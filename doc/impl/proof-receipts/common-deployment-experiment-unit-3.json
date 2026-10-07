@@ -1,0 +1,591 @@
+{
+ "date": "2026-10-07T12:08:56.701076+00:00",
+ "scope": "Unit 3 of the common deployment experiment (handoff item 3): CE-6 (CE-R1 per live Server object, CE-C3 for every Server peer and Beacon owner, CE-R1' on NoBundleFailure runs) and CE-7 (CE-A2 over all accepts by mid-run report detection with one joint weak-EUF term per generated identity position, the NoBundleFailure signing-history lemma, CE-A2pub on NoBundleFailure runs).",
+ "basis": "d42c4d3d3218f10fae78dbeaa4a7a1948fca00ea",
+ "topic": {
+  "branch": "codex/deployment-unit-3",
+  "worktree": "/tmp/beaconcrypt-deployment-unit-3"
+ },
+ "plan": {
+  "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
+  "sha256": "47d16acd1b9b4b49d35a49b3e8f0745068db6e07a836553174e5f9f7198e3663",
+  "stages": "CE-6, CE-7"
+ },
+ "commits": [
+  {
+   "commit": "309cf58967e1b70ac5b7fe4a8421ff3d277fc51d",
+   "subject": "Prove the live Server object consumes each registration ID once"
+  },
+  {
+   "commit": "09da5141002f3bcd0f66a292d041844ee95d9cd1",
+   "subject": "Detect raw-accept origin failures by the report made at the accept"
+  },
+  {
+   "commit": "757559eee57bb081454df9afd4767d9e802d5155",
+   "subject": "Bound accept-time Phase 1 forgeries over all accepts of the deployment experiment"
+  },
+  {
+   "commit": "2125f2ec0cfcfeb99e0edb471621f8bd2e4f9cec",
+   "subject": "Relate failed bundle calls to the owners' signing history"
+  },
+  {
+   "commit": "52bee9187872e2b917fced35421d7d3c193e32ca",
+   "subject": "Bound published-tuple forgeries and replays on clean runs"
+  },
+  {
+   "commit": "c2deced056c2f11515322796141da122a6d5316b",
+   "subject": "Trace live record kernels through registration commands"
+  },
+  {
+   "commit": "cdc4b6d8f7dd6bfe6470518dfeb6658526f75fc2",
+   "subject": "Prove no record sequence is accepted twice in the deployment experiment"
+  },
+  {
+   "commit": "1acc2496fc342b242678fd4e6fa9efa091c61436",
+   "subject": "Describe the published-tuple module and reword a kernel note"
+  }
+ ],
+ "files_sha256": {
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentReplay.lean": "f32ff9776d6b848b4cf4d1f668be270001896bc920d4a960ef679a2774fef0a2",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentAcceptDetection.lean": "835bde366b5db5bf03b145240ed7ee1108a9f122322c642b19df97a1c88a795f",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentProvenance.lean": "638bc1e8874f6e28aad6d6cec79f72abfc213a2c55d61e87c6ee7fb08dc57187",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentSigningHistory.lean": "0e80bed40e504fcc98e9b33f2da5e7c724aec83b5e6bb876921e6ce32a160aee",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentPublishedTuple.lean": "189306ac0acb1d2f3be0bbdbdbe1af766bbd41ca358abd36dc68830504a01589",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentRecordKernels.lean": "03d843f039a06409123de1b62f6f58d90e08b84d10447f43dbfe0f4179bdbcdb",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentRecordReplay.lean": "529676411b1beaa142eac2431caf9dfe76718abd9569b2d98294c0d76dc2ddb2",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "beca01563aa5868f9bf760714e10f8e3d65f839815e898925a713f5c5034016b",
+  "beaconcrypt-core/proofs/check-inventory.sh": "d175e5b7197ed0f02b9ff8889fca4704be7303344e5fa6cae1cd6d25793c7d30",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "e35cc085f674da8797760704a34a3aea157272ceddf28efa3d49a6cd4113112e",
+  "doc/impl/common-deployment-experiment.md": "87eb8cf5291da982d2dbe022237482b0bb29b0cc4f43fb441d6d6ec03161a915",
+  "doc/formal-verification-analysis.md": "627c87f11329a867d152e38ac593cd0fbea41e47b886bef611efb69ba1f2dcf6"
+ },
+ "modules": [
+  {
+   "name": "PqxdhDeploymentReplay",
+   "plan_stage": "CE-6 (CE-R1)",
+   "statements": [
+    "accept_oracle_registration",
+    "accept_registration",
+    "handler_other",
+    "acceptIds_append",
+    "registered_other",
+    "command_registered",
+    "coinSend_consumed",
+    "experiment_registered",
+    "construct_consumed",
+    "registered_game",
+    "countP_le_one",
+    "replay_game"
+   ],
+   "statement_count": 12,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 12
+   },
+   "direct_check_final": {
+    "exit": 0,
+    "start": "2026-10-07T12:05:31.009992+00:00",
+    "end": "2026-10-07T12:05:35.724849+00:00",
+    "source_sha256": "f32ff9776d6b848b4cf4d1f668be270001896bc920d4a960ef679a2774fef0a2",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact_sha256": "8bab744b7a68b6f193d585923fd62185e575b967de74b1c735bc5fbce47f12ec",
+    "command": [
+     "flock",
+     "/tmp/bc-arc-scratch/lean.lock",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-unit-3/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/unit3/olean/BeaconcryptCore/Computational/PqxdhDeploymentReplay.olean",
+     "/tmp/beaconcrypt-deployment-unit-3/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentReplay.lean"
+    ]
+   }
+  },
+  {
+   "name": "PqxdhDeploymentAcceptDetection",
+   "plan_stage": "CE-7 (CE-A2 detection lemma)",
+   "statements": [
+    "upto_resume",
+    "run_upto",
+    "sourceImpl_sticky",
+    "run_sticky",
+    "continuation_sticky",
+    "extend_report",
+    "reported_step",
+    "reduction_report",
+    "continuation_step",
+    "continuation_accepted",
+    "upto_detects",
+    "violation_detects",
+    "forgery_detected",
+    "forgery_bound"
+   ],
+   "statement_count": 14,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 14
+   },
+   "direct_check_final": {
+    "exit": 0,
+    "start": "2026-10-07T12:05:35.759475+00:00",
+    "end": "2026-10-07T12:05:39.716951+00:00",
+    "source_sha256": "835bde366b5db5bf03b145240ed7ee1108a9f122322c642b19df97a1c88a795f",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact_sha256": "9933b68927649ceeb0f375ca9862a1367f8b90b426202fe876a5c4300d045929",
+    "command": [
+     "flock",
+     "/tmp/bc-arc-scratch/lean.lock",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-unit-3/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/unit3/olean/BeaconcryptCore/Computational/PqxdhDeploymentAcceptDetection.olean",
+     "/tmp/beaconcrypt-deployment-unit-3/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentAcceptDetection.lean"
+    ]
+   }
+  },
+  {
+   "name": "PqxdhDeploymentProvenance",
+   "plan_stage": "CE-7 (CE-A2)",
+   "statements": [
+    "announceAll_bound",
+    "client_creates",
+    "client_run",
+    "client_transfer",
+    "a2_bound",
+    "report_game"
+   ],
+   "statement_count": 6,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 6
+   },
+   "direct_check_final": {
+    "exit": 0,
+    "start": "2026-10-07T12:05:39.751051+00:00",
+    "end": "2026-10-07T12:05:43.278434+00:00",
+    "source_sha256": "638bc1e8874f6e28aad6d6cec79f72abfc213a2c55d61e87c6ee7fb08dc57187",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact_sha256": "669ed64fe73c6bbc30859b2829fb4a8744104b61e36278cdad03c91a838bfd06",
+    "command": [
+     "flock",
+     "/tmp/bc-arc-scratch/lean.lock",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-unit-3/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/unit3/olean/BeaconcryptCore/Computational/PqxdhDeploymentProvenance.olean",
+     "/tmp/beaconcrypt-deployment-unit-3/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentProvenance.lean"
+    ]
+   }
+  },
+  {
+   "name": "PqxdhDeploymentSigningHistory",
+   "plan_stage": "CE-7 (NoBundleFailure signing history)",
+   "statements": [
+    "kept_refl",
+    "kept_trans",
+    "record_messages",
+    "accept_messages",
+    "finish_messages",
+    "read_kept",
+    "quiet_step",
+    "ownerCommand_kind",
+    "quiet_program",
+    "execution_bind",
+    "bundleOf_other",
+    "signed_kept",
+    "trace_cases",
+    "program_owned",
+    "joint_native",
+    "agree_request",
+    "forwarded_support",
+    "kept_alike",
+    "signed_quiet",
+    "forwarded_signed",
+    "create_signed",
+    "finish_summary",
+    "finish_signed",
+    "bundleOf_bundle",
+    "signed_flag",
+    "bundle_signed",
+    "native_signed",
+    "secrecy_signed",
+    "query_signed",
+    "execution_signed",
+    "install_messages",
+    "signed_source",
+    "signing_history"
+   ],
+   "statement_count": 33,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 30,
+    "Quot.sound, propext": 3
+   },
+   "direct_check_final": {
+    "exit": 0,
+    "start": "2026-10-07T12:05:43.311329+00:00",
+    "end": "2026-10-07T12:05:54.030465+00:00",
+    "source_sha256": "0e80bed40e504fcc98e9b33f2da5e7c724aec83b5e6bb876921e6ce32a160aee",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact_sha256": "48a4e832f3455de1bdac672193ab6521d1de44d16d61fc9e29f3495b8fee194b",
+    "command": [
+     "flock",
+     "/tmp/bc-arc-scratch/lean.lock",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-unit-3/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/unit3/olean/BeaconcryptCore/Computational/PqxdhDeploymentSigningHistory.olean",
+     "/tmp/beaconcrypt-deployment-unit-3/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentSigningHistory.lean"
+    ]
+   }
+  },
+  {
+   "name": "PqxdhDeploymentPublishedTuple",
+   "plan_stage": "CE-7 (CE-A2pub) and CE-6 (CE-R1')",
+   "statements": [
+    "run_inv_of_free",
+    "simulate_free",
+    "simulateQ_free",
+    "initialized_free",
+    "lift_free",
+    "compiled_free",
+    "route_generated",
+    "report_generated",
+    "pool_seeds",
+    "reporting_seeds",
+    "source_seeds",
+    "generated_lt",
+    "candidateTuple_signed",
+    "announceAll_detects",
+    "published_failure",
+    "identities_merge",
+    "identities_encode",
+    "game_report",
+    "a2pub_bound",
+    "filterMap_nodup_ne",
+    "replay_published",
+    "r1prime_bound"
+   ],
+   "statement_count": 22,
+   "axiom_profile": {
+    "Quot.sound, propext": 3,
+    "Classical.choice, Quot.sound, propext": 19
+   },
+   "direct_check_final": {
+    "exit": 0,
+    "start": "2026-10-07T12:05:54.071037+00:00",
+    "end": "2026-10-07T12:06:00.374249+00:00",
+    "source_sha256": "189306ac0acb1d2f3be0bbdbdbe1af766bbd41ca358abd36dc68830504a01589",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact_sha256": "47af4043688dedbe0fbeab8d2af2392af6e3d30873626d20c8f9da12f2b9b94d",
+    "command": [
+     "flock",
+     "/tmp/bc-arc-scratch/lean.lock",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-unit-3/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/unit3/olean/BeaconcryptCore/Computational/PqxdhDeploymentPublishedTuple.olean",
+     "/tmp/beaconcrypt-deployment-unit-3/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentPublishedTuple.lean"
+    ]
+   }
+  },
+  {
+   "name": "PqxdhDeploymentRecordKernels",
+   "plan_stage": "CE-6 (CE-C3 kernel provenance)",
+   "statements": [
+    "live_of_consumed",
+    "finish_receive",
+    "tail_finished",
+    "registration_send",
+    "send_live",
+    "initial_live",
+    "after_live",
+    "candidate_live",
+    "build_live",
+    "buildOracle_peers",
+    "finish_owners",
+    "bundle_owners",
+    "create_owners",
+    "source_step"
+   ],
+   "statement_count": 14,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 14
+   },
+   "direct_check_final": {
+    "exit": 0,
+    "start": "2026-10-07T12:06:00.411270+00:00",
+    "end": "2026-10-07T12:06:05.266992+00:00",
+    "source_sha256": "03d843f039a06409123de1b62f6f58d90e08b84d10447f43dbfe0f4179bdbcdb",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact_sha256": "24484f10b747d45fa1b9f58ca4afe2d7da8672619a004a37382310fc3674f74d",
+    "command": [
+     "flock",
+     "/tmp/bc-arc-scratch/lean.lock",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-unit-3/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/unit3/olean/BeaconcryptCore/Computational/PqxdhDeploymentRecordKernels.olean",
+     "/tmp/beaconcrypt-deployment-unit-3/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentRecordKernels.lean"
+    ]
+   }
+  },
+  {
+   "name": "PqxdhDeploymentRecordReplay",
+   "plan_stage": "CE-6 (CE-C3)",
+   "statements": [
+    "holds_step",
+    "consumed_perm",
+    "holds_receive",
+    "logged_support",
+    "peerSequences_append",
+    "ownerSequences_append",
+    "peerAccepted_server",
+    "tracked_server",
+    "serverRaw_tracked",
+    "tracked_quiet",
+    "compose_assoc",
+    "serverSend_tracked",
+    "beacon_raw_cases",
+    "beacon_send_cases",
+    "peerAccepted_beacon",
+    "ownerAccepted_beacon",
+    "beaconRaw_tracked",
+    "beaconSend_tracked",
+    "tracked_source",
+    "ownerAccepted_finish",
+    "finish_tracked",
+    "command_tracked",
+    "coinSend_tracked",
+    "experiment_tracked",
+    "construct_peers",
+    "tracked_game",
+    "holds_nodup",
+    "record_replay_game"
+   ],
+   "statement_count": 28,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 24,
+    "propext": 3,
+    "Quot.sound, propext": 1
+   },
+   "direct_check_final": {
+    "exit": 0,
+    "start": "2026-10-07T12:06:05.302327+00:00",
+    "end": "2026-10-07T12:06:10.792508+00:00",
+    "source_sha256": "529676411b1beaa142eac2431caf9dfe76718abd9569b2d98294c0d76dc2ddb2",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact_sha256": "75ad3ad53adeafa72b920f9b0cb20aecd1694922bcc7a616a135227596740e8c",
+    "command": [
+     "flock",
+     "/tmp/bc-arc-scratch/lean.lock",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-unit-3/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/unit3/olean/BeaconcryptCore/Computational/PqxdhDeploymentRecordReplay.olean",
+     "/tmp/beaconcrypt-deployment-unit-3/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentRecordReplay.lean"
+    ]
+   }
+  }
+ ],
+ "statements": 129,
+ "allowed_axioms": [
+  "propext",
+  "Classical.choice",
+  "Quot.sound"
+ ],
+ "axiom_profile_from_guards": {
+  "Classical.choice, Quot.sound, propext": 119,
+  "Quot.sound, propext": 7,
+  "propext": 3
+ },
+ "exact_statements": {
+  "PqxdhDeploymentReplay.replay_game": "theorem replay_game (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat)\n    (bounds : FreshBounds) (mode : Mode) (adversary : OracleComp (ModeSpec mode) X) (runtime : A)\n    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A)\n    (supported : outcome ∈ support ((PqxdhDeploymentSecrecy.game setup codec checks route ensureInit identityIndex bounds\n      mode adversary).run runtime))\n    (created : PqxdhRegistrationJointServerBirth.ClientCreated Unit) (output : X)\n    (final : PqxdhDeploymentSecrecy.State KemSK) (reached : outcome.1 = some (created, output, final)) (rid : Pqxdh.Bytes) :\n    final.1.transcript.countP (fun entry => entryRegistration setup.source.crypto codec entry = some rid) ≤ 1 ∧\n      final.2.native.shared.2.server.consumed = acceptIds setup.source.crypto codec final.1.transcript",
+  "PqxdhDeploymentReplay.registered_game": "theorem registered_game (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat)\n    (bounds : FreshBounds) (mode : Mode) (adversary : OracleComp (ModeSpec mode) X) (runtime : A)\n    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A)\n    (supported : outcome ∈ support ((PqxdhDeploymentSecrecy.game setup codec checks route ensureInit identityIndex bounds\n      mode adversary).run runtime))\n    (created : PqxdhRegistrationJointServerBirth.ClientCreated Unit) (output : X)\n    (final : PqxdhDeploymentSecrecy.State KemSK) (reached : outcome.1 = some (created, output, final)) :\n    Registered setup.source.crypto codec final.1.transcript final.2.native",
+  "PqxdhDeploymentReplay.accept_registration": "theorem accept_registration (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (seed : IdentitySeed) (raw : Pqxdh.Bytes) (state : NativeState KemSK) (result : Option Nat × NativeState KemSK)\n    (supported : result ∈ support ((nativeAccept setup codec checks seed PqxdhRegistrationSchedule.observationScalar\n      raw).run state)) :\n    (result.1 = none ∧ result.2.2.server.consumed = state.2.server.consumed) ∨\n      ∃ index rid, result.1 = some index ∧ registrationOf setup.source.crypto codec raw = some rid ∧\n        rid ∉ state.2.server.consumed ∧ result.2.2.server.consumed = state.2.server.consumed ++ [rid]",
+  "PqxdhDeploymentAcceptDetection.upto_detects": "theorem upto_detects (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes) (count : Nat)\n    (work : OracleComp (Spec KemSK) X) (index : Nat) (runtime : A)\n    (final : ReportResult KemSK A (Stop KemSK X) count)\n    (supported : final ∈ support (PqxdhJointPhase1Reports.run setup.joint count\n      (PqxdhRegistrationJointReportCompiler.initialized setup codec checks ensureInit supplied count (upto work index)\n        runtime)))\n    (encoded : PqxdhRegistrationJointInitializedSchedule.Outcome KemSK (Stop KemSK X))\n    (finished : (sourceResult final).1 = some encoded) (raw : Pqxdh.Bytes) (session : Nat)\n    (next : Option Nat → OracleComp (Spec KemSK) X) (stopped : encoded.2.1 = .accepted raw (some session) next)\n    (candidate : Phase1Candidate) (parsed : PqxdhRegistrationJointRawSignatures.candidate codec raw = some candidate)\n    (target : Nat) (failure : FieldOriginFailure setup.joint ⟨target, candidate⟩ final.2.1.snapshot) :\n    final.2.1.occurred = true",
+  "PqxdhDeploymentAcceptDetection.violation_detects": "theorem violation_detects (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (shortRejects : ∀ (publicKey : Ed25519PublicKey) bytes, bytes.length < 64 →\n      setup.source.crypto.verify publicKey.toList bytes = none)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes) (count : Nat)\n    (work : OracleComp (Spec KemSK) X) (index : Nat) (runtime : A)\n    (stopped : ReportResult KemSK A (Stop KemSK X) count)\n    (supported : stopped ∈ support (PqxdhJointPhase1Reports.run setup.joint count\n      (PqxdhRegistrationJointReportCompiler.initialized setup codec checks ensureInit supplied count (upto work index)\n        runtime)))\n    (violation : Violation setup codec checks stopped) : stopped.2.1.occurred = true",
+  "PqxdhDeploymentAcceptDetection.forgery_detected": "theorem forgery_detected (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (shortRejects : ∀ (publicKey : Ed25519PublicKey) bytes, bytes.length < 64 →\n      setup.source.crypto.verify publicKey.toList bytes = none)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes) (count : Nat)\n    (work : OracleComp (Spec KemSK) X) (runtime : A) (final : ReportResult KemSK A X count)\n    (forgery : NativeForgery setup codec checks ensureInit supplied count work runtime final) :\n    final.2.1.occurred = true",
+  "PqxdhDeploymentAcceptDetection.forgery_bound": "theorem forgery_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (shortRejects : ∀ (publicKey : Ed25519PublicKey) bytes, bytes.length < 64 →\n      setup.source.crypto.verify publicKey.toList bytes = none)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes) (count : Nat)\n    (work : OracleComp (Spec KemSK) X) (runtime : A)\n    (budget : PqxdhRegistrationJointRevealCosts.SourceKind → Nat)\n    (certified : ∀ source, work.IsQueryBoundP\n      (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))\n    (capacity : (if supplied.isNone then 1 else 0) + budget (.inl 1) ≤ count + 1)\n    (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : PqxdhJointIdentity.Forgery) :\n    letI := Classical.propDecidable\n    𝒟[(fun final => decide (NativeForgery setup codec checks ensureInit supplied (count + 1) work runtime final)) <$>\n      PqxdhJointPhase1Reports.run setup.joint (count + 1)\n        (PqxdhRegistrationJointReportCompiler.initialized setup codec checks ensureInit supplied (count + 1) work\n          runtime)] {true} ≤\n      ∑ target : Fin (count + 1), PqxdhJointIdentity.advantage setup.joint\n        (reduction setup codec checks ensureInit supplied count work runtime fallback ordinaryFallback target)",
+  "PqxdhDeploymentProvenance.a2_bound": "theorem a2_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (shortRejects : ∀ (publicKey : Ed25519PublicKey) bytes, bytes.length < 64 →\n      setup.source.crypto.verify publicKey.toList bytes = none)\n    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool) (bounds : FreshBounds)\n    (mode : Mode) (adversary : OracleComp (ModeSpec mode) X) (budget : Budget) (respects : budget.Respects adversary)\n    (runtime : A) (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : PqxdhJointIdentity.Forgery) :\n    letI := Classical.propDecidable\n    𝒟[(fun final => decide (NativeForgery setup codec checks ensureInit none (budget.create + 1)\n        (compileFull setup codec route bounds mode adversary) runtime final)) <$>\n      PqxdhJointPhase1Reports.run setup.joint (budget.create + 1)\n        (PqxdhRegistrationJointReportCompiler.initialized setup codec checks ensureInit none (budget.create + 1)\n          (compileFull setup codec route bounds mode adversary) runtime)] {true} ≤\n      ∑ target : Fin (budget.create + 1), PqxdhJointIdentity.advantage setup.joint\n        (reduction setup codec checks route ensureInit bounds mode adversary budget.create runtime fallback\n          ordinaryFallback target)",
+  "PqxdhDeploymentProvenance.report_game": "theorem report_game (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)\n    (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)\n    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)\n    (bounds : FreshBounds) (mode : Mode) (adversary : OracleComp (ModeSpec mode) X) (count : Nat) (runtime : A) :\n    (fun reached => (sourceResult reached).1.map fun outcome => (outcome.1, outcome.2.1.1.1, outcome.2.1.1.2)) <$>\n        PqxdhJointPhase1Reports.run setup.joint count (PqxdhRegistrationJointReportCompiler.initialized setup codec\n          checks ensureInit none count (compileFull setup codec route bounds mode adversary) runtime) =\n      (fun outcome => outcome.1.map fun result => (result.1, result.2.1, result.2.2.1)) <$>\n        (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode adversary).run runtime",
+  "PqxdhDeploymentProvenance.client_creates": "theorem client_creates (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool) (bounds : FreshBounds)\n    (mode : Mode) (adversary : OracleComp (ModeSpec mode) X) (budget : Budget) (respects : budget.Respects adversary)\n    (count : Nat) (runtime : A) :\n    (client setup codec checks route ensureInit bounds mode adversary count runtime).IsQueryBoundP\n      (SourceClass PqxdhDynamicIdentityPool.IsCreate) (1 + budget.create)",
+  "PqxdhDeploymentSigningHistory.signing_history": "theorem signing_history (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)\n    (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)\n    (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) (runtime : A)\n    (outcome : Option (PqxdhRegistrationJointInitializedSchedule.SourceOutcome KemSK\n      ((X × PqxdhDeploymentSecrecy.Ledger) × PqxdhDeploymentCompile.Local)) ×\n      PqxdhRegistrationJointServerPrefix.State KemSK A)\n    (supported : outcome ∈ support ((PqxdhRegistrationJointInitializedSchedule.source setup codec checks ensureInit none\n      (PqxdhDeploymentCompileSecrecy.compileFull setup codec route bounds mode adversary)).run\n        ((PqxdhDynamicIdentityPool.initialState, PqxdhLiveKemBirth.empty), runtime)))\n    (result : PqxdhRegistrationJointInitializedSchedule.SourceOutcome KemSK\n      ((X × PqxdhDeploymentSecrecy.Ledger) × PqxdhDeploymentCompile.Local))\n    (reached : outcome.1 = some result) (owner : Nat) (entry : PqxdhRegistrationJointOwnership.Entry KemSK)\n    (found : result.2.2.owners[owner]? = some entry)\n    (clean : PqxdhDeploymentTranscript.NoBundleFailureAt result.2.1.1.2.transcript owner) :\n    (PqxdhDeploymentTranscript.bundleOf result.2.1.1.2.transcript owner = none ∧\n        messagesAt entry.identityIndex result.2.2.pool.1.transcript = []) ∨\n      ∃ bytes keys, PqxdhDeploymentTranscript.bundleOf result.2.1.1.2.transcript owner = some bytes ∧\n        codec.write1 (PqxdhJointPhase1SourceWriter.signedCandidate setup.joint entry.owner.beacon.identity\n          (setup.joint.publicKeys entry.owner.beacon.identity).ed25519 keys) = some bytes ∧\n        messagesAt entry.identityIndex result.2.2.pool.1.transcript = PqxdhRegistrationJointIssuedAttempts.messages keys",
+  "PqxdhDeploymentSigningHistory.signed_source": "theorem signed_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)\n    (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)\n    (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) (runtime : A)\n    (outcome : Option (PqxdhRegistrationJointInitializedSchedule.SourceOutcome KemSK\n      ((X × PqxdhDeploymentSecrecy.Ledger) × PqxdhDeploymentCompile.Local)) ×\n      PqxdhRegistrationJointServerPrefix.State KemSK A)\n    (supported : outcome ∈ support ((PqxdhRegistrationJointInitializedSchedule.source setup codec checks ensureInit none\n      (PqxdhDeploymentCompileSecrecy.compileFull setup codec route bounds mode adversary)).run\n        ((PqxdhDynamicIdentityPool.initialState, PqxdhLiveKemBirth.empty), runtime)))\n    (result : PqxdhRegistrationJointInitializedSchedule.SourceOutcome KemSK\n      ((X × PqxdhDeploymentSecrecy.Ledger) × PqxdhDeploymentCompile.Local))\n    (reached : outcome.1 = some result) :\n    Signed setup codec result.2.2.shared.2.server.server.identity result.2.1.1.2.transcript result.2.2",
+  "PqxdhDeploymentPublishedTuple.a2pub_bound": "theorem a2pub_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (shortRejects : ∀ (publicKey : PqxdhEd25519EufCma.Ed25519PublicKey) bytes, bytes.length < 64 →\n      setup.source.crypto.verify publicKey.toList bytes = none)\n    (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)\n    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)\n    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)\n    (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)\n    (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) (budget : PqxdhDeploymentInterface.Budget)\n    (respects : budget.Respects adversary) (runtime : A) (fallback : PqxdhDynamicIdentityRouting.DynamicForgery)\n    (ordinaryFallback : PqxdhJointIdentity.Forgery) :\n    letI := Classical.propDecidable\n    𝒟[(fun outcome => decide (GameEvent setup codec outcome)) <$> (PqxdhDeploymentSecrecy.game setup codec checks\n        route ensureInit 0 bounds mode adversary).run runtime] {true} ≤\n      ∑ target : Fin (budget.create + 1), PqxdhJointIdentity.advantage setup.joint\n        (PqxdhDeploymentProvenance.reduction setup codec checks route ensureInit bounds mode adversary budget.create\n          runtime fallback ordinaryFallback target)",
+  "PqxdhDeploymentPublishedTuple.r1prime_bound": "theorem r1prime_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (shortRejects : ∀ (publicKey : PqxdhEd25519EufCma.Ed25519PublicKey) bytes, bytes.length < 64 →\n      setup.source.crypto.verify publicKey.toList bytes = none)\n    (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)\n    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)\n    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)\n    (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)\n    (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) (budget : PqxdhDeploymentInterface.Budget)\n    (respects : budget.Respects adversary) (runtime : A) (fallback : PqxdhDynamicIdentityRouting.DynamicForgery)\n    (ordinaryFallback : PqxdhJointIdentity.Forgery) :\n    letI := Classical.propDecidable\n    𝒟[(fun outcome => decide (ReplayEvent setup codec outcome)) <$> (PqxdhDeploymentSecrecy.game setup codec checks\n        route ensureInit 0 bounds mode adversary).run runtime] {true} ≤\n      ∑ target : Fin (budget.create + 1), PqxdhJointIdentity.advantage setup.joint\n        (PqxdhDeploymentProvenance.reduction setup codec checks route ensureInit bounds mode adversary budget.create\n          runtime fallback ordinaryFallback target)",
+  "PqxdhDeploymentPublishedTuple.replay_published": "theorem replay_published (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat)\n    (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)\n    (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) (runtime : A)\n    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A)\n    (supported : outcome ∈ support ((PqxdhDeploymentSecrecy.game setup codec checks route ensureInit identityIndex bounds\n      mode adversary).run runtime))\n    (replayed : ReplayEvent setup codec outcome) : GameEvent setup codec outcome",
+  "PqxdhDeploymentPublishedTuple.game_report": "theorem game_report (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)\n    (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)\n    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)\n    (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)\n    (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) (count : Nat) (runtime : A) :\n    letI := Classical.propDecidable\n    𝒟[(fun outcome => decide (GameEvent setup codec outcome)) <$> (PqxdhDeploymentSecrecy.game setup codec checks\n        route ensureInit 0 bounds mode adversary).run runtime] {true} =\n      𝒟[(fun reached => decide (ReportEvent setup.source.crypto codec reached)) <$>\n        PqxdhJointPhase1Reports.run setup.joint count (PqxdhRegistrationJointReportCompiler.initialized setup codec\n          checks ensureInit none count (PqxdhDeploymentCompileSecrecy.compileFull setup codec route bounds mode\n            adversary) runtime)] {true}",
+  "PqxdhDeploymentPublishedTuple.published_failure": "theorem published_failure (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (shortRejects : ∀ (publicKey : PqxdhEd25519EufCma.Ed25519PublicKey) bytes, bytes.length < 64 →\n      setup.source.crypto.verify publicKey.toList bytes = none)\n    (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)\n    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)\n    (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)\n    (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) (budget : PqxdhDeploymentInterface.Budget)\n    (respects : budget.Respects adversary) (runtime : A)\n    (reached : PqxdhRegistrationJointInitializedReports.ReportResult KemSK A\n      ((X × PqxdhDeploymentSecrecy.Ledger) × PqxdhDeploymentCompile.Local) (budget.create + 1))\n    (supported : reached ∈ support (PqxdhJointPhase1Reports.run setup.joint (budget.create + 1)\n      (PqxdhRegistrationJointReportCompiler.initialized setup codec checks ensureInit none (budget.create + 1)\n        (PqxdhDeploymentCompileSecrecy.compileFull setup codec route bounds mode adversary) runtime)))\n    (encoded : PqxdhRegistrationJointInitializedSchedule.Outcome KemSK\n      ((X × PqxdhDeploymentSecrecy.Ledger) × PqxdhDeploymentCompile.Local))\n    (finished : (PqxdhRegistrationJointInitializedReports.sourceResult reached).1 = some encoded)\n    (forgery : PublishedForgery setup.source.crypto codec encoded.2.1.1.2.transcript\n      (encodedIdentities encoded.2.2.owners))\n    (clean : PqxdhDeploymentTranscript.NoBundleFailure encoded.2.1.1.2.transcript) :\n    ∃ target candidate, target < budget.create + 1 ∧\n      candidate ∈ PqxdhDeploymentProvenance.acceptedCandidates codec (PqxdhDeploymentProvenance.finalTranscript reached.1) ∧\n      PqxdhJointPhase1Reports.FieldOriginFailure setup.joint ⟨target, candidate⟩ reached.2.1.snapshot",
+  "PqxdhDeploymentPublishedTuple.report_generated": "theorem report_generated (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (ensureInit : StateT A ProbComp Bool) (count : Nat) (program : OracleComp (Spec KemSK) Result) (runtime : A)\n    (reached : PqxdhRegistrationJointInitializedReports.ReportResult KemSK A Result count)\n    (supported : reached ∈ support (PqxdhJointPhase1Reports.run setup.joint count\n      (PqxdhRegistrationJointReportCompiler.initialized setup codec checks ensureInit none count program runtime)))\n    (index : Nat) (ref : PqxdhRegistrationJointIdentityRouting.Ref) (found : reached.1.2.refs[index]? = some ref) :\n    ∃ target, ref = .generated target",
+  "PqxdhDeploymentPublishedTuple.generated_lt": "theorem generated_lt (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (ensureInit : StateT A ProbComp Bool) (count : Nat) (program : OracleComp (Spec KemSK) Result) (runtime : A)\n    (creates : (PqxdhRegistrationJointReportCompiler.initialized setup codec checks ensureInit none count program\n      runtime).IsQueryBoundP (PqxdhJointPhase1Reports.SourceClass PqxdhDynamicIdentityPool.IsCreate) count)\n    (reached : PqxdhRegistrationJointInitializedReports.ReportResult KemSK A Result count)\n    (supported : reached ∈ support (PqxdhJointPhase1Reports.run setup.joint count\n      (PqxdhRegistrationJointReportCompiler.initialized setup codec checks ensureInit none count program runtime)))\n    (index target : Nat) (found : reached.1.2.refs[index]? = some (.generated target)) : target < count",
+  "PqxdhDeploymentRecordKernels.build_live": "theorem build_live (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (pending : pqxdh.PendingServerRegistration) (root : PqxdhSecretInputKdf.RootOutput) (payload : Option Pqxdh.Bytes)\n    (state : PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes))\n    (primitive : RawCtxSharedPrimitive.SharedState (List RawCtxSourceSend.SealContext))\n    (result : RustM (Option PqxdhServerRegistrationPublication.Response ×\n      PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes)) ×\n      RawCtxSharedPrimitive.SharedState (List RawCtxSourceSend.SealContext))\n    (supported : result ∈ support ((simulateQ (tailImpl setup codec checks)\n      (PqxdhServerRegistrationPublication.build setup.source pending root payload () state)).run primitive)) :\n    result.1 = ok (none, state) ∨ ∃ candidate kernel bytes, state.server.peers candidate.key_id = none ∧\n      Live setup.source.crypto kernel ∧\n      result.1 = ok (some ⟨bytes, candidate.key_id⟩, PqxdhServerRegistrationPublication.publish state candidate kernel\n        ())",
+  "PqxdhDeploymentRecordKernels.tail_finished": "theorem tail_finished (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)\n    (prepared : PqxdhBeaconPhase2Preparation.Prepared Response) (state final : NativeState KemSK)\n    (staged : PqxdhBeaconPhase2Publication.Staged)\n    (supported : (some staged, final) ∈ support ((simulateQ (fun query =>\n      (PqxdhRegistrationSchedule.callbacks setup codec ∘ₛ PqxdhBeaconPhase2Publication.nativeAdapter) (.inr query))\n      (PqxdhBeaconPhase2Publication.tail codec.frameRead prepared)).run state)) :\n    Finished setup.source.crypto staged.kernel",
+  "PqxdhDeploymentRecordKernels.finish_owners": "theorem finish_owners (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (index : Nat) (raw : Pqxdh.Bytes)\n    (state : PqxdhRegistrationSchedule.State KemSK) (result : Option Pqxdh.Bytes × PqxdhRegistrationSchedule.State\n      KemSK)\n    (supported : result ∈ support ((PqxdhRegistrationSchedule.finish setup codec index raw).run state)) :\n    (∀ other, other ≠ index → result.2.owners[other]? = state.owners[other]?) ∧\n      (result.1 = none → ownerKernel result.2.owners[index]? = ownerKernel state.owners[index]?) ∧\n      (∀ plaintext, result.1 = some plaintext → ownerKernel state.owners[index]? = none ∧\n        ∃ kernel, ownerKernel result.2.owners[index]? = some kernel ∧ Finished setup.source.crypto kernel)",
+  "PqxdhDeploymentRecordKernels.source_step": "theorem source_step (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (serverSeed : IdentitySeed) (request : PqxdhRegistrationSchedule.Request)\n    (state : PqxdhRegistrationSchedule.State KemSK)\n    (result : PqxdhRegistrationSchedule.QuerySpec request × PqxdhRegistrationSchedule.State KemSK)\n    (supported : result ∈ support ((PqxdhRegistrationSchedule.handler setup codec checks serverSeed (.inr request)).run\n      state)) :\n    PeerStep setup.source.crypto state.shared.2.server.server result.2.shared.2.server.server ∧\n      ((∀ index raw, request ≠ .finish index raw) → OwnersSame state.owners result.2.owners)",
+  "PqxdhDeploymentRecordReplay.record_replay_game": "theorem record_replay_game (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat)\n    (bounds : FreshBounds) (mode : Mode) (adversary : OracleComp (ModeSpec mode) X) (runtime : A)\n    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) ×\n      A)\n    (supported : outcome ∈ support ((PqxdhDeploymentSecrecy.game setup codec checks route ensureInit identityIndex\n      bounds\n      mode adversary).run runtime))\n    (created : PqxdhRegistrationJointServerBirth.ClientCreated Unit) (output : X)\n    (final : PqxdhDeploymentSecrecy.State KemSK) (reached : outcome.1 = some (created, output, final)) :\n    (∀ kid, (peerSequences final.1.transcript kid).Nodup) ∧\n      ∀ index, (ownerSequences final.1.transcript index).Nodup",
+  "PqxdhDeploymentRecordReplay.tracked_game": "theorem tracked_game (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat)\n    (bounds : FreshBounds) (mode : Mode) (adversary : OracleComp (ModeSpec mode) X) (runtime : A)\n    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) ×\n      A)\n    (supported : outcome ∈ support ((PqxdhDeploymentSecrecy.game setup codec checks route ensureInit identityIndex\n      bounds\n      mode adversary).run runtime))\n    (created : PqxdhRegistrationJointServerBirth.ClientCreated Unit) (output : X)\n    (final : PqxdhDeploymentSecrecy.State KemSK) (reached : outcome.1 = some (created, output, final)) :\n    Tracked setup.source.crypto final.1.transcript final.2"
+ },
+ "exact_definitions": {
+  "PqxdhDeploymentReplay.registrationOf": "def registrationOf (crypto : Pqxdh.Crypto) (codec : Codec Reader Response) (raw : Pqxdh.Bytes) : Option Pqxdh.Bytes :=\n  ((candidateOf codec raw).bind (acceptedKeys crypto)).map fun keys => keys.1.toList ++ keys.2.oneTime.toList",
+  "PqxdhDeploymentReplay.entryRegistration": "def entryRegistration (crypto : Pqxdh.Crypto) (codec : Codec Reader Response) : Entry → Option Pqxdh.Bytes\n  | ⟨.inl (.inr (.accept raw)), some _⟩ => registrationOf crypto codec raw\n  | _ => none",
+  "PqxdhDeploymentReplay.acceptIds": "def acceptIds (crypto : Pqxdh.Crypto) (codec : Codec Reader Response) (transcript : List Entry) : List Pqxdh.Bytes :=\n  transcript.filterMap (entryRegistration crypto codec)",
+  "PqxdhDeploymentReplay.Registered": "structure Registered (crypto : Pqxdh.Crypto) (codec : Codec Reader Response) (transcript : List Entry)\n    (native : PqxdhRegistrationSchedule.State KemSK) : Prop where\n  consumed : native.shared.2.server.consumed = acceptIds crypto codec transcript\n  unique : (acceptIds crypto codec transcript).Nodup",
+  "PqxdhDeploymentAcceptDetection.upto": "noncomputable def upto (work : OracleComp (Spec KemSK) X) (index : Nat) : OracleComp (Spec KemSK) (Stop KemSK X) :=\n  scan work index >>= stepAccept",
+  "PqxdhDeploymentAcceptDetection.ViolationAt": "def ViolationAt (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks) {count : Nat}\n    (stopped : ReportResult KemSK A (Stop KemSK X) count)\n    (encoded : PqxdhRegistrationJointInitializedSchedule.Outcome KemSK (Stop KemSK X)) (raw : Pqxdh.Bytes)\n    (session : Nat) (next : Option Nat → OracleComp (Spec KemSK) X)\n    (value : PqxdhServerRootPreparation.Verified Reader) (address : Nat)\n    (owner : PqxdhRegistrationJointGeneratedFinish.EncodedEntry) (target : Fin count) (publicKey : PublicIdentity) :\n    Prop :=\n  (sourceResult stopped).1 = some encoded ∧ encoded.2.1 = .accepted raw (some session) next ∧\n    PqxdhRegistrationJointRawSignatures.verified setup codec checks raw = some value ∧\n    encoded.2.2.owners[address]? = some owner ∧\n    stopped.1.2.refs[owner.1]? = some (.generated target.val) ∧\n    sourceKeys setup.joint (sourceResult stopped).2.1.1.seeds owner.1 = some publicKey ∧\n    value.identity = publicKey.ed25519 ∧\n    PqxdhRegistrationJointRoutedReveals.revealedAt owner.1 (sourceResult stopped).2.1.1.transcript = false ∧\n    ¬PqxdhRegistrationJointAttemptDecoding.Occurred value.keys\n      (PqxdhRegistrationJointSigningTranscript.messagesAt owner.1 (sourceResult stopped).2.1.1.transcript)",
+  "PqxdhDeploymentAcceptDetection.Violation": "def Violation (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks) {count : Nat}\n    (stopped : ReportResult KemSK A (Stop KemSK X) count) : Prop :=\n  ∃ encoded raw session next value address owner target publicKey,\n    ViolationAt setup codec checks stopped encoded raw session next value address owner target publicKey",
+  "PqxdhDeploymentAcceptDetection.NativeForgery": "def NativeForgery (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes) (count : Nat)\n    (work : OracleComp (Spec KemSK) X) (runtime : A) (final : ReportResult KemSK A X count) : Prop :=\n  ∃ (index : Nat) (stopped : ReportResult KemSK A (Stop KemSK X) count),\n    stopped ∈ support (PqxdhJointPhase1Reports.run setup.joint count\n      (PqxdhRegistrationJointReportCompiler.initialized setup codec checks ensureInit supplied count (upto work index)\n        runtime)) ∧\n    final ∈ support (continuation setup codec checks ensureInit count resumeStop stopped) ∧\n    Violation setup codec checks stopped",
+  "PqxdhDeploymentProvenance.client": "noncomputable def client (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool) (bounds : FreshBounds)\n    (mode : Mode) (adversary : OracleComp (ModeSpec mode) X) (count : Nat) (runtime : A) :\n    OracleComp ProtocolSpec ((Option (PqxdhRegistrationJointOpenInitialization.Outcome KemSK ((X × Ledger) × Local)) ×\n      PqxdhRegistrationJointIdentityCompiler.Local KemSK A) × PqxdhRegistrationJointIdentityRouting.Registry) := do\n  let output ← PqxdhRegistrationJointReportCompiler.initialized setup codec checks ensureInit none count\n    (compileFull setup codec route bounds mode adversary) runtime\n  announceAll count (acceptedCandidates codec (finalTranscript output))\n  pure output",
+  "PqxdhDeploymentProvenance.reduction": "noncomputable def reduction (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool) (bounds : FreshBounds)\n    (mode : Mode) (adversary : OracleComp (ModeSpec mode) X) (count : Nat) (runtime : A)\n    (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : PqxdhJointIdentity.Forgery)\n    (target : Fin (count + 1)) :=\n  PqxdhJointIdentityFreshness.globalReduction setup.joint target ordinaryFallback\n    (PqxdhDynamicIdentityRouting.routedAdversary count ordinaryFallback\n      (PqxdhDynamicIdentityReports.reportExtractor setup.joint (count + 1) fallback\n        (PqxdhJointPhase1Reports.routedClient setup.joint (count + 1)\n          (client setup codec checks route ensureInit bounds mode adversary (count + 1) runtime))))",
+  "PqxdhDeploymentSigningHistory.History": "def History (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (transcript : List PqxdhDeploymentInterface.Entry)\n    (owner : Nat) (entry : PqxdhRegistrationJointOwnership.Entry KemSK) (pool : PqxdhDynamicIdentityPool.SourceState) :\n    Prop :=\n  (PqxdhDeploymentTranscript.phase transcript owner = .fresh ∧ PqxdhDeploymentTranscript.bundleOf transcript owner = none ∧\n      messagesAt entry.identityIndex pool.transcript = []) ∨\n    (PqxdhDeploymentTranscript.phase transcript owner ≠ .fresh ∧\n      ∃ bytes keys, PqxdhDeploymentTranscript.bundleOf transcript owner = some bytes ∧\n        codec.write1 (PqxdhJointPhase1SourceWriter.signedCandidate setup.joint entry.owner.beacon.identity\n          (setup.joint.publicKeys entry.owner.beacon.identity).ed25519 keys) = some bytes ∧\n        messagesAt entry.identityIndex pool.transcript = PqxdhRegistrationJointIssuedAttempts.messages keys)",
+  "PqxdhDeploymentSigningHistory.Signed": "structure Signed (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (server : RawCtxServerRouting.Identity)\n    (transcript : List PqxdhDeploymentInterface.Entry) (state : PqxdhRegistrationJointSchedule.State KemSK) : Prop where\n  agree : PqxdhDeploymentEligibility.Agree setup codec server transcript (PqxdhRegistrationJointSchedule.source state)\n  owned : PqxdhRegistrationJointSchedule.Invariant state\n  distinct : ∀ (first second : Nat) (firstEntry secondEntry : PqxdhRegistrationJointOwnership.Entry KemSK),\n    state.owners[first]? = some firstEntry → state.owners[second]? = some secondEntry →\n      firstEntry.identityIndex = secondEntry.identityIndex → first = second\n  future : ∀ index, state.pool.1.seeds.length ≤ index → messagesAt index state.pool.1.transcript = []\n  absent : ∀ owner, state.owners.length ≤ owner →\n    (PqxdhDeploymentTranscript.summarize transcript).failures owner = false ∧\n      PqxdhDeploymentTranscript.bundleOf transcript owner = none\n  history : ∀ owner (entry : PqxdhRegistrationJointOwnership.Entry KemSK), state.owners[owner]? = some entry →\n    (PqxdhDeploymentTranscript.summarize transcript).failures owner = false →\n      History setup codec transcript owner entry state.pool.1",
+  "PqxdhDeploymentPublishedTuple.candidateTuple": "def candidateTuple (candidate : PqxdhEd25519EufCma.Phase1Candidate) : Option PqxdhEd25519EufCma.Phase1KeyTuple := do\n  let pre ← PqxdhEd25519EufCma.splitAttachedSignature candidate.preKey\n  let one ← PqxdhEd25519EufCma.splitAttachedSignature candidate.oneTimeKey\n  let pq ← PqxdhEd25519EufCma.splitAttachedSignature candidate.pqKey\n  let prekey ← PqxdhEd25519EufCma.parsePrekeyMessage pre.2\n  let oneTime ← PqxdhEd25519EufCma.parseOneTimeMessage one.2\n  let pqKey ← PqxdhEd25519EufCma.parsePqMessage pq.2\n  pure ⟨prekey, oneTime, pqKey⟩",
+  "PqxdhDeploymentPublishedTuple.publishedTuple": "def publishedTuple (codec : Codec Reader Response) (transcript : List PqxdhDeploymentInterface.Entry) (owner : Nat) :\n    Option PqxdhEd25519EufCma.Phase1KeyTuple :=\n  ((PqxdhDeploymentTranscript.bundleOf transcript owner).bind (PqxdhDeploymentTranscript.candidateOf codec)).bind\n    candidateTuple",
+  "PqxdhDeploymentPublishedTuple.ownerIdentities": "def ownerIdentities (setup : Setup baseSpec KemSK) (native : PqxdhRegistrationSchedule.State KemSK) :\n    List PqxdhEd25519EufCma.Ed25519PublicKey :=\n  native.owners.map fun owner => (setup.joint.publicKeys owner.beacon.identity).ed25519",
+  "PqxdhDeploymentPublishedTuple.PublishedForgery": "def PublishedForgery (crypto : Pqxdh.Crypto) (codec : Codec Reader Response)\n    (transcript : List PqxdhDeploymentInterface.Entry) (identities : List PqxdhEd25519EufCma.Ed25519PublicKey) : Prop :=\n  ∃ (raw : Pqxdh.Bytes) (session : Nat),\n    (⟨.inl (.inr (.accept raw)), some session⟩ : PqxdhDeploymentInterface.Entry) ∈ transcript ∧\n    ∃ candidate identity decoded owner, PqxdhDeploymentTranscript.candidateOf codec raw = some candidate ∧\n      PqxdhDeploymentTranscript.acceptedKeys crypto candidate = some (identity, decoded) ∧\n      identities[owner]? = some identity ∧ publishedTuple codec transcript owner ≠ some decoded",
+  "PqxdhDeploymentPublishedTuple.GameEvent": "def GameEvent (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)\n    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A) :\n    Prop :=\n  ∃ created output final, outcome.1 = some (created, output, final) ∧\n    PublishedForgery setup.source.crypto codec final.1.transcript (ownerIdentities setup final.2.native) ∧\n    PqxdhDeploymentTranscript.NoBundleFailure final.1.transcript",
+  "PqxdhDeploymentPublishedTuple.DoubleAccept": "def DoubleAccept (crypto : Pqxdh.Crypto) (codec : Codec Reader Response)\n    (transcript : List PqxdhDeploymentInterface.Entry) (identities : List PqxdhEd25519EufCma.Ed25519PublicKey) : Prop :=\n  ∃ (first second : Nat), first ≠ second ∧\n    ∃ (raw raw' : Pqxdh.Bytes) (session session' : Nat) (candidate candidate' : PqxdhEd25519EufCma.Phase1Candidate)\n      (identity : PqxdhEd25519EufCma.Ed25519PublicKey) (keys keys' : PqxdhEd25519EufCma.Phase1KeyTuple) (owner : Nat),\n      transcript[first]? = some ⟨.inl (.inr (.accept raw)), some session⟩ ∧\n      transcript[second]? = some ⟨.inl (.inr (.accept raw')), some session'⟩ ∧\n      PqxdhDeploymentTranscript.candidateOf codec raw = some candidate ∧\n      PqxdhDeploymentTranscript.candidateOf codec raw' = some candidate' ∧\n      PqxdhDeploymentTranscript.acceptedKeys crypto candidate = some (identity, keys) ∧\n      PqxdhDeploymentTranscript.acceptedKeys crypto candidate' = some (identity, keys') ∧\n      identities[owner]? = some identity",
+  "PqxdhDeploymentPublishedTuple.ReplayEvent": "def ReplayEvent (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)\n    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A) :\n    Prop :=\n  ∃ created output final, outcome.1 = some (created, output, final) ∧\n    DoubleAccept setup.source.crypto codec final.1.transcript (ownerIdentities setup final.2.native) ∧\n    PqxdhDeploymentTranscript.NoBundleFailure final.1.transcript",
+  "PqxdhDeploymentRecordKernels.Live": "def Live (c : Pqxdh.Crypto) (kernel : ConcreteRatchetKernel) : Prop :=\n  ∃ sendOrigin receiveOrigin, RawCtxReceiveConsumption.ConsumedRefines c sendOrigin receiveOrigin kernel []",
+  "PqxdhDeploymentRecordKernels.Finished": "def Finished (c : Pqxdh.Crypto) (kernel : ConcreteRatchetKernel) : Prop :=\n  ∃ sendOrigin receiveOrigin, RawCtxReceiveConsumption.ConsumedRefines c sendOrigin receiveOrigin kernel [0]",
+  "PqxdhDeploymentRecordKernels.PeerStep": "def PeerStep (c : Pqxdh.Crypto) (before after : RawCtxServerRouting.Server Unit Unit) : Prop :=\n  ∀ kid, peerKernel after kid = peerKernel before kid ∨\n    (peerKernel before kid = none ∧ ∃ kernel, peerKernel after kid = some kernel ∧ Live c kernel)",
+  "PqxdhDeploymentRecordKernels.OwnersSame": "def OwnersSame (before after : List (PqxdhRegistrationSchedule.Owner KemSK)) : Prop :=\n  ∀ index : Nat, ownerKernel after[index]? = ownerKernel before[index]?",
+  "PqxdhDeploymentRecordReplay.peerAccepted": "def peerAccepted (kid : Std.U64) : Entry → Option Std.U64\n  | ⟨.inl (.inr (.serverRaw _)), .Some message⟩ => if message.keyId = kid then some message.sequence else none\n  | _ => none",
+  "PqxdhDeploymentRecordReplay.ownerAccepted": "def ownerAccepted (index : Nat) : Entry → Option Std.U64\n  | ⟨.inl (.inr (.beaconRaw owner _)), .Some message⟩ => if owner = index then some message.sequence else none\n  | ⟨.inl (.inr (.finish owner _)), some _⟩ => if owner = index then some 1#u64 else none\n  | _ => none",
+  "PqxdhDeploymentRecordReplay.peerSequences": "def peerSequences (transcript : List Entry) (kid : Std.U64) : List Std.U64 :=\n  transcript.filterMap (peerAccepted kid)",
+  "PqxdhDeploymentRecordReplay.ownerSequences": "def ownerSequences (transcript : List Entry) (index : Nat) : List Std.U64 :=\n  transcript.filterMap (ownerAccepted index)",
+  "PqxdhDeploymentRecordReplay.Holds": "def Holds (c : Pqxdh.Crypto) (kernel : Option ConcreteRatchetKernel) (sequences : List Std.U64) : Prop :=\n  match kernel with\n  | some kernel => ∃ sendOrigin receiveOrigin,\n      RawCtxReceiveConsumption.ConsumedRefines c sendOrigin receiveOrigin kernel (positions sequences)\n  | none => sequences = []",
+  "PqxdhDeploymentRecordReplay.Tracked": "structure Tracked (c : Pqxdh.Crypto) (transcript : List Entry) (state : PqxdhDeploymentNative.State KemSK) : Prop where\n  peers : ∀ kid, Holds c (peerKernel state.native.shared.2.server.server kid) (peerSequences transcript kid)\n  owners : ∀ index, Holds c (ownerKernel state.native.owners[index]?) (ownerSequences transcript index)"
+ },
+ "leanpath": {
+  "manifest": "/tmp/bc-arc-scratch/common-experiment/unit3/leanpath",
+  "sha256": "68564ba1a5077545560c8c195e7fa1f23ea6693cd0147af4081b9f0a40455bf5",
+  "note": "The unit A LEAN_PATH with its first entry replaced by the fresh scratch prefix unit3/olean, a symlink mirror of the unit A artifacts (1543 links, every deployment artifact verified against the d42c4d3d sources); check.py unlinks an artifact before writing it, so unit A files were never written. After the last source change the seven unit 3 modules were rebuilt into unit3/olean in import order (direct_check_final)."
+ },
+ "root_checks": {
+  "root-PqxdhDeploymentReplay": {
+   "exit": 0,
+   "log_bytes": 0,
+   "root_source_sha256": "4212d44225a6d60e680f586a340c49e8a7bce197b46daa2b69bec4a915d1dde5"
+  },
+  "root-PqxdhDeploymentAcceptDetection": {
+   "exit": 0,
+   "log_bytes": 0,
+   "root_source_sha256": "bb3c3fa4b48428ec81e04c45965fb44fbdf3cde573645391b262c0302c9d6334"
+  },
+  "root-PqxdhDeploymentProvenance": {
+   "exit": 0,
+   "log_bytes": 0,
+   "root_source_sha256": "f810f6ec41e717cd46235764d0bf2420d9824833b5c0d0cb09b5ede89f1209ba"
+  },
+  "root-PqxdhDeploymentSigningHistory": {
+   "exit": 0,
+   "log_bytes": 0,
+   "root_source_sha256": "296b5285b7cc060fa6cf389f262468cd28f13d81c6c5987ed2f6f27c5eca0aaa"
+  },
+  "root-PqxdhDeploymentPublishedTuple": {
+   "exit": 0,
+   "log_bytes": 0,
+   "root_source_sha256": "beca01563aa5868f9bf760714e10f8e3d65f839815e898925a713f5c5034016b"
+  },
+  "root-PqxdhDeploymentRecordKernels": {
+   "exit": 0,
+   "log_bytes": 0,
+   "root_source_sha256": "8d3abe202816d851612d0bf366965918cf58c3476879dfa5f183fcaa6ca3679f"
+  },
+  "root-PqxdhDeploymentRecordReplay": {
+   "exit": 0,
+   "log_bytes": 0,
+   "root_source_sha256": "beca01563aa5868f9bf760714e10f8e3d65f839815e898925a713f5c5034016b"
+  }
+ },
+ "focused_inventory_per_commit": {
+  "inv-PqxdhDeploymentReplay": {
+   "exit": 0,
+   "start": "2026-10-07T10:19:13Z",
+   "end": "2026-10-07T10:20:20Z",
+   "log_sha256": "d0499be05279cb380975059c157ebcfca7d85122519d80d725c7320ce90ceb94"
+  },
+  "inv-PqxdhDeploymentAcceptDetection": {
+   "exit": 0,
+   "start": "2026-10-07T10:33:46Z",
+   "end": "2026-10-07T10:34:53Z",
+   "log_sha256": "d0499be05279cb380975059c157ebcfca7d85122519d80d725c7320ce90ceb94"
+  },
+  "inv-PqxdhDeploymentProvenance": {
+   "exit": 0,
+   "start": "2026-10-07T10:41:58Z",
+   "end": "2026-10-07T10:43:04Z",
+   "log_sha256": "71418c348c6996bc1224c0e0859c98e7cbc751850b476dc231e749b63fef2e32"
+  },
+  "inv-PqxdhDeploymentSigningHistory": {
+   "exit": 0,
+   "start": "2026-10-07T11:05:56Z",
+   "end": "2026-10-07T11:07:03Z",
+   "log_sha256": "449116ccb603be7987d83a0045e872c0fb7e31c09a42cc07cc715b17329ebd55"
+  },
+  "inv-PqxdhDeploymentPublishedTuple": {
+   "exit": 0,
+   "start": "2026-10-07T12:03:28Z",
+   "end": "2026-10-07T12:04:35Z",
+   "log_sha256": "1c505bf71c89196dfa252cc2050abb40e87dba22de05f07c1c2ae8f5524ace97"
+  },
+  "inv-PqxdhDeploymentRecordKernels": {
+   "exit": 0,
+   "start": "2026-10-07T11:59:11Z",
+   "end": "2026-10-07T12:00:18Z",
+   "log_sha256": "71418c348c6996bc1224c0e0859c98e7cbc751850b476dc231e749b63fef2e32"
+  },
+  "inv-PqxdhDeploymentRecordReplay": {
+   "exit": 0,
+   "start": "2026-10-07T12:00:43Z",
+   "end": "2026-10-07T12:01:50Z",
+   "log_sha256": "63c6874d5176e30c295fa7497de245915d2c218a90dc3f4391b840372eeb7802"
+  }
+ },
+ "focused_inventory_note": "Each module commit was prepared with the other untracked files and other modified tracked files held aside and restored afterwards (commit.py), so check-inventory ran with exactly the files of that commit. Entries are keyed by the first module of a commit, so for modules committed more than once they record the latest run. The documentation commit that adds this receipt is checked the same way.",
+ "forbidden_scan": "zero matches of \\b(sorry|admit|native_decide|implemented_by|extern|unsafe|opaque)\\b and no axiom declaration in the seven modules; the only set_option lines are autoImplicit false and linter.deprecated false scoped by in to single theorems",
+ "deviations_from_plan": [
+  "CE-A2 is proved by mid-run detection (PqxdhDeploymentAcceptDetection.upto stops the program right after the selected raw accept; the stopped run ends with that accept's own report batch; upto_detects, violation_detects through AttemptReports.owner_origin), so there is no selection factor and no collision term; the per-ordinal fallback was not needed.",
+  "The CE-A2 event NativeForgery is a reachability event on final outcomes (some run through a violating accept reaches the outcome); it contains the path event, so the bound is only stronger. The violation is read in the state reached when the accept returned.",
+  "CE-A2 is stated on the report-instrumented initialized execution of compileFull with a generated Server seed, because its event refers to the private signing log, reveal history and identity handles; report_game identifies the projection (created, output, ledger) with the deployment game at Server identity index 0. CE-A2pub and CE-R1' are stated on the deployment game itself, at Server identity index 0 (the index compile_full_source assigns from empty pools).",
+  "The A2 client is the instrumented execution followed by one terminal public batch per successful accept of the final transcript (announceAll); the batches add no identity request (client_creates), so CE-A2, CE-A2pub and CE-R1' share one reduction family and one sum.",
+  "CE-A2pub compares key tuples (verified tuple against the tuple parsed from the published bundle without a signature check); no SUF-CMA or signature uniqueness is used. Owner identity keys are read from the native owners (ownerIdentities).",
+  "CE-R1' is derived deterministically from CE-R1 (replay_published) and bounded by the CE-A2pub bound, not twice it.",
+  "CE-C3 uses RawCtxReceiveConsumption.ConsumedRefines (raw_spent, send_spent, initialized-kernel relations) over transcript-derived accepted positions rather than the HB-105 private history monitor. The owner side includes the successful finish's acceptance of sequence one, which is stronger than a raw-receive-only reading. Peers are separated by the key ID named by the decrypted record, which is the routed key ID (rawGame_success).",
+  "No planned statement turned out false or unprovable and no statement was weakened."
+ ],
+ "contracts_used": "CE-R1, CE-C3, the signing-history lemma and the detection lemma use no codec law. CE-A2 uses the existing shortRejects format rule with setup.wiring and the budget. CE-A2pub and CE-R1' add the approved Phase1ReadBack and Phase2ReadBack. FrameReadBack and DecoderAgreement are not used. Supplied Server seed is none in every security statement.",
+ "not_proved": [
+  "CE-A2pub and CE-R1' on runs with a failed bundle call in Fresh (out of scope by design).",
+  "Replay across Server objects, copies, restorations or persistence (CE-M, R4).",
+  "A run-level witness that the replay and provenance events are reachable.",
+  "CE-8 onwards: the A1 embedding, the per-target KEM transfer (including KeyMatchFinal), CE-9b, item 2 joins, the un-compiled ideal world, the headlines."
+ ],
+ "re_estimate": "CE-9 lowered from 5-10 to 3-7 agent-days because the Signed invariant pattern over the stacked execution carries over to the bundle-to-KEM-pool invariant; item 3 proper without CE-9b, CE-10 and CE-12 about 26-48 agent-days remaining.",
+ "checks_not_run": "No lake build, make verify, nix-collect-garbage, mutation testing, ProVerif or Rust run; no production Rust or ProVerif change.",
+ "review": "Not reviewed. Not pushed."
+}
