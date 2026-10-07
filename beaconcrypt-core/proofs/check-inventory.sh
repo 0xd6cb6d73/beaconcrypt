@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1510
+	[handwritten-lean]=1511
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -29214,6 +29214,37 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem positional_initialized([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemIndex theorem positional_initialized"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemIndex\.owner_kemIndex$' "$selected_source_module" "PqxdhDeploymentKemIndex dependency BeaconcryptCore.Computational.PqxdhDeploymentKemIndex.owner_kemIndex"
 require_line_count 1 '^theorem owner_kemIndex([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemIndex theorem owner_kemIndex"
+
+# Common deployment experiment registration replay (CE-6, CE-R1): public registration IDs, per-accept consumption, consumed list equals the duplicate-free accepted IDs on every outcome.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentReplay.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentReplay$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentReplay root import"
+require_line_count 12 '^theorem ' "$selected_source_module" "PqxdhDeploymentReplay theorem inventory"
+require_line_count 12 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentReplay guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentReplay\.accept_oracle_registration$' "$selected_source_module" "PqxdhDeploymentReplay dependency BeaconcryptCore.Computational.PqxdhDeploymentReplay.accept_oracle_registration"
+require_line_count 1 '^theorem accept_oracle_registration([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentReplay theorem accept_oracle_registration"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentReplay\.accept_registration$' "$selected_source_module" "PqxdhDeploymentReplay dependency BeaconcryptCore.Computational.PqxdhDeploymentReplay.accept_registration"
+require_line_count 1 '^theorem accept_registration([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentReplay theorem accept_registration"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentReplay\.handler_other$' "$selected_source_module" "PqxdhDeploymentReplay dependency BeaconcryptCore.Computational.PqxdhDeploymentReplay.handler_other"
+require_line_count 1 '^theorem handler_other([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentReplay theorem handler_other"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentReplay\.acceptIds_append$' "$selected_source_module" "PqxdhDeploymentReplay dependency BeaconcryptCore.Computational.PqxdhDeploymentReplay.acceptIds_append"
+require_line_count 1 '^theorem acceptIds_append([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentReplay theorem acceptIds_append"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentReplay\.registered_other$' "$selected_source_module" "PqxdhDeploymentReplay dependency BeaconcryptCore.Computational.PqxdhDeploymentReplay.registered_other"
+require_line_count 1 '^theorem registered_other([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentReplay theorem registered_other"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentReplay\.command_registered$' "$selected_source_module" "PqxdhDeploymentReplay dependency BeaconcryptCore.Computational.PqxdhDeploymentReplay.command_registered"
+require_line_count 1 '^theorem command_registered([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentReplay theorem command_registered"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentReplay\.coinSend_consumed$' "$selected_source_module" "PqxdhDeploymentReplay dependency BeaconcryptCore.Computational.PqxdhDeploymentReplay.coinSend_consumed"
+require_line_count 1 '^theorem coinSend_consumed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentReplay theorem coinSend_consumed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentReplay\.experiment_registered$' "$selected_source_module" "PqxdhDeploymentReplay dependency BeaconcryptCore.Computational.PqxdhDeploymentReplay.experiment_registered"
+require_line_count 1 '^theorem experiment_registered([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentReplay theorem experiment_registered"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentReplay\.construct_consumed$' "$selected_source_module" "PqxdhDeploymentReplay dependency BeaconcryptCore.Computational.PqxdhDeploymentReplay.construct_consumed"
+require_line_count 1 '^theorem construct_consumed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentReplay theorem construct_consumed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentReplay\.registered_game$' "$selected_source_module" "PqxdhDeploymentReplay dependency BeaconcryptCore.Computational.PqxdhDeploymentReplay.registered_game"
+require_line_count 1 '^theorem registered_game([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentReplay theorem registered_game"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentReplay\.countP_le_one$' "$selected_source_module" "PqxdhDeploymentReplay dependency BeaconcryptCore.Computational.PqxdhDeploymentReplay.countP_le_one"
+require_line_count 1 '^theorem countP_le_one([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentReplay theorem countP_le_one"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentReplay\.replay_game$' "$selected_source_module" "PqxdhDeploymentReplay dependency BeaconcryptCore.Computational.PqxdhDeploymentReplay.replay_game"
+require_line_count 1 '^theorem replay_game([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentReplay theorem replay_game"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"

@@ -1550,6 +1550,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentCompileCaps
 
 import BeaconcryptCore.Computational.PqxdhDeploymentKemIndex
 
+import BeaconcryptCore.Computational.PqxdhDeploymentReplay
+
 /-!
 # Beaconcrypt-core verification root
 
