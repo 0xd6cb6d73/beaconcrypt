@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1580
+	[handwritten-lean]=1581
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -32224,6 +32224,54 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecord
 require_line_count 1 '^theorem receive_open_present([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftNativeAdapters theorem receive_open_present"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftNativeAdapters\.send_seal_reply$' "$selected_source_module" "PqxdhRecordLiftNativeAdapters dependency BeaconcryptCore.Computational.PqxdhRecordLiftNativeAdapters.send_seal_reply"
 require_line_count 1 '^theorem send_seal_reply([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftNativeAdapters theorem send_seal_reply"
+
+# Generic disclosure continuation: actual post record frame, run-event equality and additive source costs.
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftLater.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRecordLiftLater$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftLater root import"
+require_line_count 21 '^theorem ' "$selected_source_module" "PqxdhRecordLiftLater theorem inventory"
+require_line_count 21 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftLater guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLater\.install_server_view$' "$selected_source_module" "PqxdhRecordLiftLater dependency BeaconcryptCore.Computational.PqxdhRecordLiftLater.install_server_view"
+require_line_count 1 '^theorem install_server_view([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLater theorem install_server_view"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLater\.resolve_view$' "$selected_source_module" "PqxdhRecordLiftLater dependency BeaconcryptCore.Computational.PqxdhRecordLiftLater.resolve_view"
+require_line_count 1 '^theorem resolve_view([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLater theorem resolve_view"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLater\.install_beacon_view$' "$selected_source_module" "PqxdhRecordLiftLater dependency BeaconcryptCore.Computational.PqxdhRecordLiftLater.install_beacon_view"
+require_line_count 1 '^theorem install_beacon_view([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLater theorem install_beacon_view"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLater\.capability_view$' "$selected_source_module" "PqxdhRecordLiftLater dependency BeaconcryptCore.Computational.PqxdhRecordLiftLater.capability_view"
+require_line_count 1 '^theorem capability_view([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLater theorem capability_view"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLater\.effects_view$' "$selected_source_module" "PqxdhRecordLiftLater dependency BeaconcryptCore.Computational.PqxdhRecordLiftLater.effects_view"
+require_line_count 1 '^theorem effects_view([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLater theorem effects_view"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLater\.nonrecord_view$' "$selected_source_module" "PqxdhRecordLiftLater dependency BeaconcryptCore.Computational.PqxdhRecordLiftLater.nonrecord_view"
+require_line_count 1 '^theorem nonrecord_view([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLater theorem nonrecord_view"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLater\.schedule_view$' "$selected_source_module" "PqxdhRecordLiftLater dependency BeaconcryptCore.Computational.PqxdhRecordLiftLater.schedule_view"
+require_line_count 1 '^theorem schedule_view([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLater theorem schedule_view"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLater\.post_record_bound$' "$selected_source_module" "PqxdhRecordLiftLater dependency BeaconcryptCore.Computational.PqxdhRecordLiftLater.post_record_bound"
+require_line_count 1 '^theorem post_record_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLater theorem post_record_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLater\.post_view$' "$selected_source_module" "PqxdhRecordLiftLater dependency BeaconcryptCore.Computational.PqxdhRecordLiftLater.post_view"
+require_line_count 1 '^theorem post_view([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLater theorem post_view"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLater\.run_event$' "$selected_source_module" "PqxdhRecordLiftLater dependency BeaconcryptCore.Computational.PqxdhRecordLiftLater.run_event"
+require_line_count 1 '^theorem run_event([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLater theorem run_event"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLater\.postCost_partition$' "$selected_source_module" "PqxdhRecordLiftLater dependency BeaconcryptCore.Computational.PqxdhRecordLiftLater.postCost_partition"
+require_line_count 1 '^theorem postCost_partition([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLater theorem postCost_partition"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLater\.post_effect_bound$' "$selected_source_module" "PqxdhRecordLiftLater dependency BeaconcryptCore.Computational.PqxdhRecordLiftLater.post_effect_bound"
+require_line_count 1 '^theorem post_effect_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLater theorem post_effect_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLater\.program_record_bound$' "$selected_source_module" "PqxdhRecordLiftLater dependency BeaconcryptCore.Computational.PqxdhRecordLiftLater.program_record_bound"
+require_line_count 1 '^theorem program_record_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLater theorem program_record_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLater\.program_effect_bound$' "$selected_source_module" "PqxdhRecordLiftLater dependency BeaconcryptCore.Computational.PqxdhRecordLiftLater.program_effect_bound"
+require_line_count 1 '^theorem program_effect_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLater theorem program_effect_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLater\.run_native$' "$selected_source_module" "PqxdhRecordLiftLater dependency BeaconcryptCore.Computational.PqxdhRecordLiftLater.run_native"
+require_line_count 1 '^theorem run_native([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLater theorem run_native"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLater\.run_kdf$' "$selected_source_module" "PqxdhRecordLiftLater dependency BeaconcryptCore.Computational.PqxdhRecordLiftLater.run_kdf"
+require_line_count 1 '^theorem run_kdf([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLater theorem run_kdf"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLater\.run_effects$' "$selected_source_module" "PqxdhRecordLiftLater dependency BeaconcryptCore.Computational.PqxdhRecordLiftLater.run_effects"
+require_line_count 1 '^theorem run_effects([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLater theorem run_effects"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLater\.run_hash$' "$selected_source_module" "PqxdhRecordLiftLater dependency BeaconcryptCore.Computational.PqxdhRecordLiftLater.run_hash"
+require_line_count 1 '^theorem run_hash([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLater theorem run_hash"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLater\.run_uniform_counts$' "$selected_source_module" "PqxdhRecordLiftLater dependency BeaconcryptCore.Computational.PqxdhRecordLiftLater.run_uniform_counts"
+require_line_count 1 '^theorem run_uniform_counts([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLater theorem run_uniform_counts"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLater\.run_seed_draws$' "$selected_source_module" "PqxdhRecordLiftLater dependency BeaconcryptCore.Computational.PqxdhRecordLiftLater.run_seed_draws"
+require_line_count 1 '^theorem run_seed_draws([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLater theorem run_seed_draws"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLater\.run_uniform$' "$selected_source_module" "PqxdhRecordLiftLater dependency BeaconcryptCore.Computational.PqxdhRecordLiftLater.run_uniform"
+require_line_count 1 '^theorem run_uniform([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLater theorem run_uniform"
 
 # Reviewed actual getter availability, distinct from network compromise powers.
 python3 proofs/source/test-getter-profile.py
