@@ -1581,6 +1581,8 @@ import BeaconcryptCore.Computational.PqxdhKeyScheduleFromRoot
 
 import BeaconcryptCore.Computational.PqxdhRootFirstEntry
 
+import BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix
+
 /-!
 # Beaconcrypt-core verification root
 

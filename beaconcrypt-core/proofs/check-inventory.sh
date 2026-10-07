@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1527
+	[handwritten-lean]=1528
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -29894,6 +29894,71 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRootFi
 require_line_count 1 '^theorem uniformImpl_eq([[:space:]]|$)' "$selected_source_module" "PqxdhRootFirstEntry theorem uniformImpl_eq"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRootFirstEntry\.uniformGame_first$' "$selected_source_module" "PqxdhRootFirstEntry dependency BeaconcryptCore.Computational.PqxdhRootFirstEntry.uniformGame_first"
 require_line_count 1 '^theorem uniformGame_first([[:space:]]|$)' "$selected_source_module" "PqxdhRootFirstEntry theorem uniformGame_first"
+
+# Item 2 stage S1a, lemma G1 (extract-design plan section 3): splitting the zero-key 192-byte random-oracle table at a hidden uniform 32-byte suffix costs (prefix cache keys + post-prefix direct reads)/2^256 with a prefix-dependent budget (coefficient one); valid only because the slice is a random oracle (R1). Generic, no protocol code.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhExtractRomHiddenSuffix.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix$' proofs/lean/BeaconcryptCore.lean "PqxdhExtractRomHiddenSuffix root import"
+require_line_count 29 '^theorem ' "$selected_source_module" "PqxdhExtractRomHiddenSuffix theorem inventory"
+require_line_count 29 '^#guard_msgs in$' "$selected_source_module" "PqxdhExtractRomHiddenSuffix guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhExtractRomHiddenSuffix\.coordinate_familyInput$' "$selected_source_module" "PqxdhExtractRomHiddenSuffix dependency BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.coordinate_familyInput"
+require_line_count 1 '^theorem coordinate_familyInput([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomHiddenSuffix theorem coordinate_familyInput"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhExtractRomHiddenSuffix\.eq_familyInput_of_coordinate$' "$selected_source_module" "PqxdhExtractRomHiddenSuffix dependency BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.eq_familyInput_of_coordinate"
+require_line_count 1 '^theorem eq_familyInput_of_coordinate([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomHiddenSuffix theorem eq_familyInput_of_coordinate"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhExtractRomHiddenSuffix\.secret_of_coordinate$' "$selected_source_module" "PqxdhExtractRomHiddenSuffix dependency BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.secret_of_coordinate"
+require_line_count 1 '^theorem secret_of_coordinate([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomHiddenSuffix theorem secret_of_coordinate"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhExtractRomHiddenSuffix\.secret_card$' "$selected_source_module" "PqxdhExtractRomHiddenSuffix dependency BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.secret_card"
+require_line_count 1 '^theorem secret_card([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomHiddenSuffix theorem secret_card"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhExtractRomHiddenSuffix\.guess_le$' "$selected_source_module" "PqxdhExtractRomHiddenSuffix dependency BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.guess_le"
+require_line_count 1 '^theorem guess_le([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomHiddenSuffix theorem guess_le"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhExtractRomHiddenSuffix\.guess_finset_le$' "$selected_source_module" "PqxdhExtractRomHiddenSuffix dependency BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.guess_finset_le"
+require_line_count 1 '^theorem guess_finset_le([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomHiddenSuffix theorem guess_finset_le"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhExtractRomHiddenSuffix\.view_familyInput$' "$selected_source_module" "PqxdhExtractRomHiddenSuffix dependency BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.view_familyInput"
+require_line_count 1 '^theorem view_familyInput([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomHiddenSuffix theorem view_familyInput"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhExtractRomHiddenSuffix\.view_public$' "$selected_source_module" "PqxdhExtractRomHiddenSuffix dependency BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.view_public"
+require_line_count 1 '^theorem view_public([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomHiddenSuffix theorem view_public"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhExtractRomHiddenSuffix\.view_logged$' "$selected_source_module" "PqxdhExtractRomHiddenSuffix dependency BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.view_logged"
+require_line_count 1 '^theorem view_logged([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomHiddenSuffix theorem view_logged"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhExtractRomHiddenSuffix\.view_hidden_update$' "$selected_source_module" "PqxdhExtractRomHiddenSuffix dependency BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.view_hidden_update"
+require_line_count 1 '^theorem view_hidden_update([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomHiddenSuffix theorem view_hidden_update"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhExtractRomHiddenSuffix\.view_public_update$' "$selected_source_module" "PqxdhExtractRomHiddenSuffix dependency BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.view_public_update"
+require_line_count 1 '^theorem view_public_update([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomHiddenSuffix theorem view_public_update"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhExtractRomHiddenSuffix\.sharedFlag_step$' "$selected_source_module" "PqxdhExtractRomHiddenSuffix dependency BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.sharedFlag_step"
+require_line_count 1 '^theorem sharedFlag_step([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomHiddenSuffix theorem sharedFlag_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhExtractRomHiddenSuffix\.splitFlag_step$' "$selected_source_module" "PqxdhExtractRomHiddenSuffix dependency BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.splitFlag_step"
+require_line_count 1 '^theorem splitFlag_step([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomHiddenSuffix theorem splitFlag_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhExtractRomHiddenSuffix\.splitFlag_log_step$' "$selected_source_module" "PqxdhExtractRomHiddenSuffix dependency BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.splitFlag_log_step"
+require_line_count 1 '^theorem splitFlag_log_step([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomHiddenSuffix theorem splitFlag_log_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhExtractRomHiddenSuffix\.shared_project$' "$selected_source_module" "PqxdhExtractRomHiddenSuffix dependency BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.shared_project"
+require_line_count 1 '^theorem shared_project([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomHiddenSuffix theorem shared_project"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhExtractRomHiddenSuffix\.split_project$' "$selected_source_module" "PqxdhExtractRomHiddenSuffix dependency BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.split_project"
+require_line_count 1 '^theorem split_project([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomHiddenSuffix theorem split_project"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhExtractRomHiddenSuffix\.splitFlag_log$' "$selected_source_module" "PqxdhExtractRomHiddenSuffix dependency BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.splitFlag_log"
+require_line_count 1 '^theorem splitFlag_log([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomHiddenSuffix theorem splitFlag_log"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhExtractRomHiddenSuffix\.flag_agree$' "$selected_source_module" "PqxdhExtractRomHiddenSuffix dependency BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.flag_agree"
+require_line_count 1 '^theorem flag_agree([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomHiddenSuffix theorem flag_agree"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhExtractRomHiddenSuffix\.splitFlag_mono$' "$selected_source_module" "PqxdhExtractRomHiddenSuffix dependency BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.splitFlag_mono"
+require_line_count 1 '^theorem splitFlag_mono([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomHiddenSuffix theorem splitFlag_mono"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhExtractRomHiddenSuffix\.sharedFlag_mono$' "$selected_source_module" "PqxdhExtractRomHiddenSuffix dependency BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.sharedFlag_mono"
+require_line_count 1 '^theorem sharedFlag_mono([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomHiddenSuffix theorem sharedFlag_mono"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhExtractRomHiddenSuffix\.flagged_tvDist$' "$selected_source_module" "PqxdhExtractRomHiddenSuffix dependency BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.flagged_tvDist"
+require_line_count 1 '^theorem flagged_tvDist([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomHiddenSuffix theorem flagged_tvDist"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhExtractRomHiddenSuffix\.flag_log$' "$selected_source_module" "PqxdhExtractRomHiddenSuffix dependency BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.flag_log"
+require_line_count 1 '^theorem flag_log([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomHiddenSuffix theorem flag_log"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhExtractRomHiddenSuffix\.splitLog_step_length$' "$selected_source_module" "PqxdhExtractRomHiddenSuffix dependency BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.splitLog_step_length"
+require_line_count 1 '^theorem splitLog_step_length([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomHiddenSuffix theorem splitLog_step_length"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhExtractRomHiddenSuffix\.splitLog_length$' "$selected_source_module" "PqxdhExtractRomHiddenSuffix dependency BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.splitLog_length"
+require_line_count 1 '^theorem splitLog_length([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomHiddenSuffix theorem splitLog_length"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhExtractRomHiddenSuffix\.tvDist_bind_le_probEvent$' "$selected_source_module" "PqxdhExtractRomHiddenSuffix dependency BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.tvDist_bind_le_probEvent"
+require_line_count 1 '^theorem tvDist_bind_le_probEvent([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomHiddenSuffix theorem tvDist_bind_le_probEvent"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhExtractRomHiddenSuffix\.secret_tvDist$' "$selected_source_module" "PqxdhExtractRomHiddenSuffix dependency BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.secret_tvDist"
+require_line_count 1 '^theorem secret_tvDist([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomHiddenSuffix theorem secret_tvDist"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhExtractRomHiddenSuffix\.prefix_tvDist$' "$selected_source_module" "PqxdhExtractRomHiddenSuffix dependency BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.prefix_tvDist"
+require_line_count 1 '^theorem prefix_tvDist([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomHiddenSuffix theorem prefix_tvDist"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhExtractRomHiddenSuffix\.boolDistAdvantage_le_tvDist$' "$selected_source_module" "PqxdhExtractRomHiddenSuffix dependency BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.boolDistAdvantage_le_tvDist"
+require_line_count 1 '^theorem boolDistAdvantage_le_tvDist([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomHiddenSuffix theorem boolDistAdvantage_le_tvDist"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhExtractRomHiddenSuffix\.hidden_suffix_bound$' "$selected_source_module" "PqxdhExtractRomHiddenSuffix dependency BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix.hidden_suffix_bound"
+require_line_count 1 '^theorem hidden_suffix_bound([[:space:]]|$)' "$selected_source_module" "PqxdhExtractRomHiddenSuffix theorem hidden_suffix_bound"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
