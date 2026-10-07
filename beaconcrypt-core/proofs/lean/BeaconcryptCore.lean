@@ -1572,6 +1572,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerKemHop
 
 import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerSource
 
+import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCommands
+
 /-!
 # Beaconcrypt-core verification root
 

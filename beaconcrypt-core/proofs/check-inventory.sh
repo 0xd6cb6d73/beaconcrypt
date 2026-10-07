@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1521
+	[handwritten-lean]=1522
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -29749,6 +29749,35 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem query_owned([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerSource theorem query_owned"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerSource\.program_owned$' "$selected_source_module" "PqxdhDeploymentLaterServerSource dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerSource.program_owned"
 require_line_count 1 '^theorem program_owned([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerSource theorem program_owned"
+
+# LQ-F spike: logged command compiler, raw-accept scan and tag of the logged source
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerCommands.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCommands$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentLaterServerCommands root import"
+require_line_count 11 '^theorem ' "$selected_source_module" "PqxdhDeploymentLaterServerCommands theorem inventory"
+require_line_count 11 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentLaterServerCommands guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerCommands\.scan_finish$' "$selected_source_module" "PqxdhDeploymentLaterServerCommands dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCommands.scan_finish"
+require_line_count 1 '^theorem scan_finish([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerCommands theorem scan_finish"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerCommands\.tag_erase$' "$selected_source_module" "PqxdhDeploymentLaterServerCommands dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCommands.tag_erase"
+require_line_count 1 '^theorem tag_erase([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerCommands theorem tag_erase"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerCommands\.ordered_fst$' "$selected_source_module" "PqxdhDeploymentLaterServerCommands dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCommands.ordered_fst"
+require_line_count 1 '^theorem ordered_fst([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerCommands theorem ordered_fst"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerCommands\.ordered_split$' "$selected_source_module" "PqxdhDeploymentLaterServerCommands dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCommands.ordered_split"
+require_line_count 1 '^theorem ordered_split([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerCommands theorem ordered_split"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerCommands\.prepare_fst$' "$selected_source_module" "PqxdhDeploymentLaterServerCommands dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCommands.prepare_fst"
+require_line_count 1 '^theorem prepare_fst([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerCommands theorem prepare_fst"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerCommands\.accept_fst$' "$selected_source_module" "PqxdhDeploymentLaterServerCommands dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCommands.accept_fst"
+require_line_count 1 '^theorem accept_fst([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerCommands theorem accept_fst"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerCommands\.accept_ordered$' "$selected_source_module" "PqxdhDeploymentLaterServerCommands dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCommands.accept_ordered"
+require_line_count 1 '^theorem accept_ordered([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerCommands theorem accept_ordered"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerCommands\.run_bind$' "$selected_source_module" "PqxdhDeploymentLaterServerCommands dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCommands.run_bind"
+require_line_count 1 '^theorem run_bind([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerCommands theorem run_bind"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerCommands\.map_held$' "$selected_source_module" "PqxdhDeploymentLaterServerCommands dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCommands.map_held"
+require_line_count 1 '^theorem map_held([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerCommands theorem map_held"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerCommands\.query_embed$' "$selected_source_module" "PqxdhDeploymentLaterServerCommands dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCommands.query_embed"
+require_line_count 1 '^theorem query_embed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerCommands theorem query_embed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerCommands\.commands_embed$' "$selected_source_module" "PqxdhDeploymentLaterServerCommands dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCommands.commands_embed"
+require_line_count 1 '^theorem commands_embed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerCommands theorem commands_embed"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
