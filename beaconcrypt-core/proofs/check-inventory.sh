@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1582
+	[handwritten-lean]=1585
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -32312,6 +32312,84 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecord
 require_line_count 1 '^theorem selected_predecessor([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainOrder theorem selected_predecessor"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainOrder\.lookup_repeated$' "$selected_source_module" "PqxdhRecordLiftChainOrder dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainOrder.lookup_repeated"
 require_line_count 1 '^theorem lookup_repeated([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainOrder theorem lookup_repeated"
+
+# Reviewed exact native writer logging and complete local adapter state framing.
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftLoggedAdapters.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRecordLiftLoggedAdapters$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftLoggedAdapters root import"
+require_line_count 16 '^theorem ' "$selected_source_module" "PqxdhRecordLiftLoggedAdapters theorem inventory"
+require_line_count 16 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftLoggedAdapters guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLoggedAdapters\.program_logged$' "$selected_source_module" "PqxdhRecordLiftLoggedAdapters dependency BeaconcryptCore.Computational.PqxdhRecordLiftLoggedAdapters.program_logged"
+require_line_count 1 '^theorem program_logged([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLoggedAdapters theorem program_logged"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLoggedAdapters\.program_native_logged$' "$selected_source_module" "PqxdhRecordLiftLoggedAdapters dependency BeaconcryptCore.Computational.PqxdhRecordLiftLoggedAdapters.program_native_logged"
+require_line_count 1 '^theorem program_native_logged([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLoggedAdapters theorem program_native_logged"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLoggedAdapters\.logged_kdf$' "$selected_source_module" "PqxdhRecordLiftLoggedAdapters dependency BeaconcryptCore.Computational.PqxdhRecordLiftLoggedAdapters.logged_kdf"
+require_line_count 1 '^theorem logged_kdf([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLoggedAdapters theorem logged_kdf"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLoggedAdapters\.logged_writer$' "$selected_source_module" "PqxdhRecordLiftLoggedAdapters dependency BeaconcryptCore.Computational.PqxdhRecordLiftLoggedAdapters.logged_writer"
+require_line_count 1 '^theorem logged_writer([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLoggedAdapters theorem logged_writer"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLoggedAdapters\.liftLookup_preserves$' "$selected_source_module" "PqxdhRecordLiftLoggedAdapters dependency BeaconcryptCore.Computational.PqxdhRecordLiftLoggedAdapters.liftLookup_preserves"
+require_line_count 1 '^theorem liftLookup_preserves([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLoggedAdapters theorem liftLookup_preserves"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLoggedAdapters\.liftLookup_realized$' "$selected_source_module" "PqxdhRecordLiftLoggedAdapters dependency BeaconcryptCore.Computational.PqxdhRecordLiftLoggedAdapters.liftLookup_realized"
+require_line_count 1 '^theorem liftLookup_realized([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLoggedAdapters theorem liftLookup_realized"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLoggedAdapters\.liftKdf_real$' "$selected_source_module" "PqxdhRecordLiftLoggedAdapters dependency BeaconcryptCore.Computational.PqxdhRecordLiftLoggedAdapters.liftKdf_real"
+require_line_count 1 '^theorem liftKdf_real([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLoggedAdapters theorem liftKdf_real"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLoggedAdapters\.realLookup_lift$' "$selected_source_module" "PqxdhRecordLiftLoggedAdapters dependency BeaconcryptCore.Computational.PqxdhRecordLiftLoggedAdapters.realLookup_lift"
+require_line_count 1 '^theorem realLookup_lift([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLoggedAdapters theorem realLookup_lift"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLoggedAdapters\.receiveNative_kdf$' "$selected_source_module" "PqxdhRecordLiftLoggedAdapters dependency BeaconcryptCore.Computational.PqxdhRecordLiftLoggedAdapters.receiveNative_kdf"
+require_line_count 1 '^theorem receiveNative_kdf([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLoggedAdapters theorem receiveNative_kdf"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLoggedAdapters\.sendNative_kdf$' "$selected_source_module" "PqxdhRecordLiftLoggedAdapters dependency BeaconcryptCore.Computational.PqxdhRecordLiftLoggedAdapters.sendNative_kdf"
+require_line_count 1 '^theorem sendNative_kdf([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLoggedAdapters theorem sendNative_kdf"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLoggedAdapters\.receiveKdf_logged$' "$selected_source_module" "PqxdhRecordLiftLoggedAdapters dependency BeaconcryptCore.Computational.PqxdhRecordLiftLoggedAdapters.receiveKdf_logged"
+require_line_count 1 '^theorem receiveKdf_logged([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLoggedAdapters theorem receiveKdf_logged"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLoggedAdapters\.sendKdf_logged$' "$selected_source_module" "PqxdhRecordLiftLoggedAdapters dependency BeaconcryptCore.Computational.PqxdhRecordLiftLoggedAdapters.sendKdf_logged"
+require_line_count 1 '^theorem sendKdf_logged([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLoggedAdapters theorem sendKdf_logged"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLoggedAdapters\.receive_program_logged$' "$selected_source_module" "PqxdhRecordLiftLoggedAdapters dependency BeaconcryptCore.Computational.PqxdhRecordLiftLoggedAdapters.receive_program_logged"
+require_line_count 1 '^theorem receive_program_logged([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLoggedAdapters theorem receive_program_logged"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLoggedAdapters\.send_program_logged$' "$selected_source_module" "PqxdhRecordLiftLoggedAdapters dependency BeaconcryptCore.Computational.PqxdhRecordLiftLoggedAdapters.send_program_logged"
+require_line_count 1 '^theorem send_program_logged([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLoggedAdapters theorem send_program_logged"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLoggedAdapters\.real_receive_logged$' "$selected_source_module" "PqxdhRecordLiftLoggedAdapters dependency BeaconcryptCore.Computational.PqxdhRecordLiftLoggedAdapters.real_receive_logged"
+require_line_count 1 '^theorem real_receive_logged([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLoggedAdapters theorem real_receive_logged"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLoggedAdapters\.real_send_logged$' "$selected_source_module" "PqxdhRecordLiftLoggedAdapters dependency BeaconcryptCore.Computational.PqxdhRecordLiftLoggedAdapters.real_send_logged"
+require_line_count 1 '^theorem real_send_logged([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLoggedAdapters theorem real_send_logged"
+
+# Source callback table-slot provenance through actual receive/send and native logging.
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftTableScope.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRecordLiftTableScope$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftTableScope root import"
+require_line_count 8 '^theorem ' "$selected_source_module" "PqxdhRecordLiftTableScope theorem inventory"
+require_line_count 8 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftTableScope guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftTableScope\.tableAllowed_empty$' "$selected_source_module" "PqxdhRecordLiftTableScope dependency BeaconcryptCore.Computational.PqxdhRecordLiftTableScope.tableAllowed_empty"
+require_line_count 1 '^theorem tableAllowed_empty([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftTableScope theorem tableAllowed_empty"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftTableScope\.tableAllowed_mono$' "$selected_source_module" "PqxdhRecordLiftTableScope dependency BeaconcryptCore.Computational.PqxdhRecordLiftTableScope.tableAllowed_mono"
+require_line_count 1 '^theorem tableAllowed_mono([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftTableScope theorem tableAllowed_mono"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftTableScope\.lookup_allowed$' "$selected_source_module" "PqxdhRecordLiftTableScope dependency BeaconcryptCore.Computational.PqxdhRecordLiftTableScope.lookup_allowed"
+require_line_count 1 '^theorem lookup_allowed([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftTableScope theorem lookup_allowed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftTableScope\.receive_allowed$' "$selected_source_module" "PqxdhRecordLiftTableScope dependency BeaconcryptCore.Computational.PqxdhRecordLiftTableScope.receive_allowed"
+require_line_count 1 '^theorem receive_allowed([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftTableScope theorem receive_allowed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftTableScope\.admitted_receive_allowed$' "$selected_source_module" "PqxdhRecordLiftTableScope dependency BeaconcryptCore.Computational.PqxdhRecordLiftTableScope.admitted_receive_allowed"
+require_line_count 1 '^theorem admitted_receive_allowed([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftTableScope theorem admitted_receive_allowed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftTableScope\.send_allowed$' "$selected_source_module" "PqxdhRecordLiftTableScope dependency BeaconcryptCore.Computational.PqxdhRecordLiftTableScope.send_allowed"
+require_line_count 1 '^theorem send_allowed([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftTableScope theorem send_allowed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftTableScope\.admitted_send_allowed$' "$selected_source_module" "PqxdhRecordLiftTableScope dependency BeaconcryptCore.Computational.PqxdhRecordLiftTableScope.admitted_send_allowed"
+require_line_count 1 '^theorem admitted_send_allowed([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftTableScope theorem admitted_send_allowed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftTableScope\.liftLookup_writesOnly$' "$selected_source_module" "PqxdhRecordLiftTableScope dependency BeaconcryptCore.Computational.PqxdhRecordLiftTableScope.liftLookup_writesOnly"
+require_line_count 1 '^theorem liftLookup_writesOnly([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftTableScope theorem liftLookup_writesOnly"
+
+# Exact private labeled source programs and full-state callback interpretation.
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftOpaqueDrivers.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRecordLiftOpaqueDrivers$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftOpaqueDrivers root import"
+require_line_count 6 '^theorem ' "$selected_source_module" "PqxdhRecordLiftOpaqueDrivers theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftOpaqueDrivers guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftOpaqueDrivers\.receive_interpretation$' "$selected_source_module" "PqxdhRecordLiftOpaqueDrivers dependency BeaconcryptCore.Computational.PqxdhRecordLiftOpaqueDrivers.receive_interpretation"
+require_line_count 1 '^theorem receive_interpretation([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftOpaqueDrivers theorem receive_interpretation"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftOpaqueDrivers\.send_interpretation$' "$selected_source_module" "PqxdhRecordLiftOpaqueDrivers dependency BeaconcryptCore.Computational.PqxdhRecordLiftOpaqueDrivers.send_interpretation"
+require_line_count 1 '^theorem send_interpretation([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftOpaqueDrivers theorem send_interpretation"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftOpaqueDrivers\.receive_continuation$' "$selected_source_module" "PqxdhRecordLiftOpaqueDrivers dependency BeaconcryptCore.Computational.PqxdhRecordLiftOpaqueDrivers.receive_continuation"
+require_line_count 1 '^theorem receive_continuation([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftOpaqueDrivers theorem receive_continuation"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftOpaqueDrivers\.send_continuation$' "$selected_source_module" "PqxdhRecordLiftOpaqueDrivers dependency BeaconcryptCore.Computational.PqxdhRecordLiftOpaqueDrivers.send_continuation"
+require_line_count 1 '^theorem send_continuation([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftOpaqueDrivers theorem send_continuation"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftOpaqueDrivers\.admitted_receive_interpretation$' "$selected_source_module" "PqxdhRecordLiftOpaqueDrivers dependency BeaconcryptCore.Computational.PqxdhRecordLiftOpaqueDrivers.admitted_receive_interpretation"
+require_line_count 1 '^theorem admitted_receive_interpretation([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftOpaqueDrivers theorem admitted_receive_interpretation"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftOpaqueDrivers\.admitted_send_interpretation$' "$selected_source_module" "PqxdhRecordLiftOpaqueDrivers dependency BeaconcryptCore.Computational.PqxdhRecordLiftOpaqueDrivers.admitted_send_interpretation"
+require_line_count 1 '^theorem admitted_send_interpretation([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftOpaqueDrivers theorem admitted_send_interpretation"
 
 # Reviewed actual getter availability, distinct from network compromise powers.
 python3 proofs/source/test-getter-profile.py
