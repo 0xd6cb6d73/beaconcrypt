@@ -29260,8 +29260,8 @@ require_line_count 1 '^theorem later_classical_event([[:space:]]|$)' "$selected_
 
 selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterCompile.lean
 require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentLaterCompile$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentLaterCompile root import"
-require_line_count 40 '^theorem ' "$selected_source_module" "PqxdhDeploymentLaterCompile theorem inventory"
-require_line_count 40 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentLaterCompile guarded dependencies"
+require_line_count 41 '^theorem ' "$selected_source_module" "PqxdhDeploymentLaterCompile theorem inventory"
+require_line_count 41 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentLaterCompile guarded dependencies"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterCompile\.read_run$' "$selected_source_module" "PqxdhDeploymentLaterCompile dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterCompile.read_run"
 require_line_count 1 '^theorem read_run([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterCompile theorem read_run"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterCompile\.preRead_run$' "$selected_source_module" "PqxdhDeploymentLaterCompile dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterCompile.preRead_run"
@@ -29342,6 +29342,8 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem compile_later_reads([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterCompile theorem compile_later_reads"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterCompile\.compile_later_no_kem$' "$selected_source_module" "PqxdhDeploymentLaterCompile dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterCompile.compile_later_no_kem"
 require_line_count 1 '^theorem compile_later_no_kem([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterCompile theorem compile_later_no_kem"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterCompile\.continuation_no_accept$' "$selected_source_module" "PqxdhDeploymentLaterCompile dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterCompile.continuation_no_accept"
+require_line_count 1 '^theorem continuation_no_accept([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterCompile theorem continuation_no_accept"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"

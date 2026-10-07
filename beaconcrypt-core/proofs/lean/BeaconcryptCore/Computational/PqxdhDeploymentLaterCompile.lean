@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.PqxdhDeploymentLater
 import BeaconcryptCore.Computational.PqxdhDeploymentCompileSecrecy
 
-/-! CE-COMPILE for the later-quantum game (stage LQ-2). The compiled program `compileLater A₁ A₂` is an ordinary source14 program in three parts. The run part is the CE-3 compiler applied to the wrapped run-phase adversary with one changed case (`compileSnapImpl`): before forwarding a `finish` on owner `c`, it issues the source14 field reads of `c`'s prekey and one-time scalar and captures them in its own snapshot; these reads are pure local reads that change no state and write no pool entry. The terminal part reads the identity, prekey and one-time fields of every created owner (the count is the compiled program's own log of successful creates) and builds the reveal with the snapshot. The post part runs `A₂` on the run's output and that reveal, forwarding its coins, HMAC and BLAKE2b queries to source14 through the unchanged compiler. The compiler modules of the CE-3 trial are reused unchanged: the finish pre-read is a wrapper around `compileImpl`, not a change to it. The field reads never read the R1 cache, the ghost touches or the family history, and the reveal is built only from identity, prekey and one-time field values. `compile_later_game` and `compile_later_source` state that the later-quantum game equals the merged initialized execution of the compiled program, jointly over the Server's public data, `A₂`'s output, the ledger, the snapshot, the complete final deployment state and the runtime state, under exactly the two approved codec contracts `Phase1ReadBack` and `Phase2ReadBack`. `compile_later_bound` transports the run-phase budget and the post-run budget to source14 caps; the field-read caps are `qCreate` identity reads and `qFinish + qCreate` prekey and one-time reads each, and the compiled program issues no KEM read for any adversary (`compile_later_no_kem`). The identity reads mark the identity pool as revealed in the annotated source execution, so the A2 and T5 results, which need unrevealed identities, are never applied to `compileLater`. No security claim is made here. -/
+/-! CE-COMPILE for the later-quantum game (stage LQ-2). The compiled program `compileLater A₁ A₂` is an ordinary source14 program in three parts. The run part is the CE-3 compiler applied to the wrapped run-phase adversary with one changed case (`compileSnapImpl`): before forwarding a `finish` on owner `c`, it issues the source14 field reads of `c`'s prekey and one-time scalar and captures them in its own snapshot; these reads are pure local reads that change no state and write no pool entry. The terminal part reads the identity, prekey and one-time fields of every created owner (the count is the compiled program's own log of successful creates) and builds the reveal with the snapshot. The post part runs `A₂` on the run's output and that reveal, forwarding its coins, HMAC and BLAKE2b queries to source14 through the unchanged compiler. The compiler modules of the CE-3 trial are reused unchanged: the finish pre-read is a wrapper around `compileImpl`, not a change to it. The field reads never read the R1 cache, the ghost touches or the family history, and the reveal is built only from identity, prekey and one-time field values. `compile_later_game` and `compile_later_source` state that the later-quantum game equals the merged initialized execution of the compiled program, jointly over the Server's public data, `A₂`'s output, the ledger, the snapshot, the complete final deployment state and the runtime state, under exactly the two approved codec contracts `Phase1ReadBack` and `Phase2ReadBack`. `compile_later_bound` transports the run-phase budget and the post-run budget to source14 caps. The field-read caps need only the run-phase budget (`compile_later_reads`): `qCreate` identity reads and `qFinish + qCreate` prekey and one-time reads each, for every post-run adversary; the compiled program issues no KEM read for any adversary (`compile_later_no_kem`). Every raw accept is issued by the run part (`continuation_no_accept`), so the terminal identity reads, which are reveal requests to the identity pool in the annotated source execution, come after every raw accept and every raw-accept cut: no freshness reading made at an accept or at a cut sees them, but whole-run unrevealedness (`PqxdhDeploymentQuiet.kernel_reads_unrevealed`) is not available for `compileLater`. Authentication is not claimed in this mode: the run-phase authentication results (A2, T5) are cited on the classical compiled program of `A₁`, whose run is the run phase of the later game (`PqxdhDeploymentLater.snap_erase`), and not on `compileLater`, whose terminal reads and post part would enter their reductions. No security claim is made here. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
@@ -348,7 +348,7 @@ theorem compile_later_game (setup : Setup baseSpec KemSK) (codec : Codec Reader 
     rw [← compiled, Functor.map_map, Functor.map_map]
     rfl
 
-/-- CE-COMPILE-L at the level of the initialized source14 execution used by the KEM and root theorems: erasing the private service annotations and merging the compiled program's local copies maps that execution of the compiled later-quantum program exactly onto the later-quantum game, whose Server identity index is the private identity pool's current size. In that annotated execution the terminal identity reads record identity reveals, so the A2 and T5 results are not applicable to it. -/
+/-- CE-COMPILE-L at the level of the initialized source14 execution used by the KEM and root theorems: erasing the private service annotations and merging the compiled program's local copies maps that execution of the compiled later-quantum program exactly onto the later-quantum game, whose Server identity index is the private identity pool's current size. In that annotated execution the terminal identity reads are reveal requests to the identity pool; they follow every raw accept (`continuation_no_accept`), so freshness read at an accept or at a raw-accept cut does not see them, but whole-run unrevealedness (`PqxdhDeploymentQuiet.kernel_reads_unrevealed`) is not available for this program. -/
 theorem compile_later_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
@@ -647,12 +647,11 @@ theorem compile_later_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader
         fun _ _ => pure_bound _ _ 0
   exact IsQueryBoundP.mono (isQueryBoundP_bind runBound restBound) (by omega)
 
-/-- The field-read caps of the compiled later-quantum program: at most `qCreate` identity reads, no KEM read, and at most `qFinish + qCreate` prekey reads and one-time reads each. -/
+/-- The field-read caps of the compiled later-quantum program: at most `qCreate` identity reads, no KEM read, and at most `qFinish + qCreate` prekey reads and one-time reads each. Only the run-phase budget is assumed: the post part forwards only coin, HMAC and BLAKE2b commands, which issue no field read, so the caps hold for every post-run adversary. -/
 theorem compile_later_reads (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (bounds : FreshBounds) (mode : Mode)
     (first : OracleComp (ModeSpec mode) X) (second : X → Reveal → OracleComp PostSpec Out)
-    (budget : Budget) (respects : budget.Respects first) (post : PostBudget)
-    (postRespects : ∀ output reveal, post.Respects (second output reveal)) :
+    (budget : Budget) (respects : budget.Respects first) :
     (compileLater setup codec route bounds mode first second).IsQueryBoundP
         (fun request => sourceKind (KemSK := KemSK) request = .inr 0) budget.create ∧
       (compileLater setup codec route bounds mode first second).IsQueryBoundP
@@ -661,12 +660,43 @@ theorem compile_later_reads (setup : Setup baseSpec KemSK) (codec : Codec Reader
         (fun request => sourceKind (KemSK := KemSK) request = .inr 2) (budget.finish + budget.create) ∧
       (compileLater setup codec route bounds mode first second).IsQueryBoundP
         (fun request => sourceKind (KemSK := KemSK) request = .inr 3) (budget.finish + budget.create) := by
-  have bound := compile_later_bound setup codec route bounds mode first second budget respects post postRespects
   have zero : ∀ (field : Fin 5) (core : Fin 12), field ≠ 4 → cost (.inr field) core = 0 := by
     intro field core notKernel
     fin_cases core <;> simp [cost, unit, notKernel]
-  refine ⟨IsQueryBoundP.mono (bound (.inr 0)) ?_, IsQueryBoundP.mono (bound (.inr 1)) ?_,
-    IsQueryBoundP.mono (bound (.inr 2)) ?_, IsQueryBoundP.mono (bound (.inr 3)) ?_⟩
+  have fieldReads : ∀ field : Fin 5, field ≠ 4 →
+      (compileLater setup codec route bounds mode first second).IsQueryBoundP
+        (fun request => sourceKind (KemSK := KemSK) request = .inr field)
+        (∑ core, laterCost (.inr field) core * runCap bounds budget core +
+          readCost (.inr field) * runCap bounds budget 1) := by
+    intro field notKernel
+    have runBound := FinitePartitionQueryBounds.weighted_bound commandKind (laterCost (.inr field))
+      (runCap bounds budget) (compileSnapImpl setup codec route)
+      (fun request => sourceKind (KemSK := KemSK) request = .inr field)
+      (wrap setup.source.crypto codec setup.serverKeyId bounds (asModeO mode first))
+      (fun core => PqxdhDeploymentCompileSecrecy.wrap_bound setup.source.crypto codec setup.serverKeyId bounds mode
+        first budget respects core)
+      (fun query state => snap_step_bound setup codec route (.inr field) query state) (Snap.empty, Local.empty)
+    have restBound : ∀ run ∈ support ((simulateQ (compileSnapImpl setup codec route)
+        (wrap setup.source.crypto codec setup.serverKeyId bounds (asModeO mode first))).run (Snap.empty, Local.empty)),
+        (terminal run.2.1 (List.range run.2.2.log.owners.length) >>= fun reveal =>
+          (simulateQ (compileImpl setup codec route) (simulateQ postEmbed (second run.1.1 reveal))).run run.2.2 >>=
+            fun result => pure (result.1, (run.1.2, (run.2.1, result.2)))).IsQueryBoundP
+          (fun request => sourceKind (KemSK := KemSK) request = .inr field)
+          (readCost (.inr field) * runCap bounds budget 1 + (0 + 0)) := by
+      intro run member
+      have count := owners_bound setup codec route bounds mode first budget respects run member
+      have reads := IsQueryBoundP.mono (terminal_bound (KemSK := KemSK) (.inr field) run.2.1
+        (List.range run.2.2.log.owners.length))
+        (Nat.mul_le_mul_left (readCost (.inr field)) (by simpa only [List.length_range] using count))
+      exact isQueryBoundP_bind reads fun reveal _ =>
+        isQueryBoundP_bind (PqxdhDeploymentCompileSecrecy.simulate_zero (compileImpl setup codec route) _
+          (fun query copies => by
+            simpa only [zero field _ notKernel] using
+              PqxdhDeploymentCompileBudget.step_bound setup codec route (.inr field) query copies)
+          _ run.2.2) fun _ _ => pure_bound _ _ 0
+    exact IsQueryBoundP.mono (isQueryBoundP_bind runBound restBound) (by omega)
+  refine ⟨IsQueryBoundP.mono (fieldReads 0 (by decide)) ?_, IsQueryBoundP.mono (fieldReads 1 (by decide)) ?_,
+    IsQueryBoundP.mono (fieldReads 2 (by decide)) ?_, IsQueryBoundP.mono (fieldReads 3 (by decide)) ?_⟩
   all_goals simp [laterCost, readCost, zero, unit, runCap_create, runCap_finish]
 
 /-- The compiled later-quantum program issues no KEM read, for every pair of adversaries and without a budget: the finish pre-reads, the terminal reads and the post part read only identity, prekey and one-time fields. The KEM read cap of the approved GoodKem argument therefore stays 0. -/
@@ -692,6 +722,32 @@ theorem compile_later_no_kem (setup : Setup baseSpec KemSK) (codec : Codec Reade
   exact isQueryBoundP_bind (n := 0) (m := 0) (PqxdhDeploymentCompileSecrecy.simulate_zero (compileImpl setup codec route) _
     (fun query copies => by simpa only [zero] using PqxdhDeploymentCompileBudget.step_bound setup codec route (.inr 1) query copies)
     _ run.2.2) fun _ _ => pure_bound _ _ 0
+
+/-- Every raw accept of `compileLater` is issued by its run part: the continuation after the run part, the terminal reads followed by the post part, issues no raw accept, for every run-part result and every post-run adversary, without a budget. So the terminal identity reads follow every raw accept and every raw-accept cut. -/
+theorem continuation_no_accept (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (route : RawCtxServerRouting.SenderDecoder) (second : X → Reveal → OracleComp PostSpec Out)
+    (run : (X × Ledger) × (Snap × Local)) :
+    (terminal (KemSK := KemSK) run.2.1 (List.range run.2.2.log.owners.length) >>= fun reveal =>
+        (simulateQ (compileImpl setup codec route) (simulateQ postEmbed (second run.1.1 reveal))).run run.2.2 >>=
+          fun result => pure (result.1, (run.1.2, (run.2.1, result.2)))).IsQueryBoundP
+      (fun request => sourceKind (KemSK := KemSK) request = .inl 3) 0 := by
+  have readZero : (terminal (KemSK := KemSK) run.2.1 (List.range run.2.2.log.owners.length)).IsQueryBoundP
+      (fun request => sourceKind (KemSK := KemSK) request = .inl 3) 0 := by
+    simpa [readCost, unit] using terminal_bound (KemSK := KemSK) (.inl 3) run.2.1 (List.range run.2.2.log.owners.length)
+  refine isQueryBoundP_bind (n := 0) (m := 0) readZero fun reveal _ => ?_
+  rw [← QueryImpl.simulateQ_compose]
+  refine isQueryBoundP_bind (n := 0) (m := 0) (PqxdhDeploymentCompileSecrecy.simulate_zero
+    ((compileImpl setup codec route) ∘ₛ postEmbed) _ (fun query state => ?_) _ run.2.2) fun _ _ => pure_bound _ _ 0
+  rcases query with coin | (⟨key, message⟩ | bytes)
+  · simp only [QueryImpl.apply_compose, postEmbed, simulateQ_spec_query]
+    simpa [commandKind, cost, unit] using
+      PqxdhDeploymentCompileBudget.step_bound setup codec route (.inl 3) (.inl coin) state
+  · simp only [QueryImpl.apply_compose, postEmbed, simulateQ_spec_query]
+    simpa [commandKind, cost, unit] using
+      PqxdhDeploymentCompileBudget.step_bound setup codec route (.inl 3) (.inr (.hmac key message)) state
+  · simp only [QueryImpl.apply_compose, postEmbed, simulateQ_spec_query]
+    simpa [commandKind, cost, unit] using
+      PqxdhDeploymentCompileBudget.step_bound setup codec route (.inl 3) (.inr (.hash bytes)) state
 
 end BeaconcryptCore.Computational.PqxdhDeploymentLaterCompile
 
@@ -934,3 +990,9 @@ end BeaconcryptCore.Computational.PqxdhDeploymentLaterCompile
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentLaterCompile.compile_later_no_kem
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentLaterCompile.continuation_no_accept' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentLaterCompile.continuation_no_accept
