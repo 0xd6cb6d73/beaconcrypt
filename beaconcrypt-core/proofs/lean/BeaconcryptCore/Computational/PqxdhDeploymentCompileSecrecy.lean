@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.PqxdhDeploymentCompileBudget
 import BeaconcryptCore.Computational.PqxdhDeploymentSecrecy
 
-/-! CE-COMPILE and budget transport for the complete common deployment experiment (CE-3 remainder). The compiled program of a complete-interface adversary in either observation mode is the trial compiler applied to the wrapped adversary, which runs the secrecy layer itself: it records the transcript, draws the hidden bit and the fresh messages with its own coins exactly when the experiment does, and issues each admitted test or fresh message as one native send. Because the draws happen at the same position in both runs, no sampling swap is needed. `compile_full_game` and `compile_full_source` state that the complete experiment equals the merged initialized execution of the compiled program, jointly over the Server's public data, the adversary's output, the whole ledger (transcript, test session and fresh messages), the whole deployment state including the produced frames, and the runtime state, under exactly the two codec contracts of the trial. The budget transport counts one experiment coin per test and one per fresh byte, so the coin cap grows by the tests plus the fresh-message byte budget `bounds.max * qFresh`; every test and fresh message is one Server or Beacon send. The compiled program issues no identity, KEM, prekey or one-time read. -/
+/-! CE-COMPILE and budget transport for the complete common deployment experiment (CE-3 remainder). The compiled program of a complete-interface adversary in either observation mode is the trial compiler applied to the wrapped adversary, which runs the secrecy layer itself: it records the transcript, draws the hidden bit and the fresh messages with its own coins exactly when the experiment does, and issues each admitted test or fresh message as one native send. Because the draws happen at the same position in both runs, no sampling swap is needed. `compile_full_game` and `compile_full_source` state that the complete experiment equals the merged initialized execution of the compiled program, jointly over the Server's public data, the adversary's output, the whole ledger (transcript, test session and fresh messages), the whole deployment state including the produced frames, and the runtime state, under exactly the two codec contracts of the trial. The budget transport counts one experiment coin per test and one per fresh byte, so the coin cap grows by the tests plus the fresh-message byte budget `bounds.max * qFresh`; every test and fresh message is one Server or Beacon send. The compiled program issues no identity, KEM, prekey or one-time read, for every adversary and without a budget (`compile_full_unread`). -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
@@ -218,6 +218,40 @@ theorem compile_full_no_secret_read (setup : Setup baseSpec KemSK) (codec : Code
     fin_cases core <;> simp [cost, unit, notKernel]
   simpa [zero] using bound
 
+/-- A stateful simulation in which no step makes a query of a class makes no query of that class, for every client and every start state; no budget of the client is needed. -/
+theorem simulate_zero {ι' κ Result State : Type} {spec : OracleSpec ι'} {target : OracleSpec κ}
+    (impl : QueryImpl spec (StateT State (OracleComp target))) (predicate : target.Domain → Prop)
+    [DecidablePred predicate] (step : ∀ query state, ((impl query).run state).IsQueryBoundP predicate 0) (client : OracleComp spec Result)
+    (state : State) : ((simulateQ impl client).run state).IsQueryBoundP predicate 0 := by
+  induction client using OracleComp.inductionOn generalizing state with
+  | pure value => trivial
+  | query_bind query next ih =>
+      simp only [simulateQ_bind, simulateQ_query, OracleQuery.input_query, OracleQuery.cont_query, id_map,
+        StateT.run_bind]
+      exact isQueryBoundP_bind (m := 0) (n := 0) (step query state) fun value _ => ih value.1 value.2
+
+/-- The trial compiler applied to any native-interface program issues no identity, KEM, prekey or one-time field read; no budget is needed, because no compiled command issues such a read. -/
+theorem compile_unread (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (route : RawCtxServerRouting.SenderDecoder) (adversary : OracleComp PqxdhDeploymentInterface.Spec X)
+    (field : Fin 5) (notKernel : field ≠ 4) :
+    (compile setup codec route adversary).IsQueryBoundP
+      (fun request => sourceKind (KemSK := KemSK) request = .inr field) 0 := by
+  have zero : ∀ core, cost (.inr field) core = 0 := by
+    intro core
+    fin_cases core <;> simp [cost, unit, notKernel]
+  exact simulate_zero (PqxdhDeploymentCompile.compileImpl setup codec route) _
+    (fun query copies => by
+      simpa only [zero] using PqxdhDeploymentCompileBudget.step_bound setup codec route (.inr field) query copies)
+    adversary PqxdhDeploymentCompile.Local.empty
+
+/-- The compiled program of every complete-interface adversary, in either mode, issues no identity, KEM, prekey or one-time field read; unlike `compile_full_no_secret_read`, no budget is assumed. -/
+theorem compile_full_unread (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (route : RawCtxServerRouting.SenderDecoder) (bounds : FreshBounds) (mode : Mode)
+    (adversary : OracleComp (ModeSpec mode) X) (field : Fin 5) (notKernel : field ≠ 4) :
+    (compileFull setup codec route bounds mode adversary).IsQueryBoundP
+      (fun request => sourceKind (KemSK := KemSK) request = .inr field) 0 :=
+  compile_unread setup codec route _ field notKernel
+
 end BeaconcryptCore.Computational.PqxdhDeploymentCompileSecrecy
 
 /-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentCompileSecrecy.compile_full_game' depends on axioms: [propext,
@@ -285,3 +319,21 @@ end BeaconcryptCore.Computational.PqxdhDeploymentCompileSecrecy
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentCompileSecrecy.compile_full_no_secret_read
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentCompileSecrecy.simulate_zero' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentCompileSecrecy.simulate_zero
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentCompileSecrecy.compile_unread' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentCompileSecrecy.compile_unread
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentCompileSecrecy.compile_full_unread' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentCompileSecrecy.compile_full_unread

@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.PqxdhDeploymentKeyMatch
 import BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBridge
 
-/-! Freshness of the compiled program (CE-5, `approved_goodkem` and `kernel_reads_unrevealed` over the complete interface). In the annotated initialized source14 execution that the KEM, root and report theorems are stated for, every step other than an identity-field read or a KEM-field read appends to the private identity and KEM transcripts only creation, signing, static DH and decapsulation observations: Server birth and Beacon creation record creations, a bundle records its three signatures, an accept and a finish record static DH requests and a finish records its decapsulation; Server commands, coins, prekey, one-time and kernel reads and the Server kernel reveal leave both pools unchanged. Hence a program with zero identity-read and zero KEM-read caps, such as the compiled program of any complete-interface adversary in either mode and its tagged form used by T4, ends every run with no reveal observation in either pool: `GoodKem` holds for every KEM creation index, and `revealedAt` is false for every identity index. No assumption is used. -/
+/-! Freshness of the compiled program (CE-5, `approved_goodkem` and `kernel_reads_unrevealed` over the complete interface). In the annotated initialized source14 execution that the KEM, root and report theorems are stated for, every step other than an identity-field read or a KEM-field read appends to the private identity and KEM transcripts only creation, signing, static DH and decapsulation observations: Server birth and Beacon creation record creations, a bundle records its three signatures, an accept and a finish record static DH requests and a finish records its decapsulation; Server commands, coins, prekey, one-time and kernel reads and the Server kernel reveal leave both pools unchanged. Hence a program with zero identity-read and zero KEM-read caps, such as the compiled program of any complete-interface adversary in either mode and its tagged form used by T4, ends every run with no reveal observation in either pool: `GoodKem` holds for every KEM creation index, and `revealedAt` is false for every identity index. The budgeted forms (`approved_goodkem`, `kernel_reads_unrevealed`) take a budget the adversary respects, as T4's other premises do; the `unbudgeted` forms hold for every adversary, because no compiled command issues an identity or KEM read (`PqxdhDeploymentCompileSecrecy.compile_full_unread`). No assumption is used. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
@@ -404,6 +404,56 @@ theorem kernel_reads_unrevealed (setup : Setup baseSpec KemSK) (codec : Codec Re
   exact unrevealed_of_quiet _ (quiet_initialized setup codec checks ensureInit supplied _ noIdentity noKem _
     quiet_empty result supported) identityIndex
 
+/-- The compiled program of every complete-interface adversary, in either mode, and its tagged form at any raw-accept ordinal issue no identity-field and no KEM-field read; no budget is assumed. -/
+theorem compiled_unread_unbudgeted (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (route : RawCtxServerRouting.SenderDecoder) (bounds : PqxdhDeploymentInterface.FreshBounds)
+    (mode : PqxdhDeploymentInterface.Mode) (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X)
+    (index : Nat) :
+    (PqxdhRegistrationJointAcceptCutTag.tag (PqxdhDeploymentCompileSecrecy.compileFull setup codec route bounds mode
+      adversary) index).IsQueryBoundP (fun query => sourceKind (KemSK := KemSK) query = .inr 0) 0 ∧
+    (PqxdhRegistrationJointAcceptCutTag.tag (PqxdhDeploymentCompileSecrecy.compileFull setup codec route bounds mode
+      adversary) index).IsQueryBoundP (fun query => sourceKind (KemSK := KemSK) query = .inr 1) 0 :=
+  ⟨PqxdhRegistrationJointAcceptCutTag.tag_bound _ index _ 0
+      (PqxdhDeploymentCompileSecrecy.compile_full_unread setup codec route bounds mode adversary 0 (by decide)),
+    PqxdhRegistrationJointAcceptCutTag.tag_bound _ index _ 0
+      (PqxdhDeploymentCompileSecrecy.compile_full_unread setup codec route bounds mode adversary 1 (by decide))⟩
+
+/-- `approved_goodkem` without a budget: in the actual initialized execution that T4 is stated for, the tagged compiled program of every complete-interface adversary, in either mode and at any raw-accept ordinal, ends every run with `GoodKem` for every creation index. -/
+theorem approved_goodkem_unbudgeted (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes)
+    (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
+    (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) (index : Nat) (runtime : A) {count : Nat}
+    (kemIndex : Fin count)
+    (final : PqxdhRegistrationJointKemRawBridge.Final KemSK A
+      ((X × PqxdhDeploymentSecrecy.Ledger) × PqxdhDeploymentCompile.Local))
+    (supported : final ∈ support ((fun result => (result.1.map (PqxdhRegistrationJointInitializedSchedule.encodeOutcome
+      setup), result.2)) <$> (PqxdhRegistrationJointInitializedSchedule.source setup codec checks ensureInit supplied
+        (PqxdhRegistrationJointAcceptCutTag.tag (PqxdhDeploymentCompileSecrecy.compileFull setup codec route bounds mode
+          adversary) index)).run ((PqxdhDynamicIdentityPool.initialState, PqxdhLiveKemBirth.empty), runtime))) :
+    PqxdhRegistrationJointKemRawBridge.GoodKem kemIndex final := by
+  rw [support_map] at supported
+  obtain ⟨result, member, rfl⟩ := supported
+  obtain ⟨noIdentity, noKem⟩ := compiled_unread_unbudgeted setup codec route bounds mode adversary index
+  exact goodKem_of_quiet kemIndex _
+    (quiet_initialized setup codec checks ensureInit supplied _ noIdentity noKem _ quiet_empty result member)
+
+/-- `kernel_reads_unrevealed` without a budget: in the same execution, for every complete-interface adversary, no identity index is ever revealed. -/
+theorem kernel_reads_unrevealed_unbudgeted (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (checks : Checks) (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)
+    (supplied : Option Pqxdh.Bytes) (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
+    (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) (index : Nat) (runtime : A)
+    (result : Option (PqxdhRegistrationJointInitializedSchedule.SourceOutcome KemSK
+      (((X × PqxdhDeploymentSecrecy.Ledger) × PqxdhDeploymentCompile.Local) × PqxdhRegistrationJointAcceptCutTag.Tag)) ×
+      PqxdhRegistrationJointServerPrefix.State KemSK A)
+    (supported : result ∈ support ((PqxdhRegistrationJointInitializedSchedule.source setup codec checks ensureInit
+      supplied (PqxdhRegistrationJointAcceptCutTag.tag (PqxdhDeploymentCompileSecrecy.compileFull setup codec route
+        bounds mode adversary) index)).run ((PqxdhDynamicIdentityPool.initialState, PqxdhLiveKemBirth.empty), runtime)))
+    (identityIndex : Nat) :
+    PqxdhRegistrationJointRoutedReveals.revealedAt identityIndex result.2.1.1.transcript = false := by
+  obtain ⟨noIdentity, noKem⟩ := compiled_unread_unbudgeted setup codec route bounds mode adversary index
+  exact unrevealed_of_quiet _ (quiet_initialized setup codec checks ensureInit supplied _ noIdentity noKem _
+    quiet_empty result supported) identityIndex
+
 end BeaconcryptCore.Computational.PqxdhDeploymentQuiet
 
 /-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentQuiet.quiet_identity' depends on axioms: [propext] -/
@@ -495,3 +545,21 @@ end BeaconcryptCore.Computational.PqxdhDeploymentQuiet
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentQuiet.kernel_reads_unrevealed
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentQuiet.compiled_unread_unbudgeted' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentQuiet.compiled_unread_unbudgeted
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentQuiet.approved_goodkem_unbudgeted' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentQuiet.approved_goodkem_unbudgeted
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentQuiet.kernel_reads_unrevealed_unbudgeted' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentQuiet.kernel_reads_unrevealed_unbudgeted

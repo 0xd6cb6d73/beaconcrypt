@@ -28984,8 +28984,8 @@ require_line_count 1 '^theorem ledgerImpl_forward([[:space:]]|$)' "$selected_sou
 
 selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentCompileSecrecy.lean
 require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentCompileSecrecy$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentCompileSecrecy root import"
-require_line_count 12 '^theorem ' "$selected_source_module" "PqxdhDeploymentCompileSecrecy theorem inventory"
-require_line_count 12 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentCompileSecrecy guarded dependencies"
+require_line_count 15 '^theorem ' "$selected_source_module" "PqxdhDeploymentCompileSecrecy theorem inventory"
+require_line_count 15 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentCompileSecrecy guarded dependencies"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileSecrecy\.compile_full_game$' "$selected_source_module" "PqxdhDeploymentCompileSecrecy dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileSecrecy.compile_full_game"
 require_line_count 1 '^theorem compile_full_game([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileSecrecy theorem compile_full_game"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileSecrecy\.compile_full_source$' "$selected_source_module" "PqxdhDeploymentCompileSecrecy dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileSecrecy.compile_full_source"
@@ -29010,6 +29010,12 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem compile_full_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileSecrecy theorem compile_full_bound"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileSecrecy\.compile_full_no_secret_read$' "$selected_source_module" "PqxdhDeploymentCompileSecrecy dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileSecrecy.compile_full_no_secret_read"
 require_line_count 1 '^theorem compile_full_no_secret_read([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileSecrecy theorem compile_full_no_secret_read"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileSecrecy\.simulate_zero$' "$selected_source_module" "PqxdhDeploymentCompileSecrecy dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileSecrecy.simulate_zero"
+require_line_count 1 '^theorem simulate_zero([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileSecrecy theorem simulate_zero"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileSecrecy\.compile_unread$' "$selected_source_module" "PqxdhDeploymentCompileSecrecy dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileSecrecy.compile_unread"
+require_line_count 1 '^theorem compile_unread([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileSecrecy theorem compile_unread"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileSecrecy\.compile_full_unread$' "$selected_source_module" "PqxdhDeploymentCompileSecrecy dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileSecrecy.compile_full_unread"
+require_line_count 1 '^theorem compile_full_unread([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileSecrecy theorem compile_full_unread"
 
 # Generic target selection (CE-4): exact split, event and advantage forms, and the plain and signed uniform-guess combinators.
 
@@ -29132,8 +29138,8 @@ require_line_count 1 '^theorem link_game([[:space:]]|$)' "$selected_source_modul
 
 selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentQuiet.lean
 require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentQuiet$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentQuiet root import"
-require_line_count 17 '^theorem ' "$selected_source_module" "PqxdhDeploymentQuiet theorem inventory"
-require_line_count 17 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentQuiet guarded dependencies"
+require_line_count 20 '^theorem ' "$selected_source_module" "PqxdhDeploymentQuiet theorem inventory"
+require_line_count 20 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentQuiet guarded dependencies"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentQuiet\.quiet_identity$' "$selected_source_module" "PqxdhDeploymentQuiet dependency BeaconcryptCore.Computational.PqxdhDeploymentQuiet.quiet_identity"
 require_line_count 1 '^theorem quiet_identity([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentQuiet theorem quiet_identity"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentQuiet\.quiet_kem$' "$selected_source_module" "PqxdhDeploymentQuiet dependency BeaconcryptCore.Computational.PqxdhDeploymentQuiet.quiet_kem"
@@ -29168,6 +29174,12 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem approved_goodkem([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentQuiet theorem approved_goodkem"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentQuiet\.kernel_reads_unrevealed$' "$selected_source_module" "PqxdhDeploymentQuiet dependency BeaconcryptCore.Computational.PqxdhDeploymentQuiet.kernel_reads_unrevealed"
 require_line_count 1 '^theorem kernel_reads_unrevealed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentQuiet theorem kernel_reads_unrevealed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentQuiet\.compiled_unread_unbudgeted$' "$selected_source_module" "PqxdhDeploymentQuiet dependency BeaconcryptCore.Computational.PqxdhDeploymentQuiet.compiled_unread_unbudgeted"
+require_line_count 1 '^theorem compiled_unread_unbudgeted([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentQuiet theorem compiled_unread_unbudgeted"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentQuiet\.approved_goodkem_unbudgeted$' "$selected_source_module" "PqxdhDeploymentQuiet dependency BeaconcryptCore.Computational.PqxdhDeploymentQuiet.approved_goodkem_unbudgeted"
+require_line_count 1 '^theorem approved_goodkem_unbudgeted([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentQuiet theorem approved_goodkem_unbudgeted"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentQuiet\.kernel_reads_unrevealed_unbudgeted$' "$selected_source_module" "PqxdhDeploymentQuiet dependency BeaconcryptCore.Computational.PqxdhDeploymentQuiet.kernel_reads_unrevealed_unbudgeted"
+require_line_count 1 '^theorem kernel_reads_unrevealed_unbudgeted([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentQuiet theorem kernel_reads_unrevealed_unbudgeted"
 
 # CE-3 budget transport in closed form: coins with the fresh-message byte budget, registration, BLAKE2b, reveal and kernel-read caps; T4 certified and room premises for the compiled program.
 
