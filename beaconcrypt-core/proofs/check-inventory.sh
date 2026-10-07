@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1527
+	[handwritten-lean]=1528
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -30047,6 +30047,45 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecord
 require_line_count 1 '^theorem seeds_aligned([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainState theorem seeds_aligned"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainState\.admission_erasure$' "$selected_source_module" "PqxdhRecordLiftChainState dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainState.admission_erasure"
 require_line_count 1 '^theorem admission_erasure([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainState theorem admission_erasure"
+
+
+# Native writer-input frame logs survive the selected/known CTX sealing adapter.
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftFrameLog.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRecordLiftFrameLog$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftFrameLog root import"
+require_line_count 16 '^theorem ' "$selected_source_module" "PqxdhRecordLiftFrameLog theorem inventory"
+require_line_count 16 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftFrameLog guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftFrameLog\.native_valid$' "$selected_source_module" "PqxdhRecordLiftFrameLog dependency BeaconcryptCore.Computational.PqxdhRecordLiftFrameLog.native_valid"
+require_line_count 1 '^theorem native_valid([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftFrameLog theorem native_valid"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftFrameLog\.native_invalid$' "$selected_source_module" "PqxdhRecordLiftFrameLog dependency BeaconcryptCore.Computational.PqxdhRecordLiftFrameLog.native_invalid"
+require_line_count 1 '^theorem native_invalid([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftFrameLog theorem native_invalid"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftFrameLog\.native_complete$' "$selected_source_module" "PqxdhRecordLiftFrameLog dependency BeaconcryptCore.Computational.PqxdhRecordLiftFrameLog.native_complete"
+require_line_count 1 '^theorem native_complete([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftFrameLog theorem native_complete"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftFrameLog\.typed_forget$' "$selected_source_module" "PqxdhRecordLiftFrameLog dependency BeaconcryptCore.Computational.PqxdhRecordLiftFrameLog.typed_forget"
+require_line_count 1 '^theorem typed_forget([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftFrameLog theorem typed_forget"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftFrameLog\.selected_forget$' "$selected_source_module" "PqxdhRecordLiftFrameLog dependency BeaconcryptCore.Computational.PqxdhRecordLiftFrameLog.selected_forget"
+require_line_count 1 '^theorem selected_forget([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftFrameLog theorem selected_forget"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftFrameLog\.known_forget$' "$selected_source_module" "PqxdhRecordLiftFrameLog dependency BeaconcryptCore.Computational.PqxdhRecordLiftFrameLog.known_forget"
+require_line_count 1 '^theorem known_forget([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftFrameLog theorem known_forget"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftFrameLog\.call_forget$' "$selected_source_module" "PqxdhRecordLiftFrameLog dependency BeaconcryptCore.Computational.PqxdhRecordLiftFrameLog.call_forget"
+require_line_count 1 '^theorem call_forget([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftFrameLog theorem call_forget"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftFrameLog\.selected_fresh$' "$selected_source_module" "PqxdhRecordLiftFrameLog dependency BeaconcryptCore.Computational.PqxdhRecordLiftFrameLog.selected_fresh"
+require_line_count 1 '^theorem selected_fresh([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftFrameLog theorem selected_fresh"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftFrameLog\.selected_repeat$' "$selected_source_module" "PqxdhRecordLiftFrameLog dependency BeaconcryptCore.Computational.PqxdhRecordLiftFrameLog.selected_repeat"
+require_line_count 1 '^theorem selected_repeat([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftFrameLog theorem selected_repeat"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftFrameLog\.known_complete$' "$selected_source_module" "PqxdhRecordLiftFrameLog dependency BeaconcryptCore.Computational.PqxdhRecordLiftFrameLog.known_complete"
+require_line_count 1 '^theorem known_complete([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftFrameLog theorem known_complete"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftFrameLog\.known_cache$' "$selected_source_module" "PqxdhRecordLiftFrameLog dependency BeaconcryptCore.Computational.PqxdhRecordLiftFrameLog.known_cache"
+require_line_count 1 '^theorem known_cache([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftFrameLog theorem known_cache"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftFrameLog\.selected_cache$' "$selected_source_module" "PqxdhRecordLiftFrameLog dependency BeaconcryptCore.Computational.PqxdhRecordLiftFrameLog.selected_cache"
+require_line_count 1 '^theorem selected_cache([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftFrameLog theorem selected_cache"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftFrameLog\.call_cache$' "$selected_source_module" "PqxdhRecordLiftFrameLog dependency BeaconcryptCore.Computational.PqxdhRecordLiftFrameLog.call_cache"
+require_line_count 1 '^theorem call_cache([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftFrameLog theorem call_cache"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftFrameLog\.native_source$' "$selected_source_module" "PqxdhRecordLiftFrameLog dependency BeaconcryptCore.Computational.PqxdhRecordLiftFrameLog.native_source"
+require_line_count 1 '^theorem native_source([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftFrameLog theorem native_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftFrameLog\.call_bound$' "$selected_source_module" "PqxdhRecordLiftFrameLog dependency BeaconcryptCore.Computational.PqxdhRecordLiftFrameLog.call_bound"
+require_line_count 1 '^theorem call_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftFrameLog theorem call_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftFrameLog\.call_bills$' "$selected_source_module" "PqxdhRecordLiftFrameLog dependency BeaconcryptCore.Computational.PqxdhRecordLiftFrameLog.call_bills"
+require_line_count 1 '^theorem call_bills([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftFrameLog theorem call_bills"
 
 # Reviewed actual getter availability, distinct from network compromise powers.
 python3 proofs/source/test-getter-profile.py
