@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1516
+	[handwritten-lean]=1517
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -29458,6 +29458,69 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem create_owners([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordKernels theorem create_owners"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordKernels\.source_step$' "$selected_source_module" "PqxdhDeploymentRecordKernels dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordKernels.source_step"
 require_line_count 1 '^theorem source_step([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordKernels theorem source_step"
+
+# Common deployment experiment CE-C3 record replay: no Server peer or Beacon owner accepts a sequence number twice
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentRecordReplay.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentRecordReplay$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentRecordReplay root import"
+require_line_count 28 '^theorem ' "$selected_source_module" "PqxdhDeploymentRecordReplay theorem inventory"
+require_line_count 28 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentRecordReplay guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordReplay\.holds_step$' "$selected_source_module" "PqxdhDeploymentRecordReplay dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordReplay.holds_step"
+require_line_count 1 '^theorem holds_step([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordReplay theorem holds_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordReplay\.consumed_perm$' "$selected_source_module" "PqxdhDeploymentRecordReplay dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordReplay.consumed_perm"
+require_line_count 1 '^theorem consumed_perm([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordReplay theorem consumed_perm"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordReplay\.holds_receive$' "$selected_source_module" "PqxdhDeploymentRecordReplay dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordReplay.holds_receive"
+require_line_count 1 '^theorem holds_receive([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordReplay theorem holds_receive"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordReplay\.logged_support$' "$selected_source_module" "PqxdhDeploymentRecordReplay dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordReplay.logged_support"
+require_line_count 1 '^theorem logged_support([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordReplay theorem logged_support"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordReplay\.peerSequences_append$' "$selected_source_module" "PqxdhDeploymentRecordReplay dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordReplay.peerSequences_append"
+require_line_count 1 '^theorem peerSequences_append([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordReplay theorem peerSequences_append"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordReplay\.ownerSequences_append$' "$selected_source_module" "PqxdhDeploymentRecordReplay dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordReplay.ownerSequences_append"
+require_line_count 1 '^theorem ownerSequences_append([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordReplay theorem ownerSequences_append"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordReplay\.peerAccepted_server$' "$selected_source_module" "PqxdhDeploymentRecordReplay dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordReplay.peerAccepted_server"
+require_line_count 1 '^theorem peerAccepted_server([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordReplay theorem peerAccepted_server"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordReplay\.tracked_server$' "$selected_source_module" "PqxdhDeploymentRecordReplay dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordReplay.tracked_server"
+require_line_count 1 '^theorem tracked_server([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordReplay theorem tracked_server"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordReplay\.serverRaw_tracked$' "$selected_source_module" "PqxdhDeploymentRecordReplay dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordReplay.serverRaw_tracked"
+require_line_count 1 '^theorem serverRaw_tracked([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordReplay theorem serverRaw_tracked"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordReplay\.tracked_quiet$' "$selected_source_module" "PqxdhDeploymentRecordReplay dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordReplay.tracked_quiet"
+require_line_count 1 '^theorem tracked_quiet([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordReplay theorem tracked_quiet"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordReplay\.compose_assoc$' "$selected_source_module" "PqxdhDeploymentRecordReplay dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordReplay.compose_assoc"
+require_line_count 1 '^theorem compose_assoc([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordReplay theorem compose_assoc"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordReplay\.serverSend_tracked$' "$selected_source_module" "PqxdhDeploymentRecordReplay dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordReplay.serverSend_tracked"
+require_line_count 1 '^theorem serverSend_tracked([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordReplay theorem serverSend_tracked"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordReplay\.beacon_raw_cases$' "$selected_source_module" "PqxdhDeploymentRecordReplay dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordReplay.beacon_raw_cases"
+require_line_count 1 '^theorem beacon_raw_cases([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordReplay theorem beacon_raw_cases"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordReplay\.beacon_send_cases$' "$selected_source_module" "PqxdhDeploymentRecordReplay dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordReplay.beacon_send_cases"
+require_line_count 1 '^theorem beacon_send_cases([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordReplay theorem beacon_send_cases"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordReplay\.peerAccepted_beacon$' "$selected_source_module" "PqxdhDeploymentRecordReplay dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordReplay.peerAccepted_beacon"
+require_line_count 1 '^theorem peerAccepted_beacon([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordReplay theorem peerAccepted_beacon"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordReplay\.ownerAccepted_beacon$' "$selected_source_module" "PqxdhDeploymentRecordReplay dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordReplay.ownerAccepted_beacon"
+require_line_count 1 '^theorem ownerAccepted_beacon([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordReplay theorem ownerAccepted_beacon"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordReplay\.beaconRaw_tracked$' "$selected_source_module" "PqxdhDeploymentRecordReplay dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordReplay.beaconRaw_tracked"
+require_line_count 1 '^theorem beaconRaw_tracked([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordReplay theorem beaconRaw_tracked"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordReplay\.beaconSend_tracked$' "$selected_source_module" "PqxdhDeploymentRecordReplay dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordReplay.beaconSend_tracked"
+require_line_count 1 '^theorem beaconSend_tracked([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordReplay theorem beaconSend_tracked"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordReplay\.tracked_source$' "$selected_source_module" "PqxdhDeploymentRecordReplay dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordReplay.tracked_source"
+require_line_count 1 '^theorem tracked_source([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordReplay theorem tracked_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordReplay\.ownerAccepted_finish$' "$selected_source_module" "PqxdhDeploymentRecordReplay dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordReplay.ownerAccepted_finish"
+require_line_count 1 '^theorem ownerAccepted_finish([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordReplay theorem ownerAccepted_finish"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordReplay\.finish_tracked$' "$selected_source_module" "PqxdhDeploymentRecordReplay dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordReplay.finish_tracked"
+require_line_count 1 '^theorem finish_tracked([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordReplay theorem finish_tracked"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordReplay\.command_tracked$' "$selected_source_module" "PqxdhDeploymentRecordReplay dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordReplay.command_tracked"
+require_line_count 1 '^theorem command_tracked([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordReplay theorem command_tracked"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordReplay\.coinSend_tracked$' "$selected_source_module" "PqxdhDeploymentRecordReplay dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordReplay.coinSend_tracked"
+require_line_count 1 '^theorem coinSend_tracked([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordReplay theorem coinSend_tracked"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordReplay\.experiment_tracked$' "$selected_source_module" "PqxdhDeploymentRecordReplay dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordReplay.experiment_tracked"
+require_line_count 1 '^theorem experiment_tracked([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordReplay theorem experiment_tracked"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordReplay\.construct_peers$' "$selected_source_module" "PqxdhDeploymentRecordReplay dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordReplay.construct_peers"
+require_line_count 1 '^theorem construct_peers([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordReplay theorem construct_peers"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordReplay\.tracked_game$' "$selected_source_module" "PqxdhDeploymentRecordReplay dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordReplay.tracked_game"
+require_line_count 1 '^theorem tracked_game([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordReplay theorem tracked_game"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordReplay\.holds_nodup$' "$selected_source_module" "PqxdhDeploymentRecordReplay dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordReplay.holds_nodup"
+require_line_count 1 '^theorem holds_nodup([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordReplay theorem holds_nodup"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordReplay\.record_replay_game$' "$selected_source_module" "PqxdhDeploymentRecordReplay dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordReplay.record_replay_game"
+require_line_count 1 '^theorem record_replay_game([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordReplay theorem record_replay_game"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"

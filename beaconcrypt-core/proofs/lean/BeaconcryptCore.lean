@@ -1562,6 +1562,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple
 
 import BeaconcryptCore.Computational.PqxdhDeploymentRecordKernels
 
+import BeaconcryptCore.Computational.PqxdhDeploymentRecordReplay
+
 /-!
 # Beaconcrypt-core verification root
 
