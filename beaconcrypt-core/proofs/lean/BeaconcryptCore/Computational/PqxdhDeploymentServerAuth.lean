@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.PqxdhDeploymentServerAuthChain
 
-/-! Theorem CE-A1, the initial-response origin of every Beacon in the common deployment experiment (CE-8, plan section 10). `reduction c` is `R_c`: the frozen compiled program under the embedding at creation index `c`, journaling its own ServerAuth queries; `serverAuthAdversary c` discards its return value. `a1_le_ordered` bounds the probability of CE-A1 at `c` (`A1At`) by the probability of the common authentication failure of `R_c` in the ordered Server-authentication game: CE-COMPILE (`compile_full_game`), the constructor's initialization gate and generated seed against the game's seed draw (`generated_order`), and `PqxdhDeploymentServerAuthChain.seed_bound` for every seed. `a1_bound` adds the existing complete Server-authentication bound with its reduction bills (`common_authentication_with_resources`) for `R_c`, with `R_c`'s query caps (`ReductionCaps`) as a premise. For a budget-respecting adversary, CE-A1 can occur only below `qCreate` (`a1_range`), so the exact union over the `qCreate` creation indices gives `a1_sum`. `ce_a1` states CE-A1 as the plan does, on runs with `NoBundleFailure_c` (`A1NoFailure`, which implies `A1At` by `noFailure_a1At`). The matching relation is public: a session matches owner `c` when an accept returned it on bytes whose raw candidate the source attached verification accepts with the identity key and key tuple of `c`'s first published bundle, and a build of it returned the decoded record that `c` accepted, both before the acceptance; the injectivity of this matching across Beacons is a separate statement. -/
+/-! Theorem CE-A1, the initial-response origin of every Beacon in the common deployment experiment (CE-8, plan section 10). `reduction c` is `R_c`: the frozen compiled program under the embedding at creation index `c`, journaling its own ServerAuth queries; `serverAuthAdversary c` discards its return value. `a1_le_ordered` bounds the probability of CE-A1 at `c` (`A1At`) by the probability of the common authentication failure of `R_c` in the ordered Server-authentication game: CE-COMPILE (`compile_full_game`), the constructor's initialization gate and generated seed against the game's seed draw (`generated_order`), and `PqxdhDeploymentServerAuthChain.seed_bound` for every seed. `a1_bound` adds the existing complete Server-authentication bound with its reduction bills (`common_authentication_with_resources`) for `R_c`, with `R_c`'s query caps (`ReductionCaps`) as a premise. For a budget-respecting adversary, CE-A1 can occur only below `qCreate` (`a1_range`), so the exact union over the `qCreate` creation indices gives `a1_sum`. `A1NoFailure` is CE-A1 on runs with `NoBundleFailure_c` (option (b) of plan section 19), which implies `A1At` (`noFailure_a1At`). The matching relation is public: a session matches owner `c` when an accept returned it on bytes whose raw candidate the source attached verification accepts with the identity key and key tuple of `c`'s first published bundle, and a build of it returned the decoded record that `c` accepted, both before the acceptance. It is weaker than the plan's eleven-field common session: the Server-authentication common event implies it on the same run (`PqxdhDeploymentServerAuthChain.root_failure`), not conversely; in particular it states no root agreement and nothing about the KEM ciphertext or the ephemeral key of the accepted response. `PinnedMatchAt` adds the Server-identity conjunct of CE-5's `PqxdhDeploymentTranscript.Linked`: the matching build response reads back, with the Phase 2 reader, `c`'s pin as the Server identity. `A1NoPinnedMatch` is `A1NoFailure` with this matching; it contains `A1NoFailure` on every outcome (`noFailure_noPinnedMatch`) and coincides with it on every outcome of the experiment (`noPinnedMatch_noFailure`, from `build_pin`: every successful build response of the experiment carries the constructed Server's identity key). `ce_a1` is stated for `A1NoPinnedMatch`. The KEM-ciphertext conjunct of `Linked` is not part of the matching and is not derived here: the Server-authentication bound charges no KEM property, and with a KEM whose decapsulation ignores the ciphertext a Beacon accepts a matched session's response with a substituted ciphertext. The injectivity of the matching across Beacons is a separate statement. -/
 open OracleComp OracleSpec CoreModels Aeneas ENNReal
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
@@ -332,7 +332,7 @@ theorem a1_sum (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (c
 
 /-! ## Runs with no rejected bundle -/
 
-/-- CE-A1 on runs with `NoBundleFailure_c`, as the plan states it: a Server was constructed; owner `c` has no rejected bundle call in Fresh in the whole run, accepted, was created with the protected binding before its acceptance, and no session matches it. -/
+/-- CE-A1 on runs with `NoBundleFailure_c`, with the public matching `Matched` in place of the plan's eleven-field common session (a weaker relation, so a smaller event than the plan's): a Server was constructed; owner `c` has no rejected bundle call in Fresh in the whole run, accepted, was created with the protected binding before its acceptance, and no session matches it. -/
 def A1NoFailure {X A : Type} (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (c : Nat)
     (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A) :
     Prop :=
@@ -358,8 +358,154 @@ theorem noFailure_a1At {X A : Type} (setup : Setup baseSpec KemSK) (codec : Code
       rw [noFailure] at later
       cases later
 
+/-! ## The pinned matching -/
+
+/-- Session `session` matches owner `owner` before its acceptance with the pin `pin`: `MatchedAt`, and the matching build response reads back, with the Phase 2 reader, `pin` as the Server identity (the Server-identity conjunct of CE-5's `PqxdhDeploymentTranscript.Linked`). -/
+def PinnedMatchAt (crypto : Pqxdh.Crypto) (codec : Codec Reader Response) (owner session : Nat)
+    (pin : PqxdhBeaconPhase2Preparation.Word32) (before : List Reg) (raw : Pqxdh.Bytes) : Prop :=
+  ∃ acceptRaw candidate keys payload reply record,
+    Reg.accept acceptRaw (some session) ∈ before ∧ PqxdhDeploymentTranscript.candidateOf codec acceptRaw = some candidate ∧
+    PqxdhDeploymentTranscript.acceptedKeys crypto candidate = some keys ∧
+    PqxdhDeploymentServerAuthEvent.publishedKeys codec before owner = some keys ∧
+    Reg.build session payload (some reply) ∈ before ∧
+    (codec.read2 reply.serialized).bind codec.serverIdentity = some pin ∧
+    PqxdhServerAuthRecordPublicationEvent.frame codec raw = some record ∧
+    PqxdhServerAuthRecordPublicationEvent.frame codec reply.serialized = some record
+
+/-- Some session matches the owner before its acceptance with the pin. -/
+def PinnedMatch (crypto : Pqxdh.Crypto) (codec : Codec Reader Response) (owner : Nat)
+    (pin : PqxdhBeaconPhase2Preparation.Word32) (before : List Reg) (raw : Pqxdh.Bytes) : Prop :=
+  ∃ session, PinnedMatchAt crypto codec owner session pin before raw
+
+/-- A pinned match is a match. -/
+theorem pinned_matched (crypto : Pqxdh.Crypto) (codec : Codec Reader Response) (owner : Nat)
+    (pin : PqxdhBeaconPhase2Preparation.Word32) (before : List Reg) (raw : Pqxdh.Bytes)
+    (pinned : PinnedMatch crypto codec owner pin before raw) : Matched crypto codec owner before raw := by
+  obtain ⟨session, acceptRaw, candidate, keys, payload, reply, record, acceptMember, candidateEq, keysEq, publishedEq,
+    buildMember, _, frameRaw, frameReply⟩ := pinned
+  exact ⟨session, acceptRaw, candidate, keys, payload, reply, record, acceptMember, candidateEq, keysEq, publishedEq,
+    buildMember, frameRaw, frameReply⟩
+
+/-- CE-A1 on runs with `NoBundleFailure_c` with the pinned matching: a Server was constructed; owner `c` has no rejected bundle call in Fresh in the whole run, accepted, was created with the protected binding before its acceptance, and no session matches it with the protected binding's pin, the constructed Server's identity key as a 32-byte word. -/
+def A1NoPinnedMatch {X A : Type} (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (c : Nat)
+    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A) :
+    Prop :=
+  ∃ created output final, outcome.1 = some (created, output, final) ∧
+    PqxdhDeploymentTranscript.NoBundleFailureAt final.1.transcript c ∧
+    ∃ before raw, accepted c (regsOf final.1.transcript) = some (before, raw) ∧
+      (summarizeReg before).owners[c]? = some (protectedBinding setup created) ∧
+      ¬ PinnedMatch setup.source.crypto codec c (protectedBinding setup created).1 before raw
+
+/-- On every outcome, CE-A1 with the public matching is CE-A1 with the pinned matching: the event with the pinned matching contains the one with the public matching. -/
+theorem noFailure_noPinnedMatch {X A : Type} (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (c : Nat)
+    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A)
+    (event : A1NoFailure setup codec c outcome) : A1NoPinnedMatch setup codec c outcome := by
+  obtain ⟨created, output, final, found, noFailure, before, raw, acceptedEq, bound, unmatched⟩ := event
+  exact ⟨created, output, final, found, noFailure, before, raw, acceptedEq, bound,
+    fun pinned => unmatched (pinned_matched _ codec c _ before raw pinned)⟩
+
+/-- A build entry of the registration view is a build entry of the transcript with the same session, payload and reply. -/
+theorem build_entry (transcript : List PqxdhDeploymentInterface.Entry) (session : Nat) (payload : Option Pqxdh.Bytes)
+    (reply : PqxdhServerRegistrationPublication.Response)
+    (member : Reg.build session payload (some reply) ∈ regsOf transcript) :
+    (⟨.inl (.inr (.build session payload)), some reply⟩ : PqxdhDeploymentInterface.Entry) ∈ transcript := by
+  simp only [regsOf, List.mem_filterMap] at member
+  obtain ⟨entry, entryMember, found⟩ := member
+  rcases entry with ⟨(coin | command) | secrecy, entryReply⟩
+  · cases found
+  · cases command with
+    | create pin keyId =>
+        cases entryReply with
+        | none => cases found
+        | some index =>
+            cases parsed : PqxdhDeploymentInterface.parsePin pin <;>
+              simp [PqxdhDeploymentServerAuthEvent.regOfEntry, parsed] at found
+    | build other otherPayload =>
+        simp only [PqxdhDeploymentServerAuthEvent.regOfEntry, Option.some.injEq, Reg.build.injEq] at found
+        obtain ⟨rfl, rfl, rfl⟩ := found
+        exact entryMember
+    | _ => simp [PqxdhDeploymentServerAuthEvent.regOfEntry] at found
+  · cases found
+
 set_option linter.deprecated false in
-/-- Theorem CE-A1 (plan section 10, option (b) of section 19): in the common deployment experiment with a generated Server seed, for a budget-respecting adversary, every identity index and every initialization runtime, the probability that some Beacon `c`, pinned to the constructed Server's identity and key ID before its acceptance, accepted with no session that matches it and published the decoded record it accepted earlier, on a run with `NoBundleFailure_c`, is at most the sum over the `qCreate` creation indices of the Server-authentication bound of `R_c`, with the bills of every constructed reduction. Premises: the approved Phase 1, Phase 2 and frame read-back contracts, `ReadWritable`, `X25519ClassLaw`, `X25519ScalarSpread`, `SourceFullCorrect`, `HasAttachedVerificationAdapter`, the KEM base caps and the query caps of each `R_c`. -/
+/-- On every outcome of the experiment with a constructed Server, every successful build response of the final transcript reads back, with `Phase2ReadBack`, the constructed Server's identity key as the Server identity, which is the pin of the protected binding: the build responses are the Phase 2 writer outputs of fields carrying the Server's identity (CE-5's `Agree.builds`, kept from the initial state), and the generated Server's identity is the 32-byte word of its public identity key (`construct_origin`). -/
+theorem build_pin (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat)
+    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec) (bounds : FreshBounds) (mode : Mode)
+    (adversary : OracleComp (ModeSpec mode) X) (runtime : A)
+    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A)
+    (supported : outcome ∈ support ((PqxdhDeploymentSecrecy.game setup codec checks route ensureInit identityIndex bounds
+      mode adversary).run runtime))
+    (created : PqxdhRegistrationJointServerBirth.ClientCreated Unit) (output : X)
+    (final : PqxdhDeploymentSecrecy.State KemSK) (reached : outcome.1 = some (created, output, final))
+    (session : Nat) (payload : Option Pqxdh.Bytes) (reply : PqxdhServerRegistrationPublication.Response)
+    (built : (⟨.inl (.inr (.build session payload)), some reply⟩ : PqxdhDeploymentInterface.Entry) ∈
+      final.1.transcript) :
+    (codec.read2 reply.serialized).bind codec.serverIdentity = some (protectedBinding setup created).1 := by
+  simp only [PqxdhDeploymentSecrecy.game, StateT.run, mem_support_bind_iff] at supported
+  obtain ⟨born, bornMember, supported⟩ := supported
+  rcases born with ⟨_ | constructed, after⟩
+  · simp only [support_pure, Set.mem_singleton_iff] at supported
+    subst supported
+    cases reached
+  · simp only [support_map, Set.mem_image] at supported
+    obtain ⟨executed, executedMember, rfl⟩ := supported
+    cases reached
+    have invariant := OracleComp.simulateQ_run_preserves_inv_of_query
+      (PqxdhDeploymentSecrecy.handler setup codec checks route constructed.seed bounds)
+      (fun state => PqxdhDeploymentEligibility.Agree setup codec
+        (PqxdhDeploymentNative.initial (KemSK := KemSK) constructed).native.shared.2.server.server.identity
+        state.1.transcript state.2.native)
+      (fun query state agree result member => PqxdhDeploymentEligibility.experiment_step setup codec checks route
+        constructed.seed bounds _ query state agree result member)
+      (PqxdhDeploymentInterface.asModeO mode adversary) (Ledger.empty, PqxdhDeploymentNative.initial constructed)
+      (PqxdhDeploymentEligibility.agree_initial setup codec constructed) _ executedMember
+    obtain ⟨fields, written, identity⟩ := invariant.builds _ built
+    obtain ⟨response, read, _, _, serverId, _, _⟩ := phase2 fields _ written
+    obtain ⟨seed, rfl, _⟩ := PqxdhLiveServerConstruction.construct_origin setup.joint ensureInit identityIndex
+      setup.serverKeyId none runtime after constructed bornMember
+    rw [read, Option.bind_some, serverId, identity]
+    rfl
+
+set_option linter.deprecated false in
+/-- On every outcome of the experiment, a session that matches owner `c` before its acceptance matches it with the pin of the protected binding (`build_pin`). -/
+theorem matched_pinned (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat)
+    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec) (bounds : FreshBounds) (mode : Mode)
+    (adversary : OracleComp (ModeSpec mode) X) (runtime : A)
+    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A)
+    (supported : outcome ∈ support ((PqxdhDeploymentSecrecy.game setup codec checks route ensureInit identityIndex bounds
+      mode adversary).run runtime))
+    (created : PqxdhRegistrationJointServerBirth.ClientCreated Unit) (output : X)
+    (final : PqxdhDeploymentSecrecy.State KemSK) (reached : outcome.1 = some (created, output, final))
+    (c : Nat) (before : List Reg) (raw : Pqxdh.Bytes) (found : accepted c (regsOf final.1.transcript) = some (before, raw))
+    (matched : Matched setup.source.crypto codec c before raw) :
+    PinnedMatch setup.source.crypto codec c (protectedBinding setup created).1 before raw := by
+  obtain ⟨session, acceptRaw, candidate, keys, payload, reply, record, acceptMember, candidateEq, keysEq, publishedEq,
+    buildMember, frameRaw, frameReply⟩ := matched
+  have prefixed := PqxdhDeploymentServerAuthEvent.accepted_prefix c _ before raw found
+  have built := build_entry final.1.transcript session payload reply (prefixed.subset buildMember)
+  exact ⟨session, acceptRaw, candidate, keys, payload, reply, record, acceptMember, candidateEq, keysEq, publishedEq,
+    buildMember, build_pin setup codec checks route ensureInit identityIndex phase2 bounds mode adversary runtime outcome
+      supported created output final reached session payload reply built, frameRaw, frameReply⟩
+
+set_option linter.deprecated false in
+/-- On every outcome of the experiment, CE-A1 with the pinned matching is CE-A1 with the public matching (`matched_pinned`); with `noFailure_noPinnedMatch` the two events coincide there. -/
+theorem noPinnedMatch_noFailure (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat)
+    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec) (bounds : FreshBounds) (mode : Mode)
+    (adversary : OracleComp (ModeSpec mode) X) (runtime : A) (c : Nat)
+    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A)
+    (supported : outcome ∈ support ((PqxdhDeploymentSecrecy.game setup codec checks route ensureInit identityIndex bounds
+      mode adversary).run runtime))
+    (event : A1NoPinnedMatch setup codec c outcome) : A1NoFailure setup codec c outcome := by
+  obtain ⟨created, output, final, found, noFailure, before, raw, acceptedEq, bound, unpinned⟩ := event
+  exact ⟨created, output, final, found, noFailure, before, raw, acceptedEq, bound, fun matched => unpinned
+    (matched_pinned setup codec checks route ensureInit identityIndex phase2 bounds mode adversary runtime outcome
+      supported created output final found c before raw acceptedEq matched)⟩
+
+set_option linter.deprecated false in
+/-- Theorem CE-A1 (plan section 10, option (b) of section 19), with the public pinned matching in place of the plan's eleven-field common session: in the common deployment experiment with a generated Server seed, for a budget-respecting adversary, every identity index and every initialization runtime, the probability that some Beacon `c`, pinned to the constructed Server's identity and key ID before its acceptance, accepted with no session that matches it with that pin and published the decoded record it accepted earlier (`A1NoPinnedMatch`), on a run with `NoBundleFailure_c`, is at most the sum over the `qCreate` creation indices of the Server-authentication bound of `R_c`, with the bills of every constructed reduction. Premises: the approved Phase 1, Phase 2 and frame read-back contracts, `ReadWritable`, `X25519ClassLaw`, `X25519ScalarSpread`, `SourceFullCorrect`, `HasAttachedVerificationAdapter`, the KEM base caps and the query caps of each `R_c`. -/
 theorem ce_a1 (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks) (caps : KemCaps)
     (bounded : KemBound setup caps) (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)
     (identityIndex : Nat) (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
@@ -375,7 +521,7 @@ theorem ce_a1 (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (ch
     (reductionCaps : ∀ c, ReductionCaps (reduction (KemSK := KemSK) setup codec route bounds mode adversary c)
       qCoin Q qH qHash qTotal qFinish)
     (fallback : ModifiedNonceAeadForgery) (signatureFallback : PqxdhJointIdentity.Forgery) :
-    (𝒟[(fun outcome => @decide (∃ c, A1NoFailure setup codec c outcome) (Classical.propDecidable _)) <$>
+    (𝒟[(fun outcome => @decide (∃ c, A1NoPinnedMatch setup codec c outcome) (Classical.propDecidable _)) <$>
       (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit identityIndex bounds mode adversary).run runtime]
         {true}).toReal ≤
       ∑ c : Fin budget.create, serverAuthBound setup codec checks caps
@@ -396,7 +542,9 @@ theorem ce_a1 (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (ch
   refine ENNReal.toReal_mono finite ?_
   classical
   rw [UniformTargetSelection.chance_eq, UniformTargetSelection.chance_eq]
-  exact probEvent_mono fun outcome _ ⟨c, event⟩ => ⟨c, noFailure_a1At setup codec c outcome event⟩
+  exact probEvent_mono fun outcome member ⟨c, event⟩ => ⟨c, noFailure_a1At setup codec c outcome
+    (noPinnedMatch_noFailure setup codec checks route ensureInit identityIndex phase2 bounds mode adversary runtime c
+      outcome member event)⟩
 
 end BeaconcryptCore.Computational.PqxdhDeploymentServerAuth
 
@@ -465,6 +613,42 @@ end BeaconcryptCore.Computational.PqxdhDeploymentServerAuth
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuth.noFailure_a1At
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuth.pinned_matched' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuth.pinned_matched
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuth.noFailure_noPinnedMatch' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuth.noFailure_noPinnedMatch
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuth.build_entry' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuth.build_entry
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuth.build_pin' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuth.build_pin
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuth.matched_pinned' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuth.matched_pinned
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuth.noPinnedMatch_noFailure' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuth.noPinnedMatch_noFailure
 
 /-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuth.ce_a1' depends on axioms: [propext,
  Classical.choice,

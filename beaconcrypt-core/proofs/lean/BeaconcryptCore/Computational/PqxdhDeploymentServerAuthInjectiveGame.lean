@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective
 
-/-! Injectivity of the CE-A1 matching and the combined CE-A1 headline (CE-8). `SharedMatch c c'` is the event that two distinct Beacons accepted and the same session matches each before its acceptance. On every outcome of the deployment experiment at identity index zero (the index of CE-9), session handles are positional (`session_unique`, from the CE-9 trace invariant `Traced.positional` and `compiled_trace`), so the two matches use one accept and one accepted candidate; the first published bundle of each Beacon carries the identity key of its final native identity seed (`keys_identity`, from the run invariant `Agree` of CE-5 and the approved Phase 1 read-back contract); hence the two owners have equal identity keys (`shared_collision`). Through CE-COMPILE, the constructor and `owners_collision`, the probability of `SharedMatch` is at most `ε_inj`, the sum over the `qCreate + 1` identity indices of the joint-use weak-EUF advantage of the collision finder's family reduction (`injective_bound`). `ce_a1_injective` adds this to `PqxdhDeploymentServerAuthBills.ce_a1_billed` by the union bound: the probability that some Beacon pinned to the constructed Server accepted with no matching session on a run with `NoBundleFailure_c`, or that two distinct Beacons are matched to one session, is at most the sum over the creation indices of the Server-authentication bound of `R_c` at the transported caps plus `ε_inj`. -/
+/-! Injectivity of the CE-A1 matching and the combined CE-A1 headline (CE-8). `SharedMatch c c'` is the event that two distinct Beacons accepted and the same session matches each before its acceptance. On every outcome of the deployment experiment at identity index zero (the index of CE-9), session handles are positional (`session_unique`, from the CE-9 trace invariant `Traced.positional` and `compiled_trace`), so the two matches use one accept and one accepted candidate; the first published bundle of each Beacon carries the identity key of its final native identity seed (`keys_identity`, from the run invariant `Agree` of CE-5 and the approved Phase 1 read-back contract); hence the two owners have equal identity keys (`shared_collision`). Through CE-COMPILE, the constructor and `owners_collision`, the probability of `SharedMatch` is at most `ε_inj`, the sum over the `qCreate + 1` identity indices of the joint-use weak-EUF advantage of the collision finder's family reduction (`injective_bound`). `ce_a1_injective` adds this to `PqxdhDeploymentServerAuthBills.ce_a1_billed` by the union bound: the probability that some Beacon pinned to the constructed Server accepted with no session that matches it with that pin (`A1NoPinnedMatch`) on a run with `NoBundleFailure_c`, or that two distinct Beacons are matched to one session (by the public matching `MatchedAt`, which every pinned match is), is at most the sum over the creation indices of the Server-authentication bound of `R_c` at the transported caps plus `ε_inj`. -/
 open OracleComp OracleSpec CoreModels Aeneas ENNReal
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
@@ -295,7 +295,7 @@ theorem injective_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
 
 
 set_option linter.deprecated false in
-/-- Theorem CE-A1 with injectivity (plan section 10): in the common deployment experiment with a generated Server seed (identity index zero, as in CE-9), for a budget-respecting adversary, the probability that some Beacon pinned to the constructed Server accepted with no matching session on a run with `NoBundleFailure_c`, or that two distinct Beacons are matched to one session, is at most the sum over the `qCreate` creation indices `c` of the Server-authentication bound of `R_c` at the transported caps, plus `ε_inj`, the sum over the `qCreate + 1` identity indices of the joint-use weak-EUF advantage of the collision finder's family reduction; every reduction of the first sum has its bills. Premises: the approved Phase 1, Phase 2 and frame read-back contracts, `ReadWritable`, `X25519ClassLaw`, `X25519ScalarSpread`, `SourceFullCorrect`, `HasAttachedVerificationAdapter` and the KEM base caps. -/
+/-- Theorem CE-A1 with injectivity (plan section 10): in the common deployment experiment with a generated Server seed (identity index zero, as in CE-9), for a budget-respecting adversary, the probability that some Beacon pinned to the constructed Server accepted with no session that matches it with that pin (`A1NoPinnedMatch`) on a run with `NoBundleFailure_c`, or that two distinct Beacons are matched to one session, is at most the sum over the `qCreate` creation indices `c` of the Server-authentication bound of `R_c` at the transported caps, plus `ε_inj`, the sum over the `qCreate + 1` identity indices of the joint-use weak-EUF advantage of the collision finder's family reduction; every reduction of the first sum has its bills. Premises: the approved Phase 1, Phase 2 and frame read-back contracts, `ReadWritable`, `X25519ClassLaw`, `X25519ScalarSpread`, `SourceFullCorrect`, `HasAttachedVerificationAdapter` and the KEM base caps. -/
 theorem ce_a1_injective (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (caps : PqxdhServerAuthSourceCosts.KemCaps) (bounded : PqxdhServerAuthSourceCosts.KemBound setup caps)
     (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)
@@ -311,7 +311,7 @@ theorem ce_a1_injective (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
     (bounds : FreshBounds) (mode : Mode) (adversary : OracleComp (ModeSpec mode) X) (budget : Budget)
     (respects : budget.Respects adversary) (runtime : A)
     (fallback : CtxNonceAeadIntCtxt.ModifiedNonceAeadForgery) (signatureFallback : PqxdhJointIdentity.Forgery) :
-    (𝒟[(fun outcome => @decide ((∃ c, PqxdhDeploymentServerAuth.A1NoFailure setup codec c outcome) ∨
+    (𝒟[(fun outcome => @decide ((∃ c, PqxdhDeploymentServerAuth.A1NoPinnedMatch setup codec c outcome) ∨
         ∃ c c', SharedMatch setup codec c c' outcome) (Classical.propDecidable _)) <$>
       (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode adversary).run runtime]
         {true}).toReal ≤
@@ -337,13 +337,13 @@ theorem ce_a1_injective (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
   set run := (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode adversary).run runtime
   classical
   rw [UniformTargetSelection.chance_eq] at unmatched injective
-  have total : 𝒟[(fun outcome => @decide ((∃ c, PqxdhDeploymentServerAuth.A1NoFailure setup codec c outcome) ∨
+  have total : 𝒟[(fun outcome => @decide ((∃ c, PqxdhDeploymentServerAuth.A1NoPinnedMatch setup codec c outcome) ∨
       ∃ c c', SharedMatch setup codec c c' outcome) (Classical.propDecidable _)) <$> run] {true} =
-      Pr[fun outcome => (∃ c, PqxdhDeploymentServerAuth.A1NoFailure setup codec c outcome) ∨
+      Pr[fun outcome => (∃ c, PqxdhDeploymentServerAuth.A1NoPinnedMatch setup codec c outcome) ∨
         ∃ c c', SharedMatch setup codec c c' outcome | run] :=
     @UniformTargetSelection.chance_eq _ run _ (fun _ => Classical.propDecidable _)
   rw [total]
-  have split := probEvent_or_le run (fun outcome => ∃ c, PqxdhDeploymentServerAuth.A1NoFailure setup codec c outcome)
+  have split := probEvent_or_le run (fun outcome => ∃ c, PqxdhDeploymentServerAuth.A1NoPinnedMatch setup codec c outcome)
     (fun outcome => ∃ c c', SharedMatch setup codec c c' outcome)
   have finiteSum : ∑ target : Fin (budget.create + 1), advantage setup.joint
       (PqxdhJointIdentityFamily.reduction setup.joint target
