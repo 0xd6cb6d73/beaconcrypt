@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1523
+	[handwritten-lean]=1525
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -29897,6 +29897,52 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem untilStop_spec([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthEvent theorem untilStop_spec"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthEvent\.unmatched_untilStop$' "$selected_source_module" "PqxdhDeploymentServerAuthEvent dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthEvent.unmatched_untilStop"
 require_line_count 1 '^theorem unmatched_untilStop([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthEvent theorem unmatched_untilStop"
+
+# CE-8 embedding R_c of the deployment experiment into the Server-authentication game.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentServerAuthEmbed.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentServerAuthEmbed$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentServerAuthEmbed root import"
+require_line_count 2 '^theorem ' "$selected_source_module" "PqxdhDeploymentServerAuthEmbed theorem inventory"
+require_line_count 2 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentServerAuthEmbed guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthEmbed\.coins_route$' "$selected_source_module" "PqxdhDeploymentServerAuthEmbed dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthEmbed.coins_route"
+require_line_count 1 '^theorem coins_route([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthEmbed theorem coins_route"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthEmbed\.localRoot_route$' "$selected_source_module" "PqxdhDeploymentServerAuthEmbed dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthEmbed.localRoot_route"
+require_line_count 1 '^theorem localRoot_route([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthEmbed theorem localRoot_route"
+
+# CE-8 erasure stability of the source14 operations.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentServerAuthStable.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentServerAuthStable$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentServerAuthStable root import"
+require_line_count 14 '^theorem ' "$selected_source_module" "PqxdhDeploymentServerAuthStable theorem inventory"
+require_line_count 14 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentServerAuthStable guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthStable\.eraseObservers_idem$' "$selected_source_module" "PqxdhDeploymentServerAuthStable dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthStable.eraseObservers_idem"
+require_line_count 1 '^theorem eraseObservers_idem([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthStable theorem eraseObservers_idem"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthStable\.eraseShared_idem$' "$selected_source_module" "PqxdhDeploymentServerAuthStable dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthStable.eraseShared_idem"
+require_line_count 1 '^theorem eraseShared_idem([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthStable theorem eraseShared_idem"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthStable\.hash_stable$' "$selected_source_module" "PqxdhDeploymentServerAuthStable dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthStable.hash_stable"
+require_line_count 1 '^theorem hash_stable([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthStable theorem hash_stable"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthStable\.reveal_stable$' "$selected_source_module" "PqxdhDeploymentServerAuthStable dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthStable.reveal_stable"
+require_line_count 1 '^theorem reveal_stable([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthStable theorem reveal_stable"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthStable\.hmac_stable$' "$selected_source_module" "PqxdhDeploymentServerAuthStable dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthStable.hmac_stable"
+require_line_count 1 '^theorem hmac_stable([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthStable theorem hmac_stable"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthStable\.build_stable$' "$selected_source_module" "PqxdhDeploymentServerAuthStable dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthStable.build_stable"
+require_line_count 1 '^theorem build_stable([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthStable theorem build_stable"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthStable\.accept_stable$' "$selected_source_module" "PqxdhDeploymentServerAuthStable dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthStable.accept_stable"
+require_line_count 1 '^theorem accept_stable([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthStable theorem accept_stable"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthStable\.callbacks_stable$' "$selected_source_module" "PqxdhDeploymentServerAuthStable dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthStable.callbacks_stable"
+require_line_count 1 '^theorem callbacks_stable([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthStable theorem callbacks_stable"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthStable\.program_stable$' "$selected_source_module" "PqxdhDeploymentServerAuthStable dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthStable.program_stable"
+require_line_count 1 '^theorem program_stable([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthStable theorem program_stable"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthStable\.callbacks_program$' "$selected_source_module" "PqxdhDeploymentServerAuthStable dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthStable.callbacks_program"
+require_line_count 1 '^theorem callbacks_program([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthStable theorem callbacks_program"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthStable\.localCallbacks_route$' "$selected_source_module" "PqxdhDeploymentServerAuthStable dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthStable.localCallbacks_route"
+require_line_count 1 '^theorem localCallbacks_route([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthStable theorem localCallbacks_route"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthStable\.onShared_stable$' "$selected_source_module" "PqxdhDeploymentServerAuthStable dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthStable.onShared_stable"
+require_line_count 1 '^theorem onShared_stable([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthStable theorem onShared_stable"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthStable\.onShared_program$' "$selected_source_module" "PqxdhDeploymentServerAuthStable dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthStable.onShared_program"
+require_line_count 1 '^theorem onShared_program([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthStable theorem onShared_program"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthStable\.localFinish_route$' "$selected_source_module" "PqxdhDeploymentServerAuthStable dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthStable.localFinish_route"
+require_line_count 1 '^theorem localFinish_route([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthStable theorem localFinish_route"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
