@@ -1580,6 +1580,12 @@ import BeaconcryptCore.Computational.PqxdhDeploymentServerAuthEmbed
 
 import BeaconcryptCore.Computational.PqxdhDeploymentServerAuthStable
 
+import BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocal
+
+import BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocalize
+
+import BeaconcryptCore.Computational.PqxdhDeploymentServerAuthEager
+
 /-!
 # Beaconcrypt-core verification root
 
