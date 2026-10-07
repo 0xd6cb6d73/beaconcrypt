@@ -1,0 +1,363 @@
+{
+  "stage": "Complete local native source adapter join",
+  "status": "independent semantic and publication hygiene reviews approved; all focused checks passed",
+  "base_commit": "603b159563dc02066bb168d97059b393726aa8b1",
+  "reconciled_central_commit": "ae4a49965c1c625b9fcc181cd281925e2e188f2b",
+  "merge_resolution": "Only handwritten-Lean count and root/checker digest conflicts; kept both source/import/gate sets and recomputed count/digests with coord inv helpers. Existing foreign module bytes unchanged.",
+  "branch": "codex/record-lift-native-adapters",
+  "worktree": "/tmp/beaconcrypt-record-lift-native-adapters",
+  "author": "/root/record_lazy_table",
+  "scope": [
+    "Literal original receive/send adapter callback equations with reversible actual full76 response conversion.",
+    "Exact missing-material rejection, original source-selected input, actual optional plaintext and optional writer bytes/API metadata.",
+    "Complete evaluated local growing-table execution equals the original native source program, preserving full kernel, reply and primitive state."
+  ],
+  "not_established": [
+    "Dynamic World installation, handle routing, raw validation, associated-data routing and partial seed-cache framing.",
+    "Concrete World KDF realization and writer/instrumentation join, global budgets, real-to-uniform hybrid, alias probability, selected CTX security."
+  ],
+  "operational_premises": [
+    "Native source interpreter is arbitrary and stateful; no purity, success, losslessness, independence or security premise.",
+    "Generic complete local joins retain explicit existing LookupPreserves, LookupRealized, table validity and KernelReferences.",
+    "Literal real lookup discharges lookup equations from existing RealValid plus ordinary functional KdfReal, which concrete World handler must establish.",
+    "No new primitive game or cryptographic contract; response representation is exact, not random-function replacement."
+  ],
+  "query_accounting": [
+    "Each lookup calls actual KDF interpreter once, repeated coordinates included through realLookup.",
+    "Missing source material makes no opening call; present source material makes one actual native opening call; selected sealing makes one actual native sealing call.",
+    "Complete primitive state equality retains shared ROM cache, actual primitive counters and any writer log; internal callback work is not free and global bills remain companion WorldBudget/compiler obligations."
+  ],
+  "modules": {
+    "PqxdhRecordLiftNativeAdapters": {
+      "theorems": [
+        "receive_callbacks",
+        "receive_native_state",
+        "receive_adapter",
+        "real_receive_adapter",
+        "send_callbacks",
+        "send_native_state",
+        "send_adapter",
+        "real_send_adapter",
+        "receive_kdf_response",
+        "send_kdf_response",
+        "receive_open_missing",
+        "receive_open_present",
+        "send_seal_reply"
+      ],
+      "exact_guard_count": 13,
+      "allowed_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "artifact": "/tmp/bc-arc-scratch/record-lift/native-adapters/publication-olean/BeaconcryptCore/Computational/PqxdhRecordLiftNativeAdapters.olean",
+      "artifact_sha256": "754675fd27380d2e9edb03f7a1cfbeb7471ce7faaf20951f57327a5409cf861d"
+    }
+  },
+  "files_sha256": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftNativeAdapters.lean": "2902e3f1bde738799f7074fb39b020e070664e6c8f02cc74060fdc553b4f823f",
+    "doc/impl/record-lift-native-adapters.md": "24b841a23a13d2499b56fcd9e0df98415f330dd1d5bdf2c451468167df29948a",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "e16f87bff8bde5d087f9f3acc5bf78250dc45215681de61f8c84c82923836616",
+    "beaconcrypt-core/proofs/check-inventory.sh": "6fe9fbbd7e4d00d0daf23b237ec388b4aa1938025d17d62f03cb0b6cf1a6382b",
+    "beaconcrypt-core/proofs/reviewed-inventory.txt": "450b69370ce4bdfa18801bcee21c054f9e5332e459d16e87cab48bbc5b8c931f",
+    "doc/formal-verification-analysis.md": "7e2ad2b60dd072ade9c44ab104b061019800b9c50bcd1f5b2879854aabd8d8f5"
+  },
+  "checks": {
+    "module": {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/native-adapters/logs/publication-module.json",
+      "receipt_sha256": "7a74a43a9e62a20a0b12694fa066d87b517c88fb2aee2b58cf0837c88fa6c7ff",
+      "result": {
+        "start": "2026-10-07T23:00:28.937561+00:00",
+        "end": "2026-10-07T23:00:33.031211+00:00",
+        "exit": 0,
+        "command": [
+          "/tmp/bc-coord/coord.sh",
+          "lean",
+          "codex",
+          "native-adapters-module",
+          "--",
+          "timeout",
+          "180",
+          "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+          "-j1",
+          "-M8000",
+          "--root=/tmp/beaconcrypt-record-lift-native-adapters/beaconcrypt-core/proofs/lean",
+          "-o",
+          "/tmp/bc-arc-scratch/record-lift/native-adapters/publication-olean/BeaconcryptCore/Computational/PqxdhRecordLiftNativeAdapters.olean",
+          "/tmp/beaconcrypt-record-lift-native-adapters/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftNativeAdapters.lean"
+        ],
+        "CARGO_BUILD_JOBS": null,
+        "CARGO_TARGET_DIR": null,
+        "source_sha256": "2902e3f1bde738799f7074fb39b020e070664e6c8f02cc74060fdc553b4f823f",
+        "artifact_sha256": "754675fd27380d2e9edb03f7a1cfbeb7471ce7faaf20951f57327a5409cf861d",
+        "leanpath_sha256": "2e4629f348954d18069fe142e8f560d16545f6f52d045adc23aa5802c9bad89e",
+        "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "log": "/tmp/bc-arc-scratch/record-lift/native-adapters/logs/publication-module.log"
+      }
+    },
+    "root": {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/native-adapters/logs/publication-root.json",
+      "receipt_sha256": "28c7179a4ee21a622e34e8909e4dc30bbd546a707e1d0b506e8ef4f59f8509ba",
+      "result": {
+        "start": "2026-10-07T23:00:40.870893+00:00",
+        "end": "2026-10-07T23:00:44.165652+00:00",
+        "exit": 0,
+        "command": [
+          "/tmp/bc-coord/coord.sh",
+          "lean",
+          "codex",
+          "native-adapters-root",
+          "--",
+          "timeout",
+          "180",
+          "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+          "-j1",
+          "-M8000",
+          "--root=/tmp/beaconcrypt-record-lift-native-adapters/beaconcrypt-core/proofs/lean",
+          "-o",
+          "/tmp/bc-arc-scratch/record-lift/native-adapters/publication-olean/BeaconcryptCore.olean",
+          "/tmp/beaconcrypt-record-lift-native-adapters/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+        ],
+        "CARGO_BUILD_JOBS": null,
+        "CARGO_TARGET_DIR": null,
+        "source_sha256": "e16f87bff8bde5d087f9f3acc5bf78250dc45215681de61f8c84c82923836616",
+        "artifact_sha256": "0b9d3d2ab738d56b82ac04d9ce9d5c5c9fd2bee3595283cd6c1e73b4d0b60ff5",
+        "leanpath_sha256": "2e4629f348954d18069fe142e8f560d16545f6f52d045adc23aa5802c9bad89e",
+        "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "log": "/tmp/bc-arc-scratch/record-lift/native-adapters/logs/publication-root.log"
+      }
+    },
+    "inventory": {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/native-adapters/logs/publication-inventory.json",
+      "receipt_sha256": "397c232d3570c4c840af6e49dde8afddf7cec4918c11a9b2e73bdf26c4586e89",
+      "result": {
+        "start": "2026-10-07T23:00:40.870448+00:00",
+        "end": "2026-10-07T23:01:57.359810+00:00",
+        "exit": 0,
+        "command": [
+          "/tmp/bc-coord/coord.sh",
+          "lease",
+          "mem",
+          "codex",
+          "@nix",
+          "native-adapters-inventory",
+          "--eta",
+          "20m",
+          "--",
+          "nix",
+          "develop",
+          "--no-update-lock-file",
+          "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+          "-c",
+          "make",
+          "-C",
+          "/tmp/beaconcrypt-record-lift-native-adapters/beaconcrypt-core",
+          "check-inventory",
+          "SHELL=bash"
+        ],
+        "CARGO_BUILD_JOBS": "2",
+        "CARGO_TARGET_DIR": "/tmp/bc-arc-scratch/record-lift/native-adapters/target",
+        "source_sha256": "e16f87bff8bde5d087f9f3acc5bf78250dc45215681de61f8c84c82923836616",
+        "artifact_sha256": null,
+        "leanpath_sha256": "2e4629f348954d18069fe142e8f560d16545f6f52d045adc23aa5802c9bad89e",
+        "log_sha256": "fa9b93a9c8412b424f4fd96e3ba71fdc4ac2c7fceb7a10ae525ca73bd1fb953d",
+        "log": "/tmp/bc-arc-scratch/record-lift/native-adapters/logs/publication-inventory.log"
+      }
+    },
+    "fidelity": {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/native-adapters/logs/publication-fidelity.json",
+      "receipt_sha256": "011158d107caa5cbe84bebb6c6bb01f53c0c40baeeb14709f723f30686b1f558",
+      "result": {
+        "start": "2026-10-07T23:00:40.871043+00:00",
+        "end": "2026-10-07T23:01:04.965550+00:00",
+        "exit": 0,
+        "command": [
+          "/tmp/bc-coord/coord.sh",
+          "lease",
+          "mem",
+          "codex",
+          "@cargo",
+          "native-adapters-fidelity",
+          "--eta",
+          "20m",
+          "--",
+          "nix",
+          "develop",
+          "--no-update-lock-file",
+          "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+          "-c",
+          "make",
+          "-C",
+          "/tmp/beaconcrypt-record-lift-native-adapters/beaconcrypt-core",
+          "check-proverif-transcript-fidelity",
+          "SHELL=bash"
+        ],
+        "CARGO_BUILD_JOBS": "2",
+        "CARGO_TARGET_DIR": "/tmp/bc-arc-scratch/record-lift/native-adapters/target",
+        "source_sha256": "e16f87bff8bde5d087f9f3acc5bf78250dc45215681de61f8c84c82923836616",
+        "artifact_sha256": null,
+        "leanpath_sha256": "2e4629f348954d18069fe142e8f560d16545f6f52d045adc23aa5802c9bad89e",
+        "log_sha256": "7817be7be31066f5ee9fbf38b4f06829fea5579f6c421a8ac88c066d21e2be49",
+        "log": "/tmp/bc-arc-scratch/record-lift/native-adapters/logs/publication-fidelity.log"
+      }
+    }
+  },
+  "publication_leanpath": "/tmp/bc-arc-scratch/record-lift/native-adapters/publication.leanpath",
+  "publication_leanpath_sha256": "2e4629f348954d18069fe142e8f560d16545f6f52d045adc23aa5802c9bad89e",
+  "inventory_handwritten_lean_count": 1578,
+  "transcript_fidelity_tests": 30,
+  "independent_review": {
+    "path": "/tmp/bc-arc-scratch/record-lift/reviews/native-adapters-semantic-2026-10-08.json",
+    "sha256": "523abb3e34a91ba1025faeefd6a6a1b7ca848434d36655afefd45b03ddf41d79",
+    "receipt": {
+      "reviewer": "/root/record_seed_boundary",
+      "author": "/root/record_lazy_table",
+      "date_utc": "2026-10-07T23:00:50.741915+00:00",
+      "result": "APPROVE semantic and source hygiene; publication metadata not yet reviewed",
+      "source": "/tmp/beaconcrypt-record-lift-native-adapters/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftNativeAdapters.lean",
+      "source_sha256": "2902e3f1bde738799f7074fb39b020e070664e6c8f02cc74060fdc553b4f823f",
+      "guide": "/tmp/beaconcrypt-record-lift-native-adapters/doc/impl/record-lift-native-adapters.md",
+      "guide_sha256": "24b841a23a13d2499b56fcd9e0df98415f330dd1d5bdf2c451468167df29948a",
+      "theorems": 13,
+      "exact_guards": 13,
+      "guard_names_match_source_order": true,
+      "allowed_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "findings": [],
+      "reviewed": [
+        {
+          "lines": "13-33,171-178",
+          "conclusion": "Actual native KDF requests are forwarded unchanged; fromResponse/fullResponse is an exact representation round trip. StateT map retains the complete primitive poststate and does not impose purity."
+        },
+        {
+          "lines": "23-25,181-205",
+          "conclusion": "Receive uses toNative then RawCtxWholeOwner.arguments, which retains source material/sequence/raw/frame/AD and contains no plaintext argument. Missing material is pure rejection; present material wraps the actual returned optional plaintext and exact source sender/sequence. Send uses nativeSeal and exact source material/sequence/context, with actual optional writer bytes and targetId metadata."
+        },
+        {
+          "lines": "36-72,106-137",
+          "conclusion": "Handler equations and complete evaluated native-state equations compose the existing interpreted/native driver correspondence with the literal adapters. concreteResult changes only the refined-kernel wrapper; reply and all primitive state are preserved."
+        },
+        {
+          "lines": "75-103,140-168",
+          "conclusion": "Generic local equations explicitly require LookupPreserves, LookupRealized, table validity and KernelReferences. Real instances discharge lookup equations via the actual realLookup plus functional KdfReal; no distribution, injectivity, security or chosen-success premise is smuggled into them."
+        },
+        {
+          "lines": "guide entire",
+          "conclusion": "Guide limits scope to complete local operations. Raw parsing, routing/peer selection, dynamic installation, global source law/counter instantiation, seed framing, global budgets and security replacement remain explicit future joins. Imported source control covers rejection, skipped/cached/future paths, rollback and send failure advancement without assuming a successful reply."
+        }
+      ],
+      "dependency_hashes": {
+        "PqxdhRecordLiftChainCompiler": "7e971f04498f783172f9003a82cd022f79ae2cd1f4ffe281ead93e4a1808ecc0",
+        "PqxdhRecordLiftRealTable": "ee3f941c4bb273ca0e01e63e5ccfb53c582660d023babad5834807c30aa87e48",
+        "RawCtxWholeOwner": "a5e041c9120134f5f6679a228220d905b245a0758f07d7110d5ed173a5d0c22a",
+        "RawCtxSourceSend": "89970f31ede0b177b7c0be4089ee13028a777db1f2d4e4c25745f74a56c2c9d4",
+        "RawCtxInterpretedOpening": "8469d04f82d28087dba94b9d17e925707225b26dbc0662e5bee93d9726d94674",
+        "RawCtxInterpretedReceive": "f35c1d7f0e82ef325622828bec30be8eb4bf232d08258af031fd9469b1aff1e9",
+        "RawCtxInterpretedSend": "c65664e61aa6d0ca37d567a630230f0589492e5bc5d09d1a24ebb3b304cf6916"
+      },
+      "author_check": {
+        "path": "/tmp/bc-arc-scratch/record-lift/native-adapters/logs/publication-module.json",
+        "sha256": "7a74a43a9e62a20a0b12694fa066d87b517c88fb2aee2b58cf0837c88fa6c7ff",
+        "exit": 0,
+        "source_sha256": "2902e3f1bde738799f7074fb39b020e070664e6c8f02cc74060fdc553b4f823f",
+        "artifact_sha256": "754675fd27380d2e9edb03f7a1cfbeb7471ce7faaf20951f57327a5409cf861d",
+        "leanpath_sha256": "2e4629f348954d18069fe142e8f560d16545f6f52d045adc23aa5802c9bad89e",
+        "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "log_note": "Empty Lean log; author publication check after normal ae4a4996 merge."
+      },
+      "hygiene": {
+        "spdx": true,
+        "no_placeholders_or_custom_axioms": true,
+        "no_H7_forbidden_name_use": true,
+        "single_line_markdown_paragraphs": true
+      },
+      "review_actions": {
+        "source_edits": false,
+        "builds": false,
+        "mail_cursor_changes": false
+      },
+      "limitations": [
+        "This receipt does not approve publication metadata currently being reconciled by the author.",
+        "The supplied native interpreter remains generic; concrete World primitive law and parser/owner routing are not proved by these local adapter equalities."
+      ],
+      "earlier_author_check": {
+        "path": "/tmp/bc-arc-scratch/record-lift/native-adapters/logs/native-adapters-225758.json",
+        "sha256": "1e9cd3273b2bae7868a370043b9ec2e9ff17b49e3d9b99da255699931b0e50fc",
+        "exit": 0,
+        "source_sha256": "2902e3f1bde738799f7074fb39b020e070664e6c8f02cc74060fdc553b4f823f",
+        "artifact_sha256": "754675fd27380d2e9edb03f7a1cfbeb7471ce7faaf20951f57327a5409cf861d",
+        "leanpath_sha256": "c25af502feb969f225ac0f7966ce781d9848c1fd22f4593a0a2f78e9a5df8dda",
+        "log_sha256": "7a84cb7dd575fd25ed8366f1c45e8c859188d5914d4fce4dbc4867f6dc8cfed6",
+        "log_note": "Only coordination wait text; no Lean diagnostic."
+      }
+    }
+  },
+  "full_matrix": "Not run: outside owner-approved current lane. No Rust changes; no full mutation suite, full lake build, make verify, ProVerif, or Nix garbage collection.",
+  "publication_hygiene": {
+    "path": "/tmp/bc-arc-scratch/record-lift/reviews/native-adapters-publication-hygiene-2026-10-08.json",
+    "sha256": "11ddfde6709a04c318bef302f0bc9815937ebeb657ee6ba50d7bd6bb151b406f",
+    "receipt": {
+      "reviewer": "/root/record_seed_boundary",
+      "author": "/root/record_lazy_table",
+      "date_utc": "2026-10-07T23:05:02.065197+00:00",
+      "result": "APPROVE publication metadata and normal merge union; no findings",
+      "head": "603b159563dc02066bb168d97059b393726aa8b1",
+      "merge_head": "ae4a49965c1c625b9fcc181cd281925e2e188f2b",
+      "files_sha256": {
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftNativeAdapters.lean": "2902e3f1bde738799f7074fb39b020e070664e6c8f02cc74060fdc553b4f823f",
+        "doc/impl/record-lift-native-adapters.md": "24b841a23a13d2499b56fcd9e0df98415f330dd1d5bdf2c451468167df29948a",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "e16f87bff8bde5d087f9f3acc5bf78250dc45215681de61f8c84c82923836616",
+        "beaconcrypt-core/proofs/check-inventory.sh": "6fe9fbbd7e4d00d0daf23b237ec388b4aa1938025d17d62f03cb0b6cf1a6382b",
+        "beaconcrypt-core/proofs/reviewed-inventory.txt": "450b69370ce4bdfa18801bcee21c054f9e5332e459d16e87cab48bbc5b8c931f",
+        "doc/formal-verification-analysis.md": "7e2ad2b60dd072ade9c44ab104b061019800b9c50bcd1f5b2879854aabd8d8f5"
+      },
+      "topic_receipt_sha256": "16a4b12feadf893f5b650d4596dfd35105893a7ca73d0ebbe0796b26707183bb",
+      "semantic_review": {
+        "path": "/tmp/bc-arc-scratch/record-lift/reviews/native-adapters-semantic-2026-10-08.json",
+        "sha256": "523abb3e34a91ba1025faeefd6a6a1b7ca848434d36655afefd45b03ddf41d79"
+      },
+      "findings": [],
+      "reviewed": [
+        "Root adds one exact NativeAdapters import at Codex anchor and retains every import from both merge parents in order.",
+        "Gate block adds theorem count13, guard count13 and exact named theorem/axiom-print gates for all13 statements. Every old gate from both parents is retained in order, except the legitimate count1578 update.",
+        "Manifest contains every parent row with unchanged digests except recomputed root/checker, plus one new NativeAdapters row at the Codex anchor. Six incoming Claude Lean source files match MERGE_HEAD byte-for-byte.",
+        "Analysis adds only the local source-adapter claim and explicit generic native/table/source premises, with dynamic routing, parsing, installation, concrete KDF/instrumentation and security joins explicitly open. Both parent analyses remain in order.",
+        "All six recorded file hashes, four check-receipt hashes, logs, module/root artifacts and LEAN_PATH hashes were verified. Module13 exact guards, root, Nix inventory and fidelity all exit0; fidelity includes20 Python and30 Rust tests.",
+        "Receipt correctly embeds the independent semantic review and distinguishes callback invocation counts from internal primitive work. No production source, existing proof source, contract or global security claim was changed."
+      ],
+      "inventory_handwritten_lean_count": 1578,
+      "checks": {
+        "module": {
+          "receipt": "/tmp/bc-arc-scratch/record-lift/native-adapters/logs/publication-module.json",
+          "receipt_sha256": "7a74a43a9e62a20a0b12694fa066d87b517c88fb2aee2b58cf0837c88fa6c7ff",
+          "exit": 0
+        },
+        "root": {
+          "receipt": "/tmp/bc-arc-scratch/record-lift/native-adapters/logs/publication-root.json",
+          "receipt_sha256": "28c7179a4ee21a622e34e8909e4dc30bbd546a707e1d0b506e8ef4f59f8509ba",
+          "exit": 0
+        },
+        "inventory": {
+          "receipt": "/tmp/bc-arc-scratch/record-lift/native-adapters/logs/publication-inventory.json",
+          "receipt_sha256": "397c232d3570c4c840af6e49dde8afddf7cec4918c11a9b2e73bdf26c4586e89",
+          "exit": 0
+        },
+        "fidelity": {
+          "receipt": "/tmp/bc-arc-scratch/record-lift/native-adapters/logs/publication-fidelity.json",
+          "receipt_sha256": "011158d107caa5cbe84bebb6c6bb01f53c0c40baeeb14709f723f30686b1f558",
+          "exit": 0
+        }
+      },
+      "git_diff_check": "passed",
+      "review_actions": {
+        "source_edits": false,
+        "builds": false,
+        "mail_cursor_changes": false
+      },
+      "allowed_followup": "Add this receipt and update publication-review status only; all source and metadata hashes above remain reviewed. Parent controls topic publication and central integration."
+    }
+  }
+}
