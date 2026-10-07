@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1506
+	[handwritten-lean]=1507
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -29084,6 +29084,31 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem failure_public([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEligibility theorem failure_public"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEligibility\.designate_owner_native$' "$selected_source_module" "PqxdhDeploymentEligibility dependency BeaconcryptCore.Computational.PqxdhDeploymentEligibility.designate_owner_native"
 require_line_count 1 '^theorem designate_owner_native([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEligibility theorem designate_owner_native"
+
+# CE-5 key match: designated Server peers verify the owner's published PQ key and identity; designated Beacons are pinned to the Server and linked to the build ciphertext (Phase1ReadBack, Phase2ReadBack).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentKeyMatch.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentKeyMatch$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentKeyMatch root import"
+require_line_count 9 '^theorem ' "$selected_source_module" "PqxdhDeploymentKeyMatch theorem inventory"
+require_line_count 9 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentKeyMatch guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKeyMatch\.bundleOf_mem$' "$selected_source_module" "PqxdhDeploymentKeyMatch dependency BeaconcryptCore.Computational.PqxdhDeploymentKeyMatch.bundleOf_mem"
+require_line_count 1 '^theorem bundleOf_mem([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKeyMatch theorem bundleOf_mem"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKeyMatch\.buildOf_mem$' "$selected_source_module" "PqxdhDeploymentKeyMatch dependency BeaconcryptCore.Computational.PqxdhDeploymentKeyMatch.buildOf_mem"
+require_line_count 1 '^theorem buildOf_mem([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKeyMatch theorem buildOf_mem"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKeyMatch\.candidateOf_written$' "$selected_source_module" "PqxdhDeploymentKeyMatch dependency BeaconcryptCore.Computational.PqxdhDeploymentKeyMatch.candidateOf_written"
+require_line_count 1 '^theorem candidateOf_written([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKeyMatch theorem candidateOf_written"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKeyMatch\.verified_signed_pq$' "$selected_source_module" "PqxdhDeploymentKeyMatch dependency BeaconcryptCore.Computational.PqxdhDeploymentKeyMatch.verified_signed_pq"
+require_line_count 1 '^theorem verified_signed_pq([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKeyMatch theorem verified_signed_pq"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKeyMatch\.published_candidate$' "$selected_source_module" "PqxdhDeploymentKeyMatch dependency BeaconcryptCore.Computational.PqxdhDeploymentKeyMatch.published_candidate"
+require_line_count 1 '^theorem published_candidate([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKeyMatch theorem published_candidate"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKeyMatch\.designate_keymatch$' "$selected_source_module" "PqxdhDeploymentKeyMatch dependency BeaconcryptCore.Computational.PqxdhDeploymentKeyMatch.designate_keymatch"
+require_line_count 1 '^theorem designate_keymatch([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKeyMatch theorem designate_keymatch"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKeyMatch\.owner_link$' "$selected_source_module" "PqxdhDeploymentKeyMatch dependency BeaconcryptCore.Computational.PqxdhDeploymentKeyMatch.owner_link"
+require_line_count 1 '^theorem owner_link([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKeyMatch theorem owner_link"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKeyMatch\.keymatch_game$' "$selected_source_module" "PqxdhDeploymentKeyMatch dependency BeaconcryptCore.Computational.PqxdhDeploymentKeyMatch.keymatch_game"
+require_line_count 1 '^theorem keymatch_game([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKeyMatch theorem keymatch_game"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKeyMatch\.link_game$' "$selected_source_module" "PqxdhDeploymentKeyMatch dependency BeaconcryptCore.Computational.PqxdhDeploymentKeyMatch.link_game"
+require_line_count 1 '^theorem link_game([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKeyMatch theorem link_game"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
