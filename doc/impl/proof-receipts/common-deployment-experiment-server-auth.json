@@ -1,6 +1,6 @@
 {
- "date": "2026-10-07T19:54:52.950171+00:00",
- "scope": "CE-8 of the common deployment experiment (handoff item 3, plan sections 10 and 14): CE-A1, the initial-response origin of every Beacon, by the embedding R_c of the experiment into the existing Server-authentication game (lazy target with stop at a failed target bundle, local other Beacons, restriction-5 Server records, truncation at the stop), the exact sum over creation indices, the bills of every R_c at the transported deployment budget, and the injectivity loss eps_inj by a joint-use weak-EUF collision finder.",
+ "date": "2026-10-07T20:44:49.863722+00:00",
+ "scope": "CE-8 of the common deployment experiment (handoff item 3, plan sections 10 and 14): CE-A1, the initial-response origin of every Beacon, by the embedding R_c of the experiment into the existing Server-authentication game (lazy target with stop at a failed target bundle, local other Beacons, restriction-5 Server records, truncation at the stop), the exact sum over creation indices, the bills of every R_c at the transported deployment budget, and the injectivity loss eps_inj by a joint-use weak-EUF collision finder with its query bills. The CE-A1 event uses a public matching relation, which is weaker than the plan's eleven-field common session (see deviations_from_plan); the headlines use its pinned form (Server identity of the matched build response).",
  "basis": "e90d54d934387bd08bfadff345449b84ebd1be2d",
  "topic": {
   "branch": "codex/deployment-server-auth",
@@ -8,8 +8,8 @@
  },
  "plan": {
   "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
-  "sha256": "2316adbfd78df1ce8ed369719f7275a67dca8e4fc0f0c08ff9403a7dca398c95",
-  "stages": "CE-8 (section 10 CE-A1 row and R_c; section 14; section 19 option (b))"
+  "sha256": "6702a02479113a61bbc886c65cce772525caf54405bfa143e788ff11790de64e",
+  "stages": "CE-8 (section 10 CE-A1 row and R_c; section 14; section 19 option (b)); review fix pass (section 9 Beacon-side corollary, owner input 17)"
  },
  "commits": [
   {
@@ -51,6 +51,18 @@
   {
    "commit": "4e2728edf7fb09daa4b26bc99b0d2fba73f70fcb",
    "subject": "Bound the injectivity loss of CE-A1"
+  },
+  {
+   "commit": "9d9ea4cb5d7e76ebda4ec5b9d9721b7e9129619c",
+   "subject": "Document CE-A1 for every deployment Beacon"
+  },
+  {
+   "commit": "c52bf0f39ca90817ad21d8518549f825d8615602",
+   "subject": "Pin the CE-A1 matching to the Server identity"
+  },
+  {
+   "commit": "322e5b729ff15cc79e0c88359566231172572482",
+   "subject": "Bill the collision reductions of CE-A1"
   }
  ],
  "files_sha256": {
@@ -66,15 +78,15 @@
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentServerAuthJournal.lean": "5dcce55ccb58b088b71d4c8622a139d0813a9c869a38d7444b489136dcaa155b",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentServerAuthTrack.lean": "5d046acd141131349d452a3366fbc1bd2a200788d5c53d5349c57262b8237efc",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentServerAuthChain.lean": "82db4381661e1288574e97311326d73ab261616f2810697024700d00877376fb",
-  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentServerAuth.lean": "e8e11ea8f28b1d9bba9a4e2886cf05e5ccb451c25fba58c90e45764db6cb1552",
-  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentServerAuthBills.lean": "1700dfc3128bddf7648a5108d5d69569871d459122ab289b11a24cc24e2f4fed",
-  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentServerAuthInjective.lean": "577091ca33bfc16aa46ca88c293ed696f619a00c51771866af030b1b08843a65",
-  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentServerAuthInjectiveGame.lean": "36c75c47e9cc71e2cd2634e46f2fd146be746859210b94038be4719496d12517",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentServerAuth.lean": "9dc95a7035b12a85dd75aaa4b7d6450642f0e9237c03b11113ae4403a33b8284",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentServerAuthBills.lean": "e6226e1d935e92d862ca5d7ffa59c8511b3606aebdfc5e90fd2d97403e394462",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentServerAuthInjective.lean": "7bd9f31516d145ea794612f00f1e555efacb7f7b3617aa8bc4b4c43cc78996a3",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentServerAuthInjectiveGame.lean": "4b3f20b7cba880d76631e12e4321f7861070d24e55c8c324ce47b640ac1f69d5",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "14ed64e3fc1b0a3d0ab1d0fac8cfac0fc7ea7ef40fe153c1f3d30cbd18e305d5",
-  "beaconcrypt-core/proofs/check-inventory.sh": "d0159a6b122e4df334984121de648da836c73437db58b8a88d210dc7a5ad9747",
-  "beaconcrypt-core/proofs/reviewed-inventory.txt": "3a447d87c74f5e0ec439095a3df9feaa6029f21c194608d52b7534337f53cef4",
-  "doc/impl/common-deployment-experiment.md": "66d6632d478749460423c0837a17c3e13e52fd6e008dfaea5b057c1bb0587f0a",
-  "doc/formal-verification-analysis.md": "0f1dd166682758eb4236cbc2353cd808138b8fd3e3d372d7bec32d53ba6d736a",
+  "beaconcrypt-core/proofs/check-inventory.sh": "d1e2032ab5c44cdfc98f83fc9cab73823a9df74f3b4e9d426ec2689defeec315",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "d38f6f70a5fb927a976b930b44b2d73c768da7d8202b8609b77503ac679edc7a",
+  "doc/impl/common-deployment-experiment.md": "87ce62b0c88a924b7d99b8591427e70381ae01857020f09805e13013a148fb53",
+  "doc/formal-verification-analysis.md": "a78dddf56fcc10ab9e03a939d323edd103877af761fc137659ae064d4e85a836",
   "doc/composition-assumptions.md": "5e168f794f58e7112deff849cabe26e2fd360ccf7f95acf148638749fdbcb3e9"
  },
  "modules": [
@@ -115,6 +127,7 @@
     "source_sha256": "31a128515f84c72be82b428267e1666b231455efc895581595d0b47323a09f0c",
     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "log_bytes": 0,
+    "log_tag": "final",
     "artifact_sha256": "7d5a8fa74384bf7ce8033e4f3eb65343668243cd910e9c8d9b2e148ece6be690",
     "command": [
      "flock",
@@ -149,6 +162,7 @@
     "source_sha256": "698ffb4639812ffa15e83096c7e1221b324939b417abc4556497ddf80e26eda6",
     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "log_bytes": 0,
+    "log_tag": "final",
     "artifact_sha256": "de1065db8be67e0639fea5506df95794a6c148d70f43fa698330db04e67219ab",
     "command": [
      "flock",
@@ -195,6 +209,7 @@
     "source_sha256": "c66c8fbefceb9b1befbca652011a2ba31c2eefcced7a0e552db5fa52b4a55f64",
     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "log_bytes": 0,
+    "log_tag": "final",
     "artifact_sha256": "047ab6689af6d234cb297e7d40969e1d1387619af71bf2a3ce9ce6798d27d77a",
     "command": [
      "flock",
@@ -258,6 +273,7 @@
     "source_sha256": "826240931a0d4bc7c68e0348c93575508c136e8f11a4708afa2a063290846921",
     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "log_bytes": 0,
+    "log_tag": "final",
     "artifact_sha256": "f87d1a3cd119c5964ee6a0744470a51ec622685069983fe3cfdb29f1f260ba1a",
     "command": [
      "flock",
@@ -326,6 +342,7 @@
     "source_sha256": "530e8dbfaf97d53603a984ba544f5a958af343994486f38653c3222b260311bf",
     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "log_bytes": 0,
+    "log_tag": "final",
     "artifact_sha256": "279c768f2d458f3b1132c174ac4495b5f3e88b55c9475c0ca8f0629106496b1f",
     "command": [
      "flock",
@@ -368,6 +385,7 @@
     "source_sha256": "8ccb4d71b160fc36f8ec1f849b9982ae7098e44f17452aaa9a505440e4c894a7",
     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "log_bytes": 0,
+    "log_tag": "final",
     "artifact_sha256": "ad037de6be939f7468aa23461807ada8268ba3d547c54edbd3dcdfc870cb45cf",
     "command": [
      "flock",
@@ -410,6 +428,7 @@
     "source_sha256": "76857afc897d432a3fe23fd1ee90d90eafac1be9fd78bbbe0a1c4cda7727898a",
     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "log_bytes": 0,
+    "log_tag": "final",
     "artifact_sha256": "92a55c1098afed775ef7c39e4a59b4afcdeda2571e4236d14f63a8dfbdbc0ea8",
     "command": [
      "flock",
@@ -456,6 +475,7 @@
     "source_sha256": "0b7135124f5c376a685428e7ca7fbaf447dd309212dd0df209b5664408c89023",
     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "log_bytes": 0,
+    "log_tag": "final",
     "artifact_sha256": "ae895c5964410e60b4723cb43e32776af026b4b2a3c2ae82d2ba752df88a0ac0",
     "command": [
      "flock",
@@ -494,6 +514,7 @@
     "source_sha256": "04add23d48d5aa27ec6dffe13a04ab5acc40e7e567cbd11df9cfca39dd562b70",
     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "log_bytes": 0,
+    "log_tag": "final",
     "artifact_sha256": "f9a22ad86c7082df700fe13c0adfd5fa794f22c47457926d1ef7430bcb3c1a38",
     "command": [
      "flock",
@@ -533,6 +554,7 @@
     "source_sha256": "5dcce55ccb58b088b71d4c8622a139d0813a9c869a38d7444b489136dcaa155b",
     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "log_bytes": 0,
+    "log_tag": "final",
     "artifact_sha256": "fff7e8cbf1705c34b56bdc2191dfedbbe33b2e3e2c2a02667d0b0d2f065d0af7",
     "command": [
      "flock",
@@ -598,6 +620,7 @@
     "source_sha256": "5d046acd141131349d452a3366fbc1bd2a200788d5c53d5349c57262b8237efc",
     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "log_bytes": 0,
+    "log_tag": "final",
     "artifact_sha256": "9329cd329f81d1217139968cfa45ac3a379b2d14127e5d3e2ebb6b9808c68f8c",
     "command": [
      "flock",
@@ -641,6 +664,7 @@
     "source_sha256": "82db4381661e1288574e97311326d73ab261616f2810697024700d00877376fb",
     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "log_bytes": 0,
+    "log_tag": "final",
     "artifact_sha256": "e4370cf79f321c371a5dc79835fd083e2a3a1f9f87b95157238948acaf348c28",
     "command": [
      "flock",
@@ -672,23 +696,33 @@
     "a1_range",
     "a1_sum",
     "noFailure_a1At",
+    "pinned_matched",
+    "noFailure_noPinnedMatch",
+    "build_entry",
+    "build_pin",
+    "matched_pinned",
+    "noPinnedMatch_noFailure",
     "ce_a1"
    ],
-   "statement_count": 12,
+   "statement_count": 18,
    "axiom_profile": {
-    "Classical.choice, Quot.sound, propext": 12
+    "Classical.choice, Quot.sound, propext": 18
    },
    "direct_check_final": {
     "exit": 0,
-    "start": "2026-10-07T19:50:26.291157+00:00",
-    "end": "2026-10-07T19:50:30.991609+00:00",
-    "source_sha256": "e8e11ea8f28b1d9bba9a4e2886cf05e5ccb451c25fba58c90e45764db6cb1552",
+    "start": "2026-10-07T20:42:18.578224+00:00",
+    "end": "2026-10-07T20:42:30.721702+00:00",
+    "source_sha256": "9dc95a7035b12a85dd75aaa4b7d6450642f0e9237c03b11113ae4403a33b8284",
     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "log_bytes": 0,
-    "artifact_sha256": "8de98e9d705c6b45fc5d382fd1a1f79ea9d909127f078a51b46d21bf907a8f21",
+    "log_tag": "fix1-final",
+    "artifact_sha256": "db6ce82c9f6f4ca2d755359447248ce628b266cda9d9f352964ea4b9392f2bc7",
     "command": [
-     "flock",
-     "/tmp/bc-arc-scratch/lean.lock",
+     "/tmp/bc-coord/coord.sh",
+     "lean",
+     "claude",
+     "ce8-PqxdhDeploymentServerAuth-fix1-final",
+     "--",
      "timeout",
      "180",
      "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
@@ -724,15 +758,19 @@
    },
    "direct_check_final": {
     "exit": 0,
-    "start": "2026-10-07T19:50:31.030202+00:00",
-    "end": "2026-10-07T19:50:35.978763+00:00",
-    "source_sha256": "1700dfc3128bddf7648a5108d5d69569871d459122ab289b11a24cc24e2f4fed",
+    "start": "2026-10-07T20:42:30.756247+00:00",
+    "end": "2026-10-07T20:42:39.896337+00:00",
+    "source_sha256": "e6226e1d935e92d862ca5d7ffa59c8511b3606aebdfc5e90fd2d97403e394462",
     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "log_bytes": 0,
-    "artifact_sha256": "151f89bb92a55bca47667c495556d61d8cb6072acec602d3b4025e00f906fdc1",
+    "log_tag": "fix1-final",
+    "artifact_sha256": "939ea344019a0283b364bfb097793b7ff134879a966190c7b0b8ce90df08ceb3",
     "command": [
-     "flock",
-     "/tmp/bc-arc-scratch/lean.lock",
+     "/tmp/bc-coord/coord.sh",
+     "lean",
+     "claude",
+     "ce8-PqxdhDeploymentServerAuthBills-fix1-final",
+     "--",
      "timeout",
      "180",
      "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
@@ -763,24 +801,30 @@
     "owners_collision",
     "joint_correct",
     "probEvent_le_bind",
-    "collision_bound"
+    "collision_bound",
+    "collider_queries",
+    "collider_bills"
    ],
-   "statement_count": 15,
+   "statement_count": 17,
    "axiom_profile": {
-    "Classical.choice, Quot.sound, propext": 12,
+    "Classical.choice, Quot.sound, propext": 14,
     "propext": 3
    },
    "direct_check_final": {
     "exit": 0,
-    "start": "2026-10-07T19:50:36.013162+00:00",
-    "end": "2026-10-07T19:50:41.313378+00:00",
-    "source_sha256": "577091ca33bfc16aa46ca88c293ed696f619a00c51771866af030b1b08843a65",
+    "start": "2026-10-07T20:42:39.935277+00:00",
+    "end": "2026-10-07T20:42:57.174993+00:00",
+    "source_sha256": "7bd9f31516d145ea794612f00f1e555efacb7f7b3617aa8bc4b4c43cc78996a3",
     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "log_bytes": 0,
-    "artifact_sha256": "794a4133bee02dbf68a7dca231c4295897bbcb8f0c1cd84b558e10908a7fd980",
+    "log_tag": "fix1-final",
+    "artifact_sha256": "ce4f3b11213b7c4640b63e4ea92e0e5b7c5738e976bd7d38f84cda74d97e13cd",
     "command": [
-     "flock",
-     "/tmp/bc-arc-scratch/lean.lock",
+     "/tmp/bc-coord/coord.sh",
+     "lean",
+     "claude",
+     "ce8-PqxdhDeploymentServerAuthInjective-fix1-final",
+     "--",
      "timeout",
      "180",
      "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
@@ -817,15 +861,19 @@
    },
    "direct_check_final": {
     "exit": 0,
-    "start": "2026-10-07T19:50:41.352576+00:00",
-    "end": "2026-10-07T19:50:46.385805+00:00",
-    "source_sha256": "36c75c47e9cc71e2cd2634e46f2fd146be746859210b94038be4719496d12517",
+    "start": "2026-10-07T20:42:57.214934+00:00",
+    "end": "2026-10-07T20:43:06.576858+00:00",
+    "source_sha256": "4b3f20b7cba880d76631e12e4321f7861070d24e55c8c324ce47b640ac1f69d5",
     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "log_bytes": 0,
-    "artifact_sha256": "ece57359afeb011cb1c2264d377169dc7aecf1e155c87f5c0bffc410d615d188",
+    "log_tag": "fix1-final",
+    "artifact_sha256": "2b3518b5c2229eeb644c9ce12f66a56b585f46982bbfcacee39199a5d0df98a3",
     "command": [
-     "flock",
-     "/tmp/bc-arc-scratch/lean.lock",
+     "/tmp/bc-coord/coord.sh",
+     "lean",
+     "claude",
+     "ce8-PqxdhDeploymentServerAuthInjectiveGame-fix1-final",
+     "--",
      "timeout",
      "180",
      "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
@@ -839,8 +887,8 @@
    }
   }
  ],
- "statements": 242,
- "deployment_statements_total_after": 768,
+ "statements": 250,
+ "deployment_statements_total_after": 776,
  "deployment_statements_total_before": 526,
  "allowed_axioms": [
   "propext",
@@ -848,7 +896,7 @@
   "Quot.sound"
  ],
  "axiom_profile_from_guards": {
-  "Classical.choice, Quot.sound, propext": 227,
+  "Classical.choice, Quot.sound, propext": 235,
   "Quot.sound, propext": 10,
   "(none)": 2,
   "propext": 3
@@ -890,26 +938,34 @@
   "PqxdhDeploymentServerAuth.a1_range": "theorem a1_range (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat)\n    (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)\n    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec) (bounds : FreshBounds) (mode : Mode)\n    (adversary : OracleComp (ModeSpec mode) X) (budget : Budget) (respects : budget.Respects adversary) (runtime : A)\n    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A)\n    (member : outcome ∈ support\n      ((PqxdhDeploymentSecrecy.game setup codec checks route ensureInit identityIndex bounds mode adversary).run runtime))\n    (c : Nat) (event : A1At setup codec c outcome) : c < budget.create",
   "PqxdhDeploymentServerAuth.a1_sum": "theorem a1_sum (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks) (caps : KemCaps)\n    (bounded : KemBound setup caps) (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)\n    (identityIndex : Nat) (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)\n    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)\n    (frameBack : PqxdhServerAuthNegativeControl.FrameReadBack codec)\n    (writable : PqxdhFirstBeaconRecordCanonical.ReadWritable codec.frameWrite codec.frameRead)\n    (law : X25519ClassLaw setup.source.crypto) (spread : X25519ScalarSpread setup.source.crypto)\n    (correct : SourceFullCorrect setup.source setup.hmac)\n    (adapter : HasAttachedVerificationAdapter\n      (fun identity => setup.source.crypto.verify identity.toList) setup.joint.verify)\n    (bounds : FreshBounds) (mode : Mode) (adversary : OracleComp (ModeSpec mode) X) (budget : Budget)\n    (respects : budget.Respects adversary) (runtime : A) (qCoin Q qH qHash qTotal qFinish : Nat)\n    (reductionCaps : ∀ c, ReductionCaps (reduction (KemSK := KemSK) setup codec route bounds mode adversary c)\n      qCoin Q qH qHash qTotal qFinish)\n    (fallback : ModifiedNonceAeadForgery) (signatureFallback : PqxdhJointIdentity.Forgery) :\n    (𝒟[(fun outcome => @decide (∃ c, A1At setup codec c outcome) (Classical.propDecidable _)) <$>\n      (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit identityIndex bounds mode adversary).run runtime]\n        {true}).toReal ≤\n      ∑ c : Fin budget.create, serverAuthBound setup codec checks caps\n        (serverAuthAdversary setup codec route bounds mode adversary c) qCoin Q qH qHash fallback signatureFallback ∧\n    ∀ c, PqxdhServerAuthCommonAuthentication.ReductionBills setup codec checks caps\n      (serverAuthAdversary setup codec route bounds mode adversary c) qCoin Q qH qHash qTotal qFinish fallback\n      signatureFallback",
   "PqxdhDeploymentServerAuth.noFailure_a1At": "theorem noFailure_a1At {X A : Type} (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (c : Nat)\n    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A)\n    (event : A1NoFailure setup codec c outcome) : A1At setup codec c outcome",
-  "PqxdhDeploymentServerAuth.ce_a1": "theorem ce_a1 (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks) (caps : KemCaps)\n    (bounded : KemBound setup caps) (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)\n    (identityIndex : Nat) (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)\n    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)\n    (frameBack : PqxdhServerAuthNegativeControl.FrameReadBack codec)\n    (writable : PqxdhFirstBeaconRecordCanonical.ReadWritable codec.frameWrite codec.frameRead)\n    (law : X25519ClassLaw setup.source.crypto) (spread : X25519ScalarSpread setup.source.crypto)\n    (correct : SourceFullCorrect setup.source setup.hmac)\n    (adapter : HasAttachedVerificationAdapter\n      (fun identity => setup.source.crypto.verify identity.toList) setup.joint.verify)\n    (bounds : FreshBounds) (mode : Mode) (adversary : OracleComp (ModeSpec mode) X) (budget : Budget)\n    (respects : budget.Respects adversary) (runtime : A) (qCoin Q qH qHash qTotal qFinish : Nat)\n    (reductionCaps : ∀ c, ReductionCaps (reduction (KemSK := KemSK) setup codec route bounds mode adversary c)\n      qCoin Q qH qHash qTotal qFinish)\n    (fallback : ModifiedNonceAeadForgery) (signatureFallback : PqxdhJointIdentity.Forgery) :\n    (𝒟[(fun outcome => @decide (∃ c, A1NoFailure setup codec c outcome) (Classical.propDecidable _)) <$>\n      (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit identityIndex bounds mode adversary).run runtime]\n        {true}).toReal ≤\n      ∑ c : Fin budget.create, serverAuthBound setup codec checks caps\n        (serverAuthAdversary setup codec route bounds mode adversary c) qCoin Q qH qHash fallback signatureFallback ∧\n    ∀ c, PqxdhServerAuthCommonAuthentication.ReductionBills setup codec checks caps\n      (serverAuthAdversary setup codec route bounds mode adversary c) qCoin Q qH qHash qTotal qFinish fallback\n      signatureFallback",
+  "PqxdhDeploymentServerAuth.pinned_matched": "theorem pinned_matched (crypto : Pqxdh.Crypto) (codec : Codec Reader Response) (owner : Nat)\n    (pin : PqxdhBeaconPhase2Preparation.Word32) (before : List Reg) (raw : Pqxdh.Bytes)\n    (pinned : PinnedMatch crypto codec owner pin before raw) : Matched crypto codec owner before raw",
+  "PqxdhDeploymentServerAuth.noFailure_noPinnedMatch": "theorem noFailure_noPinnedMatch {X A : Type} (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (c : Nat)\n    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A)\n    (event : A1NoFailure setup codec c outcome) : A1NoPinnedMatch setup codec c outcome",
+  "PqxdhDeploymentServerAuth.build_entry": "theorem build_entry (transcript : List PqxdhDeploymentInterface.Entry) (session : Nat) (payload : Option Pqxdh.Bytes)\n    (reply : PqxdhServerRegistrationPublication.Response)\n    (member : Reg.build session payload (some reply) ∈ regsOf transcript) :\n    (⟨.inl (.inr (.build session payload)), some reply⟩ : PqxdhDeploymentInterface.Entry) ∈ transcript",
+  "PqxdhDeploymentServerAuth.build_pin": "theorem build_pin (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat)\n    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec) (bounds : FreshBounds) (mode : Mode)\n    (adversary : OracleComp (ModeSpec mode) X) (runtime : A)\n    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A)\n    (supported : outcome ∈ support ((PqxdhDeploymentSecrecy.game setup codec checks route ensureInit identityIndex bounds\n      mode adversary).run runtime))\n    (created : PqxdhRegistrationJointServerBirth.ClientCreated Unit) (output : X)\n    (final : PqxdhDeploymentSecrecy.State KemSK) (reached : outcome.1 = some (created, output, final))\n    (session : Nat) (payload : Option Pqxdh.Bytes) (reply : PqxdhServerRegistrationPublication.Response)\n    (built : (⟨.inl (.inr (.build session payload)), some reply⟩ : PqxdhDeploymentInterface.Entry) ∈\n      final.1.transcript) :\n    (codec.read2 reply.serialized).bind codec.serverIdentity = some (protectedBinding setup created).1",
+  "PqxdhDeploymentServerAuth.matched_pinned": "theorem matched_pinned (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat)\n    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec) (bounds : FreshBounds) (mode : Mode)\n    (adversary : OracleComp (ModeSpec mode) X) (runtime : A)\n    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A)\n    (supported : outcome ∈ support ((PqxdhDeploymentSecrecy.game setup codec checks route ensureInit identityIndex bounds\n      mode adversary).run runtime))\n    (created : PqxdhRegistrationJointServerBirth.ClientCreated Unit) (output : X)\n    (final : PqxdhDeploymentSecrecy.State KemSK) (reached : outcome.1 = some (created, output, final))\n    (c : Nat) (before : List Reg) (raw : Pqxdh.Bytes) (found : accepted c (regsOf final.1.transcript) = some (before, raw))\n    (matched : Matched setup.source.crypto codec c before raw) :\n    PinnedMatch setup.source.crypto codec c (protectedBinding setup created).1 before raw",
+  "PqxdhDeploymentServerAuth.noPinnedMatch_noFailure": "theorem noPinnedMatch_noFailure (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat)\n    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec) (bounds : FreshBounds) (mode : Mode)\n    (adversary : OracleComp (ModeSpec mode) X) (runtime : A) (c : Nat)\n    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A)\n    (supported : outcome ∈ support ((PqxdhDeploymentSecrecy.game setup codec checks route ensureInit identityIndex bounds\n      mode adversary).run runtime))\n    (event : A1NoPinnedMatch setup codec c outcome) : A1NoFailure setup codec c outcome",
+  "PqxdhDeploymentServerAuth.ce_a1": "theorem ce_a1 (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks) (caps : KemCaps)\n    (bounded : KemBound setup caps) (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)\n    (identityIndex : Nat) (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)\n    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)\n    (frameBack : PqxdhServerAuthNegativeControl.FrameReadBack codec)\n    (writable : PqxdhFirstBeaconRecordCanonical.ReadWritable codec.frameWrite codec.frameRead)\n    (law : X25519ClassLaw setup.source.crypto) (spread : X25519ScalarSpread setup.source.crypto)\n    (correct : SourceFullCorrect setup.source setup.hmac)\n    (adapter : HasAttachedVerificationAdapter\n      (fun identity => setup.source.crypto.verify identity.toList) setup.joint.verify)\n    (bounds : FreshBounds) (mode : Mode) (adversary : OracleComp (ModeSpec mode) X) (budget : Budget)\n    (respects : budget.Respects adversary) (runtime : A) (qCoin Q qH qHash qTotal qFinish : Nat)\n    (reductionCaps : ∀ c, ReductionCaps (reduction (KemSK := KemSK) setup codec route bounds mode adversary c)\n      qCoin Q qH qHash qTotal qFinish)\n    (fallback : ModifiedNonceAeadForgery) (signatureFallback : PqxdhJointIdentity.Forgery) :\n    (𝒟[(fun outcome => @decide (∃ c, A1NoPinnedMatch setup codec c outcome) (Classical.propDecidable _)) <$>\n      (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit identityIndex bounds mode adversary).run runtime]\n        {true}).toReal ≤\n      ∑ c : Fin budget.create, serverAuthBound setup codec checks caps\n        (serverAuthAdversary setup codec route bounds mode adversary c) qCoin Q qH qHash fallback signatureFallback ∧\n    ∀ c, PqxdhServerAuthCommonAuthentication.ReductionBills setup codec checks caps\n      (serverAuthAdversary setup codec route bounds mode adversary c) qCoin Q qH qHash qTotal qFinish fallback\n      signatureFallback",
   "PqxdhDeploymentServerAuthBills.embed_weight": "theorem embed_weight (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (caps : KemCaps)\n    (bounded : KemBound setup caps) (c : Nat) (input : AuthInput) (predicate : ServerAuthSpec.Domain → Prop)\n    [DecidablePred predicate] (weights : Weights predicate) (query : (SourceSpec KemSK).Domain) (emb : Emb KemSK) :\n    ((embed setup codec c input query).run emb).IsQueryBoundP predicate (stepCost weights caps (sourceKind query))",
   "PqxdhDeploymentServerAuthBills.freeze_bound": "theorem freeze_bound {Result : Type} (stop : List (SourceEntry KemSK) → Prop) [DecidablePred stop]\n    (program : OracleComp (SourceSpec KemSK) Result) (budget : SourceKind → Nat)\n    (bounded : ∀ kind, program.IsQueryBoundP (fun request => sourceKind (KemSK := KemSK) request = kind) (budget kind))\n    (kind : SourceKind) :\n    (freeze dflt stop program).IsQueryBoundP (fun request => sourceKind (KemSK := KemSK) request = kind)\n      (budget kind)",
   "PqxdhDeploymentServerAuthBills.reduction_weight": "theorem reduction_weight (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (caps : KemCaps)\n    (bounded : KemBound setup caps) (route : RawCtxServerRouting.SenderDecoder) (bounds : FreshBounds) (mode : Mode)\n    (adversary : OracleComp (ModeSpec mode) X) (budget : Budget) (respects : budget.Respects adversary) (c : Nat)\n    (predicate : ServerAuthSpec.Domain → Prop) [DecidablePred predicate] (weights : Weights predicate)\n    (input : AuthInput) :\n    (PqxdhDeploymentServerAuth.reduction (KemSK := KemSK) setup codec route bounds mode adversary c input).IsQueryBoundP\n      predicate (∑ kind, stepCost weights caps kind * PqxdhDeploymentCompileCaps.transported bounds budget kind)",
   "PqxdhDeploymentServerAuthBills.sum_stepCost": "theorem sum_stepCost {predicate : ServerAuthSpec.Domain → Prop} [DecidablePred predicate] (weights : Weights predicate)\n    (caps : KemCaps) (bounds : FreshBounds) (budget : Budget) :\n    ∑ kind, stepCost weights caps kind * PqxdhDeploymentCompileCaps.transported bounds budget kind =\n      weights.coin * (budget.coin + budget.test + budget.freshBytes bounds) +\n      (64 + caps.keygenCost) * weights.coin * budget.create + 32 * weights.coin * budget.bundle +\n      weights.accept * budget.accept + weights.build * budget.build +\n      (weights.finish + 69 * (caps.decapsCost * weights.coin + weights.hash + weights.hmac)) * budget.finish +\n      weights.hmac * budget.hmac + weights.hash * (budget.hash + budget.sends + budget.receives + budget.test + budget.fresh) +\n      weights.reveal * (budget.serverSend + budget.serverRaw + budget.test + budget.fresh)",
   "PqxdhDeploymentServerAuthBills.reduction_caps": "theorem reduction_caps (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (caps : KemCaps)\n    (bounded : KemBound setup caps) (route : RawCtxServerRouting.SenderDecoder) (bounds : FreshBounds) (mode : Mode)\n    (adversary : OracleComp (ModeSpec mode) X) (budget : Budget) (respects : budget.Respects adversary) (c : Nat) :\n    PqxdhDeploymentServerAuth.ReductionCaps\n      (PqxdhDeploymentServerAuth.reduction (KemSK := KemSK) setup codec route bounds mode adversary c)\n      (coinCap caps bounds budget) budget.accept (romCap budget) (hashCap budget) (totalCap caps bounds budget)\n      budget.finish",
-  "PqxdhDeploymentServerAuthBills.ce_a1_billed": "theorem ce_a1_billed (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks) (caps : KemCaps)\n    (bounded : KemBound setup caps) (route : RawCtxServerRouting.SenderDecoder) {A : Type}\n    (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat)\n    (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)\n    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)\n    (frameBack : PqxdhServerAuthNegativeControl.FrameReadBack codec)\n    (writable : PqxdhFirstBeaconRecordCanonical.ReadWritable codec.frameWrite codec.frameRead)\n    (law : PqxdhServerAuthAssumptions.X25519ClassLaw setup.source.crypto)\n    (spread : PqxdhServerAuthAssumptions.X25519ScalarSpread setup.source.crypto)\n    (correct : PqxdhFullSecretInputKdf.SourceFullCorrect setup.source setup.hmac)\n    (adapter : PqxdhEd25519EufCma.HasAttachedVerificationAdapter\n      (fun identity => setup.source.crypto.verify identity.toList) setup.joint.verify)\n    (bounds : FreshBounds) (mode : Mode) (adversary : OracleComp (ModeSpec mode) X) (budget : Budget)\n    (respects : budget.Respects adversary) (runtime : A)\n    (fallback : CtxNonceAeadIntCtxt.ModifiedNonceAeadForgery) (signatureFallback : PqxdhJointIdentity.Forgery) :\n    (𝒟[(fun outcome => @decide (∃ c, PqxdhDeploymentServerAuth.A1NoFailure setup codec c outcome)\n        (Classical.propDecidable _)) <$>\n      (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit identityIndex bounds mode adversary).run runtime]\n        {true}).toReal ≤\n      ∑ c : Fin budget.create, PqxdhDeploymentServerAuth.serverAuthBound setup codec checks caps\n        (PqxdhDeploymentServerAuth.serverAuthAdversary setup codec route bounds mode adversary c)\n        (coinCap caps bounds budget) budget.accept (romCap budget) (hashCap budget) fallback signatureFallback ∧\n    ∀ c, PqxdhServerAuthCommonAuthentication.ReductionBills setup codec checks caps\n      (PqxdhDeploymentServerAuth.serverAuthAdversary setup codec route bounds mode adversary c)\n      (coinCap caps bounds budget) budget.accept (romCap budget) (hashCap budget) (totalCap caps bounds budget)\n      budget.finish fallback signatureFallback",
+  "PqxdhDeploymentServerAuthBills.ce_a1_billed": "theorem ce_a1_billed (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks) (caps : KemCaps)\n    (bounded : KemBound setup caps) (route : RawCtxServerRouting.SenderDecoder) {A : Type}\n    (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat)\n    (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)\n    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)\n    (frameBack : PqxdhServerAuthNegativeControl.FrameReadBack codec)\n    (writable : PqxdhFirstBeaconRecordCanonical.ReadWritable codec.frameWrite codec.frameRead)\n    (law : PqxdhServerAuthAssumptions.X25519ClassLaw setup.source.crypto)\n    (spread : PqxdhServerAuthAssumptions.X25519ScalarSpread setup.source.crypto)\n    (correct : PqxdhFullSecretInputKdf.SourceFullCorrect setup.source setup.hmac)\n    (adapter : PqxdhEd25519EufCma.HasAttachedVerificationAdapter\n      (fun identity => setup.source.crypto.verify identity.toList) setup.joint.verify)\n    (bounds : FreshBounds) (mode : Mode) (adversary : OracleComp (ModeSpec mode) X) (budget : Budget)\n    (respects : budget.Respects adversary) (runtime : A)\n    (fallback : CtxNonceAeadIntCtxt.ModifiedNonceAeadForgery) (signatureFallback : PqxdhJointIdentity.Forgery) :\n    (𝒟[(fun outcome => @decide (∃ c, PqxdhDeploymentServerAuth.A1NoPinnedMatch setup codec c outcome)\n        (Classical.propDecidable _)) <$>\n      (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit identityIndex bounds mode adversary).run runtime]\n        {true}).toReal ≤\n      ∑ c : Fin budget.create, PqxdhDeploymentServerAuth.serverAuthBound setup codec checks caps\n        (PqxdhDeploymentServerAuth.serverAuthAdversary setup codec route bounds mode adversary c)\n        (coinCap caps bounds budget) budget.accept (romCap budget) (hashCap budget) fallback signatureFallback ∧\n    ∀ c, PqxdhServerAuthCommonAuthentication.ReductionBills setup codec checks caps\n      (PqxdhDeploymentServerAuth.serverAuthAdversary setup codec route bounds mode adversary c)\n      (coinCap caps bounds budget) budget.accept (romCap budget) (hashCap budget) (totalCap caps bounds budget)\n      budget.finish fallback signatureFallback",
   "PqxdhDeploymentServerAuthInjective.base_identities": "theorem base_identities (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (seed : IdentitySeed) (query : (SourceSpec KemSK).Domain)\n    (notCreate : ∀ pin keyId, query ≠ .inl (.inr (.create pin keyId)))\n    (state : State KemSK) (result : (SourceSpec KemSK).Range query × State KemSK)\n    (member : result ∈ support ((base setup codec checks seed query).run state)) :\n    identities result.2 = identities state",
   "PqxdhDeploymentServerAuthInjective.seeds_eager": "theorem seeds_eager (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (seed : IdentitySeed) (program : OracleComp (SourceSpec KemSK) Result) (count : Nat)\n    (bounded : program.IsQueryBoundP (IsCreate (KemSK := KemSK)) count) (state : State KemSK) :\n    𝒮[(simulateQ (base setup codec checks seed) program).run state] =\n      𝒮[do\n        let pool ← PqxdhDynamicIdentityPool.sampleSeeds count\n        (fun result : Result × (State KemSK × List IdentitySeed) => (result.1, result.2.1)) <$>\n          (simulateQ (seedEager setup codec checks seed) program).run (state, pool)]",
   "PqxdhDeploymentServerAuthInjective.eager_identities": "theorem eager_identities (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (seed : IdentitySeed) (program : OracleComp (SourceSpec KemSK) Result) (state : State KemSK)\n    (pool : List IdentitySeed) (bounded : program.IsQueryBoundP (IsCreate (KemSK := KemSK)) pool.length)\n    (outcome : Result × (State KemSK × List IdentitySeed))\n    (member : outcome ∈ support ((simulateQ (seedEager setup codec checks seed) program).run (state, pool))) :\n    ∃ taken, identities outcome.2.1 = identities state ++ pool.take taken",
   "PqxdhDeploymentServerAuthInjective.owners_collision": "theorem owners_collision (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (seed : IdentitySeed) (program : OracleComp (SourceSpec KemSK) Result) (count : Nat)\n    (bounded : program.IsQueryBoundP (IsCreate (KemSK := KemSK)) count) (state : State KemSK)\n    (empty : state.owners = []) :\n    Pr[fun result : Result × State KemSK => Collision setup.joint (identities result.2) |\n      (simulateQ (base setup codec checks seed) program).run state] ≤\n    Pr[fun pool => Collision setup.joint pool | PqxdhDynamicIdentityPool.sampleSeeds count]",
   "PqxdhDeploymentServerAuthInjective.joint_correct": "theorem joint_correct (setup : Setup baseSpec KemSK) (seed : IdentitySeed) (message : Pqxdh.Bytes) :\n    setup.joint.verify (setup.joint.publicKeys seed).ed25519 message (setup.joint.sign seed message) = true",
   "PqxdhDeploymentServerAuthInjective.collision_bound": "theorem collision_bound (setup : Setup baseSpec KemSK) (count : Nat) :\n    Pr[fun pool => Collision setup.joint pool | PqxdhDynamicIdentityPool.sampleSeeds (count + 1)] ≤\n      ∑ target : Fin (count + 1), advantage setup.joint\n        (PqxdhJointIdentityFamily.reduction setup.joint target (collider count))",
+  "PqxdhDeploymentServerAuthInjective.collider_queries": "theorem collider_queries (count : Nat) (publics : Fin (count + 1) → PublicIdentity)\n    (kind : PqxdhJointIdentityFamily.Kind) :\n    (collider count publics).IsQueryBoundP\n      (PqxdhJointIdentityFamily.familyClass (PqxdhJointIdentityFamily.IsClass kind))\n      (if kind = .sign then 1 else 0)",
+  "PqxdhDeploymentServerAuthInjective.collider_bills": "theorem collider_bills (joint : Primitives) (count : Nat) (target : Fin (count + 1)) :\n    (∀ jointPublic, (PqxdhJointIdentityFamily.reduction joint target (collider count) jointPublic).IsQueryBoundP\n      (PqxdhJointIdentityFamily.IsClass .uniform) (32 * count)) ∧\n    (∀ jointPublic, (PqxdhJointIdentityFamily.reduction joint target (collider count) jointPublic).IsQueryBoundP\n      (PqxdhJointIdentityFamily.IsClass .sign) 1) ∧\n    (∀ jointPublic, (PqxdhJointIdentityFamily.reduction joint target (collider count) jointPublic).IsQueryBoundP\n      (PqxdhJointIdentityFamily.IsClass .staticDh) 0) ∧\n    (game joint (PqxdhJointIdentityFamily.reduction joint target (collider count))).IsTotalQueryBound\n      (32 * (count + 1))",
   "PqxdhDeploymentServerAuthInjectiveGame.bundleOfReg_regsOf": "theorem bundleOfReg_regsOf (transcript : List Entry) (owner : Nat) :\n    bundleOfReg (regsOf transcript) owner = PqxdhDeploymentTranscript.bundleOf transcript owner",
   "PqxdhDeploymentServerAuthInjectiveGame.session_unique": "theorem session_unique (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)\n    (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)\n    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec) (bounds : FreshBounds) (mode : Mode)\n    (adversary : OracleComp (ModeSpec mode) X) (runtime : A)\n    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A)\n    (member : outcome ∈ support ((PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode\n      adversary).run runtime))\n    (created : PqxdhRegistrationJointServerBirth.ClientCreated Unit) (output : X) (final : PqxdhDeploymentSecrecy.State KemSK)\n    (found : outcome.1 = some (created, output, final)) (raw other : Pqxdh.Bytes) (session : Nat)\n    (first : (raw, some session) ∈ acceptsOf (registrations final.1.transcript))\n    (second : (other, some session) ∈ acceptsOf (registrations final.1.transcript)) : raw = other",
   "PqxdhDeploymentServerAuthInjectiveGame.keys_identity": "theorem keys_identity (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)\n    (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec) (server : RawCtxServerRouting.Identity)\n    (transcript : List Entry) (native : PqxdhRegistrationSchedule.State KemSK)\n    (agree : PqxdhDeploymentEligibility.Agree setup codec server transcript native) (before : List Reg)\n    (prefixed : before <+: regsOf transcript) (owner : Nat)\n    (keys : PqxdhEd25519EufCma.Ed25519PublicKey × PqxdhEd25519EufCma.Phase1KeyTuple)\n    (published : publishedKeys codec before owner = some keys) :\n    ∃ entry : PqxdhRegistrationSchedule.Owner KemSK, native.owners[owner]? = some entry ∧\n      keys.1 = (setup.joint.publicKeys entry.beacon.identity).ed25519",
   "PqxdhDeploymentServerAuthInjectiveGame.shared_collision": "theorem shared_collision (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)\n    (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)\n    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec) (bounds : FreshBounds) (mode : Mode)\n    (adversary : OracleComp (ModeSpec mode) X) (runtime : A)\n    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A)\n    (member : outcome ∈ support ((PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode\n      adversary).run runtime)) (c c' : Nat) (shared : SharedMatch setup codec c c' outcome) :\n    ∃ created output final, outcome.1 = some (created, output, final) ∧\n      Collision setup.joint (identities final.2.native)",
   "PqxdhDeploymentServerAuthInjectiveGame.compiled_creates": "theorem compiled_creates (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)\n    (route : RawCtxServerRouting.SenderDecoder) (bounds : FreshBounds) (mode : Mode)\n    (adversary : OracleComp (ModeSpec mode) X) (budget : Budget) (respects : budget.Respects adversary) :\n    (compileFull setup codec route bounds mode adversary).IsQueryBoundP\n      (PqxdhDeploymentServerAuthInjective.IsCreate (KemSK := KemSK)) (budget.create + 1)",
   "PqxdhDeploymentServerAuthInjectiveGame.injective_bound": "theorem injective_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)\n    (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)\n    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec) (bounds : FreshBounds) (mode : Mode)\n    (adversary : OracleComp (ModeSpec mode) X) (budget : Budget) (respects : budget.Respects adversary) (runtime : A) :\n    𝒟[(fun outcome => @decide (∃ c c', SharedMatch setup codec c c' outcome) (Classical.propDecidable _)) <$>\n      (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode adversary).run runtime] {true} ≤\n      ∑ target : Fin (budget.create + 1), advantage setup.joint\n        (PqxdhJointIdentityFamily.reduction setup.joint target\n          (PqxdhDeploymentServerAuthInjective.collider budget.create))",
-  "PqxdhDeploymentServerAuthInjectiveGame.ce_a1_injective": "theorem ce_a1_injective (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (caps : PqxdhServerAuthSourceCosts.KemCaps) (bounded : PqxdhServerAuthSourceCosts.KemBound setup caps)\n    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)\n    (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)\n    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)\n    (frameBack : PqxdhServerAuthNegativeControl.FrameReadBack codec)\n    (writable : PqxdhFirstBeaconRecordCanonical.ReadWritable codec.frameWrite codec.frameRead)\n    (law : PqxdhServerAuthAssumptions.X25519ClassLaw setup.source.crypto)\n    (spread : PqxdhServerAuthAssumptions.X25519ScalarSpread setup.source.crypto)\n    (correct : PqxdhFullSecretInputKdf.SourceFullCorrect setup.source setup.hmac)\n    (adapter : PqxdhEd25519EufCma.HasAttachedVerificationAdapter\n      (fun identity => setup.source.crypto.verify identity.toList) setup.joint.verify)\n    (bounds : FreshBounds) (mode : Mode) (adversary : OracleComp (ModeSpec mode) X) (budget : Budget)\n    (respects : budget.Respects adversary) (runtime : A)\n    (fallback : CtxNonceAeadIntCtxt.ModifiedNonceAeadForgery) (signatureFallback : PqxdhJointIdentity.Forgery) :\n    (𝒟[(fun outcome => @decide ((∃ c, PqxdhDeploymentServerAuth.A1NoFailure setup codec c outcome) ∨\n        ∃ c c', SharedMatch setup codec c c' outcome) (Classical.propDecidable _)) <$>\n      (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode adversary).run runtime]\n        {true}).toReal ≤\n      (∑ c : Fin budget.create, PqxdhDeploymentServerAuth.serverAuthBound setup codec checks caps\n        (PqxdhDeploymentServerAuth.serverAuthAdversary setup codec route bounds mode adversary c)\n        (PqxdhDeploymentServerAuthBills.coinCap caps bounds budget) budget.accept\n        (PqxdhDeploymentServerAuthBills.romCap budget) (PqxdhDeploymentServerAuthBills.hashCap budget) fallback\n        signatureFallback) +\n      ∑ target : Fin (budget.create + 1), (advantage setup.joint\n        (PqxdhJointIdentityFamily.reduction setup.joint target\n          (PqxdhDeploymentServerAuthInjective.collider budget.create))).toReal ∧\n    ∀ c, PqxdhServerAuthCommonAuthentication.ReductionBills setup codec checks caps\n      (PqxdhDeploymentServerAuth.serverAuthAdversary setup codec route bounds mode adversary c)\n      (PqxdhDeploymentServerAuthBills.coinCap caps bounds budget) budget.accept\n      (PqxdhDeploymentServerAuthBills.romCap budget) (PqxdhDeploymentServerAuthBills.hashCap budget)\n      (PqxdhDeploymentServerAuthBills.totalCap caps bounds budget) budget.finish fallback signatureFallback"
+  "PqxdhDeploymentServerAuthInjectiveGame.ce_a1_injective": "theorem ce_a1_injective (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (caps : PqxdhServerAuthSourceCosts.KemCaps) (bounded : PqxdhServerAuthSourceCosts.KemBound setup caps)\n    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)\n    (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)\n    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)\n    (frameBack : PqxdhServerAuthNegativeControl.FrameReadBack codec)\n    (writable : PqxdhFirstBeaconRecordCanonical.ReadWritable codec.frameWrite codec.frameRead)\n    (law : PqxdhServerAuthAssumptions.X25519ClassLaw setup.source.crypto)\n    (spread : PqxdhServerAuthAssumptions.X25519ScalarSpread setup.source.crypto)\n    (correct : PqxdhFullSecretInputKdf.SourceFullCorrect setup.source setup.hmac)\n    (adapter : PqxdhEd25519EufCma.HasAttachedVerificationAdapter\n      (fun identity => setup.source.crypto.verify identity.toList) setup.joint.verify)\n    (bounds : FreshBounds) (mode : Mode) (adversary : OracleComp (ModeSpec mode) X) (budget : Budget)\n    (respects : budget.Respects adversary) (runtime : A)\n    (fallback : CtxNonceAeadIntCtxt.ModifiedNonceAeadForgery) (signatureFallback : PqxdhJointIdentity.Forgery) :\n    (𝒟[(fun outcome => @decide ((∃ c, PqxdhDeploymentServerAuth.A1NoPinnedMatch setup codec c outcome) ∨\n        ∃ c c', SharedMatch setup codec c c' outcome) (Classical.propDecidable _)) <$>\n      (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode adversary).run runtime]\n        {true}).toReal ≤\n      (∑ c : Fin budget.create, PqxdhDeploymentServerAuth.serverAuthBound setup codec checks caps\n        (PqxdhDeploymentServerAuth.serverAuthAdversary setup codec route bounds mode adversary c)\n        (PqxdhDeploymentServerAuthBills.coinCap caps bounds budget) budget.accept\n        (PqxdhDeploymentServerAuthBills.romCap budget) (PqxdhDeploymentServerAuthBills.hashCap budget) fallback\n        signatureFallback) +\n      ∑ target : Fin (budget.create + 1), (advantage setup.joint\n        (PqxdhJointIdentityFamily.reduction setup.joint target\n          (PqxdhDeploymentServerAuthInjective.collider budget.create))).toReal ∧\n    (∀ c, PqxdhServerAuthCommonAuthentication.ReductionBills setup codec checks caps\n      (PqxdhDeploymentServerAuth.serverAuthAdversary setup codec route bounds mode adversary c)\n      (PqxdhDeploymentServerAuthBills.coinCap caps bounds budget) budget.accept\n      (PqxdhDeploymentServerAuthBills.romCap budget) (PqxdhDeploymentServerAuthBills.hashCap budget)\n      (PqxdhDeploymentServerAuthBills.totalCap caps bounds budget) budget.finish fallback signatureFallback) ∧\n    ∀ target : Fin (budget.create + 1),\n      (∀ jointPublic, (PqxdhJointIdentityFamily.reduction setup.joint target\n        (PqxdhDeploymentServerAuthInjective.collider budget.create) jointPublic).IsQueryBoundP\n          (PqxdhJointIdentityFamily.IsClass .uniform) (32 * budget.create)) ∧\n      (∀ jointPublic, (PqxdhJointIdentityFamily.reduction setup.joint target\n        (PqxdhDeploymentServerAuthInjective.collider budget.create) jointPublic).IsQueryBoundP\n          (PqxdhJointIdentityFamily.IsClass .sign) 1) ∧\n      (∀ jointPublic, (PqxdhJointIdentityFamily.reduction setup.joint target\n        (PqxdhDeploymentServerAuthInjective.collider budget.create) jointPublic).IsQueryBoundP\n          (PqxdhJointIdentityFamily.IsClass .staticDh) 0) ∧\n      (game setup.joint (PqxdhJointIdentityFamily.reduction setup.joint target\n        (PqxdhDeploymentServerAuthInjective.collider budget.create))).IsTotalQueryBound (32 * (budget.create + 1))"
  },
  "exact_definitions": {
   "PqxdhDeploymentServerAuthEvent.Reg": "inductive Reg where\n  | create (pin : Word32) (keyId : Std.U64) (owner : Nat)\n  | bundle (owner : Nat) (reply : Option Pqxdh.Bytes)\n  | accept (raw : Pqxdh.Bytes) (reply : Option Nat)\n  | build (session : Nat) (payload : Option Pqxdh.Bytes) (reply : Option PqxdhServerRegistrationPublication.Response)\n  | finish (owner : Nat) (raw : Pqxdh.Bytes) (reply : Option Pqxdh.Bytes)",
@@ -951,6 +1007,9 @@
   "PqxdhDeploymentServerAuth.serverAuthBound": "noncomputable def serverAuthBound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (caps : KemCaps) (adversary : Adversary) (qCoin Q qH qHash : Nat) (fallback : ModifiedNonceAeadForgery)\n    (signatureFallback : PqxdhJointIdentity.Forgery) : ℝ :=\n  (serverGapDhAdvantage setup.source.crypto setup.joint setup.secretOfSeed setup.wiring\n    (PqxdhJointGapDh.extractor (scanClient setup codec checks adversary qH))).toReal +\n  (Q.choose 2 : ℝ) * 64 / (2 ^ 256 : ℝ) +\n  ∑ j : Fin (Q + 1), (PqxdhServerAuthPublicationLoss.recordLoss setup codec checks adversary Q j fallback\n    (entryReductionBudget caps qCoin Q qHash qH + 76) +\n    PqxdhServerAuthObservedSchedule.scheduleLoss setup codec checks adversary false Q j\n      (PqxdhServerAuthSessionRecord.observers codec Q j)) +\n  (PqxdhJointIdentity.advantage setup.joint\n    (PqxdhServerAuthJointIdentityEuf.reduction setup codec checks adversary signatureFallback)).toReal",
   "PqxdhDeploymentServerAuth.ReductionCaps": "structure ReductionCaps (work : AuthInput → OracleComp ServerAuthSpec X) (qCoin Q qH qHash qTotal qFinish : Nat) : Prop where\n  source : PqxdhRegistrationR1Authentication.SourceBudget work Q qH qHash\n  coins : ∀ input, (work input).IsQueryBoundP IsAuthCoin qCoin\n  total : ∀ input, (work input).IsTotalQueryBound qTotal\n  finish : ∀ input, (work input).IsQueryBoundP PqxdhServerAuthJointIdentityDhBudget.IsFinish qFinish",
   "PqxdhDeploymentServerAuth.A1NoFailure": "def A1NoFailure {X A : Type} (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (c : Nat)\n    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A) :\n    Prop :=\n  ∃ created output final, outcome.1 = some (created, output, final) ∧\n    PqxdhDeploymentTranscript.NoBundleFailureAt final.1.transcript c ∧\n    ∃ before raw, accepted c (regsOf final.1.transcript) = some (before, raw) ∧\n      (summarizeReg before).owners[c]? = some (protectedBinding setup created) ∧\n      ¬ Matched setup.source.crypto codec c before raw",
+  "PqxdhDeploymentServerAuth.PinnedMatchAt": "def PinnedMatchAt (crypto : Pqxdh.Crypto) (codec : Codec Reader Response) (owner session : Nat)\n    (pin : PqxdhBeaconPhase2Preparation.Word32) (before : List Reg) (raw : Pqxdh.Bytes) : Prop :=\n  ∃ acceptRaw candidate keys payload reply record,\n    Reg.accept acceptRaw (some session) ∈ before ∧ PqxdhDeploymentTranscript.candidateOf codec acceptRaw = some candidate ∧\n    PqxdhDeploymentTranscript.acceptedKeys crypto candidate = some keys ∧\n    PqxdhDeploymentServerAuthEvent.publishedKeys codec before owner = some keys ∧\n    Reg.build session payload (some reply) ∈ before ∧\n    (codec.read2 reply.serialized).bind codec.serverIdentity = some pin ∧\n    PqxdhServerAuthRecordPublicationEvent.frame codec raw = some record ∧\n    PqxdhServerAuthRecordPublicationEvent.frame codec reply.serialized = some record",
+  "PqxdhDeploymentServerAuth.PinnedMatch": "def PinnedMatch (crypto : Pqxdh.Crypto) (codec : Codec Reader Response) (owner : Nat)\n    (pin : PqxdhBeaconPhase2Preparation.Word32) (before : List Reg) (raw : Pqxdh.Bytes) : Prop :=\n  ∃ session, PinnedMatchAt crypto codec owner session pin before raw",
+  "PqxdhDeploymentServerAuth.A1NoPinnedMatch": "def A1NoPinnedMatch {X A : Type} (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (c : Nat)\n    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A) :\n    Prop :=\n  ∃ created output final, outcome.1 = some (created, output, final) ∧\n    PqxdhDeploymentTranscript.NoBundleFailureAt final.1.transcript c ∧\n    ∃ before raw, accepted c (regsOf final.1.transcript) = some (before, raw) ∧\n      (summarizeReg before).owners[c]? = some (protectedBinding setup created) ∧\n      ¬ PinnedMatch setup.source.crypto codec c (protectedBinding setup created).1 before raw",
   "PqxdhDeploymentServerAuthBills.stepCost": "def stepCost {predicate : ServerAuthSpec.Domain → Prop} [DecidablePred predicate] (weights : Weights predicate)\n    (caps : KemCaps) : SourceKind → Nat :=\n  Sum.elim ![weights.coin, (64 + caps.keygenCost) * weights.coin, 32 * weights.coin, weights.accept, weights.build,\n    weights.finish + 69 * (caps.decapsCost * weights.coin + weights.hash + weights.hmac), weights.hmac, weights.hash,\n    weights.reveal] (fun _ => 0)",
   "PqxdhDeploymentServerAuthBills.hashCap": "def hashCap (budget : Budget) : Nat :=\n  (budget.hash + budget.sends + budget.receives + budget.test + budget.fresh) + 69 * budget.finish",
   "PqxdhDeploymentServerAuthBills.romCap": "def romCap (budget : Budget) : Nat := budget.hmac + 69 * budget.finish",
@@ -965,7 +1024,7 @@
  "leanpath": {
   "manifest": "/tmp/bc-arc-scratch/common-experiment/ce8/leanpath",
   "sha256": "5cbb4a566f21b6e8bc2e255e6580c3a4f082bf77ede7fe1b09325ed75a735d0a",
-  "note": "The CE-9 LEAN_PATH with its first entry replaced by the fresh scratch prefix ce8/olean, a symlink mirror of the ce9/olean artifacts (1555 links), whose three CE-9 artifacts were verified against their e90d54d9 source sha256 and exit-0 final logs. check.py unlinks an artifact before writing it, so no earlier prefix was written. After the last source change all sixteen CE-8 modules were rebuilt into ce8/olean in import order (direct_check_final)."
+  "note": "The CE-9 LEAN_PATH with its first entry replaced by the fresh scratch prefix ce8/olean, a symlink mirror of the ce9/olean artifacts (1555 links), whose three CE-9 artifacts were verified against their e90d54d9 source sha256 and exit-0 final logs. First pass: check.py (raw flock on lean.lock) unlinked an artifact before writing it, so no earlier prefix was written; after the last first-pass source change all sixteen CE-8 modules were rebuilt into ce8/olean in import order (log tag final). Fix pass: check2.py runs each check as coord.sh lean claude <label> -- timeout 180 lean -j1 -M8000 (PROTOCOL v2), refuses to write through a symlinked artifact, and moves the wrapper's queue lines into a separate .coord file; the four changed modules were rebuilt in import order after the last source change (log tag fix1-final). The other twelve modules are unchanged since 9d9ea4cb and keep their final logs."
  },
  "root_checks": {
   "root-PqxdhDeploymentServerAuthEvent": {
@@ -1014,6 +1073,16 @@
    "root_source_sha256": "10742c16ddf983923821912d99006fedcba0dbd2ffa3b309fc1833e8117411a4"
   },
   "root-inj": {
+   "exit": 0,
+   "log_bytes": 0,
+   "root_source_sha256": "14ed64e3fc1b0a3d0ab1d0fac8cfac0fc7ea7ef40fe153c1f3d30cbd18e305d5"
+  },
+  "root-fix1-pin": {
+   "exit": 0,
+   "log_bytes": 0,
+   "root_source_sha256": "14ed64e3fc1b0a3d0ab1d0fac8cfac0fc7ea7ef40fe153c1f3d30cbd18e305d5"
+  },
+  "root-fix1-coll": {
    "exit": 0,
    "log_bytes": 0,
    "root_source_sha256": "14ed64e3fc1b0a3d0ab1d0fac8cfac0fc7ea7ef40fe153c1f3d30cbd18e305d5"
@@ -1079,34 +1148,123 @@
    "start": "2026-10-07T19:47:23Z",
    "end": "2026-10-07T19:48:34Z",
    "log_sha256": "0844750e33bd41e501f1ee5636e5f5d86c24bad2d68525f0bc5b16590737cc64"
+  },
+  "inv-fix1-pin": {
+   "exit": 0,
+   "start": "2026-10-07T20:35:34Z",
+   "end": "2026-10-07T20:36:45Z",
+   "log_sha256": "a68cdaf859256bcda752f78a5a25531fd7f2403b97e36b323ef68aaf81c0719e"
+  },
+  "inv-fix1-coll": {
+   "exit": 0,
+   "start": "2026-10-07T20:37:09Z",
+   "end": "2026-10-07T20:38:20Z",
+   "log_sha256": "aea6c07b29e702ffc8d8a7011492c07b046816163ba1ce1c6a95963ec327e5f0"
   }
  },
- "focused_inventory_note": "Each module commit was prepared with the other untracked files and other modified tracked files held aside and restored afterwards (commit.py), so check-inventory ran with exactly the files of that commit, in the locked minimal proof flake (nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs). The first attempt of the localization commit failed the inventory because a theorem name containing ? was read as a regular expression; the two theorems were renamed (lookup_snoc_ne, lookup_snoc_self) before any commit, and the recorded inv-localize run is the passing one. The documentation commit that adds this receipt is checked the same way.",
+ "focused_inventory_note": "First pass: each module commit was prepared with the other untracked files and other modified tracked files held aside and restored afterwards (commit.py), so check-inventory ran with exactly the files of that commit, in the locked minimal proof flake (nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs). The first attempt of the localization commit failed the inventory because a theorem name containing ? was read as a regular expression; the two theorems were renamed (lookup_snoc_ne, lookup_snoc_self) before any commit, and the recorded inv-localize run is the passing one. Fix pass (commit2.py): the worktree held exactly the files of each commit (checked), coord.sh inv recount and coord.sh inv rehash updated the inventory, the root import check ran through coord.sh lean, check-inventory ran under coord.sh lease mem claude @nix, and git diff --check and git diff --cached --check were clean (tags fix1-pin, fix1-coll, fix1-docs). The documentation commit that adds this receipt is checked the same way.",
  "forbidden_scan": "no sorry, admit, native_decide, implemented_by, extern or unsafe, no axiom declaration and no opaque declaration in the sixteen modules. set_option lines: autoImplicit false, linter.deprecated false for statements about the deprecated evalSPMF/probEvent API (as in CE-9 and the common probability modules), and backward.isDefEq.respectTransparency is not used.",
  "main_results": {
   "per_index": "PqxdhDeploymentServerAuth.a1_le_ordered: for every identity index and runtime, Pr[A1At c | CE] <= Pr[decision | orderedGame false (serverAuthAdversary c)]; premises Phase1ReadBack, Phase2ReadBack. a1_bound: (D[a1Decision c <$> CE]{true}).toReal <= serverAuthBound(R_c) = GapDH(scanClient R_c qH) + (Q choose 2)*64/2^256 + sum_{j<Q+1}(recordLoss + scheduleLoss) + jointEUF(reduction R_c), and ReductionBills, with the premises of common_authentication_with_resources and ReductionCaps of R_c.",
-  "sum": "PqxdhDeploymentServerAuth.a1_sum and ce_a1: for a budget-respecting adversary, (D[decide (exists c, A1NoFailure c) <$> CE]{true}).toReal <= sum_{c : Fin qCreate} serverAuthBound(R_c), with ReductionBills for every c; a1_range shows A1At c only for c < qCreate.",
+  "pinned": "PqxdhDeploymentServerAuth.PinnedMatchAt = MatchedAt plus (codec.read2 reply.serialized).bind codec.serverIdentity = some pin for the matching build reply; A1NoPinnedMatch = A1NoFailure with PinnedMatch at the pin of the protected binding. noFailure_noPinnedMatch: A1NoFailure c -> A1NoPinnedMatch c on every outcome. build_pin: on every outcome of the experiment, every successful build reply of the final transcript reads back (Phase2ReadBack) the constructed Server identity, the pin of the protected binding. matched_pinned and noPinnedMatch_noFailure: on every outcome of the experiment, A1NoPinnedMatch c -> A1NoFailure c.",
+  "sum": "PqxdhDeploymentServerAuth.a1_sum and ce_a1: for a budget-respecting adversary, (D[decide (exists c, A1At c) <$> CE]{true}).toReal <= sum_{c : Fin qCreate} serverAuthBound(R_c) (a1_sum) and (D[decide (exists c, A1NoPinnedMatch c) <$> CE]{true}).toReal <= the same sum (ce_a1), with ReductionBills for every c; a1_range shows A1At c only for c < qCreate.",
   "bills": "PqxdhDeploymentServerAuthBills.reduction_caps: every R_c meets accepts <= qAccept, finishes <= qFinish, BLAKE2b <= hashCap, random-oracle HMAC <= romCap, coins <= coinCap, total <= totalCap; ce_a1_billed is ce_a1 at these caps.",
+  "collider_bills": "PqxdhDeploymentServerAuthInjective.collider_queries: the collision finder makes exactly one query, a signing query (IsQueryBoundP familyClass (IsClass kind) (if kind = sign then 1 else 0)). collider_bills: B^coll_t = PqxdhJointIdentityFamily.reduction joint t (collider count) makes, on every challenge identity, at most 32*count uniform queries, at most 1 signing query and 0 static-DH queries, and its joint-use weak-EUF game makes at most 32*(count + 1) uniform queries.",
   "injectivity": "PqxdhDeploymentServerAuthInjectiveGame.injective_bound: at identity index 0, D[decide (exists c c, SharedMatch c c) <$> CE]{true} <= sum_{t : Fin (qCreate + 1)} advantage joint (PqxdhJointIdentityFamily.reduction joint t (collider qCreate)); premises Phase1ReadBack, Phase2ReadBack, budget.",
-  "headline": "PqxdhDeploymentServerAuthInjectiveGame.ce_a1_injective: at identity index 0, (D[decide ((exists c, A1NoFailure c) or exists c c, SharedMatch c c) <$> CE]{true}).toReal <= sum_{c : Fin qCreate} serverAuthBound(R_c at coinCap, qAccept, romCap, hashCap) + sum_{t : Fin (qCreate + 1)} (advantage joint (B^coll_t)).toReal, and ReductionBills at (coinCap, qAccept, romCap, hashCap, totalCap, qFinish) for every c."
+  "headline": "PqxdhDeploymentServerAuthInjectiveGame.ce_a1_injective: at identity index 0, (D[decide ((exists c, A1NoPinnedMatch c) or exists c c, SharedMatch c c) <$> CE]{true}).toReal <= sum_{c : Fin qCreate} serverAuthBound(R_c at coinCap, qAccept, romCap, hashCap) + sum_{t : Fin (qCreate + 1)} (advantage joint (B^coll_t)).toReal, ReductionBills at (coinCap, qAccept, romCap, hashCap, totalCap, qFinish) for every c, and the bills of collider_bills (count = qCreate) for every t."
  },
  "deviations_from_plan": [
-  "Public matching: the eleven-field common session is not a CE observable, so CE-A1 is stated with the public relation MatchedAt (an accept of the session on bytes whose raw candidate the source attached verification accepts with the identity key and key tuple of the Beacon's first published bundle, and an earlier build of the session with the accepted decoded record); root_failure shows that the public A1 failure is the ServerAuth common authentication failure on the same run. A restatement, not a weakening of a planned theorem.",
-  "NoBundleFailure_c (section 19 option (b)): ce_a1 uses NoBundleFailureAt on the whole run (A1NoFailure); the per-index theorems use the weaker condition before the acceptance (A1At), which it implies (noFailure_a1At).",
+  "Public matching, a smaller event than planned. The plan states CE-A1 with an eleven-field common session that published the decoded record earlier. CE-A1 is stated with a public relation instead: MatchedAt (an accept of the session on bytes whose raw candidate the source attached verification accepts with the identity key and key tuple of the Beacon's first published bundle, and an earlier build of the session with the accepted decoded record) and, in the headlines, PinnedMatchAt (the same with the Server identity of the build reply equal to the Beacon's pin). This relation is weaker than the eleven-field agreement: root_failure proves only that the public A1 failure implies the ServerAuth common authentication failure on the same run (an eleven-field common session that published the record gives a public match), not the converse, so the bounded event is a sub-event of the planned failure. It states no root agreement and nothing about the KEM ciphertext or the ephemeral key of the accepted response, so it does not give the section 9 Beacon-side ciphertext link (not_proved). The first-pass receipt called this a restatement, not a weakening, and said that the public failure is the ServerAuth failure; both statements were wrong and are withdrawn.",
+  "NoBundleFailure_c (section 19 option (b)): ce_a1 uses NoBundleFailureAt on the whole run (A1NoFailure, and A1NoPinnedMatch in the headlines); the per-index theorems use the weaker condition before the acceptance (A1At), which it implies (noFailure_a1At).",
   "The sum over Beacons is over c < qCreate (a1_range), not qCreate + 1; the injectivity sum is over qCreate + 1 identity indices as planned.",
-  "B^coll_t is the family reduction of the collision finder, which makes one signing query through the family oracle (routed to the challenger only when the signing identity is the target), not zero; no new assumption.",
+  "B^coll_t is the family reduction of the collision finder, which makes exactly one signing query through the family oracle (collider_queries; routed to the challenger only when the signing identity is the target), so B^coll_t makes at most one signing query (collider_bills), not zero as plan section 10 and owner input 17 describe. The game is the approved joint-use weak-EUF game with its signing oracle; no new assumption. Owner confirmation of this deviation is pending.",
   "The per-index and summed theorems hold at every identity index; session_unique, injective_bound and ce_a1_injective are at identity index 0, the index of the CE-9 trace invariant.",
   "R_c caps charge each local finish its full 69-callback allowance (hash, HMAC and decapsulation coins per callback); upper bounds, not exact counts.",
-  "No planned statement turned out false or unprovable and no statement was weakened; no existing module changed."
+  "Review fix pass: ce_a1, ce_a1_billed and ce_a1_injective were changed to statements at least as strong (review_fix_pass.changed_statements); no statement was weakened or removed, and no module from before CE-8 changed. The planned KEM-ciphertext and root links of the matching are not provable at the CE-A1 bound (review_fix_pass.not_done)."
  ],
- "contracts_used": "The premises of generated_authentication / common_authentication_with_resources: X25519ClassLaw, X25519ScalarSpread, SourceFullCorrect, HasAttachedVerificationAdapter, ReadWritable, Phase2ReadBack, FrameReadBack and KemBound setup caps; the bound charges Gap-DH, the R1 Extract and BLAKE2b random oracles (through serverGapDhAdvantage and the record/schedule losses), the record-loss primitive games and joint-use weak-EUF. Phase1ReadBack and Phase2ReadBack (approved 2026-10-06) through CE-COMPILE; Phase1ReadBack also in generation_keys and keys_identity. eps_inj uses only joint-use weak-EUF; signing correctness (joint_correct) follows from Setup.wiring and the attached-signature correctness of the source primitives. Supplied Server seed none; revealSeed false. No SUF-CMA, uniqueness, distributional key-generation property or honest-target premise.",
+ "contracts_used": "The premises of generated_authentication / common_authentication_with_resources: X25519ClassLaw, X25519ScalarSpread, SourceFullCorrect, HasAttachedVerificationAdapter, ReadWritable, Phase2ReadBack, FrameReadBack and KemBound setup caps; the bound charges Gap-DH, the R1 Extract and BLAKE2b random oracles (through serverGapDhAdvantage and the record/schedule losses), recordLoss (by recordLoss_expanded: three AEAD IND$ advantages, 2 x the AEAD INT-CTXT advantage, (2H + 1)/2^128 + 1/2^512), scheduleLoss (three HMAC-PRF advantages and two Extract-on-uniform advantages) and joint-use weak-EUF. Phase1ReadBack and Phase2ReadBack (approved 2026-10-06) through CE-COMPILE; Phase1ReadBack also in generation_keys and keys_identity; Phase2ReadBack also in build_pin. eps_inj uses only joint-use weak-EUF; signing correctness (joint_correct) follows from Setup.wiring and the attached-signature correctness of the source primitives. Supplied Server seed none; revealSeed false. No SUF-CMA, uniqueness, distributional key-generation property, KEM binding property or honest-target premise.",
  "not_proved": [
+  "The section 9 Beacon-side corollary: CE-A1 does not give the ciphertext conjunct of CE-5 Linked (the matched build reply carries the ciphertext of c's accepted finish input). It is not provable at the CE-A1 bound (review_fix_pass.not_done); closing it needs a KEM step (for example a per-target IND-CCA reduction for acceptance of a matched session's record under a different ciphertext with the same decapsulated key, adding loss terms to eps_A1, a plan change for the owner) or a different Beacon-side designation. The plan's section 9 justification (the eleven fields carry the ciphertext) is wrong: Session has no ciphertext field and the root input carries the KEM shared secret.",
+  "Root, associated-data and registration-ID agreement of the matched session: the outcome of the experiment keeps no root; not needed by the section 9 eligibility.",
+  "The first-entry form of Linked (acceptOf and buildOf read the first accept and build of a session) from PinnedMatchAt.",
   "CE-8r: CE-A1 without NoBundleFailure_c (phase1Total or a retry-capable ServerAuth target, owner input 15).",
   "Tighter per-class caps for local finishes.",
   "Injectivity at Server identity indices other than 0.",
-  "The map of MatchedAt and SharedMatch to the symbolic events (CE-12) and a run-level liveness witness."
+  "The map of PinnedMatchAt and SharedMatch to the symbolic events (CE-12) and a run-level liveness witness."
  ],
- "re_estimate": "CE-8 (planned 14-22, unit A re-estimate 12-20 agent-days) was built in three working sessions, about 3-4 agent-days; a review fix pass is estimated at 0.5-1. If CE-8 accounted for 12-20 of the 23-41 agent-days CE-9 left for item 3 proper without CE-9b, CE-10 and CE-12, about 11-22 remain.",
+ "re_estimate": "CE-8 (planned 14-22, unit A re-estimate 12-20 agent-days) was built in three working sessions, about 3-4 agent-days; the review fix pass took about half an agent-day. If CE-8 accounted for 12-20 of the 23-41 agent-days CE-9 left for item 3 proper without CE-9b, CE-10 and CE-12, about 11-22 remain. A KEM step for the ciphertext link would be a new reduction of about the size of one CE-9 transfer, roughly 3-6 agent-days (not derived from a design).",
  "checks_not_run": "No lake build, make verify, nix-collect-garbage, mutation testing, ProVerif or Rust run; no production Rust or ProVerif change.",
- "review": "Not reviewed. Not pushed."
+ "review": "First pass reviewed at 9d9ea4cb: semantic lens REJECT (one major, one minor, one nit), hygiene lens APPROVE_WITH_NITS (two nits). The review fix pass (review_fix_pass) is not reviewed yet. Not pushed.",
+ "review_fix_pass": {
+  "reviewed_commit": "9d9ea4cb5d7e76ebda4ec5b9d9721b7e9129619c",
+  "findings": [
+   {
+    "lens": "semantic",
+    "severity": "major",
+    "title": "The public matching omits the KEM-ciphertext and root link, so CE-A1 cannot support the plan section 9 Beacon-side corollary, and the docs call this not a weakening",
+    "response": "Documentation corrected (guide, analysis, receipt, docstrings of A1NoFailure and of the main module). Added the provable part of the link: PinnedMatchAt (Server identity of the matched build reply equal to the pin), with build_pin, matched_pinned, noPinnedMatch_noFailure, noFailure_noPinnedMatch, pinned_matched and build_entry; ce_a1, ce_a1_billed and ce_a1_injective now bound A1NoPinnedMatch. The KEM-ciphertext and root links were not added (not_done).",
+    "commit": "Pin the CE-A1 matching to the Server identity"
+   },
+   {
+    "lens": "semantic",
+    "severity": "minor",
+    "title": "No query bill for the eps_inj reductions B^coll_t; the one-signing-query claim is unproved",
+    "response": "Added collider_queries and collider_bills; ce_a1_injective gains the bills of every B^coll_t. The one-query deviation from owner input 17 is flagged for confirmation.",
+    "commit": "Bill the collision reductions of CE-A1"
+   },
+   {
+    "lens": "semantic",
+    "severity": "nit",
+    "title": "The guide misattributes the primitive games inside recordLoss and scheduleLoss",
+    "response": "CE-8: contracts used now lists them per term (recordLoss_expanded; scheduleLoss).",
+    "commit": "documentation"
+   },
+   {
+    "lens": "hygiene",
+    "severity": "nit",
+    "title": "The names-for-consumers note does not say which short names to qualify",
+    "response": "Added a bullet listing the short names to qualify and the namespaces that declare the same names.",
+    "commit": "documentation"
+   },
+   {
+    "lens": "hygiene",
+    "severity": "nit",
+    "title": "The module table lists the two Embed theorems under Stable",
+    "response": "coins_route and localRoot_route moved to the Embed row; new names and counts added.",
+    "commit": "documentation"
+   }
+  ],
+  "changed_statements": {
+   "PqxdhDeploymentServerAuth.ce_a1": {
+    "before": "theorem ce_a1 (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks) (caps : KemCaps)\n    (bounded : KemBound setup caps) (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)\n    (identityIndex : Nat) (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)\n    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)\n    (frameBack : PqxdhServerAuthNegativeControl.FrameReadBack codec)\n    (writable : PqxdhFirstBeaconRecordCanonical.ReadWritable codec.frameWrite codec.frameRead)\n    (law : X25519ClassLaw setup.source.crypto) (spread : X25519ScalarSpread setup.source.crypto)\n    (correct : SourceFullCorrect setup.source setup.hmac)\n    (adapter : HasAttachedVerificationAdapter\n      (fun identity => setup.source.crypto.verify identity.toList) setup.joint.verify)\n    (bounds : FreshBounds) (mode : Mode) (adversary : OracleComp (ModeSpec mode) X) (budget : Budget)\n    (respects : budget.Respects adversary) (runtime : A) (qCoin Q qH qHash qTotal qFinish : Nat)\n    (reductionCaps : ∀ c, ReductionCaps (reduction (KemSK := KemSK) setup codec route bounds mode adversary c)\n      qCoin Q qH qHash qTotal qFinish)\n    (fallback : ModifiedNonceAeadForgery) (signatureFallback : PqxdhJointIdentity.Forgery) :\n    (𝒟[(fun outcome => @decide (∃ c, A1NoFailure setup codec c outcome) (Classical.propDecidable _)) <$>\n      (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit identityIndex bounds mode adversary).run runtime]\n        {true}).toReal ≤\n      ∑ c : Fin budget.create, serverAuthBound setup codec checks caps\n        (serverAuthAdversary setup codec route bounds mode adversary c) qCoin Q qH qHash fallback signatureFallback ∧\n    ∀ c, PqxdhServerAuthCommonAuthentication.ReductionBills setup codec checks caps\n      (serverAuthAdversary setup codec route bounds mode adversary c) qCoin Q qH qHash qTotal qFinish fallback\n      signatureFallback",
+    "after": "theorem ce_a1 (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks) (caps : KemCaps)\n    (bounded : KemBound setup caps) (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)\n    (identityIndex : Nat) (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)\n    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)\n    (frameBack : PqxdhServerAuthNegativeControl.FrameReadBack codec)\n    (writable : PqxdhFirstBeaconRecordCanonical.ReadWritable codec.frameWrite codec.frameRead)\n    (law : X25519ClassLaw setup.source.crypto) (spread : X25519ScalarSpread setup.source.crypto)\n    (correct : SourceFullCorrect setup.source setup.hmac)\n    (adapter : HasAttachedVerificationAdapter\n      (fun identity => setup.source.crypto.verify identity.toList) setup.joint.verify)\n    (bounds : FreshBounds) (mode : Mode) (adversary : OracleComp (ModeSpec mode) X) (budget : Budget)\n    (respects : budget.Respects adversary) (runtime : A) (qCoin Q qH qHash qTotal qFinish : Nat)\n    (reductionCaps : ∀ c, ReductionCaps (reduction (KemSK := KemSK) setup codec route bounds mode adversary c)\n      qCoin Q qH qHash qTotal qFinish)\n    (fallback : ModifiedNonceAeadForgery) (signatureFallback : PqxdhJointIdentity.Forgery) :\n    (𝒟[(fun outcome => @decide (∃ c, A1NoPinnedMatch setup codec c outcome) (Classical.propDecidable _)) <$>\n      (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit identityIndex bounds mode adversary).run runtime]\n        {true}).toReal ≤\n      ∑ c : Fin budget.create, serverAuthBound setup codec checks caps\n        (serverAuthAdversary setup codec route bounds mode adversary c) qCoin Q qH qHash fallback signatureFallback ∧\n    ∀ c, PqxdhServerAuthCommonAuthentication.ReductionBills setup codec checks caps\n      (serverAuthAdversary setup codec route bounds mode adversary c) qCoin Q qH qHash qTotal qFinish fallback\n      signatureFallback",
+    "why": "Same premises and right-hand side; the event A1NoFailure becomes A1NoPinnedMatch. A1NoFailure c implies A1NoPinnedMatch c on every outcome (noFailure_noPinnedMatch), so the old left-hand side is at most the new one and the new statement implies the old one. On every outcome of the experiment the two events coincide (noPinnedMatch_noFailure), so the bounded probability is unchanged."
+   },
+   "PqxdhDeploymentServerAuthBills.ce_a1_billed": {
+    "before": "theorem ce_a1_billed (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks) (caps : KemCaps)\n    (bounded : KemBound setup caps) (route : RawCtxServerRouting.SenderDecoder) {A : Type}\n    (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat)\n    (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)\n    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)\n    (frameBack : PqxdhServerAuthNegativeControl.FrameReadBack codec)\n    (writable : PqxdhFirstBeaconRecordCanonical.ReadWritable codec.frameWrite codec.frameRead)\n    (law : PqxdhServerAuthAssumptions.X25519ClassLaw setup.source.crypto)\n    (spread : PqxdhServerAuthAssumptions.X25519ScalarSpread setup.source.crypto)\n    (correct : PqxdhFullSecretInputKdf.SourceFullCorrect setup.source setup.hmac)\n    (adapter : PqxdhEd25519EufCma.HasAttachedVerificationAdapter\n      (fun identity => setup.source.crypto.verify identity.toList) setup.joint.verify)\n    (bounds : FreshBounds) (mode : Mode) (adversary : OracleComp (ModeSpec mode) X) (budget : Budget)\n    (respects : budget.Respects adversary) (runtime : A)\n    (fallback : CtxNonceAeadIntCtxt.ModifiedNonceAeadForgery) (signatureFallback : PqxdhJointIdentity.Forgery) :\n    (𝒟[(fun outcome => @decide (∃ c, PqxdhDeploymentServerAuth.A1NoFailure setup codec c outcome)\n        (Classical.propDecidable _)) <$>\n      (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit identityIndex bounds mode adversary).run runtime]\n        {true}).toReal ≤\n      ∑ c : Fin budget.create, PqxdhDeploymentServerAuth.serverAuthBound setup codec checks caps\n        (PqxdhDeploymentServerAuth.serverAuthAdversary setup codec route bounds mode adversary c)\n        (coinCap caps bounds budget) budget.accept (romCap budget) (hashCap budget) fallback signatureFallback ∧\n    ∀ c, PqxdhServerAuthCommonAuthentication.ReductionBills setup codec checks caps\n      (PqxdhDeploymentServerAuth.serverAuthAdversary setup codec route bounds mode adversary c)\n      (coinCap caps bounds budget) budget.accept (romCap budget) (hashCap budget) (totalCap caps bounds budget)\n      budget.finish fallback signatureFallback",
+    "after": "theorem ce_a1_billed (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks) (caps : KemCaps)\n    (bounded : KemBound setup caps) (route : RawCtxServerRouting.SenderDecoder) {A : Type}\n    (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat)\n    (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)\n    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)\n    (frameBack : PqxdhServerAuthNegativeControl.FrameReadBack codec)\n    (writable : PqxdhFirstBeaconRecordCanonical.ReadWritable codec.frameWrite codec.frameRead)\n    (law : PqxdhServerAuthAssumptions.X25519ClassLaw setup.source.crypto)\n    (spread : PqxdhServerAuthAssumptions.X25519ScalarSpread setup.source.crypto)\n    (correct : PqxdhFullSecretInputKdf.SourceFullCorrect setup.source setup.hmac)\n    (adapter : PqxdhEd25519EufCma.HasAttachedVerificationAdapter\n      (fun identity => setup.source.crypto.verify identity.toList) setup.joint.verify)\n    (bounds : FreshBounds) (mode : Mode) (adversary : OracleComp (ModeSpec mode) X) (budget : Budget)\n    (respects : budget.Respects adversary) (runtime : A)\n    (fallback : CtxNonceAeadIntCtxt.ModifiedNonceAeadForgery) (signatureFallback : PqxdhJointIdentity.Forgery) :\n    (𝒟[(fun outcome => @decide (∃ c, PqxdhDeploymentServerAuth.A1NoPinnedMatch setup codec c outcome)\n        (Classical.propDecidable _)) <$>\n      (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit identityIndex bounds mode adversary).run runtime]\n        {true}).toReal ≤\n      ∑ c : Fin budget.create, PqxdhDeploymentServerAuth.serverAuthBound setup codec checks caps\n        (PqxdhDeploymentServerAuth.serverAuthAdversary setup codec route bounds mode adversary c)\n        (coinCap caps bounds budget) budget.accept (romCap budget) (hashCap budget) fallback signatureFallback ∧\n    ∀ c, PqxdhServerAuthCommonAuthentication.ReductionBills setup codec checks caps\n      (PqxdhDeploymentServerAuth.serverAuthAdversary setup codec route bounds mode adversary c)\n      (coinCap caps bounds budget) budget.accept (romCap budget) (hashCap budget) (totalCap caps bounds budget)\n      budget.finish fallback signatureFallback",
+    "why": "As ce_a1: the event A1NoFailure becomes A1NoPinnedMatch, premises, caps and right-hand side unchanged; the new statement implies the old one."
+   },
+   "PqxdhDeploymentServerAuthInjectiveGame.ce_a1_injective": {
+    "before": "theorem ce_a1_injective (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (caps : PqxdhServerAuthSourceCosts.KemCaps) (bounded : PqxdhServerAuthSourceCosts.KemBound setup caps)\n    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)\n    (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)\n    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)\n    (frameBack : PqxdhServerAuthNegativeControl.FrameReadBack codec)\n    (writable : PqxdhFirstBeaconRecordCanonical.ReadWritable codec.frameWrite codec.frameRead)\n    (law : PqxdhServerAuthAssumptions.X25519ClassLaw setup.source.crypto)\n    (spread : PqxdhServerAuthAssumptions.X25519ScalarSpread setup.source.crypto)\n    (correct : PqxdhFullSecretInputKdf.SourceFullCorrect setup.source setup.hmac)\n    (adapter : PqxdhEd25519EufCma.HasAttachedVerificationAdapter\n      (fun identity => setup.source.crypto.verify identity.toList) setup.joint.verify)\n    (bounds : FreshBounds) (mode : Mode) (adversary : OracleComp (ModeSpec mode) X) (budget : Budget)\n    (respects : budget.Respects adversary) (runtime : A)\n    (fallback : CtxNonceAeadIntCtxt.ModifiedNonceAeadForgery) (signatureFallback : PqxdhJointIdentity.Forgery) :\n    (𝒟[(fun outcome => @decide ((∃ c, PqxdhDeploymentServerAuth.A1NoFailure setup codec c outcome) ∨\n        ∃ c c', SharedMatch setup codec c c' outcome) (Classical.propDecidable _)) <$>\n      (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode adversary).run runtime]\n        {true}).toReal ≤\n      (∑ c : Fin budget.create, PqxdhDeploymentServerAuth.serverAuthBound setup codec checks caps\n        (PqxdhDeploymentServerAuth.serverAuthAdversary setup codec route bounds mode adversary c)\n        (PqxdhDeploymentServerAuthBills.coinCap caps bounds budget) budget.accept\n        (PqxdhDeploymentServerAuthBills.romCap budget) (PqxdhDeploymentServerAuthBills.hashCap budget) fallback\n        signatureFallback) +\n      ∑ target : Fin (budget.create + 1), (advantage setup.joint\n        (PqxdhJointIdentityFamily.reduction setup.joint target\n          (PqxdhDeploymentServerAuthInjective.collider budget.create))).toReal ∧\n    ∀ c, PqxdhServerAuthCommonAuthentication.ReductionBills setup codec checks caps\n      (PqxdhDeploymentServerAuth.serverAuthAdversary setup codec route bounds mode adversary c)\n      (PqxdhDeploymentServerAuthBills.coinCap caps bounds budget) budget.accept\n      (PqxdhDeploymentServerAuthBills.romCap budget) (PqxdhDeploymentServerAuthBills.hashCap budget)\n      (PqxdhDeploymentServerAuthBills.totalCap caps bounds budget) budget.finish fallback signatureFallback",
+    "after": "theorem ce_a1_injective (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (caps : PqxdhServerAuthSourceCosts.KemCaps) (bounded : PqxdhServerAuthSourceCosts.KemBound setup caps)\n    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)\n    (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)\n    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)\n    (frameBack : PqxdhServerAuthNegativeControl.FrameReadBack codec)\n    (writable : PqxdhFirstBeaconRecordCanonical.ReadWritable codec.frameWrite codec.frameRead)\n    (law : PqxdhServerAuthAssumptions.X25519ClassLaw setup.source.crypto)\n    (spread : PqxdhServerAuthAssumptions.X25519ScalarSpread setup.source.crypto)\n    (correct : PqxdhFullSecretInputKdf.SourceFullCorrect setup.source setup.hmac)\n    (adapter : PqxdhEd25519EufCma.HasAttachedVerificationAdapter\n      (fun identity => setup.source.crypto.verify identity.toList) setup.joint.verify)\n    (bounds : FreshBounds) (mode : Mode) (adversary : OracleComp (ModeSpec mode) X) (budget : Budget)\n    (respects : budget.Respects adversary) (runtime : A)\n    (fallback : CtxNonceAeadIntCtxt.ModifiedNonceAeadForgery) (signatureFallback : PqxdhJointIdentity.Forgery) :\n    (𝒟[(fun outcome => @decide ((∃ c, PqxdhDeploymentServerAuth.A1NoPinnedMatch setup codec c outcome) ∨\n        ∃ c c', SharedMatch setup codec c c' outcome) (Classical.propDecidable _)) <$>\n      (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode adversary).run runtime]\n        {true}).toReal ≤\n      (∑ c : Fin budget.create, PqxdhDeploymentServerAuth.serverAuthBound setup codec checks caps\n        (PqxdhDeploymentServerAuth.serverAuthAdversary setup codec route bounds mode adversary c)\n        (PqxdhDeploymentServerAuthBills.coinCap caps bounds budget) budget.accept\n        (PqxdhDeploymentServerAuthBills.romCap budget) (PqxdhDeploymentServerAuthBills.hashCap budget) fallback\n        signatureFallback) +\n      ∑ target : Fin (budget.create + 1), (advantage setup.joint\n        (PqxdhJointIdentityFamily.reduction setup.joint target\n          (PqxdhDeploymentServerAuthInjective.collider budget.create))).toReal ∧\n    (∀ c, PqxdhServerAuthCommonAuthentication.ReductionBills setup codec checks caps\n      (PqxdhDeploymentServerAuth.serverAuthAdversary setup codec route bounds mode adversary c)\n      (PqxdhDeploymentServerAuthBills.coinCap caps bounds budget) budget.accept\n      (PqxdhDeploymentServerAuthBills.romCap budget) (PqxdhDeploymentServerAuthBills.hashCap budget)\n      (PqxdhDeploymentServerAuthBills.totalCap caps bounds budget) budget.finish fallback signatureFallback) ∧\n    ∀ target : Fin (budget.create + 1),\n      (∀ jointPublic, (PqxdhJointIdentityFamily.reduction setup.joint target\n        (PqxdhDeploymentServerAuthInjective.collider budget.create) jointPublic).IsQueryBoundP\n          (PqxdhJointIdentityFamily.IsClass .uniform) (32 * budget.create)) ∧\n      (∀ jointPublic, (PqxdhJointIdentityFamily.reduction setup.joint target\n        (PqxdhDeploymentServerAuthInjective.collider budget.create) jointPublic).IsQueryBoundP\n          (PqxdhJointIdentityFamily.IsClass .sign) 1) ∧\n      (∀ jointPublic, (PqxdhJointIdentityFamily.reduction setup.joint target\n        (PqxdhDeploymentServerAuthInjective.collider budget.create) jointPublic).IsQueryBoundP\n          (PqxdhJointIdentityFamily.IsClass .staticDh) 0) ∧\n      (game setup.joint (PqxdhJointIdentityFamily.reduction setup.joint target\n        (PqxdhDeploymentServerAuthInjective.collider budget.create))).IsTotalQueryBound (32 * (budget.create + 1))",
+    "why": "The first disjunct A1NoFailure becomes A1NoPinnedMatch (a larger event on every outcome, so the old left-hand side is at most the new one), the right-hand side and premises are unchanged, and the conclusion gains the conjunct of the bills of every B^coll_t; the new statement implies the old one."
+   }
+  },
+  "new_statements": [
+   "PqxdhDeploymentServerAuth.pinned_matched",
+   "PqxdhDeploymentServerAuth.noFailure_noPinnedMatch",
+   "PqxdhDeploymentServerAuth.build_entry",
+   "PqxdhDeploymentServerAuth.build_pin",
+   "PqxdhDeploymentServerAuth.matched_pinned",
+   "PqxdhDeploymentServerAuth.noPinnedMatch_noFailure",
+   "PqxdhDeploymentServerAuthInjective.collider_queries",
+   "PqxdhDeploymentServerAuthInjective.collider_bills"
+  ],
+  "unchanged_statements_check": "Every other theorem of the sixteen modules has the same statement as at 9d9ea4cb up to whitespace (whitespace-normalized comparison of the text from theorem to :=); none was removed.",
+  "not_done": {
+   "ciphertext_link": "Extending the matching with the KEM-ciphertext link (the matched build reply carries the ciphertext that c's finish decapsulates) cannot be proved at the CE-A1 bound. Every term of serverAuthBound is an advantage against Gap-DH, the random oracles, the record and schedule primitives or joint-use weak-EUF, or a statistical term; none is a KEM security property, and no CE-A1 premise constrains the KEM beyond its query caps. With a KEM whose decapsulation ignores the ciphertext, an adversary that relays session i's build reply to c with only the ciphertext field replaced makes c derive the same shared secret, root and record key and accept; session i still pin-matches c, but no build reply carries c's ciphertext, so the ciphertext-extended failure has probability one while every term of the bound is what it is for a secure KEM.",
+   "root_link": "Root agreement of the matched session cannot be stated on the CE-A1 event: the outcome of the experiment (constructed Server, adversary output, ledger and native state) keeps no root, because the Server's pending token, which holds the root, is cleared at the build and a Beacon keeps only its kernel. Stating it needs an instrumented experiment that logs roots and a state correspondence through the embedding; the ServerAuth common event would then give it at the same bound. The section 9 eligibility does not need it."
+  }
+ }
 }
