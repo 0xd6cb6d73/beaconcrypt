@@ -1,0 +1,1198 @@
+{
+ "date": "2026-10-07T07:26:44.736940+00:00",
+ "scope": "Unit A of the common deployment experiment (handoff item 3): CE-1 (interface, secrecy commands, modes, transcript entries, logs, output, query classes and budgets with the fresh-message byte budget, public transcript functions phase, owner, NoBundleFailure and designate), CE-2 (secrecy layer with test and fresh, produced-frame log, mode P projection, frame lemmas), the CE-3 remainder (compile lemma for the complete experiment in both modes, re-check of the twelve trial modules over the extended interface, budget transport including the fresh-message byte budget and its closed form), CE-4 (generic exact target selection: split, event and advantage forms, plain and signed guessing combinators) and CE-5 (publicity of phase, owner, NoBundleFailure and designate as a run invariant, owner and KEM creation index in the annotated execution, designate_keymatch and the Beacon ciphertext link with the read-back laws, approved_goodkem and kernel_reads_unrevealed for the tagged compiled program).",
+ "basis": "4037fae3c69c8dd7b8056c0d5be6c6b3e0041cc2",
+ "topic": {
+  "branch": "codex/deployment-unit-a",
+  "worktree": "/tmp/beaconcrypt-deployment-unit-a"
+ },
+ "plan": {
+  "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
+  "sha256": "df7de0d5dfb05716498a0b521a9e148c66b0ae0d65ae999616940c0ccf8af89b",
+  "revision": "2 with sections 19-21",
+  "stages": "CE-1, CE-2, CE-3 remainder, CE-4, CE-5"
+ },
+ "commits": [
+  {
+   "commit": "1b32cb852dfaa7c7391094dacb5d894cec6df842",
+   "subject": "Extend the deployment interface with secrecy commands, logs and budgets"
+  },
+  {
+   "commit": "74744c99a99a63c596c4a2a394e3726975353434",
+   "subject": "Add the public transcript functions of the deployment experiment"
+  },
+  {
+   "commit": "83a51b14736e415fe347f38fa5fde7eb2dfda3a6",
+   "subject": "Log produced record frames in the native and compiled record commands"
+  },
+  {
+   "commit": "4c3d6d7d3900fba666c2d371816444d0d612a9e7",
+   "subject": "Add the secrecy commands and the complete deployment experiment"
+  },
+  {
+   "commit": "4ae4411389509256c3c3a0f9c3358251907d259e",
+   "subject": "Prove the compile lemma and budget transport for the complete experiment"
+  },
+  {
+   "commit": "a6eecf76d90faa9d9b57b8fae28b035ecec26450",
+   "subject": "Add exact uniform target selection identities"
+  },
+  {
+   "commit": "81eefa5a0333f95c89109657d739619f033f3cc5",
+   "subject": "Prove the public transcript functions agree with the native state"
+  },
+  {
+   "commit": "ea91c49fed3d4d4adb75934225d57e93aa499c14",
+   "subject": "Prove the designation key match and Beacon ciphertext link"
+  },
+  {
+   "commit": "17a71c30904838fe1df407f38d9f9f05a259d502",
+   "subject": "Prove the compiled program discloses no identity or KEM key"
+  },
+  {
+   "commit": "fcd29256d683496e947778ef6eb95747803201a6",
+   "subject": "Give the transported caps of the compiled program in closed form"
+  },
+  {
+   "commit": "e8d225348671bf52933041713bc790fa0c7fd8e0",
+   "subject": "Prove each owner holds the KEM creation index of its position"
+  }
+ ],
+ "files_sha256": {
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentInterface.lean": "3e6067e5369ca37ce1121c22aeda9dc0cf8c3b87c23dc6d8ee7a1bd76221961b",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentNative.lean": "72bc59e5bb6d464beb752b01b8d01ec2b5993a752ae96325d6915172adc3c839",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentRecordCache.lean": "6935ff55099044b572c9edc9ffc3e03678c36b91d12b30280765fb3b8ebb69e7",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentCompile.lean": "9cf880832d7463fe9ea2c70b11dcd8f1c5f9918a2177a2b4f376a2c79f444dec",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentCompileRecords.lean": "6a909356bca37c5c75554962a5d8db59990553037350e741e2a9b1054171cd37",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentCompileRegistration.lean": "aef376f7dcaf2f734351037a25c75a582b88c2d35b1b0a97bb5fc91ed32acff8",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentCompileStep.lean": "620658b02b49df6f22bc47ca23e7af51f3eea41d5cd587ecdc2c14092e07d513",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentCompileFootprint.lean": "9efacfe04f41deff0c1db88431c821e5d8699de4eacb800b0bda7d10ea05ad99",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentCompileInvariant.lean": "73182365f5b22023f85e188436f45cd49ad775173278cb4b345d7ffe4e7bd51b",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentCompileGame.lean": "a6aa4dd7c72e3704243cf135437b472d8b23e86b70af6f3833f51b676bb37b6a",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentReadHistory.lean": "5ddecf4f0e590c73e3dc58709720b863e141ec5489f95e1923f8e979357a3ac8",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentCompileBudget.lean": "e2a9111cdd596d559d2df9692fd2ad728d2b9df1fdd768083de834fe8acb1de3",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentTranscript.lean": "f2dd6d19b323c2f9185849c1ad66aca0bc2972248223e9c519baa523fa238a6e",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentSecrecy.lean": "7ba93c9d16da303e3912f1c758cf32b791cde3c8a651c52dea60d40c7539eea8",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentCompileSecrecy.lean": "c1c916a5f23eb159c5cde8a22f379e95d6f6bd303d43c3e5fb7015167eccbc6c",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/UniformTargetSelection.lean": "4fea649522c61856c5459aa43e4f42fc8f74461a88bdf0d1a67858a7da847b83",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentEligibility.lean": "0e31c8a8a8bde1be755d7d815f5ed60c2f1aa7fa09eb1532b26dcf925ae08203",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentKeyMatch.lean": "fa9152592b564c11789e7c40dacab02daa40c5817e4fe9b178db6d52b33ddb48",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentQuiet.lean": "89ec234ed98e75661f40957ce4eca77568203a2f904050d081572f24f24aa72c",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentCompileCaps.lean": "35ae0007d5ae4e3696cb21664960c39c7c11e022133ed08e14d10c91b31f561b",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentKemIndex.lean": "5f09ee6158cd140fc03d5b7c3d43796a9ac0528e4fb3c55175ae368aa3479e98",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "0169f9d2d3638a223be7b2d51e53b35bb3587d1d637780f0ba04afe1fda54304",
+  "beaconcrypt-core/proofs/check-inventory.sh": "41e6202ee5d04001ccbef67b1725f8262ec40a72a709df119d97ba7b1e667b1a",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "1c4a26ff93325eb9c92a20679f304d4926a5ea50bffaaf10c191ae5e0339066b",
+  "doc/impl/common-deployment-experiment.md": "b0ee18f15cbe1244bc7dd0f03d6ba5f7529224e1387f325f4c3c42f7582c48f8",
+  "doc/formal-verification-analysis.md": "cb0c76acfed37a20a9a187f4627879bf58717097b435e5146a997adb95378fbb",
+  "doc/composition-assumptions.md": "cffb072b94f7ec2773e28ab0c893d5efadfdf47bdbb364a2d30f4f35c72369db"
+ },
+ "modules": [
+  {
+   "name": "PqxdhDeploymentInterface",
+   "plan_stage": "CE-1",
+   "new_in_unit_a": false,
+   "statements": [
+    "parsePin_isSome",
+    "observe_serverRaw",
+    "observe_beaconRaw",
+    "observeFull_serverRaw",
+    "observeFull_beaconRaw",
+    "observeFull_secrecy",
+    "project_raw",
+    "sends_eq",
+    "targets_eq"
+   ],
+   "statement_count": 9,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 1,
+    "propext": 8
+   },
+   "direct_check_final": {
+    "exit": 0,
+    "start": "2026-10-07T07:17:27.251053+00:00",
+    "end": "2026-10-07T07:17:31.373336+00:00",
+    "source_sha256": "3e6067e5369ca37ce1121c22aeda9dc0cf8c3b87c23dc6d8ee7a1bd76221961b",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact_sha256": "6950483853e785dcd0137ca4fd24dbcf660575d39bad2f51752b0c6a8982b6a7",
+    "command": [
+     "flock",
+     "/tmp/bc-arc-scratch/lean.lock",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-unit-a/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/unit-a/olean/BeaconcryptCore/Computational/PqxdhDeploymentInterface.olean",
+     "/tmp/beaconcrypt-deployment-unit-a/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentInterface.lean"
+    ]
+   }
+  },
+  {
+   "name": "PqxdhDeploymentNative",
+   "plan_stage": "CE-2",
+   "new_in_unit_a": false,
+   "statements": [
+    "record_run",
+    "record_support",
+    "logged_map",
+    "logged_pure",
+    "logged_forget",
+    "create_width",
+    "serverStep_fields",
+    "beaconStep_fields"
+   ],
+   "statement_count": 8,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 8
+   },
+   "direct_check_final": {
+    "exit": 0,
+    "start": "2026-10-07T07:17:31.412288+00:00",
+    "end": "2026-10-07T07:17:35.217841+00:00",
+    "source_sha256": "72bc59e5bb6d464beb752b01b8d01ec2b5993a752ae96325d6915172adc3c839",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact_sha256": "5ead6f2f0537b535341048b2773792dbd9c0e8109933d0860f3233fcb3264448",
+    "command": [
+     "flock",
+     "/tmp/bc-arc-scratch/lean.lock",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-unit-a/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/unit-a/olean/BeaconcryptCore/Computational/PqxdhDeploymentNative.olean",
+     "/tmp/beaconcrypt-deployment-unit-a/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentNative.lean"
+    ]
+   }
+  },
+  {
+   "name": "PqxdhDeploymentRecordCache",
+   "plan_stage": "CE-3 (trial module, re-checked)",
+   "new_in_unit_a": false,
+   "statements": [
+    "primitives_kdf",
+    "primitives_open",
+    "local_query",
+    "setCtx_setCtx",
+    "setCtx_ctx",
+    "local_record"
+   ],
+   "statement_count": 6,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 6
+   },
+   "direct_check_final": {
+    "exit": 0,
+    "start": "2026-10-07T07:17:35.258070+00:00",
+    "end": "2026-10-07T07:17:38.859119+00:00",
+    "source_sha256": "6935ff55099044b572c9edc9ffc3e03678c36b91d12b30280765fb3b8ebb69e7",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact_sha256": "e3b6ac42bf593d2e396a90c3d9bd066cdecf1d61e7e0e9a2ed5c5f8fbb1fe3e3",
+    "command": [
+     "flock",
+     "/tmp/bc-arc-scratch/lean.lock",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-unit-a/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/unit-a/olean/BeaconcryptCore/Computational/PqxdhDeploymentRecordCache.olean",
+     "/tmp/beaconcrypt-deployment-unit-a/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentRecordCache.lean"
+    ]
+   }
+  },
+  {
+   "name": "PqxdhDeploymentCompile",
+   "plan_stage": "CE-3 (trial module, re-checked)",
+   "new_in_unit_a": false,
+   "statements": [
+    "merge_empty"
+   ],
+   "statement_count": 1,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 1
+   },
+   "direct_check_final": {
+    "exit": 0,
+    "start": "2026-10-07T07:17:38.894573+00:00",
+    "end": "2026-10-07T07:17:42.522877+00:00",
+    "source_sha256": "9cf880832d7463fe9ea2c70b11dcd8f1c5f9918a2177a2b4f376a2c79f444dec",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact_sha256": "faba1620b66ed3769a5003cefc49d1e25e2254f71e03eed8d101a0d5bae84191",
+    "command": [
+     "flock",
+     "/tmp/bc-arc-scratch/lean.lock",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-unit-a/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/unit-a/olean/BeaconcryptCore/Computational/PqxdhDeploymentCompile.olean",
+     "/tmp/beaconcrypt-deployment-unit-a/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentCompile.lean"
+    ]
+   }
+  },
+  {
+   "name": "PqxdhDeploymentCompileRecords",
+   "plan_stage": "CE-3 (trial module, re-checked)",
+   "new_in_unit_a": false,
+   "statements": [
+    "serverImpl_peer",
+    "serverImpl_absent",
+    "beaconImpl_established",
+    "reveal_run",
+    "kernel_run",
+    "record_map",
+    "record_pure",
+    "serverStep_run",
+    "serverLocal_none",
+    "serverLocal_some",
+    "mergePeer_identity",
+    "mergePeer_kernel",
+    "merge_produce",
+    "merge_put",
+    "server_record",
+    "beaconLocal_absent",
+    "beaconLocal_present",
+    "beaconStep_present",
+    "beaconStep_absent",
+    "merge_owner",
+    "merge_owner_put",
+    "mergeOwner_identityKeyId",
+    "mergeOwner_rawAttempts",
+    "beacon_record"
+   ],
+   "statement_count": 24,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 24
+   },
+   "direct_check_final": {
+    "exit": 0,
+    "start": "2026-10-07T07:17:42.561462+00:00",
+    "end": "2026-10-07T07:17:49.704826+00:00",
+    "source_sha256": "6a909356bca37c5c75554962a5d8db59990553037350e741e2a9b1054171cd37",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact_sha256": "88fde9690fefe3ceb1a3466bc9f5b0582a17dd8fc241c38f11d9f1396513b7a6",
+    "command": [
+     "flock",
+     "/tmp/bc-arc-scratch/lean.lock",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-unit-a/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/unit-a/olean/BeaconcryptCore/Computational/PqxdhDeploymentCompileRecords.olean",
+     "/tmp/beaconcrypt-deployment-unit-a/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentCompileRecords.lean"
+    ]
+   }
+  },
+  {
+   "name": "PqxdhDeploymentCompileRegistration",
+   "plan_stage": "CE-3 (trial module, re-checked)",
+   "new_in_unit_a": false,
+   "statements": [
+    "pure_commutes",
+    "bind_commutes",
+    "lift_commutes",
+    "modify_commutes",
+    "session_commutes",
+    "simulate_commutes",
+    "accept_commutes",
+    "hmac_commutes",
+    "hash_commutes",
+    "prepare_key",
+    "publish_override",
+    "afterInitialization_override",
+    "candidateTail_override",
+    "build_override",
+    "settle_override",
+    "build_commutes",
+    "evaluate_commutes",
+    "merge_native",
+    "onShared_merge",
+    "shared_merge",
+    "create_merge",
+    "merge_set",
+    "set_found",
+    "mergeOwner_none",
+    "mergeOwner_terminal",
+    "uncopied",
+    "bundle_merge",
+    "callback_commutes",
+    "callbacks_commute",
+    "finish_merge"
+   ],
+   "statement_count": 30,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 29,
+    "Quot.sound, propext": 1
+   },
+   "direct_check_final": {
+    "exit": 0,
+    "start": "2026-10-07T07:17:49.747258+00:00",
+    "end": "2026-10-07T07:17:54.494156+00:00",
+    "source_sha256": "aef376f7dcaf2f734351037a25c75a582b88c2d35b1b0a97bb5fc91ed32acff8",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact_sha256": "42a084c316613195176a70c260473fb7336a2be0464161d9cd585cbd64ce4454",
+    "command": [
+     "flock",
+     "/tmp/bc-arc-scratch/lean.lock",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-unit-a/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/unit-a/olean/BeaconcryptCore/Computational/PqxdhDeploymentCompileRegistration.olean",
+     "/tmp/beaconcrypt-deployment-unit-a/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentCompileRegistration.lean"
+    ]
+   }
+  },
+  {
+   "name": "PqxdhDeploymentCompileStep",
+   "plan_stage": "CE-3 (trial module, re-checked)",
+   "new_in_unit_a": false,
+   "statements": [
+    "compiledImpl_run",
+    "merge_log",
+    "forwardLogged_run",
+    "forward_run",
+    "onNative_run",
+    "registration_step",
+    "step_merge",
+    "compile_simulation",
+    "compile_run"
+   ],
+   "statement_count": 9,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 8,
+    "(none)": 1
+   },
+   "direct_check_final": {
+    "exit": 0,
+    "start": "2026-10-07T07:17:54.532786+00:00",
+    "end": "2026-10-07T07:17:58.280192+00:00",
+    "source_sha256": "620658b02b49df6f22bc47ca23e7af51f3eea41d5cd587ecdc2c14092e07d513",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact_sha256": "8dcb95637763b7a448260f1c6139549c15da8cbd487abed45e247998faf3e781",
+    "command": [
+     "flock",
+     "/tmp/bc-arc-scratch/lean.lock",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-unit-a/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/unit-a/olean/BeaconcryptCore/Computational/PqxdhDeploymentCompileStep.olean",
+     "/tmp/beaconcrypt-deployment-unit-a/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentCompileStep.lean"
+    ]
+   }
+  },
+  {
+   "name": "PqxdhDeploymentCompileFootprint",
+   "plan_stage": "CE-3 (trial module, re-checked)",
+   "new_in_unit_a": false,
+   "statements": [
+    "hmac_fixed",
+    "hash_fixed",
+    "identityOf_receipt",
+    "accept_footprint",
+    "build_footprint",
+    "signing_run",
+    "writing_run",
+    "bundle_owner",
+    "prepare_finish_fields",
+    "authenticate_candidate",
+    "collect_inputs",
+    "finish_owner"
+   ],
+   "statement_count": 12,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 12
+   },
+   "direct_check_final": {
+    "exit": 0,
+    "start": "2026-10-07T07:17:58.318344+00:00",
+    "end": "2026-10-07T07:18:05.103146+00:00",
+    "source_sha256": "9efacfe04f41deff0c1db88431c821e5d8699de4eacb800b0bda7d10ea05ad99",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact_sha256": "f4a79ae4a09ca21fa6ca97032e2747ca1f0bedce875b5f6f4c857a0909cb7a1c",
+    "command": [
+     "flock",
+     "/tmp/bc-arc-scratch/lean.lock",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-unit-a/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/unit-a/olean/BeaconcryptCore/Computational/PqxdhDeploymentCompileFootprint.olean",
+     "/tmp/beaconcrypt-deployment-unit-a/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentCompileFootprint.lean"
+    ]
+   }
+  },
+  {
+   "name": "PqxdhDeploymentCompileInvariant",
+   "plan_stage": "CE-3 (trial module, re-checked)",
+   "new_in_unit_a": false,
+   "statements": [
+    "good_inv",
+    "shared_footprint",
+    "good_frame",
+    "good_public",
+    "ownerShape_accepts",
+    "peerView_accept",
+    "good_accept",
+    "ownerShape_builds",
+    "good_build",
+    "ownerView_extend",
+    "ownerShape_extend",
+    "good_create",
+    "ownerShape_bundle",
+    "identityOf_bundle",
+    "good_bundle",
+    "ownerShape_finish",
+    "good_finish",
+    "serverLocal_support",
+    "beaconLocal_support",
+    "good_server_record",
+    "good_beacon_record",
+    "good_step",
+    "good_initial",
+    "compile_native"
+   ],
+   "statement_count": 24,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 24
+   },
+   "direct_check_final": {
+    "exit": 0,
+    "start": "2026-10-07T07:18:05.144802+00:00",
+    "end": "2026-10-07T07:18:11.371287+00:00",
+    "source_sha256": "73182365f5b22023f85e188436f45cd49ad775173278cb4b345d7ffe4e7bd51b",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact_sha256": "9a4fd247806ca38b8cbc9ff0ec38072ba3fd28c23af260a430589576fbc1c657",
+    "command": [
+     "flock",
+     "/tmp/bc-arc-scratch/lean.lock",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-unit-a/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/unit-a/olean/BeaconcryptCore/Computational/PqxdhDeploymentCompileInvariant.olean",
+     "/tmp/beaconcrypt-deployment-unit-a/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentCompileInvariant.lean"
+    ]
+   }
+  },
+  {
+   "name": "PqxdhDeploymentCompileGame",
+   "plan_stage": "CE-3 (trial module, re-checked)",
+   "new_in_unit_a": false,
+   "statements": [
+    "construct_fields",
+    "compile_game",
+    "compile_source"
+   ],
+   "statement_count": 3,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 3
+   },
+   "direct_check_final": {
+    "exit": 0,
+    "start": "2026-10-07T07:18:11.414436+00:00",
+    "end": "2026-10-07T07:18:15.095288+00:00",
+    "source_sha256": "a6aa4dd7c72e3704243cf135437b472d8b23e86b70af6f3833f51b676bb37b6a",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact_sha256": "2996fb4e3e9478145541bca447cf3a1da272f2473130b86a7a22c991cfe45441",
+    "command": [
+     "flock",
+     "/tmp/bc-arc-scratch/lean.lock",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-unit-a/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/unit-a/olean/BeaconcryptCore/Computational/PqxdhDeploymentCompileGame.olean",
+     "/tmp/beaconcrypt-deployment-unit-a/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentCompileGame.lean"
+    ]
+   }
+  },
+  {
+   "name": "PqxdhDeploymentReadHistory",
+   "plan_stage": "CE-3 (trial module, re-checked)",
+   "new_in_unit_a": false,
+   "statements": [
+    "kernel_read",
+    "server_reveal",
+    "kernel_unreported",
+    "reveal_unreported"
+   ],
+   "statement_count": 4,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 4
+   },
+   "direct_check_final": {
+    "exit": 0,
+    "start": "2026-10-07T07:18:15.136307+00:00",
+    "end": "2026-10-07T07:18:18.560261+00:00",
+    "source_sha256": "5ddecf4f0e590c73e3dc58709720b863e141ec5489f95e1923f8e979357a3ac8",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact_sha256": "457c7d1bba03a654ce603c4022cf84dd45393ee7b644f035be0e7c498c89c7a8",
+    "command": [
+     "flock",
+     "/tmp/bc-arc-scratch/lean.lock",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-unit-a/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/unit-a/olean/BeaconcryptCore/Computational/PqxdhDeploymentReadHistory.olean",
+     "/tmp/beaconcrypt-deployment-unit-a/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentReadHistory.lean"
+    ]
+   }
+  },
+  {
+   "name": "PqxdhDeploymentCompileBudget",
+   "plan_stage": "CE-3 (trial module, re-checked)",
+   "new_in_unit_a": false,
+   "statements": [
+    "local_bound",
+    "logged_bound",
+    "single_bound",
+    "server_hashes",
+    "beacon_hashes",
+    "peerKernel_bound",
+    "ownerKernel_bound",
+    "serverLocal_bound",
+    "beaconLocal_bound",
+    "step_bound",
+    "compile_bound"
+   ],
+   "statement_count": 11,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 11
+   },
+   "direct_check_final": {
+    "exit": 0,
+    "start": "2026-10-07T07:18:18.595596+00:00",
+    "end": "2026-10-07T07:18:22.816292+00:00",
+    "source_sha256": "e2a9111cdd596d559d2df9692fd2ad728d2b9df1fdd768083de834fe8acb1de3",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact_sha256": "9a53a7be74d7cd0889c1f18afe6d0834dcccd65e41605167d10ffc6850dd9a31",
+    "command": [
+     "flock",
+     "/tmp/bc-arc-scratch/lean.lock",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-unit-a/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/unit-a/olean/BeaconcryptCore/Computational/PqxdhDeploymentCompileBudget.olean",
+     "/tmp/beaconcrypt-deployment-unit-a/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentCompileBudget.lean"
+    ]
+   }
+  },
+  {
+   "name": "PqxdhDeploymentTranscript",
+   "plan_stage": "CE-1",
+   "new_in_unit_a": true,
+   "statements": [
+    "summarize_append",
+    "step_other",
+    "designate_peer",
+    "designate_owner"
+   ],
+   "statement_count": 4,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 4
+   },
+   "direct_check_final": {
+    "exit": 0,
+    "start": "2026-10-07T07:18:22.859394+00:00",
+    "end": "2026-10-07T07:18:26.616231+00:00",
+    "source_sha256": "f2dd6d19b323c2f9185849c1ad66aca0bc2972248223e9c519baa523fa238a6e",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact_sha256": "b2dfd615932da121db69a53ee9eac799a281252c1205cd0ebb7e35a67a493aca",
+    "command": [
+     "flock",
+     "/tmp/bc-arc-scratch/lean.lock",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-unit-a/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/unit-a/olean/BeaconcryptCore/Computational/PqxdhDeploymentTranscript.olean",
+     "/tmp/beaconcrypt-deployment-unit-a/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentTranscript.lean"
+    ]
+   }
+  },
+  {
+   "name": "PqxdhDeploymentSecrecy",
+   "plan_stage": "CE-2",
+   "new_in_unit_a": true,
+   "statements": [
+    "run_wrap",
+    "game_wrap",
+    "observeFull_project",
+    "secrecy_frame",
+    "ledgerImpl_forward"
+   ],
+   "statement_count": 5,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 4,
+    "Quot.sound, propext": 1
+   },
+   "direct_check_final": {
+    "exit": 0,
+    "start": "2026-10-07T07:18:26.654630+00:00",
+    "end": "2026-10-07T07:18:30.454553+00:00",
+    "source_sha256": "7ba93c9d16da303e3912f1c758cf32b791cde3c8a651c52dea60d40c7539eea8",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact_sha256": "6e823eaebed856ee3b1c3dce650c8bf58daad7753ecdb1c777124534c830b937",
+    "command": [
+     "flock",
+     "/tmp/bc-arc-scratch/lean.lock",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-unit-a/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/unit-a/olean/BeaconcryptCore/Computational/PqxdhDeploymentSecrecy.olean",
+     "/tmp/beaconcrypt-deployment-unit-a/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentSecrecy.lean"
+    ]
+   }
+  },
+  {
+   "name": "PqxdhDeploymentCompileSecrecy",
+   "plan_stage": "CE-3",
+   "new_in_unit_a": true,
+   "statements": [
+    "compile_full_game",
+    "compile_full_source",
+    "queryClass_inl",
+    "uniformBytes_bound",
+    "drawBit_bound",
+    "send_bound",
+    "wrap_step",
+    "observe_bound",
+    "asModeO_bound",
+    "wrap_bound",
+    "compile_full_bound",
+    "compile_full_no_secret_read"
+   ],
+   "statement_count": 12,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 9,
+    "propext": 1,
+    "Quot.sound, propext": 2
+   },
+   "direct_check_final": {
+    "exit": 0,
+    "start": "2026-10-07T07:18:30.491080+00:00",
+    "end": "2026-10-07T07:18:34.853660+00:00",
+    "source_sha256": "c1c916a5f23eb159c5cde8a22f379e95d6f6bd303d43c3e5fb7015167eccbc6c",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact_sha256": "bda46398c94dded0fab5fea6ba36c3770c99416030506e8ebf8c9a826d03c8d4",
+    "command": [
+     "flock",
+     "/tmp/bc-arc-scratch/lean.lock",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-unit-a/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/unit-a/olean/BeaconcryptCore/Computational/PqxdhDeploymentCompileSecrecy.olean",
+     "/tmp/beaconcrypt-deployment-unit-a/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentCompileSecrecy.lean"
+    ]
+   }
+  },
+  {
+   "name": "UniformTargetSelection",
+   "plan_stage": "CE-4",
+   "new_in_unit_a": true,
+   "statements": [
+    "chance_eq",
+    "split",
+    "split_of_eligible",
+    "sum_eq_card_mul",
+    "guess",
+    "chance_ne_top",
+    "advantage",
+    "signed"
+   ],
+   "statement_count": 8,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 8
+   },
+   "direct_check_final": {
+    "exit": 0,
+    "start": "2026-10-07T07:18:34.890352+00:00",
+    "end": "2026-10-07T07:18:37.088082+00:00",
+    "source_sha256": "4fea649522c61856c5459aa43e4f42fc8f74461a88bdf0d1a67858a7da847b83",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact_sha256": "f937bcf1a8aa48095a7bee09c01c265bc8d05ea2c5847c19c463b22cc01e07ca",
+    "command": [
+     "flock",
+     "/tmp/bc-arc-scratch/lean.lock",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-unit-a/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/unit-a/olean/BeaconcryptCore/Computational/UniformTargetSelection.olean",
+     "/tmp/beaconcrypt-deployment-unit-a/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/UniformTargetSelection.lean"
+    ]
+   }
+  },
+  {
+   "name": "PqxdhDeploymentEligibility",
+   "plan_stage": "CE-5",
+   "new_in_unit_a": true,
+   "statements": [
+    "nativePhase_view",
+    "bundleShaped_alike",
+    "agree_alike",
+    "alike_refl",
+    "alike_trans",
+    "record_value",
+    "serverImpl_identity",
+    "beaconImpl_view",
+    "serverStep_alike",
+    "beaconStep_alike",
+    "create_support",
+    "bundle_candidate",
+    "finish_failure",
+    "agree_extend",
+    "agree_update",
+    "onNative_support",
+    "shared_alike",
+    "build_shaped",
+    "command_step",
+    "coinSend_alike",
+    "ledger_secrecy",
+    "handler_run",
+    "experiment_step",
+    "agree_initial",
+    "agree_game",
+    "phase_public",
+    "owner_public",
+    "failure_public",
+    "designate_owner_native"
+   ],
+   "statement_count": 29,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 28,
+    "Quot.sound, propext": 1
+   },
+   "direct_check_final": {
+    "exit": 0,
+    "start": "2026-10-07T07:18:37.123305+00:00",
+    "end": "2026-10-07T07:18:43.532331+00:00",
+    "source_sha256": "0e31c8a8a8bde1be755d7d815f5ed60c2f1aa7fa09eb1532b26dcf925ae08203",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact_sha256": "7a9893f44e32a5461b12fa35160586280748cf3c850306b181eec35afa5390c8",
+    "command": [
+     "flock",
+     "/tmp/bc-arc-scratch/lean.lock",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-unit-a/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/unit-a/olean/BeaconcryptCore/Computational/PqxdhDeploymentEligibility.olean",
+     "/tmp/beaconcrypt-deployment-unit-a/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentEligibility.lean"
+    ]
+   }
+  },
+  {
+   "name": "PqxdhDeploymentKeyMatch",
+   "plan_stage": "CE-5",
+   "new_in_unit_a": true,
+   "statements": [
+    "bundleOf_mem",
+    "buildOf_mem",
+    "candidateOf_written",
+    "verified_signed_pq",
+    "published_candidate",
+    "designate_keymatch",
+    "owner_link",
+    "keymatch_game",
+    "link_game"
+   ],
+   "statement_count": 9,
+   "axiom_profile": {
+    "Quot.sound, propext": 2,
+    "Classical.choice, Quot.sound, propext": 7
+   },
+   "direct_check_final": {
+    "exit": 0,
+    "start": "2026-10-07T07:18:43.573510+00:00",
+    "end": "2026-10-07T07:18:47.311834+00:00",
+    "source_sha256": "fa9152592b564c11789e7c40dacab02daa40c5817e4fe9b178db6d52b33ddb48",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact_sha256": "96dd4dbc24e232e9e62de7aab1c0a1277b39da4ac5fef60f5c8e5f04db4fd606",
+    "command": [
+     "flock",
+     "/tmp/bc-arc-scratch/lean.lock",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-unit-a/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/unit-a/olean/BeaconcryptCore/Computational/PqxdhDeploymentKeyMatch.olean",
+     "/tmp/beaconcrypt-deployment-unit-a/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentKeyMatch.lean"
+    ]
+   }
+  },
+  {
+   "name": "PqxdhDeploymentQuiet",
+   "plan_stage": "CE-5",
+   "new_in_unit_a": true,
+   "statements": [
+    "quiet_identity",
+    "quiet_kem",
+    "quiet_create",
+    "quiet_bundle",
+    "onAux_pool",
+    "quiet_accept",
+    "quiet_finish",
+    "quiet_step",
+    "quiet_run",
+    "quiet_birth",
+    "quiet_initialized",
+    "goodKem_of_quiet",
+    "unrevealed_of_quiet",
+    "quiet_empty",
+    "compiled_unread",
+    "approved_goodkem",
+    "kernel_reads_unrevealed"
+   ],
+   "statement_count": 17,
+   "axiom_profile": {
+    "propext": 4,
+    "Classical.choice, Quot.sound, propext": 11,
+    "Quot.sound, propext": 2
+   },
+   "direct_check_final": {
+    "exit": 0,
+    "start": "2026-10-07T07:18:47.350260+00:00",
+    "end": "2026-10-07T07:18:51.781501+00:00",
+    "source_sha256": "89ec234ed98e75661f40957ce4eca77568203a2f904050d081572f24f24aa72c",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact_sha256": "b88f30edf884aaadd0881e0ba06c911c19b15e284d6a4d2ad3c63a612eb8b0a8",
+    "command": [
+     "flock",
+     "/tmp/bc-arc-scratch/lean.lock",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-unit-a/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/unit-a/olean/BeaconcryptCore/Computational/PqxdhDeploymentQuiet.olean",
+     "/tmp/beaconcrypt-deployment-unit-a/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentQuiet.lean"
+    ]
+   }
+  },
+  {
+   "name": "PqxdhDeploymentCompileCaps",
+   "plan_stage": "CE-3",
+   "new_in_unit_a": true,
+   "statements": [
+    "transported_eq",
+    "compile_full_certified",
+    "tag_certified",
+    "transported_room"
+   ],
+   "statement_count": 4,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 4
+   },
+   "direct_check_final": {
+    "exit": 0,
+    "start": "2026-10-07T07:18:51.822237+00:00",
+    "end": "2026-10-07T07:19:04.305086+00:00",
+    "source_sha256": "35ae0007d5ae4e3696cb21664960c39c7c11e022133ed08e14d10c91b31f561b",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact_sha256": "5a9808268325bee422ba8389921500fa3d82500e1a001f809dc97216e5f50367",
+    "command": [
+     "flock",
+     "/tmp/bc-arc-scratch/lean.lock",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-unit-a/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/unit-a/olean/BeaconcryptCore/Computational/PqxdhDeploymentCompileCaps.olean",
+     "/tmp/beaconcrypt-deployment-unit-a/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentCompileCaps.lean"
+    ]
+   }
+  },
+  {
+   "name": "PqxdhDeploymentKemIndex",
+   "plan_stage": "CE-5",
+   "new_in_unit_a": true,
+   "statements": [
+    "positional_set",
+    "accept_keys",
+    "finish_keys",
+    "positional_step",
+    "positional_initialized",
+    "owner_kemIndex"
+   ],
+   "statement_count": 6,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 6
+   },
+   "direct_check_final": {
+    "exit": 0,
+    "start": "2026-10-07T07:25:55.630251+00:00",
+    "end": "2026-10-07T07:25:59.613727+00:00",
+    "source_sha256": "5f09ee6158cd140fc03d5b7c3d43796a9ac0528e4fb3c55175ae368aa3479e98",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact_sha256": "57f28b4e730645fcf531cb0f82575667295c26be1cd26e6f1a724dea15b0c828",
+    "command": [
+     "flock",
+     "/tmp/bc-arc-scratch/lean.lock",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-unit-a/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/unit-a/olean/BeaconcryptCore/Computational/PqxdhDeploymentKemIndex.olean",
+     "/tmp/beaconcrypt-deployment-unit-a/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentKemIndex.lean"
+    ]
+   }
+  }
+ ],
+ "statements": 235,
+ "statements_new_in_unit_a": 105,
+ "allowed_axioms": [
+  "propext",
+  "Classical.choice",
+  "Quot.sound"
+ ],
+ "axiom_profile_from_guards": {
+  "Classical.choice, Quot.sound, propext": 212,
+  "propext": 13,
+  "Quot.sound, propext": 9,
+  "(none)": 1
+ },
+ "exact_statements": {
+  "PqxdhDeploymentCompileSecrecy.compile_full_game": "theorem compile_full_game (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat)\n    (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)\n    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)\n    (bounds : FreshBounds) (mode : Mode) (adversary : OracleComp (ModeSpec mode) X) (runtime : A) :\n    mergeFull <$> (PqxdhRegistrationJointInitializedSchedule.native setup codec checks ensureInit identityIndex none\n        (compileFull setup codec route bounds mode adversary)).run runtime =\n      (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit identityIndex bounds mode adversary).run\n        runtime",
+  "PqxdhDeploymentCompileSecrecy.compile_full_source": "theorem compile_full_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)\n    (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)\n    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)\n    (bounds : FreshBounds) (mode : Mode) (adversary : OracleComp (ModeSpec mode) X)\n    (state : PqxdhRegistrationJointServerPrefix.State KemSK A) :\n    (fun result => mergeFull (result.1.map PqxdhRegistrationJointInitializedSchedule.eraseOutcome, result.2.2)) <$>\n        (PqxdhRegistrationJointInitializedSchedule.source setup codec checks ensureInit none\n          (compileFull setup codec route bounds mode adversary)).run state =\n      (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit state.1.1.seeds.length bounds mode adversary).run\n        state.2",
+  "PqxdhDeploymentCompileSecrecy.wrap_bound": "theorem wrap_bound (codec : Codec Reader Response) (serverKid : Std.U64) (bounds : FreshBounds) (mode : Mode)\n    (adversary : OracleComp (ModeSpec mode) X) (budget : Budget) (respects : budget.Respects adversary) (core : Fin 12) :\n    (wrap codec serverKid bounds (asModeO mode adversary)).IsQueryBoundP (fun request => commandKind request = core)\n      (∑ full, wrapCost bounds core full * budget.cap full)",
+  "PqxdhDeploymentCompileSecrecy.compile_full_bound": "theorem compile_full_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)\n    (route : RawCtxServerRouting.SenderDecoder) (bounds : FreshBounds) (mode : Mode)\n    (adversary : OracleComp (ModeSpec mode) X) (budget : Budget) (respects : budget.Respects adversary)\n    (kind : SourceKind) :\n    (compileFull setup codec route bounds mode adversary).IsQueryBoundP\n      (fun request => sourceKind (KemSK := KemSK) request = kind)\n      (∑ core, cost kind core * ∑ full, wrapCost bounds core full * budget.cap full)",
+  "PqxdhDeploymentCompileCaps.tag_certified": "theorem tag_certified (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)\n    (route : RawCtxServerRouting.SenderDecoder) (bounds : FreshBounds) (mode : Mode) (adversary : OracleComp (ModeSpec mode) X)\n    (budget : Budget) (respects : budget.Respects adversary) (index : Nat) (kind : SourceKind) :\n    (PqxdhRegistrationJointAcceptCutTag.tag (compileFull setup codec route bounds mode adversary) index).IsQueryBoundP\n      (fun request => sourceKind (KemSK := KemSK) request = kind) (transported bounds budget kind)",
+  "PqxdhDeploymentCompileCaps.transported_room": "theorem transported_room (bounds : FreshBounds) (budget : Budget) :\n    transported bounds budget (.inl 1) ≤ budget.capacity",
+  "PqxdhDeploymentSecrecy.game_wrap": "theorem game_wrap (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat)\n    (bounds : FreshBounds) (mode : Mode) (adversary : OracleComp (ModeSpec mode) X) (runtime : A) :\n    (game setup codec checks route ensureInit identityIndex bounds mode adversary).run runtime =\n      (fun outcome => (outcome.1.map fun result => (result.1, result.2.1.1, (result.2.1.2, result.2.2)), outcome.2)) <$>\n        (PqxdhDeploymentNative.game setup codec checks route ensureInit identityIndex\n          (wrap codec setup.serverKeyId bounds (asModeO mode adversary))).run runtime",
+  "PqxdhDeploymentSecrecy.observeFull_project": "theorem observeFull_project (query : PqxdhDeploymentInterface.Query) :\n    observeFull query = project .P query <$> (FullSpec.query query : OracleComp FullSpec _)",
+  "PqxdhDeploymentSecrecy.secrecy_frame": "theorem secrecy_frame (codec : Codec Reader Response) (serverKid : Std.U64) (bounds : FreshBounds)\n    (secrecy : Secrecy) (ledger : Ledger) :\n    ((ledgerImpl codec serverKid bounds (.inr secrecy)).run ledger).IsQueryBoundP\n      (fun query => coinOrSend query = false) 0",
+  "PqxdhDeploymentNative.logged_forget": "theorem logged_forget {Result : Type} (work : OracleComp RawCtxMixedOwner.NativeSpec Result) (frames : List Frame) :\n    Prod.fst <$> (simulateQ frameLog work).run frames = work",
+  "UniformTargetSelection.split": "theorem split (run : ProbComp Ω) (event : Ω → Prop) [DecidablePred event] (designate : Ω → Option G) :\n    𝒟[(fun outcome => decide (event outcome ∧ (designate outcome).isSome)) <$> run] {true} =\n      ∑ target, 𝒟[(fun outcome => decide (event outcome ∧ designate outcome = some target)) <$> run] {true}",
+  "UniformTargetSelection.guess": "theorem guess [SampleableType G] (run : ProbComp Ω) (event : Ω → Prop) [DecidablePred event]\n    (designate : Ω → Option G) (eligible : ∀ outcome, event outcome → designate outcome ≠ none) :\n    𝒟[(fun outcome => decide (event outcome)) <$> run] {true} =\n      (Fintype.card G : ℝ≥0∞) * 𝒟[(fun pair : G × Ω => decide (event pair.2 ∧ designate pair.2 = some pair.1)) <$> do\n        let target ← $ᵗ G\n        let outcome ← run\n        pure (target, outcome)] {true}",
+  "UniformTargetSelection.advantage": "theorem advantage (run : ProbComp Ω) (correct : Ω → Prop) [DecidablePred correct] (designate : Ω → Option G) :\n    (𝒟[(fun outcome => decide (correct outcome ∧ (designate outcome).isSome)) <$> run] {true}).toReal -\n        (1 / 2 : ℝ) * (𝒟[(fun outcome => (designate outcome).isSome) <$> run] {true}).toReal =\n      ∑ target, ((𝒟[(fun outcome => decide (correct outcome ∧ designate outcome = some target)) <$> run] {true}).toReal -\n        (1 / 2 : ℝ) * (𝒟[(fun outcome => decide (designate outcome = some target)) <$> run] {true}).toReal)",
+  "UniformTargetSelection.signed": "theorem signed [SampleableType G] (left right : G → ProbComp Ω) (event : G → Ω → Prop)\n    [∀ target, DecidablePred (event target)] :\n    ∑ target, ((𝒟[(fun outcome => decide (event target outcome)) <$> left target] {true}).toReal -\n        (𝒟[(fun outcome => decide (event target outcome)) <$> right target] {true}).toReal) =\n      (Fintype.card G : ℝ) * ((𝒟[(fun pair : G × Ω => decide (event pair.1 pair.2)) <$> do\n          let target ← $ᵗ G\n          let outcome ← left target\n          pure (target, outcome)] {true}).toReal -\n        (𝒟[(fun pair : G × Ω => decide (event pair.1 pair.2)) <$> do\n          let target ← $ᵗ G\n          let outcome ← right target\n          pure (target, outcome)] {true}).toReal)",
+  "PqxdhDeploymentEligibility.agree_game": "theorem agree_game (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat)\n    (bounds : FreshBounds) (mode : Mode) (adversary : OracleComp (ModeSpec mode) X) (runtime : A)\n    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A)\n    (supported : outcome ∈ support ((PqxdhDeploymentSecrecy.game setup codec checks route ensureInit identityIndex bounds\n      mode adversary).run runtime))\n    (created : PqxdhRegistrationJointServerBirth.ClientCreated Unit) (output : X)\n    (final : PqxdhDeploymentSecrecy.State KemSK) (reached : outcome.1 = some (created, output, final)) :\n    Agree setup codec final.2.native.shared.2.server.server.identity final.1.transcript final.2.native",
+  "PqxdhDeploymentEligibility.phase_public": "theorem phase_public (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat)\n    (bounds : FreshBounds) (mode : Mode) (adversary : OracleComp (ModeSpec mode) X) (runtime : A)\n    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A)\n    (supported : outcome ∈ support ((PqxdhDeploymentSecrecy.game setup codec checks route ensureInit identityIndex bounds\n      mode adversary).run runtime))\n    (created : PqxdhRegistrationJointServerBirth.ClientCreated Unit) (output : X)\n    (final : PqxdhDeploymentSecrecy.State KemSK) (reached : outcome.1 = some (created, output, final)) (index : Nat) :\n    phase final.1.transcript index = nativePhase final.2.native.owners[index]?",
+  "PqxdhDeploymentEligibility.owner_public": "theorem owner_public (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat)\n    (bounds : FreshBounds) (mode : Mode) (adversary : OracleComp (ModeSpec mode) X) (runtime : A)\n    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A)\n    (supported : outcome ∈ support ((PqxdhDeploymentSecrecy.game setup codec checks route ensureInit identityIndex bounds\n      mode adversary).run runtime))\n    (created : PqxdhRegistrationJointServerBirth.ClientCreated Unit) (output : X)\n    (final : PqxdhDeploymentSecrecy.State KemSK) (reached : outcome.1 = some (created, output, final)) (k : Nat) :\n    PqxdhDeploymentTranscript.owner final.1.transcript k =\n      if k < final.2.native.owners.length then some k else none",
+  "PqxdhDeploymentEligibility.failure_public": "theorem failure_public (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)\n    (server : RawCtxServerRouting.Identity) (transcript : List Entry) (native : PqxdhRegistrationSchedule.State KemSK)\n    (agree : Agree setup codec server transcript native) (index : Nat) :\n    (summarize (transcript ++ [⟨.inl (.inr (.bundle index)), none⟩])).failures =\n      if nativePhase native.owners[index]? = .fresh then\n        Function.update (summarize transcript).failures index true\n      else (summarize transcript).failures",
+  "PqxdhDeploymentKeyMatch.designate_keymatch": "theorem designate_keymatch (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (phase1 : Phase1ReadBack codec) (server : RawCtxServerRouting.Identity) (serverKid : Std.U64)\n    (transcript : List Entry) (native : PqxdhRegistrationSchedule.State KemSK)\n    (agree : Agree setup codec server transcript native) (keyId : Std.U64) (session k : Nat)\n    (designated : designate codec serverKid transcript (.peer keyId) = some (session, k)) (raw : Pqxdh.Bytes)\n    (accepted : acceptOf transcript session = some raw) (value : PqxdhServerRootPreparation.Verified Reader)\n    (verifiedRaw : PqxdhRegistrationJointRawSignatures.verified setup codec checks raw = some value) :\n    PublishedKey setup codec transcript native k value.keys.pqKey ∧\n      ∃ owner : PqxdhRegistrationSchedule.Owner KemSK, native.owners[k]? = some owner ∧\n        value.candidate.identityKey = encodedIdentity (setup.joint.publicKeys owner.beacon.identity).ed25519",
+  "PqxdhDeploymentKeyMatch.owner_link": "theorem owner_link (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (phase1 : Phase1ReadBack codec) (phase2 : Phase2ReadBack codec) (server : RawCtxServerRouting.Identity)\n    (serverKid : Std.U64) (transcript : List Entry) (native : PqxdhRegistrationSchedule.State KemSK)\n    (agree : Agree setup codec server transcript native) (index session k : Nat)\n    (designated : designate codec serverKid transcript (.owner index) = some (session, k)) :\n    k = index ∧ ∃ (owner : PqxdhRegistrationSchedule.Owner KemSK) (response : PqxdhServerRegistrationPublication.Response)\n      (fields : PqxdhServerRegistrationPublication.ResponseFields) (raw : Pqxdh.Bytes),\n      native.owners[index]? = some owner ∧ phaseClass owner.beacon.phase = .established ∧\n      pinnedKeyId owner.beacon.phase = serverKid ∧ owner.beacon.serverIdentity = server ∧\n      buildOf transcript session = some response ∧ codec.write2 fields = some response.serialized ∧\n      fields.identity = server ∧ finishOf transcript index = some raw ∧\n      (codec.read2 raw).bind codec.ciphertext = some fields.kemCiphertext ∧\n      ∀ accepted value, acceptOf transcript session = some accepted →\n        PqxdhRegistrationJointRawSignatures.verified setup codec checks accepted = some value →\n        PublishedKey setup codec transcript native index value.keys.pqKey",
+  "PqxdhDeploymentQuiet.approved_goodkem": "theorem approved_goodkem (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes)\n    (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)\n    (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) (budget : PqxdhDeploymentInterface.Budget)\n    (respects : budget.Respects adversary) (index : Nat) (runtime : A) {count : Nat} (kemIndex : Fin count)\n    (final : PqxdhRegistrationJointKemRawBridge.Final KemSK A\n      ((X × PqxdhDeploymentSecrecy.Ledger) × PqxdhDeploymentCompile.Local))\n    (supported : final ∈ support ((fun result => (result.1.map (PqxdhRegistrationJointInitializedSchedule.encodeOutcome\n      setup), result.2)) <$> (PqxdhRegistrationJointInitializedSchedule.source setup codec checks ensureInit supplied\n        (PqxdhRegistrationJointAcceptCutTag.tag (PqxdhDeploymentCompileSecrecy.compileFull setup codec route bounds mode\n          adversary) index)).run ((PqxdhDynamicIdentityPool.initialState, PqxdhLiveKemBirth.empty), runtime))) :\n    PqxdhRegistrationJointKemRawBridge.GoodKem kemIndex final",
+  "PqxdhDeploymentQuiet.kernel_reads_unrevealed": "theorem kernel_reads_unrevealed (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes)\n    (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)\n    (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) (budget : PqxdhDeploymentInterface.Budget)\n    (respects : budget.Respects adversary) (index : Nat) (runtime : A)\n    (result : Option (PqxdhRegistrationJointInitializedSchedule.SourceOutcome KemSK\n      (((X × PqxdhDeploymentSecrecy.Ledger) × PqxdhDeploymentCompile.Local) × PqxdhRegistrationJointAcceptCutTag.Tag)) ×\n      PqxdhRegistrationJointServerPrefix.State KemSK A)\n    (supported : result ∈ support ((PqxdhRegistrationJointInitializedSchedule.source setup codec checks ensureInit\n      supplied (PqxdhRegistrationJointAcceptCutTag.tag (PqxdhDeploymentCompileSecrecy.compileFull setup codec route\n        bounds mode adversary) index)).run ((PqxdhDynamicIdentityPool.initialState, PqxdhLiveKemBirth.empty), runtime)))\n    (identityIndex : Nat) :\n    PqxdhRegistrationJointRoutedReveals.revealedAt identityIndex result.2.1.1.transcript = false",
+  "PqxdhDeploymentKemIndex.owner_kemIndex": "theorem owner_kemIndex (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes)\n    (program : OracleComp (PqxdhRegistrationJointRevealSchedule.Spec KemSK) Result) (runtime : A)\n    (after : PqxdhRegistrationJointServerPrefix.State KemSK A)\n    (outcome : PqxdhRegistrationJointInitializedSchedule.SourceOutcome KemSK Result)\n    (supported : (some outcome, after) ∈ support ((PqxdhRegistrationJointInitializedSchedule.source setup codec checks\n      ensureInit supplied program).run ((PqxdhDynamicIdentityPool.initialState, PqxdhLiveKemBirth.empty), runtime)))\n    (k : Nat) (entry : PqxdhRegistrationJointOwnership.Entry KemSK) (found : outcome.2.2.owners[k]? = some entry) :\n    entry.kemIndex = k ∧ after.1.2.keys.length = outcome.2.2.owners.length"
+ },
+ "leanpath": {
+  "manifest": "/tmp/bc-arc-scratch/common-experiment/unit-a/leanpath",
+  "sha256": "74c75e12ac86ed9bea75a60ed1136b006ec89282ba7779b9f6e76a1182e3ab75",
+  "note": "The CE-3 trial LEAN_PATH with its first entry replaced by the fresh scratch prefix unit-a/olean, a symlink mirror of the 1534 trial artifacts (stage D artifacts plus the twelve trial deployment modules); check.py unlinks an artifact before writing it, so trial files were never written. Every module was rebuilt into unit-a/olean in import order."
+ },
+ "root_checks": {
+  "root-PqxdhDeploymentTranscript": {
+   "exit": 0,
+   "log_bytes": 0,
+   "root_source_sha256": "db058b8e6ef99b1062c9cbf735be5f641ca4221dd13553ffdc042b3b129a8426"
+  },
+  "root-PqxdhDeploymentSecrecy": {
+   "exit": 0,
+   "log_bytes": 0,
+   "root_source_sha256": "dcc5a49d2dc35717623b0047e14268a6e89923b7912947076fcca2d384377540"
+  },
+  "root-PqxdhDeploymentCompileSecrecy": {
+   "exit": 0,
+   "log_bytes": 0,
+   "root_source_sha256": "ca58addac0e949762890cb11685c388f7a4ef962617b08201da7becd6625aeb7"
+  },
+  "root-PqxdhDeploymentCompileCaps": {
+   "exit": 0,
+   "log_bytes": 0,
+   "root_source_sha256": "fcb51cbb209ba18284dc07e4e9c1bca11f3b5362b7ae3dfc44158d22f34b959a"
+  },
+  "root-UniformTargetSelection": {
+   "exit": 0,
+   "log_bytes": 0,
+   "root_source_sha256": "f9496ced8635b33a560a95be7b0eeebd81458ad314ad59d104da72052a1805f6"
+  },
+  "root-PqxdhDeploymentEligibility": {
+   "exit": 0,
+   "log_bytes": 0,
+   "root_source_sha256": "dcae5cd91a17dfaf303f551a12d6254c0b48a93f0170f082ecfbba679a803040"
+  },
+  "root-PqxdhDeploymentKeyMatch": {
+   "exit": 0,
+   "log_bytes": 0,
+   "root_source_sha256": "b72e9e3bf3afd2f9707721f7654cec293986c497b91ccc07aa17134805ab9bbd"
+  },
+  "root-PqxdhDeploymentQuiet": {
+   "exit": 0,
+   "log_bytes": 0,
+   "root_source_sha256": "a8afbcf613f407a38d9fb9fdcae43b8e56760da9481ec5adcdb077ae53e13675"
+  },
+  "root-PqxdhDeploymentKemIndex": {
+   "exit": 0,
+   "log_bytes": 0,
+   "root_source_sha256": "0169f9d2d3638a223be7b2d51e53b35bb3587d1d637780f0ba04afe1fda54304"
+  },
+  "root-PqxdhDeploymentInterface": {
+   "exit": 0,
+   "log_bytes": 0,
+   "root_source_sha256": "f826a190ef1134f6fb5939e5ea816e8980cb0c5aead318b781d509a339078735"
+  },
+  "root-PqxdhDeploymentNative": {
+   "exit": 0,
+   "log_bytes": 0,
+   "root_source_sha256": "db058b8e6ef99b1062c9cbf735be5f641ca4221dd13553ffdc042b3b129a8426"
+  }
+ },
+ "focused_inventory_per_commit": {
+  "inv-PqxdhDeploymentTranscript": {
+   "exit": 0,
+   "start": "2026-10-07T06:31:17Z",
+   "end": "2026-10-07T06:32:25Z",
+   "log_sha256": "39305b8261a076b0cdcf3c27d9c8af7c9b673ae01c1bc8be8560aee42f948675"
+  },
+  "inv-PqxdhDeploymentSecrecy": {
+   "exit": 0,
+   "start": "2026-10-07T06:36:00Z",
+   "end": "2026-10-07T06:37:07Z",
+   "log_sha256": "82d992f89b336f00958a7da1c0ce54f0864412bb0a01ea1707069f3b1f9f4e76"
+  },
+  "inv-PqxdhDeploymentCompileSecrecy": {
+   "exit": 0,
+   "start": "2026-10-07T06:37:19Z",
+   "end": "2026-10-07T06:38:26Z",
+   "log_sha256": "8b7fbd3fff3a531804ac2ae7c79aadfc69561988df3f78df2bc68805ee26e16e"
+  },
+  "inv-PqxdhDeploymentCompileCaps": {
+   "exit": 0,
+   "start": "2026-10-07T07:16:09Z",
+   "end": "2026-10-07T07:17:17Z",
+   "log_sha256": "b7fa51c0fa28eef52564d8c48cc0579a389ec1f6b23d36cb23f5a5f522a5db39"
+  },
+  "inv-UniformTargetSelection": {
+   "exit": 0,
+   "start": "2026-10-07T06:41:49Z",
+   "end": "2026-10-07T06:42:54Z",
+   "log_sha256": "5d183bb74e7c987a506a426e48d6b953a7f372ba2a533ceb481a6ac548c02236"
+  },
+  "inv-PqxdhDeploymentEligibility": {
+   "exit": 0,
+   "start": "2026-10-07T06:59:42Z",
+   "end": "2026-10-07T07:00:49Z",
+   "log_sha256": "b33bfd2a7a4597c3ea622db6aa698e0502d1c82a8abb387f31ba39435c08cae7"
+  },
+  "inv-PqxdhDeploymentKeyMatch": {
+   "exit": 0,
+   "start": "2026-10-07T07:04:24Z",
+   "end": "2026-10-07T07:05:31Z",
+   "log_sha256": "598ea7aaf206d4a77707ef49239f5c71fc428ee71a79e00280f76b39fb51aa1e"
+  },
+  "inv-PqxdhDeploymentQuiet": {
+   "exit": 0,
+   "start": "2026-10-07T07:12:26Z",
+   "end": "2026-10-07T07:13:32Z",
+   "log_sha256": "8b7fbd3fff3a531804ac2ae7c79aadfc69561988df3f78df2bc68805ee26e16e"
+  },
+  "inv-PqxdhDeploymentKemIndex": {
+   "exit": 0,
+   "start": "2026-10-07T07:21:59Z",
+   "end": "2026-10-07T07:23:06Z",
+   "log_sha256": "598ea7aaf206d4a77707ef49239f5c71fc428ee71a79e00280f76b39fb51aa1e"
+  },
+  "inv-PqxdhDeploymentInterface": {
+   "exit": 0,
+   "start": "2026-10-07T06:29:57Z",
+   "end": "2026-10-07T06:31:02Z",
+   "log_sha256": "93f9567ac6f8bfc984c88ef231dc876e83650c04aa0eb85e5443f12c5cf9b5f6"
+  },
+  "inv-PqxdhDeploymentNative": {
+   "exit": 0,
+   "start": "2026-10-07T06:34:39Z",
+   "end": "2026-10-07T06:35:44Z",
+   "log_sha256": "a47ba3c32e28d7e3451512280eba401779c9714e35f8e55e67694e7a232545b6"
+  }
+ },
+ "focused_inventory_note": "Each module commit was prepared with the other untracked files and other modified tracked files held aside and restored afterwards (commit.py), so check-inventory ran with exactly the files of that commit; the produced-frame commit carried six trial modules together. The documentation commit that adds this receipt is checked the same way.",
+ "forbidden_scan": "zero matches of \\b(sorry|admit|native_decide|implemented_by|extern|unsafe|opaque)\\b outside guards and no axiom declaration in the 21 modules; the only set_option lines are autoImplicit false, linter.deprecated false (scoped by in, in UniformTargetSelection) and the pre-existing maxRecDepth options of the trial modules",
+ "deviations_from_plan": [
+  "Secrecy commands and the transcript are a layer (ledgerImpl) over the trial native handler; the CE handler is the flattened composition, and the compiled program of a complete-interface adversary is the trial compiler applied to the wrapped adversary.",
+  "The produced-frame log required extending the trial record commands in place (State, Local, serverStep, beaconStep, serverLocal, beaconLocal, merge); no trial statement was weakened or deleted, statements mentioning these definitions changed accordingly, and three statements were added to trial modules (merge_produce, logged_bound and the logged lemmas in Native).",
+  "The transcript stores mode O replies; mode P views are projections. Publication and receipt are functions of the transcript. Produced frames are tagged with the producing command instead of (side, handle, seq).",
+  "A rejected test or fresh command is recorded in the transcript with its none reply; the fresh claim index is the position of the admitted fresh message; Claim has only the fresh-message claim (CE-RG not built).",
+  "qFreshBytes is ellmax times qFresh; the coin cap charges one coin per test; the BLAKE2b cap is qHash + S + R + qTest + qFresh (tests and fresh messages counted twice). Both looser than the plan, both sound.",
+  "designate compares raw candidate fields of the accept bytes and of the published bundle instead of RawSignatures.verified; the Beacon side checks the pin against the Server identity in the build response (adversary has no input, D5) and owner_link proves with Phase2ReadBack that it is the Server identity.",
+  "designate_keymatch is proved at the deployment level (the verified PQ key is the key the owner signed in its honest published bundle); the step to KeyMatchFinal in the annotated execution is CE-9 step 9.1. owner_kemIndex supplies the owner-to-KEM-index correspondence for it.",
+  "The router stays a free parameter; DecoderAgreement is not used by any unit A statement.",
+  "No planned statement turned out false or unprovable; none was weakened."
+ ],
+ "not_proved": [
+  "CE-6 onwards: replay, A2 provenance, the A1 embedding, the per-target KEM transfer (including step 9.1), CE-9b, item 2 joins, the un-compiled ideal world, the headlines.",
+  "The post-run later-quantum reveal mode (undesigned).",
+  "Several Server objects (CE-M) and an adversary input (deviation D5).",
+  "Tighter transported caps (plan section 8 reveal, kernel-read and BLAKE2b figures)."
+ ],
+ "checks_not_run": "No lake build, make verify, nix-collect-garbage, ProVerif, Rust or mutation run; no production Rust or ProVerif change.",
+ "review": "Not reviewed. Not pushed."
+}
