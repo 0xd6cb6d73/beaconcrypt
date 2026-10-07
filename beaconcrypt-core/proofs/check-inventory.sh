@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1525
+	[handwritten-lean]=1526
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -29850,6 +29850,17 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem sum_last_le([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentTargetRange theorem sum_last_le"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentTargetRange\.kem_transfer_create$' "$selected_source_module" "PqxdhDeploymentTargetRange dependency BeaconcryptCore.Computational.PqxdhDeploymentTargetRange.kem_transfer_create"
 require_line_count 1 '^theorem kem_transfer_create([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentTargetRange theorem kem_transfer_create"
+
+# Item 2 stage S4a, lemma G2 (extract-design plan section 3): the key schedule from a uniform root, two Extract-on-uniform32 and two HMAC PRF advantages under SourceFullCorrect; no protocol code.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhKeyScheduleFromRoot.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhKeyScheduleFromRoot$' proofs/lean/BeaconcryptCore.lean "PqxdhKeyScheduleFromRoot root import"
+require_line_count 2 '^theorem ' "$selected_source_module" "PqxdhKeyScheduleFromRoot theorem inventory"
+require_line_count 2 '^#guard_msgs in$' "$selected_source_module" "PqxdhKeyScheduleFromRoot guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhKeyScheduleFromRoot\.fromRoot_bound$' "$selected_source_module" "PqxdhKeyScheduleFromRoot dependency BeaconcryptCore.Computational.PqxdhKeyScheduleFromRoot.fromRoot_bound"
+require_line_count 1 '^theorem fromRoot_bound([[:space:]]|$)' "$selected_source_module" "PqxdhKeyScheduleFromRoot theorem fromRoot_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhKeyScheduleFromRoot\.fromRoot_bound_context$' "$selected_source_module" "PqxdhKeyScheduleFromRoot dependency BeaconcryptCore.Computational.PqxdhKeyScheduleFromRoot.fromRoot_bound_context"
+require_line_count 1 '^theorem fromRoot_bound_context([[:space:]]|$)' "$selected_source_module" "PqxdhKeyScheduleFromRoot theorem fromRoot_bound_context"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
