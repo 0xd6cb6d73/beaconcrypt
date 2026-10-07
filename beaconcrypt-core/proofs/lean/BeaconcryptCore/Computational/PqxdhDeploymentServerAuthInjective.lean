@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.PqxdhDeploymentServerAuthBills
 
-/-! Identity-key collisions of the deployment owners (CE-8, `ε_inj`). Every native step other than a create keeps the identity seeds of all owners (`base_identities`, from `owner_identity` and `bundle_identity`). `seedEager` takes the identity seed of each create, in order, from a list drawn before the run; for a program with at most `count` creates the native run and the eager run on `count` independently drawn seeds have the same distribution (`seeds_eager`, the argument of `PqxdhDynamicIdentityPool.lazy_eager_complete` for the source14 constructor), and on the eager side the owners' identity seeds are a prefix of the list (`eager_identities`). Hence a collision of identity keys between two owners (`Collision`) is at most a collision among `count` drawn seeds (`owners_collision`). The collision finder `collider` sees a family of public identities and, when two distinct identities have equal Ed25519 keys, signs the empty message with the first through the family's signing oracle and returns that signature as a forgery for the second; by signing correctness (`joint_correct`, from the source wiring and the attached-signature correctness of the source primitives) it then wins, so a collision among `count + 1` seeds is at most the sum over the identity indices of the joint-use weak-EUF advantage of the family reduction of the collision finder (`collision_bound`, from `PqxdhJointIdentityFamily.family_advantage_le_sum`). No distributional property of key generation is assumed. -/
+/-! Identity-key collisions of the deployment owners (CE-8, `ε_inj`). Every native step other than a create keeps the identity seeds of all owners (`base_identities`, from `owner_identity` and `bundle_identity`). `seedEager` takes the identity seed of each create, in order, from a list drawn before the run; for a program with at most `count` creates the native run and the eager run on `count` independently drawn seeds have the same distribution (`seeds_eager`, the argument of `PqxdhDynamicIdentityPool.lazy_eager_complete` for the source14 constructor), and on the eager side the owners' identity seeds are a prefix of the list (`eager_identities`). Hence a collision of identity keys between two owners (`Collision`) is at most a collision among `count` drawn seeds (`owners_collision`). The collision finder `collider` sees a family of public identities and, when two distinct identities have equal Ed25519 keys, signs the empty message with the first through the family's signing oracle and returns that signature as a forgery for the second; by signing correctness (`joint_correct`, from the source wiring and the attached-signature correctness of the source primitives) it then wins, so a collision among `count + 1` seeds is at most the sum over the identity indices of the joint-use weak-EUF advantage of the family reduction of the collision finder (`collision_bound`, from `PqxdhJointIdentityFamily.family_advantage_le_sum`). The collision finder makes exactly one query, a signing query (`collider_queries`), so its family reduction `B^coll_t` at identity index `t` draws at most `32·count` uniform bytes for the other identities, makes at most one signing query and no static-DH query, and its whole joint-use weak-EUF game makes at most `32·(count + 1)` uniform queries (`collider_bills`, from `PqxdhJointIdentityFamily.reduction_query_bound` and `reductionGame_uniform_bound`). No distributional property of key generation is assumed. -/
 open OracleComp OracleSpec CoreModels Aeneas ENNReal
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
@@ -409,7 +409,7 @@ theorem joint_correct (setup : Setup baseSpec KemSK) (seed : IdentitySeed) (mess
   split_ifs at verified with valid
   · exact valid
 
-/-- The collision finder: on a family of public identities, if two distinct identities have equal Ed25519 keys, it asks the first for one signature on the empty message and returns that signature as a forgery for the second; otherwise it returns a signature of identity zero for identity zero. It makes one signing query. -/
+/-- The collision finder: on a family of public identities, if two distinct identities have equal Ed25519 keys, it asks the first for one signature on the empty message and returns that signature as a forgery for the second; otherwise it returns a signature of identity zero for identity zero. It makes exactly one query, a signing query (`collider_queries`). -/
 noncomputable def collider (count : Nat) (publics : Fin (count + 1) → PublicIdentity) :
     OracleComp (PqxdhJointIdentityFamily.FamilyAdversarySpec (count + 1))
       (PqxdhJointIdentityFamily.FamilyForgery (count + 1)) := by
@@ -482,6 +482,39 @@ theorem collision_bound (setup : Setup baseSpec KemSK) (count : Nat) :
   rw [← sameKey]
   exact joint_correct setup _ []
 
+
+
+/-- The collision finder makes at most one query of each primitive class of the family's identities: one signing query, no uniform and no static-DH query. -/
+theorem collider_queries (count : Nat) (publics : Fin (count + 1) → PublicIdentity)
+    (kind : PqxdhJointIdentityFamily.Kind) :
+    (collider count publics).IsQueryBoundP
+      (PqxdhJointIdentityFamily.familyClass (PqxdhJointIdentityFamily.IsClass kind))
+      (if kind = .sign then 1 else 0) := by
+  unfold collider
+  split <;>
+  · rw [OracleComp.isQueryBoundP_map_iff]
+    refine (OracleComp.isQueryBoundP_query_iff _ _ _).mpr ?_
+    cases kind <;> simp [PqxdhJointIdentityFamily.familyClass, PqxdhJointIdentityFamily.IsClass]
+
+/-- The bills of `B^coll_t`, the family reduction of the collision finder at identity index `t`: on every challenge identity it draws at most `32·count` uniform bytes (the other identities' seeds), makes at most one signing query and no static-DH query, and its whole joint-use weak-EUF game makes at most `32·(count + 1)` uniform queries. -/
+theorem collider_bills (joint : Primitives) (count : Nat) (target : Fin (count + 1)) :
+    (∀ jointPublic, (PqxdhJointIdentityFamily.reduction joint target (collider count) jointPublic).IsQueryBoundP
+      (PqxdhJointIdentityFamily.IsClass .uniform) (32 * count)) ∧
+    (∀ jointPublic, (PqxdhJointIdentityFamily.reduction joint target (collider count) jointPublic).IsQueryBoundP
+      (PqxdhJointIdentityFamily.IsClass .sign) 1) ∧
+    (∀ jointPublic, (PqxdhJointIdentityFamily.reduction joint target (collider count) jointPublic).IsQueryBoundP
+      (PqxdhJointIdentityFamily.IsClass .staticDh) 0) ∧
+    (game joint (PqxdhJointIdentityFamily.reduction joint target (collider count))).IsTotalQueryBound
+      (32 * (count + 1)) := by
+  refine ⟨fun jointPublic => ?_, fun jointPublic => ?_, fun jointPublic => ?_, ?_⟩
+  · simpa using PqxdhJointIdentityFamily.reduction_query_bound joint target (collider count) .uniform _
+      (fun publics => collider_queries count publics .uniform) jointPublic
+  · simpa using PqxdhJointIdentityFamily.reduction_query_bound joint target (collider count) .sign _
+      (fun publics => collider_queries count publics .sign) jointPublic
+  · simpa using PqxdhJointIdentityFamily.reduction_query_bound joint target (collider count) .staticDh _
+      (fun publics => collider_queries count publics .staticDh) jointPublic
+  · simpa using PqxdhJointIdentityFamily.reductionGame_uniform_bound joint target (collider count) 0
+      (fun publics => by simpa using collider_queries count publics .uniform)
 
 end BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective
 
@@ -568,3 +601,15 @@ end BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective.collision_bound
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective.collider_queries' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective.collider_queries
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective.collider_bills' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective.collider_bills
