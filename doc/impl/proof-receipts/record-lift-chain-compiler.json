@@ -1,0 +1,439 @@
+{
+  "stage": "RealTable and complete local growing-table source compiler",
+  "status": "independent semantic and publication hygiene reviews approved; all focused checks passed",
+  "base_commit": "d68e1ce442ac89fc65594d9fca074399beae9f94",
+  "branch": "codex/record-lift-chain-compiler",
+  "worktree": "/tmp/beaconcrypt-record-lift-chain-compiler",
+  "author": "/root/record_lazy_table",
+  "scope": [
+    "Complete real native full76 callback equations, deterministic source cache consistency including aliases, one actual KDF query per invocation including hits.",
+    "Rank-recursive complete local receive/send erasure with current/final table interpretation, native optional replies and complete primitive poststate.",
+    "Table validity and entry persistence, returned-kernel live-chain/skipped-material reference preservation; source support transfers existing rejection, consumption and replay control results."
+  ],
+  "not_established": [
+    "Global dynamic map/list/world source compilation and per-handle coordinate provenance.",
+    "Uniform-table hybrid, alias probability, target-input noninterference, selected CTX reduction, common-experiment security theorem."
+  ],
+  "operational_premises": [
+    "Generic LookupPreserves and LookupRealized are implementation equations, discharged by realLookup from real table consistency and functional KdfReal.",
+    "KdfReal requires exact existing fixed-source native response, no distribution or security event. Concrete World.primitives discharge is checked in the parallel WorldCompiler candidate and remains a downstream independent-review/integration obligation.",
+    "Admitted receive preservation explicitly requires existing source control capacity; all chain/cache availability premises are listed.",
+    "No additional primitive security contract, free ambient computation or independent-key premise."
+  ],
+  "query_accounting": [
+    "callback has exactly one unconditional native KDF query and checked cap 1, including hits/retries.",
+    "Whole native state equality preserves all supplied instrumentation and actual opening/sealing/writer effects.",
+    "Existing source admission budget 51 KDF/1 open per receive and 1 KDF/1 seal path per send is reused; global budget transport remains WorldBudget/WorldCompiler work."
+  ],
+  "modules": {
+    "PqxdhRecordLiftRealTable": {
+      "theorems": [
+        "receive_store",
+        "record_mono",
+        "output_mono",
+        "consistent_record",
+        "closed_record",
+        "consistent_empty",
+        "output_source",
+        "output_alias",
+        "send_store",
+        "from_fullResponse",
+        "fullResponse_from",
+        "callback_bound",
+        "callback_real",
+        "record_facts",
+        "receive_real",
+        "send_real"
+      ],
+      "exact_guard_count": 16,
+      "allowed_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "artifact": "/tmp/bc-arc-scratch/record-lift/chain-compiler/publication-olean/BeaconcryptCore/Computational/PqxdhRecordLiftRealTable.olean",
+      "artifact_sha256": "d44a01422d849d07c986b70a603d7418fcf168d46fbd2cf9f20954e81d9f7efa",
+      "copy": "Byte-identical copy of the guarded direct-check artifact; imports and source unchanged before publication root check."
+    },
+    "PqxdhRecordLiftChainCompiler": {
+      "theorems": [
+        "resume_references",
+        "receive_erasure",
+        "realLookup_realized",
+        "realLookup_preserves",
+        "realValid_empty",
+        "admitted_receive_erasure",
+        "real_receive_erasure",
+        "finish_references",
+        "receive_preserves",
+        "receive_source_support",
+        "receive_control",
+        "admitted_receive_preserves",
+        "send_ready",
+        "send_erasure",
+        "send_begin_references",
+        "send_preserves",
+        "admitted_send_erasure",
+        "real_send_erasure"
+      ],
+      "exact_guard_count": 18,
+      "allowed_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "artifact": "/tmp/bc-arc-scratch/record-lift/chain-compiler/publication-olean/BeaconcryptCore/Computational/PqxdhRecordLiftChainCompiler.olean",
+      "artifact_sha256": "7eda5475cddd0c15b4a9951d04156ce609249f535c57c173f408fa4c3094d73c",
+      "copy": "Byte-identical copy of the guarded direct-check artifact; imports and source unchanged before publication root check."
+    }
+  },
+  "files_sha256": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftRealTable.lean": "ee3f941c4bb273ca0e01e63e5ccfb53c582660d023babad5834807c30aa87e48",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChainCompiler.lean": "7e971f04498f783172f9003a82cd022f79ae2cd1f4ffe281ead93e4a1808ecc0",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "718e8963e45b7ed09fac8002f27c708b7f8518adce08a953e11fa93b10cba052",
+    "beaconcrypt-core/proofs/check-inventory.sh": "fa13870760f989f29a1e3eeb9685f5d8409ec677df6ac90e2571c8989b205a65",
+    "beaconcrypt-core/proofs/reviewed-inventory.txt": "26e774327e2a6f59a6069c97984c3b14ba5a93cfc1148861124b75b3fe98de58",
+    "doc/formal-verification-analysis.md": "a18a096087d44ae99266fafb7b198cbd7fcc4b8647de014f68cf2edb3bb95adf",
+    "doc/impl/record-lift-real-table.md": "24a40438e240893bd6a089beb8517be4d216b3fe712ac61d477c975f4246e387",
+    "doc/impl/record-lift-chain-compiler.md": "c6c4834ad04e6e36944609b5d87dec7c59331a7b95444e964564833d6e41e995"
+  },
+  "checks": {
+    "real_table": {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/chain-compiler/logs/real-table-223116.json",
+      "receipt_sha256": "b5862e04b7378294f2a388eb9b4fdb97f90b94ee25971585d410cbf299e30e71",
+      "result": {
+        "start": "2026-10-07T22:31:16.813680+00:00",
+        "end": "2026-10-07T22:31:20.742142+00:00",
+        "exit": 0,
+        "command": [
+          "/tmp/bc-coord/coord.sh",
+          "lean",
+          "codex",
+          "real-table-223116",
+          "--",
+          "timeout",
+          "180",
+          "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+          "-j1",
+          "-M8000",
+          "--root=/tmp/beaconcrypt-record-lift-chain-compiler/beaconcrypt-core/proofs/lean",
+          "-o",
+          "/tmp/bc-arc-scratch/record-lift/chain-compiler/namespace-olean/BeaconcryptCore/Computational/PqxdhRecordLiftRealTable.olean",
+          "/tmp/beaconcrypt-record-lift-chain-compiler/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftRealTable.lean"
+        ],
+        "source_sha256": "ee3f941c4bb273ca0e01e63e5ccfb53c582660d023babad5834807c30aa87e48",
+        "artifact_sha256": "d44a01422d849d07c986b70a603d7418fcf168d46fbd2cf9f20954e81d9f7efa",
+        "leanpath_sha256": "0380f55b498c87ff144955a10a5641b19f2bc35205ac8ff3b68f892241af3e38",
+        "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "log": "/tmp/bc-arc-scratch/record-lift/chain-compiler/logs/real-table-223116.log"
+      }
+    },
+    "chain_compiler": {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/chain-compiler/logs/chain-compiler-223051.json",
+      "receipt_sha256": "5305c3f27306de855fae9f43e4ee14918ec201435b6e74f557d1b9752d4af839",
+      "result": {
+        "start": "2026-10-07T22:30:51.871718+00:00",
+        "end": "2026-10-07T22:30:56.450957+00:00",
+        "exit": 0,
+        "command": [
+          "/tmp/bc-coord/coord.sh",
+          "lean",
+          "codex",
+          "chain-compiler-223051",
+          "--",
+          "timeout",
+          "180",
+          "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+          "-j1",
+          "-M8000",
+          "--root=/tmp/beaconcrypt-record-lift-chain-compiler/beaconcrypt-core/proofs/lean",
+          "-o",
+          "/tmp/bc-arc-scratch/record-lift/chain-compiler/namespace-olean/BeaconcryptCore/Computational/PqxdhRecordLiftChainCompiler.olean",
+          "/tmp/beaconcrypt-record-lift-chain-compiler/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChainCompiler.lean"
+        ],
+        "source_sha256": "7e971f04498f783172f9003a82cd022f79ae2cd1f4ffe281ead93e4a1808ecc0",
+        "artifact_sha256": "7eda5475cddd0c15b4a9951d04156ce609249f535c57c173f408fa4c3094d73c",
+        "leanpath_sha256": "0380f55b498c87ff144955a10a5641b19f2bc35205ac8ff3b68f892241af3e38",
+        "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "log": "/tmp/bc-arc-scratch/record-lift/chain-compiler/logs/chain-compiler-223051.log"
+      }
+    },
+    "root": {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/chain-compiler/logs/publication-root.json",
+      "receipt_sha256": "ab63c9b053bd4d31eab19ab4370870487404ae8ef480f8550ca9047f66c98e91",
+      "result": {
+        "start": "2026-10-07T22:32:32.135430+00:00",
+        "end": "2026-10-07T22:32:35.153501+00:00",
+        "exit": 0,
+        "command": [
+          "/tmp/bc-coord/coord.sh",
+          "lean",
+          "codex",
+          "chain-compiler-root",
+          "--",
+          "timeout",
+          "180",
+          "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+          "-j1",
+          "-M8000",
+          "--root=/tmp/beaconcrypt-record-lift-chain-compiler/beaconcrypt-core/proofs/lean",
+          "-o",
+          "/tmp/bc-arc-scratch/record-lift/chain-compiler/publication-olean/BeaconcryptCore.olean",
+          "/tmp/beaconcrypt-record-lift-chain-compiler/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+        ],
+        "CARGO_BUILD_JOBS": null,
+        "CARGO_TARGET_DIR": null,
+        "source_sha256": "718e8963e45b7ed09fac8002f27c708b7f8518adce08a953e11fa93b10cba052",
+        "artifact_sha256": "26c310b7540cc1b9d626d7020f9e7b1cc62b8c32fee12fa3573fdc3d16f42162",
+        "leanpath_sha256": "916e0caf82d45ea46a4446f898a931a04445b226831fe72dfb61b726013138ee",
+        "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "log": "/tmp/bc-arc-scratch/record-lift/chain-compiler/logs/publication-root.log"
+      }
+    },
+    "inventory": {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/chain-compiler/logs/publication-inventory.json",
+      "receipt_sha256": "ab96ee2a335eb6adb24c4928d06a682e112275dc22733ab4c506cd28279d0f1b",
+      "result": {
+        "start": "2026-10-07T22:32:32.139275+00:00",
+        "end": "2026-10-07T22:33:49.803735+00:00",
+        "exit": 0,
+        "command": [
+          "/tmp/bc-coord/coord.sh",
+          "lease",
+          "mem",
+          "codex",
+          "@nix",
+          "chain-compiler-inventory",
+          "--eta",
+          "20m",
+          "--",
+          "nix",
+          "develop",
+          "--no-update-lock-file",
+          "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+          "-c",
+          "make",
+          "-C",
+          "/tmp/beaconcrypt-record-lift-chain-compiler/beaconcrypt-core",
+          "check-inventory",
+          "SHELL=bash"
+        ],
+        "CARGO_BUILD_JOBS": "2",
+        "CARGO_TARGET_DIR": "/tmp/bc-arc-scratch/record-lift/chain-compiler/target",
+        "source_sha256": "718e8963e45b7ed09fac8002f27c708b7f8518adce08a953e11fa93b10cba052",
+        "artifact_sha256": null,
+        "leanpath_sha256": "916e0caf82d45ea46a4446f898a931a04445b226831fe72dfb61b726013138ee",
+        "log_sha256": "a8bb86ec756677ece964234095bbd6ae9985e26764b9b4fc8048c1af2ed721db",
+        "log": "/tmp/bc-arc-scratch/record-lift/chain-compiler/logs/publication-inventory.log"
+      }
+    },
+    "fidelity": {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/chain-compiler/logs/publication-fidelity.json",
+      "receipt_sha256": "8b51adc337113eae0b14e4c60f2fc68234944f612574e9f32a9c0abe4870f087",
+      "result": {
+        "start": "2026-10-07T22:32:32.144376+00:00",
+        "end": "2026-10-07T22:32:57.016101+00:00",
+        "exit": 0,
+        "command": [
+          "/tmp/bc-coord/coord.sh",
+          "lease",
+          "mem",
+          "codex",
+          "@cargo",
+          "chain-compiler-fidelity",
+          "--eta",
+          "20m",
+          "--",
+          "nix",
+          "develop",
+          "--no-update-lock-file",
+          "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+          "-c",
+          "make",
+          "-C",
+          "/tmp/beaconcrypt-record-lift-chain-compiler/beaconcrypt-core",
+          "check-proverif-transcript-fidelity",
+          "SHELL=bash"
+        ],
+        "CARGO_BUILD_JOBS": "2",
+        "CARGO_TARGET_DIR": "/tmp/bc-arc-scratch/record-lift/chain-compiler/target",
+        "source_sha256": "718e8963e45b7ed09fac8002f27c708b7f8518adce08a953e11fa93b10cba052",
+        "artifact_sha256": null,
+        "leanpath_sha256": "916e0caf82d45ea46a4446f898a931a04445b226831fe72dfb61b726013138ee",
+        "log_sha256": "8bb170abdc61a486494cc360a72f7b3ac695274b1fd3fede81045e3a4a2545ec",
+        "log": "/tmp/bc-arc-scratch/record-lift/chain-compiler/logs/publication-fidelity.log"
+      }
+    }
+  },
+  "publication_leanpath": "/tmp/bc-arc-scratch/record-lift/chain-compiler/publication.leanpath",
+  "publication_leanpath_sha256": "916e0caf82d45ea46a4446f898a931a04445b226831fe72dfb61b726013138ee",
+  "inventory_handwritten_lean_count": 1570,
+  "transcript_fidelity_tests": 30,
+  "independent_review": {
+    "path": "/tmp/bc-arc-scratch/record-lift/reviews/chain-compiler-semantic-2026-10-08.json",
+    "sha256": "a592132aed594c9c28797098a0aea931e9ed713c62151998835a281e1901a0cf",
+    "receipt": {
+      "reviewer": "/root",
+      "author": "/root/record_lazy_table",
+      "result": "approved",
+      "date": "2026-10-07T22:34:36.009300+00:00",
+      "files": {
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftRealTable.lean": "ee3f941c4bb273ca0e01e63e5ccfb53c582660d023babad5834807c30aa87e48",
+        "doc/impl/record-lift-real-table.md": "24a40438e240893bd6a089beb8517be4d216b3fe712ac61d477c975f4246e387",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChainCompiler.lean": "7e971f04498f783172f9003a82cd022f79ae2cd1f4ffe281ead93e4a1808ecc0",
+        "doc/impl/record-lift-chain-compiler.md": "c6c4834ad04e6e36944609b5d87dec7c59331a7b95444e964564833d6e41e995"
+      },
+      "guarded_statements": 34,
+      "checks": [
+        {
+          "path": "/tmp/bc-arc-scratch/record-lift/chain-compiler/logs/real-table-223116.json",
+          "sha256": "b5862e04b7378294f2a388eb9b4fdb97f90b94ee25971585d410cbf299e30e71",
+          "receipt": {
+            "start": "2026-10-07T22:31:16.813680+00:00",
+            "end": "2026-10-07T22:31:20.742142+00:00",
+            "exit": 0,
+            "command": [
+              "/tmp/bc-coord/coord.sh",
+              "lean",
+              "codex",
+              "real-table-223116",
+              "--",
+              "timeout",
+              "180",
+              "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+              "-j1",
+              "-M8000",
+              "--root=/tmp/beaconcrypt-record-lift-chain-compiler/beaconcrypt-core/proofs/lean",
+              "-o",
+              "/tmp/bc-arc-scratch/record-lift/chain-compiler/namespace-olean/BeaconcryptCore/Computational/PqxdhRecordLiftRealTable.olean",
+              "/tmp/beaconcrypt-record-lift-chain-compiler/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftRealTable.lean"
+            ],
+            "source_sha256": "ee3f941c4bb273ca0e01e63e5ccfb53c582660d023babad5834807c30aa87e48",
+            "artifact_sha256": "d44a01422d849d07c986b70a603d7418fcf168d46fbd2cf9f20954e81d9f7efa",
+            "leanpath_sha256": "0380f55b498c87ff144955a10a5641b19f2bc35205ac8ff3b68f892241af3e38",
+            "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "log": "/tmp/bc-arc-scratch/record-lift/chain-compiler/logs/real-table-223116.log"
+          }
+        },
+        {
+          "path": "/tmp/bc-arc-scratch/record-lift/chain-compiler/logs/chain-compiler-223051.json",
+          "sha256": "5305c3f27306de855fae9f43e4ee14918ec201435b6e74f557d1b9752d4af839",
+          "receipt": {
+            "start": "2026-10-07T22:30:51.871718+00:00",
+            "end": "2026-10-07T22:30:56.450957+00:00",
+            "exit": 0,
+            "command": [
+              "/tmp/bc-coord/coord.sh",
+              "lean",
+              "codex",
+              "chain-compiler-223051",
+              "--",
+              "timeout",
+              "180",
+              "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+              "-j1",
+              "-M8000",
+              "--root=/tmp/beaconcrypt-record-lift-chain-compiler/beaconcrypt-core/proofs/lean",
+              "-o",
+              "/tmp/bc-arc-scratch/record-lift/chain-compiler/namespace-olean/BeaconcryptCore/Computational/PqxdhRecordLiftChainCompiler.olean",
+              "/tmp/beaconcrypt-record-lift-chain-compiler/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChainCompiler.lean"
+            ],
+            "source_sha256": "7e971f04498f783172f9003a82cd022f79ae2cd1f4ffe281ead93e4a1808ecc0",
+            "artifact_sha256": "7eda5475cddd0c15b4a9951d04156ce609249f535c57c173f408fa4c3094d73c",
+            "leanpath_sha256": "0380f55b498c87ff144955a10a5641b19f2bc35205ac8ff3b68f892241af3e38",
+            "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "log": "/tmp/bc-arc-scratch/record-lift/chain-compiler/logs/chain-compiler-223051.log"
+          }
+        }
+      ],
+      "findings": [],
+      "fix_pass": [
+        {
+          "finding": "RealTable guide described recursive join as future work despite companion ChainCompiler now proving it.",
+          "resolution": "Guide now credits companion result and retains global obligations; source unchanged."
+        }
+      ],
+      "reviewed": [
+        "Read all16 RealTable and18 ChainCompiler theorem statements and proofs, both guides and exact guard logs. No placeholder, custom axiom, forbidden H7 use or disabled gate.",
+        "Real table consistency is ordinary exact deterministic output at interpreted predecessor. Empty/preservation derivations retain real byte-alias equalities; no injectivity/independence/security assumption.",
+        "Generic LookupPreserves/LookupRealized preserve complete native state, not a marginal or initial fixed byte interpretation. realLookup discharges them under ordinary functional KdfReal and derived real-table validity.",
+        "Rank-recursive receive erasure evaluates the actual final table, handles every skip/reject/open branch, and returns the native challenger-produced optional plaintext unchanged. It never injects recovered plaintext into an adversarial target.",
+        "All source admission, kernel/cache reference, capacity and valid-control hypotheses remain explicit. Source support transports consumed-target and rollback facts; no global reachability premise is presented as proved.",
+        "Send invokes source advancement before sealing and retains the advanced kernel after failure. Receive rollback preserves the entire entry but keeps primitive effects and table extensions.",
+        "Compared Rust concrete.rs begin_send133/resume171/finish206 and begin_receive259/resume322/open-finish436 against the exact imported source operations. Parser/adapter/World routing remain separate joins.",
+        "Every real callback makes one native KDF query, hits included. Complete state equality transports instrumentation; the package does not claim ambient open/seal work is free or prove global query caps.",
+        "KdfReal is functional response equality only. Concrete World.primitives/KdfReal joins are correctly documented as downstream checked but not part of this approval.",
+        "No primitive implementation proof, fixed public-HKDF random table, saved-state restoration or new security contract appears. Global maps, coordinate attribution, source cuts, hybrid bad-event probabilities and CTX lifts remain explicitly open."
+      ],
+      "limitations": [
+        "Read-only review; no reviewer builds or worktree edits.",
+        "Final package metadata/root/inventory/fidelity gates and downstream WorldCompiler joins need their own validation/review."
+      ]
+    }
+  },
+  "full_matrix": "Not run: outside owner-approved current lane. No Rust changes; no full mutation suite, full lake build, make verify, ProVerif, or Nix garbage collection.",
+  "publication_hygiene": {
+    "path": "/tmp/bc-arc-scratch/record-lift/reviews/chain-compiler-publication-hygiene-2026-10-08.json",
+    "sha256": "4dfa4da5105f8eebbcc02864a96669a4c19650e0fba761b8cc08abd40ce55713",
+    "receipt": {
+      "reviewer": "/root",
+      "author": "/root/record_lazy_table",
+      "result": "approved",
+      "date": "2026-10-07T22:35:48.061548+00:00",
+      "semantic_review": {
+        "path": "/tmp/bc-arc-scratch/record-lift/reviews/chain-compiler-semantic-2026-10-08.json",
+        "sha256": "a592132aed594c9c28797098a0aea931e9ed713c62151998835a281e1901a0cf"
+      },
+      "receipt_sha256_before_hygiene_embedding": "888c1b2320925d10ca6a3e7938237b393f12a3b7d1ba6e85766ff396710f759e",
+      "files": {
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftRealTable.lean": "ee3f941c4bb273ca0e01e63e5ccfb53c582660d023babad5834807c30aa87e48",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChainCompiler.lean": "7e971f04498f783172f9003a82cd022f79ae2cd1f4ffe281ead93e4a1808ecc0",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "718e8963e45b7ed09fac8002f27c708b7f8518adce08a953e11fa93b10cba052",
+        "beaconcrypt-core/proofs/check-inventory.sh": "fa13870760f989f29a1e3eeb9685f5d8409ec677df6ac90e2571c8989b205a65",
+        "beaconcrypt-core/proofs/reviewed-inventory.txt": "26e774327e2a6f59a6069c97984c3b14ba5a93cfc1148861124b75b3fe98de58",
+        "doc/formal-verification-analysis.md": "a18a096087d44ae99266fafb7b198cbd7fcc4b8647de014f68cf2edb3bb95adf",
+        "doc/impl/record-lift-real-table.md": "24a40438e240893bd6a089beb8517be4d216b3fe712ac61d477c975f4246e387",
+        "doc/impl/record-lift-chain-compiler.md": "c6c4834ad04e6e36944609b5d87dec7c59331a7b95444e964564833d6e41e995"
+      },
+      "checks": {
+        "real_table": {
+          "receipt": "/tmp/bc-arc-scratch/record-lift/chain-compiler/logs/real-table-223116.json",
+          "sha256": "b5862e04b7378294f2a388eb9b4fdb97f90b94ee25971585d410cbf299e30e71",
+          "exit": 0
+        },
+        "chain_compiler": {
+          "receipt": "/tmp/bc-arc-scratch/record-lift/chain-compiler/logs/chain-compiler-223051.json",
+          "sha256": "5305c3f27306de855fae9f43e4ee14918ec201435b6e74f557d1b9752d4af839",
+          "exit": 0
+        },
+        "root": {
+          "receipt": "/tmp/bc-arc-scratch/record-lift/chain-compiler/logs/publication-root.json",
+          "sha256": "ab63c9b053bd4d31eab19ab4370870487404ae8ef480f8550ca9047f66c98e91",
+          "exit": 0
+        },
+        "inventory": {
+          "receipt": "/tmp/bc-arc-scratch/record-lift/chain-compiler/logs/publication-inventory.json",
+          "sha256": "ab96ee2a335eb6adb24c4928d06a682e112275dc22733ab4c506cd28279d0f1b",
+          "exit": 0
+        },
+        "fidelity": {
+          "receipt": "/tmp/bc-arc-scratch/record-lift/chain-compiler/logs/publication-fidelity.json",
+          "sha256": "8b51adc337113eae0b14e4c60f2fc68234944f612574e9f32a9c0abe4870f087",
+          "exit": 0
+        }
+      },
+      "findings": [],
+      "reviewed": [
+        "Both unchanged reviewed proof files retain exactly34 guarded statements; exact per-name gates, imports and manifest rows occur once.",
+        "All1570 handwritten-Lean rows and every manifest digest checked; only expected count/root/checker digests changed.",
+        "Final root/artifact/log/path and focused inventory/fidelity receipts match actual files and exit0. Fidelity20Python+30Rust confirmed; no fullmatrix/mutation claim.",
+        "Analysis additions and both guides precisely retain local operational scope, real alias behavior, current native/KdfReal dependency, and all pending global/provenance/security joins.",
+        "No tracked Rust, frozen module or foreign path changes; footer and immediate topic publication remain author responsibility."
+      ],
+      "limits": [
+        "Approval covers recorded tree and hashes; adding this hygiene receipt to the tracked receipt is metadata-only.",
+        "Central reconciliation/integration still requires exact combined-tree checks and review."
+      ]
+    }
+  }
+}
