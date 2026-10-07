@@ -1586,6 +1586,12 @@ import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerOpaque
 
 import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBills
 
+import BeaconcryptCore.Computational.PqxdhDeploymentRegistrationTrace
+
+import BeaconcryptCore.Computational.PqxdhDeploymentKemTransfer
+
+import BeaconcryptCore.Computational.PqxdhDeploymentTargetRange
+
 /-!
 # Beaconcrypt-core verification root
 
