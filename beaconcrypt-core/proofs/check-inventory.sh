@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1510
+	[handwritten-lean]=1511
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -29214,6 +29214,47 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem positional_initialized([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemIndex theorem positional_initialized"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemIndex\.owner_kemIndex$' "$selected_source_module" "PqxdhDeploymentKemIndex dependency BeaconcryptCore.Computational.PqxdhDeploymentKemIndex.owner_kemIndex"
 require_line_count 1 '^theorem owner_kemIndex([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemIndex theorem owner_kemIndex"
+
+# Later-quantum mode LQ-1: finish snapshot, Beacon-side post-run reveal (deviation D6), post-run coins, HMAC and BLAKE2b, snap_erase, post-phase frame and run-phase event transfer.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLater.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentLater$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentLater root import"
+require_line_count 17 '^theorem ' "$selected_source_module" "PqxdhDeploymentLater theorem inventory"
+require_line_count 17 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentLater guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLater\.snapImpl_erase$' "$selected_source_module" "PqxdhDeploymentLater dependency BeaconcryptCore.Computational.PqxdhDeploymentLater.snapImpl_erase"
+require_line_count 1 '^theorem snapImpl_erase([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLater theorem snapImpl_erase"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLater\.snap_erase_run$' "$selected_source_module" "PqxdhDeploymentLater dependency BeaconcryptCore.Computational.PqxdhDeploymentLater.snap_erase_run"
+require_line_count 1 '^theorem snap_erase_run([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLater theorem snap_erase_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLater\.later_run_wrap$' "$selected_source_module" "PqxdhDeploymentLater dependency BeaconcryptCore.Computational.PqxdhDeploymentLater.later_run_wrap"
+require_line_count 1 '^theorem later_run_wrap([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLater theorem later_run_wrap"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLater\.snap_erase$' "$selected_source_module" "PqxdhDeploymentLater dependency BeaconcryptCore.Computational.PqxdhDeploymentLater.snap_erase"
+require_line_count 1 '^theorem snap_erase([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLater theorem snap_erase"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLater\.capture_initSent$' "$selected_source_module" "PqxdhDeploymentLater dependency BeaconcryptCore.Computational.PqxdhDeploymentLater.capture_initSent"
+require_line_count 1 '^theorem capture_initSent([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLater theorem capture_initSent"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLater\.revealOf_eq$' "$selected_source_module" "PqxdhDeploymentLater dependency BeaconcryptCore.Computational.PqxdhDeploymentLater.revealOf_eq"
+require_line_count 1 '^theorem revealOf_eq([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLater theorem revealOf_eq"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLater\.post_embed$' "$selected_source_module" "PqxdhDeploymentLater dependency BeaconcryptCore.Computational.PqxdhDeploymentLater.post_embed"
+require_line_count 1 '^theorem post_embed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLater theorem post_embed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLater\.nativeHmac_support$' "$selected_source_module" "PqxdhDeploymentLater dependency BeaconcryptCore.Computational.PqxdhDeploymentLater.nativeHmac_support"
+require_line_count 1 '^theorem nativeHmac_support([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLater theorem nativeHmac_support"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLater\.post_step_frame$' "$selected_source_module" "PqxdhDeploymentLater dependency BeaconcryptCore.Computational.PqxdhDeploymentLater.post_step_frame"
+require_line_count 1 '^theorem post_step_frame([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLater theorem post_step_frame"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLater\.caches_refl$' "$selected_source_module" "PqxdhDeploymentLater dependency BeaconcryptCore.Computational.PqxdhDeploymentLater.caches_refl"
+require_line_count 1 '^theorem caches_refl([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLater theorem caches_refl"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLater\.caches_trans$' "$selected_source_module" "PqxdhDeploymentLater dependency BeaconcryptCore.Computational.PqxdhDeploymentLater.caches_trans"
+require_line_count 1 '^theorem caches_trans([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLater theorem caches_trans"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLater\.post_frame$' "$selected_source_module" "PqxdhDeploymentLater dependency BeaconcryptCore.Computational.PqxdhDeploymentLater.post_frame"
+require_line_count 1 '^theorem post_frame([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLater theorem post_frame"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLater\.later_frame$' "$selected_source_module" "PqxdhDeploymentLater dependency BeaconcryptCore.Computational.PqxdhDeploymentLater.later_frame"
+require_line_count 1 '^theorem later_frame([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLater theorem later_frame"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLater\.capture_absent$' "$selected_source_module" "PqxdhDeploymentLater dependency BeaconcryptCore.Computational.PqxdhDeploymentLater.capture_absent"
+require_line_count 1 '^theorem capture_absent([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLater theorem capture_absent"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLater\.revealOf_length$' "$selected_source_module" "PqxdhDeploymentLater dependency BeaconcryptCore.Computational.PqxdhDeploymentLater.revealOf_length"
+require_line_count 1 '^theorem revealOf_length([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLater theorem revealOf_length"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLater\.later_event$' "$selected_source_module" "PqxdhDeploymentLater dependency BeaconcryptCore.Computational.PqxdhDeploymentLater.later_event"
+require_line_count 1 '^theorem later_event([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLater theorem later_event"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLater\.later_classical_event$' "$selected_source_module" "PqxdhDeploymentLater dependency BeaconcryptCore.Computational.PqxdhDeploymentLater.later_classical_event"
+require_line_count 1 '^theorem later_classical_event([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLater theorem later_classical_event"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
