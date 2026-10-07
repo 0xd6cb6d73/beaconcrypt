@@ -1,0 +1,355 @@
+{
+  "date": "2026-10-07T20:42:26.992934+00:00",
+  "scope": "Operational ghost-coordinate transport through actual source send/receive phases; no dynamic-world reachability, table coherence or security theorem.",
+  "basis": "8129cd49821daa33702d3e647e3edd9b67f3880d",
+  "topic": {
+    "branch": "codex/record-lift-chain-state",
+    "worktree": "/tmp/beaconcrypt-record-lift-chain-state"
+  },
+  "publication_status": "Independent semantic and parent final publication hygiene reviews approved; all required focused checks pass.",
+  "modules": [
+    {
+      "name": "PqxdhRecordLiftChainState",
+      "statements": 14,
+      "exact_axiom_guards": 14,
+      "allowed_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ],
+      "theorems": [
+        "resume_tracked",
+        "begin_tracked",
+        "request_sequence",
+        "future_sequence",
+        "failed_open",
+        "failed_open_retry",
+        "send_begin_tracked",
+        "send_ready_kernel",
+        "send_ready_aligned",
+        "resume_erasure",
+        "server_seed_erasure",
+        "beacon_seed_erasure",
+        "seeds_aligned",
+        "admission_erasure"
+      ]
+    }
+  ],
+  "contracts_used": [],
+  "operational_premises": [
+    "Tracked coordinate/entry/context relation on typed callbacks",
+    "Aligned source counter relation where explicitly stated",
+    "Previously proved Admitted/Prepared source-control window invariants where explicitly stated",
+    "Successor chain coordinate is the supplied typed callback reply; material is arbitrary",
+    "Two initial coordinate-to-chain equations for seed erasure; arbitrary noninjective interpretation"
+  ],
+  "query_accounting": "No new probabilistic experiment or primitive-query/resource bound. Actual source branch/control behavior is retained; neither deterministic work nor ambient work is declared free.",
+  "not_proved": [
+    "Persistent-table coordinate callback and source chain/material coherence",
+    "Dynamic native Server/Beacon world reachability and complete interpreter equality",
+    "Skipped-material table references and successful publication/consumption in that world",
+    "Full evolving-chain hybrid, selected-cut distribution, alias/collision/refusal bounds or chain_lift",
+    "CTX/AEAD lift or global record-layer security"
+  ],
+  "review": {
+    "external_receipt": "/tmp/bc-arc-scratch/record-lift/reviews/chain-state-semantic-2026-10-07.json",
+    "external_receipt_sha256": "62ecd1675c8d8aa33267e9ec9baf332de2c3f777c7b5c5f222ac672485225cae",
+    "semantic_review": {
+      "date": "2026-10-07T20:30:05.943279+00:00",
+      "reviewer": "/root/record_seed_boundary",
+      "author": "/root/record_lazy_table",
+      "reviewer_did_not_write_reviewed_module_or_proofs": true,
+      "scope": "Independent semantic and hygiene review of fourteen final ChainState theorems and guide; focused publication metadata/checks are separate.",
+      "result": "approved",
+      "source": "/tmp/beaconcrypt-record-lift-chain-state/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChainState.lean",
+      "source_sha256": "2d59f4c071968ba443ed4198c5cf6ab3a3f272650c9164c2ce31b69bd7d3ccf1",
+      "guide": "/tmp/beaconcrypt-record-lift-chain-state/doc/impl/record-lift-chain-state.md",
+      "guide_sha256": "f274acb3e3db8536c9ce65217b0bd93b36078a5b4706936f9b7dd3033783b490",
+      "semantic_findings": [],
+      "hygiene_findings": [],
+      "review_details": [
+        "Coordinate is ghost data occupying only the two polymorphic chain fields. advance preserves slot and direction and adds a Nat position. No coordinate comparison controls source admission; concrete source control, material arrays and context are retained.",
+        "Tracked preserves the complete entry and context on rejected, KDF and opening effects. Its KDF coordinate is entry.receive_chain advanced by staged skipped count. For a future opening the final coordinate advances by skipped + 1, accounting separately for the uncached target. Cached openings deliberately make no new chain-coordinate claim.",
+        "resume_tracked unfolds the existing receive resume and handles every normal source branch, including zero remaining, target exhaustion/mismatch/validation rejection, cache-slot checks and skip staging. The callback is explicitly supplied a successor coordinate and arbitrary material. The theorem does not assert that an arbitrary backend or byte-valued KDF supplies such a response.",
+        "begin_tracked follows actual admission, retains original entry/context on cached and rejected paths, and initializes a future derivation at the original receive-chain coordinate. admission_erasure reaches the actual extracted begin_receive and maps the complete effect, not only selected fields.",
+        "request_sequence needs both Aligned and the explicit source Admitted invariant; future_sequence needs Aligned, Tracked and Prepared. These are concrete operational invariants, with existing generic begin_admitted/resume_admitted facts available, not hidden cryptographic assumptions. The guide does not claim them for arbitrary dynamic-world states.",
+        "Counter arithmetic agrees with Rust: send at U64.MAX is exhausted unchanged, admitted send increments mathematically by one, target/skipped receive increments use checked source transitions, and successful U8 skip addition is related to Nat addition through UScalar.add_equiv. Nat ghost advancement is not a wraparound model; impossible exhausted/future combinations are excluded by source control or explicit operational invariants.",
+        "failed_open identifies the entire labeled kernel with the original entry for an absent opening response, including both chains, control and all cached material. failed_open_retry proves identical fresh admission on that returned kernel for the same target/context. Neither theorem rolls back an external random table or claims an entire retry trace/table coherence proof.",
+        "SendTracked records unchanged receive counter/cache and exact send increment on admitted requests. send_ready_kernel identifies the complete advanced kernel, preserving receive chain and receive slots. send_ready_aligned establishes both counter alignments before sealing. The documented failed-seal advancement is inherited from the existing source program and matches concrete SendSeal.finish.",
+        "erase uses arbitrary chains : Coordinate Slot -> RatchetChain with no injectivity premise. resume_erasure preserves the complete interpreted pending effect with an explicit mapped typed response. The theorem does not discharge primitive-backend coherence, full76 parsing, or a complete concrete-response/source-game simulation.",
+        "The same initial coordinates are shared by counterpart directions: false/position1 is Server send and Beacon receive; true/position0 is Beacon send and Server receive. Seed erasure binds these coordinates to next32/right32 respectively and equates complete kernels to the integrated Seed constructors. seeds_aligned proves both constructors total and aligned.",
+        "Skipped cache entries retain the original arbitrary Material payloads. No theorem identifies them with persistent lazy-table coordinates, proves successful receive publication/consumption across the dynamic world, or establishes alias probabilities. The guide expressly lists these remaining joins.",
+        "No new cryptographic premise, fixed independent family, freshness/injectivity assumption, source-origin assertion or security/resource bound appears. Guide accurately limits this to an operational R3 component and distinguishes persistent table/compiler and evolving-chain security work."
+      ],
+      "source_references": [
+        "PqxdhRecordLiftChainState.lean:13-89 (coordinates, tracking and explicit alignment invariants)",
+        "PqxdhRecordLiftChainState.lean:91-148 (complete rollback/retry and send advancement)",
+        "PqxdhRecordLiftChainState.lean:150-208 (arbitrary interpretation, source erasure and Seed orientation)",
+        "RawCtxChainReceive.lean:51-209, 297-322, 350-382 (exact control branches and total normalizers)",
+        "RawCtxChainInterpretation.lean:20-37 and RawCtxInterpretedOpening.lean:49-70 (complete state mapping and finish)",
+        "PqxdhFirstRecordReplay.lean:73-103, 184-266 (Window, Prepared, Admitted, continuation and rollback facts)",
+        "RawCtxChainSend.lean:76-140, 145-154 (send admission, ready kernel and absent-seal behavior)",
+        "RatchetControl.lean:202-227, 351-395 (nonwrapping U64 advancement/exhaustion)",
+        "beaconcrypt-core/src/ratchet/control.rs:152-172, 224-315 and concrete.rs:171-209, 259-397, 436-455 (production control, continuation and rollback)"
+      ],
+      "hygiene": {
+        "theorem_count": 14,
+        "exact_guard_count": 14,
+        "guard_names_and_order_match": true,
+        "theorems": [
+          "resume_tracked",
+          "begin_tracked",
+          "request_sequence",
+          "future_sequence",
+          "failed_open",
+          "failed_open_retry",
+          "send_begin_tracked",
+          "send_ready_kernel",
+          "send_ready_aligned",
+          "resume_erasure",
+          "server_seed_erasure",
+          "beacon_seed_erasure",
+          "seeds_aligned",
+          "admission_erasure"
+        ],
+        "allowed_axioms": [
+          "propext",
+          "Classical.choice",
+          "Quot.sound"
+        ],
+        "all_guards_exact_allowed_three_axioms": true,
+        "H7_forbidden_name_source_scan": "clear",
+        "proof_placeholder_and_custom_axiom_scan": "clear",
+        "SPDX": "0BSD",
+        "guide_paragraphs": "single-line"
+      },
+      "check_evidence": {
+        "author_receipt": "/tmp/bc-arc-scratch/record-lift/chain-state/logs/chain-state-202738.json",
+        "receipt_sha256": "bbd26211076a60c77dd41f09db7b9ab049ff1d12368da6db5b57eb6914f7df49",
+        "receipt": {
+          "start": "2026-10-07T20:27:38.573266+00:00",
+          "end": "2026-10-07T20:27:45.963630+00:00",
+          "exit": 0,
+          "command": [
+            "/tmp/bc-coord/coord.sh",
+            "lean",
+            "codex",
+            "chain-state-202738",
+            "--",
+            "timeout",
+            "180",
+            "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+            "-j1",
+            "-M8000",
+            "--root=/tmp/beaconcrypt-record-lift-chain-state/beaconcrypt-core/proofs/lean",
+            "-o",
+            "/tmp/bc-arc-scratch/record-lift/chain-state/olean/BeaconcryptCore/Computational/PqxdhRecordLiftChainState.olean",
+            "/tmp/beaconcrypt-record-lift-chain-state/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChainState.lean"
+          ],
+          "source_sha256": "2d59f4c071968ba443ed4198c5cf6ab3a3f272650c9164c2ce31b69bd7d3ccf1",
+          "artifact_sha256": "065895d15ab24331794d4d2aed486f3681887a5b04a610eb710c8aefd267ab36",
+          "leanpath_sha256": "36f9b02c60657a051963fa1579882b1b6f4239a94ae97534382730f839ef62f8",
+          "log_sha256": "477d53ff0f7a3eef9e6e31018a84597d6aa2731339826a05277c9e48c0962d7e",
+          "log": "/tmp/bc-arc-scratch/record-lift/chain-state/logs/chain-state-202738.log"
+        },
+        "source_artifact_log_and_leanpath_hashes_independently_verified": true,
+        "leanpath": "/tmp/bc-arc-scratch/record-lift/chain-state/leanpath",
+        "log_content": "One coordination lock queue notice only; no Lean diagnostic.",
+        "build_rerun_by_reviewer": false
+      },
+      "limitations": [
+        "Only the exact source and guide hashes above were approved. Final root/import/inventory/gate/analysis/receipt changes and focused publication checks require their own hygiene review.",
+        "No global reachable-state invariant, complete coordinate backend/source simulation, persistent-table coherence, skipped-material reference theorem, cryptographic distance or global query bound is proved by this component.",
+        "Typed erasure bindings do not imply actual HKDF outputs are independent or uniform; byte aliases remain permitted.",
+        "Reviewer performed no implementation edits, builds, plain mailbox reads, commits or writes to pinned dependencies."
+      ]
+    },
+    "publication_metadata_review": {
+      "date": "2026-10-07T20:43:06.399871+00:00",
+      "reviewer": "/root",
+      "author": "/root/record_lazy_table",
+      "result": "approved",
+      "scope": "Final ChainState operational source, metadata and publication evidence on basis8129cd49; no chain security claim",
+      "findings": [],
+      "checked": [
+        "Full theorem statements and existing independent source review",
+        "All fourteen guard/gate names and root import",
+        "Preserved interface blocks and correct count1527/reviewed hashes",
+        "Four successful focused command logs and artifact hashes",
+        "Guide validation-only change and honest remaining table/world/cryptographic obligations"
+      ],
+      "files_sha256": {
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChainState.lean": "2d59f4c071968ba443ed4198c5cf6ab3a3f272650c9164c2ce31b69bd7d3ccf1",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "86bd69ccfa51f85f4b842bfb176a156da33cb8a18949bdcf67647ad24d655d62",
+        "beaconcrypt-core/proofs/check-inventory.sh": "e4097c44914e463602fb81ed764cb97dda904b840530459fb8e6ae6b305ba18b",
+        "beaconcrypt-core/proofs/reviewed-inventory.txt": "2e4df03b9abd2cbd7fc593382c470a38dadb2804ec4ae81ec9ec0d56d46af2ba",
+        "doc/formal-verification-analysis.md": "17ef09126a3683a1e301d253b76570fe88458646330ff4f9876146cfb2ddeddc",
+        "doc/impl/record-lift-chain-state.md": "a06ece1c4e79ce56bdf6d8641080991d256ddcc9276fc6e786a37e78a6d628c7"
+      }
+    },
+    "publication_metadata_review_receipt": "/tmp/bc-arc-scratch/record-lift/reviews/chain-state-publication-2026-10-07.json",
+    "publication_metadata_review_receipt_sha256": "92effd8400bc8993c74d24d6d8bdcc57ffe372afa7c022cf277e7a7e083bf0a1"
+  },
+  "checks": {
+    "module": {
+      "start": "2026-10-07T20:40:17.408409+00:00",
+      "end": "2026-10-07T20:40:23.938435+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "chain-state-module",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-chain-state/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/chain-state/publication-olean/BeaconcryptCore/Computational/PqxdhRecordLiftChainState.olean",
+        "/tmp/beaconcrypt-record-lift-chain-state/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChainState.lean"
+      ],
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null,
+      "source_sha256": "2d59f4c071968ba443ed4198c5cf6ab3a3f272650c9164c2ce31b69bd7d3ccf1",
+      "artifact_sha256": "065895d15ab24331794d4d2aed486f3681887a5b04a610eb710c8aefd267ab36",
+      "leanpath_sha256": "01c1b0be070140d440a39b25e7f842dbb5ba27b2db4a4356dafdb5b011059e15",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "log": "/tmp/bc-arc-scratch/record-lift/chain-state/logs/publication-module.log"
+    },
+    "root_import": {
+      "start": "2026-10-07T20:40:28.509241+00:00",
+      "end": "2026-10-07T20:40:35.613890+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "chain-state-root",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-chain-state/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/chain-state/publication-olean/BeaconcryptCore.olean",
+        "/tmp/beaconcrypt-record-lift-chain-state/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+      ],
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null,
+      "source_sha256": "86bd69ccfa51f85f4b842bfb176a156da33cb8a18949bdcf67647ad24d655d62",
+      "artifact_sha256": "5923c65e8f771141c1b9fbd31fb1e2ac3faed5955f606c7289fb82f0640ccc1c",
+      "leanpath_sha256": "01c1b0be070140d440a39b25e7f842dbb5ba27b2db4a4356dafdb5b011059e15",
+      "log_sha256": "3e0c7826261ef099348541a008d0b6e85e5c8297dfbe7b9804751bb5ee0053e2",
+      "log": "/tmp/bc-arc-scratch/record-lift/chain-state/logs/publication-root.log"
+    },
+    "inventory": {
+      "start": "2026-10-07T20:40:17.411685+00:00",
+      "end": "2026-10-07T20:41:33.281106+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lease",
+        "mem",
+        "codex",
+        "@nix",
+        "chain-state-inventory",
+        "--eta",
+        "20m",
+        "--",
+        "nix",
+        "develop",
+        "--no-update-lock-file",
+        "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+        "-c",
+        "make",
+        "-C",
+        "/tmp/beaconcrypt-record-lift-chain-state/beaconcrypt-core",
+        "check-inventory",
+        "SHELL=bash"
+      ],
+      "CARGO_BUILD_JOBS": "2",
+      "CARGO_TARGET_DIR": "/tmp/bc-arc-scratch/record-lift/chain-state/target",
+      "source_sha256": "86bd69ccfa51f85f4b842bfb176a156da33cb8a18949bdcf67647ad24d655d62",
+      "artifact_sha256": null,
+      "leanpath_sha256": "01c1b0be070140d440a39b25e7f842dbb5ba27b2db4a4356dafdb5b011059e15",
+      "log_sha256": "e8783eea96ee5ae316768a22cc1d1b1293f2b6dde174b50cb4b8d1d0197efdc8",
+      "log": "/tmp/bc-arc-scratch/record-lift/chain-state/logs/publication-inventory.log"
+    },
+    "transcript_fidelity": {
+      "start": "2026-10-07T20:40:17.411009+00:00",
+      "end": "2026-10-07T20:40:42.757695+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lease",
+        "mem",
+        "codex",
+        "@cargo",
+        "chain-state-fidelity",
+        "--eta",
+        "20m",
+        "--",
+        "nix",
+        "develop",
+        "--no-update-lock-file",
+        "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+        "-c",
+        "make",
+        "-C",
+        "/tmp/beaconcrypt-record-lift-chain-state/beaconcrypt-core",
+        "check-proverif-transcript-fidelity",
+        "SHELL=bash"
+      ],
+      "CARGO_BUILD_JOBS": "2",
+      "CARGO_TARGET_DIR": "/tmp/bc-arc-scratch/record-lift/chain-state/target",
+      "source_sha256": "86bd69ccfa51f85f4b842bfb176a156da33cb8a18949bdcf67647ad24d655d62",
+      "artifact_sha256": null,
+      "leanpath_sha256": "01c1b0be070140d440a39b25e7f842dbb5ba27b2db4a4356dafdb5b011059e15",
+      "log_sha256": "26702d27d309f202de94038c00a5ecb8d8df753e9b1bab351d9d25cc3b50de0e",
+      "log": "/tmp/bc-arc-scratch/record-lift/chain-state/logs/publication-fidelity.log",
+      "tests_passed": 30
+    }
+  },
+  "checks_not_run": [
+    "Full lake build",
+    "make verify",
+    "ProVerif",
+    "Mutation suite; no production Rust changed"
+  ],
+  "resource_caps": {
+    "focused_lean": "coord.sh lean; timeout 180; -j1 -M8000",
+    "inventory": "@nix 2048 MiB",
+    "transcript_fidelity": "@cargo 3072 MiB; CARGO_BUILD_JOBS=2; isolated registered target"
+  },
+  "artifact_provenance": {
+    "published_dependency_leanpath": "/tmp/bc-coord/leanpaths/8129cd49821daa33702d3e647e3edd9b67f3880d.leanpath",
+    "own_leanpath": "/tmp/bc-arc-scratch/record-lift/chain-state/publication.leanpath",
+    "own_overlay": "/tmp/bc-arc-scratch/record-lift/chain-state/publication-olean",
+    "mirrored_published_namespace_artifacts": 5985,
+    "borrowed_prefixes_written": false
+  },
+  "hygiene": {
+    "theorems_and_guards_match": true,
+    "H7_forbidden_name_source_scan": "clear",
+    "proof_placeholder_scan": "clear",
+    "source_unchanged_since_independent_review": true,
+    "trailing_whitespace": "clear"
+  },
+  "files_sha256": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChainState.lean": "2d59f4c071968ba443ed4198c5cf6ab3a3f272650c9164c2ce31b69bd7d3ccf1",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "86bd69ccfa51f85f4b842bfb176a156da33cb8a18949bdcf67647ad24d655d62",
+    "beaconcrypt-core/proofs/check-inventory.sh": "e4097c44914e463602fb81ed764cb97dda904b840530459fb8e6ae6b305ba18b",
+    "beaconcrypt-core/proofs/reviewed-inventory.txt": "2e4df03b9abd2cbd7fc593382c470a38dadb2804ec4ae81ec9ec0d56d46af2ba",
+    "doc/formal-verification-analysis.md": "17ef09126a3683a1e301d253b76570fe88458646330ff4f9876146cfb2ddeddc",
+    "doc/impl/record-lift-chain-state.md": "a06ece1c4e79ce56bdf6d8641080991d256ddcc9276fc6e786a37e78a6d628c7"
+  },
+  "guide_changes_since_approved_hash": {
+    "approved_sha256": "f274acb3e3db8536c9ce65217b0bd93b36078a5b4706936f9b7dd3033783b490",
+    "change": "Only final validation paragraph updated to integrated interface basis, focused checks, independent semantic review and receipt path. The theorem and scope explanations are unchanged."
+  }
+}

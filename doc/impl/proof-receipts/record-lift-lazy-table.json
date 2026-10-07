@@ -1,0 +1,208 @@
+{
+  "date": "2026-10-07T19:40:01.640034+00:00",
+  "scope": "Generic persistent lazy uniform table for record-lift stage R3; no evolving-chain or CTX reduction yet.",
+  "basis": "e90d54d934387bd08bfadff345449b84ebd1be2d",
+  "topic": {
+    "branch": "codex/record-lift-lazy-table",
+    "worktree": "/tmp/beaconcrypt-record-lift-lazy-table"
+  },
+  "publication_status": "Reviewed focused component, ready for topic publication; full record lift remains open.",
+  "modules": [
+    {
+      "name": "PqxdhRecordLiftLazyTable",
+      "statements": 11,
+      "exact_axiom_guards": 11,
+      "allowed_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound"
+      ]
+    }
+  ],
+  "query_accounting": "Every table lookup increments lookups exactly once. Every miss increments draws exactly once; a hit increments draws by zero. run_budget bounds each additional counter by the structural table-query budget q. These counts do not include sampler bit cost or unrelated ambient work.",
+  "contracts_used": [],
+  "type_requirements": [
+    "DecidableEq oracle domain",
+    "SampleableType for each response type"
+  ],
+  "not_proved": [
+    "Production receive-to-table rollback correspondence",
+    "Evolving-chain cryptographic hybrid",
+    "Alias/collision/refusal probability terms",
+    "Adaptive raw CTX/AEAD lift"
+  ],
+  "review": {
+    "reviewer": "/root",
+    "author": "/root/record_lazy_table",
+    "reviewer_did_not_write_proofs": true,
+    "date": "2026-10-07",
+    "reviewed_source_sha256": "de7963dca6055f85805cf40c097000299c1c207d7c328a6794859f2d09207a4b",
+    "semantic_result": "approved generic table scope; no security or source overclaim",
+    "review_message": "I independently reviewed the 11 theorem statements/proofs; semantic scope is sound generic table only, no security or source overclaim. Please fix header multiline paragraph to one line and add SPDX 0BSD.",
+    "findings": [
+      {
+        "id": "header-format-license",
+        "severity": "nit",
+        "finding": "Flatten header paragraph and add SPDX 0BSD.",
+        "fix": "Flattened the module header paragraph and added -- SPDX-License-Identifier: 0BSD. No definitions, theorem statements, proofs or guards changed.",
+        "status": "fixed"
+      }
+    ],
+    "final_source_sha256": "fa823eb692956d5d6853ba80023f9bf430d73793d455142b080456e1c9da3df3",
+    "publication_metadata_review": "Approved by /root on 2026-10-07: inspected all new guard/import/count/digest changes and analysis/guide; exact guard/module/root/inventory/fidelity receipts match."
+  },
+  "checks": {
+    "module": {
+      "start": "2026-10-07T19:37:46.282931+00:00",
+      "end": "2026-10-07T19:37:48.794370+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "lazy-table-193746",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-lazy-table/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/lazy-table/olean/BeaconcryptCore/Computational/PqxdhRecordLiftLazyTable.olean",
+        "/tmp/beaconcrypt-record-lift-lazy-table/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftLazyTable.lean"
+      ],
+      "source_sha256": "fa823eb692956d5d6853ba80023f9bf430d73793d455142b080456e1c9da3df3",
+      "artifact_sha256": "740d98ec5ac59b9ba3232582a9354cb9edf83c6507c06c57ca176ed81e3a3122",
+      "leanpath_sha256": "79a5a13c3362c5cff68f87fbd73c6f6119a5d88ecada355ebef6d120430c9d10",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "log": "/tmp/bc-arc-scratch/record-lift/lazy-table/logs/lazy-table-193746.log"
+    },
+    "root_import": {
+      "start": "2026-10-07T19:39:13.754404+00:00",
+      "end": "2026-10-07T19:39:16.569008+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "lazy-table-root",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-lazy-table/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/lazy-table/olean/BeaconcryptCore.olean",
+        "/tmp/beaconcrypt-record-lift-lazy-table/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+      ],
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null,
+      "source_sha256": "4739874b5fc0fa049b88c88cb971b5f796ae0585d0556162b10dcd5e6f08da3e",
+      "artifact_sha256": "3c52cf4b02427d5383e520fcd62e8aa79cf0ea697edd68c13e332fbb9f68da7c",
+      "leanpath_sha256": "79a5a13c3362c5cff68f87fbd73c6f6119a5d88ecada355ebef6d120430c9d10",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "log": "/tmp/bc-arc-scratch/record-lift/lazy-table/logs/root.log"
+    },
+    "inventory": {
+      "start": "2026-10-07T19:39:13.758205+00:00",
+      "end": "2026-10-07T19:40:24.497978+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lease",
+        "mem",
+        "codex",
+        "@nix",
+        "lazy-table-inventory",
+        "--eta",
+        "20m",
+        "--",
+        "nix",
+        "develop",
+        "--no-update-lock-file",
+        "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+        "-c",
+        "make",
+        "-C",
+        "/tmp/beaconcrypt-record-lift-lazy-table/beaconcrypt-core",
+        "check-inventory",
+        "SHELL=bash"
+      ],
+      "CARGO_BUILD_JOBS": "2",
+      "CARGO_TARGET_DIR": "/tmp/bc-arc-scratch/record-lift/lazy-table/target",
+      "source_sha256": "4739874b5fc0fa049b88c88cb971b5f796ae0585d0556162b10dcd5e6f08da3e",
+      "artifact_sha256": null,
+      "leanpath_sha256": "79a5a13c3362c5cff68f87fbd73c6f6119a5d88ecada355ebef6d120430c9d10",
+      "log_sha256": "c94283810a4a1a69ed2a32a1bdbd298a4f1282fc557b893a7bfaa88acd36ccb2",
+      "log": "/tmp/bc-arc-scratch/record-lift/lazy-table/logs/inventory.log"
+    },
+    "transcript_fidelity": {
+      "start": "2026-10-07T19:40:40.033192+00:00",
+      "end": "2026-10-07T19:41:03.346603+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lease",
+        "mem",
+        "codex",
+        "@cargo",
+        "lazy-table-fidelity",
+        "--eta",
+        "20m",
+        "--",
+        "nix",
+        "develop",
+        "--no-update-lock-file",
+        "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+        "-c",
+        "make",
+        "-C",
+        "/tmp/beaconcrypt-record-lift-lazy-table/beaconcrypt-core",
+        "check-proverif-transcript-fidelity",
+        "SHELL=bash"
+      ],
+      "CARGO_BUILD_JOBS": "2",
+      "CARGO_TARGET_DIR": "/tmp/bc-arc-scratch/record-lift/lazy-table/target",
+      "source_sha256": "4739874b5fc0fa049b88c88cb971b5f796ae0585d0556162b10dcd5e6f08da3e",
+      "artifact_sha256": null,
+      "leanpath_sha256": "79a5a13c3362c5cff68f87fbd73c6f6119a5d88ecada355ebef6d120430c9d10",
+      "log_sha256": "94bc0cf894df356a2737a595953c642732236bb83c80f33e6ff99725d0162ad3",
+      "log": "/tmp/bc-arc-scratch/record-lift/lazy-table/logs/fidelity.log",
+      "tests_passed": 30
+    }
+  },
+  "checks_not_run": [
+    "Full lake build",
+    "make verify",
+    "ProVerif",
+    "Mutation suite"
+  ],
+  "files_sha256": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftLazyTable.lean": "fa823eb692956d5d6853ba80023f9bf430d73793d455142b080456e1c9da3df3",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "4739874b5fc0fa049b88c88cb971b5f796ae0585d0556162b10dcd5e6f08da3e",
+    "beaconcrypt-core/proofs/check-inventory.sh": "ac1a4770cfbbd7ac1b076b4f26048c6f78552ccdcdcd4405f9789826a36e7b1c",
+    "beaconcrypt-core/proofs/reviewed-inventory.txt": "9ec439657397488b9d2bb1749449edbd1adfc6d69c2029703f213e07d7110ff3",
+    "doc/formal-verification-analysis.md": "0a3081431ce9b1ecc49205caa71cc1121345954be3e0ee5a7bdaef7fd56bc499",
+    "doc/impl/record-lift-lazy-table.md": "eef39007930dc3424a4745b21bf79e76381459a58904723309a07a4ea43cd1ba"
+  },
+  "resource_caps": {
+    "focused_lean": "coord.sh lean; timeout 180; -j1 -M8000",
+    "inventory": "@nix 2048 MiB",
+    "transcript_fidelity": "@cargo 3072 MiB; CARGO_BUILD_JOBS=2; isolated registered target"
+  },
+  "resource_sampling": {
+    "logs": [
+      "/tmp/bc-arc-scratch/record-lift/lazy-table/logs/inventory-samples.tsv",
+      "/tmp/bc-arc-scratch/record-lift/lazy-table/logs/fidelity-samples.tsv"
+    ],
+    "scope": "Per-process /proc samples only, not an aggregate peak and not a basis for shrinking class caps."
+  },
+  "setup_failures_resolved": [
+    "The first root import check could not find a namespace member in the new first LEAN_PATH prefix. Added 5981 symlinks to published dependencies in the own overlay, never replacing new-module or root artifacts; subsequent root import passed.",
+    "The first inventory launcher requested unavailable /usr/bin/time; the lease exited 127 before Nix ran. Removed that wrapper and used the provided read-only /proc sampler; the leased inventory rerun passed."
+  ],
+  "validation_state": "All required focused checks pass on recorded source hashes; independent semantic and publication-metadata hygiene review approved."
+}
