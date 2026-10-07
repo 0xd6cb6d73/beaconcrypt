@@ -8,8 +8,9 @@
  },
  "plan": {
   "path": "/tmp/bc-arc-scratch/extract-design/plan.md",
-  "sha256": "b4ad531499d3411a6f1b72de1928677f43627b58d713b6ecf5fbce7adfbd8ebf",
-  "stages": "S0a, S0b, S1a (G1), S3a, S4a (G2); sections 3, 4, 7, 9, 15-17 and 19"
+  "sha256": "cab40d7b9c2fb48aac9d97de65dd1499cf7c94dab5f23d3297e1fd97380c240e",
+  "stages": "S0a, S0b, S1a (G1), S3a, S4a (G2); sections 3, 4, 7, 9, 15-17 and 19",
+  "note": "The hash is of the plan after the confirming review: section 19 records 133 theorems and the re-estimate 21-41.5 agent-days (plan 38.5-66), and the S1c wording of sections 3, 4 and 6 follows the corrected G1 description (the split removes the hidden entries' dependence on the secret and their reachability by direct reads; R1 gives their mutual independence). The earlier hash b4ad531499d3 was of the plan before these edits. A snapshot of the plan is committed as doc/impl/extract-composition-plan.md."
  },
  "commits": [
   {
@@ -45,7 +46,7 @@
    "subject": "Document the completed S0b stage of item 2"
   }
  ],
- "commits_note": "The commits from the base to the parent of the review-fix commit; the review-fix commit itself contains this receipt.",
+ "commits_note": "The commits from the base to the parent of the review-fix commit. The review-fix commit 298c42dc61ac902e063df05e0a96f7ebf431b573 and the documentation commit of the confirming review's nits (confirming_review) update this receipt.",
  "files_sha256": {
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhKeyScheduleFromRoot.lean": "e26885683816b0f0b72d93f3874f26be2183fea85760e80ad03d4272b119cfb3",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRootFirstEntry.lean": "f6de1ba6c7af68e056cceb1643f24ea7ee1e62bfba63ce75f3fa498baf21d171",
@@ -56,7 +57,7 @@
   "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "8352dc8e272641a1429641472dc4c982f515fd3641e9944bba7fe89547300d37",
   "beaconcrypt-core/proofs/check-inventory.sh": "f575cc45f4869208b49ef5039bf0c6842410a70275f2a8f335015fd3498357a6",
   "beaconcrypt-core/proofs/reviewed-inventory.txt": "0c020bcab7e265e7867ecfdef3ec90932a60131cc3354593a7df10fc59d82652",
-  "doc/impl/extract-composition.md": "dabe4b29d0bc605d32e8444f3dc7fa88712c4e5e5929d6032fdba8bbe5943c4c",
+  "doc/impl/extract-composition.md": "6874c3f8183e421856363947acf80c0b73ca1c58df22a9b0a510ed3e4b9dc817",
   "doc/formal-verification-analysis.md": "2c7a137e68b1c744e20716c1f7cbb69ed7a6bd4ba3a3d0158d1526a68c0510a3"
  },
  "modules": [
@@ -527,7 +528,7 @@
  "forbidden_scan": "No sorry, admit, axiom, opaque, native_decide, implemented_by, extern or unsafe in the six modules. Scoped options: set_option linter.deprecated false in on 2 declarations of PqxdhRootFirstEntry and 8 of PqxdhExtractRomHiddenSuffix (VCVio probability notation evalSPMF/probEvent/probOutput only, checked by recompiling without the option: no deprecated lemma); set_option backward.isDefEq.respectTransparency false in on PqxdhRegistrationJointKemObserverFree.evaluate_map. Module-level options: autoImplicit false, maxRecDepth 100000.",
  "contamination_scan": "Exact-token grep of the plan risk-9 list: no hit. Direct-reference constant scan (scan/Scan.lean, a Lean metaprogram over the 470 declarations of the six modules): 0 references to the listed fixed-HKDF items; liveness case PqxdhCorrelatedExtractFamily.realGame detected. References into PqxdhJointDhExtractFamily (fix/FamilyRefs.lean, types and values with opaque values included): 29 references from 18 declarations, all to the family-state types and constructors carried by PqxdhServerAuthNative.NativeState (State x18, State.mk x2, State.history x2, State.cache x2, History, Observation, Observation.derive, Observation.publicHmac, Message), from the S0a never-read lemmas (accept_neverRead, tail_oblivious, oblivious_*), freeResume, markedResume and their lemmas; no game, reduction or advantage of PqxdhJointDhExtractFamily (the hygiene review counted 31; the count depends on which equation lemmas have been generated).",
  "guard_liveness": "scan/GuardLiveness.lean with one deliberately wrong guard per module: exit 1, six guard mismatches. After the fix, fix/GuardLiveness2.lean (the same six plus a wrong guard claiming onLeft_inl depends on propext): exit 1, seven guard mismatches.",
- "guard_coverage": "The hygiene review found onLeft_inl and onLeft_inr of PqxdhRegistrationJointBeaconOpaqueFinishRouter without guards: written as @[simp] theorem on one line, they were missed by the ^theorem pattern of addprint.py and of the inventory count, so the earlier totals 27 and 131 were undercounts. Both now carry @[simp] on its own line and an exact guard (does not depend on any axioms); the router inventory block lists 29 theorems, 29 guards and both per-theorem rows. fix/OwnNames2.lean over the compiled modules: the set of theorem constants of each module equals the set of its guard names in all six modules (133 in all).",
+ "guard_coverage": "The hygiene review found onLeft_inl and onLeft_inr of PqxdhRegistrationJointBeaconOpaqueFinishRouter without guards: written as @[simp] theorem on one line, they were missed by the ^theorem pattern of addprint.py and of the inventory count, so the earlier totals 27 and 131 were undercounts. Both now carry @[simp] on its own line and an exact guard (does not depend on any axioms); the router inventory block lists 29 theorems, 29 guards and both per-theorem rows. fix/OwnNames2.lean over the compiled modules lists 132 theorem constants, because its filter of auto-generated eq_ lemmas also drops the user theorem PqxdhExtractRomHiddenSuffix.eq_familyInput_of_coordinate; its list equals the set of guard names except that theorem, which has its exact guard. The count of 133 comes from a scan by declaration range (the confirming review's confirm/Thms.lean over the compiled modules: 133 theorem constants with declaration ranges, none private), whose name set equals the set of the 133 #print axioms guard names of the six sources; every guard is preceded by #guard_msgs in and allows only propext, Classical.choice and Quot.sound (confirm/guards.py).",
  "deviations_from_plan": [
   "G1: binder prefix renamed start (Lean keyword); statement otherwise the plan's.",
   "S0a: the identity-pool transcript is erased rather than shown free of the candidate.",
@@ -558,6 +559,29 @@
    "hygiene nit: Names for consumers section in the guide, checked against central 7609c3c8.",
    "hygiene nit: contamination paragraph names the family-state types and constructors of PqxdhJointDhExtractFamily that the modules reference, and no games."
   ],
-  "integration": "Not integrated into central; central 7609c3c8 not merged into the topic."
+  "integration": "Integrated after the confirming review: the topic merges central d68e1ce442ac89fc65594d9fca074399beae9f94 with a merge commit (PROTOCOL section 6); the integration checks receipt is /tmp/bc-arc-scratch/extract-design/inc1-int/checks-receipt.json.",
+  "confirming_review": {
+   "reviewed_commit": "298c42dc61ac902e063df05e0a96f7ebf431b573",
+   "verdict": "Approved with three documentation nits; evidence /tmp/bc-arc-scratch/extract-design/inc1/confirm/ (fresh compiles of the six modules and the root import, guard liveness Liveness.lean, theorem scan Thms.lean, focused inventory) and the verdict record /tmp/bc-arc-scratch/extract-design/inc1/review-confirm.json.",
+   "nits": [
+    {
+     "title": "plan.md (outside the branch) still has the old totals and the old G1 wording, and the receipt pins it",
+     "response": "Plan section 19 now records 133 theorems and 21-41.5 agent-days (plan 38.5-66); the S1c wording of sections 4 and 6 (and the T7 docstring requirement in section 3, which had the same wording) says that the split removes the hidden entries' dependence on the secret and their reachability by direct reads and that R1 gives their mutual independence. plan.sha256 above is the new hash."
+    },
+    {
+     "title": "'Names for consumers' lists only BeaconcryptCore namespaces for interpret and view without saying so",
+     "response": "The guide says once that the per-name lists give the other BeaconcryptCore namespaces and names the exceptions: interpret is also declared in VCVio's SemanticsVia and MeasureSemanticsVia, view in 12 other BeaconcryptCore namespaces and 3 Lean.Elab ones, State also in 135 namespaces outside BeaconcryptCore; coordinate and overwrite only in Lean namespaces (fix/Central7609.log)."
+    },
+    {
+     "title": "The receipt's guard_coverage cites OwnNames2 for '133 in all', but OwnNames2 lists 132 theorems",
+     "response": "guard_coverage now explains the eq_ filter of OwnNames2 (132) and cites the scan by declaration range (133, equal to the guard names); the guide's Checks bullet, which made the same per-module equality claim, now cites the declaration-range scan too."
+    }
+   ],
+   "changed_files": [
+    "doc/impl/extract-composition.md",
+    "doc/impl/proof-receipts/extract-composition-inc1.json",
+    "/tmp/bc-arc-scratch/extract-design/plan.md (scratch, outside the branch)"
+   ]
+  }
  }
 }
