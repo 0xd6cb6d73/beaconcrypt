@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1534
+	[handwritten-lean]=1535
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -30316,6 +30316,37 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem root_failure([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthChain theorem root_failure"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthChain\.seed_bound$' "$selected_source_module" "PqxdhDeploymentServerAuthChain dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthChain.seed_bound"
 require_line_count 1 '^theorem seed_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthChain theorem seed_bound"
+
+# CE-8 theorem CE-A1 over all Beacons of the deployment experiment.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentServerAuth.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentServerAuth$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentServerAuth root import"
+require_line_count 12 '^theorem ' "$selected_source_module" "PqxdhDeploymentServerAuth theorem inventory"
+require_line_count 12 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentServerAuth guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuth\.a1At_merge$' "$selected_source_module" "PqxdhDeploymentServerAuth dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuth.a1At_merge"
+require_line_count 1 '^theorem a1At_merge([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuth theorem a1At_merge"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuth\.probEvent_bind_le$' "$selected_source_module" "PqxdhDeploymentServerAuth dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuth.probEvent_bind_le"
+require_line_count 1 '^theorem probEvent_bind_le([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuth theorem probEvent_bind_le"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuth\.a1_le_ordered$' "$selected_source_module" "PqxdhDeploymentServerAuth dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuth.a1_le_ordered"
+require_line_count 1 '^theorem a1_le_ordered([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuth theorem a1_le_ordered"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuth\.a1_bound$' "$selected_source_module" "PqxdhDeploymentServerAuth dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuth.a1_bound"
+require_line_count 1 '^theorem a1_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuth theorem a1_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuth\.owners_step$' "$selected_source_module" "PqxdhDeploymentServerAuth dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuth.owners_step"
+require_line_count 1 '^theorem owners_step([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuth theorem owners_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuth\.owners_foldl$' "$selected_source_module" "PqxdhDeploymentServerAuth dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuth.owners_foldl"
+require_line_count 1 '^theorem owners_foldl([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuth theorem owners_foldl"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuth\.unmatched_created$' "$selected_source_module" "PqxdhDeploymentServerAuth dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuth.unmatched_created"
+require_line_count 1 '^theorem unmatched_created([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuth theorem unmatched_created"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuth\.compiled_owners$' "$selected_source_module" "PqxdhDeploymentServerAuth dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuth.compiled_owners"
+require_line_count 1 '^theorem compiled_owners([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuth theorem compiled_owners"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuth\.a1_range$' "$selected_source_module" "PqxdhDeploymentServerAuth dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuth.a1_range"
+require_line_count 1 '^theorem a1_range([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuth theorem a1_range"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuth\.a1_sum$' "$selected_source_module" "PqxdhDeploymentServerAuth dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuth.a1_sum"
+require_line_count 1 '^theorem a1_sum([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuth theorem a1_sum"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuth\.noFailure_a1At$' "$selected_source_module" "PqxdhDeploymentServerAuth dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuth.noFailure_a1At"
+require_line_count 1 '^theorem noFailure_a1At([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuth theorem noFailure_a1At"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuth\.ce_a1$' "$selected_source_module" "PqxdhDeploymentServerAuth dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuth.ce_a1"
+require_line_count 1 '^theorem ce_a1([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuth theorem ce_a1"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
