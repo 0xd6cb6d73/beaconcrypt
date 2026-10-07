@@ -1,6 +1,6 @@
 {
-  "date": "2026-10-07T18:22:47.135043+00:00",
-  "scope": "LQ-F CE-level stages: the native logged source (native logged accept and handler, annotated-to-native correspondence, one log entry per raw accept), the LQ-F later game of the common deployment experiment (post-run reveal of every created Beacon's Ed25519 identity seed and X25519 prekey and one-time scalars, the Server Ed25519 identity seed and every generated Server ephemeral scalar; DH outputs derived; ML-KEM secrets never revealed; one-time scalars of failed Beacon bundle attempts excluded as in LQ), CE-COMPILE for that game to the logged source with its budget transport, and the per-target KEM transfer of CE-9 (steps 9.1-9.4) carried to it with bills and the exact-sum headline, for confidentiality only. Item 2 and the headlines are open. Not reviewed, not merged.",
+  "date": "2026-10-07T20:36:37.330898+00:00",
+  "scope": "LQ-F CE-level stages: the native logged source (native logged accept and handler, annotated-to-native correspondence, the log growing exactly as the Server session counter does), the LQ-F later game of the common deployment experiment (post-run reveal of every created Beacon's Ed25519 identity seed and X25519 prekey and one-time scalars, the Server Ed25519 identity seed and every generated Server ephemeral scalar), CE-COMPILE for that game to the logged source with its budget transport, and the per-target KEM transfer of CE-9 (steps 9.1-9.4) carried to it with bills and the exact-sum headline, for confidentiality only. Profile (owner decision, plan section 27): every honest X25519 secret and every honest Ed25519 identity secret, except two kinds of scalar that are never published or used: (a) the one-time scalars of failed Beacon bundle attempts (generated at beaconcrypt/src/beacon.rs:302, dropped when signing or serializing the bundle fails at beacon.rs:349-357, public key never output) and (b) the Server ephemeral of an accept that fails the PQ-key parse (generated at beaconcrypt/src/server.rs:368, dropped when the parse rejects at server.rs:369-372, before encapsulation, any DH step or any publication). Both are documented with this reason and get no further proof work; with LQ-F they replace deviation D6 of LQ. The LQ-F reveal leaves out (a) (in no state) and also contains (b), because the log records every generated ephemeral; no statement relies on that. DH outputs are derived, not listed; ML-KEM secrets are never revealed. Item 2 and the headlines are open. Reviewed at 847dc17b (semantic and hygiene, approve with nits); the second fix pass is not reviewed; not merged.",
   "basis": "583c33a27c62403acd272e70176c2dc7856a7903",
   "merged_central": "e90d54d934387bd08bfadff345449b84ebd1be2d",
   "spike_receipt": "doc/impl/proof-receipts/common-deployment-experiment-lqf-spike.json",
@@ -10,8 +10,8 @@
   },
   "plan": {
     "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
-    "sha256": "b72e4d1286b5a1e6f3fd97d48ae51eb19f4533dc9826252b2eea133733b2fff3",
-    "sections": "8, 9, 14, 19-23"
+    "sha256": "5654cdb3a77b15d91f1675b4d242e4f7abc71e84bf1ac7e57251cf5703d8069b",
+    "sections": "8, 9, 14, 19-23, 27"
   },
   "design": {
     "path": "/tmp/bc-arc-scratch/common-experiment/reveal-mode-design.md",
@@ -62,22 +62,30 @@
     {
       "commit": "00bd75c890ac40c07d505f97349c61f97f90a30c",
       "subject": "Carry the per-target KEM transfer to the LQ-F later game"
+    },
+    {
+      "commit": "847dc17b2a7dfc51399d33d58ff5e5019f397da2",
+      "subject": "Document the LQ-F later game, compile lemma and KEM transfer (guide, analysis, receipt)"
+    },
+    {
+      "commit": "aff819eb0f271afe1d1215103b3e339714027218",
+      "subject": "Address the LQ-F final review in the Lean modules"
     }
   ],
   "commits_note": "The documentation commit that adds this receipt follows these commits and is checked the same way (root import and focused inventory).",
   "files_sha256": {
-    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerNative.lean": "4dd7f53e93c01205bc1d21c77955eae5fa229d3f61c88752473b2b26e45f2ba5",
-    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerGame.lean": "c36a5b4ad1c0d18be0c769b5a6f69b36dec9da5e4c3e7cc95f23a3f7da674cf0",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerNative.lean": "7d8fb374a03946b3b09528584c3702ac98061dfd03827b90fb4bf1e808336c3d",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerGame.lean": "8a7193d60c0a0b2103937bbf098171de0d1db5ad0a794146ffbb48e61b76d84c",
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerCompile.lean": "1570764f5b509f47708d95d0e000601b55e3ed54bbafeb0b137875ac8c0c7346",
-    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerCompileBudget.lean": "32f6fb327a9dd41646a37912c5fa31d2dff5426f0a5feab1228f6f825deea93a",
-    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerTrace.lean": "66fc814138302c42a10841c7c4a9b5580fc5022fc2ad49e3c299e11ee69942d6",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerCompileBudget.lean": "f4fbbcbbfac6ba60723a161b8d2d5ac9253169fc30da6b850cef10a322a90a84",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerTrace.lean": "84a928aa30a865798fd2a603078a65106a8d5a2258cff6c9d43a4e4507029e5c",
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerTransfer.lean": "db25409ad69dca40425b7eb19d61927c9878d5c52506caf9ba90f2e363cc0cf0",
     "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "b2d4a3ecf4ee83da78558f00e64bfaefca7a73faebbb0a47cafca388eb2bb9fe",
     "beaconcrypt-core/proofs/check-inventory.sh": "49e06b929b39940ed5f08655ddd2d9c11f2a063b58d9fe7268f8ab04baf0abc0",
-    "beaconcrypt-core/proofs/reviewed-inventory.txt": "c25a59d7d43608c0391f089e01007b66d3994238fb5af5a94aec67830dc9a8d1",
-    "doc/impl/later-quantum-lqf-spike.md": "abf6ab16645efc5d1931d3bb04823537b9703b633b41994ace64fc655a474e32",
-    "doc/impl/common-deployment-experiment.md": "57432726f718a2a907736c8c70094928e014648879b8e351be4512de5f54db3b",
-    "doc/formal-verification-analysis.md": "3bcc8fa4c052f78cb50689539e145be4963d14cf1b75ab531fadc15c3bcf6d5e"
+    "beaconcrypt-core/proofs/reviewed-inventory.txt": "5100608b4aaf5e8353434be97bf8810a23c62b5be755f79efe13425e7e594c98",
+    "doc/impl/later-quantum-lqf-spike.md": "2230f9c14140e7981f5702f2e11887f0e1dde0d1d27d7e9c969c5aef8fa9acc4",
+    "doc/impl/common-deployment-experiment.md": "be9f2c3b2839de9aad874a96fce1f90f37d345a2102ff855026cf393480e3ff2",
+    "doc/formal-verification-analysis.md": "5028ce452aafdaff06aa8b5dca9d3f383a66c25d0e2eceae8d0bb615f594decc"
   },
   "modules": [
     {
@@ -106,15 +114,23 @@
       "direct_check_final": {
         "tag": "final",
         "exit": 0,
-        "start": "2026-10-07T18:12:35.451319+00:00",
-        "end": "2026-10-07T18:12:44.708398+00:00",
-        "source_sha256": "4dd7f53e93c01205bc1d21c77955eae5fa229d3f61c88752473b2b26e45f2ba5",
+        "start": "2026-10-07T20:26:41.202653+00:00",
+        "end": "2026-10-07T20:26:50.585128+00:00",
+        "source_sha256": "7d8fb374a03946b3b09528584c3702ac98061dfd03827b90fb4bf1e808336c3d",
         "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         "log_bytes": 0,
-        "artifact_sha256": "814b301a789fdd5bf443451b72c9397133e743718bbfdaafa8c0159e7ef4cc74",
+        "artifact_sha256": "14af5dcf4dfcde306367ad791f46d1b05c6e855311fb1ccbd56c236adc651bc6",
+        "artifact_identical_to_previous_check": false,
         "command": [
-          "flock",
-          "/tmp/bc-arc-scratch/lean.lock",
+          "/tmp/bc-coord/coord.sh",
+          "lean",
+          "claude",
+          "lqfx-PqxdhDeploymentLaterServerNative-final",
+          "--",
+          "sh",
+          "-c",
+          "exec \"$@\" > \"$0\" 2>&1",
+          "/tmp/bc-arc-scratch/common-experiment/lqfx/logs/PqxdhDeploymentLaterServerNative-final.log",
           "timeout",
           "180",
           "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
@@ -122,9 +138,10 @@
           "-M8000",
           "--root=/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean",
           "-o",
-          "/tmp/bc-arc-scratch/common-experiment/lqfc/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerNative.olean",
+          "/tmp/bc-arc-scratch/common-experiment/lqfx/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerNative.olean",
           "/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerNative.lean"
-        ]
+        ],
+        "pass": "second fix pass"
       }
     },
     {
@@ -150,15 +167,23 @@
       "direct_check_final": {
         "tag": "final",
         "exit": 0,
-        "start": "2026-10-07T18:12:44.743693+00:00",
-        "end": "2026-10-07T18:12:49.309946+00:00",
-        "source_sha256": "c36a5b4ad1c0d18be0c769b5a6f69b36dec9da5e4c3e7cc95f23a3f7da674cf0",
+        "start": "2026-10-07T20:26:50.622130+00:00",
+        "end": "2026-10-07T20:27:01.226382+00:00",
+        "source_sha256": "8a7193d60c0a0b2103937bbf098171de0d1db5ad0a794146ffbb48e61b76d84c",
         "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         "log_bytes": 0,
-        "artifact_sha256": "9cf000265418630e2cdec2348441e89585b50c5a407d948196c1da38be515a92",
+        "artifact_sha256": "4f457a5f432f480414f0b021c7e8cc67ef52d818f6d4ac79105b894b2d5ebab4",
+        "artifact_identical_to_previous_check": false,
         "command": [
-          "flock",
-          "/tmp/bc-arc-scratch/lean.lock",
+          "/tmp/bc-coord/coord.sh",
+          "lean",
+          "claude",
+          "lqfx-PqxdhDeploymentLaterServerGame-final",
+          "--",
+          "sh",
+          "-c",
+          "exec \"$@\" > \"$0\" 2>&1",
+          "/tmp/bc-arc-scratch/common-experiment/lqfx/logs/PqxdhDeploymentLaterServerGame-final.log",
           "timeout",
           "180",
           "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
@@ -166,9 +191,10 @@
           "-M8000",
           "--root=/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean",
           "-o",
-          "/tmp/bc-arc-scratch/common-experiment/lqfc/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerGame.olean",
+          "/tmp/bc-arc-scratch/common-experiment/lqfx/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerGame.olean",
           "/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerGame.lean"
-        ]
+        ],
+        "pass": "second fix pass"
       }
     },
     {
@@ -203,15 +229,23 @@
       "direct_check_final": {
         "tag": "final",
         "exit": 0,
-        "start": "2026-10-07T18:12:49.344158+00:00",
-        "end": "2026-10-07T18:12:54.559438+00:00",
+        "start": "2026-10-07T20:27:01.258798+00:00",
+        "end": "2026-10-07T20:27:06.683516+00:00",
         "source_sha256": "1570764f5b509f47708d95d0e000601b55e3ed54bbafeb0b137875ac8c0c7346",
         "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         "log_bytes": 0,
         "artifact_sha256": "3d10143f25c49fcd87b44c97e25bcfe71d00359a77e247840a3cdff4296561f0",
+        "artifact_identical_to_previous_check": true,
         "command": [
-          "flock",
-          "/tmp/bc-arc-scratch/lean.lock",
+          "/tmp/bc-coord/coord.sh",
+          "lean",
+          "claude",
+          "lqfx-PqxdhDeploymentLaterServerCompile-final",
+          "--",
+          "sh",
+          "-c",
+          "exec \"$@\" > \"$0\" 2>&1",
+          "/tmp/bc-arc-scratch/common-experiment/lqfx/logs/PqxdhDeploymentLaterServerCompile-final.log",
           "timeout",
           "180",
           "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
@@ -219,9 +253,10 @@
           "-M8000",
           "--root=/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean",
           "-o",
-          "/tmp/bc-arc-scratch/common-experiment/lqfc/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerCompile.olean",
+          "/tmp/bc-arc-scratch/common-experiment/lqfx/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerCompile.olean",
           "/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerCompile.lean"
-        ]
+        ],
+        "pass": "second fix pass"
       }
     },
     {
@@ -245,15 +280,23 @@
       "direct_check_final": {
         "tag": "final",
         "exit": 0,
-        "start": "2026-10-07T18:12:54.595079+00:00",
-        "end": "2026-10-07T18:13:09.016477+00:00",
-        "source_sha256": "32f6fb327a9dd41646a37912c5fa31d2dff5426f0a5feab1228f6f825deea93a",
+        "start": "2026-10-07T20:27:06.719034+00:00",
+        "end": "2026-10-07T20:27:21.142369+00:00",
+        "source_sha256": "f4fbbcbbfac6ba60723a161b8d2d5ac9253169fc30da6b850cef10a322a90a84",
         "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         "log_bytes": 0,
-        "artifact_sha256": "f66f7c01fbc429e4f15d51344863dcad587e492e92ca78de2ce7b963c5d51d35",
+        "artifact_sha256": "e77c3340cd914e80bcc9dc050dc9abd29a2ff8cb6f4ecbd9841a6f35a0720ccd",
+        "artifact_identical_to_previous_check": false,
         "command": [
-          "flock",
-          "/tmp/bc-arc-scratch/lean.lock",
+          "/tmp/bc-coord/coord.sh",
+          "lean",
+          "claude",
+          "lqfx-PqxdhDeploymentLaterServerCompileBudget-final",
+          "--",
+          "sh",
+          "-c",
+          "exec \"$@\" > \"$0\" 2>&1",
+          "/tmp/bc-arc-scratch/common-experiment/lqfx/logs/PqxdhDeploymentLaterServerCompileBudget-final.log",
           "timeout",
           "180",
           "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
@@ -261,9 +304,10 @@
           "-M8000",
           "--root=/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean",
           "-o",
-          "/tmp/bc-arc-scratch/common-experiment/lqfc/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerCompileBudget.olean",
+          "/tmp/bc-arc-scratch/common-experiment/lqfx/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerCompileBudget.olean",
           "/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerCompileBudget.lean"
-        ]
+        ],
+        "pass": "second fix pass"
       }
     },
     {
@@ -313,15 +357,23 @@
       "direct_check_final": {
         "tag": "final",
         "exit": 0,
-        "start": "2026-10-07T18:13:09.061644+00:00",
-        "end": "2026-10-07T18:13:18.367863+00:00",
-        "source_sha256": "66fc814138302c42a10841c7c4a9b5580fc5022fc2ad49e3c299e11ee69942d6",
+        "start": "2026-10-07T20:27:21.182445+00:00",
+        "end": "2026-10-07T20:27:31.266687+00:00",
+        "source_sha256": "84a928aa30a865798fd2a603078a65106a8d5a2258cff6c9d43a4e4507029e5c",
         "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         "log_bytes": 0,
-        "artifact_sha256": "9abad06cc5eaef265d23f48a664b8cf054eca31322e0faa243de9166653c8b9a",
+        "artifact_sha256": "483419632e7fac1a0a31820b11c7523c3cc5e29e76c60aab020ea59dadf9f7a0",
+        "artifact_identical_to_previous_check": false,
         "command": [
-          "flock",
-          "/tmp/bc-arc-scratch/lean.lock",
+          "/tmp/bc-coord/coord.sh",
+          "lean",
+          "claude",
+          "lqfx-PqxdhDeploymentLaterServerTrace-final",
+          "--",
+          "sh",
+          "-c",
+          "exec \"$@\" > \"$0\" 2>&1",
+          "/tmp/bc-arc-scratch/common-experiment/lqfx/logs/PqxdhDeploymentLaterServerTrace-final.log",
           "timeout",
           "180",
           "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
@@ -329,9 +381,10 @@
           "-M8000",
           "--root=/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean",
           "-o",
-          "/tmp/bc-arc-scratch/common-experiment/lqfc/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerTrace.olean",
+          "/tmp/bc-arc-scratch/common-experiment/lqfx/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerTrace.olean",
           "/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerTrace.lean"
-        ]
+        ],
+        "pass": "second fix pass"
       }
     },
     {
@@ -351,15 +404,23 @@
       "direct_check_final": {
         "tag": "final",
         "exit": 0,
-        "start": "2026-10-07T18:13:18.411937+00:00",
-        "end": "2026-10-07T18:13:23.319489+00:00",
+        "start": "2026-10-07T20:27:31.304334+00:00",
+        "end": "2026-10-07T20:27:40.208006+00:00",
         "source_sha256": "db25409ad69dca40425b7eb19d61927c9878d5c52506caf9ba90f2e363cc0cf0",
         "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         "log_bytes": 0,
         "artifact_sha256": "40692366e7d0e8a740359ac8411b0ad2e2b0500bf76cc01899e4c60efe00d584",
+        "artifact_identical_to_previous_check": true,
         "command": [
-          "flock",
-          "/tmp/bc-arc-scratch/lean.lock",
+          "/tmp/bc-coord/coord.sh",
+          "lean",
+          "claude",
+          "lqfx-PqxdhDeploymentLaterServerTransfer-final",
+          "--",
+          "sh",
+          "-c",
+          "exec \"$@\" > \"$0\" 2>&1",
+          "/tmp/bc-arc-scratch/common-experiment/lqfx/logs/PqxdhDeploymentLaterServerTransfer-final.log",
           "timeout",
           "180",
           "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
@@ -367,9 +428,10 @@
           "-M8000",
           "--root=/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean",
           "-o",
-          "/tmp/bc-arc-scratch/common-experiment/lqfc/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerTransfer.olean",
+          "/tmp/bc-arc-scratch/common-experiment/lqfx/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerTransfer.olean",
           "/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerTransfer.lean"
-        ]
+        ],
+        "pass": "second fix pass"
       }
     }
   ],
@@ -421,15 +483,23 @@
     "PqxdhDeploymentLaterServerKemHop": {
       "tag": "final",
       "exit": 0,
-      "start": "2026-10-07T18:11:29.876324+00:00",
-      "end": "2026-10-07T18:11:35.693573+00:00",
+      "start": "2026-10-07T20:25:44.007589+00:00",
+      "end": "2026-10-07T20:25:51.347272+00:00",
       "source_sha256": "27a7fc1632f10db1616ab84361a1e91456c110b0bd3948ec4861d9185f41f075",
       "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "log_bytes": 0,
       "artifact_sha256": "b46ac350dbd118259a539b71aa2ae8078a482628cc5dd06c0bef500659df8a0f",
+      "artifact_identical_to_previous_check": true,
       "command": [
-        "flock",
-        "/tmp/bc-arc-scratch/lean.lock",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "claude",
+        "lqfx-PqxdhDeploymentLaterServerKemHop-final",
+        "--",
+        "sh",
+        "-c",
+        "exec \"$@\" > \"$0\" 2>&1",
+        "/tmp/bc-arc-scratch/common-experiment/lqfx/logs/PqxdhDeploymentLaterServerKemHop-final.log",
         "timeout",
         "180",
         "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
@@ -437,22 +507,31 @@
         "-M8000",
         "--root=/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean",
         "-o",
-        "/tmp/bc-arc-scratch/common-experiment/lqfc/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerKemHop.olean",
+        "/tmp/bc-arc-scratch/common-experiment/lqfx/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerKemHop.olean",
         "/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerKemHop.lean"
-      ]
+      ],
+      "pass": "second fix pass"
     },
     "PqxdhDeploymentLaterServerSource": {
       "tag": "final",
       "exit": 0,
-      "start": "2026-10-07T18:11:35.725877+00:00",
-      "end": "2026-10-07T18:11:40.840696+00:00",
-      "source_sha256": "064eb71e226c75d91850e0ad0721d61a4c145a4667b8bbee5285f2fa45b1bb29",
+      "start": "2026-10-07T20:25:51.382754+00:00",
+      "end": "2026-10-07T20:25:56.430993+00:00",
+      "source_sha256": "9e7d62a8f019793502500ecd6ac82e8798b3f169fd6c59169ee66c0f401c9027",
       "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "log_bytes": 0,
-      "artifact_sha256": "2c072fcda7708f8b05d77987a965d8d66b05f2ce1f53878ff066be58df734d2b",
+      "artifact_sha256": "259be77938fb87e1e5ca2ef88e0011d2ca1579da89eb7048a91716ab601e718f",
+      "artifact_identical_to_previous_check": false,
       "command": [
-        "flock",
-        "/tmp/bc-arc-scratch/lean.lock",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "claude",
+        "lqfx-PqxdhDeploymentLaterServerSource-final",
+        "--",
+        "sh",
+        "-c",
+        "exec \"$@\" > \"$0\" 2>&1",
+        "/tmp/bc-arc-scratch/common-experiment/lqfx/logs/PqxdhDeploymentLaterServerSource-final.log",
         "timeout",
         "180",
         "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
@@ -460,22 +539,31 @@
         "-M8000",
         "--root=/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean",
         "-o",
-        "/tmp/bc-arc-scratch/common-experiment/lqfc/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerSource.olean",
+        "/tmp/bc-arc-scratch/common-experiment/lqfx/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerSource.olean",
         "/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerSource.lean"
-      ]
+      ],
+      "pass": "second fix pass"
     },
     "PqxdhDeploymentLaterServerCommands": {
       "tag": "final",
       "exit": 0,
-      "start": "2026-10-07T18:11:40.873993+00:00",
-      "end": "2026-10-07T18:11:45.427873+00:00",
+      "start": "2026-10-07T20:25:56.464700+00:00",
+      "end": "2026-10-07T20:26:00.984496+00:00",
       "source_sha256": "1fd2adc26db18b539f3bd1eb117aedf1f7cbf8072374ddf53df52b4603c4a7a4",
       "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "log_bytes": 0,
       "artifact_sha256": "dbe143458c98d8d80dbce80136b2e09ce560fa45b0b0391fcaf96c7c81b2ae88",
+      "artifact_identical_to_previous_check": true,
       "command": [
-        "flock",
-        "/tmp/bc-arc-scratch/lean.lock",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "claude",
+        "lqfx-PqxdhDeploymentLaterServerCommands-final",
+        "--",
+        "sh",
+        "-c",
+        "exec \"$@\" > \"$0\" 2>&1",
+        "/tmp/bc-arc-scratch/common-experiment/lqfx/logs/PqxdhDeploymentLaterServerCommands-final.log",
         "timeout",
         "180",
         "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
@@ -483,22 +571,31 @@
         "-M8000",
         "--root=/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean",
         "-o",
-        "/tmp/bc-arc-scratch/common-experiment/lqfc/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerCommands.olean",
+        "/tmp/bc-arc-scratch/common-experiment/lqfx/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerCommands.olean",
         "/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerCommands.lean"
-      ]
+      ],
+      "pass": "second fix pass"
     },
     "PqxdhDeploymentLaterServerCut": {
       "tag": "final",
       "exit": 0,
-      "start": "2026-10-07T18:11:45.463232+00:00",
-      "end": "2026-10-07T18:11:50.816407+00:00",
+      "start": "2026-10-07T20:26:01.019311+00:00",
+      "end": "2026-10-07T20:26:06.095383+00:00",
       "source_sha256": "2b2dc1ecec8c5235eb66981d72588396a692287211afcf9bf37346e0f4457622",
       "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "log_bytes": 0,
       "artifact_sha256": "7754c606afa14f1e3604429ddfb86724e77bacdbc56d2244d703fd196add483b",
+      "artifact_identical_to_previous_check": true,
       "command": [
-        "flock",
-        "/tmp/bc-arc-scratch/lean.lock",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "claude",
+        "lqfx-PqxdhDeploymentLaterServerCut-final",
+        "--",
+        "sh",
+        "-c",
+        "exec \"$@\" > \"$0\" 2>&1",
+        "/tmp/bc-arc-scratch/common-experiment/lqfx/logs/PqxdhDeploymentLaterServerCut-final.log",
         "timeout",
         "180",
         "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
@@ -506,22 +603,31 @@
         "-M8000",
         "--root=/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean",
         "-o",
-        "/tmp/bc-arc-scratch/common-experiment/lqfc/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerCut.olean",
+        "/tmp/bc-arc-scratch/common-experiment/lqfx/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerCut.olean",
         "/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerCut.lean"
-      ]
+      ],
+      "pass": "second fix pass"
     },
     "PqxdhDeploymentLaterServerReserve": {
       "tag": "final",
       "exit": 0,
-      "start": "2026-10-07T18:11:50.852217+00:00",
-      "end": "2026-10-07T18:12:06.049750+00:00",
-      "source_sha256": "6f7e8cd6f8caaf23c9c50ad03c1e78723ce0a3bf55e3cf477df185a9e558b30a",
+      "start": "2026-10-07T20:26:06.126397+00:00",
+      "end": "2026-10-07T20:26:09.968380+00:00",
+      "source_sha256": "681b9e627936fa082c00408132ef2df5b9538ff31ecf6e0a923dbce6e50eaac5",
       "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "log_bytes": 0,
-      "artifact_sha256": "9a9284c94e2383747caf72535a37869c005287c6cf7bdb9f3f0a3856bdbff2cc",
+      "artifact_sha256": "06c2489729ffb372f3e1c32d8009da29d65e1ca41e09aa7b9dc8d9eb9ed6612f",
+      "artifact_identical_to_previous_check": false,
       "command": [
-        "flock",
-        "/tmp/bc-arc-scratch/lean.lock",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "claude",
+        "lqfx-PqxdhDeploymentLaterServerReserve-final",
+        "--",
+        "sh",
+        "-c",
+        "exec \"$@\" > \"$0\" 2>&1",
+        "/tmp/bc-arc-scratch/common-experiment/lqfx/logs/PqxdhDeploymentLaterServerReserve-final.log",
         "timeout",
         "180",
         "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
@@ -529,22 +635,31 @@
         "-M8000",
         "--root=/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean",
         "-o",
-        "/tmp/bc-arc-scratch/common-experiment/lqfc/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerReserve.olean",
+        "/tmp/bc-arc-scratch/common-experiment/lqfx/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerReserve.olean",
         "/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerReserve.lean"
-      ]
+      ],
+      "pass": "second fix pass"
     },
     "PqxdhDeploymentLaterServerInitialized": {
       "tag": "final",
       "exit": 0,
-      "start": "2026-10-07T18:12:06.081579+00:00",
-      "end": "2026-10-07T18:12:10.285327+00:00",
-      "source_sha256": "b12121cae1ef4d5b8905977203a26e6a98a5b17a0251a0629b074d368fcf557a",
+      "start": "2026-10-07T20:26:09.999352+00:00",
+      "end": "2026-10-07T20:26:14.366340+00:00",
+      "source_sha256": "25c2f991f6e8bf8e2eafc4dd47387ef31933e6bb59e57e3c4a3d097fa7ecac19",
       "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "log_bytes": 0,
-      "artifact_sha256": "b1f03ee99a1a27de60303c59f9361094323b87af7686d94900ccf53886db0734",
+      "artifact_sha256": "65fb4312d693d2fa39acb10ac0d5ddd6e0417928c6429f05c88c93849959ba7d",
+      "artifact_identical_to_previous_check": false,
       "command": [
-        "flock",
-        "/tmp/bc-arc-scratch/lean.lock",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "claude",
+        "lqfx-PqxdhDeploymentLaterServerInitialized-final",
+        "--",
+        "sh",
+        "-c",
+        "exec \"$@\" > \"$0\" 2>&1",
+        "/tmp/bc-arc-scratch/common-experiment/lqfx/logs/PqxdhDeploymentLaterServerInitialized-final.log",
         "timeout",
         "180",
         "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
@@ -552,22 +667,31 @@
         "-M8000",
         "--root=/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean",
         "-o",
-        "/tmp/bc-arc-scratch/common-experiment/lqfc/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerInitialized.olean",
+        "/tmp/bc-arc-scratch/common-experiment/lqfx/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerInitialized.olean",
         "/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerInitialized.lean"
-      ]
+      ],
+      "pass": "second fix pass"
     },
     "PqxdhDeploymentLaterServerBridge": {
       "tag": "final",
       "exit": 0,
-      "start": "2026-10-07T18:12:10.319875+00:00",
-      "end": "2026-10-07T18:12:26.166988+00:00",
-      "source_sha256": "de6fa41056fe4c8bf0fa32586309cb52c426f29bf8597311284aa5d45213a822",
+      "start": "2026-10-07T20:26:14.400261+00:00",
+      "end": "2026-10-07T20:26:24.125713+00:00",
+      "source_sha256": "1a016ee8f8a4d2f3abf5e9166034a6ac3f6a27b43d4ac466f67643b95bb0a44a",
       "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "log_bytes": 0,
-      "artifact_sha256": "95b3bc07bd533e1363633d9af1e2ca8fd812daf486876dc55bffdede9f0dfa7e",
+      "artifact_sha256": "026a25716abe51029e05d8c50bdb020d29091d62368a2d79d129cbf58f0143ef",
+      "artifact_identical_to_previous_check": false,
       "command": [
-        "flock",
-        "/tmp/bc-arc-scratch/lean.lock",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "claude",
+        "lqfx-PqxdhDeploymentLaterServerBridge-final",
+        "--",
+        "sh",
+        "-c",
+        "exec \"$@\" > \"$0\" 2>&1",
+        "/tmp/bc-arc-scratch/common-experiment/lqfx/logs/PqxdhDeploymentLaterServerBridge-final.log",
         "timeout",
         "180",
         "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
@@ -575,22 +699,31 @@
         "-M8000",
         "--root=/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean",
         "-o",
-        "/tmp/bc-arc-scratch/common-experiment/lqfc/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerBridge.olean",
+        "/tmp/bc-arc-scratch/common-experiment/lqfx/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerBridge.olean",
         "/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerBridge.lean"
-      ]
+      ],
+      "pass": "second fix pass"
     },
     "PqxdhDeploymentLaterServerOpaque": {
       "tag": "final",
       "exit": 0,
-      "start": "2026-10-07T18:12:26.203519+00:00",
-      "end": "2026-10-07T18:12:30.174029+00:00",
-      "source_sha256": "7de8116095f1b7611c6a6181c24d859ba4437f8273df50295169eb38c3d4eade",
+      "start": "2026-10-07T20:26:24.158999+00:00",
+      "end": "2026-10-07T20:26:32.313967+00:00",
+      "source_sha256": "01fdfd05b4ac38ffe471aa885a612ed0721c825a971189ffd39612fa6d7055c5",
       "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "log_bytes": 0,
-      "artifact_sha256": "3a270af486c00b7bc54ee896d655abd63d976b1d3b2eac2de29f97c29eb87656",
+      "artifact_sha256": "5e5b60b26052a84379e4f928d12bb5826945f54b01e8e8ff9f3f765e3f2f56f1",
+      "artifact_identical_to_previous_check": false,
       "command": [
-        "flock",
-        "/tmp/bc-arc-scratch/lean.lock",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "claude",
+        "lqfx-PqxdhDeploymentLaterServerOpaque-final",
+        "--",
+        "sh",
+        "-c",
+        "exec \"$@\" > \"$0\" 2>&1",
+        "/tmp/bc-arc-scratch/common-experiment/lqfx/logs/PqxdhDeploymentLaterServerOpaque-final.log",
         "timeout",
         "180",
         "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
@@ -598,22 +731,31 @@
         "-M8000",
         "--root=/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean",
         "-o",
-        "/tmp/bc-arc-scratch/common-experiment/lqfc/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerOpaque.olean",
+        "/tmp/bc-arc-scratch/common-experiment/lqfx/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerOpaque.olean",
         "/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerOpaque.lean"
-      ]
+      ],
+      "pass": "second fix pass"
     },
     "PqxdhDeploymentLaterServerBills": {
       "tag": "final",
       "exit": 0,
-      "start": "2026-10-07T18:12:30.206321+00:00",
-      "end": "2026-10-07T18:12:35.416123+00:00",
-      "source_sha256": "2e757a2f002b2a0dfb13ce6f8b8d71be103dd04dacd7a606b586222d1114ce77",
+      "start": "2026-10-07T20:26:32.352895+00:00",
+      "end": "2026-10-07T20:26:38.136126+00:00",
+      "source_sha256": "8d6fa42047f026ce4259bd3b263c47502090f471564d8db406c2cc9852f5cc69",
       "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "log_bytes": 0,
-      "artifact_sha256": "d024d07352943cf83b89b770a123e0b6b08d41e744b840e871c7ff1808b1d7fe",
+      "artifact_sha256": "d6eb5d416ab6169002b54e213990da1e6a9e2a3e069263ed9a0805d9995b60d7",
+      "artifact_identical_to_previous_check": false,
       "command": [
-        "flock",
-        "/tmp/bc-arc-scratch/lean.lock",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "claude",
+        "lqfx-PqxdhDeploymentLaterServerBills-final",
+        "--",
+        "sh",
+        "-c",
+        "exec \"$@\" > \"$0\" 2>&1",
+        "/tmp/bc-arc-scratch/common-experiment/lqfx/logs/PqxdhDeploymentLaterServerBills-final.log",
         "timeout",
         "180",
         "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
@@ -621,15 +763,16 @@
         "-M8000",
         "--root=/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean",
         "-o",
-        "/tmp/bc-arc-scratch/common-experiment/lqfc/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerBills.olean",
+        "/tmp/bc-arc-scratch/common-experiment/lqfx/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerBills.olean",
         "/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerBills.lean"
-      ]
+      ],
+      "pass": "second fix pass"
     }
   },
   "leanpath": {
-    "manifest": "/tmp/bc-arc-scratch/common-experiment/lqfc/leanpath",
-    "sha256": "ef782905b6c9d7cc20e64cb1ac2d4a825339963d3ea229b47d534c672ad366c0",
-    "note": "The CE-9 LEAN_PATH with its first entry replaced by the fresh scratch prefix lqfc/olean, a symlink mirror (1555 links, 0 broken) of the CE-9 prefix (resolved), which holds the c29cea81 artifacts and the three CE-9 modules of e90d54d9 (final check records match those sources). check.py unlinks an artifact before writing it, so no other prefix was written."
+    "manifest": "/tmp/bc-arc-scratch/common-experiment/lqfx/leanpath",
+    "sha256": "0619af6ab988945a1e7bb9573560b73e5006baebedd5af79585675720798e290",
+    "note": "Second fix pass: the published LEAN_PATH of central 4cc974c0 (/tmp/bc-coord/leanpaths/4cc974c049a3d542fdec728982bf80594ce443d2.leanpath) with the fresh scratch prefix lqfx/olean in front, a resolved symlink mirror (5985 links, 0 broken) of its first prefix /tmp/bc-arc-scratch/record-lift/roles/publication-olean, into which the fifteen LQ-F modules were compiled in import order (no LQ-F artifact exists in any central prefix). Central 4cc974c0 differs from the merged e90d54d9 only by three new record-lift modules, so every LQ-F dependency has the same source. Every check ran through coord.sh lean (protocol v2), one check per call. The earlier checks used lqfc/olean (manifest lqfc/leanpath)."
   },
   "root_checks": {
     "root-merge": {
@@ -656,6 +799,12 @@
       "exit": 0,
       "log_bytes": 0,
       "root_source_sha256": "b2d4a3ecf4ee83da78558f00e64bfaefca7a73faebbb0a47cafca388eb2bb9fe"
+    },
+    "root-fix2-lean": {
+      "exit": 0,
+      "log_bytes": 0,
+      "root_source_sha256": "b2d4a3ecf4ee83da78558f00e64bfaefca7a73faebbb0a47cafca388eb2bb9fe",
+      "checked_with": "coord.sh lean, lqfx LEAN_PATH"
     }
   },
   "focused_inventory_per_commit": {
@@ -693,10 +842,82 @@
       "end": "2026-10-07T18:18:44Z",
       "log_sha256": "0322906cc9918cbf91ea96dc75b33e4511fc87d3f26c7363ba1dbd0c7ed0d6a7",
       "last_line": "Formal-verification inventory matches the reviewed boundary."
+    },
+    "inv-fix2-lean": {
+      "exit": 0,
+      "start": "2026-10-07T20:30:44Z",
+      "end": "2026-10-07T20:31:59Z",
+      "log_sha256": "5041d3d3586789e68d1a6b29b1d7887bd0e20e71f7365512e98f10e17c6165fb",
+      "last_line": "Formal-verification inventory matches the reviewed boundary.",
+      "commit": "aff819eb0f271afe1d1215103b3e339714027218",
+      "run_as": "coord.sh lease mem claude @nix -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C <worktree>/beaconcrypt-core check-inventory SHELL=bash"
     }
   },
   "focused_inventory_note": "The merge commit was checked with all files staged. Each later commit was prepared with the other untracked files held aside and restored afterwards (commit.py), so check-inventory ran in the locked minimal proof flake with exactly the files of that commit.",
-  "final_recheck_note": "After the last Lean commit all fifteen LQ-F modules (nine spike modules and the six CE-level modules) were re-checked in import order (tag final) with exit 0 and empty logs; the rows above are those checks.",
-  "forbidden_scan": "zero matches of \\b(sorry|admit|native_decide)\\b and no axiom, implemented_by, extern, unsafe or opaque declaration in the fifteen LQ-F modules; the only set_option lines are autoImplicit false and the per-declaration options of the spike modules; git diff --check 583c33a2..HEAD clean",
-  "not_run": "full lake build, make verify, nix-collect-garbage, mutation testing (no production Rust changed)"
+  "final_recheck_note": "After the second fix pass all fifteen LQ-F modules (nine spike modules and the six CE-level modules) were re-checked in import order through coord.sh lean (tag final) with exit 0 and empty logs; the rows above are those checks. The ten edited modules have new artifacts; the five unedited ones (KemHop, Commands, Cut, Compile, Transfer) are byte-identical to the previous check.",
+  "forbidden_scan": "zero matches of \\b(sorry|admit|native_decide)\\b and no axiom, implemented_by, extern, unsafe or opaque declaration in the fifteen LQ-F modules; the only set_option lines are autoImplicit false and the per-declaration options of the spike modules; every theorem has exactly one exact guard; git diff --check 583c33a2..HEAD clean",
+  "not_run": "full lake build, make verify, nix-collect-garbage, mutation testing (no production Rust changed)",
+  "second_fix_pass": {
+    "lean_commit": "aff819eb0f271afe1d1215103b3e339714027218",
+    "documentation_commit": "the commit that adds this version of the receipt",
+    "reviewed_head": "847dc17b",
+    "findings_addressed": [
+      "Profile stated per plan section 27 (two documented exceptions replacing D6) in the guide, the analysis, both receipts, the LaterServerGame module docstring and the scratch spike report (spike S1; final semantic 2).",
+      "Remaining \"terminal read\" docstrings reworded to \"Server read\" (Bills x3, Reserve x2, Initialized, Bridge, Opaque); Bills binder terminal renamed serverReads; nonexistent name laterServer removed from the Source docstring (final semantic 1, final hygiene nit, spike hygiene nit).",
+      "Bills wording \"for any number of Server reads\" changed to \"for any finite cap on the Server reads\" (spike hygiene nit).",
+      "compile_server_reads documented as \"at most one\" Server read (exactly one by construction; upper bound stated) in its docstring, the CompileBudget module docstring, the guide and the analysis (final semantic nit).",
+      "Positional log claim: step_log strengthened; positional correspondence presented as an informal consequence in the Native docstrings, the guide and the analysis (final semantic nit).",
+      "traced_frame premise weakened to the session counter so its docstring is exact (final semantic nit).",
+      "Fix-pass accounting corrected in the guide (ordered_split and ordered_cut restated, ordered_complete the only weakened conclusion, later_read conjunct) (final semantic and hygiene nits).",
+      "Names-for-consumers note rebuilt from an environment scan (field name_scan of common-deployment-experiment-lqf.json) (final hygiene minor; spike hygiene minor).",
+      "Already closed by the first fix pass and re-checked: T7 justification, actual_embed citation, later_read transcript conjunct, Reserve docstring, merge with central e90d54d9."
+    ],
+    "statement_changes": [
+      {
+        "name": "PqxdhDeploymentLaterServerNative.step_log",
+        "kind": "strengthened conclusion",
+        "before": "result.2.2.length + state.shared.2.sessions = log.length + result.2.1.shared.2.sessions",
+        "after": "result.2.2.length + state.shared.2.sessions = log.length + result.2.1.shared.2.sessions ∧ ((∃ entry, result.2.2 = log ++ [entry] ∧ result.2.1.shared.2.sessions = state.shared.2.sessions + 1) ∨ (result.2.2 = log ∧ result.2.1.shared.2.sessions = state.shared.2.sessions))",
+        "why": "same premises; the new conclusion contains the old one as its first conjunct, so it is at least as strong. It makes the docstring (one entry and one session per raw accept, both kept otherwise) a stated fact."
+      },
+      {
+        "name": "PqxdhDeploymentLaterServerTrace.traced_frame",
+        "kind": "weakened premise",
+        "before": "premise (shared : after.shared = state.shared)",
+        "after": "premise (counter : after.shared.2.sessions = state.shared.2.sessions)",
+        "why": "the other premises and the conclusion are unchanged and the new premise follows from the old one (congruence), so the theorem is at least as strong; its docstring (the invariant depends only on the session counter, the seeds, the KEM pool and the owners) now matches the statement. traced_step passes the counter equation from later_frame."
+      },
+      {
+        "name": "PqxdhDeploymentLaterServerBills.{commands_bills, exposeAt_bills, saved, adversary_post, scan_bills, pre_uniform, pre_decapsulations, pre_base, adversary_bound}",
+        "kind": "binder renamed",
+        "before": "(terminal : work.IsQueryBoundP (fun query => laterKind (KemSK := KemSK) query = none) reads)",
+        "after": "(serverReads : work.IsQueryBoundP (fun query => laterKind (KemSK := KemSK) query = none) reads)",
+        "why": "alpha-renaming of an explicit hypothesis: each statement is the same proposition with the same explicit arguments in the same order (callers pass it positionally)."
+      }
+    ],
+    "statements_added": 0,
+    "statements_removed": 0,
+    "statements_weakened": 0
+  },
+  "name_scan": {
+    "probe": "/tmp/bc-arc-scratch/common-experiment/lqfx/probe/NameScan.lean",
+    "log": "/tmp/bc-arc-scratch/common-experiment/lqfx/probe/NameScan.log",
+    "log_sha256": "56740221fdb30102ea26e5a85aa23fccd316e4a2209a218c7c0183614043d0fb",
+    "environment": "every import of beaconcrypt-core/proofs/lean/BeaconcryptCore.lean at the second fix pass plus PqxdhRecordLiftLazyTable, PqxdhRecordLiftSeed and PqxdhRecordLiftRoles of central 4cc974c0, under the lqfx LEAN_PATH",
+    "lqf_declarations": 296,
+    "lqf_theorems": 212,
+    "lqf_other_declarations": 84,
+    "short_names_also_declared_in_another_Computational_namespace": 161,
+    "clashes_within_lqf": [
+      "commands: LaterServerCommands.commands, LaterServerInitialized.commands",
+      "initialized: LaterServerSource.initialized, LaterServerNative.initialized, LaterServerInitialized.initialized (theorem)",
+      "query_projection, program_projection: LaterServerSource, LaterServerNative",
+      "Reveal: LaterServerSource.Reveal, LaterServerGame.Reveal"
+    ],
+    "not_clashing_previously_listed": [
+      "scanned",
+      "transfer",
+      "exec"
+    ]
+  }
 }
