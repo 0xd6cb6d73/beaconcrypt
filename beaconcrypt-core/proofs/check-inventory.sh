@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1580
+	[handwritten-lean]=1581
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -32224,6 +32224,34 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecord
 require_line_count 1 '^theorem receive_open_present([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftNativeAdapters theorem receive_open_present"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftNativeAdapters\.send_seal_reply$' "$selected_source_module" "PqxdhRecordLiftNativeAdapters dependency BeaconcryptCore.Computational.PqxdhRecordLiftNativeAdapters.send_seal_reply"
 require_line_count 1 '^theorem send_seal_reply([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftNativeAdapters theorem send_seal_reply"
+
+# Mixed hidden-coordinate callbacks: exact source/lazy endpoints and complete primitive costs.
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChainOracle.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRecordLiftChainOracle$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftChainOracle root import"
+require_line_count 11 '^theorem ' "$selected_source_module" "PqxdhRecordLiftChainOracle theorem inventory"
+require_line_count 11 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftChainOracle guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainOracle\.sample_exact$' "$selected_source_module" "PqxdhRecordLiftChainOracle dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainOracle.sample_exact"
+require_line_count 1 '^theorem sample_exact([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainOracle theorem sample_exact"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainOracle\.stored_valid$' "$selected_source_module" "PqxdhRecordLiftChainOracle dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainOracle.stored_valid"
+require_line_count 1 '^theorem stored_valid([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainOracle theorem stored_valid"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainOracle\.valid_empty$' "$selected_source_module" "PqxdhRecordLiftChainOracle dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainOracle.valid_empty"
+require_line_count 1 '^theorem valid_empty([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainOracle theorem valid_empty"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainOracle\.lookup_preserves$' "$selected_source_module" "PqxdhRecordLiftChainOracle dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainOracle.lookup_preserves"
+require_line_count 1 '^theorem lookup_preserves([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainOracle theorem lookup_preserves"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainOracle\.lookup_real$' "$selected_source_module" "PqxdhRecordLiftChainOracle dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainOracle.lookup_real"
+require_line_count 1 '^theorem lookup_real([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainOracle theorem lookup_real"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainOracle\.lookup_hit$' "$selected_source_module" "PqxdhRecordLiftChainOracle dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainOracle.lookup_hit"
+require_line_count 1 '^theorem lookup_hit([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainOracle theorem lookup_hit"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainOracle\.lookup_miss$' "$selected_source_module" "PqxdhRecordLiftChainOracle dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainOracle.lookup_miss"
+require_line_count 1 '^theorem lookup_miss([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainOracle theorem lookup_miss"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainOracle\.lookup_source$' "$selected_source_module" "PqxdhRecordLiftChainOracle dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainOracle.lookup_source"
+require_line_count 1 '^theorem lookup_source([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainOracle theorem lookup_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainOracle\.lookup_primitive$' "$selected_source_module" "PqxdhRecordLiftChainOracle dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainOracle.lookup_primitive"
+require_line_count 1 '^theorem lookup_primitive([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainOracle theorem lookup_primitive"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainOracle\.lookup_uniform_bound$' "$selected_source_module" "PqxdhRecordLiftChainOracle dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainOracle.lookup_uniform_bound"
+require_line_count 1 '^theorem lookup_uniform_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainOracle theorem lookup_uniform_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainOracle\.lookup_lazy$' "$selected_source_module" "PqxdhRecordLiftChainOracle dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainOracle.lookup_lazy"
+require_line_count 1 '^theorem lookup_lazy([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainOracle theorem lookup_lazy"
 
 # Reviewed actual getter availability, distinct from network compromise powers.
 python3 proofs/source/test-getter-profile.py
