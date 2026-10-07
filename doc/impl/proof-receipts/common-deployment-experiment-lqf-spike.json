@@ -1,0 +1,594 @@
+{
+  "date": "2026-10-07T14:12:38.844028+00:00",
+  "scope": "LQ-F spike (3-5 agent-day time box) for the exact later-quantum profile (Server identity seed and Server ephemeral scalars revealed post-run, beyond LQ): a logged source (source14 with a logged accept and a terminal laterServer read) with its projection back to source14, and over SourceSpec + LaterRead the selected-first reservation, the monitor, the KEM cut carrying the selected accept ephemeral as an explicit value, T4, the KEM hop (generalized over the scanned program), T6, the composed KEM transfer and the bills of the KEM adversary. Not reviewed, not merged.",
+  "basis": "c29cea816d81bff913c28bcb3edd6df97c76cd8a",
+  "topic": {
+    "branch": "codex/deployment-lqf-spike",
+    "worktree": "/tmp/beaconcrypt-deployment-lqf"
+  },
+  "plan": {
+    "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
+    "sha256": "47d16acd1b9b4b49d35a49b3e8f0745068db6e07a836553174e5f9f7198e3663",
+    "sections": "9, 14, 19-22"
+  },
+  "design": {
+    "path": "/tmp/bc-arc-scratch/common-experiment/reveal-mode-design.md",
+    "sha256": "254d20079c4ebd6f0b263dae76e2439bde62034bc5ad0595d996cabe13f2b895",
+    "sections": "1, 4 (LQ-F), 5"
+  },
+  "commits": [
+    {
+      "commit": "ae3c7412835265777f35b995b84e607e60774e2c",
+      "subject": "Generalize the raw-ordinal KEM hop over the scanned program"
+    },
+    {
+      "commit": "31baaf979225bb45b4e5ab50809cbfac433e04ea",
+      "subject": "Add a logged later-quantum source with a terminal Server read"
+    },
+    {
+      "commit": "46e9d08bc080ad7335e7d1419212155d8a77d07d",
+      "subject": "Compile the logged source with the Server encapsulation exposed"
+    },
+    {
+      "commit": "5fc4f937ecde07bb1e565a842875a8b4b24f10b9",
+      "subject": "Cut the logged source at the selected encapsulation"
+    },
+    {
+      "commit": "b4c377777f86f9e3397fa938b09c8691104a32bf",
+      "subject": "Relate the logged source to its compiled form under the selected-first reservation"
+    },
+    {
+      "commit": "4f4fcf3d9f8773a4fd58e847ab26437c4b24a6f2",
+      "subject": "Prove T4, T6 and the KEM transfer for the logged later-quantum source"
+    },
+    {
+      "commit": "c02bdf14ec7e3db16199a7dc295a4e3e5f2c5556",
+      "subject": "Bill the KEM adversary at the logged later-quantum exposure"
+    }
+  ],
+  "commits_note": "The documentation commit that adds this receipt follows these commits and is checked the same way (root import and focused inventory).",
+  "files_sha256": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerKemHop.lean": "ff24193321504d9d1c0f99190d2980b75a6c2fa39f4f3267304f4e15f2a928cb",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerSource.lean": "cb56005601d778f7178385e7617dadfb10c24ae42e2a89bb023c9fbc8101b203",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerCommands.lean": "bf4e6be3a5f566d10f699c1262379a60ef1d29d613cfe6e75dffba88e9908373",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerCut.lean": "2c9483788a71f3cebe05f23797e1a2067f13b1b8568ae8a8fbbd5f2d7c2670cd",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerReserve.lean": "8190c1318db35f677f2bcc09ad55446e3ad4f5e875851e5a4c103c3223057525",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerInitialized.lean": "0ed57f757b463ea08578fbb6c030245e2ffcc1da671c3cf8fdb9f614a82263e3",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerBridge.lean": "1cf9b84cf4db44dbcb8da29554c4db25c2a13ca766c4672bb9d08e3729ff9033",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerOpaque.lean": "d1d5effbf7552a550dcd6f067d3edda54cc0976288b47c1524881a8831ba9cd6",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerBills.lean": "dd1b70932f39527e9b54be8901f55c6d9e822b4a340410eb9c05f29244dbc379",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "decc93875b163d640db90d08506f8c4f71073b4cdd6d3ba81e45cc0a53c066e0",
+    "beaconcrypt-core/proofs/check-inventory.sh": "b822ee64ba79872c2b8da68e5895f69512446891feaeaafd9969972334bc39d3",
+    "beaconcrypt-core/proofs/reviewed-inventory.txt": "c9463a262dcc93e49e02aa5084614605c4d33006f1b999cd24598b503153427f",
+    "doc/impl/later-quantum-lqf-spike.md": "132ac2c1ba86b6b2d8012522806c12c4233abb9ed698999db1f09556a60fcb1e",
+    "doc/impl/common-deployment-experiment.md": "183d2065a1ceba992dad8a070743629914bcd039eabcf2e1a249e97334ef8690",
+    "doc/formal-verification-analysis.md": "e0dfb21feb998af76818700b03a6a956f446f7030dd7462a434c9a4c23a49232"
+  },
+  "modules": [
+    {
+      "name": "PqxdhDeploymentLaterServerKemHop",
+      "statements": [
+        "pre_source",
+        "branch_source",
+        "real_error",
+        "advantage_error",
+        "prefix_erase",
+        "branch_erase",
+        "certified_advantage",
+        "real_le_ideal",
+        "preRaw_eq",
+        "sourcePreRaw_eq",
+        "sourceReal_eq",
+        "branch_eq",
+        "adversary_eq"
+      ],
+      "statement_count": 13,
+      "axiom_profile": {
+        "Classical.choice, Quot.sound, propext": 13
+      },
+      "direct_check_final": {
+        "exit": 0,
+        "start": "2026-10-07T14:08:14.684896+00:00",
+        "end": "2026-10-07T14:08:18.663342+00:00",
+        "source_sha256": "ff24193321504d9d1c0f99190d2980b75a6c2fa39f4f3267304f4e15f2a928cb",
+        "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "log_bytes": 0,
+        "artifact_sha256": "75999215056a839af5e08ed43f87a8ac620550df177717877f5ed232862a5722",
+        "command": [
+          "flock",
+          "/tmp/bc-arc-scratch/lean.lock",
+          "timeout",
+          "180",
+          "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+          "-j1",
+          "-M8000",
+          "--root=/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean",
+          "-o",
+          "/tmp/bc-arc-scratch/common-experiment/lqf/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerKemHop.olean",
+          "/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerKemHop.lean"
+        ]
+      }
+    },
+    {
+      "name": "PqxdhDeploymentLaterServerSource",
+      "statements": [
+        "collectLogged_fst",
+        "collectLogged_some",
+        "sourcePrepare_fst",
+        "acceptSource_fst",
+        "query_projection",
+        "program_projection",
+        "initialized_projection",
+        "later_read",
+        "query_owned",
+        "program_owned"
+      ],
+      "statement_count": 10,
+      "axiom_profile": {
+        "Classical.choice, Quot.sound, propext": 10
+      },
+      "direct_check_final": {
+        "exit": 0,
+        "start": "2026-10-07T14:08:18.698075+00:00",
+        "end": "2026-10-07T14:08:22.962992+00:00",
+        "source_sha256": "cb56005601d778f7178385e7617dadfb10c24ae42e2a89bb023c9fbc8101b203",
+        "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "log_bytes": 0,
+        "artifact_sha256": "a5da60fd1f639bc4f1665cd4627f59238bd3c90495013bd495cf93b4b39dcf7e",
+        "command": [
+          "flock",
+          "/tmp/bc-arc-scratch/lean.lock",
+          "timeout",
+          "180",
+          "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+          "-j1",
+          "-M8000",
+          "--root=/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean",
+          "-o",
+          "/tmp/bc-arc-scratch/common-experiment/lqf/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerSource.olean",
+          "/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerSource.lean"
+        ]
+      }
+    },
+    {
+      "name": "PqxdhDeploymentLaterServerCommands",
+      "statements": [
+        "scan_finish",
+        "tag_erase",
+        "ordered_fst",
+        "ordered_split",
+        "prepare_fst",
+        "accept_fst",
+        "accept_ordered",
+        "run_bind",
+        "map_held",
+        "query_embed",
+        "commands_embed"
+      ],
+      "statement_count": 11,
+      "axiom_profile": {
+        "Classical.choice, Quot.sound, propext": 11
+      },
+      "direct_check_final": {
+        "exit": 0,
+        "start": "2026-10-07T14:08:22.995819+00:00",
+        "end": "2026-10-07T14:08:27.319509+00:00",
+        "source_sha256": "bf4e6be3a5f566d10f699c1262379a60ef1d29d613cfe6e75dffba88e9908373",
+        "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "log_bytes": 0,
+        "artifact_sha256": "02c1c10f1c09f1c51be306973f9ff96efbd9124f062e45f86b10e527159da5e0",
+        "command": [
+          "flock",
+          "/tmp/bc-arc-scratch/lean.lock",
+          "timeout",
+          "180",
+          "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+          "-j1",
+          "-M8000",
+          "--root=/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean",
+          "-o",
+          "/tmp/bc-arc-scratch/common-experiment/lqf/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerCommands.olean",
+          "/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerCommands.lean"
+        ]
+      }
+    },
+    {
+      "name": "PqxdhDeploymentLaterServerCut",
+      "statements": [
+        "support_nested",
+        "run_support",
+        "commands_support",
+        "ordered_cut",
+        "ordered_complete",
+        "accept_scan",
+        "exposeAt_scan",
+        "rawCut_shape",
+        "accepted_reached",
+        "impl_accept",
+        "pending_commands",
+        "exposeAt_actual",
+        "rawResume_opaque",
+        "kem_hop",
+        "selected_first",
+        "monitor"
+      ],
+      "statement_count": 16,
+      "axiom_profile": {
+        "Classical.choice, Quot.sound, propext": 16
+      },
+      "direct_check_final": {
+        "exit": 0,
+        "start": "2026-10-07T14:08:27.356309+00:00",
+        "end": "2026-10-07T14:08:32.479565+00:00",
+        "source_sha256": "2c9483788a71f3cebe05f23797e1a2067f13b1b8568ae8a8fbbd5f2d7c2670cd",
+        "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "log_bytes": 0,
+        "artifact_sha256": "1e2af7a85b1e83fd4161bc15d772237a670599c7dfb70007ffd2d3092da7eef0",
+        "command": [
+          "flock",
+          "/tmp/bc-arc-scratch/lean.lock",
+          "timeout",
+          "180",
+          "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+          "-j1",
+          "-M8000",
+          "--root=/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean",
+          "-o",
+          "/tmp/bc-arc-scratch/common-experiment/lqf/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerCut.olean",
+          "/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerCut.lean"
+        ]
+      }
+    },
+    {
+      "name": "PqxdhDeploymentLaterServerReserve",
+      "statements": [
+        "flat_run",
+        "run_flat",
+        "step_source",
+        "step_later",
+        "creations",
+        "selected_source"
+      ],
+      "statement_count": 6,
+      "axiom_profile": {
+        "Classical.choice, Quot.sound, propext": 6
+      },
+      "direct_check_final": {
+        "exit": 0,
+        "start": "2026-10-07T14:08:32.513990+00:00",
+        "end": "2026-10-07T14:08:36.461230+00:00",
+        "source_sha256": "8190c1318db35f677f2bcc09ad55446e3ad4f5e875851e5a4c103c3223057525",
+        "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "log_bytes": 0,
+        "artifact_sha256": "50002d24b289f6a6cbbe714037ba782187ca16a10c234c62731c355ab838e477",
+        "command": [
+          "flock",
+          "/tmp/bc-arc-scratch/lean.lock",
+          "timeout",
+          "180",
+          "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+          "-j1",
+          "-M8000",
+          "--root=/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean",
+          "-o",
+          "/tmp/bc-arc-scratch/common-experiment/lqf/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerReserve.olean",
+          "/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerReserve.lean"
+        ]
+      }
+    },
+    {
+      "name": "PqxdhDeploymentLaterServerInitialized",
+      "statements": [
+        "prepare_actual",
+        "accept_actual",
+        "prepare_pool",
+        "accept_pool",
+        "execute_bind",
+        "generic_core",
+        "generic_step",
+        "accept_step",
+        "later_step",
+        "query_source",
+        "program_source",
+        "encode_factor",
+        "execute_commands",
+        "initialized",
+        "constructor_order",
+        "actual_source_first"
+      ],
+      "statement_count": 16,
+      "axiom_profile": {
+        "Classical.choice, Quot.sound, propext": 16
+      },
+      "direct_check_final": {
+        "exit": 0,
+        "start": "2026-10-07T14:08:36.492390+00:00",
+        "end": "2026-10-07T14:08:40.829432+00:00",
+        "source_sha256": "0ed57f757b463ea08578fbb6c030245e2ffcc1da671c3cf8fdb9f614a82263e3",
+        "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "log_bytes": 0,
+        "artifact_sha256": "04d87b84a4b1984bca34f0386cd2346141e0edf0d94281204146caed257cbebd",
+        "command": [
+          "flock",
+          "/tmp/bc-arc-scratch/lean.lock",
+          "timeout",
+          "180",
+          "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+          "-j1",
+          "-M8000",
+          "--root=/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean",
+          "-o",
+          "/tmp/bc-arc-scratch/common-experiment/lqf/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerInitialized.olean",
+          "/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerInitialized.lean"
+        ]
+      }
+    },
+    {
+      "name": "PqxdhDeploymentLaterServerBridge",
+      "statements": [
+        "commands_map",
+        "exposeAt_map",
+        "exposeAt_tag",
+        "scanned_map",
+        "rawResume_tag",
+        "active_raw",
+        "run_le_real",
+        "commands_le_real",
+        "tag_bound",
+        "actual_le_real"
+      ],
+      "statement_count": 10,
+      "axiom_profile": {
+        "Classical.choice, Quot.sound, propext": 10
+      },
+      "direct_check_final": {
+        "exit": 0,
+        "start": "2026-10-07T14:08:40.864552+00:00",
+        "end": "2026-10-07T14:08:45.096384+00:00",
+        "source_sha256": "1cf9b84cf4db44dbcb8da29554c4db25c2a13ca766c4672bb9d08e3729ff9033",
+        "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "log_bytes": 0,
+        "artifact_sha256": "a63620c398ca596758da19df2d435a0103fe2e5ddab42ef129f16f8627909e76",
+        "command": [
+          "flock",
+          "/tmp/bc-arc-scratch/lean.lock",
+          "timeout",
+          "180",
+          "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+          "-j1",
+          "-M8000",
+          "--root=/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean",
+          "-o",
+          "/tmp/bc-arc-scratch/common-experiment/lqf/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerBridge.olean",
+          "/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerBridge.lean"
+        ]
+      }
+    },
+    {
+      "name": "PqxdhDeploymentLaterServerOpaque",
+      "statements": [
+        "scan_opaque",
+        "pre_opaque",
+        "post_opaque",
+        "branch_opaque",
+        "transfer"
+      ],
+      "statement_count": 5,
+      "axiom_profile": {
+        "Classical.choice, Quot.sound, propext": 5
+      },
+      "direct_check_final": {
+        "exit": 0,
+        "start": "2026-10-07T14:08:45.135031+00:00",
+        "end": "2026-10-07T14:08:49.058379+00:00",
+        "source_sha256": "d1d5effbf7552a550dcd6f067d3edda54cc0976288b47c1524881a8831ba9cd6",
+        "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "log_bytes": 0,
+        "artifact_sha256": "03f4795e35f8758f02f3a1e45e0f639a7c5bbad5ff15ae38aeb8f4915ae2abb3",
+        "command": [
+          "flock",
+          "/tmp/bc-arc-scratch/lean.lock",
+          "timeout",
+          "180",
+          "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+          "-j1",
+          "-M8000",
+          "--root=/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean",
+          "-o",
+          "/tmp/bc-arc-scratch/common-experiment/lqf/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerOpaque.olean",
+          "/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerOpaque.lean"
+        ]
+      }
+    },
+    {
+      "name": "PqxdhDeploymentLaterServerBills",
+      "statements": [
+        "flat_run",
+        "run_flat",
+        "step_source",
+        "step_later",
+        "weighted",
+        "single_sum",
+        "total_single",
+        "commands_bills",
+        "exposeAt_hides",
+        "accept_bound",
+        "exposeAt_bound",
+        "exposeAt_bills",
+        "pre_bound",
+        "saved",
+        "adversary_post",
+        "scan_bills",
+        "pre_uniform",
+        "pre_excluded",
+        "pre_decapsulations",
+        "pre_base",
+        "annotated_bound",
+        "adversary_bound"
+      ],
+      "statement_count": 22,
+      "axiom_profile": {
+        "Classical.choice, Quot.sound, propext": 22
+      },
+      "direct_check_final": {
+        "exit": 0,
+        "start": "2026-10-07T14:08:49.095478+00:00",
+        "end": "2026-10-07T14:08:54.083783+00:00",
+        "source_sha256": "dd1b70932f39527e9b54be8901f55c6d9e822b4a340410eb9c05f29244dbc379",
+        "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "log_bytes": 0,
+        "artifact_sha256": "a9fca220d675209d48e43bad0bd033c5a219e02289b225a35f38e908e952ba16",
+        "command": [
+          "flock",
+          "/tmp/bc-arc-scratch/lean.lock",
+          "timeout",
+          "180",
+          "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+          "-j1",
+          "-M8000",
+          "--root=/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean",
+          "-o",
+          "/tmp/bc-arc-scratch/common-experiment/lqf/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerBills.olean",
+          "/tmp/beaconcrypt-deployment-lqf/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerBills.lean"
+        ]
+      }
+    }
+  ],
+  "statements": 109,
+  "allowed_axioms": [
+    "propext",
+    "Classical.choice",
+    "Quot.sound"
+  ],
+  "axiom_profile_from_guards": {
+    "Classical.choice, Quot.sound, propext": 109
+  },
+  "exact_statements": {
+    "PqxdhDeploymentLaterServerKemHop.certified_advantage": "theorem certified_advantage (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)\n    (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes) (scanned : Scanned KemSK)\n    (runtime : A) (count : Nat) (selected : Fin (count + 1)) :\n    (sourceReal setup ensureInit supplied scanned runtime count selected).boolDistAdvantage\n      (branch setup ensureInit supplied scanned runtime count selected false) ≤\n      setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))\n        (certified setup ensureInit supplied scanned runtime count selected).toINDCCA +\n        PqxdhRegistrationJointKemRawGame.correctnessError setup",
+    "PqxdhDeploymentLaterServerKemHop.real_le_ideal": "theorem real_le_ideal (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)\n    (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes) (scanned : Scanned KemSK)\n    (runtime : A) (count : Nat) (selected : Fin (count + 1)) :\n    𝒟[sourceReal setup ensureInit supplied scanned runtime count selected] {true} ≤\n      𝒟[branch setup ensureInit supplied scanned runtime count selected false] {true} +\n        ENNReal.ofReal (setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))\n          (certified setup ensureInit supplied scanned runtime count selected).toINDCCA +\n          PqxdhRegistrationJointKemRawGame.correctnessError setup)",
+    "PqxdhDeploymentLaterServerKemHop.adversary_eq": "theorem adversary_eq (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)\n    (codec : PqxdhServerAuthExperiment.Codec Reader Response) (checks : PqxdhServerAuthExperiment.Checks)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes)\n    (decision : X → Bool) (work : OracleComp (SourceSpec KemSK) X) (runtime : A)\n    (count : Nat) (selected : Fin (count + 1)) (index : Nat) :\n    PqxdhRegistrationJointKemRawCertified.adversary setup codec checks ensureInit supplied decision work runtime count\n      selected index =\n      certified setup ensureInit supplied (PqxdhRegistrationJointKemRawChallenge.rawScan setup codec checks decision work\n        index) runtime count selected",
+    "PqxdhDeploymentLaterServerSource.collectLogged_fst": "theorem collectLogged_fst {E Shared : Type} (raw : Pqxdh.Bytes) :\n    Prod.fst <$> collectLogged (Reader := Reader) (E := E) (Shared := Shared) raw = collect raw",
+    "PqxdhDeploymentLaterServerSource.collectLogged_some": "theorem collectLogged_some {E Shared State : Type} {κ : Type} {target : OracleSpec κ}\n    (impl : QueryImpl (PqxdhServerRootPreparation.Spec Reader E Shared) (StateT State (OracleComp target)))\n    (raw : Pqxdh.Bytes) (before after : State) (input : Inputs Reader E Shared) (logged : Option E)\n    (reached : ((some input, logged), after) ∈ support ((simulateQ impl (collectLogged raw)).run before)) :\n    logged = some input.ephemeral.secret",
+    "PqxdhDeploymentLaterServerSource.program_projection": "theorem program_projection (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (seed : IdentitySeed) (identityIndex : Nat) (program : OracleComp (PqxdhRegistrationJointRevealSchedule.Spec KemSK) Result)\n    (state : PqxdhRegistrationJointSchedule.State KemSK) (log : Log) :\n    (fun result => (result.1, result.2.1)) <$>\n      (simulateQ (source setup codec checks seed identityIndex) (simulateQ embed program)).run (state, log) =\n      (simulateQ (PqxdhRegistrationJointServerSchedule.source setup codec checks seed identityIndex) program).run state",
+    "PqxdhDeploymentLaterServerSource.initialized_projection": "theorem initialized_projection (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes)\n    (program : OracleComp (PqxdhRegistrationJointRevealSchedule.Spec KemSK) Result)\n    (state : PqxdhRegistrationJointServerPrefix.State KemSK A) :\n    (fun result => (result.1.map Prod.fst, result.2)) <$>\n      (initialized setup codec checks ensureInit supplied (simulateQ embed program)).run state =\n      (PqxdhRegistrationJointInitializedSchedule.source setup codec checks ensureInit supplied program).run state",
+    "PqxdhDeploymentLaterServerSource.later_read": "theorem later_read (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (seed : IdentitySeed) (identityIndex : Nat) (state : PqxdhRegistrationJointSchedule.State KemSK) (log : Log)\n    (slot : state.pool.1.seeds[identityIndex]? = some seed)\n    (result : Reveal × (PqxdhRegistrationJointSchedule.State KemSK × Log))\n    (reached : result ∈ support ((source setup codec checks seed identityIndex (.inr ())).run (state, log))) :\n    result.1 = (some seed, log) ∧ result.2.2 = log ∧ result.2.1.pool.1.seeds = state.pool.1.seeds ∧\n      result.2.1.pool.2 = state.pool.2 ∧ result.2.1.owners = state.owners ∧ result.2.1.shared = state.shared",
+    "PqxdhDeploymentLaterServerSource.program_owned": "theorem program_owned (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (seed : IdentitySeed) (identityIndex : Nat) (program : OracleComp (Spec KemSK) Result)\n    (state : PqxdhRegistrationJointSchedule.State KemSK) (log : Log)\n    (result : Result × (PqxdhRegistrationJointSchedule.State KemSK × Log))\n    (owned : Owned seed identityIndex state)\n    (reached : result ∈ support ((simulateQ (source setup codec checks seed identityIndex) program).run (state, log))) :\n    Owned seed identityIndex result.2.1",
+    "PqxdhDeploymentLaterServerCommands.commands_embed": "theorem commands_embed (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (identityIndex : Nat) (publicIdentity : PublicIdentity)\n    (work : OracleComp (PqxdhRegistrationJointRevealSchedule.Spec KemSK) Result)\n    (owners : List EncodedEntry) (log : Log) (state : NativeState KemSK) :\n    commands setup codec checks identityIndex publicIdentity (simulateQ embed work) owners log state =\n      PqxdhRegistrationJointKemEncapsulation.commands setup codec checks identityIndex publicIdentity work owners\n        state",
+    "PqxdhDeploymentLaterServerCut.ordered_cut": "theorem ordered_cut (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (identityIndex : Nat) (raw : Pqxdh.Bytes) (consumed : List Pqxdh.Bytes) :\n    PqxdhRegistrationJointKemCut.scan setup ((ordered setup codec checks identityIndex raw).run consumed) 0 =\n      match PqxdhRegistrationJointRawSignatures.verified setup codec checks raw with\n      | none => pure (.complete ((none, none), consumed))\n      | some value => simulateQ (actual setup)\n          ((simulateQ (PqxdhRegistrationJointKemSourceSuffix.handler setup codec checks identityIndex raw)\n            (PqxdhRegistrationJointKemCollected.beforeEncapsulation value)).run consumed) >>= fun prepared =>\n          match prepared.1 with\n          | none => pure (.complete ((none, none), prepared.2))\n          | some ephemeral => pure (.pending (raw, value.keys.pqKey) fun reply =>\n              (fun input => ((input.1, some ephemeral.secret), input.2)) <$>\n                (PqxdhRegistrationJointKemSourceSuffix.suffix setup codec checks identityIndex raw value\n                  ephemeral reply).run prepared.2)",
+    "PqxdhDeploymentLaterServerCut.rawCut_shape": "theorem rawCut_shape (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R)\n    (work : OracleComp (Spec KemSK) X) (index : Nat) (owners : List EncodedEntry) (log : Log)\n    (state : NativeState KemSK) (request : PqxdhRegistrationJointKemCut.Request)\n    (resume : PqxdhRegistrationJointKemCut.Reply →\n      OracleComp (PqxdhRegistrationJointKemEncapsulation.Spec KemSK) (Outcome KemSK R))\n    (reached : .pending request resume ∈ support (PqxdhRegistrationJointKemCut.scan setup\n      (exposeAt setup codec checks identityIndex publicIdentity observe work index owners log state) 0)) :\n    ∃ raw next value ephemeral consumed native after logAt,\n      Cut.pending raw next ∈ support (scan work index) ∧\n      PqxdhRegistrationJointRawSignatures.verified setup codec checks raw = some value ∧\n      request = (raw, value.keys.pqKey) ∧\n      resume = rawResume setup codec checks identityIndex publicIdentity observe raw value ephemeral consumed native\n        after logAt next",
+    "PqxdhDeploymentLaterServerCut.exposeAt_actual": "theorem exposeAt_actual (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R)\n    (work : OracleComp (Spec KemSK) X) (index : Nat) (owners : List EncodedEntry) (log : Log)\n    (state : NativeState KemSK) :\n    simulateQ (actual setup) (exposeAt setup codec checks identityIndex publicIdentity observe work index owners log state) =\n      simulateQ (actual setup) (commands setup codec checks identityIndex publicIdentity\n        (observe <$> tag work index) owners log state)",
+    "PqxdhDeploymentLaterServerCut.rawResume_opaque": "theorem rawResume_opaque (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R) (raw : Pqxdh.Bytes)\n    (value : Verified Reader) (ephemeral : Ephemeral ScalarBytes) (consumed : List Pqxdh.Bytes)\n    (native : NativeState KemSK) (owners : List EncodedEntry) (log : Log)\n    (next : Option Nat → OracleComp (Spec KemSK) X) (ciphertext : MlKem768Ciphertext) (candidate : MlKemSharedSecret) :\n    rawResume setup codec checks identityIndex publicIdentity observe raw value ephemeral consumed native owners log next\n      (PqxdhRegistrationJointKemResume.reply ciphertext candidate) =\n      opaqueResume setup codec checks identityIndex publicIdentity observe raw value ephemeral consumed native owners log\n        next ciphertext candidate",
+    "PqxdhDeploymentLaterServerReserve.creations": "theorem creations (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (identityIndex : Nat) (publicIdentity : PublicIdentity) (work : OracleComp (Spec KemSK) Result) (cap : Nat)\n    (bounded : work.IsQueryBoundP (fun query => laterKind (KemSK := KemSK) query = some (.inl 1)) cap)\n    (owners : List EncodedEntry) (log : Log) (state : NativeState KemSK) :\n    (simulateQ (actual setup) (commands setup codec checks identityIndex publicIdentity work owners log\n      state)).IsQueryBoundP (PqxdhLiveKemReservation.IsCreate (KemSK := KemSK)) cap",
+    "PqxdhDeploymentLaterServerReserve.selected_source": "theorem selected_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (identityIndex : Nat) (publicIdentity : PublicIdentity) (work : OracleComp (Spec KemSK) Result) (count : Nat)\n    (bounded : work.IsQueryBoundP (fun query => laterKind (KemSK := KemSK) query = some (.inl 1)) (count + 1))\n    (owners : List EncodedEntry) (log : Log) (state : NativeState KemSK)\n    (joint : PqxdhDynamicIdentityPool.SourceState) (selected : Fin (count + 1)) :\n    𝒮[(fun result => (some result.1, result.2)) <$>\n      (simulateQ (PqxdhLiveKemBirth.impl setup.baseImpl setup.joint setup.kem)\n        (simulateQ (actual setup) (commands setup codec checks identityIndex publicIdentity work owners log state))).run\n          (joint, PqxdhLiveKemBirth.empty)] =\n      𝒮[do\n        let chosen ← simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl) setup.kem.keygen\n        let others ← PqxdhLiveKemSelection.sampleFamily\n          (simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl) setup.kem.keygen) count\n        let pairs := List.ofFn (selected.insertNth chosen others)\n        Prod.map id (PqxdhDynamicKemJointSource.project pairs) <$>\n          (((simulateQ (PqxdhDynamicKemJointSource.normal setup.baseImpl setup.joint setup.kem selected.val pairs)\n            (simulateQ (actual setup) (commands setup codec checks identityIndex publicIdentity work owners log\n              state))).run).run (joint, PqxdhDynamicKemRouter.empty))]",
+    "PqxdhDeploymentLaterServerInitialized.program_source": "theorem program_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (seed : IdentitySeed) (identityIndex : Nat) (work : OracleComp (Spec KemSK) Result)\n    (state : PqxdhRegistrationJointSchedule.State KemSK) (log : Log)\n    (owned : PqxdhRegistrationJointServerSchedule.Owned seed identityIndex state) :\n    execute setup codec checks identityIndex (setup.joint.publicKeys seed) work (encodeState setup state) log =\n      (fun result => (result.1, (encodeState setup result.2.1, result.2.2))) <$>\n        (simulateQ (PqxdhDeploymentLaterServerSource.source setup codec checks seed identityIndex) work).run\n          (state, log)",
+    "PqxdhDeploymentLaterServerInitialized.actual_source_first": "theorem actual_source_first (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes) (client : OracleComp (Spec KemSK) Result)\n    (state : PqxdhRegistrationJointServerPrefix.State KemSK A) (empty : state.1.2 = PqxdhLiveKemBirth.empty)\n    (count : Nat) (selected : Fin (count + 1))\n    (bounded : client.IsQueryBoundP\n      (fun query => PqxdhDeploymentLaterServerReserve.laterKind (KemSK := KemSK) query = some (.inl 1)) (count + 1)) :\n    𝒮[(fun result => (result.1.map fun outcome => PqxdhRegistrationJointInitializedSchedule.encodeOutcome setup outcome.1,\n        result.2)) <$>\n      (PqxdhDeploymentLaterServerSource.initialized setup codec checks ensureInit supplied client).run state] =\n      𝒮[selectedFirst setup codec checks ensureInit supplied client state count selected]",
+    "PqxdhDeploymentLaterServerBridge.actual_le_real": "theorem actual_le_real (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes) (decision : X → Bool)\n    (work : OracleComp (Spec KemSK) X) (runtime : A) (count : Nat) (selected : Fin (count + 1)) (index : Nat)\n    (bounded : work.IsQueryBoundP\n      (fun query => PqxdhDeploymentLaterServerReserve.laterKind (KemSK := KemSK) query = some (.inl 1)) (count + 1)) :\n    letI := Classical.propDecidable\n    𝒟[(fun final => decide (Decided decision final ∧ GoodKem selected final ∧\n        KeyMatchFinal setup codec checks selected final)) <$>\n      ((fun result => (result.1.map fun outcome =>\n          PqxdhRegistrationJointInitializedSchedule.encodeOutcome setup outcome.1, result.2)) <$>\n        (PqxdhDeploymentLaterServerSource.initialized setup codec checks ensureInit supplied (tag work index)).run\n          ((PqxdhDynamicIdentityPool.initialState, PqxdhLiveKemBirth.empty), runtime))] {true} ≤\n    𝒟[PqxdhDeploymentLaterServerKemHop.sourceReal setup ensureInit supplied\n      (PqxdhDeploymentLaterServerCut.scanned setup codec checks decision work index) runtime count selected] {true}",
+    "PqxdhDeploymentLaterServerOpaque.branch_opaque": "theorem branch_opaque (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes)\n    (decision : X → Bool) (work : OracleComp (Spec KemSK) X) (runtime : A)\n    (count : Nat) (selected : Fin (count + 1)) (index : Nat) (real : Bool) :\n    PqxdhDeploymentLaterServerKemHop.branch setup ensureInit supplied\n      (PqxdhDeploymentLaterServerCut.scanned setup codec checks decision work index) runtime count selected real =\n      opaqueBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index\n        real",
+    "PqxdhDeploymentLaterServerOpaque.transfer": "theorem transfer (setup : Setup baseSpec KemSK)\n    (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)\n    (codec : Codec Reader Response) (checks : Checks) (ensureInit : StateT A ProbComp Bool)\n    (supplied : Option Pqxdh.Bytes) (decision : X → Bool) (work : OracleComp (Spec KemSK) X) (runtime : A)\n    (count : Nat) (selected : Fin (count + 1)) (index : Nat)\n    (bounded : work.IsQueryBoundP\n      (fun query => PqxdhDeploymentLaterServerReserve.laterKind (KemSK := KemSK) query = some (.inl 1)) (count + 1)) :\n    (letI := Classical.propDecidable\n    𝒟[(fun final => decide (PqxdhRegistrationJointKemRawBridge.Decided decision final ∧\n        PqxdhRegistrationJointKemRawBridge.GoodKem selected final ∧\n        PqxdhRegistrationJointKemRawBridge.KeyMatchFinal setup codec checks selected final)) <$>\n      ((fun result => (result.1.map fun outcome =>\n          PqxdhRegistrationJointInitializedSchedule.encodeOutcome setup outcome.1, result.2)) <$>\n        (PqxdhDeploymentLaterServerSource.initialized setup codec checks ensureInit supplied\n          (PqxdhDeploymentLaterServerCommands.tag work index)).run\n          ((PqxdhDynamicIdentityPool.initialState, PqxdhLiveKemBirth.empty), runtime))] {true}) ≤\n    𝒟[opaqueBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index\n        false] {true} +\n      ENNReal.ofReal (setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))\n        (PqxdhDeploymentLaterServerKemHop.certified setup ensureInit supplied\n          (PqxdhDeploymentLaterServerCut.scanned setup codec checks decision work index) runtime count selected).toINDCCA +\n        PqxdhRegistrationJointKemRawGame.correctnessError setup)",
+    "PqxdhDeploymentLaterServerBills.commands_bills": "theorem commands_bills (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (caps : KemCaps) (bounded : KemBound setup caps) (identityIndex : Nat) (publicIdentity : PublicIdentity)\n    (work : OracleComp (Spec KemSK) Result) (budget : Budget) (reads : Nat)\n    (certified : ∀ source, work.IsQueryBoundP (fun query => laterKind (KemSK := KemSK) query = some source)\n      (budget source))\n    (terminal : work.IsQueryBoundP (fun query => laterKind (KemSK := KemSK) query = none) reads)\n    (owners : List EncodedEntry) (log : Log) (state : NativeState KemSK) :\n    Bounds (commands setup codec checks identityIndex publicIdentity work owners log state)\n      (budget (.inl 1)) (budget (.inl 5)) (PqxdhRegistrationJointOpenUniform.total caps budget) (budget (.inl 3))",
+    "PqxdhDeploymentLaterServerBills.adversary_bound": "theorem adversary_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (caps : KemCaps) (bounded : KemBound setup caps) (ensureInit : StateT A ProbComp Bool)\n    (qInit : Nat) (initBound : ∀ runtime, (ensureInit.run runtime).IsTotalQueryBound qInit)\n    (supplied : Option Pqxdh.Bytes) (decision : X → Bool) (work : OracleComp (Spec KemSK) X) (budget : Budget)\n    (reads : Nat)\n    (certified : ∀ source, work.IsQueryBoundP (fun query => laterKind (KemSK := KemSK) query = some source)\n      (budget source))\n    (terminal : work.IsQueryBoundP (fun query => laterKind (KemSK := KemSK) query = none) reads)\n    (runtime : A) (count : Nat) (selected : Fin (count + 1)) (index : Nat) :\n    (PqxdhDeploymentLaterServerKemHop.certified setup ensureInit supplied\n      (PqxdhDeploymentLaterServerCut.scanned setup codec checks decision work index) runtime count\n        selected).MakesAtMostQueries\n      ((qInit + if supplied.isNone then 32 else 0) +\n        (caps.keygenCost * count + uniformCap caps (budget (.inl 1)) (budget (.inl 5))\n          (PqxdhRegistrationJointOpenUniform.total caps budget) (budget (.inl 3))))\n      (caps.decapsBase * budget (.inl 5)) (budget (.inl 5))\n      (uniformCap caps (budget (.inl 1)) (budget (.inl 5))\n        (PqxdhRegistrationJointOpenUniform.total caps budget) (budget (.inl 3)))\n      (caps.decapsBase * budget (.inl 5)) (budget (.inl 5))"
+  },
+  "contracts_used": {
+    "FunctionalDecapsulation": "KEM hop (LaterServerKemHop.real_error, advantage_error, certified_advantage, real_le_ideal; LaterServerCut.kem_hop; LaterServerOpaque.transfer), exactly as in KemRawGame",
+    "KemBound_and_initializer_bill": "existing uniform-bill premises of LaterServerBills (as in KemRawBills)",
+    "new_contracts": "none",
+    "codec_laws": "none"
+  },
+  "leanpath": {
+    "manifest": "/tmp/bc-arc-scratch/common-experiment/lqf/leanpath",
+    "sha256": "d73ce5b4d336c776255177f7e6fee4146162ae7a77d8899e715fda090a908b26",
+    "note": "The LQ LEAN_PATH with its first entry replaced by the fresh scratch prefix lqf/olean, a symlink mirror (1552 links, 0 broken) of the LQ prefix (resolved) plus the seven unit 3 deployment artifacts; the nine deployment artifacts of LQ and unit 3 were verified against the c29cea81 sources by their final check records. check.py unlinks an artifact before writing it, so no other prefix was written."
+  },
+  "root_checks": {
+    "root-kemhop": {
+      "exit": 0,
+      "log_bytes": 0,
+      "root_source_sha256": "5e07cc795ed700d30430aa5330228c80a823ed59d2eedd1d2735c9e1094fcb95"
+    },
+    "root-source": {
+      "exit": 0,
+      "log_bytes": 0,
+      "root_source_sha256": "f8c42a0aad589b88ec96db22ec0a306637279abb299595fcf9931671e88b2ffe"
+    },
+    "root-commands": {
+      "exit": 0,
+      "log_bytes": 0,
+      "root_source_sha256": "9765b99109192f8e054029be06e8658e67b30424aa06cb3f841c483f7e2a9363"
+    },
+    "root-cut": {
+      "exit": 0,
+      "log_bytes": 0,
+      "root_source_sha256": "a5d96ee7b9ab079bec8fc9db1eaabd3f3e12803aecb69dc16c21a7a510049cf3"
+    },
+    "root-initialized": {
+      "exit": 0,
+      "log_bytes": 0,
+      "root_source_sha256": "b066574567d9cff69644c67c2c8ef93041b540d88cadeb01b51664aeb4964bb0"
+    },
+    "root-bridge": {
+      "exit": 0,
+      "log_bytes": 0,
+      "root_source_sha256": "5cac68249ea6326bceb1789ed99db1dce8c993e68a94b054b03c2ad885e9ff9b"
+    },
+    "root-bills": {
+      "exit": 0,
+      "log_bytes": 0,
+      "root_source_sha256": "decc93875b163d640db90d08506f8c4f71073b4cdd6d3ba81e45cc0a53c066e0"
+    }
+  },
+  "focused_inventory_per_commit": {
+    "inv-kemhop": {
+      "exit": 0,
+      "start": "2026-10-07T13:37:44Z",
+      "end": "2026-10-07T13:38:52Z",
+      "log_sha256": "9313bfbb9b59ca70d3ce30b51ffb3664377030c24ccc01535528fcb15630fe17",
+      "last_line": "Formal-verification inventory matches the reviewed boundary."
+    },
+    "inv-source": {
+      "exit": 0,
+      "start": "2026-10-07T13:38:58Z",
+      "end": "2026-10-07T13:40:07Z",
+      "log_sha256": "7901da8b67000b6f04a78429383fb0841ec3778fc2445f58aae2f5e46d589802",
+      "last_line": "Formal-verification inventory matches the reviewed boundary."
+    },
+    "inv-commands": {
+      "exit": 0,
+      "start": "2026-10-07T13:40:14Z",
+      "end": "2026-10-07T13:41:21Z",
+      "log_sha256": "c0f1ae7e2a88c2e52d2d2d1f486eda68ba1531f122dbb8cd3a9453f275363ba2",
+      "last_line": "Formal-verification inventory matches the reviewed boundary."
+    },
+    "inv-cut": {
+      "exit": 0,
+      "start": "2026-10-07T13:41:24Z",
+      "end": "2026-10-07T13:42:31Z",
+      "log_sha256": "6bfba90c5669837ab2cead75f0b960e339028bae9987648c98b1d0b2a9b4edf2",
+      "last_line": "Formal-verification inventory matches the reviewed boundary."
+    },
+    "inv-initialized": {
+      "exit": 0,
+      "start": "2026-10-07T13:58:27Z",
+      "end": "2026-10-07T13:59:36Z",
+      "log_sha256": "7901da8b67000b6f04a78429383fb0841ec3778fc2445f58aae2f5e46d589802",
+      "last_line": "Formal-verification inventory matches the reviewed boundary."
+    },
+    "inv-bridge": {
+      "exit": 0,
+      "start": "2026-10-07T13:59:39Z",
+      "end": "2026-10-07T14:00:46Z",
+      "log_sha256": "5fe10e2f78f235393552c7ab3db96f494998fd01093042bd1e34ca3469601b5b",
+      "last_line": "Formal-verification inventory matches the reviewed boundary."
+    },
+    "inv-bills": {
+      "exit": 0,
+      "start": "2026-10-07T14:06:53Z",
+      "end": "2026-10-07T14:08:01Z",
+      "log_sha256": "6bfba90c5669837ab2cead75f0b960e339028bae9987648c98b1d0b2a9b4edf2",
+      "last_line": "Formal-verification inventory matches the reviewed boundary."
+    }
+  },
+  "focused_inventory_note": "Each commit was prepared with the other untracked files held aside and restored afterwards (commit.py), so check-inventory ran in the locked minimal proof flake with exactly the files of that commit.",
+  "final_recheck_note": "After the last Lean commit all nine modules were re-checked in import order (tag final) with exit 0 and empty logs; the per-module rows above are those final checks.",
+  "forbidden_scan": "zero matches of \\b(sorry|admit|native_decide)\\b and no axiom, implemented_by, extern, unsafe or opaque declaration in the nine modules; set_option lines are autoImplicit false, and per-declaration backward.isDefEq.respectTransparency false and linter.deprecated false as in the modules they port; git diff --check c29cea81..HEAD clean",
+  "not_run": "full lake build, make verify, nix-collect-garbage, mutation testing (no production Rust changed)"
+}
