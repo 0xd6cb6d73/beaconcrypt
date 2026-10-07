@@ -1596,6 +1596,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentServerAuthJournal
 
 import BeaconcryptCore.Computational.PqxdhDeploymentServerAuthTrack
 
+import BeaconcryptCore.Computational.PqxdhDeploymentServerAuthChain
+
 /-!
 # Beaconcrypt-core verification root
 
