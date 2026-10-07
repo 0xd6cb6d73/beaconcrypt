@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1536
+	[handwritten-lean]=1538
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -30378,6 +30378,74 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem reduction_caps([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthBills theorem reduction_caps"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthBills\.ce_a1_billed$' "$selected_source_module" "PqxdhDeploymentServerAuthBills dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthBills.ce_a1_billed"
 require_line_count 1 '^theorem ce_a1_billed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthBills theorem ce_a1_billed"
+
+# CE-8 identity-key collisions of the deployment owners and the collision finder.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentServerAuthInjective.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentServerAuthInjective root import"
+require_line_count 15 '^theorem ' "$selected_source_module" "PqxdhDeploymentServerAuthInjective theorem inventory"
+require_line_count 15 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentServerAuthInjective guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthInjective\.owner_identity$' "$selected_source_module" "PqxdhDeploymentServerAuthInjective dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective.owner_identity"
+require_line_count 1 '^theorem owner_identity([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthInjective theorem owner_identity"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthInjective\.bundle_identity$' "$selected_source_module" "PqxdhDeploymentServerAuthInjective dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective.bundle_identity"
+require_line_count 1 '^theorem bundle_identity([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthInjective theorem bundle_identity"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthInjective\.set_same$' "$selected_source_module" "PqxdhDeploymentServerAuthInjective dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective.set_same"
+require_line_count 1 '^theorem set_same([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthInjective theorem set_same"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthInjective\.base_identities$' "$selected_source_module" "PqxdhDeploymentServerAuthInjective dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective.base_identities"
+require_line_count 1 '^theorem base_identities([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthInjective theorem base_identities"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthInjective\.create_with$' "$selected_source_module" "PqxdhDeploymentServerAuthInjective dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective.create_with"
+require_line_count 1 '^theorem create_with([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthInjective theorem create_with"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthInjective\.seedEager_other$' "$selected_source_module" "PqxdhDeploymentServerAuthInjective dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective.seedEager_other"
+require_line_count 1 '^theorem seedEager_other([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthInjective theorem seedEager_other"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthInjective\.seedEager_create$' "$selected_source_module" "PqxdhDeploymentServerAuthInjective dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective.seedEager_create"
+require_line_count 1 '^theorem seedEager_create([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthInjective theorem seedEager_create"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthInjective\.seeds_eager$' "$selected_source_module" "PqxdhDeploymentServerAuthInjective dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective.seeds_eager"
+require_line_count 1 '^theorem seeds_eager([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthInjective theorem seeds_eager"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthInjective\.eager_identities$' "$selected_source_module" "PqxdhDeploymentServerAuthInjective dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective.eager_identities"
+require_line_count 1 '^theorem eager_identities([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthInjective theorem eager_identities"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthInjective\.probEvent_evalSPMF_eq$' "$selected_source_module" "PqxdhDeploymentServerAuthInjective dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective.probEvent_evalSPMF_eq"
+require_line_count 1 '^theorem probEvent_evalSPMF_eq([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthInjective theorem probEvent_evalSPMF_eq"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthInjective\.collision_take$' "$selected_source_module" "PqxdhDeploymentServerAuthInjective dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective.collision_take"
+require_line_count 1 '^theorem collision_take([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthInjective theorem collision_take"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthInjective\.owners_collision$' "$selected_source_module" "PqxdhDeploymentServerAuthInjective dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective.owners_collision"
+require_line_count 1 '^theorem owners_collision([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthInjective theorem owners_collision"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthInjective\.joint_correct$' "$selected_source_module" "PqxdhDeploymentServerAuthInjective dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective.joint_correct"
+require_line_count 1 '^theorem joint_correct([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthInjective theorem joint_correct"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthInjective\.probEvent_le_bind$' "$selected_source_module" "PqxdhDeploymentServerAuthInjective dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective.probEvent_le_bind"
+require_line_count 1 '^theorem probEvent_le_bind([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthInjective theorem probEvent_le_bind"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthInjective\.collision_bound$' "$selected_source_module" "PqxdhDeploymentServerAuthInjective dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective.collision_bound"
+require_line_count 1 '^theorem collision_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthInjective theorem collision_bound"
+
+# CE-8 injectivity of the CE-A1 matching and the combined CE-A1 headline.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentServerAuthInjectiveGame.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjectiveGame$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentServerAuthInjectiveGame root import"
+require_line_count 12 '^theorem ' "$selected_source_module" "PqxdhDeploymentServerAuthInjectiveGame theorem inventory"
+require_line_count 12 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentServerAuthInjectiveGame guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthInjectiveGame\.findSome_filterMap$' "$selected_source_module" "PqxdhDeploymentServerAuthInjectiveGame dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjectiveGame.findSome_filterMap"
+require_line_count 1 '^theorem findSome_filterMap([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthInjectiveGame theorem findSome_filterMap"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthInjectiveGame\.bundleOfReg_regsOf$' "$selected_source_module" "PqxdhDeploymentServerAuthInjectiveGame dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjectiveGame.bundleOfReg_regsOf"
+require_line_count 1 '^theorem bundleOfReg_regsOf([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthInjectiveGame theorem bundleOfReg_regsOf"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthInjectiveGame\.accept_registrations$' "$selected_source_module" "PqxdhDeploymentServerAuthInjectiveGame dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjectiveGame.accept_registrations"
+require_line_count 1 '^theorem accept_registrations([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthInjectiveGame theorem accept_registrations"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthInjectiveGame\.session_unique$' "$selected_source_module" "PqxdhDeploymentServerAuthInjectiveGame dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjectiveGame.session_unique"
+require_line_count 1 '^theorem session_unique([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthInjectiveGame theorem session_unique"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthInjectiveGame\.bundleOfReg_prefix$' "$selected_source_module" "PqxdhDeploymentServerAuthInjectiveGame dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjectiveGame.bundleOfReg_prefix"
+require_line_count 1 '^theorem bundleOfReg_prefix([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthInjectiveGame theorem bundleOfReg_prefix"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthInjectiveGame\.keys_identity$' "$selected_source_module" "PqxdhDeploymentServerAuthInjectiveGame dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjectiveGame.keys_identity"
+require_line_count 1 '^theorem keys_identity([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthInjectiveGame theorem keys_identity"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthInjectiveGame\.identities_merge$' "$selected_source_module" "PqxdhDeploymentServerAuthInjectiveGame dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjectiveGame.identities_merge"
+require_line_count 1 '^theorem identities_merge([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthInjectiveGame theorem identities_merge"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthInjectiveGame\.shared_collision$' "$selected_source_module" "PqxdhDeploymentServerAuthInjectiveGame dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjectiveGame.shared_collision"
+require_line_count 1 '^theorem shared_collision([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthInjectiveGame theorem shared_collision"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthInjectiveGame\.bound_congr$' "$selected_source_module" "PqxdhDeploymentServerAuthInjectiveGame dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjectiveGame.bound_congr"
+require_line_count 1 '^theorem bound_congr([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthInjectiveGame theorem bound_congr"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthInjectiveGame\.compiled_creates$' "$selected_source_module" "PqxdhDeploymentServerAuthInjectiveGame dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjectiveGame.compiled_creates"
+require_line_count 1 '^theorem compiled_creates([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthInjectiveGame theorem compiled_creates"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthInjectiveGame\.injective_bound$' "$selected_source_module" "PqxdhDeploymentServerAuthInjectiveGame dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjectiveGame.injective_bound"
+require_line_count 1 '^theorem injective_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthInjectiveGame theorem injective_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthInjectiveGame\.ce_a1_injective$' "$selected_source_module" "PqxdhDeploymentServerAuthInjectiveGame dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjectiveGame.ce_a1_injective"
+require_line_count 1 '^theorem ce_a1_injective([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthInjectiveGame theorem ce_a1_injective"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"

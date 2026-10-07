@@ -1602,6 +1602,10 @@ import BeaconcryptCore.Computational.PqxdhDeploymentServerAuth
 
 import BeaconcryptCore.Computational.PqxdhDeploymentServerAuthBills
 
+import BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective
+
+import BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjectiveGame
+
 /-!
 # Beaconcrypt-core verification root
 
