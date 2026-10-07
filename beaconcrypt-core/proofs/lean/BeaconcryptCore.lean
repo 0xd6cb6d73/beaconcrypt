@@ -1596,6 +1596,10 @@ import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerNative
 
 import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerGame
 
+import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCompile
+
+import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCompileBudget
+
 /-!
 # Beaconcrypt-core verification root
 

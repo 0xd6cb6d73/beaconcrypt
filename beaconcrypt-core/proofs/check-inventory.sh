@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1533
+	[handwritten-lean]=1535
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -30205,6 +30205,82 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem game_event([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerGame theorem game_event"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerGame\.game_classical_event$' "$selected_source_module" "PqxdhDeploymentLaterServerGame dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerGame.game_classical_event"
 require_line_count 1 '^theorem game_classical_event([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerGame theorem game_classical_event"
+
+# LQ-F: CE-COMPILE for the LQ-F later game (logged accept merge commutation, per-step simulation, native, game and source forms)
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerCompile.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCompile$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentLaterServerCompile root import"
+require_line_count 21 '^theorem ' "$selected_source_module" "PqxdhDeploymentLaterServerCompile theorem inventory"
+require_line_count 21 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentLaterServerCompile guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerCompile\.pure_commutes$' "$selected_source_module" "PqxdhDeploymentLaterServerCompile dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCompile.pure_commutes"
+require_line_count 1 '^theorem pure_commutes([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerCompile theorem pure_commutes"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerCompile\.bind_commutes$' "$selected_source_module" "PqxdhDeploymentLaterServerCompile dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCompile.bind_commutes"
+require_line_count 1 '^theorem bind_commutes([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerCompile theorem bind_commutes"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerCompile\.local_commutes$' "$selected_source_module" "PqxdhDeploymentLaterServerCompile dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCompile.local_commutes"
+require_line_count 1 '^theorem local_commutes([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerCompile theorem local_commutes"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerCompile\.romRoot_commutes$' "$selected_source_module" "PqxdhDeploymentLaterServerCompile dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCompile.romRoot_commutes"
+require_line_count 1 '^theorem romRoot_commutes([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerCompile theorem romRoot_commutes"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerCompile\.nativeClient_commutes$' "$selected_source_module" "PqxdhDeploymentLaterServerCompile dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCompile.nativeClient_commutes"
+require_line_count 1 '^theorem nativeClient_commutes([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerCompile theorem nativeClient_commutes"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerCompile\.tail_override$' "$selected_source_module" "PqxdhDeploymentLaterServerCompile dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCompile.tail_override"
+require_line_count 1 '^theorem tail_override([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerCompile theorem tail_override"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerCompile\.acceptLogged_override$' "$selected_source_module" "PqxdhDeploymentLaterServerCompile dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCompile.acceptLogged_override"
+require_line_count 1 '^theorem acceptLogged_override([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerCompile theorem acceptLogged_override"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerCompile\.accept_merge$' "$selected_source_module" "PqxdhDeploymentLaterServerCompile dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCompile.accept_merge"
+require_line_count 1 '^theorem accept_merge([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerCompile theorem accept_merge"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerCompile\.compiledImpl_run$' "$selected_source_module" "PqxdhDeploymentLaterServerCompile dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCompile.compiledImpl_run"
+require_line_count 1 '^theorem compiledImpl_run([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerCompile theorem compiledImpl_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerCompile\.compiled_erase$' "$selected_source_module" "PqxdhDeploymentLaterServerCompile dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCompile.compiled_erase"
+require_line_count 1 '^theorem compiled_erase([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerCompile theorem compiled_erase"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerCompile\.snap_quiet$' "$selected_source_module" "PqxdhDeploymentLaterServerCompile dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCompile.snap_quiet"
+require_line_count 1 '^theorem snap_quiet([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerCompile theorem snap_quiet"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerCompile\.accept_compiled$' "$selected_source_module" "PqxdhDeploymentLaterServerCompile dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCompile.accept_compiled"
+require_line_count 1 '^theorem accept_compiled([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerCompile theorem accept_compiled"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerCompile\.server_step$' "$selected_source_module" "PqxdhDeploymentLaterServerCompile dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCompile.server_step"
+require_line_count 1 '^theorem server_step([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerCompile theorem server_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerCompile\.server_good$' "$selected_source_module" "PqxdhDeploymentLaterServerCompile dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCompile.server_good"
+require_line_count 1 '^theorem server_good([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerCompile theorem server_good"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerCompile\.server_run$' "$selected_source_module" "PqxdhDeploymentLaterServerCompile dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCompile.server_run"
+require_line_count 1 '^theorem server_run([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerCompile theorem server_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerCompile\.terminal_quiet$' "$selected_source_module" "PqxdhDeploymentLaterServerCompile dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCompile.terminal_quiet"
+require_line_count 1 '^theorem terminal_quiet([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerCompile theorem terminal_quiet"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerCompile\.post_quiet$' "$selected_source_module" "PqxdhDeploymentLaterServerCompile dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCompile.post_quiet"
+require_line_count 1 '^theorem post_quiet([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerCompile theorem post_quiet"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerCompile\.server_continuation$' "$selected_source_module" "PqxdhDeploymentLaterServerCompile dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCompile.server_continuation"
+require_line_count 1 '^theorem server_continuation([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerCompile theorem server_continuation"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerCompile\.compile_server_native$' "$selected_source_module" "PqxdhDeploymentLaterServerCompile dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCompile.compile_server_native"
+require_line_count 1 '^theorem compile_server_native([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerCompile theorem compile_server_native"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerCompile\.compile_server_game$' "$selected_source_module" "PqxdhDeploymentLaterServerCompile dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCompile.compile_server_game"
+require_line_count 1 '^theorem compile_server_game([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerCompile theorem compile_server_game"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerCompile\.compile_server_source$' "$selected_source_module" "PqxdhDeploymentLaterServerCompile dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCompile.compile_server_source"
+require_line_count 1 '^theorem compile_server_source([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerCompile theorem compile_server_source"
+
+# LQ-F: budget transport of the compiled LQ-F program (source14 caps, one Server read, no KEM read, creation cap)
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerCompileBudget.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCompileBudget$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentLaterServerCompileBudget root import"
+require_line_count 10 '^theorem ' "$selected_source_module" "PqxdhDeploymentLaterServerCompileBudget theorem inventory"
+require_line_count 10 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentLaterServerCompileBudget guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerCompileBudget\.embed_bound$' "$selected_source_module" "PqxdhDeploymentLaterServerCompileBudget dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCompileBudget.embed_bound"
+require_line_count 1 '^theorem embed_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerCompileBudget theorem embed_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerCompileBudget\.embed_server$' "$selected_source_module" "PqxdhDeploymentLaterServerCompileBudget dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCompileBudget.embed_server"
+require_line_count 1 '^theorem embed_server([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerCompileBudget theorem embed_server"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerCompileBudget\.embed_support$' "$selected_source_module" "PqxdhDeploymentLaterServerCompileBudget dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCompileBudget.embed_support"
+require_line_count 1 '^theorem embed_support([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerCompileBudget theorem embed_support"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerCompileBudget\.compile_server_bound$' "$selected_source_module" "PqxdhDeploymentLaterServerCompileBudget dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCompileBudget.compile_server_bound"
+require_line_count 1 '^theorem compile_server_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerCompileBudget theorem compile_server_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerCompileBudget\.compile_server_reads$' "$selected_source_module" "PqxdhDeploymentLaterServerCompileBudget dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCompileBudget.compile_server_reads"
+require_line_count 1 '^theorem compile_server_reads([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerCompileBudget theorem compile_server_reads"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerCompileBudget\.compile_server_no_kem$' "$selected_source_module" "PqxdhDeploymentLaterServerCompileBudget dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCompileBudget.compile_server_no_kem"
+require_line_count 1 '^theorem compile_server_no_kem([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerCompileBudget theorem compile_server_no_kem"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerCompileBudget\.laterTransported_eq$' "$selected_source_module" "PqxdhDeploymentLaterServerCompileBudget dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCompileBudget.laterTransported_eq"
+require_line_count 1 '^theorem laterTransported_eq([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerCompileBudget theorem laterTransported_eq"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerCompileBudget\.compile_server_certified$' "$selected_source_module" "PqxdhDeploymentLaterServerCompileBudget dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCompileBudget.compile_server_certified"
+require_line_count 1 '^theorem compile_server_certified([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerCompileBudget theorem compile_server_certified"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerCompileBudget\.server_room$' "$selected_source_module" "PqxdhDeploymentLaterServerCompileBudget dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCompileBudget.server_room"
+require_line_count 1 '^theorem server_room([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerCompileBudget theorem server_room"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerCompileBudget\.compile_server_creates$' "$selected_source_module" "PqxdhDeploymentLaterServerCompileBudget dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCompileBudget.compile_server_creates"
+require_line_count 1 '^theorem compile_server_creates([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerCompileBudget theorem compile_server_creates"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
