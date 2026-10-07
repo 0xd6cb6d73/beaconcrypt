@@ -127,7 +127,7 @@ def acceptCount (transcript : List Entry) : Nat :=
 def candidateOf (codec : Codec Reader Response) (bytes : Pqxdh.Bytes) : Option Phase1Candidate :=
   PqxdhRegistrationJointRawSignatures.candidate codec bytes
 
-/-- The identity key and key tuple of a raw Phase 1 candidate under the source attached verification of `crypto`, exactly as the native accept computes them (`PqxdhJointPhase1Reports.sourceAccept`): the parsed identity key and the prekey, one-time and PQ keys parsed from the three verified messages. Only public bytes and the public verification function are used. -/
+/-- The identity key and key tuple of a raw Phase 1 candidate under the source attached verification and parsing of `crypto` (`PqxdhJointPhase1Reports.sourceAccept`): the parsed identity key and the prekey, one-time and PQ keys parsed from the three verified messages. Whenever the native verification prefix `RawSignatures.verified` succeeds on accept bytes, this yields its identity and keys (`RawSignatures.verified_origin`). Only public bytes and the public verification function are used. -/
 def acceptedKeys (crypto : Pqxdh.Crypto) (candidate : Phase1Candidate) : Option (Ed25519PublicKey × Phase1KeyTuple) :=
   PqxdhJointPhase1Reports.sourceAccept (fun publicKey => crypto.verify publicKey.toList) candidate
 
