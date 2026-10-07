@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1581
+	[handwritten-lean]=1582
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -32262,6 +32262,28 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecord
 require_line_count 1 '^theorem real_receive_logged([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLoggedAdapters theorem real_receive_logged"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLoggedAdapters\.real_send_logged$' "$selected_source_module" "PqxdhRecordLiftLoggedAdapters dependency BeaconcryptCore.Computational.PqxdhRecordLiftLoggedAdapters.real_send_logged"
 require_line_count 1 '^theorem real_send_logged([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLoggedAdapters theorem real_send_logged"
+
+# Source callback table-slot provenance through actual receive/send and native logging.
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftTableScope.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRecordLiftTableScope$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftTableScope root import"
+require_line_count 8 '^theorem ' "$selected_source_module" "PqxdhRecordLiftTableScope theorem inventory"
+require_line_count 8 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftTableScope guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftTableScope\.tableAllowed_empty$' "$selected_source_module" "PqxdhRecordLiftTableScope dependency BeaconcryptCore.Computational.PqxdhRecordLiftTableScope.tableAllowed_empty"
+require_line_count 1 '^theorem tableAllowed_empty([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftTableScope theorem tableAllowed_empty"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftTableScope\.tableAllowed_mono$' "$selected_source_module" "PqxdhRecordLiftTableScope dependency BeaconcryptCore.Computational.PqxdhRecordLiftTableScope.tableAllowed_mono"
+require_line_count 1 '^theorem tableAllowed_mono([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftTableScope theorem tableAllowed_mono"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftTableScope\.lookup_allowed$' "$selected_source_module" "PqxdhRecordLiftTableScope dependency BeaconcryptCore.Computational.PqxdhRecordLiftTableScope.lookup_allowed"
+require_line_count 1 '^theorem lookup_allowed([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftTableScope theorem lookup_allowed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftTableScope\.receive_allowed$' "$selected_source_module" "PqxdhRecordLiftTableScope dependency BeaconcryptCore.Computational.PqxdhRecordLiftTableScope.receive_allowed"
+require_line_count 1 '^theorem receive_allowed([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftTableScope theorem receive_allowed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftTableScope\.admitted_receive_allowed$' "$selected_source_module" "PqxdhRecordLiftTableScope dependency BeaconcryptCore.Computational.PqxdhRecordLiftTableScope.admitted_receive_allowed"
+require_line_count 1 '^theorem admitted_receive_allowed([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftTableScope theorem admitted_receive_allowed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftTableScope\.send_allowed$' "$selected_source_module" "PqxdhRecordLiftTableScope dependency BeaconcryptCore.Computational.PqxdhRecordLiftTableScope.send_allowed"
+require_line_count 1 '^theorem send_allowed([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftTableScope theorem send_allowed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftTableScope\.admitted_send_allowed$' "$selected_source_module" "PqxdhRecordLiftTableScope dependency BeaconcryptCore.Computational.PqxdhRecordLiftTableScope.admitted_send_allowed"
+require_line_count 1 '^theorem admitted_send_allowed([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftTableScope theorem admitted_send_allowed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftTableScope\.liftLookup_writesOnly$' "$selected_source_module" "PqxdhRecordLiftTableScope dependency BeaconcryptCore.Computational.PqxdhRecordLiftTableScope.liftLookup_writesOnly"
+require_line_count 1 '^theorem liftLookup_writesOnly([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftTableScope theorem liftLookup_writesOnly"
 
 # Reviewed actual getter availability, distinct from network compromise powers.
 python3 proofs/source/test-getter-profile.py

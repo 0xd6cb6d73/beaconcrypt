@@ -1530,6 +1530,7 @@ import BeaconcryptCore.Computational.PqxdhRecordLiftWorldBudget
 import BeaconcryptCore.Computational.PqxdhRecordLiftSeedCut
 import BeaconcryptCore.Computational.PqxdhRecordLiftNativeAdapters
 import BeaconcryptCore.Computational.PqxdhRecordLiftLoggedAdapters
+import BeaconcryptCore.Computational.PqxdhRecordLiftTableScope
 import BeaconcryptCore.Computational.PqxdhDeploymentInterface
 
 import BeaconcryptCore.Computational.PqxdhDeploymentNative
