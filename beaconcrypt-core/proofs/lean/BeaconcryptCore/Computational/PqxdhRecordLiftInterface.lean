@@ -1,7 +1,8 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.PqxdhDeploymentSecrecy
+import BeaconcryptCore.Computational.PqxdhRecordLiftSeed
 
-/-! The proposed record-lift capability boundary. This module fixes the request and reply types and an open program, not an interpreter or a security theorem. Registration programs cannot read the world's kernels, hidden samples, cache or secrecy ledger. The exact CE secrecy wrapper runs outside those programs. A later interpreter must execute every capability, including transient registration receives, before this program is a probabilistic record-lift game. -/
+/-! The proposed record-lift capability boundary. This module fixes request and reply types, exact seed-kernel resolution and an open program, not a world interpreter or a security theorem. Restricted registration effects expose no hidden-state, cache or secrecy-ledger read and no record command. The exact CE secrecy wrapper runs outside those programs. CE must first prove its outstanding failed-finish erasure equality before connecting its ideal game to a future interpreter. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open beaconcrypt_core ratchet ratchet.concrete
@@ -22,7 +23,18 @@ inductive Role where
 /-- Installation accepts a caller-known kernel or a reference, never returns hidden material. -/
 inductive KernelRef (n : Nat) where
   | known (kernel : ConcreteRatchetKernel)
-  | hidden (slot : Slot n) (role : Role)
+  | hidden (slot : Slot n)
+
+/-- The installation operation chooses the role; a hidden reference cannot request the opposite role's kernel. -/
+def hiddenKernel : Role → PqxdhRecordLiftSeed.Seed → RustM ConcreteRatchetKernel
+  | .server => PqxdhRecordLiftSeed.serverKernel
+  | .beacon => PqxdhRecordLiftSeed.beaconKernel
+
+/-- Pure kernel semantics for the future private interpreter. Server installs resolve at .server and Beacon installs at .beacon. The seed assignment is not an environment input, and resolution performs no sampling or installation. -/
+def resolveKernel {n : Nat} (role : Role) (seeds : Slot n → PqxdhRecordLiftSeed.Seed) :
+    KernelRef n → RustM ConcreteRatchetKernel
+  | .known kernel => .ok kernel
+  | .hidden slot => hiddenKernel role (seeds slot)
 
 /-- Existing source record query domains, with a dynamic owner address. -/
 abbrev RecordQuery := RawCtxServerMixed.SourceSpec.Domain ⊕
@@ -53,21 +65,6 @@ structure BeaconShell where
   control : pqxdh.BeaconEstablished
   associatedData : Std.Array Std.U8 153#usize
 
-/-- The first registration record's material belongs to the registration lane. -/
-structure FirstMaterial where
-  key : CtxRomAuth.CtxKey
-  nonce : CtxRomAuth.CtxNonce
-
-/-- A candidate reference has no kernel, seed, key, nonce or private opening argument. -/
-structure Ticket where
-  index : Nat
-  deriving DecidableEq
-
-/-- Successful transient opening replies contain only the sequence-one plaintext and a ticket. The interpreter must enforce the sequence gate before constructing this reply. -/
-structure CandidateReply where
-  ticket : Ticket
-  plaintext : Pqxdh.Bytes
-
 /-- Inactive phase metadata may be updated without supplying an established kernel. -/
 inductive InactivePhase where
   | fresh
@@ -76,7 +73,7 @@ inductive InactivePhase where
   | aborted
   deriving DecidableEq
 
-/-- Environment capabilities. The interpreter owns occupancy, role-use and ticket checks. Every hash shares the record cache, and candidate rejection preserves primitive effects. No capability exposes hidden material or an analysis log. -/
+/-- Environment capabilities. The future interpreter must enforce vacant Server installs, legal Beacon phases and one install per slot/role, and route every hash through the record cache. No capability invokes a record command or returns hidden material or an analysis log. -/
 inductive Capability (n : Nat) where
   | peerPresent (keyId : Std.U64)
   | ownerPresent (owner : Nat)
@@ -85,21 +82,13 @@ inductive Capability (n : Nat) where
   | advanceOwner (owner : Nat) (phase : InactivePhase)
   | installServer (keyId : Std.U64) (identity : RawCtxServerRouting.Identity) (kernel : KernelRef n)
   | installBeacon (owner : Nat) (shell : BeaconShell) (kernel : KernelRef n)
-  | candidate (slot : Slot n) (owner : Nat) (expectedSender : Std.U64)
-      (associatedData : Std.Array Std.U8 153#usize) (first : FirstMaterial) (raw : Pqxdh.Bytes)
-  | commitCandidate (ticket : Ticket) (shell : BeaconShell)
-  | discardCandidate (ticket : Ticket)
   | hash (bytes : Pqxdh.Bytes)
-  | privateSend (handle : Handle) (plaintext : Pqxdh.Bytes)
 
 abbrev CapabilitySpec (n : Nat) : OracleSpec (Capability n)
   | .peerPresent _ | .ownerPresent _ => Bool
   | .appendOwner _ _ _ => Nat
   | .advanceOwner _ _ | .installServer _ _ _ | .installBeacon _ _ _ => Bool
-  | .candidate _ _ _ _ _ _ => Option CandidateReply
-  | .commitCandidate _ _ | .discardCandidate _ => Bool
   | .hash _ => CtxRomAuth.CtxDigest
-  | .privateSend _ _ => Option RawCtxSourceSend.Encrypted
 
 /-- Only the interpreter answers the coins used by a registration program. -/
 abbrev EnvEffects (n : Nat) := unifSpec + CapabilitySpec n
@@ -117,7 +106,7 @@ structure Environment (n : Nat) (E : Type) where
 def effectLift {n : Nat} : QueryImpl (EnvEffects n) (OracleComp (WorldSpec n)) :=
   fun query => ((WorldSpec n).query (.inr (.inl query)) : OracleComp (WorldSpec n) _)
 
-/-- Initial Server birth uses only ordinary uniform coins before any hidden slot exists. -/
+/-- The shared world coin route for startup, adversary and ledger coins. The chosen test bit is retained only in the analysis Ledger, with no direct environment read. -/
 def coinLift {n : Nat} : QueryImpl unifSpec (OracleComp (WorldSpec n)) :=
   fun coin => ((WorldSpec n).query (.inr (.inl (.inl coin))) : OracleComp (WorldSpec n) _)
 
@@ -149,7 +138,8 @@ def native {n : Nat} {E : Type} (env : Environment n E) :
 /-- The exact existing secrecy wrapper and mode projection, still awaiting a world interpreter. Its analysis ledger is an output for the proof, never an argument to the environment. -/
 noncomputable def program {n : Nat} {E X Reader Response : Type} (env : Environment n E)
     (crypto : Pqxdh.Crypto) (codec : Codec Reader Response)
-    (bounds : FreshBounds) (mode : Mode) (adversary : OracleComp (ModeSpec mode) X) :
+    (serverKid : Std.U64) (bounds : FreshBounds) (mode : Mode)
+    (adversary : OracleComp (ModeSpec mode) X) :
     OracleComp (WorldSpec n) (Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit ×
       (X × PqxdhDeploymentSecrecy.Ledger) × E)) := do
   let born ← simulateQ coinLift env.start
@@ -158,43 +148,56 @@ noncomputable def program {n : Nat} {E X Reader Response : Type} (env : Environm
   | some (created, initial) => do
       let _ ← (WorldSpec n).query (.inl created)
       let result ← (simulateQ (native env)
-        (PqxdhDeploymentSecrecy.wrap crypto codec created.server.server.metadata.sender bounds
+        (PqxdhDeploymentSecrecy.wrap crypto codec serverKid bounds
           (asModeO mode adversary))).run initial
       pure (some (PqxdhRegistrationJointServerBirth.encode created, result))
 
-/-- Capability costs are explicit; the candidate cap is separate from ordinary raw receives. These are obligations on the environment's actual programs, not cryptographic assumptions. -/
+/-- Resource categories for the actual restricted environment program. Installation rules and lazy seed sampling remain interpreter obligations, not assumptions in these costs. -/
 inductive EffectKind where
   | coin
   | hash
-  | privateSend
-  | candidate
   | administrative
   deriving DecidableEq
 
 def effectKind {n : Nat} : (EnvEffects n).Domain → EffectKind
   | .inl _ => .coin
   | .inr (.hash _) => .hash
-  | .inr (.privateSend _ _) => .privateSend
-  | .inr (.candidate _ _ _ _ _ _) => .candidate
   | .inr _ => .administrative
 
-/-- Pointwise bounds on each environment command, including rejection paths. The later interpreter must independently enforce installation/ticket rules and account for primitive work inside each capability. -/
+/-- Startup and per-command-class resource bounds, uniformly over query bytes and rejection paths. F1/F3 installation rules and F4 lazy sampling must be implemented and proved separately; this resource predicate assumes no security or noninterference conclusion. -/
 def Frame {n : Nat} {E : Type} (env : Environment n E)
-    (startupCoins : Nat) (allowance : EnvQuery → EffectKind → Nat) : Prop :=
+    (startupCoins : Nat) (allowance : Fin 14 → EffectKind → Nat) : Prop :=
   env.start.IsTotalQueryBound startupCoins ∧
     ∀ query state kind, ((env.step query).run state).IsQueryBoundP
-      (fun effect => effectKind effect = kind) (allowance query kind)
+      (fun effect => effectKind effect = kind) (allowance (queryClass (.inl (.inr query.val))) kind)
 
-/-- Generic record-lift parameters leave unresolved CE-wide hash and transient-receive caps visible. The eventual budget transport must bound these parameters from the outer CE budget and Frame. -/
+/-- Generic parameters retain the existing CE budget and an explicit shared-hash cap. CE supplies the cap and its transport proof; neither the slot count nor a CE-wide formula is assumed here. -/
 structure Caps where
   outer : Budget
-  privateSends : Nat
-  candidateReceives : Nat
   sharedHash : Nat
 
-/-- Each transient candidate is a raw receive too; its internal first-record component is owned by item 2. This conservative cap includes all of its at-most-51 KDF callbacks. -/
+/-- Finite environment-effect allowance induced by the existing outer command-class budget. Startup coins are separate. This definition is not the future composition/transport theorem. -/
+def Caps.envTotal (caps : Caps) (allowance : Fin 14 → EffectKind → Nat) (kind : EffectKind) : Nat :=
+  Finset.univ.sum fun queryKind : Fin 14 => caps.outer.cap queryKind * allowance queryKind kind
+
+/-- Ordinary-record derivation allowance. Test/fresh sends are already included in Budget.sends. This definition is not yet a bound theorem; failed registration receive work stays in CE before its erasure equality. -/
 def Caps.derivations (caps : Caps) : Nat :=
-  caps.outer.sends + caps.privateSends + 51 * (caps.outer.receives + caps.candidateReceives)
+  caps.outer.sends + 51 * caps.outer.receives
+
+/-- Known installation semantics retain the supplied kernel exactly. -/
+theorem resolveKernel_known {n : Nat} (role : Role) (seeds : Slot n → PqxdhRecordLiftSeed.Seed)
+    (kernel : ConcreteRatchetKernel) :
+    resolveKernel role seeds (.known kernel) = RustM.ok kernel := rfl
+
+/-- Hidden Server semantics are exactly the existing post-sequence-one seed constructor. -/
+theorem resolveKernel_server {n : Nat} (seeds : Slot n → PqxdhRecordLiftSeed.Seed)
+    (slot : Slot n) :
+    resolveKernel .server seeds (.hidden slot) = PqxdhRecordLiftSeed.serverKernel (seeds slot) := rfl
+
+/-- Hidden Beacon semantics are exactly the existing post-sequence-one seed constructor. -/
+theorem resolveKernel_beacon {n : Nat} (seeds : Slot n → PqxdhRecordLiftSeed.Seed)
+    (slot : Slot n) :
+    resolveKernel .beacon seeds (.hidden slot) = PqxdhRecordLiftSeed.beaconKernel (seeds slot) := rfl
 
 /-- The mode-O record specification reuses the complete source Server reply. -/
 theorem server_reply (query : RawCtxServerMixed.SourceSpec.Domain) :
@@ -206,23 +209,6 @@ theorem beacon_reply (owner : Nat) (query : RawCtxMixedOwner.SourceSpec.Domain) 
     (RecordSpec .O).Range (.inr (owner, query)) = RawCtxMixedOwner.SourceSpec.Range query := by
   cases query <;> rfl
 
-/-- The sequence gate discards a later plaintext before an environment continuation can see it. This gate must run after the complete candidate opening and its primitive effects. -/
-def candidateReply (ticket : Ticket) : core.option.Option RawCtxWholeOwner.Decrypted → Option CandidateReply
-  | .None => none
-  | .Some opened => if opened.sequence = 1#u64 then some ⟨ticket, opened.plaintext⟩ else none
-
-/-- A successful candidate reply preserves the supplied sequence-one optional plaintext. Source-opening provenance requires the interpreter's separate simulation theorem. -/
-theorem candidateReply_some (ticket : Ticket) (opened : core.option.Option RawCtxWholeOwner.Decrypted)
-    (reply : CandidateReply) (accepted : candidateReply ticket opened = some reply) :
-    ∃ value, opened = .Some value ∧ value.sequence = 1#u64 ∧ reply = ⟨ticket, value.plaintext⟩ := by
-  cases opened with
-  | none => cases accepted
-  | some value =>
-      simp only [candidateReply] at accepted
-      split at accepted
-      · exact ⟨value, rfl, ‹_›, (Option.some.inj accepted).symm⟩
-      · cases accepted
-
 end BeaconcryptCore.Computational.PqxdhRecordLiftInterface
 
 /-- info: 'BeaconcryptCore.Computational.PqxdhRecordLiftInterface.server_reply' depends on axioms: [propext] -/
@@ -233,8 +219,20 @@ end BeaconcryptCore.Computational.PqxdhRecordLiftInterface
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhRecordLiftInterface.beacon_reply
 
-/-- info: 'BeaconcryptCore.Computational.PqxdhRecordLiftInterface.candidateReply_some' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.PqxdhRecordLiftInterface.resolveKernel_known' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhRecordLiftInterface.candidateReply_some
+#print axioms BeaconcryptCore.Computational.PqxdhRecordLiftInterface.resolveKernel_known
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhRecordLiftInterface.resolveKernel_server' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRecordLiftInterface.resolveKernel_server
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhRecordLiftInterface.resolveKernel_beacon' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRecordLiftInterface.resolveKernel_beacon

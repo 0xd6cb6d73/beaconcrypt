@@ -29998,17 +29998,21 @@ require_line_count 1 '^theorem handler_putback([[:space:]]|$)' "$selected_source
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftRoles\.schedule_native$' "$selected_source_module" "PqxdhRecordLiftRoles dependency BeaconcryptCore.Computational.PqxdhRecordLiftRoles.schedule_native"
 require_line_count 1 '^theorem schedule_native([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftRoles theorem schedule_native"
 
-# Record-lift R1 proposal: capability types and open program only; no security bound.
+# Record-lift R1 proposal: exact seed resolution, capability types and open program only.
 selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftInterface.lean
 require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRecordLiftInterface$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftInterface root import"
-require_line_count 3 '^theorem ' "$selected_source_module" "PqxdhRecordLiftInterface theorem inventory"
-require_line_count 3 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftInterface guarded dependencies"
+require_line_count 5 '^theorem ' "$selected_source_module" "PqxdhRecordLiftInterface theorem inventory"
+require_line_count 5 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftInterface guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftInterface\.resolveKernel_known$' "$selected_source_module" "PqxdhRecordLiftInterface dependency BeaconcryptCore.Computational.PqxdhRecordLiftInterface.resolveKernel_known"
+require_line_count 1 '^theorem resolveKernel_known([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftInterface theorem resolveKernel_known"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftInterface\.resolveKernel_server$' "$selected_source_module" "PqxdhRecordLiftInterface dependency BeaconcryptCore.Computational.PqxdhRecordLiftInterface.resolveKernel_server"
+require_line_count 1 '^theorem resolveKernel_server([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftInterface theorem resolveKernel_server"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftInterface\.resolveKernel_beacon$' "$selected_source_module" "PqxdhRecordLiftInterface dependency BeaconcryptCore.Computational.PqxdhRecordLiftInterface.resolveKernel_beacon"
+require_line_count 1 '^theorem resolveKernel_beacon([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftInterface theorem resolveKernel_beacon"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftInterface\.server_reply$' "$selected_source_module" "PqxdhRecordLiftInterface dependency BeaconcryptCore.Computational.PqxdhRecordLiftInterface.server_reply"
 require_line_count 1 '^theorem server_reply([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftInterface theorem server_reply"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftInterface\.beacon_reply$' "$selected_source_module" "PqxdhRecordLiftInterface dependency BeaconcryptCore.Computational.PqxdhRecordLiftInterface.beacon_reply"
 require_line_count 1 '^theorem beacon_reply([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftInterface theorem beacon_reply"
-require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftInterface\.candidateReply_some$' "$selected_source_module" "PqxdhRecordLiftInterface dependency BeaconcryptCore.Computational.PqxdhRecordLiftInterface.candidateReply_some"
-require_line_count 1 '^theorem candidateReply_some([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftInterface theorem candidateReply_some"
 
 # Reviewed actual getter availability, distinct from network compromise powers.
 python3 proofs/source/test-getter-profile.py
