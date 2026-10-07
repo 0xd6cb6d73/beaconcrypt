@@ -92,7 +92,7 @@
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentServerAuthInjectiveGame.lean": "be9545f5c3ea84eaaa41ce2547bbe9dbd84c8cace6e203def8afc629392096e0",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "14ed64e3fc1b0a3d0ab1d0fac8cfac0fc7ea7ef40fe153c1f3d30cbd18e305d5",
   "beaconcrypt-core/proofs/check-inventory.sh": "5f4034b2586de0286557c76a312a5122a00dcb3bef9ea897c093865624cb2e3e",
-  "beaconcrypt-core/proofs/reviewed-inventory.txt": "b5611f0baee88e615f5262750dc8c797d6cd035055c152055e815e602f8d779e",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "3f9554f7264f540532a5a2a2a47dab3b2bb56df1f3f6afd4768478cd3bfa940f",
   "doc/impl/common-deployment-experiment.md": "3a6578829d68cf7f8d61f8ad689b70f221a3c7f3527306b3959fd487c9c614b1",
   "doc/formal-verification-analysis.md": "87bf5bfdd3193409cd6b4ba07bdf3061baaedf4df5f7fe986d262591b7c42bc5",
   "doc/composition-assumptions.md": "5e168f794f58e7112deff849cabe26e2fd360ccf7f95acf148638749fdbcb3e9"
@@ -1392,7 +1392,7 @@
    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentServerAuth.lean (module docstring only)"
   ],
   "statements": "No statement, definition or proof changed; the statement count stays 253.",
-  "checks": "PqxdhDeploymentServerAuth re-checked after the docstring change through coord.sh lean claude (-j1 -M8000, timeout 180, -o into ce8/olean), exit 0, empty log (modules[PqxdhDeploymentServerAuth].direct_check_final, log tag nits); coord.sh inv recount (1538, unchanged) and inv rehash (unchanged); git diff --check clean. The integration checks of the merged topic tip are recorded in the integration checks receipt.",
+  "checks": "PqxdhDeploymentServerAuth re-checked after the docstring change through coord.sh lean claude (-j1 -M8000, timeout 180, -o into ce8/olean), exit 0, empty log (modules[PqxdhDeploymentServerAuth].direct_check_final, log tag nits); coord.sh inv recount (1538, unchanged); the digest row of PqxdhDeploymentServerAuth.lean in reviewed-inventory.txt was rehashed in the follow-up commit (coord.sh inv rehash with the module path, b58910c7 -> 082acd91), since a rehash without paths covers only the root, trusted-boundary.md and check-inventory.sh; git diff --check clean. The integration checks of the merged topic tip are recorded in the integration checks receipt.",
   "date": "2026-10-07T21:51:32.162449+00:00"
  }
 }
