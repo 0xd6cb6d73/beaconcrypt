@@ -1,6 +1,6 @@
 # Item 2, increment 1: Extract/HKDF composition components (S0a, S0b, G1, S3a, G2)
 
-Status: five new Lean modules on branch `claude/extract-composition` (worktree `/tmp/claude-extract-inc1`), based on central `4cc974c0` (`codex/full-proof-composition`, including Codex's `PqxdhRecordLift*` modules). Every module is checked with exact axiom guards, root-imported and listed in the inventory. Not integrated into central and not independently reviewed. No existing module is changed.
+Status: six new Lean modules on branch `claude/extract-composition` (worktree `/tmp/claude-extract-inc1`), based on central `4cc974c0` (`codex/full-proof-composition`, including Codex's `PqxdhRecordLift*` modules). Every module is checked with exact axiom guards, root-imported and listed in the inventory. Not integrated into central and not independently reviewed. No existing module is changed.
 
 The plan is `/tmp/bc-arc-scratch/extract-design/plan.md` (revision 2 with section 15 critique responses, section 16 owner decisions of 2026-10-06 and section 17 implementation decisions of 2026-10-07). Under owner decision 2 (route R1, extended to this line), the zero-key 192-byte HMAC-SHA-512 Extract slice is a random oracle, HMAC-SHA-512 is a PRF and HKDF-Extract on a uniform 32-byte key is a PRG-type game. This increment builds the stages that the plan's section 17 orders first: the two equality stages S0a and S0b, which remove the KEM candidate from every observer and from the Beacon finish, and the three generic lemmas G1 (stage S1a), S3a and G2 (stage S4a).
 
@@ -13,8 +13,9 @@ The plan is `/tmp/bc-arc-scratch/extract-design/plan.md` (revision 2 with sectio
 | S1a (G1) | `PqxdhExtractRomHiddenSuffix` | 29 | `hidden_suffix_bound` | statistical bound, generic |
 | S0a | `PqxdhRegistrationJointKemObserverFree` | 40 | `opaqueBranch_free` | program equality |
 | S0b | `PqxdhRegistrationJointBeaconOpaqueFinish` | 20 | `opaqueBranch_marked`, `router_moves` | program equality |
+| S0b (router) | `PqxdhRegistrationJointBeaconOpaqueFinishRouter` | 27 | `opaqueBranch_freeRouter` | program equality |
 
-Total: 104 theorems, each with an exact `#print axioms` guard allowing only `propext`, `Classical.choice` and `Quot.sound`.
+Total: 131 theorems, each with an exact `#print axioms` guard allowing only `propext`, `Classical.choice` and `Quot.sound`.
 
 ## G2: the key schedule from a uniform root (`PqxdhKeyScheduleFromRoot`)
 
@@ -113,37 +114,49 @@ In `markedBranch` every Beacon finish runs the opaque-handle owner `PqxdhBeaconP
 
 Proof: `markPool` overwrites the value of the router's reply to the selected decapsulation of the challenge by the candidate. The router absorbs it (`router_absorbs`), because its reply there is the candidate or a missing-handle rejection; the marking commutes with the encapsulator and the exposed-encapsulation forwarding (`markPool_actual`, `markEnc_hide`) and is pushed into every native handler step (`mark_run`). With the marking in place, the native owner and the opaque-handle owner satisfy the realization obligations for the interpretation `interpret candidate` (`marked_calls`), so every source client step and marked client step have the same marked interpretation (`owner_marked`, `finish_marked`, `client_marked`), and so does every client program (`layered`).
 
-Deviation from the plan's S0b row. The plan says that the router is no longer asked the selected decapsulation of the challenge, so its candidate argument is dead. In the marked branch the Beacon still sends that request, and uses only the presence of the reply: the router answers it with a missing-handle rejection if the selected KEM slot was never created, and an equality that dropped the request would need the invariant that every live owner's KEM index is below the router's creation count, which spans the client and router layers. The marked Beacon discards the reply's value. `router_moves` states where the candidate still lives in the router: the router holding any value, with that reply overwritten by the candidate, is the router holding the candidate. The remaining step that makes the router's candidate argument dead is a proof that no other postchallenge component (Server accept and resumption, creation, bundle, field reads) requests that decapsulation; it is deferred to stage S1b, whose flattened skeleton exposes every issuer (estimate below).
+The router's candidate (`PqxdhRegistrationJointBeaconOpaqueFinishRouter`):
+
+```lean
+theorem opaqueBranch_freeRouter (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes)
+    (decision : X → Bool) (work : OracleComp (SourceSpec KemSK) X) (runtime : A)
+    (count : Nat) (selected : Fin (count + 1)) (index : Nat) (real : Bool) :
+    opaqueBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index
+        real =
+      freeRouterBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected
+        index real
+```
+
+`freeRouterBranch` is the marked branch with the post-challenge router holding the fixed public value `placeholder` (32 zero bytes) instead of the candidate. The Beacon still sends the selected decapsulation of the challenge to the router, because the router answers it with a missing-handle rejection if that KEM slot was never created; dropping the request would need the invariant that every live owner's KEM index is below the router's creation count, which spans the client and router layers. The Beacon keeps only the presence of the reply. By `router_moves`, the router holding `placeholder` with that reply overwritten by the candidate is the router holding the candidate; the overwriting is pushed into the program and changes nothing (`markedResume_unmarked`), because no other component sends that request (the Server's raw accept and prefix compiler, every other native handler, Beacon creation, bundle and field reads, and the Server's opaque resumption: `accept_free`, `source_step`, `marked_step`, `client_free`, `resume_free`, counted with `IsQueryBoundP` and VCVio's `IsQueryBoundP.simulateQ_run_StateT_of_step`), and the marked Beacon finish never reads that reply's value (`finish_unmarked`). So the plan's S0b row holds in this form: the router's candidate argument is dead, and the request it still answers carries only the slot's existence.
 
 ## Where the KEM candidate is after S0b
 
-In `markedBranch` the candidate is an argument of exactly three things: the private interpreter of the Server's opaque resumption (`KemOpaqueResume.liftImpl`, unchanged from T6), the private Beacon root interpreter `markedRoot`, and the post-challenge router, whose only use of it is its reply to the selected decapsulation of the challenge, whose value the Beacon discards. No observer holds it (S0a). It is never part of a `SecretInputKdf.Context` or any public context; no fixed-HKDF consumer is used. Program state that holds values derived from the root (pending tokens, installed kernels, the BLAKE2b cache, the table cache) is handled by the later stages S1b, S1c and S3b.
+In `freeRouterBranch` the candidate is an argument of exactly two things: the private interpreter of the Server's opaque resumption (`KemOpaqueResume.liftImpl`, unchanged from T6) and the private Beacon root interpreter `markedRoot`. The router holds a fixed public value, and no observer holds the candidate (S0a). It is never part of a `SecretInputKdf.Context` or any public context; no fixed-HKDF consumer is used. Program state that holds values derived from the root (pending tokens, installed kernels, the BLAKE2b cache, the table cache) is handled by the later stages S1b, S1c and S3b.
 
 ## Checks
 
-- Direct checks: each module with Lean 4.34, `-j1 -M8000`, `timeout 180`, through `coord.sh lean`, into the scratch prefix `/tmp/bc-arc-scratch/extract-design/inc1/olean` (a resolved symlink mirror of the first prefix of the published central `LEAN_PATH` of `4cc974c0`, followed by that `LEAN_PATH`). Final checks of all five modules in import order: exit 0, empty logs.
-- Exact axiom guards: 104 of 104 theorems; profiles `propext, Classical.choice, Quot.sound` (85), `propext, Quot.sound` (9), `propext` (6), none (4). Guard liveness: a scratch file with one deliberately wrong guard per module fails five times.
+- Direct checks: each module with Lean 4.34, `-j1 -M8000`, `timeout 180`, through `coord.sh lean`, into the scratch prefix `/tmp/bc-arc-scratch/extract-design/inc1/olean` (a resolved symlink mirror of the first prefix of the published central `LEAN_PATH` of `4cc974c0`, followed by that `LEAN_PATH`). Final checks of all six modules in import order: exit 0, empty logs.
+- Exact axiom guards: 131 of 131 theorems; profiles `propext, Classical.choice, Quot.sound` (109), `propext, Quot.sound` (11), `propext` (7), none (4). Guard liveness: a scratch file with one deliberately wrong guard per module fails six times.
 - Root import `BeaconcryptCore.lean` through `coord.sh lean` with `timeout 180`: exit 0, empty log.
-- Focused `make -C beaconcrypt-core check-inventory` in the locked minimal proof flake (`flake.nix` and `flake.lock` identical to the worktree) under a `coord.sh` `@nix` lease at the S0b commit: exit 0, "Formal-verification inventory matches the reviewed boundary."; `git diff --check` clean at every commit; `coord.sh inv recount` and `inv rehash` after every module.
+- Focused `make -C beaconcrypt-core check-inventory` in the locked minimal proof flake (`flake.nix` and `flake.lock` identical to the worktree) under a `coord.sh` `@nix` lease at the S0b commit and again at the S0b-completion commit: exit 0, "Formal-verification inventory matches the reviewed boundary."; `git diff --check` clean at every commit; `coord.sh inv recount` and `inv rehash` after every module.
 - Forbidden constructs: no `sorry`, `admit`, `axiom`, `opaque`, `native_decide`, `implemented_by`, `extern` or `unsafe`. Scoped options: `set_option linter.deprecated false in` on ten declarations of S3a and G1 that use VCVio's probability notation (`Pr[…]`, `𝒮[…]`, which VCVio marks deprecated in favour of measures; its identical-until-bad and union-bound lemmas are stated in that notation); no deprecated lemma is used, in particular not `probOutput_true_le_add_ofReal_boolDistAdvantage`. `set_option backward.isDefEq.respectTransparency false in` on `evaluate_map` (S0a), as in the central KEM modules.
-- Contamination: the exact-token grep of the plan's risk 9 finds none of its tokens in the five modules. A direct-reference constant scan (a Lean metaprogram over all 372 declarations of the five modules, including auxiliary ones) finds no reference to any listed fixed-HKDF item (`PqxdhCorrelatedExtractFamily.advantage`, `reduction`, `prepare`, `realGame`, `realImpl`, `evaluate`, `productionHiddenRoot`, `RawCtxSourceHkdf.rootResponse`, `PqxdhCorrelatedExpand.rootPost`, `rootResume`, `rootReduction`, `reduction_expanded_eq`, `PqxdhPhase2DecapsulationRouting.derive`, the listed `PqxdhPhase2DhRootConsumer` items, `PqxdhChallengeSecretRouting.*`, `PqxdhBeaconPhase2Routed.*`, `KemOpaqueReal.*`, `MlKem768RecipientCorrectness`, `jointKdfView`, `fixedHkdfSha512JointStream`, games of `PqxdhJointDhExtractFamily`); its liveness case (a scratch definition referencing `PqxdhCorrelatedExtractFamily.realGame`) is detected. `PqxdhJointDhExtractFamily.Message` occurs as the message type of the native Server root reader `romRootBytes` in `oblivious_romRootBytes`.
+- Contamination: the exact-token grep of the plan's risk 9 finds none of its tokens in the six modules. A direct-reference constant scan (a Lean metaprogram over all 470 declarations of the six modules, including auxiliary ones) finds no reference to any listed fixed-HKDF item (`PqxdhCorrelatedExtractFamily.advantage`, `reduction`, `prepare`, `realGame`, `realImpl`, `evaluate`, `productionHiddenRoot`, `RawCtxSourceHkdf.rootResponse`, `PqxdhCorrelatedExpand.rootPost`, `rootResume`, `rootReduction`, `reduction_expanded_eq`, `PqxdhPhase2DecapsulationRouting.derive`, the listed `PqxdhPhase2DhRootConsumer` items, `PqxdhChallengeSecretRouting.*`, `PqxdhBeaconPhase2Routed.*`, `KemOpaqueReal.*`, `MlKem768RecipientCorrectness`, `jointKdfView`, `fixedHkdfSha512JointStream`, games of `PqxdhJointDhExtractFamily`); its liveness case (a scratch definition referencing `PqxdhCorrelatedExtractFamily.realGame`) is detected. `PqxdhJointDhExtractFamily.Message` occurs as the message type of the native Server root reader `romRootBytes` in `oblivious_romRootBytes`.
 
 ## Deviations from the plan
 
 - G1: the binder `prefix` is renamed `start`; otherwise the statement is the plan's.
 - S0a: the identity-pool transcript is erased rather than shown free of the candidate; the erasure is an equality like the others.
-- S0b: the Beacon still requests the selected decapsulation of the challenge and uses only the presence of the reply (see above); the router's candidate argument is shown to be movable (`router_moves`), and its deadness is deferred to S1b.
+- S0b: the Beacon still requests the selected decapsulation of the challenge from the router and uses only the presence of the reply (to keep the missing-slot rejection without a cross-layer invariant); the router holds a fixed public value instead of the candidate (`opaqueBranch_freeRouter`).
 - S3a has no planned statement beyond its description; the statements above are the ones built.
 - No planned statement turned out false or unprovable, and none was weakened.
 
 ## Remaining item 2 stages and re-estimate
 
-This increment built S0a, S0b, S1a, S3a and S4a, which the plan estimated at 15.5 to 26 agent-days, in one working session. The existing source14 infrastructure (realization lemmas, never-read precedents, generic simulation lemmas) made the equality stages much cheaper than planned. Remaining, in the order of plan section 17:
+This increment built S0a, S0b (including the router's candidate), S1a, S3a and S4a, which the plan estimated at 15.5 to 26 agent-days, in one working session. The existing source14 infrastructure (realization lemmas, never-read precedents, generic simulation lemmas) made the equality stages much cheaper than planned. Remaining, in the order of plan section 17:
 
 | Stage | Plan estimate | Re-estimate | Note |
 | --- | --- | --- | --- |
-| S0b completion (router candidate dead) | in S0b | 0.5-1.5 | no-other-decapsulator lemmas for Server accept/resumption, creation, bundle and reads, then `router_moves` |
-| S1b skeleton | 10-18 | 5-10 | starts from `markedBranch`; observers and Beacon markers are already gone |
+| S1b skeleton | 10-18 | 5-10 | starts from `freeRouterBranch`; observers, Beacon markers and the router's candidate are already gone |
 | S1c ROM split | 4-7 | 2-4 | G1 instance; prefix read log and cut-split of `certified` |
 | S2 root Expand | 3-6 | 2-4 | `rootClient`, `IsRoot` transport, `expanded_uniform_bound` |
 | S3b entry factor | 6-10 | 3-6 | `uniformGame_first`, factored forms, `entryD` |
@@ -154,7 +167,7 @@ This increment built S0a, S0b, S1a, S3a and S4a, which the plan estimated at 15.
 | S5, S6 | 2.5-4 | 1.5-2.5 | |
 | S9 | 5-8 | 3-5 | guide, assumption lists, review |
 
-Remaining total: about 21 to 43 agent-days (plan: 38 to 67 for the same stages). S1b remains the main risk (elaboration memory under `-M8000`).
+Remaining total: about 20 to 41 agent-days (plan: 38 to 67 for the same stages). S1b remains the main risk (elaboration memory under `-M8000`).
 
 ## Not claimed
 

@@ -1,6 +1,6 @@
 {
- "date": "2026-10-07T21:36:33.928311+00:00",
- "scope": "Handoff item 2, increment 1: stages S0a and S0b (candidate removed from every observer and from the Beacon finish; program equalities, loss 0) and the generic lemmas G1 (stage S1a), S3a and G2 (stage S4a) of the extract-design plan.",
+ "date": "2026-10-07T21:54:32.290420+00:00",
+ "scope": "Handoff item 2, increment 1: stages S0a and S0b (candidate removed from every observer, from the Beacon finish and from the post-challenge router; program equalities, loss 0) and the generic lemmas G1 (stage S1a), S3a and G2 (stage S4a) of the extract-design plan.",
  "basis": "4cc974c049a3d542fdec728982bf80594ce443d2",
  "topic": {
   "branch": "claude/extract-composition",
@@ -31,6 +31,14 @@
   {
    "commit": "62d5ac45777ddd36b6fffdede274998dff7d0276",
    "subject": "Mark the Beacon finish of the opaque KEM branch"
+  },
+  {
+   "commit": "2b7b6487c074369f0b883e4dbb79bb0ee6dd8798",
+   "subject": "Document the first item 2 increment"
+  },
+  {
+   "commit": "0a254e160026f751a9a0c277681a95fb361b42ff",
+   "subject": "Replace the router's candidate in the marked KEM branch"
   }
  ],
  "files_sha256": {
@@ -38,12 +46,13 @@
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRootFirstEntry.lean": "f6de1ba6c7af68e056cceb1643f24ea7ee1e62bfba63ce75f3fa498baf21d171",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhExtractRomHiddenSuffix.lean": "7638c361dd3700812c905dfbf31e0eb01abe3a010f24958ef16da55d25113da3",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemObserverFree.lean": "8fc7a90a70a9c011e20339a9a497e1e728d049553593ef2e4c13d873f8babf6a",
-  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointBeaconOpaqueFinish.lean": "175dc94b088fb466f84dfeeefda7ea0516b28b94e0e309d87e6c872dd4952bd0",
-  "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "dd41ca9e93254075633f41da3a0e4d1ef1bb7dffcbcb2aef1864107c152b71e2",
-  "beaconcrypt-core/proofs/check-inventory.sh": "c0140036a16da5c38b28d95bad0e3f3d5e156417a918a40f67ceb898a3fc0061",
-  "beaconcrypt-core/proofs/reviewed-inventory.txt": "2821a9b4b791e1a485cbe23823d1639b828b143b45e5cd5b6efda6fd2a1b8883",
-  "doc/impl/extract-composition.md": "a353ac1081cf748e6cea9f93fb0e8b6c2452f617630081d857d6d3a105be267c",
-  "doc/formal-verification-analysis.md": "c7befd43acce9910b7b07a6d507248967f9ddba547cf41cb408bc627a46a9331"
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointBeaconOpaqueFinish.lean": "ffa2df1fc4e2437553b2c044c4387dd6dda7429a32a9ba76661d2dd59ce5ffda",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointBeaconOpaqueFinishRouter.lean": "ad1005459969211eaa69b6ff0b2b6d1fd3d03b570ac3bf57302a04536123e57e",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "8352dc8e272641a1429641472dc4c982f515fd3641e9944bba7fe89547300d37",
+  "beaconcrypt-core/proofs/check-inventory.sh": "7c888c3cbd0d1de67c39d5bd98fa6d67215c1413f7462905a4a33de2c42b1a9a",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "7997ddd902701287942c09117b45cd2b8d45ca04fb92a6d165f9e5163d837862",
+  "doc/impl/extract-composition.md": "80f7f1cbae060217856249ba488dfbc016f8a9404cae95cfae6855c42ee05093",
+  "doc/formal-verification-analysis.md": "10f20d648ef472c29cf1082cfef8dda11dd36748d046618aa2492907f8e1ace3"
  },
  "modules": [
   {
@@ -306,12 +315,12 @@
    },
    "direct_check_final": {
     "exit": 0,
-    "start": "2026-10-07T21:33:41.176934+00:00",
-    "end": "2026-10-07T21:33:52.090309+00:00",
-    "source_sha256": "175dc94b088fb466f84dfeeefda7ea0516b28b94e0e309d87e6c872dd4952bd0",
+    "start": "2026-10-07T21:50:15.543319+00:00",
+    "end": "2026-10-07T21:50:21.389726+00:00",
+    "source_sha256": "ffa2df1fc4e2437553b2c044c4387dd6dda7429a32a9ba76661d2dd59ce5ffda",
     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "log_bytes": 0,
-    "artifact_sha256": "fb21adb81871a4992c293bdacd77b459f054db36730fbb30c617c3f371a464ea",
+    "artifact_sha256": "2490a53f3569331ac642e12d43cdc8f49a40740e3f95bedbda3f4fb34130f2da",
     "command": [
      "/tmp/bc-coord/coord.sh",
      "lean",
@@ -329,18 +338,82 @@
      "/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointBeaconOpaqueFinish.lean"
     ]
    }
+  },
+  {
+   "name": "PqxdhRegistrationJointBeaconOpaqueFinishRouter",
+   "plan_stage": "S0b (router candidate)",
+   "statements": [
+    "markPool_other",
+    "mark_free",
+    "simulateQ_free",
+    "simulateQ_agree",
+    "simulateQ_transfer",
+    "coins_free",
+    "forward_free",
+    "native_free",
+    "prefix_compiler_free",
+    "prefixImpl_step",
+    "accept_free",
+    "source_step",
+    "marked_step",
+    "poolLift_free",
+    "creation_free",
+    "bundle_compiler_free",
+    "read_free",
+    "client_free",
+    "markedBy_other",
+    "markedPoolLift_free",
+    "finish_unmarked",
+    "free_false",
+    "resume_free",
+    "client_unmarked",
+    "markedResume_unmarked",
+    "markedPost_free",
+    "opaqueBranch_freeRouter"
+   ],
+   "statement_count": 27,
+   "axiom_profile": {
+    "propext": 1,
+    "Classical.choice, Quot.sound, propext": 24,
+    "Quot.sound, propext": 2
+   },
+   "direct_check_final": {
+    "exit": 0,
+    "start": "2026-10-07T21:50:48.899945+00:00",
+    "end": "2026-10-07T21:50:57.658129+00:00",
+    "source_sha256": "ad1005459969211eaa69b6ff0b2b6d1fd3d03b570ac3bf57302a04536123e57e",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "log_bytes": 0,
+    "artifact_sha256": "f6d29366c0f0eeb23f43b5da9a97201787610a85d1e815afb1f1c2b3572bbfbb",
+    "command": [
+     "/tmp/bc-coord/coord.sh",
+     "lean",
+     "claude",
+     "inc1-PqxdhRegistrationJointBeaconOpaqueFinishRouter-final",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/extract-design/inc1/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointBeaconOpaqueFinishRouter.olean",
+     "/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointBeaconOpaqueFinishRouter.lean"
+    ]
+   }
   }
  ],
- "statements_total": 104,
+ "statements_total": 131,
  "allowed_axioms": [
   "propext",
   "Classical.choice",
   "Quot.sound"
  ],
  "axiom_profile_from_guards": {
-  "Classical.choice, Quot.sound, propext": 85,
-  "propext": 6,
-  "Quot.sound, propext": 9,
+  "Classical.choice, Quot.sound, propext": 109,
+  "propext": 7,
+  "Quot.sound, propext": 11,
   "(none)": 4
  },
  "exact_statements": {
@@ -369,7 +442,17 @@
   "PqxdhRegistrationJointBeaconOpaqueFinish.layered": "theorem layered {ι₁ ι₂ ι₃ O α : Type} {specR : OracleSpec ι₁} {spec₁ : OracleSpec ι₂} {spec₂ : OracleSpec ι₃}\n    {m : Type → Type} [Monad m] [LawfulMonad m]\n    (client₁ : QueryImpl specR (StateT O (OracleComp spec₁))) (client₂ : QueryImpl specR (StateT O (OracleComp spec₂)))\n    (impl₁ : QueryImpl spec₁ m) (impl₂ : QueryImpl spec₂ m)\n    (step : ∀ query owners, simulateQ impl₁ ((client₁ query).run owners) = simulateQ impl₂ ((client₂ query).run owners))\n    (work : OracleComp specR α) (owners : O) :\n    simulateQ impl₁ ((simulateQ client₁ work).run owners) = simulateQ impl₂ ((simulateQ client₂ work).run owners)",
   "PqxdhRegistrationJointBeaconOpaqueFinish.resume_marked": "theorem resume_marked (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R) (raw : Pqxdh.Bytes)\n    (value : PqxdhServerRootPreparation.Verified Reader)\n    (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes)\n    (consumed : List Pqxdh.Bytes) (native : NativeState KemSK) (owners : List EncodedEntry)\n    (next : Option Nat → OracleComp (SourceSpec KemSK) X) (selected : Nat)\n    (ciphertext : MlKem768Ciphertext) (candidate : MlKemSharedSecret) :\n    simulateQ (markEnc selected ciphertext candidate)\n        (freeResume setup codec checks identityIndex publicIdentity observe raw value ephemeral consumed native owners\n          next ciphertext candidate) =\n      simulateQ (markEnc selected ciphertext candidate)\n        (markedResume setup codec checks identityIndex publicIdentity observe raw value ephemeral consumed native owners\n          next selected ciphertext candidate)",
   "PqxdhRegistrationJointBeaconOpaqueFinish.post_marked": "theorem post_marked (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (decision : X → Bool) (count : Nat) (selected : Fin (count + 1))\n    (transcript : MlKemChallengeTranscript (OpaqueContext Reader KemSK A X count)) (candidate : MlKemSharedSecret) :\n    freePost setup codec checks decision count selected transcript candidate =\n      markedPost setup codec checks decision count selected transcript candidate",
-  "PqxdhRegistrationJointBeaconOpaqueFinish.opaqueBranch_marked": "theorem opaqueBranch_marked (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes)\n    (decision : X → Bool) (work : OracleComp (SourceSpec KemSK) X) (runtime : A)\n    (count : Nat) (selected : Fin (count + 1)) (index : Nat) (real : Bool) :\n    opaqueBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index\n        real =\n      markedBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index\n        real"
+  "PqxdhRegistrationJointBeaconOpaqueFinish.opaqueBranch_marked": "theorem opaqueBranch_marked (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes)\n    (decision : X → Bool) (work : OracleComp (SourceSpec KemSK) X) (runtime : A)\n    (count : Nat) (selected : Fin (count + 1)) (index : Nat) (real : Bool) :\n    opaqueBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index\n        real =\n      markedBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index\n        real",
+  "PqxdhRegistrationJointBeaconOpaqueFinishRouter.mark_free": "theorem mark_free {α : Type} (selected : Nat) (challenge : MlKem768Ciphertext) (candidate : MlKemSharedSecret)\n    (work : OracleComp (PqxdhRegistrationJointKemEncapsulation.Spec KemSK) α)\n    (free : work.IsQueryBoundP (IsTargetEnc selected challenge) 0) :\n    simulateQ (markEnc selected challenge candidate) work = work",
+  "PqxdhRegistrationJointBeaconOpaqueFinishRouter.simulateQ_agree": "theorem simulateQ_agree {ι α : Type} {spec : OracleSpec ι} {m : Type → Type} [Monad m] [LawfulMonad m]\n    (left right : QueryImpl spec m) (bad : ι → Prop) [DecidablePred bad]\n    (agree : ∀ query, ¬ bad query → left query = right query) (work : OracleComp spec α)\n    (free : work.IsQueryBoundP bad 0) :\n    simulateQ left work = simulateQ right work",
+  "PqxdhRegistrationJointBeaconOpaqueFinishRouter.accept_free": "theorem accept_free (selected : Nat) (challenge : MlKem768Ciphertext) (setup : Setup baseSpec KemSK)\n    (codec : Codec Reader Response) (checks : Checks) (identityIndex : Nat) (publicIdentity : PublicIdentity)\n    (raw : Pqxdh.Bytes) (state : NativeState KemSK) :\n    ((PqxdhRegistrationJointKemEncapsulation.accept setup codec checks identityIndex publicIdentity raw).run\n      state).IsQueryBoundP (IsTargetEnc selected challenge) 0",
+  "PqxdhRegistrationJointBeaconOpaqueFinishRouter.source_step": "theorem source_step (selected : Nat) (challenge : MlKem768Ciphertext) (setup : Setup baseSpec KemSK)\n    (codec : Codec Reader Response) (checks : Checks) (identityIndex : Nat) (publicIdentity : PublicIdentity)\n    (query : (PqxdhRegistrationJointServiceSchedule.Spec KemSK Response).Domain) (state : NativeState KemSK) :\n    ((eraseImpl eraseObservers (PqxdhRegistrationJointKemEncapsulation.impl setup codec checks identityIndex\n      publicIdentity) query).run state).IsQueryBoundP (IsTargetEnc selected challenge)\n      (if onLeft (onLeft (IsTarget selected challenge)) query then 1 else 0)",
+  "PqxdhRegistrationJointBeaconOpaqueFinishRouter.client_free": "theorem client_free (selected : Nat) (challenge : MlKem768Ciphertext) (setup : Setup baseSpec KemSK)\n    (codec : Codec Reader Response) (query : (PqxdhRegistrationJointRevealSchedule.Spec KemSK).Domain)\n    (other : ∀ address raw, query ≠ .inl (.inr (.finish address raw)))\n    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) :\n    ((PqxdhRegistrationJointRevealSchedule.client setup codec query).run owners).IsQueryBoundP\n      (onLeft (onLeft (IsTarget selected challenge))) 0",
+  "PqxdhRegistrationJointBeaconOpaqueFinishRouter.finish_unmarked": "theorem finish_unmarked (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (identityIndex : Nat) (publicIdentity : PublicIdentity) (selected : Nat) (challenge : MlKem768Ciphertext)\n    (candidate marker : MlKemSharedSecret) (address : Nat) (raw : Pqxdh.Bytes)\n    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) :\n    simulateQ (markedBy setup codec checks identityIndex publicIdentity selected challenge candidate marker)\n        ((markedFinish setup codec selected challenge address raw).run owners) =\n      simulateQ (eraseImpl eraseObservers (markedImpl setup codec checks identityIndex publicIdentity candidate))\n        ((markedFinish setup codec selected challenge address raw).run owners)",
+  "PqxdhRegistrationJointBeaconOpaqueFinishRouter.resume_free": "theorem resume_free (selected : Nat) (challenge : MlKem768Ciphertext) (setup : Setup baseSpec KemSK)\n    (codec : Codec Reader Response) (checks : Checks) (identityIndex : Nat) (publicIdentity : PublicIdentity)\n    (raw : Pqxdh.Bytes) (value : PqxdhServerRootPreparation.Verified Reader)\n    (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes)\n    (consumed : List Pqxdh.Bytes) (native : NativeState KemSK) (ciphertext : MlKem768Ciphertext)\n    (candidate : MlKemSharedSecret) :\n    ((simulateQ (eraseImpl eraseObservers (liftImpl clientNative setup native.2.sessions candidate forwardClient))\n      (PqxdhRegistrationJointKemOpaqueResume.resume setup codec checks identityIndex publicIdentity raw value ephemeral\n        (PqxdhAcceptedRegistration.ciphertextArray ciphertext) .challenge native.2 consumed)).run\n          (eraseObservers native)).IsQueryBoundP (IsTargetEnc selected challenge) 0",
+  "PqxdhRegistrationJointBeaconOpaqueFinishRouter.markedResume_unmarked": "theorem markedResume_unmarked (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R) (raw : Pqxdh.Bytes)\n    (value : PqxdhServerRootPreparation.Verified Reader)\n    (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes)\n    (consumed : List Pqxdh.Bytes) (native : NativeState KemSK) (owners : List EncodedEntry)\n    (next : Option Nat → OracleComp (SourceSpec KemSK) X) (selected : Nat)\n    (ciphertext : MlKem768Ciphertext) (candidate marker : MlKemSharedSecret) :\n    simulateQ (markEnc selected ciphertext marker)\n        (markedResume setup codec checks identityIndex publicIdentity observe raw value ephemeral consumed native owners\n          next selected ciphertext candidate) =\n      markedResume setup codec checks identityIndex publicIdentity observe raw value ephemeral consumed native owners\n        next selected ciphertext candidate",
+  "PqxdhRegistrationJointBeaconOpaqueFinishRouter.markedPost_free": "theorem markedPost_free (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (decision : X → Bool) (count : Nat) (selected : Fin (count + 1))\n    (transcript : MlKemChallengeTranscript (OpaqueContext Reader KemSK A X count)) (candidate : MlKemSharedSecret) :\n    markedPost setup codec checks decision count selected transcript candidate =\n      freeRouterPost setup codec checks decision count selected transcript candidate",
+  "PqxdhRegistrationJointBeaconOpaqueFinishRouter.opaqueBranch_freeRouter": "theorem opaqueBranch_freeRouter (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes)\n    (decision : X → Bool) (work : OracleComp (SourceSpec KemSK) X) (runtime : A)\n    (count : Nat) (selected : Fin (count + 1)) (index : Nat) (real : Bool) :\n    opaqueBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index\n        real =\n      freeRouterBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected\n        index real"
  },
  "leanpath": {
   "manifest": "/tmp/bc-arc-scratch/extract-design/inc1/leanpath",
@@ -377,6 +460,11 @@
   "note": "First entry: the scratch prefix inc1/olean, a resolved symlink mirror (mirror.py) of the first prefix of the published LEAN_PATH of central 4cc974c0 (/tmp/bc-coord/leanpaths/4cc974c049a3d542fdec728982bf80594ce443d2.leanpath), followed by that LEAN_PATH. check.py unlinks an artifact before writing it, so no other prefix was written. Final checks rebuilt the five modules in import order."
  },
  "root_checks": {
+  "root-router": {
+   "exit": 0,
+   "log_bytes": 0,
+   "root_source_sha256": "8352dc8e272641a1429641472dc4c982f515fd3641e9944bba7fe89547300d37"
+  },
   "root-final": {
    "exit": 0,
    "log_bytes": 0,
@@ -394,6 +482,13 @@
   }
  },
  "focused_inventory": {
+  "inv-router": {
+   "exit": 0,
+   "log_bytes": 2035,
+   "start": "2026-10-07T21:52:07Z",
+   "end": "2026-10-07T21:53:18Z",
+   "log_sha256": "11d3116e9b3d02086a6f718c2d38e3d365ca9fd628ad950419a5b5f161c005f8"
+  },
   "inv-s0b": {
    "exit": 0,
    "log_bytes": 1925,
@@ -402,25 +497,24 @@
    "log_sha256": "93e0a48a9ac926fafb97d6fc5393fb63a165f7b0095edb9e96c75e7567f36b18"
   }
  },
- "focused_inventory_note": "check-inventory ran at the S0b commit 62d5ac45 (all five modules) in the locked minimal proof flake (nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs; flake.nix and flake.lock identical to the worktree) under a coord.sh @nix lease. The earlier module commits were not checked separately; each only appends a module, its root import, its check-inventory block and its inventory row, recounted and rehashed with coord.sh inv. The documentation commit changes no inventoried file.",
- "forbidden_scan": "No sorry, admit, axiom, opaque, native_decide, implemented_by, extern or unsafe in the five modules. Scoped options: set_option linter.deprecated false in on 2 declarations of PqxdhRootFirstEntry and 8 of PqxdhExtractRomHiddenSuffix (VCVio probability notation evalSPMF/probEvent/probOutput only, checked by recompiling without the option: no deprecated lemma); set_option backward.isDefEq.respectTransparency false in on PqxdhRegistrationJointKemObserverFree.evaluate_map. Module-level options: autoImplicit false, maxRecDepth 100000.",
- "contamination_scan": "Exact-token grep of the plan risk-9 list: no hit. Direct-reference constant scan (scan/Scan.lean, a Lean metaprogram over the 372 declarations of the five modules): 0 references to the listed fixed-HKDF items; liveness case PqxdhCorrelatedExtractFamily.realGame detected.",
- "guard_liveness": "scan/GuardLiveness.lean with one deliberately wrong guard per module: exit 1, five guard mismatches.",
+ "focused_inventory_note": "check-inventory ran at the S0b commit 62d5ac45 (five modules) and on the tree of the S0b-completion commit 0a254e16 (all six modules) in the locked minimal proof flake (nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs; flake.nix and flake.lock identical to the worktree) under a coord.sh @nix lease. The earlier module commits were not checked separately; each only appends a module, its root import, its check-inventory block and its inventory row, recounted and rehashed with coord.sh inv. The documentation commit changes no inventoried file.",
+ "forbidden_scan": "No sorry, admit, axiom, opaque, native_decide, implemented_by, extern or unsafe in the six modules. Scoped options: set_option linter.deprecated false in on 2 declarations of PqxdhRootFirstEntry and 8 of PqxdhExtractRomHiddenSuffix (VCVio probability notation evalSPMF/probEvent/probOutput only, checked by recompiling without the option: no deprecated lemma); set_option backward.isDefEq.respectTransparency false in on PqxdhRegistrationJointKemObserverFree.evaluate_map. Module-level options: autoImplicit false, maxRecDepth 100000.",
+ "contamination_scan": "Exact-token grep of the plan risk-9 list: no hit. Direct-reference constant scan (scan/Scan.lean, a Lean metaprogram over the 470 declarations of the six modules): 0 references to the listed fixed-HKDF items; liveness case PqxdhCorrelatedExtractFamily.realGame detected.",
+ "guard_liveness": "scan/GuardLiveness.lean with one deliberately wrong guard per module: exit 1, six guard mismatches.",
  "deviations_from_plan": [
   "G1: binder prefix renamed start (Lean keyword); statement otherwise the plan's.",
   "S0a: the identity-pool transcript is erased rather than shown free of the candidate.",
-  "S0b: the Beacon still requests the selected decapsulation of the challenge and uses only the presence of the reply (a missing-handle rejection must be kept; dropping the request needs an owner-index-below-creation-count invariant across the client and router layers). router_moves shows the router's candidate can be moved into a reply marking; deadness of the router's candidate argument needs a no-other-decapsulator lemma and is deferred to S1b.",
+  "S0b: the Beacon still requests the selected decapsulation of the challenge from the router and uses only the presence of the reply (a missing-handle rejection must be kept; dropping the request would need an owner-index-below-creation-count invariant across the client and router layers). The router holds a fixed public placeholder instead of the candidate (opaqueBranch_freeRouter), so the plan's dead router candidate holds.",
   "S3a had no planned statement beyond its description; eager_first and uniformGame_first are the built statements.",
   "No planned statement turned out false or unprovable; none was weakened; no existing module changed."
  ],
  "contracts_used": "None new. G2 has the approved functional contract SourceFullCorrect as a premise (owner decision 2026-10-06). G1 is a statistical lemma about a lazily sampled table (the R1 random-oracle model of the slice is its intended instance). S0a and S0b are program equalities without premises.",
  "not_proved": [
   "Item 2 headlines T7 and T8.",
-  "S0b completion: the router candidate argument is dead.",
   "Stages S1b, S1c, S2, S3b, S4b, T, S7, S8, S5, S6, S9.",
   "Updates of composition-assumptions.md and trusted-boundary.md for the R1 scope extension (with T7/T8)."
  ],
- "re_estimate": "S0a, S0b, S1a, S3a and S4a (plan 15.5-26 agent-days) were built in one working session. Remaining item 2 stages: about 21-43 agent-days (plan 38-67): S0b completion 0.5-1.5, S1b 5-10, S1c 2-4, S2 2-4, S3b 3-6, S4b 0.5-1, T 1-2, S7 1-3, S8 2-4, S5+S6 1.5-2.5, S9 3-5.",
+ "re_estimate": "S0a, S0b (with the router candidate), S1a, S3a and S4a (plan 15.5-26 agent-days) were built in one working session. Remaining item 2 stages: about 20-41 agent-days (plan 38-67): S1b 5-10, S1c 2-4, S2 2-4, S3b 3-6, S4b 0.5-1, T 1-2, S7 1-3, S8 2-4, S5+S6 1.5-2.5, S9 3-5.",
  "checks_not_run": "No lake build, make verify, nix-collect-garbage, mutation testing, ProVerif or Rust run; no production Rust or ProVerif change.",
  "review": "Not independently reviewed. Not integrated into central."
 }
