@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1511
+	[handwritten-lean]=1512
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -29245,6 +29245,41 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem countP_le_one([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentReplay theorem countP_le_one"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentReplay\.replay_game$' "$selected_source_module" "PqxdhDeploymentReplay dependency BeaconcryptCore.Computational.PqxdhDeploymentReplay.replay_game"
 require_line_count 1 '^theorem replay_game([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentReplay theorem replay_game"
+
+# Common deployment experiment mid-run report detection (CE-7): stopped-after-accept program, accept-time native origin failure, sticky report flag, factor-free generated-index weak-EUF bound.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentAcceptDetection.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentAcceptDetection$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentAcceptDetection root import"
+require_line_count 14 '^theorem ' "$selected_source_module" "PqxdhDeploymentAcceptDetection theorem inventory"
+require_line_count 14 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentAcceptDetection guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentAcceptDetection\.upto_resume$' "$selected_source_module" "PqxdhDeploymentAcceptDetection dependency BeaconcryptCore.Computational.PqxdhDeploymentAcceptDetection.upto_resume"
+require_line_count 1 '^theorem upto_resume([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentAcceptDetection theorem upto_resume"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentAcceptDetection\.run_upto$' "$selected_source_module" "PqxdhDeploymentAcceptDetection dependency BeaconcryptCore.Computational.PqxdhDeploymentAcceptDetection.run_upto"
+require_line_count 1 '^theorem run_upto([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentAcceptDetection theorem run_upto"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentAcceptDetection\.sourceImpl_sticky$' "$selected_source_module" "PqxdhDeploymentAcceptDetection dependency BeaconcryptCore.Computational.PqxdhDeploymentAcceptDetection.sourceImpl_sticky"
+require_line_count 1 '^theorem sourceImpl_sticky([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentAcceptDetection theorem sourceImpl_sticky"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentAcceptDetection\.run_sticky$' "$selected_source_module" "PqxdhDeploymentAcceptDetection dependency BeaconcryptCore.Computational.PqxdhDeploymentAcceptDetection.run_sticky"
+require_line_count 1 '^theorem run_sticky([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentAcceptDetection theorem run_sticky"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentAcceptDetection\.continuation_sticky$' "$selected_source_module" "PqxdhDeploymentAcceptDetection dependency BeaconcryptCore.Computational.PqxdhDeploymentAcceptDetection.continuation_sticky"
+require_line_count 1 '^theorem continuation_sticky([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentAcceptDetection theorem continuation_sticky"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentAcceptDetection\.extend_report$' "$selected_source_module" "PqxdhDeploymentAcceptDetection dependency BeaconcryptCore.Computational.PqxdhDeploymentAcceptDetection.extend_report"
+require_line_count 1 '^theorem extend_report([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentAcceptDetection theorem extend_report"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentAcceptDetection\.reported_step$' "$selected_source_module" "PqxdhDeploymentAcceptDetection dependency BeaconcryptCore.Computational.PqxdhDeploymentAcceptDetection.reported_step"
+require_line_count 1 '^theorem reported_step([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentAcceptDetection theorem reported_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentAcceptDetection\.reduction_report$' "$selected_source_module" "PqxdhDeploymentAcceptDetection dependency BeaconcryptCore.Computational.PqxdhDeploymentAcceptDetection.reduction_report"
+require_line_count 1 '^theorem reduction_report([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentAcceptDetection theorem reduction_report"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentAcceptDetection\.continuation_step$' "$selected_source_module" "PqxdhDeploymentAcceptDetection dependency BeaconcryptCore.Computational.PqxdhDeploymentAcceptDetection.continuation_step"
+require_line_count 1 '^theorem continuation_step([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentAcceptDetection theorem continuation_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentAcceptDetection\.continuation_accepted$' "$selected_source_module" "PqxdhDeploymentAcceptDetection dependency BeaconcryptCore.Computational.PqxdhDeploymentAcceptDetection.continuation_accepted"
+require_line_count 1 '^theorem continuation_accepted([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentAcceptDetection theorem continuation_accepted"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentAcceptDetection\.upto_detects$' "$selected_source_module" "PqxdhDeploymentAcceptDetection dependency BeaconcryptCore.Computational.PqxdhDeploymentAcceptDetection.upto_detects"
+require_line_count 1 '^theorem upto_detects([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentAcceptDetection theorem upto_detects"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentAcceptDetection\.violation_detects$' "$selected_source_module" "PqxdhDeploymentAcceptDetection dependency BeaconcryptCore.Computational.PqxdhDeploymentAcceptDetection.violation_detects"
+require_line_count 1 '^theorem violation_detects([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentAcceptDetection theorem violation_detects"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentAcceptDetection\.forgery_detected$' "$selected_source_module" "PqxdhDeploymentAcceptDetection dependency BeaconcryptCore.Computational.PqxdhDeploymentAcceptDetection.forgery_detected"
+require_line_count 1 '^theorem forgery_detected([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentAcceptDetection theorem forgery_detected"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentAcceptDetection\.forgery_bound$' "$selected_source_module" "PqxdhDeploymentAcceptDetection dependency BeaconcryptCore.Computational.PqxdhDeploymentAcceptDetection.forgery_bound"
+require_line_count 1 '^theorem forgery_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentAcceptDetection theorem forgery_bound"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
