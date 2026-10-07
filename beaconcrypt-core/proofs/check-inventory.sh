@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1530
+	[handwritten-lean]=1531
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -30174,6 +30174,25 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem compiled_regs_from([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthTrace theorem compiled_regs_from"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthTrace\.compiled_regs$' "$selected_source_module" "PqxdhDeploymentServerAuthTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthTrace.compiled_regs"
 require_line_count 1 '^theorem compiled_regs([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthTrace theorem compiled_regs"
+
+# CE-8 common authentication failure of the Server-authentication game from public journal facts.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentServerAuthOutcome.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentServerAuthOutcome$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentServerAuthOutcome root import"
+require_line_count 6 '^theorem ' "$selected_source_module" "PqxdhDeploymentServerAuthOutcome theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentServerAuthOutcome guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthOutcome\.finish_some$' "$selected_source_module" "PqxdhDeploymentServerAuthOutcome dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthOutcome.finish_some"
+require_line_count 1 '^theorem finish_some([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthOutcome theorem finish_some"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthOutcome\.path_grows$' "$selected_source_module" "PqxdhDeploymentServerAuthOutcome dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthOutcome.path_grows"
+require_line_count 1 '^theorem path_grows([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthOutcome theorem path_grows"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthOutcome\.game_accepted$' "$selected_source_module" "PqxdhDeploymentServerAuthOutcome dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthOutcome.game_accepted"
+require_line_count 1 '^theorem game_accepted([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthOutcome theorem game_accepted"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthOutcome\.generation_keys$' "$selected_source_module" "PqxdhDeploymentServerAuthOutcome dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthOutcome.generation_keys"
+require_line_count 1 '^theorem generation_keys([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthOutcome theorem generation_keys"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthOutcome\.agreement_keys$' "$selected_source_module" "PqxdhDeploymentServerAuthOutcome dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthOutcome.agreement_keys"
+require_line_count 1 '^theorem agreement_keys([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthOutcome theorem agreement_keys"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthOutcome\.game_failure$' "$selected_source_module" "PqxdhDeploymentServerAuthOutcome dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthOutcome.game_failure"
+require_line_count 1 '^theorem game_failure([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthOutcome theorem game_failure"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"

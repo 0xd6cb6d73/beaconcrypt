@@ -1590,6 +1590,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentServerAuthFreeze
 
 import BeaconcryptCore.Computational.PqxdhDeploymentServerAuthTrace
 
+import BeaconcryptCore.Computational.PqxdhDeploymentServerAuthOutcome
+
 /-!
 # Beaconcrypt-core verification root
 
