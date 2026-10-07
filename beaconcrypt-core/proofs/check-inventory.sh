@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1504
+	[handwritten-lean]=1505
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -28996,6 +28996,29 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem compile_full_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileSecrecy theorem compile_full_bound"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileSecrecy\.compile_full_no_secret_read$' "$selected_source_module" "PqxdhDeploymentCompileSecrecy dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileSecrecy.compile_full_no_secret_read"
 require_line_count 1 '^theorem compile_full_no_secret_read([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileSecrecy theorem compile_full_no_secret_read"
+
+# Generic target selection (CE-4): exact split, event and advantage forms, and the plain and signed uniform-guess combinators.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/UniformTargetSelection.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.UniformTargetSelection$' proofs/lean/BeaconcryptCore.lean "UniformTargetSelection root import"
+require_line_count 8 '^theorem ' "$selected_source_module" "UniformTargetSelection theorem inventory"
+require_line_count 8 '^#guard_msgs in$' "$selected_source_module" "UniformTargetSelection guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.UniformTargetSelection\.chance_eq$' "$selected_source_module" "UniformTargetSelection dependency BeaconcryptCore.Computational.UniformTargetSelection.chance_eq"
+require_line_count 1 '^theorem chance_eq([[:space:]]|$)' "$selected_source_module" "UniformTargetSelection theorem chance_eq"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.UniformTargetSelection\.split$' "$selected_source_module" "UniformTargetSelection dependency BeaconcryptCore.Computational.UniformTargetSelection.split"
+require_line_count 1 '^theorem split([[:space:]]|$)' "$selected_source_module" "UniformTargetSelection theorem split"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.UniformTargetSelection\.split_of_eligible$' "$selected_source_module" "UniformTargetSelection dependency BeaconcryptCore.Computational.UniformTargetSelection.split_of_eligible"
+require_line_count 1 '^theorem split_of_eligible([[:space:]]|$)' "$selected_source_module" "UniformTargetSelection theorem split_of_eligible"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.UniformTargetSelection\.sum_eq_card_mul$' "$selected_source_module" "UniformTargetSelection dependency BeaconcryptCore.Computational.UniformTargetSelection.sum_eq_card_mul"
+require_line_count 1 '^theorem sum_eq_card_mul([[:space:]]|$)' "$selected_source_module" "UniformTargetSelection theorem sum_eq_card_mul"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.UniformTargetSelection\.guess$' "$selected_source_module" "UniformTargetSelection dependency BeaconcryptCore.Computational.UniformTargetSelection.guess"
+require_line_count 1 '^theorem guess([[:space:]]|$)' "$selected_source_module" "UniformTargetSelection theorem guess"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.UniformTargetSelection\.chance_ne_top$' "$selected_source_module" "UniformTargetSelection dependency BeaconcryptCore.Computational.UniformTargetSelection.chance_ne_top"
+require_line_count 1 '^theorem chance_ne_top([[:space:]]|$)' "$selected_source_module" "UniformTargetSelection theorem chance_ne_top"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.UniformTargetSelection\.advantage$' "$selected_source_module" "UniformTargetSelection dependency BeaconcryptCore.Computational.UniformTargetSelection.advantage"
+require_line_count 1 '^theorem advantage([[:space:]]|$)' "$selected_source_module" "UniformTargetSelection theorem advantage"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.UniformTargetSelection\.signed$' "$selected_source_module" "UniformTargetSelection dependency BeaconcryptCore.Computational.UniformTargetSelection.signed"
+require_line_count 1 '^theorem signed([[:space:]]|$)' "$selected_source_module" "UniformTargetSelection theorem signed"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
