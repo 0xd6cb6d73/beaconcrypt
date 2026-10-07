@@ -25,9 +25,11 @@ structure Kept (before after : PqxdhRegistrationJointSchedule.State KemSK) : Pro
   messages : ∀ index, messagesAt index after.pool.1.transcript = messagesAt index before.pool.1.transcript
   identity : after.shared.2.server.server.identity = before.shared.2.server.server.identity
 
+/-- `Kept` is reflexive: every state keeps its own owner registry, identity seeds, signing histories and Server identity. -/
 theorem kept_refl (state : PqxdhRegistrationJointSchedule.State KemSK) : Kept state state :=
   ⟨rfl, rfl, fun _ => rfl, rfl⟩
 
+/-- `Kept` is transitive: two steps that each keep the owner registry, the identity seeds, every signing history and the Server identity keep them together. -/
 theorem kept_trans (first second third : PqxdhRegistrationJointSchedule.State KemSK) (left : Kept first second)
     (right : Kept second third) : Kept first third :=
   ⟨right.owners.trans left.owners, right.seeds.trans left.seeds, fun index => (right.messages index).trans
