@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1522
+	[handwritten-lean]=1523
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -29913,6 +29913,19 @@ done
 require_line_count 2 '^\t\$\(MAKE\) check-proverif-generated-drift$' Makefile "serial CI generated-drift steps"
 require_line_count 1 '^check-proverif-generated-drift:$' Makefile "serial CI generated-drift gate"
 require_line_count 1 '^fn validate_serial_proverif_ci\(' "$fidelity_test" "serial CI source validation"
+
+
+# Record-lift R1 proposal: capability types and open program only; no security bound.
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftInterface.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRecordLiftInterface$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftInterface root import"
+require_line_count 3 '^theorem ' "$selected_source_module" "PqxdhRecordLiftInterface theorem inventory"
+require_line_count 3 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftInterface guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftInterface\.server_reply$' "$selected_source_module" "PqxdhRecordLiftInterface dependency BeaconcryptCore.Computational.PqxdhRecordLiftInterface.server_reply"
+require_line_count 1 '^theorem server_reply([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftInterface theorem server_reply"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftInterface\.beacon_reply$' "$selected_source_module" "PqxdhRecordLiftInterface dependency BeaconcryptCore.Computational.PqxdhRecordLiftInterface.beacon_reply"
+require_line_count 1 '^theorem beacon_reply([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftInterface theorem beacon_reply"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftInterface\.candidateReply_some$' "$selected_source_module" "PqxdhRecordLiftInterface dependency BeaconcryptCore.Computational.PqxdhRecordLiftInterface.candidateReply_some"
+require_line_count 1 '^theorem candidateReply_some([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftInterface theorem candidateReply_some"
 
 # Reviewed actual getter availability, distinct from network compromise powers.
 python3 proofs/source/test-getter-profile.py
