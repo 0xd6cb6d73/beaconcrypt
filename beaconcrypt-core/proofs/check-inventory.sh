@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1532
+	[handwritten-lean]=1533
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -30174,6 +30174,37 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem step_log([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerNative theorem step_log"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerNative\.program_log$' "$selected_source_module" "PqxdhDeploymentLaterServerNative dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerNative.program_log"
 require_line_count 1 '^theorem program_log([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerNative theorem program_log"
+
+# LQ-F: later game with the logged Server accept, Server seed and ephemeral log in the reveal; erasure to the Beacon-side and classical games
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerGame.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerGame$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentLaterServerGame root import"
+require_line_count 12 '^theorem ' "$selected_source_module" "PqxdhDeploymentLaterServerGame theorem inventory"
+require_line_count 12 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentLaterServerGame guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerGame\.handler_erase$' "$selected_source_module" "PqxdhDeploymentLaterServerGame dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerGame.handler_erase"
+require_line_count 1 '^theorem handler_erase([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerGame theorem handler_erase"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerGame\.handler_quiet$' "$selected_source_module" "PqxdhDeploymentLaterServerGame dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerGame.handler_quiet"
+require_line_count 1 '^theorem handler_quiet([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerGame theorem handler_quiet"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerGame\.run_erase$' "$selected_source_module" "PqxdhDeploymentLaterServerGame dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerGame.run_erase"
+require_line_count 1 '^theorem run_erase([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerGame theorem run_erase"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerGame\.snapImpl_erase$' "$selected_source_module" "PqxdhDeploymentLaterServerGame dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerGame.snapImpl_erase"
+require_line_count 1 '^theorem snapImpl_erase([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerGame theorem snapImpl_erase"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerGame\.snapImpl_quiet$' "$selected_source_module" "PqxdhDeploymentLaterServerGame dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerGame.snapImpl_quiet"
+require_line_count 1 '^theorem snapImpl_quiet([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerGame theorem snapImpl_quiet"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerGame\.later_run_wrap$' "$selected_source_module" "PqxdhDeploymentLaterServerGame dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerGame.later_run_wrap"
+require_line_count 1 '^theorem later_run_wrap([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerGame theorem later_run_wrap"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerGame\.later_erase$' "$selected_source_module" "PqxdhDeploymentLaterServerGame dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerGame.later_erase"
+require_line_count 1 '^theorem later_erase([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerGame theorem later_erase"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerGame\.runPhase_erase$' "$selected_source_module" "PqxdhDeploymentLaterServerGame dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerGame.runPhase_erase"
+require_line_count 1 '^theorem runPhase_erase([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerGame theorem runPhase_erase"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerGame\.runPhase_classical$' "$selected_source_module" "PqxdhDeploymentLaterServerGame dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerGame.runPhase_classical"
+require_line_count 1 '^theorem runPhase_classical([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerGame theorem runPhase_classical"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerGame\.game_frame$' "$selected_source_module" "PqxdhDeploymentLaterServerGame dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerGame.game_frame"
+require_line_count 1 '^theorem game_frame([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerGame theorem game_frame"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerGame\.game_event$' "$selected_source_module" "PqxdhDeploymentLaterServerGame dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerGame.game_event"
+require_line_count 1 '^theorem game_event([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerGame theorem game_event"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerGame\.game_classical_event$' "$selected_source_module" "PqxdhDeploymentLaterServerGame dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerGame.game_classical_event"
+require_line_count 1 '^theorem game_classical_event([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerGame theorem game_classical_event"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
