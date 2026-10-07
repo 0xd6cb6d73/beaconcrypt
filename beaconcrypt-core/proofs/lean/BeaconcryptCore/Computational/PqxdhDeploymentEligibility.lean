@@ -807,10 +807,10 @@ theorem coinSend_alike {Value : Type} (setup : Setup baseSpec KemSK) (codec : Co
       exact alike_trans _ _ _ firstAlike (ih reply restBound middle second)
 
 /-- The secrecy layer records each secrecy command once, with its reply. -/
-theorem ledger_secrecy (codec : Codec Reader Response) (serverKid : Std.U64) (bounds : FreshBounds)
-    (secrecy : PqxdhDeploymentInterface.Secrecy) (ledger : Ledger)
+theorem ledger_secrecy (crypto : Pqxdh.Crypto) (codec : Codec Reader Response) (serverKid : Std.U64)
+    (bounds : FreshBounds) (secrecy : PqxdhDeploymentInterface.Secrecy) (ledger : Ledger)
     (result : Option RawCtxSourceSend.Encrypted × Ledger)
-    (supported : result ∈ support ((ledgerImpl codec serverKid bounds (.inr secrecy)).run ledger)) :
+    (supported : result ∈ support ((ledgerImpl crypto codec serverKid bounds (.inr secrecy)).run ledger)) :
     result.2.transcript = ledger.transcript ++ [⟨.inr secrecy, result.1⟩] := by
   rcases secrecy with ⟨handle, left, right⟩ | ⟨handle, length⟩
   · simp only [ledgerImpl, StateT.run] at supported
@@ -845,7 +845,7 @@ theorem handler_run (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
     (PqxdhDeploymentSecrecy.handler setup codec checks route serverSeed bounds query).run (ledger, state) =
       (fun result => (result.1.1, (result.1.2, result.2))) <$>
         (simulateQ (PqxdhDeploymentNative.handler setup codec checks route serverSeed)
-          ((ledgerImpl codec setup.serverKeyId bounds query).run ledger)).run state := rfl
+          ((ledgerImpl setup.source.crypto codec setup.serverKeyId bounds query).run ledger)).run state := rfl
 
 /-- Every query of the complete experiment keeps the invariant between its transcript and its native state. -/
 theorem experiment_step (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
@@ -865,14 +865,16 @@ theorem experiment_step (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
     obtain ⟨answer, answerMember, rfl⟩ := member
     exact command_step setup codec checks route serverSeed server request ledger.transcript native agree answer
       answerMember
-  · have value : reached.1 ∈ support ((ledgerImpl codec setup.serverKeyId bounds (.inr secrecy)).run ledger) := by
+  · have value : reached.1 ∈ support ((ledgerImpl setup.source.crypto codec setup.serverKeyId bounds (.inr secrecy)).run
+        ledger) := by
       apply OracleComp.support_simulateQ_run'_subset (PqxdhDeploymentNative.handler setup codec checks route serverSeed)
         _ native
       rw [StateT.run'_eq, support_map]
       exact ⟨reached, member, rfl⟩
-    have recorded := ledger_secrecy codec setup.serverKeyId bounds secrecy ledger reached.1 value
+    have recorded := ledger_secrecy setup.source.crypto codec setup.serverKeyId bounds secrecy ledger reached.1 value
     have alike := coinSend_alike setup codec checks route serverSeed _
-      (PqxdhDeploymentSecrecy.secrecy_frame codec setup.serverKeyId bounds secrecy ledger) native reached member
+      (PqxdhDeploymentSecrecy.secrecy_frame setup.source.crypto codec setup.serverKeyId bounds secrecy ledger) native
+      reached member
     simp only [recorded]
     exact agree_extend setup codec server ledger.transcript native.native reached.2.native _ agree alike rfl rfl trivial
       trivial
@@ -960,16 +962,17 @@ theorem failure_public (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
   split <;> rfl
 
 /-- A designated owner is natively Established, pinned to the protected key ID and to the pin of its created binding. -/
-theorem designate_owner_native (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+theorem designate_owner_native (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (crypto : Pqxdh.Crypto)
     (server : RawCtxServerRouting.Identity) (serverKid : Std.U64) (transcript : List Entry)
     (native : PqxdhRegistrationSchedule.State KemSK) (agree : Agree setup codec server transcript native)
     (index session k : Nat)
-    (designated : PqxdhDeploymentTranscript.designate codec serverKid transcript (.owner index) = some (session, k)) :
+    (designated : PqxdhDeploymentTranscript.designate crypto codec serverKid transcript (.owner index) =
+      some (session, k)) :
     k = index ∧ ∃ owner pin, native.owners[index]? = some owner ∧ phaseClass owner.beacon.phase = .established ∧
       (summarize transcript).owners[index]? = some (pin, serverKid) ∧ owner.beacon.serverIdentity = pin ∧
       pinnedKeyId owner.beacon.phase = serverKid := by
-  obtain ⟨same, established, pin, _, _, _, binding, _⟩ :=
-    PqxdhDeploymentTranscript.designate_owner codec serverKid transcript index session k designated
+  obtain ⟨same, established, pin, _, _, _, _, binding, _⟩ :=
+    PqxdhDeploymentTranscript.designate_owner crypto codec serverKid transcript index session k designated
   obtain ⟨owner, found, pinEq, keyEq⟩ := agree.bindings index pin serverKid binding
   have phases := agree.phases index
   rw [established, found] at phases

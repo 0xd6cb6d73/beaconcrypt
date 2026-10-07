@@ -20,7 +20,7 @@ variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response A X : Typ
 noncomputable def compileFull (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (bounds : FreshBounds) (mode : Mode)
     (adversary : OracleComp (ModeSpec mode) X) : OracleComp (SourceSpec KemSK) ((X × Ledger) × Local) :=
-  compile setup codec route (wrap codec setup.serverKeyId bounds (asModeO mode adversary))
+  compile setup codec route (wrap setup.source.crypto codec setup.serverKeyId bounds (asModeO mode adversary))
 
 /-- The merged outcome of the compiled program of a complete-interface adversary. -/
 def mergeFull (outcome : Option (PqxdhRegistrationJointInitializedSchedule.NativeOutcome KemSK ((X × Ledger) × Local)) × A) :
@@ -123,9 +123,9 @@ theorem send_bound (core : Fin 12) (handle : PqxdhDeploymentInterface.Handle) (p
       simp [ten]
 
 /-- Every query of the secrecy layer issues at most its class's native commands of each class. -/
-theorem wrap_step (codec : Codec Reader Response) (serverKid : Std.U64) (bounds : FreshBounds) (core : Fin 12)
-    (query : PqxdhDeploymentInterface.Query) (ledger : Ledger) :
-    ((ledgerImpl codec serverKid bounds query).run ledger).IsQueryBoundP (fun request => commandKind request = core)
+theorem wrap_step (crypto : Pqxdh.Crypto) (codec : Codec Reader Response) (serverKid : Std.U64) (bounds : FreshBounds)
+    (core : Fin 12) (query : PqxdhDeploymentInterface.Query) (ledger : Ledger) :
+    ((ledgerImpl crypto codec serverKid bounds query).run ledger).IsQueryBoundP (fun request => commandKind request = core)
       (wrapCost bounds core (queryClass query)) := by
   rcases query with request | secrecy
   · rw [PqxdhDeploymentSecrecy.ledgerImpl_forward, isQueryBoundP_map_iff, isQueryBoundP_query_iff]
@@ -183,13 +183,15 @@ theorem asModeO_bound (mode : Mode) (adversary : OracleComp (ModeSpec mode) X) (
   | P => exact observe_bound adversary kind (budget.cap kind) (respects kind)
 
 /-- Budget transport through the secrecy layer: the wrapped adversary makes at most `∑ full, wrapCost bounds core full * budget.cap full` native commands of each native class `core`. -/
-theorem wrap_bound (codec : Codec Reader Response) (serverKid : Std.U64) (bounds : FreshBounds) (mode : Mode)
-    (adversary : OracleComp (ModeSpec mode) X) (budget : Budget) (respects : budget.Respects adversary) (core : Fin 12) :
-    (wrap codec serverKid bounds (asModeO mode adversary)).IsQueryBoundP (fun request => commandKind request = core)
+theorem wrap_bound (crypto : Pqxdh.Crypto) (codec : Codec Reader Response) (serverKid : Std.U64) (bounds : FreshBounds)
+    (mode : Mode) (adversary : OracleComp (ModeSpec mode) X) (budget : Budget) (respects : budget.Respects adversary)
+    (core : Fin 12) :
+    (wrap crypto codec serverKid bounds (asModeO mode adversary)).IsQueryBoundP (fun request => commandKind request = core)
       (∑ full, wrapCost bounds core full * budget.cap full) :=
   FinitePartitionQueryBounds.weighted_bound queryClass (wrapCost bounds core) budget.cap
-    (ledgerImpl codec serverKid bounds) (fun request => commandKind request = core) (asModeO mode adversary)
-    (asModeO_bound mode adversary budget respects) (fun query ledger => wrap_step codec serverKid bounds core query ledger)
+    (ledgerImpl crypto codec serverKid bounds) (fun request => commandKind request = core) (asModeO mode adversary)
+    (asModeO_bound mode adversary budget respects)
+    (fun query ledger => wrap_step crypto codec serverKid bounds core query ledger)
     Ledger.empty
 
 /-- Budget transport to source14: the compiled program of a complete-interface adversary that respects `budget` makes at most `∑ core, cost kind core * ∑ full, wrapCost bounds core full * budget.cap full` source14 queries of each kind. This is the `certified` premise of the KEM and root theorems for the compiled program. -/
@@ -201,7 +203,7 @@ theorem compile_full_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader 
       (fun request => sourceKind (KemSK := KemSK) request = kind)
       (∑ core, cost kind core * ∑ full, wrapCost bounds core full * budget.cap full) :=
   PqxdhDeploymentCompileBudget.compile_bound setup codec route _ _
-    (fun core => wrap_bound codec setup.serverKeyId bounds mode adversary budget respects core) kind
+    (fun core => wrap_bound setup.source.crypto codec setup.serverKeyId bounds mode adversary budget respects core) kind
 
 /-- The compiled program issues no identity, KEM, prekey or one-time field read. -/
 theorem compile_full_no_secret_read (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)

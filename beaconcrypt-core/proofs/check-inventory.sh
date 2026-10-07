@@ -28938,8 +28938,8 @@ require_line_count 1 '^theorem compile_bound([[:space:]]|$)' "$selected_source_m
 
 selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentTranscript.lean
 require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentTranscript$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentTranscript root import"
-require_line_count 4 '^theorem ' "$selected_source_module" "PqxdhDeploymentTranscript theorem inventory"
-require_line_count 4 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentTranscript guarded dependencies"
+require_line_count 6 '^theorem ' "$selected_source_module" "PqxdhDeploymentTranscript theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentTranscript guarded dependencies"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentTranscript\.summarize_append$' "$selected_source_module" "PqxdhDeploymentTranscript dependency BeaconcryptCore.Computational.PqxdhDeploymentTranscript.summarize_append"
 require_line_count 1 '^theorem summarize_append([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentTranscript theorem summarize_append"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentTranscript\.step_other$' "$selected_source_module" "PqxdhDeploymentTranscript dependency BeaconcryptCore.Computational.PqxdhDeploymentTranscript.step_other"
@@ -28948,6 +28948,10 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem designate_peer([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentTranscript theorem designate_peer"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentTranscript\.designate_owner$' "$selected_source_module" "PqxdhDeploymentTranscript dependency BeaconcryptCore.Computational.PqxdhDeploymentTranscript.designate_owner"
 require_line_count 1 '^theorem designate_owner([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentTranscript theorem designate_owner"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentTranscript\.designate_peer_complete$' "$selected_source_module" "PqxdhDeploymentTranscript dependency BeaconcryptCore.Computational.PqxdhDeploymentTranscript.designate_peer_complete"
+require_line_count 1 '^theorem designate_peer_complete([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentTranscript theorem designate_peer_complete"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentTranscript\.designate_owner_complete$' "$selected_source_module" "PqxdhDeploymentTranscript dependency BeaconcryptCore.Computational.PqxdhDeploymentTranscript.designate_owner_complete"
+require_line_count 1 '^theorem designate_owner_complete([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentTranscript theorem designate_owner_complete"
 
 # Common deployment experiment (CE-2): secrecy layer with test, fresh and transcript, CE handler, mode-indexed game, mode P projection and secrecy frame.
 
@@ -29089,8 +29093,8 @@ require_line_count 1 '^theorem designate_owner_native([[:space:]]|$)' "$selected
 
 selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentKeyMatch.lean
 require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentKeyMatch$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentKeyMatch root import"
-require_line_count 9 '^theorem ' "$selected_source_module" "PqxdhDeploymentKeyMatch theorem inventory"
-require_line_count 9 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentKeyMatch guarded dependencies"
+require_line_count 11 '^theorem ' "$selected_source_module" "PqxdhDeploymentKeyMatch theorem inventory"
+require_line_count 11 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentKeyMatch guarded dependencies"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKeyMatch\.bundleOf_mem$' "$selected_source_module" "PqxdhDeploymentKeyMatch dependency BeaconcryptCore.Computational.PqxdhDeploymentKeyMatch.bundleOf_mem"
 require_line_count 1 '^theorem bundleOf_mem([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKeyMatch theorem bundleOf_mem"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKeyMatch\.buildOf_mem$' "$selected_source_module" "PqxdhDeploymentKeyMatch dependency BeaconcryptCore.Computational.PqxdhDeploymentKeyMatch.buildOf_mem"
@@ -29099,6 +29103,10 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem candidateOf_written([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKeyMatch theorem candidateOf_written"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKeyMatch\.verified_signed_pq$' "$selected_source_module" "PqxdhDeploymentKeyMatch dependency BeaconcryptCore.Computational.PqxdhDeploymentKeyMatch.verified_signed_pq"
 require_line_count 1 '^theorem verified_signed_pq([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKeyMatch theorem verified_signed_pq"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKeyMatch\.verified_keys$' "$selected_source_module" "PqxdhDeploymentKeyMatch dependency BeaconcryptCore.Computational.PqxdhDeploymentKeyMatch.verified_keys"
+require_line_count 1 '^theorem verified_keys([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKeyMatch theorem verified_keys"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKeyMatch\.publishedPq_candidate$' "$selected_source_module" "PqxdhDeploymentKeyMatch dependency BeaconcryptCore.Computational.PqxdhDeploymentKeyMatch.publishedPq_candidate"
+require_line_count 1 '^theorem publishedPq_candidate([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKeyMatch theorem publishedPq_candidate"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKeyMatch\.published_candidate$' "$selected_source_module" "PqxdhDeploymentKeyMatch dependency BeaconcryptCore.Computational.PqxdhDeploymentKeyMatch.published_candidate"
 require_line_count 1 '^theorem published_candidate([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKeyMatch theorem published_candidate"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKeyMatch\.designate_keymatch$' "$selected_source_module" "PqxdhDeploymentKeyMatch dependency BeaconcryptCore.Computational.PqxdhDeploymentKeyMatch.designate_keymatch"

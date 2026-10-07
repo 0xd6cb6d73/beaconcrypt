@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.PqxdhDeploymentNative
 import BeaconcryptCore.Computational.PqxdhDeploymentTranscript
 
-/-! The complete common deployment experiment (CE-2): the secrecy commands, the transcript and both observation modes on top of the native handler of `PqxdhDeploymentNative`. The secrecy layer `ledgerImpl` forwards every coin and command unchanged and records it with its mode O reply in the transcript. `test handle left right` requires `|left| = |right| > 0`; the first admitted test draws the hidden bit with one experiment coin and fixes its handle as the test session; a later test is admitted only on the same handle or on a handle with the same public designation as the first, computed on the transcript so far; an admitted test is exactly one send of `left` or `right` by the bit, with the send's allocation, failure and rollback behaviour. `fresh handle length` requires `min ≤ length ≤ max`, draws a uniform message of `length` bytes with one experiment coin per byte when the command is issued, keeps it private and sends it on the handle. A rejected secrecy command changes nothing but the transcript. The experiment's draws are never recorded in the transcript. The CE handler is this layer composed with the native handler on the product state `Ledger × State`; running an adversary under it is running the wrapped adversary `wrap` against the native handler (`run_wrap`). Mode P is the mode O experiment behind `observeFull`, whose replies are the mode P projections of the mode O replies (`observeFull_project`). No security claim is made here. -/
+/-! The complete common deployment experiment (CE-2): the secrecy commands, the transcript and both observation modes on top of the native handler of `PqxdhDeploymentNative`. The secrecy layer `ledgerImpl` forwards every coin and command unchanged and records it with its mode O reply in the transcript. `test handle left right` requires `|left| = |right| > 0`; the first admitted test draws the hidden bit with one experiment coin and fixes its handle as the test session; a later test is admitted only on the same handle or on a handle with the same public designation as the first, computed on the transcript so far with the public attached verification of the setup's source crypto; an admitted test is exactly one send of `left` or `right` by the bit, with the send's allocation, failure and rollback behaviour. `fresh handle length` requires `min ≤ length ≤ max`, draws a uniform message of `length` bytes with one experiment coin per byte when the command is issued, keeps it private and sends it on the handle. A rejected secrecy command changes nothing but the transcript. The experiment's draws are never recorded in the transcript. The CE handler is this layer composed with the native handler on the product state `Ledger × State`; running an adversary under it is running the wrapped adversary `wrap` against the native handler (`run_wrap`). Mode P is the mode O experiment behind `observeFull`, whose replies are the mode P projections of the mode O replies (`observeFull_project`). Secrecy claims (left-or-right and fresh-message secrecy) are stated only for mode P: in mode O a raw receive returns the actual plaintext, so forwarding a test or fresh ciphertext to the partner's raw receive reveals the hidden message, and the secrecy commands are just sends; authentication claims may use either mode. The ledger's transcript stores the mode O reply of every query in both modes, so in mode P it is an analysis log that contains the plaintexts of raw receives, not the adversary's view; the adversary's view of an entry is `Entry.view mode`. No security claim is made here. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
@@ -58,17 +58,18 @@ def send : Handle → Pqxdh.Bytes → OracleComp Spec (Option RawCtxSourceSend.E
   | .owner index, plaintext => (Spec.query (.inr (.beaconSend index plaintext)) : OracleComp Spec _)
 
 /-- A later test handle belongs to the test session: it is the first handle, or it has the first handle's public designation. -/
-def SameSession (codec : Codec Reader Response) (serverKid : Std.U64) (transcript : List Entry) (first handle : Handle) :
-    Prop :=
-  handle = first ∨ ∃ target, PqxdhDeploymentTranscript.designate codec serverKid transcript first = some target ∧
-    PqxdhDeploymentTranscript.designate codec serverKid transcript handle = some target
+def SameSession (crypto : Pqxdh.Crypto) (codec : Codec Reader Response) (serverKid : Std.U64) (transcript : List Entry)
+    (first handle : Handle) : Prop :=
+  handle = first ∨ ∃ target, PqxdhDeploymentTranscript.designate crypto codec serverKid transcript first = some target ∧
+    PqxdhDeploymentTranscript.designate crypto codec serverKid transcript handle = some target
 
 /-- The two test messages have equal nonzero length. -/
 def Admissible (left right : Pqxdh.Bytes) : Prop := left.length = right.length ∧ 0 < left.length
 
 open Classical in
 /-- The secrecy layer. Coins and commands are forwarded unchanged and recorded; `test` and `fresh` are sends of experiment-chosen messages, recorded with their reply. -/
-noncomputable def ledgerImpl (codec : Codec Reader Response) (serverKid : Std.U64) (bounds : FreshBounds) :
+noncomputable def ledgerImpl (crypto : Pqxdh.Crypto) (codec : Codec Reader Response) (serverKid : Std.U64)
+    (bounds : FreshBounds) :
     QueryImpl FullSpec (StateT Ledger (OracleComp Spec))
   | .inl query => fun ledger =>
       (fun reply => (reply, ledger.record (.inl query) reply)) <$> (Spec.query query : OracleComp Spec _)
@@ -80,7 +81,7 @@ noncomputable def ledgerImpl (codec : Codec Reader Response) (serverKid : Std.U6
             let reply ← send handle (if bit then right else left)
             pure (reply, { ledger.record (.inr (.test handle left right)) reply with test := some ⟨bit, handle, 1⟩ })
         | some session =>
-            if SameSession codec serverKid ledger.transcript session.first handle then do
+            if SameSession crypto codec serverKid ledger.transcript session.first handle then do
               let reply ← send handle (if session.bit then right else left)
               pure (reply, { ledger.record (.inr (.test handle left right)) reply with
                 test := some { session with count := session.count + 1 } })
@@ -105,12 +106,12 @@ noncomputable def handler (setup : Setup baseSpec KemSK) (codec : Codec Reader R
     (route : RawCtxServerRouting.SenderDecoder) (serverSeed : IdentitySeed) (bounds : FreshBounds) :
     QueryImpl FullSpec (StateT (State KemSK) ProbComp) :=
   ((PqxdhDeploymentNative.handler setup codec checks route serverSeed).mapStateTBase
-    (ledgerImpl codec setup.serverKeyId bounds)).flattenStateT
+    (ledgerImpl setup.source.crypto codec setup.serverKeyId bounds)).flattenStateT
 
 /-- A complete-interface adversary as a native-interface program that runs the secrecy layer itself and returns its final ledger. -/
-noncomputable def wrap (codec : Codec Reader Response) (serverKid : Std.U64) (bounds : FreshBounds)
-    (adversary : OracleComp FullSpec X) : OracleComp Spec (X × Ledger) :=
-  (simulateQ (ledgerImpl codec serverKid bounds) adversary).run Ledger.empty
+noncomputable def wrap (crypto : Pqxdh.Crypto) (codec : Codec Reader Response) (serverKid : Std.U64)
+    (bounds : FreshBounds) (adversary : OracleComp FullSpec X) : OracleComp Spec (X × Ledger) :=
+  (simulateQ (ledgerImpl crypto codec serverKid bounds) adversary).run Ledger.empty
 
 /-- The common deployment experiment in observation mode `mode`: the actual Server constructor with a generated seed (never a supplied one), then the adversary against the CE handler from the empty ledger and the initial native state. A constructor failure ends the run with no outcome. -/
 noncomputable def game (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
@@ -132,7 +133,7 @@ theorem run_wrap (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) 
     (simulateQ (handler setup codec checks route serverSeed bounds) adversary).run (Ledger.empty, state) =
       (fun result => (result.1.1, (result.1.2, result.2))) <$>
         (simulateQ (PqxdhDeploymentNative.handler setup codec checks route serverSeed)
-          (wrap codec setup.serverKeyId bounds adversary)).run state := by
+          (wrap setup.source.crypto codec setup.serverKeyId bounds adversary)).run state := by
   rw [wrap, OracleComp.simulateQ_mapStateTBase_run_eq_map_flattenStateT, Functor.map_map]
   simp only [handler]
   exact (id_map _).symm
@@ -144,7 +145,7 @@ theorem game_wrap (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (game setup codec checks route ensureInit identityIndex bounds mode adversary).run runtime =
       (fun outcome => (outcome.1.map fun result => (result.1, result.2.1.1, (result.2.1.2, result.2.2)), outcome.2)) <$>
         (PqxdhDeploymentNative.game setup codec checks route ensureInit identityIndex
-          (wrap codec setup.serverKeyId bounds (asModeO mode adversary))).run runtime := by
+          (wrap setup.source.crypto codec setup.serverKeyId bounds (asModeO mode adversary))).run runtime := by
   simp only [game, PqxdhDeploymentNative.game, StateT.run, map_bind]
   apply bind_congr
   rintro ⟨_ | created, after⟩
@@ -170,9 +171,9 @@ def coinOrSend : Spec.Domain → Bool
   | .inr _ => false
 
 /-- The secrecy commands issue nothing but experiment coins and sends: no registration command, no HMAC or BLAKE2b query and no raw receive. In particular they never touch the Extract family, the pending tokens, the consumed registration IDs or an owner's phase. -/
-theorem secrecy_frame (codec : Codec Reader Response) (serverKid : Std.U64) (bounds : FreshBounds)
-    (secrecy : Secrecy) (ledger : Ledger) :
-    ((ledgerImpl codec serverKid bounds (.inr secrecy)).run ledger).IsQueryBoundP
+theorem secrecy_frame (crypto : Pqxdh.Crypto) (codec : Codec Reader Response) (serverKid : Std.U64)
+    (bounds : FreshBounds) (secrecy : Secrecy) (ledger : Ledger) :
+    ((ledgerImpl crypto codec serverKid bounds (.inr secrecy)).run ledger).IsQueryBoundP
       (fun query => coinOrSend query = false) 0 := by
   have pureFrame : ∀ {Value : Type} (value : Value),
       (pure value : OracleComp Spec Value).IsQueryBoundP (fun query => coinOrSend query = false) 0 :=
@@ -223,9 +224,9 @@ theorem secrecy_frame (codec : Codec Reader Response) (serverKid : Std.U64) (bou
     · trivial
 
 /-- A forwarded coin or command is answered by exactly that query and recorded with its reply. -/
-theorem ledgerImpl_forward (codec : Codec Reader Response) (serverKid : Std.U64) (bounds : FreshBounds)
-    (query : Spec.Domain) (ledger : Ledger) :
-    (ledgerImpl codec serverKid bounds (.inl query)).run ledger =
+theorem ledgerImpl_forward (crypto : Pqxdh.Crypto) (codec : Codec Reader Response) (serverKid : Std.U64)
+    (bounds : FreshBounds) (query : Spec.Domain) (ledger : Ledger) :
+    (ledgerImpl crypto codec serverKid bounds (.inl query)).run ledger =
       (fun reply => (reply, ledger.record (.inl query) reply)) <$> (Spec.query query : OracleComp Spec _) := rfl
 
 end BeaconcryptCore.Computational.PqxdhDeploymentSecrecy

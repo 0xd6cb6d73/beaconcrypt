@@ -1,14 +1,14 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.PqxdhDeploymentEligibility
 
-/-! Key match and ciphertext link of the public designation (CE-5, second part), under the approved codec contracts. A Server peer designated `(i, k)` was accepted under raw bytes whose verified PQ key is the KEM public key that owner `k` signed in its published bundle, and whose identity key is owner `k`'s identity key (`designate_keymatch`, with `Phase1ReadBack`). A Beacon owner `c` designated `(i, c)` is natively Established and pinned to the protected key ID and to the Server's own identity; the Phase 2 response of session `i` is the writer output of fields carrying the Server identity, the ciphertext read from `c`'s accepted finish input is the KEM ciphertext of those fields, and the PQ key verified at accept `i` is the one `c` signed in its published bundle (`owner_link`, with `Phase1ReadBack` and `Phase2ReadBack`). Owner `k`'s published key is tied to its native KEM pair while it is not finished (`PublishedKey`). The attached-verification wiring of the setup is the existing functional contract `setup.wiring`. No security assumption is made here. -/
+/-! Key match and ciphertext link of the public designation (CE-5, second part), under the approved codec contracts. The designation compares keys: the PQ key that the source attached verification yields from the accept bytes, and the PQ key read from the owner's published PQ field. A Server peer designated `(i, k)` was accepted under raw bytes whose verified PQ key is the KEM public key that owner `k` signed in its published bundle, and whose identity key is owner `k`'s identity key (`designate_keymatch`, with `Phase1ReadBack`). A Beacon owner `c` designated `(i, c)` is natively Established and pinned to the protected key ID and to the Server's own identity; the Phase 2 response of session `i` is the writer output of fields carrying the Server identity, the ciphertext read from `c`'s accepted finish input is the KEM ciphertext of those fields, and the PQ key verified at accept `i` is the one `c` signed in its published bundle (`owner_link`, with `Phase1ReadBack` and `Phase2ReadBack`). Both statements hold for every verification of the accept bytes by the native verification prefix `RawSignatures.verified`, whose candidate and source attached verification are exactly what the designation reads (`verified_keys`); no signature-scheme property and no wiring law is used for them. Owner `k`'s published key is tied to its native KEM pair only while the owner is not finished (`PublishedKey`): a finish or abort erases the KEM pair from the native state, so the tie to KEM creation index `k` of the pool after finish is not part of this module. No security assumption is made here. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhDeploymentKeyMatch
 open PqxdhServerAuthExperiment PqxdhJointIdentity
 open PqxdhDeploymentInterface (Entry)
-open PqxdhDeploymentTranscript (summarize candidateOf bundleOf buildOf acceptOf finishOf designate)
+open PqxdhDeploymentTranscript (summarize candidateOf bundleOf buildOf acceptOf finishOf designate acceptedKeys publishedPq)
 open PqxdhDeploymentEligibility (Agree BundleShaped BuildShaped kemPublic phaseClass pinnedKeyId)
 open PqxdhServerAuthNegativeControl (Phase1ReadBack Phase2ReadBack)
 open PqxdhEd25519EufCma (Phase1Candidate Phase1KeyTuple encodedIdentity)
@@ -95,6 +95,21 @@ theorem verified_signed_pq (setup : Setup baseSpec KemSK) (codec : Codec Reader 
     rw [← same.2]
   · cases pqVerified
 
+/-- A verification of raw accept bytes by the native verification prefix reads exactly the raw candidate of the designation, and the source attached verification of that candidate yields the verified identity key and key tuple. -/
+theorem verified_keys (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (raw : Pqxdh.Bytes) (value : PqxdhServerRootPreparation.Verified Reader)
+    (accepted : PqxdhRegistrationJointRawSignatures.verified setup codec checks raw = some value) :
+    candidateOf codec raw = some value.candidate ∧
+      acceptedKeys setup.source.crypto value.candidate = some (value.identity, value.keys) :=
+  PqxdhRegistrationJointRawSignatures.verified_origin setup codec checks raw value accepted
+
+/-- The PQ key read from an honest published candidate is the key whose PQ message it signed. -/
+theorem publishedPq_candidate (identity : PqxdhEd25519EufCma.Ed25519PublicKey) (keys : Phase1KeyTuple)
+    (preSignature oneSignature pqSignature : PqxdhEd25519EufCma.Ed25519Signature) :
+    publishedPq (PqxdhJointPhase1SourceWriter.candidate identity keys preSignature oneSignature pqSignature) =
+      some keys.pqKey := by
+  simp [publishedPq, PqxdhJointPhase1SourceWriter.candidate]
+
 /-- The published bundle of a designated owner gives its honest candidate and its published key. -/
 theorem published_candidate (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (phase1 : Phase1ReadBack codec) (server : RawCtxServerRouting.Identity) (transcript : List Entry)
@@ -116,37 +131,34 @@ theorem designate_keymatch (setup : Setup baseSpec KemSK) (codec : Codec Reader 
     (phase1 : Phase1ReadBack codec) (server : RawCtxServerRouting.Identity) (serverKid : Std.U64)
     (transcript : List Entry) (native : PqxdhRegistrationSchedule.State KemSK)
     (agree : Agree setup codec server transcript native) (keyId : Std.U64) (session k : Nat)
-    (designated : designate codec serverKid transcript (.peer keyId) = some (session, k)) (raw : Pqxdh.Bytes)
-    (accepted : acceptOf transcript session = some raw) (value : PqxdhServerRootPreparation.Verified Reader)
+    (designated : designate setup.source.crypto codec serverKid transcript (.peer keyId) = some (session, k))
+    (raw : Pqxdh.Bytes) (accepted : acceptOf transcript session = some raw)
+    (value : PqxdhServerRootPreparation.Verified Reader)
     (verifiedRaw : PqxdhRegistrationJointRawSignatures.verified setup codec checks raw = some value) :
     PublishedKey setup codec transcript native k value.keys.pqKey ∧
       ∃ owner : PqxdhRegistrationSchedule.Owner KemSK, native.owners[k]? = some owner ∧
         value.candidate.identityKey = encodedIdentity (setup.joint.publicKeys owner.beacon.identity).ed25519 := by
-  obtain ⟨_, raw', candidate, _, rawFound, candidateFound, _, publishes⟩ :=
-    PqxdhDeploymentTranscript.designate_peer codec serverKid keyId transcript session k designated
+  obtain ⟨_, raw', candidate, keys, _, rawFound, candidateFound, keysFound, _, publishes⟩ :=
+    PqxdhDeploymentTranscript.designate_peer setup.source.crypto codec serverKid keyId transcript session k designated
   rw [accepted, Option.some.injEq] at rawFound
   subst rawFound
+  obtain ⟨origin, sourced⟩ := verified_keys setup codec checks raw value verifiedRaw
+  rw [candidateFound, Option.some.injEq] at origin
+  subst origin
+  rw [keysFound, Option.some.injEq] at sourced
+  subst sourced
   obtain ⟨published, publishedFound, identityEq, pqEq⟩ := publishes
-  obtain ⟨owner, keys, s1, s2, s3, honest, publishedKey⟩ :=
+  obtain ⟨owner, keys', s1, s2, s3, honest, publishedKey⟩ :=
     published_candidate setup codec phase1 server transcript native agree k published publishedFound
-  have origin := (PqxdhRegistrationJointRawSignatures.verified_origin setup codec checks raw value verifiedRaw).1
-  have sameCandidate : value.candidate = candidate := by
-    rw [candidateOf] at candidateFound
-    rw [candidateFound, Option.some.injEq] at origin
-    exact origin.symm
-  have pqField : value.candidate.pqKey =
-      PqxdhEd25519EufCma.attachSignature s3 (PqxdhEd25519EufCma.pqMessage keys.pqKey) := by
-    rw [sameCandidate, ← pqEq, honest]
-    rfl
-  have pqKey := verified_signed_pq setup codec checks raw value verifiedRaw s3 keys.pqKey pqField
-  obtain ⟨owner', bytes, keys', s1', s2', s3', ownerFound, rest⟩ := publishedKey
-  refine ⟨by rw [pqKey]; exact ⟨owner', bytes, keys', s1', s2', s3', ownerFound, rest⟩, owner', ownerFound, ?_⟩
+  rw [honest, publishedPq_candidate, Option.some.injEq] at pqEq
+  obtain ⟨owner', bytes, keys'', s1', s2', s3', ownerFound, rest⟩ := publishedKey
+  refine ⟨by rw [← pqEq]; exact ⟨owner', bytes, keys'', s1', s2', s3', ownerFound, rest⟩, owner', ownerFound, ?_⟩
   obtain ⟨bytesFound, written, _⟩ := rest
   obtain ⟨bytes2, bytesFound2, read⟩ := Option.bind_eq_some_iff.mp publishedFound
   rw [bytesFound, Option.some.injEq] at bytesFound2
   subst bytesFound2
   rw [candidateOf_written codec phase1 _ bytes written, Option.some.injEq] at read
-  rw [sameCandidate, ← identityEq, ← read]
+  rw [← identityEq, ← read]
   rfl
 
 /-- Beacon-side ciphertext link: an owner designated `(i, c)` is natively Established and pinned to the protected key ID and to the Server's own identity; the response of session `i` is the Phase 2 writer output of fields carrying the Server identity; the ciphertext read from the owner's accepted finish input is the KEM ciphertext of those fields; and every verification of the accept bytes of session `i` yields the PQ key the owner published in its honest bundle. -/
@@ -154,7 +166,7 @@ theorem owner_link (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
     (phase1 : Phase1ReadBack codec) (phase2 : Phase2ReadBack codec) (server : RawCtxServerRouting.Identity)
     (serverKid : Std.U64) (transcript : List Entry) (native : PqxdhRegistrationSchedule.State KemSK)
     (agree : Agree setup codec server transcript native) (index session k : Nat)
-    (designated : designate codec serverKid transcript (.owner index) = some (session, k)) :
+    (designated : designate setup.source.crypto codec serverKid transcript (.owner index) = some (session, k)) :
     k = index ∧ ∃ (owner : PqxdhRegistrationSchedule.Owner KemSK) (response : PqxdhServerRegistrationPublication.Response)
       (fields : PqxdhServerRegistrationPublication.ResponseFields) (raw : Pqxdh.Bytes),
       native.owners[index]? = some owner ∧ phaseClass owner.beacon.phase = .established ∧
@@ -165,20 +177,23 @@ theorem owner_link (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
       ∀ accepted value, acceptOf transcript session = some accepted →
         PqxdhRegistrationJointRawSignatures.verified setup codec checks accepted = some value →
         PublishedKey setup codec transcript native index value.keys.pqKey := by
-  obtain ⟨same, established, pin, raw, ciphertext, published, binding, rawFound, ciphertextFound, publishedFound, _,
-    linked⟩ := PqxdhDeploymentTranscript.designate_owner codec serverKid transcript index session k designated
+  obtain ⟨same, established, pin, raw, ciphertext, published, pqKey, binding, rawFound, ciphertextFound, publishedFound,
+    pqKeyFound, _, linked⟩ :=
+    PqxdhDeploymentTranscript.designate_owner setup.source.crypto codec serverKid transcript index session k designated
   obtain ⟨owner, ownerFound, pinEq, keyEq⟩ := agree.bindings index pin serverKid binding
   have phases := agree.phases index
   rw [established, ownerFound] at phases
-  obtain ⟨response, acceptedCandidate, responseFound, responseCiphertext, responseIdentity, acceptFound, pqEq⟩ := linked
+  obtain ⟨response, acceptedCandidate, keys, responseFound, responseCiphertext, responseIdentity, acceptFound, keysFound,
+    pqEq⟩ := linked
   obtain ⟨payload, member⟩ := buildOf_mem transcript session response responseFound
   obtain ⟨fields, written, fieldsIdentity⟩ := agree.builds _ member
   obtain ⟨decoded, read, cipherEq, _, identityEq, _, _⟩ := phase2 fields response.serialized written
   simp only [read, Option.bind_some] at responseCiphertext responseIdentity
   rw [cipherEq, Option.some.injEq] at responseCiphertext
   rw [identityEq, Option.some.injEq] at responseIdentity
-  obtain ⟨owner', keys, s1, s2, s3, honest, publishedKey⟩ :=
+  obtain ⟨owner', keys', s1, s2, s3, honest, publishedKey⟩ :=
     published_candidate setup codec phase1 server transcript native agree index published publishedFound
+  rw [honest, publishedPq_candidate, Option.some.injEq] at pqKeyFound
   refine ⟨same, owner, response, fields, raw, ownerFound, phases.symm, keyEq, ?_, responseFound, written,
     fieldsIdentity, rawFound, ?_, ?_⟩
   · rw [pinEq, ← responseIdentity, fieldsIdentity]
@@ -187,16 +202,12 @@ theorem owner_link (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
     obtain ⟨acceptedBytes, acceptedBytesFound, acceptedRead⟩ := Option.bind_eq_some_iff.mp acceptFound
     rw [acceptedFound, Option.some.injEq] at acceptedBytesFound
     subst acceptedBytesFound
-    have origin := (PqxdhRegistrationJointRawSignatures.verified_origin setup codec checks accepted value verifiedRaw).1
-    have sameCandidate : value.candidate = acceptedCandidate := by
-      rw [candidateOf] at acceptedRead
-      rw [acceptedRead, Option.some.injEq] at origin
-      exact origin.symm
-    have pqField : value.candidate.pqKey =
-        PqxdhEd25519EufCma.attachSignature s3 (PqxdhEd25519EufCma.pqMessage keys.pqKey) := by
-      rw [sameCandidate, pqEq, honest]
-      rfl
-    rw [verified_signed_pq setup codec checks accepted value verifiedRaw s3 keys.pqKey pqField]
+    obtain ⟨origin, sourced⟩ := verified_keys setup codec checks accepted value verifiedRaw
+    rw [acceptedRead, Option.some.injEq] at origin
+    subst origin
+    rw [keysFound, Option.some.injEq] at sourced
+    subst sourced
+    rw [pqEq, ← pqKeyFound]
     exact publishedKey
 
 /-- `designate_keymatch` on every outcome of the complete experiment, in either mode, for the protected Server key ID. -/
@@ -210,7 +221,8 @@ theorem keymatch_game {A X : Type} (setup : Setup baseSpec KemSK) (codec : Codec
     (created : PqxdhRegistrationJointServerBirth.ClientCreated Unit) (output : X)
     (final : PqxdhDeploymentSecrecy.State KemSK) (reached : outcome.1 = some (created, output, final))
     (keyId : Std.U64) (session k : Nat)
-    (designated : designate codec setup.serverKeyId final.1.transcript (.peer keyId) = some (session, k))
+    (designated : designate setup.source.crypto codec setup.serverKeyId final.1.transcript (.peer keyId) =
+      some (session, k))
     (raw : Pqxdh.Bytes) (accepted : acceptOf final.1.transcript session = some raw)
     (value : PqxdhServerRootPreparation.Verified Reader)
     (verifiedRaw : PqxdhRegistrationJointRawSignatures.verified setup codec checks raw = some value) :
@@ -233,7 +245,8 @@ theorem link_game {A X : Type} (setup : Setup baseSpec KemSK) (codec : Codec Rea
     (created : PqxdhRegistrationJointServerBirth.ClientCreated Unit) (output : X)
     (final : PqxdhDeploymentSecrecy.State KemSK) (reached : outcome.1 = some (created, output, final))
     (index session k : Nat)
-    (designated : designate codec setup.serverKeyId final.1.transcript (.owner index) = some (session, k)) :
+    (designated : designate setup.source.crypto codec setup.serverKeyId final.1.transcript (.owner index) =
+      some (session, k)) :
     k = index ∧ ∃ (owner : PqxdhRegistrationSchedule.Owner KemSK) (response : PqxdhServerRegistrationPublication.Response)
       (fields : PqxdhServerRegistrationPublication.ResponseFields) (raw : Pqxdh.Bytes),
       final.2.native.owners[index]? = some owner ∧ phaseClass owner.beacon.phase = .established ∧
@@ -270,6 +283,18 @@ end BeaconcryptCore.Computational.PqxdhDeploymentKeyMatch
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentKeyMatch.verified_signed_pq
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentKeyMatch.verified_keys' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentKeyMatch.verified_keys
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentKeyMatch.publishedPq_candidate' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentKeyMatch.publishedPq_candidate
 
 /-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentKeyMatch.published_candidate' depends on axioms: [propext,
  Classical.choice,
