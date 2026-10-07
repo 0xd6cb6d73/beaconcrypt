@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1524
+	[handwritten-lean]=1525
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -29969,6 +29969,34 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecord
 require_line_count 1 '^theorem beacon_source_parts([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSeed theorem beacon_source_parts"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftSeed\.server_source_parts$' "$selected_source_module" "PqxdhRecordLiftSeed dependency BeaconcryptCore.Computational.PqxdhRecordLiftSeed.server_source_parts"
 require_line_count 1 '^theorem server_source_parts([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSeed theorem server_source_parts"
+
+# Dynamic ordinary-record roles: exact native state projection and adaptive schedules.
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftRoles.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRecordLiftRoles$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftRoles root import"
+require_line_count 11 '^theorem ' "$selected_source_module" "PqxdhRecordLiftRoles theorem inventory"
+require_line_count 11 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftRoles guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftRoles\.putback_project$' "$selected_source_module" "PqxdhRecordLiftRoles dependency BeaconcryptCore.Computational.PqxdhRecordLiftRoles.putback_project"
+require_line_count 1 '^theorem putback_project([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftRoles theorem putback_project"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftRoles\.project_putback$' "$selected_source_module" "PqxdhRecordLiftRoles dependency BeaconcryptCore.Computational.PqxdhRecordLiftRoles.project_putback"
+require_line_count 1 '^theorem project_putback([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftRoles theorem project_putback"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftRoles\.putback_putback$' "$selected_source_module" "PqxdhRecordLiftRoles dependency BeaconcryptCore.Computational.PqxdhRecordLiftRoles.putback_putback"
+require_line_count 1 '^theorem putback_putback([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftRoles theorem putback_putback"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftRoles\.putback_produce$' "$selected_source_module" "PqxdhRecordLiftRoles dependency BeaconcryptCore.Computational.PqxdhRecordLiftRoles.putback_produce"
+require_line_count 1 '^theorem putback_produce([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftRoles theorem putback_produce"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftRoles\.putback_sender$' "$selected_source_module" "PqxdhRecordLiftRoles dependency BeaconcryptCore.Computational.PqxdhRecordLiftRoles.putback_sender"
+require_line_count 1 '^theorem putback_sender([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftRoles theorem putback_sender"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftRoles\.putback_fields$' "$selected_source_module" "PqxdhRecordLiftRoles dependency BeaconcryptCore.Computational.PqxdhRecordLiftRoles.putback_fields"
+require_line_count 1 '^theorem putback_fields([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftRoles theorem putback_fields"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftRoles\.server_native$' "$selected_source_module" "PqxdhRecordLiftRoles dependency BeaconcryptCore.Computational.PqxdhRecordLiftRoles.server_native"
+require_line_count 1 '^theorem server_native([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftRoles theorem server_native"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftRoles\.beacon_native$' "$selected_source_module" "PqxdhRecordLiftRoles dependency BeaconcryptCore.Computational.PqxdhRecordLiftRoles.beacon_native"
+require_line_count 1 '^theorem beacon_native([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftRoles theorem beacon_native"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftRoles\.handler_native$' "$selected_source_module" "PqxdhRecordLiftRoles dependency BeaconcryptCore.Computational.PqxdhRecordLiftRoles.handler_native"
+require_line_count 1 '^theorem handler_native([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftRoles theorem handler_native"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftRoles\.handler_putback$' "$selected_source_module" "PqxdhRecordLiftRoles dependency BeaconcryptCore.Computational.PqxdhRecordLiftRoles.handler_putback"
+require_line_count 1 '^theorem handler_putback([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftRoles theorem handler_putback"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftRoles\.schedule_native$' "$selected_source_module" "PqxdhRecordLiftRoles dependency BeaconcryptCore.Computational.PqxdhRecordLiftRoles.schedule_native"
+require_line_count 1 '^theorem schedule_native([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftRoles theorem schedule_native"
 
 # Reviewed actual getter availability, distinct from network compromise powers.
 python3 proofs/source/test-getter-profile.py
