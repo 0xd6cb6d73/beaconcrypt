@@ -1,0 +1,380 @@
+{
+  "component": "PqxdhRecordLiftBudget",
+  "date": "2026-10-07T21:39:08.780020+00:00",
+  "base_commit": "dd1efd6fc48eae94009bea201861501f2c94d8a0",
+  "status": "Publication ready: thirteen-statement semantic review, final metadata hygiene, Claude C4 answer69 and all four focused publication checks approved; parent owns commit/integration",
+  "scope": "Actual frozen open-program restricted-effect and joint record-request accounting; interpretation costs and security remain separate",
+  "theorems": [
+    "cost_sum",
+    "environment_bound",
+    "native_bound",
+    "wrapped_bound",
+    "startup_bound",
+    "program_bound",
+    "wrap_record_step",
+    "wrap_record_bound",
+    "environment_record_bound",
+    "native_record_step",
+    "native_record_bound",
+    "startup_record_bound",
+    "program_record_bound"
+  ],
+  "guard_count": 13,
+  "allowed_axioms": [
+    "propext",
+    "Classical.choice",
+    "Quot.sound"
+  ],
+  "contracts_added": [],
+  "resource_premises": {
+    "effect_bounds": [
+      "PqxdhRecordLiftInterface.Frame env startupCoins allowance",
+      "caps.outer.Respects adversary"
+    ],
+    "joint_record_bounds": [
+      "Budget.Respects adversary; no Frame premise"
+    ],
+    "helpers": "Explicit client query caps where applicable; zero-record type exclusions require no resource premise"
+  },
+  "bounds": {
+    "uniform": "startupCoins + B.coin + B.test + bounds.max * B.fresh + caps.envTotal allowance .coin",
+    "hash": "B.hash + caps.envTotal allowance .hash",
+    "administrative": "caps.envTotal allowance .administrative",
+    "joint_send": "B.sends = B.serverSend + B.beaconSend + B.test + B.fresh",
+    "joint_raw": "B.receives = B.serverRaw + B.beaconRaw"
+  },
+  "scope_exclusions": [
+    "Interpreter costs of ordinary-record requests and the private constructor handoff",
+    "Hidden-seed sampling and primitive cache-miss uniform draws",
+    "Caps.sharedHash and Caps.derivations transport through the actual World",
+    "CE source connection and failed-registration erasure",
+    "Cryptographic lifts and global event security bounds"
+  ],
+  "review": {
+    "independent_semantic": [
+      {
+        "receipt": "/tmp/bc-arc-scratch/record-lift/reviews/budget-semantic-2026-10-07.json",
+        "sha256": "e4dad5e9252b1db85aab6c18854d3e83f7c8b1658c233211014821dab8556065",
+        "content": {
+          "date": "2026-10-07T20:58:41.566628+00:00",
+          "reviewer": "/root",
+          "author": "/root/record_seed_boundary",
+          "verdict": "approved",
+          "findings": [],
+          "scope": "Six actual open-program resource transport theorems and guide; no executable world or security bound",
+          "source_sha256": "aa52855019b2569acbec4c5777c61220f03f639e92b67cb46c79b2e7f1bd793c",
+          "guide_sha256": "8da74ab83f600c1962f109a1073735e573f58c8628dd2dec5e3f37554a73a49f",
+          "theorems": [
+            "cost_sum",
+            "environment_bound",
+            "native_bound",
+            "wrapped_bound",
+            "startup_bound",
+            "program_bound"
+          ],
+          "checks_reviewed": [
+            "Actual frozen program, native dispatch, coinLift/environmentStep and Frame signatures",
+            "Finite wrapCost matrix, commandKind and queryClass mapping to same source twelve/fourteen classes",
+            "All optional-startup and adaptive continuations, either observation mode, state-uniform handler allowances",
+            "The selected WorldEffect predicate counts only restricted effects; record/seed/primitive costs not silently omitted from a claimed global bound",
+            "Zero cryptographic/source-correctness contract; only explicit Frame and outer Respects resource premises",
+            "Six exact allowed axiom guards, H7/placeholder/custom-axiom scan, checked source/artifact/log/path hashes",
+            "Guide accurately explains unused-class overcount and startup/test/fresh/public coin/hash contributions"
+          ],
+          "resource_conclusion": {
+            "coin": "startupCoins + B.coin + B.test + bounds.max*B.fresh + envTotal coin",
+            "hash": "B.hash + envTotal hash",
+            "administrative": "envTotal administrative"
+          },
+          "remaining": [
+            "Native ordinary-record S+51R and shared-hash S+R accounting",
+            "Seed sampling and shared-cache-miss uniform draws",
+            "Actual world interpreter costs, CE allowance instantiation and caps.sharedHash proof",
+            "CE C1/C7 and cryptographic lifts"
+          ],
+          "author_check": {
+            "receipt": "/tmp/bc-arc-scratch/record-lift/budget/logs/budget-205632680934.json",
+            "sha256": "b0cfd268b4590732c0b3b29d7fcdd51b2aaa5dc5f62d35ed92d2e917fa883113",
+            "content": {
+              "start": "2026-10-07T20:56:32.680934+00:00",
+              "end": "2026-10-07T20:56:41.410356+00:00",
+              "exit": 0,
+              "command": [
+                "/tmp/bc-coord/coord.sh",
+                "lean",
+                "codex",
+                "budget-205632680934",
+                "--",
+                "timeout",
+                "180",
+                "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+                "-j1",
+                "-M8000",
+                "--root=/tmp/beaconcrypt-record-lift-budget/beaconcrypt-core/proofs/lean",
+                "-o",
+                "/tmp/bc-arc-scratch/record-lift/budget/olean/BeaconcryptCore/Computational/PqxdhRecordLiftBudget.olean",
+                "/tmp/beaconcrypt-record-lift-budget/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftBudget.lean"
+              ],
+              "source_sha256": "aa52855019b2569acbec4c5777c61220f03f639e92b67cb46c79b2e7f1bd793c",
+              "artifact_sha256": "9cd3df73dbe644418aebbd6b44d5c08eb69247a3a6a3a38aee6647fe0925bd02",
+              "leanpath_sha256": "50eec966d71750241bcd2347fa3a161359bda7d5eb30511c29b780deb46593b9",
+              "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "log": "/tmp/bc-arc-scratch/record-lift/budget/logs/budget-205632680934.log"
+            }
+          },
+          "reviewer_source_edits": false,
+          "reviewer_builds": false,
+          "publication_metadata_review": "separate pending",
+          "CE_cross_review_request": 50
+        }
+      },
+      {
+        "receipt": "/tmp/bc-arc-scratch/record-lift/reviews/budget-joint-record-semantic-2026-10-07.json",
+        "sha256": "bddf23a9df0a3f41b9c378e5ce37e020a68f82580b4a158c7768d24ea8c3f336",
+        "content": {
+          "date": "2026-10-07T21:29:04.724586+00:00",
+          "reviewer": "Codex /root, independent of /root/record_seed_boundary author",
+          "verdict": "APPROVE",
+          "source_sha256": "b9ede84bb63c11f23bdf043e4ecbcceedb303f2213835c7d0b67ee16d8dc9fb0",
+          "guide_sha256": "99ee72ff7c882b4e57dd28179971e59872bd97ee4638f3c77b02ce23a2ebadb2",
+          "scope": "Seven added joint record-query statements resolving Claude answer56, atop unchanged previously approved six effect statements.",
+          "checks": [
+            "NativeRecord.send is exact union of native classes8/10; raw9/11. recordCost charges full8/10/12/13 once for sends and9/11 once for raw.",
+            "wrap_record_step unfolds actual ledgerImpl. Its coin and uniformBytes work emits zero records; each accepted test/fresh sends to exactly one Handle and every refused path performs no record request. Both arbitrary role directions and arbitrary ledger states covered.",
+            "Weighted all-path wrapper transport yields literal existing Budget.sends and Budget.receives, with no extra test/fresh charge.",
+            "environment_record_bound and startup_record_bound derive zero records from their restricted effect types, not a behavioral assumption. native dispatch forwards precisely one matching command.",
+            "program_record_bound includes optional startup failure and private initialization, arbitrary adaptive program, E and slots. Only Budget.Respects premise; no Frame/security/nonce/source premise.",
+            "Guide correctly distinguishes per-class wrapper overcount from proved joint cap; global S+51R and B.hash+S+R+E.hash still require actual World interpreter bound.",
+            "All13 statement names match exact allowed axiom guards; read source and final exit-zero evidence. No new assumptions, primitive proofs, forbidden endpoint references or placeholders."
+          ],
+          "evidence": {
+            "receipt": "/tmp/bc-arc-scratch/record-lift/budget/logs/budget-212714198751.json",
+            "receipt_sha256": "e9ea6f027f428ab1ff162c0e4b644fe90c34015622245ae3fd75db3924448a03"
+          },
+          "findings": [],
+          "remaining": "Final publication metadata/gates against dd1efd6f and final C4 notification to Claude; no global interpreter bound yet."
+        }
+      }
+    ],
+    "source_unchanged_since_joint_review": true,
+    "guide_change_after_joint_review": "Only the Validation and publication status paragraph; substantive text remains identical to reviewed guide99ee72ff",
+    "CE_original_request": 50,
+    "CE_original_answer": 56,
+    "CE_original_verdict": "ACK_WITH_NOTES: original six approved, joint send refinement requested",
+    "CE_refinement_request": 66,
+    "CE_refinement_receipt_ack": 67,
+    "CE_refinement_substantive_answer": {
+      "message": 69,
+      "verdict": "ACK_WITH_NOTES: no Budget changes needed; joint request discharged",
+      "message_file": "/tmp/bc-coord/messages/000069.msg",
+      "message_sha256": "ae69af9c4c5160d7784baaba40a50642eaa499c3ede4f8e37a84c285653837e7",
+      "notes": "Interim answer56 C4 form withdrawn. World must prove actual support native.kdf <= caps.derivations with Respects only, and effects.hash + native.hash <= B.hash + S + R + envTotal.hash with Frame and Respects. Zero-cost remainder and class weights1/51 are required. Source/reduction, uniform and CE C1/C2a/C7 remain distinct.",
+      "external_check": {
+        "source": "/tmp/bc-arc-scratch/coord-replies/c4-joint/C4Joint.lean",
+        "source_sha256": "620fcd6d06d6dd9dccafe59c5b1f672645a928cb3a268fd4f21c584c2b82fb5c",
+        "log": "/tmp/bc-arc-scratch/coord-replies/c4-joint/out.log",
+        "log_sha256": "66469f388eb73c95aff9b9fbaaa542808e56c612563e095e3b63ded22aca8f69",
+        "exit": 0,
+        "scope": "Claude read-only cross-review probes; first347 source lines match frozen Budget, all13 guards; not a replacement for final own publication checks"
+      }
+    },
+    "parent_publication_hygiene": {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/reviews/budget-publication-hygiene-2026-10-07.json",
+      "sha256": "92df9d49a2048a43b15127f811a25998863fa1c17b854d585abc6aefb7ee0add",
+      "content": {
+        "date": "2026-10-07T21:36:49.596087+00:00",
+        "reviewer": "Codex /root, independent of author /root/record_seed_boundary",
+        "verdict": "APPROVE",
+        "source_sha256": "b9ede84bb63c11f23bdf043e4ecbcceedb303f2213835c7d0b67ee16d8dc9fb0",
+        "guide_sha256": "cc277324236338c06adb152e791ae23030639a3e73938186008a0d064e116059",
+        "receipt_reviewed_sha256": "d6eb3bb80c755df4cf4db1576b8ca2d2ead3a3906897a049d013d49476bba873",
+        "checks": [
+          "Verified all current file hashes and module/root artifact hashes against four exit-zero receipts",
+          "Read exact thirteen axiom gates and checked preexisting gate preservation",
+          "Reviewed unchanged semantic proof hash and only validation prose change",
+          "Reviewed root import, one new inventory row and correct1544 count, old gates preserved",
+          "Guide and analysis accurately distinguish restricted requests and joint sends/raw from pending World interpreter costs and CE C7",
+          "No Rust change, no added contract, no forbidden placeholder/custom axiom or frozen source edits"
+        ],
+        "findings": [],
+        "pending": "Claude substantive reply to request66 remains publication gate; this approval does not replace it"
+      }
+    },
+    "guide_change_after_hygiene": "Only final validation status updated to record metadata and Claude69 approval; substantive text unchanged"
+  },
+  "checks": {
+    "module": {
+      "start": "2026-10-07T21:32:52.816785+00:00",
+      "end": "2026-10-07T21:33:11.540627+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "budget-final-publication-module",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-budget/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/budget/final-publication/olean/BeaconcryptCore/Computational/PqxdhRecordLiftBudget.olean",
+        "/tmp/beaconcrypt-record-lift-budget/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftBudget.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/budget/final-publication/logs/module.log",
+      "log_sha256": "467f10b960eae00f8570a38750d19cd8353b38c9536a4830b15ebd22bf9280f7",
+      "leanpath_sha256": "6410c9efbb812490312191ddd1b4dd7ae644e1191011feac6fe94181dc61139d",
+      "source_sha256": "b9ede84bb63c11f23bdf043e4ecbcceedb303f2213835c7d0b67ee16d8dc9fb0",
+      "artifact_sha256": "7410762457746acf5ace85ce0d110a8ae8339d2388161168bbd66e438677effb",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    "root": {
+      "start": "2026-10-07T21:33:18.757875+00:00",
+      "end": "2026-10-07T21:33:27.639616+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "budget-final-publication-root",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-budget/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/budget/final-publication/olean/BeaconcryptCore.olean",
+        "/tmp/beaconcrypt-record-lift-budget/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/budget/final-publication/logs/root.log",
+      "log_sha256": "aef280e830aaccd47dc839be5e8f4ea6eab95f93fd5c7db568db9efcd42f74d6",
+      "leanpath_sha256": "6410c9efbb812490312191ddd1b4dd7ae644e1191011feac6fe94181dc61139d",
+      "source_sha256": "a9a7750b9402c386c18958cddfb2380c4a2c0f7321f540b5ef4a42f949e4a679",
+      "artifact_sha256": "7da30b335bcac25058d3d34436a88a62c07b26f6bb2bb2ff7e64c4c037f93f28",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    "inventory": {
+      "start": "2026-10-07T21:32:52.814311+00:00",
+      "end": "2026-10-07T21:34:09.537459+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lease",
+        "mem",
+        "codex",
+        "@nix",
+        "budget-final-inventory",
+        "--eta",
+        "20m",
+        "--",
+        "nix",
+        "develop",
+        "--no-update-lock-file",
+        "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+        "-c",
+        "make",
+        "-C",
+        "/tmp/beaconcrypt-record-lift-budget/beaconcrypt-core",
+        "check-inventory",
+        "SHELL=bash"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/budget/final-publication/logs/inventory.log",
+      "log_sha256": "48b83a2acafeea7ff2f35525a954c41195ac76b743a660a819708f12af4d4329",
+      "leanpath_sha256": "6410c9efbb812490312191ddd1b4dd7ae644e1191011feac6fe94181dc61139d",
+      "source_sha256": null,
+      "artifact_sha256": null,
+      "CARGO_BUILD_JOBS": "2",
+      "CARGO_TARGET_DIR": "/tmp/bc-arc-scratch/record-lift/budget/final-publication/target"
+    },
+    "fidelity": {
+      "start": "2026-10-07T21:32:52.817326+00:00",
+      "end": "2026-10-07T21:33:18.952791+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lease",
+        "mem",
+        "codex",
+        "@cargo",
+        "budget-final-fidelity",
+        "--eta",
+        "20m",
+        "--",
+        "nix",
+        "develop",
+        "--no-update-lock-file",
+        "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+        "-c",
+        "make",
+        "-C",
+        "/tmp/beaconcrypt-record-lift-budget/beaconcrypt-core",
+        "check-proverif-transcript-fidelity",
+        "SHELL=bash"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/budget/final-publication/logs/fidelity.log",
+      "log_sha256": "bd59cbb4a6b205c6855979c51592dc15c0d44534c86904f2abb0416d34a9d84c",
+      "leanpath_sha256": "6410c9efbb812490312191ddd1b4dd7ae644e1191011feac6fe94181dc61139d",
+      "source_sha256": null,
+      "artifact_sha256": null,
+      "CARGO_BUILD_JOBS": "2",
+      "CARGO_TARGET_DIR": "/tmp/bc-arc-scratch/record-lift/budget/final-publication/target"
+    }
+  },
+  "check_receipts_sha256": {
+    "module": "99a12630483bcd4ddb0ea17a3381c3cbc3579563f29c1de21dd3fa9dbafac485",
+    "root": "c490297b19ffe1964a25e5baa8831d6f6994649440b223b813ae9771fa58a351",
+    "inventory": "dc0148ca8cbbc7cde327275a9af9c63997a012b5f9a417e9d78d464d60df150c",
+    "fidelity": "f4cd73429543be80842f8281422723c81175a676243bd974a9e4092887f5dcaf"
+  },
+  "files_sha256": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftBudget.lean": "b9ede84bb63c11f23bdf043e4ecbcceedb303f2213835c7d0b67ee16d8dc9fb0",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "a9a7750b9402c386c18958cddfb2380c4a2c0f7321f540b5ef4a42f949e4a679",
+    "beaconcrypt-core/proofs/check-inventory.sh": "26a66a3f78139e5bc61dd6bd2a1e196692c5d108a64bc5709dd40cef7d2ec310",
+    "beaconcrypt-core/proofs/reviewed-inventory.txt": "d6a1c85a1ec7943b3d595b5c6e1ae3ca486e19fd423bdb5b9a4ae06f6065010f",
+    "doc/formal-verification-analysis.md": "7d2ffc440284b7d9013395b9d7ddfec151cff87b70318e5cc00dc5ceff99599e",
+    "doc/impl/record-lift-budget.md": "28f7513152f32164d0591224838885a7ade7caf9da6461d730e7034f1091d31c"
+  },
+  "artifact_provenance": {
+    "dependency": "/tmp/bc-coord/leanpaths/dd1efd6fc48eae94009bea201861501f2c94d8a0.leanpath",
+    "dependency_sha256": "1349587f6e2cd3eba5209d8a1a50bd3205ea151b2ba73ac9ff39ab038ee061b7",
+    "overlay": "/tmp/bc-arc-scratch/record-lift/budget/final-publication/olean",
+    "mirrored_namespace_artifacts": 6002,
+    "excluded_own_module": "BeaconcryptCore/Computational/PqxdhRecordLiftBudget",
+    "root_artifact_excluded": true,
+    "own_leanpath": "/tmp/bc-arc-scratch/record-lift/budget/final-publication/leanpath",
+    "own_leanpath_sha256": "6410c9efbb812490312191ddd1b4dd7ae644e1191011feac6fe94181dc61139d",
+    "borrowed_or_pinned_writes": false
+  },
+  "inventory": {
+    "handwritten_lean_before": 1543,
+    "handwritten_lean_after": 1544,
+    "commands": [
+      "coord.sh inv recount codex /tmp/beaconcrypt-record-lift-budget/beaconcrypt-core",
+      "coord.sh inv rehash codex /tmp/beaconcrypt-record-lift-budget/beaconcrypt-core"
+    ],
+    "manifest_change_scope": [
+      "Root module hash",
+      "One new Budget source row",
+      "Inventory gate hash"
+    ]
+  },
+  "hygiene": {
+    "guards_names_exact": true,
+    "forbidden_custom_axiom_placeholder_scan": "clear",
+    "H7_name_scan": "clear",
+    "source_unchanged_since_semantic_review": true,
+    "production_Rust_changed": false
+  },
+  "checks_not_run": [
+    "Full lake build",
+    "make verify",
+    "ProVerif",
+    "Complete mutation suite; no Rust changes"
+  ]
+}
