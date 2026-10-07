@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1515
+	[handwritten-lean]=1516
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -29423,6 +29423,41 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem replay_published([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentPublishedTuple theorem replay_published"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentPublishedTuple\.r1prime_bound$' "$selected_source_module" "PqxdhDeploymentPublishedTuple dependency BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.r1prime_bound"
 require_line_count 1 '^theorem r1prime_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentPublishedTuple theorem r1prime_bound"
+
+# Common deployment experiment CE-C3 kernel provenance: live Server peer kernels from build and sequence-one Beacon kernels from finish
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentRecordKernels.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentRecordKernels$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentRecordKernels root import"
+require_line_count 14 '^theorem ' "$selected_source_module" "PqxdhDeploymentRecordKernels theorem inventory"
+require_line_count 14 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentRecordKernels guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordKernels\.live_of_consumed$' "$selected_source_module" "PqxdhDeploymentRecordKernels dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordKernels.live_of_consumed"
+require_line_count 1 '^theorem live_of_consumed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordKernels theorem live_of_consumed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordKernels\.finish_receive$' "$selected_source_module" "PqxdhDeploymentRecordKernels dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordKernels.finish_receive"
+require_line_count 1 '^theorem finish_receive([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordKernels theorem finish_receive"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordKernels\.tail_finished$' "$selected_source_module" "PqxdhDeploymentRecordKernels dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordKernels.tail_finished"
+require_line_count 1 '^theorem tail_finished([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordKernels theorem tail_finished"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordKernels\.registration_send$' "$selected_source_module" "PqxdhDeploymentRecordKernels dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordKernels.registration_send"
+require_line_count 1 '^theorem registration_send([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordKernels theorem registration_send"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordKernels\.send_live$' "$selected_source_module" "PqxdhDeploymentRecordKernels dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordKernels.send_live"
+require_line_count 1 '^theorem send_live([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordKernels theorem send_live"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordKernels\.initial_live$' "$selected_source_module" "PqxdhDeploymentRecordKernels dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordKernels.initial_live"
+require_line_count 1 '^theorem initial_live([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordKernels theorem initial_live"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordKernels\.after_live$' "$selected_source_module" "PqxdhDeploymentRecordKernels dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordKernels.after_live"
+require_line_count 1 '^theorem after_live([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordKernels theorem after_live"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordKernels\.candidate_live$' "$selected_source_module" "PqxdhDeploymentRecordKernels dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordKernels.candidate_live"
+require_line_count 1 '^theorem candidate_live([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordKernels theorem candidate_live"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordKernels\.build_live$' "$selected_source_module" "PqxdhDeploymentRecordKernels dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordKernels.build_live"
+require_line_count 1 '^theorem build_live([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordKernels theorem build_live"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordKernels\.buildOracle_peers$' "$selected_source_module" "PqxdhDeploymentRecordKernels dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordKernels.buildOracle_peers"
+require_line_count 1 '^theorem buildOracle_peers([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordKernels theorem buildOracle_peers"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordKernels\.finish_owners$' "$selected_source_module" "PqxdhDeploymentRecordKernels dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordKernels.finish_owners"
+require_line_count 1 '^theorem finish_owners([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordKernels theorem finish_owners"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordKernels\.bundle_owners$' "$selected_source_module" "PqxdhDeploymentRecordKernels dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordKernels.bundle_owners"
+require_line_count 1 '^theorem bundle_owners([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordKernels theorem bundle_owners"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordKernels\.create_owners$' "$selected_source_module" "PqxdhDeploymentRecordKernels dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordKernels.create_owners"
+require_line_count 1 '^theorem create_owners([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordKernels theorem create_owners"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentRecordKernels\.source_step$' "$selected_source_module" "PqxdhDeploymentRecordKernels dependency BeaconcryptCore.Computational.PqxdhDeploymentRecordKernels.source_step"
+require_line_count 1 '^theorem source_step([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentRecordKernels theorem source_step"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
