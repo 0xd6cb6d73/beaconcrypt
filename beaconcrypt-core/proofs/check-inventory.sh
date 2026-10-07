@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1544
+	[handwritten-lean]=1546
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -30665,6 +30665,60 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecord
 require_line_count 1 '^theorem send_lookup_available([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainTable theorem send_lookup_available"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainTable\.send_continuation$' "$selected_source_module" "PqxdhRecordLiftChainTable dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainTable.send_continuation"
 require_line_count 1 '^theorem send_continuation([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainTable theorem send_continuation"
+
+# Dynamic real/replay CTX modes: PqxdhRecordLiftCtxModes.
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxModes.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRecordLiftCtxModes$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftCtxModes root import"
+require_line_count 8 '^theorem ' "$selected_source_module" "PqxdhRecordLiftCtxModes theorem inventory"
+require_line_count 8 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftCtxModes guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxModes\.selected_step$' "$selected_source_module" "PqxdhRecordLiftCtxModes dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxModes.selected_step"
+require_line_count 1 '^theorem selected_step([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxModes theorem selected_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxModes\.known_step$' "$selected_source_module" "PqxdhRecordLiftCtxModes dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxModes.known_step"
+require_line_count 1 '^theorem known_step([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxModes theorem known_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxModes\.linked_step$' "$selected_source_module" "PqxdhRecordLiftCtxModes dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxModes.linked_step"
+require_line_count 1 '^theorem linked_step([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxModes theorem linked_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxModes\.linked_schedule$' "$selected_source_module" "PqxdhRecordLiftCtxModes dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxModes.linked_schedule"
+require_line_count 1 '^theorem linked_schedule([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxModes theorem linked_schedule"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxModes\.schedule_interpretation$' "$selected_source_module" "PqxdhRecordLiftCtxModes dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxModes.schedule_interpretation"
+require_line_count 1 '^theorem schedule_interpretation([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxModes theorem schedule_interpretation"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxModes\.source_view$' "$selected_source_module" "PqxdhRecordLiftCtxModes dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxModes.source_view"
+require_line_count 1 '^theorem source_view([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxModes theorem source_view"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxModes\.real_step$' "$selected_source_module" "PqxdhRecordLiftCtxModes dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxModes.real_step"
+require_line_count 1 '^theorem real_step([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxModes theorem real_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxModes\.real_schedule$' "$selected_source_module" "PqxdhRecordLiftCtxModes dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxModes.real_schedule"
+require_line_count 1 '^theorem real_schedule([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxModes theorem real_schedule"
+
+# Dynamic real/replay CTX modes: PqxdhRecordLiftCtxModeBounds.
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxModeBounds.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRecordLiftCtxModeBounds$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftCtxModeBounds root import"
+require_line_count 13 '^theorem ' "$selected_source_module" "PqxdhRecordLiftCtxModeBounds theorem inventory"
+require_line_count 13 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftCtxModeBounds guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxModeBounds\.target_step$' "$selected_source_module" "PqxdhRecordLiftCtxModeBounds dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxModeBounds.target_step"
+require_line_count 1 '^theorem target_step([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxModeBounds theorem target_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxModeBounds\.target_bound$' "$selected_source_module" "PqxdhRecordLiftCtxModeBounds dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxModeBounds.target_bound"
+require_line_count 1 '^theorem target_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxModeBounds theorem target_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxModeBounds\.hash_step$' "$selected_source_module" "PqxdhRecordLiftCtxModeBounds dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxModeBounds.hash_step"
+require_line_count 1 '^theorem hash_step([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxModeBounds theorem hash_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxModeBounds\.hash_bound$' "$selected_source_module" "PqxdhRecordLiftCtxModeBounds dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxModeBounds.hash_bound"
+require_line_count 1 '^theorem hash_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxModeBounds theorem hash_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxModeBounds\.private_not_uniform$' "$selected_source_module" "PqxdhRecordLiftCtxModeBounds dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxModeBounds.private_not_uniform"
+require_line_count 1 '^theorem private_not_uniform([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxModeBounds theorem private_not_uniform"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxModeBounds\.uniform_step$' "$selected_source_module" "PqxdhRecordLiftCtxModeBounds dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxModeBounds.uniform_step"
+require_line_count 1 '^theorem uniform_step([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxModeBounds theorem uniform_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxModeBounds\.uniform_bound$' "$selected_source_module" "PqxdhRecordLiftCtxModeBounds dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxModeBounds.uniform_bound"
+require_line_count 1 '^theorem uniform_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxModeBounds theorem uniform_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxModeBounds\.decision_budgets$' "$selected_source_module" "PqxdhRecordLiftCtxModeBounds dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxModeBounds.decision_budgets"
+require_line_count 1 '^theorem decision_budgets([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxModeBounds theorem decision_budgets"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxModeBounds\.selected_integrity$' "$selected_source_module" "PqxdhRecordLiftCtxModeBounds dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxModeBounds.selected_integrity"
+require_line_count 1 '^theorem selected_integrity([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxModeBounds theorem selected_integrity"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxModeBounds\.selected_privacy$' "$selected_source_module" "PqxdhRecordLiftCtxModeBounds dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxModeBounds.selected_privacy"
+require_line_count 1 '^theorem selected_privacy([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxModeBounds theorem selected_privacy"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxModeBounds\.plaintext_step$' "$selected_source_module" "PqxdhRecordLiftCtxModeBounds dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxModeBounds.plaintext_step"
+require_line_count 1 '^theorem plaintext_step([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxModeBounds theorem plaintext_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxModeBounds\.plaintext_bound$' "$selected_source_module" "PqxdhRecordLiftCtxModeBounds dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxModeBounds.plaintext_bound"
+require_line_count 1 '^theorem plaintext_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxModeBounds theorem plaintext_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxModeBounds\.decision_plaintext_bound$' "$selected_source_module" "PqxdhRecordLiftCtxModeBounds dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxModeBounds.decision_plaintext_bound"
+require_line_count 1 '^theorem decision_plaintext_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxModeBounds theorem decision_plaintext_bound"
 
 # Reviewed actual getter availability, distinct from network compromise powers.
 python3 proofs/source/test-getter-profile.py
