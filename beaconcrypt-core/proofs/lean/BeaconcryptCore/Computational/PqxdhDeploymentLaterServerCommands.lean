@@ -4,7 +4,7 @@ import BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutSource
 import BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutTag
 import BeaconcryptCore.Computational.PqxdhRegistrationJointKemSourceSuffix
 
-/-! LQ-F spike: the logged source compiled to the open private-service interface with the Server encapsulation exposed (the level of `KemEncapsulation.commands`, on which the KEM cut, the KEM games, T4 and T6 are stated). The exposed logged accept (`accept`) is the exposed accept of `KemEncapsulation` with the logged collector; forgetting the logged scalar gives it back (`ordered_fst`, `prepare_fst`, `accept_fst`). The logged command handler `impl` keeps the owner registry and the ephemeral log beside the native state: a raw accept runs the exposed logged accept and appends its entry, every other source14 request runs the unchanged exposed backend on the unchanged level-2 client, and the terminal read issues the ordinary identity-pool reveal of the Server's slot and returns it with the log. `commands` runs a program from an owner list, a log and a native state and returns the source outcome type `KemCommands.Outcome` of the existing chain, so every generic consumer of that type applies. For every source14 program, `commands` from any log is `KemEncapsulation.commands` (`commands_embed`), and the hidden logged program is the actual source command program (`actual_embed`). The module also states the raw-accept scan, finish and recording tag for programs of the logged source (`scan`, `finish`, `scan_finish`, `tag`, `tag_erase`), which count raw accepts exactly as `AcceptCut.scan` does and treat the terminal read as an ordinary request. No security statement and no assumption. -/
+/-! LQ-F: the logged source compiled to the open private-service interface with the Server encapsulation exposed (the level of `KemEncapsulation.commands`, on which the KEM cut, the KEM games, T4 and T6 are stated). The exposed logged accept (`accept`) is the exposed accept of `KemEncapsulation` with the logged collector; forgetting the logged scalar gives it back (`ordered_fst`, `prepare_fst`, `accept_fst`). The logged command handler `impl` keeps the owner registry and the ephemeral log beside the native state: a raw accept runs the exposed logged accept and appends its entry, every other source14 request runs the unchanged exposed backend on the unchanged level-2 client, and the Server read issues the ordinary identity-pool reveal of the Server's slot and returns it with the log. `commands` runs a program from an owner list, a log and a native state and returns the source outcome type `KemCommands.Outcome` of the existing chain, so every generic consumer of that type applies. For every source14 program, `commands` from any log is `KemEncapsulation.commands` (`commands_embed`); under the actual encapsulator this is the actual source command program by `KemEncapsulation.program_actual`, as used in `LaterServerReserve.step_source`. The module also states the raw-accept scan, finish and recording tag for programs of the logged source (`scan`, `finish`, `scan_finish`, `tag`, `tag_erase`), which count raw accepts exactly as `AcceptCut.scan` does and treat the Server read as an ordinary request. No security statement and no assumption. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
@@ -23,7 +23,7 @@ inductive Cut (KemSK Result : Type) where
   | complete (result : Result)
   | pending (raw : Pqxdh.Bytes) (next : Option Nat → OracleComp (Spec KemSK) Result)
 
-/-- Count every raw accept request of a logged-source program and stop before the one at the given ordinal. The terminal read and every other request are forwarded unchanged. -/
+/-- Count every raw accept request of a logged-source program and stop before the one at the given ordinal. The Server read and every other request are forwarded unchanged. -/
 noncomputable def scan (work : OracleComp (Spec KemSK) Result) : Nat → OracleComp (Spec KemSK) (Cut KemSK Result) :=
   OracleComp.recOn work
     (fun result _ => pure (.complete result))
@@ -110,7 +110,7 @@ theorem ordered_fst (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
   rw [← PqxdhRegistrationJointKemSourceSuffix.ordered_source, ← collectLogged_fst, simulateQ_map, StateT.run_map,
     ordered]
 
-/-- The exposed logged collector, unfolded at its encapsulation: verification, the steps before encapsulation, the exposed encapsulation and the literal suffix, with the generated ephemeral logged after the suffix. -/
+/-- The exposed logged collector, unfolded at its encapsulation: verification, the logged steps before encapsulation, and on their success the exposed encapsulation and the literal suffix, with the ephemeral generated before the encapsulation logged after the suffix; a rejection before encapsulation logs the entry of the logged steps. -/
 theorem ordered_split (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (raw : Pqxdh.Bytes) :
     ordered setup codec checks identityIndex raw = (do
@@ -119,10 +119,10 @@ theorem ordered_split (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
       match verified with
       | none => pure (none, none)
       | some verified => do
-          let ephemeral ← simulateQ (PqxdhRegistrationJointKemSourceSuffix.handler setup codec checks identityIndex raw)
-            (PqxdhRegistrationJointKemCollected.beforeEncapsulation verified)
-          match ephemeral with
-          | none => pure (none, none)
+          let before ← simulateQ (PqxdhRegistrationJointKemSourceSuffix.handler setup codec checks identityIndex raw)
+            (PqxdhDeploymentLaterServerSource.beforeLogged verified)
+          match before.1 with
+          | none => pure (none, before.2)
           | some ephemeral => do
               let reply ← (PqxdhRegistrationJointKemSourceSuffix.handler setup codec checks identityIndex raw)
                 (.encapsulate verified.keys.pqKey)
@@ -137,8 +137,7 @@ theorem ordered_split (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
   | some verified =>
     simp only [simulateQ_bind]
     apply bind_congr
-    intro ephemeral
-    cases ephemeral <;> simp only [simulateQ_pure, simulateQ_bind, simulateQ_spec_query,
+    rintro ⟨_ | ephemeral, entry⟩ <;> simp only [simulateQ_pure, simulateQ_bind, simulateQ_spec_query,
       PqxdhRegistrationJointKemSourceSuffix.suffix]
 
 /-- The exposed logged preparation: the logged collector from the current consumed set, with the full native state kept. -/
@@ -196,7 +195,7 @@ theorem accept_ordered (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
 /-- The local state of the logged command compiler: the owner registry and the ephemeral log. -/
 abbrev Local := List EncodedEntry × Log
 
-/-- The logged command handler over the exposed interface. A raw accept runs the exposed logged accept and appends its entry to the log; every other source14 request runs the unchanged exposed backend on the unchanged level-2 client; the terminal read reveals the Server's identity-pool slot and returns it with the log. -/
+/-- The logged command handler over the exposed interface. A raw accept runs the exposed logged accept and appends its entry to the log; every other source14 request runs the unchanged exposed backend on the unchanged level-2 client; the Server read reveals the Server's identity-pool slot and returns it with the log. -/
 noncomputable def impl (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) :
     QueryImpl (Spec KemSK) (StateT Local (PqxdhRegistrationJointKemEncapsulation.Client KemSK))

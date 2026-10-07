@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBridge
 
-/-! LQ-F spike: theorem T6 for the logged source, and the composed KEM transfer. `OpaqueCut` is `KemRawOpaque.OpaqueCut` with one more saved field, the log at the cut; every saved field is fixed before the selected encapsulation, so none holds the ciphertext or the shared secret. `opaqueScan` is the explicit logged scan, and the KEM scan of the logged `exposeAt` is its image under `toCut` (`scan_opaque`). The stopped-source prephase of the generic KEM hop at the logged exposure is the image of the logged opaque prephase (`pre_opaque`), and `KemResume.post` on such a context is the logged opaque postchallenge step (`post_opaque`), by the existing `KemOpaqueResume.resume_post` with the logged rest, which appends the explicit ephemeral and depends on neither the ciphertext nor the candidate. Hence the branch of the KEM hop at the logged exposure equals the logged opaque branch (`branch_opaque`, theorem T6 for the logged source), in which the candidate is an argument only of the private client interpreter and of the router. `transfer` composes T4 for the logged source (`LaterServerBridge.actual_le_real`), the generic KEM hop (`LaterServerKemHop.real_le_ideal`) and T6: one ordinary one-key ML-KEM IND-CCA advantage and one ordinary ML-KEM correctness error, each with coefficient one. The only contract used is `FunctionalDecapsulation`, as in `KemRawGame`; no assumption is added. -/
+/-! LQ-F: theorem T6 for the logged source, and the composed KEM transfer. `OpaqueCut` is `KemRawOpaque.OpaqueCut` with one more saved field, the log at the cut; every saved field is fixed before the selected encapsulation, so none holds the ciphertext or the shared secret. `opaqueScan` is the explicit logged scan, and the KEM scan of the logged `exposeAt` is its image under `toCut` (`scan_opaque`). The stopped-source prephase of the generic KEM hop at the logged exposure is the image of the logged opaque prephase (`pre_opaque`), and `KemResume.post` on such a context is the logged opaque postchallenge step (`post_opaque`), by the existing `KemOpaqueResume.resume_post` with the logged rest, which appends the explicit ephemeral and depends on neither the ciphertext nor the candidate. Hence the branch of the KEM hop at the logged exposure equals the logged opaque branch (`branch_opaque`, theorem T6 for the logged source), in which the candidate is an argument only of the private client interpreter and of the router. `transfer` composes T4 for the logged source (`LaterServerBridge.actual_le_real`), the generic KEM hop (`LaterServerKemHop.real_le_ideal`) and T6: one ordinary one-key ML-KEM IND-CCA advantage and one ordinary ML-KEM correctness error, each with coefficient one. The only contract used is `FunctionalDecapsulation`, as in `KemRawGame`; no assumption is added. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
@@ -43,7 +43,7 @@ noncomputable def rejectRun (setup : Setup baseSpec KemSK) (codec : Codec Reader
     (commands setup codec checks identityIndex publicIdentity (tagged observe raw next answer.1) owners
       (log ++ [logged]) answer.2)
 
-/-- The explicit logged scan: the logged prefix up to the selected raw accept, its attached verification and the steps before encapsulation; a completed prefix, a rejected verification and a rejection before encapsulation complete the run; otherwise the source parameters of the active cut are saved. -/
+/-- The explicit logged scan: the logged prefix up to the selected raw accept, its attached verification and the logged steps before encapsulation; a completed prefix, a rejected verification (entry `none`) and a rejection before encapsulation (the entry of the logged steps, the generated scalar when generation was reached) complete the run; otherwise the source parameters of the active cut are saved. -/
 noncomputable def opaqueScan (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R)
     (work : OracleComp (Spec KemSK) X) (index : Nat) (owners : List EncodedEntry) (log : Log)
@@ -60,11 +60,11 @@ noncomputable def opaqueScan (setup : Setup baseSpec KemSK) (codec : Codec Reade
     | some value => do
       let prepared ← simulateQ (actual setup)
         ((simulateQ (PqxdhRegistrationJointKemSourceSuffix.handler setup codec checks identityIndex raw)
-          (PqxdhRegistrationJointKemCollected.beforeEncapsulation value)).run reached.2.2.server.consumed)
-      match prepared.1 with
+          (PqxdhDeploymentLaterServerSource.beforeLogged value)).run reached.2.2.server.consumed)
+      match prepared.1.1 with
       | none =>
         rejectRun setup codec checks identityIndex publicIdentity observe raw next reached.1.2.1 reached.1.2.2 reached.2
-          (none, prepared.2) none
+          (none, prepared.2) prepared.1.2
       | some ephemeral =>
         pure (.pending raw value ephemeral prepared.2 reached.2 reached.1.2.1 reached.1.2.2 next)
 
@@ -99,7 +99,7 @@ theorem scan_opaque (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
     · simp only [pure_bind, rejectRun, map_bind, PqxdhRegistrationJointAcceptKemCut.scan_hide, Functor.map_map, toCut]
     · simp only [bind_assoc, map_bind]
       apply bind_congr
-      rintro ⟨_ | ephemeral, consumed⟩
+      rintro ⟨⟨_ | ephemeral, entry⟩, consumed⟩
       · simp only [pure_bind, rejectRun, map_bind, PqxdhRegistrationJointAcceptKemCut.scan_hide, Functor.map_map,
           toCut]
       · simp only [pure_bind, map_pure, toCut]

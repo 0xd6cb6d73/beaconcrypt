@@ -3,7 +3,7 @@ import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCommands
 import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerKemHop
 import BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawOpaque
 
-/-! LQ-F spike: the KEM cut of the logged source at the encapsulation of the selected raw accept. `exposeAt` is `AcceptKemCut.exposeAt` for programs of the logged source: the logged command compiler runs the program up to the raw accept at the designated raw-accept ordinal with every encapsulation interpreted in place, then runs the exposed logged accept, appends its entry to the log and runs the rest of the tagged program. `rawResume` is the saved continuation of an active cut: the literal suffix after the encapsulation reply, the unchanged accept tail and the rest of the tagged program, from the log at the cut extended by the selected accept's ephemeral scalar, which is an explicit value fixed before the encapsulation (`ordered_cut`, `accept_scan`, `exposeAt_scan`, `rawCut_shape`). A completed cut has a non-accepted tag (`accepted_reached`). Interpreting the one exposed encapsulation gives the logged command program of the tagged program (`exposeAt_actual`). Fed the ordinary challenge reply, the saved continuation is the candidate-free opaque resumption followed by the logged rest (`rawResume_opaque`), by the existing `KemOpaqueResume.resume_reply`, which takes the rest as an argument: this is the core of T6 for the logged source, and it holds because the logged entry is the explicit ephemeral and depends on neither the ciphertext nor the candidate. The KEM hop for the logged exposure is the generic hop of `PqxdhDeploymentLaterServerKemHop` at `scanned` (`kem_hop`), with one ordinary one-key ML-KEM IND-CCA advantage and one ordinary correctness error. The selected-first reservation and the selected-disclosure monitor are the generic `PqxdhDynamicKemJointSource.selected_source` and `PqxdhDynamicKemJointStopping.history_event` at the hidden logged program (`selected_first`, `monitor`); the creation cap they need is a premise here. No assumption, contract or premise beyond those of the instantiated theorems is added. -/
+/-! LQ-F: the KEM cut of the logged source at the encapsulation of the selected raw accept. `exposeAt` is `AcceptKemCut.exposeAt` for programs of the logged source: the logged command compiler runs the program up to the raw accept at the designated raw-accept ordinal with every encapsulation interpreted in place, then runs the exposed logged accept, appends its entry to the log and runs the rest of the tagged program. `rawResume` is the saved continuation of an active cut: the literal suffix after the encapsulation reply, the unchanged accept tail and the rest of the tagged program, from the log at the cut extended by the selected accept's ephemeral scalar, which is an explicit value fixed before the encapsulation (`ordered_cut`, `accept_scan`, `exposeAt_scan`, `rawCut_shape`). A completed cut has a non-accepted tag (`accepted_reached`). Interpreting the one exposed encapsulation gives the logged command program of the tagged program (`exposeAt_actual`). Fed the ordinary challenge reply, the saved continuation is the candidate-free opaque resumption followed by the logged rest (`rawResume_opaque`), by the existing `KemOpaqueResume.resume_reply`, which takes the rest as an argument: this is the core of T6 for the logged source, and it holds because the logged entry is the explicit ephemeral and depends on neither the ciphertext nor the candidate. The KEM hop for the logged exposure is the generic hop of `PqxdhDeploymentLaterServerKemHop` at `scanned` (`kem_hop`), with one ordinary one-key ML-KEM IND-CCA advantage and one ordinary correctness error. The selected-first reservation and the selected-disclosure monitor are the generic `PqxdhDynamicKemJointSource.selected_source` and `PqxdhDynamicKemJointStopping.history_event` at the hidden logged program (`selected_first`, `monitor`); the creation cap they need is a premise here. No assumption, contract or premise beyond those of the instantiated theorems is added. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
@@ -90,7 +90,18 @@ theorem commands_support (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
   obtain ⟨full, fullReached, rfl⟩ := reached
   exact run_support setup codec checks identityIndex publicIdentity work owners log state full fullReached
 
-/-- The KEM cut of the exposed logged collector of one raw accept. The attached verification is pure; a rejected verification or a rejection before encapsulation completes with no logged scalar; otherwise the cut is the encapsulation of the verified PQ key, and the saved continuation is the literal suffix followed by logging the ephemeral generated before the cut, an explicit value. -/
+/-- The interpreted logged steps before encapsulation issue no exposed encapsulation request, for every consumed set and every reply. -/
+theorem beforeLogged_free (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (identityIndex : Nat) (raw : Pqxdh.Bytes) (value : Verified Reader) (consumed : List Pqxdh.Bytes) :
+    ((simulateQ (PqxdhRegistrationJointKemSourceSuffix.handler setup codec checks identityIndex raw)
+      (PqxdhDeploymentLaterServerSource.beforeLogged value)).run consumed).IsQueryBoundP
+      (PqxdhRegistrationJointKemExposedCounts.IsEncapsulation (KemSK := KemSK)) 0 := by
+  have free := before_free setup codec checks identityIndex raw value consumed
+  rw [← PqxdhDeploymentLaterServerSource.beforeLogged_fst, simulateQ_map, StateT.run_map, isQueryBoundP_map_iff]
+    at free
+  exact free
+
+/-- The KEM cut of the exposed logged collector of one raw accept. The attached verification is pure; a rejected verification completes with no logged scalar and a rejection before encapsulation completes with the entry of the logged steps before encapsulation; otherwise the cut is the encapsulation of the verified PQ key, and the saved continuation is the literal suffix followed by logging the ephemeral generated before the cut, an explicit value. -/
 theorem ordered_cut (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (raw : Pqxdh.Bytes) (consumed : List Pqxdh.Bytes) :
     PqxdhRegistrationJointKemCut.scan setup ((ordered setup codec checks identityIndex raw).run consumed) 0 =
@@ -98,9 +109,9 @@ theorem ordered_cut (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
       | none => pure (.complete ((none, none), consumed))
       | some value => simulateQ (actual setup)
           ((simulateQ (PqxdhRegistrationJointKemSourceSuffix.handler setup codec checks identityIndex raw)
-            (PqxdhRegistrationJointKemCollected.beforeEncapsulation value)).run consumed) >>= fun prepared =>
-          match prepared.1 with
-          | none => pure (.complete ((none, none), prepared.2))
+            (PqxdhDeploymentLaterServerSource.beforeLogged value)).run consumed) >>= fun prepared =>
+          match prepared.1.1 with
+          | none => pure (.complete ((none, prepared.1.2), prepared.2))
           | some ephemeral => pure (.pending (raw, value.keys.pqKey) fun reply =>
               (fun input => ((input.1, some ephemeral.secret), input.2)) <$>
                 (PqxdhRegistrationJointKemSourceSuffix.suffix setup codec checks identityIndex raw value
@@ -114,23 +125,23 @@ theorem ordered_cut (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
   | none => rfl
   | some value =>
     dsimp only
-    conv_lhs => rw [StateT.run_bind, ← free_hide setup _ (before_free setup codec checks identityIndex raw value consumed),
-      hide, scan_free_bind]
+    conv_lhs => rw [StateT.run_bind, ← free_hide setup _ (beforeLogged_free setup codec checks identityIndex raw value
+      consumed), hide, scan_free_bind]
     apply bind_congr
     intro prepared
-    rcases prepared with ⟨_ | ephemeral, after⟩
+    rcases prepared with ⟨⟨_ | ephemeral, entry⟩, after⟩
     · rfl
     · have cut := PqxdhRegistrationJointKemSourceSuffix.suffix_cut setup codec checks identityIndex raw value
         ephemeral after (fun input => pure ((input.1, some ephemeral.secret), input.2))
       simpa only [StateT.run_bind, StateT.run_pure, map_eq_bind_pure_comp, Function.comp_def] using cut
 
-/-- A completed KEM cut of the exposed logged collector is a rejection: its collected input and its logged scalar are `none`. -/
+/-- A completed KEM cut of the exposed logged collector is a rejection: its collected input is `none`. -/
 theorem ordered_complete (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (raw : Pqxdh.Bytes) (consumed : List Pqxdh.Bytes)
     (collected : (Option (Inputs Reader ScalarBytes Word32) × Option ScalarBytes) × List Pqxdh.Bytes)
     (reached : .complete collected ∈ support (PqxdhRegistrationJointKemCut.scan setup
       ((ordered setup codec checks identityIndex raw).run consumed) 0)) :
-    collected.1 = (none, none) := by
+    collected.1.1 = none := by
   rw [ordered_cut] at reached
   generalize PqxdhRegistrationJointRawSignatures.verified setup codec checks raw = verified at reached
   cases verified with
@@ -139,7 +150,7 @@ theorem ordered_complete (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
     rfl
   | some value =>
     rw [mem_support_bind_iff] at reached
-    obtain ⟨⟨_ | ephemeral, after⟩, _, reached⟩ := reached
+    obtain ⟨⟨⟨_ | ephemeral, entry⟩, after⟩, _, reached⟩ := reached
     · obtain rfl := PqxdhRegistrationJointKemCut.Cut.complete.inj (OracleComp.eq_of_mem_support_pure _ reached)
       rfl
     · simp at reached
@@ -265,8 +276,8 @@ theorem accepted_reached (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
       obtain rfl := PqxdhRegistrationJointKemCut.Cut.complete.inj same
       have rejected := ordered_complete setup codec checks identityIndex raw _ collected collectorReached
       obtain ⟨⟨none', logged⟩, consumed⟩ := collected
-      simp only [Prod.mk.injEq] at rejected
-      obtain ⟨rfl, rfl⟩ := rejected
+      dsimp only at rejected
+      subst rejected
       have noSession := tail_none setup publicIdentity native.2 consumed native answer tailReached
       have client := commands_support setup codec checks identityIndex publicIdentity _ _ _ _ _
         (support_simulate _ _ _ finalReached)
@@ -441,6 +452,12 @@ end BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCut
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCut.commands_support
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCut.beforeLogged_free' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCut.beforeLogged_free
 
 /-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCut.ordered_cut' depends on axioms: [propext,
  Classical.choice,

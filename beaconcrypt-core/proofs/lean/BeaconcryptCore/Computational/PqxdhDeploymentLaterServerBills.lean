@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerOpaque
 import BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills
 
-/-! LQ-F spike: query bills of the KEM adversary at the logged exposure. The logged command run is the simulation of one flattened exposed handler (`flat`, `run_flat`). Every source14 request of that handler has the four bills (generated identities, logical decapsulations, uniform work, exposed encapsulations) of the same request in the existing exposed command compiler (`step_source`, through `LaterServerCommands.query_embed` and `KemProgramBills.commands` on the one-request program), and the terminal read has none: it is one identity-pool reveal, which is neither a creation, a decapsulation, uniform work nor an encapsulation (`step_later`). The weighted composition `FinitePartitionQueryBounds.weighted_bound` over the request kinds of the logged source then gives the logged command program the bills of `KemProgramBills.commands` on the source14 requests of the program, for any number of terminal reads (`commands_bills`, with `weighted`, `single_sum` and the linearity `total_single` of the native uniform allowance). The rest follows `KemRawBills` with the logged definitions: the logged `exposeAt` hides every encapsulation of the fully exposed logged program except the selected one (`exposeAt_hides`) and issues at most one exposed encapsulation (`accept_bound`, `exposeAt_bound`), so it has the four allowances of `KemRawBills.exposeAt_bills` (`exposeAt_bills`); the generic prephase of the KEM hop supplies the saved continuation certificates (`pre_bound`, `saved`), and the proof-carrying adversary at the logged exposure has exactly the caps of `KemRawBills.adversary_bound` (`scan_bills`, `pre_uniform`, `pre_excluded`, `pre_decapsulations`, `pre_base`, `annotated_bound`, `adversary_post`, `adversary_bound`). The terminal Server reads add nothing to any bill. No assumption is added; `KemBound` and the initializer bill are the existing uniform-bill premises. -/
+/-! LQ-F: query bills of the KEM adversary at the logged exposure. The logged command run is the simulation of one flattened exposed handler (`exposed`, `run_exposed`). Every source14 request of that handler has the four bills (generated identities, logical decapsulations, uniform work, exposed encapsulations) of the same request in the existing exposed command compiler (`exposed_source`, through `LaterServerCommands.query_embed` and `KemProgramBills.commands` on the one-request program), and the Server read has none: it is one identity-pool reveal, which is neither a creation, a decapsulation, uniform work nor an encapsulation (`exposed_later`). The weighted composition `FinitePartitionQueryBounds.weighted_bound` over the request kinds of the logged source then gives the logged command program the bills of `KemProgramBills.commands` on the source14 requests of the program, for any number of Server reads (`commands_bills`, with `weighted`, `single_sum` and the linearity `total_single` of the native uniform allowance). The rest follows `KemRawBills` with the logged definitions: the logged `exposeAt` hides every encapsulation of the fully exposed logged program except the selected one (`exposeAt_hides`) and issues at most one exposed encapsulation (`accept_bound`, `exposeAt_bound`), so it has the four allowances of `KemRawBills.exposeAt_bills` (`exposeAt_bills`); the generic prephase of the KEM hop supplies the saved continuation certificates (`pre_bound`, `saved`), and the proof-carrying adversary at the logged exposure has exactly the caps of `KemRawBills.adversary_bound` (`scan_bills`, `pre_uniform`, `pre_excluded`, `pre_decapsulations`, `pre_base`, `annotated_bound`, `adversary_post`, `adversary_bound`). The Server reads add nothing to any bill. No assumption is added; `KemBound` and the initializer bill are the existing uniform-bill premises. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
@@ -23,7 +23,7 @@ open PqxdhDeploymentLaterServerReserve (laterKind)
 variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response A X R Result : Type}
 
 /-- The exposed logged command handler with owners, log and native state flattened into one state. -/
-noncomputable def flat (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+noncomputable def exposed (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) :
     QueryImpl (Spec KemSK)
       (StateT (Local × NativeState KemSK) (OracleComp (PqxdhRegistrationJointKemEncapsulation.Spec KemSK))) :=
@@ -31,25 +31,25 @@ noncomputable def flat (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
     ((impl setup codec checks identityIndex publicIdentity query).run state.1).run state.2
 
 /-- One step of the flattened exposed handler. -/
-theorem flat_run (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+theorem exposed_run (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (query : (Spec KemSK).Domain)
     (state : Local × NativeState KemSK) :
-    (flat setup codec checks identityIndex publicIdentity query).run state =
+    (exposed setup codec checks identityIndex publicIdentity query).run state =
       (fun result => (result.1.1, (result.1.2, result.2))) <$>
         ((impl setup codec checks identityIndex publicIdentity query).run state.1).run state.2 := rfl
 
 /-- The logged run is the simulation of the flattened exposed handler. -/
-theorem run_flat (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+theorem run_exposed (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (work : OracleComp (Spec KemSK) Result)
     (held : Local) (state : NativeState KemSK) :
     PqxdhDeploymentLaterServerCommands.run setup codec checks identityIndex publicIdentity work held.1 held.2 state =
       (fun result => ((result.1, result.2.1), result.2.2)) <$>
-        (simulateQ (flat setup codec checks identityIndex publicIdentity) work).run (held, state) := by
+        (simulateQ (exposed setup codec checks identityIndex publicIdentity) work).run (held, state) := by
   induction work using OracleComp.inductionOn generalizing held state with
   | pure value => simp [PqxdhDeploymentLaterServerCommands.run]
   | query_bind query next ih =>
     simp only [PqxdhDeploymentLaterServerCommands.run] at ih ⊢
-    simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind, map_bind, flat_run, bind_map_left]
+    simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind, map_bind, exposed_run, bind_map_left]
     apply bind_congr
     intro result
     exact ih result.1.1 result.1.2 result.2
@@ -58,10 +58,10 @@ theorem run_flat (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) 
 def single (kind : PqxdhRegistrationJointRevealCosts.SourceKind) : Budget := fun source => if kind = source then 1 else 0
 
 /-- Every source14 request of the flattened exposed handler has the four bills of the same request in the existing exposed command compiler. -/
-theorem step_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+theorem exposed_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (caps : KemCaps) (bounded : KemBound setup caps) (identityIndex : Nat) (publicIdentity : PublicIdentity)
     (query : (PqxdhRegistrationJointRevealSchedule.Spec KemSK).Domain) (held : Local) (state : NativeState KemSK) :
-    Bounds ((flat setup codec checks identityIndex publicIdentity (.inl query)).run (held, state))
+    Bounds ((exposed setup codec checks identityIndex publicIdentity (.inl query)).run (held, state))
       (single (PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query) (.inl 1))
       (single (PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query) (.inl 5))
       (PqxdhRegistrationJointOpenUniform.total caps
@@ -79,16 +79,16 @@ theorem step_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
     held.1 state
   simp only [PqxdhRegistrationJointKemEncapsulation.commands, simulateQ_spec_query] at one
   rw [← embedded] at one
-  rw [flat_run]
+  rw [exposed_run]
   obtain ⟨creates, decaps, uniform, encaps⟩ := one
   exact ⟨by simpa only [isQueryBoundP_map_iff] using creates, by simpa only [isQueryBoundP_map_iff] using decaps,
     by simpa only [isQueryBoundP_map_iff] using uniform, by simpa only [isQueryBoundP_map_iff] using encaps⟩
 
-/-- The terminal read issues one identity-pool reveal and no counted request: no generated identity, no decapsulation, no uniform work and no exposed encapsulation. -/
-theorem step_later (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+/-- The Server read issues one identity-pool reveal and no counted request: no generated identity, no decapsulation, no uniform work and no exposed encapsulation. -/
+theorem exposed_later (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (read : Unit) (held : Local) (state : NativeState KemSK) :
-    Bounds ((flat setup codec checks identityIndex publicIdentity (.inr read)).run (held, state)) 0 0 0 0 := by
-  rw [flat_run]
+    Bounds ((exposed setup codec checks identityIndex publicIdentity (.inr read)).run (held, state)) 0 0 0 0 := by
+  rw [exposed_run]
   change Bounds ((fun result => (result.1.1, (result.1.2, result.2))) <$>
     ((fun seed => (((seed, held.2), held), state)) <$>
       ((PqxdhRegistrationJointKemEncapsulation.Spec KemSK).query (.inl (.inl (.inr (.reveal identityIndex)))) :
@@ -124,7 +124,7 @@ theorem total_single (caps : KemCaps) (budget : Budget) :
   simp
   ring
 
-/-- The logged command program has the four bills of the existing exposed command compiler on the source14 requests of the program; the terminal reads add nothing. -/
+/-- The logged command program has the four bills of the existing exposed command compiler on the source14 requests of the program; the Server reads add nothing. -/
 theorem commands_bills (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (caps : KemCaps) (bounded : KemBound setup caps) (identityIndex : Nat) (publicIdentity : PublicIdentity)
     (work : OracleComp (Spec KemSK) Result) (budget : Budget) (reads : Nat)
@@ -141,38 +141,38 @@ theorem commands_bills (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
     · exact certified kind
   have compose (predicate : (PqxdhRegistrationJointKemEncapsulation.Spec KemSK).Domain → Prop)
       [DecidablePred predicate] (component : PqxdhRegistrationJointRevealCosts.SourceKind → Nat)
-      (step : ∀ query state, ((flat setup codec checks identityIndex publicIdentity query).run state).IsQueryBoundP
+      (step : ∀ query state, ((exposed setup codec checks identityIndex publicIdentity query).run state).IsQueryBoundP
         predicate (cost component (laterKind (KemSK := KemSK) query))) :
       (commands setup codec checks identityIndex publicIdentity work owners log state).IsQueryBoundP predicate
         (∑ kind, component kind * budget kind) := by
     rw [commands, isQueryBoundP_map_iff]
     rw [show PqxdhDeploymentLaterServerCommands.run setup codec checks identityIndex publicIdentity work owners log
         state = PqxdhDeploymentLaterServerCommands.run setup codec checks identityIndex publicIdentity work
-          (owners, log).1 (owners, log).2 state from rfl, run_flat, isQueryBoundP_map_iff, ← weighted component budget reads]
+          (owners, log).1 (owners, log).2 state from rfl, run_exposed, isQueryBoundP_map_iff, ← weighted component budget reads]
     exact FinitePartitionQueryBounds.weighted_bound (laterKind (KemSK := KemSK)) (cost component)
-      (fun kind => kind.elim reads budget) (flat setup codec checks identityIndex publicIdentity) predicate work
+      (fun kind => kind.elim reads budget) (exposed setup codec checks identityIndex publicIdentity) predicate work
       partition step ((owners, log), state)
   refine ⟨?_, ?_, ?_, ?_⟩
   · rw [← single_sum (.inl 1) budget]
     apply compose
     rintro (query | read) ⟨held, native⟩
-    · exact (step_source setup codec checks caps bounded identityIndex publicIdentity query held native).creates
-    · exact (step_later setup codec checks identityIndex publicIdentity read held native).creates
+    · exact (exposed_source setup codec checks caps bounded identityIndex publicIdentity query held native).creates
+    · exact (exposed_later setup codec checks identityIndex publicIdentity read held native).creates
   · rw [← single_sum (.inl 5) budget]
     apply compose
     rintro (query | read) ⟨held, native⟩
-    · exact (step_source setup codec checks caps bounded identityIndex publicIdentity query held native).decaps
-    · exact (step_later setup codec checks identityIndex publicIdentity read held native).decaps
+    · exact (exposed_source setup codec checks caps bounded identityIndex publicIdentity query held native).decaps
+    · exact (exposed_later setup codec checks identityIndex publicIdentity read held native).decaps
   · rw [← total_single caps budget]
     apply compose
     rintro (query | read) ⟨held, native⟩
-    · exact (step_source setup codec checks caps bounded identityIndex publicIdentity query held native).uniform
-    · exact (step_later setup codec checks identityIndex publicIdentity read held native).uniform
+    · exact (exposed_source setup codec checks caps bounded identityIndex publicIdentity query held native).uniform
+    · exact (exposed_later setup codec checks identityIndex publicIdentity read held native).uniform
   · rw [← single_sum (.inl 3) budget]
     apply compose
     rintro (query | read) ⟨held, native⟩
-    · exact (step_source setup codec checks caps bounded identityIndex publicIdentity query held native).encaps
-    · exact (step_later setup codec checks identityIndex publicIdentity read held native).encaps
+    · exact (exposed_source setup codec checks caps bounded identityIndex publicIdentity query held native).encaps
+    · exact (exposed_later setup codec checks identityIndex publicIdentity read held native).encaps
 
 open PqxdhRegistrationJointKemRawBills (Hides hides_refl hides_all hides_bind hides_bound residual_hook)
 open PqxdhRegistrationJointAcceptCutTag (Tag decideTag)
@@ -546,29 +546,29 @@ theorem adversary_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
 
 end BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBills
 
-/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBills.flat_run' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBills.exposed_run' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBills.flat_run
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBills.exposed_run
 
-/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBills.run_flat' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBills.run_exposed' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBills.run_flat
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBills.run_exposed
 
-/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBills.step_source' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBills.exposed_source' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBills.step_source
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBills.exposed_source
 
-/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBills.step_later' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBills.exposed_later' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBills.step_later
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBills.exposed_later
 
 /-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBills.weighted' depends on axioms: [propext,
  Classical.choice,

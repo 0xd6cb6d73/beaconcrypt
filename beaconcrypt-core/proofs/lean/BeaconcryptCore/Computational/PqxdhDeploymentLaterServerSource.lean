@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.PqxdhRegistrationJointInitializedSchedule
 import BeaconcryptCore.Computational.PqxdhRegistrationJointKemCollected
 
-/-! LQ-F spike: a logged source for the exact later-quantum profile. The source is source14 (`PqxdhRegistrationJointServerSchedule.source`, the initialized annotated source of the accept/KEM join) with two changes. First, every raw accept is a logged accept (`acceptSource`): the literal Server accept, whose collector is the logged collector `collectLogged`, also returns the Server ephemeral scalar it generated when the accept reached its encapsulation, and the handler appends that entry (`some` scalar, or `none` when verification or a step before encapsulation rejected) to a log kept beside the source state, one entry per raw accept in raw-accept order. Second, a terminal read `laterServer` (the only query of `LaterRead`) returns the Server identity seed, read from the Server's slot of the private identity pool by the ordinary pool reveal request, together with the log. The log is ghost state of the analysis: no source14 command reads it. Forgetting the log gives back source14 exactly, for every source14 program (`query_projection`, `program_projection`) and for the initialized execution (`initialized_projection`), and the logged collector forgets to the actual collector (`collectLogged_fst`). A successful collection records exactly the ephemeral scalar its DH steps used (`collectLogged_some`). Under the Server-slot invariant the terminal read returns the Server's actual seed and the current log and changes no seed, key or owner (`later_read`), and every logged step keeps that invariant (`query_owned`, `program_owned`). Ephemerals of accepts rejected before encapsulation are not logged; their public keys are never output. This module proves no security statement and adds no assumption. -/
+/-! LQ-F: a logged source for the exact later-quantum profile. The source is source14 (`PqxdhRegistrationJointServerSchedule.source`, the initialized annotated source of the accept/KEM join) with two changes. First, every raw accept is a logged accept (`acceptSource`): the literal Server accept, whose collector is the logged collector `collectLogged`, also returns the secret of the Server ephemeral it generated whenever its generation step was reached and returned one (`beforeLogged`, the steps before encapsulation split after generation), including an accept whose PQ-key parse then rejects, and the handler appends that entry (`some` scalar, or `none` when verification or a step before generation rejected) to a log kept beside the source state, one entry per raw accept in raw-accept order. Second, a Server read `laterServer` (the only query of `LaterRead`) returns the Server identity seed, read from the Server's slot of the private identity pool by the ordinary pool reveal request, together with the log; the compiled later-quantum program issues it after its run, and the statements here allow it anywhere. The log is ghost state of the analysis: no source14 command reads it. Forgetting the log gives back source14 exactly, for every source14 program (`query_projection`, `program_projection`) and for the initialized execution (`initialized_projection`), and the logged collector forgets to the actual collector (`beforeLogged_fst`, `collectLogged_fst`). A successful collection records exactly the ephemeral scalar its DH steps used (`collectLogged_some`, `beforeLogged_some`). Under the Server-slot invariant the read returns the Server's actual seed and the current log, changes no seed, key, owner or shared state and only appends its reveal observation to the identity-pool transcript (`later_read`), and every logged step keeps that invariant (`query_owned`, `program_owned`). An entry is `none` only when no ephemeral was generated. This module proves no security statement and adds no assumption. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
@@ -14,28 +14,73 @@ open PqxdhRegistrationJointFinish (onNative onPool)
 open PqxdhRegistrationJointServerSchedule (onBackend Owned)
 variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response A Result : Type}
 
-/-- The Server ephemeral log: one entry per raw accept in raw-accept order, the generated scalar when the accept reached its encapsulation and `none` otherwise. -/
+/-- The Server ephemeral log: one entry per raw accept in raw-accept order, the scalar of the ephemeral the accept generated when its generation step was reached and returned one, and `none` otherwise. -/
 abbrev Log := List (Option ScalarBytes)
 
-/-- The terminal Server reveal: the Server identity seed read from its private identity-pool slot, and the ephemeral log. -/
+/-- The Server read: the Server identity seed read from its private identity-pool slot, and the ephemeral log. -/
 abbrev Reveal := Option IdentitySeed × Log
 
 /-- The single later-quantum Server read. -/
 abbrev LaterRead : OracleSpec Unit := fun _ => Reveal
 
-/-- source14 extended by the terminal Server read. -/
+/-- source14 extended by the Server read. -/
 abbrev Spec (KemSK : Type) := PqxdhRegistrationJointRevealSchedule.Spec KemSK + LaterRead
 
-/-- The actual raw-accept collector, with the secret of the ephemeral it generated when it reached its encapsulation. The callbacks, their order and every optional exit are those of `collect`. -/
+/-- The steps before encapsulation (freshness, reservation, both point parsers, ephemeral generation and KEM parsing), which also return the secret of the generated ephemeral whenever the generation step was reached and returned one, including when the following PQ-key parse rejects. The callbacks, their order and every optional exit are those of `KemCollected.beforeEncapsulation`. -/
+def beforeLogged {E Shared : Type} (verified : Verified Reader) :
+    OracleComp (PqxdhServerRootPreparation.Spec Reader E Shared) (Option (Ephemeral E) × Option E) := do
+  let status ← (PqxdhServerRootPreparation.Spec Reader E Shared).query
+    (.registrationStatus (PqxdhServerRootPreparation.registrationId verified))
+  match status with
+  | .Consumed => pure (none, none)
+  | .Fresh => do
+    let reserved ← (PqxdhServerRootPreparation.Spec Reader E Shared).query .reserveRegistration
+    if !reserved then pure (none, none) else do
+      let validPrekey ← (PqxdhServerRootPreparation.Spec Reader E Shared).query
+        (.parseDh (PqxdhRootTableInitialization.rootArray verified.keys.prekey))
+      if !validPrekey then pure (none, none) else do
+        let validOneTime ← (PqxdhServerRootPreparation.Spec Reader E Shared).query
+          (.parseDh (PqxdhRootTableInitialization.rootArray verified.keys.oneTime))
+        if !validOneTime then pure (none, none) else do
+          let generated ← (PqxdhServerRootPreparation.Spec Reader E Shared).query .generate
+          match generated with
+          | none => pure (none, none)
+          | some ephemeral => do
+            let validKem ← (PqxdhServerRootPreparation.Spec Reader E Shared).query (.parseKem verified.keys.pqKey)
+            if !validKem then pure (none, some ephemeral.secret) else pure (some ephemeral, some ephemeral.secret)
+
+/-- Forgetting the logged scalar gives the actual steps before encapsulation as an oracle program, before any interpretation. -/
+theorem beforeLogged_fst {E Shared : Type} (verified : Verified Reader) :
+    Prod.fst <$> beforeLogged (E := E) (Shared := Shared) verified =
+      PqxdhRegistrationJointKemCollected.beforeEncapsulation verified := by
+  unfold beforeLogged PqxdhRegistrationJointKemCollected.beforeEncapsulation
+  repeat
+    first
+    | rfl
+    | (fail_if_no_progress simp only [OptionT.run_bind, OptionT.run_mk, OptionT.run_monadLift, Option.elimM,
+        Option.elim_some, bind_map_left, map_bind, Bool.not_true, Bool.false_eq_true, ite_false])
+    | (apply bind_congr; intro answer; cases answer)
+
+/-- When the steps before encapsulation succeed with an ephemeral, the logged scalar is that ephemeral's secret. -/
+theorem beforeLogged_some {E Shared : Type} (verified : Verified Reader) (result : Option (Ephemeral E) × Option E)
+    (ephemeral : Ephemeral E) (reached : result ∈ support (beforeLogged (Shared := Shared) verified))
+    (found : result.1 = some ephemeral) : result.2 = some ephemeral.secret := by
+  unfold beforeLogged at reached
+  repeat' (first
+    | (rw [mem_support_bind_iff] at reached; obtain ⟨answer, _, reached⟩ := reached; cases answer <;>
+        try simp only [Bool.not_true, Bool.not_false, ite_true, ite_false, Bool.false_eq_true] at reached)
+    | (simp only [support_pure, Set.mem_singleton_iff] at reached; subst reached; simp_all))
+
+/-- The actual raw-accept collector, with the secret of the ephemeral it generated whenever its generation step was reached and returned one: on a rejection before encapsulation the entry of `beforeLogged`, and once the encapsulation is reached the secret of the ephemeral fixed before it. The callbacks, their order and every optional exit are those of `collect`. -/
 def collectLogged {E Shared : Type} (raw : Pqxdh.Bytes) :
     OracleComp (PqxdhServerRootPreparation.Spec Reader E Shared) (Option (Inputs Reader E Shared) × Option E) := do
   let verified ← verifyInput raw
   match verified with
   | none => pure (none, none)
   | some verified => do
-      let ephemeral ← PqxdhRegistrationJointKemCollected.beforeEncapsulation verified
-      match ephemeral with
-      | none => pure (none, none)
+      let before ← beforeLogged verified
+      match before.1 with
+      | none => pure (none, before.2)
       | some ephemeral => do
           let reply ← (PqxdhServerRootPreparation.Spec Reader E Shared).query (.encapsulate verified.keys.pqKey)
           let input ← PqxdhRegistrationJointKemCollected.afterEncapsulation verified ephemeral reply
@@ -50,12 +95,12 @@ theorem collectLogged_fst {E Shared : Type} (raw : Pqxdh.Bytes) :
   cases verified with
   | none => simp
   | some verified =>
-    simp only [PqxdhRegistrationJointKemCollected.collect_split, map_bind]
+    dsimp only
+    rw [PqxdhRegistrationJointKemCollected.collect_split, ← beforeLogged_fst, bind_map_left, map_bind]
     apply bind_congr
-    intro ephemeral
-    cases ephemeral with
-    | none => simp
-    | some ephemeral => simp [map_bind]
+    rintro ⟨_ | ephemeral, logged⟩
+    · simp
+    · simp [map_bind]
 
 /-- Under every stateful interpretation, a successful collection logs exactly the ephemeral secret recorded in its collected input, which is the scalar of its DH2 to DH4 steps. -/
 theorem collectLogged_some {E Shared State : Type} {κ : Type} {target : OracleSpec κ}
@@ -73,11 +118,10 @@ theorem collectLogged_some {E Shared State : Type} {κ : Type} {target : OracleS
   | none => simp at program
   | some verified =>
     simp only [mem_support_bind_iff] at program
-    obtain ⟨ephemeral, _, program⟩ := program
-    cases ephemeral with
-    | none => simp at program
-    | some ephemeral =>
-      simp only [mem_support_bind_iff, support_pure, Set.mem_singleton_iff, Prod.mk.injEq] at program
+    obtain ⟨prepared, _, program⟩ := program
+    rcases prepared with ⟨_ | ephemeral, entry⟩
+    · simp at program
+    · simp only [mem_support_bind_iff, support_pure, Set.mem_singleton_iff, Prod.mk.injEq] at program
       obtain ⟨reply, _, collected, collectedReached, rfl, rfl⟩ := program
       obtain ⟨_, same, _⟩ := PqxdhRegistrationJointKemCollected.after_fields verified ephemeral reply input
         collectedReached
@@ -128,7 +172,7 @@ theorem acceptSource_fst (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
   intro collected
   simp only [StateT.run_pure, map_pure, Prod.mk.eta, bind_pure]
 
-/-- The logged source handler. A raw accept runs the logged accept and appends its entry to the log; every other source14 request runs the unchanged source14 handler and keeps the log; the terminal read reveals the Server's identity-pool slot by the ordinary pool reveal request and returns it with the log. -/
+/-- The logged source handler. A raw accept runs the logged accept and appends its entry to the log; every other source14 request runs the unchanged source14 handler and keeps the log; the Server read reveals the Server's identity-pool slot by the ordinary pool reveal request and returns it with the log. -/
 noncomputable def source (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (seed : IdentitySeed) (identityIndex : Nat) :
     QueryImpl (Spec KemSK) (StateT (PqxdhRegistrationJointSchedule.State KemSK × Log) ProbComp)
@@ -208,14 +252,15 @@ theorem initialized_projection (setup : Setup baseSpec KemSK) (codec : Codec Rea
     simp only [StateT.run] at logged
     simp only [← logged, Functor.map_map, Option.map_some]
 
-/-- The terminal read at a state whose Server slot holds `seed` returns that seed and the current log, keeps the log, and changes no seed, KEM key or owner; it only appends the reveal to the identity-pool transcript. -/
+/-- The Server read at a state whose Server slot holds `seed` returns that seed and the current log, keeps the log, changes no seed, KEM key, owner or shared state, and only appends the reveal observation of the Server's slot to the identity-pool transcript. -/
 theorem later_read (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (seed : IdentitySeed) (identityIndex : Nat) (state : PqxdhRegistrationJointSchedule.State KemSK) (log : Log)
     (slot : state.pool.1.seeds[identityIndex]? = some seed)
     (result : Reveal × (PqxdhRegistrationJointSchedule.State KemSK × Log))
     (reached : result ∈ support ((source setup codec checks seed identityIndex (.inr ())).run (state, log))) :
     result.1 = (some seed, log) ∧ result.2.2 = log ∧ result.2.1.pool.1.seeds = state.pool.1.seeds ∧
-      result.2.1.pool.2 = state.pool.2 ∧ result.2.1.owners = state.owners ∧ result.2.1.shared = state.shared := by
+      result.2.1.pool.2 = state.pool.2 ∧ result.2.1.owners = state.owners ∧ result.2.1.shared = state.shared ∧
+      result.2.1.pool.1.transcript = state.pool.1.transcript ++ [⟨.inr (.reveal identityIndex), some seed⟩] := by
   simp only [source, onBackend, onPool, PqxdhLiveKemBirth.impl, PqxdhDynamicIdentityPool.lazyImpl,
     PqxdhDynamicIdentityPool.poolImpl, StateT.run, support_map, Set.mem_image] at reached
   obtain ⟨_, ⟨_, ⟨_, ⟨_, reached, rfl⟩, rfl⟩, rfl⟩, rfl⟩ := reached
@@ -240,15 +285,15 @@ theorem query_owned (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
     exact PqxdhRegistrationJointServerSchedule.query_invariant setup codec checks seed identityIndex query state
       (result.1, result.2.1) owned projected
   | inr read =>
-    obtain ⟨_, _, seeds, keys, owners, _⟩ := later_read setup codec checks seed identityIndex state log owned.2 result
-      reached
+    obtain ⟨_, _, seeds, keys, owners, _, _⟩ := later_read setup codec checks seed identityIndex state log owned.2
+      result reached
     refine ⟨?_, by rw [seeds]; exact owned.2⟩
     intro entry member
     rw [owners] at member
     exact PqxdhRegistrationJointOwnership.owned_slots state.pool result.2.1.pool entry seeds
       (by rw [keys]) (owned.1 entry member)
 
-/-- Every logged program keeps the Server-slot and owner invariant on every reached state, so every terminal read of a reached state returns the Server's actual seed. -/
+/-- Every logged program keeps the Server-slot and owner invariant on every reached state, so every Server read of a reached state returns the Server's actual seed. -/
 theorem program_owned (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (seed : IdentitySeed) (identityIndex : Nat) (program : OracleComp (Spec KemSK) Result)
     (state : PqxdhRegistrationJointSchedule.State KemSK) (log : Log)
@@ -268,6 +313,18 @@ theorem program_owned (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
       (query_owned setup codec checks seed identityIndex query state log middle owned middleReached) reached
 
 end BeaconcryptCore.Computational.PqxdhDeploymentLaterServerSource
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentLaterServerSource.beforeLogged_fst' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentLaterServerSource.beforeLogged_fst
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentLaterServerSource.beforeLogged_some' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentLaterServerSource.beforeLogged_some
 
 /-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentLaterServerSource.collectLogged_fst' depends on axioms: [propext,
  Classical.choice,
