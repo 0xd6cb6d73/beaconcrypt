@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1509
+	[handwritten-lean]=1510
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -29165,6 +29165,25 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem tag_certified([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileCaps theorem tag_certified"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileCaps\.transported_room$' "$selected_source_module" "PqxdhDeploymentCompileCaps dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileCaps.transported_room"
 require_line_count 1 '^theorem transported_room([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileCaps theorem transported_room"
+
+# CE-5 owner publicity in the annotated execution: one KEM key per owner and KEM creation index equal to owner position.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentKemIndex.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentKemIndex$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentKemIndex root import"
+require_line_count 6 '^theorem ' "$selected_source_module" "PqxdhDeploymentKemIndex theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentKemIndex guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemIndex\.positional_set$' "$selected_source_module" "PqxdhDeploymentKemIndex dependency BeaconcryptCore.Computational.PqxdhDeploymentKemIndex.positional_set"
+require_line_count 1 '^theorem positional_set([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemIndex theorem positional_set"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemIndex\.accept_keys$' "$selected_source_module" "PqxdhDeploymentKemIndex dependency BeaconcryptCore.Computational.PqxdhDeploymentKemIndex.accept_keys"
+require_line_count 1 '^theorem accept_keys([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemIndex theorem accept_keys"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemIndex\.finish_keys$' "$selected_source_module" "PqxdhDeploymentKemIndex dependency BeaconcryptCore.Computational.PqxdhDeploymentKemIndex.finish_keys"
+require_line_count 1 '^theorem finish_keys([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemIndex theorem finish_keys"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemIndex\.positional_step$' "$selected_source_module" "PqxdhDeploymentKemIndex dependency BeaconcryptCore.Computational.PqxdhDeploymentKemIndex.positional_step"
+require_line_count 1 '^theorem positional_step([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemIndex theorem positional_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemIndex\.positional_initialized$' "$selected_source_module" "PqxdhDeploymentKemIndex dependency BeaconcryptCore.Computational.PqxdhDeploymentKemIndex.positional_initialized"
+require_line_count 1 '^theorem positional_initialized([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemIndex theorem positional_initialized"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemIndex\.owner_kemIndex$' "$selected_source_module" "PqxdhDeploymentKemIndex dependency BeaconcryptCore.Computational.PqxdhDeploymentKemIndex.owner_kemIndex"
+require_line_count 1 '^theorem owner_kemIndex([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemIndex theorem owner_kemIndex"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
