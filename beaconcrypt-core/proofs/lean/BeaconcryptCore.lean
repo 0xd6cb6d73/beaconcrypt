@@ -1546,6 +1546,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentKeyMatch
 
 import BeaconcryptCore.Computational.PqxdhDeploymentQuiet
 
+import BeaconcryptCore.Computational.PqxdhDeploymentCompileCaps
+
 /-!
 # Beaconcrypt-core verification root
 

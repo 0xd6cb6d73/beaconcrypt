@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1508
+	[handwritten-lean]=1509
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -29150,6 +29150,21 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem approved_goodkem([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentQuiet theorem approved_goodkem"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentQuiet\.kernel_reads_unrevealed$' "$selected_source_module" "PqxdhDeploymentQuiet dependency BeaconcryptCore.Computational.PqxdhDeploymentQuiet.kernel_reads_unrevealed"
 require_line_count 1 '^theorem kernel_reads_unrevealed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentQuiet theorem kernel_reads_unrevealed"
+
+# CE-3 budget transport in closed form: coins with the fresh-message byte budget, registration, BLAKE2b, reveal and kernel-read caps; T4 certified and room premises for the compiled program.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentCompileCaps.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentCompileCaps$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentCompileCaps root import"
+require_line_count 4 '^theorem ' "$selected_source_module" "PqxdhDeploymentCompileCaps theorem inventory"
+require_line_count 4 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentCompileCaps guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileCaps\.transported_eq$' "$selected_source_module" "PqxdhDeploymentCompileCaps dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileCaps.transported_eq"
+require_line_count 1 '^theorem transported_eq([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileCaps theorem transported_eq"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileCaps\.compile_full_certified$' "$selected_source_module" "PqxdhDeploymentCompileCaps dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileCaps.compile_full_certified"
+require_line_count 1 '^theorem compile_full_certified([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileCaps theorem compile_full_certified"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileCaps\.tag_certified$' "$selected_source_module" "PqxdhDeploymentCompileCaps dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileCaps.tag_certified"
+require_line_count 1 '^theorem tag_certified([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileCaps theorem tag_certified"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentCompileCaps\.transported_room$' "$selected_source_module" "PqxdhDeploymentCompileCaps dependency BeaconcryptCore.Computational.PqxdhDeploymentCompileCaps.transported_room"
+require_line_count 1 '^theorem transported_room([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentCompileCaps theorem transported_room"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
