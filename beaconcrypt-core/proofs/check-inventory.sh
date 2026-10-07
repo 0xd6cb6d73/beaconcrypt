@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1568
+	[handwritten-lean]=1569
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -30997,6 +30997,71 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem injective_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthInjectiveGame theorem injective_bound"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentServerAuthInjectiveGame\.ce_a1_injective$' "$selected_source_module" "PqxdhDeploymentServerAuthInjectiveGame dependency BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjectiveGame.ce_a1_injective"
 require_line_count 1 '^theorem ce_a1_injective([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentServerAuthInjectiveGame theorem ce_a1_injective"
+
+# CE-11a generic lazy-oracle erasure engine (increment 1).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/LazyOracleDiscard.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.LazyOracleDiscard$' proofs/lean/BeaconcryptCore.lean "LazyOracleDiscard root import"
+require_line_count 29 '^theorem ' "$selected_source_module" "LazyOracleDiscard theorem inventory"
+require_line_count 29 '^#guard_msgs in$' "$selected_source_module" "LazyOracleDiscard guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.LazyOracleDiscard\.LawEq\.refl$' "$selected_source_module" "LazyOracleDiscard dependency BeaconcryptCore.Computational.LazyOracleDiscard.LawEq.refl"
+require_line_count 1 '^theorem LawEq\.refl([[:space:]]|$)' "$selected_source_module" "LazyOracleDiscard theorem LawEq.refl"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.LazyOracleDiscard\.LawEq\.symm$' "$selected_source_module" "LazyOracleDiscard dependency BeaconcryptCore.Computational.LazyOracleDiscard.LawEq.symm"
+require_line_count 1 '^theorem LawEq\.symm([[:space:]]|$)' "$selected_source_module" "LazyOracleDiscard theorem LawEq.symm"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.LazyOracleDiscard\.LawEq\.trans$' "$selected_source_module" "LazyOracleDiscard dependency BeaconcryptCore.Computational.LazyOracleDiscard.LawEq.trans"
+require_line_count 1 '^theorem LawEq\.trans([[:space:]]|$)' "$selected_source_module" "LazyOracleDiscard theorem LawEq.trans"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.LazyOracleDiscard\.LawEq\.of_eq$' "$selected_source_module" "LazyOracleDiscard dependency BeaconcryptCore.Computational.LazyOracleDiscard.LawEq.of_eq"
+require_line_count 1 '^theorem LawEq\.of_eq([[:space:]]|$)' "$selected_source_module" "LazyOracleDiscard theorem LawEq.of_eq"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.LazyOracleDiscard\.LawEq\.bind$' "$selected_source_module" "LazyOracleDiscard dependency BeaconcryptCore.Computational.LazyOracleDiscard.LawEq.bind"
+require_line_count 1 '^theorem LawEq\.bind([[:space:]]|$)' "$selected_source_module" "LazyOracleDiscard theorem LawEq.bind"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.LazyOracleDiscard\.LawEq\.map$' "$selected_source_module" "LazyOracleDiscard dependency BeaconcryptCore.Computational.LazyOracleDiscard.LawEq.map"
+require_line_count 1 '^theorem LawEq\.map([[:space:]]|$)' "$selected_source_module" "LazyOracleDiscard theorem LawEq.map"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.LazyOracleDiscard\.LawEq\.evalDist_eq$' "$selected_source_module" "LazyOracleDiscard dependency BeaconcryptCore.Computational.LazyOracleDiscard.LawEq.evalDist_eq"
+require_line_count 1 '^theorem LawEq\.evalDist_eq([[:space:]]|$)' "$selected_source_module" "LazyOracleDiscard theorem LawEq.evalDist_eq"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.LazyOracleDiscard\.lawEq_swap$' "$selected_source_module" "LazyOracleDiscard dependency BeaconcryptCore.Computational.LazyOracleDiscard.lawEq_swap"
+require_line_count 1 '^theorem lawEq_swap([[:space:]]|$)' "$selected_source_module" "LazyOracleDiscard theorem lawEq_swap"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.LazyOracleDiscard\.lawEq_drop$' "$selected_source_module" "LazyOracleDiscard dependency BeaconcryptCore.Computational.LazyOracleDiscard.lawEq_drop"
+require_line_count 1 '^theorem lawEq_drop([[:space:]]|$)' "$selected_source_module" "LazyOracleDiscard theorem lawEq_drop"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.LazyOracleDiscard\.complete_run$' "$selected_source_module" "LazyOracleDiscard dependency BeaconcryptCore.Computational.LazyOracleDiscard.complete_run"
+require_line_count 1 '^theorem complete_run([[:space:]]|$)' "$selected_source_module" "LazyOracleDiscard theorem complete_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.LazyOracleDiscard\.complete_of_none$' "$selected_source_module" "LazyOracleDiscard dependency BeaconcryptCore.Computational.LazyOracleDiscard.complete_of_none"
+require_line_count 1 '^theorem complete_of_none([[:space:]]|$)' "$selected_source_module" "LazyOracleDiscard theorem complete_of_none"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.LazyOracleDiscard\.complete_of_some$' "$selected_source_module" "LazyOracleDiscard dependency BeaconcryptCore.Computational.LazyOracleDiscard.complete_of_some"
+require_line_count 1 '^theorem complete_of_some([[:space:]]|$)' "$selected_source_module" "LazyOracleDiscard theorem complete_of_some"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.LazyOracleDiscard\.query_of_none$' "$selected_source_module" "LazyOracleDiscard dependency BeaconcryptCore.Computational.LazyOracleDiscard.query_of_none"
+require_line_count 1 '^theorem query_of_none([[:space:]]|$)' "$selected_source_module" "LazyOracleDiscard theorem query_of_none"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.LazyOracleDiscard\.query_of_some$' "$selected_source_module" "LazyOracleDiscard dependency BeaconcryptCore.Computational.LazyOracleDiscard.query_of_some"
+require_line_count 1 '^theorem query_of_some([[:space:]]|$)' "$selected_source_module" "LazyOracleDiscard theorem query_of_some"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.LazyOracleDiscard\.complete_query_swap$' "$selected_source_module" "LazyOracleDiscard dependency BeaconcryptCore.Computational.LazyOracleDiscard.complete_query_swap"
+require_line_count 1 '^theorem complete_query_swap([[:space:]]|$)' "$selected_source_module" "LazyOracleDiscard theorem complete_query_swap"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.LazyOracleDiscard\.commutes_pure$' "$selected_source_module" "LazyOracleDiscard dependency BeaconcryptCore.Computational.LazyOracleDiscard.commutes_pure"
+require_line_count 1 '^theorem commutes_pure([[:space:]]|$)' "$selected_source_module" "LazyOracleDiscard theorem commutes_pure"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.LazyOracleDiscard\.commutes_bind$' "$selected_source_module" "LazyOracleDiscard dependency BeaconcryptCore.Computational.LazyOracleDiscard.commutes_bind"
+require_line_count 1 '^theorem commutes_bind([[:space:]]|$)' "$selected_source_module" "LazyOracleDiscard theorem commutes_bind"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.LazyOracleDiscard\.commutes_map$' "$selected_source_module" "LazyOracleDiscard dependency BeaconcryptCore.Computational.LazyOracleDiscard.commutes_map"
+require_line_count 1 '^theorem commutes_map([[:space:]]|$)' "$selected_source_module" "LazyOracleDiscard theorem commutes_map"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.LazyOracleDiscard\.commutes_frame$' "$selected_source_module" "LazyOracleDiscard dependency BeaconcryptCore.Computational.LazyOracleDiscard.commutes_frame"
+require_line_count 1 '^theorem commutes_frame([[:space:]]|$)' "$selected_source_module" "LazyOracleDiscard theorem commutes_frame"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.LazyOracleDiscard\.commutes_query$' "$selected_source_module" "LazyOracleDiscard dependency BeaconcryptCore.Computational.LazyOracleDiscard.commutes_query"
+require_line_count 1 '^theorem commutes_query([[:space:]]|$)' "$selected_source_module" "LazyOracleDiscard theorem commutes_query"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.LazyOracleDiscard\.commutes_simulateQ$' "$selected_source_module" "LazyOracleDiscard dependency BeaconcryptCore.Computational.LazyOracleDiscard.commutes_simulateQ"
+require_line_count 1 '^theorem commutes_simulateQ([[:space:]]|$)' "$selected_source_module" "LazyOracleDiscard theorem commutes_simulateQ"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.LazyOracleDiscard\.complete_comp$' "$selected_source_module" "LazyOracleDiscard dependency BeaconcryptCore.Computational.LazyOracleDiscard.complete_comp"
+require_line_count 1 '^theorem complete_comp([[:space:]]|$)' "$selected_source_module" "LazyOracleDiscard theorem complete_comp"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.LazyOracleDiscard\.commutes_lift$' "$selected_source_module" "LazyOracleDiscard dependency BeaconcryptCore.Computational.LazyOracleDiscard.commutes_lift"
+require_line_count 1 '^theorem commutes_lift([[:space:]]|$)' "$selected_source_module" "LazyOracleDiscard theorem commutes_lift"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.LazyOracleDiscard\.blind_proj$' "$selected_source_module" "LazyOracleDiscard dependency BeaconcryptCore.Computational.LazyOracleDiscard.blind_proj"
+require_line_count 1 '^theorem blind_proj([[:space:]]|$)' "$selected_source_module" "LazyOracleDiscard theorem blind_proj"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.LazyOracleDiscard\.factor_of_discard$' "$selected_source_module" "LazyOracleDiscard dependency BeaconcryptCore.Computational.LazyOracleDiscard.factor_of_discard"
+require_line_count 1 '^theorem factor_of_discard([[:space:]]|$)' "$selected_source_module" "LazyOracleDiscard theorem factor_of_discard"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.LazyOracleDiscard\.erase_tail$' "$selected_source_module" "LazyOracleDiscard dependency BeaconcryptCore.Computational.LazyOracleDiscard.erase_tail"
+require_line_count 1 '^theorem erase_tail([[:space:]]|$)' "$selected_source_module" "LazyOracleDiscard theorem erase_tail"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.LazyOracleDiscard\.discard_erase$' "$selected_source_module" "LazyOracleDiscard dependency BeaconcryptCore.Computational.LazyOracleDiscard.discard_erase"
+require_line_count 1 '^theorem discard_erase([[:space:]]|$)' "$selected_source_module" "LazyOracleDiscard theorem discard_erase"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.LazyOracleDiscard\.discard_erase_proj$' "$selected_source_module" "LazyOracleDiscard dependency BeaconcryptCore.Computational.LazyOracleDiscard.discard_erase_proj"
+require_line_count 1 '^theorem discard_erase_proj([[:space:]]|$)' "$selected_source_module" "LazyOracleDiscard theorem discard_erase_proj"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.LazyOracleDiscard\.impl_project$' "$selected_source_module" "LazyOracleDiscard dependency BeaconcryptCore.Computational.LazyOracleDiscard.impl_project"
+require_line_count 1 '^theorem impl_project([[:space:]]|$)' "$selected_source_module" "LazyOracleDiscard theorem impl_project"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"

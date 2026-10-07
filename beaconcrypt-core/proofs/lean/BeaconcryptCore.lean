@@ -1651,6 +1651,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective
 
 import BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjectiveGame
 
+import BeaconcryptCore.Computational.LazyOracleDiscard
+
 /-!
 # Beaconcrypt-core verification root
 
