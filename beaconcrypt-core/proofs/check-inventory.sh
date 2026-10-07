@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1569
+	[handwritten-lean]=1570
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -31062,6 +31062,25 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.LazyOracleD
 require_line_count 1 '^theorem discard_erase_proj([[:space:]]|$)' "$selected_source_module" "LazyOracleDiscard theorem discard_erase_proj"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.LazyOracleDiscard\.impl_project$' "$selected_source_module" "LazyOracleDiscard dependency BeaconcryptCore.Computational.LazyOracleDiscard.impl_project"
 require_line_count 1 '^theorem impl_project([[:space:]]|$)' "$selected_source_module" "LazyOracleDiscard theorem impl_project"
+
+# CE-11a 108-byte hidden-slot layout (increment 1).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHiddenLayout.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentHiddenLayout$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentHiddenLayout root import"
+require_line_count 6 '^theorem ' "$selected_source_module" "PqxdhDeploymentHiddenLayout theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentHiddenLayout guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHiddenLayout\.split_join$' "$selected_source_module" "PqxdhDeploymentHiddenLayout dependency BeaconcryptCore.Computational.PqxdhDeploymentHiddenLayout.split_join"
+require_line_count 1 '^theorem split_join([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHiddenLayout theorem split_join"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHiddenLayout\.join_split$' "$selected_source_module" "PqxdhDeploymentHiddenLayout dependency BeaconcryptCore.Computational.PqxdhDeploymentHiddenLayout.join_split"
+require_line_count 1 '^theorem join_split([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHiddenLayout theorem join_split"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHiddenLayout\.joinOutput_next$' "$selected_source_module" "PqxdhDeploymentHiddenLayout dependency BeaconcryptCore.Computational.PqxdhDeploymentHiddenLayout.joinOutput_next"
+require_line_count 1 '^theorem joinOutput_next([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHiddenLayout theorem joinOutput_next"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHiddenLayout\.factor_join$' "$selected_source_module" "PqxdhDeploymentHiddenLayout dependency BeaconcryptCore.Computational.PqxdhDeploymentHiddenLayout.factor_join"
+require_line_count 1 '^theorem factor_join([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHiddenLayout theorem factor_join"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHiddenLayout\.uniform_split$' "$selected_source_module" "PqxdhDeploymentHiddenLayout dependency BeaconcryptCore.Computational.PqxdhDeploymentHiddenLayout.uniform_split"
+require_line_count 1 '^theorem uniform_split([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHiddenLayout theorem uniform_split"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHiddenLayout\.material_bound$' "$selected_source_module" "PqxdhDeploymentHiddenLayout dependency BeaconcryptCore.Computational.PqxdhDeploymentHiddenLayout.material_bound"
+require_line_count 1 '^theorem material_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHiddenLayout theorem material_bound"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
