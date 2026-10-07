@@ -1580,6 +1580,10 @@ import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerReserve
 
 import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerInitialized
 
+import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBridge
+
+import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerOpaque
+
 /-!
 # Beaconcrypt-core verification root
 

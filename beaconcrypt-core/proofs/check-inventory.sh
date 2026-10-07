@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1525
+	[handwritten-lean]=1527
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -29875,6 +29875,50 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem constructor_order([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerInitialized theorem constructor_order"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerInitialized\.actual_source_first$' "$selected_source_module" "PqxdhDeploymentLaterServerInitialized dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerInitialized.actual_source_first"
 require_line_count 1 '^theorem actual_source_first([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerInitialized theorem actual_source_first"
+
+# LQ-F spike: theorem T4 for the logged source
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerBridge.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBridge$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentLaterServerBridge root import"
+require_line_count 10 '^theorem ' "$selected_source_module" "PqxdhDeploymentLaterServerBridge theorem inventory"
+require_line_count 10 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentLaterServerBridge guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerBridge\.commands_map$' "$selected_source_module" "PqxdhDeploymentLaterServerBridge dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBridge.commands_map"
+require_line_count 1 '^theorem commands_map([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerBridge theorem commands_map"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerBridge\.exposeAt_map$' "$selected_source_module" "PqxdhDeploymentLaterServerBridge dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBridge.exposeAt_map"
+require_line_count 1 '^theorem exposeAt_map([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerBridge theorem exposeAt_map"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerBridge\.exposeAt_tag$' "$selected_source_module" "PqxdhDeploymentLaterServerBridge dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBridge.exposeAt_tag"
+require_line_count 1 '^theorem exposeAt_tag([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerBridge theorem exposeAt_tag"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerBridge\.scanned_map$' "$selected_source_module" "PqxdhDeploymentLaterServerBridge dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBridge.scanned_map"
+require_line_count 1 '^theorem scanned_map([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerBridge theorem scanned_map"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerBridge\.rawResume_tag$' "$selected_source_module" "PqxdhDeploymentLaterServerBridge dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBridge.rawResume_tag"
+require_line_count 1 '^theorem rawResume_tag([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerBridge theorem rawResume_tag"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerBridge\.active_raw$' "$selected_source_module" "PqxdhDeploymentLaterServerBridge dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBridge.active_raw"
+require_line_count 1 '^theorem active_raw([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerBridge theorem active_raw"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerBridge\.run_le_real$' "$selected_source_module" "PqxdhDeploymentLaterServerBridge dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBridge.run_le_real"
+require_line_count 1 '^theorem run_le_real([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerBridge theorem run_le_real"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerBridge\.commands_le_real$' "$selected_source_module" "PqxdhDeploymentLaterServerBridge dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBridge.commands_le_real"
+require_line_count 1 '^theorem commands_le_real([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerBridge theorem commands_le_real"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerBridge\.tag_bound$' "$selected_source_module" "PqxdhDeploymentLaterServerBridge dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBridge.tag_bound"
+require_line_count 1 '^theorem tag_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerBridge theorem tag_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerBridge\.actual_le_real$' "$selected_source_module" "PqxdhDeploymentLaterServerBridge dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBridge.actual_le_real"
+require_line_count 1 '^theorem actual_le_real([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerBridge theorem actual_le_real"
+
+# LQ-F spike: theorem T6 and the composed KEM transfer for the logged source
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerOpaque.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerOpaque$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentLaterServerOpaque root import"
+require_line_count 5 '^theorem ' "$selected_source_module" "PqxdhDeploymentLaterServerOpaque theorem inventory"
+require_line_count 5 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentLaterServerOpaque guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerOpaque\.scan_opaque$' "$selected_source_module" "PqxdhDeploymentLaterServerOpaque dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerOpaque.scan_opaque"
+require_line_count 1 '^theorem scan_opaque([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerOpaque theorem scan_opaque"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerOpaque\.pre_opaque$' "$selected_source_module" "PqxdhDeploymentLaterServerOpaque dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerOpaque.pre_opaque"
+require_line_count 1 '^theorem pre_opaque([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerOpaque theorem pre_opaque"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerOpaque\.post_opaque$' "$selected_source_module" "PqxdhDeploymentLaterServerOpaque dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerOpaque.post_opaque"
+require_line_count 1 '^theorem post_opaque([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerOpaque theorem post_opaque"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerOpaque\.branch_opaque$' "$selected_source_module" "PqxdhDeploymentLaterServerOpaque dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerOpaque.branch_opaque"
+require_line_count 1 '^theorem branch_opaque([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerOpaque theorem branch_opaque"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerOpaque\.transfer$' "$selected_source_module" "PqxdhDeploymentLaterServerOpaque dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerOpaque.transfer"
+require_line_count 1 '^theorem transfer([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerOpaque theorem transfer"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
