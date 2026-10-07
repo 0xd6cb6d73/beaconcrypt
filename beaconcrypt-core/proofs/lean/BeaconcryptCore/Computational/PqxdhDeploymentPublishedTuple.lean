@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.PqxdhDeploymentSigningHistory
 import BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutMonotone
 
-/-! Published-tuple provenance and published-tuple replay in the common deployment experiment (CE-7 CE-A2pub, CE-6 CE-R1'). `PublishedForgery` is the CE-A2pub event on a transcript: some successful accept carries a raw candidate that the source attached verification accepts with the identity key of a created owner and a key tuple other than the tuple of that owner's published bundle, read from public bytes, or that owner published none. On a run without a rejected bundle call made in Fresh (`NoBundleFailure`), the signing-history lemma of `PqxdhDeploymentSigningHistory` makes that owner's whole signing history empty or exactly the three messages of its published tuple, so the accepted tuple was never signed. With a generated Server seed no known seed is imported (`initialized_free`), so every identity handle is a generated report position below the creation cap (`report_generated`, `generated_lt`), and the A2 client's terminal batch for that accept's raw candidate detects an original-field failure in the final report snapshot (`published_failure`, `announceAll_detects`). `game_report` carries the event from the deployment experiment to the report-instrumented initialized execution under the approved codec laws `Phase1ReadBack` and `Phase2ReadBack`, and `a2pub_bound` bounds it by the same sum of ordinary joint-use weak-EUF advantages of the A2 client's reductions as CE-A2, with coefficient one. `DoubleAccept` is the CE-R1' event: two successful accepts at distinct transcript positions carry raw candidates accepted under one created owner's identity key. `replay_published` shows from CE-R1 that on every outcome of a `NoBundleFailure` run one of them is a published-tuple forgery, because two accepts of the published tuple would carry one registration ID, which the live Server object consumes once; `r1prime_bound` then has the CE-A2pub bound. The premises are `shortRejects` with `setup.wiring`, the two approved codec laws and the adversary's budget; no new assumption is used. -/
+/-! Published-tuple provenance and published-tuple replay in the common deployment experiment (CE-7 CE-A2pub, CE-6 CE-R1'). `PublishedForgery` is the CE-A2pub event on a transcript: some successful accept carries a raw candidate that the source attached verification accepts with the identity key of a created owner and a key tuple other than the tuple of that owner's published bundle, read from public bytes, or that owner published none; `OwnerForgery` is the same event at one owner (`published_owner`). For an owner that made no rejected bundle call in Fresh (`NoBundleFailureAt`), the signing-history lemma of `PqxdhDeploymentSigningHistory` makes that owner's whole signing history empty or exactly the three messages of its published tuple, so the accepted tuple was never signed. With a generated Server seed no known seed is imported (`initialized_free`), so every identity handle is a generated report position below the creation cap (`report_generated`, `generated_lt`), and the A2 client's terminal batch for that accept's raw candidate detects an original-field failure in the final report snapshot (`owner_published_failure`, `announceAll_detects`); only the forged owner's `NoBundleFailureAt` is used. `game_report_holds` carries any property of the final transcript and the owners' identity keys from the deployment experiment to the report-instrumented initialized execution under the approved codec laws `Phase1ReadBack` and `Phase2ReadBack`, at Server identity index 0, the index `compile_full_source` assigns when that execution starts from empty pools; no lemma here relates other Server identity indices, which the deployment game stores in the Server's metadata. `a2pub_owner_bound` bounds the per-owner event `OwnerEvent` (a published-tuple forgery at an owner without a rejected bundle call in Fresh, whatever the other owners did) by the same sum of ordinary joint-use weak-EUF advantages of the A2 client's reductions as CE-A2, with coefficient one, and `a2pub_bound` is its corollary for the planned event `GameEvent`, which requires `NoBundleFailure` for every owner (`game_owner`). `DoubleAccept` is the CE-R1' event: two successful accepts at distinct transcript positions carry raw candidates accepted under one created owner's identity key; `DoubleAcceptAt` fixes the owner. `replay_owner_published` shows from CE-R1 that on every outcome where that owner made no rejected bundle call in Fresh one of them is a published-tuple forgery at that owner, because two accepts of the published tuple would carry one registration ID, which the live Server object consumes once; `r1prime_owner_bound` then has the per-owner CE-A2pub bound, and `r1prime_bound` is its corollary for the planned event `ReplayEvent`. The premises are `shortRejects` with `setup.wiring`, the two approved codec laws and the adversary's budget; no new assumption is used. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
@@ -413,6 +413,26 @@ def PublishedForgery (crypto : Pqxdh.Crypto) (codec : Codec Reader Response)
       PqxdhDeploymentTranscript.acceptedKeys crypto candidate = some (identity, decoded) ∧
       identities[owner]? = some identity ∧ publishedTuple codec transcript owner ≠ some decoded
 
+/-- CE-A2pub event at one owner: some successful accept of the transcript carries a raw candidate that the source attached verification of `crypto` accepts with the identity key of owner `owner` and a key tuple that is not the tuple of that owner's published bundle (or that owner published no bundle). -/
+def OwnerForgery (crypto : Pqxdh.Crypto) (codec : Codec Reader Response)
+    (transcript : List PqxdhDeploymentInterface.Entry) (identities : List PqxdhEd25519EufCma.Ed25519PublicKey)
+    (owner : Nat) : Prop :=
+  ∃ (raw : Pqxdh.Bytes) (session : Nat),
+    (⟨.inl (.inr (.accept raw)), some session⟩ : PqxdhDeploymentInterface.Entry) ∈ transcript ∧
+    ∃ candidate identity decoded, PqxdhDeploymentTranscript.candidateOf codec raw = some candidate ∧
+      PqxdhDeploymentTranscript.acceptedKeys crypto candidate = some (identity, decoded) ∧
+      identities[owner]? = some identity ∧ publishedTuple codec transcript owner ≠ some decoded
+
+/-- A published-tuple forgery is a published-tuple forgery at some owner. -/
+theorem published_owner (crypto : Pqxdh.Crypto) (codec : Codec Reader Response)
+    (transcript : List PqxdhDeploymentInterface.Entry) (identities : List PqxdhEd25519EufCma.Ed25519PublicKey) :
+    PublishedForgery crypto codec transcript identities ↔ ∃ owner, OwnerForgery crypto codec transcript identities owner := by
+  constructor
+  · rintro ⟨raw, session, member, candidate, identity, decoded, owner, parsed, accepted, found, other⟩
+    exact ⟨owner, raw, session, member, candidate, identity, decoded, parsed, accepted, found, other⟩
+  · rintro ⟨owner, raw, session, member, candidate, identity, decoded, parsed, accepted, found, other⟩
+    exact ⟨raw, session, member, candidate, identity, decoded, owner, parsed, accepted, found, other⟩
+
 /-- The terminal batches raise the report flag for a reported candidate that is an original-field failure in the snapshot they start from. -/
 theorem announceAll_detects (joint : Primitives) (count target : Nat) (candidates : List PqxdhEd25519EufCma.Phase1Candidate)
     (candidate : PqxdhEd25519EufCma.Phase1Candidate) (member : candidate ∈ candidates)
@@ -438,8 +458,8 @@ theorem announceAll_detects (joint : Primitives) (count target : Nat) (candidate
         exact PqxdhDeploymentAcceptDetection.run_sticky joint count _ middle.2 raised after second
       · exact ih later middle.2 (by rw [snapshot]; exact failure) second
 
-/-- At the end of the report-instrumented initialized execution of the compiled program, on a run without a rejected bundle call in Fresh, a published-tuple forgery of the final transcript is an original-field failure, in the final report snapshot, of the raw candidate of one of the transcript's successful accepts at a generated report position below the creation cap. -/
-theorem published_failure (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+/-- At the end of the report-instrumented initialized execution of the compiled program, a published-tuple forgery of the final transcript at an owner that made no rejected bundle call in Fresh is an original-field failure, in the final report snapshot, of the raw candidate of one of the transcript's successful accepts at a generated report position below the creation cap. Only that owner's `NoBundleFailureAt` is used. -/
+theorem owner_published_failure (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (shortRejects : ∀ (publicKey : PqxdhEd25519EufCma.Ed25519PublicKey) bytes, bytes.length < 64 →
       setup.source.crypto.verify publicKey.toList bytes = none)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
@@ -455,13 +475,13 @@ theorem published_failure (setup : Setup baseSpec KemSK) (codec : Codec Reader R
     (encoded : PqxdhRegistrationJointInitializedSchedule.Outcome KemSK
       ((X × PqxdhDeploymentSecrecy.Ledger) × PqxdhDeploymentCompile.Local))
     (finished : (PqxdhRegistrationJointInitializedReports.sourceResult reached).1 = some encoded)
-    (forgery : PublishedForgery setup.source.crypto codec encoded.2.1.1.2.transcript
-      (encodedIdentities encoded.2.2.owners))
-    (clean : PqxdhDeploymentTranscript.NoBundleFailure encoded.2.1.1.2.transcript) :
+    (owner : Nat) (forgery : OwnerForgery setup.source.crypto codec encoded.2.1.1.2.transcript
+      (encodedIdentities encoded.2.2.owners) owner)
+    (clean : PqxdhDeploymentTranscript.NoBundleFailureAt encoded.2.1.1.2.transcript owner) :
     ∃ target candidate, target < budget.create + 1 ∧
       candidate ∈ PqxdhDeploymentProvenance.acceptedCandidates codec (PqxdhDeploymentProvenance.finalTranscript reached.1) ∧
       PqxdhJointPhase1Reports.FieldOriginFailure setup.joint ⟨target, candidate⟩ reached.2.1.snapshot := by
-  obtain ⟨raw, session, entryMember, candidate, identity, decoded, owner, parsed, accepted, identityFound,
+  obtain ⟨raw, session, entryMember, candidate, identity, decoded, parsed, accepted, identityFound,
     notPublished⟩ := forgery
   obtain ⟨original, _, actual, encodedSame, _⟩ := PqxdhRegistrationJointInitializedReports.successful_witness setup
     codec checks ensureInit none (budget.create + 1) _ runtime reached supported encoded finished
@@ -469,7 +489,7 @@ theorem published_failure (setup : Setup baseSpec KemSK) (codec : Codec Reader R
   change publishedTuple codec original.2.1.1.2.transcript owner ≠ some decoded at notPublished
   change (⟨.inl (.inr (.accept raw)), some session⟩ : PqxdhDeploymentInterface.Entry) ∈ original.2.1.1.2.transcript
     at entryMember
-  change PqxdhDeploymentTranscript.NoBundleFailure original.2.1.1.2.transcript at clean
+  change PqxdhDeploymentTranscript.NoBundleFailureAt original.2.1.1.2.transcript owner at clean
   have pool : original.2.2.pool = (PqxdhRegistrationJointInitializedReports.sourceResult reached).2.1 :=
     PqxdhRegistrationJointInitializedReports.outcome_pool reached _ finished
   have identityLookup : ∃ entry, original.2.2.owners[owner]? = some entry ∧
@@ -494,7 +514,7 @@ theorem published_failure (setup : Setup baseSpec KemSK) (codec : Codec Reader R
       field.message ∉ PqxdhRegistrationJointSigningTranscript.messagesAt entry.identityIndex
         original.2.2.pool.1.transcript := by
     rcases PqxdhDeploymentSigningHistory.signing_history setup codec checks route ensureInit bounds mode adversary
-        runtime _ actual original rfl owner entry entryFound (clean owner) with
+        runtime _ actual original rfl owner entry entryFound clean with
       ⟨_, empty⟩ | ⟨bytes, keys, published, written, messages⟩
     · obtain ⟨_, pqSignature, _, _, pqAttached, _⟩ := PqxdhEd25519EufCma.acceptPhase1Candidate_some_witness
         setup.joint.verify candidate _ decoded detached
@@ -563,6 +583,33 @@ theorem published_failure (setup : Setup baseSpec KemSK) (codec : Codec Reader R
     · rw [← pool]
       exact unissued
 
+/-- At the end of the report-instrumented initialized execution of the compiled program, on a run without a rejected bundle call in Fresh, a published-tuple forgery of the final transcript is an original-field failure, in the final report snapshot, of the raw candidate of one of the transcript's successful accepts at a generated report position below the creation cap. It is `owner_published_failure` at the forged owner. -/
+theorem published_failure (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (shortRejects : ∀ (publicKey : PqxdhEd25519EufCma.Ed25519PublicKey) bytes, bytes.length < 64 →
+      setup.source.crypto.verify publicKey.toList bytes = none)
+    (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
+    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)
+    (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
+    (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) (budget : PqxdhDeploymentInterface.Budget)
+    (respects : budget.Respects adversary) (runtime : A)
+    (reached : PqxdhRegistrationJointInitializedReports.ReportResult KemSK A
+      ((X × PqxdhDeploymentSecrecy.Ledger) × PqxdhDeploymentCompile.Local) (budget.create + 1))
+    (supported : reached ∈ support (PqxdhJointPhase1Reports.run setup.joint (budget.create + 1)
+      (PqxdhRegistrationJointReportCompiler.initialized setup codec checks ensureInit none (budget.create + 1)
+        (PqxdhDeploymentCompileSecrecy.compileFull setup codec route bounds mode adversary) runtime)))
+    (encoded : PqxdhRegistrationJointInitializedSchedule.Outcome KemSK
+      ((X × PqxdhDeploymentSecrecy.Ledger) × PqxdhDeploymentCompile.Local))
+    (finished : (PqxdhRegistrationJointInitializedReports.sourceResult reached).1 = some encoded)
+    (forgery : PublishedForgery setup.source.crypto codec encoded.2.1.1.2.transcript
+      (encodedIdentities encoded.2.2.owners))
+    (clean : PqxdhDeploymentTranscript.NoBundleFailure encoded.2.1.1.2.transcript) :
+    ∃ target candidate, target < budget.create + 1 ∧
+      candidate ∈ PqxdhDeploymentProvenance.acceptedCandidates codec (PqxdhDeploymentProvenance.finalTranscript reached.1) ∧
+      PqxdhJointPhase1Reports.FieldOriginFailure setup.joint ⟨target, candidate⟩ reached.2.1.snapshot := by
+  obtain ⟨owner, forged⟩ := (published_owner _ _ _ _).mp forgery
+  exact owner_published_failure setup codec checks shortRejects phase1 route ensureInit bounds mode adversary budget respects
+    runtime reached supported encoded finished owner forged (clean owner)
+
 /-- Merging the compiled program's local record copies changes no owner identity. -/
 theorem identities_merge (setup : Setup baseSpec KemSK) (copies : PqxdhDeploymentCompile.Local)
     (native : PqxdhRegistrationSchedule.State KemSK) :
@@ -585,6 +632,28 @@ theorem identities_encode (setup : Setup baseSpec KemSK) (state : PqxdhRegistrat
     PqxdhRegistrationJointSchedule.source, List.map_map]
   rfl
 
+/-- A property of the final transcript and the owners' identity keys holds on an outcome of the deployment experiment that constructed a Server. -/
+def GameHolds (setup : Setup baseSpec KemSK)
+    (property : List PqxdhDeploymentInterface.Entry → List PqxdhEd25519EufCma.Ed25519PublicKey → Prop)
+    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A) :
+    Prop :=
+  ∃ created output final, outcome.1 = some (created, output, final) ∧
+    property final.1.transcript (ownerIdentities setup final.2.native)
+
+/-- A property of the final transcript and the encoded owners' identity keys holds on a report-run outcome of the compiled program. -/
+def ReportHolds (property : List PqxdhDeploymentInterface.Entry → List PqxdhEd25519EufCma.Ed25519PublicKey → Prop)
+    {count : Nat} (reached : PqxdhRegistrationJointInitializedReports.ReportResult KemSK A
+      ((X × PqxdhDeploymentSecrecy.Ledger) × PqxdhDeploymentCompile.Local) count) : Prop :=
+  ∃ encoded, (PqxdhRegistrationJointInitializedReports.sourceResult reached).1 = some encoded ∧
+    property encoded.2.1.1.2.transcript (encodedIdentities encoded.2.2.owners)
+
+/-- A property of the final transcript and the encoded owners' identity keys holds on a decoded report-run outcome. -/
+def DecodedHolds (property : List PqxdhDeploymentInterface.Entry → List PqxdhEd25519EufCma.Ed25519PublicKey → Prop)
+    (result : Option (PqxdhRegistrationJointInitializedSchedule.Outcome KemSK
+      ((X × PqxdhDeploymentSecrecy.Ledger) × PqxdhDeploymentCompile.Local)) ×
+        PqxdhRegistrationJointServerPrefix.State KemSK A) : Prop :=
+  ∃ encoded, result.1 = some encoded ∧ property encoded.2.1.1.2.transcript (encodedIdentities encoded.2.2.owners)
+
 /-- The A2pub event on a report-run outcome of the compiled program: a published-tuple forgery of the final transcript under the encoded owners' identity keys, on a run without a rejected bundle call in Fresh. -/
 def ReportEvent (crypto : Pqxdh.Crypto) (codec : Codec Reader Response) {count : Nat}
     (reached : PqxdhRegistrationJointInitializedReports.ReportResult KemSK A
@@ -601,27 +670,19 @@ def GameEvent (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     PublishedForgery setup.source.crypto codec final.1.transcript (ownerIdentities setup final.2.native) ∧
     PqxdhDeploymentTranscript.NoBundleFailure final.1.transcript
 
-/-- The A2pub event on a decoded report-run outcome. -/
-def DecodedEvent (crypto : Pqxdh.Crypto) (codec : Codec Reader Response)
-    (result : Option (PqxdhRegistrationJointInitializedSchedule.Outcome KemSK
-      ((X × PqxdhDeploymentSecrecy.Ledger) × PqxdhDeploymentCompile.Local)) ×
-        PqxdhRegistrationJointServerPrefix.State KemSK A) : Prop :=
-  ∃ encoded, result.1 = some encoded ∧
-    PublishedForgery crypto codec encoded.2.1.1.2.transcript (encodedIdentities encoded.2.2.owners) ∧
-    PqxdhDeploymentTranscript.NoBundleFailure encoded.2.1.1.2.transcript
-
 set_option linter.deprecated false in
-/-- The A2pub event of the deployment experiment has exactly the probability of the A2pub event of the report-instrumented initialized execution of the compiled program. -/
-theorem game_report (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+/-- Under the approved codec laws `Phase1ReadBack` and `Phase2ReadBack`, for every property of the final transcript and the owners' identity keys, the probability that it holds on an outcome of the deployment experiment with Server identity index 0 equals the probability that it holds on an outcome of the report-instrumented initialized execution of the compiled program. -/
+theorem game_report_holds (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
     (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
     (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
-    (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) (count : Nat) (runtime : A) :
+    (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) (count : Nat) (runtime : A)
+    (property : List PqxdhDeploymentInterface.Entry → List PqxdhEd25519EufCma.Ed25519PublicKey → Prop) :
     letI := Classical.propDecidable
-    𝒟[(fun outcome => decide (GameEvent setup codec outcome)) <$> (PqxdhDeploymentSecrecy.game setup codec checks
+    𝒟[(fun outcome => decide (GameHolds setup property outcome)) <$> (PqxdhDeploymentSecrecy.game setup codec checks
         route ensureInit 0 bounds mode adversary).run runtime] {true} =
-      𝒟[(fun reached => decide (ReportEvent setup.source.crypto codec reached)) <$>
+      𝒟[(fun reached => decide (ReportHolds property reached)) <$>
         PqxdhJointPhase1Reports.run setup.joint count (PqxdhRegistrationJointReportCompiler.initialized setup codec
           checks ensureInit none count (PqxdhDeploymentCompileSecrecy.compileFull setup codec route bounds mode
             adversary) runtime)] {true} := by
@@ -634,10 +695,10 @@ theorem game_report (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
   simp only [PqxdhDynamicIdentityPool.initialState, List.length_nil] at compiled
   have reported := PqxdhRegistrationJointReportSource.initialized_source setup codec checks ensureInit none count
     (PqxdhDeploymentCompileSecrecy.compileFull setup codec route bounds mode adversary) runtime
-  have decoded : Pr[ReportEvent (A := A) setup.source.crypto codec (count := count) | PqxdhJointPhase1Reports.run
+  have decoded : Pr[ReportHolds (KemSK := KemSK) (A := A) (X := X) property (count := count) | PqxdhJointPhase1Reports.run
       setup.joint count (PqxdhRegistrationJointReportCompiler.initialized setup codec checks ensureInit none count
         (PqxdhDeploymentCompileSecrecy.compileFull setup codec route bounds mode adversary) runtime)] =
-      Pr[DecodedEvent setup.source.crypto codec | (fun result =>
+      Pr[DecodedHolds (KemSK := KemSK) (A := A) (X := X) property | (fun result =>
         PqxdhRegistrationJointIdentityCompiler.initializedResult (result.1, result.2.2.source.2)) <$>
           PqxdhJointPhase1Reports.run setup.joint count (PqxdhRegistrationJointReportCompiler.initialized setup codec
             checks ensureInit none count (PqxdhDeploymentCompileSecrecy.compileFull setup codec route bounds mode
@@ -648,23 +709,100 @@ theorem game_report (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
   congr 1
   funext result
   rcases result with ⟨_ | outcome, after⟩
-  · simp [GameEvent, DecodedEvent, PqxdhDeploymentCompileSecrecy.mergeFull]
-  · simp only [Function.comp_apply, GameEvent, DecodedEvent, PqxdhDeploymentCompileSecrecy.mergeFull, Option.map_some,
+  · simp [GameHolds, DecodedHolds, PqxdhDeploymentCompileSecrecy.mergeFull]
+  · simp only [Function.comp_apply, GameHolds, DecodedHolds, PqxdhDeploymentCompileSecrecy.mergeFull, Option.map_some,
       Option.some.injEq, PqxdhRegistrationJointInitializedSchedule.eraseOutcome,
       PqxdhRegistrationJointInitializedSchedule.encodeOutcome]
     apply propext
     constructor
-    · rintro ⟨_, _, _, ⟨rfl, rfl, rfl⟩, forged, clean⟩
-      refine ⟨_, rfl, ?_, clean⟩
+    · rintro ⟨_, _, _, ⟨rfl, rfl, rfl⟩, holds⟩
+      refine ⟨_, rfl, ?_⟩
       rw [identities_encode]
-      rwa [identities_merge] at forged
-    · rintro ⟨_, rfl, forged, clean⟩
-      refine ⟨_, _, _, rfl, ?_, clean⟩
+      rwa [identities_merge] at holds
+    · rintro ⟨_, rfl, holds⟩
+      refine ⟨_, _, _, rfl, ?_⟩
       rw [identities_merge]
-      rwa [identities_encode] at forged
+      rwa [identities_encode] at holds
 
-set_option linter.deprecated false in
-/-- Theorem CE-A2pub (published-tuple provenance, on `NoBundleFailure` runs, no selection factor). For a deployment adversary in either mode that respects its budget, with a generated Server seed, the probability that the run has no rejected bundle call made in Fresh and yet some successful accept carries a raw candidate that the source attached verification accepts with the identity key of some created owner and a key tuple other than the tuple of that owner's published bundle (or that owner published none) is at most the same sum over the `qCreate + 1` generated identity positions of the ordinary joint-use weak-EUF advantages of the A2 client's reductions as CE-A2. The premises are `shortRejects` with `setup.wiring`, the approved codec laws `Phase1ReadBack` and `Phase2ReadBack`, and the adversary's budget. -/
+/-- The A2pub event of the deployment experiment has exactly the probability of the A2pub event of the report-instrumented initialized execution of the compiled program. It is `game_report_holds` for the A2pub property. -/
+theorem game_report (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)
+    (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
+    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
+    (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
+    (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) (count : Nat) (runtime : A) :
+    letI := Classical.propDecidable
+    𝒟[(fun outcome => decide (GameEvent setup codec outcome)) <$> (PqxdhDeploymentSecrecy.game setup codec checks
+        route ensureInit 0 bounds mode adversary).run runtime] {true} =
+      𝒟[(fun reached => decide (ReportEvent setup.source.crypto codec reached)) <$>
+        PqxdhJointPhase1Reports.run setup.joint count (PqxdhRegistrationJointReportCompiler.initialized setup codec
+          checks ensureInit none count (PqxdhDeploymentCompileSecrecy.compileFull setup codec route bounds mode
+            adversary) runtime)] {true} :=
+  game_report_holds setup codec checks route ensureInit phase1 phase2 bounds mode adversary count runtime
+    fun transcript identities => PublishedForgery setup.source.crypto codec transcript identities ∧
+      PqxdhDeploymentTranscript.NoBundleFailure transcript
+
+/-- The per-owner A2pub event on an outcome of the deployment experiment: a published-tuple forgery of the final transcript at some owner, under the owners' identity keys, where that owner made no rejected bundle call in Fresh. Other owners may have failed bundle calls. -/
+def OwnerEvent (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A) :
+    Prop :=
+  ∃ created output final, outcome.1 = some (created, output, final) ∧
+    ∃ owner, OwnerForgery setup.source.crypto codec final.1.transcript (ownerIdentities setup final.2.native) owner ∧
+      PqxdhDeploymentTranscript.NoBundleFailureAt final.1.transcript owner
+
+/-- The A2pub event is contained in the per-owner A2pub event: a run without any rejected bundle call in Fresh has none at the forged owner. -/
+theorem game_owner (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A)
+    (event : GameEvent setup codec outcome) : OwnerEvent setup codec outcome := by
+  obtain ⟨created, output, final, reached, forged, clean⟩ := event
+  obtain ⟨owner, ownerForged⟩ := (published_owner _ _ _ _).mp forged
+  exact ⟨created, output, final, reached, owner, ownerForged, clean owner⟩
+
+/-- Theorem CE-A2pub per owner (published-tuple provenance at owners without a failed bundle call, no selection factor). For a deployment adversary in either mode that respects its budget, with a generated Server seed, the probability that some successful accept carries a raw candidate that the source attached verification accepts with the identity key of some created owner and a key tuple other than the tuple of that owner's published bundle (or that owner published none), where that owner made no rejected bundle call in Fresh, is at most the same sum over the `qCreate + 1` generated identity positions of the ordinary joint-use weak-EUF advantages of the A2 client's reductions as CE-A2. A failed bundle call of another owner does not void the bound. The premises are `shortRejects` with `setup.wiring`, the approved codec laws `Phase1ReadBack` and `Phase2ReadBack`, and the adversary's budget. -/
+theorem a2pub_owner_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (shortRejects : ∀ (publicKey : PqxdhEd25519EufCma.Ed25519PublicKey) bytes, bytes.length < 64 →
+      setup.source.crypto.verify publicKey.toList bytes = none)
+    (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
+    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
+    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)
+    (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
+    (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) (budget : PqxdhDeploymentInterface.Budget)
+    (respects : budget.Respects adversary) (runtime : A) (fallback : PqxdhDynamicIdentityRouting.DynamicForgery)
+    (ordinaryFallback : PqxdhJointIdentity.Forgery) :
+    letI := Classical.propDecidable
+    𝒟[(fun outcome => decide (OwnerEvent setup codec outcome)) <$> (PqxdhDeploymentSecrecy.game setup codec checks
+        route ensureInit 0 bounds mode adversary).run runtime] {true} ≤
+      ∑ target : Fin (budget.create + 1), PqxdhJointIdentity.advantage setup.joint
+        (PqxdhDeploymentProvenance.reduction setup codec checks route ensureInit bounds mode adversary budget.create
+          runtime fallback ordinaryFallback target) := by
+  classical
+  let property : List PqxdhDeploymentInterface.Entry → List PqxdhEd25519EufCma.Ed25519PublicKey → Prop :=
+    fun transcript identities => ∃ owner, OwnerForgery setup.source.crypto codec transcript identities owner ∧
+      PqxdhDeploymentTranscript.NoBundleFailureAt transcript owner
+  rw [show (fun outcome => decide (OwnerEvent setup codec outcome)) =
+      (fun outcome => decide (GameHolds setup property outcome)) from rfl,
+    game_report_holds setup codec checks route ensureInit phase1 phase2 bounds mode adversary (budget.create + 1)
+      runtime property,
+    evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map]
+  have transfer := PqxdhDeploymentProvenance.client_transfer setup codec checks route ensureInit bounds mode adversary
+    (budget.create + 1) runtime (ReportHolds property) (by
+      intro reached member happened after afterMember
+      obtain ⟨encoded, finished, owner, forged, clean⟩ := happened
+      obtain ⟨target, candidate, _, candidateMember, failure⟩ := owner_published_failure setup codec checks shortRejects
+        phase1 route ensureInit bounds mode adversary budget respects runtime reached member encoded finished owner
+        forged clean
+      exact announceAll_detects setup.joint (budget.create + 1) target _ candidate candidateMember reached.2 failure
+        after afterMember)
+  rw [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map] at transfer
+  have creates := PqxdhDeploymentProvenance.client_creates setup codec checks route ensureInit bounds mode adversary
+    budget respects (budget.create + 1) runtime
+  have field := PqxdhJointPhase1Reports.fieldOrigin_advantage_le_sum setup.joint budget.create
+    (PqxdhDeploymentProvenance.client setup codec checks route ensureInit bounds mode adversary (budget.create + 1)
+      runtime) fallback ordinaryFallback (creates.mono (by omega))
+  rw [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map] at transfer
+  exact le_trans transfer field
+
+/-- Theorem CE-A2pub (published-tuple provenance, on `NoBundleFailure` runs, no selection factor). For a deployment adversary in either mode that respects its budget, with a generated Server seed, the probability that the run has no rejected bundle call made in Fresh and yet some successful accept carries a raw candidate that the source attached verification accepts with the identity key of some created owner and a key tuple other than the tuple of that owner's published bundle (or that owner published none) is at most the same sum over the `qCreate + 1` generated identity positions of the ordinary joint-use weak-EUF advantages of the A2 client's reductions as CE-A2. The premises are `shortRejects` with `setup.wiring`, the approved codec laws `Phase1ReadBack` and `Phase2ReadBack`, and the adversary's budget. It is the corollary of `a2pub_owner_bound` through `game_owner`. -/
 theorem a2pub_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (shortRejects : ∀ (publicKey : PqxdhEd25519EufCma.Ed25519PublicKey) bytes, bytes.length < 64 →
       setup.source.crypto.verify publicKey.toList bytes = none)
@@ -682,24 +820,14 @@ theorem a2pub_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
         (PqxdhDeploymentProvenance.reduction setup codec checks route ensureInit bounds mode adversary budget.create
           runtime fallback ordinaryFallback target) := by
   classical
-  rw [game_report setup codec checks route ensureInit phase1 phase2 bounds mode adversary (budget.create + 1) runtime,
-    evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map]
-  have transfer := PqxdhDeploymentProvenance.client_transfer setup codec checks route ensureInit bounds mode adversary
-    (budget.create + 1) runtime (ReportEvent setup.source.crypto codec) (by
-      intro reached member happened after afterMember
-      obtain ⟨encoded, finished, forged, clean⟩ := happened
-      obtain ⟨target, candidate, _, candidateMember, failure⟩ := published_failure setup codec checks shortRejects
-        phase1 route ensureInit bounds mode adversary budget respects runtime reached member encoded finished forged clean
-      exact announceAll_detects setup.joint (budget.create + 1) target _ candidate candidateMember reached.2 failure
-        after afterMember)
-  rw [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map] at transfer
-  have creates := PqxdhDeploymentProvenance.client_creates setup codec checks route ensureInit bounds mode adversary
-    budget respects (budget.create + 1) runtime
-  have field := PqxdhJointPhase1Reports.fieldOrigin_advantage_le_sum setup.joint budget.create
-    (PqxdhDeploymentProvenance.client setup codec checks route ensureInit bounds mode adversary (budget.create + 1)
-      runtime) fallback ordinaryFallback (creates.mono (by omega))
-  rw [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map] at transfer
-  exact le_trans transfer field
+  refine le_trans ?_ (a2pub_owner_bound setup codec checks shortRejects phase1 phase2 route ensureInit bounds mode
+    adversary budget respects runtime fallback ordinaryFallback)
+  rw [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map, evalDist_apply_singleton,
+    ← probEvent_eq_eq_probOutput, probEvent_map]
+  apply probEvent_mono
+  intro outcome _ event
+  simp only [Function.comp_apply, decide_eq_true_eq] at event ⊢
+  exact game_owner setup codec outcome event
 
 /-- A partial map whose image list has no duplicate sends no two positions of the list to the same value. -/
 theorem filterMap_nodup_ne {α β : Type} (f : α → Option β) (list : List α) (unique : (list.filterMap f).Nodup)
@@ -747,6 +875,35 @@ def DoubleAccept (crypto : Pqxdh.Crypto) (codec : Codec Reader Response)
       PqxdhDeploymentTranscript.acceptedKeys crypto candidate' = some (identity, keys') ∧
       identities[owner]? = some identity
 
+/-- CE-R1' event at one owner: two successful accepts at distinct transcript positions carry raw candidates that the source attached verification accepts with the identity key of owner `owner`. -/
+def DoubleAcceptAt (crypto : Pqxdh.Crypto) (codec : Codec Reader Response)
+    (transcript : List PqxdhDeploymentInterface.Entry) (identities : List PqxdhEd25519EufCma.Ed25519PublicKey)
+    (owner : Nat) : Prop :=
+  ∃ (first second : Nat), first ≠ second ∧
+    ∃ (raw raw' : Pqxdh.Bytes) (session session' : Nat) (candidate candidate' : PqxdhEd25519EufCma.Phase1Candidate)
+      (identity : PqxdhEd25519EufCma.Ed25519PublicKey) (keys keys' : PqxdhEd25519EufCma.Phase1KeyTuple),
+      transcript[first]? = some ⟨.inl (.inr (.accept raw)), some session⟩ ∧
+      transcript[second]? = some ⟨.inl (.inr (.accept raw')), some session'⟩ ∧
+      PqxdhDeploymentTranscript.candidateOf codec raw = some candidate ∧
+      PqxdhDeploymentTranscript.candidateOf codec raw' = some candidate' ∧
+      PqxdhDeploymentTranscript.acceptedKeys crypto candidate = some (identity, keys) ∧
+      PqxdhDeploymentTranscript.acceptedKeys crypto candidate' = some (identity, keys') ∧
+      identities[owner]? = some identity
+
+/-- A double accept is a double accept at some owner. -/
+theorem double_owner (crypto : Pqxdh.Crypto) (codec : Codec Reader Response)
+    (transcript : List PqxdhDeploymentInterface.Entry) (identities : List PqxdhEd25519EufCma.Ed25519PublicKey) :
+    DoubleAccept crypto codec transcript identities ↔ ∃ owner, DoubleAcceptAt crypto codec transcript identities owner := by
+  constructor
+  · rintro ⟨first, second, different, raw, raw', session, session', candidate, candidate', identity, keys, keys', owner,
+      rest⟩
+    exact ⟨owner, first, second, different, raw, raw', session, session', candidate, candidate', identity, keys, keys',
+      rest⟩
+  · rintro ⟨owner, first, second, different, raw, raw', session, session', candidate, candidate', identity, keys, keys',
+      rest⟩
+    exact ⟨first, second, different, raw, raw', session, session', candidate, candidate', identity, keys, keys', owner,
+      rest⟩
+
 /-- The CE-R1' event on an outcome of the deployment experiment, on a run without a rejected bundle call in Fresh. -/
 def ReplayEvent (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A) :
@@ -755,27 +912,43 @@ def ReplayEvent (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     DoubleAccept setup.source.crypto codec final.1.transcript (ownerIdentities setup final.2.native) ∧
     PqxdhDeploymentTranscript.NoBundleFailure final.1.transcript
 
-/-- On every outcome of the experiment, two successful accepts under one owner's identity on a `NoBundleFailure` run make one of them a published-tuple forgery: if both carried the owner's published tuple they would carry one registration ID, which the live Server object consumes once (CE-R1). -/
-theorem replay_published (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+/-- The per-owner CE-R1' event on an outcome of the deployment experiment: two successful accepts at distinct positions under some created owner's identity key, where that owner made no rejected bundle call in Fresh. -/
+def ReplayOwnerEvent (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A) :
+    Prop :=
+  ∃ created output final, outcome.1 = some (created, output, final) ∧
+    ∃ owner, DoubleAcceptAt setup.source.crypto codec final.1.transcript (ownerIdentities setup final.2.native) owner ∧
+      PqxdhDeploymentTranscript.NoBundleFailureAt final.1.transcript owner
+
+/-- The CE-R1' event is contained in the per-owner CE-R1' event. -/
+theorem replay_owner (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A)
+    (event : ReplayEvent setup codec outcome) : ReplayOwnerEvent setup codec outcome := by
+  obtain ⟨created, output, final, reached, doubled, clean⟩ := event
+  obtain ⟨owner, ownerDoubled⟩ := (double_owner _ _ _ _).mp doubled
+  exact ⟨created, output, final, reached, owner, ownerDoubled, clean owner⟩
+
+/-- On every outcome of the experiment, two successful accepts under one owner's identity, where that owner made no rejected bundle call in Fresh, make one of them a published-tuple forgery at that owner: if both carried the owner's published tuple they would carry one registration ID, which the live Server object consumes once (CE-R1). -/
+theorem replay_owner_published (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat)
     (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
     (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) (runtime : A)
     (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A)
     (supported : outcome ∈ support ((PqxdhDeploymentSecrecy.game setup codec checks route ensureInit identityIndex bounds
       mode adversary).run runtime))
-    (replayed : ReplayEvent setup codec outcome) : GameEvent setup codec outcome := by
-  obtain ⟨created, output, final, reached, ⟨first, second, different, raw, raw', session, session', candidate, candidate',
-    identity, keys, keys', owner, firstFound, secondFound, parsed, parsed', accepted, accepted', identityFound⟩,
+    (replayed : ReplayOwnerEvent setup codec outcome) : OwnerEvent setup codec outcome := by
+  obtain ⟨created, output, final, reached, owner, ⟨first, second, different, raw, raw', session, session', candidate,
+    candidate', identity, keys, keys', firstFound, secondFound, parsed, parsed', accepted, accepted', identityFound⟩,
     clean⟩ := replayed
-  refine ⟨created, output, final, reached, ?_, clean⟩
+  refine ⟨created, output, final, reached, owner, ?_, clean⟩
   by_contra notForged
   have firstTuple : publishedTuple codec final.1.transcript owner = some keys := by
     by_contra other
-    exact notForged ⟨raw, session, List.mem_of_getElem? firstFound, candidate, identity, keys, owner, parsed, accepted,
+    exact notForged ⟨raw, session, List.mem_of_getElem? firstFound, candidate, identity, keys, parsed, accepted,
       identityFound, other⟩
   have secondTuple : publishedTuple codec final.1.transcript owner = some keys' := by
     by_contra other
-    exact notForged ⟨raw', session', List.mem_of_getElem? secondFound, candidate', identity, keys', owner, parsed',
+    exact notForged ⟨raw', session', List.mem_of_getElem? secondFound, candidate', identity, keys', parsed',
       accepted', identityFound, other⟩
   have same : keys' = keys := Option.some.inj (secondTuple.symm.trans firstTuple)
   subst same
@@ -787,8 +960,51 @@ theorem replay_published (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
     (by simp [PqxdhDeploymentReplay.entryRegistration, PqxdhDeploymentReplay.registrationOf, parsed, accepted])
     (by simp [PqxdhDeploymentReplay.entryRegistration, PqxdhDeploymentReplay.registrationOf, parsed', accepted'])
 
-set_option linter.deprecated false in
-/-- Theorem CE-R1' (published-tuple replay, on `NoBundleFailure` runs). For a deployment adversary in either mode that respects its budget, with a generated Server seed, the probability that the run has no rejected bundle call made in Fresh and yet two successful accepts at distinct positions carry raw candidates accepted under one created owner's identity key is at most the CE-A2pub bound: the same sum over the `qCreate + 1` generated identity positions of the A2 client's joint-use weak-EUF advantages. -/
+/-- On every outcome of the experiment, two successful accepts under one owner's identity on a `NoBundleFailure` run make one of them a published-tuple forgery: if both carried the owner's published tuple they would carry one registration ID, which the live Server object consumes once (CE-R1). It is `replay_owner_published` at the doubly accepted owner. -/
+theorem replay_published (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat)
+    (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
+    (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) (runtime : A)
+    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A)
+    (supported : outcome ∈ support ((PqxdhDeploymentSecrecy.game setup codec checks route ensureInit identityIndex bounds
+      mode adversary).run runtime))
+    (replayed : ReplayEvent setup codec outcome) : GameEvent setup codec outcome := by
+  obtain ⟨created', output', final', reached', owner, forged, _⟩ := replay_owner_published setup codec checks route
+    ensureInit identityIndex bounds mode adversary runtime outcome supported (replay_owner setup codec outcome replayed)
+  obtain ⟨created, output, final, reached, _, clean⟩ := replayed
+  rw [reached, Option.some.injEq, Prod.mk.injEq, Prod.mk.injEq] at reached'
+  obtain ⟨rfl, rfl, rfl⟩ := reached'
+  exact ⟨created, output, final, reached, (published_owner _ _ _ _).mpr ⟨owner, forged⟩, clean⟩
+
+/-- Theorem CE-R1' per owner (published-tuple replay at owners without a failed bundle call). For a deployment adversary in either mode that respects its budget, with a generated Server seed, the probability that two successful accepts at distinct positions carry raw candidates accepted under the identity key of one created owner that made no rejected bundle call in Fresh is at most the per-owner CE-A2pub bound: the same sum over the `qCreate + 1` generated identity positions of the A2 client's joint-use weak-EUF advantages. -/
+theorem r1prime_owner_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (shortRejects : ∀ (publicKey : PqxdhEd25519EufCma.Ed25519PublicKey) bytes, bytes.length < 64 →
+      setup.source.crypto.verify publicKey.toList bytes = none)
+    (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
+    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
+    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)
+    (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
+    (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) (budget : PqxdhDeploymentInterface.Budget)
+    (respects : budget.Respects adversary) (runtime : A) (fallback : PqxdhDynamicIdentityRouting.DynamicForgery)
+    (ordinaryFallback : PqxdhJointIdentity.Forgery) :
+    letI := Classical.propDecidable
+    𝒟[(fun outcome => decide (ReplayOwnerEvent setup codec outcome)) <$> (PqxdhDeploymentSecrecy.game setup codec checks
+        route ensureInit 0 bounds mode adversary).run runtime] {true} ≤
+      ∑ target : Fin (budget.create + 1), PqxdhJointIdentity.advantage setup.joint
+        (PqxdhDeploymentProvenance.reduction setup codec checks route ensureInit bounds mode adversary budget.create
+          runtime fallback ordinaryFallback target) := by
+  classical
+  refine le_trans ?_ (a2pub_owner_bound setup codec checks shortRejects phase1 phase2 route ensureInit bounds mode
+    adversary budget respects runtime fallback ordinaryFallback)
+  rw [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map, evalDist_apply_singleton,
+    ← probEvent_eq_eq_probOutput, probEvent_map]
+  apply probEvent_mono
+  intro outcome member replayed
+  simp only [Function.comp_apply, decide_eq_true_eq] at replayed ⊢
+  exact replay_owner_published setup codec checks route ensureInit 0 bounds mode adversary runtime outcome member
+    replayed
+
+/-- Theorem CE-R1' (published-tuple replay, on `NoBundleFailure` runs). For a deployment adversary in either mode that respects its budget, with a generated Server seed, the probability that the run has no rejected bundle call made in Fresh and yet two successful accepts at distinct positions carry raw candidates accepted under one created owner's identity key is at most the CE-A2pub bound: the same sum over the `qCreate + 1` generated identity positions of the A2 client's joint-use weak-EUF advantages. It is the corollary of `r1prime_owner_bound` through `replay_owner`. -/
 theorem r1prime_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (shortRejects : ∀ (publicKey : PqxdhEd25519EufCma.Ed25519PublicKey) bytes, bytes.length < 64 →
       setup.source.crypto.verify publicKey.toList bytes = none)
@@ -806,14 +1022,14 @@ theorem r1prime_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
         (PqxdhDeploymentProvenance.reduction setup codec checks route ensureInit bounds mode adversary budget.create
           runtime fallback ordinaryFallback target) := by
   classical
-  refine le_trans ?_ (a2pub_bound setup codec checks shortRejects phase1 phase2 route ensureInit bounds mode adversary
-    budget respects runtime fallback ordinaryFallback)
+  refine le_trans ?_ (r1prime_owner_bound setup codec checks shortRejects phase1 phase2 route ensureInit bounds mode
+    adversary budget respects runtime fallback ordinaryFallback)
   rw [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map, evalDist_apply_singleton,
     ← probEvent_eq_eq_probOutput, probEvent_map]
   apply probEvent_mono
-  intro outcome member replayed
+  intro outcome _ replayed
   simp only [Function.comp_apply, decide_eq_true_eq] at replayed ⊢
-  exact replay_published setup codec checks route ensureInit 0 bounds mode adversary runtime outcome member replayed
+  exact replay_owner setup codec outcome replayed
 
 end BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple
 
@@ -891,11 +1107,23 @@ end BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.candidateTuple_signed
 
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.published_owner' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.published_owner
+
 /-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.announceAll_detects' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.announceAll_detects
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.owner_published_failure' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.owner_published_failure
 
 /-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.published_failure' depends on axioms: [propext,
  Classical.choice,
@@ -915,11 +1143,29 @@ end BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.identities_encode
 
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.game_report_holds' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.game_report_holds
+
 /-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.game_report' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.game_report
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.game_owner' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.game_owner
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.a2pub_owner_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.a2pub_owner_bound
 
 /-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.a2pub_bound' depends on axioms: [propext,
  Classical.choice,
@@ -932,11 +1178,35 @@ end BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.filterMap_nodup_ne
 
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.double_owner' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.double_owner
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.replay_owner' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.replay_owner
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.replay_owner_published' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.replay_owner_published
+
 /-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.replay_published' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.replay_published
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.r1prime_owner_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.r1prime_owner_bound
 
 /-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.r1prime_bound' depends on axioms: [propext,
  Classical.choice,
