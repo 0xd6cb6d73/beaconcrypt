@@ -1514,6 +1514,8 @@ import BeaconcryptCore.Computational.PqxdhRecordLiftRoles
 import BeaconcryptCore.Computational.PqxdhRecordLiftInterface
 import BeaconcryptCore.Computational.PqxdhRecordLiftChainState
 import BeaconcryptCore.Computational.PqxdhRecordLiftFrameLog
+import BeaconcryptCore.Computational.PqxdhRecordLiftBeacon
+import BeaconcryptCore.Computational.PqxdhRecordLiftWorld
 import BeaconcryptCore.Computational.PqxdhDeploymentInterface
 
 import BeaconcryptCore.Computational.PqxdhDeploymentNative
