@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1514
+	[handwritten-lean]=1515
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -29372,6 +29372,57 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem signed_source([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSigningHistory theorem signed_source"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSigningHistory\.signing_history$' "$selected_source_module" "PqxdhDeploymentSigningHistory dependency BeaconcryptCore.Computational.PqxdhDeploymentSigningHistory.signing_history"
 require_line_count 1 '^theorem signing_history([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSigningHistory theorem signing_history"
+
+# Common deployment experiment CE-A2pub published-tuple provenance and CE-R1' published-tuple replay on NoBundleFailure runs
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentPublishedTuple.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentPublishedTuple root import"
+require_line_count 22 '^theorem ' "$selected_source_module" "PqxdhDeploymentPublishedTuple theorem inventory"
+require_line_count 22 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentPublishedTuple guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentPublishedTuple\.run_inv_of_free$' "$selected_source_module" "PqxdhDeploymentPublishedTuple dependency BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.run_inv_of_free"
+require_line_count 1 '^theorem run_inv_of_free([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentPublishedTuple theorem run_inv_of_free"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentPublishedTuple\.simulate_free$' "$selected_source_module" "PqxdhDeploymentPublishedTuple dependency BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.simulate_free"
+require_line_count 1 '^theorem simulate_free([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentPublishedTuple theorem simulate_free"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentPublishedTuple\.simulateQ_free$' "$selected_source_module" "PqxdhDeploymentPublishedTuple dependency BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.simulateQ_free"
+require_line_count 1 '^theorem simulateQ_free([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentPublishedTuple theorem simulateQ_free"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentPublishedTuple\.initialized_free$' "$selected_source_module" "PqxdhDeploymentPublishedTuple dependency BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.initialized_free"
+require_line_count 1 '^theorem initialized_free([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentPublishedTuple theorem initialized_free"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentPublishedTuple\.lift_free$' "$selected_source_module" "PqxdhDeploymentPublishedTuple dependency BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.lift_free"
+require_line_count 1 '^theorem lift_free([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentPublishedTuple theorem lift_free"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentPublishedTuple\.compiled_free$' "$selected_source_module" "PqxdhDeploymentPublishedTuple dependency BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.compiled_free"
+require_line_count 1 '^theorem compiled_free([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentPublishedTuple theorem compiled_free"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentPublishedTuple\.route_generated$' "$selected_source_module" "PqxdhDeploymentPublishedTuple dependency BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.route_generated"
+require_line_count 1 '^theorem route_generated([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentPublishedTuple theorem route_generated"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentPublishedTuple\.report_generated$' "$selected_source_module" "PqxdhDeploymentPublishedTuple dependency BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.report_generated"
+require_line_count 1 '^theorem report_generated([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentPublishedTuple theorem report_generated"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentPublishedTuple\.pool_seeds$' "$selected_source_module" "PqxdhDeploymentPublishedTuple dependency BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.pool_seeds"
+require_line_count 1 '^theorem pool_seeds([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentPublishedTuple theorem pool_seeds"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentPublishedTuple\.reporting_seeds$' "$selected_source_module" "PqxdhDeploymentPublishedTuple dependency BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.reporting_seeds"
+require_line_count 1 '^theorem reporting_seeds([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentPublishedTuple theorem reporting_seeds"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentPublishedTuple\.source_seeds$' "$selected_source_module" "PqxdhDeploymentPublishedTuple dependency BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.source_seeds"
+require_line_count 1 '^theorem source_seeds([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentPublishedTuple theorem source_seeds"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentPublishedTuple\.generated_lt$' "$selected_source_module" "PqxdhDeploymentPublishedTuple dependency BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.generated_lt"
+require_line_count 1 '^theorem generated_lt([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentPublishedTuple theorem generated_lt"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentPublishedTuple\.candidateTuple_signed$' "$selected_source_module" "PqxdhDeploymentPublishedTuple dependency BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.candidateTuple_signed"
+require_line_count 1 '^theorem candidateTuple_signed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentPublishedTuple theorem candidateTuple_signed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentPublishedTuple\.announceAll_detects$' "$selected_source_module" "PqxdhDeploymentPublishedTuple dependency BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.announceAll_detects"
+require_line_count 1 '^theorem announceAll_detects([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentPublishedTuple theorem announceAll_detects"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentPublishedTuple\.published_failure$' "$selected_source_module" "PqxdhDeploymentPublishedTuple dependency BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.published_failure"
+require_line_count 1 '^theorem published_failure([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentPublishedTuple theorem published_failure"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentPublishedTuple\.identities_merge$' "$selected_source_module" "PqxdhDeploymentPublishedTuple dependency BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.identities_merge"
+require_line_count 1 '^theorem identities_merge([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentPublishedTuple theorem identities_merge"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentPublishedTuple\.identities_encode$' "$selected_source_module" "PqxdhDeploymentPublishedTuple dependency BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.identities_encode"
+require_line_count 1 '^theorem identities_encode([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentPublishedTuple theorem identities_encode"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentPublishedTuple\.game_report$' "$selected_source_module" "PqxdhDeploymentPublishedTuple dependency BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.game_report"
+require_line_count 1 '^theorem game_report([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentPublishedTuple theorem game_report"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentPublishedTuple\.a2pub_bound$' "$selected_source_module" "PqxdhDeploymentPublishedTuple dependency BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.a2pub_bound"
+require_line_count 1 '^theorem a2pub_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentPublishedTuple theorem a2pub_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentPublishedTuple\.filterMap_nodup_ne$' "$selected_source_module" "PqxdhDeploymentPublishedTuple dependency BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.filterMap_nodup_ne"
+require_line_count 1 '^theorem filterMap_nodup_ne([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentPublishedTuple theorem filterMap_nodup_ne"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentPublishedTuple\.replay_published$' "$selected_source_module" "PqxdhDeploymentPublishedTuple dependency BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.replay_published"
+require_line_count 1 '^theorem replay_published([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentPublishedTuple theorem replay_published"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentPublishedTuple\.r1prime_bound$' "$selected_source_module" "PqxdhDeploymentPublishedTuple dependency BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple.r1prime_bound"
+require_line_count 1 '^theorem r1prime_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentPublishedTuple theorem r1prime_bound"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
