@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1522
+	[handwritten-lean]=1523
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -29913,6 +29913,34 @@ done
 require_line_count 2 '^\t\$\(MAKE\) check-proverif-generated-drift$' Makefile "serial CI generated-drift steps"
 require_line_count 1 '^check-proverif-generated-drift:$' Makefile "serial CI generated-drift gate"
 require_line_count 1 '^fn validate_serial_proverif_ci\(' "$fidelity_test" "serial CI source validation"
+
+# Generic persistent lazy uniform table: exact costs and caller-only rollback.
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftLazyTable.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRecordLiftLazyTable$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftLazyTable root import"
+require_line_count 11 '^theorem ' "$selected_source_module" "PqxdhRecordLiftLazyTable theorem inventory"
+require_line_count 11 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftLazyTable guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLazyTable\.run_miss$' "$selected_source_module" "PqxdhRecordLiftLazyTable dependency BeaconcryptCore.Computational.PqxdhRecordLiftLazyTable.run_miss"
+require_line_count 1 '^theorem run_miss([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLazyTable theorem run_miss"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLazyTable\.run_hit$' "$selected_source_module" "PqxdhRecordLiftLazyTable dependency BeaconcryptCore.Computational.PqxdhRecordLiftLazyTable.run_hit"
+require_line_count 1 '^theorem run_hit([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLazyTable theorem run_hit"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLazyTable\.miss_continuation$' "$selected_source_module" "PqxdhRecordLiftLazyTable dependency BeaconcryptCore.Computational.PqxdhRecordLiftLazyTable.miss_continuation"
+require_line_count 1 '^theorem miss_continuation([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLazyTable theorem miss_continuation"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLazyTable\.step_facts$' "$selected_source_module" "PqxdhRecordLiftLazyTable dependency BeaconcryptCore.Computational.PqxdhRecordLiftLazyTable.step_facts"
+require_line_count 1 '^theorem step_facts([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLazyTable theorem step_facts"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLazyTable\.run_project$' "$selected_source_module" "PqxdhRecordLiftLazyTable dependency BeaconcryptCore.Computational.PqxdhRecordLiftLazyTable.run_project"
+require_line_count 1 '^theorem run_project([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLazyTable theorem run_project"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLazyTable\.run_cache_mono$' "$selected_source_module" "PqxdhRecordLiftLazyTable dependency BeaconcryptCore.Computational.PqxdhRecordLiftLazyTable.run_cache_mono"
+require_line_count 1 '^theorem run_cache_mono([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLazyTable theorem run_cache_mono"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLazyTable\.run_retains$' "$selected_source_module" "PqxdhRecordLiftLazyTable dependency BeaconcryptCore.Computational.PqxdhRecordLiftLazyTable.run_retains"
+require_line_count 1 '^theorem run_retains([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLazyTable theorem run_retains"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLazyTable\.rollback_hit$' "$selected_source_module" "PqxdhRecordLiftLazyTable dependency BeaconcryptCore.Computational.PqxdhRecordLiftLazyTable.rollback_hit"
+require_line_count 1 '^theorem rollback_hit([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLazyTable theorem rollback_hit"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLazyTable\.rollback_after_adaptive$' "$selected_source_module" "PqxdhRecordLiftLazyTable dependency BeaconcryptCore.Computational.PqxdhRecordLiftLazyTable.rollback_after_adaptive"
+require_line_count 1 '^theorem rollback_after_adaptive([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLazyTable theorem rollback_after_adaptive"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLazyTable\.run_draws_le_lookups$' "$selected_source_module" "PqxdhRecordLiftLazyTable dependency BeaconcryptCore.Computational.PqxdhRecordLiftLazyTable.run_draws_le_lookups"
+require_line_count 1 '^theorem run_draws_le_lookups([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLazyTable theorem run_draws_le_lookups"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLazyTable\.run_budget$' "$selected_source_module" "PqxdhRecordLiftLazyTable dependency BeaconcryptCore.Computational.PqxdhRecordLiftLazyTable.run_budget"
+require_line_count 1 '^theorem run_budget([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLazyTable theorem run_budget"
 
 # Reviewed actual getter availability, distinct from network compromise powers.
 python3 proofs/source/test-getter-profile.py
