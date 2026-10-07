@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1529
+	[handwritten-lean]=1530
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -30046,6 +30046,53 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegist
 require_line_count 1 '^theorem evaluate_map([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemObserverFree theorem evaluate_map"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemObserverFree\.opaqueBranch_free$' "$selected_source_module" "PqxdhRegistrationJointKemObserverFree dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemObserverFree.opaqueBranch_free"
 require_line_count 1 '^theorem opaqueBranch_free([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemObserverFree theorem opaqueBranch_free"
+
+# Item 2 stage S0b (extract-design plan section 4): the opaque KEM-ideal branch equals the marked branch in which every Beacon finish carries an opaque decapsulation handle (challenge marker on the selected key's challenge ciphertext, value never read) and its root request is a private (coordinates, handle) request answered by the private root interpreter; reply marking, PqxdhBeaconPhase2Shared.owner_realization, two-layer congruence; program equality, loss 0.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointBeaconOpaqueFinish.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinish$' proofs/lean/BeaconcryptCore.lean "PqxdhRegistrationJointBeaconOpaqueFinish root import"
+require_line_count 20 '^theorem ' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinish theorem inventory"
+require_line_count 20 '^#guard_msgs in$' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinish guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointBeaconOpaqueFinish\.markPool_coins$' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinish dependency BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinish.markPool_coins"
+require_line_count 1 '^theorem markPool_coins([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinish theorem markPool_coins"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointBeaconOpaqueFinish\.markPool_actual$' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinish dependency BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinish.markPool_actual"
+require_line_count 1 '^theorem markPool_actual([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinish theorem markPool_actual"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointBeaconOpaqueFinish\.markEnc_hide$' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinish dependency BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinish.markEnc_hide"
+require_line_count 1 '^theorem markEnc_hide([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinish theorem markEnc_hide"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointBeaconOpaqueFinish\.mark_run$' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinish dependency BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinish.mark_run"
+require_line_count 1 '^theorem mark_run([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinish theorem mark_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointBeaconOpaqueFinish\.router_moves$' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinish dependency BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinish.router_moves"
+require_line_count 1 '^theorem router_moves([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinish theorem router_moves"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointBeaconOpaqueFinish\.router_absorbs$' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinish dependency BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinish.router_absorbs"
+require_line_count 1 '^theorem router_absorbs([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinish theorem router_absorbs"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointBeaconOpaqueFinish\.markedMarked_inl$' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinish dependency BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinish.markedMarked_inl"
+require_line_count 1 '^theorem markedMarked_inl([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinish theorem markedMarked_inl"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointBeaconOpaqueFinish\.sourceMarked_pool$' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinish dependency BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinish.sourceMarked_pool"
+require_line_count 1 '^theorem sourceMarked_pool([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinish theorem sourceMarked_pool"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointBeaconOpaqueFinish\.native_pool_route$' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinish dependency BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinish.native_pool_route"
+require_line_count 1 '^theorem native_pool_route([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinish theorem native_pool_route"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointBeaconOpaqueFinish\.marked_pool_route$' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinish dependency BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinish.marked_pool_route"
+require_line_count 1 '^theorem marked_pool_route([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinish theorem marked_pool_route"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointBeaconOpaqueFinish\.marked_calls$' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinish dependency BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinish.marked_calls"
+require_line_count 1 '^theorem marked_calls([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinish theorem marked_calls"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointBeaconOpaqueFinish\.owner_marked$' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinish dependency BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinish.owner_marked"
+require_line_count 1 '^theorem owner_marked([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinish theorem owner_marked"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointBeaconOpaqueFinish\.finish_marked$' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinish dependency BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinish.finish_marked"
+require_line_count 1 '^theorem finish_marked([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinish theorem finish_marked"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointBeaconOpaqueFinish\.lift_marked$' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinish dependency BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinish.lift_marked"
+require_line_count 1 '^theorem lift_marked([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinish theorem lift_marked"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointBeaconOpaqueFinish\.client_marked$' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinish dependency BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinish.client_marked"
+require_line_count 1 '^theorem client_marked([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinish theorem client_marked"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointBeaconOpaqueFinish\.layered$' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinish dependency BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinish.layered"
+require_line_count 1 '^theorem layered([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinish theorem layered"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointBeaconOpaqueFinish\.resume_marked$' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinish dependency BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinish.resume_marked"
+require_line_count 1 '^theorem resume_marked([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinish theorem resume_marked"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointBeaconOpaqueFinish\.post_marked$' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinish dependency BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinish.post_marked"
+require_line_count 1 '^theorem post_marked([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinish theorem post_marked"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointBeaconOpaqueFinish\.freeBranch_marked$' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinish dependency BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinish.freeBranch_marked"
+require_line_count 1 '^theorem freeBranch_marked([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinish theorem freeBranch_marked"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointBeaconOpaqueFinish\.opaqueBranch_marked$' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinish dependency BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinish.opaqueBranch_marked"
+require_line_count 1 '^theorem opaqueBranch_marked([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointBeaconOpaqueFinish theorem opaqueBranch_marked"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"

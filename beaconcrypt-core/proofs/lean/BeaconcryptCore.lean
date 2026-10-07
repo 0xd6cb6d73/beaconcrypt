@@ -1585,6 +1585,8 @@ import BeaconcryptCore.Computational.PqxdhExtractRomHiddenSuffix
 
 import BeaconcryptCore.Computational.PqxdhRegistrationJointKemObserverFree
 
+import BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinish
+
 /-!
 # Beaconcrypt-core verification root
 
