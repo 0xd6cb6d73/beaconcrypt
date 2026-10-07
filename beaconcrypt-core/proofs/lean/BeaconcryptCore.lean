@@ -1568,6 +1568,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentLater
 
 import BeaconcryptCore.Computational.PqxdhDeploymentLaterCompile
 
+import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerKemHop
+
 /-!
 # Beaconcrypt-core verification root
 

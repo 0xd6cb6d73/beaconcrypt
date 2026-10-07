@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1519
+	[handwritten-lean]=1520
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -29689,6 +29689,39 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem compile_later_no_kem([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterCompile theorem compile_later_no_kem"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterCompile\.continuation_no_accept$' "$selected_source_module" "PqxdhDeploymentLaterCompile dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterCompile.continuation_no_accept"
 require_line_count 1 '^theorem continuation_no_accept([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterCompile theorem continuation_no_accept"
+
+# LQ-F spike: raw-ordinal KEM hop for an arbitrary scanned program, existing games as rfl instances
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerKemHop.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerKemHop$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentLaterServerKemHop root import"
+require_line_count 13 '^theorem ' "$selected_source_module" "PqxdhDeploymentLaterServerKemHop theorem inventory"
+require_line_count 13 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentLaterServerKemHop guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerKemHop\.pre_source$' "$selected_source_module" "PqxdhDeploymentLaterServerKemHop dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerKemHop.pre_source"
+require_line_count 1 '^theorem pre_source([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerKemHop theorem pre_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerKemHop\.branch_source$' "$selected_source_module" "PqxdhDeploymentLaterServerKemHop dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerKemHop.branch_source"
+require_line_count 1 '^theorem branch_source([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerKemHop theorem branch_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerKemHop\.real_error$' "$selected_source_module" "PqxdhDeploymentLaterServerKemHop dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerKemHop.real_error"
+require_line_count 1 '^theorem real_error([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerKemHop theorem real_error"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerKemHop\.advantage_error$' "$selected_source_module" "PqxdhDeploymentLaterServerKemHop dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerKemHop.advantage_error"
+require_line_count 1 '^theorem advantage_error([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerKemHop theorem advantage_error"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerKemHop\.prefix_erase$' "$selected_source_module" "PqxdhDeploymentLaterServerKemHop dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerKemHop.prefix_erase"
+require_line_count 1 '^theorem prefix_erase([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerKemHop theorem prefix_erase"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerKemHop\.branch_erase$' "$selected_source_module" "PqxdhDeploymentLaterServerKemHop dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerKemHop.branch_erase"
+require_line_count 1 '^theorem branch_erase([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerKemHop theorem branch_erase"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerKemHop\.certified_advantage$' "$selected_source_module" "PqxdhDeploymentLaterServerKemHop dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerKemHop.certified_advantage"
+require_line_count 1 '^theorem certified_advantage([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerKemHop theorem certified_advantage"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerKemHop\.real_le_ideal$' "$selected_source_module" "PqxdhDeploymentLaterServerKemHop dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerKemHop.real_le_ideal"
+require_line_count 1 '^theorem real_le_ideal([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerKemHop theorem real_le_ideal"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerKemHop\.preRaw_eq$' "$selected_source_module" "PqxdhDeploymentLaterServerKemHop dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerKemHop.preRaw_eq"
+require_line_count 1 '^theorem preRaw_eq([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerKemHop theorem preRaw_eq"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerKemHop\.sourcePreRaw_eq$' "$selected_source_module" "PqxdhDeploymentLaterServerKemHop dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerKemHop.sourcePreRaw_eq"
+require_line_count 1 '^theorem sourcePreRaw_eq([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerKemHop theorem sourcePreRaw_eq"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerKemHop\.sourceReal_eq$' "$selected_source_module" "PqxdhDeploymentLaterServerKemHop dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerKemHop.sourceReal_eq"
+require_line_count 1 '^theorem sourceReal_eq([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerKemHop theorem sourceReal_eq"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerKemHop\.branch_eq$' "$selected_source_module" "PqxdhDeploymentLaterServerKemHop dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerKemHop.branch_eq"
+require_line_count 1 '^theorem branch_eq([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerKemHop theorem branch_eq"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerKemHop\.adversary_eq$' "$selected_source_module" "PqxdhDeploymentLaterServerKemHop dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerKemHop.adversary_eq"
+require_line_count 1 '^theorem adversary_eq([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerKemHop theorem adversary_eq"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
