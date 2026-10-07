@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerOpaque
 import BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills
 
-/-! LQ-F: query bills of the KEM adversary at the logged exposure. The logged command run is the simulation of one flattened exposed handler (`exposed`, `run_exposed`). Every source14 request of that handler has the four bills (generated identities, logical decapsulations, uniform work, exposed encapsulations) of the same request in the existing exposed command compiler (`exposed_source`, through `LaterServerCommands.query_embed` and `KemProgramBills.commands` on the one-request program), and the Server read has none: it is one identity-pool reveal, which is neither a creation, a decapsulation, uniform work nor an encapsulation (`exposed_later`). The weighted composition `FinitePartitionQueryBounds.weighted_bound` over the request kinds of the logged source then gives the logged command program the bills of `KemProgramBills.commands` on the source14 requests of the program, for any number of Server reads (`commands_bills`, with `weighted`, `single_sum` and the linearity `total_single` of the native uniform allowance). The rest follows `KemRawBills` with the logged definitions: the logged `exposeAt` hides every encapsulation of the fully exposed logged program except the selected one (`exposeAt_hides`) and issues at most one exposed encapsulation (`accept_bound`, `exposeAt_bound`), so it has the four allowances of `KemRawBills.exposeAt_bills` (`exposeAt_bills`); the generic prephase of the KEM hop supplies the saved continuation certificates (`pre_bound`, `saved`), and the proof-carrying adversary at the logged exposure has exactly the caps of `KemRawBills.adversary_bound` (`scan_bills`, `pre_uniform`, `pre_excluded`, `pre_decapsulations`, `pre_base`, `annotated_bound`, `adversary_post`, `adversary_bound`). The Server reads add nothing to any bill. No assumption is added; `KemBound` and the initializer bill are the existing uniform-bill premises. -/
+/-! LQ-F: query bills of the KEM adversary at the logged exposure. The logged command run is the simulation of one flattened exposed handler (`exposed`, `run_exposed`). Every source14 request of that handler has the four bills (generated identities, logical decapsulations, uniform work, exposed encapsulations) of the same request in the existing exposed command compiler (`exposed_source`, through `LaterServerCommands.query_embed` and `KemProgramBills.commands` on the one-request program), and the Server read has none: it is one identity-pool reveal, which is neither a creation, a decapsulation, uniform work nor an encapsulation (`exposed_later`). The weighted composition `FinitePartitionQueryBounds.weighted_bound` over the request kinds of the logged source then gives the logged command program the bills of `KemProgramBills.commands` on the source14 requests of the program, for any finite cap on the Server reads (`commands_bills`, with `weighted`, `single_sum` and the linearity `total_single` of the native uniform allowance). The rest follows `KemRawBills` with the logged definitions: the logged `exposeAt` hides every encapsulation of the fully exposed logged program except the selected one (`exposeAt_hides`) and issues at most one exposed encapsulation (`accept_bound`, `exposeAt_bound`), so it has the four allowances of `KemRawBills.exposeAt_bills` (`exposeAt_bills`); the generic prephase of the KEM hop supplies the saved continuation certificates (`pre_bound`, `saved`), and the proof-carrying adversary at the logged exposure has exactly the caps of `KemRawBills.adversary_bound` (`scan_bills`, `pre_uniform`, `pre_excluded`, `pre_decapsulations`, `pre_base`, `annotated_bound`, `adversary_post`, `adversary_bound`). The Server reads add nothing to any bill; their cap is a premise only because `weighted_bound` needs a cap for every request kind, and it enters no conclusion. No assumption is added; `KemBound` and the initializer bill are the existing uniform-bill premises. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
@@ -97,13 +97,13 @@ theorem exposed_later (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
     simp [Count, IsIdentityCreate, IsDecapsulation, IsUniform, IsEncapsulation, PqxdhDynamicIdentityPool.IsCreate,
       PqxdhDynamicIdentityPool.IsUniform]
 
-/-- The per-request cost of a logged-source request: the source14 component for a source14 kind and nothing for the terminal read. -/
+/-- The per-request cost of a logged-source request: the source14 component for a source14 kind and nothing for the Server read (kind `none`). -/
 def cost (component : PqxdhRegistrationJointRevealCosts.SourceKind → Nat) :
     Option PqxdhRegistrationJointRevealCosts.SourceKind → Nat
   | some kind => component kind
   | none => 0
 
-/-- The weighted bill of a logged-source budget is the source14 bill: the terminal read costs nothing. -/
+/-- The weighted bill of a logged-source budget is the source14 bill: the Server read costs nothing, whatever its cap `reads`. -/
 theorem weighted (component : PqxdhRegistrationJointRevealCosts.SourceKind → Nat) (budget : Budget) (reads : Nat) :
     ∑ kind : Option PqxdhRegistrationJointRevealCosts.SourceKind, cost component kind * kind.elim reads budget =
       ∑ kind, component kind * budget kind := by
@@ -130,14 +130,14 @@ theorem commands_bills (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
     (work : OracleComp (Spec KemSK) Result) (budget : Budget) (reads : Nat)
     (certified : ∀ source, work.IsQueryBoundP (fun query => laterKind (KemSK := KemSK) query = some source)
       (budget source))
-    (terminal : work.IsQueryBoundP (fun query => laterKind (KemSK := KemSK) query = none) reads)
+    (serverReads : work.IsQueryBoundP (fun query => laterKind (KemSK := KemSK) query = none) reads)
     (owners : List EncodedEntry) (log : Log) (state : NativeState KemSK) :
     Bounds (commands setup codec checks identityIndex publicIdentity work owners log state)
       (budget (.inl 1)) (budget (.inl 5)) (PqxdhRegistrationJointOpenUniform.total caps budget) (budget (.inl 3)) := by
   have partition : ∀ kind, work.IsQueryBoundP (fun query => laterKind (KemSK := KemSK) query = kind)
       (kind.elim reads budget) := by
     rintro (_ | kind)
-    · exact terminal
+    · exact serverReads
     · exact certified kind
   have compose (predicate : (PqxdhRegistrationJointKemEncapsulation.Spec KemSK).Domain → Prop)
       [DecidablePred predicate] (component : PqxdhRegistrationJointRevealCosts.SourceKind → Nat)
@@ -250,7 +250,7 @@ theorem exposeAt_bills (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
     (work : OracleComp (Spec KemSK) X) (budget : Budget) (reads : Nat)
     (certified : ∀ source, work.IsQueryBoundP (fun query => laterKind (KemSK := KemSK) query = some source)
       (budget source))
-    (terminal : work.IsQueryBoundP (fun query => laterKind (KemSK := KemSK) query = none) reads)
+    (serverReads : work.IsQueryBoundP (fun query => laterKind (KemSK := KemSK) query = none) reads)
     (index : Nat) (owners : List EncodedEntry) (log : Log) (state : NativeState KemSK) :
     Bounds (PqxdhDeploymentLaterServerCut.exposeAt setup codec checks identityIndex publicIdentity observe work
         index owners log state)
@@ -260,7 +260,7 @@ theorem exposeAt_bills (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
     (observe <$> PqxdhDeploymentLaterServerCommands.tag work index) budget reads
     (fun source => (isQueryBoundP_map_iff _ _ _).mpr
       (PqxdhDeploymentLaterServerBridge.tag_bound work index _ _ (certified source)))
-    ((isQueryBoundP_map_iff _ _ _).mpr (PqxdhDeploymentLaterServerBridge.tag_bound work index _ _ terminal))
+    ((isQueryBoundP_map_iff _ _ _).mpr (PqxdhDeploymentLaterServerBridge.tag_bound work index _ _ serverReads))
     owners log state
   have hides := exposeAt_hides setup codec checks identityIndex publicIdentity observe work index owners log state
   constructor
@@ -316,14 +316,14 @@ theorem saved (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (ch
     (count : Nat) (selected : Fin (count + 1)) (index : Nat) (budget : Budget) (reads : Nat)
     (certified : ∀ source, work.IsQueryBoundP (fun query => laterKind (KemSK := KemSK) query = some source)
       (budget source))
-    (terminal : work.IsQueryBoundP (fun query => laterKind (KemSK := KemSK) query = none) reads)
+    (serverReads : work.IsQueryBoundP (fun query => laterKind (KemSK := KemSK) query = none) reads)
     (context : PqxdhDeploymentLaterServerKemHop.Saved setup ensureInit supplied
       (PqxdhDeploymentLaterServerCut.scanned setup codec checks decision work index) runtime count selected) :
     PqxdhRegistrationJointKemSavedBills.Certificate context.2.val (budget (.inl 1)) (budget (.inl 5))
       (PqxdhRegistrationJointOpenUniform.total caps budget + caps.encapsCost * budget (.inl 3)) 0 := by
   have bills (created : PqxdhRegistrationJointServerBirth.ClientCreated Unit) :=
     exposeAt_bills setup codec checks caps bounded created.server.server.metadata.identityIndex
-      created.publicIdentity (decideTag decision) work budget reads certified terminal index [] []
+      created.publicIdentity (decideTag decision) work budget reads certified serverReads index [] []
       (PqxdhRegistrationJointInitializedAccept.initial created)
   constructor
   · exact pre_bound setup ensureInit supplied _ runtime count selected context.1 _ _
@@ -348,7 +348,7 @@ theorem adversary_post (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
     (count : Nat) (selected : Fin (count + 1)) (index : Nat) (budget : Budget) (reads : Nat)
     (certified : ∀ source, work.IsQueryBoundP (fun query => laterKind (KemSK := KemSK) query = some source)
       (budget source))
-    (terminal : work.IsQueryBoundP (fun query => laterKind (KemSK := KemSK) query = none) reads)
+    (serverReads : work.IsQueryBoundP (fun query => laterKind (KemSK := KemSK) query = none) reads)
     (transcript : MlKemChallengeTranscript (PqxdhDeploymentLaterServerKemHop.Saved setup ensureInit supplied
       (PqxdhDeploymentLaterServerCut.scanned setup codec checks decision work index) runtime count selected))
     (candidate : MlKemSharedSecret) :
@@ -361,7 +361,7 @@ theorem adversary_post (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
   have bill := PqxdhRegistrationJointKemPostBills.post_bound setup caps bounded count selected transcript.context.2.val
     transcript.publicKey transcript.ciphertext candidate _ _ _ _
     (saved setup codec checks caps bounded ensureInit supplied decision work runtime count selected index budget reads
-      certified terminal transcript.context)
+      certified serverReads transcript.context)
   rw [PqxdhRegistrationJointKemRawBills.uniform_cap] at bill
   constructor
   · simpa only [PqxdhDeploymentLaterServerKemHop.certified, isQueryBoundP_map_iff] using bill.uniform
@@ -374,7 +374,7 @@ theorem scan_bills (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
     (decision : X → Bool) (work : OracleComp (Spec KemSK) X) (budget : Budget) (reads : Nat)
     (certified : ∀ source, work.IsQueryBoundP (fun query => laterKind (KemSK := KemSK) query = some source)
       (budget source))
-    (terminal : work.IsQueryBoundP (fun query => laterKind (KemSK := KemSK) query = none) reads)
+    (serverReads : work.IsQueryBoundP (fun query => laterKind (KemSK := KemSK) query = none) reads)
     (index : Nat) (created : PqxdhRegistrationJointServerBirth.ClientCreated Unit) :
     PqxdhRegistrationJointKemCutInterpreted.Bills
       (PqxdhDeploymentLaterServerCut.scanned setup codec checks decision work index created)
@@ -385,7 +385,7 @@ theorem scan_bills (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
       (decideTag decision <$> PqxdhDeploymentLaterServerCommands.tag work index) budget reads
       (fun source => (isQueryBoundP_map_iff _ _ _).mpr
         (PqxdhDeploymentLaterServerBridge.tag_bound work index _ _ (certified source)))
-      ((isQueryBoundP_map_iff _ _ _).mpr (PqxdhDeploymentLaterServerBridge.tag_bound work index _ _ terminal))
+      ((isQueryBoundP_map_iff _ _ _).mpr (PqxdhDeploymentLaterServerBridge.tag_bound work index _ _ serverReads))
       [] [] (PqxdhRegistrationJointInitializedAccept.initial created))
   have finished (predicate : (PqxdhLiveKemBirth.Spec KemSK).Domain → Prop) [DecidablePred predicate] (cap : Nat)
       (bound : (simulateQ (actual setup) (commands setup codec checks created.server.server.metadata.identityIndex
@@ -407,7 +407,7 @@ theorem pre_uniform (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
     (reads : Nat)
     (certified : ∀ source, work.IsQueryBoundP (fun query => laterKind (KemSK := KemSK) query = some source)
       (budget source))
-    (terminal : work.IsQueryBoundP (fun query => laterKind (KemSK := KemSK) query = none) reads)
+    (serverReads : work.IsQueryBoundP (fun query => laterKind (KemSK := KemSK) query = none) reads)
     (runtime : A) (count : Nat) (selected : Fin (count + 1)) (index : Nat) (target : MlKem768PublicKey) :
     (PqxdhDeploymentLaterServerKemHop.pre setup ensureInit supplied
       (PqxdhDeploymentLaterServerCut.scanned setup codec checks decision work index) runtime count selected
@@ -424,7 +424,8 @@ theorem pre_uniform (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
       (PqxdhLiveKemSelection.family_uniform _ caps.keygenCost count
         (PqxdhServerAuthSourceCosts.keygen_uniform setup caps bounded)))
     intro others _
-    have bills := scan_bills setup codec checks caps bounded decision work budget reads certified terminal index created
+    have bills := scan_bills setup codec checks caps bounded decision work budget reads certified serverReads index
+      created
     simpa only [uniformCap, bind_pure_comp, isQueryBoundP_map_iff] using
       PqxdhDynamicKemJointBounds.pre_uniform setup.joint setup.kem selected.val
         (PqxdhDynamicKemRouter.selectedReservation selected target others) _ _ _ _
@@ -460,7 +461,7 @@ theorem pre_decapsulations (setup : Setup baseSpec KemSK) (codec : Codec Reader 
     (decision : X → Bool) (work : OracleComp (Spec KemSK) X) (budget : Budget) (reads : Nat)
     (certified : ∀ source, work.IsQueryBoundP (fun query => laterKind (KemSK := KemSK) query = some source)
       (budget source))
-    (terminal : work.IsQueryBoundP (fun query => laterKind (KemSK := KemSK) query = none) reads)
+    (serverReads : work.IsQueryBoundP (fun query => laterKind (KemSK := KemSK) query = none) reads)
     (runtime : A) (count : Nat) (selected : Fin (count + 1)) (index : Nat) (target : MlKem768PublicKey) :
     (PqxdhDeploymentLaterServerKemHop.pre setup ensureInit supplied
       (PqxdhDeploymentLaterServerCut.scanned setup codec checks decision work index) runtime count selected
@@ -469,7 +470,7 @@ theorem pre_decapsulations (setup : Setup baseSpec KemSK) (codec : Codec Reader 
     IsMlKemLogicalDecapsulationQuery (fun _ => by simp [IsMlKemLogicalDecapsulationQuery]) _
     (fun created joint others => PqxdhDynamicKemJointBounds.pre_decaps setup.joint setup.kem selected.val
       (PqxdhDynamicKemRouter.selectedReservation selected target others) _ _
-      (scan_bills setup codec checks caps bounded decision work budget reads certified terminal index created).decaps
+      (scan_bills setup codec checks caps bounded decision work budget reads certified serverReads index created).decaps
       (joint, PqxdhDynamicKemRouter.empty))
 
 /-- The prephase at the logged exposure retains every local decapsulation base query, at most `decapsBase * qFinish`. -/
@@ -479,7 +480,7 @@ theorem pre_base (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) 
     (decision : X → Bool) (work : OracleComp (Spec KemSK) X) (budget : Budget) (reads : Nat)
     (certified : ∀ source, work.IsQueryBoundP (fun query => laterKind (KemSK := KemSK) query = some source)
       (budget source))
-    (terminal : work.IsQueryBoundP (fun query => laterKind (KemSK := KemSK) query = none) reads)
+    (serverReads : work.IsQueryBoundP (fun query => laterKind (KemSK := KemSK) query = none) reads)
     (runtime : A) (count : Nat) (selected : Fin (count + 1)) (index : Nat) (target : MlKem768PublicKey) :
     (PqxdhDeploymentLaterServerKemHop.pre setup ensureInit supplied
       (PqxdhDeploymentLaterServerCut.scanned setup codec checks decision work index) runtime count selected
@@ -488,7 +489,7 @@ theorem pre_base (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) 
     IsMlKemBaseQuery (fun _ => by simp [IsMlKemBaseQuery]) _
     (fun created joint others => PqxdhDynamicKemJointBounds.pre_base setup.joint setup.kem selected.val
       (PqxdhDynamicKemRouter.selectedReservation selected target others) _ _
-      (scan_bills setup codec checks caps bounded decision work budget reads certified terminal index created).decaps
+      (scan_bills setup codec checks caps bounded decision work budget reads certified serverReads index created).decaps
       (joint, PqxdhDynamicKemRouter.empty) IsMlKemBaseQuery
       (fun _ => by simp [IsMlKemBaseQuery]) (fun _ => by simp [IsMlKemBaseQuery])
       caps.decapsBase (PqxdhRegistrationJointKemCosts.local_base setup caps bounded))
@@ -507,7 +508,7 @@ theorem annotated_bound (setup : Setup baseSpec KemSK) (ensureInit : StateT A Pr
   exact (isQueryBoundP_map_iff _ _ _).mp bounded
 
 set_option backward.isDefEq.respectTransparency false in
-/-- The proof-carrying KEM adversary at the logged exposure is bounded with exactly the caps of `KemRawBills.adversary_bound`; the terminal Server reads add nothing. -/
+/-- The proof-carrying KEM adversary at the logged exposure is bounded with exactly the caps of `KemRawBills.adversary_bound`; the Server reads add nothing, whatever their finite cap. -/
 theorem adversary_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (caps : KemCaps) (bounded : KemBound setup caps) (ensureInit : StateT A ProbComp Bool)
     (qInit : Nat) (initBound : ∀ runtime, (ensureInit.run runtime).IsTotalQueryBound qInit)
@@ -515,7 +516,7 @@ theorem adversary_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
     (reads : Nat)
     (certified : ∀ source, work.IsQueryBoundP (fun query => laterKind (KemSK := KemSK) query = some source)
       (budget source))
-    (terminal : work.IsQueryBoundP (fun query => laterKind (KemSK := KemSK) query = none) reads)
+    (serverReads : work.IsQueryBoundP (fun query => laterKind (KemSK := KemSK) query = none) reads)
     (runtime : A) (count : Nat) (selected : Fin (count + 1)) (index : Nat) :
     (PqxdhDeploymentLaterServerKemHop.certified setup ensureInit supplied
       (PqxdhDeploymentLaterServerCut.scanned setup codec checks decision work index) runtime count
@@ -532,16 +533,16 @@ theorem adversary_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
     refine ⟨?_, ?_, ?_⟩
     · exact annotated_bound setup ensureInit supplied _ runtime count selected target _ _
         (pre_uniform setup codec checks caps bounded ensureInit qInit initBound supplied decision work budget reads
-          certified terminal runtime count selected index target)
+          certified serverReads runtime count selected index target)
     · exact annotated_bound setup ensureInit supplied _ runtime count selected target _ _
-        (pre_base setup codec checks caps bounded ensureInit supplied decision work budget reads certified terminal
+        (pre_base setup codec checks caps bounded ensureInit supplied decision work budget reads certified serverReads
           runtime count selected index target)
     · exact annotated_bound setup ensureInit supplied _ runtime count selected target _ _
         (pre_decapsulations setup codec checks caps bounded ensureInit supplied decision work budget reads certified
-          terminal runtime count selected index target)
+          serverReads runtime count selected index target)
   · intro transcript candidate
     have bills := adversary_post setup codec checks caps bounded ensureInit supplied decision work runtime count
-      selected index budget reads certified terminal transcript candidate
+      selected index budget reads certified serverReads transcript candidate
     exact ⟨bills.uniform, bills.base, bills.decaps⟩
 
 end BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBills

@@ -13,7 +13,7 @@ open PqxdhDeploymentLaterServerSource (Log Spec)
 open PqxdhDeploymentLaterServerCommands (Local impl commands)
 variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response Result : Type}
 
-/-- The source kind of a logged-source request: the source14 kind, and `none` for the terminal read. -/
+/-- The source kind of a logged-source request: the source14 kind, and `none` for the Server read. -/
 def laterKind : (Spec KemSK).Domain → Option PqxdhRegistrationJointRevealCosts.SourceKind
   | .inl query => some (PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query)
   | .inr _ => none
@@ -78,7 +78,7 @@ theorem step_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
   rw [isQueryBoundP_map_iff]
   exact single
 
-/-- The terminal read issues one identity-pool reveal and no KEM creation. -/
+/-- The Server read issues one identity-pool reveal and no KEM creation. -/
 theorem step_later (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (read : Unit) (held : Local) (state : NativeState KemSK) :
     ((flat setup codec checks identityIndex publicIdentity (.inr read)).run (held, state)).IsQueryBoundP

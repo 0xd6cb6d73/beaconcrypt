@@ -266,7 +266,7 @@ theorem tag_bound (work : OracleComp (Spec KemSK) X) (index : Nat)
   exact bounded
 
 set_option backward.isDefEq.respectTransparency false in
-/-- Theorem T4 for the logged source: in the logged initialized execution of the tagged logged program, with the log forgotten, the probability that the selected raw accept returned a session, the decision holds, KEM key `selected` was never disclosed and the verified PQ key of the recorded raw bytes is the final pool key at creation index `selected`, is at most the probability that the raw-ordinal KEM real game of the logged exposure returns `true`. The decision reads the program result, which may contain the terminal Server reveal. -/
+/-- Theorem T4 for the logged source: in the logged initialized execution of the tagged logged program, with the log forgotten, the probability that the selected raw accept returned a session, the decision holds, KEM key `selected` was never disclosed and the verified PQ key of the recorded raw bytes is the final pool key at creation index `selected`, is at most the probability that the raw-ordinal KEM real game of the logged exposure returns `true`. The decision reads the program result, which may contain the Server reveal. -/
 theorem actual_le_real (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes) (decision : X → Bool)
     (work : OracleComp (Spec KemSK) X) (runtime : A) (count : Nat) (selected : Fin (count + 1)) (index : Nat)

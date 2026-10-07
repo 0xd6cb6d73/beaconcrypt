@@ -501,14 +501,15 @@ theorem later_frame (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
   subst reached
   simp [PqxdhDynamicIdentityPool.record]
 
-/-- The bundle-to-pool run invariant of CE-9 depends only on the session counter, the seeds, the KEM pool and the owners: it survives any change that keeps them. -/
+/-- The bundle-to-pool run invariant of CE-9 depends only on the Server's session counter, the seeds, the KEM pool and the owners: it survives any change that keeps them (the identity-pool transcript and the rest of the shared state may change). -/
 theorem traced_frame (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (log : List Logged) (state after : PqxdhRegistrationJointSchedule.State KemSK)
     (traced : Traced setup codec checks log state) (seeds : after.pool.1.seeds = state.pool.1.seeds)
-    (keys : after.pool.2 = state.pool.2) (owners : after.owners = state.owners) (shared : after.shared = state.shared) :
+    (keys : after.pool.2 = state.pool.2) (owners : after.owners = state.owners)
+    (counter : after.shared.2.sessions = state.shared.2.sessions) :
     Traced setup codec checks log after := by
   obtain ⟨sessions, positional, verified, bundles, kem, owned⟩ := traced
-  refine ⟨by rw [shared]; exact sessions, positional, verified, fun k bytes member => ?_, ?_, ?_⟩
+  refine ⟨by rw [counter]; exact sessions, positional, verified, fun k bytes member => ?_, ?_, ?_⟩
   · obtain ⟨identity, tuple, s1, s2, s3, written, pooled⟩ := bundles k bytes member
     exact ⟨identity, tuple, s1, s2, s3, written, by rw [keys]; exact pooled⟩
   · obtain ⟨length, index⟩ := kem
@@ -538,7 +539,7 @@ theorem traced_step (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
   | inr read =>
     obtain ⟨seeds, keys, owners, shared⟩ := later_frame setup codec checks seed identityIndex state ephemerals result
       supported
-    exact traced_frame setup codec checks log state result.2.1 traced seeds keys owners shared
+    exact traced_frame setup codec checks log state result.2.1 traced seeds keys owners (by rw [shared])
 
 /-- The logged annotated execution of a traced logged program keeps the invariant from any start. -/
 theorem traced_run (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)

@@ -228,7 +228,7 @@ theorem branch_opaque (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
         real := by
   simp only [PqxdhDeploymentLaterServerKemHop.branch, opaqueBranch, pre_opaque, bind_map_left, post_opaque]
 
-/-- The KEM transfer for the logged source (T4, the KEM hop and T6 composed): in the logged initialized execution of the tagged logged program, with the log forgotten, the final-state event of T4 has probability at most that of the logged opaque KEM-ideal branch, plus one ordinary one-key ML-KEM IND-CCA advantage of the proof-carrying adversary at the logged exposure and one ordinary ML-KEM correctness error. The decision reads the program result, which may contain the terminal Server reveal. -/
+/-- The KEM transfer for the logged source (T4, the KEM hop and T6 composed): in the logged initialized execution of the tagged logged program, with the log forgotten, the final-state event of T4 has probability at most that of the logged opaque KEM-ideal branch, plus one ordinary one-key ML-KEM IND-CCA advantage of the proof-carrying adversary at the logged exposure and one ordinary ML-KEM correctness error. The decision reads the program result, which may contain the Server reveal. -/
 theorem transfer (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)
     (codec : Codec Reader Response) (checks : Checks) (ensureInit : StateT A ProbComp Bool)

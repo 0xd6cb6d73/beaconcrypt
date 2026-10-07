@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerSource
 import BeaconcryptCore.Computational.PqxdhDeploymentRegistrationTrace
 
-/-! LQ-F: the native logged source, the counterpart of the logged annotated source at the native level of the deployment experiment. The native logged raw accept `acceptLogged` is the literal native Server accept `nativeAccept` with the logged collector in its native prefix (`prefixLogged`); forgetting the logged entry gives `nativeAccept` back exactly, with its complete shared state (`acceptLogged_fst`). The native logged handler `native` keeps the ephemeral log beside the native source14 state: a raw accept runs `acceptLogged` and appends its entry, every other source14 request runs the unchanged native handler `RevealSchedule.native`, and the Server read returns the Server seed of the handler with the current log and changes nothing. Forgetting the log gives source14's native execution back for every source14 program (`query_projection`, `program_projection`), a source14 program that issues no raw accept keeps the log (`program_quiet`), and along every execution the log grows by one entry per raw accept, exactly as the Server's session counter does (`step_log`, `program_log`), so from the initial state entry `j` belongs to the accept that allocated session index `j`. Erasing the private service annotations of the logged annotated source gives the native logged handler (`acceptSource_native`, `query_native`, `program_native`), under the Server-slot invariant for the read, and the logged initialized source is the native logged initialized execution with the same constructor, outcome and final log (`initialized_native`). No security statement and no assumption. -/
+/-! LQ-F: the native logged source, the counterpart of the logged annotated source at the native level of the deployment experiment. The native logged raw accept `acceptLogged` is the literal native Server accept `nativeAccept` with the logged collector in its native prefix (`prefixLogged`); forgetting the logged entry gives `nativeAccept` back exactly, with its complete shared state (`acceptLogged_fst`). The native logged handler `native` keeps the ephemeral log beside the native source14 state: a raw accept runs `acceptLogged` and appends its entry, every other source14 request runs the unchanged native handler `RevealSchedule.native`, and the Server read returns the Server seed of the handler with the current log and changes nothing. Forgetting the log gives source14's native execution back for every source14 program (`query_projection`, `program_projection`), a source14 program that issues no raw accept keeps the log (`program_quiet`), and along every execution the log grows exactly as the Server's session counter does: a step appends one entry and advances the counter by one (a raw accept) or keeps both (`step_log`), so over a run the log length and the counter advance by the same amount (`program_log`). That from the initial state entry `j` belongs to the accept that allocated session index `j` is an informal consequence of these two lemmas, not a stated theorem. Erasing the private service annotations of the logged annotated source gives the native logged handler (`acceptSource_native`, `query_native`, `program_native`), under the Server-slot invariant for the read, and the logged initialized source is the native logged initialized execution with the same constructor, outcome and final log (`initialized_native`). No security statement and no assumption. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
@@ -309,12 +309,14 @@ theorem initialized_native (setup : Setup baseSpec KemSK) (codec : Codec Reader 
     rw [← erased, Functor.map_map]
     rfl
 
-/-- One step of the native logged handler appends exactly one entry for a raw accept, which advances the Server's session counter by one, and keeps both the log and the counter for every other request, the Server read included. -/
+/-- One step of the native logged handler grows the log by as many entries as it advances the Server's session counter (the first conjunct, which `program_log` sums along a run). More precisely, either the step appends exactly one entry and advances the counter by one, which is the case of a raw accept (by CE-9's `nativeAccept_session`), or it keeps both the log and the counter, which is the case of every other request, the Server read included (by CE-9's `native_sessions`). -/
 theorem step_log (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (serverSeed : IdentitySeed) (query : (Spec KemSK).Domain) (state : PqxdhRegistrationSchedule.State KemSK)
     (log : Log) (result : (Spec KemSK).Range query × (PqxdhRegistrationSchedule.State KemSK × Log))
     (supported : result ∈ support ((native setup codec checks serverSeed query).run (state, log))) :
-    result.2.2.length + state.shared.2.sessions = log.length + result.2.1.shared.2.sessions := by
+    result.2.2.length + state.shared.2.sessions = log.length + result.2.1.shared.2.sessions ∧
+      ((∃ entry, result.2.2 = log ++ [entry] ∧ result.2.1.shared.2.sessions = state.shared.2.sessions + 1) ∨
+        (result.2.2 = log ∧ result.2.1.shared.2.sessions = state.shared.2.sessions)) := by
   rcases query with query | later
   · by_cases accept : ∃ raw, query = .inl (.inr (.accept raw))
     · obtain ⟨raw, rfl⟩ := accept
@@ -329,6 +331,7 @@ theorem step_log (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) 
       have sessions := (PqxdhDeploymentRegistrationTrace.nativeAccept_session setup codec checks serverSeed raw
         state.shared _ native).1
       change inner.2.2.sessions = state.shared.2.sessions + 1 at sessions
+      refine ⟨?_, Or.inl ⟨inner.1.2, rfl, sessions⟩⟩
       change (log ++ [inner.1.2]).length + state.shared.2.sessions = log.length + inner.2.2.sessions
       rw [List.length_append, List.length_singleton]
       omega
@@ -339,13 +342,14 @@ theorem step_log (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) 
       obtain ⟨inner, member, rfl⟩ := supported
       have sessions := PqxdhDeploymentRegistrationTrace.native_sessions setup codec checks serverSeed query
         (fun raw same => accept ⟨raw, same⟩) state inner member
+      refine ⟨?_, Or.inr ⟨rfl, sessions⟩⟩
       change log.length + state.shared.2.sessions = log.length + inner.2.shared.2.sessions
       rw [sessions]
   · simp only [native, StateT.run, support_pure, Set.mem_singleton_iff] at supported
     subst supported
-    rfl
+    exact ⟨rfl, Or.inr ⟨rfl, rfl⟩⟩
 
-/-- Along every execution of the native logged handler, the log grows by exactly as many entries as the Server's session counter: one entry per raw accept, in raw-accept order. From the initial state and the empty log, entry `j` of the final log belongs to the raw accept that allocated session index `j`. -/
+/-- Along every execution of the native logged handler, the log grows by exactly as many entries as the Server's session counter advances. With `step_log`, by which a step appends an entry exactly when it advances the counter by one (a raw accept) and otherwise keeps both, it follows informally, by induction along the execution, that from the initial state and the empty log entry `j` of the final log is the one appended by the raw accept that advanced the counter from `j` to `j + 1`, that is, the accept that allocated session index `j`; that positional correspondence is not itself stated as a theorem. -/
 theorem program_log (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (serverSeed : IdentitySeed) (program : OracleComp (Spec KemSK) Result)
     (state : PqxdhRegistrationSchedule.State KemSK) (log : Log)
@@ -360,7 +364,7 @@ theorem program_log (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
   | query_bind query next ih =>
     simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind, mem_support_bind_iff] at supported
     obtain ⟨middle, first, second⟩ := supported
-    have step := step_log setup codec checks serverSeed query state log middle first
+    have step := (step_log setup codec checks serverSeed query state log middle first).1
     have rest := ih middle.1 middle.2.1 middle.2.2 second
     omega
 

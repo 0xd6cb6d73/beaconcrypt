@@ -204,7 +204,7 @@ theorem accept_step (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
   simp only [Functor.map_map]
   rfl
 
-/-- The terminal read: the interpreted identity-pool reveal of the Server's slot equals the source's terminal read on the encoded state, and both return the log. -/
+/-- The Server read: the interpreted identity-pool reveal of the Server's slot equals the source's Server read on the encoded state, and both return the log. -/
 theorem later_step (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (seed : IdentitySeed) (identityIndex : Nat) (read : Unit)
     (state : PqxdhRegistrationJointSchedule.State KemSK) (log : Log) :
