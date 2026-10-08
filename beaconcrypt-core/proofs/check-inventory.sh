@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1666
+	[handwritten-lean]=1667
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -34091,6 +34091,25 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecord
 require_line_count 1 '^theorem childUniform_policy([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainHop theorem childUniform_policy"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainHop\.hop_bound$' "$selected_source_module" "PqxdhRecordLiftChainHop dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainHop.hop_bound"
 require_line_count 1 '^theorem hop_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainHop theorem hop_bound"
+
+# Items 4/5, stage S3 (chain track C3): terminal congruence of the ordered chain hybrid with idealChains, telescope and the chain bound.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChainHybrid.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRecordLiftChainHybrid$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftChainHybrid root import"
+require_line_count 6 '^theorem ' "$selected_source_module" "PqxdhRecordLiftChainHybrid theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftChainHybrid guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainHybrid\.terminal_safe$' "$selected_source_module" "PqxdhRecordLiftChainHybrid dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainHybrid.terminal_safe"
+require_line_count 1 '^theorem terminal_safe([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainHybrid theorem terminal_safe"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainHybrid\.chains_terminal$' "$selected_source_module" "PqxdhRecordLiftChainHybrid dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainHybrid.chains_terminal"
+require_line_count 1 '^theorem chains_terminal([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainHybrid theorem chains_terminal"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainHybrid\.telescope$' "$selected_source_module" "PqxdhRecordLiftChainHybrid dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainHybrid.telescope"
+require_line_count 1 '^theorem telescope([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainHybrid theorem telescope"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainHybrid\.hopLoss_eq$' "$selected_source_module" "PqxdhRecordLiftChainHybrid dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainHybrid.hopLoss_eq"
+require_line_count 1 '^theorem hopLoss_eq([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainHybrid theorem hopLoss_eq"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainHybrid\.chain_bound$' "$selected_source_module" "PqxdhRecordLiftChainHybrid dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainHybrid.chain_bound"
+require_line_count 1 '^theorem chain_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainHybrid theorem chain_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainHybrid\.chain_loss$' "$selected_source_module" "PqxdhRecordLiftChainHybrid dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainHybrid.chain_loss"
+require_line_count 1 '^theorem chain_loss([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainHybrid theorem chain_loss"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
