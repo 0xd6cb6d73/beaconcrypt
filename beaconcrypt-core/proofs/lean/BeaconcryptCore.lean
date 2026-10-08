@@ -1818,6 +1818,8 @@ import BeaconcryptCore.Computational.PqxdhRecordLiftCtxPrivModes
 
 import BeaconcryptCore.Computational.PqxdhRecordLiftCtxPrivLink
 
+import BeaconcryptCore.Computational.PqxdhRecordLiftCtxPriv
+
 /-!
 # Beaconcrypt-core verification root
 

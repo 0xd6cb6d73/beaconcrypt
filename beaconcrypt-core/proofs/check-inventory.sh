@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1683
+	[handwritten-lean]=1684
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -34998,6 +34998,41 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecord
 require_line_count 1 '^theorem linked_schedule([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPrivLink theorem linked_schedule"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPrivLink\.link$' "$selected_source_module" "PqxdhRecordLiftCtxPrivLink dependency link"
 require_line_count 1 '^theorem link([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPrivLink theorem link"
+
+# record-lift CTX privacy half: privacy hybrids, per-key hops (exactly privacyLoss), telescope, CtxPrivLiftStatement from StepBilled (items 4/5, S4 privacy half)
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPriv.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPriv$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftCtxPriv root import"
+require_line_count 14 '^theorem ' "$selected_source_module" "PqxdhRecordLiftCtxPriv theorem inventory"
+require_line_count 14 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftCtxPriv guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPriv\.privModes_zero$' "$selected_source_module" "PqxdhRecordLiftCtxPriv dependency privModes_zero"
+require_line_count 1 '^theorem privModes_zero([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPriv theorem privModes_zero"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPriv\.privModes_last$' "$selected_source_module" "PqxdhRecordLiftCtxPriv dependency privModes_last"
+require_line_count 1 '^theorem privModes_last([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPriv theorem privModes_last"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPriv\.privModes_unchanged$' "$selected_source_module" "PqxdhRecordLiftCtxPriv dependency privModes_unchanged"
+require_line_count 1 '^theorem privModes_unchanged([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPriv theorem privModes_unchanged"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPriv\.privModes_step$' "$selected_source_module" "PqxdhRecordLiftCtxPriv dependency privModes_step"
+require_line_count 1 '^theorem privModes_step([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPriv theorem privModes_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPriv\.selectedModesM_replay$' "$selected_source_module" "PqxdhRecordLiftCtxPriv dependency selectedModesM_replay"
+require_line_count 1 '^theorem selectedModesM_replay([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPriv theorem selectedModesM_replay"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPriv\.selectedModesM_random$' "$selected_source_module" "PqxdhRecordLiftCtxPriv dependency selectedModesM_random"
+require_line_count 1 '^theorem selectedModesM_random([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPriv theorem selectedModesM_random"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPriv\.game_replay$' "$selected_source_module" "PqxdhRecordLiftCtxPriv dependency game_replay"
+require_line_count 1 '^theorem game_replay([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPriv theorem game_replay"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPriv\.game_random$' "$selected_source_module" "PqxdhRecordLiftCtxPriv dependency game_random"
+require_line_count 1 '^theorem game_random([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPriv theorem game_random"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPriv\.hop_eq$' "$selected_source_module" "PqxdhRecordLiftCtxPriv dependency hop_eq"
+require_line_count 1 '^theorem hop_eq([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPriv theorem hop_eq"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPriv\.hop_loss$' "$selected_source_module" "PqxdhRecordLiftCtxPriv dependency hop_loss"
+require_line_count 1 '^theorem hop_loss([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPriv theorem hop_loss"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPriv\.game_first$' "$selected_source_module" "PqxdhRecordLiftCtxPriv dependency game_first"
+require_line_count 1 '^theorem game_first([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPriv theorem game_first"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPriv\.game_last$' "$selected_source_module" "PqxdhRecordLiftCtxPriv dependency game_last"
+require_line_count 1 '^theorem game_last([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPriv theorem game_last"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPriv\.ctxPrivLiftBool_of_billed$' "$selected_source_module" "PqxdhRecordLiftCtxPriv dependency ctxPrivLiftBool_of_billed"
+require_line_count 1 '^theorem ctxPrivLiftBool_of_billed([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPriv theorem ctxPrivLiftBool_of_billed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPriv\.ctxPrivLiftStatement_of_billed$' "$selected_source_module" "PqxdhRecordLiftCtxPriv dependency ctxPrivLiftStatement_of_billed"
+require_line_count 1 '^theorem ctxPrivLiftStatement_of_billed([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPriv theorem ctxPrivLiftStatement_of_billed"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
