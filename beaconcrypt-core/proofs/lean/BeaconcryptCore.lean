@@ -1683,6 +1683,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentFinishErasure
 
 import BeaconcryptCore.Computational.PqxdhDeploymentSeedSplit
 
+import BeaconcryptCore.Computational.PqxdhDeploymentHiddenSplit
+
 /-!
 # Beaconcrypt-core verification root
 

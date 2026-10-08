@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1587
+	[handwritten-lean]=1588
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -31702,6 +31702,61 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem seedFree_set([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSeedSplit theorem seedFree_set"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSeedSplit\.defer$' "$selected_source_module" "PqxdhDeploymentSeedSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentSeedSplit.defer"
 require_line_count 1 '^theorem defer([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSeedSplit theorem defer"
+
+# CE-11a split forms of the hidden-entry wrappers and their kernel identities (increment 2, unit 11a-2b).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHiddenSplit.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentHiddenSplit$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentHiddenSplit root import"
+require_line_count 24 '^theorem ' "$selected_source_module" "PqxdhDeploymentHiddenSplit theorem inventory"
+require_line_count 24 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentHiddenSplit guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHiddenSplit\.material_assemble$' "$selected_source_module" "PqxdhDeploymentHiddenSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentHiddenSplit.material_assemble"
+require_line_count 1 '^theorem material_assemble([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHiddenSplit theorem material_assemble"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHiddenSplit\.decode_full$' "$selected_source_module" "PqxdhDeploymentHiddenSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentHiddenSplit.decode_full"
+require_line_count 1 '^theorem decode_full([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHiddenSplit theorem decode_full"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHiddenSplit\.step_material$' "$selected_source_module" "PqxdhDeploymentHiddenSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentHiddenSplit.step_material"
+require_line_count 1 '^theorem step_material([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHiddenSplit theorem step_material"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHiddenSplit\.sequence_one_shape$' "$selected_source_module" "PqxdhDeploymentHiddenSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentHiddenSplit.sequence_one_shape"
+require_line_count 1 '^theorem sequence_one_shape([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHiddenSplit theorem sequence_one_shape"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHiddenSplit\.opening_unused$' "$selected_source_module" "PqxdhDeploymentHiddenSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentHiddenSplit.opening_unused"
+require_line_count 1 '^theorem opening_unused([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHiddenSplit theorem opening_unused"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHiddenSplit\.reply_unused$' "$selected_source_module" "PqxdhDeploymentHiddenSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentHiddenSplit.reply_unused"
+require_line_count 1 '^theorem reply_unused([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHiddenSplit theorem reply_unused"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHiddenSplit\.afterOpening_kernel$' "$selected_source_module" "PqxdhDeploymentHiddenSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentHiddenSplit.afterOpening_kernel"
+require_line_count 1 '^theorem afterOpening_kernel([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHiddenSplit theorem afterOpening_kernel"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHiddenSplit\.beaconKernel_seed$' "$selected_source_module" "PqxdhDeploymentHiddenSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentHiddenSplit.beaconKernel_seed"
+require_line_count 1 '^theorem beaconKernel_seed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHiddenSplit theorem beaconKernel_seed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHiddenSplit\.body_split$' "$selected_source_module" "PqxdhDeploymentHiddenSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentHiddenSplit.body_split"
+require_line_count 1 '^theorem body_split([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHiddenSplit theorem body_split"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHiddenSplit\.erased_split$' "$selected_source_module" "PqxdhDeploymentHiddenSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentHiddenSplit.erased_split"
+require_line_count 1 '^theorem erased_split([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHiddenSplit theorem erased_split"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHiddenSplit\.withKernel_withKernel$' "$selected_source_module" "PqxdhDeploymentHiddenSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentHiddenSplit.withKernel_withKernel"
+require_line_count 1 '^theorem withKernel_withKernel([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHiddenSplit theorem withKernel_withKernel"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHiddenSplit\.finish_factor_split$' "$selected_source_module" "PqxdhDeploymentHiddenSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentHiddenSplit.finish_factor_split"
+require_line_count 1 '^theorem finish_factor_split([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHiddenSplit theorem finish_factor_split"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHiddenSplit\.finishSplit_commutes_ctx$' "$selected_source_module" "PqxdhDeploymentHiddenSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentHiddenSplit.finishSplit_commutes_ctx"
+require_line_count 1 '^theorem finishSplit_commutes_ctx([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHiddenSplit theorem finishSplit_commutes_ctx"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHiddenSplit\.seal_unused$' "$selected_source_module" "PqxdhDeploymentHiddenSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentHiddenSplit.seal_unused"
+require_line_count 1 '^theorem seal_unused([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHiddenSplit theorem seal_unused"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHiddenSplit\.send_seal$' "$selected_source_module" "PqxdhDeploymentHiddenSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentHiddenSplit.send_seal"
+require_line_count 1 '^theorem send_seal([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHiddenSplit theorem send_seal"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHiddenSplit\.publish_setPeerKernel$' "$selected_source_module" "PqxdhDeploymentHiddenSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentHiddenSplit.publish_setPeerKernel"
+require_line_count 1 '^theorem publish_setPeerKernel([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHiddenSplit theorem publish_setPeerKernel"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHiddenSplit\.afterInitialization_kernel$' "$selected_source_module" "PqxdhDeploymentHiddenSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentHiddenSplit.afterInitialization_kernel"
+require_line_count 1 '^theorem afterInitialization_kernel([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHiddenSplit theorem afterInitialization_kernel"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHiddenSplit\.candidate_kernel$' "$selected_source_module" "PqxdhDeploymentHiddenSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentHiddenSplit.candidate_kernel"
+require_line_count 1 '^theorem candidate_kernel([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHiddenSplit theorem candidate_kernel"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHiddenSplit\.genericBuild_kernel$' "$selected_source_module" "PqxdhDeploymentHiddenSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentHiddenSplit.genericBuild_kernel"
+require_line_count 1 '^theorem genericBuild_kernel([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHiddenSplit theorem genericBuild_kernel"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHiddenSplit\.serverKernel_seed$' "$selected_source_module" "PqxdhDeploymentHiddenSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentHiddenSplit.serverKernel_seed"
+require_line_count 1 '^theorem serverKernel_seed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHiddenSplit theorem serverKernel_seed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHiddenSplit\.build_split_raw$' "$selected_source_module" "PqxdhDeploymentHiddenSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentHiddenSplit.build_split_raw"
+require_line_count 1 '^theorem build_split_raw([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHiddenSplit theorem build_split_raw"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHiddenSplit\.replaceRaw_replaceRaw$' "$selected_source_module" "PqxdhDeploymentHiddenSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentHiddenSplit.replaceRaw_replaceRaw"
+require_line_count 1 '^theorem replaceRaw_replaceRaw([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHiddenSplit theorem replaceRaw_replaceRaw"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHiddenSplit\.build_factor_split$' "$selected_source_module" "PqxdhDeploymentHiddenSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentHiddenSplit.build_factor_split"
+require_line_count 1 '^theorem build_factor_split([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHiddenSplit theorem build_factor_split"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHiddenSplit\.buildSplit_commutes_ctx$' "$selected_source_module" "PqxdhDeploymentHiddenSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentHiddenSplit.buildSplit_commutes_ctx"
+require_line_count 1 '^theorem buildSplit_commutes_ctx([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHiddenSplit theorem buildSplit_commutes_ctx"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
