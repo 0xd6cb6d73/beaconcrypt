@@ -1552,6 +1552,9 @@ import BeaconcryptCore.Computational.PqxdhRecordLiftFirstLookup
 import BeaconcryptCore.Computational.PqxdhRecordLiftGlobalCut
 import BeaconcryptCore.Computational.PqxdhRecordLiftProtocolHistory
 import BeaconcryptCore.Computational.PqxdhRecordLiftMixedWorld
+import BeaconcryptCore.Computational.PqxdhRecordLiftCtxProtocol
+import BeaconcryptCore.Computational.PqxdhRecordLiftCtxProtocolBounds
+
 import BeaconcryptCore.Computational.PqxdhDeploymentInterface
 
 import BeaconcryptCore.Computational.PqxdhDeploymentNative
