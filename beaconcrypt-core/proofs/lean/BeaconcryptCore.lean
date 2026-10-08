@@ -1753,6 +1753,8 @@ import BeaconcryptCore.Computational.PqxdhRecordLiftSeedScope
 
 import BeaconcryptCore.Computational.PqxdhRecordLiftChildPolicy
 
+import BeaconcryptCore.Computational.PqxdhRecordLiftPrefixPolicy
+
 /-!
 # Beaconcrypt-core verification root
 

@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1643
+	[handwritten-lean]=1644
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -33072,6 +33072,25 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecord
 require_line_count 1 '^theorem independent_source([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChildPolicy theorem independent_source"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChildPolicy\.independent_observed$' "$selected_source_module" "PqxdhRecordLiftChildPolicy dependency independent_observed"
 require_line_count 1 '^theorem independent_observed([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChildPolicy theorem independent_observed"
+
+# Record-lift increment A (Claude, adapted from Codex WIP 70ebff8d): the first-parent prefix is equal under selectors differing only at a dependent child.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftPrefixPolicy.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.PqxdhRecordLiftPrefixPolicy$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftPrefixPolicy root import"
+require_line_count 6 '^theorem ' "$selected_source_module" "PqxdhRecordLiftPrefixPolicy theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftPrefixPolicy guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftPrefixPolicy\.query_agrees$' "$selected_source_module" "PqxdhRecordLiftPrefixPolicy dependency query_agrees"
+require_line_count 1 '^theorem query_agrees([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftPrefixPolicy theorem query_agrees"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftPrefixPolicy\.supported_prefix$' "$selected_source_module" "PqxdhRecordLiftPrefixPolicy dependency supported_prefix"
+require_line_count 1 '^theorem supported_prefix([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftPrefixPolicy theorem supported_prefix"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftPrefixPolicy\.scan_schedule$' "$selected_source_module" "PqxdhRecordLiftPrefixPolicy dependency scan_schedule"
+require_line_count 1 '^theorem scan_schedule([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftPrefixPolicy theorem scan_schedule"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftPrefixPolicy\.scan_program$' "$selected_source_module" "PqxdhRecordLiftPrefixPolicy dependency scan_program"
+require_line_count 1 '^theorem scan_program([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftPrefixPolicy theorem scan_program"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftPrefixPolicy\.sampled_schedule$' "$selected_source_module" "PqxdhRecordLiftPrefixPolicy dependency sampled_schedule"
+require_line_count 1 '^theorem sampled_schedule([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftPrefixPolicy theorem sampled_schedule"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftPrefixPolicy\.sampled_program$' "$selected_source_module" "PqxdhRecordLiftPrefixPolicy dependency sampled_program"
+require_line_count 1 '^theorem sampled_program([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftPrefixPolicy theorem sampled_program"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
