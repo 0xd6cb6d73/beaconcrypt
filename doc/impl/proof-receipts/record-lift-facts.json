@@ -1,0 +1,1475 @@
+{
+ "date": "2026-10-08T18:10:11.070204+00:00",
+ "scope": "Items 4 and 5 (record-layer lift), facts track of the takeover plan (stage S5 continued): the unconditional record_lift and ctx_lift targets and the world-level facts of PqxdhRecordLiftIdeal. Delivered as defined: RecordLiftTarget, CtxLiftTarget, LorStatement, FreshGuessStatement. Open: OriginStatement, BindingStatement (see remaining). Unreviewed, not integrated.",
+ "basis": "075511311e457d8e2e0c5464071c802cf44b7a41",
+ "tip": "dac43360ed5ef88ed4102378b124da86f2a8480e",
+ "tip_note": "The last Lean commit; the documentation commit that adds this receipt changes no Lean file.",
+ "topic": {
+  "branch": "codex/deployment-record-facts",
+  "worktree": "/tmp/beaconcrypt-deployment-record-facts",
+  "registry": "scratch /tmp/bc-arc-scratch/items45/facts, its olean prefix and LEAN_PATH file, the worktree, the branch and the module names PqxdhRecordLift, PqxdhRecordLiftSwap, PqxdhRecordLiftFlat, PqxdhRecordLiftLor and PqxdhRecordLiftFresh registered to claude before creation"
+ },
+ "plan": {
+  "path": "/tmp/bc-arc-scratch/items45-takeover/takeover-plan.md",
+  "sha256": "23f4f6a858a8645bdf4cf0dcc9328062447f699b4743ae28456f7694756ce938",
+  "sha256_note": "Digest when this receipt was written; the plan is a shared status file and changes after this.",
+  "sections": "2 (S5; decisions D1-D5), 9 (world track), 10 (privacy track), 12 (facts track)"
+ },
+ "brief": {
+  "path": "/tmp/bc-coord/tasks/codex-items-4-5.md",
+  "sha256": "c947e27514ecf3b8041a1d61ef78b158c2c732d1f7bb8782b94c1e796a92b99e",
+  "sections": "H-4, H-5, H-7"
+ },
+ "targets": {
+  "module": "PqxdhRecordLiftIdeal (central 07551131, unchanged)",
+  "guide": "doc/impl/record-lift-ideal.md",
+  "statements_changed": "None: no definition of PqxdhRecordLiftIdeal changed; ctx_lift, record_lift, idealRecords_lor and idealRecords_fresh state the targets CtxLiftTarget, RecordLiftTarget, LorStatement and FreshGuessStatement exactly as defined."
+ },
+ "contracts": {
+  "hypotheses": "No theorem has an assumption or contract hypothesis. record_lift_bool and record_lift state targets whose first premise is SourceFullCorrect.",
+  "probe": "/tmp/bc-arc-scratch/items45/facts/tools/ContractProbeFacts3.lean",
+  "probe_sha256": "628f9df23f1fbb7131a2d607b7a4fe583e651f484ff5f1c19ec7fe88c4319489",
+  "log": "/tmp/bc-arc-scratch/items45/facts/logs/dev-contracts-m5-200124.log",
+  "log_sha256": "040f99eccbe487c1d20e060219a0e90779e4301eba9e52dcef63887a614cd9a5",
+  "per_theorem": {
+   "PqxdhRecordLift (all 3)": "proof level: functional AEAD correctness (Pqxdh.Crypto.aead_open_seal, aeadSeal_tag_length, AdaptiveRawNonceAead.HistoryCorrect) through PqxdhRecordLiftCtxBills.ctxAuthLiftTarget; SourceFullCorrect in record_lift_bool and record_lift (the target premise); IND$, INT-CTXT and, for the record-lift theorems, HMAC-PRF and Extract-on-uniform32 only as advantage terms of the losses; BLAKE2b ROM as world model",
+   "PqxdhRecordLiftSwap (all 10)": "no contract reached",
+   "PqxdhRecordLiftFlat (35), PqxdhRecordLiftLor (24), PqxdhRecordLiftFresh (40)": "no contract at proof level; dh_comm, xpub_length, x25519_length, hkdf_length and aeadSeal_tag_length reached only inside definitions (Flat 11, Lor 10, Fresh 11 theorems: the setup DH interface, the KDF definitions and the real-mode CTX code in the CTX interpreter definition), as for PqxdhRecordLiftHiding"
+  }
+ },
+ "h7": {
+  "source_scan": {
+   "tool": "/tmp/bc-arc-scratch/items45/facts/tools/h7scan.py",
+   "tool_sha256": "53cd7e6977b22a073febb1ae52f45b3fb4d28e51d2b130944bc2dd8db8ced1d2",
+   "outputs": {
+    "h7scan-m1": {
+     "path": "/tmp/bc-arc-scratch/items45/facts/logs/h7scan-m1.json",
+     "sha256": "3a979f5df6caa0a64f4ad65e425c3ba69f93c3cc9828745cf6b89ad2a591a0d5",
+     "files": {
+      "PqxdhRecordLift.lean": {
+       "forbidden_hits": {},
+       "informational": {}
+      }
+     }
+    },
+    "h7scan-m234": {
+     "path": "/tmp/bc-arc-scratch/items45/facts/logs/h7scan-m234.json",
+     "sha256": "fcdff18b1cbfc19a58cc559311c3fb81485472c6c6e5fe86b0a4c822f4661da0",
+     "files": {
+      "PqxdhRecordLiftSwap.lean": {
+       "forbidden_hits": {},
+       "informational": {}
+      },
+      "PqxdhRecordLiftFlat.lean": {
+       "forbidden_hits": {},
+       "informational": {}
+      },
+      "PqxdhRecordLiftLor.lean": {
+       "forbidden_hits": {},
+       "informational": {}
+      }
+     }
+    },
+    "h7scan-m5": {
+     "path": "/tmp/bc-arc-scratch/items45/facts/logs/h7scan-m5.json",
+     "sha256": "51d2c02e57325c32083cbfa1d799333478c5b8edd6931f648023c31098652271",
+     "files": {
+      "PqxdhRecordLiftFresh.lean": {
+       "forbidden_hits": {},
+       "informational": {}
+      }
+     }
+    }
+   }
+  },
+  "closure_guard": {
+   "m1": {
+    "path": "/tmp/bc-arc-scratch/items45/facts/logs/dev-h7-m1-163053.log",
+    "sha256": "215f768d7af3bbc1f949f6815761efec50ccba69df223ae6639017c531e8bd58",
+    "output": "H-7 guard: modules 1; declared constants 3; closure 29928; direct forbidden uses 0; closure violations 0; classified structural constants 12 of 12",
+    "tool": "/tmp/bc-arc-scratch/items45/facts/tools/H7ClosureFacts.lean",
+    "tool_sha256": "79e7b4f8948469644012d24ff840fd60a4668d7522f7601ee7c07c5e479134cc"
+   },
+   "m234": {
+    "path": "/tmp/bc-arc-scratch/items45/facts/logs/dev-h7-m234-194344.log",
+    "sha256": "110c4a517164c5ff8c373a759595a94e9b5dd02e79f3cb008ddaa21572974ff5",
+    "output": "H-7 guard: modules 4; declared constants 223; closure 30343; direct forbidden uses 0; closure violations 0; classified structural constants 12 of 12",
+    "tool": "/tmp/bc-arc-scratch/items45/facts/tools/H7ClosureFacts2.lean",
+    "tool_sha256": "9e1b0cb71367f2d2f2436028ebe579545cc90860e5ab05f9d57965b8526d3c66"
+   },
+   "m5": {
+    "path": "/tmp/bc-arc-scratch/items45/facts/logs/dev-h7-m5-200118.log",
+    "sha256": "90b182c72b5861d345ea11b0f32b8edb09a20d79c64a76609a5fb5bfb7b29b40",
+    "output": "H-7 guard: modules 5; declared constants 327; closure 30542; direct forbidden uses 0; closure violations 0; classified structural constants 12 of 12",
+    "tool": "/tmp/bc-arc-scratch/items45/facts/tools/H7ClosureFacts3.lean",
+    "tool_sha256": "300953211fff6d625ca785b3fbcd1788f450e8c9a5e4c4fe6494226941bf433e"
+   }
+  }
+ },
+ "modules": [
+  {
+   "name": "PqxdhRecordLift",
+   "delivered": "CtxLiftTarget (ctx_lift) and RecordLiftTarget (record_lift; Boolean form record_lift_bool) unconditionally, for the explicit chain, integrity and privacy reductions with their bills",
+   "module_commit": "28fc39dd2d2067d4853616e64a7c4fa4f9487139",
+   "statement_count": 3,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 3
+   },
+   "source_sha256": "d2029024c25027e5c18f6b03039e9a30fccd8cece59763b6b4a45d1bdc49d27f",
+   "module_check": {
+    "start": "2026-10-08T14:30:09.282813061Z",
+    "end": "2026-10-08T14:30:12.588253735Z",
+    "exit": 0,
+    "source_sha256": "d2029024c25027e5c18f6b03039e9a30fccd8cece59763b6b4a45d1bdc49d27f",
+    "log_bytes": 0,
+    "artifact": "/tmp/bc-arc-scratch/items45/facts/olean/BeaconcryptCore/Computational/PqxdhRecordLift.olean",
+    "artifact_sha256": "68e0053dacec2e9bbd84f88148151e81d99f38383fca491ae811b685833ec80c",
+    "leanpath_sha256": "db6d2575bec3209138852d1c0ca94a1155d1c4e88d587effccaf30059a2bc5a3",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-record-facts/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/items45/facts/olean/BeaconcryptCore/Computational/PqxdhRecordLift.olean",
+     "/tmp/beaconcrypt-deployment-record-facts/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLift.lean"
+    ]
+   },
+   "module_check_log": "/tmp/bc-arc-scratch/items45/facts/logs/PqxdhRecordLift-m1.log",
+   "root_check_with_this_module": {
+    "start": "2026-10-08T14:30:31.006458191Z",
+    "end": "2026-10-08T14:30:34.251017866Z",
+    "exit": 0,
+    "source_sha256": "23193a25152315130e82ecb3355dfbdf832cfaecd6bb3c9ad844394aee07ee38",
+    "log_bytes": 0,
+    "artifact_sha256": "5f39b446d1c888c1111eae3c2c8ef4052293d32fc3a8fd6400abd1ef94933b24",
+    "leanpath_sha256": "db6d2575bec3209138852d1c0ca94a1155d1c4e88d587effccaf30059a2bc5a3",
+    "log": "/tmp/bc-arc-scratch/items45/facts/logs/root-r1.log"
+   },
+   "inventory": {
+    "commit": "28fc39dd2d2067d4853616e64a7c4fa4f9487139",
+    "status": "0",
+    "start": "2026-10-08T14:31:09Z",
+    "end": "2026-10-08T14:32:34Z",
+    "note": "focused check-inventory at the recorded commit",
+    "command": "coord.sh lease mem claude @nix items45-facts-inventory-m1 --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C /tmp/beaconcrypt-deployment-record-facts/beaconcrypt-core check-inventory SHELL=bash",
+    "log": "/tmp/bc-arc-scratch/items45/facts/logs/inventory-m1.log",
+    "log_sha256": "9ae94cf9592569438aa250b16acdd3c47cec46067981e6458886b37a2a4ae39b"
+   },
+   "handwritten_lean_count": {
+    "before": 1690,
+    "after": 1691
+   }
+  },
+  {
+   "name": "PqxdhRecordLiftSwap",
+   "delivered": "generic relabelled-coin couplings with escapes (Swap, Swap.simulateQ_run, Swap.evalDist_map); no target",
+   "module_commit": "cee9afc766caa2b5a92b1a4a491c2bd4ff27b897",
+   "statement_count": 10,
+   "axiom_profile": {
+    "none": 2,
+    "Quot.sound, propext": 6,
+    "Classical.choice, Quot.sound, propext": 2
+   },
+   "source_sha256": "d9b37a720247ba0db82d8fedd37c6aa4331f6977a1bf8e23740b26cf880ebb8c",
+   "module_check": {
+    "start": "2026-10-08T15:29:09.450334305Z",
+    "end": "2026-10-08T15:29:12.908166630Z",
+    "exit": 0,
+    "source_sha256": "d9b37a720247ba0db82d8fedd37c6aa4331f6977a1bf8e23740b26cf880ebb8c",
+    "log_bytes": 0,
+    "artifact": "/tmp/bc-arc-scratch/items45/facts/olean/BeaconcryptCore/Computational/PqxdhRecordLiftSwap.olean",
+    "artifact_sha256": "8f51ffac576e7c950d62acab3ad45024ffd2d2c8175f2ba1e193cf6d1e3ab3e2",
+    "leanpath_sha256": "db6d2575bec3209138852d1c0ca94a1155d1c4e88d587effccaf30059a2bc5a3",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-record-facts/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/items45/facts/olean/BeaconcryptCore/Computational/PqxdhRecordLiftSwap.olean",
+     "/tmp/beaconcrypt-deployment-record-facts/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftSwap.lean"
+    ]
+   },
+   "module_check_log": "/tmp/bc-arc-scratch/items45/facts/logs/PqxdhRecordLiftSwap-m1.log",
+   "root_check_with_this_module": {
+    "start": "2026-10-08T17:43:19.123069397Z",
+    "end": "2026-10-08T17:43:23.505440749Z",
+    "exit": 0,
+    "source_sha256": "c8dcc493f82ffb9ebd77635c45e15ed7c30b4e9fca9e6dd934276735294756f3",
+    "log_bytes": 0,
+    "artifact_sha256": "b47cb3541470afdc21d33c259ac6334871934d0c81fa6970d82139b9fbd7342c",
+    "leanpath_sha256": "db6d2575bec3209138852d1c0ca94a1155d1c4e88d587effccaf30059a2bc5a3",
+    "log": "/tmp/bc-arc-scratch/items45/facts/logs/root-r2.log"
+   },
+   "inventory": {
+    "commit": "97276f87ef47a86e3f3e377bf00a270fe84e5a01",
+    "status": "0",
+    "start": "2026-10-08T17:45:07Z",
+    "end": "2026-10-08T17:46:32Z",
+    "note": "focused check-inventory at the recorded commit (the tip after the Swap, Flat and Lor commits; it covers all three)",
+    "command": "coord.sh lease mem claude @nix items45-facts-inventory-m234 --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C /tmp/beaconcrypt-deployment-record-facts/beaconcrypt-core check-inventory SHELL=bash",
+    "log": "/tmp/bc-arc-scratch/items45/facts/logs/inventory-m234.log",
+    "log_sha256": "32eb5130f6d4b318cc404265ef36535fab497e562cfd3bbb4a75da355dc6c9df"
+   },
+   "handwritten_lean_count": {
+    "before": 1691,
+    "after": 1692
+   }
+  },
+  {
+   "name": "PqxdhRecordLiftFlat",
+   "delivered": "the flattened CTX world (ctxRun_flat) and its coin, plaintext-obliviousness, persistence and ledger facts; no target",
+   "module_commit": "5d098087a4eca212f909b713dcacc82db72807b1",
+   "statement_count": 35,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 32,
+    "propext": 2,
+    "Quot.sound, propext": 1
+   },
+   "source_sha256": "400aac1eae4f7686c054b585e88b5f471ac8dde04746540edd78f95efab9b92d",
+   "module_check": {
+    "start": "2026-10-08T15:29:12.940367857Z",
+    "end": "2026-10-08T15:29:20.047958973Z",
+    "exit": 0,
+    "source_sha256": "400aac1eae4f7686c054b585e88b5f471ac8dde04746540edd78f95efab9b92d",
+    "log_bytes": 0,
+    "artifact": "/tmp/bc-arc-scratch/items45/facts/olean/BeaconcryptCore/Computational/PqxdhRecordLiftFlat.olean",
+    "artifact_sha256": "ab42aa544a7bfe676cf39e6d26672f7566f97ed2e6531b4e93c0b7e8df6f6264",
+    "leanpath_sha256": "db6d2575bec3209138852d1c0ca94a1155d1c4e88d587effccaf30059a2bc5a3",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-record-facts/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/items45/facts/olean/BeaconcryptCore/Computational/PqxdhRecordLiftFlat.olean",
+     "/tmp/beaconcrypt-deployment-record-facts/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftFlat.lean"
+    ]
+   },
+   "module_check_log": "/tmp/bc-arc-scratch/items45/facts/logs/PqxdhRecordLiftFlat-m1.log",
+   "root_check_with_this_module": {
+    "start": "2026-10-08T17:44:30.973937831Z",
+    "end": "2026-10-08T17:44:34.276121394Z",
+    "exit": 0,
+    "source_sha256": "9fcf816b3a22c3d1353715648331c61a7bc247c25e917e8bd0fa3b048db9f627",
+    "log_bytes": 0,
+    "artifact_sha256": "ee61b6f435d42cd6918ec864fa70fdd5dc6c89c9553dfcc114767b1a14f8b0e8",
+    "leanpath_sha256": "db6d2575bec3209138852d1c0ca94a1155d1c4e88d587effccaf30059a2bc5a3",
+    "log": "/tmp/bc-arc-scratch/items45/facts/logs/root-r3.log"
+   },
+   "inventory": {
+    "commit": "97276f87ef47a86e3f3e377bf00a270fe84e5a01",
+    "status": "0",
+    "start": "2026-10-08T17:45:07Z",
+    "end": "2026-10-08T17:46:32Z",
+    "note": "focused check-inventory at the recorded commit (the tip after the Swap, Flat and Lor commits; it covers all three)",
+    "command": "coord.sh lease mem claude @nix items45-facts-inventory-m234 --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C /tmp/beaconcrypt-deployment-record-facts/beaconcrypt-core check-inventory SHELL=bash",
+    "log": "/tmp/bc-arc-scratch/items45/facts/logs/inventory-m234.log",
+    "log_sha256": "32eb5130f6d4b318cc404265ef36535fab497e562cfd3bbb4a75da355dc6c9df"
+   },
+   "handwritten_lean_count": {
+    "before": 1692,
+    "after": 1693
+   }
+  },
+  {
+   "name": "PqxdhRecordLiftLor",
+   "delivered": "LorStatement (idealRecords_lor)",
+   "module_commit": "97276f87ef47a86e3f3e377bf00a270fe84e5a01",
+   "statement_count": 24,
+   "axiom_profile": {
+    "none": 1,
+    "Classical.choice, Quot.sound, propext": 21,
+    "Quot.sound, propext": 1,
+    "propext": 1
+   },
+   "source_sha256": "84d066b8125b89047665e0f5a8bbb041e9cf7e3e35b48c12ace80eeb4ea3ee49",
+   "module_check": {
+    "start": "2026-10-08T15:29:20.088251437Z",
+    "end": "2026-10-08T15:29:26.892582366Z",
+    "exit": 0,
+    "source_sha256": "84d066b8125b89047665e0f5a8bbb041e9cf7e3e35b48c12ace80eeb4ea3ee49",
+    "log_bytes": 0,
+    "artifact": "/tmp/bc-arc-scratch/items45/facts/olean/BeaconcryptCore/Computational/PqxdhRecordLiftLor.olean",
+    "artifact_sha256": "9281e7e602e06b940bcb21e2a5224c6bae8084186d3ffb247040b0b85f214901",
+    "leanpath_sha256": "db6d2575bec3209138852d1c0ca94a1155d1c4e88d587effccaf30059a2bc5a3",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-record-facts/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/items45/facts/olean/BeaconcryptCore/Computational/PqxdhRecordLiftLor.olean",
+     "/tmp/beaconcrypt-deployment-record-facts/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftLor.lean"
+    ]
+   },
+   "module_check_log": "/tmp/bc-arc-scratch/items45/facts/logs/PqxdhRecordLiftLor-m1.log",
+   "root_check_with_this_module": {
+    "start": "2026-10-08T17:44:46.293639353Z",
+    "end": "2026-10-08T17:44:49.608560451Z",
+    "exit": 0,
+    "source_sha256": "4b1e641a6dfdc0ed6e4321e66ac39b0b55025c3bc64d1e8a210921878ea9a3ee",
+    "log_bytes": 0,
+    "artifact_sha256": "52125636ade568976d0cfc26fcca15a0a859c57e6019658a0fbd5a2e30699e84",
+    "leanpath_sha256": "db6d2575bec3209138852d1c0ca94a1155d1c4e88d587effccaf30059a2bc5a3",
+    "log": "/tmp/bc-arc-scratch/items45/facts/logs/root-r4.log"
+   },
+   "inventory": {
+    "commit": "97276f87ef47a86e3f3e377bf00a270fe84e5a01",
+    "status": "0",
+    "start": "2026-10-08T17:45:07Z",
+    "end": "2026-10-08T17:46:32Z",
+    "note": "focused check-inventory at the recorded commit (the tip after the Swap, Flat and Lor commits; it covers all three)",
+    "command": "coord.sh lease mem claude @nix items45-facts-inventory-m234 --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C /tmp/beaconcrypt-deployment-record-facts/beaconcrypt-core check-inventory SHELL=bash",
+    "log": "/tmp/bc-arc-scratch/items45/facts/logs/inventory-m234.log",
+    "log_sha256": "32eb5130f6d4b318cc404265ef36535fab497e562cfd3bbb4a75da355dc6c9df"
+   },
+   "handwritten_lean_count": {
+    "before": 1693,
+    "after": 1694
+   }
+  },
+  {
+   "name": "PqxdhRecordLiftFresh",
+   "delivered": "FreshGuessStatement (idealRecords_fresh)",
+   "module_commit": "dac43360ed5ef88ed4102378b124da86f2a8480e",
+   "statement_count": 40,
+   "axiom_profile": {
+    "propext": 4,
+    "Quot.sound, propext": 6,
+    "Classical.choice, Quot.sound, propext": 30
+   },
+   "source_sha256": "da3987d2a66d7cc95d657504ef8b5d7437ce62ab73b3c0e2bc954ad817741559",
+   "module_check": {
+    "start": "2026-10-08T18:00:52.609434175Z",
+    "end": "2026-10-08T18:00:59.667961784Z",
+    "exit": 0,
+    "source_sha256": "da3987d2a66d7cc95d657504ef8b5d7437ce62ab73b3c0e2bc954ad817741559",
+    "log_bytes": 0,
+    "artifact": "/tmp/bc-arc-scratch/items45/facts/olean/BeaconcryptCore/Computational/PqxdhRecordLiftFresh.olean",
+    "artifact_sha256": "ca4c8ea95565c0e0b73ed53fd226d9ae922d95ec055560d98ef68d8730bf77e5",
+    "leanpath_sha256": "db6d2575bec3209138852d1c0ca94a1155d1c4e88d587effccaf30059a2bc5a3",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-record-facts/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/items45/facts/olean/BeaconcryptCore/Computational/PqxdhRecordLiftFresh.olean",
+     "/tmp/beaconcrypt-deployment-record-facts/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftFresh.lean"
+    ]
+   },
+   "module_check_log": "/tmp/bc-arc-scratch/items45/facts/logs/PqxdhRecordLiftFresh-m1.log",
+   "root_check_with_this_module": {
+    "start": "2026-10-08T18:01:09.260800856Z",
+    "end": "2026-10-08T18:01:12.650515855Z",
+    "exit": 0,
+    "source_sha256": "775237a2167fac025139370fcf4ddd8d1ea13326eab9899baa4077a025c2dc9c",
+    "log_bytes": 0,
+    "artifact_sha256": "75d3de1ac96df212161018142d0894775faf4867c0799f9f7899d397fa4b5a19",
+    "leanpath_sha256": "db6d2575bec3209138852d1c0ca94a1155d1c4e88d587effccaf30059a2bc5a3",
+    "log": "/tmp/bc-arc-scratch/items45/facts/logs/root-r5.log"
+   },
+   "inventory": {
+    "commit": "dac43360ed5ef88ed4102378b124da86f2a8480e",
+    "status": "0",
+    "start": "2026-10-08T18:01:55Z",
+    "end": "2026-10-08T18:03:21Z",
+    "note": "focused check-inventory at the recorded commit",
+    "command": "coord.sh lease mem claude @nix items45-facts-inventory-m5 --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C /tmp/beaconcrypt-deployment-record-facts/beaconcrypt-core check-inventory SHELL=bash",
+    "log": "/tmp/bc-arc-scratch/items45/facts/logs/inventory-m5.log",
+    "log_sha256": "56815c3c87b31eb105b2dd705760456062abed83355e4895c6ce936727ec2250"
+   },
+   "handwritten_lean_count": {
+    "before": 1694,
+    "after": 1695
+   }
+  }
+ ],
+ "statements": [
+  {
+   "module": "PqxdhRecordLift",
+   "theorem": "ctx_lift",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLift",
+   "theorem": "record_lift_bool",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLift",
+   "theorem": "record_lift",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftSwap",
+   "theorem": "Swap.mono",
+   "axioms": []
+  },
+  {
+   "module": "PqxdhRecordLiftSwap",
+   "theorem": "Swap.bind",
+   "axioms": [
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftSwap",
+   "theorem": "Swap.map",
+   "axioms": [
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftSwap",
+   "theorem": "Swap.refl",
+   "axioms": []
+  },
+  {
+   "module": "PqxdhRecordLiftSwap",
+   "theorem": "Swap.refl_support",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftSwap",
+   "theorem": "Swap.escape",
+   "axioms": [
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftSwap",
+   "theorem": "Swap.query",
+   "axioms": [
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftSwap",
+   "theorem": "Swap.evalDist_map",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftSwap",
+   "theorem": "support_keep",
+   "axioms": [
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftSwap",
+   "theorem": "Swap.simulateQ_run",
+   "axioms": [
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFlat",
+   "theorem": "ctxRun_flat",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFlat",
+   "theorem": "fullImpl_run",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFlat",
+   "theorem": "nativeImpl_run",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFlat",
+   "theorem": "nativeImpl_coin",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFlat",
+   "theorem": "zeros_length",
+   "axioms": [
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFlat",
+   "theorem": "beginSend_context",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFlat",
+   "theorem": "normalBegin_context",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFlat",
+   "theorem": "selectedInput_congr",
+   "axioms": [
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFlat",
+   "theorem": "hiddenSealing_zeros",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFlat",
+   "theorem": "ctxInterpreter_sealing_zeros",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFlat",
+   "theorem": "startContext_normalBegin",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFlat",
+   "theorem": "sendProgram_zeros",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFlat",
+   "theorem": "ownerSend_zeros",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFlat",
+   "theorem": "serverStep_send_zeros",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFlat",
+   "theorem": "beaconStep_send_zeros",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFlat",
+   "theorem": "native_serverSend_run",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFlat",
+   "theorem": "native_beaconSend_run",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFlat",
+   "theorem": "nativeImpl_send_zeros",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFlat",
+   "theorem": "support_run_fst",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFlat",
+   "theorem": "support_keep_oracle",
+   "axioms": [
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFlat",
+   "theorem": "ownerRun_known",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFlat",
+   "theorem": "knownAt_iff",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFlat",
+   "theorem": "markUsed_server",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFlat",
+   "theorem": "markUsed_owners",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFlat",
+   "theorem": "handler_peerKnown",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFlat",
+   "theorem": "handler_ownerKnown",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFlat",
+   "theorem": "handler_known",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFlat",
+   "theorem": "nativeImpl_known",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFlat",
+   "theorem": "ledger_append",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFlat",
+   "theorem": "ledgerInv_empty",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFlat",
+   "theorem": "firstTest_append",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFlat",
+   "theorem": "admissibleTest_forward",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFlat",
+   "theorem": "admissibleTest_fresh",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFlat",
+   "theorem": "admissibleTest_test",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFlat",
+   "theorem": "ledger_inv",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftLor",
+   "theorem": "flipLedger_record",
+   "axioms": []
+  },
+  {
+   "module": "PqxdhRecordLiftLor",
+   "theorem": "ledger_flip_forward",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftLor",
+   "theorem": "ledger_flip_fresh",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftLor",
+   "theorem": "ledger_flip_refused",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftLor",
+   "theorem": "escaped_keep",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftLor",
+   "theorem": "commute_couple",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftLor",
+   "theorem": "send_couple",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftLor",
+   "theorem": "fullImpl_test_session",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftLor",
+   "theorem": "fullImpl_test_first",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftLor",
+   "theorem": "decide_rev",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftLor",
+   "theorem": "step_couple",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftLor",
+   "theorem": "lorGuess_flip",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftLor",
+   "theorem": "lorGuess_escaped",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftLor",
+   "theorem": "world_couple",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftLor",
+   "theorem": "evalDist_or",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftLor",
+   "theorem": "lorEligible_split",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftLor",
+   "theorem": "lor_zeros",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftLor",
+   "theorem": "map_split",
+   "axioms": [
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftLor",
+   "theorem": "testsHidden_hiding",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftLor",
+   "theorem": "testBit_hidingView",
+   "axioms": [
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftLor",
+   "theorem": "lorGuess_hiding",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftLor",
+   "theorem": "lorEligible_hiding",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftLor",
+   "theorem": "law_zeros",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftLor",
+   "theorem": "idealRecords_lor",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFresh",
+   "theorem": "shiftByte_coin",
+   "axioms": [
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFresh",
+   "theorem": "shiftByte_injective",
+   "axioms": [
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFresh",
+   "theorem": "shiftByte_offset",
+   "axioms": [
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFresh",
+   "theorem": "shiftFrom_length",
+   "axioms": [
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFresh",
+   "theorem": "shiftFrom_injective",
+   "axioms": [
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFresh",
+   "theorem": "shiftFrom_offsets",
+   "axioms": [
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFresh",
+   "theorem": "extend_offsets",
+   "axioms": [
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFresh",
+   "theorem": "shiftLedger_empty",
+   "axioms": [
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFresh",
+   "theorem": "modify_append_ne",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFresh",
+   "theorem": "modify_append_length",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFresh",
+   "theorem": "shiftLedger_append",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFresh",
+   "theorem": "shiftLedger_target",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFresh",
+   "theorem": "ledger_shift_forward",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFresh",
+   "theorem": "ledger_shift_test",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFresh",
+   "theorem": "ledger_shift_fresh",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFresh",
+   "theorem": "uniformBytes_length",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFresh",
+   "theorem": "ledger_freshLong",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFresh",
+   "theorem": "ledger_fresh_prefix",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFresh",
+   "theorem": "freshEscaped_keep",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFresh",
+   "theorem": "commute_couple",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFresh",
+   "theorem": "send_couple",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFresh",
+   "theorem": "bytes_couple",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFresh",
+   "theorem": "fullImpl_fresh",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFresh",
+   "theorem": "target_couple",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFresh",
+   "theorem": "step_couple",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFresh",
+   "theorem": "hitAt_shift",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFresh",
+   "theorem": "handleSlot_known",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFresh",
+   "theorem": "hitAt_escaped",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFresh",
+   "theorem": "shiftedHit_escaped",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFresh",
+   "theorem": "world_couple",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFresh",
+   "theorem": "evalDist_map_true",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFresh",
+   "theorem": "shiftedHit_key",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFresh",
+   "theorem": "shiftedHit_disjoint",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFresh",
+   "theorem": "hitAt_bound",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFresh",
+   "theorem": "freshEvent_cover",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFresh",
+   "theorem": "keyAt_unique",
+   "axioms": [
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFresh",
+   "theorem": "fresh_zeros",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFresh",
+   "theorem": "freshHit_hiding",
+   "axioms": [
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFresh",
+   "theorem": "freshEvent_hiding",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftFresh",
+   "theorem": "idealRecords_fresh",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  }
+ ],
+ "statement_counts": {
+  "PqxdhRecordLift": 3,
+  "PqxdhRecordLiftSwap": 10,
+  "PqxdhRecordLiftFlat": 35,
+  "PqxdhRecordLiftLor": 24,
+  "PqxdhRecordLiftFresh": 40
+ },
+ "allowed_axioms": [
+  "Classical.choice",
+  "Quot.sound",
+  "propext"
+ ],
+ "guard_scan": {
+  "path": "/tmp/bc-arc-scratch/items45/facts/logs/guards-verify-tip.log",
+  "sha256": "e012db6bac810d4925513cd1f523269ae753b33a5f2704264c636400a5afd9c6",
+  "output": "PqxdhRecordLift.lean theorems 3 guards 3 OK\nPqxdhRecordLiftSwap.lean theorems 10 guards 10 OK\nPqxdhRecordLiftFlat.lean theorems 35 guards 35 OK\nPqxdhRecordLiftLor.lean theorems 24 guards 24 OK\nPqxdhRecordLiftFresh.lean theorems 40 guards 40 OK",
+  "tool": "/tmp/bc-arc-scratch/items45/facts/tools/guards.py",
+  "tool_sha256": "e00686c3a4fa32fffc871449a2ccf606c4723988635ac61941f8b71d70615b1b",
+  "mode": "verify",
+  "rule": "every top-level theorem has exactly one exact \"#guard_msgs in #print axioms\" block naming it, every guard allows only propext, Classical.choice and Quot.sound, and the module has no sorry, admit, axiom, native_decide, implemented_by or extern"
+ },
+ "inventory_tip": {
+  "recount": {
+   "path": "/tmp/bc-arc-scratch/items45/facts/logs/inv-recount-tip.log",
+   "sha256": "5b3072a7192eaea3a62a4eedac471193b4bc28b6b217a5854ee65664d1844ceb",
+   "output": "handwritten-lean count unchanged (1695)"
+  },
+  "rehash": {
+   "path": "/tmp/bc-arc-scratch/items45/facts/logs/inv-rehash-tip.log",
+   "sha256": "fd33c98c38e3fe7aa1274d2a46d9b666231438e3b1b454d7d73ade86fa7da936",
+   "output": "proofs/lean/BeaconcryptCore.lean: unchanged\nproofs/trusted-boundary.md: unchanged\nproofs/check-inventory.sh: unchanged"
+  },
+  "note": "coord.sh inv recount claude then coord.sh inv rehash claude ran at every module commit before committing (counts in modules[].handwritten_lean_count, read from check-inventory.sh at the commit and its parent) and again at the tip, unchanged"
+ },
+ "leanpath": {
+  "file": "/tmp/bc-arc-scratch/items45/facts/leanpath",
+  "sha256": "db6d2575bec3209138852d1c0ca94a1155d1c4e88d587effccaf30059a2bc5a3",
+  "first_prefix": "/tmp/bc-arc-scratch/items45/facts/olean",
+  "mirror_of": "/tmp/bc-arc-scratch/items45/priv/int/olean (first prefix of the published LEAN_PATH of central 07551131, root olean skipped), resolved symlinks; mirror log /tmp/bc-arc-scratch/items45/facts/mirror.log",
+  "published": "/tmp/bc-coord/leanpaths/07551131*.leanpath"
+ },
+ "diff_check": {
+  "path": "/tmp/bc-arc-scratch/items45/facts/logs/diff-check-tip.log",
+  "sha256": "9c6660ade476fda62ac26aa69791c4cebd76429fa6cfd8c1464e73d8af3730ef",
+  "output": "diff-check exit 0"
+ },
+ "diff_check_note": "git diff --check 07551131 <tip> at the tip, and git diff --cached --check before every commit",
+ "deviations": [
+  "Two generic modules (PqxdhRecordLiftSwap, PqxdhRecordLiftFlat) that the plan did not name: the hiding coupling of PqxdhRecordLiftHiding compares runs with equal coins and no escapes, while the left-or-right and fresh-message arguments need relabelled coins and escapes on an adversary-level (flattened) world.",
+  "The Swap and Flat commits have no focused check-inventory of their own; the run at the Lor commit 97276f87 covers them (all three commits were made in a row before it).",
+  "The per-commit inv recount and rehash outputs were not saved to files; the receipt records the resulting counts from check-inventory.sh at each commit and its parent, and a recount and rehash at the tip (unchanged)."
+ ],
+ "not_proved": [
+  "OriginStatement (structural and publication conjuncts) and BindingStatement: open; checked by reading and not found false (guide, Remaining work)."
+ ],
+ "checks_not_run": "No lake build, make verify, nix-collect-garbage, mutation testing, ProVerif or Rust run; no production Rust or ProVerif change. Transcript fidelity under @cargo and the central-integration checks of PROTOCOL section 6 run on the merged tip at integration, which this track does not do.",
+ "remaining": "doc/impl/record-lift-facts.md, section \"Remaining work\"; takeover plan section \"12. Facts track status\".",
+ "provenance": "New Claude work; nothing adapted from Codex WIP.",
+ "commits": [
+  {
+   "commit": "28fc39dd2d2067d4853616e64a7c4fa4f9487139",
+   "subject": "Prove ctx_lift and record_lift unconditionally"
+  },
+  {
+   "commit": "cee9afc766caa2b5a92b1a4a491c2bd4ff27b897",
+   "subject": "Add relabelled-coin couplings with escapes"
+  },
+  {
+   "commit": "5d098087a4eca212f909b713dcacc82db72807b1",
+   "subject": "Flatten the CTX world into one adversary-level simulation"
+  },
+  {
+   "commit": "97276f87ef47a86e3f3e377bf00a270fe84e5a01",
+   "subject": "Prove LorStatement on the record-ideal world"
+  },
+  {
+   "commit": "dac43360ed5ef88ed4102378b124da86f2a8480e",
+   "subject": "Prove FreshGuessStatement on the record-ideal world"
+  }
+ ]
+}
