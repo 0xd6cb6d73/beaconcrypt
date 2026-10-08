@@ -1,5 +1,5 @@
 {
- "date": "2026-10-08T13:48:18.007066+00:00",
+ "date": "2026-10-08T14:01:29.594059+00:00",
  "scope": "CE-11b unit U5 (track u5): the prefix of the second compile lemma at the challenger's pool, route P-a (design-v2 section 8.3): CE-3's compile lemma with the pool create (PqxdhDeploymentIdealPool), item 2's source layers at the pool (PqxdhDeploymentIdealPoolSource), and the cut of both sides at the selected raw accept with the relation at the cut and, after the review fix pass, the remaining creation budget of the continuation and the owner positions (PqxdhDeploymentIdealCut). Reviewed (semantic and hygiene) at 86485fe1; review fix pass applied; not integrated into central.",
  "basis": "0b70190e35c4233e20952fd8d48dfa77c9f6f1e5",
  "topic": {
@@ -8,15 +8,24 @@
  },
  "plan": {
   "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
-  "sha256_at_generation": "a099148713a15525cf4d5b7ed023755fe6acd6fe0c53cccfb29df1f80c93e64e",
-  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u5/fix/plan.at-fix-receipt-a0991487.md",
-  "dated_copy_sha256": "a099148713a15525cf4d5b7ed023755fe6acd6fe0c53cccfb29df1f80c93e64e",
-  "sections": "47-52 (A1 adopted, A2 accepted, Q1-Q3 decided, increment 2), 54 (this unit), 55 (its review fix pass; 54 was the last section before it)",
-  "earlier": {
-   "note": "hash recorded by the first U5 receipt (before section 55)",
-   "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u5/plan.at-u5-receipt-64f1165b.md",
-   "dated_copy_sha256": "64f1165baa763d858ce619aed51dc93fbe639cb3bb7035cd4af1fee298c5d449"
-  }
+  "sha256_at_generation": "6891e7f0b7a2b2dc20499a3dace92a93b30b9d512e0a107b83cd400df5e106d7",
+  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u5/int/plan.at-record-6891e7f0.md",
+  "dated_copy_sha256": "6891e7f0b7a2b2dc20499a3dace92a93b30b9d512e0a107b83cd400df5e106d7",
+  "sections": "47-52 (A1 adopted, A2 accepted, Q1-Q3 decided, increment 2 and its integration), 53 (the record-lift CTX track's integrity half integrated), 54 (this unit), 55 (its review fix pass, with the confirming-review paragraph at its end)",
+  "earlier": [
+   {
+    "note": "hash recorded by the review fix pass receipt (58a57965; section 55 without its confirming-review paragraph)",
+    "sha256": "a099148713a15525cf4d5b7ed023755fe6acd6fe0c53cccfb29df1f80c93e64e",
+    "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u5/fix/plan.at-fix-receipt-a0991487.md",
+    "dated_copy_sha256": "a099148713a15525cf4d5b7ed023755fe6acd6fe0c53cccfb29df1f80c93e64e"
+   },
+   {
+    "note": "hash recorded by the first U5 receipt (before section 55)",
+    "sha256": "64f1165baa763d858ce619aed51dc93fbe639cb3bb7035cd4af1fee298c5d449",
+    "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u5/plan.at-u5-receipt-64f1165b.md",
+    "dated_copy_sha256": "64f1165baa763d858ce619aed51dc93fbe639cb3bb7035cd4af1fee298c5d449"
+   }
+  ]
  },
  "design": {
   "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/design-v2.md",
@@ -58,6 +67,10 @@
   {
    "commit": "9020dd1f80b84b16629610ff8eec3e9dfed954d2",
    "subject": "Add remaining-creation and owner-position facts at the CE-11b cut"
+  },
+  {
+   "commit": "58a57965efedf2cb162b51fa8eaa407e789d6be0",
+   "subject": "Document the CE-11b unit U5 review fix pass"
   }
  ],
  "commits_note": "Commits on the topic after the basis that were made before this receipt was generated; the documentation commit that adds this receipt is not listed.",
@@ -961,7 +974,7 @@
   "PqxdhDeploymentIdealCut": []
  },
  "git_diff_check": {
-  "range": "0b70190e35c4233e20952fd8d48dfa77c9f6f1e5..working tree",
+  "range": "0b70190e35c4233e20952fd8d48dfa77c9f6f1e5..working tree (with the confirming-review record)",
   "exit": 0
  },
  "not_run": [
@@ -1049,6 +1062,49 @@
   ],
   "definitions_added": [
    "PoolIndexed"
-  ]
+  ],
+  "confirming_review": {
+   "reviewed_range": "86485fe190d399bdf2fb638be8e9e7330c731fb0..58a57965efedf2cb162b51fa8eaa407e789d6be0",
+   "reviewed_commit": "58a57965efedf2cb162b51fa8eaa407e789d6be0",
+   "scope": "the fix pass 9020dd1f (Lean) and 58a57965 (documentation): statements, guards, receipt, inventory, documentation, scratch notes, registry descriptions",
+   "verdict": "APPROVE: every finding of the review of 86485fe1 resolved; no new finding",
+   "checks": [
+    "PqxdhDeploymentIdealPoolSource and PqxdhDeploymentIdealCut rechecked at 58a57965 without -o through coord.sh lean against ce11b/u5/fix/leanpath: exit 0, empty logs",
+    "theorems and exact guards: PqxdhDeploymentIdealPool 11/11, PqxdhDeploymentIdealPoolSource 27/27, PqxdhDeploymentIdealCut 47/47; axioms within propext, Classical.choice, Quot.sound; no sorry, admit, native_decide or axiom",
+    "docstring-stripped diff of the three modules 86485fe1..58a57965 has only insertions (no existing statement, proof or definition changed; CutRel and cut_rel unchanged)",
+    "receipt files_sha256 equal HEAD; final-check artifacts equal the ce11b/u5/fix/olean files; dated plan and design copies hash-match; inventory logs hash-match; the fix-pass LEAN_PATH tail equals the published 0b70190e file",
+    "reviewed-inventory rows of PqxdhDeploymentIdealPoolSource, PqxdhDeploymentIdealCut and check-inventory.sh equal the HEAD hashes; check-inventory block counts 47 with the nine theorem rows",
+    "guide, analysis, scratch notes (U6 plan steps f and g, design-v2 section 20, plan section 55) and registry descriptions match the findings; one paragraph per line; git diff --check clean; footers exact; branch pushed (ls-remote 58a57965)"
+   ],
+   "probe": {
+    "file": "/tmp/bc-arc-scratch/common-experiment/ce11b/u5/confirm/probe/ConfirmU5Probe.lean",
+    "sha256": "d05bd70073c1dcd18ec098d5476804d85d5df579b54a82653fc1aff6bdff4c69",
+    "result": "exit 0, empty log (run 2; run 1 differed only in the line wrapping of two guards)",
+    "theorems": [
+     "c1_fits: at CE-9's compiled program, on every outcome of commonPrefix and for every reply of the suspended accept, the keys created so far plus the continuation's KEM creation bound fit the challenger's pool (the capacity premise of PqxdhDynamicKemStopping.normal_capacity with routerOf's counter)",
+     "c2_entry_key: cut_entry_key at CE-9's compiled program after item 2's annotated birth, every premise discharged from the CE budget and the birth",
+     "c3_indexed_nontrivial: PoolIndexed fails for a state whose first owner entry has KEM index 1"
+    ]
+   },
+   "findings_fixed": [],
+   "records": [
+    "review record: findings of the review of 86485fe1 resolved, checks run (no action)"
+   ],
+   "files_changed": [
+    "doc/impl/common-deployment-experiment.md",
+    "doc/impl/common-deployment-experiment-plan.md",
+    "doc/formal-verification-analysis.md",
+    "doc/impl/proof-receipts/common-deployment-experiment-ce11b-u5.json"
+   ],
+   "lean_change": "none (no file under beaconcrypt-core/ changed)",
+   "notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/u5/confirm/NOTES.md",
+   "scratch": "/tmp/bc-arc-scratch/common-experiment/ce11b/u5/confirm (review checks and probe), /tmp/bc-arc-scratch/common-experiment/ce11b/u5/int (record-commit scripts, plan copies)"
+  }
+ },
+ "plan_snapshot": {
+  "path": "doc/impl/common-deployment-experiment-plan.md",
+  "refreshed_from_sha256": "6891e7f0b7a2b2dc20499a3dace92a93b30b9d512e0a107b83cd400df5e106d7",
+  "sections": "0-18 and the decision sections 19-55",
+  "note": "refreshed in the commit that records the confirming review: the body equals the working plan from its third line; the snapshot paragraph records the hash and the refresh history (this refresh adds sections 52 to 55)"
  }
 }
