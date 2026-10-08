@@ -12,7 +12,9 @@
   "sha256_inc4": "35dd25a9bc701f3a01c911397822bd6fe8e6b7cd9f61da874baf9c50ed43670b",
   "sha256_note": "sha256 is the working plan at the fix pass; sha256_inc4 is the plan recorded at 7bb6dee9 (with section 41). The fix pass renumbered the later of two sections numbered 39 (increment 3 integrated; next work) to 39a and added section 42.",
   "sections": "32 (CE-11 split, real instances cuttable), 34a, 36, 38, 39a (increment 3 integrated; open points this increment closes; numbered 39 until the fix pass), 41 (this increment), 42 (this fix pass)",
-  "committed_snapshot": "doc/impl/common-deployment-experiment-plan.md (not refreshed in this increment or its fix pass; it covers sections up to 39, the increment-3 review fix; central's snapshot at 80560f92 adds the section now numbered 39a as its second section 39; refreshed at integration)"
+  "committed_snapshot": "doc/impl/common-deployment-experiment-plan.md, refreshed by the confirming-review documentation commit from the working plan at sha256_confirm (snapshot header plus the plan body from its third line; sections 19 to 42, with 39a, 40, 41 and 42 new against central's snapshot at 80560f92, which has 39a as its second section 39); before that commit it covered sections up to 39, the increment-3 review fix.",
+  "sha256_confirm": "c6c379d4b242b86b24eaa0677b8aa1059f9b7d77d3e991c38b6564f8293cebd6",
+  "sha256_confirm_note": "sha256_confirm is the working plan after the confirming-review documentation commit edited section 42 (the commands that touch the challenge; the estimate judgement citing the 11b-1 row; the record of the confirming review); the committed snapshot carries it."
  },
  "design": {
   "path": "/tmp/bc-arc-scratch/common-experiment/ce11/design-v2.md",
@@ -742,7 +744,7 @@
  "deviations_from_design": [
   "New modules PqxdhDeploymentSplitFactor and PqxdhDeploymentEnvironmentReal instead of extending PqxdhDeploymentEnvironment and PqxdhDeploymentEnvironmentJoin, which are published on central and frozen (protocol section 3).",
   "The admissibility predicate of the real splits is fun _ _ => True: the real environment issues only known-kernel installations, which the World admits without reading or setting a used marker; most directly, the real instances run with no hidden slot (next item).",
-  "The real instances run with zero hidden slots (n = 0), unlike design m12's expectation that CE-11b reuses the per-command realReg_splits lemmas: realReg is RegImpl KemSK Unit 0, so realReg_splits_* and the Commands section they rest on (createStep_effects .. hmacStep_effects, create_law .. hmac_law, create_keeps .. hmac_keeps) are stated with EnvState KemSK Unit, PqxdhRecordLiftWorld.State 0 and realStep (n := 0) and do not apply as stated to CE-11b's ideal handler at n = 2 with its own backend state (whose create also differs at creation index k). CE-11b reuses the tools before the Commands section, which are generic in n and the backend state, and the proof pattern, and re-proves the per-command laws for its handler (or first generalizes them over n and the backend state against a generic handler); recorded in working plan section 42.",
+  "The real instances run with zero hidden slots (n = 0), unlike design m12's expectation that CE-11b reuses the per-command realReg_splits lemmas: realReg is RegImpl KemSK Unit 0, so realReg_splits_* and the Commands section they rest on (createStep_effects .. hmacStep_effects, create_law .. hmac_law, create_keeps .. hmac_keeps) are stated with EnvState KemSK Unit, PqxdhRecordLiftWorld.State 0 and realStep (n := 0) and do not apply as stated to CE-11b's ideal handler at n = 2 with its own backend state (whose commands that touch the challenge also differ, design-v2 section 6: the create at creation index k, the accept at raw-accept ordinal i, which performs the challenge encapsulation, and owner k's routed decapsulation of the exact challenge ciphertext). CE-11b reuses the tools before the Commands section, which are generic in n and the backend state, and the proof pattern, and re-proves the per-command laws for its handler (or first generalizes them over n and the backend state against a generic handler); recorded in working plan section 42.",
   "Each per-command law is an equality of ProbComp programs (hence of distributions), not only an equality in law; realReg_splits_* take it through LawEq.of_eq.",
   "The split factoring is stated against ctxEffects admin for any admin, as tail_factor and owner_factor. Its World form for CE-11b's hidden splits needs one more step: buildSplitEnv and finishSplitEnv end with an administrative request (installServer or installBeacon at a .hidden slot, or advanceOwner), effects_ctx applies only to programs without administrative effects, and countFree_issue (hence effects_then_free) covers only KnownAdmin requests, which exclude hidden installs; so CE-11b combines buildSplitEnv_factor or finishSplitEnv_factor with effects_then (forwarded part through effects_ctx) and an explicit World computation of the hidden install, or proves a CountFree lemma for hidden installs.",
   "The build factoring uses a free program freeBuild and the naturality of the generic Server build under simulateQ instead of a monad-morphism abstraction.",
@@ -1093,5 +1095,39 @@
   },
   "not_run": "make verify, full lake build, mutation testing (no production Rust changed), nix-collect-garbage (forbidden), the transcript-fidelity check (integration precondition)"
  },
- "updated": "2026-10-08T06:48:15.033291+00:00"
+ "updated": "2026-10-08T07:05:36.025861+00:00",
+ "confirming_review": {
+  "reviewed_commit": "fbb77bddd90d0e4baaa110f8354cc14c56d467d2",
+  "date": "2026-10-08T07:05:36.025861+00:00",
+  "verdict": "no finding above nit level: all ten findings of the review of 7bb6dee9 resolved, every hygiene check passed; three documentation nits and one verification summary",
+  "evidence": "/tmp/bc-arc-scratch/common-experiment/ce11/confirm-inc4 (check.py, idents.txt, mirror.py, lean1.sh, probe/, logs/ with the independent rechecks of PqxdhDeploymentSplitFactor, PqxdhDeploymentEnvironmentReal, the root and the focused inventory)",
+  "findings": [
+   {
+    "severity": "informational",
+    "title": "Verification summary: all ten findings of the 7bb6dee9 review are resolved at fbb77bdd and every hygiene check passed",
+    "response": "No action.",
+    "commit": null
+   },
+   {
+    "severity": "nit",
+    "title": "The increment-3 forward pointer says 'the next section', which becomes false after merging central",
+    "response": "The paragraph 'What this does not show' of the increment-3 analysis section now names the target by its title: 'The fourth increment (section \"Common deployment experiment, CE-11a increment 4: the split wrappers factored and the join for the real game\") proves ...'. After the merge, central's CE-9b section lies between the increment-3 and increment-4 sections.",
+    "commit": "the confirming-review documentation commit"
+   },
+   {
+    "severity": "nit",
+    "title": "The re-estimate's support for 'CE-11b estimate unchanged' cites a design sentence about a different lemma family",
+    "response": "The guide re-estimate now cites the 11b-1 row of design-v2 section 6, which lists the instance proof Splits (C1°) for the ideal handler among the work of unit 11b-1, estimated at 9-16 agent-days (design-v2 sections 6 and 7), and phrases the conclusion as a judgement: the generic tools and the proof pattern now exist, so the loss of the m12 reuse is judged to fit within 11b-1's range. Working plan section 42 says the same (and the committed snapshot carries it); the earlier citation was the registration commutation lemmas in the proof route of ideal_compile (unit 11b-2).",
+    "commit": "the confirming-review documentation commit"
+   },
+   {
+    "severity": "nit",
+    "title": "'Create differs at creation index k' is the only difference named, but design-v2 section 6 also changes the selected accept",
+    "response": "The guide's names-for-consumers bullet and open point, the deviations_from_design entry of this receipt and working plan section 42 now name the commands that touch the challenge (design-v2 section 6): the create at creation index k uses the pre-generated challenge KEM key, the accept at raw-accept ordinal i performs the challenge encapsulation with a uniform shared secret, and owner k's routed decapsulation of the exact challenge ciphertext returns that shared secret. The guide's minor-finding bullet of the review fix pass and review_fix_pass.findings record what the fix pass wrote and are unchanged.",
+    "commit": "the confirming-review documentation commit"
+   }
+  ],
+  "documentation": "The first paragraph of the increment-4 analysis section records the confirming review instead of saying that the fix pass is not reviewed; the guide status paragraph, the open points and a new section 'CE-11a increment 4: confirming review' record the review; the committed plan snapshot is refreshed (plan.committed_snapshot).",
+  "checks": "No file under beaconcrypt-core changes, so the module, root and inventory checks of the fix pass (review_fix_pass.checks) still apply; git diff --check of the confirming-review commit, the Lean checks after the merge of central and the focused inventory and transcript-fidelity checks are recorded by the integration checks receipt."
+ }
 }
