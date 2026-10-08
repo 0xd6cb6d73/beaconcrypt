@@ -20,16 +20,26 @@
  "ce_plan": {
   "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
   "sha256": "c6c379d4b242b86b24eaa0677b8aa1059f9b7d77d3e991c38b6564f8293cebd6",
-  "sections": "9.6-9.7, 10 (CE-KT, CE-OR, CE-UKS, CE-APP, CE-LOR), 13, 16 inputs 9 and 13"
+  "sections": "9.6-9.7, 10 (CE-KT, CE-OR, CE-UKS, CE-APP, CE-LOR), 13, 16 inputs 9 and 13",
+  "note": "sha256 above is the plan the S1 module and its documentation commit read (c6c379d4). The plan changed after S1 (last modified 2026-10-08 09:42 +0200, before the fix pass started at about 10:20 +0200), so the fix pass read fix_pass.sha256. That version only appends sections 43 to 45 to c6c379d4: its first 826 lines are byte-identical to c6c379d4 (checked at the nit fix), so every cited section (9.6-9.7, 10, 13, 16 inputs 9 and 13) is unchanged; section 45 records the design-review findings that the fix pass fixed.",
+  "fix_pass": {
+   "sha256": "e65fa6c5d6d9386c0026ca07cbbb683b51b77c8b518f27acd47b6a638842ddb5",
+   "sections": "the same sections; unchanged against c6c379d4 (sections 43-45 appended)",
+   "recorded_by": "confirming-review nit fix (nit 3: the ce_plan hash was already stale when the fix pass ran)"
+  }
  },
  "design_panel": {
   "path": "/tmp/bc-arc-scratch/items45/ideal/design.md",
-  "sha256": "bda34c18b9100fe82d74e3d38ecfa088c475923a0c8fbe7af0a4b9698cb1efbd",
-  "note": "Updated in place by the fix pass (rows of section 2, D1-D4 and H-7 of section 3, lens items A1-A3, new section 7). The version the design review read is kept byte for byte as /tmp/bc-arc-scratch/items45/ideal/fix1/design-reviewed-3ff717df.md (sha256 879642f0f8d14ae04353f39c0a2b57059749490332656c8e73156ce5284425dc).",
+  "sha256": "ba4f2f879902c959dbb0041e861fd1ad6b1ff4aea79379c5e9f3a8031248afc9",
+  "note": "Updated in place by the fix pass and again by the confirming-review nit fix (row KeyMode of section 2, lens items A1 and S4, D3 path made absolute, new section 8). The version before the nit fix is kept byte for byte as /tmp/bc-arc-scratch/items45/ideal/nits/design-before-nits.md (sha256 bda34c18b9100fe82d74e3d38ecfa088c475923a0c8fbe7af0a4b9698cb1efbd, the fix-pass version); the version the design review read is fix1/design-reviewed-3ff717df.md.",
   "s1": {
    "path": "/tmp/bc-arc-scratch/items45/ideal/design.md",
    "sha256": "879642f0f8d14ae04353f39c0a2b57059749490332656c8e73156ce5284425dc",
    "note": "Written before the module was finalized; explains every definition with its CE-12 consumer and records a three-lens critique (CE-12 consumer, proof feasibility, fidelity and scope). Two of its findings changed the module before the Lean commit: the privacy half is stated for both observation modes against randomRecords (B1), and OriginStatement takes Frame (B2)."
+  },
+  "fix_pass": {
+   "sha256": "bda34c18b9100fe82d74e3d38ecfa088c475923a0c8fbe7af0a4b9698cb1efbd",
+   "note": "Updated in place by the fix pass (rows of section 2, D1-D4 and H-7 of section 3, lens items A1-A3, new section 7). The version the design review read is kept byte for byte as /tmp/bc-arc-scratch/items45/ideal/fix1/design-reviewed-3ff717df.md (sha256 879642f0f8d14ae04353f39c0a2b57059749490332656c8e73156ce5284425dc)."
   }
  },
  "provenance": "New Claude work. The module imports only central modules (PqxdhRecordLiftMixedWorld, PqxdhRecordLiftCtxServices, PqxdhRecordLiftCtxModeBounds) and adapts nothing from Codex WIP W1-W6.",
@@ -43,14 +53,14 @@
    "subject": "Fix the S1 design-review findings in the record-lift targets"
   }
  ],
- "commits_note": "The S1 documentation commit 3ff717df followed the S1 Lean commit; the fix-pass documentation commit (guide, analysis section and this receipt) follows the fix-pass Lean commit 7277807f.",
+ "commits_note": "The S1 documentation commit 3ff717df followed the S1 Lean commit; the fix-pass documentation commit (guide, analysis section and this receipt) follows the fix-pass Lean commit 7277807f. The confirming-review nit fix is one documentation-only commit after 077610c8 (fix-pass documentation commit); it rewords the module docstring and changes no definition, statement or guard.",
  "files_sha256": {
-  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftIdeal.lean": "4af6f25e37c7c5fdc254919d8afd1564efd03cb1e4f690fdd20d66a38d8306be",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftIdeal.lean": "58804c73dd7ddc9e11d3a131ce09447f0c1e6b4205cdfe38e3fe40bc5e81c9fc",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "6f503092afaf3a18698675ff879d5883dd1077805c1a707e49f2c1c40b822361",
   "beaconcrypt-core/proofs/check-inventory.sh": "1cb5bdf03a172f3b6e6892b0bfda72ac243f1fd15ecec1c287e36ea076250570",
-  "beaconcrypt-core/proofs/reviewed-inventory.txt": "e018afb8f860d7be71495b1975ee181eaf575270efce1d0752aea19cd73bcc66",
-  "doc/impl/record-lift-ideal.md": "fedb56d166c56e3e7abb95030936e877bd8cf99f7f03893e9938459d63d4c0c7",
-  "doc/formal-verification-analysis.md": "91e2bd82b9244074e2c8ec4d5ac2a9ed1d70164125d3c9a4099405abe00c16fb"
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "79584370e3795ec07d8eafe0c95aa19ea8e28c13ad8c309d6a5f9343fd62d13a",
+  "doc/impl/record-lift-ideal.md": "789c750ac14885f45adaec5b95417dcf3cff28d02a979765574343c29dad078b",
+  "doc/formal-verification-analysis.md": "52e4a1dcc525149f7c00c3e9f88e85d21f4ec29959d250a8f37fc64b3002b333"
  },
  "modules": [
   {
@@ -478,12 +488,49 @@
   "R6 forms (stage S6).",
   "CE-12 obligations listed in the guide: frame-level CE-OR and CE-UKS events through codec.frameRead, and C5 as a support invariant of the client program with env_g for every interpreter (idealAuth, idealRecords), plus the C5 maps for CE-APP and CE-LOR."
  ],
- "checks_not_run": "No lake build, make verify, nix-collect-garbage, mutation testing, ProVerif, transcript-fidelity cargo run or Rust run; no production Rust or ProVerif change. Not integrated into central.",
+ "checks_not_run": "No lake build, make verify, nix-collect-garbage, mutation testing, ProVerif or Rust run in S1, the fix pass or the nit fix; no production Rust or ProVerif change. Transcript fidelity and the integration into central run after the nit fix on the merged tip (nit_fix.integration_checks).",
  "review": {
   "s1_gate": "Independent design review of 3ff717df by Claude reviewers that did not write the module; 9 findings (3 major, 3 minor, 3 nit), all fixed in 7277807f and the fix-pass documentation commit.",
   "findings": "/tmp/bc-arc-scratch/items45/ideal/fix1/review-findings.json",
   "findings_sha256": "60e865c7e34c989a68f8741d4897044e6f932d159b317344ebbcd32ff6be8570",
-  "confirming_review": "Not run yet.",
+  "confirming_review": {
+   "reviewed_commit": "077610c808316980d1682fcb176d325d1330d055",
+   "reviewed_range": "3ff717df..077610c8 (fix-pass Lean commit 7277807f and documentation commit 077610c8)",
+   "reviewer": "independent Claude confirming review of the fix pass (reviewers that did not write the module)",
+   "outcome": "four documentation nits; no finding against the Lean definitions or statements",
+   "evidence": [
+    "/tmp/bc-arc-scratch/items45/ideal/confirm/module-check.exit, module-check.log, module-src.sha: module check exit 0, empty log, source 4af6f25e",
+    "/tmp/bc-arc-scratch/items45/ideal/confirm/thms.txt, guards.txt, thms-old.txt: 28 theorems, 28 exact guards, the 21 S1 theorems kept",
+    "/tmp/bc-arc-scratch/items45/ideal/confirm/h7scan-confirm.json: H-7 source scan version 2, no forbidden and no informational name",
+    "/tmp/bc-arc-scratch/items45/ideal/confirm/lean.diff: the fix-pass Lean diff cfdddc25..7277807f"
+   ],
+   "findings": [
+    {
+     "severity": "nit",
+     "title": "Earlier prose claim still unsupported: the module docstring and the analysis say random mode is a proven endpoint of the existing CTX bounds",
+     "response": "Module docstring line 9 and the analysis sentence reworded: real and replay are exactly the endpoints of selected_integrity (keyImpl_modes), and random mode agrees with replay except on sealing (randomImpl_other). The docstring worlds paragraph, the guide worlds section and CtxPrivLiftStatement paragraph say the IND$ correspondence is not proved; the guide open points list the correspondence of randomImpl with the IND$ random experiment behind replay_random_advantage as an explicit S4 obligation; design panel row KeyMode and lens item S4 updated.",
+     "outcome": "fixed"
+    },
+    {
+     "severity": "nit",
+     "title": "CE-12 obligation (ii) states only the forward direction of C5, which the containments need alongside 'slot_g is held only by the designated handles'",
+     "response": "Extended in the guide consumer paragraph, the open points and design A1: C5 must also give that only the designated handles hold slot_g on the support of every interpreter, from per-role slot uniqueness via PqxdhRecordLiftProtocol.Unused/markUsed plus C5 for both designated handles, or from the converse of C5. The analysis sentence on the two remaining CE-12 steps says the same in plain English.",
+     "outcome": "fixed"
+    },
+    {
+     "severity": "nit",
+     "title": "The receipt's ce_plan sha256 was already stale when the fix pass ran",
+     "response": "ce_plan.fix_pass records the plan the fix pass read (e65fa6c5) and ce_plan.note records that it only appends sections 43-45 to c6c379d4 (first 826 lines byte-identical), so the cited sections were rechecked and are unchanged.",
+     "outcome": "fixed"
+    },
+    {
+     "severity": "nit",
+     "title": "The guide cites a scratch path without its root",
+     "response": "The D3 row now cites /tmp/bc-arc-scratch/coord-replies/r1-audit/reply-final.md (also in the design panel D3 item).",
+     "outcome": "fixed"
+    }
+   ]
+  },
   "s1": "Not reviewed. The S1 gate is an independent design review of the statements by a reviewer that did not write them; its questions are in the design panel section 6."
  },
  "files_sha256_s1": {
@@ -494,6 +541,14 @@
   "doc/impl/record-lift-ideal.md": "28c759a31ec266fd9a795defb74d48bc40314ff97363e63891d8b24e1069e0de",
   "doc/formal-verification-analysis.md": "60927570ec5db9144634ceb6b584a21fa7ada06f1d28ddf3f5e5eb7379613597"
  },
+ "files_sha256_fix1": {
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftIdeal.lean": "4af6f25e37c7c5fdc254919d8afd1564efd03cb1e4f690fdd20d66a38d8306be",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "6f503092afaf3a18698675ff879d5883dd1077805c1a707e49f2c1c40b822361",
+  "beaconcrypt-core/proofs/check-inventory.sh": "1cb5bdf03a172f3b6e6892b0bfda72ac243f1fd15ecec1c287e36ea076250570",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "e018afb8f860d7be71495b1975ee181eaf575270efce1d0752aea19cd73bcc66",
+  "doc/impl/record-lift-ideal.md": "fedb56d166c56e3e7abb95030936e877bd8cf99f7f03893e9938459d63d4c0c7",
+  "doc/formal-verification-analysis.md": "91e2bd82b9244074e2c8ec4d5ac2a9ed1d70164125d3c9a4099405abe00c16fb"
+ },
  "fix_pass": {
   "date": "2026-10-08",
   "lean_commit": "7277807f3c9036201d4d12dbcc4f5dffca553a18",
@@ -503,5 +558,26 @@
    "OriginStatement": "before (n privacy bills): produced form 0 in idealAuth and idealRecords; published form <= guessTerm in randomRecords and <= publicationTerm in idealRecords; mode-O reductions CtxBounded. After (n): the same produced conjuncts; published form <= publicationTerm in idealAuth, idealRecords and randomRecords; no reduction or bill. The probability conjuncts imply the old ones; the dropped bill conjunct only constrained the removed reductions."
   },
   "unchanged": "Every other existing definition and all 21 S1 theorems are unchanged in statement; docstrings of randomRecords and CtxPrivLiftBool were updated."
+ },
+ "nit_fix": {
+  "date": "2026-10-08",
+  "base": "077610c808316980d1682fcb176d325d1330d055",
+  "scope": "Documentation only: module docstring (two sentences of the module doc comment), guide, analysis section, this receipt; reviewed-inventory.txt digest of the module. No definition, statement, guard, import or check-inventory.sh line changes.",
+  "module_source_sha256": "58804c73dd7ddc9e11d3a131ce09447f0c1e6b4205cdfe38e3fe40bc5e81c9fc",
+  "module_check": {
+   "command": "items45/ideal/nits/dev.sh (coord.sh lean claude, timeout 180, lean -j1 -M8000, no -o) against items45/ideal/fix1/leanpath",
+   "log": "/tmp/bc-arc-scratch/items45/ideal/nits/logs/dev-docstring-105906.log",
+   "exit": 0,
+   "log_bytes": 0
+  },
+  "inventory": {
+   "recount": "coord.sh inv recount claude: handwritten-lean count unchanged (1641)",
+   "rehash": "coord.sh inv rehash claude: proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftIdeal.lean 4af6f25e37c7 -> 58804c73dd7d; BeaconcryptCore.lean, trusted-boundary.md and check-inventory.sh unchanged"
+  },
+  "h7_scan": {
+   "v2": "/tmp/bc-arc-scratch/items45/ideal/nits/h7scan.json: no forbidden and no informational name",
+   "v3": "/tmp/bc-arc-scratch/items45/ideal/nits/h7scan-v3.json (version 3 of items45/A/int2/tools/h7scan.py, adds JointKdfRO): no forbidden and no informational name"
+  },
+  "integration_checks": "/tmp/bc-arc-scratch/items45/ideal/int/checks-receipt.json (module and root checks into a fresh prefix, inv recount/rehash, focused check-inventory, transcript fidelity and git diff --check on the merged tip)"
  }
 }
