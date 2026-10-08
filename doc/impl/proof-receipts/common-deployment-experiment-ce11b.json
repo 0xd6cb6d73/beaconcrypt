@@ -1,5 +1,5 @@
 {
- "date": "2026-10-08T09:50:30.903327+00:00",
+ "date": "2026-10-08T09:50:42.897842+00:00",
  "scope": "CE-11b increment 1: PqxdhDeploymentIdealSlots (U1 generic: slot programs, slotCore, slot_natural_law, slotCore_natural), PqxdhDeploymentIdealParams (U1 R3 draws Target/Params/drawParams and spike item (b): preOpaque_pool, draws_swap, slotGame_pool), PqxdhDeploymentEnvironmentDraw (U3 generic: join_from, join_draw, paramEnv, join_param). Spike items (c) and (d) as checked scratch definitions only. Not reviewed; not integrated into central.",
  "basis": "ee7878ee4c42f59460a3a8b80983a4a209bd4e0d",
  "topic": {
@@ -32,9 +32,13 @@
   {
    "commit": "e21d46300fb3a11081984a45b6011ef98ab5ea47",
    "subject": "Document CE-11b increment 1"
+  },
+  {
+   "commit": "542820b4ef67e3c0f8219b27fefd3636a1af5132",
+   "subject": "Record the CE-11b prefix route and the spike re-estimate"
   }
  ],
- "commits_note": "Three Lean commits; the documentation commit that adds this receipt, the guide sections and the analysis section follows them.",
+ "commits_note": "The three Lean commits followed by the documentation commits made before this receipt was last generated; the documentation commit that last updated this receipt (and the status paragraph of the guide) is not listed.",
  "files_sha256": {
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealSlots.lean": "f5839292c571aaeefbdec55b901c3e69ce5a6c03c7ab4b68a0cfefecda66a611",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealParams.lean": "f031bdc1889d7ae810463e84a7e59621b35f46aca554596d29508385da91192d",
