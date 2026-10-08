@@ -1,0 +1,214 @@
+{
+ "date": "2026-10-08T13:23:17.771283+00:00",
+ "scope": "Items 4 and 5 (record-layer lift), stage S5 of the takeover plan (world track): the record_lift composition and the ideal-world facts of PqxdhRecordLiftIdeal. Delivered so far: RecordAuthLiftTarget (integrity record_lift), RecordLiftTarget and CtxLiftTarget conditional on the privacy half CtxPrivLiftStatement as an explicit hypothesis parameter, the mode-O record lift, and HidingStatement. Not yet proved: OriginStatement, BindingStatement, FreshGuessStatement, LorStatement (see remaining). Unreviewed, not integrated.",
+ "basis": "14f51c34403649b85c6acc0ad29fb2622406dd81",
+ "tip": "b957b9970f9579ed54cc87be936b3e607c974429",
+ "topic": {
+  "branch": "codex/deployment-record-world",
+  "worktree": "/tmp/beaconcrypt-deployment-record-world",
+  "registry": "scratch /tmp/bc-arc-scratch/items45/world, its olean prefix world/olean, worktree, branch and the module names PqxdhRecordLiftComposition and PqxdhRecordLiftHiding registered to claude before creation (PqxdhRecordLift* is Claude's prefix since the owner decision of 2026-10-08)"
+ },
+ "plan": {
+  "path": "/tmp/bc-arc-scratch/items45-takeover/takeover-plan.md",
+  "sha256": "b60725a6183bbea258dbd63b0598acf6e9ab6796b24325cd7546a00fe173e31d",
+  "sections": "2 (S5; decisions D1-D5), 9 (world track status)"
+ },
+ "brief": {
+  "path": "/tmp/bc-coord/tasks/codex-items-4-5.md",
+  "sha256": "c947e27514ecf3b8041a1d61ef78b158c2c732d1f7bb8782b94c1e796a92b99e",
+  "sections": "H-4, H-5, H-7"
+ },
+ "targets": {
+  "module": "PqxdhRecordLiftIdeal (central 14f51c34, unchanged)",
+  "guide": "doc/impl/record-lift-ideal.md",
+  "statements_changed": "None: no definition of PqxdhRecordLiftIdeal changed; every delivered statement is a target as defined or a stronger form of it."
+ },
+ "contracts": {
+  "hypotheses": "No theorem has an assumption or contract hypothesis. The targets RecordAuthLiftBool and RecordLiftBool carry SourceFullCorrect as their own first premise; CtxPrivLiftStatement is an explicit hypothesis parameter of record_lift_of_priv, record_lift_bool_of_priv (Boolean form) and ctx_lift_of_priv, not an assumption or contract.",
+  "probe": "/tmp/bc-arc-scratch/items45/world/tools/ContractProbe.lean",
+  "probe_sha256": "fdedc2976ae4bb8600b0399c7828ec99726ba88265249eb9a7fd628e4762e892",
+  "log": "/tmp/bc-arc-scratch/items45/world/logs/dev-contracts1-151315.log",
+  "log_sha256": "c75f036a62b4a94fc850e6ac5b56406676c01bf1a40f69925dcb0598b3e69d6f",
+  "per_theorem": {
+   "PqxdhRecordLiftComposition (all 7)": "proof level: functional AEAD correctness (Pqxdh.Crypto.aead_open_seal, aeadSeal_tag_length, AdaptiveRawNonceAead.HistoryCorrect) through PqxdhRecordLiftCtxBills.ctxAuthLiftTarget / ctxAuthLiftStatement; SourceFullCorrect in the 6 theorems that apply chain_lift (all but ctx_lift_of_priv); IND$, INT-CTXT, HMAC-PRF and Extract-on-uniform32 only as advantage terms of the losses; BLAKE2b ROM as world model",
+   "PqxdhRecordLiftHiding (all 55)": "no contract at proof level; dh_comm, xpub_length, x25519_length, hkdf_length and aeadSeal_tag_length reached only inside definitions (setup DH interface, KDF definitions, real-mode CTX code in the CTX interpreter definition)"
+  }
+ },
+ "h7": {
+  "source_scan": {
+   "tool": "/tmp/bc-arc-scratch/items45/world/tools/h7scan.py",
+   "tool_sha256": "53cd7e6977b22a073febb1ae52f45b3fb4d28e51d2b130944bc2dd8db8ced1d2",
+   "result": {
+    "PqxdhRecordLiftComposition.lean": {
+     "forbidden_hits": {},
+     "informational": {}
+    },
+    "PqxdhRecordLiftHiding.lean": {
+     "forbidden_hits": {},
+     "informational": {}
+    }
+   }
+  },
+  "closure_guard": {
+   "tool": "/tmp/bc-arc-scratch/items45/world/tools/H7Closure.lean",
+   "tool_sha256": "4c407c5154cab47d387d2fcc4d6e17abded2672ce5609a4ccb71edb0bf2bfd58",
+   "log": "/tmp/bc-arc-scratch/items45/world/logs/dev-h7-hiding-151400.log",
+   "output": "H-7 guard: modules 2; declared constants 205; closure 29957; direct forbidden uses 0; closure violations 0; classified structural constants 12 of 12"
+  }
+ },
+ "modules": [
+  {
+   "name": "PqxdhRecordLiftComposition",
+   "delivered": "RecordAuthLiftTarget (record_auth_lift); RecordLiftTarget and CtxLiftTarget given CtxPrivLiftStatement as a hypothesis parameter (record_lift_of_priv, ctx_lift_of_priv); mode-O record lift (record_lift_O)",
+   "module_commit": "7f6530654c3f620c39939018afcdb9e3f35cf426",
+   "statement_count": 7,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 7
+   },
+   "source_sha256": "2d39c0c656e8d423fa6e8c42584b4e71013cbce046ca88cf8515dde400516967",
+   "module_check": {
+    "start": "2026-10-08T12:43:09.829072976Z",
+    "end": "2026-10-08T12:43:18.070936202Z",
+    "exit": 0,
+    "source_sha256": "2d39c0c656e8d423fa6e8c42584b4e71013cbce046ca88cf8515dde400516967",
+    "log_bytes": 0,
+    "artifact": "/tmp/bc-arc-scratch/items45/world/olean/BeaconcryptCore/Computational/PqxdhRecordLiftComposition.olean",
+    "artifact_sha256": "80cda9cae032ac6cdd53eb2231e8ccf3bdbc9dc337579fe0a3f54ddf4b0e65ca",
+    "leanpath_sha256": "90db23f57d7307501c213c792c38619a071293fb50ca3bcf7fdd6ef078fd6531",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-record-world/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/items45/world/olean/BeaconcryptCore/Computational/PqxdhRecordLiftComposition.olean",
+     "/tmp/beaconcrypt-deployment-record-world/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftComposition.lean"
+    ]
+   },
+   "module_check_log": "/tmp/bc-arc-scratch/items45/world/logs/PqxdhRecordLiftComposition-m1.log",
+   "inventory": {
+    "commit": "7f6530654c3f620c39939018afcdb9e3f35cf426",
+    "status": "0",
+    "start": "2026-10-08T12:44:13Z",
+    "end": "2026-10-08T12:45:41Z",
+    "command": "coord.sh lease mem claude @nix items45-world-inventory-comp --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C /tmp/beaconcrypt-deployment-record-world/beaconcrypt-core check-inventory SHELL=bash",
+    "log": "/tmp/bc-arc-scratch/items45/world/logs/inventory-comp.log"
+   },
+   "inv_recount": "handwritten-lean count 1680 -> 1681",
+   "inv_rehash": "proofs/lean/BeaconcryptCore.lean: 48b84716bd34 -> c15de35c7181\nproofs/trusted-boundary.md: unchanged\nproofs/check-inventory.sh: ac745ecf9f26 -> e8949b4364b7"
+  },
+  {
+   "name": "PqxdhRecordLiftHiding",
+   "delivered": "HidingStatement (idealRecords_hiding); hiding_replace for two replacements",
+   "module_commit": "e0907c584493c53f3baf8a3ee1007bda78518aa9",
+   "statement_count": 55,
+   "axiom_profile": {
+    "none": 4,
+    "Quot.sound, propext": 13,
+    "propext": 5,
+    "Classical.choice, Quot.sound, propext": 33
+   },
+   "source_sha256": "a016163f1e9f341db3219703676001329dd203d23f5d5dcd7a36977e6353ab58",
+   "module_check": {
+    "start": "2026-10-08T13:13:43.421132000Z",
+    "end": "2026-10-08T13:13:49.756442833Z",
+    "exit": 0,
+    "source_sha256": "a016163f1e9f341db3219703676001329dd203d23f5d5dcd7a36977e6353ab58",
+    "log_bytes": 0,
+    "artifact": "/tmp/bc-arc-scratch/items45/world/olean/BeaconcryptCore/Computational/PqxdhRecordLiftHiding.olean",
+    "artifact_sha256": "bc52292581349946b3dc9588c185c737e372d85657ed89c4de6a327e619f4437",
+    "leanpath_sha256": "90db23f57d7307501c213c792c38619a071293fb50ca3bcf7fdd6ef078fd6531",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-record-world/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/items45/world/olean/BeaconcryptCore/Computational/PqxdhRecordLiftHiding.olean",
+     "/tmp/beaconcrypt-deployment-record-world/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftHiding.lean"
+    ]
+   },
+   "module_check_log": "/tmp/bc-arc-scratch/items45/world/logs/PqxdhRecordLiftHiding-m2.log",
+   "inventory": {
+    "commit": "e0907c584493c53f3baf8a3ee1007bda78518aa9",
+    "status": "0",
+    "start": "2026-10-08T13:14:13Z",
+    "end": "2026-10-08T13:15:38Z",
+    "command": "coord.sh lease mem claude @nix items45-world-inventory-hiding --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C /tmp/beaconcrypt-deployment-record-world/beaconcrypt-core check-inventory SHELL=bash",
+    "log": "/tmp/bc-arc-scratch/items45/world/logs/inventory-hiding.log"
+   },
+   "inv_recount": "handwritten-lean count 1681 -> 1682",
+   "inv_rehash": "proofs/lean/BeaconcryptCore.lean: c15de35c7181 -> 85c63054e89c\nproofs/trusted-boundary.md: unchanged\nproofs/check-inventory.sh: e8949b4364b7 -> 6aaddf697a6b"
+  }
+ ],
+ "root_import": {
+  "start": "2026-10-08T13:13:49.842786789Z",
+  "end": "2026-10-08T13:13:52.990868729Z",
+  "exit": 0,
+  "log_bytes": 0,
+  "artifact_sha256": "94c51f652b6785c25d321699f9612e3c0b3621468917c03677742d8940bc9dfa",
+  "leanpath_sha256": "90db23f57d7307501c213c792c38619a071293fb50ca3bcf7fdd6ef078fd6531",
+  "command": [
+   "coord.sh",
+   "lean",
+   "claude",
+   "<label>",
+   "--",
+   "timeout",
+   "180",
+   "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+   "-j1",
+   "-M8000",
+   "--root=/tmp/beaconcrypt-deployment-record-world/beaconcrypt-core/proofs/lean",
+   "-o",
+   "/tmp/bc-arc-scratch/items45/world/olean/BeaconcryptCore.olean",
+   "/tmp/beaconcrypt-deployment-record-world/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+  ]
+ },
+ "leanpath": {
+  "file": "/tmp/bc-arc-scratch/items45/world/leanpath",
+  "sha256": "90db23f57d7307501c213c792c38619a071293fb50ca3bcf7fdd6ef078fd6531",
+  "first_prefix": "/tmp/bc-arc-scratch/items45/world/olean",
+  "mirror_of": "/tmp/bc-arc-scratch/items45/ctx/int/olean (first prefix of the published LEAN_PATH of central 14f51c34, root olean skipped), resolved symlinks; mirror log /tmp/bc-arc-scratch/items45/world/mirror.log"
+ },
+ "diff_check": "git diff --check clean before every commit",
+ "deviations": [
+  "Receipt and guide names: doc/impl/proof-receipts/record-lift-world.json and doc/impl/record-lift-world.md already exist (the frozen PqxdhRecordLiftWorld increment), so this track uses record-lift-world-facts.json and record-lift-world-facts.md.",
+  "Module split: the composition is PqxdhRecordLiftComposition and the hiding fact PqxdhRecordLiftHiding instead of one module PqxdhRecordLift (plan S5 D/E); the name PqxdhRecordLift is left for a final assembly once the privacy half and the remaining world facts exist.",
+  "Privacy form of record_lift: CtxPrivLiftStatement is not on central, so record_lift_of_priv takes it as a hypothesis parameter (as instructed); the mode-O record lift needs no privacy half and is proved outright (record_lift_O)."
+ ],
+ "remaining": "See doc/impl/record-lift-world-facts.md section Remaining work and takeover plan section 9.",
+ "provenance": "New Claude work; nothing adapted from Codex WIP.",
+ "commits": [
+  {
+   "commit": "7f6530654c3f620c39939018afcdb9e3f35cf426",
+   "subject": "Add the record-lift composition of record_lift"
+  },
+  {
+   "commit": "becef377326eff06a7ba5801b55a4514e25dad05",
+   "subject": "Document the record-lift composition"
+  },
+  {
+   "commit": "e0907c584493c53f3baf8a3ee1007bda78518aa9",
+   "subject": "Add the record-lift hiding proof of HidingStatement"
+  },
+  {
+   "commit": "b957b9970f9579ed54cc87be936b3e607c974429",
+   "subject": "Document the record-lift hiding proof"
+  }
+ ]
+}
