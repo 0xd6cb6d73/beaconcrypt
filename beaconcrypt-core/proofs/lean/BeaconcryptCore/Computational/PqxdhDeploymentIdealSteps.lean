@@ -7,13 +7,13 @@ import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerNative
 /-!
 # The ideal registration of the common deployment experiment and `CE.idealGame g` (CE-11b, unit U1)
 
-The ideal registration of the common deployment experiment for one target (CE-11b design-v2 section 3, unit U1) and the game `CE.idealGame g` built from it. It is pointwise in the challenger's draws `p : Params KemSK count` (route R3, `PqxdhDeploymentIdealParams`) and in a target `t` (a raw-accept ordinal and a KEM creation index), and it is a slot program (`PqxdhDeploymentIdealSlots.SlotProgram`): each registration command is a stateful client of coins and of hidden reads at item 2's 128-byte DH coordinates, which `slotCore` answers through item 2's first-touch allocator in front of a slot service. Its own backend `IdealCore` holds the raw-accept counter, the flag recording that the selected accept was active, the hidden Server session with the coordinates of its hidden read, and two ghosts that no step reads (the hidden Server install and the hidden Beacon install).
+The ideal registration of the common deployment experiment for one target (CE-11b design-v2 section 3, unit U1) and the game `CE.idealGame g` built from it. It is pointwise in the challenger's draws `p : Params KemSK count` (route R3, `PqxdhDeploymentIdealParams`) and in a target `t` (a raw-accept ordinal and a KEM creation index), and it is a slot program (`PqxdhDeploymentIdealSlots.SlotProgram`): each registration command is a stateful client of coins and of hidden reads at item 2's 128-byte DH coordinates, which `slotCore` answers through item 2's first-touch allocator in front of a slot service. Its own backend `IdealCore` holds the raw-accept counter, the flag recording that the selected accept was active, the hidden Server session with the coordinates of its hidden read, and two ghosts on which no reply and no non-ghost state depends (the hidden Server install and the hidden Beacon install; a step that sets one keeps its earlier value if there is one).
 
 - Create reads the KEM key pair of the new owner from the pool (`createPool`: `PqxdhRegistrationSchedule.create` with the KEM draw replaced by pool entry `owners.length`; beyond the pool it is the native create, `createPool_beyond`). Bundle and HMAC are the real commands (`realRegAt`, the real registration handler `PqxdhDeploymentBackend.realReg` on any backend, `realRegAt_real`; `idealProg_real`).
 - The raw accept compares the pre-increment counter with the target ordinal (`acceptStep`, `acceptStep_other`, `acceptStep_accepts`). The selected accept is `acceptExposed`: when the pure verification of the Phase 1 message yields the challenger's selected PQ key, the native steps before encapsulation run; if they reach the encapsulation the accept is active, the challenge ciphertext is sent with item 2's candidate-free suffix and the challenge marker, and item 2's marker tail runs under `tailCE`, whose challenge-marked root request reads the hidden value at the root input's coordinates, marks the session with them and returns the sentinel root. On every other Phase 1 message it is the LQ-F logged accept (`acceptExposed_logged`).
-- The build of the marked session with a pending token reads its hidden value (an allocator hit) and runs `buildHidden`, the native build with the session's response tail given by the hidden build service (`buildHidden_native`: with the native services at a root it is the native build); a published peer sets the Server install ghost. Every other build is real (`buildStep_unmarked`).
+- The build of the marked session with a pending token reads its hidden value (an allocator hit) and runs `buildHidden`, the native build with the session's response tail given by the hidden build service (`buildHidden_native`: with the native services at a root it is the native build); a published peer sets the Server install ghost. Every other build is real (`buildStep_real`): every build while no session is marked (`buildStep_unmarked`), and, once a session is marked, every build of another session and every build of the marked session without a pending token (`buildStep_other`).
 - After an active selected accept, a finish of the selected owner in the `initSent` phase runs `finishChallenge`: the owner's grouped native finish (item 2's grouped Beacon owner at the native owner type) whose preparation answers the decapsulation of exactly the challenge ciphertext with the challenge marker (`preparationCE_challenge`) and decapsulates every other ciphertext as item 2's CCA evaluation does (`preparationCE_eval`), and whose grouped request reads the hidden value at the four DH coordinates and runs the hidden continuation on a challenge marker (`groupCE`). An establishment after a hidden read sets the Beacon install ghost. Every other finish is real (`finishStep_real`).
-- `tailCE_challenge`, `groupCE_challenge` and `groupCE_known` relate the CE-native hidden steps to item 2's services skeleton under its public-table layer (`publicLocal_coins`): the challenge-marked root request and the challenge-marked grouped finish answer as `resumeTail` and `groupStep` with the factored services, on the game state without ghosts, and a known decapsulation result is item 2's native grouped answer `groupNativeN`.
+- `tailCE_challenge`, `groupCE_challenge` and `groupCE_known` relate the CE-native hidden steps to item 2's services skeleton under its public-table layer (`publicLocal_coins`): the challenge-marked root request and the challenge-marked grouped finish answer as `resumeTail` and `groupStep` with the factored services, with the same reply and the same game state without ghosts, the CE-native Extract family state (observation history and HMAC cache) and item 2's table cache both unchanged, and the CE mark or recorded coordinates matching item 2's marks (the root request leaves the whole CE-native state unchanged); a known decapsulation result is item 2's native grouped answer `groupNativeN`.
 
 `idealCore t p svc` is the slot core of `idealProg` with the factored hidden services over any slot service, `idealReg t p` is the core over item 2's persistent lazy table, and `idealGame` (`CE.idealGame g`) draws the challenger's parameters and runs the common deployment experiment `gameWith` with `idealReg` at the target of `g`, from the initial backend `idealInit` and with identity index 0. `idealCoreErased` uses the erased hidden services `erasedHidden` (the factored build and the erased finish at the split of the value), the form after C7. Both cores are natural (`idealCore_natural`, `idealCoreErased_natural`: CE-11a's `CoreNatural`, the premise of `PqxdhDeploymentSeedSplit.represent_split`). `SplitBk` and `splitInit` are the backend of the split form.
 
@@ -46,7 +46,7 @@ open PqxdhRecordLiftInterface (EnvQuery EnvSpec)
 
 /-! ### The ideal backend -/
 
-/-- The ideal registration's own backend (design-v2 section 3.1): the number of raw accepts so far (before a raw accept, the ordinal of that accept), whether the selected accept was active (it reached its encapsulation with the challenger's selected PQ key, so the challenge ciphertext was sent), the hidden Server session with the coordinates of its hidden read, and two ghosts that no step reads: the hidden Server install (key ID of the published peer and the coordinates) and the hidden Beacon install of the selected owner (the coordinates). -/
+/-- The ideal registration's own backend (design-v2 section 3.1): the number of raw accepts so far (before a raw accept, the ordinal of that accept), whether the selected accept was active (it reached its encapsulation with the challenger's selected PQ key, so the challenge ciphertext was sent), the hidden Server session with the coordinates of its hidden read, and two ghosts on which no reply and no non-ghost state depends (a step that sets one reads only its earlier value, which it keeps): the hidden Server install (key ID of the published peer and the coordinates) and the hidden Beacon install of the selected owner (the coordinates). -/
 structure IdealCore where
   accepts : ℕ
   active : Bool
@@ -373,7 +373,7 @@ end Finish
 
 /-! ### Agreement of the hidden steps with item 2's skeleton steps
 
-On the game state without ghosts and under item 2's public-table layer `PqxdhRegistrationJointKemEntryFactor.publicLocalV` (which answers the skeleton's direct reads from a lazily sampled table and forwards coins and hidden reads), the CE-native hidden steps answer as the corresponding steps of item 2's services skeleton with the factored services: the challenge-marked root request of the selected accept as `resumeTail`, and the grouped challenge finish as `groupStep`. A grouped finish with a known decapsulation result is item 2's native grouped answer `groupNativeN`, whose split against `groupStep` is item 2's `split_group`. These are the per-step facts of the post-challenge simulation (CE-11b design section 8.4). -/
+On the game state without ghosts and under item 2's public-table layer `PqxdhRegistrationJointKemEntryFactor.publicLocalV` (which answers the skeleton's direct reads from a lazily sampled table and forwards coins and hidden reads), the CE-native hidden steps answer as the corresponding steps of item 2's services skeleton with the factored services: the challenge-marked root request of the selected accept as `resumeTail`, and the grouped challenge finish as `groupStep`. Each statement is one equation of joint distributions that also keeps the components a later simulation relation needs: the CE-native Extract family state (the first component of the native state) and item 2's table cache are unchanged, and the CE mark or recorded coordinates correspond to item 2's marks. A grouped finish with a known decapsulation result is item 2's native grouped answer `groupNativeN`, whose split against `groupStep` is item 2's `split_group`. These are the per-step facts of the post-challenge simulation (CE-11b design section 8.4). -/
 
 section Skeleton
 variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response : Type}
@@ -395,14 +395,14 @@ theorem publicLocal_coins {V α : Type} (work : ProbComp α) (cache : PqxdhSecre
       refine bind_congr fun reply => ?_
       exact ih reply cache
 
-/-- The challenge-marked root request of the selected accept: `tailCE` reads the hidden value at the root input's coordinates and returns the sentinel root, as item 2's `resumeTail` with the factored services does; the game state is unchanged on both sides, the table is untouched, and the CE mark records the coordinates where item 2's mark records the value read there. -/
+/-- The challenge-marked root request of the selected accept: `tailCE` reads the hidden value at the root input's coordinates and returns the sentinel root, as item 2's `resumeTail` with the factored services does. Jointly: the replies are equal; the whole CE-native state (Extract family state and game state with its ghosts) is unchanged; item 2's game state is the CE game state without ghosts, so it is unchanged too; the CE mark records the session and the coordinates where item 2's mark records the session and the value read there; and item 2's table cache is unchanged. -/
 theorem tailCE_challenge (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (index : ℕ) (input : PqxdhRegistrationJointKemOpaqueClient.Input Reader)
     (marker : input.shared = .challenge) (native : NativeState KemSK) (recorded : Option (ℕ × Coord))
     (marks : PqxdhRegistrationJointKemPostSkeleton.Marks Output) (cache : PqxdhSecretInputKdf.HmacOracle.QueryCache) :
-    (fun r => (r.1, clean r.2.1.2, r.2.2)) <$> (tailCE (KemSK := KemSK) setup.hmac index (.inl (.inl input))).run
-        (native, recorded) =
-      (fun r => (r.1.1, r.1.2.1, (r.1.2.2).map fun mark => (mark.1, coordsOf input))) <$>
+    (fun r => (r.1, r.2.1, clean r.2.1.2, r.2.2, cache)) <$>
+        (tailCE (KemSK := KemSK) setup.hmac index (.inl (.inl input))).run (native, recorded) =
+      (fun r => (r.1.1, native, r.1.2.1, (r.1.2.2).map (fun mark => (mark.1, coordsOf input)), r.2)) <$>
         (simulateQ (publicLocalV Output)
           ((PqxdhRegistrationJointKemPostSkeleton.resumeTail (KemSK := KemSK) setup.hmac index
             (factoredServices setup codec checks) (.inl (.inl input))).run (clean native.2, marks))).run cache := by
@@ -426,19 +426,24 @@ theorem tailCE_challenge (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
   simp only [bind_map_left, map_bind, simulateQ_pure, StateT.run_pure, map_pure]
   rfl
 
-/-- The grouped finish with the challenge marker: the CE-native answer `groupCE` with the factored hidden services is item 2's grouped step `groupStep` with the factored services, under item 2's public-table layer, on the game state without ghosts: the same reply, the same game state up to its ghost, and the table untouched. -/
+/-- The grouped finish with the challenge marker: the CE-native answer `groupCE` with the factored hidden services is item 2's grouped step `groupStep` with the factored services, under item 2's public-table layer. Jointly: the replies are equal; the CE-native Extract family state is unchanged; item 2's game state is the CE game state without ghosts (the CTX cache may change, equally on both sides); the CE recorded coordinates become the four DH coordinates when the DH outputs are nonzero and are unchanged otherwise; and item 2's marks and table cache are unchanged. -/
 theorem groupCE_challenge (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (pending : Pending Response) (marker : pending.root.shared = .challenge) (native : NativeState KemSK)
     (recorded : Option Coord) (marks : PqxdhRegistrationJointKemPostSkeleton.Marks Output)
     (cache : PqxdhSecretInputKdf.HmacOracle.QueryCache) :
-    (fun r => (r.1, clean r.2.1.2)) <$>
+    (fun r => (r.1, r.2.1.1, clean r.2.1.2, r.2.2, marks, cache)) <$>
         (groupCE setup codec (factoredHidden setup codec checks) pending).run (native, recorded) =
-      (fun r => (r.1.1, r.1.2.1)) <$>
+      (fun r => (r.1.1, native.1, r.1.2.1,
+          (if Pqxdh.dhNonZero (absBytes pending.root.dh1, absBytes pending.root.dh2, absBytes pending.root.dh3,
+              absBytes pending.root.dh4) then
+            some (message pending.root.dh1 pending.root.dh2 pending.root.dh3 pending.root.dh4)
+          else recorded), r.1.2.2, r.2)) <$>
         (simulateQ (publicLocalV Output)
           ((groupStep setup codec (factoredServices setup codec checks) pending).run (clean native.2, marks))).run cache := by
   by_cases nonzero : Pqxdh.dhNonZero (absBytes pending.root.dh1, absBytes pending.root.dh2, absBytes pending.root.dh3,
       absBytes pending.root.dh4)
-  · have left : (groupCE setup codec (factoredHidden setup codec checks) pending).run (native, recorded) =
+  · simp only [nonzero, ↓reduceIte]
+    have left : (groupCE setup codec (factoredHidden setup codec checks) pending).run (native, recorded) =
         (do
           let value ← (SlotSpec.query (.inr (message pending.root.dh1 pending.root.dh2 pending.root.dh3
             pending.root.dh4)) : OracleComp SlotSpec _)
@@ -467,7 +472,8 @@ theorem groupCE_challenge (setup : Setup baseSpec KemSK) (codec : Codec Reader R
     simp only [PqxdhServerAuthNative.nativeCtx, PqxdhRegistrationJointKemPostSkeleton.ctxGame, StateT.run,
       OracleComp.liftComp_map, Functor.map_map, bind_pure_comp, map_pure]
     rfl
-  · have left : (groupCE setup codec (factoredHidden setup codec checks) pending).run (native, recorded) =
+  · simp only [nonzero, ↓reduceIte]
+    have left : (groupCE setup codec (factoredHidden setup codec checks) pending).run (native, recorded) =
         pure (none, (native, recorded)) := by
       simp only [groupCE, StateT.run, marker, nonzero, ↓reduceIte]
     have right : (groupStep setup codec (factoredServices setup codec checks) pending).run (clean native.2, marks) =
@@ -595,7 +601,7 @@ theorem acceptStep_accepts (t : Target count) (p : Params KemSK count) (created 
     obtain ⟨inner, -, rfl⟩ := member
     rfl
 
-/-- A build of a session that is not marked is the real build. -/
+/-- While no session is marked, every build is the real build. -/
 theorem buildStep_unmarked (hidden : Output → Hidden Response) (created : Created Unit) (session : ℕ)
     (payload : Option Pqxdh.Bytes) (x : XState KemSK IdealCore 2) (unmarked : x.backend.marks = none) :
     (buildStep setup codec route checks hidden created session payload).run x =
@@ -605,6 +611,31 @@ theorem buildStep_unmarked (hidden : Output → Hidden Response) (created : Crea
     | none => _) = _
   rw [unmarked]
   rfl
+
+/-- While a session is marked, a build is the real build unless it addresses the marked session and that session still has a pending token: builds of every other session, and builds of the marked session after its token is consumed. -/
+theorem buildStep_other (hidden : Output → Hidden Response) (created : Created Unit) (session : ℕ)
+    (payload : Option Pqxdh.Bytes) (x : XState KemSK IdealCore 2) (index : ℕ) (coords : Coord)
+    (marked : x.backend.marks = some (index, coords))
+    (other : ¬ (index = session ∧ (x.base.native.shared.2.pending session).isSome)) :
+    (buildStep setup codec route checks hidden created session payload).run x =
+      (onSlots (realRegAt setup codec route checks created ⟨.build session payload, trivial⟩)).run x := by
+  change (match x.backend.marks with
+    | some (index, coords) => _
+    | none => _) = _
+  rw [marked]
+  exact ite_eq_right_of_eq_false _ _ (eq_false other)
+
+/-- Every build is the real build except the build of the marked session while it has a pending token (`buildStep_unmarked` and `buildStep_other`). -/
+theorem buildStep_real (hidden : Output → Hidden Response) (created : Created Unit) (session : ℕ)
+    (payload : Option Pqxdh.Bytes) (x : XState KemSK IdealCore 2)
+    (real : ∀ index coords, x.backend.marks = some (index, coords) →
+      ¬ (index = session ∧ (x.base.native.shared.2.pending session).isSome)) :
+    (buildStep setup codec route checks hidden created session payload).run x =
+      (onSlots (realRegAt setup codec route checks created ⟨.build session payload, trivial⟩)).run x := by
+  rcases marked : x.backend.marks with _ | ⟨index, coords⟩
+  · exact buildStep_unmarked setup codec route checks hidden created session payload x marked
+  · exact buildStep_other setup codec route checks hidden created session payload x index coords marked
+      (real index coords marked)
 
 /-- A finish is the real finish unless the selected accept was active, the finish addresses the selected owner and that owner is in the `initSent` phase. -/
 theorem finishStep_real (t : Target count) (p : Params KemSK count) (hidden : Output → Hidden Response)
@@ -786,6 +817,22 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps.buildStep_unmarke
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps.buildStep_unmarked
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps.buildStep_other' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps.buildStep_other
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps.buildStep_real' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps.buildStep_real
 
 /--
 info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps.finishStep_real' depends on axioms: [propext,

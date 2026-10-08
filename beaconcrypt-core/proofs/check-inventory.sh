@@ -34319,8 +34319,8 @@ require_line_count 1 '^theorem chain_lift_terms([[:space:]]|$)' "$selected_sourc
 
 selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealSteps.lean
 require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentIdealSteps root import"
-require_line_count 17 '^theorem ' "$selected_source_module" "PqxdhDeploymentIdealSteps theorem inventory"
-require_line_count 17 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentIdealSteps guarded dependencies"
+require_line_count 19 '^theorem ' "$selected_source_module" "PqxdhDeploymentIdealSteps theorem inventory"
+require_line_count 19 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentIdealSteps guarded dependencies"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSteps\.realRegAt_real$' "$selected_source_module" "PqxdhDeploymentIdealSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps.realRegAt_real"
 require_line_count 1 '^theorem realRegAt_real([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSteps theorem realRegAt_real"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSteps\.createPool_beyond$' "$selected_source_module" "PqxdhDeploymentIdealSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps.createPool_beyond"
@@ -34347,6 +34347,10 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem acceptStep_accepts([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSteps theorem acceptStep_accepts"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSteps\.buildStep_unmarked$' "$selected_source_module" "PqxdhDeploymentIdealSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps.buildStep_unmarked"
 require_line_count 1 '^theorem buildStep_unmarked([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSteps theorem buildStep_unmarked"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSteps\.buildStep_other$' "$selected_source_module" "PqxdhDeploymentIdealSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps.buildStep_other"
+require_line_count 1 '^theorem buildStep_other([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSteps theorem buildStep_other"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSteps\.buildStep_real$' "$selected_source_module" "PqxdhDeploymentIdealSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps.buildStep_real"
+require_line_count 1 '^theorem buildStep_real([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSteps theorem buildStep_real"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSteps\.finishStep_real$' "$selected_source_module" "PqxdhDeploymentIdealSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps.finishStep_real"
 require_line_count 1 '^theorem finishStep_real([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSteps theorem finishStep_real"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSteps\.idealProg_real$' "$selected_source_module" "PqxdhDeploymentIdealSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps.idealProg_real"
