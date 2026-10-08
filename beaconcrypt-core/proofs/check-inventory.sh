@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1668
+	[handwritten-lean]=1669
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -34189,6 +34189,27 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecord
 require_line_count 1 '^theorem seedObserver_total([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainBills theorem seedObserver_total"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainBills\.observerAt_total$' "$selected_source_module" "PqxdhRecordLiftChainBills dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainBills.observerAt_total"
 require_line_count 1 '^theorem observerAt_total([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainBills theorem observerAt_total"
+
+# Items 4/5, stage S3 (chain track C3, decision D3): structural reasons for zero aliasing and refusal terms of the chain lift.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChainAlias.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRecordLiftChainAlias$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftChainAlias root import"
+require_line_count 7 '^theorem ' "$selected_source_module" "PqxdhRecordLiftChainAlias theorem inventory"
+require_line_count 7 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftChainAlias guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainAlias\.hops_injective$' "$selected_source_module" "PqxdhRecordLiftChainAlias dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainAlias.hops_injective"
+require_line_count 1 '^theorem hops_injective([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainAlias theorem hops_injective"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainAlias\.adjacent_agree$' "$selected_source_module" "PqxdhRecordLiftChainAlias dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainAlias.adjacent_agree"
+require_line_count 1 '^theorem adjacent_agree([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainAlias theorem adjacent_agree"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainAlias\.adjacent_query$' "$selected_source_module" "PqxdhRecordLiftChainAlias dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainAlias.adjacent_query"
+require_line_count 1 '^theorem adjacent_query([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainAlias theorem adjacent_query"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainAlias\.kernel_total$' "$selected_source_module" "PqxdhRecordLiftChainAlias dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainAlias.kernel_total"
+require_line_count 1 '^theorem kernel_total([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainAlias theorem kernel_total"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainAlias\.installServer_admission$' "$selected_source_module" "PqxdhRecordLiftChainAlias dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainAlias.installServer_admission"
+require_line_count 1 '^theorem installServer_admission([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainAlias theorem installServer_admission"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainAlias\.installBeacon_admission$' "$selected_source_module" "PqxdhRecordLiftChainAlias dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainAlias.installBeacon_admission"
+require_line_count 1 '^theorem installBeacon_admission([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainAlias theorem installBeacon_admission"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainAlias\.statement_of_target$' "$selected_source_module" "PqxdhRecordLiftChainAlias dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainAlias.statement_of_target"
+require_line_count 1 '^theorem statement_of_target([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainAlias theorem statement_of_target"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
