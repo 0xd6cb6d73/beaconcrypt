@@ -1,0 +1,343 @@
+{
+  "component": "PqxdhRecordLiftMaskedReads",
+  "status": "All32 statements and final publication metadata independently approved; all focused checks passed; ready for topic commit and publication",
+  "base_commit": "df84f3c684a0e7e80726d76212646adc9aadb305",
+  "topic_branch": "codex/record-lift-masked-reads",
+  "date_utc": "2026-10-08T00:06:22.370131+00:00",
+  "source_theorems": 32,
+  "exact_axiom_guards": 32,
+  "allowed_axioms": [
+    "propext",
+    "Classical.choice",
+    "Quot.sound"
+  ],
+  "seed_parts_axioms": [
+    "Quot.sound"
+  ],
+  "handwritten_lean_count": 1590,
+  "manifest_rows": 2010,
+  "files": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftMaskedReads.lean": "6f7242e4b48ff97bec42a3796f108ab0dca75895051799dbdfe941655b49607f",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "3d0e2966c3023f3c3233901ab5954d5631d97c864ccbc59157d3be1b07227c6e",
+    "beaconcrypt-core/proofs/check-inventory.sh": "a448c1c81e8a1582a6fa47025f17e0fc522489adf4a9f874078cf6776ea48b31",
+    "beaconcrypt-core/proofs/reviewed-inventory.txt": "71523bd9980bf72ad3476327c4603dfc4498dd375c899dd754375a435fea16fa",
+    "doc/impl/record-lift-masked-reads.md": "930e74f9dc8f0408feae6bca3af7ad9e03a77308254dbdf361789157e13bb54d",
+    "doc/formal-verification-analysis.md": "b6bcefc44a485eac296d316c7b7b75563dfaa6db7c126ebe3ac1b116c67221b0"
+  },
+  "checks": {
+    "module": {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/masked-reads/publication/logs/module.json",
+      "receipt_sha256": "0773e120ccbca723016426fc9fb56c95644a25c28c5bfeaedc964c6db04b2339",
+      "start": "2026-10-08T00:04:54.772257+00:00",
+      "end": "2026-10-08T00:04:59.363224+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "masked-reads-final-publication-module",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-masked-reads/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/masked-reads/publication/olean/BeaconcryptCore/Computational/PqxdhRecordLiftMaskedReads.olean",
+        "/tmp/beaconcrypt-record-lift-masked-reads/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftMaskedReads.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/masked-reads/publication/logs/module.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "leanpath_sha256": "4f848e386cbabe9f7864e04569697d3f94943aa239dc061d0c01793fec778626",
+      "source_sha256": "6f7242e4b48ff97bec42a3796f108ab0dca75895051799dbdfe941655b49607f",
+      "artifact_sha256": "fe74f09658897284897661fab774d44eef1ba7aa7bf0070d41d184f7963298eb",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    "root": {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/masked-reads/publication/logs/root.json",
+      "receipt_sha256": "2f5753e7e8a7a9c6cb0426ca6aef1e1b8856642ecdb68f065e498f639932153a",
+      "start": "2026-10-08T00:05:02.377769+00:00",
+      "end": "2026-10-08T00:05:05.571195+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "masked-reads-final-publication-root",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-masked-reads/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/masked-reads/publication/olean/BeaconcryptCore.olean",
+        "/tmp/beaconcrypt-record-lift-masked-reads/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/masked-reads/publication/logs/root.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "leanpath_sha256": "4f848e386cbabe9f7864e04569697d3f94943aa239dc061d0c01793fec778626",
+      "source_sha256": "3d0e2966c3023f3c3233901ab5954d5631d97c864ccbc59157d3be1b07227c6e",
+      "artifact_sha256": "62153f610db7af50920ed02dcb9f0b86e89b19dafb969da5eac8bfb0ed43030d",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    "inventory": {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/masked-reads/publication/logs/inventory.json",
+      "receipt_sha256": "0d45f790cbc69943741ecdf3be3af3b44d69bfbf051393287934e9a941b1ebc8",
+      "start": "2026-10-08T00:05:02.377359+00:00",
+      "end": "2026-10-08T00:06:19.737999+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lease",
+        "mem",
+        "codex",
+        "@nix",
+        "masked-reads-final-inventory",
+        "--eta",
+        "20m",
+        "--",
+        "nix",
+        "develop",
+        "--no-update-lock-file",
+        "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+        "-c",
+        "make",
+        "-C",
+        "/tmp/beaconcrypt-record-lift-masked-reads/beaconcrypt-core",
+        "check-inventory",
+        "SHELL=bash"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/masked-reads/publication/logs/inventory.log",
+      "log_sha256": "2a0774bd84c3ec5843de2d4a7d951ba30926437b1e99b3fa71a7444d14609b77",
+      "leanpath_sha256": "4f848e386cbabe9f7864e04569697d3f94943aa239dc061d0c01793fec778626",
+      "source_sha256": null,
+      "artifact_sha256": null,
+      "CARGO_BUILD_JOBS": "2",
+      "CARGO_TARGET_DIR": "/tmp/bc-arc-scratch/record-lift/masked-reads/publication/target"
+    },
+    "fidelity": {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/masked-reads/publication/logs/fidelity.json",
+      "receipt_sha256": "d27670d6413050d886f9d61e7c30da46d5f19ec75975a6a7f7bf47b8fa53da00",
+      "start": "2026-10-08T00:05:02.377454+00:00",
+      "end": "2026-10-08T00:05:26.482203+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lease",
+        "mem",
+        "codex",
+        "@cargo",
+        "masked-reads-final-fidelity",
+        "--eta",
+        "20m",
+        "--",
+        "nix",
+        "develop",
+        "--no-update-lock-file",
+        "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+        "-c",
+        "make",
+        "-C",
+        "/tmp/beaconcrypt-record-lift-masked-reads/beaconcrypt-core",
+        "check-proverif-transcript-fidelity",
+        "SHELL=bash"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/masked-reads/publication/logs/fidelity.log",
+      "log_sha256": "aa635bea01e47e35edb1ba3aeb92baa0d8de92c5aef9469750b611babcf58937",
+      "leanpath_sha256": "4f848e386cbabe9f7864e04569697d3f94943aa239dc061d0c01793fec778626",
+      "source_sha256": null,
+      "artifact_sha256": null,
+      "CARGO_BUILD_JOBS": "2",
+      "CARGO_TARGET_DIR": "/tmp/bc-arc-scratch/record-lift/masked-reads/publication/target"
+    }
+  },
+  "dependencies": {
+    "base": "df84f3c684a0e7e80726d76212646adc9aadb305",
+    "published_leanpath": "/tmp/bc-coord/leanpaths/df84f3c684a0e7e80726d76212646adc9aadb305.leanpath",
+    "published_leanpath_sha256": "9df105afc5f6ff16334c5722c05a48f46afac11cf717400fb6c27f1d4cfa7aa8",
+    "own_leanpath": "/tmp/bc-arc-scratch/record-lift/masked-reads/publication/leanpath",
+    "own_leanpath_sha256": "4f848e386cbabe9f7864e04569697d3f94943aa239dc061d0c01793fec778626",
+    "symlinked_artifacts": 3854,
+    "own_module_and_root_outputs_are_not_symlinks": true
+  },
+  "mirror_receipt": {
+    "path": "/tmp/bc-arc-scratch/record-lift/masked-reads/publication/mirror.json",
+    "sha256": "2c6fea84c6b1d2023504b0a8c86a22aa6ba094b1d70625621c7336daba344655"
+  },
+  "review": {
+    "semantic": {
+      "path": "/tmp/bc-arc-scratch/record-lift/reviews/masked-reads-semantic-2026-10-08.json",
+      "sha256": "36791c962e486bdc17c50f9cfbff388b7af46016021eff296e9de7f91022b406",
+      "receipt": {
+        "reviewer": "/root/record_lazy_table",
+        "author": "/root/record_seed_boundary",
+        "date_utc": "2026-10-08T00:05:11.635693+00:00",
+        "result": "APPROVE semantic scope; no findings",
+        "files_sha256": {
+          "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftMaskedReads.lean": "6f7242e4b48ff97bec42a3796f108ab0dca75895051799dbdfe941655b49607f",
+          "doc/impl/record-lift-masked-reads.md": "488049f63e3c74246cebfe65a23f74f156807cf03a4d2dd542d784ef438ad21d"
+        },
+        "theorems": [
+          "key_parts",
+          "chain_parts",
+          "realize_reads",
+          "chain_read",
+          "reads_iff_successor",
+          "chain_next_read",
+          "chain_key_read",
+          "material_read",
+          "material_chain_read",
+          "material_key_read",
+          "material_nonce",
+          "receive_request_read",
+          "send_request_read",
+          "opening_key_read",
+          "opening_chain_read",
+          "seal_key_read",
+          "seal_chain_read",
+          "opening_nonce",
+          "seed_parts",
+          "seed_realize_replace",
+          "seed_read",
+          "seed_chain_read",
+          "receive_open_reads",
+          "receive_open_chain_invariant",
+          "receive_open_seeds",
+          "send_seal_reads",
+          "send_seal_chain_invariant",
+          "send_seal_seeds",
+          "chain_key_invariant",
+          "chain_successor_read",
+          "seed_receive_request",
+          "seed_send_request"
+        ],
+        "exact_guards": 32,
+        "check": {
+          "start": "2026-10-07T23:59:59.428024+00:00",
+          "end": "2026-10-08T00:00:04.055749+00:00",
+          "exit": 0,
+          "command": [
+            "/tmp/bc-coord/coord.sh",
+            "lean",
+            "codex",
+            "masked-reads-235959428024",
+            "--",
+            "timeout",
+            "180",
+            "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+            "-j1",
+            "-M8000",
+            "--root=/tmp/beaconcrypt-record-lift-masked-reads/beaconcrypt-core/proofs/lean",
+            "-o",
+            "/tmp/bc-arc-scratch/record-lift/masked-reads/f7-olean/BeaconcryptCore/Computational/PqxdhRecordLiftMaskedReads.olean",
+            "/tmp/beaconcrypt-record-lift-masked-reads/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftMaskedReads.lean"
+          ],
+          "source_sha256": "6f7242e4b48ff97bec42a3796f108ab0dca75895051799dbdfe941655b49607f",
+          "artifact_sha256": "fe74f09658897284897661fab774d44eef1ba7aa7bf0070d41d184f7963298eb",
+          "leanpath_sha256": "7ccb06ee4a926889546aee64a1c2769762a3fea5692a1d0b6d3edf9b421b832e",
+          "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "log": "/tmp/bc-arc-scratch/record-lift/masked-reads/logs/masked-reads-235959428024.log"
+        },
+        "snapshot_receipt": {
+          "path": "/tmp/bc-arc-scratch/record-lift/masked-reads/review-snapshot/receipt.json",
+          "sha256": "0d8953b42c0d699c43f896988151538886fdb9f0337c439d4cfb4356d5caa2d5"
+        },
+        "findings": [],
+        "reviewed": [
+          "Read all32 statements/proofs and guide against MaterialTable, ProjectionCut, SeedCut and NativeAdapters. Exact deterministic source getters and complete optional callback effects are retained.",
+          "Projection replacement keeps full cached payload correlations, other table entries and counters. Key replacement changes material only at structural equality; chain32 replacement changes exact predecessor reads. No independent-key or byte-injectivity premise.",
+          "Unconditional Reads selector handles Nat subtraction; only-successor corollary requires both source lower bounds and explicitly excludes the invalid false-direction position-zero predecessor case.",
+          "Actual cached/target opening RustM and core Option getters are preserved; whole native opening congruence retains complete primitive state and reply without requiring private rollback-kernel equality. Sealing congruence retains actual writer effects including None.",
+          "Seed replacement follows both actual role/direction orientations, changes precisely selected seed cache, retains equal bookkeeping/uniform increment, and separately allows returned role kernel to change. Fixed-table read equations make no descendant KDF-consistency claim.",
+          "No global reachable target-free observer, secrecy advantage or query reduction is claimed. No H7 direct references, primitive implementation proof, snapshot/persistence claim, placeholder/custom axiom or disabled gate. All32 exact guards and author source/artifact/log/LEAN_PATH provenance independently verified."
+        ],
+        "limitations": [
+          "Operational locality only; global masked client, interpreter and cryptographic reduction remain downstream.",
+          "Publication metadata/root/inventory/fidelity require separate hygiene review."
+        ],
+        "reviewer_actions": "Read-only source review and hash verification; no author source edits or builds."
+      }
+    },
+    "guide_validation_status_only": {
+      "reviewed_sha256": "488049f63e3c74246cebfe65a23f74f156807cf03a4d2dd542d784ef438ad21d",
+      "current_sha256": "930e74f9dc8f0408feae6bca3af7ad9e03a77308254dbdf361789157e13bb54d",
+      "change": "Only final validation/status paragraph updated after successful checks; semantic exposition unchanged."
+    },
+    "publication_hygiene": {
+      "path": "/tmp/bc-arc-scratch/record-lift/reviews/masked-reads-publication-hygiene-2026-10-08.json",
+      "sha256": "bec892214a01f1aa19c7308c95a91955e58725dcc1a57887312f269da32f0ec9",
+      "receipt": {
+        "reviewer": "/root",
+        "author": "/root/record_seed_boundary",
+        "date_utc": "2026-10-08T00:07:30.029956+00:00",
+        "result": "APPROVE publication hygiene; no findings",
+        "package_receipt_sha256": "4eed4b718dc54db13fa42a5faa96c2360a0692ca04713ff106b88585a36732db",
+        "files_sha256": {
+          "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftMaskedReads.lean": "6f7242e4b48ff97bec42a3796f108ab0dca75895051799dbdfe941655b49607f",
+          "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "3d0e2966c3023f3c3233901ab5954d5631d97c864ccbc59157d3be1b07227c6e",
+          "beaconcrypt-core/proofs/check-inventory.sh": "a448c1c81e8a1582a6fa47025f17e0fc522489adf4a9f874078cf6776ea48b31",
+          "beaconcrypt-core/proofs/reviewed-inventory.txt": "71523bd9980bf72ad3476327c4603dfc4498dd375c899dd754375a435fea16fa",
+          "doc/impl/record-lift-masked-reads.md": "930e74f9dc8f0408feae6bca3af7ad9e03a77308254dbdf361789157e13bb54d",
+          "doc/formal-verification-analysis.md": "b6bcefc44a485eac296d316c7b7b75563dfaa6db7c126ebe3ac1b116c67221b0"
+        },
+        "theorems": 32,
+        "manifest_rows": 2010,
+        "handwritten_count": 1590,
+        "findings": [],
+        "verified": [
+          "All2010 inventory digests independently verified, 1590 handwritten count,32exact theorem/guard pairs and metadata gates, one root import, shared Codex anchors only.",
+          "Four successful focused check receipt/log/path/source/artifact hashes match, including exact pinned module artifact;20Python+30Rust fidelity.",
+          "Source unchanged from independent semantic review36791c96; only guide validation paragraph changed. Semantic scope and plain-English analysis match deterministic read locality, complete optional callback effects and explicit source lower-bound domain.",
+          "Complete seeds/table/counters and retained32/44 correlations are respected. Seed replacement does not assert unchanged returned role kernel or descendant source consistency; native callback equality does not imply equal rollback kernel or whole-state execution.",
+          "No new security/independence/reachability/byte-injectivity premise, primitive implementation proof, Rust or frozen-module change; downstream masked simulator and global composition remain explicit."
+        ],
+        "limitations": [
+          "No evolving masked client or interpreter is constructed here.",
+          "No global reachability, label provenance or whole observer noninterference theorem.",
+          "No real-HKDF replacement, byte injectivity/freshness assumption or cryptographic bound.",
+          "Fixed descendant table under changed seed is not claimed to satisfy real-HKDF consistency.",
+          "Private pending rollback kernels and subsequent source publication are not equated by the callback results."
+        ],
+        "semantic_review_sha256": "36791c962e486bdc17c50f9cfbff388b7af46016021eff296e9de7f91022b406"
+      }
+    }
+  },
+  "development_snapshot": {
+    "path": "/tmp/bc-arc-scratch/record-lift/masked-reads/review-snapshot",
+    "receipt_sha256": "0d8953b42c0d699c43f896988151538886fdb9f0337c439d4cfb4356d5caa2d5",
+    "status": "Pinned immutable source and artifact used read-only by downstream development; final publication module artifact matches."
+  },
+  "scope": {
+    "projection": "Exact one-coordinate full76 replacement; retained44, all other cache entries and complete counters preserved",
+    "chain": "Unconditional source predecessor selector; unique successor only under existing source directional lower bounds",
+    "key": "Only selected coordinate material key changes; all chain inputs and material nonces agree",
+    "seed": "Actual SeedCut realized World differs only at selected seed entry; opposite32, complete counters/cache/owners retained; returned role kernel may change",
+    "callbacks": "Whole actual NativeAdapters opening/sealing computations from exact source getter/context equality, preserving optional replies and complete primitive state"
+  },
+  "limitations": [
+    "No evolving masked client or interpreter is constructed here.",
+    "No global reachability, label provenance or whole observer noninterference theorem.",
+    "No real-HKDF replacement, byte injectivity/freshness assumption or cryptographic bound.",
+    "Fixed descendant table under changed seed is not claimed to satisfy real-HKDF consistency.",
+    "Private pending rollback kernels and subsequent source publication are not equated by the callback results."
+  ],
+  "hygiene": {
+    "H7_direct_names": [],
+    "placeholders_or_custom_axioms": [],
+    "exact32_source_guard_gate_pairs": true,
+    "git_diff_check": "passed",
+    "production_source_changed": false,
+    "frozen_modules_changed": false
+  },
+  "publication": {
+    "committed": false,
+    "pushed": false,
+    "integrated": false,
+    "authorization": "Parent final hygiene approval; topic commit/push with exact footer and three-hash verification; parent coordinates central integration."
+  }
+}
