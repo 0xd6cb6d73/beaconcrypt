@@ -1802,6 +1802,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps
 
 import BeaconcryptCore.Computational.PqxdhDeploymentIdealPool
 
+import BeaconcryptCore.Computational.PqxdhDeploymentIdealPoolSource
+
 /-!
 # Beaconcrypt-core verification root
 

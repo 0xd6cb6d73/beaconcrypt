@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1675
+	[handwritten-lean]=1676
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -34388,6 +34388,67 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem good_step_pool([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPool theorem good_step_pool"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPool\.compile_native_pool$' "$selected_source_module" "PqxdhDeploymentIdealPool dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPool.compile_native_pool"
 require_line_count 1 '^theorem compile_native_pool([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPool theorem compile_native_pool"
+
+# CE-11b unit U5: route P-a third layer, the source side of the prefix at the challenger's pool.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPoolSource.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentIdealPoolSource$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentIdealPoolSource root import"
+require_line_count 27 '^theorem ' "$selected_source_module" "PqxdhDeploymentIdealPoolSource theorem inventory"
+require_line_count 27 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentIdealPoolSource guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPoolSource\.createPool_install$' "$selected_source_module" "PqxdhDeploymentIdealPoolSource dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPoolSource.createPool_install"
+require_line_count 1 '^theorem createPool_install([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPoolSource theorem createPool_install"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPoolSource\.createSourcePool_native$' "$selected_source_module" "PqxdhDeploymentIdealPoolSource dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPoolSource.createSourcePool_native"
+require_line_count 1 '^theorem createSourcePool_native([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPoolSource theorem createSourcePool_native"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPoolSource\.sourcePool_native$' "$selected_source_module" "PqxdhDeploymentIdealPoolSource dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPoolSource.sourcePool_native"
+require_line_count 1 '^theorem sourcePool_native([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPoolSource theorem sourcePool_native"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPoolSource\.programPool_native$' "$selected_source_module" "PqxdhDeploymentIdealPoolSource dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPoolSource.programPool_native"
+require_line_count 1 '^theorem programPool_native([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPoolSource theorem programPool_native"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPoolSource\.isCreate_class$' "$selected_source_module" "PqxdhDeploymentIdealPoolSource dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPoolSource.isCreate_class"
+require_line_count 1 '^theorem isCreate_class([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPoolSource theorem isCreate_class"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPoolSource\.reserved_agree$' "$selected_source_module" "PqxdhDeploymentIdealPoolSource dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPoolSource.reserved_agree"
+require_line_count 1 '^theorem reserved_agree([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPoolSource theorem reserved_agree"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPoolSource\.reserved_noCreate$' "$selected_source_module" "PqxdhDeploymentIdealPoolSource dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPoolSource.reserved_noCreate"
+require_line_count 1 '^theorem reserved_noCreate([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPoolSource theorem reserved_noCreate"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPoolSource\.coins_reserved$' "$selected_source_module" "PqxdhDeploymentIdealPoolSource dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPoolSource.coins_reserved"
+require_line_count 1 '^theorem coins_reserved([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPoolSource theorem coins_reserved"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPoolSource\.client_reserved$' "$selected_source_module" "PqxdhDeploymentIdealPoolSource dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPoolSource.client_reserved"
+require_line_count 1 '^theorem client_reserved([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPoolSource theorem client_reserved"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPoolSource\.executeWith_impl$' "$selected_source_module" "PqxdhDeploymentIdealPoolSource dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPoolSource.executeWith_impl"
+require_line_count 1 '^theorem executeWith_impl([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPoolSource theorem executeWith_impl"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPoolSource\.executeWith_bind$' "$selected_source_module" "PqxdhDeploymentIdealPoolSource dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPoolSource.executeWith_bind"
+require_line_count 1 '^theorem executeWith_bind([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPoolSource theorem executeWith_bind"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPoolSource\.executeWith_noCreate$' "$selected_source_module" "PqxdhDeploymentIdealPoolSource dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPoolSource.executeWith_noCreate"
+require_line_count 1 '^theorem executeWith_noCreate([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPoolSource theorem executeWith_noCreate"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPoolSource\.client_noCreate$' "$selected_source_module" "PqxdhDeploymentIdealPoolSource dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPoolSource.client_noCreate"
+require_line_count 1 '^theorem client_noCreate([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPoolSource theorem client_noCreate"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPoolSource\.compile_poolLift$' "$selected_source_module" "PqxdhDeploymentIdealPoolSource dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPoolSource.compile_poolLift"
+require_line_count 1 '^theorem compile_poolLift([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPoolSource theorem compile_poolLift"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPoolSource\.compile_create$' "$selected_source_module" "PqxdhDeploymentIdealPoolSource dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPoolSource.compile_create"
+require_line_count 1 '^theorem compile_create([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPoolSource theorem compile_create"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPoolSource\.create_reserved$' "$selected_source_module" "PqxdhDeploymentIdealPoolSource dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPoolSource.create_reserved"
+require_line_count 1 '^theorem create_reserved([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPoolSource theorem create_reserved"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPoolSource\.source_counts$' "$selected_source_module" "PqxdhDeploymentIdealPoolSource dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPoolSource.source_counts"
+require_line_count 1 '^theorem source_counts([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPoolSource theorem source_counts"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPoolSource\.query_poolOwned$' "$selected_source_module" "PqxdhDeploymentIdealPoolSource dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPoolSource.query_poolOwned"
+require_line_count 1 '^theorem query_poolOwned([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPoolSource theorem query_poolOwned"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPoolSource\.query_reserved$' "$selected_source_module" "PqxdhDeploymentIdealPoolSource dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPoolSource.query_reserved"
+require_line_count 1 '^theorem query_reserved([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPoolSource theorem query_reserved"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPoolSource\.program_reserved$' "$selected_source_module" "PqxdhDeploymentIdealPoolSource dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPoolSource.program_reserved"
+require_line_count 1 '^theorem program_reserved([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPoolSource theorem program_reserved"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPoolSource\.empty_prefix$' "$selected_source_module" "PqxdhDeploymentIdealPoolSource dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPoolSource.empty_prefix"
+require_line_count 1 '^theorem empty_prefix([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPoolSource theorem empty_prefix"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPoolSource\.stopped_step$' "$selected_source_module" "PqxdhDeploymentIdealPoolSource dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPoolSource.stopped_step"
+require_line_count 1 '^theorem stopped_step([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPoolSource theorem stopped_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPoolSource\.reserved_step_prefix$' "$selected_source_module" "PqxdhDeploymentIdealPoolSource dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPoolSource.reserved_step_prefix"
+require_line_count 1 '^theorem reserved_step_prefix([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPoolSource theorem reserved_step_prefix"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPoolSource\.stopped_program$' "$selected_source_module" "PqxdhDeploymentIdealPoolSource dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPoolSource.stopped_program"
+require_line_count 1 '^theorem stopped_program([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPoolSource theorem stopped_program"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPoolSource\.reserved_program_prefix$' "$selected_source_module" "PqxdhDeploymentIdealPoolSource dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPoolSource.reserved_program_prefix"
+require_line_count 1 '^theorem reserved_program_prefix([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPoolSource theorem reserved_program_prefix"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPoolSource\.kemCommands_reserved$' "$selected_source_module" "PqxdhDeploymentIdealPoolSource dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPoolSource.kemCommands_reserved"
+require_line_count 1 '^theorem kemCommands_reserved([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPoolSource theorem kemCommands_reserved"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPoolSource\.kemCommands_stopped$' "$selected_source_module" "PqxdhDeploymentIdealPoolSource dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPoolSource.kemCommands_stopped"
+require_line_count 1 '^theorem kemCommands_stopped([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPoolSource theorem kemCommands_stopped"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
