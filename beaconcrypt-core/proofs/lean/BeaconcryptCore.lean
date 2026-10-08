@@ -1836,6 +1836,8 @@ import BeaconcryptCore.Computational.PqxdhRecordLiftLaterWorlds
 
 import BeaconcryptCore.Computational.PqxdhRecordLiftLaterTargets
 
+import BeaconcryptCore.Computational.PqxdhRecordLiftLaterChain
+
 /-!
 # Beaconcrypt-core verification root
 

@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1692
+	[handwritten-lean]=1693
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -35511,6 +35511,55 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecord
 require_line_count 1 '^theorem laterHiding_advantage([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterTargets theorem laterHiding_advantage"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterTargets\.laterHiding_event$' "$selected_source_module" "PqxdhRecordLiftLaterTargets dependency laterHiding_event"
 require_line_count 1 '^theorem laterHiding_event([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterTargets theorem laterHiding_event"
+
+# record-lift later chain_lift: chain hybrid of an arbitrary World client (terminal, seed and parent cuts, hop, telescope, observer bills), later program bills with PostBudget, LaterChainLiftTarget (items 4/5, S6, R6)
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftLaterChain.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterChain$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftLaterChain root import"
+require_line_count 21 '^theorem ' "$selected_source_module" "PqxdhRecordLiftLaterChain theorem inventory"
+require_line_count 21 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftLaterChain guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterChain\.chainsOf_factor$' "$selected_source_module" "PqxdhRecordLiftLaterChain dependency chainsOf_factor"
+require_line_count 1 '^theorem chainsOf_factor([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterChain theorem chainsOf_factor"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterChain\.chainsOf_bounds$' "$selected_source_module" "PqxdhRecordLiftLaterChain dependency chainsOf_bounds"
+require_line_count 1 '^theorem chainsOf_bounds([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterChain theorem chainsOf_bounds"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterChain\.chainsOf_good$' "$selected_source_module" "PqxdhRecordLiftLaterChain dependency chainsOf_good"
+require_line_count 1 '^theorem chainsOf_good([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterChain theorem chainsOf_good"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterChain\.terminal_safe_of$' "$selected_source_module" "PqxdhRecordLiftLaterChain dependency terminal_safe_of"
+require_line_count 1 '^theorem terminal_safe_of([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterChain theorem terminal_safe_of"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterChain\.chainsOf_terminal$' "$selected_source_module" "PqxdhRecordLiftLaterChain dependency chainsOf_terminal"
+require_line_count 1 '^theorem chainsOf_terminal([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterChain theorem chainsOf_terminal"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterChain\.scan_absent_of$' "$selected_source_module" "PqxdhRecordLiftLaterChain dependency scan_absent_of"
+require_line_count 1 '^theorem scan_absent_of([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterChain theorem scan_absent_of"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterChain\.seed_prefix_of$' "$selected_source_module" "PqxdhRecordLiftLaterChain dependency seed_prefix_of"
+require_line_count 1 '^theorem seed_prefix_of([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterChain theorem seed_prefix_of"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterChain\.uniform_policy_of$' "$selected_source_module" "PqxdhRecordLiftLaterChain dependency uniform_policy_of"
+require_line_count 1 '^theorem uniform_policy_of([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterChain theorem uniform_policy_of"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterChain\.childUniform_policy_of$' "$selected_source_module" "PqxdhRecordLiftLaterChain dependency childUniform_policy_of"
+require_line_count 1 '^theorem childUniform_policy_of([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterChain theorem childUniform_policy_of"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterChain\.hop_bound_of$' "$selected_source_module" "PqxdhRecordLiftLaterChain dependency hop_bound_of"
+require_line_count 1 '^theorem hop_bound_of([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterChain theorem hop_bound_of"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterChain\.chain_loss_of$' "$selected_source_module" "PqxdhRecordLiftLaterChain dependency chain_loss_of"
+require_line_count 1 '^theorem chain_loss_of([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterChain theorem chain_loss_of"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterChain\.parentObserver_total_of$' "$selected_source_module" "PqxdhRecordLiftLaterChain dependency parentObserver_total_of"
+require_line_count 1 '^theorem parentObserver_total_of([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterChain theorem parentObserver_total_of"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterChain\.seedObserver_total_of$' "$selected_source_module" "PqxdhRecordLiftLaterChain dependency seedObserver_total_of"
+require_line_count 1 '^theorem seedObserver_total_of([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterChain theorem seedObserver_total_of"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterChain\.observerOf_total$' "$selected_source_module" "PqxdhRecordLiftLaterChain dependency observerOf_total"
+require_line_count 1 '^theorem observerOf_total([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterChain theorem observerOf_total"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterChain\.later_interface_weighted$' "$selected_source_module" "PqxdhRecordLiftLaterChain dependency later_interface_weighted"
+require_line_count 1 '^theorem later_interface_weighted([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterChain theorem later_interface_weighted"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterChain\.later_weighted$' "$selected_source_module" "PqxdhRecordLiftLaterChain dependency later_weighted"
+require_line_count 1 '^theorem later_weighted([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterChain theorem later_weighted"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterChain\.laterProgramCoins_closed$' "$selected_source_module" "PqxdhRecordLiftLaterChain dependency laterProgramCoins_closed"
+require_line_count 1 '^theorem laterProgramCoins_closed([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterChain theorem laterProgramCoins_closed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterChain\.later_coins$' "$selected_source_module" "PqxdhRecordLiftLaterChain dependency later_coins"
+require_line_count 1 '^theorem later_coins([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterChain theorem later_coins"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterChain\.laterObserverBill_closed$' "$selected_source_module" "PqxdhRecordLiftLaterChain dependency laterObserverBill_closed"
+require_line_count 1 '^theorem laterObserverBill_closed([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterChain theorem laterObserverBill_closed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterChain\.later_chain_lift_bool$' "$selected_source_module" "PqxdhRecordLiftLaterChain dependency later_chain_lift_bool"
+require_line_count 1 '^theorem later_chain_lift_bool([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterChain theorem later_chain_lift_bool"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterChain\.later_chain_lift$' "$selected_source_module" "PqxdhRecordLiftLaterChain dependency later_chain_lift"
+require_line_count 1 '^theorem later_chain_lift([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterChain theorem later_chain_lift"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
