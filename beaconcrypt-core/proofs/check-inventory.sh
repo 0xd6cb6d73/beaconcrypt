@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1684
+	[handwritten-lean]=1685
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -35033,6 +35033,65 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecord
 require_line_count 1 '^theorem ctxPrivLiftBool_of_billed([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPriv theorem ctxPrivLiftBool_of_billed"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPriv\.ctxPrivLiftStatement_of_billed$' "$selected_source_module" "PqxdhRecordLiftCtxPriv dependency ctxPrivLiftStatement_of_billed"
 require_line_count 1 '^theorem ctxPrivLiftStatement_of_billed([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPriv theorem ctxPrivLiftStatement_of_billed"
+
+# record-lift CTX privacy bills: explicit privBills, StepBilled, CtxPrivLiftStatement (items 4/5, S4 privacy half)
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPrivBills.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPrivBills$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftCtxPrivBills root import"
+require_line_count 26 '^theorem ' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills theorem inventory"
+require_line_count 26 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPrivBills\.bytesSample_total$' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills dependency bytesSample_total"
+require_line_count 1 '^theorem bytesSample_total([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills theorem bytesSample_total"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPrivBills\.seal_hash$' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills dependency seal_hash"
+require_line_count 1 '^theorem seal_hash([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills theorem seal_hash"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPrivBills\.seal_uniform$' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills dependency seal_uniform"
+require_line_count 1 '^theorem seal_uniform([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills theorem seal_uniform"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPrivBills\.random_hash_step$' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills dependency random_hash_step"
+require_line_count 1 '^theorem random_hash_step([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills theorem random_hash_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPrivBills\.random_uniform_step$' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills dependency random_uniform_step"
+require_line_count 1 '^theorem random_uniform_step([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills theorem random_uniform_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPrivBills\.known_hash_step$' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills dependency known_hash_step"
+require_line_count 1 '^theorem known_hash_step([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills theorem known_hash_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPrivBills\.known_uniform_step$' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills dependency known_uniform_step"
+require_line_count 1 '^theorem known_uniform_step([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills theorem known_uniform_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPrivBills\.target_step$' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills dependency target_step"
+require_line_count 1 '^theorem target_step([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills theorem target_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPrivBills\.hash_step$' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills dependency hash_step"
+require_line_count 1 '^theorem hash_step([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills theorem hash_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPrivBills\.uniform_step$' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills dependency uniform_step"
+require_line_count 1 '^theorem uniform_step([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills theorem uniform_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPrivBills\.keyed_not_uniform$' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills dependency keyed_not_uniform"
+require_line_count 1 '^theorem keyed_not_uniform([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills theorem keyed_not_uniform"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPrivBills\.decision_budgets$' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills dependency decision_budgets"
+require_line_count 1 '^theorem decision_budgets([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills theorem decision_budgets"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPrivBills\.coinForward_route$' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills dependency coinForward_route"
+require_line_count 1 '^theorem coinForward_route([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills theorem coinForward_route"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPrivBills\.hashForward_route$' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills dependency hashForward_route"
+require_line_count 1 '^theorem hashForward_route([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills theorem hashForward_route"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPrivBills\.opening_route$' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills dependency opening_route"
+require_line_count 1 '^theorem opening_route([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills theorem opening_route"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPrivBills\.sealing_route$' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills dependency sealing_route"
+require_line_count 1 '^theorem sealing_route([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills theorem sealing_route"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPrivBills\.reduction_step$' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills dependency reduction_step"
+require_line_count 1 '^theorem reduction_step([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills theorem reduction_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPrivBills\.reduction_uniform$' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills dependency reduction_uniform"
+require_line_count 1 '^theorem reduction_uniform([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills theorem reduction_uniform"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPrivBills\.reduction_hash$' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills dependency reduction_hash"
+require_line_count 1 '^theorem reduction_hash([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills theorem reduction_hash"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPrivBills\.reduction_keyed$' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills dependency reduction_keyed"
+require_line_count 1 '^theorem reduction_keyed([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills theorem reduction_keyed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPrivBills\.reduction_seal$' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills dependency reduction_seal"
+require_line_count 1 '^theorem reduction_seal([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills theorem reduction_seal"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPrivBills\.reduction_raw$' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills dependency reduction_raw"
+require_line_count 1 '^theorem reduction_raw([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills theorem reduction_raw"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPrivBills\.link_route$' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills dependency link_route"
+require_line_count 1 '^theorem link_route([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills theorem link_route"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPrivBills\.hash_bill$' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills dependency hash_bill"
+require_line_count 1 '^theorem hash_bill([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills theorem hash_bill"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPrivBills\.stepBilled$' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills dependency stepBilled"
+require_line_count 1 '^theorem stepBilled([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills theorem stepBilled"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPrivBills\.ctxPrivLiftStatement$' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills dependency ctxPrivLiftStatement"
+require_line_count 1 '^theorem ctxPrivLiftStatement([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills theorem ctxPrivLiftStatement"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
