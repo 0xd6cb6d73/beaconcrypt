@@ -1046,7 +1046,7 @@ noncomputable def beaconInstall (owner : ℕ) (r : (Option Pqxdh.Bytes × Option
     ProbComp ((Option Pqxdh.Bytes × Option Coord) × XState KemSK SplitBk 2) :=
   xInstall (fun r => r.1.2) (fun r => establishedAt r.2.base.native.owners owner) (stepApply owner) r
 
-/-- The final split form of the ideal registration (`CE.idealGameSplit° g`, design-v2 section 5.2): the C7-erased slot program in front of the lazy service (the material of a slot drawn at its first touch, the seed never), with the marked build and owner k's challenge finish followed by their hidden installs, which draw the seed of the slot at the install. -/
+/-- The final split form of the ideal registration (design-v2 section 5.2): the C7-erased slot program in front of the lazy service (the material of a slot drawn at its first touch, the seed never), with the marked build and owner k's challenge finish followed by their hidden installs, which draw the seed of the slot at the install. -/
 noncomputable def idealSplit (t : Target count) (p : Params KemSK count)
     (created : PqxdhLiveServerConstruction.Created Unit) : RegImpl KemSK SplitBk 2
   | ⟨.build session payload, _⟩ => fun x => (fun r => (r.1.1, r.2)) <$>
@@ -1238,7 +1238,7 @@ theorem split_game {A X : Type} (t : Target count) (p : Params KemSK count) (ens
 theorem splitView_seedFree (x : XState KemSK SplitBk 2) :
     PqxdhDeploymentIdealKeys.splitView (seedFree x) = PqxdhDeploymentIdealKeys.splitView x := rfl
 
-/-- The ideal registration and its final split form (`ideal_to_split`, design-v2 section 5.2): the ideal game and the split game with lazy materials and seeds drawn at the hidden installs have the same law up to the split view (native state without the CTX cache, allocator and ideal core, snapshot and log). -/
+/-- The ideal registration and its final split form (`ideal_to_split`, design-v2 section 5.2): the ideal game and the split game with lazy materials and seeds drawn at the hidden installs have the same law up to the split view (the native state with the CTX cache emptied, together with the allocator and the ideal backend, the LQ-F snapshot and the log). -/
 theorem ideal_to_split {A X : Type} (t : Target count) (p : Params KemSK count) (ensureInit : StateT A ProbComp Bool)
     (identityIndex : ℕ) (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
     (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) (runtime : A) :

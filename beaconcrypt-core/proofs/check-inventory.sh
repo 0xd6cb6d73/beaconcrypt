@@ -34643,7 +34643,7 @@ require_line_count 1 '^theorem split_kernel([[:space:]]|$)' "$selected_source_mo
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealKernel\.ideal_to_splitEager$' "$selected_source_module" "PqxdhDeploymentIdealKernel dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealKernel.ideal_to_splitEager"
 require_line_count 1 '^theorem ideal_to_splitEager([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealKernel theorem ideal_to_splitEager"
 
-# CE-11b U2: deferral of the ideal registration's seed draws to its hidden installs
+# CE-11b U2: deferral of the ideal registration's seed draws to its hidden installs.
 
 selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealDefer.lean
 require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentIdealDefer$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentIdealDefer root import"
