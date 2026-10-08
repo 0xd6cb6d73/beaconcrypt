@@ -1,6 +1,6 @@
 {
- "date": "2026-10-08T11:51:57.778424+00:00",
- "scope": "CE-11b increment 2: the spike finished (design-v2 section 8.5, items (a)-(g)) and the rest of unit U1, PqxdhDeploymentIdealSteps (the ideal registration as a slot program and CE.idealGame g, with the agreement of the hidden steps with item 2's services skeleton). Reviewed (independent semantic and hygiene review of 2445723b: no error in the Lean statements or proofs); review fix pass applied after merging central 98b906d9 into the topic: tailCE_challenge and groupCE_challenge strengthened, buildStep_other and buildStep_real added, docstrings, guide, analysis, plan snapshot and this receipt corrected. Not yet confirmed by a second review; not integrated into central.",
+ "date": "2026-10-08T12:07:04.253490+00:00",
+ "scope": "CE-11b increment 2: the spike finished (design-v2 section 8.5, items (a)-(g)) and the rest of unit U1, PqxdhDeploymentIdealSteps (the ideal registration as a slot program and CE.idealGame g, with the agreement of the hidden steps with item 2's services skeleton). Reviewed (independent semantic and hygiene review of 2445723b: no error in the Lean statements or proofs); review fix pass applied after merging central 98b906d9 into the topic: tailCE_challenge and groupCE_challenge strengthened, buildStep_other and buildStep_real added, docstrings, guide, analysis, plan snapshot and this receipt corrected. Confirming review of e29c26fa: every finding resolved; one minor documentation finding and two nits fixed in one commit (three docstrings of PqxdhDeploymentIdealSteps with its inventory row, guide, analysis, plan snapshot and this receipt; no statement, proof or definition changed); not integrated into central at that commit.",
  "basis": "e464a35cde7d99ee92153274ded1379a457820cf",
  "topic": {
   "branch": "codex/deployment-ce11b",
@@ -8,10 +8,10 @@
  },
  "plan": {
   "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
-  "sha256": "122b88b16b122eb12dc9bd456f649d9fb3a218085a11ef7d7001bac78ffc94af",
-  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/inc2fix/plan.at-fix-receipt-122b88b1.md",
-  "dated_copy_sha256": "122b88b16b122eb12dc9bd456f649d9fb3a218085a11ef7d7001bac78ffc94af",
-  "sections": "47-49 (A1 adopted, A2 accepted, Q1-Q3 decided), 50 (increment 2, with its addendum), 51 (review fix pass, new)",
+  "sha256": "a78a6ca37d0cdf7ad85b94d4cf39e43568211a11948f2b3023f75dccea8a6260",
+  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/inc2/nits/plan.at-nits-receipt-a78a6ca3.md",
+  "dated_copy_sha256": "a78a6ca37d0cdf7ad85b94d4cf39e43568211a11948f2b3023f75dccea8a6260",
+  "sections": "47-49 (A1 adopted, A2 accepted, Q1-Q3 decided), 50 (increment 2, with its addendum), 51 (review fix pass, with its confirming-review paragraph)",
   "earlier_records": [
    {
     "sha256": "3f47bc8752b5655996e8426be829e3d64f3f4c100529aa744cd38d022c944603",
@@ -22,14 +22,20 @@
     "sha256": "b254eb00b95272ce3b5a8eb4f980c7c244c5396a464ec7680368711329860528",
     "copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/inc2fix/plan.before-fix.md",
     "note": "the plan with the section 50 addendum, before section 51"
+   },
+   {
+    "sha256": "122b88b16b122eb12dc9bd456f649d9fb3a218085a11ef7d7001bac78ffc94af",
+    "copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/inc2fix/plan.at-fix-receipt-122b88b1.md",
+    "note": "the hash this receipt recorded at e29c26fa (sections 19 to 51, before the confirming-review paragraph of section 51)"
    }
   ]
  },
  "design": {
   "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/design-v2.md",
-  "sha256": "a63caf2d8f7940722fbacb7acfa4851f4b63c429ab1f450a1cb8d55c2de6f269",
-  "sections": "3.1, 3.2 (built), 6.2 (IdealInv I5: the two-coordinate bound, planned), 8.4 (post phase, per-step facts), 8.5 (spike, finished), 11, 12 (R3), 15, 16 (corrections after increment 2, moved before Appendix A), 17 (corrections after the review of increment 2, new)",
-  "before_fix_sha256": "08f923d472f91d545b5787a1b36700795877a98638ac6591a154d0a7b020fedc"
+  "sha256": "7d054d3556d6b288034aa0a029d52324e3b2abf04f647f07945547d42bfbd9ad",
+  "sections": "3.1, 3.2 (built), 6.2 (IdealInv I5: the two-coordinate bound, planned), 8.4 (post phase, per-step facts), 8.5 (spike, finished), 11, 12 (R3), 15, 16 (corrections after increment 2, moved before Appendix A), 17 (corrections after the review of increment 2), 18 (corrections after the confirming review, new)",
+  "before_fix_sha256": "08f923d472f91d545b5787a1b36700795877a98638ac6591a154d0a7b020fedc",
+  "before_nits_sha256": "a63caf2d8f7940722fbacb7acfa4851f4b63c429ab1f450a1cb8d55c2de6f269"
  },
  "spike": {
   "results": "/tmp/bc-arc-scratch/common-experiment/ce11b/spike.md",
@@ -140,14 +146,18 @@
   {
    "commit": "d5fe365cdd9cd84d2a107f400dfbef5c6cc3a84d",
    "subject": "Strengthen the CE-11b skeleton agreements and cover every real build"
+  },
+  {
+   "commit": "e29c26fa20bcda9746b6694c8fcd0627aee63c43",
+   "subject": "Document the CE-11b increment 2 review fix pass"
   }
  ],
- "commits_note": "The commits on the topic's first-parent line after the basis, made before this receipt was last generated; the merge commit 2655cb0f brings in central 98b906d9. The commit that last regenerated this receipt is not listed.",
+ "commits_note": "The commits on the topic's first-parent line after the basis, made before this receipt was last generated; the merge commit 2655cb0f brings in central 98b906d9. The commit that last regenerated this receipt (the confirming review's nit commit) is not listed.",
  "files_sha256": {
-  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealSteps.lean": "c26e0a8663825bbee56b515309a63946d23d8353ba16f837bd818540821d32f3",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealSteps.lean": "f6fa18383e23017db0484a8f5081565e8a934562528ef30dca38765f8137404a",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "b0a1df24a72df6f6bcb674fd959ba99bb708bd215fdb7a9417c8fd64f30a56e0",
   "beaconcrypt-core/proofs/check-inventory.sh": "6e4bdd6ecc32ef6f99ff3f99d5a4a6ca3b0a88b9a3267314608f1b38c627bde5",
-  "beaconcrypt-core/proofs/reviewed-inventory.txt": "d8fa5daf5a57a915279387f5c02b2b8055f2a2f29e8c8bc10d455d548c7a7b4f"
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "1373b98a1eabf797f657b01e98aab2c898b99b3a4ea1446292f28143f05514c2"
  },
  "modules": [
   {
@@ -343,8 +353,9 @@
      "/tmp/bc-arc-scratch/common-experiment/ce11b/inc2fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealSteps.olean",
      "/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealSteps.lean"
     ],
-    "source_matches_worktree": true,
-    "source_matches_head": true
+    "source_matches_worktree": false,
+    "note": "the fix-pass source (d5fe365c, equal at e29c26fa), before the confirming-review docstring change; that change is checked by direct_check_confirm_nits",
+    "source_matches_fix_tip": true
    },
    "direct_check_before_review_fix": {
     "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps",
@@ -426,6 +437,34 @@
      "/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealSteps.lean"
     ],
     "note": "the module source of 2445723b at the merge of central, checked into inc2fix/merge/olean"
+   },
+   "direct_check_confirm_nits": {
+    "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps",
+    "run": "PqxdhDeploymentIdealSteps-1",
+    "source_sha256": "f6fa18383e23017db0484a8f5081565e8a934562528ef30dca38765f8137404a",
+    "leanpath": "/tmp/bc-coord/leanpaths/98b906d9aff034c0ffee6e97112b2d6659b22cf3.leanpath",
+    "leanpath_sha256": "a14eff5b44bdceabd1b088b1eb206bb0b3db8f721fc48897477ad6b6d15fb26f",
+    "head": "e29c26fa20bcda9746b6694c8fcd0627aee63c43",
+    "start": "2026-10-08T12:03:16Z",
+    "end": "2026-10-08T12:03:21Z",
+    "result": "exit 0 seconds 5",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealSteps.lean"
+    ],
+    "source_matches_worktree": true,
+    "note": "development check without -o against the published 98b906d9 LEAN_PATH (the module is not in it; its imports are), with the docstring change in the working tree; the exact #guard_msgs guards make an empty log mean every axiom profile is unchanged"
    }
   }
  ],
@@ -595,9 +634,18 @@
    "working_tree_dirt_lines": 3,
    "log_sha256": "e0b8e6ae16c564d18cbad55a96bf4c1c89727e80fbbaa3a6cec7d992e1958dbf",
    "result_line": "Formal-verification inventory matches the reviewed boundary."
+  },
+  "inventory-nits": {
+   "exit": 0,
+   "start": "2026-10-08T12:04:21Z",
+   "end": "2026-10-08T12:05:43Z",
+   "head_at_run": "e29c26fa20bcda9746b6694c8fcd0627aee63c43",
+   "working_tree_dirt_lines": 3,
+   "log_sha256": "3f97cac512732f73569a32f85287a717d575fd75c2ee05554f070954e3a89d87",
+   "result_line": "Formal-verification inventory matches the reviewed boundary."
   }
  },
- "focused_inventory_note": "ran on the Lean commit with a clean tree; the documentation commit changes no file under beaconcrypt-core/ Review fix pass: inventory-merge ran with the resolved merge staged (before the merge commit 2655cb0f), inventory-lean on the fix pass's Lean commit with a clean tree, inventory-docs on the same commit with the documentation changes of the fix pass's documentation commit in the working tree (no file under beaconcrypt-core/ differs).",
+ "focused_inventory_note": "ran on the Lean commit with a clean tree; the documentation commit changes no file under beaconcrypt-core/. Review fix pass: inventory-merge ran with the resolved merge staged (before the merge commit 2655cb0f), inventory-lean on the fix pass's Lean commit with a clean tree, inventory-docs on the same commit with the documentation changes of the fix pass's documentation commit in the working tree (no file under beaconcrypt-core/ differs). Confirming-review nits: inventory-nits ran on e29c26fa with the nit commit's changes under beaconcrypt-core/ (the docstrings of PqxdhDeploymentIdealSteps and its rehashed inventory row) in the working tree; the nit commit changes no other file under beaconcrypt-core/.",
  "inventory": {
   "handwritten_lean_rows_before": 1666,
   "handwritten_lean_rows_after": 1667,
@@ -624,6 +672,25 @@
     "handwritten_lean_rows": "unchanged (1674)",
     "check_inventory_block": "PqxdhDeploymentIdealSteps counts 17 -> 19; rows for buildStep_other and buildStep_real added in source order (invreplace.py)"
    }
+  },
+  "confirm_nits": {
+   "recount": "handwritten-lean count unchanged (1674)",
+   "rehashed": [
+    "proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealSteps.lean"
+   ],
+   "unchanged": [
+    "proofs/lean/BeaconcryptCore.lean",
+    "proofs/trusted-boundary.md",
+    "proofs/check-inventory.sh"
+   ],
+   "rehash_log": [
+    "proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealSteps.lean: c26e0a866382 -> f6fa18383e23",
+    "proofs/check-inventory.sh: unchanged",
+    "proofs/lean/BeaconcryptCore.lean: unchanged",
+    "proofs/trusted-boundary.md: unchanged",
+    "proofs/check-inventory.sh: unchanged"
+   ],
+   "note": "coord.sh inv recount before coord.sh inv rehash; the module row digest changes with the docstrings, check-inventory.sh is unchanged (no theorem row or count changes)"
   }
  },
  "forbidden_scan": {
@@ -637,14 +704,17 @@
   "since_basis": {
    "range": "e464a35c..working tree",
    "exit": 0
+  },
+  "since_fix_tip": {
+   "range": "e29c26fa..working tree",
+   "exit": 0
   }
  },
  "not_run": [
   "full lake build",
   "make verify",
   "mutation testing",
-  "nix-collect-garbage",
-  "confirming review of the fix pass"
+  "nix-collect-garbage"
  ],
  "reestimate": {
   "unit": "nominal agent-days",
@@ -686,7 +756,33 @@
   "records": [
    "semantic review record: checks run and semantics confirmed (no action)",
    "hygiene review record: passed checks (no action)"
-  ]
+  ],
+  "confirming_review": {
+   "reviewed_commit": "e29c26fa20bcda9746b6694c8fcd0627aee63c43",
+   "kinds": [
+    "semantic",
+    "hygiene"
+   ],
+   "result": "APPROVE_WITH_NITS: every finding of the review of 2445723b resolved in the Lean (only tailCE_challenge and groupCE_challenge changed, both strengthened; buildStep_other and buildStep_real added; no definition changed); module rechecked without -o against the published 98b906d9 LEAN_PATH (exit 0, empty log; 19 theorems, 19 exact guards); receipt hashes, inventory digests and plan snapshot body agree; a scratch probe derives the earlier statements from the new ones by projection; one minor documentation finding and two nits",
+   "findings_fixed": [
+    "minor: four summaries (module docstring, agreement section docstring, guide row, analysis) said the grouped finish's recorded coordinates correspond to item 2's marks, which groupCE_challenge does not state: reworded to \"for the root request the CE mark is item 2's mark with the coordinates in place of the value; for the grouped finish the recorded coordinates become the four DH coordinates (when the DH outputs are nonzero) and item 2's marks are unchanged\"",
+    "nit: the ghost parentheticals of the module and IdealCore docstrings described the wrong precedence (a step that sets a ghost overwrites it; Option.or prefers its first argument): now \"a step that may set one reads its earlier value only to keep it when it sets nothing\"",
+    "nit: focused_inventory_note lacked a sentence boundary before \"Review fix pass:\": inserted in this regeneration"
+   ],
+   "records": [
+    "review record: original findings resolved, checks run (no action)"
+   ],
+   "files_changed": [
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealSteps.lean",
+    "beaconcrypt-core/proofs/reviewed-inventory.txt",
+    "doc/impl/common-deployment-experiment.md",
+    "doc/impl/common-deployment-experiment-plan.md",
+    "doc/formal-verification-analysis.md",
+    "doc/impl/proof-receipts/common-deployment-experiment-ce11b-inc2.json"
+   ],
+   "lean_change": "docstrings only (module docstring, IdealCore docstring, agreement section docstring); no statement, proof or definition changed",
+   "scratch": "/tmp/bc-arc-scratch/common-experiment/ce11b/inc2/confirm (review checks), /tmp/bc-arc-scratch/common-experiment/ce11b/inc2/nits (nit fix checks, backups, this script)"
+  }
  },
  "merged_central": {
   "central": "98b906d9aff034c0ffee6e97112b2d6659b22cf3",
@@ -695,9 +791,9 @@
  },
  "plan_snapshot": {
   "path": "doc/impl/common-deployment-experiment-plan.md",
-  "sha256": "a4b31ba32a4900bb1a6a025457d21f6b9603ec99dd7406d5ea8b64728c30cd05",
-  "source_sha256": "122b88b16b122eb12dc9bd456f649d9fb3a218085a11ef7d7001bac78ffc94af",
-  "note": "committed snapshot refreshed from the working plan in the review fix pass (adds sections 49 to 51); header note updated; body equal to the working plan"
+  "sha256": "082c78a55ad05ec7f119705cbe00df21c6f8741fc3493fddb196622a86888534",
+  "source_sha256": "a78a6ca37d0cdf7ad85b94d4cf39e43568211a11948f2b3023f75dccea8a6260",
+  "note": "committed snapshot refreshed from the working plan after the confirming review (adds the confirming-review paragraph of section 51); header note updated; body equal to the working plan"
  },
  "statement_changes": [
   {
