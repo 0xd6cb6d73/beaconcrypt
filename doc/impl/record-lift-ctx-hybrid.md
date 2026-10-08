@@ -50,14 +50,14 @@ The proof has three steps. `world keyed store target` is the CTX world whose loo
 
 ## What remains of the CTX track
 
-The integrity target `CtxAuthLiftStatement` (with zero refusal term, `CtxAuthLiftTarget`) needs, beyond this module:
+The steps of the CTX track and their status:
 
 1. Done in `PqxdhRecordLiftCtxAvailability` (see above). This obligation was missing from the S1 design notes, which expected the nonce argument alone to suffice.
 2. Done in `PqxdhRecordLiftCtxLink` (see above).
 3. Done in `PqxdhRecordLiftKeyCut` (see above); it replaces the planned discharge of the `parentIdeal` premise of `program_reduction_cut`, since the hops are linked through `PqxdhRecordLiftCtxModes` rather than through that cut.
 4. Done in `PqxdhRecordLiftCtx` (see above), conditional on the bills of item 5.
 5. Done in `PqxdhRecordLiftCtxBills` (see above); the integrity half is complete.
-6. The privacy half (`CtxPrivLiftStatement`, replay to random, `PqxdhRecordLiftCtxModeBounds.selected_privacy`) needs the correspondence of `PqxdhRecordLiftIdeal.randomImpl` with `AdaptiveCtxPrivacyGuard.randomView` (the open point of the S1 targets) and a link variant in which the reduction simulates random-mode coordinates itself: the present link needs every other coordinate in real or replay mode (`hybridModes_notRandom`), because the known calls of `PqxdhRecordLiftCtxModes` have no random mode. The availability module, the selected-key law (which holds for every mode assignment) and the telescope pattern carry over. Estimate 1.5 to 2 days.
+6. Remaining: the privacy half `CtxPrivLiftStatement` (`idealAuth` to `randomRecords`, with the per-key loss `privacyLoss`, exactly the IND$ advantage of `AdaptiveCtxPrivacyGuard.viewReduction`). Its hybrids switch bounded coordinates from replay to random mode one at a time; the last one is `randomRecords` by `ctxRunWith_congr`, and the telescope and bills carry over from `PqxdhRecordLiftCtx` and `PqxdhRecordLiftCtxBills`. Per hop, the side before the step is the challenger's replay game (`link` with `real = false`, the selected-key law, and `AdaptiveCtxSharedModes.replay_view_eq` towards `AdaptiveCtxPrivacyGuard.replayView`), and `AdaptiveCtxPrivacyGuard.replay_random_advantage` bounds the step exactly by `privacyLoss` once the side after the step is identified with `AdaptiveCtxPrivacyGuard.randomView` of the same one-key adversary. Two pieces are new: (a) the correspondence of `PqxdhRecordLiftIdeal.randomImpl` at the target (fresh body and tag, private-suffix commitment, no key) with the random experiment behind `randomView` (the open point of the S1 targets); (b) a link variant whose reduction simulates the coordinates already in random mode itself, since `randomImpl` needs no key but the known calls of `PqxdhRecordLiftCtxModes` have no random mode (the present link requires `hybridModes_notRandom`). `PqxdhRecordLiftCtxModeBounds.selected_privacy` (real to random, with the integrity terms) is not the right per-hop bound for this target. Estimate 1.5 to 2 days.
 
 ## Checks
 
