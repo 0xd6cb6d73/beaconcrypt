@@ -1711,6 +1711,8 @@ import BeaconcryptCore.Computational.PqxdhRegistrationJointKemEntryFactorSteps
 import BeaconcryptCore.Computational.PqxdhRegistrationJointKemEntryFactorResume
 import BeaconcryptCore.Computational.PqxdhRegistrationJointKemEntryFactor
 import BeaconcryptCore.Computational.PqxdhRegistrationJointKemIdealKeys
+import BeaconcryptCore.Computational.PqxdhRegistrationJointKemSecondEntryTable
+import BeaconcryptCore.Computational.PqxdhRegistrationJointKemSecondEntry
 
 /-!
 # Beaconcrypt-core verification root
