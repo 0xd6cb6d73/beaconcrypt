@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1666
+	[handwritten-lean]=1667
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -34073,6 +34073,47 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem gameWith_param([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw theorem gameWith_param"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEnvironmentDraw\.join_param$' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw dependency BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentDraw.join_param"
 require_line_count 1 '^theorem join_param([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw theorem join_param"
+
+# CE-11b U1 ideal registration steps and CE.idealGame g.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealSteps.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentIdealSteps root import"
+require_line_count 17 '^theorem ' "$selected_source_module" "PqxdhDeploymentIdealSteps theorem inventory"
+require_line_count 17 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentIdealSteps guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSteps\.realRegAt_real$' "$selected_source_module" "PqxdhDeploymentIdealSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps.realRegAt_real"
+require_line_count 1 '^theorem realRegAt_real([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSteps theorem realRegAt_real"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSteps\.createPool_beyond$' "$selected_source_module" "PqxdhDeploymentIdealSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps.createPool_beyond"
+require_line_count 1 '^theorem createPool_beyond([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSteps theorem createPool_beyond"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSteps\.acceptExposed_logged$' "$selected_source_module" "PqxdhDeploymentIdealSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps.acceptExposed_logged"
+require_line_count 1 '^theorem acceptExposed_logged([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSteps theorem acceptExposed_logged"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSteps\.buildHidden_native$' "$selected_source_module" "PqxdhDeploymentIdealSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps.buildHidden_native"
+require_line_count 1 '^theorem buildHidden_native([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSteps theorem buildHidden_native"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSteps\.preparationCE_challenge$' "$selected_source_module" "PqxdhDeploymentIdealSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps.preparationCE_challenge"
+require_line_count 1 '^theorem preparationCE_challenge([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSteps theorem preparationCE_challenge"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSteps\.preparationCE_eval$' "$selected_source_module" "PqxdhDeploymentIdealSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps.preparationCE_eval"
+require_line_count 1 '^theorem preparationCE_eval([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSteps theorem preparationCE_eval"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSteps\.publicLocal_coins$' "$selected_source_module" "PqxdhDeploymentIdealSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps.publicLocal_coins"
+require_line_count 1 '^theorem publicLocal_coins([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSteps theorem publicLocal_coins"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSteps\.tailCE_challenge$' "$selected_source_module" "PqxdhDeploymentIdealSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps.tailCE_challenge"
+require_line_count 1 '^theorem tailCE_challenge([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSteps theorem tailCE_challenge"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSteps\.groupCE_challenge$' "$selected_source_module" "PqxdhDeploymentIdealSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps.groupCE_challenge"
+require_line_count 1 '^theorem groupCE_challenge([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSteps theorem groupCE_challenge"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSteps\.groupCE_known$' "$selected_source_module" "PqxdhDeploymentIdealSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps.groupCE_known"
+require_line_count 1 '^theorem groupCE_known([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSteps theorem groupCE_known"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSteps\.acceptStep_other$' "$selected_source_module" "PqxdhDeploymentIdealSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps.acceptStep_other"
+require_line_count 1 '^theorem acceptStep_other([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSteps theorem acceptStep_other"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSteps\.acceptStep_accepts$' "$selected_source_module" "PqxdhDeploymentIdealSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps.acceptStep_accepts"
+require_line_count 1 '^theorem acceptStep_accepts([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSteps theorem acceptStep_accepts"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSteps\.buildStep_unmarked$' "$selected_source_module" "PqxdhDeploymentIdealSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps.buildStep_unmarked"
+require_line_count 1 '^theorem buildStep_unmarked([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSteps theorem buildStep_unmarked"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSteps\.finishStep_real$' "$selected_source_module" "PqxdhDeploymentIdealSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps.finishStep_real"
+require_line_count 1 '^theorem finishStep_real([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSteps theorem finishStep_real"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSteps\.idealProg_real$' "$selected_source_module" "PqxdhDeploymentIdealSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps.idealProg_real"
+require_line_count 1 '^theorem idealProg_real([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSteps theorem idealProg_real"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSteps\.idealCore_natural$' "$selected_source_module" "PqxdhDeploymentIdealSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps.idealCore_natural"
+require_line_count 1 '^theorem idealCore_natural([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSteps theorem idealCore_natural"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSteps\.idealCoreErased_natural$' "$selected_source_module" "PqxdhDeploymentIdealSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps.idealCoreErased_natural"
+require_line_count 1 '^theorem idealCoreErased_natural([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSteps theorem idealCoreErased_natural"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
