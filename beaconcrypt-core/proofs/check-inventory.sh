@@ -32161,8 +32161,8 @@ require_line_count 1 '^theorem opaqueBranch_idealKeys([[:space:]]|$)' "$selected
 
 selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemSecondEntryTable.lean
 require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRegistrationJointKemSecondEntryTable$' proofs/lean/BeaconcryptCore.lean "PqxdhRegistrationJointKemSecondEntryTable root import"
-require_line_count 19 '^theorem ' "$selected_source_module" "PqxdhRegistrationJointKemSecondEntryTable theorem inventory"
-require_line_count 19 '^#guard_msgs in$' "$selected_source_module" "PqxdhRegistrationJointKemSecondEntryTable guarded dependencies"
+require_line_count 20 '^theorem ' "$selected_source_module" "PqxdhRegistrationJointKemSecondEntryTable theorem inventory"
+require_line_count 20 '^#guard_msgs in$' "$selected_source_module" "PqxdhRegistrationJointKemSecondEntryTable guarded dependencies"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemSecondEntry\.pin_same$' "$selected_source_module" "PqxdhRegistrationJointKemSecondEntryTable dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemSecondEntry.pin_same"
 require_line_count 1 '^theorem pin_same([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemSecondEntryTable theorem pin_same"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemSecondEntry\.pin_other$' "$selected_source_module" "PqxdhRegistrationJointKemSecondEntryTable dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemSecondEntry.pin_other"
@@ -32177,6 +32177,8 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegist
 require_line_count 1 '^theorem indexed_miss([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemSecondEntryTable theorem indexed_miss"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemSecondEntry\.indexed_eager$' "$selected_source_module" "PqxdhRegistrationJointKemSecondEntryTable dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemSecondEntry.indexed_eager"
 require_line_count 1 '^theorem indexed_eager([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemSecondEntryTable theorem indexed_eager"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemSecondEntry\.indexed_eager_output$' "$selected_source_module" "PqxdhRegistrationJointKemSecondEntryTable dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemSecondEntry.indexed_eager_output"
+require_line_count 1 '^theorem indexed_eager_output([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemSecondEntryTable theorem indexed_eager_output"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemSecondEntry\.firstTable_started$' "$selected_source_module" "PqxdhRegistrationJointKemSecondEntryTable dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemSecondEntry.firstTable_started"
 require_line_count 1 '^theorem firstTable_started([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemSecondEntryTable theorem firstTable_started"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemSecondEntry\.pinned_started$' "$selected_source_module" "PqxdhRegistrationJointKemSecondEntryTable dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemSecondEntry.pinned_started"

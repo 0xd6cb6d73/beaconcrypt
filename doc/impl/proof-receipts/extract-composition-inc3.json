@@ -1,5 +1,5 @@
 {
- "date": "2026-10-08T03:12:19.519553+00:00",
+ "date": "2026-10-08T03:48:32.438620+00:00",
  "scope": "Handoff item 2, increment 3: stages S3b (entry 0's 108 bytes in the uniform-root world: factored services, relabelled hidden values, uniformGame_entry), S4b (idealKeysBranch and theorem T7) and S7 (every hidden entry ideal: indexed lazy-table hybrid, first-touch slot allocator in front of PqxdhRecordLiftLazyTable, naturality) of the extract-design plan. Stages T and S8 are not built.",
  "basis": "a2b5380080ed397ae31b790e79304b39e16135b1",
  "topic": {
@@ -8,9 +8,10 @@
  },
  "plan": {
   "path": "/tmp/bc-arc-scratch/extract-design/plan.md",
-  "sha256": "29fb8774b7abf7ec6dc77b3e49d45cac40b91fa9a0a9a6101e1e2c01d1cdf7a4",
+  "sha256": "5b88eadaf818e5072cbb9c0f6ca870774792d81c9396003107dad06d5ce0930f",
   "snapshot": "doc/impl/extract-composition-plan.md",
-  "stages": "S3b, S4b, S7; sections 3, 4, 5, 9, 11, 17, 18, 20, 21"
+  "stages": "S3b, S4b, S7; sections 3, 4, 5, 9, 11, 17, 18, 20, 21",
+  "note": "SHA-256 after the review fixes of ddd954ec (section 21: header and notes 3 to 6); at ddd954ec it was 29fb8774b7abf7ec6dc77b3e49d45cac40b91fa9a0a9a6101e1e2c01d1cdf7a4. No owner decision, statement or assumption of the plan changed."
  },
  "commits": [
   {
@@ -24,24 +25,30 @@
   {
    "commit": "9cab71ca5949429bb1e873e384b908db0f96bad7",
    "subject": "Make every hidden entry ideal in item 2 stage S7"
+  },
+  {
+   "commit": "ddd954ecd6ab73650fb5e995182f6616cce15cfc",
+   "subject": "Record the third item 2 increment (S3b, S4b, S7)"
   }
  ],
- "commits_note": "The stage commits from the base a2b53800 (central, containing increments 1 and 2). The documentation commit that adds this receipt, the increment-3 guide sections, the analysis paragraph and the plan snapshot follows them.",
+ "commits_note": "The stage commits from the base a2b53800 (central, containing increments 1 and 2) and the documentation commit ddd954ec, which the semantic and hygiene reviews covered. The review-fix commit that re-issues this receipt follows them.",
  "files_sha256": {
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemEntryFactorTools.lean": "e18bcac3cb39b4237ad392fb880c21adac7ac3ec0dfb115296d3a2018f32c12b",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemEntryFactorNative.lean": "df0784ed761d22f3e7e29ab0d6a852627fd1f256311d17e7386d0328a67afa0a",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemEntryFactorSteps.lean": "031eb349888e80a55b7c33178e7ba4db4c8329922ac029d13cb1384b440c9897",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemEntryFactorResume.lean": "d2389d031d46c8c7ad7d89fa1b517b934a9a0a82ec49bf17b86c13e906ad50c9",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemEntryFactor.lean": "e7d23209a795ca92cd35400f3154132fe25a5927d6c5307902672ede5776c5b9",
-  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemIdealKeys.lean": "b1cbcf4f1ca4cf6a67f02619cb4e8073f7fa40de518deebe837b07f986290b0a",
-  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemSecondEntryTable.lean": "9e59754c5aab7624eaf48ba95f7cc19e3e65493112639223d9f98294018a3396",
-  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemSecondEntry.lean": "8af9b9135c0f0678b45363a3e9cc3497771c1ca535a1f5ad53a825dcf96a738f",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemIdealKeys.lean": "63c19fa500d724569faf2f0b30cb5958ada1d0b177e55a5764416b55e50cd67e",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemSecondEntryTable.lean": "678c4e1c62fe5346de50243dae01ab005176e09bb718293510f666e480df34bc",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemSecondEntry.lean": "ff0735be05d5c7bc607c53eef796db717cd76f57053f90a807ab3a71e19eeab9",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "968055d31eebb672238c5050c49b8b7b372d5e5abc204ddbc9a8fe81836974c9",
-  "beaconcrypt-core/proofs/check-inventory.sh": "83bd5b766b4ab79f0a4bd68b6828d14d3bba1c95c18069a1d79920dbc8d80b77",
-  "beaconcrypt-core/proofs/reviewed-inventory.txt": "e2049992ba0c66e722e453f4a5f1e5b51862ae3b25862a667ba044872ac37001",
-  "doc/impl/extract-composition.md": "bce2d2d5562e37c836433e3886e8997a5226740ce594344f631329ee361ded71",
-  "doc/impl/extract-composition-plan.md": "e73d6e5e3ba5636d324e626d891356970ffb6bd724cc3721101b05a997edb756",
-  "doc/formal-verification-analysis.md": "fd9bebd3f0bb70900c91aa788d15b2842c52c73b0055bbd36098f83fe58125a7"
+  "beaconcrypt-core/proofs/check-inventory.sh": "ebcd7ebf15722b191b21c213de37ae352abc9d0106c4ab3f0ff3fb001f8ab46d",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "44b53876fe472114b956e697229128586ee02cb398671efb3ce000ea40472b3e",
+  "doc/impl/extract-composition.md": "e8398a630f303532345e239eb139fcc089f2f95b2ef493d723183963c57527ea",
+  "doc/impl/extract-composition-plan.md": "13226ac43cba0b4e47d93be1c95dc6bd3a00fc5671507e505138c4b987a67f3d",
+  "doc/formal-verification-analysis.md": "0e217f299477a7af79a7cfbf18a32fc69c7f41ce8b31ac5511f613011c901632",
+  "doc/composition-assumptions.md": "b51c87be6346e600ac58b3f8ec23a13560af845cb9d2250def56ee55633e7bdd",
+  "beaconcrypt-core/proofs/trusted-boundary.md": "845110e2a9f6d3a0a6cf88ba512bdc64f9190bb1599d563b1126734b1f908454"
  },
  "modules": [
   {
@@ -348,6 +355,31 @@
      "/tmp/bc-arc-scratch/extract-design/inc3/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemIdealKeys.olean",
      "/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemIdealKeys.lean"
     ]
+   },
+   "direct_check_review_fixes": {
+    "exit": 0,
+    "start": "2026-10-08T03:37:28.365271444Z",
+    "end": "2026-10-08T03:37:31.754984259Z",
+    "source_sha256": "63c19fa500d724569faf2f0b30cb5958ada1d0b177e55a5764416b55e50cd67e",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "log_bytes": 0,
+    "artifact_sha256": "15f9284832efb1726e29edbe0c057b0652821316fb540ca9b04b6d415ed60f14",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/extract-design/inc3/fix1/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemIdealKeys.olean",
+     "/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemIdealKeys.lean"
+    ]
    }
   },
   {
@@ -361,6 +393,7 @@
     "indexed_hit",
     "indexed_miss",
     "indexed_eager",
+    "indexed_eager_output",
     "firstTable_started",
     "pinned_started",
     "firstTable_pinned",
@@ -374,11 +407,11 @@
     "slot_step",
     "slot_lazy"
    ],
-   "statement_count": 19,
+   "statement_count": 20,
    "axiom_profile": {
     "propext": 3,
     "Quot.sound, propext": 5,
-    "Classical.choice, Quot.sound, propext": 10,
+    "Classical.choice, Quot.sound, propext": 11,
     "(none)": 1
    },
    "direct_check_final": {
@@ -403,6 +436,31 @@
      "--root=/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean",
      "-o",
      "/tmp/bc-arc-scratch/extract-design/inc3/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemSecondEntryTable.olean",
+     "/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemSecondEntryTable.lean"
+    ]
+   },
+   "direct_check_review_fixes": {
+    "exit": 0,
+    "start": "2026-10-08T03:37:34.936146302Z",
+    "end": "2026-10-08T03:37:44.905315734Z",
+    "source_sha256": "678c4e1c62fe5346de50243dae01ab005176e09bb718293510f666e480df34bc",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "log_bytes": 0,
+    "artifact_sha256": "bdbcbb68be5b14998919b033aeb438b9e5ca3055292a923dca4901f4dd8b36e3",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/extract-design/inc3/fix1/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemSecondEntryTable.olean",
      "/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemSecondEntryTable.lean"
     ]
    }
@@ -456,14 +514,39 @@
      "/tmp/bc-arc-scratch/extract-design/inc3/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemSecondEntry.olean",
      "/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemSecondEntry.lean"
     ]
+   },
+   "direct_check_review_fixes": {
+    "exit": 0,
+    "start": "2026-10-08T03:37:48.533544117Z",
+    "end": "2026-10-08T03:37:52.217139677Z",
+    "source_sha256": "ff0735be05d5c7bc607c53eef796db717cd76f57053f90a807ab3a71e19eeab9",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "log_bytes": 0,
+    "artifact_sha256": "d764a93ab452a62b0ee6be8e5f4f9c5e3cd4e6100f83bba6a0434e80cebcb274",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/extract-design/inc3/fix1/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemSecondEntry.olean",
+     "/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemSecondEntry.lean"
+    ]
    }
   }
  ],
- "statements_total": 126,
+ "statements_total": 127,
  "statements_per_stage": {
   "S3b": 88,
   "S4b": 3,
-  "S7": 35
+  "S7": 36
  },
  "allowed_axioms": [
   "propext",
@@ -471,7 +554,7 @@
   "Quot.sound"
  ],
  "axiom_profile_from_guards": {
-  "Classical.choice, Quot.sound, propext": 100,
+  "Classical.choice, Quot.sound, propext": 101,
   "Quot.sound, propext": 17,
   "(none)": 6,
   "propext": 3
@@ -501,12 +584,18 @@
   "PqxdhRegistrationJointKemSecondEntry.slotGame_all": "theorem slotGame_all (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes)\n    (decision : X → Bool) (work : OracleComp (SourceSpec KemSK) X) (runtime : A)\n    (count : Nat) (selected : Fin (count + 1)) (index : Nat) (n : ℕ)\n    (bounded : (entryClient (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count\n      selected index).IsQueryBoundP (IsValue (D := PqxdhCorrelatedExtractFamily.Message) (R := Output)) n) :\n    slotGame (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index n =\n      allIdealBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected\n        index",
   "PqxdhRegistrationJointKemSecondEntry.entryClient_natural": "theorem entryClient_natural {S₁ S₂ : Type} (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)\n    (checks : Checks) (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes)\n    (decision : X → Bool) (work : OracleComp (SourceSpec KemSK) X) (runtime : A)\n    (count : Nat) (selected : Fin (count + 1)) (index : Nat) {n : ℕ}\n    (service₁ : SlotService S₁ Output n) (service₂ : SlotService S₂ Output n) (inv : S₁ → Prop) (proj : S₁ → S₂)\n    (step : ∀ slot state, inv state →\n      Prod.map id proj <$> (service₁ slot).run state = (service₂ slot).run (proj state))\n    (keeps : ∀ slot state, inv state → ∀ result ∈ support ((service₁ slot).run state), inv result.2)\n    (alloc : Alloc PqxdhCorrelatedExtractFamily.Message n) (state : S₁) (holds : inv state) :\n    (simulateQ (slotImpl service₁) (entryClient (Reader := Reader) setup codec checks ensureInit supplied decision work\n        runtime count selected index)).run' (alloc, state) =\n      (simulateQ (slotImpl service₂) (entryClient (Reader := Reader) setup codec checks ensureInit supplied decision work\n        runtime count selected index)).run' (alloc, proj state)",
   "PqxdhRegistrationJointKemSecondEntry.opaqueBranch_allIdeal": "theorem opaqueBranch_allIdeal (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes)\n    (decision : X → Bool) (work : OracleComp (SourceSpec KemSK) X) (runtime : A)\n    (count : Nat) (selected : Fin (count + 1)) (index : Nat)\n    (budget : PqxdhRegistrationJointRevealCosts.SourceKind → Nat)\n    (certified : ∀ source, work.IsQueryBoundP\n      (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))\n    (correct : SourceFullCorrect setup.source setup.hmac) :\n    (opaqueBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index\n        false).boolDistAdvantage\n      (allIdealBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected\n        index) ≤\n      ((budget (.inl 3) + budget (.inl 5) + budget (.inl 6) : ℕ) : ℝ) / 2 ^ 256 +\n        ∑ slot ∈ Finset.range (1 + budget (.inl 5)),\n          (hmacPrfRealGame setup.hmac (indexedReduction setup.hmac (rootClient (Reader := Reader) setup codec checks\n            ensureInit supplied decision work runtime count selected index) slot)).boolDistAdvantage\n            (hmacPrfRandomGame (indexedReduction setup.hmac (rootClient (Reader := Reader) setup codec checks\n              ensureInit supplied decision work runtime count selected index) slot)) +\n        ∑ k ∈ Finset.range (1 + budget (.inl 5)), keyScheduleBound setup.source setup.hmac\n          (entryDk (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index\n            k)",
-  "PqxdhRegistrationJointKemSecondEntry.opaqueBranch_slots": "theorem opaqueBranch_slots (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes)\n    (decision : X → Bool) (work : OracleComp (SourceSpec KemSK) X) (runtime : A)\n    (count : Nat) (selected : Fin (count + 1)) (index : Nat)\n    (budget : PqxdhRegistrationJointRevealCosts.SourceKind → Nat)\n    (certified : ∀ source, work.IsQueryBoundP\n      (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))\n    (correct : SourceFullCorrect setup.source setup.hmac) :\n    (opaqueBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index\n        false).boolDistAdvantage\n      (slotGame (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index\n        (1 + budget (.inl 5))) ≤\n      ((budget (.inl 3) + budget (.inl 5) + budget (.inl 6) : ℕ) : ℝ) / 2 ^ 256 +\n        ∑ slot ∈ Finset.range (1 + budget (.inl 5)),\n          (hmacPrfRealGame setup.hmac (indexedReduction setup.hmac (rootClient (Reader := Reader) setup codec checks\n            ensureInit supplied decision work runtime count selected index) slot)).boolDistAdvantage\n            (hmacPrfRandomGame (indexedReduction setup.hmac (rootClient (Reader := Reader) setup codec checks\n              ensureInit supplied decision work runtime count selected index) slot)) +\n        ∑ k ∈ Finset.range (1 + budget (.inl 5)), keyScheduleBound setup.source setup.hmac\n          (entryDk (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index\n            k)"
+  "PqxdhRegistrationJointKemSecondEntry.opaqueBranch_slots": "theorem opaqueBranch_slots (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes)\n    (decision : X → Bool) (work : OracleComp (SourceSpec KemSK) X) (runtime : A)\n    (count : Nat) (selected : Fin (count + 1)) (index : Nat)\n    (budget : PqxdhRegistrationJointRevealCosts.SourceKind → Nat)\n    (certified : ∀ source, work.IsQueryBoundP\n      (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))\n    (correct : SourceFullCorrect setup.source setup.hmac) :\n    (opaqueBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index\n        false).boolDistAdvantage\n      (slotGame (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index\n        (1 + budget (.inl 5))) ≤\n      ((budget (.inl 3) + budget (.inl 5) + budget (.inl 6) : ℕ) : ℝ) / 2 ^ 256 +\n        ∑ slot ∈ Finset.range (1 + budget (.inl 5)),\n          (hmacPrfRealGame setup.hmac (indexedReduction setup.hmac (rootClient (Reader := Reader) setup codec checks\n            ensureInit supplied decision work runtime count selected index) slot)).boolDistAdvantage\n            (hmacPrfRandomGame (indexedReduction setup.hmac (rootClient (Reader := Reader) setup codec checks\n              ensureInit supplied decision work runtime count selected index) slot)) +\n        ∑ k ∈ Finset.range (1 + budget (.inl 5)), keyScheduleBound setup.source setup.hmac\n          (entryDk (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index\n            k)",
+  "PqxdhRegistrationJointKemSecondEntryTable.indexed_eager_output": "theorem indexed_eager_output {α : Type} [MeasurableSpace α] (sampler : ℕ → ProbComp R) (k : ℕ)\n    (client : OracleComp (Spec D R) α) (state : IState D R) :\n    𝒟[(simulateQ (indexedImpl sampler) client).run' state] =\n      𝒟[do let value ← sampler k; (simulateQ (indexedImpl (pin k value sampler)) client).run' state]"
  },
  "leanpath": {
   "manifest": "/tmp/bc-arc-scratch/extract-design/inc3/leanpath",
   "sha256": "c79f9b3c9d7141a02fe09633f9aa897395e7ddd9574645fb01a7a2229fad2e5b",
-  "note": "First entry: the scratch prefix inc3/olean, a resolved mirror (mirror.py) of the first prefix of the published LEAN_PATH of central a2b53800 (extract-design/inc2-int/olean) without the root olean, followed by the published a2b53800 LEAN_PATH (/tmp/bc-coord/leanpaths/a2b5380080ed397ae31b790e79304b39e16135b1.leanpath). check.sh refuses to write over a mirror symlink, so no other prefix was written. The final checks rebuilt the eight modules and the root in import order after the documentation edits."
+  "note": "First entry: the scratch prefix inc3/olean, a resolved mirror (mirror.py) of the first prefix of the published LEAN_PATH of central a2b53800 (extract-design/inc2-int/olean) without the root olean, followed by the published a2b53800 LEAN_PATH (/tmp/bc-coord/leanpaths/a2b5380080ed397ae31b790e79304b39e16135b1.leanpath). check.sh refuses to write over a mirror symlink, so no other prefix was written. The final checks rebuilt the eight modules and the root in import order after the documentation edits.",
+  "review_fixes": {
+   "manifest": "/tmp/bc-arc-scratch/extract-design/inc3/fix1/leanpath",
+   "sha256": "9ad5a74b387f0222dc03aba712e14eb59c5424ec3aeae68b5d5103029f278d02",
+   "note": "First entry: the fresh scratch prefix inc3/fix1/olean, a resolved symlink mirror of inc3/olean without the oleans of PqxdhRegistrationJointKemIdealKeys, PqxdhRegistrationJointKemSecondEntryTable, PqxdhRegistrationJointKemSecondEntry and the root, which were rebuilt there in import order; followed by the published a2b53800 LEAN_PATH. inc3/olean was not written."
+  }
  },
  "root_check_final": {
   "exit": 0,
@@ -557,16 +646,25 @@
    "last_line": "Formal-verification inventory matches the reviewed boundary.",
    "start": "2026-10-08T03:00:42Z",
    "end": "2026-10-08T03:02:01Z"
+  },
+  "inv-fix1": {
+   "exit": 0,
+   "log_bytes": 1929,
+   "log_sha256": "2be17543483d7120b67c729012ecd69eb4b273b02dcc3a80619bd53c5f87c068",
+   "last_line": "Formal-verification inventory matches the reviewed boundary.",
+   "start": "2026-10-08T03:45:30Z",
+   "end": "2026-10-08T03:46:49Z"
   }
  },
- "focused_inventory_note": "check-inventory ran on the tree of each stage commit (S3b fc7e1ff8, S4b 7c33b745, S7 9cab71ca) in the locked minimal proof flake (nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C beaconcrypt-core check-inventory) under a coord.sh @nix lease. coord.sh inv recount ran before inv rehash at each stage, and a second inv rehash reported no change. The documentation commit changes no inventoried file.",
+ "focused_inventory_note": "check-inventory ran on the tree of each stage commit (S3b fc7e1ff8, S4b 7c33b745, S7 9cab71ca) in the locked minimal proof flake (nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C beaconcrypt-core check-inventory) under a coord.sh @nix lease. coord.sh inv recount ran before inv rehash at each stage, and a second inv rehash reported no change. The documentation commit changes no inventoried file. After the review fixes (inv-fix1): coord.sh inv recount (1618, unchanged) before inv rehash of the three rebuilt modules, the root, trusted-boundary.md and check-inventory.sh (last); a second rehash changed nothing; the focused check-inventory ran on the review-fix tree under a coord.sh @nix lease.",
  "inventory_counts": {
   "handwritten_lean_before": 1610,
   "after_S3b": 1615,
   "after_S4b": 1616,
-  "after_S7": 1618
+  "after_S7": 1618,
+  "after_review_fixes": 1618
  },
- "forbidden_scan": "No sorry, admit, axiom, opaque declaration, native_decide, implemented_by, extern or unsafe in the eight modules. Module-level options autoImplicit false and maxRecDepth 100000; one scoped set_option linter.deprecated false in (indexed_eager, VCVio probability notation, as in increment 1). No deprecated lemma.",
+ "forbidden_scan": "No sorry, admit, axiom, opaque declaration, native_decide, implemented_by, extern or unsafe in the eight modules (rechecked on the three changed modules after the review fixes). Module-level options autoImplicit false and maxRecDepth 100000; one scoped set_option linter.deprecated false in (indexed_eager, VCVio probability notation, as in increment 1), recorded as an exception in the guide; its 𝒟 form indexed_eager_output has no scoped option and run_eager uses it. No deprecated lemma.",
  "contamination_scan": {
   "source": "/tmp/bc-arc-scratch/extract-design/inc3/probe/contamination-scan.lean",
   "source_sha256": "c0a254dc7c1cce94bf5c5c06cfb6882a34249a897921b28e90fc493ce30fe068",
@@ -612,15 +710,70 @@
   "S7: the indexed lazy-table hybrid of the plan's S7 row (rather than one extra entry under T), with the slot form behind a first-touch coordinate-to-slot allocator in front of PqxdhRecordLiftLazyTable; modules PqxdhRegistrationJointKemSecondEntryTable (generic) and PqxdhRegistrationJointKemSecondEntry.",
   "No planned statement turned out false or unprovable; none was weakened; no assumption or contract added; no existing module changed."
  ],
- "contracts_used": "None new. T7 and T7-all take exactly T5's source budget certified and SourceFullCorrect setup.source setup.hmac (owner decision of 2026-10-06). The first term is valid only under the R1 random-oracle model of the zero-key 192-byte Extract slice (owner decision 2, extended to this line); the HMAC-SHA-512 PRF and Extract-on-uniform32 advantages are explicit terms.",
+ "contracts_used": "None new. T7 and T7-all take exactly T5's source budget certified and SourceFullCorrect setup.source setup.hmac (owner decision of 2026-10-06). The first term is valid only under the R1 random-oracle model of the zero-key 192-byte Extract slice (owner decision 2, extended to this line); the HMAC-SHA-512 PRF and Extract-on-uniform32 advantages are explicit terms. The R1 extension to this line is listed in doc/composition-assumptions.md and beaconcrypt-core/proofs/trusted-boundary.md since the review fixes.",
  "headline_bound": "T7: (opaqueBranch ... false).boolDistAdvantage (idealKeysBranch ...) <= (qAccept + qFinish + qHmac)/2^256 + sum over slot < 1 + qFinish of AdvPRF(indexedReduction setup.hmac rootClient slot) + AdvExt_uniform32(initExtractReduction source hmac entryD) + AdvPRF(initExpandReduction source entryD) + AdvExt_uniform32(stepExtractReduction hmac entryD) + AdvPRF(stepExpandReduction entryD). T7-all: the same with the last four terms replaced by the sum over k < 1 + qFinish of keyScheduleBound source hmac (entryDk k), against allIdealBranch (= slotGame (1 + qFinish)).",
  "not_proved": [
-  "Stage T (qRoot = 2, n = 2 slots).",
-  "Stage S8 (resumption open bill, reduction bills with KemBound and initBound).",
+  "Stage T (qRoot = 2, n = 2 slots); CE-11b waits for it (a hand-off at 1 + qFinish slots would need a request and an ack with Codex).",
+  "Stage S8 (resumption open bill, reduction bills with KemBound and initBound, hidden-entry sampler draws of entryD and entryDk k).",
   "Stages S5 (T8, composite with T5), S6 (key-first form) and S9.",
-  "Updates of composition-assumptions.md and trusted-boundary.md for the R1 scope extension (with T7/T8)."
+  "CE-11's law-level CoreNatural for idealReg g: slot_natural and entryClient_natural are exact-form analogues for item 2's clients and do not discharge it (CE-11b's obligation)."
  ],
  "re_estimate": "S3b, S4b and S7 (increment-2 re-estimate 3.5-9 agent-days) were built in one working session. Remaining: 9-17 agent-days: T 3-6, S8 3-5, S5+S6 1-2, S9 2-4. Main risks: stage T's cross-layer invariant and S8's per-layer cost accounting.",
  "checks_not_run": "No lake build, make verify, nix-collect-garbage, mutation testing, ProVerif, Rust or transcript-fidelity run; no production Rust or ProVerif change.",
- "review": "Not independently reviewed. Not integrated into central."
+ "review": "Independently reviewed at ddd954ec by a semantic review and a hygiene review (one major finding, three minor findings and five nits, one of them a record of the hygiene checks). All are fixed in the review-fix commit that follows ddd954ec (review_fixes); it adds one theorem (indexed_eager_output) and changes no existing statement. A confirming review is pending. Not integrated into central.",
+ "date_first_issue": "2026-10-08T03:12:19.519553+00:00",
+ "root_check_review_fixes": {
+  "exit": 0,
+  "start": "2026-10-08T03:37:57.333243616Z",
+  "end": "2026-10-08T03:38:06.102135192Z",
+  "source_sha256": "968055d31eebb672238c5050c49b8b7b372d5e5abc204ddbc9a8fe81836974c9",
+  "log_bytes": 0,
+  "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "artifact_sha256": "658ca1a66b8a16fe63321ab789ea780b0c73782b00bee67fc92b248f7106913e",
+  "command": [
+   "coord.sh",
+   "lean",
+   "claude",
+   "<label>",
+   "--",
+   "timeout",
+   "180",
+   "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+   "-j1",
+   "-M8000",
+   "--root=/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean",
+   "-o",
+   "/tmp/bc-arc-scratch/extract-design/inc3/fix1/olean/BeaconcryptCore.olean",
+   "/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+  ]
+ },
+ "contamination_scan_review_fixes": {
+  "source": "/tmp/bc-arc-scratch/extract-design/inc3/fix1/probe/contamination-scan.lean",
+  "source_sha256": "c0a254dc7c1cce94bf5c5c06cfb6882a34249a897921b28e90fc493ce30fe068",
+  "log_sha256": "2f1cb8353a5672dd2fbf71d0867de368151e6bbb0b188e541f23209c54d9815b",
+  "output": "scanned 290 declarations of 8 modules; forbidden direct references: 0 []\nliveness: [BeaconcryptCore.Computational.PqxdhCorrelatedExtractFamily.realGame]"
+ },
+ "guard_coverage_review_fixes": {
+  "source": "/tmp/bc-arc-scratch/extract-design/inc3/fix1/probe/theorem-coverage.lean",
+  "source_sha256": "bd345d71314a5778aa6d8bad8a52a1312f6dbfdc6333828243a37eb47e40cae9",
+  "log_sha256": "1d9042267ea32d39a137046a651fdde1a25150804097eab1a64fe603db75255b",
+  "result": "290 constants in the eight modules, all depending only on propext, Classical.choice and Quot.sound; the 127 theorem constants with declaration ranges are exactly the 127 guard names (fix1/logs/thm-range.txt and fix1/logs/guard-names.txt identical)."
+ },
+ "guard_liveness_review_fixes": {
+  "source": "/tmp/bc-arc-scratch/extract-design/inc3/fix1/probe/liveness.lean",
+  "source_sha256": "aeb78679e9d228eef9bc32180a9d58d016cd2b181792d9fcbb68a66632a6c26a",
+  "log_sha256": "298ab5ce4d78796638ad9f8ed423cecb9693aa411da2e1c6fac7c64e3203bb13",
+  "result": "exit 1: the deliberately wrong guard for indexed_eager_output (missing Classical.choice) fails; the probe also prints the statements of indexed_eager_output and run_eager."
+ },
+ "git_diff_check_review_fixes": "clean",
+ "review_fixes": [
+  "Major, naturality: slot_natural and entryClient_natural are described as item 2's exact-form analogue (for clients of the allocator and for the closed client entryClient) of CE-11's CoreNatural, covering exact service projections such as LazyOracleDiscard.impl_project; 'which the exact form implies' is removed. CE-11b still has to prove CoreNatural in law, per command, for idealReg g with split marks; a LawEq variant of slot_natural over a client B + (D ->o R) would be the reusable piece; the S7 slot form stores the joined 108 bytes in the marks and is at n = 1 + qFinish. Changed: module documentation of SecondEntryTable and SecondEntry, docstrings of slot_natural and entryClient_natural, guide (S7 section, consumer notes, not claimed), analysis paragraph, plan section 21 and its snapshot. No Lean statement changed.",
+  "Minor, T7 module header: stage T (PqxdhRegistrationJointBeaconFinishOnce, not built) would restate the bound with 2.",
+  "Minor, stage T and n = 2: guide (stage T section, consumer notes), analysis and plan section 21 say that CE-11b waits for stage T; using 1 + qFinish slots would change the hand-off n (C4, per-slot record-lift terms) and needs a request and an ack with Codex. T and n = 2 stay open.",
+  "Minor, R1 in the assumption lists: new end-of-file sections in doc/composition-assumptions.md and beaconcrypt-core/proofs/trusted-boundary.md (the file the plan cites as trusted-boundary.md) record the R1 extension to this line (Extract ROM on the 192-byte slice and Extract game on a uniform 32-byte key; no new primitive game; correlated family not used; S1c, S2, T7 and T7-all depend on it). Existing Server-authentication paragraphs unchanged.",
+  "Nit, S8 bill: the guide S8 paragraph, plan section 21 note 4 and the scratch NOTES list the hidden-entry sampler draws of entryD and entryDk k.",
+  "Nits (two), 𝒮 statement of indexed_eager: kept unchanged and recorded as an exception in the guide checks; new theorem indexed_eager_output (𝒟 form for outputs, exact guard propext, Classical.choice, Quot.sound, no scoped option); run_eager now applies it (statement unchanged).",
+  "Nit, plan section 21 note 4: \"re-estimate 3-5 agent-days\"; snapshot header and this receipt name the new plan SHA-256.",
+  "Nit, hygiene record: no action."
+ ]
 }

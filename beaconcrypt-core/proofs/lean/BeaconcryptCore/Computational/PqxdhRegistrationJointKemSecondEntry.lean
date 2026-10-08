@@ -7,7 +7,7 @@ import BeaconcryptCore.Computational.PqxdhRegistrationJointKemIdealKeys
 This module builds stage S7 of the item 2 plan: from the uniform-root world of stage S2 to the game in which every hidden entry, not only entry 0, holds 108 uniform bytes.
 
 - `allIdealBranch` runs the factored root client `PqxdhRegistrationJointKemEntryFactor.entryClient` with every hidden coordinate answered by 108 uniform bytes, consistently on repeated coordinates (VCVio's lazy uniform table keyed by the 128-byte coordinates). Every other root and every other HMAC/HKDF evaluation is as in the ideal-key branch of stage S4b.
-- `slotGame n` is the same game through the first-touch coordinate-to-slot allocator in front of Codex's persistent lazy table `PqxdhRecordLiftLazyTable.impl` on `PqxdhRecordLiftInterface.Slot n` (item 2 plan sections 18 and 20): a new hidden coordinate gets the next slot, equal coordinates share a slot, and the 108 bytes of a slot are read only through the table. `slotGame_all` shows that the two games are equal once `n` is at least the number of hidden reads, which is at most `1 + qFinish` (`entryClient_value`); stage T would make it 2. `entryClient_natural` is the naturality CE-11 needs: the registration core reads hidden-slot outputs only through the slot service. The first touch of a slot is a hidden read, which the skeleton makes only at the selected raw accept's private root on the challenge marker and at a grouped Beacon finish on the challenge marker (`PqxdhRegistrationJointKemRootExpand.resumeImpl_hidden`, `skelImpl_hidden`).
+- `slotGame n` is the same game through the first-touch coordinate-to-slot allocator in front of Codex's persistent lazy table `PqxdhRecordLiftLazyTable.impl` on `PqxdhRecordLiftInterface.Slot n` (item 2 plan sections 18 and 20): a new hidden coordinate gets the next slot, equal coordinates share a slot, and the 108 bytes of a slot are read only through the table. `slotGame_all` shows that the two games are equal once `n` is at least the number of hidden reads, which is at most `1 + qFinish` (`entryClient_value`); stage T would make it 2. `entryClient_natural` is item 2's exact-form analogue, for the closed factored root client, of the naturality that CE-11 calls `CoreNatural`: the client reads hidden-slot outputs only through the slot service, so a projection that carries one slot service to another by an exact program equality under an invariant (for example `LazyOracleDiscard.impl_project`) carries the whole run. It does not discharge `CoreNatural`, which takes service projections in law (`LawEq`) and concerns CE-11's per-command registration core. The first touch of a slot is a hidden read, which the skeleton makes only at the selected raw accept's private root on the challenge marker and at a grouped Beacon finish on the challenge marker (`PqxdhRegistrationJointKemRootExpand.resumeImpl_hidden`, `skelImpl_hidden`).
 - The hybrid `hybrid k` answers the first `k` fresh hidden coordinates (in first-touch order) with 108 uniform bytes and every later one with the key-schedule output of a fresh uniform root. `hybrid 0` is the uniform-root world, and `hybrid (1 + qFinish)` is `allIdealBranch`. Each hop `k` to `k + 1` is the key-schedule game on the distinguisher `entryDk k` of the `k`-th fresh entry (`hybrid_root`, `hybrid_uniform`, by eager sampling of that entry), bounded by G2 (`PqxdhKeyScheduleFromRoot.fromRoot_bound`). `entryDk 0` is stage S3b's `entryD` (`entryDk_zero`), and `entryDk 1` is the distinguisher of the second entry.
 - `opaqueBranch_allIdeal`: the opaque KEM-ideal branch of T6 and `allIdealBranch` are distinguishable with advantage at most the S1c and S2 terms of T7 plus the sum over `k < 1 + qFinish` of the four key-schedule advantages of G2 on `entryDk k` (`keyScheduleBound`).
 
@@ -159,11 +159,8 @@ theorem run_eager (draw : ℕ → ProbComp Output) (k : ℕ)
     (client : OracleComp (Spec PqxdhCorrelatedExtractFamily.Message Output) Bool)
     (state : IState PqxdhCorrelatedExtractFamily.Message Output) :
     𝒟[(simulateQ (indexedImpl draw) client).run' state] =
-      𝒟[do let value ← draw k; (simulateQ (indexedImpl (pin k value draw)) client).run' state] := by
-  apply evalDist_eq_of_evalSPMF_eq
-  have project := congrArg (fun distribution => Prod.fst <$> distribution) (indexed_eager draw k client state)
-  simp only [← evalSPMF_map] at project
-  simpa [StateT.run'_eq, map_bind] using project
+      𝒟[do let value ← draw k; (simulateQ (indexedImpl (pin k value draw)) client).run' state] :=
+  indexed_eager_output draw k client state
 
 /-- The `k`-th hybrid is the key-schedule game with a uniform root on the `k`-th entry's distinguisher. -/
 theorem hybrid_root (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
@@ -285,7 +282,7 @@ theorem slotGame_all (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
   rw [slotGame, allIdealBranch, StateT.run'_eq, StateT.run'_eq, ← lazy, Functor.map_map]
   rfl
 
-/-- Naturality of the registration core in its slot service (the property CE-11 calls `CoreNatural`): the factored root client reads hidden-slot outputs only through the slot service behind the first-touch allocator, so a projection that carries one slot service to another under an invariant carries the whole run. -/
+/-- Naturality of the factored root client in its slot service, in exact form: the client reads hidden-slot outputs only through the slot service behind the first-touch allocator, so a projection that carries each step of one slot service to the corresponding step of another by an exact program equality under an invariant carries the whole run. This is item 2's exact-form analogue, for the closed client, of the property CE-11 calls `CoreNatural`, not that property, which takes service projections in law (`LawEq`) and concerns CE-11's per-command registration core. -/
 theorem entryClient_natural {S₁ S₂ : Type} (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (checks : Checks) (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes)
     (decision : X → Bool) (work : OracleComp (SourceSpec KemSK) X) (runtime : A)

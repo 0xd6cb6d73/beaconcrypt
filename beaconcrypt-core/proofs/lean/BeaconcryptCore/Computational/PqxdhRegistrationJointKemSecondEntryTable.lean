@@ -8,10 +8,10 @@ import BeaconcryptCore.Computational.LazyOracleDiscard
 
 This module is generic and contains no protocol code. It provides the tables of stage S7 of the item 2 plan, which makes every hidden entry ideal, one entry at a time, in first-touch order.
 
-- `indexedImpl sampler` is a lazily sampled table whose `j`-th fresh point (in first-touch order) is drawn from `sampler j`; repeated points are answered from the table. `indexed_eager` draws the `k`-th fresh value before the run (`pin k value sampler` answers the `k`-th fresh point with `value`), by `PqxdhServerAuthEntryFactor.eager_run`. It is a distribution equality; no value is programmed.
+- `indexedImpl sampler` is a lazily sampled table whose `j`-th fresh point (in first-touch order) is drawn from `sampler j`; repeated points are answered from the table. `indexed_eager` draws the `k`-th fresh value before the run (`pin k value sampler` answers the `k`-th fresh point with `value`), by `PqxdhServerAuthEntryFactor.eager_run`. It is a distribution equality; no value is programmed. It is stated in VCVio's deprecated `𝒮[…]` notation, like that lemma; `indexed_eager_output` restates it for the client's output in the measure notation `𝒟[…]`.
 - `firstTable_pinned`: the first-value table of stage S3b (`PqxdhRegistrationJointKemEntryFactor.firstTable`) is the indexed table pinned at its first fresh point.
 - `indexed_lazy`: a client with at most `m` value requests, run from a table with fewer than `q - m` fresh points, sees only the first `q` samplers; if these are uniform, the indexed table is VCVio's lazy uniform table.
-- `slotImpl service` puts a first-touch coordinate-to-slot allocator in front of a slot service (item 2 plan section 20, note 2): a new point gets the next free slot of `PqxdhRecordLiftInterface.Slot n`, a repeated point keeps its slot, and the slot's value is read only through `service`. `slot_lazy` shows that with `service` the persistent lazy table `PqxdhRecordLiftLazyTable.impl` and at most `n` value requests, the allocator and table are VCVio's lazy uniform table on the points. `slot_natural` is the naturality the common experiment (CE-11) needs: a client of the allocator reads slot values only through the slot service, so a projection that carries one slot service to another under an invariant carries the whole run.
+- `slotImpl service` puts a first-touch coordinate-to-slot allocator in front of a slot service (item 2 plan section 20, note 2): a new point gets the next free slot of `PqxdhRecordLiftInterface.Slot n`, a repeated point keeps its slot, and the slot's value is read only through `service`. `slot_lazy` shows that with `service` the persistent lazy table `PqxdhRecordLiftLazyTable.impl` and at most `n` value requests, the allocator and table are VCVio's lazy uniform table on the points. `slot_natural` is an exact-form naturality for clients of the allocator: a client reads slot values only through the slot service, so a projection that carries each step of one slot service to the corresponding step of another by an exact program equality under an invariant (for example `LazyOracleDiscard.impl_project`, which carries `tableService` to VCVio's lazy oracle on the slots) carries the whole run. It is item 2's exact-form analogue of the property that the common experiment (CE-11) calls `CoreNatural`, not that property: `CoreNatural` takes service projections in law (`LawEq`), which the split service of CE-11 needs because drawing material and seed and joining them is a different program from one uniform 108-byte draw, and it concerns CE-11's per-command registration core. CE-11b still has to prove `CoreNatural` for its own core; a `LawEq` variant of `slot_natural` would be the reusable piece.
 
 These are program and distribution equalities; they charge nothing.
 -/
@@ -121,6 +121,16 @@ theorem indexed_eager {α : Type} (sampler : ℕ → ProbComp R) (k : ℕ) (clie
             exact Nat.lt_succ_self k
         · exact Or.inl fun value => by rw [indexed_miss _ _ _ hit, indexed_miss _ _ _ hit, pin_other _ _ _ _ at_k]
       · exact Or.inl fun value => by rw [indexed_hit _ _ _ _ hit, indexed_hit _ _ _ _ hit]
+
+/-- `indexed_eager` for the client's output, in the measure notation: the indexed table has the output distribution of drawing the `k`-th fresh value first and answering the `k`-th fresh point with it. -/
+theorem indexed_eager_output {α : Type} [MeasurableSpace α] (sampler : ℕ → ProbComp R) (k : ℕ)
+    (client : OracleComp (Spec D R) α) (state : IState D R) :
+    𝒟[(simulateQ (indexedImpl sampler) client).run' state] =
+      𝒟[do let value ← sampler k; (simulateQ (indexedImpl (pin k value sampler)) client).run' state] := by
+  apply evalDist_eq_of_evalSPMF_eq
+  have project := congrArg (fun distribution => Prod.fst <$> distribution) (indexed_eager sampler k client state)
+  simp only [← evalSPMF_map] at project
+  simpa [StateT.run'_eq, map_bind] using project
 
 end Indexed
 
@@ -289,7 +299,7 @@ theorem slot_none {S : Type} (service : SlotService S R n) (point : D) (state : 
         result.2))) <$> (service ⟨state.1.2, room⟩).run state.2 := by
   simp [slotImpl, found, room]
 
-/-- Naturality (the property CE-11 calls `CoreNatural`): a client of the allocator reads slot values only through the slot service, so a projection that carries one slot service to another under an invariant carries the whole run, with the allocator state unchanged. -/
+/-- Naturality in exact form: a client of the allocator reads slot values only through the slot service, so a projection that carries each step of one slot service to the corresponding step of another by an exact program equality under an invariant (for example `LazyOracleDiscard.impl_project`) carries the whole run, with the allocator state unchanged. This is item 2's exact-form analogue of the property CE-11 calls `CoreNatural`, not that property, which takes service projections in law (`LawEq`) and concerns CE-11's per-command registration core. -/
 theorem slot_natural {S₁ S₂ α : Type} (service₁ : SlotService S₁ R n) (service₂ : SlotService S₂ R n)
     (inv : S₁ → Prop) (proj : S₁ → S₂)
     (step : ∀ slot state, inv state →
@@ -551,6 +561,12 @@ end BeaconcryptCore.Computational.PqxdhRegistrationJointKemSecondEntry
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhRegistrationJointKemSecondEntry.indexed_eager
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationJointKemSecondEntry.indexed_eager_output' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationJointKemSecondEntry.indexed_eager_output
 
 /-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationJointKemSecondEntry.firstTable_started' depends on axioms: [propext,
  Quot.sound] -/
