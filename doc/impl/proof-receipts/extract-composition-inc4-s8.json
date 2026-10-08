@@ -1,5 +1,5 @@
 {
- "date": "2026-10-08T06:18:23.343064+00:00",
+ "date": "2026-10-08T06:51:36.442264+00:00",
  "scope": "Handoff item 2, increment 4 continued: stage S8 (the random draws of the item 2 root clients and key-schedule distinguishers; PqxdhRegistrationJointKemRootCosts*) and the second part of stage S5 (theorem T8b, the bills of every reduction in the item 2 loss of theorem T8; PqxdhRegistrationJointKemKeyTransferBills) of the extract-design plan. Stage T, theorem T8 and stage S6 are in the receipt extract-composition-inc4.json.",
  "basis": "dd08851bd28341555cc0486d93f0e2ddf5c751f0",
  "basis_note": "dd08851b is the documentation commit of the first part of increment 4 on claude/extract-composition (stage T, T8, S6), built from central fa8d9a54.",
@@ -505,9 +505,27 @@
  "contracts_used": "None new: certified (T5 source budget), KemBound setup caps and initBound, the premises of the existing bills.",
  "headline_bound": "T8b: for slots 0 and 1, indexedReduction setup.hmac rootClient slot makes one challenge query and at most rootBill + 128 local uniform queries, and its real and random games draw at most 64 + rootBill + 128; the key-schedule reductions on entryD have EntryComponentBills at rootBill + 64 (on entryDk k, k < 2, at rootBill + 216).",
  "not_proved": [
-  "Independent semantic and hygiene reviews of increment 4; central integration."
+  "Central integration (and a confirming review of the review fixes if requested)."
  ],
  "re_estimate": "S8 and T8b were built in part of one session (against 4.5-8 agent-days in plan section 22). Remaining item 2 work: reviews of increment 4 (15 modules, 187 theorems), review fixes and integration, 1.5-3 agent-days.",
  "checks_not_run": "No lake build, make verify, nix-collect-garbage, mutation testing, ProVerif, Rust or transcript-fidelity run; no production Rust or ProVerif change.",
- "review": "Not independently reviewed. Not integrated into central."
+ "review": "Independently reviewed at b86df5eb together with the rest of increment 4 (semantic and hygiene reviews). The findings and their fixes are recorded in extract-composition-inc4.json (review_fixes); those touching this receipt's scope are documentation only: the guide T8b paragraph (the four key-schedule reductions of idealKeysLoss, the Extract reductions billed by game draws, the root fields of EntryComponentBills extra; no base or decapsulation interface, those costs inside the uniform bill through KemBound), the analysis S8 paragraph (self-contained reason; count among the bill parameters) and the check-inventory.sh comment of the S5 first-part block. No module of this receipt changed. Not integrated into central.",
+ "date_first_issue": "2026-10-08T06:18:23.343064+00:00",
+ "reviewed_commit": "b86df5ebe8e447ca407cd73c0c9de7b724480839",
+ "files_sha256_review_fixes": {
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRootCostsTools.lean": "0a81ef0bdfdf3fdf53f1495a220818d4360362307d205bc41768d8efebf56455",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRootCostsLayers.lean": "52ee8d1c76ea613c7aa1ee2e42c2c85f369849cd69207dda4012debbc070dd0f",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRootCostsSkeleton.lean": "25bc3366bb38e628a29daa3a1f786631ecc9f47a0ad968b39bbb2cd1fa988df4",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRootCostsClient.lean": "3365818c360a3cacf7ad299ca7aedfd4722a45d88fc6943796d6dbc519aa2b3a",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRootCosts.lean": "b590eadbfc5f626a8006387aaa9662fbaad3f145aa63c87040a25f1dae866cef",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemKeyTransferBills.lean": "b06c514e47ec56e235a9b84b91fd96886d6420869ec60a656dcbd98edf08e02b",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "c761701d0e0b1810f9a296517efbc717cc913c10991184e5ed3e86fa9087b4fe",
+  "beaconcrypt-core/proofs/check-inventory.sh": "d7c560ea2c86c1d58b5ca6cf75c8c41cecc141a873bd79b9d187d593346d80ce",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "ab66803fd31b2d6a6e80dfe484c52c9f4bf1a1f5115e82298503382959b9a381",
+  "beaconcrypt-core/proofs/trusted-boundary.md": "bf09950c7347e42a1161c077a36bc8c8083d1c9f99adcac828d176e80be7fb49",
+  "doc/impl/extract-composition.md": "5c5c6fe2228a6234b40c6233a0b5e886d699c9605af9839d9ce73da3a395225f",
+  "doc/impl/extract-composition-plan.md": "1f2acf53f9144766c4b0fd395ad1a94fd56ba84ec73b83de65318836488ae1df",
+  "doc/formal-verification-analysis.md": "281c02d3a27153962d68adad0622a774f532638504219ea46f6462c8cd9a0b15",
+  "doc/composition-assumptions.md": "52722094744ffd9346173baef51d6c68db7a502c6c0d36b8e60df8a826955630"
+ }
 }

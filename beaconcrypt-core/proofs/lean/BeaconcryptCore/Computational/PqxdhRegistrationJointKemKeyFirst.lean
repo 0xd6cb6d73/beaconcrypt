@@ -3,11 +3,11 @@ import BeaconcryptCore.Computational.PqxdhRegistrationJointKemKeyTransfer
 /-!
 # The ideal-key branch with the message key first or last (item 2, stage S6)
 
-The ideal-key branch `PqxdhRegistrationJointKemIdealKeys.idealKeysBranch` (H4 of the item 2 plan) draws entry 0's 108 uniform bytes `(key32 ‖ next32 ‖ nonce12, right32)` at once and runs entry 0's distinguisher `entryD` on them. Item 4 (the CTX lift) needs the 32-byte message key `key32` as a separate challenger value: first, in the shape of the challenger key of `AdaptiveCtxDynamicKnownKeys.sourceGame` (`$ᵗ CtxKey` before everything else), or last, in the shape of `firstPrepare`/`firstIdeal`, after the executable's remaining material. This module restates H4 in both shapes, as equalities of output distributions:
+The ideal-key branch `PqxdhRegistrationJointKemIdealKeys.idealKeysBranch` (H4 of the item 2 plan) draws entry 0's 108 uniform bytes `(key32 ‖ next32 ‖ nonce12, right32)` at once and runs entry 0's distinguisher `entryD` on them. Item 4 (the CTX lift) needs the 32-byte message key `key32` as a separate challenger value. This module restates H4 with the key drawn as a separate value, before or after the 76-byte residual `(nonce12, next32, right32)` (`PqxdhServerAuthCtxMaterial.Residual`), in both cases before the whole game, as equalities of output distributions:
 
-- `idealKeys_key_first`: the key is drawn first, then the 76-byte residual `(nonce12, next32, right32)` (`PqxdhServerAuthCtxMaterial.Residual`), and `entryD` runs on the reassembled 108 bytes (`PqxdhServerAuthCtxMaterial.output`); this is `PqxdhServerAuthCtxMaterial.key_first`;
-- `idealKeys_key_last`: the residual is drawn first and the key last;
-- `authenticated_key_first` and `authenticated_key_last`: theorem T8 (`PqxdhRegistrationJointKemKeyTransfer.authenticated_ideal_keys`) with the ideal-key branch in either shape.
+- `idealKeys_key_first`: the key is drawn first, then the residual, and `entryD` runs on the reassembled 108 bytes (`PqxdhServerAuthCtxMaterial.output`); this is `PqxdhServerAuthCtxMaterial.key_first`. The key comes before everything else, the order of the challenger key of `AdaptiveCtxDynamicKnownKeys.sourceGame`; the draw is written `$ᵗ RootOutput`, as in `key_first`, not `$ᵗ CtxKey`; both types are reducible abbreviations of `List.Vector UInt8 32` (`CtxKey` is `FixedBytes 32`), so a consumer shaped like `sourceGame` passes from one draw to the other by unfolding them, as `PqxdhServerAuthCtxExperiment.stopped_game` does;
+- `idealKeys_key_last`: the residual is drawn first and the key after it, both before `entryD` runs. This is not the shape of `PqxdhAdaptiveMessageKeySource.firstPrepare`/`firstIdeal`, which sample the source context first and the key after it: here the prechallenge context is sampled inside `entryD`, after both draws;
+- `authenticated_key_first` and `authenticated_key_last`: theorem T8 (`PqxdhRegistrationJointKemKeyTransfer.authenticated_ideal_keys`) with the ideal-key branch in either form.
 
 `nonce12`, `next32` and `right32` stay private simulator data of the distinguisher; the statements say nothing about the independence of an arbitrary source context from the key beyond these distribution equalities. They are equalities and charge nothing.
 -/
@@ -40,7 +40,7 @@ noncomputable def keyFirstBranch (setup : Setup baseSpec KemSK) (codec : Codec R
   entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index
     (output key rest)
 
-/-- The ideal-key branch with entry 0's 108 bytes drawn as the 76-byte residual first and the 32-byte message key last. -/
+/-- The ideal-key branch with entry 0's 108 bytes drawn as the 76-byte residual first and the 32-byte message key after it, both before `entryD` runs (not the `firstPrepare`/`firstIdeal` shape, whose key follows the source context). -/
 noncomputable def keyLastBranch (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes)
     (decision : X → Bool) (work : OracleComp (SourceSpec KemSK) X) (runtime : A)
@@ -75,7 +75,7 @@ theorem keyFirst_keyLast (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
     entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index
       (output key rest)))
 
-/-- Stage S6, key last: the ideal-key branch has the output distribution of the game that draws the 32-byte message key after the 76-byte residual. -/
+/-- Stage S6, key last: the ideal-key branch has the output distribution of the game that draws the 32-byte message key after the 76-byte residual, both before `entryD` runs. -/
 theorem idealKeys_key_last (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes)
     (decision : X → Bool) (work : OracleComp (SourceSpec KemSK) X) (runtime : A)

@@ -32757,7 +32757,7 @@ require_line_count 1 '^theorem slotGame_two([[:space:]]|$)' "$selected_source_mo
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointBeaconFinishOnce\.opaqueBranch_slots_two$' "$selected_source_module" "PqxdhRegistrationJointBeaconFinishOnce dependency BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconFinishOnce.opaqueBranch_slots_two"
 require_line_count 1 '^theorem opaqueBranch_slots_two([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointBeaconFinishOnce theorem opaqueBranch_slots_two"
 
-# Item 2 stage S5, first part (extract-design plan sections 3 and 22): theorem T8, T5 in opaque form composed with T7 at two slots (and with S7 at two entries, also in the slot form at Slot 2); one-sided because T5 is; no test query; the bills of T8b wait for stage S8.
+# Item 2 stage S5, first part (extract-design plan sections 3 and 22): theorem T8, T5 in opaque form composed with T7 at two slots (and with S7 at two entries, also in the slot form at Slot 2); one-sided because T5 is; no test query; the bills are theorem T8b (stage S5, second part, below).
 
 selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemKeyTransfer.lean
 require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRegistrationJointKemKeyTransfer$' proofs/lean/BeaconcryptCore.lean "PqxdhRegistrationJointKemKeyTransfer root import"
@@ -32776,7 +32776,7 @@ require_line_count 1 '^theorem authenticated_all_ideal([[:space:]]|$)' "$selecte
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemKeyTransfer\.authenticated_slots$' "$selected_source_module" "PqxdhRegistrationJointKemKeyTransfer dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemKeyTransfer.authenticated_slots"
 require_line_count 1 '^theorem authenticated_slots([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemKeyTransfer theorem authenticated_slots"
 
-# Item 2 stage S6 (extract-design plan sections 4 and 10): the ideal-key branch with the 32-byte message key drawn first or last (PqxdhServerAuthCtxMaterial.key_first), as equalities of output distributions, and theorem T8 in both shapes, for item 4.
+# Item 2 stage S6 (extract-design plan sections 4 and 10): the ideal-key branch with the 32-byte message key drawn first or after the 76-byte residual, both before the whole game (PqxdhServerAuthCtxMaterial.key_first), as equalities of output distributions, and theorem T8 in both forms, for item 4.
 
 selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemKeyFirst.lean
 require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRegistrationJointKemKeyFirst$' proofs/lean/BeaconcryptCore.lean "PqxdhRegistrationJointKemKeyFirst root import"
