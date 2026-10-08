@@ -466,7 +466,7 @@ Every module was checked on its own with Lean 4.34 (`-j1`, `-M8000`, timeout 180
 
 ## CE-9b: what is proved
 
-CE-9b makes theorem T4 (`PqxdhRegistrationJointKemRawBridge.actual_le_real`) an equality for the decisions that the deployment experiment uses, and with it turns the per-target KEM transfer of CE-9 into a two-sided bound, as plan section 9 (step 9.7 and the paragraph on the two-sided chain) requires for left-or-right secrecy. Two new modules under `beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/` carry 39 guarded theorems; no existing module changed. The `PqxdhDeployment*` modules at central `65e20738` carry 1306 `theorem` declarations, and 1345 with CE-9b.
+CE-9b makes theorem T4 (`PqxdhRegistrationJointKemRawBridge.actual_le_real`) an equality for the decisions that the deployment experiment uses, and with it turns the per-target KEM transfer of CE-9 into a two-sided bound, as plan section 9 (step 9.7 and the paragraph on the two-sided chain) requires for left-or-right secrecy. Two new modules under `beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/` carry 39 guarded theorems; no existing proof module changed, and the root `BeaconcryptCore.lean` gains their two imports at the end of its import block. The `PqxdhDeployment*` modules at central `65e20738` carry 1306 `theorem` declarations, and 1345 with CE-9b.
 
 | Module | Theorems | Content |
 | --- | --- | --- |

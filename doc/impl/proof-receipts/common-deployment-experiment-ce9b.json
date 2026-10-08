@@ -1,5 +1,5 @@
 {
- "date": "2026-10-08T05:31:43.452546+00:00",
+ "date": "2026-10-08T05:32:12.661828+00:00",
  "scope": "CE-9b of the common deployment experiment (handoff item 3): the reverse chain of theorem T4 (KemRawBridge.actual_le_real) under its own premises, T4 as an equality for decisions that imply KeyMatchFinal on the support of the actual execution (and the Decided form for decisions that imply accepted, GoodKem and KeyMatchFinal), the unconditional defect bound, the deployment instance (decision_implies, defect_zero, eligible_real) and the two-sided per-target, reverse and exact-sum KEM transfers (kem_transfer_two_sided, kem_transfer_lower, kem_transfer_sum_two_sided, kem_transfer_create_two_sided); the same for the logged T4 of the LQ-F later game (PqxdhDeploymentLaterKemTwoSided).",
  "basis": "65e207381dd63c0b25d30faddb58902225d409a5",
  "topic": {
@@ -22,15 +22,15 @@
    "subject": "Carry the two-sided T4 to the LQ-F later game (CE-9b)"
   }
  ],
- "commits_note": "The documentation commit that adds this receipt follows these two Lean commits.",
+ "commits_note": "The documentation commits that add and correct this receipt follow these two Lean commits: 28d6dc97 (Document CE-9b, the two-sided form of T4) and the commit that states the root import change.",
  "files_sha256": {
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentKemTwoSided.lean": "9db2befc4bd0e99088507be2297b096b048ad973b67ca22f526709b6ec773c91",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterKemTwoSided.lean": "be0293625932286820b40714a50841eebc1aa5ae4451ceb937cc234830ce7966",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "f0980528e94ce471cc296d9f21bde4d984aee55900d96dff333ad6d786c457e3",
   "beaconcrypt-core/proofs/check-inventory.sh": "faf224aef235aa9e58eee50a7a1ee55f3bea975b53c4f363a96755993f462c35",
   "beaconcrypt-core/proofs/reviewed-inventory.txt": "7502475a0ed3525c8c6f21011b234d1f2f16cb77ca15b551696d1d2d9a9678e9",
-  "doc/impl/common-deployment-experiment.md": "48d9ff2aad94ebc14101aca9f629ac147bc9325e58c4770c0cb6d9c917e48d03",
-  "doc/formal-verification-analysis.md": "814c163ea5eeeafbcfe73362ab1bd424b2534825037dec2f3c0878618545d9af"
+  "doc/impl/common-deployment-experiment.md": "7676be225c8fc960571c0760554d065ceb9301478964fd21045ce42e0fe289d8",
+  "doc/formal-verification-analysis.md": "b8914be376ec85e244cf235532012fedbae622478b29a925fd71ed7e2eed0be9"
  },
  "modules": [
   {
