@@ -1,5 +1,5 @@
 {
- "date": "2026-10-08T03:44:00.355971+00:00",
+ "date": "2026-10-08T03:44:34.527332+00:00",
  "scope": "CE-11a increment 3 (units 11a-3 and 11a-4 of design v2 sections 5.8-5.9 with the C4 and C6 statements agreed with Codex in the world-budget and r6-later replies): PqxdhDeploymentEnvironment (the stripped environment state, the startup, the capability-form registration step realStep and envReal, the capability-form BLAKE2b factoring of the build tail and the finish, C2a with frame_real and frame_wrapped and the first-touch allowance at the accept and the finish, the split hidden wrappers in capability form with their costs, the single-install ingredients, and C4 with c4_instance, c4_closed, c4_later and c4_real), PqxdhDeploymentEnvironmentJoin (reassembly, admissibility and the Splits obligation, the exact joins of the fixed steps, the main simulation, C1 as join with its observed and analysis projections, C3 as c3_shared_cache, and C6 as join_later and join_later_public). Not reviewed; not integrated into central.",
  "basis": "8ef1af6c9073650b1cbb17d3314073aeab0fa326",
  "topic": {
@@ -8,7 +8,7 @@
  },
  "plan": {
   "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
-  "sha256": "0c98e57ea616f0f62ca517ce28f93b533b5f8031cc30ec1addcd47b5c2b74f9f",
+  "sha256": "bd1c85a3151819a67150cf6d1e1c4fcf895e0608a43e0737470abbdd0cb8bc36",
   "sections": "25 (finish-time receive accounting), 26 (CE-11 commitments), 28 (interface v1), 31 (C4 final), 32 (CE-11 split), 33 (world-side C4 and R6 shape), 35 (first touch at the accept), 37 (increment 2 integrated)",
   "committed_snapshot": "doc/impl/common-deployment-experiment-plan.md"
  },
@@ -55,6 +55,10 @@
   {
    "commit": "79c9ea3d7a1828422ade2b250652f76d47e9efb0",
    "subject": "Add the CE-11a generic join with the record world (unit 11a-4)"
+  },
+  {
+   "commit": "8760a7c6990782fcd69732716d38cb8e2dfec0e4",
+   "subject": "Document CE-11a increment 3 (environment and join)"
   }
  ],
  "commits_note": "The documentation commit that adds this receipt follows these commits; it changes no Lean file. Its root import and focused inventory ran on the working tree with the documentation files and this receipt (rows root-docs and inventory-docs).",
@@ -879,6 +883,6 @@
  "not_run": "make verify (owner-gated), full lake build, mutation testing (no production Rust changed), nix-collect-garbage (forbidden on this machine), the transcript-fidelity cargo check (an integration precondition)",
  "obstacles": "none blocking: every built statement is proved without a new assumption or contract; the parts not built are listed under not_built with the reason",
  "statement_text_note": "exact_statements and definitions are the source text of each declaration up to its proof; binders declared by section variables (setup, codec, checks, route, KemSK, Bk, n) are in the enclosing section of the module.",
- "coordination": "Protocol v2: mail peeked only (Codex integrated central 8ef1af6c..2ce7d106 (#146) and 2ce7d106..2f69a484 (#150) during the task; the topic branch was not merged, which belongs to the integration step); scratch inc3, olean prefix inc3/olean and leanpath inc3/leanpath registered before creation; module names PqxdhDeploymentEnvironment and PqxdhDeploymentEnvironmentJoin are under Claude's registered PqxdhDeployment* prefix; no Codex-registered path or branch was touched; Codex modules on central were only imported; nothing was deleted. Topic branch claude/ce11a and worktree /tmp/claude-ce11a are the grandfathered names of increments 1 and 2.",
+ "coordination": "Protocol v2: mail peeked only (Codex integrated central 8ef1af6c..2ce7d106 (#146), 2ce7d106..2f69a484 (#150), 2f69a484..7b1992d8 (#154) and 7b1992d8..94a77e95 (#158) during the task; the topic branch was not merged, which belongs to the integration step); scratch inc3, olean prefix inc3/olean and leanpath inc3/leanpath registered before creation; module names PqxdhDeploymentEnvironment and PqxdhDeploymentEnvironmentJoin are under Claude's registered PqxdhDeployment* prefix; no Codex-registered path or branch was touched; Codex modules on central were only imported; nothing was deleted. Topic branch claude/ce11a and worktree /tmp/claude-ce11a are the grandfathered names of increments 1 and 2.",
  "review": "Not reviewed. An independent semantic and hygiene review is required before integration."
 }
