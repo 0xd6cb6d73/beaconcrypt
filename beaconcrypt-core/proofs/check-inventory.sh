@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1594
+	[handwritten-lean]=1596
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -33153,6 +33153,31 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecord
 require_line_count 1 '^theorem observed_run_source([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProtocol theorem observed_run_source"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProtocol\.analysis_run_source$' "$selected_source_module" "PqxdhRecordLiftProtocol dependency BeaconcryptCore.Computational.PqxdhRecordLiftProtocol.analysis_run_source"
 require_line_count 1 '^theorem analysis_run_source([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProtocol theorem analysis_run_source"
+
+
+# Complete private global source interpretation and contextual first-use sampling law.
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftGlobalMask.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRecordLiftGlobalMask$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftGlobalMask root import"
+require_line_count 4 '^theorem ' "$selected_source_module" "PqxdhRecordLiftGlobalMask theorem inventory"
+require_line_count 4 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftGlobalMask guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftGlobalMask\.local_realization$' "$selected_source_module" "PqxdhRecordLiftGlobalMask dependency BeaconcryptCore.Computational.PqxdhRecordLiftGlobalMask.local_realization"
+require_line_count 1 '^theorem local_realization([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftGlobalMask theorem local_realization"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftGlobalMask\.interpreter_realization$' "$selected_source_module" "PqxdhRecordLiftGlobalMask dependency BeaconcryptCore.Computational.PqxdhRecordLiftGlobalMask.interpreter_realization"
+require_line_count 1 '^theorem interpreter_realization([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftGlobalMask theorem interpreter_realization"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftGlobalMask\.interpreter_coordinate$' "$selected_source_module" "PqxdhRecordLiftGlobalMask dependency BeaconcryptCore.Computational.PqxdhRecordLiftGlobalMask.interpreter_coordinate"
+require_line_count 1 '^theorem interpreter_coordinate([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftGlobalMask theorem interpreter_coordinate"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftGlobalMask\.schedule_realization$' "$selected_source_module" "PqxdhRecordLiftGlobalMask dependency BeaconcryptCore.Computational.PqxdhRecordLiftGlobalMask.schedule_realization"
+require_line_count 1 '^theorem schedule_realization([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftGlobalMask theorem schedule_realization"
+
+# Complete private global source interpretation and contextual first-use sampling law.
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftDeferredChild.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRecordLiftDeferredChild$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftDeferredChild root import"
+require_line_count 2 '^theorem ' "$selected_source_module" "PqxdhRecordLiftDeferredChild theorem inventory"
+require_line_count 2 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftDeferredChild guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftDeferredChild\.filled$' "$selected_source_module" "PqxdhRecordLiftDeferredChild dependency BeaconcryptCore.Computational.PqxdhRecordLiftDeferredChild.filled"
+require_line_count 1 '^theorem filled([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftDeferredChild theorem filled"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftDeferredChild\.initial_law$' "$selected_source_module" "PqxdhRecordLiftDeferredChild dependency BeaconcryptCore.Computational.PqxdhRecordLiftDeferredChild.initial_law"
+require_line_count 1 '^theorem initial_law([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftDeferredChild theorem initial_law"
 
 # Reviewed actual getter availability, distinct from network compromise powers.
 python3 proofs/source/test-getter-profile.py
