@@ -1840,6 +1840,8 @@ import BeaconcryptCore.Computational.PqxdhRecordLiftLaterChain
 
 import BeaconcryptCore.Computational.PqxdhRecordLiftLaterCtx
 
+import BeaconcryptCore.Computational.PqxdhRecordLiftLaterPriv
+
 /-!
 # Beaconcrypt-core verification root
 
