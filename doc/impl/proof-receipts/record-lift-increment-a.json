@@ -1,6 +1,6 @@
 {
  "component": "Record-lift increment A (items 4/5 takeover plan stage S2): Codex WIP W1-W5 published as modules on a Claude topic branch",
- "status": "Checked on the topic branch; the independent semantic and publication-hygiene reviews of ac0136be returned 12 findings, all fixed or answered in fix_pass_1; confirmation of the fix pass and central integration pending",
+ "status": "Checked on the topic branch; the independent semantic and publication-hygiene reviews of ac0136be returned 12 findings, all fixed or answered in fix_pass_1; a confirming review of 23b9c7bd found every finding resolved (confirming_review); central integration pending",
  "base_commit": "80560f9285c9577da71dfcfa676571432283b0c1",
  "branch": "codex/deployment-record-a",
  "worktree": "/tmp/beaconcrypt-deployment-record-a",
@@ -1012,7 +1012,20 @@
    "PqxdhRecordLiftPrefixPolicy.lean theorems 6 guards 6 OK",
    "PqxdhRecordLiftCtxProgramBounds.lean theorems 12 guards 12 OK"
   ],
-  "note": "Every theorem has exactly one exact #guard_msgs/#print axioms guard; the Lean checks exit 0, so every guard matched; no sorry, admit or axiom declaration."
+  "note": "Every theorem has exactly one exact #guard_msgs/#print axioms guard; the Lean checks exit 0, so every guard matched; no sorry, admit or axiom declaration.",
+  "fix_pass_1": {
+   "result_file": "/tmp/bc-arc-scratch/items45/A/fix1/guards-final.txt",
+   "result_file_sha256": "9b923c959facd149f14cd2f9329fbf84e91eeb23f1a267d8d00c432b51d150ef",
+   "tool": "/tmp/bc-arc-scratch/items45/A/tools/guards.py verify <module> (unchanged tool)",
+   "sources": "the Lean sources of the fix pass, which are those of b9f8e5bf (b6a0e5c8 is the only fix-pass commit that changes a Lean file)",
+   "result": "Same five lines as result above: every theorem of the five modules has exactly one exact guard, all OK.",
+   "rerun": {
+    "commit": "23b9c7bdfa2a1830676a9658ef6332b55ce819bc",
+    "file": "/tmp/bc-arc-scratch/items45/A/int/guards-23b9c7bd.txt",
+    "file_sha256": "9b923c959facd149f14cd2f9329fbf84e91eeb23f1a267d8d00c432b51d150ef",
+    "note": "Rerun for the confirming review nit at 23b9c7bd, whose beaconcrypt-core tree equals that of b9f8e5bf (23b9c7bd changes only this receipt); byte-identical to the fix-pass result."
+   }
+  }
  },
  "diff_check": "git diff --check 80560f92..b9f8e5bf: clean",
  "not_run": [
@@ -1021,7 +1034,7 @@
  ],
  "trust_boundary": "No new axiom, assumption or contract; no existing module changed; doc/composition-assumptions.md and trusted-boundary.md unchanged.",
  "reviews": {
-  "status": "completed on ac0136be; findings addressed in fix_pass_1; confirmation pending",
+  "status": "completed on ac0136be; findings addressed in fix_pass_1; fix pass confirmed at 23b9c7bd (confirming_review)",
   "semantic": {
    "reviewer": "Claude semantic reviewer that wrote none of the adapted code (takeover plan R2)",
    "scratch": "/tmp/bc-arc-scratch/items45/A/review-semantic",
@@ -1037,6 +1050,10 @@
   "required_before_integration": [
    "Confirmation of fix_pass_1 by an independent reviewer",
    "Integration preconditions of PROTOCOL section 6 (transcript fidelity, merge of central, LEAN_PATH file)"
+  ],
+  "required_before_integration_status": [
+   "Done: confirming_review (fix pass confirmed at 23b9c7bd).",
+   "At integration: the PROTOCOL section 6 checks on the merged topic tip are recorded in /tmp/bc-arc-scratch/items45/A/int/checks-receipt.json, not in this file."
   ]
  },
  "remaining": [
@@ -1160,5 +1177,35 @@
    }
   ],
   "statements_changed": "Only the four CtxProgramBounds statements opaque_send, opaque_receive, kernel_send and kernel_receive changed text, by replacing the constant recordCost with operationBill, whose body is identical; each is the same proposition as before. No other statement, name or guard changed."
+ },
+ "confirming_review": {
+  "reviewed_range": "ac0136be..23b9c7bd (fix pass 1: b6a0e5c8, b9f8e5bf and the receipt commit 23b9c7bd)",
+  "reviewed_commit": "23b9c7bdfa2a1830676a9658ef6332b55ce819bc",
+  "reviewer": "independent Claude confirming review of the fix pass",
+  "verdict": "approve: every finding of the semantic and hygiene reviews is resolved at 23b9c7bd; one optional receipt nit",
+  "scratch": "/tmp/bc-arc-scratch/items45/A/confirm",
+  "evidence": [
+   "/tmp/bc-arc-scratch/items45/A/confirm/logs/recheck-ctxprogrambounds.log: dev recheck of PqxdhRecordLiftCtxProgramBounds against items45/A/fix1/leanpath, empty log",
+   "/tmp/bc-arc-scratch/items45/A/confirm/BillProbe.lean and logs/billprobe.log: operationBill gives the documented send and receive numbers in every ledger (by decide); the old local name recordCost is gone and PqxdhRecordLiftBudget.recordCost is unaffected; the four renamed statements printed",
+   "/tmp/bc-arc-scratch/items45/A/confirm/h7scan-v2-rerun.json: case-insensitive H-7 source scan version 2, no forbidden name in the five modules",
+   "/tmp/bc-arc-scratch/items45/A/confirm/logs/h7closure-rerun.log: H-7 closure guard rerun: 5 modules, 250 declared constants, closure 26179, 0 direct forbidden uses, 0 closure violations, 12 of 12 structural constants classified",
+   "/tmp/bc-arc-scratch/items45/A/confirm/ClosureKdfProbe.lean and logs/kdfprobe.log: the joint-KDF, random-oracle and fixed-HKDF constants of the closure listed against the analysis closure sentence"
+  ],
+  "findings": [
+   {
+    "severity": "nit",
+    "title": "The receipt's guard_scan entry was not updated for the fix pass",
+    "response": "Optional; done in this commit: guard_scan.fix_pass_1 points to /tmp/bc-arc-scratch/items45/A/fix1/guards-final.txt (same result, from the fix-pass sources of b9f8e5bf) and records a byte-identical rerun at 23b9c7bd.",
+    "outcome": "fixed"
+   },
+   {
+    "severity": "informational",
+    "title": "Every finding is resolved at 23b9c7bd",
+    "response": "None.",
+    "outcome": "no_change_needed"
+   }
+  ],
+  "documentation": "Only this receipt changes: status, reviews.status, reviews.required_before_integration_status, guard_scan.fix_pass_1 and this field. The five guides and the analysis already defer review and integration status to this receipt, so neither changes.",
+  "checks": "No file under beaconcrypt-core changes, so the module, root and inventory checks of fix pass 1 still apply; git diff --check of this commit is recorded by the integration checks receipt."
  }
 }
