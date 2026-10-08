@@ -6,9 +6,9 @@ import BeaconcryptCore.Computational.LazyOracleDiscard
 /-!
 # The challenger's draws of CE-11b and the draw swap of item 2's prefix
 
-The ideal registration of the common deployment experiment (CE-11b) is pointwise in the challenger's draws, which are made before the run in item 2's order and type (design-v2 section 3.1, route R3): the selected KEM key pair `chosen`, the family `others` of the other `count` KEM key pairs, and the challenge ciphertext of an encapsulation to `chosen`'s public key (`Params`, `drawParams`). A target in item 2's coordinates is a raw-accept ordinal and a KEM creation index (`Target`; `Target.ofCE` reads it from a CE designation `g`, with `PqxdhDeploymentKemTransfer.selectedKem`). The reservation of the stopped selected-first router is the pool `Params.pool`: entry `t.kem` is `chosen` and the other entries are `others` in index order (`pool_kem`, `pool_other`), which is the list `List.ofFn (selected.insertNth chosen others)` that item 2's prephase hands to the router.
+The ideal registration of the common deployment experiment (CE-11b) is pointwise in the challenger's draws, which are made before the run in item 2's order and type (design-v2 section 3.1, route R3): the selected KEM key pair `chosen`, the family `others` of the other `count` KEM key pairs, and the challenge ciphertext of an encapsulation to `chosen`'s public key (`Params`, `drawParams`). A target in item 2's coordinates is a raw-accept ordinal and a KEM creation index (`Target`; `Target.ofCE` reads it from a CE designation `g`, with `PqxdhDeploymentKemTransfer.selectedKem`). The reservation of the stopped selected-first router is the pool `Params.pool`: entry `t.kem` is `chosen` and the other entries are `others` in index order (`pool_kem`, `pool_other`), which is the form `List.ofFn (selected.insertNth chosen others)` in which item 2's prephase builds the router's reservation (`pool_eq` gives the list form; `preOpaquePool`, the prephase at a given family, builds the router from this list, and `preOpaque_pool` relates it to item 2's prephase).
 
-Item 2's ideal world draws the same values in another order: `PqxdhRegistrationJointKemPostSkeleton.sharedStart` draws `chosen`, then runs the prephase `PqxdhRegistrationJointKemRawOpaque.sourcePreOpaque`, which draws the family after the Server constructor (and not at all when the constructor fails), then draws the challenge encapsulation. `preOpaquePool` is the prephase with the family given as an argument; `preOpaque_pool` moves the family draw before the constructor (a failed constructor discards it), and `draws_swap` moves the encapsulation before the prephase, so item 2's prefix has the law of `drawParams` followed by the prephase at the drawn pool (`startPool`). `slotGame_pool` lifts this to item 2's two-slot ideal world `PqxdhRegistrationJointKemSecondEntry.slotGame`: it is, in distribution, `drawParams` followed by the same world pointwise in the drawn parameters (`slotGameAt`). Every step is an exchange of independent draws (`LazyOracleDiscard.lawEq_swap`) or the removal of an unused draw (`LazyOracleDiscard.lawEq_drop`). These are equalities in law; they charge nothing and make no security claim.
+Item 2's ideal world draws the same values in another order: `PqxdhRegistrationJointKemPostSkeleton.sharedStart` draws `chosen`, then runs the prephase `PqxdhRegistrationJointKemRawOpaque.sourcePreOpaque`, which draws the family after the Server constructor (and not at all when the constructor fails), then draws the challenge encapsulation. `preOpaquePool` is the prephase with the family given as an argument; `preOpaque_pool` moves the family draw before the constructor (a failed constructor discards it), and `draws_swap` moves the encapsulation before the prephase, so item 2's prefix has the law of `drawParams` followed by the prephase at the drawn pool (`startPool`). `slotGame_pool` lifts this to item 2's `n`-slot ideal world `PqxdhRegistrationJointKemSecondEntry.slotGame` (at `n = 2`, item 2's two-slot ideal world): it is, in distribution, `drawParams` followed by the same world pointwise in the drawn parameters (`slotGameAt`). Every step is an exchange of independent draws (`LazyOracleDiscard.lawEq_swap`) or the removal of an unused draw (`LazyOracleDiscard.lawEq_drop`). These are equalities in law; they charge nothing and make no security claim.
 -/
 
 open OracleComp OracleSpec
@@ -83,7 +83,7 @@ theorem pool_other (t : Target count) (p : Params KemSK count) (j : Fin count) :
   simp [Params.family]
   omega
 
-/-- The pool of a target is the reservation that item 2's prephase hands to the stopped selected-first router. -/
+/-- The pool of a target as a list: `List.ofFn (t.kem.insertNth chosen others)`. This lemma only unfolds `Params.pool`. It is the form in which item 2's prephase builds the reservation of the stopped selected-first router: the prephase at a given family, `preOpaquePool`, passes this list to the router by definition, and `preOpaque_pool` shows that the family draw followed by `preOpaquePool` has the law of item 2's prephase `sourcePreOpaque`. -/
 theorem pool_eq (t : Target count) (p : Params KemSK count) :
     p.pool t = List.ofFn (t.kem.insertNth p.chosen p.others) := rfl
 
@@ -162,7 +162,7 @@ theorem draws_swap (count : ℕ) (selected : Fin (count + 1)) (index : ℕ) :
 
 end Swap
 
-/-! ### Item 2's two-slot ideal world, pointwise in the challenger's draws -/
+/-! ### Item 2's `n`-slot ideal world, pointwise in the challenger's draws -/
 
 section Slots
 variable {ι : Type} {baseSpec : OracleSpec ι} {Reader Response A X : Type}
@@ -207,7 +207,7 @@ theorem internalize_run {C S : Type} {n : ℕ} (service : PqxdhRegistrationJoint
   rw [internalizeV, simulateQ_bind, StateT.run'_eq, StateT.run_bind, slot_liftComp, bind_map_left, map_bind]
   rfl
 
-/-- The draw swap in item 2's two-slot ideal world: the `n`-slot world has the distribution of the challenger's draws followed by the same world at the drawn parameters. -/
+/-- The draw swap in item 2's `n`-slot ideal world (at `n = 2`, item 2's two-slot ideal world): the `n`-slot world has the distribution of the challenger's draws followed by the same world at the drawn parameters. -/
 theorem slotGame_pool (count : ℕ) (selected : Fin (count + 1)) (index n : ℕ) :
     𝒟[slotGame setup codec checks ensureInit supplied decision work runtime count selected index n] =
       𝒟[drawParams setup count >>= slotGameAt (Reader := Reader) setup codec checks ensureInit supplied decision work
