@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1640
+	[handwritten-lean]=1641
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -32951,6 +32951,55 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem kem_transfer_server_lower([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterKemTwoSided theorem kem_transfer_server_lower"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterKemTwoSided\.kem_transfer_server_sum_two_sided$' "$selected_source_module" "PqxdhDeploymentLaterKemTwoSided dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterKemTwoSided.kem_transfer_server_sum_two_sided"
 require_line_count 1 '^theorem kem_transfer_server_sum_two_sided([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterKemTwoSided theorem kem_transfer_server_sum_two_sided"
+
+# Items 4/5, stage S1: record-lift ideal worlds (idealChains, idealAuth, idealRecords) and the H-5 target statements as definitions, with well-formedness theorems.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftIdeal.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRecordLiftIdeal$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftIdeal root import"
+require_line_count 21 '^theorem ' "$selected_source_module" "PqxdhRecordLiftIdeal theorem inventory"
+require_line_count 21 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftIdeal guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftIdeal\.positions_derivations$' "$selected_source_module" "PqxdhRecordLiftIdeal dependency BeaconcryptCore.Computational.PqxdhRecordLiftIdeal.positions_derivations"
+require_line_count 1 '^theorem positions_derivations([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftIdeal theorem positions_derivations"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftIdeal\.analysis_chainView$' "$selected_source_module" "PqxdhRecordLiftIdeal dependency BeaconcryptCore.Computational.PqxdhRecordLiftIdeal.analysis_chainView"
+require_line_count 1 '^theorem analysis_chainView([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftIdeal theorem analysis_chainView"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftIdeal\.realChains_analysis$' "$selected_source_module" "PqxdhRecordLiftIdeal dependency BeaconcryptCore.Computational.PqxdhRecordLiftIdeal.realChains_analysis"
+require_line_count 1 '^theorem realChains_analysis([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftIdeal theorem realChains_analysis"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftIdeal\.chains_selected_zero$' "$selected_source_module" "PqxdhRecordLiftIdeal dependency BeaconcryptCore.Computational.PqxdhRecordLiftIdeal.chains_selected_zero"
+require_line_count 1 '^theorem chains_selected_zero([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftIdeal theorem chains_selected_zero"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftIdeal\.realChains_game$' "$selected_source_module" "PqxdhRecordLiftIdeal dependency BeaconcryptCore.Computational.PqxdhRecordLiftIdeal.realChains_game"
+require_line_count 1 '^theorem realChains_game([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftIdeal theorem realChains_game"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftIdeal\.idealRecords_O$' "$selected_source_module" "PqxdhRecordLiftIdeal dependency BeaconcryptCore.Computational.PqxdhRecordLiftIdeal.idealRecords_O"
+require_line_count 1 '^theorem idealRecords_O([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftIdeal theorem idealRecords_O"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftIdeal\.idealRecords_P$' "$selected_source_module" "PqxdhRecordLiftIdeal dependency BeaconcryptCore.Computational.PqxdhRecordLiftIdeal.idealRecords_P"
+require_line_count 1 '^theorem idealRecords_P([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftIdeal theorem idealRecords_P"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftIdeal\.keyImpl_modes$' "$selected_source_module" "PqxdhRecordLiftIdeal dependency BeaconcryptCore.Computational.PqxdhRecordLiftIdeal.keyImpl_modes"
+require_line_count 1 '^theorem keyImpl_modes([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftIdeal theorem keyImpl_modes"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftIdeal\.randomImpl_other$' "$selected_source_module" "PqxdhRecordLiftIdeal dependency BeaconcryptCore.Computational.PqxdhRecordLiftIdeal.randomImpl_other"
+require_line_count 1 '^theorem randomImpl_other([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftIdeal theorem randomImpl_other"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftIdeal\.materialAt_native$' "$selected_source_module" "PqxdhRecordLiftIdeal dependency BeaconcryptCore.Computational.PqxdhRecordLiftIdeal.materialAt_native"
+require_line_count 1 '^theorem materialAt_native([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftIdeal theorem materialAt_native"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftIdeal\.ctxInterpreter_base$' "$selected_source_module" "PqxdhRecordLiftIdeal dependency BeaconcryptCore.Computational.PqxdhRecordLiftIdeal.ctxInterpreter_base"
+require_line_count 1 '^theorem ctxInterpreter_base([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftIdeal theorem ctxInterpreter_base"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftIdeal\.hiddenOpening_malformed$' "$selected_source_module" "PqxdhRecordLiftIdeal dependency BeaconcryptCore.Computational.PqxdhRecordLiftIdeal.hiddenOpening_malformed"
+require_line_count 1 '^theorem hiddenOpening_malformed([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftIdeal theorem hiddenOpening_malformed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftIdeal\.hiddenSealing_narrow$' "$selected_source_module" "PqxdhRecordLiftIdeal dependency BeaconcryptCore.Computational.PqxdhRecordLiftIdeal.hiddenSealing_narrow"
+require_line_count 1 '^theorem hiddenSealing_narrow([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftIdeal theorem hiddenSealing_narrow"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftIdeal\.pure_advantage$' "$selected_source_module" "PqxdhRecordLiftIdeal dependency BeaconcryptCore.Computational.PqxdhRecordLiftIdeal.pure_advantage"
+require_line_count 1 '^theorem pure_advantage([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftIdeal theorem pure_advantage"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftIdeal\.chainLiftStatement_of_bool$' "$selected_source_module" "PqxdhRecordLiftIdeal dependency BeaconcryptCore.Computational.PqxdhRecordLiftIdeal.chainLiftStatement_of_bool"
+require_line_count 1 '^theorem chainLiftStatement_of_bool([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftIdeal theorem chainLiftStatement_of_bool"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftIdeal\.ctxAuthLiftStatement_of_bool$' "$selected_source_module" "PqxdhRecordLiftIdeal dependency BeaconcryptCore.Computational.PqxdhRecordLiftIdeal.ctxAuthLiftStatement_of_bool"
+require_line_count 1 '^theorem ctxAuthLiftStatement_of_bool([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftIdeal theorem ctxAuthLiftStatement_of_bool"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftIdeal\.ctxPrivLiftStatement_of_bool$' "$selected_source_module" "PqxdhRecordLiftIdeal dependency BeaconcryptCore.Computational.PqxdhRecordLiftIdeal.ctxPrivLiftStatement_of_bool"
+require_line_count 1 '^theorem ctxPrivLiftStatement_of_bool([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftIdeal theorem ctxPrivLiftStatement_of_bool"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftIdeal\.recordLiftStatement_of_bool$' "$selected_source_module" "PqxdhRecordLiftIdeal dependency BeaconcryptCore.Computational.PqxdhRecordLiftIdeal.recordLiftStatement_of_bool"
+require_line_count 1 '^theorem recordLiftStatement_of_bool([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftIdeal theorem recordLiftStatement_of_bool"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftIdeal\.recordLiftBool_of_parts$' "$selected_source_module" "PqxdhRecordLiftIdeal dependency BeaconcryptCore.Computational.PqxdhRecordLiftIdeal.recordLiftBool_of_parts"
+require_line_count 1 '^theorem recordLiftBool_of_parts([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftIdeal theorem recordLiftBool_of_parts"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftIdeal\.hiding_advantage$' "$selected_source_module" "PqxdhRecordLiftIdeal dependency BeaconcryptCore.Computational.PqxdhRecordLiftIdeal.hiding_advantage"
+require_line_count 1 '^theorem hiding_advantage([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftIdeal theorem hiding_advantage"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftIdeal\.hiding_event$' "$selected_source_module" "PqxdhRecordLiftIdeal dependency BeaconcryptCore.Computational.PqxdhRecordLiftIdeal.hiding_event"
+require_line_count 1 '^theorem hiding_event([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftIdeal theorem hiding_event"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
