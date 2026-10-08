@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1638
+	[handwritten-lean]=1639
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -32859,6 +32859,63 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem toy_splits([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEnvironmentJoin theorem toy_splits"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEnvironmentJoin\.toy_join$' "$selected_source_module" "PqxdhDeploymentEnvironmentJoin dependency BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentJoin.toy_join"
 require_line_count 1 '^theorem toy_join([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEnvironmentJoin theorem toy_join"
+
+# CE-9b: the two-sided form of theorem T4 (the reverse chain, the equality for decisions that imply KeyMatchFinal, the defect bound) and the two-sided per-target KEM transfer of the common deployment experiment.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentKemTwoSided.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentKemTwoSided$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentKemTwoSided root import"
+require_line_count 25 '^theorem ' "$selected_source_module" "PqxdhDeploymentKemTwoSided theorem inventory"
+require_line_count 25 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentKemTwoSided guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTwoSided\.chance_ext$' "$selected_source_module" "PqxdhDeploymentKemTwoSided dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTwoSided.chance_ext"
+require_line_count 1 '^theorem chance_ext([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTwoSided theorem chance_ext"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTwoSided\.chance_le_add$' "$selected_source_module" "PqxdhDeploymentKemTwoSided dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTwoSided.chance_le_add"
+require_line_count 1 '^theorem chance_le_add([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTwoSided theorem chance_le_add"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTwoSided\.chance_eq_zero$' "$selected_source_module" "PqxdhDeploymentKemTwoSided dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTwoSided.chance_eq_zero"
+require_line_count 1 '^theorem chance_eq_zero([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTwoSided theorem chance_eq_zero"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTwoSided\.toReal_close$' "$selected_source_module" "PqxdhDeploymentKemTwoSided dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTwoSided.toReal_close"
+require_line_count 1 '^theorem toReal_close([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTwoSided theorem toReal_close"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTwoSided\.le_add_of_close$' "$selected_source_module" "PqxdhDeploymentKemTwoSided dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTwoSided.le_add_of_close"
+require_line_count 1 '^theorem le_add_of_close([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTwoSided theorem le_add_of_close"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTwoSided\.source_step_good$' "$selected_source_module" "PqxdhDeploymentKemTwoSided dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTwoSided.source_step_good"
+require_line_count 1 '^theorem source_step_good([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTwoSided theorem source_step_good"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTwoSided\.stopped_step_good$' "$selected_source_module" "PqxdhDeploymentKemTwoSided dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTwoSided.stopped_step_good"
+require_line_count 1 '^theorem stopped_step_good([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTwoSided theorem stopped_step_good"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTwoSided\.stopped_good$' "$selected_source_module" "PqxdhDeploymentKemTwoSided dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTwoSided.stopped_good"
+require_line_count 1 '^theorem stopped_good([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTwoSided theorem stopped_good"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTwoSided\.real_le_run$' "$selected_source_module" "PqxdhDeploymentKemTwoSided dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTwoSided.real_le_run"
+require_line_count 1 '^theorem real_le_run([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTwoSided theorem real_le_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTwoSided\.real_le_commands$' "$selected_source_module" "PqxdhDeploymentKemTwoSided dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTwoSided.real_le_commands"
+require_line_count 1 '^theorem real_le_commands([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTwoSided theorem real_le_commands"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTwoSided\.real_le_actual$' "$selected_source_module" "PqxdhDeploymentKemTwoSided dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTwoSided.real_le_actual"
+require_line_count 1 '^theorem real_le_actual([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTwoSided theorem real_le_actual"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTwoSided\.actual_eq_real$' "$selected_source_module" "PqxdhDeploymentKemTwoSided dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTwoSided.actual_eq_real"
+require_line_count 1 '^theorem actual_eq_real([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTwoSided theorem actual_eq_real"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTwoSided\.decided_eq_real$' "$selected_source_module" "PqxdhDeploymentKemTwoSided dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTwoSided.decided_eq_real"
+require_line_count 1 '^theorem decided_eq_real([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTwoSided theorem decided_eq_real"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTwoSided\.real_le_actual_add$' "$selected_source_module" "PqxdhDeploymentKemTwoSided dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTwoSided.real_le_actual_add"
+require_line_count 1 '^theorem real_le_actual_add([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTwoSided theorem real_le_actual_add"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTwoSided\.actual_real_close$' "$selected_source_module" "PqxdhDeploymentKemTwoSided dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTwoSided.actual_real_close"
+require_line_count 1 '^theorem actual_real_close([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTwoSided theorem actual_real_close"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTwoSided\.decision_implies$' "$selected_source_module" "PqxdhDeploymentKemTwoSided dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTwoSided.decision_implies"
+require_line_count 1 '^theorem decision_implies([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTwoSided theorem decision_implies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTwoSided\.defect_zero$' "$selected_source_module" "PqxdhDeploymentKemTwoSided dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTwoSided.defect_zero"
+require_line_count 1 '^theorem defect_zero([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTwoSided theorem defect_zero"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTwoSided\.eligible_real$' "$selected_source_module" "PqxdhDeploymentKemTwoSided dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTwoSided.eligible_real"
+require_line_count 1 '^theorem eligible_real([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTwoSided theorem eligible_real"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTwoSided\.kem_transfer_two_sided$' "$selected_source_module" "PqxdhDeploymentKemTwoSided dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTwoSided.kem_transfer_two_sided"
+require_line_count 1 '^theorem kem_transfer_two_sided([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTwoSided theorem kem_transfer_two_sided"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTwoSided\.kem_transfer_lower$' "$selected_source_module" "PqxdhDeploymentKemTwoSided dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTwoSided.kem_transfer_lower"
+require_line_count 1 '^theorem kem_transfer_lower([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTwoSided theorem kem_transfer_lower"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTwoSided\.abs_sum_sub_le$' "$selected_source_module" "PqxdhDeploymentKemTwoSided dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTwoSided.abs_sum_sub_le"
+require_line_count 1 '^theorem abs_sum_sub_le([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTwoSided theorem abs_sum_sub_le"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTwoSided\.kem_transfer_sum_two_sided$' "$selected_source_module" "PqxdhDeploymentKemTwoSided dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTwoSided.kem_transfer_sum_two_sided"
+require_line_count 1 '^theorem kem_transfer_sum_two_sided([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTwoSided theorem kem_transfer_sum_two_sided"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTwoSided\.sum_last_eq$' "$selected_source_module" "PqxdhDeploymentKemTwoSided dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTwoSided.sum_last_eq"
+require_line_count 1 '^theorem sum_last_eq([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTwoSided theorem sum_last_eq"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTwoSided\.split_create$' "$selected_source_module" "PqxdhDeploymentKemTwoSided dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTwoSided.split_create"
+require_line_count 1 '^theorem split_create([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTwoSided theorem split_create"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentKemTwoSided\.kem_transfer_create_two_sided$' "$selected_source_module" "PqxdhDeploymentKemTwoSided dependency BeaconcryptCore.Computational.PqxdhDeploymentKemTwoSided.kem_transfer_create_two_sided"
+require_line_count 1 '^theorem kem_transfer_create_two_sided([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentKemTwoSided theorem kem_transfer_create_two_sided"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"

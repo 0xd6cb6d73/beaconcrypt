@@ -1743,6 +1743,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentEnvironment
 
 import BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentJoin
 
+import BeaconcryptCore.Computational.PqxdhDeploymentKemTwoSided
+
 /-!
 # Beaconcrypt-core verification root
 
