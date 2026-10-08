@@ -1,6 +1,6 @@
 {
  "date": "2026-10-08T18:10:11.070204+00:00",
- "scope": "Items 4 and 5 (record-layer lift), facts track of the takeover plan (stage S5 continued): the record_lift and ctx_lift targets without the privacy-half hypothesis of the world track's conditional forms (RecordLiftTarget keeps its own SourceFullCorrect premise) and the world-level facts of PqxdhRecordLiftIdeal. Delivered as defined: RecordLiftTarget, CtxLiftTarget, LorStatement, FreshGuessStatement. Open: OriginStatement, BindingStatement (see remaining). Reviewed at 18cfb60c (independent semantic and hygiene reviews, both APPROVE_WITH_NITS); findings resolved by the fix pass (section review). Not integrated.",
+ "scope": "Items 4 and 5 (record-layer lift), facts track of the takeover plan (stage S5 continued): the record_lift and ctx_lift targets without the privacy-half hypothesis of the world track's conditional forms (RecordLiftTarget keeps its own SourceFullCorrect premise) and the world-level facts of PqxdhRecordLiftIdeal. Delivered as defined: RecordLiftTarget, CtxLiftTarget, LorStatement, FreshGuessStatement. Open: OriginStatement, BindingStatement (see remaining). Reviewed at 18cfb60c (independent semantic and hygiene reviews, both APPROVE_WITH_NITS); findings resolved by the fix pass (section review). Confirming review of the fix pass: APPROVE_WITH_NITS, nits fixed (review.confirming_review, nit_fix). Integration per PROTOCOL section 6 on a tip that merges central (nit_fix.integration_checks).",
  "basis": "075511311e457d8e2e0c5464071c802cf44b7a41",
  "reviewed": "18cfb60c137f174931712a184b417df5726f816d",
  "tip": "c4ed9d472ab7f6cc06ba562e109c0d916c37d5bf",
@@ -38,10 +38,11 @@
   "per_theorem": {
    "PqxdhRecordLift (all 3)": "proof level: functional AEAD correctness (Pqxdh.Crypto.aead_open_seal, aeadSeal_tag_length, AdaptiveRawNonceAead.HistoryCorrect) through PqxdhRecordLiftCtxBills.ctxAuthLiftTarget; SourceFullCorrect in record_lift_bool and record_lift (the target premise); IND$, INT-CTXT and, for the record-lift theorems, HMAC-PRF and Extract-on-uniform32 only as advantage terms of the losses; BLAKE2b ROM as world model",
    "PqxdhRecordLiftSwap (all 10)": "no contract and no field of the primitive record reached",
-   "PqxdhRecordLiftFlat (35), PqxdhRecordLiftLor (24), PqxdhRecordLiftFresh (40)": "no contract at proof level; aeadSeal_tag_length reached only inside definitions (Flat 11, Lor 10, Fresh 11 theorems: the real-mode CTX code in the CTX interpreter definition, which the zeroed random-mode world never runs), as for PqxdhRecordLiftHiding; structural fields below",
-   "structural fields (all 5 modules)": "dh_comm, xpub_length and x25519_length (the setup DH interface) and hkdf_length (the KDF definitions) are reached only inside definitions, never as a proof step, by 35 theorems: PqxdhRecordLift 3 (all), Flat 11, Lor 10, Fresh 11 (the same theorem set for all four fields and for aeadSeal_tag_length; probe MARKER and HIT lines of the log). They are structural fields of the primitive record classified by the H-7 closure guard (classified structural constants 12 of 12), not contracts used; PROOFLEVEL is 0 for each of them. The contracts used (functional AEAD correctness, SourceFullCorrect) and the games and model entering as loss terms and world model are on the brief's H-7 list."
+   "PqxdhRecordLiftFlat (35), PqxdhRecordLiftLor (24), PqxdhRecordLiftFresh (40)": "no contract at proof level; aeadSeal_tag_length reached only inside definitions (Flat 11, Lor 10, Fresh 11 theorems: the real- and replay-mode CTX code (the .real and .replay branches of keyImpl) in the CTX interpreter definition, which the zeroed random-mode world never runs), as for PqxdhRecordLiftHiding; structural fields below",
+   "structural fields (all 5 modules)": "dh_comm, xpub_length and x25519_length are reached through the setup's DH interface, whose constants the H-7 closure guard classifies as structural (classified structural constants 12 of 12), and hkdf_length is reached through the KDF definitions (RawCtxSourceHkdf.response). All four are propositional fields of the trusted primitive record, reached only inside definitions, never as a proof step, by 35 theorems: PqxdhRecordLift 3 (all), Flat 11, Lor 10, Fresh 11 (the same theorem set for all four fields and for aeadSeal_tag_length; probe MARKER and HIT lines of the log); they are not contracts used, and PROOFLEVEL is 0 for each of them. The contracts used (functional AEAD correctness, SourceFullCorrect) and the games and model entering as loss terms and world model are on the brief's H-7 list."
   },
-  "fix_note": "Fix pass (review finding 2): the earlier text called the structural fields H-7 contracts and listed their reach only for Flat, Lor and Fresh; the reach of the three PqxdhRecordLift theorems is added and the fields are classified as structural. Per-theorem hit sets: /tmp/bc-arc-scratch/items45/facts/fix1/hit-*.txt (extracted from the probe log)."
+  "fix_note": "Fix pass (review finding 2): the earlier text called the structural fields H-7 contracts and listed their reach only for Flat, Lor and Fresh; the reach of the three PqxdhRecordLift theorems is added and the fields are classified as structural. Per-theorem hit sets: /tmp/bc-arc-scratch/items45/facts/fix1/hit-*.txt (extracted from the probe log).",
+  "nit_note": "Confirming-review nit fix: the fix-pass wording said that the H-7 closure guard classifies the four structural fields; it classifies only the constants of the DH interface through which dh_comm, xpub_length and x25519_length are reached, while hkdf_length is reached through the KDF definitions. It also named only the real-mode CTX code as the route of aeadSeal_tag_length; the route probe of the confirming review shows the replay-mode seal as a second route inside the same CTX interpreter definition. Neither route is a proof step. Route probe: /tmp/bc-arc-scratch/items45/facts/confirm/RouteProbe.lean, log /tmp/bc-arc-scratch/items45/facts/confirm/logs/route-probe.log (SHA-256 5813f9dc5e21e8302594d268837f6eec6462eb306b7024d93b94e1923854b85b, exit 0)."
  },
  "h7": {
   "source_scan": {
@@ -1631,7 +1632,7 @@
  "not_proved": [
   "OriginStatement (structural and publication conjuncts) and BindingStatement: open; checked by reading and not found false (guide, Remaining work)."
  ],
- "checks_not_run": "No lake build, make verify, nix-collect-garbage, mutation testing, ProVerif or Rust run; no production Rust or ProVerif change. Transcript fidelity under @cargo and the central-integration checks of PROTOCOL section 6 run on the merged tip at integration, which this track does not do. The fix pass does not merge central (now 8b740cda); that merge and its checks belong to the integration.",
+ "checks_not_run": "No lake build, make verify, nix-collect-garbage, mutation testing, ProVerif or Rust run in the track, the fix pass or the nit fix; no production Rust or ProVerif change. Transcript fidelity (cargo under @cargo) and the central integration checks of PROTOCOL section 6 run on the merged tip (nit_fix.integration_checks).",
  "remaining": "doc/impl/record-lift-facts.md, section \"Remaining work\"; takeover plan section \"12. Facts track status\".",
  "provenance": "New Claude work; nothing adapted from Codex WIP.",
  "commits": [
@@ -1662,6 +1663,10 @@
   {
    "commit": "c4ed9d472ab7f6cc06ba562e109c0d916c37d5bf",
    "subject": "Address facts-track review findings in the guides and analysis"
+  },
+  {
+   "commit": "8c46b4412c58ffd8aa30abb28e99ea75a5e0b3e5",
+   "subject": "Record the facts-track review fix pass in its receipt"
   }
  ],
  "focused_inventory_tips": {
@@ -1699,7 +1704,18 @@
    "note": "Fix pass: the fix commit c4ed9d47 (clean tree)."
   },
   "command": "coord.sh lease mem claude @nix <label> --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C /tmp/beaconcrypt-deployment-record-facts/beaconcrypt-core check-inventory SHELL=bash (PYTHONDONTWRITEBYTECODE=1 in the implementer runs)",
-  "per_commit_note": "Module commits: 28fc39dd, 97276f87 (covering cee9afc7 Swap and 5d098087 Flat, made in a row before it) and dac43360 (modules[].inventory). The hygiene review replayed manifest digests, category counts, gate names and root imports statically at every commit 07551131..18cfb60c (review-hygiene/invcommits.py): OK, handwritten-lean 1690, 1691, 1692, 1693, 1694, 1695, 1695."
+  "per_commit_note": "Module commits: 28fc39dd, 97276f87 (covering cee9afc7 Swap and 5d098087 Flat, made in a row before it) and dac43360 (modules[].inventory). The hygiene review replayed manifest digests, category counts, gate names and root imports statically at every commit 07551131..18cfb60c (review-hygiene/invcommits.py): OK, handwritten-lean 1690, 1691, 1692, 1693, 1694, 1695, 1695.",
+  "inventory-f2": {
+   "exit": 0,
+   "start": "2026-10-08T18:35:06Z",
+   "end": "2026-10-08T18:36:31Z",
+   "recorded_head": "8c46b4412c58ffd8aa30abb28e99ea75a5e0b3e5",
+   "log": "/tmp/bc-arc-scratch/items45/facts/fix1/logs/inventory-f2.log",
+   "log_sha256": "758e2b46aa1d8e861b8813d189c715c4269556d3bd9ee22271ff07f0bab624db",
+   "dirt_bytes_before": 0,
+   "dirt_bytes_after": 0,
+   "note": "Fix pass: the receipt commit 8c46b441 (clean tree), run after that commit; previously recorded only in the fix-pass notes (deviations)."
+  }
  },
  "rechecks_f1": {
   "what": "Each of the five modules and the root BeaconcryptCore.lean rechecked without -o against /tmp/bc-arc-scratch/items45/facts/leanpath through coord.sh lean (timeout 180, -j1 -M8000), one check per call, at the fix commit; all exit 0 with empty logs (the guards pass).",
@@ -1838,7 +1854,46 @@
     "outcome": "no_change_needed"
    }
   ],
-  "statements_changed": "None. The fix pass changes only Markdown; every Lean file is byte-identical to dac43360 (and to 18cfb60c), so every theorem statement, proof and guard is unchanged."
+  "statements_changed": "None. The fix pass changes only Markdown; every Lean file is byte-identical to dac43360 (and to 18cfb60c), so every theorem statement, proof and guard is unchanged.",
+  "confirming_review": {
+   "reviewed_commit": "8c46b4412c58ffd8aa30abb28e99ea75a5e0b3e5",
+   "reviewed_range": "18cfb60c..8c46b441 (the fix commit c4ed9d47 and the receipt commit 8c46b441)",
+   "reviewer": "independent Claude confirming review of the fix pass (a reviewer that did not write the modules); read only",
+   "notes": "/tmp/bc-arc-scratch/items45/facts/confirm/NOTES.md",
+   "notes_sha256": "44c4d381eaef2807c1ad1fb880a3cbbd0aeb9e3179506045b2fd01eec0982d95",
+   "verdict": "APPROVE_WITH_NITS",
+   "outcome": "findings F1-F10 and F12 resolved, F11 partly (one scratch label); no Lean change in the fix pass; two documentation-precision nits in the replacement text of F2 and F3 and the remaining scratch label; no finding against a Lean statement, definition, guard or inventory row",
+   "evidence": [
+    "diff 18cfb60c..8c46b441: Markdown and this receipt only; no Lean, inventory, root or check-inventory.sh change; both commits end with the exact footer",
+    "own guard scan: 3/10/35/24/40 = 112 theorems with 112 exact guards, axioms within propext, Classical.choice and Quot.sound; the receipt statements equal the guards by module, name and axioms",
+    "rechecks without -o at 8c46b441 through coord.sh lean: the five modules and the root exit 0 with empty logs (2026-10-08T18:46:05Z-18:46:36Z)",
+    "receipt digests: 41 of 42 path digests and files_sha256_fix1 match; the plan digests are documented as changing",
+    "focused check-inventory at c4ed9d47 and 8c46b441 exit 0, dirt 0/0; git diff --check 07551131..8c46b441 clean",
+    "H-7 source scan version 3 of the guide, this receipt, the added documentation lines and the five modules: no forbidden or informational hit (/tmp/bc-arc-scratch/items45/facts/confirm/logs/h7scan-head.json, SHA-256 191c82cf744be3e3de1a6d624a927445296092dcca5e518ffe4fa637e355518e)",
+    "F1 checked against Lean (RecordAD bytes, seq and sid; replayPlaintext compares context.ad) and Rust (build_associated_data 153 bytes; LE64(sequence) || LE64(sender_id) in commitment.rs)",
+    "route probe (contracts.nit_note): aeadSeal_tag_length is used by the real-mode and the replay-mode local seal inside the CTX interpreter definition; the DH fields through the setup DH interface; hkdf_length through RawCtxSourceHkdf.response and the KDF production stream"
+   ],
+   "findings": [
+    {
+     "severity": "nit",
+     "title": "F2 replacement text says that the H-7 closure guard classifies the four structural fields, hkdf_length included; it classifies only the DH-interface constants",
+     "response": "Guide (Contracts per theorem) and contracts.per_theorem: dh_comm, xpub_length and x25519_length are reached through the setup DH interface, whose constants the closure guard classifies as structural (12 of 12); hkdf_length through the KDF definitions (RawCtxSourceHkdf.response); all four are propositional fields of the trusted primitive record, reached only inside definitions, not contracts used. The DH-interface module is not named in maintained documents (its name contains a forbidden H-7 substring).",
+     "outcome": "fixed"
+    },
+    {
+     "severity": "nit",
+     "title": "aeadSeal_tag_length attributed only to the real-mode CTX code; the replay-mode seal is a second route",
+     "response": "Guide, the Assumptions paragraph of the analysis section and contracts.per_theorem now say the real- and replay-mode CTX code (the .real and .replay branches of keyImpl).",
+     "outcome": "fixed"
+    },
+    {
+     "severity": "nit",
+     "title": "F11 partly applied: one scratch NOTES label (LOR proved) still later than its evidence",
+     "response": "The scratch NOTES entry is relabelled 17:25 and marked with its earlier label 17:50 and the dev-lor29 log time 17:25:27 (scratch only).",
+     "outcome": "fixed"
+    }
+   ]
+  }
  },
  "fix_pass": {
   "date": "2026-10-08",
@@ -1847,5 +1902,23 @@
   "scope": "Documentation only: doc/impl/record-lift-facts.md (status, opening paragraph, contracts per theorem, Remaining work 1(d), Checks), doc/formal-verification-analysis.md (S5 continued status and assumptions, privacy-track pointer), doc/impl/record-lift-world-facts.md (one status row), doc/impl/record-lift-ideal.md (Delivering stages note), and this receipt in the following commit. No Lean file, inventory row, count, digest, root import or check-inventory.sh line changes.",
   "notes": "/tmp/bc-arc-scratch/items45/facts/fix1/NOTES.md",
   "checks": "At the fix commit: rechecks of the five modules and the root (rechecks_f1), guards.py verify 112/112 (guard_scan.verify_f1), inv recount and rehash unchanged (inventory_tip.recount_f1, rehash_f1), focused check-inventory exit 0 with clean tree before and after (focused_inventory_tips.inventory-f1), H-7 source scan of modules and docs (h7.source_scan.outputs.*-f1) and closure guard (h7.closure_guard.f1), git diff --check clean."
- }
+ },
+ "nit_fix": {
+  "date": "2026-10-08",
+  "base": "8c46b4412c58ffd8aa30abb28e99ea75a5e0b3e5",
+  "scope": "Documentation only: doc/impl/record-lift-facts.md (Status: the confirming review and the integration step instead of \"Not integrated\"; Contracts per theorem: the DH-interface and KDF routes of the structural fields and the real- and replay-mode routes of aeadSeal_tag_length; Checks: integration checks pointer), doc/formal-verification-analysis.md (status sentence and Assumptions paragraph of the section \"Items 4 and 5, stage S5, continued\") and this receipt (scope, contracts.per_theorem, contracts.nit_note, review.confirming_review, focused_inventory_tips.inventory-f2, commits, files_sha256_nits, this record, checks_not_run). No Lean file, inventory row, count, digest, root import or check-inventory.sh line changes.",
+  "edit_scripts": [
+   "/tmp/bc-arc-scratch/items45/facts/nits/edit_contracts.py",
+   "/tmp/bc-arc-scratch/items45/facts/nits/edit_docs.py",
+   "/tmp/bc-arc-scratch/items45/facts/nits/receipt_nits.py"
+  ],
+  "h7_scan": "The guide, the added analysis lines and this receipt are scanned after this receipt is written (/tmp/bc-arc-scratch/items45/facts/nits/, recorded in the integration checks receipt).",
+  "diff_check": "git diff --check clean",
+  "integration_checks": "/tmp/bc-arc-scratch/items45/facts/int/checks-receipt.json (module checks into a fresh prefix, root import, inv recount/rehash, focused check-inventory, transcript fidelity and git diff --check on the merged tip)"
+ },
+ "files_sha256_nits": {
+  "doc/formal-verification-analysis.md": "6f49c5e379a8ab5fe24e60c1572a8a6f04d007e197bd8345e89cb6224b4a109f",
+  "doc/impl/record-lift-facts.md": "276c57dd88fd3a19377a64eb7184a102e946b54e5b1f163c1574697d74a28f60"
+ },
+ "files_sha256_nits_note": "The Markdown files that the nit-fix commit changes, at that commit; every Lean and inventory file is unchanged from dac43360."
 }
