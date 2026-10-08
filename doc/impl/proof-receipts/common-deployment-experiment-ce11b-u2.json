@@ -1,6 +1,6 @@
 {
- "date": "2026-10-08T14:43:46.250497+00:00",
- "scope": "CE-11b unit U2 (design-v2 sections 4 and 5.2): C7 for the ideal registration, the represent step, the seed relocation, the kernel identities, the deferral of the seed draws to the hidden installs and ideal_to_split, as four modules. seed_at_install (F4) moved to U3. Reviewed (semantic and hygiene) at 091b9b48; review fix pass applied (docstrings, a comment, inventory digests, documentation and this receipt; no statement changed); not integrated into central.",
+ "date": "2026-10-08T14:57:07.541346+00:00",
+ "scope": "CE-11b unit U2 (design-v2 sections 4 and 5.2): C7 for the ideal registration, the represent step, the seed relocation, the kernel identities, the deferral of the seed draws to the hidden installs and ideal_to_split, as four modules. seed_at_install (F4) moved to U3. Reviewed (semantic and hygiene) at 091b9b48; review fix pass applied (docstrings, a comment, inventory digests, documentation and this receipt; no statement changed); confirming review of e2a64e51: APPROVE, no new finding, recorded before the integration; not integrated into central at the recording commit.",
  "basis": "0b70190e35c4233e20952fd8d48dfa77c9f6f1e5",
  "basis_note": "topic tip after increment 2 (equal to central 0b70190e at the start of the unit); central moved to 14f51c34 during the unit and to 07551131 (which contains unit U5) since; it is not merged into the topic (the merge is an integration step)",
  "topic": {
@@ -9,18 +9,29 @@
  },
  "plan": {
   "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
-  "sha256": "740686104dd9c584a5e29e697db0920eb21b81f8b2730a325767ecb9af222bd1",
-  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u2/fix/plan.at-fix-receipt-74068610.md",
-  "dated_copy_sha256": "740686104dd9c584a5e29e697db0920eb21b81f8b2730a325767ecb9af222bd1",
-  "sections": "54 and 55 (unit U5, other track), 56 (this unit), 57 (another lane: central 07551131 with U5), 58 (this review fix pass, new; 57 was the last section)",
-  "earlier": {
-   "note": "dated copy recorded by the first U2 receipt (before sections 57 and 58)",
-   "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u2/docs/plan.at-u2-receipt-e289a18a.md",
-   "dated_copy_sha256": "e289a18aa12c39a30c27de9398b404de476e54da84a4f18a89e2a6e153234550"
-  },
+  "sha256": "86f632a11ffa6e0fc4b58e1b722f55106f9dc210757352a42240d8ce3e3f11fc",
+  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u2/int/plan.at-record-86f632a1.md",
+  "dated_copy_sha256": "86f632a11ffa6e0fc4b58e1b722f55106f9dc210757352a42240d8ce3e3f11fc",
+  "sections": "54 and 55 (unit U5, other track), 56 (this unit), 57 (another lane: central 07551131 with U5), 58 (the review fix pass, with the confirming-review paragraph at its end)",
+  "earlier": [
+   {
+    "note": "hash recorded by the review fix pass receipt (e2a64e51; section 58 without its confirming-review paragraph)",
+    "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u2/fix/plan.at-fix-receipt-74068610.md",
+    "dated_copy_sha256": "740686104dd9c584a5e29e697db0920eb21b81f8b2730a325767ecb9af222bd1"
+   },
+   {
+    "note": "dated copy recorded by the first U2 receipt (before sections 57 and 58)",
+    "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u2/docs/plan.at-u2-receipt-e289a18a.md",
+    "dated_copy_sha256": "e289a18aa12c39a30c27de9398b404de476e54da84a4f18a89e2a6e153234550"
+   }
+  ],
   "before_fix_copy": {
    "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u2/fix/plan.before-fix.md",
    "sha256": "85e19c05954639130661ac83ab1040068acb824dec83a8ab3de8f3008d696b09"
+  },
+  "before_record_copy": {
+   "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u2/int/plan.before-record-74068610.md",
+   "sha256": "740686104dd9c584a5e29e697db0920eb21b81f8b2730a325767ecb9af222bd1"
   }
  },
  "design": {
@@ -70,9 +81,13 @@
   {
    "commit": "5da0e4ec67f7d5690361a624c89814fa468b519e",
    "subject": "Fix the CE-11b unit U2 review docstring nits"
+  },
+  {
+   "commit": "e2a64e519826b114b34bb28805cc6611cbcf1397",
+   "subject": "Document the CE-11b unit U2 review fix pass"
   }
  ],
- "commits_note": "Commits on the topic after the basis that were made before this receipt was generated; the documentation commit of the review fix pass, which adds this receipt, is not listed.",
+ "commits_note": "Commits on the topic after the basis that were made before this receipt was last generated; the commit that records the confirming review (and last regenerates this receipt) is not listed.",
  "files_sha256": {
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealErase.lean": "d873ea79dc3587164237629a17e6e7beb63916db61ac01b900896ac0c784e1cd",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealKeys.lean": "be480f19cca177b0e1a984b335f523ad8ed84c198ac7e0aeb85ee1efe0f642bc",
@@ -1665,7 +1680,7 @@
   "PqxdhDeploymentIdealDefer": []
  },
  "git_diff_check": {
-  "range": "0b70190e35c4233e20952fd8d48dfa77c9f6f1e5..working tree",
+  "range": "0b70190e35c4233e20952fd8d48dfa77c9f6f1e5..working tree (with the confirming-review record)",
   "exit": 0
  },
  "not_run": [
@@ -1752,6 +1767,56 @@
    "PqxdhDeploymentIdealKeys (module docstring)",
    "PqxdhDeploymentIdealDefer.idealSplit",
    "PqxdhDeploymentIdealDefer.ideal_to_split"
-  ]
+  ],
+  "confirming_review": {
+   "reviewed_range": "091b9b485178ef934e4625535189030ad9a19e2b..e2a64e519826b114b34bb28805cc6611cbcf1397",
+   "reviewed_commit": "e2a64e519826b114b34bb28805cc6611cbcf1397",
+   "scope": "the fix pass 5da0e4ec (Lean docstrings, a check-inventory comment, inventory digests) and e2a64e51 (documentation, receipt): statements, guards, receipt, inventory, documentation, scratch notes, registry descriptions",
+   "verdict": "APPROVE: every finding of the review of 091b9b48 resolved; no new finding",
+   "checks": [
+    "HEAD e2a64e51 equals git ls-remote; clean tree; git diff --check clean; both fix commits end with the exact footer",
+    "Lean diff 091b9b48..e2a64e51: docstrings only (module docstring of PqxdhDeploymentIdealKeys; docstrings of idealSplit and ideal_to_split in PqxdhDeploymentIdealDefer); no statement, definition or proof changed",
+    "PqxdhDeploymentIdealKeys, PqxdhDeploymentIdealDefer and the root import rechecked at e2a64e51 without -o through coord.sh lean against ce11b/u2/fix/leanpath: exit 0, empty logs",
+    "receipt against HEAD (confirm/verify_receipt.py): files_sha256 (7 files) equal HEAD; theorem and definition lists and counts equal the sources (77, 10, 44, 55; 186 in all); 186 exact guards, each naming its own theorem, axioms within propext, Classical.choice, Quot.sound; axiom_profile keys equal the theorems and the profiles equal the guards; module commits equal the last commit touching each module; final-check records equal their JSON files; artifact hashes match; inventory records equal their logs (including inventory-u2docs); inventory rows equal the file digests",
+    "registry notes of PqxdhDeploymentIdealKeys and PqxdhDeploymentIdealErase refreshed; working plan section 58 appended after 57; CE-11b design section 22 added; central 07551131 contains db7bda73 (unit U5)"
+   ],
+   "check_logs": {
+    "PqxdhDeploymentIdealKeys": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u2/confirm/logs/PqxdhDeploymentIdealKeys.log",
+     "bytes": 0
+    },
+    "PqxdhDeploymentIdealDefer": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u2/confirm/logs/PqxdhDeploymentIdealDefer.log",
+     "bytes": 0
+    },
+    "root": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u2/confirm/logs/root.log",
+     "bytes": 0
+    }
+   },
+   "verify_script": {
+    "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u2/confirm/verify_receipt.py",
+    "sha256": "50fab231e6a8b7a79925107b2de7e36b11be7cb3f0561df9c8531f03e39c936a"
+   },
+   "findings_fixed": [],
+   "records": [
+    "review record: findings of the review of 091b9b48 resolved, checks run (no action)"
+   ],
+   "files_changed": [
+    "doc/impl/common-deployment-experiment.md",
+    "doc/impl/common-deployment-experiment-plan.md",
+    "doc/formal-verification-analysis.md",
+    "doc/impl/proof-receipts/common-deployment-experiment-ce11b-u2.json"
+   ],
+   "lean_change": "none (no file under beaconcrypt-core/ changed)",
+   "notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/u2/confirm/NOTES.txt",
+   "scratch": "/tmp/bc-arc-scratch/common-experiment/ce11b/u2/confirm (review checks), /tmp/bc-arc-scratch/common-experiment/ce11b/u2/int (record-commit scripts, plan copies)"
+  }
+ },
+ "plan_snapshot": {
+  "path": "doc/impl/common-deployment-experiment-plan.md",
+  "refreshed_from_sha256": "86f632a11ffa6e0fc4b58e1b722f55106f9dc210757352a42240d8ce3e3f11fc",
+  "sections": "0-18 and the decision sections 19-58",
+  "note": "refreshed in the commit that records the confirming review: the body equals the working plan from its third line; the snapshot paragraph records the hash and the refresh history (on this branch the refresh adds sections 52 to 58; sections 52 to 55 equal the snapshot that central received from unit U5 at db7bda73, whose body is a prefix of this one)"
  }
 }
