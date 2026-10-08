@@ -1,9 +1,11 @@
 {
  "date": "2026-10-08T18:10:11.070204+00:00",
- "scope": "Items 4 and 5 (record-layer lift), facts track of the takeover plan (stage S5 continued): the unconditional record_lift and ctx_lift targets and the world-level facts of PqxdhRecordLiftIdeal. Delivered as defined: RecordLiftTarget, CtxLiftTarget, LorStatement, FreshGuessStatement. Open: OriginStatement, BindingStatement (see remaining). Unreviewed, not integrated.",
+ "scope": "Items 4 and 5 (record-layer lift), facts track of the takeover plan (stage S5 continued): the record_lift and ctx_lift targets without the privacy-half hypothesis of the world track's conditional forms (RecordLiftTarget keeps its own SourceFullCorrect premise) and the world-level facts of PqxdhRecordLiftIdeal. Delivered as defined: RecordLiftTarget, CtxLiftTarget, LorStatement, FreshGuessStatement. Open: OriginStatement, BindingStatement (see remaining). Reviewed at 18cfb60c (independent semantic and hygiene reviews, both APPROVE_WITH_NITS); findings resolved by the fix pass (section review). Not integrated.",
  "basis": "075511311e457d8e2e0c5464071c802cf44b7a41",
- "tip": "dac43360ed5ef88ed4102378b124da86f2a8480e",
- "tip_note": "The last Lean commit; the documentation commit that adds this receipt changes no Lean file.",
+ "reviewed": "18cfb60c137f174931712a184b417df5726f816d",
+ "tip": "c4ed9d472ab7f6cc06ba562e109c0d916c37d5bf",
+ "lean_tip": "dac43360ed5ef88ed4102378b124da86f2a8480e",
+ "tip_note": "The fix-pass commit, the tree that the fix-pass checks cover; it changes only Markdown (no Lean file, inventory row, count, digest, root import or check-inventory.sh line). The receipt commit that follows adds only this file, which check-inventory does not read; its own focused check-inventory runs after it is committed and is recorded in the fix-pass notes (deviations). lean_tip is the last Lean commit; every Lean file and inventory file is byte-identical from lean_tip to tip.",
  "topic": {
   "branch": "codex/deployment-record-facts",
   "worktree": "/tmp/beaconcrypt-deployment-record-facts",
@@ -13,7 +15,9 @@
   "path": "/tmp/bc-arc-scratch/items45-takeover/takeover-plan.md",
   "sha256": "23f4f6a858a8645bdf4cf0dcc9328062447f699b4743ae28456f7694756ce938",
   "sha256_note": "Digest when this receipt was written; the plan is a shared status file and changes after this.",
-  "sections": "2 (S5; decisions D1-D5), 9 (world track), 10 (privacy track), 12 (facts track)"
+  "sections": "2 (S5; decisions D1-D5), 9 (world track), 10 (privacy track), 12 (facts track)",
+  "sha256_fix1": "0fc337103a8a2ba69c632aa610057e3fe0cd4077edf81d7d65bf8d0df4d6e7da",
+  "note_fix1": "Digest after the fix pass corrected section 12 (header time from the file time; guard count 112); the plan is a shared status file and changes after this."
  },
  "brief": {
   "path": "/tmp/bc-coord/tasks/codex-items-4-5.md",
@@ -23,7 +27,7 @@
  "targets": {
   "module": "PqxdhRecordLiftIdeal (central 07551131, unchanged)",
   "guide": "doc/impl/record-lift-ideal.md",
-  "statements_changed": "None: no definition of PqxdhRecordLiftIdeal changed; ctx_lift, record_lift, idealRecords_lor and idealRecords_fresh state the targets CtxLiftTarget, RecordLiftTarget, LorStatement and FreshGuessStatement exactly as defined."
+  "statements_changed": "None: no definition of PqxdhRecordLiftIdeal changed; ctx_lift, record_lift, idealRecords_lor and idealRecords_fresh state the targets CtxLiftTarget, RecordLiftTarget, LorStatement and FreshGuessStatement exactly as defined. The fix pass changes no Lean file, so no statement changes."
  },
  "contracts": {
   "hypotheses": "No theorem has an assumption or contract hypothesis. record_lift_bool and record_lift state targets whose first premise is SourceFullCorrect.",
@@ -33,9 +37,11 @@
   "log_sha256": "040f99eccbe487c1d20e060219a0e90779e4301eba9e52dcef63887a614cd9a5",
   "per_theorem": {
    "PqxdhRecordLift (all 3)": "proof level: functional AEAD correctness (Pqxdh.Crypto.aead_open_seal, aeadSeal_tag_length, AdaptiveRawNonceAead.HistoryCorrect) through PqxdhRecordLiftCtxBills.ctxAuthLiftTarget; SourceFullCorrect in record_lift_bool and record_lift (the target premise); IND$, INT-CTXT and, for the record-lift theorems, HMAC-PRF and Extract-on-uniform32 only as advantage terms of the losses; BLAKE2b ROM as world model",
-   "PqxdhRecordLiftSwap (all 10)": "no contract reached",
-   "PqxdhRecordLiftFlat (35), PqxdhRecordLiftLor (24), PqxdhRecordLiftFresh (40)": "no contract at proof level; dh_comm, xpub_length, x25519_length, hkdf_length and aeadSeal_tag_length reached only inside definitions (Flat 11, Lor 10, Fresh 11 theorems: the setup DH interface, the KDF definitions and the real-mode CTX code in the CTX interpreter definition), as for PqxdhRecordLiftHiding"
-  }
+   "PqxdhRecordLiftSwap (all 10)": "no contract and no field of the primitive record reached",
+   "PqxdhRecordLiftFlat (35), PqxdhRecordLiftLor (24), PqxdhRecordLiftFresh (40)": "no contract at proof level; aeadSeal_tag_length reached only inside definitions (Flat 11, Lor 10, Fresh 11 theorems: the real-mode CTX code in the CTX interpreter definition, which the zeroed random-mode world never runs), as for PqxdhRecordLiftHiding; structural fields below",
+   "structural fields (all 5 modules)": "dh_comm, xpub_length and x25519_length (the setup DH interface) and hkdf_length (the KDF definitions) are reached only inside definitions, never as a proof step, by 35 theorems: PqxdhRecordLift 3 (all), Flat 11, Lor 10, Fresh 11 (the same theorem set for all four fields and for aeadSeal_tag_length; probe MARKER and HIT lines of the log). They are structural fields of the primitive record classified by the H-7 closure guard (classified structural constants 12 of 12), not contracts used; PROOFLEVEL is 0 for each of them. The contracts used (functional AEAD correctness, SourceFullCorrect) and the games and model entering as loss terms and world model are on the brief's H-7 list."
+  },
+  "fix_note": "Fix pass (review finding 2): the earlier text called the structural fields H-7 contracts and listed their reach only for Flat, Lor and Fresh; the reach of the three PqxdhRecordLift theorems is added and the fields are classified as structural. Per-theorem hit sets: /tmp/bc-arc-scratch/items45/facts/fix1/hit-*.txt (extracted from the probe log)."
  },
  "h7": {
   "source_scan": {
@@ -79,6 +85,145 @@
        "informational": {}
       }
      }
+    },
+    "h7scan-docs-tip": {
+     "path": "/tmp/bc-arc-scratch/items45/facts/logs/h7scan-docs.json",
+     "sha256": "51ad208d20bd0d61f98069ecbc4d68a83feb35643dc4cf9952de11c5177a3b37",
+     "note": "Implementer docs scan at 18cfb60c; it covered only the guide doc/impl/record-lift-facts.md (review finding 9).",
+     "files": {
+      "record-lift-facts.md": {
+       "forbidden_hits": {},
+       "informational": {}
+      }
+     }
+    },
+    "h7scan-review-hygiene-modules": {
+     "path": "/tmp/bc-arc-scratch/items45/facts/review-hygiene/h7scan-modules.json",
+     "sha256": "d83830161a711b1efa32ceb2d352eda22276fbe9d7beca6dc70d89c32bf3ff5e",
+     "note": "Independent hygiene review at 18cfb60c: the five modules.",
+     "files": {
+      "PqxdhRecordLift.lean": {
+       "forbidden_hits": {},
+       "informational": {}
+      },
+      "PqxdhRecordLiftSwap.lean": {
+       "forbidden_hits": {},
+       "informational": {}
+      },
+      "PqxdhRecordLiftFlat.lean": {
+       "forbidden_hits": {},
+       "informational": {}
+      },
+      "PqxdhRecordLiftLor.lean": {
+       "forbidden_hits": {},
+       "informational": {}
+      },
+      "PqxdhRecordLiftFresh.lean": {
+       "forbidden_hits": {},
+       "informational": {}
+      }
+     }
+    },
+    "h7scan-review-hygiene-docs": {
+     "path": "/tmp/bc-arc-scratch/items45/facts/review-hygiene/h7scan-docs.json",
+     "sha256": "cedf01fbf7f8333c7599d6a5c20da317d69a727c969c2e0757aa9cdc7e3daf83",
+     "note": "Independent hygiene review at 18cfb60c: the guide, the receipt, all added lines of the FVA, record-lift-world-facts.md and check-inventory.sh, and the takeover plan (its only informational hit, at plan line 251, is in section 11, the later track).",
+     "files": {
+      "record-lift-facts.md": {
+       "forbidden_hits": {},
+       "informational": {}
+      },
+      "record-lift-facts.json": {
+       "forbidden_hits": {},
+       "informational": {}
+      },
+      "docs-added.txt": {
+       "forbidden_hits": {},
+       "informational": {}
+      },
+      "takeover-plan.md": {
+       "forbidden_hits": {},
+       "informational": {
+        "\\b[Rr]eveal": [
+         251
+        ]
+       }
+      }
+     }
+    },
+    "h7scan-modules-f1": {
+     "path": "/tmp/bc-arc-scratch/items45/facts/fix1/logs/h7scan-modules-f1.json",
+     "sha256": "d83830161a711b1efa32ceb2d352eda22276fbe9d7beca6dc70d89c32bf3ff5e",
+     "note": "Fix pass at c4ed9d47: the five modules.",
+     "files": {
+      "PqxdhRecordLift.lean": {
+       "forbidden_hits": {},
+       "informational": {}
+      },
+      "PqxdhRecordLiftSwap.lean": {
+       "forbidden_hits": {},
+       "informational": {}
+      },
+      "PqxdhRecordLiftFlat.lean": {
+       "forbidden_hits": {},
+       "informational": {}
+      },
+      "PqxdhRecordLiftLor.lean": {
+       "forbidden_hits": {},
+       "informational": {}
+      },
+      "PqxdhRecordLiftFresh.lean": {
+       "forbidden_hits": {},
+       "informational": {}
+      }
+     }
+    },
+    "h7scan-docs-f1": {
+     "path": "/tmp/bc-arc-scratch/items45/facts/fix1/logs/h7scan-docs-f1.json",
+     "sha256": "a5e3305fa53dbd05904e1b46caeec00bb22c5fffce08e779e6d16c5e8dd690ef",
+     "note": "Fix pass at c4ed9d47: the guide, this receipt as it stood before this update, every line the branch adds (07551131..c4ed9d47) to doc/formal-verification-analysis.md, doc/impl/record-lift-world-facts.md, doc/impl/record-lift-ideal.md, check-inventory.sh, reviewed-inventory.txt and BeaconcryptCore.lean (fix1/added-*.txt), and the takeover plan. No forbidden hit; the only informational hit is at plan line 251 (section 11, the later track). The updated receipt is scanned after it is written (fix-pass notes).",
+     "files": {
+      "record-lift-facts.md": {
+       "forbidden_hits": {},
+       "informational": {}
+      },
+      "record-lift-facts.json": {
+       "forbidden_hits": {},
+       "informational": {}
+      },
+      "added-BeaconcryptCore.lean.txt": {
+       "forbidden_hits": {},
+       "informational": {}
+      },
+      "added-check-inventory.sh.txt": {
+       "forbidden_hits": {},
+       "informational": {}
+      },
+      "added-formal-verification-analysis.md.txt": {
+       "forbidden_hits": {},
+       "informational": {}
+      },
+      "added-record-lift-ideal.md.txt": {
+       "forbidden_hits": {},
+       "informational": {}
+      },
+      "added-record-lift-world-facts.md.txt": {
+       "forbidden_hits": {},
+       "informational": {}
+      },
+      "added-reviewed-inventory.txt.txt": {
+       "forbidden_hits": {},
+       "informational": {}
+      },
+      "takeover-plan.md": {
+       "forbidden_hits": {},
+       "informational": {
+        "\\b[Rr]eveal": [
+         251
+        ]
+       }
+      }
+     }
     }
    }
   },
@@ -103,13 +248,30 @@
     "output": "H-7 guard: modules 5; declared constants 327; closure 30542; direct forbidden uses 0; closure violations 0; classified structural constants 12 of 12",
     "tool": "/tmp/bc-arc-scratch/items45/facts/tools/H7ClosureFacts3.lean",
     "tool_sha256": "300953211fff6d625ca785b3fbcd1788f450e8c9a5e4c4fe6494226941bf433e"
+   },
+   "review-hygiene": {
+    "path": "/tmp/bc-arc-scratch/items45/facts/review-hygiene/logs/h7closure.log",
+    "sha256": "90b182c72b5861d345ea11b0f32b8edb09a20d79c64a76609a5fb5bfb7b29b40",
+    "output": "H-7 guard: modules 5; declared constants 327; closure 30542; direct forbidden uses 0; closure violations 0; classified structural constants 12 of 12",
+    "note": "Independent hygiene review at 18cfb60c with a copy of H7ClosureFacts3.lean (same sha256); negative controls exit 1 (review-hygiene/logs/neg-closure.log, neg-guard.log)."
+   },
+   "f1": {
+    "path": "/tmp/bc-arc-scratch/items45/facts/fix1/logs/h7closure-f1.log",
+    "sha256": "90b182c72b5861d345ea11b0f32b8edb09a20d79c64a76609a5fb5bfb7b29b40",
+    "output": "H-7 guard: modules 5; declared constants 327; closure 30542; direct forbidden uses 0; closure violations 0; classified structural constants 12 of 12",
+    "exit": 0,
+    "start": "2026-10-08T18:32:28Z",
+    "end": "2026-10-08T18:32:34Z",
+    "tool": "/tmp/bc-arc-scratch/items45/facts/tools/H7ClosureFacts3.lean",
+    "tool_sha256": "300953211fff6d625ca785b3fbcd1788f450e8c9a5e4c4fe6494226941bf433e",
+    "head": "c4ed9d472ab7f6cc06ba562e109c0d916c37d5bf"
    }
   }
  },
  "modules": [
   {
    "name": "PqxdhRecordLift",
-   "delivered": "CtxLiftTarget (ctx_lift) and RecordLiftTarget (record_lift; Boolean form record_lift_bool) unconditionally, for the explicit chain, integrity and privacy reductions with their bills",
+   "delivered": "CtxLiftTarget (ctx_lift) and RecordLiftTarget (record_lift; Boolean form record_lift_bool) without the privacy-half hypothesis of the world track's conditional forms (RecordLiftTarget keeps its own SourceFullCorrect premise), for the explicit chain, integrity and privacy reductions with their bills",
    "module_commit": "28fc39dd2d2067d4853616e64a7c4fa4f9487139",
    "statement_count": 3,
    "axiom_profile": {
@@ -1411,7 +1573,14 @@
   "tool": "/tmp/bc-arc-scratch/items45/facts/tools/guards.py",
   "tool_sha256": "e00686c3a4fa32fffc871449a2ccf606c4723988635ac61941f8b71d70615b1b",
   "mode": "verify",
-  "rule": "every top-level theorem has exactly one exact \"#guard_msgs in #print axioms\" block naming it, every guard allows only propext, Classical.choice and Quot.sound, and the module has no sorry, admit, axiom, native_decide, implemented_by or extern"
+  "rule": "every top-level theorem has exactly one exact \"#guard_msgs in #print axioms\" block naming it, every guard allows only propext, Classical.choice and Quot.sound, and the module has no sorry, admit, axiom, native_decide, implemented_by or extern",
+  "verify_f1": {
+   "path": "/tmp/bc-arc-scratch/items45/facts/fix1/logs/guards-verify-f1.log",
+   "sha256": "e012db6bac810d4925513cd1f523269ae753b33a5f2704264c636400a5afd9c6",
+   "output": "PqxdhRecordLift.lean theorems 3 guards 3 OK\nPqxdhRecordLiftSwap.lean theorems 10 guards 10 OK\nPqxdhRecordLiftFlat.lean theorems 35 guards 35 OK\nPqxdhRecordLiftLor.lean theorems 24 guards 24 OK\nPqxdhRecordLiftFresh.lean theorems 40 guards 40 OK",
+   "head": "c4ed9d472ab7f6cc06ba562e109c0d916c37d5bf",
+   "total": "3 + 10 + 35 + 24 + 40 = 112 theorems and 112 guards (the scratch report, plan section 12 and notes said 113; review findings 5 and 8)"
+  }
  },
  "inventory_tip": {
   "recount": {
@@ -1424,7 +1593,19 @@
    "sha256": "fd33c98c38e3fe7aa1274d2a46d9b666231438e3b1b454d7d73ade86fa7da936",
    "output": "proofs/lean/BeaconcryptCore.lean: unchanged\nproofs/trusted-boundary.md: unchanged\nproofs/check-inventory.sh: unchanged"
   },
-  "note": "coord.sh inv recount claude then coord.sh inv rehash claude ran at every module commit before committing (counts in modules[].handwritten_lean_count, read from check-inventory.sh at the commit and its parent) and again at the tip, unchanged"
+  "note": "coord.sh inv recount claude then coord.sh inv rehash claude ran at every module commit before committing (counts in modules[].handwritten_lean_count, read from check-inventory.sh at the commit and its parent) and again at the tip, unchanged",
+  "recount_f1": {
+   "path": "/tmp/bc-arc-scratch/items45/facts/fix1/logs/inv-recount-f1.log",
+   "sha256": "5b3072a7192eaea3a62a4eedac471193b4bc28b6b217a5854ee65664d1844ceb",
+   "output": "handwritten-lean count unchanged (1695)",
+   "head": "c4ed9d472ab7f6cc06ba562e109c0d916c37d5bf"
+  },
+  "rehash_f1": {
+   "path": "/tmp/bc-arc-scratch/items45/facts/fix1/logs/inv-rehash-f1.log",
+   "sha256": "fd33c98c38e3fe7aa1274d2a46d9b666231438e3b1b454d7d73ade86fa7da936",
+   "output": "proofs/lean/BeaconcryptCore.lean: unchanged\nproofs/trusted-boundary.md: unchanged\nproofs/check-inventory.sh: unchanged",
+   "head": "c4ed9d472ab7f6cc06ba562e109c0d916c37d5bf"
+  }
  },
  "leanpath": {
   "file": "/tmp/bc-arc-scratch/items45/facts/leanpath",
@@ -1436,18 +1617,21 @@
  "diff_check": {
   "path": "/tmp/bc-arc-scratch/items45/facts/logs/diff-check-tip.log",
   "sha256": "9c6660ade476fda62ac26aa69791c4cebd76429fa6cfd8c1464e73d8af3730ef",
-  "output": "diff-check exit 0"
+  "output": "diff-check exit 0",
+  "fix_pass": "git diff --cached --check before the fix commit and git diff --check 07551131 c4ed9d47: clean (fix1/logs/diff-check-f1.log)"
  },
  "diff_check_note": "git diff --check 07551131 <tip> at the tip, and git diff --cached --check before every commit",
  "deviations": [
   "Two generic modules (PqxdhRecordLiftSwap, PqxdhRecordLiftFlat) that the plan did not name: the hiding coupling of PqxdhRecordLiftHiding compares runs with equal coins and no escapes, while the left-or-right and fresh-message arguments need relabelled coins and escapes on an adversary-level (flattened) world.",
-  "The Swap and Flat commits have no focused check-inventory of their own; the run at the Lor commit 97276f87 covers them (all three commits were made in a row before it).",
-  "The per-commit inv recount and rehash outputs were not saved to files; the receipt records the resulting counts from check-inventory.sh at each commit and its parent, and a recount and rehash at the tip (unchanged)."
+  "The Swap and Flat commits have no focused check-inventory of their own; the run at the Lor commit 97276f87 covers them (all three commits were made in a row before it). The guide said \"at every module commit\" until the fix pass (review finding 7).",
+  "The per-commit inv recount and rehash outputs were not saved to files; the receipt records the resulting counts from check-inventory.sh at each commit and its parent, and a recount and rehash at the tip (unchanged).",
+  "The documentation commit 18cfb60c was first recorded with tip dac43360 and without its focused check-inventory and docs H-7 scan, which were only in the scratch notes; both, the independent runs of the hygiene review and the fix-pass runs are now in focused_inventory_tips and h7 (review finding 6).",
+  "The receipt commit that follows the fix commit adds only this file, so its focused check-inventory and the H-7 scan of this final file run after it is committed and are recorded in /tmp/bc-arc-scratch/items45/facts/fix1/NOTES.md, as in the earlier tracks."
  ],
  "not_proved": [
   "OriginStatement (structural and publication conjuncts) and BindingStatement: open; checked by reading and not found false (guide, Remaining work)."
  ],
- "checks_not_run": "No lake build, make verify, nix-collect-garbage, mutation testing, ProVerif or Rust run; no production Rust or ProVerif change. Transcript fidelity under @cargo and the central-integration checks of PROTOCOL section 6 run on the merged tip at integration, which this track does not do.",
+ "checks_not_run": "No lake build, make verify, nix-collect-garbage, mutation testing, ProVerif or Rust run; no production Rust or ProVerif change. Transcript fidelity under @cargo and the central-integration checks of PROTOCOL section 6 run on the merged tip at integration, which this track does not do. The fix pass does not merge central (now 8b740cda); that merge and its checks belong to the integration.",
  "remaining": "doc/impl/record-lift-facts.md, section \"Remaining work\"; takeover plan section \"12. Facts track status\".",
  "provenance": "New Claude work; nothing adapted from Codex WIP.",
  "commits": [
@@ -1470,6 +1654,198 @@
   {
    "commit": "dac43360ed5ef88ed4102378b124da86f2a8480e",
    "subject": "Prove FreshGuessStatement on the record-ideal world"
+  },
+  {
+   "commit": "18cfb60c137f174931712a184b417df5726f816d",
+   "subject": "Document the record-lift facts track"
+  },
+  {
+   "commit": "c4ed9d472ab7f6cc06ba562e109c0d916c37d5bf",
+   "subject": "Address facts-track review findings in the guides and analysis"
   }
- ]
+ ],
+ "focused_inventory_tips": {
+  "inventory-tip1": {
+   "exit": 0,
+   "start": "2026-10-08T18:10:31Z",
+   "end": "2026-10-08T18:11:55Z",
+   "recorded_head": "18cfb60c137f174931712a184b417df5726f816d",
+   "log": "/tmp/bc-arc-scratch/items45/facts/logs/inventory-tip1.log",
+   "log_sha256": "116fa30f19d45ee71dd62c56431dbf8ddc89abfb7a7c0145ccb6494873e313e1",
+   "dirt_bytes_before": 0,
+   "dirt_bytes_after": 0,
+   "note": "Implementer run at the documentation commit 18cfb60c (clean tree), run after that commit; previously recorded only in the scratch notes (review finding 6)."
+  },
+  "inventory-review-hygiene": {
+   "exit": 0,
+   "start": "2026-10-08T18:19:10Z",
+   "end": "2026-10-08T18:20:36Z",
+   "recorded_head": "18cfb60c137f174931712a184b417df5726f816d",
+   "log": "/tmp/bc-arc-scratch/items45/facts/review-hygiene/logs/inventory.log",
+   "log_sha256": "a70c679dd57f0cca404fc3d118482c2e2fa1bd2b76aee3f1cdebaf2c751eed3f",
+   "dirt_bytes_before": 0,
+   "dirt_bytes_after": 97,
+   "note": "Independent hygiene review at 18cfb60c. dirt_bytes_after counts the ignored __pycache__ directories that this run created without PYTHONDONTWRITEBYTECODE=1; the reviewer removed them after coord.sh disk check-delete printed ok to delete, and git status --porcelain --ignored was empty again (review finding 12)."
+  },
+  "inventory-f1": {
+   "exit": 0,
+   "start": "2026-10-08T18:30:54Z",
+   "end": "2026-10-08T18:32:20Z",
+   "recorded_head": "c4ed9d472ab7f6cc06ba562e109c0d916c37d5bf",
+   "log": "/tmp/bc-arc-scratch/items45/facts/fix1/logs/inventory-f1.log",
+   "log_sha256": "ef85235c81fcefcaca1bda04a65da4da46cb4fa2c7bdc5766d0f6a5cafc4ec4c",
+   "dirt_bytes_before": 0,
+   "dirt_bytes_after": 0,
+   "note": "Fix pass: the fix commit c4ed9d47 (clean tree)."
+  },
+  "command": "coord.sh lease mem claude @nix <label> --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C /tmp/beaconcrypt-deployment-record-facts/beaconcrypt-core check-inventory SHELL=bash (PYTHONDONTWRITEBYTECODE=1 in the implementer runs)",
+  "per_commit_note": "Module commits: 28fc39dd, 97276f87 (covering cee9afc7 Swap and 5d098087 Flat, made in a row before it) and dac43360 (modules[].inventory). The hygiene review replayed manifest digests, category counts, gate names and root imports statically at every commit 07551131..18cfb60c (review-hygiene/invcommits.py): OK, handwritten-lean 1690, 1691, 1692, 1693, 1694, 1695, 1695."
+ },
+ "rechecks_f1": {
+  "what": "Each of the five modules and the root BeaconcryptCore.lean rechecked without -o against /tmp/bc-arc-scratch/items45/facts/leanpath through coord.sh lean (timeout 180, -j1 -M8000), one check per call, at the fix commit; all exit 0 with empty logs (the guards pass).",
+  "script": "/tmp/bc-arc-scratch/items45/facts/fix1/rcheck.sh",
+  "script_sha256": "aa168d2bc6502d6b485f87a13538470c0dcc8fb21176aacae024bdf4fff804df",
+  "summary": "/tmp/bc-arc-scratch/items45/facts/fix1/logs/summary.txt",
+  "summary_sha256": "c04e426ba12b8d94804028f8b4b54f8097b8f97af12bc78c8080510763cb3591",
+  "lines": [
+   "PqxdhRecordLift-f1 exit 0 start 2026-10-08T18:30:07Z end 2026-10-08T18:30:10Z (3s), log bytes 0, src sha256 d2029024c25027e5c18f6b03039e9a30fccd8cece59763b6b4a45d1bdc49d27f, head c4ed9d472ab7f6cc06ba562e109c0d916c37d5bf",
+   "PqxdhRecordLiftSwap-f1 exit 0 start 2026-10-08T18:30:10Z end 2026-10-08T18:30:13Z (3s), log bytes 0, src sha256 d9b37a720247ba0db82d8fedd37c6aa4331f6977a1bf8e23740b26cf880ebb8c, head c4ed9d472ab7f6cc06ba562e109c0d916c37d5bf",
+   "PqxdhRecordLiftFlat-f1 exit 0 start 2026-10-08T18:30:14Z end 2026-10-08T18:30:21Z (7s), log bytes 0, src sha256 400aac1eae4f7686c054b585e88b5f471ac8dde04746540edd78f95efab9b92d, head c4ed9d472ab7f6cc06ba562e109c0d916c37d5bf",
+   "PqxdhRecordLiftLor-f1 exit 0 start 2026-10-08T18:30:21Z end 2026-10-08T18:30:33Z (12s), log bytes 0, src sha256 84d066b8125b89047665e0f5a8bbb041e9cf7e3e35b48c12ace80eeb4ea3ee49, head c4ed9d472ab7f6cc06ba562e109c0d916c37d5bf",
+   "PqxdhRecordLiftFresh-f1 exit 0 start 2026-10-08T18:30:33Z end 2026-10-08T18:30:40Z (7s), log bytes 0, src sha256 da3987d2a66d7cc95d657504ef8b5d7437ce62ab73b3c0e2bc954ad817741559, head c4ed9d472ab7f6cc06ba562e109c0d916c37d5bf",
+   "root-f1 exit 0 start 2026-10-08T18:30:40Z end 2026-10-08T18:30:43Z (3s), log bytes 0, src sha256 775237a2167fac025139370fcf4ddd8d1ea13326eab9899baa4077a025c2dc9c, head c4ed9d472ab7f6cc06ba562e109c0d916c37d5bf"
+  ]
+ },
+ "files_sha256_fix1": {
+  "doc/formal-verification-analysis.md": "9b285392118f684cdbe11d8c1761d9e7d351b8f533a5729875b62449ac0b419e",
+  "doc/impl/record-lift-facts.md": "1c12fc66ca682696ed9378fcb83e62e33ddab7afbfa6f25c93f06152d5156870",
+  "doc/impl/record-lift-ideal.md": "d71ebeab6cd21c6d363d147ab52e53975b01bfc4782b3f56d62e2c9effdd3b66",
+  "doc/impl/record-lift-world-facts.md": "abe2809efdeb54acd474d817a4763f230a1c96a55ec1fd40e5f203e7fb7cca40"
+ },
+ "files_sha256_fix1_note": "The files the fix commit c4ed9d47 changes, at that commit; every other file of the branch is unchanged from 18cfb60c, and every Lean and inventory file from dac43360.",
+ "review": {
+  "reviewed_commit": "18cfb60c137f174931712a184b417df5726f816d",
+  "reviewed_range": "07551131..18cfb60c",
+  "semantic": {
+   "reviewer": "independent Claude semantic review (did not write the modules)",
+   "verdict": "APPROVE_WITH_NITS",
+   "notes": "/tmp/bc-arc-scratch/items45/facts/review-semantic/NOTES.md",
+   "notes_sha256": "a7249a227b25c2a2887931f0b74c3c5420f20010c31105ef413b22229eadf978",
+   "evidence": "targets as defined (PqxdhRecordLiftIdeal unchanged); PqxdhRecordLift statements are exact instantiations of the *_of_priv theorems with ctxPrivLiftStatement; Swap, Flat, Lor and Fresh read for soundness; Rust record-layer correspondence; one recompile per module without -o (exit 0, empty logs)"
+  },
+  "hygiene": {
+   "reviewer": "independent Claude hygiene review (did not write the modules)",
+   "verdict": "APPROVE_WITH_NITS",
+   "notes": "/tmp/bc-arc-scratch/items45/facts/review-hygiene/NOTES.md",
+   "notes_sha256": "69279cd8fe7b82bd53ffb859bf1a60e41421d53a48725b174cf68cce313e762a",
+   "evidence": "guardscan2 3/10/35/24/40 = 112 theorems and guards; 112 plain #print axioms outputs byte-identical to the guard docstrings; forbidden tokens none; H-7 scan v3 of modules and docs clean; closure guard rerun clean with negative controls exiting 1; static per-commit inventory replay OK; focused check-inventory at 18cfb60c exit 0; module and root rechecks exit 0 with empty logs; receipt digests verified; merge-tree against central 8b740cda: conflicts only in the four anchor files"
+  },
+  "findings": [
+   {
+    "id": "F1",
+    "review": "semantic",
+    "severity": "minor",
+    "title": "Remaining-work plan step (d) credits the 153-byte associated data with binding sequence and sender",
+    "response": "doc/impl/record-lift-facts.md, Remaining work 1(d), now says that the record context Pqxdh.RecordAD compared by replayPlaintext carries seq and sid in addition to the 153 AD bytes, matching LE64(seq) || LE64(sender_kid) in the Rust commitment transcript (beaconcrypt-core/src/commitment.rs), that build_associated_data (beaconcrypt-core/src/pqxdh.rs) holds only the tagged identity keys, PQXDH_INFO and SYM_RATCHET_INFO, and names the builders RawCtxSelectedMessageSealing.selectedInput and RawCtxKeyFreeDecoder.target. The conclusion (a replay match gives frame equality) is unchanged.",
+    "outcome": "fixed"
+   },
+   {
+    "id": "F2",
+    "review": "semantic",
+    "severity": "minor",
+    "title": "Guide calls structural primitive fields H-7 contracts and omits the PqxdhRecordLift structural reach",
+    "response": "The Contracts per theorem paragraph now says that dh_comm, xpub_length, x25519_length and hkdf_length are structural fields classified by the H-7 closure guard, not contracts used, reached inside definitions by all 3 PqxdhRecordLift theorems and 11/10/11 theorems of Flat/Lor/Fresh (35, the same set for each field), and that only the contracts used and the loss-term games and world model are on the H-7 list. Receipt contracts.per_theorem updated likewise.",
+    "outcome": "fixed"
+   },
+   {
+    "id": "F3",
+    "review": "semantic",
+    "severity": "nit",
+    "title": "FVA Assumptions says the definitions are never run by the zeroed world",
+    "response": "doc/formal-verification-analysis.md now says that some fields of the primitive record occur only inside definitions (the Diffie-Hellman interface, the key-derivation definitions and the real-mode record-encryption code, the last of which the zeroed random-mode world never runs).",
+    "outcome": "fixed"
+   },
+   {
+    "id": "F4",
+    "review": "semantic",
+    "severity": "nit",
+    "title": "\"Without conditions\" / \"unconditionally\" needs a qualifier for record_lift",
+    "response": "FVA status: \"proved without the privacy-half hypothesis ... the target keeps its own premise, the key-schedule correctness contract SourceFullCorrect\"; record-lift-world-facts.md row: \"Later proved without the privacy-half hypothesis ... RecordLiftTarget keeps its own SourceFullCorrect premise\"; the same qualifier in the guide opening paragraph, the receipt scope and modules[0].delivered. The commit subject of 28fc39dd is pushed history and stays.",
+    "outcome": "fixed"
+   },
+   {
+    "id": "F5",
+    "review": "semantic",
+    "severity": "nit",
+    "title": "Guard count 113 in the report and plan section 12; the actual count is 112",
+    "response": "Plan section 12 now says 112 (3 + 10 + 35 + 24 + 40); the facts NOTES say 112 OK. No maintained document had 113.",
+    "outcome": "fixed"
+   },
+   {
+    "id": "F6",
+    "review": "hygiene",
+    "severity": "minor",
+    "title": "In-repo receipt has no check evidence for the branch tip 18cfb60c and its deviations do not mention the gap",
+    "response": "This receipt now records the implementer focused check-inventory at 18cfb60c, the hygiene review run at 18cfb60c and the fix-pass run at the fix commit (focused_inventory_tips), the implementer docs H-7 scan and the review and fix-pass scans (h7.source_scan.outputs), and a deviation for the earlier gap.",
+    "outcome": "fixed"
+   },
+   {
+    "id": "F7",
+    "review": "hygiene",
+    "severity": "nit",
+    "title": "Guide says the focused check-inventory ran at every module commit",
+    "response": "doc/impl/record-lift-facts.md Checks now names 28fc39dd, 97276f87 (covering the Swap, Flat and Lor commits) and dac43360, plus 18cfb60c and the fix-pass commit; deviations[1] notes the earlier wording.",
+    "outcome": "fixed"
+   },
+   {
+    "id": "F8",
+    "review": "hygiene",
+    "severity": "nit",
+    "title": "Implementer report says 113 of 113 guards; the branch has 112",
+    "response": "The fix-pass report and this receipt say 112 (guard_scan.verify_f1); the scratch notes are corrected. The figure 113 appeared only in scratch and report text.",
+    "outcome": "fixed"
+   },
+   {
+    "id": "F9",
+    "review": "hygiene",
+    "severity": "nit",
+    "title": "Implementer docs H-7 scan covered only the guide",
+    "response": "The fix pass scanned the guide, this receipt, every added line of the FVA, record-lift-world-facts.md, record-lift-ideal.md, check-inventory.sh, reviewed-inventory.txt and the root, and the plan (h7scan-docs-f1), and recorded the output here; the final receipt is scanned after it is written.",
+    "outcome": "fixed"
+   },
+   {
+    "id": "F10",
+    "review": "hygiene",
+    "severity": "nit",
+    "title": "Related guides and the FVA not updated for the facts-track deliveries",
+    "response": "doc/impl/record-lift-ideal.md Open points, Delivering stages: a \"(Later: ...)\" note naming the world-track and facts-track deliveries and the open OriginStatement and BindingTarget; the privacy-track FVA paragraph points to the section \"Items 4 and 5, stage S5, continued\".",
+    "outcome": "fixed"
+   },
+   {
+    "id": "F11",
+    "review": "hygiene",
+    "severity": "nit",
+    "title": "Clock labels in scratch notes and the plan are later than the file times",
+    "response": "Plan section 12 header corrected to about 20:10 CEST (file time 20:10:10); the facts NOTES labels for the commits and inventory runs corrected from git commit times and the log start/end files, each marked with its earlier label. Fix-pass labels come from date and the log files.",
+    "outcome": "fixed"
+   },
+   {
+    "id": "F12",
+    "review": "hygiene",
+    "severity": "nit",
+    "title": "Reviewer note: the review inventory run left ignored __pycache__ (resolved by the reviewer)",
+    "response": "No action on the branch; the run is recorded with its note in focused_inventory_tips.inventory-review-hygiene. Integration (central moved to 8b740cda) needs a merge, which this fix pass does not do.",
+    "outcome": "no_change_needed"
+   }
+  ],
+  "statements_changed": "None. The fix pass changes only Markdown; every Lean file is byte-identical to dac43360 (and to 18cfb60c), so every theorem statement, proof and guard is unchanged."
+ },
+ "fix_pass": {
+  "date": "2026-10-08",
+  "base": "18cfb60c137f174931712a184b417df5726f816d",
+  "commit": "c4ed9d472ab7f6cc06ba562e109c0d916c37d5bf",
+  "scope": "Documentation only: doc/impl/record-lift-facts.md (status, opening paragraph, contracts per theorem, Remaining work 1(d), Checks), doc/formal-verification-analysis.md (S5 continued status and assumptions, privacy-track pointer), doc/impl/record-lift-world-facts.md (one status row), doc/impl/record-lift-ideal.md (Delivering stages note), and this receipt in the following commit. No Lean file, inventory row, count, digest, root import or check-inventory.sh line changes.",
+  "notes": "/tmp/bc-arc-scratch/items45/facts/fix1/NOTES.md",
+  "checks": "At the fix commit: rechecks of the five modules and the root (rechecks_f1), guards.py verify 112/112 (guard_scan.verify_f1), inv recount and rehash unchanged (inventory_tip.recount_f1, rehash_f1), focused check-inventory exit 0 with clean tree before and after (focused_inventory_tips.inventory-f1), H-7 source scan of modules and docs (h7.source_scan.outputs.*-f1) and closure guard (h7.closure_guard.f1), git diff --check clean."
+ }
 }
