@@ -11,7 +11,7 @@ import BeaconcryptCore.Computational.PqxdhRecordLiftCtxProgramBounds
 
 **Transfer.** `certified_map` is the generic consequence for any private interpreter (any state type) whose chain table grows and holds every looked-up coordinate: if its requests touching only present coordinates within `positions` are simulated through a state map by another interpreter, the whole certified program is (`program_map` for the compiled program). For the CTX world with an arbitrary keyed implementation (`ctxInterpreterOf`), keyed implementations agreeing on present coordinates within `positions budget` give the same world (`program_congr`, `ctxRunWith_congr`), and the last hybrid of `PqxdhRecordLiftCtxHybrid` is `PqxdhRecordLiftIdeal.idealAuth` (`hybrid_last`).
 
-**Scope.** No assumption or contract. The selected-key lazy/eager law, the hop bounds and the assembly of `CtxAuthLiftStatement` are later S4 stages; see `doc/impl/record-lift-ctx-hybrid.md`.
+**Scope.** No theorem of this module has an assumption or contract hypothesis or uses a contract: no proof uses a field of the primitive record or a security game (fields reached only inside definitions, such as those of the setup's DH interface, are structural). This module leaves the selected-key lazy/eager law to `PqxdhRecordLiftKeyCut`, and the hop bounds and the assembly of `CtxAuthLiftStatement` to `PqxdhRecordLiftCtx` and `PqxdhRecordLiftCtxBills`; see `doc/impl/record-lift-ctx-hybrid.md`. New Claude work; nothing adapted from Codex WIP.
 -/
 
 open OracleComp OracleSpec ENNReal CoreModels Aeneas

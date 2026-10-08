@@ -11,7 +11,9 @@ import BeaconcryptCore.Computational.PqxdhRecordLiftCtxProtocolBounds
 
 **Step bills.** Per service, the step reduction of `PqxdhRecordLiftCtxLink` forwards coins and hashes one request each (`coinForward_route`, `hashForward_route`), draws at most 64 coins for an allocation (`allocate_total`) and 76 for a lookup (`bareLookup_total`), and routes at most one request for a hidden opening or seal (`opening_route`, `sealing_route`) and at most one hash for a caller-known send or receive (`PqxdhRecordLiftCtxProtocolBounds.knownRom_total`); `reduction_step` and its five instances give the uniform, hash, private replay-cache, target-seal and target-raw categories of `PqxdhRecordLiftCtxModeBounds`. `link_route` adds the decision's own coins. `ctxBills` charges the program's coins, the decision's coins and 64 coins per possible private replay-cache fill, the program's shared hashes (exactly `PqxdhRecordLiftIdeal.sharedHashTotal`, `hash_bill`), one seal and the raw receives.
 
-**Scope.** No assumption or contract. The privacy half (`CtxPrivLiftStatement`) is a later stage; see `doc/impl/record-lift-ctx-hybrid.md`.
+**Contracts.** No theorem of this module has an assumption or contract hypothesis. `ctxAuthLiftTarget` and `ctxAuthLiftStatement` use, through `PqxdhRecordLiftCtx.ctxAuthLiftTarget_of_billed`, exactly the contracts of that theorem from the brief's H-7 list: functional AEAD correctness (the fields `aead_open_seal`, reached through `PqxdhRecordLiftCtxModeBounds.selected_integrity`, and `aeadSeal_tag_length` of the primitive record `Pqxdh.Crypto`), the modified-nonce AEAD IND$ and INT-CTXT games as the advantage terms of `integrityLoss`, and the BLAKE2b random-oracle model as the world model. The other 32 theorems (the bills) use no contract.
+
+**Scope.** The privacy half (`CtxPrivLiftStatement`) is still open; see `doc/impl/record-lift-ctx-hybrid.md`. New Claude work; nothing adapted from Codex WIP.
 -/
 
 open OracleComp OracleSpec ENNReal CoreModels Aeneas
