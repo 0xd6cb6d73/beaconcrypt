@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1593
+	[handwritten-lean]=1594
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -33085,6 +33085,74 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecord
 require_line_count 1 '^theorem interpreter_coordinate([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftMaskedOracle theorem interpreter_coordinate"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftMaskedOracle\.schedule_realization$' "$selected_source_module" "PqxdhRecordLiftMaskedOracle dependency BeaconcryptCore.Computational.PqxdhRecordLiftMaskedOracle.schedule_realization"
 require_line_count 1 '^theorem schedule_realization([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftMaskedOracle theorem schedule_realization"
+
+# Complete global private-service protocol factoring, with actual optional replies, dynamic storage and private instrumentation.
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftProtocol.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRecordLiftProtocol$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftProtocol root import"
+require_line_count 31 '^theorem ' "$selected_source_module" "PqxdhRecordLiftProtocol theorem inventory"
+require_line_count 31 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftProtocol guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProtocol\.join_split$' "$selected_source_module" "PqxdhRecordLiftProtocol dependency BeaconcryptCore.Computational.PqxdhRecordLiftProtocol.join_split"
+require_line_count 1 '^theorem join_split([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProtocol theorem join_split"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProtocol\.local_query_factor$' "$selected_source_module" "PqxdhRecordLiftProtocol dependency BeaconcryptCore.Computational.PqxdhRecordLiftProtocol.local_query_factor"
+require_line_count 1 '^theorem local_query_factor([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProtocol theorem local_query_factor"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProtocol\.local_program_factor$' "$selected_source_module" "PqxdhRecordLiftProtocol dependency BeaconcryptCore.Computational.PqxdhRecordLiftProtocol.local_program_factor"
+require_line_count 1 '^theorem local_program_factor([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProtocol theorem local_program_factor"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProtocol\.kernelSend_factor$' "$selected_source_module" "PqxdhRecordLiftProtocol dependency BeaconcryptCore.Computational.PqxdhRecordLiftProtocol.kernelSend_factor"
+require_line_count 1 '^theorem kernelSend_factor([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProtocol theorem kernelSend_factor"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProtocol\.kernelReceive_factor$' "$selected_source_module" "PqxdhRecordLiftProtocol dependency BeaconcryptCore.Computational.PqxdhRecordLiftProtocol.kernelReceive_factor"
+require_line_count 1 '^theorem kernelReceive_factor([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProtocol theorem kernelReceive_factor"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProtocol\.ownerSend_factor$' "$selected_source_module" "PqxdhRecordLiftProtocol dependency BeaconcryptCore.Computational.PqxdhRecordLiftProtocol.ownerSend_factor"
+require_line_count 1 '^theorem ownerSend_factor([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProtocol theorem ownerSend_factor"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProtocol\.ownerReceive_factor$' "$selected_source_module" "PqxdhRecordLiftProtocol dependency BeaconcryptCore.Computational.PqxdhRecordLiftProtocol.ownerReceive_factor"
+require_line_count 1 '^theorem ownerReceive_factor([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProtocol theorem ownerReceive_factor"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProtocol\.ownerStep_factor$' "$selected_source_module" "PqxdhRecordLiftProtocol dependency BeaconcryptCore.Computational.PqxdhRecordLiftProtocol.ownerStep_factor"
+require_line_count 1 '^theorem ownerStep_factor([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProtocol theorem ownerStep_factor"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProtocol\.ownerRun_factor$' "$selected_source_module" "PqxdhRecordLiftProtocol dependency BeaconcryptCore.Computational.PqxdhRecordLiftProtocol.ownerRun_factor"
+require_line_count 1 '^theorem ownerRun_factor([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProtocol theorem ownerRun_factor"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProtocol\.ownerRun_world$' "$selected_source_module" "PqxdhRecordLiftProtocol dependency BeaconcryptCore.Computational.PqxdhRecordLiftProtocol.ownerRun_world"
+require_line_count 1 '^theorem ownerRun_world([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProtocol theorem ownerRun_world"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProtocol\.beaconStep_factor$' "$selected_source_module" "PqxdhRecordLiftProtocol dependency BeaconcryptCore.Computational.PqxdhRecordLiftProtocol.beaconStep_factor"
+require_line_count 1 '^theorem beaconStep_factor([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProtocol theorem beaconStep_factor"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProtocol\.serverStep_factor$' "$selected_source_module" "PqxdhRecordLiftProtocol dependency BeaconcryptCore.Computational.PqxdhRecordLiftProtocol.serverStep_factor"
+require_line_count 1 '^theorem serverStep_factor([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProtocol theorem serverStep_factor"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProtocol\.resolve_factor$' "$selected_source_module" "PqxdhRecordLiftProtocol dependency BeaconcryptCore.Computational.PqxdhRecordLiftProtocol.resolve_factor"
+require_line_count 1 '^theorem resolve_factor([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProtocol theorem resolve_factor"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProtocol\.installServer_factor$' "$selected_source_module" "PqxdhRecordLiftProtocol dependency BeaconcryptCore.Computational.PqxdhRecordLiftProtocol.installServer_factor"
+require_line_count 1 '^theorem installServer_factor([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProtocol theorem installServer_factor"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProtocol\.installBeacon_factor$' "$selected_source_module" "PqxdhRecordLiftProtocol dependency BeaconcryptCore.Computational.PqxdhRecordLiftProtocol.installBeacon_factor"
+require_line_count 1 '^theorem installBeacon_factor([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProtocol theorem installBeacon_factor"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProtocol\.initialize_factor$' "$selected_source_module" "PqxdhRecordLiftProtocol dependency BeaconcryptCore.Computational.PqxdhRecordLiftProtocol.initialize_factor"
+require_line_count 1 '^theorem initialize_factor([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProtocol theorem initialize_factor"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProtocol\.capability_factor$' "$selected_source_module" "PqxdhRecordLiftProtocol dependency BeaconcryptCore.Computational.PqxdhRecordLiftProtocol.capability_factor"
+require_line_count 1 '^theorem capability_factor([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProtocol theorem capability_factor"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProtocol\.charge_factor$' "$selected_source_module" "PqxdhRecordLiftProtocol dependency BeaconcryptCore.Computational.PqxdhRecordLiftProtocol.charge_factor"
+require_line_count 1 '^theorem charge_factor([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProtocol theorem charge_factor"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProtocol\.effects_factor$' "$selected_source_module" "PqxdhRecordLiftProtocol dependency BeaconcryptCore.Computational.PqxdhRecordLiftProtocol.effects_factor"
+require_line_count 1 '^theorem effects_factor([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProtocol theorem effects_factor"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProtocol\.handler_factor$' "$selected_source_module" "PqxdhRecordLiftProtocol dependency BeaconcryptCore.Computational.PqxdhRecordLiftProtocol.handler_factor"
+require_line_count 1 '^theorem handler_factor([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProtocol theorem handler_factor"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProtocol\.schedule_factor$' "$selected_source_module" "PqxdhRecordLiftProtocol dependency BeaconcryptCore.Computational.PqxdhRecordLiftProtocol.schedule_factor"
+require_line_count 1 '^theorem schedule_factor([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProtocol theorem schedule_factor"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProtocol\.rejoin_splitResult$' "$selected_source_module" "PqxdhRecordLiftProtocol dependency BeaconcryptCore.Computational.PqxdhRecordLiftProtocol.rejoin_splitResult"
+require_line_count 1 '^theorem rejoin_splitResult([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProtocol theorem rejoin_splitResult"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProtocol\.schedule_join$' "$selected_source_module" "PqxdhRecordLiftProtocol dependency BeaconcryptCore.Computational.PqxdhRecordLiftProtocol.schedule_join"
+require_line_count 1 '^theorem schedule_join([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProtocol theorem schedule_join"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProtocol\.schedule_pending_empty$' "$selected_source_module" "PqxdhRecordLiftProtocol dependency BeaconcryptCore.Computational.PqxdhRecordLiftProtocol.schedule_pending_empty"
+require_line_count 1 '^theorem schedule_pending_empty([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProtocol theorem schedule_pending_empty"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProtocol\.run_factor$' "$selected_source_module" "PqxdhRecordLiftProtocol dependency BeaconcryptCore.Computational.PqxdhRecordLiftProtocol.run_factor"
+require_line_count 1 '^theorem run_factor([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProtocol theorem run_factor"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProtocol\.initial_schedule_source$' "$selected_source_module" "PqxdhRecordLiftProtocol dependency BeaconcryptCore.Computational.PqxdhRecordLiftProtocol.initial_schedule_source"
+require_line_count 1 '^theorem initial_schedule_source([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProtocol theorem initial_schedule_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProtocol\.run_source$' "$selected_source_module" "PqxdhRecordLiftProtocol dependency BeaconcryptCore.Computational.PqxdhRecordLiftProtocol.run_source"
+require_line_count 1 '^theorem run_source([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProtocol theorem run_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProtocol\.observed_splitResult$' "$selected_source_module" "PqxdhRecordLiftProtocol dependency BeaconcryptCore.Computational.PqxdhRecordLiftProtocol.observed_splitResult"
+require_line_count 1 '^theorem observed_splitResult([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProtocol theorem observed_splitResult"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProtocol\.analysis_splitResult$' "$selected_source_module" "PqxdhRecordLiftProtocol dependency BeaconcryptCore.Computational.PqxdhRecordLiftProtocol.analysis_splitResult"
+require_line_count 1 '^theorem analysis_splitResult([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProtocol theorem analysis_splitResult"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProtocol\.observed_run_source$' "$selected_source_module" "PqxdhRecordLiftProtocol dependency BeaconcryptCore.Computational.PqxdhRecordLiftProtocol.observed_run_source"
+require_line_count 1 '^theorem observed_run_source([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProtocol theorem observed_run_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftProtocol\.analysis_run_source$' "$selected_source_module" "PqxdhRecordLiftProtocol dependency BeaconcryptCore.Computational.PqxdhRecordLiftProtocol.analysis_run_source"
+require_line_count 1 '^theorem analysis_run_source([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftProtocol theorem analysis_run_source"
 
 # Reviewed actual getter availability, distinct from network compromise powers.
 python3 proofs/source/test-getter-profile.py
