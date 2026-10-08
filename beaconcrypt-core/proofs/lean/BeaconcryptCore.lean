@@ -1555,6 +1555,7 @@ import BeaconcryptCore.Computational.PqxdhRecordLiftMixedWorld
 import BeaconcryptCore.Computational.PqxdhRecordLiftCtxProtocol
 import BeaconcryptCore.Computational.PqxdhRecordLiftCtxProtocolBounds
 
+import BeaconcryptCore.Computational.PqxdhRecordLiftGlobalSeedCut
 import BeaconcryptCore.Computational.PqxdhDeploymentInterface
 
 import BeaconcryptCore.Computational.PqxdhDeploymentNative

@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1622
+	[handwritten-lean]=1623
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -34749,6 +34749,72 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecord
 require_line_count 1 '^theorem schedule_categories([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxProtocolBounds theorem schedule_categories"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxProtocolBounds\.reduction_budgets$' "$selected_source_module" "PqxdhRecordLiftCtxProtocolBounds dependency reduction_budgets"
 require_line_count 1 '^theorem reduction_budgets([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxProtocolBounds theorem reduction_budgets"
+
+# Reviewed actual first-allocation directional seed cuts and explicit primitive query bounds.
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftGlobalSeedCut.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.PqxdhRecordLiftGlobalSeedCut$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftGlobalSeedCut root import"
+require_line_count 30 '^theorem ' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut theorem count"
+require_line_count 30 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut axiom guard count"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftGlobalSeedCut\.seed_read$' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut dependency BeaconcryptCore.Computational.PqxdhRecordLiftGlobalSeedCut.seed_read"
+require_line_count 1 '^theorem seed_read([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut theorem seed_read"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftGlobalSeedCut\.chain_read$' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut dependency BeaconcryptCore.Computational.PqxdhRecordLiftGlobalSeedCut.chain_read"
+require_line_count 1 '^theorem chain_read([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut theorem chain_read"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftGlobalSeedCut\.output_read$' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut dependency BeaconcryptCore.Computational.PqxdhRecordLiftGlobalSeedCut.output_read"
+require_line_count 1 '^theorem output_read([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut theorem output_read"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftGlobalSeedCut\.lookup_realization$' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut dependency BeaconcryptCore.Computational.PqxdhRecordLiftGlobalSeedCut.lookup_realization"
+require_line_count 1 '^theorem lookup_realization([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut theorem lookup_realization"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftGlobalSeedCut\.seed_cache_commute$' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut dependency BeaconcryptCore.Computational.PqxdhRecordLiftGlobalSeedCut.seed_cache_commute"
+require_line_count 1 '^theorem seed_cache_commute([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut theorem seed_cache_commute"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftGlobalSeedCut\.allocate_realization$' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut dependency BeaconcryptCore.Computational.PqxdhRecordLiftGlobalSeedCut.allocate_realization"
+require_line_count 1 '^theorem allocate_realization([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut theorem allocate_realization"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftGlobalSeedCut\.interpreter_realization$' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut dependency BeaconcryptCore.Computational.PqxdhRecordLiftGlobalSeedCut.interpreter_realization"
+require_line_count 1 '^theorem interpreter_realization([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut theorem interpreter_realization"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftGlobalSeedCut\.schedule_realization$' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut dependency BeaconcryptCore.Computational.PqxdhRecordLiftGlobalSeedCut.schedule_realization"
+require_line_count 1 '^theorem schedule_realization([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut theorem schedule_realization"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftGlobalSeedCut\.scan_finish$' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut dependency BeaconcryptCore.Computational.PqxdhRecordLiftGlobalSeedCut.scan_finish"
+require_line_count 1 '^theorem scan_finish([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut theorem scan_finish"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftGlobalSeedCut\.scan_avoids$' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut dependency BeaconcryptCore.Computational.PqxdhRecordLiftGlobalSeedCut.scan_avoids"
+require_line_count 1 '^theorem scan_avoids([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut theorem scan_avoids"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftGlobalSeedCut\.query_other$' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut dependency BeaconcryptCore.Computational.PqxdhRecordLiftGlobalSeedCut.query_other"
+require_line_count 1 '^theorem query_other([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut theorem query_other"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftGlobalSeedCut\.avoids_preserves$' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut dependency BeaconcryptCore.Computational.PqxdhRecordLiftGlobalSeedCut.avoids_preserves"
+require_line_count 1 '^theorem avoids_preserves([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut theorem avoids_preserves"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftGlobalSeedCut\.scan_initial_missing$' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut dependency BeaconcryptCore.Computational.PqxdhRecordLiftGlobalSeedCut.scan_initial_missing"
+require_line_count 1 '^theorem scan_initial_missing([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut theorem scan_initial_missing"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftGlobalSeedCut\.prefix_forget$' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut dependency BeaconcryptCore.Computational.PqxdhRecordLiftGlobalSeedCut.prefix_forget"
+require_line_count 1 '^theorem prefix_forget([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut theorem prefix_forget"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftGlobalSeedCut\.resume_prefix$' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut dependency BeaconcryptCore.Computational.PqxdhRecordLiftGlobalSeedCut.resume_prefix"
+require_line_count 1 '^theorem resume_prefix([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut theorem resume_prefix"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftGlobalSeedCut\.allocate_miss$' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut dependency BeaconcryptCore.Computational.PqxdhRecordLiftGlobalSeedCut.allocate_miss"
+require_line_count 1 '^theorem allocate_miss([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut theorem allocate_miss"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftGlobalSeedCut\.prepare_realize$' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut dependency BeaconcryptCore.Computational.PqxdhRecordLiftGlobalSeedCut.prepare_realize"
+require_line_count 1 '^theorem prepare_realize([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut theorem prepare_realize"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftGlobalSeedCut\.miss_continuation$' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut dependency BeaconcryptCore.Computational.PqxdhRecordLiftGlobalSeedCut.miss_continuation"
+require_line_count 1 '^theorem miss_continuation([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut theorem miss_continuation"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftGlobalSeedCut\.source_split$' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut dependency BeaconcryptCore.Computational.PqxdhRecordLiftGlobalSeedCut.source_split"
+require_line_count 1 '^theorem source_split([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut theorem source_split"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftGlobalSeedCut\.continuation_source$' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut dependency BeaconcryptCore.Computational.PqxdhRecordLiftGlobalSeedCut.continuation_source"
+require_line_count 1 '^theorem continuation_source([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut theorem continuation_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftGlobalSeedCut\.observed_real$' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut dependency BeaconcryptCore.Computational.PqxdhRecordLiftGlobalSeedCut.observed_real"
+require_line_count 1 '^theorem observed_real([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut theorem observed_real"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftGlobalSeedCut\.observed_source$' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut dependency BeaconcryptCore.Computational.PqxdhRecordLiftGlobalSeedCut.observed_source"
+require_line_count 1 '^theorem observed_source([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut theorem observed_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftGlobalSeedCut\.uniform_source$' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut dependency BeaconcryptCore.Computational.PqxdhRecordLiftGlobalSeedCut.uniform_source"
+require_line_count 1 '^theorem uniform_source([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut theorem uniform_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftGlobalSeedCut\.observed_bound$' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut dependency BeaconcryptCore.Computational.PqxdhRecordLiftGlobalSeedCut.observed_bound"
+require_line_count 1 '^theorem observed_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut theorem observed_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftGlobalSeedCut\.scan_bound$' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut dependency BeaconcryptCore.Computational.PqxdhRecordLiftGlobalSeedCut.scan_bound"
+require_line_count 1 '^theorem scan_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut theorem scan_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftGlobalSeedCut\.sampledPrefix_bound$' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut dependency BeaconcryptCore.Computational.PqxdhRecordLiftGlobalSeedCut.sampledPrefix_bound"
+require_line_count 1 '^theorem sampledPrefix_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut theorem sampledPrefix_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftGlobalSeedCut\.reductionObserver_bound$' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut dependency BeaconcryptCore.Computational.PqxdhRecordLiftGlobalSeedCut.reductionObserver_bound"
+require_line_count 1 '^theorem reductionObserver_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut theorem reductionObserver_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftGlobalSeedCut\.observed_query_bound$' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut dependency BeaconcryptCore.Computational.PqxdhRecordLiftGlobalSeedCut.observed_query_bound"
+require_line_count 1 '^theorem observed_query_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut theorem observed_query_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftGlobalSeedCut\.reduction_bounds$' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut dependency BeaconcryptCore.Computational.PqxdhRecordLiftGlobalSeedCut.reduction_bounds"
+require_line_count 1 '^theorem reduction_bounds([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut theorem reduction_bounds"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftGlobalSeedCut\.challenger_bounds$' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut dependency BeaconcryptCore.Computational.PqxdhRecordLiftGlobalSeedCut.challenger_bounds"
+require_line_count 1 '^theorem challenger_bounds([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftGlobalSeedCut theorem challenger_bounds"
 
 # Reviewed actual getter availability, distinct from network compromise powers.
 python3 proofs/source/test-getter-profile.py
