@@ -1,16 +1,18 @@
 {
- "date": "2026-10-08T13:23:26.934299+00:00",
- "scope": "Items 4 and 5 (record-layer lift), stage S4 of the takeover plan, privacy half: PqxdhRecordLiftIdeal.CtxPrivLiftStatement (decision D1), including the open point of the S1 targets (randomImpl is the IND$ random experiment behind AdaptiveCtxPrivacyGuard.replay_random_advantage).",
+ "date": "2026-10-08T13:53:41.957530+00:00",
+ "scope": "Items 4 and 5 (record-layer lift), stage S4 of the takeover plan, privacy half: PqxdhRecordLiftIdeal.CtxPrivLiftStatement (decision D1), including the open point of the S1 targets (randomImpl is the IND$ random experiment behind AdaptiveCtxPrivacyGuard.replay_random_advantage). This receipt also records the independent semantic and hygiene reviews of 77ccccbd and the fix pass of their findings (commits 3b2e273f and 8e7d18c7).",
  "basis": "14f51c34403649b85c6acc0ad29fb2622406dd81",
  "topic": {
   "branch": "codex/deployment-record-priv",
   "worktree": "/tmp/beaconcrypt-deployment-record-priv",
-  "registry": "branch, worktree, scratch /tmp/bc-arc-scratch/items45/priv, olean prefix priv/olean, leanpath priv/leanpath and the five module names registered to claude before creation"
+  "registry": "branch, worktree, scratch /tmp/bc-arc-scratch/items45/priv, olean prefix priv/olean, leanpath priv/leanpath and the five module names registered to claude before creation; the fix-pass scratch /tmp/bc-arc-scratch/items45/priv/fix1 was registered to claude before creation"
  },
  "plan": {
   "path": "/tmp/bc-arc-scratch/items45-takeover/takeover-plan.md",
-  "sha256": "ee46b3e56b6a724fbdeb1b89cbc6a93359f39e8b6cdfe67c3224ddd2ce8b7610",
-  "sections": "2 (S4: X1-X4; decisions D1-D5), 8 (CTX track status and the privacy-half plan (a)-(d)), 9 (privacy track status, written by this track)"
+  "sha256": "7b19c99395dbf3436164487a5daec61fbf064f5c289c0c4507b3da2edb123142",
+  "sections": "2 (S4: X1-X4; decisions D1-D5), 8 (CTX track status and the privacy-half plan (a)-(d)), 10 (privacy track status, written by this track, with its fix-pass update)",
+  "sha256_track": "ee46b3e56b6a724fbdeb1b89cbc6a93359f39e8b6cdfe67c3224ddd2ce8b7610",
+  "note": "The track receipt cited the privacy section as section 9; it was a second section numbered 9 (after the world track's section 9) with the time label 15:35 although it was written at about 15:23 (hygiene finding H5). The fix pass renumbered it to 10, corrected its label and appended a fix-pass update; the world track's section 9 is not this track's and was not edited by it. Hash at the time of this receipt."
  },
  "brief": {
   "path": "/tmp/bc-coord/tasks/codex-items-4-5.md",
@@ -24,7 +26,7 @@
   "hops": "hops n budget = (sends + 51 * receives) * (n * 2); one privacyLoss (ofReal of the IND$ advantage of AdaptiveCtxPrivacyGuard.viewReduction of the hop adversary) per index of Fin (hops n budget), coefficient one; each hop proved equal (not only bounded) to its privacyLoss (PqxdhRecordLiftCtxPriv.hop_loss)",
   "reduction": "privReduction: hop step = PqxdhRecordLiftCtxPrivModes.decisionClient bytesSample setup.source.crypto (linkClient (entryAt step) (privModes (positions budget) step) ...)",
   "bill": "privBills: uniform = programBill .uniform + decision + 66 * programBill .hash; hash = programBill .hash = sharedHashTotal (hash_bill); seals = 1; raw = programBill .raw",
-  "statements_changed": "None. No definition or statement of PqxdhRecordLiftIdeal or of any existing module changed."
+  "statements_changed": "None. No definition or statement of PqxdhRecordLiftIdeal or of any existing module changed. The review fix pass changes no statement, proof or guard: its Lean edits join wrapped theorem and definition docstrings only (guards at the fix-pass commit are identical, name by name and axiom by axiom, to the statements recorded per module)."
  },
  "open_point_closed": "PqxdhRecordLiftCtxRandom.randomView_eq (AdaptiveCtxPrivacyGuard.randomView is exactly the random replay source), randomTargetView_randomView (= the random one-key target view, randomImpl on the shared cache), replay_random_target (replay vs random one-key targets: exactly the IND$ advantage of viewReduction), privacyLoss_eq.",
  "contracts": {
@@ -67,7 +69,19 @@
   "rom": "The BLAKE2b random-oracle model is the world model (one shared lazily sampled cache).",
   "structural": "Pqxdh.Crypto.dh_comm, xpub_length, x25519_length (22 theorems, through the type of the setup parameter) and hkdf_length (22 theorems, through RawCtxSourceHkdf.response behind PqxdhRecordLiftCtxProtocol.knownRom) occur only inside definitions.",
   "absent": "No theorem reaches SourceFullCorrect, FrameReadBack, Phase1ReadBack, Phase2ReadBack, DecoderAgreement, AdaptiveRawNonceAead.HistoryCorrect, RawCtxSelectedPlaintextOrigins.HistoryCorrect, verify_sign, conv_agree, decap_encap, edPub_length, kemPub_length, encap_ss_length, decap_length or blake2b_length.",
-  "composition_assumptions": "doc/composition-assumptions.md already lists functional AEAD correctness, the modified-nonce AEAD IND$ game and the BLAKE2b random-oracle model (accepted-record endpoint; ordered all-key IND$ privacy component); unchanged."
+  "composition_assumptions": "doc/composition-assumptions.md already lists functional AEAD correctness, the modified-nonce AEAD IND$ game and the BLAKE2b random-oracle model (accepted-record endpoint; ordered all-key IND$ privacy component); unchanged.",
+  "fix": {
+   "probe": "/tmp/bc-arc-scratch/items45/priv/fix1/tools/ContractProbe.lean",
+   "probe_sha256": "383b2c16692c16fafe138cca8780f95f75298c4a73f16c7f56ab12ff1752dd1b",
+   "log": "/tmp/bc-arc-scratch/items45/priv/fix1/logs/dev-contracts-155156.log",
+   "log_sha256": "42c898f8baedbd7871a19a91205995d627190599921504f132ec81ff31a512bc",
+   "result": "Rerun against the fix-pass LEAN_PATH: output byte-identical to the track run /tmp/bc-arc-scratch/items45/priv/logs/contracts-p5.log, so the per-theorem contract lists are unchanged."
+  },
+  "review_tagprobe": {
+   "log": "/tmp/bc-arc-scratch/items45/priv/review-hygiene/logs/tagprobe.log",
+   "log_sha256": "2b0ce1390b7bcdda5450ef235acfaee3d52557aba03113228c50eef992459445",
+   "result": "Hygiene review probe: PqxdhRecordLiftCtxRandom.replay_random_target and privacyLoss_eq reach Pqxdh.Crypto.aeadSeal_tag_length through theorem constants (via AdaptiveCtxPrivacyGuard.replay_random_advantage); randomView_eq and randomTargetView_randomView do not. The analysis paragraph of PqxdhRecordLiftCtxRandom now says so (finding H1)."
+  }
  },
  "provenance": "New Claude work. PqxdhRecordLiftCtxPrivLink and the step-bill part of PqxdhRecordLiftCtxPrivBills are adapted from Claude's integrity-half modules PqxdhRecordLiftCtxLink, PqxdhRecordLiftCtxBills and PqxdhRecordLiftCtxModeBounds; nothing adapted from Codex WIP.",
  "commits": [
@@ -76,23 +90,25 @@
   "c82cc8ee11bce1a6c2aa61a69aeac3fc5e83f230",
   "26a6f7b1b8efda1d5dce47da0b6ec036c4f62859",
   "111a68574d3bce2cdfb29c09223c6d4edf8c964e",
-  "bd802c1ac35b7e7380bcf458da5e6625d99b4fdc"
+  "bd802c1ac35b7e7380bcf458da5e6625d99b4fdc",
+  "3b2e273f9406eb1a5722118752485a0a5611903a",
+  "8e7d18c7fc07656a75bec35998638b3a71e550c0"
  ],
  "files_sha256": {
-  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxRandom.lean": "b4dfc4bd57ab962e4f5daa3c49facea59a0a5086795b1122d5edacb07d65c7aa",
-  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPrivModes.lean": "105da6f3115ac3fc36a0a8dc61946a1f9718d65daca9d3f5c9793bb5d8d60c42",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxRandom.lean": "071a7efdb241986159c69b27376e0d77e6459bbfa883c531161f07bb73781855",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPrivModes.lean": "2dfa0fd200d1233b846219a70dea363304c7327644bb959d9efedc7942477db9",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPrivLink.lean": "ab61843a1d36876519d66a07d449b9f9de2ea7a3f461d4b51cecd1602d706bd4",
-  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPriv.lean": "9ac7d9cb808575c12a8099a7cdb1e5fb7651d49d2da150ab9c8081b6945b8d06",
-  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPrivBills.lean": "0fb80df61ffd3946b8f1c295adf89b1c74edc651c3a2fbee42ce7f65c9ec856e",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPriv.lean": "ab2d8749c69d104d9b907b618a94ed854166c4437e6d64b9498b1f24ce3e9f25",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPrivBills.lean": "36dfeb23abce8e8c3594a474a0ef0db6745588e1ae4de9adc5f39759b4726f1e",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "e42ecfc10345f22d023cb028f6b5bcc6d41efde979e5d756b9df2221fd349d50",
   "beaconcrypt-core/proofs/check-inventory.sh": "63f7f095b63af2c1a22d5fbc14d129a9e23396279b95eb1e3033d023c4389748",
-  "beaconcrypt-core/proofs/reviewed-inventory.txt": "b907bf3e1704a0617ff9ba1505337209d5a2e1022836ef3570970f2dc6c416d6",
-  "doc/impl/record-lift-ctx-priv.md": "f1b2af916c514d8dd3d0cdd06a463a8125cc1dd9fbbf694a6534c032fc769609",
-  "doc/formal-verification-analysis.md": "2c8726b8ce2b4b120eda6ce8f9ca4a8afe1bd9ac613c7db374c5bebd79583ae7",
-  "doc/impl/record-lift-ctx-hybrid.md": "1fe4a78518ef457d9704071efb6d472219d7cd36eed6495fa59b742ae97b4bd2",
-  "doc/impl/record-lift-ideal.md": "aeb7927469872d839721bc162faabe7cad87a1dfc9edc209e7d7ad079e5dc0c1"
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "5730234ec1d29a899e59d031ebe7077a7c22b39c7a4fcfa741dceef1c423f239",
+  "doc/impl/record-lift-ctx-priv.md": "387a86c5271a2216993f2b0d89e03c5db064cc0c1886780abd6715409d0f0c3c",
+  "doc/formal-verification-analysis.md": "43ee41667d5840e3315a24568fe174535f0a451dcbc929efdcabc3d0e76fa557",
+  "doc/impl/record-lift-ctx-hybrid.md": "8157fb79f3f535a445fcd8b34d334f3d7e02dcb4fd7da941a7fcd06c779cf62f",
+  "doc/impl/record-lift-ideal.md": "9c8564ac2c39fc0e00c7ee7cd560da2088f16b1e30d4f0c5b13c668fa93872c4"
  },
- "files_sha256_note": "At the documentation commit bd802c1ac35b7e7380bcf458da5e6625d99b4fdc (the commit before this receipt).",
+ "files_sha256_note": "At the fix-pass documentation commit 8e7d18c7fc07656a75bec35998638b3a71e550c0, the tree that the fix-pass checks cover; the receipt commit changes only this file.",
  "modules": [
   {
    "name": "PqxdhRecordLiftCtxRandom",
@@ -422,6 +438,37 @@
     "classified_structural": 0,
     "log": "/tmp/bc-arc-scratch/items45/priv/logs/dev-h7-random-150017.log",
     "log_sha256": "d4ce9fdedd610f84b72855d1347993e3460bd75ee20efe322f610ae772723826"
+   },
+   "source_sha256_fix": "071a7efdb241986159c69b27376e0d77e6459bbfa883c531161f07bb73781855",
+   "source_changed_in_fix": true,
+   "module_check_fix": {
+    "start": "2026-10-08T13:47:19.276204873Z",
+    "end": "2026-10-08T13:47:24.440925688Z",
+    "exit": 0,
+    "source_sha256": "071a7efdb241986159c69b27376e0d77e6459bbfa883c531161f07bb73781855",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/items45/priv/fix1/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxRandom.olean",
+    "artifact_sha256": "f8d5c526e83e3760f8631d70bc2dd6c63bc05147fb5e334e66adbf2a84d1b4b8",
+    "leanpath_sha256": "0ba0a1d32bb7bad40d36f7477aef7283021e5cd6a6af939a66d49d47be6ad578",
+    "log": "/tmp/bc-arc-scratch/items45/priv/fix1/logs/PqxdhRecordLiftCtxRandom-f1.log",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-record-priv/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/items45/priv/fix1/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxRandom.olean",
+     "/tmp/beaconcrypt-deployment-record-priv/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxRandom.lean"
+    ],
+    "tag": "f1"
    }
   },
   {
@@ -769,6 +816,37 @@
     "classified_structural": 0,
     "log": "/tmp/bc-arc-scratch/items45/priv/logs/dev-h7-modes-150714.log",
     "log_sha256": "3291a50bbd9fab369ee12104141daa10abed344dfb22f079464608bd9d431dfa"
+   },
+   "source_sha256_fix": "2dfa0fd200d1233b846219a70dea363304c7327644bb959d9efedc7942477db9",
+   "source_changed_in_fix": true,
+   "module_check_fix": {
+    "start": "2026-10-08T13:47:36.939700847Z",
+    "end": "2026-10-08T13:47:41.462012768Z",
+    "exit": 0,
+    "source_sha256": "2dfa0fd200d1233b846219a70dea363304c7327644bb959d9efedc7942477db9",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/items45/priv/fix1/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPrivModes.olean",
+    "artifact_sha256": "b3c577982db841c281d3d9673843819d88ee0c5989b9ceb649eee70d919b55dc",
+    "leanpath_sha256": "0ba0a1d32bb7bad40d36f7477aef7283021e5cd6a6af939a66d49d47be6ad578",
+    "log": "/tmp/bc-arc-scratch/items45/priv/fix1/logs/PqxdhRecordLiftCtxPrivModes-f1.log",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-record-priv/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/items45/priv/fix1/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPrivModes.olean",
+     "/tmp/beaconcrypt-deployment-record-priv/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPrivModes.lean"
+    ],
+    "tag": "f1"
    }
   },
   {
@@ -948,6 +1026,37 @@
     "classified_structural": 12,
     "log": "/tmp/bc-arc-scratch/items45/priv/logs/dev-h7-link-150947.log",
     "log_sha256": "bcd1e17ec9e261f98a8708609fcd5d6cd14121fdd9f0765911af36529069dbfb"
+   },
+   "source_sha256_fix": "ab61843a1d36876519d66a07d449b9f9de2ea7a3f461d4b51cecd1602d706bd4",
+   "source_changed_in_fix": false,
+   "module_check_fix": {
+    "start": "2026-10-08T13:47:41.508068568Z",
+    "end": "2026-10-08T13:47:52.335286228Z",
+    "exit": 0,
+    "source_sha256": "ab61843a1d36876519d66a07d449b9f9de2ea7a3f461d4b51cecd1602d706bd4",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/items45/priv/fix1/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPrivLink.olean",
+    "artifact_sha256": "14d8ef48cc2f68534553f205281bcb0ae4997d3388460c2a4679b04745dd4df4",
+    "leanpath_sha256": "0ba0a1d32bb7bad40d36f7477aef7283021e5cd6a6af939a66d49d47be6ad578",
+    "log": "/tmp/bc-arc-scratch/items45/priv/fix1/logs/PqxdhRecordLiftCtxPrivLink-f1.log",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-record-priv/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/items45/priv/fix1/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPrivLink.olean",
+     "/tmp/beaconcrypt-deployment-record-priv/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPrivLink.lean"
+    ],
+    "tag": "f1"
    }
   },
   {
@@ -1151,6 +1260,37 @@
     "classified_structural": 12,
     "log": "/tmp/bc-arc-scratch/items45/priv/logs/dev-h7-priv-151235.log",
     "log_sha256": "17bc54c03c9b41cb83e0bac8610834b511b59464d60af6133c0cbcc3ec9cf79d"
+   },
+   "source_sha256_fix": "ab2d8749c69d104d9b907b618a94ed854166c4437e6d64b9498b1f24ce3e9f25",
+   "source_changed_in_fix": true,
+   "module_check_fix": {
+    "start": "2026-10-08T13:47:52.389694843Z",
+    "end": "2026-10-08T13:47:57.998648354Z",
+    "exit": 0,
+    "source_sha256": "ab2d8749c69d104d9b907b618a94ed854166c4437e6d64b9498b1f24ce3e9f25",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/items45/priv/fix1/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPriv.olean",
+    "artifact_sha256": "4bbcc2d5a3d865b77d6f9ed5a67f2e222c6257b2b9d6b88c9695fc023cafe234",
+    "leanpath_sha256": "0ba0a1d32bb7bad40d36f7477aef7283021e5cd6a6af939a66d49d47be6ad578",
+    "log": "/tmp/bc-arc-scratch/items45/priv/fix1/logs/PqxdhRecordLiftCtxPriv-f1.log",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-record-priv/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/items45/priv/fix1/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPriv.olean",
+     "/tmp/beaconcrypt-deployment-record-priv/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPriv.lean"
+    ],
+    "tag": "f1"
    }
   },
   {
@@ -1449,6 +1589,37 @@
     "classified_structural": 12,
     "log": "/tmp/bc-arc-scratch/items45/priv/logs/dev-h7-all-151809.log",
     "log_sha256": "e5e6eb4cb6200416c8bcf57f1750f87632a69f7f36cfe43d777a14b690385112"
+   },
+   "source_sha256_fix": "36dfeb23abce8e8c3594a474a0ef0db6745588e1ae4de9adc5f39759b4726f1e",
+   "source_changed_in_fix": true,
+   "module_check_fix": {
+    "start": "2026-10-08T13:47:58.054020812Z",
+    "end": "2026-10-08T13:48:03.631671459Z",
+    "exit": 0,
+    "source_sha256": "36dfeb23abce8e8c3594a474a0ef0db6745588e1ae4de9adc5f39759b4726f1e",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/items45/priv/fix1/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPrivBills.olean",
+    "artifact_sha256": "e882c20962e161663a0f66e960cbde6ce16618e484ca24d66b21937aba45af11",
+    "leanpath_sha256": "0ba0a1d32bb7bad40d36f7477aef7283021e5cd6a6af939a66d49d47be6ad578",
+    "log": "/tmp/bc-arc-scratch/items45/priv/fix1/logs/PqxdhRecordLiftCtxPrivBills-f1.log",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-record-priv/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/items45/priv/fix1/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPrivBills.olean",
+     "/tmp/beaconcrypt-deployment-record-priv/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPrivBills.lean"
+    ],
+    "tag": "f1"
    }
   }
  ],
@@ -1471,16 +1642,75 @@
   "propext": 1
  },
  "leanpath": {
-  "path": "/tmp/bc-arc-scratch/items45/priv/leanpath",
-  "sha256": "1515348202264bfff2d345ecd954d43e63d1f8ad67b1438e7e775f535ce71f99",
-  "first_prefix": "/tmp/bc-arc-scratch/items45/priv/olean",
-  "mirror": "resolved symlink mirror (1713 links, 0 broken, root olean skipped) of the first prefix /tmp/bc-arc-scratch/items45/ctx/int/olean of the published LEAN_PATH of central 14f51c34, then that published LEAN_PATH",
-  "published": "/tmp/bc-coord/leanpaths/14f51c34403649b85c6acc0ad29fb2622406dd81.leanpath",
-  "published_sha256": "d5776c51b26c995e317760984019c82b26e98325705253b83857fec48e687003"
+  "track": {
+   "path": "/tmp/bc-arc-scratch/items45/priv/leanpath",
+   "sha256": "1515348202264bfff2d345ecd954d43e63d1f8ad67b1438e7e775f535ce71f99",
+   "first_prefix": "/tmp/bc-arc-scratch/items45/priv/olean",
+   "mirror": "resolved symlink mirror (1713 links, 0 broken, root olean skipped) of the first prefix /tmp/bc-arc-scratch/items45/ctx/int/olean of the published LEAN_PATH of central 14f51c34, then that published LEAN_PATH",
+   "published": "/tmp/bc-coord/leanpaths/14f51c34403649b85c6acc0ad29fb2622406dd81.leanpath",
+   "published_sha256": "d5776c51b26c995e317760984019c82b26e98325705253b83857fec48e687003"
+  },
+  "fix": {
+   "path": "/tmp/bc-arc-scratch/items45/priv/fix1/leanpath",
+   "sha256": "0ba0a1d32bb7bad40d36f7477aef7283021e5cd6a6af939a66d49d47be6ad578",
+   "first_prefix": "/tmp/bc-arc-scratch/items45/priv/fix1/olean",
+   "mirror": "resolved symlink mirror (source /tmp/bc-arc-scratch/items45/ctx/int/olean links 1713 skipped 1 broken 0) of the same first prefix /tmp/bc-arc-scratch/items45/ctx/int/olean of the published LEAN_PATH of central 14f51c34, then that published LEAN_PATH; the five privacy-track oleans and the root olean were written into it by the f1 checks. This is the LEAN_PATH that reproduces the fix-pass tree.",
+   "published": "/tmp/bc-coord/leanpaths/14f51c34403649b85c6acc0ad29fb2622406dd81.leanpath",
+   "published_sha256": "d5776c51b26c995e317760984019c82b26e98325705253b83857fec48e687003"
+  }
  },
- "inventory": "coord.sh inv recount claude then coord.sh inv rehash claude at every module commit; handwritten-lean 1680 -> 1685 (one per module); the focused check-inventory ran on every clean module commit (exit 0, no dirt).",
- "diff_check": "git diff --check clean before every commit.",
- "forbidden_scan": "No sorry, admit, axiom declaration, native_decide, implemented_by, extern, unsafe or opaque in the five modules (guards.py verify and the inventory escape-hatch pattern).",
+ "inventory": {
+  "track": "coord.sh inv recount claude then coord.sh inv rehash claude at every module commit; handwritten-lean 1680 -> 1685 (one per module); the focused check-inventory ran on every clean module commit (exit 0, no dirt).",
+  "tip_runs": {
+   "implementer": {
+    "status": 0,
+    "commit": "77ccccbd66c8e669f57588ec6672d1147c8d4e5a",
+    "dirt_bytes": 0,
+    "dirt_after_bytes": 0,
+    "start": "2026-10-08T13:23:42Z",
+    "end": "2026-10-08T13:25:04Z",
+    "log": "/tmp/bc-arc-scratch/items45/priv/logs/inventory-tip.log",
+    "log_sha256": "46af1c535659b0c221d8a2449ef09cce1974c9ae0e2ce0d9ab1f64c47eaaba8d",
+    "lease_label": "items45-priv-inventory-tip",
+    "command": "coord.sh lease mem claude @nix items45-priv-inventory-tip --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C /tmp/beaconcrypt-deployment-record-priv/beaconcrypt-core check-inventory SHELL=bash"
+   },
+   "hygiene_review": {
+    "status": 0,
+    "commit": "77ccccbd66c8e669f57588ec6672d1147c8d4e5a",
+    "dirt_bytes": 0,
+    "dirt_after_bytes": 0,
+    "start": "2026-10-08T13:36:18Z",
+    "end": "2026-10-08T13:37:43Z",
+    "log": "/tmp/bc-arc-scratch/items45/priv/review-hygiene/logs/inventory.log",
+    "log_sha256": "db5eb913db1cb1471cd57d0bfee74fa61e57a540c269be6276f059da36322cff",
+    "lease_label": "see review-hygiene/NOTES.md",
+    "command": "coord.sh lease mem claude @nix see review-hygiene/NOTES.md --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C /tmp/beaconcrypt-deployment-record-priv/beaconcrypt-core check-inventory SHELL=bash",
+    "note": "Run by the hygiene review under coord.sh lease mem claude @nix; the worktree was clean including ignored files before and after (review-hygiene/ignored-before.txt is empty)."
+   }
+  },
+  "fix": {
+   "recount": "handwritten-lean count unchanged (1685)",
+   "recount_log": "/tmp/bc-arc-scratch/items45/priv/fix1/logs/inv-recount-f1.log",
+   "rehash": "proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxRandom.lean: b4dfc4bd57ab -> 071a7efdb241\nproofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPrivModes.lean: 105da6f3115a -> 2dfa0fd200d1\nproofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPrivLink.lean: unchanged\nproofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPriv.lean: 9ac7d9cb8085 -> ab2d8749c69d\nproofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPrivBills.lean: 0fb80df61ffd -> 36dfeb23abce",
+   "rehash_log": "/tmp/bc-arc-scratch/items45/priv/fix1/logs/inv-rehash-f1.log",
+   "note": "coord.sh inv recount claude before coord.sh inv rehash claude on the docstring commit 3b2e273f; the four changed module digests are the only manifest change; check-inventory.sh, the root and the gate blocks are unchanged.",
+   "focused_inventory": {
+    "status": 0,
+    "commit": "8e7d18c7fc07656a75bec35998638b3a71e550c0",
+    "dirt_bytes": 0,
+    "dirt_after_bytes": 0,
+    "start": "2026-10-08T13:51:10Z",
+    "end": "2026-10-08T13:52:37Z",
+    "log": "/tmp/bc-arc-scratch/items45/priv/fix1/logs/inventory-f1docs.log",
+    "log_sha256": "8e4af10198ab93a405685e5f0969a26ece1cfca0139fa8534265070e37b5b07f",
+    "lease_label": "items45-priv-fix1-inventory-f1docs",
+    "command": "coord.sh lease mem claude @nix items45-priv-fix1-inventory-f1docs --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C /tmp/beaconcrypt-deployment-record-priv/beaconcrypt-core check-inventory SHELL=bash"
+   }
+  },
+  "integration_note": "Expected handwritten-lean after merging central: 1685 if central stays at 14f51c34; 1687 if the world track (codex/deployment-record-world, two modules) reaches central first (hygiene finding H6); coord.sh inv recount sets the count."
+ },
+ "diff_check": "git diff --check clean before every track commit and before both fix-pass commits (and clean on every track commit per the hygiene review).",
+ "forbidden_scan": "No sorry, admit, axiom declaration, native_decide, implemented_by, extern, unsafe or opaque in the five modules (guards.py verify and the inventory escape-hatch pattern). Unchanged in the fix pass (guards.py verify on the five modules after the docstring joins: 30, 32, 11, 14 and 26 theorems, each with one exact guard).",
  "h7_scan": {
   "tool": "/tmp/bc-arc-scratch/items45/priv/tools/h7scan.py",
   "tool_sha256": "53cd7e6977b22a073febb1ae52f45b3fb4d28e51d2b130944bc2dd8db8ced1d2",
@@ -1488,12 +1718,32 @@
   "modules_sha256": "6c535da1f09086dd63f025145ab43df42f6732cd3bc6515d6b9f42d9afe3de64",
   "docs": "/tmp/bc-arc-scratch/items45/priv/logs/h7scan-docs.json",
   "docs_sha256": "e351d325bd0d9fd5dc60fe266bb3c0e54a2456729eeb655910ae3a6865650df1",
-  "result": "Version 3, case-insensitive: no forbidden and no informational name in the five modules, the guide or the added analysis and guide lines."
+  "result": "Version 3, case-insensitive: no forbidden and no informational name in the five modules, the guide or the added analysis and guide lines.",
+  "fix_modules": {
+   "output": "/tmp/bc-arc-scratch/items45/priv/fix1/h7scan-modules.json",
+   "sha256": "6c535da1f09086dd63f025145ab43df42f6732cd3bc6515d6b9f42d9afe3de64",
+   "result": "five modules after the docstring joins: no forbidden and no informational name (byte-identical to the track output logs/h7scan-all.json)"
+  },
+  "fix_docs": {
+   "output": "/tmp/bc-arc-scratch/items45/priv/fix1/h7scan-docs.json",
+   "sha256": "e351d325bd0d9fd5dc60fe266bb3c0e54a2456729eeb655910ae3a6865650df1",
+   "input": "/tmp/bc-arc-scratch/items45/priv/fix1/docs-added.txt",
+   "result": "the guide doc/impl/record-lift-ctx-priv.md and every line that the branch adds to doc/formal-verification-analysis.md, doc/impl/record-lift-ctx-hybrid.md and doc/impl/record-lift-ideal.md at the fix pass: no forbidden and no informational name"
+  },
+  "reviews": "Semantic review (review-semantic/logs/h7scan.json) and hygiene review (review-hygiene/h7scan-modules.json, h7scan-docs.json): no forbidden and no informational hit in the five modules, the guide, the receipt or the added documentation and gate lines."
  },
  "meta_check": {
   "probe": "/tmp/bc-arc-scratch/items45/priv/tools/H7ClosurePriv.lean",
   "probe_sha256": "89216be987a23d014147f78bfd1aacb997ca5418424a9b6034843f137749de0f",
-  "note": "Closure guard version 3 adapted from items45/ctx/tools/H7Closure.lean; each run covers the modules committed so far (per-module entries above); the 12 classified constants are the structural DH-interface constants reached through Setup.beaconDomain."
+  "note": "Closure guard version 3 adapted from items45/ctx/tools/H7Closure.lean; each run covers the modules committed so far (per-module entries above); the 12 classified constants are the structural DH-interface constants reached through Setup.beaconDomain.",
+  "fix": {
+   "probe": "/tmp/bc-arc-scratch/items45/priv/fix1/tools/H7ClosurePriv.lean",
+   "probe_sha256": "89216be987a23d014147f78bfd1aacb997ca5418424a9b6034843f137749de0f",
+   "log": "/tmp/bc-arc-scratch/items45/priv/fix1/logs/dev-h7-all-154820.log",
+   "log_sha256": "e5e6eb4cb6200416c8bcf57f1750f87632a69f7f36cfe43d777a14b690385112",
+   "result": "H-7 guard: modules 5; declared constants 330; closure 25769; direct forbidden uses 0; closure violations 0; classified structural constants 12 of 12"
+  },
+  "reviews": "Semantic review (review-semantic/logs/closure.log) and hygiene review (review-hygiene/logs/h7closure.log): 5 modules, 330 declared constants, closure 25769, 0 direct, 0 violations, 12 of 12 structural; hygiene negative controls (dropping Quot.sound from the ctxPrivLiftStatement guard; adding aeadseal_tag_length to the forbidden list) both fail with exit 1."
  },
  "deviations_from_plan": [
   "The per-key hop uses AdaptiveCtxPrivacyGuard.replay_random_advantage (exact) rather than PqxdhRecordLiftCtxModeBounds.selected_privacy (real to random, with integrity terms), because the privacy hybrids start from idealAuth (replay mode) and the target charges privacyLoss only.",
@@ -1506,8 +1756,172 @@
   "RecordLiftStatement (the world track composes it from this theorem with recordLiftBool_of_parts).",
   "The R6 forms (stage S6)."
  ],
- "checks_not_run": "No lake build, make verify, nix-collect-garbage, mutation testing, ProVerif or Rust run. Transcript fidelity (@cargo) is an integration-time check and has not run yet.",
+ "checks_not_run": "No lake build, make verify, nix-collect-garbage, mutation testing, ProVerif or Rust run in the track or the fix pass. Transcript fidelity (@cargo) and the central integration checks of PROTOCOL section 6 run on the merged tip at integration.",
  "review": {
-  "status": "pending: independent semantic and hygiene review, fix pass, confirming review"
- }
+  "reviewed_commit": "77ccccbd66c8e669f57588ec6672d1147c8d4e5a",
+  "reviewed_range": "14f51c34..77ccccbd",
+  "semantic": {
+   "reviewer": "independent Claude semantic review (did not write the modules)",
+   "notes": "/tmp/bc-arc-scratch/items45/priv/review-semantic/NOTES.md",
+   "notes_sha256": "3ab3928da85f6c4c4b94149ecdca86df95a6d3d3bc610dbd57bb502a3109f9ac",
+   "verdict": "APPROVE_WITH_NITS (one minor, three nits)",
+   "checked": "Statements against the central targets (exact target type of ctxPrivLiftStatement accepted by a probe), source correspondence of randomImpl with the IND$ random experiment, exactness of randomView_eq, randomTargetView_eq, hop_eq, game_first, game_last, link and key_cut_measure for any modes, bills against the integrity bills, guard coverage 113/113, H-7 scan and closure (330/25769/0/0/12), five module recompiles exit 0 with empty logs (review-semantic/logs), compatibility with the world track's record_lift_of_priv."
+  },
+  "hygiene": {
+   "reviewer": "independent Claude hygiene review (did not write the modules)",
+   "notes": "/tmp/bc-arc-scratch/items45/priv/review-hygiene/NOTES.md",
+   "notes_sha256": "d7ef90a94f916f46fae66cc7534a05ccad610fdd6d19b90d68bd4a769fa5c1f1",
+   "verdict": "APPROVE_WITH_NITS (one minor, five nits, one informational)",
+   "checked": "Commits and footers, diff --check, registry, guard scan (30/32/11/14/26 = 113, every guard byte-identical to Lean output in AxiomProbe.lean), forbidden tokens and options, H-7 scan v3 and closure guard with two negative controls, module and root rechecks, per-commit inventory replay (invcommits.py), focused check-inventory at 77ccccbd, receipt digests (receiptcheck.py), contract lists, docs line discipline, merge-tree previews against the world and CE-11b branches."
+  },
+  "findings": [
+   {
+    "review": "semantic",
+    "id": "S1",
+    "severity": "minor",
+    "title": "Prose says the sampler swap is the only distributional step, but the privacy half has other law-only steps",
+    "response": "Guide (three-mode challenger section): the sampler swap is stated with the measure 𝒟; besides it, modeView_random (drops the unused selected key, evalDist_bind_const) and the selected-key law PqxdhRecordLiftKeyCut.key_cut_measure (through which game_replay and game_random hold) are equalities of distributions; the identifications randomView_eq, randomTargetView_randomView, source_view, modeView_replay, link, game_first and game_last are program equalities, and replay_random_target, hop_advantage and hop_eq are equalities of advantages built from these. Analysis (second-module paragraph): the same in plain English.",
+    "outcome": "fixed"
+   },
+   {
+    "review": "semantic",
+    "id": "S2",
+    "severity": "nit",
+    "title": "FVA says random-mode records carry \"the same private commitment\"",
+    "response": "Analysis \"What is proved\" paragraph now: \"sealed as uniformly random bytes of the plaintext's length, with a uniformly random 16-byte tag and a private commitment computed in the same way as in replay mode\".",
+    "outcome": "fixed"
+   },
+   {
+    "review": "semantic",
+    "id": "S3",
+    "severity": "nit",
+    "title": "Stale \"open\" wording remains next to the updated sentences",
+    "response": "CTX-track guide item 6 now begins \"Done by the privacy track in five modules\" and keeps the earlier plan as a clause (\"The plan as recorded here before that work\", \"Two pieces were new\", \"The estimate was 1.5 to 2 days\"). S1 guide: the worlds-section and CtxPrivLiftStatement sentences say \"was an S4 obligation\" with \"closed\" pointers to PqxdhRecordLiftCtxRandom.randomTargetView_randomView and replay_random_target, and the open-points bullet is marked \"(closed by the privacy track)\". The central PqxdhRecordLiftCtxBills docstring is frozen; the guide Status section now says that its Scope sentence predates this track and names the theorem that closes it.",
+    "outcome": "fixed"
+   },
+   {
+    "review": "semantic",
+    "id": "S4",
+    "severity": "nit",
+    "title": "Deviation 4's rationale depends on the coin-query cost model, which should be stated explicitly",
+    "response": "Guide sampler paragraph: \"AdaptiveCtxQueryBounds.SourceUniform, the class that the uniform cap of CtxBounded counts, caps the number of coin queries, each a uniform draw from a finite range of any size, as in every existing bill, so a uniform byte string of any length costs one query.\" The analysis states the same counting convention in plain English.",
+    "outcome": "fixed"
+   },
+   {
+    "review": "hygiene",
+    "id": "H1",
+    "severity": "minor",
+    "title": "FVA says PqxdhRecordLiftCtxRandom \"uses no assumption\", but two of its theorems use the tag-length contract",
+    "response": "Analysis first-module paragraph now: the module's equalities of programs use no assumption; the replay-to-random consequence uses only the 16-byte tag length (counted under functional AEAD correctness) through the existing one-key comparison of replay mode with the IND$ game. files_sha256 updated.",
+    "outcome": "fixed"
+   },
+   {
+    "review": "hygiene",
+    "id": "H2",
+    "severity": "nit",
+    "title": "Stale \"not proved yet\" sentence remains in the FVA S1 section",
+    "response": "The S1 sentence now says the correspondence \"was not proved at stage S1; the privacy step had to show it, and the privacy track proves it\" with PqxdhRecordLiftCtxRandom.randomTargetView_randomView and replay_random_target and a pointer to the privacy section (one line).",
+    "outcome": "fixed"
+   },
+   {
+    "review": "hygiene",
+    "id": "H3",
+    "severity": "nit",
+    "title": "Theorem docstrings are wrapped mid-sentence in 24 places",
+    "response": "Commit 3b2e273f: the twenty wrapped theorem and definition docstrings (25 line breaks; PqxdhRecordLiftCtxPrivLink had none) are one line each. Guard docstrings are the exact #print axioms output and stay as Lean prints them. Rechecks with -o into the fresh prefix fix1/olean, root import, inv recount and rehash, H-7 scan and closure guard and the focused check-inventory are recorded here.",
+    "outcome": "fixed"
+   },
+   {
+    "review": "hygiene",
+    "id": "H4",
+    "severity": "nit",
+    "title": "Closed items in the guides still read as open",
+    "response": "Same edits as S3 (CTX-track guide item 6 relabelled \"Done by the privacy track\"; S1 guide lines with \"closed\" pointers; the open-points bullet marked closed).",
+    "outcome": "fixed"
+   },
+   {
+    "review": "hygiene",
+    "id": "H5",
+    "severity": "nit",
+    "title": "Takeover plan has two \"## 9.\" sections, and the privacy section's time label postdates the file",
+    "response": "The privacy section is now \"## 10.\" with the label \"about 15:23 CEST\" and a fix-pass update paragraph; plan.sha256 records the new hash and plan.sha256_track the old one.",
+    "outcome": "fixed"
+   },
+   {
+    "review": "hygiene",
+    "id": "H6",
+    "severity": "nit",
+    "title": "Status lines and the tip inventory run need updating at the fix pass or integration",
+    "response": "Guide Status and analysis Status now say: independently reviewed, findings fixed, confirming review pending, not integrated. inventory.tip_runs records the implementer's and the hygiene review's runs at 77ccccbd; this review block records both reviews; the expected post-merge count (1685, or 1687 after the world track) is in the guide, inventory.integration_note and the plan.",
+    "outcome": "fixed"
+   },
+   {
+    "review": "hygiene",
+    "id": "H7",
+    "severity": "info",
+    "title": "Checks independently verified clean",
+    "response": "Recorded in review.hygiene.",
+    "outcome": "no_change_needed"
+   }
+  ],
+  "fix_pass": {
+   "commits": [
+    "3b2e273f9406eb1a5722118752485a0a5611903a",
+    "8e7d18c7fc07656a75bec35998638b3a71e550c0"
+   ],
+   "scratch": "/tmp/bc-arc-scratch/items45/priv/fix1",
+   "lean_edits": "Docstrings only (twenty theorem and definition docstrings joined into one line each); no statement, proof, definition body or guard changed.",
+   "doc_edits": "doc/impl/record-lift-ctx-priv.md, doc/formal-verification-analysis.md (privacy section and one S1 sentence), doc/impl/record-lift-ctx-hybrid.md (item 6), doc/impl/record-lift-ideal.md (two sentences and the open-points bullet)."
+  },
+  "confirming_review": "pending"
+ },
+ "date_track": "2026-10-08T13:23:26.934299+00:00",
+ "commits_note": "Seven track commits 98edf474..77ccccbd (five module commits, the documentation commit and the track receipt commit 77ccccbd, which is not listed above because it only added this file), then the fix-pass commits 3b2e273f (docstrings) and 8e7d18c7 (documentation); the receipt commit that updates this file follows 8e7d18c7.",
+ "files_sha256_track": {
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxRandom.lean": "b4dfc4bd57ab962e4f5daa3c49facea59a0a5086795b1122d5edacb07d65c7aa",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPrivModes.lean": "105da6f3115ac3fc36a0a8dc61946a1f9718d65daca9d3f5c9793bb5d8d60c42",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPrivLink.lean": "ab61843a1d36876519d66a07d449b9f9de2ea7a3f461d4b51cecd1602d706bd4",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPriv.lean": "9ac7d9cb808575c12a8099a7cdb1e5fb7651d49d2da150ab9c8081b6945b8d06",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPrivBills.lean": "0fb80df61ffd3946b8f1c295adf89b1c74edc651c3a2fbee42ce7f65c9ec856e",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "e42ecfc10345f22d023cb028f6b5bcc6d41efde979e5d756b9df2221fd349d50",
+  "beaconcrypt-core/proofs/check-inventory.sh": "63f7f095b63af2c1a22d5fbc14d129a9e23396279b95eb1e3033d023c4389748",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "b907bf3e1704a0617ff9ba1505337209d5a2e1022836ef3570970f2dc6c416d6",
+  "doc/impl/record-lift-ctx-priv.md": "f1b2af916c514d8dd3d0cdd06a463a8125cc1dd9fbbf694a6534c032fc769609",
+  "doc/formal-verification-analysis.md": "2c8726b8ce2b4b120eda6ce8f9ca4a8afe1bd9ac613c7db374c5bebd79583ae7",
+  "doc/impl/record-lift-ctx-hybrid.md": "1fe4a78518ef457d9704071efb6d472219d7cd36eed6495fa59b742ae97b4bd2",
+  "doc/impl/record-lift-ideal.md": "aeb7927469872d839721bc162faabe7cad87a1dfc9edc209e7d7ad079e5dc0c1"
+ },
+ "files_sha256_track_note": "At the documentation commit bd802c1ac35b7e7380bcf458da5e6625d99b4fdc (the commit before this receipt). Identical to the reviewed commit 77ccccbd.",
+ "root_check_fix": {
+  "start": "2026-10-08T13:48:03.681163163Z",
+  "end": "2026-10-08T13:48:07.035716647Z",
+  "exit": 0,
+  "source_sha256": "e42ecfc10345f22d023cb028f6b5bcc6d41efde979e5d756b9df2221fd349d50",
+  "log_bytes": 0,
+  "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "artifact": "/tmp/bc-arc-scratch/items45/priv/fix1/olean/BeaconcryptCore.olean",
+  "artifact_sha256": "681be927321c84e51a2736cb7861b8429c2dfceb6c8b3052785799401285b54f",
+  "leanpath_sha256": "0ba0a1d32bb7bad40d36f7477aef7283021e5cd6a6af939a66d49d47be6ad578",
+  "log": "/tmp/bc-arc-scratch/items45/priv/fix1/logs/root-f1.log",
+  "command": [
+   "coord.sh",
+   "lean",
+   "claude",
+   "<label>",
+   "--",
+   "timeout",
+   "180",
+   "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+   "-j1",
+   "-M8000",
+   "--root=/tmp/beaconcrypt-deployment-record-priv/beaconcrypt-core/proofs/lean",
+   "-o",
+   "/tmp/bc-arc-scratch/items45/priv/fix1/olean/BeaconcryptCore.olean",
+   "/tmp/beaconcrypt-deployment-record-priv/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+  ],
+  "tag": "f1"
+ },
+ "known_unfixed": [
+  "The body of the pushed commit 26a6f7b1 has the typo \"PqxdhRecordLiftCtx Priv\" (hygiene review notes); pushed commits are not amended."
+ ]
 }
