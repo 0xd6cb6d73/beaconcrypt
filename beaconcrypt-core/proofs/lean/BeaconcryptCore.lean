@@ -1784,6 +1784,8 @@ import BeaconcryptCore.Computational.PqxdhRecordLiftCtxLink
 
 import BeaconcryptCore.Computational.PqxdhRecordLiftCtxAvailability
 
+import BeaconcryptCore.Computational.PqxdhRecordLiftKeyCut
+
 /-!
 # Beaconcrypt-core verification root
 
