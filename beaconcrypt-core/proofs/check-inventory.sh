@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1664
+	[handwritten-lean]=1665
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -34011,6 +34011,35 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem slotCore_run([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSlots theorem slotCore_run"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSlots\.slotCore_natural$' "$selected_source_module" "PqxdhDeploymentIdealSlots dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSlots.slotCore_natural"
 require_line_count 1 '^theorem slotCore_natural([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSlots theorem slotCore_natural"
+
+# CE-11b U1/U5 challenger draws (R3) and the draw swap of item 2's prefix.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealParams.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentIdealParams$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentIdealParams root import"
+require_line_count 11 '^theorem ' "$selected_source_module" "PqxdhDeploymentIdealParams theorem inventory"
+require_line_count 11 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentIdealParams guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealParams\.ofCE_kem$' "$selected_source_module" "PqxdhDeploymentIdealParams dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealParams.ofCE_kem"
+require_line_count 1 '^theorem ofCE_kem([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealParams theorem ofCE_kem"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealParams\.ofCE_accept$' "$selected_source_module" "PqxdhDeploymentIdealParams dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealParams.ofCE_accept"
+require_line_count 1 '^theorem ofCE_accept([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealParams theorem ofCE_accept"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealParams\.pool_length$' "$selected_source_module" "PqxdhDeploymentIdealParams dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealParams.pool_length"
+require_line_count 1 '^theorem pool_length([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealParams theorem pool_length"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealParams\.pool_kem$' "$selected_source_module" "PqxdhDeploymentIdealParams dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealParams.pool_kem"
+require_line_count 1 '^theorem pool_kem([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealParams theorem pool_kem"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealParams\.pool_other$' "$selected_source_module" "PqxdhDeploymentIdealParams dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealParams.pool_other"
+require_line_count 1 '^theorem pool_other([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealParams theorem pool_other"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealParams\.pool_eq$' "$selected_source_module" "PqxdhDeploymentIdealParams dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealParams.pool_eq"
+require_line_count 1 '^theorem pool_eq([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealParams theorem pool_eq"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealParams\.preOpaque_pool$' "$selected_source_module" "PqxdhDeploymentIdealParams dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealParams.preOpaque_pool"
+require_line_count 1 '^theorem preOpaque_pool([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealParams theorem preOpaque_pool"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealParams\.draws_swap$' "$selected_source_module" "PqxdhDeploymentIdealParams dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealParams.draws_swap"
+require_line_count 1 '^theorem draws_swap([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealParams theorem draws_swap"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealParams\.slot_liftComp$' "$selected_source_module" "PqxdhDeploymentIdealParams dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealParams.slot_liftComp"
+require_line_count 1 '^theorem slot_liftComp([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealParams theorem slot_liftComp"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealParams\.internalize_run$' "$selected_source_module" "PqxdhDeploymentIdealParams dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealParams.internalize_run"
+require_line_count 1 '^theorem internalize_run([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealParams theorem internalize_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealParams\.slotGame_pool$' "$selected_source_module" "PqxdhDeploymentIdealParams dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealParams.slotGame_pool"
+require_line_count 1 '^theorem slotGame_pool([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealParams theorem slotGame_pool"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
