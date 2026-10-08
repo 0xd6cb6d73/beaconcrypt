@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1663
+	[handwritten-lean]=1664
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -33982,6 +33982,35 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecord
 require_line_count 1 '^theorem hiding_advantage([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftIdeal theorem hiding_advantage"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftIdeal\.hiding_event$' "$selected_source_module" "PqxdhRecordLiftIdeal dependency BeaconcryptCore.Computational.PqxdhRecordLiftIdeal.hiding_event"
 require_line_count 1 '^theorem hiding_event([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftIdeal theorem hiding_event"
+
+# CE-11b U1 slot programs and their naturality (generic).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealSlots.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentIdealSlots$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentIdealSlots root import"
+require_line_count 11 '^theorem ' "$selected_source_module" "PqxdhDeploymentIdealSlots theorem inventory"
+require_line_count 11 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentIdealSlots guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSlots\.simulateQ_keeps$' "$selected_source_module" "PqxdhDeploymentIdealSlots dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSlots.simulateQ_keeps"
+require_line_count 1 '^theorem simulateQ_keeps([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSlots theorem simulateQ_keeps"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSlots\.slot_keeps$' "$selected_source_module" "PqxdhDeploymentIdealSlots dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSlots.slot_keeps"
+require_line_count 1 '^theorem slot_keeps([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSlots theorem slot_keeps"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSlots\.slot_step_law$' "$selected_source_module" "PqxdhDeploymentIdealSlots dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSlots.slot_step_law"
+require_line_count 1 '^theorem slot_step_law([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSlots theorem slot_step_law"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSlots\.slot_natural_law$' "$selected_source_module" "PqxdhDeploymentIdealSlots dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSlots.slot_natural_law"
+require_line_count 1 '^theorem slot_natural_law([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSlots theorem slot_natural_law"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSlots\.slot_natural_proj$' "$selected_source_module" "PqxdhDeploymentIdealSlots dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSlots.slot_natural_proj"
+require_line_count 1 '^theorem slot_natural_proj([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSlots theorem slot_natural_proj"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSlots\.detach_attach$' "$selected_source_module" "PqxdhDeploymentIdealSlots dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSlots.detach_attach"
+require_line_count 1 '^theorem detach_attach([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSlots theorem detach_attach"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSlots\.attach_detach$' "$selected_source_module" "PqxdhDeploymentIdealSlots dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSlots.attach_detach"
+require_line_count 1 '^theorem attach_detach([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSlots theorem attach_detach"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSlots\.mapBackend_attach$' "$selected_source_module" "PqxdhDeploymentIdealSlots dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSlots.mapBackend_attach"
+require_line_count 1 '^theorem mapBackend_attach([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSlots theorem mapBackend_attach"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSlots\.detach_mapBackend$' "$selected_source_module" "PqxdhDeploymentIdealSlots dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSlots.detach_mapBackend"
+require_line_count 1 '^theorem detach_mapBackend([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSlots theorem detach_mapBackend"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSlots\.slotCore_run$' "$selected_source_module" "PqxdhDeploymentIdealSlots dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSlots.slotCore_run"
+require_line_count 1 '^theorem slotCore_run([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSlots theorem slotCore_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSlots\.slotCore_natural$' "$selected_source_module" "PqxdhDeploymentIdealSlots dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSlots.slotCore_natural"
+require_line_count 1 '^theorem slotCore_natural([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSlots theorem slotCore_natural"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"

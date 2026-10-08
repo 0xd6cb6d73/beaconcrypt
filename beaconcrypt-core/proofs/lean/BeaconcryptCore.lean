@@ -1778,6 +1778,8 @@ import BeaconcryptCore.Computational.PqxdhRecordLiftCtxProgramBounds
 
 import BeaconcryptCore.Computational.PqxdhRecordLiftIdeal
 
+import BeaconcryptCore.Computational.PqxdhDeploymentIdealSlots
+
 /-!
 # Beaconcrypt-core verification root
 
