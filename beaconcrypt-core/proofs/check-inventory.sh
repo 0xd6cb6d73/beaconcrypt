@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1665
+	[handwritten-lean]=1666
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -34074,6 +34074,23 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecord
 require_line_count 1 '^theorem seed_prefix([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSeedPolicy theorem seed_prefix"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftSeedPolicy\.uniform_policy$' "$selected_source_module" "PqxdhRecordLiftSeedPolicy dependency BeaconcryptCore.Computational.PqxdhRecordLiftSeedPolicy.uniform_policy"
 require_line_count 1 '^theorem uniform_policy([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSeedPolicy theorem uniform_policy"
+
+# Items 4/5, stage S3 (chain track C2): one hop of the ordered chain hybrid, seed cut at depth zero and parent cut at positive depth, identified with the adjacent mixed policy.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChainHop.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRecordLiftChainHop$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftChainHop root import"
+require_line_count 5 '^theorem ' "$selected_source_module" "PqxdhRecordLiftChainHop theorem inventory"
+require_line_count 5 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftChainHop guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainHop\.selected_succ$' "$selected_source_module" "PqxdhRecordLiftChainHop dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainHop.selected_succ"
+require_line_count 1 '^theorem selected_succ([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainHop theorem selected_succ"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainHop\.chains_observe$' "$selected_source_module" "PqxdhRecordLiftChainHop dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainHop.chains_observe"
+require_line_count 1 '^theorem chains_observe([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainHop theorem chains_observe"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainHop\.advantage_congr_right$' "$selected_source_module" "PqxdhRecordLiftChainHop dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainHop.advantage_congr_right"
+require_line_count 1 '^theorem advantage_congr_right([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainHop theorem advantage_congr_right"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainHop\.childUniform_policy$' "$selected_source_module" "PqxdhRecordLiftChainHop dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainHop.childUniform_policy"
+require_line_count 1 '^theorem childUniform_policy([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainHop theorem childUniform_policy"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChainHop\.hop_bound$' "$selected_source_module" "PqxdhRecordLiftChainHop dependency BeaconcryptCore.Computational.PqxdhRecordLiftChainHop.hop_bound"
+require_line_count 1 '^theorem hop_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChainHop theorem hop_bound"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
