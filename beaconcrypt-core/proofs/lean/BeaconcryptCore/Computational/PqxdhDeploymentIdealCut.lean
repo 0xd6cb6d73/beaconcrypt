@@ -11,8 +11,9 @@ The second compile lemma of CE-11b (design-v2 section 8) compares `CE.idealGame 
 - The pool scan is the erasure of the annotated pool source execution of the compiled scan (`pool_scan_source`, from `PqxdhDeploymentIdealPool.compile_native_pool` and `PqxdhDeploymentIdealPoolSource.programPool_native`), and the source prefix of item 2's opaque scan under the stopped selected-first router at the pool is its encoding (`stopped_scan_source`, from `compile_scan` and `PqxdhDeploymentIdealPoolSource.kemCommands_stopped`).
 - `ideal_prefix`: the common deployment experiment with the ideal registration at `p` is the Server construction, then `commonPrefix`, then `resumeAt` on the merged deployment state. `item2_prefix`: item 2's prephase at the drawn family (`PqxdhDeploymentIdealParams.preOpaquePool`) for the compiled program is the same construction, then `commonPrefix`, then the rest of item 2's opaque scan (`opaqueRest`, `opaqueScan_split`) under the stopped router from the compiled cut and the encoded state.
 - `CutRel` and `cut_rel`: on every outcome of the common prefix, the source-side invariant at the pool holds (`cut_owned`), the compiled program's local copies and the erased source state satisfy CE-3's merge invariant (`cut_good`), and the KEM pool holds the first entries of the challenger's pool, at most as many as the budget's creations (`cut_prefix`). This is where the post-challenge phase (unit U6) starts: the selected accept's verification and the steps before its encapsulation are in `opaqueRest` on item 2's side and in `acceptExposed` on the CE side.
+- Two further facts on the outcomes of the common prefix, kept outside `CutRel` so that `cut_rel` keeps its premises. Remaining creations (`cut_residual`, from the generic `scan_residual` and `sourcePool_keys`): for a source budget of the whole compiled program, the KEM key pairs created so far are at most the budget's creations, and at a pending compiled cut the compiled continuation, for every reply of the suspended accept, stays within the budget with only the remaining creations (the budget's creations minus the key pairs created so far), so the key pairs created so far plus the continuation's creations fit the pool whenever the budget's creations do. Owner positions (`PoolIndexed`, `cut_indexed`, `cut_entry_key`): every owner entry's KEM index is its position in the owner list, so the active KEM key pair of owner `j` is entry `j` of the challenger's pool.
 
-Premises: the approved codec contracts `Phase1ReadBack` and `Phase2ReadBack` (through CE-3's compile lemma and invariant) and, on item 2's side, a source budget for item 2's scan of the compiled program that reads no identity or KEM field and creates no more KEM keys than the pool holds (the CE budget gives one; CE-11b's `ideal_compile` instantiates it). These are program equalities and support facts. They charge nothing and make no security claim.
+Premises: the approved codec contracts `Phase1ReadBack` and `Phase2ReadBack` (through CE-3's compile lemma and invariant) and, on item 2's side, a source budget for item 2's scan of the compiled program that reads no identity or KEM field and creates no more KEM keys than the pool holds (the CE budget gives one; CE-11b's `ideal_compile` instantiates it), and for `cut_residual` a source budget of the whole compiled program (CE-9's `PqxdhDeploymentCompileCaps.compile_full_certified` gives one from the CE budget). These are program equalities and support facts. They charge nothing and make no security claim.
 -/
 
 open OracleComp OracleSpec CoreModels Aeneas
@@ -1000,7 +1001,7 @@ variable (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (route :
   (checks : Checks) {count : ℕ} (t : Target count) (p : Params KemSK count)
   (created : PqxdhLiveServerConstruction.Created Unit)
 
-/-- On every outcome of the common prefix, the annotated source state keeps the source-side invariant at the pool (CE-3's source ownership facts, the Server's identity slot, one KEM key pair per owner). -/
+/-- On every outcome of the common prefix, the annotated source state keeps the source-side invariant at the pool (item 2's source ownership facts `PqxdhRegistrationJointServerSchedule.Owned`, the Server's identity slot, one KEM key pair per owner). -/
 theorem cut_owned {Y : Type} (pool : PqxdhRegistrationJointPreparation.Pool KemSK)
     (empty : pool.2 = PqxdhLiveKemBirth.empty)
     (slot : pool.1.seeds[created.server.server.metadata.identityIndex]? = some created.seed) (work : OracleComp Spec Y)
@@ -1057,7 +1058,7 @@ theorem cut_good {Y : Type} (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadB
     (PqxdhDeploymentCompileInvariant.good_initial setup codec (PqxdhRegistrationSchedule.initial created) sender peers
       rfl (fun _ => rfl))
 
-/-- On every outcome of the common prefix, the KEM pool holds the first entries of the challenger's pool, at most as many as the source budget's creations (owner `j` holds pool entry `j`), when the budget of item 2's scan of the compiled program creates no more KEM keys than the pool holds. -/
+/-- On every outcome of the common prefix, the KEM pool holds the first entries of the challenger's pool, at most as many as the source budget's creations (the KEM key pair at KEM index `j` is pool entry `j`; `cut_indexed` shows that owner `j` has KEM index `j`, and `cut_entry_key` combines the two), when the budget of item 2's scan of the compiled program creates no more KEM keys than the pool holds. -/
 theorem cut_prefix {Y : Type} (pool : PqxdhRegistrationJointPreparation.Pool KemSK)
     (empty : pool.2 = PqxdhLiveKemBirth.empty)
     (slot : pool.1.seeds[created.server.server.metadata.identityIndex]? = some created.seed) (work : OracleComp Spec Y)
@@ -1106,7 +1107,7 @@ theorem cut_prefix {Y : Type} (pool : PqxdhRegistrationJointPreparation.Pool Kem
   simpa [sourceInit, PqxdhRegistrationJointSchedule.initial, empty, PqxdhLiveKemBirth.empty] using prefixed.2
 
 
-/-- The relation at the cut, on an outcome of the common prefix (`commonPrefix`), from which the CE side resumes with `resumeAt` on the merged deployment state (`ideal_prefix`) and item 2's side resumes with `opaqueRest` from the compiled cut, the encoded owners, the native state, the joint identity state and the router state of the KEM pool (`item2_prefix`): the annotated source state keeps the source-side invariant at the pool, the local copies and the erased source state satisfy CE-3's merge invariant, and the KEM pool holds the first entries of the challenger's pool, at most as many as the budget's creations. -/
+/-- The relation at the cut, on an outcome of the common prefix (`commonPrefix`), from which the CE side resumes with `resumeAt` on the merged deployment state (`ideal_prefix`) and item 2's side resumes with `opaqueRest` from the compiled cut, the encoded owners, the native state, the joint identity state and the router state of the KEM pool (`item2_prefix`): the annotated source state keeps the source-side invariant at the pool, the local copies and the erased source state satisfy CE-3's merge invariant, and the KEM pool holds the first entries of the challenger's pool, at most as many as the budget's creations. The continuation's remaining creations (`cut_residual`) and the owner positions (`cut_indexed`, `cut_entry_key`) are separate facts on the same outcomes. -/
 structure CutRel {Y : Type} (budget : PqxdhRegistrationJointRevealCosts.SourceKind → ℕ)
     (reached : (CutCE Y × Local) × PqxdhRegistrationJointSchedule.State KemSK) : Prop where
   owned : PqxdhDeploymentIdealPoolSource.PoolOwned created.seed created.server.server.metadata.identityIndex reached.2
@@ -1134,6 +1135,345 @@ theorem cut_rel {Y : Type} (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBa
     (cut_prefix setup codec route checks t p created pool empty slot work budget certified room reached member).2⟩
 
 end Facts
+
+
+/-! ### Remaining creations at the cut -/
+
+section Residual
+open PqxdhDeploymentIdealParams (Target Params)
+open PqxdhJointIdentity (IdentitySeed)
+open PqxdhLiveKemReservation (Pair)
+variable (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
+  (checks : Checks) {count : ℕ} (t : Target count) (p : Params KemSK count)
+  (created : PqxdhLiveServerConstruction.Created Unit)
+
+/-- Item 2's accept scan of a program with at most `cap` requests of a class, run by any handler whose state carries a counter that grows by at most one on a request of the class and does not grow on any other request: on every outcome the counter grew by at most `cap`, and at a pending cut the continuation, for every reply of the suspended accept, has at most `cap` minus the counter's growth requests of the class. -/
+theorem scan_residual {σ Z : Type}
+    (impl : QueryImpl (PqxdhRegistrationJointRevealSchedule.Spec KemSK) (StateT σ ProbComp)) (counter : σ → ℕ)
+    (predicate : (PqxdhRegistrationJointRevealSchedule.Spec KemSK).Domain → Prop) [DecidablePred predicate]
+    (grows : ∀ query state (result : (PqxdhRegistrationJointRevealSchedule.Spec KemSK).Range query × σ),
+      result ∈ support ((impl query).run state) → counter result.2 ≤ counter state + if predicate query then 1 else 0)
+    (work : OracleComp (PqxdhRegistrationJointRevealSchedule.Spec KemSK) Z) (index cap : ℕ)
+    (bounded : work.IsQueryBoundP predicate cap) (state : σ) (reached : Cut KemSK Z × σ)
+    (member : reached ∈ support ((simulateQ impl (scan work index)).run state)) :
+    counter reached.2 ≤ counter state + cap ∧
+      ∀ raw next, reached.1 = .pending raw next → ∀ reply,
+        (next reply).IsQueryBoundP predicate (counter state + cap - counter reached.2) := by
+  induction work using OracleComp.inductionOn generalizing index cap state reached with
+  | pure value =>
+      change reached ∈ support ((simulateQ impl (pure (Cut.complete value) : OracleComp _ (Cut KemSK Z))).run state)
+        at member
+      simp only [simulateQ_pure, StateT.run_pure, support_pure, Set.mem_singleton_iff] at member
+      subst member
+      exact ⟨Nat.le_add_right _ _, fun raw next same => nomatch same⟩
+  | query_bind query next ih =>
+      rw [isQueryBoundP_query_bind_iff] at bounded
+      have forward (index' : ℕ) (passed : reached ∈ support ((simulateQ impl
+          (((PqxdhRegistrationJointRevealSchedule.Spec KemSK).query query :
+            OracleComp (PqxdhRegistrationJointRevealSchedule.Spec KemSK) _) >>= fun answer =>
+              scan (next answer) index')).run state)) :
+          counter reached.2 ≤ counter state + cap ∧
+            ∀ raw rest, reached.1 = .pending raw rest → ∀ reply,
+              (rest reply).IsQueryBoundP predicate (counter state + cap - counter reached.2) := by
+        simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind, mem_support_bind_iff] at passed
+        obtain ⟨⟨answer, after⟩, first, rest⟩ := passed
+        have grown : counter after ≤ counter state + if predicate query then 1 else 0 :=
+          grows query state (answer, after) first
+        obtain ⟨count, residual⟩ := ih answer index' _ (bounded.2 answer) after reached rest
+        have budget : counter after + (if predicate query then cap - 1 else cap) ≤ counter state + cap := by
+          split_ifs at grown ⊢ with hit
+          · have positive := bounded.1.resolve_left (not_not.mpr hit)
+            omega
+          · omega
+        exact ⟨by omega, fun raw rest same reply => (residual raw rest same reply).mono (by omega)⟩
+      rcases query with (coin | request) | read
+      · exact forward index member
+      · cases request with
+        | accept raw =>
+            cases index with
+            | zero =>
+                change reached ∈ support ((simulateQ impl
+                  (pure (Cut.pending raw next) : OracleComp _ (Cut KemSK Z))).run state) at member
+                simp only [simulateQ_pure, StateT.run_pure, support_pure, Set.mem_singleton_iff] at member
+                subst member
+                refine ⟨Nat.le_add_right _ _, fun raw' rest same reply => ?_⟩
+                cases same
+                rw [Nat.add_sub_cancel_left]
+                exact (bounded.2 reply).mono (by split_ifs <;> omega)
+            | succ index => exact forward index member
+        | _ => exact forward index member
+      · exact forward index member
+
+/-- Every request of the annotated pool source schedule adds one KEM key pair if it is a creation (source kind `.inl 1`) and keeps the KEM key pairs otherwise. -/
+theorem sourcePool_keys (seed : IdentitySeed) (identityIndex : ℕ) (pairs : List (Pair KemSK))
+    (query : (PqxdhRegistrationJointRevealSchedule.Spec KemSK).Domain)
+    (state : PqxdhRegistrationJointSchedule.State KemSK)
+    (result : (PqxdhRegistrationJointRevealSchedule.Spec KemSK).Range query × PqxdhRegistrationJointSchedule.State KemSK)
+    (supported : result ∈ support
+      ((PqxdhDeploymentIdealPoolSource.sourcePool setup codec checks seed identityIndex pairs query).run state)) :
+    result.2.pool.2.keys.length = state.pool.2.keys.length +
+      if PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = .inl 1 then 1 else 0 := by
+  by_cases creates : ∃ pin keyId, query = .inl (.inr (.create pin keyId))
+  · obtain ⟨pin, keyId, rfl⟩ := creates
+    change result ∈ support (PqxdhRegistrationJointSchedule.created setup pin keyId state <$>
+      PqxdhDeploymentIdealPoolSource.materialPool setup pairs state.owners.length) at supported
+    rw [support_map] at supported
+    obtain ⟨material, _, rfl⟩ := supported
+    change (state.pool.2.keys ++ [material.keys]).length = _
+    simp [PqxdhRegistrationJointRevealCosts.sourceKind, PqxdhRegistrationSchedule.sourceKind]
+  · have notCreate : ∀ pin keyId, query ≠ .inl (.inr (.create pin keyId)) := fun pin keyId same =>
+      creates ⟨pin, keyId, same⟩
+    have other : PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query ≠ .inl 1 := by
+      intro kind
+      apply creates
+      rcases query with (coin | request) | read
+      · exact absurd kind (by simp [PqxdhRegistrationJointRevealCosts.sourceKind, PqxdhRegistrationSchedule.sourceKind])
+      · cases request with
+        | create pin keyId => exact ⟨pin, keyId, rfl⟩
+        | _ => exact absurd kind (by simp [PqxdhRegistrationJointRevealCosts.sourceKind,
+            PqxdhRegistrationSchedule.sourceKind])
+      · exact absurd kind (by simp [PqxdhRegistrationJointRevealCosts.sourceKind])
+    have same : PqxdhDeploymentIdealPoolSource.sourcePool setup codec checks seed identityIndex pairs query =
+        PqxdhRegistrationJointServerSchedule.source setup codec checks seed identityIndex query := by
+      rcases query with (coin | request) | read
+      · rfl
+      · cases request with
+        | create pin keyId => exact absurd rfl (notCreate pin keyId)
+        | _ => rfl
+      · rfl
+    rw [same] at supported
+    rw [(PqxdhDeploymentIdealPoolSource.source_counts setup codec checks seed identityIndex query notCreate state result
+      supported).1]
+    simp [other]
+
+/-- On every outcome of the common prefix, the KEM key pairs created so far are at most the budget's creations, and at a pending compiled cut the compiled continuation, for every reply of the suspended accept, stays within the budget with only the remaining creations: `budget (.inl 1)` minus the KEM key pairs created so far, and `budget source` for every other source kind. Premises: an empty KEM pool at the start and a source budget for the whole compiled program (not only its scan; CE-9's `PqxdhDeploymentCompileCaps.compile_full_certified` gives one). So the KEM key pairs created so far plus the continuation's creations are at most `budget (.inl 1)`, hence fit the pool whenever the budget's creations do; this is the form of the capacity premise of item 2's routers (`PqxdhDynamicKemStopping.normal_capacity` asks for the created keys plus the creation bound to be at most the number of pairs). -/
+theorem cut_residual {Y : Type} (pool : PqxdhRegistrationJointPreparation.Pool KemSK)
+    (empty : pool.2 = PqxdhLiveKemBirth.empty) (work : OracleComp Spec Y)
+    (budget : PqxdhRegistrationJointRevealCosts.SourceKind → ℕ)
+    (whole : ∀ source, (PqxdhDeploymentCompile.compile setup codec route work).IsQueryBoundP
+      (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))
+    (reached : (CutCE Y × Local) × PqxdhRegistrationJointSchedule.State KemSK)
+    (member : reached ∈ support (commonPrefix setup codec route checks t p created pool work)) :
+    reached.2.pool.2.keys.length ≤ budget (.inl 1) ∧
+      ∀ raw next, compileCut setup codec route reached.1 = .pending raw next → ∀ reply source,
+        (next reply).IsQueryBoundP
+          (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source)
+          (Function.update budget (.inl 1) (budget (.inl 1) - reached.2.pool.2.keys.length) source) := by
+  have scanned : (compileCut setup codec route reached.1, reached.2) ∈ support
+      ((simulateQ (PqxdhDeploymentIdealPoolSource.sourcePool setup codec checks created.seed
+          created.server.server.metadata.identityIndex (p.pool t))
+        (scan (PqxdhDeploymentCompile.compile setup codec route work) t.accept)).run (sourceInit created pool)) := by
+    rw [show PqxdhDeploymentCompile.compile setup codec route work =
+        (simulateQ (compileImpl setup codec route) work).run Local.empty from rfl,
+      compile_scan, simulateQ_map, StateT.run_map, support_map]
+    exact ⟨reached, member, rfl⟩
+  have start : (sourceInit created pool).pool.2.keys.length = 0 := by
+    simp [sourceInit, PqxdhRegistrationJointSchedule.initial, empty, PqxdhLiveKemBirth.empty]
+  have creations := scan_residual _ (fun state : PqxdhRegistrationJointSchedule.State KemSK => state.pool.2.keys.length)
+    (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = .inl 1)
+    (fun query state result supported => (sourcePool_keys setup codec checks created.seed
+      created.server.server.metadata.identityIndex (p.pool t) query state result supported).le)
+    _ t.accept _ (whole (.inl 1)) _ _ scanned
+  simp only [start, Nat.zero_add] at creations
+  refine ⟨creations.1, fun raw next pending reply source => ?_⟩
+  by_cases kind : source = .inl 1
+  · subst kind
+    simpa only [Function.update_self] using creations.2 raw next pending reply
+  · have other := scan_residual _ (fun _ : PqxdhRegistrationJointSchedule.State KemSK => 0)
+      (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source)
+      (fun _ _ _ _ => Nat.zero_le _) _ t.accept _ (whole source) _ _ scanned
+    simpa only [Function.update_of_ne kind, Nat.zero_add, Nat.sub_zero] using other.2 raw next pending reply
+
+end Residual
+
+
+/-! ### Owner positions at the cut -/
+
+section Indexed
+open PqxdhDeploymentIdealParams (Target Params)
+open PqxdhJointIdentity (IdentitySeed)
+open PqxdhLiveKemReservation (Pair)
+open PqxdhRegistrationJointOwnership (Entry)
+variable (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
+  (checks : Checks) {count : ℕ} (t : Target count) (p : Params KemSK count)
+  (created : PqxdhLiveServerConstruction.Created Unit)
+
+/-- Every owner entry's KEM index is its position in the owner list. -/
+def PoolIndexed (state : PqxdhRegistrationJointSchedule.State KemSK) : Prop :=
+  state.owners.map Entry.kemIndex = List.range state.owners.length
+
+/-- Under `PoolIndexed`, the owner entry at position `j` has KEM index `j`. -/
+theorem indexed_entry (state : PqxdhRegistrationJointSchedule.State KemSK) (indexed : PoolIndexed state) (j : ℕ)
+    (entry : Entry KemSK) (found : state.owners[j]? = some entry) : entry.kemIndex = j := by
+  have mapped := congrArg (fun list : List ℕ => list[j]?) indexed
+  simp only [List.getElem?_map, found, Option.map_some, List.getElem?_range (List.getElem?_eq_some_iff.mp found).1]
+    at mapped
+  exact Option.some.inj mapped
+
+/-- Replacing an owner entry's source owner keeps every KEM index. -/
+theorem set_kemIndex (owners : List (Entry KemSK)) (address : ℕ) (entry : Entry KemSK)
+    (found : owners[address]? = some entry) (owner : PqxdhRegistrationSchedule.Owner KemSK) :
+    (owners.set address { entry with owner := owner }).map Entry.kemIndex = owners.map Entry.kemIndex := by
+  apply List.ext_getElem?
+  intro j
+  simp only [List.getElem?_map, List.getElem?_set]
+  split_ifs with same bound
+  · subst same
+    simp [found]
+  · exact absurd (List.getElem?_eq_some_iff.mp found).1 (same ▸ bound)
+  · rfl
+
+/-- Every request of the annotated source schedule other than a creation keeps every owner entry's KEM index. -/
+theorem source_kemIndex (seed : IdentitySeed) (identityIndex : ℕ)
+    (query : (PqxdhRegistrationJointRevealSchedule.Spec KemSK).Domain)
+    (notCreate : ∀ pin keyId, query ≠ .inl (.inr (.create pin keyId))) (state : PqxdhRegistrationJointSchedule.State KemSK)
+    (result : (PqxdhRegistrationJointRevealSchedule.Spec KemSK).Range query × PqxdhRegistrationJointSchedule.State KemSK)
+    (supported : result ∈ support
+      ((PqxdhRegistrationJointServerSchedule.source setup codec checks seed identityIndex query).run state)) :
+    result.2.owners.map Entry.kemIndex = state.owners.map Entry.kemIndex := by
+  have shared : ∀ {Value : Type} (work : PqxdhServerAuthNative.NativeGame KemSK Value)
+      (result : Value × PqxdhRegistrationJointSchedule.State KemSK),
+      result ∈ support ((PqxdhRegistrationJointSchedule.onShared work).run state) →
+        result.2.owners.map Entry.kemIndex = state.owners.map Entry.kemIndex := by
+    intro Value work result member
+    simp only [PqxdhRegistrationJointSchedule.onShared, StateT.run, support_map, Set.mem_image] at member
+    obtain ⟨reached, _, rfl⟩ := member
+    rfl
+  rcases query with (coin | request) | read
+  case inl.inl =>
+    simp only [PqxdhRegistrationJointServerSchedule.source, PqxdhRegistrationJointRevealSchedule.source,
+      PqxdhRegistrationJointSchedule.handler, StateT.run_lift, bind_pure_comp, support_map, Set.mem_image] at supported
+    obtain ⟨_, _, rfl⟩ := supported
+    rfl
+  case inl.inr =>
+    cases request with
+    | create pin keyId => exact absurd rfl (notCreate pin keyId)
+    | accept raw =>
+        change result ∈ support ((PqxdhRegistrationJointServerSchedule.onBackend
+          (PqxdhRegistrationJointServerAccept.source setup codec checks seed identityIndex raw)).run state) at supported
+        simp only [PqxdhRegistrationJointServerSchedule.onBackend, StateT.run, support_map, Set.mem_image] at supported
+        obtain ⟨reached, _, rfl⟩ := supported
+        rfl
+    | bundle address =>
+        cases found : state.owners[address]? <;>
+          simp only [PqxdhRegistrationJointServerSchedule.source, PqxdhRegistrationJointRevealSchedule.source,
+            PqxdhRegistrationJointSchedule.handler, PqxdhRegistrationJointSchedule.bundle, StateT.run, found,
+            support_map, Set.mem_image, mem_support_pure_iff] at supported
+        case none => exact supported ▸ rfl
+        case some entry =>
+          obtain ⟨reached, _, rfl⟩ := supported
+          exact set_kemIndex state.owners address entry found _
+    | finish address raw =>
+        cases found : state.owners[address]? <;>
+          simp only [PqxdhRegistrationJointServerSchedule.source, PqxdhRegistrationJointRevealSchedule.source,
+            PqxdhRegistrationJointSchedule.handler, PqxdhRegistrationJointSchedule.finish, StateT.run, found,
+            support_map, Set.mem_image, mem_support_pure_iff] at supported
+        case none => exact supported ▸ rfl
+        case some entry =>
+          obtain ⟨reached, _, rfl⟩ := supported
+          exact set_kemIndex state.owners address entry found _
+    | build session payload => exact shared _ result supported
+    | hmac key message => exact shared _ result supported
+    | hash bytes => exact shared _ result supported
+    | reveal keyId => exact shared _ result supported
+  case inr =>
+    have reached : result = PqxdhRegistrationJointLiveRead.sourceStep read state := by
+      simpa only [PqxdhRegistrationJointServerSchedule.source, PqxdhRegistrationJointRevealSchedule.source, StateT.run,
+        support_pure, Set.mem_singleton_iff] using supported
+    subst reached
+    cases found : state.owners[read.1]? with
+    | none => simp [PqxdhRegistrationJointLiveRead.sourceStep, found]
+    | some entry => simp [PqxdhRegistrationJointLiveRead.sourceStep, found]
+
+/-- Every request of the annotated pool source schedule keeps `PoolIndexed`, from a state with the source-side representation invariant at the pool: a creation appends an owner whose KEM index is the KEM pool's size, which is the owner count. -/
+theorem query_indexed (seed : IdentitySeed) (identityIndex : ℕ) (pairs : List (Pair KemSK))
+    (query : (PqxdhRegistrationJointRevealSchedule.Spec KemSK).Domain)
+    (state : PqxdhRegistrationJointSchedule.State KemSK)
+    (result : (PqxdhRegistrationJointRevealSchedule.Spec KemSK).Range query × PqxdhRegistrationJointSchedule.State KemSK)
+    (owned : PqxdhDeploymentIdealPoolSource.PoolOwned seed identityIndex state) (indexed : PoolIndexed state)
+    (supported : result ∈ support
+      ((PqxdhDeploymentIdealPoolSource.sourcePool setup codec checks seed identityIndex pairs query).run state)) :
+    PoolIndexed result.2 := by
+  by_cases creates : ∃ pin keyId, query = .inl (.inr (.create pin keyId))
+  · obtain ⟨pin, keyId, rfl⟩ := creates
+    change result ∈ support (PqxdhRegistrationJointSchedule.created setup pin keyId state <$>
+      PqxdhDeploymentIdealPoolSource.materialPool setup pairs state.owners.length) at supported
+    rw [support_map] at supported
+    obtain ⟨material, _, rfl⟩ := supported
+    change (state.owners ++ [PqxdhRegistrationJointSchedule.birth pin keyId state.pool material]).map Entry.kemIndex =
+      List.range (state.owners ++ [PqxdhRegistrationJointSchedule.birth pin keyId state.pool material]).length
+    rw [List.map_append, indexed, List.length_append, List.length_singleton, List.range_succ]
+    simp [PqxdhRegistrationJointSchedule.birth, owned.2]
+  · have notCreate : ∀ pin keyId, query ≠ .inl (.inr (.create pin keyId)) := fun pin keyId same =>
+      creates ⟨pin, keyId, same⟩
+    have same : PqxdhDeploymentIdealPoolSource.sourcePool setup codec checks seed identityIndex pairs query =
+        PqxdhRegistrationJointServerSchedule.source setup codec checks seed identityIndex query := by
+      rcases query with (coin | request) | read
+      · rfl
+      · cases request with
+        | create pin keyId => exact absurd rfl (notCreate pin keyId)
+        | _ => rfl
+      · rfl
+    rw [same] at supported
+    have kept := source_kemIndex setup codec checks seed identityIndex query notCreate state result supported
+    have length : result.2.owners.length = state.owners.length := by
+      simpa only [List.length_map] using congrArg List.length kept
+    unfold PoolIndexed
+    rw [kept, length]
+    exact indexed
+
+/-- On every outcome of the common prefix, from a joint pool with the constructed Server's seed at its identity slot and an empty KEM pool, every owner entry's KEM index is its position (`PoolIndexed`). -/
+theorem cut_indexed {Y : Type} (pool : PqxdhRegistrationJointPreparation.Pool KemSK)
+    (empty : pool.2 = PqxdhLiveKemBirth.empty)
+    (slot : pool.1.seeds[created.server.server.metadata.identityIndex]? = some created.seed) (work : OracleComp Spec Y)
+    (reached : (CutCE Y × Local) × PqxdhRegistrationJointSchedule.State KemSK)
+    (member : reached ∈ support (commonPrefix setup codec route checks t p created pool work)) :
+    PoolIndexed reached.2 := by
+  have start : PqxdhDeploymentIdealPoolSource.PoolOwned created.seed created.server.server.metadata.identityIndex
+      (sourceInit created pool) ∧ PoolIndexed (sourceInit created pool) :=
+    ⟨⟨⟨PqxdhRegistrationJointSchedule.initial_owned pool _, slot⟩,
+      by simp [sourceInit, PqxdhRegistrationJointSchedule.initial, empty, PqxdhLiveKemBirth.empty]⟩,
+      by simp [PoolIndexed, sourceInit, PqxdhRegistrationJointSchedule.initial]⟩
+  exact ((PqxdhServerAuthExperiment.run_rel (PqxdhDeploymentIdealPoolSource.sourcePool setup codec checks created.seed
+      created.server.server.metadata.identityIndex (p.pool t))
+    (fun before after => PqxdhDeploymentIdealPoolSource.PoolOwned created.seed
+        created.server.server.metadata.identityIndex before ∧ PoolIndexed before →
+      PqxdhDeploymentIdealPoolSource.PoolOwned created.seed created.server.server.metadata.identityIndex after ∧
+        PoolIndexed after)
+    (fun _ facts => facts) (fun _ _ _ left right facts => right (left facts))
+    (fun query before after supported facts =>
+      ⟨PqxdhDeploymentIdealPoolSource.query_poolOwned setup codec checks created.seed
+        created.server.server.metadata.identityIndex (p.pool t) query before after facts.1 supported,
+      query_indexed setup codec checks created.seed created.server.server.metadata.identityIndex (p.pool t) query
+        before after facts.1 facts.2 supported⟩)
+    _ _ reached member) start).2
+
+/-- On every outcome of the common prefix, owner `j` holds pool entry `j`: the active KEM key pair of the owner entry at position `j`, if any, is entry `j` of the challenger's pool (`cut_owned`, `cut_indexed`, `cut_prefix`), when the budget of item 2's scan of the compiled program creates no more KEM keys than the pool holds. -/
+theorem cut_entry_key {Y : Type} (pool : PqxdhRegistrationJointPreparation.Pool KemSK)
+    (empty : pool.2 = PqxdhLiveKemBirth.empty)
+    (slot : pool.1.seeds[created.server.server.metadata.identityIndex]? = some created.seed) (work : OracleComp Spec Y)
+    (budget : PqxdhRegistrationJointRevealCosts.SourceKind → ℕ)
+    (certified : ∀ source, (scan (PqxdhDeploymentCompile.compile setup codec route work) t.accept).IsQueryBoundP
+      (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))
+    (room : budget (.inl 1) ≤ (p.pool t).length)
+    (reached : (CutCE Y × Local) × PqxdhRegistrationJointSchedule.State KemSK)
+    (member : reached ∈ support (commonPrefix setup codec route checks t p created pool work))
+    (j : ℕ) (entry : Entry KemSK) (found : reached.2.owners[j]? = some entry)
+    (keys : PqxdhKemIndCca.MlKem768PublicKey × KemSK)
+    (active : PqxdhRegistrationJointOwnership.activeKey entry.owner = some keys) :
+    (p.pool t)[j]? = some keys := by
+  have owned := cut_owned setup codec route checks t p created pool empty slot work reached member
+  have index := indexed_entry reached.2 (cut_indexed setup codec route checks t p created pool empty slot work reached
+    member) j entry found
+  have prefixed := (cut_prefix setup codec route checks t p created pool empty slot work budget certified room reached
+    member).1
+  have stored := (owned.1.1 entry (List.mem_of_getElem? found)).2 keys active
+  rw [index] at stored
+  have bound : j < reached.2.pool.2.keys.length := (List.getElem?_eq_some_iff.mp stored).1
+  rw [prefixed, List.getElem?_take] at stored
+  simpa only [bound, ↓reduceIte] using stored
+
+end Indexed
 
 end BeaconcryptCore.Computational.PqxdhDeploymentIdealCut
 
@@ -1422,3 +1762,75 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealCut.cut_rel' depends on
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealCut.cut_rel
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealCut.scan_residual' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealCut.scan_residual
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealCut.sourcePool_keys' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealCut.sourcePool_keys
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealCut.cut_residual' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealCut.cut_residual
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealCut.indexed_entry' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealCut.indexed_entry
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealCut.set_kemIndex' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealCut.set_kemIndex
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealCut.source_kemIndex' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealCut.source_kemIndex
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealCut.query_indexed' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealCut.query_indexed
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealCut.cut_indexed' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealCut.cut_indexed
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealCut.cut_entry_key' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealCut.cut_entry_key
