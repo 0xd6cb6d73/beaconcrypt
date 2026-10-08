@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1665
+	[handwritten-lean]=1666
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -34040,6 +34040,39 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem internalize_run([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealParams theorem internalize_run"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealParams\.slotGame_pool$' "$selected_source_module" "PqxdhDeploymentIdealParams dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealParams.slotGame_pool"
 require_line_count 1 '^theorem slotGame_pool([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealParams theorem slotGame_pool"
+
+# CE-11b U3 generic C1 for environments that draw parameters at startup.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentEnvironmentDraw.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentDraw$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentEnvironmentDraw root import"
+require_line_count 13 '^theorem ' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw theorem inventory"
+require_line_count 13 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEnvironmentDraw\.program_rest$' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw dependency BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentDraw.program_rest"
+require_line_count 1 '^theorem program_rest([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw theorem program_rest"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEnvironmentDraw\.join_from$' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw dependency BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentDraw.join_from"
+require_line_count 1 '^theorem join_from([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw theorem join_from"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEnvironmentDraw\.join_draw$' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw dependency BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentDraw.join_draw"
+require_line_count 1 '^theorem join_draw([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw theorem join_draw"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEnvironmentDraw\.join_draw_observed$' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw dependency BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentDraw.join_draw_observed"
+require_line_count 1 '^theorem join_draw_observed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw theorem join_draw_observed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEnvironmentDraw\.join_draw_analysis$' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw dependency BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentDraw.join_draw_analysis"
+require_line_count 1 '^theorem join_draw_analysis([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw theorem join_draw_analysis"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEnvironmentDraw\.merge_withE$' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw dependency BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentDraw.merge_withE"
+require_line_count 1 '^theorem merge_withE([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw theorem merge_withE"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEnvironmentDraw\.good_withE$' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw dependency BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentDraw.good_withE"
+require_line_count 1 '^theorem good_withE([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw theorem good_withE"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEnvironmentDraw\.stable_param$' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw dependency BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentDraw.stable_param"
+require_line_count 1 '^theorem stable_param([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw theorem stable_param"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEnvironmentDraw\.splits_param$' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw dependency BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentDraw.splits_param"
+require_line_count 1 '^theorem splits_param([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw theorem splits_param"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEnvironmentDraw\.handlerWith_param$' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw dependency BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentDraw.handlerWith_param"
+require_line_count 1 '^theorem handlerWith_param([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw theorem handlerWith_param"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEnvironmentDraw\.simulateQ_embed$' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw dependency BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentDraw.simulateQ_embed"
+require_line_count 1 '^theorem simulateQ_embed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw theorem simulateQ_embed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEnvironmentDraw\.gameWith_param$' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw dependency BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentDraw.gameWith_param"
+require_line_count 1 '^theorem gameWith_param([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw theorem gameWith_param"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEnvironmentDraw\.join_param$' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw dependency BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentDraw.join_param"
+require_line_count 1 '^theorem join_param([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw theorem join_param"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
