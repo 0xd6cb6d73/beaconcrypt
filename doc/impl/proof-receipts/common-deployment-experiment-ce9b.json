@@ -1,0 +1,255 @@
+{
+ "date": "2026-10-08T05:31:43.452546+00:00",
+ "scope": "CE-9b of the common deployment experiment (handoff item 3): the reverse chain of theorem T4 (KemRawBridge.actual_le_real) under its own premises, T4 as an equality for decisions that imply KeyMatchFinal on the support of the actual execution (and the Decided form for decisions that imply accepted, GoodKem and KeyMatchFinal), the unconditional defect bound, the deployment instance (decision_implies, defect_zero, eligible_real) and the two-sided per-target, reverse and exact-sum KEM transfers (kem_transfer_two_sided, kem_transfer_lower, kem_transfer_sum_two_sided, kem_transfer_create_two_sided); the same for the logged T4 of the LQ-F later game (PqxdhDeploymentLaterKemTwoSided).",
+ "basis": "65e207381dd63c0b25d30faddb58902225d409a5",
+ "topic": {
+  "branch": "codex/deployment-ce9b",
+  "worktree": "/tmp/beaconcrypt-deployment-ce9b"
+ },
+ "plan": {
+  "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
+  "sha256": "868fec0d383dcad7ab6fd3db254cd5226a5ea0435a12213ee09e728ff5886d5e",
+  "sections": "9 (step 9.7 and the two-sided chain paragraph), 14 (CE-9b row), 19-39",
+  "committed_snapshot": "doc/impl/common-deployment-experiment-plan.md (section 9 and the section 14 CE-9b row are unchanged in the snapshot)"
+ },
+ "commits": [
+  {
+   "commit": "29f37f2ea3eabe74f6bf619dc3525c5ed0fa3760",
+   "subject": "Prove T4 as an equality for key-matching decisions (CE-9b)"
+  },
+  {
+   "commit": "ee7143fa376f7aa70122d6ec38ca21b222933939",
+   "subject": "Carry the two-sided T4 to the LQ-F later game (CE-9b)"
+  }
+ ],
+ "commits_note": "The documentation commit that adds this receipt follows these two Lean commits.",
+ "files_sha256": {
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentKemTwoSided.lean": "9db2befc4bd0e99088507be2297b096b048ad973b67ca22f526709b6ec773c91",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterKemTwoSided.lean": "be0293625932286820b40714a50841eebc1aa5ae4451ceb937cc234830ce7966",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "f0980528e94ce471cc296d9f21bde4d984aee55900d96dff333ad6d786c457e3",
+  "beaconcrypt-core/proofs/check-inventory.sh": "faf224aef235aa9e58eee50a7a1ee55f3bea975b53c4f363a96755993f462c35",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "7502475a0ed3525c8c6f21011b234d1f2f16cb77ca15b551696d1d2d9a9678e9",
+  "doc/impl/common-deployment-experiment.md": "48d9ff2aad94ebc14101aca9f629ac147bc9325e58c4770c0cb6d9c917e48d03",
+  "doc/formal-verification-analysis.md": "814c163ea5eeeafbcfe73362ab1bd424b2534825037dec2f3c0878618545d9af"
+ },
+ "modules": [
+  {
+   "name": "PqxdhDeploymentKemTwoSided",
+   "plan_stage": "CE-9b (two-sided T4 and two-sided per-target KEM transfer, run phase)",
+   "statements": [
+    "chance_ext",
+    "chance_le_add",
+    "chance_eq_zero",
+    "toReal_close",
+    "le_add_of_close",
+    "source_step_good",
+    "stopped_step_good",
+    "stopped_good",
+    "real_le_run",
+    "real_le_commands",
+    "real_le_actual",
+    "actual_eq_real",
+    "decided_eq_real",
+    "real_le_actual_add",
+    "actual_real_close",
+    "decision_implies",
+    "defect_zero",
+    "eligible_real",
+    "kem_transfer_two_sided",
+    "kem_transfer_lower",
+    "abs_sum_sub_le",
+    "kem_transfer_sum_two_sided",
+    "sum_last_eq",
+    "split_create",
+    "kem_transfer_create_two_sided"
+   ],
+   "statement_count": 25,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 25
+   },
+   "direct_check_final": {
+    "exit": 0,
+    "start": "2026-10-08T05:15:26.103987110Z",
+    "end": "2026-10-08T05:16:17.083106923Z",
+    "source_sha256": "9db2befc4bd0e99088507be2297b096b048ad973b67ca22f526709b6ec773c91",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "log_bytes": 0,
+    "artifact_sha256": "a657b90647541e71081d96e77c2391c96c7a1e5b02a6cfd4950228426eb33d7e",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-ce9b/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/ce9b/olean/BeaconcryptCore/Computational/PqxdhDeploymentKemTwoSided.olean",
+     "/tmp/beaconcrypt-deployment-ce9b/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentKemTwoSided.lean"
+    ]
+   }
+  },
+  {
+   "name": "PqxdhDeploymentLaterKemTwoSided",
+   "plan_stage": "CE-9b for the LQ-F later game (logged T4, two-sided transfer)",
+   "statements": [
+    "real_le_run",
+    "real_le_commands",
+    "real_le_actual",
+    "actual_eq_real",
+    "decided_eq_real",
+    "real_le_actual_add",
+    "actual_real_close",
+    "hop_close",
+    "decision_implies_server",
+    "defect_zero_server",
+    "eligible_server_real",
+    "kem_transfer_server_two_sided",
+    "kem_transfer_server_lower",
+    "kem_transfer_server_sum_two_sided"
+   ],
+   "statement_count": 14,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 14
+   },
+   "direct_check_final": {
+    "exit": 0,
+    "start": "2026-10-08T05:23:37.678321644Z",
+    "end": "2026-10-08T05:23:44.155333532Z",
+    "source_sha256": "be0293625932286820b40714a50841eebc1aa5ae4451ceb937cc234830ce7966",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "log_bytes": 0,
+    "artifact_sha256": "f88c9bd3b2dad1bbd5e8535a34b70081b2f5ae7315e17ba92d0b1c49484824d2",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-ce9b/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/ce9b/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterKemTwoSided.olean",
+     "/tmp/beaconcrypt-deployment-ce9b/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterKemTwoSided.lean"
+    ]
+   }
+  }
+ ],
+ "statements": 39,
+ "deployment_statements_total_before": 1306,
+ "deployment_statements_total_after": 1345,
+ "deployment_statements_note": "Count of lines starting with \"theorem \" in the PqxdhDeployment*.lean modules at central 65e20738 (git ls-tree and git show), and with the two CE-9b modules.",
+ "allowed_axioms": [
+  "propext",
+  "Classical.choice",
+  "Quot.sound"
+ ],
+ "axiom_profile_from_guards": {
+  "Classical.choice, Quot.sound, propext": 39
+ },
+ "exact_statements": {
+  "PqxdhDeploymentKemTwoSided.stopped_good": "theorem stopped_good (baseImpl : QueryImpl baseSpec ProbComp) (primitives : Primitives)\n    (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK)) (selected : Nat)\n    (pairs : List (MlKem768PublicKey × KemSK)) (client : OracleComp (PqxdhLiveKemBirth.Spec KemSK) Result)\n    (state : PqxdhDynamicKemJointSource.State KemSK) (good : PqxdhDynamicKemJointStopping.Good state)\n    (result : Option Result × PqxdhDynamicKemJointSource.State KemSK)\n    (supported : result ∈ support (((simulateQ\n      (PqxdhDynamicKemJointRouter.stopped baseImpl primitives kem selected pairs) client).run).run state))\n    (complete : result.1.isSome = true) : PqxdhDynamicKemJointStopping.Good result.2",
+  "PqxdhDeploymentKemTwoSided.real_le_actual": "theorem real_le_actual (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes) (decision : X → Bool)\n    (work : OracleComp (SourceSpec KemSK) X) (runtime : A) (budget : PqxdhRegistrationJointKemCommands.Budget)\n    (certified : ∀ source, work.IsQueryBoundP\n      (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))\n    (count : Nat) (selected : Fin (count + 1)) (index : Nat) (room : budget (.inl 1) ≤ count + 1) :\n    letI := Classical.propDecidable\n    𝒟[PqxdhRegistrationJointKemRawGame.sourceReal setup codec checks ensureInit supplied decision work runtime count\n      selected index] {true} ≤\n    𝒟[(fun final => decide (Decided decision final ∧ GoodKem selected final)) <$>\n      ((fun result => (result.1.map (PqxdhRegistrationJointInitializedSchedule.encodeOutcome setup), result.2)) <$>\n        (PqxdhRegistrationJointInitializedSchedule.source setup codec checks ensureInit supplied (tag work index)).run\n          ((PqxdhDynamicIdentityPool.initialState, PqxdhLiveKemBirth.empty), runtime))] {true}",
+  "PqxdhDeploymentKemTwoSided.actual_eq_real": "theorem actual_eq_real (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes) (decision : X → Bool)\n    (work : OracleComp (SourceSpec KemSK) X) (runtime : A) (budget : PqxdhRegistrationJointKemCommands.Budget)\n    (certified : ∀ source, work.IsQueryBoundP\n      (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))\n    (count : Nat) (selected : Fin (count + 1)) (index : Nat) (room : budget (.inl 1) ≤ count + 1)\n    (implied : ∀ final ∈ support ((fun result => (result.1.map (PqxdhRegistrationJointInitializedSchedule.encodeOutcome\n        setup), result.2)) <$> (PqxdhRegistrationJointInitializedSchedule.source setup codec checks ensureInit supplied\n          (tag work index)).run ((PqxdhDynamicIdentityPool.initialState, PqxdhLiveKemBirth.empty), runtime)),\n      Decided decision final → GoodKem selected final → KeyMatchFinal setup codec checks selected final) :\n    letI := Classical.propDecidable\n    𝒟[(fun final => decide (Decided decision final ∧ GoodKem selected final ∧\n        KeyMatchFinal setup codec checks selected final)) <$>\n      ((fun result => (result.1.map (PqxdhRegistrationJointInitializedSchedule.encodeOutcome setup), result.2)) <$>\n        (PqxdhRegistrationJointInitializedSchedule.source setup codec checks ensureInit supplied (tag work index)).run\n          ((PqxdhDynamicIdentityPool.initialState, PqxdhLiveKemBirth.empty), runtime))] {true} =\n    𝒟[PqxdhRegistrationJointKemRawGame.sourceReal setup codec checks ensureInit supplied decision work runtime count\n      selected index] {true}",
+  "PqxdhDeploymentKemTwoSided.decided_eq_real": "theorem decided_eq_real (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes) (decision : X → Bool)\n    (work : OracleComp (SourceSpec KemSK) X) (runtime : A) (budget : PqxdhRegistrationJointKemCommands.Budget)\n    (certified : ∀ source, work.IsQueryBoundP\n      (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))\n    (count : Nat) (selected : Fin (count + 1)) (index : Nat) (room : budget (.inl 1) ≤ count + 1)\n    (implied : ∀ final ∈ support ((fun result => (result.1.map (PqxdhRegistrationJointInitializedSchedule.encodeOutcome\n        setup), result.2)) <$> (PqxdhRegistrationJointInitializedSchedule.source setup codec checks ensureInit supplied\n          (tag work index)).run ((PqxdhDynamicIdentityPool.initialState, PqxdhLiveKemBirth.empty), runtime)),\n      Decided decision final → GoodKem selected final ∧ KeyMatchFinal setup codec checks selected final) :\n    letI := Classical.propDecidable\n    𝒟[(fun final => decide (Decided decision final)) <$>\n      ((fun result => (result.1.map (PqxdhRegistrationJointInitializedSchedule.encodeOutcome setup), result.2)) <$>\n        (PqxdhRegistrationJointInitializedSchedule.source setup codec checks ensureInit supplied (tag work index)).run\n          ((PqxdhDynamicIdentityPool.initialState, PqxdhLiveKemBirth.empty), runtime))] {true} =\n    𝒟[PqxdhRegistrationJointKemRawGame.sourceReal setup codec checks ensureInit supplied decision work runtime count\n      selected index] {true}",
+  "PqxdhDeploymentKemTwoSided.real_le_actual_add": "theorem real_le_actual_add (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes) (decision : X → Bool)\n    (work : OracleComp (SourceSpec KemSK) X) (runtime : A) (budget : PqxdhRegistrationJointKemCommands.Budget)\n    (certified : ∀ source, work.IsQueryBoundP\n      (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))\n    (count : Nat) (selected : Fin (count + 1)) (index : Nat) (room : budget (.inl 1) ≤ count + 1) :\n    letI := Classical.propDecidable\n    𝒟[PqxdhRegistrationJointKemRawGame.sourceReal setup codec checks ensureInit supplied decision work runtime count\n      selected index] {true} ≤\n    𝒟[(fun final => decide (Decided decision final ∧ GoodKem selected final ∧\n        KeyMatchFinal setup codec checks selected final)) <$>\n      ((fun result => (result.1.map (PqxdhRegistrationJointInitializedSchedule.encodeOutcome setup), result.2)) <$>\n        (PqxdhRegistrationJointInitializedSchedule.source setup codec checks ensureInit supplied (tag work index)).run\n          ((PqxdhDynamicIdentityPool.initialState, PqxdhLiveKemBirth.empty), runtime))] {true} +\n    𝒟[(fun final => decide (Decided decision final ∧ GoodKem selected final ∧\n        ¬KeyMatchFinal setup codec checks selected final)) <$>\n      ((fun result => (result.1.map (PqxdhRegistrationJointInitializedSchedule.encodeOutcome setup), result.2)) <$>\n        (PqxdhRegistrationJointInitializedSchedule.source setup codec checks ensureInit supplied (tag work index)).run\n          ((PqxdhDynamicIdentityPool.initialState, PqxdhLiveKemBirth.empty), runtime))] {true}",
+  "PqxdhDeploymentKemTwoSided.actual_real_close": "theorem actual_real_close (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes) (decision : X → Bool)\n    (work : OracleComp (SourceSpec KemSK) X) (runtime : A) (budget : PqxdhRegistrationJointKemCommands.Budget)\n    (certified : ∀ source, work.IsQueryBoundP\n      (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))\n    (count : Nat) (selected : Fin (count + 1)) (index : Nat) (room : budget (.inl 1) ≤ count + 1) :\n    letI := Classical.propDecidable\n    |(𝒟[PqxdhRegistrationJointKemRawGame.sourceReal setup codec checks ensureInit supplied decision work runtime count\n        selected index] {true}).toReal -\n      (𝒟[(fun final => decide (Decided decision final ∧ GoodKem selected final ∧\n          KeyMatchFinal setup codec checks selected final)) <$>\n        ((fun result => (result.1.map (PqxdhRegistrationJointInitializedSchedule.encodeOutcome setup), result.2)) <$>\n          (PqxdhRegistrationJointInitializedSchedule.source setup codec checks ensureInit supplied (tag work index)).run\n            ((PqxdhDynamicIdentityPool.initialState, PqxdhLiveKemBirth.empty), runtime))] {true}).toReal| ≤\n    (𝒟[(fun final => decide (Decided decision final ∧ GoodKem selected final ∧\n        ¬KeyMatchFinal setup codec checks selected final)) <$>\n      ((fun result => (result.1.map (PqxdhRegistrationJointInitializedSchedule.encodeOutcome setup), result.2)) <$>\n        (PqxdhRegistrationJointInitializedSchedule.source setup codec checks ensureInit supplied (tag work index)).run\n          ((PqxdhDynamicIdentityPool.initialState, PqxdhLiveKemBirth.empty), runtime))] {true}).toReal",
+  "PqxdhDeploymentKemTwoSided.decision_implies": "theorem decision_implies (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)\n    (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec) (bounds : FreshBounds) (mode : Mode)\n    (adversary : OracleComp (ModeSpec mode) X) (budget : Budget) (event : Observed X → Bool)\n    (claim : Observed X → Option Handle) (g : Fin budget.accept × Fin budget.capacity) (runtime : A)\n    (final : PqxdhRegistrationJointKemRawBridge.Final KemSK A ((X × Ledger) × Local))\n    (reached : final ∈ support ((fun result => (result.1.map (PqxdhRegistrationJointInitializedSchedule.encodeOutcome\n      setup), result.2)) <$> (PqxdhRegistrationJointInitializedSchedule.source setup codec checks ensureInit none\n        (tag (compileFull setup codec route bounds mode adversary) g.1.val)).run\n          ((PqxdhDynamicIdentityPool.initialState, PqxdhLiveKemBirth.empty), runtime)))\n    (decided : Decided (decision setup.source.crypto codec setup.serverKeyId budget event claim g) final) :\n    GoodKem (selectedKem budget g) final ∧ KeyMatchFinal setup codec checks (selectedKem budget g) final",
+  "PqxdhDeploymentKemTwoSided.defect_zero": "theorem defect_zero (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)\n    (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec) (bounds : FreshBounds) (mode : Mode)\n    (adversary : OracleComp (ModeSpec mode) X) (budget : Budget) (event : Observed X → Bool)\n    (claim : Observed X → Option Handle) (g : Fin budget.accept × Fin budget.capacity) (runtime : A) :\n    letI := Classical.propDecidable\n    𝒟[(fun final => decide (Decided (decision setup.source.crypto codec setup.serverKeyId budget event claim g) final ∧\n        GoodKem (selectedKem budget g) final ∧ ¬KeyMatchFinal setup codec checks (selectedKem budget g) final)) <$>\n      ((fun result => (result.1.map (PqxdhRegistrationJointInitializedSchedule.encodeOutcome setup), result.2)) <$>\n        (PqxdhRegistrationJointInitializedSchedule.source setup codec checks ensureInit none\n          (tag (compileFull setup codec route bounds mode adversary) g.1.val)).run\n          ((PqxdhDynamicIdentityPool.initialState, PqxdhLiveKemBirth.empty), runtime))] {true} = 0",
+  "PqxdhDeploymentKemTwoSided.eligible_real": "theorem eligible_real (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)\n    (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)\n    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec) (bounds : FreshBounds) (mode : Mode)\n    (adversary : OracleComp (ModeSpec mode) X) (budget : Budget) (respects : budget.Respects adversary)\n    (event : Observed X → Bool) (claim : Observed X → Option Handle) (g : Fin budget.accept × Fin budget.capacity)\n    (runtime : A) :\n    𝒟[(fun outcome => decide (happens event outcome = true ∧\n        designated setup.source.crypto codec setup.serverKeyId budget claim outcome = some g)) <$>\n      (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode adversary).run runtime] {true} =\n    𝒟[PqxdhRegistrationJointKemRawGame.sourceReal setup codec checks ensureInit none\n      (decision setup.source.crypto codec setup.serverKeyId budget event claim g)\n      (compileFull setup codec route bounds mode adversary) runtime budget.create (selectedKem budget g) g.1.val]\n      {true}",
+  "PqxdhDeploymentKemTwoSided.kem_transfer_two_sided": "theorem kem_transfer_two_sided (setup : Setup baseSpec KemSK)\n    (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)\n    (codec : Codec Reader Response) (checks : Checks) (route : RawCtxServerRouting.SenderDecoder)\n    (ensureInit : StateT A ProbComp Bool) (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)\n    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec) (bounds : FreshBounds) (mode : Mode)\n    (adversary : OracleComp (ModeSpec mode) X) (budget : Budget) (respects : budget.Respects adversary)\n    (event : Observed X → Bool) (claim : Observed X → Option Handle) (g : Fin budget.accept × Fin budget.capacity)\n    (runtime : A) :\n    |(𝒟[(fun outcome => decide (happens event outcome = true ∧\n        designated setup.source.crypto codec setup.serverKeyId budget claim outcome = some g)) <$>\n      (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode adversary).run runtime]\n        {true}).toReal -\n      (𝒟[PqxdhRegistrationJointKemRawOpaque.opaqueBranch setup codec checks ensureInit none\n        (decision setup.source.crypto codec setup.serverKeyId budget event claim g)\n        (compileFull setup codec route bounds mode adversary) runtime budget.create (selectedKem budget g) g.1.val\n        false] {true}).toReal| ≤\n      setup.kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl\n          (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl))\n        (PqxdhRegistrationJointKemRawCertified.adversary setup codec checks ensureInit none\n          (decision setup.source.crypto codec setup.serverKeyId budget event claim g)\n          (compileFull setup codec route bounds mode adversary) runtime budget.create (selectedKem budget g)\n          g.1.val).toINDCCA +\n        PqxdhRegistrationJointKemRawGame.correctnessError setup",
+  "PqxdhDeploymentKemTwoSided.kem_transfer_lower": "theorem kem_transfer_lower (setup : Setup baseSpec KemSK)\n    (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)\n    (codec : Codec Reader Response) (checks : Checks) (route : RawCtxServerRouting.SenderDecoder)\n    (ensureInit : StateT A ProbComp Bool) (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)\n    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec) (bounds : FreshBounds) (mode : Mode)\n    (adversary : OracleComp (ModeSpec mode) X) (budget : Budget) (respects : budget.Respects adversary)\n    (event : Observed X → Bool) (claim : Observed X → Option Handle) (g : Fin budget.accept × Fin budget.capacity)\n    (runtime : A) :\n    𝒟[PqxdhRegistrationJointKemRawOpaque.opaqueBranch setup codec checks ensureInit none\n        (decision setup.source.crypto codec setup.serverKeyId budget event claim g)\n        (compileFull setup codec route bounds mode adversary) runtime budget.create (selectedKem budget g) g.1.val\n        false] {true} ≤\n      𝒟[(fun outcome => decide (happens event outcome = true ∧\n        designated setup.source.crypto codec setup.serverKeyId budget claim outcome = some g)) <$>\n      (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode adversary).run runtime] {true} +\n      ENNReal.ofReal (setup.kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl\n          (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl))\n        (PqxdhRegistrationJointKemRawCertified.adversary setup codec checks ensureInit none\n          (decision setup.source.crypto codec setup.serverKeyId budget event claim g)\n          (compileFull setup codec route bounds mode adversary) runtime budget.create (selectedKem budget g)\n          g.1.val).toINDCCA +\n        PqxdhRegistrationJointKemRawGame.correctnessError setup)",
+  "PqxdhDeploymentKemTwoSided.kem_transfer_sum_two_sided": "theorem kem_transfer_sum_two_sided (setup : Setup baseSpec KemSK)\n    (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)\n    (codec : Codec Reader Response) (checks : Checks) (route : RawCtxServerRouting.SenderDecoder)\n    (ensureInit : StateT A ProbComp Bool) (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)\n    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec) (bounds : FreshBounds) (mode : Mode)\n    (adversary : OracleComp (ModeSpec mode) X) (budget : Budget) (respects : budget.Respects adversary)\n    (event : Observed X → Bool) (claim : Observed X → Option Handle) (runtime : A) :\n    |(𝒟[(fun outcome => decide (happens event outcome = true ∧\n        (designated setup.source.crypto codec setup.serverKeyId budget claim outcome).isSome)) <$>\n      (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode adversary).run runtime]\n        {true}).toReal -\n      ∑ g : Fin budget.accept × Fin budget.capacity,\n        (𝒟[PqxdhRegistrationJointKemRawOpaque.opaqueBranch setup codec checks ensureInit none\n          (decision setup.source.crypto codec setup.serverKeyId budget event claim g)\n          (compileFull setup codec route bounds mode adversary) runtime budget.create (selectedKem budget g) g.1.val\n          false] {true}).toReal| ≤\n      ∑ g : Fin budget.accept × Fin budget.capacity,\n        (setup.kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl\n            (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl))\n          (PqxdhRegistrationJointKemRawCertified.adversary setup codec checks ensureInit none\n            (decision setup.source.crypto codec setup.serverKeyId budget event claim g)\n            (compileFull setup codec route bounds mode adversary) runtime budget.create (selectedKem budget g)\n            g.1.val).toINDCCA +\n          PqxdhRegistrationJointKemRawGame.correctnessError setup)",
+  "PqxdhDeploymentKemTwoSided.split_create": "theorem split_create (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)\n    (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)\n    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec) (bounds : FreshBounds) (mode : Mode)\n    (adversary : OracleComp (ModeSpec mode) X) (budget : Budget) (respects : budget.Respects adversary)\n    (event : Observed X → Bool) (claim : Observed X → Option Handle) (runtime : A) :\n    𝒟[(fun outcome => decide (happens event outcome = true ∧\n        (PqxdhDeploymentTargetRange.eligible setup.source.crypto codec setup.serverKeyId claim outcome).isSome)) <$>\n      (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode adversary).run runtime] {true} =\n      ∑ g : Fin budget.accept × Fin budget.create,\n        𝒟[(fun outcome => decide (happens event outcome = true ∧\n          designated setup.source.crypto codec setup.serverKeyId budget claim outcome =\n            some ((g.1, g.2.castSucc) : Fin budget.accept × Fin budget.capacity))) <$>\n        (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode adversary).run runtime]\n          {true}",
+  "PqxdhDeploymentKemTwoSided.kem_transfer_create_two_sided": "theorem kem_transfer_create_two_sided (setup : Setup baseSpec KemSK)\n    (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)\n    (codec : Codec Reader Response) (checks : Checks) (route : RawCtxServerRouting.SenderDecoder)\n    (ensureInit : StateT A ProbComp Bool) (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)\n    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec) (bounds : FreshBounds) (mode : Mode)\n    (adversary : OracleComp (ModeSpec mode) X) (budget : Budget) (respects : budget.Respects adversary)\n    (event : Observed X → Bool) (claim : Observed X → Option Handle) (runtime : A) :\n    |(𝒟[(fun outcome => decide (happens event outcome = true ∧\n        (PqxdhDeploymentTargetRange.eligible setup.source.crypto codec setup.serverKeyId claim outcome).isSome)) <$>\n      (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode adversary).run runtime]\n        {true}).toReal -\n      ∑ g : Fin budget.accept × Fin budget.create,\n        (𝒟[PqxdhRegistrationJointKemRawOpaque.opaqueBranch setup codec checks ensureInit none\n          (decision setup.source.crypto codec setup.serverKeyId budget event claim (g.1, g.2.castSucc))\n          (compileFull setup codec route bounds mode adversary) runtime budget.create\n          (selectedKem budget (g.1, g.2.castSucc)) g.1.val false] {true}).toReal| ≤\n      ∑ g : Fin budget.accept × Fin budget.create,\n        (setup.kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl\n            (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl))\n          (PqxdhRegistrationJointKemRawCertified.adversary setup codec checks ensureInit none\n            (decision setup.source.crypto codec setup.serverKeyId budget event claim (g.1, g.2.castSucc))\n            (compileFull setup codec route bounds mode adversary) runtime budget.create\n            (selectedKem budget (g.1, g.2.castSucc)) g.1.val).toINDCCA +\n          PqxdhRegistrationJointKemRawGame.correctnessError setup)",
+  "PqxdhDeploymentLaterKemTwoSided.real_le_actual": "theorem real_le_actual (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes) (decision : X → Bool)\n    (work : OracleComp (Spec KemSK) X) (runtime : A) (count : Nat) (selected : Fin (count + 1)) (index : Nat)\n    (bounded : work.IsQueryBoundP\n      (fun query => PqxdhDeploymentLaterServerReserve.laterKind (KemSK := KemSK) query = some (.inl 1)) (count + 1)) :\n    letI := Classical.propDecidable\n    𝒟[PqxdhDeploymentLaterServerKemHop.sourceReal setup ensureInit supplied\n      (PqxdhDeploymentLaterServerCut.scanned setup codec checks decision work index) runtime count selected] {true} ≤\n    𝒟[(fun final => decide (Decided decision final ∧ GoodKem selected final)) <$>\n      ((fun result => (result.1.map fun outcome =>\n          PqxdhRegistrationJointInitializedSchedule.encodeOutcome setup outcome.1, result.2)) <$>\n        (PqxdhDeploymentLaterServerSource.initialized setup codec checks ensureInit supplied (tag work index)).run\n          ((PqxdhDynamicIdentityPool.initialState, PqxdhLiveKemBirth.empty), runtime))] {true}",
+  "PqxdhDeploymentLaterKemTwoSided.actual_eq_real": "theorem actual_eq_real (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes) (decision : X → Bool)\n    (work : OracleComp (Spec KemSK) X) (runtime : A) (count : Nat) (selected : Fin (count + 1)) (index : Nat)\n    (bounded : work.IsQueryBoundP\n      (fun query => PqxdhDeploymentLaterServerReserve.laterKind (KemSK := KemSK) query = some (.inl 1)) (count + 1))\n    (implied : ∀ final ∈ support ((fun result => (result.1.map fun outcome =>\n        PqxdhRegistrationJointInitializedSchedule.encodeOutcome setup outcome.1, result.2)) <$>\n        (PqxdhDeploymentLaterServerSource.initialized setup codec checks ensureInit supplied (tag work index)).run\n          ((PqxdhDynamicIdentityPool.initialState, PqxdhLiveKemBirth.empty), runtime)),\n      Decided decision final → GoodKem selected final → KeyMatchFinal setup codec checks selected final) :\n    letI := Classical.propDecidable\n    𝒟[(fun final => decide (Decided decision final ∧ GoodKem selected final ∧\n        KeyMatchFinal setup codec checks selected final)) <$>\n      ((fun result => (result.1.map fun outcome =>\n          PqxdhRegistrationJointInitializedSchedule.encodeOutcome setup outcome.1, result.2)) <$>\n        (PqxdhDeploymentLaterServerSource.initialized setup codec checks ensureInit supplied (tag work index)).run\n          ((PqxdhDynamicIdentityPool.initialState, PqxdhLiveKemBirth.empty), runtime))] {true} =\n    𝒟[PqxdhDeploymentLaterServerKemHop.sourceReal setup ensureInit supplied\n      (PqxdhDeploymentLaterServerCut.scanned setup codec checks decision work index) runtime count selected]\n      {true}",
+  "PqxdhDeploymentLaterKemTwoSided.hop_close": "theorem hop_close (setup : Setup baseSpec KemSK)\n    (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)\n    (codec : Codec Reader Response) (checks : Checks) (ensureInit : StateT A ProbComp Bool)\n    (supplied : Option Pqxdh.Bytes) (decision : X → Bool) (work : OracleComp (Spec KemSK) X) (runtime : A)\n    (count : Nat) (selected : Fin (count + 1)) (index : Nat) :\n    |(𝒟[PqxdhDeploymentLaterServerKemHop.sourceReal setup ensureInit supplied\n        (PqxdhDeploymentLaterServerCut.scanned setup codec checks decision work index) runtime count selected]\n          {true}).toReal -\n      (𝒟[PqxdhDeploymentLaterServerOpaque.opaqueBranch (Reader := Reader) setup codec checks ensureInit supplied\n        decision work runtime count selected index false] {true}).toReal| ≤\n      setup.kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl\n          (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl))\n        (PqxdhDeploymentLaterServerKemHop.certified setup ensureInit supplied\n          (PqxdhDeploymentLaterServerCut.scanned setup codec checks decision work index) runtime count\n          selected).toINDCCA +\n        PqxdhRegistrationJointKemRawGame.correctnessError setup",
+  "PqxdhDeploymentLaterKemTwoSided.decision_implies_server": "theorem decision_implies_server (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)\n    (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec) (bounds : FreshBounds) (mode : Mode)\n    (first : OracleComp (ModeSpec mode) X) (second : X → Reveal → OracleComp PostSpec Out) (budget : Budget)\n    (event : Observed Out → Bool) (claim : Observed Out → Option Handle) (g : Fin budget.accept × Fin budget.capacity)\n    (runtime : A) (final : PqxdhRegistrationJointKemRawBridge.Final KemSK A (Out × (Ledger × (Snap × Local))))\n    (reached : final ∈ support ((fun result => (result.1.map fun outcome =>\n        PqxdhRegistrationJointInitializedSchedule.encodeOutcome setup outcome.1, result.2)) <$>\n      (PqxdhDeploymentLaterServerSource.initialized setup codec checks ensureInit none\n        (tag (compileServer setup codec route bounds mode first second) g.1.val)).run\n        ((PqxdhDynamicIdentityPool.initialState, PqxdhLiveKemBirth.empty), runtime)))\n    (decided : Decided (decision setup.source.crypto codec setup.serverKeyId budget event claim g) final) :\n    GoodKem (selectedKem budget g) final ∧ KeyMatchFinal setup codec checks (selectedKem budget g) final",
+  "PqxdhDeploymentLaterKemTwoSided.eligible_server_real": "theorem eligible_server_real (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)\n    (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)\n    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec) (bounds : FreshBounds) (mode : Mode)\n    (first : OracleComp (ModeSpec mode) X) (second : X → Reveal → OracleComp PostSpec Out) (budget : Budget)\n    (respects : budget.Respects first) (event : Observed Out → Bool) (claim : Observed Out → Option Handle)\n    (g : Fin budget.accept × Fin budget.capacity) (runtime : A) :\n    𝒟[(fun outcome => decide (happens event outcome = true ∧\n        designated setup.source.crypto codec setup.serverKeyId budget claim outcome = some g)) <$>\n      (PqxdhDeploymentLaterServerGame.game setup codec checks route ensureInit 0 bounds mode first second).run\n        runtime] {true} =\n    𝒟[PqxdhDeploymentLaterServerKemHop.sourceReal setup ensureInit none\n      (PqxdhDeploymentLaterServerCut.scanned setup codec checks\n        (decision setup.source.crypto codec setup.serverKeyId budget event claim g)\n        (compileServer setup codec route bounds mode first second) g.1.val)\n      runtime budget.create (selectedKem budget g)] {true}",
+  "PqxdhDeploymentLaterKemTwoSided.kem_transfer_server_two_sided": "theorem kem_transfer_server_two_sided (setup : Setup baseSpec KemSK)\n    (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)\n    (codec : Codec Reader Response) (checks : Checks) (route : RawCtxServerRouting.SenderDecoder)\n    (ensureInit : StateT A ProbComp Bool) (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)\n    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec) (bounds : FreshBounds) (mode : Mode)\n    (first : OracleComp (ModeSpec mode) X) (second : X → Reveal → OracleComp PostSpec Out) (budget : Budget)\n    (respects : budget.Respects first) (event : Observed Out → Bool) (claim : Observed Out → Option Handle)\n    (g : Fin budget.accept × Fin budget.capacity) (runtime : A) :\n    |(𝒟[(fun outcome => decide (happens event outcome = true ∧\n        designated setup.source.crypto codec setup.serverKeyId budget claim outcome = some g)) <$>\n      (PqxdhDeploymentLaterServerGame.game setup codec checks route ensureInit 0 bounds mode first second).run\n        runtime] {true}).toReal -\n      (𝒟[PqxdhDeploymentLaterServerOpaque.opaqueBranch (Reader := Reader) setup codec checks ensureInit none\n        (decision setup.source.crypto codec setup.serverKeyId budget event claim g)\n        (compileServer setup codec route bounds mode first second) runtime budget.create (selectedKem budget g) g.1.val\n        false] {true}).toReal| ≤\n      setup.kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl\n          (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl))\n        (PqxdhDeploymentLaterServerKemHop.certified setup ensureInit none\n          (PqxdhDeploymentLaterServerCut.scanned setup codec checks\n            (decision setup.source.crypto codec setup.serverKeyId budget event claim g)\n            (compileServer setup codec route bounds mode first second) g.1.val)\n          runtime budget.create (selectedKem budget g)).toINDCCA +\n        PqxdhRegistrationJointKemRawGame.correctnessError setup",
+  "PqxdhDeploymentLaterKemTwoSided.kem_transfer_server_sum_two_sided": "theorem kem_transfer_server_sum_two_sided (setup : Setup baseSpec KemSK)\n    (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)\n    (codec : Codec Reader Response) (checks : Checks) (route : RawCtxServerRouting.SenderDecoder)\n    (ensureInit : StateT A ProbComp Bool) (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)\n    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec) (bounds : FreshBounds) (mode : Mode)\n    (first : OracleComp (ModeSpec mode) X) (second : X → Reveal → OracleComp PostSpec Out) (budget : Budget)\n    (respects : budget.Respects first) (event : Observed Out → Bool) (claim : Observed Out → Option Handle)\n    (runtime : A) :\n    |(𝒟[(fun outcome => decide (happens event outcome = true ∧\n        (designated setup.source.crypto codec setup.serverKeyId budget claim outcome).isSome)) <$>\n      (PqxdhDeploymentLaterServerGame.game setup codec checks route ensureInit 0 bounds mode first second).run\n        runtime] {true}).toReal -\n      ∑ g : Fin budget.accept × Fin budget.capacity,\n        (𝒟[PqxdhDeploymentLaterServerOpaque.opaqueBranch (Reader := Reader) setup codec checks ensureInit none\n          (decision setup.source.crypto codec setup.serverKeyId budget event claim g)\n          (compileServer setup codec route bounds mode first second) runtime budget.create (selectedKem budget g)\n          g.1.val false] {true}).toReal| ≤\n      ∑ g : Fin budget.accept × Fin budget.capacity,\n        (setup.kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl\n            (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl))\n          (PqxdhDeploymentLaterServerKemHop.certified setup ensureInit none\n            (PqxdhDeploymentLaterServerCut.scanned setup codec checks\n              (decision setup.source.crypto codec setup.serverKeyId budget event claim g)\n              (compileServer setup codec route bounds mode first second) g.1.val)\n            runtime budget.create (selectedKem budget g)).toINDCCA +\n          PqxdhRegistrationJointKemRawGame.correctnessError setup)"
+ },
+ "exact_definitions": {
+  "PqxdhDeploymentKemTwoSided.Completed": "def Completed (decision : X → Bool)\n    (reached : Option (Outcome KemSK (X × Tag)) × PqxdhDynamicKemJointSource.State KemSK) : Prop :=\n  ∃ outcome, reached.1 = some outcome ∧ decision outcome.1.1.1 = true ∧ accepted outcome.1.1.2 = true"
+ },
+ "leanpath": {
+  "manifest": "/tmp/bc-arc-scratch/common-experiment/ce9b/leanpath",
+  "sha256": "1e82846984be914a55d3b098fdbae3f60670ca73348fc8fb1b44f4dfec7ebe55",
+  "mirror_script": "/tmp/bc-arc-scratch/common-experiment/ce9b/mirror.py",
+  "mirror_log": "source /tmp/bc-arc-scratch/common-experiment/ce11/int-ce11a-3/olean links 1671 skipped 1 broken 0",
+  "note": "ce9b/olean is a resolved symlink mirror (1671 links) of the first prefix of the published LEAN_PATH of central 65e20738 (/tmp/bc-coord/leanpaths/65e207381dd63c0b25d30faddb58902225d409a5.leanpath), without its root olean, in front of that published LEAN_PATH; the two CE-9b oleans and the root olean were written into it by check.sh (which unlinks an artifact before writing it), so no earlier prefix was written."
+ },
+ "root_checks": {
+  "root-r1": {
+   "exit": 0,
+   "log_bytes": 0,
+   "root_source_sha256": "aa43e93265cc91e743fdc10c56b35d922ee4556c0e3ff330b9fdf9540c569dfa",
+   "start": "2026-10-08T05:16:27.718130631Z",
+   "end": "2026-10-08T05:17:21.046037937Z"
+  },
+  "root-r2": {
+   "exit": 0,
+   "log_bytes": 0,
+   "root_source_sha256": "f0980528e94ce471cc296d9f21bde4d984aee55900d96dff333ad6d786c457e3",
+   "start": "2026-10-08T05:23:49.206574160Z",
+   "end": "2026-10-08T05:23:52.366340946Z"
+  }
+ },
+ "focused_inventory_per_commit": {
+  "inv-doc": {
+   "exit": 0,
+   "start": "2026-10-08T05:30:03Z",
+   "end": "2026-10-08T05:31:22Z",
+   "log_sha256": "5c04cd96b7671a5da275b3c6615b22e7f1cc303e220c12bc469f9e34e46524b2"
+  },
+  "inv-m1": {
+   "exit": 0,
+   "start": "2026-10-08T05:17:52Z",
+   "end": "2026-10-08T05:19:10Z",
+   "log_sha256": "c01f6adfb22e184e11b145287df86729399401ef0f278a0f5a5aa162427cc336"
+  },
+  "inv-m2": {
+   "exit": 0,
+   "start": "2026-10-08T05:23:52Z",
+   "end": "2026-10-08T05:25:12Z",
+   "log_sha256": "7276bafc881bdeb5ce2cd28e180a8031393bf99d3b936cdc54169acbfd974922"
+  }
+ },
+ "focused_inventory_note": "inv-m1 ran on the worktree holding exactly the files of commit 29f37f2e, inv-m2 on exactly the files of commit ee7143fa, and inv-doc on the files of the documentation commit, in the locked minimal proof flake (nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs; flake.nix and flake.lock identical to the worktree) under coord.sh lease mem claude @nix. coord.sh inv recount ran before coord.sh inv rehash for both Lean commits.",
+ "forbidden_scan": "No sorry, admit, native_decide, implemented_by, extern or unsafe, no axiom declaration and no opaque declaration in the two modules; the word opaque occurs only in docstrings and in the names of existing declarations (opaqueBranch, KemRawOpaque, LaterServerOpaque). Options: autoImplicit false, and backward.isDefEq.respectTransparency false for single theorems (13 and 10 occurrences), as in KemRawBridge and LaterServerBridge.",
+ "main_results": {
+  "discarded_runs": "The only runs that the proof of T4 discards are completed runs with an active cut at the selected accept (encapsulation to the reserved key of creation index selected), decision and session holding and the key unrevealed, in which creation index selected is never created; every other step of actual_le_real is an equality, discards runs on which the real game also returns false (stop or completion before the cut, encapsulation to another key, failed Server construction), or discards runs that cannot occur (a completed stopped run with a set monitor, excluded by stopped_good).",
+  "reverse": "PqxdhDeploymentKemTwoSided.real_le_actual: Pr[KemRawGame.sourceReal ... decision work runtime count selected index] <= Pr_actual[Decided decision /\\ GoodKem selected], under T4 own premises (certified, room).",
+  "equality": "PqxdhDeploymentKemTwoSided.actual_eq_real: if, on the support of the actual execution, Decided /\\ GoodKem implies KeyMatchFinal, then Pr_actual[Decided /\\ GoodKem /\\ KeyMatchFinal] = Pr[sourceReal]; decided_eq_real: if Decided implies GoodKem /\\ KeyMatchFinal, then Pr_actual[Decided] = Pr[sourceReal].",
+  "defect": "PqxdhDeploymentKemTwoSided.real_le_actual_add and actual_real_close: for every decision, Pr[sourceReal] <= Pr_actual[D /\\ G /\\ K] + Pr_actual[D /\\ G /\\ not K] and |Pr[sourceReal] - Pr_actual[D /\\ G /\\ K]| <= Pr_actual[D /\\ G /\\ not K].",
+  "deployment": "decision_implies (Phase1ReadBack), defect_zero, eligible_real: Pr_CE[happens event /\\ designated claim = some g] = Pr[sourceReal ... (decision g) (compileFull ...) runtime qCreate (selectedKem g) g.1] for a budget-respecting adversary (Phase1ReadBack, Phase2ReadBack).",
+  "two_sided": "kem_transfer_two_sided: |Pr_CE[happens event /\\ designated claim = some g] - Pr[opaqueBranch ... (decision g) ... false]| <= IND_CCA_Advantage(KemRawCertified.adversary ... (decision g) ...) + correctnessError setup; kem_transfer_lower (ENNReal reverse); kem_transfer_sum_two_sided over Fin qAccept x Fin (qCreate + 1) with the budgeted designation; kem_transfer_create_two_sided over Fin qAccept x Fin qCreate with plain eligibility (split_create).",
+  "later": "PqxdhDeploymentLaterKemTwoSided: the same chain for LaterServerBridge.actual_le_real (creation cap bounded), hop_close (LaterServerKemHop.certified_advantage with LaterServerOpaque.branch_opaque), decision_implies_server, defect_zero_server, eligible_server_real, kem_transfer_server_two_sided, kem_transfer_server_lower, kem_transfer_server_sum_two_sided; confidentiality statements only."
+ },
+ "counterexample": "Informal, not a Lean statement: without the class hypothesis the equality can fail. A defect run carries, at the selected accept, the reserved key of a creation index that the run never creates; its probability is the chance that an adversary-chosen PQ key equals a key the run never generated. MlKemScheme does not exclude a key generation with positive mass on one public key; with it, a program that creates no Beacon and submits a verifying accept with that key, decision always true and creation index 0 (count 0), has T4 left side 0 and a positive real game. Bounding the defect without the hypothesis would need a min-entropy property of ML-KEM key generation, which is not an approved assumption.",
+ "deviations_from_plan": [
+  "The equality is proved (not only a two-sided bound), under the weaker hypothesis Decided /\\ GoodKem -> KeyMatchFinal on the support; the plan class (decisions implying accepted /\\ KeyMatchFinal /\\ GoodKem) is decided_eq_real. The unconditional defect bound is added.",
+  "A second module, PqxdhDeploymentLaterKemTwoSided, carries CE-9b to the logged T4 of the LQ-F later game; the task named one module. It has no tight-domain (Fin qCreate) form, since the LQ-F line has no designated_create.",
+  "Only one new definition (Completed); all other statements are about existing games, adversaries and events.",
+  "The working plan file was not edited; plan amendments are left to the orchestrator.",
+  "No statement was weakened and no existing module changed; CE-9 one-sided theorems are unchanged."
+ ],
+ "contracts_used": "None new. Generic statements: the premises of the reversed T4 only (certified and room; the creation cap bounded for the logged T4). Deployment statements: Phase1ReadBack and Phase2ReadBack (approved 2026-10-06), FunctionalDecapsulation (existing contract of the KEM hop), the adversary budget. defect_zero, decision_implies and their later forms use only Phase1ReadBack. No hardness assumption, idealization or advantage term beyond the IND-CCA advantage and correctness error of the existing KEM hops; the CE-9 bills (kem_transfer_bills, kem_transfer_server_bills) bill the same adversaries.",
+ "not_proved": [
+  "CE-12 left-or-right headline: item 2 T7 composition, CE-11 un-compiled ideal world, items 4 and 5, final-world advantage 0.",
+  "The counterexample to the unconditional equality is informal.",
+  "N * Adv(B_guess) / signed-hop forms (owner input 5); Server identity indices other than 0."
+ ],
+ "re_estimate": "CE-9b was planned at 3-6 agent-days (plan section 14) and was built, with the LQ-F later game, in one working session of under one agent-day. Other stages keep their estimates; CE-12 left-or-right part no longer waits on CE-9b.",
+ "checks_not_run": "No lake build, make verify, nix-collect-garbage, mutation testing, ProVerif or Rust run; no production Rust or ProVerif change.",
+ "review": "Not reviewed; not integrated into central."
+}
