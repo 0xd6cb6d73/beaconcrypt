@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1586
+	[handwritten-lean]=1587
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -31669,6 +31669,39 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem realPost_commutes([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentFinishErasure theorem realPost_commutes"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentFinishErasure\.laterWith_real$' "$selected_source_module" "PqxdhDeploymentFinishErasure dependency BeaconcryptCore.Computational.PqxdhDeploymentFinishErasure.laterWith_real"
 require_line_count 1 '^theorem laterWith_real([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentFinishErasure theorem laterWith_real"
+
+# CE-11a slot services, the 108-byte split represent step and the generic seed deferral (increment 2).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentSeedSplit.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentSeedSplit$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentSeedSplit root import"
+require_line_count 13 '^theorem ' "$selected_source_module" "PqxdhDeploymentSeedSplit theorem inventory"
+require_line_count 13 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentSeedSplit guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSeedSplit\.LawEq\.bind_support$' "$selected_source_module" "PqxdhDeploymentSeedSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentSeedSplit.LawEq.bind_support"
+require_line_count 1 '^theorem LawEq\.bind_support([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSeedSplit theorem LawEq.bind_support"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSeedSplit\.lawEq_run_simulateQ_of_proj$' "$selected_source_module" "PqxdhDeploymentSeedSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentSeedSplit.lawEq_run_simulateQ_of_proj"
+require_line_count 1 '^theorem lawEq_run_simulateQ_of_proj([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSeedSplit theorem lawEq_run_simulateQ_of_proj"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSeedSplit\.table_service_proj$' "$selected_source_module" "PqxdhDeploymentSeedSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentSeedSplit.table_service_proj"
+require_line_count 1 '^theorem table_service_proj([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSeedSplit theorem table_service_proj"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSeedSplit\.joinTable_cacheQuery$' "$selected_source_module" "PqxdhDeploymentSeedSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentSeedSplit.joinTable_cacheQuery"
+require_line_count 1 '^theorem joinTable_cacheQuery([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSeedSplit theorem joinTable_cacheQuery"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSeedSplit\.splitService_none$' "$selected_source_module" "PqxdhDeploymentSeedSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentSeedSplit.splitService_none"
+require_line_count 1 '^theorem splitService_none([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSeedSplit theorem splitService_none"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSeedSplit\.splitService_some$' "$selected_source_module" "PqxdhDeploymentSeedSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentSeedSplit.splitService_some"
+require_line_count 1 '^theorem splitService_some([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSeedSplit theorem splitService_some"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSeedSplit\.split_service_proj$' "$selected_source_module" "PqxdhDeploymentSeedSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentSeedSplit.split_service_proj"
+require_line_count 1 '^theorem split_service_proj([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSeedSplit theorem split_service_proj"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSeedSplit\.fixed_mapBackend$' "$selected_source_module" "PqxdhDeploymentSeedSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentSeedSplit.fixed_mapBackend"
+require_line_count 1 '^theorem fixed_mapBackend([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSeedSplit theorem fixed_mapBackend"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSeedSplit\.fixed_backend$' "$selected_source_module" "PqxdhDeploymentSeedSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentSeedSplit.fixed_backend"
+require_line_count 1 '^theorem fixed_backend([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSeedSplit theorem fixed_backend"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSeedSplit\.represent$' "$selected_source_module" "PqxdhDeploymentSeedSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentSeedSplit.represent"
+require_line_count 1 '^theorem represent([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSeedSplit theorem represent"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSeedSplit\.represent_split$' "$selected_source_module" "PqxdhDeploymentSeedSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentSeedSplit.represent_split"
+require_line_count 1 '^theorem represent_split([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSeedSplit theorem represent_split"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSeedSplit\.seedFree_set$' "$selected_source_module" "PqxdhDeploymentSeedSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentSeedSplit.seedFree_set"
+require_line_count 1 '^theorem seedFree_set([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSeedSplit theorem seedFree_set"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSeedSplit\.defer$' "$selected_source_module" "PqxdhDeploymentSeedSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentSeedSplit.defer"
+require_line_count 1 '^theorem defer([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSeedSplit theorem defer"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
