@@ -1,5 +1,5 @@
 {
- "date": "2026-10-08T09:47:30.974533+00:00",
+ "date": "2026-10-08T09:50:30.903327+00:00",
  "scope": "CE-11b increment 1: PqxdhDeploymentIdealSlots (U1 generic: slot programs, slotCore, slot_natural_law, slotCore_natural), PqxdhDeploymentIdealParams (U1 R3 draws Target/Params/drawParams and spike item (b): preOpaque_pool, draws_swap, slotGame_pool), PqxdhDeploymentEnvironmentDraw (U3 generic: join_from, join_draw, paramEnv, join_param). Spike items (c) and (d) as checked scratch definitions only. Not reviewed; not integrated into central.",
  "basis": "ee7878ee4c42f59460a3a8b80983a4a209bd4e0d",
  "topic": {
@@ -28,6 +28,10 @@
   {
    "commit": "5b5eb1b4c3e21491113eca499c9fa078087e1b7d",
    "subject": "Add C1 for environments that draw parameters at startup"
+  },
+  {
+   "commit": "e21d46300fb3a11081984a45b6011ef98ab5ea47",
+   "subject": "Document CE-11b increment 1"
   }
  ],
  "commits_note": "Three Lean commits; the documentation commit that adds this receipt, the guide sections and the analysis section follows them.",
@@ -389,11 +393,11 @@
  ],
  "spike": {
   "file": "/tmp/bc-arc-scratch/common-experiment/ce11b/spike/AcceptSpike.lean",
-  "sha256": "c13a110355058965a6650557b727d4638080899a801169fddef8c88b5e55f7cf",
-  "last_dev_check": "c13a110355058965a6650557b727d4638080899a801169fddef8c88b5e55f7cf  spike/AcceptSpike.lean\nexit 0",
-  "content": "acceptActive, acceptSelected, acceptSelected_logged (theorem), tailCE, coordsOf, buildHidden, buildHidden_native (theorem, rfl), groupedOwnerCE, preparationCE, groupCE, ownerImplCE, finishChallenge; scratch only, not published",
+  "sha256": "1fc9bcef57183b0c76ae7ab30db2e58c2a65c0d1fca1779b6f07e407453b0f93",
+  "last_dev_check": "1fc9bcef57183b0c76ae7ab30db2e58c2a65c0d1fca1779b6f07e407453b0f93  spike/AcceptSpike.lean\nexit 0",
+  "content": "acceptActive, acceptSelected, acceptSelected_logged (theorem), tailCE, coordsOf, buildHidden, buildHidden_native (theorem, rfl), groupedOwnerCE, preparationCE, groupCE, ownerImplCE, finishChallenge; createPool, create_merge_pool (theorem), handlerPool, revealPool, deploymentPool, compile_simulation_pool_stmt (statement only); scratch only, not published",
   "not_done": [
-   "(a) prefix layer list, create_merge_pool, compile_simulation_pool, P-a/P-b choice",
+   "(a) proof of the pool compile simulation (layer list and P-a choice are done, see the guide)",
    "(d) post_compile for owner k challenge finish",
    "(e) one record command on the hidden session",
    "(f) one non-challenge finish of owner k through router and evalLayer",
