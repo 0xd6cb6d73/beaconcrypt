@@ -20,4 +20,4 @@ New Claude work. It composes the published cuts `PqxdhRecordLiftGlobalCut` and `
 
 ## Validation status
 
-All five statements have exact `#print axioms` guards with `propext`, `Classical.choice` and `Quot.sound`. The module passes the focused single-module check against `/tmp/bc-arc-scratch/items45/chain/leanpath` (central `ee7878ee`). The H-7 source scan (version 3) finds no forbidden name. Independent review and central integration are pending.
+All five statements have exact `#print axioms` guards with `propext`, `Classical.choice` and `Quot.sound`. The module passes the focused single-module check (`coord.sh lean`, `-j1 -M8000`, `timeout 180`) against a resolved mirror of the first prefix of the published `LEAN_PATH` of central `ee7878ee` in front of that published `LEAN_PATH`, and the H-7 source scan (version 3) finds no forbidden name; commands, exit statuses and SHA-256 digests are recorded in `doc/impl/proof-receipts/record-lift-chain.json`. The independent semantic and hygiene reviews of `0f06970f` and the fix pass of their findings are recorded in that receipt; central integration is pending.
