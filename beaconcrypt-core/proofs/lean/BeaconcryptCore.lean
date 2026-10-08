@@ -1755,6 +1755,8 @@ import BeaconcryptCore.Computational.PqxdhRecordLiftChildPolicy
 
 import BeaconcryptCore.Computational.PqxdhRecordLiftPrefixPolicy
 
+import BeaconcryptCore.Computational.PqxdhRecordLiftCtxProgramBounds
+
 /-!
 # Beaconcrypt-core verification root
 

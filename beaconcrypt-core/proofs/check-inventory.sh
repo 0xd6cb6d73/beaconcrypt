@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1644
+	[handwritten-lean]=1645
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -33091,6 +33091,37 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecord
 require_line_count 1 '^theorem sampled_schedule([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftPrefixPolicy theorem sampled_schedule"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftPrefixPolicy\.sampled_program$' "$selected_source_module" "PqxdhRecordLiftPrefixPolicy dependency sampled_program"
 require_line_count 1 '^theorem sampled_program([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftPrefixPolicy theorem sampled_program"
+
+# Record-lift increment A (Claude, adapted from Codex WIP 879a91bd): per-operation CTX component bills for every hidden or caller-known record send and receive.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxProgramBounds.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxProgramBounds$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftCtxProgramBounds root import"
+require_line_count 12 '^theorem ' "$selected_source_module" "PqxdhRecordLiftCtxProgramBounds theorem inventory"
+require_line_count 12 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftCtxProgramBounds guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxProgramBounds\.weighted_bind$' "$selected_source_module" "PqxdhRecordLiftCtxProgramBounds dependency weighted_bind"
+require_line_count 1 '^theorem weighted_bind([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxProgramBounds theorem weighted_bind"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxProgramBounds\.weighted_indicator$' "$selected_source_module" "PqxdhRecordLiftCtxProgramBounds dependency weighted_indicator"
+require_line_count 1 '^theorem weighted_indicator([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxProgramBounds theorem weighted_indicator"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxProgramBounds\.weighted_mono$' "$selected_source_module" "PqxdhRecordLiftCtxProgramBounds dependency weighted_mono"
+require_line_count 1 '^theorem weighted_mono([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxProgramBounds theorem weighted_mono"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxProgramBounds\.weighted_add$' "$selected_source_module" "PqxdhRecordLiftCtxProgramBounds dependency weighted_add"
+require_line_count 1 '^theorem weighted_add([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxProgramBounds theorem weighted_add"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxProgramBounds\.weighted_simulate$' "$selected_source_module" "PqxdhRecordLiftCtxProgramBounds dependency weighted_simulate"
+require_line_count 1 '^theorem weighted_simulate([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxProgramBounds theorem weighted_simulate"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxProgramBounds\.weighted_run$' "$selected_source_module" "PqxdhRecordLiftCtxProgramBounds dependency weighted_run"
+require_line_count 1 '^theorem weighted_run([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxProgramBounds theorem weighted_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxProgramBounds\.local_weighted$' "$selected_source_module" "PqxdhRecordLiftCtxProgramBounds dependency local_weighted"
+require_line_count 1 '^theorem local_weighted([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxProgramBounds theorem local_weighted"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxProgramBounds\.local_lift$' "$selected_source_module" "PqxdhRecordLiftCtxProgramBounds dependency local_lift"
+require_line_count 1 '^theorem local_lift([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxProgramBounds theorem local_lift"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxProgramBounds\.opaque_send$' "$selected_source_module" "PqxdhRecordLiftCtxProgramBounds dependency opaque_send"
+require_line_count 1 '^theorem opaque_send([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxProgramBounds theorem opaque_send"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxProgramBounds\.opaque_receive$' "$selected_source_module" "PqxdhRecordLiftCtxProgramBounds dependency opaque_receive"
+require_line_count 1 '^theorem opaque_receive([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxProgramBounds theorem opaque_receive"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxProgramBounds\.kernel_send$' "$selected_source_module" "PqxdhRecordLiftCtxProgramBounds dependency kernel_send"
+require_line_count 1 '^theorem kernel_send([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxProgramBounds theorem kernel_send"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxProgramBounds\.kernel_receive$' "$selected_source_module" "PqxdhRecordLiftCtxProgramBounds dependency kernel_receive"
+require_line_count 1 '^theorem kernel_receive([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxProgramBounds theorem kernel_receive"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
