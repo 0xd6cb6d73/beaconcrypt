@@ -1,6 +1,6 @@
 {
  "date": "2026-10-08T06:19:08.653188+00:00",
- "scope": "CE-11a increment 4 (the CE-11a leftovers of plan section 39 that do not wait for item 2's registration core): PqxdhDeploymentSplitFactor (the factoring of the environment's split hidden wrappers buildSplitFwd/buildSplitEnv and finishSplitFwd/finishSplitEnv against the CE-side split forms PqxdhDeploymentHiddenSplit.buildSplit and finishSplit), PqxdhDeploymentEnvironmentReal (the per-command splits of the real registration handler realReg into the real environment realStep relative to the trivial admissibility predicate, and the real instances of the generic join: C1 c1_real with projections onto PqxdhDeploymentSecrecy.game, the LQ-F run phase and PqxdhRecordLiftWorld.game, C3 c3_real and C6 c6_real for the LQ-F later game against PqxdhRecordLiftLater.run). Not reviewed; not integrated into central.",
+ "scope": "CE-11a increment 4 (the CE-11a leftovers of plan section 39a that do not wait for item 2's registration core): PqxdhDeploymentSplitFactor (the factoring of the environment's split hidden wrappers buildSplitFwd/buildSplitEnv and finishSplitFwd/finishSplitEnv against the CE-side split forms PqxdhDeploymentHiddenSplit.buildSplit and finishSplit), PqxdhDeploymentEnvironmentReal (the per-command splits of the real registration handler realReg into the real environment realStep relative to the trivial admissibility predicate, and the real instances of the generic join: C1 c1_real with projections onto PqxdhDeploymentSecrecy.game, the LQ-F run phase, PqxdhRecordLiftWorld.game and analysis and the run-phase reveal, C3 c3_real and C6 c6_real for the LQ-F later game against PqxdhRecordLiftLater.run with its public form). Reviewed at 7bb6dee9 (one minor finding, nine nits); review fix pass 3b53ddd1 plus one documentation commit, not reviewed yet; not integrated into central.",
  "basis": "65e207381dd63c0b25d30faddb58902225d409a5",
  "topic": {
   "branch": "claude/ce11a",
@@ -8,9 +8,11 @@
  },
  "plan": {
   "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
-  "sha256": "35dd25a9bc701f3a01c911397822bd6fe8e6b7cd9f61da874baf9c50ed43670b",
-  "sections": "32 (CE-11 split, real instances cuttable), 34a, 36, 38, 39 (increment 3 integrated; open points this increment closes), 41 (this increment)",
-  "committed_snapshot": "doc/impl/common-deployment-experiment-plan.md (not refreshed in this increment; it covers sections up to the increment-3 review fix and is refreshed at integration)"
+  "sha256": "63b52ce8e8b7225ad8896a97503a195c78df66e23b9cebaffcbb5b8c2fa73f7e",
+  "sha256_inc4": "35dd25a9bc701f3a01c911397822bd6fe8e6b7cd9f61da874baf9c50ed43670b",
+  "sha256_note": "sha256 is the working plan at the fix pass; sha256_inc4 is the plan recorded at 7bb6dee9 (with section 41). The fix pass renumbered the later of two sections numbered 39 (increment 3 integrated; next work) to 39a and added section 42.",
+  "sections": "32 (CE-11 split, real instances cuttable), 34a, 36, 38, 39a (increment 3 integrated; open points this increment closes; numbered 39 until the fix pass), 41 (this increment), 42 (this fix pass)",
+  "committed_snapshot": "doc/impl/common-deployment-experiment-plan.md (not refreshed in this increment or its fix pass; it covers sections up to 39, the increment-3 review fix; central's snapshot at 80560f92 adds the section now numbered 39a as its second section 39; refreshed at integration)"
  },
  "design": {
   "path": "/tmp/bc-arc-scratch/common-experiment/ce11/design-v2.md",
@@ -27,13 +29,13 @@
    "subject": "Join the real registration environment with the record world"
   }
  ],
- "commits_note": "The documentation commit that adds this receipt follows these commits; it changes no Lean or inventory file. Its root import and focused inventory ran on the working tree with the documentation files and this receipt (rows root-docs and inventory-docs).",
+ "commits_note": "The documentation commit 7bb6dee9 added this receipt; it changes no Lean or inventory file, and its root import and focused inventory ran on the working tree with the documentation files and this receipt (rows root-docs and inventory-docs). The review fix pass is the Lean commit 3b53ddd1 and the documentation commit that carries this version of the receipt (review_fix_pass.commits); that commit changes no Lean or inventory file, and its root and inventory checks ran on its working tree (review_fix_pass.checks rows root-docs and inventory-docs).",
  "files_sha256": {
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentSplitFactor.lean": "4d03be11a07598bc0b5bd47bd37749cacfa3d885744737aa7067489544a5a1f0",
-  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentEnvironmentReal.lean": "f2cd20f7ca610caed901386ba53af539ee3ded33279678bf658a97c590c657f9",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentEnvironmentReal.lean": "5aa184d914af83c6b3fa88f1a9fd92e3773372ace3b098919f21029d7b0d5d83",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "108fa307d14f849404b22e34c53d8e90fd12eee34fc97b3d3f84c8485d726c1e",
-  "beaconcrypt-core/proofs/check-inventory.sh": "d52bc877f86918f6083d74fd0b204d4a567f8461d9a5b9f88d3c0a392756142f",
-  "beaconcrypt-core/proofs/reviewed-inventory.txt": "c66e62aeab181949d107b66c7f3558c49a227178981396491ba07ce6f43d4f11"
+  "beaconcrypt-core/proofs/check-inventory.sh": "b5b86c830cb105d6e55d6c93a27fa0d1db971b6c8832df1a9d059c54c9000b5d",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "d98a44b45551094997dd41692b1dff92a937c1718bc947f227322aad8d5f1e91"
  },
  "modules": [
   {
@@ -99,7 +101,8 @@
      "/tmp/bc-arc-scratch/common-experiment/ce11/inc4/olean/BeaconcryptCore/Computational/PqxdhDeploymentSplitFactor.olean",
      "/tmp/claude-ce11a/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentSplitFactor.lean"
     ]
-   }
+   },
+   "source_changed_in_fix_pass": false
   },
   {
    "name": "PqxdhDeploymentEnvironmentReal",
@@ -238,9 +241,14 @@
     "c1_real_observed",
     "c3_real",
     "postNative_real",
-    "c6_real"
+    "c6_real",
+    "c1_real_analysis",
+    "c1_real_reveal",
+    "c1_real_classical_observed",
+    "c1_real_classical_analysis",
+    "c6_real_public"
    ],
-   "theorem_count": 135,
+   "theorem_count": 140,
    "definitions": [
     "withCache",
     "ctxAdmin",
@@ -261,11 +269,11 @@
     "finishedState"
    ],
    "axiom_profile": {
-    "Classical.choice, Quot.sound, propext": 132,
+    "Classical.choice, Quot.sound, propext": 137,
     "Quot.sound, propext": 2,
     "none": 1
    },
-   "direct_check_final": {
+   "direct_check_inc4": {
     "exit": 0,
     "start": "2026-10-08T06:12:26.852639740Z",
     "end": "2026-10-08T06:12:42.158158057Z",
@@ -292,10 +300,52 @@
      "/tmp/bc-arc-scratch/common-experiment/ce11/inc4/olean/BeaconcryptCore/Computational/PqxdhDeploymentEnvironmentReal.olean",
      "/tmp/claude-ce11a/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentEnvironmentReal.lean"
     ]
-   }
+   },
+   "direct_check_final": {
+    "exit": 0,
+    "start": "2026-10-08T06:39:22.315032171Z",
+    "end": "2026-10-08T06:39:39.385589556Z",
+    "source_sha256": "5aa184d914af83c6b3fa88f1a9fd92e3773372ace3b098919f21029d7b0d5d83",
+    "source_matches_worktree": true,
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/common-experiment/ce11/fix5/olean/BeaconcryptCore/Computational/PqxdhDeploymentEnvironmentReal.olean",
+    "artifact_sha256": "bb84945a4310e554c3934c7c3191b5a53eb946987d69b615ea4df3303269f217",
+    "leanpath_sha256": "b70d63ed340b050a23df3ff0e995946d9b20e80d3925bfb4ecd5e19450e270e7",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/claude-ce11a/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/ce11/fix5/olean/BeaconcryptCore/Computational/PqxdhDeploymentEnvironmentReal.olean",
+     "/tmp/claude-ce11a/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentEnvironmentReal.lean"
+    ]
+   },
+   "source_changed_in_fix_pass": true,
+   "added_in_fix_pass": [
+    "c1_real_analysis",
+    "c1_real_reveal",
+    "c1_real_classical_observed",
+    "c1_real_classical_analysis",
+    "c6_real_public"
+   ],
+   "statements_changed_in_fix_pass": [],
+   "docstrings_changed_in_fix_pass": [
+    "module docstring (n = 0 scope of the per-command lemmas; the new projections)",
+    "onNative_run (names PqxdhDeploymentCompileStep.onNative_run)",
+    "onShared_run (names PqxdhRegistrationSchedule.onShared_run)"
+   ]
   }
  ],
- "statements": 157,
+ "statements": 162,
  "design_statements": {
   "PqxdhDeploymentSplitFactor": {
    "count": 4,
@@ -324,9 +374,9 @@
  "design_names_realized_as": {
   "factoring of buildSplitEnv and finishSplitFwd against PqxdhDeploymentHiddenSplit.buildSplit and finishSplit (increment 3 open point)": "PqxdhDeploymentSplitFactor.buildSplit_factor, finishSplit_factor (forms buildSplitFwd, finishSplitFwd), buildSplitEnv_factor, finishSplitEnv_factor (forms buildSplitEnv, finishSplitEnv)",
   "realReg_splits_create .. realReg_splits_hmac (design-v2 section 5.9)": "PqxdhDeploymentEnvironmentReal.realReg_splits_* (each the law create_law .. hmac_law with LawEq.of_eq and the keep create_keeps .. hmac_keeps)",
-  "Splits created (realReg created) realStep inv (plan section 39: an explicit inv for the real registration)": "PqxdhDeploymentEnvironmentReal.real_splits with inv := fun _ _ => True (known installations use no hidden slot)",
-  "c1_real (CE.game = World.run ... envReal)": "PqxdhDeploymentEnvironmentReal.c1_real (full reassembled state), c1_real_classical (PqxdhDeploymentSecrecy.game), c1_real_runPhase (LQ-F run phase), c1_real_observed (PqxdhRecordLiftWorld.game)",
-  "c6_real (jointly with c1_real)": "PqxdhDeploymentEnvironmentReal.c6_real (PqxdhDeploymentLaterServerGame.game against PqxdhRecordLiftLater.run with envReveal), via postNative_real",
+  "Splits created (realReg created) realStep inv (plan sections 39 and 39a: Splits relative to an admissibility predicate inv, and the per-command real Splits)": "PqxdhDeploymentEnvironmentReal.real_splits with inv := fun _ _ => True (known installations use no hidden slot)",
+  "c1_real (CE.game = World.run ... envReal)": "PqxdhDeploymentEnvironmentReal.c1_real (full reassembled state), c1_real_classical (PqxdhDeploymentSecrecy.game), c1_real_runPhase (LQ-F run phase), c1_real_observed (PqxdhRecordLiftWorld.game); added in the fix pass: c1_real_analysis (PqxdhRecordLiftWorld.analysis), c1_real_reveal (run-phase reveal), c1_real_classical_observed and c1_real_classical_analysis (PqxdhDeploymentSecrecy.game against PqxdhRecordLiftWorld.game and analysis)",
+  "c6_real (jointly with c1_real)": "PqxdhDeploymentEnvironmentReal.c6_real (PqxdhDeploymentLaterServerGame.game against PqxdhRecordLiftLater.run with envReveal), via postNative_real; added in the fix pass: c6_real_public (public form, as join_later_public)",
   "C3 for the real game": "PqxdhDeploymentEnvironmentReal.c3_real"
  },
  "helper_and_instance_theorems": {
@@ -354,7 +404,7 @@
    ]
   },
   "PqxdhDeploymentEnvironmentReal": {
-   "count": 126,
+   "count": 131,
    "names": [
     "effects_query_ctx",
     "effects_ctx",
@@ -481,7 +531,12 @@
     "c1_real_runPhase",
     "c1_real_observed",
     "c3_real",
-    "postNative_real"
+    "postNative_real",
+    "c1_real_analysis",
+    "c1_real_reveal",
+    "c1_real_classical_observed",
+    "c1_real_classical_analysis",
+    "c6_real_public"
    ]
   }
  },
@@ -492,7 +547,7 @@
  ],
  "axiom_profile_from_guards": {
   "propext": 1,
-  "Classical.choice, Quot.sound, propext": 149,
+  "Classical.choice, Quot.sound, propext": 154,
   "none": 2,
   "Quot.sound, propext": 5
  },
@@ -653,7 +708,12 @@
   "PqxdhDeploymentEnvironmentReal.c1_real_observed": "theorem c1_real_observed (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat) (runtime : A)\n    (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)\n    (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) :\n    LawEq ((fun outcome => outcome.map fun value => (value.2.1, value.2.2.1, value.2.2.2.base.produced)) <$>\n        (gameWith setup codec route (fun _ => ()) (PqxdhDeploymentBackend.realReg setup codec route checks) ensureInit\n          identityIndex bounds mode adversary).run' runtime)\n      (PqxdhRecordLiftWorld.game setup codec route\n        (PqxdhDeploymentEnvironment.envReal (n := 0) setup codec checks ensureInit identityIndex runtime) setup.serverKeyId\n          bounds mode adversary)",
   "PqxdhDeploymentEnvironmentReal.c3_real": "theorem c3_real (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat) (runtime : A)\n    (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)\n    (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) :\n    LawEq ((fun outcome => outcome.map fun value => (value.1, value.2.1, value.2.2.1,\n        value.2.2.2.base.native.shared.2.ctx)) <$>\n        (gameWith setup codec route (fun _ => ()) (PqxdhDeploymentBackend.realReg setup codec route checks) ensureInit\n          identityIndex bounds mode adversary).run' runtime)\n      ((fun result => result.1.map fun value => (value.1, value.2.1.1, value.2.1.2, result.2.primitive.2)) <$>\n        PqxdhRecordLiftWorld.run setup codec route\n          (PqxdhDeploymentEnvironment.envReal (n := 0) setup codec checks ensureInit identityIndex runtime) setup.serverKeyId\n            bounds mode adversary)",
   "PqxdhDeploymentEnvironmentReal.postNative_real": "theorem postNative_real (created : PqxdhLiveServerConstruction.Created Unit) :\n    PqxdhDeploymentEnvironmentJoin.postNative setup codec route (PqxdhDeploymentBackend.realReg setup codec route checks created) =\n      PqxdhDeploymentFinishErasure.realPost setup codec checks created",
-  "PqxdhDeploymentEnvironmentReal.c6_real": "theorem c6_real (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat) (runtime : A)\n    (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)\n    (first : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X)\n    (second : X → PqxdhDeploymentLaterServerGame.Reveal → OracleComp PqxdhDeploymentLater.PostSpec Out) :\n    LawEq ((PqxdhDeploymentLaterServerGame.game setup codec checks route ensureInit identityIndex bounds mode first\n        second).run' runtime)\n      ((fun result => result.1.map fun value => (value.1, value.2.1.1,\n          (value.2.1.2, PqxdhDeploymentBackend.laterView (merge value.2.2 result.2)))) <$>\n        PqxdhRecordLiftLater.run setup codec route\n          (PqxdhDeploymentEnvironment.envReal (n := 0) setup codec checks ensureInit identityIndex runtime) setup.serverKeyId\n            bounds mode PqxdhDeploymentEnvironmentJoin.envReveal first second)"
+  "PqxdhDeploymentEnvironmentReal.c6_real": "theorem c6_real (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat) (runtime : A)\n    (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)\n    (first : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X)\n    (second : X → PqxdhDeploymentLaterServerGame.Reveal → OracleComp PqxdhDeploymentLater.PostSpec Out) :\n    LawEq ((PqxdhDeploymentLaterServerGame.game setup codec checks route ensureInit identityIndex bounds mode first\n        second).run' runtime)\n      ((fun result => result.1.map fun value => (value.1, value.2.1.1,\n          (value.2.1.2, PqxdhDeploymentBackend.laterView (merge value.2.2 result.2)))) <$>\n        PqxdhRecordLiftLater.run setup codec route\n          (PqxdhDeploymentEnvironment.envReal (n := 0) setup codec checks ensureInit identityIndex runtime) setup.serverKeyId\n            bounds mode PqxdhDeploymentEnvironmentJoin.envReveal first second)",
+  "PqxdhDeploymentEnvironmentReal.c1_real_analysis": "theorem c1_real_analysis (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat) (runtime : A)\n    (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)\n    (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) :\n    LawEq ((fun outcome => outcome.map fun value => (value.2.1, value.2.2.1, value.2.2.2.base.produced,\n        (⟨value.2.2.2.base.serverRaw, value.2.2.2.base.ownerRaw⟩ : PqxdhRecordLiftWorld.RawCounters))) <$>\n        (gameWith setup codec route (fun _ => ()) (PqxdhDeploymentBackend.realReg setup codec route checks) ensureInit\n          identityIndex bounds mode adversary).run' runtime)\n      (PqxdhRecordLiftWorld.analysis <$> PqxdhRecordLiftWorld.run setup codec route\n        (PqxdhDeploymentEnvironment.envReal (n := 0) setup codec checks ensureInit identityIndex runtime) setup.serverKeyId\n          bounds mode adversary)",
+  "PqxdhDeploymentEnvironmentReal.c1_real_reveal": "theorem c1_real_reveal (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat) (runtime : A)\n    (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)\n    (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) :\n    LawEq ((fun outcome => outcome.map fun value => (value.1, value.2.1, value.2.2.1,\n        (PqxdhDeploymentLater.revealOf value.2.2.2.base.native.owners value.2.2.2.snap, value.2.2.2.log))) <$>\n        (gameWith setup codec route (fun _ => ()) (PqxdhDeploymentBackend.realReg setup codec route checks) ensureInit\n          identityIndex bounds mode adversary).run' runtime)\n      ((fun result => result.1.map fun value => (value.1, value.2.1.1, value.2.1.2,\n          (PqxdhDeploymentLater.revealOf value.2.2.native.owners value.2.2.snap, value.2.2.log))) <$>\n        PqxdhRecordLiftWorld.run setup codec route\n          (PqxdhDeploymentEnvironment.envReal (n := 0) setup codec checks ensureInit identityIndex runtime) setup.serverKeyId\n            bounds mode adversary)",
+  "PqxdhDeploymentEnvironmentReal.c1_real_classical_observed": "theorem c1_real_classical_observed (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat) (runtime : A)\n    (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)\n    (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) :\n    LawEq ((fun outcome => outcome.map fun value => (value.2.1, value.2.2.1, value.2.2.2.produced)) <$>\n        (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit identityIndex bounds mode adversary).run' runtime)\n      (PqxdhRecordLiftWorld.game setup codec route\n        (PqxdhDeploymentEnvironment.envReal (n := 0) setup codec checks ensureInit identityIndex runtime) setup.serverKeyId\n          bounds mode adversary)",
+  "PqxdhDeploymentEnvironmentReal.c1_real_classical_analysis": "theorem c1_real_classical_analysis (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat) (runtime : A)\n    (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)\n    (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) :\n    LawEq ((fun outcome => outcome.map fun value => (value.2.1, value.2.2.1, value.2.2.2.produced,\n        (⟨value.2.2.2.serverRaw, value.2.2.2.ownerRaw⟩ : PqxdhRecordLiftWorld.RawCounters))) <$>\n        (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit identityIndex bounds mode adversary).run' runtime)\n      (PqxdhRecordLiftWorld.analysis <$> PqxdhRecordLiftWorld.run setup codec route\n        (PqxdhDeploymentEnvironment.envReal (n := 0) setup codec checks ensureInit identityIndex runtime) setup.serverKeyId\n          bounds mode adversary)",
+  "PqxdhDeploymentEnvironmentReal.c6_real_public": "theorem c6_real_public (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat) (runtime : A)\n    (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)\n    (first : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X)\n    (second : X → PqxdhDeploymentLaterServerGame.Reveal → OracleComp PqxdhDeploymentLater.PostSpec Out) :\n    LawEq ((fun outcome => outcome.map fun value => (value.1, value.2.1, value.2.2.1,\n        (value.2.2.2.2.1.produced,\n          (⟨value.2.2.2.2.1.serverRaw, value.2.2.2.2.1.ownerRaw⟩ : PqxdhRecordLiftWorld.RawCounters)),\n        (PqxdhDeploymentLater.revealOf value.2.2.2.2.1.native.owners value.2.2.2.1, value.2.2.2.2.2))) <$>\n        (PqxdhDeploymentLaterServerGame.game setup codec checks route ensureInit identityIndex bounds mode first\n          second).run' runtime)\n      ((fun result => result.1.map fun value => (value.1, value.2.1.1, value.2.1.2,\n          PqxdhRecordLiftLater.recordView result.2,\n          (PqxdhDeploymentLater.revealOf value.2.2.native.owners value.2.2.snap, value.2.2.log))) <$>\n        PqxdhRecordLiftLater.run setup codec route\n          (PqxdhDeploymentEnvironment.envReal (n := 0) setup codec checks ensureInit identityIndex runtime) setup.serverKeyId\n            bounds mode PqxdhDeploymentEnvironmentJoin.envReveal first second)"
  },
  "definitions": {
   "PqxdhDeploymentSplitFactor.freeBuild": "noncomputable def freeBuild (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) (value : PqxdhServerAuthSendFactor.Factor)\n    (pending : pqxdh.PendingServerRegistration) (data : Option Pqxdh.Bytes)\n    (server : PqxdhServerAuthEntryFactor.ServerState) :\n    OracleComp TailSpec (RustM (Option PqxdhServerRegistrationPublication.Response × PqxdhServerAuthEntryFactor.ServerState)) :=\n  PqxdhServerAuthLoggedSendFactor.factored (fun entry _ _ => pure (entry, .None))\n    (fun request => liftM (TailSpec.query (.inl request))) source (fun request => liftM (TailSpec.query (.inr request)))\n    value pending data () server",
@@ -681,9 +741,10 @@
  ],
  "deviations_from_design": [
   "New modules PqxdhDeploymentSplitFactor and PqxdhDeploymentEnvironmentReal instead of extending PqxdhDeploymentEnvironment and PqxdhDeploymentEnvironmentJoin, which are published on central and frozen (protocol section 3).",
-  "The admissibility predicate of the real splits is fun _ _ => True: the real environment issues only known-kernel installations, which the World admits without reading or setting a used marker.",
-  "Each per-command law is an exact equality of distributions (an Eq of ProbComp programs); realReg_splits_* take it through LawEq.of_eq.",
-  "The split factoring is stated against ctxEffects admin for any admin, as tail_factor and owner_factor; the World form for CE-11b combines it with effects_ctx.",
+  "The admissibility predicate of the real splits is fun _ _ => True: the real environment issues only known-kernel installations, which the World admits without reading or setting a used marker; most directly, the real instances run with no hidden slot (next item).",
+  "The real instances run with zero hidden slots (n = 0), unlike design m12's expectation that CE-11b reuses the per-command realReg_splits lemmas: realReg is RegImpl KemSK Unit 0, so realReg_splits_* and the Commands section they rest on (createStep_effects .. hmacStep_effects, create_law .. hmac_law, create_keeps .. hmac_keeps) are stated with EnvState KemSK Unit, PqxdhRecordLiftWorld.State 0 and realStep (n := 0) and do not apply as stated to CE-11b's ideal handler at n = 2 with its own backend state (whose create also differs at creation index k). CE-11b reuses the tools before the Commands section, which are generic in n and the backend state, and the proof pattern, and re-proves the per-command laws for its handler (or first generalizes them over n and the backend state against a generic handler); recorded in working plan section 42.",
+  "Each per-command law is an equality of ProbComp programs (hence of distributions), not only an equality in law; realReg_splits_* take it through LawEq.of_eq.",
+  "The split factoring is stated against ctxEffects admin for any admin, as tail_factor and owner_factor. Its World form for CE-11b's hidden splits needs one more step: buildSplitEnv and finishSplitEnv end with an administrative request (installServer or installBeacon at a .hidden slot, or advanceOwner), effects_ctx applies only to programs without administrative effects, and countFree_issue (hence effects_then_free) covers only KnownAdmin requests, which exclude hidden installs; so CE-11b combines buildSplitEnv_factor or finishSplitEnv_factor with effects_then (forwarded part through effects_ctx) and an explicit World computation of the hidden install, or proves a CountFree lemma for hidden installs.",
   "The build factoring uses a free program freeBuild and the naturality of the generic Server build under simulateQ instead of a monad-morphism abstraction.",
   "The real build reuses CE-3's build_override and settle_override with the World's peer kernels as local copies (worldCopies).",
   "c1_real is stated at the full reassembled state with three projections; c6_real is projected to the LQ-F view laterView; both compose with gameWith_classical, gameWith_real and laterWith_real.",
@@ -812,7 +873,7 @@
   "handwritten_lean_rows_after": 1640,
   "rehashed": "proofs/lean/BeaconcryptCore.lean and proofs/check-inventory.sh at each Lean commit (coord.sh inv recount before coord.sh inv rehash; a second rehash unchanged)"
  },
- "forbidden_scan": "no match for sorry, admit, native_decide, axiom, implemented_by, extern, unsafe, opaque, set_option linter and maxHeartbeats in the two modules; the only set_option is autoImplicit false; every theorem has exactly one exact guard",
+ "forbidden_scan": "no match for sorry, admit, native_decide, axiom, implemented_by, extern, unsafe, opaque, set_option linter and maxHeartbeats in the two modules; the only set_option is autoImplicit false; every theorem has exactly one exact guard (rechecked at the fix pass)",
  "git_diff_check": {
   "range": "65e207381dd63c0b25d30faddb58902225d409a5..working tree",
   "exit": 0,
@@ -821,6 +882,216 @@
  "not_run": "make verify (owner-gated), full lake build, mutation testing (no production Rust changed), nix-collect-garbage (forbidden on this machine), the transcript-fidelity cargo check (an integration precondition)",
  "obstacles": "none blocking: every planned statement is proved without a new assumption or contract; the parts not built are listed under not_built with the reason",
  "statement_text_note": "exact_statements and definitions are the source text of each declaration up to its proof; binders declared by section variables (setup, codec, checks, route, created, admin, KemSK, n) are in the enclosing section of the module.",
- "coordination": "Protocol v2: mail peeked only; central moved 65e20738..80560f92 (CE-9b) during the task, the topic branch was not merged (integration step); scratch inc4, olean prefix inc4/olean and leanpath inc4/leanpath registered before creation; the module names are under Claude's registered PqxdhDeployment* prefix; no Codex-registered path or branch was touched; record-lift modules on central were only imported; nothing was deleted. Topic branch claude/ce11a and worktree /tmp/claude-ce11a are the grandfathered names of the earlier increments.",
- "review": "Not reviewed. An independent semantic and hygiene review is required before integration."
+ "coordination": "Protocol v2: mail peeked only; central moved 65e20738..80560f92 (CE-9b) during the task, the topic branch was not merged (integration step); scratch inc4, olean prefix inc4/olean and leanpath inc4/leanpath registered before creation; the module names are under Claude's registered PqxdhDeployment* prefix; no Codex-registered path or branch was touched; record-lift modules on central were only imported; nothing was deleted. Topic branch claude/ce11a and worktree /tmp/claude-ce11a are the grandfathered names of the earlier increments. Fix pass: mail peeked only; central stayed at 80560f92; the topic branch was not merged (integration step). Registered before creation: fix5 (scratch), fix5/olean, fix5/leanpath; nothing was deleted; no Codex-registered path or branch was touched; the working plan (Claude's) was edited (one heading renumbered, section 42 appended), not deleted.",
+ "review": {
+  "reviewed_commit": "7bb6dee925040de2381784427892f989a63d1d8e",
+  "lenses": [
+   "semantic",
+   "hygiene"
+  ],
+  "findings": "one minor and nine nits, one of them a summary of the passed hygiene checks (review_fix_pass.findings)",
+  "evidence": [
+   "/tmp/bc-arc-scratch/common-experiment/ce11/review-inc4-semantic",
+   "/tmp/bc-arc-scratch/common-experiment/ce11/review-inc4-hygiene (scan.py, percommit.py, receipt_check.py, names.py, logs/)"
+  ]
+ },
+ "review_fix_pass": {
+  "reviewed_commit": "7bb6dee925040de2381784427892f989a63d1d8e",
+  "date": "2026-10-08T06:48:15.030591+00:00",
+  "commits": [
+   {
+    "commit": "3b53ddd1cc1f42c29f0199e11784c558e312457b",
+    "subject": "Add the analysis, reveal and public forms of the real join instances"
+   },
+   {
+    "commit": "the fix-pass documentation commit (carries this receipt)",
+    "subject": "Document the review fix pass of CE-11a increment 4"
+   }
+  ],
+  "findings": [
+   {
+    "severity": "minor",
+    "title": "Guide overstates how CE-11b can reuse the real per-command splits",
+    "response": "The guide's names-for-consumers bullet and open point now say that CE-11b reuses the generic tools (sections Bridge to FinishShape, generic in n and the backend state) and the proof pattern of the create, bundle and HMAC laws, and re-proves the per-command laws for its ideal handler (or first generalizes them over n and the backend state against a generic handler); its create differs at creation index k (design-v2 section 6, pre-generated challenge KEM key). New deviations bullet (guide and deviations_from_design below): the real instances run with zero hidden slots (n = 0; realReg : RegImpl KemSK Unit 0, EnvState KemSK Unit, PqxdhRecordLiftWorld.State 0, realStep (n := 0)), unlike design m12's expectation that CE-11b reuses realReg_splits; this is also the most direct reason the trivial inv is enough. The module docstring of PqxdhDeploymentEnvironmentReal and the analysis say the same; working plan section 42 records the revision of m12's expectation.",
+    "commit": "3b53ddd1cc1f42c29f0199e11784c558e312457b (module docstring) and the fix-pass documentation commit"
+   },
+   {
+    "severity": "nit",
+    "title": "The \"World form for CE-11b\" note skips the hidden-install step",
+    "response": "The guide decisions bullet and deviations_from_design now say that buildSplitEnv and finishSplitEnv end with an administrative request (hidden installServer/installBeacon or advanceOwner), that effects_ctx excludes administrative effects and countFree_issue covers only KnownAdmin requests, and that CE-11b therefore combines the factoring with effects_then (forwarded part through effects_ctx, hidden install by an explicit World computation) or with effects_then_free after a count-freeness lemma for hidden installs.",
+    "commit": "the fix-pass documentation commit"
+   },
+   {
+    "severity": "nit",
+    "title": "\"Plan section 39\" is ambiguous because the plan has two sections numbered 39",
+    "response": "Working plan: the second section 39 (increment 3 integrated; next work) is renumbered 39a (as 34a was), and section 42 records it. The guide status paragraph and re-estimate, and this receipt (scope, plan.sections, design_names_realized_as) cite section 39a. The committed snapshot on this branch predates section 39a (central's snapshot at 80560f92 has it as the second section 39); it is refreshed at integration (guide open points).",
+    "commit": "the fix-pass documentation commit"
+   },
+   {
+    "severity": "nit",
+    "title": "Two wording issues in the analysis and the guide",
+    "response": "The analysis says the bundle only ever publishes an owner from a fresh phase, with or without retained coins, moving it to initSent; the guide exactness bullet says \"an equality of programs (hence of distributions)\"; deviations_from_design says the same.",
+    "commit": "the fix-pass documentation commit"
+   },
+   {
+    "severity": "nit",
+    "title": "Increment-3 text that now reads as stale has no pointer to increment 4",
+    "response": "Forward pointers in the guide's increment-3 open points (per-command splits and real instances; split-wrapper factoring) and at the end of the increment-3 analysis paragraph \"What this does not show\". The frozen PqxdhDeploymentEnvironment docstrings are unchanged and remain literally true of that module.",
+    "commit": "the fix-pass documentation commit"
+   },
+   {
+    "severity": "nit",
+    "title": "Optional: real instances of the interface's analysis projection",
+    "response": "Added c1_real_analysis (join_analysis, with the raw-attempt counters), c1_real_reveal (join_reveal), c1_real_classical_observed and c1_real_classical_analysis (observed and analysis projections with PqxdhDeploymentSecrecy.game on the left, from c1_real_classical) and c6_real_public (join_later_public in the form of PqxdhDeploymentLaterServerGame.game, from c6_real and revealOf_fill); none has a hypothesis; each guarded on propext, Classical.choice and Quot.sound.",
+    "commit": "3b53ddd1cc1f42c29f0199e11784c558e312457b"
+   },
+   {
+    "severity": "nit",
+    "title": "Two helper lemmas restate lemmas already in the import closure",
+    "response": "Kept (theorems are never deleted). Their docstrings name PqxdhDeploymentCompileStep.onNative_run and PqxdhRegistrationSchedule.onShared_run; the guide names-for-consumers section asks later work to cite those instead of local copies.",
+    "commit": "3b53ddd1cc1f42c29f0199e11784c558e312457b and the fix-pass documentation commit"
+   },
+   {
+    "severity": "nit",
+    "title": "Commit subject of 1be37a4f is longer than the history norm",
+    "response": "Not amended (pushed). The fix-pass commit subjects have at most 72 characters.",
+    "commit": "none"
+   },
+   {
+    "severity": "nit",
+    "title": "Increment-3 analysis paragraph still says the real per-command splits are not proved",
+    "response": "Addressed by the forward pointer at the end of that paragraph (see the stale-text finding).",
+    "commit": "the fix-pass documentation commit"
+   },
+   {
+    "severity": "nit",
+    "title": "Verification summary: every hygiene check passed (records results; not a defect)",
+    "response": "No action.",
+    "commit": "none"
+   }
+  ],
+  "statement_changes": [],
+  "statement_changes_note": "No earlier theorem statement or definition changed: the exact text of the 157 theorems and 18 definitions recorded at 7bb6dee9 equals the current text (checked by this script); the five added theorems are listed under added_theorems.",
+  "added_theorems": {
+   "PqxdhDeploymentSplitFactor": [],
+   "PqxdhDeploymentEnvironmentReal": [
+    "c1_real_analysis",
+    "c1_real_reveal",
+    "c1_real_classical_observed",
+    "c1_real_classical_analysis",
+    "c6_real_public"
+   ]
+  },
+  "leanpath": {
+   "manifest": "/tmp/bc-arc-scratch/common-experiment/ce11/fix5/leanpath",
+   "sha256": "b70d63ed340b050a23df3ff0e995946d9b20e80d3925bfb4ecd5e19450e270e7",
+   "note": "The published LEAN_PATH of central 65e20738 with the fresh scratch prefix fix5/olean in front, a resolved symlink mirror (1672 links, fix5/mirror.py) of inc4/olean without the increment-4 olean of PqxdhDeploymentEnvironmentReal, into which that module was compiled; root checks wrote fix5/root-checks/<tag>/BeaconcryptCore.olean. Every check ran through coord.sh lean claude, one check per call, timeout 180, lean -j1 -M8000."
+  },
+  "inventory": "coord.sh inv recount left 1640 handwritten Lean rows; fix5/invupdate.py regenerated the PqxdhDeploymentEnvironmentReal block of check-inventory.sh (135 to 140 theorems); coord.sh inv rehash updated the rows of the module and of check-inventory.sh, and a second rehash was unchanged.",
+  "checks": {
+   "module-PqxdhDeploymentEnvironmentReal": {
+    "exit": 0,
+    "start": "2026-10-08T06:39:22.315032171Z",
+    "end": "2026-10-08T06:39:39.385589556Z",
+    "source_sha256": "5aa184d914af83c6b3fa88f1a9fd92e3773372ace3b098919f21029d7b0d5d83",
+    "source_matches_worktree": true,
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/common-experiment/ce11/fix5/olean/BeaconcryptCore/Computational/PqxdhDeploymentEnvironmentReal.olean",
+    "artifact_sha256": "bb84945a4310e554c3934c7c3191b5a53eb946987d69b615ea4df3303269f217",
+    "leanpath_sha256": "b70d63ed340b050a23df3ff0e995946d9b20e80d3925bfb4ecd5e19450e270e7",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/claude-ce11a/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/ce11/fix5/olean/BeaconcryptCore/Computational/PqxdhDeploymentEnvironmentReal.olean",
+     "/tmp/claude-ce11a/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentEnvironmentReal.lean"
+    ]
+   },
+   "root-lean": {
+    "exit": 0,
+    "start": "2026-10-08T06:40:00.121468914Z",
+    "end": "2026-10-08T06:40:03.959466226Z",
+    "log_bytes": 0,
+    "root_source_sha256": "108fa307d14f849404b22e34c53d8e90fd12eee34fc97b3d3f84c8485d726c1e",
+    "artifact": "/tmp/bc-arc-scratch/common-experiment/ce11/fix5/root-checks/lean/BeaconcryptCore.olean",
+    "artifact_sha256": "b6e1e99d4a07f1f9d5622c8077cf4e6bd6452c78e095ea95b0e3d93370345502",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/claude-ce11a/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/ce11/fix5/root-checks/lean/BeaconcryptCore.olean",
+     "/tmp/claude-ce11a/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+    ]
+   },
+   "inventory-lean": {
+    "exit": 0,
+    "start": "2026-10-08T06:40:07Z",
+    "end": "2026-10-08T06:41:28Z",
+    "head_at_run": "7bb6dee925040de2381784427892f989a63d1d8e",
+    "working_tree_dirt_lines": 3,
+    "log_sha256": "bb4a9df170aa3f38c3da2fe3517e163b7e97ce2934add93de58891c169556a64",
+    "last_line": "Formal-verification inventory matches the reviewed boundary."
+   },
+   "root-docs": {
+    "exit": 0,
+    "start": "2026-10-08T06:46:43.495052245Z",
+    "end": "2026-10-08T06:46:46.889831068Z",
+    "log_bytes": 0,
+    "root_source_sha256": "108fa307d14f849404b22e34c53d8e90fd12eee34fc97b3d3f84c8485d726c1e",
+    "artifact": "/tmp/bc-arc-scratch/common-experiment/ce11/fix5/root-checks/docs/BeaconcryptCore.olean",
+    "artifact_sha256": "b6e1e99d4a07f1f9d5622c8077cf4e6bd6452c78e095ea95b0e3d93370345502",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/claude-ce11a/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/ce11/fix5/root-checks/docs/BeaconcryptCore.olean",
+     "/tmp/claude-ce11a/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+    ]
+   },
+   "inventory-docs": {
+    "exit": 0,
+    "start": "2026-10-08T06:46:49Z",
+    "end": "2026-10-08T06:48:11Z",
+    "head_at_run": "3b53ddd1cc1f42c29f0199e11784c558e312457b",
+    "working_tree_dirt_lines": 3,
+    "log_sha256": "a7e88cefc18e4ef82f2fcf0f8c6a5e9e74c3af05c80df7b0143cd77b2c7d1f40",
+    "last_line": "Formal-verification inventory matches the reviewed boundary."
+   },
+   "git_diff_check": {
+    "range": "7bb6dee925040de2381784427892f989a63d1d8e..working tree",
+    "exit": 0,
+    "output": ""
+   }
+  },
+  "not_run": "make verify, full lake build, mutation testing (no production Rust changed), nix-collect-garbage (forbidden), the transcript-fidelity check (integration precondition)"
+ },
+ "updated": "2026-10-08T06:48:15.033291+00:00"
 }
