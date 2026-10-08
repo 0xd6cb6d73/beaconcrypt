@@ -6,7 +6,7 @@ import BeaconcryptCore.Computational.PqxdhDeploymentBackend
 
 A pointed registration handler (`PointedReg L`) for a lazily sampled cache focused by the lens `L` of the extended state pairs a registration handler `reg` with a pointed handler: in law, every command of `reg` is its pointed step followed by the completion of the cache point the step reports (`factor`), and every pointed step commutes with completions (`oblivious`). The erased handler forgets the reported points and completes nothing. `erase_game` is the global erasure for the run phase of `gameWith` (critique M4, CE plan section 26): whenever the fixed steps of the handler (coins, BLAKE2b, records) commute with completions of the cache, the games with `reg` and with the erased handler have the same law of the Server's public data, the adversary's output, the ledger and every projection of the final state that does not see the cache. `erase_later` is the same equality for the LQ-F later game `laterWith`, whose post phase is a pluggable handler `postWith` that commutes with completions (critique m7) and whose reveal does not see the cache.
 
-`FinishPair` is the CTX-cache instance (C7): for the CTX lens the fixed steps commute by `PqxdhDeploymentBackend.fixed_commute_ctx`, so `erase_game_ctx` and `erase_later_ctx` need no premise beyond the pointed pair itself, and they compare the final states with the CTX cache emptied. The real registration handler is a pair with no point (`realPair`), and its later game with the real post phase `realPost` is the LQ-F game (`laterWith_real`). `factor_focus` turns a pointed inner step on a sub-state into a pointed step of the whole state, the construction the ideal registration of CE-11b uses for its hidden finish with `PqxdhDeploymentHiddenEntry.finishFactor_pointed`.
+`FinishPair` is the CTX-cache instance (C7): for the CTX lens the fixed steps commute by `PqxdhDeploymentBackend.fixed_commute_ctx`, so `erase_game_ctx` and `erase_later_ctx` need no premise beyond the pointed pair itself, and they compare the final states with the CTX cache emptied. The real registration handler is a pair with no point (`realPair`), and its later game with the real post phase `realPost` is the LQ-F game (`laterWith_real`). `factor_focus` turns a pointed inner step on a sub-state into a pointed step of the whole state, the construction the ideal registration of CE-11b uses for its hidden finish with `PqxdhDeploymentHiddenEntry.finishFactor_pointed`. `factor_prefix` and `oblivious_prefix` put a prefix in front of a family of pointed steps (the pointed form needs nothing of the prefix; obliviousness needs the prefix to commute with completions), and `factor_suffix` and `oblivious_suffix` put a suffix that commutes with completions after a pointed step, which passes its point on. Together they give the pointed form of a step made of stateful, probabilistic steps before a focused pointed step and a commuting step after it, the shape expected for the ideal hidden finish of CE-11b.
 
 C7 for the ideal game `CE.idealGame g` itself is the instance of `erase_game_ctx` at the ideal registration handler, built in CE-11b. These are equalities in law of a lazily sampled cache. No security claim is made here.
 -/
@@ -107,6 +107,58 @@ theorem oblivious_focus {σ ρ α β : Type} (L : CacheLens spec₀ σ) (M : Cac
     (fun s => ?_) init_set (fun s c => by rw [inner_set]) fin_set fin_complete innerCommutes
   rw [StateT.run_map, StateT.run_map, Functor.map_map]
   simp only [StateT.run, Functor.map_map]
+
+/-! ### Pointed steps after a prefix and before a commuting suffix -/
+
+/-- A pointed step after a prefix: if every continuation of a prefix is, in law, its pointed step followed by the completion of the reported point, then the whole step is, in law, the prefix followed by the pointed continuation, followed by the completion of the point it reports. The prefix may read and write the cache. -/
+theorem factor_prefix {σ γ α : Type} (L : CacheLens spec₀ σ) (pre : StateT σ ProbComp γ)
+    (step : γ → StateT σ ProbComp α) (pointed : γ → StateT σ ProbComp (α × Option spec₀.Domain))
+    (stepFactor : ∀ c s, LawEq ((step c).run s)
+      ((pointed c).run s >>= fun r => (r.1.1, ·) <$> L.completeOpt r.1.2 r.2))
+    (s : σ) :
+    LawEq ((pre >>= step).run s)
+      ((pre >>= pointed).run s >>= fun r => (r.1.1, ·) <$> L.completeOpt r.1.2 r.2) := by
+  rw [StateT.run_bind, StateT.run_bind, bind_assoc]
+  exact LawEq.bind (LawEq.refl _) fun p => stepFactor p.1 p.2
+
+/-- The pointed step after a prefix commutes with completions when the prefix and every pointed continuation do. -/
+theorem oblivious_prefix {σ γ α : Type} (L : CacheLens spec₀ σ) (pre : StateT σ ProbComp γ)
+    (pointed : γ → StateT σ ProbComp (α × Option spec₀.Domain))
+    (preCommutes : Commutes L pre) (pointedCommutes : ∀ c, Commutes L (Prod.fst <$> pointed c)) :
+    Commutes L (Prod.fst <$> (pre >>= pointed)) := by
+  rw [map_bind]
+  exact LazyOracleDiscard.commutes_bind L preCommutes pointedCommutes
+
+/-- A commuting suffix after a pointed step: if a step is, in law, its pointed step followed by the completion of the reported point, and every suffix commutes with completions, then the step followed by the suffix is, in law, the pointed step followed by the suffix, which passes the point on, followed by the completion of that point. -/
+theorem factor_suffix {σ α β : Type} (L : CacheLens spec₀ σ) (step : StateT σ ProbComp α)
+    (pointed : StateT σ ProbComp (α × Option spec₀.Domain))
+    (stepFactor : ∀ s, LawEq (step.run s) (pointed.run s >>= fun r => (r.1.1, ·) <$> L.completeOpt r.1.2 r.2))
+    (suffix : α → StateT σ ProbComp β) (suffixCommutes : ∀ a, Commutes L (suffix a)) (s : σ) :
+    LawEq ((step >>= suffix).run s)
+      ((pointed >>= fun p => (·, p.2) <$> suffix p.1).run s >>= fun r => (r.1.1, ·) <$> L.completeOpt r.1.2 r.2) := by
+  rw [StateT.run_bind]
+  refine (LawEq.bind (stepFactor s) fun r => LawEq.refl ((suffix r.1).run r.2)).trans ?_
+  rw [StateT.run_bind, bind_assoc, bind_assoc]
+  refine LawEq.bind (LawEq.refl _) fun p => ?_
+  rcases p with ⟨⟨a, point⟩, after⟩
+  rw [bind_map_left, StateT.run_map, bind_map_left]
+  cases point with
+  | none =>
+      simp only [StateLens.completeOpt, pure_bind, map_pure, Prod.mk.eta, bind_pure]
+      exact LawEq.refl _
+  | some t => exact suffixCommutes a t after
+
+/-- The pointed step followed by a commuting suffix commutes with completions when the pointed step does. -/
+theorem oblivious_suffix {σ α β : Type} (L : CacheLens spec₀ σ)
+    (pointed : StateT σ ProbComp (α × Option spec₀.Domain)) (suffix : α → StateT σ ProbComp β)
+    (pointedCommutes : Commutes L (Prod.fst <$> pointed)) (suffixCommutes : ∀ a, Commutes L (suffix a)) :
+    Commutes L (Prod.fst <$> (pointed >>= fun p => (·, p.2) <$> suffix p.1)) := by
+  have shape : (Prod.fst <$> (pointed >>= fun p => (·, p.2) <$> suffix p.1) : StateT σ ProbComp β) =
+      (Prod.fst <$> pointed) >>= suffix := by
+    rw [map_bind, bind_map_left]
+    simp only [Functor.map_map, id_map']
+  rw [shape]
+  exact LazyOracleDiscard.commutes_bind L pointedCommutes suffixCommutes
 
 /-! ### The global erasure for the pluggable native game -/
 
@@ -494,6 +546,38 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentFinishErasure.oblivious_focu
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentFinishErasure.oblivious_focus
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentFinishErasure.factor_prefix' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentFinishErasure.factor_prefix
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentFinishErasure.oblivious_prefix' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentFinishErasure.oblivious_prefix
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentFinishErasure.factor_suffix' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentFinishErasure.factor_suffix
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentFinishErasure.oblivious_suffix' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentFinishErasure.oblivious_suffix
 
 /--
 info: 'BeaconcryptCore.Computational.PqxdhDeploymentFinishErasure.pointedWith_erased' depends on axioms: [propext,

@@ -6,9 +6,9 @@ import BeaconcryptCore.Computational.PqxdhDeploymentFinishErasure
 
 A slot service (`SlotService S n`) is how a registration handler obtains the 108-byte key-schedule output of a hidden slot from a service state `S` in its backend. Three services are compared: `tableService` is item 2's S7 persistent lazy table (`PqxdhRecordLiftLazyTable`, with query counts), `lazyService` is VCVio's lazily sampled cache of outputs, and `splitService` keeps the output as environment material (key32, nonce12) and a world seed (next32, right32), each lazily sampled at the first touch of the slot. `ServiceProj inv proj svc₁ svc₂` (critique M8's "touch" as a relation) says that the state projection `proj` carries every step of `svc₁` to the corresponding step of `svc₂` in law, from states satisfying `inv`, and preserves `inv`. The table forgets its counts (`table_service_proj`, by `LazyOracleDiscard.impl_project`), and the split joins material and seed whenever both or neither are present (`split_service_proj`, by the 108-byte bijection `PqxdhDeploymentHiddenLayout.uniform_split`).
 
-`CoreNatural core` (M8's "uses" as a relation) says that a registration core reads slot outputs only through its service: every step of the core transports along every service projection. `represent` is the game-level transport: for a natural core, the game with one service and the game with another have the same law up to the service projection of the final state (`lawEq_run_simulateQ_of_proj` is the underlying transport in law of a simulation along a state projection gated by an invariant), and `represent_split` compares the table and the split representations through the lazy one. `defer` is the generic seed deferral: an instance of `PqxdhDeploymentFinishErasure.erase_game` at the hidden-seed lens, which erases seed completions that the handler reports as discarded, comparing final states with the seed table emptied.
+`CoreNatural core` (M8's "uses" as a relation) says that a registration core reads slot outputs only through its service: every step of the core transports along every service projection. `represent` is the game-level transport: for a natural core, the game with one service and the game with another have the same law up to the service projection of the final state (`lawEq_run_simulateQ_of_proj` is the underlying transport in law of a simulation along a state projection gated by an invariant), and `represent_split` compares the table and the split representations through the lazy one. `defer` is the generic seed deferral: an instance of `PqxdhDeploymentFinishErasure.erase_game` at the hidden-seed lens, which erases seed completions that the handler reports as discarded, comparing final states with the seed table emptied. `defer_later` is the same deferral for the LQ-F later game `laterWith`, an instance of `PqxdhDeploymentFinishErasure.erase_later` at the hidden-seed lens, for a post phase that commutes with seed completions; the real post phase does (`realPost_commutes_seed`).
 
-The kernel identities of the split wrappers and the step "C7-erased factor form equals split form" that makes the seed completions discardable are not part of this module. These are equalities in law of lazily sampled caches and uniform bytes. No security claim is made here.
+The kernel identities of the split wrappers and the step "C7-erased factor form equals split form" that makes the seed completions discardable are not part of this module. Nor is a later-game counterpart of `represent`: it needs, besides `CoreNatural`, a naturality premise for the post phase along `mapBackend`, because a post phase may read the backend (in the ideal game, HMAC reads the R1 tables, which share the backend with the slot service state). These are equalities in law of lazily sampled caches and uniform bytes. No security claim is made here.
 -/
 
 open OracleComp OracleSpec CoreModels Aeneas
@@ -343,7 +343,7 @@ theorem seedFree_set {KemSK Bk : Type} (state : XState KemSK Bk n)
     (cache : (PqxdhRecordLiftWorld.SeedSpec n).QueryCache) : seedFree (seedLens.set state cache) = seedFree state := rfl
 
 section Defer
-variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Bk Reader Response A X : Type}
+variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Bk Reader Response A X Out : Type}
   (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
 
 /-- The seed deferral (generic, M4 form on the seed lens): if each constructed Server's registration handler is, in law, a pointed handler followed by the completion of a reported seed-table point, and the pointed steps commute with seed completions, then the game with the handler and the game with its erased handler have the same law of the Server's public data, the output, the ledger and the final state with the seed table emptied. -/
@@ -357,6 +357,30 @@ theorem defer (pair : PqxdhLiveServerConstruction.Created Unit → PointedReg (s
   PqxdhDeploymentFinishErasure.erase_game setup codec route pair
     (fun created query => PqxdhDeploymentBackend.fixed_commute_seed setup codec route (pair created).reg query)
     seedFree seedFree_set init ensureInit identityIndex bounds mode adversary runtime
+
+/-- The seed deferral for the LQ-F later game (generic, on the seed lens): if each constructed Server's registration handler is, in law, a pointed handler followed by the completion of a reported seed-table point, the pointed steps commute with seed completions, and the post phase commutes with seed completions, then the later games with the handler and with its erased handler have the same law of the Server's public data, the second adversary's output, the ledger and the final state with the seed table emptied. The LQ-F reveal does not read the seed table. -/
+theorem defer_later
+    (pair : PqxdhLiveServerConstruction.Created Unit → PointedReg (seedLens (KemSK := KemSK) (Bk := Bk) (n := n)))
+    (postWith : PqxdhLiveServerConstruction.Created Unit →
+      QueryImpl PqxdhDeploymentLater.PostSpec (StateT (XState KemSK Bk n) ProbComp))
+    (postCommutes : ∀ created query, Commutes seedLens (postWith created query))
+    (init : PqxdhLiveServerConstruction.Created Unit → Bk) (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat)
+    (bounds : FreshBounds) (mode : Mode) (first : OracleComp (ModeSpec mode) X)
+    (second : X → PqxdhDeploymentLaterServerGame.Reveal → OracleComp PqxdhDeploymentLater.PostSpec Out) (runtime : A) :
+    LawEq (outcomeMap seedFree <$> (PqxdhDeploymentFinishErasure.laterWith setup codec route init
+        (fun created => (pair created).reg) postWith ensureInit identityIndex bounds mode first second).run runtime)
+      (outcomeMap seedFree <$> (PqxdhDeploymentFinishErasure.laterWith setup codec route init
+        (fun created => (pair created).erased) postWith ensureInit identityIndex bounds mode first second).run runtime) :=
+  PqxdhDeploymentFinishErasure.erase_later setup codec route pair
+    (fun created query => PqxdhDeploymentBackend.fixed_commute_seed setup codec route (pair created).reg query)
+    postWith postCommutes (fun _ _ _ => rfl) seedFree seedFree_set init ensureInit identityIndex bounds mode first second
+    runtime
+
+/-- The real post phase (fresh coins, the native HMAC and BLAKE2b on the deployment state) commutes with completions of the hidden-seed table. -/
+theorem realPost_commutes_seed (checks : Checks) (created : PqxdhLiveServerConstruction.Created Unit)
+    (query : PqxdhDeploymentLater.PostSpec.Domain) :
+    Commutes seedLens (PqxdhDeploymentFinishErasure.realPost (Bk := Bk) (n := n) setup codec checks created query) :=
+  PqxdhDeploymentBackend.onBase_seed _
 
 end Defer
 
@@ -465,3 +489,19 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentSeedSplit.defer' depends on 
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentSeedSplit.defer
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentSeedSplit.defer_later' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentSeedSplit.defer_later
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentSeedSplit.realPost_commutes_seed' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentSeedSplit.realPost_commutes_seed

@@ -257,7 +257,7 @@ end Finish
 /-- A fixed seed standing for the World's seed in the split forms. -/
 def dummySeed : PqxdhRecordLiftSeed.Seed := (List.Vector.replicate 32 0, List.Vector.replicate 32 0)
 
-/-- A fixed kernel standing for "installed by the World": the split forms stage it in place of the seed kernel; it carries no slot data. -/
+/-- A fixed kernel standing for "installed by the World": `buildSplit` publishes it as the Server peer's kernel and `finishSplit` stages it as the Beacon kernel, in place of the World's kernel of the slot's seed; it carries no slot data. It is a concrete, predictable kernel (the World's Beacon kernel of the all-zero `dummySeed`, used on both sides) and is meant only as a marker: no record operation may run on it, and it is always replaced at install by the World's kernel of the seed, the replacement under which `build_factor_split` and `finish_factor_split` give the factor forms. Nothing in this module enforces that use; the environment of unit 11a-3 is to prove it as the invariant `env_stripped` (every kernel the environment holds is this placeholder, and the World's kernels fill them at the merge). -/
 noncomputable def placeholderKernel : ConcreteRatchetKernel := PqxdhRecordLiftWorld.kernel .beacon dummySeed
 
 /-- Replacing the staged kernel twice keeps the second replacement. -/

@@ -31635,14 +31635,22 @@ require_line_count 1 '^theorem realHandler_commutes_ctx([[:space:]]|$)' "$select
 
 selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentFinishErasure.lean
 require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentFinishErasure$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentFinishErasure root import"
-require_line_count 16 '^theorem ' "$selected_source_module" "PqxdhDeploymentFinishErasure theorem inventory"
-require_line_count 16 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentFinishErasure guarded dependencies"
+require_line_count 20 '^theorem ' "$selected_source_module" "PqxdhDeploymentFinishErasure theorem inventory"
+require_line_count 20 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentFinishErasure guarded dependencies"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentFinishErasure\.PointedReg\.ofCommuting_erased$' "$selected_source_module" "PqxdhDeploymentFinishErasure dependency BeaconcryptCore.Computational.PqxdhDeploymentFinishErasure.PointedReg.ofCommuting_erased"
 require_line_count 1 '^theorem PointedReg\.ofCommuting_erased([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentFinishErasure theorem PointedReg.ofCommuting_erased"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentFinishErasure\.factor_focus$' "$selected_source_module" "PqxdhDeploymentFinishErasure dependency BeaconcryptCore.Computational.PqxdhDeploymentFinishErasure.factor_focus"
 require_line_count 1 '^theorem factor_focus([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentFinishErasure theorem factor_focus"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentFinishErasure\.oblivious_focus$' "$selected_source_module" "PqxdhDeploymentFinishErasure dependency BeaconcryptCore.Computational.PqxdhDeploymentFinishErasure.oblivious_focus"
 require_line_count 1 '^theorem oblivious_focus([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentFinishErasure theorem oblivious_focus"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentFinishErasure\.factor_prefix$' "$selected_source_module" "PqxdhDeploymentFinishErasure dependency BeaconcryptCore.Computational.PqxdhDeploymentFinishErasure.factor_prefix"
+require_line_count 1 '^theorem factor_prefix([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentFinishErasure theorem factor_prefix"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentFinishErasure\.oblivious_prefix$' "$selected_source_module" "PqxdhDeploymentFinishErasure dependency BeaconcryptCore.Computational.PqxdhDeploymentFinishErasure.oblivious_prefix"
+require_line_count 1 '^theorem oblivious_prefix([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentFinishErasure theorem oblivious_prefix"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentFinishErasure\.factor_suffix$' "$selected_source_module" "PqxdhDeploymentFinishErasure dependency BeaconcryptCore.Computational.PqxdhDeploymentFinishErasure.factor_suffix"
+require_line_count 1 '^theorem factor_suffix([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentFinishErasure theorem factor_suffix"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentFinishErasure\.oblivious_suffix$' "$selected_source_module" "PqxdhDeploymentFinishErasure dependency BeaconcryptCore.Computational.PqxdhDeploymentFinishErasure.oblivious_suffix"
+require_line_count 1 '^theorem oblivious_suffix([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentFinishErasure theorem oblivious_suffix"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentFinishErasure\.pointedWith_erased$' "$selected_source_module" "PqxdhDeploymentFinishErasure dependency BeaconcryptCore.Computational.PqxdhDeploymentFinishErasure.pointedWith_erased"
 require_line_count 1 '^theorem pointedWith_erased([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentFinishErasure theorem pointedWith_erased"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentFinishErasure\.pointedWith_factor$' "$selected_source_module" "PqxdhDeploymentFinishErasure dependency BeaconcryptCore.Computational.PqxdhDeploymentFinishErasure.pointedWith_factor"
@@ -31674,8 +31682,8 @@ require_line_count 1 '^theorem laterWith_real([[:space:]]|$)' "$selected_source_
 
 selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentSeedSplit.lean
 require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentSeedSplit$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentSeedSplit root import"
-require_line_count 13 '^theorem ' "$selected_source_module" "PqxdhDeploymentSeedSplit theorem inventory"
-require_line_count 13 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentSeedSplit guarded dependencies"
+require_line_count 15 '^theorem ' "$selected_source_module" "PqxdhDeploymentSeedSplit theorem inventory"
+require_line_count 15 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentSeedSplit guarded dependencies"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSeedSplit\.LawEq\.bind_support$' "$selected_source_module" "PqxdhDeploymentSeedSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentSeedSplit.LawEq.bind_support"
 require_line_count 1 '^theorem LawEq\.bind_support([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSeedSplit theorem LawEq.bind_support"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSeedSplit\.lawEq_run_simulateQ_of_proj$' "$selected_source_module" "PqxdhDeploymentSeedSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentSeedSplit.lawEq_run_simulateQ_of_proj"
@@ -31702,6 +31710,10 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem seedFree_set([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSeedSplit theorem seedFree_set"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSeedSplit\.defer$' "$selected_source_module" "PqxdhDeploymentSeedSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentSeedSplit.defer"
 require_line_count 1 '^theorem defer([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSeedSplit theorem defer"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSeedSplit\.defer_later$' "$selected_source_module" "PqxdhDeploymentSeedSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentSeedSplit.defer_later"
+require_line_count 1 '^theorem defer_later([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSeedSplit theorem defer_later"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSeedSplit\.realPost_commutes_seed$' "$selected_source_module" "PqxdhDeploymentSeedSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentSeedSplit.realPost_commutes_seed"
+require_line_count 1 '^theorem realPost_commutes_seed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSeedSplit theorem realPost_commutes_seed"
 
 # CE-11a split forms of the hidden-entry wrappers and their kernel identities (increment 2, unit 11a-2b).
 
