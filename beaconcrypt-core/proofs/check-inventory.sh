@@ -32915,8 +32915,8 @@ require_line_count 1 '^theorem finishSplitEnv_factor([[:space:]]|$)' "$selected_
 
 selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentEnvironmentReal.lean
 require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentReal$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentEnvironmentReal root import"
-require_line_count 135 '^theorem ' "$selected_source_module" "PqxdhDeploymentEnvironmentReal theorem inventory"
-require_line_count 135 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentEnvironmentReal guarded dependencies"
+require_line_count 140 '^theorem ' "$selected_source_module" "PqxdhDeploymentEnvironmentReal theorem inventory"
+require_line_count 140 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentEnvironmentReal guarded dependencies"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEnvironmentReal\.effects_query_ctx$' "$selected_source_module" "PqxdhDeploymentEnvironmentReal dependency BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentReal.effects_query_ctx"
 require_line_count 1 '^theorem effects_query_ctx([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEnvironmentReal theorem effects_query_ctx"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEnvironmentReal\.effects_ctx$' "$selected_source_module" "PqxdhDeploymentEnvironmentReal dependency BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentReal.effects_ctx"
@@ -33187,6 +33187,16 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem postNative_real([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEnvironmentReal theorem postNative_real"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEnvironmentReal\.c6_real$' "$selected_source_module" "PqxdhDeploymentEnvironmentReal dependency BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentReal.c6_real"
 require_line_count 1 '^theorem c6_real([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEnvironmentReal theorem c6_real"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEnvironmentReal\.c1_real_analysis$' "$selected_source_module" "PqxdhDeploymentEnvironmentReal dependency BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentReal.c1_real_analysis"
+require_line_count 1 '^theorem c1_real_analysis([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEnvironmentReal theorem c1_real_analysis"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEnvironmentReal\.c1_real_reveal$' "$selected_source_module" "PqxdhDeploymentEnvironmentReal dependency BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentReal.c1_real_reveal"
+require_line_count 1 '^theorem c1_real_reveal([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEnvironmentReal theorem c1_real_reveal"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEnvironmentReal\.c1_real_classical_observed$' "$selected_source_module" "PqxdhDeploymentEnvironmentReal dependency BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentReal.c1_real_classical_observed"
+require_line_count 1 '^theorem c1_real_classical_observed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEnvironmentReal theorem c1_real_classical_observed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEnvironmentReal\.c1_real_classical_analysis$' "$selected_source_module" "PqxdhDeploymentEnvironmentReal dependency BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentReal.c1_real_classical_analysis"
+require_line_count 1 '^theorem c1_real_classical_analysis([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEnvironmentReal theorem c1_real_classical_analysis"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEnvironmentReal\.c6_real_public$' "$selected_source_module" "PqxdhDeploymentEnvironmentReal dependency BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentReal.c6_real_public"
+require_line_count 1 '^theorem c6_real_public([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEnvironmentReal theorem c6_real_public"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"

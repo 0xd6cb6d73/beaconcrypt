@@ -4,7 +4,7 @@ import BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentJoin
 /-!
 # The real registration environment joins the record world (CE-11a, increment 4)
 
-The real registration environment `PqxdhDeploymentEnvironment.envReal` splits the real registration handler `PqxdhDeploymentBackend.realReg` (the LQ-F run-phase handler) command by command (`realReg_splits_create`, `realReg_splits_bundle`, `realReg_splits_accept`, `realReg_splits_build`, `realReg_splits_finish`, `realReg_splits_hmac`, together `real_splits`), relative to the trivial admissibility predicate: the real environment installs only known kernels, which use no hidden slot, so no used-marker condition is needed. Instantiating the generic join of increment 3 gives C1 for the real game (`c1_real`, with the projections `c1_real_classical` onto `PqxdhDeploymentSecrecy.game`, `c1_real_runPhase` onto the LQ-F run phase and `c1_real_observed` onto `PqxdhRecordLiftWorld.game`), C3 (`c3_real`) and C6 (`c6_real`: the LQ-F later game against `PqxdhRecordLiftLater.run` with the environment's reveal `envReveal`, through `postNative_real`). This is the validation (critique m12) that the hypotheses of the generic join are satisfiable for the real game; for each command the reassembled law is the real handler's exactly (`create_law`, `bundle_law`, `accept_law`, `build_law`, `finish_law`, `hmac_law`) and admissibility is kept (`create_keeps` to `hmac_keeps`).
+The real registration environment `PqxdhDeploymentEnvironment.envReal` splits the real registration handler `PqxdhDeploymentBackend.realReg` (the LQ-F run-phase handler) command by command (`realReg_splits_create`, `realReg_splits_bundle`, `realReg_splits_accept`, `realReg_splits_build`, `realReg_splits_finish`, `realReg_splits_hmac`, together `real_splits`), relative to the trivial admissibility predicate: the real registration runs with no hidden slot (`n = 0`) and its environment installs only known kernels, so no used-marker condition is needed. Instantiating the generic join of increment 3 gives C1 for the real game (`c1_real`, with the projections `c1_real_classical` onto `PqxdhDeploymentSecrecy.game`, `c1_real_runPhase` onto the LQ-F run phase, `c1_real_observed` onto `PqxdhRecordLiftWorld.game`, `c1_real_analysis` onto `PqxdhRecordLiftWorld.analysis` and `c1_real_reveal` onto the run-phase reveal, and the observed and analysis projections with `PqxdhDeploymentSecrecy.game` on the left, `c1_real_classical_observed` and `c1_real_classical_analysis`), C3 (`c3_real`) and C6 (`c6_real`: the LQ-F later game against `PqxdhRecordLiftLater.run` with the environment's reveal `envReveal`, through `postNative_real`, and its public form `c6_real_public`). The per-command lemmas (section `Commands`) are stated for this handler only, at `n = 0` with the unit backend state; the tools before them (sections `Bridge` to `FinishShape`) are generic in `n` and the backend state. This is the validation (critique m12) that the hypotheses of the generic join are satisfiable for the real game; for each command the reassembled law is the real handler's exactly (`create_law`, `bundle_law`, `accept_law`, `build_law`, `finish_law`, `hmac_law`) and admissibility is kept (`create_keeps` to `hmac_keeps`).
 
 **The World read on its cache.** A program of coin and BLAKE2b effects, run by the World with its counts forgotten, is that program read through `PqxdhDeploymentEnvironment.ctxEffects` on the World's shared CTX cache (`effects_query_ctx`, `effects_ctx`, `effects_coins`). `CountFree` programs, whose World run does not depend on the counts, include every record-relevant request with a known kernel (`countFree_issue`, `countFree_ownerEffect`, `countFree_ownerChange`, `countFree_serverEffect`), and `effects_then_free` composes a forwarded program with such a continuation. The requests the real environment issues are computed explicitly (`effects_append`, `effects_advance`, `effects_installServer`, `effects_installBeacon`).
 
@@ -1417,12 +1417,12 @@ variable {ι : Type} {baseSpec : OracleSpec ι} {Reader Response : Type}
   (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
   (route : RawCtxServerRouting.SenderDecoder) (created : PqxdhLiveServerConstruction.Created Unit)
 
-/-- One run of a registration step on the deployment state. -/
+/-- One run of a registration step on the deployment state. The same statement as `PqxdhDeploymentCompileStep.onNative_run`, which later work should cite instead. -/
 theorem onNative_run {α : Type} (work : PqxdhRegistrationSchedule.Game KemSK α) (state : PqxdhDeploymentNative.State KemSK) :
     (PqxdhDeploymentNative.onNative work).run state =
       (fun result => (result.1, { state with native := result.2 })) <$> work.run state.native := rfl
 
-/-- One run of a shared native step on the registration state. -/
+/-- One run of a shared native step on the registration state. Definitionally the statement of `PqxdhRegistrationSchedule.onShared_run` (`work.run state.shared` is `work state.shared`), which later work should cite instead. -/
 theorem onShared_run {α : Type} (work : NativeGame KemSK α) (state : PqxdhRegistrationSchedule.State KemSK) :
     (PqxdhRegistrationSchedule.onShared work).run state =
       (fun result => (result.1, { state with shared := result.2 })) <$> work.run state.shared := rfl
@@ -2643,6 +2643,112 @@ theorem c6_real (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat) (run
     funext result
     rcases result with ⟨_ | value, w⟩ <;> rfl
 
+/-- The analysis projection of C1 for the real registration (`PqxdhRecordLiftWorld.analysis`): the adversary's output, the ledger, the produced frames and the raw-attempt counters of the common deployment experiment with the real registration handler have the law of the record world's analysis projection with the real environment. -/
+theorem c1_real_analysis (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat) (runtime : A)
+    (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
+    (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) :
+    LawEq ((fun outcome => outcome.map fun value => (value.2.1, value.2.2.1, value.2.2.2.base.produced,
+        (⟨value.2.2.2.base.serverRaw, value.2.2.2.base.ownerRaw⟩ : PqxdhRecordLiftWorld.RawCounters))) <$>
+        (gameWith setup codec route (fun _ => ()) (PqxdhDeploymentBackend.realReg setup codec route checks) ensureInit
+          identityIndex bounds mode adversary).run' runtime)
+      (PqxdhRecordLiftWorld.analysis <$> PqxdhRecordLiftWorld.run setup codec route
+        (PqxdhDeploymentEnvironment.envReal (n := 0) setup codec checks ensureInit identityIndex runtime) setup.serverKeyId
+          bounds mode adversary) :=
+  PqxdhDeploymentEnvironmentJoin.join_analysis setup codec route (fun _ => ())
+    (PqxdhDeploymentBackend.realReg setup codec route checks)
+    (PqxdhDeploymentEnvironment.envReal setup codec checks ensureInit identityIndex runtime) ensureInit identityIndex runtime
+    rfl (fun _ _ => True) PqxdhDeploymentEnvironmentJoin.stable_true (fun _ => trivial) (real_splits setup codec checks route)
+    bounds mode adversary
+
+/-- The run-phase reveal projection of C1 for the real registration (`join_reveal`): the Server's public data, the adversary's output, the ledger and the Beacon-side reveal with the Server ephemeral log of the final state have the same law in the common deployment experiment with the real registration handler and in the record world with the real environment. -/
+theorem c1_real_reveal (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat) (runtime : A)
+    (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
+    (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) :
+    LawEq ((fun outcome => outcome.map fun value => (value.1, value.2.1, value.2.2.1,
+        (PqxdhDeploymentLater.revealOf value.2.2.2.base.native.owners value.2.2.2.snap, value.2.2.2.log))) <$>
+        (gameWith setup codec route (fun _ => ()) (PqxdhDeploymentBackend.realReg setup codec route checks) ensureInit
+          identityIndex bounds mode adversary).run' runtime)
+      ((fun result => result.1.map fun value => (value.1, value.2.1.1, value.2.1.2,
+          (PqxdhDeploymentLater.revealOf value.2.2.native.owners value.2.2.snap, value.2.2.log))) <$>
+        PqxdhRecordLiftWorld.run setup codec route
+          (PqxdhDeploymentEnvironment.envReal (n := 0) setup codec checks ensureInit identityIndex runtime) setup.serverKeyId
+            bounds mode adversary) :=
+  PqxdhDeploymentEnvironmentJoin.join_reveal setup codec route (fun _ => ())
+    (PqxdhDeploymentBackend.realReg setup codec route checks)
+    (PqxdhDeploymentEnvironment.envReal setup codec checks ensureInit identityIndex runtime) ensureInit identityIndex runtime
+    rfl (fun _ _ => True) PqxdhDeploymentEnvironmentJoin.stable_true (fun _ => trivial) (real_splits setup codec checks route)
+    bounds mode adversary
+
+/-- The observed projection of C1 for the real registration with the classical common deployment experiment on the left: the adversary's output, the ledger and the produced frames of `PqxdhDeploymentSecrecy.game` have the law of the record world's game (`PqxdhRecordLiftWorld.game`) with the real environment. -/
+theorem c1_real_classical_observed (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat) (runtime : A)
+    (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
+    (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) :
+    LawEq ((fun outcome => outcome.map fun value => (value.2.1, value.2.2.1, value.2.2.2.produced)) <$>
+        (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit identityIndex bounds mode adversary).run' runtime)
+      (PqxdhRecordLiftWorld.game setup codec route
+        (PqxdhDeploymentEnvironment.envReal (n := 0) setup codec checks ensureInit identityIndex runtime) setup.serverKeyId
+          bounds mode adversary) := by
+  have projected := (c1_real_classical setup codec checks route ensureInit identityIndex runtime bounds mode adversary).map
+    (fun outcome => outcome.map fun value => (value.2.1, value.2.2.1, value.2.2.2.produced))
+  rw [Functor.map_map] at projected
+  refine projected.trans (LawEq.of_eq ?_)
+  unfold PqxdhRecordLiftWorld.game
+  congr 1
+  funext result
+  rcases result with ⟨_ | value, w⟩ <;> rfl
+
+/-- The analysis projection of C1 for the real registration with the classical common deployment experiment on the left: the adversary's output, the ledger, the produced frames and the raw-attempt counters of `PqxdhDeploymentSecrecy.game` have the law of the record world's analysis projection (`PqxdhRecordLiftWorld.analysis`) with the real environment. -/
+theorem c1_real_classical_analysis (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat) (runtime : A)
+    (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
+    (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) :
+    LawEq ((fun outcome => outcome.map fun value => (value.2.1, value.2.2.1, value.2.2.2.produced,
+        (⟨value.2.2.2.serverRaw, value.2.2.2.ownerRaw⟩ : PqxdhRecordLiftWorld.RawCounters))) <$>
+        (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit identityIndex bounds mode adversary).run' runtime)
+      (PqxdhRecordLiftWorld.analysis <$> PqxdhRecordLiftWorld.run setup codec route
+        (PqxdhDeploymentEnvironment.envReal (n := 0) setup codec checks ensureInit identityIndex runtime) setup.serverKeyId
+          bounds mode adversary) := by
+  have projected := (c1_real_classical setup codec checks route ensureInit identityIndex runtime bounds mode adversary).map
+    (fun outcome => outcome.map fun value => (value.2.1, value.2.2.1, value.2.2.2.produced,
+      (⟨value.2.2.2.serverRaw, value.2.2.2.ownerRaw⟩ : PqxdhRecordLiftWorld.RawCounters)))
+  rw [Functor.map_map] at projected
+  refine projected.trans (LawEq.of_eq ?_)
+  congr 1
+  funext result
+  rcases result with ⟨_ | value, w⟩ <;> rfl
+
+/-- C6 for the real registration, public form (`join_later_public`): the Server's public data, the second adversary's output, the run-phase ledger, the record view (produced frames and raw-attempt counters) and the Beacon-side reveal with the Server ephemeral log of the final state have the same law in the LQ-F later game (`PqxdhDeploymentLaterServerGame.game`) and in the later record world with the real environment and `envReveal`. -/
+theorem c6_real_public (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat) (runtime : A)
+    (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
+    (first : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X)
+    (second : X → PqxdhDeploymentLaterServerGame.Reveal → OracleComp PqxdhDeploymentLater.PostSpec Out) :
+    LawEq ((fun outcome => outcome.map fun value => (value.1, value.2.1, value.2.2.1,
+        (value.2.2.2.2.1.produced,
+          (⟨value.2.2.2.2.1.serverRaw, value.2.2.2.2.1.ownerRaw⟩ : PqxdhRecordLiftWorld.RawCounters)),
+        (PqxdhDeploymentLater.revealOf value.2.2.2.2.1.native.owners value.2.2.2.1, value.2.2.2.2.2))) <$>
+        (PqxdhDeploymentLaterServerGame.game setup codec checks route ensureInit identityIndex bounds mode first
+          second).run' runtime)
+      ((fun result => result.1.map fun value => (value.1, value.2.1.1, value.2.1.2,
+          PqxdhRecordLiftLater.recordView result.2,
+          (PqxdhDeploymentLater.revealOf value.2.2.native.owners value.2.2.snap, value.2.2.log))) <$>
+        PqxdhRecordLiftLater.run setup codec route
+          (PqxdhDeploymentEnvironment.envReal (n := 0) setup codec checks ensureInit identityIndex runtime) setup.serverKeyId
+            bounds mode PqxdhDeploymentEnvironmentJoin.envReveal first second) := by
+  have projected := (c6_real setup codec checks route ensureInit identityIndex runtime bounds mode first second).map
+    (fun outcome => outcome.map fun value => (value.1, value.2.1, value.2.2.1,
+      (value.2.2.2.2.1.produced,
+        (⟨value.2.2.2.2.1.serverRaw, value.2.2.2.2.1.ownerRaw⟩ : PqxdhRecordLiftWorld.RawCounters)),
+      (PqxdhDeploymentLater.revealOf value.2.2.2.2.1.native.owners value.2.2.2.1, value.2.2.2.2.2)))
+  rw [Functor.map_map] at projected
+  refine projected.trans (LawEq.of_eq ?_)
+  congr 1
+  funext result
+  rcases result with ⟨_ | value, w⟩
+  · rfl
+  · simp only [Option.map_some, Option.some.injEq]
+    rw [show (PqxdhDeploymentBackend.laterView (merge value.2.2 w)).2.1.native.owners =
+      (fill w value.2.2.native).owners from rfl, PqxdhDeploymentEnvironmentJoin.revealOf_fill]
+    rfl
+
 end Real
 
 end BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentReal
@@ -3724,3 +3830,43 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentReal.c6_real' dep
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentReal.c6_real
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentReal.c1_real_analysis' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentReal.c1_real_analysis
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentReal.c1_real_reveal' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentReal.c1_real_reveal
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentReal.c1_real_classical_observed' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentReal.c1_real_classical_observed
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentReal.c1_real_classical_analysis' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentReal.c1_real_classical_analysis
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentReal.c6_real_public' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentReal.c6_real_public
