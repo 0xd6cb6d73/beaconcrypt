@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1682
+	[handwritten-lean]=1683
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -34969,6 +34969,35 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecord
 require_line_count 1 '^theorem random_game([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPrivModes theorem random_game"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPrivModes\.hop_advantage$' "$selected_source_module" "PqxdhRecordLiftCtxPrivModes dependency hop_advantage"
 require_line_count 1 '^theorem hop_advantage([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPrivModes theorem hop_advantage"
+
+# record-lift CTX privacy link: three-mode key-free reduction of one privacy hybrid step and its link (items 4/5, S4 privacy half)
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPrivLink.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPrivLink$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftCtxPrivLink root import"
+require_line_count 11 '^theorem ' "$selected_source_module" "PqxdhRecordLiftCtxPrivLink theorem inventory"
+require_line_count 11 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftCtxPrivLink guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPrivLink\.coinForward_step$' "$selected_source_module" "PqxdhRecordLiftCtxPrivLink dependency coinForward_step"
+require_line_count 1 '^theorem coinForward_step([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPrivLink theorem coinForward_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPrivLink\.coinForward_program$' "$selected_source_module" "PqxdhRecordLiftCtxPrivLink dependency coinForward_program"
+require_line_count 1 '^theorem coinForward_program([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPrivLink theorem coinForward_program"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPrivLink\.simulateQ_hashForward$' "$selected_source_module" "PqxdhRecordLiftCtxPrivLink dependency simulateQ_hashForward"
+require_line_count 1 '^theorem simulateQ_hashForward([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPrivLink theorem simulateQ_hashForward"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPrivLink\.hashForward_step$' "$selected_source_module" "PqxdhRecordLiftCtxPrivLink dependency hashForward_step"
+require_line_count 1 '^theorem hashForward_step([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPrivLink theorem hashForward_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPrivLink\.hashForward_program$' "$selected_source_module" "PqxdhRecordLiftCtxPrivLink dependency hashForward_program"
+require_line_count 1 '^theorem hashForward_program([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPrivLink theorem hashForward_program"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPrivLink\.routeKeyed_step$' "$selected_source_module" "PqxdhRecordLiftCtxPrivLink dependency routeKeyed_step"
+require_line_count 1 '^theorem routeKeyed_step([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPrivLink theorem routeKeyed_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPrivLink\.known_link$' "$selected_source_module" "PqxdhRecordLiftCtxPrivLink dependency known_link"
+require_line_count 1 '^theorem known_link([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPrivLink theorem known_link"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPrivLink\.linked_run$' "$selected_source_module" "PqxdhRecordLiftCtxPrivLink dependency linked_run"
+require_line_count 1 '^theorem linked_run([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPrivLink theorem linked_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPrivLink\.linked_step$' "$selected_source_module" "PqxdhRecordLiftCtxPrivLink dependency linked_step"
+require_line_count 1 '^theorem linked_step([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPrivLink theorem linked_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPrivLink\.linked_schedule$' "$selected_source_module" "PqxdhRecordLiftCtxPrivLink dependency linked_schedule"
+require_line_count 1 '^theorem linked_schedule([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPrivLink theorem linked_schedule"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPrivLink\.link$' "$selected_source_module" "PqxdhRecordLiftCtxPrivLink dependency link"
+require_line_count 1 '^theorem link([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPrivLink theorem link"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
