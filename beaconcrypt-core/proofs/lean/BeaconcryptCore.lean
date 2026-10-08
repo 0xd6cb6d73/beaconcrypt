@@ -1675,6 +1675,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentHiddenLayout
 
 import BeaconcryptCore.Computational.PqxdhDeploymentHiddenKernels
 
+import BeaconcryptCore.Computational.PqxdhDeploymentHiddenEntry
+
 /-!
 # Beaconcrypt-core verification root
 
