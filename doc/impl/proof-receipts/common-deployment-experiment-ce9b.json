@@ -29,8 +29,8 @@
   "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "f0980528e94ce471cc296d9f21bde4d984aee55900d96dff333ad6d786c457e3",
   "beaconcrypt-core/proofs/check-inventory.sh": "faf224aef235aa9e58eee50a7a1ee55f3bea975b53c4f363a96755993f462c35",
   "beaconcrypt-core/proofs/reviewed-inventory.txt": "7502475a0ed3525c8c6f21011b234d1f2f16cb77ca15b551696d1d2d9a9678e9",
-  "doc/impl/common-deployment-experiment.md": "a607b4ab2993256452dc7b46bf535409b7d39c1c154c3e88b7f5c30aaae7f58a",
-  "doc/formal-verification-analysis.md": "d3d16a11a38dc602e28749978155e3366fbee072cc0c25f163fa5819637efe01"
+  "doc/impl/common-deployment-experiment.md": "1a592b66fc1a42c67621d4976457f9275e11bf634cddb750e9e1efbe99e7ebea",
+  "doc/formal-verification-analysis.md": "7e832f527e296794df34f5dd87cbe8935bb390ae9bf7d6d027ebb0e3dc710050"
  },
  "modules": [
   {
@@ -266,7 +266,7 @@
  ],
  "re_estimate": "CE-9b was planned at 3-6 agent-days (plan section 14) and was built, with the LQ-F later game, in one working session of under one agent-day. Other stages keep their estimates; once CE-9b is reviewed and integrated, the CE-12 left-or-right part no longer waits on it. The two left-or-right open points (a second transferred event per target; the decision-generic ideal run) are not estimated separately: the first is statement work inside CE-12, the second belongs to the CE-11 un-compiled ideal world.",
  "checks_not_run": "No lake build, make verify, nix-collect-garbage, mutation testing, ProVerif or Rust run; no production Rust or ProVerif change.",
- "review": "An independent review of 7452ceb9 with a semantic and a hygiene lens raised one minor finding and four nits, all about the documentation and the receipt. The review fix pass (one documentation commit, which carries this receipt) addresses all of them and is not reviewed. Not integrated into central.",
+ "review": "An independent review of 7452ceb9 with a semantic and a hygiene lens raised one minor finding and four nits, all about the documentation and the receipt. The review fix pass (one documentation commit, 40ba37e5) addresses all of them; a confirming review of 40ba37e5 approved it with one informational note (confirming_review), and one documentation commit, which carries this version of the receipt, records the confirming review. Not integrated into central at this commit.",
  "review_fix_pass": [
   "Minor (left-or-right needs two transfers per target; final-world argument needs a decision-generic ideal run): guide two-sided transfer paragraph now says b' = b is one of the events; two new items in CE-9b: open points; the analysis says the same; not_proved lists both. No Lean change; the statements already allow an arbitrary event.",
   "Nit (real game acceptance without the session conjunct): the analysis sentence now includes that the selected accept returned a session (KemGame.decision = decision /\\ accepted through decideTag; Completed).",
@@ -317,5 +317,24 @@
    ],
    "note": "C-rc and locale-rc are the comm -23 exit statuses in the C locale and in en_US.UTF-8; unlisted-tracked is the number of tracked proof files missing from the manifest; manifest-only is the number of manifest lines with no tracked file. On the git index of the first Lean commit before it was made (the reviewer's act_untracked against exp in ce9b/review-hygiene), comm -23 in en_US.UTF-8 exits 1 with the three warnings."
   }
+ },
+ "confirming_review": {
+  "reviewed_commit": "40ba37e5dc7eeeeefd95db8536f4ebeba0efe33a",
+  "verdict": "approve (one informational note; no repository change requested)",
+  "evidence": "/tmp/bc-arc-scratch/common-experiment/ce9b/confirm (PqxdhDeploymentKemTwoSided.thms/.guards and PqxdhDeploymentLaterKemTwoSided.thms/.guards: theorem and #print axioms guard names agree, 25 and 14; commcheck.sh with exp/all/unrev per commit: the tracked-unlisted sub-check reproduced on the committed trees of 65e20738, 29f37f2e, ee7143fa, 28d6dc97, 97c9f2e0, 7452ceb9 and 40ba37e5, every unrev file empty)",
+  "findings": [
+   {
+    "severity": "informational",
+    "title": "The fix report says commcheck.out covers 40ba37e5, but the scratch file has six lines that stop at 7452ceb9",
+    "response": "No repository change needed (the fix commit cannot name itself, so inventory_subcheck_reproduction in review_fix_pass also ends at 7452ceb9). The reproduction was rerun for 40ba37e5 with /tmp/bc-arc-scratch/common-experiment/ce9b/fix-subcheck/commcheck.sh and its line appended to fix-subcheck/commcheck.out: 40ba37e5 C-rc=0 unlisted-tracked=0 locale-rc=0 manifest-only=0",
+    "commit": null
+   }
+  ],
+  "documentation": "The guide status paragraph, the CE-9b open points and a new section \"CE-9b: confirming review\" record the review; the analysis first paragraph of the CE-9b section now says that a confirming review approved the corrections instead of that they are not yet reviewed; this receipt updates review, adds confirming_review and updates the files_sha256 digests of the guide and the analysis.",
+  "files_sha256_at_40ba37e5": {
+   "doc/impl/common-deployment-experiment.md": "a607b4ab2993256452dc7b46bf535409b7d39c1c154c3e88b7f5c30aaae7f58a",
+   "doc/formal-verification-analysis.md": "d3d16a11a38dc602e28749978155e3366fbee072cc0c25f163fa5819637efe01"
+  },
+  "checks": "No file under beaconcrypt-core changes, so the module, root and inventory checks of the fix pass (fix_pass_checks) still apply; git diff --check of this commit is recorded by the integration checks receipt."
  }
 }
