@@ -1778,6 +1778,12 @@ import BeaconcryptCore.Computational.PqxdhRecordLiftCtxProgramBounds
 
 import BeaconcryptCore.Computational.PqxdhRecordLiftIdeal
 
+import BeaconcryptCore.Computational.PqxdhDeploymentIdealSlots
+
+import BeaconcryptCore.Computational.PqxdhDeploymentIdealParams
+
+import BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentDraw
+
 import BeaconcryptCore.Computational.PqxdhRecordLiftSeedRelay
 
 import BeaconcryptCore.Computational.PqxdhRecordLiftSeedPolicy

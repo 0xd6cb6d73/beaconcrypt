@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1670
+	[handwritten-lean]=1673
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -33982,6 +33982,97 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecord
 require_line_count 1 '^theorem hiding_advantage([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftIdeal theorem hiding_advantage"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftIdeal\.hiding_event$' "$selected_source_module" "PqxdhRecordLiftIdeal dependency BeaconcryptCore.Computational.PqxdhRecordLiftIdeal.hiding_event"
 require_line_count 1 '^theorem hiding_event([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftIdeal theorem hiding_event"
+
+# CE-11b U1 slot programs and their naturality (generic).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealSlots.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentIdealSlots$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentIdealSlots root import"
+require_line_count 11 '^theorem ' "$selected_source_module" "PqxdhDeploymentIdealSlots theorem inventory"
+require_line_count 11 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentIdealSlots guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSlots\.simulateQ_keeps$' "$selected_source_module" "PqxdhDeploymentIdealSlots dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSlots.simulateQ_keeps"
+require_line_count 1 '^theorem simulateQ_keeps([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSlots theorem simulateQ_keeps"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSlots\.slot_keeps$' "$selected_source_module" "PqxdhDeploymentIdealSlots dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSlots.slot_keeps"
+require_line_count 1 '^theorem slot_keeps([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSlots theorem slot_keeps"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSlots\.slot_step_law$' "$selected_source_module" "PqxdhDeploymentIdealSlots dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSlots.slot_step_law"
+require_line_count 1 '^theorem slot_step_law([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSlots theorem slot_step_law"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSlots\.slot_natural_law$' "$selected_source_module" "PqxdhDeploymentIdealSlots dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSlots.slot_natural_law"
+require_line_count 1 '^theorem slot_natural_law([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSlots theorem slot_natural_law"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSlots\.slot_natural_proj$' "$selected_source_module" "PqxdhDeploymentIdealSlots dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSlots.slot_natural_proj"
+require_line_count 1 '^theorem slot_natural_proj([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSlots theorem slot_natural_proj"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSlots\.detach_attach$' "$selected_source_module" "PqxdhDeploymentIdealSlots dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSlots.detach_attach"
+require_line_count 1 '^theorem detach_attach([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSlots theorem detach_attach"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSlots\.attach_detach$' "$selected_source_module" "PqxdhDeploymentIdealSlots dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSlots.attach_detach"
+require_line_count 1 '^theorem attach_detach([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSlots theorem attach_detach"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSlots\.mapBackend_attach$' "$selected_source_module" "PqxdhDeploymentIdealSlots dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSlots.mapBackend_attach"
+require_line_count 1 '^theorem mapBackend_attach([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSlots theorem mapBackend_attach"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSlots\.detach_mapBackend$' "$selected_source_module" "PqxdhDeploymentIdealSlots dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSlots.detach_mapBackend"
+require_line_count 1 '^theorem detach_mapBackend([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSlots theorem detach_mapBackend"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSlots\.slotCore_run$' "$selected_source_module" "PqxdhDeploymentIdealSlots dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSlots.slotCore_run"
+require_line_count 1 '^theorem slotCore_run([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSlots theorem slotCore_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSlots\.slotCore_natural$' "$selected_source_module" "PqxdhDeploymentIdealSlots dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSlots.slotCore_natural"
+require_line_count 1 '^theorem slotCore_natural([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSlots theorem slotCore_natural"
+
+# CE-11b U1/U5 challenger draws (R3) and the draw swap of item 2's prefix.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealParams.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentIdealParams$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentIdealParams root import"
+require_line_count 11 '^theorem ' "$selected_source_module" "PqxdhDeploymentIdealParams theorem inventory"
+require_line_count 11 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentIdealParams guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealParams\.ofCE_kem$' "$selected_source_module" "PqxdhDeploymentIdealParams dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealParams.ofCE_kem"
+require_line_count 1 '^theorem ofCE_kem([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealParams theorem ofCE_kem"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealParams\.ofCE_accept$' "$selected_source_module" "PqxdhDeploymentIdealParams dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealParams.ofCE_accept"
+require_line_count 1 '^theorem ofCE_accept([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealParams theorem ofCE_accept"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealParams\.pool_length$' "$selected_source_module" "PqxdhDeploymentIdealParams dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealParams.pool_length"
+require_line_count 1 '^theorem pool_length([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealParams theorem pool_length"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealParams\.pool_kem$' "$selected_source_module" "PqxdhDeploymentIdealParams dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealParams.pool_kem"
+require_line_count 1 '^theorem pool_kem([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealParams theorem pool_kem"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealParams\.pool_other$' "$selected_source_module" "PqxdhDeploymentIdealParams dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealParams.pool_other"
+require_line_count 1 '^theorem pool_other([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealParams theorem pool_other"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealParams\.pool_eq$' "$selected_source_module" "PqxdhDeploymentIdealParams dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealParams.pool_eq"
+require_line_count 1 '^theorem pool_eq([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealParams theorem pool_eq"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealParams\.preOpaque_pool$' "$selected_source_module" "PqxdhDeploymentIdealParams dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealParams.preOpaque_pool"
+require_line_count 1 '^theorem preOpaque_pool([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealParams theorem preOpaque_pool"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealParams\.draws_swap$' "$selected_source_module" "PqxdhDeploymentIdealParams dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealParams.draws_swap"
+require_line_count 1 '^theorem draws_swap([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealParams theorem draws_swap"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealParams\.slot_liftComp$' "$selected_source_module" "PqxdhDeploymentIdealParams dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealParams.slot_liftComp"
+require_line_count 1 '^theorem slot_liftComp([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealParams theorem slot_liftComp"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealParams\.internalize_run$' "$selected_source_module" "PqxdhDeploymentIdealParams dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealParams.internalize_run"
+require_line_count 1 '^theorem internalize_run([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealParams theorem internalize_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealParams\.slotGame_pool$' "$selected_source_module" "PqxdhDeploymentIdealParams dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealParams.slotGame_pool"
+require_line_count 1 '^theorem slotGame_pool([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealParams theorem slotGame_pool"
+
+# CE-11b U3 generic C1 for environments that draw parameters at startup.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentEnvironmentDraw.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentDraw$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentEnvironmentDraw root import"
+require_line_count 13 '^theorem ' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw theorem inventory"
+require_line_count 13 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEnvironmentDraw\.program_rest$' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw dependency BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentDraw.program_rest"
+require_line_count 1 '^theorem program_rest([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw theorem program_rest"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEnvironmentDraw\.join_from$' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw dependency BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentDraw.join_from"
+require_line_count 1 '^theorem join_from([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw theorem join_from"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEnvironmentDraw\.join_draw$' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw dependency BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentDraw.join_draw"
+require_line_count 1 '^theorem join_draw([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw theorem join_draw"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEnvironmentDraw\.join_draw_observed$' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw dependency BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentDraw.join_draw_observed"
+require_line_count 1 '^theorem join_draw_observed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw theorem join_draw_observed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEnvironmentDraw\.join_draw_analysis$' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw dependency BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentDraw.join_draw_analysis"
+require_line_count 1 '^theorem join_draw_analysis([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw theorem join_draw_analysis"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEnvironmentDraw\.merge_withE$' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw dependency BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentDraw.merge_withE"
+require_line_count 1 '^theorem merge_withE([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw theorem merge_withE"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEnvironmentDraw\.good_withE$' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw dependency BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentDraw.good_withE"
+require_line_count 1 '^theorem good_withE([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw theorem good_withE"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEnvironmentDraw\.stable_param$' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw dependency BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentDraw.stable_param"
+require_line_count 1 '^theorem stable_param([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw theorem stable_param"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEnvironmentDraw\.splits_param$' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw dependency BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentDraw.splits_param"
+require_line_count 1 '^theorem splits_param([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw theorem splits_param"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEnvironmentDraw\.handlerWith_param$' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw dependency BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentDraw.handlerWith_param"
+require_line_count 1 '^theorem handlerWith_param([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw theorem handlerWith_param"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEnvironmentDraw\.simulateQ_embed$' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw dependency BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentDraw.simulateQ_embed"
+require_line_count 1 '^theorem simulateQ_embed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw theorem simulateQ_embed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEnvironmentDraw\.gameWith_param$' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw dependency BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentDraw.gameWith_param"
+require_line_count 1 '^theorem gameWith_param([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw theorem gameWith_param"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEnvironmentDraw\.join_param$' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw dependency BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentDraw.join_param"
+require_line_count 1 '^theorem join_param([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEnvironmentDraw theorem join_param"
 
 # Items 4/5, stage S3 (chain track C1): persistent initial child for the seed-mask continuation of the global seed cut.
 
