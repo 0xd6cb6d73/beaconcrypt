@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1680
+	[handwritten-lean]=1681
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -34831,6 +34831,73 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecord
 require_line_count 1 '^theorem ctxAuthLiftTarget([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxBills theorem ctxAuthLiftTarget"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxBills\.ctxAuthLiftStatement$' "$selected_source_module" "PqxdhRecordLiftCtxBills dependency ctxAuthLiftStatement"
 require_line_count 1 '^theorem ctxAuthLiftStatement([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxBills theorem ctxAuthLiftStatement"
+
+# record-lift CTX privacy: random one-key target = IND$ random experiment behind randomView (items 4/5, S4 privacy half)
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxRandom.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxRandom$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftCtxRandom root import"
+require_line_count 30 '^theorem ' "$selected_source_module" "PqxdhRecordLiftCtxRandom theorem inventory"
+require_line_count 30 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftCtxRandom guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxRandom\.seal_interpretation$' "$selected_source_module" "PqxdhRecordLiftCtxRandom dependency seal_interpretation"
+require_line_count 1 '^theorem seal_interpretation([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxRandom theorem seal_interpretation"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxRandom\.local_interpretation$' "$selected_source_module" "PqxdhRecordLiftCtxRandom dependency local_interpretation"
+require_line_count 1 '^theorem local_interpretation([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxRandom theorem local_interpretation"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxRandom\.target_step$' "$selected_source_module" "PqxdhRecordLiftCtxRandom dependency target_step"
+require_line_count 1 '^theorem target_step([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxRandom theorem target_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxRandom\.target_schedule$' "$selected_source_module" "PqxdhRecordLiftCtxRandom dependency target_schedule"
+require_line_count 1 '^theorem target_schedule([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxRandom theorem target_schedule"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxRandom\.randomTargetView_eq$' "$selected_source_module" "PqxdhRecordLiftCtxRandom dependency randomTargetView_eq"
+require_line_count 1 '^theorem randomTargetView_eq([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxRandom theorem randomTargetView_eq"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxRandom\.runLogged_eq$' "$selected_source_module" "PqxdhRecordLiftCtxRandom dependency runLogged_eq"
+require_line_count 1 '^theorem runLogged_eq([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxRandom theorem runLogged_eq"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxRandom\.randomLogged_run$' "$selected_source_module" "PqxdhRecordLiftCtxRandom dependency randomLogged_run"
+require_line_count 1 '^theorem randomLogged_run([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxRandom theorem randomLogged_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxRandom\.randomLogged_uniform$' "$selected_source_module" "PqxdhRecordLiftCtxRandom dependency randomLogged_uniform"
+require_line_count 1 '^theorem randomLogged_uniform([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxRandom theorem randomLogged_uniform"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxRandom\.randomLogged_seal$' "$selected_source_module" "PqxdhRecordLiftCtxRandom dependency randomLogged_seal"
+require_line_count 1 '^theorem randomLogged_seal([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxRandom theorem randomLogged_seal"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxRandom\.randomLogged_raw$' "$selected_source_module" "PqxdhRecordLiftCtxRandom dependency randomLogged_raw"
+require_line_count 1 '^theorem randomLogged_raw([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxRandom theorem randomLogged_raw"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxRandom\.randomSealOracle_run$' "$selected_source_module" "PqxdhRecordLiftCtxRandom dependency randomSealOracle_run"
+require_line_count 1 '^theorem randomSealOracle_run([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxRandom theorem randomSealOracle_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxRandom\.randomLinked_run$' "$selected_source_module" "PqxdhRecordLiftCtxRandom dependency randomLinked_run"
+require_line_count 1 '^theorem randomLinked_run([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxRandom theorem randomLinked_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxRandom\.linked_step$' "$selected_source_module" "PqxdhRecordLiftCtxRandom dependency linked_step"
+require_line_count 1 '^theorem linked_step([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxRandom theorem linked_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxRandom\.run_simulateQ_embed$' "$selected_source_module" "PqxdhRecordLiftCtxRandom dependency run_simulateQ_embed"
+require_line_count 1 '^theorem run_simulateQ_embed([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxRandom theorem run_simulateQ_embed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxRandom\.linked_schedule$' "$selected_source_module" "PqxdhRecordLiftCtxRandom dependency linked_schedule"
+require_line_count 1 '^theorem linked_schedule([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxRandom theorem linked_schedule"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxRandom\.recordReply_history$' "$selected_source_module" "PqxdhRecordLiftCtxRandom dependency recordReply_history"
+require_line_count 1 '^theorem recordReply_history([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxRandom theorem recordReply_history"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxRandom\.guard_query$' "$selected_source_module" "PqxdhRecordLiftCtxRandom dependency guard_query"
+require_line_count 1 '^theorem guard_query([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxRandom theorem guard_query"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxRandom\.guard_run$' "$selected_source_module" "PqxdhRecordLiftCtxRandom dependency guard_run"
+require_line_count 1 '^theorem guard_run([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxRandom theorem guard_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxRandom\.randomView_eq$' "$selected_source_module" "PqxdhRecordLiftCtxRandom dependency randomView_eq"
+require_line_count 1 '^theorem randomView_eq([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxRandom theorem randomView_eq"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxRandom\.randomTargetView_randomView$' "$selected_source_module" "PqxdhRecordLiftCtxRandom dependency randomTargetView_randomView"
+require_line_count 1 '^theorem randomTargetView_randomView([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxRandom theorem randomTargetView_randomView"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxRandom\.randomTarget_keyImpl$' "$selected_source_module" "PqxdhRecordLiftCtxRandom dependency randomTarget_keyImpl"
+require_line_count 1 '^theorem randomTarget_keyImpl([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxRandom theorem randomTarget_keyImpl"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxRandom\.replayTarget_keyImpl$' "$selected_source_module" "PqxdhRecordLiftCtxRandom dependency replayTarget_keyImpl"
+require_line_count 1 '^theorem replayTarget_keyImpl([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxRandom theorem replayTarget_keyImpl"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxRandom\.replay_random_target$' "$selected_source_module" "PqxdhRecordLiftCtxRandom dependency replay_random_target"
+require_line_count 1 '^theorem replay_random_target([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxRandom theorem replay_random_target"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxRandom\.privacyLoss_eq$' "$selected_source_module" "PqxdhRecordLiftCtxRandom dependency privacyLoss_eq"
+require_line_count 1 '^theorem privacyLoss_eq([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxRandom theorem privacyLoss_eq"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxRandom\.random_forward$' "$selected_source_module" "PqxdhRecordLiftCtxRandom dependency random_forward"
+require_line_count 1 '^theorem random_forward([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxRandom theorem random_forward"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxRandom\.target_run$' "$selected_source_module" "PqxdhRecordLiftCtxRandom dependency target_run"
+require_line_count 1 '^theorem target_run([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxRandom theorem target_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxRandom\.forward_step$' "$selected_source_module" "PqxdhRecordLiftCtxRandom dependency forward_step"
+require_line_count 1 '^theorem forward_step([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxRandom theorem forward_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxRandom\.forward_complete$' "$selected_source_module" "PqxdhRecordLiftCtxRandom dependency forward_complete"
+require_line_count 1 '^theorem forward_complete([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxRandom theorem forward_complete"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxRandom\.local_public_history$' "$selected_source_module" "PqxdhRecordLiftCtxRandom dependency local_public_history"
+require_line_count 1 '^theorem local_public_history([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxRandom theorem local_public_history"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxRandom\.public_history_step$' "$selected_source_module" "PqxdhRecordLiftCtxRandom dependency public_history_step"
+require_line_count 1 '^theorem public_history_step([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxRandom theorem public_history_step"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
