@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1690
+	[handwritten-lean]=1691
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -35421,6 +35421,67 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecord
 require_line_count 1 '^theorem stepBilled([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills theorem stepBilled"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxPrivBills\.ctxPrivLiftStatement$' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills dependency ctxPrivLiftStatement"
 require_line_count 1 '^theorem ctxPrivLiftStatement([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxPrivBills theorem ctxPrivLiftStatement"
+
+# record-lift later worlds: the two-phase program under every policy and CTX mode, Later.run identification, run-phase event carry-over, split into the run-phase world and the E-only continuation (items 4/5, S6, R6)
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftLaterWorlds.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterWorlds$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftLaterWorlds root import"
+require_line_count 27 '^theorem ' "$selected_source_module" "PqxdhRecordLiftLaterWorlds theorem inventory"
+require_line_count 27 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftLaterWorlds guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterWorlds\.chains_eq$' "$selected_source_module" "PqxdhRecordLiftLaterWorlds dependency chains_eq"
+require_line_count 1 '^theorem chains_eq([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterWorlds theorem chains_eq"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterWorlds\.ctxRun_eq$' "$selected_source_module" "PqxdhRecordLiftLaterWorlds dependency ctxRun_eq"
+require_line_count 1 '^theorem ctxRun_eq([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterWorlds theorem ctxRun_eq"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterWorlds\.program_recordBounded$' "$selected_source_module" "PqxdhRecordLiftLaterWorlds dependency program_recordBounded"
+require_line_count 1 '^theorem program_recordBounded([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterWorlds theorem program_recordBounded"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterWorlds\.later_recordBounded$' "$selected_source_module" "PqxdhRecordLiftLaterWorlds dependency later_recordBounded"
+require_line_count 1 '^theorem later_recordBounded([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterWorlds theorem later_recordBounded"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterWorlds\.laterReal_source$' "$selected_source_module" "PqxdhRecordLiftLaterWorlds dependency laterReal_source"
+require_line_count 1 '^theorem laterReal_source([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterWorlds theorem laterReal_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterWorlds\.laterReal_game$' "$selected_source_module" "PqxdhRecordLiftLaterWorlds dependency laterReal_game"
+require_line_count 1 '^theorem laterReal_game([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterWorlds theorem laterReal_game"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterWorlds\.runEventView_eq$' "$selected_source_module" "PqxdhRecordLiftLaterWorlds dependency runEventView_eq"
+require_line_count 1 '^theorem runEventView_eq([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterWorlds theorem runEventView_eq"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterWorlds\.laterReal_event$' "$selected_source_module" "PqxdhRecordLiftLaterWorlds dependency laterReal_event"
+require_line_count 1 '^theorem laterReal_event([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterWorlds theorem laterReal_event"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterWorlds\.laterIdealRecords_O$' "$selected_source_module" "PqxdhRecordLiftLaterWorlds dependency laterIdealRecords_O"
+require_line_count 1 '^theorem laterIdealRecords_O([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterWorlds theorem laterIdealRecords_O"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterWorlds\.laterIdealRecords_P$' "$selected_source_module" "PqxdhRecordLiftLaterWorlds dependency laterIdealRecords_P"
+require_line_count 1 '^theorem laterIdealRecords_P([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterWorlds theorem laterIdealRecords_P"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterWorlds\.schedule_split$' "$selected_source_module" "PqxdhRecordLiftLaterWorlds dependency schedule_split"
+require_line_count 1 '^theorem schedule_split([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterWorlds theorem schedule_split"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterWorlds\.laterChains_split$' "$selected_source_module" "PqxdhRecordLiftLaterWorlds dependency laterChains_split"
+require_line_count 1 '^theorem laterChains_split([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterWorlds theorem laterChains_split"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterWorlds\.laterCtxRun_split$' "$selected_source_module" "PqxdhRecordLiftLaterWorlds dependency laterCtxRun_split"
+require_line_count 1 '^theorem laterCtxRun_split([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterWorlds theorem laterCtxRun_split"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterWorlds\.effectLift_effects$' "$selected_source_module" "PqxdhRecordLiftLaterWorlds dependency effectLift_effects"
+require_line_count 1 '^theorem effectLift_effects([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterWorlds theorem effectLift_effects"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterWorlds\.post_effects$' "$selected_source_module" "PqxdhRecordLiftLaterWorlds dependency post_effects"
+require_line_count 1 '^theorem post_effects([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterWorlds theorem post_effects"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterWorlds\.allQueries_map$' "$selected_source_module" "PqxdhRecordLiftLaterWorlds dependency allQueries_map"
+require_line_count 1 '^theorem allQueries_map([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterWorlds theorem allQueries_map"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterWorlds\.resolve_post$' "$selected_source_module" "PqxdhRecordLiftLaterWorlds dependency resolve_post"
+require_line_count 1 '^theorem resolve_post([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterWorlds theorem resolve_post"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterWorlds\.effects_post$' "$selected_source_module" "PqxdhRecordLiftLaterWorlds dependency effects_post"
+require_line_count 1 '^theorem effects_post([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterWorlds theorem effects_post"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterWorlds\.handler_post$' "$selected_source_module" "PqxdhRecordLiftLaterWorlds dependency handler_post"
+require_line_count 1 '^theorem handler_post([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterWorlds theorem handler_post"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterWorlds\.schedule_post$' "$selected_source_module" "PqxdhRecordLiftLaterWorlds dependency schedule_post"
+require_line_count 1 '^theorem schedule_post([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterWorlds theorem schedule_post"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterWorlds\.post_schedule$' "$selected_source_module" "PqxdhRecordLiftLaterWorlds dependency post_schedule"
+require_line_count 1 '^theorem post_schedule([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterWorlds theorem post_schedule"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterWorlds\.simulateQ_congr_of_all$' "$selected_source_module" "PqxdhRecordLiftLaterWorlds dependency simulateQ_congr_of_all"
+require_line_count 1 '^theorem simulateQ_congr_of_all([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterWorlds theorem simulateQ_congr_of_all"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterWorlds\.continueWith_congr$' "$selected_source_module" "PqxdhRecordLiftLaterWorlds dependency continueWith_congr"
+require_line_count 1 '^theorem continueWith_congr([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterWorlds theorem continueWith_congr"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterWorlds\.interpreter_post$' "$selected_source_module" "PqxdhRecordLiftLaterWorlds dependency interpreter_post"
+require_line_count 1 '^theorem interpreter_post([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterWorlds theorem interpreter_post"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterWorlds\.continueWith_policy$' "$selected_source_module" "PqxdhRecordLiftLaterWorlds dependency continueWith_policy"
+require_line_count 1 '^theorem continueWith_policy([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterWorlds theorem continueWith_policy"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterWorlds\.simulateQ_onBase$' "$selected_source_module" "PqxdhRecordLiftLaterWorlds dependency simulateQ_onBase"
+require_line_count 1 '^theorem simulateQ_onBase([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterWorlds theorem simulateQ_onBase"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterWorlds\.continueWith_ctx$' "$selected_source_module" "PqxdhRecordLiftLaterWorlds dependency continueWith_ctx"
+require_line_count 1 '^theorem continueWith_ctx([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterWorlds theorem continueWith_ctx"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"

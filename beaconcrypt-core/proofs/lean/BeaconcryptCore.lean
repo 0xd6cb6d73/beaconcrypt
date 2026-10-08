@@ -1832,6 +1832,8 @@ import BeaconcryptCore.Computational.PqxdhRecordLiftCtxPriv
 
 import BeaconcryptCore.Computational.PqxdhRecordLiftCtxPrivBills
 
+import BeaconcryptCore.Computational.PqxdhRecordLiftLaterWorlds
+
 /-!
 # Beaconcrypt-core verification root
 
