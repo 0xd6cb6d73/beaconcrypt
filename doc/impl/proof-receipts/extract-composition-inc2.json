@@ -22,9 +22,10 @@
  },
  "plan": {
   "path": "/tmp/bc-arc-scratch/extract-design/plan.md",
-  "sha256": "b48a48a22249c7ca48c7e02b19dd33aadd77955473891d1bb5d9335ee41da8c0",
+  "sha256": "221065661932fe420a85059229f6f0df19dacb1b74d7f6f2b329f38e95585ffb",
   "stages": "S1b, S1c, S2; sections 3, 4, 9, 10, 16-20",
-  "snapshot": "doc/impl/extract-composition-plan.md (the plan with a header paragraph naming this SHA-256)"
+  "snapshot": "doc/impl/extract-composition-plan.md (the plan with a header paragraph naming this SHA-256)",
+  "note": "SHA-256 after the confirming review's documentation nit, which adds the f14a8046, 0ea4260c and a6c50b30 commits and the confirming review to section 20 and names the guide's status line as the current record of merges; before it the plan's SHA-256 was b48a48a22249c7ca48c7e02b19dd33aadd77955473891d1bb5d9335ee41da8c0. No statement, effort or assumption of the plan changed."
  },
  "ce11_design": {
   "path": "/tmp/bc-arc-scratch/common-experiment/ce11/design-v2.md",
@@ -923,7 +924,7 @@
  ],
  "re_estimate": "S1b, S1c and S2 (plan 17-31 agent-days, increment-1 re-estimate 9-18) were built in one working session. Remaining: 9.5-20 agent-days (plan 21.5-35): S3b 2-5, S4b 0.5-1, T 1-2, S7 1-3 (behind a first-touch coordinate-to-slot layer, plan section 20), S8 2-3, S5+S6 1-2, S9 2-4. Main risk: S3b.",
  "checks_not_run": "No lake build, make verify, nix-collect-garbage, mutation testing or ProVerif run; the only Rust run is the transcript-fidelity cargo test; no production Rust or ProVerif change.",
- "review": "Independently reviewed at 09ae745b by a semantic review and a hygiene review; all findings are fixed in the review-fix commit 0ea4260c (review_fixes), which changes no Lean statement, proof or guard. The fixes and the merges are not yet independently re-reviewed. Not integrated into central.",
+ "review": "Independently reviewed at 09ae745b by a semantic review and a hygiene review; all findings are fixed in the review-fix commit 0ea4260c (review_fixes), which changes no Lean statement, proof or guard. A confirming review of the fixes and the merges approved feb46e22 with one optional documentation nit (plan section 20 and its snapshot named only the 62c5f4b7 merge), fixed in the documentation commit that follows feb46e22 (plan section 20, its snapshot, the guide's status line and this receipt's plan and review fields; no Lean file changed). Not integrated into central.",
  "review_fixes": [
   "Minor, candidate freedom: guide (S2 section, checks), analysis and this receipt state the term grep's scope and rest candidate freedom on splitGame_root and the absent candidate argument; the closure check is added (rootClient_closure).",
   "Minor, first touch and slots: S1b consumer note, services module documentation, plan section 20 (and a pointer in section 18), notes in CE-11 design v2 sections 5.7 and 6: the Server slot's first touch is the selected accept's private root request; S7/CE-11 need a first-touch coordinate-to-slot allocator in front of PqxdhRecordLiftLazyTable; defer/oblivious/allowanceG to be re-checked against an accept-time touch before the remaining CE-11a split steps or S7.",
