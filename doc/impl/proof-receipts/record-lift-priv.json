@@ -1,0 +1,1513 @@
+{
+ "date": "2026-10-08T13:23:26.934299+00:00",
+ "scope": "Items 4 and 5 (record-layer lift), stage S4 of the takeover plan, privacy half: PqxdhRecordLiftIdeal.CtxPrivLiftStatement (decision D1), including the open point of the S1 targets (randomImpl is the IND$ random experiment behind AdaptiveCtxPrivacyGuard.replay_random_advantage).",
+ "basis": "14f51c34403649b85c6acc0ad29fb2622406dd81",
+ "topic": {
+  "branch": "codex/deployment-record-priv",
+  "worktree": "/tmp/beaconcrypt-deployment-record-priv",
+  "registry": "branch, worktree, scratch /tmp/bc-arc-scratch/items45/priv, olean prefix priv/olean, leanpath priv/leanpath and the five module names registered to claude before creation"
+ },
+ "plan": {
+  "path": "/tmp/bc-arc-scratch/items45-takeover/takeover-plan.md",
+  "sha256": "ee46b3e56b6a724fbdeb1b89cbc6a93359f39e8b6cdfe67c3224ddd2ce8b7610",
+  "sections": "2 (S4: X1-X4; decisions D1-D5), 8 (CTX track status and the privacy-half plan (a)-(d)), 9 (privacy track status, written by this track)"
+ },
+ "brief": {
+  "path": "/tmp/bc-coord/tasks/codex-items-4-5.md",
+  "sha256": "c947e27514ecf3b8041a1d61ef78b158c2c732d1f7bb8782b94c1e796a92b99e",
+  "sections": "H-1 to H-7, 7"
+ },
+ "targets": {
+  "module": "PqxdhRecordLiftIdeal (central 14f51c34, unchanged)",
+  "guide": "doc/impl/record-lift-ideal.md",
+  "delivered": "PqxdhRecordLiftCtxPrivBills.ctxPrivLiftStatement : CtxPrivLiftStatement setup codec route serverKid bounds n (PqxdhRecordLiftCtxPriv.privReduction setup codec route serverKid bounds) privBills (both forms; every environment with Frame, every adversary with Budget.Respects, both observation modes, every cache-free decision and every Boolean event)",
+  "hops": "hops n budget = (sends + 51 * receives) * (n * 2); one privacyLoss (ofReal of the IND$ advantage of AdaptiveCtxPrivacyGuard.viewReduction of the hop adversary) per index of Fin (hops n budget), coefficient one; each hop proved equal (not only bounded) to its privacyLoss (PqxdhRecordLiftCtxPriv.hop_loss)",
+  "reduction": "privReduction: hop step = PqxdhRecordLiftCtxPrivModes.decisionClient bytesSample setup.source.crypto (linkClient (entryAt step) (privModes (positions budget) step) ...)",
+  "bill": "privBills: uniform = programBill .uniform + decision + 66 * programBill .hash; hash = programBill .hash = sharedHashTotal (hash_bill); seals = 1; raw = programBill .raw",
+  "statements_changed": "None. No definition or statement of PqxdhRecordLiftIdeal or of any existing module changed."
+ },
+ "open_point_closed": "PqxdhRecordLiftCtxRandom.randomView_eq (AdaptiveCtxPrivacyGuard.randomView is exactly the random replay source), randomTargetView_randomView (= the random one-key target view, randomImpl on the shared cache), replay_random_target (replay vs random one-key targets: exactly the IND$ advantage of viewReduction), privacyLoss_eq.",
+ "contracts": {
+  "hypotheses": "No theorem of the five modules has an assumption or contract hypothesis. Main-theorem premises: Budget.Respects, Frame, the decision coin bound and StepBilled bills (a property of the explicit construction, discharged by PqxdhRecordLiftCtxPrivBills.stepBilled).",
+  "method": "Closure probe over the constant dependencies of every theorem of the five modules (116 theorems found, the 113 declared theorems plus generated equation lemmas); PROOFLEVEL = reached through theorem constants only.",
+  "probe": "/tmp/bc-arc-scratch/items45/priv/tools/ContractProbe.lean",
+  "probe_sha256": "383b2c16692c16fafe138cca8780f95f75298c4a73f16c7f56ab12ff1752dd1b",
+  "log": "/tmp/bc-arc-scratch/items45/priv/logs/contracts-p5.log",
+  "log_sha256": "42c898f8baedbd7871a19a91205995d627190599921504f132ec81ff31a512bc",
+  "aead_open_seal": "No theorem.",
+  "aeadSeal_tag_length_prooflevel": [
+   "privacyLoss_eq",
+   "replay_random_target",
+   "linked_step",
+   "source_view",
+   "schedule_interpretation",
+   "replay_game",
+   "mode_public_history_step",
+   "linked_schedule",
+   "selected_step",
+   "modeView_replay",
+   "random_game",
+   "hop_advantage",
+   "ctxPrivLiftStatement_of_billed",
+   "hop_eq",
+   "ctxPrivLiftBool_of_billed",
+   "hop_loss",
+   "decision_budgets",
+   "stepBilled",
+   "known_hash_step",
+   "ctxPrivLiftStatement",
+   "known_uniform_step",
+   "uniform_step",
+   "hash_step"
+  ],
+  "aeadSeal_tag_length_prooflevel_count": 23,
+  "aeadSeal_tag_length_total": 51,
+  "classification": "aeadSeal_tag_length (16-byte tags) is classified under functional AEAD correctness of the H-7 list, as for the integrity half; it enters only through central replay-side lemmas (AdaptiveCtxPrivacyGuard.replay_random_advantage, AdaptiveCtxSharedModes.public_history_step and replay_view_eq, AdaptiveCtxSharedReplayBounds).",
+  "games": "The modified-nonce AEAD IND$ game only as the advantage term of privacyLoss; no INT-CTXT term.",
+  "rom": "The BLAKE2b random-oracle model is the world model (one shared lazily sampled cache).",
+  "structural": "Pqxdh.Crypto.dh_comm, xpub_length, x25519_length (22 theorems, through the type of the setup parameter) and hkdf_length (22 theorems, through RawCtxSourceHkdf.response behind PqxdhRecordLiftCtxProtocol.knownRom) occur only inside definitions.",
+  "absent": "No theorem reaches SourceFullCorrect, FrameReadBack, Phase1ReadBack, Phase2ReadBack, DecoderAgreement, AdaptiveRawNonceAead.HistoryCorrect, RawCtxSelectedPlaintextOrigins.HistoryCorrect, verify_sign, conv_agree, decap_encap, edPub_length, kemPub_length, encap_ss_length, decap_length or blake2b_length.",
+  "composition_assumptions": "doc/composition-assumptions.md already lists functional AEAD correctness, the modified-nonce AEAD IND$ game and the BLAKE2b random-oracle model (accepted-record endpoint; ordered all-key IND$ privacy component); unchanged."
+ },
+ "provenance": "New Claude work. PqxdhRecordLiftCtxPrivLink and the step-bill part of PqxdhRecordLiftCtxPrivBills are adapted from Claude's integrity-half modules PqxdhRecordLiftCtxLink, PqxdhRecordLiftCtxBills and PqxdhRecordLiftCtxModeBounds; nothing adapted from Codex WIP.",
+ "commits": [
+  "98edf474afa997e511ee470d404b47c8b89e08c4",
+  "0633b733c5830461e3c4db277a0852436f3ac501",
+  "c82cc8ee11bce1a6c2aa61a69aeac3fc5e83f230",
+  "26a6f7b1b8efda1d5dce47da0b6ec036c4f62859",
+  "111a68574d3bce2cdfb29c09223c6d4edf8c964e",
+  "bd802c1ac35b7e7380bcf458da5e6625d99b4fdc"
+ ],
+ "files_sha256": {
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxRandom.lean": "b4dfc4bd57ab962e4f5daa3c49facea59a0a5086795b1122d5edacb07d65c7aa",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPrivModes.lean": "105da6f3115ac3fc36a0a8dc61946a1f9718d65daca9d3f5c9793bb5d8d60c42",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPrivLink.lean": "ab61843a1d36876519d66a07d449b9f9de2ea7a3f461d4b51cecd1602d706bd4",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPriv.lean": "9ac7d9cb808575c12a8099a7cdb1e5fb7651d49d2da150ab9c8081b6945b8d06",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPrivBills.lean": "0fb80df61ffd3946b8f1c295adf89b1c74edc651c3a2fbee42ce7f65c9ec856e",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "e42ecfc10345f22d023cb028f6b5bcc6d41efde979e5d756b9df2221fd349d50",
+  "beaconcrypt-core/proofs/check-inventory.sh": "63f7f095b63af2c1a22d5fbc14d129a9e23396279b95eb1e3033d023c4389748",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "b907bf3e1704a0617ff9ba1505337209d5a2e1022836ef3570970f2dc6c416d6",
+  "doc/impl/record-lift-ctx-priv.md": "f1b2af916c514d8dd3d0cdd06a463a8125cc1dd9fbbf694a6534c032fc769609",
+  "doc/formal-verification-analysis.md": "2c8726b8ce2b4b120eda6ce8f9ca4a8afe1bd9ac613c7db374c5bebd79583ae7",
+  "doc/impl/record-lift-ctx-hybrid.md": "1fe4a78518ef457d9704071efb6d472219d7cd36eed6495fa59b742ae97b4bd2",
+  "doc/impl/record-lift-ideal.md": "aeb7927469872d839721bc162faabe7cad87a1dfc9edc209e7d7ad079e5dc0c1"
+ },
+ "files_sha256_note": "At the documentation commit bd802c1ac35b7e7380bcf458da5e6625d99b4fdc (the commit before this receipt).",
+ "modules": [
+  {
+   "name": "PqxdhRecordLiftCtxRandom",
+   "scope": "random one-key target = IND$ random experiment behind randomView (the open point of the S1 targets)",
+   "module_commit": "98edf474afa997e511ee470d404b47c8b89e08c4",
+   "statement_count": 30,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 28,
+    "Quot.sound, propext": 2
+   },
+   "statements": [
+    {
+     "name": "seal_interpretation",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "local_interpretation",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "target_step",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "target_schedule",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "randomTargetView_eq",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "runLogged_eq",
+     "axioms": [
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "randomLogged_run",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "randomLogged_uniform",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "randomLogged_seal",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "randomLogged_raw",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "randomSealOracle_run",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "randomLinked_run",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "linked_step",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "run_simulateQ_embed",
+     "axioms": [
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "linked_schedule",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "recordReply_history",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "guard_query",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "guard_run",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "randomView_eq",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "randomTargetView_randomView",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "randomTarget_keyImpl",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "replayTarget_keyImpl",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "replay_random_target",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "privacyLoss_eq",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "random_forward",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "target_run",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "forward_step",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "forward_complete",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "local_public_history",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "public_history_step",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    }
+   ],
+   "module_check": {
+    "start": "2026-10-08T12:59:39.326780293Z",
+    "end": "2026-10-08T12:59:44.163292702Z",
+    "exit": 0,
+    "source_sha256": "b4dfc4bd57ab962e4f5daa3c49facea59a0a5086795b1122d5edacb07d65c7aa",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/items45/priv/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxRandom.olean",
+    "artifact_sha256": "8b062c99eec0625e696366b180ade5777a30ed0cc944d693ac14de2db7e560a9",
+    "leanpath_sha256": "1515348202264bfff2d345ecd954d43e63d1f8ad67b1438e7e775f535ce71f99",
+    "log": "/tmp/bc-arc-scratch/items45/priv/logs/PqxdhRecordLiftCtxRandom-m1.log",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-record-priv/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/items45/priv/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxRandom.olean",
+     "/tmp/beaconcrypt-deployment-record-priv/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxRandom.lean"
+    ],
+    "tag": "m1"
+   },
+   "root_check": {
+    "start": "2026-10-08T13:00:02.592761420Z",
+    "end": "2026-10-08T13:00:05.756316786Z",
+    "exit": 0,
+    "source_sha256": "72cd1274b0670229e03e386b04c96ae5be9341b826e3c2d0f7a615d4532904b5",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/items45/priv/olean/BeaconcryptCore.olean",
+    "artifact_sha256": "ffb2eaa137d8b7a0064977e1d4d978dade608dd0824710fc36e0b6fde903c63c",
+    "leanpath_sha256": "1515348202264bfff2d345ecd954d43e63d1f8ad67b1438e7e775f535ce71f99",
+    "log": "/tmp/bc-arc-scratch/items45/priv/logs/root-r1.log",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-record-priv/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/items45/priv/olean/BeaconcryptCore.olean",
+     "/tmp/beaconcrypt-deployment-record-priv/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+    ],
+    "tag": "r1"
+   },
+   "inv_recount": "handwritten-lean 1680 -> 1681, then coord.sh inv rehash claude (module digest, root, check-inventory.sh)",
+   "focused_inventory": {
+    "status": 0,
+    "commit": "98edf474afa997e511ee470d404b47c8b89e08c4",
+    "dirt_bytes": 0,
+    "dirt_after_bytes": 0,
+    "start": "2026-10-08T13:00:36Z",
+    "end": "2026-10-08T13:02:01Z",
+    "log": "/tmp/bc-arc-scratch/items45/priv/logs/inventory-p1.log",
+    "log_sha256": "6f344fee8b0fb2351d5ba771ca9337f350403748826bfe6cff1fe5c1a0e7e109",
+    "command": "coord.sh lease mem claude @nix items45-priv-inventory-p1 --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C /tmp/beaconcrypt-deployment-record-priv/beaconcrypt-core check-inventory SHELL=bash"
+   },
+   "h7_closure_guard": {
+    "modules": 1,
+    "declared_constants": 81,
+    "closure": 20801,
+    "direct_forbidden_uses": 0,
+    "closure_violations": 0,
+    "classified_structural": 0,
+    "log": "/tmp/bc-arc-scratch/items45/priv/logs/dev-h7-random-150017.log",
+    "log_sha256": "d4ce9fdedd610f84b72855d1347993e3460bd75ee20efe322f610ae772723826"
+   }
+  },
+  {
+   "name": "PqxdhRecordLiftCtxPrivModes",
+   "scope": "three-mode known calls, selected challenger in any mode, single-coin sampler swap, per-key hop",
+   "module_commit": "0633b733c5830461e3c4db277a0852436f3ac501",
+   "statement_count": 32,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 32
+   },
+   "statements": [
+    {
+     "name": "card_bytes",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "bytesSample_eq",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "bytesSample_evalDist",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "randomWith_uniform",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "knownLocal_uniform",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "modeTarget_replay",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "modeTarget_random",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "modeTarget_run",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "mode_local_from_target",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "mode_public_history_step",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "mode_forward_complete",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "selected_step",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "known_step",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "linked_step",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "linked_schedule",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "schedule_interpretation",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "source_view",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "modeView_replay",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "modeView_random",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "sameLaw_refl",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "sameLaw_bind",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "sameLaw_bytes",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "sameLaw_fst",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "sameLaw_simulateQ",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "seal_run",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "sameLaw_seal",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "sameLaw_known",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "sameLaw_source_step",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "sameLaw_sourceGame",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "replay_game",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "random_game",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "hop_advantage",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    }
+   ],
+   "module_check": {
+    "start": "2026-10-08T13:06:54.209592915Z",
+    "end": "2026-10-08T13:06:58.385493796Z",
+    "exit": 0,
+    "source_sha256": "105da6f3115ac3fc36a0a8dc61946a1f9718d65daca9d3f5c9793bb5d8d60c42",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/items45/priv/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPrivModes.olean",
+    "artifact_sha256": "1fde24657df00a1eb9aa259a3d4f355e3f580dd2c9f3dadb1f75e8eeb3eba491",
+    "leanpath_sha256": "1515348202264bfff2d345ecd954d43e63d1f8ad67b1438e7e775f535ce71f99",
+    "log": "/tmp/bc-arc-scratch/items45/priv/logs/PqxdhRecordLiftCtxPrivModes-m1.log",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-record-priv/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/items45/priv/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPrivModes.olean",
+     "/tmp/beaconcrypt-deployment-record-priv/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPrivModes.lean"
+    ],
+    "tag": "m1"
+   },
+   "root_check": {
+    "start": "2026-10-08T13:07:06.680721884Z",
+    "end": "2026-10-08T13:07:14.482675989Z",
+    "exit": 0,
+    "source_sha256": "cb22a0da898ae611e9d6b7ae29dea31da98e086c664930a6415a4135f07dccf1",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/items45/priv/olean/BeaconcryptCore.olean",
+    "artifact_sha256": "a422826a22a1cbed28fe240bdd99aff8ff70ba22dcd6d916f13f87a85db83331",
+    "leanpath_sha256": "1515348202264bfff2d345ecd954d43e63d1f8ad67b1438e7e775f535ce71f99",
+    "log": "/tmp/bc-arc-scratch/items45/priv/logs/root-r2.log",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-record-priv/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/items45/priv/olean/BeaconcryptCore.olean",
+     "/tmp/beaconcrypt-deployment-record-priv/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+    ],
+    "tag": "r2"
+   },
+   "inv_recount": "handwritten-lean 1681 -> 1682, then coord.sh inv rehash claude (module digest, root, check-inventory.sh)",
+   "focused_inventory": {
+    "status": 0,
+    "commit": "0633b733c5830461e3c4db277a0852436f3ac501",
+    "dirt_bytes": 0,
+    "dirt_after_bytes": 0,
+    "start": "2026-10-08T13:07:28Z",
+    "end": "2026-10-08T13:08:52Z",
+    "log": "/tmp/bc-arc-scratch/items45/priv/logs/inventory-p2.log",
+    "log_sha256": "566b1b1b1ea9c05dc975150d9d8a0cb33b7ad94a689c42910216f30d1824eba5",
+    "command": "coord.sh lease mem claude @nix items45-priv-inventory-p2 --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C /tmp/beaconcrypt-deployment-record-priv/beaconcrypt-core check-inventory SHELL=bash"
+   },
+   "h7_closure_guard": {
+    "modules": 2,
+    "declared_constants": 163,
+    "closure": 21279,
+    "direct_forbidden_uses": 0,
+    "closure_violations": 0,
+    "classified_structural": 0,
+    "log": "/tmp/bc-arc-scratch/items45/priv/logs/dev-h7-modes-150714.log",
+    "log_sha256": "3291a50bbd9fab369ee12104141daa10abed344dfb22f079464608bd9d431dfa"
+   }
+  },
+  {
+   "name": "PqxdhRecordLiftCtxPrivLink",
+   "scope": "key-free reduction of one privacy hybrid step and its link",
+   "module_commit": "c82cc8ee11bce1a6c2aa61a69aeac3fc5e83f230",
+   "statement_count": 11,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 10,
+    "Quot.sound, propext": 1
+   },
+   "statements": [
+    {
+     "name": "coinForward_step",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "coinForward_program",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "simulateQ_hashForward",
+     "axioms": [
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "hashForward_step",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "hashForward_program",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "routeKeyed_step",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "known_link",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "linked_run",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "linked_step",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "linked_schedule",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "link",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    }
+   ],
+   "module_check": {
+    "start": "2026-10-08T13:09:33.715586953Z",
+    "end": "2026-10-08T13:09:38.744180625Z",
+    "exit": 0,
+    "source_sha256": "ab61843a1d36876519d66a07d449b9f9de2ea7a3f461d4b51cecd1602d706bd4",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/items45/priv/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPrivLink.olean",
+    "artifact_sha256": "14d8ef48cc2f68534553f205281bcb0ae4997d3388460c2a4679b04745dd4df4",
+    "leanpath_sha256": "1515348202264bfff2d345ecd954d43e63d1f8ad67b1438e7e775f535ce71f99",
+    "log": "/tmp/bc-arc-scratch/items45/priv/logs/PqxdhRecordLiftCtxPrivLink-m2.log",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-record-priv/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/items45/priv/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPrivLink.olean",
+     "/tmp/beaconcrypt-deployment-record-priv/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPrivLink.lean"
+    ],
+    "tag": "m2"
+   },
+   "root_check": {
+    "start": "2026-10-08T13:09:38.943598792Z",
+    "end": "2026-10-08T13:09:47.627374848Z",
+    "exit": 0,
+    "source_sha256": "2149dea3a8fbc541c1e773cbf41b46ec94f85037a1b635c439b9b3a5c9ab43fb",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/items45/priv/olean/BeaconcryptCore.olean",
+    "artifact_sha256": "c28cc4c8885a9dff0c689615b10f96748bd4d87e8a44893ff2a359160e11c7f4",
+    "leanpath_sha256": "1515348202264bfff2d345ecd954d43e63d1f8ad67b1438e7e775f535ce71f99",
+    "log": "/tmp/bc-arc-scratch/items45/priv/logs/root-r3.log",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-record-priv/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/items45/priv/olean/BeaconcryptCore.olean",
+     "/tmp/beaconcrypt-deployment-record-priv/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+    ],
+    "tag": "r3"
+   },
+   "inv_recount": "handwritten-lean 1682 -> 1683, then coord.sh inv rehash claude (module digest, root, check-inventory.sh)",
+   "focused_inventory": {
+    "status": 0,
+    "commit": "c82cc8ee11bce1a6c2aa61a69aeac3fc5e83f230",
+    "dirt_bytes": 0,
+    "dirt_after_bytes": 0,
+    "start": "2026-10-08T13:10:00Z",
+    "end": "2026-10-08T13:11:24Z",
+    "log": "/tmp/bc-arc-scratch/items45/priv/logs/inventory-p3.log",
+    "log_sha256": "265d6a0ac30d3aba1730b18c7f6315cbe2e0a52311114dacd09ce17443dab950",
+    "command": "coord.sh lease mem claude @nix items45-priv-inventory-p3 --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C /tmp/beaconcrypt-deployment-record-priv/beaconcrypt-core check-inventory SHELL=bash"
+   },
+   "h7_closure_guard": {
+    "modules": 3,
+    "declared_constants": 213,
+    "closure": 23837,
+    "direct_forbidden_uses": 0,
+    "closure_violations": 0,
+    "classified_structural": 12,
+    "log": "/tmp/bc-arc-scratch/items45/priv/logs/dev-h7-link-150947.log",
+    "log_sha256": "bcd1e17ec9e261f98a8708609fcd5d6cd14121fdd9f0765911af36529069dbfb"
+   }
+  },
+  {
+   "name": "PqxdhRecordLiftCtxPriv",
+   "scope": "privacy hybrids, exact hops, telescope, CtxPrivLiftStatement from StepBilled",
+   "module_commit": "26a6f7b1b8efda1d5dce47da0b6ec036c4f62859",
+   "statement_count": 14,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 14
+   },
+   "statements": [
+    {
+     "name": "privModes_zero",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "privModes_last",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "privModes_unchanged",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "privModes_step",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "selectedModesM_replay",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "selectedModesM_random",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "game_replay",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "game_random",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "hop_eq",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "hop_loss",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "game_first",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "game_last",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "ctxPrivLiftBool_of_billed",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "ctxPrivLiftStatement_of_billed",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    }
+   ],
+   "module_check": {
+    "start": "2026-10-08T13:12:17.863002195Z",
+    "end": "2026-10-08T13:12:23.055230281Z",
+    "exit": 0,
+    "source_sha256": "9ac7d9cb808575c12a8099a7cdb1e5fb7651d49d2da150ab9c8081b6945b8d06",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/items45/priv/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPriv.olean",
+    "artifact_sha256": "cd6d750e794938a1226fda033b01929effab6dc26653599d8d0e51cbd750e6e6",
+    "leanpath_sha256": "1515348202264bfff2d345ecd954d43e63d1f8ad67b1438e7e775f535ce71f99",
+    "log": "/tmp/bc-arc-scratch/items45/priv/logs/PqxdhRecordLiftCtxPriv-m1.log",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-record-priv/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/items45/priv/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPriv.olean",
+     "/tmp/beaconcrypt-deployment-record-priv/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPriv.lean"
+    ],
+    "tag": "m1"
+   },
+   "root_check": {
+    "start": "2026-10-08T13:12:32.386045647Z",
+    "end": "2026-10-08T13:12:35.649704906Z",
+    "exit": 0,
+    "source_sha256": "687db78879b6dd9dfb89b5bf0438e8361df754fc548543653ab42e8b9950ae81",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/items45/priv/olean/BeaconcryptCore.olean",
+    "artifact_sha256": "4b2d0a527fe1beda16f5dd90ae7e475d978d2f6f53e776ca132534e17efcf0a3",
+    "leanpath_sha256": "1515348202264bfff2d345ecd954d43e63d1f8ad67b1438e7e775f535ce71f99",
+    "log": "/tmp/bc-arc-scratch/items45/priv/logs/root-r4.log",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-record-priv/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/items45/priv/olean/BeaconcryptCore.olean",
+     "/tmp/beaconcrypt-deployment-record-priv/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+    ],
+    "tag": "r4"
+   },
+   "inv_recount": "handwritten-lean 1683 -> 1684, then coord.sh inv rehash claude (module digest, root, check-inventory.sh)",
+   "focused_inventory": {
+    "status": 0,
+    "commit": "26a6f7b1b8efda1d5dce47da0b6ec036c4f62859",
+    "dirt_bytes": 0,
+    "dirt_after_bytes": 0,
+    "start": "2026-10-08T13:12:50Z",
+    "end": "2026-10-08T13:14:16Z",
+    "log": "/tmp/bc-arc-scratch/items45/priv/logs/inventory-p4.log",
+    "log_sha256": "b7dce4b280299fe2adabd5f2e097ee3b95c65759bf0927b96e033e8b1a5a02e2",
+    "command": "coord.sh lease mem claude @nix items45-priv-inventory-p4 --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C /tmp/beaconcrypt-deployment-record-priv/beaconcrypt-core check-inventory SHELL=bash"
+   },
+   "h7_closure_guard": {
+    "modules": 4,
+    "declared_constants": 234,
+    "closure": 25082,
+    "direct_forbidden_uses": 0,
+    "closure_violations": 0,
+    "classified_structural": 12,
+    "log": "/tmp/bc-arc-scratch/items45/priv/logs/dev-h7-priv-151235.log",
+    "log_sha256": "17bc54c03c9b41cb83e0bac8610834b511b59464d60af6133c0cbcc3ec9cf79d"
+   }
+  },
+  {
+   "name": "PqxdhRecordLiftCtxPrivBills",
+   "scope": "explicit privacy bills, StepBilled, CtxPrivLiftStatement",
+   "module_commit": "111a68574d3bce2cdfb29c09223c6d4edf8c964e",
+   "statement_count": 26,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 25,
+    "propext": 1
+   },
+   "statements": [
+    {
+     "name": "bytesSample_total",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "seal_hash",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "seal_uniform",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "random_hash_step",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "random_uniform_step",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "known_hash_step",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "known_uniform_step",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "target_step",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "hash_step",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "uniform_step",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "keyed_not_uniform",
+     "axioms": [
+      "propext"
+     ]
+    },
+    {
+     "name": "decision_budgets",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "coinForward_route",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "hashForward_route",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "opening_route",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "sealing_route",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "reduction_step",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "reduction_uniform",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "reduction_hash",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "reduction_keyed",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "reduction_seal",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "reduction_raw",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "link_route",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "hash_bill",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "stepBilled",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "ctxPrivLiftStatement",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    }
+   ],
+   "module_check": {
+    "start": "2026-10-08T13:17:47.535716882Z",
+    "end": "2026-10-08T13:17:57.028515559Z",
+    "exit": 0,
+    "source_sha256": "0fb80df61ffd3946b8f1c295adf89b1c74edc651c3a2fbee42ce7f65c9ec856e",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/items45/priv/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPrivBills.olean",
+    "artifact_sha256": "8193feb29c9e10398adfc3fd615d359079e1ab9d2a17b23dca7da47f87af48fe",
+    "leanpath_sha256": "1515348202264bfff2d345ecd954d43e63d1f8ad67b1438e7e775f535ce71f99",
+    "log": "/tmp/bc-arc-scratch/items45/priv/logs/PqxdhRecordLiftCtxPrivBills-m1.log",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-record-priv/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/items45/priv/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPrivBills.olean",
+     "/tmp/beaconcrypt-deployment-record-priv/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPrivBills.lean"
+    ],
+    "tag": "m1"
+   },
+   "root_check": {
+    "start": "2026-10-08T13:18:06.382269914Z",
+    "end": "2026-10-08T13:18:09.554794592Z",
+    "exit": 0,
+    "source_sha256": "e42ecfc10345f22d023cb028f6b5bcc6d41efde979e5d756b9df2221fd349d50",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/items45/priv/olean/BeaconcryptCore.olean",
+    "artifact_sha256": "681be927321c84e51a2736cb7861b8429c2dfceb6c8b3052785799401285b54f",
+    "leanpath_sha256": "1515348202264bfff2d345ecd954d43e63d1f8ad67b1438e7e775f535ce71f99",
+    "log": "/tmp/bc-arc-scratch/items45/priv/logs/root-r5.log",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-record-priv/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/items45/priv/olean/BeaconcryptCore.olean",
+     "/tmp/beaconcrypt-deployment-record-priv/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+    ],
+    "tag": "r5"
+   },
+   "inv_recount": "handwritten-lean 1684 -> 1685, then coord.sh inv rehash claude (module digest, root, check-inventory.sh)",
+   "focused_inventory": {
+    "status": 0,
+    "commit": "111a68574d3bce2cdfb29c09223c6d4edf8c964e",
+    "dirt_bytes": 0,
+    "dirt_after_bytes": 0,
+    "start": "2026-10-08T13:18:24Z",
+    "end": "2026-10-08T13:19:51Z",
+    "log": "/tmp/bc-arc-scratch/items45/priv/logs/inventory-p5.log",
+    "log_sha256": "b967909a1249d0d1fbeddde8633f9e296aed268c78452c1f3d3373dcb8bf6756",
+    "command": "coord.sh lease mem claude @nix items45-priv-inventory-p5 --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C /tmp/beaconcrypt-deployment-record-priv/beaconcrypt-core check-inventory SHELL=bash"
+   },
+   "h7_closure_guard": {
+    "modules": 5,
+    "declared_constants": 330,
+    "closure": 25769,
+    "direct_forbidden_uses": 0,
+    "closure_violations": 0,
+    "classified_structural": 12,
+    "log": "/tmp/bc-arc-scratch/items45/priv/logs/dev-h7-all-151809.log",
+    "log_sha256": "e5e6eb4cb6200416c8bcf57f1750f87632a69f7f36cfe43d777a14b690385112"
+   }
+  }
+ ],
+ "statements": 113,
+ "statement_counts": {
+  "PqxdhRecordLiftCtxRandom": 30,
+  "PqxdhRecordLiftCtxPrivModes": 32,
+  "PqxdhRecordLiftCtxPrivLink": 11,
+  "PqxdhRecordLiftCtxPriv": 14,
+  "PqxdhRecordLiftCtxPrivBills": 26
+ },
+ "allowed_axioms": [
+  "Classical.choice",
+  "Quot.sound",
+  "propext"
+ ],
+ "axiom_profile_from_guards": {
+  "Classical.choice, Quot.sound, propext": 109,
+  "Quot.sound, propext": 3,
+  "propext": 1
+ },
+ "leanpath": {
+  "path": "/tmp/bc-arc-scratch/items45/priv/leanpath",
+  "sha256": "1515348202264bfff2d345ecd954d43e63d1f8ad67b1438e7e775f535ce71f99",
+  "first_prefix": "/tmp/bc-arc-scratch/items45/priv/olean",
+  "mirror": "resolved symlink mirror (1713 links, 0 broken, root olean skipped) of the first prefix /tmp/bc-arc-scratch/items45/ctx/int/olean of the published LEAN_PATH of central 14f51c34, then that published LEAN_PATH",
+  "published": "/tmp/bc-coord/leanpaths/14f51c34403649b85c6acc0ad29fb2622406dd81.leanpath",
+  "published_sha256": "d5776c51b26c995e317760984019c82b26e98325705253b83857fec48e687003"
+ },
+ "inventory": "coord.sh inv recount claude then coord.sh inv rehash claude at every module commit; handwritten-lean 1680 -> 1685 (one per module); the focused check-inventory ran on every clean module commit (exit 0, no dirt).",
+ "diff_check": "git diff --check clean before every commit.",
+ "forbidden_scan": "No sorry, admit, axiom declaration, native_decide, implemented_by, extern, unsafe or opaque in the five modules (guards.py verify and the inventory escape-hatch pattern).",
+ "h7_scan": {
+  "tool": "/tmp/bc-arc-scratch/items45/priv/tools/h7scan.py",
+  "tool_sha256": "53cd7e6977b22a073febb1ae52f45b3fb4d28e51d2b130944bc2dd8db8ced1d2",
+  "modules": "/tmp/bc-arc-scratch/items45/priv/logs/h7scan-all.json",
+  "modules_sha256": "6c535da1f09086dd63f025145ab43df42f6732cd3bc6515d6b9f42d9afe3de64",
+  "docs": "/tmp/bc-arc-scratch/items45/priv/logs/h7scan-docs.json",
+  "docs_sha256": "e351d325bd0d9fd5dc60fe266bb3c0e54a2456729eeb655910ae3a6865650df1",
+  "result": "Version 3, case-insensitive: no forbidden and no informational name in the five modules, the guide or the added analysis and guide lines."
+ },
+ "meta_check": {
+  "probe": "/tmp/bc-arc-scratch/items45/priv/tools/H7ClosurePriv.lean",
+  "probe_sha256": "89216be987a23d014147f78bfd1aacb997ca5418424a9b6034843f137749de0f",
+  "note": "Closure guard version 3 adapted from items45/ctx/tools/H7Closure.lean; each run covers the modules committed so far (per-module entries above); the 12 classified constants are the structural DH-interface constants reached through Setup.beaconDomain."
+ },
+ "deviations_from_plan": [
+  "The per-key hop uses AdaptiveCtxPrivacyGuard.replay_random_advantage (exact) rather than PqxdhRecordLiftCtxModeBounds.selected_privacy (real to random, with integrity terms), because the privacy hybrids start from idealAuth (replay mode) and the target charges privacyLoss only.",
+  "The open point needed a full simulation of the IND$ random experiment (PqxdhRecordLiftCtxRandom).",
+  "The link needed known calls in random mode: new modules PqxdhRecordLiftCtxPrivModes and PqxdhRecordLiftCtxPrivLink instead of reusing PqxdhRecordLiftCtxModes and PqxdhRecordLiftCtxLink.",
+  "New obligation found and proved: random-mode known seals with the world sampler draw one coin per plaintext byte (no bill in BillInput); the constructed clients use the single-coin sampler bytesSample, related to the world by the law equality sameLaw_sourceGame.",
+  "Module split: five modules."
+ ],
+ "not_proved": [
+  "RecordLiftStatement (the world track composes it from this theorem with recordLiftBool_of_parts).",
+  "The R6 forms (stage S6)."
+ ],
+ "checks_not_run": "No lake build, make verify, nix-collect-garbage, mutation testing, ProVerif or Rust run. Transcript fidelity (@cargo) is an integration-time check and has not run yet.",
+ "review": {
+  "status": "pending: independent semantic and hygiene review, fix pass, confirming review"
+ }
+}
