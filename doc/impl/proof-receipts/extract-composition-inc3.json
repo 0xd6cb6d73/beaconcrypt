@@ -1,5 +1,5 @@
 {
- "date": "2026-10-08T03:48:32.438620+00:00",
+ "date": "2026-10-08T04:04:50.803289+00:00",
  "scope": "Handoff item 2, increment 3: stages S3b (entry 0's 108 bytes in the uniform-root world: factored services, relabelled hidden values, uniformGame_entry), S4b (idealKeysBranch and theorem T7) and S7 (every hidden entry ideal: indexed lazy-table hybrid, first-touch slot allocator in front of PqxdhRecordLiftLazyTable, naturality) of the extract-design plan. Stages T and S8 are not built.",
  "basis": "a2b5380080ed397ae31b790e79304b39e16135b1",
  "topic": {
@@ -8,10 +8,10 @@
  },
  "plan": {
   "path": "/tmp/bc-arc-scratch/extract-design/plan.md",
-  "sha256": "5b88eadaf818e5072cbb9c0f6ca870774792d81c9396003107dad06d5ce0930f",
+  "sha256": "2866496a466e2d60b2aafba56b15780539391f0c9afd1356a2301c2911a76d35",
   "snapshot": "doc/impl/extract-composition-plan.md",
   "stages": "S3b, S4b, S7; sections 3, 4, 5, 9, 11, 17, 18, 20, 21",
-  "note": "SHA-256 after the review fixes of ddd954ec (section 21: header and notes 3 to 6); at ddd954ec it was 29fb8774b7abf7ec6dc77b3e49d45cac40b91fa9a0a9a6101e1e2c01d1cdf7a4. No owner decision, statement or assumption of the plan changed."
+  "note": "SHA-256 after the confirming review of 3e2fe170 (section 21 header: review and integration status); after the review fixes of ddd954ec it was 5b88eadaf818e5072cbb9c0f6ca870774792d81c9396003107dad06d5ce0930f, and at ddd954ec 29fb8774b7abf7ec6dc77b3e49d45cac40b91fa9a0a9a6101e1e2c01d1cdf7a4. No owner decision, statement or assumption of the plan changed."
  },
  "commits": [
   {
@@ -29,9 +29,13 @@
   {
    "commit": "ddd954ecd6ab73650fb5e995182f6616cce15cfc",
    "subject": "Record the third item 2 increment (S3b, S4b, S7)"
+  },
+  {
+   "commit": "3e2fe17054427d835c0a67711ff8251ffaa0af47",
+   "subject": "Fix the review findings of the third item 2 increment"
   }
  ],
- "commits_note": "The stage commits from the base a2b53800 (central, containing increments 1 and 2) and the documentation commit ddd954ec, which the semantic and hygiene reviews covered. The review-fix commit that re-issues this receipt follows them.",
+ "commits_note": "The stage commits from the base a2b53800 (central, containing increments 1 and 2), the documentation commit ddd954ec, which the semantic and hygiene reviews covered, and the review-fix commit 3e2fe170, which the confirming review covered. The documentation-only commit that re-issues this receipt follows them.",
  "files_sha256": {
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemEntryFactorTools.lean": "e18bcac3cb39b4237ad392fb880c21adac7ac3ec0dfb115296d3a2018f32c12b",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemEntryFactorNative.lean": "df0784ed761d22f3e7e29ab0d6a852627fd1f256311d17e7386d0328a67afa0a",
@@ -44,10 +48,10 @@
   "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "968055d31eebb672238c5050c49b8b7b372d5e5abc204ddbc9a8fe81836974c9",
   "beaconcrypt-core/proofs/check-inventory.sh": "ebcd7ebf15722b191b21c213de37ae352abc9d0106c4ab3f0ff3fb001f8ab46d",
   "beaconcrypt-core/proofs/reviewed-inventory.txt": "44b53876fe472114b956e697229128586ee02cb398671efb3ce000ea40472b3e",
-  "doc/impl/extract-composition.md": "e8398a630f303532345e239eb139fcc089f2f95b2ef493d723183963c57527ea",
-  "doc/impl/extract-composition-plan.md": "13226ac43cba0b4e47d93be1c95dc6bd3a00fc5671507e505138c4b987a67f3d",
-  "doc/formal-verification-analysis.md": "0e217f299477a7af79a7cfbf18a32fc69c7f41ce8b31ac5511f613011c901632",
-  "doc/composition-assumptions.md": "b51c87be6346e600ac58b3f8ec23a13560af845cb9d2250def56ee55633e7bdd",
+  "doc/impl/extract-composition.md": "1a7a8ad6b52dfde7f5f5788e343485608c5bb813107c6cf7cd398beb265666e4",
+  "doc/impl/extract-composition-plan.md": "a5ad6df9e445ca79b51704ef0ea5d30c6de5e48b1071beff4b13006782e534ff",
+  "doc/formal-verification-analysis.md": "b3a028bc94463b68b44b32ac874bdc01b859204223477c6f5a685f9ce3d813d2",
+  "doc/composition-assumptions.md": "558a2da40ee96316d51e68ef901a4167b78e86b2c92c78ca28adeeebcd1fe7c8",
   "beaconcrypt-core/proofs/trusted-boundary.md": "845110e2a9f6d3a0a6cf88ba512bdc64f9190bb1599d563b1126734b1f908454"
  },
  "modules": [
@@ -563,7 +567,7 @@
   "PqxdhRegistrationJointKemEntryFactorTools.relabel_fwd": "theorem relabel_fwd {α : Type} (f : V → W) (layer : QueryImpl A (OracleComp B))\n    (work : OracleComp (A + ((D →ₒ W) + T)) α) :\n    simulateQ (relabel (B := B) (D := D) (T := T) f) (simulateQ (fwd (T := (D →ₒ W) + T) layer) work) =\n      simulateQ (fwd (T := (D →ₒ V) + T) layer) (simulateQ (relabel (B := A) (D := D) (T := T) f) work)",
   "PqxdhRegistrationJointKemEntryFactorTools.relabel_fwdOption": "theorem relabel_fwdOption {J α : Type} (f : V → W) (layer : QueryImpl A (OptionT (StateT J (OracleComp B))))\n    (work : OracleComp (A + ((D →ₒ W) + T)) α) (state : J) :\n    simulateQ (relabel (B := B) (D := D) (T := T) f)\n        (((simulateQ (fwdOption (T := (D →ₒ W) + T) layer) work).run).run state) =\n      ((simulateQ (fwdOption (T := (D →ₒ V) + T) layer)\n        (simulateQ (relabel (B := A) (D := D) (T := T) f) work)).run).run state",
   "PqxdhRegistrationJointKemEntryFactorTools.map_run_inv": "theorem map_run_inv {σ₁ σ₂ α : Type}\n    (impl₁ : QueryImpl spec (StateT σ₁ (OracleComp spec'))) (impl₂ : QueryImpl spec (StateT σ₂ (OracleComp spec')))\n    (inv : σ₁ → Prop) (proj : σ₁ → σ₂)\n    (hinv : ∀ query state, inv state → ∀ result ∈ support ((impl₁ query).run state), inv result.2)\n    (hproj : ∀ query state, inv state →\n      Prod.map id proj <$> (impl₁ query).run state = (impl₂ query).run (proj state))\n    (work : OracleComp spec α) (state : σ₁) (holds : inv state) :\n    Prod.map id proj <$> (simulateQ impl₁ work).run state = (simulateQ impl₂ work).run (proj state) ∧\n      ∀ result ∈ support ((simulateQ impl₁ work).run state), inv result.2",
-  "PqxdhRegistrationJointKemEntryFactorNative.factorHidden_eq": "theorem factorHidden_eq (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (context : PqxdhServerAuthEntryFactor.Context KemSK) (value : Output) :\n    factorHidden setup codec checks context value = factoredHidden setup codec checks value := rfl\n\n/-- The factored services: hidden values are 108-byte outputs, the hidden session's pending token holds the placeholder root, and each hidden entry runs the factored forms. -/\nnoncomputable def factoredServices (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks) :\n    Services Output Response where\n  rootOf _ := PqxdhServerAuthEntryFactor.sentinel\n  hidden := factoredHidden setup codec checks\n\n/-- The native Beacon continuation after a root is the factored continuation at the root's 108-byte output. -/\ntheorem hiddenAfter_factor (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (root : RootOutput) :\n    (nativeHidden setup codec checks root).hiddenAfter =\n      (factoredHidden setup codec checks (PqxdhServerAuthKeySchedule.fromRoot setup.source root)).hiddenAfter",
+  "PqxdhRegistrationJointKemEntryFactorNative.factorHidden_eq": "theorem factorHidden_eq (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (context : PqxdhServerAuthEntryFactor.Context KemSK) (value : Output) :\n    factorHidden setup codec checks context value = factoredHidden setup codec checks value",
   "PqxdhRegistrationJointKemEntryFactorNative.hiddenAfter_factor": "theorem hiddenAfter_factor (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (root : RootOutput) :\n    (nativeHidden setup codec checks root).hiddenAfter =\n      (factoredHidden setup codec checks (PqxdhServerAuthKeySchedule.fromRoot setup.source root)).hiddenAfter",
   "PqxdhRegistrationJointKemEntryFactorNative.hiddenBuild_factor": "theorem hiddenBuild_factor (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (token other : PqxdhServerRelatedRootConsumer.Returned) (same : other.pending = token.pending)\n    (payload : Option Pqxdh.Bytes) (server : PqxdhServerAuthEntryFactor.ServerState) :\n    nativeResponse setup codec checks token payload server =\n      (factoredHidden setup codec checks (PqxdhServerAuthKeySchedule.fromRoot setup.source token.root)).hiddenBuild\n        other payload server",
   "PqxdhRegistrationJointKemEntryFactorSteps.skelImpl_rel": "theorem skelImpl_rel (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (identityIndex : Nat) (publicIdentity : PublicIdentity) (query : (GSpec KemSK Response).Domain) :\n    RelC (PqxdhServerAuthKeySchedule.fromRoot setup.source) id Inv (fun _ => Inv)\n      (skelImpl setup codec checks identityIndex publicIdentity (nativeServices setup codec checks) query)\n      (skelImpl setup codec checks identityIndex publicIdentity (factoredServices setup codec checks) query)",
@@ -720,7 +724,7 @@
  ],
  "re_estimate": "S3b, S4b and S7 (increment-2 re-estimate 3.5-9 agent-days) were built in one working session. Remaining: 9-17 agent-days: T 3-6, S8 3-5, S5+S6 1-2, S9 2-4. Main risks: stage T's cross-layer invariant and S8's per-layer cost accounting.",
  "checks_not_run": "No lake build, make verify, nix-collect-garbage, mutation testing, ProVerif, Rust or transcript-fidelity run; no production Rust or ProVerif change.",
- "review": "Independently reviewed at ddd954ec by a semantic review and a hygiene review (one major finding, three minor findings and five nits, one of them a record of the hygiene checks). All are fixed in the review-fix commit that follows ddd954ec (review_fixes); it adds one theorem (indexed_eager_output) and changes no existing statement. A confirming review is pending. Not integrated into central.",
+ "review": "Independently reviewed at ddd954ec by a semantic review and a hygiene review (one major finding, three minor findings and five nits, one of them a record of the hygiene checks). All are fixed in the review-fix commit 3e2fe170 (review_fixes); it adds one theorem (indexed_eager_output) and changes no existing statement. The confirming review of 3e2fe170 checked the eight review-fix items independently, found all resolved and approved, with documentation nits (confirming_review_fixes), fixed in the documentation-only commit that re-issues this receipt; it changes no Lean file. Integration into central follows (merge of central into the branch, coordination protocol section 6).",
  "date_first_issue": "2026-10-08T03:12:19.519553+00:00",
  "root_check_review_fixes": {
   "exit": 0,
@@ -775,5 +779,14 @@
   "Nits (two), 𝒮 statement of indexed_eager: kept unchanged and recorded as an exception in the guide checks; new theorem indexed_eager_output (𝒟 form for outputs, exact guard propext, Classical.choice, Quot.sound, no scoped option); run_eager now applies it (statement unchanged).",
   "Nit, plan section 21 note 4: \"re-estimate 3-5 agent-days\"; snapshot header and this receipt name the new plan SHA-256.",
   "Nit, hygiene record: no action."
- ]
+ ],
+ "confirming_review_fixes": [
+  "Assumption-list scope (analysis): the entries 'Extract PRG-type games' and 'zero-salt HKDF-Extract on 192-byte inputs as a programmable random oracle' of doc/formal-verification-analysis.md now include item 2's registration/KEM line under owner decision 2 in their scope parentheticals and end with a pointer to doc/composition-assumptions.md, section 'Item 2: route R1 on the registration KEM line'.",
+  "'Listed above' (doc/composition-assumptions.md): only the random-oracle idealization is said to be listed above; the section is called the first listing of the Extract PRG-type game in that file and cites the analysis entry (cryptographic assumptions).",
+  "Guide status: the increment-3 introduction and the top status paragraph give 127 theorems (126 at ddd954ec), the reviews at ddd954ec, the review-fix commit 3e2fe170, the confirming review and the integration step; new guide section \"Increment 3: confirming review\".",
+  "Optional, naturality in plain English: the analysis paragraph says 'up to a map of the table's internal state that may forget parts of it, such as its query counts' instead of 'up to a renaming'.",
+  "Optional, exact statements: every exact_statements entry is cut at the first top-level ':=' of its theorem; only factorHidden_eq changed (it extended into the next two declarations).",
+  "Record of the independent checks: no action."
+ ],
+ "plan_snapshot_refresh": "doc/impl/extract-composition-plan.md refreshed from the scratch plan (section 21 header: review and integration status); pre-edit copy /tmp/bc-arc-scratch/extract-design/inc3-int/plan.pre-int.md."
 }
