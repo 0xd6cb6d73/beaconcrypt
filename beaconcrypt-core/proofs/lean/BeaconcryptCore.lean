@@ -1751,6 +1751,8 @@ import BeaconcryptCore.Computational.PqxdhRecordLiftCtxNoRefusal
 
 import BeaconcryptCore.Computational.PqxdhRecordLiftSeedScope
 
+import BeaconcryptCore.Computational.PqxdhRecordLiftChildPolicy
+
 /-!
 # Beaconcrypt-core verification root
 

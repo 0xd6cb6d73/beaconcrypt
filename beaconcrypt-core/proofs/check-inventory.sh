@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1642
+	[handwritten-lean]=1643
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -33027,6 +33027,51 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecord
 require_line_count 1 '^theorem sampled_program([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSeedScope theorem sampled_program"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftSeedScope\.prepared_reads_missing$' "$selected_source_module" "PqxdhRecordLiftSeedScope dependency prepared_reads_missing"
 require_line_count 1 '^theorem prepared_reads_missing([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSeedScope theorem prepared_reads_missing"
+
+# Record-lift increment A (Claude, adapted from Codex WIP 128a2916): the persistent evolving child has the law of the adjacent concrete chain policy.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChildPolicy.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.PqxdhRecordLiftChildPolicy$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftChildPolicy root import"
+require_line_count 19 '^theorem ' "$selected_source_module" "PqxdhRecordLiftChildPolicy theorem inventory"
+require_line_count 19 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftChildPolicy guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChildPolicy\.reads_iff$' "$selected_source_module" "PqxdhRecordLiftChildPolicy dependency reads_iff"
+require_line_count 1 '^theorem reads_iff([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChildPolicy theorem reads_iff"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChildPolicy\.coin_lazy$' "$selected_source_module" "PqxdhRecordLiftChildPolicy dependency coin_lazy"
+require_line_count 1 '^theorem coin_lazy([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChildPolicy theorem coin_lazy"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChildPolicy\.other_source$' "$selected_source_module" "PqxdhRecordLiftChildPolicy dependency other_source"
+require_line_count 1 '^theorem other_source([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChildPolicy theorem other_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChildPolicy\.lookup_child$' "$selected_source_module" "PqxdhRecordLiftChildPolicy dependency lookup_child"
+require_line_count 1 '^theorem lookup_child([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChildPolicy theorem lookup_child"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChildPolicy\.relay_child$' "$selected_source_module" "PqxdhRecordLiftChildPolicy dependency relay_child"
+require_line_count 1 '^theorem relay_child([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChildPolicy theorem relay_child"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChildPolicy\.view_putChild$' "$selected_source_module" "PqxdhRecordLiftChildPolicy dependency view_putChild"
+require_line_count 1 '^theorem view_putChild([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChildPolicy theorem view_putChild"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChildPolicy\.view_child$' "$selected_source_module" "PqxdhRecordLiftChildPolicy dependency view_child"
+require_line_count 1 '^theorem view_child([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChildPolicy theorem view_child"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChildPolicy\.child_source$' "$selected_source_module" "PqxdhRecordLiftChildPolicy dependency child_source"
+require_line_count 1 '^theorem child_source([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChildPolicy theorem child_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChildPolicy\.needs_iff$' "$selected_source_module" "PqxdhRecordLiftChildPolicy dependency needs_iff"
+require_line_count 1 '^theorem needs_iff([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChildPolicy theorem needs_iff"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChildPolicy\.different_source$' "$selected_source_module" "PqxdhRecordLiftChildPolicy dependency different_source"
+require_line_count 1 '^theorem different_source([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChildPolicy theorem different_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChildPolicy\.relay_different$' "$selected_source_module" "PqxdhRecordLiftChildPolicy dependency relay_different"
+require_line_count 1 '^theorem relay_different([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChildPolicy theorem relay_different"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChildPolicy\.query_source$' "$selected_source_module" "PqxdhRecordLiftChildPolicy dependency query_source"
+require_line_count 1 '^theorem query_source([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChildPolicy theorem query_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChildPolicy\.different_entry$' "$selected_source_module" "PqxdhRecordLiftChildPolicy dependency different_entry"
+require_line_count 1 '^theorem different_entry([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChildPolicy theorem different_entry"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChildPolicy\.query_invariant$' "$selected_source_module" "PqxdhRecordLiftChildPolicy dependency query_invariant"
+require_line_count 1 '^theorem query_invariant([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChildPolicy theorem query_invariant"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChildPolicy\.step_good$' "$selected_source_module" "PqxdhRecordLiftChildPolicy dependency step_good"
+require_line_count 1 '^theorem step_good([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChildPolicy theorem step_good"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChildPolicy\.schedule_source$' "$selected_source_module" "PqxdhRecordLiftChildPolicy dependency schedule_source"
+require_line_count 1 '^theorem schedule_source([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChildPolicy theorem schedule_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChildPolicy\.flatten_run$' "$selected_source_module" "PqxdhRecordLiftChildPolicy dependency flatten_run"
+require_line_count 1 '^theorem flatten_run([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChildPolicy theorem flatten_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChildPolicy\.independent_source$' "$selected_source_module" "PqxdhRecordLiftChildPolicy dependency independent_source"
+require_line_count 1 '^theorem independent_source([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChildPolicy theorem independent_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChildPolicy\.independent_observed$' "$selected_source_module" "PqxdhRecordLiftChildPolicy dependency independent_observed"
+require_line_count 1 '^theorem independent_observed([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChildPolicy theorem independent_observed"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
