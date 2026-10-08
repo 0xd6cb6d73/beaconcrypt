@@ -1747,6 +1747,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentKemTwoSided
 
 import BeaconcryptCore.Computational.PqxdhDeploymentLaterKemTwoSided
 
+import BeaconcryptCore.Computational.PqxdhRecordLiftCtxNoRefusal
+
 /-!
 # Beaconcrypt-core verification root
 
