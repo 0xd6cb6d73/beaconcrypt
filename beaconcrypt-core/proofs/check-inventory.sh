@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1664
+	[handwritten-lean]=1665
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -34047,6 +34047,67 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecord
 require_line_count 1 '^theorem hybridModes_unchanged([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxHybrid theorem hybridModes_unchanged"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxHybrid\.hybridModes_step$' "$selected_source_module" "PqxdhRecordLiftCtxHybrid dependency hybridModes_step"
 require_line_count 1 '^theorem hybridModes_step([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxHybrid theorem hybridModes_step"
+
+# Items 4/5, stage S4 (X1 link): one key-indexed CTX hybrid step as the PqxdhRecordLiftCtxModes one-key challenger game against a key-free reduction client, with the selected key supplied externally.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxLink.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxLink$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftCtxLink root import"
+require_line_count 27 '^theorem ' "$selected_source_module" "PqxdhRecordLiftCtxLink theorem inventory"
+require_line_count 27 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftCtxLink guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxLink\.ctxRunWith_tableKey$' "$selected_source_module" "PqxdhRecordLiftCtxLink dependency ctxRunWith_tableKey"
+require_line_count 1 '^theorem ctxRunWith_tableKey([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxLink theorem ctxRunWith_tableKey"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxLink\.keyedWith_erase$' "$selected_source_module" "PqxdhRecordLiftCtxLink dependency keyedWith_erase"
+require_line_count 1 '^theorem keyedWith_erase([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxLink theorem keyedWith_erase"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxLink\.base_erase$' "$selected_source_module" "PqxdhRecordLiftCtxLink dependency base_erase"
+require_line_count 1 '^theorem base_erase([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxLink theorem base_erase"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxLink\.ctxInterpreterWith_erase$' "$selected_source_module" "PqxdhRecordLiftCtxLink dependency ctxInterpreterWith_erase"
+require_line_count 1 '^theorem ctxInterpreterWith_erase([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxLink theorem ctxInterpreterWith_erase"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxLink\.slotOf_ne_zero$' "$selected_source_module" "PqxdhRecordLiftCtxLink dependency slotOf_ne_zero"
+require_line_count 1 '^theorem slotOf_ne_zero([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxLink theorem slotOf_ne_zero"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxLink\.slotOf_injective$' "$selected_source_module" "PqxdhRecordLiftCtxLink dependency slotOf_injective"
+require_line_count 1 '^theorem slotOf_injective([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxLink theorem slotOf_injective"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxLink\.keysOf_reserved$' "$selected_source_module" "PqxdhRecordLiftCtxLink dependency keysOf_reserved"
+require_line_count 1 '^theorem keysOf_reserved([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxLink theorem keysOf_reserved"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxLink\.coinForward_step$' "$selected_source_module" "PqxdhRecordLiftCtxLink dependency coinForward_step"
+require_line_count 1 '^theorem coinForward_step([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxLink theorem coinForward_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxLink\.coinForward_program$' "$selected_source_module" "PqxdhRecordLiftCtxLink dependency coinForward_program"
+require_line_count 1 '^theorem coinForward_program([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxLink theorem coinForward_program"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxLink\.simulateQ_hashForward$' "$selected_source_module" "PqxdhRecordLiftCtxLink dependency simulateQ_hashForward"
+require_line_count 1 '^theorem simulateQ_hashForward([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxLink theorem simulateQ_hashForward"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxLink\.hashForward_step$' "$selected_source_module" "PqxdhRecordLiftCtxLink dependency hashForward_step"
+require_line_count 1 '^theorem hashForward_step([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxLink theorem hashForward_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxLink\.hashForward_program$' "$selected_source_module" "PqxdhRecordLiftCtxLink dependency hashForward_program"
+require_line_count 1 '^theorem hashForward_program([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxLink theorem hashForward_program"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxLink\.keysOf_selected$' "$selected_source_module" "PqxdhRecordLiftCtxLink dependency keysOf_selected"
+require_line_count 1 '^theorem keysOf_selected([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxLink theorem keysOf_selected"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxLink\.keysOf_other$' "$selected_source_module" "PqxdhRecordLiftCtxLink dependency keysOf_other"
+require_line_count 1 '^theorem keysOf_other([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxLink theorem keysOf_other"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxLink\.keyImpl_bool$' "$selected_source_module" "PqxdhRecordLiftCtxLink dependency keyImpl_bool"
+require_line_count 1 '^theorem keyImpl_bool([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxLink theorem keyImpl_bool"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxLink\.keyImpl_known$' "$selected_source_module" "PqxdhRecordLiftCtxLink dependency keyImpl_known"
+require_line_count 1 '^theorem keyImpl_known([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxLink theorem keyImpl_known"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxLink\.routeKeyed_step$' "$selected_source_module" "PqxdhRecordLiftCtxLink dependency routeKeyed_step"
+require_line_count 1 '^theorem routeKeyed_step([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxLink theorem routeKeyed_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxLink\.known_link$' "$selected_source_module" "PqxdhRecordLiftCtxLink dependency known_link"
+require_line_count 1 '^theorem known_link([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxLink theorem known_link"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxLink\.linked_run$' "$selected_source_module" "PqxdhRecordLiftCtxLink dependency linked_run"
+require_line_count 1 '^theorem linked_run([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxLink theorem linked_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxLink\.linked_step$' "$selected_source_module" "PqxdhRecordLiftCtxLink dependency linked_step"
+require_line_count 1 '^theorem linked_step([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxLink theorem linked_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxLink\.linked_schedule$' "$selected_source_module" "PqxdhRecordLiftCtxLink dependency linked_schedule"
+require_line_count 1 '^theorem linked_schedule([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxLink theorem linked_schedule"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxLink\.ctxInterpreterWith_schedule$' "$selected_source_module" "PqxdhRecordLiftCtxLink dependency ctxInterpreterWith_schedule"
+require_line_count 1 '^theorem ctxInterpreterWith_schedule([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxLink theorem ctxInterpreterWith_schedule"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxLink\.linkProj_initial$' "$selected_source_module" "PqxdhRecordLiftCtxLink dependency linkProj_initial"
+require_line_count 1 '^theorem linkProj_initial([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxLink theorem linkProj_initial"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxLink\.link$' "$selected_source_module" "PqxdhRecordLiftCtxLink dependency link"
+require_line_count 1 '^theorem link([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxLink theorem link"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxLink\.hybridModes_notRandom$' "$selected_source_module" "PqxdhRecordLiftCtxLink dependency hybridModes_notRandom"
+require_line_count 1 '^theorem hybridModes_notRandom([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxLink theorem hybridModes_notRandom"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxLink\.selectedModes_hybrid_real$' "$selected_source_module" "PqxdhRecordLiftCtxLink dependency selectedModes_hybrid_real"
+require_line_count 1 '^theorem selectedModes_hybrid_real([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxLink theorem selectedModes_hybrid_real"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxLink\.selectedModes_hybrid_replay$' "$selected_source_module" "PqxdhRecordLiftCtxLink dependency selectedModes_hybrid_replay"
+require_line_count 1 '^theorem selectedModes_hybrid_replay([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxLink theorem selectedModes_hybrid_replay"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
