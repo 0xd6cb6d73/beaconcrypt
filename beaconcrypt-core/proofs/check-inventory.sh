@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1693
+	[handwritten-lean]=1694
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -35538,6 +35538,61 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecord
 require_line_count 1 '^theorem admissibleTest_test([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftFlat theorem admissibleTest_test"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftFlat\.ledger_inv$' "$selected_source_module" "PqxdhRecordLiftFlat dependency ledger_inv"
 require_line_count 1 '^theorem ledger_inv([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftFlat theorem ledger_inv"
+
+# record lift world facts: LorStatement (idealRecords_lor, exact one half on PublicHiding in mode P) (items 4/5)
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftLor.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.PqxdhRecordLiftLor$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftLor root import"
+require_line_count 24 '^theorem ' "$selected_source_module" "PqxdhRecordLiftLor theorem inventory"
+require_line_count 24 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftLor guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLor\.flipLedger_record$' "$selected_source_module" "PqxdhRecordLiftLor dependency flipLedger_record"
+require_line_count 1 '^theorem flipLedger_record([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLor theorem flipLedger_record"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLor\.ledger_flip_forward$' "$selected_source_module" "PqxdhRecordLiftLor dependency ledger_flip_forward"
+require_line_count 1 '^theorem ledger_flip_forward([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLor theorem ledger_flip_forward"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLor\.ledger_flip_fresh$' "$selected_source_module" "PqxdhRecordLiftLor dependency ledger_flip_fresh"
+require_line_count 1 '^theorem ledger_flip_fresh([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLor theorem ledger_flip_fresh"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLor\.ledger_flip_refused$' "$selected_source_module" "PqxdhRecordLiftLor dependency ledger_flip_refused"
+require_line_count 1 '^theorem ledger_flip_refused([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLor theorem ledger_flip_refused"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLor\.escaped_keep$' "$selected_source_module" "PqxdhRecordLiftLor dependency escaped_keep"
+require_line_count 1 '^theorem escaped_keep([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLor theorem escaped_keep"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLor\.commute_couple$' "$selected_source_module" "PqxdhRecordLiftLor dependency commute_couple"
+require_line_count 1 '^theorem commute_couple([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLor theorem commute_couple"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLor\.send_couple$' "$selected_source_module" "PqxdhRecordLiftLor dependency send_couple"
+require_line_count 1 '^theorem send_couple([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLor theorem send_couple"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLor\.fullImpl_test_session$' "$selected_source_module" "PqxdhRecordLiftLor dependency fullImpl_test_session"
+require_line_count 1 '^theorem fullImpl_test_session([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLor theorem fullImpl_test_session"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLor\.fullImpl_test_first$' "$selected_source_module" "PqxdhRecordLiftLor dependency fullImpl_test_first"
+require_line_count 1 '^theorem fullImpl_test_first([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLor theorem fullImpl_test_first"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLor\.decide_rev$' "$selected_source_module" "PqxdhRecordLiftLor dependency decide_rev"
+require_line_count 1 '^theorem decide_rev([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLor theorem decide_rev"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLor\.step_couple$' "$selected_source_module" "PqxdhRecordLiftLor dependency step_couple"
+require_line_count 1 '^theorem step_couple([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLor theorem step_couple"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLor\.lorGuess_flip$' "$selected_source_module" "PqxdhRecordLiftLor dependency lorGuess_flip"
+require_line_count 1 '^theorem lorGuess_flip([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLor theorem lorGuess_flip"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLor\.lorGuess_escaped$' "$selected_source_module" "PqxdhRecordLiftLor dependency lorGuess_escaped"
+require_line_count 1 '^theorem lorGuess_escaped([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLor theorem lorGuess_escaped"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLor\.world_couple$' "$selected_source_module" "PqxdhRecordLiftLor dependency world_couple"
+require_line_count 1 '^theorem world_couple([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLor theorem world_couple"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLor\.evalDist_or$' "$selected_source_module" "PqxdhRecordLiftLor dependency evalDist_or"
+require_line_count 1 '^theorem evalDist_or([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLor theorem evalDist_or"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLor\.lorEligible_split$' "$selected_source_module" "PqxdhRecordLiftLor dependency lorEligible_split"
+require_line_count 1 '^theorem lorEligible_split([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLor theorem lorEligible_split"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLor\.lor_zeros$' "$selected_source_module" "PqxdhRecordLiftLor dependency lor_zeros"
+require_line_count 1 '^theorem lor_zeros([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLor theorem lor_zeros"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLor\.map_split$' "$selected_source_module" "PqxdhRecordLiftLor dependency map_split"
+require_line_count 1 '^theorem map_split([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLor theorem map_split"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLor\.testsHidden_hiding$' "$selected_source_module" "PqxdhRecordLiftLor dependency testsHidden_hiding"
+require_line_count 1 '^theorem testsHidden_hiding([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLor theorem testsHidden_hiding"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLor\.testBit_hidingView$' "$selected_source_module" "PqxdhRecordLiftLor dependency testBit_hidingView"
+require_line_count 1 '^theorem testBit_hidingView([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLor theorem testBit_hidingView"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLor\.lorGuess_hiding$' "$selected_source_module" "PqxdhRecordLiftLor dependency lorGuess_hiding"
+require_line_count 1 '^theorem lorGuess_hiding([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLor theorem lorGuess_hiding"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLor\.lorEligible_hiding$' "$selected_source_module" "PqxdhRecordLiftLor dependency lorEligible_hiding"
+require_line_count 1 '^theorem lorEligible_hiding([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLor theorem lorEligible_hiding"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLor\.law_zeros$' "$selected_source_module" "PqxdhRecordLiftLor dependency law_zeros"
+require_line_count 1 '^theorem law_zeros([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLor theorem law_zeros"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLor\.idealRecords_lor$' "$selected_source_module" "PqxdhRecordLiftLor dependency idealRecords_lor"
+require_line_count 1 '^theorem idealRecords_lor([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLor theorem idealRecords_lor"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"

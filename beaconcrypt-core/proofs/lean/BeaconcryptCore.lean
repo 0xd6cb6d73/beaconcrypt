@@ -1838,6 +1838,8 @@ import BeaconcryptCore.Computational.PqxdhRecordLiftSwap
 
 import BeaconcryptCore.Computational.PqxdhRecordLiftFlat
 
+import BeaconcryptCore.Computational.PqxdhRecordLiftLor
+
 /-!
 # Beaconcrypt-core verification root
 
