@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1691
+	[handwritten-lean]=1692
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -35434,6 +35434,33 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecord
 require_line_count 1 '^theorem record_lift_bool([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLift theorem record_lift_bool"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLift\.record_lift$' "$selected_source_module" "PqxdhRecordLift dependency record_lift"
 require_line_count 1 '^theorem record_lift([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLift theorem record_lift"
+
+# record lift world facts: Swap couplings of probabilistic computations with relabelled coins and escapes (items 4/5)
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftSwap.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.PqxdhRecordLiftSwap$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftSwap root import"
+require_line_count 10 '^theorem ' "$selected_source_module" "PqxdhRecordLiftSwap theorem inventory"
+require_line_count 10 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftSwap guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftSwap\.Swap\.mono$' "$selected_source_module" "PqxdhRecordLiftSwap dependency Swap.mono"
+require_line_count 1 '^theorem Swap\.mono([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSwap theorem Swap.mono"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftSwap\.Swap\.bind$' "$selected_source_module" "PqxdhRecordLiftSwap dependency Swap.bind"
+require_line_count 1 '^theorem Swap\.bind([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSwap theorem Swap.bind"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftSwap\.Swap\.map$' "$selected_source_module" "PqxdhRecordLiftSwap dependency Swap.map"
+require_line_count 1 '^theorem Swap\.map([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSwap theorem Swap.map"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftSwap\.Swap\.refl$' "$selected_source_module" "PqxdhRecordLiftSwap dependency Swap.refl"
+require_line_count 1 '^theorem Swap\.refl([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSwap theorem Swap.refl"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftSwap\.Swap\.refl_support$' "$selected_source_module" "PqxdhRecordLiftSwap dependency Swap.refl_support"
+require_line_count 1 '^theorem Swap\.refl_support([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSwap theorem Swap.refl_support"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftSwap\.Swap\.escape$' "$selected_source_module" "PqxdhRecordLiftSwap dependency Swap.escape"
+require_line_count 1 '^theorem Swap\.escape([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSwap theorem Swap.escape"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftSwap\.Swap\.query$' "$selected_source_module" "PqxdhRecordLiftSwap dependency Swap.query"
+require_line_count 1 '^theorem Swap\.query([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSwap theorem Swap.query"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftSwap\.Swap\.evalDist_map$' "$selected_source_module" "PqxdhRecordLiftSwap dependency Swap.evalDist_map"
+require_line_count 1 '^theorem Swap\.evalDist_map([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSwap theorem Swap.evalDist_map"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftSwap\.support_keep$' "$selected_source_module" "PqxdhRecordLiftSwap dependency support_keep"
+require_line_count 1 '^theorem support_keep([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSwap theorem support_keep"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftSwap\.Swap\.simulateQ_run$' "$selected_source_module" "PqxdhRecordLiftSwap dependency Swap.simulateQ_run"
+require_line_count 1 '^theorem Swap\.simulateQ_run([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSwap theorem Swap.simulateQ_run"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
