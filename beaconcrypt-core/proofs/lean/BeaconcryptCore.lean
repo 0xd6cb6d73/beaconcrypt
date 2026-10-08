@@ -1544,6 +1544,9 @@ import BeaconcryptCore.Computational.PqxdhRecordLiftMaskedOracle
 import BeaconcryptCore.Computational.PqxdhRecordLiftProtocol
 import BeaconcryptCore.Computational.PqxdhRecordLiftGlobalMask
 import BeaconcryptCore.Computational.PqxdhRecordLiftDeferredChild
+import BeaconcryptCore.Computational.PqxdhRecordLiftCtxOracle
+
+import BeaconcryptCore.Computational.PqxdhRecordLiftWorldProvenance
 import BeaconcryptCore.Computational.PqxdhDeploymentInterface
 
 import BeaconcryptCore.Computational.PqxdhDeploymentNative
