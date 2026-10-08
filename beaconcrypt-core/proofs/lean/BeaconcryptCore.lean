@@ -1780,6 +1780,8 @@ import BeaconcryptCore.Computational.PqxdhRecordLiftIdeal
 
 import BeaconcryptCore.Computational.PqxdhRecordLiftSeedRelay
 
+import BeaconcryptCore.Computational.PqxdhRecordLiftSeedPolicy
+
 /-!
 # Beaconcrypt-core verification root
 
