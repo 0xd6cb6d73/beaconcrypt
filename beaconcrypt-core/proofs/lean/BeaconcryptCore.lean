@@ -1745,6 +1745,7 @@ import BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconFinishOnceMarke
 import BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconFinishOncePost
 import BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconFinishOncePrefix
 import BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconFinishOnce
+import BeaconcryptCore.Computational.PqxdhRegistrationJointKemKeyTransfer
 
 /-!
 # Beaconcrypt-core verification root

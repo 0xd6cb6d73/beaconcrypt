@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1643
+	[handwritten-lean]=1644
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -32756,6 +32756,25 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegist
 require_line_count 1 '^theorem slotGame_two([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointBeaconFinishOnce theorem slotGame_two"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointBeaconFinishOnce\.opaqueBranch_slots_two$' "$selected_source_module" "PqxdhRegistrationJointBeaconFinishOnce dependency BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconFinishOnce.opaqueBranch_slots_two"
 require_line_count 1 '^theorem opaqueBranch_slots_two([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointBeaconFinishOnce theorem opaqueBranch_slots_two"
+
+# Item 2 stage S5, first part (extract-design plan sections 3 and 22): theorem T8, T5 in opaque form composed with T7 at two slots (and with S7 at two entries, also in the slot form at Slot 2); one-sided because T5 is; no test query; the bills of T8b wait for stage S8.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemKeyTransfer.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRegistrationJointKemKeyTransfer$' proofs/lean/BeaconcryptCore.lean "PqxdhRegistrationJointKemKeyTransfer root import"
+require_line_count 6 '^theorem ' "$selected_source_module" "PqxdhRegistrationJointKemKeyTransfer theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$selected_source_module" "PqxdhRegistrationJointKemKeyTransfer guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemKeyTransfer\.idealKeys_loss$' "$selected_source_module" "PqxdhRegistrationJointKemKeyTransfer dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemKeyTransfer.idealKeys_loss"
+require_line_count 1 '^theorem idealKeys_loss([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemKeyTransfer theorem idealKeys_loss"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemKeyTransfer\.allIdeal_loss$' "$selected_source_module" "PqxdhRegistrationJointKemKeyTransfer dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemKeyTransfer.allIdeal_loss"
+require_line_count 1 '^theorem allIdeal_loss([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemKeyTransfer theorem allIdeal_loss"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemKeyTransfer\.compose_right$' "$selected_source_module" "PqxdhRegistrationJointKemKeyTransfer dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemKeyTransfer.compose_right"
+require_line_count 1 '^theorem compose_right([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemKeyTransfer theorem compose_right"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemKeyTransfer\.authenticated_ideal_keys$' "$selected_source_module" "PqxdhRegistrationJointKemKeyTransfer dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemKeyTransfer.authenticated_ideal_keys"
+require_line_count 1 '^theorem authenticated_ideal_keys([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemKeyTransfer theorem authenticated_ideal_keys"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemKeyTransfer\.authenticated_all_ideal$' "$selected_source_module" "PqxdhRegistrationJointKemKeyTransfer dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemKeyTransfer.authenticated_all_ideal"
+require_line_count 1 '^theorem authenticated_all_ideal([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemKeyTransfer theorem authenticated_all_ideal"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemKeyTransfer\.authenticated_slots$' "$selected_source_module" "PqxdhRegistrationJointKemKeyTransfer dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemKeyTransfer.authenticated_slots"
+require_line_count 1 '^theorem authenticated_slots([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemKeyTransfer theorem authenticated_slots"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
