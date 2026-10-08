@@ -1,0 +1,707 @@
+{
+ "date": "2026-10-08T10:32:47.126360+00:00",
+ "scope": "CE-11b increment 1: PqxdhDeploymentIdealSlots (U1 generic: slot programs, slotCore, slot_natural_law, slotCore_natural), PqxdhDeploymentIdealParams (U1 R3 draws Target/Params/drawParams and spike item (b): preOpaque_pool, draws_swap, slotGame_pool), PqxdhDeploymentEnvironmentDraw (U3 generic: join_from, join_draw, paramEnv, join_param). Spike items (a), (c) and (d) as checked scratch definitions only. Reviewed (independent semantic, hygiene and composition review of 9f89f395); review fix pass applied (docstrings of PqxdhDeploymentIdealParams, guide, analysis, plan); confirming review of 7e4c14bf: every finding resolved, two documentation nits fixed in a documentation-only commit; not integrated into central at that commit.",
+ "basis": "ee7878ee4c42f59460a3a8b80983a4a209bd4e0d",
+ "topic": {
+  "branch": "codex/deployment-ce11b",
+  "worktree": "/tmp/beaconcrypt-deployment-ce11b"
+ },
+ "plan": {
+  "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
+  "sha256": "dc425e6e6b23eaa2788a0b6b690e8d70b5be116b5a132e99c52bcd78ba78d6e4",
+  "sections": "0 (item 7 amended by A1 after the confirming review), 8, 9 (headline form; rows 9.5 and 9.6 and the two-sided chain paragraph amended by A1), 13 (amended by A1 after the confirming review), 14 (CE-11 row, amended by A1), 32, 43-46, 47 (this increment; corrected in the review fix), 48 (review fix: A1 adopted, A2 accepted, corrections, re-estimate with the U3/U4 move; confirming review)"
+ },
+ "design": {
+  "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/design-v2.md",
+  "sha256": "c3e77b8a843c1e0f5e7244eb90becbf497d3f0d566ec982fc43d00d43b7756c7",
+  "sections": "0, 1, 3.1, 5.1, 6.1, 8.3 step 1, 8.5 (spike), 10.1 (corrected), 11, 13, 15 (corrections after increment 1; effort line with the U3/U4 move)"
+ },
+ "commits": [
+  {
+   "commit": "a058e9c64c1aadb91fd16057116e49851e9655f3",
+   "subject": "Add slot programs and their naturality"
+  },
+  {
+   "commit": "e0272f88e4f0d7b29e9d07f34a2549bbf86fb856",
+   "subject": "Add the CE-11b challenger draws and the draw swap"
+  },
+  {
+   "commit": "5b5eb1b4c3e21491113eca499c9fa078087e1b7d",
+   "subject": "Add C1 for environments that draw parameters at startup"
+  },
+  {
+   "commit": "e21d46300fb3a11081984a45b6011ef98ab5ea47",
+   "subject": "Document CE-11b increment 1"
+  },
+  {
+   "commit": "542820b4ef67e3c0f8219b27fefd3636a1af5132",
+   "subject": "Record the CE-11b prefix route and the spike re-estimate"
+  },
+  {
+   "commit": "9f89f395b9a47da6999befc73459a5e859b1361f",
+   "subject": "Correct the CE-11b commit counts in the guide and receipt"
+  },
+  {
+   "commit": "86af5127c782838456af4b0f31743442e0911767",
+   "subject": "Correct the CE-11b draw docstrings"
+  },
+  {
+   "commit": "7e4c14bf885eb3efa7a91bf2b011504a6b0a3f80",
+   "subject": "Document the CE-11b increment 1 review fix pass"
+  }
+ ],
+ "commits_note": "The Lean and documentation commits made before this receipt was last generated, ending with the review fix pass's documentation commit 7e4c14bf; the documentation commit of the confirming review's nits, which last updated this receipt, is not listed.",
+ "files_sha256": {
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealSlots.lean": "f5839292c571aaeefbdec55b901c3e69ce5a6c03c7ab4b68a0cfefecda66a611",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealParams.lean": "43f4cdedde9dc8da9c3f5578b34b5442ce7044239da48cc6aeb05e8ec5a44438",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentEnvironmentDraw.lean": "4f65dbdb3db8e67d20d4599a1ff4ae967395b6975d9337ad02f946594e189041",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "a082bd1d01bddfedc0b2bd4c300f8c05bc0ab1126d725080190be9c1f3845c5e",
+  "beaconcrypt-core/proofs/check-inventory.sh": "1af7dd0d533d768a3a450b9aee67d38f3c87e97a200865cecf8f2d7cd2197588",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "6d9ca602925c9d9d7e7ee86aee0848e5e2af7c626f6b7962ca28055af35d1642"
+ },
+ "modules": [
+  {
+   "name": "BeaconcryptCore.Computational.PqxdhDeploymentIdealSlots",
+   "theorem_count": 11,
+   "theorems": [
+    "simulateQ_keeps",
+    "slot_keeps",
+    "slot_step_law",
+    "slot_natural_law",
+    "slot_natural_proj",
+    "detach_attach",
+    "attach_detach",
+    "mapBackend_attach",
+    "detach_mapBackend",
+    "slotCore_run",
+    "slotCore_natural"
+   ],
+   "definitions": [
+    "Coord",
+    "SlotSpec",
+    "SlotProgram",
+    "detach",
+    "attach",
+    "slotCore"
+   ],
+   "guarded": 11,
+   "axiom_profile": {
+    "simulateQ_keeps": [
+     "Quot.sound",
+     "propext"
+    ],
+    "slot_keeps": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "slot_step_law": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "slot_natural_law": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "slot_natural_proj": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "detach_attach": [],
+    "attach_detach": [],
+    "mapBackend_attach": [],
+    "detach_mapBackend": [],
+    "slotCore_run": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "slotCore_natural": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ]
+   },
+   "direct_check_final": {
+    "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealSlots",
+    "start": "2026-10-08T09:17:25.421017943Z",
+    "end": "2026-10-08T09:17:28.917178307Z",
+    "exit": 0,
+    "source_sha256": "f5839292c571aaeefbdec55b901c3e69ce5a6c03c7ab4b68a0cfefecda66a611",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/common-experiment/ce11b/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealSlots.olean",
+    "artifact_sha256": "29fec3e463fdb548eddfcec954fc2760a252e8a4809f96d050385523891b8da2",
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce11b/leanpath",
+    "leanpath_sha256": "14544bf58c3df042cd412bed78d8715e905c35ca2e5fb299a61b518498c2710f",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/ce11b/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealSlots.olean",
+     "/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealSlots.lean"
+    ],
+    "source_matches_worktree": true
+   }
+  },
+  {
+   "name": "BeaconcryptCore.Computational.PqxdhDeploymentIdealParams",
+   "theorem_count": 11,
+   "theorems": [
+    "ofCE_kem",
+    "ofCE_accept",
+    "pool_length",
+    "pool_kem",
+    "pool_other",
+    "pool_eq",
+    "preOpaque_pool",
+    "draws_swap",
+    "slot_liftComp",
+    "internalize_run",
+    "slotGame_pool"
+   ],
+   "definitions": [
+    "Target",
+    "Target.ofCE",
+    "Params",
+    "Params.family",
+    "Params.pool",
+    "drawParams",
+    "preOpaquePool",
+    "startPool",
+    "entryClientAt",
+    "slotGameAt"
+   ],
+   "guarded": 11,
+   "axiom_profile": {
+    "ofCE_kem": [],
+    "ofCE_accept": [],
+    "pool_length": [
+     "propext"
+    ],
+    "pool_kem": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "pool_other": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "pool_eq": [
+     "propext"
+    ],
+    "preOpaque_pool": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "draws_swap": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "slot_liftComp": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "internalize_run": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "slotGame_pool": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ]
+   },
+   "direct_check_final": {
+    "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealParams",
+    "start": "2026-10-08T10:12:29.188675099Z",
+    "end": "2026-10-08T10:12:32.793464181Z",
+    "exit": 0,
+    "source_sha256": "43f4cdedde9dc8da9c3f5578b34b5442ce7044239da48cc6aeb05e8ec5a44438",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/common-experiment/ce11b/fix1/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealParams.olean",
+    "artifact_sha256": "cec99db137739fe8a961530636c0c435346ad1e75a02c283c927dec2305edd02",
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce11b/fix1/leanpath",
+    "leanpath_sha256": "eb0e06f2b06edb74148cd8cb22f65fc1c5a96291659a71ec5fe1146ead7d5f07",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/ce11b/fix1/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealParams.olean",
+     "/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealParams.lean"
+    ],
+    "source_matches_worktree": true
+   },
+   "direct_check_before_review_fix": {
+    "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealParams",
+    "start": "2026-10-08T09:24:16.235345117Z",
+    "end": "2026-10-08T09:24:19.969499578Z",
+    "exit": 0,
+    "source_sha256": "f031bdc1889d7ae810463e84a7e59621b35f46aca554596d29508385da91192d",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/common-experiment/ce11b/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealParams.olean",
+    "artifact_sha256": "0f90afeda7a5c7f018cf5738d927ac7b32de9df3849ebf0f1a580de17b635fa9",
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce11b/leanpath",
+    "leanpath_sha256": "14544bf58c3df042cd412bed78d8715e905c35ca2e5fb299a61b518498c2710f",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/ce11b/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealParams.olean",
+     "/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealParams.lean"
+    ],
+    "source_matches_worktree": false
+   },
+   "review_fix_note": "docstrings only (module docstring, section header, pool_eq, slotGame_pool); statements and proofs unchanged; rechecked into ce11b/fix1/olean"
+  },
+  {
+   "name": "BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentDraw",
+   "theorem_count": 13,
+   "theorems": [
+    "program_rest",
+    "join_from",
+    "join_draw",
+    "join_draw_observed",
+    "join_draw_analysis",
+    "merge_withE",
+    "good_withE",
+    "stable_param",
+    "splits_param",
+    "handlerWith_param",
+    "simulateQ_embed",
+    "gameWith_param",
+    "join_param"
+   ],
+   "definitions": [
+    "worldRest",
+    "dropX",
+    "withX",
+    "dropE",
+    "withE",
+    "paramReg",
+    "paramStep",
+    "paramInv",
+    "paramEnv"
+   ],
+   "guarded": 13,
+   "axiom_profile": {
+    "program_rest": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "join_from": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "join_draw": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "join_draw_observed": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "join_draw_analysis": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "merge_withE": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "good_withE": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "stable_param": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "splits_param": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "handlerWith_param": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "simulateQ_embed": [
+     "Quot.sound",
+     "propext"
+    ],
+    "gameWith_param": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "join_param": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ]
+   },
+   "direct_check_final": {
+    "module": "BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentDraw",
+    "start": "2026-10-08T09:32:55.330897663Z",
+    "end": "2026-10-08T09:33:00.496712794Z",
+    "exit": 0,
+    "source_sha256": "4f65dbdb3db8e67d20d4599a1ff4ae967395b6975d9337ad02f946594e189041",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/common-experiment/ce11b/olean/BeaconcryptCore/Computational/PqxdhDeploymentEnvironmentDraw.olean",
+    "artifact_sha256": "96b4c8387827408219e32efdb4047e159dc499c1c455cee97e292aceb29817d4",
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce11b/leanpath",
+    "leanpath_sha256": "14544bf58c3df042cd412bed78d8715e905c35ca2e5fb299a61b518498c2710f",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/ce11b/olean/BeaconcryptCore/Computational/PqxdhDeploymentEnvironmentDraw.olean",
+     "/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentEnvironmentDraw.lean"
+    ],
+    "source_matches_worktree": true
+   }
+  }
+ ],
+ "theorem_total": 35,
+ "allowed_axioms": [
+  "Classical.choice",
+  "Quot.sound",
+  "propext"
+ ],
+ "design_names_realized_as": {
+  "slot_natural_law, slot_natural_proj, slotCore, slotCore_natural (design-v2 5.1, v1 4.1)": "PqxdhDeploymentIdealSlots, as designed (plus slot_step_law, slot_keeps, simulateQ_keeps, slotCore_run and the attach/detach lemmas)",
+  "Target, Target.ofCE, Params, Params.pool, drawParams (design-v2 3.1)": "PqxdhDeploymentIdealParams (not IdealSteps), plus Params.family, pool_length, pool_kem, pool_other, pool_eq, ofCE_kem, ofCE_accept",
+  "draws_swap (design-v2 8.3 step 1, S13)": "PqxdhDeploymentIdealParams.draws_swap (LawEq of sharedStart and drawParams >>= startPool), with preOpaque_pool and the slotGame form slotGame_pool",
+  "bindStart, envGD, run_bindStart (design-v2 6.1)": "replaced by PqxdhDeploymentEnvironmentDraw.paramEnv (parameter in the environment backend) and join_param (replaces c1_split and run_bindStart; c1_ideal also needs ideal_to_split under drawParams); run_bindStart dropped (needs World count-obliviousness); run_bindStart_support planned in U4"
+ },
+ "deviations_from_design": [
+  "Params/drawParams/draws_swap live in the new module PqxdhDeploymentIdealParams (design: IdealSteps and IdealCut), because they do not depend on the spike-dependent step definitions.",
+  "envGD: state EnvState KemSK (P x Bk) with the parameter in the backend (paramEnv) instead of P x E (bindStart); join_param (regs := idealSplit t ., steps := idealStep t .) replaces c1_split and run_bindStart, which would need a World count-obliviousness lemma that central lacks; c1_ideal composes ideal_to_split pointwise under drawParams with join_param; plan section 9 headline form unchanged; Frame startup bound qInit + 32 + (count + 1)*kg + ec (A2) instead of envG's qInit + 32.",
+  "simulateQ_keeps restates PqxdhDeploymentEnvironmentJoin.keeps_simulateQ to keep PqxdhDeploymentIdealSlots free of environment imports.",
+  "The working-plan section is 47 (the task named 42, which already existed).",
+  "C3 and the run-phase reveal projection for paramEnv: central c3_shared_cache and join_reveal need born, so they come as maps of join_draw (U3, planned).",
+  "C6 for envGD: central join_later and join_later_public need born; a new generic join_later_param is planned in 11b-L before c6_ideal.",
+  "C5 support transport: run_bindStart_support becomes planned work in U4, an invariant argument over paramEnv's startup support and the annotated World handler.",
+  "Publication order: generic, spike-independent parts of U1, U3 and U5 step 1 were published before the spike's exit criteria were met; nothing published depends on the spike."
+ ],
+ "spike": {
+  "file": "/tmp/bc-arc-scratch/common-experiment/ce11b/spike/AcceptSpike.lean",
+  "sha256": "1fc9bcef57183b0c76ae7ab30db2e58c2a65c0d1fca1779b6f07e407453b0f93",
+  "last_dev_check": "1fc9bcef57183b0c76ae7ab30db2e58c2a65c0d1fca1779b6f07e407453b0f93  spike/AcceptSpike.lean\nexit 0",
+  "content": "acceptActive, acceptSelected, acceptSelected_logged (theorem), tailCE, coordsOf, buildHidden, buildHidden_native (theorem, rfl), groupedOwnerCE, preparationCE, groupCE, ownerImplCE, finishChallenge; createPool, create_merge_pool (theorem), handlerPool, revealPool, deploymentPool, compile_simulation_pool_stmt (statement only); scratch only, not published",
+  "not_done": [
+   "(a) proof of the pool compile simulation (layer list and P-a choice are done, see the guide)",
+   "(d) post_compile for owner k challenge finish",
+   "(e) one record command on the hidden session",
+   "(f) one non-challenge finish of owner k through router and evalLayer",
+   "faithfulness of finishChallenge on non-challenge ciphertexts"
+  ],
+  "scope_note": "items (a) (pool create of the prefix route), (c) and (d) as checked scratch definitions; item (b) published as PqxdhDeploymentIdealParams"
+ },
+ "contracts_used": {
+  "new_contracts": [],
+  "new_assumptions": [],
+  "codec_laws": [],
+  "premises": "per-draw Splits and stable predicates (join_draw, join_param), service projections (slot_natural_law); no assumption"
+ },
+ "leanpath": {
+  "manifest": "/tmp/bc-arc-scratch/common-experiment/ce11b/leanpath",
+  "sha256": "14544bf58c3df042cd412bed78d8715e905c35ca2e5fb299a61b518498c2710f",
+  "note": "ce11b/olean (resolved symlink mirror of the first prefix of /tmp/bc-coord/leanpaths/ee7878ee4c42f59460a3a8b80983a4a209bd4e0d.leanpath without the root olean, plus the three CE-11b oleans) in front of the published ee7878ee LEAN_PATH"
+ },
+ "root_checks": {
+  "root-final1": {
+   "module": "BeaconcryptCore",
+   "start": "2026-10-08T09:41:30.917183224Z",
+   "end": "2026-10-08T09:41:34.360087819Z",
+   "exit": 0,
+   "source_sha256": "a082bd1d01bddfedc0b2bd4c300f8c05bc0ab1126d725080190be9c1f3845c5e",
+   "log_bytes": 0,
+   "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "artifact": "/tmp/bc-arc-scratch/common-experiment/ce11b/root-checks/final1/BeaconcryptCore.olean",
+   "artifact_sha256": "6cc4c81ea84adfc500266b455efc1603a5bb911a532e61da6938dd27ef4cecf6",
+   "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce11b/leanpath",
+   "leanpath_sha256": "14544bf58c3df042cd412bed78d8715e905c35ca2e5fb299a61b518498c2710f",
+   "command": [
+    "coord.sh",
+    "lean",
+    "claude",
+    "<label>",
+    "--",
+    "timeout",
+    "180",
+    "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+    "-j1",
+    "-M8000",
+    "--root=/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean",
+    "-o",
+    "/tmp/bc-arc-scratch/common-experiment/ce11b/root-checks/final1/BeaconcryptCore.olean",
+    "/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+   ]
+  },
+  "root-fix1": {
+   "module": "BeaconcryptCore",
+   "start": "2026-10-08T10:12:39.690205676Z",
+   "end": "2026-10-08T10:12:42.929630054Z",
+   "exit": 0,
+   "source_sha256": "a082bd1d01bddfedc0b2bd4c300f8c05bc0ab1126d725080190be9c1f3845c5e",
+   "log_bytes": 0,
+   "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "artifact": "/tmp/bc-arc-scratch/common-experiment/ce11b/fix1/root-checks/fix1/BeaconcryptCore.olean",
+   "artifact_sha256": "6cc4c81ea84adfc500266b455efc1603a5bb911a532e61da6938dd27ef4cecf6",
+   "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce11b/fix1/leanpath",
+   "leanpath_sha256": "eb0e06f2b06edb74148cd8cb22f65fc1c5a96291659a71ec5fe1146ead7d5f07",
+   "command": [
+    "coord.sh",
+    "lean",
+    "claude",
+    "<label>",
+    "--",
+    "timeout",
+    "180",
+    "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+    "-j1",
+    "-M8000",
+    "--root=/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean",
+    "-o",
+    "/tmp/bc-arc-scratch/common-experiment/ce11b/fix1/root-checks/fix1/BeaconcryptCore.olean",
+    "/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+   ]
+  }
+ },
+ "focused_inventory": {
+  "inventory-final1": {
+   "exit": 0,
+   "start": "2026-10-08T09:41:40Z",
+   "end": "2026-10-08T09:43:03Z",
+   "head_at_run": "5b5eb1b4c3e21491113eca499c9fa078087e1b7d",
+   "working_tree_dirt_lines": 0,
+   "log_sha256": "c75b4c76d3b8c0c3b8698fdfd4a81e6345f8a0d952bedfa6c81a25704f31a021",
+   "last_line": "Formal-verification inventory matches the reviewed boundary."
+  },
+  "inventory-docs": {
+   "exit": 0,
+   "start": "2026-10-08T09:45:56Z",
+   "end": "2026-10-08T09:47:19Z",
+   "head_at_run": "5b5eb1b4c3e21491113eca499c9fa078087e1b7d",
+   "working_tree_dirt_lines": 3,
+   "log_sha256": "26ccb285601061435503f82cc718c5c5fe01a6a11818d74cc0eb1ee71b271387",
+   "last_line": "Formal-verification inventory matches the reviewed boundary."
+  },
+  "inventory-fix1": {
+   "exit": 0,
+   "start": "2026-10-08T10:12:57Z",
+   "end": "2026-10-08T10:14:20Z",
+   "head_at_run": "86af5127c782838456af4b0f31743442e0911767",
+   "working_tree_dirt_lines": 0,
+   "log_sha256": "4a5955c117b92b78473b7f7d8dc2350269e22f1bec83f50691b334811ff4558a",
+   "last_line": "Formal-verification inventory matches the reviewed boundary."
+  },
+  "inventory-fix1-docs": {
+   "exit": 0,
+   "start": "2026-10-08T10:19:16Z",
+   "end": "2026-10-08T10:20:40Z",
+   "head_at_run": "86af5127c782838456af4b0f31743442e0911767",
+   "working_tree_dirt_lines": 4,
+   "log_sha256": "d06d2d9297f7e00b2a5996bb67e1194509c3db4d5392cc0e4de00eabd630c259",
+   "last_line": "Formal-verification inventory matches the reviewed boundary."
+  }
+ },
+ "focused_inventory_note": "inventory-final1 ran on the last Lean commit with a clean tree; inventory-docs ran on the same commit with the documentation changes of the documentation commit (guide, analysis, this receipt) in the working tree, before that commit. Review fix pass: inventory-fix1 ran on the fix pass's Lean commit with a clean tree; inventory-fix1-docs ran on the same commit with the documentation changes of the fix pass's documentation commit in the working tree.",
+ "inventory": {
+  "handwritten_lean_rows_before": 1663,
+  "handwritten_lean_rows_after": 1666,
+  "rehashed": [
+   "proofs/lean/BeaconcryptCore.lean",
+   "proofs/check-inventory.sh"
+  ],
+  "note": "coord.sh inv recount before coord.sh inv rehash after each module commit",
+  "review_fix": {
+   "rehashed": [
+    "proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealParams.lean"
+   ],
+   "rows_changed": 0,
+   "note": "coord.sh inv rehash after the docstring change; theorem counts unchanged, so check-inventory.sh is unchanged"
+  }
+ },
+ "forbidden_scan": {
+  "PqxdhDeploymentIdealSlots": [],
+  "PqxdhDeploymentIdealParams": [],
+  "PqxdhDeploymentEnvironmentDraw": []
+ },
+ "git_diff_check": {
+  "range": "ee7878ee..working tree",
+  "exit": 0
+ },
+ "not_run": [
+  "full lake build",
+  "make verify",
+  "mutation testing",
+  "nix-collect-garbage"
+ ],
+ "plan_snapshot": {
+  "path": "doc/impl/common-deployment-experiment-plan.md",
+  "sha256": "dadcc7369fa40303be3fd8c05a54a5e6f37c07b12a620b8c2bd7d340294d825f",
+  "source_sha256": "dc425e6e6b23eaa2788a0b6b690e8d70b5be116b5a132e99c52bcd78ba78d6e4",
+  "note": "committed snapshot, refreshed from the working plan after the confirming review (adds sections 43 to 48); the header note lists the places amended by A1 (item 7 of section 0, rows 9.5 and 9.6 and the two-sided chain paragraph of section 9, section 13, the CE-11 row of section 14)"
+ },
+ "leanpath_review_fix": {
+  "manifest": "/tmp/bc-arc-scratch/common-experiment/ce11b/fix1/leanpath",
+  "sha256": "eb0e06f2b06edb74148cd8cb22f65fc1c5a96291659a71ec5fe1146ead7d5f07",
+  "note": "ce11b/fix1/olean (resolved symlink mirror of ce11b/olean without the PqxdhDeploymentIdealParams olean, plus its rechecked olean) in front of the published ee7878ee LEAN_PATH"
+ },
+ "reestimate": {
+  "unit": "nominal agent-days",
+  "design_main_line": "36-61",
+  "per_unit": {
+   "spike": {
+    "planned": "3-5",
+    "done": "2",
+    "remaining": "1-3"
+   },
+   "U1": {
+    "planned": "4-7",
+    "done": "1",
+    "remaining": "3-6"
+   },
+   "U2": {
+    "planned": "3-5",
+    "done": "0",
+    "remaining": "3-5"
+   },
+   "U3": {
+    "planned": "5-8.5 (design 5-9, +0.5 for C3 and the reveal projection on paramEnv, -0.5-1 for the C5 support transport, moved to U4)",
+    "done": "1-2",
+    "remaining": "4-6.5"
+   },
+   "U4": {
+    "planned": "4.5-8 (design 4-7, +0.5-1 for the C5 support transport, moved from U3)",
+    "done": "0",
+    "remaining": "4.5-8"
+   },
+   "U5": {
+    "planned": "5.5-10 (design 5-8; spike item (g))",
+    "done": "0",
+    "remaining": "5.5-10"
+   },
+   "U6": {
+    "planned": "7-12",
+    "done": "0",
+    "remaining": "7-12"
+   },
+   "U7": {
+    "planned": "2-3",
+    "done": "0",
+    "remaining": "2-3"
+   },
+   "documentation, reviews, integration": {
+    "planned": "3-5",
+    "done": "0",
+    "remaining": "3-5"
+   }
+  },
+  "main_line": "37-63.5",
+  "done": "4-5",
+  "remaining": "33-58.5",
+  "deferred_11b_L": "2.5-5 (design 2-4, +0.5-1 for join_later_param)",
+  "rule": "each bound of the remaining range is the corresponding bound of the total minus the corresponding bound of the work done",
+  "note_confirming_review": "confirming-review nit: 0.5-1 of U3's figure moves with the C5 support transport to U4 (planned and remaining); main line 37-63.5 and remaining 33-58.5 unchanged"
+ },
+ "review": {
+  "reviewed_commit": "9f89f395b9a47da6999befc73459a5e859b1361f",
+  "kinds": [
+   "semantic",
+   "hygiene",
+   "composition"
+  ],
+  "result": "no error in the Lean statements or proofs; four minor and seven nit findings (one a record of the reviewer's checks) on the documentation, the plan and three docstrings",
+  "findings_fixed": [
+   "minor: c1_ideal is not join_param (guide decisions, open points, names for consumers; plan section 47)",
+   "minor: paramEnv needs startup-draw versions of C3, the reveal join and C6 (guide decisions, open points, re-estimate; design-v2 10.1 and 15; plan 47/48)",
+   "minor: C6 has no paramEnv form (join_later_param planned in 11b-L; guide, plan section 47 A4, design-v2 10.1)",
+   "minor: plan section 9 rows 9.5/9.6 and the section 14 CE-11 row routed through T7 (A1 adopted; rows amended in the working plan and the committed snapshot)",
+   "nit: run_bindStart_support stated as settled (now planned work in U4)",
+   "nit: re-estimate arithmetic (recomputed per unit; same figures in guide, receipt and plan section 47)",
+   "nit: spike labels (status paragraph, spike section, receipt scope)",
+   "nit: wording in the IdealParams docstrings and the analysis (n-slot world; pool_eq; every other KEM creation index)",
+   "nit: envGD startup bound stated (A2 accepted, N2 settled internally)",
+   "nit: publication order recorded as a deviation with the P-b and R3 fallbacks",
+   "nit: record of the reviewer's checks (no change needed)"
+  ],
+  "confirming_review": {
+   "reviewed_commit": "7e4c14bf885eb3efa7a91bf2b011504a6b0a3f80",
+   "result": "every finding of the review of 9f89f395 resolved; statements, guards, receipt and HEAD agree; two documentation nits and one record (no action)",
+   "findings_fixed": [
+    "nit: after A1, plan section 13, item 7 of the summary (section 0) and the two-sided chain paragraph of section 9 still named idealKeysBranch(compile A) / T7 as the compiled ideal world; amended in the style of the other rows (earlier wording after \"before it\") in the working plan and the refreshed snapshot, whose header note lists them",
+    "nit: the C5 support transport moved from U3 to U4 without a figure; 0.5-1 moved from U3's planned and remaining figures to U4's in the guide table, this receipt's reestimate.per_unit and plan section 48",
+    "record: every finding resolved; statements, guards, receipt and HEAD agree (no change needed)"
+   ],
+   "files_changed": [
+    "doc/impl/common-deployment-experiment.md",
+    "doc/impl/common-deployment-experiment-plan.md",
+    "doc/formal-verification-analysis.md",
+    "doc/impl/proof-receipts/common-deployment-experiment-ce11b.json"
+   ],
+   "core_changed": false,
+   "note": "documentation only; no file under beaconcrypt-core changed, so the Lean and inventory checks of the review fix pass still apply"
+  }
+ }
+}

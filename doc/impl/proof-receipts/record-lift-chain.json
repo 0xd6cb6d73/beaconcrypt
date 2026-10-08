@@ -1,0 +1,1584 @@
+{
+ "date": "2026-10-08T10:26:44.859502+00:00",
+ "scope": "Items 4 and 5 (record-layer lift), stage S3 of the takeover plan (chain track C1-C4, item 5): PqxdhRecordLiftSeedRelay, PqxdhRecordLiftSeedPolicy, PqxdhRecordLiftChainHop, PqxdhRecordLiftChainHybrid, PqxdhRecordLiftChainBills, PqxdhRecordLiftChainAlias and PqxdhRecordLiftChainLift, 96 guarded statements; PqxdhRecordLiftChainLift.chain_lift proves PqxdhRecordLiftIdeal.ChainLiftTarget as defined on central ee7878ee, for the explicit reductions chainReduction and the explicit bills chainBills. This receipt also records the documentation-only fix pass of the independent semantic and hygiene reviews of 0f06970f.",
+ "basis": "ee7878ee4c42f59460a3a8b80983a4a209bd4e0d",
+ "topic": {
+  "branch": "codex/deployment-record-chain",
+  "worktree": "/tmp/beaconcrypt-deployment-record-chain",
+  "registry": "scratch /tmp/bc-arc-scratch/items45/chain, worktree and branch registered to claude before creation; modules under the PqxdhRecordLift* names Claude owns since the owner decision of 2026-10-08 (/tmp/bc-coord/decision-2026-10-08.txt); the worktree note was updated in the fix pass to name PqxdhRecordLiftChainLift (hygiene nit 9)"
+ },
+ "plan": {
+  "path": "/tmp/bc-arc-scratch/items45-takeover/takeover-plan.md",
+  "sha256": "b66f4608b374aefcf574bf6128a03f82533cbaa1686d98ab0ee1f76bcd7defb3",
+  "sections": "2 (S3: C1-C4; decisions D1-D5), 7 (chain track status)",
+  "note": "Hash at the time of this receipt; section 7 (status) was appended by the chain track after its last module commit. Section 2 S3 is unchanged."
+ },
+ "brief": {
+  "path": "/tmp/bc-coord/tasks/codex-items-4-5.md",
+  "sha256": "c947e27514ecf3b8041a1d61ef78b158c2c732d1f7bb8782b94c1e796a92b99e",
+  "sections": "H-1 to H-7, 7"
+ },
+ "targets": {
+  "module": "PqxdhRecordLiftIdeal (central ee7878ee, unchanged)",
+  "guide": "doc/impl/record-lift-ideal.md",
+  "delivered": "PqxdhRecordLiftChainLift.chain_lift : ChainLiftTarget setup codec route serverKid bounds n hmac (chainReduction setup codec route serverKid bounds n) chainBills",
+  "hops": "hops n budget = (sends + 51 * receives) * (n * 2); the body of commit e50cfd79 prints this formula without its multiplication signs (hygiene nit 7; the pushed commit is not amended)",
+  "bill": "chainBills.observer input = observerBill input = 2 * programCoins input + 44 + input.decision; programCoins input = C_coin + 64 * C_hash + 64 * C_admin + 140 * sends + 3940 * receives (programCoins_closed), reading only the budget, startup, allowance and fresh fields of BillInput",
+  "contracts_used": "SourceFullCorrect setup.source hmac only (brief H-7); Extract-on-uniform32 and HMAC-PRF enter only as advantages of the explicit observers",
+  "statements_changed": "None. No definition of PqxdhRecordLiftIdeal and no statement of the chain track changed in the fix pass; the two Lean edits are module docstrings."
+ },
+ "provenance": {
+  "seed_relay": "Adapted from Codex WIP a274839204ccf2a7825ff8f42b107c41ba7d7541cacb76927c9f7ed23d3bb908 (49-line stub, never compiled)",
+  "seed_policy_design_note": {
+   "location": "codex/deployment-record-wip@023b9a81:doc/impl/handover/record-lift-wip/codex-plan-seed-policy.md",
+   "sha256": "02cb4c6516c6bc060b1c0eaa715274c54e04a804d206557b6a91fd1109d6f11d",
+   "verified": true
+  },
+  "reused": "PqxdhRecordLiftChildPolicy (adapted from Codex WIP 128a291626158feebadc9f9d2a97a0ef3fbfec78efe76087ec71b8f83c768894), PqxdhRecordLiftCtxProgramBounds (adapted from Codex WIP 879a91bdf51208e3308bc6a6f9d3f52994553fdb4549d18f15ac82b545a178fd); everything else new Claude work"
+ },
+ "commits": [
+  {
+   "commit": "acee8e1814df261751e5612aa9762ea901c59f16",
+   "subject": "Add the record-lift seed relay (chain track C1)"
+  },
+  {
+   "commit": "bef97eae4b19e7b5d678818838c3555375bef4d5",
+   "subject": "Add the record-lift seed policy (chain track C1)"
+  },
+  {
+   "commit": "e1eef973abefe6a18b763027dc2a739dfac58f00",
+   "subject": "Add the record-lift chain hop (chain track C2)"
+  },
+  {
+   "commit": "90f350770146f4a051824a95a3748b63a55cd86f",
+   "subject": "Add the record-lift chain hybrid (chain track C3)"
+  },
+  {
+   "commit": "248413d4fec2e8cd10dfdf91a1a049d52f589971",
+   "subject": "Add the record-lift chain bills (chain track C4)"
+  },
+  {
+   "commit": "1146d3b55c9931c96783b07f9494c8ede7da96c4",
+   "subject": "Add the record-lift chain alias facts (chain track C3, D3)"
+  },
+  {
+   "commit": "e50cfd7963c0a190adfff8f09b15c33d32a6ab7c",
+   "subject": "Prove the record-lift chain lift target (item 5)"
+  },
+  {
+   "commit": "9049621d755d18fe45be7c092adf760cdacf8c34",
+   "subject": "Explain the record-lift chain lift in the verification analysis"
+  },
+  {
+   "commit": "0f06970f2d031e8f70f6d842d783563e6cccb472",
+   "subject": "Record the chain-track checks in the chain-lift guide"
+  },
+  {
+   "commit": "c15efe2a7479cbf782870820aa946456b0aa99da",
+   "subject": "Fix the chain-track review findings in docstrings and guides"
+  },
+  {
+   "commit": "d0a41fcf535fc06d44986a81958bafa719755a98",
+   "subject": "Add the record-lift chain-track receipt"
+  }
+ ],
+ "commits_note": "Nine track commits acee8e18..0f06970f, the fix-pass commit c15efe2a (docstrings, guides, inventory rehash) and the receipt commit d0a41fcf; this version of the receipt is written by the confirming-review nit-fix commit that follows d0a41fcf (documentation only: the chain-lift guide and this receipt).",
+ "files_sha256": {
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftSeedRelay.lean": "c079df3d109ed00ddc21019c9e5b153a17981978c8e596520d43d8a861257589",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftSeedPolicy.lean": "45cf47719cf72f1d5617d161b8430f1736a2442744a982c16e66d0f4cba93678",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChainHop.lean": "235374a455963ecdc3a2a3763934bd84403dafe8b560e44fcd2cd89f73f2ebbf",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChainHybrid.lean": "7f896932ef75e22f8ec15672d8a69df61a7158e0ca5a81c4ecd60ca271201823",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChainBills.lean": "543e71b243dd331ae91fa66ace496450886c0be479f5cbc266bcdbace7d2c1a7",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChainAlias.lean": "e2934d0a9bb4f469bf21d4ded5eb6f9d21219cbc979d7633b1ffd2c48060a822",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChainLift.lean": "c83d57141a2b725bcdca44d4f823a631a22274476ad8a466e078bc2e6aec1b51",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "69fb1082573404ad1c0ed057cbb547622d5ae561b392f2f06bd916b419d0ee7e",
+  "beaconcrypt-core/proofs/check-inventory.sh": "e55a65f3c0bf7b5f0de8c7b9f76aa80abe848617e2afbd135508f006578110ff",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "0f47fd6a1ac347b9824240abfa1558aaead4f36ff04bcc785e0c15c18c3858d7",
+  "doc/impl/record-lift-seed-relay.md": "89825a557d367b3902e461916c141ae2a694ea2e9fb263573bc46f738121ae15",
+  "doc/impl/record-lift-seed-policy.md": "31f411d0d64f93885b158256bbed58fdb716210b17c9d4ced7c1ae93c9d01aa3",
+  "doc/impl/record-lift-chain-hop.md": "d0581e8420033799722ff7df9df503bb9dc56ba3ee145921fa71ea9dc666e1a1",
+  "doc/impl/record-lift-chain-hybrid.md": "962d42e335a4eea6f9f879a25980a920010313ff62568f9b73aad89f5df05d06",
+  "doc/impl/record-lift-chain-bills.md": "f7e12b8d59254356b95c51db8cfac92fa4a69149c5ccb4f16d9600800c6ff073",
+  "doc/impl/record-lift-chain-alias.md": "f112a40090da81ee2547e1cf54a80e395db3a0b8ff3251e273f2aaeebe2fa615",
+  "doc/impl/record-lift-chain-lift.md": "3211ac898c28c7b3236f2f6fc2224de2ef978a56a70671260b0a277010ec3131",
+  "doc/impl/record-lift-ideal.md": "df2314014aafd0004054bd7b7a344f1e68f9657405014d3b1c9430b149ea91b8",
+  "doc/formal-verification-analysis.md": "be96745624562e4727b0d7bc7f0e4a40af7f1369031c1d0a7cdbea75d6c1a89e"
+ },
+ "files_sha256_note": "At the confirming-review nit-fix commit (the commit that adds this version of the receipt); only doc/impl/record-lift-chain-lift.md differs from files_sha256_fix1. The receipt itself is not listed.",
+ "files_sha256_fix1": {
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftSeedRelay.lean": "c079df3d109ed00ddc21019c9e5b153a17981978c8e596520d43d8a861257589",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftSeedPolicy.lean": "45cf47719cf72f1d5617d161b8430f1736a2442744a982c16e66d0f4cba93678",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChainHop.lean": "235374a455963ecdc3a2a3763934bd84403dafe8b560e44fcd2cd89f73f2ebbf",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChainHybrid.lean": "7f896932ef75e22f8ec15672d8a69df61a7158e0ca5a81c4ecd60ca271201823",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChainBills.lean": "543e71b243dd331ae91fa66ace496450886c0be479f5cbc266bcdbace7d2c1a7",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChainAlias.lean": "e2934d0a9bb4f469bf21d4ded5eb6f9d21219cbc979d7633b1ffd2c48060a822",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChainLift.lean": "c83d57141a2b725bcdca44d4f823a631a22274476ad8a466e078bc2e6aec1b51",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "69fb1082573404ad1c0ed057cbb547622d5ae561b392f2f06bd916b419d0ee7e",
+  "beaconcrypt-core/proofs/check-inventory.sh": "e55a65f3c0bf7b5f0de8c7b9f76aa80abe848617e2afbd135508f006578110ff",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "0f47fd6a1ac347b9824240abfa1558aaead4f36ff04bcc785e0c15c18c3858d7",
+  "doc/impl/record-lift-seed-relay.md": "89825a557d367b3902e461916c141ae2a694ea2e9fb263573bc46f738121ae15",
+  "doc/impl/record-lift-seed-policy.md": "31f411d0d64f93885b158256bbed58fdb716210b17c9d4ced7c1ae93c9d01aa3",
+  "doc/impl/record-lift-chain-hop.md": "d0581e8420033799722ff7df9df503bb9dc56ba3ee145921fa71ea9dc666e1a1",
+  "doc/impl/record-lift-chain-hybrid.md": "962d42e335a4eea6f9f879a25980a920010313ff62568f9b73aad89f5df05d06",
+  "doc/impl/record-lift-chain-bills.md": "f7e12b8d59254356b95c51db8cfac92fa4a69149c5ccb4f16d9600800c6ff073",
+  "doc/impl/record-lift-chain-alias.md": "f112a40090da81ee2547e1cf54a80e395db3a0b8ff3251e273f2aaeebe2fa615",
+  "doc/impl/record-lift-chain-lift.md": "29b3a5b8ff0c8eaf88af7316a2ae584e93e71836c12df71d536f9f183f1ae80a",
+  "doc/impl/record-lift-ideal.md": "df2314014aafd0004054bd7b7a344f1e68f9657405014d3b1c9430b149ea91b8",
+  "doc/formal-verification-analysis.md": "be96745624562e4727b0d7bc7f0e4a40af7f1369031c1d0a7cdbea75d6c1a89e"
+ },
+ "files_sha256_fix1_note": "At c15efe2a, the tree that the fix-pass checks cover; the receipt commit d0a41fcf added only this file.",
+ "modules": [
+  {
+   "name": "PqxdhRecordLiftSeedRelay",
+   "plan_stage": "C1",
+   "statement_count": 4,
+   "statements": [
+    {
+     "name": "unused_source",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "query_source",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "schedule_source",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "deferred_source",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    }
+   ],
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 4
+   },
+   "proper_subset_guards": {},
+   "source_sha256_0f06970f": "c079df3d109ed00ddc21019c9e5b153a17981978c8e596520d43d8a861257589",
+   "source_sha256_fix": "c079df3d109ed00ddc21019c9e5b153a17981978c8e596520d43d8a861257589",
+   "check_0f06970f": {
+    "tag": "v1",
+    "exit": 0,
+    "start": "2026-10-08T09:22:18.881154568Z",
+    "end": "2026-10-08T09:22:23.041509638Z",
+    "source_sha256": "c079df3d109ed00ddc21019c9e5b153a17981978c8e596520d43d8a861257589",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact_sha256": "d2ff55fa1b70e71ec57647e42a37ed002f505c78d8ef9619ca3f0b2e04473dbf",
+    "leanpath_sha256": "313375db9b99f2a1ba8b52ad34c77f3d684bb70ccf00cfc230040929974d4bd1",
+    "log": "/tmp/bc-arc-scratch/items45/chain/logs/PqxdhRecordLiftSeedRelay-v1.log"
+   },
+   "check_fix": {
+    "tag": "f1",
+    "exit": 0,
+    "start": "2026-10-08T10:19:33.369804460Z",
+    "end": "2026-10-08T10:19:40.636586330Z",
+    "source_sha256": "c079df3d109ed00ddc21019c9e5b153a17981978c8e596520d43d8a861257589",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/items45/chain/fix1/olean/BeaconcryptCore/Computational/PqxdhRecordLiftSeedRelay.olean",
+    "artifact_sha256": "d2ff55fa1b70e71ec57647e42a37ed002f505c78d8ef9619ca3f0b2e04473dbf",
+    "leanpath_sha256": "ee638066e60fd3ad415c2262bf83e815006c067c7c43b6ffb469ed3e724b8173",
+    "log": "/tmp/bc-arc-scratch/items45/chain/fix1/logs/PqxdhRecordLiftSeedRelay-f1.log",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-record-chain/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/items45/chain/fix1/olean/BeaconcryptCore/Computational/PqxdhRecordLiftSeedRelay.olean",
+     "/tmp/beaconcrypt-deployment-record-chain/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftSeedRelay.lean"
+    ]
+   }
+  },
+  {
+   "name": "PqxdhRecordLiftSeedPolicy",
+   "plan_stage": "C1 (and the generic supported-prefix lemmas of C3)",
+   "statement_count": 35,
+   "statements": [
+    {
+     "name": "reads_iff",
+     "axioms": [
+      "propext"
+     ]
+    },
+    {
+     "name": "needs_lookup",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "interpreter_fixed",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "different_source",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "lookup_child",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "relay_child",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "view_putChild",
+     "axioms": [
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "view_child",
+     "axioms": [
+      "Quot.sound"
+     ]
+    },
+    {
+     "name": "child_source",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "needs_iff",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "relay_different",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "query_source",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "different_entry",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "query_invariant",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "step_good",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "schedule_source",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "flatten_run",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "independent_source",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "independent_observed",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "lawEq_bind_support",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "reaches_trans",
+     "axioms": []
+    },
+    {
+     "name": "reaches_step",
+     "axioms": []
+    },
+    {
+     "name": "reaches_final",
+     "axioms": [
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "safe_of_reaches",
+     "axioms": []
+    },
+    {
+     "name": "safe_mono",
+     "axioms": []
+    },
+    {
+     "name": "chain_lookup_present",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "lookup_present",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "present_preserved",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "lookup_absent",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "run_agrees",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "agrees_update",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "complete_whole",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "scan_absent",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "seed_prefix",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "uniform_policy",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    }
+   ],
+   "axiom_profile": {
+    "propext": 1,
+    "Classical.choice, Quot.sound, propext": 27,
+    "Quot.sound, propext": 2,
+    "Quot.sound": 1,
+    "none": 4
+   },
+   "proper_subset_guards": {
+    "reads_iff": [
+     "propext"
+    ],
+    "view_putChild": [
+     "Quot.sound",
+     "propext"
+    ],
+    "view_child": [
+     "Quot.sound"
+    ],
+    "reaches_trans": [],
+    "reaches_step": [],
+    "reaches_final": [
+     "Quot.sound",
+     "propext"
+    ],
+    "safe_of_reaches": [],
+    "safe_mono": []
+   },
+   "source_sha256_0f06970f": "7dff70bef60b2f56709635c7983b43d04f50f236fc370e2a47581ec4435c887d",
+   "source_sha256_fix": "45cf47719cf72f1d5617d161b8430f1736a2442744a982c16e66d0f4cba93678",
+   "check_0f06970f": {
+    "tag": "v1",
+    "exit": 0,
+    "start": "2026-10-08T09:29:08.675371246Z",
+    "end": "2026-10-08T09:29:15.784311202Z",
+    "source_sha256": "7dff70bef60b2f56709635c7983b43d04f50f236fc370e2a47581ec4435c887d",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact_sha256": "9711d8eecbb4df6aa2e5788fc41d66cf11b88054f63e6d195f678da0149a71cf",
+    "leanpath_sha256": "313375db9b99f2a1ba8b52ad34c77f3d684bb70ccf00cfc230040929974d4bd1",
+    "log": "/tmp/bc-arc-scratch/items45/chain/logs/PqxdhRecordLiftSeedPolicy-v1.log"
+   },
+   "check_fix": {
+    "tag": "f1",
+    "exit": 0,
+    "start": "2026-10-08T10:19:40.672279705Z",
+    "end": "2026-10-08T10:19:45.917258340Z",
+    "source_sha256": "45cf47719cf72f1d5617d161b8430f1736a2442744a982c16e66d0f4cba93678",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/items45/chain/fix1/olean/BeaconcryptCore/Computational/PqxdhRecordLiftSeedPolicy.olean",
+    "artifact_sha256": "19f130309ae81d2666b9e8f5a71c49e5407cb985c67dc46ab9cf129fc8822655",
+    "leanpath_sha256": "ee638066e60fd3ad415c2262bf83e815006c067c7c43b6ffb469ed3e724b8173",
+    "log": "/tmp/bc-arc-scratch/items45/chain/fix1/logs/PqxdhRecordLiftSeedPolicy-f1.log",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-record-chain/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/items45/chain/fix1/olean/BeaconcryptCore/Computational/PqxdhRecordLiftSeedPolicy.olean",
+     "/tmp/beaconcrypt-deployment-record-chain/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftSeedPolicy.lean"
+    ]
+   }
+  },
+  {
+   "name": "PqxdhRecordLiftChainHop",
+   "plan_stage": "C2",
+   "statement_count": 5,
+   "statements": [
+    {
+     "name": "selected_succ",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "chains_observe",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "advantage_congr_right",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "childUniform_policy",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "hop_bound",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    }
+   ],
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 5
+   },
+   "proper_subset_guards": {},
+   "source_sha256_0f06970f": "235374a455963ecdc3a2a3763934bd84403dafe8b560e44fcd2cd89f73f2ebbf",
+   "source_sha256_fix": "235374a455963ecdc3a2a3763934bd84403dafe8b560e44fcd2cd89f73f2ebbf",
+   "check_0f06970f": {
+    "tag": "v1",
+    "exit": 0,
+    "start": "2026-10-08T09:32:14.258247999Z",
+    "end": "2026-10-08T09:32:18.265371385Z",
+    "source_sha256": "235374a455963ecdc3a2a3763934bd84403dafe8b560e44fcd2cd89f73f2ebbf",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact_sha256": "1f9efe8856fc6f8e5bb1a7015430029211eac58ae68a2fca7b603481870b9017",
+    "leanpath_sha256": "313375db9b99f2a1ba8b52ad34c77f3d684bb70ccf00cfc230040929974d4bd1",
+    "log": "/tmp/bc-arc-scratch/items45/chain/logs/PqxdhRecordLiftChainHop-v1.log"
+   },
+   "check_fix": {
+    "tag": "f1",
+    "exit": 0,
+    "start": "2026-10-08T10:19:48.844642762Z",
+    "end": "2026-10-08T10:19:55.215772463Z",
+    "source_sha256": "235374a455963ecdc3a2a3763934bd84403dafe8b560e44fcd2cd89f73f2ebbf",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/items45/chain/fix1/olean/BeaconcryptCore/Computational/PqxdhRecordLiftChainHop.olean",
+    "artifact_sha256": "1f9efe8856fc6f8e5bb1a7015430029211eac58ae68a2fca7b603481870b9017",
+    "leanpath_sha256": "ee638066e60fd3ad415c2262bf83e815006c067c7c43b6ffb469ed3e724b8173",
+    "log": "/tmp/bc-arc-scratch/items45/chain/fix1/logs/PqxdhRecordLiftChainHop-f1.log",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-record-chain/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/items45/chain/fix1/olean/BeaconcryptCore/Computational/PqxdhRecordLiftChainHop.olean",
+     "/tmp/beaconcrypt-deployment-record-chain/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChainHop.lean"
+    ]
+   }
+  },
+  {
+   "name": "PqxdhRecordLiftChainHybrid",
+   "plan_stage": "C3",
+   "statement_count": 6,
+   "statements": [
+    {
+     "name": "terminal_safe",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "chains_terminal",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "telescope",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "hopLoss_eq",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "chain_bound",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "chain_loss",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    }
+   ],
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 6
+   },
+   "proper_subset_guards": {},
+   "source_sha256_0f06970f": "7f896932ef75e22f8ec15672d8a69df61a7158e0ca5a81c4ecd60ca271201823",
+   "source_sha256_fix": "7f896932ef75e22f8ec15672d8a69df61a7158e0ca5a81c4ecd60ca271201823",
+   "check_0f06970f": {
+    "tag": "v1",
+    "exit": 0,
+    "start": "2026-10-08T09:34:44.301398818Z",
+    "end": "2026-10-08T09:34:47.743989699Z",
+    "source_sha256": "7f896932ef75e22f8ec15672d8a69df61a7158e0ca5a81c4ecd60ca271201823",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact_sha256": "328c2bbd0b18f52913fd06b60dc73f7a3e220e4be3b33be633a7861c9e73930e",
+    "leanpath_sha256": "313375db9b99f2a1ba8b52ad34c77f3d684bb70ccf00cfc230040929974d4bd1",
+    "log": "/tmp/bc-arc-scratch/items45/chain/logs/PqxdhRecordLiftChainHybrid-v1.log"
+   },
+   "check_fix": {
+    "tag": "f1",
+    "exit": 0,
+    "start": "2026-10-08T10:19:55.248971376Z",
+    "end": "2026-10-08T10:19:58.922561056Z",
+    "source_sha256": "7f896932ef75e22f8ec15672d8a69df61a7158e0ca5a81c4ecd60ca271201823",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/items45/chain/fix1/olean/BeaconcryptCore/Computational/PqxdhRecordLiftChainHybrid.olean",
+    "artifact_sha256": "328c2bbd0b18f52913fd06b60dc73f7a3e220e4be3b33be633a7861c9e73930e",
+    "leanpath_sha256": "ee638066e60fd3ad415c2262bf83e815006c067c7c43b6ffb469ed3e724b8173",
+    "log": "/tmp/bc-arc-scratch/items45/chain/fix1/logs/PqxdhRecordLiftChainHybrid-f1.log",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-record-chain/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/items45/chain/fix1/olean/BeaconcryptCore/Computational/PqxdhRecordLiftChainHybrid.olean",
+     "/tmp/beaconcrypt-deployment-record-chain/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChainHybrid.lean"
+    ]
+   }
+  },
+  {
+   "name": "PqxdhRecordLiftChainBills",
+   "plan_stage": "C4",
+   "statement_count": 36,
+   "statements": [
+    {
+     "name": "weighted_of_total",
+     "axioms": []
+    },
+    {
+     "name": "total_of_weighted",
+     "axioms": []
+    },
+    {
+     "name": "weighted_cost_mono",
+     "axioms": [
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "weighted_scale",
+     "axioms": [
+      "propext"
+     ]
+    },
+    {
+     "name": "weighted_total",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "countCoin_total",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "coinCost_categories",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "primitives_total",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "logged_total",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "open_hash",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "seal_hash",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "allocation_total",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "lookup_total",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "protocol_total",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "sample_total",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "maskedLookup_total",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "mask_total",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "seedMask_total",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "weighted_service",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "resolve_weighted",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "charge_free",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "effects_weighted",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "ownerRun_weighted",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "handler_weighted",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "worldBill_classes",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "interface_weighted",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "program_weighted",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "programCoins_closed",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "program_coins",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "lookupScan_weighted",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "lookupScan_pending",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "seedScan_weighted",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "seedScan_pending",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "parentObserver_total",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "seedObserver_total",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "observerAt_total",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    }
+   ],
+   "axiom_profile": {
+    "none": 2,
+    "Quot.sound, propext": 1,
+    "propext": 1,
+    "Classical.choice, Quot.sound, propext": 32
+   },
+   "proper_subset_guards": {
+    "weighted_of_total": [],
+    "total_of_weighted": [],
+    "weighted_cost_mono": [
+     "Quot.sound",
+     "propext"
+    ],
+    "weighted_scale": [
+     "propext"
+    ]
+   },
+   "source_sha256_0f06970f": "604d11a1b6be56eff7f77668f4856b994e20a4f582a0943983c3e6feb9cafb25",
+   "source_sha256_fix": "543e71b243dd331ae91fa66ace496450886c0be479f5cbc266bcdbace7d2c1a7",
+   "check_0f06970f": {
+    "tag": "v2",
+    "exit": 0,
+    "start": "2026-10-08T09:56:40.665014406Z",
+    "end": "2026-10-08T09:56:55.109250286Z",
+    "source_sha256": "604d11a1b6be56eff7f77668f4856b994e20a4f582a0943983c3e6feb9cafb25",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact_sha256": "369c2acd13c0a6a5002696f53d3a9c2b2e3487149a8f119d9ddcb45e006e51a8",
+    "leanpath_sha256": "313375db9b99f2a1ba8b52ad34c77f3d684bb70ccf00cfc230040929974d4bd1",
+    "log": "/tmp/bc-arc-scratch/items45/chain/logs/PqxdhRecordLiftChainBills-v2.log"
+   },
+   "check_fix": {
+    "tag": "f1",
+    "exit": 0,
+    "start": "2026-10-08T10:20:01.571972540Z",
+    "end": "2026-10-08T10:20:11.379136521Z",
+    "source_sha256": "543e71b243dd331ae91fa66ace496450886c0be479f5cbc266bcdbace7d2c1a7",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/items45/chain/fix1/olean/BeaconcryptCore/Computational/PqxdhRecordLiftChainBills.olean",
+    "artifact_sha256": "f62861d248cbfc31793339e21c0c44071345586632d9f71bff37fa416921f894",
+    "leanpath_sha256": "ee638066e60fd3ad415c2262bf83e815006c067c7c43b6ffb469ed3e724b8173",
+    "log": "/tmp/bc-arc-scratch/items45/chain/fix1/logs/PqxdhRecordLiftChainBills-f1.log",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-record-chain/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/items45/chain/fix1/olean/BeaconcryptCore/Computational/PqxdhRecordLiftChainBills.olean",
+     "/tmp/beaconcrypt-deployment-record-chain/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChainBills.lean"
+    ]
+   }
+  },
+  {
+   "name": "PqxdhRecordLiftChainAlias",
+   "plan_stage": "C3 (decision D3)",
+   "statement_count": 7,
+   "statements": [
+    {
+     "name": "hops_injective",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "adjacent_agree",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "adjacent_query",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "kernel_total",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "installServer_admission",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "installBeacon_admission",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "statement_of_target",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    }
+   ],
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 7
+   },
+   "proper_subset_guards": {},
+   "source_sha256_0f06970f": "e2934d0a9bb4f469bf21d4ded5eb6f9d21219cbc979d7633b1ffd2c48060a822",
+   "source_sha256_fix": "e2934d0a9bb4f469bf21d4ded5eb6f9d21219cbc979d7633b1ffd2c48060a822",
+   "check_0f06970f": {
+    "tag": "v2",
+    "exit": 0,
+    "start": "2026-10-08T09:56:55.148681067Z",
+    "end": "2026-10-08T09:57:07.562969165Z",
+    "source_sha256": "e2934d0a9bb4f469bf21d4ded5eb6f9d21219cbc979d7633b1ffd2c48060a822",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact_sha256": "d14918486f247d635a91ce37ee4dbd5638e4e530f84aa1dcdb688a21833c908b",
+    "leanpath_sha256": "313375db9b99f2a1ba8b52ad34c77f3d684bb70ccf00cfc230040929974d4bd1",
+    "log": "/tmp/bc-arc-scratch/items45/chain/logs/PqxdhRecordLiftChainAlias-v2.log"
+   },
+   "check_fix": {
+    "tag": "f1",
+    "exit": 0,
+    "start": "2026-10-08T10:20:11.416914325Z",
+    "end": "2026-10-08T10:20:16.145952344Z",
+    "source_sha256": "e2934d0a9bb4f469bf21d4ded5eb6f9d21219cbc979d7633b1ffd2c48060a822",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/items45/chain/fix1/olean/BeaconcryptCore/Computational/PqxdhRecordLiftChainAlias.olean",
+    "artifact_sha256": "d14918486f247d635a91ce37ee4dbd5638e4e530f84aa1dcdb688a21833c908b",
+    "leanpath_sha256": "ee638066e60fd3ad415c2262bf83e815006c067c7c43b6ffb469ed3e724b8173",
+    "log": "/tmp/bc-arc-scratch/items45/chain/fix1/logs/PqxdhRecordLiftChainAlias-f1.log",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-record-chain/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/items45/chain/fix1/olean/BeaconcryptCore/Computational/PqxdhRecordLiftChainAlias.olean",
+     "/tmp/beaconcrypt-deployment-record-chain/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChainAlias.lean"
+    ]
+   }
+  },
+  {
+   "name": "PqxdhRecordLiftChainLift",
+   "plan_stage": "delivered target (extra module, deviation 1)",
+   "statement_count": 3,
+   "statements": [
+    {
+     "name": "chain_lift_bool",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "chain_lift",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    {
+     "name": "chain_lift_terms",
+     "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    }
+   ],
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 3
+   },
+   "proper_subset_guards": {},
+   "source_sha256_0f06970f": "c83d57141a2b725bcdca44d4f823a631a22274476ad8a466e078bc2e6aec1b51",
+   "source_sha256_fix": "c83d57141a2b725bcdca44d4f823a631a22274476ad8a466e078bc2e6aec1b51",
+   "check_0f06970f": {
+    "tag": "v2",
+    "exit": 0,
+    "start": "2026-10-08T09:57:07.600716853Z",
+    "end": "2026-10-08T09:57:14.656377607Z",
+    "source_sha256": "c83d57141a2b725bcdca44d4f823a631a22274476ad8a466e078bc2e6aec1b51",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact_sha256": "942abbf9efde1d45fdc6e560c4e2b8650d9e5652a44b08cb37126dd550e7bb60",
+    "leanpath_sha256": "313375db9b99f2a1ba8b52ad34c77f3d684bb70ccf00cfc230040929974d4bd1",
+    "log": "/tmp/bc-arc-scratch/items45/chain/logs/PqxdhRecordLiftChainLift-v2.log"
+   },
+   "check_fix": {
+    "tag": "f1",
+    "exit": 0,
+    "start": "2026-10-08T10:20:18.937963927Z",
+    "end": "2026-10-08T10:20:25.594825155Z",
+    "source_sha256": "c83d57141a2b725bcdca44d4f823a631a22274476ad8a466e078bc2e6aec1b51",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/items45/chain/fix1/olean/BeaconcryptCore/Computational/PqxdhRecordLiftChainLift.olean",
+    "artifact_sha256": "942abbf9efde1d45fdc6e560c4e2b8650d9e5652a44b08cb37126dd550e7bb60",
+    "leanpath_sha256": "ee638066e60fd3ad415c2262bf83e815006c067c7c43b6ffb469ed3e724b8173",
+    "log": "/tmp/bc-arc-scratch/items45/chain/fix1/logs/PqxdhRecordLiftChainLift-f1.log",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-record-chain/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/items45/chain/fix1/olean/BeaconcryptCore/Computational/PqxdhRecordLiftChainLift.olean",
+     "/tmp/beaconcrypt-deployment-record-chain/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChainLift.lean"
+    ]
+   }
+  }
+ ],
+ "statements": 96,
+ "statement_counts": {
+  "PqxdhRecordLiftSeedRelay": 4,
+  "PqxdhRecordLiftSeedPolicy": 35,
+  "PqxdhRecordLiftChainHop": 5,
+  "PqxdhRecordLiftChainHybrid": 6,
+  "PqxdhRecordLiftChainBills": 36,
+  "PqxdhRecordLiftChainAlias": 7,
+  "PqxdhRecordLiftChainLift": 3
+ },
+ "allowed_axioms": [
+  "Classical.choice",
+  "Quot.sound",
+  "propext"
+ ],
+ "axiom_profile_from_guards": {
+  "Classical.choice, Quot.sound, propext": 84,
+  "propext": 2,
+  "Quot.sound, propext": 3,
+  "Quot.sound": 1,
+  "none": 6
+ },
+ "leanpath": {
+  "track": {
+   "manifest": "/tmp/bc-arc-scratch/items45/chain/leanpath",
+   "sha256": "313375db9b99f2a1ba8b52ad34c77f3d684bb70ccf00cfc230040929974d4bd1",
+   "prefix": "/tmp/bc-arc-scratch/items45/chain/olean",
+   "mirror_script": "/tmp/bc-arc-scratch/items45/chain/mirror.py",
+   "mirror_log": "source /tmp/bc-arc-scratch/items45/ideal/int/olean links 1696 skipped 1 broken 0",
+   "note": "Resolved symlink mirror of the first prefix of the published LEAN_PATH of central ee7878ee (/tmp/bc-coord/leanpaths/ee7878ee4c42f59460a3a8b80983a4a209bd4e0d.leanpath) without its root olean, in front of that published LEAN_PATH; used by the checks at 0f06970f."
+  },
+  "fix": {
+   "manifest": "/tmp/bc-arc-scratch/items45/chain/fix1/leanpath",
+   "sha256": "ee638066e60fd3ad415c2262bf83e815006c067c7c43b6ffb469ed3e724b8173",
+   "prefix": "/tmp/bc-arc-scratch/items45/chain/fix1/olean",
+   "mirror_script": "/tmp/bc-arc-scratch/items45/chain/fix1/mirror.py",
+   "mirror_log": "source /tmp/bc-arc-scratch/items45/ideal/int/olean links 1696 skipped 1 broken 0",
+   "published_sha256": "bbc444378bf8646ea024e97a79432e0ccbe5225c81cc9b08356e94d83f9fc991",
+   "note": "Fresh prefix of the fix pass, built the same way from the same published LEAN_PATH (central is still ee7878ee); every chain-track olean and the root olean were rewritten into it by the f1 checks. This is the LEAN_PATH that reproduces the fix-pass tree."
+  }
+ },
+ "root_checks": {
+  "root-v1 (0f06970f tree)": {
+   "exit": 0,
+   "start": "2026-10-08T09:58:16.632800499Z",
+   "end": "2026-10-08T09:58:20.094790112Z",
+   "source_sha256": "69fb1082573404ad1c0ed057cbb547622d5ae561b392f2f06bd916b419d0ee7e",
+   "log_bytes": 0,
+   "artifact_sha256": "17b8528359830f06d2b3b3be62fd0eb9bbacd93fdc14ff40df54f2e1f7b7f00e",
+   "leanpath_sha256": "313375db9b99f2a1ba8b52ad34c77f3d684bb70ccf00cfc230040929974d4bd1"
+  },
+  "root-f1 (c15efe2a tree)": {
+   "exit": 0,
+   "start": "2026-10-08T10:20:25.628711337Z",
+   "end": "2026-10-08T10:20:28.880696180Z",
+   "source_sha256": "69fb1082573404ad1c0ed057cbb547622d5ae561b392f2f06bd916b419d0ee7e",
+   "log_bytes": 0,
+   "artifact_sha256": "17b8528359830f06d2b3b3be62fd0eb9bbacd93fdc14ff40df54f2e1f7b7f00e",
+   "leanpath_sha256": "ee638066e60fd3ad415c2262bf83e815006c067c7c43b6ffb469ed3e724b8173",
+   "command": [
+    "coord.sh",
+    "lean",
+    "claude",
+    "<label>",
+    "--",
+    "timeout",
+    "180",
+    "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+    "-j1",
+    "-M8000",
+    "--root=/tmp/beaconcrypt-deployment-record-chain/beaconcrypt-core/proofs/lean",
+    "-o",
+    "/tmp/bc-arc-scratch/items45/chain/fix1/olean/BeaconcryptCore.olean",
+    "/tmp/beaconcrypt-deployment-record-chain/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+   ]
+  }
+ },
+ "inventory": {
+  "track": "coord.sh inv recount claude then coord.sh inv rehash claude at every module commit; handwritten-lean 1663 -> 1670 (+7 modules); check-inventory.sh gate blocks (theorem and guard counts and names) before \"# Separate primitive-fidelity profile\"; root imports appended after PqxdhRecordLiftIdeal",
+  "fix": {
+   "recount": "handwritten-lean count unchanged (1670)",
+   "rehash": "proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftSeedPolicy.lean: 7dff70bef60b -> 45cf47719cf7; proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChainBills.lean: 604d11a1b6be -> 543e71b243dd; proofs/lean/BeaconcryptCore.lean: unchanged; proofs/trusted-boundary.md: unchanged; proofs/check-inventory.sh: unchanged"
+  }
+ },
+ "focused_inventory": {
+  "inventory-v1": {
+   "exit": 0,
+   "start": "2026-10-08T09:58:29Z",
+   "end": "2026-10-08T09:59:53Z",
+   "log_sha256": "4e1c54661fd63a0c5026ac401308a7ef2cee6966cea5b18a8ea09bf830857a91",
+   "head": "e50cfd7963c0a190adfff8f09b15c33d32a6ab7c (by timing)",
+   "note": "The status file has no head line (hygiene nit 9). The run (09:58:29Z-09:59:53Z) falls after commit e50cfd79 (09:58:11Z) and before 9049621d (10:00:36Z), and 9049621d and 0f06970f change only Markdown files, which check-inventory does not read."
+  },
+  "inventory-v2": {
+   "exit": 0,
+   "start": "2026-10-08T10:01:23Z",
+   "end": "2026-10-08T10:02:46Z",
+   "head": "0f06970f2d031e8f70f6d842d783563e6cccb472",
+   "log_sha256": "5abe003083cb3ee2b087fb09d6a2e053497a2af1de1dd316062923f703eed5bf"
+  },
+  "review-hygiene": {
+   "exit": 0,
+   "head": "0f06970f2d031e8f70f6d842d783563e6cccb472",
+   "log": "/tmp/bc-arc-scratch/items45/chain/review-hygiene/logs/inventory.log",
+   "note": "Independent rerun by the hygiene review"
+  },
+  "inventory-f1": {
+   "exit": 0,
+   "start": "2026-10-08T10:23:23Z",
+   "end": "2026-10-08T10:24:45Z",
+   "head": "c15efe2a7479cbf782870820aa946456b0aa99da",
+   "log_sha256": "5b15e80536ef63bdc4c4066b45db44672c616b666c1979060214e2e30db2baa4",
+   "command": "coord.sh lease mem claude @nix chainfix-inventory --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C /tmp/beaconcrypt-deployment-record-chain/beaconcrypt-core check-inventory SHELL=bash"
+  },
+  "inventory-f2": {
+   "exit": 0,
+   "start": "2026-10-08T10:27:13Z",
+   "end": "2026-10-08T10:28:35Z",
+   "head": "d0a41fcf535fc06d44986a81958bafa719755a98",
+   "log": "/tmp/bc-arc-scratch/items45/chain/fix1/logs/inventory-f2.log",
+   "log_sha256": "17ec734512dc43977ea067aaa6feba992e75779a59448891f2bcb6f0dfa417de",
+   "command": "coord.sh lease mem claude @nix chainfix-inventory2 --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C /tmp/beaconcrypt-deployment-record-chain/beaconcrypt-core check-inventory SHELL=bash (lease history ticket 00000233)",
+   "note": "Run at the receipt commit d0a41fcf, after this receipt was written, so it was recorded only outside the repository until the confirming-review nit fix (confirming-review nit 2). The nit-fix commit changes only Markdown and this receipt, which check-inventory does not read."
+  }
+ },
+ "diff_check": "git diff --check clean on every track commit and on the fix-pass commit",
+ "forbidden_scan": "No sorry, admit, axiom declaration, native_decide, implemented_by, extern, unsafe or opaque in the seven modules; options: autoImplicit false and set_option maxRecDepth 2048 (four uses in PqxdhRecordLiftChainBills); the check-inventory escape-hatch scan passes",
+ "h7_scan": {
+  "tool": "/tmp/bc-arc-scratch/items45/chain/tools/h7scan.py",
+  "tool_sha256": "53cd7e6977b22a073febb1ae52f45b3fb4d28e51d2b130944bc2dd8db8ced1d2",
+  "tool_note": "Version 3, identical to /tmp/bc-arc-scratch/items45/A/int2/tools/h7scan.py; case-insensitive, list includes JointKdfRO",
+  "track": {
+   "output": "/tmp/bc-arc-scratch/items45/chain/h7scan.json",
+   "sha256": "cd76c3396eab3d890ad3eb1cc8a6c2c42be884733aaafad6c5df065ed7b74a38",
+   "result": "seven modules: no forbidden hit"
+  },
+  "fix_modules": {
+   "output": "/tmp/bc-arc-scratch/items45/chain/fix1/h7scan-modules.json",
+   "sha256": "cd76c3396eab3d890ad3eb1cc8a6c2c42be884733aaafad6c5df065ed7b74a38",
+   "result": "seven modules: no forbidden hit; byte-identical to the track scan"
+  },
+  "fix_docs": {
+   "output": "/tmp/bc-arc-scratch/items45/chain/fix1/h7scan-docs.json",
+   "sha256": "7ec2fec3f9131cc4c0acd521e1a369daebd273fe31ee6aae9beb9c3459526e0a",
+   "result": "seven guides: no forbidden and no informational hit"
+  },
+  "informational": "FixedHkdfSha512NoSaltSource (SeedRelay, SeedPolicy, ChainBills) and productionStream/FixedHkdfDomain (SeedPolicy, lines 103-104 and 288-289): the real production HKDF stream used as in the published PqxdhRecordLiftChildPolicy; no random table replaces a public HKDF evaluation"
+ },
+ "meta_check": {
+  "probe": "/tmp/bc-arc-scratch/items45/chain/tools/H7Closure.lean",
+  "probe_sha256": "39c0e9d65210fd63453bf3bbc8ea182194b6788c0eafe78bb0e97666ec461e9b",
+  "track": {
+   "log": "/tmp/bc-arc-scratch/items45/chain/logs/dev-h7closure-115728.log",
+   "log_sha256": "1c8fd19c5acf353c663211fedb2ef7db76860b6079197c07106ee64e73fa33d3"
+  },
+  "fix": {
+   "log": "/tmp/bc-arc-scratch/items45/chain/fix1/logs/dev-h7closure-122042.log",
+   "log_sha256": "1c8fd19c5acf353c663211fedb2ef7db76860b6079197c07106ee64e73fa33d3",
+   "leanpath_sha256": "ee638066e60fd3ad415c2262bf83e815006c067c7c43b6ffb469ed3e724b8173"
+  },
+  "result": "H-7 guard: modules 7; declared constants 276; closure 26645; direct forbidden uses 0; closure violations 0; classified structural constants 12 of 12",
+  "note": "Transitive constant closure of every declaration of the seven modules (adapted from items45/A/int2/tools/H7Closure.lean, version 3); the twelve classified structural constants are the DH-interface constants reached through Setup.beaconDomain, as in increment A and S1. Identical output at 0f06970f and after the fix pass."
+ },
+ "deviations_from_plan": [
+  "Extra module PqxdhRecordLiftChainLift holds chain_lift (plan C3 places chain_lift in its two modules, PqxdhRecordLiftChainHybrid and PqxdhRecordLiftChainAlias): the target needs ChainBills (C4), which imports ChainHybrid, and ChainAlias (C3).",
+  "The generic supported-prefix lemmas behind the C3 support-level policy congruence (lawEq_bind_support, reaches_*, safe_of_reaches, safe_mono, chain_lookup_present, lookup_present, present_preserved, lookup_absent, run_agrees, agrees_update) live in PqxdhRecordLiftSeedPolicy, because seed_prefix (C1) needs them first; ChainHybrid applies them with MixedWorld.protocol_run_bounds (run_kdf, run_depth).",
+  "C4 bills the prefix and the suffix of a cut with one whole-run closed-form cap programCoins each and every lookup at a full 76-byte reply under every policy, instead of WorldBudget real cap plus 76 * (S + 51 * R) with separate qPrefix, qSuffix and T caps per cut: observerBill = 2 * programCoins + 44 + decision.",
+  "The 32 retained bytes of a seed cut (seedObserver_total) are rounded up to 44 so that one bill covers every index (observerAt_total).",
+  "Consequence: the bill is explicit and proved but not tight; advantage coefficients are unchanged and the bill is a function of BillInput only. Recorded in doc/impl/record-lift-chain-bills.md and doc/impl/record-lift-chain-lift.md."
+ ],
+ "not_proved": [
+  "CTX targets (S4), RecordLiftStatement and the origin, binding and hiding targets (S5), R6 forms (S6): other stages",
+  "Tightness of the bill (not required by the target)"
+ ],
+ "checks_not_run": "No lake build, make verify, nix-collect-garbage, mutation testing, ProVerif or Rust run in the track, the fix pass or the nit fix; no production Rust or ProVerif change. Transcript fidelity (cargo under @cargo) and the central integration checks of PROTOCOL section 6 run on the merged tip (nit_fix.integration_checks).",
+ "review": {
+  "reviewed_commit": "0f06970f2d031e8f70f6d842d783563e6cccb472",
+  "reviewed_range": "ee7878ee..0f06970f",
+  "semantic": {
+   "reviewer": "independent Claude semantic review (did not write the modules)",
+   "notes": "/tmp/bc-arc-scratch/items45/chain/review-semantic/NOTES.md",
+   "verdict": "APPROVE_WITH_NITS",
+   "evidence": "all seven modules recompiled without -o (exit 0, empty logs); probe ReviewProbe.lean: chain_lift elaborates as ChainLiftStatement ... noTerm noTerm and as the Bool and event conjunction, the bill closed form holds, programCoins does not depend on decision or slots (rfl); H-7 closure guard rerun identical (276/26645, 0 violations, 12 structural)"
+  },
+  "hygiene": {
+   "reviewer": "independent Claude hygiene review (did not write the modules)",
+   "notes": "/tmp/bc-arc-scratch/items45/chain/review-hygiene/NOTES.md",
+   "verdict": "APPROVE_WITH_NITS",
+   "evidence": "guard/theorem bijection 4/35/5/6/36/7/3; independent rechecks of seven modules and root (exit 0, empty logs); negative control (dropped Quot.sound in the chain_lift guard) fails with exit 1; per-commit inventory digests and counts; focused check-inventory at 0f06970f exit 0; footers, origin and registry checked"
+  },
+  "findings": [
+   {
+    "review": "semantic",
+    "severity": "nit",
+    "title": "Guide for seed-policy misstates the axiom sets of 8 of its 35 guards",
+    "response": "record-lift-seed-policy.md Validation status names every proper-subset guard with its exact list (reads_iff; view_putChild and reaches_final; view_child; reaches_trans, reaches_step, safe_of_reaches, safe_mono) and the other 27 with the three allowed names.",
+    "outcome": "fixed"
+   },
+   {
+    "review": "semantic",
+    "severity": "nit",
+    "title": "Guide for chain-bills misstates two axiom sets",
+    "response": "record-lift-chain-bills.md Validation status: 2 with no axiom, weighted_cost_mono propext and Quot.sound, weighted_scale propext, the other 32 all three.",
+    "outcome": "fixed"
+   },
+   {
+    "review": "semantic",
+    "severity": "nit",
+    "title": "ChainBills module docstring says programCoins reads the decision cost, but it does not",
+    "response": "Module docstring (line 5) now says programCoins reads four BillInput fields (budget, startup, allowance, fresh), the decision cost enters only through observerBill and the slot count is not read; same correction in the guide. Module rechecked (f1), reviewed-inventory digest rehashed.",
+    "outcome": "fixed"
+   },
+   {
+    "review": "semantic",
+    "severity": "nit",
+    "title": "The guides do not record the plan deviations or how loose the bill is",
+    "response": "record-lift-chain-bills.md states that the bill is explicit and proved but not tight, with the three reasons; record-lift-chain-lift.md has a new section listing the four deviations; record-lift-ideal.md Open points names the delivered PqxdhRecordLiftChainLift.chain_lift.",
+    "outcome": "fixed"
+   },
+   {
+    "review": "hygiene",
+    "severity": "minor",
+    "title": "Two guides misstate the axiom sets of their guards (brief section 7: prose must match the guards exactly)",
+    "response": "Fixed together with semantic nits 1 and 2, in the style of record-lift-child-policy.md. No Lean or inventory change for this finding.",
+    "outcome": "fixed"
+   },
+   {
+    "review": "hygiene",
+    "severity": "minor",
+    "title": "No in-repo receipt; the validation evidence is cited only from /tmp, and the design note is cited by a /tmp path although a pushed copy exists",
+    "response": "This receipt; every Validation section and the whole-track paragraph of record-lift-chain-lift.md point at it. The design note is cited as codex/deployment-record-wip@023b9a81:doc/impl/handover/record-lift-wip/codex-plan-seed-policy.md with its hash in record-lift-seed-relay.md, record-lift-seed-policy.md and (optional part, done) the SeedPolicy module docstring, which was rechecked and rehashed.",
+    "outcome": "fixed"
+   },
+   {
+    "review": "hygiene",
+    "severity": "nit",
+    "title": "Commit message of e50cfd79 lost its multiplication signs",
+    "response": "Not amended (pushed). The formula is restated in this receipt (targets.hops) and in the fix-pass commit body.",
+    "outcome": "no_change_needed (formula restated)"
+   },
+   {
+    "review": "hygiene",
+    "severity": "nit",
+    "title": "chain-bills guide does not name weighted_service",
+    "response": "Named in the Proof section of record-lift-chain-bills.md (it bills a single private service request by its own cost; used by resolve_weighted).",
+    "outcome": "fixed"
+   },
+   {
+    "review": "hygiene",
+    "severity": "nit",
+    "title": "Small gaps in receipt and registry metadata",
+    "response": "Head of inventory-v1 recorded here (e50cfd79 by timing); the registry note of the worktree now names PqxdhRecordLiftChainLift.",
+    "outcome": "fixed"
+   }
+  ],
+  "fix_pass": {
+   "commit": "c15efe2a7479cbf782870820aa946456b0aa99da",
+   "scope": "Documentation only: two module docstrings (ChainBills, SeedPolicy), seven chain-track guides, the S1 guide open point, two reviewed-inventory digests; this receipt in the following commit",
+   "statements_changed": "none",
+   "checks": "all seven modules and the root import rechecked into the fresh prefix fix1/olean (exit 0, empty logs); inv recount unchanged (1670), rehash of the two modules; H-7 source scan and closure guard rerun clean; focused check-inventory at the fix commit exit 0; git diff --check clean"
+  },
+  "confirming_review": {
+   "reviewed_commit": "d0a41fcf535fc06d44986a81958bafa719755a98",
+   "reviewed_range": "0f06970f..d0a41fcf (fix-pass commit c15efe2a and receipt commit d0a41fcf)",
+   "reviewer": "independent Claude confirming review of the fix pass (a reviewer that did not write the modules); read only",
+   "notes": "/tmp/bc-arc-scratch/items45/chain/confirm/NOTES.md",
+   "notes_sha256": "2758fb158afaa7ffab6b76dbb0065486f7a89864573299dc06439aeab95721c1",
+   "verdict": "APPROVE_WITH_NITS",
+   "outcome": "every finding of the semantic and hygiene reviews resolved; two documentation nits; no finding against a Lean statement, definition, guard or inventory row",
+   "evidence": [
+    "Lean diff of the fix pass: two module-docstring lines only (ChainBills line 5, SeedPolicy line 6); no statement, definition or proof change",
+    "/tmp/bc-arc-scratch/items45/chain/confirm/verify.py: the 19 receipt files_sha256 digests equal at c15efe2a, at d0a41fcf and on disk; d0a41fcf adds only the receipt; the inventory digests of the seven modules equal their SHA-256; theorem/guard bijection 4/35/5/6/36/7/3 = 96; guard axiom sets equal the receipt statements and proper_subset_guards; profile 84/2/3/1/6",
+    "/tmp/bc-arc-scratch/items45/chain/confirm/logs/: independent rechecks without -o of ChainBills, SeedPolicy and ChainLift via coord.sh lean against fix1/leanpath, exit 0, empty logs",
+    "olean, log, leanpath, root, H-7 scan, closure guard and inventory log hashes of the receipt verified; the seed-policy design-note citation codex/deployment-record-wip@023b9a81 resolves with SHA-256 02cb4c65...; footers exact; git diff --check clean"
+   ],
+   "findings": [
+    {
+     "severity": "nit",
+     "title": "Deviation 1 says plan C3 places chain_lift in ChainHybrid; plan C3 names ChainHybrid and ChainAlias jointly",
+     "response": "record-lift-chain-lift.md (Deviations from the plan) and deviations_from_plan[0] of this receipt now say that plan C3 places chain_lift in its two modules (PqxdhRecordLiftChainHybrid, PqxdhRecordLiftChainAlias). No Lean or inventory change.",
+     "outcome": "fixed"
+    },
+    {
+     "severity": "nit",
+     "title": "The check-inventory run at the tip (inventory-f2) and the takeover-plan section 7 status exist only outside the repository",
+     "response": "focused_inventory.inventory-f2 records the run at d0a41fcf (exit 0, log SHA-256); the integration checks receipt /tmp/bc-arc-scratch/items45/chain/int/checks-receipt.json records it too, with this confirming review. Takeover-plan section 7 is a scratch file outside the repository and is refreshed after the integration; no branch change needed.",
+     "outcome": "fixed (receipt); takeover-plan refresh outside the repository"
+    }
+   ]
+  }
+ },
+ "nit_fix": {
+  "date": "2026-10-08",
+  "base": "d0a41fcf535fc06d44986a81958bafa719755a98",
+  "scope": "Documentation only: doc/impl/record-lift-chain-lift.md (the plan-C3 wording of deviation 1, and the Validation status names the confirming review) and this receipt. No Lean file, inventory row, count, digest, root import or check-inventory.sh line changes.",
+  "h7_scan_docs": {
+   "output": "/tmp/bc-arc-scratch/items45/chain/nits/h7scan-docs.json",
+   "sha256": "7ec2fec3f9131cc4c0acd521e1a369daebd273fe31ee6aae9beb9c3459526e0a",
+   "result": "seven chain-track guides: no forbidden and no informational hit (version 3)"
+  },
+  "diff_check": "git diff --check clean",
+  "integration_checks": "/tmp/bc-arc-scratch/items45/chain/int/checks-receipt.json (module checks into a fresh prefix, root import, inv recount/rehash, focused check-inventory, transcript fidelity and git diff --check on the merged tip)"
+ }
+}
