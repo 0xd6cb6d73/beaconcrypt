@@ -1,8 +1,8 @@
-# Item 2: Extract/HKDF composition (increments 1 to 3)
+# Item 2: Extract/HKDF composition (increments 1 to 4)
 
-Status: increment 1 (six modules: stages S0a, S0b, G1, S3a and G2) is integrated into central at `ae4a4996`, and increment 2 (twelve modules: stages S1b, S1c and S2) at `a2b53800` (merge commit of the topic branch, after the independent semantic and hygiene reviews of `09ae745b`, the review fixes of `0ea4260c` and the confirming review of `feb46e22`; the increment-2 sections below record the merges of central into the branch before that integration). Increment 3 (eight modules: stages S3b, S4b and S7) is on branch `claude/extract-composition` (worktree `/tmp/claude-extract-inc1`), built from central `a2b53800`: commits `fc7e1ff8` (S3b), `7c33b745` (S4b, theorem T7), `9cab71ca` (S7) and the documentation commit `ddd954ec` that adds the increment-3 sections below, the analysis paragraph and the receipt `doc/impl/proof-receipts/extract-composition-inc3.json`. A semantic review and a hygiene review of `ddd954ec` raised one major finding, three minor findings and five nits (two of them on the same `𝒮[…]` statement, and one a record of the hygiene checks that needs no action); the review-fix commit that follows `ddd954ec` fixes them (section "Increment 3: review fixes"). It changes documentation and docstrings, adds the route R1 entries for this line to the two assumption lists and adds one theorem, `indexed_eager_output`, the `𝒟[…]` form of `indexed_eager`; no existing statement changed. The confirming review of `3e2fe170` approved the review fixes with documentation nits, which the documentation-only commit after it fixes (the scope notes of the two assumption lists, the increment-3 status above and below, and the receipt). The integration step then merges central, which Codex has since moved, into the branch and fast-forwards central to that merge commit. Stages T and S8 of the plan are not built (section "Increment 3: stages T and S8 (not built)"). No increment changes an existing module.
+Status: increment 1 (six modules: stages S0a, S0b, G1, S3a and G2) is integrated into central at `ae4a4996`, and increment 2 (twelve modules: stages S1b, S1c and S2) at `a2b53800` (merge commit of the topic branch, after the independent semantic and hygiene reviews of `09ae745b`, the review fixes of `0ea4260c` and the confirming review of `feb46e22`; the increment-2 sections below record the merges of central into the branch before that integration). Increment 3 (eight modules: stages S3b, S4b and S7) is on branch `claude/extract-composition` (worktree `/tmp/claude-extract-inc1`), built from central `a2b53800`: commits `fc7e1ff8` (S3b), `7c33b745` (S4b, theorem T7), `9cab71ca` (S7) and the documentation commit `ddd954ec` that adds the increment-3 sections below, the analysis paragraph and the receipt `doc/impl/proof-receipts/extract-composition-inc3.json`. A semantic review and a hygiene review of `ddd954ec` raised one major finding, three minor findings and five nits (two of them on the same `𝒮[…]` statement, and one a record of the hygiene checks that needs no action); the review-fix commit that follows `ddd954ec` fixes them (section "Increment 3: review fixes"). It changes documentation and docstrings, adds the route R1 entries for this line to the two assumption lists and adds one theorem, `indexed_eager_output`, the `𝒟[…]` form of `indexed_eager`; no existing statement changed. The confirming review of `3e2fe170` approved the review fixes with documentation nits, which the documentation-only commit after it fixes (the scope notes of the two assumption lists, the increment-3 status above and below, and the receipt). The integration step then merges central, which Codex has since moved, into the branch and fast-forwards central to that merge commit. Increment 3 is integrated into central at `fa8d9a54` (merge commit of the topic branch). Increment 4 (nine modules: stage T, the first part of stage S5 with theorem T8, and stage S6) is on branch `claude/extract-composition`, built from central `fa8d9a54`: commits `1fabfb08` (stage T), `e11381c4` (theorem T8) and `83ef5dc7` (stage S6), followed by the documentation commit that adds the increment-4 sections below, the analysis section, the assumption-list paragraphs, plan section 22 and the receipt `doc/impl/proof-receipts/extract-composition-inc4.json`; it is not yet reviewed or integrated. Stage S8 (the reduction bills) and with it the second part of stage S5 (T8b) are not built (section "Increment 4: stage S8 (not built)"). No increment changes an existing module.
 
-The plan is `/tmp/bc-arc-scratch/extract-design/plan.md` (revision 2 with section 15 critique responses, section 16 owner decisions of 2026-10-06, section 17 implementation decisions of 2026-10-07, section 18 the service signature fixed by CE-11, section 19 the increment-1 status, section 20 the increment-2 interface notes and section 21 the increment-3 status); `doc/impl/extract-composition-plan.md` is a snapshot of it. Under owner decision 2 (route R1, extended to this line), the zero-key 192-byte HMAC-SHA-512 Extract slice is a random oracle, and the Extract PRG-type game on a uniform 32-byte key, an additional assumption of Server authentication, is extended to this line. HMAC-SHA-512 as a PRF is a standard game and not part of the R1 idealization; the owner accepted it and the Extract PRG-type game as ordinary primitive games (plan section 16), and their advantages are explicit terms of the bounds.
+The plan is `/tmp/bc-arc-scratch/extract-design/plan.md` (revision 2 with section 15 critique responses, section 16 owner decisions of 2026-10-06, section 17 implementation decisions of 2026-10-07, section 18 the service signature fixed by CE-11, section 19 the increment-1 status, section 20 the increment-2 interface notes, section 21 the increment-3 status and section 22 the increment-4 status); `doc/impl/extract-composition-plan.md` is a snapshot of it. Under owner decision 2 (route R1, extended to this line), the zero-key 192-byte HMAC-SHA-512 Extract slice is a random oracle, and the Extract PRG-type game on a uniform 32-byte key, an additional assumption of Server authentication, is extended to this line. HMAC-SHA-512 as a PRF is a standard game and not part of the R1 idealization; the owner accepted it and the Extract PRG-type game as ordinary primitive games (plan section 16), and their advantages are explicit terms of the bounds.
 
 ## Increment 1: components (S0a, S0b, G1, S3a, G2)
 
@@ -569,3 +569,178 @@ Remaining total: 9 to 17 agent-days (the sum of the rows above). The main risks 
 ### Increment 3: not claimed
 
 T7 and T7-all (`opaqueBranch_idealKeys`, `opaqueBranch_allIdeal`) are two-sided transfers of the registration segment for an arbitrary decision of the opaque KEM-ideal branch of theorem T6: they have no test query and are not secrecy theorems, and they cover no evolving key, skipped key, record replay or later record (item 3's common experiment). Their first term is valid only under the random-oracle model of the zero-key 192-byte Extract slice (R1); the PRF and Extract advantages are explicit terms. T8 (the composite with T5, one-sided because T5 is), stage T's `qRoot = 2`, the reduction bills of S8 and the key-first form S6 are not built. `slot_natural` and `entryClient_natural` are exact-form naturality results for item 2's clients; they are not CE-11's law-level `CoreNatural` and do not discharge it. Not covered: persistence, snapshots, codec internals, running-code access and primitive implementations (owner scope).
+
+## Increment 4: stage T, theorem T8 and stage S6
+
+Increment 4 builds stage T, the first part of stage S5 (theorem T8) and stage S6 of the plan on branch `claude/extract-composition`, from central `fa8d9a54` (which contains increments 1 to 3). Scratch, logs and resumption notes: `/tmp/bc-arc-scratch/extract-design/inc4/` (`NOTES.md`). Status: nine new Lean modules with 96 theorems, each with an exact axiom guard, root-imported and listed in the inventory; commits `1fabfb08` (stage T, seven modules, 85 theorems), `e11381c4` (theorem T8, 6 theorems) and `83ef5dc7` (stage S6, 5 theorems), followed by the documentation commit with these sections. Stage S8 was assessed and deferred (section "Increment 4: stage S8 (not built)"), so the second part of stage S5, the bills companion T8b, is not built either. The plan names the guide `doc/impl/registration-kem-key-transfer.md`; this guide, `doc/impl/extract-composition.md`, has been the established guide of item 2 since increment 1 and is kept. Not yet independently reviewed; not integrated into central. No existing module is changed.
+
+### Stage T: at most two hidden reads (`PqxdhRegistrationJointBeaconFinishOnce*`)
+
+| Module | Theorems | Content |
+| --- | --- | --- |
+| `PqxdhRegistrationJointBeaconFinishOnceTools` | 19 | generic: the potential bound `PotBound` (along every path, the targeted queries plus a potential of the final value stay within the budget) with its rules and `isQueryBoundP_of_potBound`; `option_potential` (a potential that every step of an optional stateful interpreter pays for bounds every program); `composeOpt` and `composeOpt_run` (a stateful interpreter followed by an optional stateful interpreter is one optional stateful interpreter on the product state); `option_monotone`, `option_invariant`, `option_support`, `run_support`, `simulate_support`, `option_simulate_bind`, `liftComp_inl` |
+| `PqxdhRegistrationJointBeaconFinishOnceOwners` | 21 | the KEM creation index of an owner's phase (`phaseKem`), the number of owners holding the selected index (`ownerCount`), owners awaiting their finish with it (`awaits`, `finishMark`); a finish leaves `initSent` for `aborted` or `established` (`owner_settles`, `groupedOwner_settles`), a bundle keeps the KEM handle (`bundle_kem`), a raw `create` appends the born owner (`create_run`); no source request other than `create` increases the count (`client_count`, `groupedClient_count`) |
+| `PqxdhRegistrationJointBeaconFinishOnceRouter` | 12 | the KEM routers answer a creation with their counter and increment it (`router_counts`, `source_counts`); the joint wrapper never decreases the counter (`combine_mono`), and the joint creation client gets the counter as its KEM index (`client_created`); `pending selected counter` (one while the counter is at most `selected`); measures that no step decreases pass through `fwdOption`, stateless layers and `composeOpt` (`StepMono`); `option_lift_state` |
+| `PqxdhRegistrationJointBeaconFinishOnceMarked` | 5 | the decapsulation handle of a prepared Beacon root is a reply of the decapsulation request for the owner's KEM handle (`collect_shared`, `prepare_shared`); the grouped finish request with the challenge marker (`markedGroup`), made only by an owner awaiting its finish with the selected index, at most once (`groupedOwner_marked`, `groupedClient_marked`); every native step of the skeleton reads a hidden value only on such a request (`skelImpl_marked`) |
+| `PqxdhRegistrationJointBeaconFinishOncePost` | 11 | the post-challenge phase collapsed into one interpreter (`topImpl`: grouped client, skeleton's native layer, actual encapsulator, router); a raw `create` keeps the potential (`create_step`); every source request pays its hidden reads from the potential (`top_step`, `top_potential`); `KemOnce` and `postSkel_two` |
+| `PqxdhRegistrationJointBeaconFinishOncePrefix` | 9 | the prefix collapsed the same way (`preTop`: source client, source backend, stopped router); no source request increases the potential (`pre_step`, `pre_run`, `commands_once`, `opaqueScan_once`); every prechallenge context satisfies `KemOnce` (`sourcePreOpaque_once`, `sharedStart_once`) |
+| `PqxdhRegistrationJointBeaconFinishOnce` | 8 | `rootClient_two`, `entryClient_two`; S2, T7 and S7 restated with two slots (`split_uniform_two`, `opaqueBranch_uniform_two`, `opaqueBranch_idealKeys_two`, `opaqueBranch_allIdeal_two`, `slotGame_two`, `opaqueBranch_slots_two`) |
+
+```lean
+def KemOnce (selected : Nat) {count : Nat} : OpaqueContext Reader KemSK A X count → Prop
+  | .ready _ _ (some (.pending _ _ _ _ _ owners _)) state _ =>
+      ownerCount selected owners + pending selected state.2.created ≤ 1
+  | _ => True
+
+theorem postSkel_two (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (decision : X → Bool) (count : Nat) (selected : Fin (count + 1)) (services : Services V Response)
+    (chosen : MlKem768PublicKey × KemSK) (challenge : MlKem768Ciphertext)
+    (context : OpaqueContext Reader KemSK A X count) (once : KemOnce selected.val context) :
+    (postSkel setup codec checks decision count selected services chosen challenge context).IsQueryBoundP
+      (fun query => valueRead? query = true) 2
+
+theorem sharedStart_once … :
+    ∀ start ∈ support (PqxdhRegistrationJointKemPostSkeleton.sharedStart (Reader := Reader) setup codec checks ensureInit
+      supplied decision work runtime count selected index), KemOnce selected.val start.2.2.1
+
+theorem rootClient_two … :
+    (rootClient (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected
+      index).IsQueryBoundP IsRoot 2
+
+theorem entryClient_two … :
+    (entryClient (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected
+      index).IsQueryBoundP (IsValue (D := PqxdhCorrelatedExtractFamily.Message) (R := Output)) 2
+
+theorem opaqueBranch_idealKeys_two … (budget) (certified : …) (correct : SourceFullCorrect setup.source setup.hmac) :
+    (opaqueBranch … false).boolDistAdvantage (idealKeysBranch …) ≤
+      ((budget (.inl 3) + budget (.inl 5) + budget (.inl 6) : ℕ) : ℝ) / 2 ^ 256 +
+        ∑ slot ∈ Finset.range 2,
+          (hmacPrfRealGame setup.hmac (indexedReduction setup.hmac (rootClient …) slot)).boolDistAdvantage
+            (hmacPrfRandomGame (indexedReduction setup.hmac (rootClient …) slot)) +
+        (the four key-schedule advantages of T7 on entryD …)
+
+theorem opaqueBranch_slots_two … (budget) (certified : …) (correct : …) :
+    (opaqueBranch … false).boolDistAdvantage (slotGame … 2) ≤
+      ((budget (.inl 3) + budget (.inl 5) + budget (.inl 6) : ℕ) : ℝ) / 2 ^ 256 +
+        ∑ slot ∈ Finset.range 2, (PRF advantage of indexedReduction setup.hmac (rootClient …) slot) +
+        ∑ k ∈ Finset.range 2, keyScheduleBound setup.source setup.hmac (entryDk … k)
+```
+
+(`…` abbreviates the arguments `setup codec checks ensureInit supplied decision work runtime count selected index` and, for the bounds, T5's source budget `certified`; `rootClient`, `entryClient`, `IsRoot`, `IsValue`, `idealKeysBranch`, `entryDk`, `keyScheduleBound` and `slotGame` are those of increments 2 and 3. The receipt records every exact statement.)
+
+Stage S2 counted one hidden read for the Server's private resumption root and one for every Beacon finish request after the cut, `1 + qFinish`. Stage T shows that at most one grouped Beacon finish after the cut carries the challenge marker, so the root client of stage S2 and the factored root client of stage S3b make at most two hidden reads, and every bound that used `1 + qFinish` slots or entries holds with two. The bound needs no premise: it holds for every source program, within the source budget or not.
+
+The Rust reference and the Lean model. In the Rust Beacon (`beaconcrypt/src/beacon.rs`), `finish_registration` returns `None` unless the Beacon is in `InitSent`, every failure calls `abort_registration` (state `Aborted`) and success publishes; no path re-enters `InitSent` with the same `pq_key`, and every Beacon generates its own ML-KEM key pair in `try_new`, so the owner of a KEM key decapsulates at most once. The Lean model has the same structure: the Beacon finish (`PqxdhBeaconPhase2Publication.owner` for the source, the grouped owner of stage S1b after the cut) acts only on phase `initSent` and ends in `aborted` (`PqxdhBeaconPhase2Preparation.abort`) or `established` (`PqxdhBeaconPhase2Publication.publish`); a bundle (`PqxdhLivePhase1Bundle.bundle`) moves `fresh` or `freshWithCoins` to `initSent` with the same KEM handle; a raw `create` gives the born owner the KEM index returned by the KEM pool; and both KEM routers, the stopped source router of the prefix and the router after the challenge (`PqxdhDynamicKemRouter.source` and `router`), answer a creation with the current value of their counter `created` and increment it, while no other request changes the counter. A grouped finish carries the challenge marker only for an owner whose KEM handle has the selected creation index and only on the exact challenge ciphertext (`PqxdhRegistrationJointBeaconOpaqueFinish.markedPreparation`).
+
+The potential. The owner list lives in the state of the source client, while the creation counter lives in the state of the router several interpreter layers below it. The plan described the missing fact as the uniqueness of KEM creation indices among owners. A weaker quantity suffices and needs no uniqueness invariant: the number of owners whose phase holds the selected index (`ownerCount`), plus one while the router's counter is at most the selected index, that is while the router has not yet handed it out (`pending`). This potential starts at one (no owner, counter 0), no request increases it (a creation that hands out the selected index adds one owner and removes the pending one, any other creation leaves both unchanged or lowers the pending one; a bundle keeps the KEM handle; a finish only clears handles; the counter never decreases), and a grouped finish that carries the challenge marker belongs to an owner awaiting its finish with the selected index, which it then clears, so it lowers the potential by one. To state this, the source client, the skeleton's native layer, the actual encapsulator and the router are collapsed into one optional stateful interpreter with the product state (`composeOpt`, applied twice), and `option_potential` bounds the hidden reads of any program of that interpreter by the potential of its start. Before the cut the same collapse (source client, source backend, stopped router) and `option_invariant` show that the potential at the selected raw accept is at most one (`sourcePreOpaque_once`), which is `KemOnce`. After the cut the Server's resumption makes its one hidden read and does not touch the owners, the counter only grows, and the rest of the continuation makes at most `KemOnce`'s one (`postSkel_two`).
+
+The decapsulation handle. That a finish of an owner whose KEM index is not the selected one makes no request with the challenge marker is a data-flow fact: the handle of the prepared root is the reply of the preparation's decapsulation request for the owner's own KEM handle (`collect_shared`, `prepare_shared`, for every interpreter), and the marked preparation answers that request with a known secret unless the index is the selected one (`toHandle`).
+
+Consequences. `rootClient_two` and `entryClient_two` replace `1 + qFinish` by 2 in the root count of stage S2 and the hidden-read count of stage S7. The restatements are new theorems beside the existing ones, which are unchanged: `split_uniform_two` and `opaqueBranch_uniform_two` (stages S1c and S2, a PRF sum over two slots), `opaqueBranch_idealKeys_two` (theorem T7 with two slots), `opaqueBranch_allIdeal_two` (stage S7, both sums over two entries) and its slot form `opaqueBranch_slots_two`, through `slotGame_two`, the first-touch allocator in front of the persistent lazy table on `PqxdhRecordLiftInterface.Slot 2`. The premises of these bounds are those of the originals (`certified` for the S1c term, `SourceFullCorrect`), and the decorrelation caveat of route R1 applies unchanged.
+
+### Stage S5, first part: theorem T8 (`PqxdhRegistrationJointKemKeyTransfer`)
+
+```lean
+theorem authenticated_ideal_keys (setup : Setup baseSpec KemSK)
+    (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)
+    (codec : Codec Reader Response) (checks : Checks)
+    (shortRejects : ∀ (publicKey : PqxdhEd25519EufCma.Ed25519PublicKey) bytes, bytes.length < 64 →
+      setup.source.crypto.verify publicKey.toList bytes = none)
+    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes) (count : Nat)
+    (work : OracleComp (SourceSpec KemSK) X) (runtime : A) (index : Nat)
+    (budget : PqxdhRegistrationJointRevealCosts.SourceKind → Nat)
+    (certified : ∀ source, work.IsQueryBoundP
+      (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))
+    (capacity : (if supplied.isNone then 1 else 0) + budget (.inl 1) ≤ count + 1)
+    (decision : X → Bool) (kemIndex : Fin (count + 1)) (chosenOwner : Nat) (fallback : Pqxdh.Bytes)
+    (dynamicFallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : Forgery)
+    (correct : SourceFullCorrect setup.source setup.hmac) :
+    (letI := Classical.propDecidable; 𝒟[(fun pair =>
+        decide (PqxdhRegistrationJointKemRawBridge.Decided decision
+            (PqxdhRegistrationJointInitializedReports.sourceResult pair.2) ∧
+          PqxdhRegistrationJointKemRawBridge.GoodKem kemIndex
+            (PqxdhRegistrationJointInitializedReports.sourceResult pair.2) ∧
+          PqxdhRegistrationJointAcceptOrigin.Protected setup codec checks kemIndex pair.1)) <$>
+      PqxdhRegistrationJointAcceptCutReports.split setup codec checks ensureInit supplied (count + 1) work index
+        runtime] {true}) ≤
+    𝒟[idealKeysBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count kemIndex
+        index] {true} +
+      ENNReal.ofReal (setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
+        (PqxdhRegistrationJointKemRawCertified.adversary setup codec checks ensureInit supplied decision work runtime
+          count kemIndex index).toINDCCA +
+        PqxdhRegistrationJointKemRawGame.correctnessError setup) +
+      ∑ target : Fin (count + 1), advantage setup.joint
+        (PqxdhRegistrationJointNativeOriginBound.reduction setup codec checks ensureInit supplied count
+          (PqxdhRegistrationJointAcceptCut.selected work index chosenOwner fallback) runtime
+          dynamicFallback ordinaryFallback target) +
+      ENNReal.ofReal (idealKeysLoss (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count
+        kemIndex index budget)
+```
+
+`idealKeysLoss` is the right side of theorem T7 at two slots: `(qAccept + qFinish + qHmac)/2^256 + Σ_{slot < 2} AdvPRF(indexedReduction setup.hmac rootClient slot) + keyScheduleBound setup.source setup.hmac entryD` (`idealKeys_loss` is `opaqueBranch_idealKeys_two` written with it). Theorem T8 is the plan's composite: the left side, the premises `functional`, `shortRejects`, `certified` and `capacity`, and the terms of T5 are exactly those of `PqxdhRegistrationJointKemRawOpaque.authenticated_selected_opaque` (theorem T5 in opaque form); the KEM-ideal opaque branch on its right is replaced by the ideal-key branch at the cost of `ofReal idealKeysLoss`, through `ProbComp.evalDist_apply_true_le_add_ofReal_boolDistAdvantage` (`compose_right`). The only added premise is `SourceFullCorrect setup.source setup.hmac` (owner decision of 2026-10-06). `authenticated_all_ideal` is the same composition with stage S7 at two entries (game `allIdealBranch`, loss `allIdealLoss` with the key-schedule advantages of the first two fresh hidden entries), and `authenticated_slots` its slot form with `slotGame 2`. The statements are one-sided because T5 is, so consumers must not claim a two-sided end-to-end distance; they are real-to-ideal-key transfers of the registration segment for an arbitrary decision, have no test query, are not secrecy theorems and cover no evolving key, skipped key, record replay or later record. The first term of the loss is valid only under the random-oracle model of the zero-key 192-byte Extract slice (route R1), as in T7.
+
+### Stage S6: the message key first or last (`PqxdhRegistrationJointKemKeyFirst`)
+
+```lean
+noncomputable def keyFirstBranch … : ProbComp Bool := do
+  let key ← $ᵗ RootOutput
+  let rest ← $ᵗ Residual
+  entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index
+    (output key rest)
+
+theorem idealKeys_key_first … :
+    𝒟[idealKeysBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected
+        index] =
+      𝒟[keyFirstBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected
+        index]
+```
+
+The ideal-key branch draws entry 0's 108 bytes at once. Item 4 needs the 32-byte message key `key32` as a separate challenger value: first, in the shape of the challenger key of `AdaptiveCtxDynamicKnownKeys.sourceGame`, or last, in the shape of `firstPrepare`/`firstIdeal`. `idealKeys_key_first` draws the key first and the 76-byte residual `(nonce12, next32, right32)` after it (`PqxdhServerAuthCtxMaterial.Residual`, reassembled by `PqxdhServerAuthCtxMaterial.output`), from `PqxdhServerAuthCtxMaterial.key_first`; `idealKeys_key_last` draws the residual first and the key last (`keyLastBranch`, with `keyFirst_keyLast`, the swap of the two draws). Both are equalities of output distributions, stated with `𝒟[…]` (the `𝒮[…]` statement of `key_first` is used only inside the proofs). `authenticated_key_first` and `authenticated_key_last` are theorem T8 with the ideal-key branch in either shape. The plan's `key_first_context` (a separately sampled context placed after the key) is not used: in H4 the prechallenge context is sampled inside `entryD`, after entry 0's bytes, and the two shapes above are the ones the CTX consumers take.
+
+### Increment 4: stage S8 (not built)
+
+Stage S8 (`PqxdhRegistrationJointKemRootCosts`, the reduction bills) was assessed and deferred; the bills companion T8b of stage S5 waits for it. The reduction lemmas of the existing PRF and key-schedule games need a coin bound of the root client (`PqxdhCorrelatedExpandQueryBounds.indexed_bounds` and `indexed_uniform_ledger` take `rootClient.IsQueryBoundP IsCoin qCoins`) and a uniform bound of each distinguisher (the `PqxdhServerAuthEntryReductionResources` lemmas take a total bound `U` of the distinguisher), for every oracle answer. There is no shortcut through the program equalities of increments 1 and 2 (`post_opaque`, `post_free`, `post_marked`, `markedPost_free`, `post_grouped`, `post_shared`), which relate the skeleton's post-challenge phase to the source's: a query bound of an interpreted program does not reflect back to the program for answers the interpreter cannot produce (cache hits of the Extract table, Expand outputs of hidden reads), so the existing post-challenge bills of the source (`PqxdhRegistrationJointKemPostBills.post_bound`, `PqxdhRegistrationJointKemRawBills.saved`) cannot be carried over. Stage S8 needs a structural accounting at the skeleton's level: a weighted query-bound notion with transport through stateful, stateless and optional stateful interpreters; the weights of each layer (the public table of the root client, 64 per direct read; the CCA evaluation; the post-challenge router with identity creation 32, explicit coins 1 and decapsulation `decapsUniform + baseUniform·decapsBase`; the actual encapsulator, `encapsCost`); the per-request weights of the grouped client and the skeleton's native layer for the native and the factored services, reusing `factor_build_uniform` and `factor_after_uniform` (64 each) and analogues for the native services; the prefix `sharedStart` (the challenger's key generation and encapsulation and the stopped-source prefix); the hidden-entry draws of the item 2 distinguishers (with stage T at most two fresh entries: 32 bytes for `entryD`, 108 for `entryDk 1`); the four key-schedule reductions on `entryD` and `entryDk k` (existing lemmas in `PqxdhServerAuthEntryReductionResources`); and the open bill of the resumption of stage D. Re-estimate: 4 to 7 agent-days.
+
+### Increment 4: checks
+
+- Direct checks: each module with Lean 4.34, `-j1 -M8000`, `timeout 180`, through `coord.sh lean`, into the scratch prefix `/tmp/bc-arc-scratch/extract-design/inc4/olean` (a resolved symlink mirror of the first prefix of the published `LEAN_PATH` of central `fa8d9a54`, without the root olean) followed by that `LEAN_PATH`. Every module's check after its guards were added had exit 0 and an empty log; after the documentation edits all nine modules and the root were checked again in import order: exit 0, empty logs.
+- Exact axiom guards: 96 of 96 theorems (stage T 85, theorem T8 6, stage S6 5); profiles `propext, Classical.choice, Quot.sound` (80), `propext, Quot.sound` (11), `propext` (1), none (4). A scratch metaprogram (`inc4/probe/theorem-coverage.lean`) lists the 360 constants of the nine modules: every one depends only on `propext`, `Classical.choice` and `Quot.sound`, and the 96 theorem constants with declaration ranges are exactly the 96 guard names. Guard liveness: a scratch file with one deliberately wrong guard for each of the nine modules fails nine times.
+- Root import `BeaconcryptCore.lean` through `coord.sh lean` with `timeout 180` after each stage: exit 0, empty log.
+- Inventory: `coord.sh inv recount` (1636 to 1643 handwritten Lean files at stage T, 1644 at T8, 1645 at S6) before `inv rehash`, rerun once with no change, at each stage; a scratch comparison of all 2063 digest rows after stage T finds no mismatch. Focused `make -C beaconcrypt-core check-inventory` in the locked minimal proof flake under a `coord.sh` `@nix` lease at each stage commit: exit 0, "Formal-verification inventory matches the reviewed boundary." (the run prints the same `comm` sort-order notices as the increment-3 runs). `git diff --check` clean at every commit.
+- Forbidden constructs: no `sorry`, `admit`, `axiom`, `opaque` declaration, `native_decide`, `implemented_by`, `extern` or `unsafe` in the nine modules; no scoped `set_option` (only the module-level `autoImplicit false` and `maxRecDepth 100000`); no probability statement other than `𝒟[…]`; no deprecated lemma.
+- Contamination: the direct-reference constant scan of increments 1 to 3 over the nine modules (`inc4/probe/contamination-scan.lean`, 360 declarations) finds five references, all to `PqxdhChallengeSecretRouting.FunctionalDecapsulation`, the type of T5's premise `functional`, in the five T8-type statements (`authenticated_ideal_keys`, `authenticated_all_ideal`, `authenticated_slots`, `authenticated_key_first`, `authenticated_key_last`); the plan requires that premise in T8 (section 3), and it is a functional interface of the KEM, not a fixed-HKDF root consumer or `MlKem768RecipientCorrectness`. The exact-token statement grep of plan risk 9 over the nine modules finds the same five occurrences and no other forbidden token. The scan's liveness case is detected.
+- Candidate freedom: the new games and losses (`keyFirstBranch`, `keyLastBranch`, `idealKeysLoss`, `allIdealLoss`) have no candidate argument and are built from increment 3's `entryD`, `entryDk` and `rootClient`; the closure check (`inc4/probe/candidate-closure.lean`: 3139 to 4805 constants of the definition closures, 5147 to 5293 with types) reaches none of the candidate-carrying definitions of the earlier games, and its liveness cases are detected.
+- Not run: no `lake build`, `make verify`, `nix-collect-garbage`, mutation testing, ProVerif or Rust run, and no transcript-fidelity check (no Rust or ProVerif file changed).
+
+### Increment 4: deviations from the plan
+
+- Order: the task order was T, S8, S5, S6, S9. Stage S8 was assessed after stage T and deferred (section "Increment 4: stage S8 (not built)"); stage S5 was split, theorem T8 is built and its bills companion T8b waits for S8; stage S6 and the closing documentation of stage S9 for the built stages followed.
+- Stage T: the plan described the missing fact as the uniqueness of KEM creation indices among Beacon owners, a cross-layer invariant. The built proof uses a weaker potential, the number of owners holding the selected index plus one while the router has not handed it out, which is preserved on its own and needs no uniqueness invariant; the cross-layer coupling is handled by collapsing the interpreter stacks into one interpreter (`composeOpt`) before and after the cut. The module is split into seven. The bound holds without any premise. The restatements with two slots are new theorems (suffix `_two`); `rootClient_root`, `entryClient_value`, T7 and S7 at `1 + qFinish` are unchanged.
+- Theorem T8 uses the two-slot T7. Its loss is written with the definitions `idealKeysLoss` and `allIdealLoss`, which unfold to the right sides of `opaqueBranch_idealKeys_two` and `opaqueBranch_allIdeal_two`. The plan's statement check forbids `PqxdhChallengeSecretRouting.*` in new statements; T8's statements contain `PqxdhChallengeSecretRouting.FunctionalDecapsulation` as the type of T5's premise `functional`, which the plan requires.
+- Stage S6 states the key-first and key-last forms as `𝒟[…]` equalities from `key_first` and a swap of the two draws; `key_first_context` is not needed.
+- The plan names the guide `doc/impl/registration-kem-key-transfer.md`; the established guide `doc/impl/extract-composition.md` is kept.
+- No planned statement turned out false or unprovable, none was weakened, no assumption or contract was added and no existing module was changed.
+
+### Increment 4: remaining stages and re-estimate
+
+Stage T (increment-3 re-estimate 3 to 6 agent-days), theorem T8 and stage S6 (1 to 2) were built in one working session. Remaining:
+
+| Stage | Increment-3 re-estimate | Re-estimate | Note |
+| --- | --- | --- | --- |
+| S8 bills | 3-5 | 4-7 | structural weighted accounting at the skeleton's level; see the S8 section |
+| S5, second part (T8b) | (in S5 1-2) | 0.5-1 | after S8: every reduction of `idealKeysLoss` with its challenge count and bills |
+| S9 for increment 4 | 2-4 | 1-2 | independent semantic and hygiene reviews of increment 4, review fixes, integration |
+
+Remaining total: 5.5 to 10 agent-days, the sum of the rows above. The main risk is S8's per-layer accounting under `-M8000`.
+
+### Increment 4: notes for consumers (CE-11b, CE-12)
+
+- Two slots. `slotGame_two`, `opaqueBranch_slots_two` and `entryClient_two` give the slot form at `PqxdhRecordLiftInterface.Slot 2`, the slot count of the CE-11 hand-off with the record lift (CE-11 design v2 section 6: `envG g : Environment 2`, C4 at `n = 2`). The hand-off's `n` does not change, so CE-11b needs no request to Codex about it. `entryClient_two` needs no premise.
+- First touches and marks are unchanged from increment 3: a slot is first touched at the selected raw accept's private root request (Server slot) or at a grouped Beacon finish on the challenge marker (Beacon slot), and the S7 slot form stores the joined 108 bytes in the marks, not CE-11's split marks. `CoreNatural` remains a CE-11b proof.
+- Stage T's potential (`ownerCount`, `pending`, `KemOnce`) and the collapse `composeOpt` are generic enough for CE-11's registration core if it needs the same count per command; `postSkel_two` is stated for arbitrary services.
+- Theorem T8 is available in five forms (`authenticated_ideal_keys`, `authenticated_all_ideal`, `authenticated_slots`, `authenticated_key_first`, `authenticated_key_last`), all one-sided. A CE-12 headline that composes them must keep the one-sidedness, must not present them as secrecy theorems, and must list the R1 idealization, `SourceFullCorrect` and T5's premises. The bills (T8b) are not available until stage S8; a headline that states explicit reduction resources has to wait for it or carry the reductions' resources as open.
+- The names of increment 4 are in `BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconFinishOnce` (shared by its seven modules), `…PqxdhRegistrationJointKemKeyTransfer` and `…PqxdhRegistrationJointKemKeyFirst`. Short names such as `potential`, `created`, `pending`, `phaseKem` and `composeOpt` are generic; consumers should qualify them.
+
+### Increment 4: not claimed
+
+Stage T bounds a count of hidden reads; it adds no probability statement of its own. The two-slot restatements of S2, T7 and S7 are two-sided transfers of the registration segment for an arbitrary decision, valid only under the random-oracle model of the zero-key 192-byte Extract slice for their first term. Theorem T8 and its variants are one-sided, have no test query and are not secrecy theorems; they cover no evolving key, skipped key, record replay or later record. Stage S6 is a pair of distribution equalities. The reduction bills (T8b, stage S8) are not proved. Not covered: persistence, snapshots, codec internals, running-code access and primitive implementations (owner scope).
