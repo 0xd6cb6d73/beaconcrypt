@@ -1710,6 +1710,7 @@ import BeaconcryptCore.Computational.PqxdhRegistrationJointKemEntryFactorNative
 import BeaconcryptCore.Computational.PqxdhRegistrationJointKemEntryFactorSteps
 import BeaconcryptCore.Computational.PqxdhRegistrationJointKemEntryFactorResume
 import BeaconcryptCore.Computational.PqxdhRegistrationJointKemEntryFactor
+import BeaconcryptCore.Computational.PqxdhRegistrationJointKemIdealKeys
 
 /-!
 # Beaconcrypt-core verification root

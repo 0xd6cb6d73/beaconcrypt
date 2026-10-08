@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1615
+	[handwritten-lean]=1616
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -32143,6 +32143,19 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegist
 require_line_count 1 '^theorem uniformGame_entry([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemEntryFactor theorem uniformGame_entry"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemEntryFactor\.rootClient_entryD$' "$selected_source_module" "PqxdhRegistrationJointKemEntryFactor dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemEntryFactor.rootClient_entryD"
 require_line_count 1 '^theorem rootClient_entryD([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemEntryFactor theorem rootClient_entryD"
+
+# Item 2 stage S4b: the ideal-key branch and theorem T7 (registration segment).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemIdealKeys.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRegistrationJointKemIdealKeys$' proofs/lean/BeaconcryptCore.lean "PqxdhRegistrationJointKemIdealKeys root import"
+require_line_count 3 '^theorem ' "$selected_source_module" "PqxdhRegistrationJointKemIdealKeys theorem inventory"
+require_line_count 3 '^#guard_msgs in$' "$selected_source_module" "PqxdhRegistrationJointKemIdealKeys guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemIdealKeys\.advantage_left$' "$selected_source_module" "PqxdhRegistrationJointKemIdealKeys dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemIdealKeys.advantage_left"
+require_line_count 1 '^theorem advantage_left([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemIdealKeys theorem advantage_left"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemIdealKeys\.uniform_idealKeys$' "$selected_source_module" "PqxdhRegistrationJointKemIdealKeys dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemIdealKeys.uniform_idealKeys"
+require_line_count 1 '^theorem uniform_idealKeys([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemIdealKeys theorem uniform_idealKeys"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemIdealKeys\.opaqueBranch_idealKeys$' "$selected_source_module" "PqxdhRegistrationJointKemIdealKeys dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemIdealKeys.opaqueBranch_idealKeys"
+require_line_count 1 '^theorem opaqueBranch_idealKeys([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemIdealKeys theorem opaqueBranch_idealKeys"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
