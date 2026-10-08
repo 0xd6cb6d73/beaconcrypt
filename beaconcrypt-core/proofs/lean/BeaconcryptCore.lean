@@ -1784,6 +1784,20 @@ import BeaconcryptCore.Computational.PqxdhDeploymentIdealParams
 
 import BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentDraw
 
+import BeaconcryptCore.Computational.PqxdhRecordLiftSeedRelay
+
+import BeaconcryptCore.Computational.PqxdhRecordLiftSeedPolicy
+
+import BeaconcryptCore.Computational.PqxdhRecordLiftChainHop
+
+import BeaconcryptCore.Computational.PqxdhRecordLiftChainHybrid
+
+import BeaconcryptCore.Computational.PqxdhRecordLiftChainBills
+
+import BeaconcryptCore.Computational.PqxdhRecordLiftChainAlias
+
+import BeaconcryptCore.Computational.PqxdhRecordLiftChainLift
+
 import BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps
 
 /-!
