@@ -1718,6 +1718,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentHiddenSplit
 
 import BeaconcryptCore.Computational.PqxdhDeploymentEnvironment
 
+import BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentJoin
+
 /-!
 # Beaconcrypt-core verification root
 
