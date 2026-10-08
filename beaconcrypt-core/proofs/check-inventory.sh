@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1663
+	[handwritten-lean]=1664
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -33982,6 +33982,71 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecord
 require_line_count 1 '^theorem hiding_advantage([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftIdeal theorem hiding_advantage"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftIdeal\.hiding_event$' "$selected_source_module" "PqxdhRecordLiftIdeal dependency BeaconcryptCore.Computational.PqxdhRecordLiftIdeal.hiding_event"
 require_line_count 1 '^theorem hiding_event([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftIdeal theorem hiding_event"
+
+# Items 4/5, stage S4 (X1): record-lift CTX hybrid, the all-real CTX world equals the chain-ideal world on the counter-erased state and the view, and the key-indexed hybrid family over ChainOrder.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxHybrid.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxHybrid$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftCtxHybrid root import"
+require_line_count 29 '^theorem ' "$selected_source_module" "PqxdhRecordLiftCtxHybrid theorem inventory"
+require_line_count 29 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftCtxHybrid guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxHybrid\.keyed_bare$' "$selected_source_module" "PqxdhRecordLiftCtxHybrid dependency keyed_bare"
+require_line_count 1 '^theorem keyed_bare([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxHybrid theorem keyed_bare"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxHybrid\.openArguments_facts$' "$selected_source_module" "PqxdhRecordLiftCtxHybrid dependency openArguments_facts"
+require_line_count 1 '^theorem openArguments_facts([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxHybrid theorem openArguments_facts"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxHybrid\.real_open_cache$' "$selected_source_module" "PqxdhRecordLiftCtxHybrid dependency real_open_cache"
+require_line_count 1 '^theorem real_open_cache([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxHybrid theorem real_open_cache"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxHybrid\.opening_bare$' "$selected_source_module" "PqxdhRecordLiftCtxHybrid dependency opening_bare"
+require_line_count 1 '^theorem opening_bare([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxHybrid theorem opening_bare"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxHybrid\.stateT_map_apply$' "$selected_source_module" "PqxdhRecordLiftCtxHybrid dependency stateT_map_apply"
+require_line_count 1 '^theorem stateT_map_apply([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxHybrid theorem stateT_map_apply"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxHybrid\.stateT_bind_apply$' "$selected_source_module" "PqxdhRecordLiftCtxHybrid dependency stateT_bind_apply"
+require_line_count 1 '^theorem stateT_bind_apply([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxHybrid theorem stateT_bind_apply"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxHybrid\.real_seal_cache$' "$selected_source_module" "PqxdhRecordLiftCtxHybrid dependency real_seal_cache"
+require_line_count 1 '^theorem real_seal_cache([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxHybrid theorem real_seal_cache"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxHybrid\.eraseSeal_arguments$' "$selected_source_module" "PqxdhRecordLiftCtxHybrid dependency eraseSeal_arguments"
+require_line_count 1 '^theorem eraseSeal_arguments([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxHybrid theorem eraseSeal_arguments"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxHybrid\.sealing_bare$' "$selected_source_module" "PqxdhRecordLiftCtxHybrid dependency sealing_bare"
+require_line_count 1 '^theorem sealing_bare([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxHybrid theorem sealing_bare"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxHybrid\.base_bare$' "$selected_source_module" "PqxdhRecordLiftCtxHybrid dependency base_bare"
+require_line_count 1 '^theorem base_bare([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxHybrid theorem base_bare"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxHybrid\.keyed_other$' "$selected_source_module" "PqxdhRecordLiftCtxHybrid dependency keyed_other"
+require_line_count 1 '^theorem keyed_other([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxHybrid theorem keyed_other"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxHybrid\.hash_support$' "$selected_source_module" "PqxdhRecordLiftCtxHybrid dependency hash_support"
+require_line_count 1 '^theorem hash_support([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxHybrid theorem hash_support"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxHybrid\.real_nonseal_nonces$' "$selected_source_module" "PqxdhRecordLiftCtxHybrid dependency real_nonseal_nonces"
+require_line_count 1 '^theorem real_nonseal_nonces([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxHybrid theorem real_nonseal_nonces"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxHybrid\.keyed_self$' "$selected_source_module" "PqxdhRecordLiftCtxHybrid dependency keyed_self"
+require_line_count 1 '^theorem keyed_self([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxHybrid theorem keyed_self"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxHybrid\.opening_nonces$' "$selected_source_module" "PqxdhRecordLiftCtxHybrid dependency opening_nonces"
+require_line_count 1 '^theorem opening_nonces([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxHybrid theorem opening_nonces"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxHybrid\.sealing_other$' "$selected_source_module" "PqxdhRecordLiftCtxHybrid dependency sealing_other"
+require_line_count 1 '^theorem sealing_other([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxHybrid theorem sealing_other"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxHybrid\.step_bare$' "$selected_source_module" "PqxdhRecordLiftCtxHybrid dependency step_bare"
+require_line_count 1 '^theorem step_bare([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxHybrid theorem step_bare"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxHybrid\.base_keys$' "$selected_source_module" "PqxdhRecordLiftCtxHybrid dependency base_keys"
+require_line_count 1 '^theorem base_keys([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxHybrid theorem base_keys"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxHybrid\.step_unsealed$' "$selected_source_module" "PqxdhRecordLiftCtxHybrid dependency step_unsealed"
+require_line_count 1 '^theorem step_unsealed([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxHybrid theorem step_unsealed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxHybrid\.schedule_bare$' "$selected_source_module" "PqxdhRecordLiftCtxHybrid dependency schedule_bare"
+require_line_count 1 '^theorem schedule_bare([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxHybrid theorem schedule_bare"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxHybrid\.initial_unsealed$' "$selected_source_module" "PqxdhRecordLiftCtxHybrid dependency initial_unsealed"
+require_line_count 1 '^theorem initial_unsealed([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxHybrid theorem initial_unsealed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxHybrid\.allReal_bare$' "$selected_source_module" "PqxdhRecordLiftCtxHybrid dependency allReal_bare"
+require_line_count 1 '^theorem allReal_bare([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxHybrid theorem allReal_bare"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxHybrid\.allReal_view$' "$selected_source_module" "PqxdhRecordLiftCtxHybrid dependency allReal_view"
+require_line_count 1 '^theorem allReal_view([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxHybrid theorem allReal_view"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxHybrid\.allReal_decision$' "$selected_source_module" "PqxdhRecordLiftCtxHybrid dependency allReal_decision"
+require_line_count 1 '^theorem allReal_decision([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxHybrid theorem allReal_decision"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxHybrid\.hybridModes_zero$' "$selected_source_module" "PqxdhRecordLiftCtxHybrid dependency hybridModes_zero"
+require_line_count 1 '^theorem hybridModes_zero([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxHybrid theorem hybridModes_zero"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxHybrid\.hybrid_zero_view$' "$selected_source_module" "PqxdhRecordLiftCtxHybrid dependency hybrid_zero_view"
+require_line_count 1 '^theorem hybrid_zero_view([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxHybrid theorem hybrid_zero_view"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxHybrid\.hybridModes_last$' "$selected_source_module" "PqxdhRecordLiftCtxHybrid dependency hybridModes_last"
+require_line_count 1 '^theorem hybridModes_last([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxHybrid theorem hybridModes_last"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxHybrid\.hybridModes_unchanged$' "$selected_source_module" "PqxdhRecordLiftCtxHybrid dependency hybridModes_unchanged"
+require_line_count 1 '^theorem hybridModes_unchanged([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxHybrid theorem hybridModes_unchanged"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxHybrid\.hybridModes_step$' "$selected_source_module" "PqxdhRecordLiftCtxHybrid dependency hybridModes_step"
+require_line_count 1 '^theorem hybridModes_step([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxHybrid theorem hybridModes_step"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
