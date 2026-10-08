@@ -1,0 +1,233 @@
+{
+  "component": "PqxdhRecordLiftWorldBudget",
+  "status": "49 statements independently approved; all four focused gates passed; publication hygiene approved; Claude C4 ACK_WITH_NOTES without module changes; ready for focused publication",
+  "base_commit": "d68e1ce442ac89fc65594d9fca074399beae9f94",
+  "topic_branch": "codex/record-lift-world-budget",
+  "date_utc": "2026-10-07T22:54:55.582420+00:00",
+  "source_theorems": 49,
+  "exact_axiom_guards": 49,
+  "allowed_axioms": [
+    "propext",
+    "Classical.choice",
+    "Quot.sound"
+  ],
+  "handwritten_lean_count": 1569,
+  "files": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftWorldBudget.lean": "b4bbf0f647aebc1a41e4f1056137703028f10d82ec1d80417abf9e11be49e2c4",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "d4da59a2d3ded591473f2383d45ef4941d5a23e5eead9dd62e4c5736c6d63300",
+    "beaconcrypt-core/proofs/check-inventory.sh": "7a4461d3c2b3183012a92bf93d281eb77bf32ba4f78c53965985cfbf08ce7757",
+    "beaconcrypt-core/proofs/reviewed-inventory.txt": "01aafdfd9c758c0a2ef092a1e7eaa9815d5d43ebbd4d7f0f45998daa4deaa9bd",
+    "doc/formal-verification-analysis.md": "a8a7b16ca9e4d3eb6e4a4654841859eca2942818ab837ab1921daf3a77887831",
+    "doc/impl/record-lift-world-budget.md": "d9d7005503c9ecde2d5f5d4dc6b0a28c9af15bc40d8d74f201b6d1351ac7c844"
+  },
+  "checks": {
+    "module": {
+      "start": "2026-10-07T22:42:01.045056+00:00",
+      "end": "2026-10-07T22:42:14.514654+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "world-budget-final-publication-module",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-world-budget/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/world-budget/publication/olean/BeaconcryptCore/Computational/PqxdhRecordLiftWorldBudget.olean",
+        "/tmp/beaconcrypt-record-lift-world-budget/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftWorldBudget.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/world-budget/publication/logs/module.log",
+      "log_sha256": "4fe165994e09d603066edc2d57f84023cb35f85290894123f571f7178524b8e3",
+      "leanpath_sha256": "7b7c148e2000df6435f8ab7d503fc6c212d30438441f28c50a112ec3c4ad1fca",
+      "source_sha256": "b4bbf0f647aebc1a41e4f1056137703028f10d82ec1d80417abf9e11be49e2c4",
+      "artifact_sha256": "afb8eacdf2e85ae403c358ca3b955b5ad0287900ad94117d8ae3431cc0ac4c39",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    "root": {
+      "start": "2026-10-07T22:42:27.732825+00:00",
+      "end": "2026-10-07T22:42:30.812668+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "world-budget-final-publication-root",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-world-budget/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/world-budget/publication/olean/BeaconcryptCore.olean",
+        "/tmp/beaconcrypt-record-lift-world-budget/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/world-budget/publication/logs/root.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "leanpath_sha256": "7b7c148e2000df6435f8ab7d503fc6c212d30438441f28c50a112ec3c4ad1fca",
+      "source_sha256": "d4da59a2d3ded591473f2383d45ef4941d5a23e5eead9dd62e4c5736c6d63300",
+      "artifact_sha256": "22aa65519c9241fd4df4e26c3d7cb9f9dbc3d934ff2342ede8e1230db680f0f1",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    "inventory": {
+      "start": "2026-10-07T22:42:22.889584+00:00",
+      "end": "2026-10-07T22:43:38.672564+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lease",
+        "mem",
+        "codex",
+        "@nix",
+        "world-budget-final-inventory",
+        "--eta",
+        "20m",
+        "--",
+        "nix",
+        "develop",
+        "--no-update-lock-file",
+        "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+        "-c",
+        "make",
+        "-C",
+        "/tmp/beaconcrypt-record-lift-world-budget/beaconcrypt-core",
+        "check-inventory",
+        "SHELL=bash"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/world-budget/publication/logs/inventory.log",
+      "log_sha256": "2360370a50405c9fc6d2551e2ed1a69ee34ea0cdf86a8c7239d00935ab2eb520",
+      "leanpath_sha256": "7b7c148e2000df6435f8ab7d503fc6c212d30438441f28c50a112ec3c4ad1fca",
+      "source_sha256": null,
+      "artifact_sha256": null,
+      "CARGO_BUILD_JOBS": "2",
+      "CARGO_TARGET_DIR": "/tmp/bc-arc-scratch/record-lift/world-budget/publication/target"
+    },
+    "fidelity": {
+      "start": "2026-10-07T22:42:22.886923+00:00",
+      "end": "2026-10-07T22:42:47.632961+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lease",
+        "mem",
+        "codex",
+        "@cargo",
+        "world-budget-final-fidelity",
+        "--eta",
+        "20m",
+        "--",
+        "nix",
+        "develop",
+        "--no-update-lock-file",
+        "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+        "-c",
+        "make",
+        "-C",
+        "/tmp/beaconcrypt-record-lift-world-budget/beaconcrypt-core",
+        "check-proverif-transcript-fidelity",
+        "SHELL=bash"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/world-budget/publication/logs/fidelity.log",
+      "log_sha256": "577306d988b6edf75a2ab14bf4375f73f1f5c87b558ffdd02eaa03f3a4879e63",
+      "leanpath_sha256": "7b7c148e2000df6435f8ab7d503fc6c212d30438441f28c50a112ec3c4ad1fca",
+      "source_sha256": null,
+      "artifact_sha256": null,
+      "CARGO_BUILD_JOBS": "2",
+      "CARGO_TARGET_DIR": "/tmp/bc-arc-scratch/record-lift/world-budget/publication/target"
+    }
+  },
+  "dependency_provenance": {
+    "base": "d68e1ce442ac89fc65594d9fca074399beae9f94",
+    "published_leanpath": "/tmp/bc-coord/leanpaths/d68e1ce442ac89fc65594d9fca074399beae9f94.leanpath",
+    "published_leanpath_sha256": "10c7a465cea49791471ad9985cf65eeb1133f274dffee6e41044ed786ff079ac",
+    "own_leanpath_sha256": "7b7c148e2000df6435f8ab7d503fc6c212d30438441f28c50a112ec3c4ad1fca",
+    "namespace_artifacts": 6027,
+    "module_and_root_artifacts": "fresh owned paths; no symlink outputs",
+    "no_published_writes": true
+  },
+  "review": {
+    "semantic": {
+      "path": "/tmp/bc-arc-scratch/record-lift/reviews/world-budget-semantic-2026-10-08.json",
+      "sha256": "364c31b17c433c4da34df950c5d1fa13d19cab248410462aa70d8dcf5e931088",
+      "status": "approved without findings",
+      "reviewed_source_sha256": "b4bbf0f647aebc1a41e4f1056137703028f10d82ec1d80417abf9e11be49e2c4",
+      "reviewed_guide_sha256": "57d86537ed4a19c60e0aa79b1c1ebd95826525ca3ac41aa34f8f7977a5147ccf",
+      "current_guide_sha256": "d9d7005503c9ecde2d5f5d4dc6b0a28c9af15bc40d8d74f201b6d1351ac7c844",
+      "guide_change": "only final validation/review-status paragraph updated after approval"
+    },
+    "hygiene": {
+      "path": "/tmp/bc-arc-scratch/record-lift/reviews/world-budget-publication-hygiene-2026-10-08.json",
+      "sha256": "f94a2b39e690287f5529944d3d32651541f5eabff2689e18507572de08d08915",
+      "status": "approved without findings",
+      "allowed_followup": "Only review-status fields and the final guide paragraph were updated after review; source, root, gate, manifest and analysis hashes are unchanged."
+    },
+    "claude": {
+      "request_message": 85,
+      "acknowledgement_message": 86,
+      "substantive_response": 91,
+      "status": "ACK_WITH_NOTES; no module change requested",
+      "message_path": "/tmp/bc-coord/messages/000091.msg",
+      "message_sha256": "76c63c8f2720642ad395a31eaaf8b05ad7e26d99c11c07b75c489c1b8b880603",
+      "reviewed_source_sha256": "b4bbf0f647aebc1a41e4f1056137703028f10d82ec1d80417abf9e11be49e2c4",
+      "reviewed_guide_sha256": "b690ca8814a6751cbd2274f7540b05d44f0fb8fbae04b8237c07bc67341e76d2",
+      "current_guide_sha256": "d9d7005503c9ecde2d5f5d4dc6b0a28c9af15bc40d8d74f201b6d1351ac7c844",
+      "guide_change": "Final validation/review-status paragraph only; explanatory paragraphs unchanged. Historical development receipts retain the earlier hashes they reviewed.",
+      "probe_source": "/tmp/bc-arc-scratch/coord-replies/world-budget/WorldBudget.lean",
+      "probe_source_sha256": "4d1bd1155e3187fb5c4863bd9e7ce4dfead633cc41f0ca5909f8f5ea9b629a21",
+      "probe_log": "/tmp/bc-arc-scratch/coord-replies/world-budget/out.log",
+      "probe_log_sha256": "237dcef90168cc485fe0edf1316b9ab97ed15b6c9d72309a6368d66314d15de8",
+      "probe_exit": 0,
+      "accepted": [
+        "CE C4 shared hash and KDF instantiations compile without additional premises.",
+        "Uniform bill includes startup, direct and environment coins, shared hashes and exactly 64 underlying uniform requests per lazily sampled slot.",
+        "Sequence-one key32/nonce12 remain 44 environment bytes; the World alone draws next32/right32. CE supplies this ordering and its own registration accounting."
+      ],
+      "notes": [
+        "The optional primitive_uniform_bound wording nit is left unchanged to preserve the frozen source; its upper bound covers both hits and misses, while zero-cost hits describe existing semantics.",
+        "No cryptographic, reachability, injectivity or codec assumption was found.",
+        "CE-side allowance looseness and finish-time accounting remain CE obligations."
+      ]
+    }
+  },
+  "scope": {
+    "execution": "actual World.run support; complete source handlers and shared cache retained",
+    "native": "KDF S+51R, hash S+R, sealing/writing S, opening R; only Budget.Respects",
+    "shared_hash": "B.hash+S+R+envTotal.hash with Frame+Respects",
+    "uniform_counter": "effects.coin+64*(effects.hash+native.hash)+64*seeds.draws without Frame or budget",
+    "finite_seed_count": "draws equal actual occupied slot count and are at most n, derived from empty initialization",
+    "combined_uniform": "startupCoins+B.coin+B.test+bounds.max*B.fresh+envTotal.coin+64*(B.hash+S+R+envTotal.hash)+64*n",
+    "sample_seed": "exact actual 64 underlying uniform queries; complete miss poststate retained"
+  },
+  "limitations": [
+    "ordinary-record World costs only; CE environment allowance, source erasure and slot interpretation remain external joins",
+    "no primitive security contract or cryptographic security bound is introduced",
+    "no runtime/byte-copy/parsing bounds or selected-reduction bills",
+    "chain/CTX replacements, final origin/hiding endpoints and later-phase costs remain open"
+  ],
+  "hygiene": {
+    "direct_H7_names": [],
+    "placeholders_or_custom_axioms": [],
+    "all_theorems_named_once_in_source_guards_and_gates": true,
+    "git_diff_check": "passed",
+    "production_source_changed": false,
+    "existing_proof_modules_changed": false,
+    "published_paths_written": false
+  },
+  "publication": {
+    "committed": false,
+    "pushed": false,
+    "integrated": false
+  },
+  "seed_development_snapshot": {
+    "path": "/tmp/bc-arc-scratch/record-lift/world-budget/seed-snapshot-20261007",
+    "status": "pinned unchanged; earlier checked 9-theorem import for SeedCut and ChainOracle development, final imports must recheck against publication"
+  }
+}
