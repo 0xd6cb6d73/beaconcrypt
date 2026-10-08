@@ -12,7 +12,9 @@
   "sha256": "7b19c99395dbf3436164487a5daec61fbf064f5c289c0c4507b3da2edb123142",
   "sections": "2 (S4: X1-X4; decisions D1-D5), 8 (CTX track status and the privacy-half plan (a)-(d)), 10 (privacy track status, written by this track, with its fix-pass update)",
   "sha256_track": "ee46b3e56b6a724fbdeb1b89cbc6a93359f39e8b6cdfe67c3224ddd2ce8b7610",
-  "note": "The track receipt cited the privacy section as section 9; it was a second section numbered 9 (after the world track's section 9) with the time label 15:35 although it was written at about 15:23 (hygiene finding H5). The fix pass renumbered it to 10, corrected its label and appended a fix-pass update; the world track's section 9 is not this track's and was not edited by it. Hash at the time of this receipt."
+  "note": "The track receipt cited the privacy section as section 9; it was a second section numbered 9 (after the world track's section 9) with the time label 15:35 although it was written at about 15:23 (hygiene finding H5). The fix pass renumbered it to 10, corrected its label and appended a fix-pass update; the world track's section 9 is not this track's and was not edited by it. Hash at the time of this receipt.",
+  "sha256_nit_fix": "7b19c99395dbf3436164487a5daec61fbf064f5c289c0c4507b3da2edb123142",
+  "note_nit_fix": "Hash of the takeover plan when the confirming-review nit fix was written (equal to sha256 if the plan did not change). The opening paragraph of section 10 still says \"unreviewed\" as of its 15:23 label (confirming-review nit 2, scratch only); its later update paragraphs supersede it, and the integration appends one more."
  },
  "brief": {
   "path": "/tmp/bc-coord/tasks/codex-items-4-5.md",
@@ -81,6 +83,17 @@
    "log": "/tmp/bc-arc-scratch/items45/priv/review-hygiene/logs/tagprobe.log",
    "log_sha256": "2b0ce1390b7bcdda5450ef235acfaee3d52557aba03113228c50eef992459445",
    "result": "Hygiene review probe: PqxdhRecordLiftCtxRandom.replay_random_target and privacyLoss_eq reach Pqxdh.Crypto.aeadSeal_tag_length through theorem constants (via AdaptiveCtxPrivacyGuard.replay_random_advantage); randomView_eq and randomTargetView_randomView do not. The analysis paragraph of PqxdhRecordLiftCtxRandom now says so (finding H1)."
+  },
+  "confirming_tagprobe": {
+   "probe": "/tmp/bc-arc-scratch/items45/priv/confirm/probe/TagCentral.lean",
+   "probe_sha256": "f83e5798fea6cbe9ff807121a67e69f6bcf80543c9046b964272ad7e08ae54cb",
+   "log": "/tmp/bc-arc-scratch/items45/priv/confirm/logs/tagcentral.log",
+   "log_sha256": "57e3acf96ec9f8d9fa93f6f30fa9553925688d5abecc764413e0fa6300235245",
+   "all_theorems_probe": "/tmp/bc-arc-scratch/items45/priv/confirm/probe/TagAll.lean",
+   "all_theorems_probe_sha256": "366a6ba0e00f34ba2f143c4317efe6c86c9b647987218d1771de8943ee2909b9",
+   "all_theorems_log": "/tmp/bc-arc-scratch/items45/priv/confirm/logs/tagall.tsv",
+   "all_theorems_log_sha256": "b6bb745edc6e669d63dbec6c24f713137a3e51c34448a101ec59b7b48cb91f17",
+   "result": "Confirming-review probes: proof-level reach of Pqxdh.Crypto.aeadSeal_tag_length in exactly the 23 theorems of aeadSeal_tag_length_prooflevel. Both central lemmas that replay_random_target uses (rw with AdaptiveCtxSharedModes.replay_view_eq, then AdaptiveCtxPrivacyGuard.replay_random_advantage) reach it at proof level, and privacyLoss_eq gets it through replay_random_target; randomTargetView_randomView does not reach it. The guide section \"Contracts per theorem\" named only replay_random_advantage for these two theorems and now names both (confirming-review nit 1); contracts.classification already listed both lemmas."
   }
  },
  "provenance": "New Claude work. PqxdhRecordLiftCtxPrivLink and the step-bill part of PqxdhRecordLiftCtxPrivBills are adapted from Claude's integrity-half modules PqxdhRecordLiftCtxLink, PqxdhRecordLiftCtxBills and PqxdhRecordLiftCtxModeBounds; nothing adapted from Codex WIP.",
@@ -92,9 +105,25 @@
   "111a68574d3bce2cdfb29c09223c6d4edf8c964e",
   "bd802c1ac35b7e7380bcf458da5e6625d99b4fdc",
   "3b2e273f9406eb1a5722118752485a0a5611903a",
-  "8e7d18c7fc07656a75bec35998638b3a71e550c0"
+  "8e7d18c7fc07656a75bec35998638b3a71e550c0",
+  "9fafea3cec00d4a5703247025e7b763d2f6e9cd5"
  ],
  "files_sha256": {
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxRandom.lean": "071a7efdb241986159c69b27376e0d77e6459bbfa883c531161f07bb73781855",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPrivModes.lean": "2dfa0fd200d1233b846219a70dea363304c7327644bb959d9efedc7942477db9",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPrivLink.lean": "ab61843a1d36876519d66a07d449b9f9de2ea7a3f461d4b51cecd1602d706bd4",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPriv.lean": "ab2d8749c69d104d9b907b618a94ed854166c4437e6d64b9498b1f24ce3e9f25",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPrivBills.lean": "36dfeb23abce8e8c3594a474a0ef0db6745588e1ae4de9adc5f39759b4726f1e",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "e42ecfc10345f22d023cb028f6b5bcc6d41efde979e5d756b9df2221fd349d50",
+  "beaconcrypt-core/proofs/check-inventory.sh": "63f7f095b63af2c1a22d5fbc14d129a9e23396279b95eb1e3033d023c4389748",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "5730234ec1d29a899e59d031ebe7077a7c22b39c7a4fcfa741dceef1c423f239",
+  "doc/impl/record-lift-ctx-priv.md": "ff3fc70229a156ac7fef4fb13459e3e6816b955f43f168bd026fb41e30850c17",
+  "doc/formal-verification-analysis.md": "a9083c0995c7f52a3a6861a407a8c047b200ae68f7779abb7beaf5e8d074d8f9",
+  "doc/impl/record-lift-ctx-hybrid.md": "8157fb79f3f535a445fcd8b34d334f3d7e02dcb4fd7da941a7fcd06c779cf62f",
+  "doc/impl/record-lift-ideal.md": "9c8564ac2c39fc0e00c7ee7cd560da2088f16b1e30d4f0c5b13c668fa93872c4"
+ },
+ "files_sha256_note": "At the confirming-review nit-fix commit (the commit that adds this version of the receipt); only doc/impl/record-lift-ctx-priv.md and doc/formal-verification-analysis.md differ from files_sha256_fix1. The receipt itself is not listed.",
+ "files_sha256_fix1": {
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxRandom.lean": "071a7efdb241986159c69b27376e0d77e6459bbfa883c531161f07bb73781855",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPrivModes.lean": "2dfa0fd200d1233b846219a70dea363304c7327644bb959d9efedc7942477db9",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPrivLink.lean": "ab61843a1d36876519d66a07d449b9f9de2ea7a3f461d4b51cecd1602d706bd4",
@@ -108,7 +137,7 @@
   "doc/impl/record-lift-ctx-hybrid.md": "8157fb79f3f535a445fcd8b34d334f3d7e02dcb4fd7da941a7fcd06c779cf62f",
   "doc/impl/record-lift-ideal.md": "9c8564ac2c39fc0e00c7ee7cd560da2088f16b1e30d4f0c5b13c668fa93872c4"
  },
- "files_sha256_note": "At the fix-pass documentation commit 8e7d18c7fc07656a75bec35998638b3a71e550c0, the tree that the fix-pass checks cover; the receipt commit changes only this file.",
+ "files_sha256_fix1_note": "At the fix-pass documentation commit 8e7d18c7fc07656a75bec35998638b3a71e550c0, the tree that the fix-pass checks cover; the receipt commit 9fafea3c changed only this file.",
  "modules": [
   {
    "name": "PqxdhRecordLiftCtxRandom",
@@ -1686,6 +1715,19 @@
     "lease_label": "see review-hygiene/NOTES.md",
     "command": "coord.sh lease mem claude @nix see review-hygiene/NOTES.md --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C /tmp/beaconcrypt-deployment-record-priv/beaconcrypt-core check-inventory SHELL=bash",
     "note": "Run by the hygiene review under coord.sh lease mem claude @nix; the worktree was clean including ignored files before and after (review-hygiene/ignored-before.txt is empty)."
+   },
+   "f1tip": {
+    "status": 0,
+    "commit": "9fafea3cec00d4a5703247025e7b763d2f6e9cd5",
+    "dirt_bytes": 0,
+    "dirt_after_bytes": 0,
+    "start": "2026-10-08T13:54:08Z",
+    "end": "2026-10-08T13:55:32Z",
+    "log": "/tmp/bc-arc-scratch/items45/priv/fix1/logs/inventory-f1tip.log",
+    "log_sha256": "9f22fe0024951c4416782c7f5fd6aefe0c91e9fa0e3e55bd89809949cf78fa88",
+    "lease_label": "items45-priv-fix1-inventory-f1tip",
+    "command": "coord.sh lease mem claude @nix items45-priv-fix1-inventory-f1tip --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C /tmp/beaconcrypt-deployment-record-priv/beaconcrypt-core check-inventory SHELL=bash",
+    "note": "Run by the implementer at the fix-pass receipt commit 9fafea3c after that receipt was written, so it was recorded only in the scratch NOTES until the confirming-review nit fix (nit 3). The nit-fix commit changes only Markdown and this receipt, which check-inventory does not read."
    }
   },
   "fix": {
@@ -1707,7 +1749,8 @@
     "command": "coord.sh lease mem claude @nix items45-priv-fix1-inventory-f1docs --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C /tmp/beaconcrypt-deployment-record-priv/beaconcrypt-core check-inventory SHELL=bash"
    }
   },
-  "integration_note": "Expected handwritten-lean after merging central: 1685 if central stays at 14f51c34; 1687 if the world track (codex/deployment-record-world, two modules) reaches central first (hygiene finding H6); coord.sh inv recount sets the count."
+  "integration_note": "Expected handwritten-lean after merging central: 1685 if central stays at 14f51c34; 1687 if the world track (codex/deployment-record-world, two modules) reaches central first (hygiene finding H6); coord.sh inv recount sets the count.",
+  "integration_note_nit_fix": "Central was 14f51c34 (handwritten-lean 1680) when the nit fix was written, and another integration (CE-11b unit U5, three modules) was announced on top of it; the integration recounts against the central tip it merges (1680 + 5 = 1685 at 14f51c34, plus one per module that reached central after 14f51c34) and records the result in its checks receipt."
  },
  "diff_check": "git diff --check clean before every track commit and before both fix-pass commits (and clean on every track commit per the hygiene review).",
  "forbidden_scan": "No sorry, admit, axiom declaration, native_decide, implemented_by, extern, unsafe or opaque in the five modules (guards.py verify and the inventory escape-hatch pattern). Unchanged in the fix pass (guards.py verify on the five modules after the docstring joins: 30, 32, 11, 14 and 26 theorems, each with one exact guard).",
@@ -1756,7 +1799,7 @@
   "RecordLiftStatement (the world track composes it from this theorem with recordLiftBool_of_parts).",
   "The R6 forms (stage S6)."
  ],
- "checks_not_run": "No lake build, make verify, nix-collect-garbage, mutation testing, ProVerif or Rust run in the track or the fix pass. Transcript fidelity (@cargo) and the central integration checks of PROTOCOL section 6 run on the merged tip at integration.",
+ "checks_not_run": "No lake build, make verify, nix-collect-garbage, mutation testing, ProVerif or Rust run in the track, the fix pass or the nit fix; no production Rust or ProVerif change. Transcript fidelity (cargo under @cargo) and the central integration checks of PROTOCOL section 6 run on the merged tip (nit_fix.integration_checks).",
  "review": {
   "reviewed_commit": "77ccccbd66c8e669f57588ec6672d1147c8d4e5a",
   "reviewed_range": "14f51c34..77ccccbd",
@@ -1873,10 +1916,62 @@
    "lean_edits": "Docstrings only (twenty theorem and definition docstrings joined into one line each); no statement, proof, definition body or guard changed.",
    "doc_edits": "doc/impl/record-lift-ctx-priv.md, doc/formal-verification-analysis.md (privacy section and one S1 sentence), doc/impl/record-lift-ctx-hybrid.md (item 6), doc/impl/record-lift-ideal.md (two sentences and the open-points bullet)."
   },
-  "confirming_review": "pending"
+  "confirming_review": {
+   "reviewed_commit": "9fafea3cec00d4a5703247025e7b763d2f6e9cd5",
+   "reviewed_range": "77ccccbd..9fafea3c (docstring commit 3b2e273f, documentation commit 8e7d18c7, receipt commit 9fafea3c)",
+   "reviewer": "independent Claude confirming review of the fix pass (a reviewer that did not write the modules); read only",
+   "notes": "/tmp/bc-arc-scratch/items45/priv/confirm/NOTES.md",
+   "notes_sha256": "c886de3e7ca7e2d79ef239055b70a9cd27678a45e0eee7b6308d2a1901f5af96",
+   "verdict": "APPROVE_WITH_NITS",
+   "outcome": "every finding S1-S4 and H1-H7 of the semantic and hygiene reviews resolved; three nits; no finding against a Lean statement, definition, guard or inventory row",
+   "evidence": [
+    "Lean diff of the fix pass docstring-only (normalized comparison of the five modules at 77ccccbd and 9fafea3c; PqxdhRecordLiftCtxPrivLink byte-identical); no statement change",
+    "113 theorems, 113 exact guards (30/32/11/14/26), axioms only propext, Classical.choice and Quot.sound; no sorry, admit or axiom; receipt per-theorem axioms equal the guards (109/3/1)",
+    "fix1 check records: source SHA-256 equal to the HEAD sources, artifact SHA-256 equal to the current artifacts, exit 0, empty logs",
+    "/tmp/bc-arc-scratch/items45/priv/confirm/logs/: rechecks without -o of the five modules and the root import via coord.sh lean against the fix-pass LEAN_PATH, exit 0, empty logs",
+    "tag-length probes /tmp/bc-arc-scratch/items45/priv/confirm/probe/TagAll.lean and TagCentral.lean (contracts.confirming_tagprobe): proof-level reach in exactly the receipt's 23 theorems; AdaptiveCtxSharedModes.replay_view_eq also reaches it",
+    "receipt files_sha256 (12 entries) equal the blobs at 9fafea3c and 8e7d18c7, files_sha256_track the blobs at 77ccccbd; plan hash and review NOTES digests equal; inventory digests equal the HEAD files; f1docs and f1tip check-inventory runs exit 0 without dirt",
+    "H-7 source scan version 3 of the five modules, the guide, the receipt and the added documentation lines clean (/tmp/bc-arc-scratch/items45/priv/confirm/logs/h7scan.json, SHA-256 435687061deebeb051ad438751643a09328e38500cc89c079b9a6fc5afc627ba); H-7 closure guard rerun /tmp/bc-arc-scratch/items45/priv/confirm/logs/h7closure.log: H-7 guard: modules 5; declared constants 330; closure 25769; direct forbidden uses 0; closure violations 0; classified structural constants 12 of 12",
+    "commit footers exact on 3b2e273f, 8e7d18c7 and 9fafea3c; git diff --check clean; worktree clean before and after"
+   ],
+   "findings": [
+    {
+     "severity": "nit",
+     "title": "The tag-length attribution of replay_random_target names only replay_random_advantage",
+     "response": "The guide section \"Contracts per theorem\" now names AdaptiveCtxSharedModes.replay_view_eq and AdaptiveCtxPrivacyGuard.replay_random_advantage for replay_random_target and privacyLoss_eq; contracts.confirming_tagprobe records the probe. No Lean change.",
+     "outcome": "fixed"
+    },
+    {
+     "severity": "nit",
+     "title": "The opening paragraph of takeover-plan section 10 still says \"unreviewed\"",
+     "response": "Scratch file outside the repository; the opening paragraph is the status at its 15:23 label and the later update paragraphs (fix pass, integration) supersede it; plan.note_nit_fix says so.",
+     "outcome": "no repository change needed"
+    },
+    {
+     "severity": "nit",
+     "title": "The check-inventory run at 9fafea3c is recorded only in the scratch NOTES",
+     "response": "inventory.tip_runs.f1tip records it (exit 0, clean before and after); the guide Checks section and the analysis status sentence name the confirming review; the integration checks receipt records both.",
+     "outcome": "fixed"
+    }
+   ]
+  }
+ },
+ "nit_fix": {
+  "date": "2026-10-08T14:09:41.264724+00:00",
+  "base": "9fafea3cec00d4a5703247025e7b763d2f6e9cd5",
+  "scope": "Documentation only: doc/impl/record-lift-ctx-priv.md (Contracts per theorem: replay_view_eq next to replay_random_advantage; Status: the confirming review and the integration recount instead of \"confirming review pending\" and \"Not integrated\"; Checks: a confirming-review paragraph; Remaining: the confirming-review and integration bullet removed), doc/formal-verification-analysis.md (status sentence of the privacy-half section) and this receipt. No Lean file, inventory row, count, digest, root import or check-inventory.sh line changes.",
+  "edit_scripts": [
+   "/tmp/bc-arc-scratch/items45/priv/nits/edit_docs.py",
+   "/tmp/bc-arc-scratch/items45/priv/nits/edit_docs2.py",
+   "/tmp/bc-arc-scratch/items45/priv/nits/receipt_nits.py"
+  ],
+  "h7_scan_docs": "The guide and the added analysis lines are scanned after this receipt is written (/tmp/bc-arc-scratch/items45/priv/nits/h7scan-docs.json, recorded in the integration checks receipt).",
+  "h7_scan_receipt": "This receipt is scanned after it is written (/tmp/bc-arc-scratch/items45/priv/nits/h7scan-receipt.json, recorded in the integration checks receipt).",
+  "diff_check": "git diff --check clean",
+  "integration_checks": "/tmp/bc-arc-scratch/items45/priv/int/checks-receipt.json (module checks into a fresh prefix, root import, inv recount/rehash, focused check-inventory, transcript fidelity and git diff --check on the merged tip)"
  },
  "date_track": "2026-10-08T13:23:26.934299+00:00",
- "commits_note": "Seven track commits 98edf474..77ccccbd (five module commits, the documentation commit and the track receipt commit 77ccccbd, which is not listed above because it only added this file), then the fix-pass commits 3b2e273f (docstrings) and 8e7d18c7 (documentation); the receipt commit that updates this file follows 8e7d18c7.",
+ "commits_note": "Seven track commits 98edf474..77ccccbd (five module commits, the documentation commit and the track receipt commit 77ccccbd, which is not listed above because it only added this file), the fix-pass commits 3b2e273f (docstrings) and 8e7d18c7 (documentation) and the fix-pass receipt commit 9fafea3c; this version of the receipt is written by the confirming-review nit-fix commit that follows 9fafea3c (documentation only: the guide, the analysis status sentence and this receipt).",
  "files_sha256_track": {
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxRandom.lean": "b4dfc4bd57ab962e4f5daa3c49facea59a0a5086795b1122d5edacb07d65c7aa",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxPrivModes.lean": "105da6f3115ac3fc36a0a8dc61946a1f9718d65daca9d3f5c9793bb5d8d60c42",
