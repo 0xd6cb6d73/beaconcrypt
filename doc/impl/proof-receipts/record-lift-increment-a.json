@@ -1,6 +1,6 @@
 {
  "component": "Record-lift increment A (items 4/5 takeover plan stage S2): Codex WIP W1-W5 published as modules on a Claude topic branch",
- "status": "Checked on the topic branch; the independent semantic and publication-hygiene reviews of ac0136be returned 12 findings, all fixed or answered in fix_pass_1; a confirming review of 23b9c7bd found every finding resolved (confirming_review); central integration pending",
+ "status": "Integrated into central at fa58fbbe (integration); the independent semantic and publication-hygiene reviews of ac0136be returned 12 findings, all fixed or answered in fix_pass_1; a confirming review of 23b9c7bd found every finding resolved (confirming_review), and its second pass raised documentation and guard nits, addressed in the follow-up commit (confirming_review.second_pass)",
  "base_commit": "80560f9285c9577da71dfcfa676571432283b0c1",
  "branch": "codex/deployment-record-a",
  "worktree": "/tmp/beaconcrypt-deployment-record-a",
@@ -137,7 +137,8 @@
     },
     "log_bytes": 0
    },
-   "review_needed": "Approved inside the Codex lane (reviews/ctx-no-refusal-semantic-2026-10-08.json on branch codex/deployment-record-wip, reviewer a Codex sub-agent); takeover plan R2 asks for a confirming semantic pass by a Claude reviewer plus publication hygiene."
+   "review_scope": "Approved inside the Codex lane (reviews/ctx-no-refusal-semantic-2026-10-08.json on branch codex/deployment-record-wip, reviewer a Codex sub-agent); takeover plan R2 asks for a confirming semantic pass by a Claude reviewer plus publication hygiene.",
+   "review_outcome": "reviewed in reviews (ac0136be), fix_pass_1, confirming_review (23b9c7bd); integrated into central at fa58fbbe (integration field)"
   },
   {
    "id": "W2",
@@ -322,7 +323,8 @@
     },
     "log_bytes": 0
    },
-   "review_needed": "Never reviewed; independent semantic review against the frozen candidate reviews/seed-scope-semantic-candidate.json (branch codex/deployment-record-wip) plus publication hygiene needed."
+   "review_scope": "Never reviewed; independent semantic review against the frozen candidate reviews/seed-scope-semantic-candidate.json (branch codex/deployment-record-wip) plus publication hygiene needed.",
+   "review_outcome": "reviewed in reviews (ac0136be), fix_pass_1, confirming_review (23b9c7bd); integrated into central at fa58fbbe (integration field)"
   },
   {
    "id": "W3",
@@ -496,7 +498,8 @@
     },
     "log_bytes": 0
    },
-   "review_needed": "Never reviewed; semantic review of all 19 statements (Codex-written) and of Claude's two-line completion, plus publication hygiene."
+   "review_scope": "Never reviewed; semantic review of all 19 statements (Codex-written) and of Claude's two-line completion, plus publication hygiene.",
+   "review_outcome": "reviewed in reviews (ac0136be), fix_pass_1, confirming_review (23b9c7bd); integrated into central at fa58fbbe (integration field)"
   },
   {
    "id": "W4",
@@ -594,7 +597,8 @@
     },
     "log_bytes": 0
    },
-   "review_needed": "Never reviewed; semantic review of the 5 Codex statements and of Claude's fix and sampled_program, plus publication hygiene."
+   "review_scope": "Never reviewed; semantic review of the 5 Codex statements and of Claude's fix and sampled_program, plus publication hygiene.",
+   "review_outcome": "reviewed in reviews (ac0136be), fix_pass_1, confirming_review (23b9c7bd); integrated into central at fa58fbbe (integration field)"
   },
   {
    "id": "W5",
@@ -723,7 +727,8 @@
     },
     "log_bytes": 0
    },
-   "review_needed": "Never reviewed; semantic review of the 9 Codex statements and of Claude's 3 additions and the type fix, plus publication hygiene.",
+   "review_scope": "Never reviewed; semantic review of the 9 Codex statements and of Claude's 3 additions and the type fix, plus publication hygiene.",
+   "review_outcome": "reviewed in reviews (ac0136be), fix_pass_1, confirming_review (23b9c7bd); integrated into central at fa58fbbe (integration field)",
    "earlier_checks": [
     {
      "receipt": "/tmp/bc-arc-scratch/items45/A/logs/PqxdhRecordLiftCtxProgramBounds-r2.json",
@@ -1001,6 +1006,24 @@
     "jointKdfView",
     "IsFixedHkdf"
    ]
+  },
+  "version_3": {
+   "tool": "/tmp/bc-arc-scratch/items45/A/int2/tools/h7scan.py",
+   "tool_sha256": "53cd7e6977b22a073febb1ae52f45b3fb4d28e51d2b130944bc2dd8db8ced1d2",
+   "adapted_from": "/tmp/bc-arc-scratch/items45/A/fix1/tools/h7scan.py (version 2)",
+   "change": "adds JointKdfRO, the random-oracle specification behind the fixed-HKDF random table (H-7), to the forbidden list; case-insensitive substring matching as in version 2, so derived names such as JointKdfRO.QueryCache and jointKdfROIsUniformSpec match",
+   "sources": "the five module sources at fa58fbbe (byte-identical to b9f8e5bf, 23b9c7bd and d7184575)",
+   "result_file": "/tmp/bc-arc-scratch/items45/A/int2/h7scan-v3.json",
+   "result_file_sha256": "206e2763685caa920401caf689d75dd8f530f8c4807c9a3722de0c05e1e52dcb",
+   "exit": 0,
+   "result": "no forbidden name in the five modules; informational hits unchanged",
+   "selftest": {
+    "file": "/tmp/bc-arc-scratch/items45/A/int2/h7-selftest.txt",
+    "result_file": "/tmp/bc-arc-scratch/items45/A/int2/h7-selftest.json",
+    "result_file_sha256": "29a98f2d40acd4a27d3aecc2beded524a604a0e26e3605f1e1acd5fbf5484888",
+    "exit": 1,
+    "hits": "jointKdfView line 2, fixedHkdfSha512JointStream line 1, IsFixedHkdf line 3, JointKdfRO lines 4 and 5 (the version 2 self-test plus JointKdfRO.QueryCache and jointKdfROIsUniformSpec)"
+   }
   }
  },
  "guard_scan": {
@@ -1034,7 +1057,7 @@
  ],
  "trust_boundary": "No new axiom, assumption or contract; no existing module changed; doc/composition-assumptions.md and trusted-boundary.md unchanged.",
  "reviews": {
-  "status": "completed on ac0136be; findings addressed in fix_pass_1; fix pass confirmed at 23b9c7bd (confirming_review)",
+  "status": "completed on ac0136be; findings addressed in fix_pass_1; fix pass confirmed at 23b9c7bd (confirming_review, including second_pass)",
   "semantic": {
    "reviewer": "Claude semantic reviewer that wrote none of the adapted code (takeover plan R2)",
    "scratch": "/tmp/bc-arc-scratch/items45/A/review-semantic",
@@ -1053,7 +1076,7 @@
   ],
   "required_before_integration_status": [
    "Done: confirming_review (fix pass confirmed at 23b9c7bd).",
-   "At integration: the PROTOCOL section 6 checks on the merged topic tip are recorded in /tmp/bc-arc-scratch/items45/A/int/checks-receipt.json, not in this file."
+   "Done: the PROTOCOL section 6 checks on the merged topic tip fa58fbbe are recorded in /tmp/bc-arc-scratch/items45/A/int/checks-receipt.json, not in this file; central integration in the integration field."
   ]
  },
  "remaining": [
@@ -1079,7 +1102,37 @@
    "log": "/tmp/bc-arc-scratch/items45/A/fix1/logs/dev-h7guard-negative-090746.log",
    "log_sha256": "96b557b682681b0bce19d5ee4c0a190ced5a8ab54402b56463ad3bfb99d354d8"
   },
-  "note": "Meta-level constant-dependency guard invited by H-7: fails (Lean error) on any direct use of a forbidden name by the 250 constants declared in the five modules, or on any forbidden name in their 26,179-constant transitive closure other than twelve exactly listed constants of the functional DH interface (PqxdhJointGapDh.{DhInterface,DhInterface.mk,DhInterface.dh,ScalarBytes,sourceScalarDh,sourceInterface,zeroDh} and auxiliaries, PqxdhPhase2GapDhSource.PublicDomain{,.mk}). Those are reached structurally through the field type PqxdhServerAuthExperiment.Setup.beaconDomain of the setup parameter that every record-lift module already has; they are not a Gap-DH game or assumption. Matching is case-insensitive; the list also covers sorryAx, RawCtxProtocolRoles, reveal, PqxdhDeploymentIdealKeys/Headlines, PqxdhLaterChallengeMarked, SelectedFirstRecord and FirstRecordConfidentiality. For R6, the Setup-type DH dependency is structural only, so the check is on use, not presence."
+  "note": "Meta-level constant-dependency guard invited by H-7: fails (Lean error) on any direct use of a forbidden name by the 250 constants declared in the five modules, or on any forbidden name in their 26,179-constant transitive closure other than twelve exactly listed constants of the functional DH interface (PqxdhJointGapDh.{DhInterface,DhInterface.mk,DhInterface.dh,ScalarBytes,sourceScalarDh,sourceInterface,zeroDh} and auxiliaries, PqxdhPhase2GapDhSource.PublicDomain{,.mk}). Those are reached structurally through the field type PqxdhServerAuthExperiment.Setup.beaconDomain of the setup parameter that every record-lift module already has; they are not a Gap-DH game or assumption. Matching is case-insensitive; the list also covers sorryAx, RawCtxProtocolRoles, reveal, PqxdhDeploymentIdealKeys/Headlines, PqxdhLaterChallengeMarked, SelectedFirstRecord and FirstRecordConfidentiality. For R6, the Setup-type DH dependency is structural only, so the check is on use, not presence.",
+  "version_3": {
+   "tool": "/tmp/bc-arc-scratch/items45/A/int2/tools/H7Closure.lean",
+   "tool_sha256": "9b3fbc6ea1de16dcdf4387cc7d14adc5085e25426e54a746e48adc196537670d",
+   "adapted_from": "/tmp/bc-arc-scratch/items45/A/fix1/tools/H7Closure.lean (fix pass 1)",
+   "change": "adds \"jointkdfro\" (JointKdfRO, the random-oracle specification behind the fixed-HKDF random table) to forbiddenParts; nothing else changes",
+   "command": "coord.sh lean claude items45A-int2-h7guard-v3 -- timeout 180 lean -j1 -M8000 /tmp/bc-arc-scratch/items45/A/int2/tools/H7Closure.lean (LEAN_PATH = the published fa58fbbe LEAN_PATH /tmp/bc-coord/leanpaths/fa58fbbe2d0c81a87d6cfdb169160f4c30de8467.leanpath, whose first prefix holds the five increment-A oleans compiled from these sources)",
+   "leanpath_sha256": "bc5bf798ae347b4c22ba7ebb7b958d2e2ffda29e8e4e4913d4fc9c3c681de178",
+   "log": "/tmp/bc-arc-scratch/items45/A/int2/logs/h7guard-v3.log",
+   "log_sha256": "81358bd5126e5a950d91b25f2f975da0f11e007ea004b24e882bc265d57ea412",
+   "exit": 0,
+   "result": "H-7 guard: modules 5; declared constants 250; closure 26179; direct forbidden uses 0; closure violations 0; classified structural constants 12 of 12",
+   "negative_test": {
+    "tool": "/tmp/bc-arc-scratch/items45/A/int2/tools/H7ClosureNegative.lean",
+    "tool_sha256": "fa036dead08f0421de1f589763f7147f516fd08a7096e22572665a8337d1448c",
+    "note": "the version 3 guard with \"operationbill\" added to the forbidden list; it must fail",
+    "log": "/tmp/bc-arc-scratch/items45/A/int2/logs/h7guard-v3-negative.log",
+    "log_sha256": "267e20c6e7cb1ce0b959dbb865780ef41d078abefc8514067285c5b1a291d62e",
+    "exit": 1,
+    "result": "10 direct forbidden uses and 7 closure violations, all operationBill constants of CtxProgramBounds"
+   },
+   "negative_test_jointkdfro": {
+    "tool": "/tmp/bc-arc-scratch/items45/A/int2/tools/H7ClosureNegativeKdf.lean",
+    "tool_sha256": "97439eeef761ed9bf8645f503be22346d97f0be44a3f62cad9238fd3fa4845a4",
+    "note": "pattern-specific negative test: the version 3 guard with the published module RawCtxKdfRequestTable, whose definitions use JointKdfRO, added to the guarded modules; it must fail and name jointkdfro",
+    "log": "/tmp/bc-arc-scratch/items45/A/int2/logs/h7guard-v3-negative-kdf.log",
+    "log_sha256": "89bef6ea8c28e35c5477300ed5cc44ea1f77f61d7de510071e04ef89c64ea561",
+    "exit": 1,
+    "result": "modules 6, declared constants 291, closure 26344; 12 direct uses of PqxdhJointKdf.JointKdfRO by RawCtxKdfRequestTable constants and 1 closure violation (PqxdhJointKdf.JointKdfRO, jointkdfro); no other forbidden part fires"
+   }
+  }
  },
  "fix_pass_1": {
   "date_utc": "2026-10-08T07:08:43.040422+00:00",
@@ -1206,6 +1259,56 @@
    }
   ],
   "documentation": "Only this receipt changes: status, reviews.status, reviews.required_before_integration_status, guard_scan.fix_pass_1 and this field. The five guides and the analysis already defer review and integration status to this receipt, so neither changes.",
-  "checks": "No file under beaconcrypt-core changes, so the module, root and inventory checks of fix pass 1 still apply; git diff --check of this commit is recorded by the integration checks receipt."
+  "checks": "No file under beaconcrypt-core changes, so the module, root and inventory checks of fix pass 1 still apply; git diff --check of this commit is recorded by the integration checks receipt.",
+  "second_pass": {
+   "reviewed_commit": "23b9c7bdfa2a1830676a9658ef6332b55ce819bc",
+   "reviewer": "independent Claude confirming review, second pass (after d7184575 and the integration at fa58fbbe)",
+   "verdict": "approve: all 12 findings resolved at 23b9c7bd and no statement is weaker; documentation and guard nits",
+   "evidence": [
+    "/tmp/bc-arc-scratch/items45/A/confirm/receipt-23b9c7bd.json: the receipt at 23b9c7bd (SHA-256 4c3caecaeae4d0bce05773e346f8ff8f7c8dd69804124cbf83d4f98f24cc3d0c)",
+    "/tmp/bc-arc-scratch/items45/A/confirm/logs/recheck2-ctxprogrambounds.log: dev recheck of PqxdhRecordLiftCtxProgramBounds against items45/A/fix1/leanpath, empty log"
+   ],
+   "findings": [
+    {
+     "severity": "nit",
+     "title": "Every per-module review_needed field still describes the state before review",
+     "response": "Renamed to review_scope (the original scope request, text unchanged) in each of the five modules, each followed by a review_outcome pointer to reviews (ac0136be), fix_pass_1, confirming_review (23b9c7bd) and the integration field.",
+     "outcome": "fixed"
+    },
+    {
+     "severity": "nit",
+     "title": "At 23b9c7bd the guard_scan entry pointed to the guard scan from before the fix pass",
+     "response": "Already resolved by d7184575 (guard_scan.fix_pass_1); nothing further.",
+     "outcome": "no_change_needed"
+    },
+    {
+     "severity": "nit",
+     "title": "The H-7 closure guard has no pattern for JointKdfRO",
+     "response": "Added jointkdfro to forbiddenParts (closure guard version 3) and JointKdfRO to h7scan.py (version 3); the guard reruns clean on the five modules (closure 26179, 0 violations), the operationbill negative test still fails, a new pattern-specific negative test fails on exactly JointKdfRO, and the source scan and its self-test behave as expected (h7_scan.version_3, h7_closure_guard.version_3). Later increments use version 3.",
+     "outcome": "fixed"
+    },
+    {
+     "severity": "informational",
+     "title": "All 12 findings are resolved at 23b9c7bd and no statement is weaker",
+     "response": "None.",
+     "outcome": "no_change_needed"
+    }
+   ],
+   "documentation": "Only this receipt changes: status, reviews.status, reviews.required_before_integration_status, modules[*].review_scope/review_outcome, h7_scan.version_3, h7_closure_guard.version_3, integration and this field. The guides and the analysis defer review and integration status to this receipt; the analysis closure sentence names only the brief's names and stays true under version 3.",
+   "checks": "No file under beaconcrypt-core changes; the follow-up integration checks on the new tip are recorded in /tmp/bc-arc-scratch/items45/A/int2/checks-receipt.json."
+  }
+ },
+ "integration": {
+  "central": "0ba574b45aba20171ba229b0fbc2a1aa68ff5aa0..fa58fbbe2d0c81a87d6cfdb169160f4c30de8467",
+  "tip": "fa58fbbe2d0c81a87d6cfdb169160f4c30de8467 (merge commit of central 0ba574b4 into d7184575)",
+  "date_utc": "2026-10-08T07:24:47Z (end of integrate.log)",
+  "intent_message": 228,
+  "integration_message": 229,
+  "checks_receipt": "/tmp/bc-arc-scratch/items45/A/int/checks-receipt.json",
+  "checks_receipt_sha256": "18ea189ea6aca11d6b62f80252184989d900e4e7dac6dec9a9c340234bc3ed3a",
+  "outcome": "/tmp/bc-arc-scratch/items45/A/int/integration-result.json",
+  "leanpath": "/tmp/bc-coord/leanpaths/fa58fbbe2d0c81a87d6cfdb169160f4c30de8467.leanpath",
+  "leanpath_sha256": "bc5bf798ae347b4c22ba7ebb7b958d2e2ffda29e8e4e4913d4fc9c3c681de178",
+  "follow_up": "This documentation-only follow-up (second-pass confirming-review nits) is integrated by a further fast-forward; its checks receipt is /tmp/bc-arc-scratch/items45/A/int2/checks-receipt.json."
  }
 }
