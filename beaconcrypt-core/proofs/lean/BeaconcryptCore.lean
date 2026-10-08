@@ -1800,6 +1800,8 @@ import BeaconcryptCore.Computational.PqxdhRecordLiftChainLift
 
 import BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps
 
+import BeaconcryptCore.Computational.PqxdhDeploymentIdealPool
+
 /-!
 # Beaconcrypt-core verification root
 

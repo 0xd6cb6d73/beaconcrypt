@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1674
+	[handwritten-lean]=1675
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -34359,6 +34359,35 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem idealCore_natural([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSteps theorem idealCore_natural"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSteps\.idealCoreErased_natural$' "$selected_source_module" "PqxdhDeploymentIdealSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps.idealCoreErased_natural"
 require_line_count 1 '^theorem idealCoreErased_natural([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSteps theorem idealCoreErased_natural"
+
+# CE-11b unit U5: route P-a first layer, CE-3's compile lemma with the KEM creations reading the challenger's pool.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPool.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentIdealPool$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentIdealPool root import"
+require_line_count 11 '^theorem ' "$selected_source_module" "PqxdhDeploymentIdealPool theorem inventory"
+require_line_count 11 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentIdealPool guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPool\.simulateQ_congr_none$' "$selected_source_module" "PqxdhDeploymentIdealPool dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPool.simulateQ_congr_none"
+require_line_count 1 '^theorem simulateQ_congr_none([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPool theorem simulateQ_congr_none"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPool\.create_merge_pool$' "$selected_source_module" "PqxdhDeploymentIdealPool dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPool.create_merge_pool"
+require_line_count 1 '^theorem create_merge_pool([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPool theorem create_merge_pool"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPool\.createPool_support$' "$selected_source_module" "PqxdhDeploymentIdealPool dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPool.createPool_support"
+require_line_count 1 '^theorem createPool_support([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPool theorem createPool_support"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPool\.revealPool_agree$' "$selected_source_module" "PqxdhDeploymentIdealPool dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPool.revealPool_agree"
+require_line_count 1 '^theorem revealPool_agree([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPool theorem revealPool_agree"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPool\.compile_noCreate$' "$selected_source_module" "PqxdhDeploymentIdealPool dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPool.compile_noCreate"
+require_line_count 1 '^theorem compile_noCreate([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPool theorem compile_noCreate"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPool\.compiledPool_other$' "$selected_source_module" "PqxdhDeploymentIdealPool dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPool.compiledPool_other"
+require_line_count 1 '^theorem compiledPool_other([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPool theorem compiledPool_other"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPool\.step_merge_pool$' "$selected_source_module" "PqxdhDeploymentIdealPool dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPool.step_merge_pool"
+require_line_count 1 '^theorem step_merge_pool([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPool theorem step_merge_pool"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPool\.compile_simulation_pool$' "$selected_source_module" "PqxdhDeploymentIdealPool dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPool.compile_simulation_pool"
+require_line_count 1 '^theorem compile_simulation_pool([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPool theorem compile_simulation_pool"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPool\.good_create_pool$' "$selected_source_module" "PqxdhDeploymentIdealPool dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPool.good_create_pool"
+require_line_count 1 '^theorem good_create_pool([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPool theorem good_create_pool"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPool\.good_step_pool$' "$selected_source_module" "PqxdhDeploymentIdealPool dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPool.good_step_pool"
+require_line_count 1 '^theorem good_step_pool([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPool theorem good_step_pool"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPool\.compile_native_pool$' "$selected_source_module" "PqxdhDeploymentIdealPool dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPool.compile_native_pool"
+require_line_count 1 '^theorem compile_native_pool([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPool theorem compile_native_pool"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
