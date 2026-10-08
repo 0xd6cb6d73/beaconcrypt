@@ -12,7 +12,9 @@
   "sha256_at_receipt": "1ec6f1c49ea3df97e167f5276a08ff6dcc987d05a97cf6f82f9843f962c63694",
   "sections": "2 (S6; decisions D1-D5); section \"11. Later track (S6, R6) status\" with its fix-pass update",
   "sha256_at_fix_pass": "23f4f6a858a8645bdf4cf0dcc9328062447f699b4743ae28456f7694756ce938",
-  "sha256_note": "sha256_at_receipt is the digest when the first receipt was written (15:25Z, before section 11 was added at 17:27 CEST); sha256_at_fix_pass is the digest when this fix-pass version was written, after the fix-pass update of section 11 (section 12, of the facts track, was added meanwhile). The plan is a shared status file of several Claude tracks and changes after this."
+  "sha256_note": "sha256_at_receipt is the digest when the first receipt was written (15:25Z, before section 11 was added at 17:27 CEST); sha256_at_fix_pass is the digest when this fix-pass version was written, after the fix-pass update of section 11 (section 12, of the facts track, was added meanwhile). The plan is a shared status file of several Claude tracks and changes after this.",
+  "sha256_at_nit_fix": "23f4f6a858a8645bdf4cf0dcc9328062447f699b4743ae28456f7694756ce938",
+  "note_nit_fix": "sha256_at_nit_fix is the digest when the confirming-review nit fix was written: unchanged since the fix pass. The integration update of section 11 changes it."
  },
  "brief": {
   "path": "/tmp/bc-coord/tasks/codex-items-4-5.md",
@@ -72,9 +74,26 @@
   "975d8d693148316e2178ce94261dbdfce1a58078",
   "0649481eac7a07abde9c011f3b9db1282cce470d",
   "2178c16f6de394bd0df0595daff69c14e84c319f",
-  "b254abac0dfe66493b0c50d2f4853737974aae75"
+  "b254abac0dfe66493b0c50d2f4853737974aae75",
+  "5713521cfd3c5c024aba98f81e49015a8bfa1182"
  ],
  "files_sha256": {
+  "doc/impl/record-lift-later-lift.md": "48ac7273b5081efc4f5b1be1ed5f0f752e74022661397c88fab8aba33cb5cfab",
+  "doc/formal-verification-analysis.md": "91c715411208ae25f2a7d410556e55f4951c12483221ec5869f2f0608d1593fc",
+  "doc/impl/record-lift-ideal.md": "10872d3adea6c6c8e94e8232c3f50277840aaa6093664f3a1ed13cb79153aa13",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "dcefb0af096cad81b443e4cad8f6d87f80d5a5e5d4a913db35b75f87e1a6cdfd",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "14df94ca96cce93117fe8ae153e97a878d1f9c7dda4b2bb382edfbf840fd5b40",
+  "beaconcrypt-core/proofs/check-inventory.sh": "1c7c4d28c69e789bf9791f1520eea8b918c14d814b35785a3ec09e577c5a24b9",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftLaterWorlds.lean": "d623998a6fa3a1b7bd0c130fc5f1d436711d6bf2db4ab9f58c987e89b86dce0a",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftLaterTargets.lean": "98cfc45035d31f5a6ac6411d08082f468c7970ae317e974cb8d6e02dfd26700c",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftLaterChain.lean": "091a38fc06ff5ff52e3c9dda9f8e8d57f5894487b39e8950b042d1fbd90e0581",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftLaterCtx.lean": "eb6a4b9e67b2949c9aba1b41602f1430abc991c9153210fcb3346ee230e6d0d2",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftLaterPriv.lean": "c640d8cdfadb433e5e9e7d0c3fb9459fdc21cabef37e3b46f661e89541b0f94c",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftLaterHiding.lean": "c47118a17cadc990846828360fc2629fa89b9519826d95ad89b2a8091b12eff7",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftLaterLift.lean": "1a32f11729d8fdc153e20fc7bed196d26fd58caa0e331347b8d16e79927d3614"
+ },
+ "files_sha256_note": "At the confirming-review nit-fix commit (the commit that adds this version of the receipt); only doc/formal-verification-analysis.md and doc/impl/record-lift-later-lift.md differ from files_sha256_fix1. The receipt itself is not listed.",
+ "files_sha256_fix1": {
   "doc/impl/record-lift-later-lift.md": "39922d3a5bd732968b1f1ccd01338042c5692953c3bcfe275e8b8d8085e8aea5",
   "doc/formal-verification-analysis.md": "05fe55c3a57981df6ad745b8eb1fecf4ed2665fd9beb1484e071c58d4dc5a331",
   "doc/impl/record-lift-ideal.md": "10872d3adea6c6c8e94e8232c3f50277840aaa6093664f3a1ed13cb79153aa13",
@@ -89,7 +108,7 @@
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftLaterHiding.lean": "c47118a17cadc990846828360fc2629fa89b9519826d95ad89b2a8091b12eff7",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftLaterLift.lean": "1a32f11729d8fdc153e20fc7bed196d26fd58caa0e331347b8d16e79927d3614"
  },
- "files_sha256_note": "At the fix-pass documentation commit b254abac (equal to the working tree when this receipt was updated); the receipt itself is not listed.",
+ "files_sha256_fix1_note": "At the fix-pass documentation commit b254abac0dfe66493b0c50d2f4853737974aae75, the tree that the fix-pass checks cover; the receipt commit 5713521c added only this file.",
  "modules": [
   {
    "name": "PqxdhRecordLiftLaterWorlds",
@@ -2001,6 +2020,7 @@
    "fix_change": "docstrings only (no statement, proof, guard, definition or name change; content outside doc comments identical to 0649481e)"
   }
  ],
+ "root_check_note": "The seven track root checks (modules[].root_check) wrote their artifact to one shared path, /tmp/bc-arc-scratch/items45/later/olean/BeaconcryptCore.olean, each overwriting the previous one, so only the last root artifact digest (4c39297a, after PqxdhRecordLiftLaterLift, equal to root_check_fix.artifact_sha256) can still be checked against the file; the six earlier digests record their runs only.",
  "statement_counts": {
   "PqxdhRecordLiftLaterWorlds": 27,
   "PqxdhRecordLiftLaterTargets": 11,
@@ -2125,9 +2145,33 @@
     "log_sha256": "f084c8bed0e78281ee31e26d60f9f2b6878614a5de46548422de35e7bb93ac92",
     "lease_label": "items45-later-fix1-inventory-f2",
     "note": "Fix pass: the documentation commit b254abac."
+   },
+   "inventory-f3": {
+    "status": 0,
+    "commit": "5713521cfd3c5c024aba98f81e49015a8bfa1182",
+    "dirt_bytes": 0,
+    "dirt_after_bytes": 0,
+    "start": "2026-10-08T18:12:09Z",
+    "end": "2026-10-08T18:13:34Z",
+    "log": "/tmp/bc-arc-scratch/items45/later/fix1/logs/inventory-f3.log",
+    "log_sha256": "fed593c1b1415adca5cdc62edf901ec47116d0d129745e1ee534a833d867d1c3",
+    "lease_label": "items45-later-fix1-inventory-f3",
+    "note": "Fix pass: the receipt commit 5713521c (clean tree), run after that commit, so it was recorded only outside the repository until the confirming-review nit fix."
    }
   },
-  "tip_note": "The run at the receipt commit that follows b254abac cannot be recorded in this file; it is recorded at integration (only doc/ changes, which check-inventory does not read)."
+  "confirm_run": {
+   "status": 0,
+   "commit": "5713521cfd3c5c024aba98f81e49015a8bfa1182",
+   "dirt_bytes": 0,
+   "dirt_after_bytes": 0,
+   "start": "2026-10-08T18:20:30Z",
+   "end": "2026-10-08T18:21:55Z",
+   "log": "/tmp/bc-arc-scratch/items45/later/confirm/logs/inventory.log",
+   "log_sha256": "1bb75849a01c0d0ca4760780650e828df947f8c51ed9b3b97731089864ac9377",
+   "lease_label": "confirming review",
+   "note": "Independent focused check-inventory of the confirming review at 5713521c under coord.sh lease mem claude @nix; the review also found no ignored files before or after."
+  },
+  "tip_note": "The runs at the receipt commit 5713521c are fix_runs.inventory-f3 and confirm_run. The nit-fix commit that follows changes only doc/, which check-inventory does not read; the integration runs check-inventory again on the merged tip."
  },
  "diff_check": "git diff --cached --check clean before every module commit and before the documentation commit. Fix pass: git diff --cached --check clean before 2178c16f and b254abac; git diff --check clean over 07551131..b254abac and per fix commit (/tmp/bc-arc-scratch/items45/later/fix1/logs/diff-check-range.txt, empty).",
  "forbidden_scan": "No sorry, admit, axiom declaration, native_decide, implemented_by, extern, unsafe or opaque in the seven modules; every theorem has exactly one exact #print axioms guard (guards.py verify). Fix pass: the same grep is empty (/tmp/bc-arc-scratch/items45/later/fix1/logs/forbidden-tokens.txt); guards.py verify 27, 11, 21, 25, 11, 6 and 6 theorems, each with one exact guard (/tmp/bc-arc-scratch/items45/later/fix1/logs/guards-verify.txt, sha256 94a93101d10a8a34a4443768c662585a42bc6399931271b9ead63af145178759).",
@@ -2177,7 +2221,7 @@
   "A later origin, binding or authentication statement (excluded by design; confirmed by the semantic review: the CE guide rule that authentication is not claimed in the later mode and plan section S6). laterReal_event carries over the events of runEventView only; carrying the record-lift origin and binding events (which read View.slots, extendable by post-phase installs) into the later game would need a slot-monotonicity argument for the post phase, not proved and not needed.",
   "Later forms of FreshGuessStatement and LorStatement (their run-phase forms are open in S5)."
  ],
- "checks_not_run": "No lake build, make verify, nix-collect-garbage, mutation testing, ProVerif or Rust run; no production Rust or ProVerif change. Transcript fidelity (cargo under @cargo) and the central integration checks of PROTOCOL section 6 are not run: this stage is not integrated.",
+ "checks_not_run": "No lake build, make verify, nix-collect-garbage, mutation testing, ProVerif or Rust run in the track, the fix pass or the nit fix; no production Rust or ProVerif change. Transcript fidelity (cargo under @cargo) and the central integration checks of PROTOCOL section 6 run on the merged tip (nit_fix.integration_checks).",
  "review": {
   "reviewed_commit": "0649481eac7a07abde9c011f3b9db1282cce470d",
   "reviewed_range": "07551131..0649481e",
@@ -2269,13 +2313,61 @@
     "outcome": "no_change_needed"
    }
   ],
-  "confirming_review": "Pending: a confirming review of 0649481e..(receipt commit after b254abac)."
+  "confirming_review": {
+   "reviewed_commit": "5713521cfd3c5c024aba98f81e49015a8bfa1182",
+   "reviewed_range": "0649481e..5713521c (fix-pass commits 2178c16f, b254abac and the receipt commit 5713521c)",
+   "reviewer": "independent Claude confirming review of the fix pass (a reviewer that did not write the modules); read only",
+   "notes": "/tmp/bc-arc-scratch/items45/later/confirm/NOTES.md",
+   "notes_sha256": "a35f70b6e21f4096978350b41e8d781745b8946d60afaf3f4752308445721fb7",
+   "verdict": "APPROVE_WITH_NITS",
+   "outcome": "all eight findings of the semantic and hygiene reviews (S1-S4, H1-H4) resolved; no statement weaker; one pre-existing receipt nit; no finding against a Lean statement, definition, guard or inventory row",
+   "evidence": [
+    "diff 0649481e..5713521c: Lean docstrings only (comment-stripped code identical for all seven modules; guard blocks byte-identical; 107 theorems with 107 exact guards, allowed axioms only); the three rehashed inventory rows equal the file digests",
+    "receipt: files_sha256 equal to HEAD, b254abac and the worktree; files_sha256_reviewed equal to 975d8d69 and 0649481e; commits list equal to rev-list; plan and brief digests and 83 path digests checked",
+    "contract-probe log recount matches the guide and the receipt (structural reaches and proof-level uses)",
+    "semantic: View.slots is the final control of handleSlot, extended by installServer and installBeacon; the native environment answers HMAC by environmentStep; the S1 and S2 wordings are accurate",
+    "signature scan: only PqxdhRecordLiftLaterChain.hop_bound_of and chain_loss_of take SourceFullCorrect; no section variable carries a contract",
+    "independent Lean checks (no -o, fix1 LEAN_PATH) of PqxdhRecordLiftLaterWorlds, PqxdhRecordLiftLaterTargets and PqxdhRecordLiftLaterLift: exit 0, empty logs",
+    "H-7 source scan version 3 of the seven modules, the guide, the receipt and the added documentation and docstring lines: no forbidden hit; informational reveal counts as in the fix pass (/tmp/bc-arc-scratch/items45/later/confirm/logs/h7scan.json, SHA-256 0aca54435adf94e381be1538c122178ff1c38addc0da525fd6eefcfb5c1d9998)",
+    "git diff --check 07551131..5713521c clean; the three fix commits end with the exact footer; added Markdown lines are whole paragraphs or list items",
+    "focused check-inventory at 5713521c under @nix: exit 0, clean before and after (inventory.confirm_run)"
+   ],
+   "findings": [
+    {
+     "severity": "nit",
+     "title": "Six track root_check artifact digests no longer match their recorded path, and the receipt does not say why",
+     "response": "root_check_note: the track root checks wrote to one shared path, so only the last root artifact digest (4c39297a, equal to root_check_fix) can still be checked against the file.",
+     "outcome": "fixed"
+    }
+   ]
+  }
+ },
+ "nit_fix": {
+  "date": "2026-10-08",
+  "base": "5713521cfd3c5c024aba98f81e49015a8bfa1182",
+  "scope": "Documentation only: doc/impl/record-lift-later-lift.md (the Status paragraph names the confirming review and its nit fix and describes the integration step; the Remaining-work bullets on the confirming review and the integration are removed), the status sentence of the analysis section \"Items 4 and 5, stage S6\" (confirming review instead of \"Not yet integrated\") and this receipt (root_check_note, inventory.fix_runs.inventory-f3, inventory.confirm_run, inventory.tip_note, plan, files_sha256, commits, review.confirming_review, this record, checks_not_run, remaining). No Lean file, inventory row, count, digest, root import or check-inventory.sh line changes.",
+  "edit_scripts": [
+   "/tmp/bc-arc-scratch/items45/later/nits/edit_docs.py",
+   "/tmp/bc-arc-scratch/items45/later/nits/receipt_nits.py"
+  ],
+  "h7_scan_docs": {
+   "guide": "/tmp/bc-arc-scratch/items45/later/nits/h7scan-docs-guide.json",
+   "guide_sha256": "32a481984c0d456041f93d7e4655997c4721b365b0761d019a9525c034abe7af",
+   "added_lines": "/tmp/bc-arc-scratch/items45/later/nits/h7scan-docs-added.json",
+   "added_lines_sha256": "bdd8e32d9fa884b068daa6113d7d0698a1f9e3979a6fef9c750b3d88c070453c",
+   "added_lines_source": "/tmp/bc-arc-scratch/items45/later/nits/docs-added-lines.txt",
+   "added_lines_source_sha256": "b0e6b0be68c53c2930d2070268e3c5ad675ab7adc0b2f7a45b4b39a5444255a0",
+   "result": "Version 3: no forbidden hit in the guide or in the lines added to the analysis and the S1 guide since 07551131; informational reveal counts unchanged (guide 3, added lines 2)"
+  },
+  "h7_scan_receipt": "This receipt is scanned after it is written (/tmp/bc-arc-scratch/items45/later/nits/h7scan-receipt.json, recorded in the integration checks receipt).",
+  "diff_check": "git diff --check clean",
+  "integration_checks": "/tmp/bc-arc-scratch/items45/later/int/checks-receipt.json (module checks into a fresh prefix, root import, inv recount/rehash, focused check-inventory, transcript fidelity and git diff --check on the merged tip)"
  },
  "date_track": "2026-10-08T15:25:12.466050+00:00",
  "reviewed": "0649481eac7a07abde9c011f3b9db1282cce470d",
  "tip": "b254abac0dfe66493b0c50d2f4853737974aae75",
  "tip_note": "The fix-pass documentation commit, the tree that the fix-pass checks cover. The receipt commit that follows adds only this file; check-inventory reads only beaconcrypt-core/proofs and .github/workflows/formal-verification.yml, never doc/, so every input of check-inventory stays as at the tip, where inventory-f2 exited 0.",
- "commits_note": "Seven module commits, the documentation commit 975d8d69, the receipt commit 0649481e (reviewed), the fix-pass Lean commit 2178c16f (docstrings of PqxdhRecordLiftLaterWorlds, PqxdhRecordLiftLaterTargets and PqxdhRecordLiftLaterLift; their three inventory rows rehashed) and the fix-pass documentation commit b254abac (guide, analysis section, S1 guide S6 row). The receipt commit that follows b254abac adds this version of the receipt and nothing else.",
+ "commits_note": "Seven module commits, the documentation commit 975d8d69, the receipt commit 0649481e (reviewed), the fix-pass Lean commit 2178c16f (docstrings of PqxdhRecordLiftLaterWorlds, PqxdhRecordLiftLaterTargets and PqxdhRecordLiftLaterLift; their three inventory rows rehashed) and the fix-pass documentation commit b254abac (guide, analysis section, S1 guide S6 row). The receipt commit 5713521c (Record the record-lift later review fix pass in the receipt) added the fix-pass version of the receipt and nothing else; this version of the receipt is written by the confirming-review nit-fix commit that follows 5713521c (documentation only: the guide Status paragraph and Remaining work, the analysis status sentence and this receipt).",
  "files_sha256_reviewed": {
   "doc/impl/record-lift-later-lift.md": "2b60772b1d317e9c73cfd6bce4bbad8291fe36df830206f5a5e2c5737f105832",
   "doc/formal-verification-analysis.md": "ba495dcf7130d3b053fe9724d5a869b823183da0dc8f06b75e33864d54e8a6dc",
@@ -2340,5 +2432,5 @@
   "statements_changed": "None. Every statement, definition and guard is byte-identical; only doc comments, inventory digests and documents change, so every statement is exactly as strong as before.",
   "checks": "Against the fix1 LEAN_PATH: the seven module checks with -o into fix1/olean in dependency order and the root import (exit 0, empty logs: modules[].fix_check, root_check_fix); guards.py verify 107/107; inv recount (1697 unchanged) before inv rehash (three module digests); H-7 source scan v3 and closure guard (h7_scan.fix, meta_check.fix); contract probe byte-identical to the track (contracts.fix); git diff --check; focused check-inventory at 2178c16f and b254abac (inventory.fix_runs)."
  },
- "remaining": "Confirming review of the fix pass; integration per PROTOCOL section 6 (merge central, inv recount, focused inventory, transcript fidelity under @cargo, root import, LEAN_PATH publication); the later FreshGuess and Lor forms with their run-phase forms (S5). Guide doc/impl/record-lift-later-lift.md, section \"Remaining work\"; takeover plan section 11."
+ "remaining": "Integration per PROTOCOL section 6 on a tip that merges central (merge central, inv recount, focused inventory, transcript fidelity under @cargo, root import, LEAN_PATH publication); the later FreshGuess and Lor forms with their run-phase forms (S5). Guide doc/impl/record-lift-later-lift.md, section \"Remaining work\"; takeover plan section 11."
 }
