@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1644
+	[handwritten-lean]=1645
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -32775,6 +32775,23 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegist
 require_line_count 1 '^theorem authenticated_all_ideal([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemKeyTransfer theorem authenticated_all_ideal"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemKeyTransfer\.authenticated_slots$' "$selected_source_module" "PqxdhRegistrationJointKemKeyTransfer dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemKeyTransfer.authenticated_slots"
 require_line_count 1 '^theorem authenticated_slots([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemKeyTransfer theorem authenticated_slots"
+
+# Item 2 stage S6 (extract-design plan sections 4 and 10): the ideal-key branch with the 32-byte message key drawn first or last (PqxdhServerAuthCtxMaterial.key_first), as equalities of output distributions, and theorem T8 in both shapes, for item 4.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemKeyFirst.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRegistrationJointKemKeyFirst$' proofs/lean/BeaconcryptCore.lean "PqxdhRegistrationJointKemKeyFirst root import"
+require_line_count 5 '^theorem ' "$selected_source_module" "PqxdhRegistrationJointKemKeyFirst theorem inventory"
+require_line_count 5 '^#guard_msgs in$' "$selected_source_module" "PqxdhRegistrationJointKemKeyFirst guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemKeyFirst\.idealKeys_key_first$' "$selected_source_module" "PqxdhRegistrationJointKemKeyFirst dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemKeyFirst.idealKeys_key_first"
+require_line_count 1 '^theorem idealKeys_key_first([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemKeyFirst theorem idealKeys_key_first"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemKeyFirst\.keyFirst_keyLast$' "$selected_source_module" "PqxdhRegistrationJointKemKeyFirst dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemKeyFirst.keyFirst_keyLast"
+require_line_count 1 '^theorem keyFirst_keyLast([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemKeyFirst theorem keyFirst_keyLast"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemKeyFirst\.idealKeys_key_last$' "$selected_source_module" "PqxdhRegistrationJointKemKeyFirst dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemKeyFirst.idealKeys_key_last"
+require_line_count 1 '^theorem idealKeys_key_last([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemKeyFirst theorem idealKeys_key_last"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemKeyFirst\.authenticated_key_first$' "$selected_source_module" "PqxdhRegistrationJointKemKeyFirst dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemKeyFirst.authenticated_key_first"
+require_line_count 1 '^theorem authenticated_key_first([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemKeyFirst theorem authenticated_key_first"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemKeyFirst\.authenticated_key_last$' "$selected_source_module" "PqxdhRegistrationJointKemKeyFirst dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemKeyFirst.authenticated_key_last"
+require_line_count 1 '^theorem authenticated_key_last([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemKeyFirst theorem authenticated_key_last"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
