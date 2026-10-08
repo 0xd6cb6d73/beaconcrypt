@@ -1,6 +1,7 @@
 import BeaconcryptCore.Computational.PqxdhRegistrationJointKemRootExpandCount
 
 /-!
+# The root Expand of the KEM-ideal branch (item 2, stage S2)
 
 This module completes stage S2 of the item 2 plan: the hop from G1's split world (H1 of the plan, after stage S1c) to the uniform-root world `PqxdhCorrelatedExpandHybrid.uniformGame rootClient` (H2), for the KEM-ideal branch.
 

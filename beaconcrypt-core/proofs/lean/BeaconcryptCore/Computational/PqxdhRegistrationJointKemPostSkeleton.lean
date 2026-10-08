@@ -16,7 +16,7 @@ So in this form the candidate is G1's secret: it is the 32-byte suffix of every 
 
 Proof. `opaqueBranch_grouped` gives the grouped branch. Its native layer splits (`groupedImpl_split`, `resumeImpl_split`, through `split_run`): the native state with the table cache is the skeleton state with the table below it at the candidate (`opRoot`). The table then moves below the actual encapsulator (`push_stateless`), below the post-challenge router (`push_option`, after `run_eraseOption` removes its erased observers) and below the CCA evaluation (`push_stateless`); the decision reads none of the states. At the bottom, `opRoot` with uniform coins is G1's `sharedImpl` composed with `compileHidden` (`shared_compile`). These are program equalities; they charge no advantage, and no assumption is added.
 
-`resume_lift_backend` is the backend-generic form of `PqxdhRegistrationJointKemOpaqueResume.resume_lift` that the plan asks for: the Server's resumption under any prefix interpreter and any interpreter of its private tail, whose root request is no longer tied to the restricted Extract-ROM interpreter with the candidate.
+`resume_lift_backend` states only that the Server's resumption splits into its prefix and its tail under any pair of interpreters: under `preImpl + tailImpl` it is the compiled suffix under `preImpl` followed by the private tail under `tailImpl`. This is `PqxdhRegistrationJointKemOpaqueResume.resume` unfolded; it does not relate the resumption to the source, and no proof uses it. The content that the plan's backend-generic restatement of `PqxdhRegistrationJointKemOpaqueResume.resume_lift` was meant to provide, the source's private resumption with its root request answered by a backend other than the restricted Extract-ROM interpreter with the candidate, is `resumeImpl_split` (per request, in `PqxdhRegistrationJointKemPostSkeletonNative`: the source's resumption interpreter is the skeleton's with the shared table below it) and `groupedResume_split` (the whole resumed client); consumers should use those.
 -/
 
 open OracleComp OracleSpec CoreModels Aeneas
@@ -33,7 +33,7 @@ open PqxdhRegistrationJointKemObserverFree PqxdhRegistrationJointBeaconOpaqueFin
 open PqxdhSecretInputKdf (HmacBlock HmacOracle RootOutput)
 open PqxdhServerAuthNative (NativeGame NativeState eraseObservers)
 
-/-! ### The backend-generic resumption -/
+/-! ### The resumption under any pair of interpreters -/
 
 section Resume
 
@@ -41,7 +41,7 @@ open PqxdhRegistrationJointKemOpaqueResume (prefixLift tailLift)
 
 variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response : Type} {m : Type → Type} [Monad m] [LawfulMonad m]
 
-/-- The backend-generic restatement of `PqxdhRegistrationJointKemOpaqueResume.resume_lift`: under any prefix interpreter and any interpreter of the private tail (whose root request may be answered by any backend), the Server's resumption is the compiled suffix under the prefix interpreter followed by the tail under the tail interpreter. -/
+/-- The Server's resumption splits into its prefix and its tail under any pair of interpreters: under `preImpl + tailImpl` it is the compiled suffix under `preImpl` followed by the private tail under `tailImpl` (`PqxdhRegistrationJointKemOpaqueResume.resume` unfolded). It does not relate the resumption to the source; for that see `resumeImpl_split` and `groupedResume_split`. -/
 theorem resume_lift_backend (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (raw : Pqxdh.Bytes)
     (verified : PqxdhServerRootPreparation.Verified Reader)

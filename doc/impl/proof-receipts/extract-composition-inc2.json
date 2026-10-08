@@ -1,15 +1,26 @@
 {
- "date": "2026-10-08T00:56:27.627789+00:00",
+ "date": "2026-10-08T01:36:33.833131+00:00",
  "scope": "Handoff item 2, increment 2: stages S1b (the opaque KEM-ideal branch as G1's shared world on the services skeleton, program equality), S1c (G1 instance at coefficient one, route R1) and S2 (internalized root client, IsRoot count 1 + qFinish, expanded_uniform_bound) of the extract-design plan.",
  "basis": "ae4a49965c1c625b9fcc181cd281925e2e188f2b",
+ "merged_central": {
+  "commit": "62c5f4b77323ed30f63c685f7d023dd26b0919ea",
+  "branch": "codex/full-proof-composition",
+  "note": "Central 62c5f4b7 is merged into the topic (merge commit f14a8046, PROTOCOL section 6): hot-spot conflicts only where both sides appended at the end of check-inventory.sh, reviewed-inventory.txt and formal-verification-analysis.md, resolved with central's side first; item 2's root imports moved to the end of the import block; inv recount 1594 -> 1606 and inv rehash (check-inventory.sh last). The topic adds files only relative to central, apart from the recomputed count line and digests."
+ },
  "topic": {
   "branch": "claude/extract-composition",
   "worktree": "/tmp/claude-extract-inc1"
  },
  "plan": {
   "path": "/tmp/bc-arc-scratch/extract-design/plan.md",
-  "sha256": "cab40d7b9c2fb48aac9d97de65dd1499cf7c94dab5f23d3297e1fd97380c240e",
-  "stages": "S1b, S1c, S2; sections 3, 4, 9, 10, 16-19"
+  "sha256": "b48a48a22249c7ca48c7e02b19dd33aadd77955473891d1bb5d9335ee41da8c0",
+  "stages": "S1b, S1c, S2; sections 3, 4, 9, 10, 16-20",
+  "snapshot": "doc/impl/extract-composition-plan.md (the plan with a header paragraph naming this SHA-256)"
+ },
+ "ce11_design": {
+  "path": "/tmp/bc-arc-scratch/common-experiment/ce11/design-v2.md",
+  "sha256": "6c04b78f4e72603e4c1cad12929e1f696323a585f71561708beb3175728f87b1",
+  "note": "Notes appended at the end of sections 5.7 and 6 (review finding 2); nothing else changed."
  },
  "commits": [
   {
@@ -27,27 +38,36 @@
   {
    "commit": "bcca3a564bca4c5b0ebe1d819e67fa1853149b61",
    "subject": "Expand the hidden roots of item 2 stage S2"
+  },
+  {
+   "commit": "09ae745b1a13b5b70019dc202b3bdd259a0a2523",
+   "subject": "Record the checks of item 2 increment 2"
+  },
+  {
+   "commit": "f14a80463deb54bd6daf2043f2be9024a3241efa",
+   "subject": "Merge central 62c5f4b7 into the item 2 increment"
   }
  ],
- "commits_note": "The commits from the base to the S2 commit. The documentation commit that adds this receipt, the increment-2 check sections of the guide and the analysis paragraphs follows them.",
+ "commits_note": "The first-parent commits of the topic from the base to the merge of central 62c5f4b7: S1b, S1b module documentation names, S1c, S2, the documentation commit 09ae745b (reviewed) and the merge f14a8046. The review-fix commit that re-issues this receipt follows them.",
  "files_sha256": {
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemPostSkeletonTools.lean": "1863a62cfce188e3733b18049ec2eb9568b7c5daa523940a77b0f5a408fc6e8e",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemPostSkeletonGroup.lean": "36d4cf620bd1c7d219590c645d92e7e8d313bf4bf99a8988b037a06935906b3a",
-  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemPostSkeletonServices.lean": "ae0f4367ef6adf21a5a45bd129a934256214283ac88d0e0f1c5bf7b70b7f945e",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemPostSkeletonServices.lean": "e8b79e1bd93daef459fc378f36369492425020176686a8542912a3484d8d6192",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemPostSkeletonNative.lean": "fed771c4141c74b4b0b4d5f9a6c3a2c29052934badaf4faf0d3e5b4fd18ae992",
-  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemPostSkeleton.lean": "300622c336ed34b6580c305e054a41bbb3af8086fd367a370cd2be669b1c6b60",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemPostSkeleton.lean": "24f2d084fc506a58db2cbcff6f498c089a7f01e68ece8e6c521b26e86a864b63",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRomSplitTools.lean": "de316315fd67c1a3dd371f4c2369524aa6f0dae1942e4951378abf644ebf1707",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRomSplitPrefix.lean": "96f5a2044a385e75c5b2b11a1e9ca90603445bb2f2549e2a8563325832c24af6",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRomSplitPost.lean": "1fec8ebfde7253bed99e4997086c672f814f021cd338e21bc099a2c24e207b00",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRomSplit.lean": "564a78be25c82a02a1e590c5b8e2a76373f6cd6092dafc4f73b60fdb7672035d",
-  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRootExpandLocal.lean": "2f0213e6fce1846531ce71648eee24a8946a22004f27b3221976b3fb07f79486",
-  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRootExpandCount.lean": "bd55623f913907d8b496fd5f7bbc6a577b747ae9cb2cc9c5b94abffb49296623",
-  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRootExpand.lean": "76176ddaf06f7598d9e271bc305c083f4b19345842cc483fe592a1356fe9268a",
-  "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "98c5d9c0d75cb8b6a17f104c6bbce986404069114cf89263ad9316a58d088fa8",
-  "beaconcrypt-core/proofs/check-inventory.sh": "43cbf794200d8b636120aac7dc84f3add91f3565c266b1c67d223462a8d98b8a",
-  "beaconcrypt-core/proofs/reviewed-inventory.txt": "6a9b528e8b57478af129980c46ede52f0e02b450ddc0f7a5413e44d9df5de7a2",
-  "doc/impl/extract-composition.md": "780d981cb69a80e22835d4656a9c1e37d47707447e0389d68e605ee4926d7e55",
-  "doc/formal-verification-analysis.md": "8b0f020f773b4b685bf7d7f37443106e3e6e7a54ce7b4184d3d3c165f814125b"
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRootExpandLocal.lean": "e924cdf9f49fba3000a9d13f863f9eba923dd4a264f5864d5d79db795f73058b",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRootExpandCount.lean": "00212175ba81a4d02ae2a0181acda342cf9f86e6cdf16493e61f3a0b325a936f",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRootExpand.lean": "608ef61418316f0f1a365e42d924b5d2726655cc89e265cea0073a6deeaef87a",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "d936af5ea78352341b7fbfa7b9f0c94c2ba1b6d2ffa0105fa1cc6ab51c560908",
+  "beaconcrypt-core/proofs/check-inventory.sh": "f540ab1443018d6a6eac22d105dc5389104180013882f31ef2d0f5324ec10a64",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "f652de0408977ceb99ab7ab3038a46e09d74df8101da96e0a1f6728597b0a6d2",
+  "doc/impl/extract-composition.md": "5b523ed8063b6589ac4ebe3193d0492a64bcf3a98b8ae613e969d187d412c06a",
+  "doc/impl/extract-composition-plan.md": "ed0d5f2e2084ae7f38c368758c9d882393f7bb64ad344ef2b666849b875312fa",
+  "doc/formal-verification-analysis.md": "2a8c7bb39e32cf32b5c623ce250b2e62ca368632886e2c8155c6f3c67709603c"
  },
  "modules": [
   {
@@ -73,8 +93,8 @@
    },
    "direct_check_final": {
     "exit": 0,
-    "start": "2026-10-08T00:53:44.914286657Z",
-    "end": "2026-10-08T00:54:00.550465764Z",
+    "start": "2026-10-08T01:17:03.850558575Z",
+    "end": "2026-10-08T01:17:11.252619910Z",
     "source_sha256": "1863a62cfce188e3733b18049ec2eb9568b7c5daa523940a77b0f5a408fc6e8e",
     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "log_bytes": 0,
@@ -92,7 +112,7 @@
      "-M8000",
      "--root=/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean",
      "-o",
-     "/tmp/bc-arc-scratch/extract-design/inc2/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemPostSkeletonTools.olean",
+     "/tmp/bc-arc-scratch/extract-design/inc2/merge62/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemPostSkeletonTools.olean",
      "/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemPostSkeletonTools.lean"
     ]
    }
@@ -123,8 +143,8 @@
    },
    "direct_check_final": {
     "exit": 0,
-    "start": "2026-10-08T00:54:00.576612603Z",
-    "end": "2026-10-08T00:54:05.151576710Z",
+    "start": "2026-10-08T01:17:11.280715636Z",
+    "end": "2026-10-08T01:17:15.875835864Z",
     "source_sha256": "36d4cf620bd1c7d219590c645d92e7e8d313bf4bf99a8988b037a06935906b3a",
     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "log_bytes": 0,
@@ -142,7 +162,7 @@
      "-M8000",
      "--root=/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean",
      "-o",
-     "/tmp/bc-arc-scratch/extract-design/inc2/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemPostSkeletonGroup.olean",
+     "/tmp/bc-arc-scratch/extract-design/inc2/merge62/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemPostSkeletonGroup.olean",
      "/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemPostSkeletonGroup.lean"
     ]
    }
@@ -155,12 +175,12 @@
    "axiom_profile": {},
    "direct_check_final": {
     "exit": 0,
-    "start": "2026-10-08T00:54:05.180085485Z",
-    "end": "2026-10-08T00:54:13.254764001Z",
-    "source_sha256": "ae0f4367ef6adf21a5a45bd129a934256214283ac88d0e0f1c5bf7b70b7f945e",
+    "start": "2026-10-08T01:22:34.671857507Z",
+    "end": "2026-10-08T01:22:39.332742292Z",
+    "source_sha256": "e8b79e1bd93daef459fc378f36369492425020176686a8542912a3484d8d6192",
     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "log_bytes": 0,
-    "artifact_sha256": "d5bcbf6b5e20b6b58e4b50146582ed7f0aac01606fb4124ae44f46af958a1731",
+    "artifact_sha256": "e1f074ea6715755de204831bdee9093747ad7ffd6adbf89d2b2fdfe92b17e029",
     "command": [
      "coord.sh",
      "lean",
@@ -174,7 +194,7 @@
      "-M8000",
      "--root=/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean",
      "-o",
-     "/tmp/bc-arc-scratch/extract-design/inc2/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemPostSkeletonServices.olean",
+     "/tmp/bc-arc-scratch/extract-design/inc2/merge62/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemPostSkeletonServices.olean",
      "/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemPostSkeletonServices.lean"
     ]
    }
@@ -233,8 +253,8 @@
    },
    "direct_check_final": {
     "exit": 0,
-    "start": "2026-10-08T00:54:13.283370938Z",
-    "end": "2026-10-08T00:54:21.282539790Z",
+    "start": "2026-10-08T01:22:39.363314537Z",
+    "end": "2026-10-08T01:23:05.149747986Z",
     "source_sha256": "fed771c4141c74b4b0b4d5f9a6c3a2c29052934badaf4faf0d3e5b4fd18ae992",
     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "log_bytes": 0,
@@ -252,7 +272,7 @@
      "-M8000",
      "--root=/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean",
      "-o",
-     "/tmp/bc-arc-scratch/extract-design/inc2/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemPostSkeletonNative.olean",
+     "/tmp/bc-arc-scratch/extract-design/inc2/merge62/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemPostSkeletonNative.olean",
      "/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemPostSkeletonNative.lean"
     ]
    }
@@ -280,12 +300,12 @@
    },
    "direct_check_final": {
     "exit": 0,
-    "start": "2026-10-08T00:54:21.314218574Z",
-    "end": "2026-10-08T00:54:32.106555471Z",
-    "source_sha256": "300622c336ed34b6580c305e054a41bbb3af8086fd367a370cd2be669b1c6b60",
+    "start": "2026-10-08T01:23:05.180052242Z",
+    "end": "2026-10-08T01:23:29.006586408Z",
+    "source_sha256": "24f2d084fc506a58db2cbcff6f498c089a7f01e68ece8e6c521b26e86a864b63",
     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "log_bytes": 0,
-    "artifact_sha256": "6fd35e657234bb1d3d31138eadc55696e91f798cc20aabe16b890f5ae3822369",
+    "artifact_sha256": "595234f6f6f2726129de659a9f4916091f0c87a30fab512c1199c29b7aa00e9b",
     "command": [
      "coord.sh",
      "lean",
@@ -299,7 +319,7 @@
      "-M8000",
      "--root=/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean",
      "-o",
-     "/tmp/bc-arc-scratch/extract-design/inc2/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemPostSkeleton.olean",
+     "/tmp/bc-arc-scratch/extract-design/inc2/merge62/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemPostSkeleton.olean",
      "/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemPostSkeleton.lean"
     ]
    }
@@ -324,8 +344,8 @@
    },
    "direct_check_final": {
     "exit": 0,
-    "start": "2026-10-08T00:54:32.131327272Z",
-    "end": "2026-10-08T00:54:35.401696629Z",
+    "start": "2026-10-08T01:23:29.034448309Z",
+    "end": "2026-10-08T01:23:51.536392674Z",
     "source_sha256": "de316315fd67c1a3dd371f4c2369524aa6f0dae1942e4951378abf644ebf1707",
     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "log_bytes": 0,
@@ -343,7 +363,7 @@
      "-M8000",
      "--root=/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean",
      "-o",
-     "/tmp/bc-arc-scratch/extract-design/inc2/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRomSplitTools.olean",
+     "/tmp/bc-arc-scratch/extract-design/inc2/merge62/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRomSplitTools.olean",
      "/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRomSplitTools.lean"
     ]
    }
@@ -399,8 +419,8 @@
    },
    "direct_check_final": {
     "exit": 0,
-    "start": "2026-10-08T00:54:35.426977035Z",
-    "end": "2026-10-08T00:54:41.645142250Z",
+    "start": "2026-10-08T01:23:51.562779670Z",
+    "end": "2026-10-08T01:23:57.931055130Z",
     "source_sha256": "96f5a2044a385e75c5b2b11a1e9ca90603445bb2f2549e2a8563325832c24af6",
     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "log_bytes": 0,
@@ -418,7 +438,7 @@
      "-M8000",
      "--root=/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean",
      "-o",
-     "/tmp/bc-arc-scratch/extract-design/inc2/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRomSplitPrefix.olean",
+     "/tmp/bc-arc-scratch/extract-design/inc2/merge62/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRomSplitPrefix.olean",
      "/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRomSplitPrefix.lean"
     ]
    }
@@ -467,8 +487,8 @@
    },
    "direct_check_final": {
     "exit": 0,
-    "start": "2026-10-08T00:54:41.676111594Z",
-    "end": "2026-10-08T00:55:13.214844160Z",
+    "start": "2026-10-08T01:23:57.961828479Z",
+    "end": "2026-10-08T01:24:05.908698392Z",
     "source_sha256": "1fec8ebfde7253bed99e4997086c672f814f021cd338e21bc099a2c24e207b00",
     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "log_bytes": 0,
@@ -486,7 +506,7 @@
      "-M8000",
      "--root=/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean",
      "-o",
-     "/tmp/bc-arc-scratch/extract-design/inc2/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRomSplitPost.olean",
+     "/tmp/bc-arc-scratch/extract-design/inc2/merge62/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRomSplitPost.olean",
      "/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRomSplitPost.lean"
     ]
    }
@@ -509,8 +529,8 @@
    },
    "direct_check_final": {
     "exit": 0,
-    "start": "2026-10-08T00:55:13.243784448Z",
-    "end": "2026-10-08T00:55:23.783586688Z",
+    "start": "2026-10-08T01:24:08.972334809Z",
+    "end": "2026-10-08T01:24:12.909702840Z",
     "source_sha256": "564a78be25c82a02a1e590c5b8e2a76373f6cd6092dafc4f73b60fdb7672035d",
     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "log_bytes": 0,
@@ -528,7 +548,7 @@
      "-M8000",
      "--root=/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean",
      "-o",
-     "/tmp/bc-arc-scratch/extract-design/inc2/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRomSplit.olean",
+     "/tmp/bc-arc-scratch/extract-design/inc2/merge62/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRomSplit.olean",
      "/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRomSplit.lean"
     ]
    }
@@ -550,12 +570,12 @@
    },
    "direct_check_final": {
     "exit": 0,
-    "start": "2026-10-08T00:55:23.809978603Z",
-    "end": "2026-10-08T00:55:27.655150417Z",
-    "source_sha256": "2f0213e6fce1846531ce71648eee24a8946a22004f27b3221976b3fb07f79486",
+    "start": "2026-10-08T01:24:12.937184604Z",
+    "end": "2026-10-08T01:24:16.846749614Z",
+    "source_sha256": "e924cdf9f49fba3000a9d13f863f9eba923dd4a264f5864d5d79db795f73058b",
     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "log_bytes": 0,
-    "artifact_sha256": "dc16fe28033e8795ef5f6b860a6d02255c5125047cb23687d93bfd74b342e295",
+    "artifact_sha256": "8eff97fce39e4196e9a855c8c5e81a624903eb357155abb0a493da2987153343",
     "command": [
      "coord.sh",
      "lean",
@@ -569,7 +589,7 @@
      "-M8000",
      "--root=/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean",
      "-o",
-     "/tmp/bc-arc-scratch/extract-design/inc2/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRootExpandLocal.olean",
+     "/tmp/bc-arc-scratch/extract-design/inc2/merge62/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRootExpandLocal.olean",
      "/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRootExpandLocal.lean"
     ]
    }
@@ -618,12 +638,12 @@
    },
    "direct_check_final": {
     "exit": 0,
-    "start": "2026-10-08T00:55:27.683765259Z",
-    "end": "2026-10-08T00:55:34.978490873Z",
-    "source_sha256": "bd55623f913907d8b496fd5f7bbc6a577b747ae9cb2cc9c5b94abffb49296623",
+    "start": "2026-10-08T01:24:16.871550148Z",
+    "end": "2026-10-08T01:24:24.322516745Z",
+    "source_sha256": "00212175ba81a4d02ae2a0181acda342cf9f86e6cdf16493e61f3a0b325a936f",
     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "log_bytes": 0,
-    "artifact_sha256": "7f047443088423d7b4cfae8bf8b0eea6727c524a79b2f9239bf9ad21af7daadf",
+    "artifact_sha256": "e4bb1cbaa5e7d0acfa187c27b2ac34aef655a81cb7828e0072c958bd07a8e7a8",
     "command": [
      "coord.sh",
      "lean",
@@ -637,7 +657,7 @@
      "-M8000",
      "--root=/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean",
      "-o",
-     "/tmp/bc-arc-scratch/extract-design/inc2/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRootExpandCount.olean",
+     "/tmp/bc-arc-scratch/extract-design/inc2/merge62/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRootExpandCount.olean",
      "/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRootExpandCount.lean"
     ]
    }
@@ -656,12 +676,12 @@
    },
    "direct_check_final": {
     "exit": 0,
-    "start": "2026-10-08T00:55:35.009721092Z",
-    "end": "2026-10-08T00:55:38.597390124Z",
-    "source_sha256": "76176ddaf06f7598d9e271bc305c083f4b19345842cc483fe592a1356fe9268a",
+    "start": "2026-10-08T01:24:24.354115340Z",
+    "end": "2026-10-08T01:24:53.479478887Z",
+    "source_sha256": "608ef61418316f0f1a365e42d924b5d2726655cc89e265cea0073a6deeaef87a",
     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "log_bytes": 0,
-    "artifact_sha256": "00752f95486414b1a2aff51f2ab00e304d1c7cb9b1f1345964b18eeca414f800",
+    "artifact_sha256": "afa660e7c3eeda25cbb312b35c97b32fa7dee8e321d8c89c9d589e4b3ac84c0b",
     "command": [
      "coord.sh",
      "lean",
@@ -675,7 +695,7 @@
      "-M8000",
      "--root=/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean",
      "-o",
-     "/tmp/bc-arc-scratch/extract-design/inc2/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRootExpand.olean",
+     "/tmp/bc-arc-scratch/extract-design/inc2/merge62/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRootExpand.olean",
      "/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRootExpand.lean"
     ]
    }
@@ -727,15 +747,15 @@
   "PqxdhRegistrationJointKemRootExpand.opaqueBranch_uniform": "theorem opaqueBranch_uniform (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes)\n    (decision : X → Bool) (work : OracleComp (SourceSpec KemSK) X) (runtime : A)\n    (count : Nat) (selected : Fin (count + 1)) (index : Nat)\n    (budget : PqxdhRegistrationJointRevealCosts.SourceKind → Nat)\n    (certified : ∀ source, work.IsQueryBoundP\n      (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source)) :\n    (opaqueBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index\n        false).boolDistAdvantage\n      (uniformGame (rootClient (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count\n        selected index)) ≤\n      ((budget (.inl 3) + budget (.inl 5) + budget (.inl 6) : ℕ) : ℝ) / 2 ^ 256 +\n        ∑ slot ∈ Finset.range (1 + budget (.inl 5)),\n          (hmacPrfRealGame setup.hmac (indexedReduction setup.hmac (rootClient (Reader := Reader) setup codec checks\n            ensureInit supplied decision work runtime count selected index) slot)).boolDistAdvantage\n            (hmacPrfRandomGame (indexedReduction setup.hmac (rootClient (Reader := Reader) setup codec checks\n              ensureInit supplied decision work runtime count selected index) slot))"
  },
  "leanpath": {
-  "manifest": "/tmp/bc-arc-scratch/extract-design/inc2/leanpath",
-  "sha256": "b980493684079ca8c3636a764480f696bfe6799bc930dcb9bb42423fc9635e52",
-  "note": "First entry: the scratch prefix inc2/olean, a resolved mirror (mirror.py) of the increment-1 integration prefix inc1-int/olean (the first prefix of the published LEAN_PATH of central ae4a4996) without the root olean, followed by the published ae4a4996 LEAN_PATH (/tmp/bc-coord/leanpaths/ae4a49965c1c625b9fcc181cd281925e2e188f2b.leanpath). check.sh refuses to write over a mirror symlink, so no other prefix was written. The final checks rebuilt the twelve modules and the root in import order after the S2 commit."
+  "manifest": "/tmp/bc-arc-scratch/extract-design/inc2/merge62/leanpath",
+  "sha256": "8f4be13bf179c2847a2536cd679009d21b3cbecf1cb67a93e29cd4cd418ce11e",
+  "note": "First entry: the scratch prefix inc2/merge62/olean, a resolved mirror (merge62/mirror.py) of record-lift/stage6/olean (the first prefix of the published LEAN_PATH of central 62c5f4b7) without the root olean, followed by the published 62c5f4b7 LEAN_PATH (/tmp/bc-coord/leanpaths/62c5f4b77323ed30f63c685f7d023dd26b0919ea.leanpath). merge62/check.sh refuses to write over a mirror symlink, so no other prefix was written. After the merge the twelve modules and the root were rebuilt in import order; after the review fixes the five modules with changed documentation, every module importing them and the root were rebuilt in import order. The direct_check_final entries are the latest check of each module. Before the merge the increment was checked against inc2/leanpath (the ae4a4996 LEAN_PATH)."
  },
  "root_check_final": {
   "exit": 0,
-  "start": "2026-10-08T00:55:38.626978467Z",
-  "end": "2026-10-08T00:55:41.611902430Z",
-  "source_sha256": "98c5d9c0d75cb8b6a17f104c6bbce986404069114cf89263ad9316a58d088fa8",
+  "start": "2026-10-08T01:24:53.506888957Z",
+  "end": "2026-10-08T01:24:56.340152680Z",
+  "source_sha256": "d936af5ea78352341b7fbfa7b9f0c94c2ba1b6d2ffa0105fa1cc6ab51c560908",
   "log_bytes": 0,
   "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
   "command": [
@@ -751,27 +771,57 @@
    "-M8000",
    "--root=/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean",
    "-o",
-   "/tmp/bc-arc-scratch/extract-design/inc2/olean/BeaconcryptCore.olean",
+   "/tmp/bc-arc-scratch/extract-design/inc2/merge62/olean/BeaconcryptCore.olean",
    "/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
   ]
  },
- "root_checks_note": "The root was also checked after each stage (exit 0, empty log), before the final rebuild.",
+ "root_checks_note": "The root was also checked after each stage and after the merge of central 62c5f4b7 (exit 0, empty log), before the final rebuild after the review fixes.",
  "focused_inventory": {
-  "inv-s2": {
+  "inventory-merge": {
    "exit": 0,
-   "log_bytes": 2031,
-   "log_sha256": "8ffeb860ee258f0f499d79244ccbe35032f3bce00d5e8046ffb1fb5929223daf",
+   "log_bytes": 1928,
+   "log_sha256": "062eaa0782af70fe8fdfb25947d6d6589126158cb158bf30ca7c6089b05f2b12",
    "last_line": "Formal-verification inventory matches the reviewed boundary.",
-   "start": "2026-10-08T00:46:07Z",
-   "end": "2026-10-08T00:47:22Z"
+   "start": "2026-10-08T01:19:48Z",
+   "end": "2026-10-08T01:21:07Z",
+   "head": "09ae745b1a13b5b70019dc202b3bdd259a0a2523",
+   "dirt_sha256": "64fcd50defa187fb8d7cffe158b0024a3b661de4327f85688c16d93009fcefa2",
+   "dirt_unchanged": true
+  },
+  "inventory-fix": {
+   "exit": 0,
+   "log_bytes": 1928,
+   "log_sha256": "c7fde285487d72ffa95a9e47323b7901b88be81aa3983dd1296276987260b676",
+   "last_line": "Formal-verification inventory matches the reviewed boundary.",
+   "start": "2026-10-08T01:33:49Z",
+   "end": "2026-10-08T01:35:09Z",
+   "head": "f14a80463deb54bd6daf2043f2be9024a3241efa",
+   "dirt_sha256": "9eeb66053de07ea801ea488c54c9f32ba7b24397bf03190b44601e0dc69a95cf",
+   "dirt_unchanged": true
   }
  },
- "focused_inventory_note": "check-inventory ran on the tree of the S2 commit bcca3a56 in the locked minimal proof flake (nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C beaconcrypt-core check-inventory) under a coord.sh @nix lease. The S1b and S1c commits were not checked separately; their reviewed-inventory.txt recorded a stale digest of check-inventory.sh (inv rehash ran before inv recount rewrote the count line), which the S2 commit corrects. A scratch comparison of all 2006 digest rows with the S2 tree found no mismatch. The documentation commit changes no inventoried file.",
+ "transcript_fidelity": {
+  "exit": 0,
+  "log_bytes": 2906,
+  "log_sha256": "6816cb9d7869f501b2788fa946770e5c4ebc6bddaddad0948bc47e1c835db7d0",
+  "last_line": "test result: ok. 30 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 12.84s",
+  "start": "2026-10-08T01:35:11Z",
+  "end": "2026-10-08T01:35:31Z",
+  "head": "f14a80463deb54bd6daf2043f2be9024a3241efa",
+  "dirt_sha256": "9eeb66053de07ea801ea488c54c9f32ba7b24397bf03190b44601e0dc69a95cf",
+  "dirt_unchanged": true,
+  "command": "CARGO_BUILD_JOBS=2 CARGO_TARGET_DIR=/tmp/bc-arc-scratch/extract-design/inc1-int/target coord.sh lease mem claude @cargo <label> -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C /tmp/claude-extract-inc1/beaconcrypt-core check-proverif-transcript-fidelity SHELL=bash",
+  "note": "Run on the review-fix tree (HEAD f14a8046 with the uncommitted review fixes, which touch no Rust, ProVerif or Makefile file)."
+ },
+ "focused_inventory_note": "check-inventory (nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C beaconcrypt-core check-inventory, under a coord.sh @nix lease) ran on the S2 tree bcca3a56 (exit 0, earlier receipt), on the merged tree before the merge commit (inventory-merge; staged merge on HEAD 09ae745b) and on the review-fix tree (inventory-fix; HEAD f14a8046 with the uncommitted fixes, identical in every inventoried file to the review-fix commit). The S1b, S1c and S2-preceding commits 73b763e9, f30da2f7 and 4cd25180 recorded a stale digest of check-inventory.sh (inv rehash ran before inv recount rewrote the count line), which bcca3a56 corrects; history is not rewritten. A scratch comparison of all 2026 digest rows with the review-fix tree found no mismatch. Documentation files are not inventoried.",
  "inventory_counts": {
   "handwritten_lean_before": 1574,
   "after_S1b": 1579,
   "after_S1c": 1583,
-  "after_S2": 1586
+  "after_S2": 1586,
+  "central_62c5f4b7": 1594,
+  "after_merge": 1606,
+  "after_review_fixes": 1606
  },
  "forbidden_scan": "No sorry, admit, axiom, opaque, native_decide, implemented_by, extern or unsafe in the twelve modules. No scoped set_option; module-level options autoImplicit false and maxRecDepth 100000 only. No probability notation and no deprecated lemma.",
  "contamination_scan": {
@@ -798,16 +848,25 @@
   "source": "/tmp/bc-arc-scratch/extract-design/inc2/probe/rootclient-term-grep.lean",
   "source_sha256": "ab17bddb2660f50481ce13a5a445261df953fd4328b90d9ad5e88d69685aa913",
   "log_sha256": "d815545d2aa0e5bb18c1458807839fe7be7a09ead4f694ffb971587177996659",
-  "output": "rootClient value: 0 uniform samplings\nreachable BeaconcryptCore constants: 1198\nconstants sampling MlKemSharedSecret (syntactic): 0 []\nall uniform samplings in reachable definition values: 4\n  BeaconcryptCore.Computational.PqxdhJointGapDh.sampleScalar: BeaconcryptCore.Computational.PqxdhJointGapDh.ScalarBytes\n  BeaconcryptCore.Computational.PqxdhJointGapDh.sampleScalar: BeaconcryptCore.Computational.PqxdhJointGapDh.ScalarBytes\n  BeaconcryptCore.Computational.PqxdhJointIdentity.sampleSeed: BeaconcryptCore.Computational.PqxdhJointIdentity.IdentitySeed\n  BeaconcryptCore.Computational.PqxdhJointIdentity.sampleSeed: BeaconcryptCore.Computational.PqxdhJointIdentity.IdentitySeed"
+  "output": "rootClient value: 0 uniform samplings\nreachable BeaconcryptCore constants: 1198\nconstants sampling MlKemSharedSecret (syntactic): 0 []\nall uniform samplings in reachable definition values: 4\n  BeaconcryptCore.Computational.PqxdhJointGapDh.sampleScalar: BeaconcryptCore.Computational.PqxdhJointGapDh.ScalarBytes\n  BeaconcryptCore.Computational.PqxdhJointGapDh.sampleScalar: BeaconcryptCore.Computational.PqxdhJointGapDh.ScalarBytes\n  BeaconcryptCore.Computational.PqxdhJointIdentity.sampleSeed: BeaconcryptCore.Computational.PqxdhJointIdentity.IdentitySeed\n  BeaconcryptCore.Computational.PqxdhJointIdentity.sampleSeed: BeaconcryptCore.Computational.PqxdhJointIdentity.IdentitySeed",
+  "scope": "Direct occurrences of uniformSample and SampleableType.selectElem in the values of the BeaconcryptCore-namespace definitions reachable from rootClient through definition values (1198 constants), matched on the sampled type name. It does not see samplers inside VCVio generics or setup fields, for example CtxRomAuth.ctxRandomOracle (uniformSampleImpl.withCaching, 64-byte digests, reached through hashGame), the public Extract table's HmacOracle.randomOracle draws or the unifSpec coin queries, so it cannot by itself rule out a candidate draw made through a generic sampler. Supporting evidence only."
  },
- "rootClient_candidate_note": "rootClient has no candidate argument; splitGame_root states that splitGame (sharedStart ...) (sharedClient ...) = randomGame (simulateQ (compile setup.hmac) rootClient), where splitGame draws no candidate. The term grep is syntactic on the type name because MlKemSharedSecret and RootOutput are both List.Vector UInt8 32; it finds no sampling at either.",
+ "rootClient_closure": {
+  "source": "/tmp/bc-arc-scratch/extract-design/inc2/probe/rootclient-closure.lean",
+  "source_sha256": "a3cda90ae3c2b66f42276c93db5bd6947c970463c552401675d8fab45dcc9b4c",
+  "log_sha256": "5767c1755f296497bb981ce5f54a567e530705b612cae947c0eaa95c0b37f020",
+  "output": "rootClient closure (types: false): 2879 constants; candidate-carrying definitions reached: []\nrootClient closure (types: true): 4883 constants; candidate-carrying definitions reached: []\nliveness: sharedGame closure reaches sharedImpl: true\nliveness: opaqueBranch closure (2715 constants) reaches: [BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawOpaque.opaqueBranch]\nliveness: groupedBranch closure (2834 constants) reaches: [BeaconcryptCore.Computational.PqxdhRegistrationJointKemPostSkeleton.groupedBranch,\n BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinish.markedRoot]",
+  "result": "The definition closure of rootClient across all namespaces (2879 constants through definition values; 4883 when the types of visited constants are walked too; theorem values not entered) reaches none of opaqueBranch, freeBranch, freeRouterBranch, groupedBranch, opRoot, PqxdhExtractRomHiddenSuffix.sharedImpl, PqxdhExtractRomHiddenSuffix.sharedGame and markedRoot. Liveness: the closure of sharedGame reaches sharedImpl, and the closure of groupedBranch reaches markedRoot. The type MlKemSharedSecret occurs in the closure (encapsulation and decapsulation result types, for example known decapsulation results of other ciphertexts)."
+ },
+ "rootClient_candidate_note": "Candidate freedom rests on the structure: rootClient has no candidate argument, and splitGame_root states that splitGame (sharedStart ...) (sharedClient ...) = randomGame (simulateQ (compile setup.hmac) rootClient), where splitGame draws no candidate. The closure check and the term grep are supporting scratch evidence with the scopes stated in their entries; the term grep is syntactic on the type name because MlKemSharedSecret and RootOutput are both List.Vector UInt8 32, and it finds no sampling at either.",
  "deviations_from_plan": [
   "S1b: layered services skeleton instead of a flattened handler; the services serverRoot, beaconRoot and table are the two skeleton oracles (hidden reads by coordinates, direct reads); the section 18 services are the record Hidden with exactly the required field types (hiddenBuild, hiddenAfter).",
   "S1b: grouped Beacon finish (one request for the root and its continuation); the encapsulation-hiding wrapper of the resumed client is dropped by an equality (forward_actual); embed has placeholders in the Server identity fields and the KEM field, which no service reads.",
-  "S1b: the hidden Server value is first read at the resumption's private root request, not at the build (CE-11 design v2 section 5.7 expected the hidden build).",
+  "S1b: the hidden Server value is first read at the resumption's private root request during the selected raw accept (resumeTail), not at the build (plan section 18 and CE-11 design v2 sections 5.7, 5.8 and 6 expected the hidden build); inherent, since the source and the Rust Server derive the root at the accept. Hidden reads are keyed by coordinates, so S7 and CE-11 need a first-touch coordinate-to-slot layer in front of PqxdhRecordLiftLazyTable. Plan section 20 and notes in CE-11 design v2 sections 5.7 and 6 record this and the re-check of defer, oblivious and allowanceG against an accept-time touch.",
   "S1c: the prefix table-read log is realized as a key-count potential of the table cache along the scan (scan_potential); the residual counts all table reads after the cut plus the resumption; the bound is the plan's coefficient-one term.",
   "S2: the IsRoot count goes through the skeleton's hidden reads; KemOpaqueCosts.client_root enters through S1c's resume_root; the continuation's finish budget is inherited (scan_inherit) without subtracting finishes before the cut, giving the plan's conservative qRoot = 1 + qFinish.",
-  "S2: the plan did not name statements; built: splitGame_root, splitGame_expanded, rootClient_root, rootClient_uniform, split_uniform, opaqueBranch_uniform. The definition-level term grep is a scratch metaprogram, not a committed check.",
+  "S2: the plan did not name statements; built: splitGame_root, splitGame_expanded, rootClient_root, rootClient_uniform, split_uniform, opaqueBranch_uniform. The closure check and the definition-level term grep are scratch metaprograms, not committed checks.",
+  "S1b: resume_lift_backend only splits the resumption into prefix and tail under any pair of interpreters (resume unfolded, unused); the content of the plan's backend-generic resume_lift (risk 4) is resumeImpl_split and groupedResume_split.",
   "No planned statement turned out false or unprovable; none was weakened; no assumption or contract added; no existing module changed."
  ],
  "contracts_used": "None new. The only premise of the S1c and S2 bounds is T5's source budget certified. S1c is valid only under the R1 random-oracle model of the zero-key 192-byte Extract slice (owner decision 2, extended to this line); S2's HMAC PRF advantages are explicit terms of the bound.",
@@ -817,7 +876,19 @@
   "Stages S3b, S4b, T, S7, S8, S5, S6, S9.",
   "Updates of composition-assumptions.md and trusted-boundary.md for the R1 scope extension (with T7/T8)."
  ],
- "re_estimate": "S1b, S1c and S2 (plan 17-31 agent-days, increment-1 re-estimate 9-18) were built in one working session. Remaining: 9.5-20 agent-days (plan 21.5-35): S3b 2-5, S4b 0.5-1, T 1-2, S7 1-3, S8 2-3, S5+S6 1-2, S9 2-4. Main risk: S3b.",
- "checks_not_run": "No lake build, make verify, nix-collect-garbage, mutation testing, ProVerif or Rust run; no production Rust or ProVerif change.",
- "review": "Not independently reviewed. Not integrated into central."
+ "re_estimate": "S1b, S1c and S2 (plan 17-31 agent-days, increment-1 re-estimate 9-18) were built in one working session. Remaining: 9.5-20 agent-days (plan 21.5-35): S3b 2-5, S4b 0.5-1, T 1-2, S7 1-3 (behind a first-touch coordinate-to-slot layer, plan section 20), S8 2-3, S5+S6 1-2, S9 2-4. Main risk: S3b.",
+ "checks_not_run": "No lake build, make verify, nix-collect-garbage, mutation testing or ProVerif run; the only Rust run is the transcript-fidelity cargo test; no production Rust or ProVerif change.",
+ "review": "Independently reviewed at 09ae745b by a semantic review and a hygiene review; all findings are fixed in the review-fix commit (review_fixes), which changes no Lean statement, proof or guard. The fixes are not yet independently re-reviewed. Not integrated into central.",
+ "review_fixes": [
+  "Minor, candidate freedom: guide (S2 section, checks), analysis and this receipt state the term grep's scope and rest candidate freedom on splitGame_root and the absent candidate argument; the closure check is added (rootClient_closure).",
+  "Minor, first touch and slots: S1b consumer note, services module documentation, plan section 20 (and a pointer in section 18), notes in CE-11 design v2 sections 5.7 and 6: the Server slot's first touch is the selected accept's private root request; S7/CE-11 need a first-touch coordinate-to-slot allocator in front of PqxdhRecordLiftLazyTable; defer/oblivious/allowanceG to be re-checked against an accept-time touch before the remaining CE-11a split steps or S7.",
+  "Nit, resume_lift_backend: module documentation, docstring, section header and guide say it only splits the resumption under any pair of interpreters and point to resumeImpl_split and groupedResume_split.",
+  "Nit, stage T: \"stage T (plan section 17) tightens\" in PqxdhRegistrationJointKemRootExpandCount and the guide.",
+  "Nit, titles: the three S2 modules have title headings.",
+  "Nits, guide title, status and R1 wording: one H1 for the topic, a current status line, increments as level-2 sections; analysis and guide say the HMAC-SHA-512 PRF is the standard game accepted by the owner, not part of R1.",
+  "Nit, resumeImplT: the services module documentation names resumeImpl.",
+  "Nit, commit label: f30da2f7 is \"S1b module documentation names\".",
+  "Nit, stale intermediate digests: no change (history not rewritten); recount before rehash, check-inventory.sh last, at the merge and the fixes.",
+  "Nit, central moved: central 62c5f4b7 merged (f14a8046) with the section 6 resolution, inv recount, inv rehash, root import, focused inventory and transcript fidelity; receipt re-issued for the merged tip."
+ ]
 }

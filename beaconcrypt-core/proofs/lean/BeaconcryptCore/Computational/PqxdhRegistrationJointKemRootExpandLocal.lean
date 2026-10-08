@@ -2,6 +2,7 @@ import BeaconcryptCore.Computational.PqxdhRegistrationJointKemRomSplit
 import BeaconcryptCore.Computational.PqxdhCorrelatedExpandHybrid
 
 /-!
+# The root client of the KEM-ideal branch (item 2, stage S2, internalization)
 
 This module begins stage S2 of the item 2 plan. It turns G1's split world of stage S1c (`PqxdhExtractRomHiddenSuffix.splitGame`, H1 of the plan) into an ordinary game of the correlated Extract family (`PqxdhCorrelatedExtractFamily.randomGame`) on a root client (`rootClient`) that holds everything except the hidden table.
 

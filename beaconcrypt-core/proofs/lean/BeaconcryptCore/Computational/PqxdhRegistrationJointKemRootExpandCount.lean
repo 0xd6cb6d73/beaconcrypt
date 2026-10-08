@@ -2,6 +2,7 @@ import BeaconcryptCore.Computational.PqxdhRegistrationJointKemRootExpandLocal
 import BeaconcryptCore.Computational.PqxdhCorrelatedExpandQueryBounds
 
 /-!
+# The root count of the root client (item 2, stage S2, root count)
 
 This module bounds the root requests of the root client of stage S2 (`PqxdhRegistrationJointKemRootExpand.rootClient`) by `1 + qFinish`, where `qFinish` is the source budget of Beacon finish requests (kind 5). The count includes repeated requests at the same coordinates, as `PqxdhCorrelatedExpandHybrid.IsRoot` does.
 
@@ -11,7 +12,7 @@ This module bounds the root requests of the root client of stage S2 (`PqxdhRegis
 - The actual encapsulator, the router and the CCA evaluation forward hidden reads one for one and add none (`fwd_hidden`, `fwdOption_hidden`).
 - The continuation suspended at the cut inherits every query bound of the source program (`scan_inherit` to `sharedStart_inherit`), so its Beacon finish requests stay within `qFinish` (`certified_finish`).
 
-The bound needs no assumption beyond the source budget `certified` of theorem T5. The plan's optional stage T would tighten `1 + qFinish` to `2`.
+The bound needs no assumption beyond the source budget `certified` of theorem T5. Stage T (plan section 17) tightens `1 + qFinish` to `2`.
 -/
 
 open OracleComp OracleSpec CoreModels Aeneas
