@@ -1677,6 +1677,12 @@ import BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinish
 
 import BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinishRouter
 
+import BeaconcryptCore.Computational.LazyOracleDiscard
+
+import BeaconcryptCore.Computational.PqxdhDeploymentHiddenLayout
+
+import BeaconcryptCore.Computational.PqxdhDeploymentHiddenKernels
+
 /-!
 # Beaconcrypt-core verification root
 
