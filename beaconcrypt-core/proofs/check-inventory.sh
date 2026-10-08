@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1596
+	[handwritten-lean]=1597
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -33178,6 +33178,64 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecord
 require_line_count 1 '^theorem filled([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftDeferredChild theorem filled"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftDeferredChild\.initial_law$' "$selected_source_module" "PqxdhRecordLiftDeferredChild dependency BeaconcryptCore.Computational.PqxdhRecordLiftDeferredChild.initial_law"
 require_line_count 1 '^theorem initial_law([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftDeferredChild theorem initial_law"
+
+# Exact selected-key ordinary CTX interpreter, source admission, stopped adaptive execution and local query caps.
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxOracle.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRecordLiftCtxOracle$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftCtxOracle root import"
+require_line_count 26 '^theorem ' "$selected_source_module" "PqxdhRecordLiftCtxOracle theorem inventory"
+require_line_count 26 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftCtxOracle guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxOracle\.resume_aimed$' "$selected_source_module" "PqxdhRecordLiftCtxOracle dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxOracle.resume_aimed"
+require_line_count 1 '^theorem resume_aimed([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxOracle theorem resume_aimed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxOracle\.begin_aimed$' "$selected_source_module" "PqxdhRecordLiftCtxOracle dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxOracle.begin_aimed"
+require_line_count 1 '^theorem begin_aimed([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxOracle theorem begin_aimed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxOracle\.receive_queries$' "$selected_source_module" "PqxdhRecordLiftCtxOracle dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxOracle.receive_queries"
+require_line_count 1 '^theorem receive_queries([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxOracle theorem receive_queries"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxOracle\.admitted_receive_queries$' "$selected_source_module" "PqxdhRecordLiftCtxOracle dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxOracle.admitted_receive_queries"
+require_line_count 1 '^theorem admitted_receive_queries([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxOracle theorem admitted_receive_queries"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxOracle\.coin_step$' "$selected_source_module" "PqxdhRecordLiftCtxOracle dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxOracle.coin_step"
+require_line_count 1 '^theorem coin_step([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxOracle theorem coin_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxOracle\.coin_program$' "$selected_source_module" "PqxdhRecordLiftCtxOracle dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxOracle.coin_program"
+require_line_count 1 '^theorem coin_program([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxOracle theorem coin_program"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxOracle\.store_realization$' "$selected_source_module" "PqxdhRecordLiftCtxOracle dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxOracle.store_realization"
+require_line_count 1 '^theorem store_realization([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxOracle theorem store_realization"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxOracle\.output_key_invariant$' "$selected_source_module" "PqxdhRecordLiftCtxOracle dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxOracle.output_key_invariant"
+require_line_count 1 '^theorem output_key_invariant([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxOracle theorem output_key_invariant"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxOracle\.lookup_native_erasure$' "$selected_source_module" "PqxdhRecordLiftCtxOracle dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxOracle.lookup_native_erasure"
+require_line_count 1 '^theorem lookup_native_erasure([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxOracle theorem lookup_native_erasure"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxOracle\.keyLookup_source$' "$selected_source_module" "PqxdhRecordLiftCtxOracle dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxOracle.keyLookup_source"
+require_line_count 1 '^theorem keyLookup_source([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxOracle theorem keyLookup_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxOracle\.source_nonces$' "$selected_source_module" "PqxdhRecordLiftCtxOracle dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxOracle.source_nonces"
+require_line_count 1 '^theorem source_nonces([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxOracle theorem source_nonces"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxOracle\.no_seal_nonces$' "$selected_source_module" "PqxdhRecordLiftCtxOracle dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxOracle.no_seal_nonces"
+require_line_count 1 '^theorem no_seal_nonces([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxOracle theorem no_seal_nonces"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxOracle\.opening_with_nonces$' "$selected_source_module" "PqxdhRecordLiftCtxOracle dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxOracle.opening_with_nonces"
+require_line_count 1 '^theorem opening_with_nonces([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxOracle theorem opening_with_nonces"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxOracle\.sealing_nonces$' "$selected_source_module" "PqxdhRecordLiftCtxOracle dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxOracle.sealing_nonces"
+require_line_count 1 '^theorem sealing_nonces([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxOracle theorem sealing_nonces"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxOracle\.keyLookup_native$' "$selected_source_module" "PqxdhRecordLiftCtxOracle dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxOracle.keyLookup_native"
+require_line_count 1 '^theorem keyLookup_native([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxOracle theorem keyLookup_native"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxOracle\.interpreter_source$' "$selected_source_module" "PqxdhRecordLiftCtxOracle dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxOracle.interpreter_source"
+require_line_count 1 '^theorem interpreter_source([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxOracle theorem interpreter_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxOracle\.except_bind$' "$selected_source_module" "PqxdhRecordLiftCtxOracle dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxOracle.except_bind"
+require_line_count 1 '^theorem except_bind([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxOracle theorem except_bind"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxOracle\.schedule_source$' "$selected_source_module" "PqxdhRecordLiftCtxOracle dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxOracle.schedule_source"
+require_line_count 1 '^theorem schedule_source([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxOracle theorem schedule_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxOracle\.nativeLookup_realization$' "$selected_source_module" "PqxdhRecordLiftCtxOracle dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxOracle.nativeLookup_realization"
+require_line_count 1 '^theorem nativeLookup_realization([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxOracle theorem nativeLookup_realization"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxOracle\.keyLookup_total$' "$selected_source_module" "PqxdhRecordLiftCtxOracle dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxOracle.keyLookup_total"
+require_line_count 1 '^theorem keyLookup_total([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxOracle theorem keyLookup_total"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxOracle\.keyLookup_uniform$' "$selected_source_module" "PqxdhRecordLiftCtxOracle dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxOracle.keyLookup_uniform"
+require_line_count 1 '^theorem keyLookup_uniform([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxOracle theorem keyLookup_uniform"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxOracle\.interpreter_total$' "$selected_source_module" "PqxdhRecordLiftCtxOracle dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxOracle.interpreter_total"
+require_line_count 1 '^theorem interpreter_total([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxOracle theorem interpreter_total"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxOracle\.allowed_admitted$' "$selected_source_module" "PqxdhRecordLiftCtxOracle dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxOracle.allowed_admitted"
+require_line_count 1 '^theorem allowed_admitted([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxOracle theorem allowed_admitted"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxOracle\.receive_admitted$' "$selected_source_module" "PqxdhRecordLiftCtxOracle dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxOracle.receive_admitted"
+require_line_count 1 '^theorem receive_admitted([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxOracle theorem receive_admitted"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxOracle\.send_admitted$' "$selected_source_module" "PqxdhRecordLiftCtxOracle dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxOracle.send_admitted"
+require_line_count 1 '^theorem send_admitted([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxOracle theorem send_admitted"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxOracle\.reduction_source$' "$selected_source_module" "PqxdhRecordLiftCtxOracle dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxOracle.reduction_source"
+require_line_count 1 '^theorem reduction_source([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxOracle theorem reduction_source"
 
 # Reviewed actual getter availability, distinct from network compromise powers.
 python3 proofs/source/test-getter-profile.py
