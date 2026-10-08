@@ -1,11 +1,11 @@
 {
  "component": "Record-lift increment A (items 4/5 takeover plan stage S2): Codex WIP W1-W5 published as modules on a Claude topic branch",
- "status": "Checked on the topic branch; independent semantic and publication-hygiene review pending; not integrated into central",
+ "status": "Checked on the topic branch; the independent semantic and publication-hygiene reviews of ac0136be returned 12 findings, all fixed or answered in fix_pass_1; confirmation of the fix pass and central integration pending",
  "base_commit": "80560f9285c9577da71dfcfa676571432283b0c1",
  "branch": "codex/deployment-record-a",
  "worktree": "/tmp/beaconcrypt-deployment-record-a",
- "checked_tip": "ccd1fcf9ce2bee93b9396f26750de599e2c7d319",
- "lean_tree_note": "The analysis commit after the root-import check changes only doc/formal-verification-analysis.md; the beaconcrypt-core tree at the checked tip equals the one of the root-import check.",
+ "checked_tip": "b9f8e5bf6e62de945abf88b175c688eb5079e91b",
+ "lean_tree_note": "Fix pass 1: b6a0e5c8 changes the CtxProgramBounds source, its guide and its inventory digest; b9f8e5bf changes only doc/formal-verification-analysis.md and two guides, so the beaconcrypt-core tree at the checked tip equals the one of the CtxProgramBounds and root-import checks of fix pass 1; the receipt commit after it changes only this file. The earlier checks covered ccd1fcf9.",
  "date_utc": "2026-10-08T06:42:42.330080+00:00",
  "authority": [
   "Owner decision 2026-10-08 (/tmp/bc-coord/decision-2026-10-08.txt, mailbox message 221): Claude takes over items 4 and 5 and adopts the PqxdhRecordLift* module names (variant V1).",
@@ -27,7 +27,7 @@
    "source_sha256": "b1fb622690c682168787b60369bf8c7abd85ef69223c7741af00906895ade306",
    "wip_source_sha256": "b1fb622690c682168787b60369bf8c7abd85ef69223c7741af00906895ade306",
    "wip_source_path": "/tmp/beaconcrypt-record-lift-ctx-no-refusal/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxNoRefusal.lean",
-   "wip_preserved_copy": "doc/impl/handover/record-lift-wip/PqxdhRecordLiftCtxNoRefusal.lean.txt on branch codex/deployment-record-wip (commit 023b9a81, local) and /tmp/bc-arc-scratch/items45/inherited/PqxdhRecordLiftCtxNoRefusal.lean.txt",
+   "wip_preserved_copy": "doc/impl/handover/record-lift-wip/PqxdhRecordLiftCtxNoRefusal.lean.txt on branch codex/deployment-record-wip (commit 023b9a81, pushed to origin on 2026-10-08 at 08:24 CEST and verified with git ls-remote; takeover plan S0 had said to keep it local, while plan section 3 and the task rules push every Claude branch after each commit, so the preserved WIP is durable outside /tmp) and /tmp/bc-arc-scratch/items45/inherited/PqxdhRecordLiftCtxNoRefusal.lean.txt",
    "source_unchanged_from_wip": true,
    "guide": "doc/impl/record-lift-ctx-no-refusal.md",
    "guide_sha256": "d3c9ec51fa23df48b5d054f65c295d44ea307d9510d12e86595241e307a96e46",
@@ -146,7 +146,7 @@
    "source_sha256": "034108c4963ebf0c70c3ba1667a96c553a11b9964a2c1bf30e714b51e5581557",
    "wip_source_sha256": "034108c4963ebf0c70c3ba1667a96c553a11b9964a2c1bf30e714b51e5581557",
    "wip_source_path": "/tmp/beaconcrypt-record-lift-seed-policy/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftSeedScope.lean",
-   "wip_preserved_copy": "doc/impl/handover/record-lift-wip/PqxdhRecordLiftSeedScope.lean.txt on branch codex/deployment-record-wip (commit 023b9a81, local) and /tmp/bc-arc-scratch/items45/inherited/PqxdhRecordLiftSeedScope.lean.txt",
+   "wip_preserved_copy": "doc/impl/handover/record-lift-wip/PqxdhRecordLiftSeedScope.lean.txt on branch codex/deployment-record-wip (commit 023b9a81, pushed to origin on 2026-10-08 at 08:24 CEST and verified with git ls-remote; takeover plan S0 had said to keep it local, while plan section 3 and the task rules push every Claude branch after each commit, so the preserved WIP is durable outside /tmp) and /tmp/bc-arc-scratch/items45/inherited/PqxdhRecordLiftSeedScope.lean.txt",
    "source_unchanged_from_wip": true,
    "guide": "doc/impl/record-lift-seed-scope.md",
    "guide_sha256": "9f2702ef64111508917a2209025ae067182c83f0ce4aed636207d905abfb30df",
@@ -331,16 +331,17 @@
    "source_sha256": "10e99823853e2f056e3151f61114dd89a8fdb3748055eb85cbaf078eac9cc9a3",
    "wip_source_sha256": "128a291626158feebadc9f9d2a97a0ef3fbfec78efe76087ec71b8f83c768894",
    "wip_source_path": "/tmp/beaconcrypt-record-lift-child-policy/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChildPolicy.lean",
-   "wip_preserved_copy": "doc/impl/handover/record-lift-wip/PqxdhRecordLiftChildPolicy.lean.txt on branch codex/deployment-record-wip (commit 023b9a81, local) and /tmp/bc-arc-scratch/items45/inherited/PqxdhRecordLiftChildPolicy.lean.txt",
+   "wip_preserved_copy": "doc/impl/handover/record-lift-wip/PqxdhRecordLiftChildPolicy.lean.txt on branch codex/deployment-record-wip (commit 023b9a81, pushed to origin on 2026-10-08 at 08:24 CEST and verified with git ls-remote; takeover plan S0 had said to keep it local, while plan section 3 and the task rules push every Claude branch after each commit, so the preserved WIP is durable outside /tmp) and /tmp/bc-arc-scratch/items45/inherited/PqxdhRecordLiftChildPolicy.lean.txt",
    "source_unchanged_from_wip": false,
    "guide": "doc/impl/record-lift-child-policy.md",
-   "guide_sha256": "12e34d021f701bf311bf1bd3e554031a8baa5df006808bcff885d8039191c401",
+   "guide_sha256": "678d83aa046eceba666bc7c2ddfbefad2fcd9ca520496684843691c268b475d5",
    "wip_guide_sha256": null,
    "author": "Codex (all WIP content); Claude (changes listed here, guides where new)",
    "claude_changes": [
     "independent_observed: the final `done` (unsolved goal in Codex check child-policy-module-035501) replaced by `simp only [bind_assoc, bind_map_left] at independent concrete` and `exact independent.trans (LazyOracleDiscard.LawEq.of_eq concrete.symm)` (takeover plan section 1.1 glue). No statement changed.",
     "Added the 19 exact axiom guards.",
-    "New guide written by Claude. The c77f2663 fallback was not used."
+    "New guide written by Claude. The c77f2663 fallback was not used.",
+    "Review fix pass 1 (b9f8e5bf): the guide credits the real HKDF derivation to the published GlobalMask (interpreter_realization) and GlobalCut instead of ChildRelay, whose unused_source is parametric in the child value; the validation status gives the exact axiom split (coin_lazy depends only on propext and Quot.sound). Module source unchanged."
    ],
    "statements": 19,
    "exact_axiom_guards": 19,
@@ -504,17 +505,18 @@
    "source_sha256": "15ea3a5d0c79af0734b049e6eab34824f5533c4c2dcce3a786bbf5da13b5ee7e",
    "wip_source_sha256": "70ebff8d4c54f95f5e5f287fb13fc8f13c5592990f535e55fc7a5b33ee196c7b",
    "wip_source_path": "/tmp/beaconcrypt-record-lift-prefix-policy/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftPrefixPolicy.lean",
-   "wip_preserved_copy": "doc/impl/handover/record-lift-wip/PqxdhRecordLiftPrefixPolicy.lean.txt on branch codex/deployment-record-wip (commit 023b9a81, local) and /tmp/bc-arc-scratch/items45/inherited/PqxdhRecordLiftPrefixPolicy.lean.txt",
+   "wip_preserved_copy": "doc/impl/handover/record-lift-wip/PqxdhRecordLiftPrefixPolicy.lean.txt on branch codex/deployment-record-wip (commit 023b9a81, pushed to origin on 2026-10-08 at 08:24 CEST and verified with git ls-remote; takeover plan S0 had said to keep it local, while plan section 3 and the task rules push every Claude branch after each commit, so the preserved WIP is durable outside /tmp) and /tmp/bc-arc-scratch/items45/inherited/PqxdhRecordLiftPrefixPolicy.lean.txt",
    "source_unchanged_from_wip": false,
    "guide": "doc/impl/record-lift-prefix-policy.md",
-   "guide_sha256": "061eeb709ea6c60dc3bc286636f3a78f6a6109a12a36274360f97b9dc96ebde7",
+   "guide_sha256": "60c9871c92ee90f232ef4f8c10359e2229defa3867c300b1f9fcea37f9f3059e",
    "wip_guide_sha256": "b785c48c97d4496f5f7ec9968b9e124c1a9a4d697f9f67f1d94f1fef84600928",
    "author": "Codex (all WIP content); Claude (changes listed here, guides where new)",
    "claude_changes": [
     "sampled_schedule: final `simpa only [prefix_forget] using scan_schedule ...` (type mismatch MixedWorld.policy vs unfolded ChainOracle.lookup in Codex check prefix-policy25) replaced by `rw [prefix_forget, prefix_forget]` and `exact scan_schedule ...`. No statement changed.",
     "Added theorem sampled_program (frozen-program instance of sampled_schedule, already described by the guide).",
     "Added the 6 exact axiom guards.",
-    "Guide: sampled-prefix sentence names both endpoints; draft status paragraph replaced by validation status and provenance."
+    "Guide: sampled-prefix sentence names both endpoints; draft status paragraph replaced by validation status and provenance.",
+    "Review fix pass 1 (b9f8e5bf): the guide provenance notes that Claude named the two sampled-prefix endpoints in the fourth paragraph of the Codex draft. Module source unchanged."
    ],
    "statements": 6,
    "exact_axiom_guards": 6,
@@ -598,13 +600,13 @@
    "id": "W5",
    "module": "PqxdhRecordLiftCtxProgramBounds",
    "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxProgramBounds.lean",
-   "source_sha256": "975412ec828f34c8388686d331dca9c089781cff9d7ed6847c2cb58f67e8b03e",
+   "source_sha256": "77915f22da5070791cf312aafdc9a311241d2ffc53ff8092a921a2993c1d67a5",
    "wip_source_sha256": "879a91bdf51208e3308bc6a6f9d3f52994553fdb4549d18f15ac82b545a178fd",
    "wip_source_path": "/tmp/beaconcrypt-record-lift-ctx-program-bounds/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxProgramBounds.lean",
-   "wip_preserved_copy": "doc/impl/handover/record-lift-wip/PqxdhRecordLiftCtxProgramBounds.lean.txt on branch codex/deployment-record-wip (commit 023b9a81, local) and /tmp/bc-arc-scratch/items45/inherited/PqxdhRecordLiftCtxProgramBounds.lean.txt",
+   "wip_preserved_copy": "doc/impl/handover/record-lift-wip/PqxdhRecordLiftCtxProgramBounds.lean.txt on branch codex/deployment-record-wip (commit 023b9a81, pushed to origin on 2026-10-08 at 08:24 CEST and verified with git ls-remote; takeover plan S0 had said to keep it local, while plan section 3 and the task rules push every Claude branch after each commit, so the preserved WIP is durable outside /tmp) and /tmp/bc-arc-scratch/items45/inherited/PqxdhRecordLiftCtxProgramBounds.lean.txt",
    "source_unchanged_from_wip": false,
    "guide": "doc/impl/record-lift-ctx-program-bounds.md",
-   "guide_sha256": "2150308040afe80529837181f00e2a879dcd3dd942f887b68c2bf25c7b1c7834",
+   "guide_sha256": "0344e0c3c7022dd396528804f34ed7e19584eee731558ee6fb4d85d70d2ee455",
    "wip_guide_sha256": null,
    "author": "Codex (all WIP content); Claude (changes listed here, guides where new)",
    "claude_changes": [
@@ -612,7 +614,8 @@
     "Added theorems opaque_receive, kernel_send and kernel_receive (per-receive bill, and both bills for every stored kernel, hidden or caller-known).",
     "Module docstring narrowed to the per-operation bills actually proved (Codex's draft said \"every typed private reply, including changed CTX games\").",
     "Added the 12 exact axiom guards.",
-    "New guide written by Claude."
+    "New guide written by Claude.",
+    "Review fix pass 1 (b6a0e5c8): the local bill definition recordCost (Codex) renamed operationBill, with a docstring, because the module opens PqxdhRecordLiftBudget, whose recordCost : RecordKind -> Fin 14 -> Nat (the per-command record count) has a different type and meaning. The body is unchanged; opaque_send, opaque_receive, kernel_send and kernel_receive change only by the renamed constant, so each states the same proposition as before. Theorem names, guards and check-inventory gates unchanged. Guide updated."
    ],
    "statements": 12,
    "exact_axiom_guards": 12,
@@ -687,20 +690,20 @@
     ]
    },
    "check": {
-    "receipt": "/tmp/bc-arc-scratch/items45/A/logs/PqxdhRecordLiftCtxProgramBounds-r2.json",
-    "receipt_sha256": "f53ed96e525c0775a9ece186b8b3bfc9d830e5c601b0b252edd2f2be0fa1cf56",
+    "receipt": "/tmp/bc-arc-scratch/items45/A/fix1/logs/PqxdhRecordLiftCtxProgramBounds-f1.json",
+    "receipt_sha256": "245a76b9a2b8621f67d68169fb217b2c1f76cb2def387de304ceb24bdc9661ad",
     "content": {
      "module": "BeaconcryptCore.Computational.PqxdhRecordLiftCtxProgramBounds",
-     "start": "2026-10-08T06:37:03.776029811Z",
-     "end": "2026-10-08T06:37:08.662993500Z",
+     "start": "2026-10-08T07:02:12.900178910Z",
+     "end": "2026-10-08T07:02:18.220603048Z",
      "exit": 0,
-     "source_sha256": "975412ec828f34c8388686d331dca9c089781cff9d7ed6847c2cb58f67e8b03e",
+     "source_sha256": "77915f22da5070791cf312aafdc9a311241d2ffc53ff8092a921a2993c1d67a5",
      "log_bytes": 0,
      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-     "artifact": "/tmp/bc-arc-scratch/items45/A/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxProgramBounds.olean",
-     "artifact_sha256": "b6a41e3eb06168bd7c4beb52d3f36dc9c77194f31d200aaf6ba94735593b00ff",
-     "leanpath": "/tmp/bc-arc-scratch/items45/A/leanpath",
-     "leanpath_sha256": "f5d96a2473995e762c2f85fc822b0294a69477caf73b7033c4d5f9d07e99a64e",
+     "artifact": "/tmp/bc-arc-scratch/items45/A/fix1/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxProgramBounds.olean",
+     "artifact_sha256": "23d9b59bcc8f8d164d85de46ab792bc71c432ce63bad5e4e13636836b6b1e68b",
+     "leanpath": "/tmp/bc-arc-scratch/items45/A/fix1/leanpath",
+     "leanpath_sha256": "923f51007d3b0775468289adbef90849e96f055f92a62c97e413b4f48e2a51ee",
      "command": [
       "coord.sh",
       "lean",
@@ -714,30 +717,66 @@
       "-M8000",
       "--root=/tmp/beaconcrypt-deployment-record-a/beaconcrypt-core/proofs/lean",
       "-o",
-      "/tmp/bc-arc-scratch/items45/A/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxProgramBounds.olean",
+      "/tmp/bc-arc-scratch/items45/A/fix1/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxProgramBounds.olean",
       "/tmp/beaconcrypt-deployment-record-a/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxProgramBounds.lean"
      ]
     },
     "log_bytes": 0
    },
-   "review_needed": "Never reviewed; semantic review of the 9 Codex statements and of Claude's 3 additions and the type fix, plus publication hygiene."
+   "review_needed": "Never reviewed; semantic review of the 9 Codex statements and of Claude's 3 additions and the type fix, plus publication hygiene.",
+   "earlier_checks": [
+    {
+     "receipt": "/tmp/bc-arc-scratch/items45/A/logs/PqxdhRecordLiftCtxProgramBounds-r2.json",
+     "receipt_sha256": "f53ed96e525c0775a9ece186b8b3bfc9d830e5c601b0b252edd2f2be0fa1cf56",
+     "content": {
+      "module": "BeaconcryptCore.Computational.PqxdhRecordLiftCtxProgramBounds",
+      "start": "2026-10-08T06:37:03.776029811Z",
+      "end": "2026-10-08T06:37:08.662993500Z",
+      "exit": 0,
+      "source_sha256": "975412ec828f34c8388686d331dca9c089781cff9d7ed6847c2cb58f67e8b03e",
+      "log_bytes": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact": "/tmp/bc-arc-scratch/items45/A/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxProgramBounds.olean",
+      "artifact_sha256": "b6a41e3eb06168bd7c4beb52d3f36dc9c77194f31d200aaf6ba94735593b00ff",
+      "leanpath": "/tmp/bc-arc-scratch/items45/A/leanpath",
+      "leanpath_sha256": "f5d96a2473995e762c2f85fc822b0294a69477caf73b7033c4d5f9d07e99a64e",
+      "command": [
+       "coord.sh",
+       "lean",
+       "claude",
+       "<label>",
+       "--",
+       "timeout",
+       "180",
+       "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+       "-j1",
+       "-M8000",
+       "--root=/tmp/beaconcrypt-deployment-record-a/beaconcrypt-core/proofs/lean",
+       "-o",
+       "/tmp/bc-arc-scratch/items45/A/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxProgramBounds.olean",
+       "/tmp/beaconcrypt-deployment-record-a/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxProgramBounds.lean"
+      ]
+     },
+     "log_bytes": 0
+    }
+   ]
   }
  ],
  "root_import": {
-  "receipt": "/tmp/bc-arc-scratch/items45/A/logs/root-r1.json",
-  "receipt_sha256": "e4096c03f83b7872d37fb3464bfede20fe2846c7ef6b5021b5e294a6a5399a55",
+  "receipt": "/tmp/bc-arc-scratch/items45/A/fix1/logs/root-f1.json",
+  "receipt_sha256": "4ee73679a272a94d39ab239e07de57bf385d0d9a531fabe6c117717e8dccadad",
   "content": {
    "module": "BeaconcryptCore",
-   "start": "2026-10-08T06:38:42.118729549Z",
-   "end": "2026-10-08T06:38:46.201603947Z",
+   "start": "2026-10-08T07:04:50.216503985Z",
+   "end": "2026-10-08T07:04:53.424402072Z",
    "exit": 0,
    "source_sha256": "2f9b482d9ab006ae36b9a51ab89797acf78aaf2a7495f9d201bcb78f26b9747c",
    "log_bytes": 0,
    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-   "artifact": "/tmp/bc-arc-scratch/items45/A/olean/BeaconcryptCore.olean",
+   "artifact": "/tmp/bc-arc-scratch/items45/A/fix1/olean/BeaconcryptCore.olean",
    "artifact_sha256": "721267ce09708ff59daa456e13172c0ebb3c2832533d34af87c57be481c6370f",
-   "leanpath": "/tmp/bc-arc-scratch/items45/A/leanpath",
-   "leanpath_sha256": "f5d96a2473995e762c2f85fc822b0294a69477caf73b7033c4d5f9d07e99a64e",
+   "leanpath": "/tmp/bc-arc-scratch/items45/A/fix1/leanpath",
+   "leanpath_sha256": "923f51007d3b0775468289adbef90849e96f055f92a62c97e413b4f48e2a51ee",
    "command": [
     "coord.sh",
     "lean",
@@ -751,9 +790,42 @@
     "-M8000",
     "--root=/tmp/beaconcrypt-deployment-record-a/beaconcrypt-core/proofs/lean",
     "-o",
-    "/tmp/bc-arc-scratch/items45/A/olean/BeaconcryptCore.olean",
+    "/tmp/bc-arc-scratch/items45/A/fix1/olean/BeaconcryptCore.olean",
     "/tmp/beaconcrypt-deployment-record-a/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
    ]
+  },
+  "earlier": {
+   "receipt": "/tmp/bc-arc-scratch/items45/A/logs/root-r1.json",
+   "receipt_sha256": "e4096c03f83b7872d37fb3464bfede20fe2846c7ef6b5021b5e294a6a5399a55",
+   "content": {
+    "module": "BeaconcryptCore",
+    "start": "2026-10-08T06:38:42.118729549Z",
+    "end": "2026-10-08T06:38:46.201603947Z",
+    "exit": 0,
+    "source_sha256": "2f9b482d9ab006ae36b9a51ab89797acf78aaf2a7495f9d201bcb78f26b9747c",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/items45/A/olean/BeaconcryptCore.olean",
+    "artifact_sha256": "721267ce09708ff59daa456e13172c0ebb3c2832533d34af87c57be481c6370f",
+    "leanpath": "/tmp/bc-arc-scratch/items45/A/leanpath",
+    "leanpath_sha256": "f5d96a2473995e762c2f85fc822b0294a69477caf73b7033c4d5f9d07e99a64e",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-record-a/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/items45/A/olean/BeaconcryptCore.olean",
+     "/tmp/beaconcrypt-deployment-record-a/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+    ]
+   }
   }
  },
  "dependency_mirror": {
@@ -764,7 +836,15 @@
   "mirror_log": "source /tmp/bc-arc-scratch/common-experiment/ce9b/int/olean links 1673 skipped 1 broken 0",
   "published_leanpath": "/tmp/bc-coord/leanpaths/80560f9285c9577da71dfcfa676571432283b0c1.leanpath",
   "published_leanpath_sha256": "e5df22ad841fc0cd47d95d263a7474538920e32193e5fb3488184439bb8f931f",
-  "note": "Resolved-symlink mirror of the published first prefix (common-experiment/ce9b/int/olean) without its root olean, plus the five new module oleans and the recompiled root olean, placed first in LEAN_PATH."
+  "note": "Resolved-symlink mirror of the published first prefix (common-experiment/ce9b/int/olean) without its root olean, plus the five new module oleans and the recompiled root olean, placed first in LEAN_PATH.",
+  "fix_pass_1": {
+   "own_prefix": "/tmp/bc-arc-scratch/items45/A/fix1/olean",
+   "own_leanpath": "/tmp/bc-arc-scratch/items45/A/fix1/leanpath",
+   "own_leanpath_sha256": "923f51007d3b0775468289adbef90849e96f055f92a62c97e413b4f48e2a51ee",
+   "mirror_script": "/tmp/bc-arc-scratch/items45/A/fix1/mirror.py",
+   "mirror_log": "source /tmp/bc-arc-scratch/items45/A/olean links 1677 skipped 2 broken 0",
+   "note": "Resolved-symlink mirror of items45/A/olean without the root olean and the CtxProgramBounds olean, plus the recompiled CtxProgramBounds olean and root olean, placed first in front of the unchanged remainder of items45/A/leanpath (the published LEAN_PATH of central 80560f92). items45/A/olean is left as the earlier checks recorded it."
+  }
  },
  "inventory": {
   "rows_added": 5,
@@ -774,6 +854,17 @@
   "recount_log": "handwritten-lean count unchanged (1645)",
   "rehash_log": "proofs/lean/BeaconcryptCore.lean: unchanged\nproofs/trusted-boundary.md: unchanged\nproofs/check-inventory.sh: unchanged\nproofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxNoRefusal.lean: unchanged\nproofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftSeedScope.lean: unchanged\nproofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChildPolicy.lean: unchanged\nproofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftPrefixPolicy.lean: unchanged\nproofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxProgramBounds.lean: unchanged",
   "focused_check_inventory": {
+   "command": "coord.sh lease mem claude @nix items45A-fix1-inventory --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C /tmp/beaconcrypt-deployment-record-a/beaconcrypt-core check-inventory SHELL=bash",
+   "log": "/tmp/bc-arc-scratch/items45/A/fix1/logs/inventory-f1.log",
+   "log_sha256": "3797de29a35ca340e2d3a7566fbd28d39a3250c77fb29e6576c2407f057a16ab",
+   "exit": 0,
+   "commit": "b9f8e5bf6e62de945abf88b175c688eb5079e91b",
+   "start": "2026-10-08T07:05:51Z",
+   "end": "2026-10-08T07:07:13Z",
+   "worktree_dirt_before_and_after": "none",
+   "last_line": "Formal-verification inventory matches the reviewed boundary."
+  },
+  "earlier_focused_check_inventory": {
    "command": "coord.sh lease mem claude @nix items45A-inventory --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C /tmp/beaconcrypt-deployment-record-a/beaconcrypt-core check-inventory SHELL=bash",
    "log": "/tmp/bc-arc-scratch/items45/A/logs/inventory-r1.log",
    "log_sha256": "ab6892ff95469753806050897ea5ddf8b17095d7d085e145784c4340fd5ec1da",
@@ -782,21 +873,26 @@
    "start": "2026-10-08T06:40:06Z",
    "end": "2026-10-08T06:41:28Z",
    "last_line": "Formal-verification inventory matches the reviewed boundary."
-  }
+  },
+  "fix_pass_1_recount_log": "handwritten-lean count unchanged (1645)",
+  "fix_pass_1_rehash_log": "proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxNoRefusal.lean: unchanged\nproofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftSeedScope.lean: unchanged\nproofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChildPolicy.lean: unchanged\nproofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftPrefixPolicy.lean: unchanged\nproofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxProgramBounds.lean: 975412ec828f -> 77915f22da50"
  },
  "h7_scan": {
-  "tool": "/tmp/bc-arc-scratch/items45/A/tools/h7scan.py",
+  "tool": "/tmp/bc-arc-scratch/items45/A/fix1/tools/h7scan.py",
   "result": {
+   "version": 2,
+   "case_insensitive": true,
    "forbidden_names": [
     "PqxdhCorrelatedExtractFamily",
+    "CorrelatedExtract",
     "jointKdfView",
     "fixedHkdfSha512JointStream",
+    "IsFixedHkdf",
     "productionHiddenRoot",
+    "hiddenRoot",
     "rootResponse",
-    "hiddenRootShared",
     "PqxdhJointDhExtractFamily",
-    "GapDh",
-    "gapDh"
+    "GapDh"
    ],
    "informational_patterns": [
     "\\b[Rr]eveal",
@@ -839,7 +935,73 @@
     }
    }
   },
-  "note": "No forbidden name occurs. ChildPolicy uses PqxdhJointKdf.productionStream at PqxdhJointKdfGame.FixedHkdfDomain.ratchet.address of the hidden parent (the real HKDF derivation), exactly as the published GlobalCut and ChildRelay do; this is not a random table."
+  "note": "Version 2 of the source scan matches every forbidden pattern case-insensitively (version 1 was case-sensitive and would have missed capitalized forms such as FixedHkdfSha512JointStreamSpec, IsFixedHkdfSha512*Query or JointKdfViewQuery); a self-test file with those three forms fails it. No forbidden name occurs in the five modules. ChildPolicy uses PqxdhJointKdf.productionStream at PqxdhJointKdfGame.FixedHkdfDomain.ratchet.address of the hidden parent (the real HKDF derivation), exactly as the published GlobalMask (interpreter_realization) and GlobalCut do; ChildRelay.unused_source is parametric in the child value. This is not a random table.",
+  "earlier": {
+   "tool": "/tmp/bc-arc-scratch/items45/A/tools/h7scan.py",
+   "result": {
+    "forbidden_names": [
+     "PqxdhCorrelatedExtractFamily",
+     "jointKdfView",
+     "fixedHkdfSha512JointStream",
+     "productionHiddenRoot",
+     "rootResponse",
+     "hiddenRootShared",
+     "PqxdhJointDhExtractFamily",
+     "GapDh",
+     "gapDh"
+    ],
+    "informational_patterns": [
+     "\\b[Rr]eveal",
+     "RawCtxProtocolRoles",
+     "FixedHkdfSha512NoSaltSource",
+     "FixedHkdfDomain",
+     "productionStream"
+    ],
+    "files": {
+     "PqxdhRecordLiftCtxNoRefusal.lean": {
+      "forbidden_hits": {},
+      "informational": {}
+     },
+     "PqxdhRecordLiftSeedScope.lean": {
+      "forbidden_hits": {},
+      "informational": {}
+     },
+     "PqxdhRecordLiftChildPolicy.lean": {
+      "forbidden_hits": {},
+      "informational": {
+       "FixedHkdfDomain": [
+        77,
+        260,
+        326
+       ],
+       "productionStream": [
+        76,
+        259,
+        325
+       ]
+      }
+     },
+     "PqxdhRecordLiftPrefixPolicy.lean": {
+      "forbidden_hits": {},
+      "informational": {}
+     },
+     "PqxdhRecordLiftCtxProgramBounds.lean": {
+      "forbidden_hits": {},
+      "informational": {}
+     }
+    }
+   }
+  },
+  "tool_sha256": "035f137d5769ddc9561a9422a4232c4d45d5a5d2724766a7654c76deb7240c0f",
+  "selftest": {
+   "file": "/tmp/bc-arc-scratch/items45/A/fix1/h7-selftest.txt",
+   "exit": 1,
+   "hits": [
+    "fixedHkdfSha512JointStream",
+    "jointKdfView",
+    "IsFixedHkdf"
+   ]
+  }
  },
  "guard_scan": {
   "tool": "/tmp/bc-arc-scratch/items45/A/tools/guards.py",
@@ -852,23 +1014,151 @@
   ],
   "note": "Every theorem has exactly one exact #guard_msgs/#print axioms guard; the Lean checks exit 0, so every guard matched; no sorry, admit or axiom declaration."
  },
- "diff_check": "git diff --check 80560f92..HEAD: clean",
+ "diff_check": "git diff --check 80560f92..b9f8e5bf: clean",
  "not_run": [
   "transcript-fidelity cargo test (integration-time check, PROTOCOL section 6)",
   "make verify, full lake build, mutation testing (forbidden for this task)"
  ],
  "trust_boundary": "No new axiom, assumption or contract; no existing module changed; doc/composition-assumptions.md and trusted-boundary.md unchanged.",
  "reviews": {
-  "status": "pending",
-  "required": [
-   "Independent semantic review of all five modules by a Claude reviewer that wrote none of the adapted code (takeover plan R2), per review_needed of each module",
-   "Publication-hygiene review (guards, inventory, guides, analysis prose)"
+  "status": "completed on ac0136be; findings addressed in fix_pass_1; confirmation pending",
+  "semantic": {
+   "reviewer": "Claude semantic reviewer that wrote none of the adapted code (takeover plan R2)",
+   "scratch": "/tmp/bc-arc-scratch/items45/A/review-semantic",
+   "findings": 7
+  },
+  "hygiene": {
+   "reviewer": "Claude hygiene sub-agent that wrote none of the code",
+   "scratch": "/tmp/bc-arc-scratch/items45/A/review-hygiene",
+   "checks": "/tmp/bc-arc-scratch/items45/A/review-hygiene/checks.json",
+   "checks_sha256": "d6b50ea489eb831953385b90b92749052d232614a4b38db33ed186449b3d698b",
+   "findings": 5
+  },
+  "required_before_integration": [
+   "Confirmation of fix_pass_1 by an independent reviewer",
+   "Integration preconditions of PROTOCOL section 6 (transcript fidelity, merge of central, LEAN_PATH file)"
   ]
  },
  "remaining": [
   "Adjacent hybrid step (increment B: compose GlobalCut.observed_bound, PrefixPolicy and ChildPolicy; discharge Good at the sampled cut from SourcePrefix/Availability; charge the child draw)",
   "Seed-level analogue (W6 SeedRelay, SeedPolicy)",
   "Telescope, alias/refusal terms, chain_lift",
-  "Program-level transport of the CTX per-operation bills into Budget fields; ctx_lift; record_lift; origin; hiding; R6"
- ]
+  "Program-level transport of the CTX per-operation bills into Budget fields; ctx_lift; record_lift; origin; hiding; R6",
+  "For R6 and later H-7 checks: the Setup-type DH dependency is structural only, so the closure guard checks use, not presence."
+ ],
+ "h7_closure_guard": {
+  "tool": "/tmp/bc-arc-scratch/items45/A/fix1/tools/H7Closure.lean",
+  "tool_sha256": "b5d3c1216c80ad99bc6abb863ad76fe12bc32bd36834fac69c62371db4690127",
+  "adapted_from": "/tmp/bc-arc-scratch/items45/A/review-semantic/H7Closure.lean (increment-A semantic review probe)",
+  "command": "coord.sh lean claude items45A-fix1-h7guard -- timeout 180 lean -j1 -M8000 /tmp/bc-arc-scratch/items45/A/fix1/tools/H7Closure.lean (LEAN_PATH = /tmp/bc-arc-scratch/items45/A/fix1/leanpath)",
+  "exit": 0,
+  "log": "/tmp/bc-arc-scratch/items45/A/fix1/logs/dev-h7guard-090409.log",
+  "log_sha256": "81358bd5126e5a950d91b25f2f975da0f11e007ea004b24e882bc265d57ea412",
+  "result": "H-7 guard: modules 5; declared constants 250; closure 26179; direct forbidden uses 0; closure violations 0; classified structural constants 12 of 12",
+  "negative_test": {
+   "tool": "/tmp/bc-arc-scratch/items45/A/fix1/tools/H7ClosureNegative.lean",
+   "note": "the same guard with \"operationbill\" added to the forbidden list; it must fail",
+   "exit": 1,
+   "log": "/tmp/bc-arc-scratch/items45/A/fix1/logs/dev-h7guard-negative-090746.log",
+   "log_sha256": "96b557b682681b0bce19d5ee4c0a190ced5a8ab54402b56463ad3bfb99d354d8"
+  },
+  "note": "Meta-level constant-dependency guard invited by H-7: fails (Lean error) on any direct use of a forbidden name by the 250 constants declared in the five modules, or on any forbidden name in their 26,179-constant transitive closure other than twelve exactly listed constants of the functional DH interface (PqxdhJointGapDh.{DhInterface,DhInterface.mk,DhInterface.dh,ScalarBytes,sourceScalarDh,sourceInterface,zeroDh} and auxiliaries, PqxdhPhase2GapDhSource.PublicDomain{,.mk}). Those are reached structurally through the field type PqxdhServerAuthExperiment.Setup.beaconDomain of the setup parameter that every record-lift module already has; they are not a Gap-DH game or assumption. Matching is case-insensitive; the list also covers sorryAx, RawCtxProtocolRoles, reveal, PqxdhDeploymentIdealKeys/Headlines, PqxdhLaterChallengeMarked, SelectedFirstRecord and FirstRecordConfidentiality. For R6, the Setup-type DH dependency is structural only, so the check is on use, not presence."
+ },
+ "fix_pass_1": {
+  "date_utc": "2026-10-08T07:08:43.040422+00:00",
+  "reviewed_tip": "ac0136be1ce9a9c56e453539e692c86a77d61519",
+  "commits": [
+   "b6a0e5c8 Rename the record-lift CTX operation bill",
+   "b9f8e5bf Correct the record-lift increment A prose",
+   "the commit that records this receipt"
+  ],
+  "scratch": "/tmp/bc-arc-scratch/items45/A/fix1",
+  "findings": [
+   {
+    "id": "semantic-1",
+    "severity": "minor",
+    "title": "The FVA list of statements without Classical.choice leaves out ChildPolicy.coin_lazy",
+    "outcome": "fixed",
+    "change": "FVA parenthetical now names seven statements (six weighted_* lemmas and ChildPolicy.coin_lazy); the child-policy guide validation status states the exact split (b9f8e5bf)."
+   },
+   {
+    "id": "semantic-2",
+    "severity": "minor",
+    "title": "The FVA no-refusal paragraph names the wrong premise",
+    "outcome": "fixed",
+    "change": "FVA: program_reduction_no_refusal holds for every fixed selected key and does not show uniformity or hiding (a later step); its only hypotheses are parentIdeal and unused (b9f8e5bf)."
+   },
+   {
+    "id": "semantic-3",
+    "severity": "nit",
+    "title": "FVA ChildPolicy paragraph describes a lazy draw and leaves out one premise",
+    "outcome": "fixed",
+    "change": "FVA: child drawn up front (by ChildRelay.deferred_source, equivalently at first use and reused); the availability lower bound start direction <= position is listed among the assumptions (b9f8e5bf)."
+   },
+   {
+    "id": "semantic-4",
+    "severity": "nit",
+    "title": "CtxProgramBounds.recordCost has the same name as the opened PqxdhRecordLiftBudget.recordCost",
+    "outcome": "fixed",
+    "change": "Renamed operationBill with a docstring; statements are the same propositions; guide updated; module rechecked and rehashed (b6a0e5c8)."
+   },
+   {
+    "id": "semantic-5",
+    "severity": "nit",
+    "title": "The receipt calls the WIP preservation branch local, but it is on origin",
+    "outcome": "fixed",
+    "change": "Every wip_preserved_copy now says pushed to origin and records the deviation from takeover plan S0 (this receipt)."
+   },
+   {
+    "id": "semantic-6",
+    "severity": "nit",
+    "title": "The H-7 scan tool matches case-sensitively",
+    "outcome": "fixed",
+    "change": "h7scan.py version 2 is case-insensitive (self-test with capitalized forms fails it); the transitive probe is adopted as the H-7 closure guard (h7_closure_guard, with a negative test); FVA records the closure check (b9f8e5bf)."
+   },
+   {
+    "id": "semantic-7",
+    "severity": "nit",
+    "title": "For information: what the review confirmed",
+    "outcome": "no_change_needed",
+    "change": "None."
+   },
+   {
+    "id": "hygiene-1",
+    "severity": "minor",
+    "title": "Analysis prose undercounts the statements that do not use Classical.choice",
+    "outcome": "fixed",
+    "change": "Same change as semantic-1; the W3 guide now gives the exact split as the W5 guide does (b9f8e5bf)."
+   },
+   {
+    "id": "hygiene-2",
+    "severity": "nit",
+    "title": "Receipt calls the salvage branch 'local' although it is on origin",
+    "outcome": "fixed",
+    "change": "Same change as semantic-5 (this receipt)."
+   },
+   {
+    "id": "hygiene-3",
+    "severity": "nit",
+    "title": "W3 guide and receipt say ChildRelay uses the real HKDF derivation",
+    "outcome": "fixed",
+    "change": "Guide (b9f8e5bf) and h7_scan.note (this receipt) credit GlobalMask (interpreter_realization) and GlobalCut."
+   },
+   {
+    "id": "hygiene-4",
+    "severity": "nit",
+    "title": "W4 guide provenance credits all of the first five paragraphs to Codex",
+    "outcome": "fixed",
+    "change": "Provenance adds: except that Claude named the two sampled-prefix endpoints in the fourth paragraph (b9f8e5bf)."
+   },
+   {
+    "id": "hygiene-5",
+    "severity": "nit",
+    "title": "W1 commit body quotes Codex's footer string mid-paragraph",
+    "outcome": "no_change_needed",
+    "change": "39383f1e is pushed and amending is forbidden, so it stays; the fix-pass commit bodies name Codex authorship without the footer token (git log --grep over 80560f92..HEAD matches only 39383f1e)."
+   }
+  ],
+  "statements_changed": "Only the four CtxProgramBounds statements opaque_send, opaque_receive, kernel_send and kernel_receive changed text, by replacing the constant recordCost with operationBill, whose body is identical; each is the same proposition as before. No other statement, name or guard changed."
+ }
 }
