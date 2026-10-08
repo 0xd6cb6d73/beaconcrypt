@@ -9,10 +9,10 @@ Built by Claude on branch `codex/deployment-record-world` (worktree `/tmp/beacon
 | Target | Module | State |
 | --- | --- | --- |
 | `RecordAuthLiftTarget` (integrity `record_lift`) | `PqxdhRecordLiftComposition` | proved (`record_auth_lift`) |
-| `RecordLiftTarget`, `CtxLiftTarget` | `PqxdhRecordLiftComposition` | proved with the privacy half as a hypothesis parameter (`record_lift_of_priv`, `ctx_lift_of_priv`); for observation mode O, the Boolean bound without that hypothesis (`record_lift_O`; no event form or bills conjunct) |
+| `RecordLiftTarget`, `CtxLiftTarget` | `PqxdhRecordLiftComposition` | proved with the privacy half as a hypothesis parameter (`record_lift_of_priv`, `ctx_lift_of_priv`); for observation mode O, the Boolean bound without that hypothesis (`record_lift_O`; no event form or bills conjunct). Later proved without the privacy-half hypothesis by the facts track (`PqxdhRecordLift.record_lift`, `ctx_lift`; `RecordLiftTarget` keeps its own `SourceFullCorrect` premise; guide `doc/impl/record-lift-facts.md`) |
 | `HidingStatement` | `PqxdhRecordLiftHiding` | proved (`idealRecords_hiding`; `hiding_replace` for two replacements) |
-| `FreshGuessStatement`, `LorStatement` | planned, on an adversary-level form of the hiding coupling | open (not found false by reading; see Remaining work) |
-| `OriginStatement`, `BindingStatement` | planned | open (not found false by reading; see Remaining work) |
+| `FreshGuessStatement`, `LorStatement` | planned, on an adversary-level form of the hiding coupling | open here; later proved by the facts track (`PqxdhRecordLiftFresh.idealRecords_fresh`, `PqxdhRecordLiftLor.idealRecords_lor`; guide `doc/impl/record-lift-facts.md`) |
+| `OriginStatement`, `BindingStatement` | planned | open (not found false by reading; see Remaining work and the facts track's plan in `doc/impl/record-lift-facts.md`) |
 
 ## `PqxdhRecordLiftComposition` (7 guarded theorems)
 
