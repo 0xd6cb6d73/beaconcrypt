@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1675
+	[handwritten-lean]=1676
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -34520,6 +34520,33 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem erase_ideal([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealErase theorem erase_ideal"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealErase\.erase_idealGame$' "$selected_source_module" "PqxdhDeploymentIdealErase dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealErase.erase_idealGame"
 require_line_count 1 '^theorem erase_idealGame([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealErase theorem erase_idealGame"
+
+# CE-11b U2: the first-touch split of the ideal registration (represent_split instance, seed relocation, ideal_to_splitX).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealKeys.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentIdealKeys$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentIdealKeys root import"
+require_line_count 10 '^theorem ' "$selected_source_module" "PqxdhDeploymentIdealKeys theorem inventory"
+require_line_count 10 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentIdealKeys guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealKeys\.slotCore_moveSeeds$' "$selected_source_module" "PqxdhDeploymentIdealKeys dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealKeys.slotCore_moveSeeds"
+require_line_count 1 '^theorem slotCore_moveSeeds([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealKeys theorem slotCore_moveSeeds"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealKeys\.onBase_seedFrame$' "$selected_source_module" "PqxdhDeploymentIdealKeys dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealKeys.onBase_seedFrame"
+require_line_count 1 '^theorem onBase_seedFrame([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealKeys theorem onBase_seedFrame"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealKeys\.realRegAt_seedFrame$' "$selected_source_module" "PqxdhDeploymentIdealKeys dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealKeys.realRegAt_seedFrame"
+require_line_count 1 '^theorem realRegAt_seedFrame([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealKeys theorem realRegAt_seedFrame"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealKeys\.idealProg_seedFrame$' "$selected_source_module" "PqxdhDeploymentIdealKeys dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealKeys.idealProg_seedFrame"
+require_line_count 1 '^theorem idealProg_seedFrame([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealKeys theorem idealProg_seedFrame"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealKeys\.fixed_moveSeeds$' "$selected_source_module" "PqxdhDeploymentIdealKeys dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealKeys.fixed_moveSeeds"
+require_line_count 1 '^theorem fixed_moveSeeds([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealKeys theorem fixed_moveSeeds"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealKeys\.game_moveSeeds$' "$selected_source_module" "PqxdhDeploymentIdealKeys dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealKeys.game_moveSeeds"
+require_line_count 1 '^theorem game_moveSeeds([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealKeys theorem game_moveSeeds"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealKeys\.outcomeMap_comp$' "$selected_source_module" "PqxdhDeploymentIdealKeys dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealKeys.outcomeMap_comp"
+require_line_count 1 '^theorem outcomeMap_comp([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealKeys theorem outcomeMap_comp"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealKeys\.represent_ideal$' "$selected_source_module" "PqxdhDeploymentIdealKeys dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealKeys.represent_ideal"
+require_line_count 1 '^theorem represent_ideal([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealKeys theorem represent_ideal"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealKeys\.seed_move$' "$selected_source_module" "PqxdhDeploymentIdealKeys dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealKeys.seed_move"
+require_line_count 1 '^theorem seed_move([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealKeys theorem seed_move"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealKeys\.ideal_to_splitX$' "$selected_source_module" "PqxdhDeploymentIdealKeys dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealKeys.ideal_to_splitX"
+require_line_count 1 '^theorem ideal_to_splitX([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealKeys theorem ideal_to_splitX"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"

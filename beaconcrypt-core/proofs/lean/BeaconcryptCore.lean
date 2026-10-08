@@ -1802,6 +1802,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps
 
 import BeaconcryptCore.Computational.PqxdhDeploymentIdealErase
 
+import BeaconcryptCore.Computational.PqxdhDeploymentIdealKeys
+
 /-!
 # Beaconcrypt-core verification root
 
