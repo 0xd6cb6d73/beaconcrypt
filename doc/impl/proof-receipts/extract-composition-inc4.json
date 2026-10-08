@@ -1,6 +1,6 @@
 {
- "date": "2026-10-08T06:51:36.442264+00:00",
- "scope": "Handoff item 2, increment 4: stage T (at most two hidden reads; PqxdhRegistrationJointBeaconFinishOnce*), the first part of stage S5 (theorem T8, PqxdhRegistrationJointKemKeyTransfer) and stage S6 (the ideal-key branch with the message key first or last, PqxdhRegistrationJointKemKeyFirst) of the extract-design plan. Stage S8 and the bills companion T8b of S5 are not built.",
+ "date": "2026-10-08T07:02:19.083516+00:00",
+ "scope": "Handoff item 2, increment 4: stage T (at most two hidden reads; PqxdhRegistrationJointBeaconFinishOnce*), the first part of stage S5 (theorem T8, PqxdhRegistrationJointKemKeyTransfer) and stage S6 (the ideal-key branch with the message key first or last, PqxdhRegistrationJointKemKeyFirst) of the extract-design plan. Stage S8 and the second part of stage S5 (theorem T8b), built after the first issue of this receipt, are in the receipt extract-composition-inc4-s8.json. scope_at_first_issue keeps the scope sentence of the first issue.",
  "basis": "fa8d9a54d8a9c956f2e99a08a0e6c91a4a7415a6",
  "topic": {
   "branch": "claude/extract-composition",
@@ -12,7 +12,8 @@
   "snapshot": "doc/impl/extract-composition-plan.md",
   "stages": "T, S5 (first part: T8), S6; sections 3, 5, 9, 11, 13, 17, 21, 22",
   "sha256_review_fixes": "89258e03473c9c677758c4e38c40401752e4bf9dd07c837bf506ba2109c58e0e",
-  "note": "sha256 is the plan at the first issue of this receipt (section 22 added); sha256_review_fixes is the plan after the review fixes of b86df5eb (section 23, note 7; pre-edit copy inc4/fix1/plan.pre-review.md, SHA-256 4132816d0546af984eb43217852e911be66f95a178be55704ba3d2ba98074a2a). No owner decision, statement or assumption of the plan changed."
+  "note": "sha256 is the plan at the first issue of this receipt (section 22 added); sha256_review_fixes is the plan after the review fixes of b86df5eb (section 23, note 7; pre-edit copy inc4/fix1/plan.pre-review.md, SHA-256 4132816d0546af984eb43217852e911be66f95a178be55704ba3d2ba98074a2a); sha256_confirming_review is the plan after the confirming review of 7f795e19 (section 23, note 8; pre-edit copy inc4-int/plan.pre-int.md, SHA-256 89258e03473c9c677758c4e38c40401752e4bf9dd07c837bf506ba2109c58e0e). No owner decision, statement or assumption of the plan changed.",
+  "sha256_confirming_review": "f3e4ad132cace78e69978eaa13fdaeb6c3a7b796bbc34bc948c93217fbb02433"
  },
  "commits": [
   {
@@ -674,14 +675,14 @@
  "contracts_used": "None new. Stage T: no premise. The two-slot restatements: as the restated statements (certified for the S1c term, SourceFullCorrect setup.source setup.hmac). T8 and its variants: T5's premises (FunctionalDecapsulation, shortRejects with setup.wiring, certified, capacity) and SourceFullCorrect; the first item 2 term holds only under the R1 random-oracle model of the zero-key 192-byte Extract slice.",
  "headline_bound": "T8: P[Decided and GoodKem and Protected] <= P[decision in idealKeysBranch] + ofReal(IND-CCA advantage + KEM correctness error) + sum over targets of joint EUF advantages + ofReal(idealKeysLoss), idealKeysLoss = (qAccept + qFinish + qHmac)/2^256 + sum over slot < 2 of AdvPRF(indexedReduction setup.hmac rootClient slot) + keyScheduleBound source hmac entryD. One-sided; no test query; not a secrecy theorem.",
  "not_proved": [
-  "Central integration (and a confirming review of the review fixes if requested).",
+  "Central integration: the merge of central into the branch and the fast-forward of central (coordination protocol section 6) follow the documentation-only commit that re-issues this receipt.",
   "A key-last form in the firstPrepare/firstIdeal shape (the key after the prechallenge context): it would need entryD split into sharedStart and a continuation; not built; CE-11b plans its own key-first and key-last forms of CE.idealGame g.",
   "The module documentation of the integrated modules PqxdhRegistrationJointKemIdealKeys and PqxdhRegistrationJointKemSecondEntry (and the docstring of opaqueBranch_allIdeal) still describes stage T as not built; they are frozen on central (coordination protocol section 3) and the guide records it.",
   "Stage S8 and T8b are in the receipt extract-composition-inc4-s8.json."
  ],
- "re_estimate": "T (increment-3 re-estimate 3-6 agent-days), T8 and S6 (1-2) were built in one working session. Remaining: 5.5-10 agent-days: S8 4-7, T8b 0.5-1, reviews and integration 1-2.",
+ "re_estimate": "After the confirming review of 7f795e19: every stage of the plan (section 9, including the optional stages T and S7) is built and reviewed; remaining item 2 work is the merge of central into the branch and the integration (coordination protocol section 6), under a day. This is the registration segment of handoff item 2 (plan section 14). re_estimate_at_first_issue keeps the re-estimate of the first issue.",
  "checks_not_run": "No lake build, make verify, nix-collect-garbage, mutation testing, ProVerif, Rust or transcript-fidelity run; no production Rust or ProVerif change.",
- "review": "Independently reviewed at b86df5eb (the whole of increment 4: this receipt and extract-composition-inc4-s8.json) by a semantic review and a hygiene review: three minor findings and seven nits, one of them a record of the independent checks that needs no action. All are fixed in the review-fix commit that follows b86df5eb (review_fixes); it changes no Lean statement and adds no theorem, assumption or contract. Not integrated into central.",
+ "review": "Independently reviewed at b86df5eb (the whole of increment 4: this receipt and extract-composition-inc4-s8.json) by a semantic review and a hygiene review: three minor findings and seven nits, one of them a record of the independent checks that needs no action. All are fixed in the review-fix commit 7f795e19 (review_fixes); it changes no Lean statement and adds no theorem, assumption or contract. The confirming review of 7f795e19 checked the ten findings independently, found all resolved, the statements unchanged and both receipts matching the commit, and approved with documentation nits (confirming_review_fixes), fixed in the documentation-only commit that re-issues this receipt; it changes no Lean file. Integration into central follows (merge of central into the branch, coordination protocol section 6).",
  "date_first_issue": "2026-10-08T05:24:36.426913+00:00",
  "reviewed_commit": "b86df5ebe8e447ca407cd73c0c9de7b724480839",
  "commits_note_review": "The semantic and hygiene reviews covered b86df5eb, the tip after the documentation commit dd08851b, the stage S8 and T8b commits e8fc0935 and 25ccaa90 (receipt extract-composition-inc4-s8.json) and the documentation commit b86df5eb. The review-fix commit that re-issues this receipt follows b86df5eb.",
@@ -749,5 +750,33 @@
   "Nit, record of the independent checks (semantic review): no action.",
   "Nit, increment-3 analysis paragraph (hygiene review): same fix as the second item."
  ],
- "statements_changed_review_fixes": "None. PqxdhRegistrationJointKemKeyFirst: module documentation and the docstrings of keyLastBranch and idealKeys_key_last only; definitions, statements, proofs and guards unchanged (exact_statements re-verified against the source)."
+ "statements_changed_review_fixes": "None. PqxdhRegistrationJointKemKeyFirst: module documentation and the docstrings of keyLastBranch and idealKeys_key_last only; definitions, statements, proofs and guards unchanged (exact_statements re-verified against the source).",
+ "scope_at_first_issue": "Handoff item 2, increment 4: stage T (at most two hidden reads; PqxdhRegistrationJointBeaconFinishOnce*), the first part of stage S5 (theorem T8, PqxdhRegistrationJointKemKeyTransfer) and stage S6 (the ideal-key branch with the message key first or last, PqxdhRegistrationJointKemKeyFirst) of the extract-design plan. Stage S8 and the bills companion T8b of S5 are not built.",
+ "re_estimate_at_first_issue": "T (increment-3 re-estimate 3-6 agent-days), T8 and S6 (1-2) were built in one working session. Remaining: 5.5-10 agent-days: S8 4-7, T8b 0.5-1, reviews and integration 1-2.",
+ "confirming_review_commit": "7f795e19db625d3d57e093b18448be15d92021e1",
+ "files_sha256_confirming_review": {
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointBeaconFinishOnceTools.lean": "1cf51295b06170474fa63fb21c48725ee379a55ae810f2b04d7f8281af86f7e5",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointBeaconFinishOnceOwners.lean": "22e576f50663276f8fc20706b758d86d5d1fbfa0e732e8451dfa6e327f655e10",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointBeaconFinishOnceRouter.lean": "1bb2348126f6203ffaab21ec51b27c70fce5dfb2994da0d0bf51200ebbb301f4",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointBeaconFinishOnceMarked.lean": "4f1678751314db9c030fb60e3b0a57289cd4e8c13eb27437b67c24804daec1f6",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointBeaconFinishOncePost.lean": "664f1505561caa3c9f85fbc3a469ab039d5deb45f9b6568450f3edba82c0b091",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointBeaconFinishOncePrefix.lean": "a3ec709d08d9f998eaddc0a9cb0995e788899a7c30d2420402552cfabada94eb",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointBeaconFinishOnce.lean": "f8dc742daf60490f620fb54c49754c7a7d0761e3c5f25b2788439a7722300f3a",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemKeyTransfer.lean": "be3fe12db05d03c0f330d2a4839498e6ee8f03064a6696a0dbbd2c145779c211",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemKeyFirst.lean": "b6b38ca961349c6e28da51fd07dea88268690c67665a5c333ce94aa2129cf02a",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "c761701d0e0b1810f9a296517efbc717cc913c10991184e5ed3e86fa9087b4fe",
+  "beaconcrypt-core/proofs/check-inventory.sh": "d7c560ea2c86c1d58b5ca6cf75c8c41cecc141a873bd79b9d187d593346d80ce",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "ab66803fd31b2d6a6e80dfe484c52c9f4bf1a1f5115e82298503382959b9a381",
+  "beaconcrypt-core/proofs/trusted-boundary.md": "bf09950c7347e42a1161c077a36bc8c8083d1c9f99adcac828d176e80be7fb49",
+  "doc/impl/extract-composition.md": "3e47d0ce0a99cb6fdf3510001a45201f1f748720b7eea137c0cbb836513a3ad3",
+  "doc/impl/extract-composition-plan.md": "8ac5aa93de830bb52904c4dae4842f21ea7ce137814db95ce8ab00f95fc2ca95",
+  "doc/formal-verification-analysis.md": "281c02d3a27153962d68adad0622a774f532638504219ea46f6462c8cd9a0b15",
+  "doc/composition-assumptions.md": "52722094744ffd9346173baef51d6c68db7a502c6c0d36b8e60df8a826955630"
+ },
+ "plan_snapshot_refresh": "doc/impl/extract-composition-plan.md refreshed from the scratch plan after the confirming review of 7f795e19 (section 23, note 8; header: SHA-256 and the refresh list); pre-edit copy /tmp/bc-arc-scratch/extract-design/inc4-int/plan.pre-int.md.",
+ "confirming_review_fixes": [
+  "Optional, receipts keep first-issue text: extract-composition-inc4.json keeps its first-issue scope and re-estimate in scope_at_first_issue and re_estimate_at_first_issue; its scope now says that stage S8 and T8b are in extract-composition-inc4-s8.json. extract-composition-inc4-s8.json keeps its first-issue re-estimate in re_estimate_at_first_issue. Both re_estimate fields give the remaining work after the confirming review. The S8 receipt gains plan.sha256_review_fixes (the plan after the review fixes, as in this receipt) and both gain plan.sha256_confirming_review.",
+  "Guide status line: \"a comment of check-inventory.sh\" now reads \"two section comments of check-inventory.sh\" (the stage S6 and the stage S5 first-part blocks); the status paragraph also names the confirming review and the integration step; new guide section \"Increment 4: confirming review\"; plan section 23, note 8, and the snapshot refresh.",
+  "Record of the confirming review (all ten findings resolved, statements unchanged, receipts match the commit): no action."
+ ]
 }
