@@ -1743,6 +1743,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentEnvironment
 
 import BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentJoin
 
+import BeaconcryptCore.Computational.PqxdhDeploymentSplitFactor
+
 /-!
 # Beaconcrypt-core verification root
 

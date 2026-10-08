@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1638
+	[handwritten-lean]=1639
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -32859,6 +32859,57 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem toy_splits([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEnvironmentJoin theorem toy_splits"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentEnvironmentJoin\.toy_join$' "$selected_source_module" "PqxdhDeploymentEnvironmentJoin dependency BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentJoin.toy_join"
 require_line_count 1 '^theorem toy_join([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentEnvironmentJoin theorem toy_join"
+
+# CE-11a increment 4: factoring of the environment's split hidden wrappers against the CE-side split forms.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentSplitFactor.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentSplitFactor$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentSplitFactor root import"
+require_line_count 22 '^theorem ' "$selected_source_module" "PqxdhDeploymentSplitFactor theorem inventory"
+require_line_count 22 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentSplitFactor guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSplitFactor\.continueRust_simulateQ$' "$selected_source_module" "PqxdhDeploymentSplitFactor dependency BeaconcryptCore.Computational.PqxdhDeploymentSplitFactor.continueRust_simulateQ"
+require_line_count 1 '^theorem continueRust_simulateQ([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSplitFactor theorem continueRust_simulateQ"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSplitFactor\.afterInitialization_simulateQ$' "$selected_source_module" "PqxdhDeploymentSplitFactor dependency BeaconcryptCore.Computational.PqxdhDeploymentSplitFactor.afterInitialization_simulateQ"
+require_line_count 1 '^theorem afterInitialization_simulateQ([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSplitFactor theorem afterInitialization_simulateQ"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSplitFactor\.candidate_simulateQ$' "$selected_source_module" "PqxdhDeploymentSplitFactor dependency BeaconcryptCore.Computational.PqxdhDeploymentSplitFactor.candidate_simulateQ"
+require_line_count 1 '^theorem candidate_simulateQ([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSplitFactor theorem candidate_simulateQ"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSplitFactor\.genericBuild_simulateQ$' "$selected_source_module" "PqxdhDeploymentSplitFactor dependency BeaconcryptCore.Computational.PqxdhDeploymentSplitFactor.genericBuild_simulateQ"
+require_line_count 1 '^theorem genericBuild_simulateQ([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSplitFactor theorem genericBuild_simulateQ"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSplitFactor\.sendLabels_simulateQ$' "$selected_source_module" "PqxdhDeploymentSplitFactor dependency BeaconcryptCore.Computational.PqxdhDeploymentSplitFactor.sendLabels_simulateQ"
+require_line_count 1 '^theorem sendLabels_simulateQ([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSplitFactor theorem sendLabels_simulateQ"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSplitFactor\.factored_simulateQ$' "$selected_source_module" "PqxdhDeploymentSplitFactor dependency BeaconcryptCore.Computational.PqxdhDeploymentSplitFactor.factored_simulateQ"
+require_line_count 1 '^theorem factored_simulateQ([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSplitFactor theorem factored_simulateQ"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSplitFactor\.factored_free$' "$selected_source_module" "PqxdhDeploymentSplitFactor dependency BeaconcryptCore.Computational.PqxdhDeploymentSplitFactor.factored_free"
+require_line_count 1 '^theorem factored_free([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSplitFactor theorem factored_free"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSplitFactor\.buildFactor_free$' "$selected_source_module" "PqxdhDeploymentSplitFactor dependency BeaconcryptCore.Computational.PqxdhDeploymentSplitFactor.buildFactor_free"
+require_line_count 1 '^theorem buildFactor_free([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSplitFactor theorem buildFactor_free"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSplitFactor\.buildSplitFwd_free$' "$selected_source_module" "PqxdhDeploymentSplitFactor dependency BeaconcryptCore.Computational.PqxdhDeploymentSplitFactor.buildSplitFwd_free"
+require_line_count 1 '^theorem buildSplitFwd_free([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSplitFactor theorem buildSplitFwd_free"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSplitFactor\.buildSplit_factor$' "$selected_source_module" "PqxdhDeploymentSplitFactor dependency BeaconcryptCore.Computational.PqxdhDeploymentSplitFactor.buildSplit_factor"
+require_line_count 1 '^theorem buildSplit_factor([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSplitFactor theorem buildSplit_factor"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSplitFactor\.buildSplitEnv_factor$' "$selected_source_module" "PqxdhDeploymentSplitFactor dependency BeaconcryptCore.Computational.PqxdhDeploymentSplitFactor.buildSplitEnv_factor"
+require_line_count 1 '^theorem buildSplitEnv_factor([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSplitFactor theorem buildSplitEnv_factor"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSplitFactor\.lift_run$' "$selected_source_module" "PqxdhDeploymentSplitFactor dependency BeaconcryptCore.Computational.PqxdhDeploymentSplitFactor.lift_run"
+require_line_count 1 '^theorem lift_run([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSplitFactor theorem lift_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSplitFactor\.lift_pure$' "$selected_source_module" "PqxdhDeploymentSplitFactor dependency BeaconcryptCore.Computational.PqxdhDeploymentSplitFactor.lift_pure"
+require_line_count 1 '^theorem lift_pure([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSplitFactor theorem lift_pure"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSplitFactor\.lift_map$' "$selected_source_module" "PqxdhDeploymentSplitFactor dependency BeaconcryptCore.Computational.PqxdhDeploymentSplitFactor.lift_map"
+require_line_count 1 '^theorem lift_map([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSplitFactor theorem lift_map"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSplitFactor\.lift_simulateQ$' "$selected_source_module" "PqxdhDeploymentSplitFactor dependency BeaconcryptCore.Computational.PqxdhDeploymentSplitFactor.lift_simulateQ"
+require_line_count 1 '^theorem lift_simulateQ([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSplitFactor theorem lift_simulateQ"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSplitFactor\.nativePrim_lift$' "$selected_source_module" "PqxdhDeploymentSplitFactor dependency BeaconcryptCore.Computational.PqxdhDeploymentSplitFactor.nativePrim_lift"
+require_line_count 1 '^theorem nativePrim_lift([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSplitFactor theorem nativePrim_lift"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSplitFactor\.receiveLabels_rom$' "$selected_source_module" "PqxdhDeploymentSplitFactor dependency BeaconcryptCore.Computational.PqxdhDeploymentSplitFactor.receiveLabels_rom"
+require_line_count 1 '^theorem receiveLabels_rom([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSplitFactor theorem receiveLabels_rom"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSplitFactor\.factoredBody_rom$' "$selected_source_module" "PqxdhDeploymentSplitFactor dependency BeaconcryptCore.Computational.PqxdhDeploymentSplitFactor.factoredBody_rom"
+require_line_count 1 '^theorem factoredBody_rom([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSplitFactor theorem factoredBody_rom"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSplitFactor\.finishErased_rom$' "$selected_source_module" "PqxdhDeploymentSplitFactor dependency BeaconcryptCore.Computational.PqxdhDeploymentSplitFactor.finishErased_rom"
+require_line_count 1 '^theorem finishErased_rom([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSplitFactor theorem finishErased_rom"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSplitFactor\.hashFx_ctx$' "$selected_source_module" "PqxdhDeploymentSplitFactor dependency BeaconcryptCore.Computational.PqxdhDeploymentSplitFactor.hashFx_ctx"
+require_line_count 1 '^theorem hashFx_ctx([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSplitFactor theorem hashFx_ctx"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSplitFactor\.finishSplit_factor$' "$selected_source_module" "PqxdhDeploymentSplitFactor dependency BeaconcryptCore.Computational.PqxdhDeploymentSplitFactor.finishSplit_factor"
+require_line_count 1 '^theorem finishSplit_factor([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSplitFactor theorem finishSplit_factor"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSplitFactor\.finishSplitEnv_factor$' "$selected_source_module" "PqxdhDeploymentSplitFactor dependency BeaconcryptCore.Computational.PqxdhDeploymentSplitFactor.finishSplitEnv_factor"
+require_line_count 1 '^theorem finishSplitEnv_factor([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSplitFactor theorem finishSplitEnv_factor"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
