@@ -30,8 +30,7 @@ variable {n : Nat} {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response
 
 /-! ### The privacy hybrid family -/
 
-/-- The privacy hybrid with cut `cut`: random mode exactly on the coordinates that `PqxdhRecordLiftChainOrder.selected`
-selects, replay mode elsewhere. -/
+/-- The privacy hybrid with cut `cut`: random mode exactly on the coordinates that `PqxdhRecordLiftChainOrder.selected` selects, replay mode elsewhere. -/
 noncomputable def privModes (positions cut : Nat) (label : Label n) : KeyMode :=
   if PqxdhRecordLiftChainOrder.selected positions cut label then .random else .replay
 
@@ -85,16 +84,14 @@ section Hops
 variable (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
   (serverKid : Std.U64) (bounds : FreshBounds)
 
-/-- The three-mode client of privacy step `step`: the link client of the step's coordinate under the modes before the
-step. -/
+/-- The three-mode client of privacy step `step`: the link client of the step's coordinate under the modes before the step. -/
 noncomputable def stepClient (env : Environment n E) (mode : Mode) (adversary : OracleComp (ModeSpec mode) X)
     (decision : View n E X → ProbComp Bool) (budget : Budget) (step : Fin (hops n budget)) :
     OracleComp PqxdhRecordLiftCtxPrivModes.Spec Bool :=
   linkClient (PqxdhRecordLiftChainOrder.entryAt (positions := positions budget) step)
     (privModes (positions budget) step.val) setup codec route env serverKid bounds mode adversary decision
 
-/-- The explicit privacy reduction family: hop `step`'s ordinary one-key CTX adversary is its step client with the
-known-key work run inside and random-mode records drawn by the single-coin sampler. -/
+/-- The explicit privacy reduction family: hop `step`'s ordinary one-key CTX adversary is its step client with the known-key work run inside and random-mode records drawn by the single-coin sampler. -/
 noncomputable def privReduction : CtxReduction n := fun env mode adversary decision budget step =>
   PqxdhRecordLiftCtxPrivModes.decisionClient PqxdhRecordLiftCtxPrivModes.bytesSample setup.source.crypto
     (stepClient setup codec route serverKid bounds env mode adversary decision budget step)
@@ -161,8 +158,7 @@ theorem game_first (env : Environment n E) (mode : Mode) (adversary : OracleComp
   rw [privModes_zero]
   rfl
 
-/-- The last privacy hybrid is `randomRecords`: the bounded coordinates are in random mode, and no other coordinate is
-reached. -/
+/-- The last privacy hybrid is `randomRecords`: the bounded coordinates are in random mode, and no other coordinate is reached. -/
 theorem game_last (env : Environment n E) (mode : Mode) (adversary : OracleComp (ModeSpec mode) X)
     (decision : View n E X → ProbComp Bool) (budget : Budget) (respects : budget.Respects adversary) :
     (randomRecords setup codec route env serverKid bounds mode adversary >>= fun result => decision (ctxView result)) =
@@ -182,8 +178,7 @@ section Statement
 variable (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
   (serverKid : Std.U64) (bounds : FreshBounds)
 
-/-- The privacy reductions respect `bills`: for every environment with `Frame`, adversary within its budget and decision
-with its coin cost, every hop's one-key adversary stays within the bills' uniform, shared-hash, seal and raw caps. -/
+/-- The privacy reductions respect `bills`: for every environment with `Frame`, adversary within its budget and decision with its coin cost, every hop's one-key adversary stays within the bills' uniform, shared-hash, seal and raw caps. -/
 def StepBilled (bills : CtxBills) : Prop :=
   ∀ {E X : Type} (env : Environment n E) (startup : Nat) (allowance : Fin 14 → EffectKind → Nat),
     Frame env startup allowance →
@@ -193,9 +188,7 @@ def StepBilled (bills : CtxBills) : Prop :=
     CtxBounded (privReduction setup codec route serverKid bounds env mode adversary decision budget step) bills
       ⟨budget, startup, allowance, bounds, n, cost⟩
 
-/-- **`ctx_lift`, privacy half, from the step bills.** With the explicit reduction family `privReduction`, the Boolean
-form holds as soon as the reductions respect the bills: `idealAuth` and `randomRecords` differ by at most the exact sum
-of the per-key IND$ losses, every term with coefficient one. -/
+/-- **`ctx_lift`, privacy half, from the step bills.** With the explicit reduction family `privReduction`, the Boolean form holds as soon as the reductions respect the bills: `idealAuth` and `randomRecords` differ by at most the exact sum of the per-key IND$ losses, every term with coefficient one. -/
 theorem ctxPrivLiftBool_of_billed (bills : CtxBills) (billed : StepBilled (n := n) setup codec route serverKid bounds bills) :
     CtxPrivLiftBool setup codec route serverKid bounds n (privReduction setup codec route serverKid bounds) bills := by
   intro E X env startup allowance frame mode adversary budget respects decision cost costBound

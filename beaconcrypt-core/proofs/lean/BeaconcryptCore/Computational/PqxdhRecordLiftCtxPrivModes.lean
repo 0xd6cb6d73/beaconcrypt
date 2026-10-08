@@ -176,8 +176,7 @@ theorem mode_forward_complete (selected : KeyMode) (decode : RawDecoder) (crypto
 
 open AdaptiveCtxDynamicKnownKeys (SourceState ReductionState project erase initialReduction initialSource)
 
-/-- The challenger's source semantics: the selected key in mode `selected`, every known call locally in its own mode,
-all on one shared cache. -/
+/-- The challenger's source semantics: the selected key in mode `selected`, every known call locally in its own mode, all on one shared cache. -/
 noncomputable def sourceImpl (sample : Sampler) (selected : KeyMode) (decode : RawDecoder) (crypto : Pqxdh.Crypto)
     (key : CtxKey) : QueryImpl Spec (StateT SourceState ProbComp) := fun query state =>
   match query with
@@ -190,8 +189,7 @@ noncomputable def sourceImpl (sample : Sampler) (selected : KeyMode) (decode : R
         state.cache
       pure (result.1.1, { state with others := Function.update state.others known.slot result.1.2, cache := result.2 })
 
-/-- The key-free reduction: selected requests go to the challenger; known calls run locally, their coins and public
-hashes forwarded through the challenger's interface. -/
+/-- The key-free reduction: selected requests go to the challenger; known calls run locally, their coins and public hashes forwarded through the challenger's interface. -/
 noncomputable def reductionImpl (sample : Sampler) (crypto : Pqxdh.Crypto) :
     QueryImpl Spec (StateT ReductionState (OracleComp ReceiveSpec)) := fun query state =>
   match query with
@@ -440,8 +438,7 @@ theorem sameLaw_source_step (selected : KeyMode) (decode : RawDecoder) (crypto :
       exact sameLaw_bind _ _ _ _ (sameLaw_known crypto known (state.others known.slot) state.cache)
         (fun result => sameLaw_refl _)
 
-/-- **Sampler swap.** The challenger's game with the world's random sampler and with the single-coin sampler are
-interchangeable for every three-mode client and selected mode. -/
+/-- **Sampler swap.** The challenger's game with the world's random sampler and with the single-coin sampler are interchangeable for every three-mode client and selected mode. -/
 theorem sameLaw_sourceGame (selected : KeyMode) (decode : RawDecoder) (crypto : Pqxdh.Crypto) {Result : Type}
     (client : OracleComp Spec Result) :
     SameLaw (sourceGame uniformBytes selected decode crypto client) (sourceGame bytesSample selected decode crypto client) :=
@@ -450,22 +447,19 @@ theorem sameLaw_sourceGame (selected : KeyMode) (decode : RawDecoder) (crypto : 
 
 /-! ### The per-key privacy hop -/
 
-/-- **Replay side.** With the world's samplers, the replay challenger's game has the law of the replay one-key view of
-the constructed client with the single-coin sampler. -/
+/-- **Replay side.** With the world's samplers, the replay challenger's game has the law of the replay one-key view of the constructed client with the single-coin sampler. -/
 theorem replay_game (decode : RawDecoder) (crypto : Pqxdh.Crypto) (client : OracleComp Spec Bool) :
     𝒟[Prod.fst <$> sourceGame uniformBytes .replay decode crypto client] =
       𝒟[AdaptiveCtxPrivacyGuard.replayView decode crypto (decisionClient bytesSample crypto client)] := by
   rw [sameLaw_fst _ _ (sameLaw_sourceGame .replay decode crypto client), source_view, modeView_replay]
 
-/-- **Random side.** With the world's samplers, the random challenger's game has the law of the IND$ random experiment
-behind `randomView` for the constructed client with the single-coin sampler. -/
+/-- **Random side.** With the world's samplers, the random challenger's game has the law of the IND$ random experiment behind `randomView` for the constructed client with the single-coin sampler. -/
 theorem random_game (decode : RawDecoder) (crypto : Pqxdh.Crypto) (client : OracleComp Spec Bool) :
     𝒟[Prod.fst <$> sourceGame uniformBytes .random decode crypto client] =
       𝒟[AdaptiveCtxPrivacyGuard.randomView decode (decisionClient bytesSample crypto client)] := by
   rw [sameLaw_fst _ _ (sameLaw_sourceGame .random decode crypto client), source_view, modeView_random]
 
-/-- **The per-key privacy hop.** The replay and random challenger games (world samplers) differ by exactly the ordinary
-IND$ advantage of the view reduction of the constructed client. -/
+/-- **The per-key privacy hop.** The replay and random challenger games (world samplers) differ by exactly the ordinary IND$ advantage of the view reduction of the constructed client. -/
 theorem hop_advantage (decode : RawDecoder) (crypto : Pqxdh.Crypto) (client : OracleComp Spec Bool) :
     (Prod.fst <$> sourceGame uniformBytes .replay decode crypto client).boolDistAdvantage
         (Prod.fst <$> sourceGame uniformBytes .random decode crypto client) =

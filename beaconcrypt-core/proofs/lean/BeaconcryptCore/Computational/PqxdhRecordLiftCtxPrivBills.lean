@@ -123,8 +123,7 @@ theorem known_hash_step (crypto : Pqxdh.Crypto) (call : KnownCall) (entry : KeyE
       rcases request with (_ | _ | _) | _ <;> simp [SourceUniform, SourceHash])
 
 set_option backward.isDefEq.respectTransparency false in
-/-- A known call's local program draws one coin per coin request, at most 66 per seal or raw request and none per
-public hash. -/
+/-- A known call's local program draws one coin per coin request, at most 66 per seal or raw request and none per public hash. -/
 theorem known_uniform_step (crypto : Pqxdh.Crypto) (call : KnownCall) (entry : KeyEntry) :
     ((knownLocal bytesSample crypto call).run entry).IsQueryBoundP (HashClass false)
       (if SourceUniform call.request then 1 else if SourceHash call.request then 0 else 66) := by
@@ -210,8 +209,7 @@ theorem hash_step (crypto : Pqxdh.Crypto) (query : Spec.Domain) (state : Reducti
     exact (known_hash_step crypto known _).mono (by by_cases coin : SourceUniform known.request <;> simp [coin])
 
 set_option backward.isDefEq.respectTransparency false in
-/-- Every coin request of the reduction is a selected coin, a known call's coin, or one of at most 66 coins of a keyed
-known request. -/
+/-- Every coin request of the reduction is a selected coin, a known call's coin, or one of at most 66 coins of a keyed known request. -/
 theorem uniform_step (crypto : Pqxdh.Crypto) (query : Spec.Domain) (state : ReductionState) :
     ((PqxdhRecordLiftCtxPrivModes.reductionImpl bytesSample crypto query).run state).IsQueryBoundP SourceUniform
       (if UniformRoute query then 1 else if KeyedRoute query then 66 else 0) := by
@@ -496,9 +494,7 @@ theorem link_route (target : Label n) (modes : Label n → KeyMode) (setup : Pqx
     (fun _ _ => coinForward_route _ predicate _ decisionCost decisionUnit (coins _) coinStep)
 
 
-/-- The explicit privacy bills: the program's coins plus the decision's coins plus 66 coins per keyed request (two for a
-random-mode body and tag, 64 for a private 64-byte commitment fill), the program's shared hashes, one seal and the raw
-receives. -/
+/-- The explicit privacy bills: the program's coins plus the decision's coins plus 66 coins per keyed request (two for a random-mode body and tag, 64 for a private 64-byte commitment fill), the program's shared hashes, one seal and the raw receives. -/
 def privBills : CtxBills where
   uniform input := programBill .uniform input + input.decision + 66 * programBill .hash input
   hash input := programBill .hash input
@@ -538,10 +534,7 @@ theorem stepBilled : StepBilled (n := n) setup codec route serverKid bounds priv
   simp only [Nat.mul_one, Nat.mul_zero, Nat.add_zero] at uniform keyed hash sealing raw
   exact decision_budgets setup.source.crypto _ _ _ _ _ _ uniform keyed hash sealing raw
 
-/-- **`ctx_lift`, privacy half (H-5, item 4).** With the explicit reduction family `privReduction` and the explicit
-bills `privBills`, `CtxPrivLiftStatement` holds in both forms: in either observation mode, `idealAuth` and
-`randomRecords` (in mode P, `idealRecords`) differ, for every cache-free decision and every Boolean event, by at most
-the exact sum over the target key indices of the per-key IND$ losses, each with coefficient one. -/
+/-- **`ctx_lift`, privacy half (H-5, item 4).** With the explicit reduction family `privReduction` and the explicit bills `privBills`, `CtxPrivLiftStatement` holds in both forms: in either observation mode, `idealAuth` and `randomRecords` (in mode P, `idealRecords`) differ, for every cache-free decision and every Boolean event, by at most the exact sum over the target key indices of the per-key IND$ losses, each with coefficient one. -/
 theorem ctxPrivLiftStatement :
     CtxPrivLiftStatement setup codec route serverKid bounds n (privReduction setup codec route serverKid bounds)
       privBills :=

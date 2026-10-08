@@ -183,8 +183,7 @@ theorem runLogged_eq (decode : AdaptiveRawNonceAead.RawDecoder) {Result : Type}
           simp only [pure_bind, ih]
 
 
-/-- The logged IND$ random challenger: primitive queries go to the random challenger and raw queries are answered from the
-log. -/
+/-- The logged IND$ random challenger: primitive queries go to the random challenger and raw queries are answered from the log. -/
 noncomputable def randomLogged (decode : AdaptiveRawNonceAead.RawDecoder) :
     QueryImpl AdaptiveSpec (StateT (SealHistory × ModifiedNonceAeadHandlerState) ProbComp) :=
   (modifiedNonceAeadINDDollarRandomImpl.mapStateTBase (logImpl decode)).flattenStateT
@@ -287,8 +286,7 @@ def lift (state : ReceiveState) : ReceiveState × (SealHistory × ModifiedNonceA
     ctxIndependentTagStateToModifiedNonceAead state.ctx)
 
 set_option backward.isDefEq.respectTransparency false in
-/-- Every request of the wrapper linked to the logged random challenger is the logged random source, with the
-challenger's log and state determined by the receive state. -/
+/-- Every request of the wrapper linked to the logged random challenger is the logged random source, with the challenger's log and state determined by the receive state. -/
 theorem linked_step (decode : RawDecoder) (query : ReceiveSpec.Domain) (state : ReceiveState) :
     (randomLinked decode query).run (lift state) = Prod.map id lift <$> (loggedRandomImpl decode query).run state := by
   rw [lift, randomLinked_run]
@@ -471,8 +469,7 @@ theorem randomTargetView_randomView (decode : RawDecoder) (client : OracleComp R
     randomTargetView decode client = AdaptiveCtxPrivacyGuard.randomView decode client := by
   rw [randomTargetView_eq, randomView_eq]
 
-/-- The random one-key target is `PqxdhRecordLiftIdeal.keyImpl` in random mode on the shared cache, for every primitive
-record and key (random mode reads neither). -/
+/-- The random one-key target is `PqxdhRecordLiftIdeal.keyImpl` in random mode on the shared cache, for every primitive record and key (random mode reads neither). -/
 theorem randomTarget_keyImpl (decode : RawDecoder) (crypto : Pqxdh.Crypto) (key : CtxKey) :
     randomTarget decode =
       (hashImpl.mapStateTBase (PqxdhRecordLiftIdeal.keyImpl decode crypto key .random)).flattenStateT := rfl
@@ -482,9 +479,7 @@ theorem replayTarget_keyImpl (decode : RawDecoder) (crypto : Pqxdh.Crypto) (key 
     AdaptiveCtxSharedModes.targetImpl false decode crypto key =
       (hashImpl.mapStateTBase (PqxdhRecordLiftIdeal.keyImpl decode crypto key .replay)).flattenStateT := rfl
 
-/-- **Replay versus random, one key.** The replay one-key target and the random one-key target differ, for every
-one-key client, by exactly the ordinary IND$ advantage of the view reduction, that is `PqxdhRecordLiftIdeal.privacyLoss`
-(without `ofReal`). -/
+/-- **Replay versus random, one key.** The replay one-key target and the random one-key target differ, for every one-key client, by exactly the ordinary IND$ advantage of the view reduction, that is `PqxdhRecordLiftIdeal.privacyLoss` (without `ofReal`). -/
 theorem replay_random_target (decode : RawDecoder) (crypto : Pqxdh.Crypto) (client : OracleComp ReceiveSpec Bool) :
     (AdaptiveCtxSharedModes.targetView false decode crypto client).boolDistAdvantage (randomTargetView decode client) =
       modifiedNonceAeadINDDollarAdvantage crypto (AdaptiveCtxPrivacyGuard.viewReduction decode client) := by
