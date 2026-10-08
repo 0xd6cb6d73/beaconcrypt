@@ -1,6 +1,6 @@
 {
  "date": "2026-10-08T01:09:06.800255+00:00",
- "scope": "CE-11a increment 2 (unit 11a-2 of design v2 sections 5.4-5.7, and the first part of the new unit 11a-2b: the split forms of the hidden-entry wrappers and their kernel identities from design v2 sections 5.3-5.4): PqxdhDeploymentHiddenEntry (the hidden-entry wrappers with the Services field types of item 2, the pointed finish, the CTX obliviousness of the native primitives and the wrappers, and the finish-time accounting of plan section 25), PqxdhDeploymentBackend (the native game gameWith with a registration handler chosen from the constructed Server, the LQ-F ghosts, gameWith_real and gameWith_classical, and the obliviousness of coins, BLAKE2b, records and every real registration command), PqxdhDeploymentFinishErasure (the generic C7 erasure erase_game and erase_later with a pluggable post phase, the CTX instances, the real instance with laterWith_real, and, since the review fix pass, the pointed-step composition lemmas factor_prefix, oblivious_prefix, factor_suffix and oblivious_suffix), PqxdhDeploymentSeedSplit (slot services, the 108-byte split, CoreNatural, represent, the generic seed deferral defer and, since the review fix pass, its later-game form defer_later with realPost_commutes_seed), PqxdhDeploymentHiddenSplit (buildSplit, finishSplit with a placeholder kernel, and the kernel identities build_factor_split and finish_factor_split). Reviewed at 413f454b with a semantic and a hygiene lens (three minor findings and six nits); the review fix pass (review_fix_pass) is in the commits 289fbc87 and the documentation commit that adds this version of the receipt, and is not reviewed yet; not integrated into central.",
+ "scope": "CE-11a increment 2 (unit 11a-2 of design v2 sections 5.4-5.7, and the first part of the new unit 11a-2b: the split forms of the hidden-entry wrappers and their kernel identities from design v2 sections 5.3-5.4): PqxdhDeploymentHiddenEntry (the hidden-entry wrappers with the Services field types of item 2, the pointed finish, the CTX obliviousness of the native primitives and the wrappers, and the finish-time accounting of plan section 25), PqxdhDeploymentBackend (the native game gameWith with a registration handler chosen from the constructed Server, the LQ-F ghosts, gameWith_real and gameWith_classical, and the obliviousness of coins, BLAKE2b, records and every real registration command), PqxdhDeploymentFinishErasure (the generic C7 erasure erase_game and erase_later with a pluggable post phase, the CTX instances, the real instance with laterWith_real, and, since the review fix pass, the pointed-step composition lemmas factor_prefix, oblivious_prefix, factor_suffix and oblivious_suffix), PqxdhDeploymentSeedSplit (slot services, the 108-byte split, CoreNatural, represent, the generic seed deferral defer and, since the review fix pass, its later-game form defer_later with realPost_commutes_seed), PqxdhDeploymentHiddenSplit (buildSplit, finishSplit with a placeholder kernel, and the kernel identities build_factor_split and finish_factor_split). Reviewed at 413f454b with a semantic and a hygiene lens (three minor findings and six nits); the review fix pass (review_fix_pass) is in the commits 289fbc87 and 379bcb9c; a confirming review of 379bcb9c raised four nits (confirming_review), which the documentation commit that adds this version of the receipt addresses; not integrated into central.",
  "basis": "1749e215e8f9384143b53948012e5915175622f7",
  "topic": {
   "branch": "claude/ce11a",
@@ -16,12 +16,19 @@
  },
  "item2_plan": {
   "committed_snapshot": "doc/impl/extract-composition-plan.md",
-  "sections": "18 (service signature fixed by CE-11)"
+  "sections": "18 (service signature fixed by CE-11); 20 (item 2 increment 2: Server-slot first touch at the selected accept, coordinate-to-slot allocator, re-check before the 11a-2b remainder)",
+  "section_20_commit": {
+   "branch": "claude/extract-composition",
+   "commit": "feb46e223f2e53415331585eaaa6a1324af3c6f1",
+   "note": "Section 20 is committed in doc/impl/extract-composition-plan.md on this branch, not yet on central; the central snapshot ends with section 19."
+  }
  },
  "design": {
   "path": "/tmp/bc-arc-scratch/common-experiment/ce11/design-v2.md",
-  "sha256": "8bc4e0de802f0b36b1d79def4f3100a74561af209502b1122379befbf8b5bdd0",
-  "sections": "5.4-5.7 (increment 2), 7, 8"
+  "sections": "5.4-5.7 (increment 2), 7, 8",
+  "sha256_inc2": "8bc4e0de802f0b36b1d79def4f3100a74561af209502b1122379befbf8b5bdd0",
+  "sha256": "6c04b78f4e72603e4c1cad12929e1f696323a585f71561708beb3175728f87b1",
+  "sha256_note": "sha256 is the design at the confirming-review nit fix. sha256_inc2 (8bc4e0de...) is the hash recorded by the versions of this receipt in 413f454b and 379bcb9c; it is the design before two notes were added to it at 01:33 UTC on 2026-10-08 by item 2 increment 2 (item 2 plan section 20): the paragraphs starting \"**Note (2026-10-08, item 2\" at the end of section 5.7 and of section 6. The current design with these two paragraphs and the blank line before each removed has exactly that hash. The notes record the Server-slot first touch at the selected accept, the coordinate-to-slot allocator and the re-check before the 11a-2b remainder; the guide open points state their content."
  },
  "critique": {
   "path": "/tmp/bc-arc-scratch/common-experiment/ce11/critique.md",
@@ -60,9 +67,13 @@
   {
    "commit": "289fbc87e3b46e2bd9dbc994e5d0cbdd7e2b6eb4",
    "subject": "Add pointed-step composition lemmas and the later-game seed deferral"
+  },
+  {
+   "commit": "379bcb9c70bbe81924edb9e994275ac0300b2db2",
+   "subject": "Document the review fix pass of CE-11a increment 2"
   }
  ],
- "commits_note": "The review fix-pass documentation commit that adds this version of the receipt follows these commits; it changes no Lean file. The two documentation commits of the increment were checked on their working trees: 2149e478 by root-docs and inventory-docs, 413f454b (the reviewed commit) by root-docs2 and inventory-docs2. The fix-pass Lean commit 289fbc87 was checked by the *_fix2 rows (module checks, root-fix2, inventory-fix2-lean), and the fix-pass documentation commit by inventory-fix2-docs on its working tree with a first version of this receipt.",
+ "commits_note": "The confirming-review documentation commit that adds this version of the receipt follows these commits; it changes only this receipt, the guide and the analysis. The two documentation commits of the increment were checked on their working trees: 2149e478 by root-docs and inventory-docs, 413f454b (the reviewed commit) by root-docs2 and inventory-docs2. The fix-pass Lean commit 289fbc87 was checked by the *_fix2 rows (module checks, root-fix2, inventory-fix2-lean), and the fix-pass documentation commit 379bcb9c (no Lean file) by inventory-fix2-docs on its working tree with a first version of its receipt.",
  "files_sha256": {
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHiddenEntry.lean": "61a7cfac9fc8a54498d3edaae579e05b606d9861e3e6826330638d1e0571a2ea",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentBackend.lean": "827eaaff2e028181bde677aebf5ded9c18f627c79a750537838f596276cfde6b",
@@ -993,7 +1004,8 @@
   "the split build and finish as steps of XState installing the World kernel by a lazy lookup of XState.seeds, and their seed-lens obliviousness (design buildSplit_commutes_seed, finishSplit_commutes_seed)",
   "moving the split service seed table into XState.seeds so that defer applies to the split game",
   "split_game",
-  "represent_later, the later-game counterpart of represent, with a naturality premise for postWith along mapBackend (the ideal post phase reads the backend R1 tables, which share the backend with the slot service state); for the 11a-2b remainder or 11b-1 (the later-game seed deferral defer_later is built in the review fix pass)"
+  "represent_later, the later-game counterpart of represent, with a naturality premise for postWith along mapBackend (the ideal post phase reads the backend R1 tables, which share the backend with the slot service state); for the 11a-2b remainder or 11b-1 (the later-game seed deferral defer_later is built in the review fix pass)",
+  "first, the re-check of item 2 plan section 20 (Server-slot first touch at the selected accept in the built S1b skeleton): the accept is among the first-touch classes of allowanceG; defer with its pointed seed completion at the accept, whose obligation (the erased accept commutes with seedLens) needs a split form of the accept whose marks keep material and slot rather than the joined 108 bytes, and that split form with its seed-lens obliviousness; hidden_server_once and buildSplit_env_cost unchanged; CoreNatural accounts for the state of the first-touch coordinate-to-slot allocator in front of PqxdhRecordLiftLazyTable (added at the confirming-review nit fix)"
  ],
  "deferred_to_11a_3": [
   "buildSplit_env_cost and finishSplit_env_cost (capability form)",
@@ -1321,7 +1333,7 @@
  "not_run": "make verify (owner-gated), full lake build, mutation testing (no production Rust changed), nix-collect-garbage (forbidden on this machine), the transcript-fidelity cargo check (an integration precondition, not run for a topic-only increment)",
  "obstacles": "none blocking: every built statement is proved without a new assumption or contract; the 11a-2b remainder is deferred because it is stated for the registration core of item 2, not because a statement failed",
  "statement_text_note": "exact_statements and definitions are the source text of each declaration up to its proof; binders declared by section variables (setup, codec, checks, route, the cache spec of a generic lens, KemSK, Bk, n) are in the enclosing section of the module.",
- "coordination": "Protocol v2: mail peeked only (Codex integrated central 1749e215..df84f3c6 (#112) and df84f3c6..764e0e24 (#116) during the task; the topic branch was not merged, which belongs to the integration step); scratch inc2, olean prefix inc2/olean and leanpath inc2/leanpath registered before creation; module names in the PqxdhDeployment* prefix; no Codex path touched; nothing deleted; every Lean check through coord.sh lean claude; the nix inventory checks under coord.sh lease mem claude @nix; keepalive run. Grandfathered names claude/ce11a and /tmp/claude-ce11a as in increment 1. Review fix pass: mail peeked only; the scratch fix2 (with fix2/olean, fix2/leanpath) and fix2/final (with fix2/final/olean, fix2/final/leanpath) registered to claude before creation; no file deleted or replaced (dev and check scripts write fresh logs and artifacts only); no Codex path touched; every Lean check through coord.sh lean claude; inventory under coord.sh lease mem claude @nix. Central moved to f20cb4b0 (origin) during the fix pass; the topic is not merged, which belongs to the integration step.",
+ "coordination": "Protocol v2: mail peeked only (Codex integrated central 1749e215..df84f3c6 (#112) and df84f3c6..764e0e24 (#116) during the task; the topic branch was not merged, which belongs to the integration step); scratch inc2, olean prefix inc2/olean and leanpath inc2/leanpath registered before creation; module names in the PqxdhDeployment* prefix; no Codex path touched; nothing deleted; every Lean check through coord.sh lean claude; the nix inventory checks under coord.sh lease mem claude @nix; keepalive run. Grandfathered names claude/ce11a and /tmp/claude-ce11a as in increment 1. Review fix pass: mail peeked only; the scratch fix2 (with fix2/olean, fix2/leanpath) and fix2/final (with fix2/final/olean, fix2/final/leanpath) registered to claude before creation; no file deleted or replaced (dev and check scripts write fresh logs and artifacts only); no Codex path touched; every Lean check through coord.sh lean claude; inventory under coord.sh lease mem claude @nix. Central moved to f20cb4b0 (origin) during the fix pass; the topic is not merged, which belongs to the integration step. Confirming-review nit fix: mail peeked only; the scratch fix3 registered to claude before creation; no Lean check or lease needed (documentation only); nothing deleted; no Codex path touched. Central moved from 7045f0f6 to 8b674fa4 (origin) during the nit fix; the topic is not merged, which belongs to the integration step.",
  "modules_note": "direct_check_final of the three modules changed by the review fix pass is their recheck into the fresh prefix fix2/final/olean against fix2/final/leanpath, in import order; direct_check_inc2 is the check of the reviewed version, whose artifacts in inc2/olean are unchanged. PqxdhDeploymentHiddenEntry and PqxdhDeploymentBackend are unchanged and keep their increment-2 checks; their inc2 artifacts are reused through the fix2 mirrors.",
  "leanpath_inc2": {
   "manifest": "/tmp/bc-arc-scratch/common-experiment/ce11/inc2/leanpath",
@@ -1333,7 +1345,7 @@
   "sha256": "5408eb7f46c8c2b7221a87fd2d09cccc03701548424380b441b601b460ea32cc",
   "note": "Review fix pass: the published LEAN_PATH of central 1749e215 (/tmp/bc-coord/leanpaths/1749e215e8f9384143b53948012e5915175622f7.leanpath) with the fresh scratch prefix fix2/final/olean in front, a resolved symlink mirror (fix2/final/mirror.py: 1618 links, root olean and the three rechecked modules left out) of the increment prefix inc2/olean, into which the three changed modules and then the root were compiled in import order. Development checks without -o ran against fix2/leanpath (fix2/olean, a mirror built the same way); fix2/olean also holds a development build of PqxdhDeploymentFinishErasure made before its guards and docstring were added, used only to elaborate PqxdhDeploymentSeedSplit during development, so the final checks used the fresh prefix fix2/final/olean. Every check ran through coord.sh lean claude (protocol v2), one check per call, timeout 180, lean -j1 -M8000; no artifact or log was replaced."
  },
- "review": "Reviewed at 413f454b by an independent review with a semantic and a hygiene lens: three minor findings and six nits (listed in review_fix_pass). The review scratch is /tmp/bc-arc-scratch/common-experiment/ce11/review-inc2-semantic and review-inc2-hygiene. The review fix pass is not reviewed yet.",
+ "review": "Reviewed at 413f454b by an independent review with a semantic and a hygiene lens: three minor findings and six nits (listed in review_fix_pass). The review scratch is /tmp/bc-arc-scratch/common-experiment/ce11/review-inc2-semantic and review-inc2-hygiene. The review fix pass was checked by a confirming review of 379bcb9c, which raised four nits (confirming_review).",
  "review_fix_pass": {
   "reviewed_commit": "413f454bb810619a2e46b196cfdcc2a9398f3435",
   "date": "2026-10-08T01:39:42.698367+00:00",
@@ -1413,5 +1425,50 @@
    "PqxdhDeploymentSeedSplit.realPost_commutes_seed": "every query of the real post phase realPost commutes with completions of the seed table."
   }
  },
- "updated": "2026-10-08T01:39:42.698401+00:00"
+ "updated": "2026-10-08T01:56:34.186328+00:00",
+ "confirming_review": {
+  "reviewed_commit": "379bcb9c70bbe81924edb9e994275ac0300b2db2",
+  "date": "2026-10-08T01:56:34.186328+00:00",
+  "findings": [
+   {
+    "severity": "nit",
+    "title": "Guide open points do not yet carry the item-2 first-touch re-check that design-v2 sections 5.7 and 6 and item 2 plan section 20 require before the 11a-2b remainder",
+    "response": "The guide open points state it in plain words, citing item 2 plan section 20 as committed on claude/extract-composition (feb46e22): S1b reads the Server hidden value at the selected raw accept (resumeTail) and keeps it in its marks until the build, so a Server slot is first touched at the accept (a Beacon slot at its finish); hidden reads are keyed by 128-byte coordinates, so a first-touch coordinate-to-slot allocator sits in front of PqxdhRecordLiftLazyTable and CoreNatural must account for its state (its map is the C5 coordinate-to-slot map); re-check before the split steps (1) the accept is a first-touch class of the 11a-3 allowance, (2) defer with the pointed seed completion at the accept, whose obligation (the erased accept commutes with seedLens) holds only if the marks keep material and slot rather than the joined 108 bytes, (3) hidden_server_once and buildSplit_env_cost unchanged. The 11a-2b remainder estimate rises from 1-3 to 2-4 agent-days (split form of the accept and its seed-lens obliviousness), CE-11a remaining 14-25, CE-11b unchanged. The analysis gains one sentence on the accept-time first touch, and deferred_to_11a_2b_remainder gains the re-check and the split form of the accept.",
+    "commit": "the confirming-review documentation commit"
+   },
+   {
+    "severity": "nit",
+    "title": "Receipt design hash is design-v2 from before the item-2 notes, with no note saying so",
+    "response": "design now records sha256_inc2 (8bc4e0de..., the earlier hash) and sha256 (the current design) with sha256_note; the difference is exactly the two item 2 notes (checked by removing them). The critique hash is current. item2_plan names section 20 and its branch commit.",
+    "commit": "the confirming-review documentation commit"
+   },
+   {
+    "severity": "nit",
+    "title": "Lean module docstrings still carry short critique labels that clash with the committed plan's critique table",
+    "response": "Optional per the review and not a reason for a commit of its own: the docstrings are unchanged; the open points record that the labels become \"CE-11 design critique Mx\" or are dropped when these modules are next touched, and the guide section on this review says how to read them until then (M2, M3, M4, M5, M8, m4, m7 of the CE-11 design critique) and that they are not the plan snapshot labels.",
+    "commit": "the confirming-review documentation commit (guide note only; no Lean file)"
+   },
+   {
+    "severity": "nit",
+    "title": "Central moved again just before the doc commit (now 7045f0f6); the basis bullet records f20cb4b0",
+    "response": "Central has since moved further, to 8b674fa4. The guide basis bullet records central 8b674fa4: since f20cb4b0 it adds PqxdhRecordLiftCtxOracle (7045f0f6) and PqxdhRecordLiftWorldProvenance (8b674fa4), 15 new Lean files since 1749e215, and changes, among existing files, the same four shared files (BeaconcryptCore.lean, check-inventory.sh, reviewed-inventory.txt, formal-verification-analysis.md), so no module that this increment imports changed. The merge belongs to the integration step.",
+    "commit": "the confirming-review documentation commit (note only)"
+   }
+  ],
+  "changed_files": [
+   "doc/formal-verification-analysis.md",
+   "doc/impl/common-deployment-experiment.md",
+   "doc/impl/proof-receipts/common-deployment-experiment-ce11a-inc2.json"
+  ],
+  "changed_statements": "none",
+  "new_assumptions": "none",
+  "checks": {
+   "changed_files_only": "git diff --name-only 379bcb9c lists exactly changed_files (asserted after this receipt is written)",
+   "lean_and_inventory": "not rerun: no file under beaconcrypt-core/ changed, so the module checks, root import and focused check-inventory of the fix pass still apply",
+   "git_diff_check": "exit 0 with empty output on the working tree of this commit, after this receipt is written (asserted)",
+   "json": "this receipt parses as JSON and keeps every earlier key in order; only design, item2_plan, deferred_to_11a_2b_remainder (one entry appended), scope, commits, commits_note, review, coordination and updated change, and confirming_review is added (asserted)"
+  },
+  "central_at_nit_fix": "8b674fa4a891e757276a0e31042dcd05f1637c3d",
+  "central_note": "central (origin/codex/full-proof-composition) after git fetch just before this receipt was written; the topic is not merged"
+ }
 }
