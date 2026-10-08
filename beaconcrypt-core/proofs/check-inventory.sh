@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1650
+	[handwritten-lean]=1651
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -32995,6 +32995,19 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegist
 require_line_count 1 '^theorem pinned_total([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRootCosts theorem pinned_total"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemRootCosts\.entryDk_total$' "$selected_source_module" "PqxdhRegistrationJointKemRootCosts dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemRootCosts.entryDk_total"
 require_line_count 1 '^theorem entryDk_total([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemRootCosts theorem entryDk_total"
+
+# Item 2 stage S5, second part (extract-design plan sections 3, 5 and 22): theorem T8b, the challenge-query counts and complete bills of every reduction in idealKeysLoss and allIdealLoss (the two one-query HMAC PRF reductions of stages S2 and T, and the G2 key-schedule reductions on entryD and entryDk k) from certified, KemBound and initBound via the stage S8 bills.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemKeyTransferBills.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhRegistrationJointKemKeyTransferBills$' proofs/lean/BeaconcryptCore.lean "PqxdhRegistrationJointKemKeyTransferBills root import"
+require_line_count 3 '^theorem ' "$selected_source_module" "PqxdhRegistrationJointKemKeyTransferBills theorem inventory"
+require_line_count 3 '^#guard_msgs in$' "$selected_source_module" "PqxdhRegistrationJointKemKeyTransferBills guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemKeyTransfer\.prf_bills$' "$selected_source_module" "PqxdhRegistrationJointKemKeyTransferBills dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemKeyTransfer.prf_bills"
+require_line_count 1 '^theorem prf_bills([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemKeyTransferBills theorem prf_bills"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemKeyTransfer\.idealKeys_bills$' "$selected_source_module" "PqxdhRegistrationJointKemKeyTransferBills dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemKeyTransfer.idealKeys_bills"
+require_line_count 1 '^theorem idealKeys_bills([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemKeyTransferBills theorem idealKeys_bills"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRegistrationJointKemKeyTransfer\.allIdeal_bills$' "$selected_source_module" "PqxdhRegistrationJointKemKeyTransferBills dependency BeaconcryptCore.Computational.PqxdhRegistrationJointKemKeyTransfer.allIdeal_bills"
+require_line_count 1 '^theorem allIdeal_bills([[:space:]]|$)' "$selected_source_module" "PqxdhRegistrationJointKemKeyTransferBills theorem allIdeal_bills"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
