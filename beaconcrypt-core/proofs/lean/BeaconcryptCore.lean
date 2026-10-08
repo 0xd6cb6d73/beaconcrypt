@@ -1812,6 +1812,12 @@ import BeaconcryptCore.Computational.PqxdhRecordLiftCtx
 
 import BeaconcryptCore.Computational.PqxdhRecordLiftCtxBills
 
+import BeaconcryptCore.Computational.PqxdhDeploymentIdealPool
+
+import BeaconcryptCore.Computational.PqxdhDeploymentIdealPoolSource
+
+import BeaconcryptCore.Computational.PqxdhDeploymentIdealCut
+
 import BeaconcryptCore.Computational.PqxdhRecordLiftComposition
 
 import BeaconcryptCore.Computational.PqxdhRecordLiftHiding
