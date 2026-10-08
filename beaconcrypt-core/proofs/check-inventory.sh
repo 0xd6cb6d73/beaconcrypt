@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1585
+	[handwritten-lean]=1586
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -31630,6 +31630,45 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem realReg_commutes_ctx([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentBackend theorem realReg_commutes_ctx"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentBackend\.realHandler_commutes_ctx$' "$selected_source_module" "PqxdhDeploymentBackend dependency BeaconcryptCore.Computational.PqxdhDeploymentBackend.realHandler_commutes_ctx"
 require_line_count 1 '^theorem realHandler_commutes_ctx([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentBackend theorem realHandler_commutes_ctx"
+
+# CE-11a generic C7 erasure for the pluggable native and later games (increment 2).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentFinishErasure.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentFinishErasure$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentFinishErasure root import"
+require_line_count 16 '^theorem ' "$selected_source_module" "PqxdhDeploymentFinishErasure theorem inventory"
+require_line_count 16 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentFinishErasure guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentFinishErasure\.PointedReg\.ofCommuting_erased$' "$selected_source_module" "PqxdhDeploymentFinishErasure dependency BeaconcryptCore.Computational.PqxdhDeploymentFinishErasure.PointedReg.ofCommuting_erased"
+require_line_count 1 '^theorem PointedReg\.ofCommuting_erased([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentFinishErasure theorem PointedReg.ofCommuting_erased"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentFinishErasure\.factor_focus$' "$selected_source_module" "PqxdhDeploymentFinishErasure dependency BeaconcryptCore.Computational.PqxdhDeploymentFinishErasure.factor_focus"
+require_line_count 1 '^theorem factor_focus([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentFinishErasure theorem factor_focus"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentFinishErasure\.oblivious_focus$' "$selected_source_module" "PqxdhDeploymentFinishErasure dependency BeaconcryptCore.Computational.PqxdhDeploymentFinishErasure.oblivious_focus"
+require_line_count 1 '^theorem oblivious_focus([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentFinishErasure theorem oblivious_focus"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentFinishErasure\.pointedWith_erased$' "$selected_source_module" "PqxdhDeploymentFinishErasure dependency BeaconcryptCore.Computational.PqxdhDeploymentFinishErasure.pointedWith_erased"
+require_line_count 1 '^theorem pointedWith_erased([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentFinishErasure theorem pointedWith_erased"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentFinishErasure\.pointedWith_factor$' "$selected_source_module" "PqxdhDeploymentFinishErasure dependency BeaconcryptCore.Computational.PqxdhDeploymentFinishErasure.pointedWith_factor"
+require_line_count 1 '^theorem pointedWith_factor([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentFinishErasure theorem pointedWith_factor"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentFinishErasure\.pointedWith_oblivious$' "$selected_source_module" "PqxdhDeploymentFinishErasure dependency BeaconcryptCore.Computational.PqxdhDeploymentFinishErasure.pointedWith_oblivious"
+require_line_count 1 '^theorem pointedWith_oblivious([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentFinishErasure theorem pointedWith_oblivious"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentFinishErasure\.erase_game$' "$selected_source_module" "PqxdhDeploymentFinishErasure dependency BeaconcryptCore.Computational.PqxdhDeploymentFinishErasure.erase_game"
+require_line_count 1 '^theorem erase_game([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentFinishErasure theorem erase_game"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentFinishErasure\.laterTail_blind$' "$selected_source_module" "PqxdhDeploymentFinishErasure dependency BeaconcryptCore.Computational.PqxdhDeploymentFinishErasure.laterTail_blind"
+require_line_count 1 '^theorem laterTail_blind([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentFinishErasure theorem laterTail_blind"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentFinishErasure\.erase_later$' "$selected_source_module" "PqxdhDeploymentFinishErasure dependency BeaconcryptCore.Computational.PqxdhDeploymentFinishErasure.erase_later"
+require_line_count 1 '^theorem erase_later([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentFinishErasure theorem erase_later"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentFinishErasure\.fullX_set$' "$selected_source_module" "PqxdhDeploymentFinishErasure dependency BeaconcryptCore.Computational.PqxdhDeploymentFinishErasure.fullX_set"
+require_line_count 1 '^theorem fullX_set([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentFinishErasure theorem fullX_set"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentFinishErasure\.erase_game_ctx$' "$selected_source_module" "PqxdhDeploymentFinishErasure dependency BeaconcryptCore.Computational.PqxdhDeploymentFinishErasure.erase_game_ctx"
+require_line_count 1 '^theorem erase_game_ctx([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentFinishErasure theorem erase_game_ctx"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentFinishErasure\.xreveal_ctx$' "$selected_source_module" "PqxdhDeploymentFinishErasure dependency BeaconcryptCore.Computational.PqxdhDeploymentFinishErasure.xreveal_ctx"
+require_line_count 1 '^theorem xreveal_ctx([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentFinishErasure theorem xreveal_ctx"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentFinishErasure\.erase_later_ctx$' "$selected_source_module" "PqxdhDeploymentFinishErasure dependency BeaconcryptCore.Computational.PqxdhDeploymentFinishErasure.erase_later_ctx"
+require_line_count 1 '^theorem erase_later_ctx([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentFinishErasure theorem erase_later_ctx"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentFinishErasure\.simulateQ_lift$' "$selected_source_module" "PqxdhDeploymentFinishErasure dependency BeaconcryptCore.Computational.PqxdhDeploymentFinishErasure.simulateQ_lift"
+require_line_count 1 '^theorem simulateQ_lift([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentFinishErasure theorem simulateQ_lift"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentFinishErasure\.realPost_commutes$' "$selected_source_module" "PqxdhDeploymentFinishErasure dependency BeaconcryptCore.Computational.PqxdhDeploymentFinishErasure.realPost_commutes"
+require_line_count 1 '^theorem realPost_commutes([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentFinishErasure theorem realPost_commutes"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentFinishErasure\.laterWith_real$' "$selected_source_module" "PqxdhDeploymentFinishErasure dependency BeaconcryptCore.Computational.PqxdhDeploymentFinishErasure.laterWith_real"
+require_line_count 1 '^theorem laterWith_real([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentFinishErasure theorem laterWith_real"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"

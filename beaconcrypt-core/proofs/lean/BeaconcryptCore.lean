@@ -1679,6 +1679,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentHiddenEntry
 
 import BeaconcryptCore.Computational.PqxdhDeploymentBackend
 
+import BeaconcryptCore.Computational.PqxdhDeploymentFinishErasure
+
 /-!
 # Beaconcrypt-core verification root
 
