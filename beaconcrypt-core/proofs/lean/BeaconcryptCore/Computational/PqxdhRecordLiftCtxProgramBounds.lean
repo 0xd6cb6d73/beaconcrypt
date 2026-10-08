@@ -126,7 +126,8 @@ def lookupCost : BudgetKind → Nat | .uniform => 76 | _ => 0
 def openingCost : BudgetKind → Nat | .hash | .raw => 1 | _ => 0
 def sealingCost : BudgetKind → Nat | .hash | .seal => 1 | _ => 0
 
-def recordCost (kind : BudgetKind) : RecordKind → Nat
+/-- The bill of one record send or receive in one CTX component ledger. Named apart from the opened `PqxdhRecordLiftBudget.recordCost`, which counts records per full-interface command. -/
+def operationBill (kind : BudgetKind) : RecordKind → Nat
   | .send => lookupCost kind + sealingCost kind
   | .raw => 51 * lookupCost kind + openingCost kind
 
@@ -144,9 +145,9 @@ theorem opaque_send (kind : BudgetKind) (kernel : PqxdhRecordLiftWorldCompiler.L
     (context : RawCtxSourceSend.SealContext) :
     Weighted (categoryCost kind)
       (simulateQ localLift (PqxdhRecordLiftOpaqueDrivers.admittedSend kernel context))
-      (recordCost kind .send) := by
+      (operationBill kind .send) := by
   apply weighted_simulate _ _ _ _ _
-  · simpa [recordCost] using local_weighted
+  · simpa [operationBill] using local_weighted
       (PqxdhRecordLiftOpaqueDrivers.admittedSend kernel context)
       (lookupCost kind) (openingCost kind) (sealingCost kind) 1 0 1
       (PqxdhRecordLiftOpaqueBounds.admitted_send_lookup kernel context)
@@ -159,7 +160,7 @@ theorem opaque_receive (kind : BudgetKind) (kernel : PqxdhRecordLiftWorldCompile
     (target : Std.U64) (context : RawCtxWholeOwner.OpenContext) :
     Weighted (categoryCost kind)
       (simulateQ localLift (PqxdhRecordLiftOpaqueDrivers.admittedReceive kernel target context))
-      (recordCost kind .raw) := by
+      (operationBill kind .raw) := by
   apply weighted_simulate _ _ _ _ _
   · have bounded := local_weighted
       (PqxdhRecordLiftOpaqueDrivers.admittedReceive kernel target context)
@@ -167,16 +168,16 @@ theorem opaque_receive (kind : BudgetKind) (kernel : PqxdhRecordLiftWorldCompile
       (PqxdhRecordLiftOpaqueBounds.admitted_receive_lookup kernel target context)
       (PqxdhRecordLiftOpaqueBounds.admitted_receive_opening kernel target context)
       (PqxdhRecordLiftOpaqueBounds.admitted_receive_sealing kernel target context)
-    exact weighted_mono _ _ _ _ bounded (by simp only [recordCost]; omega)
+    exact weighted_mono _ _ _ _ bounded (by simp only [operationBill]; omega)
   · exact local_lift kind
 
 /-- Every hidden or caller-known send, including exhaustion and writer failure, stays within the per-send category bill. -/
 theorem kernel_send (kind : BudgetKind) (stored : PqxdhRecordLiftWorldCompiler.StoredKernel n)
     (context : RawCtxSourceSend.SealContext) :
-    Weighted (categoryCost kind) (kernelSend stored context) (recordCost kind .send) := by
+    Weighted (categoryCost kind) (kernelSend stored context) (operationBill kind .send) := by
   cases stored with
   | known kernel =>
-      cases kind <;> simp [Weighted, kernelSend, categoryCost, recordCost, lookupCost, sealingCost]
+      cases kind <;> simp [Weighted, kernelSend, categoryCost, operationBill, lookupCost, sealingCost]
   | hidden slot kernel =>
       simpa only [kernelSend, Nat.add_zero] using weighted_bind (categoryCost kind) _
         (fun result => pure (PqxdhRecordLiftWorldCompiler.StoredKernel.hidden slot result.1, result.2))
@@ -185,10 +186,10 @@ theorem kernel_send (kind : BudgetKind) (stored : PqxdhRecordLiftWorldCompiler.S
 /-- Every hidden or caller-known receive, including cached, future, rejected and failed-opening paths, stays within the per-receive category bill. -/
 theorem kernel_receive (kind : BudgetKind) (stored : PqxdhRecordLiftWorldCompiler.StoredKernel n)
     (target : Std.U64) (context : RawCtxWholeOwner.OpenContext) :
-    Weighted (categoryCost kind) (kernelReceive stored target context) (recordCost kind .raw) := by
+    Weighted (categoryCost kind) (kernelReceive stored target context) (operationBill kind .raw) := by
   cases stored with
   | known kernel =>
-      cases kind <;> simp [Weighted, kernelReceive, categoryCost, recordCost, lookupCost, openingCost]
+      cases kind <;> simp [Weighted, kernelReceive, categoryCost, operationBill, lookupCost, openingCost]
   | hidden slot kernel =>
       simpa only [kernelReceive, Nat.add_zero] using weighted_bind (categoryCost kind) _
         (fun result => pure (PqxdhRecordLiftWorldCompiler.StoredKernel.hidden slot result.1, result.2))
