@@ -1,0 +1,406 @@
+{
+ "date": "2026-10-08T11:14:43.834665+00:00",
+ "scope": "CE-11b increment 2: the spike finished (design-v2 section 8.5, items (a)-(g)) and the rest of unit U1, PqxdhDeploymentIdealSteps (the ideal registration as a slot program and CE.idealGame g, with the agreement of its hidden steps with item 2's services skeleton). Unit U2 not started. Not reviewed; not integrated into central.",
+ "basis": "e464a35cde7d99ee92153274ded1379a457820cf",
+ "topic": {
+  "branch": "codex/deployment-ce11b",
+  "worktree": "/tmp/beaconcrypt-deployment-ce11b"
+ },
+ "plan": {
+  "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
+  "sha256": "3f47bc8752b5655996e8426be829e3d64f3f4c100529aa744cd38d022c944603",
+  "sections": "47-49 (A1 adopted, A2 accepted, Q1-Q3 decided), 50 (this increment, new; 49 was the last section)"
+ },
+ "design": {
+  "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/design-v2.md",
+  "sha256": "08f923d472f91d545b5787a1b36700795877a98638ac6591a154d0a7b020fedc",
+  "sections": "3.1, 3.2 (built), 8.4 (post phase, per-step facts), 8.5 (spike, finished), 11, 12 (R3), 15, 16 (corrections after increment 2, new)"
+ },
+ "spike": {
+  "results": "/tmp/bc-arc-scratch/common-experiment/ce11b/spike.md",
+  "results_sha256": "4eddf4c1b61ac881e8db3ebbebec1780246b7d89c943b2f36e26001359d8701e",
+  "scratch": {
+   "/tmp/bc-arc-scratch/common-experiment/ce11b/inc2/spike/PoolSpike.lean": {
+    "sha256": "497c32269b17e8f79927c28c75eea9cff9f51a2f82009c2317c1124209dac19a",
+    "theorems": [
+     "simulateQ_congr_none",
+     "create_merge_pool",
+     "createPool_support",
+     "revealPool_agree",
+     "compile_noCreate",
+     "compiledPool_other",
+     "step_merge_pool",
+     "compile_simulation_pool",
+     "good_create_pool",
+     "good_step_pool",
+     "compile_native_pool"
+    ],
+    "sorry_free": true,
+    "last_dev_check": {
+     "run": "PoolSpike-3",
+     "source_sha256": "497c32269b17e8f79927c28c75eea9cff9f51a2f82009c2317c1124209dac19a",
+     "result": "exit 0 seconds 4",
+     "log_bytes": 0,
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+   },
+   "/tmp/bc-arc-scratch/common-experiment/ce11b/inc2/spike/PostSpike.lean": {
+    "sha256": "02aaa25af112fd74aa8c5158c04400a504a0d8a2b99f3e702260fd2428d3f098",
+    "theorems": [
+     "publicLocal_coins",
+     "groupCE_challenge",
+     "groupCE_known",
+     "reveal_step"
+    ],
+    "sorry_free": true,
+    "last_dev_check": {
+     "run": "PostSpike-16",
+     "source_sha256": "02aaa25af112fd74aa8c5158c04400a504a0d8a2b99f3e702260fd2428d3f098",
+     "result": "exit 0 seconds 4",
+     "log_bytes": 0,
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+   }
+  },
+  "published_in_U1": [
+   "acceptExposed",
+   "acceptExposed_logged",
+   "tailCE_challenge",
+   "finishChallenge",
+   "groupCE_challenge",
+   "groupCE_known",
+   "preparationCE_challenge",
+   "preparationCE_eval",
+   "publicLocal_coins",
+   "buildHidden_native"
+  ],
+  "scratch_only": [
+   "compile_native_pool and its layer-1 lemmas (route P-a, PoolSpike.lean)",
+   "reveal_step (item (e), PostSpike.lean)"
+  ],
+  "decision": "route P-a kept (pointwise in the pool); P-b stays the fallback",
+  "not_done": [
+   "P-a layers 2 and 3 and the glue to sourcePreOpaque (U5)",
+   "PostRel and the flattened post-challenge stack (U6)",
+   "faithfulness of finishChallenge to the native finish off the challenge ciphertext (no planned consumer)"
+  ]
+ },
+ "commits": [
+  {
+   "commit": "caad5a07b404fdd2228b615aa808980a5c3f2827",
+   "subject": "Add the CE-11b ideal registration steps and CE.idealGame"
+  }
+ ],
+ "commits_note": "Commits on the topic after the basis that were made before this receipt was generated; the documentation commit that adds this receipt is not listed.",
+ "files_sha256": {
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealSteps.lean": "2f1688663a5e5aa174fc550345f50bdc82b6cd04f74c77ca48dc6ba7e5bfa89a",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "6b3db3895f51acf08d66f063b5211690595e5d26751ebd99a6a9a5dbfd992462",
+  "beaconcrypt-core/proofs/check-inventory.sh": "503b09ecfa483ed68fd88bbc2adf56fa92426c1e0f0840e88e3252094bab4da5",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "2dc7c4cc44676839760b8f06b8f59f99cbfedd42cc1e1851ceef9b2b8de5c851"
+ },
+ "modules": [
+  {
+   "name": "BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps",
+   "theorem_count": 17,
+   "theorems": [
+    "realRegAt_real",
+    "createPool_beyond",
+    "acceptExposed_logged",
+    "buildHidden_native",
+    "preparationCE_challenge",
+    "preparationCE_eval",
+    "publicLocal_coins",
+    "tailCE_challenge",
+    "groupCE_challenge",
+    "groupCE_known",
+    "acceptStep_other",
+    "acceptStep_accepts",
+    "buildStep_unmarked",
+    "finishStep_real",
+    "idealProg_real",
+    "idealCore_natural",
+    "idealCoreErased_natural"
+   ],
+   "definitions": [
+    "IdealCore",
+    "IdealCore.initial",
+    "TableState",
+    "IdealBk",
+    "idealInit",
+    "SplitBk",
+    "splitInit",
+    "liftS",
+    "onSlots",
+    "realRegAt",
+    "createPool",
+    "createReg",
+    "coordsOf",
+    "tailCE",
+    "prefixNative",
+    "AcceptOut",
+    "acceptActive",
+    "acceptInactive",
+    "acceptExposed",
+    "buildHidden",
+    "publishedKey",
+    "PreSpecCE",
+    "OwnerSpecCE",
+    "groupedOwnerCE",
+    "preparationCE",
+    "groupCE",
+    "ownerImplCE",
+    "finishChallenge",
+    "initSentAt",
+    "establishedAt",
+    "acceptStep",
+    "buildStep",
+    "finishStep",
+    "idealProg",
+    "idealCore",
+    "idealReg",
+    "erasedHidden",
+    "idealCoreErased",
+    "idealGame"
+   ],
+   "guarded": 17,
+   "axiom_profile": {
+    "realRegAt_real": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "createPool_beyond": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "acceptExposed_logged": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "buildHidden_native": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "preparationCE_challenge": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "preparationCE_eval": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "publicLocal_coins": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "tailCE_challenge": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "groupCE_challenge": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "groupCE_known": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "acceptStep_other": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "acceptStep_accepts": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "buildStep_unmarked": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "finishStep_real": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "idealProg_real": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "idealCore_natural": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "idealCoreErased_natural": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ]
+   },
+   "direct_check_final": {
+    "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps",
+    "start": "2026-10-08T11:08:12.117212327Z",
+    "end": "2026-10-08T11:08:17.330184568Z",
+    "exit": 0,
+    "source_sha256": "2f1688663a5e5aa174fc550345f50bdc82b6cd04f74c77ca48dc6ba7e5bfa89a",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/common-experiment/ce11b/inc2/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealSteps.olean",
+    "artifact_sha256": "63ab79a7df901d57d85ba7a2f03e5aa74672976b613b729aa47e74ec0f4f9e3a",
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce11b/inc2/leanpath",
+    "leanpath_sha256": "d695805c4142742035c0a0f31c5561dc41be87c0c90ef24fffda8ebc5478eea7",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/ce11b/inc2/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealSteps.olean",
+     "/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealSteps.lean"
+    ],
+    "source_matches_worktree": true
+   }
+  }
+ ],
+ "theorem_total": 17,
+ "allowed_axioms": [
+  "Classical.choice",
+  "Quot.sound",
+  "propext"
+ ],
+ "design_names_realized_as": {
+  "IdealCore, idealInit, SplitBk, splitInit (design-v2 3.1)": "as designed, with IdealCore.initial, TableState, IdealBk",
+  "createPool (3.2)": "createPool with createPool_beyond, and the create command createReg",
+  "acceptExposed, acceptExposed_logged (3.2, 8.5 (c))": "acceptExposed = acceptActive on a verified key match, else acceptInactive (the LQ-F logged accept); acceptExposed_logged by definition; tailCE, prefixNative, coordsOf, AcceptOut",
+  "buildHidden (3.2)": "buildHidden with buildHidden_native; buildStep sets the Server ghost through publishedKey",
+  "finishChallenge (3.2, 8.5 (d))": "finishChallenge with groupedOwnerCE, preparationCE, groupCE, ownerImplCE, PreSpecCE, OwnerSpecCE; finishStep with initSentAt and establishedAt",
+  "idealProg, idealReg, idealGame, idealCoreErased, erasedHidden (3.2, v1 2.3 and 3)": "as designed, with idealCore over any slot service, idealCore_natural and idealCoreErased_natural",
+  "realReg on the ideal backend (NOTES)": "realRegAt (any backend and slot count) with realRegAt_real"
+ },
+ "deviations_from_design": [
+  "session mark set at the private root request (item 2 resumeTail), not when the accept returns a session; unobservable because a mark without a pending token is never built",
+  "active set exactly when the selected accept reaches its encapsulation with the key match (critique S12)",
+  "design risk R3 fallback not needed: acceptExposed branches on the pure verification first",
+  "the grouped request records the hidden-read coordinates in the step state; the Beacon ghost is set only after an establishment that followed a hidden read",
+  "realRegAt copies realReg to every backend; its CTX obliviousness (needed for C7) is open work in U2",
+  "skeleton agreement lemmas planned in U6 published in U1 (tailCE_challenge, groupCE_challenge, groupCE_known, preparationCE_eval, publicLocal_coins)",
+  "U2 not started in this increment"
+ ],
+ "contracts_used": {
+  "new_contracts": [],
+  "new_assumptions": [],
+  "codec_laws": [],
+  "premises": "none beyond hypotheses of individual lemmas (marker shapes, key-match and phase conditions)"
+ },
+ "leanpath": {
+  "manifest": "/tmp/bc-arc-scratch/common-experiment/ce11b/inc2/leanpath",
+  "sha256": "d695805c4142742035c0a0f31c5561dc41be87c0c90ef24fffda8ebc5478eea7",
+  "note": "ce11b/inc2/olean (resolved symlink mirror of the first prefix of /tmp/bc-coord/leanpaths/e464a35cde7d99ee92153274ded1379a457820cf.leanpath, ce11b/int/olean, without its root olean; mirror.py, mirror.log) in front of the published LEAN_PATH; the module olean was written there by the final check"
+ },
+ "root_checks": {
+  "root-u1": {
+   "module": "BeaconcryptCore",
+   "start": "2026-10-08T11:08:29.307017201Z",
+   "end": "2026-10-08T11:08:32.528978240Z",
+   "exit": 0,
+   "source_sha256": "6b3db3895f51acf08d66f063b5211690595e5d26751ebd99a6a9a5dbfd992462",
+   "log_bytes": 0,
+   "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "artifact": "/tmp/bc-arc-scratch/common-experiment/ce11b/inc2/root-checks/u1/BeaconcryptCore.olean",
+   "artifact_sha256": "b3fb00ae702809bbf4594b03b7bd508f8ac608645e706037afc41192a58b4605",
+   "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce11b/inc2/leanpath",
+   "leanpath_sha256": "d695805c4142742035c0a0f31c5561dc41be87c0c90ef24fffda8ebc5478eea7",
+   "command": [
+    "coord.sh",
+    "lean",
+    "claude",
+    "<label>",
+    "--",
+    "timeout",
+    "180",
+    "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+    "-j1",
+    "-M8000",
+    "--root=/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean",
+    "-o",
+    "/tmp/bc-arc-scratch/common-experiment/ce11b/inc2/root-checks/u1/BeaconcryptCore.olean",
+    "/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+   ]
+  }
+ },
+ "focused_inventory": {
+  "inventory-u1": {
+   "exit": 0,
+   "start": "2026-10-08T11:09:04Z",
+   "end": "2026-10-08T11:10:26Z",
+   "head_at_run": "caad5a07b404fdd2228b615aa808980a5c3f2827",
+   "working_tree_dirt_lines": 0,
+   "log_sha256": "1451496d6ed3614e0b9137d161d7adbe15b975eea3b6d79e9d5b44e03997cc8c",
+   "result_line": "Formal-verification inventory matches the reviewed boundary."
+  }
+ },
+ "focused_inventory_note": "ran on the Lean commit with a clean tree; the documentation commit changes no file under beaconcrypt-core/",
+ "inventory": {
+  "handwritten_lean_rows_before": 1666,
+  "handwritten_lean_rows_after": 1667,
+  "rehashed": [
+   "proofs/lean/BeaconcryptCore.lean",
+   "proofs/check-inventory.sh"
+  ],
+  "note": "coord.sh inv recount before coord.sh inv rehash"
+ },
+ "forbidden_scan": {
+  "PqxdhDeploymentIdealSteps": []
+ },
+ "git_diff_check": {
+  "range": "e464a35cde7d99ee92153274ded1379a457820cf..working tree",
+  "exit": 0
+ },
+ "not_run": [
+  "full lake build",
+  "make verify",
+  "mutation testing",
+  "nix-collect-garbage"
+ ],
+ "reestimate": {
+  "unit": "nominal agent-days",
+  "remaining_after_increment_1": "33-58.5",
+  "per_unit_remaining": {
+   "Spike": "0",
+   "U1": "0",
+   "U2": "3-5",
+   "U3": "4-6.5",
+   "U4": "4.5-8",
+   "U5": "4.75-8.5 (layer 1 of P-a in scratch)",
+   "U6": "6.5-11 (per-step facts done)",
+   "U7": "2-3",
+   "Documentation, reviews, integration": "3-5"
+  },
+  "remaining_main_line": "27.75-47",
+  "increment_2_spent": "about 3.5-4",
+  "main_line_total": "about 35-56 (planned 37-63.5)",
+  "deferred_11b_L": "2.5-5",
+  "optional_U8": "1-2"
+ },
+ "review": null
+}

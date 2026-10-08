@@ -20,6 +20,8 @@ Status of CE-11a increment 4: the CE-11a leftovers of plan section 39a (the work
 
 Status of CE-11b increment 1: the first part of CE-11b, the ideal registration of the common deployment experiment for one target, its environment and the second compile lemma (the CE-11b design, version 2, kept with the working plan, sections 3.1, 5.1, 6.1 and 8.3 step 1): the generic registration core built from slot programs and its naturality (unit U1, generic part), the challenger's draws of route R3 with the draw swap of item 2's prefix (unit U1 definitions and unit U5 step 1, the spike's item (b)), and C1 for an environment that draws a parameter at startup (unit U3, generic part), on branch `codex/deployment-ce11b` over central `ee7878ee`, with four Lean commits and four documentation commits (the last of each belongs to the review fix pass). The spike's items (a), (c) and (d) (the pool create of the prefix route, the CE-native selected accept, the marked build and owner k's challenge finish) exist as checked scratch definitions only; "CE-11b increment 1: spike" records them. An independent review (semantic, hygiene and composition) of `9f89f395` found no error in the Lean statements or proofs; its findings concern the documentation, the plan and three docstrings, and the review fix pass fixes them ("CE-11b increment 1: review fix pass"). A confirming review of the fix pass at `7e4c14bf` found every finding resolved and raised two documentation nits, which one documentation commit addresses ("CE-11b increment 1: confirming review"); not integrated into central at this commit. The plain-English explanation is the section "Common deployment experiment, CE-11b increment 1: slot programs, the challenger's draws and a startup draw" of [the analysis](../formal-verification-analysis.md); the receipt is [proof-receipts/common-deployment-experiment-ce11b.json](proof-receipts/common-deployment-experiment-ce11b.json).
 
+Status of CE-11b increment 2: increment 1 was integrated into central at `e464a35c`. Increment 2 finishes the CE-11b spike (design-v2 section 8.5, items (a) to (g); "CE-11b increment 2: spike") and adds the rest of unit U1, the module `PqxdhDeploymentIdealSteps`: the ideal registration of the common deployment experiment for one target as a slot program and the ideal game `CE.idealGame g`, on branch `codex/deployment-ce11b` over central `e464a35c`, with one Lean commit and one documentation commit. Unit U2 (`PqxdhDeploymentIdealKeys`) is not started in this increment ("CE-11b increment 2: open points"). Not reviewed and not integrated into central at this commit. The plain-English explanation is the section "Common deployment experiment, CE-11b increment 2: the ideal registration" of [the analysis](../formal-verification-analysis.md); the receipt is [proof-receipts/common-deployment-experiment-ce11b-inc2.json](proof-receipts/common-deployment-experiment-ce11b-inc2.json).
+
 ## CE-11a increment 1: what is proved
 
 Increment 1 of CE-11a (unit 11a-1: the erasure engine and the layout) and the spike that plan section 32 runs alongside it (the local finish erasure, the engine applied to it and the labelled-kernel identities) add three modules under `beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/` with 67 guarded theorems; no existing proof module changed (the root `BeaconcryptCore.lean` gains three imports). Every theorem depends at most on `propext`, `Classical.choice` and `Quot.sound`, recorded by an exact `#guard_msgs` over `#print axioms`.
@@ -457,6 +459,79 @@ A confirming review of the fix pass at `7e4c14bf` found every finding of the rev
 - Record of the confirming review (every finding resolved; statements, guards, receipt and head agree): no action.
 
 The committed plan snapshot `common-deployment-experiment-plan.md` is refreshed from the working plan after these edits, so it now carries sections 43 to 48; its header note lists the places that A1 amends.
+
+## CE-11b increment 2: what is proved
+
+Increment 2 adds one module under `beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/` with 17 guarded theorems; no existing proof module changed (the root `BeaconcryptCore.lean` gains one import). Every theorem depends at most on `propext`, `Classical.choice` and `Quot.sound`, recorded by an exact `#guard_msgs` over `#print axioms`.
+
+| Module | Theorems | Content |
+| --- | --- | --- |
+| `PqxdhDeploymentIdealSteps` | 17 | The ideal registration for a target `t` (a raw-accept ordinal and a KEM creation index) and the challenger's draws `p` (design-v2 section 3), as a slot program `idealProg t p hidden created` with its own backend `IdealCore` (raw-accept counter, active flag, hidden Server session with the coordinates of its hidden read, and the Server and Beacon install ghosts, which no step reads). Create reads the new owner's KEM key pair from the pool (`createPool`; beyond the pool it is the native create, `createPool_beyond`; `createReg` is the create command); bundle and HMAC are the real commands (`realRegAt`, the real registration handler on any backend and slot count, equal to `PqxdhDeploymentBackend.realReg` at the unit backend by `realRegAt_real`; `idealProg_real`). The raw accept compares the pre-increment counter with the target ordinal (`acceptStep`; `acceptStep_other`, `acceptStep_accepts`); the selected accept is `acceptExposed`: on a Phase 1 message whose pure verification yields the selected PQ key, the native steps before encapsulation and, when they reach the encapsulation, the active path (item 2's candidate-free suffix with the challenge ciphertext and the challenge marker, then item 2's marker tail under `tailCE`, whose challenge-marked root request reads the hidden value at the root input's coordinates, marks the session with them and returns the sentinel root); on every other message the LQ-F logged accept (`acceptExposed_logged`). The build of the marked session with a pending token reads its hidden value and runs `buildHidden`, the native build with the hidden build service (`buildHidden_native`); a published peer sets the Server install ghost; every other build is real (`buildStep_unmarked`). After an active selected accept, a finish of the selected owner in the `initSent` phase runs `finishChallenge`: item 2's grouped Beacon owner at the native owner type, whose preparation answers the decapsulation of exactly the challenge ciphertext with the challenge marker (`preparationCE_challenge`) and decapsulates every other ciphertext as item 2's CCA evaluation does (`preparationCE_eval`), and whose grouped request reads the hidden value at the four DH coordinates and runs the hidden continuation on a challenge marker (`groupCE`); an establishment after a hidden read sets the Beacon install ghost; every other finish is real (`finishStep_real`). `idealCore`, `idealReg` (over item 2's persistent lazy table), `erasedHidden`, `idealCoreErased` and the naturality of both cores (`idealCore_natural`, `idealCoreErased_natural`, the premise of `represent_split`); `idealGame` is `CE.idealGame g` (the challenger's draws, then `gameWith` with `idealReg` at the target of `g` from `idealInit`, identity index 0). `tailCE_challenge`, `groupCE_challenge` and `groupCE_known` relate the hidden steps to item 2's services skeleton under its public-table layer (`publicLocal_coins`): the challenge-marked root request answers as `resumeTail` and the challenge-marked grouped finish as `groupStep`, both with the factored services and on the game state without ghosts, and a known decapsulation result is item 2's native grouped answer `groupNativeN`. |
+
+## CE-11b increment 2: decisions and deviations
+
+- The selected accept branches on the pure verification of the Phase 1 message (`PqxdhRegistrationJointRawSignatures.verified`; item 2's scan uses the same function, and `verifyInput_source` shows that it is what the native verification computes) before it runs anything. On every message without the selected PQ key it is the LQ-F logged accept itself, so `acceptExposed_logged` holds by definition and the fallback of design risk R3 (an extra equality for a restructured non-selected path) is not needed.
+- `active` is set exactly when the selected accept reaches its encapsulation with the key match, which is when item 2's `postSkel` takes its active branch (critique S12). A rejection before the encapsulation leaves the accept inactive.
+- The hidden Server session is marked at the private root request of the selected accept, as item 2's `resumeTail` marks it; design-v2 section 3.2 says "when the accept returns a session". A mark whose session never receives a pending token is never built (the build of a marked session requires its pending token), so nothing observable changes, and the post-phase relation compares the two marks directly (`tailCE_challenge`: the CE mark records the coordinates where item 2's mark records the value read there).
+- The finish of the selected owner is hidden only in the `initSent` phase (design-v2 section 3.2); in every other phase it is the real finish, which in those phases changes nothing (the grouped owner, like the native owner, acts only in `initSent`). The grouped request records the coordinates of its hidden read in the step's state, so the Beacon install ghost is set exactly after an establishment that followed a hidden read; an establishment from a known decapsulation result is a known install and sets no ghost.
+- `realRegAt` is a copy of `PqxdhDeploymentBackend.realReg` on every backend and slot count (central's `realReg` is fixed at the unit backend and no slot); `realRegAt_real` shows that it is `realReg` there. Its CTX obliviousness, which C7 needs, is not yet proved for other backends (open points).
+- The agreement lemmas with item 2's skeleton (`tailCE_challenge`, `groupCE_challenge`, `groupCE_known`, with the tool `publicLocal_coins`) are per-step facts of unit U6's post-challenge simulation; they are published in U1 because they are statements about U1's definitions and are the spike's evidence for items (c), (d) and (f). `preparationCE_challenge` and `preparationCE_eval` likewise.
+- Beyond the pool `createPool` draws a fresh key pair, as the native create does (`createPool_beyond`); the compile lemma assumes the budget, under which this branch is not taken.
+- Publication before review: increment 2 is pushed as one Lean commit and one documentation commit for review; it is not integrated.
+
+## CE-11b increment 2: names for consumers
+
+- For units U2 to U6: `IdealCore`, `IdealCore.initial`, `TableState`, `IdealBk`, `idealInit`, `SplitBk`, `splitInit`; `idealProg`, `idealCore`, `idealReg`, `erasedHidden`, `idealCoreErased`, `idealCore_natural`, `idealCoreErased_natural` (U2's `represent_split` instance); `idealGame` (`CE.idealGame g`); the steps `createReg`, `acceptStep`, `buildStep`, `finishStep` and their real-case lemmas `acceptStep_other`, `buildStep_unmarked`, `finishStep_real`, `idealProg_real`; the hidden pieces `acceptExposed`, `acceptActive`, `tailCE`, `buildHidden`, `finishChallenge`, `groupedOwnerCE`, `ownerImplCE`, `groupCE`, `preparationCE`; `realRegAt` with `realRegAt_real`.
+- For U6 (post-challenge simulation): `tailCE_challenge`, `groupCE_challenge`, `groupCE_known`, `preparationCE_challenge`, `preparationCE_eval`, `publicLocal_coins`.
+
+## CE-11b increment 2: contracts used
+
+None. The module uses item 2's prefix, suffix, tail, grouped owner, services skeleton, public-table layer and native grouped answer, CE-11a's backend and slot cores, and the LQ-F logged accept; no codec law, and no new assumption or contract.
+
+## CE-11b increment 2: spike
+
+The spike of the CE-11b design (section 8.5) is finished. Its outcome, item by item:
+
+- (a) Prefix route. Route P-a (pointwise in the pool) is kept; P-b stays the fallback. The first of the three layers P-a re-parametrizes, CE-3's whole compile lemma at the native level with both creates reading the pool, is proved in scratch (about 260 lines): every non-create deployment command compiles to a program without a create query (from CE-3's per-kind budget `PqxdhDeploymentCompileBudget.step_bound`), so the pool handlers agree with CE-3's handlers on every compiled step but the create, whose case is the commutation of the pool create with CE-3's merge and the preservation of CE-3's invariant by the pool create; the step lemma, the simulation, the invariant preservation and the native compile lemma follow as in CE-3. The second layer (CE-3's game wrappers) is short. The third (the source side down to item 2's reservation form) consists of inductions over the program in which only the create case changes: the create cases of `PqxdhRegistrationJointServerClient.program_source` and `PqxdhRegistrationJointServerSchedule.program_native`, the initialized wrappers and the link to `PqxdhRegistrationJointKemInitialization.commands`.
+- (b) The draw swap: done in increment 1.
+- (c) The selected accept: `acceptExposed` with `acceptExposed_logged`, and `tailCE_challenge` (published).
+- (d) Owner k's challenge finish: `finishChallenge` and `groupCE_challenge` (published).
+- (e) A record command on the hidden session: item 2's skeleton answer to a kernel reveal is the native scheduler's answer, because the reveal reads only the peers (proved in scratch); with CE-3's record step this covers the record commands of the hidden session.
+- (f) A non-challenge finish of owner k: `preparationCE_eval` and `groupCE_known` (published); the split of item 2's native grouped answer against `groupStep` is item 2's existing `split_group`.
+- (g) The measured re-estimate is the section "CE-11b increment 2: re-estimate".
+
+The spike also identified the shape of U6's post-challenge relation: item 2's `SplitN` relation (a native state is the join of the table cache and the skeleton state, up to the analysis observers), extended by the ghost seals, the marks as coordinates against marks as values, the allocator and table below the slot service, the post-challenge router state and the two install ghosts.
+
+## CE-11b increment 2: open points
+
+- Unit U2 (`PqxdhDeploymentIdealKeys`): C7 for the ideal registration (`idealPair`, `erase_ideal`), the `represent_split` instance, `seed_move`, the conditional-read kernel identities, the two-point deferral, `split_game`, `seed_at_install` and `ideal_to_split`. It needs, first, the CTX obliviousness of `realRegAt` on every backend (central proves it for `realReg` at the unit backend only) and a commutation lemma that carries the obliviousness of a slot program through `slotCore`.
+- Unit U5: the second and third layers of route P-a, the glue to item 2's prephase and the CE-side scan; the first layer is in scratch and is published with U5.
+- Unit U6: the post-challenge relation and the flattening of item 2's post-challenge stack, the per-command simulation and the decision step; the per-step facts above are in place.
+- The faithfulness of `finishChallenge` to the native finish on a raw message whose ciphertext is not the challenge is not proved; no planned consumer needs it (U6 compares against item 2's grouped form).
+- Units U3, U4, U7, U8 and the deferred unit 11b-L as in increment 1's open points; plan section 49 records the decisions on questions Q1 to Q3.
+
+## CE-11b increment 2: re-estimate
+
+Figures in nominal agent-days. The spike and U1 are done. U5 drops from 5.5-10 to 4.75-8.5 remaining (the first layer of route P-a, about 0.5-1, is proved in scratch; the second layer 0.25-0.5, the third 2-3.5, the glue to item 2's prephase 1.5-2.5, the CE-side scan and cut relation 1-2). U6 drops from 7-12 to 6.5-11 (the per-step facts of the hidden accept root, the challenge and known grouped finishes, the reveal and the evaluation decapsulation are done; the post-challenge relation and the flattening of the stack 3-5, the per-command simulation 2.5-4.5, the decision 1-1.5). The other units are unchanged.
+
+| Unit | Remaining after increment 1 | Remaining after increment 2 |
+| --- | --- | --- |
+| Spike | 1-3 | 0 |
+| U1 | 3-6 | 0 |
+| U2 | 3-5 | 3-5 |
+| U3 | 4-6.5 | 4-6.5 |
+| U4 | 4.5-8 | 4.5-8 |
+| U5 | 5.5-10 | 4.75-8.5 |
+| U6 | 7-12 | 6.5-11 |
+| U7 | 2-3 | 2-3 |
+| Documentation, reviews, integration | 3-5 | 3-5 |
+| Main line | 33-58.5 | 27.75-47 |
+
+Increment 2 took about 3.5-4 (the spike's rest about 1, U1 about 1.5, U5's first layer 0.5-1, U6's step facts about 0.5), so the main line is now about 35-56 in all (planned 37-63.5). The deferred unit 11b-L stays at 2.5-5 and the optional U8 at 1-2.
+
+## CE-11b increment 2: checks
+
+The module was checked on its own with Lean 4.34 (`-j1`, `-M8000`, timeout 180) through the coordination wrapper, writing its olean into a fresh prefix that mirrors the first prefix of central's published `LEAN_PATH` at `e464a35c` by resolved symlinks; the root import was checked against the same prefix; both logs are empty. The inventory rows were added, then `inv recount` (handwritten Lean files 1666 to 1667) and `inv rehash` ran in that order; the focused `check-inventory` passed under a `nix` lease on the Lean commit with a clean tree; `git diff --check` is clean. The spike's scratch files were checked the same way without `-o`; their last runs are clean and use no `sorry`. No full `lake build`, `make verify`, mutation testing or `nix-collect-garbage` was run.
 
 ## CE-8: what is proved
 
