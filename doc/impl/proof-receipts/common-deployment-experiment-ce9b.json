@@ -1,5 +1,5 @@
 {
- "date": "2026-10-08T05:32:21.823860+00:00",
+ "date": "2026-10-08T05:52:21.532283+00:00",
  "scope": "CE-9b of the common deployment experiment (handoff item 3): the reverse chain of theorem T4 (KemRawBridge.actual_le_real) under its own premises, T4 as an equality for decisions that imply KeyMatchFinal on the support of the actual execution (and the Decided form for decisions that imply accepted, GoodKem and KeyMatchFinal), the unconditional defect bound, the deployment instance (decision_implies, defect_zero, eligible_real) and the two-sided per-target, reverse and exact-sum KEM transfers (kem_transfer_two_sided, kem_transfer_lower, kem_transfer_sum_two_sided, kem_transfer_create_two_sided); the same for the logged T4 of the LQ-F later game (PqxdhDeploymentLaterKemTwoSided).",
  "basis": "65e207381dd63c0b25d30faddb58902225d409a5",
  "topic": {
@@ -22,15 +22,15 @@
    "subject": "Carry the two-sided T4 to the LQ-F later game (CE-9b)"
   }
  ],
- "commits_note": "Three documentation commits follow these two Lean commits: 28d6dc97 (Document CE-9b, the two-sided form of T4), 97c9f2e0 (State the root import change in the CE-9b documentation) and the commit that corrects the commit count in the status paragraph; the last one carries this version of the receipt.",
+ "commits_note": "Three documentation commits follow these two Lean commits: 28d6dc97 (Document CE-9b, the two-sided form of T4), 97c9f2e0 (State the root import change in the CE-9b documentation) and 7452ceb9 (Correct the CE-9b commit count in the guide status). The review fix pass adds one documentation commit, which carries this version of the receipt.",
  "files_sha256": {
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentKemTwoSided.lean": "9db2befc4bd0e99088507be2297b096b048ad973b67ca22f526709b6ec773c91",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterKemTwoSided.lean": "be0293625932286820b40714a50841eebc1aa5ae4451ceb937cc234830ce7966",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "f0980528e94ce471cc296d9f21bde4d984aee55900d96dff333ad6d786c457e3",
   "beaconcrypt-core/proofs/check-inventory.sh": "faf224aef235aa9e58eee50a7a1ee55f3bea975b53c4f363a96755993f462c35",
   "beaconcrypt-core/proofs/reviewed-inventory.txt": "7502475a0ed3525c8c6f21011b234d1f2f16cb77ca15b551696d1d2d9a9678e9",
-  "doc/impl/common-deployment-experiment.md": "a0f184664295a36f49fab465c898359b99797751e8af917e6e6aa6c4d8d39a87",
-  "doc/formal-verification-analysis.md": "b8914be376ec85e244cf235532012fedbae622478b29a925fd71ed7e2eed0be9"
+  "doc/impl/common-deployment-experiment.md": "a607b4ab2993256452dc7b46bf535409b7d39c1c154c3e88b7f5c30aaae7f58a",
+  "doc/formal-verification-analysis.md": "d3d16a11a38dc602e28749978155e3366fbee072cc0c25f163fa5819637efe01"
  },
  "modules": [
   {
@@ -202,6 +202,13 @@
    "root_source_sha256": "f0980528e94ce471cc296d9f21bde4d984aee55900d96dff333ad6d786c457e3",
    "start": "2026-10-08T05:23:49.206574160Z",
    "end": "2026-10-08T05:23:52.366340946Z"
+  },
+  "root-r3": {
+   "exit": 0,
+   "log_bytes": 0,
+   "root_source_sha256": "f0980528e94ce471cc296d9f21bde4d984aee55900d96dff333ad6d786c457e3",
+   "start": "2026-10-08T05:47:57.952753908Z",
+   "end": "2026-10-08T05:48:10.580835356Z"
   }
  },
  "focused_inventory_per_commit": {
@@ -210,6 +217,12 @@
    "start": "2026-10-08T05:30:03Z",
    "end": "2026-10-08T05:31:22Z",
    "log_sha256": "5c04cd96b7671a5da275b3c6615b22e7f1cc303e220c12bc469f9e34e46524b2"
+  },
+  "inv-fix": {
+   "exit": 0,
+   "start": "2026-10-08T05:48:29Z",
+   "end": "2026-10-08T05:49:48Z",
+   "log_sha256": "595022dc8feecd146b99e3e9e6b8fb1ffc42fdc64ccfe422378697d2f0c242f4"
   },
   "inv-m1": {
    "exit": 0,
@@ -224,7 +237,7 @@
    "log_sha256": "7276bafc881bdeb5ce2cd28e180a8031393bf99d3b936cdc54169acbfd974922"
   }
  },
- "focused_inventory_note": "inv-m1 ran on the worktree holding exactly the files of commit 29f37f2e, inv-m2 on exactly the files of commit ee7143fa, and inv-doc on the files of the documentation commit, in the locked minimal proof flake (nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs; flake.nix and flake.lock identical to the worktree) under coord.sh lease mem claude @nix. coord.sh inv recount ran before coord.sh inv rehash for both Lean commits.",
+ "focused_inventory_note": "All runs used the locked minimal proof flake (nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs; flake.nix and flake.lock identical to the worktree) under coord.sh lease mem claude @nix; coord.sh inv recount ran before coord.sh inv rehash for both Lean commits. inv-m1 and inv-m2 ran just before the commits 29f37f2e and ee7143fa, on the file contents of those commits, while the commit's new module was not yet tracked by git (so not on the commits' git index). That explains the three GNU comm warnings in each of their logs (file 1 / file 2 / input is not in sorted order): check-inventory.sh compares the proof files listed in its manifest, which already named the new module, with git ls-files; on the resulting unpairable line comm checks order in the caller's locale (en_US.UTF-8), while the script sorted its inputs with LC_ALL=C (check-inventory.sh line 181, pre-existing, outside CE-9b). comm then exits with status 1, so in those two runs the sub-check for tracked proof files missing from the manifest gave no verdict (its if-condition is false); the rest of check-inventory ran. A reproduction of that sub-check on the committed trees (fix_pass_checks.inventory_subcheck_reproduction) finds no unlisted tracked file and no unpairable line for 65e20738, 29f37f2e, ee7143fa, 28d6dc97, 97c9f2e0 and 7452ceb9. inv-doc ran on the files of the first documentation commit, the reviewer ran a focused check-inventory at 7452ceb9 (lease 00000186, exit 0), and inv-fix ran on the files of the review fix commit, whose tracked file set equals that of 7452ceb9; none of these logs has a comm warning.",
  "forbidden_scan": "No sorry, admit, native_decide, implemented_by, extern or unsafe, no axiom declaration and no opaque declaration in the two modules; the word opaque occurs only in docstrings and in the names of existing declarations (opaqueBranch, KemRawOpaque, LaterServerOpaque). Options: autoImplicit false, and backward.isDefEq.respectTransparency false for single theorems (13 and 10 occurrences), as in KemRawBridge and LaterServerBridge.",
  "main_results": {
   "discarded_runs": "The only runs that the proof of T4 discards are completed runs with an active cut at the selected accept (encapsulation to the reserved key of creation index selected), decision and session holding and the key unrevealed, in which creation index selected is never created; every other step of actual_le_real is an equality, discards runs on which the real game also returns false (stop or completion before the cut, encapsulation to another key, failed Server construction), or discards runs that cannot occur (a completed stopped run with a set monitor, excluded by stopped_good).",
@@ -246,10 +259,63 @@
  "contracts_used": "None new. Generic statements: the premises of the reversed T4 only (certified and room; the creation cap bounded for the logged T4). Deployment statements: Phase1ReadBack and Phase2ReadBack (approved 2026-10-06), FunctionalDecapsulation (existing contract of the KEM hop), the adversary budget. defect_zero, decision_implies and their later forms use only Phase1ReadBack. No hardness assumption, idealization or advantage term beyond the IND-CCA advantage and correctness error of the existing KEM hops; the CE-9 bills (kem_transfer_bills, kem_transfer_server_bills) bill the same adversaries.",
  "not_proved": [
   "CE-12 left-or-right headline: item 2 T7 composition, CE-11 un-compiled ideal world, items 4 and 5, final-world advantage 0.",
+  "A left-or-right advantage relative to one half of the eligibility probability, per target Pr_CE[b' = b /\\ designated = g] - 1/2 Pr_CE[designated = g], needs the two-sided transfer for two events per target (b' = b and true, or b' = b and b' != b). The per-target decision contains the event and KemRawCertified.adversary takes the decision, so each event has its own certified IND-CCA adversary and its own advantage and correctness error, unless CE-12 defines one combined adversary that flips a coin between the two decisions. One application of kem_transfer_sum_two_sided with the event b' = b counts too few KEM terms. The Lean statements need no change (the event is arbitrary).",
+  "The per-target final-world argument (left-or-right advantage 0) needs the ideal branches of the two events to be images of one decision-independent ideal run: opaqueBranch passes the decision through decideTag inside the exposure (KemRawOpaque.opaqueBranch, KemRawChallenge.rawScan). CE-11 un-compiled CE.idealGame g has to supply that form.",
   "The counterexample to the unconditional equality is informal.",
   "N * Adv(B_guess) / signed-hop forms (owner input 5); Server identity indices other than 0."
  ],
- "re_estimate": "CE-9b was planned at 3-6 agent-days (plan section 14) and was built, with the LQ-F later game, in one working session of under one agent-day. Other stages keep their estimates; CE-12 left-or-right part no longer waits on CE-9b.",
+ "re_estimate": "CE-9b was planned at 3-6 agent-days (plan section 14) and was built, with the LQ-F later game, in one working session of under one agent-day. Other stages keep their estimates; once CE-9b is reviewed and integrated, the CE-12 left-or-right part no longer waits on it. The two left-or-right open points (a second transferred event per target; the decision-generic ideal run) are not estimated separately: the first is statement work inside CE-12, the second belongs to the CE-11 un-compiled ideal world.",
  "checks_not_run": "No lake build, make verify, nix-collect-garbage, mutation testing, ProVerif or Rust run; no production Rust or ProVerif change.",
- "review": "Not reviewed; not integrated into central."
+ "review": "An independent review of 7452ceb9 with a semantic and a hygiene lens raised one minor finding and four nits, all about the documentation and the receipt. The review fix pass (one documentation commit, which carries this receipt) addresses all of them and is not reviewed. Not integrated into central.",
+ "review_fix_pass": [
+  "Minor (left-or-right needs two transfers per target; final-world argument needs a decision-generic ideal run): guide two-sided transfer paragraph now says b' = b is one of the events; two new items in CE-9b: open points; the analysis says the same; not_proved lists both. No Lean change; the statements already allow an arbitrary event.",
+  "Nit (real game acceptance without the session conjunct): the analysis sentence now includes that the selected accept returned a session (KemGame.decision = decision /\\ accepted through decideTag; Completed).",
+  "Nit (unconditional no-longer-waits): guide CE-9b: re-estimate and re_estimate are conditional on review and integration.",
+  "Nit (inv-m1 and inv-m2 before their commits; comm warnings): focused_inventory_note and the guide CE-9b: checks paragraph state when the runs ran, the cause of the warnings, that comm exits 1 so the tracked-unlisted sub-check gave no verdict in those two runs, its reproduction on the committed trees, and the clean runs on committed trees. check-inventory.sh is unchanged (pre-existing locale mismatch, outside CE-9b).",
+  "Nit (stale CE-9 status line): the guide CE-9 status now says CE-9 with its fix pass is integrated into central at e90d54d9 (plan section 23, committed snapshot doc/impl/common-deployment-experiment-plan.md) and contained in 65e20738; it records no confirming review of the CE-9 fix pass.",
+  "No statement, Lean file, inventory entry or other proof file changed; the guide gains the section CE-9b: review fix pass."
+ ],
+ "fix_pass_checks": {
+  "PqxdhDeploymentKemTwoSided-fix1": {
+   "exit": 0,
+   "log_bytes": 0,
+   "start": "2026-10-08T05:47:32.736931477Z",
+   "end": "2026-10-08T05:47:46.412747578Z",
+   "source_sha256": "9db2befc4bd0e99088507be2297b096b048ad973b67ca22f526709b6ec773c91",
+   "artifact_sha256": "a657b90647541e71081d96e77c2391c96c7a1e5b02a6cfd4950228426eb33d7e",
+   "artifact_identical_to": "PqxdhDeploymentKemTwoSided-m2"
+  },
+  "PqxdhDeploymentLaterKemTwoSided-fix1": {
+   "exit": 0,
+   "log_bytes": 0,
+   "start": "2026-10-08T05:47:48.813217833Z",
+   "end": "2026-10-08T05:47:55.570791587Z",
+   "source_sha256": "be0293625932286820b40714a50841eebc1aa5ae4451ceb937cc234830ce7966",
+   "artifact_sha256": "f88c9bd3b2dad1bbd5e8535a34b70081b2f5ae7315e17ba92d0b1c49484824d2",
+   "artifact_identical_to": "PqxdhDeploymentLaterKemTwoSided-m1"
+  },
+  "root-r3": {
+   "exit": 0,
+   "log_bytes": 0,
+   "start": "2026-10-08T05:47:57.952753908Z",
+   "end": "2026-10-08T05:48:10.580835356Z",
+   "source_sha256": "f0980528e94ce471cc296d9f21bde4d984aee55900d96dff333ad6d786c457e3",
+   "artifact_sha256": "fdd8b78c1746f34f0bec18963716c2541bcb4e4b8fed09ffe2dbdec0cc2af89b",
+   "artifact_identical_to": "root-r2"
+  },
+  "order": "PqxdhDeploymentKemTwoSided, then PqxdhDeploymentLaterKemTwoSided, then the root BeaconcryptCore.lean, through coord.sh lean claude (check.sh), on the files of the review fix commit",
+  "inventory": "coord.sh inv recount (handwritten-lean count unchanged, 1640) and coord.sh inv rehash (no change); focused check-inventory inv-fix (see focused_inventory_per_commit) exit 0 with no comm warning; git diff --check clean",
+  "inventory_subcheck_reproduction": {
+   "script": "/tmp/bc-arc-scratch/common-experiment/ce9b/fix-subcheck/commcheck.sh",
+   "output": [
+    "65e20738 C-rc=0 unlisted-tracked=0 locale-rc=0 manifest-only=0",
+    "29f37f2e C-rc=0 unlisted-tracked=0 locale-rc=0 manifest-only=0",
+    "ee7143fa C-rc=0 unlisted-tracked=0 locale-rc=0 manifest-only=0",
+    "28d6dc97 C-rc=0 unlisted-tracked=0 locale-rc=0 manifest-only=0",
+    "97c9f2e0 C-rc=0 unlisted-tracked=0 locale-rc=0 manifest-only=0",
+    "7452ceb9 C-rc=0 unlisted-tracked=0 locale-rc=0 manifest-only=0"
+   ],
+   "note": "C-rc and locale-rc are the comm -23 exit statuses in the C locale and in en_US.UTF-8; unlisted-tracked is the number of tracked proof files missing from the manifest; manifest-only is the number of manifest lines with no tracked file. On the git index of the first Lean commit before it was made (the reviewer's act_untracked against exp in ce9b/review-hygiene), comm -23 in en_US.UTF-8 exits 1 with the three warnings."
+  }
+ }
 }
