@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1641
+	[handwritten-lean]=1642
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -32978,6 +32978,55 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecord
 require_line_count 1 '^theorem program_world_no_refusal([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxNoRefusal theorem program_world_no_refusal"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxNoRefusal\.program_reduction_no_refusal$' "$selected_source_module" "PqxdhRecordLiftCtxNoRefusal dependency program_reduction_no_refusal"
 require_line_count 1 '^theorem program_reduction_no_refusal([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxNoRefusal theorem program_reduction_no_refusal"
+
+# Record-lift increment A (Claude, adapted from Codex WIP 034108c4): seed entry and whole-slot chain absence at the first allocation of a slot.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftSeedScope.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.PqxdhRecordLiftSeedScope$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftSeedScope root import"
+require_line_count 21 '^theorem ' "$selected_source_module" "PqxdhRecordLiftSeedScope theorem inventory"
+require_line_count 21 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftSeedScope guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftSeedScope\.installServer_safe$' "$selected_source_module" "PqxdhRecordLiftSeedScope dependency installServer_safe"
+require_line_count 1 '^theorem installServer_safe([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSeedScope theorem installServer_safe"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftSeedScope\.local_safe$' "$selected_source_module" "PqxdhRecordLiftSeedScope dependency local_safe"
+require_line_count 1 '^theorem local_safe([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSeedScope theorem local_safe"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftSeedScope\.capability_safe$' "$selected_source_module" "PqxdhRecordLiftSeedScope dependency capability_safe"
+require_line_count 1 '^theorem capability_safe([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSeedScope theorem capability_safe"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftSeedScope\.effects_safe$' "$selected_source_module" "PqxdhRecordLiftSeedScope dependency effects_safe"
+require_line_count 1 '^theorem effects_safe([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSeedScope theorem effects_safe"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftSeedScope\.kernelSend_safe$' "$selected_source_module" "PqxdhRecordLiftSeedScope dependency kernelSend_safe"
+require_line_count 1 '^theorem kernelSend_safe([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSeedScope theorem kernelSend_safe"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftSeedScope\.kernelReceive_safe$' "$selected_source_module" "PqxdhRecordLiftSeedScope dependency kernelReceive_safe"
+require_line_count 1 '^theorem kernelReceive_safe([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSeedScope theorem kernelReceive_safe"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftSeedScope\.ownerStep_safe$' "$selected_source_module" "PqxdhRecordLiftSeedScope dependency ownerStep_safe"
+require_line_count 1 '^theorem ownerStep_safe([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSeedScope theorem ownerStep_safe"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftSeedScope\.ownerRun_safe$' "$selected_source_module" "PqxdhRecordLiftSeedScope dependency ownerRun_safe"
+require_line_count 1 '^theorem ownerRun_safe([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSeedScope theorem ownerRun_safe"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftSeedScope\.beacon_safe$' "$selected_source_module" "PqxdhRecordLiftSeedScope dependency beacon_safe"
+require_line_count 1 '^theorem beacon_safe([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSeedScope theorem beacon_safe"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftSeedScope\.server_safe$' "$selected_source_module" "PqxdhRecordLiftSeedScope dependency server_safe"
+require_line_count 1 '^theorem server_safe([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSeedScope theorem server_safe"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftSeedScope\.handler_safe$' "$selected_source_module" "PqxdhRecordLiftSeedScope dependency handler_safe"
+require_line_count 1 '^theorem handler_safe([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSeedScope theorem handler_safe"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftSeedScope\.schedule_safe$' "$selected_source_module" "PqxdhRecordLiftSeedScope dependency schedule_safe"
+require_line_count 1 '^theorem schedule_safe([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSeedScope theorem schedule_safe"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftSeedScope\.initial_schedule_safe$' "$selected_source_module" "PqxdhRecordLiftSeedScope dependency initial_schedule_safe"
+require_line_count 1 '^theorem initial_schedule_safe([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSeedScope theorem initial_schedule_safe"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftSeedScope\.scan_reaches$' "$selected_source_module" "PqxdhRecordLiftSeedScope dependency scan_reaches"
+require_line_count 1 '^theorem scan_reaches([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSeedScope theorem scan_reaches"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftSeedScope\.pending_query$' "$selected_source_module" "PqxdhRecordLiftSeedScope dependency pending_query"
+require_line_count 1 '^theorem pending_query([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSeedScope theorem pending_query"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftSeedScope\.scoped_missing_slot$' "$selected_source_module" "PqxdhRecordLiftSeedScope dependency scoped_missing_slot"
+require_line_count 1 '^theorem scoped_missing_slot([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSeedScope theorem scoped_missing_slot"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftSeedScope\.pending_schedule$' "$selected_source_module" "PqxdhRecordLiftSeedScope dependency pending_schedule"
+require_line_count 1 '^theorem pending_schedule([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSeedScope theorem pending_schedule"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftSeedScope\.pending_children$' "$selected_source_module" "PqxdhRecordLiftSeedScope dependency pending_children"
+require_line_count 1 '^theorem pending_children([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSeedScope theorem pending_children"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftSeedScope\.sampled_schedule$' "$selected_source_module" "PqxdhRecordLiftSeedScope dependency sampled_schedule"
+require_line_count 1 '^theorem sampled_schedule([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSeedScope theorem sampled_schedule"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftSeedScope\.sampled_program$' "$selected_source_module" "PqxdhRecordLiftSeedScope dependency sampled_program"
+require_line_count 1 '^theorem sampled_program([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSeedScope theorem sampled_program"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftSeedScope\.prepared_reads_missing$' "$selected_source_module" "PqxdhRecordLiftSeedScope dependency prepared_reads_missing"
+require_line_count 1 '^theorem prepared_reads_missing([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftSeedScope theorem prepared_reads_missing"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
