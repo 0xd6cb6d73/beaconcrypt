@@ -4,7 +4,7 @@ Stage S5 of the items 4/5 takeover plan (`/tmp/bc-arc-scratch/items45-takeover/t
 
 ## Status
 
-Built by Claude on branch `codex/deployment-record-world` (worktree `/tmp/beaconcrypt-deployment-record-world`, base central `14f51c34`), scratch `/tmp/bc-arc-scratch/items45/world`. New Claude work; nothing is adapted from Codex WIP. An independent semantic review and an independent hygiene review of `43f714d3` found no defect in a Lean statement, definition, guard or inventory row; their findings on the documentation and the receipt are resolved by the review fix pass that follows `43f714d3` (receipt section `review`). Not yet integrated.
+Built by Claude on branch `codex/deployment-record-world` (worktree `/tmp/beaconcrypt-deployment-record-world`, base central `14f51c34`), scratch `/tmp/bc-arc-scratch/items45/world`. New Claude work; nothing is adapted from Codex WIP. An independent semantic review and an independent hygiene review of `43f714d3` found no defect in a Lean statement, definition, guard or inventory row; their findings on the documentation and the receipt are resolved by the review fix pass that follows `43f714d3` (receipt section `review`). A confirming review of the fix pass (`43f714d3..8a51f0a8`) approved it with one nit and no finding against a statement, definition, guard or inventory row; the nit fix corrects the receipt's note on the contract-probe logs, which are byte-identical, and records the confirming review in the receipt (sections `review.confirming_review` and `nit_fix`). Central integration merges central into the topic branch, reruns the checks on the merged tip and fast-forwards central to it.
 
 | Target | Module | State |
 | --- | --- | --- |
