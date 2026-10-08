@@ -1,0 +1,1618 @@
+{
+ "date": "2026-10-08T14:14:01.281508+00:00",
+ "scope": "CE-11b unit U2 (design-v2 sections 4 and 5.2): C7 for the ideal registration, the represent step, the seed relocation, the kernel identities, the deferral of the seed draws to the hidden installs and ideal_to_split, as four modules. seed_at_install (F4) moved to U3. Not reviewed; not integrated into central.",
+ "basis": "0b70190e35c4233e20952fd8d48dfa77c9f6f1e5",
+ "basis_note": "topic tip after increment 2 (equal to central 0b70190e at the start of the unit); central moved to 14f51c34 during the unit and is not merged",
+ "topic": {
+  "branch": "codex/deployment-ce11b",
+  "worktree": "/tmp/beaconcrypt-deployment-ce11b"
+ },
+ "plan": {
+  "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
+  "sha256": "e289a18aa12c39a30c27de9398b404de476e54da84a4f18a89e2a6e153234550",
+  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u2/docs/plan.at-u2-receipt-e289a18a.md",
+  "dated_copy_sha256": "e289a18aa12c39a30c27de9398b404de476e54da84a4f18a89e2a6e153234550",
+  "sections": "54 and 55 (unit U5, other track; read for the re-estimate), 56 (this unit, new; 55 was the last section)",
+  "before_u2_copy": {
+   "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u2/docs/plan.before-u2.md",
+   "sha256": "6891e7f0b7a2b2dc20499a3dace92a93b30b9d512e0a107b83cd400df5e106d7"
+  }
+ },
+ "design": {
+  "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/design-v2.md",
+  "sha256": "80e2cb5ac18c5c679364e16315911c61a451c7bc0f1778d660f217a99fe35d0b",
+  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u2/docs/design-v2.at-u2-receipt-80e2cb5a.md",
+  "dated_copy_sha256": "80e2cb5ac18c5c679364e16315911c61a451c7bc0f1778d660f217a99fe35d0b",
+  "sections": "4 (C7), 5.2 (steps 1-5), 6.1 (idealStep shape), 11, 21 (corrections after unit U2, new; 20 was the last numbered section)",
+  "before_u2_copy": {
+   "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u2/docs/design-v2.before-u2.md",
+   "sha256": "a6a839f6f3903cccbbabd65953918f5b8d1c93a8c39234887f01ad12860d1b1a"
+  }
+ },
+ "notes": {
+  "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/NOTES.md",
+  "section": "## Track u2"
+ },
+ "commits": [
+  {
+   "commit": "2f46f1a57a95068a6ee2b9d86daf0c67b8fa7027",
+   "subject": "Prove C7 for the CE-11b ideal registration"
+  },
+  {
+   "commit": "cb63629c67f5e2dc2ef338a04afc4e6b0c0017cd",
+   "subject": "Prove the first-touch split of the CE-11b ideal registration"
+  },
+  {
+   "commit": "0d32c6cf6b7276d8070db272ddb175b87537c0d9",
+   "subject": "Prove the kernel identities of the CE-11b ideal registration"
+  },
+  {
+   "commit": "26943f396c65b3a831ef746749786a2b84def885",
+   "subject": "Defer the CE-11b ideal registration's seed draws to its installs"
+  }
+ ],
+ "commits_note": "Commits on the topic after the basis that were made before this receipt was generated; the documentation commit that adds this receipt is not listed.",
+ "files_sha256": {
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealErase.lean": "d873ea79dc3587164237629a17e6e7beb63916db61ac01b900896ac0c784e1cd",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealKeys.lean": "c0f82206498a41813875134df7a62fd011988f8c44be7e27dc4f7ab473c2045a",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealKernel.lean": "4b6120f353e314315efebf171582a79cb310dd33f4ce90a8d4262571e8ae69ec",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealDefer.lean": "bba0d0b704b700c30843aedad6fe7946c7406237359ba52909ca177b50d4532a",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "0cf0769670b25656dda8a47849e6c32cd46fa28db2d30fe684255255e45bd94a",
+  "beaconcrypt-core/proofs/check-inventory.sh": "1b5508ff4d502d913bf123a716031da7f29cafc83807f0e0514fe5a01bc48b11",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "cb20bc4df7314e5d0779e9e5a057ce48dce4a946471a07728d9845a2ce8fd56a"
+ },
+ "modules": [
+  {
+   "name": "BeaconcryptCore.Computational.PqxdhDeploymentIdealErase",
+   "commit": "2f46f1a57a95068a6ee2b9d86daf0c67b8fa7027",
+   "theorem_count": 77,
+   "theorems": [
+    "realRegAt_forget",
+    "realRegAt_commutes_ctx",
+    "slotImpl_coins",
+    "onSlots_run",
+    "slotCore_onSlots",
+    "slotCore_commutes_ctx",
+    "createReg_commutes_ctx",
+    "idealCore_real_commutes_ctx",
+    "onPair_run",
+    "onPair_bind",
+    "onPair_pure",
+    "onPair_map",
+    "onPair_onSlots",
+    "SlotFrame.pure",
+    "SlotFrame.bind",
+    "SlotFrame.map",
+    "SlotFrame.onSlots",
+    "SlotFrame.read",
+    "SlotFrame.simulateQ",
+    "SlotFrame.focus",
+    "onPair_commutes_frame",
+    "onPair_commutes_onSlots",
+    "onPair_focus",
+    "onPair_commutes_focus",
+    "onPair_dispatch",
+    "onPair_commutes_dispatch",
+    "pairLens_completeOpt",
+    "onPair_factor",
+    "slotCore_pair",
+    "slotCore_commutes",
+    "slotCore_factor",
+    "frame_marked",
+    "romRoot_frame",
+    "tailCE_client_frame",
+    "tailCE_forward_frame",
+    "tail_split",
+    "tailRest_frame",
+    "tailCE_tail_frame",
+    "serverTail_frame",
+    "acceptActive_frame",
+    "acceptInactive_frame",
+    "acceptExposed_frame",
+    "factoredHidden_build",
+    "factoredHidden_after",
+    "buildHidden_commutes",
+    "buildHidden_factored_commutes",
+    "ownerImpl_prepare",
+    "ownerRun",
+    "completeOpt_map",
+    "nativeCtx_factor",
+    "group_factor",
+    "owner_factor",
+    "challenge_factor",
+    "finishStep_factor",
+    "nativeCtx_erased",
+    "group_erase",
+    "owner_erase",
+    "challenge_erase",
+    "finishStep_erase",
+    "acceptStep_commutes",
+    "readAt_bind_run",
+    "buildStep_commutes",
+    "tailNative_commutes",
+    "knownWork_commutes",
+    "groupCE_explicit",
+    "groupCE_erased_commutes",
+    "owner_explicit",
+    "owner_erased_commutes",
+    "challenge_erased_commutes",
+    "finishStep_erased_commutes",
+    "idealProg_erased_other",
+    "idealPointed_finish_erased",
+    "idealCore_commutes",
+    "idealPair_reg",
+    "idealPair_erased",
+    "erase_ideal",
+    "erase_idealGame"
+   ],
+   "definitions": [
+    "forget",
+    "reattach",
+    "onPair",
+    "pairLens",
+    "SlotFrame",
+    "markPut",
+    "tailRest",
+    "hiddenTokenBuild",
+    "groupLens",
+    "challengeLens",
+    "groupPointed",
+    "ownerPointed",
+    "finishChallengePointed",
+    "finishStepPointed",
+    "acceptBranch",
+    "countAccept",
+    "readAt",
+    "buildFocus",
+    "buildBranch",
+    "knownWork",
+    "groupExplicit",
+    "ownerExplicit",
+    "challengeBranch",
+    "finishBranch",
+    "idealPointed",
+    "idealPair",
+    "idealGameErased"
+   ],
+   "guarded": 77,
+   "axiom_profile": {
+    "realRegAt_forget": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "realRegAt_commutes_ctx": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "slotImpl_coins": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "onSlots_run": [],
+    "slotCore_onSlots": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "slotCore_commutes_ctx": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "createReg_commutes_ctx": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "idealCore_real_commutes_ctx": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "onPair_run": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "onPair_bind": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "onPair_pure": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "onPair_map": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "onPair_onSlots": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "pure": [
+     "Quot.sound",
+     "propext"
+    ],
+    "bind": [
+     "Quot.sound",
+     "propext"
+    ],
+    "map": [
+     "Quot.sound",
+     "propext"
+    ],
+    "onSlots": [
+     "Quot.sound",
+     "propext"
+    ],
+    "read": [
+     "Quot.sound",
+     "propext"
+    ],
+    "simulateQ": [
+     "Quot.sound",
+     "propext"
+    ],
+    "focus": [
+     "Quot.sound",
+     "propext"
+    ],
+    "onPair_commutes_frame": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "onPair_commutes_onSlots": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "onPair_focus": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "onPair_commutes_focus": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "onPair_dispatch": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "onPair_commutes_dispatch": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "pairLens_completeOpt": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "onPair_factor": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "slotCore_pair": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "slotCore_commutes": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "slotCore_factor": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "frame_marked": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "romRoot_frame": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "tailCE_client_frame": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "tailCE_forward_frame": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "tail_split": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "tailRest_frame": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "tailCE_tail_frame": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "serverTail_frame": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "acceptActive_frame": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "acceptInactive_frame": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "acceptExposed_frame": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "factoredHidden_build": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "factoredHidden_after": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "buildHidden_commutes": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "buildHidden_factored_commutes": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "ownerImpl_prepare": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "ownerRun": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "completeOpt_map": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "nativeCtx_factor": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "group_factor": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "owner_factor": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "challenge_factor": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "finishStep_factor": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "nativeCtx_erased": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "group_erase": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "owner_erase": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "challenge_erase": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "finishStep_erase": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "acceptStep_commutes": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "readAt_bind_run": [
+     "Quot.sound",
+     "propext"
+    ],
+    "buildStep_commutes": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "tailNative_commutes": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "knownWork_commutes": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "groupCE_explicit": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "groupCE_erased_commutes": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "owner_explicit": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "owner_erased_commutes": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "challenge_erased_commutes": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "finishStep_erased_commutes": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "idealProg_erased_other": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "idealPointed_finish_erased": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "idealCore_commutes": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "idealPair_reg": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "idealPair_erased": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "erase_ideal": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "erase_idealGame": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ]
+   },
+   "direct_check_final": {
+    "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealErase",
+    "start": "2026-10-08T12:47:43.759141658Z",
+    "end": "2026-10-08T12:48:03.356132003Z",
+    "exit": 0,
+    "source_sha256": "d873ea79dc3587164237629a17e6e7beb63916db61ac01b900896ac0c784e1cd",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/common-experiment/ce11b/u2/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealErase.olean",
+    "artifact_sha256": "b0283165fdbfedb09ccec4087bbdc07b3d20778df8995d9816b03c7311722399",
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce11b/u2/leanpath",
+    "leanpath_sha256": "033ead23c801629344085786b09e5085ca5001e5c26bd5e1ef38aa14214557a0",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/ce11b/u2/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealErase.olean",
+     "/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealErase.lean"
+    ],
+    "source_matches_worktree": true
+   }
+  },
+  {
+   "name": "BeaconcryptCore.Computational.PqxdhDeploymentIdealKeys",
+   "commit": "cb63629c67f5e2dc2ef338a04afc4e6b0c0017cd",
+   "theorem_count": 10,
+   "theorems": [
+    "slotCore_moveSeeds",
+    "onBase_seedFrame",
+    "realRegAt_seedFrame",
+    "idealProg_seedFrame",
+    "fixed_moveSeeds",
+    "game_moveSeeds",
+    "outcomeMap_comp",
+    "represent_ideal",
+    "seed_move",
+    "ideal_to_splitX"
+   ],
+   "definitions": [
+    "seedPut",
+    "detachX",
+    "attachX",
+    "slotCoreX",
+    "moveSeeds",
+    "idealSplitX",
+    "splitView"
+   ],
+   "guarded": 10,
+   "axiom_profile": {
+    "slotCore_moveSeeds": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "onBase_seedFrame": [
+     "Quot.sound",
+     "propext"
+    ],
+    "realRegAt_seedFrame": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "idealProg_seedFrame": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "fixed_moveSeeds": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "game_moveSeeds": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "outcomeMap_comp": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "represent_ideal": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "seed_move": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "ideal_to_splitX": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ]
+   },
+   "direct_check_final": {
+    "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealKeys",
+    "start": "2026-10-08T13:03:40.883384103Z",
+    "end": "2026-10-08T13:03:45.697047409Z",
+    "exit": 0,
+    "source_sha256": "c0f82206498a41813875134df7a62fd011988f8c44be7e27dc4f7ab473c2045a",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/common-experiment/ce11b/u2/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealKeys.olean",
+    "artifact_sha256": "63866c31cee497e905b74eb251170764a90e37e6f4e8b305e26676fe84c44f4c",
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce11b/u2/leanpath",
+    "leanpath_sha256": "033ead23c801629344085786b09e5085ca5001e5c26bd5e1ef38aa14214557a0",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/ce11b/u2/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealKeys.olean",
+     "/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealKeys.lean"
+    ],
+    "source_matches_worktree": true
+   }
+  },
+  {
+   "name": "BeaconcryptCore.Computational.PqxdhDeploymentIdealKernel",
+   "commit": "0d32c6cf6b7276d8070db272ddb175b87537c0d9",
+   "theorem_count": 44,
+   "theorems": [
+    "Ignores.pure",
+    "Ignores.bind",
+    "Ignores.map",
+    "Ignores.liftS",
+    "Ignores.read",
+    "IgnoresS.pure",
+    "IgnoresS.bind",
+    "IgnoresS.simulateQ",
+    "tailCE_ignores",
+    "acceptActive_ignores",
+    "acceptStep_ignores",
+    "eagerDummy_same",
+    "slotImpl_same",
+    "slotCoreX_same",
+    "settle_replaceRaw",
+    "buildHidden_seed",
+    "buildStepC_fst",
+    "query_support",
+    "splitService_support",
+    "slotImpl_split_support",
+    "slotImpl_eagerDummy",
+    "pairPeek_map",
+    "onPair_readAt",
+    "nativeCtx_erased_seed",
+    "group_seed",
+    "lift_run",
+    "onPair_onSlots_lift",
+    "finish_withKernel",
+    "owner_seed",
+    "set_modify",
+    "finishChallenge_branch",
+    "challenge_seed",
+    "establishedAt_modify",
+    "finishStepC_fst",
+    "finishStepC_seed",
+    "buildFocus_run",
+    "publishedKey_peerFix",
+    "buildStepC_seed",
+    "slotCoreX_run",
+    "attach_pairPeek",
+    "slotRunX_map",
+    "slotRunX_seed",
+    "split_kernel",
+    "ideal_to_splitEager"
+   ],
+   "definitions": [
+    "SameEffects",
+    "Ignores",
+    "IgnoresS",
+    "SeedCache",
+    "MatCache",
+    "eagerDummy",
+    "lazyDummy",
+    "SameSvc",
+    "peerFix",
+    "buildHiddenC",
+    "buildStepC",
+    "buildApply",
+    "pairPeek",
+    "liftPair",
+    "groupApply",
+    "setOwnerKernel",
+    "ownerApply",
+    "setKernelAt",
+    "reinstall",
+    "challengeApply",
+    "assembleF",
+    "finishHiddenC",
+    "finishStepC",
+    "stepApply",
+    "slotRunX",
+    "xPeek",
+    "idealSplitEager"
+   ],
+   "guarded": 44,
+   "axiom_profile": {
+    "pure": [
+     "propext"
+    ],
+    "bind": [
+     "Quot.sound",
+     "propext"
+    ],
+    "map": [
+     "Quot.sound",
+     "propext"
+    ],
+    "liftS": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "read": [
+     "Quot.sound",
+     "propext"
+    ],
+    "simulateQ": [
+     "Quot.sound",
+     "propext"
+    ],
+    "tailCE_ignores": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "acceptActive_ignores": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "acceptStep_ignores": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "eagerDummy_same": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "slotImpl_same": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "slotCoreX_same": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "settle_replaceRaw": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "buildHidden_seed": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "buildStepC_fst": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "query_support": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "splitService_support": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "slotImpl_split_support": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "slotImpl_eagerDummy": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "pairPeek_map": [
+     "propext"
+    ],
+    "onPair_readAt": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "nativeCtx_erased_seed": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "group_seed": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "lift_run": [],
+    "onPair_onSlots_lift": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "finish_withKernel": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "owner_seed": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "set_modify": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "finishChallenge_branch": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "challenge_seed": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "establishedAt_modify": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "finishStepC_fst": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "finishStepC_seed": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "buildFocus_run": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "publishedKey_peerFix": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "buildStepC_seed": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "slotCoreX_run": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "attach_pairPeek": [
+     "Quot.sound",
+     "propext"
+    ],
+    "slotRunX_map": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "slotRunX_seed": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "split_kernel": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "ideal_to_splitEager": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ]
+   },
+   "direct_check_final": {
+    "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealKernel",
+    "start": "2026-10-08T13:37:20.858374501Z",
+    "end": "2026-10-08T13:37:27.724139168Z",
+    "exit": 0,
+    "source_sha256": "4b6120f353e314315efebf171582a79cb310dd33f4ce90a8d4262571e8ae69ec",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/common-experiment/ce11b/u2/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealKernel.olean",
+    "artifact_sha256": "fe2b0fcd6321a911f671cfc8f0f5f34643542b319215855494c379c71c013da0",
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce11b/u2/leanpath",
+    "leanpath_sha256": "033ead23c801629344085786b09e5085ca5001e5c26bd5e1ef38aa14214557a0",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/ce11b/u2/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealKernel.olean",
+     "/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealKernel.lean"
+    ],
+    "source_matches_worktree": true
+   }
+  },
+  {
+   "name": "BeaconcryptCore.Computational.PqxdhDeploymentIdealDefer",
+   "commit": "26943f396c65b3a831ef746749786a2b84def885",
+   "theorem_count": 55,
+   "theorems": [
+    "commutes_completeList",
+    "erase_tail_list",
+    "discard_erase_list",
+    "fixed_seeds",
+    "pointedWithSeeds_erased",
+    "defer_seeds",
+    "slotsFrom_self",
+    "slotsFrom_cons",
+    "eagerDummy_present",
+    "lazyDummy_run",
+    "splitService_run",
+    "eagerDummy_lazy",
+    "simulateQ_frame",
+    "slotImpl_lazy_frame",
+    "simulateQ_lazy_commutes",
+    "slotImpl_counter",
+    "simulateQ_counter",
+    "complete_support",
+    "slotImpl_lazy_found",
+    "slotImpl_lazy_new",
+    "slotImpl_eager_new",
+    "seeded_material",
+    "seeded_new",
+    "eager_lazy",
+    "installStep_commutes",
+    "slotImpl_eager_keeps",
+    "modify_keep",
+    "xInstall_peek",
+    "buildApply_void",
+    "stepApply_void",
+    "completeList_map",
+    "slotRunX_eager_keeps",
+    "slotRunX_lazy_frame",
+    "slotRunX_lazy_commutes",
+    "slotRunX_eager_lazy",
+    "slotImpl_lazy_keeps",
+    "completeList_support",
+    "mem_slotsFrom",
+    "invX_complete",
+    "query_grows",
+    "xInstall_support",
+    "slotRunX_lazy_keeps",
+    "partial_of_inv",
+    "install_factor",
+    "install_keeps",
+    "install_oblivious",
+    "plain_factor",
+    "plain_keeps",
+    "plain_oblivious",
+    "splitSeeds_erased",
+    "fixed_invX",
+    "initial_invX",
+    "split_game",
+    "splitView_seedFree",
+    "ideal_to_split"
+   ],
+   "definitions": [
+    "completeList",
+    "PointedSeeds",
+    "PointedSeeds.erased",
+    "pointedWithSeeds",
+    "pairSeeds",
+    "Seeded",
+    "slotsFrom",
+    "xInstall",
+    "installStep",
+    "installAt",
+    "InvX",
+    "Partial",
+    "serverInstall",
+    "beaconInstall",
+    "idealSplit",
+    "splitPointed",
+    "splitSeeds"
+   ],
+   "guarded": 55,
+   "axiom_profile": {
+    "commutes_completeList": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "erase_tail_list": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "discard_erase_list": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "fixed_seeds": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "pointedWithSeeds_erased": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "defer_seeds": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "slotsFrom_self": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "slotsFrom_cons": [
+     "Quot.sound",
+     "propext"
+    ],
+    "eagerDummy_present": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "lazyDummy_run": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "splitService_run": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "eagerDummy_lazy": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "simulateQ_frame": [
+     "Quot.sound",
+     "propext"
+    ],
+    "slotImpl_lazy_frame": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "simulateQ_lazy_commutes": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "slotImpl_counter": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "simulateQ_counter": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "complete_support": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "slotImpl_lazy_found": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "slotImpl_lazy_new": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "slotImpl_eager_new": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "seeded_material": [],
+    "seeded_new": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "eager_lazy": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "installStep_commutes": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "slotImpl_eager_keeps": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "modify_keep": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "xInstall_peek": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "buildApply_void": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "stepApply_void": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "completeList_map": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "slotRunX_eager_keeps": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "slotRunX_lazy_frame": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "slotRunX_lazy_commutes": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "slotRunX_eager_lazy": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "slotImpl_lazy_keeps": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "completeList_support": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "mem_slotsFrom": [
+     "Quot.sound",
+     "propext"
+    ],
+    "invX_complete": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "query_grows": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "xInstall_support": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "slotRunX_lazy_keeps": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "partial_of_inv": [],
+    "install_factor": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "install_keeps": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "install_oblivious": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "plain_factor": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "plain_keeps": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "plain_oblivious": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "splitSeeds_erased": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "fixed_invX": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "initial_invX": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "split_game": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "splitView_seedFree": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "ideal_to_split": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ]
+   },
+   "direct_check_final": {
+    "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealDefer",
+    "start": "2026-10-08T14:06:08.792827369Z",
+    "end": "2026-10-08T14:06:17.438366436Z",
+    "exit": 0,
+    "source_sha256": "bba0d0b704b700c30843aedad6fe7946c7406237359ba52909ca177b50d4532a",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/common-experiment/ce11b/u2/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealDefer.olean",
+    "artifact_sha256": "c343f025b08e3411bc7970f66380b1a2312b797f957b597c6a7126a92622967e",
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce11b/u2/leanpath",
+    "leanpath_sha256": "033ead23c801629344085786b09e5085ca5001e5c26bd5e1ef38aa14214557a0",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/ce11b/u2/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealDefer.olean",
+     "/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealDefer.lean"
+    ],
+    "source_matches_worktree": true
+   }
+  }
+ ],
+ "theorem_total": 186,
+ "allowed_axioms": [
+  "Classical.choice",
+  "Quot.sound",
+  "propext"
+ ],
+ "design_names_realized_as": {
+  "idealPair, erase_ideal (design-v2 4)": "idealPair (FinishPair over any slot service; idealPair_reg, idealPair_erased), erase_ideal (erase_game_ctx at idealPair, up to fullX), erase_idealGame and idealGameErased for CE.idealGame g",
+  "represent_split instance (5.2 step 1)": "represent_ideal",
+  "seed_move (5.2 step 2)": "generic slotCoreX, moveSeeds, slotCore_moveSeeds, game_moveSeeds; instance seed_move; first-touch split form idealSplitX; ideal_to_splitX",
+  "conditional-read kernel identities (5.2 step 3)": "split_kernel: idealSplitX = idealSplitEager exactly (eagerDummy service, xPeek seed fixes with buildApply and stepApply), from buildHidden_seed, nativeCtx_erased_seed, finish_withKernel, acceptStep_ignores; ideal_to_splitEager",
+  "two-point defer, split_game (5.2 step 4)": "discard_erase_list, PointedSeeds, defer_seeds (list points under the invariant InvX), eager_lazy, xInstall, xInstall_peek, splitSeeds, split_game (up to seedFree)",
+  "idealSplit (5.2)": "idealSplit: lazyDummy slot steps, serverInstall after the marked build (gate publishedKey), beaconInstall after owner k's challenge finish (gate establishedAt)",
+  "ideal_to_split (5.2)": "ideal_to_split (up to splitView)",
+  "seed_at_install (5.2 step 5, F4)": "not built in U2; moved to U3 as a conjunct of the U3 invariant"
+ },
+ "deviations_from_design": [
+  "four modules (PqxdhDeploymentIdealErase, PqxdhDeploymentIdealKeys, PqxdhDeploymentIdealKernel, PqxdhDeploymentIdealDefer) instead of one, each registered before creation",
+  "C7 pointed finish built as a slot program on pairs (onPair, slotCore_factor) with owner k's grouped finish restructured (ownerRun), instead of factor_prefix/factor_suffix on the game state",
+  "kernel identities through an intermediate eager split form (exact, no invariant) instead of conditional seed reads under an invariant",
+  "deferral with lists of points under a state invariant instead of the two-point PointedReg with the single-point defer",
+  "seed_at_install (F4) moved to U3: needs the run facts I4 and I5 of IdealInv (ghost writes overwrite); statement unchanged",
+  "central 14f51c34 (record-lift CTX track) not merged into the topic during the unit"
+ ],
+ "contracts_used": {
+  "new_contracts": [],
+  "new_assumptions": [],
+  "codec_laws": [],
+  "premises": "none beyond hypotheses of individual lemmas (state invariants of the deferral, gate conditions)"
+ },
+ "leanpath": {
+  "manifest": "/tmp/bc-arc-scratch/common-experiment/ce11b/u2/leanpath",
+  "sha256": "033ead23c801629344085786b09e5085ca5001e5c26bd5e1ef38aa14214557a0",
+  "note": "ce11b/u2/olean (resolved symlink mirror of the first prefix of /tmp/bc-coord/leanpaths/0b70190e35c4233e20952fd8d48dfa77c9f6f1e5.leanpath, ce11b/inc2/int/olean, without its root olean; u2/mirror.py, u2/mirror.log) in front of the published LEAN_PATH; each module olean was written there by its final check"
+ },
+ "root_checks": {
+  "root-erase1": {
+   "module": "BeaconcryptCore",
+   "start": "2026-10-08T12:48:26.842576202Z",
+   "end": "2026-10-08T12:48:34.507817134Z",
+   "exit": 0,
+   "source_sha256": "ad87b4256efe8f07b6489e95492fd81f7ee2f6f3f8803cade472abb6e77e6528",
+   "log_bytes": 0,
+   "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "artifact": "/tmp/bc-arc-scratch/common-experiment/ce11b/u2/root-checks/erase1/BeaconcryptCore.olean",
+   "artifact_sha256": "a94c29eb3a122f2e7307247bfe035652809d3076feb4e6935c1543c820376fb2",
+   "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce11b/u2/leanpath",
+   "leanpath_sha256": "033ead23c801629344085786b09e5085ca5001e5c26bd5e1ef38aa14214557a0",
+   "command": [
+    "coord.sh",
+    "lean",
+    "claude",
+    "<label>",
+    "--",
+    "timeout",
+    "180",
+    "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+    "-j1",
+    "-M8000",
+    "--root=/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean",
+    "-o",
+    "/tmp/bc-arc-scratch/common-experiment/ce11b/u2/root-checks/erase1/BeaconcryptCore.olean",
+    "/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+   ]
+  },
+  "root-keys1": {
+   "module": "BeaconcryptCore",
+   "start": "2026-10-08T13:03:45.887888835Z",
+   "end": "2026-10-08T13:03:54.989390418Z",
+   "exit": 0,
+   "source_sha256": "4708c42bb9e63e9e9415f598f75dc231a7987e23ff8f360df4c44c07fa065d46",
+   "log_bytes": 0,
+   "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "artifact": "/tmp/bc-arc-scratch/common-experiment/ce11b/u2/root-checks/keys1/BeaconcryptCore.olean",
+   "artifact_sha256": "e9c6c26e88ea1803d37545754d2f2eebd5503256b14779b614ae5f8cf4cecac5",
+   "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce11b/u2/leanpath",
+   "leanpath_sha256": "033ead23c801629344085786b09e5085ca5001e5c26bd5e1ef38aa14214557a0",
+   "command": [
+    "coord.sh",
+    "lean",
+    "claude",
+    "<label>",
+    "--",
+    "timeout",
+    "180",
+    "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+    "-j1",
+    "-M8000",
+    "--root=/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean",
+    "-o",
+    "/tmp/bc-arc-scratch/common-experiment/ce11b/u2/root-checks/keys1/BeaconcryptCore.olean",
+    "/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+   ]
+  },
+  "root-kernel1": {
+   "module": "BeaconcryptCore",
+   "start": "2026-10-08T13:37:34.681449381Z",
+   "end": "2026-10-08T13:37:37.879576916Z",
+   "exit": 0,
+   "source_sha256": "0e1e2c2d9bd141b762369aa28eae737050aa4fd51d7f53db81e8e52b1e8f1d83",
+   "log_bytes": 0,
+   "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "artifact": "/tmp/bc-arc-scratch/common-experiment/ce11b/u2/root-checks/kernel1/BeaconcryptCore.olean",
+   "artifact_sha256": "228ec904ca8efa562666db3b8b0b7c39fce01b062eceabebdc3f93371306be9f",
+   "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce11b/u2/leanpath",
+   "leanpath_sha256": "033ead23c801629344085786b09e5085ca5001e5c26bd5e1ef38aa14214557a0",
+   "command": [
+    "coord.sh",
+    "lean",
+    "claude",
+    "<label>",
+    "--",
+    "timeout",
+    "180",
+    "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+    "-j1",
+    "-M8000",
+    "--root=/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean",
+    "-o",
+    "/tmp/bc-arc-scratch/common-experiment/ce11b/u2/root-checks/kernel1/BeaconcryptCore.olean",
+    "/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+   ]
+  },
+  "root-defer1": {
+   "module": "BeaconcryptCore",
+   "start": "2026-10-08T14:06:43.853088429Z",
+   "end": "2026-10-08T14:06:47.065645146Z",
+   "exit": 0,
+   "source_sha256": "0cf0769670b25656dda8a47849e6c32cd46fa28db2d30fe684255255e45bd94a",
+   "log_bytes": 0,
+   "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "artifact": "/tmp/bc-arc-scratch/common-experiment/ce11b/u2/root-checks/defer1/BeaconcryptCore.olean",
+   "artifact_sha256": "f6f94e56a3809c95f7bd84f5a77adab2200add3a95baa15bec6f9b579bd5ac42",
+   "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce11b/u2/leanpath",
+   "leanpath_sha256": "033ead23c801629344085786b09e5085ca5001e5c26bd5e1ef38aa14214557a0",
+   "command": [
+    "coord.sh",
+    "lean",
+    "claude",
+    "<label>",
+    "--",
+    "timeout",
+    "180",
+    "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+    "-j1",
+    "-M8000",
+    "--root=/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean",
+    "-o",
+    "/tmp/bc-arc-scratch/common-experiment/ce11b/u2/root-checks/defer1/BeaconcryptCore.olean",
+    "/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+   ]
+  }
+ },
+ "focused_inventory": {
+  "inventory-erase1": {
+   "exit": 0,
+   "start": "2026-10-08T12:48:44Z",
+   "end": "2026-10-08T12:50:08Z",
+   "head_at_run": "2f46f1a57a95068a6ee2b9d86daf0c67b8fa7027",
+   "working_tree_dirt_lines": 0,
+   "working_tree_dirt_after_lines": 0,
+   "log_sha256": "af7980d7422cf8dffb716c3e6a7a04e977951adcbe6b4081a0ce27396a7b74a8",
+   "result_line": "Formal-verification inventory matches the reviewed boundary."
+  },
+  "inventory-keys1": {
+   "exit": 0,
+   "start": "2026-10-08T13:04:13Z",
+   "end": "2026-10-08T13:05:36Z",
+   "head_at_run": "cb63629c67f5e2dc2ef338a04afc4e6b0c0017cd",
+   "working_tree_dirt_lines": 0,
+   "working_tree_dirt_after_lines": 0,
+   "log_sha256": "5507e82c856c683e36e378a56fdfb7f5fe214269c572f41a9525cdaa91ca4d86",
+   "result_line": "Formal-verification inventory matches the reviewed boundary."
+  },
+  "inventory-kernel1": {
+   "exit": 0,
+   "start": "2026-10-08T13:37:44Z",
+   "end": "2026-10-08T13:39:09Z",
+   "head_at_run": "0d32c6cf6b7276d8070db272ddb175b87537c0d9",
+   "working_tree_dirt_lines": 0,
+   "working_tree_dirt_after_lines": 0,
+   "log_sha256": "0fd4072ffc7edad7c560c3e69386cab4dc2d812dbfaa69f5e1b10ec62766ffd3",
+   "result_line": "Formal-verification inventory matches the reviewed boundary."
+  },
+  "inventory-defer1": {
+   "exit": 0,
+   "start": "2026-10-08T14:06:57Z",
+   "end": "2026-10-08T14:08:22Z",
+   "head_at_run": "26943f396c65b3a831ef746749786a2b84def885",
+   "working_tree_dirt_lines": 0,
+   "working_tree_dirt_after_lines": 0,
+   "log_sha256": "12931b9da718ae6a4161b42dbcd047f21c867b9d0d385195442510800937af76",
+   "result_line": "Formal-verification inventory matches the reviewed boundary."
+  }
+ },
+ "focused_inventory_note": "each run on its module's Lean commit with a clean tree; the documentation commit changes no file under beaconcrypt-core/",
+ "inventory": {
+  "handwritten_lean_rows_before": 1674,
+  "handwritten_lean_rows_after": 1678,
+  "per_module": {
+   "PqxdhDeploymentIdealErase": "1674 -> 1675",
+   "PqxdhDeploymentIdealKeys": "1675 -> 1676",
+   "PqxdhDeploymentIdealKernel": "1676 -> 1677",
+   "PqxdhDeploymentIdealDefer": "1677 -> 1678"
+  },
+  "rehashed": [
+   "proofs/lean/BeaconcryptCore.lean",
+   "proofs/check-inventory.sh"
+  ],
+  "note": "coord.sh inv recount before coord.sh inv rehash, per module"
+ },
+ "forbidden_scan": {
+  "PqxdhDeploymentIdealErase": [],
+  "PqxdhDeploymentIdealKeys": [],
+  "PqxdhDeploymentIdealKernel": [],
+  "PqxdhDeploymentIdealDefer": []
+ },
+ "git_diff_check": {
+  "range": "0b70190e35c4233e20952fd8d48dfa77c9f6f1e5..working tree",
+  "exit": 0
+ },
+ "not_run": [
+  "full lake build",
+  "make verify",
+  "mutation testing",
+  "nix-collect-garbage"
+ ],
+ "reestimate": {
+  "unit": "nominal agent-days",
+  "per_unit_remaining": {
+   "U2": "0 (planned 3-5; took about 1-1.5)",
+   "U3": "4.25-7 (+0.25-0.5 for seed_at_install)"
+  },
+  "remaining_main_line_increment_2_figures": "25-42.5 (27.75-47 after increment 2)",
+  "remaining_main_line_with_U5_track": "20.5-34.5 (23.25-39 after U5, plan sections 54 and 55)"
+ },
+ "review": null
+}
