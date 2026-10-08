@@ -1,0 +1,342 @@
+{
+  "component": "Reviewed WorldCompiler157 and MaskedReads32 integration",
+  "status": "Exact merged tree approved by independent aggregate review; prepared for commit and publication",
+  "date_utc": "2026-10-08T00:14:50.378369+00:00",
+  "central_base": "df84f3c684a0e7e80726d76212646adc9aadb305",
+  "topic_branch": "codex/record-lift-stage5",
+  "merge_parents": [
+    "7b36cc6fc4b997c86135905da954aa1af867c28c",
+    "1bdcbdcb102c924f7a2ca2f98c79ed3b6bd5311b"
+  ],
+  "components": {
+    "PqxdhRecordLiftMaskedReads": {
+      "commit": "7b36cc6fc4b997c86135905da954aa1af867c28c",
+      "theorems": 32,
+      "guards": 32,
+      "historical_guide_and_receipt_unchanged": [
+        "doc/impl/record-lift-masked-reads.md",
+        "doc/impl/proof-receipts/record-lift-masked-reads.json"
+      ],
+      "module_source_change": "Byte-for-byte unchanged",
+      "historical_receipt": {
+        "path": "doc/impl/proof-receipts/record-lift-masked-reads.json",
+        "sha256": "6e6ef4d55edda81bdef5bc3a2c4309ab7276b5f22cf9b37efac6d114eddf2bd2"
+      }
+    },
+    "PqxdhRecordLiftWorldCompiler": {
+      "commit": "1bdcbdcb102c924f7a2ca2f98c79ed3b6bd5311b",
+      "theorems": 157,
+      "guards": 157,
+      "historical_guide_and_receipt_unchanged": [
+        "doc/impl/record-lift-world-compiler.md",
+        "doc/impl/proof-receipts/record-lift-world-compiler.json"
+      ],
+      "module_source_change": "One trailing newline removed only, with parent approval and fresh157-guard check",
+      "historical_receipt": {
+        "path": "doc/impl/proof-receipts/record-lift-world-compiler.json",
+        "sha256": "f18e238ed9c7a88a4d58c414d3849f3fbdc4287899e19168e998f9ce500d9c62"
+      }
+    }
+  },
+  "total_statements": 189,
+  "exact_axiom_guards": 189,
+  "allowed_axioms": [
+    "propext",
+    "Classical.choice",
+    "Quot.sound"
+  ],
+  "files": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftMaskedReads.lean": "6f7242e4b48ff97bec42a3796f108ab0dca75895051799dbdfe941655b49607f",
+    "doc/impl/record-lift-masked-reads.md": "930e74f9dc8f0408feae6bca3af7ad9e03a77308254dbdf361789157e13bb54d",
+    "doc/impl/proof-receipts/record-lift-masked-reads.json": "6e6ef4d55edda81bdef5bc3a2c4309ab7276b5f22cf9b37efac6d114eddf2bd2",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftWorldCompiler.lean": "9d9f716a684494ad4399810ab55932fc86eab9d23b5dc32c337b314233542232",
+    "doc/impl/record-lift-world-compiler.md": "9aa0bf1489c246aa576f97272794e39376c9e9244adbba79335e5464b1dd6b69",
+    "doc/impl/proof-receipts/record-lift-world-compiler.json": "f18e238ed9c7a88a4d58c414d3849f3fbdc4287899e19168e998f9ce500d9c62",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "ddbd1ba4dbdb36d3c7b035f864f607efcbc6c73110077d7ffb571c4b28a81a35",
+    "beaconcrypt-core/proofs/check-inventory.sh": "5a1fb1ed623175ce9c26e7b3687ed25de7ffc54690413b35731b05b04ab4a0e9",
+    "beaconcrypt-core/proofs/reviewed-inventory.txt": "82c5d924e7681b9d56bb1db2969c241d4800c914affb1da1fd4794a9205b63a2",
+    "doc/formal-verification-analysis.md": "8176b73f663aa91ec3601a45269441582b02d33a7dfd4edc800670b1b95cdd25"
+  },
+  "handwritten_lean_count": 1591,
+  "manifest_rows": 2011,
+  "source_format_fix": {
+    "module": "PqxdhRecordLiftWorldCompiler",
+    "original_sha256": "3813cdc0de0b767fd5fc616c57880b249c72c55b922a126d0d0699d01c903b9d",
+    "final_sha256": "9d9f716a684494ad4399810ab55932fc86eab9d23b5dc32c337b314233542232",
+    "exact_transformation": "source.rstrip() + newline",
+    "removed_bytes": 1,
+    "only_difference": "One inherited extra blank line at EOF removed",
+    "authorization": "Parent explicitly authorized stage5-only formatting fix; prior published topic and artifacts unchanged",
+    "proof_tokens_unchanged": true
+  },
+  "metadata_resolutions": [
+    {
+      "file": "beaconcrypt-core/proofs/check-inventory.sh",
+      "hunk": 1,
+      "action": "retain current value pending exact recount/rehash",
+      "left_lines": 1,
+      "right_lines": 1
+    },
+    {
+      "file": "beaconcrypt-core/proofs/check-inventory.sh",
+      "hunk": 2,
+      "action": "preserve complete current block then complete WorldCompiler block",
+      "left_lines": 135,
+      "right_lines": 319
+    },
+    {
+      "file": "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean",
+      "hunk": 1,
+      "action": "preserve complete current block then complete WorldCompiler block",
+      "left_lines": 4,
+      "right_lines": 1
+    },
+    {
+      "file": "beaconcrypt-core/proofs/reviewed-inventory.txt",
+      "hunk": 1,
+      "action": "retain current value pending exact recount/rehash",
+      "left_lines": 1,
+      "right_lines": 1
+    },
+    {
+      "file": "beaconcrypt-core/proofs/reviewed-inventory.txt",
+      "hunk": 2,
+      "action": "preserve complete current block then complete WorldCompiler block",
+      "left_lines": 4,
+      "right_lines": 1
+    },
+    {
+      "file": "beaconcrypt-core/proofs/reviewed-inventory.txt",
+      "hunk": 3,
+      "action": "retain current value pending exact recount/rehash",
+      "left_lines": 1,
+      "right_lines": 1
+    },
+    {
+      "file": "doc/formal-verification-analysis.md",
+      "hunk": 1,
+      "action": "preserve complete current block then complete WorldCompiler block",
+      "left_lines": 27,
+      "right_lines": 7
+    }
+  ],
+  "checks": {
+    "world": {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/stage5/logs/world.json",
+      "receipt_sha256": "260c8c6eb275daf864f50d4e62bec03474f5013641f808d64a2d17d545f85af6",
+      "start": "2026-10-08T00:12:24.698939+00:00",
+      "end": "2026-10-08T00:12:40.247070+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "stage5-final-publication-world",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-stage5/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/stage5/olean/BeaconcryptCore/Computational/PqxdhRecordLiftWorldCompiler.olean",
+        "/tmp/beaconcrypt-record-lift-stage5/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftWorldCompiler.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/stage5/logs/world.log",
+      "log_sha256": "6532de8e2d3f396192c340707c79bb52fe4c4c5f45fad1aaecb8825352499abc",
+      "leanpath_sha256": "7565b30290b9ef37d6e34d094bc0b14fc49646bfc086855d0270f8df8c3b6a7c",
+      "source_sha256": "9d9f716a684494ad4399810ab55932fc86eab9d23b5dc32c337b314233542232",
+      "artifact_sha256": "9b9039d5fb6791d361c59f8451b1274d188ae2a197b9439d341aa2001a000101",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    "root": {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/stage5/logs/root.json",
+      "receipt_sha256": "12143e383e50c4d39c599140a67cf7316caf7ff1abd0d8d8daf368ebbdf050a0",
+      "start": "2026-10-08T00:13:13.589654+00:00",
+      "end": "2026-10-08T00:13:21.247359+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "stage5-final-publication-root",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-stage5/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/stage5/olean/BeaconcryptCore.olean",
+        "/tmp/beaconcrypt-record-lift-stage5/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/stage5/logs/root.log",
+      "log_sha256": "5d2abf71b216df31717a54d508fc0e729d15e04141bd472672d51642d22c06ff",
+      "leanpath_sha256": "7565b30290b9ef37d6e34d094bc0b14fc49646bfc086855d0270f8df8c3b6a7c",
+      "source_sha256": "ddbd1ba4dbdb36d3c7b035f864f607efcbc6c73110077d7ffb571c4b28a81a35",
+      "artifact_sha256": "734f48f3ba88b6130b6f48c2f0340f631dad8f9da05583e1fcc49f9512e94dbf",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    "inventory": {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/stage5/logs/inventory.json",
+      "receipt_sha256": "3b2b4eec62e7c20aa2f8a09c00be8ed81a8d2b8a34d16ff3b55ed19c5cd9503e",
+      "start": "2026-10-08T00:13:13.589949+00:00",
+      "end": "2026-10-08T00:14:29.294760+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lease",
+        "mem",
+        "codex",
+        "@nix",
+        "stage5-final-inventory",
+        "--eta",
+        "20m",
+        "--",
+        "nix",
+        "develop",
+        "--no-update-lock-file",
+        "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+        "-c",
+        "make",
+        "-C",
+        "/tmp/beaconcrypt-record-lift-stage5/beaconcrypt-core",
+        "check-inventory",
+        "SHELL=bash"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/stage5/logs/inventory.log",
+      "log_sha256": "adac9c0bb142fe70664599cd618106cc1c85afa1b3e784bbdfc9db1ee5a99efb",
+      "leanpath_sha256": "7565b30290b9ef37d6e34d094bc0b14fc49646bfc086855d0270f8df8c3b6a7c",
+      "source_sha256": null,
+      "artifact_sha256": null,
+      "CARGO_BUILD_JOBS": "2",
+      "CARGO_TARGET_DIR": "/tmp/bc-arc-scratch/record-lift/stage5/target"
+    },
+    "fidelity": {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/stage5/logs/fidelity.json",
+      "receipt_sha256": "f8aece9c9274727a241b65d558b699716c47c29b8722f79980c26368ebb44956",
+      "start": "2026-10-08T00:13:13.589758+00:00",
+      "end": "2026-10-08T00:13:38.120420+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lease",
+        "mem",
+        "codex",
+        "@cargo",
+        "stage5-final-fidelity",
+        "--eta",
+        "20m",
+        "--",
+        "nix",
+        "develop",
+        "--no-update-lock-file",
+        "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+        "-c",
+        "make",
+        "-C",
+        "/tmp/beaconcrypt-record-lift-stage5/beaconcrypt-core",
+        "check-proverif-transcript-fidelity",
+        "SHELL=bash"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/stage5/logs/fidelity.log",
+      "log_sha256": "81b015aa2e446254debd3759dc3f7cd0ac17b8e1b81220072fbad5a5840d96c5",
+      "leanpath_sha256": "7565b30290b9ef37d6e34d094bc0b14fc49646bfc086855d0270f8df8c3b6a7c",
+      "source_sha256": null,
+      "artifact_sha256": null,
+      "CARGO_BUILD_JOBS": "2",
+      "CARGO_TARGET_DIR": "/tmp/bc-arc-scratch/record-lift/stage5/target"
+    },
+    "masked_reads": {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/masked-reads/publication/logs/module.json",
+      "receipt_sha256": "0773e120ccbca723016426fc9fb56c95644a25c28c5bfeaedc964c6db04b2339",
+      "start": "2026-10-08T00:04:54.772257+00:00",
+      "end": "2026-10-08T00:04:59.363224+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "masked-reads-final-publication-module",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-masked-reads/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/masked-reads/publication/olean/BeaconcryptCore/Computational/PqxdhRecordLiftMaskedReads.olean",
+        "/tmp/beaconcrypt-record-lift-masked-reads/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftMaskedReads.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/masked-reads/publication/logs/module.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "leanpath_sha256": "4f848e386cbabe9f7864e04569697d3f94943aa239dc061d0c01793fec778626",
+      "source_sha256": "6f7242e4b48ff97bec42a3796f108ab0dca75895051799dbdfe941655b49607f",
+      "artifact_sha256": "fe74f09658897284897661fab774d44eef1ba7aa7bf0070d41d184f7963298eb",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null,
+      "reuse": "Source and all imported dependencies unchanged; copied exact reviewed artifact; final root checks the joined import surface."
+    }
+  },
+  "dependency_provenance": {
+    "base": "df84f3c684a0e7e80726d76212646adc9aadb305",
+    "published_path": "/tmp/bc-coord/leanpaths/df84f3c684a0e7e80726d76212646adc9aadb305.leanpath",
+    "published_path_sha256": "9df105afc5f6ff16334c5722c05a48f46afac11cf717400fb6c27f1d4cfa7aa8",
+    "own_path_sha256": "7565b30290b9ef37d6e34d094bc0b14fc49646bfc086855d0270f8df8c3b6a7c",
+    "symlinks": 3854,
+    "modules": {
+      "PqxdhRecordLiftMaskedReads": {
+        "commit": "7b36cc6fc4b997c86135905da954aa1af867c28c",
+        "prefix": "/tmp/bc-arc-scratch/record-lift/masked-reads/publication/olean",
+        "source_sha256": "6f7242e4b48ff97bec42a3796f108ab0dca75895051799dbdfe941655b49607f",
+        "copied_artifacts": {
+          "/tmp/bc-arc-scratch/record-lift/stage5/olean/BeaconcryptCore/Computational/PqxdhRecordLiftMaskedReads.olean": "fe74f09658897284897661fab774d44eef1ba7aa7bf0070d41d184f7963298eb"
+        }
+      },
+      "PqxdhRecordLiftWorldCompiler": {
+        "commit": "1bdcbdcb102c924f7a2ca2f98c79ed3b6bd5311b",
+        "prefix": "/tmp/bc-arc-scratch/record-lift/world-compiler/publication/olean",
+        "source_sha256": "3813cdc0de0b767fd5fc616c57880b249c72c55b922a126d0d0699d01c903b9d",
+        "copied_artifacts": {
+          "/tmp/bc-arc-scratch/record-lift/stage5/olean/BeaconcryptCore/Computational/PqxdhRecordLiftWorldCompiler.olean": "9b9039d5fb6791d361c59f8451b1274d188ae2a197b9439d341aa2001a000101"
+        }
+      }
+    }
+  },
+  "current_artifacts": {
+    "BeaconcryptCore.olean": "734f48f3ba88b6130b6f48c2f0340f631dad8f9da05583e1fcc49f9512e94dbf",
+    "PqxdhRecordLiftWorldCompiler.olean": "9b9039d5fb6791d361c59f8451b1274d188ae2a197b9439d341aa2001a000101",
+    "PqxdhRecordLiftMaskedReads.olean": "fe74f09658897284897661fab774d44eef1ba7aa7bf0070d41d184f7963298eb"
+  },
+  "scope": "Operational complete dynamic source simulation and exact selected seed/full76 read locality; existing observed/analysis projections only. No new cryptographic/security bound, global uniqueness/orientation assumption or hidden-state observation claim.",
+  "remaining": [
+    "Global physical role/origin/unique sender invariants for mixed policies.",
+    "Actual opaque global client and labeled attempt history.",
+    "Masked selected interpreter, CTX service routing and cryptographic/alias/refusal hybrid bounds.",
+    "CE source/ledger/result correspondence and session selection."
+  ],
+  "review": {
+    "independent_aggregate_review": {
+      "path": "/tmp/bc-arc-scratch/record-lift/reviews/stage5-final-integration-2026-10-08.json",
+      "sha256": "891c0cf70b9e81dd829408274e499626180302f67f92964864669824c6a5273f",
+      "result": "APPROVE exact joined tree for integration; no findings"
+    }
+  },
+  "publication": {
+    "committed": false,
+    "pushed": false,
+    "central_integrated": false
+  },
+  "hygiene": {
+    "git_diff_check": "passed",
+    "all_manifest_rows_rehashed_and_verified": true,
+    "exact_component_theorem_guard_gate_counts": true,
+    "production_or_frozen_dependency_changes": false,
+    "historical_guides_and_receipts_preserved": true
+  }
+}

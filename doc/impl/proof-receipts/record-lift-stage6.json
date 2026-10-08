@@ -1,0 +1,528 @@
+{
+  "stage": "Stage6 reviewed protocol and private record services",
+  "status": "Independent aggregate review approved; all final checks pass; final normal merge publication authorized; central integration remains parent-owned",
+  "date_utc": "2026-10-08T01:03:10.898733+00:00",
+  "central_basis": "764e0e24e58d19adfa500370e8dbc222da95196c",
+  "branch": "codex/record-lift-stage6",
+  "merge_parents": [
+    "1b98a1cc6bdd9aecd4af39f328a65ca47e1236a5",
+    "93de5b55c048288ab5051269f654072e0e06dc19"
+  ],
+  "component_count": 3,
+  "exact_guard_count": 76,
+  "components": [
+    {
+      "module": "PqxdhRecordLiftCtxServices",
+      "topic": "5f5a6fe529b0912a302c9aa5af997513b7c74c08",
+      "source": "/tmp/beaconcrypt-record-lift-ctx-services/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxServices.lean",
+      "source_sha256": "6fef9d8a6705e7f48de53bdd180e3dead52f76206aa7c286abf79edaa3544cfd",
+      "artifact_source": "/tmp/bc-arc-scratch/record-lift/ctx-services/publication-olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxServices.olean",
+      "artifact": "/tmp/bc-arc-scratch/record-lift/stage6/olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxServices.olean",
+      "artifact_sha256": "90f956cd224c8cf5d6f3a81e25e8dcb5750128cebc7697d453f34651c4bc1c2a",
+      "files_sha256": {
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxServices.lean": "6fef9d8a6705e7f48de53bdd180e3dead52f76206aa7c286abf79edaa3544cfd",
+        "doc/impl/record-lift-ctx-services.md": "dc2bac9f476c26326f9de2cdda5e42190ee284ee10b25c87914a060e9dc510eb",
+        "doc/impl/proof-receipts/record-lift-ctx-services.json": "12bc0e25eb3e21be1441904768605bcda3ff30566b8af8ad35ef02b90a8b81fe"
+      },
+      "theorems": [
+        "native_counts_erasure",
+        "logged_counts_erasure",
+        "sealRom_typed",
+        "sealRom_invalid",
+        "nativeSeal_step",
+        "evaluateRom_bind",
+        "nativeSeal_program",
+        "nativeSeal_typed",
+        "materialRoute_real",
+        "chainRoute_real",
+        "openingRoute_getters",
+        "openingRoute_native",
+        "publicRom_complete",
+        "publicRom_cache",
+        "sealCall_invalid",
+        "sealCall_known_cache",
+        "sealCall_selected_fresh",
+        "sealCall_selected_repeat",
+        "receive_log_program",
+        "native_unit_erasure",
+        "receiveOpen_logged",
+        "receiveOpen_native",
+        "native_opening_malformed",
+        "openingService_total",
+        "openingService_other",
+        "openingService_source",
+        "nativeSeal_invalid",
+        "sealCall_source",
+        "sealCall_total",
+        "sealCall_bills",
+        "sealCall_other",
+        "sendSeal_inner",
+        "sealingService_source",
+        "openingService_routes",
+        "sealingService_total",
+        "sealingService_bills",
+        "sealingService_other",
+        "sealingService_repeat"
+      ],
+      "exact_guards": 38,
+      "immediate_dependency_sources": [
+        {
+          "module": "BeaconcryptCore.Computational.PqxdhRecordLiftOpaqueDrivers",
+          "source_sha256": "22824667ffa27ec9e61706cd537d3d6bc1638203bd0688f5be3e51a9983d4726",
+          "same_as_central": true
+        },
+        {
+          "module": "BeaconcryptCore.Computational.PqxdhRecordLiftLoggedAdapters",
+          "source_sha256": "18e33a9a2a8eed99d3f839ee69520565efeba9950c6db524aac0bcd9546f057e",
+          "same_as_central": true
+        },
+        {
+          "module": "BeaconcryptCore.Computational.PqxdhRecordLiftWorld",
+          "source_sha256": "f08771606169225766f6922e2e73b3b68f8fe0c8e10eefd9d287f21ca635964d",
+          "same_as_central": true
+        },
+        {
+          "module": "BeaconcryptCore.Computational.PqxdhRecordLiftMaskedReads",
+          "source_sha256": "6f7242e4b48ff97bec42a3796f108ab0dca75895051799dbdfe941655b49607f",
+          "same_as_central": true
+        },
+        {
+          "module": "BeaconcryptCore.Computational.RawCtxSelectedOpenConsumer",
+          "source_sha256": "ee06755bc6d097c302393adf69c216c69d24f3d44b271109928499fbfcba0215",
+          "same_as_central": true
+        },
+        {
+          "module": "BeaconcryptCore.Computational.RawCtxSelectedSealConsumer",
+          "source_sha256": "48cb3562b9695f6e889b54620cba6f35046544550dbdba4275fa31b7e79d27db",
+          "same_as_central": true
+        }
+      ]
+    },
+    {
+      "module": "PqxdhRecordLiftMaskedOracle",
+      "topic": "b2359a71951c2128ae7a62caf4ce979acd1eee6e",
+      "source": "/tmp/beaconcrypt-record-lift-masked-oracle/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftMaskedOracle.lean",
+      "source_sha256": "079816a67112a1c360bab01137c3e18d9e4655fe0b9126e641956449e767fce0",
+      "artifact_source": "/tmp/bc-arc-scratch/record-lift/masked-oracle/publication/olean/BeaconcryptCore/Computational/PqxdhRecordLiftMaskedOracle.olean",
+      "artifact": "/tmp/bc-arc-scratch/record-lift/stage6/olean/BeaconcryptCore/Computational/PqxdhRecordLiftMaskedOracle.olean",
+      "artifact_sha256": "c3610234c406dd0de20d5ae61b21cd351845d2321b66262a18344198fa7e88a0",
+      "files_sha256": {
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftMaskedOracle.lean": "079816a67112a1c360bab01137c3e18d9e4655fe0b9126e641956449e767fce0",
+        "doc/impl/record-lift-masked-oracle.md": "1c6e7e9fd9d72e0f88e540da193b72a29dc9c3b468790e09a7443e6fa11b2ce1",
+        "doc/impl/proof-receipts/record-lift-masked-oracle.json": "c71bdaba79f87ba4c54e4eb81722c208ec7d4108aa1709ba5fef4bcccca941e3"
+      },
+      "theorems": [
+        "record_realize",
+        "output_read",
+        "lookup_realization",
+        "lookup_coordinate",
+        "interpreter_realization",
+        "interpreter_coordinate",
+        "schedule_realization"
+      ],
+      "exact_guards": 7,
+      "immediate_dependency_sources": [
+        {
+          "module": "BeaconcryptCore.Computational.PqxdhRecordLiftChainOracle",
+          "source_sha256": "e916c4dfd434d3503e4130992959ce58a308ad1e41b0a93216b520fccc45a8d7",
+          "same_as_central": true
+        },
+        {
+          "module": "BeaconcryptCore.Computational.PqxdhRecordLiftMaskedReads",
+          "source_sha256": "6f7242e4b48ff97bec42a3796f108ab0dca75895051799dbdfe941655b49607f",
+          "same_as_central": true
+        },
+        {
+          "module": "BeaconcryptCore.Computational.RawCtxSelectedChainGame",
+          "source_sha256": "eb0193603798075aa777e04e41f565abd16feaab68136e24072e8427e5835dbe",
+          "same_as_central": true
+        },
+        {
+          "module": "BeaconcryptCore.Computational.PqxdhRecordLiftOpaqueDrivers",
+          "source_sha256": "22824667ffa27ec9e61706cd537d3d6bc1638203bd0688f5be3e51a9983d4726",
+          "same_as_central": true
+        },
+        {
+          "module": "BeaconcryptCore.Computational.PqxdhRecordLiftLoggedAdapters",
+          "source_sha256": "18e33a9a2a8eed99d3f839ee69520565efeba9950c6db524aac0bcd9546f057e",
+          "same_as_central": true
+        }
+      ]
+    },
+    {
+      "module": "PqxdhRecordLiftProtocol",
+      "topic": "93de5b55c048288ab5051269f654072e0e06dc19",
+      "source": "/tmp/beaconcrypt-record-lift-protocol/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftProtocol.lean",
+      "source_sha256": "5fbddf94e4d39001acc91f64ed88addf2aec3c4cf9c1aa500e36ca79bdc12a49",
+      "artifact_source": "/tmp/bc-arc-scratch/record-lift/protocol/publication/olean/BeaconcryptCore/Computational/PqxdhRecordLiftProtocol.olean",
+      "artifact": "/tmp/bc-arc-scratch/record-lift/stage6/olean/BeaconcryptCore/Computational/PqxdhRecordLiftProtocol.olean",
+      "artifact_sha256": "0b0446b007dc284c685bdf1d818bcf42aa297340364b16c330f8bfca4854f960",
+      "files_sha256": {
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftProtocol.lean": "5fbddf94e4d39001acc91f64ed88addf2aec3c4cf9c1aa500e36ca79bdc12a49",
+        "doc/impl/record-lift-protocol.md": "396eec66c30c9be1487e1d8e0e3fd9e821fd548821aab97d446701c5c542fceb",
+        "doc/impl/proof-receipts/record-lift-protocol.json": "b11a623e445f9c309bf7439bd8f097d3f60f540bce42a94c69c332253815ebcd"
+      },
+      "theorems": [
+        "join_split",
+        "local_query_factor",
+        "local_program_factor",
+        "kernelSend_factor",
+        "kernelReceive_factor",
+        "ownerSend_factor",
+        "ownerReceive_factor",
+        "ownerStep_factor",
+        "ownerRun_factor",
+        "ownerRun_world",
+        "beaconStep_factor",
+        "serverStep_factor",
+        "resolve_factor",
+        "installServer_factor",
+        "installBeacon_factor",
+        "initialize_factor",
+        "capability_factor",
+        "charge_factor",
+        "effects_factor",
+        "handler_factor",
+        "schedule_factor",
+        "rejoin_splitResult",
+        "schedule_join",
+        "schedule_pending_empty",
+        "run_factor",
+        "initial_schedule_source",
+        "run_source",
+        "observed_splitResult",
+        "analysis_splitResult",
+        "observed_run_source",
+        "analysis_run_source"
+      ],
+      "exact_guards": 31,
+      "immediate_dependency_sources": [
+        {
+          "module": "BeaconcryptCore.Computational.PqxdhRecordLiftWorldCompiler",
+          "source_sha256": "9d9f716a684494ad4399810ab55932fc86eab9d23b5dc32c337b314233542232",
+          "same_as_central": true
+        },
+        {
+          "module": "BeaconcryptCore.Computational.PqxdhRecordLiftOpaqueDrivers",
+          "source_sha256": "22824667ffa27ec9e61706cd537d3d6bc1638203bd0688f5be3e51a9983d4726",
+          "same_as_central": true
+        }
+      ]
+    }
+  ],
+  "files_sha256": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxServices.lean": "6fef9d8a6705e7f48de53bdd180e3dead52f76206aa7c286abf79edaa3544cfd",
+    "doc/impl/record-lift-ctx-services.md": "dc2bac9f476c26326f9de2cdda5e42190ee284ee10b25c87914a060e9dc510eb",
+    "doc/impl/proof-receipts/record-lift-ctx-services.json": "12bc0e25eb3e21be1441904768605bcda3ff30566b8af8ad35ef02b90a8b81fe",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftMaskedOracle.lean": "079816a67112a1c360bab01137c3e18d9e4655fe0b9126e641956449e767fce0",
+    "doc/impl/record-lift-masked-oracle.md": "1c6e7e9fd9d72e0f88e540da193b72a29dc9c3b468790e09a7443e6fa11b2ce1",
+    "doc/impl/proof-receipts/record-lift-masked-oracle.json": "c71bdaba79f87ba4c54e4eb81722c208ec7d4108aa1709ba5fef4bcccca941e3",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftProtocol.lean": "5fbddf94e4d39001acc91f64ed88addf2aec3c4cf9c1aa500e36ca79bdc12a49",
+    "doc/impl/record-lift-protocol.md": "396eec66c30c9be1487e1d8e0e3fd9e821fd548821aab97d446701c5c542fceb",
+    "doc/impl/proof-receipts/record-lift-protocol.json": "b11a623e445f9c309bf7439bd8f097d3f60f540bce42a94c69c332253815ebcd",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "b969bf7d5ba4458fe354cee787cec24a39ea1dbe369a89c76d1895ead73afd5e",
+    "beaconcrypt-core/proofs/check-inventory.sh": "4d3e11986ec040ea7111c8addecd61473eb8df31098709806c487365c17b869b",
+    "beaconcrypt-core/proofs/reviewed-inventory.txt": "35b5719a60ce0288f7997428ecce7430eb999b4a6ffbf6c6cd9383ad9cadaa0d",
+    "doc/formal-verification-analysis.md": "3ad35e47e6dbac35183ac90f0418512376e0e8c206d6bea079dc2c3dc606ab9d"
+  },
+  "scope": [
+    "Unchanged Protocol31 complete dynamic adaptive private-service source factor and its separate original-World observations.",
+    "Unchanged CtxServices38 actual selected CTX opening/sealing callbacks, native counter erasure, attempted writer log and local bills with explicit nonce stop.",
+    "Unchanged MaskedOracle7 selected next32 local service interpretation and whole adaptive local continuation equation retaining primitive/cache/log state.",
+    "Only additive root/checker/inventory/analysis union relative to the three reviewed component topics; no new Lean statement in this merge."
+  ],
+  "not_established": [
+    "Complete global target-input/observer masking and eager/lazy uniform-child coupling.",
+    "Global mixed-policy validity/depth and source/reduction query cap transport, finite ordered chain and CTX advantages.",
+    "Global physical orientation/history, alias/collision and nonce-refusal bounds, permitted final integrity/privacy/later events.",
+    "CE-side constructor/ledger and registration/installation equality, C1/C5 session selection and concrete reveal obligations."
+  ],
+  "source_and_dependency_preservation": {
+    "all_topic_sources_guides_receipts_identical": true,
+    "all_central_files_outside_four_shared_metadata_identical": true,
+    "dependencies": "/tmp/bc-arc-scratch/record-lift/stage6/dependencies.json",
+    "dependencies_sha256": "0c867cd6207dc0dda352e12c07f3c7b30a307dbd19fe54af3b27cdae17b1b388",
+    "complete_parent_recovery": "/tmp/bc-arc-scratch/record-lift/stage6/final-preservation.json",
+    "complete_parent_recovery_sha256": "f445cc1d4fbe3c334c9dd4b02c0c47bc81f51b7970f91a15031f4f6a9a057e78",
+    "reconstruction_script": "/tmp/bc-arc-scratch/record-lift/stage6/reconstruct-final.py",
+    "reconstruction_script_sha256": "971524b94ae61f5b1a1ffff69fc583ab9fa5c8669c38c1715e4be93aa7cb7c89"
+  },
+  "reused_exact_module_checks": [
+    {
+      "module": "PqxdhRecordLiftCtxServices",
+      "topic": "5f5a6fe529b0912a302c9aa5af997513b7c74c08",
+      "exact_guards": 38,
+      "receipt": "/tmp/bc-arc-scratch/record-lift/ctx-services/logs/publication-module.json",
+      "receipt_sha256": "fc5cb74e57e343c8f370271135c2f1d4ab22024ca44b1b26a0166a39ea14e6ef",
+      "result": {
+        "start": "2026-10-08T00:33:01.720424+00:00",
+        "end": "2026-10-08T00:33:11.637504+00:00",
+        "exit": 0,
+        "command": [
+          "/tmp/bc-coord/coord.sh",
+          "lean",
+          "codex",
+          "ctx-services-module",
+          "--",
+          "timeout",
+          "180",
+          "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+          "-j1",
+          "-M8000",
+          "--root=/tmp/beaconcrypt-record-lift-ctx-services/beaconcrypt-core/proofs/lean",
+          "-o",
+          "/tmp/bc-arc-scratch/record-lift/ctx-services/publication-olean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxServices.olean",
+          "/tmp/beaconcrypt-record-lift-ctx-services/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxServices.lean"
+        ],
+        "CARGO_BUILD_JOBS": null,
+        "CARGO_TARGET_DIR": null,
+        "source_sha256": "6fef9d8a6705e7f48de53bdd180e3dead52f76206aa7c286abf79edaa3544cfd",
+        "artifact_sha256": "90f956cd224c8cf5d6f3a81e25e8dcb5750128cebc7697d453f34651c4bc1c2a",
+        "leanpath_sha256": "53b13998878ca7d6178e93450386d203d9b654c0c4cb4b248dfd87f3ade8ebd6",
+        "log_sha256": "753ba857a762ce943416308b1e8fb97adc594e87a21ab49195389efdbf2152e2",
+        "log": "/tmp/bc-arc-scratch/record-lift/ctx-services/logs/publication-module.log"
+      },
+      "reuse_reason": "Exact reviewed source, unchanged complete imported central dependency closure and immutable published artifact; no recompile needed for this metadata-only union."
+    },
+    {
+      "module": "PqxdhRecordLiftMaskedOracle",
+      "topic": "b2359a71951c2128ae7a62caf4ce979acd1eee6e",
+      "exact_guards": 7,
+      "receipt": "/tmp/bc-arc-scratch/record-lift/masked-oracle/publication/logs/module-003723.json",
+      "receipt_sha256": "ea790da461a0f6dc86293a334607f5d0de6787e1318d8dbe011d13a99826522f",
+      "result": {
+        "start": "2026-10-08T00:37:16.153396+00:00",
+        "end": "2026-10-08T00:37:23.071150+00:00",
+        "exit": 0,
+        "command": [
+          "/tmp/bc-coord/coord.sh",
+          "lean",
+          "codex",
+          "masked-oracle-module",
+          "--",
+          "timeout",
+          "180",
+          "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+          "-j1",
+          "-M8000",
+          "--root=/tmp/beaconcrypt-record-lift-masked-oracle/beaconcrypt-core/proofs/lean",
+          "-o",
+          "/tmp/bc-arc-scratch/record-lift/masked-oracle/publication/olean/BeaconcryptCore/Computational/PqxdhRecordLiftMaskedOracle.olean",
+          "/tmp/beaconcrypt-record-lift-masked-oracle/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftMaskedOracle.lean"
+        ],
+        "log": "/tmp/bc-arc-scratch/record-lift/masked-oracle/publication/logs/module-003723.log",
+        "log_sha256": "e4d0ed39cc5f7ac457b5c3eab4da89be1b9daee0fdda576229de437653cc07d7",
+        "leanpath_sha256": "23dd230b1bb40ad1e6b2a89aa704f7dd97313d4d9c3c21b8b33a664269e2012d",
+        "source_sha256": "079816a67112a1c360bab01137c3e18d9e4655fe0b9126e641956449e767fce0",
+        "artifact_sha256": "c3610234c406dd0de20d5ae61b21cd351845d2321b66262a18344198fa7e88a0",
+        "CARGO_BUILD_JOBS": null,
+        "CARGO_TARGET_DIR": null
+      },
+      "reuse_reason": "Exact reviewed source, unchanged complete imported central dependency closure and immutable published artifact; no recompile needed for this metadata-only union."
+    },
+    {
+      "module": "PqxdhRecordLiftProtocol",
+      "topic": "93de5b55c048288ab5051269f654072e0e06dc19",
+      "exact_guards": 31,
+      "receipt": "/tmp/bc-arc-scratch/record-lift/protocol/publication/logs/module.json",
+      "receipt_sha256": "719120c503408444f50265cae78aae1e6c9e6fbb4ae946525d2b5b16721ff00c",
+      "result": {
+        "start": "2026-10-08T00:43:46.764695+00:00",
+        "end": "2026-10-08T00:43:57.905585+00:00",
+        "command": [
+          "/tmp/bc-coord/coord.sh",
+          "lean",
+          "codex",
+          "module",
+          "--",
+          "timeout",
+          "180",
+          "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+          "-j1",
+          "-M8000",
+          "--root=/tmp/beaconcrypt-record-lift-protocol/beaconcrypt-core/proofs/lean",
+          "-o",
+          "/tmp/bc-arc-scratch/record-lift/protocol/publication/olean/BeaconcryptCore/Computational/PqxdhRecordLiftProtocol.olean",
+          "/tmp/beaconcrypt-record-lift-protocol/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftProtocol.lean"
+        ],
+        "exit": 0,
+        "source_sha256": "5fbddf94e4d39001acc91f64ed88addf2aec3c4cf9c1aa500e36ca79bdc12a49",
+        "artifact_sha256": "0b0446b007dc284c685bdf1d818bcf42aa297340364b16c330f8bfca4854f960",
+        "leanpath_sha256": "db57b903123aaadbf36aa769b2e5270b9ca633d9ec8d4d8ed4529f06e0b2ae51",
+        "log": "/tmp/bc-arc-scratch/record-lift/protocol/publication/logs/module.log",
+        "log_sha256": "f77c56cc7e558c5c2c8030f0dfd6db017895497916defdccbdb1a7b3b5cf16df"
+      },
+      "reuse_reason": "Exact reviewed source, unchanged complete imported central dependency closure and immutable published artifact; no recompile needed for this metadata-only union."
+    }
+  ],
+  "fresh_aggregate_checks": {
+    "root": {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/stage6/logs/root.json",
+      "sha256": "034743903c64499e5d70657628aa1d67047ddd0f24e017c15ea78e3b782ba615",
+      "result": {
+        "start": "2026-10-08T01:00:54.992765+00:00",
+        "end": "2026-10-08T01:01:11.651487+00:00",
+        "command": [
+          "/tmp/bc-coord/coord.sh",
+          "lean",
+          "codex",
+          "root",
+          "--",
+          "timeout",
+          "180",
+          "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+          "-j1",
+          "-M8000",
+          "--root=/tmp/beaconcrypt-record-lift-stage6/beaconcrypt-core/proofs/lean",
+          "-o",
+          "/tmp/bc-arc-scratch/record-lift/stage6/olean/BeaconcryptCore.olean",
+          "/tmp/beaconcrypt-record-lift-stage6/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+        ],
+        "exit": 0,
+        "source_sha256": "b969bf7d5ba4458fe354cee787cec24a39ea1dbe369a89c76d1895ead73afd5e",
+        "artifact_sha256": "b6c299f17bec220b4213eee28652f74470c1e4957e55aae8b15ca449d4911d75",
+        "leanpath_sha256": "db2e4cb3cb2a73fa2164506e746b24b686bb4e280a6dc223c82fcd6740a669ca",
+        "log": "/tmp/bc-arc-scratch/record-lift/stage6/logs/root.log",
+        "log_sha256": "5379a872a83f7d99d6b2b57b070214ac9aac96ae7f2775ef513ad50df8fa87ee"
+      }
+    },
+    "inventory": {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/stage6/logs/inventory.json",
+      "sha256": "08c50f6e150c53af0e1c364f4c64b4f911fad1a542af8741910534c2c065ac02",
+      "result": {
+        "start": "2026-10-08T01:00:54.993124+00:00",
+        "end": "2026-10-08T01:02:14.977628+00:00",
+        "command": [
+          "/tmp/bc-coord/coord.sh",
+          "lease",
+          "mem",
+          "codex",
+          "@nix",
+          "stage6-inventory",
+          "--eta",
+          "5m",
+          "--",
+          "nix",
+          "develop",
+          "--no-update-lock-file",
+          "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+          "-c",
+          "make",
+          "-C",
+          "/tmp/beaconcrypt-record-lift-stage6/beaconcrypt-core",
+          "check-inventory",
+          "SHELL=bash"
+        ],
+        "exit": 0,
+        "log": "/tmp/bc-arc-scratch/record-lift/stage6/logs/inventory.log",
+        "log_sha256": "3428d9f598625617a8c985db045dbfd617d7e173bdbcba46053d7ba9ab76ea3e",
+        "leanpath_sha256": "db2e4cb3cb2a73fa2164506e746b24b686bb4e280a6dc223c82fcd6740a669ca",
+        "source_sha256": "5fbddf94e4d39001acc91f64ed88addf2aec3c4cf9c1aa500e36ca79bdc12a49",
+        "root_sha256": "b969bf7d5ba4458fe354cee787cec24a39ea1dbe369a89c76d1895ead73afd5e",
+        "checker_sha256": "4d3e11986ec040ea7111c8addecd61473eb8df31098709806c487365c17b869b",
+        "inventory_sha256": "35b5719a60ce0288f7997428ecce7430eb999b4a6ffbf6c6cd9383ad9cadaa0d",
+        "cargo_jobs": null,
+        "cargo_target": null
+      }
+    },
+    "fidelity": {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/stage6/logs/fidelity.json",
+      "sha256": "b9d9b7805ab9c21cd4bdf61a9ea981e00fed2f97d92eb7efebae39186908d36c",
+      "result": {
+        "start": "2026-10-08T01:00:54.996479+00:00",
+        "end": "2026-10-08T01:01:19.679458+00:00",
+        "command": [
+          "/tmp/bc-coord/coord.sh",
+          "lease",
+          "mem",
+          "codex",
+          "@cargo",
+          "stage6-fidelity",
+          "--eta",
+          "5m",
+          "--",
+          "nix",
+          "develop",
+          "--no-update-lock-file",
+          "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+          "-c",
+          "make",
+          "-C",
+          "/tmp/beaconcrypt-record-lift-stage6/beaconcrypt-core",
+          "check-proverif-transcript-fidelity",
+          "SHELL=bash"
+        ],
+        "exit": 0,
+        "log": "/tmp/bc-arc-scratch/record-lift/stage6/logs/fidelity.log",
+        "log_sha256": "c2866e19303289380c15e242ff1ab331cf763f25e57b408ec53c48a344913aa5",
+        "leanpath_sha256": "db2e4cb3cb2a73fa2164506e746b24b686bb4e280a6dc223c82fcd6740a669ca",
+        "source_sha256": "5fbddf94e4d39001acc91f64ed88addf2aec3c4cf9c1aa500e36ca79bdc12a49",
+        "root_sha256": "b969bf7d5ba4458fe354cee787cec24a39ea1dbe369a89c76d1895ead73afd5e",
+        "checker_sha256": "4d3e11986ec040ea7111c8addecd61473eb8df31098709806c487365c17b869b",
+        "inventory_sha256": "35b5719a60ce0288f7997428ecce7430eb999b4a6ffbf6c6cd9383ad9cadaa0d",
+        "cargo_jobs": "2",
+        "cargo_target": "/tmp/bc-arc-scratch/record-lift/stage6/cargo-target"
+      }
+    }
+  },
+  "inventory_handwritten_lean": 1594,
+  "verified_inventory_rows": 2014,
+  "transcript_fidelity": {
+    "python": 20,
+    "rust": 30
+  },
+  "leanpath": "/tmp/bc-arc-scratch/record-lift/stage6/leanpath",
+  "leanpath_sha256": "db2e4cb3cb2a73fa2164506e746b24b686bb4e280a6dc223c82fcd6740a669ca",
+  "root_artifact_sha256": "b6c299f17bec220b4213eee28652f74470c1e4957e55aae8b15ca449d4911d75",
+  "component_reviews": [
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/reviews/ctx-services-semantic-2026-10-08.json",
+      "sha256": "b450e8c758f4d149e92a89312c7e622c31ee8f82532d48acd65a726719be06c3"
+    },
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/reviews/ctx-services-publication-hygiene-2026-10-08.json",
+      "sha256": "b599222df6b55a4c44efb6edf65e53566d0244f675f5d5d9789d066389fbd8ec"
+    },
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/reviews/masked-oracle-semantic-2026-10-08.json",
+      "sha256": "aeb2f59bc513e5a6a90e3bb34793d6eadbb360fff43a427739eb5183b4512680"
+    },
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/reviews/masked-oracle-publication-hygiene-2026-10-08.json",
+      "sha256": "5028b043a2db78ef1c70a78b2d39ffb73afabdffb6c5f9bc49a6a742a86d4ba8"
+    },
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/reviews/protocol-semantic-2026-10-08.json",
+      "sha256": "8db13d7585aac73251cbcc98ca3480c1eb2838d0adc3597497316286c99e4072"
+    },
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/reviews/protocol-publication-hygiene-2026-10-08.json",
+      "sha256": "fc420f7de0131a83829ff8ba0e05cd8163bd1fc3677325a14e99a28cf5ec995d"
+    }
+  ],
+  "intermediate_fix_history": {
+    "finding": "A generic conflict resolver truncated shared metadata tails in the first intermediate candidate. Parent review blocked it before any commit.",
+    "fix": "Rebuilt complete parent files plus exact incoming insertion, and independently verified complete-parent round trips and every inventory row hash. The corrected checkpoint was independently approved before publication.",
+    "evidence": {
+      "review": "/tmp/bc-arc-scratch/record-lift/reviews/stage6-intermediate-fix-2026-10-08.json",
+      "review_sha256": "f69fdbc832ec95a2a03d8fbf02043ea793aca723e77e275531829f0e433597fb",
+      "fixed_packet": "/tmp/bc-arc-scratch/record-lift/stage6/intermediate-fixed.json",
+      "fixed_packet_sha256": "345acc907b6ab44145f157fd79793ea95c85e4e4d2f15fc79087fdd28061fbfb",
+      "rejected_packet": "/tmp/bc-arc-scratch/record-lift/stage6/intermediate.json",
+      "rejected_packet_sha256": "b7cd3592f472d8e4e5a8183efa921d5f07a6f08cd565ca788e4b37a81b0284cc",
+      "preservation_check": "/tmp/bc-arc-scratch/record-lift/stage6/intermediate-preservation.json",
+      "preservation_check_sha256": "bf3a38443f46ed0db7154a3c1b06a64a04078d2ac3f55f0b19110bc6bc2f428f",
+      "status": "Fix-pass independently approved; no source changes or additional theorem claims"
+    },
+    "corrected_checkpoint": "1b98a1cc6bdd9aecd4af39f328a65ca47e1236a5"
+  },
+  "independent_aggregate_review": {
+    "receipt": "/tmp/bc-arc-scratch/record-lift/reviews/stage6-final-integration-2026-10-08.json",
+    "sha256": "b0b4dd819b215fe083c6477fce0ee50d2b1e043fbf524e5af386e13afefdb3bb",
+    "result": "APPROVE final aggregate; no findings",
+    "reviewed_group_receipt_sha256": "6b3b603ec765fa62558ff150aeff81240c8bdcce75b81a08b46c3193f308530e",
+    "allowed_post_review_change": "Only this aggregate receipt status and independent review citation were updated; all reviewed source, guides, topic receipts and shared metadata are unchanged."
+  },
+  "integration": "Prepared candidate only. Parent owns central integration and intent120/ack121 coordination.",
+  "full_matrix": "No new Rust/wire/binding or primitive contract. Focused fidelity20Python30Rust includes existing mutation matrices; no full verify/lake build/ProVerif/Nix garbage collection in this lane."
+}
