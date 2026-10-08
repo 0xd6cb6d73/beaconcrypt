@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1667
+	[handwritten-lean]=1668
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -34360,6 +34360,25 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecord
 require_line_count 1 '^theorem key_cut([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftKeyCut theorem key_cut"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftKeyCut\.key_cut_measure$' "$selected_source_module" "PqxdhRecordLiftKeyCut dependency key_cut_measure"
 require_line_count 1 '^theorem key_cut_measure([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftKeyCut theorem key_cut_measure"
+
+# record-lift CTX integrity half: hybrid telescope to CtxAuthLiftTarget from step bills (items 4/5, S4, X3)
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtx.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.PqxdhRecordLiftCtx$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftCtx root import"
+require_line_count 6 '^theorem ' "$selected_source_module" "PqxdhRecordLiftCtx theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftCtx guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtx\.game_real$' "$selected_source_module" "PqxdhRecordLiftCtx dependency game_real"
+require_line_count 1 '^theorem game_real([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtx theorem game_real"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtx\.game_replay$' "$selected_source_module" "PqxdhRecordLiftCtx dependency game_replay"
+require_line_count 1 '^theorem game_replay([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtx theorem game_replay"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtx\.advantage_congr$' "$selected_source_module" "PqxdhRecordLiftCtx dependency advantage_congr"
+require_line_count 1 '^theorem advantage_congr([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtx theorem advantage_congr"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtx\.hop_bound$' "$selected_source_module" "PqxdhRecordLiftCtx dependency hop_bound"
+require_line_count 1 '^theorem hop_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtx theorem hop_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtx\.ctxAuthLiftBool_of_billed$' "$selected_source_module" "PqxdhRecordLiftCtx dependency ctxAuthLiftBool_of_billed"
+require_line_count 1 '^theorem ctxAuthLiftBool_of_billed([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtx theorem ctxAuthLiftBool_of_billed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtx\.ctxAuthLiftTarget_of_billed$' "$selected_source_module" "PqxdhRecordLiftCtx dependency ctxAuthLiftTarget_of_billed"
+require_line_count 1 '^theorem ctxAuthLiftTarget_of_billed([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtx theorem ctxAuthLiftTarget_of_billed"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
