@@ -262,3 +262,55 @@ The budget split (the plan's cut-split of `certified`). G1 needs, for every outc
 - After the cut (`PqxdhRegistrationJointKemRomSplitPost`). Every native step of the skeleton makes at most one table read, and only on a raw accept, a public HMAC, a Beacon tail root callback or a grouped Beacon finish (`skelImpl_reads`); the Server's resumption makes at most one, at its private root request (`resumeImpl_reads`, `resume_root`); every source request of the continuation makes at most one such request, and only if it is a table request of the source (`groupedClient_bound`); the encapsulator, the router and the CCA evaluation forward table reads one for one (`fwd_reads`, `fwdOption_reads`). So the client makes at most `1 + (Q - c - 1) = Q - c` direct reads (`sharedClient_direct`); the one read of the resumption is the selected accept's. Inactive contexts make none (`sharedClient_inactive`).
 
 Every hidden read is a table read too, so the bound counts hidden reads against the budget as well; it is not tight but it is the plan's term.
+
+## S2: the root Expand (`PqxdhRegistrationJointKemRootExpand*`)
+
+| Module | Theorems | Content |
+| --- | --- | --- |
+| `PqxdhRegistrationJointKemRootExpandLocal` | 6 | generic internalization of a prefix and of the public table into a root client (`publicLocal`, `internalize`; `random_coins`, `split_step`, `split_local_run`, `splitGame_local`); `rootClient`, `splitGame_root`, `splitGame_expanded` |
+| `PqxdhRegistrationJointKemRootExpandCount` | 33 | the root count: Beacon finish requests (`FinishKind`, `certified_finish`), inheritance of query bounds by the continuation at the cut (`scan_inherit`, `commands_inherit`, `opaqueScan_inherit`, `sourcePreOpaque_inherit`, `sharedStart_inherit`), hidden reads per skeleton step (`skelImpl_hidden`, `resumeImpl_hidden`), grouped finishes per source request (`groupedClient_group`), forwarding through the lower layers (`fwd_hidden`, `fwdOption_hidden`), `postSkel_hidden`, `publicLocal_root`, `rootClient_root` |
+| `PqxdhRegistrationJointKemRootExpand` | 3 | `rootClient_uniform` (the `expanded_uniform_bound` instance), `split_uniform` (H1 to H2), `opaqueBranch_uniform` (S1c and S2 composed) |
+
+```lean
+theorem splitGame_root (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes)
+    (decision : X → Bool) (work : OracleComp (SourceSpec KemSK) X) (runtime : A)
+    (count : Nat) (selected : Fin (count + 1)) (index : Nat) :
+    splitGame (sharedStart (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count
+        selected index) (sharedClient setup codec checks decision count selected) =
+      randomGame (simulateQ (compile setup.hmac) (rootClient (Reader := Reader) setup codec checks ensureInit supplied
+        decision work runtime count selected index))
+
+theorem rootClient_root … (budget) (certified : …) :
+    (rootClient (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected
+      index).IsQueryBoundP IsRoot (1 + budget (.inl 5))
+
+theorem split_uniform … (budget) (certified : …) :
+    (splitGame (sharedStart …) (sharedClient setup codec checks decision count selected)).boolDistAdvantage
+      (uniformGame (rootClient …)) ≤
+      ∑ slot ∈ Finset.range (1 + budget (.inl 5)),
+        (hmacPrfRealGame setup.hmac (indexedReduction setup.hmac (rootClient …) slot)).boolDistAdvantage
+          (hmacPrfRandomGame (indexedReduction setup.hmac (rootClient …) slot))
+
+theorem opaqueBranch_uniform … (budget) (certified : …) :
+    (opaqueBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index
+        false).boolDistAdvantage (uniformGame (rootClient …)) ≤
+      ((budget (.inl 3) + budget (.inl 5) + budget (.inl 6) : ℕ) : ℝ) / 2 ^ 256 +
+        ∑ slot ∈ Finset.range (1 + budget (.inl 5)),
+          (hmacPrfRealGame setup.hmac (indexedReduction setup.hmac (rootClient …) slot)).boolDistAdvantage
+            (hmacPrfRandomGame (indexedReduction setup.hmac (rootClient …) slot))
+```
+
+(`…` abbreviates the arguments of `opaqueBranch_split`; `certified` is T5's source budget, unchanged. `randomGame` is `PqxdhCorrelatedExtractFamily.randomGame`, `compile` is `PqxdhCorrelatedExpand.compile`, `IsRoot`, `uniformGame` and `indexedReduction` are those of `PqxdhCorrelatedExpandHybrid`.)
+
+The root client. `rootClient` is a client of `PqxdhCorrelatedExpand.RootSpec` (uniform coins and root requests at 128-byte coordinates). It is `internalize start post` at S1b's prefix `sharedStart` and the skeleton's post-challenge phase `postSkel` with the native services. `internalize` runs the prefix on the root client's own coins (key generation, the stopped source up to the selected raw accept, the encapsulation) and then the skeleton client, answering its coins and its hidden reads by its own coin and root requests and every direct read from a lazily sampled public table that it holds itself, starting from the table cache at the cut (`publicLocal`). So the CCA evaluation, the post-challenge router, the actual encapsulator, the native game state (with its BLAKE2b table) and the public zero-key 192-byte table all run inside the root client, as plan section 9 requires; only the hidden table is outside.
+
+The equality (`splitGame_local`, generic in the prefix and the skeleton client). G1's split world answers hidden reads from a coordinate-keyed lazily sampled table (`ExtractOracle.randomOracle`) and direct reads from the public table; the family's `randomGame` answers family queries from the same kind of coordinate-keyed table. Per query (`split_step`), the split world's step at the state `(cache, hidden)` is the root client's step at `cache`, compiled by `compile` (a root request becomes a family query followed by real Expand, exactly as `compileHidden` does for a hidden read) and run under the family's random table at `hidden`; the public table's coins are the root client's coins (`compile_coins`, `random_coins`). Induction (`split_local_run`) and the prefix (`random_coins` again) give the game equality. `splitGame_expanded` then applies `PqxdhCorrelatedExpand.expandedGame_eq`: H1 is the cached-root game with real Expand on `rootClient`.
+
+The root count (`rootClient_root`). `PqxdhCorrelatedExpandHybrid.IsRoot` counts every root request, repeated ones included. The root client makes one root request per hidden read of the skeleton client and none for its coins or its public table (`publicLocal_root`). Hidden reads happen only at the Server's private resumption root (at most one, `resume_root`, which rests on `KemOpaqueCosts.client_root`) and at grouped Beacon finishes whose decapsulation handle is the challenge marker (at most one per grouped finish, `skelImpl_hidden`); raw accepts, public HMAC and Beacon tail root callbacks read only the public table. Each source request of the continuation makes at most one grouped finish, and only if it is a Beacon finish request (`groupedClient_group`, from S1c's `groupedOwner_bound`). The encapsulator, the router and the CCA evaluation forward hidden reads one for one (`fwd_hidden`, `fwdOption_hidden`). The continuation suspended at the cut makes at most `qFinish = budget (.inl 5)` Beacon finish requests, because a continuation of the scan inherits every query bound of the source program (`scan_inherit`, generic in the predicate and the handler, carried through the source client and native backend, the stopped run and the prefix by `commands_inherit`, `opaqueScan_inherit`, `sourcePreOpaque_inherit` and `sharedStart_inherit`). Hence `qRoot = 1 + qFinish`, the plan's conservative count (finish requests before the cut are not subtracted); optional stage T would tighten it to `2`.
+
+The bound. `rootClient_uniform` is `expanded_uniform_bound` at `rootClient` with `q = 1 + qFinish`: H1 and H2 (`uniformGame rootClient`, every root a fresh uniform root, consistent on repeated coordinates) are distinguishable with advantage at most the sum over `slot < 1 + qFinish` of the HMAC-SHA-512 PRF advantages of `indexedReduction setup.hmac rootClient slot`, each a one-challenge-query adversary. This is the plan's `ε_exp`; it is a standard computational step (after S1c each hidden PRK is a fresh uniform block read only by its Expand). `opaqueBranch_uniform` composes S1c and S2 by the triangle inequality: H0 to H2 costs `ε_rom + ε_exp`.
+
+Candidate freedom. `rootClient` has no candidate argument, and `splitGame_root` shows that it is defined from the arguments of `splitGame`, which draws no candidate; this is the stated lemma of plan section 10 for the S2 reductions, whose `scanSampler` contexts hold stopped states of `rootClient`. The definition-level term grep (a Lean metaprogram, scratch `inc2/probe/rootclient-term-grep.lean`) walks the values of all 1198 `BeaconcryptCore` constants reachable from `rootClient` through definition values and finds no `uniformSample` at `MlKemSharedSecret`; the only uniform samplings among them are of DH scalars (`PqxdhJointGapDh.sampleScalar`) and identity seeds (`PqxdhJointIdentity.sampleSeed`). The grep is syntactic on the type name, since `MlKemSharedSecret` and `RootOutput` are both `List.Vector UInt8 32`; it finds no sampling at either.
+
+Notes for consumers. S3b starts from `uniformGame rootClient` (H2). In it the hidden Server value is the uniform root of the resumption's coordinates, drawn at the selected raw accept's private root request, and each grouped Beacon finish on the challenge marker reads the uniform root of its coordinates (the same root as the Server's when the coordinates coincide). `internalize` and `splitGame_local` are generic in the prefix and the skeleton client, so another instance of the services skeleton with `V = RootOutput` can reuse them.
