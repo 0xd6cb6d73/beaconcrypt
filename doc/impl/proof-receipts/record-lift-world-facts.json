@@ -1,0 +1,1312 @@
+{
+ "date": "2026-10-08T13:56:35.628480+00:00",
+ "scope": "Items 4 and 5 (record-layer lift), stage S5 of the takeover plan (world track): the record_lift composition and the ideal-world facts of PqxdhRecordLiftIdeal. Delivered so far: RecordAuthLiftTarget and HidingStatement as defined; RecordLiftTarget and CtxLiftTarget conditional on the privacy half CtxPrivLiftStatement as an explicit hypothesis parameter; the mode-O Boolean bound of the record lift. Not proved: OriginStatement, BindingStatement, FreshGuessStatement, LorStatement (not_proved). Reviewed at 43f714d3 (semantic and hygiene review); this version of the receipt records the review fix pass, the confirming review of the fix pass and its nit fix. Not integrated.",
+ "basis": "14f51c34403649b85c6acc0ad29fb2622406dd81",
+ "reviewed": "43f714d34be11d28224671cf08ff8f550bff23ba",
+ "tip": "1624913a3de6820a4c8d110fa9b734be06e6a9a8",
+ "tip_note": "The fix commit, the tree that the fix-pass checks cover. The receipt commit that follows adds only this file (commits_note).",
+ "topic": {
+  "branch": "codex/deployment-record-world",
+  "worktree": "/tmp/beaconcrypt-deployment-record-world",
+  "registry": "scratch /tmp/bc-arc-scratch/items45/world, its olean prefix world/olean, worktree, branch and the module names PqxdhRecordLiftComposition and PqxdhRecordLiftHiding registered to claude before creation (PqxdhRecordLift* is Claude's prefix since the owner decision of 2026-10-08); the fix-pass scratch world/fix1 and its prefix world/fix1/olean registered before creation"
+ },
+ "plan": {
+  "path": "/tmp/bc-arc-scratch/items45-takeover/takeover-plan.md",
+  "sha256": "7b19c99395dbf3436164487a5daec61fbf064f5c289c0c4507b3da2edb123142",
+  "sha256_note": "Digest when this receipt was written; the plan is a shared status file of several Claude tracks and changes after this.",
+  "sections": "by title: \"2. Common staged plan (independent of the naming variant)\", stage S5 and decisions D1-D5; \"9. World track (S5) status\" with its fix-pass update",
+  "note_nit_fix": "Unchanged at the confirming-review nit fix: the plan file still has this SHA-256. Later status paragraphs (such as the integration update) change it."
+ },
+ "brief": {
+  "path": "/tmp/bc-coord/tasks/codex-items-4-5.md",
+  "sha256": "c947e27514ecf3b8041a1d61ef78b158c2c732d1f7bb8782b94c1e796a92b99e",
+  "sections": "H-4, H-5, H-7"
+ },
+ "targets": {
+  "module": "PqxdhRecordLiftIdeal (central 14f51c34, unchanged)",
+  "guide": "doc/impl/record-lift-ideal.md",
+  "statements_changed": "None: no definition of PqxdhRecordLiftIdeal changed, and the fix pass changed no theorem statement. record_auth_lift (RecordAuthLiftTarget) and idealRecords_hiding (HidingStatement) are targets as defined; record_lift_of_priv and ctx_lift_of_priv are RecordLiftTarget and CtxLiftTarget conditional on CtxPrivLiftStatement, and record_lift_bool_of_priv the Boolean form RecordLiftBool conditional on CtxPrivLiftBool (each weaker than its target until the privacy half is proved); record_lift_O is the mode-O Boolean bound of the record lift (not RecordLiftStatement restricted to mode O).",
+  "delivered": {
+   "as_defined": [
+    "RecordAuthLiftTarget (PqxdhRecordLiftComposition.record_auth_lift)",
+    "HidingStatement (PqxdhRecordLiftHiding.idealRecords_hiding)"
+   ],
+   "conditional": [
+    "RecordLiftTarget given CtxPrivLiftStatement (record_lift_of_priv)",
+    "CtxLiftTarget given CtxPrivLiftStatement (ctx_lift_of_priv)",
+    "RecordLiftBool given CtxPrivLiftBool (record_lift_bool_of_priv)"
+   ],
+   "partial": [
+    "the Boolean bound of RecordLiftStatement in observation mode O (record_lift_O)"
+   ],
+   "auxiliary": [
+    "RecordAuthLiftBool (record_auth_lift_bool)",
+    "RecordAuthLiftStatement for every alias and refusal term (record_auth_lift_terms; the target is its zero-term instance)",
+    "HidingStatement for any two length-agreeing replacements (hiding_replace)"
+   ]
+  }
+ },
+ "contracts": {
+  "hypotheses": "No theorem has an assumption hypothesis. record_auth_lift_bool, record_auth_lift, record_auth_lift_terms, record_lift_bool_of_priv and record_lift_of_priv state targets whose first premise is SourceFullCorrect; record_lift_O states no target and takes the same contract (H-7 list) as its explicit hypothesis correct. CtxPrivLiftStatement (CtxPrivLiftBool for record_lift_bool_of_priv) is an explicit hypothesis parameter of record_lift_of_priv, record_lift_bool_of_priv and ctx_lift_of_priv, not an assumption or contract. The 55 Hiding theorems have no contract hypothesis.",
+  "probe": "/tmp/bc-arc-scratch/items45/world/tools/ContractProbe.lean",
+  "probe_sha256": "fdedc2976ae4bb8600b0399c7828ec99726ba88265249eb9a7fd628e4762e892",
+  "log_track": "/tmp/bc-arc-scratch/items45/world/logs/dev-contracts1-151315.log",
+  "log_track_sha256": "c75f036a62b4a94fc850e6ac5b56406676c01bf1a40f69925dcb0598b3e69d6f",
+  "log_fix": "/tmp/bc-arc-scratch/items45/world/fix1/logs/contracts-f2.log",
+  "log_fix_sha256": "c75f036a62b4a94fc850e6ac5b56406676c01bf1a40f69925dcb0598b3e69d6f",
+  "exit_fix": 0,
+  "fix_note": "The fix-tree probe log (log_fix) is byte-identical to the track log (log_track): both have SHA-256 c75f036a62b4a94fc850e6ac5b56406676c01bf1a40f69925dcb0598b3e69d6f, as has the development run of the probe on the fix tree (/tmp/bc-arc-scratch/items45/world/fix1/logs/dev-contracts-f1-154942.log). Every THEOREM, PROOFLEVEL and PROOFPATH line is therefore equal and in the same order. The earlier version of this note said that the order of the THEOREM listing differs; no two probe runs differ. The only listing in this receipt whose order differs from the probe's THEOREM listing (63 lines in environment order: the 62 guarded theorems and the auxiliary PqxdhRecordLiftHiding.Coupled.brecOn) is the source order of the statements section of this receipt and of the guards (corrected in the confirming-review nit fix).",
+  "per_theorem": {
+   "PqxdhRecordLiftComposition (all 7)": "proof level: functional AEAD correctness (Pqxdh.Crypto.aead_open_seal, aeadSeal_tag_length, AdaptiveRawNonceAead.HistoryCorrect) through PqxdhRecordLiftCtxBills.ctxAuthLiftTarget / ctxAuthLiftStatement; SourceFullCorrect in the 6 theorems that apply chain_lift (all but ctx_lift_of_priv); IND$, INT-CTXT, HMAC-PRF and Extract-on-uniform32 only as advantage terms of the losses; BLAKE2b ROM as world model",
+   "PqxdhRecordLiftHiding (all 55)": "no contract at proof level; dh_comm, xpub_length, x25519_length, hkdf_length and aeadSeal_tag_length reached only inside definitions (setup DH interface, KDF definitions, real-mode CTX code in the CTX interpreter definition)"
+  }
+ },
+ "provenance": "New Claude work; nothing adapted from Codex WIP.",
+ "commits": [
+  {
+   "commit": "7f6530654c3f620c39939018afcdb9e3f35cf426",
+   "subject": "Add the record-lift composition of record_lift"
+  },
+  {
+   "commit": "becef377326eff06a7ba5801b55a4514e25dad05",
+   "subject": "Document the record-lift composition"
+  },
+  {
+   "commit": "e0907c584493c53f3baf8a3ee1007bda78518aa9",
+   "subject": "Add the record-lift hiding proof of HidingStatement"
+  },
+  {
+   "commit": "b957b9970f9579ed54cc87be936b3e607c974429",
+   "subject": "Document the record-lift hiding proof"
+  },
+  {
+   "commit": "43f714d34be11d28224671cf08ff8f550bff23ba",
+   "subject": "Add the record-lift world-track receipt and remaining work"
+  },
+  {
+   "commit": "1624913a3de6820a4c8d110fa9b734be06e6a9a8",
+   "subject": "Fix the record-lift world-track review findings"
+  },
+  {
+   "commit": "8a51f0a880542c4440640b75a6bde806c0d071a1",
+   "subject": "Record the record-lift world-track review fix pass in the receipt"
+  }
+ ],
+ "commits_note": "Four track commits 7f653065..b957b997 (two module commits, two documentation commits), the earlier receipt commit 43f714d3 (reviewed), the fix-pass commit 1624913a (docstrings of PqxdhRecordLiftComposition, the rehashed inventory row, the guide and the FVA S5 section) and the receipt commit 8a51f0a8 that added the fix-pass version of the receipt and nothing else; this version of the receipt is written by the confirming-review nit-fix commit that follows 8a51f0a8 (documentation only: the guide Status paragraph and this receipt). check-inventory.sh reads only beaconcrypt-core/proofs (git ls-files restricted to that directory) and .github/workflows/formal-verification.yml, never doc/, so the receipt commit leaves every input of check-inventory as at 1624913a, where inventory-f1 exited 0.",
+ "files_sha256": {
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftComposition.lean": "11acb7bc7ad0c08491d3dd08602d08e46132a56e1bfac966a79e43f9c6af019f",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftHiding.lean": "a016163f1e9f341db3219703676001329dd203d23f5d5dcd7a36977e6353ab58",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "85c63054e89c0a34a3d6f95a9a2c4b312517542f4a8c827bbecfebfb010acb29",
+  "beaconcrypt-core/proofs/check-inventory.sh": "6aaddf697a6b2bcfb4e82295e1449f09a562c3e3a6e3f133258ca4463c376377",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "2128fd827becd928311dc00eac57131ad98668c3f5518e1f9cb2b1cf19537421",
+  "doc/impl/record-lift-world-facts.md": "3def1c528a37a9e35d8080b0cf3e8e9170bf1382c253865a5f76089d5a1bc33e",
+  "doc/formal-verification-analysis.md": "f3b5ce0f1e7cee1a6acb17188da37b4bce34cdbbe9c3f133574a359278b5d577"
+ },
+ "files_sha256_note": "At the confirming-review nit-fix commit (the commit that adds this version of the receipt); only doc/impl/record-lift-world-facts.md differs from files_sha256_fix1. The receipt itself is not listed.",
+ "files_sha256_fix1": {
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftComposition.lean": "11acb7bc7ad0c08491d3dd08602d08e46132a56e1bfac966a79e43f9c6af019f",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftHiding.lean": "a016163f1e9f341db3219703676001329dd203d23f5d5dcd7a36977e6353ab58",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "85c63054e89c0a34a3d6f95a9a2c4b312517542f4a8c827bbecfebfb010acb29",
+  "beaconcrypt-core/proofs/check-inventory.sh": "6aaddf697a6b2bcfb4e82295e1449f09a562c3e3a6e3f133258ca4463c376377",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "2128fd827becd928311dc00eac57131ad98668c3f5518e1f9cb2b1cf19537421",
+  "doc/impl/record-lift-world-facts.md": "812553cc804ad8b8fd712edfa15a76d005efe97c796f0e0345d672c7c80a8ffb",
+  "doc/formal-verification-analysis.md": "f3b5ce0f1e7cee1a6acb17188da37b4bce34cdbbe9c3f133574a359278b5d577"
+ },
+ "files_sha256_fix1_note": "At the fix-pass commit 1624913a3de6820a4c8d110fa9b734be06e6a9a8, the tree that the fix-pass checks cover; the receipt commit 8a51f0a8 added only this file.",
+ "files_sha256_reviewed": {
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftComposition.lean": "2d39c0c656e8d423fa6e8c42584b4e71013cbce046ca88cf8515dde400516967",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftHiding.lean": "a016163f1e9f341db3219703676001329dd203d23f5d5dcd7a36977e6353ab58",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "85c63054e89c0a34a3d6f95a9a2c4b312517542f4a8c827bbecfebfb010acb29",
+  "beaconcrypt-core/proofs/check-inventory.sh": "6aaddf697a6b2bcfb4e82295e1449f09a562c3e3a6e3f133258ca4463c376377",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "8dfff31963852126db0b8137e85eb9e3ab77051e4c0eda8b109787261a8e53ff",
+  "doc/impl/record-lift-world-facts.md": "190664e1e747834189c8b31352adbb681bab722a3fa2b6b4a49eb8ac73d1dbef",
+  "doc/formal-verification-analysis.md": "44b62bced262320293a1f3ffe188cd98b2acfa48c8c0c02bce6272bee67e8e5e"
+ },
+ "files_sha256_reviewed_note": "At the reviewed commit 43f714d3.",
+ "modules": [
+  {
+   "name": "PqxdhRecordLiftComposition",
+   "delivered": "RecordAuthLiftTarget as defined (record_auth_lift; Boolean half record_auth_lift_bool; every choice of alias and refusal terms record_auth_lift_terms); RecordLiftTarget and CtxLiftTarget conditional on CtxPrivLiftStatement as a hypothesis parameter (record_lift_of_priv, ctx_lift_of_priv; Boolean form record_lift_bool_of_priv conditional on CtxPrivLiftBool); the mode-O Boolean bound of the record lift (record_lift_O; no event form or bills conjunct)",
+   "module_commit": "7f6530654c3f620c39939018afcdb9e3f35cf426",
+   "statement_count": 7,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 7
+   },
+   "source_sha256_reviewed": "2d39c0c656e8d423fa6e8c42584b4e71013cbce046ca88cf8515dde400516967",
+   "source_sha256": "11acb7bc7ad0c08491d3dd08602d08e46132a56e1bfac966a79e43f9c6af019f",
+   "source_note": "The fix pass changed docstrings only (module docstring and the record_lift_O docstring); no statement, proof, guard or set_option line changed.",
+   "module_check_track": {
+    "start": "2026-10-08T12:43:09.829072976Z",
+    "end": "2026-10-08T12:43:18.070936202Z",
+    "exit": 0,
+    "source_sha256": "2d39c0c656e8d423fa6e8c42584b4e71013cbce046ca88cf8515dde400516967",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/items45/world/olean/BeaconcryptCore/Computational/PqxdhRecordLiftComposition.olean",
+    "artifact_sha256": "80cda9cae032ac6cdd53eb2231e8ccf3bdbc9dc337579fe0a3f54ddf4b0e65ca",
+    "leanpath_sha256": "90db23f57d7307501c213c792c38619a071293fb50ca3bcf7fdd6ef078fd6531",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-record-world/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/items45/world/olean/BeaconcryptCore/Computational/PqxdhRecordLiftComposition.olean",
+     "/tmp/beaconcrypt-deployment-record-world/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftComposition.lean"
+    ],
+    "log": "/tmp/bc-arc-scratch/items45/world/logs/PqxdhRecordLiftComposition-m1.log"
+   },
+   "module_check_fix": {
+    "start": "2026-10-08T13:48:28.293587321Z",
+    "end": "2026-10-08T13:48:34.611071367Z",
+    "exit": 0,
+    "source_sha256": "11acb7bc7ad0c08491d3dd08602d08e46132a56e1bfac966a79e43f9c6af019f",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/items45/world/fix1/olean/BeaconcryptCore/Computational/PqxdhRecordLiftComposition.olean",
+    "artifact_sha256": "709c3516718d05a212332c11667f05a144bfa55328d5c3d89f70b8d54fdd7736",
+    "leanpath_sha256": "4a949ef1a2d22829cf3c9234dbe507ac06e326467514f59cc3abf87efeebb44e",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-record-world/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/items45/world/fix1/olean/BeaconcryptCore/Computational/PqxdhRecordLiftComposition.olean",
+     "/tmp/beaconcrypt-deployment-record-world/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftComposition.lean"
+    ],
+    "log": "/tmp/bc-arc-scratch/items45/world/fix1/logs/PqxdhRecordLiftComposition-f1.log"
+   },
+   "inv_recount_track": "handwritten-lean count 1680 -> 1681",
+   "inv_rehash_track": "proofs/lean/BeaconcryptCore.lean: 48b84716bd34 -> c15de35c7181\nproofs/trusted-boundary.md: unchanged\nproofs/check-inventory.sh: ac745ecf9f26 -> e8949b4364b7"
+  },
+  {
+   "name": "PqxdhRecordLiftHiding",
+   "delivered": "HidingStatement as defined (idealRecords_hiding); hiding_replace, the same for any two replacements that agree on lengths",
+   "module_commit": "e0907c584493c53f3baf8a3ee1007bda78518aa9",
+   "statement_count": 55,
+   "axiom_profile": {
+    "none": 4,
+    "Quot.sound, propext": 13,
+    "propext": 5,
+    "Classical.choice, Quot.sound, propext": 33
+   },
+   "source_sha256_reviewed": "a016163f1e9f341db3219703676001329dd203d23f5d5dcd7a36977e6353ab58",
+   "source_sha256": "a016163f1e9f341db3219703676001329dd203d23f5d5dcd7a36977e6353ab58",
+   "source_note": "Unchanged by the fix pass.",
+   "module_check_track": {
+    "start": "2026-10-08T13:13:43.421132000Z",
+    "end": "2026-10-08T13:13:49.756442833Z",
+    "exit": 0,
+    "source_sha256": "a016163f1e9f341db3219703676001329dd203d23f5d5dcd7a36977e6353ab58",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/items45/world/olean/BeaconcryptCore/Computational/PqxdhRecordLiftHiding.olean",
+    "artifact_sha256": "bc52292581349946b3dc9588c185c737e372d85657ed89c4de6a327e619f4437",
+    "leanpath_sha256": "90db23f57d7307501c213c792c38619a071293fb50ca3bcf7fdd6ef078fd6531",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-record-world/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/items45/world/olean/BeaconcryptCore/Computational/PqxdhRecordLiftHiding.olean",
+     "/tmp/beaconcrypt-deployment-record-world/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftHiding.lean"
+    ],
+    "log": "/tmp/bc-arc-scratch/items45/world/logs/PqxdhRecordLiftHiding-m2.log"
+   },
+   "module_check_fix": {
+    "start": "2026-10-08T13:48:36.982693295Z",
+    "end": "2026-10-08T13:48:43.080978283Z",
+    "exit": 0,
+    "source_sha256": "a016163f1e9f341db3219703676001329dd203d23f5d5dcd7a36977e6353ab58",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/items45/world/fix1/olean/BeaconcryptCore/Computational/PqxdhRecordLiftHiding.olean",
+    "artifact_sha256": "bc52292581349946b3dc9588c185c737e372d85657ed89c4de6a327e619f4437",
+    "leanpath_sha256": "4a949ef1a2d22829cf3c9234dbe507ac06e326467514f59cc3abf87efeebb44e",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-record-world/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/items45/world/fix1/olean/BeaconcryptCore/Computational/PqxdhRecordLiftHiding.olean",
+     "/tmp/beaconcrypt-deployment-record-world/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftHiding.lean"
+    ],
+    "log": "/tmp/bc-arc-scratch/items45/world/fix1/logs/PqxdhRecordLiftHiding-f1.log"
+   },
+   "inv_recount_track": "handwritten-lean count 1681 -> 1682",
+   "inv_rehash_track": "proofs/lean/BeaconcryptCore.lean: c15de35c7181 -> 85c63054e89c\nproofs/trusted-boundary.md: unchanged\nproofs/check-inventory.sh: e8949b4364b7 -> 6aaddf697a6b"
+  }
+ ],
+ "statements": [
+  {
+   "module": "PqxdhRecordLiftComposition",
+   "theorem": "record_auth_lift_bool",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftComposition",
+   "theorem": "record_auth_lift",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftComposition",
+   "theorem": "record_auth_lift_terms",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftComposition",
+   "theorem": "ctx_lift_of_priv",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftComposition",
+   "theorem": "record_lift_bool_of_priv",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftComposition",
+   "theorem": "record_lift_of_priv",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftComposition",
+   "theorem": "record_lift_O",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "Coupled.mono",
+   "axioms": []
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "Coupled.bind",
+   "axioms": [
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "Coupled.map",
+   "axioms": [
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "Coupled.query",
+   "axioms": [
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "Coupled.refl",
+   "axioms": []
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "Coupled.of_map",
+   "axioms": [
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "Coupled.map_eq",
+   "axioms": [
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "Coupled.simulateQ_run",
+   "axioms": [
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "Coupled.simulateQ",
+   "axioms": [
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "Coupled.refl_weighted",
+   "axioms": [
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "eqRel_eq",
+   "axioms": []
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "replay_isSome",
+   "axioms": [
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "localRaw_couple",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "randomSeal_couple",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "randomImpl_couple",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "hash_couple",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "sampled_couple",
+   "axioms": [
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "privRel_update",
+   "axioms": [
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "keyed_couple",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "keyed_seal_couple",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "succeeded_apiReply",
+   "axioms": []
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "hiddenOpening_couple",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "opening_couple",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "sealing_run",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "hiddenSealing_wide",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "sealing_couple",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "serviceRel_refl",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "base_couple",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "interpreter_couple",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "refl_noOpening",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "normalFinish_couple",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "receiveProgram_couple",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "kernelReceive_couple",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "ownerReceive_couple",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "ownerRun_raw_couple",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "handler_couple",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "schedule_couple",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "environmentStep_couple",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "native_couple",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "view_spec",
+   "axioms": [
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "ledgerRel_record",
+   "axioms": [
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "sameSession_view",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "send_couple",
+   "axioms": [
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "drawBit_couple",
+   "axioms": [
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "uniformBytes_couple",
+   "axioms": [
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "ledger_couple",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "observeFull_couple",
+   "axioms": [
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "adversary_couple",
+   "axioms": [
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "wrap_couple",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "worldProgram_couple",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "program_couple",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "ctxRun_couple",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "hidingView_rel",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "hiding_replace",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  },
+  {
+   "module": "PqxdhRecordLiftHiding",
+   "theorem": "idealRecords_hiding",
+   "axioms": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+   ]
+  }
+ ],
+ "statement_counts": {
+  "PqxdhRecordLiftComposition": 7,
+  "PqxdhRecordLiftHiding": 55
+ },
+ "allowed_axioms": [
+  "Classical.choice",
+  "Quot.sound",
+  "propext"
+ ],
+ "axiom_profile_from_guards": {
+  "Classical.choice, Quot.sound, propext": 40,
+  "none": 4,
+  "Quot.sound, propext": 13,
+  "propext": 5
+ },
+ "guard_scan": {
+  "tool": "/tmp/bc-arc-scratch/items45/world/tools/guards.py",
+  "tool_sha256": "e00686c3a4fa32fffc871449a2ccf606c4723988635ac61941f8b71d70615b1b",
+  "mode": "verify",
+  "rule": "every top-level theorem has exactly one exact block \"/-- info: ... -/ #guard_msgs in #print axioms <name>\" naming it, every guard allows only propext, Classical.choice and Quot.sound (or no axiom), no duplicate or extra guard; sorry, admit, axiom declarations, native_decide, implemented_by and extern are rejected",
+  "fix": {
+   "PqxdhRecordLiftComposition": {
+    "log": "/tmp/bc-arc-scratch/items45/world/fix1/logs/guards-PqxdhRecordLiftComposition-f1.log",
+    "log_sha256": "6151fd7fd07c7f60734d5c88221ff889c6a25eeb21857d4d3c4115085a73ce18",
+    "output": "PqxdhRecordLiftComposition.lean theorems 7 guards 7 OK",
+    "exit": 0
+   },
+   "PqxdhRecordLiftHiding": {
+    "log": "/tmp/bc-arc-scratch/items45/world/fix1/logs/guards-PqxdhRecordLiftHiding-f1.log",
+    "log_sha256": "40b0af06e244b2ad64d5ac7a012fc3528862533700c3ffe5c12cea90b34e6337",
+    "output": "PqxdhRecordLiftHiding.lean theorems 55 guards 55 OK",
+    "exit": 0
+   }
+  },
+  "review_hygiene": {
+   "tool": "/tmp/bc-arc-scratch/items45/world/review-hygiene/guardscan2.py",
+   "tool_sha256": "135fae6691dc5c0025fdf1be11eef79fef5078cf4a99f67236202d11f2ab5436",
+   "output": "/tmp/bc-arc-scratch/items45/world/review-hygiene/guardscan2.out",
+   "output_sha256": "215954f305beba6980d1ccfa6f7fee28d31a330dec9feea6d6db85464571466b",
+   "result": "Composition 7/7, Hiding 55/55, bijection, bare #guard_msgs in, allowed forms only, order OK (at 43f714d3; the fix pass changed no guard)"
+  },
+  "track_note": "No output of an exact-guard scan by the track exists (finding H2(a)); the guide no longer lists one among the track checks."
+ },
+ "forbidden_scan": {
+  "tool": "/tmp/bc-arc-scratch/items45/world/fix1/forbidden.py",
+  "tool_sha256": "b90a0d95ef327ef5d15b5b069b8cd53b5c9690f41f5f5a352c9ccabcdfa511f4",
+  "output": "/tmp/bc-arc-scratch/items45/world/fix1/logs/forbidden-f1.json",
+  "output_sha256": "5e0795a11a57d95aad60b268d53045b95d3ab8057ee9a1573c68d4a0f63971b2",
+  "exit": 0,
+  "result": "Both modules at the fix tree: no sorry, admit, axiom declaration, native_decide, implemented_by, extern, unsafe or opaque outside comments; no evalSPMF, script-S or probOutput anywhere (statements reuse central definitions, so the modules have no new probability notation at all); set_option only autoImplicit false. Negative control: a file with sorry in a proof makes the tool exit 1.",
+  "review_hygiene": "Forbidden tokens: none (only \"opaque\" in a Hiding docstring); set_option only autoImplicit false; no evalSPMF, script-S, probOutput or linter.deprecated."
+ },
+ "leanpath": {
+  "track": {
+   "file": "/tmp/bc-arc-scratch/items45/world/leanpath",
+   "sha256": "90db23f57d7307501c213c792c38619a071293fb50ca3bcf7fdd6ef078fd6531",
+   "first_prefix": "/tmp/bc-arc-scratch/items45/world/olean",
+   "mirror_of": "/tmp/bc-arc-scratch/items45/ctx/int/olean (first prefix of the published LEAN_PATH of central 14f51c34, root olean skipped), resolved symlinks; mirror log /tmp/bc-arc-scratch/items45/world/mirror.log"
+  },
+  "fix": {
+   "file": "/tmp/bc-arc-scratch/items45/world/fix1/leanpath",
+   "sha256": "4a949ef1a2d22829cf3c9234dbe507ac06e326467514f59cc3abf87efeebb44e",
+   "first_prefix": "/tmp/bc-arc-scratch/items45/world/fix1/olean",
+   "mirror_of": "the same first prefix, mirrored afresh (1713 links, root skipped, 0 broken); mirror log /tmp/bc-arc-scratch/items45/world/fix1/mirror.log; the rest of the file is the published 14f51c34 LEAN_PATH"
+  }
+ },
+ "root_checks": {
+  "r1 (7f653065 tree)": {
+   "start": "2026-10-08T12:43:21.496833857Z",
+   "end": "2026-10-08T12:43:24.908742638Z",
+   "exit": 0,
+   "source_sha256": "c15de35c71817ee3078f034f3b401fc5186532671d47bb1739a052ed7b7bb02f",
+   "log_bytes": 0,
+   "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "artifact": "/tmp/bc-arc-scratch/items45/world/olean/BeaconcryptCore.olean",
+   "artifact_sha256": "3c10afc309afca19769fb93a486dde2c11ffd3765ef058619bc6c8abdef965a2",
+   "leanpath_sha256": "90db23f57d7307501c213c792c38619a071293fb50ca3bcf7fdd6ef078fd6531",
+   "command": [
+    "coord.sh",
+    "lean",
+    "claude",
+    "<label>",
+    "--",
+    "timeout",
+    "180",
+    "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+    "-j1",
+    "-M8000",
+    "--root=/tmp/beaconcrypt-deployment-record-world/beaconcrypt-core/proofs/lean",
+    "-o",
+    "/tmp/bc-arc-scratch/items45/world/olean/BeaconcryptCore.olean",
+    "/tmp/beaconcrypt-deployment-record-world/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+   ],
+   "log": "/tmp/bc-arc-scratch/items45/world/logs/root-r1.log"
+  },
+  "r2 (e0907c58 tree; the root file is unchanged up to 1624913a)": {
+   "start": "2026-10-08T13:13:49.842786789Z",
+   "end": "2026-10-08T13:13:52.990868729Z",
+   "exit": 0,
+   "source_sha256": "85c63054e89c0a34a3d6f95a9a2c4b312517542f4a8c827bbecfebfb010acb29",
+   "log_bytes": 0,
+   "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "artifact": "/tmp/bc-arc-scratch/items45/world/olean/BeaconcryptCore.olean",
+   "artifact_sha256": "94c51f652b6785c25d321699f9612e3c0b3621468917c03677742d8940bc9dfa",
+   "leanpath_sha256": "90db23f57d7307501c213c792c38619a071293fb50ca3bcf7fdd6ef078fd6531",
+   "command": [
+    "coord.sh",
+    "lean",
+    "claude",
+    "<label>",
+    "--",
+    "timeout",
+    "180",
+    "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+    "-j1",
+    "-M8000",
+    "--root=/tmp/beaconcrypt-deployment-record-world/beaconcrypt-core/proofs/lean",
+    "-o",
+    "/tmp/bc-arc-scratch/items45/world/olean/BeaconcryptCore.olean",
+    "/tmp/beaconcrypt-deployment-record-world/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+   ],
+   "log": "/tmp/bc-arc-scratch/items45/world/logs/root-r2.log"
+  },
+  "f1 (1624913a tree)": {
+   "start": "2026-10-08T13:48:45.748146512Z",
+   "end": "2026-10-08T13:48:49.100686268Z",
+   "exit": 0,
+   "source_sha256": "85c63054e89c0a34a3d6f95a9a2c4b312517542f4a8c827bbecfebfb010acb29",
+   "log_bytes": 0,
+   "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "artifact": "/tmp/bc-arc-scratch/items45/world/fix1/olean/BeaconcryptCore.olean",
+   "artifact_sha256": "94c51f652b6785c25d321699f9612e3c0b3621468917c03677742d8940bc9dfa",
+   "leanpath_sha256": "4a949ef1a2d22829cf3c9234dbe507ac06e326467514f59cc3abf87efeebb44e",
+   "command": [
+    "coord.sh",
+    "lean",
+    "claude",
+    "<label>",
+    "--",
+    "timeout",
+    "180",
+    "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+    "-j1",
+    "-M8000",
+    "--root=/tmp/beaconcrypt-deployment-record-world/beaconcrypt-core/proofs/lean",
+    "-o",
+    "/tmp/bc-arc-scratch/items45/world/fix1/olean/BeaconcryptCore.olean",
+    "/tmp/beaconcrypt-deployment-record-world/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+   ],
+   "log": "/tmp/bc-arc-scratch/items45/world/fix1/logs/root-f1.log"
+  }
+ },
+ "inventory": {
+  "track": "coord.sh inv recount claude then coord.sh inv rehash claude at each module commit; handwritten-lean 1680 -> 1681 -> 1682 (modules.inv_recount_track, modules.inv_rehash_track); gate blocks before \"# Separate primitive-fidelity profile\", root imports at the end of the import block, manifest rows at the end of reviewed-inventory.txt",
+  "fix": {
+   "recount": "handwritten-lean count unchanged (1682)",
+   "rehash_default": "proofs/lean/BeaconcryptCore.lean: unchanged; proofs/trusted-boundary.md: unchanged; proofs/check-inventory.sh: unchanged",
+   "rehash_modules": "proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftComposition.lean: 2d39c0c656e8 -> 11acb7bc7ad0; proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftHiding.lean: unchanged"
+  },
+  "integration_note": "At integration the recount runs against the central tip that is merged; the privacy track (five modules) and this track both add rows at the same end-of-file anchors.",
+  "integration_note_nit_fix": "At the nit fix central is 14f51c34 (handwritten-lean 1680) and the branch counts 1682 (two modules). An integration announced before this one (CE-11b unit U5, three modules, expected 1683) may move central first; the integration recounts against the central tip it merges and records the result in its checks receipt."
+ },
+ "focused_inventory": {
+  "inventory-comp": {
+   "exit": 0,
+   "start": "2026-10-08T12:44:13Z",
+   "end": "2026-10-08T12:45:41Z",
+   "recorded_head": "7f6530654c3f620c39939018afcdb9e3f35cf426",
+   "log": "/tmp/bc-arc-scratch/items45/world/logs/inventory-comp.log",
+   "log_sha256": "3b65772462c561463198b87c7d7997dd5e3012c8f0399d3072fa92a42716ce64",
+   "dirt_bytes_before": 0,
+   "dirt_bytes_after": 0,
+   "note": "Track: PqxdhRecordLiftComposition module commit (clean tree; started 7 s after the commit)."
+  },
+  "inventory-hiding": {
+   "exit": 0,
+   "start": "2026-10-08T13:14:13Z",
+   "end": "2026-10-08T13:15:38Z",
+   "recorded_head": "e0907c584493c53f3baf8a3ee1007bda78518aa9",
+   "log": "/tmp/bc-arc-scratch/items45/world/logs/inventory-hiding.log",
+   "log_sha256": "240da8d9fda56a7c9316dd43f83b4d347a2e6b5213f4109137445b9742906bf5",
+   "dirt_bytes_before": 0,
+   "dirt_bytes_after": 0,
+   "note": "Track: PqxdhRecordLiftHiding module commit (clean tree)."
+  },
+  "inventory-tip": {
+   "exit": 0,
+   "start": "2026-10-08T13:27:26Z",
+   "end": "2026-10-08T13:28:53Z",
+   "recorded_head": "43f714d34be11d28224671cf08ff8f550bff23ba",
+   "log": "/tmp/bc-arc-scratch/items45/world/logs/inventory-tip.log",
+   "log_sha256": "4b2a324694bcc4e0b289f5961439ba0d5e758887381c7147fbd247f338e4f6a4",
+   "dirt_bytes_before": 0,
+   "dirt_bytes_after": 0,
+   "note": "Track: the reviewed tip 43f714d3 (the earlier receipt commit), run after that commit; previously recorded only in scratch (review findings S8 and H2)."
+  },
+  "inventory-review-hygiene": {
+   "exit": 0,
+   "start": "2026-10-08T13:33:22Z",
+   "end": "2026-10-08T13:34:48Z",
+   "recorded_head": "43f714d34be11d28224671cf08ff8f550bff23ba",
+   "log": "/tmp/bc-arc-scratch/items45/world/review-hygiene/logs/inventory.log",
+   "log_sha256": "242199ab3ab557bf532311858e1e0ba15bbcd97b46f3a273e7e9c6b7dfc10620",
+   "dirt_bytes_before": 0,
+   "dirt_bytes_after": 0,
+   "note": "Independent run of the hygiene review at 43f714d3."
+  },
+  "inventory-f1": {
+   "exit": 0,
+   "start": "2026-10-08T13:50:42Z",
+   "end": "2026-10-08T13:52:08Z",
+   "recorded_head": "1624913a3de6820a4c8d110fa9b734be06e6a9a8",
+   "log": "/tmp/bc-arc-scratch/items45/world/fix1/logs/inventory-f1.log",
+   "log_sha256": "b62fd96beed3bec61842e3a465b7bbe1f10e2e709837a19576f6ad569413ff67",
+   "dirt_bytes_before": 0,
+   "dirt_bytes_after": 0,
+   "note": "Fix pass: the fix commit 1624913a (clean tree)."
+  },
+  "inventory-f2": {
+   "exit": 0,
+   "start": "2026-10-08T13:56:48Z",
+   "end": "2026-10-08T13:58:13Z",
+   "recorded_head": "8a51f0a880542c4440640b75a6bde806c0d071a1",
+   "log": "/tmp/bc-arc-scratch/items45/world/fix1/logs/inventory-f2.log",
+   "log_sha256": "929a7a13eff5896a75a2d86e1944ace4475613520fce64c189b86d1c978391d4",
+   "dirt_bytes_before": 0,
+   "dirt_bytes_after": 0,
+   "note": "The receipt commit 8a51f0a8 (clean tree), run after that commit, so it was recorded only outside the repository until the confirming-review nit fix. The nit-fix commit changes only Markdown and this receipt, which check-inventory does not read."
+  },
+  "command": "coord.sh lease mem claude @nix <label> --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C /tmp/beaconcrypt-deployment-record-world/beaconcrypt-core check-inventory SHELL=bash"
+ },
+ "diff_check": {
+  "log": "/tmp/bc-arc-scratch/items45/world/fix1/logs/diff-check-f1.log",
+  "log_sha256": "31fbb85f86edd331826693a833c4627fccad48f89ce25232556021269758f104",
+  "result": [
+   "git diff --check 14f51c34 43f714d3 exit 0",
+   "git diff --check 43f714d3 1624913a exit 0",
+   "git diff --check 1624913a~1 1624913a exit 0",
+   "git diff --check 43f714d3~1 43f714d3 exit 0",
+   "git diff --check b957b997~1 b957b997 exit 0",
+   "git diff --check e0907c58~1 e0907c58 exit 0",
+   "git diff --check becef377~1 becef377 exit 0",
+   "git diff --check 7f653065~1 7f653065 exit 0"
+  ],
+  "receipt_commit": "git diff --cached --check on the staged receipt before the receipt commit (exit 0; recorded in the track NOTES)"
+ },
+ "h7_scan": {
+  "tool": "/tmp/bc-arc-scratch/items45/world/tools/h7scan.py",
+  "tool_sha256": "53cd7e6977b22a073febb1ae52f45b3fb4d28e51d2b130944bc2dd8db8ced1d2",
+  "tool_note": "Version 3, identical to /tmp/bc-arc-scratch/items45/A/int2/tools/h7scan.py and the chain and CTX copies; case-insensitive",
+  "track": {
+   "outputs": [
+    "/tmp/bc-arc-scratch/items45/world/logs/h7scan-comp.json",
+    "/tmp/bc-arc-scratch/items45/world/logs/h7scan-hiding.json"
+   ],
+   "result": {
+    "PqxdhRecordLiftComposition.lean": {
+     "forbidden_hits": {},
+     "informational": {}
+    },
+    "PqxdhRecordLiftHiding.lean": {
+     "forbidden_hits": {},
+     "informational": {}
+    }
+   }
+  },
+  "review_hygiene": "Both modules, guide, FVA added lines and the earlier receipt: no hit, no informational hit (review-hygiene/h7scan-modules.json, h7scan-docs.json)",
+  "fix_modules": {
+   "output": "/tmp/bc-arc-scratch/items45/world/fix1/logs/h7scan-modules-f1.json",
+   "sha256": "f936752cfeaa8e7287fbeb76c50a9952b89d294b80f3328f3affd34d73710467",
+   "exit": 0,
+   "result": {
+    "PqxdhRecordLiftComposition.lean": {
+     "forbidden_hits": {},
+     "informational": {}
+    },
+    "PqxdhRecordLiftHiding.lean": {
+     "forbidden_hits": {},
+     "informational": {}
+    }
+   }
+  },
+  "fix_docs": {
+   "output": "/tmp/bc-arc-scratch/items45/world/fix1/logs/h7scan-docs-f1.json",
+   "sha256": "551e4ce9f595e225b3db25caf9bccb5265b38cac188d0b077ea798daf3a00157",
+   "exit": 0,
+   "inputs": "doc/impl/record-lift-world-facts.md and the lines that the branch adds to doc/formal-verification-analysis.md (/tmp/bc-arc-scratch/items45/world/fix1/fva-added.txt)",
+   "result": {
+    "record-lift-world-facts.md": {
+     "forbidden_hits": {},
+     "informational": {}
+    },
+    "fva-added.txt": {
+     "forbidden_hits": {},
+     "informational": {}
+    }
+   }
+  },
+  "fix_receipt": {
+   "output": "/tmp/bc-arc-scratch/items45/world/fix1/logs/h7scan-receipt-f1.json",
+   "result": "this receipt as generated before this field was filled: no forbidden and no informational hit; the final file is scanned again after it is written (recorded in the track NOTES)"
+  }
+ },
+ "meta_check": {
+  "probe": "/tmp/bc-arc-scratch/items45/world/tools/H7Closure.lean",
+  "probe_sha256": "4c407c5154cab47d387d2fcc4d6e17abded2672ce5609a4ccb71edb0bf2bfd58",
+  "track": {
+   "7f653065 (Composition)": {
+    "log": "/tmp/bc-arc-scratch/items45/world/logs/dev-h7-comp-144338.log",
+    "log_sha256": "13ba827f8c9adb0839f6b6808c2517f5267b7ae3be0c3e63e9392dd550a852eb",
+    "output": "H-7 guard: modules 1; declared constants 8; closure 29721; direct forbidden uses 0; closure violations 0; classified structural constants 12 of 12"
+   },
+   "e0907c58 (+Hiding)": {
+    "log": "/tmp/bc-arc-scratch/items45/world/logs/dev-h7-hiding-151400.log",
+    "log_sha256": "aa7b57815954f7259f127d99ad4265cc2c04d3cd98882131bb8ddabe66879533",
+    "output": "H-7 guard: modules 2; declared constants 205; closure 29957; direct forbidden uses 0; closure violations 0; classified structural constants 12 of 12"
+   },
+   "note": "The track runs did not record their exit status; the guard fails by an elaboration error, and neither log has one."
+  },
+  "review_hygiene": "Independent rerun (same tool, digest identical): modules 2, 205 declared constants, closure 29957, 0 direct, 0 violations, 12 of 12 structural; negative control (forbidden part pqxdhrecordliftideal.hidingstatement) exits 1",
+  "fix": {
+   "log": "/tmp/bc-arc-scratch/items45/world/fix1/logs/h7closure-f2.log",
+   "log_sha256": "aa7b57815954f7259f127d99ad4265cc2c04d3cd98882131bb8ddabe66879533",
+   "exit": 0,
+   "start": "2026-10-08T13:52:36.246168112Z",
+   "end": "2026-10-08T13:52:41.361335317Z",
+   "output": "H-7 guard: modules 2; declared constants 205; closure 29957; direct forbidden uses 0; closure violations 0; classified structural constants 12 of 12",
+   "leanpath_sha256": "4a949ef1a2d22829cf3c9234dbe507ac06e326467514f59cc3abf87efeebb44e",
+   "command": [
+    "coord.sh",
+    "lean",
+    "claude",
+    "<label>",
+    "--",
+    "timeout",
+    "180",
+    "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+    "-j1",
+    "-M8000",
+    "/tmp/bc-arc-scratch/items45/world/tools/H7Closure.lean"
+   ]
+  }
+ },
+ "deviations": [
+  "Receipt and guide names: doc/impl/proof-receipts/record-lift-world.json and doc/impl/record-lift-world.md already exist (the frozen PqxdhRecordLiftWorld increment), so this track uses record-lift-world-facts.json and record-lift-world-facts.md.",
+  "Module split: the composition is PqxdhRecordLiftComposition and the hiding fact PqxdhRecordLiftHiding instead of one module PqxdhRecordLift (plan S5 D/E); the name PqxdhRecordLift is left for a final assembly once the privacy half and the remaining world facts exist.",
+  "Privacy form of record_lift: CtxPrivLiftStatement is not on central, so record_lift_of_priv takes it as a hypothesis parameter (as instructed). For observation mode O only the Boolean bound is stated without it (record_lift_O); the event form and the bills conjunct are not restated for mode O, since record_auth_lift gives both against idealAuth, which is idealRecords in mode O."
+ ],
+ "not_proved": [
+  "OriginStatement (structural and publication conjuncts), BindingStatement, FreshGuessStatement and LorStatement: open; checked by reading and none found false (guide, Remaining work).",
+  "RecordLiftTarget and CtxLiftTarget unconditionally: they need the privacy half CtxPrivLiftStatement on central (the privacy track, branch codex/deployment-record-priv, not integrated when this receipt was written)."
+ ],
+ "checks_not_run": "No lake build, make verify, nix-collect-garbage, mutation testing, ProVerif or Rust run in the track, the fix pass or the nit fix; no production Rust or ProVerif change. Transcript fidelity (cargo under @cargo) and the central integration checks of PROTOCOL section 6 run on the merged tip (nit_fix.integration_checks).",
+ "review": {
+  "reviewed_commit": "43f714d34be11d28224671cf08ff8f550bff23ba",
+  "reviewed_range": "14f51c34..43f714d3",
+  "semantic": {
+   "reviewer": "independent Claude semantic review (did not write the modules)",
+   "notes": "/tmp/bc-arc-scratch/items45/world/review-semantic/NOTES.md",
+   "notes_sha256": "3f4c042cc7192bfab829ae6122ea3f630c8e21054c6cd1974994bbfd02781a4a",
+   "verdict": "REQUEST_CHANGES (documentation only; both modules sound, statements equal to the targets as defined)",
+   "evidence": "recompiles of both modules without -o against the published 14f51c34 LEAN_PATH (exit 0, empty logs); guards 7/7 and 55/55 with matching axiom profiles; inventory digests equal to the 43f714d3 contents; H-7 grep clean; reading of the remaining targets (none found false)"
+  },
+  "hygiene": {
+   "reviewer": "independent Claude hygiene review (did not write the modules)",
+   "notes": "/tmp/bc-arc-scratch/items45/world/review-hygiene/NOTES.md",
+   "notes_sha256": "a887608c3f78b7eb77834de513d0459684befed3eca823e486e419c00ba2a50c",
+   "verdict": "APPROVE_WITH_NITS",
+   "evidence": "guard scan (guardscan2.py) 7/7 and 55/55; forbidden tokens none; H-7 scan v3 and closure guard rerun clean with negative controls exiting 1; per-commit static inventory replay (invcommits.py); focused check-inventory at 43f714d3 under @nix exit 0; independent rechecks of both modules and the root (exit 0, empty logs); olean mirror and receipt digests verified"
+  },
+  "findings": [
+   {
+    "review": "semantic",
+    "id": "S1",
+    "severity": "major",
+    "title": "Guide's opening paragraph says every target is proved, but four are unproved and two are conditional",
+    "response": "The opening paragraph of doc/impl/record-lift-world-facts.md now states the stage goal (\"is to compose ... and to prove ...\"), lists what is delivered (RecordAuthLiftTarget and HidingStatement as defined; RecordLiftTarget and CtxLiftTarget given CtxPrivLiftStatement as a hypothesis parameter; the mode-O Boolean bound of the record lift) and names the four open targets, pointing to Status and Remaining work. \"Every target is proved as defined on central\" is replaced by \"The delivered statements use the target definitions of central unchanged; no target definition, assumption or contract changes.\"",
+    "outcome": "fixed"
+   },
+   {
+    "review": "semantic",
+    "id": "S2",
+    "severity": "minor",
+    "title": "Receipt calls every delivered statement a target as defined or a stronger form, but the conditional theorems are weaker",
+    "response": "targets.statements_changed and targets.delivered now distinguish the targets as defined (record_auth_lift, idealRecords_hiding), the conditional forms (record_lift_of_priv, record_lift_bool_of_priv, ctx_lift_of_priv: the targets given CtxPrivLiftStatement or CtxPrivLiftBool, weaker than the targets) and the mode-O Boolean bound (record_lift_O).",
+    "outcome": "fixed"
+   },
+   {
+    "review": "semantic",
+    "id": "S3",
+    "severity": "minor",
+    "title": "FVA says the full mode-O record lift is proved outright, but record_lift_O gives only the Boolean bound",
+    "response": "FVA S5 section: for observation mode O the module proves the record-lift bound outright in its Boolean form; the event form and the query budgets of the reductions are not restated for that mode, and the integrity form gives them because the two ideal worlds coincide there. Reworded rather than adding a theorem: record_auth_lift (RecordAuthLiftTarget) at mode O already states the event form and the bills against idealAuth, which is idealRecords in mode O (idealRecords_O), and the mode-O record loss equals the integrity loss (the last step of record_lift_O).",
+    "outcome": "fixed"
+   },
+   {
+    "review": "semantic",
+    "id": "S4",
+    "severity": "minor",
+    "title": "FVA describes ideal-world acceptance as partner-only, which is the unproved OriginStatement",
+    "response": "FVA S5 section: \"a hidden record key accepts only frames previously sealed under that same key\", followed by \"(That the frames a hidden handle accepts were sealed by its partner is the separate origin fact, which is still open.)\"",
+    "outcome": "fixed"
+   },
+   {
+    "review": "semantic",
+    "id": "S5",
+    "severity": "nit",
+    "title": "record_lift_O takes SourceFullCorrect directly, not as a target premise, so two contract statements are inaccurate for it",
+    "response": "contracts.hypotheses of this receipt, the guide (Contracts per theorem), the Contracts paragraph of the PqxdhRecordLiftComposition module docstring and the record_lift_O docstring now say that record_auth_lift_bool, record_auth_lift, record_auth_lift_terms, record_lift_bool_of_priv and record_lift_of_priv state targets whose first premise is SourceFullCorrect, and that record_lift_O, which states no target, takes the same contract (H-7 list) as its explicit hypothesis correct. Docstrings only; no statement changed.",
+    "outcome": "fixed"
+   },
+   {
+    "review": "semantic",
+    "id": "S6",
+    "severity": "nit",
+    "title": "Remaining work (c) cites DecoderAgreement for the Server's receiving handle, but both sides route by the same function",
+    "response": "Guide, Remaining work (publication and binding paragraph): identifying the Server's receiving handle needs no contract, because PqxdhRecordLiftProtocol.serverStep routes a raw receive with the same route that receivingHandle reads; DecoderAgreement is a premise of OriginStatement only (not of BindingStatement), relates route to the sender that codec.frameRead decodes, and the plan does not assume that either bound needs it. The takeover plan's world section says the same.",
+    "outcome": "fixed"
+   },
+   {
+    "review": "semantic",
+    "id": "S7",
+    "severity": "nit",
+    "title": "FreshGuess plan says 'a sum over the claimed index' without the weighting that keeps the bound at 2^-min",
+    "response": "Guide, Remaining work (LorStatement and FreshGuessStatement paragraph): for each i, given the adversary's view (so its claimed index and guess) and that the i-th fresh message went to a hidden handle, that message is uniform over its length_i >= min bytes, so Pr[claimed index = i, message i on a hidden handle and equal to the guess] <= Pr[claimed index = i] * 256^-min, and the sum over i is at most 256^-min <= 2^-min; the paragraph notes that bounding each index term by 2^-min alone would give the number of fresh messages times 2^-min. The takeover plan's world section states the weighted form too.",
+    "outcome": "fixed"
+   },
+   {
+    "review": "semantic",
+    "id": "S8",
+    "severity": "nit",
+    "title": "Tip check-inventory run and second root import are recorded only in scratch",
+    "response": "focused_inventory records the track run at the reviewed tip 43f714d3 (inventory-tip), the hygiene review's run there and the fix-pass run at 1624913a; root_checks records r1, r2 (the root import of the reviewed tree) and the fix-pass f1. commits_note explains why the receipt commit is covered by the run at 1624913a.",
+    "outcome": "fixed"
+   },
+   {
+    "review": "hygiene",
+    "id": "H1",
+    "severity": "minor",
+    "title": "Guide introduction says every S5 target is proved, but four are open",
+    "response": "Same rewrite as S1. Instead of the suggested \"Every delivered target is proved as defined on central\" the paragraph says \"The delivered statements use the target definitions of central unchanged\", because two delivered theorems are conditional forms, not targets as defined.",
+    "outcome": "fixed"
+   },
+   {
+    "review": "hygiene",
+    "id": "H2",
+    "severity": "minor",
+    "title": "In-repo receipt does not record several checks the guide says it records, and does not cover the tip",
+    "response": "(a) guard_scan: guards.py verify on the fix tree (7/7 and 55/55, exact #guard_msgs over #print axioms, only the three allowed axioms) with logs, and the hygiene review's independent guardscan2 result; the guide no longer says that the track ran the exact-guard scan. (b) meta_check: the fix-pass closure guard run records its exit status and log digest (the track runs did not record exit statuses; their logs carry no error). (c) diff_check: commands and exit statuses per commit and range. (d) statements, statement_counts, allowed_axioms, axiom_profile_from_guards, files_sha256 (fix commit and reviewed commit), forbidden_scan and checks_not_run (transcript fidelity under @cargo at integration). (e) focused_inventory with the tip runs (S8) and commits_note.",
+    "outcome": "fixed"
+   },
+   {
+    "review": "hygiene",
+    "id": "H3",
+    "severity": "nit",
+    "title": "'true by reading' asserts that unproved targets are true",
+    "response": "Guide status table: \"open (not found false by reading; see Remaining work)\"; Remaining work: \"Reading found neither false, and both are believed true because ...\"; takeover plan world section: \"all checked by reading and none found false\".",
+    "outcome": "fixed"
+   },
+   {
+    "review": "hygiene",
+    "id": "H4",
+    "severity": "nit",
+    "title": "Mode-O record lift is described as the full record lift, but only the Boolean form is stated",
+    "response": "Same fix as S3 in the FVA; the guide status row now reads \"for observation mode O, the Boolean bound without that hypothesis (record_lift_O; no event form or bills conjunct)\", the guide's composition paragraph, the module docstring and the record_lift_O docstring say it is the Boolean bound only and not RecordLiftStatement restricted to mode O, and this receipt (modules, deviations) says \"mode-O Boolean bound\".",
+    "outcome": "fixed"
+   },
+   {
+    "review": "hygiene",
+    "id": "H5",
+    "severity": "nit",
+    "title": "Receipt's takeover-plan digest is stale, and the plan has two sections numbered 9",
+    "response": "plan.sha256 is re-recorded when this receipt is written and the sections are cited by title. The world section's heading time is corrected to 15:23 CEST (when it was written) and it carries the fix-pass update. The duplicate number was resolved by the privacy track, which renumbered its own section to 10 (observed 15:51 CEST); the world section stays 9 (\"World track (S5) status\").",
+    "outcome": "fixed"
+   }
+  ],
+  "fix_commit": "1624913a3de6820a4c8d110fa9b734be06e6a9a8",
+  "fix_statement_changes": "None. Lean changes are docstrings of PqxdhRecordLiftComposition (module docstring and record_lift_O); every theorem statement, proof, guard and inventory count is unchanged, so every statement is exactly as strong as before.",
+  "confirming_review": {
+   "reviewed_commit": "8a51f0a880542c4440640b75a6bde806c0d071a1",
+   "reviewed_range": "43f714d3..8a51f0a8 (fix-pass commit 1624913a and receipt commit 8a51f0a8)",
+   "reviewer": "independent Claude confirming review of the fix pass (a reviewer that did not write the modules); read only",
+   "notes": "/tmp/bc-arc-scratch/items45/world/confirm/NOTES.md",
+   "notes_sha256": "4f26ceb306f3ddf46a5e2192773dc1916b7805703b40d25bbbaa034b6d3fc3c8",
+   "verdict": "APPROVE_WITH_NITS",
+   "outcome": "every finding of the semantic and hygiene reviews resolved; one receipt nit; no finding against a Lean statement, definition, guard or inventory row",
+   "evidence": [
+    "Lean code of PqxdhRecordLiftComposition equal to 43f714d3 after stripping comments, its 7 guard blocks byte-equal; PqxdhRecordLiftHiding byte-identical to 43f714d3",
+    "own guard scan /tmp/bc-arc-scratch/items45/world/confirm/guardscan.py (SHA-256 9df5d7780aa8b2bc7f2f601e629fd6af587191df010d99c31a1b96c0910be70e) and the track guards.py verify: 7/7 and 55/55, allowed axioms only; the receipt statements (62) equal the source guards; axiom profile 40/13/5/4 equal",
+    "files_sha256 equal to the blobs at 8a51f0a8 and 1624913a, files_sha256_reviewed equal at 43f714d3; only the receipt differs between 1624913a and 8a51f0a8; git ls-remote equal to 8a51f0a8",
+    "H-7 source scan version 3 of both modules, the guide, the added analysis lines and the receipt: clean (/tmp/bc-arc-scratch/items45/world/confirm/h7scan-confirm.json, SHA-256 e0be3417f7aaf8a93b8712d6fdb9c7e001c7d17c40785d254e8461ba70389b8f)",
+    "git diff --check 43f714d3 8a51f0a8 clean; commit footers exact",
+    "Lean check of PqxdhRecordLiftComposition at 8a51f0a8 against the published 14f51c34 LEAN_PATH via coord.sh lean: exit 0, no Lean output (/tmp/bc-arc-scratch/items45/world/confirm/comp-check.log holds only the wrapper's queue line); negative control with an altered record_lift_O guard: exit 1 (/tmp/bc-arc-scratch/items45/world/confirm/negctl.log)",
+    "inventory-f2 at 8a51f0a8 exit 0; check-inventory.sh reads only beaconcrypt-core/proofs and .github",
+    "documentation claims checked against PqxdhRecordLiftIdeal: RecordBounded at O equals RecordAuthBounded; recordLoss at O equals recordAuthLoss; DecoderAgreement occurs only in OriginStatement; serverStep and receivingHandle use the same route; random mode keeps replay acceptance; fresh lengths are at least the minimum"
+   ],
+   "findings": [
+    {
+     "severity": "nit",
+     "title": "contracts.fix_note describes an order difference, but the two logs it cites are byte-identical",
+     "response": "contracts.fix_note now says that the fix-tree probe log is byte-identical to the track log (same SHA-256) and names the only listing with a different order: the source order of the statements section and of the guards.",
+     "outcome": "fixed"
+    }
+   ]
+  }
+ },
+ "nit_fix": {
+  "date": "2026-10-08",
+  "base": "8a51f0a880542c4440640b75a6bde806c0d071a1",
+  "scope": "Documentation only: doc/impl/record-lift-world-facts.md (the Status paragraph names the confirming review and its nit fix, and describes the integration step) and this receipt (contracts.fix_note, focused_inventory.inventory-f2, plan.note_nit_fix, inventory.integration_note_nit_fix, files_sha256, commits, review.confirming_review, this record). No Lean file, inventory row, count, digest, root import or check-inventory.sh line changes.",
+  "h7_scan_docs": {
+   "output": "/tmp/bc-arc-scratch/items45/world/nits/h7scan-docs.json",
+   "sha256": "7aafbbd535a306896c21d1cf6be97062babcc5db6c54d62df07ab52329fda549",
+   "result": "guide doc/impl/record-lift-world-facts.md: no forbidden hit and no informational hit (version 3)"
+  },
+  "h7_scan_receipt": "This receipt is scanned after it is written (/tmp/bc-arc-scratch/items45/world/nits/h7scan-receipt.json, recorded in the integration checks receipt).",
+  "diff_check": "git diff --check clean",
+  "integration_checks": "/tmp/bc-arc-scratch/items45/world/int/checks-receipt.json (module checks into a fresh prefix, root import, inv recount/rehash, focused check-inventory, transcript fidelity and git diff --check on the merged tip)"
+ },
+ "remaining": "doc/impl/record-lift-world-facts.md, section \"Remaining work\"; takeover plan section \"9. World track (S5) status\"."
+}
