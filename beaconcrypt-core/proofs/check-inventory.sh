@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1696
+	[handwritten-lean]=1697
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -35665,6 +35665,25 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecord
 require_line_count 1 '^theorem later_hiding_replace([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterHiding theorem later_hiding_replace"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterHiding\.later_idealRecords_hiding$' "$selected_source_module" "PqxdhRecordLiftLaterHiding dependency later_idealRecords_hiding"
 require_line_count 1 '^theorem later_idealRecords_hiding([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterHiding theorem later_idealRecords_hiding"
+
+# record-lift later lifts: later integrity record lift, later ctx_lift and later record_lift composed from the later chain lift and the later CTX halves (items 4/5, S6, R6)
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftLaterLift.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterLift$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftLaterLift root import"
+require_line_count 6 '^theorem ' "$selected_source_module" "PqxdhRecordLiftLaterLift theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftLaterLift guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterLift\.later_record_auth_lift_bool$' "$selected_source_module" "PqxdhRecordLiftLaterLift dependency later_record_auth_lift_bool"
+require_line_count 1 '^theorem later_record_auth_lift_bool([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterLift theorem later_record_auth_lift_bool"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterLift\.later_record_auth_lift$' "$selected_source_module" "PqxdhRecordLiftLaterLift dependency later_record_auth_lift"
+require_line_count 1 '^theorem later_record_auth_lift([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterLift theorem later_record_auth_lift"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterLift\.later_ctx_lift_bool$' "$selected_source_module" "PqxdhRecordLiftLaterLift dependency later_ctx_lift_bool"
+require_line_count 1 '^theorem later_ctx_lift_bool([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterLift theorem later_ctx_lift_bool"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterLift\.later_ctx_lift$' "$selected_source_module" "PqxdhRecordLiftLaterLift dependency later_ctx_lift"
+require_line_count 1 '^theorem later_ctx_lift([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterLift theorem later_ctx_lift"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterLift\.later_record_lift_bool$' "$selected_source_module" "PqxdhRecordLiftLaterLift dependency later_record_lift_bool"
+require_line_count 1 '^theorem later_record_lift_bool([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterLift theorem later_record_lift_bool"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftLaterLift\.later_record_lift$' "$selected_source_module" "PqxdhRecordLiftLaterLift dependency later_record_lift"
+require_line_count 1 '^theorem later_record_lift([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftLaterLift theorem later_record_lift"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
