@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1680
+	[handwritten-lean]=1681
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -34831,6 +34831,27 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecord
 require_line_count 1 '^theorem ctxAuthLiftTarget([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxBills theorem ctxAuthLiftTarget"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxBills\.ctxAuthLiftStatement$' "$selected_source_module" "PqxdhRecordLiftCtxBills dependency ctxAuthLiftStatement"
 require_line_count 1 '^theorem ctxAuthLiftStatement([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxBills theorem ctxAuthLiftStatement"
+
+# record-lift composition: integrity record_lift from chain_lift and ctxAuthLiftTarget, full record_lift with the privacy half as a hypothesis parameter (items 4/5, S5)
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftComposition.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.PqxdhRecordLiftComposition$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftComposition root import"
+require_line_count 7 '^theorem ' "$selected_source_module" "PqxdhRecordLiftComposition theorem inventory"
+require_line_count 7 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftComposition guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftComposition\.record_auth_lift_bool$' "$selected_source_module" "PqxdhRecordLiftComposition dependency record_auth_lift_bool"
+require_line_count 1 '^theorem record_auth_lift_bool([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftComposition theorem record_auth_lift_bool"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftComposition\.record_auth_lift$' "$selected_source_module" "PqxdhRecordLiftComposition dependency record_auth_lift"
+require_line_count 1 '^theorem record_auth_lift([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftComposition theorem record_auth_lift"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftComposition\.record_auth_lift_terms$' "$selected_source_module" "PqxdhRecordLiftComposition dependency record_auth_lift_terms"
+require_line_count 1 '^theorem record_auth_lift_terms([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftComposition theorem record_auth_lift_terms"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftComposition\.ctx_lift_of_priv$' "$selected_source_module" "PqxdhRecordLiftComposition dependency ctx_lift_of_priv"
+require_line_count 1 '^theorem ctx_lift_of_priv([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftComposition theorem ctx_lift_of_priv"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftComposition\.record_lift_bool_of_priv$' "$selected_source_module" "PqxdhRecordLiftComposition dependency record_lift_bool_of_priv"
+require_line_count 1 '^theorem record_lift_bool_of_priv([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftComposition theorem record_lift_bool_of_priv"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftComposition\.record_lift_of_priv$' "$selected_source_module" "PqxdhRecordLiftComposition dependency record_lift_of_priv"
+require_line_count 1 '^theorem record_lift_of_priv([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftComposition theorem record_lift_of_priv"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftComposition\.record_lift_O$' "$selected_source_module" "PqxdhRecordLiftComposition dependency record_lift_O"
+require_line_count 1 '^theorem record_lift_O([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftComposition theorem record_lift_O"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
