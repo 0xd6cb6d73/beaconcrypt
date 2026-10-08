@@ -11,7 +11,9 @@
   "path": "/tmp/bc-arc-scratch/items45-takeover/takeover-plan.md",
   "sha256": "10c055c36fa0b1a2aee9c3f8b35915fae001741b2241274d6a4b3ec67eb2eb0a",
   "sections": "2 (S4: X1-X4; decisions D1-D5), 8 (CTX track status)",
-  "note": "Hash at the time of this receipt; the fix pass corrected section 8 (contracts used; expected handwritten-lean count after merging central 98b906d9 is 1679, not 1676) and appended a fix-pass update. Section 2 S4 is unchanged."
+  "note": "Hash at the time of this receipt; the fix pass corrected section 8 (contracts used; expected handwritten-lean count after merging central 98b906d9 is 1679, not 1676) and appended a fix-pass update. Section 2 S4 is unchanged.",
+  "sha256_nit_fix": "11e68f937e2309a0d34ddcc6ba94b90dd6812506771726763fbe86847b994c81",
+  "note_nit_fix": "The plan is a scratch status file outside the repository. It was edited after the receipt commit ca34bf0a was generated (the fix-pass update paragraph of section 8, which names ca34bf0a, was appended about two minutes later), so sha256 names the version the fix pass read and sha256_nit_fix the version the confirming-review nit fix read (confirming-review nit 2). Sections 2 (S4) and the S4 decisions are unchanged; later status paragraphs (such as the integration update) change the hash again."
  },
  "brief": {
   "path": "/tmp/bc-coord/tasks/codex-items-4-5.md",
@@ -42,8 +44,28 @@
    "allReal_bare, allReal_view, allReal_decision, hybrid_zero_view, step_bare, schedule_bare, opening_bare, sealing_bare, real_open_cache, real_seal_cache (PqxdhRecordLiftCtxHybrid)": "Pqxdh.Crypto.aeadSeal_tag_length only (16-byte Poly1305 tags), through PqxdhRecordLiftCtxServices.sealRom_typed and the record-building definitions CtxRomAuth.ctxSeal and CtxRomAuth.ctxSealOracle; no aead_open_seal, no game; BLAKE2b ROM worlds",
    "every other theorem (hybrid family of PqxdhRecordLiftCtxHybrid; all of PqxdhRecordLiftCtxLink, PqxdhRecordLiftCtxAvailability, PqxdhRecordLiftKeyCut; game_real, game_replay, advantage_congr of PqxdhRecordLiftCtx; the 32 bill theorems of PqxdhRecordLiftCtxBills)": "no contract"
   },
-  "classification": "aeadSeal_tag_length is classified under functional AEAD correctness of the H-7 list (the AEAD functional specification in the primitive record), as in the milestone B9a notes (doc/impl/handover/milestone-b/stage-notes/b9a-notes.md, N2), which list it next to aead_open_seal. This is a documentation classification of an existing record field used by central definitions, not a new hypothesis; flagged in the fix-pass report for the owner to confirm.",
-  "structural": "Pqxdh.Crypto.dh_comm, xpub_length and x25519_length (66 theorems) occur only inside the DH-interface definitions reached through the type PqxdhServerAuthExperiment.Setup of the setup parameter (the structural constants of the H-7 closure guard), and Pqxdh.Crypto.hkdf_length (68 theorems) only inside RawCtxSourceHkdf.response; no theorem uses them as a proof step.",
+  "classification": "aeadSeal_tag_length is classified under functional AEAD correctness of the H-7 list (the AEAD functional specification in the primitive record), as in the milestone B9a notes (doc/impl/handover/milestone-b/stage-notes/b9a-notes.md, N2), which list it next to aead_open_seal. This is a documentation classification of an existing record field used by central definitions, not a new hypothesis; reported to the owner once, as an FYI, in the orchestrator's report of the CTX-track integration (confirming-review nit 4); no new contract and no owner decision is needed unless the owner classifies the field differently.",
+  "structural": "Pqxdh.Crypto.dh_comm, xpub_length and x25519_length (66 theorems) occur only inside the DH-interface definitions reached through the type PqxdhServerAuthExperiment.Setup of the setup parameter (the structural constants of the H-7 closure guard); Pqxdh.Crypto.hkdf_length (68 theorems) only inside the KDF definitions RawCtxSourceHkdf.response and PqxdhJointKdf.productionStream; and Pqxdh.Crypto.aeadSeal_tag_length, for 53 of the 68 theorems that reach it, only inside the AEAD record-building definitions (CtxRomAuth.ctxSeal, CtxRomAuth.ctxSealOracle, the localSeal definitions of AdaptiveCtxSharedReplay and AdaptiveCtxSharedHash, and the other definitions listed in structural_frontier). For these theorems no proof step uses the fields. The other 15 theorems that reach aeadSeal_tag_length use it at proof level (per_theorem).",
+  "structural_frontier": {
+   "aeadSeal_tag_length": [
+    "AdaptiveCtxSharedReplay.localSeal",
+    "CtxHonestTagSampling.ctxDirectSampleKeyFreeSealOracle",
+    "CtxIndependentTags.ctxKeyFreeSealOracle",
+    "CtxRomAuth.ctxSeal",
+    "CtxNonceAeadIndDollarValidation.ctxRealValidationCiphertext",
+    "AdaptiveCtxSharedHash.localSeal",
+    "CtxRomAuth.ctxSealOracle",
+    "CtxNonceAeadIntCtxt.modifiedNonceAeadSealOracle",
+    "CtxNonceAeadIndDollarValidation.ctxValidationTag",
+    "AdaptiveCtxReplayDictionary.abstractSeal"
+   ],
+   "hkdf_length": [
+    "RawCtxSourceHkdf.response",
+    "PqxdhJointKdf.productionStream"
+   ],
+   "source": "Confirming-review probe /tmp/bc-arc-scratch/items45/ctx/confirm/ContractConfirm.lean (SHA-256 231f0a43033577480d645fb7a7e09b060652360ae90bc4007de13fd0b5243aee), log /tmp/bc-arc-scratch/items45/ctx/confirm/logs/probe1.log (SHA-256 11f2c65f7aa59840037f5c25572805d9813ae6ab8002be8fb5498d1e367c3030): the definitions of the closure (namespace BeaconcryptCore.Computational) that use the field directly, over all theorems of the six modules that reach it; aeadSeal_tag_length: 68 theorems, 15 at proof level, 53 only inside definitions; hkdf_length: 68 theorems, 0 at proof level. The probe also found no raw projection of a propositional field of Pqxdh.Crypto and no use of its recursor.",
+   "note": "Added in the confirming-review nit fix (nit 1): the fix-pass version of structural listed the DH fields and hkdf_length (with RawCtxSourceHkdf.response only) and omitted aeadSeal_tag_length for the theorems that reach it only inside definitions."
+  },
   "absent": "No theorem reaches Pqxdh.Crypto.verify_sign, conv_agree, decap_encap, edPub_length, kemPub_length, encap_ss_length, decap_length, blake2b_length, SourceFullCorrect, FrameReadBack, Phase1ReadBack, Phase2ReadBack, DecoderAgreement or RawCtxSelectedPlaintextOrigins.HistoryCorrect; HMAC-PRF and Extract-on-uniform32 are not used.",
   "composition_assumptions": "doc/composition-assumptions.md already lists functional AEAD correctness, the modified-nonce AEAD INT-CTXT and IND$ games and the BLAKE2b ROM for AdaptiveCtxDynamicKnownKeys.sourceGame; PqxdhRecordLiftCtxModes.sourceGame, used here, is its variant with replay-mode known calls. No new contract, so composition-assumptions.md and trusted-boundary.md are unchanged."
  },
@@ -100,10 +122,28 @@
   {
    "commit": "a3418026846cde516b7fbafdbdea5a5b1cf4c062",
    "subject": "Fix the CTX-track review findings in docstrings and guides"
+  },
+  {
+   "commit": "ca34bf0aecd156c7198f56feafe336ac020fe334",
+   "subject": "Add the record-lift CTX-track receipt"
   }
  ],
- "commits_note": "Twelve track commits 9622b5fd..a6f3b00d (six module commits, six documentation commits) and the fix-pass commit; the receipt commit that adds this file follows the fix-pass commit.",
+ "commits_note": "Twelve track commits 9622b5fd..a6f3b00d (six module commits, six documentation commits), the fix-pass commit a3418026 (docstrings, guide, analysis, inventory rehash) and the receipt commit ca34bf0a; this version of the receipt is written by the confirming-review nit-fix commit that follows ca34bf0a (documentation only: the guide and this receipt).",
  "files_sha256": {
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxHybrid.lean": "ccda3d9ae827b18e5adfc86439634c38b12f3125df4fea943b94c3f164bd4526",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxLink.lean": "ae508bb0e91226e8960b64e25796ee8d0ff409277706cd962ac6209e800721a8",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxAvailability.lean": "b8ef23b334ee3dae716e8efb0b7bfc319d631f4c1d562484a87c50857caa6002",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftKeyCut.lean": "b7de32c70c908ae95e4a94e83bb6b218e53d954d7422094e4eafa2cc19f37e00",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtx.lean": "2410f999a25684bb939a005b994dda4964d242f1053e8f895c7a2e324f31eaaa",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxBills.lean": "b174949df3225fefb27b171fae7de3cb95f147c6428052353ff8206c060a5aef",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "5d0a013ecbf00b120e3e6e44173f2f61d8daf462f247f6665fae1832d539a744",
+  "beaconcrypt-core/proofs/check-inventory.sh": "20155424217acbabec0ffe7831101bef1664ae8f7b1ca51501f12ebf1cd718a9",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "5fcfd80e08faef23f9230e5f35f76829235eb20d024f29d10e08fce8e006c905",
+  "doc/impl/record-lift-ctx-hybrid.md": "3da35daa94d97d1379c9838e869085d1ecc5a8deb7fefeed305369591bf4564a",
+  "doc/formal-verification-analysis.md": "04e52696d920768eea18c8265e12deda31f20c6efad249ba09a1c5f633ef4972"
+ },
+ "files_sha256_note": "At the confirming-review nit-fix commit (the commit that adds this version of the receipt); only doc/impl/record-lift-ctx-hybrid.md differs from files_sha256_fix1. The receipt itself is not listed.",
+ "files_sha256_fix1": {
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxHybrid.lean": "ccda3d9ae827b18e5adfc86439634c38b12f3125df4fea943b94c3f164bd4526",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxLink.lean": "ae508bb0e91226e8960b64e25796ee8d0ff409277706cd962ac6209e800721a8",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxAvailability.lean": "b8ef23b334ee3dae716e8efb0b7bfc319d631f4c1d562484a87c50857caa6002",
@@ -116,7 +156,7 @@
   "doc/impl/record-lift-ctx-hybrid.md": "da2ee9aa73f4ecd5714bceea650c6f9785acd32d15b6063ee9787872e16aa1be",
   "doc/formal-verification-analysis.md": "04e52696d920768eea18c8265e12deda31f20c6efad249ba09a1c5f633ef4972"
  },
- "files_sha256_note": "At the fix-pass commit a3418026846cde516b7fbafdbdea5a5b1cf4c062, the tree that the fix-pass checks cover; the receipt commit adds only this file.",
+ "files_sha256_fix1_note": "At the fix-pass commit a3418026846cde516b7fbafdbdea5a5b1cf4c062, the tree that the fix-pass checks cover; the receipt commit ca34bf0a added only this file.",
  "files_sha256_a6f3b00d": {
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxHybrid.lean": "f7157b8af9047e878267c225b451758191d59ac9281d8d0db93ea129d59e2cb2",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxLink.lean": "f96c25ef06ee0dc42985fb7b97a5e1716f6da3d34f4c36cbd02c3dae0e695d04",
@@ -2365,7 +2405,8 @@
    "rehash": "proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxHybrid.lean: f7157b8af904 -> ccda3d9ae827; proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxLink.lean: f96c25ef06ee -> ae508bb0e912; proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxAvailability.lean: 211dd7ba8afc -> b8ef23b334ee; proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftKeyCut.lean: 745d9646226e -> b7de32c70c90; proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtx.lean: 8a96b20ddf16 -> 2410f999a256; proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftCtxBills.lean: 2da68d46711a -> b174949df322",
    "rehash_default": "proofs/lean/BeaconcryptCore.lean: unchanged; proofs/trusted-boundary.md: unchanged; proofs/check-inventory.sh: unchanged"
   },
-  "integration_note": "A trivial-mode git merge-tree of ee7878ee, central 98b906d9 and a6f3b00d (hygiene review) conflicts only in check-inventory.sh, BeaconcryptCore.lean, reviewed-inventory.txt and doc/formal-verification-analysis.md, and central adds none of the six module names. After the merge with 98b906d9 the expected handwritten-lean count is 1673 + 6 = 1679 (hygiene finding H3; the earlier note said 1676)."
+  "integration_note": "A trivial-mode git merge-tree of ee7878ee, central 98b906d9 and a6f3b00d (hygiene review) conflicts only in check-inventory.sh, BeaconcryptCore.lean, reviewed-inventory.txt and doc/formal-verification-analysis.md, and central adds none of the six module names. After the merge with 98b906d9 the expected handwritten-lean count is 1673 + 6 = 1679 (hygiene finding H3; the earlier note said 1676).",
+  "integration_note_nit_fix": "Central has moved past 98b906d9: at the confirming review it was 0b70190e (CE-11b increment 2, handwritten-lean 1674). Merging 0b70190e gives 1674 + 6 = 1680 (confirming-review nit 3); the integration recounts against the central tip it merges and records the result in its checks receipt."
  },
  "focused_inventory": {
   "inventory-x1": {
@@ -2471,6 +2512,19 @@
    "tree": "a3418026 (clean commit)",
    "note": "Fix-pass run on the clean fix-pass commit",
    "command": "coord.sh lease mem claude @nix items45-ctxfix-inventory-f1 --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C /tmp/beaconcrypt-deployment-record-ctx/beaconcrypt-core check-inventory SHELL=bash"
+  },
+  "inventory-f2": {
+   "exit": 0,
+   "start": "2026-10-08T12:04:19Z",
+   "end": "2026-10-08T12:05:42Z",
+   "recorded_head": "ca34bf0aecd156c7198f56feafe336ac020fe334",
+   "log": "/tmp/bc-arc-scratch/items45/ctx/fix1/logs/inventory-f2.log",
+   "log_sha256": "2994741a6d12970fbeb0e6d367d5e9dd9c7a6bc155c5807d20a6521c13b43eba",
+   "dirt_bytes_before": 0,
+   "dirt_bytes_after": 0,
+   "tree": "ca34bf0a (clean receipt commit)",
+   "note": "Run at the receipt commit ca34bf0a after this receipt was written, so it was recorded only outside the repository until the confirming-review nit fix. The nit-fix commit changes only Markdown and this receipt, which check-inventory does not read.",
+   "command": "coord.sh lease mem claude @nix items45-ctxfix-inventory-f2 --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C /tmp/beaconcrypt-deployment-record-ctx/beaconcrypt-core check-inventory SHELL=bash"
   }
  },
  "diff_check": "git diff --check clean on every track commit (hygiene review) and on the fix-pass commit",
@@ -2534,7 +2588,7 @@
   "The privacy half CtxPrivLiftStatement (idealAuth to randomRecords, per-key loss privacyLoss), including the open S1 point that PqxdhRecordLiftIdeal.randomImpl matches the IND$ random experiment behind replay_random_advantage (the semantic review compared them at definition level and saw no mismatch; still an obligation)",
   "RecordLiftStatement and the origin, binding and hiding targets (S5), R6 forms (S6): other stages"
  ],
- "checks_not_run": "No lake build, make verify, nix-collect-garbage, mutation testing, ProVerif or Rust run in the track or the fix pass; no production Rust or ProVerif change. Transcript fidelity (cargo under @cargo) and the central integration checks of PROTOCOL section 6 run on the merged tip at integration.",
+ "checks_not_run": "No lake build, make verify, nix-collect-garbage, mutation testing, ProVerif or Rust run in the track, the fix pass or the nit fix; no production Rust or ProVerif change. Transcript fidelity (cargo under @cargo) and the central integration checks of PROTOCOL section 6 run on the merged tip (nit_fix.integration_checks).",
  "review": {
   "reviewed_commit": "a6f3b00dcecbd48b122bff3c6a5748905e498a35",
   "reviewed_range": "ee7878ee..a6f3b00d",
@@ -2655,6 +2709,64 @@
     "response": "Kept: the six modules form one stage whose sections (hybrid family, contracts per theorem, checks) are shared; every module docstring names the guide, and the guide has one section per module.",
     "outcome": "no_change_needed"
    }
-  ]
+  ],
+  "confirming_review": {
+   "reviewed_commit": "ca34bf0aecd156c7198f56feafe336ac020fe334",
+   "reviewed_range": "a6f3b00d..ca34bf0a (fix-pass commit a3418026 and receipt commit ca34bf0a)",
+   "reviewer": "independent Claude confirming review of the fix pass (a reviewer that did not write the modules); read only",
+   "notes": "/tmp/bc-arc-scratch/items45/ctx/confirm/NOTES.md",
+   "notes_sha256": "63ef43e6c57b15a3adae704fb9034a49280d97ba18e0724d6f3d387368bf87df",
+   "verdict": "APPROVE_WITH_NITS",
+   "outcome": "every finding S1-S5 and H1-H8 of the semantic and hygiene reviews resolved or answered (H8 kept, reasoned); four documentation nits; no finding against a Lean statement, definition, guard or inventory row",
+   "evidence": [
+    "HEAD == git ls-remote == ca34bf0a, clean worktree; the Lean diff of the fix pass is six module docstrings and the removal of one set_option line; no statement changed",
+    "receipt files_sha256 equal the blobs at a3418026 and ca34bf0a, files_sha256_a6f3b00d the blobs at a6f3b00d; inventory rows equal the module SHA-256; module check records (source, artifact, log, leanpath) verified",
+    "/tmp/bc-arc-scratch/items45/ctx/confirm/guardscan2.py (SHA-256 135fae6691dc5c0025fdf1be11eef79fef5078cf4a99f67236202d11f2ab5436): 215/215 guards OK at ca34bf0a; the receipt axiom lists equal the guards; linter.deprecated suppressions exactly on miss_eager, table_eager, key_cut_view and key_cut",
+    "/tmp/bc-arc-scratch/items45/ctx/confirm/logs/: rechecks without -o of the six modules and the root import via coord.sh lean against the fix-pass leanpath, exit 0, empty logs (PqxdhRecordLiftKeyCut without a deprecation warning)",
+    "own contract probes /tmp/bc-arc-scratch/items45/ctx/confirm/ContractConfirm.lean and ContractConfirm2.lean (logs/probe1.log SHA-256 11f2c65f7aa59840037f5c25572805d9813ae6ab8002be8fb5498d1e367c3030, logs/probe2.log SHA-256 875f7889bb95daee4f9424d3cd41c32bc857f58b2091d41cd661898a3992d041): aead_open_seal and AdaptiveRawNonceAead.HistoryCorrect 5/5 at proof level, aeadSeal_tag_length 68 (15 at proof level), hkdf_length 68 (0), DH fields 66 (0), matching the fix-pass probe; the IND$ and INT-CTXT advantages and integrityLoss are reached only by the five final theorems; HMAC-PRF, Extract, privacyLoss and hopLoss by none",
+    "H-7 source scan version 3 of the six modules, the guide, the added analysis lines and the receipt clean (/tmp/bc-arc-scratch/items45/ctx/confirm/logs/h7scan.json); git diff --check ee7878ee..ca34bf0a clean; footers exact",
+    "focused check-inventory runs f1 (a3418026) and f2 (ca34bf0a) exit 0 on clean trees; recount 1669; closure numbers per commit verified",
+    "git fetch and git merge-tree --write-tree of central 0b70190e with ca34bf0a: conflicts only in the four anchor files"
+   ],
+   "findings": [
+    {
+     "severity": "nit",
+     "title": "The list of fields that occur only inside definitions leaves out aeadSeal_tag_length",
+     "response": "The guide section \"Contracts per theorem\" and contracts.structural now list aeadSeal_tag_length for the 53 theorems that reach it only inside the AEAD record-building definitions (contracts.structural_frontier lists the ten), and both KDF definitions RawCtxSourceHkdf.response and PqxdhJointKdf.productionStream for hkdf_length. No Lean change.",
+     "outcome": "fixed"
+    },
+    {
+     "severity": "nit",
+     "title": "The receipt plan hash no longer matches the takeover plan",
+     "response": "plan.sha256_nit_fix and plan.note_nit_fix record the current hash and that the plan was edited after the receipt (the fix-pass update paragraph naming ca34bf0a).",
+     "outcome": "fixed"
+    },
+    {
+     "severity": "nit",
+     "title": "Central has moved past 98b906d9; the expected count at integration is 1680",
+     "response": "inventory.integration_note_nit_fix: merging 0b70190e gives 1674 + 6 = 1680; the integration recounts against the central tip it merges. No branch change.",
+     "outcome": "fixed (receipt note); the recount runs at integration"
+    },
+    {
+     "severity": "nit",
+     "title": "The fix report and the receipt disagree on whether the tag-length classification goes to the owner",
+     "response": "The orchestrator's report of the CTX-track integration mentions the classification once as an FYI; contracts.classification says so. No new contract.",
+     "outcome": "fixed"
+    }
+   ]
+  }
+ },
+ "nit_fix": {
+  "date": "2026-10-08",
+  "base": "ca34bf0aecd156c7198f56feafe336ac020fe334",
+  "scope": "Documentation only: doc/impl/record-lift-ctx-hybrid.md (section \"Contracts per theorem\": the structural fields with aeadSeal_tag_length and both KDF definitions; the Status paragraph names the confirming review) and this receipt. No Lean file, inventory row, count, digest, root import or check-inventory.sh line changes.",
+  "h7_scan_docs": {
+   "output": "/tmp/bc-arc-scratch/items45/ctx/nits/h7scan-docs.json",
+   "sha256": "a993a8eae53d43281b9920c6834ea0d8940ac1931dd851edc1e642e84a5f8cb9",
+   "result": "guide doc/impl/record-lift-ctx-hybrid.md: no forbidden hit (version 3); informational hit only productionStream, on the line of section \"Contracts per theorem\" that names the KDF definition"
+  },
+  "h7_scan_receipt": "This receipt is scanned after it is written (/tmp/bc-arc-scratch/items45/ctx/nits/h7scan-receipt.json, recorded in the integration checks receipt).",
+  "diff_check": "git diff --check clean",
+  "integration_checks": "/tmp/bc-arc-scratch/items45/ctx/int/checks-receipt.json (module checks into a fresh prefix, root import, inv recount/rehash, focused check-inventory, transcript fidelity and git diff --check on the merged tip)"
  }
 }
