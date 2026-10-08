@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1592
+	[handwritten-lean]=1593
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -33065,6 +33065,26 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecord
 require_line_count 1 '^theorem sealingService_other([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxServices theorem sealingService_other"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftCtxServices\.sealingService_repeat$' "$selected_source_module" "PqxdhRecordLiftCtxServices dependency BeaconcryptCore.Computational.PqxdhRecordLiftCtxServices.sealingService_repeat"
 require_line_count 1 '^theorem sealingService_repeat([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftCtxServices theorem sealingService_repeat"
+
+# Exact selected next32 private service and whole adaptive continuation simulation.
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftMaskedOracle.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.PqxdhRecordLiftMaskedOracle$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordLiftMaskedOracle root import"
+require_line_count 7 '^theorem ' "$selected_source_module" "PqxdhRecordLiftMaskedOracle theorem inventory"
+require_line_count 7 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordLiftMaskedOracle guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftMaskedOracle\.record_realize$' "$selected_source_module" "PqxdhRecordLiftMaskedOracle dependency BeaconcryptCore.Computational.PqxdhRecordLiftMaskedOracle.record_realize"
+require_line_count 1 '^theorem record_realize([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftMaskedOracle theorem record_realize"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftMaskedOracle\.output_read$' "$selected_source_module" "PqxdhRecordLiftMaskedOracle dependency BeaconcryptCore.Computational.PqxdhRecordLiftMaskedOracle.output_read"
+require_line_count 1 '^theorem output_read([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftMaskedOracle theorem output_read"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftMaskedOracle\.lookup_realization$' "$selected_source_module" "PqxdhRecordLiftMaskedOracle dependency BeaconcryptCore.Computational.PqxdhRecordLiftMaskedOracle.lookup_realization"
+require_line_count 1 '^theorem lookup_realization([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftMaskedOracle theorem lookup_realization"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftMaskedOracle\.lookup_coordinate$' "$selected_source_module" "PqxdhRecordLiftMaskedOracle dependency BeaconcryptCore.Computational.PqxdhRecordLiftMaskedOracle.lookup_coordinate"
+require_line_count 1 '^theorem lookup_coordinate([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftMaskedOracle theorem lookup_coordinate"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftMaskedOracle\.interpreter_realization$' "$selected_source_module" "PqxdhRecordLiftMaskedOracle dependency BeaconcryptCore.Computational.PqxdhRecordLiftMaskedOracle.interpreter_realization"
+require_line_count 1 '^theorem interpreter_realization([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftMaskedOracle theorem interpreter_realization"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftMaskedOracle\.interpreter_coordinate$' "$selected_source_module" "PqxdhRecordLiftMaskedOracle dependency BeaconcryptCore.Computational.PqxdhRecordLiftMaskedOracle.interpreter_coordinate"
+require_line_count 1 '^theorem interpreter_coordinate([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftMaskedOracle theorem interpreter_coordinate"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftMaskedOracle\.schedule_realization$' "$selected_source_module" "PqxdhRecordLiftMaskedOracle dependency BeaconcryptCore.Computational.PqxdhRecordLiftMaskedOracle.schedule_realization"
+require_line_count 1 '^theorem schedule_realization([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftMaskedOracle theorem schedule_realization"
 
 # Reviewed actual getter availability, distinct from network compromise powers.
 python3 proofs/source/test-getter-profile.py
