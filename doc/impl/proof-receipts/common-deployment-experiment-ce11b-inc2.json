@@ -1,6 +1,6 @@
 {
- "date": "2026-10-08T11:14:43.834665+00:00",
- "scope": "CE-11b increment 2: the spike finished (design-v2 section 8.5, items (a)-(g)) and the rest of unit U1, PqxdhDeploymentIdealSteps (the ideal registration as a slot program and CE.idealGame g, with the agreement of its hidden steps with item 2's services skeleton). Unit U2 not started. Not reviewed; not integrated into central.",
+ "date": "2026-10-08T11:17:35.240889+00:00",
+ "scope": "CE-11b increment 2: the spike finished (design-v2 section 8.5, items (a)-(g)) and the rest of unit U1, PqxdhDeploymentIdealSteps (the ideal registration as a slot program and CE.idealGame g, with the agreement of its hidden steps with item 2's services skeleton). Unit U2 not published (its first lemmas in scratch). Not reviewed; not integrated into central.",
  "basis": "e464a35cde7d99ee92153274ded1379a457820cf",
  "topic": {
   "branch": "codex/deployment-ce11b",
@@ -60,6 +60,26 @@
      "log_bytes": 0,
      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     }
+   },
+   "/tmp/bc-arc-scratch/common-experiment/ce11b/inc2/spike/U2Spike.lean": {
+    "sha256": "fa8cb8f3d5e46a675370fa883caf839fcb559e9e6502fee7feb6180cb0688139",
+    "theorems": [
+     "realRegAt_forget",
+     "realRegAt_commutes_ctx",
+     "slotImpl_coins",
+     "slotCore_onSlots",
+     "slotCore_commutes_ctx",
+     "createReg_commutes_ctx",
+     "idealCore_real_commutes_ctx"
+    ],
+    "sorry_free": true,
+    "last_dev_check": {
+     "run": "U2Spike-2",
+     "source_sha256": "fa8cb8f3d5e46a675370fa883caf839fcb559e9e6502fee7feb6180cb0688139",
+     "result": "exit 0 seconds 3",
+     "log_bytes": 0,
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
    }
   },
   "published_in_U1": [
@@ -89,6 +109,10 @@
   {
    "commit": "caad5a07b404fdd2228b615aa808980a5c3f2827",
    "subject": "Add the CE-11b ideal registration steps and CE.idealGame"
+  },
+  {
+   "commit": "6e82a77af1f74b3e8cd8b72c62d282309b1282e4",
+   "subject": "Document CE-11b increment 2 and the finished spike"
   }
  ],
  "commits_note": "Commits on the topic after the basis that were made before this receipt was generated; the documentation commit that adds this receipt is not listed.",
@@ -304,7 +328,7 @@
   "the grouped request records the hidden-read coordinates in the step state; the Beacon ghost is set only after an establishment that followed a hidden read",
   "realRegAt copies realReg to every backend; its CTX obliviousness (needed for C7) is open work in U2",
   "skeleton agreement lemmas planned in U6 published in U1 (tailCE_challenge, groupCE_challenge, groupCE_known, preparationCE_eval, publicLocal_coins)",
-  "U2 not started in this increment"
+  "U2 not published in this increment; its first lemmas (realRegAt_commutes_ctx, slotCore_commutes_ctx, createReg_commutes_ctx and the create, bundle and HMAC commutation of the ideal core) are checked scratch proofs (spike/U2Spike.lean)"
  ],
  "contracts_used": {
   "new_contracts": [],
