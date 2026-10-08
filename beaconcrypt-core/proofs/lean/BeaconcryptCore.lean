@@ -1782,6 +1782,8 @@ import BeaconcryptCore.Computational.PqxdhRecordLiftCtxHybrid
 
 import BeaconcryptCore.Computational.PqxdhRecordLiftCtxLink
 
+import BeaconcryptCore.Computational.PqxdhRecordLiftCtxAvailability
+
 /-!
 # Beaconcrypt-core verification root
 
