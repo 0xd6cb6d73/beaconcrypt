@@ -7,13 +7,15 @@ import BeaconcryptCore.Computational.PqxdhDeploymentFinishErasure
 
 C1, C3 and C6 of the record-lift hand-off in generic form: for every registration handler `reg` of the native deployment game with a pluggable registration handler (`PqxdhDeploymentBackend.gameWith`) and every environment of the record-lift capability boundary that splits it, the common deployment experiment and the record world (`PqxdhRecordLiftWorld.run`) have the same law.
 
-**Reassembly (design-v2 section 5.9).** `merge e w` puts the World's record coordinates into the environment's stripped registration state (`fill`: the World's Server peer map with its kernels, the World's established shells and kernels, the World's shared CTX cache) and adds the World's raw-attempt counters, produced frames and seed table. It reads no instrumentation (`merge_forget`). `Good created e w` is the admissibility invariant: the environment state is stripped and holds the constructed Server, the World's Server is initialized with the environment's sender and identity and has the environment's peers up to their kernels, and the World's owners are the environment's owners phase by phase up to their kernels. `Splits created reg step` says that from every admissible joint state each registration command of the environment, interpreted by the World's effects, has the law of `reg` on the reassembled state, and keeps admissibility.
+**Reassembly (design-v2 section 5.9).** `merge e w` puts the World's record coordinates into the environment's stripped registration state (`fill`: the World's Server peer map with its kernels, the World's established shells and kernels, the World's shared CTX cache) and adds the World's raw-attempt counters, produced frames and seed table. It reads no instrumentation (`merge_forget`). `Good created e w` is the admissibility invariant: the environment state is stripped and holds the constructed Server, the World's Server is initialized with the environment's sender and identity and has the environment's peers up to their kernels, and the World's owners are the environment's owners phase by phase up to their kernels. `Splits created reg step inv` says that from every joint state satisfying `Good` and an environment-specific admissibility predicate `inv`, each registration command of the environment, interpreted by the World's effects, has the law of `reg` on the reassembled state, and keeps `Good` and `inv`.
 
-**C1.** The fixed steps join exactly: a World coin is the native coin (`coin_join`), the World's `.hash` is the native BLAKE2b oracle on the same cache (`hash_join`), and the World's Server and Beacon record steps are the native record steps on the reassembled state (`serverStep_merge`, `beaconStep_merge`); together with `Splits` this gives the per-step obligation (`worldStep_step`) and the invariant (`worldStep_keeps`), hence the main simulation `run_join`. The startup is the actual Server constructor: its coins are the World's counted coins (`coins_world`), and the constructed Server's initial environment state reassembles to the native game's initial state (`merge_initial`, `good_initial`). `join` is C1 at the full reassembled state, with the observed and analysis projections `join_observed` and `join_analysis`.
+**The admissibility predicate.** Neither `Good` nor `merge` reads the World's used markers, which decide whether the World admits a hidden install (`PqxdhRecordLiftWorld.Unused`); an environment with hidden installs ties them to its own state through `inv` (design-v2 section 5.9: "used markers = hidden installs performed"). `inv` must be `Stable`: it reads the World only through `fixedView` (the used markers, the seed table, the Server's sender, identity and peers up to their kernels, and the owners up to their kernels), which every fixed step keeps (`effects_view`, `serverStep_view`, `beaconStep_view`). With `inv := fun _ _ => True` the obligation is on `Good` alone (`stable_true`, `splits_true`). The toy environment `toyStep` with one hidden Server install, which the World admits (`toy_admitted`), splits the handler `toyReg` relative to `toyInv` (the World's marker of the slot is set exactly when the environment's flag is): `toy_splits`, and C1 applies to it (`toy_join`).
+
+**C1.** The fixed steps join exactly: a World coin is the native coin (`coin_join`), the World's `.hash` is the native BLAKE2b oracle on the same cache (`hash_join`), and the World's Server and Beacon record steps are the native record steps on the reassembled state (`serverStep_merge`, `beaconStep_merge`); together with `Splits` this gives the per-step obligation (`worldStep_step`) and the invariant (`worldStep_keeps`), hence the main simulation `run_join`. The startup is the actual Server constructor: its coins are the World's counted coins (`coins_world`), and the constructed Server's initial environment state reassembles to the native game's initial state (`merge_initial`, `good_initial`); `inv` is required at the initialized fresh World and carries over to the World after the startup coins (`initialized_view`). `join` is C1 at the full reassembled state, with the observed, analysis and run-phase reveal projections `join_observed`, `join_analysis` and `join_reveal`.
 
 **C3.** `c3_shared_cache`: every BLAKE2b query of the common deployment experiment (adversary, record or registration) is a query on the World's shared cache; jointly with the output and the ledger, the native game's final CTX cache has the law of the World's `primitive.2`.
 
-**C6.** `join_later` is C1 for the LQ-F later game (`PqxdhDeploymentFinishErasure.laterWith`, its post phase the run-phase handler on the post commands, `postNative`) against the later record world (`PqxdhRecordLiftLater.run`, split into the run and the post phase by `run_split`) with the environment's own reveal `envReveal`; the second adversary receives the same reveal on both sides (`reveal_merge`, `revealOf_strip`, `revealOf_fill`). `join_later_public` is its public form with the World's record view (`view_merge`).
+**C6.** `join_later` is C1 for the LQ-F later game (`PqxdhDeploymentFinishErasure.laterWith`, its post phase the run-phase handler on the post commands, `postNative`) against the later record world (`PqxdhRecordLiftLater.run`, split into the run and the post phase by `run_split`) with the environment's own reveal `envReveal`; the second adversary receives the same reveal on both sides (`reveal_merge`, `revealOf_strip`, `revealOf_fill`). `join_later_public` is its public form with the World's record view (`view_merge`). The Server seed component of `envReveal` is not part of the native games' outcomes; it reaches the second adversary only inside `join_later`, through `reveal_merge` and `Good.createdEq`.
 
 These are equalities in law and of programs; no security claim is made here. The real-registration instances (`c1_real`, `c6_real`) and the per-command splits of the real handler are not in this module.
 -/
@@ -84,7 +86,7 @@ noncomputable def stripPhase : PqxdhRecordLiftBeacon.Phase → PqxdhRecordLiftBe
   | .established shell _ => .established shell PqxdhDeploymentHiddenSplit.placeholderKernel
   | phase => phase
 
-/-- Admissibility (design-v2 section 5.9, per constructed Server, M2): the environment state is stripped and holds the constructed Server; the World's Server is initialized with the environment's sender and identity and has the environment's peers up to their kernels; the World's owners are the environment's owners, phase by phase, up to their kernels. -/
+/-- Admissibility (design-v2 section 5.9, per constructed Server, M2): the environment state is stripped and holds the constructed Server; the World's Server is initialized with the environment's sender and identity and has the environment's peers up to their kernels; the World's owners are the environment's owners, phase by phase, up to their kernels. It constrains neither the World's used markers nor its seed table; an environment-specific predicate conjoined with it does (`Stable`, `Splits`). -/
 structure Good {Bk : Type} (created : PqxdhLiveServerConstruction.Created Unit) (e : EnvState KemSK Bk)
     (w : PqxdhRecordLiftWorld.State n) : Prop where
   stripped : Stripped e.native
@@ -95,6 +97,22 @@ structure Good {Bk : Type} (created : PqxdhLiveServerConstruction.Created Unit) 
   ownersLength : w.owners.length = e.native.owners.length
   owners : ∀ (index : Nat) (owner : PqxdhRegistrationSchedule.Owner KemSK), e.native.owners[index]? = some owner →
     (w.owners[index]?).map stripPhase = some (PqxdhRecordLiftBeacon.projectPhase owner.beacon)
+
+/-- What the fixed steps (a coin, the public BLAKE2b query, a Server or Beacon record command) keep of a World state: the used markers, the seed table with its counts, the Server's sender, identity and peers up to their kernels, and the owners' phases up to their kernels. -/
+noncomputable def fixedView (w : PqxdhRecordLiftWorld.State n) :
+    (Slot n → PqxdhRecordLiftInterface.Role → Bool) × PqxdhRecordLiftLazyTable.State (PqxdhRecordLiftWorld.SeedSpec n) ×
+      Option (Std.U64 × RawCtxServerRouting.Identity × (Std.U64 → Option (RawCtxServerRouting.Peer Unit))) ×
+      List PqxdhRecordLiftBeacon.Phase :=
+  (w.used, w.seeds, w.server.map (fun server => (server.sender, server.records.server.identity,
+    fun keyId => (server.records.server.peers keyId).map stripPeer)), w.owners.map stripPhase)
+
+/-- An environment-specific admissibility predicate `inv`, conjoined with `Good`, is stable when it reads the World only through `fixedView`, so that every fixed step keeps it. An environment with hidden installs uses it to tie the World's used markers to the hidden installs it has performed (design-v2 section 5.9: "used markers = hidden installs performed"), which `Good` cannot do because the environment's state is not fixed; the trivial predicate `fun _ _ => True` is stable (`stable_true`). -/
+def Stable {Bk : Type} (inv : EnvState KemSK Bk → PqxdhRecordLiftWorld.State n → Prop) : Prop :=
+  ∀ (e : EnvState KemSK Bk) (w w' : PqxdhRecordLiftWorld.State n), fixedView w' = fixedView w → inv e w → inv e w'
+
+/-- The trivial admissibility predicate is stable. -/
+theorem stable_true {Bk : Type} : Stable (KemSK := KemSK) (Bk := Bk) (n := n) (fun _ _ => True) :=
+  fun _ _ _ _ _ => trivial
 
 /-! ### The joint state and the fixed steps -/
 
@@ -532,6 +550,68 @@ theorem beaconStep_good (created : PqxdhLiveServerConstruction.Created Unit) (in
       · rw [List.getElem?_set_ne same]
         exact before
 
+/-- A coin or a public BLAKE2b query keeps the fixed view of the World. -/
+theorem effects_view (query : (EnvEffects n).Domain)
+    (fixed : (∃ coin, query = .inl coin) ∨ ∃ bytes, query = .inr (.hash bytes)) (w : PqxdhRecordLiftWorld.State n) :
+    ∀ result ∈ support ((PqxdhRecordLiftWorld.effects query).run w), fixedView result.2 = fixedView w := by
+  intro result supported
+  rcases fixed with ⟨coin, rfl⟩ | ⟨bytes, rfl⟩
+  · change result ∈ support ((PqxdhRecordLiftWorld.sampled (unifSpec.query coin : ProbComp _)).run
+      (PqxdhRecordLiftWorld.chargeEffect (.inl coin) w)) at supported
+    simp only [PqxdhRecordLiftWorld.sampled, StateT.run, mem_support_bind_iff, support_pure,
+      Set.mem_singleton_iff] at supported
+    obtain ⟨_, _, rfl⟩ := supported
+    rfl
+  · change result ∈ support ((PqxdhRecordLiftWorld.capability (.hash bytes)).run
+      (PqxdhRecordLiftWorld.chargeEffect (.inr (.hash bytes)) w)) at supported
+    simp only [PqxdhRecordLiftWorld.capability, PqxdhRecordLiftWorld.sampled, StateT.run, mem_support_bind_iff,
+      support_pure, Set.mem_singleton_iff] at supported
+    obtain ⟨_, ⟨_, _, rfl⟩, rfl⟩ := supported
+    rfl
+
+/-- A Server record command keeps the fixed view of the World: only kernels, the raw counter, the produced frames and the primitive state change. -/
+theorem serverStep_view (query : RawCtxServerMixed.SourceSpec.Domain) (w : PqxdhRecordLiftWorld.State n) :
+    ∀ result ∈ support ((PqxdhRecordLiftWorld.serverStep setup codec route query).run w),
+      fixedView result.2 = fixedView w := by
+  intro result supported
+  change result ∈ support (PqxdhRecordLiftWorld.serverStep setup codec route query w) at supported
+  unfold PqxdhRecordLiftWorld.serverStep at supported
+  cases found : w.server with
+  | none =>
+      simp only [found] at supported
+      rcases query with _ | _ <;>
+        simp only [support_pure, Set.mem_singleton_iff] at supported <;> subst supported <;> rfl
+  | some world =>
+      simp only [found, mem_support_bind_iff, support_pure, Set.mem_singleton_iff] at supported
+      obtain ⟨inner, member, rfl⟩ := supported
+      have kept := serverImpl_stripped codec route (fun _ => world.sender) query world.records inner.1.1
+        (logged_support _ _ _ _ member)
+      have peers : (fun keyId => (inner.1.1.2.server.peers keyId).map stripPeer) =
+          fun keyId => (world.records.server.peers keyId).map stripPeer := funext kept.2
+      simp only [fixedView, PqxdhRecordLiftWorld.produce, found, Option.map_some, kept.1, peers]
+
+/-- A Beacon record command keeps the fixed view of the World: only the addressed owner's kernel, its raw counter, the produced frames and the primitive state change. -/
+theorem beaconStep_view (index : Nat) (query : RawCtxMixedOwner.SourceSpec.Domain) (w : PqxdhRecordLiftWorld.State n) :
+    ∀ result ∈ support ((PqxdhRecordLiftWorld.beaconStep setup codec index query).run w),
+      fixedView result.2 = fixedView w := by
+  intro result supported
+  change result ∈ support (PqxdhRecordLiftWorld.beaconStep setup codec index query w) at supported
+  unfold PqxdhRecordLiftWorld.beaconStep at supported
+  split at supported
+  · simp only [support_pure, Set.mem_singleton_iff] at supported
+    subst supported
+    rfl
+  · rename_i phase foundW
+    simp only [mem_support_bind_iff, support_pure, Set.mem_singleton_iff] at supported
+    obtain ⟨inner, member, rfl⟩ := supported
+    have kept := beaconHandler_stripped codec query ⟨phase, w.ownerRaw index⟩ inner.1.1
+      (logged_support _ _ _ _ member)
+    have keepSet : w.owners.set index phase = w.owners := by
+      obtain ⟨below, element⟩ := List.getElem?_eq_some_iff.mp foundW
+      rw [← element, List.set_getElem_self]
+    simp only [fixedView, PqxdhRecordLiftWorld.produce, List.map_set, kept]
+    rw [← List.map_set, keepSet]
+
 end Keeps
 
 
@@ -541,14 +621,31 @@ section Join
 variable {Bk : Type} {ι : Type} {baseSpec : OracleSpec ι} {Reader Response : Type}
   (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
 
-/-- The registration handler `reg` splits into the environment step `step` and the record world (design-v2 section 5.9): from every admissible joint state, each registration command of the environment, interpreted by the World's effects, has the law of the registration handler on the reassembled state, and it keeps admissibility. -/
-def Splits (created : PqxdhLiveServerConstruction.Created Unit) (reg : RegImpl KemSK Bk n) (step : EnvStep KemSK Bk n) :
-    Prop :=
-  ∀ (query : EnvQuery) (e : EnvState KemSK Bk) (w : PqxdhRecordLiftWorld.State n), Good created e w →
+/-- The registration handler `reg` splits into the environment step `step` and the record world (design-v2 section 5.9), relative to an environment-specific admissibility predicate `inv` conjoined with `Good`: from every joint state that satisfies `Good` and `inv`, each registration command of the environment, interpreted by the World's effects, has the law of the registration handler on the reassembled state, and it keeps `Good` and `inv`. With `inv := fun _ _ => True` this is the obligation on `Good` alone (`splits_true`). -/
+def Splits (created : PqxdhLiveServerConstruction.Created Unit) (reg : RegImpl KemSK Bk n) (step : EnvStep KemSK Bk n)
+    (inv : EnvState KemSK Bk → PqxdhRecordLiftWorld.State n → Prop) : Prop :=
+  ∀ (query : EnvQuery) (e : EnvState KemSK Bk) (w : PqxdhRecordLiftWorld.State n), Good created e w → inv e w →
     LawEq ((fun result => (result.1.1, merge result.1.2 result.2)) <$>
         (simulateQ PqxdhRecordLiftWorld.effects ((step query).run e)).run w) ((reg query).run (merge e w)) ∧
       ∀ result ∈ support ((simulateQ PqxdhRecordLiftWorld.effects ((step query).run e)).run w),
-        Good created result.1.2 result.2
+        Good created result.1.2 result.2 ∧ inv result.1.2 result.2
+
+/-- With the trivial admissibility predicate, `Splits` is the obligation on `Good` alone: the law of each registration command from every `Good` joint state and the preservation of `Good`. -/
+theorem splits_true (created : PqxdhLiveServerConstruction.Created Unit) (reg : RegImpl KemSK Bk n)
+    (step : EnvStep KemSK Bk n) :
+    Splits created reg step (fun _ _ => True) ↔
+      ∀ (query : EnvQuery) (e : EnvState KemSK Bk) (w : PqxdhRecordLiftWorld.State n), Good created e w →
+        LawEq ((fun result => (result.1.1, merge result.1.2 result.2)) <$>
+            (simulateQ PqxdhRecordLiftWorld.effects ((step query).run e)).run w) ((reg query).run (merge e w)) ∧
+          ∀ result ∈ support ((simulateQ PqxdhRecordLiftWorld.effects ((step query).run e)).run w),
+            Good created result.1.2 result.2 := by
+  constructor
+  · intro splits query e w good
+    obtain ⟨law, keeps⟩ := splits query e w good trivial
+    exact ⟨law, fun result member => (keeps result member).1⟩
+  · intro splits query e w good _
+    obtain ⟨law, keeps⟩ := splits query e w good
+    exact ⟨law, fun result member => ⟨keeps result member, trivial⟩⟩
 
 /-- A registration command of the open program is the environment step interpreted by the World's effects. -/
 theorem worldStep_reg (env : Environment n (EnvState KemSK Bk)) (query : EnvQuery) (e : EnvState KemSK Bk)
@@ -635,9 +732,10 @@ theorem worldStep_beaconRaw (env : Environment n (EnvState KemSK Bk)) (owner : N
 
 /-- One joint step, reassembled, has the law of the native game's step on the reassembled state, from every admissible state (the per-query obligation of C1). -/
 theorem worldStep_step (env : Environment n (EnvState KemSK Bk)) (reg : RegImpl KemSK Bk n)
-    (created : PqxdhLiveServerConstruction.Created Unit) (splits : Splits created reg env.step)
+    (created : PqxdhLiveServerConstruction.Created Unit) (inv : EnvState KemSK Bk → PqxdhRecordLiftWorld.State n → Prop)
+    (splits : Splits created reg env.step inv)
     (query : PqxdhDeploymentInterface.Spec.Domain) (e : EnvState KemSK Bk) (w : PqxdhRecordLiftWorld.State n)
-    (good : Good created e w) :
+    (good : Good created e w) (holds : inv e w) :
     LawEq (Prod.map id (fun state => merge state.1 state.2) <$> (worldStep setup codec route env query).run (e, w))
       ((handlerWith setup codec route reg query).run (merge e w)) := by
   obtain ⟨world, found, sender, _, _⟩ := good.server
@@ -659,97 +757,108 @@ theorem worldStep_step (env : Environment n (EnvState KemSK Bk)) (reg : RegImpl 
         exact LawEq.of_eq (beaconStep_merge setup codec owner (.inr raw) e w good.ownersLength good.owners)
     | create pin keyId =>
         rw [worldStep_reg setup codec route env ⟨.create pin keyId, trivial⟩ e w, Functor.map_map]
-        exact (splits ⟨.create pin keyId, trivial⟩ e w good).1
+        exact (splits ⟨.create pin keyId, trivial⟩ e w good holds).1
     | bundle owner =>
         rw [worldStep_reg setup codec route env ⟨.bundle owner, trivial⟩ e w, Functor.map_map]
-        exact (splits ⟨.bundle owner, trivial⟩ e w good).1
+        exact (splits ⟨.bundle owner, trivial⟩ e w good holds).1
     | accept raw =>
         rw [worldStep_reg setup codec route env ⟨.accept raw, trivial⟩ e w, Functor.map_map]
-        exact (splits ⟨.accept raw, trivial⟩ e w good).1
+        exact (splits ⟨.accept raw, trivial⟩ e w good holds).1
     | build session payload =>
         rw [worldStep_reg setup codec route env ⟨.build session payload, trivial⟩ e w, Functor.map_map]
-        exact (splits ⟨.build session payload, trivial⟩ e w good).1
+        exact (splits ⟨.build session payload, trivial⟩ e w good holds).1
     | finish owner raw =>
         rw [worldStep_reg setup codec route env ⟨.finish owner raw, trivial⟩ e w, Functor.map_map]
-        exact (splits ⟨.finish owner raw, trivial⟩ e w good).1
+        exact (splits ⟨.finish owner raw, trivial⟩ e w good holds).1
     | hmac key message =>
         rw [worldStep_reg setup codec route env ⟨.hmac key message, trivial⟩ e w, Functor.map_map]
-        exact (splits ⟨.hmac key message, trivial⟩ e w good).1
+        exact (splits ⟨.hmac key message, trivial⟩ e w good holds).1
 
-/-- One joint step keeps admissibility (the invariant obligation of C1). -/
+/-- One joint step keeps admissibility, `Good` and the stable predicate `inv` (the invariant obligation of C1). -/
 theorem worldStep_keeps (env : Environment n (EnvState KemSK Bk)) (reg : RegImpl KemSK Bk n)
-    (created : PqxdhLiveServerConstruction.Created Unit) (splits : Splits created reg env.step)
+    (created : PqxdhLiveServerConstruction.Created Unit) (inv : EnvState KemSK Bk → PqxdhRecordLiftWorld.State n → Prop)
+    (stable : Stable inv) (splits : Splits created reg env.step inv)
     (query : PqxdhDeploymentInterface.Spec.Domain) (e : EnvState KemSK Bk) (w : PqxdhRecordLiftWorld.State n)
-    (good : Good created e w) :
-    ∀ result ∈ support ((worldStep setup codec route env query).run (e, w)), Good created result.2.1 result.2.2 := by
+    (good : Good created e w) (holds : inv e w) :
+    ∀ result ∈ support ((worldStep setup codec route env query).run (e, w)),
+      Good created result.2.1 result.2.2 ∧ inv result.2.1 result.2.2 := by
   intro result supported
   rcases query with coin | command
   · rw [worldStep_coin setup codec route env coin e w, support_map] at supported
     obtain ⟨inner, member, rfl⟩ := supported
     have framed := effects_frame (.inl coin) (Or.inl ⟨coin, rfl⟩) w inner member
-    exact good_frame created e w inner.2 good framed.1 framed.2
+    exact ⟨good_frame created e w inner.2 good framed.1 framed.2,
+      stable e w inner.2 (effects_view (.inl coin) (Or.inl ⟨coin, rfl⟩) w inner member) holds⟩
   · cases command with
     | hash bytes =>
         rw [worldStep_hash setup codec route env bytes e w, support_map] at supported
         obtain ⟨inner, member, rfl⟩ := supported
         have framed := effects_frame (.inr (.hash bytes)) (Or.inr ⟨bytes, rfl⟩) w inner member
-        exact good_frame created e w inner.2 good framed.1 framed.2
+        exact ⟨good_frame created e w inner.2 good framed.1 framed.2,
+          stable e w inner.2 (effects_view (.inr (.hash bytes)) (Or.inr ⟨bytes, rfl⟩) w inner member) holds⟩
     | serverSend keyId plaintext =>
         rw [worldStep_serverSend setup codec route env keyId plaintext e w, support_map] at supported
         obtain ⟨inner, member, rfl⟩ := supported
-        exact serverStep_good setup codec route created (.inl (plaintext, keyId)) e w good inner member
+        exact ⟨serverStep_good setup codec route created (.inl (plaintext, keyId)) e w good inner member,
+          stable e w inner.2 (serverStep_view setup codec route (.inl (plaintext, keyId)) w inner member) holds⟩
     | serverRaw raw =>
         rw [worldStep_serverRaw setup codec route env raw e w, support_map] at supported
         obtain ⟨inner, member, rfl⟩ := supported
-        exact serverStep_good setup codec route created (.inr raw) e w good inner member
+        exact ⟨serverStep_good setup codec route created (.inr raw) e w good inner member,
+          stable e w inner.2 (serverStep_view setup codec route (.inr raw) w inner member) holds⟩
     | beaconSend owner plaintext =>
         rw [worldStep_beaconSend setup codec route env owner plaintext e w, support_map] at supported
         obtain ⟨inner, member, rfl⟩ := supported
-        exact beaconStep_good setup codec created owner (.inl plaintext) e w good inner member
+        exact ⟨beaconStep_good setup codec created owner (.inl plaintext) e w good inner member,
+          stable e w inner.2 (beaconStep_view setup codec owner (.inl plaintext) w inner member) holds⟩
     | beaconRaw owner raw =>
         rw [worldStep_beaconRaw setup codec route env owner raw e w, support_map] at supported
         obtain ⟨inner, member, rfl⟩ := supported
-        exact beaconStep_good setup codec created owner (.inr raw) e w good inner member
+        exact ⟨beaconStep_good setup codec created owner (.inr raw) e w good inner member,
+          stable e w inner.2 (beaconStep_view setup codec owner (.inr raw) w inner member) holds⟩
     | create pin keyId =>
         rw [worldStep_reg setup codec route env ⟨.create pin keyId, trivial⟩ e w, support_map] at supported
         obtain ⟨inner, member, rfl⟩ := supported
-        exact (splits ⟨.create pin keyId, trivial⟩ e w good).2 inner member
+        exact (splits ⟨.create pin keyId, trivial⟩ e w good holds).2 inner member
     | bundle owner =>
         rw [worldStep_reg setup codec route env ⟨.bundle owner, trivial⟩ e w, support_map] at supported
         obtain ⟨inner, member, rfl⟩ := supported
-        exact (splits ⟨.bundle owner, trivial⟩ e w good).2 inner member
+        exact (splits ⟨.bundle owner, trivial⟩ e w good holds).2 inner member
     | accept raw =>
         rw [worldStep_reg setup codec route env ⟨.accept raw, trivial⟩ e w, support_map] at supported
         obtain ⟨inner, member, rfl⟩ := supported
-        exact (splits ⟨.accept raw, trivial⟩ e w good).2 inner member
+        exact (splits ⟨.accept raw, trivial⟩ e w good holds).2 inner member
     | build session payload =>
         rw [worldStep_reg setup codec route env ⟨.build session payload, trivial⟩ e w, support_map] at supported
         obtain ⟨inner, member, rfl⟩ := supported
-        exact (splits ⟨.build session payload, trivial⟩ e w good).2 inner member
+        exact (splits ⟨.build session payload, trivial⟩ e w good holds).2 inner member
     | finish owner raw =>
         rw [worldStep_reg setup codec route env ⟨.finish owner raw, trivial⟩ e w, support_map] at supported
         obtain ⟨inner, member, rfl⟩ := supported
-        exact (splits ⟨.finish owner raw, trivial⟩ e w good).2 inner member
+        exact (splits ⟨.finish owner raw, trivial⟩ e w good holds).2 inner member
     | hmac key message =>
         rw [worldStep_reg setup codec route env ⟨.hmac key message, trivial⟩ e w, support_map] at supported
         obtain ⟨inner, member, rfl⟩ := supported
-        exact (splits ⟨.hmac key message, trivial⟩ e w good).2 inner member
+        exact (splits ⟨.hmac key message, trivial⟩ e w good holds).2 inner member
 
-/-- The main simulation of C1: from every admissible joint state, the open program interpreted by the environment and the World, reassembled, has the law of the native game with the registration handler on the reassembled state. -/
+/-- The main simulation of C1: from every admissible joint state (`Good` and the stable predicate `inv`), the open program interpreted by the environment and the World, reassembled, has the law of the native game with the registration handler on the reassembled state. -/
 theorem run_join {α : Type} (env : Environment n (EnvState KemSK Bk)) (reg : RegImpl KemSK Bk n)
-    (created : PqxdhLiveServerConstruction.Created Unit) (splits : Splits created reg env.step)
+    (created : PqxdhLiveServerConstruction.Created Unit) (inv : EnvState KemSK Bk → PqxdhRecordLiftWorld.State n → Prop)
+    (stable : Stable inv) (splits : Splits created reg env.step inv)
     (work : OracleComp PqxdhDeploymentInterface.Spec α) (e : EnvState KemSK Bk) (w : PqxdhRecordLiftWorld.State n)
-    (good : Good created e w) :
+    (good : Good created e w) (holds : inv e w) :
     LawEq ((fun result => (result.1.1, merge result.1.2 result.2)) <$>
         (simulateQ (PqxdhRecordLiftWorld.handler setup codec route)
           ((simulateQ (PqxdhRecordLiftInterface.native env) work).run e)).run w)
       ((simulateQ (handlerWith setup codec route reg) work).run (merge e w)) := by
   rw [OracleComp.simulateQ_mapStateTBase_run_eq_map_flattenStateT, Functor.map_map]
   exact PqxdhDeploymentSeedSplit.lawEq_run_simulateQ_of_proj (worldStep setup codec route env) (handlerWith setup codec route reg)
-    (fun state => Good created state.1 state.2) (fun state => merge state.1 state.2)
-    (fun query state holds => worldStep_step setup codec route env reg created splits query state.1 state.2 holds)
-    (fun query state holds => worldStep_keeps setup codec route env reg created splits query state.1 state.2 holds)
-    work (e, w) good
+    (fun state => Good created state.1 state.2 ∧ inv state.1 state.2) (fun state => merge state.1 state.2)
+    (fun query state both => worldStep_step setup codec route env reg created inv splits query state.1 state.2 both.1
+      both.2)
+    (fun query state both => worldStep_keeps setup codec route env reg created inv stable splits query state.1 state.2
+      both.1 both.2)
+    work (e, w) ⟨good, holds⟩
 
 end Join
 
@@ -824,6 +933,17 @@ theorem good_initial (created : PqxdhLiveServerConstruction.Created Unit) (backe
   · simp only [PqxdhDeploymentEnvironment.envInitial, PqxdhDeploymentEnvironment.strip,
       PqxdhRegistrationSchedule.initial, List.map_nil, List.getElem?_nil, reduceCtorEq] at found
 
+/-- The initialized World after any startup coins has the fixed view of the initialized fresh World, so a stable predicate that holds at the latter holds at the former. -/
+theorem initialized_view (created : PqxdhLiveServerConstruction.Created Unit) (w : PqxdhRecordLiftWorld.State n)
+    (fresh : uncount w = uncount (PqxdhRecordLiftWorld.initial (n := n))) :
+    fixedView (initialized created w) = fixedView (initialized created (PqxdhRecordLiftWorld.initial (n := n))) := by
+  have used : w.used = (PqxdhRecordLiftWorld.initial (n := n)).used := (congrArg PqxdhRecordLiftWorld.State.used fresh :)
+  have seeds : w.seeds = (PqxdhRecordLiftWorld.initial (n := n)).seeds :=
+    (congrArg PqxdhRecordLiftWorld.State.seeds fresh :)
+  have owners : w.owners = (PqxdhRecordLiftWorld.initial (n := n)).owners :=
+    (congrArg PqxdhRecordLiftWorld.State.owners fresh :)
+  simp only [fixedView, initialized, used, seeds, owners]
+
 end Startup
 
 section Full
@@ -836,12 +956,15 @@ def joined {Out : Type} (result : Option (PqxdhRegistrationJointServerBirth.Clie
     Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × Out × PqxdhDeploymentSecrecy.Ledger × XState KemSK Bk n) :=
   result.1.map fun value => (value.1, value.2.1.1, value.2.1.2, merge value.2.2 result.2)
 
-/-- C1 generic (design-v2 section 5.9, at the full reassembled state): if the environment starts as the actual Server constructor with the registration handler's initial backend and splits every constructed Server's registration handler, the common deployment experiment with that handler and the record world with that environment have the same law of the Server's public data, the adversary's output, the ledger and the full reassembled final state. -/
+/-- C1 generic (design-v2 section 5.9, at the full reassembled state): if the environment starts as the actual Server constructor with the registration handler's initial backend, a stable admissibility predicate `inv` holds at the constructed Server's initial environment state and the initialized fresh World, and the environment splits every constructed Server's registration handler relative to `inv`, the common deployment experiment with that handler and the record world with that environment have the same law of the Server's public data, the adversary's output, the ledger and the full reassembled final state. -/
 theorem join (init : PqxdhLiveServerConstruction.Created Unit → Bk)
     (reg : PqxdhLiveServerConstruction.Created Unit → RegImpl KemSK Bk n) (env : Environment n (EnvState KemSK Bk))
     (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat) (runtime : A)
     (born : env.start = PqxdhDeploymentEnvironment.start setup ensureInit identityIndex runtime init)
-    (splits : ∀ created, Splits created (reg created) env.step)
+    (inv : EnvState KemSK Bk → PqxdhRecordLiftWorld.State n → Prop) (stable : Stable inv)
+    (startInv : ∀ created, inv (PqxdhDeploymentEnvironment.envInitial created (init created))
+      (initialized created (PqxdhRecordLiftWorld.initial (n := n))))
+    (splits : ∀ created, Splits created (reg created) env.step inv)
     (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
     (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) :
     LawEq ((gameWith setup codec route init reg ensureInit identityIndex bounds mode adversary).run' runtime)
@@ -896,9 +1019,10 @@ theorem join (init : PqxdhLiveServerConstruction.Created Unit → Bk)
       change PqxdhRecordLiftWorld.initializeServer created w = _
       simp only [PqxdhRecordLiftWorld.initializeServer, vacant]
       rfl
-    have joinedRun := (run_join setup codec route env (reg created) created (splits created) wrapped
+    have joinedRun := (run_join setup codec route env (reg created) created inv stable (splits created) wrapped
       (PqxdhDeploymentEnvironment.envInitial created (init created)) (initialized created w)
-      (good_initial created (init created) w fresh)).map
+      (good_initial created (init created) w fresh)
+      (stable _ _ _ (initialized_view created w fresh) (startInv created))).map
         (fun result => some (PqxdhRegistrationJointServerBirth.encode created, result.1.1, result.1.2, result.2))
     rw [merge_initial created (init created) w fresh, Functor.map_map] at joinedRun
     dsimp only
@@ -912,7 +1036,10 @@ theorem c3_shared_cache (init : PqxdhLiveServerConstruction.Created Unit → Bk)
     (reg : PqxdhLiveServerConstruction.Created Unit → RegImpl KemSK Bk n) (env : Environment n (EnvState KemSK Bk))
     (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat) (runtime : A)
     (born : env.start = PqxdhDeploymentEnvironment.start setup ensureInit identityIndex runtime init)
-    (splits : ∀ created, Splits created (reg created) env.step)
+    (inv : EnvState KemSK Bk → PqxdhRecordLiftWorld.State n → Prop) (stable : Stable inv)
+    (startInv : ∀ created, inv (PqxdhDeploymentEnvironment.envInitial created (init created))
+      (initialized created (PqxdhRecordLiftWorld.initial (n := n))))
+    (splits : ∀ created, Splits created (reg created) env.step inv)
     (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
     (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) :
     LawEq ((fun outcome => outcome.map fun value => (value.1, value.2.1, value.2.2.1,
@@ -920,8 +1047,8 @@ theorem c3_shared_cache (init : PqxdhLiveServerConstruction.Created Unit → Bk)
         (gameWith setup codec route init reg ensureInit identityIndex bounds mode adversary).run' runtime)
       ((fun result => result.1.map fun value => (value.1, value.2.1.1, value.2.1.2, result.2.primitive.2)) <$>
         PqxdhRecordLiftWorld.run setup codec route env setup.serverKeyId bounds mode adversary) := by
-  have joined := (join setup codec route init reg env ensureInit identityIndex runtime born splits bounds mode
-    adversary).map (fun outcome => outcome.map fun value => (value.1, value.2.1, value.2.2.1,
+  have joined := (join setup codec route init reg env ensureInit identityIndex runtime born inv stable startInv splits bounds
+    mode adversary).map (fun outcome => outcome.map fun value => (value.1, value.2.1, value.2.2.1,
       value.2.2.2.base.native.shared.2.ctx))
   rw [Functor.map_map] at joined
   refine joined.trans (LawEq.of_eq ?_)
@@ -934,14 +1061,17 @@ theorem join_observed (init : PqxdhLiveServerConstruction.Created Unit → Bk)
     (reg : PqxdhLiveServerConstruction.Created Unit → RegImpl KemSK Bk n) (env : Environment n (EnvState KemSK Bk))
     (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat) (runtime : A)
     (born : env.start = PqxdhDeploymentEnvironment.start setup ensureInit identityIndex runtime init)
-    (splits : ∀ created, Splits created (reg created) env.step)
+    (inv : EnvState KemSK Bk → PqxdhRecordLiftWorld.State n → Prop) (stable : Stable inv)
+    (startInv : ∀ created, inv (PqxdhDeploymentEnvironment.envInitial created (init created))
+      (initialized created (PqxdhRecordLiftWorld.initial (n := n))))
+    (splits : ∀ created, Splits created (reg created) env.step inv)
     (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
     (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) :
     LawEq ((fun outcome => outcome.map fun value => (value.2.1, value.2.2.1, value.2.2.2.base.produced)) <$>
         (gameWith setup codec route init reg ensureInit identityIndex bounds mode adversary).run' runtime)
       (PqxdhRecordLiftWorld.game setup codec route env setup.serverKeyId bounds mode adversary) := by
-  have joined := (join setup codec route init reg env ensureInit identityIndex runtime born splits bounds mode
-    adversary).map (fun outcome => outcome.map fun value => (value.2.1, value.2.2.1, value.2.2.2.base.produced))
+  have joined := (join setup codec route init reg env ensureInit identityIndex runtime born inv stable startInv splits bounds
+    mode adversary).map (fun outcome => outcome.map fun value => (value.2.1, value.2.2.1, value.2.2.2.base.produced))
   rw [Functor.map_map] at joined
   refine joined.trans (LawEq.of_eq ?_)
   unfold PqxdhRecordLiftWorld.game
@@ -954,7 +1084,10 @@ theorem join_analysis (init : PqxdhLiveServerConstruction.Created Unit → Bk)
     (reg : PqxdhLiveServerConstruction.Created Unit → RegImpl KemSK Bk n) (env : Environment n (EnvState KemSK Bk))
     (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat) (runtime : A)
     (born : env.start = PqxdhDeploymentEnvironment.start setup ensureInit identityIndex runtime init)
-    (splits : ∀ created, Splits created (reg created) env.step)
+    (inv : EnvState KemSK Bk → PqxdhRecordLiftWorld.State n → Prop) (stable : Stable inv)
+    (startInv : ∀ created, inv (PqxdhDeploymentEnvironment.envInitial created (init created))
+      (initialized created (PqxdhRecordLiftWorld.initial (n := n))))
+    (splits : ∀ created, Splits created (reg created) env.step inv)
     (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
     (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) :
     LawEq ((fun outcome => outcome.map fun value => (value.2.1, value.2.2.1, value.2.2.2.base.produced,
@@ -962,8 +1095,8 @@ theorem join_analysis (init : PqxdhLiveServerConstruction.Created Unit → Bk)
         (gameWith setup codec route init reg ensureInit identityIndex bounds mode adversary).run' runtime)
       (PqxdhRecordLiftWorld.analysis <$> PqxdhRecordLiftWorld.run setup codec route env setup.serverKeyId bounds mode
         adversary) := by
-  have joined := (join setup codec route init reg env ensureInit identityIndex runtime born splits bounds mode
-    adversary).map (fun outcome => outcome.map fun value => (value.2.1, value.2.2.1, value.2.2.2.base.produced,
+  have joined := (join setup codec route init reg env ensureInit identityIndex runtime born inv stable startInv splits bounds
+    mode adversary).map (fun outcome => outcome.map fun value => (value.2.1, value.2.2.1, value.2.2.2.base.produced,
       (⟨value.2.2.2.base.serverRaw, value.2.2.2.base.ownerRaw⟩ : PqxdhRecordLiftWorld.RawCounters)))
   rw [Functor.map_map] at joined
   refine joined.trans (LawEq.of_eq ?_)
@@ -1088,36 +1221,42 @@ theorem keeps_simulateQ {ι' σ α : Type} {spec' : OracleSpec ι'} (impl : Quer
       obtain ⟨middle, member, final⟩ := supported
       exact ih middle.1 middle.2 (keeps query state holds middle member) result final
 
-/-- Every outcome of the open program interpreted by the environment and the World from an admissible joint state is admissible. -/
+/-- Every outcome of the open program interpreted by the environment and the World from an admissible joint state (`Good` and the stable predicate `inv`) is admissible. -/
 theorem run_keeps {α : Type} (env : Environment n (EnvState KemSK Bk)) (reg : RegImpl KemSK Bk n)
-    (created : PqxdhLiveServerConstruction.Created Unit) (splits : Splits created reg env.step)
+    (created : PqxdhLiveServerConstruction.Created Unit) (inv : EnvState KemSK Bk → PqxdhRecordLiftWorld.State n → Prop)
+    (stable : Stable inv) (splits : Splits created reg env.step inv)
     (work : OracleComp PqxdhDeploymentInterface.Spec α) (e : EnvState KemSK Bk) (w : PqxdhRecordLiftWorld.State n)
-    (good : Good created e w) :
+    (good : Good created e w) (holds : inv e w) :
     ∀ result ∈ support ((simulateQ (PqxdhRecordLiftWorld.handler setup codec route)
-      ((simulateQ (PqxdhRecordLiftInterface.native env) work).run e)).run w), Good created result.1.2 result.2 := by
+      ((simulateQ (PqxdhRecordLiftInterface.native env) work).run e)).run w),
+        Good created result.1.2 result.2 ∧ inv result.1.2 result.2 := by
   intro result supported
   rw [OracleComp.simulateQ_mapStateTBase_run_eq_map_flattenStateT, support_map] at supported
   obtain ⟨flat, member, rfl⟩ := supported
-  exact keeps_simulateQ (worldStep setup codec route env) (fun state => Good created state.1 state.2)
-    (fun query state holds => worldStep_keeps setup codec route env reg created splits query state.1 state.2 holds)
-    work (e, w) good flat member
+  exact keeps_simulateQ (worldStep setup codec route env) (fun state => Good created state.1 state.2 ∧ inv state.1 state.2)
+    (fun query state both => worldStep_keeps setup codec route env reg created inv stable splits query state.1 state.2
+      both.1 both.2)
+    work (e, w) ⟨good, holds⟩ flat member
 
-/-- C1 with a continuation: the open program from an admissible joint state followed by a continuation of its outcome has the law of the native game followed by a continuation of the reassembled outcome, when the two continuations agree in law on admissible outcomes. -/
+/-- C1 with a continuation: the open program from an admissible joint state (`Good` and the stable predicate `inv`) followed by a continuation of its outcome has the law of the native game followed by a continuation of the reassembled outcome, when the two continuations agree in law on admissible outcomes. -/
 theorem run_join_bind {α γ : Type} (env : Environment n (EnvState KemSK Bk)) (reg : RegImpl KemSK Bk n)
-    (created : PqxdhLiveServerConstruction.Created Unit) (splits : Splits created reg env.step)
+    (created : PqxdhLiveServerConstruction.Created Unit) (inv : EnvState KemSK Bk → PqxdhRecordLiftWorld.State n → Prop)
+    (stable : Stable inv) (splits : Splits created reg env.step inv)
     (work : OracleComp PqxdhDeploymentInterface.Spec α) (e : EnvState KemSK Bk) (w : PqxdhRecordLiftWorld.State n)
-    (good : Good created e w) (worldNext : (α × EnvState KemSK Bk) × PqxdhRecordLiftWorld.State n → ProbComp γ)
+    (good : Good created e w) (holds : inv e w)
+    (worldNext : (α × EnvState KemSK Bk) × PqxdhRecordLiftWorld.State n → ProbComp γ)
     (nativeNext : α × XState KemSK Bk n → ProbComp γ)
-    (next : ∀ result, Good created result.1.2 result.2 →
+    (next : ∀ result, Good created result.1.2 result.2 → inv result.1.2 result.2 →
       LawEq (worldNext result) (nativeNext (result.1.1, merge result.1.2 result.2))) :
     LawEq ((simulateQ (PqxdhRecordLiftWorld.handler setup codec route)
         ((simulateQ (PqxdhRecordLiftInterface.native env) work).run e)).run w >>= worldNext)
       ((simulateQ (handlerWith setup codec route reg) work).run (merge e w) >>= nativeNext) := by
   refine (PqxdhDeploymentSeedSplit.LawEq.bind_support _ fun result member =>
-    next result (run_keeps setup codec route env reg created splits work e w good result member)).trans ?_
+    next result (run_keeps setup codec route env reg created inv stable splits work e w good holds result member).1
+      (run_keeps setup codec route env reg created inv stable splits work e w good holds result member).2).trans ?_
   rw [← bind_map_left (fun result : (α × EnvState KemSK Bk) × PqxdhRecordLiftWorld.State n =>
     (result.1.1, merge result.1.2 result.2))]
-  exact (run_join setup codec route env reg created splits work e w good).bind fun _ => LawEq.refl _
+  exact (run_join setup codec route env reg created inv stable splits work e w good holds).bind fun _ => LawEq.refl _
 
 /-- The two phases of the later record world: the World run of the first adversary, then the post phase on the same environment and World from the run's final states (r6-later reply point 2). -/
 theorem run_split {R : Type} (env : Environment n (EnvState KemSK Bk)) (serverKid : Std.U64)
@@ -1145,12 +1284,15 @@ noncomputable def postNative (reg : RegImpl KemSK Bk n) :
     QueryImpl PqxdhDeploymentLater.PostSpec (StateT (XState KemSK Bk n) ProbComp) :=
   handlerWith setup codec route reg ∘ₛ PqxdhDeploymentLater.postEmbed
 
-/-- C6 (design-v2 section 5.9, r6-later reply): if the environment starts as the actual Server constructor with the registration handler's initial backend and splits every constructed Server's registration handler, the LQ-F later game with that handler (`PqxdhDeploymentFinishErasure.laterWith`, its post phase the run-phase handler on the post commands) and the later record world (`PqxdhRecordLiftLater.run`) with that environment and the environment's own reveal have the same law of the Server's public data, the second adversary's output, the run-phase ledger and the full reassembled final state. The second adversary receives the same reveal on both sides (`reveal_merge`). -/
+/-- C6 (design-v2 section 5.9, r6-later reply): if the environment starts as the actual Server constructor with the registration handler's initial backend, a stable admissibility predicate `inv` holds at the constructed Server's initial environment state and the initialized fresh World, and the environment splits every constructed Server's registration handler relative to `inv`, the LQ-F later game with that handler (`PqxdhDeploymentFinishErasure.laterWith`, its post phase the run-phase handler on the post commands) and the later record world (`PqxdhRecordLiftLater.run`) with that environment and the environment's own reveal have the same law of the Server's public data, the second adversary's output, the run-phase ledger and the full reassembled final state. The second adversary receives the same reveal on both sides (`reveal_merge`). -/
 theorem join_later (init : PqxdhLiveServerConstruction.Created Unit → Bk)
     (reg : PqxdhLiveServerConstruction.Created Unit → RegImpl KemSK Bk n) (env : Environment n (EnvState KemSK Bk))
     (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat) (runtime : A)
     (born : env.start = PqxdhDeploymentEnvironment.start setup ensureInit identityIndex runtime init)
-    (splits : ∀ created, Splits created (reg created) env.step)
+    (inv : EnvState KemSK Bk → PqxdhRecordLiftWorld.State n → Prop) (stable : Stable inv)
+    (startInv : ∀ created, inv (PqxdhDeploymentEnvironment.envInitial created (init created))
+      (initialized created (PqxdhRecordLiftWorld.initial (n := n))))
+    (splits : ∀ created, Splits created (reg created) env.step inv)
     (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
     (first : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X)
     (second : X → PqxdhDeploymentLaterServerGame.Reveal → OracleComp PqxdhDeploymentLater.PostSpec Out) :
@@ -1218,25 +1360,29 @@ theorem join_later (init : PqxdhLiveServerConstruction.Created Unit → Bk)
     rw [simulateQ_bind, StateT.run_bind, simulateQ_spec_query, initRun, pure_bind]
     simp only [simulateQ_bind, StateT.run_bind, simulateQ_pure, StateT.run_pure, bind_assoc, pure_bind]
     rw [← merge_initial created (init created) w fresh]
-    refine run_join_bind setup codec route env (reg created) created (splits created) wrapped _ _
-      (good_initial created (init created) w fresh) _ _ (fun result good => ?_)
+    refine run_join_bind setup codec route env (reg created) created inv stable (splits created) wrapped _ _
+      (good_initial created (init created) w fresh) (stable _ _ _ (initialized_view created w fresh) (startInv created))
+      _ _ (fun result good holds => ?_)
     rcases result with ⟨⟨⟨output, ledger⟩, finalEnv⟩, finalWorld⟩
     dsimp only
     rw [reveal_merge created finalEnv finalWorld good]
-    have posted := (run_join setup codec route env (reg created) created (splits created)
-      (simulateQ PqxdhDeploymentLater.postEmbed (second output (envReveal finalEnv))) finalEnv finalWorld good).map
+    have posted := (run_join setup codec route env (reg created) created inv stable (splits created)
+      (simulateQ PqxdhDeploymentLater.postEmbed (second output (envReveal finalEnv))) finalEnv finalWorld good holds).map
         (fun result => some (PqxdhRegistrationJointServerBirth.encode created, result.1, ledger, result.2))
     simp only [Functor.map_map] at posted
     simp only [postNative, QueryImpl.simulateQ_compose, map_pure, bind_pure_comp, Functor.map_map,
       PqxdhRecordLiftLater.post]
     exact posted
 
-/-- C6, public form (r6-later reply, `join_later_public`): the Server's public data, the second adversary's output, the run-phase ledger, the record view (produced frames and raw-attempt counters) and the Beacon-side reveal with the Server ephemeral log of the final state have the same law in the LQ-F later game with the registration handler and in the later record world with the environment. -/
+/-- C6, public form (r6-later reply, `join_later_public`): the Server's public data, the second adversary's output, the run-phase ledger, the record view (produced frames and raw-attempt counters) and the Beacon-side reveal with the Server ephemeral log of the final state have the same law in the LQ-F later game with the registration handler and in the later record world with the environment. The remaining component of `envReveal`, the constructed Server's seed, is not part of the native later game's outcome; the second adversary's view of it is covered inside `join_later` through `reveal_merge` and `Good.createdEq`. -/
 theorem join_later_public (init : PqxdhLiveServerConstruction.Created Unit → Bk)
     (reg : PqxdhLiveServerConstruction.Created Unit → RegImpl KemSK Bk n) (env : Environment n (EnvState KemSK Bk))
     (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat) (runtime : A)
     (born : env.start = PqxdhDeploymentEnvironment.start setup ensureInit identityIndex runtime init)
-    (splits : ∀ created, Splits created (reg created) env.step)
+    (inv : EnvState KemSK Bk → PqxdhRecordLiftWorld.State n → Prop) (stable : Stable inv)
+    (startInv : ∀ created, inv (PqxdhDeploymentEnvironment.envInitial created (init created))
+      (initialized created (PqxdhRecordLiftWorld.initial (n := n))))
+    (splits : ∀ created, Splits created (reg created) env.step inv)
     (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
     (first : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X)
     (second : X → PqxdhDeploymentLaterServerGame.Reveal → OracleComp PqxdhDeploymentLater.PostSpec Out) :
@@ -1251,8 +1397,8 @@ theorem join_later_public (init : PqxdhLiveServerConstruction.Created Unit → B
           PqxdhRecordLiftLater.recordView result.2,
           (PqxdhDeploymentLater.revealOf value.2.2.native.owners value.2.2.snap, value.2.2.log))) <$>
         PqxdhRecordLiftLater.run setup codec route env setup.serverKeyId bounds mode envReveal first second) := by
-  have joinedLater := (join_later setup codec route init reg env ensureInit identityIndex runtime born splits bounds mode
-    first second).map (fun outcome => outcome.map fun value => (value.1, value.2.1, value.2.2.1,
+  have joinedLater := (join_later setup codec route init reg env ensureInit identityIndex runtime born inv stable startInv
+    splits bounds mode first second).map (fun outcome => outcome.map fun value => (value.1, value.2.1, value.2.2.1,
       (value.2.2.2.base.produced,
         (⟨value.2.2.2.base.serverRaw, value.2.2.2.base.ownerRaw⟩ : PqxdhRecordLiftWorld.RawCounters)),
       (PqxdhDeploymentLater.revealOf value.2.2.2.base.native.owners value.2.2.2.snap, value.2.2.2.log)))
@@ -1266,7 +1412,275 @@ theorem join_later_public (init : PqxdhLiveServerConstruction.Created Unit → B
     rw [show (merge value.2.2 w).base.native.owners = (fill w value.2.2.native).owners from rfl, revealOf_fill]
     rfl
 
+/-- The run-phase reveal projection of C1: the Server's public data, the adversary's output, the ledger and the Beacon-side reveal with the Server ephemeral log of the final state (the first and last components of `envReveal`) have the same law in the common deployment experiment and in the record world (`revealOf_fill`). The remaining component of `envReveal`, the constructed Server's seed, is not part of the native game's outcome; it is covered inside `join_later` through `reveal_merge` and `Good.createdEq`. -/
+theorem join_reveal (init : PqxdhLiveServerConstruction.Created Unit → Bk)
+    (reg : PqxdhLiveServerConstruction.Created Unit → RegImpl KemSK Bk n) (env : Environment n (EnvState KemSK Bk))
+    (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat) (runtime : A)
+    (born : env.start = PqxdhDeploymentEnvironment.start setup ensureInit identityIndex runtime init)
+    (inv : EnvState KemSK Bk → PqxdhRecordLiftWorld.State n → Prop) (stable : Stable inv)
+    (startInv : ∀ created, inv (PqxdhDeploymentEnvironment.envInitial created (init created))
+      (initialized created (PqxdhRecordLiftWorld.initial (n := n))))
+    (splits : ∀ created, Splits created (reg created) env.step inv)
+    (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
+    (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) :
+    LawEq ((fun outcome => outcome.map fun value => (value.1, value.2.1, value.2.2.1,
+        (PqxdhDeploymentLater.revealOf value.2.2.2.base.native.owners value.2.2.2.snap, value.2.2.2.log))) <$>
+        (gameWith setup codec route init reg ensureInit identityIndex bounds mode adversary).run' runtime)
+      ((fun result => result.1.map fun value => (value.1, value.2.1.1, value.2.1.2,
+          (PqxdhDeploymentLater.revealOf value.2.2.native.owners value.2.2.snap, value.2.2.log))) <$>
+        PqxdhRecordLiftWorld.run setup codec route env setup.serverKeyId bounds mode adversary) := by
+  have projected := (join setup codec route init reg env ensureInit identityIndex runtime born inv stable startInv splits
+    bounds mode adversary).map (fun outcome => outcome.map fun value => (value.1, value.2.1, value.2.2.1,
+      (PqxdhDeploymentLater.revealOf value.2.2.2.base.native.owners value.2.2.2.snap, value.2.2.2.log)))
+  rw [Functor.map_map] at projected
+  refine projected.trans (LawEq.of_eq ?_)
+  congr 1
+  funext result
+  rcases result with ⟨_ | value, w⟩
+  · rfl
+  · simp only [joined, Option.map_some, Option.some.injEq]
+    rw [show (merge value.2.2 w).base.native.owners = (fill w value.2.2.native).owners from rfl, revealOf_fill]
+    rfl
+
 end Later
+
+
+/-! ### A satisfiability check: `Splits` with one hidden install -/
+
+section Toy
+variable {ι : Type} {baseSpec : OracleSpec ι} {Reader Response A X : Type}
+  (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
+
+/-- A registration state with a Server peer added at a key ID; nothing else changes. -/
+def addPeer (keyId : Std.U64) (peer : RawCtxServerRouting.Peer Unit) (state : PqxdhRegistrationSchedule.State KemSK) :
+    PqxdhRegistrationSchedule.State KemSK :=
+  { state with shared := (state.shared.1, { state.shared.2 with server := { state.shared.2.server with
+      server := { state.shared.2.server.server with
+        peers := Function.update state.shared.2.server.server.peers keyId (some peer) } } }) }
+
+/-- Adding a stripped peer commutes with stripping. -/
+theorem strip_addPeer (keyId : Std.U64) (identity : RawCtxServerRouting.Identity)
+    (state : PqxdhRegistrationSchedule.State KemSK) :
+    PqxdhDeploymentEnvironment.strip (addPeer keyId ⟨identity, PqxdhDeploymentHiddenSplit.placeholderKernel, ()⟩ state) =
+      addPeer keyId ⟨identity, PqxdhDeploymentHiddenSplit.placeholderKernel, ()⟩ (PqxdhDeploymentEnvironment.strip state) := by
+  have peers : (fun other => (Function.update state.shared.2.server.server.peers keyId
+      (some ⟨identity, PqxdhDeploymentHiddenSplit.placeholderKernel, ()⟩) other).map stripPeer) =
+      Function.update (fun other => (state.shared.2.server.server.peers other).map stripPeer) keyId
+        (some ⟨identity, PqxdhDeploymentHiddenSplit.placeholderKernel, ()⟩) := by
+    funext other
+    by_cases same : other = keyId
+    · subst same
+      simp only [Function.update_self, Option.map_some]
+      rfl
+    · simp only [Function.update_of_ne same]
+  simp only [PqxdhDeploymentEnvironment.strip, addPeer]
+  rw [peers]
+
+/-- The toy environment's guard: its flag is unset and its peer `keyId` is vacant. -/
+def toyFresh (keyId : Std.U64) (e : EnvState KemSK Bool) : Bool :=
+  !e.backend && (e.native.shared.2.server.server.peers keyId).isNone
+
+/-- The toy environment state after its hidden install: the flag set and the peer recorded with the placeholder kernel. -/
+noncomputable def toyAfter (keyId : Std.U64) (identity : RawCtxServerRouting.Identity) (e : EnvState KemSK Bool) :
+    EnvState KemSK Bool :=
+  { e with backend := true, native := addPeer keyId ⟨identity, PqxdhDeploymentHiddenSplit.placeholderKernel, ()⟩ e.native }
+
+/-- A toy environment with one hidden install (the satisfiability check of `Splits` for an environment whose hidden install the World admits): at every command, if `toyFresh`, it issues `installServer keyId identity (.hidden slot)` and moves to `toyAfter`; otherwise it does nothing. Its replies are `reply`. -/
+noncomputable def toyStep (slot : Slot n) (keyId : Std.U64) (identity : RawCtxServerRouting.Identity)
+    (reply : (query : EnvQuery) → EnvSpec.Range query) : EnvStep KemSK Bool n := fun query e =>
+  if toyFresh keyId e then
+    (fun _ => (reply query, toyAfter keyId identity e)) <$>
+      PqxdhDeploymentEnvironment.request (.installServer keyId identity (.hidden slot))
+  else pure (reply query, e)
+
+/-- The seed of a slot from a lazily sampled seed table: the cached seed, or a uniform seed, then cached. -/
+noncomputable def lazySeed (table : (PqxdhRecordLiftWorld.SeedSpec n).QueryCache) (slot : Slot n) :
+    ProbComp (PqxdhRecordLiftSeed.Seed × (PqxdhRecordLiftWorld.SeedSpec n).QueryCache) :=
+  match table slot with
+  | some seed => pure (seed, table)
+  | none => (fun seed => (seed, table.cacheQuery slot seed)) <$> ($ᵗ PqxdhRecordLiftSeed.Seed)
+
+/-- The extended state after the toy handler's install: the flag set, the seed table updated and the peer installed with the World's Server kernel of the drawn seed. -/
+noncomputable def toyInstalled {KemSK : Type} (keyId : Std.U64) (identity : RawCtxServerRouting.Identity)
+    (x : XState KemSK Bool n) (drawn : PqxdhRecordLiftSeed.Seed × (PqxdhRecordLiftWorld.SeedSpec n).QueryCache) :
+    XState KemSK Bool n :=
+  { x with
+    base := { x.base with native := addPeer keyId ⟨identity, PqxdhRecordLiftWorld.kernel .server drawn.1, ()⟩ x.base.native }
+    backend := true
+    seeds := drawn.2 }
+
+/-- The registration handler that the toy environment splits: if the flag is unset and the peer `keyId` is vacant, the seed of `slot` from the extended state's seed table and `toyInstalled`; otherwise nothing. -/
+noncomputable def toyReg (slot : Slot n) (keyId : Std.U64) (identity : RawCtxServerRouting.Identity)
+    (reply : (query : EnvQuery) → EnvSpec.Range query) : RegImpl KemSK Bool n := fun query x =>
+  if !x.backend && (x.base.native.shared.2.server.server.peers keyId).isNone then
+    (fun drawn => (reply query, toyInstalled keyId identity x drawn)) <$> lazySeed x.seeds slot
+  else pure (reply query, x)
+
+/-- The toy environment's admissibility predicate: the World's Server marker of `slot` is set exactly when the environment's flag is (design-v2 section 5.9: "used markers = hidden installs performed"). -/
+def toyInv (slot : Slot n) (e : EnvState KemSK Bool) (w : PqxdhRecordLiftWorld.State n) : Prop :=
+  w.used slot .server = e.backend
+
+/-- The toy admissibility predicate reads the World only through its used markers, so it is stable. -/
+theorem toy_stable (slot : Slot n) : Stable (KemSK := KemSK) (toyInv slot) := by
+  intro e w w' same holds
+  have used : w'.used = w.used := congrArg Prod.fst same
+  unfold toyInv
+  rw [used]
+  exact holds
+
+/-- The toy admissibility predicate holds at the startup: no marker is set and the flag is unset. -/
+theorem toy_start (slot : Slot n) (created : PqxdhLiveServerConstruction.Created Unit) :
+    toyInv slot (PqxdhDeploymentEnvironment.envInitial (KemSK := KemSK) created false)
+      (initialized created (PqxdhRecordLiftWorld.initial (n := n))) := rfl
+
+/-- From an admissible state where the toy guard holds, the World run of a toy step is the hidden install: the World's lazy Server-kernel lookup of `slot`, the marker set and the peer installed with that kernel. -/
+theorem toy_install_run (slot : Slot n) (keyId : Std.U64) (identity : RawCtxServerRouting.Identity)
+    (reply : (query : EnvQuery) → EnvSpec.Range query) (query : EnvQuery) (e : EnvState KemSK Bool)
+    (w : PqxdhRecordLiftWorld.State n) (world : PqxdhRecordLiftWorld.Server) (found : w.server = some world)
+    (vacant : world.records.server.peers keyId = none) (unused : w.used slot .server = false)
+    (fresh : toyFresh keyId e = true) :
+    (simulateQ PqxdhRecordLiftWorld.effects ((toyStep slot keyId identity reply query).run e)).run w =
+      (fun resolved => ((reply query, toyAfter keyId identity e),
+        { PqxdhRecordLiftWorld.markUsed resolved.2 .server (.hidden slot) with
+          server := some { world with records := { world.records with server := { world.records.server with
+            peers := Function.update world.records.server.peers keyId (some ⟨identity, resolved.1, ()⟩) } } } })) <$>
+        (PqxdhRecordLiftWorld.resolve .server (.hidden slot)).run
+          (PqxdhRecordLiftWorld.chargeEffect (.inr (.installServer keyId identity (.hidden slot))) w) := by
+  have charged : (PqxdhRecordLiftWorld.chargeEffect (n := n)
+      (.inr (.installServer keyId identity (.hidden slot))) w).server = some world := found
+  have admitted : world.records.server.peers keyId = none ∧ PqxdhRecordLiftWorld.Unused
+      (PqxdhRecordLiftWorld.chargeEffect (.inr (.installServer keyId identity (.hidden slot))) w) .server
+        (.hidden slot) := ⟨vacant, unused⟩
+  change (simulateQ PqxdhRecordLiftWorld.effects (toyStep slot keyId identity reply query e)).run _ = _
+  simp only [toyStep, fresh, ↓reduceIte, PqxdhDeploymentEnvironment.request]
+  rw [simulateQ_map, simulateQ_spec_query, StateT.run_map]
+  change (fun result => ((reply query, toyAfter keyId identity e), result.2)) <$>
+    (PqxdhRecordLiftWorld.installServer keyId identity (.hidden slot)).run
+      (PqxdhRecordLiftWorld.chargeEffect (.inr (.installServer keyId identity (.hidden slot))) w) = _
+  simp only [PqxdhRecordLiftWorld.installServer, StateT.run, charged, ite_eq_left admitted, bind_pure_comp,
+    Functor.map_map]
+
+/-- From an admissible state where the toy guard holds, the hidden install is admitted: in every outcome the World's Server marker of `slot` is set and the World's peer `keyId` is present. -/
+theorem toy_admitted (slot : Slot n) (keyId : Std.U64) (identity : RawCtxServerRouting.Identity)
+    (reply : (query : EnvQuery) → EnvSpec.Range query) (created : PqxdhLiveServerConstruction.Created Unit)
+    (query : EnvQuery) (e : EnvState KemSK Bool) (w : PqxdhRecordLiftWorld.State n) (good : Good created e w)
+    (holds : toyInv slot e w) (fresh : toyFresh keyId e = true) :
+    ∀ result ∈ support ((simulateQ PqxdhRecordLiftWorld.effects ((toyStep slot keyId identity reply query).run e)).run w),
+      result.2.used slot .server = true ∧
+        ∃ world, result.2.server = some world ∧ (world.records.server.peers keyId).isSome := by
+  obtain ⟨world, found, _, _, peers⟩ := good.server
+  have flag : e.backend = false := by
+    simp only [toyFresh, Bool.and_eq_true, Bool.not_eq_true'] at fresh
+    exact fresh.1
+  have vacantEnv : e.native.shared.2.server.server.peers keyId = none := by
+    simp only [toyFresh, Bool.and_eq_true, Option.isNone_iff_eq_none] at fresh
+    exact fresh.2
+  have vacant : world.records.server.peers keyId = none := by
+    have same := peers keyId
+    rw [vacantEnv, Option.map_eq_none_iff] at same
+    exact same
+  have unused : w.used slot .server = false := by rw [holds, flag]
+  intro result supported
+  rw [toy_install_run slot keyId identity reply query e w world found vacant unused fresh, support_map] at supported
+  obtain ⟨resolved, _, rfl⟩ := supported
+  refine ⟨?_, _, rfl, ?_⟩
+  · simp only [PqxdhRecordLiftWorld.markUsed, Function.update_self]
+  · simp only [Function.update_self, Option.isSome_some]
+
+/-- The satisfiability check (review of increment 3): the toy environment, whose hidden install the World admits (`toy_admitted`), splits the toy handler relative to the stable predicate `toyInv`, for every constructed Server. -/
+theorem toy_splits (slot : Slot n) (keyId : Std.U64) (identity : RawCtxServerRouting.Identity)
+    (reply : (query : EnvQuery) → EnvSpec.Range query) (created : PqxdhLiveServerConstruction.Created Unit) :
+    Splits (KemSK := KemSK) created (toyReg slot keyId identity reply) (toyStep slot keyId identity reply)
+      (toyInv slot) := by
+  intro query e w good holds
+  obtain ⟨world, found, sender, identityEq, peers⟩ := good.server
+  have guardEq : (!(merge e w).backend && ((merge e w).base.native.shared.2.server.server.peers keyId).isNone) =
+      toyFresh keyId e := by
+    simp only [toyFresh, merge, fill, fillServer, found]
+    rw [← peers keyId, Option.isNone_map]
+  cases fresh : toyFresh keyId e with
+  | false =>
+      have stepRun : (toyStep slot keyId identity reply query).run e = pure (reply query, e) := by
+        simp only [toyStep, StateT.run, fresh, Bool.false_eq_true, ↓reduceIte]
+      have regRun : (toyReg slot keyId identity reply query).run (merge e w) = pure (reply query, merge e w) := by
+        simp only [toyReg, StateT.run, guardEq, fresh, Bool.false_eq_true, ↓reduceIte]
+      rw [stepRun, regRun]
+      simp only [simulateQ_pure, StateT.run_pure, map_pure, support_pure, Set.mem_singleton_iff]
+      refine ⟨LawEq.refl _, fun result member => ?_⟩
+      subst member
+      exact ⟨good, holds⟩
+  | true =>
+      have flag : e.backend = false := by
+        simp only [toyFresh, Bool.and_eq_true, Bool.not_eq_true'] at fresh
+        exact fresh.1
+      have vacantEnv : e.native.shared.2.server.server.peers keyId = none := by
+        simp only [toyFresh, Bool.and_eq_true, Option.isNone_iff_eq_none] at fresh
+        exact fresh.2
+      have vacant : world.records.server.peers keyId = none := by
+        have same := peers keyId
+        rw [vacantEnv, Option.map_eq_none_iff] at same
+        exact same
+      have unused : w.used slot .server = false := by rw [holds, flag]
+      have regRun : (toyReg slot keyId identity reply query).run (merge e w) =
+          (fun drawn => (reply query, toyInstalled keyId identity (merge e w) drawn)) <$> lazySeed w.seeds.1 slot := by
+        simp only [toyReg, StateT.run, guardEq, fresh, ↓reduceIte]
+        rfl
+      rw [toy_install_run slot keyId identity reply query e w world found vacant unused fresh, regRun]
+      refine ⟨LawEq.of_eq ?_, fun result member => ?_⟩
+      · obtain ⟨worldServer, owners, ownerRaw, produced, primitive, seeds, used⟩ := w
+        simp only at found
+        subst found
+        cases cached : seeds.1 slot with
+        | some seed =>
+            rw [PqxdhRecordLiftWorld.resolve_hit .server slot _ seed cached]
+            simp only [lazySeed, cached, map_pure]
+            rfl
+        | none =>
+            rw [PqxdhRecordLiftWorld.resolve_miss .server slot _ cached]
+            have forgot := PqxdhRecordLiftWorld.countCoin_forget ($ᵗ PqxdhRecordLiftSeed.Seed)
+              (primitive.1.uniform)
+            simp only [lazySeed, cached, Functor.map_map]
+            conv_rhs => rw [← forgot, Functor.map_map]
+            rfl
+      · rw [support_map] at member
+        obtain ⟨resolved, inResolve, rfl⟩ := member
+        obtain ⟨seed, _, _, _, usedEq, serverEq, ownersEq, _⟩ :=
+          PqxdhRecordLiftWorld.resolve_hidden_facts .server slot _ resolved inResolve
+        dsimp only
+        refine ⟨⟨?_, good.createdEq, ⟨_, rfl, sender, identityEq, fun other => ?_⟩, ?_, ?_⟩, ?_⟩
+        · unfold PqxdhDeploymentEnvironment.Stripped
+          simp only [toyAfter]
+          rw [strip_addPeer, good.stripped]
+        · by_cases same : other = keyId
+          · subst same
+            simp only [toyAfter, addPeer, Function.update_self, Option.map_some]
+            rfl
+          · simp only [toyAfter, addPeer, Function.update_of_ne same]
+            exact peers other
+        · simp only [PqxdhRecordLiftWorld.markUsed, ownersEq]
+          exact good.ownersLength
+        · intro index owner ownerFound
+          simp only [PqxdhRecordLiftWorld.markUsed, ownersEq]
+          exact good.owners index owner ownerFound
+        · simp only [toyInv, toyAfter, PqxdhRecordLiftWorld.markUsed, Function.update_self]
+
+/-- C1 applies to the toy environment: the common deployment experiment with the toy handler and the record world with the toy environment have the same law (`join` at `toyInv`). -/
+theorem toy_join (slot : Slot n) (keyId : Std.U64) (identity : RawCtxServerRouting.Identity)
+    (reply : (query : EnvQuery) → EnvSpec.Range query) (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat)
+    (runtime : A) (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
+    (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) :
+    LawEq ((gameWith setup codec route (fun _ => false) (fun _ => toyReg slot keyId identity reply) ensureInit
+        identityIndex bounds mode adversary).run' runtime)
+      (joined <$> PqxdhRecordLiftWorld.run setup codec route
+        (⟨PqxdhDeploymentEnvironment.start setup ensureInit identityIndex runtime (fun _ => false),
+          toyStep slot keyId identity reply⟩ : Environment n (EnvState KemSK Bool)) setup.serverKeyId bounds mode adversary) :=
+  join setup codec route (fun _ => false) (fun _ => toyReg slot keyId identity reply)
+    ⟨PqxdhDeploymentEnvironment.start setup ensureInit identityIndex runtime (fun _ => false),
+      toyStep slot keyId identity reply⟩ ensureInit identityIndex runtime rfl (toyInv slot) (toy_stable slot)
+    (fun created => toy_start slot created) (fun created => toy_splits slot keyId identity reply created) bounds mode
+    adversary
+
+end Toy
 
 end BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentJoin
 
@@ -1279,6 +1693,14 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentJoin.merge_forget
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentJoin.merge_forget
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentJoin.stable_true' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentJoin.stable_true
 
 /--
 info: 'BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentJoin.worldStep_run' depends on axioms: [propext,
@@ -1433,6 +1855,38 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentJoin.beaconStep_g
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentJoin.beaconStep_good
 
 /--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentJoin.effects_view' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentJoin.effects_view
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentJoin.serverStep_view' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentJoin.serverStep_view
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentJoin.beaconStep_view' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentJoin.beaconStep_view
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentJoin.splits_true' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentJoin.splits_true
+
+/--
 info: 'BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentJoin.worldStep_reg' depends on axioms: [propext,
  Classical.choice,
  Quot.sound]
@@ -1550,6 +2004,14 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentJoin.good_initial
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentJoin.good_initial
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentJoin.initialized_view' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentJoin.initialized_view
 
 /--
 info: 'BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentJoin.join' depends on axioms: [propext,
@@ -1684,3 +2146,67 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentJoin.join_later_p
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentJoin.join_later_public
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentJoin.join_reveal' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentJoin.join_reveal
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentJoin.strip_addPeer' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentJoin.strip_addPeer
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentJoin.toy_stable' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentJoin.toy_stable
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentJoin.toy_start' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentJoin.toy_start
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentJoin.toy_install_run' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentJoin.toy_install_run
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentJoin.toy_admitted' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentJoin.toy_admitted
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentJoin.toy_splits' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentJoin.toy_splits
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentJoin.toy_join' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentJoin.toy_join
