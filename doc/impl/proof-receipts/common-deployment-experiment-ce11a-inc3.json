@@ -12,7 +12,8 @@
   "sha256_inc3": "bd1c85a3151819a67150cf6d1e1c4fcf895e0608a43e0737470abbdd0cb8bc36",
   "sha256_note": "sha256 is the working plan at the fix pass; sha256_inc3 is the plan recorded at 4f502f99 (with section 38). The fix pass renumbered the earlier of two sections numbered 35 (increment 2 built) to 34a and added section 39.",
   "sections": "25 (finish-time receive accounting), 26 (CE-11 commitments), 28 (interface v1), 31 (C4 final), 32 (CE-11 split), 33 (world-side C4 and R6 shape), 35 (first touch at the accept), 37 (increment 2 integrated), 39 (increment 3 review fix); 34a is increment 2 built (numbered 35 until the fix pass)",
-  "committed_snapshot": "doc/impl/common-deployment-experiment-plan.md (refreshed in the fix pass to the working plan with sections up to 39; its header records the SHA-256 above)"
+  "committed_snapshot": "doc/impl/common-deployment-experiment-plan.md (refreshed in the fix pass to the working plan with sections up to 39; its header records the SHA-256 above)",
+  "snapshot_check_confirming_review": "At the confirming-review documentation commit the working plan still has SHA-256 c13e63f68588d710981ee6ab4c7c22ce8489ec1ecaf79e8b0adaf40a9284d5ef and the committed snapshot doc/impl/common-deployment-experiment-plan.md, without its two header lines (the snapshot paragraph and the blank line after it), is byte-identical to it, so the snapshot needed no refresh."
  },
  "design": {
   "path": "/tmp/bc-arc-scratch/common-experiment/ce11/design-v2.md",
@@ -69,9 +70,13 @@
   {
    "commit": "d83bb01b312bc9eb5ebbc97ec08886a25dc833f9",
    "subject": "Thread an environment admissibility predicate through the CE-11a join"
+  },
+  {
+   "commit": "aeaad6382616c1dbd5b7c30f387587ef81412834",
+   "subject": "Document the review fix pass of CE-11a increment 3"
   }
  ],
- "commits_note": "The documentation commit 8760a7c6 adds this receipt and the documentation-only commit 4f502f99 records the central moves; neither changes a Lean or inventory file. The root-docs and inventory-docs checks ran on the working tree that became 8760a7c6. The review fix pass is the Lean commit d83bb01b and the documentation commit that carries this version of the receipt (it follows the commits listed); that commit changes no Lean or inventory file, and its root and inventory checks ran on the working tree that became it (review_fix_pass.checks rows root-docs2 and inventory-docs2; rows root-docs and inventory-docs ran on a draft that differed only in one list marker of the guide).",
+ "commits_note": "The confirming-review documentation commit that adds this version of the receipt follows these commits; it changes only this receipt, the guide and the analysis (no Lean or inventory file). The documentation commit 8760a7c6 adds this receipt and the documentation-only commit 4f502f99 records the central moves; neither changes a Lean or inventory file. The root-docs and inventory-docs checks ran on the working tree that became 8760a7c6. The review fix pass is the Lean commit d83bb01b and the documentation commit aeaad638, which carried the previous version of this receipt; that commit changes no Lean or inventory file, and its root and inventory checks ran on the working tree that became it (review_fix_pass.checks rows root-docs2 and inventory-docs2; rows root-docs and inventory-docs ran on a draft that differed only in one list marker of the guide).",
  "files_sha256": {
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentEnvironment.lean": "feb7995eaab66c1c513f269e0bb69ecf28ae45b027c8e169bf01ab72f4f8f6bb",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentEnvironmentJoin.lean": "dc3d312cebc2b3b6b7494194b6a47ba5f7a3bee7a640400a46a1efedf576d6e4",
@@ -1068,7 +1073,8 @@
   "evidence": [
    "/tmp/bc-arc-scratch/common-experiment/ce11/review-inc3-semantic (UsedProbe.lean, probe.log: Good holds for every used-marker choice, merge ignores them, hidden installs with set markers are refused)",
    "/tmp/bc-arc-scratch/common-experiment/ce11/review-inc3-hygiene"
-  ]
+  ],
+  "confirming_review": "The fix pass was checked by a confirming review of aeaad638, which approved it with two optional documentation nits and two informational notes (confirming_review)."
  },
  "leanpath_inc3": {
   "manifest": "/tmp/bc-arc-scratch/common-experiment/ce11/inc3/leanpath",
@@ -1084,7 +1090,7 @@
     "subject": "Thread an environment admissibility predicate through the CE-11a join"
    },
    {
-    "commit": "the fix-pass documentation commit (carries this receipt)",
+    "commit": "aeaad6382616c1dbd5b7c30f387587ef81412834",
     "subject": "Document the review fix pass of CE-11a increment 3"
    }
   ],
@@ -1520,7 +1526,46 @@
     "last_line": "Formal-verification inventory matches the reviewed boundary."
    }
   },
-  "not_run": "make verify, full lake build, mutation testing (no production Rust changed), nix-collect-garbage (forbidden), the transcript-fidelity check (integration precondition)"
+  "not_run": "make verify, full lake build, mutation testing (no production Rust changed), nix-collect-garbage (forbidden), the transcript-fidelity check (integration precondition)",
+  "git_diff_check": {
+   "range": "4f502f99ec948d70e479b70602eb685dd0700bec..aeaad6382616c1dbd5b7c30f387587ef81412834",
+   "exit": 0,
+   "output": ""
+  }
  },
- "updated": "2026-10-08T04:32:25.672508+00:00"
+ "updated": "2026-10-08T04:45:50.068508+00:00",
+ "confirming_review": {
+  "reviewed_commit": "aeaad6382616c1dbd5b7c30f387587ef81412834",
+  "date": "2026-10-08T04:45:50.068508+00:00",
+  "verdict": "approve (two optional documentation nits, one informational confirmation, one housekeeping note)",
+  "evidence": "/tmp/bc-arc-scratch/common-experiment/ce11/confirm-inc3 (guards.py, sigs.py, OldForms.lean, src/ with the old and new module sources, logs/)",
+  "findings": [
+   {
+    "severity": "informational",
+    "title": "Confirmation: all nine findings are resolved at aeaad638; no statement is weaker; guards match theorems; receipt matches HEAD",
+    "response": "No action.",
+    "commit": null
+   },
+   {
+    "severity": "nit",
+    "title": "Analysis gloss of the stable view is broader than fixedView (Server raw-attempt counter)",
+    "response": "The parenthesis in the analysis paragraph on the consistency of the two states now reads '(the markers of used hidden slots, the seed table, the Server's sender, identity and peers and the Beacons' phases, each up to kernels)', as the review proposed; fixedView does not read records.rawAttempts, which the fixed steps change. The guide decisions bullet already described fixedView exactly.",
+    "commit": "the confirming-review documentation commit"
+   },
+   {
+    "severity": "nit",
+    "title": "Receipt has no git diff --check row for the fix pass",
+    "response": "review_fix_pass.git_diff_check records git diff --check 4f502f99ec948d70e479b70602eb685dd0700bec aeaad6382616c1dbd5b7c30f387587ef81412834: exit 0, empty output (rerun at the confirming-review documentation commit).",
+    "commit": "the confirming-review documentation commit"
+   },
+   {
+    "severity": "housekeeping",
+    "title": "Stray unregistered temp directory /tmp/confirm-inc3-tmp",
+    "response": "Not a defect of the commits. The directory holds only copies of committed sources (env-new.lean, env-old.lean, join-new.lean, join-old.lean, the same files as confirm-inc3/src). coord.sh disk check-delete claude /tmp/confirm-inc3-tmp answers 'DO NOT DELETE: registered to nobody, not claude', and it lies outside the scratch root, so it cannot be registered to claude; it is left for the owner.",
+    "commit": null
+   }
+  ],
+  "documentation": "The analysis first paragraph of the increment 3 section now records the confirming review instead of saying that the fix pass is not reviewed and that the work is not integrated; the guide status paragraph, the open points and a new section \"CE-11a increment 3: confirming review\" record the review.",
+  "checks": "No file under beaconcrypt-core changes, so the module, root and inventory checks of the fix pass (review_fix_pass.checks) still apply; git diff --check of the confirming-review commit is recorded by the integration checks receipt."
+ }
 }
