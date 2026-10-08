@@ -196,7 +196,7 @@ No item 2 headline (T7, T8) is stated yet; these modules are components. G1 is a
 
 # Increment 2
 
-Increment 2 builds stages S1b, S1c and S2 of the plan on branch `claude/extract-composition`, from central `ae4a4996` (which contains increment 1). Scratch, logs and resumption notes: `/tmp/bc-arc-scratch/extract-design/inc2/` (`NOTES.md`).
+Increment 2 builds stages S1b, S1c and S2 of the plan on branch `claude/extract-composition`, from central `ae4a4996` (which contains increment 1). Scratch, logs and resumption notes: `/tmp/bc-arc-scratch/extract-design/inc2/` (`NOTES.md`). Status: twelve new Lean modules with 207 theorems, each with an exact axiom guard, root-imported and listed in the inventory; commits `73b763e9` (S1b), `f30da2f7` (S1b guide names), `4cd25180` (S1c), `bcca3a56` (S2) and the documentation commit that adds the increment-2 checks, the analysis paragraphs and the receipt `doc/impl/proof-receipts/extract-composition-inc2.json`. Not independently reviewed and not integrated into central. No existing module is changed.
 
 ## S1b: the KEM-ideal branch as G1's shared world (`PqxdhRegistrationJointKemPostSkeleton*`)
 
@@ -314,3 +314,42 @@ The bound. `rootClient_uniform` is `expanded_uniform_bound` at `rootClient` with
 Candidate freedom. `rootClient` has no candidate argument, and `splitGame_root` shows that it is defined from the arguments of `splitGame`, which draws no candidate; this is the stated lemma of plan section 10 for the S2 reductions, whose `scanSampler` contexts hold stopped states of `rootClient`. The definition-level term grep (a Lean metaprogram, scratch `inc2/probe/rootclient-term-grep.lean`) walks the values of all 1198 `BeaconcryptCore` constants reachable from `rootClient` through definition values and finds no `uniformSample` at `MlKemSharedSecret`; the only uniform samplings among them are of DH scalars (`PqxdhJointGapDh.sampleScalar`) and identity seeds (`PqxdhJointIdentity.sampleSeed`). The grep is syntactic on the type name, since `MlKemSharedSecret` and `RootOutput` are both `List.Vector UInt8 32`; it finds no sampling at either.
 
 Notes for consumers. S3b starts from `uniformGame rootClient` (H2). In it the hidden Server value is the uniform root of the resumption's coordinates, drawn at the selected raw accept's private root request, and each grouped Beacon finish on the challenge marker reads the uniform root of its coordinates (the same root as the Server's when the coordinates coincide). `internalize` and `splitGame_local` are generic in the prefix and the skeleton client, so another instance of the services skeleton with `V = RootOutput` can reuse them.
+
+## Increment 2: checks
+
+- Direct checks: each module with Lean 4.34, `-j1 -M8000`, `timeout 180`, through `coord.sh lean`, into the scratch prefix `/tmp/bc-arc-scratch/extract-design/inc2/olean` (a resolved mirror of the increment-1 integration prefix, which is the first prefix of the published `LEAN_PATH` of central `ae4a4996`, without the root olean), followed by that `LEAN_PATH`. Every module's check after its guards were added had exit 0 and an empty log; after the S2 commit all twelve modules and then the root were checked again in import order: exit 0, empty logs.
+- Exact axiom guards: 207 of 207 theorems (S1b 79, S1c 86, S2 42); profiles `propext, Classical.choice, Quot.sound` (190), `propext, Quot.sound` (10), `propext` (1), none (6). A scratch metaprogram (`inc2/probe/theorem-coverage.lean`) lists the 878 constants of the twelve modules: every one depends only on `propext`, `Classical.choice` and `Quot.sound`, and the 207 theorem constants with declaration ranges are exactly the 207 guard names (the other 358 theorem constants are generated equation, injectivity and `congr_simp` lemmas). Guard liveness: a scratch file with one deliberately wrong guard for each of the eleven modules with theorems fails eleven times.
+- Root import `BeaconcryptCore.lean` through `coord.sh lean` with `timeout 180` after each stage: exit 0, empty log.
+- Inventory: `coord.sh inv recount` (1574 to 1586 handwritten Lean files) and `inv rehash` after each stage. The S1b and S1c commits recorded a stale digest of `check-inventory.sh` in `reviewed-inventory.txt`, because the rehash ran before the recount changed the count line; the S2 commit corrects it, and a scratch check of all 2006 digest rows against the S2 tree finds no mismatch. Focused `make -C beaconcrypt-core check-inventory` in the locked minimal proof flake under a `coord.sh` `@nix` lease on the S2 tree: exit 0, "Formal-verification inventory matches the reviewed boundary.". `git diff --check` clean at every commit.
+- Forbidden constructs: no `sorry`, `admit`, `axiom`, `opaque`, `native_decide`, `implemented_by`, `extern` or `unsafe` in the twelve modules; no scoped `set_option` (only the module-level `autoImplicit false` and `maxRecDepth 100000`); no probability notation and no deprecated lemma.
+- Contamination: the direct-reference constant scan of increment 1, extended to the twelve modules (`inc2/probe/contamination-scan.lean`, 878 declarations), finds no reference to any listed fixed-HKDF item; its liveness case is detected.
+- Candidate freedom of `rootClient`: `splitGame_root` and the definition-level term grep described in the S2 section (`inc2/probe/rootclient-term-grep.lean`: 1198 reachable `BeaconcryptCore` constants, no sampling at `MlKemSharedSecret`).
+- Not run: no `lake build`, `make verify`, `nix-collect-garbage`, mutation testing, ProVerif or Rust run.
+
+## Increment 2: deviations from the plan
+
+- S1b: the services skeleton is layered rather than one flattened handler. The plan's services `serverRoot`, `beaconRoot` and `table` are realized as the two oracles of the skeleton (hidden reads by coordinates, direct reads), and the section 18 services (`hiddenBuild`, `hiddenAfter`) as the record `Hidden` with exactly the required field types. The source's Beacon finish is grouped into one request for its root and its continuation, and the encapsulation-hiding wrapper of the resumed client is dropped by an equality. The prepared state handed to `hiddenAfter` has placeholders in the Server identity fields and the KEM field, which no service reads. The hidden Server value is first read at the resumption's private root request, not at the build (see the consumer note of S1b and CE-11 design v2 section 5.7).
+- S1c: the prefix "table-read log" of the plan is realized as a key-count potential of the table cache along the scan to the selected raw accept, which gives the covering set and the cut-split of `certified` directly. The residual counts every table read after the cut (hidden reads included) plus the Server's resumption; the bound is still the plan's coefficient-one term `(qAccept + qFinish + qHmac)/2^256`.
+- S2: the `IsRoot` count goes through the skeleton's hidden reads (S1b restated the branch, so the pool, router, generated-finish compiler and CCA wrapper appear as the skeleton's layers); `KemOpaqueCosts.client_root` enters through S1c's `resume_root`. The finish budget of the continuation at the cut is obtained by inheritance (`scan_inherit`), without subtracting the finishes before the cut, which gives the plan's conservative `qRoot = 1 + qFinish`. The definition-level term grep is a scratch metaprogram, recorded here and in the receipt, not a committed check.
+- The plan did not name the S2 statements; the built ones are `splitGame_root`, `splitGame_expanded`, `rootClient_root`, `rootClient_uniform`, `split_uniform` and `opaqueBranch_uniform`.
+- No planned statement turned out false or unprovable, none was weakened, no assumption or contract was added and no existing module was changed.
+
+## Increment 2: remaining stages and re-estimate
+
+S1b, S1c and S2 (plan 17 to 31 agent-days, increment-1 re-estimate 9 to 18) were built in one working session. Remaining, in the order of plan section 17:
+
+| Stage | Plan estimate | Re-estimate | Note |
+| --- | --- | --- | --- |
+| S3b entry factor | 6-10 | 2-5 | `uniformGame rootClient = rootHybrid source entryD`; `factorHidden` already instantiates the section 18 services; `uniformGame_first` |
+| S4b T7 | 1-2 | 0.5-1 | `fromRoot_bound` |
+| T (finish once) | 2-3 | 1-2 | `qRoot = 2` |
+| S7 every entry | 2-3 | 1-3 | reuses Codex's `PqxdhRecordLiftLazyTable` |
+| S8 bills | 3-5 | 2-3 | |
+| S5, S6 | 2.5-4 | 1-2 | |
+| S9 | 5-8 | 2-4 | guide, assumption lists, review |
+
+Remaining total: 9.5 to 20 agent-days, the sum of the rows above (plan: 21.5 to 35 for the same stages). The main risk is now S3b: equating the uniform-root world with the factored entry experiment needs the native and factored services to agree on the selected session and on every Beacon finish, under `-M8000`.
+
+## Increment 2: not claimed
+
+No item 2 headline (T7, T8) is stated yet. S1b is a program equality; S1c is a statistical bound valid only under the random-oracle model of the zero-key 192-byte Extract slice (R1); S2 is a computational bound whose PRF advantages are explicit terms. All three are for the opaque KEM-ideal branch of theorem T6 and take T5's source budget `certified` as their only premise. Not covered: persistence, snapshots, codec internals, running-code access and primitive implementations (owner scope).
