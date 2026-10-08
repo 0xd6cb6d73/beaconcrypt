@@ -1832,6 +1832,28 @@ import BeaconcryptCore.Computational.PqxdhRecordLiftCtxPriv
 
 import BeaconcryptCore.Computational.PqxdhRecordLiftCtxPrivBills
 
+import BeaconcryptCore.Computational.PqxdhDeploymentIdealErase
+
+import BeaconcryptCore.Computational.PqxdhDeploymentIdealKeys
+
+import BeaconcryptCore.Computational.PqxdhDeploymentIdealKernel
+
+import BeaconcryptCore.Computational.PqxdhDeploymentIdealDefer
+
+import BeaconcryptCore.Computational.PqxdhRecordLiftLaterWorlds
+
+import BeaconcryptCore.Computational.PqxdhRecordLiftLaterTargets
+
+import BeaconcryptCore.Computational.PqxdhRecordLiftLaterChain
+
+import BeaconcryptCore.Computational.PqxdhRecordLiftLaterCtx
+
+import BeaconcryptCore.Computational.PqxdhRecordLiftLaterPriv
+
+import BeaconcryptCore.Computational.PqxdhRecordLiftLaterHiding
+
+import BeaconcryptCore.Computational.PqxdhRecordLiftLaterLift
+
 import BeaconcryptCore.Computational.PqxdhRecordLift
 
 import BeaconcryptCore.Computational.PqxdhRecordLiftSwap
