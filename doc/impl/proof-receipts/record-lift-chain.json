@@ -76,10 +76,36 @@
   {
    "commit": "c15efe2a7479cbf782870820aa946456b0aa99da",
    "subject": "Fix the chain-track review findings in docstrings and guides"
+  },
+  {
+   "commit": "d0a41fcf535fc06d44986a81958bafa719755a98",
+   "subject": "Add the record-lift chain-track receipt"
   }
  ],
- "commits_note": "Nine track commits acee8e18..0f06970f, then the fix-pass commit c15efe2a (docstrings, guides, inventory rehash); this receipt is added by the commit that follows it.",
+ "commits_note": "Nine track commits acee8e18..0f06970f, the fix-pass commit c15efe2a (docstrings, guides, inventory rehash) and the receipt commit d0a41fcf; this version of the receipt is written by the confirming-review nit-fix commit that follows d0a41fcf (documentation only: the chain-lift guide and this receipt).",
  "files_sha256": {
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftSeedRelay.lean": "c079df3d109ed00ddc21019c9e5b153a17981978c8e596520d43d8a861257589",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftSeedPolicy.lean": "45cf47719cf72f1d5617d161b8430f1736a2442744a982c16e66d0f4cba93678",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChainHop.lean": "235374a455963ecdc3a2a3763934bd84403dafe8b560e44fcd2cd89f73f2ebbf",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChainHybrid.lean": "7f896932ef75e22f8ec15672d8a69df61a7158e0ca5a81c4ecd60ca271201823",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChainBills.lean": "543e71b243dd331ae91fa66ace496450886c0be479f5cbc266bcdbace7d2c1a7",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChainAlias.lean": "e2934d0a9bb4f469bf21d4ded5eb6f9d21219cbc979d7633b1ffd2c48060a822",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChainLift.lean": "c83d57141a2b725bcdca44d4f823a631a22274476ad8a466e078bc2e6aec1b51",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "69fb1082573404ad1c0ed057cbb547622d5ae561b392f2f06bd916b419d0ee7e",
+  "beaconcrypt-core/proofs/check-inventory.sh": "e55a65f3c0bf7b5f0de8c7b9f76aa80abe848617e2afbd135508f006578110ff",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "0f47fd6a1ac347b9824240abfa1558aaead4f36ff04bcc785e0c15c18c3858d7",
+  "doc/impl/record-lift-seed-relay.md": "89825a557d367b3902e461916c141ae2a694ea2e9fb263573bc46f738121ae15",
+  "doc/impl/record-lift-seed-policy.md": "31f411d0d64f93885b158256bbed58fdb716210b17c9d4ced7c1ae93c9d01aa3",
+  "doc/impl/record-lift-chain-hop.md": "d0581e8420033799722ff7df9df503bb9dc56ba3ee145921fa71ea9dc666e1a1",
+  "doc/impl/record-lift-chain-hybrid.md": "962d42e335a4eea6f9f879a25980a920010313ff62568f9b73aad89f5df05d06",
+  "doc/impl/record-lift-chain-bills.md": "f7e12b8d59254356b95c51db8cfac92fa4a69149c5ccb4f16d9600800c6ff073",
+  "doc/impl/record-lift-chain-alias.md": "f112a40090da81ee2547e1cf54a80e395db3a0b8ff3251e273f2aaeebe2fa615",
+  "doc/impl/record-lift-chain-lift.md": "3211ac898c28c7b3236f2f6fc2224de2ef978a56a70671260b0a277010ec3131",
+  "doc/impl/record-lift-ideal.md": "df2314014aafd0004054bd7b7a344f1e68f9657405014d3b1c9430b149ea91b8",
+  "doc/formal-verification-analysis.md": "be96745624562e4727b0d7bc7f0e4a40af7f1369031c1d0a7cdbea75d6c1a89e"
+ },
+ "files_sha256_note": "At the confirming-review nit-fix commit (the commit that adds this version of the receipt); only doc/impl/record-lift-chain-lift.md differs from files_sha256_fix1. The receipt itself is not listed.",
+ "files_sha256_fix1": {
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftSeedRelay.lean": "c079df3d109ed00ddc21019c9e5b153a17981978c8e596520d43d8a861257589",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftSeedPolicy.lean": "45cf47719cf72f1d5617d161b8430f1736a2442744a982c16e66d0f4cba93678",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftChainHop.lean": "235374a455963ecdc3a2a3763934bd84403dafe8b560e44fcd2cd89f73f2ebbf",
@@ -100,7 +126,7 @@
   "doc/impl/record-lift-ideal.md": "df2314014aafd0004054bd7b7a344f1e68f9657405014d3b1c9430b149ea91b8",
   "doc/formal-verification-analysis.md": "be96745624562e4727b0d7bc7f0e4a40af7f1369031c1d0a7cdbea75d6c1a89e"
  },
- "files_sha256_note": "At c15efe2a, the tree that the fix-pass checks cover; the receipt commit adds only this file.",
+ "files_sha256_fix1_note": "At c15efe2a, the tree that the fix-pass checks cover; the receipt commit d0a41fcf added only this file.",
  "modules": [
   {
    "name": "PqxdhRecordLiftSeedRelay",
@@ -1365,6 +1391,16 @@
    "head": "c15efe2a7479cbf782870820aa946456b0aa99da",
    "log_sha256": "5b15e80536ef63bdc4c4066b45db44672c616b666c1979060214e2e30db2baa4",
    "command": "coord.sh lease mem claude @nix chainfix-inventory --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C /tmp/beaconcrypt-deployment-record-chain/beaconcrypt-core check-inventory SHELL=bash"
+  },
+  "inventory-f2": {
+   "exit": 0,
+   "start": "2026-10-08T10:27:13Z",
+   "end": "2026-10-08T10:28:35Z",
+   "head": "d0a41fcf535fc06d44986a81958bafa719755a98",
+   "log": "/tmp/bc-arc-scratch/items45/chain/fix1/logs/inventory-f2.log",
+   "log_sha256": "17ec734512dc43977ea067aaa6feba992e75779a59448891f2bcb6f0dfa417de",
+   "command": "coord.sh lease mem claude @nix chainfix-inventory2 --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C /tmp/beaconcrypt-deployment-record-chain/beaconcrypt-core check-inventory SHELL=bash (lease history ticket 00000233)",
+   "note": "Run at the receipt commit d0a41fcf, after this receipt was written, so it was recorded only outside the repository until the confirming-review nit fix (confirming-review nit 2). The nit-fix commit changes only Markdown and this receipt, which check-inventory does not read."
   }
  },
  "diff_check": "git diff --check clean on every track commit and on the fix-pass commit",
@@ -1406,7 +1442,7 @@
   "note": "Transitive constant closure of every declaration of the seven modules (adapted from items45/A/int2/tools/H7Closure.lean, version 3); the twelve classified structural constants are the DH-interface constants reached through Setup.beaconDomain, as in increment A and S1. Identical output at 0f06970f and after the fix pass."
  },
  "deviations_from_plan": [
-  "Extra module PqxdhRecordLiftChainLift holds chain_lift (plan C3 puts it in ChainHybrid): the target needs ChainBills (C4), which imports ChainHybrid, and ChainAlias (C3).",
+  "Extra module PqxdhRecordLiftChainLift holds chain_lift (plan C3 places chain_lift in its two modules, PqxdhRecordLiftChainHybrid and PqxdhRecordLiftChainAlias): the target needs ChainBills (C4), which imports ChainHybrid, and ChainAlias (C3).",
   "The generic supported-prefix lemmas behind the C3 support-level policy congruence (lawEq_bind_support, reaches_*, safe_of_reaches, safe_mono, chain_lookup_present, lookup_present, present_preserved, lookup_absent, run_agrees, agrees_update) live in PqxdhRecordLiftSeedPolicy, because seed_prefix (C1) needs them first; ChainHybrid applies them with MixedWorld.protocol_run_bounds (run_kdf, run_depth).",
   "C4 bills the prefix and the suffix of a cut with one whole-run closed-form cap programCoins each and every lookup at a full 76-byte reply under every policy, instead of WorldBudget real cap plus 76 * (S + 51 * R) with separate qPrefix, qSuffix and T caps per cut: observerBill = 2 * programCoins + 44 + decision.",
   "The 32 retained bytes of a seed cut (seedObserver_total) are rounded up to 44 so that one bill covers every index (observerAt_total).",
@@ -1416,7 +1452,7 @@
   "CTX targets (S4), RecordLiftStatement and the origin, binding and hiding targets (S5), R6 forms (S6): other stages",
   "Tightness of the bill (not required by the target)"
  ],
- "checks_not_run": "No lake build, make verify, nix-collect-garbage, mutation testing, ProVerif or Rust run. Transcript fidelity (cargo under @cargo) and the central integration checks of PROTOCOL section 6 are pending and belong to the integration.",
+ "checks_not_run": "No lake build, make verify, nix-collect-garbage, mutation testing, ProVerif or Rust run in the track, the fix pass or the nit fix; no production Rust or ProVerif change. Transcript fidelity (cargo under @cargo) and the central integration checks of PROTOCOL section 6 run on the merged tip (nit_fix.integration_checks).",
  "review": {
   "reviewed_commit": "0f06970f2d031e8f70f6d842d783563e6cccb472",
   "reviewed_range": "ee7878ee..0f06970f",
@@ -1503,6 +1539,46 @@
    "statements_changed": "none",
    "checks": "all seven modules and the root import rechecked into the fresh prefix fix1/olean (exit 0, empty logs); inv recount unchanged (1670), rehash of the two modules; H-7 source scan and closure guard rerun clean; focused check-inventory at the fix commit exit 0; git diff --check clean"
   },
-  "confirming_review": "pending"
+  "confirming_review": {
+   "reviewed_commit": "d0a41fcf535fc06d44986a81958bafa719755a98",
+   "reviewed_range": "0f06970f..d0a41fcf (fix-pass commit c15efe2a and receipt commit d0a41fcf)",
+   "reviewer": "independent Claude confirming review of the fix pass (a reviewer that did not write the modules); read only",
+   "notes": "/tmp/bc-arc-scratch/items45/chain/confirm/NOTES.md",
+   "notes_sha256": "2758fb158afaa7ffab6b76dbb0065486f7a89864573299dc06439aeab95721c1",
+   "verdict": "APPROVE_WITH_NITS",
+   "outcome": "every finding of the semantic and hygiene reviews resolved; two documentation nits; no finding against a Lean statement, definition, guard or inventory row",
+   "evidence": [
+    "Lean diff of the fix pass: two module-docstring lines only (ChainBills line 5, SeedPolicy line 6); no statement, definition or proof change",
+    "/tmp/bc-arc-scratch/items45/chain/confirm/verify.py: the 19 receipt files_sha256 digests equal at c15efe2a, at d0a41fcf and on disk; d0a41fcf adds only the receipt; the inventory digests of the seven modules equal their SHA-256; theorem/guard bijection 4/35/5/6/36/7/3 = 96; guard axiom sets equal the receipt statements and proper_subset_guards; profile 84/2/3/1/6",
+    "/tmp/bc-arc-scratch/items45/chain/confirm/logs/: independent rechecks without -o of ChainBills, SeedPolicy and ChainLift via coord.sh lean against fix1/leanpath, exit 0, empty logs",
+    "olean, log, leanpath, root, H-7 scan, closure guard and inventory log hashes of the receipt verified; the seed-policy design-note citation codex/deployment-record-wip@023b9a81 resolves with SHA-256 02cb4c65...; footers exact; git diff --check clean"
+   ],
+   "findings": [
+    {
+     "severity": "nit",
+     "title": "Deviation 1 says plan C3 places chain_lift in ChainHybrid; plan C3 names ChainHybrid and ChainAlias jointly",
+     "response": "record-lift-chain-lift.md (Deviations from the plan) and deviations_from_plan[0] of this receipt now say that plan C3 places chain_lift in its two modules (PqxdhRecordLiftChainHybrid, PqxdhRecordLiftChainAlias). No Lean or inventory change.",
+     "outcome": "fixed"
+    },
+    {
+     "severity": "nit",
+     "title": "The check-inventory run at the tip (inventory-f2) and the takeover-plan section 7 status exist only outside the repository",
+     "response": "focused_inventory.inventory-f2 records the run at d0a41fcf (exit 0, log SHA-256); the integration checks receipt /tmp/bc-arc-scratch/items45/chain/int/checks-receipt.json records it too, with this confirming review. Takeover-plan section 7 is a scratch file outside the repository and is refreshed after the integration; no branch change needed.",
+     "outcome": "fixed (receipt); takeover-plan refresh outside the repository"
+    }
+   ]
+  }
+ },
+ "nit_fix": {
+  "date": "2026-10-08",
+  "base": "d0a41fcf535fc06d44986a81958bafa719755a98",
+  "scope": "Documentation only: doc/impl/record-lift-chain-lift.md (the plan-C3 wording of deviation 1, and the Validation status names the confirming review) and this receipt. No Lean file, inventory row, count, digest, root import or check-inventory.sh line changes.",
+  "h7_scan_docs": {
+   "output": "/tmp/bc-arc-scratch/items45/chain/nits/h7scan-docs.json",
+   "sha256": "7ec2fec3f9131cc4c0acd521e1a369daebd273fe31ee6aae9beb9c3459526e0a",
+   "result": "seven chain-track guides: no forbidden and no informational hit (version 3)"
+  },
+  "diff_check": "git diff --check clean",
+  "integration_checks": "/tmp/bc-arc-scratch/items45/chain/int/checks-receipt.json (module checks into a fresh prefix, root import, inv recount/rehash, focused check-inventory, transcript fidelity and git diff --check on the merged tip)"
  }
 }
