@@ -1,0 +1,513 @@
+{
+ "date": "2026-10-08T06:18:23.343064+00:00",
+ "scope": "Handoff item 2, increment 4 continued: stage S8 (the random draws of the item 2 root clients and key-schedule distinguishers; PqxdhRegistrationJointKemRootCosts*) and the second part of stage S5 (theorem T8b, the bills of every reduction in the item 2 loss of theorem T8; PqxdhRegistrationJointKemKeyTransferBills) of the extract-design plan. Stage T, theorem T8 and stage S6 are in the receipt extract-composition-inc4.json.",
+ "basis": "dd08851bd28341555cc0486d93f0e2ddf5c751f0",
+ "basis_note": "dd08851b is the documentation commit of the first part of increment 4 on claude/extract-composition (stage T, T8, S6), built from central fa8d9a54.",
+ "topic": {
+  "branch": "claude/extract-composition",
+  "worktree": "/tmp/claude-extract-inc1"
+ },
+ "plan": {
+  "path": "/tmp/bc-arc-scratch/extract-design/plan.md",
+  "sha256": "4132816d0546af984eb43217852e911be66f95a178be55704ba3d2ba98074a2a",
+  "snapshot": "doc/impl/extract-composition-plan.md",
+  "stages": "S8, S5 (second part: T8b); sections 3, 5, 9, 22, 23"
+ },
+ "commits": [
+  {
+   "commit": "e8fc093536632c35fcdb383c7b55cc8162ab7ba0",
+   "subject": "Bound the random draws of the item 2 root clients (stage S8)"
+  },
+  {
+   "commit": "25ccaa902f92034779950cc202c75296e455ae22",
+   "subject": "State the bills of the item 2 reductions as theorem T8b (stage S5, second part)"
+  }
+ ],
+ "commits_note": "The stage commits after dd08851b. The documentation commit that adds this receipt, the S8 and T8b guide sections, the analysis section, the assumption-list paragraphs and the plan snapshot follows them.",
+ "files_sha256": {
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRootCostsTools.lean": "0a81ef0bdfdf3fdf53f1495a220818d4360362307d205bc41768d8efebf56455",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRootCostsLayers.lean": "52ee8d1c76ea613c7aa1ee2e42c2c85f369849cd69207dda4012debbc070dd0f",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRootCostsSkeleton.lean": "25bc3366bb38e628a29daa3a1f786631ecc9f47a0ad968b39bbb2cd1fa988df4",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRootCostsClient.lean": "3365818c360a3cacf7ad299ca7aedfd4722a45d88fc6943796d6dbc519aa2b3a",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRootCosts.lean": "b590eadbfc5f626a8006387aaa9662fbaad3f145aa63c87040a25f1dae866cef",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemKeyTransferBills.lean": "b06c514e47ec56e235a9b84b91fd96886d6420869ec60a656dcbd98edf08e02b",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "c761701d0e0b1810f9a296517efbc717cc913c10991184e5ed3e86fa9087b4fe",
+  "beaconcrypt-core/proofs/check-inventory.sh": "825db876eda21e2e927b4ba0e90a0ce1794159c14d7c2e609217ce9b1516a64d",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "c7a67be1f69ba74f84aadf7160edcdc60036f3a93d7cba705355f27dc366e1eb",
+  "beaconcrypt-core/proofs/trusted-boundary.md": "bf09950c7347e42a1161c077a36bc8c8083d1c9f99adcac828d176e80be7fb49",
+  "doc/impl/extract-composition.md": "af127ed7810a30865ffaab944be64fe53a787f57b0f033c919ba19fa14e096ff",
+  "doc/impl/extract-composition-plan.md": "3923fbea127cc8e459c9727dda9fc9171374389f361173fd49ef464e5d6bfe4f",
+  "doc/formal-verification-analysis.md": "5b251b2c9e8e15f4d49df135278d44207bb40c6804d4d8d81d0574cd1a24ebff",
+  "doc/composition-assumptions.md": "52722094744ffd9346173baef51d6c68db7a502c6c0d36b8e60df8a826955630"
+ },
+ "modules": [
+  {
+   "name": "PqxdhRegistrationJointKemRootCostsTools",
+   "plan_stage": "S8",
+   "statements": [
+    "wBound_pure",
+    "wBound_query_bind",
+    "wBound_mono",
+    "wBound_bind",
+    "wBound_map",
+    "wBound_map_iff",
+    "wBound_query",
+    "wBound_add",
+    "wBound_weight_mono",
+    "wBound_of_isQueryBoundP",
+    "isQueryBoundP_of_wBound",
+    "wBound_kinds",
+    "wBound_simulate",
+    "wBound_run",
+    "wBound_option"
+   ],
+   "statement_count": 15,
+   "axiom_profile": {
+    "(none)": 2,
+    "Quot.sound, propext": 7,
+    "Classical.choice, Quot.sound, propext": 6
+   },
+   "direct_check_final": {
+    "exit": 0,
+    "start": "2026-10-08T06:13:29.913070801Z",
+    "end": "2026-10-08T06:13:32.817610519Z",
+    "source_sha256": "0a81ef0bdfdf3fdf53f1495a220818d4360362307d205bc41768d8efebf56455",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "log_bytes": 0,
+    "artifact_sha256": "9b1b6e3ecc6b05ddbed1cb874a44af02cc71a20c1baf99878647bcda72f0e394",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/extract-design/inc4/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRootCostsTools.olean",
+     "/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRootCostsTools.lean"
+    ]
+   }
+  },
+  {
+   "name": "PqxdhRegistrationJointKemRootCostsLayers",
+   "plan_stage": "S8",
+   "statements": [
+    "wBound_of_total",
+    "wBound_liftComp_inl",
+    "publicLocal_cost",
+    "evalLayer_inl",
+    "evalLayer_inr",
+    "evalLayer_total",
+    "evalLayer_cost",
+    "ccaCoins_cost",
+    "ccaAmbient_cost",
+    "post_router_cost",
+    "router_cost",
+    "actual_cost",
+    "lower_cost",
+    "liftT_cost"
+   ],
+   "statement_count": 14,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 12,
+    "Quot.sound, propext": 1,
+    "propext": 1
+   },
+   "direct_check_final": {
+    "exit": 0,
+    "start": "2026-10-08T06:13:32.845311200Z",
+    "end": "2026-10-08T06:13:37.554950999Z",
+    "source_sha256": "52ee8d1c76ea613c7aa1ee2e42c2c85f369849cd69207dda4012debbc070dd0f",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "log_bytes": 0,
+    "artifact_sha256": "8b2c148339edfdb7fbfd05c9dc066d96dca9923e35f1c0316aa1005b140bfb6b",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/extract-design/inc4/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRootCostsLayers.olean",
+     "/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRootCostsLayers.lean"
+    ]
+   }
+  },
+  {
+   "name": "PqxdhRegistrationJointKemRootCostsSkeleton",
+   "plan_stage": "S8",
+   "statements": [
+    "forwardCoins_cost",
+    "serverAux_total",
+    "prefixStep_cost",
+    "clientPrefix_cost",
+    "factoredBuild_total",
+    "factoredAfter_total",
+    "factoredServices_bills",
+    "nativeResponse_total",
+    "nativeServices_bills",
+    "gameStep_cost",
+    "ctxGame_total",
+    "tableRead_cost",
+    "valueRead_cost",
+    "tailStep_cost",
+    "ncost_pure",
+    "ncost_bind",
+    "ncost_mono",
+    "ncost_map",
+    "ncost_game",
+    "ncost_table",
+    "ncost_value",
+    "ncost_client",
+    "ncost_acceptTail",
+    "ncost_build",
+    "ncost_hmac",
+    "ncost_hash",
+    "ncost_group",
+    "wPool_le",
+    "skelImpl_cost",
+    "resumeImpl_cost",
+    "after_free",
+    "compiled_cost",
+    "tail_cost",
+    "resume_cost"
+   ],
+   "statement_count": 34,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 33,
+    "propext": 1
+   },
+   "direct_check_final": {
+    "exit": 0,
+    "start": "2026-10-08T06:13:37.589948059Z",
+    "end": "2026-10-08T06:13:44.033183599Z",
+    "source_sha256": "25bc3366bb38e628a29daa3a1f786631ecc9f47a0ad968b39bbb2cd1fa988df4",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "log_bytes": 0,
+    "artifact_sha256": "f6ddf52d65853f89cf2580a2ddee4a0cf0afe0f295f4dafb0d51fd803286770f",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/extract-design/inc4/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRootCostsSkeleton.olean",
+     "/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRootCostsSkeleton.lean"
+    ]
+   }
+  },
+  {
+   "name": "PqxdhRegistrationJointKemRootCostsClient",
+   "plan_stage": "S8",
+   "statements": [
+    "collect_cost",
+    "prepare_cost",
+    "groupedOwner_cost",
+    "groupedCompiler_cost",
+    "groupedFinish_cost",
+    "kind_univ",
+    "command_sum",
+    "liftGrouped_cost",
+    "groupedClient_cost",
+    "source_sum",
+    "skelResume_cost",
+    "postSkel_cost",
+    "sourcePreOpaque_total",
+    "sharedStart_total",
+    "rootClient_coins",
+    "publicLocalV_cost",
+    "entryClient_coins"
+   ],
+   "statement_count": 17,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 17
+   },
+   "direct_check_final": {
+    "exit": 0,
+    "start": "2026-10-08T06:13:44.063481483Z",
+    "end": "2026-10-08T06:13:56.099441653Z",
+    "source_sha256": "3365818c360a3cacf7ad299ca7aedfd4722a45d88fc6943796d6dbc519aa2b3a",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "log_bytes": 0,
+    "artifact_sha256": "32ac63579c019c553dc2cfbbfbf1fb869384d0636df18d81daca1a5494b16697",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/extract-design/inc4/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRootCostsClient.olean",
+     "/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRootCostsClient.lean"
+    ]
+   }
+  },
+  {
+   "name": "PqxdhRegistrationJointKemRootCosts",
+   "plan_stage": "S8",
+   "statements": [
+    "total_of_wBound",
+    "firstTable_step",
+    "indexedTable_step",
+    "table_total",
+    "rootSample_total",
+    "entryD_total",
+    "pinned_total",
+    "entryDk_total"
+   ],
+   "statement_count": 8,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 8
+   },
+   "direct_check_final": {
+    "exit": 0,
+    "start": "2026-10-08T06:16:09.120660749Z",
+    "end": "2026-10-08T06:16:13.369409681Z",
+    "source_sha256": "b590eadbfc5f626a8006387aaa9662fbaad3f145aa63c87040a25f1dae866cef",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "log_bytes": 0,
+    "artifact_sha256": "49722f489e7c4133cfe429ed950d8e2f55ba069d66f2ea7a3cafc77d39b70a9f",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/extract-design/inc4/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRootCosts.olean",
+     "/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemRootCosts.lean"
+    ]
+   }
+  },
+  {
+   "name": "PqxdhRegistrationJointKemKeyTransferBills",
+   "plan_stage": "S5 (T8b)",
+   "statements": [
+    "prf_bills",
+    "idealKeys_bills",
+    "allIdeal_bills"
+   ],
+   "statement_count": 3,
+   "axiom_profile": {
+    "Classical.choice, Quot.sound, propext": 3
+   },
+   "direct_check_final": {
+    "exit": 0,
+    "start": "2026-10-08T06:16:21.814189384Z",
+    "end": "2026-10-08T06:16:25.254509279Z",
+    "source_sha256": "b06c514e47ec56e235a9b84b91fd96886d6420869ec60a656dcbd98edf08e02b",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "log_bytes": 0,
+    "artifact_sha256": "e49897aaaede8313e4f9c86762171aaa362f53357ed4145a7746cd58a31b8003",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/extract-design/inc4/olean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemKeyTransferBills.olean",
+     "/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemKeyTransferBills.lean"
+    ]
+   }
+  }
+ ],
+ "statements_total": 91,
+ "statements_per_stage": {
+  "S8": 88,
+  "S5 (T8b)": 3
+ },
+ "allowed_axioms": [
+  "propext",
+  "Classical.choice",
+  "Quot.sound"
+ ],
+ "axiom_profile_from_guards": {
+  "(none)": 2,
+  "Quot.sound, propext": 8,
+  "Classical.choice, Quot.sound, propext": 79,
+  "propext": 2
+ },
+ "exact_statements": {
+  "PqxdhRegistrationJointKemRootCostsTools.wBound_kinds": "theorem wBound_kinds {Kind : Type} [Fintype Kind] [DecidableEq Kind] (classify : spec.Domain → Kind)\n    (cost budget : Kind → ℕ) {work : OracleComp spec α}\n    (bounded : ∀ kind, work.IsQueryBoundP (fun query => classify query = kind) (budget kind)) :\n    WBound work (fun query => cost (classify query)) (∑ kind, cost kind * budget kind)",
+  "PqxdhRegistrationJointKemRootCostsTools.wBound_simulate": "theorem wBound_simulate (handler : QueryImpl spec (OracleComp spec')) (w : spec.Domain → ℕ) (w' : spec'.Domain → ℕ)\n    (step : ∀ query, WBound (handler query) w' (w query)) {work : OracleComp spec α} {n : ℕ}\n    (bounded : WBound work w n) : WBound (simulateQ handler work) w' n",
+  "PqxdhRegistrationJointKemRootCostsTools.wBound_run": "theorem wBound_run (handler : QueryImpl spec (StateT σ (OracleComp spec'))) (w : spec.Domain → ℕ)\n    (w' : spec'.Domain → ℕ) (step : ∀ query state, WBound ((handler query).run state) w' (w query))\n    {work : OracleComp spec α} {n : ℕ} (bounded : WBound work w n) (state : σ) :\n    WBound ((simulateQ handler work).run state) w' n",
+  "PqxdhRegistrationJointKemRootCostsTools.wBound_option": "theorem wBound_option (handler : QueryImpl spec (OptionT (StateT σ (OracleComp spec')))) (w : spec.Domain → ℕ)\n    (w' : spec'.Domain → ℕ) (step : ∀ query state, WBound (((handler query).run).run state) w' (w query))\n    {work : OracleComp spec α} {n : ℕ} (bounded : WBound work w n) (state : σ) :\n    WBound (((simulateQ handler work).run).run state) w' n",
+  "PqxdhRegistrationJointKemRootCostsLayers.publicLocal_cost": "theorem publicLocal_cost (query : (SkelSpec PqxdhSecretInputKdf.RootOutput).Domain) (cache : PqxdhSecretInputKdf.HmacOracle.QueryCache) :\n    WBound ((PqxdhRegistrationJointKemRootExpand.publicLocal query).run cache) wRoot (wSkel query)",
+  "PqxdhRegistrationJointKemRootCostsLayers.evalLayer_cost": "theorem evalLayer_cost (setup : Setup baseSpec KemSK) (caps : KemCaps) (bounded : KemBound setup caps)\n    (secret : KemSK) (challenge : MlKem768Ciphertext) (query : (MlKemCCAOracleSpec baseSpec + TSpec V).Domain) :\n    WBound (fwd (T := TSpec V) (evalLayer setup secret challenge) query) (wSkel (V := V)) (wCca caps query)",
+  "PqxdhRegistrationJointKemRootCostsLayers.router_cost": "theorem router_cost (setup : Setup baseSpec KemSK) (caps : KemCaps) (bounded : KemBound setup caps)\n    (selected : Nat) (reservation : PqxdhDynamicKemRouter.Reservation KemSK) (challenge : MlKem768Ciphertext)\n    (candidate : MlKemSharedSecret) (query : (PqxdhLiveKemBirth.Spec KemSK + TSpec V).Domain)\n    (state : PqxdhDynamicKemJointSource.State KemSK) :\n    WBound (((fwdOption (T := TSpec V) (PqxdhDynamicKemJointRouter.post setup.joint setup.kem selected reservation\n      challenge candidate) query).run).run state) (wCca (V := V) caps) (wPoolT (V := V) caps query)",
+  "PqxdhRegistrationJointKemRootCostsLayers.actual_cost": "theorem actual_cost (setup : Setup baseSpec KemSK) (caps : KemCaps) (bounded : KemBound setup caps)\n    (query : (Enc KemSK + TSpec V).Domain) :\n    WBound (fwd (T := TSpec V) (PqxdhRegistrationJointKemEncapsulation.actual setup) query)\n      (wPoolT (V := V) caps) (wEnc (V := V) caps query)",
+  "PqxdhRegistrationJointKemRootCostsLayers.lower_cost": "theorem lower_cost (setup : Setup baseSpec KemSK) (caps : KemCaps) (bounded : KemBound setup caps)\n    (secret : KemSK) (challenge : MlKem768Ciphertext) (selected : Nat)\n    (reservation : PqxdhDynamicKemRouter.Reservation KemSK) (candidate : MlKemSharedSecret) {α : Type}\n    (work : OracleComp (Enc KemSK + TSpec V) α) {n : ℕ} (bounded' : WBound work (wEnc (V := V) caps) n)\n    (state : PqxdhDynamicKemJointSource.State KemSK) :\n    WBound (simulateQ (fwd (T := TSpec V) (evalLayer setup secret challenge))\n      (((simulateQ (fwdOption (T := TSpec V) (PqxdhDynamicKemJointRouter.post setup.joint setup.kem selected\n        reservation challenge candidate)) (simulateQ (fwd (T := TSpec V)\n          (PqxdhRegistrationJointKemEncapsulation.actual setup)) work)).run).run state)) (wSkel (V := V)) n",
+  "PqxdhRegistrationJointKemRootCostsSkeleton.clientPrefix_cost": "theorem clientPrefix_cost (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (caps : KemCaps) (bounded : KemBound setup caps) (identityIndex : Nat) (raw : Pqxdh.Bytes)\n    (consumed : List Pqxdh.Bytes) :\n    WBound ((simulateQ (PqxdhRegistrationJointKemEncapsulation.prefixImpl setup codec checks raw)\n      (PqxdhRegistrationJointServerPrefix.clientPrefix (KemSK := KemSK) identityIndex raw)).run consumed)\n      (wEncBase caps) (32 + caps.encapsCost)",
+  "PqxdhRegistrationJointKemRootCostsSkeleton.nativeServices_bills": "theorem nativeServices_bills (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks) :\n    ServiceBills (nativeServices setup codec checks)",
+  "PqxdhRegistrationJointKemRootCostsSkeleton.factoredServices_bills": "theorem factoredServices_bills (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks) :\n    ServiceBills (PqxdhRegistrationJointKemEntryFactor.factoredServices setup codec checks)",
+  "PqxdhRegistrationJointKemRootCostsSkeleton.ncost_group": "theorem ncost_group (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (services : Services V Response) (bills : ServiceBills services)\n    (pending : PqxdhRegistrationJointKemPostSkeleton.Pending Response) :\n    NCost (groupStep (KemSK := KemSK) setup codec services pending) 128",
+  "PqxdhRegistrationJointKemRootCostsSkeleton.skelImpl_cost": "theorem skelImpl_cost (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (caps : KemCaps) (bounded : KemBound setup caps) (identityIndex : Nat) (publicIdentity : PublicIdentity)\n    (services : Services V Response) (bills : ServiceBills services)\n    (query : (GSpec KemSK Response).Domain) (state : SkelState KemSK V) :\n    WBound ((skelImpl setup codec checks identityIndex publicIdentity services query).run state) (wEnc (V := V) caps)\n      (wG caps query)",
+  "PqxdhRegistrationJointKemRootCostsSkeleton.after_free": "theorem after_free (caps : KemCaps) (verified : PqxdhServerRootPreparation.Verified Reader)\n    (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes)\n    (reply : Option (PqxdhBeaconPhase2Preparation.Ciphertext × PqxdhBeaconPhase2Preparation.Word32)) :\n    WBound (PqxdhRegistrationJointKemCollected.afterEncapsulation (Shared := PqxdhBeaconPhase2Preparation.Word32)\n      verified ephemeral reply) (fun query => serverUniformCost caps (serverClass query)) 0",
+  "PqxdhRegistrationJointKemRootCostsSkeleton.resume_cost": "theorem resume_cost (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (caps : KemCaps) (bounded : KemBound setup caps) (identityIndex : Nat) (publicIdentity : PublicIdentity)\n    (raw : Pqxdh.Bytes) (verified : PqxdhServerRootPreparation.Verified Reader)\n    (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes)\n    (ciphertext : PqxdhBeaconPhase2Preparation.Ciphertext) (token : PqxdhRegistrationJointKemOpaqueSuffix.Token)\n    (state : GameState KemSK) (consumed : List Pqxdh.Bytes) :\n    WBound (PqxdhRegistrationJointKemOpaqueResume.resume setup codec checks identityIndex publicIdentity raw verified\n      ephemeral ciphertext token state consumed) (wResume caps) 64",
+  "PqxdhRegistrationJointKemRootCostsClient.prepare_cost": "theorem prepare_cost {I D K X Shared : Type} (caps : KemCaps) (control : beaconcrypt_core.pqxdh.BeaconInitSent)\n    (identity : I) (prekey oneTime : D) (kem : K) (raw : Pqxdh.Bytes) :\n    WBound (PqxdhBeaconPhase2Shared.prepare (X := X) (Response := Response) (Shared := Shared) control identity prekey\n      oneTime kem raw) (wPrep caps) caps.decapsCost",
+  "PqxdhRegistrationJointKemRootCostsClient.groupedClient_cost": "theorem groupedClient_cost (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (selected : Nat)\n    (challenge : MlKem768Ciphertext) (caps : KemCaps)\n    (query : (PqxdhRegistrationJointRevealSchedule.Spec KemSK).Domain)\n    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) :\n    WBound ((groupedClient setup codec selected challenge query).run owners) (wG (Response := Response) caps)\n      (wSource caps (sourceKind query))",
+  "PqxdhRegistrationJointKemRootCostsClient.source_sum": "theorem source_sum (caps : KemCaps) (budget : SourceKind → ℕ) :\n    64 + ∑ kind, wSource caps kind * budget kind = postBill caps budget",
+  "PqxdhRegistrationJointKemRootCostsClient.skelResume_cost": "theorem skelResume_cost (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (caps : KemCaps) (bounded : KemBound setup caps)\n    (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R) (raw : Pqxdh.Bytes)\n    (value : PqxdhServerRootPreparation.Verified Reader)\n    (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes)\n    (consumed : List Pqxdh.Bytes) (game : GameState KemSK) (owners : List EncodedEntry)\n    (next : Option Nat → OracleComp (SourceSpec KemSK) X) (selected : Nat) (ciphertext : MlKem768Ciphertext)\n    (services : Services V Response) (bills : ServiceBills services) (budget : SourceKind → ℕ)\n    (inherits : ∀ reply kind, (next reply).IsQueryBoundP (fun query => sourceKind (KemSK := KemSK) query = kind)\n      (budget kind)) :\n    WBound (skelResume setup codec checks identityIndex publicIdentity observe raw value ephemeral consumed game owners\n      next selected ciphertext services) (wEnc (V := V) caps) (64 + ∑ kind, wSource caps kind * budget kind)",
+  "PqxdhRegistrationJointKemRootCostsClient.postSkel_cost": "theorem postSkel_cost (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (caps : KemCaps) (bounded : KemBound setup caps)\n    (decision : X → Bool) (count : Nat) (selected : Fin (count + 1)) (services : Services V Response)\n    (bills : ServiceBills services) (chosen : MlKem768PublicKey × KemSK) (challenge : MlKem768Ciphertext)\n    (context : OpaqueContext Reader KemSK A X count) (budget : SourceKind → ℕ)\n    (inherits : ∀ kind, Inherits (fun query => sourceKind (KemSK := KemSK) query = kind) (budget kind) context) :\n    WBound (postSkel setup codec checks decision count selected services chosen challenge context) (wSkel (V := V))\n      (64 + ∑ kind, wSource caps kind * budget kind)",
+  "PqxdhRegistrationJointKemRootCostsClient.sourcePreOpaque_total": "theorem sourcePreOpaque_total (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (caps : KemCaps) (bounded : KemBound setup caps) (ensureInit : StateT A ProbComp Bool)\n    (qInit : Nat) (initBound : ∀ runtime, (ensureInit.run runtime).IsTotalQueryBound qInit)\n    (supplied : Option Pqxdh.Bytes) (decision : X → Bool) (work : OracleComp (SourceSpec KemSK) X)\n    (budget : SourceKind → ℕ)\n    (certified : ∀ source, work.IsQueryBoundP (fun query => sourceKind (KemSK := KemSK) query = source) (budget source))\n    (runtime : A) (count : Nat) (selected : Fin (count + 1)) (index : Nat) (chosen : MlKem768PublicKey × KemSK) :\n    (PqxdhRegistrationJointKemRawOpaque.sourcePreOpaque (Reader := Reader) setup codec checks ensureInit supplied\n      decision work runtime count selected index chosen).IsTotalQueryBound (preBill caps qInit supplied count budget)",
+  "PqxdhRegistrationJointKemRootCostsClient.sharedStart_total": "theorem sharedStart_total (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (caps : KemCaps) (bounded : KemBound setup caps) (ensureInit : StateT A ProbComp Bool)\n    (qInit : Nat) (initBound : ∀ runtime, (ensureInit.run runtime).IsTotalQueryBound qInit)\n    (supplied : Option Pqxdh.Bytes) (decision : X → Bool) (work : OracleComp (SourceSpec KemSK) X)\n    (budget : SourceKind → ℕ)\n    (certified : ∀ source, work.IsQueryBoundP (fun query => sourceKind (KemSK := KemSK) query = source) (budget source))\n    (runtime : A) (count : Nat) (selected : Fin (count + 1)) (index : Nat) :\n    (sharedStart (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected\n      index).IsTotalQueryBound (prefixBill caps qInit supplied count budget)",
+  "PqxdhRegistrationJointKemRootCostsClient.rootClient_coins": "theorem rootClient_coins (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (caps : KemCaps) (bounded : KemBound setup caps) (ensureInit : StateT A ProbComp Bool)\n    (qInit : Nat) (initBound : ∀ runtime, (ensureInit.run runtime).IsTotalQueryBound qInit)\n    (supplied : Option Pqxdh.Bytes) (decision : X → Bool) (work : OracleComp (SourceSpec KemSK) X)\n    (budget : SourceKind → ℕ)\n    (certified : ∀ source, work.IsQueryBoundP (fun query => sourceKind (KemSK := KemSK) query = source) (budget source))\n    (runtime : A) (count : Nat) (selected : Fin (count + 1)) (index : Nat) :\n    (PqxdhRegistrationJointKemRootExpand.rootClient (Reader := Reader) setup codec checks ensureInit supplied decision\n      work runtime count selected index).IsQueryBoundP PqxdhCorrelatedExpandQueryBounds.IsCoin\n      (rootBill caps qInit supplied count budget)",
+  "PqxdhRegistrationJointKemRootCostsClient.entryClient_coins": "theorem entryClient_coins (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (caps : KemCaps) (bounded : KemBound setup caps) (ensureInit : StateT A ProbComp Bool)\n    (qInit : Nat) (initBound : ∀ runtime, (ensureInit.run runtime).IsTotalQueryBound qInit)\n    (supplied : Option Pqxdh.Bytes) (decision : X → Bool) (work : OracleComp (SourceSpec KemSK) X)\n    (budget : SourceKind → ℕ)\n    (certified : ∀ source, work.IsQueryBoundP (fun query => sourceKind (KemSK := KemSK) query = source) (budget source))\n    (runtime : A) (count : Nat) (selected : Fin (count + 1)) (index : Nat) :\n    WBound (PqxdhRegistrationJointKemEntryFactor.entryClient (Reader := Reader) setup codec checks ensureInit supplied\n      decision work runtime count selected index) (wEntry 0) (rootBill caps qInit supplied count budget)",
+  "PqxdhRegistrationJointKemRootCosts.firstTable_step": "theorem firstTable_step (value : R) (sample : ProbComp R) (cost : ℕ) (bounded : sample.IsTotalQueryBound cost)\n    (query : (PqxdhRegistrationJointKemSecondEntry.Spec D R).Domain) (state : PqxdhRootFirstEntry.State D R) :\n    ((PqxdhRegistrationJointKemEntryFactor.firstTable value sample query).run state).IsTotalQueryBound\n      (wTable2 cost query)",
+  "PqxdhRegistrationJointKemRootCosts.indexedTable_step": "theorem indexedTable_step (family : ℕ → ProbComp R) (cost : ℕ) (bounded : ∀ j, (family j).IsTotalQueryBound cost)\n    (query : (PqxdhRegistrationJointKemSecondEntry.Spec D R).Domain)\n    (state : PqxdhRegistrationJointKemSecondEntry.IState D R) :\n    ((indexedImpl family query).run state).IsTotalQueryBound (wTable2 cost query)",
+  "PqxdhRegistrationJointKemRootCosts.table_total": "theorem table_total {α σ : Type} (handler : QueryImpl (PqxdhRegistrationJointKemSecondEntry.Spec D R) (StateT σ ProbComp))\n    (cost : ℕ) (step : ∀ query state, ((handler query).run state).IsTotalQueryBound (wTable2 cost query))\n    (client : OracleComp (PqxdhRegistrationJointKemSecondEntry.Spec D R) α) (n m : ℕ)\n    (coins : WBound client (wTable2 0) n) (reads : client.IsQueryBoundP (IsValue (D := D) (R := R)) m) (state : σ) :\n    ((simulateQ handler client).run' state).IsTotalQueryBound (n + cost * m)",
+  "PqxdhRegistrationJointKemRootCosts.entryD_total": "theorem entryD_total (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (caps : KemCaps) (bounded : KemBound setup caps) (ensureInit : StateT A ProbComp Bool)\n    (qInit : Nat) (initBound : ∀ runtime, (ensureInit.run runtime).IsTotalQueryBound qInit)\n    (supplied : Option Pqxdh.Bytes) (decision : X → Bool) (work : OracleComp (SourceSpec KemSK) X)\n    (budget : SourceKind → ℕ)\n    (certified : ∀ source, work.IsQueryBoundP (fun query => sourceKind (KemSK := KemSK) query = source) (budget source))\n    (runtime : A) (count : Nat) (selected : Fin (count + 1)) (index : Nat) (value : PqxdhServerAuthKeySchedule.Output) :\n    (PqxdhRegistrationJointKemEntryFactor.entryD (Reader := Reader) setup codec checks ensureInit supplied decision\n      work runtime count selected index value).IsTotalQueryBound (rootBill caps qInit supplied count budget + 64)",
+  "PqxdhRegistrationJointKemRootCosts.entryDk_total": "theorem entryDk_total (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (caps : KemCaps) (bounded : KemBound setup caps) (ensureInit : StateT A ProbComp Bool)\n    (qInit : Nat) (initBound : ∀ runtime, (ensureInit.run runtime).IsTotalQueryBound qInit)\n    (supplied : Option Pqxdh.Bytes) (decision : X → Bool) (work : OracleComp (SourceSpec KemSK) X)\n    (budget : SourceKind → ℕ)\n    (certified : ∀ source, work.IsQueryBoundP (fun query => sourceKind (KemSK := KemSK) query = source) (budget source))\n    (runtime : A) (count : Nat) (selected : Fin (count + 1)) (index : Nat) (k : ℕ)\n    (value : PqxdhServerAuthKeySchedule.Output) :\n    (entryDk (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index k\n      value).IsTotalQueryBound (rootBill caps qInit supplied count budget + 216)",
+  "PqxdhRegistrationJointKemKeyTransferBills.prf_bills": "theorem prf_bills (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (caps : KemCaps) (bounded : KemBound setup caps) (ensureInit : StateT A ProbComp Bool)\n    (qInit : Nat) (initBound : ∀ runtime, (ensureInit.run runtime).IsTotalQueryBound qInit)\n    (supplied : Option Pqxdh.Bytes) (decision : X → Bool) (work : OracleComp (SourceSpec KemSK) X)\n    (budget : SourceKind → ℕ)\n    (certified : ∀ source, work.IsQueryBoundP (fun query => sourceKind (KemSK := KemSK) query = source) (budget source))\n    (runtime : A) (count : Nat) (selected : Fin (count + 1)) (index : Nat) (slot : ℕ) :\n    PrfBills setup.hmac (rootClient (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count\n      selected index) slot (rootBill caps qInit supplied count budget)",
+  "PqxdhRegistrationJointKemKeyTransferBills.idealKeys_bills": "theorem idealKeys_bills (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (caps : KemCaps) (bounded : KemBound setup caps) (ensureInit : StateT A ProbComp Bool)\n    (qInit : Nat) (initBound : ∀ runtime, (ensureInit.run runtime).IsTotalQueryBound qInit)\n    (supplied : Option Pqxdh.Bytes) (decision : X → Bool) (work : OracleComp (SourceSpec KemSK) X)\n    (budget : SourceKind → ℕ)\n    (certified : ∀ source, work.IsQueryBoundP (fun query => sourceKind (KemSK := KemSK) query = source) (budget source))\n    (runtime : A) (count : Nat) (selected : Fin (count + 1)) (index : Nat) :\n    (∀ slot ∈ Finset.range 2, PrfBills setup.hmac (rootClient (Reader := Reader) setup codec checks ensureInit supplied\n      decision work runtime count selected index) slot (rootBill caps qInit supplied count budget)) ∧\n    EntryComponentBills setup.source setup.hmac (entryD (Reader := Reader) setup codec checks ensureInit supplied\n      decision work runtime count selected index) (rootBill caps qInit supplied count budget + 64)",
+  "PqxdhRegistrationJointKemKeyTransferBills.allIdeal_bills": "theorem allIdeal_bills (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)\n    (caps : KemCaps) (bounded : KemBound setup caps) (ensureInit : StateT A ProbComp Bool)\n    (qInit : Nat) (initBound : ∀ runtime, (ensureInit.run runtime).IsTotalQueryBound qInit)\n    (supplied : Option Pqxdh.Bytes) (decision : X → Bool) (work : OracleComp (SourceSpec KemSK) X)\n    (budget : SourceKind → ℕ)\n    (certified : ∀ source, work.IsQueryBoundP (fun query => sourceKind (KemSK := KemSK) query = source) (budget source))\n    (runtime : A) (count : Nat) (selected : Fin (count + 1)) (index : Nat) :\n    (∀ slot ∈ Finset.range 2, PrfBills setup.hmac (rootClient (Reader := Reader) setup codec checks ensureInit supplied\n      decision work runtime count selected index) slot (rootBill caps qInit supplied count budget)) ∧\n    ∀ k ∈ Finset.range 2, EntryComponentBills setup.source setup.hmac (entryDk (Reader := Reader) setup codec checks\n      ensureInit supplied decision work runtime count selected index k) (rootBill caps qInit supplied count budget + 216)"
+ },
+ "bill_definitions": {
+  "PqxdhRegistrationJointKemRootCostsClient.rootBill": "def rootBill (caps : KemCaps) (qInit : Nat) (supplied : Option Pqxdh.Bytes) (count : Nat) (budget : SourceKind → ℕ) :\n    ℕ :=\n  prefixBill caps qInit supplied count budget + postBill caps budget",
+  "PqxdhRegistrationJointKemRootCostsClient.prefixBill": "def prefixBill (caps : KemCaps) (qInit : Nat) (supplied : Option Pqxdh.Bytes) (count : Nat) (budget : SourceKind → ℕ) :\n    ℕ :=\n  caps.keygenCost + preBill caps qInit supplied count budget + caps.encapsCost",
+  "PqxdhRegistrationJointKemRootCostsClient.preBill": "def preBill (caps : KemCaps) (qInit : Nat) (supplied : Option Pqxdh.Bytes) (count : Nat) (budget : SourceKind → ℕ) :\n    ℕ :=\n  ((qInit + if supplied.isNone then 32 else 0) + (caps.keygenCost * count +\n    PqxdhRegistrationJointKemPostBills.uniformCap caps (budget (.inl 1)) (budget (.inl 5))\n      (PqxdhRegistrationJointOpenUniform.total caps budget) (budget (.inl 3)))) +\n    caps.baseUniform * (caps.decapsBase * budget (.inl 5)) + caps.decapsCost * budget (.inl 5)",
+  "PqxdhRegistrationJointKemRootCostsClient.postBill": "def postBill (caps : KemCaps) (budget : SourceKind → ℕ) : ℕ :=\n  64 + (budget (.inl 0) + 64 * budget (.inl 1) + 32 * budget (.inl 2) + (96 + caps.encapsCost) * budget (.inl 3) +\n    64 * budget (.inl 4) + (caps.decapsCost + 128) * budget (.inl 5) + 64 * budget (.inl 6) + 64 * budget (.inl 7) +\n    budget (.inr 0) + budget (.inr 1))",
+  "PqxdhRegistrationJointKemRootCostsClient.wSource": "def wSource (caps : KemCaps) : SourceKind → ℕ\n  | .inl source => ![1, 64, 32, 96 + caps.encapsCost, 64, caps.decapsCost + 128, 64, 64, 0] source\n  | .inr field => ![1, 1, 0, 0, 0] field",
+  "PqxdhRegistrationJointKemKeyTransferBills.PrfBills": "def PrfBills (hmac : PqxdhSecretInputKdf.HmacSha512) (client : OracleComp PqxdhCorrelatedExpand.RootSpec Bool)\n    (slot qCoins : ℕ) : Prop :=\n  (indexedReduction hmac client slot).IsQueryBoundP IsHmacChallengeQuery 1 ∧\n    (indexedReduction hmac client slot).IsQueryBoundP IsHmacUniformQuery (qCoins + 64 * 2) ∧\n    (hmacPrfRealGame hmac (indexedReduction hmac client slot)).IsTotalQueryBound (64 + qCoins + 64 * 2) ∧\n    (hmacPrfRandomGame (indexedReduction hmac client slot)).IsTotalQueryBound (64 + qCoins + 64 * 2)"
+ },
+ "leanpath": {
+  "manifest": "/tmp/bc-arc-scratch/extract-design/inc4/leanpath",
+  "sha256": "f7a850707e4d13bd4d2963233bf8cc6f25eca3ea0fbe60cfcc0a8829eebb2ed0",
+  "note": "As in extract-composition-inc4.json: inc4/olean (a resolved mirror of the first prefix of the published LEAN_PATH of central fa8d9a54, plus the increment 4 oleans written by check.sh) followed by the published fa8d9a54 LEAN_PATH. The final checks rebuilt the six modules and the root in import order after the documentation edits."
+ },
+ "root_check_final": {
+  "exit": 0,
+  "start": "2026-10-08T06:16:25.282708538Z",
+  "end": "2026-10-08T06:16:28.532318241Z",
+  "source_sha256": "c761701d0e0b1810f9a296517efbc717cc913c10991184e5ed3e86fa9087b4fe",
+  "log_bytes": 0,
+  "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "command": [
+   "coord.sh",
+   "lean",
+   "claude",
+   "<label>",
+   "--",
+   "timeout",
+   "180",
+   "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+   "-j1",
+   "-M8000",
+   "--root=/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean",
+   "-o",
+   "/tmp/bc-arc-scratch/extract-design/inc4/olean/BeaconcryptCore.olean",
+   "/tmp/claude-extract-inc1/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+  ]
+ },
+ "root_checks_note": "The root was also checked at each of the two stage commits (exit 0, empty log).",
+ "focused_inventory": {
+  "inv-S8": {
+   "exit": 0,
+   "log_bytes": 2031,
+   "log_sha256": "9285a274d75c63c781883db53a74f1e6b1a52cfb4dad1eebb16fe1d315816421",
+   "last_line": "Formal-verification inventory matches the reviewed boundary.",
+   "start": "2026-10-08T06:03:40Z",
+   "end": "2026-10-08T06:05:02Z"
+  },
+  "inv-T8b": {
+   "exit": 0,
+   "log_bytes": 2032,
+   "log_sha256": "030c15c014ad02ba937377e6cfe0b466f06c37e251813b775c379e3163e78c61",
+   "last_line": "Formal-verification inventory matches the reviewed boundary.",
+   "start": "2026-10-08T06:05:43Z",
+   "end": "2026-10-08T06:07:05Z"
+  },
+  "inv-s8doc": {
+   "exit": 0,
+   "log_bytes": 1927,
+   "log_sha256": "a07bad5cfb389d372edb52497093c072d544795efe64e276c22737ba546e0566",
+   "last_line": "Formal-verification inventory matches the reviewed boundary.",
+   "start": "2026-10-08T06:16:36Z",
+   "end": "2026-10-08T06:17:55Z"
+  }
+ },
+ "focused_inventory_note": "check-inventory ran on the tree of each stage commit (S8 e8fc0935 with the untracked T8b file held outside the worktree, T8b 25ccaa90) and on the documentation tree, in the locked minimal proof flake under a coord.sh @nix lease. coord.sh inv recount ran before inv rehash each time; a second inv rehash reported no change.",
+ "inventory_counts": {
+  "handwritten_lean_before": 1645,
+  "after_S8": 1650,
+  "after_T8b": 1651
+ },
+ "forbidden_scan": "No sorry, admit, axiom, native_decide, implemented_by, extern, maxHeartbeats option or scoped set_option in the six modules; module-level autoImplicit false and maxRecDepth 100000 only (two scoped respectTransparency options of the table step lemmas were removed before the documentation commit). No probability statement.",
+ "contamination_scan": {
+  "source": "/tmp/bc-arc-scratch/extract-design/inc4/probe/s8-contamination.lean",
+  "source_sha256": "7c4329e594fe5f51e934b72b316db8fbc89e82397c6de8a4a7fd697e315eec10",
+  "log_sha256": "dca915250a6755edd02d9570b56efaa6e15f36252c2ff12a5ff4ec8d96bbb08d",
+  "output": "scanned 328 declarations of 6 modules; forbidden direct references: 0 []\nliveness: [BeaconcryptCore.Computational.PqxdhCorrelatedExtractFamily.realGame]"
+ },
+ "guard_liveness": {
+  "source": "/tmp/bc-arc-scratch/extract-design/inc4/probe/s8-liveness.lean",
+  "source_sha256": "21512dcbb17367e71b97bade8591fee98d94fee8e0926c33d86a7b91b52ad5f3",
+  "log_sha256": "956ce52f8a7d1f3eb92b8fd3af217cc6ce87ba266da756cb3285eff90a34a04e",
+  "result": "exit 1 with 6 guard mismatches, one per module."
+ },
+ "guard_coverage": {
+  "source": "/tmp/bc-arc-scratch/extract-design/inc4/probe/s8-coverage.lean",
+  "source_sha256": "2e35c51bbb8fb8b54db38cdfec1d02370bfefe62c37c4a18ed684f4f8875354c",
+  "log_sha256": "8e8f3c9a35bc713b0b1903a6daab4d28841d0c98c7da7cc66505e32e7d52f88e",
+  "result": "328 constants in the six modules, all depending only on propext, Classical.choice and Quot.sound; the 93 theorem constants with declaration ranges are the 91 guard names and the two fields ServiceBills.build and ServiceBills.after of a Prop structure (projections, not theorem declarations; not guarded, as the fields of EntryComponentBills and CcaBills)."
+ },
+ "candidate_closure": {
+  "source": "/tmp/bc-arc-scratch/extract-design/inc4/probe/s8-closure.lean",
+  "source_sha256": "9430647abfd4988e0c113f19ecb507e3d88189f2413b0b3eedb97d3abae50496",
+  "log_sha256": "cfc0b977287cec367748e6944d5d27dc599860658b8eaaada14c900feb8c5297",
+  "output": "BeaconcryptCore.Computational.PqxdhRegistrationJointKemRootCosts.rootBill closure (types: false): 164 constants; candidate-carrying definitions reached: []\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemRootCosts.rootBill closure (types: true): 170 constants; candidate-carrying definitions reached: []\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemRootCosts.wSource closure (types: false): 181 constants; candidate-carrying definitions reached: []\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemRootCosts.wSource closure (types: true): 187 constants; candidate-carrying definitions reached: []\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemRootCosts.postBill closure (types: false): 144 constants; candidate-carrying definitions reached: []\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemRootCosts.postBill closure (types: true): 150 constants; candidate-carrying definitions reached: []\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemRootCosts.prefixBill closure (types: false): 161 constants; candidate-carrying definitions reached: []\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemRootCosts.prefixBill closure (types: true): 167 constants; candidate-carrying definitions reached: []\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemRootCosts.preBill closure (types: false): 160 constants; candidate-carrying definitions reached: []\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemRootCosts.preBill closure (types: true): 166 constants; candidate-carrying definitions reached: []\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemKeyTransfer.PrfBills closure (types: false): 653 constants; candidate-carrying definitions reached: []\nBeaconcryptCore.Computational.PqxdhRegistrationJointKemKeyTransfer.PrfBills closure (types: true): 2740 constants; candidate-carrying definitions reached: []\nliveness: sharedGame closure reaches sharedImpl: true\nliveness: groupedBranch closure (2834 constants) reaches: [BeaconcryptCore."
+ },
+ "candidate_note": "The bill definitions (rootBill, wSource, postBill, prefixBill, preBill, PrfBills) reach no candidate-carrying definition; the resource lemmas about the post-challenge router and the CCA evaluation are stated for every candidate value.",
+ "deviations_from_plan": [
+  "Order: S8 was first deferred (plan section 22) and then resumed and built in the same session, after T, T8 and S6; T8b followed.",
+  "Bills: structural (rootBill = prefixBill + postBill at the skeleton level) rather than the per-kind source bill plus extras sketched in plan section 5; the finish weight decapsCost + 128 is smaller than the source ledger 69 * max 64 decapsCost because the skeleton runs a continuation as one opening commitment of its services.",
+  "entryDk k is bounded at 108 per hidden read for every k (the plan named entryDk 1).",
+  "Five modules for S8; T8b in its own module PqxdhRegistrationJointKemKeyTransferBills (the existing PqxdhRegistrationJointKemKeyTransfer is unchanged).",
+  "No planned statement turned out false or unprovable; none was weakened; no assumption or contract added; no existing module changed."
+ ],
+ "contracts_used": "None new: certified (T5 source budget), KemBound setup caps and initBound, the premises of the existing bills.",
+ "headline_bound": "T8b: for slots 0 and 1, indexedReduction setup.hmac rootClient slot makes one challenge query and at most rootBill + 128 local uniform queries, and its real and random games draw at most 64 + rootBill + 128; the key-schedule reductions on entryD have EntryComponentBills at rootBill + 64 (on entryDk k, k < 2, at rootBill + 216).",
+ "not_proved": [
+  "Independent semantic and hygiene reviews of increment 4; central integration."
+ ],
+ "re_estimate": "S8 and T8b were built in part of one session (against 4.5-8 agent-days in plan section 22). Remaining item 2 work: reviews of increment 4 (15 modules, 187 theorems), review fixes and integration, 1.5-3 agent-days.",
+ "checks_not_run": "No lake build, make verify, nix-collect-garbage, mutation testing, ProVerif, Rust or transcript-fidelity run; no production Rust or ProVerif change.",
+ "review": "Not independently reviewed. Not integrated into central."
+}

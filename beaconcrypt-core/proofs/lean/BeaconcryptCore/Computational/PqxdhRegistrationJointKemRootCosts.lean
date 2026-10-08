@@ -42,7 +42,6 @@ def wTable2 (cost : ℕ) : (PqxdhRegistrationJointKemSecondEntry.Spec D R).Domai
   | .inl _ => 1
   | .inr _ => cost
 
-set_option backward.isDefEq.respectTransparency false in
 /-- A step of the first-value table costs one draw per coin and at most the sampler's cost per hidden read. -/
 theorem firstTable_step (value : R) (sample : ProbComp R) (cost : ℕ) (bounded : sample.IsTotalQueryBound cost)
     (query : (PqxdhRegistrationJointKemSecondEntry.Spec D R).Domain) (state : PqxdhRootFirstEntry.State D R) :
@@ -67,7 +66,6 @@ theorem firstTable_step (value : R) (sample : ProbComp R) (cost : ℕ) (bounded 
         trivial
     · trivial
 
-set_option backward.isDefEq.respectTransparency false in
 /-- A step of the indexed table costs one draw per coin and at most `cost` per hidden read when every sampler of the family costs at most `cost`. -/
 theorem indexedTable_step (family : ℕ → ProbComp R) (cost : ℕ) (bounded : ∀ j, (family j).IsTotalQueryBound cost)
     (query : (PqxdhRegistrationJointKemSecondEntry.Spec D R).Domain)
