@@ -1,0 +1,2678 @@
+{
+  "stage": "Source sampling and adaptive origin accounting (Task A, 2026-10-09)",
+  "base": "1639476c44f46f80fbac20ccc34f31137b7cc574",
+  "topic": "codex/record-lift-origin-accounting",
+  "state": "Focused direct checks and all 27 independent component semantic reviews passed; final publication review pending",
+  "headlines": [
+    "PqxdhRecordFactsOriginSelectedSeal.source_sampler",
+    "PqxdhRecordFactsOriginFailedFlag.sampled_erased_bound",
+    "PqxdhRecordFactsOriginRawBounds.source_seal_continuation",
+    "PqxdhRecordFactsOriginOrdinalCut.scan_resume",
+    "PqxdhRecordFactsOriginOrdinalTrace.track_selected",
+    "PqxdhRecordFactsOriginOrdinalProbability.source_event_bound",
+    "PqxdhRecordFactsOriginOrdinalPath.path_opening"
+  ],
+  "scope": "Exact source selected sampler, complete adaptive muting/private-copy projection and until-bad comparison; actual public raw-candidate counting; local fixed body/tag failed-writer replay flag bound; full-state attempted-seal prefix cut, one common traced probability space, exact support paths and generic supported-prefix/finite-ordinal accounting. Numerical global OriginStatement remains a consuming join.",
+  "contracts_added": [],
+  "existing_interfaces": [
+    "Actual cache-erased replay/random hidden-record services and unchanged classical shared random-oracle model. Literal writer and parser behavior is retained.",
+    "Source FreshPoint, empty selected dictionary and no-later-target-seal conditions are explicit local structural inputs with separately checked initialized source discharge.",
+    "Original environment Frame and adversary Budget.Respects premises yield the complete raw callback cap; existing source sealing cap yields the attempted ordinal allowance.",
+    "The generic source-event probability transfer requires proved supported-trace event inclusion and a pointwise selected callback bound; these are consumer proof obligations, not primitive assumptions."
+  ],
+  "query_accounting": {
+    "sealing": "S = budget.sends counts every actual source .sealing callback before replies, including real/known modes and failed writers and rejection after reaching the callback; outer sends rejected before that callback do not count. The later target event restricts the selected mode.",
+    "raw": "R = budget.receives from original all-reply source category ledger, retained in each supported residual continuation. Every extracted candidate is an original counted raw callback; padded Fin indices do not supply the cap.",
+    "local_statistical_term": "2 * R / 2^512 for the original unconditioned selected digest after fixed input/body/tag, literal failed writer and adaptive erased selected replay flag. Coefficient-one equality transfers the muted flag probability; no second bad-event loss.",
+    "ordinal_union": "S * cap from one common complete source trace, once exact supported selected callback and source-event inclusion are discharged; no independence between ordinal events.",
+    "preserved_other_bills": "All original native, finite/uniform, KDF, hash, base and reduction queries remain separately charged. Earlier prefix work, complete callback, writer failures and the full suffix are retained; no projected bookkeeping or opaque work is declared free."
+  },
+  "exclusions": [
+    "No closed numerical unpublished-origin or full OriginStatement theorem",
+    "No end-to-end computational-symbolic completion claim",
+    "No selected-writer outcome conditioning, honest-target premise or marginal-only generator reordering",
+    "No inference of receive chronology from final dictionary membership alone",
+    "No new primitive/deployment/codec assumption, Rust/ProVerif behavior, assigned-ID equality, snapshot or persistence claim"
+  ],
+  "modules": [
+    {
+      "module": "PqxdhRecordFactsOriginAverage",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginAverage.lean",
+      "source_sha256": "c7ecd2fd5828d07d6774b54c424ee46cc8fac9a8a7b2e84b27d30f7a1225af67",
+      "guide": "doc/impl/record-facts-origin-average.md",
+      "guide_sha256": "9e66385a8a5a47764c67cdaf7d6d470311f972bfd45678b446adac919831e519",
+      "reviewed_guide_sha256": "9e66385a8a5a47764c67cdaf7d6d470311f972bfd45678b446adac919831e519",
+      "guide_terminology_amendment": null,
+      "theorems": [
+        "bind_le"
+      ],
+      "guards": [
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginAverage.bind_le"
+      ],
+      "guarded_count": 1,
+      "reviewed_candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/average/average1-candidate.json",
+      "reviewed_candidate_sha256": "1708fe60d53d805c20ad12b9fd563e333632f5dec3ea5ff3aedd833abf07da8f"
+    },
+    {
+      "module": "PqxdhRecordFactsOriginCandidateTrace",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginCandidateTrace.lean",
+      "source_sha256": "cd088e3f12462113e6e299386027d2adfd28c7e9773d7de0cb09c910bac458a3",
+      "guide": "doc/impl/record-facts-origin-candidate-trace.md",
+      "guide_sha256": "b554a26f2d54dc01b9fc33772d982aa9f81fa3be95cd08195929963aff8e0818",
+      "reviewed_guide_sha256": "b554a26f2d54dc01b9fc33772d982aa9f81fa3be95cd08195929963aff8e0818",
+      "guide_terminology_amendment": null,
+      "theorems": [
+        "traced_pure",
+        "traced_query_bind",
+        "traced_fresh",
+        "traced_queries",
+        "traced_erase",
+        "traced_length",
+        "traced_prefix",
+        "traced_candidate",
+        "guess_complete",
+        "interpreted_erase",
+        "source_guess_complete"
+      ],
+      "guards": [
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginCandidateTrace.traced_pure",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginCandidateTrace.traced_query_bind",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginCandidateTrace.traced_fresh",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginCandidateTrace.traced_queries",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginCandidateTrace.traced_erase",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginCandidateTrace.traced_length",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginCandidateTrace.traced_prefix",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginCandidateTrace.traced_candidate",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginCandidateTrace.guess_complete",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginCandidateTrace.interpreted_erase",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginCandidateTrace.source_guess_complete"
+      ],
+      "guarded_count": 11,
+      "reviewed_candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-trace/origin-trace11-semantic-candidate.json",
+      "reviewed_candidate_sha256": "a0aeefdea656bb15bef66c7330f5333ebcd69c2e7a0079cd6b606c294c8c87cc"
+    },
+    {
+      "module": "PqxdhRecordFactsOriginMute",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginMute.lean",
+      "source_sha256": "a9cbb15d90a36fd902bbd4b8078ca55990b74ec0c893fc8e9ef8ead366df46f6",
+      "guide": "doc/impl/record-facts-origin-mute.md",
+      "guide_sha256": "70eaffc75c2b614694dbae71e1a9901816b58b81de1d24221f082a49f25d75bb",
+      "reviewed_guide_sha256": "70eaffc75c2b614694dbae71e1a9901816b58b81de1d24221f082a49f25d75bb",
+      "guide_terminology_amendment": null,
+      "theorems": [
+        "project_idempotent",
+        "raw_project",
+        "uniform_run",
+        "public_project",
+        "query_project",
+        "program_project",
+        "program_congr",
+        "raw_agrees"
+      ],
+      "guards": [
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMute.project_idempotent",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMute.raw_project",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMute.uniform_run",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMute.public_project",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMute.query_project",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMute.program_project",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMute.program_congr",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMute.raw_agrees"
+      ],
+      "guarded_count": 8,
+      "reviewed_candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin/mute8-semantic-candidate.json",
+      "reviewed_candidate_sha256": "059b54b8c0276237574b5ca9b476d08b771a302f90c5a262aa260ccb57d582c6"
+    },
+    {
+      "module": "PqxdhRecordFactsOriginMuteFamily",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginMuteFamily.lean",
+      "source_sha256": "5d9d8d7ccb60dc42edb8de8372473c69f23349b6c7e3667fdde49f02f34e2df6",
+      "guide": "doc/impl/record-facts-origin-mute-family.md",
+      "guide_sha256": "2e52dbbf556c3abf23be3732596a83339920013cb3a38babce0e61dc84e1e85d",
+      "reviewed_guide_sha256": "2e52dbbf556c3abf23be3732596a83339920013cb3a38babce0e61dc84e1e85d",
+      "guide_terminology_amendment": null,
+      "theorems": [
+        "project_base",
+        "project_get",
+        "project_idempotent",
+        "local_project",
+        "other_project",
+        "keyed_project",
+        "program_project",
+        "local_nonraw",
+        "local_raw",
+        "erased_lens",
+        "keyed_agrees"
+      ],
+      "guards": [
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteFamily.project_base",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteFamily.project_get",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteFamily.project_idempotent",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteFamily.local_project",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteFamily.other_project",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteFamily.keyed_project",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteFamily.program_project",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteFamily.local_nonraw",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteFamily.local_raw",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteFamily.erased_lens",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteFamily.keyed_agrees"
+      ],
+      "guarded_count": 11,
+      "reviewed_candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin/mute-family11-semantic-candidate.json",
+      "reviewed_candidate_sha256": "1db5afd85979207548aa1cbe1db168f4cd6b16489aba8b3a5c2fc35bf7f6cdc1"
+    },
+    {
+      "module": "PqxdhRecordFactsOriginMuteServices",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginMuteServices.lean",
+      "source_sha256": "832e476a2e7efcd9e51df447e3db772b91135513f5367bb59868aefc21be4004",
+      "guide": "doc/impl/record-facts-origin-mute-services.md",
+      "guide_sha256": "12d775ed7b8f4bc62dc2e67395deeab66ed0b41204833727de20936623f581b6",
+      "reviewed_guide_sha256": "12d775ed7b8f4bc62dc2e67395deeab66ed0b41204833727de20936623f581b6",
+      "guide_terminology_amendment": null,
+      "theorems": [
+        "onBase_project",
+        "opening_noSeal",
+        "sealing_noSeal",
+        "opening_project",
+        "pending_project",
+        "sealing_project",
+        "service_project",
+        "program_project"
+      ],
+      "guards": [
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteServices.onBase_project",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteServices.opening_noSeal",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteServices.sealing_noSeal",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteServices.opening_project",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteServices.pending_project",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteServices.sealing_project",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteServices.service_project",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteServices.program_project"
+      ],
+      "guarded_count": 8,
+      "reviewed_candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin/mute-services8-semantic-candidate.json",
+      "reviewed_candidate_sha256": "31823b06920d0c495d14fda94b841e1790f0054bbb4e6787eb8fec9266cecd3e"
+    },
+    {
+      "module": "PqxdhRecordFactsOriginMuteUntilBad",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginMuteUntilBad.lean",
+      "source_sha256": "74e7227f0f95ff4a3169117cfc6bccf44745d326fa79abb1eda695bd1df09b76",
+      "guide": "doc/impl/record-facts-origin-mute-until-bad.md",
+      "guide_sha256": "8d262462992cadd2f816f51d7e4502b8b79e89430d4f7a599a9a5475cb61d066",
+      "reviewed_guide_sha256": "8d262462992cadd2f816f51d7e4502b8b79e89430d4f7a599a9a5475cb61d066",
+      "guide_terminology_amendment": null,
+      "theorems": [
+        "raw_noReplay",
+        "raw_agrees",
+        "opening_agrees",
+        "nonraw_agrees",
+        "sealing_agrees",
+        "service_agrees",
+        "erased_agrees"
+      ],
+      "guards": [
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteUntilBad.raw_noReplay",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteUntilBad.raw_agrees",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteUntilBad.opening_agrees",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteUntilBad.nonraw_agrees",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteUntilBad.sealing_agrees",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteUntilBad.service_agrees",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteUntilBad.erased_agrees"
+      ],
+      "guarded_count": 7,
+      "reviewed_candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-until/origin-until7-semantic-candidate.json",
+      "reviewed_candidate_sha256": "47d86469d5a0922b0360c93910ce00c06c5d84e4ffb289b0510bc28156d01dda"
+    },
+    {
+      "module": "PqxdhRecordFactsOriginRawGuess",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginRawGuess.lean",
+      "source_sha256": "a5ad4d5da2d3a0fe44b999dc4d21eef5ae3d2667bf827cce31be226d24d1461d",
+      "guide": "doc/impl/record-facts-origin-raw-guess.md",
+      "guide_sha256": "49b0616fe81ee5b53f94eab459f5976862a462e731958ef7935cfc15fc4399ce",
+      "reviewed_guide_sha256": "49b0616fe81ee5b53f94eab459f5976862a462e731958ef7935cfc15fc4399ce",
+      "guide_terminology_amendment": null,
+      "theorems": [
+        "encoded_commit",
+        "candidate_pack",
+        "raw_bad",
+        "opening_bad",
+        "service_bad",
+        "service_candidate_counted",
+        "service_bad_guess"
+      ],
+      "guards": [
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginRawGuess.encoded_commit",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginRawGuess.candidate_pack",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginRawGuess.raw_bad",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginRawGuess.opening_bad",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginRawGuess.service_bad",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginRawGuess.service_candidate_counted",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginRawGuess.service_bad_guess"
+      ],
+      "guarded_count": 7,
+      "reviewed_candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin/raw-guess7-semantic-candidate.json",
+      "reviewed_candidate_sha256": "7118ae04a32345849b6b6f60c7ac6473145b0f878a5d95a8ccd48f54bee55c62"
+    },
+    {
+      "module": "PqxdhRecordFactsOriginOrdinal",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginOrdinal.lean",
+      "source_sha256": "5c25eb50bb778e9591fc840dfa5b23844c94edc584f227a11b66f8e53ae56b85",
+      "guide": "doc/impl/record-facts-origin-ordinal.md",
+      "guide_sha256": "ebba8e430c29ca73ba314927c15550578a69bed297107854caf610e9ea24a970",
+      "reviewed_guide_sha256": "1699e91e9a235112ed00cefd7539fd1c948fa56643f216433cc6defbf118d0b3",
+      "guide_terminology_amendment": {
+        "reviewed_baseline_sha256": "1699e91e9a235112ed00cefd7539fd1c948fa56643f216433cc6defbf118d0b3",
+        "amended_sha256": "ebba8e430c29ca73ba314927c15550578a69bed297107854caf610e9ea24a970",
+        "change": "Terminology only: sealing ordinal counts every source .sealing constructor, not only hidden/nonreal-mode calls. Original independently reviewed guide remains frozen."
+      },
+      "theorems": [
+        "reach_insertion",
+        "reach_history",
+        "sealingCoordinates_length",
+        "reach_bill",
+        "seal_index_lt",
+        "source_seal_index"
+      ],
+      "guards": [
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinal.reach_insertion",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinal.reach_history",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinal.sealingCoordinates_length",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinal.reach_bill",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinal.seal_index_lt",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinal.source_seal_index"
+      ],
+      "guarded_count": 6,
+      "reviewed_candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/ordinal/ordinal6-amended-candidate.json",
+      "reviewed_candidate_sha256": "648946279ef757fedc1d074d2f41f425b4d1adbba0c88529b2f8f4a3eb3d15bb"
+    },
+    {
+      "module": "PqxdhRecordFactsOriginOrdinalServices",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginOrdinalServices.lean",
+      "source_sha256": "e0652c37b3b2b6244e628019ae9296d54421c8d45b7ae3259666f4492de00799",
+      "guide": "doc/impl/record-facts-origin-ordinal-services.md",
+      "guide_sha256": "131805a035c6cde0c676cc9fb93997d79af5f1881966ecd2140e342b11847c10",
+      "reviewed_guide_sha256": "131805a035c6cde0c676cc9fb93997d79af5f1881966ecd2140e342b11847c10",
+      "guide_terminology_amendment": null,
+      "theorems": [
+        "localRaw_seals",
+        "keyedRaw_seals",
+        "hiddenOpening_seals",
+        "service_nonSeal",
+        "hiddenSealing_other",
+        "service_sealing_other",
+        "insertion_sealing"
+      ],
+      "guards": [
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalServices.localRaw_seals",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalServices.keyedRaw_seals",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalServices.hiddenOpening_seals",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalServices.service_nonSeal",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalServices.hiddenSealing_other",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalServices.service_sealing_other",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalServices.insertion_sealing"
+      ],
+      "guarded_count": 7,
+      "reviewed_candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/ordinal/ordinal-services7-candidate.json",
+      "reviewed_candidate_sha256": "254d96bfcd78736cd7aea24108b2ac4c3e57270444f47f438f4f2de892f9f2fa"
+    },
+    {
+      "module": "PqxdhRecordFactsOriginOrdinalReach",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginOrdinalReach.lean",
+      "source_sha256": "6bba8c85d511610a8d733239aff580f125e5850088872a9b28cdc0b0ff8b8393",
+      "guide": "doc/impl/record-facts-origin-ordinal-reach.md",
+      "guide_sha256": "0a2ae07ba2b39e4d858367e7d2941b6f635b172601b0d30c885667db45469aff",
+      "reviewed_guide_sha256": "2b3165f38206945c7599eef3326ed247e04cd12b861455c9da567c7e90ac4dc4",
+      "guide_terminology_amendment": {
+        "reviewed_baseline_sha256": "2b3165f38206945c7599eef3326ed247e04cd12b861455c9da567c7e90ac4dc4",
+        "amended_sha256": "0a2ae07ba2b39e4d858367e7d2941b6f635b172601b0d30c885667db45469aff",
+        "change": "Terminology only: sealing ordinal counts every source .sealing constructor, not only hidden/nonreal-mode calls. Original independently reviewed guide remains frozen."
+      },
+      "theorems": [
+        "reach_sealing",
+        "reach_unattempted_empty",
+        "source_prefix_empty",
+        "source_entry_sealing"
+      ],
+      "guards": [
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalReach.reach_sealing",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalReach.reach_unattempted_empty",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalReach.source_prefix_empty",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalReach.source_entry_sealing"
+      ],
+      "guarded_count": 4,
+      "reviewed_candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/ordinal/ordinal-reach4-candidate.json",
+      "reviewed_candidate_sha256": "40f08f749099d168c97647de4f3c93cf4b43fd13a7037b09f581eb84ef9166a6"
+    },
+    {
+      "module": "PqxdhRecordFactsOriginOrdinalPreserve",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginOrdinalPreserve.lean",
+      "source_sha256": "fb361961da718eacb8485b3dbbcd9f43944d94f47de9a43529ab81602fe6e553",
+      "guide": "doc/impl/record-facts-origin-ordinal-preserve.md",
+      "guide_sha256": "4d36e43a6296760c7e697f0b739ecea78a78d9a3d1a1a5ed042ec95336696d51",
+      "reviewed_guide_sha256": "4d36e43a6296760c7e697f0b739ecea78a78d9a3d1a1a5ed042ec95336696d51",
+      "guide_terminology_amendment": null,
+      "theorems": [
+        "program_preserves",
+        "erased_service",
+        "muted_raw",
+        "muted_keyed_raw",
+        "muted_opening",
+        "muted_sealing_eq",
+        "muted_service",
+        "erased_program",
+        "muted_program",
+        "reach_preserves",
+        "erased_reach",
+        "muted_reach"
+      ],
+      "guards": [
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalPreserve.program_preserves",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalPreserve.erased_service",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalPreserve.muted_raw",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalPreserve.muted_keyed_raw",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalPreserve.muted_opening",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalPreserve.muted_sealing_eq",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalPreserve.muted_service",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalPreserve.erased_program",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalPreserve.muted_program",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalPreserve.reach_preserves",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalPreserve.erased_reach",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalPreserve.muted_reach"
+      ],
+      "guarded_count": 12,
+      "reviewed_candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/ordinal/ordinal-preserve12-candidate.json",
+      "reviewed_candidate_sha256": "3f80bdadbca7d363175750d64bc73dc0c0ef8d5cf51e5bc25a6be0560fd3955e"
+    },
+    {
+      "module": "PqxdhRecordFactsOriginMuteAdaptive",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginMuteAdaptive.lean",
+      "source_sha256": "5e9c022fb9ca57fe6974fb7418408dad3adcf56ba2e199bb31792ea1925eff0d",
+      "guide": "doc/impl/record-facts-origin-mute-adaptive.md",
+      "guide_sha256": "5074e34990893c4e9ee1699ba2bc7db7ac898cfceb565c39cfc62326ef2459a6",
+      "reviewed_guide_sha256": "5074e34990893c4e9ee1699ba2bc7db7ac898cfceb565c39cfc62326ef2459a6",
+      "guide_terminology_amendment": null,
+      "theorems": [
+        "marked_erase",
+        "marked_flag",
+        "marked_sticky",
+        "hit_marked",
+        "agree_good",
+        "complete_erase",
+        "marked_queries",
+        "bad_probability",
+        "event_good",
+        "marked_distance",
+        "complete_distance",
+        "source_bad_probability",
+        "source_event_good",
+        "source_distance"
+      ],
+      "guards": [
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteAdaptive.marked_erase",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteAdaptive.marked_flag",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteAdaptive.marked_sticky",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteAdaptive.hit_marked",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteAdaptive.agree_good",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteAdaptive.complete_erase",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteAdaptive.marked_queries",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteAdaptive.bad_probability",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteAdaptive.event_good",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteAdaptive.marked_distance",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteAdaptive.complete_distance",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteAdaptive.source_bad_probability",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteAdaptive.source_event_good",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteAdaptive.source_distance"
+      ],
+      "guarded_count": 14,
+      "reviewed_candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-adaptive/origin-adaptive14-semantic-candidate.json",
+      "reviewed_candidate_sha256": "5a71e2d0d4f29ad686ef77ba2377d466bb5b93a4d4b51a29fe7ee38e5eb91015"
+    },
+    {
+      "module": "PqxdhRecordFactsOriginCandidateFlag",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginCandidateFlag.lean",
+      "source_sha256": "d3eb138b70751ba2bc86faf1ea264907ef80d7bfdeaa73e248ed1e9e7ccbc7e9",
+      "guide": "doc/impl/record-facts-origin-candidate-flag.md",
+      "guide_sha256": "7081a999b0c1201fbc2943114347d4bff7727a43f7651ac8936ff2e076e96e63",
+      "reviewed_guide_sha256": "7081a999b0c1201fbc2943114347d4bff7727a43f7651ac8936ff2e076e96e63",
+      "guide_terminology_amendment": null,
+      "theorems": [
+        "flag_in_trace",
+        "initialized_flag",
+        "flag_finite",
+        "erase_instrumentation",
+        "flag_probability"
+      ],
+      "guards": [
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginCandidateFlag.flag_in_trace",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginCandidateFlag.initialized_flag",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginCandidateFlag.flag_finite",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginCandidateFlag.erase_instrumentation",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginCandidateFlag.flag_probability"
+      ],
+      "guarded_count": 5,
+      "reviewed_candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-flag/origin-flag5-semantic-candidate.json",
+      "reviewed_candidate_sha256": "b6960609d04f23440c13f30822425aa6dbed7bf79b1a221d402fd41b1a12bf8d"
+    },
+    {
+      "module": "PqxdhRecordFactsOriginMuteFresh",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginMuteFresh.lean",
+      "source_sha256": "6f7523c6ceeb382923cc86ceea97750eed7cb71cce3e6110ad3d7dc962d18716",
+      "guide": "doc/impl/record-facts-origin-mute-fresh.md",
+      "guide_sha256": "0db0cec3aca9742b7040c89e034b60849fe819c4c67c67ed5ce70328d05ee31c",
+      "reviewed_guide_sha256": "0db0cec3aca9742b7040c89e034b60849fe819c4c67c67ed5ce70328d05ee31c",
+      "guide_terminology_amendment": null,
+      "theorems": [
+        "fresh_excludes",
+        "continuation_noSeal",
+        "after_seal_noSeal",
+        "after_seal_project"
+      ],
+      "guards": [
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteFresh.fresh_excludes",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteFresh.continuation_noSeal",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteFresh.after_seal_noSeal",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteFresh.after_seal_project"
+      ],
+      "guarded_count": 4,
+      "reviewed_candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin/mute-fresh4-semantic-candidate.json",
+      "reviewed_candidate_sha256": "21ed22bb5d1efafe25a6d90b1b17a085efb9c97d053e296128e82a3ba0c975b2"
+    },
+    {
+      "module": "PqxdhRecordFactsOriginLogs",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginLogs.lean",
+      "source_sha256": "93d2f733df743d29f4e99c957aa1082a4bc318b786468688cfbd46e76070724d",
+      "guide": "doc/impl/record-facts-origin-logs.md",
+      "guide_sha256": "0672954c03663e4beaaace6299eefb1b14e2ad94092e6740c24aa1f153519a99",
+      "reviewed_guide_sha256": "0672954c03663e4beaaace6299eefb1b14e2ad94092e6740c24aa1f153519a99",
+      "guide_terminology_amendment": null,
+      "theorems": [
+        "logged_program_forget",
+        "withNative_logs",
+        "withNative_clear",
+        "interpreter_clear",
+        "clearPrivate_idempotent",
+        "clearCtx_idempotent",
+        "clearCtx_retained",
+        "clearCtx_keys",
+        "onBase_clear",
+        "base_clear"
+      ],
+      "guards": [
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginLogs.logged_program_forget",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginLogs.withNative_logs",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginLogs.withNative_clear",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginLogs.interpreter_clear",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginLogs.clearPrivate_idempotent",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginLogs.clearCtx_idempotent",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginLogs.clearCtx_retained",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginLogs.clearCtx_keys",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginLogs.onBase_clear",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginLogs.base_clear"
+      ],
+      "guarded_count": 10,
+      "reviewed_candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-logs/origin-logs10-semantic-candidate.json",
+      "reviewed_candidate_sha256": "cc1d04ea66e4c82b731c4efacf01ec850e88c536b3902f6adcc840c855e8c6d2"
+    },
+    {
+      "module": "PqxdhRecordFactsOriginMuteComplete",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginMuteComplete.lean",
+      "source_sha256": "1b06a985700862da5f22f0954ea695ca386f0b8aaac1cdce922709fcdd8ad64a",
+      "guide": "doc/impl/record-facts-origin-mute-complete.md",
+      "guide_sha256": "d3cfb77457a2a744f91f49a28017ad1c15b8b74164c3a7f06321deb28b5836a9",
+      "reviewed_guide_sha256": "d3cfb77457a2a744f91f49a28017ad1c15b8b74164c3a7f06321deb28b5836a9",
+      "guide_terminology_amendment": null,
+      "theorems": [
+        "project_commute",
+        "project_idempotent",
+        "local_clear",
+        "keyed_clear",
+        "program_projection",
+        "keyed_program_clear",
+        "hidden_sealing_forget",
+        "sealing_reduced",
+        "service_clear",
+        "program_clear",
+        "program_project",
+        "program_congr"
+      ],
+      "guards": [
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteComplete.project_commute",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteComplete.project_idempotent",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteComplete.local_clear",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteComplete.keyed_clear",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteComplete.program_projection",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteComplete.keyed_program_clear",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteComplete.hidden_sealing_forget",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteComplete.sealing_reduced",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteComplete.service_clear",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteComplete.program_clear",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteComplete.program_project",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginMuteComplete.program_congr"
+      ],
+      "guarded_count": 12,
+      "reviewed_candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin/mute-complete12-semantic-candidate.json",
+      "reviewed_candidate_sha256": "3d1fec17c9a3ab44d2311065c36a64494a7f625ee854a45f325a1ff25c40f768"
+    },
+    {
+      "module": "PqxdhRecordFactsOriginSelectedSeal",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginSelectedSeal.lean",
+      "source_sha256": "1d06254e6e4d2a3b02ee89b5050af3d04d6a19f8438d2afe2445fb23ea9f32e6",
+      "guide": "doc/impl/record-facts-origin-selected-seal.md",
+      "guide_sha256": "171403c56a7960ec91e85553e6967fb9c68864b2c867cd9dc33f3134a9e84439",
+      "reviewed_guide_sha256": "171403c56a7960ec91e85553e6967fb9c68864b2c867cd9dc33f3134a9e84439",
+      "guide_terminology_amendment": null,
+      "theorems": [
+        "keyed_project",
+        "hidden_project",
+        "keyed_sampler",
+        "hidden_sampler",
+        "source_sampler",
+        "continuation_independent"
+      ],
+      "guards": [
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginSelectedSeal.keyed_project",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginSelectedSeal.hidden_project",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginSelectedSeal.keyed_sampler",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginSelectedSeal.hidden_sampler",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginSelectedSeal.source_sampler",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginSelectedSeal.continuation_independent"
+      ],
+      "guarded_count": 6,
+      "reviewed_candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin/selected-seal6-semantic-candidate.json",
+      "reviewed_candidate_sha256": "4f1ee1998e1a8f68f7efd38a44d2ff6fec57879e1f0d3b571886ae0eba2762d6"
+    },
+    {
+      "module": "PqxdhRecordFactsOriginGuess",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginGuess.lean",
+      "source_sha256": "3adeba90decda2aa94930b0ca4697288628c2799395c8cf90be01f64e41d8e48",
+      "guide": "doc/impl/record-facts-origin-guess.md",
+      "guide_sha256": "7b1c7c96ddf31139d7c7461551b3c76a6243cdaca5f7a0c5e830ce367a96a662",
+      "reviewed_guide_sha256": "7b1c7c96ddf31139d7c7461551b3c76a6243cdaca5f7a0c5e830ce367a96a662",
+      "guide_terminology_amendment": null,
+      "theorems": [
+        "fixed_guess",
+        "independent_guess",
+        "bit_guess_split",
+        "one_bit_guess"
+      ],
+      "guards": [
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginGuess.fixed_guess",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginGuess.independent_guess",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginGuess.bit_guess_split",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginGuess.one_bit_guess"
+      ],
+      "guarded_count": 4,
+      "reviewed_candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin/guess4-semantic-candidate-v2.json",
+      "reviewed_candidate_sha256": "ad03f9e87f68c5b7cd08d2b991adbbebaf9d7440823f9c5817a5f080dc190d03"
+    },
+    {
+      "module": "PqxdhRecordFactsOriginFailedGuess",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginFailedGuess.lean",
+      "source_sha256": "cc80e3758d037f9c3fe4e18b4190efdfd5c45a3f3402ca63dc616498d8e54e87",
+      "guide": "doc/impl/record-facts-origin-failed-guess.md",
+      "guide_sha256": "e9599922e7fb3f295217a2ba1efb48af85dddd94ef27c2e25d422883ba3b61f4",
+      "reviewed_guide_sha256": "e9599922e7fb3f295217a2ba1efb48af85dddd94ef27c2e25d422883ba3b61f4",
+      "guide_terminology_amendment": null,
+      "theorems": [
+        "continuation_fixed",
+        "experiment_form",
+        "failed_guess_bound",
+        "source_failed_guess_bound",
+        "failed_guesses_bound"
+      ],
+      "guards": [
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginFailedGuess.continuation_fixed",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginFailedGuess.experiment_form",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginFailedGuess.failed_guess_bound",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginFailedGuess.source_failed_guess_bound",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginFailedGuess.failed_guesses_bound"
+      ],
+      "guarded_count": 5,
+      "reviewed_candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin/failed-guess5-semantic-candidate.json",
+      "reviewed_candidate_sha256": "b4ad7099d8b275f4852100b8c9c44e22574bdb368f795414ad6c581af7ba653e"
+    },
+    {
+      "module": "PqxdhRecordFactsOriginOrdinalCut",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginOrdinalCut.lean",
+      "source_sha256": "a248a0e51a68de809f2eb05307f8530c7a28ce4b42c4ed5125b8d1b90de51282",
+      "guide": "doc/impl/record-facts-origin-ordinal-cut.md",
+      "guide_sha256": "c5ff8132a8a3823352ed6153090b4de953f25bd18d996bf049a420e6cef7750e",
+      "reviewed_guide_sha256": "c5ff8132a8a3823352ed6153090b4de953f25bd18d996bf049a420e6cef7750e",
+      "guide_terminology_amendment": null,
+      "theorems": [
+        "scan_target",
+        "scan_prior",
+        "scan_other",
+        "scan_resume",
+        "scan_reachable",
+        "scan_prefix",
+        "selected_index_lt"
+      ],
+      "guards": [
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalCut.scan_target",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalCut.scan_prior",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalCut.scan_other",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalCut.scan_resume",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalCut.scan_reachable",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalCut.scan_prefix",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalCut.selected_index_lt"
+      ],
+      "guarded_count": 7,
+      "reviewed_candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/ordinal/ordinal-cut7-candidate.json",
+      "reviewed_candidate_sha256": "8c6a6c5bed3e5e6abf1c395fee1dfb9d25cdca913355c51e6c4cf0c7ece496ea"
+    },
+    {
+      "module": "PqxdhRecordFactsOriginOrdinalTrace",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginOrdinalTrace.lean",
+      "source_sha256": "d3f62af427fb1ea7bc8e4b666f2f5393d8656db50cf9a8c811b74be4cc0a8f40",
+      "guide": "doc/impl/record-facts-origin-ordinal-trace.md",
+      "guide_sha256": "aefab0c798a3a43de44ef1c008d72736ca36d17166088cc7477abb74dbf14e18",
+      "reviewed_guide_sha256": "aefab0c798a3a43de44ef1c008d72736ca36d17166088cc7477abb74dbf14e18",
+      "guide_terminology_amendment": null,
+      "theorems": [
+        "track_sealing",
+        "track_other",
+        "track_drop",
+        "track_selected",
+        "track_length",
+        "track_selected_support"
+      ],
+      "guards": [
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalTrace.track_sealing",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalTrace.track_other",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalTrace.track_drop",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalTrace.track_selected",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalTrace.track_length",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalTrace.track_selected_support"
+      ],
+      "guarded_count": 6,
+      "reviewed_candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/ordinal/ordinal-trace6-candidate.json",
+      "reviewed_candidate_sha256": "1b9fe7580599100d255919a9f5a3a0388a2c19491c0328cd3b29be09e7a9141d"
+    },
+    {
+      "module": "PqxdhRecordFactsOriginOrdinalEntries",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginOrdinalEntries.lean",
+      "source_sha256": "2eab072418e63582385b9a9251d830ed5abc90566b9b9fce183843fe5cf32c8e",
+      "guide": "doc/impl/record-facts-origin-ordinal-entries.md",
+      "guide_sha256": "617693024784e8ed34d74a4c32bb33819f1748245a8c0ec354163adb2dc8840a",
+      "reviewed_guide_sha256": "617693024784e8ed34d74a4c32bb33819f1748245a8c0ec354163adb2dc8840a",
+      "guide_terminology_amendment": null,
+      "theorems": [
+        "track_entry",
+        "tracked_cut"
+      ],
+      "guards": [
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalEntries.track_entry",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalEntries.tracked_cut"
+      ],
+      "guarded_count": 2,
+      "reviewed_candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/ordinal/ordinal-entries2-candidate.json",
+      "reviewed_candidate_sha256": "0fc5420f6249f7556e6fb4a1d1ccc614934900f320184ccd0a5051a96a5abf99"
+    },
+    {
+      "module": "PqxdhRecordFactsOriginOrdinalPath",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginOrdinalPath.lean",
+      "source_sha256": "fe7f16a7bcac5779c2c978dd4edf7bf8809dbb0d07466e53ca0178739d60a4da",
+      "guide": "doc/impl/record-facts-origin-ordinal-path.md",
+      "guide_sha256": "802c2dd8359892a716dc960db2edfc66478bee9fa04961a7145e64ff04fac269",
+      "reviewed_guide_sha256": "802c2dd8359892a716dc960db2edfc66478bee9fa04961a7145e64ff04fac269",
+      "guide_terminology_amendment": null,
+      "theorems": [
+        "path_support",
+        "support_path",
+        "prefix_reach",
+        "prefix_trans",
+        "prefix_path",
+        "track_query",
+        "path_query",
+        "path_opening"
+      ],
+      "guards": [
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalPath.path_support",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalPath.support_path",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalPath.prefix_reach",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalPath.prefix_trans",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalPath.prefix_path",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalPath.track_query",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalPath.path_query",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalPath.path_opening"
+      ],
+      "guarded_count": 8,
+      "reviewed_candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/ordinal/ordinal-path8-candidate.json",
+      "reviewed_candidate_sha256": "5f699c12108fc0d663e88d12d125675fd07d35827113b68606a6ff831e79c55f"
+    },
+    {
+      "module": "PqxdhRecordFactsOriginOrdinalProbability",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginOrdinalProbability.lean",
+      "source_sha256": "d85ec4f0aea3bf8e1219a369ca21f77cc0383cff84dd4d117fe1a28246d996d6",
+      "guide": "doc/impl/record-facts-origin-ordinal-probability.md",
+      "guide_sha256": "03f4f2e6c5fe43e315903e75ce775f669b14e636a686dc122f6f774b9a00fc12",
+      "reviewed_guide_sha256": "03f4f2e6c5fe43e315903e75ce775f669b14e636a686dc122f6f774b9a00fc12",
+      "guide_terminology_amendment": null,
+      "theorems": [
+        "marked_pending",
+        "marked_complete",
+        "selected_bound",
+        "finite_union_bound",
+        "trace_event_cover",
+        "any_cut_bound",
+        "source_event_bound"
+      ],
+      "guards": [
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalProbability.marked_pending",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalProbability.marked_complete",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalProbability.selected_bound",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalProbability.finite_union_bound",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalProbability.trace_event_cover",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalProbability.any_cut_bound",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalProbability.source_event_bound"
+      ],
+      "guarded_count": 7,
+      "reviewed_candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/ordinal/ordinal-probability7-candidate.json",
+      "reviewed_candidate_sha256": "bc64babc431c8fc356e42be7b994e2442cdf5ec543b2ea34d908a28d61ffc537"
+    },
+    {
+      "module": "PqxdhRecordFactsOriginRawBounds",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginRawBounds.lean",
+      "source_sha256": "f2c8b10d6a852fa581fa7e6cb296e794da105370e9dba9ce3c311850c8ed44c7",
+      "guide": "doc/impl/record-facts-origin-raw-bounds.md",
+      "guide_sha256": "33c652e504f8e60c516ae7205292489163a8687d0ebf3033b587e08cd629a077",
+      "reviewed_guide_sha256": "33c652e504f8e60c516ae7205292489163a8687d0ebf3033b587e08cd629a077",
+      "guide_terminology_amendment": null,
+      "theorems": [
+        "raw_queries",
+        "program_raw",
+        "reach_queries",
+        "source_seal_continuation"
+      ],
+      "guards": [
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginRawBounds.raw_queries",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginRawBounds.program_raw",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginRawBounds.reach_queries",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginRawBounds.source_seal_continuation"
+      ],
+      "guarded_count": 4,
+      "reviewed_candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/average/raw-bounds4-candidate.json",
+      "reviewed_candidate_sha256": "b78dcf797af6119f78ef36a2ffc1b38546ff7972aac0aa3ffba3cef338acd7fe"
+    },
+    {
+      "module": "PqxdhRecordFactsOriginSelectedGuess",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginSelectedGuess.lean",
+      "source_sha256": "94f1e909c5e2deddc57f36952aa46c1e5f305365fc0e42dfe71652697c766ba6",
+      "guide": "doc/impl/record-facts-origin-selected-guess.md",
+      "guide_sha256": "7025dbdc316327221d7956f0a0ffd220e4c095cc3f63848e1a21c2653248f7fa",
+      "reviewed_guide_sha256": "7025dbdc316327221d7956f0a0ffd220e4c095cc3f63848e1a21c2653248f7fa",
+      "guide_terminology_amendment": null,
+      "theorems": [
+        "hidden_dictionary",
+        "continuation_support",
+        "experiment_support",
+        "failed_trace_bound"
+      ],
+      "guards": [
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginSelectedGuess.hidden_dictionary",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginSelectedGuess.continuation_support",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginSelectedGuess.experiment_support",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginSelectedGuess.failed_trace_bound"
+      ],
+      "guarded_count": 4,
+      "reviewed_candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin/selected-guess4-semantic-candidate.json",
+      "reviewed_candidate_sha256": "0dc6e9a3c4c2ae6c819f7fabceed05fb4558c6f8d5172696855ec4ccc4123a1f"
+    },
+    {
+      "module": "PqxdhRecordFactsOriginFailedFlag",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginFailedFlag.lean",
+      "source_sha256": "9ba1a8053fc7df0efe8f7bc3b7c0155c341a812ebf4b88d7f98a68f14dbfc96d",
+      "guide": "doc/impl/record-facts-origin-failed-flag.md",
+      "guide_sha256": "d317ee92f0acf03d109e6171a71202e40646f0871208ea2ea9938deb9a5c00fc",
+      "reviewed_guide_sha256": "d317ee92f0acf03d109e6171a71202e40646f0871208ea2ea9938deb9a5c00fc",
+      "guide_terminology_amendment": null,
+      "theorems": [
+        "hidden_fixed",
+        "sampled_le_trace",
+        "sampled_bound",
+        "sampled_probability",
+        "sampled_erased_bound"
+      ],
+      "guards": [
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginFailedFlag.hidden_fixed",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginFailedFlag.sampled_le_trace",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginFailedFlag.sampled_bound",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginFailedFlag.sampled_probability",
+        "BeaconcryptCore.Computational.PqxdhRecordFactsOriginFailedFlag.sampled_erased_bound"
+      ],
+      "guarded_count": 5,
+      "reviewed_candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin/failed-flag5-semantic-candidate.json",
+      "reviewed_candidate_sha256": "1566937d46fe6151f33570d3791fb9e49b7e17cfc4c6813cea7b9041ea8d9d66"
+    }
+  ],
+  "module_count": 27,
+  "exact_guard_total": 185,
+  "axiom_allowlist": [
+    "propext",
+    "Classical.choice",
+    "Quot.sound"
+  ],
+  "independent_reviews": [
+    {
+      "path": "/tmp/bc-arc-scratch/record-lift/facts-v3/ordinal/average1-review.json",
+      "sha256": "80c23ae5cd46a72180bda6671362a29250664c2f9fcd023feef9189690f32cc4",
+      "receipt": {
+        "verdict": "APPROVE",
+        "reviewer": "codex-boundary-survey",
+        "time": "2026-10-09T19:31:02.937801+00:00",
+        "candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/average/average1-candidate.json",
+        "candidate_sha256": "1708fe60d53d805c20ad12b9fd563e333632f5dec3ea5ff3aedd833abf07da8f",
+        "checks": [
+          "All source, guide, artifact, LEAN_PATH and direct-check receipt pins match. One exact standard-three axiom guard and empty direct-check log.",
+          "Statement preserves the original full prefix distribution and quantifies over support only. It requires a pointwise continuation bound, adds no event-conditioned sampling and claims no source discharge.",
+          "Proof is the existing VCVio supported probability-bind bound with definitional conversion of sets to events. No new assumptions, hidden state projection, selection factor or free query claim."
+        ],
+        "findings": []
+      }
+    },
+    {
+      "path": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-trace11-review.json",
+      "sha256": "afb49e3edf2d33ad13408b5a93b1f74984621a9cf870723a559f1d3cb58967bf",
+      "receipt": {
+        "reviewer": "Codex /root independent review",
+        "decision": "APPROVE",
+        "time": "2026-10-09T19:28:41.162853+00:00",
+        "candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-trace/origin-trace11-semantic-candidate.json",
+        "candidate_sha256": "a0aeefdea656bb15bef66c7330f5333ebcd69c2e7a0079cd6b606c294c8c87cc",
+        "reviewed_files": {
+          "/tmp/beaconcrypt-record-lift-facts-origin-trace/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginCandidateTrace.lean": "cd088e3f12462113e6e299386027d2adfd28c7e9773d7de0cb09c910bac458a3",
+          "/tmp/beaconcrypt-record-lift-facts-origin-trace/doc/impl/record-facts-origin-candidate-trace.md": "b554a26f2d54dc01b9fc33772d982aa9f81fa3be95cd08195929963aff8e0818",
+          "/tmp/beaconcrypt-record-lift-facts-origin-trace/doc/formal-verification-analysis.md": "a409f8826f68f1ad0ac06a72e01af27e1238a4f8befe072196c5c00e5460aa78",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-trace/analysis-snippet.md": "64fb71facbad633e6c2df9a612fa7e419bcb94b9e067198ae9bac363545e43fb",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-trace/olean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginCandidateTrace.olean": "09de6ad20b618c808c2a94e82e8c4bc106901b4b0551aefa0a0038d4f9bd62ca",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-trace/leanpath": "e0b51d3eaa617f2f147af38fdf044890263d3d14e25254f89a614dd2eb2ba41e"
+        },
+        "findings": [],
+        "reasoning": [
+          "Trace forwards every exact source request and reply; adaptive client receives no analysis list. Erasure retains full original syntax and interpreted final state.",
+          "All-reply query caps and attempted-seal freshness preserved; candidate length derives from an actual charged-query premise and original cap rather than the padded Fin type.",
+          "Prefix/current candidate membership cover every supported completion. The generic support claim and its separate interpreted erasure are accurately scoped; source-specific flag and numerical bounds remain separate.",
+          "No extra source query, assumption, hidden recovered target input, primitive claim, or cost waiver. Prose matches eleven statements."
+        ],
+        "validation": {
+          "candidate_pins": "verified",
+          "focused_check": "exit0 empty log",
+          "guards": 11,
+          "placeholder_scan": "clean",
+          "rebuild": false
+        }
+      }
+    },
+    {
+      "path": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-mute8-review.json",
+      "sha256": "0128415c4df954ca12ae8bf188eb590662bc7769b6f317f72513e0e470a730c6",
+      "receipt": {
+        "stage": "OriginMute8",
+        "reviewer": "Codex root independent of facts_origin",
+        "verdict": "APPROVE",
+        "time": "2026-10-09T18:26:04.651293+00:00",
+        "candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin/mute8-semantic-candidate.json",
+        "candidate_sha256": "059b54b8c0276237574b5ca9b476d08b771a302f90c5a262aa260ccb57d582c6",
+        "files": {
+          "/tmp/beaconcrypt-record-lift-facts-origin/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginMute.lean": "a9cbb15d90a36fd902bbd4b8078ca55990b74ec0c893fc8e9ef8ead366df46f6",
+          "/tmp/beaconcrypt-record-lift-facts-origin/doc/impl/record-facts-origin-mute.md": "70eaffc75c2b614694dbae71e1a9901816b58b81de1d24221f082a49f25d75bb",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/origin/mute8-analysis-snippet.md": "0f340eed34d4da4ff1d64739b327e3b16d4026edb2dab3c5bdfc0e28225ed159",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/origin/olean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginMute.olean": "7997ee76874c922dc2d0268a79b26e998296160d3cb6b957b9d2ddd72770782a",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/origin/leanpath-guess": "7ac2166a3cf31e8d694ea4cf863d31d9054d06e13ac2a825cb55889be01a4330"
+        },
+        "checks": [
+          "Read all eight complete statements/proofs and guide. Muted raw service changes reply to none but retains rawBase parse/input accounting. Projection forgets selected dictionary/private cache while preserving full shared cache and other instrumentation.",
+          "Exact uniform/public hash projection extends through every adaptive continuation using a syntactic zero-seal cap; not merely equality of marginal digest distributions. Both complete reply and retained projected state are compared.",
+          "raw_agrees gives exact pre-replay-match equality after the separately proved cache erasure. Local noMatch and no-selected-seal are explicitly undischarged global source obligations, not advertised security contracts.",
+          "Checked file/artifact/check pins and eight exact axiom guards. No source publication, bit-leakage, temporal, or numerical origin conclusion is claimed here."
+        ],
+        "findings": []
+      }
+    },
+    {
+      "path": "/tmp/bc-arc-scratch/record-lift/facts-v3/publication/mute-family11-review.json",
+      "sha256": "5f09501d2e4f47d579a0872bd9c07654dffd90776c4f653619eeb8044d98b205",
+      "receipt": {
+        "stage": "OriginMuteFamily11",
+        "reviewer": "Codex boundary_survey; independent of origin author",
+        "verdict": "APPROVE",
+        "time": "2026-10-09T18:35:39.326448+00:00",
+        "candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin/mute-family11-semantic-candidate.json",
+        "candidate_sha256": "1db5afd85979207548aa1cbe1db168f4cd6b16489aba8b3a5c2fc35bf7f6cdc1",
+        "files": {
+          "/tmp/beaconcrypt-record-lift-facts-origin/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginMuteFamily.lean": "5d9d8d7ccb60dc42edb8de8372473c69f23349b6c7e3667fdde49f02f34e2df6",
+          "/tmp/beaconcrypt-record-lift-facts-origin/doc/impl/record-facts-origin-mute-family.md": "2e52dbbf556c3abf23be3732596a83339920013cb3a38babce0e61dc84e1e85d",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/origin/mute-family11-analysis-snippet.md": "2aa0ae2c5d181f3899c3b3b80ae7ddbb25f0e493f5b4a46fe4449f891ace09e2",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/origin/olean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginMuteFamily.olean": "05f3a126b3ed2e528eb77ee558d73408370b3597fe09cf978a189ad07d792b00",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/origin/leanpath-guess": "7ac2166a3cf31e8d694ea4cf863d31d9054d06e13ac2a825cb55889be01a4330"
+        },
+        "checks": [
+          "Read all11 theorem statements/proofs, guide and analysis snippet plus the exact local Mute endpoint and actual family lens definitions.",
+          "Projection removes only target successfulSeals and suffix cache. Shared ROM, every base field including produced/pending writer logs, all other coordinates and actual nonce/raw/private-input histories remain retained. No missing digest copy is claimed hidden by this local-family result.",
+          "local_project preserves the complete step reply and surrounding family via actual get/set laws. other_project handles arbitrary other-coordinate local work and shared-cache updates; target material lookup is unchanged because base.chain is retained.",
+          "keyed_project and program_project quantify over the complete evaluated adaptive continuation and arbitrary typed replies, under explicit zero later target-seal queries. No marginal-distribution substitution or assumed secret independence appears.",
+          "local_nonraw is literal erased endpoint equality. local_raw and keyed_agrees require the precise pre-step NoReplay condition and preserve complete erased state before a selected replay match; this is explicitly an until-bad transition condition still to be discharged, not a security premise for the protocol.",
+          "Source once-per-coordinate suffix restriction, unused writer-log projection, actual writer/publication effects, temporal target selection and numerical accounting remain explicit consuming obligations. No new primitive/security/deployment contract or free-work claim.",
+          "All source/guide/artifact/LEAN_PATH/check receipt pins verified; eleven exact axiom guards and direct successful check preserved, no placeholders/custom axioms."
+        ],
+        "findings": []
+      }
+    },
+    {
+      "path": "/tmp/bc-arc-scratch/record-lift/facts-v3/publication/mute-services8-review.json",
+      "sha256": "bb414d3dbc181ae4880950227e54a109ffce4c4c07a8472c0a59081c0e851e28",
+      "receipt": {
+        "stage": "MuteServices8 independent semantic/hygiene review",
+        "reviewer": "codex boundary_survey (not author)",
+        "time": "2026-10-09T18:46:44.314763+00:00",
+        "verdict": "APPROVE",
+        "candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin/mute-services8-semantic-candidate.json",
+        "candidate_sha256": "31823b06920d0c495d14fda94b841e1790f0054bbb4e6787eb8fec9266cecd3e",
+        "pins_verified": true,
+        "findings": [],
+        "review": [
+          "Read all eight guarded theorem statements and proofs, guide and analysis excerpt; verified source/artifact/LEAN_PATH/check/log pins and empty successful log.",
+          "Literal hidden opening and sealing compilers retain getters, validation, actual writer optional replies and pending-buffer reinstallation. Other constructors remain arbitrary complete base-only callbacks; no costs removed.",
+          "Selected projection erases only the selected local copies and leaves all base fields intact, including digest-bearing writer logs; guide makes the remaining leakage explicit.",
+          "Program equality quantifies arbitrary adaptive continuation, excluding later selected seals by explicit zero query bound. Source suffix discharge, failed-writer coupling and probability remain open; no security claim inferred."
+        ],
+        "new_assumptions": []
+      }
+    },
+    {
+      "path": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-until7-review.json",
+      "sha256": "e32856b0ceb45843ae3bcda9a67b0b50a4cd283797ac3a505e9686c939399e16",
+      "receipt": {
+        "stage": "OriginMuteUntilBad7",
+        "reviewer": "Codex root independent of facts_later",
+        "verdict": "APPROVE",
+        "time": "2026-10-09T19:02:59.846124+00:00",
+        "candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-until/origin-until7-semantic-candidate.json",
+        "candidate_sha256": "47d86469d5a0922b0360c93910ce00c06c5d84e4ffb289b0510bc28156d01dda",
+        "files": {
+          "/tmp/beaconcrypt-record-lift-facts-origin-until/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginMuteUntilBad.lean": "74e7227f0f95ff4a3169117cfc6bccf44745d326fa79abb1eda695bd1df09b76",
+          "/tmp/beaconcrypt-record-lift-facts-origin-until/doc/impl/record-facts-origin-mute-until-bad.md": "8d262462992cadd2f816f51d7e4502b8b79e89430d4f7a599a9a5475cb61d066",
+          "/tmp/beaconcrypt-record-lift-facts-origin-until/doc/formal-verification-analysis.md": "26a0374de900b61a643cb75d7d156e87f79e50436521d243957a9e3a0396a93e",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-until/analysis-snippet.md": "90ce47a04c846e692a709d57097975f3d01ba4e4df2c85ecfd9a3e92520c64b4",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-until/olean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginMuteUntilBad.olean": "0564642c88fbd9f7da6cea940c74347778214ba2d8383cc92edbd6051db56cf9",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-until/leanpath": "5e1f08c6930d7896a6e45a910be081ad9a9796196c342797d02ca47331545297"
+        },
+        "checks": [
+          "Inspected all seven complete statements/proofs and flag definitions. Actual parser, opening arguments, selected material, associated-data width and packed universal-decoder request preserved. raw_noReplay obtains literal replayPlaintext absence from actual optional result; no attacker target changed.",
+          "keyed/raw and actual hiddenOpening equality keep complete replies and state. All selected and unselected seals keep full writer result/pending append. The ten-way source service comparison uses identical base interpreter and literal PrivateCacheWorld.erased specialization, no assumed blanket source simulator.",
+          "Verified pinned source/dependencies/artifact/guide, clean direct check and seven exact axiom guards. No query waivers/new contract/nonreplay premise hidden in endpoint; serviceBad=false is explicit local until-bad condition. Adaptive coupling, selected fresh sample, ordinals and final numerical bound are correctly left open."
+        ],
+        "findings": []
+      }
+    },
+    {
+      "path": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-trace/origin-raw-guess7-review.json",
+      "sha256": "7f5c2c2fe6ec821dadba1c30aa14c5cc7cf22e44b994e2dfe5d898af578fd5a0",
+      "receipt": {
+        "reviewer": "Codex /root/facts_later",
+        "time": "2026-10-09T19:28:01.180750+00:00",
+        "decision": "APPROVE",
+        "candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin/raw-guess7-semantic-candidate.json",
+        "candidate_sha256": "7118ae04a32345849b6b6f60c7ac6473145b0f878a5d95a8ccd48f54bee55c62",
+        "stage": "OriginRawGuess7",
+        "reviewed_files": {
+          "/tmp/beaconcrypt-record-lift-facts-origin/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginRawGuess.lean": "a5ad4d5da2d3a0fe44b999dc4d21eef5ae3d2667bf827cce31be226d24d1461d",
+          "/tmp/beaconcrypt-record-lift-facts-origin/doc/impl/record-facts-origin-raw-guess.md": "49b0616fe81ee5b53f94eab459f5976862a462e731958ef7935cfc15fc4399ce",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/origin/raw-guess7-analysis-snippet.md": "4926d2da3a9abaeda559fdad9b63e5ac652353027badcc1b206fdc3d5e76984e",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/origin/olean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginRawGuess.olean": "4363dd38ae18b1560dae0f45ba9b8b758e989cfea02cd98c8d9138f55bb0e252",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/origin/leanpath-guess": "7ac2166a3cf31e8d694ea4cf863d31d9054d06e13ac2a825cb55889be01a4330"
+        },
+        "findings": [],
+        "reasoning": [
+          "Reviewed all seven theorem statements/proofs and guide against actual UniversalDecoder framing, replay dictionary witness, UntilBad flag and source categoryCost definitions.",
+          "Candidate derives solely from original raw bytes through empty-input, outer-reader and payload checks. Private nonce/AD framing affects other target fields but not the commitment projection. No recovered plaintext or secret key is inserted into an adversarial target.",
+          "raw_bad uses an actual selected replay dictionary entry and complete encoded-record equality; checked record decoding yields equality of the full commitment, without a hash injectivity premise. opening_bad preserves exact source payload/open-argument/AD-width gates and discharges original context equality.",
+          "Only actual opening requests can raise the service flag or produce candidates. Their existing raw category cost equals one, including requests with later unsuccessful optional replies. This is a local count bridge, not a global budget or free-work assertion.",
+          "service_bad_guess explicitly exposes fixed dictionary commitment as a local structural premise; maintained guide and packet require its source discharge from an empty-before-seal prefix and no later selected seals. No final security endpoint or numerical guessing premise is smuggled into this local fact.",
+          "Exact source/artifact/guide/check pins, seven guarded ordinary-axiom checks and empty successful final check log verified; no placeholders or custom axioms found."
+        ],
+        "validation": {
+          "check_receipt": "b3bcd05802cd6b9059838681e17e621d1928461f4a202049a3b2fc71be1415e4",
+          "rebuilt": false
+        }
+      }
+    },
+    {
+      "path": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-ordinal6-review.json",
+      "sha256": "9ed78c58d6e0ae77a930a1f03a1d4c0667dd4cdaad0bfce8dc359713d6a251d6",
+      "receipt": {
+        "stage": "OriginOrdinal6",
+        "reviewer": "Codex root independent of boundary_survey",
+        "verdict": "APPROVE",
+        "time": "2026-10-09T19:11:07.721524+00:00",
+        "candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/ordinal/ordinal6-amended-candidate.json",
+        "candidate_sha256": "648946279ef757fedc1d074d2f41f425b4d1adbba0c88529b2f8f4a3eb3d15bb",
+        "files": {
+          "/tmp/beaconcrypt-record-lift-facts-origin-ordinal/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginOrdinal.lean": "5c25eb50bb778e9591fc840dfa5b23844c94edc584f227a11b66f8e53ae56b85",
+          "/tmp/beaconcrypt-record-lift-facts-origin-ordinal/doc/impl/record-facts-origin-ordinal.md": "1699e91e9a235112ed00cefd7539fd1c948fa56643f216433cc6defbf118d0b3",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/ordinal/olean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginOrdinal.olean": "1eedb217769ceefb5d11ea3415acef8d2b14650437dc61891648cca0cb13b18f",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/ordinal/leanpath": "e44e366bbe1d065b5b07bf624e047ee92a9201571e0936e87cc097b92ae6a5cc"
+        },
+        "checks": [
+          "Read six complete statements/proofs, Insertion definition and amended guide. Generic Reach induction selects an actual supported query with full prior state and literal supported reply/remaining path. No later-completion or successful-selected-output premise.",
+          "reach_bill transports the syntactic weighted bound through every possible callback reply and exact attempted-coordinate append. seal_index_lt counts selected hidden sealing callback before its outcome; source_seal_index instantiates literal initialized erased program with only actual Budget.Respects and existing program_seals.",
+          "Guide correction distinguishes outer sends rejected before any hidden sealing callback from attempted hidden seals, including failed writer. No unused endpoint charged free; these facts cover hidden seal ordinals only. Dictionary insertion classification, actual before-receive event/source coupling and numerical bound stay open.",
+          "Verified amended guide/candidate, unchanged source/artifact/check pins, empty direct log and six exact ordinary-axiom guards. No new contract, honesty or security premise."
+        ],
+        "findings": []
+      }
+    },
+    {
+      "path": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-ordinal-services7-review.json",
+      "sha256": "d8370af567f65378c5a8afe605069f30994a4a25df2e03ed10adc653cbb14c71",
+      "receipt": {
+        "stage": "OriginOrdinalServices7",
+        "reviewer": "Codex root independent of boundary_survey",
+        "verdict": "APPROVE",
+        "time": "2026-10-09T19:16:21.792047+00:00",
+        "candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/ordinal/ordinal-services7-candidate.json",
+        "candidate_sha256": "254d96bfcd78736cd7aea24108b2ac4c3e57270444f47f438f4f2de892f9f2fa",
+        "files": {
+          "/tmp/beaconcrypt-record-lift-facts-origin-ordinal/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginOrdinalServices.lean": "e0652c37b3b2b6244e628019ae9296d54421c8d45b7ae3259666f4492de00799",
+          "/tmp/beaconcrypt-record-lift-facts-origin-ordinal/doc/impl/record-facts-origin-ordinal-services.md": "131805a035c6cde0c676cc9fb93997d79af5f1881966ecd2140e342b11847c10",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/ordinal/olean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginOrdinalServices.olean": "73bc9a540bb0db1d0ce7ce61fc5ab37ab77c6fd012656d3a8cbf237eaebdbce9",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/ordinal/leanpath": "e44e366bbe1d065b5b07bf624e047ee92a9201571e0936e87cc097b92ae6a5cc"
+        },
+        "checks": [
+          "Read all seven public statements/proofs, three elementary private StateT map/bind/pure helpers and guide. Actual erased raw endpoint retains seal dictionaries; hidden opening executes literal parse/input/AD and optional-reply branches. No plaintext inserted or source work omitted.",
+          "Every non-sealing source service is handled; generic base callback lacks access to hidden keyed state by the actual interpreter wiring. Seals retain every other key coordinate including writer failure; source insertion classification derives exact callback and coordinate from new dictionary membership.",
+          "This operational classification applies to defined erased endpoint for all modes; guide accurately limits its connection to actual original world to existing replay/random observation laws. No real-mode cryptographic claim or total-writer premise. No numerical bound or before-receive witness yet.",
+          "All candidate source/guide/artifact/check pins, seven public guarded axioms and empty direct log verified. Existing private pure helpers introduce no axioms and are covered transitively by guarded public consumers. No new primitive assumption/security premise/query-cost waiver."
+        ],
+        "findings": []
+      }
+    },
+    {
+      "path": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-ordinal-reach4-review.json",
+      "sha256": "b8aa773e081cf03b8d0e74fdd8c436d58f5715c85695eff28c376ee87c0603bc",
+      "receipt": {
+        "reviewer": "Codex /root independent review",
+        "decision": "APPROVE",
+        "time": "2026-10-09T19:21:47.257814+00:00",
+        "candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/ordinal/ordinal-reach4-candidate.json",
+        "candidate_sha256": "40f08f749099d168c97647de4f3c93cf4b43fd13a7037b09f581eb84ef9166a6",
+        "reviewed_files": {
+          "/tmp/beaconcrypt-record-lift-facts-origin-ordinal/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginOrdinalReach.lean": "6bba8c85d511610a8d733239aff580f125e5850088872a9b28cdc0b0ff8b8393",
+          "/tmp/beaconcrypt-record-lift-facts-origin-ordinal/doc/impl/record-facts-origin-ordinal-reach.md": "2b3165f38206945c7599eef3326ed247e04cd12b861455c9da567c7e90ac4dc4",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/ordinal/olean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginOrdinalReach.olean": "f668d6debff32c1fb3fc9fae42c2564e946a307205fdb2c578d4793dd62889a1",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/ordinal/leanpath": "e44e366bbe1d065b5b07bf624e047ee92a9201571e0936e87cc097b92ae6a5cc"
+        },
+        "findings": [],
+        "reasoning": [
+          "Full supported-prefix entry insertion returns an actual earlier literal sealing service, exact material, full prior and reply states, and remaining continuation; no completion or writer-success premise.",
+          "The source-derived program freshness discharges unattempted dictionary emptiness and FreshPoint; weighted accounting supplies history.length < budget.sends with no claim that rejected-before-callback sends count as seals.",
+          "All four theorem statements preserve original source parameters and exact callbacks. The caller must supply the actual before-receive prefix; final membership alone is explicitly not claimed to establish chronology.",
+          "No new primitive contract, security assumption, query waiver, persistence claim or Rust modification. Numerical guessing bound remains separate."
+        ],
+        "validation": {
+          "candidate_and_check_pins": "verified",
+          "focused_check": "exit0 empty log",
+          "exact_axiom_guards": 4,
+          "forbidden_placeholders": "none",
+          "rebuild": false
+        }
+      }
+    },
+    {
+      "path": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-ordinal-preserve12-review.json",
+      "sha256": "cf4414a6b4c6cc0a2b1d2073f78a9cb49606ad3b75fb6d51ff152ec070bedef0",
+      "receipt": {
+        "reviewer": "Codex /root independent review",
+        "decision": "APPROVE",
+        "time": "2026-10-09T19:26:46.794090+00:00",
+        "candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/ordinal/ordinal-preserve12-candidate.json",
+        "candidate_sha256": "3f80bdadbca7d363175750d64bc73dc0c0ef8d5cf51e5bc25a6be0560fd3955e",
+        "reviewed_files": {
+          "/tmp/beaconcrypt-record-lift-facts-origin-ordinal/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginOrdinalPreserve.lean": "fb361961da718eacb8485b3dbbcd9f43944d94f47de9a43529ab81602fe6e553",
+          "/tmp/beaconcrypt-record-lift-facts-origin-ordinal/doc/impl/record-facts-origin-ordinal-preserve.md": "4d36e43a6296760c7e697f0b739ecea78a78d9a3d1a1a5ed042ec95336696d51",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/ordinal/olean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginOrdinalPreserve.olean": "75d1589445a29ec8afc758a7a7fb15c45f9a3704815ea7d658a8d27d8eac97f2",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/ordinal/leanpath": "e44e366bbe1d065b5b07bf624e047ee92a9201571e0936e87cc097b92ae6a5cc"
+        },
+        "findings": [],
+        "reasoning": [
+          "Both original erased and selected muted service interpreters preserve the full selected successfulSeals list for every non-selected-seal service; openings retain their actual guards, dictionary and optional replies. Other coordinates retain actual writer and base work.",
+          "Generic complete-program and supported-prefix inductions use explicit zero-target-seal bounds, preserve complete support witnesses and residual bounds, and require no future completion.",
+          "The explicit no-later-selected-seal condition is a structural source obligation discharged separately by OriginMuteFresh; no primitive security conclusion is assumed. No equality between erased and muted public replies is asserted here.",
+          "Twelve exact guarded theorems, accurate prose scope, no query waiver/new contract/Rust or persistence claim. Actual candidate counting and numerical original-prefix averaging remain pending."
+        ],
+        "validation": {
+          "pins": "all verified",
+          "focused_check": "exit0 empty log",
+          "guards": 12,
+          "placeholder_scan": "clean",
+          "rebuild": false
+        }
+      }
+    },
+    {
+      "path": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin/origin-adaptive14-review.json",
+      "sha256": "bfbabedce005e6616caf3397589aecfc66dfa766187266d7224d3db51600550f",
+      "receipt": {
+        "stage": "OriginMuteAdaptive14",
+        "reviewer": "/root/facts_origin",
+        "author": "/root/facts_later",
+        "time": "2026-10-09T19:19:33.351398+00:00",
+        "candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-adaptive/origin-adaptive14-semantic-candidate.json",
+        "candidate_sha256": "5a71e2d0d4f29ad686ef77ba2377d466bb5b93a4d4b51a29fe7ee38e5eb91015",
+        "decision": "APPROVE",
+        "findings": [],
+        "inspected": [
+          "All 14 theorem statements/proofs and exact ordinary-axiom guards",
+          "Frozen dependency and previous UntilBad review, complete current pinned file hashes",
+          "Literal pre-step sticky marker, complete reply/private-state erasure and adaptive source agreement instantiation",
+          "VCVio relational bad equality and full-state coefficient-one TV theorem plus StatefulGoodEvent implementation",
+          "Per-step finite query cap retention; no numeric source cap or selection loss claimed",
+          "Guide and analysis snippet explicitly leave ordinal selection, candidate family/count and unpublished bound open",
+          "Recorded zero-exit check, empty log, artifact and leanpath hashes; no new build needed"
+        ],
+        "scope": "Exact full adaptive source IUB only; no new primitive/interface contract, no honesty or no-later-seal premise. Selected key and state arbitrary. Numerical global unpublished bound remains open."
+      }
+    },
+    {
+      "path": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-flag5-review.json",
+      "sha256": "fa562644dc8edee7fb10068d4d5d51b0c97c6f281a20d0511a7ffc3229024b5a",
+      "receipt": {
+        "reviewer": "Codex /root independent review",
+        "decision": "APPROVE",
+        "time": "2026-10-09T19:38:39.047086+00:00",
+        "candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-flag/origin-flag5-semantic-candidate.json",
+        "candidate_sha256": "b6960609d04f23440c13f30822425aa6dbed7bf79b1a221d402fd41b1a12bf8d",
+        "reviewed_files": {
+          "/tmp/beaconcrypt-record-lift-facts-origin-flag/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginCandidateFlag.lean": "d3eb138b70751ba2bc86faf1ea264907ef80d7bfdeaa73e248ed1e9e7ccbc7e9",
+          "/tmp/beaconcrypt-record-lift-facts-origin-flag/doc/impl/record-facts-origin-candidate-flag.md": "7081a999b0c1201fbc2943114347d4bff7727a43f7651ac8936ff2e076e96e63",
+          "/tmp/beaconcrypt-record-lift-facts-origin-flag/doc/formal-verification-analysis.md": "17a06dc2fb1e9a28ed74eef96bb8e1ff0577fefafd52395dd300c4b0647a5218",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-flag/analysis-snippet.md": "9b15b560d70af92771e035d6d09d380a76bbba24da54b0d4ce0c05fdc61d21fa",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-flag/olean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginCandidateFlag.olean": "16b189de785cd1ba059a80eab743e3177c7ded69914d5f9f9162a15652049719",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-flag/leanpath": "1c92f827053ea13257e9e01e7b10ad97870de0a1741496062f6c687aa91eaa3a"
+        },
+        "findings": [],
+        "reasoning": [
+          "Literal marked-muted source receives and complete state/optional replies retained. A marked flag is covered by an actual commitment candidate from original raw bytes; no secret recovered plaintext or artificial target is introduced.",
+          "Local fixed-dictionary/no-later-seal premises are accurately stated source obligations, not primitive contracts. The source consumer must discharge them; the proof uses exact selected dictionary preservation for all callbacks.",
+          "Finite membership consumes the existing raw callback cap and literal extraction cost, not a finite index assumption. Other ledgers and ambient work are explicitly unchanged.",
+          "Exact instrumentation erasure and source support event inclusion yield coefficient-one probability comparison on the actual unconditioned muted execution, retaining complete private poststate. Uniformity and global ordinal selection are not assumed or claimed here."
+        ],
+        "validation": {
+          "pins": "verified",
+          "guards": 5,
+          "focused_check": "exit0 empty log",
+          "placeholder_scan": "clean",
+          "rebuild": false
+        }
+      }
+    },
+    {
+      "path": "/tmp/bc-arc-scratch/record-lift/facts-v3/publication/mute-fresh4-review.json",
+      "sha256": "90f6f6c15227d4fa7401242c14f562c7cf4fc48d64cb0990320522842a589675",
+      "receipt": {
+        "stage": "MuteFresh4 independent semantic/hygiene review",
+        "reviewer": "codex boundary_survey (not author)",
+        "time": "2026-10-09T18:50:05.602870+00:00",
+        "verdict": "APPROVE",
+        "candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin/mute-fresh4-semantic-candidate.json",
+        "candidate_sha256": "21ed22bb5d1efafe25a6d90b1b17a085efb9c97d053e296128e82a3ba0c975b2",
+        "findings": [],
+        "review": [
+          "All four statements/proofs, guide and analysis excerpt reviewed; exact source/artifact/path/check pins, four guards and empty passing log verified.",
+          "Freshness is an explicit all-typed-reply annotated source invariant, not a secret/honest-target assumption. Prior attempted labels persist by append, including failed or refused seal replies.",
+          "Derived zero target-seal cap covers the full reply-dependent continuation. Service projection retains all ordinary effects and private writer logs; no costs removed.",
+          "No actual selected-ordinal stopping/coupling or numerical bound claimed; final source selection and private-log blindness remain explicit."
+        ],
+        "new_assumptions": []
+      }
+    },
+    {
+      "path": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin/origin-logs10-review.json",
+      "sha256": "1212995ae019ef0df4f9c30f67a4183d3f321ab2e1bac82d81795d4b339a899e",
+      "receipt": {
+        "stage": "OriginLogs10",
+        "decision": "APPROVE",
+        "reviewer": "Codex facts_origin (independent)",
+        "time": "2026-10-09T18:51:45.386611+00:00",
+        "candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-logs/origin-logs10-semantic-candidate.json",
+        "candidate_sha256": "cc1d04ea66e4c82b731c4efacf01ec850e88c536b3902f6adcc840c855e8c6d2",
+        "checks": {
+          "all_pinned_files": true,
+          "ten_exact_axiom_guards": true,
+          "recorded_exit": 0,
+          "recorded_log_empty": true,
+          "rebuilt": false
+        },
+        "semantic_review": [
+          "clearPrivate/clearCtx blank only base.produced and base.pending; inspected all other field definitions and literal retention laws.",
+          "Generic logged_program_forget retains complete actual adaptive native effects/replies/state. withNative_* frames this through actual record-state adapters; known send/receive are not assumed independent of native operations.",
+          "interpreter_clear matches all eight actual CounterProtocol constructors except hidden opening/sealing. Publish still executes actual pending\u2192produced append; only its observational logs are blanked afterward.",
+          "Lookup preserves actual chosen policy, sampler, seeds/table, primitive state and KDF costs. Allocation/hash/coin/charge cases retain exact sampler/counter/shared-cache fields.",
+          "onBase_clear and base_clear frame the full key family; arbitrary base-read client blindness is neither assumed nor claimed.",
+          "No target-key independence, new contract, security event implication or query waiver. Complete-source digest blindness remains a separate composition with the hidden services."
+        ],
+        "findings": []
+      }
+    },
+    {
+      "path": "/tmp/bc-arc-scratch/record-lift/facts-v3/publication46/mute-complete12-review.json",
+      "sha256": "ae900d138724bd5aefc870ddc02557796b6c188d946f6b54bd5f2ccd8e4eb95f",
+      "receipt": {
+        "stage": "MuteComplete12 independent semantic/hygiene review",
+        "reviewer": "codex boundary_survey (not author)",
+        "time": "2026-10-09T19:01:11.161699+00:00",
+        "verdict": "APPROVE",
+        "candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin/mute-complete12-semantic-candidate.json",
+        "candidate_sha256": "3d1fec17c9a3ab44d2311065c36a64494a7f625ee854a45f325a1ff25c40f768",
+        "findings": [],
+        "review": [
+          "All twelve statements/proofs, guide and analysis excerpt inspected; exact file/dependency/check pins, twelve guards and empty successful log verified.",
+          "Complete projection removes only target seal dictionary/private suffix cache and base produced/pending logs; source counters, chain/seeds, shared cache, all other keys and target nonce/input/raw histories remain.",
+          "Literal hidden writer invocation and optional ciphertext are preserved. Previous buffer is write-only; reduced sealing proof does not treat writer failure as successful publication or remove native work.",
+          "Generic adaptive projection theorem quantifies evaluated full continuation and state. Actual base callbacks are discharged by reviewed OriginLogs, not assumed blind.",
+          "No-later-target-seal restriction is explicit; earlier Fresh lemmas provide source route. Initial sampled-digest/poststate equality, actual first-match coupling and full temporal selection/numerical bound remain open and accurately documented."
+        ],
+        "new_assumptions": []
+      }
+    },
+    {
+      "path": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-selected-seal6-review.json",
+      "sha256": "ae548a084d306e0e75619e7915db70ef0e735b3322cee08dbdcc20e223e9fe6c",
+      "receipt": {
+        "stage": "OriginSelectedSeal6",
+        "reviewer": "Codex root independent of facts_origin",
+        "verdict": "APPROVE",
+        "time": "2026-10-09T19:06:39.994558+00:00",
+        "candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin/selected-seal6-semantic-candidate.json",
+        "candidate_sha256": "4f1ee1998e1a8f68f7efd38a44d2ff6fec57879e1f0d3b571886ae0eba2762d6",
+        "files": {
+          "/tmp/beaconcrypt-record-lift-facts-origin/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginSelectedSeal.lean": "1d06254e6e4d2a3b02ee89b5050af3d04d6a19f8438d2afe2445fb23ea9f32e6",
+          "/tmp/beaconcrypt-record-lift-facts-origin/doc/impl/record-facts-origin-selected-seal.md": "171403c56a7960ec91e85553e6967fb9c68864b2c867cd9dc33f3134a9e84439",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/origin/selected-seal6-analysis-snippet.md": "00b7d499ada2c03591dc185601b551a61968c70491d946984a8cd6f66e3c2bd7",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/origin/olean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginSelectedSeal.olean": "e7a40a46ae3cf9b64ac2a4a5e0c35005f4992fed6464dda08898c23ca7fe7bb2",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/origin/leanpath-guess": "7ac2166a3cf31e8d694ea4cf863d31d9054d06e13ac2a825cb55889be01a4330"
+        },
+        "checks": [
+          "Read all six complete theorem statements and proofs, full sampler/result definitions and guide. Replay uses source AEAD body/tag then uniform digest; random uses source full body then tag then digest. Literal writer reply and pending frame append retained, no draw interchange or conditional sampling.",
+          "keyed/hidden projection erases exactly already proved private copies; writer reply remains deliberately outside equality. Continuation theorem applies identical fixed adaptive client to full retained reply/poststate distribution. noSeal is explicit local source invariant, not assumed primitive security.",
+          "source_sampler consumes actual erased source fresh point and nonreal mode. The surrounding source discharges those invariants separately. Dummy ordinary hash is local to this no-ordinary-query hidden seal; surrounding ordinary calls are not removed.",
+          "Verified all pins, empty single-file log, six exact guards. No new contract, honest-target condition, numerical probability or source ordinal claim; guide leaves failed-branch probability/IUB and selection open."
+        ],
+        "findings": []
+      }
+    },
+    {
+      "path": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-guess4-v2-review.json",
+      "sha256": "8f2e077646007614c7e3eb3eb12be92f6c1306e370c76d313d2b870073e83c3c",
+      "receipt": {
+        "stage": "OriginGuess4 v2",
+        "reviewer": "Codex root independent of facts_origin",
+        "verdict": "APPROVE",
+        "time": "2026-10-09T18:22:42.728542+00:00",
+        "candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin/guess4-semantic-candidate-v2.json",
+        "candidate_sha256": "ad03f9e87f68c5b7cd08d2b991adbbebaf9d7440823f9c5817a5f080dc190d03",
+        "files": {
+          "/tmp/beaconcrypt-record-lift-facts-origin/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginGuess.lean": "3adeba90decda2aa94930b0ca4697288628c2799395c8cf90be01f64e41d8e48",
+          "/tmp/beaconcrypt-record-lift-facts-origin/doc/impl/record-facts-origin-guess.md": "7b1c7c96ddf31139d7c7461551b3c76a6243cdaca5f7a0c5e830ce367a96a662",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/origin/guess4-analysis-snippet.md": "ae03a775dfcfdc3afdf334ad6a3f604a82e28ec12b4964609ba51dcf3d8e52f2",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/origin/olean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginGuess.olean": "29352620902e18094e6b56a6e86227540fff03e460c7c1b09426fdc3e6f7b9c2",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/origin/leanpath-guess": "7ac2166a3cf31e8d694ea4cf863d31d9054d06e13ac2a825cb55889be01a4330"
+        },
+        "checks": [
+          "Read all four complete theorem statements and proofs, guide and analysis. Exact uniform digest cardinality is used; independent full continuation is commuted before applying point mass.",
+          "One digest-dependent bit selects two fixed continuations; event inequality is unconditional and sums both branches. No conditional uniformity, no source secrecy assumption, no claim that a successful ciphertext reply leaks only one bit.",
+          "The earlier excessive recursion and disabled deprecation-linter settings are gone. Discrete measurable instances are internal and do not add theorem hypotheses. Four guarded axiom checks and clean focused check receipt verified.",
+          "Publication/source blindness, temporal selection, raw receive accounting and full OriginStatement remain explicit separate obligations."
+        ],
+        "findings": []
+      }
+    },
+    {
+      "path": "/tmp/bc-arc-scratch/record-lift/facts-v3/ordinal/failed-guess5-review.json",
+      "sha256": "7f192e7f1f41dab77dbf0aa3a1b16bb878c1019a685c7796e4398471dc519b4c",
+      "receipt": {
+        "stage": "OriginFailedGuess5 independent semantic/hygiene review",
+        "reviewer": "codex boundary_survey (not author)",
+        "time": "2026-10-09T19:13:16.926866+00:00",
+        "verdict": "APPROVE",
+        "candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin/failed-guess5-semantic-candidate.json",
+        "candidate_sha256": "b4ad7099d8b275f4852100b8c9c44e22574bdb368f795414ad6c581af7ba653e",
+        "findings": [],
+        "review": [
+          "All five statements/proofs, experiment/continuation definitions, SelectedSeal poststate wiring, guide and analysis excerpt inspected; exact file/check pins, five guards and empty passing log verified.",
+          "Commitment is sampled unconditionally before literal writer failure test. Successful writer branch stops the selected target and returns no continuation result; no returned ciphertext is treated as a single leaked bit.",
+          "Full fixed muted continuation and projected state are equal for all digests by prior complete-state projection. No-later-selected-seal input is explicit and source_failed_guess_bound derives it from all-reply Fresh at next none.",
+          "Single-guess bound is 2/2^512 and finite family bound is 2*attempts/2^512 over the same unconditional experiment. Each candidate can depend on complete retained output; no production cap inferred from Fin attempts.",
+          "Actual pre-digest source averaging, service ordinal selection, raw-candidate extraction/counts and erased/muted first-match coupling remain separate. No secret plaintext is inserted into a target, no native/source work is removed, no new primitive contract or conditioning assumption."
+        ],
+        "new_assumptions": []
+      }
+    },
+    {
+      "path": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-ordinal-cut7-review.json",
+      "sha256": "c1306c6f3f8f63d2cc6951520eb55d70717c4f10adf51e0e825989db807df212",
+      "receipt": {
+        "reviewer": "Codex /root independent review",
+        "decision": "APPROVE",
+        "time": "2026-10-09T19:32:32.175139+00:00",
+        "candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/ordinal/ordinal-cut7-candidate.json",
+        "candidate_sha256": "8c6a6c5bed3e5e6abf1c395fee1dfb9d25cdca913355c51e6c4cf0c7ece496ea",
+        "reviewed_files": {
+          "/tmp/beaconcrypt-record-lift-facts-origin-ordinal/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginOrdinalCut.lean": "a248a0e51a68de809f2eb05307f8530c7a28ce4b42c4ed5125b8d1b90de51282",
+          "/tmp/beaconcrypt-record-lift-facts-origin-ordinal/doc/impl/record-facts-origin-ordinal-cut.md": "c5ff8132a8a3823352ed6153090b4de953f25bd18d996bf049a420e6cef7750e",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/ordinal/olean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginOrdinalCut.olean": "dce470755765256a8ee52ffe28275a9c51d9b6bc208515a5fadb8d537e9150b5",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/ordinal/leanpath": "e44e366bbe1d065b5b07bf624e047ee92a9201571e0936e87cc097b92ae6a5cc"
+        },
+        "findings": [],
+        "reasoning": [
+          "Scanner cuts immediately before the selected sealing callback receives any reply; earlier actual stateful services execute and update full state and attempted history for every reply. Earlier completion is preserved explicitly.",
+          "scan_resume is exact ProbComp program equality with the entire original final result/state. No key-distribution-only interchange, writer-success conditioning or marginal erasure.",
+          "Every supported cut yields exact source Reach with relative attempted-seal ordinal and full literal callback/continuation. Strict index bound derives from existing Weighted source seal cap.",
+          "Seven statements and guide accurately separate support/source accounting from the still-required common-run ordinal union and per-cut numerical bound; no new contract or work waiver."
+        ],
+        "validation": {
+          "pins": "verified",
+          "guards": 7,
+          "focused_check": "exit0 empty log",
+          "placeholder_scan": "clean",
+          "rebuild": false
+        }
+      }
+    },
+    {
+      "path": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin/ordinal-trace6-review.json",
+      "sha256": "f796ce11dda64fac3db87d794e5166ec84397c3a16caf9cad44069d418cd1a8b",
+      "receipt": {
+        "stage": "OriginOrdinalTrace6",
+        "reviewer": "/root/facts_origin",
+        "author": "/root/boundary_survey",
+        "time": "2026-10-09T19:36:22.753999+00:00",
+        "candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/ordinal/ordinal-trace6-candidate.json",
+        "candidate_sha256": "1b9fe7580599100d255919a9f5a3a0388a2c19491c0328cd3b29be09e7a9141d",
+        "decision": "APPROVE",
+        "findings": [],
+        "inspected": [
+          "All six exact theorem statements and proofs, source track definition and Cut/scan/resume dependency definitions",
+          "One complete original probability space; every cut pre-reply; no writer-success filter; source order/full result retained",
+          "Exact nth cut + final result joint-law equality to scan/resume, including absent ordinal",
+          "Original syntactic attempted-seal length bound and actual supported prefix/resumed result witness",
+          "All pinned source/guide/artifact/LP/check hashes and six guards; zero-exit empty check log",
+          "Guide explicitly leaves per-cut probability, averaging, finite union and global source event inclusion open"
+        ],
+        "scope": "Operational full-state equality and support facts only; no new contracts, no query exemption, no statistical source conclusion inferred. No rebuild needed."
+      }
+    },
+    {
+      "path": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-ordinal-entries2-review.json",
+      "sha256": "35700c6ec8b95fdb7d703934da956e5fb24ba0bbca3cd58cbaad0bcfdf82bfa8",
+      "receipt": {
+        "reviewer": "Codex /root independent review",
+        "decision": "APPROVE",
+        "time": "2026-10-09T19:44:06.566893+00:00",
+        "candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/ordinal/ordinal-entries2-candidate.json",
+        "candidate_sha256": "0fc5420f6249f7556e6fb4a1d1ccc614934900f320184ccd0a5051a96a5abf99",
+        "reviewed_files": {
+          "/tmp/beaconcrypt-record-lift-facts-origin-ordinal/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginOrdinalEntries.lean": "2eab072418e63582385b9a9251d830ed5abc90566b9b9fce183843fe5cf32c8e",
+          "/tmp/beaconcrypt-record-lift-facts-origin-ordinal/doc/impl/record-facts-origin-ordinal-entries.md": "617693024784e8ed34d74a4c32bb33819f1748245a8c0ec354163adb2dc8840a",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/ordinal/olean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginOrdinalEntries.olean": "51d2216d01a12fe866b9bd0c5f0060515890c7a556da5a30dc87ec69e6b5c2a6",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/ordinal/leanpath": "e44e366bbe1d065b5b07bf624e047ee92a9201571e0936e87cc097b92ae6a5cc"
+        },
+        "findings": [],
+        "reasoning": [
+          "A final actual erased dictionary entry not present initially yields a same-material literal sealing cut in the SAME complete original trace; no unrelated existential source path is substituted.",
+          "tracked_cut connects each actual trace member to its supported scan prefix and exact attempted-history index, preserving full source state and continuation.",
+          "Conclusion deliberately gives only coordinate provenance, not that a final dictionary entry identifies an earlier target receive. Guide accurately reserves receive chronology and numerical event attribution for a consuming same-execution proof.",
+          "Two exact guards, unchanged existing source/interface premises and no new security contract or query waiver."
+        ],
+        "validation": {
+          "pins": "verified",
+          "guards": 2,
+          "focused_check": "exit0 empty log",
+          "placeholder_scan": "clean",
+          "rebuild": false
+        }
+      }
+    },
+    {
+      "path": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-ordinal-path8-review.json",
+      "sha256": "ec7d27926cee8b8c581099027b7805807861ec9c4919594575e7842601d77ea9",
+      "receipt": {
+        "reviewer": "Codex root (independent of boundary_survey author)",
+        "time": "2026-10-09T19:49:34.898735+00:00",
+        "candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/ordinal/ordinal-path8-candidate.json",
+        "candidate_sha256": "5f699c12108fc0d663e88d12d125675fd07d35827113b68606a6ff831e79c55f",
+        "verdict": "APPROVE",
+        "scope": "Eight structural exact-execution lemmas, not accepted-event inclusion or numerical OriginStatement closure.",
+        "review": [
+          "Path support equivalence preserves complete same tracked result, cut list, private state, actual typed reply and adaptive continuation.",
+          "Prefix concatenation and suffix reconstruction retain chronology and do not replace same-run witness by another supported execution sharing a result.",
+          "Opening emits no seal cut and keeps actual optional plaintext; no recovered plaintext inserted into input.",
+          "Service remains original parameter; no honesty, writer-success, independence, free ambient-work or new primitive premise. Query accounting unchanged.",
+          "All pins and clean direct-check log match; eight exact guarded axioms statements allow only ordinary Lean axioms. Guide precisely distinguishes structural result from pending temporal/event and probability consumers."
+        ],
+        "findings": []
+      }
+    },
+    {
+      "path": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-ordinal-probability7-review.json",
+      "sha256": "ccbdad76d97111a2fd3aa8528e7db0950277ddb94d30ed8b9ebd17c6ce42c949",
+      "receipt": {
+        "reviewer": "Codex /root independent review",
+        "decision": "APPROVE",
+        "time": "2026-10-09T19:40:10.462858+00:00",
+        "candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/ordinal/ordinal-probability7-candidate.json",
+        "candidate_sha256": "bc64babc431c8fc356e42be7b994e2442cdf5ec543b2ea34d908a28d61ffc537",
+        "reviewed_files": {
+          "/tmp/beaconcrypt-record-lift-facts-origin-ordinal/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginOrdinalProbability.lean": "d85ec4f0aea3bf8e1219a369ca21f77cc0383cff84dd4d117fe1a28246d996d6",
+          "/tmp/beaconcrypt-record-lift-facts-origin-ordinal/doc/impl/record-facts-origin-ordinal-probability.md": "03f4f2e6c5fe43e315903e75ce775f669b14e636a686dc122f6f774b9a00fc12",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/ordinal/olean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginOrdinalProbability.olean": "007cf731c54aad7cadc4407a62855e7772cee6f9050c6ec0fe813303dfc68bfd",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/ordinal/leanpath": "e44e366bbe1d065b5b07bf624e047ee92a9201571e0936e87cc097b92ae6a5cc"
+        },
+        "findings": [],
+        "reasoning": [
+          "Per-cut cap is averaged over original supported prefix via exact joint track_selected equality; source result/private state and saved continuation remain available. Early completion contributes zero.",
+          "Finite union uses a single full original traced distribution; arbitrary correlations allowed. Actual Weighted source seal cap bounds trace length and supplies finite indices. No independence or conditional writer-success distribution is introduced.",
+          "Coefficient count is charged once. source_event_bound explicitly requires a source event inclusion proof and supported callback bound; neither is disguised as a primitive contract or declared discharged.",
+          "All seven statements/prose preserve underlying work and distinguish query caps, union factor and remaining source semantic joins. Only ordinary Lean axioms, no forbidden placeholder or custom axiom."
+        ],
+        "validation": {
+          "pins": "verified",
+          "guards": 7,
+          "focused_check": "exit0 empty log",
+          "placeholder_scan": "clean",
+          "rebuild": false
+        }
+      }
+    },
+    {
+      "path": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin/raw-bounds4-review.json",
+      "sha256": "cea9e3318cba84007b37ab896b793f20d892a931ec0641713dd05e8f96d4d8d2",
+      "receipt": {
+        "stage": "OriginRawBounds4",
+        "reviewer": "/root/facts_origin",
+        "author": "/root",
+        "time": "2026-10-09T19:44:58.215366+00:00",
+        "candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/average/raw-bounds4-candidate.json",
+        "candidate_sha256": "b78dcf797af6119f78ef36a2ffc1b38546ff7972aac0aa3ffba3cef338acd7fe",
+        "decision": "APPROVE",
+        "findings": [],
+        "inspected": [
+          "All four exact statements/proofs/ordinary-axiom guards and pinned source/guide/artifact/path/check files",
+          "Exact categoryCost.raw marking all hidden openings including rejection; Weighted-to-predicate conversion",
+          "Existing complete program_categories and programBill specialization to actual budget.receives with original Frame and Respects",
+          "Reach transports arbitrary all-reply cap through each actual supported service; source_seal_continuation covers every reply including none before any success conditioning",
+          "Other query ledgers unchanged, conservative original cap explicitly scoped, no ambient-work exemption",
+          "Recorded clean zero-exit direct check verified; no rebuild needed"
+        ],
+        "scope": "Actual whole source and supported preseal continuation raw cap; no new security contract or source event probability claim."
+      }
+    },
+    {
+      "path": "/tmp/bc-arc-scratch/record-lift/facts-v3/ordinal/selected-guess4-review.json",
+      "sha256": "6f7a60883eb444810ace164583b70b7995287e3272d7845dbe6790a59174b33b",
+      "receipt": {
+        "verdict": "APPROVE",
+        "reviewer": "codex-boundary-survey",
+        "time": "2026-10-09T19:36:49.630183+00:00",
+        "candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin/selected-guess4-semantic-candidate.json",
+        "candidate_sha256": "0dc6e9a3c4c2ae6c819f7fabceed05fb4558c6f8d5172696855ec4ccc4123a1f",
+        "findings": [],
+        "checks": [
+          "All candidate source/guide/artifact/check pins verified; four standard axiom guards, empty direct check and no placeholder/custom axiom.",
+          "hidden_dictionary preserves literal hiddenResult insertion and requires exact previously empty dictionary; actual before-prefix discharge remains external to this module.",
+          "continuation/experiment support use only support inclusion, preserving full optional writer branch and projected state, and do not claim uniformity of typed replies.",
+          "failed_trace_bound counts actual public raw candidates via every-reply original Counted cap and padded finite indices; logger adds no query and no candidate from a recovered secret plaintext.",
+          "Full unconditioned digest and literal successful-writer stop are retained; explicit no-later-target-seal premise enables existing complete continuation independence. Factor two and cap multiplication exactly reuse reviewed failed_guesses_bound.",
+          "Guide accurately leaves marked-event inclusion, body/tag/prefix averaging and attempted ordinal union open; no global origin or free-work overclaim."
+        ]
+      }
+    },
+    {
+      "path": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-failed-flag5-review.json",
+      "sha256": "e203249d019a12ee9681cc58aa8997f07b54468736bc46c5e9767fe6ed732bdf",
+      "receipt": {
+        "reviewer": "Codex root (independent of facts_origin author)",
+        "time": "2026-10-09T19:51:53.228147+00:00",
+        "candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin/failed-flag5-semantic-candidate.json",
+        "candidate_sha256": "1566937d46fe6151f33570d3791fb9e49b7e17cfc4c6813cea7b9041ea8d9d66",
+        "verdict": "APPROVE",
+        "scope": "Five local failed-writer replay-flag results, not the final source OriginStatement.",
+        "review": [
+          "Exact original digest remains unconditioned; the literal writer predicate is evaluated inside that experiment. Failed branch returns actual erased or muted adaptive continuation, successful branch false.",
+          "Flag-to-trace coverage uses actual candidate callback and singleton selected dictionary; no target plaintext is inserted into raw input.",
+          "Coefficient two comes solely from existing unconditional fixed-secret two-branch bound. Erased/muted bad probability equality contributes no second statistical term.",
+          "Empty pre-dictionary, no later selected seal and original raw query cap remain explicit local structural hypotheses, to be discharged by consuming prefix/budget results.",
+          "Every supplied source, guide, artifact and check receipt pin matches. Five exact guarded theorem axioms are ordinary only; no new contract or primitive assumption."
+        ],
+        "findings": []
+      }
+    }
+  ],
+  "guide_terminology_amendments": {
+    "doc/impl/record-facts-origin-ordinal.md": {
+      "reviewed_baseline_sha256": "1699e91e9a235112ed00cefd7539fd1c948fa56643f216433cc6defbf118d0b3",
+      "amended_sha256": "ebba8e430c29ca73ba314927c15550578a69bed297107854caf610e9ea24a970",
+      "change": "Terminology only: sealing ordinal counts every source .sealing constructor, not only hidden/nonreal-mode calls. Original independently reviewed guide remains frozen."
+    },
+    "doc/impl/record-facts-origin-ordinal-reach.md": {
+      "reviewed_baseline_sha256": "2b3165f38206945c7599eef3326ed247e04cd12b861455c9da567c7e90ac4dc4",
+      "amended_sha256": "0a2ae07ba2b39e4d858367e7d2941b6f635b172601b0d30c885667db45469aff",
+      "change": "Terminology only: sealing ordinal counts every source .sealing constructor, not only hidden/nonreal-mode calls. Original independently reviewed guide remains frozen."
+    }
+  },
+  "anchor_fix": {
+    "doc/formal-verification-analysis.md": {
+      "anchor": "## Raw-accept source cut and native KEM origin (not yet joined)",
+      "section_sha256": "8cf9edf4c43363e394fcd14e6b1be710312cebd2530e4115e556a928a1253b7d",
+      "base_preserved": true
+    },
+    "doc/formal-verification.md": {
+      "anchor": "## Historical F* correspondence",
+      "section_sha256": "181f5c37b29fe0dd63180af3016230959c4f614863e33cd9a44e693ff9fc569f",
+      "base_preserved": true
+    },
+    "doc/composition-assumptions.md": {
+      "anchor": "## Live finish boundary (HB-106)",
+      "section_sha256": "a21bb00b89cb03331522408458de6c6af5c5cbb12d46d125bc52d527a789d7b8",
+      "base_preserved": true
+    },
+    "beaconcrypt-core/proofs/trusted-boundary.md": {
+      "anchor": "## Current symbolic source-claim ledger",
+      "section_sha256": "db490497a2b1f6cb3681ac60f41c8300bfd2930bd39ac0017f6d522efecd9b70",
+      "base_preserved": true
+    }
+  },
+  "validation": [
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-fidelity-195436081183.json",
+      "receipt_sha256": "41a204ae3dfdda39fb2b29d2199ffeda6c7d709faeb5fca6dc2e162a227401ce",
+      "start": "2026-10-09T19:54:14.300131+00:00",
+      "end": "2026-10-09T19:54:36.081441+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lease",
+        "mem",
+        "codex",
+        "@cargo",
+        "facts-origin-accounting-fidelity",
+        "--eta",
+        "20m",
+        "--",
+        "nix",
+        "develop",
+        "--no-update-lock-file",
+        "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+        "-c",
+        "make",
+        "-C",
+        "/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core",
+        "check-proverif-transcript-fidelity",
+        "SHELL=bash"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-fidelity-195436081183.log",
+      "log_sha256": "8cadf395e9f2c514e2baf74175596d8b2b682438a01865c1097b2fbb3ce1c778",
+      "leanpath_sha256": "82c335ad94e7ec359d599e95fc06e4b50cfbc1caf8e21660a699e81e1a646470",
+      "source_sha256": null,
+      "artifact_sha256": null,
+      "CARGO_BUILD_JOBS": "2",
+      "CARGO_TARGET_DIR": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/target"
+    },
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-inventory-200057007309.json",
+      "receipt_sha256": "a29f2c0c121935154758ec48edb93fe0e0fb06321b656a1d0a6ff48902cd1f83",
+      "start": "2026-10-09T19:59:08.999436+00:00",
+      "end": "2026-10-09T20:00:57.007558+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lease",
+        "mem",
+        "codex",
+        "@nix",
+        "facts-origin-accounting-inventory",
+        "--eta",
+        "20m",
+        "--",
+        "nix",
+        "develop",
+        "--no-update-lock-file",
+        "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+        "-c",
+        "make",
+        "-C",
+        "/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core",
+        "check-inventory",
+        "SHELL=bash"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-inventory-200057007309.log",
+      "log_sha256": "25061a1479148e2c7518a1ac909b627f09ffa1228afe576ee79f8a1e30f9ac64",
+      "leanpath_sha256": "82c335ad94e7ec359d599e95fc06e4b50cfbc1caf8e21660a699e81e1a646470",
+      "source_sha256": null,
+      "artifact_sha256": null,
+      "CARGO_BUILD_JOBS": "2",
+      "CARGO_TARGET_DIR": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/target"
+    },
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195304916365.json",
+      "receipt_sha256": "e688140b914ffc9f9639bb1c6dbb7b6cbbc24417357368f6800cf6bcb60ec400",
+      "start": "2026-10-09T19:53:02.470874+00:00",
+      "end": "2026-10-09T19:53:04.916597+00:00",
+      "exit": 0,
+      "command": [
+        "python3",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "facts-origin-accounting-module",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/olean-project/BeaconcryptCore/Computational/PqxdhRecordFactsOriginAverage.olean",
+        "/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginAverage.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195304916365.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "leanpath_sha256": "82c335ad94e7ec359d599e95fc06e4b50cfbc1caf8e21660a699e81e1a646470",
+      "source_sha256": "c7ecd2fd5828d07d6774b54c424ee46cc8fac9a8a7b2e84b27d30f7a1225af67",
+      "artifact_sha256": "9baa94b2481ec1f6ce402dcddc4a1166fe9589f2e18fe4a660219b6ea45b9670",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195328267930.json",
+      "receipt_sha256": "ad6750919c3ee2dec89134131d0f3e25a8f8fa9cb9016efe47524594096e94ea",
+      "start": "2026-10-09T19:53:25.251978+00:00",
+      "end": "2026-10-09T19:53:28.268198+00:00",
+      "exit": 0,
+      "command": [
+        "python3",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "facts-origin-accounting-module",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/olean-project/BeaconcryptCore/Computational/PqxdhRecordFactsOriginCandidateTrace.olean",
+        "/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginCandidateTrace.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195328267930.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "leanpath_sha256": "82c335ad94e7ec359d599e95fc06e4b50cfbc1caf8e21660a699e81e1a646470",
+      "source_sha256": "cd088e3f12462113e6e299386027d2adfd28c7e9773d7de0cb09c910bac458a3",
+      "artifact_sha256": "09de6ad20b618c808c2a94e82e8c4bc106901b4b0551aefa0a0038d4f9bd62ca",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195328358697.json",
+      "receipt_sha256": "12e2e0f364da1769c6bdaa81bfad1396a9b124c03f24b68b2ae3be21cd3f33db",
+      "start": "2026-10-09T19:53:25.250117+00:00",
+      "end": "2026-10-09T19:53:28.358885+00:00",
+      "exit": 0,
+      "command": [
+        "python3",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "facts-origin-accounting-module",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/olean-project/BeaconcryptCore/Computational/PqxdhRecordFactsOriginMute.olean",
+        "/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginMute.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195328358697.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "leanpath_sha256": "82c335ad94e7ec359d599e95fc06e4b50cfbc1caf8e21660a699e81e1a646470",
+      "source_sha256": "a9cbb15d90a36fd902bbd4b8078ca55990b74ec0c893fc8e9ef8ead366df46f6",
+      "artifact_sha256": "7997ee76874c922dc2d0268a79b26e998296160d3cb6b957b9d2ddd72770782a",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195331386250.json",
+      "receipt_sha256": "5a8203613d4a7d21760fc05221e98f977df2dd7ca387907db6450c025227ce8e",
+      "start": "2026-10-09T19:53:28.409501+00:00",
+      "end": "2026-10-09T19:53:31.386527+00:00",
+      "exit": 0,
+      "command": [
+        "python3",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "facts-origin-accounting-module",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/olean-project/BeaconcryptCore/Computational/PqxdhRecordFactsOriginMuteFamily.olean",
+        "/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginMuteFamily.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195331386250.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "leanpath_sha256": "82c335ad94e7ec359d599e95fc06e4b50cfbc1caf8e21660a699e81e1a646470",
+      "source_sha256": "5d9d8d7ccb60dc42edb8de8372473c69f23349b6c7e3667fdde49f02f34e2df6",
+      "artifact_sha256": "05f3a126b3ed2e528eb77ee558d73408370b3597fe09cf978a189ad07d792b00",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195333175661.json",
+      "receipt_sha256": "71bf4f19ee74c67b39e2cc2d1e1953fd8489b2a3864f0ec6d1a927fe492bf2b6",
+      "start": "2026-10-09T19:53:28.321966+00:00",
+      "end": "2026-10-09T19:53:33.175936+00:00",
+      "exit": 0,
+      "command": [
+        "python3",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "facts-origin-accounting-module",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/olean-project/BeaconcryptCore/Computational/PqxdhRecordFactsOriginOrdinal.olean",
+        "/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginOrdinal.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195333175661.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "leanpath_sha256": "82c335ad94e7ec359d599e95fc06e4b50cfbc1caf8e21660a699e81e1a646470",
+      "source_sha256": "5c25eb50bb778e9591fc840dfa5b23844c94edc584f227a11b66f8e53ae56b85",
+      "artifact_sha256": "1eedb217769ceefb5d11ea3415acef8d2b14650437dc61891648cca0cb13b18f",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195334360261.json",
+      "receipt_sha256": "b7dfe189e847e8b64495bca1dd5b18852214251fc75419d7644a0bf5703b4a38",
+      "start": "2026-10-09T19:53:31.442824+00:00",
+      "end": "2026-10-09T19:53:34.360537+00:00",
+      "exit": 0,
+      "command": [
+        "python3",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "facts-origin-accounting-module",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/olean-project/BeaconcryptCore/Computational/PqxdhRecordFactsOriginMuteServices.olean",
+        "/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginMuteServices.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195334360261.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "leanpath_sha256": "82c335ad94e7ec359d599e95fc06e4b50cfbc1caf8e21660a699e81e1a646470",
+      "source_sha256": "832e476a2e7efcd9e51df447e3db772b91135513f5367bb59868aefc21be4004",
+      "artifact_sha256": "c03a2371e4e9ff18fa28a0e9e0578929a301fee2ef76091d363a00e3684cfd3c",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195337351033.json",
+      "receipt_sha256": "b2e90929a10dca129d1353055706132d046cdd2f4f340670a6e8e4cd7df1a1ab",
+      "start": "2026-10-09T19:53:33.228495+00:00",
+      "end": "2026-10-09T19:53:37.351295+00:00",
+      "exit": 0,
+      "command": [
+        "python3",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "facts-origin-accounting-module",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/olean-project/BeaconcryptCore/Computational/PqxdhRecordFactsOriginOrdinalServices.olean",
+        "/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginOrdinalServices.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195337351033.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "leanpath_sha256": "82c335ad94e7ec359d599e95fc06e4b50cfbc1caf8e21660a699e81e1a646470",
+      "source_sha256": "e0652c37b3b2b6244e628019ae9296d54421c8d45b7ae3259666f4492de00799",
+      "artifact_sha256": "73bc9a540bb0db1d0ce7ce61fc5ab37ab77c6fd012656d3a8cbf237eaebdbce9",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195337553800.json",
+      "receipt_sha256": "fe66db1bd1aaeeae50ae8b7e7dd8e18c84bd1bb558d5a0cae2a1430697dc9d85",
+      "start": "2026-10-09T19:53:34.414359+00:00",
+      "end": "2026-10-09T19:53:37.554064+00:00",
+      "exit": 0,
+      "command": [
+        "python3",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "facts-origin-accounting-module",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/olean-project/BeaconcryptCore/Computational/PqxdhRecordFactsOriginMuteUntilBad.olean",
+        "/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginMuteUntilBad.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195337553800.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "leanpath_sha256": "82c335ad94e7ec359d599e95fc06e4b50cfbc1caf8e21660a699e81e1a646470",
+      "source_sha256": "74e7227f0f95ff4a3169117cfc6bccf44745d326fa79abb1eda695bd1df09b76",
+      "artifact_sha256": "0564642c88fbd9f7da6cea940c74347778214ba2d8383cc92edbd6051db56cf9",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195340267504.json",
+      "receipt_sha256": "5d357e0559699f9e01b704fb7352d6f52d6c7c6108f95a135d8ea394def0a8fc",
+      "start": "2026-10-09T19:53:37.608334+00:00",
+      "end": "2026-10-09T19:53:40.267732+00:00",
+      "exit": 0,
+      "command": [
+        "python3",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "facts-origin-accounting-module",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/olean-project/BeaconcryptCore/Computational/PqxdhRecordFactsOriginRawGuess.olean",
+        "/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginRawGuess.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195340267504.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "leanpath_sha256": "82c335ad94e7ec359d599e95fc06e4b50cfbc1caf8e21660a699e81e1a646470",
+      "source_sha256": "a5ad4d5da2d3a0fe44b999dc4d21eef5ae3d2667bf827cce31be226d24d1461d",
+      "artifact_sha256": "4363dd38ae18b1560dae0f45ba9b8b758e989cfea02cd98c8d9138f55bb0e252",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195340284030.json",
+      "receipt_sha256": "272bb555ac23e73fe887a19d4e549029ddb5035e74bc016648741df7b55c1d61",
+      "start": "2026-10-09T19:53:37.405911+00:00",
+      "end": "2026-10-09T19:53:40.284243+00:00",
+      "exit": 0,
+      "command": [
+        "python3",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "facts-origin-accounting-module",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/olean-project/BeaconcryptCore/Computational/PqxdhRecordFactsOriginOrdinalReach.olean",
+        "/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginOrdinalReach.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195340284030.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "leanpath_sha256": "82c335ad94e7ec359d599e95fc06e4b50cfbc1caf8e21660a699e81e1a646470",
+      "source_sha256": "6bba8c85d511610a8d733239aff580f125e5850088872a9b28cdc0b0ff8b8393",
+      "artifact_sha256": "f668d6debff32c1fb3fc9fae42c2564e946a307205fdb2c578d4793dd62889a1",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195345720012.json",
+      "receipt_sha256": "aa4820c67d55af69ac0b8dbe3940725ddfaceeaf0c85be9e431395d30d2ef6fe",
+      "start": "2026-10-09T19:53:40.325132+00:00",
+      "end": "2026-10-09T19:53:45.720286+00:00",
+      "exit": 0,
+      "command": [
+        "python3",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "facts-origin-accounting-module",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/olean-project/BeaconcryptCore/Computational/PqxdhRecordFactsOriginMuteAdaptive.olean",
+        "/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginMuteAdaptive.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195345720012.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "leanpath_sha256": "82c335ad94e7ec359d599e95fc06e4b50cfbc1caf8e21660a699e81e1a646470",
+      "source_sha256": "5e9c022fb9ca57fe6974fb7418408dad3adcf56ba2e199bb31792ea1925eff0d",
+      "artifact_sha256": "57e51e43b0649c7293e8c1fd58c419f39d2a8e6989e23d3506ee0fcb86ee0c80",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195348076972.json",
+      "receipt_sha256": "e4efc2769117485c95bffa84ac990285ec17853300a736b09ddaf8b122de430f",
+      "start": "2026-10-09T19:53:40.346216+00:00",
+      "end": "2026-10-09T19:53:48.077265+00:00",
+      "exit": 0,
+      "command": [
+        "python3",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "facts-origin-accounting-module",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/olean-project/BeaconcryptCore/Computational/PqxdhRecordFactsOriginOrdinalPreserve.olean",
+        "/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginOrdinalPreserve.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195348076972.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "leanpath_sha256": "82c335ad94e7ec359d599e95fc06e4b50cfbc1caf8e21660a699e81e1a646470",
+      "source_sha256": "fb361961da718eacb8485b3dbbcd9f43944d94f47de9a43529ab81602fe6e553",
+      "artifact_sha256": "75d1589445a29ec8afc758a7a7fb15c45f9a3704815ea7d658a8d27d8eac97f2",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195348548284.json",
+      "receipt_sha256": "5545a18128a3bde40fe1bcd7018e57d2375421f202494b743f3e99daedbe1077",
+      "start": "2026-10-09T19:53:45.776818+00:00",
+      "end": "2026-10-09T19:53:48.548506+00:00",
+      "exit": 0,
+      "command": [
+        "python3",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "facts-origin-accounting-module",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/olean-project/BeaconcryptCore/Computational/PqxdhRecordFactsOriginMuteFresh.olean",
+        "/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginMuteFresh.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195348548284.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "leanpath_sha256": "82c335ad94e7ec359d599e95fc06e4b50cfbc1caf8e21660a699e81e1a646470",
+      "source_sha256": "6f7523c6ceeb382923cc86ceea97750eed7cb71cce3e6110ad3d7dc962d18716",
+      "artifact_sha256": "ddd0482430ea5a021559664a123215acc475167329170d1e3470688b414de2f9",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195350943001.json",
+      "receipt_sha256": "6f396449defa29cd098872bccc5273a0747bb8ad22aad47932cc33d18bcacae0",
+      "start": "2026-10-09T19:53:48.133635+00:00",
+      "end": "2026-10-09T19:53:50.943261+00:00",
+      "exit": 0,
+      "command": [
+        "python3",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "facts-origin-accounting-module",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/olean-project/BeaconcryptCore/Computational/PqxdhRecordFactsOriginCandidateFlag.olean",
+        "/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginCandidateFlag.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195350943001.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "leanpath_sha256": "82c335ad94e7ec359d599e95fc06e4b50cfbc1caf8e21660a699e81e1a646470",
+      "source_sha256": "d3eb138b70751ba2bc86faf1ea264907ef80d7bfdeaa73e248ed1e9e7ccbc7e9",
+      "artifact_sha256": "16b189de785cd1ba059a80eab743e3177c7ded69914d5f9f9162a15652049719",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195351298749.json",
+      "receipt_sha256": "816b193544dec35f2c0aed492dbd5ee3e4b788fe43bc83229f4c05113c53545e",
+      "start": "2026-10-09T19:53:48.604894+00:00",
+      "end": "2026-10-09T19:53:51.299062+00:00",
+      "exit": 0,
+      "command": [
+        "python3",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "facts-origin-accounting-module",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/olean-project/BeaconcryptCore/Computational/PqxdhRecordFactsOriginLogs.olean",
+        "/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginLogs.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195351298749.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "leanpath_sha256": "82c335ad94e7ec359d599e95fc06e4b50cfbc1caf8e21660a699e81e1a646470",
+      "source_sha256": "93d2f733df743d29f4e99c957aa1082a4bc318b786468688cfbd46e76070724d",
+      "artifact_sha256": "d245b473ccf95ee6cbdfb4aef5f50002fa3fe509cf424a64e1d89a0eb7bf4a2d",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195353924743.json",
+      "receipt_sha256": "69b264f12eaf842aa979dda9b9b40c0967818329a9b99a3dc5c3fcfc133dd7fe",
+      "start": "2026-10-09T19:53:50.997897+00:00",
+      "end": "2026-10-09T19:53:53.924967+00:00",
+      "exit": 0,
+      "command": [
+        "python3",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "facts-origin-accounting-module",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/olean-project/BeaconcryptCore/Computational/PqxdhRecordFactsOriginGuess.olean",
+        "/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginGuess.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195353924743.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "leanpath_sha256": "82c335ad94e7ec359d599e95fc06e4b50cfbc1caf8e21660a699e81e1a646470",
+      "source_sha256": "3adeba90decda2aa94930b0ca4697288628c2799395c8cf90be01f64e41d8e48",
+      "artifact_sha256": "29352620902e18094e6b56a6e86227540fff03e460c7c1b09426fdc3e6f7b9c2",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195354483682.json",
+      "receipt_sha256": "7b40b8007cf5387d1999788d8ac94b64b2e298ea90d08ce33f0f445d8cad669f",
+      "start": "2026-10-09T19:53:51.353822+00:00",
+      "end": "2026-10-09T19:53:54.483904+00:00",
+      "exit": 0,
+      "command": [
+        "python3",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "facts-origin-accounting-module",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/olean-project/BeaconcryptCore/Computational/PqxdhRecordFactsOriginMuteComplete.olean",
+        "/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginMuteComplete.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195354483682.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "leanpath_sha256": "82c335ad94e7ec359d599e95fc06e4b50cfbc1caf8e21660a699e81e1a646470",
+      "source_sha256": "1b06a985700862da5f22f0954ea695ca386f0b8aaac1cdce922709fcdd8ad64a",
+      "artifact_sha256": "aff26593ef26d6810864368dc84687a592056a159e9ca281b5147b0a112270e2",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195356946015.json",
+      "receipt_sha256": "312d3c0d5b4b4cd48ae025a6d90a6898a12d5208ca6d84c8326ca6fb709d9b2c",
+      "start": "2026-10-09T19:53:53.980715+00:00",
+      "end": "2026-10-09T19:53:56.946266+00:00",
+      "exit": 0,
+      "command": [
+        "python3",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "facts-origin-accounting-module",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/olean-project/BeaconcryptCore/Computational/PqxdhRecordFactsOriginOrdinalCut.olean",
+        "/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginOrdinalCut.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195356946015.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "leanpath_sha256": "82c335ad94e7ec359d599e95fc06e4b50cfbc1caf8e21660a699e81e1a646470",
+      "source_sha256": "a248a0e51a68de809f2eb05307f8530c7a28ce4b42c4ed5125b8d1b90de51282",
+      "artifact_sha256": "dce470755765256a8ee52ffe28275a9c51d9b6bc208515a5fadb8d537e9150b5",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195359798357.json",
+      "receipt_sha256": "e15ab292218af7a702c72d27e70d06833983ebc9359e93898fa4ff732a3955b6",
+      "start": "2026-10-09T19:53:54.538860+00:00",
+      "end": "2026-10-09T19:53:59.798625+00:00",
+      "exit": 0,
+      "command": [
+        "python3",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "facts-origin-accounting-module",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/olean-project/BeaconcryptCore/Computational/PqxdhRecordFactsOriginSelectedSeal.olean",
+        "/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginSelectedSeal.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195359798357.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "leanpath_sha256": "82c335ad94e7ec359d599e95fc06e4b50cfbc1caf8e21660a699e81e1a646470",
+      "source_sha256": "1d06254e6e4d2a3b02ee89b5050af3d04d6a19f8438d2afe2445fb23ea9f32e6",
+      "artifact_sha256": "e7a40a46ae3cf9b64ac2a4a5e0c35005f4992fed6464dda08898c23ca7fe7bb2",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195401218343.json",
+      "receipt_sha256": "56dacd4915f8f9a2a28e68b78453e8fbe02a2d146cc11ab6bb40d1a0c1d88139",
+      "start": "2026-10-09T19:53:57.004021+00:00",
+      "end": "2026-10-09T19:54:01.218609+00:00",
+      "exit": 0,
+      "command": [
+        "python3",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "facts-origin-accounting-module",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/olean-project/BeaconcryptCore/Computational/PqxdhRecordFactsOriginOrdinalTrace.olean",
+        "/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginOrdinalTrace.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195401218343.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "leanpath_sha256": "82c335ad94e7ec359d599e95fc06e4b50cfbc1caf8e21660a699e81e1a646470",
+      "source_sha256": "d3f62af427fb1ea7bc8e4b666f2f5393d8656db50cf9a8c811b74be4cc0a8f40",
+      "artifact_sha256": "63338adb3b9827254c6d7cd02d64c0207f4b97758c56760077ec464267775d83",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195404179451.json",
+      "receipt_sha256": "f161cb14c254f632d7474cb7d3b7e76ab9b379bda2d2bdb7a19601ab371350bc",
+      "start": "2026-10-09T19:53:59.858261+00:00",
+      "end": "2026-10-09T19:54:04.179786+00:00",
+      "exit": 0,
+      "command": [
+        "python3",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "facts-origin-accounting-module",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/olean-project/BeaconcryptCore/Computational/PqxdhRecordFactsOriginFailedGuess.olean",
+        "/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginFailedGuess.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195404179451.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "leanpath_sha256": "82c335ad94e7ec359d599e95fc06e4b50cfbc1caf8e21660a699e81e1a646470",
+      "source_sha256": "cc80e3758d037f9c3fe4e18b4190efdfd5c45a3f3402ca63dc616498d8e54e87",
+      "artifact_sha256": "642b9e0fb22c8762d77250c519d5a4fc346fd340371d4f678f12040a33630e94",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195404734362.json",
+      "receipt_sha256": "e98521a7494928520a1fb9821afc7a029c076e3424a8363225efa5bffe70357b",
+      "start": "2026-10-09T19:54:01.275842+00:00",
+      "end": "2026-10-09T19:54:04.734631+00:00",
+      "exit": 0,
+      "command": [
+        "python3",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "facts-origin-accounting-module",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/olean-project/BeaconcryptCore/Computational/PqxdhRecordFactsOriginOrdinalEntries.olean",
+        "/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginOrdinalEntries.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195404734362.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "leanpath_sha256": "82c335ad94e7ec359d599e95fc06e4b50cfbc1caf8e21660a699e81e1a646470",
+      "source_sha256": "2eab072418e63582385b9a9251d830ed5abc90566b9b9fce183843fe5cf32c8e",
+      "artifact_sha256": "51d2216d01a12fe866b9bd0c5f0060515890c7a556da5a30dc87ec69e6b5c2a6",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195407331274.json",
+      "receipt_sha256": "56065e28b42807031e641716eea1ad118a3e6637f18e30c9e9803d36b2faa162",
+      "start": "2026-10-09T19:54:04.238045+00:00",
+      "end": "2026-10-09T19:54:07.331528+00:00",
+      "exit": 0,
+      "command": [
+        "python3",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "facts-origin-accounting-module",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/olean-project/BeaconcryptCore/Computational/PqxdhRecordFactsOriginOrdinalProbability.olean",
+        "/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginOrdinalProbability.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195407331274.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "leanpath_sha256": "82c335ad94e7ec359d599e95fc06e4b50cfbc1caf8e21660a699e81e1a646470",
+      "source_sha256": "d85ec4f0aea3bf8e1219a369ca21f77cc0383cff84dd4d117fe1a28246d996d6",
+      "artifact_sha256": "007cf731c54aad7cadc4407a62855e7772cee6f9050c6ec0fe813303dfc68bfd",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195407814719.json",
+      "receipt_sha256": "0bc312eee0780f8d97568004037542e527dabced9b86f95b7fa04f45711ea09e",
+      "start": "2026-10-09T19:54:04.791311+00:00",
+      "end": "2026-10-09T19:54:07.814973+00:00",
+      "exit": 0,
+      "command": [
+        "python3",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "facts-origin-accounting-module",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/olean-project/BeaconcryptCore/Computational/PqxdhRecordFactsOriginOrdinalPath.olean",
+        "/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginOrdinalPath.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195407814719.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "leanpath_sha256": "82c335ad94e7ec359d599e95fc06e4b50cfbc1caf8e21660a699e81e1a646470",
+      "source_sha256": "fe7f16a7bcac5779c2c978dd4edf7bf8809dbb0d07466e53ca0178739d60a4da",
+      "artifact_sha256": "8574c49691ce527edff80763e6e16f1c9c61670bf1e34a5cc7c05bc2aa761d3c",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195410863811.json",
+      "receipt_sha256": "6290094724f39360f316c0571f224ae94fe712415b454e8d92853e0a6f6f3b3a",
+      "start": "2026-10-09T19:54:07.394126+00:00",
+      "end": "2026-10-09T19:54:10.864025+00:00",
+      "exit": 0,
+      "command": [
+        "python3",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "facts-origin-accounting-module",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/olean-project/BeaconcryptCore/Computational/PqxdhRecordFactsOriginRawBounds.olean",
+        "/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginRawBounds.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195410863811.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "leanpath_sha256": "82c335ad94e7ec359d599e95fc06e4b50cfbc1caf8e21660a699e81e1a646470",
+      "source_sha256": "f2c8b10d6a852fa581fa7e6cb296e794da105370e9dba9ce3c311850c8ed44c7",
+      "artifact_sha256": "d20e895e92eb7336efc31c06d8b38d2547689f2e7f3dd62791f39aa4c91251d7",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195413721778.json",
+      "receipt_sha256": "4f69ce84def4dc347ae34ce6c7b7e94a5cd40febac3d74cd9530efd69ee73eb1",
+      "start": "2026-10-09T19:54:07.871298+00:00",
+      "end": "2026-10-09T19:54:13.722049+00:00",
+      "exit": 0,
+      "command": [
+        "python3",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "facts-origin-accounting-module",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/olean-project/BeaconcryptCore/Computational/PqxdhRecordFactsOriginSelectedGuess.olean",
+        "/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginSelectedGuess.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195413721778.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "leanpath_sha256": "82c335ad94e7ec359d599e95fc06e4b50cfbc1caf8e21660a699e81e1a646470",
+      "source_sha256": "94f1e909c5e2deddc57f36952aa46c1e5f305365fc0e42dfe71652697c766ba6",
+      "artifact_sha256": "1a61232d461b56e3b56b89d9afe7679f45e6fcdfea27646a77e144d8b9ccc480",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195416927073.json",
+      "receipt_sha256": "0718df33a7b90510bcd76f070362bc2fb1d7b2348adbdbaa37705567fa62314b",
+      "start": "2026-10-09T19:54:13.777411+00:00",
+      "end": "2026-10-09T19:54:16.927391+00:00",
+      "exit": 0,
+      "command": [
+        "python3",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "facts-origin-accounting-module",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/olean-project/BeaconcryptCore/Computational/PqxdhRecordFactsOriginFailedFlag.olean",
+        "/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginFailedFlag.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195416927073.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "leanpath_sha256": "82c335ad94e7ec359d599e95fc06e4b50cfbc1caf8e21660a699e81e1a646470",
+      "source_sha256": "9ba1a8053fc7df0efe8f7bc3b7c0155c341a812ebf4b88d7f98a68f14dbfc96d",
+      "artifact_sha256": "1efb9b5c7913b93294ce66663fbc7ab2fd48fe52b5f31e73e6f7043931c59bc2",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-root-195422785353.json",
+      "receipt_sha256": "1ab70cdf7c8438509fb8a01b12e29573279d095771262faa1cf408d7f1c86bec",
+      "start": "2026-10-09T19:54:19.893348+00:00",
+      "end": "2026-10-09T19:54:22.785608+00:00",
+      "exit": 0,
+      "command": [
+        "python3",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "facts-origin-accounting-root",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/olean-project/BeaconcryptCore.olean",
+        "/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-root-195422785353.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "leanpath_sha256": "82c335ad94e7ec359d599e95fc06e4b50cfbc1caf8e21660a699e81e1a646470",
+      "source_sha256": "113b44774f2cd38e42dda4f486b93cef6f5965e860184a24c6d51e946e19cc40",
+      "artifact_sha256": "52bee7aca5c864097b9a6931e35a8109c6346507656e845b80be5321539f0bae",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    }
+  ],
+  "validation_summary": {
+    "changed_modules": "27/27 focused single-file Lean checks passed in import dependency order",
+    "root_import": "pass",
+    "inventory": "pass; 1814 handwritten Lean rows",
+    "transcript_fidelity": "30/30 tests and 20 verdict-class checks passed",
+    "hygiene": "185 public statements and 185 exact axiom guards; no forbidden placeholders/custom axioms; all source pins match independently reviewed candidates; two guide terminology amendments are explicit and source-independent",
+    "diff_check": "pass",
+    "full_make_verify": "not run; outside stage authorization",
+    "mutation_tests": "not run; no Rust changes"
+  },
+  "resolved_validation_attempts": {
+    "attempts": [
+      {
+        "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-inventory-195127594898.json",
+        "receipt_sha256": "6bda59f6cfdc8271e8301a4e9a9b1fa1bec66664db5cb20eb13ceafc488fb992",
+        "start": "2026-10-09T19:51:24.889517+00:00",
+        "end": "2026-10-09T19:51:27.595182+00:00",
+        "exit": 2,
+        "command": [
+          "/tmp/bc-coord/coord.sh",
+          "lease",
+          "mem",
+          "codex",
+          "@nix",
+          "facts-origin-accounting-inventory",
+          "--eta",
+          "20m",
+          "--",
+          "nix",
+          "develop",
+          "--no-update-lock-file",
+          "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+          "-c",
+          "make",
+          "-C",
+          "/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core",
+          "check-inventory",
+          "SHELL=bash"
+        ],
+        "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-inventory-195127594898.log",
+        "log_sha256": "b21e263ef3f6badbb00006033b2440f43557d9293f79b362c7f0a49924c13ca2",
+        "leanpath_sha256": "6b3b4c14d7802740b5efebf95cff397b8c6cb656a9322a85fcff339716d65e2b",
+        "source_sha256": null,
+        "artifact_sha256": null,
+        "CARGO_BUILD_JOBS": "2",
+        "CARGO_TARGET_DIR": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/target"
+      },
+      {
+        "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195115342541.json",
+        "receipt_sha256": "91890717f5f766e83adb03fcb7098ca82f8db3d81f5b6b2e2e6a7dae065a5563",
+        "start": "2026-10-09T19:51:13.952631+00:00",
+        "end": "2026-10-09T19:51:15.342820+00:00",
+        "exit": 1,
+        "command": [
+          "python3",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+          "/tmp/bc-coord/coord.sh",
+          "lean",
+          "codex",
+          "facts-origin-accounting-module",
+          "--",
+          "timeout",
+          "180",
+          "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+          "-j1",
+          "-M8000",
+          "--root=/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean",
+          "-o",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/olean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginAverage.olean",
+          "/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginAverage.lean"
+        ],
+        "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195115342541.log",
+        "log_sha256": "5d57195ec7a602f9af80237663e5a529400fef7c9c143d429bb1a72d846a912d",
+        "leanpath_sha256": "6b3b4c14d7802740b5efebf95cff397b8c6cb656a9322a85fcff339716d65e2b",
+        "source_sha256": "c7ecd2fd5828d07d6774b54c424ee46cc8fac9a8a7b2e84b27d30f7a1225af67",
+        "artifact_sha256": null,
+        "CARGO_BUILD_JOBS": null,
+        "CARGO_TARGET_DIR": null
+      },
+      {
+        "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195115366093.json",
+        "receipt_sha256": "5fa7908ee493dc501e3a7ba2fde005e4f277194da7b0c4d274c691638788d6c0",
+        "start": "2026-10-09T19:51:13.948737+00:00",
+        "end": "2026-10-09T19:51:15.366345+00:00",
+        "exit": 1,
+        "command": [
+          "python3",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+          "/tmp/bc-coord/coord.sh",
+          "lean",
+          "codex",
+          "facts-origin-accounting-module",
+          "--",
+          "timeout",
+          "180",
+          "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+          "-j1",
+          "-M8000",
+          "--root=/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean",
+          "-o",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/olean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginCandidateTrace.olean",
+          "/tmp/beaconcrypt-record-lift-origin-accounting-publication/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginCandidateTrace.lean"
+        ],
+        "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/logs/facts-origin-accounting-module-195115366093.log",
+        "log_sha256": "c875c436c1ad6097fc686275e3711bd0c9bbe346919eac027447f0e4326b946c",
+        "leanpath_sha256": "6b3b4c14d7802740b5efebf95cff397b8c6cb656a9322a85fcff339716d65e2b",
+        "source_sha256": "cd088e3f12462113e6e299386027d2adfd28c7e9773d7de0cb09c910bac458a3",
+        "artifact_sha256": null,
+        "CARGO_BUILD_JOBS": null,
+        "CARGO_TARGET_DIR": null
+      }
+    ],
+    "resolution": "Initial direct checks failed before source elaboration because an own partial runtime mirror shadowed published runtime artifacts. The active fresh overlay now contains project BeaconcryptCore artifacts only, with external/runtime namespaces resolved directly from the pinned published dependency path; every final direct/root check passes. The first inventory check identified the newly edited trusted-boundary digest; approved metadata was rehashed and final inventory passes. No proof statement or source proof was weakened."
+  },
+  "published_dependency_basis": "/tmp/bc-coord/leanpaths/1639476c44f46f80fbac20ccc34f31137b7cc574.leanpath",
+  "leanpath": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/leanpath",
+  "leanpath_sha256": "82c335ad94e7ec359d599e95fc06e4b50cfbc1caf8e21660a699e81e1a646470",
+  "remaining": [
+    "Complete literal selected callback body/tag averaging and final callback flag/event probability transfer",
+    "Prove accepted-receive to selected sticky replay flag in every same resumed execution, retaining before-receive chronology",
+    "Join the exact source unpublished event with the existing selected callback and attempted-seal bounds to close unchanged numerical OriginStatement",
+    "Reconcile with the next central integration and run final focused integration checks before publication; larger computational-symbolic and production boundary work remains separately scoped"
+  ],
+  "updated_at": "2026-10-09T20:01:12.727767+00:00"
+}
