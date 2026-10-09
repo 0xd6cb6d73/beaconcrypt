@@ -485,5 +485,11 @@
     "time": "2026-10-09T19:21:00.430330+00:00",
     "leanpath": "/tmp/bc-arc-scratch/boundary/prelude-publication/leanpath"
   },
-  "updated_at": "2026-10-09T19:21:18.401761+00:00"
+  "updated_at": "2026-10-09T19:21:18.401761+00:00",
+  "validation_label_correction": {
+    "recorded_at": "2026-10-09T19:41:44.430151+00:00",
+    "correction": "The embedded final publication review describes the auxiliary fidelity set as 20 getter-profile cases. The fidelity command actually ran 20 test-verdict-classes.py tests plus 30 Rust transcript-fidelity tests. The separate inventory command also checked 20 Beacon getter-profile cases and nine Python regression tests. Original embedded review and all exact check pins are retained. No validation was newly run for PB-A by this correction.",
+    "fidelity_log": "/tmp/bc-arc-scratch/boundary/prelude-publication/logs/boundary-prelude-fidelity-191354407235.log",
+    "fidelity_log_sha256": "cc21b8bdd1c69e340ca9203690eb57c59c2e0a89b3c2ff76ddcbe622b6a11800"
+  }
 }

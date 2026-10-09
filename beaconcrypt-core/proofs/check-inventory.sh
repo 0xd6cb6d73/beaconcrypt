@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1786
+	[handwritten-lean]=1787
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -41130,6 +41130,33 @@ require_line_count 1 '^theorem handler_serverRaw([[:space:]]|$)' "$selected_sour
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRecordPrelude\.handler_serverRaw$' "$selected_source_module" "PqxdhBoundaryRecordPrelude dependency handler_serverRaw"
 require_line_count 1 '^theorem handler_beaconRaw([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRecordPrelude theorem handler_beaconRaw"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRecordPrelude\.handler_beaconRaw$' "$selected_source_module" "PqxdhBoundaryRecordPrelude dependency handler_beaconRaw"
+
+
+# Checked native record prelude at the common experiment raw command interfaces.
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryRecordExecution.lean
+require_line_count 10 '^theorem ' "$selected_source_module" "PqxdhBoundaryRecordExecution theorem total"
+require_line_count 10 '^#guard_msgs in$' "$selected_source_module" "PqxdhBoundaryRecordExecution axiom guard total"
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhBoundaryRecordExecution$' proofs/lean/BeaconcryptCore.lean "PqxdhBoundaryRecordExecution root import"
+require_line_count 1 '^theorem prepared_payload([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRecordExecution theorem prepared_payload"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRecordExecution\.prepared_payload$' "$selected_source_module" "PqxdhBoundaryRecordExecution dependency prepared_payload"
+require_line_count 1 '^theorem prepared_loop([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRecordExecution theorem prepared_loop"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRecordExecution\.prepared_loop$' "$selected_source_module" "PqxdhBoundaryRecordExecution dependency prepared_loop"
+require_line_count 1 '^theorem executeOwner_exact([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRecordExecution theorem executeOwner_exact"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRecordExecution\.executeOwner_exact$' "$selected_source_module" "PqxdhBoundaryRecordExecution dependency executeOwner_exact"
+require_line_count 1 '^theorem executeServer_exact([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRecordExecution theorem executeServer_exact"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRecordExecution\.executeServer_exact$' "$selected_source_module" "PqxdhBoundaryRecordExecution dependency executeServer_exact"
+require_line_count 1 '^theorem executeBeacon_exact([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRecordExecution theorem executeBeacon_exact"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRecordExecution\.executeBeacon_exact$' "$selected_source_module" "PqxdhBoundaryRecordExecution dependency executeBeacon_exact"
+require_line_count 1 '^theorem record_map_result([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRecordExecution theorem record_map_result"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRecordExecution\.record_map_result$' "$selected_source_module" "PqxdhBoundaryRecordExecution dependency record_map_result"
+require_line_count 1 '^theorem executeServerRaw_exact([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRecordExecution theorem executeServerRaw_exact"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRecordExecution\.executeServerRaw_exact$' "$selected_source_module" "PqxdhBoundaryRecordExecution dependency executeServerRaw_exact"
+require_line_count 1 '^theorem executeBeaconRaw_exact([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRecordExecution theorem executeBeaconRaw_exact"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRecordExecution\.executeBeaconRaw_exact$' "$selected_source_module" "PqxdhBoundaryRecordExecution dependency executeBeaconRaw_exact"
+require_line_count 1 '^theorem handler_serverRaw([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRecordExecution theorem handler_serverRaw"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRecordExecution\.handler_serverRaw$' "$selected_source_module" "PqxdhBoundaryRecordExecution dependency handler_serverRaw"
+require_line_count 1 '^theorem handler_beaconRaw([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRecordExecution theorem handler_beaconRaw"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRecordExecution\.handler_beaconRaw$' "$selected_source_module" "PqxdhBoundaryRecordExecution dependency handler_beaconRaw"
 
 # Reviewed actual getter availability, distinct from network compromise powers.
 python3 proofs/source/test-getter-profile.py
