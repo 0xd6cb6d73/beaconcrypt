@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1821
+	[handwritten-lean]=1822
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -37298,6 +37298,61 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem prefix_length([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostRequests theorem prefix_length"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostRequests\.step_bundle$' "$selected_source_module" "PqxdhDeploymentIdealPostRequests dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostRequests.step_bundle"
 require_line_count 1 '^theorem step_bundle([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostRequests theorem step_bundle"
+
+# CE-11b unit U6, third part: item 2's per-request steps for the real Server requests (raw accept, real build)
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostServer.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentIdealPostServer$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentIdealPostServer root import"
+require_line_count 24 '^theorem ' "$selected_source_module" "PqxdhDeploymentIdealPostServer theorem inventory"
+require_line_count 24 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentIdealPostServer guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostServer\.splitT_pure$' "$selected_source_module" "PqxdhDeploymentIdealPostServer dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostServer.splitT_pure"
+require_line_count 1 '^theorem splitT_pure([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostServer theorem splitT_pure"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostServer\.splitT_bind$' "$selected_source_module" "PqxdhDeploymentIdealPostServer dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostServer.splitT_bind"
+require_line_count 1 '^theorem splitT_bind([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostServer theorem splitT_bind"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostServer\.splitT_set$' "$selected_source_module" "PqxdhDeploymentIdealPostServer dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostServer.splitT_set"
+require_line_count 1 '^theorem splitT_set([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostServer theorem splitT_set"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostServer\.splitT_modify$' "$selected_source_module" "PqxdhDeploymentIdealPostServer dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostServer.splitT_modify"
+require_line_count 1 '^theorem splitT_modify([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostServer theorem splitT_modify"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostServer\.splitT_consume$' "$selected_source_module" "PqxdhDeploymentIdealPostServer dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostServer.splitT_consume"
+require_line_count 1 '^theorem splitT_consume([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostServer theorem splitT_consume"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostServer\.tableRead_run$' "$selected_source_module" "PqxdhDeploymentIdealPostServer dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostServer.tableRead_run"
+require_line_count 1 '^theorem tableRead_run([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostServer theorem tableRead_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostServer\.splitT_loggedRoot$' "$selected_source_module" "PqxdhDeploymentIdealPostServer dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostServer.splitT_loggedRoot"
+require_line_count 1 '^theorem splitT_loggedRoot([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostServer theorem splitT_loggedRoot"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostServer\.splitT_client$' "$selected_source_module" "PqxdhDeploymentIdealPostServer dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostServer.splitT_client"
+require_line_count 1 '^theorem splitT_client([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostServer theorem splitT_client"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostServer\.splitT_tail$' "$selected_source_module" "PqxdhDeploymentIdealPostServer dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostServer.splitT_tail"
+require_line_count 1 '^theorem splitT_tail([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostServer theorem splitT_tail"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostServer\.fwdOption_liftComp$' "$selected_source_module" "PqxdhDeploymentIdealPostServer dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostServer.fwdOption_liftComp"
+require_line_count 1 '^theorem fwdOption_liftComp([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostServer theorem fwdOption_liftComp"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostServer\.service_enc$' "$selected_source_module" "PqxdhDeploymentIdealPostServer dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostServer.service_enc"
+require_line_count 1 '^theorem service_enc([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostServer theorem service_enc"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostServer\.service_encProgram$' "$selected_source_module" "PqxdhDeploymentIdealPostServer dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostServer.service_encProgram"
+require_line_count 1 '^theorem service_encProgram([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostServer theorem service_encProgram"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostServer\.lowerE_enc$' "$selected_source_module" "PqxdhDeploymentIdealPostServer dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostServer.lowerE_enc"
+require_line_count 1 '^theorem lowerE_enc([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostServer theorem lowerE_enc"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostServer\.upperLayer_accept$' "$selected_source_module" "PqxdhDeploymentIdealPostServer dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostServer.upperLayer_accept"
+require_line_count 1 '^theorem upperLayer_accept([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostServer theorem upperLayer_accept"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostServer\.sourceMid_accept$' "$selected_source_module" "PqxdhDeploymentIdealPostServer dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostServer.sourceMid_accept"
+require_line_count 1 '^theorem sourceMid_accept([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostServer theorem sourceMid_accept"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostServer\.prefix_chain$' "$selected_source_module" "PqxdhDeploymentIdealPostServer dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostServer.prefix_chain"
+require_line_count 1 '^theorem prefix_chain([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostServer theorem prefix_chain"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostServer\.source_accept_run$' "$selected_source_module" "PqxdhDeploymentIdealPostServer dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostServer.source_accept_run"
+require_line_count 1 '^theorem source_accept_run([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostServer theorem source_accept_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostServer\.step_accept$' "$selected_source_module" "PqxdhDeploymentIdealPostServer dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostServer.step_accept"
+require_line_count 1 '^theorem step_accept([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostServer theorem step_accept"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostServer\.buildService_real$' "$selected_source_module" "PqxdhDeploymentIdealPostServer dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostServer.buildService_real"
+require_line_count 1 '^theorem buildService_real([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostServer theorem buildService_real"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostServer\.build_real$' "$selected_source_module" "PqxdhDeploymentIdealPostServer dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostServer.build_real"
+require_line_count 1 '^theorem build_real([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostServer theorem build_real"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostServer\.upperLayer_build$' "$selected_source_module" "PqxdhDeploymentIdealPostServer dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostServer.upperLayer_build"
+require_line_count 1 '^theorem upperLayer_build([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostServer theorem upperLayer_build"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostServer\.sourceMid_build$' "$selected_source_module" "PqxdhDeploymentIdealPostServer dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostServer.sourceMid_build"
+require_line_count 1 '^theorem sourceMid_build([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostServer theorem sourceMid_build"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostServer\.skelMarks_real$' "$selected_source_module" "PqxdhDeploymentIdealPostServer dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostServer.skelMarks_real"
+require_line_count 1 '^theorem skelMarks_real([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostServer theorem skelMarks_real"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostServer\.step_build$' "$selected_source_module" "PqxdhDeploymentIdealPostServer dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostServer.step_build"
+require_line_count 1 '^theorem step_build([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostServer theorem step_build"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
