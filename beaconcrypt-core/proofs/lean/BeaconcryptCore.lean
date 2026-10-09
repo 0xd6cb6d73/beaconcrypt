@@ -1998,6 +1998,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentIdealPostServer
 
 import BeaconcryptCore.Computational.PqxdhDeploymentIdealPostHidden
 
+import BeaconcryptCore.Computational.PqxdhDeploymentIdealPostFinish
+
 /-!
 # Beaconcrypt-core verification root
 

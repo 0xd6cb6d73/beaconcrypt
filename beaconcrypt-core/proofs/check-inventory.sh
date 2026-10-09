@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1823
+	[handwritten-lean]=1824
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -37398,6 +37398,71 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem lowerEC_native([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostHidden theorem lowerEC_native"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostHidden\.step_build_hidden$' "$selected_source_module" "PqxdhDeploymentIdealPostHidden dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostHidden.step_build_hidden"
 require_line_count 1 '^theorem step_build_hidden([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostHidden theorem step_build_hidden"
+
+# CE-11b unit U6, third part: item 2's real Beacon finish step against the middle execution.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostFinish.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentIdealPostFinish$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentIdealPostFinish root import"
+require_line_count 29 '^theorem ' "$selected_source_module" "PqxdhDeploymentIdealPostFinish theorem inventory"
+require_line_count 29 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentIdealPostFinish guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostFinish\.collect_map$' "$selected_source_module" "PqxdhDeploymentIdealPostFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostFinish.collect_map"
+require_line_count 1 '^theorem collect_map([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostFinish theorem collect_map"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostFinish\.admitted_map$' "$selected_source_module" "PqxdhDeploymentIdealPostFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostFinish.admitted_map"
+require_line_count 1 '^theorem admitted_map([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostFinish theorem admitted_map"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostFinish\.prepare_map$' "$selected_source_module" "PqxdhDeploymentIdealPostFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostFinish.prepare_map"
+require_line_count 1 '^theorem prepare_map([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostFinish theorem prepare_map"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostFinish\.collect_free$' "$selected_source_module" "PqxdhDeploymentIdealPostFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostFinish.collect_free"
+require_line_count 1 '^theorem collect_free([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostFinish theorem collect_free"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostFinish\.prepare_free$' "$selected_source_module" "PqxdhDeploymentIdealPostFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostFinish.prepare_free"
+require_line_count 1 '^theorem prepare_free([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostFinish theorem prepare_free"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostFinish\.owner_grouped$' "$selected_source_module" "PqxdhDeploymentIdealPostFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostFinish.owner_grouped"
+require_line_count 1 '^theorem owner_grouped([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostFinish theorem owner_grouped"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostFinish\.markedPrep_known$' "$selected_source_module" "PqxdhDeploymentIdealPostFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostFinish.markedPrep_known"
+require_line_count 1 '^theorem markedPrep_known([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostFinish theorem markedPrep_known"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostFinish\.markedPrep_bounds$' "$selected_source_module" "PqxdhDeploymentIdealPostFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostFinish.markedPrep_bounds"
+require_line_count 1 '^theorem markedPrep_bounds([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostFinish theorem markedPrep_bounds"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostFinish\.known_calls$' "$selected_source_module" "PqxdhDeploymentIdealPostFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostFinish.known_calls"
+require_line_count 1 '^theorem known_calls([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostFinish theorem known_calls"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostFinish\.onPool_map$' "$selected_source_module" "PqxdhDeploymentIdealPostFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostFinish.onPool_map"
+require_line_count 1 '^theorem onPool_map([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostFinish theorem onPool_map"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostFinish\.known_fullCalls$' "$selected_source_module" "PqxdhDeploymentIdealPostFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostFinish.known_fullCalls"
+require_line_count 1 '^theorem known_fullCalls([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostFinish theorem known_fullCalls"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostFinish\.nativeCtx_pure$' "$selected_source_module" "PqxdhDeploymentIdealPostFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostFinish.nativeCtx_pure"
+require_line_count 1 '^theorem nativeCtx_pure([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostFinish theorem nativeCtx_pure"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostFinish\.nativeCtx_bind$' "$selected_source_module" "PqxdhDeploymentIdealPostFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostFinish.nativeCtx_bind"
+require_line_count 1 '^theorem nativeCtx_bind([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostFinish theorem nativeCtx_bind"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostFinish\.simulate_nativeCtx$' "$selected_source_module" "PqxdhDeploymentIdealPostFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostFinish.simulate_nativeCtx"
+require_line_count 1 '^theorem simulate_nativeCtx([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostFinish theorem simulate_nativeCtx"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostFinish\.tail_known$' "$selected_source_module" "PqxdhDeploymentIdealPostFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostFinish.tail_known"
+require_line_count 1 '^theorem tail_known([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostFinish theorem tail_known"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostFinish\.middle_finish$' "$selected_source_module" "PqxdhDeploymentIdealPostFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostFinish.middle_finish"
+require_line_count 1 '^theorem middle_finish([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostFinish theorem middle_finish"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostFinish\.stackRun_pure$' "$selected_source_module" "PqxdhDeploymentIdealPostFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostFinish.stackRun_pure"
+require_line_count 1 '^theorem stackRun_pure([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostFinish theorem stackRun_pure"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostFinish\.stackRun_bind$' "$selected_source_module" "PqxdhDeploymentIdealPostFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostFinish.stackRun_bind"
+require_line_count 1 '^theorem stackRun_bind([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostFinish theorem stackRun_bind"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostFinish\.skel_groupedPool$' "$selected_source_module" "PqxdhDeploymentIdealPostFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostFinish.skel_groupedPool"
+require_line_count 1 '^theorem skel_groupedPool([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostFinish theorem skel_groupedPool"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostFinish\.lowerEC_run$' "$selected_source_module" "PqxdhDeploymentIdealPostFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostFinish.lowerEC_run"
+require_line_count 1 '^theorem lowerEC_run([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostFinish theorem lowerEC_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostFinish\.stack_prep$' "$selected_source_module" "PqxdhDeploymentIdealPostFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostFinish.stack_prep"
+require_line_count 1 '^theorem stack_prep([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostFinish theorem stack_prep"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostFinish\.splitT_ctx$' "$selected_source_module" "PqxdhDeploymentIdealPostFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostFinish.splitT_ctx"
+require_line_count 1 '^theorem splitT_ctx([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostFinish theorem splitT_ctx"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostFinish\.splitT_group_known$' "$selected_source_module" "PqxdhDeploymentIdealPostFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostFinish.splitT_group_known"
+require_line_count 1 '^theorem splitT_group_known([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostFinish theorem splitT_group_known"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostFinish\.stack_known$' "$selected_source_module" "PqxdhDeploymentIdealPostFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostFinish.stack_known"
+require_line_count 1 '^theorem stack_known([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostFinish theorem stack_known"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostFinish\.owner_stack$' "$selected_source_module" "PqxdhDeploymentIdealPostFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostFinish.owner_stack"
+require_line_count 1 '^theorem owner_stack([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostFinish theorem owner_stack"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostFinish\.sourceMid_finish$' "$selected_source_module" "PqxdhDeploymentIdealPostFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostFinish.sourceMid_finish"
+require_line_count 1 '^theorem sourceMid_finish([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostFinish theorem sourceMid_finish"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostFinish\.upperLayer_finish$' "$selected_source_module" "PqxdhDeploymentIdealPostFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostFinish.upperLayer_finish"
+require_line_count 1 '^theorem upperLayer_finish([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostFinish theorem upperLayer_finish"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostFinish\.upperLayer_finish_none$' "$selected_source_module" "PqxdhDeploymentIdealPostFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostFinish.upperLayer_finish_none"
+require_line_count 1 '^theorem upperLayer_finish_none([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostFinish theorem upperLayer_finish_none"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostFinish\.step_finish$' "$selected_source_module" "PqxdhDeploymentIdealPostFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostFinish.step_finish"
+require_line_count 1 '^theorem step_finish([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostFinish theorem step_finish"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
