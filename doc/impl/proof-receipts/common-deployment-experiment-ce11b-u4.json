@@ -1,6 +1,6 @@
 {
- "date": "2026-10-09T22:02:07.015546+00:00",
- "scope": "CE-11b unit U3 remainder and unit U4, first part (track u4). U3 remainder: the effect bounds of every ideal command including the allocator's no-room branch (PqxdhDeploymentIdealEnvCost), frame_ideal, frame_idealD, c4_ideal, c4_ideal_later and F4 on the final split game's own support (PqxdhDeploymentIdealFrame). U4 first part: the transcript functions of design-v2 section 7.1 and U6's key facts on the record world (PqxdhDeploymentIdealTrace), the provenance-annotated record world tools and the World annotation invariant (PqxdhDeploymentIdealOrigins), the session and token facts (PqxdhDeploymentIdealSessions), the provenance invariant Prov with origins_ghost, L1 and L3 (ideal_trace_world, ideal_trace) and three of the four conjuncts of IdealSlots (ideal_slots_server) (PqxdhDeploymentIdealProvenance). Review fix pass (review of 9c477e45): PqxdhDeploymentIdealAnomaly (ctGuessBy, the ciphertext guess of an explicit guesser program, with ctGuessBy_le <= ctGuessPk, ctGuessBy_le_ctGuess, ctGuessPk_eq_iSup, ctGuessBy_probComp, ambientLift, guess_preChallenge) and three premise-free corollaries in PqxdhDeploymentIdealProvenance (ideal_trace_world_peer, ideal_trace_peer, ideal_slots_restrictions); docstrings; no existing statement changed. Not built: the Beacon converse (L4) and the full ideal_slots, ideal_slots_prefix, L2, anomaly_le and its public-key-only form anomaly_le_pk (ctGuessBy at an explicit guesser). Reviewed at 9c477e45; the fix pass is not reviewed; not integrated.",
+ "date": "2026-10-09T22:25:49.136138+00:00",
+ "scope": "CE-11b unit U3 remainder and unit U4, first part (track u4). U3 remainder: the effect bounds of every ideal command including the allocator's no-room branch (PqxdhDeploymentIdealEnvCost), frame_ideal, frame_idealD, c4_ideal, c4_ideal_later and F4 on the final split game's own support (PqxdhDeploymentIdealFrame). U4 first part: the transcript functions of design-v2 section 7.1 and U6's key facts on the record world (PqxdhDeploymentIdealTrace), the provenance-annotated record world tools and the World annotation invariant (PqxdhDeploymentIdealOrigins), the session and token facts (PqxdhDeploymentIdealSessions), the provenance invariant Prov with origins_ghost, L1 and L3 (ideal_trace_world, ideal_trace) and three of the four conjuncts of IdealSlots (ideal_slots_server) (PqxdhDeploymentIdealProvenance). Review fix pass (review of 9c477e45): PqxdhDeploymentIdealAnomaly (ctGuessBy, the ciphertext guess of an explicit guesser program, with ctGuessBy_le <= ctGuessPk, ctGuessBy_le_ctGuess, ctGuessPk_eq_iSup, ctGuessBy_probComp, ambientLift, guess_preChallenge) and three premise-free corollaries in PqxdhDeploymentIdealProvenance (ideal_trace_world_peer, ideal_trace_peer, ideal_slots_restrictions); docstrings; no existing statement changed. Not built: the Beacon converse (L4) and the full ideal_slots, ideal_slots_prefix, L2, anomaly_le and its public-key-only form anomaly_le_pk (ctGuessBy at an explicit guesser). Reviewed at 9c477e45 (findings fixed by the review fix pass); confirming review of c02d3caf: APPROVE_WITH_NITS, all nine findings resolved, its minor documentation finding (the stopping point of anomalyGuesser: owner k's first finish made in InitSent) and two nits fixed by the documentation commit that records it before the integration (no Lean change); not integrated into central at the recording commit.",
  "basis": {
   "start": "760f056e92b0bdadf00c170388acf5c2776a40e2",
   "central_at_receipt": "39fd1c507e20780a65c6264824759751c76e2b17",
@@ -18,28 +18,44 @@
  "topic": {
   "branch": "codex/deployment-ce11b",
   "worktree": "/tmp/beaconcrypt-deployment-ce11b",
-  "head_at_receipt": "5aff9fa8a386eac33090c5c4569e352a7667ce22"
+  "head_at_receipt": "c02d3caf863c404110ba7d084dd47f030b4d2f3a"
  },
  "plan": {
   "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
-  "sha256": "34e58ee0855b4c894835eb38d06c90d448a585e18c6a06626f7683d957c5c03c",
-  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/docs/plan.at-u4-receipt-34e58ee0.md",
-  "dated_copy_sha256": "34e58ee0855b4c894835eb38d06c90d448a585e18c6a06626f7683d957c5c03c",
-  "sections": "47-49 (A1-A3, Q1-Q3), 73 (this track; 72 was the last section before it; reworded by the review fix pass), 75 (review fix pass; 74 belongs to track u6b)",
+  "sha256": "4d57644e955cdb77280a0e4c8a4c30f955ae335b8e9e25bd2995cc74caefdc6a",
+  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/int/docs/plan.at-record-4d57644e.md",
+  "dated_copy_sha256": "4d57644e955cdb77280a0e4c8a4c30f955ae335b8e9e25bd2995cc74caefdc6a",
+  "sections": "47-49 (A1-A3, Q1-Q3), 73 (this track; 72 was the last section before it; reworded by the review fix pass), 75 (review fix pass; 74 belongs to track u6b); 75 corrected and 77 (its confirming review; 76 belongs to track u6b) by the commit that records the confirming review",
+  "earlier": [
+   {
+    "note": "hash recorded by the review fix pass receipt (c02d3caf; through section 75)",
+    "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/docs/plan.at-u4-receipt-34e58ee0.md",
+    "dated_copy_sha256": "34e58ee0855b4c894835eb38d06c90d448a585e18c6a06626f7683d957c5c03c"
+   }
+  ],
   "backup_before": [
    "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/docs/plan.before-u4-f94790b7.md",
-   "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/fix/docs/plan.before-fix-8b8c741d.md"
+   "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/fix/docs/plan.before-fix-8b8c741d.md",
+   "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/int/docs/plan.before-record-49ab372f.md"
   ]
  },
  "design": {
   "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/design-v2.md",
-  "sha256": "e93d400bdeb32e1aa67e4ce45d7fb24e037fc6523473e0e1174bb968b416cf45",
-  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/docs/design-v2.at-u4-receipt-e93d400b.md",
-  "dated_copy_sha256": "e93d400bdeb32e1aa67e4ce45d7fb24e037fc6523473e0e1174bb968b416cf45",
-  "sections": "5.2 (F4), 6.3, 7.1-7.4, 26 (this track; pointer added by the review fix pass), 28 (review fix pass; 27 belongs to track u6b)",
+  "sha256": "472e5f47b867fa63276c38ca63ab57dc9a445b3a4d69cad5936445ba011b8d64",
+  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/int/docs/design-v2.at-record-472e5f47.md",
+  "dated_copy_sha256": "472e5f47b867fa63276c38ca63ab57dc9a445b3a4d69cad5936445ba011b8d64",
+  "sections": "5.2 (F4), 6.3, 7.1-7.4, 26 (this track; pointer added by the review fix pass), 28 (review fix pass; 27 belongs to track u6b); 28 corrected (stopping point of anomalyGuesser) by the commit that records the confirming review",
+  "earlier": [
+   {
+    "note": "hash recorded by the review fix pass receipt (c02d3caf)",
+    "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/docs/design-v2.at-u4-receipt-e93d400b.md",
+    "dated_copy_sha256": "e93d400bdeb32e1aa67e4ce45d7fb24e037fc6523473e0e1174bb968b416cf45"
+   }
+  ],
   "backup_before": [
    "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/docs/design-v2.before-u4-a5e0ac09.md",
-   "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/fix/docs/design-v2.before-fix-3ff26b66.md"
+   "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/fix/docs/design-v2.before-fix-3ff26b66.md",
+   "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/int/docs/design-v2.before-record-208b8264.md"
   ]
  },
  "notes": {
@@ -87,9 +103,13 @@
   {
    "commit": "5aff9fa8a386eac33090c5c4569e352a7667ce22",
    "subject": "Add guesser programs for the CE-11b anomaly guess"
+  },
+  {
+   "commit": "c02d3caf863c404110ba7d084dd47f030b4d2f3a",
+   "subject": "Document the CE-11b unit U4 review fix pass"
   }
  ],
- "commits_note": "First-parent commits on the topic after the basis made before this receipt was generated; the documentation commit that adds this receipt is not listed.",
+ "commits_note": "First-parent commits on the topic after the basis that were made before this receipt was last generated; the commit that records the confirming review (and last regenerates this receipt) is not listed.",
  "files_sha256": {
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealEnvCost.lean": "d8458fd7d0c7f9a58f2722b031f81882b56807fc5ff1d8d0871a633d53a78945",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealFrame.lean": "521481b41f9099128b3eacbd07657e7cfe9bbcdb5dbb53c750decea349f3c480",
@@ -1063,7 +1083,7 @@
   "ideal_trace_world (7.2 item 3)": "PqxdhDeploymentIdealProvenance.ideal_trace_world (L1, L3; Phase1ReadBack as a premise of the whole statement, used only by L3) and ideal_trace_world_peer (L1 without Phase1ReadBack, for every Server key ID, review fix pass)",
   "origins_ghost (7.2 item 4)": "PqxdhDeploymentIdealProvenance.origins_ghost (annotation = ghostOrigins)",
   "ideal_slots (7.2 item 5)": "PqxdhDeploymentIdealProvenance.ideal_slots_server (three of four conjuncts; Phase1ReadBack as a premise of the whole statement, used only by the Server converse) and ideal_slots_restrictions (the two restrictions without Phase1ReadBack, for every Server key ID, review fix pass); full form open",
-  "anomaly_le (7.2 item 6)": "open; its public-key-only form for CE-12a's IND-CCA reduction (plan section 49, Q2) is anomaly_le_pk, a bound by PqxdhDeploymentIdealAnomaly.ctGuessBy at an explicit guesser program (plan section 75, design-v2 section 28), not by ctGuessPk; PqxdhDeploymentIdealAnomaly holds ctGuessBy, ctGuessBy_le, ctGuessBy_le_ctGuess, ctGuessPk_eq_iSup, ctGuessBy_probComp, ambientLift and guess_preChallenge (review fix pass)"
+  "anomaly_le (7.2 item 6)": "open; its public-key-only form for CE-12a's IND-CCA reduction (plan section 49, Q2) is anomaly_le_pk, a bound by PqxdhDeploymentIdealAnomaly.ctGuessBy at an explicit guesser program (plan section 75, design-v2 section 28) that stops at the first of the selected raw accept and owner k's first finish made in InitSent (stopping point corrected after the confirming review, plan section 77), not by ctGuessPk; PqxdhDeploymentIdealAnomaly holds ctGuessBy, ctGuessBy_le, ctGuessBy_le_ctGuess, ctGuessPk_eq_iSup, ctGuessBy_probComp, ambientLift and guess_preChallenge (review fix pass)"
  },
  "deviations_from_design": [
   "one invariant Prov of the provenance-annotated record world replaces design-v2 7.2's split-game ideal_trace followed by a transfer; the split-game ideal_trace is derived through CE-11a's join at envG t p (implementation-level)",
@@ -1078,7 +1098,7 @@
  "contracts_used": {
   "new_contracts": [],
   "new_assumptions": [],
-  "premises": "KemBound setup caps (cost bounds, frames, C4); Phase1ReadBack for trace_designated (L3) and as a premise of the whole statement of ideal_trace_world, ideal_trace and ideal_slots_server, used only by L3 and the Server converse; none for ideal_trace_world_peer, ideal_trace_peer, ideal_slots_restrictions and PqxdhDeploymentIdealAnomaly; admissibility (Good, IdealInv) discharged by world_prov/world_provG"
+  "premises": "KemBound setup caps (cost bounds, frames, C4); Phase1ReadBack for keyFacts_marked (the key match, as in U6's ideal_keymatch; added by the confirming review's nit), trace_designated (L3) and as a premise of the whole statement of ideal_trace_world, ideal_trace and ideal_slots_server, used only by L3 and the Server converse; none for ideal_trace_world_peer, ideal_trace_peer, ideal_slots_restrictions and PqxdhDeploymentIdealAnomaly; admissibility (Good, IdealInv) discharged by world_prov/world_provG"
  },
  "scratch": {
   "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/dev/CostA.lean": {
@@ -1812,7 +1832,7 @@
   "PqxdhDeploymentIdealAnomaly": []
  },
  "git_diff_check": {
-  "range": "760f056e92b0bdadf00c170388acf5c2776a40e2..working tree",
+  "range": "760f056e92b0bdadf00c170388acf5c2776a40e2..working tree (with the confirming-review record)",
   "exit": 0,
   "output": ""
  },
@@ -1835,7 +1855,106 @@
   "U4_total_now": "about 6-10.25"
  },
  "review": {
-  "status": "reviewed at 9c477e45 (independent semantic and hygiene lenses): no wrong Lean statement; one major finding and eight nits (three of them records without action), all addressed by the review fix pass (key fix_pass); the fix pass is not reviewed"
+  "status": "reviewed at 9c477e45 (independent semantic and hygiene lenses): no wrong Lean statement; one major finding and eight nits (three of them records without action), all addressed by the review fix pass (key fix_pass); fix pass confirmed by a confirming review of c02d3caf (APPROVE_WITH_NITS), recorded before the integration",
+  "confirming_review": {
+   "reviewed_range": "9c477e45e0e801911ac032c2964c06b32ff7648c..c02d3caf863c404110ba7d084dd47f030b4d2f3a",
+   "reviewed_commit": "c02d3caf863c404110ba7d084dd47f030b4d2f3a",
+   "scope": "the fix pass 5aff9fa8 (Lean: PqxdhDeploymentIdealAnomaly, three premise-free corollaries in PqxdhDeploymentIdealProvenance, docstrings of Trace, Origins and Provenance) and c02d3caf (documentation, receipt): the nine findings of the review of 9c477e45, statements, guards, receipt, inventory, documentation, trial merge with central",
+   "verdict": "APPROVE_WITH_NITS: all nine findings of the review of 9c477e45 resolved; one minor documentation finding (anomalyGuesser stopped at owner k's first finish with a reason that is false for a finish outside InitSent: beacon.rs 403-406 rejects it without reading the secret key or aborting; the stopping point is owner k's first finish made in InitSent, which establishes or aborts the Beacon, 487-490, and on Anomaly is the designating finish, finishOf) and two nits (keyFacts_marked missing from the guide's contracts used and the receipt's premises; scratch: plan section 75 theorem list and conflict record)",
+   "checks": [
+    "Lean diff 9c477e45..c02d3caf read: Trace and Origins docstrings only; Provenance docstrings and three new corollaries (exact restatements without phase1, serverKid generalized); Anomaly new (6 theorems)",
+    "PqxdhDeploymentIdealTrace, PqxdhDeploymentIdealOrigins, PqxdhDeploymentIdealProvenance, PqxdhDeploymentIdealAnomaly and the root recompiled independently from the c02d3caf sources (git archive) through coord.sh lean (-j1 -M8000, timeout 180), in import order, -o into confirm/olean (resolved mirror of u4/olean without those artifacts, 6283 links; LEAN_PATH confirm/leanpath = own prefix, then the published 3d212990 LEAN_PATH) and confirm/root: exit 0, empty logs, artifacts byte-identical to the fix pass finals",
+    "142 theorems with 142 exact guards across the seven modules, axiom sets within propext, Classical.choice, Quot.sound; no forbidden token; existing theorems unchanged (the comment-stripped diff has no removed lines)",
+    "reviewed-inventory digests for beaconcrypt-core all match c02d3caf; handwritten Lean count 1828; check-inventory.sh run (plain bash, TMPDIR in the review scratch) on the clean c02d3caf worktree: exit 0, tree unchanged",
+    "receipt: 74 hash and content checks, 0 bad (files_sha256, modules with theorem lists, definitions and axiom profiles, final_checks logs, artifacts and leanpaths, focused_inventory logs, plan and design with dated copies, scratch dev files); root-check sources equal each commit's root; root checks ran 0-10 s before each commit",
+    "footers exact on 5aff9fa8 and c02d3caf; git ls-remote shows c02d3caf; git diff --check clean; registry notes of Trace, Origins, Provenance and Anomaly refreshed",
+    "trial merge with central 39fd1c50: conflicts only in the check-inventory.sh handwritten Lean count, the reviewed-inventory root row and the check-inventory.sh digest row, whose hunk also carries central's adjacent trusted-boundary.md row",
+    "probe ConfirmU4Probe (scratch only, exit 0, empty log): predictAdv packages a guesser and one decapsulation query of its prediction as a OneKeyAdversary; the three corollaries are exactly (rfl) the L1 and restriction parts of ideal_trace_world, ideal_trace and ideal_slots_server; negative control ConfirmU4ProbeNeg (serverKeyId + 1) fails"
+   ],
+   "check_logs": {
+    "PqxdhDeploymentIdealTrace": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/confirm/logs/PqxdhDeploymentIdealTrace.log",
+     "bytes": 0,
+     "summary": "PqxdhDeploymentIdealTrace exit 0 log bytes 0 seconds 9 art bbd378e387e3801f97a5db15cea6ffd263ee530743c7140ad82909131225601f"
+    },
+    "PqxdhDeploymentIdealOrigins": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/confirm/logs/PqxdhDeploymentIdealOrigins.log",
+     "bytes": 0,
+     "summary": "PqxdhDeploymentIdealOrigins exit 0 log bytes 0 seconds 6 art 4377af9bc3d06487ab9dbacad6262e629267955a5fb6aa917b48276477857736"
+    },
+    "PqxdhDeploymentIdealProvenance": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/confirm/logs/PqxdhDeploymentIdealProvenance.log",
+     "bytes": 0,
+     "summary": "PqxdhDeploymentIdealProvenance exit 0 log bytes 0 seconds 10 art 4fd39063a6c6baf1eebecafbe499d4e15e699e450b112db03f1d56fc6b05df9c"
+    },
+    "PqxdhDeploymentIdealAnomaly": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/confirm/logs/PqxdhDeploymentIdealAnomaly.log",
+     "bytes": 0,
+     "summary": "PqxdhDeploymentIdealAnomaly exit 0 log bytes 0 seconds 3 art d59189d64c77234a4bf5b4e9f4aad65a015bb1a23c700779ef1fbf09180c2fca"
+    },
+    "root": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/confirm/logs/root.log",
+     "bytes": 0,
+     "summary": "root exit 0 log bytes 0 seconds 2 art a4e09d7cb3723b4a5c8d7f66877bc7d9e5a0df53d8ea853346a493be03b6b100"
+    }
+   },
+   "probe": {
+    "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/confirm/probe/ConfirmU4Probe.lean",
+    "sha256": "aa09e2d0021102ffcb5976f6dfbe681dec7738b780f9fb6c25816a7df12a9438",
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/confirm/logs/ConfirmU4Probe-1.log",
+    "log_bytes": 0,
+    "negative_control": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/confirm/probe/ConfirmU4ProbeNeg.lean",
+     "sha256": "49712dd1a8e1e122e69797307f73d20ecf52fbb2adf5d2cb925e4bf1d9a54929",
+     "log": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/confirm/logs/ConfirmU4ProbeNeg-1.log",
+     "log_sha256": "a60ce5ed3fc211aa40049dd8858cb500a0ef2fcfe6f394a3be13687112e00e5f",
+     "result": "fails (error), as intended"
+    }
+   },
+   "inventory_log": {
+    "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/confirm/logs/inventory.log",
+    "sha256": "59c641af6a68ae71109875b148d97385e51c75f31b54c58208133e825d455c92"
+   },
+   "scripts": {
+    "check.sh": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/confirm/scripts/check.sh",
+     "sha256": "70a5efb9fa9c10da73604e497abf758acc5cc09d8035ae8da4c3de4adcfaef87"
+    },
+    "dev.sh": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/confirm/scripts/dev.sh",
+     "sha256": "c61a80f0eb72dda8c5891e2f90527a05a5359a95d0fd8832cd41c2491fece905"
+    },
+    "guards.py": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/confirm/scripts/guards.py",
+     "sha256": "0246bb2467ba2ab929f4161b63cab2cb8a7cd06ef0bdc484ac6ec51896bf36e1"
+    },
+    "mirror.py": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/confirm/scripts/mirror.py",
+     "sha256": "37463c9dcdb2808e3efc655df4cc46258f850ebbe2ccf53d3c1de66ad737d8df"
+    },
+    "receipt_check.py": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/confirm/scripts/receipt_check.py",
+     "sha256": "bc71516f9ec824c485c34ca2392b84c5c65c5cd67a29f4de11dd9c5bd1dfe369"
+    }
+   },
+   "findings_fixed": [
+    "minor: the stopping point of anomalyGuesser is owner k's first finish made in InitSent (guide open points incl. steps (ii) and (iii), the major bullet of the guide's review fix pass section, plan section 75, design-v2 section 28, the analysis wording; the module docstring of PqxdhDeploymentIdealAnomaly left unchanged, optional, so the reviewed Lean stays byte-identical)",
+    "nit: keyFacts_marked takes Phase1ReadBack (guide contracts used, the Trace table row, contracts_used.premises of this receipt)",
+    "nit (scratch): plan section 75 lists ctGuessBy, encapsHit and ambientLift as definitions and encapsHit_max among the six theorems; the trial-merge record names the adjacent trusted-boundary.md row (plan section 75, the guide's records bullet, the integration notes)"
+   ],
+   "records": [
+    "the nine findings of the review of 9c477e45 are resolved at c02d3caf and the checks pass (no action)"
+   ],
+   "files_changed": [
+    "doc/impl/common-deployment-experiment.md",
+    "doc/impl/common-deployment-experiment-plan.md",
+    "doc/formal-verification-analysis.md",
+    "doc/impl/proof-receipts/common-deployment-experiment-ce11b-u4.json"
+   ],
+   "lean_change": "none (no file under beaconcrypt-core/ changed)",
+   "notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/confirm/NOTES.md",
+   "scratch": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/confirm (review checks, probes), /tmp/bc-arc-scratch/common-experiment/ce11b/u4/int (record-commit scripts, plan and design copies)"
+  }
  },
  "fix_pass": {
   "review": {
@@ -1853,7 +1972,7 @@
   },
   "commits": {
    "lean": "5aff9fa8a386eac33090c5c4569e352a7667ce22",
-   "documentation": "the commit that adds this record"
+   "documentation": "c02d3caf863c404110ba7d084dd47f030b4d2f3a"
   },
   "per_finding": [
    {
@@ -1944,5 +2063,11 @@
    "git_diff_check": "clean (see git_diff_check)"
   },
   "reestimate": "anomaly item 3.5-6 (was 2-3.5); U4 remaining 4.75-8.5 without L2; U4 about 6-10.25 in total; the fix pass took about 0.25"
+ },
+ "plan_snapshot": {
+  "path": "doc/impl/common-deployment-experiment-plan.md",
+  "refreshed_from_sha256": "4d57644e955cdb77280a0e4c8a4c30f955ae335b8e9e25bd2995cc74caefdc6a",
+  "sections": "0-18 and the decision sections 19-77",
+  "note": "refreshed in the commit that records the confirming review: the body equals the working plan from its third line; the snapshot paragraph records the hash and the refresh history (the refresh adds sections 72 to 77 and the integration bullet of section 71; the snapshot it replaces, working plan e924b155 through section 71, is the one in central 39fd1c50 and on this branch since the merge of 3d212990, and its body is a prefix of this one)"
  }
 }
