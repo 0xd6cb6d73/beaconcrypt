@@ -1,9 +1,9 @@
 {
- "date": "2026-10-09T21:20:00.459793+00:00",
- "scope": "CE-11b unit U3 remainder and unit U4, first part (track u4). U3 remainder: the effect bounds of every ideal command including the allocator's no-room branch (PqxdhDeploymentIdealEnvCost), frame_ideal, frame_idealD, c4_ideal, c4_ideal_later and F4 on the final split game's own support (PqxdhDeploymentIdealFrame). U4 first part: the transcript functions of design-v2 section 7.1 and U6's key facts on the record world (PqxdhDeploymentIdealTrace), the provenance-annotated record world tools and the World annotation invariant (PqxdhDeploymentIdealOrigins), the session and token facts (PqxdhDeploymentIdealSessions), the provenance invariant Prov with origins_ghost, L1 and L3 (ideal_trace_world, ideal_trace) and three of the four conjuncts of IdealSlots (ideal_slots_server) (PqxdhDeploymentIdealProvenance). Not built: the Beacon converse (L4) and the full ideal_slots, ideal_slots_prefix, L2, anomaly_le and its public-key-only form. Not reviewed; not integrated.",
+ "date": "2026-10-09T22:02:07.015546+00:00",
+ "scope": "CE-11b unit U3 remainder and unit U4, first part (track u4). U3 remainder: the effect bounds of every ideal command including the allocator's no-room branch (PqxdhDeploymentIdealEnvCost), frame_ideal, frame_idealD, c4_ideal, c4_ideal_later and F4 on the final split game's own support (PqxdhDeploymentIdealFrame). U4 first part: the transcript functions of design-v2 section 7.1 and U6's key facts on the record world (PqxdhDeploymentIdealTrace), the provenance-annotated record world tools and the World annotation invariant (PqxdhDeploymentIdealOrigins), the session and token facts (PqxdhDeploymentIdealSessions), the provenance invariant Prov with origins_ghost, L1 and L3 (ideal_trace_world, ideal_trace) and three of the four conjuncts of IdealSlots (ideal_slots_server) (PqxdhDeploymentIdealProvenance). Review fix pass (review of 9c477e45): PqxdhDeploymentIdealAnomaly (ctGuessBy, the ciphertext guess of an explicit guesser program, with ctGuessBy_le <= ctGuessPk, ctGuessBy_le_ctGuess, ctGuessPk_eq_iSup, ctGuessBy_probComp, ambientLift, guess_preChallenge) and three premise-free corollaries in PqxdhDeploymentIdealProvenance (ideal_trace_world_peer, ideal_trace_peer, ideal_slots_restrictions); docstrings; no existing statement changed. Not built: the Beacon converse (L4) and the full ideal_slots, ideal_slots_prefix, L2, anomaly_le and its public-key-only form anomaly_le_pk (ctGuessBy at an explicit guesser). Reviewed at 9c477e45; the fix pass is not reviewed; not integrated.",
  "basis": {
   "start": "760f056e92b0bdadf00c170388acf5c2776a40e2",
-  "central_at_receipt": "3915c3f0593a33a172fda02802b159f39b5856f1",
+  "central_at_receipt": "39fd1c507e20780a65c6264824759751c76e2b17",
   "merges": [
    {
     "commit": "38685f46501b445cd4576b254f252f23db49146c",
@@ -18,30 +18,33 @@
  "topic": {
   "branch": "codex/deployment-ce11b",
   "worktree": "/tmp/beaconcrypt-deployment-ce11b",
-  "head_at_receipt": "9e0002b40b1dab5b80244867a3e2647cfbcf69f6"
+  "head_at_receipt": "5aff9fa8a386eac33090c5c4569e352a7667ce22"
  },
  "plan": {
   "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
-  "sha256": "282efb0178ae2b8b2dc94647b5cb7280fe27b0aa798958d5de676d9fb3d4e375",
-  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/docs/plan.at-u4-receipt-282efb01.md",
-  "dated_copy_sha256": "282efb0178ae2b8b2dc94647b5cb7280fe27b0aa798958d5de676d9fb3d4e375",
-  "sections": "47-49 (A1-A3, Q1-Q3), 73 (this track; 72 was the last section before it)",
+  "sha256": "34e58ee0855b4c894835eb38d06c90d448a585e18c6a06626f7683d957c5c03c",
+  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/docs/plan.at-u4-receipt-34e58ee0.md",
+  "dated_copy_sha256": "34e58ee0855b4c894835eb38d06c90d448a585e18c6a06626f7683d957c5c03c",
+  "sections": "47-49 (A1-A3, Q1-Q3), 73 (this track; 72 was the last section before it; reworded by the review fix pass), 75 (review fix pass; 74 belongs to track u6b)",
   "backup_before": [
-   "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/docs/plan.before-u4-f94790b7.md"
+   "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/docs/plan.before-u4-f94790b7.md",
+   "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/fix/docs/plan.before-fix-8b8c741d.md"
   ]
  },
  "design": {
   "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/design-v2.md",
-  "sha256": "a799e6962afd1fa28ba1d036e713138082160f1950b58d0dcd714e8b6bdca428",
-  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/docs/design-v2.at-u4-receipt-a799e696.md",
-  "dated_copy_sha256": "a799e6962afd1fa28ba1d036e713138082160f1950b58d0dcd714e8b6bdca428",
-  "sections": "5.2 (F4), 6.3, 7.1-7.4, 26 (this track)",
+  "sha256": "e93d400bdeb32e1aa67e4ce45d7fb24e037fc6523473e0e1174bb968b416cf45",
+  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/docs/design-v2.at-u4-receipt-e93d400b.md",
+  "dated_copy_sha256": "e93d400bdeb32e1aa67e4ce45d7fb24e037fc6523473e0e1174bb968b416cf45",
+  "sections": "5.2 (F4), 6.3, 7.1-7.4, 26 (this track; pointer added by the review fix pass), 28 (review fix pass; 27 belongs to track u6b)",
   "backup_before": [
-   "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/docs/design-v2.before-u4-a5e0ac09.md"
+   "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/docs/design-v2.before-u4-a5e0ac09.md",
+   "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/fix/docs/design-v2.before-fix-3ff26b66.md"
   ]
  },
  "notes": {
   "track_notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/NOTES.md",
+  "fix_notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/fix/NOTES.md",
   "ce11b_notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/NOTES.md (Track u4)"
  },
  "commits": [
@@ -76,16 +79,25 @@
   {
    "commit": "9e0002b40b1dab5b80244867a3e2647cfbcf69f6",
    "subject": "Merge central 3d212990 into CE-11b unit U4"
+  },
+  {
+   "commit": "9c477e45e0e801911ac032c2964c06b32ff7648c",
+   "subject": "Document CE-11b unit U3 remainder and the first part of unit U4"
+  },
+  {
+   "commit": "5aff9fa8a386eac33090c5c4569e352a7667ce22",
+   "subject": "Add guesser programs for the CE-11b anomaly guess"
   }
  ],
  "commits_note": "First-parent commits on the topic after the basis made before this receipt was generated; the documentation commit that adds this receipt is not listed.",
  "files_sha256": {
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealEnvCost.lean": "d8458fd7d0c7f9a58f2722b031f81882b56807fc5ff1d8d0871a633d53a78945",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealFrame.lean": "521481b41f9099128b3eacbd07657e7cfe9bbcdb5dbb53c750decea349f3c480",
-  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealTrace.lean": "1fcc0d0157c10f08a0351a2da30efcf22ebcdd22853f910fe96faaa4176fe34a",
-  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealOrigins.lean": "1a7f07462356c6c662e9337a5119c0cf1712d05add086ef0c6481ba64173eee1",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealTrace.lean": "db5c655b1b8ec05bf932f2c62f9b044e0d01a4161d15611622769704470bba32",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealOrigins.lean": "c9f033d16e73d0a44896435daf86ba42b39bf22221987e4d3e8efa9040a2a640",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealSessions.lean": "c70a52c2b82dd41e3af01dbacb77f0fffc09d064afe50a1f168009fb102be101",
-  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealProvenance.lean": "95f3aef67cd14750067fee856a39745720166973c34c502774727be93aede16d"
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealProvenance.lean": "f37c493a3abd481000a03dd8964db7b34e30a431ec78d112c7edbbb83b79b3f8",
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealAnomaly.lean": "f6c7be8b24761a55f08c5c916f5a46344a79dd9a9d816eca5fac79361319e7b2"
  },
  "modules": [
   {
@@ -342,7 +354,7 @@
    "name": "BeaconcryptCore.Computational.PqxdhDeploymentIdealTrace",
    "unit": "U4 (first part)",
    "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealTrace.lean",
-   "sha256": "1fcc0d0157c10f08a0351a2da30efcf22ebcdd22853f910fe96faaa4176fe34a",
+   "sha256": "db5c655b1b8ec05bf932f2c62f9b044e0d01a4161d15611622769704470bba32",
    "theorem_count": 16,
    "guard_count": 16,
    "definitions": [
@@ -449,7 +461,7 @@
    "name": "BeaconcryptCore.Computational.PqxdhDeploymentIdealOrigins",
    "unit": "U4 (first part)",
    "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealOrigins.lean",
-   "sha256": "1a7f07462356c6c662e9337a5119c0cf1712d05add086ef0c6481ba64173eee1",
+   "sha256": "c9f033d16e73d0a44896435daf86ba42b39bf22221987e4d3e8efa9040a2a640",
    "theorem_count": 31,
    "guard_count": 31,
    "definitions": [
@@ -731,9 +743,9 @@
    "name": "BeaconcryptCore.Computational.PqxdhDeploymentIdealProvenance",
    "unit": "U4 (first part)",
    "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealProvenance.lean",
-   "sha256": "95f3aef67cd14750067fee856a39745720166973c34c502774727be93aede16d",
-   "theorem_count": 39,
-   "guard_count": 39,
+   "sha256": "f37c493a3abd481000a03dd8964db7b34e30a431ec78d112c7edbbb83b79b3f8",
+   "theorem_count": 42,
+   "guard_count": 42,
    "definitions": [
     "BuiltIn",
     "Prov"
@@ -777,7 +789,10 @@
     "origins_ghost",
     "ideal_trace_world",
     "ideal_trace",
-    "ideal_slots_server"
+    "ideal_slots_server",
+    "ideal_trace_world_peer",
+    "ideal_trace_peer",
+    "ideal_slots_restrictions"
    ],
    "axiom_profile": {
     "builtIn_append": [
@@ -961,11 +976,78 @@
      "Classical.choice",
      "Quot.sound",
      "propext"
+    ],
+    "ideal_trace_world_peer": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "ideal_trace_peer": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "ideal_slots_restrictions": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ]
+   }
+  },
+  {
+   "name": "BeaconcryptCore.Computational.PqxdhDeploymentIdealAnomaly",
+   "unit": "U4 (first part), review fix pass",
+   "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealAnomaly.lean",
+   "sha256": "f6c7be8b24761a55f08c5c916f5a46344a79dd9a9d816eca5fac79361319e7b2",
+   "theorem_count": 6,
+   "guard_count": 6,
+   "definitions": [
+    "ctGuessBy",
+    "encapsHit",
+    "ambientLift"
+   ],
+   "theorems": [
+    "encapsHit_max",
+    "ctGuessBy_le",
+    "ctGuessBy_le_ctGuess",
+    "ctGuessPk_eq_iSup",
+    "ctGuessBy_probComp",
+    "guess_preChallenge"
+   ],
+   "axiom_profile": {
+    "encapsHit_max": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "ctGuessBy_le": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "ctGuessBy_le_ctGuess": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "ctGuessPk_eq_iSup": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "ctGuessBy_probComp": [
+     "Classical.choice",
+     "Quot.sound",
+     "propext"
+    ],
+    "guess_preChallenge": [
+     "Quot.sound",
+     "propext"
     ]
    }
   }
  ],
- "theorem_total": 133,
+ "theorem_total": 142,
  "allowed_axioms": [
   "Classical.choice",
   "Quot.sound",
@@ -975,27 +1057,28 @@
   "frame_ideal, frame_idealD (6.3)": "PqxdhDeploymentIdealFrame.frame_ideal, frame_idealD (with PqxdhDeploymentIdealEnvCost.idealStep_bound)",
   "c4_ideal (6.3)": "PqxdhDeploymentIdealFrame.c4_ideal, c4_ideal_later",
   "seed_at_install, native support (5.2 F4)": "PqxdhDeploymentIdealFrame.seed_at_install_split",
-  "sessionAt, peerOf, FinishBefore, BeaconLinked, Anomaly, IdealSlots, originSlots, ctGuess (7.1)": "PqxdhDeploymentIdealTrace (same names), with ctGuessPk (plan section 49, Q2)",
-  "ledger_keeps, run_keeps_origins (7.2 items 1, 4)": "PqxdhDeploymentIdealOrigins.run_keeps_origins, world_keeps_origins (one generic statement)",
-  "ideal_trace (7.2 item 2)": "PqxdhDeploymentIdealProvenance.ideal_trace (L1, L3 on the final split game for every p, through join at envG t p); L2, L4 open",
-  "ideal_trace_world (7.2 item 3)": "PqxdhDeploymentIdealProvenance.ideal_trace_world (L1, L3)",
+  "sessionAt, peerOf, FinishBefore, BeaconLinked, Anomaly, IdealSlots, originSlots, ctGuess (7.1)": "PqxdhDeploymentIdealTrace (same names), with ctGuessPk, the restriction of ctGuess to guesses of the public key alone: both are suprema over all guess functions (information-theoretic), not the form that CE-12a's IND-CCA reduction consumes (plan section 49, Q2; review fix pass: PqxdhDeploymentIdealAnomaly.ctGuessBy)",
+  "ledger_keeps, run_keeps_origins (7.2 items 1, 4)": "PqxdhDeploymentIdealOrigins.run_keeps_origins, world_keeps_origins: replace both on the provenance-annotated record world by one generic statement; no gameWith-level ledger_keeps exists (the split-game facts come through CE-11a's join and lawEq_support)",
+  "ideal_trace (7.2 item 2)": "PqxdhDeploymentIdealProvenance.ideal_trace (L1, L3 on the final split game for every p, through join at envG t p; Phase1ReadBack as a premise of the whole statement, used only by L3) and ideal_trace_peer (L1 without Phase1ReadBack, review fix pass); L2, L4 open",
+  "ideal_trace_world (7.2 item 3)": "PqxdhDeploymentIdealProvenance.ideal_trace_world (L1, L3; Phase1ReadBack as a premise of the whole statement, used only by L3) and ideal_trace_world_peer (L1 without Phase1ReadBack, for every Server key ID, review fix pass)",
   "origins_ghost (7.2 item 4)": "PqxdhDeploymentIdealProvenance.origins_ghost (annotation = ghostOrigins)",
-  "ideal_slots (7.2 item 5)": "PqxdhDeploymentIdealProvenance.ideal_slots_server (three of four conjuncts); full form open",
-  "anomaly_le (7.2 item 6)": "open (PqxdhDeploymentIdealAnomaly registered)"
+  "ideal_slots (7.2 item 5)": "PqxdhDeploymentIdealProvenance.ideal_slots_server (three of four conjuncts; Phase1ReadBack as a premise of the whole statement, used only by the Server converse) and ideal_slots_restrictions (the two restrictions without Phase1ReadBack, for every Server key ID, review fix pass); full form open",
+  "anomaly_le (7.2 item 6)": "open; its public-key-only form for CE-12a's IND-CCA reduction (plan section 49, Q2) is anomaly_le_pk, a bound by PqxdhDeploymentIdealAnomaly.ctGuessBy at an explicit guesser program (plan section 75, design-v2 section 28), not by ctGuessPk; PqxdhDeploymentIdealAnomaly holds ctGuessBy, ctGuessBy_le, ctGuessBy_le_ctGuess, ctGuessPk_eq_iSup, ctGuessBy_probComp, ambientLift and guess_preChallenge (review fix pass)"
  },
  "deviations_from_design": [
   "one invariant Prov of the provenance-annotated record world replaces design-v2 7.2's split-game ideal_trace followed by a transfer; the split-game ideal_trace is derived through CE-11a's join at envG t p (implementation-level)",
   "slot 0 at the marked coordinates comes from Prov.marked (U4's own invariant), not from IdealInv",
   "the annotation is tracked by a World-level invariant AnnInv (Present, Covered, Marked) and the change sites of the two hidden commands (buildCached_origins, finishChallenge_owner with aRun_owner)",
-  "four registered modules (PqxdhDeploymentIdealTrace, PqxdhDeploymentIdealOrigins, PqxdhDeploymentIdealSessions, PqxdhDeploymentIdealProvenance) instead of PqxdhDeploymentIdealProvenance alone",
-  "ideal_slots delivered in part (ideal_slots_server); its Server converse takes Phase1ReadBack (the statement sketch ideal_slots_stmt listed no premise; design-v2 7.2 states L3 under Phase1ReadBack)",
+  "four registered modules (PqxdhDeploymentIdealTrace, PqxdhDeploymentIdealOrigins, PqxdhDeploymentIdealSessions, PqxdhDeploymentIdealProvenance) instead of PqxdhDeploymentIdealProvenance alone; the review fix pass adds PqxdhDeploymentIdealAnomaly, the module registered for anomaly_le",
+  "ideal_slots delivered in part (ideal_slots_server), stated under Phase1ReadBack, which only its Server converse uses (the statement sketch ideal_slots_stmt listed no premise; design-v2 7.2 states L3 under Phase1ReadBack); ideal_slots_restrictions states the two restrictions without it",
+  "the public-key-only anomaly form is restated with a guesser program (ctGuessBy) instead of ctGuessPk (review fix pass; plan section 75, design-v2 section 28; implementation-level, Q2 decision unchanged)",
   "U3 remainder: the allocator's no-room branch is bounded inside the unchanged allowance (plan sections 31, 33, 35 unchanged)",
   "central merged twice during the track (1639476c as 38685f46, 3d212990 as 9e0002b4); the root and the focused inventory re-run on each merge tree"
  ],
  "contracts_used": {
   "new_contracts": [],
   "new_assumptions": [],
-  "premises": "KemBound setup caps (cost bounds, frames, C4), Phase1ReadBack (L3, ideal_trace_world, ideal_trace, the Server converse of ideal_slots_server); admissibility (Good, IdealInv) discharged by world_prov/world_provG"
+  "premises": "KemBound setup caps (cost bounds, frames, C4); Phase1ReadBack for trace_designated (L3) and as a premise of the whole statement of ideal_trace_world, ideal_trace and ideal_slots_server, used only by L3 and the Server converse; none for ideal_trace_world_peer, ideal_trace_peer, ideal_slots_restrictions and PqxdhDeploymentIdealAnomaly; admissibility (Good, IdealInv) discharged by world_prov/world_provG"
  },
  "scratch": {
   "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/dev/CostA.lean": {
@@ -1021,15 +1104,24 @@
   "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/dev/ProvA.lean": {
    "sha256": "bc3fd469ef2ba084939902aef3e38499d679db3837e7d9de74c59a7ff05feaae",
    "sorry_free": true
+  },
+  "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/fix/dev/AnomalyE.lean": {
+   "sha256": "d5c2fa84e5b1a089806f826a11321b2d2b0473599dcf71d3250bb2824c85b279",
+   "sorry_free": true
+  },
+  "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/fix/dev/ProvNew.lean": {
+   "sha256": "650eb05ff5bcdf7f9f034487a5078143433ee3d640a129955470d511e96c71f5",
+   "sorry_free": true
   }
  },
  "leanpath": {
   "manifests": {
    "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/leanpath": "c532b4009d0796985f0e5ef73a0b3fb87ce3f80fcd8664d09cf1ee5484d556b2",
    "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/leanpath2": "8ecf59d5ae0b78068097c7c6729bbfef5cfe918325f9e85248f1e6a9a7ae6a74",
-   "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/leanpath3": "26f34daf6f3dd09a70274327d4fdd967d280fb7d23c95a4501bb24944a53f802"
+   "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/leanpath3": "26f34daf6f3dd09a70274327d4fdd967d280fb7d23c95a4501bb24944a53f802",
+   "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/fix/leanpath": "95188453b619114693680274e2f4bfc4cb1dc8d10ef23b5d92d435b31116bdf7"
   },
-  "note": "ce11b/u4/olean: resolved symlink mirror of the first published prefix (u3/int/olean at 760f056e, without its root olean; scripts/mirror.py), extended with resolved links of the new central module oleans at 1639476c and 3d212990 (resolved targets of common modules identical), plus the six oleans written by the final checks; leanpath = u4/olean then the published 760f056e LEAN_PATH, leanpath2 = then 1639476c, leanpath3 = then 3d212990"
+  "note": "ce11b/u4/olean: resolved symlink mirror of the first published prefix (u3/int/olean at 760f056e, without its root olean; scripts/mirror.py), extended with resolved links of the new central module oleans at 1639476c and 3d212990 (resolved targets of common modules identical), plus the six oleans written by the final checks; leanpath = u4/olean then the published 760f056e LEAN_PATH, leanpath2 = then 1639476c, leanpath3 = then 3d212990; review fix pass: u4/fix/olean is a resolved mirror of u4/olean without the oleans of PqxdhDeploymentIdeal{Trace,Origins,Provenance} (6283 links), plus the oleans of those three and of PqxdhDeploymentIdealAnomaly written by the fix-pass finals; u4/fix/leanpath = u4/fix/olean then the published 3d212990 LEAN_PATH (u4/leanpath3 minus its first prefix)"
  },
  "final_checks": {
   "published 760f056e LEAN_PATH (u4/leanpath): PqxdhDeploymentIdealEnvCost": {
@@ -1451,9 +1543,192 @@
     "/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
    ],
    "against": "published 3d212990 LEAN_PATH (u4/leanpath3)"
+  },
+  "review fix pass: u4/fix/leanpath (u4/fix/olean, then the published 3d212990 LEAN_PATH): PqxdhDeploymentIdealAnomaly": {
+   "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealAnomaly",
+   "start": "2026-10-09T21:50:50.512702313Z",
+   "end": "2026-10-09T21:50:53.379252973Z",
+   "exit": 0,
+   "head_before": "5aff9fa8a386eac33090c5c4569e352a7667ce22",
+   "dirty_lines_before": 0,
+   "head_after": "5aff9fa8a386eac33090c5c4569e352a7667ce22",
+   "dirty_lines_after": 0,
+   "source_sha256": "f6c7be8b24761a55f08c5c916f5a46344a79dd9a9d816eca5fac79361319e7b2",
+   "log_bytes": 0,
+   "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "artifact": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealAnomaly.olean",
+   "artifact_sha256": "d59189d64c77234a4bf5b4e9f4aad65a015bb1a23c700779ef1fbf09180c2fca",
+   "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/fix/leanpath",
+   "leanpath_sha256": "95188453b619114693680274e2f4bfc4cb1dc8d10ef23b5d92d435b31116bdf7",
+   "command": [
+    "coord.sh",
+    "lean",
+    "claude",
+    "<label>",
+    "--",
+    "timeout",
+    "180",
+    "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+    "-j1",
+    "-M8000",
+    "--root=/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean",
+    "-o",
+    "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealAnomaly.olean",
+    "/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealAnomaly.lean"
+   ],
+   "against": "review fix pass: u4/fix/leanpath (u4/fix/olean, then the published 3d212990 LEAN_PATH)"
+  },
+  "review fix pass: u4/fix/leanpath (u4/fix/olean, then the published 3d212990 LEAN_PATH): PqxdhDeploymentIdealOrigins": {
+   "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealOrigins",
+   "start": "2026-10-09T21:50:31.406133321Z",
+   "end": "2026-10-09T21:50:37.005022954Z",
+   "exit": 0,
+   "head_before": "5aff9fa8a386eac33090c5c4569e352a7667ce22",
+   "dirty_lines_before": 0,
+   "head_after": "5aff9fa8a386eac33090c5c4569e352a7667ce22",
+   "dirty_lines_after": 0,
+   "source_sha256": "c9f033d16e73d0a44896435daf86ba42b39bf22221987e4d3e8efa9040a2a640",
+   "log_bytes": 0,
+   "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "artifact": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealOrigins.olean",
+   "artifact_sha256": "4377af9bc3d06487ab9dbacad6262e629267955a5fb6aa917b48276477857736",
+   "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/fix/leanpath",
+   "leanpath_sha256": "95188453b619114693680274e2f4bfc4cb1dc8d10ef23b5d92d435b31116bdf7",
+   "command": [
+    "coord.sh",
+    "lean",
+    "claude",
+    "<label>",
+    "--",
+    "timeout",
+    "180",
+    "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+    "-j1",
+    "-M8000",
+    "--root=/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean",
+    "-o",
+    "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealOrigins.olean",
+    "/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealOrigins.lean"
+   ],
+   "against": "review fix pass: u4/fix/leanpath (u4/fix/olean, then the published 3d212990 LEAN_PATH)"
+  },
+  "review fix pass: u4/fix/leanpath (u4/fix/olean, then the published 3d212990 LEAN_PATH): PqxdhDeploymentIdealProvenance": {
+   "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealProvenance",
+   "start": "2026-10-09T21:50:39.904918068Z",
+   "end": "2026-10-09T21:50:50.461751343Z",
+   "exit": 0,
+   "head_before": "5aff9fa8a386eac33090c5c4569e352a7667ce22",
+   "dirty_lines_before": 0,
+   "head_after": "5aff9fa8a386eac33090c5c4569e352a7667ce22",
+   "dirty_lines_after": 0,
+   "source_sha256": "f37c493a3abd481000a03dd8964db7b34e30a431ec78d112c7edbbb83b79b3f8",
+   "log_bytes": 0,
+   "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "artifact": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealProvenance.olean",
+   "artifact_sha256": "4fd39063a6c6baf1eebecafbe499d4e15e699e450b112db03f1d56fc6b05df9c",
+   "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/fix/leanpath",
+   "leanpath_sha256": "95188453b619114693680274e2f4bfc4cb1dc8d10ef23b5d92d435b31116bdf7",
+   "command": [
+    "coord.sh",
+    "lean",
+    "claude",
+    "<label>",
+    "--",
+    "timeout",
+    "180",
+    "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+    "-j1",
+    "-M8000",
+    "--root=/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean",
+    "-o",
+    "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealProvenance.olean",
+    "/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealProvenance.lean"
+   ],
+   "against": "review fix pass: u4/fix/leanpath (u4/fix/olean, then the published 3d212990 LEAN_PATH)"
+  },
+  "review fix pass: u4/fix/leanpath (u4/fix/olean, then the published 3d212990 LEAN_PATH): PqxdhDeploymentIdealTrace": {
+   "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealTrace",
+   "start": "2026-10-09T21:50:24.793289300Z",
+   "end": "2026-10-09T21:50:31.361504076Z",
+   "exit": 0,
+   "head_before": "5aff9fa8a386eac33090c5c4569e352a7667ce22",
+   "dirty_lines_before": 0,
+   "head_after": "5aff9fa8a386eac33090c5c4569e352a7667ce22",
+   "dirty_lines_after": 0,
+   "source_sha256": "db5c655b1b8ec05bf932f2c62f9b044e0d01a4161d15611622769704470bba32",
+   "log_bytes": 0,
+   "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "artifact": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealTrace.olean",
+   "artifact_sha256": "bbd378e387e3801f97a5db15cea6ffd263ee530743c7140ad82909131225601f",
+   "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/fix/leanpath",
+   "leanpath_sha256": "95188453b619114693680274e2f4bfc4cb1dc8d10ef23b5d92d435b31116bdf7",
+   "command": [
+    "coord.sh",
+    "lean",
+    "claude",
+    "<label>",
+    "--",
+    "timeout",
+    "180",
+    "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+    "-j1",
+    "-M8000",
+    "--root=/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean",
+    "-o",
+    "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealTrace.olean",
+    "/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealTrace.lean"
+   ],
+   "against": "review fix pass: u4/fix/leanpath (u4/fix/olean, then the published 3d212990 LEAN_PATH)"
+  },
+  "review fix pass: u4/fix/leanpath (u4/fix/olean, then the published 3d212990 LEAN_PATH): root-fix1": {
+   "module": "BeaconcryptCore",
+   "start": "2026-10-09T21:50:53.425969743Z",
+   "end": "2026-10-09T21:50:55.842787401Z",
+   "exit": 0,
+   "head_before": "5aff9fa8a386eac33090c5c4569e352a7667ce22",
+   "dirty_lines_before": 0,
+   "head_after": "5aff9fa8a386eac33090c5c4569e352a7667ce22",
+   "dirty_lines_after": 0,
+   "source_sha256": "95860239bb2a0315e58f1d09a9995c48ce747dc754edb9bdf24b017b56a2a105",
+   "log_bytes": 0,
+   "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "artifact": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/fix/root-checks/fix1/BeaconcryptCore.olean",
+   "artifact_sha256": "a4e09d7cb3723b4a5c8d7f66877bc7d9e5a0df53d8ea853346a493be03b6b100",
+   "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/fix/leanpath",
+   "leanpath_sha256": "95188453b619114693680274e2f4bfc4cb1dc8d10ef23b5d92d435b31116bdf7",
+   "command": [
+    "coord.sh",
+    "lean",
+    "claude",
+    "<label>",
+    "--",
+    "timeout",
+    "180",
+    "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+    "-j1",
+    "-M8000",
+    "--root=/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean",
+    "-o",
+    "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/fix/root-checks/fix1/BeaconcryptCore.olean",
+    "/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+   ],
+   "against": "review fix pass: u4/fix/leanpath (u4/fix/olean, then the published 3d212990 LEAN_PATH)"
   }
  },
  "focused_inventory": {
+  "docs-fix": {
+   "log": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/logs/inventory-docs-fix.log",
+   "exit": 0,
+   "start": "2026-10-09T22:00:17Z",
+   "end": "2026-10-09T22:02:02Z",
+   "head_at_run": "5aff9fa8a386eac33090c5c4569e352a7667ce22",
+   "working_tree_dirt_lines": 3,
+   "working_tree_dirt_lines_after": 3,
+   "log_sha256": "301827af994e4225225a6765db75b1250744353203c30dfae74e8e69b1ca4265",
+   "result_line": [
+    "Formal-verification inventory matches the reviewed boundary."
+   ]
+  },
   "docs1": {
    "log": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/logs/inventory-docs1.log",
    "exit": 0,
@@ -1463,6 +1738,19 @@
    "working_tree_dirt_lines": 3,
    "working_tree_dirt_lines_after": 3,
    "log_sha256": "3ef4a76fd4f74b4ab7e3ff600e08d2c0b247736dca8f9db83dff187f43234099",
+   "result_line": [
+    "Formal-verification inventory matches the reviewed boundary."
+   ]
+  },
+  "fix1": {
+   "log": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4/logs/inventory-fix1.log",
+   "exit": 0,
+   "start": "2026-10-09T21:51:03Z",
+   "end": "2026-10-09T21:52:49Z",
+   "head_at_run": "5aff9fa8a386eac33090c5c4569e352a7667ce22",
+   "working_tree_dirt_lines": 0,
+   "working_tree_dirt_lines_after": 0,
+   "log_sha256": "7a9f08e696105c056a2f328fda944245d8afe92f42fb97b82dc3915578b05d36",
    "result_line": [
     "Formal-verification inventory matches the reviewed boundary."
    ]
@@ -1509,9 +1797,9 @@
  },
  "inventory": {
   "handwritten_lean_rows_at_start": 1775,
-  "handwritten_lean_rows_at_receipt": 1827,
-  "u4_track_rows": 6,
-  "steps": "1775 -> 1776 (EnvCost) -> 1777 (Frame) -> 1789 (merge 1639476c) -> 1790 (Trace) -> 1791 (Origins) -> 1792 (Sessions) -> 1793 (Provenance) -> 1827 (merge 3d212990)",
+  "handwritten_lean_rows_at_receipt": 1828,
+  "u4_track_rows": 7,
+  "steps": "1775 -> 1776 (EnvCost) -> 1777 (Frame) -> 1789 (merge 1639476c) -> 1790 (Trace) -> 1791 (Origins) -> 1792 (Sessions) -> 1793 (Provenance) -> 1827 (merge 3d212990) -> 1828 (Anomaly, review fix pass)",
   "note": "per module: root import, row and check-inventory block (scripts/invblock.py), then coord.sh inv recount before coord.sh inv rehash; merges recounted after conflict resolution"
  },
  "forbidden_scan": {
@@ -1520,7 +1808,8 @@
   "PqxdhDeploymentIdealTrace": [],
   "PqxdhDeploymentIdealOrigins": [],
   "PqxdhDeploymentIdealSessions": [],
-  "PqxdhDeploymentIdealProvenance": []
+  "PqxdhDeploymentIdealProvenance": [],
+  "PqxdhDeploymentIdealAnomaly": []
  },
  "git_diff_check": {
   "range": "760f056e92b0bdadf00c170388acf5c2776a40e2..working tree",
@@ -1539,10 +1828,121 @@
   "U3_remainder_took": "about 0.5-0.75",
   "U4_planned": "3.5-6.5 (without ideal_keymatch)",
   "U4_first_part_took": "about 1-1.5",
-  "U4_remaining": "Beacon converse and full ideal_slots 1-2, ideal_slots_prefix 0.25-0.5, anomaly_le with its public-key-only form 2-3.5, L2 0.5-1 only if needed; about 3.25-6 without L2",
-  "U4_total_now": "about 4.25-7.5"
+  "U4_remaining_at_first_part": "Beacon converse and full ideal_slots 1-2, ideal_slots_prefix 0.25-0.5, anomaly_le with its public-key-only form 2-3.5, L2 0.5-1 only if needed; about 3.25-6 without L2",
+  "U4_total_at_first_part": "about 4.25-7.5",
+  "review_fix_pass_took": "about 0.25",
+  "U4_remaining": "Beacon converse and full ideal_slots 1-2, ideal_slots_prefix 0.25-0.5, anomaly_le with anomaly_le_pk (ctGuessBy at an explicit guesser program; program-level factorization of the run prefix through the public key) 3.5-6, L2 0.5-1 only if needed; about 4.75-8.5 without L2",
+  "U4_total_now": "about 6-10.25"
  },
  "review": {
-  "status": "not reviewed"
+  "status": "reviewed at 9c477e45 (independent semantic and hygiene lenses): no wrong Lean statement; one major finding and eight nits (three of them records without action), all addressed by the review fix pass (key fix_pass); the fix pass is not reviewed"
+ },
+ "fix_pass": {
+  "review": {
+   "reviewed_commit": "9c477e45e0e801911ac032c2964c06b32ff7648c",
+   "lenses": [
+    "semantic",
+    "hygiene"
+   ],
+   "result": "no wrong Lean statement; 133 theorems with 133 exact guards within propext, Classical.choice and Quot.sound; all six modules and the root recompiled with exit 0 and empty logs",
+   "findings": {
+    "major": 1,
+    "nit": 8,
+    "records_without_action": 3
+   }
+  },
+  "commits": {
+   "lean": "5aff9fa8a386eac33090c5c4569e352a7667ce22",
+   "documentation": "the commit that adds this record"
+  },
+  "per_finding": [
+   {
+    "finding": "major: the public-key-only anomaly bound through ctGuessPk cannot be used by CE-12a's IND-CCA reduction (plan section 49, Q2, option (b))",
+    "fix": "kept ctGuessPk and ctGuessPk_le; new module PqxdhDeploymentIdealAnomaly with ctGuessBy (guesser program MlKem768PublicKey -> OracleComp (unifSpec + baseSpec) MlKem768Ciphertext, run on the public key before the encapsulation), ctGuessBy_le (<= ctGuessPk, information-theoretic corollary), ctGuessBy_le_ctGuess, ctGuessPk_eq_iSup (ctGuessPk = supremum of ctGuessBy over all guessers), ctGuessBy_probComp (ProbComp guessers), ambientLift and guess_preChallenge (the lifted guesser runs unchanged under the pre-challenge decapsulation oracle); the planned public-key-only form is anomaly_le_pk at an explicit guesser (guide open points, plan section 75, design-v2 section 28); ctGuessPk docstrings, guide (table, names, open points), plan section 73, design-v2 section 26 pointer, receipt mapping and analysis reworded; anomaly item re-estimated 3.5-6 (was 2-3.5)"
+   },
+   {
+    "finding": "nit: analysis calls the annotation the one the record lift reads without noting the unproved bridge run_origins (U7)",
+    "fix": "analysis, guide plain-terms paragraph and the Provenance module docstring name the World-level annotation (PqxdhRecordLiftOrigins) and the planned run_origins (design-v2 section 9.1, U7)"
+   },
+   {
+    "finding": "nit: run_keeps_origins said to cover design-v2's ledger_keeps",
+    "fix": "'replaces (on the annotated record world)' in the guide (decisions bullet, table row), the Origins module docstring and run_keeps_origins docstring, the receipt, plan section 73 and design-v2 section 28; no gameWith-level ledger_keeps exists"
+   },
+   {
+    "finding": "nit: record of checks and confirmations (semantic lens)",
+    "fix": "none (record)"
+   },
+   {
+    "finding": "nit: Phase1ReadBack described per conjunct although the theorems take it for the whole statement",
+    "fix": "both options: reworded (guide, analysis, docstrings of ideal_trace_world, ideal_trace, ideal_slots_server and the module docstring) and premise-free corollaries ideal_trace_world_peer, ideal_trace_peer, ideal_slots_restrictions added to PqxdhDeploymentIdealProvenance"
+   },
+   {
+    "finding": "nit: guide says the root was checked after each Lean commit",
+    "fix": "guide 'CE-11b unit U4: checks' says the root of each Lean commit was checked on the committed sources just before the commit (source hashes in the receipt); the fix-pass checks ran after the Lean commit on its clean tree"
+   },
+   {
+    "finding": "nit: registry notes of PqxdhDeploymentIdealProvenance and PqxdhDeploymentIdealOrigins",
+    "fix": "notes refreshed through coord.sh registry (also PqxdhDeploymentIdealTrace and PqxdhDeploymentIdealAnomaly)"
+   },
+   {
+    "finding": "nit: record, central moved to 3915c3f0 (trial merge: three inventory conflicts)",
+    "fix": "none now; central has since moved to 39fd1c50 (no CE-11b file), and a trial merge with 5aff9fa8 conflicts only in the same three inventory places; the integration merges central, recounts and rehashes"
+   },
+   {
+    "finding": "nit: hygiene summary (record)",
+    "fix": "none (record)"
+   }
+  ],
+  "changed_statements": "none: no existing theorem or definition changed its statement or proof",
+  "docstrings_changed": [
+   "PqxdhDeploymentIdealTrace: module docstring, ctGuessPk",
+   "PqxdhDeploymentIdealOrigins: module docstring, run_keeps_origins",
+   "PqxdhDeploymentIdealProvenance: module docstring, ideal_trace_world, ideal_trace, ideal_slots_server"
+  ],
+  "new_theorems": {
+   "PqxdhDeploymentIdealAnomaly": [
+    "encapsHit_max",
+    "ctGuessBy_le",
+    "ctGuessBy_le_ctGuess",
+    "ctGuessPk_eq_iSup",
+    "ctGuessBy_probComp",
+    "guess_preChallenge"
+   ],
+   "PqxdhDeploymentIdealProvenance": [
+    "ideal_trace_world_peer",
+    "ideal_trace_peer",
+    "ideal_slots_restrictions"
+   ]
+  },
+  "new_definitions": {
+   "PqxdhDeploymentIdealAnomaly": [
+    "ctGuessBy",
+    "encapsHit",
+    "ambientLift"
+   ]
+  },
+  "strength_of_corollaries": "each restates a part of ideal_trace_world, ideal_trace or ideal_slots_server with the same conclusion and one premise fewer (no Phase1ReadBack); ideal_trace_world_peer and ideal_slots_restrictions hold for every Server key ID instead of setup.serverKeyId",
+  "theorem_counts_after": {
+   "PqxdhDeploymentIdealEnvCost": 29,
+   "PqxdhDeploymentIdealFrame": 8,
+   "PqxdhDeploymentIdealTrace": 16,
+   "PqxdhDeploymentIdealOrigins": 31,
+   "PqxdhDeploymentIdealSessions": 10,
+   "PqxdhDeploymentIdealProvenance": 42,
+   "PqxdhDeploymentIdealAnomaly": 6,
+   "total": 142
+  },
+  "checks": {
+   "finals": "fix/logs/final (keys 'review fix pass: ...' of final_checks): PqxdhDeploymentIdealTrace, PqxdhDeploymentIdealOrigins, PqxdhDeploymentIdealProvenance, PqxdhDeploymentIdealAnomaly and the root (root-fix1), in import order, at 5aff9fa8 with a clean tree, each exit 0 with an empty log, -o into u4/fix/olean",
+   "reused_oleans": "PqxdhDeploymentIdealEnvCost, PqxdhDeploymentIdealFrame, PqxdhDeploymentIdealSessions: sources and imports unchanged since their final checks (u4/olean)",
+   "dev_checks": "fix/logs/dev (no -o, against u4/leanpath3): AnomalyA-E, the guard probes, PqxdhDeploymentIdealProvenance and PqxdhDeploymentIdealAnomaly with guards, exit 0",
+   "inventory_steps": "coord.sh inv recount (1827 -> 1828) and coord.sh inv rehash (Trace, Origins, Provenance, Anomaly, then the root and check-inventory.sh last) before the Lean commit",
+   "focused_inventory": {
+    "fix1": "see focused_inventory.fix1",
+    "docs-fix": "see focused_inventory.docs-fix"
+   },
+   "git_diff_check": "clean (see git_diff_check)"
+  },
+  "reestimate": "anomaly item 3.5-6 (was 2-3.5); U4 remaining 4.75-8.5 without L2; U4 about 6-10.25 in total; the fix pass took about 0.25"
  }
 }
