@@ -1864,6 +1864,8 @@ import BeaconcryptCore.Computational.PqxdhRecordLiftLor
 
 import BeaconcryptCore.Computational.PqxdhRecordLiftFresh
 
+import BeaconcryptCore.Computational.PqxdhDeploymentIdealKeymatch
+
 /-!
 # Beaconcrypt-core verification root
 
