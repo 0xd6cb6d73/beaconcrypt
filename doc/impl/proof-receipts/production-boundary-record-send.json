@@ -2,7 +2,7 @@
   "stage": "PB-B2 source send execution and complete CE publication, Send13",
   "base": "1639476c44f46f80fbac20ccc34f31137b7cc574",
   "topic": "codex/record-lift-boundary-send",
-  "state": "Semantically reviewed; focused publication validation passed; final publication review pending",
+  "state": "Independent semantic and final publication reviews approved; focused proof checkpoint published with exact three-way hash equality; central integration pending",
   "module": "PqxdhBoundaryRecordSend",
   "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryRecordSend.lean",
   "source_sha256": "71ab7c9cff9052187d3a099c23ee336d00d4044440f9b945ae0f1acca11a9ddb",
@@ -327,5 +327,47 @@
   ],
   "leanpath": "/tmp/bc-arc-scratch/boundary/send-publication/leanpath",
   "leanpath_sha256": "992c46fcac776a34beb082699169408925a21e0ace266ded7839fa256aa934ee",
-  "updated_at": "2026-10-09T20:07:16.065319+00:00"
+  "updated_at": "2026-10-09T20:07:16.065319+00:00",
+  "publication": {
+    "proof_commit": "83bc678e2dfad278655ce5005cbb5c6a2390d6f0",
+    "branch": "codex/record-lift-boundary-send",
+    "origin_topic": "83bc678e2dfad278655ce5005cbb5c6a2390d6f0",
+    "direct_remote": "83bc678e2dfad278655ce5005cbb5c6a2390d6f0",
+    "review": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-marker/boundary-send-publication-review.json",
+    "review_sha256": "4fe4cebe02c230fa5c29ebe604cd05aa4e2039e6065197f13d151924df9907f3",
+    "time": "2026-10-09T20:09:15.375148+00:00",
+    "leanpath": "/tmp/bc-arc-scratch/boundary/send-publication/leanpath"
+  },
+  "final_publication_review": {
+    "path": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-marker/boundary-send-publication-review.json",
+    "sha256": "4fe4cebe02c230fa5c29ebe604cd05aa4e2039e6065197f13d151924df9907f3",
+    "receipt": {
+      "reviewer": "Codex facts_later, independent reviewer",
+      "decision": "APPROVE",
+      "time": "2026-10-09T20:07:59.739316+00:00",
+      "candidate": "/tmp/bc-arc-scratch/boundary/send-publication/candidate.json",
+      "candidate_sha256": "c2b5e79105444843a547811ea28c773c50e4fa4c080cb5ad4e0f0f1ba022ae54",
+      "files": {
+        "beaconcrypt-core/proofs/check-inventory.sh": "a1136df6e937309e0540afce42a3c900b63937421e6439f4122bef48cd31768f",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "8435a50d0312df086e214ccf24af100b1c83df6c28da4319a23486e2f7552676",
+        "beaconcrypt-core/proofs/reviewed-inventory.txt": "3b1ea2b94cbf1d1b43a349d102bbf12ceba7d117fe4e7f3f8d933c1182820048",
+        "beaconcrypt-core/proofs/trusted-boundary.md": "30a094460cd753ee1c81ed95b3f7bc7bdea4b610b944919afe19322a3374f121",
+        "doc/composition-assumptions.md": "2fc09311a5bd321a2979e65c3f70d6290a5bff71248c67a84691c9fa5c8a8682",
+        "doc/formal-verification-analysis.md": "51eb52f0984ddcead2dda30abb79f5a577c8c217f40c0e2884643ddda2bb46ff",
+        "doc/formal-verification.md": "2d91f94a9d8cfd8845468323087514b5d71fefde91875c8640c65f612abbcffb",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryRecordSend.lean": "71ab7c9cff9052187d3a099c23ee336d00d4044440f9b945ae0f1acca11a9ddb",
+        "doc/impl/production-boundary-record-send.md": "fbdad7233f8c73bd005fa73ea5a3b56236547e971042413954ce3cec98917de6",
+        "doc/impl/proof-receipts/production-boundary-record-send.json": "288f2aae986dc451b79c77921d5d11ca065854cb46cccada0cb662ea53f8ff2b"
+      },
+      "findings": [],
+      "checks": [
+        "All ten file pins match, including exact previously reviewed Send13 source and guide; all seven metadata insertions are at prescribed Codex anchors.",
+        "Root import occurs once; checker has thirteen theorem/axiom guards, count changes 1787\u21921788, inventory digests match actual changed proof/root/checker/trusted boundary. No gate disabled.",
+        "Maintained receipt embeds exact earlier semantic candidate and independent review, accurately retains source transcriptions versus local extracted operations, all optional writer replies/failure advancement, no assigned-ID equality and unchanged external contracts.",
+        "Plain-English analysis and summaries match thirteen statements, four independent one-callback caps and zero opening, explicit wider source/reduction and runtime costs. No global security or completed whole-boundary claim.",
+        "Focused module and root exact output logs clean. Inventory is 1788 handwritten Lean entries with separate 20 Beacon getter cases and 9 Python regressions. Fidelity log records 30 Rust transcript tests and 20 Python verdict-class tests. Every receipt/log pin verified; no full matrix or Rust mutation claim.",
+        "Read-only verification; no repeat builds. Central reconciliation remains explicitly pending Claude reservation."
+      ]
+    }
+  }
 }
