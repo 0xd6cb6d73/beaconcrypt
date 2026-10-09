@@ -2,7 +2,7 @@
   "stage": "PB-B1 receive execution through extracted local operations",
   "base": "cffd06c625e0f7369da8a3ad8e01ad3e0b0dd3c0",
   "topic": "codex/record-lift-boundary-execution-publication",
-  "state": "Semantic review and all focused checks passed; final publication metadata review pending",
+  "state": "Semantic and final publication reviews approved; proof checkpoint pushed and directly verified; central integration pending",
   "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryRecordExecution.lean",
   "source_sha256": "748f92e5ba6de5c31318cd21165f98eb8d1c440875cc7632f69121ec7ba7c46d",
   "guide": "doc/impl/production-boundary-record-execution.md",
@@ -307,5 +307,60 @@
   "full_verify_or_mutation": "Not run; outside authorized focused stage",
   "leanpath": "/tmp/bc-arc-scratch/boundary/execution-publication/leanpath",
   "leanpath_sha256": "512028281e97113b207d50f069f19adc860495789e4e1a5bcd9107c45802deff",
-  "time": "2026-10-09T19:41:44.430151+00:00"
+  "time": "2026-10-09T19:41:44.430151+00:00",
+  "publication_review": {
+    "path": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accepted-flag/boundary-execution-publication-review.json",
+    "sha256": "00247d6c7d545982091adf16ed4f4d0c69fdcba3292c3888e5d887e6644eade7",
+    "receipt": {
+      "reviewer": "Codex /root/facts_later",
+      "time": "2026-10-09T19:42:34.006918+00:00",
+      "decision": "APPROVE",
+      "candidate": "/tmp/bc-arc-scratch/boundary/execution-publication/candidate.json",
+      "candidate_sha256": "cecff6f662bd18442e468e66f03a2bae05965f9e26707d755ea1c85cedd56fd1",
+      "stage": "PB-B1 final publication bundle",
+      "reviewed_files": {
+        "beaconcrypt-core/proofs/check-inventory.sh": "e534e88313eba6e12ac9ee681b33806ba5c50dcffdd37c73dc2a63b3c617ba26",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "e87bc03f00bb11debb10013184e5f8d448fdba53e0c84fb5bb6cdf6fc39f0ba1",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryRecordExecution.lean": "748f92e5ba6de5c31318cd21165f98eb8d1c440875cc7632f69121ec7ba7c46d",
+        "beaconcrypt-core/proofs/reviewed-inventory.txt": "0560ed391db87467e300bb8c3b662496dde103b4b42a768787be527d601e1b7d",
+        "beaconcrypt-core/proofs/trusted-boundary.md": "7d062fa393821bbf906a4bcd86137358eb7c8b3baaa659df3cedec47d798fc8c",
+        "doc/composition-assumptions.md": "ed220b066db13a56947c64c085399aee2ed819c553ac6ba9d053d57223a6c429",
+        "doc/formal-verification-analysis.md": "c00887d3cb133c0e9087d278ef5f928520820d02837b57c6d03a15a40ac2aa37",
+        "doc/formal-verification.md": "0999ea829099bd6b390718ff7b32b9b3bba65d93122d69af18095f2c0827e590",
+        "doc/impl/production-boundary-record-execution.md": "67c0d8710255468ef4fb56e17a02181743929707d9f5ad36ffa904879e6067b6",
+        "doc/impl/proof-receipts/production-boundary-record-execution.json": "df582174d2229ef39a4741fc20f6d71c34b6c88d2921aa9fd9073f589b004587",
+        "doc/impl/proof-receipts/production-boundary-record-prelude.json": "6ac496cf73c5134917d253a98b399632b7733bb0fea376074ddd018dd109d9fb"
+      },
+      "findings": [],
+      "reasoning": [
+        "Source and guide are byte-identical to independently approved execution10 revision2; ten complete theorem statements, actual argument/reply/state preservation, existing contracts and explicit loop/outer-adapter RT scope remain unchanged.",
+        "All seven metadata anchor additions, root import, ten guarded theorem/dependency entries and reviewed inventory1787 match the proof. No Rust/primitive implementation or persistence change and no global security/cost closure is claimed.",
+        "Maintained receipt embeds exact approved semantic review and scanner evidence; every file/artifact/check/log/LEAN_PATH pin verified. Direct module and root checks have empty logs; inventory and fidelity exited zero.",
+        "Fidelity counts accurately distinguish30 Rust transcript tests and20 Python verdict-class tests from the separate inventory20-case Beacon getter profile and9 Python getter regressions. No full verification or mutation run is claimed.",
+        "The PB-A receipt delta appends only an explicit test-label correction. Original embedded review and all original pins remain unchanged; independently checked original fidelity log confirms20 verdict-class tests plus30 transcript tests. The correction claims no newly run PB-A validation.",
+        "Diff whitespace check passes; exact eleven publication paths contain only approved source/guide/receipt and metadata/correction. No additional build was needed."
+      ],
+      "validation": {
+        "focused_checks": [
+          "5794b45b1698a92b2a611f951b73dc93c168b5b94f6c05da6d69317c7064cb1e",
+          "b5362cec9e5f5ceb0b2f8dc59eebeab08a0dbdf61abd6480fc4f4876d88ac75b",
+          "579595c07e0c45b0f2b90631c1681625f728f9c553f2ccc01335fa191eae3d29",
+          "ea22476ea673506b06f7116cab30fdb78d1cfb331a0a6cec0e6ecb15b7380480"
+        ],
+        "semantic_review": "71dc475f4af978159d77cfc34407a79cb56065e2f5cbf2f701e99c47c1ac5f69",
+        "rebuilt": false
+      }
+    }
+  },
+  "proof_publication": {
+    "proof_commit": "63e40f612ca6ad7ba7bcf5930d96326b0431652a",
+    "branch": "codex/record-lift-boundary-execution-publication",
+    "origin_topic": "63e40f612ca6ad7ba7bcf5930d96326b0431652a",
+    "direct_remote": "63e40f612ca6ad7ba7bcf5930d96326b0431652a",
+    "review": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accepted-flag/boundary-execution-publication-review.json",
+    "review_sha256": "00247d6c7d545982091adf16ed4f4d0c69fdcba3292c3888e5d887e6644eade7",
+    "time": "2026-10-09T19:42:58.157550+00:00",
+    "leanpath": "/tmp/bc-arc-scratch/boundary/execution-publication/leanpath"
+  },
+  "updated_at": "2026-10-09T19:43:26.814855+00:00"
 }
