@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1776
+	[handwritten-lean]=1777
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -37063,6 +37063,29 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem drawParams_uniform([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvCost theorem drawParams_uniform"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvCost\.idealStep_bound$' "$selected_source_module" "PqxdhDeploymentIdealEnvCost dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvCost.idealStep_bound"
 require_line_count 1 '^theorem idealStep_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvCost theorem idealStep_bound"
+
+# CE-11b unit U3 remainder: the frames, C4 and F4 of the ideal environment (frame_ideal, frame_idealD, c4_ideal, c4_ideal_later, lawEq_support, seed_at_install_split).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealFrame.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentIdealFrame$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentIdealFrame root import"
+require_line_count 8 '^theorem ' "$selected_source_module" "PqxdhDeploymentIdealFrame theorem inventory"
+require_line_count 8 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentIdealFrame guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealFrame\.frame_ideal$' "$selected_source_module" "PqxdhDeploymentIdealFrame dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealFrame.frame_ideal"
+require_line_count 1 '^theorem frame_ideal([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealFrame theorem frame_ideal"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealFrame\.frame_idealD$' "$selected_source_module" "PqxdhDeploymentIdealFrame dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealFrame.frame_idealD"
+require_line_count 1 '^theorem frame_idealD([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealFrame theorem frame_idealD"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealFrame\.c4_ideal$' "$selected_source_module" "PqxdhDeploymentIdealFrame dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealFrame.c4_ideal"
+require_line_count 1 '^theorem c4_ideal([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealFrame theorem c4_ideal"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealFrame\.c4_ideal_later$' "$selected_source_module" "PqxdhDeploymentIdealFrame dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealFrame.c4_ideal_later"
+require_line_count 1 '^theorem c4_ideal_later([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealFrame theorem c4_ideal_later"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealFrame\.lawEq_support_subset$' "$selected_source_module" "PqxdhDeploymentIdealFrame dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealFrame.lawEq_support_subset"
+require_line_count 1 '^theorem lawEq_support_subset([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealFrame theorem lawEq_support_subset"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealFrame\.lawEq_support$' "$selected_source_module" "PqxdhDeploymentIdealFrame dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealFrame.lawEq_support"
+require_line_count 1 '^theorem lawEq_support([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealFrame theorem lawEq_support"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealFrame\.envG_admitted$' "$selected_source_module" "PqxdhDeploymentIdealFrame dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealFrame.envG_admitted"
+require_line_count 1 '^theorem envG_admitted([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealFrame theorem envG_admitted"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealFrame\.seed_at_install_split$' "$selected_source_module" "PqxdhDeploymentIdealFrame dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealFrame.seed_at_install_split"
+require_line_count 1 '^theorem seed_at_install_split([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealFrame theorem seed_at_install_split"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
