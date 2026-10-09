@@ -1,6 +1,6 @@
 {
- "date": "2026-10-09T17:08:59.520901+00:00",
- "scope": "CE-11b unit U6, first part (track u6), after its review fix pass: the key match of the ideal registration (PqxdhDeploymentIdealKeymatch; design-v2 section 7.2 item 2, built in U6), the branches of the second compile lemma at the cut with the reduction to the selected-key branch (PqxdhDeploymentIdealBranch), and the selected accept's steps before encapsulation with the reduction to the active branch (PqxdhDeploymentIdealActive). The active branch (ActiveBranch) and PqxdhDeploymentIdealCompile are not built; ideal_compile is not claimed. Reviewed (semantic and hygiene) at f7f0baaa; review fix pass applied (Lean commit 45f6e7ac, docstrings only, and a documentation commit); not integrated into central.",
+ "date": "2026-10-09T17:21:09.838401+00:00",
+ "scope": "CE-11b unit U6, first part (track u6), after its review fix pass: the key match of the ideal registration (PqxdhDeploymentIdealKeymatch; design-v2 section 7.2 item 2, built in U6), the branches of the second compile lemma at the cut with the reduction to the selected-key branch (PqxdhDeploymentIdealBranch), and the selected accept's steps before encapsulation with the reduction to the active branch (PqxdhDeploymentIdealActive). The active branch (ActiveBranch) and PqxdhDeploymentIdealCompile are not built; ideal_compile is not claimed. Reviewed (semantic and hygiene) at f7f0baaa; review fix pass applied (Lean commit 45f6e7ac, docstrings only, and a documentation commit); confirming review of 7c164b00: APPROVE, no new finding, recorded before the integration; not integrated into central at the recording commit.",
  "basis": "959b715460dbc271ff2c617df9dd64f1d0f73234",
  "topic": {
   "branch": "codex/deployment-ce11b-cut",
@@ -8,14 +8,25 @@
  },
  "plan": {
   "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
-  "sha256_at_generation": "4203b91024fbef607ba792efdfbc574919c966ad155236c4ec06cd71bae8e585",
-  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6/fix/docs/plan.at-fix-receipt-4203b910.md",
-  "dated_copy_sha256": "4203b91024fbef607ba792efdfbc574919c966ad155236c4ec06cd71bae8e585",
-  "sections": "47-50 (A1, A2, Q1-Q3), 54-55 (U5), 63 (this unit; 62 was the last section before it), 64 (its review fix pass; 63 was the last section before it)",
-  "before_review": {
-   "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6/docs/plan.at-u6-receipt-12dddd29.md",
-   "dated_copy_sha256": "12dddd29f5b591d94ea6409edd7aef97c6911eafc1b2ba3c2fa1f83d98606fa3",
-   "note": "the plan as pinned by the receipt of f7f0baaa"
+  "sha256": "b5d888142f47e0feb5243cc373474ed4348fa35bbe3ba191fc158316181eb1ad",
+  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6/int/plan.at-record-b5d88814.md",
+  "dated_copy_sha256": "b5d888142f47e0feb5243cc373474ed4348fa35bbe3ba191fc158316181eb1ad",
+  "sections": "47-50 (A1, A2, Q1-Q3), 54-55 (U5), 63 (this unit; 62 was the last section before it), 64 (its review fix pass; 63 was the last section before it; with the confirming-review bullet at its end)",
+  "earlier": [
+   {
+    "note": "hash recorded by the review fix pass receipt (7c164b00; section 64 without its confirming-review bullet)",
+    "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6/fix/docs/plan.at-fix-receipt-4203b910.md",
+    "dated_copy_sha256": "4203b91024fbef607ba792efdfbc574919c966ad155236c4ec06cd71bae8e585"
+   },
+   {
+    "note": "the plan as pinned by the receipt of f7f0baaa",
+    "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6/docs/plan.at-u6-receipt-12dddd29.md",
+    "dated_copy_sha256": "12dddd29f5b591d94ea6409edd7aef97c6911eafc1b2ba3c2fa1f83d98606fa3"
+   }
+  ],
+  "before_record_copy": {
+   "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6/int/plan.before-record-4203b910.md",
+   "sha256": "4203b91024fbef607ba792efdfbc574919c966ad155236c4ec06cd71bae8e585"
   }
  },
  "design": {
@@ -50,9 +61,13 @@
   {
    "commit": "45f6e7ac88d1f5a7a9b1387c4faba5d8037065ab",
    "subject": "Correct the obligation docstrings of the CE-11b second compile lemma"
+  },
+  {
+   "commit": "7c164b008b85720fdba655787a6f15af1f59e868",
+   "subject": "Record the review fix pass of CE-11b unit U6, first part"
   }
  ],
- "commits_note": "Commits on the topic after the basis that were made before this receipt was generated; the documentation commit of the review fix pass that regenerates this receipt is not listed.",
+ "commits_note": "Commits on the topic after the basis that were made before this receipt was last generated; the commit that records the confirming review (and last regenerates this receipt) is not listed.",
  "files_sha256": {
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealKeymatch.lean": "141778bc759982044e6d50f141e6e9eb0a80c79d5bb0ce9860ddada9b81ffcd8",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealBranch.lean": "764c1b1eb358d608203a1d1a347b18ef1158f5364de194105ccbd9ea45522651",
@@ -950,7 +965,7 @@
   "PqxdhDeploymentIdealActive": []
  },
  "git_diff_check": {
-  "range": "959b715460dbc271ff2c617df9dd64f1d0f73234..working tree",
+  "range": "959b715460dbc271ff2c617df9dd64f1d0f73234..working tree (with the confirming-review record)",
   "exit": 0
  },
  "not_run": [
@@ -1019,6 +1034,80 @@
    "PqxdhDeploymentIdealBranch.SelectedBranch",
    "PqxdhDeploymentIdealActive.ActiveBranch"
   ],
-  "lean_fix_commit": "45f6e7ac88d1f5a7a9b1387c4faba5d8037065ab"
+  "lean_fix_commit": "45f6e7ac88d1f5a7a9b1387c4faba5d8037065ab",
+  "confirming_review": {
+   "reviewed_range": "f7f0baaa6d96e9ebf04a75c86cc634d8959319b9..7c164b008b85720fdba655787a6f15af1f59e868",
+   "reviewed_commit": "7c164b008b85720fdba655787a6f15af1f59e868",
+   "scope": "the fix pass 45f6e7ac (Lean docstrings of SelectedBranch and ActiveBranch, inventory digests) and 7c164b00 (documentation, receipt): statements, guards, receipt, inventory, documentation, cited names, registry notes, olean prefixes, merge with central",
+   "verdict": "APPROVE: every finding of the review of f7f0baaa resolved; no new finding",
+   "checks": [
+    "Lean diff f7f0baaa..7c164b00: two docstrings only (SelectedBranch in PqxdhDeploymentIdealBranch, ActiveBranch in PqxdhDeploymentIdealActive); inventory rows of the two modules rehashed; no statement, definition or proof changed",
+    "PqxdhDeploymentIdealBranch, PqxdhDeploymentIdealActive and the root import rechecked at 7c164b00 (clean tree) without -o through coord.sh lean against ce11b/u6/fix/leanpath: exit 0, empty logs",
+    "receipt against HEAD (confirm/bin/receipt_check.py): files_sha256 equal HEAD; theorems 44, 17 and 11 equal the exact guards and the receipt lists; axiom profiles equal the guard text; definitions equal the receipt",
+    "inventory (confirm/bin/inv_digest.py) at 45f6e7ac and 7c164b00: 2129 rows ok, no mismatch, missing path, duplicate or unlisted Lean file; handwritten Lean count 1709, equal to expected_category_counts",
+    "central moves 959b7154 -> 84a07b15 (4 PqxdhRecordFactsLater*) -> 5ba38799 (10 PqxdhRecordFactsOrigin*), no CE-11b file; read-only merge-tree of the topic with 5ba38799: conflict markers only in check-inventory.sh and reviewed-inventory.txt, root imports and analysis clean",
+    "every name cited in the documentation lines added by the fix pass resolves (confirm/names_check.out); meaning spot-checked: OpaqueClient.client, OpaqueTail.tail, ServerAccept.tail, buildStep, hmacStep, groupStep, PqxdhRegistrationSchedule.bundle, nativeHmac, finish_terminal, build_consumes, Rust get_shared_secret",
+    "registry notes refreshed; u6/olean and fix/olean resolve like items45/facts/int/olean (the published 959b7154 first prefix) minus the root olean plus the 3 U6 oleans (confirm/bin/mirror_cmp.py)"
+   ],
+   "check_logs": {
+    "Branch": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6/confirm/logs/Branch.log",
+     "bytes": 0
+    },
+    "Active": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6/confirm/logs/Active.log",
+     "bytes": 0
+    },
+    "root": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6/confirm/logs/root.log",
+     "bytes": 0
+    }
+   },
+   "scripts": {
+    "inv_digest.py": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6/confirm/bin/inv_digest.py",
+     "sha256": "79cb01fb14d66ac4b7bd58c2877cb53cd7d0c32c6bfbb5bcb3c97058c2c90153"
+    },
+    "leanrun.sh": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6/confirm/bin/leanrun.sh",
+     "sha256": "4b822aab0dc1802f2897cbef75a019a78604b96dd74a93c73f62e621e5795313"
+    },
+    "mirror_cmp.py": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6/confirm/bin/mirror_cmp.py",
+     "sha256": "b4b4458a700e0b46014378ea8df6b4f23f8e3f46e74a987dccb2dccd718495f0"
+    },
+    "names_check.py": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6/confirm/bin/names_check.py",
+     "sha256": "41a916d7cd48c8e2a2484c864081c8acc3cfad5e52a9943b30efa19e0b28ce0f"
+    },
+    "receipt_check.py": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6/confirm/bin/receipt_check.py",
+     "sha256": "8c897d52558de2eb946423e2f5d6651a5b44dba56a9d2056ba7d155fcf940e37"
+    }
+   },
+   "inventory_digests": {
+    "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6/confirm/inv_digest.out",
+    "sha256": "e0d711ddf99aab4b20edefae9cb03325b01254e571e2fa16909377d0fbc2b7aa"
+   },
+   "findings_fixed": [],
+   "records": [
+    "review record: findings of the review of f7f0baaa resolved, checks run (no action)"
+   ],
+   "files_changed": [
+    "doc/impl/common-deployment-experiment.md",
+    "doc/impl/common-deployment-experiment-plan.md",
+    "doc/formal-verification-analysis.md",
+    "doc/impl/proof-receipts/common-deployment-experiment-ce11b-u6.json"
+   ],
+   "lean_change": "none (no file under beaconcrypt-core/ changed)",
+   "notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6/confirm/notes.txt",
+   "scratch": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6/confirm (review checks), /tmp/bc-arc-scratch/common-experiment/ce11b/u6/int (record-commit scripts, plan copies)"
+  }
+ },
+ "plan_snapshot": {
+  "path": "doc/impl/common-deployment-experiment-plan.md",
+  "refreshed_from_sha256": "b5d888142f47e0feb5243cc373474ed4348fa35bbe3ba191fc158316181eb1ad",
+  "sections": "0-18 and the decision sections 19-64",
+  "note": "refreshed in the commit that records the confirming review: the body equals the working plan from its third line; the snapshot paragraph records the hash and the refresh history (the refresh adds sections 59 to 64; the snapshot it replaces, through section 58, is the one in central 194016ff and on this branch since the merge of 8b740cda, and its body is a prefix of this one)"
  }
 }
