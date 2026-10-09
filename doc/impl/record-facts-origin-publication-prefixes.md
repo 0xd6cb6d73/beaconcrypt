@@ -1,0 +1,9 @@
+# Initialized receive-prefix history
+
+`PqxdhRecordFactsOriginPublicationPrefixes` proves four statements that preserve the true earlier transcript for every accepted receive through the complete initialized adaptive source execution. The `Prefixes` predicate quantifies every decomposition of the actual transcript into an earlier prefix, the received event, and its later suffix. Each successful receive has the exact temporal witness defined by `ReceivedBefore`, evaluated against its unchanged earlier prefix.
+
+`split_snoc` classifies a decomposition after appending one event: it selects either an existing earlier event or the literal newly appended event. `full_invariant` transports all prior witnesses through the actual source control and seal-dictionary growth and establishes the newly appended receive's before-prefix witness. The current source safety and publication history are retained alongside these facts.
+
+`full_program_invariant` covers arbitrary adaptive full-interface continuations and stopping. `ctxRun_prefixes` discharges initialization from actual startup, server installation and the initially empty transcript and seal dictionaries. It therefore has no assumed initial history, prior-origin or publication-schedule premise. Startup failure is handled explicitly.
+
+This initialized result retains actual optional plaintexts, routing, decoded frames, physical sender owners and writer outcomes. Its primitive scope remains replay/random hidden modes and the existing `FrameReadBack` contract. It does not yet state a guessing probability: the next event extraction must exclude the prior-publication alternative for `UnpublishedAccept`, and a separate selected-seal coupling must bound failed-writer matches. No Rust, persistence, snapshot or primitive implementation is changed, and original query costs remain charged.

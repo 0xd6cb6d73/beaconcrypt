@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1769
+	[handwritten-lean]=1779
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -40474,6 +40474,149 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecord
 require_line_count 1 '^theorem bindingStatement([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsBindingGlobal theorem bindingStatement"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsBindingGlobal\.bindingTarget$' "$selected_source_module" "PqxdhRecordFactsBindingGlobal dependency bindingTarget"
 require_line_count 1 '^theorem bindingTarget([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsBindingGlobal theorem bindingTarget"
+
+# Reviewed initialized temporal receive-prefix origin.
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginPublicationStep.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationStep$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordFactsOriginPublicationStep root import"
+require_line_count 4 '^theorem ' "$selected_source_module" "PqxdhRecordFactsOriginPublicationStep theorem inventory"
+require_line_count 4 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationStep guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationStep\.sealing_entry$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationStep dependency sealing_entry"
+require_line_count 1 '^theorem sealing_entry([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationStep theorem sealing_entry"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationStep\.kernelSend_entry$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationStep dependency kernelSend_entry"
+require_line_count 1 '^theorem kernelSend_entry([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationStep theorem kernelSend_entry"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationStep\.ownerSend_entry$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationStep dependency ownerSend_entry"
+require_line_count 1 '^theorem ownerSend_entry([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationStep theorem ownerSend_entry"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationStep\.ownerRun_entry$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationStep dependency ownerRun_entry"
+require_line_count 1 '^theorem ownerRun_entry([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationStep theorem ownerRun_entry"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginPublicationDispatch.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationDispatch$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordFactsOriginPublicationDispatch root import"
+require_line_count 7 '^theorem ' "$selected_source_module" "PqxdhRecordFactsOriginPublicationDispatch theorem inventory"
+require_line_count 7 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationDispatch guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationDispatch\.serverSend_entry$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationDispatch dependency serverSend_entry"
+require_line_count 1 '^theorem serverSend_entry([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationDispatch theorem serverSend_entry"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationDispatch\.beaconSend_entry$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationDispatch dependency beaconSend_entry"
+require_line_count 1 '^theorem beaconSend_entry([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationDispatch theorem beaconSend_entry"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationDispatch\.kernelReceive_seals$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationDispatch dependency kernelReceive_seals"
+require_line_count 1 '^theorem kernelReceive_seals([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationDispatch theorem kernelReceive_seals"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationDispatch\.ownerReceive_seals$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationDispatch dependency ownerReceive_seals"
+require_line_count 1 '^theorem ownerReceive_seals([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationDispatch theorem ownerReceive_seals"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationDispatch\.ownerRun_receive_seals$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationDispatch dependency ownerRun_receive_seals"
+require_line_count 1 '^theorem ownerRun_receive_seals([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationDispatch theorem ownerRun_receive_seals"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationDispatch\.serverReceive_seals$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationDispatch dependency serverReceive_seals"
+require_line_count 1 '^theorem serverReceive_seals([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationDispatch theorem serverReceive_seals"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationDispatch\.beaconReceive_seals$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationDispatch dependency beaconReceive_seals"
+require_line_count 1 '^theorem beaconReceive_seals([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationDispatch theorem beaconReceive_seals"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginPublicationNative.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationNative$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordFactsOriginPublicationNative root import"
+require_line_count 5 '^theorem ' "$selected_source_module" "PqxdhRecordFactsOriginPublicationNative theorem inventory"
+require_line_count 5 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationNative guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationNative\.effects_program_kept$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationNative dependency effects_program_kept"
+require_line_count 1 '^theorem effects_program_kept([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationNative theorem effects_program_kept"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationNative\.effect_lift$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationNative dependency effect_lift"
+require_line_count 1 '^theorem effect_lift([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationNative theorem effect_lift"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationNative\.native_nonSend_seals$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationNative dependency native_nonSend_seals"
+require_line_count 1 '^theorem native_nonSend_seals([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationNative theorem native_nonSend_seals"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationNative\.native_entry$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationNative dependency native_entry"
+require_line_count 1 '^theorem native_entry([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationNative theorem native_entry"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationNative\.native_received_before$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationNative dependency native_received_before"
+require_line_count 1 '^theorem native_received_before([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationNative theorem native_received_before"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginPublicationHistory.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationHistory$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordFactsOriginPublicationHistory root import"
+require_line_count 6 '^theorem ' "$selected_source_module" "PqxdhRecordFactsOriginPublicationHistory theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationHistory guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationHistory\.published_append$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationHistory dependency published_append"
+require_line_count 1 '^theorem published_append([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationHistory theorem published_append"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationHistory\.history_transport$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationHistory dependency history_transport"
+require_line_count 1 '^theorem history_transport([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationHistory theorem history_transport"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationHistory\.current_published$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationHistory dependency current_published"
+require_line_count 1 '^theorem current_published([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationHistory theorem current_published"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationHistory\.history_extend$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationHistory dependency history_extend"
+require_line_count 1 '^theorem history_extend([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationHistory theorem history_extend"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationHistory\.native_history$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationHistory dependency native_history"
+require_line_count 1 '^theorem native_history([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationHistory theorem native_history"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationHistory\.history_publications_eq$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationHistory dependency history_publications_eq"
+require_line_count 1 '^theorem history_publications_eq([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationHistory theorem history_publications_eq"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginPublicationWrapper.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationWrapper$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordFactsOriginPublicationWrapper root import"
+require_line_count 5 '^theorem ' "$selected_source_module" "PqxdhRecordFactsOriginPublicationWrapper theorem inventory"
+require_line_count 5 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationWrapper guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationWrapper\.coin_history$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationWrapper dependency coin_history"
+require_line_count 1 '^theorem coin_history([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationWrapper theorem coin_history"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationWrapper\.drawBit_history$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationWrapper dependency drawBit_history"
+require_line_count 1 '^theorem drawBit_history([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationWrapper theorem drawBit_history"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationWrapper\.uniformBytes_history$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationWrapper dependency uniformBytes_history"
+require_line_count 1 '^theorem uniformBytes_history([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationWrapper theorem uniformBytes_history"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationWrapper\.send_history$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationWrapper dependency send_history"
+require_line_count 1 '^theorem send_history([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationWrapper theorem send_history"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationWrapper\.history_append$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationWrapper dependency history_append"
+require_line_count 1 '^theorem history_append([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationWrapper theorem history_append"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginPublicationLedger.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationLedger$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordFactsOriginPublicationLedger root import"
+require_line_count 4 '^theorem ' "$selected_source_module" "PqxdhRecordFactsOriginPublicationLedger theorem inventory"
+require_line_count 4 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationLedger guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationLedger\.ledger_history$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationLedger dependency ledger_history"
+require_line_count 1 '^theorem ledger_history([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationLedger theorem ledger_history"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationLedger\.full_history$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationLedger dependency full_history"
+require_line_count 1 '^theorem full_history([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationLedger theorem full_history"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationLedger\.full_invariant$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationLedger dependency full_invariant"
+require_line_count 1 '^theorem full_invariant([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationLedger theorem full_invariant"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationLedger\.full_program_invariant$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationLedger dependency full_program_invariant"
+require_line_count 1 '^theorem full_program_invariant([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationLedger theorem full_program_invariant"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginPublicationGlobal.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationGlobal$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordFactsOriginPublicationGlobal root import"
+require_line_count 3 '^theorem ' "$selected_source_module" "PqxdhRecordFactsOriginPublicationGlobal theorem inventory"
+require_line_count 3 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationGlobal guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationGlobal\.coin_lift$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationGlobal dependency coin_lift"
+require_line_count 1 '^theorem coin_lift([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationGlobal theorem coin_lift"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationGlobal\.startup_kept$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationGlobal dependency startup_kept"
+require_line_count 1 '^theorem startup_kept([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationGlobal theorem startup_kept"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationGlobal\.ctxRun_history$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationGlobal dependency ctxRun_history"
+require_line_count 1 '^theorem ctxRun_history([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationGlobal theorem ctxRun_history"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginPublicationTemporal.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationTemporal$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordFactsOriginPublicationTemporal root import"
+require_line_count 5 '^theorem ' "$selected_source_module" "PqxdhRecordFactsOriginPublicationTemporal theorem inventory"
+require_line_count 5 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationTemporal guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationTemporal\.accepted_history$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationTemporal dependency accepted_history"
+require_line_count 1 '^theorem accepted_history([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationTemporal theorem accepted_history"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationTemporal\.acceptedBefore_mono$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationTemporal dependency acceptedBefore_mono"
+require_line_count 1 '^theorem acceptedBefore_mono([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationTemporal theorem acceptedBefore_mono"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationTemporal\.receivedBefore_mono$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationTemporal dependency receivedBefore_mono"
+require_line_count 1 '^theorem receivedBefore_mono([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationTemporal theorem receivedBefore_mono"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationTemporal\.native_receivedBefore$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationTemporal dependency native_receivedBefore"
+require_line_count 1 '^theorem native_receivedBefore([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationTemporal theorem native_receivedBefore"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationTemporal\.full_receivedBefore$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationTemporal dependency full_receivedBefore"
+require_line_count 1 '^theorem full_receivedBefore([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationTemporal theorem full_receivedBefore"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginPublicationPrefixes.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationPrefixes$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordFactsOriginPublicationPrefixes root import"
+require_line_count 4 '^theorem ' "$selected_source_module" "PqxdhRecordFactsOriginPublicationPrefixes theorem inventory"
+require_line_count 4 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationPrefixes guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationPrefixes\.split_snoc$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationPrefixes dependency split_snoc"
+require_line_count 1 '^theorem split_snoc([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationPrefixes theorem split_snoc"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationPrefixes\.full_invariant$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationPrefixes dependency full_invariant"
+require_line_count 1 '^theorem full_invariant([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationPrefixes theorem full_invariant"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationPrefixes\.full_program_invariant$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationPrefixes dependency full_program_invariant"
+require_line_count 1 '^theorem full_program_invariant([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationPrefixes theorem full_program_invariant"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationPrefixes\.ctxRun_prefixes$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationPrefixes dependency ctxRun_prefixes"
+require_line_count 1 '^theorem ctxRun_prefixes([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationPrefixes theorem ctxRun_prefixes"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginPublicationEvent.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationEvent$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordFactsOriginPublicationEvent root import"
+require_line_count 3 '^theorem ' "$selected_source_module" "PqxdhRecordFactsOriginPublicationEvent theorem inventory"
+require_line_count 3 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationEvent guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationEvent\.ctxView_prefixes$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationEvent dependency ctxView_prefixes"
+require_line_count 1 '^theorem ctxView_prefixes([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationEvent theorem ctxView_prefixes"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationEvent\.forged_failed$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationEvent dependency forged_failed"
+require_line_count 1 '^theorem forged_failed([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationEvent theorem forged_failed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationEvent\.ctxRun_unpublished_failed$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationEvent dependency ctxRun_unpublished_failed"
+require_line_count 1 '^theorem ctxRun_unpublished_failed([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationEvent theorem ctxRun_unpublished_failed"
 
 # Reviewed actual getter availability, distinct from network compromise powers.
 python3 proofs/source/test-getter-profile.py
