@@ -98,6 +98,11 @@ The eight guarded statements in `PqxdhBoundaryRecordPrelude` connect the shared 
 
 The ten guarded statements of `PqxdhBoundaryRecordExecution` connect the production receive transcription over extracted local operations to both frozen CE raw handlers, preserving optional replies and complete native state, logs, counters and hash cache. [The execution guide](impl/production-boundary-record-execution.md) explicitly retains both loop control and outer Rust dispatch as reviewed transcription, and lists the remaining source joins. No new contract, primitive proof or production change is introduced.
 
+## Source sampling and adaptive origin accounting
+
+The [reviewed origin accounting checkpoint](impl/record-facts-origin-accounting.md) integrates exact selected-seal sampling, adaptive selected-coordinate muting, public raw-candidate counting and full-state attempted-seal selection. Its 27 modules contain 185 guarded statements. The scanner and common trace preserve the actual source program and every reply; the probability tools average over its supported prefixes and union its counted attempted sealing ordinals.
+
+The fixed failed-writer candidate experiment has bound `2 * R / 2^512`, with `R` supplied by the original raw callback budget. The common-trace union has factor `S`, supplied by the source attempted-seal budget. The exact accepted-event inclusion and complete selected-callback statistical join remain consuming work, so this checkpoint makes no closed numerical record-origin or end-to-end protocol claim. The [receipt](impl/proof-receipts/record-facts-origin-accounting.json) records independent reviews and focused checks; source/Rust, ProVerif and primitive implementations are unchanged.
 ## Source send execution at the CE commands
 
 The thirteen guarded statements of `PqxdhBoundaryRecordSend` connect the source send driver over extracted local steps to both frozen CE send commands. Complete optional writer results, shared effects, state reinstallation and separate callback caps are preserved, including send failure consuming one allocated step. [The guide](impl/production-boundary-record-send.md) retains driver control and public Rust dispatch as reviewed transcription and lists remaining joins; no new cryptographic or deployment contract is added.
