@@ -440,7 +440,7 @@ open LazyOracleDiscard (LawEq)
 variable (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
   (checks : Checks)
 
-/-- The active branch of the second compile lemma at the challenger's draws `p` (the obligation that the post-challenge simulation of unit U6 discharges): for every constructed Server, every outcome of the common prefix with the strengthened relation at the cut whose CE cut is pending at raw bytes that verify to the selected PQ key, and every outcome of the native steps before encapsulation that reaches the encapsulation with an ephemeral, item 2's post-challenge phase on the active cut and the CE side from the steps after encapsulation (`activeCE`, with the decision together with the mark) have the same law. -/
+/-- The active branch of the second compile lemma at the challenger's draws `p` (the obligation that the post-challenge simulation of unit U6 is to discharge, in `PqxdhDeploymentIdealPost`): for every constructed Server, every outcome of the common prefix with the strengthened relation at the cut whose CE cut is pending at raw bytes that verify to the selected PQ key, and every outcome of the native steps before encapsulation that reaches the encapsulation with an ephemeral, item 2's post-challenge phase on the active cut and the CE side from the steps after encapsulation (`activeCE`, with the decision together with the mark) have the same law. -/
 def ActiveBranch {A : Type} (ensureInit : StateT A ProbComp Bool) (bounds : FreshBounds) (mode : Mode)
     (adversary : OracleComp (ModeSpec mode) X) (budget : Budget) (event : Observed X → Bool)
     (claim : Observed X → Option PqxdhDeploymentInterface.Handle) (g : Fin budget.accept × Fin budget.capacity)
