@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1867
+	[handwritten-lean]=1868
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -37853,6 +37853,39 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem finish_other([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge theorem finish_other"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostChallenge\.step_finishActive$' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostChallenge.step_finishActive"
 require_line_count 1 '^theorem step_finishActive([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge theorem step_finishActive"
+
+# CE-11b unit U6, fourth part: item 2's side of the middle execution (invariant, every simulated request, preservation, simulation).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostInvariant.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentIdealPostInvariant$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentIdealPostInvariant root import"
+require_line_count 13 '^theorem ' "$selected_source_module" "PqxdhDeploymentIdealPostInvariant theorem inventory"
+require_line_count 13 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentIdealPostInvariant guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostInvariant\.step_all$' "$selected_source_module" "PqxdhDeploymentIdealPostInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostInvariant.step_all"
+require_line_count 1 '^theorem step_all([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostInvariant theorem step_all"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostInvariant\.indices_set$' "$selected_source_module" "PqxdhDeploymentIdealPostInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostInvariant.indices_set"
+require_line_count 1 '^theorem indices_set([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostInvariant theorem indices_set"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostInvariant\.source_indices$' "$selected_source_module" "PqxdhDeploymentIdealPostInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostInvariant.source_indices"
+require_line_count 1 '^theorem source_indices([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostInvariant theorem source_indices"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostInvariant\.not_costly$' "$selected_source_module" "PqxdhDeploymentIdealPostInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostInvariant.not_costly"
+require_line_count 1 '^theorem not_costly([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostInvariant theorem not_costly"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostInvariant\.sourcePool_keep$' "$selected_source_module" "PqxdhDeploymentIdealPostInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostInvariant.sourcePool_keep"
+require_line_count 1 '^theorem sourcePool_keep([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostInvariant theorem sourcePool_keep"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostInvariant\.groupedOwnerCE_fields$' "$selected_source_module" "PqxdhDeploymentIdealPostInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostInvariant.groupedOwnerCE_fields"
+require_line_count 1 '^theorem groupedOwnerCE_fields([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostInvariant theorem groupedOwnerCE_fields"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostInvariant\.challenge_fields$' "$selected_source_module" "PqxdhDeploymentIdealPostInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostInvariant.challenge_fields"
+require_line_count 1 '^theorem challenge_fields([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostInvariant theorem challenge_fields"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostInvariant\.bump_facts$' "$selected_source_module" "PqxdhDeploymentIdealPostInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostInvariant.bump_facts"
+require_line_count 1 '^theorem bump_facts([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostInvariant theorem bump_facts"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostInvariant\.keep_real$' "$selected_source_module" "PqxdhDeploymentIdealPostInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostInvariant.keep_real"
+require_line_count 1 '^theorem keep_real([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostInvariant theorem keep_real"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostInvariant\.keep_buildHidden$' "$selected_source_module" "PqxdhDeploymentIdealPostInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostInvariant.keep_buildHidden"
+require_line_count 1 '^theorem keep_buildHidden([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostInvariant theorem keep_buildHidden"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostInvariant\.keep_challenge$' "$selected_source_module" "PqxdhDeploymentIdealPostInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostInvariant.keep_challenge"
+require_line_count 1 '^theorem keep_challenge([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostInvariant theorem keep_challenge"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostInvariant\.keep_all$' "$selected_source_module" "PqxdhDeploymentIdealPostInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostInvariant.keep_all"
+require_line_count 1 '^theorem keep_all([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostInvariant theorem keep_all"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostInvariant\.item_sim$' "$selected_source_module" "PqxdhDeploymentIdealPostInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostInvariant.item_sim"
+require_line_count 1 '^theorem item_sim([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostInvariant theorem item_sim"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
