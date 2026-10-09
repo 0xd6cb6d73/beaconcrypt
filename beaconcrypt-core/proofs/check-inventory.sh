@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1789
+	[handwritten-lean]=1790
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -37086,6 +37086,45 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem envG_admitted([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealFrame theorem envG_admitted"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealFrame\.seed_at_install_split$' "$selected_source_module" "PqxdhDeploymentIdealFrame dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealFrame.seed_at_install_split"
 require_line_count 1 '^theorem seed_at_install_split([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealFrame theorem seed_at_install_split"
+
+# CE-11b unit U4: public transcript functions for the provenance of the ideal environment (sessionAt, peerOf, FinishBefore, BeaconLinked, Anomaly, IdealSlots), U6's key facts on the record world (world_keyFacts, keyFacts_marked), the slot maps and ctGuess/ctGuessPk.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealTrace.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentIdealTrace$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentIdealTrace root import"
+require_line_count 16 '^theorem ' "$selected_source_module" "PqxdhDeploymentIdealTrace theorem inventory"
+require_line_count 16 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentIdealTrace guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealTrace\.acceptReplies_append$' "$selected_source_module" "PqxdhDeploymentIdealTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealTrace.acceptReplies_append"
+require_line_count 1 '^theorem acceptReplies_append([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealTrace theorem acceptReplies_append"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealTrace\.acceptReplies_other$' "$selected_source_module" "PqxdhDeploymentIdealTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealTrace.acceptReplies_other"
+require_line_count 1 '^theorem acceptReplies_other([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealTrace theorem acceptReplies_other"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealTrace\.acceptReplies_accept$' "$selected_source_module" "PqxdhDeploymentIdealTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealTrace.acceptReplies_accept"
+require_line_count 1 '^theorem acceptReplies_accept([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealTrace theorem acceptReplies_accept"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealTrace\.acceptReplies_length$' "$selected_source_module" "PqxdhDeploymentIdealTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealTrace.acceptReplies_length"
+require_line_count 1 '^theorem acceptReplies_length([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealTrace theorem acceptReplies_length"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealTrace\.sessionAt_other$' "$selected_source_module" "PqxdhDeploymentIdealTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealTrace.sessionAt_other"
+require_line_count 1 '^theorem sessionAt_other([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealTrace theorem sessionAt_other"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealTrace\.sessionAt_before$' "$selected_source_module" "PqxdhDeploymentIdealTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealTrace.sessionAt_before"
+require_line_count 1 '^theorem sessionAt_before([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealTrace theorem sessionAt_before"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealTrace\.sessionAt_accept$' "$selected_source_module" "PqxdhDeploymentIdealTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealTrace.sessionAt_accept"
+require_line_count 1 '^theorem sessionAt_accept([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealTrace theorem sessionAt_accept"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealTrace\.acceptCount_other$' "$selected_source_module" "PqxdhDeploymentIdealTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealTrace.acceptCount_other"
+require_line_count 1 '^theorem acceptCount_other([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealTrace theorem acceptCount_other"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealTrace\.acceptCount_accept$' "$selected_source_module" "PqxdhDeploymentIdealTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealTrace.acceptCount_accept"
+require_line_count 1 '^theorem acceptCount_accept([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealTrace theorem acceptCount_accept"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealTrace\.buildOf_other$' "$selected_source_module" "PqxdhDeploymentIdealTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealTrace.buildOf_other"
+require_line_count 1 '^theorem buildOf_other([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealTrace theorem buildOf_other"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealTrace\.buildOf_build$' "$selected_source_module" "PqxdhDeploymentIdealTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealTrace.buildOf_build"
+require_line_count 1 '^theorem buildOf_build([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealTrace theorem buildOf_build"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealTrace\.buildOf_some$' "$selected_source_module" "PqxdhDeploymentIdealTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealTrace.buildOf_some"
+require_line_count 1 '^theorem buildOf_some([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealTrace theorem buildOf_some"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealTrace\.split_keyFacts$' "$selected_source_module" "PqxdhDeploymentIdealTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealTrace.split_keyFacts"
+require_line_count 1 '^theorem split_keyFacts([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealTrace theorem split_keyFacts"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealTrace\.world_keyFacts$' "$selected_source_module" "PqxdhDeploymentIdealTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealTrace.world_keyFacts"
+require_line_count 1 '^theorem world_keyFacts([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealTrace theorem world_keyFacts"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealTrace\.keyFacts_marked$' "$selected_source_module" "PqxdhDeploymentIdealTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealTrace.keyFacts_marked"
+require_line_count 1 '^theorem keyFacts_marked([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealTrace theorem keyFacts_marked"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealTrace\.ctGuessPk_le$' "$selected_source_module" "PqxdhDeploymentIdealTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealTrace.ctGuessPk_le"
+require_line_count 1 '^theorem ctGuessPk_le([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealTrace theorem ctGuessPk_le"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"

@@ -1958,6 +1958,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvCost
 
 import BeaconcryptCore.Computational.PqxdhDeploymentIdealFrame
 
+import BeaconcryptCore.Computational.PqxdhDeploymentIdealTrace
+
 /-!
 # Beaconcrypt-core verification root
 
