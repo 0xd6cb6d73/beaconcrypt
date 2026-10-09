@@ -1903,6 +1903,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvBuild
 
 import BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvFinish
 
+import BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvFacts
+
 /-!
 # Beaconcrypt-core verification root
 
