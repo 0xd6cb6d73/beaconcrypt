@@ -1960,6 +1960,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentIdealFrame
 
 import BeaconcryptCore.Computational.PqxdhDeploymentIdealTrace
 
+import BeaconcryptCore.Computational.PqxdhDeploymentIdealOrigins
+
 /-!
 # Beaconcrypt-core verification root
 
