@@ -1653,8 +1653,8 @@
   ]
  },
  "third_part": {
-  "date": "2026-10-09T21:39:38.965445+00:00",
-  "scope": "CE-11b unit U6, third part (track u6b): item 2's per-request steps of the post-challenge simulation for the public HMAC, the local field reads, create and bundle (PqxdhDeploymentIdealPostRequests), a raw accept other than the selected one and a real build (PqxdhDeploymentIdealPostServer), and the table counters erased from item 2's view with the marked build (PqxdhDeploymentIdealPostHidden). ActiveBranch, PqxdhDeploymentIdealPost and PqxdhDeploymentIdealCompile are not built; ideal_compile is not claimed. Not reviewed; not integrated into central.",
+  "date": "2026-10-09T22:15:11.341081+00:00",
+  "scope": "CE-11b unit U6, third part (track u6b): item 2's per-request steps of the post-challenge simulation for the public HMAC, the local field reads, create and bundle (PqxdhDeploymentIdealPostRequests), a raw accept other than the selected one and a real build (PqxdhDeploymentIdealPostServer), the table counters erased from item 2's view with the marked build (PqxdhDeploymentIdealPostHidden), and every Beacon finish other than owner k's challenge finish (PqxdhDeploymentIdealPostFinish). Owner k's challenge finish, ActiveBranch, PqxdhDeploymentIdealPost and PqxdhDeploymentIdealCompile are not built; ideal_compile is not claimed. Not reviewed; not integrated into central.",
   "basis": "564dc4d621464ea72c99e5072d1cb64cf492179e",
   "topic": {
    "branch": "codex/deployment-ce11b-cut",
@@ -1662,16 +1662,16 @@
   },
   "plan": {
    "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
-   "sha256_at_generation": "8b8c741dbf7963badc185ae4cb5ce69f881e4990d3c76879a5f8b698aa18b9d9",
-   "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p3/docs/plan.at-u6b3-receipt-8b8c741d.md",
-   "dated_copy_sha256": "8b8c741dbf7963badc185ae4cb5ce69f881e4990d3c76879a5f8b698aa18b9d9",
-   "sections": "47-50 (A1, A2, Q1-Q3), 63-64, 67, 70-71 (U6 earlier parts), 74 (this part, new; 73 was the last section)"
+   "sha256_at_generation": "49ab372fd25f51d099aab1907464a630bba5a0e1106fc6e3f219886427b559db",
+   "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p3/docs/plan.at-u6b3-receipt-49ab372f.md",
+   "dated_copy_sha256": "49ab372fd25f51d099aab1907464a630bba5a0e1106fc6e3f219886427b559db",
+   "sections": "47-50 (A1, A2, Q1-Q3), 63-64, 67, 70-71 (U6 earlier parts), 74 and 76 (this part, new; 73 and 75 were the last sections before each)"
   },
   "design": {
    "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/design-v2.md",
-   "sha256": "3ff26b6648a71dd44ffd500b029c5be06df1872b361805a2987aab18a729d948",
-   "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p3/docs/design-v2.at-u6b3-receipt-3ff26b66.md",
-   "dated_copy_sha256": "3ff26b6648a71dd44ffd500b029c5be06df1872b361805a2987aab18a729d948",
+   "sha256": "208b8264f09a5fcd1eb900cd0ea6ad92b2196e712920889bdca18b65e70458af",
+   "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p3/docs/design-v2.at-u6b3-receipt-208b8264.md",
+   "dated_copy_sha256": "208b8264f09a5fcd1eb900cd0ea6ad92b2196e712920889bdca18b65e70458af",
    "sections": "8.4, 11, 25, 27 (this part, new; 26 was the last section)"
   },
   "notes": {
@@ -1690,6 +1690,14 @@
    {
     "commit": "4146b7bf432b373008a30e013c54b909de16e6f6",
     "subject": "Erase table counters from item 2's view and add the marked build step"
+   },
+   {
+    "commit": "5e01b866694e3a0f0103a3a3930d11609c9ca6b3",
+    "subject": "Document CE-11b unit U6, third part"
+   },
+   {
+    "commit": "9377e652b23cd36c991b622c52889db64e84fe5d",
+    "subject": "Add item 2's real Beacon finish step against the middle execution"
    }
   ],
   "commits_note": "First-parent commits on the topic after the basis that were made before this key was generated; the documentation commit that adds it is not listed.",
@@ -1697,9 +1705,10 @@
    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostRequests.lean": "2866e746e222d23d72b0aca68ecedeca4f0ca4dead96b6bc1e368be775c34169",
    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostServer.lean": "3f2161d2ed9c66fbd769e7be8834ac2fffbece54ecd49fbfdbc839197c2844b9",
    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostHidden.lean": "2ae3e91397ac87ace232657af892c3ccb98d28ff26c4b58700992b7bf894114a",
-   "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "1589f8059cc33b3c67a1be5e2cc64989ef22fdbf75326c68db3c0a05847977c7",
-   "beaconcrypt-core/proofs/check-inventory.sh": "fc1fbc2be3b949d84f78dd77193802ee997144e6a00cfa6e6c6ca5dec1c1b17e",
-   "beaconcrypt-core/proofs/reviewed-inventory.txt": "d043791a7cde1579e97e5ce60803f3266f34931a4cacfb8764afb9391ab07fd3"
+   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostFinish.lean": "b0250d5b2ee14a47af62c747cd933999f62680fdecfbde3079a0ad66bc5ef9a0",
+   "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "c55289cceb342241228a259bf11d987b4fe9f07a8a457023f226259669cc9b16",
+   "beaconcrypt-core/proofs/check-inventory.sh": "e2e3deae12623dee048d79c236e36dedb54551f83370455378a8a0c9335d0791",
+   "beaconcrypt-core/proofs/reviewed-inventory.txt": "dd623d6bf230704580b6eeaa09b3255e425dd4f4b32eeafd553620d1c8632c46"
   },
   "modules": [
    {
@@ -2222,32 +2231,262 @@
      ],
      "source_matches_worktree": true
     }
+   },
+   {
+    "name": "BeaconcryptCore.Computational.PqxdhDeploymentIdealPostFinish",
+    "theorem_count": 29,
+    "theorems": [
+     "collect_map",
+     "admitted_map",
+     "prepare_map",
+     "collect_free",
+     "prepare_free",
+     "owner_grouped",
+     "markedPrep_known",
+     "markedPrep_bounds",
+     "known_calls",
+     "onPool_map",
+     "known_fullCalls",
+     "nativeCtx_pure",
+     "nativeCtx_bind",
+     "simulate_nativeCtx",
+     "tail_known",
+     "middle_finish",
+     "stackRun_pure",
+     "stackRun_bind",
+     "skel_groupedPool",
+     "lowerEC_run",
+     "stack_prep",
+     "splitT_ctx",
+     "splitT_group_known",
+     "stack_known",
+     "owner_stack",
+     "sourceMid_finish",
+     "upperLayer_finish",
+     "upperLayer_finish_none",
+     "step_finish"
+    ],
+    "definitions": [
+     "mapSecrets",
+     "mapInputs",
+     "mapPrepared",
+     "MapCalls",
+     "groupH",
+     "preparationKnown",
+     "prepSecret",
+     "targetPrep",
+     "handlesKnown",
+     "tailKnown",
+     "stackRun"
+    ],
+    "guarded": 29,
+    "axiom_profile": {
+     "collect_map": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "admitted_map": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "prepare_map": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "collect_free": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "prepare_free": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "owner_grouped": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "markedPrep_known": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "markedPrep_bounds": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "known_calls": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "onPool_map": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "known_fullCalls": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "nativeCtx_pure": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "nativeCtx_bind": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "simulate_nativeCtx": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "tail_known": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "middle_finish": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "stackRun_pure": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "stackRun_bind": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "skel_groupedPool": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "lowerEC_run": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "stack_prep": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "splitT_ctx": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "splitT_group_known": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "stack_known": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "owner_stack": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "sourceMid_finish": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "upperLayer_finish": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "upperLayer_finish_none": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "step_finish": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    "direct_check_final": {
+     "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealPostFinish",
+     "start": "2026-10-09T22:11:13.587794856Z",
+     "end": "2026-10-09T22:11:20.838557113Z",
+     "exit": 0,
+     "head": "5e01b866694e3a0f0103a3a3930d11609c9ca6b3",
+     "dirty_paths": 1,
+     "source_sha256": "b0250d5b2ee14a47af62c747cd933999f62680fdecfbde3079a0ad66bc5ef9a0",
+     "log_bytes": 0,
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "artifact": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p3/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostFinish.olean",
+     "artifact_sha256": "d376a0febcc7c1138722ff821c5afae591b8b19a46744b8e12380d1218984fcc",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p3/leanpath",
+     "leanpath_sha256": "451ab277512dd5d0635ef1f47f87c7146d4535a447c961fda2ef2f6d58cf031a",
+     "command": [
+      "coord.sh",
+      "lean",
+      "claude",
+      "<label>",
+      "--",
+      "timeout",
+      "180",
+      "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+      "-j1",
+      "-M8000",
+      "--root=/tmp/beaconcrypt-deployment-ce11b-cut/beaconcrypt-core/proofs/lean",
+      "-o",
+      "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p3/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostFinish.olean",
+      "/tmp/beaconcrypt-deployment-ce11b-cut/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostFinish.lean"
+     ],
+     "source_matches_worktree": true
+    }
    }
   ],
-  "theorem_total": 65,
+  "theorem_total": 94,
   "allowed_axioms": [
    "Classical.choice",
    "Quot.sound",
    "propext"
   ],
   "design_names_realized_as": {
-   "per-command steps (8.4): HMAC, BLAKE2b, reveal, kernel read, create, bundle, accept, build": "StepAt/StepAtC lemmas: step_hmac, step_read, step_create, step_bundle (PostRequests), step_accept, step_build (PostServer), step_build_hidden (PostHidden); coins, hash and reveal from the second part",
+   "per-command steps (8.4): HMAC, BLAKE2b, reveal, kernel read, create, bundle, accept, build": "StepAt/StepAtC lemmas: step_hmac, step_read, step_create, step_bundle (PostRequests), step_accept, step_build (PostServer), step_build_hidden (PostHidden), step_finish (PostFinish; every finish other than owner k's challenge finish); coins, hash and reveal from the second part",
    "lookup counts (8.4 (ii))": "erased from item 2's view: PqxdhDeploymentIdealPostHidden.encodeMidC, lowerEC, StepAtC, stepAtC_of_stepAt",
    "router and decapsulation (8.4: router post, evalLayer)": "PqxdhDeploymentIdealPostRequests.jointProgram_fresh (no agreement premise away from the selected challenge decapsulation), lowerE_pool; PqxdhDeploymentIdealPostServer.lowerE_enc",
-   "finishes, ActiveBranch, ideal_compile (8.1, 8.4)": "not proved; remaining per the guide open points 1-4"
+   "real finishes (8.4)": "PqxdhDeploymentIdealPostFinish.step_finish, via prepare_map (handle naturality), known_fullCalls, middle_finish, owner_stack",
+   "owner k's challenge finish, ActiveBranch, ideal_compile (8.1, 8.4)": "not proved; remaining per the guide open points 1-4"
   },
   "deviations_from_design": [
    "the table counters are erased from item 2's view (the ideal marked build charges one lookup that item 2's skeleton does not)",
    "item 2's post/stopped router comparison re-proved away from the selected challenge decapsulation, without the agreement premise",
    "a split framework at the factored value type (SplitT) instead of transporting item 2's SplitN through RelC",
    "step lemmas take facts of the middle state as premises, to be discharged by the middle invariant",
-   "U6 published in three further modules (PqxdhDeploymentIdealPostRequests, PqxdhDeploymentIdealPostServer, PqxdhDeploymentIdealPostHidden; all registered); PqxdhDeploymentIdealPost and PqxdhDeploymentIdealCompile remain"
+   "real finishes through the naturality of the opaque preparation in its handle type (no support argument); owner k's challenge finish goes to a further module although the registry entry of PqxdhDeploymentIdealPostFinish names it",
+   "U6 published in four further modules (PqxdhDeploymentIdealPostRequests, PqxdhDeploymentIdealPostServer, PqxdhDeploymentIdealPostHidden, PqxdhDeploymentIdealPostFinish; all registered); owner k's challenge finish, PqxdhDeploymentIdealPost and PqxdhDeploymentIdealCompile remain"
   ],
   "contracts_used": {
    "new_contracts": [],
    "new_assumptions": [],
    "codec_laws": [],
-   "premises": "none in published claims; the step lemmas' premises (prefix pool with one key pair per owner and room, ownership invariant, Server identity slot, the constructed Server's public identity, the mark's allocated slot and stored value, the accept or build not hidden) are intermediate results of the unit"
+   "premises": "none in published claims; the step lemmas' premises (prefix pool with one key pair per owner and room, ownership invariant, Server identity slot, the constructed Server's public identity, the mark's allocated slot and stored value, the accept, build or finish not hidden, the addressed owner at the selected KEM index not in initSent) are intermediate results of the unit"
   },
   "scratch": {
    "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p3/dev/RQ.lean": {
@@ -2285,6 +2524,18 @@
      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     "note": "development copy of PqxdhDeploymentIdealPostHidden (without the generated guards)"
+   },
+   "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p3/dev/FN.lean": {
+    "sha256": "a1d29b355807a53fa6f88658ccf9ceece0cb05cb92bdc22120199810e76e15ed",
+    "sorry_free": true,
+    "last_dev_check": {
+     "run": "FN-71",
+     "source_sha256": "a1d29b355807a53fa6f88658ccf9ceece0cb05cb92bdc22120199810e76e15ed",
+     "result": "exit 0 seconds 7",
+     "log_bytes": 0,
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "note": "development copy of PqxdhDeploymentIdealPostFinish (without the generated guards)"
    }
   },
   "leanpath": {
@@ -2385,6 +2636,37 @@
      "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p3/root-checks/posthidden1/BeaconcryptCore.olean",
      "/tmp/beaconcrypt-deployment-ce11b-cut/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
     ]
+   },
+   "postfinish1": {
+    "module": "BeaconcryptCore",
+    "start": "2026-10-09T22:11:34.749261972Z",
+    "end": "2026-10-09T22:11:37.119957767Z",
+    "exit": 0,
+    "head": "5e01b866694e3a0f0103a3a3930d11609c9ca6b3",
+    "dirty_paths": 4,
+    "source_sha256": "c55289cceb342241228a259bf11d987b4fe9f07a8a457023f226259669cc9b16",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p3/root-checks/postfinish1/BeaconcryptCore.olean",
+    "artifact_sha256": "c55513c22a46aa9b76dcf5cb3c85d2e725aace9f2341fd65f2f0b199ec8ad627",
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p3/leanpath",
+    "leanpath_sha256": "451ab277512dd5d0635ef1f47f87c7146d4535a447c961fda2ef2f6d58cf031a",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-ce11b-cut/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p3/root-checks/postfinish1/BeaconcryptCore.olean",
+     "/tmp/beaconcrypt-deployment-ce11b-cut/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+    ]
    }
   },
   "root_checks_note": "each root check ran before its Lean commit with the root import and the module in the tree (head = parent commit, uncommitted paths counted)",
@@ -2397,11 +2679,20 @@
     "working_tree_dirt_lines": 0,
     "log_sha256": "87d82dae53418242d9787340742422fcd4de059d500b0bd5f9503cd75fd5fa9c",
     "result_line": "Formal-verification inventory matches the reviewed boundary."
+   },
+   "inventory-lean2": {
+    "exit": 0,
+    "start": "2026-10-09T22:12:23Z",
+    "end": "2026-10-09T22:14:14Z",
+    "head_at_run": "9377e652b23cd36c991b622c52889db64e84fe5d",
+    "working_tree_dirt_lines": 0,
+    "log_sha256": "f92febfb1f9482cc9698eec87f963fb8190b1ac3c8acef7c189fb33523f36ca3",
+    "result_line": "Formal-verification inventory matches the reviewed boundary."
    }
   },
   "inventory": {
    "handwritten_lean_rows_before": 1820,
-   "handwritten_lean_rows_after": 1823,
+   "handwritten_lean_rows_after": 1824,
    "rehashed": [
     "proofs/lean/BeaconcryptCore.lean",
     "proofs/check-inventory.sh"
@@ -2411,7 +2702,8 @@
   "forbidden_scan": {
    "PqxdhDeploymentIdealPostRequests": [],
    "PqxdhDeploymentIdealPostServer": [],
-   "PqxdhDeploymentIdealPostHidden": []
+   "PqxdhDeploymentIdealPostHidden": [],
+   "PqxdhDeploymentIdealPostFinish": []
   },
   "git_diff_check": {
    "range": "564dc4d621464ea72c99e5072d1cb64cf492179e..working tree",
@@ -2425,9 +2717,9 @@
   ],
   "reestimate": {
    "unit": "nominal agent-days",
-   "ActiveBranch_remaining_before": "3.25-6",
-   "U6_third_part_took": "about 0.75",
-   "ActiveBranch_remaining": "2.5-5 (finishes 0.75-1.5, invariants 0.75-1.5, the accept on item 2's side 0.5-1, assembly 0.5-1)",
+   "ActiveBranch_remaining_before": "3.25-6 (second part); 2.5-5 after the first three modules",
+   "U6_third_part_took": "about 1.25",
+   "ActiveBranch_remaining": "2.25-4.5",
    "Compile": "about 0.25"
   },
   "review": null
