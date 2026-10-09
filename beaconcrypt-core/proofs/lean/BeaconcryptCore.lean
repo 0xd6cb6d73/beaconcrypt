@@ -1964,6 +1964,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentIdealOrigins
 
 import BeaconcryptCore.Computational.PqxdhDeploymentIdealSessions
 
+import BeaconcryptCore.Computational.PqxdhDeploymentIdealProvenance
+
 /-!
 # Beaconcrypt-core verification root
 
