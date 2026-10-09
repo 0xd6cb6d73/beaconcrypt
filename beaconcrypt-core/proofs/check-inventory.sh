@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1863
+	[handwritten-lean]=1864
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -37627,6 +37627,59 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem buildSplitFwd_written([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealBeaconFacts theorem buildSplitFwd_written"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealBeaconFacts\.buildCached_written$' "$selected_source_module" "PqxdhDeploymentIdealBeaconFacts dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealBeaconFacts.buildCached_written"
 require_line_count 1 '^theorem buildCached_written([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealBeaconFacts theorem buildCached_written"
+
+# CE-11b unit U4 remainder: Beacon provenance invariant, Beacon converse L4, full ideal_slots (IdealSlots or Anomaly) and ideal_slots_prefix.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealBeacon.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentIdealBeacon$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentIdealBeacon root import"
+require_line_count 23 '^theorem ' "$selected_source_module" "PqxdhDeploymentIdealBeacon theorem inventory"
+require_line_count 23 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentIdealBeacon guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealBeacon\.acceptCount_prefix$' "$selected_source_module" "PqxdhDeploymentIdealBeacon dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealBeacon.acceptCount_prefix"
+require_line_count 1 '^theorem acceptCount_prefix([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealBeacon theorem acceptCount_prefix"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealBeacon\.lateFinish_count$' "$selected_source_module" "PqxdhDeploymentIdealBeacon dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealBeacon.lateFinish_count"
+require_line_count 1 '^theorem lateFinish_count([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealBeacon theorem lateFinish_count"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealBeacon\.lateFinish_append$' "$selected_source_module" "PqxdhDeploymentIdealBeacon dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealBeacon.lateFinish_append"
+require_line_count 1 '^theorem lateFinish_append([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealBeacon theorem lateFinish_append"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealBeacon\.finish_split$' "$selected_source_module" "PqxdhDeploymentIdealBeacon dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealBeacon.finish_split"
+require_line_count 1 '^theorem finish_split([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealBeacon theorem finish_split"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealBeacon\.written_read$' "$selected_source_module" "PqxdhDeploymentIdealBeacon dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealBeacon.written_read"
+require_line_count 1 '^theorem written_read([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealBeacon theorem written_read"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealBeacon\.beacon_initial$' "$selected_source_module" "PqxdhDeploymentIdealBeacon dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealBeacon.beacon_initial"
+require_line_count 1 '^theorem beacon_initial([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealBeacon theorem beacon_initial"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealBeacon\.quiet_finish$' "$selected_source_module" "PqxdhDeploymentIdealBeacon dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealBeacon.quiet_finish"
+require_line_count 1 '^theorem quiet_finish([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealBeacon theorem quiet_finish"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealBeacon\.beacon_quiet$' "$selected_source_module" "PqxdhDeploymentIdealBeacon dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealBeacon.beacon_quiet"
+require_line_count 1 '^theorem beacon_quiet([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealBeacon theorem beacon_quiet"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealBeacon\.beacon_realQuiet$' "$selected_source_module" "PqxdhDeploymentIdealBeacon dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealBeacon.beacon_realQuiet"
+require_line_count 1 '^theorem beacon_realQuiet([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealBeacon theorem beacon_realQuiet"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealBeacon\.beacon_acceptOther$' "$selected_source_module" "PqxdhDeploymentIdealBeacon dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealBeacon.beacon_acceptOther"
+require_line_count 1 '^theorem beacon_acceptOther([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealBeacon theorem beacon_acceptOther"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealBeacon\.beacon_selected$' "$selected_source_module" "PqxdhDeploymentIdealBeacon dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealBeacon.beacon_selected"
+require_line_count 1 '^theorem beacon_selected([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealBeacon theorem beacon_selected"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealBeacon\.beacon_realBuild$' "$selected_source_module" "PqxdhDeploymentIdealBeacon dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealBeacon.beacon_realBuild"
+require_line_count 1 '^theorem beacon_realBuild([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealBeacon theorem beacon_realBuild"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealBeacon\.beacon_markedBuild$' "$selected_source_module" "PqxdhDeploymentIdealBeacon dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealBeacon.beacon_markedBuild"
+require_line_count 1 '^theorem beacon_markedBuild([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealBeacon theorem beacon_markedBuild"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealBeacon\.beacon_challenge$' "$selected_source_module" "PqxdhDeploymentIdealBeacon dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealBeacon.beacon_challenge"
+require_line_count 1 '^theorem beacon_challenge([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealBeacon theorem beacon_challenge"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealBeacon\.beacon_rStep$' "$selected_source_module" "PqxdhDeploymentIdealBeacon dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealBeacon.beacon_rStep"
+require_line_count 1 '^theorem beacon_rStep([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealBeacon theorem beacon_rStep"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealBeacon\.finishOf_mem$' "$selected_source_module" "PqxdhDeploymentIdealBeacon dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealBeacon.finishOf_mem"
+require_line_count 1 '^theorem finishOf_mem([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealBeacon theorem finishOf_mem"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealBeacon\.keyFacts_marked_prefix$' "$selected_source_module" "PqxdhDeploymentIdealBeacon dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealBeacon.keyFacts_marked_prefix"
+require_line_count 1 '^theorem keyFacts_marked_prefix([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealBeacon theorem keyFacts_marked_prefix"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealBeacon\.trace_designated_prefix$' "$selected_source_module" "PqxdhDeploymentIdealBeacon dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealBeacon.trace_designated_prefix"
+require_line_count 1 '^theorem trace_designated_prefix([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealBeacon theorem trace_designated_prefix"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealBeacon\.beacon_converse$' "$selected_source_module" "PqxdhDeploymentIdealBeacon dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealBeacon.beacon_converse"
+require_line_count 1 '^theorem beacon_converse([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealBeacon theorem beacon_converse"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealBeacon\.world_beacon$' "$selected_source_module" "PqxdhDeploymentIdealBeacon dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealBeacon.world_beacon"
+require_line_count 1 '^theorem world_beacon([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealBeacon theorem world_beacon"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealBeacon\.ideal_slots_prefix$' "$selected_source_module" "PqxdhDeploymentIdealBeacon dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealBeacon.ideal_slots_prefix"
+require_line_count 1 '^theorem ideal_slots_prefix([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealBeacon theorem ideal_slots_prefix"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealBeacon\.ideal_beacon$' "$selected_source_module" "PqxdhDeploymentIdealBeacon dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealBeacon.ideal_beacon"
+require_line_count 1 '^theorem ideal_beacon([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealBeacon theorem ideal_beacon"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealBeacon\.ideal_slots$' "$selected_source_module" "PqxdhDeploymentIdealBeacon dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealBeacon.ideal_slots"
+require_line_count 1 '^theorem ideal_slots([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealBeacon theorem ideal_slots"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
