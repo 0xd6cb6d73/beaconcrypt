@@ -107,6 +107,10 @@ The fixed failed-writer candidate experiment has bound `2 * R / 2^512`, with `R`
 
 The thirteen guarded statements of `PqxdhBoundaryRecordSend` connect the source send driver over extracted local steps to both frozen CE send commands. Complete optional writer results, shared effects, state reinstallation and separate callback caps are preserved, including send failure consuming one allocated step. [The guide](impl/production-boundary-record-send.md) retains driver control and public Rust dispatch as reviewed transcription and lists remaining joins; no new cryptographic or deployment contract is added.
 
+## Live receive owner state and callback caps
+
+The seven guarded statements of `PqxdhBoundaryRecordReceiveState` preserve the complete interpreted owner result and primitive poststate. Failed live receives restore owned protocol state while retaining primitive/cache effects and counting the attempt once. Immutable metadata and separate owner, Server and Beacon native callback caps are transported through the reviewed receive executor boundary. [The guide](impl/production-boundary-record-receive-state.md) keeps whole loops and public Rust adapters as reviewed transcriptions and identifies the remaining consumption/replay and adaptive joins. This adds no registration budget or cryptographic assumption.
+
 ## Historical F* correspondence
 
 The migration inventories every historical lemma declaration: [192 ratchet declarations](impl/ratchet-fstar-coverage.md), [68 PQXDH declarations](impl/pqxdh-fstar-coverage.md), and [25 commitment declarations](impl/commitment-fstar-coverage.md). These ledgers distinguish semantic matches from removed implementation helpers. Five old planner bounds changed during the earlier extraction refactor: the current implementation retains fifty skipped keys and derives the authentication target separately, allowing fifty-one total derivations. The old fifty-total-derivation clauses are explicitly adapted, not claimed as literal statement equality.

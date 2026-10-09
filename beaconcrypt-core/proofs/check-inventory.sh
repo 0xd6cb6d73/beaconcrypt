@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1820
+	[handwritten-lean]=1821
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -41944,6 +41944,27 @@ require_line_count 1 '^theorem executeBeacon_bounds([[:space:]]|$)' "$selected_s
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRecordSend\.executeBeacon_bounds$' "$selected_source_module" "PqxdhBoundaryRecordSend dependency executeBeacon_bounds"
 require_line_count 1 '^theorem executeOwner_active([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRecordSend theorem executeOwner_active"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRecordSend\.executeOwner_active$' "$selected_source_module" "PqxdhBoundaryRecordSend dependency executeOwner_active"
+
+
+# Source live receive complete owner poststate and role callback accounting.
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryRecordReceiveState.lean
+require_line_count 7 '^theorem ' "$selected_source_module" "PqxdhBoundaryRecordReceiveState theorem total"
+require_line_count 7 '^#guard_msgs in$' "$selected_source_module" "PqxdhBoundaryRecordReceiveState guarded dependencies"
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhBoundaryRecordReceiveState$' proofs/lean/BeaconcryptCore.lean "PqxdhBoundaryRecordReceiveState root import"
+require_line_count 1 '^theorem owner_interpretation([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRecordReceiveState theorem owner_interpretation"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRecordReceiveState\.owner_interpretation$' "$selected_source_module" "PqxdhBoundaryRecordReceiveState dependency owner_interpretation"
+require_line_count 1 '^theorem owner_supported([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRecordReceiveState theorem owner_supported"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRecordReceiveState\.owner_supported$' "$selected_source_module" "PqxdhBoundaryRecordReceiveState dependency owner_supported"
+require_line_count 1 '^theorem owner_failure([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRecordReceiveState theorem owner_failure"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRecordReceiveState\.owner_failure$' "$selected_source_module" "PqxdhBoundaryRecordReceiveState dependency owner_failure"
+require_line_count 1 '^theorem owner_metadata([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRecordReceiveState theorem owner_metadata"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRecordReceiveState\.owner_metadata$' "$selected_source_module" "PqxdhBoundaryRecordReceiveState dependency owner_metadata"
+require_line_count 1 '^theorem owner_bounds([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRecordReceiveState theorem owner_bounds"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRecordReceiveState\.owner_bounds$' "$selected_source_module" "PqxdhBoundaryRecordReceiveState dependency owner_bounds"
+require_line_count 1 '^theorem server_bounds([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRecordReceiveState theorem server_bounds"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRecordReceiveState\.server_bounds$' "$selected_source_module" "PqxdhBoundaryRecordReceiveState dependency server_bounds"
+require_line_count 1 '^theorem beacon_bounds([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRecordReceiveState theorem beacon_bounds"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRecordReceiveState\.beacon_bounds$' "$selected_source_module" "PqxdhBoundaryRecordReceiveState dependency beacon_bounds"
 
 # Reviewed actual getter availability, distinct from network compromise powers.
 python3 proofs/source/test-getter-profile.py
