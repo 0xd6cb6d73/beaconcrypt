@@ -2,7 +2,7 @@
   "stage": "Actual CTX cache observation and source first-seal freshness, Task A (2026-10-09)",
   "base": "5ba38799897dc8d3e79dfc19f1cd63c95050afe9",
   "topic": "codex/record-lift-facts-cache",
-  "state": "All frozen theorem modules independently approved and focused publication checks passed; final bundle review and publication pending",
+  "state": "All frozen theorem modules and final publication bundle independently approved; focused checks passed; proof topic pushed and directly verified; central integration pending",
   "headlines": [
     "PqxdhRecordFactsPrivateCacheWorld.view_observation",
     "PqxdhRecordFactsPrivateCacheSource.source_prefix_fresh"
@@ -1034,5 +1034,68 @@
     "Join accepted-record and unpublished-frame source events to those bounds",
     "Discharge full OriginStatement and BindingStatement with original counted query/reduction bills"
   ],
-  "updated_at": "2026-10-09T17:06:57.358289+00:00"
+  "updated_at": "2026-10-09T17:10:06.694416+00:00",
+  "final_bundle_review": {
+    "path": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache99-publication-review.json",
+    "sha256": "0741437f0d203064382afa061b82e78f980720873a3324bf5e52d8851f0d29e2",
+    "receipt": {
+      "stage": "Counter+Cache99 final publication bundle",
+      "reviewer": "Codex root, independent of bundle/cache author; Counter19 statements separately independently reviewed by boundary_survey",
+      "verdict": "APPROVE",
+      "time": "2026-10-09T17:09:03.438554+00:00",
+      "candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/publication/candidate.json",
+      "candidate_sha256": "f2a93d45f8cb2582c97ae85883def4d7a148070133342dd2d1559dd9b5413ec4",
+      "base": "5ba38799897dc8d3e79dfc19f1cd63c95050afe9",
+      "files": {
+        "/tmp/beaconcrypt-record-lift-facts-cache/beaconcrypt-core/proofs/check-inventory.sh": "cede218ab3b51f9471fd8c490284286d4730ec01fd94734bb4af73f43e569657",
+        "/tmp/beaconcrypt-record-lift-facts-cache/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "a8c1dec806c34cacec9a9eef96d67cad8872a9b67d30559a95e88b40c8ec0f4c",
+        "/tmp/beaconcrypt-record-lift-facts-cache/beaconcrypt-core/proofs/reviewed-inventory.txt": "820972b9a7b65ab7855e79b375bcc3d630b7fb10edc563e986c116e4e1cd89c9",
+        "/tmp/beaconcrypt-record-lift-facts-cache/beaconcrypt-core/proofs/trusted-boundary.md": "936138f6f2ec8f5cb7442798ae8ab55f8ae06d17ee5540b4596f426b1d8f6b35",
+        "/tmp/beaconcrypt-record-lift-facts-cache/doc/composition-assumptions.md": "6a38f9f57620006685dd54444fff4f71214ffcac3e6f33cab5ec8b7f2a4aadbd",
+        "/tmp/beaconcrypt-record-lift-facts-cache/doc/formal-verification-analysis.md": "25ddb8f11a489f8522a2072cfd32838afe1d0c4acfa1122a7541cab1c903fde2",
+        "/tmp/beaconcrypt-record-lift-facts-cache/doc/formal-verification.md": "80577f54659743ad49e5857e3e4015eb5f568060346693bbaa0c58378025effe",
+        "/tmp/beaconcrypt-record-lift-facts-cache/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsCounter.lean": "34bb48c6952a04ab798fda2433c1d473b0cf19a2fe2a57a63966a60a9f8274ee",
+        "/tmp/beaconcrypt-record-lift-facts-cache/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsCounterCtx.lean": "70bebd1a788ccb911cb3f4c1f81c466632a2fe75c5526b4c984ce0ceb49250b8",
+        "/tmp/beaconcrypt-record-lift-facts-cache/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsCounterProtocol.lean": "2514951e414fadd68f52c4f9f3901d0c9543dd12f82dc0f9348e41e558f10e65",
+        "/tmp/beaconcrypt-record-lift-facts-cache/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsPrivateCache.lean": "e7a6154376e07a95f36e9d9faf6d2a5a7c4ffeb97b5b25edb9a4fdb2024ce312",
+        "/tmp/beaconcrypt-record-lift-facts-cache/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsPrivateCacheCompiler.lean": "374dfa6f8e97c466d8ef7d55742c9829a224c723eed08fbf433ba249db6c119a",
+        "/tmp/beaconcrypt-record-lift-facts-cache/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsPrivateCacheFamily.lean": "0a1eccf32ea95b5c464134ff23fbb016d7e6cbd2f21b00d9ab3a730cac1cf01a",
+        "/tmp/beaconcrypt-record-lift-facts-cache/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsPrivateCacheFresh.lean": "e098efcd2e8934c7bbc05e1f517ca496bf7dacb9088ed9ff339ad65b2443f720",
+        "/tmp/beaconcrypt-record-lift-facts-cache/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsPrivateCacheRandom.lean": "9ab6f0c59dcc165a49873ffc5048f56dd678a674170dd60b324a70cab41c4e2e",
+        "/tmp/beaconcrypt-record-lift-facts-cache/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsPrivateCacheServices.lean": "a66599f1fe5dfe85c47d1bc082ec130793243e13a6768418a6c3635ef4748cd2",
+        "/tmp/beaconcrypt-record-lift-facts-cache/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsPrivateCacheSource.lean": "9b14b63ba9eadcfcdad320220ce4c4ebda0baa79c8276953442b42fefe80e734",
+        "/tmp/beaconcrypt-record-lift-facts-cache/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsPrivateCacheWorld.lean": "183a73d00d8b38d6572160a1c9d62ac6921d4e01490fcf713fb20335efe096c0",
+        "/tmp/beaconcrypt-record-lift-facts-cache/doc/impl/proof-receipts/record-facts-cache-observation.json": "51dbcf996332c1bf7eea9a085280551df803554f975285e299d636abd1ed5d7a",
+        "/tmp/beaconcrypt-record-lift-facts-cache/doc/impl/record-facts-cache-observation.md": "29af72d3848c739f5663dddcd94eed05f8238060d5f7ed130ea122c1fca2ded8",
+        "/tmp/beaconcrypt-record-lift-facts-cache/doc/impl/record-facts-counter-ctx.md": "1f83a14041a98809a62f23c2413d54b65eeef038b1bcb164780b1a446abf542f",
+        "/tmp/beaconcrypt-record-lift-facts-cache/doc/impl/record-facts-counter-protocol.md": "6bfe569f370970b480314efcaf29354c41507f5b9c896643fff62696aa6b3ed2",
+        "/tmp/beaconcrypt-record-lift-facts-cache/doc/impl/record-facts-counter.md": "d00c0158024ab4b71cc00c1792b735a228a5f579cf51fd85a4bed546779b6329",
+        "/tmp/beaconcrypt-record-lift-facts-cache/doc/impl/record-facts-private-cache-compiler.md": "adc9b5c8792d1c3461d4113a6a73c229ec0575dcb2d433701adb8de7f4ca0efa",
+        "/tmp/beaconcrypt-record-lift-facts-cache/doc/impl/record-facts-private-cache-family.md": "c74edeae0c4eed7309b9e77eaf1a2d9b508f90c19b2f3203522ea95e1f64e016",
+        "/tmp/beaconcrypt-record-lift-facts-cache/doc/impl/record-facts-private-cache-fresh.md": "bfc20bde24c7d2954977290305de5c514f64dd546f72448eda6f66591475ff36",
+        "/tmp/beaconcrypt-record-lift-facts-cache/doc/impl/record-facts-private-cache-random.md": "535943217804c6043ea2612c229eae63bd0ad672a471c479d5086454728d8515",
+        "/tmp/beaconcrypt-record-lift-facts-cache/doc/impl/record-facts-private-cache-services.md": "971c3ebd6d2026a4c6b3248bd08db4c1e9e1d36590b773320f1e7bbc6fe5a592",
+        "/tmp/beaconcrypt-record-lift-facts-cache/doc/impl/record-facts-private-cache-source.md": "9cc3182af4c62d961cb573b340fdce0f9525d0ba0b8ad2116ad33ba2ee5badd7",
+        "/tmp/beaconcrypt-record-lift-facts-cache/doc/impl/record-facts-private-cache-world.md": "a4fab0ba67fcfed918881a8d631849f22f97e5389914820309e3a44f004224dc",
+        "/tmp/beaconcrypt-record-lift-facts-cache/doc/impl/record-facts-private-cache.md": "df1d237797d70a3237e73139b0751aaf6580f57825827b980a9278ba4e07fa3b"
+      },
+      "checks": [
+        "All31 final file digests and eleven independently reviewed source/guide/candidate pins match; review receipts are embedded exactly.",
+        "99 exact axiom guards mapped to new checker gates; only removed checker line updates Lean count1720\u21921731. No prior gate disabled or removed.",
+        "Maintained documentation and stage guide accurately separate arbitrary-mode counter projection, replay/random actual-world cache law, and erased-source prefix freshness; no future writer-success conditioning or new freshness premise.",
+        "Read actual source_prefix_fresh and checkedRun_safe statements against independent Source24 review: initialized actual Protocol.program, supported prefix, original all-reply program_fresh, no assumed conclusion.",
+        "All14 final focused module/root/inventory/fidelity check receipt/log/artifact hashes verified with exit0.",
+        "No new primitive/codec/deployment contract, custom axiom, primitive proof or original query-cost equality. Numerical bounds and full Origin/Binding remain explicitly open."
+      ],
+      "findings": [],
+      "publication_condition": "Commit exact31files only with Codex footer, push/fetch/directverify; normal reconciliation/integration coordination required."
+    }
+  },
+  "proof_commit": "de6374d8a50c6fa59c8e6f1d8bdf74f01247583e",
+  "publication": {
+    "local_tracking_direct_remote": "de6374d8a50c6fa59c8e6f1d8bdf74f01247583e",
+    "reconciled_central": "5ba38799897dc8d3e79dfc19f1cd63c95050afe9",
+    "reconciliation": "Fetched origin and normal merge reports already up to date; all proof/checker/root/inventory hashes match successful focused verification.",
+    "receipt_only_followup": "Only this receipt adds final review and pushed proof commit; no proof, gate, inventory, source or model changes."
+  }
 }
