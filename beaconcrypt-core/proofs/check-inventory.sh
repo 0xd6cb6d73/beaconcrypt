@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1864
+	[handwritten-lean]=1865
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -37680,6 +37680,31 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem ideal_beacon([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealBeacon theorem ideal_beacon"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealBeacon\.ideal_slots$' "$selected_source_module" "PqxdhDeploymentIdealBeacon dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealBeacon.ideal_slots"
 require_line_count 1 '^theorem ideal_slots([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealBeacon theorem ideal_slots"
+
+# CE-11b unit U4 remainder: the transcript guess of the Beacon-side anomaly and the identical-until-stop coupling.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealGuess.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentIdealGuess$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentIdealGuess root import"
+require_line_count 9 '^theorem ' "$selected_source_module" "PqxdhDeploymentIdealGuess theorem inventory"
+require_line_count 9 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentIdealGuess guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealGuess\.relTriple_until_stop$' "$selected_source_module" "PqxdhDeploymentIdealGuess dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealGuess.relTriple_until_stop"
+require_line_count 1 '^theorem relTriple_until_stop([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealGuess theorem relTriple_until_stop"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealGuess\.lawEq_until_stop$' "$selected_source_module" "PqxdhDeploymentIdealGuess dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealGuess.lawEq_until_stop"
+require_line_count 1 '^theorem lawEq_until_stop([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealGuess theorem lawEq_until_stop"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealGuess\.cutAt_prefix$' "$selected_source_module" "PqxdhDeploymentIdealGuess dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealGuess.cutAt_prefix"
+require_line_count 1 '^theorem cutAt_prefix([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealGuess theorem cutAt_prefix"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealGuess\.acceptCount_cons$' "$selected_source_module" "PqxdhDeploymentIdealGuess dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealGuess.acceptCount_cons"
+require_line_count 1 '^theorem acceptCount_cons([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealGuess theorem acceptCount_cons"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealGuess\.cutAt_append$' "$selected_source_module" "PqxdhDeploymentIdealGuess dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealGuess.cutAt_append"
+require_line_count 1 '^theorem cutAt_append([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealGuess theorem cutAt_append"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealGuess\.cutAt_keeps$' "$selected_source_module" "PqxdhDeploymentIdealGuess dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealGuess.cutAt_keeps"
+require_line_count 1 '^theorem cutAt_keeps([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealGuess theorem cutAt_keeps"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealGuess\.earlyFinish_eq$' "$selected_source_module" "PqxdhDeploymentIdealGuess dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealGuess.earlyFinish_eq"
+require_line_count 1 '^theorem earlyFinish_eq([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealGuess theorem earlyFinish_eq"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealGuess\.guessCt_append$' "$selected_source_module" "PqxdhDeploymentIdealGuess dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealGuess.guessCt_append"
+require_line_count 1 '^theorem guessCt_append([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealGuess theorem guessCt_append"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealGuess\.anomaly_guess$' "$selected_source_module" "PqxdhDeploymentIdealGuess dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealGuess.anomaly_guess"
+require_line_count 1 '^theorem anomaly_guess([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealGuess theorem anomaly_guess"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
