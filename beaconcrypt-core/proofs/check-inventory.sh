@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1866
+	[handwritten-lean]=1867
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -37796,6 +37796,63 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem upperLayer_finish_none([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostFinish theorem upperLayer_finish_none"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostFinish\.step_finish$' "$selected_source_module" "PqxdhDeploymentIdealPostFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostFinish.step_finish"
 require_line_count 1 '^theorem step_finish([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostFinish theorem step_finish"
+
+# CE-11b unit U6, fourth part: owner k's challenge finish against the middle execution, and every finish after an active selected accept.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostChallenge.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentIdealPostChallenge$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentIdealPostChallenge root import"
+require_line_count 25 '^theorem ' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge theorem inventory"
+require_line_count 25 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostChallenge\.collect_relabel$' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostChallenge.collect_relabel"
+require_line_count 1 '^theorem collect_relabel([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge theorem collect_relabel"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostChallenge\.prepare_relabel$' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostChallenge.prepare_relabel"
+require_line_count 1 '^theorem prepare_relabel([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge theorem prepare_relabel"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostChallenge\.reservation_selected$' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostChallenge.reservation_selected"
+require_line_count 1 '^theorem reservation_selected([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge theorem reservation_selected"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostChallenge\.post_target$' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostChallenge.post_target"
+require_line_count 1 '^theorem post_target([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge theorem post_target"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostChallenge\.stack_target$' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostChallenge.stack_target"
+require_line_count 1 '^theorem stack_target([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge theorem stack_target"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostChallenge\.prepKnown_erase$' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostChallenge.prepKnown_erase"
+require_line_count 1 '^theorem prepKnown_erase([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge theorem prepKnown_erase"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostChallenge\.stack_prepQuery$' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostChallenge.stack_prepQuery"
+require_line_count 1 '^theorem stack_prepQuery([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge theorem stack_prepQuery"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostChallenge\.stack_prepProgram$' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostChallenge.stack_prepProgram"
+require_line_count 1 '^theorem stack_prepProgram([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge theorem stack_prepProgram"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostChallenge\.tableLayer_flat$' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostChallenge.tableLayer_flat"
+require_line_count 1 '^theorem tableLayer_flat([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge theorem tableLayer_flat"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostChallenge\.slot_known$' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostChallenge.slot_known"
+require_line_count 1 '^theorem slot_known([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge theorem slot_known"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostChallenge\.stack_challenge$' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostChallenge.stack_challenge"
+require_line_count 1 '^theorem stack_challenge([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge theorem stack_challenge"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostChallenge\.groupCE_keep$' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostChallenge.groupCE_keep"
+require_line_count 1 '^theorem groupCE_keep([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge theorem groupCE_keep"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostChallenge\.stack_challengeC$' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostChallenge.stack_challengeC"
+require_line_count 1 '^theorem stack_challengeC([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge theorem stack_challengeC"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostChallenge\.prep_calls$' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostChallenge.prep_calls"
+require_line_count 1 '^theorem prep_calls([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge theorem prep_calls"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostChallenge\.slot_prep$' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostChallenge.slot_prep"
+require_line_count 1 '^theorem slot_prep([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge theorem slot_prep"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostChallenge\.owner_challenge$' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostChallenge.owner_challenge"
+require_line_count 1 '^theorem owner_challenge([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge theorem owner_challenge"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostChallenge\.slot_keep$' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostChallenge.slot_keep"
+require_line_count 1 '^theorem slot_keep([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge theorem slot_keep"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostChallenge\.slot_keepProgram$' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostChallenge.slot_keepProgram"
+require_line_count 1 '^theorem slot_keepProgram([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge theorem slot_keepProgram"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostChallenge\.rejoin_set$' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostChallenge.rejoin_set"
+require_line_count 1 '^theorem rejoin_set([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge theorem rejoin_set"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostChallenge\.finishStep_challenge$' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostChallenge.finishStep_challenge"
+require_line_count 1 '^theorem finishStep_challenge([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge theorem finishStep_challenge"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostChallenge\.finishChallenge_found$' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostChallenge.finishChallenge_found"
+require_line_count 1 '^theorem finishChallenge_found([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge theorem finishChallenge_found"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostChallenge\.sourceMid_challenge$' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostChallenge.sourceMid_challenge"
+require_line_count 1 '^theorem sourceMid_challenge([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge theorem sourceMid_challenge"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostChallenge\.step_challenge$' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostChallenge.step_challenge"
+require_line_count 1 '^theorem step_challenge([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge theorem step_challenge"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostChallenge\.finish_other$' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostChallenge.finish_other"
+require_line_count 1 '^theorem finish_other([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge theorem finish_other"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostChallenge\.step_finishActive$' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostChallenge.step_finishActive"
+require_line_count 1 '^theorem step_finishActive([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostChallenge theorem step_finishActive"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
