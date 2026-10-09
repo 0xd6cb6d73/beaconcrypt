@@ -1,0 +1,11 @@
+# Control provenance through complete native and secrecy commands
+
+`PqxdhRecordFactsOriginControl` proves eight guarded statements preserving source control safety, hidden-handle provenance, and the classification of caller-known kernels through the actual compiled native interface and secrecy ledger. These are support statements about every permitted execution, including arbitrary adaptive continuations. They work in every CTX mode and from any initial private state.
+
+`native_step` applies the existing source schedule theorem to the literal compiled native command. It preserves the full source `Step` relation: source safety at the resulting control, and forward evolution of existing role and slot provenance. `step_trans` and `native_program_step` compose this fact through arbitrary native queries. Existing handle lemmas then preserve installed hidden slots and label ownership; no cryptographic premise or assumption about the command's selected key is introduced.
+
+`native_program_known` separately transports the existing caller-known-kernel theorem. This separate fact is needed when interpreting historical transcript entries using the final control state: a final hidden handle cannot have been a caller-known handle earlier. The source `Forward` relation alone is not used to infer that conclusion.
+
+`full_step`, `full_known`, `full_program_step`, and `full_program_known` lift those properties through the actual secrecy-ledger program, including its experiment-generated messages and coins. All native requests and their replies still execute in their original order. These statements preserve control properties; they neither discard other state nor assert that the protocol consumes no cryptographic queries. The query bills remain those of the unchanged execution.
+
+The only safety premise is the explicit safety of the starting control in the `Step` statements. The caller-known preservation statements do not require it. Initial source safety is established separately by the existing source theorem. No new primitive, codec, deployment, snapshot, persistence or authenticity premise is introduced. The module does not prove a transcript-origin event or a numerical security bound; it supplies the control persistence needed by those later joins.
