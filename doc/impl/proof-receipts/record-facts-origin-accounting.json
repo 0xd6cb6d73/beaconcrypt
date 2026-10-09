@@ -2,7 +2,7 @@
   "stage": "Source sampling and adaptive origin accounting (Task A, 2026-10-09)",
   "base": "1639476c44f46f80fbac20ccc34f31137b7cc574",
   "topic": "codex/record-lift-origin-accounting",
-  "state": "Focused direct checks and all 27 independent component semantic reviews passed; final publication review pending",
+  "state": "All27 independent component reviews and final publication review approved; focused proof checkpoint committed, pushed, fetched and directly verified; central integration pending",
   "headlines": [
     "PqxdhRecordFactsOriginSelectedSeal.source_sampler",
     "PqxdhRecordFactsOriginFailedFlag.sampled_erased_bound",
@@ -2674,5 +2674,41 @@
     "Join the exact source unpublished event with the existing selected callback and attempted-seal bounds to close unchanged numerical OriginStatement",
     "Reconcile with the next central integration and run final focused integration checks before publication; larger computational-symbolic and production boundary work remains separately scoped"
   ],
-  "updated_at": "2026-10-09T20:01:12.727767+00:00"
+  "updated_at": "2026-10-09T20:03:29.161353+00:00",
+  "final_publication_review": {
+    "path": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication-review.json",
+    "sha256": "abb52d70aaa73b765cb6fa52c177d3e678ff23146c4f0a61333b19a68a0ca630",
+    "receipt": {
+      "reviewer": "Codex root, independent publication and semantic reviewer",
+      "time": "2026-10-09T20:02:52.964519+00:00",
+      "candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication/candidate.json",
+      "candidate_sha256": "2924e74fd8755f58390a3b63f7e31c41606834417ef68e07987753012499ff19",
+      "base": "1639476c44f46f80fbac20ccc34f31137b7cc574",
+      "verdict": "APPROVE",
+      "scope": "27 source sampling/adaptive accounting modules,185 guarded statements; not global numerical OriginStatement closure.",
+      "findings": [],
+      "resolved_findings": [
+        "Shared document additions now use exact Codex anchors and preserve the original base paragraphs.",
+        "Every sealing constructor is counted, including real/known mode. Two publication guide terminology edits are separately pinned against unchanged independently reviewed originals."
+      ],
+      "review": [
+        "All27 source hashes match independently reviewed original packets, and every embedded review matches its pinned receipt; only two documented guide terminology edits differ. Exact public theorem/guard lists185 match, ordinary axiom allowlist, placeholder/custom-axiom scan clean.",
+        "Same complete source cut/trace, chronology-capable support paths, original raw callback cap and full adaptive sampler/muting statements compose without assuming independent ordinal events or conditioned writer outcomes.",
+        "Fixed-input/body/tag failed-writer flag2R/2^512 and generic S-union are accurately scoped. Full callback/body-tag averaging and exact same-execution accepted-event inclusion explicitly remain unresolved consumers. No hidden root or end-to-end security claim.",
+        "Original native/KDF/hash/uniform/base/reduction bills remain charged. No primitive, deployment, codec or honesty contract added; no Rust/PV/frozeninterface edits.",
+        "All27 direct checks plus root, inventory1814 and fidelity30Rust+20verdict tests verified by source/artifact/log/check pins. Failed initial overlay and stalehash attempts documented and successfully resolved. No full machinery claimed.",
+        "Root/checker/inventory anchors and four shared doc anchors checked; pre-existing checker rules unchanged except required handwritten count. Receipt/artifact/source/guide pins exact."
+      ],
+      "integration_precondition": "Claude U6b reservation still active. Fetch/reconcile normally after its notice; check exact reconciled tip and independent receipt delta before integration."
+    }
+  },
+  "publication": {
+    "local_head": "7fc697e5cbd1c9a120fc8c2ce7c173c061dfb41b",
+    "origin_topic": "7fc697e5cbd1c9a120fc8c2ce7c173c061dfb41b",
+    "direct_remote": "7fc697e5cbd1c9a120fc8c2ce7c173c061dfb41b",
+    "changed_files": 63,
+    "candidate_sha256": "2924e74fd8755f58390a3b63f7e31c41606834417ef68e07987753012499ff19",
+    "final_review": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-accounting-publication-review.json",
+    "final_review_sha256": "abb52d70aaa73b765cb6fa52c177d3e678ff23146c4f0a61333b19a68a0ca630"
+  }
 }
