@@ -98,6 +98,10 @@ The eight guarded statements in `PqxdhBoundaryRecordPrelude` connect the shared 
 
 The ten guarded statements of `PqxdhBoundaryRecordExecution` connect the production receive transcription over extracted local operations to both frozen CE raw handlers, preserving optional replies and complete native state, logs, counters and hash cache. [The execution guide](impl/production-boundary-record-execution.md) explicitly retains both loop control and outer Rust dispatch as reviewed transcription, and lists the remaining source joins. No new contract, primitive proof or production change is introduced.
 
+## Source send execution at the CE commands
+
+The thirteen guarded statements of `PqxdhBoundaryRecordSend` connect the source send driver over extracted local steps to both frozen CE send commands. Complete optional writer results, shared effects, state reinstallation and separate callback caps are preserved, including send failure consuming one allocated step. [The guide](impl/production-boundary-record-send.md) retains driver control and public Rust dispatch as reviewed transcription and lists remaining joins; no new cryptographic or deployment contract is added.
+
 ## Historical F* correspondence
 
 The migration inventories every historical lemma declaration: [192 ratchet declarations](impl/ratchet-fstar-coverage.md), [68 PQXDH declarations](impl/pqxdh-fstar-coverage.md), and [25 commitment declarations](impl/commitment-fstar-coverage.md). These ledgers distinguish semantic matches from removed implementation helpers. Five old planner bounds changed during the earlier extraction refactor: the current implementation retains fifty skipped keys and derives the authentication target separately, allowing fifty-one total derivations. The old fifty-total-derivation clauses are explicitly adapted, not claimed as literal statement equality.
