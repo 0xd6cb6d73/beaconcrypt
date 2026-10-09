@@ -2,7 +2,7 @@
   "stage": "Complete adaptive source digest compiler and collision components (Task A, 2026-10-09)",
   "base": "dad157b1805329044872b2de0670f46e2485937b",
   "topic": "codex/record-lift-facts-hash-source",
-  "state": "Focused checks and component semantic reviews passed; final bundle review/publication pending",
+  "state": "Independently reviewed complete source compiler stage committed, pushed and directly verified; central integration pending",
   "headlines": [
     "PqxdhRecordFactsHashSource.source_exact",
     "PqxdhRecordFactsHashSource.source_view",
@@ -1354,5 +1354,78 @@
     "Prove unpublished accepted-frame guessing bound and close exact OriginStatement",
     "Item7 production/source boundary joins"
   ],
-  "updated_at": "2026-10-09T17:57:50.483677+00:00"
+  "updated_at": "2026-10-09T17:59:55.574553+00:00",
+  "publication": {
+    "proof_commit": "749fd4654c61f52e78386b988711a6337efecdcf",
+    "local_head": "749fd4654c61f52e78386b988711a6337efecdcf",
+    "origin_topic": "749fd4654c61f52e78386b988711a6337efecdcf",
+    "direct_remote": "749fd4654c61f52e78386b988711a6337efecdcf",
+    "final_bundle_review": "/tmp/bc-arc-scratch/record-lift/facts-v3/binding-native/hash-source99-publication-review.json",
+    "final_bundle_review_sha256": "dcb640129f1c7980566fe81f838a43b6a35d2ffb5650e1a477d1d8cf94e3277e",
+    "final_bundle_review_receipt": {
+      "reviewer": "/root/facts_later",
+      "independent": true,
+      "decision": "APPROVE",
+      "candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/hash-publication/candidate.json",
+      "candidate_sha256": "b4946623024a6199a28eeaf3b117897707ee410f26275344615dc707eaf69202",
+      "publication_receipt": "/tmp/beaconcrypt-record-lift-facts-hash-source/doc/impl/proof-receipts/record-facts-hash-source.json",
+      "publication_receipt_sha256": "1449ddd231a4748659de9407e23857a9507fb5979c162a6a63ccdf067fa604ea",
+      "reviewed_files": {
+        "beaconcrypt-core/proofs/check-inventory.sh": "a45e125cb2cee4d9afa54ce694fa23b0d2bada40a7898930df8d92fa15cdd7f0",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "fe4a197a3a8c0e235e3e7f0c0570f6362088d14a88f3fab53eb44d9d2cb2861f",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsCollision.lean": "4f1fd3c4df22defbee861c9a662833bf8fff901697926aa2b5fbd58daf8cb4bf",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsCollisionCache.lean": "f42938addd4d3a0260e75c77613bb84559368eab818d582b7c000002c731440c",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsCollisionOracle.lean": "08099fc448eadeb2df83545cf9b1d4d9246c2594b0655072e149a73941799626",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsDigestCache.lean": "93b11fbcfd2591eaae6a109da4a24e67ba843c7e90f97b856f12e5c6907c6f9b",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsHashBase.lean": "0421c3aee3a444bb9e5a4cbc5a5146b3e942ba67f08c1abb5b8f1d60dc1e52f5",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsHashKnown.lean": "f47815f1afd1ccdd7e452ea390686522219d28b127427c93f772ac486c888d7e",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsHashLocal.lean": "cdfdd631470802bba471e63f1a820c20ff75919ba71a46675e3a7ca2e8c9f3e7",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsHashNative.lean": "544e357afceafd76ae8a416578055ac520737bde68c2e911cb328f0277394e6c",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsHashSealBills.lean": "7457510d842aa17833057c87253f062212b7b6344bef28564c596f5a7a04d3a0",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsHashShared.lean": "f89c50d17c0d8903b463db7cb912eb7e1dc2630f8b391c954a5ca4ae4b57f522",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsHashSource.lean": "175c9cc0155e5cdf1b073dd49edd2b37f39626e31b144a99aa3ae569a8c497eb",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsPrivateCacheSourceDraw.lean": "35c6a2920b6ad32b8374daa2b35e9416ba6ba2d10c47b564accd827bf8f98689",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsPrivateCacheSourceDrawMemo.lean": "11b0e4221fcf1b88cd2291c8bf065da41e0ca89e7972a002ac34bf143d9adb07",
+        "beaconcrypt-core/proofs/reviewed-inventory.txt": "9ab880b147a9b102216c5876f94f95afa355eb1ab2ce9a5d00279ee5837df311",
+        "beaconcrypt-core/proofs/trusted-boundary.md": "e2f9c0f1279e6cb6eb0e4e68b9edb7053afbb74f33d15638a685c5ed6aeb4c7c",
+        "doc/composition-assumptions.md": "17fff7aba96f3953b37cbb14eebd169942e74f4e7d929a6fb09288a59d568fe8",
+        "doc/formal-verification-analysis.md": "76601e583cf3bdf0c0d94aa667888b79ce1fab23fa6087e857e869652eab4941",
+        "doc/formal-verification.md": "5f04697aa776da7f05eafd69df438175756d41c80e850c8f83d378ebcf7b5a6b",
+        "doc/impl/proof-receipts/record-facts-hash-source.json": "1449ddd231a4748659de9407e23857a9507fb5979c162a6a63ccdf067fa604ea",
+        "doc/impl/record-facts-collision-cache.md": "95c2e9b333928e207f464ff9e4ccd238814e62fdb48b485a9ef3cffd38993b0d",
+        "doc/impl/record-facts-collision-oracle.md": "c77b2b88ff1e7cf4b6becd0bc2deba1d59d625647564bf80f263774186a05e69",
+        "doc/impl/record-facts-collision.md": "28548c14b78385cd982b47f3e0fd59ad081e34d6ae01e8dbe2186e2ec78d5a41",
+        "doc/impl/record-facts-digest-cache.md": "c5edae3bb85ad9da7b16324e70283d73c5a87b65d9abdd5a7619abd360c0ff08",
+        "doc/impl/record-facts-hash-base.md": "059f7de98ac5408a66ca7fddf6fd84746bd8fd3fd2fd7f1447c14716f90a3586",
+        "doc/impl/record-facts-hash-known.md": "3c376666bb0961868666dee9809a221e204ca103779a35267355d30b9b5aa1e5",
+        "doc/impl/record-facts-hash-local.md": "571f39549d2c833f1d6c5b8f1c9863bb5c67f9a3b89b2ad9d5f81cd197ada1b1",
+        "doc/impl/record-facts-hash-native.md": "009ddb37afb513c33faba7045ca2c97ec9b1f99b325dd6fd4b678f0a69dfa0a8",
+        "doc/impl/record-facts-hash-seal-bills.md": "6acf3b60c018c5fb1e8c7c69ddc39bc56803fd53c0cc0893d95c6387fe08bc66",
+        "doc/impl/record-facts-hash-shared.md": "b0b886dbd02997a23c267eba78cf620aeaacc0e6dd260de1dde0f35a5ee9cdb9",
+        "doc/impl/record-facts-hash-source.md": "eecafd09cde47ea7f8761be519c39be14d4138b103c51a1c91619ebb44686917",
+        "doc/impl/record-facts-private-cache-source-draw-memo.md": "f8e1f1ba9f0e75b60ef50f642d6c7f4c67f6d5eb6afe99349d7f21d7793b93bf",
+        "doc/impl/record-facts-private-cache-source-draw.md": "1f115bdba52939fc3ff13f057b187111cc66874469bd2686047c4aefb3212d27"
+      },
+      "scope": "Final 13-module, 99-guard complete digest compiler and generic collision/source-send bundle; no final protocol binding or origin statement.",
+      "semantic_review": [
+        "Read every new concrete compiler and bill proof plus all guides and maintained-document deltas; rechecked complete source join beyond individual component compilation. Previously independently reviewed Collision10/Oracle8/Cache11 source hashes match unchanged.",
+        "HashSource ambient_exact handles all nine nonsealing constructors using their literal source equations; compiled_self and source_exact discharge AmbientExact and initialized freshness/history internally. No ambient simulation or desired-security premise remains on whole compiler equality.",
+        "Private digest address is fixed before its answer; replay preserves real AEAD result, random mode body/tag/digest order is retained; failed writer buffers and full state/cache survive. Coherent ordinary hash hits reuse exact values. No marginal-only equality or public-HKDF randomization is used.",
+        "Hidden opening returns the original replay endpoint optional plaintext with parser/gates/raw history. Whole 76-byte lookup preserves correlated projections and original KDF charge. Native caller-known send/open execute exact source adapters and public primitives.",
+        "Generic collision bound counts target/ordinary pairs in both temporal orders and private/private pairs under all-reply request caps. Sealing cap budget.sends counts attempted hidden services and uses actual source command budget. It does not yet supply global compiler request caps or final source-event containment.",
+        "All documents distinguish original counted costs from counter/cache observation. No free ambient/random work, new primitive/codec/deployment premise, snapshot/persistence claim, Rust or ProVerif change. Global ledger, source/reduction caps and publication guessing remain explicit obligations."
+      ],
+      "metadata_validation": [
+        "All 34 candidate file hashes verified; 13 source/guide hashes and candidate/review pins match receipt.",
+        "99 public theorem and exact guard names verified against module-meta and source; no forbidden placeholder/custom axiom; additive root imports and inventory gate entries retain existing gates.",
+        "Reviewed inventory hashes for all 13 modules, root import, checker and trusted-boundary document match actual files; handwritten count moves 1734 to 1747.",
+        "All 16 fresh validation receipt/log hashes and zero exits verified: 13 changed-module checks and root check have empty logs and exact source/artifact/LEAN_PATH pins; fidelity log reports 30/30 tests; inventory succeeds with 20-case getter profile.",
+        "Full make verify and mutation runs explicitly not claimed; this is proportionate focused validation and no Rust changed."
+      ],
+      "rebuild": "Not repeated; pinned exact fresh module/root artifacts and logs independently verified.",
+      "findings": []
+    },
+    "frozen_candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/hash-publication/candidate.json",
+    "frozen_candidate_sha256": "b4946623024a6199a28eeaf3b117897707ee410f26275344615dc707eaf69202"
+  }
 }
