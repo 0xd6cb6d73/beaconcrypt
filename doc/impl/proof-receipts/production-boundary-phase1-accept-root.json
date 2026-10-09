@@ -1,0 +1,1053 @@
+{
+  "stage": "PB-C PB02/03/04 source Phase1, raw acceptance and exact root requests,42",
+  "time": "2026-10-09T21:37:11.164801+00:00",
+  "base": "3915c3f0593a33a172fda02802b159f39b5856f1",
+  "topic": "codex/record-lift-boundary-phase1-root",
+  "state": "Independent component reviews approved; publication bundle checked; aggregate review and commit/push pending",
+  "modules": [
+    {
+      "module": "PqxdhBoundaryPhase1Source",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryPhase1Source.lean",
+      "source_sha256": "a491c8925cc1a486fc6174611fe959c4c5eef5710865ded5c16ca077b3202c1f",
+      "guide": "doc/impl/production-boundary-phase1-source.md",
+      "guide_sha256": "40981bee0a0b56437db11c67ac19f88b9a1161ebf669f9ab3da5179af7dc210e",
+      "guards": 6,
+      "semantic_candidate": {
+        "path": "/tmp/bc-arc-scratch/boundary/phase1/source6-semantic-candidate.json",
+        "sha256": "56281279dfefa014e6a7f552eb2d736a3d65516e077d7bf0a65a6c14f29b1f26",
+        "receipt": {
+          "stage": "PB-C/02 Phase1Source6",
+          "base": "3d212990d5cc980c1d05aa77ddd8c86e4c31591f",
+          "files": {
+            "/tmp/beaconcrypt-record-lift-boundary-phase1/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryPhase1Source.lean": "a491c8925cc1a486fc6174611fe959c4c5eef5710865ded5c16ca077b3202c1f",
+            "/tmp/beaconcrypt-record-lift-boundary-phase1/doc/impl/production-boundary-phase1-source.md": "40981bee0a0b56437db11c67ac19f88b9a1161ebf669f9ab3da5179af7dc210e",
+            "/tmp/bc-arc-scratch/boundary/phase1/source6-analysis-snippet.md": "dd2ef593be510ee9b6988bfa06b33944794025cba8bc7e50ff9f5a18245f58a8",
+            "/tmp/bc-arc-scratch/boundary/phase1/olean/BeaconcryptCore/Computational/PqxdhBoundaryPhase1Source.olean": "eeab08f8a0c7c039de42cccc94114175fdbaaa0a3d6faff06936c7190c5578eb",
+            "/tmp/bc-arc-scratch/boundary/phase1/leanpath": "a3034eeee51c5b48af4d9365b2dd6f9beefa3832baa856c6efeaab08156d481d",
+            "/tmp/bc-arc-scratch/boundary/phase1/scan-spec.json": "581dfbb1a43db7212c9e0f8428bf3dbe4ed5d4c9fc55745482a0407160b759f8",
+            "/tmp/bc-arc-scratch/boundary/phase1/prepare-scan.py": "11737a00fa42f3b601df2d15b0a01dd8eaf5d01c5457279014049dd7254a480c",
+            "/tmp/bc-arc-scratch/boundary/phase1/statement-scan.py": "330d6251cf25e79dc5dd0092d9195413abd0db43b684c67810ff6b46c6537f49",
+            "/tmp/bc-arc-scratch/boundary/phase1/scan-clean.lean": "f681c19f12d2439ed09c343a433cb10055d343f0ed1c6e04985b8555a8b8aca9",
+            "/tmp/bc-arc-scratch/boundary/phase1/scan-live.lean": "5ebc7b93f3237f160585d44b40801110cc6e2ae0df27fffb104cb2c926c008b2",
+            "/tmp/bc-arc-scratch/boundary/phase1/statement-clean.json": "842b6ff6fdcb1f503ea09bb6a56f074e1f5fae971c01784b0a190fc676b4c7c6",
+            "/tmp/bc-arc-scratch/boundary/phase1/statement-live.json": "4541d44df997ef2ca3208d301210c39bb557dc88b34056778ea57324534d5c30"
+          },
+          "check_receipt": "/tmp/bc-arc-scratch/boundary/phase1/logs/boundary-phase1-module-210832561412.json",
+          "check_receipt_sha256": "1f7f66d3a081064125606859282a856fb449e6a7db0a13f2a8fe94ebc1b520e2",
+          "scan_receipts": {
+            "/tmp/bc-arc-scratch/boundary/phase1/logs/boundary-phase1-scan-clean-210836777791.json": "bea479bc1b953ae20bb73dbdc793f941eb8e6f8334a7d2ca358e8cec52bd3d35",
+            "/tmp/bc-arc-scratch/boundary/phase1/logs/boundary-phase1-scan-live-210846934788.json": "541914f7141ef0998e14d6e26d61cff211d321b87b3ae4cba9c8956bbe5506fe"
+          },
+          "expected_scan_exits": {
+            "statement-clean": 0,
+            "statement-live": 1,
+            "scan-clean": 0,
+            "scan-live": 1
+          },
+          "guards": 6,
+          "scope": "Literal source generator/signature/writer order with full state and arbitrary continuation, every failure and source service caps1/3/1.",
+          "contracts_added": [],
+          "source_classification": "RT for unextracted Rust adapter, L for exact Computational equations; existing finite Rust validator identified but no new fidelity run claimed.",
+          "remaining": [
+            "Independent review",
+            "CE-native source14 bundle specialization",
+            "Extracted unsigned-buffer consumer join",
+            "Publication/inventory/fidelity gates"
+          ]
+        }
+      },
+      "independent_review": {
+        "path": "/tmp/bc-arc-scratch/boundary/phase1/source6-review.json",
+        "sha256": "f9b1947421af2b3ee546dfd61f1b785d698e0e1e86d5f6f5b5c159dd5354d000",
+        "receipt": {
+          "reviewer": "root, independent of implementation",
+          "candidate": "/tmp/bc-arc-scratch/boundary/phase1/source6-semantic-candidate.json",
+          "candidate_sha256": "56281279dfefa014e6a7f552eb2d736a3d65516e077d7bf0a65a6c14f29b1f26",
+          "verdict": "APPROVE",
+          "guards": 6,
+          "findings": [],
+          "inspected": [
+            "Every statement/proof and guide against source beacon.rs300-396 and original LivePhase1Bundle APIs.",
+            "Stateful implementation arbitrary: generation, prekey/one-time/PQ signing and optional writer are in actual order, each failure retains latest callback state and original role.",
+            "Selected tuple and writer candidate retained together with private material/auxiliary state and arbitrary continuation; no marginal generator interchange.",
+            "Fresh/FreshWithCoins/inactive behavior, phase transition only after writer success, no NoBundleFailure or writer totality.",
+            "Caps1/3/1 are logical interface requests only; primitive uniform/base/ambient work not waived.",
+            "RT limits explicit and source validator not presented as a semantic Rust extraction theorem; extracted unsigned-buffer and CE-native consumers next.",
+            "All source/guide/check/artifact/scan pins verified; clean and deliberately failing scan controls inspected; exact ordinary-only guards."
+          ],
+          "contracts_added": [],
+          "time": "2026-10-09T21:10:59.672480+00:00"
+        }
+      }
+    },
+    {
+      "module": "PqxdhBoundaryPhase1Native",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryPhase1Native.lean",
+      "source_sha256": "cb99cd63d572b3447960d2ee7f9ce3fa312f35cb53125d31553e497ced8fc698",
+      "guide": "doc/impl/production-boundary-phase1-native.md",
+      "guide_sha256": "3f82a13a63ef154ab653650aad7fe13dae9d80963253ced69217e281a934bffb",
+      "guards": 6,
+      "semantic_candidate": {
+        "path": "/tmp/bc-arc-scratch/boundary/phase1/native6-semantic-candidate.json",
+        "sha256": "6a8a40a70e55145d0f22c84712fcbbe0d6fead64439b0a69e065ef445ee6544d",
+        "receipt": {
+          "stage": "PB-C/02 Phase1Native6",
+          "base": "3d212990d5cc980c1d05aa77ddd8c86e4c31591f",
+          "files": {
+            "/tmp/beaconcrypt-record-lift-boundary-phase1/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryPhase1Native.lean": "cb99cd63d572b3447960d2ee7f9ce3fa312f35cb53125d31553e497ced8fc698",
+            "/tmp/beaconcrypt-record-lift-boundary-phase1/doc/impl/production-boundary-phase1-native.md": "3f82a13a63ef154ab653650aad7fe13dae9d80963253ced69217e281a934bffb",
+            "/tmp/bc-arc-scratch/boundary/phase1/native6-analysis-snippet.md": "edb1247111811847071f299e167a34d42e849f4913c956ea37690925929b4604",
+            "/tmp/bc-arc-scratch/boundary/phase1/olean/BeaconcryptCore/Computational/PqxdhBoundaryPhase1Native.olean": "33d1ae43e9a86f535ee62674aa690ec1230f80950fc0b40dc0c836ab9f0d507d",
+            "/tmp/bc-arc-scratch/boundary/phase1/leanpath": "a3034eeee51c5b48af4d9365b2dd6f9beefa3832baa856c6efeaab08156d481d",
+            "/tmp/bc-arc-scratch/boundary/phase1/check-native.py": "63376e81de52c78804d2386a8f2cac258a00144511558b2918b14f49ce6e8581",
+            "/tmp/bc-arc-scratch/boundary/phase1/source6-semantic-candidate.json": "56281279dfefa014e6a7f552eb2d736a3d65516e077d7bf0a65a6c14f29b1f26",
+            "/tmp/bc-arc-scratch/boundary/phase1/source6-review.json": "f9b1947421af2b3ee546dfd61f1b785d698e0e1e86d5f6f5b5c159dd5354d000",
+            "/tmp/bc-arc-scratch/boundary/phase1/native-scans/scan-live.lean": "6f68b4b3d2e5926b2af586091f0bb46c1f9fc3a7ec0e4aff35cb39dbe81fe306",
+            "/tmp/bc-arc-scratch/boundary/phase1/native-scans/scan-clean.lean": "caa8211179a857289177257029ff61e031e811a8e310fa6cc7a49295e7b6fe61",
+            "/tmp/bc-arc-scratch/boundary/phase1/native-scans/statement-live.json": "44d1d0f9afc856334fbc96ba0c9f9a8216d64e4180e358821f65031aed0ce364",
+            "/tmp/bc-arc-scratch/boundary/phase1/native-scans/scan-spec.json": "581dfbb1a43db7212c9e0f8428bf3dbe4ed5d4c9fc55745482a0407160b759f8",
+            "/tmp/bc-arc-scratch/boundary/phase1/native-scans/statement-clean.json": "ee85b7f89e823e20cec304d21fde0d34822010d7e84a22fbc9e5cb9413a929ff",
+            "/tmp/bc-arc-scratch/boundary/phase1/native-scans/statement-scan.py": "2b14d5372d9092b9649b3cb5aae9106ac10097445e0338aee01bbba30889d44b"
+          },
+          "check_receipt": "/tmp/bc-arc-scratch/boundary/phase1/logs/boundary-phase1-module-211917609928.json",
+          "check_receipt_sha256": "05113e55645cb9343c4f15f15e4c189c4a0c01a070370363fcc321e44e49ec18",
+          "scan_receipts": {
+            "/tmp/bc-arc-scratch/boundary/phase1/logs/boundary-phase1-native-scan-clean-211958342825.json": "503f0e84f54567cd45ab7ee14fe1f671de4586ed3ee9e6c292624e1f83fa057a",
+            "/tmp/bc-arc-scratch/boundary/phase1/logs/boundary-phase1-native-scan-live-212013922887.json": "0eb4764a0246ab3e334ecd9756e66bb9d02b412e5961a0afe9b6da68f63033bd"
+          },
+          "expected_scan_exits": {
+            "statement-clean": 0,
+            "statement-live": 1,
+            "scan-clean": 0,
+            "scan-live": 1
+          },
+          "guards": 6,
+          "scope": "Actual source14 and CE bundle execution, exact prepared signer/writer outcome, source generator order, complete state/continuation, native uniform byte cap32.",
+          "contracts_added": [],
+          "source_classification": "RT for unextracted Rust adapter; L for exact Computational execution and native uniform bound; no new fidelity run claimed.",
+          "whitespace": "git diff --check --no-index /dev/null on source and guide: expected newfile exit1, no diagnostics.",
+          "remaining": [
+            "Independent review",
+            "Extracted unsigned-buffer consumer join",
+            "Publication/inventory/fidelity gates"
+          ]
+        }
+      },
+      "independent_review": {
+        "path": "/tmp/bc-arc-scratch/boundary/phase1/native6-review.json",
+        "sha256": "3c485ded5b37ac19123293afd7640da731f4b7d788154ccc32b8f37464a0a4e5",
+        "receipt": {
+          "reviewer": "root, independent of implementation",
+          "candidate": "/tmp/bc-arc-scratch/boundary/phase1/native6-semantic-candidate.json",
+          "candidate_sha256": "6a8a40a70e55145d0f22c84712fcbbe0d6fead64439b0a69e065ef445ee6544d",
+          "verdict": "APPROVE",
+          "guards": 6,
+          "findings": [],
+          "inspected": [
+            "All six statements/proofs, native callbacks/projection/bundle/source14 and CE actual .bundle branch.",
+            "Prepared result uses same seed and actual projected tuple for three attached signatures and optional writer; no source-generation reordering or successful-bundle premise.",
+            "Fresh32-byte sample at original point, FreshWithCoins retained scalar, inactive/no-owner no draw; every optional writer outcome accounted.",
+            "Complete owner replacement, untouched owners/shared native state/counters/produced log and arbitrary full continuation preserved.",
+            "Existing total typed signing contract distinguished from generic Source6 optional signature failures; no NoBundleFailure or new primitive contract.",
+            "Uniform cap32 exactexisting bound with local signing/serialization work retained and Source6 service1/3/1 counts separate.",
+            "Rust300-396/RT limit, existing finite validator scope, extracted builder join pending accurately documented.",
+            "All frozen source/guide/check/artifact and scanner pins verified; clean and deliberately failing controls, six exact ordinary-only axiom guards, whitespace pass."
+          ],
+          "contracts_added": [],
+          "time": "2026-10-09T21:22:33.582757+00:00"
+        }
+      }
+    },
+    {
+      "module": "PqxdhBoundaryPhase1Buffers",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryPhase1Buffers.lean",
+      "source_sha256": "f03825648bb14b9dabba2795eedcb0a26327ffdd3b65228823853f0f5feb8f18",
+      "guide": "doc/impl/production-boundary-phase1-buffers.md",
+      "guide_sha256": "324d634913af793e483571c1444c47555e4765952e38ba3bd87418f76843fb4f",
+      "guards": 7,
+      "semantic_candidate": {
+        "path": "/tmp/bc-arc-scratch/boundary/phase1/buffers7-semantic-candidate.json",
+        "sha256": "52b7f4f136bbef99c6038b0dcf4a67c595e0d89fd6d23de8342f91f374856db3",
+        "receipt": {
+          "stage": "PB-C/02 Phase1Buffers7 plus additive complete PB gates over Source6/Native6/Buffers7",
+          "base": "3d212990d5cc980c1d05aa77ddd8c86e4c31591f",
+          "files": {
+            "/tmp/beaconcrypt-record-lift-boundary-phase1/doc/impl/production-boundary-phase1-buffers.md": "324d634913af793e483571c1444c47555e4765952e38ba3bd87418f76843fb4f",
+            "/tmp/bc-arc-scratch/boundary/phase1/buffers7-analysis-snippet.md": "e8f6354e52d4431238f6d3dfe5ec543480612cb3e2ddde7709000260d7c42fda",
+            "/tmp/bc-arc-scratch/boundary/phase1/leanpath": "a3034eeee51c5b48af4d9365b2dd6f9beefa3832baa856c6efeaab08156d481d",
+            "/tmp/bc-arc-scratch/boundary/phase1/check-v2.py": "7ecec69bf655a0229794b2a49fab7e3ce1a2c2d536456241ead44206e96166d7",
+            "/tmp/bc-arc-scratch/boundary/phase1/source6-semantic-candidate.json": "56281279dfefa014e6a7f552eb2d736a3d65516e077d7bf0a65a6c14f29b1f26",
+            "/tmp/bc-arc-scratch/boundary/phase1/source6-review.json": "f9b1947421af2b3ee546dfd61f1b785d698e0e1e86d5f6f5b5c159dd5354d000",
+            "/tmp/bc-arc-scratch/boundary/phase1/native6-semantic-candidate.json": "6a8a40a70e55145d0f22c84712fcbbe0d6fead64439b0a69e065ef445ee6544d",
+            "/tmp/bc-arc-scratch/boundary/phase1/native6-review.json": "3c485ded5b37ac19123293afd7640da731f4b7d788154ccc32b8f37464a0a4e5",
+            "/tmp/bc-arc-scratch/boundary/phase1/scan-v2/scan-live.lean": "88ab47d882abe2b973d083c48f7974fdc172dab1a5882f1fa2756ac019942117",
+            "/tmp/bc-arc-scratch/boundary/phase1/scan-v2/whitespace.json": "317ab34fc3ef1bd81ec112010c1784439a91a6696b9f0add47a85427ff3372d4",
+            "/tmp/bc-arc-scratch/boundary/phase1/scan-v2/scan-clean.lean": "62850d844939c299ec52c15bdcac32427de00af4b39902fe1976a26330ceabea",
+            "/tmp/bc-arc-scratch/boundary/phase1/scan-v2/statement-live.json": "711c3b3a7f20a4c8e034dab07d69f54fa87882c12915e4c95c76d409c0128855",
+            "/tmp/bc-arc-scratch/boundary/phase1/scan-v2/scan-spec.json": "a379e9a8bea127a2605f774cdca286a3bfdc7211576f972c05cb75f229f30cd6",
+            "/tmp/bc-arc-scratch/boundary/phase1/scan-v2/statement-clean.json": "f5cdb458105be4a537db5f8dbcd9fc7f7d969f8f2ec07da643b764f8e12c8b97",
+            "/tmp/bc-arc-scratch/boundary/phase1/scan-v2/forbidden.json": "78ccfe833029b405e7c41772b9e25115d4e280935ea42731f8097412b607dff1",
+            "/tmp/bc-arc-scratch/boundary/phase1/scan-v2/statement-scan.py": "846caa7098aae5f71efd143dece198d21c3d50f79dec417684cc53c6cdf5f7c7",
+            "/tmp/beaconcrypt-record-lift-boundary-phase1/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryPhase1Buffers.lean": "f03825648bb14b9dabba2795eedcb0a26327ffdd3b65228823853f0f5feb8f18",
+            "/tmp/beaconcrypt-record-lift-boundary-phase1/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryPhase1Native.lean": "cb99cd63d572b3447960d2ee7f9ce3fa312f35cb53125d31553e497ced8fc698",
+            "/tmp/beaconcrypt-record-lift-boundary-phase1/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryPhase1Source.lean": "a491c8925cc1a486fc6174611fe959c4c5eef5710865ded5c16ca077b3202c1f",
+            "/tmp/bc-arc-scratch/boundary/phase1/olean/BeaconcryptCore/Computational/PqxdhBoundaryPhase1Buffers.olean": "37ba34b0ec1118fb2e4e649f005517824b714528da71a090677f427da4d88d89",
+            "/tmp/bc-arc-scratch/boundary/phase1/olean/BeaconcryptCore/Computational/PqxdhBoundaryPhase1Native.olean": "33d1ae43e9a86f535ee62674aa690ec1230f80950fc0b40dc0c836ab9f0d507d",
+            "/tmp/bc-arc-scratch/boundary/phase1/olean/BeaconcryptCore/Computational/PqxdhBoundaryPhase1Source.olean": "eeab08f8a0c7c039de42cccc94114175fdbaaa0a3d6faff06936c7190c5578eb"
+          },
+          "check_receipt": "/tmp/bc-arc-scratch/boundary/phase1/logs/boundary-phase1-module-212653712206.json",
+          "check_receipt_sha256": "22d521df5f8f461fe01dd5dfdaf05e70a4e689d5fc66eaa5bdfaf16e8e75ef22",
+          "scan_receipts": {
+            "/tmp/bc-arc-scratch/boundary/phase1/logs/boundary-phase1-v2-scan-clean-212814898287.json": "5e054a05d90d6d9de80ceee57bbfdd05c34ab6a29dbea94302957d8d2da15733",
+            "/tmp/bc-arc-scratch/boundary/phase1/logs/boundary-phase1-v2-scan-live-212754612800.json": "b0a11ec8949710f2fe8ecab19e187fce5a170dd406e98cb30e16a0ffbf3d0e62"
+          },
+          "expected_scan_exits": {
+            "statement-clean": 0,
+            "statement-live": 1,
+            "scan-clean": 0,
+            "scan-live": 1
+          },
+          "scan_scope": {
+            "statements": 31,
+            "direct_declarations": 75,
+            "negative_statement_hits": 5,
+            "negative_direct_hits": 12,
+            "spec": "Exact full registration-receive PB gate; old Source6/Native6 gates preserved unchanged."
+          },
+          "guards": 7,
+          "scope": "Literal extracted unsigned builder feeds actual native signing and optional writer, exact control/publication and complete CE continuation for all source phases and failures.",
+          "contracts_added": [],
+          "source_classification": "Existing extracted builder consumed directly with exact concrete byte arrays; actual surrounding Rust adapter remains RT. No newly extracted Rust or new test result is claimed.",
+          "remaining": [
+            "Independent review",
+            "Parent-owned combined PB02/PB04 publication gates, commit/push/integration"
+          ]
+        }
+      },
+      "independent_review": {
+        "path": "/tmp/bc-arc-scratch/boundary/phase1/buffers7-review.json",
+        "sha256": "b240ccb6ec85f58cacebd6693980e1125bea248b00f842098ad68713f235db4f",
+        "receipt": {
+          "reviewer": "root, independent of implementation",
+          "candidate": "/tmp/bc-arc-scratch/boundary/phase1/buffers7-semantic-candidate.json",
+          "candidate_sha256": "52b7f4f136bbef99c6038b0dcf4a67c595e0d89fd6d23de8342f91f374856db3",
+          "verdict": "APPROVE",
+          "guards": 7,
+          "findings": [],
+          "inspected": [
+            "All seven statements/proofs plus definitions and guide, actual beacon.rs300-396 and native Source6/Native6 interfaces.",
+            "Concrete identity32/prekey32/onetime32/KEM1184 arrays feed literal extracted beacon_start; exact signed buffers and extracted control used by writer/publication, not an unused side fact.",
+            "Preparation and optional writer failure retain original owner; source generation order and all phases preserved; impossible extracted failure branch discharged by core_build.",
+            "Actual CE bundle continuation preserves complete deployment state, other owners and primitive/cache/instrumentation; no distribution marginalization.",
+            "Logical service1/3/1 and uniform32 inherited scope explicit; deterministic primitive/ambient work remains real; existing typed signer only.",
+            "All frozen pins, successful module receipt, full PB06 clean/live direct and statement gates, exact ordinary-only axiom guards and whitespace/placeholder checks inspected.",
+            "Rust adapter remains RT; existing extraction consumed but no newly translated adapter/codec or security bridge claimed."
+          ],
+          "contracts_added": [],
+          "time": "2026-10-09T21:32:57.077699+00:00"
+        }
+      }
+    },
+    {
+      "module": "PqxdhBoundaryRoot",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryRoot.lean",
+      "source_sha256": "86b294a5001c47d268cfa6a26de37e061956747c58916450fef6b3070c2836e8",
+      "guide": "doc/impl/production-boundary-root.md",
+      "guide_sha256": "4097773715d1ba9cea043335aff691fe5eaee26c7e748d2dc99265f06045939b",
+      "guards": 11,
+      "semantic_candidate": {
+        "path": "/tmp/bc-arc-scratch/boundary/root/root11-v2-candidate.json",
+        "sha256": "6f71ab2a91a87a4881ac26490ee1be1b4d8d36030ad3f6a6e922135ff6667404",
+        "receipt": {
+          "stage": "PB-C PB04 exact root request and real initializer, Root11",
+          "time": "2026-10-09T21:24:22.361487+00:00",
+          "base": "3d212990d5cc980c1d05aa77ddd8c86e4c31591f",
+          "worktree": "/tmp/beaconcrypt-record-lift-boundary-root",
+          "branch": "codex/record-lift-boundary-root",
+          "files": {
+            "/tmp/beaconcrypt-record-lift-boundary-root/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryRoot.lean": "86b294a5001c47d268cfa6a26de37e061956747c58916450fef6b3070c2836e8",
+            "/tmp/beaconcrypt-record-lift-boundary-root/doc/impl/production-boundary-root.md": "4097773715d1ba9cea043335aff691fe5eaee26c7e748d2dc99265f06045939b",
+            "/tmp/bc-arc-scratch/boundary/root/analysis-snippet.md": "87fff7aa474156ea0771a1a1aca87c844322afc3e5f2ddd45156cf819d96d4c3",
+            "/tmp/bc-arc-scratch/boundary/root/leanpath": "fad71def8af1e50853316b38ad654a09f05faea2e4fbe427d695c7368611abbc",
+            "/tmp/bc-arc-scratch/boundary/root/scan-spec.json": "cb788794892c9b3a23fb97f474e38fa18263e937cad16e99564efbcc68a8409a",
+            "/tmp/bc-arc-scratch/boundary/root/prepare-scan.py": "c21d1b8e5532099f898fefa481a3f0ea6ffbf7bf8474abed704ef23619c6e457",
+            "/tmp/bc-arc-scratch/boundary/root/statement-scan.py": "261d9c8e566d3a448573057cba2649d7488d572da1be374b1a2d771f9c55d0f0",
+            "/tmp/bc-arc-scratch/boundary/root/statement-clean.json": "65bfefd3333080afc6a45231a5d89ef8f35ee89cf0c29e13a759716f8a786318",
+            "/tmp/bc-arc-scratch/boundary/root/statement-live.json": "986e9bb9bd511c4e20b9fa7a37af9e6c8dff3bf51012b16ed43e6567aff53088",
+            "/tmp/bc-arc-scratch/boundary/root/scan-clean.lean": "5f51f4bcca9474c35f2badd0b745255ce89e10a2c8a171851d2ace0af00488ee",
+            "/tmp/bc-arc-scratch/boundary/root/scan-live.lean": "d693add4c21016250c46cc3bb464a951375846f885d663e2db0f62d0e278c479",
+            "/tmp/bc-arc-scratch/boundary/root/scan-before-allowance.lean": "dc27dfe1fb5fd9d150e3a5894598f9300d832729262f74409ffb8d51ab85b290",
+            "/tmp/bc-arc-scratch/boundary/root/preclassification-evidence.json": "09745e2db64b82370425bc3c1b28d986b0a59ef68c9e6e1240275e2f44703b4f",
+            "/tmp/bc-arc-scratch/boundary/root/olean/BeaconcryptCore/Computational/PqxdhBoundaryRoot.olean": "8bba51019a1c9cbb1ccbab8e5e58c24dd290f2f3cdd7053d80b22559f139f5cb",
+            "/tmp/bc-arc-scratch/boundary/root/scan-v2/scan-live.lean": "0b0ca5365a5e7ec38ea3b105ef8424a31ae421cb1f764b43cba566aee8292d22",
+            "/tmp/bc-arc-scratch/boundary/root/scan-v2/scan-clean.lean": "bd3f10fff4a0bbd0e33dfc673bec708da6538d8e129c1a40622b285dc0584dd9",
+            "/tmp/bc-arc-scratch/boundary/root/scan-v2/leanpath": "fad71def8af1e50853316b38ad654a09f05faea2e4fbe427d695c7368611abbc",
+            "/tmp/bc-arc-scratch/boundary/root/scan-v2/statement-live.json": "377b2dd2b89d06739f5b94da7a55389871b243986f8edb41ef87b02759b309c3",
+            "/tmp/bc-arc-scratch/boundary/root/scan-v2/scan-spec.json": "5b8176913a06eb671cee3e066e6e49fae03b2177c41afa7883ceda20037321f5",
+            "/tmp/bc-arc-scratch/boundary/root/scan-v2/statement-clean.json": "1c815b79590c8496e4ca3761c4d4986ec385496bcb8c918b8c05af876dfadab4",
+            "/tmp/bc-arc-scratch/boundary/root/scan-v2/check.py": "cb5ec75b3337e0fd03f6956c4cd48af876f2e46e4d1c3ca038c217c1d58cf957",
+            "/tmp/bc-arc-scratch/boundary/root/scan-v2/statement-scan.py": "d3535dfbc89e271bfca82db70490c898ef8594d542d142c867ee9572d5d79255"
+          },
+          "guards": 11,
+          "theorems": [
+            "built_input",
+            "input_length",
+            "source_built",
+            "tail_root",
+            "scheduler_root",
+            "source_complete",
+            "logged_complete",
+            "logged_built_complete",
+            "scheduler_root_uniform",
+            "initial_complete",
+            "initial_prefix"
+          ],
+          "checks": {
+            "module": {
+              "receipt": "/tmp/bc-arc-scratch/boundary/root/logs/boundary-root-module-211713694450.json",
+              "sha256": "3c0a7c19f2dd42fd42e02a096c60583062e5075165723f626881a9d07cdad234",
+              "result": {
+                "start": "2026-10-09T21:17:09.314684+00:00",
+                "end": "2026-10-09T21:17:13.694715+00:00",
+                "exit": 0,
+                "command": [
+                  "python3",
+                  "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+                  "/tmp/bc-coord/coord.sh",
+                  "lean",
+                  "codex",
+                  "boundary-root-module",
+                  "--",
+                  "timeout",
+                  "180",
+                  "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+                  "-j1",
+                  "-M8000",
+                  "--root=/tmp/beaconcrypt-record-lift-boundary-root/beaconcrypt-core/proofs/lean",
+                  "-o",
+                  "/tmp/bc-arc-scratch/boundary/root/olean/BeaconcryptCore/Computational/PqxdhBoundaryRoot.olean",
+                  "/tmp/beaconcrypt-record-lift-boundary-root/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryRoot.lean"
+                ],
+                "log": "/tmp/bc-arc-scratch/boundary/root/logs/boundary-root-module-211713694450.log",
+                "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "leanpath_sha256": "fad71def8af1e50853316b38ad654a09f05faea2e4fbe427d695c7368611abbc",
+                "source_sha256": "86b294a5001c47d268cfa6a26de37e061956747c58916450fef6b3070c2836e8",
+                "artifact_sha256": "8bba51019a1c9cbb1ccbab8e5e58c24dd290f2f3cdd7053d80b22559f139f5cb",
+                "CARGO_BUILD_JOBS": null,
+                "CARGO_TARGET_DIR": null
+              }
+            },
+            "scan-clean": {
+              "receipt": "/tmp/bc-arc-scratch/boundary/root/scan-v2/logs/boundary-root-scan-v2-scan-clean-212343359675.json",
+              "sha256": "16f0e62ce6fb4e7a0d8c23b98c53263235f371fb28a6abd02c146f3ee27e4af6",
+              "result": {
+                "start": "2026-10-09T21:23:40.259302+00:00",
+                "end": "2026-10-09T21:23:43.359935+00:00",
+                "exit": 0,
+                "command": [
+                  "python3",
+                  "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+                  "/tmp/bc-coord/coord.sh",
+                  "lean",
+                  "codex",
+                  "boundary-root-scan-v2-scan-clean",
+                  "--",
+                  "timeout",
+                  "180",
+                  "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+                  "-j1",
+                  "-M8000",
+                  "/tmp/bc-arc-scratch/boundary/root/scan-v2/scan-clean.lean"
+                ],
+                "log": "/tmp/bc-arc-scratch/boundary/root/scan-v2/logs/boundary-root-scan-v2-scan-clean-212343359675.log",
+                "log_sha256": "5d37f9cfdc13d96f753930ecab2355ff914fdd141044550870c7fe752b90005e",
+                "leanpath_sha256": "fad71def8af1e50853316b38ad654a09f05faea2e4fbe427d695c7368611abbc",
+                "source_sha256": "bd3f10fff4a0bbd0e33dfc673bec708da6538d8e129c1a40622b285dc0584dd9",
+                "artifact_sha256": null,
+                "CARGO_BUILD_JOBS": null,
+                "CARGO_TARGET_DIR": null
+              }
+            },
+            "scan-live": {
+              "receipt": "/tmp/bc-arc-scratch/boundary/root/scan-v2/logs/boundary-root-scan-v2-scan-live-212344873299.json",
+              "sha256": "2cd63c4af50babfb7992d1949b88b21438e2f61b241ccf898d58bf3b4f1cc844",
+              "result": {
+                "start": "2026-10-09T21:23:41.421070+00:00",
+                "end": "2026-10-09T21:23:44.873547+00:00",
+                "exit": 1,
+                "command": [
+                  "python3",
+                  "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+                  "/tmp/bc-coord/coord.sh",
+                  "lean",
+                  "codex",
+                  "boundary-root-scan-v2-scan-live",
+                  "--",
+                  "timeout",
+                  "180",
+                  "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+                  "-j1",
+                  "-M8000",
+                  "/tmp/bc-arc-scratch/boundary/root/scan-v2/scan-live.lean"
+                ],
+                "log": "/tmp/bc-arc-scratch/boundary/root/scan-v2/logs/boundary-root-scan-v2-scan-live-212344873299.log",
+                "log_sha256": "56fcf15fda4237bf22a4063a26bd6605f5ee73821ecc0b22604bd540f74f1fdf",
+                "leanpath_sha256": "fad71def8af1e50853316b38ad654a09f05faea2e4fbe427d695c7368611abbc",
+                "source_sha256": "0b0ca5365a5e7ec38ea3b105ef8424a31ae421cb1f764b43cba566aee8292d22",
+                "artifact_sha256": null,
+                "CARGO_BUILD_JOBS": null,
+                "CARGO_TARGET_DIR": null
+              }
+            }
+          },
+          "contracts_added": [],
+          "scope": "Exact extracted192-byte input at actual native source/scheduler root callbacks, Server history/touch retained, arbitrary complete continuation, existing64uniform cap, real initial64 and same64/76prefix. Built-input helper premise is an actual extracted successful builder equation; descriptor supplied unchanged, provenance/alignment not inferred by that helper. Root192 Extract stays original shared CE ROM; no functional fixed-root evaluation or correctness premise.",
+          "existing_contracts": [
+            "Existing Setup primitive/codec record",
+            "Existing R1 root Extract shared classical programmable ROM",
+            "Existing real ratchet HKDF source prefix consistency",
+            "Native implementation and RT adapter/compiler/runtime contracts unchanged"
+          ],
+          "costs": "One logical root-table read and real Expand HMAC; uniform cap64 per miss,0hit. Initial callback real64HKDF with same64/76prefix; no new uniform draw. Other primitive/base/native/continuation costs unchanged.",
+          "scans": "11 declaration statements clean; direct12 declarations clean0; live16 declarations10 forbidden directrefs including unallowed sibling projection, familyBafterRoot andRootFields; statementlive includes all restoredPB06tokens. Exactone-name functional field allowance393 only realinitial64/76, root192 sharedCE ROM unchanged.",
+          "remaining": [
+            "Independent semantic review",
+            "Fresh publication topic metadata/checks/aggregate review",
+            "Acceptance caller provenance and complete game composition separately scoped"
+          ],
+          "previous_candidate": {
+            "path": "/tmp/bc-arc-scratch/boundary/root/root11-candidate.json",
+            "sha256": "f894276dee2396e195e80af4906353dfa84a60617c4983456f0e66c2daac8cb0",
+            "state": "proof/guide/checks frozen unchanged; superseded only for additive complete gate"
+          },
+          "review_fix": "Full PB06 exclusions inherited; exact functional crypto field allowance only, same exception in both scanners, original2hits preserved; direct clean12/0, live16/10 plus statement clean11/0 and live12/7. No proof or guide modification."
+        }
+      },
+      "independent_review": {
+        "path": "/tmp/bc-arc-scratch/boundary/root/root11-review.json",
+        "sha256": "c6304ae98a2abd0944e0934487c1e597357e58fa60961975b33e183ff7ec6365",
+        "receipt": {
+          "stage": "PB-C PB04 Root11 independent semantic and hygiene review",
+          "reviewer": "codex boundary_survey, independent of author root",
+          "time": "2026-10-09T21:24:55.576672+00:00",
+          "candidate": "/tmp/bc-arc-scratch/boundary/root/root11-v2-candidate.json",
+          "candidate_sha256": "6f71ab2a91a87a4881ac26490ee1be1b4d8d36030ad3f6a6e922135ff6667404",
+          "verdict": "APPROVE",
+          "findings": [],
+          "resolved_findings": [
+            "Logged descriptor guide now explicitly retains the supplied descriptor without inferring provenance or alignment with the pending token.",
+            "Final scan-v2 inherits the entire PB06 exclusion specification plus exactly the one approved functional crypto projection; both scanners use that exact exception and live controls reject sibling and family-B/RootFields names. Original two-hit evidence remains pinned."
+          ],
+          "inspected": [
+            "All eleven theorem statements and proofs, extracted builder success/nonzero rejection and literal padding/DH1/DH2/DH3/DH4/KEM order",
+            "Actual sourceRoot and scheduler root callback, exact shared Extract cache update and full native state retention",
+            "loggedRoot full family derive/publicHmac entries plus session touch, exact original pending root input and arbitrary complete continuation",
+            "Existing uniform table bound64 including hit branch, real Expand at INFO_PQ ||01 and first32 projection, no omitted native/HMAC/history/continuation work",
+            "Actual real initial64 scheduler callback and same-input/domain64/76 prefix through existing prefixConsistent field",
+            "Rust pqxdh derive_root_key_input and ratchet symmetric_ratchet_hkdf call wiring; public adapter remains RT",
+            "Every candidate source/guide/artifact/scan/check/LP pin; direct clean module and all11 exact axiom guards; intended failing direct and statement controls"
+          ],
+          "claude393_condition": {
+            "projection": "BeaconcryptCore.Computational.PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource.crypto",
+            "definition": "Projection of the existing source record to Pqxdh.Crypto; functional primitive/correctness/length interface, not a game or advantage endpoint.",
+            "actual_uses": "Only initial_complete and initial_prefix real64/76 ratchet calls; no functional root derivation is introduced.",
+            "root_request": "All root equations read HmacOracle.randomOracle at the actual192-byte built input in the original shared CE Extract cache; real HMAC Expand follows. No functional extract evaluation or functional correctness premise answers the ROM call.",
+            "allowance": "Exact fully qualified one-name exception; all other PB06 and item2 endpoint bans retained; sibling negative control rejects."
+          },
+          "scope_notes": [
+            "Operational request and full continuation equality only, not secrecy/authentication or a joint-sampler distribution theorem.",
+            "Successful builder equality is a local extracted execution premise; caller provenance/alignment remains for the acceptance boundary.",
+            "R1 shared programmable classical Extract ROM and real ratchet prefix contract are existing explicit contracts, not proved or replaced here.",
+            "No generator interchange, marginal-only replacement, new honest-key/independence/injectivity premise, primitive proof, snapshot or persistence conclusion."
+          ],
+          "tests_rerun": [],
+          "validation": "Inspected exact pinned clean check and live-control failures; no redundant Lean, Rust or mutation run."
+        }
+      }
+    },
+    {
+      "module": "PqxdhBoundaryRegistrationAccept",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryRegistrationAccept.lean",
+      "source_sha256": "83ffb31d82c50e83f56245da0273d36faff5eb1a8aac57a16126f8eb29c42e31",
+      "guide": "doc/impl/production-boundary-registration-accept.md",
+      "guide_sha256": "7ed5f497b1636fa19e76e18e9db325716786466de80c28d9dc695df3ec1c60eb",
+      "guards": 12,
+      "semantic_candidate": {
+        "path": "/tmp/bc-arc-scratch/boundary/accept/accept12-semantic-candidate.json",
+        "sha256": "61476fbaf4b5cb74a66df0122473ab2061f3bae906ac9717deef50bf8ac28f32",
+        "receipt": {
+          "stage": "PB-C/PB-03 RegistrationAccept12",
+          "time": "2026-10-09T21:28:53.256358+00:00",
+          "worktree": "/tmp/beaconcrypt-record-lift-boundary-accept",
+          "branch": "codex/record-lift-boundary-accept",
+          "base": "d281c8045f1d34f93f047837cdddb0fc4e6b01db",
+          "files": {
+            "/tmp/beaconcrypt-record-lift-boundary-accept/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryRegistrationAccept.lean": "83ffb31d82c50e83f56245da0273d36faff5eb1a8aac57a16126f8eb29c42e31",
+            "/tmp/beaconcrypt-record-lift-boundary-accept/doc/impl/production-boundary-registration-accept.md": "7ed5f497b1636fa19e76e18e9db325716786466de80c28d9dc695df3ec1c60eb",
+            "/tmp/beaconcrypt-record-lift-boundary-accept/doc/formal-verification-analysis.md": "f83394474f9be102e3d63876138f4ddaeada9a792e4be7955f4c8c8d711ee1fa",
+            "/tmp/bc-arc-scratch/boundary/accept/analysis-snippet.md": "0bd7ae97c21d31a87f10bcad3481987adf845a199faedb8e7a0693fcdb1a0cca",
+            "/tmp/bc-arc-scratch/boundary/accept/leanpath": "71f7b0cb58a2163c71e3d23c3fddf01cacfacebbf12f13a4cd36705a8a34b250",
+            "/tmp/bc-arc-scratch/boundary/accept/olean/BeaconcryptCore/Computational/PqxdhBoundaryRegistrationAccept.olean": "58d3e0d8aa3a95270593cf080c02e54544e72b1e9a466ccf2ac18c622c6ebe58",
+            "/tmp/bc-arc-scratch/boundary/accept/scan-spec.json": "b1d8c669d1a975a89ab8794f143f2abf649200aba82e68a269392f82f5216b22",
+            "/tmp/bc-arc-scratch/boundary/accept/scan-base.lean": "cac919432ac3e770c7145e36f82feaba564eb59707cc3b184fbd77b81090420c",
+            "/tmp/bc-arc-scratch/boundary/accept/scan-clean.lean": "0366815a3519f464478411bf1f52a6da3ae9f5d01155ca068e6ae5d17cc30684",
+            "/tmp/bc-arc-scratch/boundary/accept/scan-live.lean": "e6f29bd653e7708cc2e4cea9b1c3de1524c5f8a28b3e3583308c9f21c747b2eb",
+            "/tmp/bc-arc-scratch/boundary/accept/statement-scan.py": "11d55188bf6c0da68bc3f8149da13f1871b901485f87ea90b292210cc44c7866",
+            "/tmp/bc-arc-scratch/boundary/accept/statement-clean.json": "4f3d2d325b56c7ca936a386e5c0ea97074a6ea1bf19c9c8fdad9b3eb5db32ad3",
+            "/tmp/bc-arc-scratch/boundary/accept/statement-live.json": "a704440cb3b77d2ec789bb6e0c3dc54a9c469e53d061e7165d92549056859582",
+            "/tmp/bc-arc-scratch/boundary/accept/inputs-scan-clean.lean": "f91e5cbc6305d807ad9090dcf7a509b65c1491b595231888c8674b574563944f",
+            "/tmp/bc-arc-scratch/boundary/accept/inputs-scan-live.lean": "f31334137e0f3418cc29b4bb3706a2765011aee24313159a8e0c863406b3286e",
+            "/tmp/bc-arc-scratch/boundary/accept/inputs-scan-unexceptional.lean": "febd9042984ab55162037dc645dfc9a0bf5b18b4359dced6aef7047350ee7880",
+            "/tmp/bc-arc-scratch/boundary/accept/input-statements.py": "c39bd1fe9ffd205c4630344cc3a1f06dfd67cd83ab282bab3a951b66622fb7c4",
+            "/tmp/bc-arc-scratch/boundary/accept/input-statements-clean.json": "ee50dfdce7fa09b95c7bfe2d2ce9c1840e4b3a77d6cccbec89b999a1c7a3f537",
+            "/tmp/bc-arc-scratch/boundary/accept/input-statements-live.json": "396230bca3cffa7692aa21d6cc55f186549c48a4d2f8b600d778341df4f1a2a5"
+          },
+          "guards": 12,
+          "check_receipts": {
+            "module": {
+              "path": "/tmp/bc-arc-scratch/boundary/accept/logs/boundary-accept-module-212532689544.json",
+              "sha256": "57d96cb0f39275ddb7fbd9c95415130767d617db9bfab4403fabba8b44f052e5",
+              "result": {
+                "start": "2026-10-09T21:25:24.587200+00:00",
+                "end": "2026-10-09T21:25:32.689810+00:00",
+                "exit": 0,
+                "command": [
+                  "python3",
+                  "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+                  "/tmp/bc-coord/coord.sh",
+                  "lean",
+                  "codex",
+                  "boundary-accept-module",
+                  "--",
+                  "timeout",
+                  "180",
+                  "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+                  "-j1",
+                  "-M8000",
+                  "--root=/tmp/beaconcrypt-record-lift-boundary-accept/beaconcrypt-core/proofs/lean",
+                  "-o",
+                  "/tmp/bc-arc-scratch/boundary/accept/olean/BeaconcryptCore/Computational/PqxdhBoundaryRegistrationAccept.olean",
+                  "/tmp/beaconcrypt-record-lift-boundary-accept/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryRegistrationAccept.lean"
+                ],
+                "log": "/tmp/bc-arc-scratch/boundary/accept/logs/boundary-accept-module-212532689544.log",
+                "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "leanpath_sha256": "71f7b0cb58a2163c71e3d23c3fddf01cacfacebbf12f13a4cd36705a8a34b250",
+                "source_sha256": "83ffb31d82c50e83f56245da0273d36faff5eb1a8aac57a16126f8eb29c42e31",
+                "artifact_sha256": "58d3e0d8aa3a95270593cf080c02e54544e72b1e9a466ccf2ac18c622c6ebe58",
+                "CARGO_BUILD_JOBS": null,
+                "CARGO_TARGET_DIR": null
+              }
+            },
+            "direct_clean": {
+              "path": "/tmp/bc-arc-scratch/boundary/accept/logs/boundary-accept-scan-clean-212716495673.json",
+              "sha256": "bda5eae735693b333f0105363f74b57d9d3fa3047b2272e063651b6e9206dbd0",
+              "result": {
+                "start": "2026-10-09T21:27:13.449100+00:00",
+                "end": "2026-10-09T21:27:16.495944+00:00",
+                "exit": 0,
+                "command": [
+                  "python3",
+                  "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+                  "/tmp/bc-coord/coord.sh",
+                  "lean",
+                  "codex",
+                  "boundary-accept-scan-clean",
+                  "--",
+                  "timeout",
+                  "180",
+                  "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+                  "-j1",
+                  "-M8000",
+                  "/tmp/bc-arc-scratch/boundary/accept/scan-clean.lean"
+                ],
+                "log": "/tmp/bc-arc-scratch/boundary/accept/logs/boundary-accept-scan-clean-212716495673.log",
+                "log_sha256": "6bca88500301e7c1b957989583c953d84c05306651edbe834d6952776a7d4cf0",
+                "leanpath_sha256": "71f7b0cb58a2163c71e3d23c3fddf01cacfacebbf12f13a4cd36705a8a34b250",
+                "source_sha256": "0366815a3519f464478411bf1f52a6da3ae9f5d01155ca068e6ae5d17cc30684",
+                "artifact_sha256": null,
+                "CARGO_BUILD_JOBS": null,
+                "CARGO_TARGET_DIR": null
+              }
+            },
+            "direct_live": {
+              "path": "/tmp/bc-arc-scratch/boundary/accept/logs/boundary-accept-scan-live-212707955114.json",
+              "sha256": "0a4c6bc5de2343f1e10421e3313eeb5cd4e13a8d665b0c705f4e712671d79dc4",
+              "result": {
+                "start": "2026-10-09T21:27:04.388907+00:00",
+                "end": "2026-10-09T21:27:07.955525+00:00",
+                "exit": 1,
+                "command": [
+                  "python3",
+                  "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+                  "/tmp/bc-coord/coord.sh",
+                  "lean",
+                  "codex",
+                  "boundary-accept-scan-live",
+                  "--",
+                  "timeout",
+                  "180",
+                  "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+                  "-j1",
+                  "-M8000",
+                  "/tmp/bc-arc-scratch/boundary/accept/scan-live.lean"
+                ],
+                "log": "/tmp/bc-arc-scratch/boundary/accept/logs/boundary-accept-scan-live-212707955114.log",
+                "log_sha256": "6e9b7a6e3c0142d5b84ce369971c8f2635cfb2bcb0f9368b0acffd83d93d502a",
+                "leanpath_sha256": "71f7b0cb58a2163c71e3d23c3fddf01cacfacebbf12f13a4cd36705a8a34b250",
+                "source_sha256": "e6f29bd653e7708cc2e4cea9b1c3de1524c5f8a28b3e3583308c9f21c747b2eb",
+                "artifact_sha256": null,
+                "CARGO_BUILD_JOBS": null,
+                "CARGO_TARGET_DIR": null
+              }
+            },
+            "inputs_clean": {
+              "path": "/tmp/bc-arc-scratch/boundary/accept/logs/inputs-clean-20261009-212347.json",
+              "sha256": "d9cf6174efc65b262cc67a2b64ab921f233e8e4432c1652c400653bc0e837415",
+              "result": {
+                "command": [
+                  "python3",
+                  "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+                  "/tmp/bc-coord/coord.sh",
+                  "lean",
+                  "codex",
+                  "boundary-accept-input-scan-clean",
+                  "--",
+                  "timeout",
+                  "180",
+                  "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+                  "-j1",
+                  "-M8000",
+                  "/tmp/bc-arc-scratch/boundary/accept/inputs-scan-clean.lean"
+                ],
+                "exit": 0,
+                "source": "/tmp/bc-arc-scratch/boundary/accept/inputs-scan-clean.lean",
+                "source_sha256": "f91e5cbc6305d807ad9090dcf7a509b65c1491b595231888c8674b574563944f",
+                "log": "/tmp/bc-arc-scratch/boundary/accept/logs/inputs-clean-20261009-212347.log",
+                "log_sha256": "ffcab580f25974df1a9dff9e80063d682cb5de5d14d1e64ff65eadcbe2d397d1",
+                "leanpath_sha256": "71f7b0cb58a2163c71e3d23c3fddf01cacfacebbf12f13a4cd36705a8a34b250"
+              }
+            },
+            "inputs_live": {
+              "path": "/tmp/bc-arc-scratch/boundary/accept/logs/inputs-live-20261009-212352.json",
+              "sha256": "8d7a421e87bfd721f6701d1484263ef2aeef7486f640c9164d6abd65a43ef72c",
+              "result": {
+                "command": [
+                  "python3",
+                  "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+                  "/tmp/bc-coord/coord.sh",
+                  "lean",
+                  "codex",
+                  "boundary-accept-input-scan-live",
+                  "--",
+                  "timeout",
+                  "180",
+                  "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+                  "-j1",
+                  "-M8000",
+                  "/tmp/bc-arc-scratch/boundary/accept/inputs-scan-live.lean"
+                ],
+                "exit": 1,
+                "source": "/tmp/bc-arc-scratch/boundary/accept/inputs-scan-live.lean",
+                "source_sha256": "f31334137e0f3418cc29b4bb3706a2765011aee24313159a8e0c863406b3286e",
+                "log": "/tmp/bc-arc-scratch/boundary/accept/logs/inputs-live-20261009-212352.log",
+                "log_sha256": "bfe6d34811b1d8b3717dcbf1aee4c91983694df9ed36fc93291cc5a064190b28",
+                "leanpath_sha256": "71f7b0cb58a2163c71e3d23c3fddf01cacfacebbf12f13a4cd36705a8a34b250"
+              }
+            },
+            "inputs_strict_original_rule": {
+              "path": "/tmp/bc-arc-scratch/boundary/accept/logs/inputs-unexceptional-20261009-212804.json",
+              "sha256": "fba7bd6f7c4061d9e0e994a4c7eecc362070b148e350b08c465fcc287929a278",
+              "result": {
+                "command": [
+                  "python3",
+                  "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+                  "/tmp/bc-coord/coord.sh",
+                  "lean",
+                  "codex",
+                  "boundary-accept-input-scan-unexceptional",
+                  "--",
+                  "timeout",
+                  "180",
+                  "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+                  "-j1",
+                  "-M8000",
+                  "/tmp/bc-arc-scratch/boundary/accept/inputs-scan-unexceptional.lean"
+                ],
+                "exit": 1,
+                "source": "/tmp/bc-arc-scratch/boundary/accept/inputs-scan-unexceptional.lean",
+                "source_sha256": "febd9042984ab55162037dc645dfc9a0bf5b18b4359dced6aef7047350ee7880",
+                "log": "/tmp/bc-arc-scratch/boundary/accept/logs/inputs-unexceptional-20261009-212804.log",
+                "log_sha256": "e6f40a9288190a790408585241813f49d3bffdda980960265d8cd070991b9ab3",
+                "leanpath_sha256": "71f7b0cb58a2163c71e3d23c3fddf01cacfacebbf12f13a4cd36705a8a34b250"
+              }
+            }
+          },
+          "scope": "Exact ordered raw verifier/core validation and native prefix, complete unchanged native root client/acceptance, consumed-ID and pending/attempt footprint, actual CE accept and arbitrary complete result/state continuation. Public Rust adapter and callback mapping remain RT.",
+          "contracts_added": [],
+          "queries": {
+            "verification": 9,
+            "collectVerified": 13,
+            "totalPrefix": 22,
+            "scope": "Source callback counts before interpretation, all replies including rejection. Actual primitive generation/KEM/root/ambient work remains inside unchanged callback programs; not declared free or bounded by22."
+          },
+          "scans": {
+            "direct": "35 actual elaborated declarations, zero forbidden references; four live forbidden helpers add12 refs and fail as intended",
+            "statements": "17 statement types, zero hits; live fixture adds5 exact forbidden tokens and fails",
+            "inputs": "8 selected input theorem declarations, zero forbidden references after exact approved projection exception; strict original rule detects precisely one .crypto use in existing accept_footprint; live family fixture detects3 and fails",
+            "allowance": "Only BeaconcryptCore.Computational.PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource.crypto, per message397; existing footprint uses it only for real attached signature verification in the raw identity receipt. No root Extract evaluation or functional law for ROM-answered call. Every other PB06 namespace/endpoint ban retained.",
+            "scope_limit": "Direct declaration references, not a transitive import scan; allowed local facts share files with excluded historical results."
+          },
+          "remaining": [
+            "Independent semantic/source/query/scan review",
+            "Focused publication integration checks and metadata; no full matrix requested"
+          ],
+          "rust_changes": false,
+          "forbidden_tokens": []
+        }
+      },
+      "independent_review": {
+        "path": "/tmp/bc-arc-scratch/boundary/accept/accept12-review.json",
+        "sha256": "fb90e95223e15d31aad5534515d2ca9bceff2f9c93a6200a85780233fe31a209",
+        "receipt": {
+          "stage": "PB-C/PB-03 RegistrationAccept12",
+          "reviewer": "/root/facts_origin",
+          "author": "/root/facts_later",
+          "decision": "APPROVE",
+          "time": "2026-10-09T21:31:02.771861+00:00",
+          "candidate": "/tmp/bc-arc-scratch/boundary/accept/accept12-semantic-candidate.json",
+          "candidate_sha256": "61476fbaf4b5cb74a66df0122473ab2061f3bae906ac9717deef50bf8ac28f32",
+          "source_sha256": "83ffb31d82c50e83f56245da0273d36faff5eb1a8aac57a16126f8eb29c42e31",
+          "findings": [],
+          "checks": {
+            "all_candidate_files_and_receipts": "All pinned file, receipt, embedded receipt, log, source, artifact and leanpath hashes agree. Module check exits0 with empty log; all12 exact guards retained.",
+            "semantic_statements": "Read every definition/proof and all12 theorem statements. verification_source preserves decode/identity/check/PQ verify/prekey verify/one-time verify source order and all optional replies. B10 applies only its local parser/extracted-validator component; registration_id uses the actual extracted equation, never the Rust debug assertion.",
+            "source": "Compared Server get_shared_secret lines332\u2013422: exact registration ID, consumed status before reservation, key constructors then ephemeral/KEM/conversions/DH1\u20134, root before consumed append. Codec, constructor/admission and allocator mappings remain explicitly RT. Ghost attempt ordinal is not advertised as a Rust wire ID.",
+            "complete_state": "preparation/nativePrefix and rawAccept/nativeAccept equal complete computations. nativeSet advances every attempt; nativeClient is unchanged; only actual successful token publishes. accept_continuation preserves both caches, native shared state, all owners/counters/traces and pending maps before arbitrary full-state continuation.",
+            "consumption_and_footprint": "Checked operational input lemmas and evaluate_support use. Rejection retains consumed and pending; success appends exactly returned fresh registration ID and publishes current attempted index; every unrelated pending entry and peer/identity ID retained. No honest-candidate, successful-prefix or initial-invariant premise introduced.",
+            "query_accounting": "9 verification callbacks and13 post-verification callbacks give22 source-prefix slots on all branches. Guide correctly separates these from interpreted ephemeral/KEM/root/ambient queries and runtime work. Replay theorem begins only after prior verification; it does not erase that cost.",
+            "primitive_projection_exception": "Strict original input scan finds exactly FixedHkdfSha512NoSaltSource.crypto in existing DeploymentCompileFootprint.accept_footprint. Inspected identityOf_receipt/prefix_receipt use: the projected primitive is real attached-signature verification only. Claude message397 scope is met. Actual nativeClient uses loggedRoot\u2192romRoot\u2192romRootBytes\u2192HmacOracle.randomOracle at actual extracted root-input bytes, with real expandRoot afterwards; no fixed Extract evaluation or functional law for a ROM-answered root call added.",
+            "scans": "Complete PB06 namespace/part exclusions retained except exact approved .crypto projection. New module direct scan35decl0hits, statement17decl0hits. Four elaborated live controls add12 forbidden references; text fixture adds5 forbidden tokens. Input scan8decl0hits after exception; original strict scan records exactly1 expected hit and live input fixture3. Input statement source files in the publication worktree are byte-identical to this worktree. Scope remains direct references, not a transitive import graph.",
+            "hygiene": "No placeholder/custom axiom/done in uncommented source. New source/guide git diff --check --no-index /dev/null show no whitespace diagnostics. No resource/linter gate disabled in the new module.",
+            "documentation": "Guide and FVA snippet correctly distinguish extracted local core facts from surrounding RT adapter, primitive/runtime contracts from proved results, and operational boundary from security. No snapshot/persistence or primitive algorithm proof added.",
+            "verification": "No rebuild needed: reviewed the clean pinned single-file check and exact guards; no Rust/mutation/full-matrix claim."
+          },
+          "remaining": "Parent-owned focused publication, inventory/fidelity/root import and remote integration checks."
+        }
+      }
+    }
+  ],
+  "guarded_statements": 42,
+  "axioms": [
+    "propext",
+    "Classical.choice",
+    "Quot.sound"
+  ],
+  "scope": "Exact source ordered generation/signatures/optional writer fed by extracted unsigned buffers; literal CE bundle and raw acceptance; root at actual extracted192-byte input into same shared R1 interpreter and real Expand; complete owner/native/cache/history/attempt/pending/consumed state before arbitrary continuations. Real64/76 prefix retained.",
+  "source_boundary": "Extracted beacon_start unsigned buffers and root input builder plus local validation and registration-ID equations consumed. Surrounding public Rust adapters, registry/container mappings and codec internals remain RT/existing contracts.",
+  "classification_conditions393_397": [
+    "Exact existing functional .crypto projection only for real signature verification and real64/76 calls",
+    "Original root request uses shared randomOracle at actual bytes with real Expand, no fixed Extract evaluation/premise",
+    "All other complete PB06 bans retained with exact-token and elaborated direct-reference liveness controls",
+    "No family-B RootFields/secretIdentity/decoded-after-root/ReceiveBridge/C6/C7/erasure security premise"
+  ],
+  "contracts_added": [],
+  "existing_contracts": "Primitive correctness and exact interface, shared reader/codec, compiler/extraction/runtime/allocator and normal-return live ownership unchanged. Snapshot/persistence excluded.",
+  "query_accounting": "Phase1 logical generation/signature/writer caps1/3/1; native uniform32. Raw verification/collect caps9/13=22 callbacks before interpretation. Root table miss uniform64, hit0; real Expand/HMAC and shared state retained. These are scoped component counts, not a new global budget/statistical claim; actual primitive/base/uniform/ambient/runtime work not waived.",
+  "checks": {
+    "PqxdhBoundaryPhase1Source": {
+      "receipt": "/tmp/bc-arc-scratch/boundary/phase1-root-publication/logs/boundary-phase1-root-publication-module-213330489257.json",
+      "sha256": "c117f58dfad18ad64cb51c3af9173dbbff943ab7908f9426b814ea72d014f758",
+      "result": {
+        "start": "2026-10-09T21:33:27.008305+00:00",
+        "end": "2026-10-09T21:33:30.489513+00:00",
+        "exit": 0,
+        "command": [
+          "python3",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+          "/tmp/bc-coord/coord.sh",
+          "lean",
+          "codex",
+          "boundary-phase1-root-publication-module",
+          "--",
+          "timeout",
+          "180",
+          "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+          "-j1",
+          "-M8000",
+          "--root=/tmp/beaconcrypt-record-lift-boundary-phase1-root-publication/beaconcrypt-core/proofs/lean",
+          "-o",
+          "/tmp/bc-arc-scratch/boundary/phase1-root-publication/olean/BeaconcryptCore/Computational/PqxdhBoundaryPhase1Source.olean",
+          "/tmp/beaconcrypt-record-lift-boundary-phase1-root-publication/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryPhase1Source.lean"
+        ],
+        "log": "/tmp/bc-arc-scratch/boundary/phase1-root-publication/logs/boundary-phase1-root-publication-module-213330489257.log",
+        "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "leanpath_sha256": "849a48cf4f2a81fc55b8d4d8849ff5c92c4c70833e5b10d8618fce0403481550",
+        "source_sha256": "a491c8925cc1a486fc6174611fe959c4c5eef5710865ded5c16ca077b3202c1f",
+        "artifact_sha256": "eeab08f8a0c7c039de42cccc94114175fdbaaa0a3d6faff06936c7190c5578eb",
+        "CARGO_BUILD_JOBS": null,
+        "CARGO_TARGET_DIR": null
+      }
+    },
+    "PqxdhBoundaryPhase1Native": {
+      "receipt": "/tmp/bc-arc-scratch/boundary/phase1-root-publication/logs/boundary-phase1-root-publication-module-213347290794.json",
+      "sha256": "392721de5d740f9def738dda9cfbdecfb0d84933a070d614594196d279f03d9a",
+      "result": {
+        "start": "2026-10-09T21:33:43.560725+00:00",
+        "end": "2026-10-09T21:33:47.291050+00:00",
+        "exit": 0,
+        "command": [
+          "python3",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+          "/tmp/bc-coord/coord.sh",
+          "lean",
+          "codex",
+          "boundary-phase1-root-publication-module",
+          "--",
+          "timeout",
+          "180",
+          "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+          "-j1",
+          "-M8000",
+          "--root=/tmp/beaconcrypt-record-lift-boundary-phase1-root-publication/beaconcrypt-core/proofs/lean",
+          "-o",
+          "/tmp/bc-arc-scratch/boundary/phase1-root-publication/olean/BeaconcryptCore/Computational/PqxdhBoundaryPhase1Native.olean",
+          "/tmp/beaconcrypt-record-lift-boundary-phase1-root-publication/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryPhase1Native.lean"
+        ],
+        "log": "/tmp/bc-arc-scratch/boundary/phase1-root-publication/logs/boundary-phase1-root-publication-module-213347290794.log",
+        "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "leanpath_sha256": "849a48cf4f2a81fc55b8d4d8849ff5c92c4c70833e5b10d8618fce0403481550",
+        "source_sha256": "cb99cd63d572b3447960d2ee7f9ce3fa312f35cb53125d31553e497ced8fc698",
+        "artifact_sha256": "33d1ae43e9a86f535ee62674aa690ec1230f80950fc0b40dc0c836ab9f0d507d",
+        "CARGO_BUILD_JOBS": null,
+        "CARGO_TARGET_DIR": null
+      }
+    },
+    "PqxdhBoundaryPhase1Buffers": {
+      "receipt": "/tmp/bc-arc-scratch/boundary/phase1-root-publication/logs/boundary-phase1-root-publication-module-213357814437.json",
+      "sha256": "8e3e5fe21ac11cf3c2d62747afe4528155b967caca008f29648e2f1bcc68571f",
+      "result": {
+        "start": "2026-10-09T21:33:53.987133+00:00",
+        "end": "2026-10-09T21:33:57.814700+00:00",
+        "exit": 0,
+        "command": [
+          "python3",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+          "/tmp/bc-coord/coord.sh",
+          "lean",
+          "codex",
+          "boundary-phase1-root-publication-module",
+          "--",
+          "timeout",
+          "180",
+          "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+          "-j1",
+          "-M8000",
+          "--root=/tmp/beaconcrypt-record-lift-boundary-phase1-root-publication/beaconcrypt-core/proofs/lean",
+          "-o",
+          "/tmp/bc-arc-scratch/boundary/phase1-root-publication/olean/BeaconcryptCore/Computational/PqxdhBoundaryPhase1Buffers.olean",
+          "/tmp/beaconcrypt-record-lift-boundary-phase1-root-publication/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryPhase1Buffers.lean"
+        ],
+        "log": "/tmp/bc-arc-scratch/boundary/phase1-root-publication/logs/boundary-phase1-root-publication-module-213357814437.log",
+        "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "leanpath_sha256": "849a48cf4f2a81fc55b8d4d8849ff5c92c4c70833e5b10d8618fce0403481550",
+        "source_sha256": "f03825648bb14b9dabba2795eedcb0a26327ffdd3b65228823853f0f5feb8f18",
+        "artifact_sha256": "37ba34b0ec1118fb2e4e649f005517824b714528da71a090677f427da4d88d89",
+        "CARGO_BUILD_JOBS": null,
+        "CARGO_TARGET_DIR": null
+      }
+    },
+    "PqxdhBoundaryRoot": {
+      "receipt": "/tmp/bc-arc-scratch/boundary/phase1-root-publication/logs/boundary-phase1-root-publication-module-213336894269.json",
+      "sha256": "792f92853dc86d699688cd654867a40dc45cbd5d05f4227d52da001254400e7c",
+      "result": {
+        "start": "2026-10-09T21:33:32.775828+00:00",
+        "end": "2026-10-09T21:33:36.894491+00:00",
+        "exit": 0,
+        "command": [
+          "python3",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+          "/tmp/bc-coord/coord.sh",
+          "lean",
+          "codex",
+          "boundary-phase1-root-publication-module",
+          "--",
+          "timeout",
+          "180",
+          "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+          "-j1",
+          "-M8000",
+          "--root=/tmp/beaconcrypt-record-lift-boundary-phase1-root-publication/beaconcrypt-core/proofs/lean",
+          "-o",
+          "/tmp/bc-arc-scratch/boundary/phase1-root-publication/olean/BeaconcryptCore/Computational/PqxdhBoundaryRoot.olean",
+          "/tmp/beaconcrypt-record-lift-boundary-phase1-root-publication/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryRoot.lean"
+        ],
+        "log": "/tmp/bc-arc-scratch/boundary/phase1-root-publication/logs/boundary-phase1-root-publication-module-213336894269.log",
+        "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "leanpath_sha256": "849a48cf4f2a81fc55b8d4d8849ff5c92c4c70833e5b10d8618fce0403481550",
+        "source_sha256": "86b294a5001c47d268cfa6a26de37e061956747c58916450fef6b3070c2836e8",
+        "artifact_sha256": "8bba51019a1c9cbb1ccbab8e5e58c24dd290f2f3cdd7053d80b22559f139f5cb",
+        "CARGO_BUILD_JOBS": null,
+        "CARGO_TARGET_DIR": null
+      }
+    },
+    "PqxdhBoundaryRegistrationAccept": {
+      "receipt": "/tmp/bc-arc-scratch/boundary/phase1-root-publication/logs/boundary-phase1-root-publication-module-213403708635.json",
+      "sha256": "446f9b242f868bb57f5894b277e7b05253b5a8dff8b7df4b56a8ffe088915bcf",
+      "result": {
+        "start": "2026-10-09T21:33:55.145101+00:00",
+        "end": "2026-10-09T21:34:03.708886+00:00",
+        "exit": 0,
+        "command": [
+          "python3",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+          "/tmp/bc-coord/coord.sh",
+          "lean",
+          "codex",
+          "boundary-phase1-root-publication-module",
+          "--",
+          "timeout",
+          "180",
+          "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+          "-j1",
+          "-M8000",
+          "--root=/tmp/beaconcrypt-record-lift-boundary-phase1-root-publication/beaconcrypt-core/proofs/lean",
+          "-o",
+          "/tmp/bc-arc-scratch/boundary/phase1-root-publication/olean/BeaconcryptCore/Computational/PqxdhBoundaryRegistrationAccept.olean",
+          "/tmp/beaconcrypt-record-lift-boundary-phase1-root-publication/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryRegistrationAccept.lean"
+        ],
+        "log": "/tmp/bc-arc-scratch/boundary/phase1-root-publication/logs/boundary-phase1-root-publication-module-213403708635.log",
+        "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "leanpath_sha256": "849a48cf4f2a81fc55b8d4d8849ff5c92c4c70833e5b10d8618fce0403481550",
+        "source_sha256": "83ffb31d82c50e83f56245da0273d36faff5eb1a8aac57a16126f8eb29c42e31",
+        "artifact_sha256": "58d3e0d8aa3a95270593cf080c02e54544e72b1e9a466ccf2ac18c622c6ebe58",
+        "CARGO_BUILD_JOBS": null,
+        "CARGO_TARGET_DIR": null
+      }
+    },
+    "root": {
+      "receipt": "/tmp/bc-arc-scratch/boundary/phase1-root-publication/logs/boundary-phase1-root-publication-root-213424375824.json",
+      "sha256": "a522370b665f6282d02dd50236accf9cd79f8d8c86d631f686e25a167cf56a6a",
+      "result": {
+        "start": "2026-10-09T21:34:21.786782+00:00",
+        "end": "2026-10-09T21:34:24.376106+00:00",
+        "exit": 0,
+        "command": [
+          "python3",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+          "/tmp/bc-coord/coord.sh",
+          "lean",
+          "codex",
+          "boundary-phase1-root-publication-root",
+          "--",
+          "timeout",
+          "180",
+          "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+          "-j1",
+          "-M8000",
+          "--root=/tmp/beaconcrypt-record-lift-boundary-phase1-root-publication/beaconcrypt-core/proofs/lean",
+          "-o",
+          "/tmp/bc-arc-scratch/boundary/phase1-root-publication/olean/BeaconcryptCore.olean",
+          "/tmp/beaconcrypt-record-lift-boundary-phase1-root-publication/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+        ],
+        "log": "/tmp/bc-arc-scratch/boundary/phase1-root-publication/logs/boundary-phase1-root-publication-root-213424375824.log",
+        "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "leanpath_sha256": "849a48cf4f2a81fc55b8d4d8849ff5c92c4c70833e5b10d8618fce0403481550",
+        "source_sha256": "957417d2f70c368309f83c711b64ea92537ad91e4ac79f04d451be1c13dd5b8c",
+        "artifact_sha256": "d604ba96787737d5b8568659a4649c887b36182c0a4aef02279379304a05ffb2",
+        "CARGO_BUILD_JOBS": null,
+        "CARGO_TARGET_DIR": null
+      }
+    },
+    "inventory": {
+      "receipt": "/tmp/bc-arc-scratch/boundary/phase1-root-publication/logs/boundary-phase1-root-publication-inventory-213611935254.json",
+      "sha256": "f8c0ab0995dcd65f3acb67bd1d030267424faff700ea490dfe4527ccf8933112",
+      "result": {
+        "start": "2026-10-09T21:34:22.950252+00:00",
+        "end": "2026-10-09T21:36:11.935515+00:00",
+        "exit": 0,
+        "command": [
+          "/tmp/bc-coord/coord.sh",
+          "lease",
+          "mem",
+          "codex",
+          "@nix",
+          "boundary-phase1-root-publication-inventory",
+          "--eta",
+          "20m",
+          "--",
+          "nix",
+          "develop",
+          "--no-update-lock-file",
+          "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+          "-c",
+          "make",
+          "-C",
+          "/tmp/beaconcrypt-record-lift-boundary-phase1-root-publication/beaconcrypt-core",
+          "check-inventory",
+          "SHELL=bash"
+        ],
+        "log": "/tmp/bc-arc-scratch/boundary/phase1-root-publication/logs/boundary-phase1-root-publication-inventory-213611935254.log",
+        "log_sha256": "bfcde01a18a020065d835a66d39044c1acd0a2a6460a3d5041f7120343e50038",
+        "leanpath_sha256": "849a48cf4f2a81fc55b8d4d8849ff5c92c4c70833e5b10d8618fce0403481550",
+        "source_sha256": null,
+        "artifact_sha256": null,
+        "CARGO_BUILD_JOBS": "2",
+        "CARGO_TARGET_DIR": "/tmp/bc-arc-scratch/boundary/phase1-root-publication/target"
+      }
+    },
+    "fidelity": {
+      "receipt": "/tmp/bc-arc-scratch/boundary/phase1-root-publication/logs/boundary-phase1-root-publication-fidelity-213656638062.json",
+      "sha256": "3a6d4e5dceee4ebf9c90e7176082b0d78ac4f922cb402727815e7c6d37bd1444",
+      "result": {
+        "start": "2026-10-09T21:36:32.231302+00:00",
+        "end": "2026-10-09T21:36:56.638373+00:00",
+        "exit": 0,
+        "command": [
+          "/tmp/bc-coord/coord.sh",
+          "lease",
+          "mem",
+          "codex",
+          "@cargo",
+          "boundary-phase1-root-publication-fidelity",
+          "--eta",
+          "20m",
+          "--",
+          "nix",
+          "develop",
+          "--no-update-lock-file",
+          "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+          "-c",
+          "make",
+          "-C",
+          "/tmp/beaconcrypt-record-lift-boundary-phase1-root-publication/beaconcrypt-core",
+          "check-proverif-transcript-fidelity",
+          "SHELL=bash"
+        ],
+        "log": "/tmp/bc-arc-scratch/boundary/phase1-root-publication/logs/boundary-phase1-root-publication-fidelity-213656638062.log",
+        "log_sha256": "2eccf87a73de784d4e4f173d12fa96bd8da86fa1af2cd1db996f86bfe474c4e9",
+        "leanpath_sha256": "849a48cf4f2a81fc55b8d4d8849ff5c92c4c70833e5b10d8618fce0403481550",
+        "source_sha256": null,
+        "artifact_sha256": null,
+        "CARGO_BUILD_JOBS": "2",
+        "CARGO_TARGET_DIR": "/tmp/bc-arc-scratch/boundary/phase1-root-publication/target"
+      }
+    }
+  },
+  "validation_summary": {
+    "direct_modules": "Phase1 Source6/Native6/Buffers7, Root11, Acceptance12; forty-two exact guards pass; clean logs",
+    "root_import": "Pass; clean log",
+    "inventory": "All current handwritten Lean entries and exact new module/root/checker/trust rows validated; see pinned log",
+    "fidelity": "30 Rust transcript-fidelity tests and 20 Python verdict-class tests pass",
+    "inventory_auxiliary": "20 Beacon getter cases and 9 Python regression cases pass",
+    "contamination": "All reviewed component statement/direct-reference scans clean; live controls fail as intended. Direct declarations only, not a transitive import graph.",
+    "full_build_or_make_verify": "Not run; outside this stage",
+    "rust_mutation": "Not run; no Rust change"
+  },
+  "remaining": [
+    "Independent aggregate publication review, commit and immediate topic push",
+    "Reconcile current central before integration",
+    "Birth, PB05 build and PB-D whole adaptive classical/later source-boundary joins plus final CE14 ledger remain separate"
+  ],
+  "leanpath": "/tmp/bc-arc-scratch/boundary/phase1-root-publication/leanpath",
+  "leanpath_sha256": "849a48cf4f2a81fc55b8d4d8849ff5c92c4c70833e5b10d8618fce0403481550"
+}

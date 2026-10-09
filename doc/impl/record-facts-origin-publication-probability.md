@@ -1,0 +1,7 @@
+# Original publication-event probability
+
+`PqxdhRecordFactsOriginPublicationProbability` connects the original full ideal-source publication event to the erased source event used by the ordinal proof. `unpublished_observation` composes the already checked view observation law with the actual unpublished-accept Boolean. `unpublished_probability` converts that exact law into equality between the original Boolean singleton probability and the erased run's proposition event. The retained view includes the actual transcript, client result and production history; discarded counters and private caches are not observed.
+
+`publication_term` checks that the derived coefficient-two receive-times-send expression is exactly the frozen `publicationTerm` (`2 * receives * sends / 2^512`), including its natural-to-extended-real casts. It introduces neither a statistical estimate nor an additional term.
+
+All non-real hidden modes are covered, arbitrary complete environment/adversary continuations are retained, and no new contract, honesty premise or query allowance is added. These three lemmas do not prove the numerical event bound: the concrete source cover and universal selected-resumption implication must first be discharged in the actual same experiment. Source and reduction query charges remain unchanged. A direct Lean check includes three exact axiom guards allowing only the ordinary logical axioms.

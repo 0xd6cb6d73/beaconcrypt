@@ -1,0 +1,13 @@
+# Source dictionary sequence and failed-writer joins
+
+`PqxdhRecordFactsOriginSealAlignment` proves six structural joins for the exact erased source endpoint. These joins connect a retained dictionary witness to the actual selected callback's writer result and to its allocated source sequence. They introduce no primitive or protocol-security premise.
+
+`sealing_entry` starts from the source callback's empty selected dictionary and an entry in its actual poststate. It identifies that entry with the callback's literal selected input and returned record, and retains the exact optional writer reply. `sealing_failed` then uses the existing complete decoded-frame matching rule to identify the writer argument, including sequence, sender and payload. If that same frame's writer returns `none`, this callback's actual reply is `none`.
+
+`suffix_failed` carries the same conclusion across an arbitrary supported erased continuation whose source query bound excludes another seal at this coordinate. The earlier dictionary-preservation theorem supplies equality of the final and callback dictionaries. The continuation still executes every other permitted operation with its original replies and state; no recovered plaintext is inserted into an adversarial request.
+
+`prefix_queries` transports any all-reply query predicate through a literal supported chronological prefix. `sealing_entry_sequence` applies the source sealing-alignment predicate to the exact inserted entry. `source_prefix_sequence` discharges that predicate from the initialized complete source program using `PqxdhRecordFactsOriginSealingAligned.program`; it selects the actual insertion in the same prefix and proves the entry's authenticated sequence equals its coordinate position plus one. The source attempted-send budget and its `Respects` premise are used for that existing insertion-selection interface, without adding a numerical loss.
+
+The local empty-dictionary and no-further-selected-seal conditions are operational inputs to reusable lemmas; existing initialized-source freshness discharges them in the consuming proof. The final source-prefix sequence theorem needs no new alignment or cryptographic assumption. Modes remain the existing non-real modes. Optional writer failure is literal, and exact frame matching uses already proved source construction rather than a constructor-injectivity assumption.
+
+The final acceptance-event cover and universal marked-resumption implication remain consuming work. These six facts do not close the numerical origin bound by themselves. They change neither source nor reduction query bills and waive no base, uniform, hash or primitive work. Snapshots and persistence remain excluded.
