@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1785
+	[handwritten-lean]=1786
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -41107,6 +41107,29 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecord
 require_line_count 1 '^theorem forged_failed([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationEvent theorem forged_failed"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginPublicationEvent\.ctxRun_unpublished_failed$' "$selected_source_module" "PqxdhRecordFactsOriginPublicationEvent dependency ctxRun_unpublished_failed"
 require_line_count 1 '^theorem ctxRun_unpublished_failed([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginPublicationEvent theorem ctxRun_unpublished_failed"
+
+
+# Checked native record prelude at the common experiment raw command interfaces.
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryRecordPrelude.lean
+require_line_count 8 '^theorem ' "$selected_source_module" "PqxdhBoundaryRecordPrelude theorem total"
+require_line_count 8 '^#guard_msgs in$' "$selected_source_module" "PqxdhBoundaryRecordPrelude axiom guard total"
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhBoundaryRecordPrelude$' proofs/lean/BeaconcryptCore.lean "PqxdhBoundaryRecordPrelude root import"
+require_line_count 1 '^theorem owner_exact([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRecordPrelude theorem owner_exact"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRecordPrelude\.owner_exact$' "$selected_source_module" "PqxdhBoundaryRecordPrelude dependency owner_exact"
+require_line_count 1 '^theorem server_exact([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRecordPrelude theorem server_exact"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRecordPrelude\.server_exact$' "$selected_source_module" "PqxdhBoundaryRecordPrelude dependency server_exact"
+require_line_count 1 '^theorem beacon_exact([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRecordPrelude theorem beacon_exact"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRecordPrelude\.beacon_exact$' "$selected_source_module" "PqxdhBoundaryRecordPrelude dependency beacon_exact"
+require_line_count 1 '^theorem primitives_withReader([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRecordPrelude theorem primitives_withReader"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRecordPrelude\.primitives_withReader$' "$selected_source_module" "PqxdhBoundaryRecordPrelude dependency primitives_withReader"
+require_line_count 1 '^theorem serverRaw_exact([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRecordPrelude theorem serverRaw_exact"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRecordPrelude\.serverRaw_exact$' "$selected_source_module" "PqxdhBoundaryRecordPrelude dependency serverRaw_exact"
+require_line_count 1 '^theorem beaconRaw_exact([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRecordPrelude theorem beaconRaw_exact"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRecordPrelude\.beaconRaw_exact$' "$selected_source_module" "PqxdhBoundaryRecordPrelude dependency beaconRaw_exact"
+require_line_count 1 '^theorem handler_serverRaw([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRecordPrelude theorem handler_serverRaw"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRecordPrelude\.handler_serverRaw$' "$selected_source_module" "PqxdhBoundaryRecordPrelude dependency handler_serverRaw"
+require_line_count 1 '^theorem handler_beaconRaw([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRecordPrelude theorem handler_beaconRaw"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRecordPrelude\.handler_beaconRaw$' "$selected_source_module" "PqxdhBoundaryRecordPrelude dependency handler_beaconRaw"
 
 # Reviewed actual getter availability, distinct from network compromise powers.
 python3 proofs/source/test-getter-profile.py

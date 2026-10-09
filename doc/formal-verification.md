@@ -90,6 +90,10 @@ The record proof now derives accepted and published record evidence from actual 
 
 Ten `PqxdhRecordFactsOriginPublication*` modules contribute 46 guarded statements establishing the exact earlier transcript for every accepted raw receive in the complete initialized adaptive source. `ctxRun_unpublished_failed` maps the frozen unpublished-acceptance event to the same receive's matching hidden seal with a literal failed frame writer, retaining its raw bytes, actual plaintext, physical sender and material coordinate. Startup and installation discharge the internal history premises. [The event guide](impl/record-facts-origin-publication-event.md) distinguishes this temporal event inclusion from the still-open service-ordinal selection and numerical unpublished-origin bound. No new contract, Rust change or query-cost waiver is introduced.
 
+## Native prelude at the receive commands
+
+The eight guarded statements in `PqxdhBoundaryRecordPrelude` connect the shared complete-input reader and extracted payload prelude to both actual native CE raw commands, retaining complete optional replies, state and primitive effects. The role lookups discharge the local associated-data representation condition. [The prelude guide](impl/production-boundary-record-prelude.md) keeps the reviewed Rust transcription distinct from extracted-core equations and lists the remaining executor, registration and full-game joins. No new contract or production change is introduced.
+
 ## Historical F* correspondence
 
 The migration inventories every historical lemma declaration: [192 ratchet declarations](impl/ratchet-fstar-coverage.md), [68 PQXDH declarations](impl/pqxdh-fstar-coverage.md), and [25 commitment declarations](impl/commitment-fstar-coverage.md). These ledgers distinguish semantic matches from removed implementation helpers. Five old planner bounds changed during the earlier extraction refactor: the current implementation retains fifty skipped keys and derives the authentication target separately, allowing fifty-one total derivations. The old fifty-total-derivation clauses are explicitly adapted, not claimed as literal statement equality.
