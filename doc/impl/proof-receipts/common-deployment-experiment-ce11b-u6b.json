@@ -1,6 +1,6 @@
 {
- "date": "2026-10-09T19:23:19.738451+00:00",
- "scope": "CE-11b unit U6, second part (track u6b), after its review fix pass: the decision step on the CE side (PqxdhDeploymentIdealPostMark), item 2's post-challenge stack as two layers with the budgeted optional simulation sim_option, which excludes a stop of the post-challenge router only once it is instantiated for item 2 (PqxdhDeploymentIdealPostSim), the middle execution of the post-challenge simulation with the CE side's step commutation complete under CE-3's merge invariant (step_mergeMid; the whole-program form compile_simulationMid holds under a middle invariant that is not yet proved) (PqxdhDeploymentIdealPostSource), item 2's service layers on native skeleton steps with the erasures (PqxdhDeploymentIdealPostItem), and item 2's view of the middle state with the first per-request steps (PqxdhDeploymentIdealPostSteps). ActiveBranch, PqxdhDeploymentIdealPost and PqxdhDeploymentIdealCompile are not built; ideal_compile is not claimed. Reviewed (semantic and hygiene) at 7d47499c; review fix pass applied (Lean commit 60721af7, docstrings only, and a documentation commit), not yet re-reviewed; not integrated into central.",
+ "date": "2026-10-09T19:37:14.054407+00:00",
+ "scope": "CE-11b unit U6, second part (track u6b), after its review fix pass: the decision step on the CE side (PqxdhDeploymentIdealPostMark), item 2's post-challenge stack as two layers with the budgeted optional simulation sim_option, which excludes a stop of the post-challenge router only once it is instantiated for item 2 (PqxdhDeploymentIdealPostSim), the middle execution of the post-challenge simulation with the CE side's step commutation complete under CE-3's merge invariant (step_mergeMid; the whole-program form compile_simulationMid holds under a middle invariant that is not yet proved) (PqxdhDeploymentIdealPostSource), item 2's service layers on native skeleton steps with the erasures (PqxdhDeploymentIdealPostItem), and item 2's view of the middle state with the first per-request steps (PqxdhDeploymentIdealPostSteps). ActiveBranch, PqxdhDeploymentIdealPost and PqxdhDeploymentIdealCompile are not built; ideal_compile is not claimed. Reviewed (semantic and hygiene) at 7d47499c; review fix pass applied (Lean commit 60721af7, docstrings only, and documentation commit 02484ae3); confirming review of 02484ae3: APPROVE_WITH_NITS, every finding resolved, its two nits (central moved past 760f056e to cffd06c6 before 02484ae3; an older next-steps bullet in the track notes) fixed by the commit that records it before the integration; not integrated into central at the recording commit (the integration merges central cffd06c6, handwritten Lean count 1786 + 5 = 1791).",
  "basis": "dad157b1805329044872b2de0670f46e2485937b",
  "topic": {
   "branch": "codex/deployment-ce11b-cut",
@@ -8,14 +8,26 @@
  },
  "plan": {
   "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
-  "sha256_at_generation": "3bde11c18887176403ba38b0f29e98d44549da8307cffe5c9630a2dcf162923c",
-  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/fix/docs/plan.at-fix-receipt-3bde11c1.md",
-  "dated_copy_sha256": "3bde11c18887176403ba38b0f29e98d44549da8307cffe5c9630a2dcf162923c",
-  "sections": "47-50 (A1, A2, Q1-Q3), 63-64 (U6 first part), 67 (this part; 66 was the last section before it; its first bullet now points to its addendum), 70 (its review fix pass; 69 was the last section before it)",
+  "sha256_at_generation": "575c42821699327362049727fa4e799848d8eb65fc0b8a1c2a076175fe8c2020",
+  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/int/docs/plan.at-record-575c4282.md",
+  "dated_copy_sha256": "575c42821699327362049727fa4e799848d8eb65fc0b8a1c2a076175fe8c2020",
+  "sections": "47-50 (A1, A2, Q1-Q3), 63-64 (U6 first part), 67 (this part; 66 was the last section before it; its first bullet now points to its addendum), 70 (its review fix pass; 69 was the last section before it), 71 (its confirming review; 70 was the last section before it)",
+  "earlier": [
+   {
+    "note": "hash recorded by the review fix pass receipt (02484ae3; through section 70)",
+    "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/fix/docs/plan.at-fix-receipt-3bde11c1.md",
+    "dated_copy_sha256": "3bde11c18887176403ba38b0f29e98d44549da8307cffe5c9630a2dcf162923c"
+   }
+  ],
   "before_review": {
    "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/docs/plan.at-u6b-receipt-467dd517.md",
    "dated_copy_sha256": "467dd5174a6012dcd07676395ca59b4855286c54fa5645477dc1e4ad5adb04ee",
    "note": "the plan as pinned by the receipt of 7d47499c"
+  },
+  "before_record_copy": {
+   "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/int/docs/plan.before-record-3bde11c1.md",
+   "sha256": "3bde11c18887176403ba38b0f29e98d44549da8307cffe5c9630a2dcf162923c",
+   "note": "the working plan just before section 71 was appended (equal to the fix pass receipt's copy)"
   }
  },
  "design": {
@@ -34,7 +46,9 @@
   "track_notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/NOTES.md",
   "fix_notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/fix/NOTES.md",
   "ce11b_notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/NOTES.md (U6 plan)",
-  "u6_notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6/NOTES.md (remaining U6 plan (a)-(h))"
+  "u6_notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6/NOTES.md (remaining U6 plan (a)-(h))",
+  "confirm_notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/confirm/NOTES.md",
+  "integration_notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/int/NOTES.md"
  },
  "commits": [
   {
@@ -68,9 +82,13 @@
   {
    "commit": "60721af77d799678e11fee9021990b0aee9ca18c",
    "subject": "Document the helper lemmas of the CE-11b post simulation"
+  },
+  {
+   "commit": "02484ae3de6589d92dde927c6b95c311e3cd802b",
+   "subject": "Document the CE-11b unit U6 second part review fix pass"
   }
  ],
- "commits_note": "Commits on the topic after the basis that were made before this receipt was generated; the documentation commit of the review fix pass that regenerates this receipt is not listed.",
+ "commits_note": "First-parent commits on the topic after the basis that were made before this receipt was last generated; the commit that records the confirming review (and last regenerates this receipt) is not listed.",
  "files_sha256": {
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostMark.lean": "d3fdb4607dbc5957db77869e634d1446a31523bdca105329057b1d030a442050",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostSim.lean": "31f17283c7544cc4455bbc06dfa860fc62b7f2fdcada89a1e5572500fcf0e36f",
@@ -1428,8 +1446,9 @@
   "PqxdhDeploymentIdealPostSteps": []
  },
  "git_diff_check": {
-  "range": "dad157b1805329044872b2de0670f46e2485937b..working tree",
-  "exit": 0
+  "range": "dad157b1805329044872b2de0670f46e2485937b..working tree (with the confirming-review record): the topic's own changes",
+  "exit": 0,
+  "output": ""
  },
  "not_run": [
   "full lake build",
@@ -1540,6 +1559,69 @@
     "2\t2\tbeaconcrypt-core/proofs/reviewed-inventory.txt"
    ],
    "note": "only added docstring lines in the two modules and the two rehashed inventory digests"
+  },
+  "docs_fix_commit": "02484ae3de6589d92dde927c6b95c311e3cd802b",
+  "status": "reviewed once (7d47499c); review fix pass done (60721af7, 02484ae3); fix pass confirmed by a confirming review of 02484ae3 (APPROVE_WITH_NITS), recorded before the integration",
+  "confirming_review": {
+   "reviewed_range": "7d47499c4b2def5f2f83e29c7d855d82e136e60e..02484ae3de6589d92dde927c6b95c311e3cd802b",
+   "reviewed_commit": "02484ae3de6589d92dde927c6b95c311e3cd802b",
+   "scope": "the fix pass 60721af7 (Lean: docstrings of 31 helper theorems and the HiddenKind instance, two inventory rows rehashed) and 02484ae3 (documentation, receipt): statements, guards, receipt, inventory, documentation of every finding",
+   "verdict": "APPROVE_WITH_NITS: every finding of the review of 7d47499c resolved (findings 1-11); two nits: (1) central had moved past 760f056e (da8f4859, then cffd06c6 with 1786 handwritten Lean rows) before 02484ae3, whose guide still says central is at 760f056e with 1780 after the merge; (2) the track notes still had the older next-steps bullet (line 38) that planned identity-field reveals",
+   "checks": [
+    "Lean diff 7d47499c..60721af7: only 32 added docstring lines (31 theorems and the HiddenKind instance); no other added or removed line; no statement changed",
+    "guards (confirm/scripts/guards.py): 107 theorems = 107 exact guards, names match, axioms within propext, Classical.choice, Quot.sound; every theorem and instance has a docstring at HEAD; no sorry, admit or axiom",
+    "receipt against HEAD (confirm/scripts/receipt_vs_head.py): files_sha256 equal the HEAD blobs; direct_check_final head 60721af7, dirty 0, exit 0, empty logs, artifacts present at the recorded hashes; olean identity claims true (PostMark, PostSim, PostSteps and root equal, PostSource and PostItem differ); root checks' sources equal the root at each module commit; focused inventory logs match, exit 0",
+    "own rechecks at 02484ae3 with a clean tree (confirm/scripts/check1.sh through coord.sh lean; -j1 -M8000, timeout 180, no -o, LEAN_PATH = ce11b/u6b/fix/leanpath): PqxdhDeploymentIdealPostSource, PqxdhDeploymentIdealPostItem, root: exit 0, empty logs",
+    "documentation of findings 1-11: guide, analysis, receipt, design-v2 section 25, working plan section 67 pointer and section 70, track NOTES PRECISE NEXT STEPS, registry notes"
+   ],
+   "check_logs": {
+    "PostSource": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/confirm/logs/PostSource.log",
+     "bytes": 0
+    },
+    "PostItem": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/confirm/logs/PostItem.log",
+     "bytes": 0
+    },
+    "root": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/confirm/logs/root.log",
+     "bytes": 0
+    }
+   },
+   "scripts": {
+    "check1.sh": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/confirm/scripts/check1.sh",
+     "sha256": "6270691b23c5aaa693e3865af6d111cf7bb8befe7e50f1d499213c36523f6c19"
+    },
+    "guards.py": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/confirm/scripts/guards.py",
+     "sha256": "c0667b4013dcd134df42fc3ae38a64a42b78a4f92135d3687295bd71859458f7"
+    },
+    "receipt_vs_head.py": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/confirm/scripts/receipt_vs_head.py",
+     "sha256": "50a5dfe28cc7b3d4b8649222550d991046ddd7344c117eca05dc59a1dec1e5d6"
+    }
+   },
+   "findings_fixed": [
+    "nit 1 (central moves): guide status paragraph and integration open point name central cffd06c6 (by way of da8f4859) and the count 1791 after the merge; working plan section 71 and the committed snapshot; this receipt (scope); the merge itself, the recount and the registry notes of the branch and the worktree follow at the integration",
+    "nit 2 (track notes): the line-38 bullet of /tmp/bc-arc-scratch/common-experiment/ce11b/u6b/NOTES.md is marked as superseded by \"PRECISE NEXT STEPS\" (scratch file, not in the repository)",
+    "status lines: the guide status paragraph, the open-points bullet, the analysis Review paragraph and this receipt (review.status, scope) no longer say that the fix pass is not re-reviewed; new guide section \"CE-11b unit U6, second part: confirming review\""
+   ],
+   "files_changed": [
+    "doc/impl/common-deployment-experiment.md",
+    "doc/impl/common-deployment-experiment-plan.md",
+    "doc/formal-verification-analysis.md",
+    "doc/impl/proof-receipts/common-deployment-experiment-ce11b-u6b.json"
+   ],
+   "lean_change": "none (no file under beaconcrypt-core/ changed)",
+   "notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/confirm/NOTES.md",
+   "scratch": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/confirm (review checks), /tmp/bc-arc-scratch/common-experiment/ce11b/u6b/int (record-commit scripts, plan copies)"
   }
+ },
+ "plan_snapshot": {
+  "path": "doc/impl/common-deployment-experiment-plan.md",
+  "refreshed_from_sha256": "575c42821699327362049727fa4e799848d8eb65fc0b8a1c2a076175fe8c2020",
+  "sections": "0-18 and the decision sections 19-71",
+  "note": "refreshed in the commit that records the confirming review: the body equals the working plan from its third line; the snapshot paragraph records the hash and the refresh history, built from central cffd06c6's paragraph (the U3 refresh through section 69). On this branch the snapshot it replaces is central dad157b1's (through section 64; its body is a prefix of this one). Central's current snapshot (since 760f056e, through section 69) differs from this body only by two later edits of the working plan (section 67's first bullet points to its addendum; section 69 ends with U3's integration bullet) and the new sections 70 and 71, so the integration merge keeps this version"
  }
 }
