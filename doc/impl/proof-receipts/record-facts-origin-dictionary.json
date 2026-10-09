@@ -2,7 +2,7 @@
   "stage": "Global ideal record dictionary origin, Task A (2026-10-09)",
   "base": "84a07b155d71574ae133d4db8b868f9a818b2c1a",
   "topic": "codex/record-lift-facts-origin",
-  "state": "All ten modules independently approved; complete focused publication checks pass; final bundle integration review pending",
+  "state": "Complete focused publication checks and independent final bundle review passed; proof commit pushed and directly verified; central integration pending",
   "headline": "PqxdhRecordFactsOriginInvariant.ctxRun_dictionary_origin",
   "scope": "Every final ideal-key seal dictionary entry in the actual complete ctxRun has an exact produced source frame tagged to an actual installed hidden sender of its slot and physical direction, derived from actual initialization and arbitrary adaptive source schedule.",
   "ideal_world_precondition": "Every coordinate uses replay or random mode (modes label \u2260 real).",
@@ -877,5 +877,66 @@
     "hygiene": "All reviewed source hashes retained; 82 theorem declarations and 82 exact guards; no placeholder, custom axiom, or active done; checker bash syntax and git diff --check pass",
     "not_run": "No lake build, make verify, ProVerif or mutation suite; no Rust or symbolic model changed. Full proof machinery requires owner approval under coordination protocol."
   },
-  "updated_at": "2026-10-09T16:43:24.848576+00:00"
+  "updated_at": "2026-10-09T16:50:05.562152+00:00",
+  "final_bundle_review": {
+    "path": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin82-publication-review.json",
+    "sha256": "a769e2d8681e482adfc82552bb85afc2d17a95774a7196c293399e6e617f2512",
+    "receipt": {
+      "stage": "Origin82 publication bundle",
+      "reviewer": "Codex root, independent of proof and bundle author",
+      "verdict": "APPROVE",
+      "time": "2026-10-09T16:48:25.055935+00:00",
+      "candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin/publication/origin82-publication-candidate.json",
+      "candidate_sha256": "0e8386225b1efadb764acfc3417c1678e165f32baf93222db000e29bb8113fbb",
+      "base": "84a07b155d71574ae133d4db8b868f9a818b2c1a",
+      "reviewed_files": {
+        "beaconcrypt-core/proofs/check-inventory.sh": "0c5f62c01485d6bdacd1f4f9cd3a97263dad5a7ed46ec7c1b737e80bac713de9",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "1f7ea7abb192cf0e6b22262b56d2946adaeeb052881cc61257ed90fe67eae289",
+        "beaconcrypt-core/proofs/reviewed-inventory.txt": "9dcd281160a488ab5ed120c05cf7a2cb9c31d27c46fbc36dd116768ffca65b21",
+        "beaconcrypt-core/proofs/trusted-boundary.md": "b3554ff0ae963a0df594ff7a8d9fd37d5d7e931f45feabf72522fc493900785c",
+        "doc/composition-assumptions.md": "e90868381a36b900eb8a3afe600a85cf28c40a109dcf04485d8933cca8afd651",
+        "doc/formal-verification-analysis.md": "eb0a6f6af333982f3e47eeffd91c22841cf162053b194b127698bce02c892957",
+        "doc/formal-verification.md": "89716cd6cb2760e5289f6417784e72537c20b2fa473581e4740ea74541447be2",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginAmbient.lean": "a56e6c8d59e0e328c5210d5536a3eac4977eef39fd6fd5b453d936afd7f5ae64",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginBuffers.lean": "16b9c509774b752301da2771401d791f26da3211c74ed0af74eb1d1352a856c7",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginDictionary.lean": "f0ecb57ac2a542034a38c4c6c2c54a4ba4e5a54d4ad346ca1184fd05c271aeb9",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginHandles.lean": "123aa685126c958569361754f1db4585a49313254e396ce6183717563af69b0a",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginInvariant.lean": "609a6d53973c2ee0c61495bda3e243df6cd0e8a1ac7fd692a75445e4c1b3a1e7",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginReceive.lean": "6f491bef14e4f964cf55e8f818d59f4e6a3842dc993b0cf65389bb6f4aea27c7",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginReplay.lean": "42e10f94994b23ae38cdbe0138ddf0e8c6fda606b3f8475e13687cbc4f8c2bc7",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginSend.lean": "05bef21a3116e6f45644825b89078d3a11ef4d50fdd1099ff31dfb688b64ed55",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginServices.lean": "c79823f2820abbbdc625de7e4f17e6a3c416ff01c6c0f21c1dcd181dc0495f9b",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginWorld.lean": "85c73023739a0cfc8708051c09b6e9bd3bf8e9640271bea2cedd217221a9a077",
+        "doc/impl/proof-receipts/record-facts-origin-dictionary.json": "cc522f1d212e72cbe1e38da019e2773a68ac73036e41ec2b94e82a08b6e1b678",
+        "doc/impl/record-facts-origin-ambient.md": "a1655148d589f8da4379b5dc6f73248c43fecf45fc2809e230346dd246d8b598",
+        "doc/impl/record-facts-origin-buffers.md": "c4a82dea1f544937ca67292429a1fbc4619124bd7a69c38844e1f019b616dde8",
+        "doc/impl/record-facts-origin-dictionary.md": "794feed39d46a3d30fcdfb511fd904bd9f4ba7e2ba3cbd664ffe2e818dc24c7e",
+        "doc/impl/record-facts-origin-handles.md": "f03e45fa2be19b565099957486f31012521dd08af7518c9f128fbbbb3d82bfde",
+        "doc/impl/record-facts-origin-invariant.md": "1c37233cf6bf09474c7ab1893bca4d4af613b53563179db67a8a0b03a723482b",
+        "doc/impl/record-facts-origin-receive.md": "8feb83d369a6a571b02d8bc1d72cc5420490bf090f459abc5a010d013326c545",
+        "doc/impl/record-facts-origin-replay.md": "46012bdef6d75e5c13fb3bfb2d00cd05d2ea01871fc3573da0173b4274c7f50a",
+        "doc/impl/record-facts-origin-send.md": "0fe770192c2b3e6c55b8d763aa38615c3143ebbc52739eb2e83b266aaa3e2456",
+        "doc/impl/record-facts-origin-services.md": "1c018751ced4fe870b2c61db5b1c43955fd52a7d03f1b2c64ee641a70d33df4a",
+        "doc/impl/record-facts-origin-world.md": "eed59ae83df00d8d6abf9bd5d11ea665e8eb30667b859151f28fa14724fbac12"
+      },
+      "checks": [
+        "All ten theorem modules retain individually independently reviewed hashes; 82 exact guarded declarations and corresponding additive inventory gates verified.",
+        "Only removed checker line updates handwritten Lean count 1710 to 1720; no disabled or weakened preexisting gate.",
+        "Final guides and maintained documentation precisely state actual adaptive dictionary provenance; no completed accepted-event, publication probability, real-world security or new query cap claimed.",
+        "All 13 successful final module/root/inventory/fidelity check receipts, logs and applicable artifact hashes verified.",
+        "No new primitive or codec contract, origin assumption, honest-selected-target premise, primitive implementation proof, snapshot or persistence extension.",
+        "Full actual source effects remain; absence of an added numerical cap is not a claim that ambient work is free."
+      ],
+      "findings": [],
+      "publication_condition": "Commit only these 28 reviewed files with required footer; fetch/reconcile and integration protocol remain required."
+    }
+  },
+  "proof_commit": "68f3d27f1fe47148f510fc0ab331f2fadd2be9bc",
+  "publication": {
+    "topic": "codex/record-lift-facts-origin",
+    "local_tracking_direct_remote": "68f3d27f1fe47148f510fc0ab331f2fadd2be9bc",
+    "reconciled_central": "84a07b155d71574ae133d4db8b868f9a818b2c1a",
+    "reconciliation": "Fetched origin; normal merge reports already up to date. Proof source/root/checker/inventory hashes remain exactly those of successful validation.",
+    "receipt_only_followup": "This receipt update adds final independent review and pushed proof commit; it does not change any proof, gate, inventory, model or source."
+  }
 }
