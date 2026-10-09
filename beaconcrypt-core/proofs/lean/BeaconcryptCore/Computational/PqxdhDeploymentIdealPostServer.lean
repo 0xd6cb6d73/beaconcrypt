@@ -44,10 +44,12 @@ def SplitT {α : Type} (work : NativeGame KemSK α) (free : NGame KemSK Output �
     (simulateQ tableLayer (free.run (clean native.2, marks))).run (native.1.cache, slots) =
       (fun result => ((result.1, (clean result.2.2, marks)), (result.2.1.cache, slots))) <$> work.run native
 
+/-- Returning a value splits: both programs return it and leave their states unchanged. -/
 theorem splitT_pure {α : Type} (value : α) : SplitT (KemSK := KemSK) (pure value) (pure value) := by
   intro native marks slots
   simp only [StateT.run_pure, simulateQ_pure, map_pure]
 
+/-- Splitting is closed under bind: a split first program followed by split continuations splits. -/
 theorem splitT_bind {α β : Type} {work : NativeGame KemSK α} {free : NGame KemSK Output α}
     {next : α → NativeGame KemSK β} {nextFree : α → NGame KemSK Output β}
     (first : SplitT work free) (rest : ∀ value, SplitT (next value) (nextFree value)) :
@@ -57,6 +59,7 @@ theorem splitT_bind {α β : Type} {work : NativeGame KemSK α} {free : NGame Ke
     map_bind]
   exact bind_congr fun result => rest result.1 result.2 marks slots
 
+/-- Setting the native game state splits against setting the skeleton's game state to its image without observers. -/
 theorem splitT_set (value value' : GameState KemSK) (cleaned : value' = clean value) :
     SplitT (PqxdhServerAuthNative.nativeSet value) (PqxdhRegistrationJointKemPostSkeleton.setGame value') := by
   intro native marks slots
@@ -64,6 +67,7 @@ theorem splitT_set (value value' : GameState KemSK) (cleaned : value' = clean va
     _ <$> (pure ((), (native.1, value)) : ProbComp _)
   rw [simulateQ_pure, StateT.run_pure, map_pure, cleaned]
 
+/-- Modifying the native game state splits against a skeleton modification that commutes with dropping the observers. -/
 theorem splitT_modify (change change' : GameState KemSK → GameState KemSK)
     (cleaned : ∀ game, change' (clean game) = clean (change game)) :
     SplitT (PqxdhServerAuthNative.nativeModify change) (PqxdhRegistrationJointKemPostSkeleton.modifyGame change') := by
@@ -72,6 +76,7 @@ theorem splitT_modify (change change' : GameState KemSK → GameState KemSK)
     _ <$> (pure ((), (native.1, change native.2)) : ProbComp _)
   rw [simulateQ_pure, StateT.run_pure, map_pure, cleaned]
 
+/-- Consuming a registration id splits: both programs append the same id to the Server's consumed list. -/
 theorem splitT_consume (rid : pqxdh.RegistrationId) :
     SplitT (PqxdhServerAuthNative.nativeConsume (KemSK := KemSK) rid)
       (PqxdhRegistrationJointKemPostSkeleton.consumeGame rid) := by
@@ -94,6 +99,7 @@ theorem tableRead_run (point : Pqxdh.Bytes) (state : SkelState KemSK Output)
   rw [simulateQ_map, simulateQ_spec_query, StateT.run_map, PqxdhDeploymentIdealPostSteps.tableLayer_direct,
     Functor.map_map]
 
+/-- The Server's logged root (the random-oracle root of the root key input, with its session touch recorded) splits against the skeleton's table read of the root key input, expanded; the split drops the recorded touch. -/
 theorem splitT_loggedRoot (hmac : PqxdhSecretInputKdf.HmacSha512) (index : ℕ)
     (input : PqxdhServerRootPreparation.Inputs Reader PqxdhJointGapDh.ScalarBytes PqxdhBeaconPhase2Preparation.Word32)
     (original : pqxdh.PendingServerRegistration) :

@@ -177,6 +177,7 @@ section View
 def eraseServiceC (state : ServiceState KemSK) : ServiceState KemSK :=
   Prod.map PqxdhRegistrationJointKemObserverFree.eraseJoint eraseTables state
 
+/-- Erasing the router transcripts and the table counters is idempotent. -/
 theorem eraseServiceC_idem (state : ServiceState KemSK) : eraseServiceC (eraseServiceC state) = eraseServiceC state := by
   simp only [eraseServiceC, Prod.map, PqxdhRegistrationJointKemObserverFree.eraseJoint_idem]
   rfl
