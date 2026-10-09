@@ -1899,6 +1899,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentIdealPostMark
 
 import BeaconcryptCore.Computational.PqxdhDeploymentIdealPostSim
 
+import BeaconcryptCore.Computational.PqxdhDeploymentIdealPostSource
+
 /-!
 # Beaconcrypt-core verification root
 
