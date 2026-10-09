@@ -1,0 +1,9 @@
+# Every compatible selected resumption
+
+`PqxdhRecordFactsOriginResumeConsumer.AcceptedTarget` is a concrete event on the complete source result: the actual final transcript contains a successful received record whose routed current hidden slot, physical receive direction, and returned sequence select the target coordinate. It contains no source support or security assumption.
+
+`program_target_flag` extracts the whole-source marker theorem for that event. `suffix_target_flag` applies it to every literal supported marked suffix following a selected sealing callback. The supplied prefix is an actual complete-state execution prefix of the initialized source program. The source proves its selected dictionary is empty. Actual erased-service dictionary monotonicity then proves the earlier prefix had no selected replay hit. The checked flagged-path reconstruction joins that exact prefix, the literal selected reply, and each compatible marked suffix into a complete source run with the same final state and flag. No other execution with a compatible final state is substituted.
+
+`resume_event_flag` handles the complete original selected resumption. Its concrete event must imply `AcceptedTarget`, and a separate source lemma must show that every actual supported selected callback reply followed by a winning supported suffix is literally `none`. The consumer then proves the resumption's failed-writer AND replay-match flag is true. That failure implication is an explicit remaining operational composition obligation, not a primitive assumption or a protocol authentication premise.
+
+The source dictionary preservation uses replay/random modes at all hidden coordinates. No new contract, query allowance or reduction loss is added. The remaining task is to instantiate the concrete failed-writer dictionary event and its common completed-trace cover, then apply the checked `2 * receives * sends / 2^512` source accounting theorem.
