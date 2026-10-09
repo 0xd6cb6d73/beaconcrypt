@@ -82,6 +82,10 @@ The record proof now has a concrete ten-service compiler and a checked full-exec
 
 The record proof now derives accepted and published record evidence from actual startup, Server installation and the complete adaptive transcript. Eight new modules contain 59 guarded statements. They prove probability zero for the exact unproduced hidden-frame event in all three ideal CTX worlds and both observation modes, using only existing readback and replay/random premises. [The origin guide](impl/record-facts-origin-global.md) explains each join and distinguishes this structural result from the remaining unpublished-before-acceptance guessing bounds. No full origin or binding completion is claimed.
 
+## Complete adaptive ideal record binding
+
+`PqxdhRecordFactsBindingGlobal` now proves the frozen `BindingStatement` at `bindingTerm` and `BindingTarget` for both ideal CTX worlds and both observation modes. The proof derives all source transcript witnesses and both global digest query caps, retaining actual raw receive replies and arbitrary adaptive scheduling. Fourteen additive modules contribute 126 guarded theorems; no frozen record interface, Rust behavior or primitive contract changes. The final scope, resource distinctions and remaining origin/source-boundary work are documented in `doc/impl/record-facts-binding-global.md` and `doc/impl/record-facts-binding-resources.md`; the focused validation/review receipt is `doc/impl/proof-receipts/record-facts-binding-global.json`.
+
 ## Historical F* correspondence
 
 The migration inventories every historical lemma declaration: [192 ratchet declarations](impl/ratchet-fstar-coverage.md), [68 PQXDH declarations](impl/pqxdh-fstar-coverage.md), and [25 commitment declarations](impl/commitment-fstar-coverage.md). These ledgers distinguish semantic matches from removed implementation helpers. Five old planner bounds changed during the earlier extraction refactor: the current implementation retains fifty skipped keys and derives the authentication target separately, allowing fifty-one total derivations. The old fifty-total-derivation clauses are explicitly adapted, not claimed as literal statement equality.

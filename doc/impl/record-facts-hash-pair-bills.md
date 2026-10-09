@@ -1,0 +1,7 @@
+# Paired digest-query budgets
+
+`PqxdhRecordFactsHashPairBills.pair_bound` joins two scalar query caps for the same complete adaptive client into the paired budget used by the collision experiment. Its input classifier is fixed before each reply: private and ordinary digest addresses consume their respective counter, while finite coin queries consume neither digest counter. The proof inducts through every typed reply continuation and decrements exactly the selected counter. It does not combine marginal probabilities or assume that separately generated transcripts coincide.
+
+`ctx_collision_bound` applies the existing actual memoized-cache theorem to those paired caps. With `S` private and `H` ordinary logical requests, the probability of a distinct-input equal-digest pair with a private endpoint is at most `S·(S+H)/2^512`. Repeated inputs are charged conservatively before cache interpretation. Both classes may be chosen adaptively, and arbitrary finite coins remain interleaved in the identical computation. The classifier is part of the query input rather than chosen after its digest. No target-selection factor or new primitive assumption is added.
+
+These two guarded statements are accounting and generic probability facts. The source must still discharge both caps for its concrete compiler, and its desired protocol event must be related to this cache collision. Finite sampler and original source/native costs remain separate ledgers, not zero-cost ambient work. The module does not claim the protocol binding or origin endpoint.
