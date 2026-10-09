@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1775
+	[handwritten-lean]=1776
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -36998,6 +36998,71 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem hidden_beacon_once([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnv theorem hidden_beacon_once"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnv\.seed_at_install$' "$selected_source_module" "PqxdhDeploymentIdealEnv dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnv.seed_at_install"
 require_line_count 1 '^theorem seed_at_install([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnv theorem seed_at_install"
+
+# CE-11b unit U3 remainder: cost bounds of the ideal environment's commands (selected accept with the allocator's no-room branch, pool create, owner k's challenge finish, the challenger's draws, idealStep_bound).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealEnvCost.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvCost$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentIdealEnvCost root import"
+require_line_count 29 '^theorem ' "$selected_source_module" "PqxdhDeploymentIdealEnvCost theorem inventory"
+require_line_count 29 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentIdealEnvCost guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvCost\.output_bound$' "$selected_source_module" "PqxdhDeploymentIdealEnvCost dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvCost.output_bound"
+require_line_count 1 '^theorem output_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvCost theorem output_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvCost\.lazyDummy_bound$' "$selected_source_module" "PqxdhDeploymentIdealEnvCost dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvCost.lazyDummy_bound"
+require_line_count 1 '^theorem lazyDummy_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvCost theorem lazyDummy_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvCost\.slotLazy_step$' "$selected_source_module" "PqxdhDeploymentIdealEnvCost dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvCost.slotLazy_step"
+require_line_count 1 '^theorem slotLazy_step([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvCost theorem slotLazy_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvCost\.total_of_wBound$' "$selected_source_module" "PqxdhDeploymentIdealEnvCost dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvCost.total_of_wBound"
+require_line_count 1 '^theorem total_of_wBound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvCost theorem total_of_wBound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvCost\.slotRun_total$' "$selected_source_module" "PqxdhDeploymentIdealEnvCost dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvCost.slotRun_total"
+require_line_count 1 '^theorem slotRun_total([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvCost theorem slotRun_total"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvCost\.liftS_cost$' "$selected_source_module" "PqxdhDeploymentIdealEnvCost dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvCost.liftS_cost"
+require_line_count 1 '^theorem liftS_cost([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvCost theorem liftS_cost"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvCost\.prefixNative_step$' "$selected_source_module" "PqxdhDeploymentIdealEnvCost dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvCost.prefixNative_step"
+require_line_count 1 '^theorem prefixNative_step([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvCost theorem prefixNative_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvCost\.beforeLogged_cost$' "$selected_source_module" "PqxdhDeploymentIdealEnvCost dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvCost.beforeLogged_cost"
+require_line_count 1 '^theorem beforeLogged_cost([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvCost theorem beforeLogged_cost"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvCost\.suffix_cost$' "$selected_source_module" "PqxdhDeploymentIdealEnvCost dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvCost.suffix_cost"
+require_line_count 1 '^theorem suffix_cost([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvCost theorem suffix_cost"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvCost\.romRoot_uniform$' "$selected_source_module" "PqxdhDeploymentIdealEnvCost dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvCost.romRoot_uniform"
+require_line_count 1 '^theorem romRoot_uniform([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvCost theorem romRoot_uniform"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvCost\.tailCE_step$' "$selected_source_module" "PqxdhDeploymentIdealEnvCost dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvCost.tailCE_step"
+require_line_count 1 '^theorem tailCE_step([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvCost theorem tailCE_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvCost\.tailCE_cost$' "$selected_source_module" "PqxdhDeploymentIdealEnvCost dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvCost.tailCE_cost"
+require_line_count 1 '^theorem tailCE_cost([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvCost theorem tailCE_cost"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvCost\.serverTail_none_cost$' "$selected_source_module" "PqxdhDeploymentIdealEnvCost dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvCost.serverTail_none_cost"
+require_line_count 1 '^theorem serverTail_none_cost([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvCost theorem serverTail_none_cost"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvCost\.acceptActive_cost$' "$selected_source_module" "PqxdhDeploymentIdealEnvCost dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvCost.acceptActive_cost"
+require_line_count 1 '^theorem acceptActive_cost([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvCost theorem acceptActive_cost"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvCost\.acceptInactive_cost$' "$selected_source_module" "PqxdhDeploymentIdealEnvCost dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvCost.acceptInactive_cost"
+require_line_count 1 '^theorem acceptInactive_cost([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvCost theorem acceptInactive_cost"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvCost\.acceptExposed_cost$' "$selected_source_module" "PqxdhDeploymentIdealEnvCost dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvCost.acceptExposed_cost"
+require_line_count 1 '^theorem acceptExposed_cost([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvCost theorem acceptExposed_cost"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvCost\.acceptSelected_bound$' "$selected_source_module" "PqxdhDeploymentIdealEnvCost dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvCost.acceptSelected_bound"
+require_line_count 1 '^theorem acceptSelected_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvCost theorem acceptSelected_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvCost\.createPool_uniform$' "$selected_source_module" "PqxdhDeploymentIdealEnvCost dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvCost.createPool_uniform"
+require_line_count 1 '^theorem createPool_uniform([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvCost theorem createPool_uniform"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvCost\.createPoolStep_bound$' "$selected_source_module" "PqxdhDeploymentIdealEnvCost dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvCost.createPoolStep_bound"
+require_line_count 1 '^theorem createPoolStep_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvCost theorem createPoolStep_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvCost\.preparationCE_step$' "$selected_source_module" "PqxdhDeploymentIdealEnvCost dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvCost.preparationCE_step"
+require_line_count 1 '^theorem preparationCE_step([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvCost theorem preparationCE_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvCost\.preparation_cost$' "$selected_source_module" "PqxdhDeploymentIdealEnvCost dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvCost.preparation_cost"
+require_line_count 1 '^theorem preparation_cost([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvCost theorem preparation_cost"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvCost\.markedRoot_uniform$' "$selected_source_module" "PqxdhDeploymentIdealEnvCost dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvCost.markedRoot_uniform"
+require_line_count 1 '^theorem markedRoot_uniform([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvCost theorem markedRoot_uniform"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvCost\.knownFwd_bound$' "$selected_source_module" "PqxdhDeploymentIdealEnvCost dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvCost.knownFwd_bound"
+require_line_count 1 '^theorem knownFwd_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvCost theorem knownFwd_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvCost\.commitEnv_bound$' "$selected_source_module" "PqxdhDeploymentIdealEnvCost dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvCost.commitEnv_bound"
+require_line_count 1 '^theorem commitEnv_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvCost theorem commitEnv_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvCost\.groupEnv_bound$' "$selected_source_module" "PqxdhDeploymentIdealEnvCost dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvCost.groupEnv_bound"
+require_line_count 1 '^theorem groupEnv_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvCost theorem groupEnv_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvCost\.finishChallenge_bound$' "$selected_source_module" "PqxdhDeploymentIdealEnvCost dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvCost.finishChallenge_bound"
+require_line_count 1 '^theorem finishChallenge_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvCost theorem finishChallenge_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvCost\.sampleFamily_uniform$' "$selected_source_module" "PqxdhDeploymentIdealEnvCost dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvCost.sampleFamily_uniform"
+require_line_count 1 '^theorem sampleFamily_uniform([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvCost theorem sampleFamily_uniform"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvCost\.drawParams_uniform$' "$selected_source_module" "PqxdhDeploymentIdealEnvCost dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvCost.drawParams_uniform"
+require_line_count 1 '^theorem drawParams_uniform([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvCost theorem drawParams_uniform"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvCost\.idealStep_bound$' "$selected_source_module" "PqxdhDeploymentIdealEnvCost dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvCost.idealStep_bound"
+require_line_count 1 '^theorem idealStep_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvCost theorem idealStep_bound"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
