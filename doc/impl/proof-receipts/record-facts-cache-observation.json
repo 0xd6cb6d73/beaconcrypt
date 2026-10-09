@@ -1,0 +1,1038 @@
+{
+  "stage": "Actual CTX cache observation and source first-seal freshness, Task A (2026-10-09)",
+  "base": "5ba38799897dc8d3e79dfc19f1cd63c95050afe9",
+  "topic": "codex/record-lift-facts-cache",
+  "state": "All frozen theorem modules independently approved and focused publication checks passed; final bundle review and publication pending",
+  "headlines": [
+    "PqxdhRecordFactsPrivateCacheWorld.view_observation",
+    "PqxdhRecordFactsPrivateCacheSource.source_prefix_fresh"
+  ],
+  "scope": "Exact law for the permitted observation of the actual complete adaptive CTX source run after removing unobserved uniform instrumentation and discarded raw private-cache completions; actual source prefix cache emptiness and unused nonces before hidden sealing are derived from initialization and attempted-seal history.",
+  "mode_restrictions": "Counter projection permits every mode. Original-world private-cache observation equivalence requires every coordinate mode to differ from real. Source cache freshness holds in the erased endpoint for every mode; its use for the original world consumes the separate replay/random observation restriction.",
+  "contracts_added": [],
+  "query_accounting": "These are full evaluated observation and support laws. Projecting uniform instrumentation and omitting unobserved private completions does not preserve original query counts and is not a zero-cost claim. Every original source and constructed reduction must retain its complete counted uniform, native and effect bills. No numerical query bound or reduction loss is asserted by this stage.",
+  "exclusions": [
+    "No OriginStatement or BindingStatement probability bound",
+    "No accepted-transcript or successful writer-publication conclusion",
+    "No new primitive, codec, deployment, source-freshness or protocol-security assumption",
+    "No primitive implementation, Rust, ProVerif, snapshot or persistence change"
+  ],
+  "modules": [
+    {
+      "module": "PqxdhRecordFactsCounter",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsCounter.lean",
+      "source_sha256": "34bb48c6952a04ab798fda2433c1d473b0cf19a2fe2a57a63966a60a9f8274ee",
+      "theorems": [
+        "primitives_project",
+        "primitive_program_project",
+        "sampled_project",
+        "logged_project",
+        "logged_program_project",
+        "lookup_project",
+        "send_program_project",
+        "receive_program_project",
+        "liftLookup_project",
+        "local_project",
+        "withRecord_project"
+      ],
+      "guarded_count": 11,
+      "guide": "doc/impl/record-facts-counter.md",
+      "guide_sha256": "d00c0158024ab4b71cc00c1792b735a228a5f579cf51fd85a4bed546779b6329",
+      "reviewed_candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/binding/counter11-amended-candidate.json",
+      "reviewed_candidate_sha256": "1884992a29c3498ad9ab582f85d6a61c84726b2ea3bbfab274c415ee65a60891"
+    },
+    {
+      "module": "PqxdhRecordFactsCounterProtocol",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsCounterProtocol.lean",
+      "source_sha256": "2514951e414fadd68f52c4f9f3901d0c9543dd12f82dc0f9348e41e558f10e65",
+      "theorems": [
+        "primitiveWork_project",
+        "interpreter_project",
+        "program_project"
+      ],
+      "guarded_count": 3,
+      "guide": "doc/impl/record-facts-counter-protocol.md",
+      "guide_sha256": "6bfe569f370970b480314efcaf29354c41507f5b9c896643fff62696aa6b3ed2",
+      "reviewed_candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/binding/counter-protocol3-semantic-candidate.json",
+      "reviewed_candidate_sha256": "a8531fc624ed8078c418467574329af3a42a0954e4506f77a6924f4fe334b5a3"
+    },
+    {
+      "module": "PqxdhRecordFactsCounterCtx",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsCounterCtx.lean",
+      "source_sha256": "70bebd1a788ccb911cb3f4c1f81c466632a2fe75c5526b4c984ce0ceb49250b8",
+      "theorems": [
+        "keyed_project",
+        "keyed_program_project",
+        "onBase_project",
+        "interpreter_project",
+        "program_project"
+      ],
+      "guarded_count": 5,
+      "guide": "doc/impl/record-facts-counter-ctx.md",
+      "guide_sha256": "1f83a14041a98809a62f23c2413d54b65eeef038b1bcb164780b1a446abf542f",
+      "reviewed_candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/binding/counter-ctx5-semantic-candidate.json",
+      "reviewed_candidate_sha256": "ed2100d8d2eb2ac242dc15d469cf00ba22151986e5fd954699ea3d6dbd3e80ca"
+    },
+    {
+      "module": "PqxdhRecordFactsPrivateCache",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsPrivateCache.lean",
+      "source_sha256": "e7a6154376e07a95f36e9d9faf6d2a5a7c4ffeb97b5b25edb9a4fdb2024ce312",
+      "theorems": [
+        "observe_set",
+        "localUpdate_commutes",
+        "localRead_commutes",
+        "privateAccess_commutes",
+        "privateLookup_exact",
+        "seal_commutes",
+        "sealing_exact",
+        "rawBase_commutes",
+        "raw_factor",
+        "linked_nonraw_commutes",
+        "pointed_factor",
+        "pointed_commutes",
+        "replay_observation"
+      ],
+      "guarded_count": 13,
+      "guide": "doc/impl/record-facts-private-cache.md",
+      "guide_sha256": "df1d237797d70a3237e73139b0751aaf6580f57825827b980a9278ba4e07fa3b",
+      "reviewed_candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/replay-observation-candidate.json",
+      "reviewed_candidate_sha256": "0d399983e6d250a08fc9727d0f160b00f9c7a41a78c1bc323a62afa63148b35b"
+    },
+    {
+      "module": "PqxdhRecordFactsPrivateCacheRandom",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsPrivateCacheRandom.lean",
+      "source_sha256": "9ab6f0c59dcc165a49873ffc5048f56dd678a674170dd60b324a70cab41c4e2e",
+      "theorems": [
+        "draw_commutes",
+        "randomSeal_commutes",
+        "randomSealing_exact",
+        "linked_replay",
+        "random_nonraw_commutes",
+        "mode_factor",
+        "mode_commutes",
+        "mode_observation"
+      ],
+      "guarded_count": 8,
+      "guide": "doc/impl/record-facts-private-cache-random.md",
+      "guide_sha256": "535943217804c6043ea2612c229eae63bd0ad672a471c479d5086454728d8515",
+      "reviewed_candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/random-observation-candidate.json",
+      "reviewed_candidate_sha256": "c2b267cef74c5d361dec5b99bf34ae19ba2de26e031c9d9115af8be7fdb3eb83"
+    },
+    {
+      "module": "PqxdhRecordFactsPrivateCacheFamily",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsPrivateCacheFamily.lean",
+      "source_sha256": "0a1eccf32ea95b5c464134ff23fbb016d7e6cbd2f21b00d9ab3a730cac1cf01a",
+      "theorems": [
+        "uncountedKeyed_run",
+        "observeFamily_set",
+        "complete_local",
+        "localLift_other_commutes",
+        "localLift_commutes",
+        "baseRead_commutes",
+        "completeOpt_local",
+        "factor_local",
+        "localPointed_commutes",
+        "pointedFromBase_run",
+        "factorFromBase",
+        "keyedPointed_commutes",
+        "keyedPointed_run",
+        "local_mode_factor",
+        "selected_factor",
+        "keyed_factor",
+        "keyed_observation"
+      ],
+      "guarded_count": 17,
+      "guide": "doc/impl/record-facts-private-cache-family.md",
+      "guide_sha256": "c74edeae0c4eed7309b9e77eaf1a2d9b508f90c19b2f3203522ea95e1f64e016",
+      "reviewed_candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/family-observation-candidate.json",
+      "reviewed_candidate_sha256": "5d4d30c47e730ca77fb6b2679a7e40150f190fdb96e9362d5e96090a4dd2ac54"
+    },
+    {
+      "module": "PqxdhRecordFactsPrivateCacheServices",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsPrivateCacheServices.lean",
+      "source_sha256": "a66599f1fe5dfe85c47d1bc082ec130793243e13a6768418a6c3635ef4748cd2",
+      "theorems": [
+        "onBase_commutes",
+        "mixed_factor",
+        "pointed_commutes",
+        "mixed_observation"
+      ],
+      "guarded_count": 4,
+      "guide": "doc/impl/record-facts-private-cache-services.md",
+      "guide_sha256": "971c3ebd6d2026a4c6b3248bd08db4c1e9e1d36590b773320f1e7bbc6fe5a592",
+      "reviewed_candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/services-observation-candidate.json",
+      "reviewed_candidate_sha256": "44f27bf3778948a7d2ac24c3dfa7080f9820d9b77295c0d04dd31a982abd06af"
+    },
+    {
+      "module": "PqxdhRecordFactsPrivateCacheCompiler",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsPrivateCacheCompiler.lean",
+      "source_sha256": "374dfa6f8e97c466d8ef7d55742c9829a224c723eed08fbf433ba249db6c119a",
+      "theorems": [
+        "inject_program",
+        "compile_opening",
+        "compile_sealing",
+        "compile_service",
+        "compiled_observation"
+      ],
+      "guarded_count": 5,
+      "guide": "doc/impl/record-facts-private-cache-compiler.md",
+      "guide_sha256": "adc9b5c8792d1c3461d4113a6a73c229ec0575dcb2d433701adb8de7f4ca0efa",
+      "reviewed_candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/compiler-observation-candidate.json",
+      "reviewed_candidate_sha256": "3ec56a384a8eb3036fffe402f224f3c679387c403f0fcd32785d1ab7e3f5c72b"
+    },
+    {
+      "module": "PqxdhRecordFactsPrivateCacheFresh",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsPrivateCacheFresh.lean",
+      "source_sha256": "e098efcd2e8934c7bbc05e1f517ca496bf7dacb9088ed9ff339ad65b2443f720",
+      "theorems": [
+        "raw_cache",
+        "privateAccess_fresh",
+        "sealing_fresh",
+        "randomSealing_fresh"
+      ],
+      "guarded_count": 4,
+      "guide": "doc/impl/record-facts-private-cache-fresh.md",
+      "guide_sha256": "bfc20bde24c7d2954977290305de5c514f64dd546f72448eda6f66591475ff36",
+      "reviewed_candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/fresh-digest-candidate.json",
+      "reviewed_candidate_sha256": "0a6df6a281ea55f3c85a0e2909b2e013399c927ab84bf26762dea68b224d88ad"
+    },
+    {
+      "module": "PqxdhRecordFactsPrivateCacheWorld",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsPrivateCacheWorld.lean",
+      "source_sha256": "183a73d00d8b38d6572160a1c9d62ac6921d4e01490fcf713fb20335efe096c0",
+      "theorems": [
+        "compiled_interpreter",
+        "counterless_observation",
+        "program_observation",
+        "run_observation",
+        "view_observation"
+      ],
+      "guarded_count": 5,
+      "guide": "doc/impl/record-facts-private-cache-world.md",
+      "guide_sha256": "a4fab0ba67fcfed918881a8d631849f22f97e5389914820309e3a44f004224dc",
+      "reviewed_candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/world-observation-candidate.json",
+      "reviewed_candidate_sha256": "49240ae8fd265ae33f18609f515e9894139421b991bf8341f99c0e2aeb1f9676"
+    },
+    {
+      "module": "PqxdhRecordFactsPrivateCacheSource",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsPrivateCacheSource.lean",
+      "source_sha256": "9b14b63ba9eadcfcdad320220ce4c4ebda0baa79c8276953442b42fefe80e734",
+      "theorems": [
+        "erasedKeyed_run",
+        "erasedKeyed_witness",
+        "erasedKeyed_other",
+        "localRaw_retains",
+        "Virgin.seal",
+        "raw_virgin",
+        "seal_virgin",
+        "erased_base",
+        "erased_inject",
+        "erased_opening",
+        "erased_sealing",
+        "hiddenOpening_virgin",
+        "hiddenSealing_virgin",
+        "compiled_virgin",
+        "query_virgin",
+        "freshPoint",
+        "initial_virgin",
+        "checked_project",
+        "checked_safe",
+        "checkedRun_project",
+        "checkedRun_safe",
+        "reach_virgin",
+        "reach_fresh",
+        "source_prefix_fresh"
+      ],
+      "guarded_count": 24,
+      "guide": "doc/impl/record-facts-private-cache-source.md",
+      "guide_sha256": "9cc3182af4c62d961cb573b340fdce0f9525d0ba0b8ad2116ad33ba2ee5badd7",
+      "reviewed_candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/source-freshness-candidate.json",
+      "reviewed_candidate_sha256": "3d82272d1e9a509d8c97575c4c48848a0f6a5225b8e5d1ca02c8a711d2078965"
+    }
+  ],
+  "exact_guard_total": 99,
+  "axiom_allowlist": [
+    "propext",
+    "Classical.choice",
+    "Quot.sound"
+  ],
+  "independent_reviews": [
+    {
+      "path": "/tmp/bc-arc-scratch/boundary/survey/counter11-review.json",
+      "sha256": "513132ec2f63615306c5afbbd896113218f52774a1918892a8a9e3ac749e3809",
+      "receipt": {
+        "stage": "Counter11",
+        "reviewer": "/root/boundary_survey",
+        "verdict": "APPROVE",
+        "time": "2026-10-09T16:21:15.013959+00:00",
+        "candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/binding/counter11-semantic-candidate.json",
+        "candidate_sha256": "693a367a38af48cc9f4ff17ea593851777ae7df32dc976c217d0d99889a19be0",
+        "files_verified": {
+          "/tmp/beaconcrypt-record-lift-facts-binding/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsCounter.lean": "34bb48c6952a04ab798fda2433c1d473b0cf19a2fe2a57a63966a60a9f8274ee",
+          "/tmp/beaconcrypt-record-lift-facts-binding/doc/impl/record-facts-counter.md": "37ee8d7a7a02382cd4bf1fcd874569c0812fbfc31f92418b386d1c83e0baa0a7",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/binding/olean/BeaconcryptCore/Computational/PqxdhRecordFactsCounter.olean": "3f9cf35997b05ed8f17339ceea0adc7ef1de480c24a041a3b474422616cc0d6a",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/binding/counter.leanpath": "241073852961f9e93c8fa87e3c6b882993365e709a0747c04f9024d31a5a9123"
+        },
+        "findings": [
+          {
+            "severity": "documentation nit",
+            "file": "doc/impl/record-facts-counter.md",
+            "text": "Qualify Existing table hits as Ideal table hits; real lookups recompute RealTable.output even at cached coordinates.",
+            "resolved": true
+          }
+        ],
+        "review": [
+          "All eleven statements/proofs independently inspected against actual World primitive, Protocol.sampled, ChainOracle.lookup, LoggedAdapters and original local interpreter definitions.",
+          "Projection erases only uniform count; shared ROM, native/effect counters, whole chain outputs, seed/context and literal pending frame logs remain. Arbitrary continuation equalities preserve actual optional replies.",
+          "Uniform counter never substituted for a bound: counted source and reductions retain separate query-accounting obligations. Full ServiceSpec and CTX joins explicitly pending.",
+          "No new assumption, security premise, codec law or claimed Origin/Binding conclusion; fixed native/source implementations reused unchanged.",
+          "All exact axiom guards present; source/guide/olean/Lean path hashes and successful bounded single-file check receipt independently verified. No source change or additional build needed."
+        ],
+        "amendment": {
+          "candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/binding/counter11-amended-candidate.json",
+          "sha256": "1884992a29c3498ad9ab582f85d6a61c84726b2ea3bbfab274c415ee65a60891",
+          "review": "The one-word ideal table-hit clarification resolves the sole nit. The Lean source and artifact are unchanged."
+        }
+      }
+    },
+    {
+      "path": "/tmp/bc-arc-scratch/boundary/survey/counter-protocol3-review.json",
+      "sha256": "37215f178601c41080726218f16971ea46b6498d0c36b99687372ce1bc0a3041",
+      "receipt": {
+        "stage": "CounterProtocol3",
+        "reviewer": "/root/boundary_survey",
+        "verdict": "APPROVE",
+        "time": "2026-10-09T16:31:30.281131+00:00",
+        "candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/binding/counter-protocol3-semantic-candidate.json",
+        "candidate_sha256": "a8531fc624ed8078c418467574329af3a42a0954e4506f77a6924f4fe334b5a3",
+        "files_verified": {
+          "/tmp/beaconcrypt-record-lift-facts-binding/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsCounterProtocol.lean": "2514951e414fadd68f52c4f9f3901d0c9543dd12f82dc0f9348e41e558f10e65",
+          "/tmp/beaconcrypt-record-lift-facts-binding/doc/impl/record-facts-counter-protocol.md": "6bfe569f370970b480314efcaf29354c41507f5b9c896643fff62696aa6b3ed2",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/binding/olean/BeaconcryptCore/Computational/PqxdhRecordFactsCounterProtocol.olean": "703a0abeda71929587ab391ee18f91244dffab156238676976c02e4ee8d95cc6",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/binding/services.leanpath": "241073852961f9e93c8fa87e3c6b882993365e709a0747c04f9024d31a5a9123"
+        },
+        "findings": [],
+        "review": [
+          "Independently read all definitions, three statements/proofs, guide and exact source Protocol.interpreter. All ten constructors are covered, including allocation, real public shared hash, native known/hidden send and receive, charges and publication.",
+          "Uniform instrumentation alone is projected zero on both sides. Native/effect counts, full seed and chain tables, shared ROM, pending/produced logs and literal optional replies are retained, with arbitrary initial state and full adaptive program quantification.",
+          "primitiveWork_project is a transparent frame lemma; interpreter_project uses reviewed lower projections and program_project the complete state simulation law. No marginal-distribution argument or unavailable secret simulation is assumed.",
+          "No new contract, security conclusion, freshness limitation or waived query bill. Guide correctly reserves actual CTX keyed join and global origin/binding bounds.",
+          "All source/guide/artifact/path/check-log hashes verified. Three exact guarded axiom dependencies contain only the allowed foundational axioms. No need to rerun the already matching bounded direct check."
+        ]
+      }
+    },
+    {
+      "path": "/tmp/bc-arc-scratch/boundary/survey/counter-ctx5-review.json",
+      "sha256": "4e2f439ef3ac2b78e52e415361c0a29d46aa479d7b068071f71f8b717cd2d99e",
+      "receipt": {
+        "stage": "CounterCtx5",
+        "reviewer": "/root/boundary_survey",
+        "verdict": "APPROVE",
+        "time": "2026-10-09T16:40:55.844464+00:00",
+        "candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/binding/counter-ctx5-semantic-candidate.json",
+        "candidate_sha256": "ed2100d8d2eb2ac242dc15d469cf00ba22151986e5fd954699ea3d6dbd3e80ca",
+        "files_verified": {
+          "/tmp/beaconcrypt-record-lift-facts-binding/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsCounterCtx.lean": "70bebd1a788ccb911cb3f4c1f81c466632a2fe75c5526b4c984ce0ceb49250b8",
+          "/tmp/beaconcrypt-record-lift-facts-binding/doc/impl/record-facts-counter-ctx.md": "1f83a14041a98809a62f23c2413d54b65eeef038b1bcb164780b1a446abf542f",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/binding/olean/BeaconcryptCore/Computational/PqxdhRecordFactsCounterCtx.olean": "17899715f458992f9e133b6714953f5e68be2734a548ab087ebdf2ad0fe6481e",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/binding/ctx.leanpath": "c2733dd27deb69f2e4e6de0e8a117b45a3402c2be92674e2b93351ca69e31ea2"
+        },
+        "findings": [],
+        "review": [
+          "Read all five statements and proofs against exact frozen Ideal.keyed/ctxInterpreter and reviewed Family.uncountedKeyed. Key selected from current table, actual one-key mode, shared cache and complete keyed dictionary update match.",
+          "Every key mode allowed in counter projection; no unjustified extension of subsequent cache-discard law to real mode. Complete adaptive keyed and ServiceSpec continuation equalities retain full result and all nonuniform state.",
+          "Hidden opening and sealing use same source programs and exact seed/table/pending arguments after projection. Writer failure frames survive buffer reinstallation. All other constructors use reviewed actual CounterProtocol projection.",
+          "The only erased instrumentation is uniform count, never used as a new source cap. Query costs, statistical collision/guessing, origin and binding remain explicit independent obligations. No new contract, restricted adversary or desired security conclusion is assumed.",
+          "Five exact foundational-axiom guards, bounded successful module-check receipt, source/guide/olean/Lean path and empty-log digests independently verified."
+        ]
+      }
+    },
+    {
+      "path": "/tmp/bc-arc-scratch/record-lift/facts-v3/private-cache13-review.json",
+      "sha256": "8268bfb8b5474d91dcbf7a2e34a748d75958901bb24cde331ab54deb1cbab36a",
+      "receipt": {
+        "reviewer": "Codex root, independent of boundary_survey implementation",
+        "result": "APPROVE",
+        "scope": "PrivateCache13 per-key replay observation law only, excluding future global/cache counting/Binding or Origin joins",
+        "candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/replay-observation-candidate.json",
+        "candidate_sha256": "0d399983e6d250a08fc9727d0f160b00f9c7a41a78c1bc323a62afa63148b35b",
+        "files": {
+          "/tmp/beaconcrypt-record-lift-facts-cache/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsPrivateCache.lean": "e7a6154376e07a95f36e9d9faf6d2a5a7c4ffeb97b5b25edb9a4fdb2024ce312",
+          "/tmp/beaconcrypt-record-lift-facts-cache/doc/impl/record-facts-private-cache.md": "df1d237797d70a3237e73139b0751aaf6580f57825827b980a9278ba4e07fa3b",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/olean/BeaconcryptCore/Computational/PqxdhRecordFactsPrivateCache.olean": "0f49251c1afbf5598205648c850494ecbe4661828a06bdb8de9490218eae11b2",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/leanpath": "240f56fc6fae7934c4b5b9ef7bb3ea96158701502b7824c2f270f97d324c4c93",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/analysis-snippet.md": "18c767fa193526c20303465158c7b159d5c19679a0e43706235efebe0493352f"
+        },
+        "check_receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/logs/facts-cache-module-154557.json",
+        "reviewed": [
+          "All13 statements/proofs, private helper equations, actual linked replay primitives and LazyOracleDiscard.discard_erase_proj continuation requirements",
+          "Focus is suffix cache only; full returned result and Local/sharedROM retained for arbitrary initial state and arbitrary adaptive client",
+          "Raw factor exact includes parser rejection, optional reply, rawAttempts/privateInputs; no assumed fresh seal point",
+          "Later seal law commutes actual lazy lookup, preserving correlation and entire continuation, rather than marginal key equality",
+          "Source draw counts may differ and are explicitly not projected into an equality claim; source budget remains required",
+          "Exact13 axiom guards verified by matching successful log/source/artifact; guide and analysis snippet scoped and no forbidden uses"
+        ],
+        "findings": [],
+        "time": "2026-10-09T15:47:17.653496+00:00"
+      }
+    },
+    {
+      "path": "/tmp/bc-arc-scratch/record-lift/facts-v3/private-cache-random8-review.json",
+      "sha256": "cc341d61a49d16310a95b590cf2cd57c1231b01dc01a3ca57568a59cb5386e04",
+      "receipt": {
+        "result": "APPROVE",
+        "reviewer": "Codex root independent of boundary_survey author",
+        "candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/random-observation-candidate.json",
+        "candidate_sha256": "c2b267cef74c5d361dec5b99bf34ae19ba2de26e031c9d9115af8be7fdb3eb83",
+        "files": {
+          "/tmp/beaconcrypt-record-lift-facts-cache/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsPrivateCacheRandom.lean": "9ab6f0c59dcc165a49873ffc5048f56dd678a674170dd60b324a70cab41c4e2e",
+          "/tmp/beaconcrypt-record-lift-facts-cache/doc/impl/record-facts-private-cache-random.md": "535943217804c6043ea2612c229eae63bd0ad672a471c479d5086454728d8515",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/olean/BeaconcryptCore/Computational/PqxdhRecordFactsPrivateCacheRandom.olean": "7218478ea141e2d50f0eed03080ea4741667d188785e37806bb5c19ef0a4a57b",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/leanpath": "240f56fc6fae7934c4b5b9ef7bb3ea96158701502b7824c2f270f97d324c4c93",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/random-analysis-snippet.md": "b8038dd253a728df35509c1f22cc85e2990dfda7d165dcdeb063cf1176912042"
+        },
+        "reviewed": [
+          "All8 statement/proof bodies and guide; actual Ideal.randomSeal/keyImpl source inspected",
+          "Random body then tag then actual lazy private lookup order retained; arbitrary initial state and full adaptive continuation law",
+          "Explicit mode != real excludes actual rawAEADopening endpoint, not a protocol security premise",
+          "Projection keeps complete reply,Local histories and sharedROM; only suffix cache omitted",
+          "No cost equality or globalBinding/Origin claim; source accounting remains required",
+          "Eight exactguards matching empty successful log and source/artifact hashes; no forbidden assumptions"
+        ],
+        "findings": [],
+        "scope": "Per-key replay/random observation helper only; globalcoordinate/count projection remains open",
+        "time": "2026-10-09T15:56:17.679070+00:00"
+      }
+    },
+    {
+      "path": "/tmp/bc-arc-scratch/record-lift/facts-v3/private-cache-family17-review.json",
+      "sha256": "8c6039b63983ee3f0881495aa4107711db6ea3e3d224eb6a022e398ee342b4d3",
+      "receipt": {
+        "stage": "PrivateCacheFamily17",
+        "reviewer": "/root",
+        "verdict": "APPROVE",
+        "time": "2026-10-09T16:16:22.885807+00:00",
+        "candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/family-observation-candidate.json",
+        "candidate_sha256": "5d4d30c47e730ca77fb6b2679a7e40150f190fdb96e9362d5e96090a4dd2ac54",
+        "source_sha256": "0a1eccf32ea95b5c464134ff23fbb016d7e6cbd2f21b00d9ab3a730cac1cf01a",
+        "findings": [],
+        "review": [
+          "Read all seventeen statements/proofs, definitions, guide and predecessor reviewed discard law interfaces. Exact key selection uses current materialAt; no byte-key injectivity or honest-label assumption. All coordinate modes explicitly exclude real opening.",
+          "familyLens updates only private suffix dictionaries; localLens retains other coordinates and couples selected local entry to actual shared ROM. complete_local and completeOpt_local identify exact lazy completion distributions including existing hits.",
+          "Commutation is across the entire step, including deferred point, reply and retained state; factorFromBase permits selection from retained base. No interchange from marginal key distributions.",
+          "keyed_observation is full adaptive KeyedSpec evaluated LawEq, retaining whole result, all Local histories, and complete supplied base including shared ROM. Only raw discarded private completions removed, local real public hashes and seal cache kept.",
+          "Endpoint omits outer source uniform accounting explicitly. Actual keyed counter projection and interleaved all-ServiceSpec join remain open; guide makes no equality of costs, fresh collision law, origin/binding or source global security claim. No new primitive contract.",
+          "All 17 exact guards, zero-diagnostic check receipt, file and artifact digests match candidate."
+        ]
+      }
+    },
+    {
+      "path": "/tmp/bc-arc-scratch/record-lift/facts-v3/private-cache-services4-review.json",
+      "sha256": "9125525ec0194eda401e995297654ba7484dbda458627a18cdcfbe9d56b3f1b7",
+      "receipt": {
+        "stage": "PrivateCacheServices4",
+        "reviewer": "/root",
+        "verdict": "APPROVE",
+        "time": "2026-10-09T16:19:30.688310+00:00",
+        "candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/services-observation-candidate.json",
+        "candidate_sha256": "44f27bf3778948a7d2ac24c3dfa7080f9820d9b77295c0d04dd31a982abd06af",
+        "source_sha256": "a66599f1fe5dfe85c47d1bc082ec130793243e13a6768418a6c3635ef4748cd2",
+        "findings": [],
+        "review": [
+          "Read all four statements/proofs and guide. Arbitrary base work has only Protocol.Private state; no access to suffix dictionaries by interface, so onBase_commutes is derived rather than supplied as noninterference premise.",
+          "Mixed query interface is explicitly internal. Exact key modes exclude real and linked key uses current base material. Base queries preserve actual output/state law with no completion; key branch uses reviewed family factor.",
+          "mixed_observation quantifies over full adaptive continuation and returned result/base/Local histories. It can allow table changes between key requests without dropping shared ROM, counters or logs of supplied base endpoint.",
+          "Actual protocol ServiceSpec compiler and counted source projection still need proofs. Neither arbitrary-base lemma nor guide advertises global source event, cost equality or security bound.",
+          "Four exact guards, empty-log direct check and source/artifact/guide digests verified; no new primitive or codec contract."
+        ]
+      }
+    },
+    {
+      "path": "/tmp/bc-arc-scratch/record-lift/facts-v3/private-cache-compiler5-review.json",
+      "sha256": "8b007609f2434ac7298966d8a2801f69e7afca39a06dcecd213c5174dd463104",
+      "receipt": {
+        "stage": "PrivateCacheCompiler5",
+        "reviewer": "/root",
+        "verdict": "APPROVE",
+        "time": "2026-10-09T16:34:40.996924+00:00",
+        "candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/compiler-observation-candidate.json",
+        "candidate_sha256": "3ec56a384a8eb3036fffe402f224f3c679387c403f0fcd32785d1ab7e3f5c72b",
+        "source_sha256": "374dfa6f8e97c466d8ef7d55742c9829a224c723eed08fbf433ba249db6c119a",
+        "findings": [],
+        "review": [
+          "Read all five public statements and proofs, private apply_bind helper, compiler/base definitions and guide. Internal private read and buffer update are explicit compiled operations; no extra outer protocol or adversarial command is assumed.",
+          "Opening and sealing execute unchanged hiddenOpening/hiddenSealing programs at actual read base seeds/table/pending. All parsing, widths, optional plaintext/writer result and failed-writer buffer are preserved in exact result/state equality. Other services delegated literally to parameter impl.",
+          "Injection preserves an entire adaptive keyed program and per-service equality keeps actual continuation. compiled_observation uses full adaptive mixed compiler law, not selected query schedules or marginal state equality.",
+          "Retains whole result/base/Local histories, removing only discarded suffix completions. Source uniform-counter projection remains separately required; no equality of source bills, free primitive or ambient work, crypto advantage or global binding/origin claim.",
+          "All five public guarded axioms, zero-diagnostic check, source/artifact/guide hashes verified. Final CounterCtx/world instantiation and source query/statistical accounting are separate obligations."
+        ]
+      }
+    },
+    {
+      "path": "/tmp/bc-arc-scratch/record-lift/facts-v3/private-cache-fresh4-review.json",
+      "sha256": "c5a1b9874c6d806bdca1cd150a44e25d93b5fb167fda1a04c1ad07d0d50a141c",
+      "receipt": {
+        "stage": "PrivateCacheFresh4",
+        "reviewer": "Codex root independent of boundary_survey author",
+        "verdict": "APPROVE",
+        "time": "2026-10-09T16:48:57.207353+00:00",
+        "candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/fresh-digest-candidate.json",
+        "candidate_sha256": "0a6df6a281ea55f3c85a0e2909b2e013399c927ab84bf26762dea68b224d88ad",
+        "files": {
+          "/tmp/beaconcrypt-record-lift-facts-cache/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsPrivateCacheFresh.lean": "e098efcd2e8934c7bbc05e1f517ca496bf7dacb9088ed9ff339ad65b2443f720",
+          "/tmp/beaconcrypt-record-lift-facts-cache/doc/impl/record-facts-private-cache-fresh.md": "bfc20bde24c7d2954977290305de5c514f64dd546f72448eda6f66591475ff36",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/olean/BeaconcryptCore/Computational/PqxdhRecordFactsPrivateCacheFresh.olean": "632e1b434580bf58a2652efd0aed4da217f90b7afeb1dfca550b1346ed38a0b3",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/leanpath-84a07b15": "298ea50fc7dab3232a76b07d5efb6187b52593a24cde303a4c0dcdf6c04e5f52"
+        },
+        "checks": [
+          "raw_cache covers parser failure and success for erased raw endpoint only.",
+          "privateAccess_fresh preserves complete poststate and literal log/cache insertion from explicit missing-point premise.",
+          "Replay actual AEAD body/tag and random body then tag then whole digest order preserved; no conditioning on writer failure.",
+          "Explicit unused nonce/missing suffix operational premises not asserted as source facts or primitive guarantees; guide leaves source discharge and probability bounds open.",
+          "All statements/proofs and plain-English guide read; exact guards and successful source/artifact/check-log hashes verified."
+        ],
+        "findings": [],
+        "scope": "Frozen module and guide only; final inventory/root/analysis/integration metadata not yet reviewed."
+      }
+    },
+    {
+      "path": "/tmp/bc-arc-scratch/record-lift/facts-v3/private-cache-world5-review.json",
+      "sha256": "f5bbeabfb68e0627ca04938f8035bd72b07d7469eada0803de6cb76a030244f1",
+      "receipt": {
+        "stage": "PrivateCacheWorld5",
+        "reviewer": "Codex root independent of boundary_survey author",
+        "verdict": "APPROVE",
+        "time": "2026-10-09T16:48:57.205583+00:00",
+        "candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/world-observation-candidate.json",
+        "candidate_sha256": "49240ae8fd265ae33f18609f515e9894139421b991bf8341f99c0e2aeb1f9676",
+        "files": {
+          "/tmp/beaconcrypt-record-lift-facts-cache/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsPrivateCacheWorld.lean": "183a73d00d8b38d6572160a1c9d62ac6921d4e01490fcf713fb20335efe096c0",
+          "/tmp/beaconcrypt-record-lift-facts-cache/doc/impl/record-facts-private-cache-world.md": "a4fab0ba67fcfed918881a8d631849f22f97e5389914820309e3a44f004224dc",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/olean/BeaconcryptCore/Computational/PqxdhRecordFactsPrivateCacheWorld.olean": "4e156710bfb0475f81d1e6d0c5ed67967645c816ae6365e126c8713f9bfb1769",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/world.leanpath": "49c7c6adee789f55dc44721744bfff8ecb65c1da95cb51714f53bb8cf17e5900"
+        },
+        "checks": [
+          "Exact original ctxRun/program, same env/adversary/codec/route/observation mode; arbitrary adaptive service continuation preserved.",
+          "CounterCtx full-state projection composes with independently reviewed family cache law; no marginal sampler interchange.",
+          "observe drops only uniform instrumentation and per-coordinate suffix dictionaries, retaining full client, shared base/cache, local histories and logs. ctxView is a valid function of that observation.",
+          "All-coordinate replay/random restriction explicit; no Frame, budget, freshness or new primitive/codec premise. Original source and reduction query bills remain outstanding, not declared free.",
+          "All statements/proofs and plain-English guide read; exact guards and successful source/artifact/check-log hashes verified."
+        ],
+        "findings": [],
+        "scope": "Frozen module and guide only; final inventory/root/analysis/integration metadata not yet reviewed."
+      }
+    },
+    {
+      "path": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin/source24-review.json",
+      "sha256": "15f91892a4acfaf0c34252ff68222028556c1bb7399fe8ff07e16f08270553c8",
+      "receipt": {
+        "stage": "PrivateCacheSource24",
+        "reviewer": "Codex facts_origin, independent of boundary_survey author",
+        "verdict": "APPROVE",
+        "time": "2026-10-09T16:58:35.751379+00:00",
+        "candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/source-freshness-candidate.json",
+        "candidate_sha256": "3d82272d1e9a509d8c97575c4c48848a0f6a5225b8e5d1ca02c8a711d2078965",
+        "source_sha256": "9b14b63ba9eadcfcdad320220ce4c4ebda0baa79c8276953442b42fefe80e734",
+        "findings": [],
+        "checks": [
+          "Read all 24 public statements and proofs, three private helper proofs, and the complete guide. Inspected actual erased endpoint/compiler/family definitions, World observation projection and Fresh equations, source attempted-history Fresh/program_fresh/annotated_query_bind, and uniform-only counter normalization.",
+          "Virgin describes full absence of suffix-cache entries and used nonces only at coordinates absent from the attempted-seal history. Raw retained-cache proof covers rejection and success. Seal attempt records its selected coordinate even on width refusal or writer failure; all unrelated coordinate entries remain exact.",
+          "Compiler equations preserve actual base operations, lookup/seed/cache effects, sealing writer buffer and optional opening replies. The erased-world invariant allows arbitrary modes, but the original-world observation transport remains explicitly replay/random only; the guide does not overclaim real-mode equivalence.",
+          "checked tests the pre-query state, keeps actual endpoint reply and complete resulting state, and projects away only its proof-side flag. Its supported-completion safety is supplemented by source_prefix_fresh over explicit supported-prefix Reach, so no endpoint losslessness or future successful writer is required.",
+          "Final prefix theorem discharges initial emptiness and source all-reply freshness from actual source initialization/program_fresh. Reach supplies ordinary operational execution evidence, not an assumed authentication/security conclusion. No new primitive, codec, writer, freshness or deployment premise.",
+          "This stage supplies missing-cache/unused-nonce conditions only; uniform distribution exposure is the separate Fresh theorem, and statistical collision/guessing coupling and original counted query bills remain separate. No claim that cache erasure makes source work free."
+        ],
+        "hygiene": {
+          "candidate_hash": "matched",
+          "four_pinned_files": "matched",
+          "World5_Fresh4_candidate_pins": "matched",
+          "public_statement_count": 24,
+          "exact_guard_bijection": true,
+          "private_helpers": 3,
+          "standard_axioms": "Virgin.seal only propext; others propext/Classical.choice/Quot.sound",
+          "recorded_check_exit": 0,
+          "recorded_log": "empty; exact SHA verified",
+          "placeholder_custom_axiom_scan": "clear",
+          "git_diff_check": "pass",
+          "reviewer_rebuilt": false
+        },
+        "scope": "Approve frozen Source24 theorem module and guide, not later statistical/protocol event closure or publication metadata."
+      }
+    }
+  ],
+  "validation": [
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/publication/logs/facts-cache-pub-fidelity-170230048241.json",
+      "receipt_sha256": "6c3aa8f1ec66c38bd4afb776721c554d352b2cd44f40ee05d3944b06f9bb9d09",
+      "start": "2026-10-09T17:02:06.011154+00:00",
+      "end": "2026-10-09T17:02:30.048499+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lease",
+        "mem",
+        "codex",
+        "@cargo",
+        "facts-cache-pub-fidelity",
+        "--eta",
+        "20m",
+        "--",
+        "nix",
+        "develop",
+        "--no-update-lock-file",
+        "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+        "-c",
+        "make",
+        "-C",
+        "/tmp/beaconcrypt-record-lift-facts-cache/beaconcrypt-core",
+        "check-proverif-transcript-fidelity",
+        "SHELL=bash"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/publication/logs/facts-cache-pub-fidelity-170230048241.log",
+      "log_sha256": "ef9f375edaa2a5c93eaae9035f5398dd09d3834cb92e8de7939e4a1f526f86ec",
+      "leanpath_sha256": "660bb291addfa6f5a067bf3ba69f36d5edc7056b1dddfa269c3bc343c118d2a0",
+      "source_sha256": null,
+      "artifact_sha256": null,
+      "CARGO_BUILD_JOBS": "2",
+      "CARGO_TARGET_DIR": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/publication/target"
+    },
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/publication/logs/facts-cache-pub-inventory-170347595443.json",
+      "receipt_sha256": "2c9646bb2fa8c81d628681235b89031d4c8bf2de34ae8f65a8a38d347ae287cb",
+      "start": "2026-10-09T17:02:06.010004+00:00",
+      "end": "2026-10-09T17:03:47.595911+00:00",
+      "exit": 0,
+      "command": [
+        "/tmp/bc-coord/coord.sh",
+        "lease",
+        "mem",
+        "codex",
+        "@nix",
+        "facts-cache-pub-inventory",
+        "--eta",
+        "20m",
+        "--",
+        "nix",
+        "develop",
+        "--no-update-lock-file",
+        "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+        "-c",
+        "make",
+        "-C",
+        "/tmp/beaconcrypt-record-lift-facts-cache/beaconcrypt-core",
+        "check-inventory",
+        "SHELL=bash"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/publication/logs/facts-cache-pub-inventory-170347595443.log",
+      "log_sha256": "d7468ed35f303e3fe051e5421716195e822067c6bd271aa62229ccac0bd74e1c",
+      "leanpath_sha256": "660bb291addfa6f5a067bf3ba69f36d5edc7056b1dddfa269c3bc343c118d2a0",
+      "source_sha256": null,
+      "artifact_sha256": null,
+      "CARGO_BUILD_JOBS": "2",
+      "CARGO_TARGET_DIR": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/publication/target"
+    },
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/publication/logs/facts-cache-pub-module-165920.json",
+      "receipt_sha256": "7137554337a9286db1bcc54db49189bfa7d82eca3b6a50063cec14a5a88e81c7",
+      "start": "2026-10-09T16:59:16.781921+00:00",
+      "end": "2026-10-09T16:59:20.102185+00:00",
+      "exit": 0,
+      "command": [
+        "python3",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "facts-cache-pub-module",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-facts-cache/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/publication/olean/BeaconcryptCore/Computational/PqxdhRecordFactsPrivateCache.olean",
+        "/tmp/beaconcrypt-record-lift-facts-cache/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsPrivateCache.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/publication/logs/facts-cache-pub-module-165920.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "leanpath_sha256": "660bb291addfa6f5a067bf3ba69f36d5edc7056b1dddfa269c3bc343c118d2a0",
+      "source_sha256": "e7a6154376e07a95f36e9d9faf6d2a5a7c4ffeb97b5b25edb9a4fdb2024ce312",
+      "artifact_sha256": "0f49251c1afbf5598205648c850494ecbe4661828a06bdb8de9490218eae11b2",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/publication/logs/facts-cache-pub-module-165921.json",
+      "receipt_sha256": "cc8e751e85ae0e4e400ce1c11f38bf11f2ae2e05df4dad5094c33e2a24200302",
+      "start": "2026-10-09T16:59:16.782634+00:00",
+      "end": "2026-10-09T16:59:21.625285+00:00",
+      "exit": 0,
+      "command": [
+        "python3",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "facts-cache-pub-module",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-facts-cache/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/publication/olean/BeaconcryptCore/Computational/PqxdhRecordFactsCounter.olean",
+        "/tmp/beaconcrypt-record-lift-facts-cache/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsCounter.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/publication/logs/facts-cache-pub-module-165921.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "leanpath_sha256": "660bb291addfa6f5a067bf3ba69f36d5edc7056b1dddfa269c3bc343c118d2a0",
+      "source_sha256": "34bb48c6952a04ab798fda2433c1d473b0cf19a2fe2a57a63966a60a9f8274ee",
+      "artifact_sha256": "3f9cf35997b05ed8f17339ceea0adc7ef1de480c24a041a3b474422616cc0d6a",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/publication/logs/facts-cache-pub-module-165931915723.json",
+      "receipt_sha256": "3e30c7f43fa46b1354f37139c5227c2ab0c83519919556e29f86473993bdf78b",
+      "start": "2026-10-09T16:59:29.393464+00:00",
+      "end": "2026-10-09T16:59:31.915976+00:00",
+      "exit": 0,
+      "command": [
+        "python3",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "facts-cache-pub-module",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-facts-cache/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/publication/olean/BeaconcryptCore/Computational/PqxdhRecordFactsPrivateCacheRandom.olean",
+        "/tmp/beaconcrypt-record-lift-facts-cache/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsPrivateCacheRandom.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/publication/logs/facts-cache-pub-module-165931915723.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "leanpath_sha256": "660bb291addfa6f5a067bf3ba69f36d5edc7056b1dddfa269c3bc343c118d2a0",
+      "source_sha256": "9ab6f0c59dcc165a49873ffc5048f56dd678a674170dd60b324a70cab41c4e2e",
+      "artifact_sha256": "7218478ea141e2d50f0eed03080ea4741667d188785e37806bb5c19ef0a4a57b",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/publication/logs/facts-cache-pub-module-165932473646.json",
+      "receipt_sha256": "c2f48df8575b0a7197bf7bc855d4b832a253187ca493ea045c33cde7b8d785e9",
+      "start": "2026-10-09T16:59:29.390616+00:00",
+      "end": "2026-10-09T16:59:32.473879+00:00",
+      "exit": 0,
+      "command": [
+        "python3",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "facts-cache-pub-module",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-facts-cache/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/publication/olean/BeaconcryptCore/Computational/PqxdhRecordFactsCounterProtocol.olean",
+        "/tmp/beaconcrypt-record-lift-facts-cache/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsCounterProtocol.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/publication/logs/facts-cache-pub-module-165932473646.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "leanpath_sha256": "660bb291addfa6f5a067bf3ba69f36d5edc7056b1dddfa269c3bc343c118d2a0",
+      "source_sha256": "2514951e414fadd68f52c4f9f3901d0c9543dd12f82dc0f9348e41e558f10e65",
+      "artifact_sha256": "703a0abeda71929587ab391ee18f91244dffab156238676976c02e4ee8d95cc6",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/publication/logs/facts-cache-pub-module-170031713802.json",
+      "receipt_sha256": "bd8f9581a2c64302ae6c4b23df8e480942c9b0eaab6afa56253f610caa8854e0",
+      "start": "2026-10-09T17:00:29.246278+00:00",
+      "end": "2026-10-09T17:00:31.714056+00:00",
+      "exit": 0,
+      "command": [
+        "python3",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "facts-cache-pub-module",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-facts-cache/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/publication/olean/BeaconcryptCore/Computational/PqxdhRecordFactsPrivateCacheFamily.olean",
+        "/tmp/beaconcrypt-record-lift-facts-cache/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsPrivateCacheFamily.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/publication/logs/facts-cache-pub-module-170031713802.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "leanpath_sha256": "660bb291addfa6f5a067bf3ba69f36d5edc7056b1dddfa269c3bc343c118d2a0",
+      "source_sha256": "0a1eccf32ea95b5c464134ff23fbb016d7e6cbd2f21b00d9ab3a730cac1cf01a",
+      "artifact_sha256": "803fba8b940904ea406f25bc71494ff00004a37342cafec3e4b4398cbeeb98a8",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/publication/logs/facts-cache-pub-module-170101660048.json",
+      "receipt_sha256": "ef31127d2456f96a0fb327745efc04a9a7fc4fa3a012975a071a73704ec51dab",
+      "start": "2026-10-09T17:00:59.497232+00:00",
+      "end": "2026-10-09T17:01:01.660344+00:00",
+      "exit": 0,
+      "command": [
+        "python3",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "facts-cache-pub-module",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-facts-cache/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/publication/olean/BeaconcryptCore/Computational/PqxdhRecordFactsPrivateCacheServices.olean",
+        "/tmp/beaconcrypt-record-lift-facts-cache/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsPrivateCacheServices.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/publication/logs/facts-cache-pub-module-170101660048.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "leanpath_sha256": "660bb291addfa6f5a067bf3ba69f36d5edc7056b1dddfa269c3bc343c118d2a0",
+      "source_sha256": "a66599f1fe5dfe85c47d1bc082ec130793243e13a6768418a6c3635ef4748cd2",
+      "artifact_sha256": "18525ae32c7a3dd55d30287404cf4f1e3101f528b8c4c973c520bcd20c2e8a54",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/publication/logs/facts-cache-pub-module-170101768933.json",
+      "receipt_sha256": "39a01c04abe7fa599b2c6adf80ec82afbc001c9bd47d44298c7ac3f13c2816e2",
+      "start": "2026-10-09T17:00:59.496823+00:00",
+      "end": "2026-10-09T17:01:01.769180+00:00",
+      "exit": 0,
+      "command": [
+        "python3",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "facts-cache-pub-module",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-facts-cache/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/publication/olean/BeaconcryptCore/Computational/PqxdhRecordFactsCounterCtx.olean",
+        "/tmp/beaconcrypt-record-lift-facts-cache/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsCounterCtx.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/publication/logs/facts-cache-pub-module-170101768933.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "leanpath_sha256": "660bb291addfa6f5a067bf3ba69f36d5edc7056b1dddfa269c3bc343c118d2a0",
+      "source_sha256": "70bebd1a788ccb911cb3f4c1f81c466632a2fe75c5526b4c984ce0ceb49250b8",
+      "artifact_sha256": "17899715f458992f9e133b6714953f5e68be2734a548ab087ebdf2ad0fe6481e",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/publication/logs/facts-cache-pub-module-170116722837.json",
+      "receipt_sha256": "97384963585406fc64fa166f5c625a32caee3ad923f886238237fbba990ce115",
+      "start": "2026-10-09T17:01:14.268820+00:00",
+      "end": "2026-10-09T17:01:16.723053+00:00",
+      "exit": 0,
+      "command": [
+        "python3",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "facts-cache-pub-module",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-facts-cache/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/publication/olean/BeaconcryptCore/Computational/PqxdhRecordFactsPrivateCacheCompiler.olean",
+        "/tmp/beaconcrypt-record-lift-facts-cache/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsPrivateCacheCompiler.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/publication/logs/facts-cache-pub-module-170116722837.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "leanpath_sha256": "660bb291addfa6f5a067bf3ba69f36d5edc7056b1dddfa269c3bc343c118d2a0",
+      "source_sha256": "374dfa6f8e97c466d8ef7d55742c9829a224c723eed08fbf433ba249db6c119a",
+      "artifact_sha256": "6949a1b26f9038dd150f580e07c4428399540042053e88a37fae4a9d3177ff28",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/publication/logs/facts-cache-pub-module-170119088703.json",
+      "receipt_sha256": "0e753223eb291e39f6862315f7bbe4fd1d064d9d2cec6b7af2fdbc463c480f90",
+      "start": "2026-10-09T17:01:16.795278+00:00",
+      "end": "2026-10-09T17:01:19.088969+00:00",
+      "exit": 0,
+      "command": [
+        "python3",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "facts-cache-pub-module",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-facts-cache/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/publication/olean/BeaconcryptCore/Computational/PqxdhRecordFactsPrivateCacheWorld.olean",
+        "/tmp/beaconcrypt-record-lift-facts-cache/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsPrivateCacheWorld.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/publication/logs/facts-cache-pub-module-170119088703.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "leanpath_sha256": "660bb291addfa6f5a067bf3ba69f36d5edc7056b1dddfa269c3bc343c118d2a0",
+      "source_sha256": "183a73d00d8b38d6572160a1c9d62ac6921d4e01490fcf713fb20335efe096c0",
+      "artifact_sha256": "4e156710bfb0475f81d1e6d0c5ed67967645c816ae6365e126c8713f9bfb1769",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/publication/logs/facts-cache-pub-module-170120711333.json",
+      "receipt_sha256": "68e94e724665504ba4b98ce0bfc3586f828e7f50f4a665d54b9e0f972ccf41da",
+      "start": "2026-10-09T17:01:16.802390+00:00",
+      "end": "2026-10-09T17:01:20.711570+00:00",
+      "exit": 0,
+      "command": [
+        "python3",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "facts-cache-pub-module",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-facts-cache/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/publication/olean/BeaconcryptCore/Computational/PqxdhRecordFactsPrivateCacheFresh.olean",
+        "/tmp/beaconcrypt-record-lift-facts-cache/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsPrivateCacheFresh.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/publication/logs/facts-cache-pub-module-170120711333.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "leanpath_sha256": "660bb291addfa6f5a067bf3ba69f36d5edc7056b1dddfa269c3bc343c118d2a0",
+      "source_sha256": "e098efcd2e8934c7bbc05e1f517ca496bf7dacb9088ed9ff339ad65b2443f720",
+      "artifact_sha256": "632e1b434580bf58a2652efd0aed4da217f90b7afeb1dfca550b1346ed38a0b3",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/publication/logs/facts-cache-pub-module-170123873421.json",
+      "receipt_sha256": "13e894a91d835173c0be50bdd81c1a6ab44c3b16c5de40035b14f22374f84efc",
+      "start": "2026-10-09T17:01:20.789284+00:00",
+      "end": "2026-10-09T17:01:23.873679+00:00",
+      "exit": 0,
+      "command": [
+        "python3",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "facts-cache-pub-module",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-facts-cache/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/publication/olean/BeaconcryptCore/Computational/PqxdhRecordFactsPrivateCacheSource.olean",
+        "/tmp/beaconcrypt-record-lift-facts-cache/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsPrivateCacheSource.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/publication/logs/facts-cache-pub-module-170123873421.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "leanpath_sha256": "660bb291addfa6f5a067bf3ba69f36d5edc7056b1dddfa269c3bc343c118d2a0",
+      "source_sha256": "9b14b63ba9eadcfcdad320220ce4c4ebda0baa79c8276953442b42fefe80e734",
+      "artifact_sha256": "38c672864ec5ee87fdd28848c20f04e66dc25778af2a82e5ad67e380f929f27d",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    },
+    {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/publication/logs/facts-cache-pub-root-170137084365.json",
+      "receipt_sha256": "925fefab55b1a19f33b6174eb41094d024bf8ed8cea6b81c3cdefb30940170b0",
+      "start": "2026-10-09T17:01:35.044419+00:00",
+      "end": "2026-10-09T17:01:37.084612+00:00",
+      "exit": 0,
+      "command": [
+        "python3",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+        "/tmp/bc-coord/coord.sh",
+        "lean",
+        "codex",
+        "facts-cache-pub-root",
+        "--",
+        "timeout",
+        "180",
+        "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+        "-j1",
+        "-M8000",
+        "--root=/tmp/beaconcrypt-record-lift-facts-cache/beaconcrypt-core/proofs/lean",
+        "-o",
+        "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/publication/olean/BeaconcryptCore.olean",
+        "/tmp/beaconcrypt-record-lift-facts-cache/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+      ],
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/publication/logs/facts-cache-pub-root-170137084365.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "leanpath_sha256": "660bb291addfa6f5a067bf3ba69f36d5edc7056b1dddfa269c3bc343c118d2a0",
+      "source_sha256": "a8c1dec806c34cacec9a9eef96d67cad8872a9b67d30559a95e88b40c8ec0f4c",
+      "artifact_sha256": "ee1efa4eaf46492e9ec4b27ce566c0bcd56870f75028fe98d94b24425c34f1c2",
+      "CARGO_BUILD_JOBS": null,
+      "CARGO_TARGET_DIR": null
+    }
+  ],
+  "validation_summary": {
+    "changed_modules": "11/11 bounded single-file Lean checks passed",
+    "root_import": "pass",
+    "inventory": "pass; 1731 handwritten Lean rows",
+    "transcript_fidelity": "30/30 tests passed",
+    "hygiene": "99 public statements with 99 exact guards; no placeholder or custom axiom; source hashes match frozen candidates",
+    "diff_check": "pass",
+    "full_make_verify": "not run; outside focused stage authorization",
+    "mutation_tests": "not run; no Rust changes"
+  },
+  "published_dependency_basis": "/tmp/bc-coord/leanpaths/5ba38799897dc8d3e79dfc19f1cd63c95050afe9.leanpath",
+  "leanpath": "/tmp/bc-arc-scratch/record-lift/facts-v3/cache/publication/leanpath",
+  "leanpath_sha256": "660bb291addfa6f5a067bf3ba69f36d5edc7056b1dddfa269c3bc343c118d2a0",
+  "remaining": [
+    "Couple actual source fresh-digest draws to adaptive statistical collision and guessing games",
+    "Join accepted-record and unpublished-frame source events to those bounds",
+    "Discharge full OriginStatement and BindingStatement with original counted query/reduction bills"
+  ],
+  "updated_at": "2026-10-09T17:06:57.358289+00:00"
+}
