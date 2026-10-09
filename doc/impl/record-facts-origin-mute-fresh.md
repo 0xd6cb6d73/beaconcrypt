@@ -1,0 +1,9 @@
+# Source freshness after a selected hidden seal
+
+`PqxdhRecordFactsOriginMuteFresh` derives the muted continuation's no-later-selected-seal condition from the existing checked source attempted-coordinate history. The source history records every actual sealing request before its endpoint reply, so failed writers and refused sends do not erase earlier attempts. The module adds four guarded statements and no security contract.
+
+`fresh_excludes` proves that a coordinate already in the prior attempted history cannot be the next fresh sealing coordinate. `continuation_noSeal` extends this fact through every branch of an arbitrary source continuation whose annotated requests satisfy the existing `Fresh` predicate. It yields a syntactic zero query cap for that selected sealing coordinate, retaining all other services and replies.
+
+`after_seal_noSeal` specializes the result immediately after a literal sealing query. The selected coordinate is inserted in the attempted history regardless of the returned option, and every possible reply's continuation has zero later selected sealing calls. `after_seal_project` applies the exact muted-service projection equality using this derived query restriction. Its full reply-dependent continuation and complete projected poststate are preserved.
+
+These local continuation theorems take the existing annotated-source `Fresh` invariant. `PqxdhRecordLiftProtocolHistory.program_fresh` already proves that invariant for the complete initialized production-shaped schedule; these lemmas are the induction interface for selecting an actual seal within that schedule. They do not assume successful publication, honest selection or target secrecy. The complete selected-ordinal execution, unused writer-log projection, identical-until-first-match coupling and final numerical unpublished-origin bound remain separate work.
