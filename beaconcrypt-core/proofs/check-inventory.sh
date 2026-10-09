@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1827
+	[handwritten-lean]=1828
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -37475,8 +37475,8 @@ require_line_count 1 '^theorem acceptSelected_pending([[:space:]]|$)' "$selected
 
 selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealProvenance.lean
 require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentIdealProvenance$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentIdealProvenance root import"
-require_line_count 39 '^theorem ' "$selected_source_module" "PqxdhDeploymentIdealProvenance theorem inventory"
-require_line_count 39 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentIdealProvenance guarded dependencies"
+require_line_count 42 '^theorem ' "$selected_source_module" "PqxdhDeploymentIdealProvenance theorem inventory"
+require_line_count 42 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentIdealProvenance guarded dependencies"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealProvenance\.builtIn_append$' "$selected_source_module" "PqxdhDeploymentIdealProvenance dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealProvenance.builtIn_append"
 require_line_count 1 '^theorem builtIn_append([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealProvenance theorem builtIn_append"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealProvenance\.buildOf_none$' "$selected_source_module" "PqxdhDeploymentIdealProvenance dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealProvenance.buildOf_none"
@@ -37555,6 +37555,31 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem ideal_trace([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealProvenance theorem ideal_trace"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealProvenance\.ideal_slots_server$' "$selected_source_module" "PqxdhDeploymentIdealProvenance dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealProvenance.ideal_slots_server"
 require_line_count 1 '^theorem ideal_slots_server([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealProvenance theorem ideal_slots_server"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealProvenance\.ideal_trace_world_peer$' "$selected_source_module" "PqxdhDeploymentIdealProvenance dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealProvenance.ideal_trace_world_peer"
+require_line_count 1 '^theorem ideal_trace_world_peer([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealProvenance theorem ideal_trace_world_peer"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealProvenance\.ideal_trace_peer$' "$selected_source_module" "PqxdhDeploymentIdealProvenance dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealProvenance.ideal_trace_peer"
+require_line_count 1 '^theorem ideal_trace_peer([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealProvenance theorem ideal_trace_peer"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealProvenance\.ideal_slots_restrictions$' "$selected_source_module" "PqxdhDeploymentIdealProvenance dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealProvenance.ideal_slots_restrictions"
+require_line_count 1 '^theorem ideal_slots_restrictions([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealProvenance theorem ideal_slots_restrictions"
+
+# CE-11b unit U4 review fix pass: guesser programs for the KEM ciphertext guess of the Beacon-side anomaly (ctGuessBy, ctGuessBy_le, ctGuessBy_le_ctGuess, ctGuessPk_eq_iSup, ctGuessBy_probComp, guess_preChallenge).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealAnomaly.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentIdealAnomaly$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentIdealAnomaly root import"
+require_line_count 6 '^theorem ' "$selected_source_module" "PqxdhDeploymentIdealAnomaly theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentIdealAnomaly guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealAnomaly\.encapsHit_max$' "$selected_source_module" "PqxdhDeploymentIdealAnomaly dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealAnomaly.encapsHit_max"
+require_line_count 1 '^theorem encapsHit_max([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealAnomaly theorem encapsHit_max"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealAnomaly\.ctGuessBy_le$' "$selected_source_module" "PqxdhDeploymentIdealAnomaly dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealAnomaly.ctGuessBy_le"
+require_line_count 1 '^theorem ctGuessBy_le([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealAnomaly theorem ctGuessBy_le"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealAnomaly\.ctGuessBy_le_ctGuess$' "$selected_source_module" "PqxdhDeploymentIdealAnomaly dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealAnomaly.ctGuessBy_le_ctGuess"
+require_line_count 1 '^theorem ctGuessBy_le_ctGuess([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealAnomaly theorem ctGuessBy_le_ctGuess"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealAnomaly\.ctGuessPk_eq_iSup$' "$selected_source_module" "PqxdhDeploymentIdealAnomaly dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealAnomaly.ctGuessPk_eq_iSup"
+require_line_count 1 '^theorem ctGuessPk_eq_iSup([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealAnomaly theorem ctGuessPk_eq_iSup"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealAnomaly\.ctGuessBy_probComp$' "$selected_source_module" "PqxdhDeploymentIdealAnomaly dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealAnomaly.ctGuessBy_probComp"
+require_line_count 1 '^theorem ctGuessBy_probComp([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealAnomaly theorem ctGuessBy_probComp"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealAnomaly\.guess_preChallenge$' "$selected_source_module" "PqxdhDeploymentIdealAnomaly dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealAnomaly.guess_preChallenge"
+require_line_count 1 '^theorem guess_preChallenge([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealAnomaly theorem guess_preChallenge"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"

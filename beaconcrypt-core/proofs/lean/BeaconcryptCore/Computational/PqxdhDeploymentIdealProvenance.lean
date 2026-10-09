@@ -11,8 +11,10 @@ C5 restated (design-v2 section 7, plan section 47 A3) on the record world with t
 - `Prov t`, the provenance invariant between the transcript, the environment state, the World and the provenance annotation: the annotation invariant (`PqxdhDeploymentIdealOrigins.AnnInv`); every Server origin is at the Server install ghost's key ID and every Beacon origin at owner `k`; the accept counter counts the transcript's raw accepts; up to the selected ordinal the session counter is the accept counter and every pending token and successful build is below it; the mark is the selected ordinal's session at coordinates holding slot 0, and while its token is pending the selected accept returned it and it has no successful build; every successful build of the marked session published the Server install ghost's peer; the ghost's key ID is the target's peer in the transcript (`peerOf`).
 - Preservation: by every entry that is not a registration command (`prov_quiet`), by the World's fixed steps (`prov_view`) and by every registration command of the ideal step (`ideal_rStep`), through the state-level lemmas `prov_realQuiet`, `prov_realBuild`, `prov_acceptOther`, `prov_selected`, `prov_markedBuild` and `prov_challenge` with the session facts of `PqxdhDeploymentIdealSessions`, the marked build's annotated form (`buildCached_program`, `buildCached_origins`, `buildCached_reply`) and the challenge finish's hidden installs (`finishChallenge_owner`). Startup: `prov_initial`.
 - On every outcome of the provenance-annotated record world: `world_provG` (fixed parameters, `envG`) and `world_prov` (`envGD`); the annotation is the slot map of the install ghosts (`origins_eq_ghost`, `origins_ghost`).
-- L1 and L3 of design-v2 section 7.2: the Server install ghost is at slot 0 and its key ID is the target's peer (`trace_peer`); under `Phase1ReadBack`, a Server peer designating the target is the ghost's key ID (`trace_designated`, with U6's key match through `PqxdhDeploymentIdealTrace.keyFacts_marked`). On the record world with `envGD` (`ideal_trace_world`) and on the final split game's own support for every parameter (`ideal_trace`, through CE-11a's `join` at `envG t p`).
-- `ideal_slots_server`: three of the four conjuncts of `PqxdhDeploymentIdealTrace.IdealSlots` (the Server restriction with slot 0, the Beacon restriction, and under `Phase1ReadBack` the Server converse) on every outcome of the provenance-annotated record world with `envGD`.
+- L1 and L3 of design-v2 section 7.2: the Server install ghost is at slot 0 and its key ID is the target's peer (`trace_peer`); under `Phase1ReadBack`, a Server peer designating the target is the ghost's key ID (`trace_designated`, with U6's key match through `PqxdhDeploymentIdealTrace.keyFacts_marked`). On the record world with `envGD` (`ideal_trace_world`) and on the final split game's own support for every parameter (`ideal_trace`, through CE-11a's `join` at `envG t p`). Both take `Phase1ReadBack` as a premise of the whole statement although only L3 uses it; `ideal_trace_world_peer` and `ideal_trace_peer` state L1 without it.
+- `ideal_slots_server`: three of the four conjuncts of `PqxdhDeploymentIdealTrace.IdealSlots` (the Server restriction with slot 0, the Beacon restriction and the Server converse) on every outcome of the provenance-annotated record world with `envGD`, stated under `Phase1ReadBack`, which only the Server converse uses; `ideal_slots_restrictions` states the two restrictions without it, for every Server key ID.
+
+The annotation is the World-level provenance annotation of `PqxdhRecordLiftOrigins`; its relation to the record lift's own handle-to-slot map is design-v2's `run_origins` (section 9.1, unit U7), not proved here.
 
 Not here: the Beacon converse (L4, with the anomaly as its alternative) and hence the full `ideal_slots`, L2, `ideal_slots_prefix` and `anomaly_le` (see the CE-11b unit U4 guide). These are support facts; no security claim is made here.
 -/
@@ -1124,7 +1126,7 @@ theorem origins_ghost (t : Target count) (ensureInit : StateT A ProbComp Bool) (
     mode adversary result member value found
   exact origins_eq_ghost t _ _ _ _ holds inv
 
-/-- `ideal_trace_world` (design-v2 section 7.2, item 3, L1 and L3): on every outcome of the record world with the ideal environment of a target, the Server install ghost is at coordinates holding slot 0 and its key ID is the target's peer in the transcript (L1), and, under `Phase1ReadBack`, every Server peer that designates the target is the Server install ghost's key ID (L3). -/
+/-- `ideal_trace_world` (design-v2 section 7.2, item 3, L1 and L3): on every outcome of the record world with the ideal environment of a target, the Server install ghost is at coordinates holding slot 0 and its key ID is the target's peer in the transcript (L1), and, under `Phase1ReadBack`, every Server peer that designates the target is the Server install ghost's key ID (L3). The theorem takes `Phase1ReadBack` as a premise of the whole statement, but only L3 uses it; `ideal_trace_world_peer` states L1 without it. -/
 theorem ideal_trace_world (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec) (t : Target count)
     (ensureInit : StateT A ProbComp Bool) (identityIndex : ℕ) (runtime : A)
     (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
@@ -1147,7 +1149,7 @@ theorem ideal_trace_world (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBac
   exact ⟨fun keyId c peer => trace_peer t _ _ _ _ holds inv keyId c peer, fun keyId designated =>
     trace_designated setup codec checks phase1 setup.serverKeyId t _ _ _ _ _ holds facts keyId designated⟩
 
-/-- `ideal_trace` (design-v2 section 7.2, item 2, L1 and L3) on the final split game's own support, for every parameter `p`: on every outcome of `gameWith .. splitInit (idealSplit t p)`, the Server install ghost is at coordinates holding slot 0 and its key ID is the target's peer in the transcript (L1), and, under `Phase1ReadBack`, every Server peer that designates the target is the Server install ghost's key ID (L3). Route: CE-11a's `join` at `envG t p` carries supports (`PqxdhDeploymentIdealFrame.lawEq_support`) from the record world with `envG t p`, where the provenance invariant holds (`world_provG` through `annotated_cover`); the key facts come from `PqxdhDeploymentIdealTrace.split_keyFacts`. -/
+/-- `ideal_trace` (design-v2 section 7.2, item 2, L1 and L3) on the final split game's own support, for every parameter `p`: on every outcome of `gameWith .. splitInit (idealSplit t p)`, the Server install ghost is at coordinates holding slot 0 and its key ID is the target's peer in the transcript (L1), and, under `Phase1ReadBack`, every Server peer that designates the target is the Server install ghost's key ID (L3). Route: CE-11a's `join` at `envG t p` carries supports (`PqxdhDeploymentIdealFrame.lawEq_support`) from the record world with `envG t p`, where the provenance invariant holds (`world_provG` through `annotated_cover`); the key facts come from `PqxdhDeploymentIdealTrace.split_keyFacts`. The theorem takes `Phase1ReadBack` as a premise of the whole statement, but only L3 uses it; `ideal_trace_peer` states L1 without it. -/
 theorem ideal_trace (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec) (t : Target count)
     (p : Params KemSK count) (ensureInit : StateT A ProbComp Bool) (identityIndex : ℕ) (runtime : A)
     (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
@@ -1190,7 +1192,7 @@ theorem ideal_trace (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack code
     exact ⟨fun keyId c peer => trace_peer t _ _ _ _ holds inv keyId c peer, fun keyId designated =>
       trace_designated setup codec checks phase1 setup.serverKeyId t p _ _ _ _ holds facts keyId designated⟩
 
-/-- Three of the four conjuncts of C5 restated (`PqxdhDeploymentIdealTrace.IdealSlots`, design-v2 section 7.2, item 5), on every outcome of the provenance-annotated record world with the ideal environment of a target: the Server restriction (a Server peer holding a slot holds slot 0 and is the target's peer), the Beacon restriction (an owner holding a slot is owner `k`) and, under `Phase1ReadBack`, the Server converse (a Server peer designating the target holds slot 0). The fourth conjunct, the Beacon converse with the anomaly as its alternative, is not proved here. -/
+/-- Three of the four conjuncts of C5 restated (`PqxdhDeploymentIdealTrace.IdealSlots`, design-v2 section 7.2, item 5), on every outcome of the provenance-annotated record world with the ideal environment of a target: the Server restriction (a Server peer holding a slot holds slot 0 and is the target's peer), the Beacon restriction (an owner holding a slot is owner `k`) and, under `Phase1ReadBack`, the Server converse (a Server peer designating the target holds slot 0). The theorem takes `Phase1ReadBack` as a premise of the whole statement, but only the Server converse uses it; `ideal_slots_restrictions` states the two restrictions without it. The fourth conjunct, the Beacon converse with the anomaly as its alternative, is not proved here. -/
 theorem ideal_slots_server (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec) (t : Target count)
     (ensureInit : StateT A ProbComp Bool) (identityIndex : ℕ) (runtime : A)
     (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
@@ -1230,6 +1232,77 @@ theorem ideal_slots_server (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBa
     change result.2.2.peers keyId = some 0
     rw [ghost]
     simp only [PqxdhDeploymentIdealTrace.ghostOrigins, peer, ite_true, zero]
+
+/-- L1 of `ideal_trace_world` without `Phase1ReadBack`, for every Server key ID: on every outcome of the record world with the ideal environment of a target, the Server install ghost is at coordinates holding slot 0 and its key ID is the target's peer in the transcript. -/
+theorem ideal_trace_world_peer (t : Target count) (ensureInit : StateT A ProbComp Bool) (identityIndex : ℕ)
+    (runtime : A) (serverKid : Std.U64) (bounds : PqxdhDeploymentInterface.FreshBounds)
+    (mode : PqxdhDeploymentInterface.Mode) (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) :
+    ∀ result ∈ support (PqxdhRecordLiftWorld.run setup codec route
+        (PqxdhDeploymentIdealEnv.envGD setup codec checks t ensureInit identityIndex runtime) serverKid bounds mode
+          adversary),
+      ∀ value, result.1 = some value →
+        ∀ keyId c, value.2.2.backend.2.2.2.peer = some (keyId, c) →
+          value.2.2.backend.2.2.1.1 c = some 0 ∧ peerOf t value.2.1.2.transcript = some keyId := by
+  intro result member value found
+  obtain ⟨annotated, annotatedMember, sameValue, _⟩ := annotated_cover setup codec route _ serverKid bounds mode
+    adversary result member
+  obtain ⟨_, _, inv, holds⟩ := world_prov setup codec route checks t ensureInit identityIndex runtime serverKid bounds
+    mode adversary annotated annotatedMember value (by rw [sameValue]; exact found)
+  exact fun keyId c peer => trace_peer t _ _ _ _ holds inv keyId c peer
+
+/-- L1 of `ideal_trace` without `Phase1ReadBack`: on every outcome of the final split game `gameWith .. splitInit (idealSplit t p)`, for every parameter `p`, the Server install ghost is at coordinates holding slot 0 and its key ID is the target's peer in the transcript. Route as for `ideal_trace`, without the key facts. -/
+theorem ideal_trace_peer (t : Target count) (p : Params KemSK count) (ensureInit : StateT A ProbComp Bool)
+    (identityIndex : ℕ) (runtime : A) (bounds : PqxdhDeploymentInterface.FreshBounds)
+    (mode : PqxdhDeploymentInterface.Mode) (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) :
+    ∀ outcome ∈ support ((PqxdhDeploymentBackend.gameWith setup codec route PqxdhDeploymentIdealSteps.splitInit
+        (PqxdhDeploymentIdealDefer.idealSplit setup codec route checks t p) ensureInit identityIndex bounds mode
+          adversary).run' runtime),
+      ∀ value, outcome = some value →
+        ∀ keyId c, value.2.2.2.backend.2.2.peer = some (keyId, c) →
+          value.2.2.2.backend.2.1.1 c = some 0 ∧ peerOf t value.2.2.1.transcript = some keyId := by
+  intro outcome member value found
+  have law := PqxdhDeploymentEnvironmentJoin.join setup codec route PqxdhDeploymentIdealSteps.splitInit
+    (fun created => PqxdhDeploymentIdealDefer.idealSplit setup codec route checks t p created)
+    (PqxdhDeploymentIdealEnv.envG setup codec checks t p ensureInit identityIndex runtime) ensureInit identityIndex runtime
+    rfl (PqxdhDeploymentIdealEnv.IdealInv t) (PqxdhDeploymentIdealEnv.idealInv_stable t)
+    (fun created => PqxdhDeploymentIdealEnv.idealInv_start t created)
+    (fun created => PqxdhDeploymentIdealEnv.ideal_splits setup codec route checks t p created) bounds mode adversary
+  rw [PqxdhDeploymentIdealFrame.lawEq_support law, support_map] at member
+  obtain ⟨result, resultMember, joinedEq⟩ := member
+  rw [found] at joinedEq
+  rcases resultFound : result.1 with _ | v
+  · simp only [PqxdhDeploymentEnvironmentJoin.joined, resultFound, Option.map_none, reduceCtorEq] at joinedEq
+  · simp only [PqxdhDeploymentEnvironmentJoin.joined, resultFound, Option.map_some, Option.some.injEq] at joinedEq
+    subst joinedEq
+    obtain ⟨annotated, annotatedMember, sameValue, _⟩ := annotated_cover setup codec route _ setup.serverKeyId
+      bounds mode adversary result resultMember
+    obtain ⟨_, _, inv, holds⟩ := world_provG setup codec route checks t p ensureInit identityIndex runtime
+      setup.serverKeyId bounds mode adversary annotated annotatedMember v (by rw [sameValue]; exact resultFound)
+    exact fun keyId c peer => trace_peer t _ _ _ _ holds inv keyId c peer
+
+/-- The two restrictions of `PqxdhDeploymentIdealTrace.IdealSlots` without `Phase1ReadBack`, for every Server key ID: on every outcome of the provenance-annotated record world with the ideal environment of a target, a Server peer holding a slot holds slot 0 and is the target's peer, and an owner holding a slot is owner `k`. -/
+theorem ideal_slots_restrictions (t : Target count) (ensureInit : StateT A ProbComp Bool) (identityIndex : ℕ)
+    (runtime : A) (serverKid : Std.U64) (bounds : PqxdhDeploymentInterface.FreshBounds)
+    (mode : PqxdhDeploymentInterface.Mode) (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) :
+    ∀ result ∈ support (PqxdhDeploymentIdealOrigins.annotatedRun setup codec route
+        (PqxdhDeploymentIdealEnv.envGD setup codec checks t ensureInit identityIndex runtime) serverKid bounds mode
+          adversary),
+      ∀ value, result.1 = some value →
+        (∀ keyId slot, PqxdhDeploymentIdealTrace.originSlots result.2.2 (.peer keyId) = some slot →
+          slot = 0 ∧ peerOf t value.2.1.2.transcript = some keyId) ∧
+        ∀ owner slot, PqxdhDeploymentIdealTrace.originSlots result.2.2 (.owner owner) = some slot →
+          owner = t.kem.val := by
+  intro result member value found
+  obtain ⟨_, _, inv, holds⟩ := world_prov setup codec route checks t ensureInit identityIndex runtime serverKid bounds
+    mode adversary result member value found
+  have ghost := origins_eq_ghost t _ _ _ _ holds inv
+  refine ⟨fun keyId slot slotted => ?_, fun owner slot slotted => holds.ownerKey owner slot slotted⟩
+  change result.2.2.peers keyId = some slot at slotted
+  obtain ⟨c, peer⟩ := holds.peerKey keyId slot slotted
+  obtain ⟨zero, named⟩ := trace_peer t _ _ _ _ holds inv keyId c peer
+  rw [ghost] at slotted
+  simp only [PqxdhDeploymentIdealTrace.ghostOrigins, peer, ite_true, zero, Option.some.injEq] at slotted
+  exact ⟨slotted.symm, named⟩
 
 end Outcomes
 
@@ -1530,3 +1603,27 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealProvenance.ideal_slots_
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealProvenance.ideal_slots_server
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealProvenance.ideal_trace_world_peer' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealProvenance.ideal_trace_world_peer
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealProvenance.ideal_trace_peer' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealProvenance.ideal_trace_peer
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealProvenance.ideal_slots_restrictions' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealProvenance.ideal_slots_restrictions

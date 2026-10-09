@@ -11,7 +11,7 @@ The definitions of design-v2 section 7.1 and the key facts of U6's trace invaria
 - Public functions of the transcript: `acceptReplies`, `sessionAt` (the session returned by the raw accept attempt of an ordinal), `peerOf` (the key ID built by the target's session), `FinishBefore` (owner `k` finished before the selected raw accept), `BeaconLinked` (owner `k` designates the target), `Anomaly` (both), `IdealSlots` (C5 restated: restriction and converse for a handle-to-slot map), with their transcript lemmas (`sessionAt_other`, `sessionAt_before`, `sessionAt_accept`, `acceptCount_other`, `acceptCount_accept`, `buildOf_other`, `buildOf_build`, `buildOf_some`).
 - `KeyFacts`, the two transcript conjuncts of `PqxdhDeploymentIdealKeymatch.KeyTrace`; `split_keyFacts` on every outcome of the final split game (U6's `game_trace` along `ideal_to_split`), `world_keyFacts` on every outcome of the record world with `envGD` (along `c1_split`), and `keyFacts_marked`, the key match of `ideal_keymatch` from the key facts alone.
 - The slot maps `originSlots` (of a provenance annotation) and `ghostOrigins` (of the ideal environment's install ghosts).
-- The KEM ciphertext guess quantities `ctGuess` (design-v2 section 7.1) and `ctGuessPk` (its public-key-only form, plan section 49, Q2), with `ctGuessPk_le`. They are definitions, not assumptions.
+- The KEM ciphertext guess quantities `ctGuess` (design-v2 section 7.1) and `ctGuessPk` (its restriction to guesses of the public key alone), with `ctGuessPk_le`. They are definitions, not assumptions. Both are suprema over all guess functions, including inefficient ones, so they are information-theoretic quantities of the scheme; the guesser-parametrized form that CE-12a's IND-CCA reduction consumes (plan section 49, Q2) is `PqxdhDeploymentIdealAnomaly.ctGuessBy`.
 
 These are definitions and support facts; no security claim is made here.
 -/
@@ -326,7 +326,7 @@ noncomputable def ctGuess : ENNReal :=
       let encapsulated ← setup.kem.encaps pair.1
       pure (decide (encapsulated.1 = guess pair)))] {true}
 
-/-- The public-key-only form of `ctGuess` (plan section 49, Q2): the guess reads only the public key. -/
+/-- The restriction of `ctGuess` to guesses of the public key alone: the supremum over all functions of the public key, including inefficient ones, of the probability that an encapsulation to the public key has the guessed ciphertext. An information-theoretic quantity of the scheme, not the form that CE-12a's IND-CCA reduction consumes (plan section 49, Q2): that reduction needs a guesser program constructed from the adversary, `PqxdhDeploymentIdealAnomaly.ctGuessBy`, which is at most `ctGuessPk` (`PqxdhDeploymentIdealAnomaly.ctGuessBy_le`). -/
 noncomputable def ctGuessPk : ENNReal :=
   ⨆ guess : PqxdhKemIndCca.MlKem768PublicKey → PqxdhKemIndCca.MlKem768Ciphertext,
     𝒟[simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl) (do
