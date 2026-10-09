@@ -1,6 +1,6 @@
 {
- "date": "2026-10-09T18:36:59.355010+00:00",
- "scope": "CE-11b unit U3 (track u3), after its review fix pass: the ideal environment of the CE-11b design (version 2, section 6) and its join with the final split form of U2: capability forms of the ideal registration's commands with exact laws (PqxdhDeploymentIdealEnvReal, PqxdhDeploymentIdealEnvStep, PqxdhDeploymentIdealEnvBuild, PqxdhDeploymentIdealEnvFinish), facts for the admissibility predicate (PqxdhDeploymentIdealEnvFacts), and idealStep (marked build buildCachedEnv reading the cached slot material), IdealInv (with allocCached), ideal_splits, envG, envGD, c1_split, c1_ideal, c1_idealGame, c3_ideal and ideal_reveal (both for the draw followed by the final split game), env_admitted, hidden_server_once, hidden_beacon_once, seed_at_install and the build-class bound idealStep_build_bound (PqxdhDeploymentIdealEnv). Not built: frame_ideal and frame_idealD beyond the build class, c4_ideal, seed_at_install on the native support; U4 not started. Reviewed once (review of 94a9cd4a; findings fixed); the fix pass is not re-reviewed; not integrated.",
+ "date": "2026-10-09T18:57:07.952754+00:00",
+ "scope": "CE-11b unit U3 (track u3), after its review fix pass: the ideal environment of the CE-11b design (version 2, section 6) and its join with the final split form of U2: capability forms of the ideal registration's commands with exact laws (PqxdhDeploymentIdealEnvReal, PqxdhDeploymentIdealEnvStep, PqxdhDeploymentIdealEnvBuild, PqxdhDeploymentIdealEnvFinish), facts for the admissibility predicate (PqxdhDeploymentIdealEnvFacts), and idealStep (marked build buildCachedEnv reading the cached slot material), IdealInv (with allocCached), ideal_splits, envG, envGD, c1_split, c1_ideal, c1_idealGame, c3_ideal and ideal_reveal (both for the draw followed by the final split game), env_admitted, hidden_server_once, hidden_beacon_once, seed_at_install and the build-class bound idealStep_build_bound (PqxdhDeploymentIdealEnv). Not built: frame_ideal and frame_idealD beyond the build class, c4_ideal, seed_at_install on the native support; U4 not started. Reviewed (review of 94a9cd4a; findings fixed); confirming review of bc0ca615: APPROVE_WITH_NITS, every finding resolved, its one nit (the status lines still said the fix pass was not re-reviewed) fixed by the commit that records it before the integration; not integrated into central at the recording commit.",
  "basis": {
   "start": "8b740cda8c9a0d871f47c466d3d68e38a2d993fe",
   "central_at_receipt": "78fb56cdb3d496bee0a392358c3334d475862dce",
@@ -30,14 +30,26 @@
  },
  "plan": {
   "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
-  "sha256": "2c317687309443421aa516d5c105ce55af99084e111caea43aca88d1652f5003",
-  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u3/fix/plan.at-u3-fix-receipt-2c317687.md",
-  "dated_copy_sha256": "2c317687309443421aa516d5c105ce55af99084e111caea43aca88d1652f5003",
-  "sections": "6 (design v2 references), 47-50, 59-60, 65 (this unit; 64 was the last section before it), 66 (review fix pass; 65 was the last section before it)",
+  "sha256": "b78f12e0d9c7e9d055542e26efdcc62a60f0e7d50f2516a71ab0b0c007739cff",
+  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u3/int/plan.at-record-b78f12e0.md",
+  "dated_copy_sha256": "b78f12e0d9c7e9d055542e26efdcc62a60f0e7d50f2516a71ab0b0c007739cff",
+  "sections": "6 (design v2 references), 47-50, 59-60, 65 (this unit; 64 was the last section before it), 66 (review fix pass; 65 was the last section before it), 69 (its confirming review; 68 was the last section before it)",
+  "earlier": [
+   {
+    "note": "hash recorded by the review fix pass receipt (bc0ca615; through section 66)",
+    "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u3/fix/plan.at-u3-fix-receipt-2c317687.md",
+    "dated_copy_sha256": "2c317687309443421aa516d5c105ce55af99084e111caea43aca88d1652f5003"
+   }
+  ],
   "backup_before": [
    "/tmp/bc-arc-scratch/common-experiment/ce11b/u3/plan.before-u3-b5d88814.md",
    "/tmp/bc-arc-scratch/common-experiment/ce11b/u3/fix/plan.before-fix-5b21d7db.md"
-  ]
+  ],
+  "before_record_copy": {
+   "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u3/int/plan.before-record-467dd517.md",
+   "sha256": "467dd5174a6012dcd07676395ca59b4855286c54fa5645477dc1e4ad5adb04ee",
+   "note": "the working plan just before section 69 was appended (sections 67 and 68 by track u6b and the record facts record; 37d71cdf before track u6b's addendum to section 67)"
+  }
  },
  "design": {
   "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/design-v2.md",
@@ -101,9 +113,13 @@
   {
    "commit": "a20610f45b0061be9b9be0401d2495f88c9b804c",
    "subject": "Merge central 78fb56cd into CE-11b unit U3"
+  },
+  {
+   "commit": "bc0ca6159a17e15eb4a79d307fc92b0e7311c78a",
+   "subject": "Document the CE-11b unit U3 review fix pass"
   }
  ],
- "commits_note": "First-parent commits on the topic after the basis made before this receipt was generated; the documentation commit that adds this receipt is not listed.",
+ "commits_note": "First-parent commits on the topic after the basis that were made before this receipt was last generated; the commit that records the confirming review (and last regenerates this receipt) is not listed.",
  "files_sha256": {
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealEnvReal.lean": "a3f73097c5cd141a86687891947948eec835d8766de68387587266af4f6ff75a",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealEnvStep.lean": "e4675513a4938750c4b050c6b2d898e1859d37f932f57786a2a5bb8e539ce760",
@@ -2677,7 +2693,7 @@
   "PqxdhDeploymentIdealEnv": []
  },
  "git_diff_check": {
-  "range": "78fb56cdb3d496bee0a392358c3334d475862dce (central at receipt, merged into the topic)..working tree: the topic's own changes",
+  "range": "78fb56cdb3d496bee0a392358c3334d475862dce (central merged into the topic at a20610f4)..working tree (with the confirming-review record): the topic's own changes",
   "exit": 0,
   "output": "",
   "note": "a check from the U3 start 8b740cda also covers files merged from central; six PqxdhRecordFacts* modules of central have a blank line at end of file (central's, not changed here)"
@@ -2696,7 +2712,7 @@
   "U4": "3.5-6.5 (ideal_keymatch is in U6)"
  },
  "review": {
-  "status": "reviewed once; review fix pass done; not re-reviewed",
+  "status": "reviewed once; review fix pass done; fix pass confirmed by a confirming review of bc0ca615 (APPROVE_WITH_NITS), recorded before the integration",
   "review_of": "94a9cd4af1489a424c41610aab52d4e779153566",
   "review_notes": [
    "/tmp/bc-arc-scratch/common-experiment/ce11b/u3/review-semantic/NOTES.md",
@@ -2711,7 +2727,7 @@
   "fix_commits": {
    "lean": "ddb249ba86bee715eb0e521b29802a3f4ecdf5cc",
    "merge_central_78fb56cd": "a20610f45b0061be9b9be0401d2495f88c9b804c",
-   "docs": "the commit that adds this receipt"
+   "docs": "bc0ca6159a17e15eb4a79d307fc92b0e7311c78a"
   },
   "fixes": {
    "major frame_idealD/frame_ideal build class": "buildCachedEnv (cached read, no draw); IdealInv.allocCached; Facts AllocCached, material_grows, slotLazy_cached, slotsLazy_cached, conjuncts of acceptSelected_move and finishChallenge_move; Env buildCached_hit, buildCached_cache, buildCached_bound, idealStep_build_bound",
@@ -2735,6 +2751,113 @@
    "acceptSelected_move, finishChallenge_move: + conclusion (cache keeps every allocated slot material)",
    "idealStep_build: marked branch names buildCachedEnv",
    "statements with IdealInv only as a premise (idealInv_stable, idealInv_finish_ready, idealInv_realStep, server_once, beacon_once) read the stronger predicate; unconditional results (ideal_splits, c1_split, c1_ideal, c1_idealGame, c3_ideal, ideal_reveal, env_admitted, hidden_server_once, hidden_beacon_once, seed_at_install) keep their statements with no premise"
-  ]
+  ],
+  "confirming_review": {
+   "reviewed_range": "94a9cd4af1489a424c41610aab52d4e779153566..bc0ca6159a17e15eb4a79d307fc92b0e7311c78a",
+   "reviewed_commit": "bc0ca6159a17e15eb4a79d307fc92b0e7311c78a",
+   "scope": "the fix pass ddb249ba (Lean: buildCachedEnv, IdealInv.allocCached, seven theorems, docstrings), a20610f4 (merge of central 78fb56cd, U3 inventory blocks moved after U6's) and bc0ca615 (documentation, receipt): statements, guards, receipt, inventory, documentation, merge with central",
+   "verdict": "APPROVE_WITH_NITS: every finding of the review of 94a9cd4a resolved (major build-class frame, minor overclaim, the nits); one nit: the status lines (guide status paragraph, open points, analysis Review paragraph, receipt) still said the fix pass was not re-reviewed",
+   "checks": [
+    "the six modules and the root rechecked from the bc0ca615 blobs (confirm/src) through coord.sh lean (-j1 -M8000, timeout 180), -o into confirm/olean (BeaconcryptCore-only resolved mirror of the published 78fb56cd first prefix, 6214 links) and confirm/root: exit 0, empty logs (Real 13 s, Step 5 s, Build 6 s, Finish 7 s, Facts 13 s, Env 8 s, root 3 s)",
+    "receipt against HEAD: files_sha256 equal HEAD (6/6); theorem counts 42/37/27/33/53/32 = 224 equal the exact guards (each own name, axioms within propext, Classical.choice, Quot.sound); no theorem deleted, seven added",
+    "inventory rows hash-match HEAD; handwritten Lean count 1761; topic against central 78fb56cd: six modules, root imports, inventory and docs only; U3 check-inventory blocks contiguous after central's U6 blocks, before the primitive-fidelity anchor; merge a20610f4 count 1761 = 1755 + 6 (plus the block move)",
+    "probe U3ConfirmProbe (scratch only, run1 exit 0, empty log): miss_noop (the review's counterexample state is now a no-op), review_conjunct (the review's option 2 conjunct follows from allocCached), envG_build_frame (build class of Frame for envG, literally), envGD_build_frame (through the parameterized step, isQueryBoundP_map_iff), build_allowance (class 4: 0 coin, 1 hash, 1 administrative)",
+    "check-inventory.sh run read-only on the clean worktree at bc0ca615 with host tools (TMPDIR=confirm/tmp, not the Nix shell): exit 0, inventory matches the reviewed boundary",
+    "statement diff 94a9cd4a..bc0ca615 (confirm/scripts/stmts.py): changed exactly the guide's list of changed statements; seven theorems added, none removed; downstream unconditional statements textually unchanged",
+    "documentation: analysis U3 section, module docstring, guide status/what is proved/decisions/open points/checks/review fix pass sections accurate; working plan section 66 present, numbering unique; commit trailers exact; HEAD pushed"
+   ],
+   "check_logs": {
+    "PqxdhDeploymentIdealEnvReal": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u3/confirm/logs/PqxdhDeploymentIdealEnvReal.log",
+     "bytes": 0,
+     "status": "PqxdhDeploymentIdealEnvReal exit 0 secs 13 logbytes 0 coordbytes 0"
+    },
+    "PqxdhDeploymentIdealEnvStep": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u3/confirm/logs/PqxdhDeploymentIdealEnvStep.log",
+     "bytes": 0,
+     "status": "PqxdhDeploymentIdealEnvStep exit 0 secs 5 logbytes 0 coordbytes 0"
+    },
+    "PqxdhDeploymentIdealEnvBuild": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u3/confirm/logs/PqxdhDeploymentIdealEnvBuild.log",
+     "bytes": 0,
+     "status": "PqxdhDeploymentIdealEnvBuild exit 0 secs 6 logbytes 0 coordbytes 0"
+    },
+    "PqxdhDeploymentIdealEnvFinish": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u3/confirm/logs/PqxdhDeploymentIdealEnvFinish.log",
+     "bytes": 0,
+     "status": "PqxdhDeploymentIdealEnvFinish exit 0 secs 7 logbytes 0 coordbytes 0"
+    },
+    "PqxdhDeploymentIdealEnvFacts": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u3/confirm/logs/PqxdhDeploymentIdealEnvFacts.log",
+     "bytes": 0,
+     "status": "PqxdhDeploymentIdealEnvFacts exit 0 secs 13 logbytes 0 coordbytes 0"
+    },
+    "PqxdhDeploymentIdealEnv": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u3/confirm/logs/PqxdhDeploymentIdealEnv.log",
+     "bytes": 0,
+     "status": "PqxdhDeploymentIdealEnv exit 0 secs 8 logbytes 0 coordbytes 0"
+    },
+    "root": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u3/confirm/logs/root.log",
+     "bytes": 0,
+     "status": "root exit 0 secs 3 logbytes 0 coordbytes 0"
+    }
+   },
+   "probe": {
+    "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u3/confirm/probe/U3ConfirmProbe.lean",
+    "sha256": "2cc7ef81413840a7b379d071294b57cadd689e5dfadab5f90e4a8e4c15c21810",
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce11b/u3/confirm/logs/probe-run1.log",
+    "log_bytes": 0
+   },
+   "inventory_log": {
+    "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u3/confirm/logs/inventory.log",
+    "sha256": "cc6fab7193ad4425c6bb2f3a1e93569a321f62b702e29906b7b63fe40bea0ad5"
+   },
+   "scripts": {
+    "check.sh": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u3/confirm/scripts/check.sh",
+     "sha256": "469fe79a0f2d2faa3fc8993127a3e6071fc00a93e1b5462db39669494f7e751c"
+    },
+    "guards.py": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u3/confirm/scripts/guards.py",
+     "sha256": "2e05bfb274fabe585a89126f1c07cc61041c9bece912ec03df7adaad78d3e08c"
+    },
+    "mirror.py": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u3/confirm/scripts/mirror.py",
+     "sha256": "eb5d73c070f0ce0ce14176dc0526c35cc4a587937a7630ef001a58b6d303d6a4"
+    },
+    "probe.sh": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u3/confirm/scripts/probe.sh",
+     "sha256": "209c72d02e156875187800711a38c09d23210e64ebbbc43bee724decaee02313"
+    },
+    "stmts.py": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u3/confirm/scripts/stmts.py",
+     "sha256": "523fc08fa63b7a2540938c10ff7c1bf71c79ef51f08beb1caa497441d1dc578e"
+    }
+   },
+   "findings_fixed": [
+    "nit: status lines still say the fix pass is not re-reviewed: guide status paragraph and open-points bullet, new guide section \"CE-11b unit U3: confirming review\", analysis U3 Review paragraph, this receipt (review.status, review.confirming_review, scope)"
+   ],
+   "records": [
+    "confirmed resolved: major finding (build-class frame): the marked build reads the cached material and the build-class part of Frame holds from every state (no action)",
+    "confirmed resolved: minor overclaim and the nits (I5 slot 0, env_admitted, native seed_at_install, inventory order) (no action)",
+    "record of checks at bc0ca615 (no action)"
+   ],
+   "files_changed": [
+    "doc/impl/common-deployment-experiment.md",
+    "doc/impl/common-deployment-experiment-plan.md",
+    "doc/formal-verification-analysis.md",
+    "doc/impl/proof-receipts/common-deployment-experiment-ce11b-u3.json"
+   ],
+   "lean_change": "none (no file under beaconcrypt-core/ changed)",
+   "notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/u3/confirm/NOTES.md",
+   "scratch": "/tmp/bc-arc-scratch/common-experiment/ce11b/u3/confirm (review checks, probe), /tmp/bc-arc-scratch/common-experiment/ce11b/u3/int (record-commit scripts, plan copies)"
+  }
+ },
+ "plan_snapshot": {
+  "path": "doc/impl/common-deployment-experiment-plan.md",
+  "refreshed_from_sha256": "b78f12e0d9c7e9d055542e26efdcc62a60f0e7d50f2516a71ab0b0c007739cff",
+  "sections": "0-18 and the decision sections 19-69",
+  "note": "refreshed in the commit that records the confirming review: the body equals the working plan from its third line; the snapshot paragraph records the hash and the refresh history (the refresh adds sections 65 to 69; the snapshot it replaces, through section 64, is the one in central 1f6ec6b8 and on this branch since the merge of dad157b1, and its body is a prefix of this one)"
  }
 }
