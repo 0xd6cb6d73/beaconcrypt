@@ -7,13 +7,13 @@ import BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentDraw
 
 CE-11b's ideal environment (design-v2 section 6) and its C1 with the final split form `PqxdhDeploymentIdealDefer.idealSplit`.
 
-- `idealStep`: the capability form of `idealSplit t p` per command (pool create, real bundle and HMAC, selected raw accept and every other accept with the accept counter advanced, the marked build of the marked session while it has a pending token and every other build, owner k's challenge finish after an active selected accept and every other finish), with its branches (`idealStep_selected`, `idealStep_accept_other`, `idealStep_build`, `idealStep_challenge`, `idealStep_finish_real`).
-- `IdealInv`, the admissibility predicate: the World's used markers are the slots of the install ghosts, the seed table holds exactly the used slots' seeds, and the allocator, marks and ghosts satisfy the guards each hidden command needs. `idealInv_stable`, `idealInv_start`; the guards (`initSent_open`, `idealInv_build_ready`, `idealInv_finish_ready`); preservation by moves without hidden effect (`idealInv_move`, `idealInv_realStep`), by the selected accept (`idealInv_selected`), the marked build (`idealInv_build`) and owner k's challenge finish (`idealInv_finish`), from the facts of `PqxdhDeploymentIdealEnvFacts`.
+- `idealStep`: the capability form of `idealSplit t p` per command (pool create, real bundle and HMAC, selected raw accept and every other accept with the accept counter advanced, the marked build of the marked session while it has a pending token and every other build, owner k's challenge finish after an active selected accept and every other finish), with its branches (`idealStep_selected`, `idealStep_accept_other`, `idealStep_build`, `idealStep_challenge`, `idealStep_finish_real`). The marked build reads its slot's material from the environment's material cache without a draw (`buildCachedEnv`); at a cached slot it is `PqxdhDeploymentIdealEnvBuild.buildHiddenEnv` (`buildCached_hit`), it leaves the cache unchanged (`buildCached_cache`), and the build class stays within the first-touch allowance at every environment state (`buildCached_bound`, `idealStep_build_bound`).
+- `IdealInv`, the admissibility predicate: the World's used markers are the slots of the install ghosts, the seed table holds exactly the used slots' seeds, the material cache holds every allocated slot's material, and the allocator, marks and ghosts satisfy the guards each hidden command needs. `idealInv_stable`, `idealInv_start`; the guards (`initSent_open`, `idealInv_build_ready`, `idealInv_finish_ready`); preservation by moves without hidden effect (`idealInv_move`, `idealInv_realStep`), by the selected accept (`idealInv_selected`), the marked build (`idealInv_build`) and owner k's challenge finish (`idealInv_finish`), from the facts of `PqxdhDeploymentIdealEnvFacts`.
 - `ideal_splits`: the ideal step splits `idealSplit t p` relative to `IdealInv t` for every constructed Server.
-- The environments `envG` (fixed parameters) and `envGD` (the challenger's parameters drawn at startup, `PqxdhDeploymentEnvironmentDraw.paramEnv`); C1 at the full reassembled state (`c1_split`, `join_param` with `ideal_splits`), at the observed projection with the ideal game (`c1_ideal`, through `ideal_to_split` pointwise under the draw, and `c1_idealGame` for `PqxdhDeploymentIdealSteps.idealGame`), the final CTX cache (`c3_ideal`) and the reveal (`ideal_reveal`).
+- The environments `envG` (fixed parameters) and `envGD` (the challenger's parameters drawn at startup, `PqxdhDeploymentEnvironmentDraw.paramEnv`). C1 at the full reassembled state (`c1_split`, `join_param` with `ideal_splits`). C1 for the ideal game itself at the observed projection (the adversary's output, the ledger and the produced frames): `c1_ideal`, through `ideal_to_split` pointwise under the draw, and `c1_idealGame` for `PqxdhDeploymentIdealSteps.idealGame`. For the draw followed by the final split game, not for the ideal game itself (`ideal_to_split` reads both games through `splitView`, which empties the CTX cache): the same final CTX cache (`c3_ideal`) and the same reveal (`ideal_reveal`) as the record world with `envGD`.
 - On every outcome of the record world with `envGD`: admissibility (`world_keeps`, generic, and `env_admitted`), at most one slot per role among the World's markers (`server_once`, `beacon_once`, `hidden_server_once`, `hidden_beacon_once`), and F4 at the reassembled state (`seed_at_install`).
 
-Not here: the frames `frame_ideal`/`frame_idealD` and `c4_ideal` (see the U3 guide). These are equalities in law and support facts; no security claim is made here.
+Not here: the frames `frame_ideal`/`frame_idealD` beyond the build class, and `c4_ideal` (see the U3 guide). These are equalities in law, support facts and query bounds; no security claim is made here.
 -/
 
 open OracleComp OracleSpec CoreModels Aeneas
@@ -30,7 +30,7 @@ open PqxdhDeploymentIdealSlots (Coord)
 open PqxdhDeploymentIdealSteps (IdealCore SplitBk splitInit initSentAt establishedAt)
 open PqxdhDeploymentIdealParams (Target Params)
 open PqxdhRecordLiftInterface (EnvEffects EffectKind effectKind)
-open PqxdhDeploymentIdealEnvFacts (terminalAt SessionMove AllocMove RealMove)
+open PqxdhDeploymentIdealEnvFacts (terminalAt SessionMove AllocMove RealMove AllocCached)
 
 variable {KemSK : Type}
 
@@ -40,7 +40,19 @@ section Step
 variable {ι : Type} {baseSpec : OracleSpec ι} {Reader Response : Type}
   (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks) {count : ℕ}
 
-/-- The ideal environment step (design-v2 section 6.1), the capability form of the final split form `PqxdhDeploymentIdealDefer.idealSplit t p`: the pool create, the real bundle and HMAC, the selected raw accept (`PqxdhDeploymentIdealEnvStep.acceptSelectedEnv`) and every other raw accept with the accept counter advanced, the marked build while its session has a pending token (`PqxdhDeploymentIdealEnvBuild.buildHiddenEnv`) and every other build, owner k's challenge finish after an active selected accept (`PqxdhDeploymentIdealEnvFinish.finishChallengeEnv`) and every other finish. -/
+/-- The marked build reading its slot's material from the environment's material cache, without a draw: at the slot of the marked coordinates, with the session's pending token and the slot's material cached, CE-11a's split hidden build of that slot (`PqxdhDeploymentEnvironment.buildSplitEnv`) runs on the cached material; the environment keeps the stripped state after the build and sets the Server install ghost when a peer was published (`PqxdhDeploymentIdealEnvBuild.builtEnv`, the material cache unchanged). Without an allocated slot, a pending token or a cached material it does nothing. At a slot whose material is cached it is the lazy-read form `PqxdhDeploymentIdealEnvBuild.buildHiddenEnv` (`buildCached_hit`), and the admissibility predicate `IdealInv` keeps every allocated slot's material cached (`allocCached`), so the build class draws no coin (`idealStep_build_bound`). -/
+noncomputable def buildCachedEnv (session : ℕ) (payload : Option Pqxdh.Bytes) (coords : Coord) :
+    StateT (EnvState KemSK SplitBk) (OracleComp (EnvEffects 2)) (Option PqxdhServerRegistrationPublication.Response) :=
+  fun e => match e.backend.2.1.1 coords, e.native.shared.2.pending session with
+  | some j, some token => match e.backend.1 j with
+      | some material => do
+          let result ← (PqxdhDeploymentEnvironment.buildSplitEnv setup codec checks material j token payload
+            e.native.shared.2.server).run []
+          pure (result.1.1, PqxdhDeploymentIdealEnvBuild.builtEnv e session coords e.backend.1 result)
+      | none => pure (none, e)
+  | _, _ => pure (none, e)
+
+/-- The ideal environment step (design-v2 section 6.1), the capability form of the final split form `PqxdhDeploymentIdealDefer.idealSplit t p`: the pool create, the real bundle and HMAC, the selected raw accept (`PqxdhDeploymentIdealEnvStep.acceptSelectedEnv`) and every other raw accept with the accept counter advanced, the marked build while its session has a pending token (`buildCachedEnv`, reading the cached material of its slot) and every other build, owner k's challenge finish after an active selected accept (`PqxdhDeploymentIdealEnvFinish.finishChallengeEnv`) and every other finish. -/
 noncomputable def idealStep (t : Target count) (p : Params KemSK count) : EnvStep KemSK SplitBk 2 := fun query =>
   StateT.mk fun e => match query with
   | ⟨.create pin keyId, _⟩ => (PqxdhDeploymentIdealEnvReal.createPoolStep (n := 2) setup (p.pool t) pin keyId).run e
@@ -54,7 +66,7 @@ noncomputable def idealStep (t : Target count) (p : Params KemSK count) : EnvSte
       match e.backend.2.2.marks with
       | some (index, coords) =>
           if index = session ∧ (e.native.shared.2.pending session).isSome then
-            (PqxdhDeploymentIdealEnvBuild.buildHiddenEnv setup codec checks session payload coords).run e
+            (buildCachedEnv setup codec checks session payload coords).run e
           else (PqxdhDeploymentEnvironment.realStep setup codec checks ⟨.build session payload, allowed⟩).run e
       | none => (PqxdhDeploymentEnvironment.realStep setup codec checks ⟨.build session payload, allowed⟩).run e
   | ⟨.finish owner raw, allowed⟩ =>
@@ -73,7 +85,7 @@ end Step
 
 /-! ### The admissibility predicate of the ideal environment -/
 
-/-- The ideal environment's admissibility predicate (design-v2 section 6.2, with the layout of the U3 guide), tying the World's used markers and seed table to the ideal backend: the allocator is well formed (`allocBound`, `allocBelow`); while the accept counter has not passed the selected ordinal nothing is marked, active, installed or allocated (`before`, I5 first clause); the World's Server markers are exactly the slot of the Server install ghost and its Beacon markers exactly the slot of the Beacon install ghost (`serverMarks` I1, `beaconMarks` I2); a marked session with a pending token has no Server install ghost (`pendingPeer`, I3), and a marked session lies below the session counter at allocated coordinates (`markedSession`); while owner k is not terminal there is no Beacon install ghost and at most one allocated slot (`ownerOpen`, I4 and I5 third clause); the Server install ghost is at the marked coordinates (`peerMarked`, I5 last clause); and the World's seed table holds exactly the seeds of the used slots (`seeds`, F4 `seed_at_install`). -/
+/-- The ideal environment's admissibility predicate (design-v2 section 6.2, with the layout of the U3 guide), tying the World's used markers and seed table to the ideal backend: the allocator is well formed (`allocBound`, `allocBelow`); while the accept counter has not passed the selected ordinal nothing is marked, active, installed or allocated (`before`, I5 first clause); the World's Server markers are exactly the slot of the Server install ghost and its Beacon markers exactly the slot of the Beacon install ghost (`serverMarks` I1, `beaconMarks` I2); a marked session with a pending token has no Server install ghost (`pendingPeer`, I3), and a marked session lies below the session counter at allocated coordinates (`markedSession`); while owner k is not terminal there is no Beacon install ghost and at most one allocated slot (`ownerOpen`, I4 and I5 third clause); the Server install ghost is at the marked coordinates (`peerMarked`, I5 last clause); the World's seed table holds exactly the seeds of the used slots (`seeds`, F4 `seed_at_install`); and the material cache holds the material of every allocated slot (`allocCached`, so the marked build reads its slot's material without a draw). -/
 structure IdealInv {count : ℕ} (t : Target count) (e : EnvState KemSK SplitBk) (w : PqxdhRecordLiftWorld.State 2) :
     Prop where
   allocBound : e.backend.2.1.2 ≤ 2
@@ -89,6 +101,7 @@ structure IdealInv {count : ℕ} (t : Target count) (e : EnvState KemSK SplitBk)
   ownerOpen : ¬ terminalAt e.native.owners t.kem.val → e.backend.2.2.beacon = none ∧ e.backend.2.1.2 ≤ 1
   peerMarked : ∀ kid c, e.backend.2.2.peer = some (kid, c) → ∃ s, e.backend.2.2.marks = some (s, c)
   seeds : ∀ j, (w.seeds.1 j).isSome = true ↔ (w.used j .server = true ∨ w.used j .beacon = true)
+  allocCached : AllocCached e.backend.2.1 e.backend.1
 
 /-- The ideal admissibility predicate reads the World only through its used markers and its seed table, so it is stable. -/
 theorem idealInv_stable {count : ℕ} (t : Target count) : Stable (KemSK := KemSK) (IdealInv t) := by
@@ -97,14 +110,15 @@ theorem idealInv_stable {count : ℕ} (t : Target count) : Stable (KemSK := KemS
   have seeds : w'.seeds = w.seeds := congrArg (fun view => view.2.1) same
   exact ⟨holds.allocBound, holds.allocBelow, holds.before, by rw [used]; exact holds.serverMarks,
     by rw [used]; exact holds.beaconMarks, holds.pendingPeer, holds.markedSession, holds.ownerOpen, holds.peerMarked,
-    by rw [used, seeds]; exact holds.seeds⟩
+    by rw [used, seeds]; exact holds.seeds, holds.allocCached⟩
 
 /-- The ideal admissibility predicate holds at the startup: the empty allocator, the initial ideal backend, no used marker and an empty seed table. -/
 theorem idealInv_start {count : ℕ} (t : Target count) (created : PqxdhLiveServerConstruction.Created Unit) :
     IdealInv t (PqxdhDeploymentEnvironment.envInitial (KemSK := KemSK) created (splitInit created))
       (initialized created (PqxdhRecordLiftWorld.initial (n := 2))) := by
   refine ⟨Nat.zero_le 2, fun _ _ found => ?_, fun _ => ⟨rfl, rfl, rfl, rfl, rfl⟩, fun j => ?_, fun j => ?_,
-    fun _ _ marked => ?_, fun _ _ marked => ?_, fun _ => ⟨rfl, Nat.zero_le 1⟩, fun _ _ peer => ?_, fun j => ?_⟩
+    fun _ _ marked => ?_, fun _ _ marked => ?_, fun _ => ⟨rfl, Nat.zero_le 1⟩, fun _ _ peer => ?_, fun j => ?_,
+    fun _ _ found => ?_⟩
   · simp [PqxdhDeploymentEnvironment.envInitial, splitInit, PqxdhRegistrationJointKemSecondEntry.emptyAlloc] at found
   · simp [initialized, PqxdhRecordLiftWorld.initial, PqxdhDeploymentEnvironment.envInitial, splitInit,
       IdealCore.initial]
@@ -114,6 +128,7 @@ theorem idealInv_start {count : ℕ} (t : Target count) (created : PqxdhLiveServ
   · simp [PqxdhDeploymentEnvironment.envInitial, splitInit, IdealCore.initial] at marked
   · simp [PqxdhDeploymentEnvironment.envInitial, splitInit, IdealCore.initial] at peer
   · simp [initialized, PqxdhRecordLiftWorld.initial, PqxdhRecordLiftLazyTable.initial]
+  · simp [PqxdhDeploymentEnvironment.envInitial, splitInit, PqxdhRegistrationJointKemSecondEntry.emptyAlloc] at found
 
 /-! ### Preservation of the admissibility predicate -/
 
@@ -128,14 +143,15 @@ theorem initSent_open (owners : List (PqxdhRegistrationSchedule.Owner KemSK)) (i
   unfold PqxdhRegistrationSchedule.Terminal at terminal
   cases phase : owner.beacon.phase <;> simp_all
 
-/-- Under the admissibility predicate, a marked session with a pending token has an allocated slot whose World Server marker is unused, and no Server install ghost. -/
+/-- Under the admissibility predicate, a marked session with a pending token has an allocated slot whose World Server marker is unused and whose material is cached, and no Server install ghost. -/
 theorem idealInv_build_ready (t : Target count) (e : EnvState KemSK SplitBk) (w : PqxdhRecordLiftWorld.State 2)
     (holds : IdealInv t e w) (session : ℕ) (coords : Coord) (marked : e.backend.2.2.marks = some (session, coords))
     (pending : (e.native.shared.2.pending session).isSome = true) :
-    e.backend.2.2.peer = none ∧ ∃ j, e.backend.2.1.1 coords = some j ∧ w.used j .server = false := by
+    e.backend.2.2.peer = none ∧ ∃ j, e.backend.2.1.1 coords = some j ∧ w.used j .server = false ∧
+      (e.backend.1 j).isSome = true := by
   have noPeer := holds.pendingPeer session coords marked pending
   obtain ⟨j, found⟩ := Option.isSome_iff_exists.mp (holds.markedSession session coords marked).2
-  refine ⟨noPeer, j, found, ?_⟩
+  refine ⟨noPeer, j, found, ?_, holds.allocCached coords j found⟩
   cases used : w.used j .server
   · rfl
   · obtain ⟨_, _, wrong, _⟩ := (holds.serverMarks j).mp used
@@ -154,9 +170,9 @@ theorem idealInv_finish_ready (t : Target count) (e : EnvState KemSK SplitBk) (w
     rw [noBeacon] at wrong
     cases wrong
 
-/-- The admissibility predicate is kept by a move that leaves the allocator and every ideal backend field but the accept counter unchanged, does not lower the accept counter, moves the Server's sessions, keeps owner k terminal, and leaves the World's used markers and seed table unchanged. -/
+/-- The admissibility predicate is kept by a move that leaves the material cache, the allocator and every ideal backend field but the accept counter unchanged, does not lower the accept counter, moves the Server's sessions, keeps owner k terminal, and leaves the World's used markers and seed table unchanged. -/
 theorem idealInv_move (t : Target count) (e e' : EnvState KemSK SplitBk) (w w' : PqxdhRecordLiftWorld.State 2)
-    (holds : IdealInv t e w) (alloc : e'.backend.2.1 = e.backend.2.1)
+    (holds : IdealInv t e w) (cache : e'.backend.1 = e.backend.1) (alloc : e'.backend.2.1 = e.backend.2.1)
     (accepts : e.backend.2.2.accepts ≤ e'.backend.2.2.accepts) (active : e'.backend.2.2.active = e.backend.2.2.active)
     (marks : e'.backend.2.2.marks = e.backend.2.2.marks) (peer : e'.backend.2.2.peer = e.backend.2.2.peer)
     (beacon : e'.backend.2.2.beacon = e.backend.2.2.beacon)
@@ -165,7 +181,7 @@ theorem idealInv_move (t : Target count) (e e' : EnvState KemSK SplitBk) (w w' :
     (used : w'.used = w.used) (seeds : w'.seeds.1 = w.seeds.1) : IdealInv t e' w' := by
   refine ⟨by rw [alloc]; exact holds.allocBound, by rw [alloc]; exact holds.allocBelow, fun le => ?_, fun j => ?_,
     fun j => ?_, fun s c found present => ?_, fun s c found => ?_, fun notTerminal => ?_, fun kid c found => ?_,
-    fun j => ?_⟩
+    fun j => ?_, by rw [alloc, cache]; exact holds.allocCached⟩
   · rw [marks, active, peer, beacon, alloc]
     exact holds.before (le_trans accepts le)
   · rw [used, peer, alloc]
@@ -186,7 +202,7 @@ theorem idealInv_move (t : Target count) (e e' : EnvState KemSK SplitBk) (w w' :
   · rw [used, seeds]
     exact holds.seeds j
 
-/-- The admissibility predicate is kept by the selected accept: from the empty state before it, the accept counter passes the selected ordinal, the mark is at a session below the new counter with an allocated slot, at most one slot is allocated, nothing is installed, and the World's used markers and seed table are unchanged. -/
+/-- The admissibility predicate is kept by the selected accept: from the empty state before it, the accept counter passes the selected ordinal, the mark is at a session below the new counter with an allocated slot, at most one slot is allocated, nothing is installed, every allocated slot's material stays cached, and the World's used markers and seed table are unchanged. -/
 theorem idealInv_selected (t : Target count) (e e' : EnvState KemSK SplitBk) (w w' : PqxdhRecordLiftWorld.State 2)
     (holds : IdealInv t e w) (selected : e.backend.2.2.accepts = t.accept)
     (move : SessionMove e.native.shared.2 e'.native.shared.2 ∧ AllocMove e.backend.2.1 e'.backend.2.1 ∧
@@ -195,16 +211,18 @@ theorem idealInv_selected (t : Target count) (e e' : EnvState KemSK SplitBk) (w 
           e.native.shared.2.sessions < e'.native.shared.2.sessions ∧
           ((e'.backend.2.1.1 c).isSome = true ∨ 2 ≤ e'.backend.2.1.2)) ∧
         e'.backend.2.2.accepts = e.backend.2.2.accepts + 1 ∧ e'.backend.2.2.peer = e.backend.2.2.peer ∧
-        e'.backend.2.2.beacon = e.backend.2.2.beacon ∧ e'.native.owners = (strip e.native).owners)
+        e'.backend.2.2.beacon = e.backend.2.2.beacon ∧ e'.native.owners = (strip e.native).owners ∧
+        (AllocCached e.backend.2.1 e.backend.1 → AllocCached e'.backend.2.1 e'.backend.1))
     (used : w'.used = w.used) (seeds : w'.seeds.1 = w.seeds.1) : IdealInv t e' w' := by
-  obtain ⟨_, alloc, counter, marked, accepts, peer, beacon, _⟩ := move
+  obtain ⟨_, alloc, counter, marked, accepts, peer, beacon, _, cached⟩ := move
   obtain ⟨_, _, noPeer, noBeacon, empty⟩ := holds.before (le_of_eq selected)
   have small : e'.backend.2.1.2 ≤ 1 := by omega
   have peer' : e'.backend.2.2.peer = none := peer.trans noPeer
   have beacon' : e'.backend.2.2.beacon = none := beacon.trans noBeacon
   refine ⟨by omega, alloc.below holds.allocBelow, fun le => absurd le (by omega), fun j => ?_, fun j => ?_,
     fun _ _ _ _ => peer', fun s c found => ?_, fun _ => ⟨beacon', small⟩,
-    fun _ _ wrong => (by rw [peer'] at wrong; cases wrong), fun j => by rw [used, seeds]; exact holds.seeds j⟩
+    fun _ _ wrong => (by rw [peer'] at wrong; cases wrong), fun j => by rw [used, seeds]; exact holds.seeds j,
+    cached holds.allocCached⟩
   · rw [used, peer']
     constructor
     · intro usedTrue
@@ -224,11 +242,11 @@ theorem idealInv_selected (t : Target count) (e e' : EnvState KemSK SplitBk) (w 
   · obtain ⟨same, below, slotted⟩ := marked s c found
     exact ⟨by rw [same]; exact below, slotted.resolve_right (by omega)⟩
 
-/-- The admissibility predicate is kept by the marked build of a session with a pending token: the token is consumed, and either nothing is installed or the Server install ghost is at the marked coordinates, whose slot's World Server marker is set and whose seed is present. -/
+/-- The admissibility predicate is kept by the marked build of a session with a pending token, the material cache unchanged: the token is consumed, and either nothing is installed or the Server install ghost is at the marked coordinates, whose slot's World Server marker is set and whose seed is present. -/
 theorem idealInv_build (t : Target count) (e e' : EnvState KemSK SplitBk) (w w' : PqxdhRecordLiftWorld.State 2)
     (holds : IdealInv t e w) (session : ℕ) (coords : Coord) (marked : e.backend.2.2.marks = some (session, coords))
     (j : PqxdhRecordLiftInterface.Slot 2) (allocated : e.backend.2.1.1 coords = some j)
-    (noPeer : e.backend.2.2.peer = none)
+    (noPeer : e.backend.2.2.peer = none) (cache : e'.backend.1 = e.backend.1)
     (move : SessionMove e.native.shared.2 e'.native.shared.2 ∧ e'.native.shared.2.pending session = none ∧
         e'.native.owners = (strip e.native).owners ∧ e'.backend.2.1 = e.backend.2.1 ∧
         e'.backend.2.2 = { e.backend.2.2 with peer := e'.backend.2.2.peer } ∧
@@ -239,7 +257,7 @@ theorem idealInv_build (t : Target count) (e e' : EnvState KemSK SplitBk) (w w' 
     IdealInv t e' w' := by
   obtain ⟨sessions, consumed, owners, alloc, core, quiet | ⟨key, peer', used', seeded, other⟩⟩ := move
   · have accepts : e'.backend.2.2.accepts = e.backend.2.2.accepts := by rw [core]
-    exact idealInv_move t e e' w w' holds alloc (le_of_eq accepts.symm) (by rw [core])
+    exact idealInv_move t e e' w w' holds cache alloc (le_of_eq accepts.symm) (by rw [core])
       (by rw [core]) quiet.1 (by rw [core]) sessions
       (fun terminal => by rw [owners, PqxdhDeploymentIdealEnvFacts.terminalAt_strip]; exact terminal) quiet.2.1 quiet.2.2
   · have accepts : e'.backend.2.2.accepts = e.backend.2.2.accepts := by rw [core]
@@ -265,7 +283,7 @@ theorem idealInv_build (t : Target count) (e e' : EnvState KemSK SplitBk) (w w' 
       · simp [Function.update_of_ne same]
     refine ⟨by rw [alloc]; exact holds.allocBound, by rw [alloc]; exact holds.allocBelow, fun le => ?_, fun j' => ?_,
       fun j' => ?_, fun s c found present => ?_, fun s c found => ?_, fun notTerminal => ?_, fun kid c found => ?_,
-      fun j' => ?_⟩
+      fun j' => ?_, by rw [alloc, cache]; exact holds.allocCached⟩
     · rw [accepts] at le
       rw [(holds.before le).1] at marked
       cases marked
@@ -306,7 +324,7 @@ theorem idealInv_build (t : Target count) (e e' : EnvState KemSK SplitBk) (w w' 
           · exact absurd ((usedServer j').1 h) same]
         exact holds.seeds j'
 
-/-- The admissibility predicate is kept by owner k's challenge finish after an active selected accept: owner k ends terminal, the allocator moves by at most one slot, and either nothing is installed or the Beacon install ghost is at coordinates with a slot whose World Beacon marker is set and whose seed is present. -/
+/-- The admissibility predicate is kept by owner k's challenge finish after an active selected accept: owner k ends terminal, the allocator moves by at most one slot, every allocated slot's material stays cached, and either nothing is installed or the Beacon install ghost is at coordinates with a slot whose World Beacon marker is set and whose seed is present. -/
 theorem idealInv_finish (t : Target count) (e e' : EnvState KemSK SplitBk) (w w' : PqxdhRecordLiftWorld.State 2)
     (holds : IdealInv t e w) (active : e.backend.2.2.active = true)
     (initSent : initSentAt e.native.owners t.kem.val = true)
@@ -318,9 +336,10 @@ theorem idealInv_finish (t : Target count) (e e' : EnvState KemSK SplitBk) (w w'
         ((e'.backend.2.2.beacon = e.backend.2.2.beacon ∧ w'.used = w.used ∧ w'.seeds.1 = w.seeds.1) ∨
           (∃ c j, e'.backend.2.2.beacon = some c ∧ e'.backend.2.1.1 c = some j ∧
             w'.used = Function.update w.used j (Function.update (w.used j) .beacon true) ∧
-            (w'.seeds.1 j).isSome = true ∧ ∀ k, k ≠ j → w'.seeds.1 k = w.seeds.1 k))) :
+            (w'.seeds.1 j).isSome = true ∧ ∀ k, k ≠ j → w'.seeds.1 k = w.seeds.1 k)) ∧
+        (AllocCached e.backend.2.1 e.backend.1 → AllocCached e'.backend.2.1 e'.backend.1)) :
     IdealInv t e' w' := by
-  obtain ⟨sessions, pending, terminal, alloc, counter, core, installed⟩ := move
+  obtain ⟨sessions, pending, terminal, alloc, counter, core, installed, cached⟩ := move
   obtain ⟨noBeacon, room, unused⟩ := idealInv_finish_ready t e w holds initSent
   have accepts : e'.backend.2.2.accepts = e.backend.2.2.accepts := by rw [core]
   have marks : e'.backend.2.2.marks = e.backend.2.2.marks := by rw [core]
@@ -350,7 +369,7 @@ theorem idealInv_finish (t : Target count) (e e' : EnvState KemSK SplitBk) (w w'
       exact ⟨kid, c, found, alloc.keeps c j' slotted⟩
   refine ⟨by omega, alloc.below holds.allocBelow, fun le => ?_, fun j' => ?_, fun j' => ?_,
     fun s c found present => ?_, fun s c found => ?_, fun notTerminal => absurd terminal notTerminal,
-    fun kid c found => ?_, fun j' => ?_⟩
+    fun kid c found => ?_, fun j' => ?_, cached holds.allocCached⟩
   · rw [accepts] at le
     rw [(holds.before le).2.1] at active
     cases active
@@ -430,12 +449,12 @@ theorem idealStep_accept_other (t : Target count) (p : Params KemSK count) (raw 
   change (if e.backend.2.2.accepts = t.accept then _ else _) = _
   rw [ite_eq_right_of_eq_false _ _ (eq_false other)]
 
-/-- The build of the ideal step: the marked build of the marked session while it has a pending token, the real build otherwise. -/
+/-- The build of the ideal step: the marked build of the marked session while it has a pending token (reading its slot's cached material), the real build otherwise. -/
 theorem idealStep_build (t : Target count) (p : Params KemSK count) (session : ℕ) (payload : Option Pqxdh.Bytes)
     (allowed : PqxdhRecordLiftInterface.IsEnvironment (.build session payload)) (e : EnvState KemSK SplitBk) :
     (∃ coords, e.backend.2.2.marks = some (session, coords) ∧ (e.native.shared.2.pending session).isSome = true ∧
       (idealStep setup codec checks t p ⟨.build session payload, allowed⟩).run e =
-        (PqxdhDeploymentIdealEnvBuild.buildHiddenEnv setup codec checks session payload coords).run e) ∨
+        (buildCachedEnv setup codec checks session payload coords).run e) ∨
     ((∀ index coords, e.backend.2.2.marks = some (index, coords) →
         ¬ (index = session ∧ (e.native.shared.2.pending session).isSome)) ∧
       (idealStep setup codec checks t p ⟨.build session payload, allowed⟩).run e =
@@ -443,13 +462,13 @@ theorem idealStep_build (t : Target count) (p : Params KemSK count) (session : �
   change (∃ coords, _ ∧ _ ∧ (match e.backend.2.2.marks with
       | some (index, coords) =>
           if index = session ∧ (e.native.shared.2.pending session).isSome then
-            (PqxdhDeploymentIdealEnvBuild.buildHiddenEnv setup codec checks session payload coords).run e
+            (buildCachedEnv setup codec checks session payload coords).run e
           else (PqxdhDeploymentEnvironment.realStep setup codec checks ⟨.build session payload, allowed⟩).run e
       | none => (PqxdhDeploymentEnvironment.realStep setup codec checks ⟨.build session payload, allowed⟩).run e) = _) ∨
     (_ ∧ (match e.backend.2.2.marks with
       | some (index, coords) =>
           if index = session ∧ (e.native.shared.2.pending session).isSome then
-            (PqxdhDeploymentIdealEnvBuild.buildHiddenEnv setup codec checks session payload coords).run e
+            (buildCachedEnv setup codec checks session payload coords).run e
           else (PqxdhDeploymentEnvironment.realStep setup codec checks ⟨.build session payload, allowed⟩).run e
       | none => (PqxdhDeploymentEnvironment.realStep setup codec checks ⟨.build session payload, allowed⟩).run e) = _)
   rcases marked : e.backend.2.2.marks with _ | ⟨index, coords⟩
@@ -461,6 +480,76 @@ theorem idealStep_build (t : Target count) (p : Params KemSK count) (session : �
       simp only [Option.some.injEq, Prod.mk.injEq] at same
       obtain ⟨rfl, rfl⟩ := same
       exact chosen
+
+/-- At an allocated slot whose material is cached, the marked build reading the cached material is the marked build reading it lazily (`PqxdhDeploymentIdealEnvBuild.buildHiddenEnv`), whose lazy read is then a cache hit. -/
+theorem buildCached_hit (session : ℕ) (payload : Option Pqxdh.Bytes) (coords : Coord) (e : EnvState KemSK SplitBk)
+    (j : PqxdhRecordLiftInterface.Slot 2) (material : PqxdhDeploymentHiddenLayout.Material)
+    (allocated : e.backend.2.1.1 coords = some j) (cached : e.backend.1 j = some material) :
+    (buildCachedEnv setup codec checks session payload coords).run e =
+      (PqxdhDeploymentIdealEnvBuild.buildHiddenEnv setup codec checks session payload coords).run e := by
+  change buildCachedEnv setup codec checks session payload coords e =
+    PqxdhDeploymentIdealEnvBuild.buildHiddenEnv setup codec checks session payload coords e
+  unfold buildCachedEnv PqxdhDeploymentIdealEnvBuild.buildHiddenEnv
+  rw [allocated]
+  cases e.native.shared.2.pending session with
+  | none => rfl
+  | some token =>
+      dsimp only
+      rw [cached, LazyOracleDiscard.query_of_some cached]
+      simp only [PqxdhDeploymentEnvironment.coins, simulateQ_pure, pure_bind]
+
+/-- The marked build reading the cached material leaves the material cache unchanged. -/
+theorem buildCached_cache (session : ℕ) (payload : Option Pqxdh.Bytes) (coords : Coord) (e : EnvState KemSK SplitBk) :
+    ∀ v ∈ support ((buildCachedEnv setup codec checks session payload coords).run e), v.2.backend.1 = e.backend.1 := by
+  intro v member
+  change v ∈ support (buildCachedEnv setup codec checks session payload coords e) at member
+  unfold buildCachedEnv at member
+  split at member
+  · split at member
+    · rw [mem_support_bind_iff] at member
+      obtain ⟨_, _, final⟩ := member
+      rw [support_pure, Set.mem_singleton_iff] at final
+      subst final
+      rfl
+    · rw [support_pure, Set.mem_singleton_iff] at member
+      subst member
+      rfl
+  · rw [support_pure, Set.mem_singleton_iff] at member
+    subst member
+    rfl
+
+/-- The marked build reading the cached material stays within the real allowance of the build class at every environment state: no coin, at most one BLAKE2b query (its sequence-one seal) and at most one administrative effect (the hidden Server install), from `PqxdhDeploymentEnvironment.buildSplit_env_cost`. -/
+theorem buildCached_bound (caps : PqxdhServerAuthSourceCosts.KemCaps) (session : ℕ) (payload : Option Pqxdh.Bytes)
+    (coords : Coord) (e : EnvState KemSK SplitBk) (kind : EffectKind) :
+    ((buildCachedEnv setup codec checks session payload coords).run e).IsQueryBoundP
+      (fun effect => effectKind effect = kind) (PqxdhDeploymentEnvironment.baseAllowance caps 4 kind) := by
+  change IsQueryBoundP (buildCachedEnv setup codec checks session payload coords e) _ _
+  unfold buildCachedEnv
+  split
+  · split
+    · apply (isQueryBoundP_bind (m := 0) (PqxdhDeploymentEnvironment.buildSplit_env_cost setup codec checks _ _ _ payload
+        _ [] kind) fun _ _ => isQueryBoundP_pure _ _ _).mono
+      cases kind <;> simp [PqxdhDeploymentEnvironment.baseAllowance]
+    · trivial
+  · trivial
+
+/-- The build class of the ideal step at every environment state stays within the first-touch allowance of plan sections 31, 33 and 35 (`PqxdhDeploymentEnvironment.allowanceG` of the real allowance with the first-touch classes `ceFirstTouch`, accept and finish), whose build class has no coin: the marked build reads its slot's cached material (`buildCached_bound`) and every other build is the real build (`PqxdhDeploymentEnvironment.buildStep_bound`). This is the build-class part of the frame `frame_idealD`; the other classes are not proved here. -/
+theorem idealStep_build_bound (caps : PqxdhServerAuthSourceCosts.KemCaps) (t : Target count) (p : Params KemSK count)
+    (session : ℕ) (payload : Option Pqxdh.Bytes) (allowed : PqxdhRecordLiftInterface.IsEnvironment (.build session payload))
+    (e : EnvState KemSK SplitBk) (kind : EffectKind) :
+    ((idealStep setup codec checks t p ⟨.build session payload, allowed⟩).run e).IsQueryBoundP
+      (fun effect => effectKind effect = kind)
+      (PqxdhDeploymentEnvironment.allowanceG (PqxdhDeploymentEnvironment.baseAllowance caps)
+        PqxdhDeploymentEnvironment.ceFirstTouch
+        (PqxdhDeploymentInterface.queryClass (.inl (.inr (.build session payload)))) kind) := by
+  have base : ((idealStep setup codec checks t p ⟨.build session payload, allowed⟩).run e).IsQueryBoundP
+      (fun effect => effectKind effect = kind) (PqxdhDeploymentEnvironment.baseAllowance caps 4 kind) := by
+    rcases idealStep_build setup codec checks t p session payload allowed e with ⟨_, _, _, run⟩ | ⟨_, run⟩
+    · rw [run]
+      exact buildCached_bound setup codec checks caps session payload _ e kind
+    · rw [run]
+      exact PqxdhDeploymentEnvironment.buildStep_bound setup codec checks caps session payload _ kind
+  exact base.mono (Nat.le_add_right _ _)
 
 /-- Owner k's challenge finish of the ideal step after an active selected accept. -/
 theorem idealStep_challenge (t : Target count) (p : Params KemSK count) (owner : ℕ) (raw : Pqxdh.Bytes)
@@ -490,8 +579,8 @@ theorem idealInv_realStep (t : Target count) (query : PqxdhRecordLiftInterface.E
   have move := world_support _ w _ (realStep_move setup codec checks t.kem.val query e) result member
   obtain ⟨used, seeds⟩ := run_keep _ (realStep_free setup codec checks query e) w result member
   exact idealInv_move t e _ w _ holds (by rw [move.backend]) (by rw [move.backend]) (by rw [move.backend])
-    (by rw [move.backend]) (by rw [move.backend]) (by rw [move.backend]) move.sessions move.terminal used
-    (congrArg Prod.fst seeds)
+    (by rw [move.backend]) (by rw [move.backend]) (by rw [move.backend]) (by rw [move.backend]) move.sessions
+    move.terminal used (congrArg Prod.fst seeds)
 
 /-- The ideal environment's step splits the final split form `PqxdhDeploymentIdealDefer.idealSplit t p` relative to the ideal admissibility predicate (design-v2 section 6.2): every command, interpreted by the World's effects from an admissible joint state, has the law of the split form on the reassembled state and keeps `Good` and `IdealInv`. -/
 theorem ideal_splits (t : Target count) (p : Params KemSK count) (created : PqxdhLiveServerConstruction.Created Unit) :
@@ -507,8 +596,8 @@ theorem ideal_splits (t : Target count) (p : Params KemSK count) (created : Pqxd
       have move := world_support _ w _ (createPool_move setup t.kem.val (p.pool t) pin keyId e) result member
       obtain ⟨used, seeds⟩ := run_keep _ (createPool_free setup (p.pool t) pin keyId e) w result member
       exact idealInv_move t e _ w _ holds (by rw [move.backend]) (by rw [move.backend]) (by rw [move.backend])
-        (by rw [move.backend]) (by rw [move.backend]) (by rw [move.backend]) move.sessions move.terminal used
-        (congrArg Prod.fst seeds)
+        (by rw [move.backend]) (by rw [move.backend]) (by rw [move.backend]) (by rw [move.backend]) move.sessions
+        move.terminal used (congrArg Prod.fst seeds)
   | bundle owner =>
       obtain ⟨law, keeps⟩ := PqxdhDeploymentIdealEnvStep.bundle_splits setup codec route checks t p created owner e w good
       exact ⟨law, fun result member => ⟨keeps result member,
@@ -530,20 +619,25 @@ theorem ideal_splits (t : Target count) (p : Params KemSK count) (created : Pqxd
           { e with backend := bump e.backend }) result member
         obtain ⟨used, seeds⟩ := run_keep _ (realStep_free setup codec checks ⟨.accept raw, trivial⟩
           { e with backend := bump e.backend }) w result member
-        exact idealInv_move t e _ w _ holds (by rw [move.backend]; rfl) (by rw [move.backend]; exact Nat.le_succ _)
+        exact idealInv_move t e _ w _ holds (by rw [move.backend]; rfl) (by rw [move.backend]; rfl)
+          (by rw [move.backend]; exact Nat.le_succ _)
           (by rw [move.backend]; rfl) (by rw [move.backend]; rfl) (by rw [move.backend]; rfl) (by rw [move.backend]; rfl)
           move.sessions move.terminal used (congrArg Prod.fst seeds)
   | build session payload =>
       rcases idealStep_build setup codec checks t p session payload allowed e with
         ⟨coords, marked, pendingSome, run⟩ | ⟨real, run⟩
-      · rw [run]
-        obtain ⟨noPeer, j, allocated, unused⟩ := idealInv_build_ready t e w holds session coords marked pendingSome
+      · obtain ⟨noPeer, j, allocated, unused, cachedSome⟩ := idealInv_build_ready t e w holds session coords marked
+          pendingSome
         obtain ⟨token, pending⟩ := Option.isSome_iff_exists.mp pendingSome
+        obtain ⟨material, cached⟩ := Option.isSome_iff_exists.mp cachedSome
+        have cache := world_support _ w _ (buildCached_cache setup codec checks session payload coords e)
+        rw [buildCached_hit setup codec checks session payload coords e j material allocated cached] at cache
+        rw [run, buildCached_hit setup codec checks session payload coords e j material allocated cached]
         refine ⟨LazyOracleDiscard.LawEq.of_eq (PqxdhDeploymentIdealEnvBuild.buildHidden_law setup codec route checks t p
           created session payload e w good coords j token marked pending allocated unused), fun result member =>
             ⟨PqxdhDeploymentIdealEnvBuild.buildHidden_keeps setup codec checks created session payload coords e w good j
               token allocated pending unused result member, ?_⟩⟩
-        exact idealInv_build t e _ w _ holds session coords marked j allocated noPeer
+        exact idealInv_build t e _ w _ holds session coords marked j allocated noPeer (cache result member)
           (buildHidden_move setup codec checks created session payload coords e w good j token allocated pending unused
             result member)
       · rw [run]
@@ -799,7 +893,7 @@ theorem world_keeps {Bk : Type} (env : PqxdhRecordLiftInterface.Environment 2 (E
       (splits created) _ _ _ (PqxdhDeploymentEnvironmentJoin.good_initial created backend w fresh)
       (stable _ _ _ (PqxdhDeploymentEnvironmentJoin.initialized_view created w fresh) holds) middle middleMember⟩
 
-/-- Every outcome of the record world with the ideal environment of a target (`envGD`): the final environment state and World are admissible, `Good` and `IdealInv` at the drawn parameters' target (design-v2 section 6.3, `env_admitted`). The World's used markers are then exactly the slots of the environment's install ghosts (`IdealInv`'s `serverMarks` and `beaconMarks`): every hidden install the environment issued was admitted. -/
+/-- Every outcome of the record world with the ideal environment of a target (`envGD`): the final environment state and World are admissible, `Good` and `IdealInv` at the drawn parameters' target (design-v2 section 6.3, `env_admitted`). The World's used markers are then exactly the slots of the environment's install ghosts (`IdealInv`'s `serverMarks` and `beaconMarks`); the guard of each hidden step (its slot's World marker unused) comes from `IdealInv` at the state before the step (`idealInv_build_ready`, `idealInv_finish_ready`, used inside `ideal_splits`). -/
 theorem env_admitted (t : Target count) (ensureInit : StateT A ProbComp Bool) (identityIndex : ℕ) (runtime : A)
     (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
     (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) :
@@ -991,6 +1085,38 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealEnv.idealStep_build' de
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealEnv.idealStep_build
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealEnv.buildCached_hit' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealEnv.buildCached_hit
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealEnv.buildCached_cache' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealEnv.buildCached_cache
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealEnv.buildCached_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealEnv.buildCached_bound
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealEnv.idealStep_build_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealEnv.idealStep_build_bound
 
 /--
 info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealEnv.idealStep_challenge' depends on axioms: [propext,

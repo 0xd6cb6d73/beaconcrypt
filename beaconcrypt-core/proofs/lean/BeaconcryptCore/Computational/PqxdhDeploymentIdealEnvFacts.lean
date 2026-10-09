@@ -9,6 +9,7 @@ What CE-11b's ideal environment (design-v2 section 6) needs about each command f
 - World runs without a hidden install keep the World's used markers and seed table (`isHidden`, `hidden_admin`, `hiddenFree_of_noAdmin`, `effects_keep`, `run_keep`); every real environment step, the pool create and the selected accept issue none (`coins_free`, `issue_free`, `ownerEffect_free`, `ownerChange_free`, `serverEffect_free`, `realStep_free`, `createPool_free`, `acceptSelected_free`).
 - Moves of the registration state: owner `k` is terminal (`terminalAt`, kept by stripping, by setting an owner that stays unchanged if terminal and by appending: `terminal_stripOwner`, `terminalAt_strip`, `terminalAt_set`, `terminalAt_append`, with `finished_keep` and `bundled_keep`); the Server's session counter does not decrease and no session below it gains a pending token (`SessionMove`, `refl`, `trans`, `of_eq`); `RealMove` collects both with an unchanged backend. Every real environment step (`realStep_move`, through `hmacOracle_keeps`, `nativeHmac_move` and `acceptLogged_move`, the latter from `PqxdhServerAuthPendingBudget.accept_pending`) and the pool create (`createPool_move`) make a `RealMove`; `world_support` carries facts about an environment program to its World run.
 - The selected accept's allocator and session facts: a slot read (`isRead`), allocator moves (`AllocMove`, `refl`, `trans`), one allocator step (`slotStep_move`), lifted coins (`slot_liftS`, `slot_mapLiftS`), invariants kept at the requests a program issues (`run_keepsGood`); the marker tail issues at most one root request (`isRoot`, `isClientRoot`, `client_root`, `tail_root`) and installs before anything else (`isInstall`, `GoodTail`); its root and auxiliary requests keep the Server's sessions (`romRoot_keeps`, `auxiliary_keeps`); the marker tail with its slot reads answered by the allocator as one handler (`tailSlots`, `tailSlots_run`, `TailInv`, `tailSlots_step`); the native accept tail without input (`serverTail_none`). Together (`acceptInactive_facts`, `acceptActive_facts`, `acceptExposed_facts`, `acceptSelected_move`): the selected accept moves the Server's sessions, raises the allocator's counter by at most one, and its mark is at the old session counter, below the new one, at coordinates holding a slot unless the allocator is full.
+- The material cache of the allocated slots (`AllocCached`): a lazy material read fills its slot and keeps the cache (`material_grows`), so every step of the allocator in front of the lazy service and every slot client run against it keep every allocated slot's material cached (`slotLazy_cached`, `slotsLazy_cached`); the selected accept and owner k's challenge finish keep it (conjuncts of `acceptSelected_move` and `finishChallenge_move`).
 - The hidden commands' outcomes with the seed table exact outside the slot (`lazy_other`, `buildHidden_exact`, `hiddenFinish_exact`, copies of `PqxdhDeploymentIdealEnvBuild.buildHidden_outcome` and `PqxdhDeploymentIdealEnvFinish.hiddenFinish_outcome` with that conjunct added), and the moves of the marked build (`builtEnv_move`, `buildHidden_move`) and of owner k's challenge finish (`finishChallenge_move`).
 
 These are support facts about programs; no security claim is made here.
@@ -727,6 +728,79 @@ theorem run_keepsGood {ι₁ ι₂ σ α : Type} {spec₁ : OracleSpec ι₁} {s
 
 end SlotFacts
 
+/-! ### The material cache of the allocated slots -/
+
+section Cached
+open PqxdhRegistrationJointKemSecondEntry (Alloc slotImpl)
+open PqxdhDeploymentIdealSlots (SlotSpec)
+open PqxdhDeploymentIdealKernel (MatCache SeedCache lazyDummy)
+open PqxdhDeploymentSeedSplit (MaterialSpec)
+
+/-- The material cache holds the material of every slot allocated to coordinates. -/
+def AllocCached (a : Alloc Coord 2) (m : MatCache 2) : Prop :=
+  ∀ c j, a.1 c = some j → (m j).isSome = true
+
+/-- A lazy material read leaves the read slot's material in the cache and keeps every material already there. -/
+theorem material_grows (j : PqxdhRecordLiftInterface.Slot 2) (m : MatCache 2) :
+    ∀ r ∈ support (((MaterialSpec 2).randomOracle j).run m),
+      (r.2 j).isSome = true ∧ ∀ k, (m k).isSome = true → (r.2 k).isSome = true := by
+  intro r member
+  refine ⟨by rw [PqxdhDeploymentIdealKernel.query_support j m r member]; rfl, fun k present => ?_⟩
+  rcases found : m j with _ | w
+  · rw [LazyOracleDiscard.query_of_none found] at member
+    simp only [support_bind, support_pure, Set.mem_iUnion, Set.mem_singleton_iff] at member
+    obtain ⟨y, _, rfl⟩ := member
+    by_cases same : k = j
+    · subst same
+      simp [QueryCache.cacheQuery_self]
+    · dsimp only
+      rw [QueryCache.cacheQuery_of_ne _ _ same]
+      exact present
+  · rw [LazyOracleDiscard.query_of_some found, support_pure, Set.mem_singleton_iff] at member
+    subst member
+    exact present
+
+/-- One step of the allocator in front of the lazy service keeps the material of every allocated slot cached: a read at allocated coordinates reads its slot's material, a read at new coordinates with room allocates the next slot and reads its material, and every other step leaves the allocator and the cache unchanged. -/
+theorem slotLazy_cached (query : SlotSpec.Domain) (state : Alloc Coord 2 × (MatCache 2 × SeedCache 2))
+    (holds : AllocCached state.1 state.2.1) :
+    ∀ r ∈ support ((slotImpl lazyDummy query).run state), AllocCached r.2.1 r.2.2.1 := by
+  intro r member
+  rcases query with coin | point
+  · rw [PqxdhRegistrationJointKemSecondEntry.slot_coin, support_map] at member
+    obtain ⟨_, _, rfl⟩ := member
+    exact holds
+  · rcases found : state.1.1 point with _ | slot
+    · by_cases room : state.1.2 < 2
+      · rw [PqxdhDeploymentIdealDefer.slotImpl_lazy_new point state found room, support_map] at member
+        obtain ⟨inner, innerMember, rfl⟩ := member
+        obtain ⟨filled, grows⟩ := material_grows _ _ inner innerMember
+        intro c j present
+        dsimp only at present ⊢
+        by_cases same : c = point
+        · subst same
+          simp only [Function.update_self, Option.some.injEq] at present
+          subst present
+          exact filled
+        · rw [Function.update_of_ne same] at present
+          exact grows j (holds c j present)
+      · simp only [slotImpl, QueryImpl.add_apply_inr, StateT.run_mk, found, room, _root_.dite_false,
+          support_map] at member
+        obtain ⟨answer, -, rfl⟩ := member
+        exact holds
+    · rw [PqxdhDeploymentIdealDefer.slotImpl_lazy_found point state slot found, support_map] at member
+      obtain ⟨inner, innerMember, rfl⟩ := member
+      exact fun c j present => (material_grows _ _ inner innerMember).2 j (holds c j present)
+
+/-- A slot client run against the allocator in front of the lazy service keeps the material of every allocated slot cached. -/
+theorem slotsLazy_cached {α : Type} (work : OracleComp SlotSpec α) (state : Alloc Coord 2 × (MatCache 2 × SeedCache 2))
+    (holds : AllocCached state.1 state.2.1) :
+    ∀ r ∈ support ((simulateQ (slotImpl lazyDummy) work).run state), AllocCached r.2.1 r.2.2.1 :=
+  run_keepsGood (slotImpl lazyDummy) (fun _ => False) (fun current => AllocCached current.1 current.2.1)
+    (fun query current _ kept result member => slotLazy_cached query current kept result member) work
+    (isQueryBoundP_false work 0) state holds
+
+end Cached
+
 /-! ### The selected accept's marker tail through the allocator -/
 
 section TailFacts
@@ -1240,7 +1314,7 @@ theorem hiddenFinish_exact (e : EnvState KemSK SplitBk) (owner : ℕ) (control :
     exact Or.inr ⟨control', associatedData, kernel, seed, table, established, facts.1, facts.2.1,
       lazy_other j w.seeds (seed, table) inTable, rfl⟩
 
-/-- The selected accept in capability form: the Server's sessions move; the allocator moves with its counter raised by at most one; a mark is at the old session counter, below the new one, with its coordinates holding a slot unless the allocator is full; the accept counter is advanced, the install ghosts are unchanged, and the owners are the stripped owners. -/
+/-- The selected accept in capability form: the Server's sessions move; the allocator moves with its counter raised by at most one; a mark is at the old session counter, below the new one, with its coordinates holding a slot unless the allocator is full; the accept counter is advanced, the install ghosts are unchanged, and the owners are the stripped owners; and the material of every allocated slot stays cached. -/
 theorem acceptSelected_move (p : Params KemSK count) (raw : Pqxdh.Bytes) (e : EnvState KemSK SplitBk) :
     ∀ v ∈ support ((PqxdhDeploymentIdealEnvStep.acceptSelectedEnv setup codec checks p raw).run e),
       SessionMove e.native.shared.2 v.2.native.shared.2 ∧ AllocMove e.backend.2.1 v.2.backend.2.1 ∧
@@ -1249,7 +1323,8 @@ theorem acceptSelected_move (p : Params KemSK count) (raw : Pqxdh.Bytes) (e : En
           e.native.shared.2.sessions < v.2.native.shared.2.sessions ∧
           ((v.2.backend.2.1.1 c).isSome = true ∨ 2 ≤ v.2.backend.2.1.2)) ∧
         v.2.backend.2.2.accepts = e.backend.2.2.accepts + 1 ∧ v.2.backend.2.2.peer = e.backend.2.2.peer ∧
-        v.2.backend.2.2.beacon = e.backend.2.2.beacon ∧ v.2.native.owners = (strip e.native).owners := by
+        v.2.backend.2.2.beacon = e.backend.2.2.beacon ∧ v.2.native.owners = (strip e.native).owners ∧
+        (AllocCached e.backend.2.1 e.backend.1 → AllocCached v.2.backend.2.1 v.2.backend.1) := by
   intro v member
   change v ∈ support ((fun r => (r.1.1.1.1, PqxdhDeploymentIdealEnvStep.acceptedEnv e r)) <$> coins (n := 2)
     ((PqxdhDeploymentIdealEnvStep.acceptGame setup codec checks p e.created.seed raw
@@ -1264,7 +1339,8 @@ theorem acceptSelected_move (p : Params KemSK count) (raw : Pqxdh.Bytes) (e : En
   obtain ⟨x, xMember, rfl⟩ := inner
   obtain ⟨sessions, alloc, counter, marked⟩ := acceptExposed_facts setup codec checks lazyDummy p e.created.seed raw
     e.native.shared e.backend.2.1 (e.backend.1, ∅) x xMember
-  exact ⟨sessions, alloc, counter, marked, rfl, rfl, rfl, rfl⟩
+  exact ⟨sessions, alloc, counter, marked, rfl, rfl, rfl, rfl,
+    fun holds => slotsLazy_cached _ (e.backend.2.1, (e.backend.1, ∅)) holds x xMember⟩
 
 /-- The marked build's environment state: the session's token consumed and the Server's sessions moved. -/
 theorem builtEnv_move (e : EnvState KemSK SplitBk) (session : ℕ) (coords : Coord) (material : MatCache 2)
@@ -1320,7 +1396,7 @@ theorem buildHidden_move (created : PqxdhLiveServerConstruction.Created Unit) (s
       exact other k ne
 
 open PqxdhDeploymentEnvironmentReal (fill_inactive good_matched) in
-/-- Owner k's challenge finish in capability form, from an admissible state whose owner is in the `initSent` phase and whose World holds no Beacon marker: the Server's session counter and pending tokens are unchanged; the owner is terminal; the allocator moves with its counter raised by at most one; every ideal backend field but the Beacon install ghost is unchanged; and either nothing was installed (the ghost, the used markers and the seed table unchanged) or the ghost is at coordinates with a slot whose Beacon marker is set and whose seed is present, the table unchanged at every other slot. -/
+/-- Owner k's challenge finish in capability form, from an admissible state whose owner is in the `initSent` phase and whose World holds no Beacon marker: the Server's session counter and pending tokens are unchanged; the owner is terminal; the allocator moves with its counter raised by at most one; every ideal backend field but the Beacon install ghost is unchanged; and either nothing was installed (the ghost, the used markers and the seed table unchanged) or the ghost is at coordinates with a slot whose Beacon marker is set and whose seed is present, the table unchanged at every other slot; and the material of every allocated slot stays cached. -/
 theorem finishChallenge_move (created : PqxdhLiveServerConstruction.Created Unit) (p : Params KemSK count) (owner : ℕ)
     (raw : Pqxdh.Bytes) (e : EnvState KemSK SplitBk) (w : PqxdhRecordLiftWorld.State 2) (good : Good created e w)
     (initSentOwner : initSentAt e.native.owners owner = true) (unused : ∀ j, w.used j .beacon = false) :
@@ -1335,7 +1411,8 @@ theorem finishChallenge_move (created : PqxdhLiveServerConstruction.Created Unit
             result.2.seeds.1 = w.seeds.1) ∨
           (∃ c j, result.1.2.backend.2.2.beacon = some c ∧ result.1.2.backend.2.1.1 c = some j ∧
             result.2.used = Function.update w.used j (Function.update (w.used j) .beacon true) ∧
-            (result.2.seeds.1 j).isSome = true ∧ ∀ k, k ≠ j → result.2.seeds.1 k = w.seeds.1 k)) := by
+            (result.2.seeds.1 j).isSome = true ∧ ∀ k, k ≠ j → result.2.seeds.1 k = w.seeds.1 k)) ∧
+        (AllocCached e.backend.2.1 e.backend.1 → AllocCached result.1.2.backend.2.1 result.1.2.backend.1) := by
   rcases owned : e.native.owners[owner]? with _ | before
   · simp only [initSentAt, owned, Bool.false_eq_true] at initSentOwner
   rcases phase : before.beacon.phase with _ | _ | ⟨control, prekey, oneTime, kem⟩ | _ | _
@@ -1366,9 +1443,11 @@ theorem finishChallenge_move (created : PqxdhLiveServerConstruction.Created Unit
     rw [envEq]
     exact ⟨congrArg (fun g => g.sessions) game, congrArg (fun g => g.pending) game,
       terminalSet _ (PqxdhRegistrationSchedule.finish_terminal control before staged) shared, AllocMove.refl _,
-      Nat.le_succ _, rfl, Or.inl ⟨rfl, congrArg (fun x => x.used) worldEq, congrArg (fun x => x.seeds.1) worldEq⟩⟩
+      Nat.le_succ _, rfl, Or.inl ⟨rfl, congrArg (fun x => x.used) worldEq, congrArg (fun x => x.seeds.1) worldEq⟩, id⟩
   · obtain ⟨move, counter, _⟩ := slotStep_move (lazyDummy (n := 2)) (.inr coords) (e.backend.2.1, (e.backend.1, ∅))
       read readMember
+    have cachedRead : AllocCached e.backend.2.1 e.backend.1 → AllocCached read.2.1 read.2.2.1 := fun holds =>
+      slotLazy_cached (.inr coords) (e.backend.2.1, (e.backend.1, ∅)) holds read readMember
     obtain ⟨staged, cache', ⟨aborted, outcome⟩ | ⟨control', associatedData, kernel, seed, table, established, seeded, _,
         other, outcome⟩⟩ :=
       hiddenFinish_exact setup codec e owner control before pending coords read j w w.primitive.2 initSent worldPhase
@@ -1382,7 +1461,8 @@ theorem finishChallenge_move (created : PqxdhLiveServerConstruction.Created Unit
         cases afterPhase : (PqxdhBeaconPhase2Publication.finish control before staged).2.beacon.phase <;>
           simp_all [PqxdhDeploymentEnvironment.inactiveTag]
       refine ⟨rfl, rfl, terminalSet _ (PqxdhRegistrationSchedule.finish_terminal control before staged) _, move,
-        counter, ?_, Or.inl ⟨?_, congrArg (fun x => x.used) worldEq, congrArg (fun x => x.seeds.1) worldEq⟩⟩
+        counter, ?_, Or.inl ⟨?_, congrArg (fun x => x.used) worldEq, congrArg (fun x => x.seeds.1) worldEq⟩,
+        cachedRead⟩
       · simp only [finishedEnv, hiddenBackend, closed, Bool.false_eq_true, ↓reduceIte]
       · simp only [finishedEnv, hiddenBackend, closed, Bool.false_eq_true, ↓reduceIte]
     · simp only [Prod.mk.injEq] at outcome
@@ -1392,7 +1472,8 @@ theorem finishChallenge_move (created : PqxdhLiveServerConstruction.Created Unit
           staged).2) owner = true := by
         simp only [establishedAt, List.getElem?_set_self below, established]
       refine ⟨rfl, rfl, terminalSet _ (PqxdhRegistrationSchedule.finish_terminal control before staged) _, move,
-        counter, ?_, Or.inr ⟨coords, j, ?_, slotted, congrArg (fun x => x.used) worldEq, ?_, fun k ne => ?_⟩⟩
+        counter, ?_, Or.inr ⟨coords, j, ?_, slotted, congrArg (fun x => x.used) worldEq, ?_, fun k ne => ?_⟩,
+        cachedRead⟩
       · simp only [finishedEnv, hiddenBackend, opened, ↓reduceIte]
       · simp only [finishedEnv, hiddenBackend, opened, ↓reduceIte, Option.some_or]
       · rw [show result.2.seeds = table from congrArg (fun x => x.seeds) worldEq, seeded]
@@ -1655,6 +1736,30 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvFacts.run_keepsGood'
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvFacts.run_keepsGood
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvFacts.material_grows' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvFacts.material_grows
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvFacts.slotLazy_cached' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvFacts.slotLazy_cached
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvFacts.slotsLazy_cached' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvFacts.slotsLazy_cached
 
 /--
 info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvFacts.client_root' depends on axioms: [propext,
