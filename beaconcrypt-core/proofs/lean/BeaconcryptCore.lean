@@ -1940,6 +1940,18 @@ import BeaconcryptCore.Computational.PqxdhDeploymentIdealBranch
 
 import BeaconcryptCore.Computational.PqxdhDeploymentIdealActive
 
+import BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvReal
+
+import BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvStep
+
+import BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvBuild
+
+import BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvFinish
+
+import BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvFacts
+
+import BeaconcryptCore.Computational.PqxdhDeploymentIdealEnv
+
 /-!
 # Beaconcrypt-core verification root
 
