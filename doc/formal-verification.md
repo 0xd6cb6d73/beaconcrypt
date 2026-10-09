@@ -74,6 +74,10 @@ The reviewed Task A dictionary-origin increment contains 82 guarded statements a
 
 The [record-cache observation stage](impl/record-facts-cache-observation.md) adds 99 guarded operational statements in eleven Lean modules. It proves an exact observation law from the actual adaptive replay/random CTX world to its discarded-cache endpoint and derives first-seal empty-cache/unused-nonce conditions at actual supported source prefixes. The statistical origin/binding bounds and source/reduction bills remain separate obligations. No Rust, primitive or deployment contract changes are included.
 
+## Complete source record digest compiler
+
+The record proof now has a concrete ten-service compiler and a checked full-execution equality into one private/ordinary memoizing digest experiment. Its original-view law preserves arbitrary adaptive source continuations in replay/random hidden modes. Thirteen new modules contain 99 guarded operational, query and generic collision statements; [the compiler guide](impl/record-facts-hash-source.md) distinguishes these results from the remaining global origin, publication and binding obligations. Original source costs remain explicit and separate from observation instrumentation. This stage changes no Rust or symbolic model and adds no primitive contract.
+
 ## Historical F* correspondence
 
 The migration inventories every historical lemma declaration: [192 ratchet declarations](impl/ratchet-fstar-coverage.md), [68 PQXDH declarations](impl/pqxdh-fstar-coverage.md), and [25 commitment declarations](impl/commitment-fstar-coverage.md). These ledgers distinguish semantic matches from removed implementation helpers. Five old planner bounds changed during the earlier extraction refactor: the current implementation retains fifty skipped keys and derives the authentication target separately, allowing fifty-one total derivations. The old fifty-total-derivation clauses are explicitly adapted, not claimed as literal statement equality.
