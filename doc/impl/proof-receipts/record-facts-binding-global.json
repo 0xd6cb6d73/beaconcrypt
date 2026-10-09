@@ -2,7 +2,7 @@
   "stage": "Complete frozen adaptive record binding (Task A, 2026-10-09)",
   "base": "78fb56cdb3d496bee0a392358c3334d475862dce",
   "topic": "codex/record-lift-facts-binding-global",
-  "state": "Focused checks and component semantic reviews passed; final bundle review/publication pending",
+  "state": "Independently reviewed proof commit published and directly verified; receipt-only followup prepared for reviewed integration",
   "headlines": [
     "PqxdhRecordFactsBindingGlobal.bindingStatement",
     "PqxdhRecordFactsBindingGlobal.bindingTarget"
@@ -1441,5 +1441,59 @@
     "Item7 production/source boundary joins",
     "CE headline consumption and owner-authorized final aggregate verification"
   ],
-  "updated_at": "2026-10-09T18:40:53.542369+00:00"
+  "updated_at": "2026-10-09T18:43:37.695206+00:00",
+  "proof_commit": "4f37ff90fa212d2665148571a77d86a6c2e2139c",
+  "publication": {
+    "proof_commit": "4f37ff90fa212d2665148571a77d86a6c2e2139c",
+    "tracking": "4f37ff90fa212d2665148571a77d86a6c2e2139c",
+    "direct": "4f37ff90fa212d2665148571a77d86a6c2e2139c",
+    "review": "/tmp/bc-arc-scratch/record-lift/facts-v3/binding-ledger-known/binding126-publication-review.json",
+    "review_sha256": "b35506e477607efe3b6e13726ec3672cad84f49dccbd46e5315652f4cd32d8df",
+    "candidate_sha256": "930ea42104959745904dc5abf3b05678c74192a476dbcb4f84c1e5ca64a5ef59"
+  },
+  "final_publication_review": {
+    "path": "/tmp/bc-arc-scratch/record-lift/facts-v3/binding-ledger-known/binding126-publication-review.json",
+    "sha256": "b35506e477607efe3b6e13726ec3672cad84f49dccbd46e5315652f4cd32d8df",
+    "receipt": {
+      "stage": "Binding126 complete frozen target publication bundle",
+      "reviewer": "/root/facts_later, independent of root publication and final BindingGlobal author",
+      "verdict": "APPROVE",
+      "time": "2026-10-09T18:42:41.823551+00:00",
+      "candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/binding-global-publication/candidate.json",
+      "candidate_sha256": "930ea42104959745904dc5abf3b05678c74192a476dbcb4f84c1e5ca64a5ef59",
+      "base": "78fb56cdb3d496bee0a392358c3334d475862dce",
+      "worktree": "/tmp/beaconcrypt-record-lift-facts-binding-global",
+      "reviewed_receipt_sha256": "37676ec73ea4f7716ccb4f757f03201980eb84770bcd796336ffe2ed55241abd",
+      "verified": {
+        "exact_changed_file_set": 36,
+        "all_candidate_file_hashes": true,
+        "modules": 14,
+        "theorems": 126,
+        "exact_guard_names_and_allowlist": true,
+        "root_imports_and_inventory_gates": true,
+        "inventory_digests": true,
+        "embedded_component_reviews_verified": 14,
+        "direct_module_checks": 14,
+        "root_import_check": true,
+        "inventory_handwritten_lean": 1769,
+        "transcript_fidelity_tests": 30,
+        "verdict_class_tests": 20,
+        "all_17_check_receipt_and_log_hashes": true,
+        "source_artifact_and_leanpath_pins": true,
+        "git_diff_check": 0,
+        "forbidden_placeholders_or_custom_axioms": false
+      },
+      "scope_findings": [
+        "Reviewed integrated final endpoint/source-event/distribution/query-cap joins, exact frozen target statements and complete maintained documentation/metadata diff. All source and guide files agree with their frozen component candidates and independent reviews. Components authored by this reviewer retain the root independent semantic review; this bundle review does not replace those with self-review.",
+        "The four-field LedgerEvidence remains an internal definition. Its recorded interface review is accurately limited to that definition; initialized source discharge is supplied by the independently approved KnownLedger9 and consumed without an evidence premise in Global7.",
+        "Actual CrossAccept covers both endpoint orders and final-transcript publication before or after reception; actual optional plaintext/routing, known/hidden alternatives, cache membership and non-partner distinctness are preserved. No assigned-ID equality or produced-implies-published claim.",
+        "Private S and ordinary H caps constrain the same adaptive concrete compiler; paired memoization theorem gives S*(S+H)/2^512 and frozen bindingTerm follows by monotone arithmetic. No extra global target-selection factor or assumption equating public and private random outputs.",
+        "Final BindingStatement/BindingTarget apply to both frozen ideal worlds and both observation modes with only existing readback/frame/command-budget premises. Classical ROM idealization is explicit and is not attributed to collision resistance alone.",
+        "Compiler U+qBody+16*S+64*(S+H)+D budget remains explicitly separate from actual original WorldBudget and constructed CtxBills/PrivBills/ChainBills. The resource audit records the unproved arbitrary-mode internal ctxRun counter endpoint without advertising its closure. qBody and decision bounds remain actual resource conditions, not metadata.",
+        "FVA explains all substantial component and final joins in plain English and explicitly supersedes older pending-binding statements; source boundary, unpublished-origin numerical bound and final aggregate verification remain active.",
+        "Root imports and inventory/checker changes are additive at Codex anchors; no frozen interface, Rust, ProVerif, registration, snapshot, persistence, primitive or deployment contract modification."
+      ],
+      "validation_policy": "Read-only independent review. No redundant rebuild; verified all supplied direct/root/inventory/fidelity receipts and logs, exact file/artifact pins, guards and diff hygiene."
+    }
+  }
 }
