@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1708
+	[handwritten-lean]=1709
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -36479,6 +36479,35 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem cut_relIndexed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealBranch theorem cut_relIndexed"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealBranch\.ideal_compile_of_selected$' "$selected_source_module" "PqxdhDeploymentIdealBranch dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealBranch.ideal_compile_of_selected"
 require_line_count 1 '^theorem ideal_compile_of_selected([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealBranch theorem ideal_compile_of_selected"
+
+# CE-11b unit U6: the selected accept at the cut (stopped_before, itemRest_selected, resumeMarked_selected, ActiveBranch, selected_of_active, ideal_compile_of_active).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealActive.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentIdealActive$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentIdealActive root import"
+require_line_count 11 '^theorem ' "$selected_source_module" "PqxdhDeploymentIdealActive theorem inventory"
+require_line_count 11 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentIdealActive guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealActive\.stopped_coins$' "$selected_source_module" "PqxdhDeploymentIdealActive dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealActive.stopped_coins"
+require_line_count 1 '^theorem stopped_coins([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealActive theorem stopped_coins"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealActive\.stopped_plain$' "$selected_source_module" "PqxdhDeploymentIdealActive dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealActive.stopped_plain"
+require_line_count 1 '^theorem stopped_plain([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealActive theorem stopped_plain"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealActive\.stopped_program$' "$selected_source_module" "PqxdhDeploymentIdealActive dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealActive.stopped_program"
+require_line_count 1 '^theorem stopped_program([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealActive theorem stopped_program"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealActive\.beforeLogged_plain$' "$selected_source_module" "PqxdhDeploymentIdealActive dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealActive.beforeLogged_plain"
+require_line_count 1 '^theorem beforeLogged_plain([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealActive theorem beforeLogged_plain"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealActive\.stopped_before$' "$selected_source_module" "PqxdhDeploymentIdealActive dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealActive.stopped_before"
+require_line_count 1 '^theorem stopped_before([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealActive theorem stopped_before"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealActive\.opaqueRest_selected$' "$selected_source_module" "PqxdhDeploymentIdealActive dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealActive.opaqueRest_selected"
+require_line_count 1 '^theorem opaqueRest_selected([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealActive theorem opaqueRest_selected"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealActive\.itemRest_selected$' "$selected_source_module" "PqxdhDeploymentIdealActive dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealActive.itemRest_selected"
+require_line_count 1 '^theorem itemRest_selected([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealActive theorem itemRest_selected"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealActive\.acceptStep_selected$' "$selected_source_module" "PqxdhDeploymentIdealActive dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealActive.acceptStep_selected"
+require_line_count 1 '^theorem acceptStep_selected([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealActive theorem acceptStep_selected"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealActive\.resumeMarked_selected$' "$selected_source_module" "PqxdhDeploymentIdealActive dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealActive.resumeMarked_selected"
+require_line_count 1 '^theorem resumeMarked_selected([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealActive theorem resumeMarked_selected"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealActive\.selected_of_active$' "$selected_source_module" "PqxdhDeploymentIdealActive dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealActive.selected_of_active"
+require_line_count 1 '^theorem selected_of_active([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealActive theorem selected_of_active"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealActive\.ideal_compile_of_active$' "$selected_source_module" "PqxdhDeploymentIdealActive dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealActive.ideal_compile_of_active"
+require_line_count 1 '^theorem ideal_compile_of_active([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealActive theorem ideal_compile_of_active"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
