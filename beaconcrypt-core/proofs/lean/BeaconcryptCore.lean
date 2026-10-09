@@ -1868,6 +1868,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvReal
 
 import BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvStep
 
+import BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvBuild
+
 /-!
 # Beaconcrypt-core verification root
 

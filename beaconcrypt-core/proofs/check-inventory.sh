@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1708
+	[handwritten-lean]=1709
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -36514,6 +36514,67 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem build_real_splits([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvStep theorem build_real_splits"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvStep\.finish_real_splits$' "$selected_source_module" "PqxdhDeploymentIdealEnvStep dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvStep.finish_real_splits"
 require_line_count 1 '^theorem finish_real_splits([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvStep theorem finish_real_splits"
+
+# CE-11b unit U3: the ideal environment's marked build in capability form, with the generic build override and shape, the World's hidden Server install and its split of the final split form.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealEnvBuild.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvBuild$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentIdealEnvBuild root import"
+require_line_count 27 '^theorem ' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild theorem inventory"
+require_line_count 27 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvBuild\.publish_mapPeers$' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvBuild.publish_mapPeers"
+require_line_count 1 '^theorem publish_mapPeers([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild theorem publish_mapPeers"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvBuild\.afterInitialization_mapPeers$' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvBuild.afterInitialization_mapPeers"
+require_line_count 1 '^theorem afterInitialization_mapPeers([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild theorem afterInitialization_mapPeers"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvBuild\.candidate_mapPeers$' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvBuild.candidate_mapPeers"
+require_line_count 1 '^theorem candidate_mapPeers([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild theorem candidate_mapPeers"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvBuild\.genericBuild_mapPeers$' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvBuild.genericBuild_mapPeers"
+require_line_count 1 '^theorem genericBuild_mapPeers([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild theorem genericBuild_mapPeers"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvBuild\.afterInitializationG_shape$' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvBuild.afterInitializationG_shape"
+require_line_count 1 '^theorem afterInitializationG_shape([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild theorem afterInitializationG_shape"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvBuild\.continueRustG_shape$' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvBuild.continueRustG_shape"
+require_line_count 1 '^theorem continueRustG_shape([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild theorem continueRustG_shape"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvBuild\.candidateG_shape$' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvBuild.candidateG_shape"
+require_line_count 1 '^theorem candidateG_shape([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild theorem candidateG_shape"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvBuild\.genericBuild_shape$' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvBuild.genericBuild_shape"
+require_line_count 1 '^theorem genericBuild_shape([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild theorem genericBuild_shape"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvBuild\.embed_override$' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvBuild.embed_override"
+require_line_count 1 '^theorem embed_override([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild theorem embed_override"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvBuild\.native_override$' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvBuild.native_override"
+require_line_count 1 '^theorem native_override([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild theorem native_override"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvBuild\.freeBuild_override$' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvBuild.freeBuild_override"
+require_line_count 1 '^theorem freeBuild_override([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild theorem freeBuild_override"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvBuild\.freeBuild_shape$' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvBuild.freeBuild_shape"
+require_line_count 1 '^theorem freeBuild_shape([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild theorem freeBuild_shape"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvBuild\.resolve_uncount$' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvBuild.resolve_uncount"
+require_line_count 1 '^theorem resolve_uncount([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild theorem resolve_uncount"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvBuild\.effects_hiddenServer$' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvBuild.effects_hiddenServer"
+require_line_count 1 '^theorem effects_hiddenServer([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild theorem effects_hiddenServer"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvBuild\.countFree_hiddenServer$' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvBuild.countFree_hiddenServer"
+require_line_count 1 '^theorem countFree_hiddenServer([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild theorem countFree_hiddenServer"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvBuild\.buildSplitFwd_noAdmin$' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvBuild.buildSplitFwd_noAdmin"
+require_line_count 1 '^theorem buildSplitFwd_noAdmin([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild theorem buildSplitFwd_noAdmin"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvBuild\.countFree_hiddenServerEffect$' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvBuild.countFree_hiddenServerEffect"
+require_line_count 1 '^theorem countFree_hiddenServerEffect([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild theorem countFree_hiddenServerEffect"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvBuild\.buildHidden_effects$' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvBuild.buildHidden_effects"
+require_line_count 1 '^theorem buildHidden_effects([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild theorem buildHidden_effects"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvBuild\.buildHidden_run$' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvBuild.buildHidden_run"
+require_line_count 1 '^theorem buildHidden_run([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild theorem buildHidden_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvBuild\.idealSplit_build_hidden$' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvBuild.idealSplit_build_hidden"
+require_line_count 1 '^theorem idealSplit_build_hidden([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild theorem idealSplit_build_hidden"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvBuild\.serverInstall_quiet$' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvBuild.serverInstall_quiet"
+require_line_count 1 '^theorem serverInstall_quiet([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild theorem serverInstall_quiet"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvBuild\.serverInstall_published$' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvBuild.serverInstall_published"
+require_line_count 1 '^theorem serverInstall_published([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild theorem serverInstall_published"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvBuild\.strip_builtSettled_publish$' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvBuild.strip_builtSettled_publish"
+require_line_count 1 '^theorem strip_builtSettled_publish([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild theorem strip_builtSettled_publish"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvBuild\.setPeerKernel_override$' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvBuild.setPeerKernel_override"
+require_line_count 1 '^theorem setPeerKernel_override([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild theorem setPeerKernel_override"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvBuild\.buildHidden_law$' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvBuild.buildHidden_law"
+require_line_count 1 '^theorem buildHidden_law([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild theorem buildHidden_law"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvBuild\.buildHidden_outcome$' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvBuild.buildHidden_outcome"
+require_line_count 1 '^theorem buildHidden_outcome([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild theorem buildHidden_outcome"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealEnvBuild\.buildHidden_keeps$' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvBuild.buildHidden_keeps"
+require_line_count 1 '^theorem buildHidden_keeps([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealEnvBuild theorem buildHidden_keeps"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
