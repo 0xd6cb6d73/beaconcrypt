@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1706
+	[handwritten-lean]=1710
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -39041,6 +39041,59 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecord
 require_line_count 1 '^theorem schedule_source([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChildRelay theorem schedule_source"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordLiftChildRelay\.deferred_source$' "$selected_source_module" "PqxdhRecordLiftChildRelay dependency deferred_source"
 require_line_count 1 '^theorem deferred_source([[:space:]]|$)' "$selected_source_module" "PqxdhRecordLiftChildRelay theorem deferred_source"
+
+# Reviewed later record facts: complete E-only post continuation, LOR and adaptive fresh guessing.
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsLaterTargets.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.PqxdhRecordFactsLaterTargets$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordFactsLaterTargets root import"
+require_line_count 0 '^theorem ' "$selected_source_module" "PqxdhRecordFactsLaterTargets theorem inventory"
+require_line_count 0 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordFactsLaterTargets guarded dependencies"
+require_line_count 1 '^def LaterFreshGuessStatement([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsLaterTargets target LaterFreshGuessStatement"
+require_line_count 1 '^def LaterLorStatement([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsLaterTargets target LaterLorStatement"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsLaterFlat.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.PqxdhRecordFactsLaterFlat$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordFactsLaterFlat root import"
+require_line_count 3 '^theorem ' "$selected_source_module" "PqxdhRecordFactsLaterFlat theorem inventory"
+require_line_count 3 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordFactsLaterFlat guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsLaterFlat\.postRun_source$' "$selected_source_module" "PqxdhRecordFactsLaterFlat dependency postRun_source"
+require_line_count 1 '^theorem postRun_source([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsLaterFlat theorem postRun_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsLaterFlat\.laterCtxRun_flat$' "$selected_source_module" "PqxdhRecordFactsLaterFlat dependency laterCtxRun_flat"
+require_line_count 1 '^theorem laterCtxRun_flat([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsLaterFlat theorem laterCtxRun_flat"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsLaterFlat\.postRun_known$' "$selected_source_module" "PqxdhRecordFactsLaterFlat dependency postRun_known"
+require_line_count 1 '^theorem postRun_known([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsLaterFlat theorem postRun_known"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsLaterLor.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.PqxdhRecordFactsLaterLor$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordFactsLaterLor root import"
+require_line_count 6 '^theorem ' "$selected_source_module" "PqxdhRecordFactsLaterLor theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordFactsLaterLor guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsLaterLor\.post_escaped$' "$selected_source_module" "PqxdhRecordFactsLaterLor dependency post_escaped"
+require_line_count 1 '^theorem post_escaped([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsLaterLor theorem post_escaped"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsLaterLor\.post_couple$' "$selected_source_module" "PqxdhRecordFactsLaterLor dependency post_couple"
+require_line_count 1 '^theorem post_couple([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsLaterLor theorem post_couple"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsLaterLor\.world_couple$' "$selected_source_module" "PqxdhRecordFactsLaterLor dependency world_couple"
+require_line_count 1 '^theorem world_couple([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsLaterLor theorem world_couple"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsLaterLor\.lor_zeros$' "$selected_source_module" "PqxdhRecordFactsLaterLor dependency lor_zeros"
+require_line_count 1 '^theorem lor_zeros([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsLaterLor theorem lor_zeros"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsLaterLor\.law_zeros$' "$selected_source_module" "PqxdhRecordFactsLaterLor dependency law_zeros"
+require_line_count 1 '^theorem law_zeros([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsLaterLor theorem law_zeros"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsLaterLor\.later_idealRecords_lor$' "$selected_source_module" "PqxdhRecordFactsLaterLor dependency later_idealRecords_lor"
+require_line_count 1 '^theorem later_idealRecords_lor([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsLaterLor theorem later_idealRecords_lor"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsLaterFresh.lean
+require_line_count 1 '^import BeaconcryptCore\.Computational\.PqxdhRecordFactsLaterFresh$' proofs/lean/BeaconcryptCore.lean "PqxdhRecordFactsLaterFresh root import"
+require_line_count 6 '^theorem ' "$selected_source_module" "PqxdhRecordFactsLaterFresh theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$selected_source_module" "PqxdhRecordFactsLaterFresh guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsLaterFresh\.post_escaped$' "$selected_source_module" "PqxdhRecordFactsLaterFresh dependency post_escaped"
+require_line_count 1 '^theorem post_escaped([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsLaterFresh theorem post_escaped"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsLaterFresh\.post_couple$' "$selected_source_module" "PqxdhRecordFactsLaterFresh dependency post_couple"
+require_line_count 1 '^theorem post_couple([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsLaterFresh theorem post_couple"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsLaterFresh\.world_couple$' "$selected_source_module" "PqxdhRecordFactsLaterFresh dependency world_couple"
+require_line_count 1 '^theorem world_couple([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsLaterFresh theorem world_couple"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsLaterFresh\.hitAt_bound$' "$selected_source_module" "PqxdhRecordFactsLaterFresh dependency hitAt_bound"
+require_line_count 1 '^theorem hitAt_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsLaterFresh theorem hitAt_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsLaterFresh\.fresh_zeros$' "$selected_source_module" "PqxdhRecordFactsLaterFresh dependency fresh_zeros"
+require_line_count 1 '^theorem fresh_zeros([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsLaterFresh theorem fresh_zeros"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsLaterFresh\.later_idealRecords_fresh$' "$selected_source_module" "PqxdhRecordFactsLaterFresh dependency later_idealRecords_fresh"
+require_line_count 1 '^theorem later_idealRecords_fresh([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsLaterFresh theorem later_idealRecords_fresh"
 
 # Reviewed actual getter availability, distinct from network compromise powers.
 python3 proofs/source/test-getter-profile.py

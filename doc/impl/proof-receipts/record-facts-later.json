@@ -1,0 +1,142 @@
+{
+  "stage": "Later record confidentiality facts, task brief v3 (2026-10-09)",
+  "base": "959b715460dbc271ff2c617df9dd64f1d0f73234",
+  "topic": "codex/record-lift-facts-later",
+  "state": "independently reviewed source proofs complete; focused publication gates pending",
+  "definition_freeze": {
+    "mail": 260,
+    "target_source_sha256": "e77058b61219c798cb05866b28b314955db93b97c67e799324041c9c3510765a"
+  },
+  "targets": [
+    "PqxdhRecordFactsLaterLor.later_idealRecords_lor : LaterLorStatement",
+    "PqxdhRecordFactsLaterFresh.later_idealRecords_fresh : LaterFreshGuessStatement"
+  ],
+  "scope": "Mode-P laterIdealRecords, arbitrary env, E-only reveal, run and post adversaries, public decision and eligibility, final-output adaptive fresh claim. Exact whole-state post source equalities, no later origin/binding.",
+  "contracts_added": [],
+  "contract_hypotheses": [],
+  "query_accounting": "No primitive reduction or numerical cap is needed for these ideal-world information-theoretic facts. Complete native post work remains in both coupled experiments and is charged by separate already-published later lift bills.",
+  "losses": {
+    "lor": "exact half of eligible hidden-test probability",
+    "fresh": "at most inverse(2^bounds.min), via weighted inverse(256^bounds.min) per index/length claim; no index selection loss"
+  },
+  "modules": [
+    {
+      "module": "PqxdhRecordFactsLaterTargets",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsLaterTargets.lean",
+      "source_sha256": "e77058b61219c798cb05866b28b314955db93b97c67e799324041c9c3510765a",
+      "artifact": "/tmp/bc-arc-scratch/record-lift/facts-v3/later/olean/BeaconcryptCore/Computational/PqxdhRecordFactsLaterTargets.olean",
+      "artifact_sha256": "3b22e5ac97f55dd6f9e081f17c2de0aab6ce1b9bf1cb54cf26473fd9fe3c5a7d",
+      "theorems": [],
+      "guarded_count": 0
+    },
+    {
+      "module": "PqxdhRecordFactsLaterFlat",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsLaterFlat.lean",
+      "source_sha256": "b5dbf99f28854f44c474e09be77674726b86eb531aa6a9be859955571a2590bc",
+      "artifact": "/tmp/bc-arc-scratch/record-lift/facts-v3/later/olean/BeaconcryptCore/Computational/PqxdhRecordFactsLaterFlat.olean",
+      "artifact_sha256": "29903e8beb53432c6be08ee4922166be51abe0daaac716af98c6a1553a1bf82e",
+      "theorems": [
+        "postRun_source",
+        "laterCtxRun_flat",
+        "postRun_known"
+      ],
+      "guarded_count": 3
+    },
+    {
+      "module": "PqxdhRecordFactsLaterLor",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsLaterLor.lean",
+      "source_sha256": "4938a14b597482a52b06ed58b167da4bba07180aea99b4c9965c97901032ec29",
+      "artifact": "/tmp/bc-arc-scratch/record-lift/facts-v3/later/olean/BeaconcryptCore/Computational/PqxdhRecordFactsLaterLor.olean",
+      "artifact_sha256": "afe96ef5a9a44ac0858d968c36cf94a30f99618cc2189dc50d7c776cb0e6fa55",
+      "theorems": [
+        "post_escaped",
+        "post_couple",
+        "world_couple",
+        "lor_zeros",
+        "law_zeros",
+        "later_idealRecords_lor"
+      ],
+      "guarded_count": 6
+    },
+    {
+      "module": "PqxdhRecordFactsLaterFresh",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsLaterFresh.lean",
+      "source_sha256": "abef299336f0d2dbb088ab7aae1f8dbad5150d2ba791b91d67d2ba3623f2086f",
+      "artifact": "/tmp/bc-arc-scratch/record-lift/facts-v3/later/olean/BeaconcryptCore/Computational/PqxdhRecordFactsLaterFresh.olean",
+      "artifact_sha256": "427d495ade91b7a6478fd379eafcfea1f25255fa0842ba0356e495503a0427a4",
+      "theorems": [
+        "post_escaped",
+        "post_couple",
+        "world_couple",
+        "hitAt_bound",
+        "fresh_zeros",
+        "later_idealRecords_fresh"
+      ],
+      "guarded_count": 6
+    }
+  ],
+  "checks": [
+    {
+      "module": "PqxdhRecordFactsLaterTargets",
+      "exit": 0,
+      "command": "LEAN_PATH=<owned mirror> /tmp/bc-coord/coord.sh lean codex facts-later-targets -- timeout 180 /home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean -j1 -M8000 --root=beaconcrypt-core/proofs/lean -o <owned module artifact> <module source>",
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/later/logs/targets2.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "module": "PqxdhRecordFactsLaterFlat",
+      "exit": 0,
+      "command": "python3 /tmp/bc-arc-scratch/record-lift/facts-v3/later/check.py PqxdhRecordFactsLaterFlat",
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/later/logs/PqxdhRecordFactsLaterFlat-20261009-153326.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "module": "PqxdhRecordFactsLaterLor",
+      "exit": 0,
+      "command": "python3 /tmp/bc-arc-scratch/record-lift/facts-v3/later/check.py PqxdhRecordFactsLaterLor",
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/later/logs/PqxdhRecordFactsLaterLor-20261009-153332.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "module": "PqxdhRecordFactsLaterFresh",
+      "exit": 0,
+      "command": "python3 /tmp/bc-arc-scratch/record-lift/facts-v3/later/check.py PqxdhRecordFactsLaterFresh",
+      "log": "/tmp/bc-arc-scratch/record-lift/facts-v3/later/logs/PqxdhRecordFactsLaterFresh-20261009-154644.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "review": {
+    "partial_lor9": {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/later-lor9-review.json",
+      "sha256": "a6cec8e0d0f9e85c8dbabbdcc3489ef4b38b165ef6578d1a23f023774406c6cc",
+      "verdict": "APPROVE",
+      "scope": "frozen targets, LaterFlat3 and LaterLor6; excludes LaterFresh and aggregate guide/metadata"
+    },
+    "aggregate": {
+      "receipt": "/tmp/bc-arc-scratch/record-lift/facts-v3/later15-review.json",
+      "sha256": "6542c310f89a4b4e25b9f3bcf1ff50c598eb379432b86e14d63b6bffa8635a41",
+      "verdict": "APPROVE",
+      "scope": "all15 statements, frozen targets, guide, analysis and metadata; focused publication gates pending"
+    }
+  },
+  "hygiene": {
+    "guarded_statements": 15,
+    "allowed_axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "forbidden_placeholder_or_custom_axiom_matches": [],
+    "diff_check_exit": 0,
+    "rust_changes": false
+  },
+  "publication_checks": {
+    "root_import": "pending root orchestrator",
+    "inventory": "pending root orchestrator",
+    "transcript_fidelity": "pending root orchestrator"
+  },
+  "inventory": {
+    "handwritten_lean": 1710,
+    "rows": 2134
+  }
+}
