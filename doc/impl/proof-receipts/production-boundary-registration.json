@@ -1,0 +1,564 @@
+{
+  "stage": "PB-C PB-06 real candidate-local receive and CE native finish, Registration16",
+  "time": "2026-10-09T21:15:59.528448+00:00",
+  "base": "d281c8045f1d34f93f047837cdddb0fc4e6b01db",
+  "topic": "codex/record-lift-boundary-registration-publication",
+  "state": "Independent component reviews approved; publication bundle checked; aggregate review and commit/push pending",
+  "modules": [
+    {
+      "module": "PqxdhBoundaryRegistrationReceive",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryRegistrationReceive.lean",
+      "source_sha256": "ecca63c2c586818c8c9737d41fec3fb0670b7a102e53b36bc4bf8697e6203d98",
+      "guide": "doc/impl/production-boundary-registration-receive.md",
+      "guide_sha256": "372f493bc71f3a0b1cf9d8e131dd28d5d85f0fabcfced94509927e2d36d4dcc2",
+      "guards": 11,
+      "semantic_candidate": {
+        "path": "/tmp/bc-arc-scratch/boundary/registration-receive/registration-receive11-candidate.json",
+        "sha256": "deb00cf213d5bee5ff1957c0bf7809619d5b06c34c35293c3c6c66e83efded95",
+        "receipt": {
+          "stage": "PB-C PB-06 real candidate-local registration receive, RegistrationReceive11",
+          "time": "2026-10-09T20:55:36.512970+00:00",
+          "base": "3d212990d5cc980c1d05aa77ddd8c86e4c31591f",
+          "worktree": "/tmp/beaconcrypt-record-lift-boundary-registration-receive",
+          "branch": "codex/record-lift-boundary-registration-receive",
+          "files": {
+            "/tmp/beaconcrypt-record-lift-boundary-registration-receive/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryRegistrationReceive.lean": "ecca63c2c586818c8c9737d41fec3fb0670b7a102e53b36bc4bf8697e6203d98",
+            "/tmp/beaconcrypt-record-lift-boundary-registration-receive/doc/impl/production-boundary-registration-receive.md": "372f493bc71f3a0b1cf9d8e131dd28d5d85f0fabcfced94509927e2d36d4dcc2",
+            "/tmp/beaconcrypt-record-lift-boundary-registration-receive/doc/formal-verification-analysis.md": "a9e114047a095d7b087224fe0a17b2a0094424291f204a95d70232e4247a62ce",
+            "/tmp/bc-arc-scratch/boundary/registration-receive/analysis-snippet.md": "746485d3f190188b6b243ce7832dc14d5f9812e2c73450c641621e8f6987f201",
+            "/tmp/bc-arc-scratch/boundary/registration-receive/leanpath": "c33dd7c3e72445ddd05429383bb7e4dab3777d02321109d204ada8f0640bdc55",
+            "/tmp/bc-arc-scratch/boundary/registration-receive/scan-spec.json": "a379e9a8bea127a2605f774cdca286a3bfdc7211576f972c05cb75f229f30cd6",
+            "/tmp/bc-arc-scratch/boundary/registration-receive/statement-clean.json": "0d50f02b375cd39597006686cf1f06e62a159ea3c5c6ba8b78fc13a4c8883430",
+            "/tmp/bc-arc-scratch/boundary/registration-receive/statement-live.json": "e45c358067d1b0429365c62c163902c064595c5e275443193b766b57d8d0924e",
+            "/tmp/bc-arc-scratch/boundary/registration-receive/scan-clean.lean": "ae236f68ec7efdbdd185ad33f1c3bac33b6d6ebdc18cab99bd8e3f427c476837",
+            "/tmp/bc-arc-scratch/boundary/registration-receive/scan-live.lean": "4f53d7189c48ba233038f833c38e8e78cbe16716cd8e6922e93d9969a0c32c77",
+            "/tmp/bc-arc-scratch/boundary/registration-receive/statement-scan.py": "b6d852c62a0bc4eb6c48e05b458fac648c71f02466ed905ab38d836b12c02219",
+            "/tmp/bc-arc-scratch/boundary/registration-receive/olean/BeaconcryptCore/Computational/PqxdhBoundaryRegistrationReceive.olean": "067ec0fda57df3bdd32c8dbf3468843115631719a4fd094dc821c213de79b828"
+          },
+          "guards": 11,
+          "checks": {
+            "module": {
+              "receipt": "/tmp/bc-arc-scratch/boundary/registration-receive/logs/boundary-registration-receive-module-205412699284.json",
+              "sha256": "8b597368174b8ce44651a60036f1667cb2d6bbfd59d83fc14c5f36925f6d1192",
+              "result": {
+                "start": "2026-10-09T20:54:09.087688+00:00",
+                "end": "2026-10-09T20:54:12.699514+00:00",
+                "exit": 0,
+                "command": [
+                  "python3",
+                  "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+                  "/tmp/bc-coord/coord.sh",
+                  "lean",
+                  "codex",
+                  "boundary-registration-receive-module",
+                  "--",
+                  "timeout",
+                  "180",
+                  "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+                  "-j1",
+                  "-M8000",
+                  "--root=/tmp/beaconcrypt-record-lift-boundary-registration-receive/beaconcrypt-core/proofs/lean",
+                  "-o",
+                  "/tmp/bc-arc-scratch/boundary/registration-receive/olean/BeaconcryptCore/Computational/PqxdhBoundaryRegistrationReceive.olean",
+                  "/tmp/beaconcrypt-record-lift-boundary-registration-receive/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryRegistrationReceive.lean"
+                ],
+                "log": "/tmp/bc-arc-scratch/boundary/registration-receive/logs/boundary-registration-receive-module-205412699284.log",
+                "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "leanpath_sha256": "c33dd7c3e72445ddd05429383bb7e4dab3777d02321109d204ada8f0640bdc55",
+                "source_sha256": "ecca63c2c586818c8c9737d41fec3fb0670b7a102e53b36bc4bf8697e6203d98",
+                "artifact_sha256": "067ec0fda57df3bdd32c8dbf3468843115631719a4fd094dc821c213de79b828",
+                "CARGO_BUILD_JOBS": null,
+                "CARGO_TARGET_DIR": null
+              }
+            },
+            "scan-clean": {
+              "receipt": "/tmp/bc-arc-scratch/boundary/registration-receive/logs/boundary-registration-receive-scan-clean-205426948550.json",
+              "sha256": "8185b8dc14bf4b3691173b610792d93bd29f58733cef3f8812989e34c2a4ce50",
+              "result": {
+                "start": "2026-10-09T20:54:23.638379+00:00",
+                "end": "2026-10-09T20:54:26.948872+00:00",
+                "exit": 0,
+                "command": [
+                  "python3",
+                  "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+                  "/tmp/bc-coord/coord.sh",
+                  "lean",
+                  "codex",
+                  "boundary-registration-receive-scan-clean",
+                  "--",
+                  "timeout",
+                  "180",
+                  "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+                  "-j1",
+                  "-M8000",
+                  "/tmp/bc-arc-scratch/boundary/registration-receive/scan-clean.lean"
+                ],
+                "log": "/tmp/bc-arc-scratch/boundary/registration-receive/logs/boundary-registration-receive-scan-clean-205426948550.log",
+                "log_sha256": "9e3028084724588b97a3401d7228f1139a707fcb624146e459f85bf528eff883",
+                "leanpath_sha256": "c33dd7c3e72445ddd05429383bb7e4dab3777d02321109d204ada8f0640bdc55",
+                "source_sha256": "ae236f68ec7efdbdd185ad33f1c3bac33b6d6ebdc18cab99bd8e3f427c476837",
+                "artifact_sha256": null,
+                "CARGO_BUILD_JOBS": null,
+                "CARGO_TARGET_DIR": null
+              }
+            },
+            "scan-live": {
+              "receipt": "/tmp/bc-arc-scratch/boundary/registration-receive/logs/boundary-registration-receive-scan-live-205427042483.json",
+              "sha256": "8f7b6a9aea432e5b8d5df0cd53f26b2dd1919622585ba9172c65458939280653",
+              "result": {
+                "start": "2026-10-09T20:54:23.637422+00:00",
+                "end": "2026-10-09T20:54:27.042762+00:00",
+                "exit": 1,
+                "command": [
+                  "python3",
+                  "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+                  "/tmp/bc-coord/coord.sh",
+                  "lean",
+                  "codex",
+                  "boundary-registration-receive-scan-live",
+                  "--",
+                  "timeout",
+                  "180",
+                  "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+                  "-j1",
+                  "-M8000",
+                  "/tmp/bc-arc-scratch/boundary/registration-receive/scan-live.lean"
+                ],
+                "log": "/tmp/bc-arc-scratch/boundary/registration-receive/logs/boundary-registration-receive-scan-live-205427042483.log",
+                "log_sha256": "92bb22ef6cf4da41cf5d86339c41fc25aa842deab77cd6f864f18f13abf616e2",
+                "leanpath_sha256": "c33dd7c3e72445ddd05429383bb7e4dab3777d02321109d204ada8f0640bdc55",
+                "source_sha256": "4f53d7189c48ba233038f833c38e8e78cbe16716cd8e6922e93d9969a0c32c77",
+                "artifact_sha256": null,
+                "CARGO_BUILD_JOBS": null,
+                "CARGO_TARGET_DIR": null
+              }
+            }
+          },
+          "scope": "Exact real Publication.afterRoot/nativeTailAdapter source executor on the candidate-local kernel, same root request/interpreter, uniform all sequences before afterOpening gate; entire native registration owner, finish, active abort and inactive no-op; arbitrary full native/base state and complete continuation.",
+          "conditions382": [
+            "Real Publication tail only; no RootFields/secretIdentity/family-B decoded-after-root/ReceiveBridge/C6/C7/erasure premise",
+            "Exact full program, returned value, complete native/base state and request transcript",
+            "Candidate-local receive uniform over every sequence/rejection; sequence-one check only after receive; active abort retained",
+            "Original root request/interpreter remains unchanged; no functional fixed-root correctness on ROM answers"
+          ],
+          "contracts_added": [],
+          "query_accounting": "Existing CE/registration finish_accounting remains the receive-subprogram cap: 51 chain-step KDF and one opening, with one hash under its stated factored hash interface. No new statistical/counting proof; initial/root/preparation/native/base/uniform work not waived.",
+          "scans": "33 direct declarations clean0; live37 reports12 forbidden references and fails intentionally.16 statement declarations clean0; live17 reports5 forbidden tokens. Direct references only, not transitive graph.",
+          "remaining": [
+            "Independent semantic review",
+            "Concrete CE finish dispatch/shared-reader wrapper in separate additive module",
+            "Publication metadata/root/inventory/fidelity and reviewed integration"
+          ]
+        }
+      },
+      "independent_review": {
+        "path": "/tmp/bc-arc-scratch/boundary/registration-receive/registration-receive11-review.json",
+        "sha256": "a903571c0a6d24c32e1bce656056753535ef979aa9ae078c09bed04ad7775007",
+        "receipt": {
+          "reviewer": "root, independent of implementation",
+          "candidate": "/tmp/bc-arc-scratch/boundary/registration-receive/registration-receive11-candidate.json",
+          "candidate_sha256": "deb00cf213d5bee5ff1957c0bf7809619d5b06c34c35293c3c6c66e83efded95",
+          "verdict": "APPROVE",
+          "guards": 11,
+          "findings": [],
+          "inspected": [
+            "All11 theorem statements/proofs and complete source/native request shapes.",
+            "Real Publication.afterRoot/nativeTailAdapter only, no familyB orRootFields orsecretIdentity premise; shared root request unchanged.",
+            "Mixed receive projection composition ensures source cannot reach its dummy send/writer branches.",
+            "Local finish candidate kernel/ad; real 64byteinitial KDF, application getter and complete receive before sequence1/binding gate; all rawbytes/sequences/rejections uniform.",
+            "Program equality and arbitrary interpreter+continuation preserve exact request syntax and full value/state; literal optional plaintext returned, no hidden replacement.",
+            "Native fullowner includes preparation, inactive noop, active failure abort and final commit/pin; CE concrete dispatch remains nextincrement.",
+            "Existing51KDF/1open/1hash accounting only cited in its factored interface, not preparation/root/initial totals; opaque/native/base/uniform work not waived.",
+            "Source ratchet/beacon sites and existing PB-B1 transcript boundary reviewed; whole adapters remain RT, physical erasure/persistence excluded.",
+            "Every packet/check/log/artifact/scan pin verified; clean scans and intended live failure, no claim of transitive scan."
+          ],
+          "contracts_added": []
+        }
+      }
+    },
+    {
+      "module": "PqxdhBoundaryRegistrationFinish",
+      "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryRegistrationFinish.lean",
+      "source_sha256": "5e537b59073aa2533c547ae09dc94c1586801c612121b09b643d30831a4fde37",
+      "guide": "doc/impl/production-boundary-registration-finish.md",
+      "guide_sha256": "c7ec31b659c1e05437ebbab823fe96683577f84245c3a62daa1a25b1a0666f4b",
+      "guards": 5,
+      "semantic_candidate": {
+        "path": "/tmp/bc-arc-scratch/boundary/registration-finish/registration-finish5-candidate.json",
+        "sha256": "cfbb1d1c8a8be485108612853adb742f17347f5a6bc46ed88e8786696fdea400",
+        "receipt": {
+          "stage": "PB-C PB-06 real CE native registration finish, RegistrationFinish5",
+          "time": "2026-10-09T21:02:31.969208+00:00",
+          "base": "3d212990d5cc980c1d05aa77ddd8c86e4c31591f",
+          "worktree": "/tmp/beaconcrypt-record-lift-boundary-registration-receive",
+          "branch": "codex/record-lift-boundary-registration-receive",
+          "files": {
+            "/tmp/beaconcrypt-record-lift-boundary-registration-receive/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryRegistrationFinish.lean": "5e537b59073aa2533c547ae09dc94c1586801c612121b09b643d30831a4fde37",
+            "/tmp/beaconcrypt-record-lift-boundary-registration-receive/doc/impl/production-boundary-registration-finish.md": "c7ec31b659c1e05437ebbab823fe96683577f84245c3a62daa1a25b1a0666f4b",
+            "/tmp/bc-arc-scratch/boundary/registration-finish/analysis-snippet.md": "840a436b083008719ac9458ae483c208eef98e365c657435f71b0aec120542aa",
+            "/tmp/bc-arc-scratch/boundary/registration-finish/leanpath": "c33dd7c3e72445ddd05429383bb7e4dab3777d02321109d204ada8f0640bdc55",
+            "/tmp/bc-arc-scratch/boundary/registration-finish/scan-spec.json": "a379e9a8bea127a2605f774cdca286a3bfdc7211576f972c05cb75f229f30cd6",
+            "/tmp/bc-arc-scratch/boundary/registration-finish/statement-clean.json": "e818e84650e02b21fd000a02afc61f5b1f8535a5c0568a1aaf9c3cfc561dd2da",
+            "/tmp/bc-arc-scratch/boundary/registration-finish/statement-live.json": "f54d7fb6e7328a9b96bbdd789b79fec1a2a3eb33b22f2dcdaf59026d55173a4c",
+            "/tmp/bc-arc-scratch/boundary/registration-finish/scan-clean.lean": "cebfdf3b873681972659b8b00a3438e92bb25ecab2f2d8fc9cf4ae444b253580",
+            "/tmp/bc-arc-scratch/boundary/registration-finish/scan-live.lean": "81d8c98c7d22a6cc03015bd5059f064aa3299833f4f2e593597dd137da862fa7",
+            "/tmp/bc-arc-scratch/boundary/registration-finish/statement-scan.py": "8a49c4891dc94ca2c15648e914001d62fcf40cf3e82089c90fc9a0f8c30bf633",
+            "/tmp/bc-arc-scratch/boundary/registration-receive/olean/BeaconcryptCore/Computational/PqxdhBoundaryRegistrationFinish.olean": "e4696b6a9f6d22d63662001186926c718efc4f9222b64294521aa8b29da97c72"
+          },
+          "guards": 5,
+          "checks": {
+            "module": {
+              "receipt": "/tmp/bc-arc-scratch/boundary/registration-finish/logs/boundary-registration-finish-module-210137629253.json",
+              "sha256": "38937a48a5d175f4c8b586a9af3f434d8bd71761d297a5ef8fb24b12315d975c",
+              "result": {
+                "start": "2026-10-09T21:01:33.478068+00:00",
+                "end": "2026-10-09T21:01:37.629518+00:00",
+                "exit": 0,
+                "command": [
+                  "python3",
+                  "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+                  "/tmp/bc-coord/coord.sh",
+                  "lean",
+                  "codex",
+                  "boundary-registration-finish-module",
+                  "--",
+                  "timeout",
+                  "180",
+                  "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+                  "-j1",
+                  "-M8000",
+                  "--root=/tmp/beaconcrypt-record-lift-boundary-registration-receive/beaconcrypt-core/proofs/lean",
+                  "-o",
+                  "/tmp/bc-arc-scratch/boundary/registration-receive/olean/BeaconcryptCore/Computational/PqxdhBoundaryRegistrationFinish.olean",
+                  "/tmp/beaconcrypt-record-lift-boundary-registration-receive/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryRegistrationFinish.lean"
+                ],
+                "log": "/tmp/bc-arc-scratch/boundary/registration-finish/logs/boundary-registration-finish-module-210137629253.log",
+                "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "leanpath_sha256": "c33dd7c3e72445ddd05429383bb7e4dab3777d02321109d204ada8f0640bdc55",
+                "source_sha256": "5e537b59073aa2533c547ae09dc94c1586801c612121b09b643d30831a4fde37",
+                "artifact_sha256": "e4696b6a9f6d22d63662001186926c718efc4f9222b64294521aa8b29da97c72",
+                "CARGO_BUILD_JOBS": null,
+                "CARGO_TARGET_DIR": null
+              }
+            },
+            "scan-clean": {
+              "receipt": "/tmp/bc-arc-scratch/boundary/registration-finish/logs/boundary-registration-finish-scan-clean-210210105622.json",
+              "sha256": "aaa34eaf502317e0d8cd5e3ba07c02841977d90f5a79542e26f694d60fd238b2",
+              "result": {
+                "start": "2026-10-09T21:02:06.970616+00:00",
+                "end": "2026-10-09T21:02:10.105874+00:00",
+                "exit": 0,
+                "command": [
+                  "python3",
+                  "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+                  "/tmp/bc-coord/coord.sh",
+                  "lean",
+                  "codex",
+                  "boundary-registration-finish-scan-clean",
+                  "--",
+                  "timeout",
+                  "180",
+                  "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+                  "-j1",
+                  "-M8000",
+                  "/tmp/bc-arc-scratch/boundary/registration-finish/scan-clean.lean"
+                ],
+                "log": "/tmp/bc-arc-scratch/boundary/registration-finish/logs/boundary-registration-finish-scan-clean-210210105622.log",
+                "log_sha256": "3bc685cb09cd775634dd7e0e90fcbe00795e9ee3f7024d082e52ead024080466",
+                "leanpath_sha256": "c33dd7c3e72445ddd05429383bb7e4dab3777d02321109d204ada8f0640bdc55",
+                "source_sha256": "cebfdf3b873681972659b8b00a3438e92bb25ecab2f2d8fc9cf4ae444b253580",
+                "artifact_sha256": null,
+                "CARGO_BUILD_JOBS": null,
+                "CARGO_TARGET_DIR": null
+              }
+            },
+            "scan-live": {
+              "receipt": "/tmp/bc-arc-scratch/boundary/registration-finish/logs/boundary-registration-finish-scan-live-210210303091.json",
+              "sha256": "a00a2538183c194eccd5bf531b154e4d6dfdd4894c93fffab1f954c4ca87de00",
+              "result": {
+                "start": "2026-10-09T21:02:06.970815+00:00",
+                "end": "2026-10-09T21:02:10.303379+00:00",
+                "exit": 1,
+                "command": [
+                  "python3",
+                  "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+                  "/tmp/bc-coord/coord.sh",
+                  "lean",
+                  "codex",
+                  "boundary-registration-finish-scan-live",
+                  "--",
+                  "timeout",
+                  "180",
+                  "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+                  "-j1",
+                  "-M8000",
+                  "/tmp/bc-arc-scratch/boundary/registration-finish/scan-live.lean"
+                ],
+                "log": "/tmp/bc-arc-scratch/boundary/registration-finish/logs/boundary-registration-finish-scan-live-210210303091.log",
+                "log_sha256": "431f9f132534955765450828de7c128d91707a1b4d8764e7519b714df2f39825",
+                "leanpath_sha256": "c33dd7c3e72445ddd05429383bb7e4dab3777d02321109d204ada8f0640bdc55",
+                "source_sha256": "81d8c98c7d22a6cc03015bd5059f064aa3299833f4f2e593597dd137da862fa7",
+                "artifact_sha256": null,
+                "CARGO_BUILD_JOBS": null,
+                "CARGO_TARGET_DIR": null
+              }
+            }
+          },
+          "dependency": {
+            "candidate": "/tmp/bc-arc-scratch/boundary/registration-receive/registration-receive11-candidate.json",
+            "candidate_sha256": "deb00cf213d5bee5ff1957c0bf7809619d5b06c34c35293c3c6c66e83efded95",
+            "review": "/tmp/bc-arc-scratch/boundary/registration-receive/registration-receive11-review.json",
+            "review_sha256": "a903571c0a6d24c32e1bce656056753535ef979aa9ae078c09bed04ad7775007",
+            "state": "reviewed frozen; every pin remains unchanged"
+          },
+          "scope": "Same original native callbacks under shared reader; exact real scheduler finish and CE native finish command with complete shared state, owner registry, counters, produced history and arbitrary complete continuation. Uniform all raw bytes/sequences/rejections through real candidate-local receive before sequence-one admission. No marginal-only replacement.",
+          "contracts_added": [],
+          "query_accounting": "Reuse existing registration finish_accounting receive-subprogram costs (51 chain-step KDF, one opening, one factored hash); no second cost/statistical theorem or waived root/initial/preparation/native/base/finite work.",
+          "scans": "10 direct declarations clean0; live14 reports12 forbidden references and fails intentionally.7 statement declarations clean0; live8 reports5 forbidden tokens. Direct references only, not transitive import graph.",
+          "remaining": [
+            "Independent semantic review",
+            "Combined Receive11+Finish5 publication metadata and focused checks",
+            "Reviewed integration"
+          ]
+        }
+      },
+      "independent_review": {
+        "path": "/tmp/bc-arc-scratch/boundary/registration-finish/registration-finish5-review.json",
+        "sha256": "fde684e8963cf303766ea73dbcaa77ad8269b1d4300e44510dd051651591a018",
+        "receipt": {
+          "reviewer": "root, independent of implementation",
+          "candidate": "/tmp/bc-arc-scratch/boundary/registration-finish/registration-finish5-candidate.json",
+          "candidate_sha256": "cfbb1d1c8a8be485108612853adb742f17347f5a6bc46ed88e8786696fdea400",
+          "verdict": "APPROVE",
+          "guards": 5,
+          "findings": [],
+          "inspected": [
+            "All five theorem statements and proofs, exact scheduler callbacks/finish/finish_source and CE handler/onNative implementations.",
+            "Shared reader substitution leaves original preparation/root/initial/hash/AEAD callbacks unchanged; no fixed-root correctness premise on ROM response.",
+            "Complete shared state and owners, absent-owner no-op, active failure abort and candidate-local receive preserved via reviewed Receive11 exact program equality.",
+            "Raw receive before sequence-one admission inherited uniformly, including malformed/rejected later-sequence requests.",
+            "Full native CE state including counters/produced records and arbitrary joint continuation preserved; no marginal-only or discarded-state equality.",
+            "No family-B bridge, RootFields/secretIdentity, C6/C7, finishErased or record-world compilation used as boundary evidence; live direct-reference and statement controls inspected.",
+            "Existing 51 KDF/one open/one factored hash explicitly receive-subprogram only, not total finish cost; root/preparation/initial/base/native work not waived.",
+            "Source/transcription and shared-reader contracts remain explicit, no Rust/new primitive or persistence claim.",
+            "All frozen source/guide/scan/log/artifact pins verified; five ordinary-only exact guards and clean source scan."
+          ],
+          "contracts_added": [],
+          "time": "2026-10-09T21:05:50.139667+00:00"
+        }
+      }
+    }
+  ],
+  "guarded_statements": 16,
+  "axioms": [
+    "propext",
+    "Classical.choice",
+    "Quot.sound"
+  ],
+  "scope": "Exact real Publication.afterRoot/nativeTailAdapter source executor, complete real owner and CE scheduler/native finish. Uniform every sequence and raw rejection before admission; original root request and callbacks, entire native state and arbitrary complete continuations preserved.",
+  "source_boundary": "Extracted local preparation, receive and finish operations reused. Public Rust loops, registry/container adapters and codec execution remain reviewed transcriptions and existing shared-reader boundary.",
+  "conditions382": [
+    "Real Publication tail only; no family-B RootFields/secretIdentity/decoded-after-root/ReceiveBridge/C6/C7/erasure premise",
+    "Exact joint full program/reply/native state, request transcript and complete continuation",
+    "Local candidate receive before sequence-one gate for every input/sequence; actual active abort/inactive no-op",
+    "Original root request/interpreter unchanged; no fixed-root functional correctness for ROM replies"
+  ],
+  "contracts_added": [],
+  "existing_contracts": "Primitive correctness and exact interface, shared reader/codec, compiler/extraction/runtime/allocator and normal-return live ownership unchanged. Snapshot/persistence excluded.",
+  "query_accounting": "Existing CE/registration finish_accounting is a receive-subprogram cap: 51 chain-step KDF, one opening, one hash under stated factored interface. No new budget/statistical theorem; preparation/root/initial/native/base/uniform/codec/runtime work not waived.",
+  "checks": {
+    "PqxdhBoundaryRegistrationReceive": {
+      "receipt": "/tmp/bc-arc-scratch/boundary/registration-publication/logs/boundary-registration-publication-module-211359416854.json",
+      "sha256": "5e12f3b12e6c3c3ac82afbf8bfe4f156566213830017d66f713fcf00d7b1f925",
+      "result": {
+        "start": "2026-10-09T21:13:55.069933+00:00",
+        "end": "2026-10-09T21:13:59.417153+00:00",
+        "exit": 0,
+        "command": [
+          "python3",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+          "/tmp/bc-coord/coord.sh",
+          "lean",
+          "codex",
+          "boundary-registration-publication-module",
+          "--",
+          "timeout",
+          "180",
+          "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+          "-j1",
+          "-M8000",
+          "--root=/tmp/beaconcrypt-record-lift-boundary-registration-publication/beaconcrypt-core/proofs/lean",
+          "-o",
+          "/tmp/bc-arc-scratch/boundary/registration-publication/olean/BeaconcryptCore/Computational/PqxdhBoundaryRegistrationReceive.olean",
+          "/tmp/beaconcrypt-record-lift-boundary-registration-publication/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryRegistrationReceive.lean"
+        ],
+        "log": "/tmp/bc-arc-scratch/boundary/registration-publication/logs/boundary-registration-publication-module-211359416854.log",
+        "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "leanpath_sha256": "ec00022eb56cefb4df3fdfbc68e2b2335b3ad102533ae44916996f169f061796",
+        "source_sha256": "ecca63c2c586818c8c9737d41fec3fb0670b7a102e53b36bc4bf8697e6203d98",
+        "artifact_sha256": "067ec0fda57df3bdd32c8dbf3468843115631719a4fd094dc821c213de79b828",
+        "CARGO_BUILD_JOBS": null,
+        "CARGO_TARGET_DIR": null
+      }
+    },
+    "PqxdhBoundaryRegistrationFinish": {
+      "receipt": "/tmp/bc-arc-scratch/boundary/registration-publication/logs/boundary-registration-publication-module-211435205839.json",
+      "sha256": "c631961ff21881bdbe368ab705390d3327281163c040479225ed0ce20237a7fb",
+      "result": {
+        "start": "2026-10-09T21:14:31.322503+00:00",
+        "end": "2026-10-09T21:14:35.206192+00:00",
+        "exit": 0,
+        "command": [
+          "python3",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+          "/tmp/bc-coord/coord.sh",
+          "lean",
+          "codex",
+          "boundary-registration-publication-module",
+          "--",
+          "timeout",
+          "180",
+          "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+          "-j1",
+          "-M8000",
+          "--root=/tmp/beaconcrypt-record-lift-boundary-registration-publication/beaconcrypt-core/proofs/lean",
+          "-o",
+          "/tmp/bc-arc-scratch/boundary/registration-publication/olean/BeaconcryptCore/Computational/PqxdhBoundaryRegistrationFinish.olean",
+          "/tmp/beaconcrypt-record-lift-boundary-registration-publication/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryRegistrationFinish.lean"
+        ],
+        "log": "/tmp/bc-arc-scratch/boundary/registration-publication/logs/boundary-registration-publication-module-211435205839.log",
+        "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "leanpath_sha256": "ec00022eb56cefb4df3fdfbc68e2b2335b3ad102533ae44916996f169f061796",
+        "source_sha256": "5e537b59073aa2533c547ae09dc94c1586801c612121b09b643d30831a4fde37",
+        "artifact_sha256": "e4696b6a9f6d22d63662001186926c718efc4f9222b64294521aa8b29da97c72",
+        "CARGO_BUILD_JOBS": null,
+        "CARGO_TARGET_DIR": null
+      }
+    },
+    "root": {
+      "receipt": "/tmp/bc-arc-scratch/boundary/registration-publication/logs/boundary-registration-publication-root-211452050734.json",
+      "sha256": "72a14ae292f18af7866db40bfeeb8aca81c299299bfd076758a3a3ec2904662d",
+      "result": {
+        "start": "2026-10-09T21:14:49.295864+00:00",
+        "end": "2026-10-09T21:14:52.050999+00:00",
+        "exit": 0,
+        "command": [
+          "python3",
+          "/tmp/bc-arc-scratch/record-lift/facts-v3/codex-lean-slots.py",
+          "/tmp/bc-coord/coord.sh",
+          "lean",
+          "codex",
+          "boundary-registration-publication-root",
+          "--",
+          "timeout",
+          "180",
+          "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+          "-j1",
+          "-M8000",
+          "--root=/tmp/beaconcrypt-record-lift-boundary-registration-publication/beaconcrypt-core/proofs/lean",
+          "-o",
+          "/tmp/bc-arc-scratch/boundary/registration-publication/olean/BeaconcryptCore.olean",
+          "/tmp/beaconcrypt-record-lift-boundary-registration-publication/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+        ],
+        "log": "/tmp/bc-arc-scratch/boundary/registration-publication/logs/boundary-registration-publication-root-211452050734.log",
+        "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "leanpath_sha256": "ec00022eb56cefb4df3fdfbc68e2b2335b3ad102533ae44916996f169f061796",
+        "source_sha256": "2ff0074ff9ae39a6b088943f95253e184a676fe58a0de7615197496780c630d6",
+        "artifact_sha256": "b0d588c9a65105c53d277348305f6f347e343b8e3e6cd659c8e78bb0899c81d5",
+        "CARGO_BUILD_JOBS": null,
+        "CARGO_TARGET_DIR": null
+      }
+    },
+    "inventory": {
+      "receipt": "/tmp/bc-arc-scratch/boundary/registration-publication/logs/boundary-registration-publication-inventory-211550410582.json",
+      "sha256": "e057bd7802f34fb947985ebd06d14b66a12608062f255912f3bcb0dfea011de4",
+      "result": {
+        "start": "2026-10-09T21:13:55.069995+00:00",
+        "end": "2026-10-09T21:15:50.410911+00:00",
+        "exit": 0,
+        "command": [
+          "/tmp/bc-coord/coord.sh",
+          "lease",
+          "mem",
+          "codex",
+          "@nix",
+          "boundary-registration-publication-inventory",
+          "--eta",
+          "20m",
+          "--",
+          "nix",
+          "develop",
+          "--no-update-lock-file",
+          "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+          "-c",
+          "make",
+          "-C",
+          "/tmp/beaconcrypt-record-lift-boundary-registration-publication/beaconcrypt-core",
+          "check-inventory",
+          "SHELL=bash"
+        ],
+        "log": "/tmp/bc-arc-scratch/boundary/registration-publication/logs/boundary-registration-publication-inventory-211550410582.log",
+        "log_sha256": "6bbe1b809e088ade5d6943c53e6f22f7e2da6a8bb3dd085a7f3a140d40a3e5b8",
+        "leanpath_sha256": "ec00022eb56cefb4df3fdfbc68e2b2335b3ad102533ae44916996f169f061796",
+        "source_sha256": null,
+        "artifact_sha256": null,
+        "CARGO_BUILD_JOBS": "2",
+        "CARGO_TARGET_DIR": "/tmp/bc-arc-scratch/boundary/registration-publication/target"
+      }
+    },
+    "fidelity": {
+      "receipt": "/tmp/bc-arc-scratch/boundary/registration-publication/logs/boundary-registration-publication-fidelity-211421412524.json",
+      "sha256": "ad2cb1678bc7fdb97d45df17dec57dca4f117964d158857afe0fb9899215a008",
+      "result": {
+        "start": "2026-10-09T21:13:55.072246+00:00",
+        "end": "2026-10-09T21:14:21.412853+00:00",
+        "exit": 0,
+        "command": [
+          "/tmp/bc-coord/coord.sh",
+          "lease",
+          "mem",
+          "codex",
+          "@cargo",
+          "boundary-registration-publication-fidelity",
+          "--eta",
+          "20m",
+          "--",
+          "nix",
+          "develop",
+          "--no-update-lock-file",
+          "path:/tmp/bc-arc-scratch/proof-flake#proofs",
+          "-c",
+          "make",
+          "-C",
+          "/tmp/beaconcrypt-record-lift-boundary-registration-publication/beaconcrypt-core",
+          "check-proverif-transcript-fidelity",
+          "SHELL=bash"
+        ],
+        "log": "/tmp/bc-arc-scratch/boundary/registration-publication/logs/boundary-registration-publication-fidelity-211421412524.log",
+        "log_sha256": "3095e87c2645eef4374970504b35ad0e62fefd7ea9afb0bf2ab0aae4b4050ae3",
+        "leanpath_sha256": "ec00022eb56cefb4df3fdfbc68e2b2335b3ad102533ae44916996f169f061796",
+        "source_sha256": null,
+        "artifact_sha256": null,
+        "CARGO_BUILD_JOBS": "2",
+        "CARGO_TARGET_DIR": "/tmp/bc-arc-scratch/boundary/registration-publication/target"
+      }
+    }
+  },
+  "validation_summary": {
+    "direct_modules": "Receive11 and Finish5; sixteen exact guards pass; clean logs",
+    "root_import": "Pass; clean log",
+    "inventory": "1850 handwritten Lean entries; exact new module/root/checker/trust rows validated",
+    "fidelity": "30 Rust transcript-fidelity tests and 20 Python verdict-class tests pass",
+    "inventory_auxiliary": "20 Beacon getter cases and 9 Python regression cases pass",
+    "contamination": "Both reviewed component statement/direct-reference scans clean; live controls fail as intended. Direct declarations only, not a transitive import graph.",
+    "full_build_or_make_verify": "Not run; outside this stage",
+    "rust_mutation": "Not run; no Rust change"
+  },
+  "remaining": [
+    "Independent aggregate publication review, commit and immediate topic push",
+    "Reconcile current central before integration",
+    "Birth, remaining PB-C accept/build/root and PB-D whole adaptive classical/later source-boundary joins remain separate"
+  ],
+  "leanpath": "/tmp/bc-arc-scratch/boundary/registration-publication/leanpath",
+  "leanpath_sha256": "ec00022eb56cefb4df3fdfbc68e2b2335b3ad102533ae44916996f169f061796"
+}

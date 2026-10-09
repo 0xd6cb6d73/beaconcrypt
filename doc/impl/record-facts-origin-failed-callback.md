@@ -1,0 +1,11 @@
+# Complete selected callback probability
+
+`PqxdhRecordFactsOriginFailedCallback` closes the probability calculation for one literal selected hidden sealing callback and its full adaptive source continuation. In replay and random modes, the failed-writer replay-match event has probability at most `2 * rawCap / 2^512`. The raw cap is the original continuation's bound on the existing raw category cost, which charges every adaptive opening attempt.
+
+`resume_probability` compares the complete marked source resumption to a probability-only experiment that stops the selected target after successful publication. The source resumption still executes its actual successful continuation and retains its complete result and private state. Only the probability of the failed-writer match flag is equal; the theorem does not remove successful source work from query accounting.
+
+`callback_bound` uses the checked exact source sampler. In random mode it averages the existing unconditioned digest bound over the original body draw followed by the original tag draw. In replay mode it uses the actual primitive-generated body and tag. It never interchanges source draws. If the associated-data width gate rejects before insertion, the selected dictionary remains empty and the exact zero-match theorem applies. The literal writer return is never assumed independent of the digest and no distribution is conditioned on writer failure.
+
+`marked_bound` gives the same numerical result for the complete original marked resumption. `event_bound` transfers it to any concrete event on the literal full source result whose implication to the flag holds for every supported marked execution. Existence of another compatible marked run is insufficient.
+
+The local hypotheses remain explicit: the selected mode is replay or random, the actual selected cache and nonce history are fresh, the selected dictionary is initially empty, the failure continuation never seals that same coordinate again, and its raw query count is bounded. These are structural source obligations, not new primitive assumptions. Separate initialized-prefix theorems establish them for actual source cuts. The final source event implication and the sum over attempted sealing ordinals remain to be joined before claiming the full unpublished-origin bound.

@@ -1,0 +1,9 @@
+# Source probability accounting interface
+
+`PqxdhRecordFactsOriginSourceProbability.source_event_bound` combines the actual source callback estimates on the common attempted-seal trace. The resulting coefficient is `2 * budget.receives * budget.sends / 2^512`. Both counts are the existing source budget: sends bounds attempted hidden sealing callbacks, including writer failures; receives bounds every adaptive hidden opening attempt.
+
+The theorem applies the same complete initialized source program and private-state interpreter throughout. Its ordinal scan stops before the selected callback reply. The checked callback theorem derives cache and nonce freshness, empty selected dictionary, no repeated selected seal, and the raw continuation cap from that actual prefix. The original prefix distribution is averaged unchanged. The finite union uses all attempted seals in one completed trace, so its target selection does not depend on writer success or a later final outcome.
+
+Two semantic obligations remain deliberately explicit. First, each occurrence of the concrete source event must identify a cut in the same completed trace. Second, at every supported selected cut, that concrete cut event must imply the failed-writer replay-match flag in every supported marked resumption. These are intermediate composition obligations to be proved from the temporal receive and publication code; they are not primitive contracts and this theorem alone does not establish `OriginStatement`.
+
+The permanent inputs are the existing source environment `Frame`, the adversary's `Budget.Respects`, and replay/random selected-key modes. The theorem introduces no new security assumption and no new cost-free ambient work. The proof uses no statistical terms beyond the previously proved two fixed continuation guesses per raw attempt and the explicit attempted-seal selection factor.

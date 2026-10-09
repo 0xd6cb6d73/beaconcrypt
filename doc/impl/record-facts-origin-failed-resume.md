@@ -1,0 +1,9 @@
+# Full selected source resumption with its failed-writer flag
+
+`PqxdhRecordFactsOriginFailedResume.resumeMarked` executes the literal selected erased-source sealing callback and then the entire original continuation on its actual optional writer reply. It returns the complete original final result and private state, together with an analysis-only Boolean. That Boolean is true exactly when the selected callback returned no ciphertext and the continuation's selected replay-match flag was raised. Even successful-writer continuations still execute completely; their final analysis Boolean is false.
+
+`resume_marked_erase` proves exact program equality after dropping only that final Boolean. The remaining result is the unchanged `OriginOrdinalCut.resume` execution, including the original callback, actual optional reply and complete later state. The marker does not enter the adversary interface, change later scheduling, discard source work or replace plaintext replies.
+
+`event_le_flag` transfers an arbitrary event on that exact original final result to the analysis flag when every supported marked execution satisfying the event raises the flag. The premise is support-wise in the same complete run. Existence of another supported execution with a matching final state does not suffice. This is an event-inclusion interface, not a protocol-security assumption; the consuming source theorem must prove the implication from the actual accepted receive and its earlier failed writer.
+
+These two exact ordinary-axiom-guarded statements introduce no new contract or query exemption. They provide the common-experiment join between complete source event attribution and the separate selected-flag numerical bound. The concrete protocol event implication and callback probability bound are separate results.
