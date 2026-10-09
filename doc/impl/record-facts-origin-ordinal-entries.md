@@ -1,0 +1,7 @@
+# Seal dictionary provenance in the same completed trace
+
+`PqxdhRecordFactsOriginOrdinalEntries.track_entry` establishes provenance for the actual cache-erased service execution and its exact `OriginOrdinalTrace.track` output. Every final seal dictionary entry was either present in the initial state or has a sealing cut at that same material coordinate in this execution’s cut list. The proof follows the actual supported callback replies and suffix trace. Only literal sealing callbacks can introduce dictionary entries; raw callbacks and base work retain dictionaries, and other coordinates cannot insert at the chosen material.
+
+`tracked_cut` shows that every member of that exact list is an indexed supported source cut. It retains its original pending request, full private prefix state, literal continuation and attempted-label history. The initialized source consumer can therefore apply the already proved `source_prefix_empty` and `source_prefix_fresh` facts to this same cut, without a new empty-state or freshness contract.
+
+These two statements do not derive target-receive chronology from final dictionary membership. The matching cut’s order relative to an accepted receive must still come from a same-execution prefix or the source temporal correspondence. The selected cutoff probability, failed-writer event and accepted-receive-to-flag inclusion are separate consumers. No primitive assumption, query exemption, source change, snapshot or persistence premise is added.

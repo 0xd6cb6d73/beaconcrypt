@@ -1,0 +1,9 @@
+# Exact seal-entry insertion in the erased source services
+
+`PqxdhRecordFactsOriginOrdinalServices` proves seven statements classifying changes to the actual erased source's seal dictionaries. `localRaw_seals` and `keyedRaw_seals` show that raw replies retain the exact selected and full-family seal dictionaries. `hiddenOpening_seals` preserves this equality through every literal parser, getter, associated-data validation and optional plaintext branch. `service_nonSeal` includes every non-sealing service; all actual base work and effects still execute.
+
+`hiddenSealing_other` retains the complete local state at every material coordinate other than the callback's selected coordinate. `service_sealing_other` keeps that property through actual writer-buffer reinstallation, including failure. `insertion_sealing` consequently proves that an entry absent before a supported callback and present afterward can only have been inserted by a literal hidden sealing request at that exact material coordinate. It makes no honest-target or writer-success assumption.
+
+The statements use the exact erased interpreter and its source compiler, preserving full optional replies and state. Its generic base endpoint only accesses base state, as mechanically enforced by the existing interpreter type and wiring; the actual source base interpreter is an instance. Complete-world equivalence to the original counted source remains supplied by the existing replay/random observation laws. This module does not claim that its defined erased real-mode endpoint implements actual real-mode cryptography.
+
+Combining this callback classification with supported-prefix selection, proving insertion before the target receive, and the full adaptive failed-writer statistical bound remain separate steps. No primitive contract, security premise or query-cost waiver is added. Other source work remains charged, and no Rust, persistence or snapshot behavior changes.
