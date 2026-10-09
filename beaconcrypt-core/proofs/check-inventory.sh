@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1791
+	[handwritten-lean]=1792
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -37194,6 +37194,33 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem aRun_free([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealOrigins theorem aRun_free"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealOrigins\.aRun_owner$' "$selected_source_module" "PqxdhDeploymentIdealOrigins dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealOrigins.aRun_owner"
 require_line_count 1 '^theorem aRun_owner([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealOrigins theorem aRun_owner"
+
+# CE-11b unit U4: the Server's session counter, pending tokens and replies under the ideal environment's commands (real steps, pool create, the selected accept's tail under tailCE).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealSessions.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentIdealSessions$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentIdealSessions root import"
+require_line_count 10 '^theorem ' "$selected_source_module" "PqxdhDeploymentIdealSessions theorem inventory"
+require_line_count 10 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentIdealSessions guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSessions\.strip_game$' "$selected_source_module" "PqxdhDeploymentIdealSessions dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSessions.strip_game"
+require_line_count 1 '^theorem strip_game([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSessions theorem strip_game"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSessions\.realStep_accept$' "$selected_source_module" "PqxdhDeploymentIdealSessions dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSessions.realStep_accept"
+require_line_count 1 '^theorem realStep_accept([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSessions theorem realStep_accept"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSessions\.realStep_build$' "$selected_source_module" "PqxdhDeploymentIdealSessions dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSessions.realStep_build"
+require_line_count 1 '^theorem realStep_build([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSessions theorem realStep_build"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSessions\.realStep_quiet$' "$selected_source_module" "PqxdhDeploymentIdealSessions dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSessions.realStep_quiet"
+require_line_count 1 '^theorem realStep_quiet([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSessions theorem realStep_quiet"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSessions\.createPool_game$' "$selected_source_module" "PqxdhDeploymentIdealSessions dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSessions.createPool_game"
+require_line_count 1 '^theorem createPool_game([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSessions theorem createPool_game"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSessions\.tailCE_client_pending$' "$selected_source_module" "PqxdhDeploymentIdealSessions dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSessions.tailCE_client_pending"
+require_line_count 1 '^theorem tailCE_client_pending([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSessions theorem tailCE_client_pending"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSessions\.tailCE_tail_pending$' "$selected_source_module" "PqxdhDeploymentIdealSessions dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSessions.tailCE_tail_pending"
+require_line_count 1 '^theorem tailCE_tail_pending([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSessions theorem tailCE_tail_pending"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSessions\.acceptActive_pending$' "$selected_source_module" "PqxdhDeploymentIdealSessions dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSessions.acceptActive_pending"
+require_line_count 1 '^theorem acceptActive_pending([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSessions theorem acceptActive_pending"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSessions\.acceptExposed_pending$' "$selected_source_module" "PqxdhDeploymentIdealSessions dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSessions.acceptExposed_pending"
+require_line_count 1 '^theorem acceptExposed_pending([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSessions theorem acceptExposed_pending"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealSessions\.acceptSelected_pending$' "$selected_source_module" "PqxdhDeploymentIdealSessions dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealSessions.acceptSelected_pending"
+require_line_count 1 '^theorem acceptSelected_pending([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealSessions theorem acceptSelected_pending"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
