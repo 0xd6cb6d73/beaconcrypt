@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1735
+	[handwritten-lean]=1736
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -36523,6 +36523,31 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem acceptAfter_mark([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostMark theorem acceptAfter_mark"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostMark\.activeCE_reply$' "$selected_source_module" "PqxdhDeploymentIdealPostMark dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostMark.activeCE_reply"
 require_line_count 1 '^theorem activeCE_reply([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostMark theorem activeCE_reply"
+
+# CE-11b unit U6, second part: item 2's post-challenge stack as two layers and the budgeted optional simulation.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostSim.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentIdealPostSim$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentIdealPostSim root import"
+require_line_count 9 '^theorem ' "$selected_source_module" "PqxdhDeploymentIdealPostSim theorem inventory"
+require_line_count 9 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentIdealPostSim guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostSim\.optionLower_run$' "$selected_source_module" "PqxdhDeploymentIdealPostSim dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostSim.optionLower_run"
+require_line_count 1 '^theorem optionLower_run([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostSim theorem optionLower_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostSim\.optionLower_neverRead$' "$selected_source_module" "PqxdhDeploymentIdealPostSim dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostSim.optionLower_neverRead"
+require_line_count 1 '^theorem optionLower_neverRead([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostSim theorem optionLower_neverRead"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostSim\.compose_neverRead$' "$selected_source_module" "PqxdhDeploymentIdealPostSim dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostSim.compose_neverRead"
+require_line_count 1 '^theorem compose_neverRead([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostSim theorem compose_neverRead"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostSim\.fwdOption_neverRead$' "$selected_source_module" "PqxdhDeploymentIdealPostSim dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostSim.fwdOption_neverRead"
+require_line_count 1 '^theorem fwdOption_neverRead([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostSim theorem fwdOption_neverRead"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostSim\.sim_option$' "$selected_source_module" "PqxdhDeploymentIdealPostSim dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostSim.sim_option"
+require_line_count 1 '^theorem sim_option([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostSim theorem sim_option"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostSim\.itemPost_active$' "$selected_source_module" "PqxdhDeploymentIdealPostSim dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostSim.itemPost_active"
+require_line_count 1 '^theorem itemPost_active([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostSim theorem itemPost_active"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostSim\.skelResume_upper$' "$selected_source_module" "PqxdhDeploymentIdealPostSim dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostSim.skelResume_upper"
+require_line_count 1 '^theorem skelResume_upper([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostSim theorem skelResume_upper"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostSim\.serviceLayer_neverRead$' "$selected_source_module" "PqxdhDeploymentIdealPostSim dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostSim.serviceLayer_neverRead"
+require_line_count 1 '^theorem serviceLayer_neverRead([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostSim theorem serviceLayer_neverRead"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostSim\.itemPost_erased$' "$selected_source_module" "PqxdhDeploymentIdealPostSim dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostSim.itemPost_erased"
+require_line_count 1 '^theorem itemPost_erased([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostSim theorem itemPost_erased"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
