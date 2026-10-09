@@ -2,7 +2,7 @@
   "stage": "Initialized structural record origin (Task A, 2026-10-09)",
   "base": "4761f182f8b613d57f6023096a0118787a4c81f2",
   "topic": "codex/record-lift-facts-origin-global",
-  "state": "Focused checks and component semantic reviews passed; final bundle review/publication pending",
+  "state": "Independently reviewed initialized structural origin stage committed, pushed and directly verified; central integration pending",
   "headlines": [
     "PqxdhRecordFactsOriginGlobal.ctxRun_entryFacts",
     "PqxdhRecordFactsOriginGlobal.idealAuth_unproduced_zero",
@@ -887,5 +887,61 @@
     "Original source/reduction query accounting audit",
     "Item7 production/source boundary joins"
   ],
-  "updated_at": "2026-10-09T18:14:05.146764+00:00"
+  "updated_at": "2026-10-09T18:16:22.821518+00:00",
+  "publication": {
+    "proof_commit": "4798170623f021da975c4fa98c552afb1e768445",
+    "local_head": "4798170623f021da975c4fa98c552afb1e768445",
+    "origin_topic": "4798170623f021da975c4fa98c552afb1e768445",
+    "direct_remote": "4798170623f021da975c4fa98c552afb1e768445",
+    "final_bundle_review": "/tmp/bc-arc-scratch/record-lift/facts-v3/draw/origin59-publication-review.json",
+    "final_bundle_review_sha256": "562eedd65228b4c4d060029506894b014e2d4aa4772911484053061ba7cb5dbc",
+    "final_bundle_review_receipt": {
+      "stage": "Origin59 final publication review",
+      "reviewer": "Codex boundary_survey; independent of all eight module authors and publication preparer",
+      "verdict": "APPROVE",
+      "time": "2026-10-09T18:15:27.582768+00:00",
+      "candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-global-publication/candidate.json",
+      "candidate_sha256": "ead9b49630e154b7244c512efd4068d1504e4208ae042b5802547658a94693e7",
+      "base": "4761f182f8b613d57f6023096a0118787a4c81f2",
+      "files": {
+        "beaconcrypt-core/proofs/check-inventory.sh": "05b0c43091d83cd5ccfd7268441bd3950ee22a8a9c2d0c6e84e6901ac7fc383f",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "e26a5bbbcbe7461bec0fea6ea08336d97d031ce200267280613ad943e41fedd4",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginAccepted.lean": "dfe861b53d1cadeccbcbfe13294b1250f64245f1c6026e55f63ed7db15bd1d71",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginControl.lean": "374860cc7c32e2852f49e383c8c2831b0cee73b915709f856eb86610f2bfa76b",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginDispatch.lean": "16b81b1ffa8505652dfd8686e6b9f43f7d189fefb32b752a03837e0d701a0285",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginGlobal.lean": "852d140290b0fa0b2213fa5c30b70172bbdba7e7b28dfbab5cd1b571d88adb7d",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginLedger.lean": "4071080ed03f0c500581b707d8d100cc697f2bd192b786d67b3d50ac90208281",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginMonotone.lean": "5199ea5d23781638f9f9fea29e621d8e1f968ae30d3a37c9c0bde7d24b05ed42",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginNative.lean": "a766145889beba9eb8ad9a2dea06e75143dd54777c8296bc86b26815ed487b81",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordFactsOriginPublished.lean": "5e1b3f59ce49f8355b050366b770ed42feb04528894c37fdb02ff4430fec8fde",
+        "beaconcrypt-core/proofs/reviewed-inventory.txt": "51920f267c1d3fa7e016bc7c4a4626af738de1dc025d8d82664f45db8ab14e70",
+        "beaconcrypt-core/proofs/trusted-boundary.md": "0c32a9593b0000ec8b6e0d492ded34a8dea6445b048f83be98d689699a948043",
+        "doc/composition-assumptions.md": "5a0e1b652dc19bfeb437685d13174a117929dafebb1ca6d9c48a72a08193002f",
+        "doc/formal-verification-analysis.md": "473663644a3d7fb5cf09504b701026a823f64fe6b837d905d59cf23c17c1cd6c",
+        "doc/formal-verification.md": "90fdea384f414f87213177ae35abac72449bab11f0e1cc829181b46dc815ba1a",
+        "doc/impl/proof-receipts/record-facts-origin-global.json": "b3ea04e861cb3d84823970a3ee5f96d7346f1754cac2f6055a51aacbca809178",
+        "doc/impl/record-facts-origin-accepted.md": "13637f8e9389ab15e21b99d92bb795178846e7f77ea4afde5882b3f94147915d",
+        "doc/impl/record-facts-origin-control.md": "7f95f008b00d0a9b07708f0c4ac4203792efc03004b251192a1459ba7b460070",
+        "doc/impl/record-facts-origin-dispatch.md": "106be788a0b97cad7eba782f11fa961dd3fb4f5afce5c9edc871f3837b91fff0",
+        "doc/impl/record-facts-origin-global.md": "f7b1cc1d3ae2c72a6700253568a98e9f0c913d85a8f30bf14fa9f890daadf239",
+        "doc/impl/record-facts-origin-ledger.md": "4fd2fcf4d0a02679cc08a0dfd57bc3caf624e0ffc17b70c29d5228489e7353a8",
+        "doc/impl/record-facts-origin-monotone.md": "7574583a29e80e8564aabec6b85bda3c9c1ee00e540f2933cbb3b7b9329599fe",
+        "doc/impl/record-facts-origin-native.md": "27dd2d217b56fc07173120325221f07f09fb18c4513e31925efd28c7e606c1d9",
+        "doc/impl/record-facts-origin-published.md": "b56f3f96cb1622a27067fe3c8fc81b8e1b7c0d22c26cdbc310d34c3ea2de937c"
+      },
+      "checks": [
+        "Read all 59 statements and proof bodies, all eight module guides, frozen UnproducedAccept endpoint and maintained-documentation additions. The structural result preserves actual raw bytes, literal optional plaintext, routed physical handles, complete private poststate, dictionary entries, produced log and adaptive continuations.",
+        "Actual send/receive dispatch and native ledger entry witnesses follow the source owner/kernel operations. Caller-known and hidden keys remain explicit alternatives; no selected honest target premise or reverse hidden-slot persistence is used.",
+        "Actual startup and installation derive Safe; ledger starts empty and arbitrary full adaptive continuation preserves prior witnesses. Exact final hidden slot and opposite physical direction identify the source counterpart.",
+        "Decoded-field equality is ordinary data equality; no constructor injectivity or primitive correctness claim is added. Existing FrameReadBack is confined to successful writer output; failed writers may still produce seal histories, so no produced-to-published inference is made.",
+        "Probability zero covers exactly the unchanged UnproducedAccept event in idealAuth, idealRecords and randomRecords, both observation modes. Three unpublished-prefix numerical bounds and full OriginStatement/BindingStatement remain explicitly open.",
+        "All 24 publication file pins, 8 component candidate/review pins, exact 59 theorem and guard names, 11 validation receipt/log pins and 9 generated Lean artifact pins match. No placeholder/custom axiom occurs; original source costs remain separately accountable.",
+        "Eight direct Lean checks, root import, inventory1755 and transcript fidelity30+20 recorded exit0. Exact changed/new file set equals packet; git diff --check passes. No Rust/model/frozen-interface edits or disabled gates."
+      ],
+      "findings": [],
+      "validation_scope": "Read-only independent semantic and publication audit; no duplicate heavy build."
+    },
+    "frozen_candidate": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-global-publication/candidate.json",
+    "frozen_candidate_sha256": "ead9b49630e154b7244c512efd4068d1504e4208ae042b5802547658a94693e7"
+  }
 }
