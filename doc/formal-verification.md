@@ -74,6 +74,30 @@ The reviewed Task A dictionary-origin increment contains 82 guarded statements a
 
 The [record-cache observation stage](impl/record-facts-cache-observation.md) adds 99 guarded operational statements in eleven Lean modules. It proves an exact observation law from the actual adaptive replay/random CTX world to its discarded-cache endpoint and derives first-seal empty-cache/unused-nonce conditions at actual supported source prefixes. The statistical origin/binding bounds and source/reduction bills remain separate obligations. No Rust, primitive or deployment contract changes are included.
 
+## Complete source record digest compiler
+
+The record proof now has a concrete ten-service compiler and a checked full-execution equality into one private/ordinary memoizing digest experiment. Its original-view law preserves arbitrary adaptive source continuations in replay/random hidden modes. Thirteen new modules contain 99 guarded operational, query and generic collision statements; [the compiler guide](impl/record-facts-hash-source.md) distinguishes these results from the remaining global origin, publication and binding obligations. Original source costs remain explicit and separate from observation instrumentation. This stage changes no Rust or symbolic model and adds no primitive contract.
+
+## Initialized structural record origin
+
+The record proof now derives accepted and published record evidence from actual startup, Server installation and the complete adaptive transcript. Eight new modules contain 59 guarded statements. They prove probability zero for the exact unproduced hidden-frame event in all three ideal CTX worlds and both observation modes, using only existing readback and replay/random premises. [The origin guide](impl/record-facts-origin-global.md) explains each join and distinguishes this structural result from the remaining unpublished-before-acceptance guessing bounds. No full origin or binding completion is claimed.
+
+## Complete adaptive ideal record binding
+
+`PqxdhRecordFactsBindingGlobal` now proves the frozen `BindingStatement` at `bindingTerm` and `BindingTarget` for both ideal CTX worlds and both observation modes. The proof derives all source transcript witnesses and both global digest query caps, retaining actual raw receive replies and arbitrary adaptive scheduling. Fourteen additive modules contribute 126 guarded theorems; no frozen record interface, Rust behavior or primitive contract changes. The final scope, resource distinctions and remaining origin/source-boundary work are documented in `doc/impl/record-facts-binding-global.md` and `doc/impl/record-facts-binding-resources.md`; the focused validation/review receipt is `doc/impl/proof-receipts/record-facts-binding-global.json`.
+
+## Actual receive prefixes and failed-writer origin
+
+Ten `PqxdhRecordFactsOriginPublication*` modules contribute 46 guarded statements establishing the exact earlier transcript for every accepted raw receive in the complete initialized adaptive source. `ctxRun_unpublished_failed` maps the frozen unpublished-acceptance event to the same receive's matching hidden seal with a literal failed frame writer, retaining its raw bytes, actual plaintext, physical sender and material coordinate. Startup and installation discharge the internal history premises. [The event guide](impl/record-facts-origin-publication-event.md) distinguishes this temporal event inclusion from the still-open service-ordinal selection and numerical unpublished-origin bound. No new contract, Rust change or query-cost waiver is introduced.
+
+## Native prelude at the receive commands
+
+The eight guarded statements in `PqxdhBoundaryRecordPrelude` connect the shared complete-input reader and extracted payload prelude to both actual native CE raw commands, retaining complete optional replies, state and primitive effects. The role lookups discharge the local associated-data representation condition. [The prelude guide](impl/production-boundary-record-prelude.md) keeps the reviewed Rust transcription distinct from extracted-core equations and lists the remaining executor, registration and full-game joins. No new contract or production change is introduced.
+
+## Receive execution at the common experiment commands
+
+The ten guarded statements of `PqxdhBoundaryRecordExecution` connect the production receive transcription over extracted local operations to both frozen CE raw handlers, preserving optional replies and complete native state, logs, counters and hash cache. [The execution guide](impl/production-boundary-record-execution.md) explicitly retains both loop control and outer Rust dispatch as reviewed transcription, and lists the remaining source joins. No new contract, primitive proof or production change is introduced.
+
 ## Historical F* correspondence
 
 The migration inventories every historical lemma declaration: [192 ratchet declarations](impl/ratchet-fstar-coverage.md), [68 PQXDH declarations](impl/pqxdh-fstar-coverage.md), and [25 commitment declarations](impl/commitment-fstar-coverage.md). These ledgers distinguish semantic matches from removed implementation helpers. Five old planner bounds changed during the earlier extraction refactor: the current implementation retains fifty skipped keys and derives the authentication target separately, allowing fifty-one total derivations. The old fifty-total-derivation clauses are explicitly adapted, not claimed as literal statement equality.
