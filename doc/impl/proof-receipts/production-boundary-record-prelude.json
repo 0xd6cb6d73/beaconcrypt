@@ -2,7 +2,7 @@
   "stage": "PB-A native prelude to CE raw commands",
   "base": "da8f48590720b5bb35d2f5eacc66c57fdbe3606b",
   "topic": "codex/record-lift-boundary-prelude-publication",
-  "state": "Focused checks and independent semantic/source review passed; final metadata review and publication pending",
+  "state": "Independent semantic and final publication reviews approved; proof checkpoint pushed and directly verified; central integration pending",
   "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryRecordPrelude.lean",
   "source_sha256": "8bb99992c11e282839166cdecb28a9b2eab82bf84053ee999d65da5757b918c0",
   "guide": "doc/impl/production-boundary-record-prelude.md",
@@ -426,5 +426,64 @@
   "full_verify_or_mutation": "Not run; unauthorized and unnecessary at this Lean-only focused stage",
   "leanpath": "/tmp/bc-arc-scratch/boundary/prelude-publication/leanpath",
   "leanpath_sha256": "0115552d872845899f43df51438a05053ecaffc8211c3d2d026966551f06162a",
-  "time": "2026-10-09T19:15:53.904339+00:00"
+  "time": "2026-10-09T19:15:53.904339+00:00",
+  "publication_review": {
+    "path": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-trace/boundary-prelude-publication-review.json",
+    "sha256": "23fc0d38e443f4d0176615a2a0b1c148eb4486614ad7e67890b9ed52bbfe10b7",
+    "receipt": {
+      "reviewer": "Codex /root/facts_later",
+      "time": "2026-10-09T19:18:41.637607+00:00",
+      "decision": "APPROVE",
+      "candidate": "/tmp/bc-arc-scratch/boundary/prelude-publication/candidate.json",
+      "candidate_sha256": "d311654d70ca3a4f8263098afe7aae06522bad32c6828831d8d6365e87e426da",
+      "stage": "PB-A8 final publication bundle",
+      "worktree": "/tmp/beaconcrypt-record-lift-boundary-prelude-publication",
+      "base": "da8f48590720b5bb35d2f5eacc66c57fdbe3606b",
+      "reviewed_files": {
+        "beaconcrypt-core/proofs/check-inventory.sh": "3160c51b397eb965b1f7a1fe7bd219da9369d0eac43fbdd7c2ef8cb85390a830",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "23aa43227e311a2d01e33d1bf47f69be3fac6119b2740570be08969520907c5b",
+        "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryRecordPrelude.lean": "8bb99992c11e282839166cdecb28a9b2eab82bf84053ee999d65da5757b918c0",
+        "beaconcrypt-core/proofs/reviewed-inventory.txt": "fa2ea91fac8bec116a9b97d52d37b8015d669fe0732d39b143736fce89067603",
+        "beaconcrypt-core/proofs/trusted-boundary.md": "77a5e3af2c720157735ef6a4820add2dabe7aeff4724fb0318c5ff07bc788aa9",
+        "doc/composition-assumptions.md": "40812f7c080cd3f013d9bd20ecfe572f5c2c1263b0d2147e24e6d864f9476bfb",
+        "doc/formal-verification-analysis.md": "90a330a826d0db585005bf0972aad3cfc659b3e9afeb8df91ff90124ae06567d",
+        "doc/formal-verification.md": "8bddd890445f33ca1814827b2627f1f5403a7d4a7ed12f8e236e9d84f64277d0",
+        "doc/impl/production-boundary-record-prelude.md": "abfeaf50a5a3ae121cb00eea4896395be1ae8555a030812d91874ea06b12ccf0",
+        "doc/impl/proof-receipts/production-boundary-record-prelude.json": "859f13003cec744ad9c8c22c49b14380e822b798f1b348d2e86e8642a454ae06"
+      },
+      "findings": [],
+      "scope": "Independent final source/interface/query-preservation review of unchanged semantic proof and guide, all seven metadata anchor diffs, root import, eight exact guards, reviewed inventory and maintained receipt; no new build.",
+      "reasoning": [
+        "Proof source, guide and module artifact are byte-identical to independently approved PB-A8; all candidate, check, artifact and embedded-review pins verified.",
+        "Metadata accurately limits closure to complete-input/payload framing through actual role programs and frozen CE handlers, retaining complete optional replies, state, logs, counters and shared hash cache. Existing Reader and primitive contracts remain unchanged; arbitrary raw bytes and source role-selected associated data are retained.",
+        "Rust adapter dispatch remains explicit RT. Executor argument provenance, send boundary, root/registration and full theorem closure remain pending. No canonicalization, assigned-ID, honest-peer, primitive-internal or persistence conclusion is introduced.",
+        "Equality retains literal callbacks and instrumentation; no new numeric cost or ambient work waiver is asserted.",
+        "Exactly ten publication paths changed, only approved proof/guide/receipt and seven metadata anchors; no Rust change. Checker and inventory contain eight exact guards and the updated total 1786.",
+        "Focused module/root checks have empty logs; inventory and transcript fidelity receipts have exit zero, with 30 transcript and 20 getter-profile cases. No unrun full verification or mutation coverage is claimed."
+      ],
+      "validation": {
+        "candidate_pins": "all verified",
+        "diff_check": "clean",
+        "semantic_review": "dbbd4f5b7269be60e9a46e336de6797dd0527fceb8868d9321615da15be71c1a",
+        "focused_checks": [
+          "586d458f6ffa499b8095b4cda6e46fb7d2aa3190f863b73303c3e118ec9d690b",
+          "31ed1a27f4e9286c5a6d86aabc2ac69d225a7547b15e651421fe71d3f9523f34",
+          "3be842475e84ca2868551d613bc5fa7e341350930e59476a70d0469536354eda",
+          "3649a4b881b86e702a768c384c30fa6eb96e03388338ae54dcd19b59436634d7"
+        ],
+        "rebuilt": false
+      }
+    }
+  },
+  "proof_publication": {
+    "proof_commit": "e0f599a0f94757c21606550814af7c02b8998b21",
+    "branch": "codex/record-lift-boundary-prelude-publication",
+    "origin_topic": "e0f599a0f94757c21606550814af7c02b8998b21",
+    "direct_remote": "e0f599a0f94757c21606550814af7c02b8998b21",
+    "review": "/tmp/bc-arc-scratch/record-lift/facts-v3/origin-trace/boundary-prelude-publication-review.json",
+    "review_sha256": "23fc0d38e443f4d0176615a2a0b1c148eb4486614ad7e67890b9ed52bbfe10b7",
+    "time": "2026-10-09T19:21:00.430330+00:00",
+    "leanpath": "/tmp/bc-arc-scratch/boundary/prelude-publication/leanpath"
+  },
+  "updated_at": "2026-10-09T19:21:18.401761+00:00"
 }
