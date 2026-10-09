@@ -99,7 +99,7 @@ theorem tableRead_run (point : Pqxdh.Bytes) (state : SkelState KemSK Output)
   rw [simulateQ_map, simulateQ_spec_query, StateT.run_map, PqxdhDeploymentIdealPostSteps.tableLayer_direct,
     Functor.map_map]
 
-/-- The Server's logged root (the random-oracle root of the root key input, with its session touch recorded) splits against the skeleton's table read of the root key input, expanded; the split drops the recorded touch. -/
+/-- The Server's logged root (the random-oracle root of the root key input, with its session touch recorded) splits against the skeleton's table read of the root key input, expanded; the split drops the recorded touch and the two family-history entries. -/
 theorem splitT_loggedRoot (hmac : PqxdhSecretInputKdf.HmacSha512) (index : ℕ)
     (input : PqxdhServerRootPreparation.Inputs Reader PqxdhJointGapDh.ScalarBytes PqxdhBeaconPhase2Preparation.Word32)
     (original : pqxdh.PendingServerRegistration) :

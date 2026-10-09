@@ -1653,8 +1653,8 @@
   ]
  },
  "third_part": {
-  "date": "2026-10-09T22:38:33.786880+00:00",
-  "scope": "CE-11b unit U6, third part (track u6b), after its review fix pass: item 2's per-request steps of the post-challenge simulation for the public HMAC, the local field reads, create and bundle (PqxdhDeploymentIdealPostRequests), a raw accept other than the selected one and a real build (PqxdhDeploymentIdealPostServer), the table counters erased from item 2's view with the marked build (PqxdhDeploymentIdealPostHidden), and every Beacon finish other than owner k's challenge finish (PqxdhDeploymentIdealPostFinish; step_finish's last premise concerns the addressed owner only). Owner k's challenge finish (PqxdhDeploymentIdealPostChallenge, registered, not created), ActiveBranch, PqxdhDeploymentIdealPost and PqxdhDeploymentIdealCompile are not built; ideal_compile is not claimed. Reviewed (semantic and hygiene) at 71fa9922; review fix pass applied (Lean commit 6f05c227, docstrings only, and a documentation commit), not yet re-reviewed; not integrated into central (central moved to 39fd1c50 and then 97befa84; merged before the integration).",
+  "date": "2026-10-09T22:51:40.973813+00:00",
+  "scope": "CE-11b unit U6, third part (track u6b), after its review fix pass: item 2's per-request steps of the post-challenge simulation for the public HMAC, the local field reads, create and bundle (PqxdhDeploymentIdealPostRequests), a raw accept other than the selected one and a real build (PqxdhDeploymentIdealPostServer), the table counters erased from item 2's view with the marked build (PqxdhDeploymentIdealPostHidden), and every Beacon finish other than owner k's challenge finish (PqxdhDeploymentIdealPostFinish; step_finish's last premise concerns the addressed owner only). Owner k's challenge finish (PqxdhDeploymentIdealPostChallenge, registered, not created), ActiveBranch, PqxdhDeploymentIdealPost and PqxdhDeploymentIdealCompile are not built; ideal_compile is not claimed. Reviewed (semantic and hygiene) at 71fa9922; review fix pass applied (Lean commit 6f05c227, docstrings only, and documentation commit b7381f0b); confirming review of b7381f0b: APPROVE_WITH_NITS, all six findings resolved, its one optional nit (splitT_loggedRoot's docstring also names the two family-history entries that the split drops) taken by the commit that records it before the integration (docstring only); not integrated into central at the recording commit (central moved to 39fd1c50 and then 97befa84; the integration merges 97befa84, handwritten Lean count 1862 + 4 = 1866).",
   "basis": "564dc4d621464ea72c99e5072d1cb64cf492179e",
   "topic": {
    "branch": "codex/deployment-ce11b-cut",
@@ -1662,14 +1662,26 @@
   },
   "plan": {
    "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
-   "sha256_at_generation": "f7418c9473dbde0aafa2870469748a25d3e171a164e426cfc7f5ef3a8e71a58c",
-   "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p3/fix/docs/plan.at-fix-receipt-f7418c94.md",
-   "dated_copy_sha256": "f7418c9473dbde0aafa2870469748a25d3e171a164e426cfc7f5ef3a8e71a58c",
-   "sections": "47-50 (A1, A2, Q1-Q3), 63-64, 67, 70-71 (U6 earlier parts), 74 and 76 (this part; 73 and 75 were the last sections before each), 78 (its review fix pass; 77 was the last section before it)",
+   "sha256_at_generation": "8232634a2f9a0fbfb8b7323fcd235a7390c165ddee6722a38fbfec49f59fad23",
+   "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p3/int/docs/plan.at-record-8232634a.md",
+   "dated_copy_sha256": "8232634a2f9a0fbfb8b7323fcd235a7390c165ddee6722a38fbfec49f59fad23",
+   "sections": "47-50 (A1, A2, Q1-Q3), 63-64, 67, 70-71 (U6 earlier parts), 74 and 76 (this part; 73 and 75 were the last sections before each), 78 (its review fix pass; 77 was the last section before it), 79 (its confirming review; 78 was the last section before it)",
+   "earlier": [
+    {
+     "note": "hash recorded by the review fix pass receipt (b7381f0b; through section 78)",
+     "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p3/fix/docs/plan.at-fix-receipt-f7418c94.md",
+     "dated_copy_sha256": "f7418c9473dbde0aafa2870469748a25d3e171a164e426cfc7f5ef3a8e71a58c"
+    }
+   ],
    "before_review": {
     "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p3/docs/plan.at-u6b3-receipt-49ab372f.md",
     "dated_copy_sha256": "49ab372fd25f51d099aab1907464a630bba5a0e1106fc6e3f219886427b559db",
     "note": "the plan as pinned by the receipt of 71fa9922"
+   },
+   "before_record_copy": {
+    "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p3/int/docs/plan.before-record-f7418c94.md",
+    "sha256": "f7418c9473dbde0aafa2870469748a25d3e171a164e426cfc7f5ef3a8e71a58c",
+    "note": "the working plan just before section 79 was appended (equal to the fix pass receipt's copy)"
    }
   },
   "design": {
@@ -1687,7 +1699,9 @@
   "notes": {
    "track_notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p3/NOTES.md",
    "fix_notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p3/fix/NOTES.md",
-   "second_part_notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/NOTES.md"
+   "second_part_notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/NOTES.md",
+   "confirm_notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/confirm/NOTES.md",
+   "integration_notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p3/int/NOTES.md"
   },
   "commits": [
    {
@@ -1717,17 +1731,21 @@
    {
     "commit": "6f05c227d7d959ff3a3735f9c073c63d182d119a",
     "subject": "Document the step_finish premise and the split helpers precisely"
+   },
+   {
+    "commit": "b7381f0b732ee93ee6c17e8ac2c5bc71427220a0",
+    "subject": "Record the CE-11b unit U6 third part review fix pass"
    }
   ],
-  "commits_note": "First-parent commits on the topic after the basis that were made before this key was generated; the documentation commit of the review fix pass that regenerates it is not listed.",
+  "commits_note": "First-parent commits on the topic after the basis that were made before this key was last generated; the commit that records the confirming review (and last regenerates this key) is not listed.",
   "files_sha256": {
    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostRequests.lean": "2866e746e222d23d72b0aca68ecedeca4f0ca4dead96b6bc1e368be775c34169",
-   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostServer.lean": "e575d705e7921a8d40ceb30ec602a5cf4454ab737849761356740b41d259014f",
+   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostServer.lean": "7ac6134248a513c32371b0f5917cad87e357e72a0da1612e46785db6a68095fe",
    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostHidden.lean": "3922eebe053a10fba03e8c40b5faf97afc9cd285f2c8faf187b894217e0cd93a",
    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostFinish.lean": "b333464c592367bbd9d92385534713d93317a85f2663391f282d8e888527d0f5",
    "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "c55289cceb342241228a259bf11d987b4fe9f07a8a457023f226259669cc9b16",
    "beaconcrypt-core/proofs/check-inventory.sh": "e2e3deae12623dee048d79c236e36dedb54551f83370455378a8a0c9335d0791",
-   "beaconcrypt-core/proofs/reviewed-inventory.txt": "d800f7648827b4a7c879c86e752fb677394cc4b70ff0520c712f999cbd96f8e3"
+   "beaconcrypt-core/proofs/reviewed-inventory.txt": "4bbc839f22ff9d1ebf4bdc53a5b85499d2719d3086b516a6752638bf74a74ac6"
   },
   "modules": [
    {
@@ -2116,7 +2134,8 @@
      "artifact_sha256": "4c5a8b6907e590f69397209f3c9d5ccc0384139f743d6346c84fc7ca5ca0e0cc",
      "source_equals_reviewed_blob": true,
      "note": "run before the module's commit: head is the parent commit and dirty_paths counts the uncommitted paths; the checked source equals the committed module"
-    }
+    },
+    "record_commit_note": "the record commit of the confirming review changes the docstring of splitT_loggedRoot (source 7ac6134248a5); direct_check_final is the fix pass's check of the source before it (e575d705e792); the changed source is checked in review.confirming_review.record_commit_check and again by the integration checks"
    },
    {
     "name": "BeaconcryptCore.Computational.PqxdhDeploymentIdealPostHidden",
@@ -2859,6 +2878,21 @@
      "proofs/check-inventory.sh"
     ],
     "note": "coord.sh inv rehash with the three module paths, then coord.sh inv recount (count unchanged); no check-inventory block changed (docstrings only)"
+   },
+   "record_commit": {
+    "handwritten_lean_rows": 1824,
+    "rehashed": [
+     "proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostServer.lean"
+    ],
+    "unchanged": [
+     "proofs/lean/BeaconcryptCore.lean",
+     "proofs/trusted-boundary.md",
+     "proofs/check-inventory.sh"
+    ],
+    "digest_before": "e575d705e7921a8d40ceb30ec602a5cf4454ab737849761356740b41d259014f",
+    "digest_after": "7ac6134248a513c32371b0f5917cad87e357e72a0da1612e46785db6a68095fe",
+    "log": "proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostServer.lean: e575d705e792 -> 7ac6134248a5; handwritten-lean count unchanged (1824)",
+    "note": "coord.sh inv rehash with the PostServer path, then coord.sh inv recount (count unchanged); no check-inventory block changed (docstring only)"
    }
   },
   "forbidden_scan": {
@@ -2868,8 +2902,9 @@
    "PqxdhDeploymentIdealPostFinish": []
   },
   "git_diff_check": {
-   "range": "564dc4d621464ea72c99e5072d1cb64cf492179e..working tree",
-   "exit": 0
+   "range": "564dc4d621464ea72c99e5072d1cb64cf492179e..working tree (with the confirming-review record): the topic's own changes",
+   "exit": 0,
+   "output": ""
   },
   "not_run": [
    "full lake build",
@@ -2992,7 +3027,129 @@
      "3\t3\tbeaconcrypt-core/proofs/reviewed-inventory.txt"
     ],
     "note": "seven added docstring lines, one reworded module docstring line and three rehashed inventory digests"
+   },
+   "docs_fix_commit": "b7381f0b732ee93ee6c17e8ac2c5bc71427220a0",
+   "status": "reviewed once (71fa9922); review fix pass done (6f05c227, b7381f0b); fix pass confirmed by a confirming review of b7381f0b (APPROVE_WITH_NITS), recorded before the integration together with its optional docstring nit",
+   "confirming_review": {
+    "reviewed_range": "71fa9922113c890acd3d769b924cf601d6335a3f..b7381f0b732ee93ee6c17e8ac2c5bc71427220a0",
+    "reviewed_commit": "b7381f0b732ee93ee6c17e8ac2c5bc71427220a0",
+    "scope": "the fix pass 6f05c227 (Lean: seven docstring lines and one reworded module docstring line, three inventory rows rehashed) and b7381f0b (documentation, receipt): statements, guards, receipt, inventory, documentation of every finding, central moves, trial merges",
+    "verdict": "APPROVE_WITH_NITS: all six findings of the review of 71fa9922 resolved; no statement weaker, guards equal theorems, receipt equals HEAD; one optional nit: splitT_loggedRoot's new docstring names only the dropped touch, not the two family-history entries that the logged root appends (romRoot: the derive and public HMAC entries; implicit in SplitT's docstring)",
+    "checks": [
+     "Lean diff 71fa9922..6f05c227: seven added docstring lines (six splitT_* in PostServer, eraseServiceC_idem in PostHidden) and one reworded line of the PostFinish module docstring; no statement, proof or guard change",
+     "receipt against HEAD (confirm/p3/scripts/receipt_guards.py): files_sha256 equal the HEAD blobs; direct_check_final head 6f05c227, dirty 0, exit 0, artifact and LEAN_PATH hashes ok; 94 theorems = 94 exact guards (22/24/19/29), names equal the receipt, axiom profiles equal the guards, no forbidden token; root fix1 source equals the HEAD root; inventory log hashes ok; commit list equals the first-parent log; plan and design live files equal the pinned copies",
+     "inventory rows of the four modules, the root and check-inventory.sh equal the HEAD blob digests; handwritten Lean count 1824",
+     "own rechecks at b7381f0b with a clean tree (confirm/p3/scripts/check1.sh through coord.sh lean; -j1 -M8000, timeout 180, no -o, LEAN_PATH = ce11b/u6b/p3/fix/leanpath): PqxdhDeploymentIdealPostServer, PqxdhDeploymentIdealPostHidden, PqxdhDeploymentIdealPostFinish, root: exit 0, empty logs",
+     "documentation: guide status, decisions, open points 1, 2 and 5 and the fix-pass section, analysis Review paragraph, plan section 78, design-v2 section 27, receipt: the addressed-owner wording everywhere, no wording about every owner left; registry notes refreshed; PqxdhDeploymentIdealPostChallenge registered, not created",
+     "central moves verified: 564dc4d6..39fd1c50 = 3d212990 d281c804 3915c3f0 39fd1c50 (81 files, 35 new .lean, count 1855); 97befa84 (7 new PqxdhDeploymentIdeal* modules, count 1862; + 4 = 1866)",
+     "trial merges in a private object directory: 39fd1c50 conflicts only in the check-inventory.sh count and two reviewed-inventory hunks (the root row; the check-inventory.sh row with the trusted-boundary.md row); 97befa84 conflicts in the count and the check-inventory block, the root imports, three inventory hunks, the analysis and the guide; matches the guide's open point 5",
+     "footers exact (one Co-Authored-By line, last); git diff --check clean; HEAD pushed"
+    ],
+    "check_logs": {
+     "PostServer": {
+      "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/confirm/p3/logs/PostServer.log",
+      "bytes": 0
+     },
+     "PostHidden": {
+      "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/confirm/p3/logs/PostHidden.log",
+      "bytes": 0
+     },
+     "PostFinish": {
+      "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/confirm/p3/logs/PostFinish.log",
+      "bytes": 0
+     },
+     "root": {
+      "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/confirm/p3/logs/root.log",
+      "bytes": 0
+     }
+    },
+    "trial_merge_logs": {
+     "merge-39fd1c50.txt": {
+      "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/confirm/p3/logs/merge-39fd1c50.txt",
+      "sha256": "3e3e8a6419f5ee8a888189cbe4ad1588a05ccf5e6d539be44b1c682c18bf3fb1"
+     },
+     "merge-97befa84.txt": {
+      "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/confirm/p3/logs/merge-97befa84.txt",
+      "sha256": "1833ae94f1b00e9ed0d078491f5d5553ab36fcf4ece49ea2263518223641db8d"
+     }
+    },
+    "scripts": {
+     "check1.sh": {
+      "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/confirm/p3/scripts/check1.sh",
+      "sha256": "373d99248c045a5568a367a6024c996859968b6f406b419ac53ecec04fba99ac"
+     },
+     "receipt_guards.py": {
+      "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/confirm/p3/scripts/receipt_guards.py",
+      "sha256": "004deabfd6a71c7ea90c28d88a41992513952aeca1c3a7933e3398f33e3f4137"
+     }
+    },
+    "findings_fixed": [
+     "optional nit (splitT_loggedRoot docstring): taken by the commit that records this review, since after the integration the module is published and frozen: the docstring says that the split drops the recorded touch and the two family-history entries; docstring only",
+     "status lines: the guide status paragraph, open point 5, the analysis Review paragraph and this key (review.status, scope) no longer say that the fix pass is not re-reviewed; new guide section \"CE-11b unit U6, third part: confirming review\"; working plan section 79 and the committed snapshot"
+    ],
+    "record_commit_lean_change": {
+     "file": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostServer.lean",
+     "sha256_before": "e575d705e7921a8d40ceb30ec602a5cf4454ab737849761356740b41d259014f",
+     "sha256_after": "7ac6134248a513c32371b0f5917cad87e357e72a0da1612e46785db6a68095fe",
+     "declaration": "PqxdhDeploymentIdealPostServer.splitT_loggedRoot (docstring only)",
+     "inventory_sha256_before": "d800f7648827b4a7c879c86e752fb677394cc4b70ff0520c712f999cbd96f8e3",
+     "inventory_sha256_after": "4bbc839f22ff9d1ebf4bdc53a5b85499d2719d3086b516a6752638bf74a74ac6",
+     "numstat": [
+      "1\t1\tbeaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostServer.lean",
+      "1\t1\tbeaconcrypt-core/proofs/reviewed-inventory.txt",
+      "1\t1\tdoc/formal-verification-analysis.md",
+      "37\t1\tdoc/impl/common-deployment-experiment-plan.md",
+      "8\t2\tdoc/impl/common-deployment-experiment.md"
+     ],
+     "note": "the only change under beaconcrypt-core/ in the record commit: one docstring line and its inventory row; no statement, proof, guard or definition changed"
+    },
+    "record_commit_check": {
+     "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealPostServer",
+     "start": "2026-10-09T22:48:13.461559860Z",
+     "end": "2026-10-09T22:48:18.429583472Z",
+     "exit": 0,
+     "head": "b7381f0b732ee93ee6c17e8ac2c5bc71427220a0",
+     "dirty_paths": 2,
+     "source_sha256": "7ac6134248a513c32371b0f5917cad87e357e72a0da1612e46785db6a68095fe",
+     "log_bytes": 0,
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "artifact": null,
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p3/fix/leanpath",
+     "leanpath_sha256": "d08a039298da8dca2517f633550b7ea49504b33ffa49b1a19c2535d57aae1960",
+     "command": [
+      "coord.sh",
+      "lean",
+      "claude",
+      "<label>",
+      "--",
+      "timeout",
+      "180",
+      "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+      "-j1",
+      "-M8000",
+      "--root=/tmp/beaconcrypt-deployment-ce11b-cut/beaconcrypt-core/proofs/lean",
+      "/tmp/beaconcrypt-deployment-ce11b-cut/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostServer.lean"
+     ],
+     "coord_log_bytes": 0
+    },
+    "record_commit_check_note": "one no-output check of PqxdhDeploymentIdealPostServer with the record commit's change in the tree (head b7381f0b, two dirty paths: the module and its inventory row) through coord.sh lean against the fix pass's LEAN_PATH (whose prefix holds PqxdhDeploymentIdealPostRequests compiled at 6f05c227, byte-identical source); the integration checks compile all four modules and the root on the merged topic tip with -o into a fresh prefix",
+    "files_changed": [
+     "proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostServer.lean",
+     "proofs/reviewed-inventory.txt",
+     "doc/impl/common-deployment-experiment.md",
+     "doc/impl/common-deployment-experiment-plan.md",
+     "doc/formal-verification-analysis.md",
+     "doc/impl/proof-receipts/common-deployment-experiment-ce11b-u6b.json"
+    ],
+    "notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/confirm/NOTES.md (section \"Confirming review of the u6b third part fix pass (b7381f0b)\")",
+    "scratch": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/confirm/p3 (review checks), /tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p3/int (record-commit scripts, plan copies, the record check)"
    }
+  },
+  "plan_snapshot": {
+   "path": "doc/impl/common-deployment-experiment-plan.md",
+   "refreshed_from_sha256": "8232634a2f9a0fbfb8b7323fcd235a7390c165ddee6722a38fbfec49f59fad23",
+   "sections": "0-18 and the decision sections 19-79",
+   "note": "refreshed in the commit that records the confirming review: the body equals the working plan from its third line; the snapshot paragraph records the hash and the refresh history, built from central 97befa84's paragraph (the u4 refresh 4d57644e, through section 77). On this branch the snapshot it replaces is central 564dc4d6's (through section 71; its body is a prefix of this one). Central's current snapshot (since 97befa84, through section 77) has a body that is a prefix of this one (this body adds the integration bullet of section 77 and sections 78 and 79), so the integration merge keeps this version"
   }
  }
 }
