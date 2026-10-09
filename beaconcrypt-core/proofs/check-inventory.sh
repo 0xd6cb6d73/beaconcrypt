@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1738
+	[handwritten-lean]=1739
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -36728,6 +36728,35 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem upperLayer_neverRead([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostItem theorem upperLayer_neverRead"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostItem\.itemPost_clean$' "$selected_source_module" "PqxdhDeploymentIdealPostItem dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostItem.itemPost_clean"
 require_line_count 1 '^theorem itemPost_clean([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostItem theorem itemPost_clean"
+
+# CE-11b unit U6, second part: item 2's per-request steps, the projection and the native requests.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostSteps.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentIdealPostSteps$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentIdealPostSteps root import"
+require_line_count 11 '^theorem ' "$selected_source_module" "PqxdhDeploymentIdealPostSteps theorem inventory"
+require_line_count 11 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentIdealPostSteps guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostSteps\.lowerE_native$' "$selected_source_module" "PqxdhDeploymentIdealPostSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostSteps.lowerE_native"
+require_line_count 1 '^theorem lowerE_native([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostSteps theorem lowerE_native"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostSteps\.encodeMid_erased$' "$selected_source_module" "PqxdhDeploymentIdealPostSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostSteps.encodeMid_erased"
+require_line_count 1 '^theorem encodeMid_erased([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostSteps theorem encodeMid_erased"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostSteps\.encodeMid_clean$' "$selected_source_module" "PqxdhDeploymentIdealPostSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostSteps.encodeMid_clean"
+require_line_count 1 '^theorem encodeMid_clean([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostSteps theorem encodeMid_clean"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostSteps\.upperE_run$' "$selected_source_module" "PqxdhDeploymentIdealPostSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostSteps.upperE_run"
+require_line_count 1 '^theorem upperE_run([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostSteps theorem upperE_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostSteps\.upperLayer_hash$' "$selected_source_module" "PqxdhDeploymentIdealPostSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostSteps.upperLayer_hash"
+require_line_count 1 '^theorem upperLayer_hash([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostSteps theorem upperLayer_hash"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostSteps\.step_hash$' "$selected_source_module" "PqxdhDeploymentIdealPostSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostSteps.step_hash"
+require_line_count 1 '^theorem step_hash([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostSteps theorem step_hash"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostSteps\.upperLayer_reveal$' "$selected_source_module" "PqxdhDeploymentIdealPostSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostSteps.upperLayer_reveal"
+require_line_count 1 '^theorem upperLayer_reveal([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostSteps theorem upperLayer_reveal"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostSteps\.step_reveal$' "$selected_source_module" "PqxdhDeploymentIdealPostSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostSteps.step_reveal"
+require_line_count 1 '^theorem step_reveal([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostSteps theorem step_reveal"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostSteps\.upperLayer_coin$' "$selected_source_module" "PqxdhDeploymentIdealPostSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostSteps.upperLayer_coin"
+require_line_count 1 '^theorem upperLayer_coin([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostSteps theorem upperLayer_coin"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostSteps\.step_coin$' "$selected_source_module" "PqxdhDeploymentIdealPostSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostSteps.step_coin"
+require_line_count 1 '^theorem step_coin([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostSteps theorem step_coin"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostSteps\.tableLayer_direct$' "$selected_source_module" "PqxdhDeploymentIdealPostSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostSteps.tableLayer_direct"
+require_line_count 1 '^theorem tableLayer_direct([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostSteps theorem tableLayer_direct"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
