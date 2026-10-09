@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1707
+	[handwritten-lean]=1708
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -36438,6 +36438,47 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem run_settled([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealKeymatch theorem run_settled"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealKeymatch\.handler_accept_inactive$' "$selected_source_module" "PqxdhDeploymentIdealKeymatch dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealKeymatch.handler_accept_inactive"
 require_line_count 1 '^theorem handler_accept_inactive([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealKeymatch theorem handler_accept_inactive"
+
+# CE-11b unit U6: the branches of the second compile lemma at the cut (game_marked, slotGameAt_cut, dead branches, CutRelIndexed, ideal_compile_of_selected).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealBranch.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentIdealBranch$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentIdealBranch root import"
+require_line_count 17 '^theorem ' "$selected_source_module" "PqxdhDeploymentIdealBranch theorem inventory"
+require_line_count 17 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentIdealBranch guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealBranch\.ideal_cutMarked$' "$selected_source_module" "PqxdhDeploymentIdealBranch dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealBranch.ideal_cutMarked"
+require_line_count 1 '^theorem ideal_cutMarked([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealBranch theorem ideal_cutMarked"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealBranch\.ideal_prefixMarked$' "$selected_source_module" "PqxdhDeploymentIdealBranch dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealBranch.ideal_prefixMarked"
+require_line_count 1 '^theorem ideal_prefixMarked([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealBranch theorem ideal_prefixMarked"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealBranch\.game_marked$' "$selected_source_module" "PqxdhDeploymentIdealBranch dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealBranch.game_marked"
+require_line_count 1 '^theorem game_marked([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealBranch theorem game_marked"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealBranch\.slotGameAt_cut$' "$selected_source_module" "PqxdhDeploymentIdealBranch dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealBranch.slotGameAt_cut"
+require_line_count 1 '^theorem slotGameAt_cut([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealBranch theorem slotGameAt_cut"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealBranch\.itemPost_failed$' "$selected_source_module" "PqxdhDeploymentIdealBranch dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealBranch.itemPost_failed"
+require_line_count 1 '^theorem itemPost_failed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealBranch theorem itemPost_failed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealBranch\.itemPost_dead$' "$selected_source_module" "PqxdhDeploymentIdealBranch dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealBranch.itemPost_dead"
+require_line_count 1 '^theorem itemPost_dead([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealBranch theorem itemPost_dead"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealBranch\.optionRun_support$' "$selected_source_module" "PqxdhDeploymentIdealBranch dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealBranch.optionRun_support"
+require_line_count 1 '^theorem optionRun_support([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealBranch theorem optionRun_support"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealBranch\.rejectRun_complete$' "$selected_source_module" "PqxdhDeploymentIdealBranch dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealBranch.rejectRun_complete"
+require_line_count 1 '^theorem rejectRun_complete([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealBranch theorem rejectRun_complete"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealBranch\.opaqueRest_dead$' "$selected_source_module" "PqxdhDeploymentIdealBranch dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealBranch.opaqueRest_dead"
+require_line_count 1 '^theorem opaqueRest_dead([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealBranch theorem opaqueRest_dead"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealBranch\.itemRest_dead$' "$selected_source_module" "PqxdhDeploymentIdealBranch dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealBranch.itemRest_dead"
+require_line_count 1 '^theorem itemRest_dead([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealBranch theorem itemRest_dead"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealBranch\.map_const_lawEq$' "$selected_source_module" "PqxdhDeploymentIdealBranch dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealBranch.map_const_lawEq"
+require_line_count 1 '^theorem map_const_lawEq([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealBranch theorem map_const_lawEq"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealBranch\.resumeMarked_dead$' "$selected_source_module" "PqxdhDeploymentIdealBranch dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealBranch.resumeMarked_dead"
+require_line_count 1 '^theorem resumeMarked_dead([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealBranch theorem resumeMarked_dead"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealBranch\.scan_certified$' "$selected_source_module" "PqxdhDeploymentIdealBranch dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealBranch.scan_certified"
+require_line_count 1 '^theorem scan_certified([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealBranch theorem scan_certified"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealBranch\.transported_unread$' "$selected_source_module" "PqxdhDeploymentIdealBranch dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealBranch.transported_unread"
+require_line_count 1 '^theorem transported_unread([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealBranch theorem transported_unread"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealBranch\.transported_pool$' "$selected_source_module" "PqxdhDeploymentIdealBranch dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealBranch.transported_pool"
+require_line_count 1 '^theorem transported_pool([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealBranch theorem transported_pool"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealBranch\.cut_relIndexed$' "$selected_source_module" "PqxdhDeploymentIdealBranch dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealBranch.cut_relIndexed"
+require_line_count 1 '^theorem cut_relIndexed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealBranch theorem cut_relIndexed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealBranch\.ideal_compile_of_selected$' "$selected_source_module" "PqxdhDeploymentIdealBranch dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealBranch.ideal_compile_of_selected"
+require_line_count 1 '^theorem ideal_compile_of_selected([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealBranch theorem ideal_compile_of_selected"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
