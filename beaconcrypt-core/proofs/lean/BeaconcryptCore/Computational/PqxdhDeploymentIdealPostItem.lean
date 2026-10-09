@@ -147,6 +147,7 @@ open PqxdhRegistrationJointKemPostSkeleton (NGame SClient clean gameStep setGame
 /-- The skeleton state with the analysis observers of its game state erased. -/
 def cleanSkel {V : Type} (state : SkelState KemSK V) : SkelState KemSK V := (clean state.1, state.2)
 
+/-- Erasing the observers twice is erasing them once. -/
 theorem cleanSkel_idem {V : Type} (state : SkelState KemSK V) : cleanSkel (cleanSkel state) = cleanSkel state := rfl
 
 /-- A computation on the skeleton state never reads the analysis observers of the game state. -/
@@ -155,11 +156,13 @@ def GhostFree {V α : Type} {M : Type → Type} [Monad M] (work : StateT (SkelSt
 
 variable {V : Type} {M : Type → Type} [Monad M] [LawfulMonad M]
 
+/-- A pure computation is `GhostFree`. -/
 theorem ghostFree_pure {α : Type} (value : α) : GhostFree (KemSK := KemSK) (V := V) (M := M) (pure value) := by
   intro state
   simp only [StateT.run_pure, map_pure]
   rfl
 
+/-- `GhostFree` computations are closed under bind. -/
 theorem ghostFree_bind {α β : Type} (work : StateT (SkelState KemSK V) M α) (next : α → StateT (SkelState KemSK V) M β)
     (first : GhostFree work) (rest : ∀ value, GhostFree (next value)) : GhostFree (work >>= next) := by
   intro state
@@ -179,16 +182,19 @@ theorem ghostFree_bind {α β : Type} (work : StateT (SkelState KemSK V) M α) (
         simp only [StateT.run_bind, map_bind]
         exact (bind_congr later).symm
 
+/-- A game-state computation of the source (`gameStep`, which runs on the game state without observers) is `GhostFree`. -/
 theorem ghostFree_gameStep {α : Type} (work : StateT (PqxdhServerAuthExperiment.GameState KemSK) ProbComp α) :
     GhostFree (KemSK := KemSK) (V := V) (gameStep work) := by
   intro state
   rfl
 
+/-- Replacing the game state is `GhostFree`. -/
 theorem ghostFree_setGame (game : PqxdhServerAuthExperiment.GameState KemSK) :
     GhostFree (KemSK := KemSK) (V := V) (setGame game) := by
   intro state
   rfl
 
+/-- A change of the game state is `GhostFree` when its result without observers does not depend on the observers of its input. -/
 theorem ghostFree_modifyGame (change : PqxdhServerAuthExperiment.GameState KemSK → PqxdhServerAuthExperiment.GameState KemSK)
     (same : ∀ game, clean (change game) = clean (change (clean game))) :
     GhostFree (KemSK := KemSK) (V := V) (modifyGame change) := by
@@ -196,17 +202,20 @@ theorem ghostFree_modifyGame (change : PqxdhServerAuthExperiment.GameState KemSK
   simp only [modifyGame, StateT.run, map_pure, Prod.map, id_eq, cleanSkel]
   rw [same state.1]
 
+/-- A direct table read is `GhostFree`. -/
 theorem ghostFree_tableRead (point : Pqxdh.Bytes) : GhostFree (KemSK := KemSK) (V := V) (tableRead point) := by
   intro state
   simp only [tableRead, StateT.run, Functor.map_map]
   rfl
 
+/-- A hidden read is `GhostFree`. -/
 theorem ghostFree_valueRead (point : PqxdhCorrelatedExtractFamily.Message) :
     GhostFree (KemSK := KemSK) (V := V) (valueRead point) := by
   intro state
   simp only [valueRead, StateT.run, Functor.map_map]
   rfl
 
+/-- `GhostFree` is closed under mapping the result. -/
 theorem ghostFree_map {α β : Type} (f : α → β) (work : StateT (SkelState KemSK V) M α) (free : GhostFree work) :
     GhostFree (f <$> work) := by
   intro state
@@ -215,6 +224,7 @@ theorem ghostFree_map {α β : Type} (f : α → β) (work : StateT (SkelState K
   simp only [StateT.run_map, Functor.map_map]
   exact mapped
 
+/-- A `GhostFree` native-layer program stays `GhostFree` on the exposed encapsulation interface (`liftT`). -/
 theorem ghostFree_liftT {α : Type} (work : NGame KemSK V α) (free : GhostFree work) :
     GhostFree (PqxdhRegistrationJointKemPostSkeleton.liftT (KemSK := KemSK) work) := by
   intro state
@@ -223,6 +233,7 @@ theorem ghostFree_liftT {α : Type} (work : NGame KemSK V α) (free : GhostFree 
   simp only [StateT.run] at mapped
   rw [mapped]
 
+/-- Recording the hidden Server session and its value (`mark`) is `GhostFree`. -/
 theorem ghostFree_mark (index : ℕ) (value : V) :
     GhostFree (KemSK := KemSK) (PqxdhRegistrationJointKemPostSkeleton.mark index value) := by
   intro state
@@ -233,6 +244,7 @@ open PqxdhBeaconPhase2Preparation (Word32)
 variable {ι : Type} {baseSpec : OracleSpec ι} {Reader Response : Type}
   (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
 
+/-- The Beacon tail callbacks of the skeleton (`tailStep`) are `GhostFree`. -/
 theorem ghostFree_tailStep (query : (PqxdhBeaconPhase2Publication.NativeTailSpec Response).Domain) :
     GhostFree (PqxdhRegistrationJointKemPostSkeleton.tailStep (V := V) setup codec query) := by
   rcases query with query | query
@@ -242,6 +254,7 @@ theorem ghostFree_tailStep (query : (PqxdhBeaconPhase2Publication.NativeTailSpec
     | initial request => exact ghostFree_gameStep _
     | application response => exact ghostFree_gameStep _
 
+/-- The Server's core acceptance and root of a raw accept in the skeleton (`clientStep`) are `GhostFree`. -/
 theorem ghostFree_clientStep (hmac : PqxdhSecretInputKdf.HmacSha512) (control : beaconcrypt_core.pqxdh.ServerState)
     (binding : beaconcrypt_core.pqxdh.ServerBinding)
     (input : PqxdhServerRootPreparation.Inputs Reader PqxdhJointGapDh.ScalarBytes Word32) :
@@ -255,6 +268,7 @@ theorem ghostFree_clientStep (hmac : PqxdhSecretInputKdf.HmacSha512) (control : 
       ghostFree_pure _
     exact ghostFree_map _ _ (ghostFree_tableRead _)
 
+/-- The Server's accept tail in the skeleton (`acceptTail`) is `GhostFree`. -/
 theorem ghostFree_acceptTail (publicIdentity : PqxdhJointIdentity.PublicIdentity)
     (game : PqxdhServerAuthExperiment.GameState KemSK)
     (collected : Option (PqxdhServerRootPreparation.Inputs Reader PqxdhJointGapDh.ScalarBytes Word32) ×
@@ -271,6 +285,7 @@ theorem ghostFree_acceptTail (publicIdentity : PqxdhJointIdentity.PublicIdentity
     · exact ghostFree_pure _
     · exact ghostFree_pure _
 
+/-- The Server's raw accept in the skeleton (`acceptStep`) is `GhostFree`. -/
 theorem ghostFree_acceptStep (identityIndex : ℕ) (publicIdentity : PqxdhJointIdentity.PublicIdentity)
     (raw : Pqxdh.Bytes) :
     GhostFree (PqxdhRegistrationJointKemPostSkeleton.acceptStep (V := V) setup codec checks identityIndex
@@ -281,6 +296,7 @@ theorem ghostFree_acceptStep (identityIndex : ℕ) (publicIdentity : PqxdhJointI
   simp only [StateT.run, Functor.map_map]
   rfl
 
+/-- The Server build in the skeleton (`buildStep`) is `GhostFree`. -/
 theorem ghostFree_buildStep (services : PqxdhRegistrationJointKemPostSkeleton.Services V Response) (session : ℕ)
     (payload : Option Pqxdh.Bytes) :
     GhostFree (PqxdhRegistrationJointKemPostSkeleton.buildStep setup codec checks services session payload) := by
@@ -297,6 +313,7 @@ theorem ghostFree_buildStep (services : PqxdhRegistrationJointKemPostSkeleton.Se
   · simp only [map_bind, map_pure]
     rfl
 
+/-- The adversary's public HMAC in the skeleton (`hmacStep`) is `GhostFree`. -/
 theorem ghostFree_hmacStep (key : PqxdhSecretInputKdf.HmacBlock) (message : Pqxdh.Bytes) :
     GhostFree (PqxdhRegistrationJointKemPostSkeleton.hmacStep (KemSK := KemSK) (V := V) setup key message) := by
   unfold PqxdhRegistrationJointKemPostSkeleton.hmacStep
@@ -304,6 +321,7 @@ theorem ghostFree_hmacStep (key : PqxdhSecretInputKdf.HmacBlock) (message : Pqxd
   · exact ghostFree_tableRead _
   · exact ghostFree_pure _
 
+/-- The grouped Beacon finish in the skeleton (`groupStep`) is `GhostFree`. -/
 theorem ghostFree_groupStep (services : PqxdhRegistrationJointKemPostSkeleton.Services V Response)
     (pending : PqxdhRegistrationJointKemPostSkeleton.Pending Response) :
     GhostFree (PqxdhRegistrationJointKemPostSkeleton.groupStep (KemSK := KemSK) setup codec services pending) := by

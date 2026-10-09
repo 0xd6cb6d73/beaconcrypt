@@ -238,6 +238,7 @@ def HiddenKind (query : (PqxdhRegistrationJointRevealSchedule.Spec KemSK).Domain
     PqxdhRegistrationJointRevealCosts.sourceKind query = .inl 4 ∨
     PqxdhRegistrationJointRevealCosts.sourceKind query = .inl 5
 
+/-- Whether a source request is of a hidden kind is decidable. -/
 instance : DecidablePred (HiddenKind (KemSK := KemSK)) := fun _ => by
   unfold HiddenKind
   infer_instance
@@ -478,10 +479,12 @@ def ShComm {M : Type → Type} [Monad M] {α : Type} (copies : Local) (work : St
 
 variable {M : Type → Type} [Monad M] [LawfulMonad M] (copies : Local)
 
+/-- A pure computation commutes with the override. -/
 theorem shComm_pure {α : Type} (value : α) : ShComm (M := M) (KemSK := KemSK) copies (pure value) := by
   intro s
   simp only [StateT.run_pure, map_pure, Prod.map, id]
 
+/-- Computations that commute with the override are closed under bind. -/
 theorem shComm_bind {α β : Type} (work : StateT (NativeState KemSK) M α) (next : α → StateT (NativeState KemSK) M β)
     (first : ShComm copies work) (rest : ∀ value, ShComm copies (next value)) : ShComm copies (work >>= next) := by
   intro s
@@ -497,18 +500,21 @@ theorem shComm_local {α : Type} (step : PqxdhServerAuthExperiment.GameState Kem
   simp only [PqxdhServerAuthNative.localState, StateT.run, map_pure, stepped]
   rfl
 
+/-- A coin computation on the native state (`PqxdhServerAuthNative.nativeCoins`) commutes with the override. -/
 theorem shComm_coins {α : Type} (work : ProbComp α) :
     ShComm (KemSK := KemSK) copies (PqxdhServerAuthNative.nativeCoins work) := by
   intro s
   simp only [PqxdhServerAuthNative.nativeCoins, StateT.run, Functor.map_map]
   rfl
 
+/-- A computation on the shared commitment cache (`PqxdhServerAuthNative.nativeCtx`) commutes with the override. -/
 theorem shComm_ctx {α : Type} (work : StateT (RawCtxSharedPrimitive.SharedState Unit) ProbComp α) :
     ShComm (KemSK := KemSK) copies (PqxdhServerAuthNative.nativeCtx work) := by
   intro s
   simp only [PqxdhServerAuthNative.nativeCtx, StateT.run, Functor.map_map]
   rfl
 
+/-- One native root evaluation (`PqxdhServerAuthNative.romRootBytes`) commutes with the override. -/
 theorem shComm_romRootBytes (hmac : PqxdhSecretInputKdf.HmacSha512) (message : PqxdhJointDhExtractFamily.Message)
     (bytes : Pqxdh.Bytes) :
     ShComm (KemSK := KemSK) copies (PqxdhServerAuthNative.romRootBytes hmac message bytes) := by
@@ -516,6 +522,7 @@ theorem shComm_romRootBytes (hmac : PqxdhSecretInputKdf.HmacSha512) (message : P
   simp only [PqxdhServerAuthNative.romRootBytes, StateT.run, Functor.map_map]
   rfl
 
+/-- Setting the overridden game state on the overridden native state gives the override of setting the game state. -/
 theorem shComm_set (game : PqxdhServerAuthExperiment.GameState KemSK) (s : NativeState KemSK) :
     (PqxdhServerAuthNative.nativeSet (overrideGame copies game)).run (overrideShared copies s) =
       Prod.map id (overrideShared copies) <$> (PqxdhServerAuthNative.nativeSet game).run s := rfl
@@ -570,6 +577,7 @@ noncomputable def tailRest (setup : Setup baseSpec KemSK) (publicIdentity : Pqxd
           pure (some index)
       | _ => pure none
 
+/-- The native accept tail after the installation of the game state (`tailRest`) commutes with the override. -/
 theorem shComm_tailRest (setup : Setup baseSpec KemSK) (publicIdentity : PqxdhJointIdentity.PublicIdentity)
     (index : ℕ) (control : beaconcrypt_core.pqxdh.ServerState)
     (input : Option (PqxdhServerRootPreparation.Inputs Reader PqxdhJointGapDh.ScalarBytes
@@ -838,6 +846,7 @@ open PqxdhDeploymentIdealSlots (SlotSpec Coord)
 open PqxdhRegistrationJointKemEntryFactor (Output)
 variable (copies : Local) (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
 
+/-- The uninstrumented native root callback (`PqxdhServerAuthNative.sourceRoot`) commutes with the override. -/
 theorem shComm_sourceRoot (hmac : PqxdhSecretInputKdf.HmacSha512) (input : beaconcrypt_core.pqxdh.RootKeyInput) :
     ShComm (M := ProbComp) (KemSK := KemSK) copies (PqxdhServerAuthNative.sourceRoot hmac input) := by
   intro s
@@ -952,6 +961,7 @@ def mapBuiltG (f : Std.U64 → RawCtxGenericRoleStorage.Peer K PM → RawCtxGene
     RustM (Option PqxdhServerRegistrationPublication.Response × PqxdhInitialGenericPublication.State K M PM C) :=
   fun result => (fun value => (value.1, mapPeersG f value.2)) <$> result
 
+/-- Publishing a candidate commutes with `mapPeersG` when the map leaves the candidate's key ID alone. -/
 theorem publish_mapPeers (f : Std.U64 → RawCtxGenericRoleStorage.Peer K PM → RawCtxGenericRoleStorage.Peer K PM)
     (state : PqxdhInitialGenericPublication.State K M PM C) (candidate : pqxdh.ServerRegistrationCandidate)
     (kernel : K) (metadata : PM) (unused : f candidate.key_id = id) :
@@ -965,6 +975,7 @@ theorem publish_mapPeers (f : Std.U64 → RawCtxGenericRoleStorage.Peer K PM →
     simp only [Function.update_self, Option.map_some, unused, id_eq]
   · simp only [Function.update_of_ne same]
 
+/-- The publication after the chain initialization (`PqxdhInitialGenericPublication.afterInitialization`) commutes with `mapPeersG` when the map leaves the candidate's key ID alone. -/
 theorem afterInitialization_mapPeers (f : Std.U64 → RawCtxGenericRoleStorage.Peer K PM → RawCtxGenericRoleStorage.Peer K PM)
     (calls : RawCtxChainOwner.Calls K m) (aux : QueryImpl PqxdhServerRegistrationPublication.AuxSpec m)
     (candidate : pqxdh.ServerRegistrationCandidate) (authenticated : Pqxdh.Bytes) (kernel : K) (metadata : PM)
@@ -985,6 +996,7 @@ theorem afterInitialization_mapPeers (f : Std.U64 → RawCtxGenericRoleStorage.P
     · simp only [map_pure]
     · simp only [map_pure, publish_mapPeers f state candidate advanced metadata unused]
 
+/-- The generic builder's candidate step (`PqxdhInitialGenericBuilder.candidate`) commutes with `mapPeersG` when the map leaves the candidate's key ID alone. -/
 theorem candidate_mapPeers (f : Std.U64 → RawCtxGenericRoleStorage.Peer K PM → RawCtxGenericRoleStorage.Peer K PM)
     (calls : RawCtxChainOwner.Calls K m) (aux : QueryImpl PqxdhServerRegistrationPublication.AuxSpec m)
     (initial : RustM K) (candidate : pqxdh.ServerRegistrationCandidate) (data : Option Pqxdh.Bytes) (metadata : PM)
@@ -1087,6 +1099,7 @@ def knownCopy (kid : Std.U64) (peer : RawCtxGenericRoleStorage.Peer PqxdhServerA
   | some current => { peer with kernel := PqxdhServerAuthSendFactor.known current }
   | none => peer
 
+/-- Embedding the overridden Server state into the factored kernel representation gives `mapPeersG (knownCopy copies)` of the embedding. -/
 theorem embed_override (state : PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes)) :
     PqxdhServerAuthSendFactor.embed (overrideServer copies state) =
       mapPeersG (knownCopy copies) (PqxdhServerAuthSendFactor.embed state) := by
@@ -1098,6 +1111,7 @@ theorem embed_override (state : PqxdhServerRegistrationPublication.State Unit Un
   · simp only [Option.map_some, knownCopy, PqxdhDeploymentCompile.mergePeer]
     rcases copies.peers kid <;> rfl
 
+/-- Resolving a factored state mapped by `knownCopy` gives the override of the resolved native Server state. -/
 theorem native_override (state : PqxdhInitialGenericPublication.State PqxdhServerAuthSendFactor.Kernel Unit Unit
     (List Pqxdh.Bytes)) :
     PqxdhInitialGenericPublication.native PqxdhServerAuthSendFactor.resolve (mapPeersG (knownCopy copies) state) =
