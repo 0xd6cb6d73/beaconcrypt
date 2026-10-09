@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1848
+	[handwritten-lean]=1850
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -42398,6 +42398,49 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecord
 require_line_count 1 '^theorem randomRecords_unpublished_bound([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginClosure theorem randomRecords_unpublished_bound"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhRecordFactsOriginClosure\.origin_statement$' "$selected_source_module" "PqxdhRecordFactsOriginClosure dependency origin_statement"
 require_line_count 1 '^theorem origin_statement([[:space:]]|$)' "$selected_source_module" "PqxdhRecordFactsOriginClosure theorem origin_statement"
+
+
+# Real candidate-local registration receive and complete CE native finish.
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryRegistrationReceive.lean
+require_line_count 11 '^theorem ' "$selected_source_module" "PqxdhBoundaryRegistrationReceive theorem total"
+require_line_count 11 '^#guard_msgs in$' "$selected_source_module" "PqxdhBoundaryRegistrationReceive guarded dependencies"
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhBoundaryRegistrationReceive$' proofs/lean/BeaconcryptCore.lean "PqxdhBoundaryRegistrationReceive root import"
+require_line_count 1 '^theorem receive_lift([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRegistrationReceive theorem receive_lift"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRegistrationReceive\.receive_lift$' "$selected_source_module" "PqxdhBoundaryRegistrationReceive dependency receive_lift"
+require_line_count 1 '^theorem receive_adapter([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRegistrationReceive theorem receive_adapter"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRegistrationReceive\.receive_adapter$' "$selected_source_module" "PqxdhBoundaryRegistrationReceive dependency receive_adapter"
+require_line_count 1 '^theorem local_receive_exact([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRegistrationReceive theorem local_receive_exact"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRegistrationReceive\.local_receive_exact$' "$selected_source_module" "PqxdhBoundaryRegistrationReceive dependency local_receive_exact"
+require_line_count 1 '^theorem after_root_exact([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRegistrationReceive theorem after_root_exact"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRegistrationReceive\.after_root_exact$' "$selected_source_module" "PqxdhBoundaryRegistrationReceive dependency after_root_exact"
+require_line_count 1 '^theorem tail_exact([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRegistrationReceive theorem tail_exact"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRegistrationReceive\.tail_exact$' "$selected_source_module" "PqxdhBoundaryRegistrationReceive dependency tail_exact"
+require_line_count 1 '^theorem after_root_complete([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRegistrationReceive theorem after_root_complete"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRegistrationReceive\.after_root_complete$' "$selected_source_module" "PqxdhBoundaryRegistrationReceive dependency after_root_complete"
+require_line_count 1 '^theorem tail_complete([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRegistrationReceive theorem tail_complete"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRegistrationReceive\.tail_complete$' "$selected_source_module" "PqxdhBoundaryRegistrationReceive dependency tail_complete"
+require_line_count 1 '^theorem tail_lift([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRegistrationReceive theorem tail_lift"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRegistrationReceive\.tail_lift$' "$selected_source_module" "PqxdhBoundaryRegistrationReceive dependency tail_lift"
+require_line_count 1 '^theorem registration_exact([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRegistrationReceive theorem registration_exact"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRegistrationReceive\.registration_exact$' "$selected_source_module" "PqxdhBoundaryRegistrationReceive dependency registration_exact"
+require_line_count 1 '^theorem registration_complete([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRegistrationReceive theorem registration_complete"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRegistrationReceive\.registration_complete$' "$selected_source_module" "PqxdhBoundaryRegistrationReceive dependency registration_complete"
+require_line_count 1 '^theorem registration_failure([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRegistrationReceive theorem registration_failure"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRegistrationReceive\.registration_failure$' "$selected_source_module" "PqxdhBoundaryRegistrationReceive dependency registration_failure"
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryRegistrationFinish.lean
+require_line_count 5 '^theorem ' "$selected_source_module" "PqxdhBoundaryRegistrationFinish theorem total"
+require_line_count 5 '^#guard_msgs in$' "$selected_source_module" "PqxdhBoundaryRegistrationFinish guarded dependencies"
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhBoundaryRegistrationFinish$' proofs/lean/BeaconcryptCore.lean "PqxdhBoundaryRegistrationFinish root import"
+require_line_count 1 '^theorem callbacks_withReader([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRegistrationFinish theorem callbacks_withReader"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRegistrationFinish\.callbacks_withReader$' "$selected_source_module" "PqxdhBoundaryRegistrationFinish dependency callbacks_withReader"
+require_line_count 1 '^theorem finish_exact([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRegistrationFinish theorem finish_exact"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRegistrationFinish\.finish_exact$' "$selected_source_module" "PqxdhBoundaryRegistrationFinish dependency finish_exact"
+require_line_count 1 '^theorem native_finish_exact([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRegistrationFinish theorem native_finish_exact"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRegistrationFinish\.native_finish_exact$' "$selected_source_module" "PqxdhBoundaryRegistrationFinish dependency native_finish_exact"
+require_line_count 1 '^theorem finish_complete([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRegistrationFinish theorem finish_complete"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRegistrationFinish\.finish_complete$' "$selected_source_module" "PqxdhBoundaryRegistrationFinish dependency finish_complete"
+require_line_count 1 '^theorem native_finish_complete([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRegistrationFinish theorem native_finish_complete"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRegistrationFinish\.native_finish_complete$' "$selected_source_module" "PqxdhBoundaryRegistrationFinish dependency native_finish_complete"
 
 # Reviewed actual getter availability, distinct from network compromise powers.
 python3 proofs/source/test-getter-profile.py
