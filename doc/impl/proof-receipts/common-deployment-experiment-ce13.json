@@ -13,15 +13,15 @@
   "status": "not on central at this receipt; mentioned as pending integration, not cited as results"
  },
  "authorship": "Claude",
- "state": "written (986262ab); reviewed by an independent review (semantic, completeness, hygiene lenses) of 986262ab; review fix pass applied; not confirmed; not integrated",
+ "state": "written (986262ab); reviewed by an independent review (semantic, completeness, hygiene lenses) of 986262ab; review fix pass 4dc0c791; confirming review of 4dc0c791: APPROVE_WITH_NITS, its four nits taken in the commit that records it; not integrated",
  "documents": {
   "guide": {
    "path": "doc/impl/deployment-experiment.md",
-   "sha256": "e94c96606dbf0f4a82ff33ad9087fb6cfbc48faed672096da421c165b138def1"
+   "sha256": "b636dd1713843185105b8d235cda8ece5f3fcb4bc41cab9e889d3d40f3a6c379"
   },
   "source_scope": {
    "path": "doc/proverif-source-scope.md",
-   "sha256": "dabe747500c4a5affaa7fac852b518cc4caf7a84ca97b3698fe15b405cf3dc03"
+   "sha256": "8547733cd0a4efd3c4bb160a160085de7cc9ab750a2db165e050b5c72dfd77dd"
   },
   "composition_assumptions": {
    "path": "doc/composition-assumptions.md",
@@ -29,11 +29,11 @@
   },
   "analysis": {
    "path": "doc/formal-verification-analysis.md",
-   "sha256": "4d0de3fa0648686500b1d238498ae5c3dcc8de2fd39eaaa7a09d7740eeba34d8"
+   "sha256": "7dce72bdce7ff5175afdfaefd8984268c4b4b091132f814f0d753f399140dddb"
   },
   "plan_snapshot": {
    "path": "doc/impl/common-deployment-experiment-plan.md",
-   "sha256": "b83f24b4207948f607d848ec0b4fbcf9146f6af624ea856322d32f9b2142026a"
+   "sha256": "0333b4f334410f4297352f6fe0a83b69fdefc5ac77278a8eea0ef845a6c34f9b"
   },
   "trusted_boundary": {
    "path": "beaconcrypt-core/proofs/trusted-boundary.md",
@@ -45,21 +45,26 @@
   }
  },
  "documents_edits": {
-  "guide": "new file; review fix pass: status line, finish row (plan section 25), budgets (plan section 22 cap loosening), compile argument (gap, collision and D-ct closures, item 7 joins), terms and bills, rows table, production forms, new section 'Name index of the published forms', not-claimed bullet, corrections 1, 2 and 11, checks, new section 'Review fix pass'",
-  "source_scope": "new final section 'Computational column: the common deployment experiment'; review fix pass: conventions (exception (a)), premise bundles (setup-carried contracts), terms (closures), production paragraph, index statuses (A2 rows, A2-provenance, L2-origin), NBF owners in the symbolic-only lists, A1-root pin line 116, CE-A1 condition per owner, either-side ce_app_sym family, later CE-APP-L and CE-LOR-L forms, new entry for CE-KT-L at rows 168-173, ce_plain_every_b2s without _target form",
+  "guide": "new file; review fix pass: status line, finish row (plan section 25), budgets (plan section 22 cap loosening), compile argument (gap, collision and D-ct closures, item 7 joins), terms and bills, rows table, production forms, new section 'Name index of the published forms', not-claimed bullet, corrections 1, 2 and 11, checks, new section 'Review fix pass'; confirming-review record: nits 2, 3 and 4 (production paragraph, event-projection paragraph, correction 5, review fix pass item 1), status line, new section 'Confirming review'",
+  "source_scope": "new final section 'Computational column: the common deployment experiment'; review fix pass: conventions (exception (a)), premise bundles (setup-carried contracts), terms (closures), production paragraph, index statuses (A2 rows, A2-provenance, L2-origin), NBF owners in the symbolic-only lists, A1-root pin line 116, CE-A1 condition per owner, either-side ce_app_sym family, later CE-APP-L and CE-LOR-L forms, new entry for CE-KT-L at rows 168-173, ce_plain_every_b2s without _target form; confirming-review record: s2b-S1 symbolic-only list names the owners with a rejected bundle call in Fresh (nit 1), production paragraph names the symbolic-eligibility forms and the gap bounds (nit 3), App-b2s eligibility wording (nit 4)",
   "composition_assumptions": "reveal-capability text of section 'The experiment a composition theorem must cover' (formerly line 33) amended to the plan section 19 profile with the section 27 exceptions; a note appended to the CE-3 codec paragraph; new final section 'Common deployment experiment: approved profile and scope of the headline claims (CE-13)'; review fix pass: scope lists of the final section (random-oracle model and setup-carried contracts of every statement, the CE-KT/CE-OR/CE-UKS/CE-APP/CE-LOR bullet, CE-A1 with Phase1ReadBack, SourceFullCorrect, the random oracles and KemBound, which statements use the Phase laws, CE-APP-L and CE-LOR-L as the later forms, R1 and C3 on every outcome), the plan section 22 cap note and the pointer to the trust-boundary inventory",
-  "analysis": "new final section 'Common deployment experiment, CE-13: what is computational now'; review fix pass: production coverage, reveal exception (a), decoded frames, CE-A1 condition and the registration bullet, which claims have symbolic-eligibility corollaries and their per-family cost, beacon_gap_le, the conditions paragraph, symbolic-only additions, the fix-pass sentence",
-  "plan_snapshot": "wholesale copy of the working plan through section 124 with the snapshot header paragraph updated",
+  "analysis": "new final section 'Common deployment experiment, CE-13: what is computational now'; review fix pass: production coverage, reveal exception (a), decoded frames, CE-A1 condition and the registration bullet, which claims have symbolic-eligibility corollaries and their per-family cost, beacon_gap_le, the conditions paragraph, symbolic-only additions, the fix-pass sentence; confirming-review record: replay_never named separately as the CE-12 P2 support fact (nit 2)",
+  "plan_snapshot": "wholesale copy of the working plan through section 125 with the snapshot header paragraph updated (confirming-review record; the header now names the SHA-256 of the copied working plan, which the two earlier CE-13 refreshes had left at the D-ct refresh's 825d9dca); review fix pass: wholesale copy through section 124",
   "trusted_boundary": "review fix pass: new final section 'Common deployment experiment: codec contracts and reveal profile' (plan section 19: the codec laws in both assumption lists)",
   "reviewed_inventory": "review fix pass: digest of proofs/trusted-boundary.md recomputed by coord.sh inv rehash (1a231e855385... -> 346f1f0f7b6e...); no row added or removed"
  },
  "plan": {
-  "working_plan_sha256": "23338214eca84d3449ba6698fa205afb9e9a513d49b6e77258f89344908f32eb",
-  "sections_through": 124,
+  "working_plan_sha256": "fd6fff038638903933950ade81a19a5e2afc55410de2215f9734e17bb124a381",
+  "sections_through": 125,
   "new_sections": [
    123,
-   124
+   124,
+   125
   ],
+  "earlier_working_plan_sha256": {
+   "123": "899f76ad5c44aab2fc8ec8e28d2a843348f09abc3b7383c2d977801ce73a70aa",
+   "124": "23338214eca84d3449ba6698fa205afb9e9a513d49b6e77258f89344908f32eb"
+  },
   "snapshot_body_equals_working_plan": true
  },
  "rows": [
@@ -683,8 +688,9 @@
   {
    "n": 5,
    "rows": "all symbolic-eligibility cells (event map)",
-   "correction": "designated implies symbolic eligibility only on NBF runs (designated_sym); symbolic eligibility implies designated or a gap on every run (server_gap, beacon_gap)",
-   "source": "PqxdhDeploymentHeadlineSymbolicLor.designated_sym"
+   "correction": "on runs with no rejected bundle call in Fresh, designated implies symbolic eligibility (designated_sym, a sufficient condition; nothing is stated for other runs); symbolic eligibility implies designated or a gap on every run (server_gap, beacon_gap)",
+   "source": "PqxdhDeploymentHeadlineSymbolicLor.designated_sym",
+   "wording_fixed_by": "confirming review, nit 4 (the first wording read as a necessary condition)"
   },
   {
    "n": 6,
@@ -750,7 +756,8 @@
   "Markdown tables: no code span containing a pipe; constant column counts",
   "snapshot body byte-identical to the working plan (through section 124)",
   "check-inventory exit 0 (review fix pass, after the trust-boundary rehash)",
-  "qualified names, name index names and production names resolved (name_check)"
+  "qualified names, name index names and production names resolved (name_check)",
+  "confirming-review record: git diff --check clean; snapshot body equals the working plan through section 125; document hashes recomputed"
  ],
  "not_run": [
   "make verify",
@@ -764,7 +771,7 @@
   527,
   529
  ],
- "next": "confirming review of the fix pass, then integration (PROTOCOL section 6)",
+ "next": "integration (PROTOCOL section 6): merge central a2665670 (production D-ct forms, message 531), update the documents' own sentences that call those forms pending, checks on the tip, integration lease",
  "review": {
   "reviewed_commit": "986262abde35b93036b6aab2ba023de09616ea98",
   "lenses": [
@@ -872,6 +879,49 @@
    "production D-ct module counted as 48 theorems; branch tip 02cec0fd",
    "receipt correction sources no longer refer to scratch notes"
   ],
-  "lean_change": "none; no assumption, contract or idealization added"
+  "lean_change": "none; no assumption, contract or idealization added",
+  "confirming_review": {
+   "reviewed_commit": "4dc0c791a31db0889bfb98f55f6e433c978ae109",
+   "diff": "986262ab..4dc0c791",
+   "central_basis": "529e2c8bf414f680ac57b159365280aab2e2f3f2",
+   "mode": "read-only, independent of the author",
+   "checked": [
+    "every finding of the review of 986262ab resolved; no statement weaker",
+    "receipt document hashes equal the committed files (7/7); working plan 23338214 equals the receipt; snapshot body equals the working plan",
+    "trusted-boundary.md digest 346f1f0f equals its reviewed-inventory row; check-inventory log exit message OK",
+    "every qualified name of the guide, the column section, the composition section and line 33, the analysis section and the new trust-boundary section resolves at central; every name-index row resolves in its module (epsCt in PqxdhDeploymentHeadlineDctEvent as documented)",
+    "the ctGapTerm forms without a _dct sibling are beacon_gap_le and the six named intermediate lemmas",
+    "the dct term scan matches the analysis cost sentence; FunctionalDecapsulation is added in exactly four _dct forms",
+    "premises: ce_a1 (Phase1ReadBack, SourceFullCorrect, KemBound; no FunctionalDecapsulation), a2_bound (shortRejects only), report_game, a2pub_owner_bound and r1prime_owner_bound (Phase1ReadBack, Phase2ReadBack), replay_game and record_replay_game (none)",
+    "ProVerif pin lines delayed-response.pvl:88, 116, 147 and fs-registration.pvl:238, 285, 313",
+    "compile caps of PqxdhDeploymentCompileCaps match the section 22 text",
+    "git diff --check clean; no /tmp or scratch-design citations in the new text; one paragraph per line; commit trailer exact"
+   ],
+   "verdict": "APPROVE_WITH_NITS",
+   "nits": [
+    {
+     "n": 1,
+     "nit": "s2b-S1 cites a symbolic-eligibility form (ce_app_server_sym) but its symbolic-only list left out the owners with a rejected bundle call in Fresh, although review fix pass item 12 says every such entry lists them",
+     "fix": "'under symbolic eligibility, owners with a rejected bundle call in Fresh' added to the s2b-S1 symbolic-only list (column)"
+    },
+    {
+     "n": 2,
+     "nit": "replay_never was grouped with the registration statements that precede CE-12, but it is a CE-12 P2 lemma (PqxdhDeploymentHeadlineInjective)",
+     "fix": "named separately as the CE-12 P2 support fact for C3 at index 0, not a probability bound and without production form (guide production paragraph and review fix pass item 1, analysis production paragraph)"
+    },
+    {
+     "n": 3,
+     "nit": "guide and column said the Beacon-side and mixed/either-side production forms keep ctGapTerm; only the symbolic-eligibility forms (and the gap bounds) do",
+     "fix": "both say 'the Beacon-side and either-side symbolic-eligibility production forms (and the gap bounds beacon_gap_le, ce_a1_linked and sym_gap)' keep ctGapTerm explicit at central 529e2c8b"
+    },
+    {
+     "n": 4,
+     "nit": "designated_sym was paraphrased as a necessary condition; it proves a sufficient one (pre-existing wording)",
+     "fix": "'conversely, on runs with no rejected bundle call in Fresh a designated handle is symbolically eligible (designated_sym; nothing is stated for other runs)' in the event-projection paragraph and correction 5; the column's App-b2s eligibility says the symbolic-eligibility forms use a symbolically eligible handle"
+    }
+   ],
+   "also_fixed": "the plan snapshot header named the D-ct refresh's working-plan SHA-256 (825d9dca) in the two earlier CE-13 refreshes; it now names the copied working plan",
+   "record": "guide section 'Confirming review'; working plan section 125 (snapshot through section 125)"
+  }
  }
 }
