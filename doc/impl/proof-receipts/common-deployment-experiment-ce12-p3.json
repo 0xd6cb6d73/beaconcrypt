@@ -1,6 +1,6 @@
 {
- "date": "2026-10-10T12:55:31.222883+00:00",
- "scope": "CE-12 P3 (track ce12/p3): the later-quantum (LQ-F) headlines of the common deployment experiment: CE-KT-L, CE-APP-L, CE-LOR-L (with Server-peer forms), their symbolic-eligibility corollaries (APP, KT and LOR; the gap and collision events are carried to the classical experiment of the run-phase adversary by game_classical_event and a support transfer, where eps_A2pub, eps_A1, ctGapTerm and ctCollTerm are terms of first and eps_inj is the fixed collider advantage of the setup at qCreate) and their bills with the post budget. Confidentiality only. Reviewed (semantic, composition, hygiene) at 049f1d5b; every finding fixed by the review fix pass; confirming review pending; not integrated.",
+ "date": "2026-10-10T13:11:53.525551+00:00",
+ "scope": "CE-12 P3 (track ce12/p3): the later-quantum (LQ-F) headlines of the common deployment experiment: CE-KT-L, CE-APP-L, CE-LOR-L (with Server-peer forms), their symbolic-eligibility corollaries (APP, KT and LOR; the gap and collision events are carried to the classical experiment of the run-phase adversary by game_classical_event and a support transfer, where eps_A2pub, eps_A1, ctGapTerm and ctCollTerm are terms of first and eps_inj is the fixed collider advantage of the setup at qCreate) and their bills with the post budget. Confidentiality only. Reviewed (semantic, composition, hygiene) at 049f1d5b; every finding fixed by the review fix pass (Lean commit f1c615bb, docstrings only, and documentation commit fe044df5); confirming review of fe044df5: every finding resolved (Lean changes docstrings only; frozen modules, guards and receipt verified), one documentation nit (the analysis sentence on the direct-reference scan said that no Server-authentication theorem and no authenticated key-transfer theorem is cited, broader than the scan, which looks for A2, T5 and T8, and in conflict with the citation of CE-A1 through CE-12 P2's bounds), taken by the commit that records the review (documentation only); not integrated at the record commit.",
  "basis": {
   "start": "df7727c3238f70388e3ea739df109ad025ace097",
   "merges": [],
@@ -14,20 +14,45 @@
  "topic": {
   "branch": "codex/deployment-ce12-later",
   "worktree": "/tmp/beaconcrypt-deployment-ce12-later",
-  "head_at_receipt": "f1c615bb7a57c0a4e1109c1b091211e92bba9a0f",
-  "note": "the fix-pass documentation commit that regenerates this receipt follows head_at_receipt; it changes no Lean file"
+  "head_at_receipt": "fe044df50e644ca9c2b404fc91dfe16a475d0a60",
+  "note": "the commit that records the confirming review (and last regenerates this receipt) follows head_at_receipt and changes no Lean or inventory file"
  },
  "plan": {
   "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
-  "sha256": "5a147c8821792bb91a860551000885cf8a1ad52cc408ae2ec870baeca6c60c0a",
+  "sha256": "bc07a643f000d30db7c1f59482f7a105d5d4b99894191569b324f40aab85acb9",
   "sections": [
    107,
    109,
-   111
+   111,
+   113
   ],
-  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/docs/plan.at-p3-fix-20261010T125142Z.md",
-  "dated_copy_sha256": "cfc14110a5e966654683c4605494174afdab1b05b1db4527cf973c8394639d7b",
-  "note": "sections 108 and 110 are CE-12 P2b (concurrent track)"
+  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/int/docs/plan.at-record-bc07a643.md",
+  "dated_copy_sha256": "bc07a643f000d30db7c1f59482f7a105d5d4b99894191569b324f40aab85acb9",
+  "note": "sha256 is the working plan just after section 113 was appended (the dated copy); CE-12 P2b appended its section 114 afterwards (the working plan extends the dated copy). sections 105, 106, 108 and 110 are CE-12 P2b (concurrent track); section 112 and the in-place edits of sections 2, 13, 14, 16 and 19 are item 7 increment I5's (branch codex/deployment-boundary-ledger)",
+  "section_113": "the confirming review of fe044df5 and its record commit",
+  "backup_before": {
+   "path": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/int/docs/plan.before-record-05b6d40f.md",
+   "sha256": "05b6d40ff487c867c3924192706b32f1ad6a300268168fdeb411c4c2ab6bdb22",
+   "note": "the working plan just before section 113 was appended, after item 7 increment I5 appended section 112 and edited sections 2, 13, 14, 16 and 19 in place"
+  },
+  "earlier": [
+   {
+    "sha256": "5a147c8821792bb91a860551000885cf8a1ad52cc408ae2ec870baeca6c60c0a",
+    "sections": [
+     107,
+     109,
+     111
+    ],
+    "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/docs/plan.at-p3-fix-20261010T125142Z.md",
+    "dated_copy_sha256": "cfc14110a5e966654683c4605494174afdab1b05b1db4527cf973c8394639d7b",
+    "note": "sections 108 and 110 are CE-12 P2b (concurrent track)",
+    "recorded_by": "the review fix pass fe044df5"
+   }
+  ],
+  "edit_script": {
+   "path": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/int/scripts/plan_edit.py",
+   "sha256": "c6a7861f5f4ef7851196bc5ecce5dc8e98ef04e402dc4e91a1b2962d6a7928c0"
+  }
  },
  "design": {
   "paths": [
@@ -106,6 +131,10 @@
   {
    "commit": "f1c615bb7a57c0a4e1109c1b091211e92bba9a0f",
    "subject": "Describe eps_inj as the setup's collider advantage in symbolic_lor_later"
+  },
+  {
+   "commit": "fe044df50e644ca9c2b404fc91dfe16a475d0a60",
+   "subject": "Fix the CE-12 P3 review findings in the guide, analysis and receipt"
   }
  ],
  "files_sha256": {
@@ -684,9 +713,9 @@
   "ctGapTerm and ctCollTerm explicit; beta's phase-1 uniform/base bill is P2b's ptc_bills (not on central); P3 proves its decapsulation count qFinish + 1"
  ],
  "open_points": [
-  "confirming review of the fix pass, then integration (merge central 2a33faf5 or newer first; recount 1930 + 7 = 1937 at 2a33faf5)",
+  "integration into central (PROTOCOL section 6), after the commit that records the confirming review: merge central 2a33faf5 or newer first (merge commit, central first at the anchors), recount 1930 + 7 = 1937 at 2a33faf5, rehash, checks on the topic tip into a fresh prefix",
   "after P2b is integrated: billed later forms with ptc_bills at first and closed later symbolic forms with epsilon_ctcoll",
-  "plan snapshot doc/impl/common-deployment-experiment-plan.md not refreshed (integration)"
+  "plan snapshot doc/impl/common-deployment-experiment-plan.md refreshed by the commit that records the confirming review (plan_snapshot); if central changes the snapshot before the integration (item 7 increment I5 also edits it), the integration takes the newer wholesale copy of the working plan"
  ],
  "checks": {
   "lean_tool": "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean via coord.sh lean claude, -j1 -M8000, timeout 180",
@@ -992,12 +1021,19 @@
    "note": "every constant of the seven modules (113): direct references (getUsedConstantsAsSet) flagged as A2 (any constant of PqxdhDeploymentProvenance or a name containing a2_bound), T5 (last component authenticated*, any constant of PqxdhRegistrationJointAuthenticatedSelectedKem) or T8 (a theorem of a PqxdhRegistrationJointKemKeyTransfer* module): none; liveness cases (a2_bound, authenticated_selected_kem, idealKeys_loss) all flagged. References into watched modules (Authenticated, Provenance, Origin, Uks, Binding, Injective, Euf, GapDh, KemKeyTransfer, Boundary): Ed25519PublicKey, HasAttachedVerificationAdapter, PqxdhJointGapDh.ScalarBytes, PqxdhDeploymentServerAuthInjective.Collision and identities, PqxdhRegistrationJointKemKeyTransfer.PrfBills (bill predicate). External theorems cited by the symbolic modules: server_gap_bound, sym_gap, ce_a1_linked, identity_collision_game (CE-12 P2), applied to PqxdhDeploymentSecrecy.game ... first after gaps_later, serverGap_later, beaconGap_later, collisions_later or identity_later; the log lists every external BeaconcryptCore theorem cited per module. Scratch probe, not a committed check; the semantic and hygiene reviews ran comparable probes (review-semantic/probe/Refs.lean, review-hygiene/probe/DirectRefs.lean)"
   },
   "git_diff_check": {
-   "range": "df7727c3238f70388e3ea739df109ad025ace097..f1c615bb7a57c0a4e1109c1b091211e92bba9a0f",
-   "exit": 0
+   "range": "df7727c3238f70388e3ea739df109ad025ace097..fe044df50e644ca9c2b404fc91dfe16a475d0a60",
+   "exit": 0,
+   "earlier": [
+    {
+     "range": "df7727c3238f70388e3ea739df109ad025ace097..f1c615bb7a57c0a4e1109c1b091211e92bba9a0f",
+     "exit": 0
+    }
+   ],
+   "note": "the commit that records the confirming review is checked with git diff --cached --check before it is made"
   }
  },
  "review": {
-  "status": "reviewed at 049f1d5b (semantic, composition, hygiene; scratch ce12/p3/review-semantic, review-composition, review-hygiene): no defect in any Lean statement, composition re-derived hop by hop (no double count, post budget billed); eleven findings (three minor, eight nits, one a record with no action), all fixed by the review fix pass; confirming review pending",
+  "status": "reviewed at 049f1d5b (semantic, composition, hygiene; scratch ce12/p3/review-semantic, review-composition, review-hygiene): no defect in any Lean statement, composition re-derived hop by hop (no double count, post budget billed); eleven findings (three minor, eight nits, one a record with no action), all fixed by the review fix pass (f1c615bb, fe044df5); confirming review of fe044df5: every finding resolved, one documentation nit, taken by the commit that records the review; not integrated at the record commit",
   "findings_fixed": [
    "minor: analysis did not state the premises of the symbolic forms and the receipt left KemBound off the symbolic KT forms: analysis Symbolic eligibility premises sentence; guide premises per form; contracts_used.premises",
    "nit: no recorded scan behind the no-A2/T5/T8 claim: direct-reference scan (checks.direct_reference_scan), guide checks, analysis",
@@ -1010,7 +1046,50 @@
    "nit: pre-commit inventory runs described as staged and warning-free: guide checks and checks.inventories notes now give the dirt and the comm warnings",
    "nit: /tmp worktree path in the guide status paragraph: dropped (topic.worktree keeps it)",
    "nit: closure size 1617 was not a closure size: 1579 BeaconcryptCore modules (scan.closure_beaconcryptcore_modules), 38 external names separate"
-  ]
+  ],
+  "confirming_review": {
+   "reviewed_range": "049f1d5ba99727eb828086d6049e83c37b9b1d30..fe044df50e644ca9c2b404fc91dfe16a475d0a60",
+   "reviewed_commit": "fe044df50e644ca9c2b404fc91dfe16a475d0a60",
+   "date": "2026-10-10",
+   "scope": "the review fix pass (Lean commit f1c615bb, documentation commit fe044df5): the findings of the P3 review at 049f1d5b, statements, guards, the frozen modules, the receipt, the documentation",
+   "verdict": "APPROVE_WITH_NITS: every finding of the P3 review resolved at fe044df5 (no further action for any of them); one documentation nit, taken by the commit that records the review",
+   "record": "all eight findings resolved at fe044df5; Lean changes are docstrings only; frozen modules, guards and receipt verified",
+   "record_note": "the record line as the confirming review gave it; review.findings_fixed lists the review's findings in eleven entries (three minor, eight nits, one of them a record with no action)",
+   "nits": [
+    {
+     "where": "doc/formal-verification-analysis.md, CE-12 P3 entry, paragraph \"Symbolic eligibility\", last sentence",
+     "finding": "said that a scan of the direct references of all 113 constants \"confirms that no Server-authentication theorem and no authenticated key-transfer theorem is cited\"; the scan looks for A2, T5 and T8 only, and the symbolic forms cite the Server-authentication bound CE-A1 (CE-12 P2 analysis) through CE-12 P2's ce_a1_linked and CE-A2pub through server_gap_bound",
+     "outcome": "taken: \"...; a scan of the direct references of all 113 constants of the stage's modules confirms that they cite neither the provenance theorem A2 nor item 2's authenticated key-transfer theorems T5 and T8; CE-A2pub and CE-A1 enter only through CE-12 P2's bounds on that classical experiment.\" The guide's statements of the scan already named A2, T5 and T8 and are unchanged; checks.direct_reference_scan unchanged"
+    }
+   ],
+   "checks": [
+    "Lean diff 049f1d5b..fe044df5 read line by line: docstrings of PqxdhDeploymentLaterHeadlineSymbolicLor only; no module that existed before the track touched (frozen); the module's reviewed-inventory row (0b3cedc8) equals the file",
+    "PqxdhDeploymentLaterHeadlineSymbolicLor recompiled without -o through coord.sh lean at the clean head fe044df5 against ce12/p3/fix/leanpath: exit 0, empty log",
+    "guard scan (confirm/scripts/guards.py) over the seven modules: 91 theorems (16, 7, 5, 7, 24, 8, 24), 91 exact guards in declaration order, every axiom list within propext, Classical.choice, Quot.sound; no forbidden token",
+    "receipt module and file hashes, theorem lists, plan, design and LEAN_PATH hashes, reference-scan log and probe hashes equal to HEAD; clean-head inventory at fe044df5 exit 0, no dirt (fix/logs/inventory-fix-clean.*)"
+   ],
+   "recompile": {
+    "module": "PqxdhDeploymentLaterHeadlineSymbolicLor",
+    "exit": 0,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/confirm/logs/symboliclor-head-1.log",
+    "log_bytes": 0,
+    "head": "fe044df50e644ca9c2b404fc91dfe16a475d0a60",
+    "dirty_paths": 0,
+    "source_sha256": "0b3cedc8e0ecc0df089b1c7321a8b64e382603c4598c7c08cb2e0a9d8d75fdcb",
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/fix/leanpath",
+    "leanpath_sha256": "b2a7f91389ac5f793662d2f40f4a3cab33e27b0f550fa0e84a999732bcd912ef",
+    "mode": "without -o",
+    "script": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/confirm/scripts/check.sh",
+    "script_sha256": "46ce061b2ae2c1db69e729807c56b00ca6703eaacf5403f93e2c67a89c930014"
+   },
+   "guard_scan": {
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/confirm/logs/guards.json",
+    "log_sha256": "93cf51a5b62e9c8483af052445d406b08e069ee4a064ad4f0308100817492ebf",
+    "script": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/confirm/scripts/guards.py",
+    "script_sha256": "cedd0281dcabbf04c2636abacec8b7f66c4ab6ee05d51d7ad63437b71660ddc8"
+   },
+   "scratch": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/confirm/"
+  }
  },
  "fix_pass": {
   "start": "049f1d5ba99727eb828086d6049e83c37b9b1d30",
@@ -1055,6 +1134,19 @@
    "/tmp/bc-arc-scratch/common-experiment/ce12/p3/fix/scripts/probe.sh",
    "/tmp/bc-arc-scratch/common-experiment/ce12/p3/fix/scripts/receipt_fix.py",
    "/tmp/bc-arc-scratch/common-experiment/ce12/p3/fix/scripts/scan.py"
-  ]
+  ],
+  "docs_commit": "fe044df50e644ca9c2b404fc91dfe16a475d0a60"
+ },
+ "plan_snapshot": {
+  "path": "doc/impl/common-deployment-experiment-plan.md",
+  "sha256": "b0335609ca4748c0171e55317fc03b5d8e2de947b0719c7b2d8b68c68282f0a6",
+  "refreshed_from_sha256": "bc07a643f000d30db7c1f59482f7a105d5d4b99894191569b324f40aab85acb9",
+  "through_section": 113,
+  "sections": "0-18 and the decision sections 19-113",
+  "script": {
+   "path": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/int/scripts/snapshot.py",
+   "sha256": "cd9f71023d4c427783a92af67d63c51c5264ea9b40cc33406c6c2aba85363702"
+  },
+  "note": "refreshed in the commit that records the confirming review as a wholesale copy of the working plan: the body equals the working plan from its third line; the snapshot paragraph, built from central 2a33faf5's, records the hash and the refresh history. This branch carried central 2a33faf5's snapshot (the CE-12 P2 refresh, working plan 11657fb2, through section 104) unchanged until this commit; the refresh adds item 7 increment I5's in-place edits of sections 2, 13, 14, 16 and 19 (six lines, equal line for line to that increment's committed snapshot 76d7f494 on codex/deployment-boundary-ledger, checked by the script), section 104's integration bullet and sections 105 to 113 (section 112 equal to I5's). If central changes the snapshot before the integration, the integration merge takes the newer wholesale copy of the working plan instead of merging by hand and states it in the integration record"
  }
 }
