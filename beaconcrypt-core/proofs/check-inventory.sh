@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1933
+	[handwritten-lean]=1934
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -40226,6 +40226,61 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem beta_decapsulations_later([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineBills theorem beta_decapsulations_later"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineBills\.later_target_bills$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineBills dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineBills.later_target_bills"
 require_line_count 1 '^theorem later_target_bills([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineBills theorem later_target_bills"
+
+# CE-12 P3: symbolic_lor for the later-quantum game (support transfer from the classical experiment of the run-phase adversary; run-phase difference terms through game_classical_event)
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterHeadlineSymbolicLor.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineSymbolicLor$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentLaterHeadlineSymbolicLor root import"
+require_line_count 24 '^theorem ' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor theorem inventory"
+require_line_count 24 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineSymbolicLor\.caches_refl$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineSymbolicLor.caches_refl"
+require_line_count 1 '^theorem caches_refl([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor theorem caches_refl"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineSymbolicLor\.kin_lorEligSym$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineSymbolicLor.kin_lorEligSym"
+require_line_count 1 '^theorem kin_lorEligSym([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor theorem kin_lorEligSym"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineSymbolicLor\.kin_lorEligPeerSym$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineSymbolicLor.kin_lorEligPeerSym"
+require_line_count 1 '^theorem kin_lorEligPeerSym([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor theorem kin_lorEligPeerSym"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineSymbolicLor\.kin_serverGap$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineSymbolicLor.kin_serverGap"
+require_line_count 1 '^theorem kin_serverGap([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor theorem kin_serverGap"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineSymbolicLor\.kin_beaconGap$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineSymbolicLor.kin_beaconGap"
+require_line_count 1 '^theorem kin_beaconGap([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor theorem kin_beaconGap"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineSymbolicLor\.kin_identity$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineSymbolicLor.kin_identity"
+require_line_count 1 '^theorem kin_identity([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor theorem kin_identity"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineSymbolicLor\.kin_happens$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineSymbolicLor.kin_happens"
+require_line_count 1 '^theorem kin_happens([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor theorem kin_happens"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineSymbolicLor\.kin_ctColl$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineSymbolicLor.kin_ctColl"
+require_line_count 1 '^theorem kin_ctColl([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor theorem kin_ctColl"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineSymbolicLor\.kin_identity_decide$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineSymbolicLor.kin_identity_decide"
+require_line_count 1 '^theorem kin_identity_decide([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor theorem kin_identity_decide"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineSymbolicLor\.support_later$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineSymbolicLor.support_later"
+require_line_count 1 '^theorem support_later([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor theorem support_later"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineSymbolicLor\.lor_inclusion_later$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineSymbolicLor.lor_inclusion_later"
+require_line_count 1 '^theorem lor_inclusion_later([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor theorem lor_inclusion_later"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineSymbolicLor\.lor_difference_later$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineSymbolicLor.lor_difference_later"
+require_line_count 1 '^theorem lor_difference_later([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor theorem lor_difference_later"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineSymbolicLor\.lor_difference_peer_later$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineSymbolicLor.lor_difference_peer_later"
+require_line_count 1 '^theorem lor_difference_peer_later([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor theorem lor_difference_peer_later"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineSymbolicLor\.kin_run$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineSymbolicLor.kin_run"
+require_line_count 1 '^theorem kin_run([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor theorem kin_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineSymbolicLor\.collisions_later$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineSymbolicLor.collisions_later"
+require_line_count 1 '^theorem collisions_later([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor theorem collisions_later"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineSymbolicLor\.identity_later$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineSymbolicLor.identity_later"
+require_line_count 1 '^theorem identity_later([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor theorem identity_later"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineSymbolicLor\.symbolic_lor_later_le$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineSymbolicLor.symbolic_lor_later_le"
+require_line_count 1 '^theorem symbolic_lor_later_le([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor theorem symbolic_lor_later_le"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineSymbolicLor\.lor_difference_later_bound$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineSymbolicLor.lor_difference_later_bound"
+require_line_count 1 '^theorem lor_difference_later_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor theorem lor_difference_later_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineSymbolicLor\.symbolic_lor_later$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineSymbolicLor.symbolic_lor_later"
+require_line_count 1 '^theorem symbolic_lor_later([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor theorem symbolic_lor_later"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineSymbolicLor\.symbolic_lor_later_bound$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineSymbolicLor.symbolic_lor_later_bound"
+require_line_count 1 '^theorem symbolic_lor_later_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor theorem symbolic_lor_later_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineSymbolicLor\.symbolic_lor_server_later_le$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineSymbolicLor.symbolic_lor_server_later_le"
+require_line_count 1 '^theorem symbolic_lor_server_later_le([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor theorem symbolic_lor_server_later_le"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineSymbolicLor\.lor_difference_server_later_bound$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineSymbolicLor.lor_difference_server_later_bound"
+require_line_count 1 '^theorem lor_difference_server_later_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor theorem lor_difference_server_later_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineSymbolicLor\.symbolic_lor_server_later$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineSymbolicLor.symbolic_lor_server_later"
+require_line_count 1 '^theorem symbolic_lor_server_later([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor theorem symbolic_lor_server_later"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineSymbolicLor\.symbolic_lor_server_later_bound$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineSymbolicLor.symbolic_lor_server_later_bound"
+require_line_count 1 '^theorem symbolic_lor_server_later_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineSymbolicLor theorem symbolic_lor_server_later_bound"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
