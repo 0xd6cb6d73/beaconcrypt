@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1951
+	[handwritten-lean]=1952
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -41052,6 +41052,39 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem whole_keyed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctReceive theorem whole_keyed"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctReceive\.factor_key$' "$selected_source_module" "PqxdhDeploymentHeadlineDctReceive dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctReceive.factor_key"
 require_line_count 1 '^theorem factor_key([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctReceive theorem factor_key"
+
+# CE-12 D-ct: the Beacon finish reads an R1 entry and commits under its sequence-one key (real and known-root branches).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineDctFinish.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctFinish$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentHeadlineDctFinish root import"
+require_line_count 13 '^theorem ' "$selected_source_module" "PqxdhDeploymentHeadlineDctFinish theorem inventory"
+require_line_count 13 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentHeadlineDctFinish guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctFinish\.r1Grows_trans$' "$selected_source_module" "PqxdhDeploymentHeadlineDctFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctFinish.r1Grows_trans"
+require_line_count 1 '^theorem r1Grows_trans([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctFinish theorem r1Grows_trans"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctFinish\.nativeCtx_keeps$' "$selected_source_module" "PqxdhDeploymentHeadlineDctFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctFinish.nativeCtx_keeps"
+require_line_count 1 '^theorem nativeCtx_keeps([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctFinish theorem nativeCtx_keeps"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctFinish\.sourceRoot_read$' "$selected_source_module" "PqxdhDeploymentHeadlineDctFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctFinish.sourceRoot_read"
+require_line_count 1 '^theorem sourceRoot_read([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctFinish theorem sourceRoot_read"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctFinish\.callbacks_grows$' "$selected_source_module" "PqxdhDeploymentHeadlineDctFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctFinish.callbacks_grows"
+require_line_count 1 '^theorem callbacks_grows([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctFinish theorem callbacks_grows"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctFinish\.run_callbacks_grows$' "$selected_source_module" "PqxdhDeploymentHeadlineDctFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctFinish.run_callbacks_grows"
+require_line_count 1 '^theorem run_callbacks_grows([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctFinish theorem run_callbacks_grows"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctFinish\.tail_keyed$' "$selected_source_module" "PqxdhDeploymentHeadlineDctFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctFinish.tail_keyed"
+require_line_count 1 '^theorem tail_keyed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctFinish theorem tail_keyed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctFinish\.owner_keyed$' "$selected_source_module" "PqxdhDeploymentHeadlineDctFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctFinish.owner_keyed"
+require_line_count 1 '^theorem owner_keyed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctFinish theorem owner_keyed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctFinish\.scheduleFinish_keyed$' "$selected_source_module" "PqxdhDeploymentHeadlineDctFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctFinish.scheduleFinish_keyed"
+require_line_count 1 '^theorem scheduleFinish_keyed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctFinish theorem scheduleFinish_keyed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctFinish\.consumer_keyed$' "$selected_source_module" "PqxdhDeploymentHeadlineDctFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctFinish.consumer_keyed"
+require_line_count 1 '^theorem consumer_keyed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctFinish theorem consumer_keyed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctFinish\.groupNative_keyed$' "$selected_source_module" "PqxdhDeploymentHeadlineDctFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctFinish.groupNative_keyed"
+require_line_count 1 '^theorem groupNative_keyed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctFinish theorem groupNative_keyed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctFinish\.prepareCE_facts$' "$selected_source_module" "PqxdhDeploymentHeadlineDctFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctFinish.prepareCE_facts"
+require_line_count 1 '^theorem prepareCE_facts([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctFinish theorem prepareCE_facts"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctFinish\.keepLift_run$' "$selected_source_module" "PqxdhDeploymentHeadlineDctFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctFinish.keepLift_run"
+require_line_count 1 '^theorem keepLift_run([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctFinish theorem keepLift_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctFinish\.finishChallenge_keyed$' "$selected_source_module" "PqxdhDeploymentHeadlineDctFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctFinish.finishChallenge_keyed"
+require_line_count 1 '^theorem finishChallenge_keyed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctFinish theorem finishChallenge_keyed"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
