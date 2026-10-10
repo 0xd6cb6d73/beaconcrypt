@@ -2059,6 +2059,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentIdealPostItemRun
 
 import BeaconcryptCore.Computational.PqxdhDeploymentIdealPostReduce
 
+import BeaconcryptCore.Computational.PqxdhDeploymentIdealPostGoodBuild
+
 /-!
 # Beaconcrypt-core verification root
 

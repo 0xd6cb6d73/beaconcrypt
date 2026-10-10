@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1871
+	[handwritten-lean]=1872
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -37961,6 +37961,37 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem activeBranch_of_middle([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostReduce theorem activeBranch_of_middle"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostReduce\.ideal_compile_of_middle$' "$selected_source_module" "PqxdhDeploymentIdealPostReduce dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostReduce.ideal_compile_of_middle"
 require_line_count 1 '^theorem ideal_compile_of_middle([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostReduce theorem ideal_compile_of_middle"
+
+# CE-11b unit U6, fourth part: CE-3's invariant across the marked build of the middle execution (factored build footprint, Phase2ReadBack).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostGoodBuild.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentIdealPostGoodBuild$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentIdealPostGoodBuild root import"
+require_line_count 12 '^theorem ' "$selected_source_module" "PqxdhDeploymentIdealPostGoodBuild theorem inventory"
+require_line_count 12 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentIdealPostGoodBuild guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostGoodBuild\.afterInitializationW_shape$' "$selected_source_module" "PqxdhDeploymentIdealPostGoodBuild dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostGoodBuild.afterInitializationW_shape"
+require_line_count 1 '^theorem afterInitializationW_shape([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostGoodBuild theorem afterInitializationW_shape"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostGoodBuild\.continueRust_shape$' "$selected_source_module" "PqxdhDeploymentIdealPostGoodBuild dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostGoodBuild.continueRust_shape"
+require_line_count 1 '^theorem continueRust_shape([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostGoodBuild theorem continueRust_shape"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostGoodBuild\.candidateW_shape$' "$selected_source_module" "PqxdhDeploymentIdealPostGoodBuild dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostGoodBuild.candidateW_shape"
+require_line_count 1 '^theorem candidateW_shape([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostGoodBuild theorem candidateW_shape"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostGoodBuild\.genericBuildW_shape$' "$selected_source_module" "PqxdhDeploymentIdealPostGoodBuild dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostGoodBuild.genericBuildW_shape"
+require_line_count 1 '^theorem genericBuildW_shape([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostGoodBuild theorem genericBuildW_shape"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostGoodBuild\.tailImpl_write$' "$selected_source_module" "PqxdhDeploymentIdealPostGoodBuild dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostGoodBuild.tailImpl_write"
+require_line_count 1 '^theorem tailImpl_write([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostGoodBuild theorem tailImpl_write"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostGoodBuild\.factored_logged$' "$selected_source_module" "PqxdhDeploymentIdealPostGoodBuild dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostGoodBuild.factored_logged"
+require_line_count 1 '^theorem factored_logged([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostGoodBuild theorem factored_logged"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostGoodBuild\.freeWrite_shape$' "$selected_source_module" "PqxdhDeploymentIdealPostGoodBuild dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostGoodBuild.freeWrite_shape"
+require_line_count 1 '^theorem freeWrite_shape([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostGoodBuild theorem freeWrite_shape"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostGoodBuild\.hiddenBuild_shape$' "$selected_source_module" "PqxdhDeploymentIdealPostGoodBuild dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostGoodBuild.hiddenBuild_shape"
+require_line_count 1 '^theorem hiddenBuild_shape([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostGoodBuild theorem hiddenBuild_shape"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostGoodBuild\.buildHidden_footprint$' "$selected_source_module" "PqxdhDeploymentIdealPostGoodBuild dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostGoodBuild.buildHidden_footprint"
+require_line_count 1 '^theorem buildHidden_footprint([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostGoodBuild theorem buildHidden_footprint"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostGoodBuild\.good_of_build$' "$selected_source_module" "PqxdhDeploymentIdealPostGoodBuild dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostGoodBuild.good_of_build"
+require_line_count 1 '^theorem good_of_build([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostGoodBuild theorem good_of_build"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostGoodBuild\.compiledMid_buildHidden$' "$selected_source_module" "PqxdhDeploymentIdealPostGoodBuild dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostGoodBuild.compiledMid_buildHidden"
+require_line_count 1 '^theorem compiledMid_buildHidden([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostGoodBuild theorem compiledMid_buildHidden"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostGoodBuild\.good_buildHidden$' "$selected_source_module" "PqxdhDeploymentIdealPostGoodBuild dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostGoodBuild.good_buildHidden"
+require_line_count 1 '^theorem good_buildHidden([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostGoodBuild theorem good_buildHidden"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
