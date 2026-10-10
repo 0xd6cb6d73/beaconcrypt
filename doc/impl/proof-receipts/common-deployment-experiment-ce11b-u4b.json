@@ -1,6 +1,6 @@
 {
- "date": "2026-10-10T00:13:38.839695+00:00",
- "scope": "CE-11b unit U4, remainder (track u4b), with its review fix pass: the native facts for the Beacon converse, the Beacon provenance invariant, L4 (ideal_beacon), the full C5 restated (ideal_slots: IdealSlots or Anomaly) and its prefix-closed form (ideal_slots_prefix) on the annotated record world with envGD; the transcript guess of the Beacon-side anomaly with a generic identical-until-stop coupling; anomaly_le (the anomaly at most ctGuessPk, hence ctGuess) through c1_split and an identical-until-selected-accept coupling of the final split game over the challenge; from the review fix pass the guess-event bound guess_le_pk_sup and the bounds for the anomaly on a prefix (anomaly_prefix_le_pk_sup, anomaly_prefix_le). Not delivered (unit U4 not complete): anomaly_le_pk and anomaly_prefix_le_pk (ctGuessBy at a constructed guesser without the selected secret key; next step, module PqxdhDeploymentIdealAnomalyGuesser) and unit U8 (its own step, module PqxdhDeploymentIdealKeyFirst).",
+ "date": "2026-10-10T00:29:02.373411+00:00",
+ "scope": "CE-11b unit U4, remainder (track u4b), with its review fix pass: the native facts for the Beacon converse, the Beacon provenance invariant, L4 (ideal_beacon), the full C5 restated (ideal_slots: IdealSlots or Anomaly) and its prefix-closed form (ideal_slots_prefix) on the annotated record world with envGD; the transcript guess of the Beacon-side anomaly with a generic identical-until-stop coupling; anomaly_le (the anomaly at most ctGuessPk, hence ctGuess) through c1_split and an identical-until-selected-accept coupling of the final split game over the challenge; from the review fix pass the guess-event bound guess_le_pk_sup and the bounds for the anomaly on a prefix (anomaly_prefix_le_pk_sup, anomaly_prefix_le). Not delivered (unit U4 not complete): anomaly_le_pk and anomaly_prefix_le_pk (ctGuessBy at a constructed guesser without the selected secret key; next step, module PqxdhDeploymentIdealAnomalyGuesser) and unit U8 (its own step, module PqxdhDeploymentIdealKeyFirst). Reviewed at 1217aa58 (findings fixed by the review fix pass); confirming review of 32561f4c: APPROVE_WITH_NITS, all ten findings resolved or correctly recorded, the two disclosed scope gaps open as intended, its documentation nit (the trial-merge description) fixed by the documentation commit that records it before the integration (no Lean change); not integrated into central at the recording commit.",
  "basis": {
   "start": "97befa844ffe9db0fbec55eea7b7bd7516ac7601",
   "central_at_receipt": "dd681f34cd9459993ae5cf19eada13b1694d981d",
@@ -20,27 +20,51 @@
     "doc/impl/common-deployment-experiment.md"
    ],
    "clean": "doc/impl/common-deployment-experiment-plan.md (changed only by central), the four PqxdhDeploymentIdealPost* modules and the u6b receipt (added or changed only by central)",
-   "handwritten_lean_after_merge": 1870
+   "handwritten_lean_after_merge": 1870,
+   "conflicts_by_file": {
+    "beaconcrypt-core/proofs/check-inventory.sh": "one hunk: the module blocks only (this track's four blocks against the third part of unit U6's four, before \"# Separate primitive-fidelity profile\"); the [handwritten-lean] count line changed identically on both sides (1862 -> 1866) and merges silently to 1866, which coord.sh inv recount must raise to 1870 (check-inventory.sh fails otherwise)",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "one hunk: the end of the import block (four imports on each side)",
+    "beaconcrypt-core/proofs/reviewed-inventory.txt": "three hunks: the digest row of proofs/lean/BeaconcryptCore.lean, the digest row of proofs/check-inventory.sh, and the module rows at the end of the file (four on each side)",
+    "doc/formal-verification-analysis.md": "one hunk: the end of the file (one section on each side)",
+    "doc/impl/common-deployment-experiment.md": "two hunks: the status paragraphs and the section block before \"CE-8: what is proved\""
+   },
+   "correction": "corrected after the confirming review of 32561f4c: the guide status paragraph and plan section 82 (review fix pass) listed the handwritten Lean count, the digest rows and the module blocks as conflicts of check-inventory.sh; check-inventory.sh conflicts only in the module blocks, the count merges silently to 1866 and must be recounted to 1870, and the conflicting digest rows are in reviewed-inventory.txt (guide status paragraph and open points, plan sections 82 and 83 now say so)",
+   "confirming_review_trial_merges": {
+    "note": "dd681f34 with 32561f4c and with de2deeaa, git merge-tree into a separate object directory (no writes to the shared repository); conflicts in the same five files",
+    "merge_tree_head": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4b/confirm/merge-tree-head.txt",
+    "merge_tree_head_sha256": "f318bf750facb584845506ab9f59d53f6340efa4b28e00cdf5df447877ea6c73"
+   }
   }
  },
  "topic": {
   "branch": "codex/deployment-ce11b",
   "worktree": "/tmp/beaconcrypt-deployment-ce11b",
-  "head_at_receipt": "de2deeaa71d0324cc3f3b428e3cb9a51aa49742c"
+  "head_at_receipt": "32561f4ce0c398e5affd66559bc6e92431412044"
  },
  "plan": {
   "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
-  "sha256": "6fb8a9749a5e17f6c7ad95df44d94a28d367cdf1427889d3f8e3026bf7cb6885",
-  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4b/fix/docs/plan.at-u4b-fix-receipt-6fb8a974.md",
-  "dated_copy_sha256": "6fb8a9749a5e17f6c7ad95df44d94a28d367cdf1427889d3f8e3026bf7cb6885",
+  "sha256": "45f3f79b7d48f7596f7a8dc8cf1a940ab53112611a2326e9516681a3f396a9be",
+  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4b/int/docs/plan.at-record-45f3f79b.md",
+  "dated_copy_sha256": "45f3f79b7d48f7596f7a8dc8cf1a940ab53112611a2326e9516681a3f396a9be",
   "sections": [
    80,
-   82
+   82,
+   83
   ],
   "section_80_corrected": "the stale \"no merge needed\" (central note added) and \"reads the challenge only at the selected raw accept\" (now: does not read it before the selected raw accept, where it is first read)",
+  "section_82_corrected": "the trial-merge record (check-inventory.sh conflicts only in the module blocks; the count merges silently to 1866 and must be recounted to 1870; the conflicting digest rows are in reviewed-inventory.txt), by the commit that records the confirming review",
+  "section_83": "the confirming review of 32561f4c and its record commit (81 belongs to track u6b)",
+  "earlier": [
+   {
+    "note": "hash recorded by the review fix pass receipt (32561f4c; through section 82)",
+    "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4b/fix/docs/plan.at-u4b-fix-receipt-6fb8a974.md",
+    "dated_copy_sha256": "6fb8a9749a5e17f6c7ad95df44d94a28d367cdf1427889d3f8e3026bf7cb6885"
+   }
+  ],
   "backup_before": [
    "/tmp/bc-arc-scratch/common-experiment/ce11b/u4b/docs/plan.before-u4b-72a7509f.md",
-   "/tmp/bc-arc-scratch/common-experiment/ce11b/u4b/fix/docs/plan.before-u4b-fix-ba563390.md"
+   "/tmp/bc-arc-scratch/common-experiment/ce11b/u4b/fix/docs/plan.before-u4b-fix-ba563390.md",
+   "/tmp/bc-arc-scratch/common-experiment/ce11b/u4b/int/docs/plan.before-record-6fb8a974.md"
   ]
  },
  "design": {
@@ -60,7 +84,8 @@
  "notes": {
   "track_notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4b/NOTES.md",
   "fix_notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4b/fix/NOTES.md",
-  "ce11b_notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/NOTES.md (section \"Track u4b\")"
+  "ce11b_notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/NOTES.md (section \"Track u4b\")",
+  "integration_notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4b/int/NOTES.md"
  },
  "commits": [
   {
@@ -86,9 +111,13 @@
   {
    "commit": "de2deeaa71d0324cc3f3b428e3cb9a51aa49742c",
    "subject": "Bound the CE-11b prefix anomaly by the ciphertext guess"
+  },
+  {
+   "commit": "32561f4ce0c398e5affd66559bc6e92431412044",
+   "subject": "Document the CE-11b unit U4 remainder review fix pass"
   }
  ],
- "commits_note": "First-parent commits on the topic after the basis made before this receipt was last generated; the documentation commit of the review fix pass, which adds this version of the receipt, is not listed.",
+ "commits_note": "First-parent commits on the topic after the basis made before this receipt was last generated; the commit that records the confirming review (and last regenerates this receipt) is not listed.",
  "files_sha256": {
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealBeaconFacts.lean": "9acd8ef7c750a4b7c0c76dcd35ff0b5d07e906a9af1c900866f38e05f82a09a8",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealBeacon.lean": "bc208598fa7a6b23a4ad9571925206bd39bd51f473d098bde0d5ea9d27431a20",
@@ -1186,7 +1215,7 @@
   }
  },
  "git_diff_check": {
-  "range": "97befa844ffe9db0fbec55eea7b7bd7516ac7601..HEAD",
+  "range": "97befa844ffe9db0fbec55eea7b7bd7516ac7601..working tree (with the confirming-review record)",
   "exit": 0,
   "output": ""
  },
@@ -1203,7 +1232,7 @@
   "U8": "1.25-2.25 (rechecked with the projection step), not started"
  },
  "review": {
-  "status": "reviewed at 1217aa58 (independent semantic and hygiene lenses): no wrong statement, proof or hidden assumption; two disclosed scope gaps (major), two minor findings and nits, all addressed by the review fix pass (key fix_pass); not re-reviewed; not integrated",
+  "status": "reviewed at 1217aa58 (independent semantic and hygiene lenses): no wrong statement, proof or hidden assumption; two disclosed scope gaps (major), two minor findings and nits, all addressed by the review fix pass (key fix_pass); fix pass confirmed by a confirming review of 32561f4c (APPROVE_WITH_NITS), recorded before the integration; the two scope gaps stay open as intended",
   "reviewed_commit": "1217aa58cd7848b01d2d9296dd4721591f58e88b",
   "lenses": [
    "semantic",
@@ -1212,12 +1241,86 @@
   "review_scratch": [
    "/tmp/bc-arc-scratch/common-experiment/ce11b/u4b/review-semantic",
    "/tmp/bc-arc-scratch/common-experiment/ce11b/u4b/review-hygiene"
-  ]
+  ],
+  "confirming_review": {
+   "reviewed_range": "1217aa58cd7848b01d2d9296dd4721591f58e88b..32561f4ce0c398e5affd66559bc6e92431412044",
+   "reviewed_commit": "32561f4ce0c398e5affd66559bc6e92431412044",
+   "scope": "the fix pass de2deeaa (Lean: anomaly_prefix_guess, guess_le_pk_sup, anomaly_prefix_le_pk_sup, anomaly_prefix_le; two linter suppressions removed) and 32561f4c (documentation, receipt): the ten findings of the review of 1217aa58, statements, guards, receipt, inventory, documentation, Rust citations, trial merge with central",
+   "verdict": "APPROVE_WITH_NITS: all ten earlier findings resolved or correctly recorded; the two disclosed scope gaps (anomaly_le_pk with anomaly_prefix_le_pk; unit U8) stay open as intended; one documentation nit (the trial-merge description: check-inventory.sh conflicts only in the module blocks, the handwritten Lean count merges silently to 1866 and must be recounted to 1870, the conflicting digest rows are in reviewed-inventory.txt); a record of the confirming checks (no action)",
+   "checks": [
+    "trial merges of dd681f34 with 32561f4c and with de2deeaa (git merge-tree into confirm/objects, an alternate object directory, no writes to the shared git directory): conflicts in check-inventory.sh, BeaconcryptCore.lean, reviewed-inventory.txt, the analysis and the guide, as recorded",
+    "handwritten Lean count: 97befa84 1862, dd681f34 1866, 32561f4c 1866, so 1870 after the merge",
+    "guards 20/20, 23/23, 10/10, 24/24 = 77; theorem names equal the receipt's; axiom sets within propext, Classical.choice, Quot.sound; receipt file hashes equal the head",
+    "commits de2deeaa and 32561f4c: exact footer; git ls-remote shows 32561f4c",
+    "PqxdhDeploymentIdealGuess, PqxdhDeploymentIdealAnomalyBound and the root recompiled from git-archive copies of 32561f4c (confirm/src) through coord.sh lean (-j1 -M8000, timeout 180) with LEAN_PATH confirm/leanpath (confirm/olean, a resolved mirror of u4b/olean without the Guess and AnomalyBound oleans and the root artifacts, then the published 97befa84 LEAN_PATH): exit 0, empty logs; module oleans byte-identical to fix/olean",
+    "statements: no theorem or definition removed or changed in the four modules (signature text 1217aa58 vs 32561f4c); added anomaly_prefix_guess, guess_le_pk_sup, anomaly_prefix_le_pk_sup, anomaly_prefix_le; the prefix event is exactly ideal_slots_prefix's alternative (BeaconLinked pre and FinishBefore t pre, any serverKid)",
+    "receipt: file hashes, theorem lists, axiom profiles, definitions and totals equal the head; focused inventory log hashes and the trial-merge log hash verified; the inventory rows and check-inventory blocks cover all 77 theorems",
+    "read-back premise lists: Phase1ReadBack 12, Phase2ReadBack 11, union 13, as in the guide and the receipt",
+    "Rust beacon.rs 402-406 and 487-490 (with the identity aborts 492-500): abort_registration leads to Aborted (no keys), Established holds no KEM secret key; consistent with open point (a)",
+    "U8 route names exist: tableService, lazyService, table_service_proj, represent, represent_split, slotCore_natural, commutes_simulateQ, lawEq_drop, key_first",
+    "plan section 80 corrected, 82 added, section 14 row open; design-v2 section 31; hashes equal the receipt's"
+   ],
+   "check_logs": {
+    "Guess": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4b/confirm/logs/Guess.log",
+     "bytes": 0
+    },
+    "AnomalyBound": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4b/confirm/logs/AnomalyBound.log",
+     "bytes": 0
+    },
+    "root": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4b/confirm/logs/root.log",
+     "bytes": 0
+    }
+   },
+   "artifacts": {
+    "PqxdhDeploymentIdealGuess": {
+     "confirm": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4b/confirm/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealGuess.olean",
+     "fix": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4b/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealGuess.olean",
+     "sha256": "432057203f76566817329d8e436b05918813451cba6452669c5e2be2fb907cc5"
+    },
+    "PqxdhDeploymentIdealAnomalyBound": {
+     "confirm": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4b/confirm/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealAnomalyBound.olean",
+     "fix": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4b/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealAnomalyBound.olean",
+     "sha256": "4f441f12847a3a55eb4e4915f5d8e21f35f2d0a6647bc7b80da0148017f00fca"
+    }
+   },
+   "leanpath": {
+    "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4b/confirm/leanpath",
+    "sha256": "e11f9a0072f992734556634802139322775849a72f740289972ea6da0da83306"
+   },
+   "scripts": {
+    "mirror.py": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4b/confirm/scripts/mirror.py",
+     "sha256": "c1fd4bf76b1115f049b0a2c4cfc8fa1c59bdd670496739b064eef73ea13f1e7a"
+    }
+   },
+   "findings_fixed": [
+    "nit: the trial-merge description (guide status paragraph and open points, plan section 82, receipt basis.trial_merge.conflicts_by_file and correction): check-inventory.sh conflicts only in the module blocks; the [handwritten-lean] count changed identically on both sides and merges silently to 1866, recounted to 1870 at the integration; the conflicting digest rows (root and check-inventory.sh) are in reviewed-inventory.txt"
+   ],
+   "records": [
+    "all ten earlier findings resolved or correctly recorded; the two disclosed scope gaps stay open as intended: deliver anomaly_le_pk and anomaly_prefix_le_pk, then U8, as scheduled (no action)",
+    "the confirming checks (no action)"
+   ],
+   "files_changed": [
+    "doc/impl/common-deployment-experiment.md",
+    "doc/impl/common-deployment-experiment-plan.md",
+    "doc/formal-verification-analysis.md",
+    "doc/impl/proof-receipts/common-deployment-experiment-ce11b-u4b.json"
+   ],
+   "lean_change": "none (no file under beaconcrypt-core/ changed)",
+   "notes": {
+    "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4b/confirm/NOTES.md",
+    "sha256": "138386117f3da4e64350bd9b53a264f08b46c038b33f9be47e532aa5eccb0af7"
+   },
+   "scratch": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4b/confirm (review checks), /tmp/bc-arc-scratch/common-experiment/ce11b/u4b/int (record-commit scripts, plan copies, integration)"
+  }
  },
  "fix_pass": {
   "commits": {
    "lean": "de2deeaa71d0324cc3f3b428e3cb9a51aa49742c",
-   "documentation": "the commit that adds this version of the receipt"
+   "documentation": "32561f4ce0c398e5affd66559bc6e92431412044"
   },
   "per_finding": [
    {
@@ -1303,5 +1406,11 @@
    "/tmp/bc-arc-scratch/common-experiment/ce11b/u4b/logs/devo/PqxdhDeploymentIdealGuess-3.log",
    "/tmp/bc-arc-scratch/common-experiment/ce11b/u4b/logs/devo/PqxdhDeploymentIdealGuess-3.meta"
   ]
+ },
+ "plan_snapshot": {
+  "path": "doc/impl/common-deployment-experiment-plan.md",
+  "refreshed_from_sha256": "45f3f79b7d48f7596f7a8dc8cf1a940ab53112611a2326e9516681a3f396a9be",
+  "sections": "0-18 and the decision sections 19-83",
+  "note": "refreshed in the commit that records the confirming review: the body equals the working plan from its third line; the snapshot paragraph, built from central dd681f34's (the newest), records the hash and the refresh history. Against this branch's snapshot (central 97befa84's, working plan 4d57644e through section 77) the refresh adds sections 78 to 83; against central dd681f34's (working plan 8232634a through section 79) it adds sections 80 to 83; both old bodies are prefixes of this one, and the integration merge keeps this snapshot"
  }
 }
