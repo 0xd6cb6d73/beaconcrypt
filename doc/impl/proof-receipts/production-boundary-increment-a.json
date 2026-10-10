@@ -1,0 +1,220 @@
+{
+ "stage": "item 7 increment A (Claude takeover of Codex lane): PB-05 W1/W2, PB-D W3/W4, PB-01 W5, survey publication",
+ "topic": "codex/deployment-boundary-a",
+ "worktree": "/tmp/beaconcrypt-deployment-boundary-a",
+ "central_basis": "f0dc46bb6473ab37ecf48e623f1ccb192bd6b3af",
+ "checked_tip": "fa22bf4bb351236d65c13b910cc601bc44b44fbb",
+ "state": "checked on the topic branch; independent fresh-context reviews (decision D-6) pending for all five modules; not integrated into central",
+ "owner_decision": "/tmp/bc-coord/decision-2026-10-10.txt (message #503): \"Codex ran out of budget. Adopt its lane.\"",
+ "plan": "/tmp/bc-arc-scratch/item7/plan.md (decisions D-1 to D-6)",
+ "commits": [
+  {
+   "commit": "0c7b05d2283ee8fadfc0964af0f653872ee1818f",
+   "subject": "Add the PB-05 real Server registration build executor"
+  },
+  {
+   "commit": "4a94825821238ffb34f6547f9b31022579f36889",
+   "subject": "Add the PB-05 native build settlement and CE build command join"
+  },
+  {
+   "commit": "5e2609a76faee2d1e6eb3a4be1d07100b297ab84",
+   "subject": "Add the PB-D generic adaptive source executor"
+  },
+  {
+   "commit": "e4a8feb1d1c0e776f639ac1c851e8a160f144646",
+   "subject": "Add the PB-03 logged acceptance join for the later-quantum game"
+  },
+  {
+   "commit": "6c538394046a743961aa2a3d19f1219c3609315a",
+   "subject": "Add the PB-01 Server birth and Beacon creation source order"
+  },
+  {
+   "commit": "fa22bf4bb351236d65c13b910cc601bc44b44fbb",
+   "subject": "Publish the approved production boundary survey"
+  }
+ ],
+ "modules": [
+  {
+   "module": "PqxdhBoundaryRegistrationBuild",
+   "survey_row": "PB-05",
+   "theorems": [
+    "send_exact",
+    "after_initialization_exact",
+    "candidate_exact",
+    "build_exact",
+    "build_complete",
+    "native_seal_exact",
+    "seal_complete",
+    "after_initialization_failure"
+   ],
+   "guarded_statements": 8,
+   "source_sha256": "f33544fdae633624ecf33d93b67c36c976888e3f424e09522b27f19d9bdbded5",
+   "guide": "doc/impl/production-boundary-registration-build.md",
+   "guide_sha256": "c10e90736be3149038ad975c391441adb5b49da9ee5e7c3b5d587bbbbdf7c73c",
+   "receipt": "doc/impl/proof-receipts/production-boundary-registration-build.json",
+   "receipt_sha256": "e565c918be974020d13360c3e77b54658e41be5dff74528e00f3a414817ea2c4",
+   "provenance": "adapted from Codex WIP f33544fdae633624ecf33d93b67c36c976888e3f424e09522b27f19d9bdbded5 (Lean source, committed byte for byte) and 676f64be7c7bae0bb07412b3ffeb4c6eb75313b87a17bcbf8767ae22315c2488 (guide text, kept verbatim with a Claude section appended); preserved copies in /tmp/bc-arc-scratch/item7/inherited/pb05-build (mirror of codex/deployment-boundary-wip 52ff9f3c)"
+  },
+  {
+   "module": "PqxdhBoundaryRegistrationBuildNative",
+   "survey_row": "PB-05",
+   "theorems": [
+    "native_exact",
+    "native_present",
+    "native_missing",
+    "token_consumed",
+    "scheduler_build",
+    "deployment_build",
+    "deployment_complete",
+    "native_uniform"
+   ],
+   "guarded_statements": 8,
+   "source_sha256": "161348b44861174b71b105ce91864808f397ec901f5d4d4efcf4db1e8cbba47b",
+   "guide": "doc/impl/production-boundary-registration-build-native.md",
+   "guide_sha256": "8b9fd12268aa7568315cb37ee1b4b1911d1ad5960e6d64e38506652406f8027c",
+   "receipt": "doc/impl/proof-receipts/production-boundary-registration-build-native.json",
+   "receipt_sha256": "925d1dce6f28a770cd9eb4dbee070a32e930a8d753bd14649450a111d5505325",
+   "provenance": "adapted from Codex WIP 161348b44861174b71b105ce91864808f397ec901f5d4d4efcf4db1e8cbba47b (Lean source, committed byte for byte) and b326ec01dba5dcf333aafa22d1874c3cb5de34fedae46fe605fa9a677997387f (guide text, kept verbatim with a Claude section appended); preserved copies in /tmp/bc-arc-scratch/item7/inherited/pb05-build-native"
+  },
+  {
+   "module": "PqxdhBoundaryProgram",
+   "survey_row": "PB-D",
+   "theorems": [
+    "execute_pure",
+    "execute_query",
+    "execute_bind",
+    "execute_fail",
+    "execute_div",
+    "execute_congr",
+    "execute_lift",
+    "source_exact",
+    "source_continuation",
+    "outcome_ok",
+    "outcome_normal",
+    "ofResult_ok",
+    "ofResult_normal"
+   ],
+   "guarded_statements": 13,
+   "source_sha256": "fbeedc5d0d3944cb324ee57cc9b9a16f158c40fa36f256fa45c62156b65562c6",
+   "guide": "doc/impl/production-boundary-program.md",
+   "guide_sha256": "ef91c9fe5144546d10134582156fa688b849de34c13c88beb0b193bb2e2d74ef",
+   "receipt": "doc/impl/proof-receipts/production-boundary-program.json",
+   "receipt_sha256": "414053b6bb725c59d916b6707eda416a760d76d389fea06f117036acc1d5447e",
+   "provenance": "adapted from Codex WIP 185bfab26f38c518b4d544c98fc2625181e2e129e5a527ce39bb85eba2fabb59 (Lean source: nine theorems and their proofs kept unchanged; the nine plain #print axioms lines replaced by exact #guard_msgs guards; outcome, ofResult and four theorems added) and d67a206c35d625ce69912befcbfa9286f6bf5f30c1df67c3166de047d883ddbc (guide draft: one sentence corrected, two sections added); preserved copies in /tmp/bc-arc-scratch/item7/inherited/pbd-program"
+  },
+  {
+   "module": "PqxdhBoundaryLoggedAccept",
+   "survey_row": "PB-03 under LQ-F (PB-D)",
+   "theorems": [
+    "collection_exact",
+    "preparation_exact",
+    "accept_exact",
+    "deployment_exact",
+    "deployment_complete",
+    "deployment_erase",
+    "logged_caps",
+    "deployment_log"
+   ],
+   "guarded_statements": 8,
+   "source_sha256": "bbf90a6b0d40e2e1d1cf3bcaf31a60b443b485ecfd49e65d7f2496e34227631b",
+   "guide": "doc/impl/production-boundary-logged-accept.md",
+   "guide_sha256": "8581897252b75aac3d9c3e96fec6f1f0c294e6456a1b1a2c61e85a0e187702e7",
+   "receipt": "doc/impl/proof-receipts/production-boundary-logged-accept.json",
+   "receipt_sha256": "9364e0153990385123f6ccd86de10e5d5528f6f5fe4ae4eced0cbabe948553b4",
+   "provenance": "adapted from Codex WIP 2c9dc5d843573f0ea25042e691adaf9029342a0a12a3108e5ffc13049aafed00 (Lean source: five definitions and five theorems kept unchanged; three theorems and eight exact guards added); preserved copy in /tmp/bc-arc-scratch/item7/inherited/pbd-logged-accept"
+  },
+  {
+   "module": "PqxdhBoundaryBirth",
+   "survey_row": "PB-01",
+   "theorems": [
+    "server_source",
+    "server_continuation",
+    "server_bills",
+    "beaconCreate_native",
+    "create_source",
+    "create_continuation",
+    "create_rejects",
+    "create_bills"
+   ],
+   "guarded_statements": 8,
+   "source_sha256": "20e6ce97aef9cf96f53413c2113bdd55b18d3c6b4ca5b25cd4fc9f3b5274a9c4",
+   "guide": "doc/impl/production-boundary-birth.md",
+   "guide_sha256": "73e80f022cfea7bf0364286607acaf65c64d4b247880dd997a18489f19f27580",
+   "receipt": "doc/impl/proof-receipts/production-boundary-birth.json",
+   "receipt_sha256": "fceffdfe6189ab25cb6d04cf7470c17a4e2bb466958f1349a5186021cc571c91",
+   "provenance": "adapted from Codex WIP 02b9c3b89caba696a3e719e6cdb4f53d1c161077d592ad0b53253a63890d3f22 (Lean source: serverBirth, server_source and server_continuation kept, two unused done tactics removed; the Beacon creation half, the bills and eight exact guards added); preserved copy in /tmp/bc-arc-scratch/item7/inherited/pb01-birth"
+  }
+ ],
+ "survey": {
+  "path": "doc/impl/production-boundary-survey.md",
+  "sha256": "68ec600dfa385deea34d8c4bcb5038811a3474d405ce67e7f5861febae9c67b1",
+  "codex_wip_sha256": "781fb253a8636564c1c3a44a275face29f8b353c6a0c595bc3b058d6548af190",
+  "difference": "one added status and provenance paragraph (line 3) and the blank line after it; every other line verbatim"
+ },
+ "tip_checks": {
+  "module_checks": "per-module receipts (each module check through coord.sh lean with -o into item7/a/olean, exit 0, empty log)",
+  "root_import": {
+   "commit": "6c538394046a743961aa2a3d19f1219c3609315a",
+   "note": "beaconcrypt-core is identical at 6c538394 and fa22bf4b (the later commit adds only doc/impl/production-boundary-survey.md)",
+   "exit": 0,
+   "log": "/tmp/bc-arc-scratch/item7/a/logs/root-1.log",
+   "log_bytes": 0,
+   "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "leanpath": "/tmp/bc-arc-scratch/item7/a/leanpath",
+   "leanpath_sha256": "fe146755bd6d790bb1b58d39711a03481bf30bd15aecf8479e4d96b091ccda29",
+   "command": [
+    "coord.sh",
+    "lean",
+    "claude",
+    "<label>",
+    "--",
+    "timeout",
+    "180",
+    "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+    "-j1",
+    "-M8000",
+    "--root=/tmp/beaconcrypt-deployment-boundary-a/beaconcrypt-core/proofs/lean",
+    "/tmp/beaconcrypt-deployment-boundary-a/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+   ],
+   "start": "2026-10-10T08:11:12.258522992Z",
+   "end": "2026-10-10T08:11:15.225481361Z"
+  },
+  "inv_recount_then_rehash": {
+   "order": "coord.sh inv recount claude <core> before coord.sh inv rehash claude <core> in every module commit; repeated at 6c538394: count unchanged (1913), all three default rows unchanged",
+   "logs": [
+    "/tmp/bc-arc-scratch/item7/a/logs/inv-recount-tip.log",
+    "/tmp/bc-arc-scratch/item7/a/logs/inv-rehash-tip.log"
+   ]
+  },
+  "check_inventory": {
+   "commit": "fa22bf4bb351236d65c13b910cc601bc44b44fbb",
+   "lease": "00000504 (@nix, 2048 MiB)",
+   "start": "2026-10-10T08:11:37Z",
+   "end": "2026-10-10T08:13:26Z",
+   "status": 0,
+   "dirty_paths_before": 0,
+   "dirty_paths_after": 0,
+   "log": "/tmp/bc-arc-scratch/item7/a/logs/inventory-tip-fa22bf4b.log",
+   "log_sha256": "f45f8ea9b14fdda7f71858742cdc2c1e0f5f67944b327054ce9b73bf8bc9236b",
+   "last_line": "Formal-verification inventory matches the reviewed boundary.",
+   "command": "coord.sh lease mem claude @nix item7-a-inventory-tip-fa22bf4b --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C /tmp/beaconcrypt-deployment-boundary-a/beaconcrypt-core check-inventory SHELL=bash"
+  },
+  "git_diff_check": "git diff --check f0dc46bb..fa22bf4b clean; every commit was also checked with git diff --cached --check before committing",
+  "contamination_scans": "both scans per module with failing liveness controls, results in the per-module receipts; spec /tmp/bc-arc-scratch/item7/a/scans/scan-spec.json sha256 6c72b02503316b7699becd206706e0fafde58bff9574b18955b4f10c9cf8be36"
+ },
+ "decisions_applied": {
+  "D1": ".crypto allowance extended by name to PqxdhBoundaryRegistrationBuild only (one source occurrence, line 104); no other module references the projection",
+  "D3": "ofResult adapter with outcome_ok, outcome_normal, ofResult_ok, ofResult_normal in PqxdhBoundaryProgram",
+  "D5": "survey published verbatim with one status paragraph",
+  "D6": "reviews pending: not run in this increment (the author sub-agent cannot spawn a reviewer)"
+ },
+ "not_run": [
+  "make verify",
+  "full lake build",
+  "mutation testing",
+  "nix-collect-garbage",
+  "transcript-fidelity cargo tests (no inventory metadata they read changed: only Lean rows, root imports and check-inventory module blocks)",
+  "central integration"
+ ],
+ "note": "The commit that adds this receipt changes only doc/impl/proof-receipts, which check-inventory does not read."
+}
