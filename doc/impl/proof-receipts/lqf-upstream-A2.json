@@ -37,9 +37,10 @@
    }
   ],
   "head_at_receipt": "6e1895eaa119ee9a3c06a46def3a3d8289436f2f",
-  "documentation_commit": "the commit that adds this receipt (on top of head_at_receipt)",
+  "documentation_commit": "3fbe593372a55a137e4db8d8c2ba33641f445dac",
   "pushed": true,
-  "commit_message_note": "the commit message of 41b65c01 (Hybrid) says 10 guarded theorems; the module has 9 (the pushed commit is not amended)"
+  "commit_message_note": "the commit message of 41b65c01 (Hybrid) says 10 guarded theorems; the module has 9 (the pushed commit is not amended)",
+  "record_commit": "the commit that adds checks.clean_tip (on top of 3fbe5933)"
  },
  "design": {
   "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/design-v2.md",
@@ -600,7 +601,90 @@
    "script_sha256": "92384b7d611ddf1ef6fa2d7e8d62f324d5ebac94a9040ff478c63c786b61a58f",
    "result": "no unused selectively opened name in the six modules (comments and doc strings removed before the textual search); code lines at most 120 characters"
   },
-  "not_run": "make verify, full lake build, nix-collect-garbage, mutation testing (forbidden by the task); the transcript-fidelity cargo step and the integration steps (the unit is not integrated: the task says not to integrate)"
+  "not_run": "make verify, full lake build, nix-collect-garbage, mutation testing (forbidden by the task); the transcript-fidelity cargo step and the integration steps (the unit is not integrated: the task says not to integrate)",
+  "clean_tip": {
+   "commit": "3fbe593372a55a137e4db8d8c2ba33641f445dac",
+   "note": "run after the documentation commit on the clean tree (git status empty before and after); recorded by the commit that adds this key",
+   "module_rebuilds": [
+    {
+     "module": "BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemRoot",
+     "exit": 0,
+     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/A2/logs/tipcheck/PqxdhDeploymentLaterServerItemRoot.log",
+     "log_bytes": 0,
+     "artifact": "/tmp/bc-arc-scratch/common-experiment/lqf-up/A2/tipcheck/PqxdhDeploymentLaterServerItemRoot.olean",
+     "artifact_sha256": "54f7fe2a5e467da43525abfd98dd403fc2bc91e56a6890fd176c2690c16644e2",
+     "identical_to_final": true
+    },
+    {
+     "module": "BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemFactor",
+     "exit": 0,
+     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/A2/logs/tipcheck/PqxdhDeploymentLaterServerItemFactor.log",
+     "log_bytes": 0,
+     "artifact": "/tmp/bc-arc-scratch/common-experiment/lqf-up/A2/tipcheck/PqxdhDeploymentLaterServerItemFactor.olean",
+     "artifact_sha256": "78d13be216573801b31ee35bb70d2769ed8efe17c3e9886f0c3c4ef564458ed5",
+     "identical_to_final": true
+    },
+    {
+     "module": "BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemOnce",
+     "exit": 0,
+     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/A2/logs/tipcheck/PqxdhDeploymentLaterServerItemOnce.log",
+     "log_bytes": 0,
+     "artifact": "/tmp/bc-arc-scratch/common-experiment/lqf-up/A2/tipcheck/PqxdhDeploymentLaterServerItemOnce.olean",
+     "artifact_sha256": "4fa9297b96a5bca0c3d4921a012ed44e2810445625cbc2ae48e73a82b5f285ee",
+     "identical_to_final": true
+    },
+    {
+     "module": "BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemHybrid",
+     "exit": 0,
+     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/A2/logs/tipcheck/PqxdhDeploymentLaterServerItemHybrid.log",
+     "log_bytes": 0,
+     "artifact": "/tmp/bc-arc-scratch/common-experiment/lqf-up/A2/tipcheck/PqxdhDeploymentLaterServerItemHybrid.olean",
+     "artifact_sha256": "bde5990762c259d9ad80a6f3d78426c145c2f9a1673f6625253d793b54dcc31e",
+     "identical_to_final": true
+    },
+    {
+     "module": "BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemKeys",
+     "exit": 0,
+     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/A2/logs/tipcheck/PqxdhDeploymentLaterServerItemKeys.log",
+     "log_bytes": 0,
+     "artifact": "/tmp/bc-arc-scratch/common-experiment/lqf-up/A2/tipcheck/PqxdhDeploymentLaterServerItemKeys.olean",
+     "artifact_sha256": "d256880dd57855a7122a0cd521849e344ca7a6489449ab16c08b11892e522840",
+     "identical_to_final": true
+    },
+    {
+     "module": "BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemBills",
+     "exit": 0,
+     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/A2/logs/tipcheck/PqxdhDeploymentLaterServerItemBills.log",
+     "log_bytes": 0,
+     "artifact": "/tmp/bc-arc-scratch/common-experiment/lqf-up/A2/tipcheck/PqxdhDeploymentLaterServerItemBills.olean",
+     "artifact_sha256": "8cc366261f92b789103807f96931f12539e7041433cc8f9e7bb643f80d4d2e49",
+     "identical_to_final": true
+    }
+   ],
+   "module_rebuilds_note": "each module rebuilt with -o into lqf-up/A2/tipcheck against lqf-up/A2/leanpath, one coord.sh lean call each (scripts/tipcheck.sh); oleans byte-identical to the finals",
+   "root": {
+    "exit": 0,
+    "log_bytes": 0,
+    "source_sha256": "cbf08fbbfbf71820b0bfcccbeb9c9fefed20f4b6727f12092a5528efb4f1a13f",
+    "artifact_sha256": "ef51deec4295fbbdec5d544eada52d53ed4247844120b46e73d01de0c7e6b269",
+    "head_at_check": "3fbe593372a55a137e4db8d8c2ba33641f445dac",
+    "dirty_paths_at_check": 0,
+    "identical_to": "root-unitA2-bills",
+    "json": "/tmp/bc-arc-scratch/common-experiment/lqf-up/A2/logs/final/root-tip-3fbe5933.json"
+   },
+   "inventory": {
+    "tag": "tip-3fbe5933",
+    "lease": "00000502",
+    "status": 0,
+    "head_at_run": "3fbe593372a55a137e4db8d8c2ba33641f445dac",
+    "start": "2026-10-10T08:02:06Z",
+    "end": "2026-10-10T08:03:57Z",
+    "dirty_paths_before": 0,
+    "dirty_paths_after": 0,
+    "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/A2/logs/inventory-tip-3fbe5933.log",
+    "log_sha256": "3ed10854de503b390fad15824b201b70f4875f357d72d675b56f95e134cc4115"
+   }
+  }
  },
  "assumptions": "none added; no contract used; the premises of the targets are those of unit D1's frozen statements (R1, the HMAC-SHA-512 PRF game, the Extract game on uniform32, SourceFullCorrect, the logged source budget certified); the bills take the logged source budget, a Server-read cap that enters no bill (LQ-F design-v2 F17), KemBound and initBound",
  "claims": "confidentiality only; no T5, theorem A2 or T8 cited; no definition of unit A2 references a DH-keyed component (contamination scan); no fixed-HKDF item; no QPT or QROM claim; the sharpened R1 caveat (LQ-F design-v2 section 5) in the docstrings of opaqueBranchL_idealKeys_two, opaqueBranchL_slots_two, later_slots_two and the Keys module",
