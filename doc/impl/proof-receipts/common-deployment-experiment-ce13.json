@@ -1,49 +1,65 @@
 {
- "stage": "CE-13: the documentation stage of the common deployment experiment (handoff item 3), the computational column of the symbolic/computational matrix; documents only",
+ "stage": "CE-13: the documentation stage of the common deployment experiment (handoff item 3), the computational column of the symbolic/computational matrix; documents, plus one section of the trust-boundary inventory in the review fix pass",
  "topic": "codex/deployment-ce13",
  "central_basis": "529e2c8bf414f680ac57b159365280aab2e2f3f2",
  "central_note": "codex/full-proof-composition with CE-12 P1, P2, P2b, P3, P4, D-ct (integration message 527) and the production composition of items 3 and 7 (integration message 529) integrated",
  "production_dct_pending": {
   "branch": "codex/deployment-boundary-production",
   "lean_commit": "fa57acd91147d72482ef4f0e2086e6e8c6f1d587",
+  "lean_docstring_commit": "0543c7e6",
   "documents_commit": "5b288801cf14edef352300d7635b14aee658f429",
-  "status": "not reviewed and not integrated at this receipt; mentioned as pending integration, not cited as results"
+  "branch_tip_at_fix_pass": "02cec0fda7f6f880bde7254c77cb7c900100d56c",
+  "theorems": "48: 42 _dct and 4 _dct_full closed forms, ctgap_term_le, ctgap_term_billed (module PqxdhDeploymentProductionHeadlinesDct)",
+  "status": "not on central at this receipt; mentioned as pending integration, not cited as results"
  },
  "authorship": "Claude",
- "state": "written; not reviewed; not integrated",
+ "state": "written (986262ab); reviewed by an independent review (semantic, completeness, hygiene lenses) of 986262ab; review fix pass applied; not confirmed; not integrated",
  "documents": {
   "guide": {
    "path": "doc/impl/deployment-experiment.md",
-   "sha256": "7a6529465cb787d30fce101a39fcee4ead8a435722db3980c00adf13ea78d73d"
+   "sha256": "e94c96606dbf0f4a82ff33ad9087fb6cfbc48faed672096da421c165b138def1"
   },
   "source_scope": {
    "path": "doc/proverif-source-scope.md",
-   "sha256": "c33d9daeb62970373bee957756dfb1aea38d092c29892b204893c19ed3290964"
+   "sha256": "dabe747500c4a5affaa7fac852b518cc4caf7a84ca97b3698fe15b405cf3dc03"
   },
   "composition_assumptions": {
    "path": "doc/composition-assumptions.md",
-   "sha256": "ff3b75e77e72cd43d610bea949bc5a26b38f52fc698b40afa0b959881550d876"
+   "sha256": "3c86850c4d07cf4bdf16b812178229448c981c91ea836c8df2e9fa84175c650f"
   },
   "analysis": {
    "path": "doc/formal-verification-analysis.md",
-   "sha256": "1ce206959e28227d67185de61371530d7c30bf9666015d0f8ce14604f5108e10"
+   "sha256": "4d0de3fa0648686500b1d238498ae5c3dcc8de2fd39eaaa7a09d7740eeba34d8"
   },
   "plan_snapshot": {
    "path": "doc/impl/common-deployment-experiment-plan.md",
-   "sha256": "57bd385dc0eb8338b08fda55a702d70cb77f93919725a64b15583809997c7a8d"
+   "sha256": "b83f24b4207948f607d848ec0b4fbcf9146f6af624ea856322d32f9b2142026a"
+  },
+  "trusted_boundary": {
+   "path": "beaconcrypt-core/proofs/trusted-boundary.md",
+   "sha256": "346f1f0f7b6e193f7834bd4c838462cd87d9c6d3c3832846468d70248e4706ab"
+  },
+  "reviewed_inventory": {
+   "path": "beaconcrypt-core/proofs/reviewed-inventory.txt",
+   "sha256": "910213d6a4380b6aa1dce87215fa47704a4346231eb239eb56cf44eb1383d450"
   }
  },
  "documents_edits": {
-  "guide": "new file",
-  "source_scope": "new final section 'Computational column: the common deployment experiment' (index with one line per security row, entries per row group)",
-  "composition_assumptions": "reveal-capability text of section 'The experiment a composition theorem must cover' (formerly line 33) amended to the plan section 19 profile with the section 27 exceptions; a note appended to the CE-3 codec paragraph; new final section 'Common deployment experiment: approved profile and scope of the headline claims (CE-13)'",
-  "analysis": "new final section 'Common deployment experiment, CE-13: what is computational now'",
-  "plan_snapshot": "wholesale copy of the working plan through section 123 with the snapshot header paragraph updated"
+  "guide": "new file; review fix pass: status line, finish row (plan section 25), budgets (plan section 22 cap loosening), compile argument (gap, collision and D-ct closures, item 7 joins), terms and bills, rows table, production forms, new section 'Name index of the published forms', not-claimed bullet, corrections 1, 2 and 11, checks, new section 'Review fix pass'",
+  "source_scope": "new final section 'Computational column: the common deployment experiment'; review fix pass: conventions (exception (a)), premise bundles (setup-carried contracts), terms (closures), production paragraph, index statuses (A2 rows, A2-provenance, L2-origin), NBF owners in the symbolic-only lists, A1-root pin line 116, CE-A1 condition per owner, either-side ce_app_sym family, later CE-APP-L and CE-LOR-L forms, new entry for CE-KT-L at rows 168-173, ce_plain_every_b2s without _target form",
+  "composition_assumptions": "reveal-capability text of section 'The experiment a composition theorem must cover' (formerly line 33) amended to the plan section 19 profile with the section 27 exceptions; a note appended to the CE-3 codec paragraph; new final section 'Common deployment experiment: approved profile and scope of the headline claims (CE-13)'; review fix pass: scope lists of the final section (random-oracle model and setup-carried contracts of every statement, the CE-KT/CE-OR/CE-UKS/CE-APP/CE-LOR bullet, CE-A1 with Phase1ReadBack, SourceFullCorrect, the random oracles and KemBound, which statements use the Phase laws, CE-APP-L and CE-LOR-L as the later forms, R1 and C3 on every outcome), the plan section 22 cap note and the pointer to the trust-boundary inventory",
+  "analysis": "new final section 'Common deployment experiment, CE-13: what is computational now'; review fix pass: production coverage, reveal exception (a), decoded frames, CE-A1 condition and the registration bullet, which claims have symbolic-eligibility corollaries and their per-family cost, beacon_gap_le, the conditions paragraph, symbolic-only additions, the fix-pass sentence",
+  "plan_snapshot": "wholesale copy of the working plan through section 124 with the snapshot header paragraph updated",
+  "trusted_boundary": "review fix pass: new final section 'Common deployment experiment: codec contracts and reveal profile' (plan section 19: the codec laws in both assumption lists)",
+  "reviewed_inventory": "review fix pass: digest of proofs/trusted-boundary.md recomputed by coord.sh inv rehash (1a231e855385... -> 346f1f0f7b6e...); no row added or removed"
  },
  "plan": {
-  "working_plan_sha256": "899f76ad5c44aab2fc8ec8e28d2a843348f09abc3b7383c2d977801ce73a70aa",
-  "sections_through": 123,
-  "new_section": 123,
+  "working_plan_sha256": "23338214eca84d3449ba6698fa205afb9e9a513d49b6e77258f89344908f32eb",
+  "sections_through": 124,
+  "new_sections": [
+   123,
+   124
+  ],
   "snapshot_body_equals_working_plan": true
  },
  "rows": [
@@ -78,7 +94,7 @@
    "vc": "3179",
    "target": "L2-origin",
    "checker": "check-record-origin.py",
-   "status": "computational",
+   "status": "computational (root symbolic-only; Server pin and plaintext under CE designation only)",
    "entry": "b2s origin",
    "strongest_theorems": "PqxdhDeploymentHeadlinePlain.ce_or_fields_b2s; PqxdhDeploymentHeadlineInjective.ce_or_injective_b2s; PqxdhDeploymentHeadlineSymbolic.ce_or_b2s_sym",
    "production_central": "PqxdhDeploymentProductionHeadlines.ce_or_fields_b2s; PqxdhDeploymentProductionHeadlinesClassical.ce_or_injective_b2s, ce_or_b2s_sym"
@@ -231,7 +247,7 @@
    "vc": "3161",
    "target": "A2-provenance",
    "checker": "check-registration-provenance.py",
-   "status": "computational",
+   "status": "computational (publication reading on NBF owners)",
    "entry": "provenance",
    "strongest_theorems": "PqxdhDeploymentProvenance.a2_bound, a2_generated_bound; PqxdhDeploymentPublishedTuple.a2pub_owner_bound, a2pub_bound",
    "production_central": "none"
@@ -258,7 +274,7 @@
    "vc": "598",
    "target": "A2",
    "checker": "check-free-schedule.py",
-   "status": "computational",
+   "status": "computational (publication reading on NBF owners)",
    "entry": "provenance",
    "strongest_theorems": "as A2-provenance",
    "production_central": "none"
@@ -267,7 +283,7 @@
    "vc": "614",
    "target": "s2b-A2",
    "checker": "check-free-schedule.py",
-   "status": "computational",
+   "status": "computational (publication reading on NBF owners)",
    "entry": "provenance",
    "strongest_theorems": "as A2-provenance",
    "production_central": "none"
@@ -276,7 +292,7 @@
    "vc": "632",
    "target": "b2s-A2",
    "checker": "check-free-schedule.py",
-   "status": "computational",
+   "status": "computational (publication reading on NBF owners)",
    "entry": "provenance",
    "strongest_theorems": "as A2-provenance",
    "production_central": "none"
@@ -285,7 +301,7 @@
    "vc": "650",
    "target": "encoding-A2",
    "checker": "check-primitive-fidelity.py",
-   "status": "computational",
+   "status": "computational (publication reading on NBF owners)",
    "entry": "provenance",
    "strongest_theorems": "as A2-provenance",
    "production_central": "none"
@@ -350,8 +366,8 @@
    "checker": "check-application-secrecy.py",
    "status": "computational",
    "entry": "application secrecy",
-   "strongest_theorems": "PqxdhDeploymentHeadlineGated.ce_app_billed; PqxdhDeploymentHeadlineDctClosedP2b.ce_app_beacon_sym_billed_dct",
-   "production_central": "PqxdhDeploymentProductionHeadlines.ce_app_billed, ce_app_beacon_sym_billed (ctGapTerm explicit)"
+   "strongest_theorems": "PqxdhDeploymentHeadlineGated.ce_app_billed; PqxdhDeploymentHeadlineDctClosedP2b.ce_app_beacon_sym_billed_dct; either side PqxdhDeploymentHeadlineDctClosedP2b.ce_app_sym_billed_dct",
+   "production_central": "PqxdhDeploymentProductionHeadlines.ce_app_billed, ce_app_beacon_sym_billed (ctGapTerm explicit); ce_app_sym_billed, PqxdhDeploymentProductionHeadlinesClassical.ce_app_sym (ctGapTerm explicit)"
   },
   {
    "vc": "637",
@@ -368,7 +384,7 @@
    "checker": "check-application-secrecy.py",
    "status": "computational",
    "entry": "application secrecy",
-   "strongest_theorems": "PqxdhDeploymentHeadlineApp.ce_app_server; PqxdhDeploymentHeadlineSymbolic.ce_app_server_sym",
+   "strongest_theorems": "PqxdhDeploymentHeadlineApp.ce_app_server; PqxdhDeploymentHeadlineSymbolic.ce_app_server_sym; either side ce_app_sym_billed_dct",
    "production_central": "PqxdhDeploymentProductionHeadlinesClassical.ce_app_server, ce_app_server_sym"
   },
   {
@@ -504,7 +520,8 @@
    "status": "symbolic-only",
    "entry": "passive",
    "strongest_theorems": "",
-   "production_central": ""
+   "production_central": "",
+   "ce_kt_l": "CE-KT-L listed as a transfer (PqxdhDeploymentLaterHeadlineKeyTransfer.ce_kt_later_sum, ce_kt_later_close; symbolic ce_kt_server_later_sym, PqxdhDeploymentHeadlineDctClosedLater.ce_kt_beacon_later_sym_dct, ce_kt_later_sym_dct); status unchanged"
   },
   {
    "vc": "169",
@@ -512,8 +529,9 @@
    "checker": "check-results.awk",
    "status": "partial",
    "entry": "passive",
-   "strongest_theorems": "PqxdhDeploymentLaterHeadlineApp.ce_app_server_later; PqxdhDeploymentLaterHeadlineSymbolic.ce_app_server_later_sym",
-   "production_central": "PqxdhDeploymentProductionHeadlinesLater.ce_app_server_later, ce_app_server_later_sym"
+   "strongest_theorems": "PqxdhDeploymentLaterHeadlineApp.ce_app_server_later; PqxdhDeploymentLaterHeadlineSymbolic.ce_app_server_later_sym; either side PqxdhDeploymentHeadlineDctClosedLaterP4.ce_app_later_sym_billed_dct_full",
+   "production_central": "PqxdhDeploymentProductionHeadlinesLater.ce_app_server_later, ce_app_server_later_sym",
+   "ce_kt_l": "CE-KT-L listed as a transfer (PqxdhDeploymentLaterHeadlineKeyTransfer.ce_kt_later_sum, ce_kt_later_close; symbolic ce_kt_server_later_sym, PqxdhDeploymentHeadlineDctClosedLater.ce_kt_beacon_later_sym_dct, ce_kt_later_sym_dct); status unchanged"
   },
   {
    "vc": "170",
@@ -521,8 +539,9 @@
    "checker": "check-results.awk",
    "status": "partial",
    "entry": "passive",
-   "strongest_theorems": "as 169",
-   "production_central": "as 169"
+   "strongest_theorems": "as 169; either side PqxdhDeploymentHeadlineDctClosedLaterP4.ce_app_later_sym_billed_dct_full",
+   "production_central": "as 169",
+   "ce_kt_l": "CE-KT-L listed as a transfer (PqxdhDeploymentLaterHeadlineKeyTransfer.ce_kt_later_sum, ce_kt_later_close; symbolic ce_kt_server_later_sym, PqxdhDeploymentHeadlineDctClosedLater.ce_kt_beacon_later_sym_dct, ce_kt_later_sym_dct); status unchanged"
   },
   {
    "vc": "171",
@@ -530,8 +549,9 @@
    "checker": "check-results.awk",
    "status": "partial",
    "entry": "passive",
-   "strongest_theorems": "as 169",
-   "production_central": "as 169"
+   "strongest_theorems": "as 169; either side PqxdhDeploymentHeadlineDctClosedLaterP4.ce_app_later_sym_billed_dct_full",
+   "production_central": "as 169",
+   "ce_kt_l": "CE-KT-L listed as a transfer (PqxdhDeploymentLaterHeadlineKeyTransfer.ce_kt_later_sum, ce_kt_later_close; symbolic ce_kt_server_later_sym, PqxdhDeploymentHeadlineDctClosedLater.ce_kt_beacon_later_sym_dct, ce_kt_later_sym_dct); status unchanged"
   },
   {
    "vc": "172",
@@ -539,8 +559,9 @@
    "checker": "check-results.awk",
    "status": "partial",
    "entry": "passive",
-   "strongest_theorems": "PqxdhDeploymentLaterHeadlineGated.ce_app_later_billed; PqxdhDeploymentHeadlineDctClosedLaterP4.ce_app_beacon_later_sym_billed_dct_full",
-   "production_central": "PqxdhDeploymentProductionHeadlinesLater.ce_app_later_billed, ce_app_beacon_later_sym_billed (ctGapTerm explicit)"
+   "strongest_theorems": "PqxdhDeploymentLaterHeadlineGated.ce_app_later_billed; PqxdhDeploymentHeadlineDctClosedLaterP4.ce_app_beacon_later_sym_billed_dct_full; either side PqxdhDeploymentHeadlineDctClosedLaterP4.ce_app_later_sym_billed_dct_full",
+   "production_central": "PqxdhDeploymentProductionHeadlinesLater.ce_app_later_billed, ce_app_beacon_later_sym_billed (ctGapTerm explicit)",
+   "ce_kt_l": "CE-KT-L listed as a transfer (PqxdhDeploymentLaterHeadlineKeyTransfer.ce_kt_later_sum, ce_kt_later_close; symbolic ce_kt_server_later_sym, PqxdhDeploymentHeadlineDctClosedLater.ce_kt_beacon_later_sym_dct, ce_kt_later_sym_dct); status unchanged"
   },
   {
    "vc": "173",
@@ -549,7 +570,8 @@
    "status": "partial",
    "entry": "passive",
    "strongest_theorems": "PqxdhDeploymentLaterHeadlineGated.ce_lor_later_billed; PqxdhDeploymentHeadlineDctClosedLaterP4.symbolic_lor_later_bound_closed_billed_dct_full; ce_lor_server_later, symbolic_lor_server_later_bound",
-   "production_central": "PqxdhDeploymentProductionHeadlinesLater.ce_lor_later_billed, symbolic_lor_later_bound_closed_billed, ce_lor_server_later, symbolic_lor_server_later_bound"
+   "production_central": "PqxdhDeploymentProductionHeadlinesLater.ce_lor_later_billed, symbolic_lor_later_bound_closed_billed, ce_lor_server_later, symbolic_lor_server_later_bound",
+   "ce_kt_l": "CE-KT-L listed as a transfer (PqxdhDeploymentLaterHeadlineKeyTransfer.ce_kt_later_sum, ce_kt_later_close; symbolic ce_kt_server_later_sym, PqxdhDeploymentHeadlineDctClosedLater.ce_kt_beacon_later_sym_dct, ce_kt_later_sym_dct); status unchanged"
   },
   {
    "vc": "127",
@@ -638,13 +660,13 @@
    "n": 1,
    "rows": "all production cells",
    "correction": "production composition cited from central 529e2c8b (fast-forward from 16956129, message 529); the production _dct forms only on branch codex/deployment-boundary-production (fa57acd9), marked pending integration",
-   "source": "git log of central and of the branch; verifier G1/G2/G3/G4/G6/G8"
+   "source": "git log of central and of the branch; the adversarial verification of the row groups"
   },
   {
    "n": 2,
    "rows": "S3-beacon 602, A1-root 3168",
-   "correction": "every ProVerif Beacon pins (ed_public(SERVER_IDENTITY_SECRET), SERVER_KEY_ID); 'any assigned key ID' is the Beacon's own assigned ID; no pin remainder for these rows (mapper had listed (S, other key ID) Beacons as a remainder)",
-   "source": "fs-registration.pvl:238,285,313; delayed-response.pvl:88,113 (re-read: mapper and verifier disagreed)"
+   "correction": "every ProVerif Beacon pins (ed_public(SERVER_IDENTITY_SECRET), SERVER_KEY_ID); 'any assigned key ID' is the Beacon's own assigned ID; no pin remainder for these rows (the first mapping had listed (S, other key ID) Beacons as a remainder)",
+   "source": "fs-registration.pvl:238,285,313; delayed-response.pvl:88,116 (re-read: mapping and verification disagreed; the line of the pin was corrected from 113 to 116 in the review fix pass)"
   },
   {
    "n": 3,
@@ -697,8 +719,8 @@
   {
    "n": 11,
    "rows": "A1-root, S3-server, S3-beacon (LQ-F cell)",
-   "correction": "CE-KT-L recorded as a later-mode analogue only (module documentation assigns it to the passive-quantum rows)",
-   "source": "PqxdhDeploymentLaterHeadlineKeyTransfer documentation; mapper note 7"
+   "correction": "CE-KT-L recorded as a later-mode analogue of the classical rows, not a counterpart; in the review fix pass listed for the passive-quantum rows 168-173 as a transfer, as its module documentation assigns it",
+   "source": "PqxdhDeploymentLaterHeadlineKeyTransfer module documentation"
   },
   {
    "n": 12,
@@ -714,17 +736,21 @@
  ],
  "d2_evidence": "ratchet_status derivability: reviewed reading of ratchet.rs:203-209, 414-444, 499-532 and beaconcrypt-core/src/ratchet/control.rs:63-95; recorded as reviewed transcription, not a Lean statement",
  "name_check": {
-  "method": "every backticked Module.name token in the guide and in the added text of the other three documents resolved against the declarations of beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/*.lean at the topic (equal to central for Lean)",
-  "distinct_qualified_names_resolved": 160,
+  "method": "first version: every backticked Module.name token in the guide and in the added text of the other three documents resolved against the declarations of beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/*.lean at central 529e2c8b. Review fix pass: the same check on the added text of the five documents against 529e2c8b (the trust-boundary section included); every name of the guide's name index checked to be a declaration of the module of its row; every production name in the column and the guide checked against the theorems of the three production modules; reverse coverage of the headline modules against the added text: every uncited theorem is an intermediate lemma of the kinds the name index excludes",
+  "distinct_qualified_names_resolved": 196,
+  "name_index_names_checked": 264,
   "unresolved": [],
-  "placeholder_ignored": "PqxdhDeploymentX.name (naming convention example)"
+  "placeholder_ignored": "PqxdhDeploymentX.name (naming convention example)",
+  "expected_non_declarations": "epsCt is listed in the DctWorld row with its module PqxdhDeploymentHeadlineDctEvent; anomaly_beta_billed is named in a production row as excluded; PqxdhDeploymentProductionHeadlinesDct is on the branch only"
  },
  "lean_change": "none",
- "inventory": "not needed: no doc/ file is listed in beaconcrypt-core/proofs/reviewed-inventory.txt or read by check-inventory.sh; no recount, rehash or inventory check run",
+ "inventory": "first version: not needed (no doc/ file is in reviewed-inventory.txt or read by check-inventory.sh). Review fix pass: proofs/trusted-boundary.md (category inventory) changed; its digest was recomputed by coord.sh inv rehash (1a231e855385ed010b1760319bf0c06d800527c89b6159fc19dd23e03b8b3a25 -> 346f1f0f7b6e193f7834bd4c838462cd87d9c6d3c3832846468d70248e4706ab); no file added or removed, so no recount; make -C beaconcrypt-core check-inventory in the locked proof shell (nix develop path:/tmp/bc-arc-scratch/proof-flake#proofs) under coord lease 00000639 (@nix): exit 0, 'Formal-verification inventory matches the reviewed boundary'",
  "checks": [
   "git diff --check (clean)",
   "Markdown tables: no code span containing a pipe; constant column counts",
-  "snapshot body byte-identical to the working plan"
+  "snapshot body byte-identical to the working plan (through section 124)",
+  "check-inventory exit 0 (review fix pass, after the trust-boundary rehash)",
+  "qualified names, name index names and production names resolved (name_check)"
  ],
  "not_run": [
   "make verify",
@@ -732,12 +758,120 @@
   "mutation testing",
   "nix-collect-garbage",
   "Lean checks (documents only; every statement read from source)",
-  "check-inventory (documents not covered)",
-  "transcript-fidelity cargo tests"
+  "transcript-fidelity cargo tests (no ProVerif, Rust or fidelity input changed)"
  ],
  "coordination_messages": [
   527,
   529
  ],
- "next": "independent review (semantic and hygiene lenses) of the documents and this receipt, fix pass, confirming review, then integration (PROTOCOL section 6)"
+ "next": "confirming review of the fix pass, then integration (PROTOCOL section 6)",
+ "review": {
+  "reviewed_commit": "986262abde35b93036b6aab2ba023de09616ea98",
+  "lenses": [
+   "semantic",
+   "completeness",
+   "hygiene"
+  ],
+  "findings": [
+   {
+    "n": 1,
+    "severity": "major",
+    "title": "production coverage overstated (analysis; opening sentence of the guide and column)",
+    "fix": "every CE-12 headline bound on a probability of the experiment published before D-ct (129 forms) has a production form; D-ct forms on a branch only; registration statements before CE-12 have none (only ce_a1_linked and the gap and collision bounds of their family)"
+   },
+   {
+    "n": 2,
+    "severity": "major",
+    "title": "plan section 19: codec laws not in the second assumption list (trusted-boundary.md)",
+    "fix": "new trust-boundary section 'Common deployment experiment: codec contracts and reveal profile'; inv rehash; check-inventory exit 0"
+   },
+   {
+    "n": 3,
+    "severity": "minor",
+    "title": "analysis implied symbolic-eligibility corollaries for the Server-pin and plaintext fields",
+    "fix": "the analysis names the claims with such corollaries and lists pin and plaintext under ProVerif's eligibility as symbolic-only"
+   },
+   {
+    "n": 4,
+    "severity": "minor",
+    "title": "LQ-F reveal without exception (a) in the analysis and the column conventions",
+    "fix": "exception (a) stated in both; the analysis adds that kind (b) is revealed anyway"
+   },
+   {
+    "n": 5,
+    "severity": "minor",
+    "title": "CE-A1 without its no-failed-bundle condition in the analysis",
+    "fix": "registration bullet and conditions paragraph"
+   },
+   {
+    "n": 6,
+    "severity": "minor",
+    "title": "composition scope lists ('Every headline', CE-A1 without Phase1ReadBack, Phase-law users, later CE-OR/CE-UKS)",
+    "fix": "scope lists rewritten as recorded in documents_edits.composition_assumptions"
+   },
+   {
+    "n": 7,
+    "severity": "nit",
+    "title": "beacon_gap_le has no closed sibling",
+    "fix": "excepted in the analysis, the guide and the column (closed use ce_a1_linked_dct); the six intermediate lemmas named in the guide"
+   },
+   {
+    "n": 8,
+    "severity": "nit",
+    "title": "imprecise cost of the symbolic corollaries",
+    "fix": "per-family terms in the analysis"
+   },
+   {
+    "n": 9,
+    "severity": "nit",
+    "title": "'that exact record'",
+    "fix": "'a record with the same decoded frame'"
+   },
+   {
+    "n": 10,
+    "severity": "nit",
+    "title": "wrong ProVerif line of the A1Beacon pin",
+    "fix": "delayed-response.pvl:116 in correction 2 and the A1-root entry"
+   },
+   {
+    "n": 11,
+    "severity": "nit",
+    "title": "not-claimed bullet misstated the conditional replay claim",
+    "fix": "CE-A2pub, CE-R1' and CE-A1 for owners with a rejected bundle call; CE-A2, R1 and C3 on every run"
+   },
+   {
+    "n": 12,
+    "severity": "nit",
+    "title": "index statuses and symbolic-only lists inconsistent",
+    "fix": "A2 and A2-provenance rows, L2-origin qualifier, NBF owners in every symbolic-only list, NBF owners instead of NBF runs"
+   },
+   {
+    "n": 13,
+    "severity": "minor",
+    "title": "CE-KT-L had no row",
+    "fix": "entry 'Key transfer in LQ-F for rows 168 to 173 (CE-KT-L)' as a transfer; statuses unchanged"
+   },
+   {
+    "n": 14,
+    "severity": "minor",
+    "title": "either-side ce_app_sym family uncited",
+    "fix": "cited under App-b2s, App-s2b and rows 169-172 with frozen, _dct and production forms"
+   },
+   {
+    "n": 15,
+    "severity": "minor",
+    "title": "uncited headline-level names and modules (task text cut inside this finding; remainder rebuilt from the completeness review's notes)",
+    "fix": "ct_collision_game, ct_coll_billed, ctCollEps_le_design, ctgap_world, the bills, anomaly_beta, the item 7 joins and transfer lemmas, PqxdhDeploymentLaterHeadlineClosed and the later forms cited; name index of the published forms in the guide"
+   }
+  ],
+  "further_points_fixed": [
+   "ce_plain_every_b2s has no _target form (L2-origin entry)",
+   "no citation of the scratch CE-12 design document in the documents",
+   "finish row records the owner ruling of plan section 25 (PqxdhDeploymentHiddenEntry.finish_accounting)",
+   "coin and BLAKE2b cap loosening of plan section 22 (awaiting owner confirmation) recorded in the guide and the composition assumptions",
+   "production D-ct module counted as 48 theorems; branch tip 02cec0fd",
+   "receipt correction sources no longer refer to scratch notes"
+  ],
+  "lean_change": "none; no assumption, contract or idealization added"
+ }
 }
