@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1902
+	[handwritten-lean]=1903
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -39082,6 +39082,25 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem shared_splitL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit theorem shared_splitL"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemSplit\.opaqueBranchL_split$' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemSplit.opaqueBranchL_split"
 require_line_count 1 '^theorem opaqueBranchL_split([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit theorem opaqueBranchL_split"
+
+# LQ-F upstream unit A2: stage S2 of item 2 over the logged source (root client internalization and PRF step).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerItemRoot.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemRoot$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentLaterServerItemRoot root import"
+require_line_count 6 '^theorem ' "$selected_source_module" "PqxdhDeploymentLaterServerItemRoot theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentLaterServerItemRoot guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemRoot\.splitGameL_root$' "$selected_source_module" "PqxdhDeploymentLaterServerItemRoot dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemRoot.splitGameL_root"
+require_line_count 1 '^theorem splitGameL_root([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemRoot theorem splitGameL_root"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemRoot\.splitGameL_expanded$' "$selected_source_module" "PqxdhDeploymentLaterServerItemRoot dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemRoot.splitGameL_expanded"
+require_line_count 1 '^theorem splitGameL_expanded([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemRoot theorem splitGameL_expanded"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemRoot\.rootClientL_root$' "$selected_source_module" "PqxdhDeploymentLaterServerItemRoot dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemRoot.rootClientL_root"
+require_line_count 1 '^theorem rootClientL_root([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemRoot theorem rootClientL_root"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemRoot\.entryClientL_value$' "$selected_source_module" "PqxdhDeploymentLaterServerItemRoot dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemRoot.entryClientL_value"
+require_line_count 1 '^theorem entryClientL_value([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemRoot theorem entryClientL_value"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemRoot\.splitL_uniform$' "$selected_source_module" "PqxdhDeploymentLaterServerItemRoot dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemRoot.splitL_uniform"
+require_line_count 1 '^theorem splitL_uniform([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemRoot theorem splitL_uniform"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemRoot\.opaqueBranchL_uniform$' "$selected_source_module" "PqxdhDeploymentLaterServerItemRoot dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemRoot.opaqueBranchL_uniform"
+require_line_count 1 '^theorem opaqueBranchL_uniform([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemRoot theorem opaqueBranchL_uniform"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
