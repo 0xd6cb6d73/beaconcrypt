@@ -1,0 +1,730 @@
+{
+ "date": "2026-10-10T06:26:09.936624+00:00",
+ "scope": "CE-12 P2 first session (track ce12/p2): the D-ct spike (stop rule fired; F-ct2), the symbolic-eligibility predicates and gap lemmas, the identity-collision and KEM-level ciphertext-collision terms, the symbolic corollaries of CE-OR (both directions), CE-UKS (sender), CE-APP and CE-KT, and symbolic_lor with the NoBundleFailure filter (design-v2 sections 7.1-7.5, 8). Not built: injective CE-OR forms, bills, AG, ct_collision_game, D-ct. Not reviewed and not integrated.",
+ "basis": {
+  "start": "b88e30124d0c80a762cdf99ccf82569995c4a471",
+  "central_merged": "c031e4e752e72c35890cdef16469e49ea06c0fc5",
+  "merge_commit": "a981309b2893e399dad4a2810839ec5e305bfb71",
+  "central_at_receipt": "c031e4e752e72c35890cdef16469e49ea06c0fc5",
+  "published_leanpaths": [
+   "/tmp/bc-coord/leanpaths/b88e30124d0c80a762cdf99ccf82569995c4a471.leanpath",
+   "/tmp/bc-coord/leanpaths/c031e4e752e72c35890cdef16469e49ea06c0fc5.leanpath"
+  ]
+ },
+ "topic": {
+  "branch": "codex/deployment-ce12",
+  "worktree": "/tmp/beaconcrypt-deployment-ce12",
+  "head_at_receipt": "e37ed9e7cccc224cdfd0a316ad21c4568449efe7",
+  "note": "the documentation commit that adds this receipt follows head_at_receipt and changes no Lean or inventory file"
+ },
+ "plan": {
+  "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
+  "sha256": "54f613b99678526a6359ab323a3c85152c355bbd8bff49e69afca07c9c79d3a1",
+  "section": 102,
+  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/docs/plan.at-p2-receipt-54f613b9.md",
+  "backup_before": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/docs/plan.before-p2-817e02d8.md"
+ },
+ "design": {
+  "path": "/tmp/bc-arc-scratch/common-experiment/ce12/design-v2.md",
+  "sha256": "9866f32e40a4fdb3742d4bc36709971a0ade2932882896fe1975b8ac334cbb4e",
+  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/docs/design-v2.at-p2-9866f32e.md",
+  "sections": "7.1-7.5, 8 (P2a, P2b in part, P2d spike)"
+ },
+ "notes": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/NOTES.md",
+ "spike": {
+  "statement_probe": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/spike/CtGapWorld.lean",
+  "statement_probe_sha256": "8025b4985d6f9a5f0b73dec2ef5ac26479c8d407559b70ba6e18d804d61add69",
+  "probe_log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/logs/dev/CtGapWorld-1.log",
+  "probe_exit": 0,
+  "stop_rule": "remaining estimate above 1.5 actual days",
+  "remaining_estimate_days": "4-8",
+  "fired": true,
+  "result": "F-ct2: explicit public term ctGapTerm = 𝒟[happens ctGapEvent <$> game]; D-ct deferred; to be reported to the owner before publication (design-v2 section 14 note 4)",
+  "missing": [
+   "World invariant tying the marked build sequence-one record and commitment to the cached slot material (buildCachedEnv, buildSplitEnv, buildSplitFwd, PqxdhServerAuthCtxMaterial.factor (joinOutput material dummySeed)) across the five idealStep branches and the World hash cache (1-2 days)",
+   "identical-until-bad hybrid over the R1 table, the World hash cache and the material cache: key32_0 seals the visible sequence-one record in the Phase 2 response and enters a BLAKE2b commitment, so it is not statistically independent of the view in realChains/World.run; entries created after the selected accept need the sequence-one key derivation to be a fresh random-oracle output (check concrete.rs:64-106) (2-4 days)",
+   "connection of PqxdhRecordFactsCollision (run_bound, ctxDigest_bound over DrawSpec clients) to the World tables (0.5-1 day)",
+   "the c = k* branch through finishChallengeEnv, preparationCE with Shared.known and groupEnv known-root path (0.5-1 day)"
+  ]
+ },
+ "commits": [
+  {
+   "commit": "361ad9f8e06671238b35028918c6d6b6c502464c",
+   "subject": "Add the CE-12 gap lemmas in the F-ct2 form"
+  },
+  {
+   "commit": "5553cf770702f9d218404f3170435d775ead1775",
+   "subject": "Add the CE-12 collision terms"
+  },
+  {
+   "commit": "a981309b2893e399dad4a2810839ec5e305bfb71",
+   "subject": "Merge central c031e4e7 into CE-12 P2"
+  },
+  {
+   "commit": "227db4dd0e02c66393e53ed3a74aab043e49726c",
+   "subject": "Add the CE-12 symbolic corollaries"
+  },
+  {
+   "commit": "3b8a4cd36ea1f538c4d8fe4b70e88c48aab50da9",
+   "subject": "Remove no-op deprecation suppressions from CE-12 P2"
+  },
+  {
+   "commit": "e37ed9e7cccc224cdfd0a316ad21c4568449efe7",
+   "subject": "Add the CE-12 symbolic LOR corollary"
+  }
+ ],
+ "files_sha256": {
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "e13da928668c21be80d96994dce2c881e4c18f3d2c07ee5bda32c1278cc88bda",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "8a6c6eb60956eba96b9eaab7110f572872a482fb5f5d58daabe52a1c15ae75e5",
+  "beaconcrypt-core/proofs/check-inventory.sh": "7df4029475082820eff542e236b5706bdf904b1d5584b37405dac609279b6195"
+ },
+ "modules": [
+  {
+   "name": "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGap",
+   "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineGap.lean",
+   "sha256": "31149250f7013b6ef8e646eccd8a1b629ca65189fa08702b9bfaca026d0569f7",
+   "created_in": "361ad9f8e06671238b35028918c6d6b6c502464c",
+   "last_changed_in": "3b8a4cd36ea1f538c4d8fe4b70e88c48aab50da9",
+   "theorem_count": 30,
+   "guard_count": 30,
+   "guards_in_order": true,
+   "deprecation_suppressions": 0,
+   "definitions": [
+    "SymServer",
+    "SymBeacon",
+    "ciphertextOf",
+    "CtGap",
+    "CtGapEvent",
+    "ctGapEvent",
+    "finishReg",
+    "FinishReady",
+    "ServerGap",
+    "BeaconGap",
+    "serverGap",
+    "beaconGap",
+    "a2pubTerm",
+    "a1Term",
+    "ctGapTerm"
+   ],
+   "theorems": [
+    "finishReg_regsOf",
+    "established_accepted",
+    "acceptedFrom_first",
+    "owners_foldl_prefix",
+    "owners_prefix_get",
+    "regsOf_snoc",
+    "finishReady_snoc",
+    "ready_step",
+    "ready_empty",
+    "ready_game",
+    "acceptedFrom_split",
+    "accepted_split",
+    "ready_accepted",
+    "first_acceptedFrom",
+    "finish_accepted",
+    "accept_logged",
+    "acceptCount_logged",
+    "accept_positional",
+    "acceptedKeys_identity",
+    "candidateTuple_pq",
+    "server_gap",
+    "accept_entry",
+    "beacon_gap",
+    "chance_le_support",
+    "chance_le_add_support",
+    "server_gap_le",
+    "server_gap_bound",
+    "beacon_gap_le",
+    "ce_a1_linked",
+    "sym_gap"
+   ],
+   "axiom_profile": {
+    "propext, Classical.choice, Quot.sound": 27,
+    "propext, Quot.sound": 3
+   },
+   "imports": [
+    "BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjectiveGame",
+    "BeaconcryptCore.Computational.PqxdhDeploymentTargetRange",
+    "BeaconcryptCore.Computational.PqxdhDeploymentKeyMatch"
+   ],
+   "final_check": {
+    "prefix": "ce12/p2/olean3",
+    "exit": 0,
+    "head": "227db4dd0e02c66393e53ed3a74aab043e49726c",
+    "dirty_paths": 4,
+    "log_bytes": 0,
+    "artifact_sha256": "d264c383ecdb0808b572bfa830cf0bcb0604b3efa0eaad7a399a64743128c2c5",
+    "source_sha256": "31149250f7013b6ef8e646eccd8a1b629ca65189fa08702b9bfaca026d0569f7"
+   },
+   "earlier_checks": [
+    {
+     "prefix": "olean",
+     "exit": 0,
+     "head": "b88e30124d0c80a762cdf99ccf82569995c4a471",
+     "log_bytes": 0,
+     "artifact_sha256": "bb33376589781339f0351425a867763a79d47a56d184c0c8f7d001d14ca45a66",
+     "source_sha256": "67a36f9eeccad05617d73df239c2ce572b98a2766b620ffe81cf01f665069f1f"
+    },
+    {
+     "prefix": "olean2",
+     "exit": 0,
+     "head": "5553cf770702f9d218404f3170435d775ead1775",
+     "log_bytes": 0,
+     "artifact_sha256": "bb33376589781339f0351425a867763a79d47a56d184c0c8f7d001d14ca45a66",
+     "source_sha256": "67a36f9eeccad05617d73df239c2ce572b98a2766b620ffe81cf01f665069f1f"
+    }
+   ],
+   "recheck": {
+    "prefix": "ce12/p2/recheck/olean",
+    "exit": 0,
+    "head": "e37ed9e7cccc224cdfd0a316ad21c4568449efe7",
+    "dirty_paths": 0,
+    "log_bytes": 0,
+    "artifact_sha256": "d264c383ecdb0808b572bfa830cf0bcb0604b3efa0eaad7a399a64743128c2c5",
+    "source_sha256": "31149250f7013b6ef8e646eccd8a1b629ca65189fa08702b9bfaca026d0569f7",
+    "identical_to_final": true
+   }
+  },
+  {
+   "name": "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineCollision",
+   "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineCollision.lean",
+   "sha256": "0881bf4176bd241efa57517496e390dcd7d68e6e32cc28c30a0905dab34d7fc0",
+   "created_in": "5553cf770702f9d218404f3170435d775ead1775",
+   "last_changed_in": "3b8a4cd36ea1f538c4d8fe4b70e88c48aab50da9",
+   "theorem_count": 14,
+   "guard_count": 14,
+   "guards_in_order": true,
+   "deprecation_suppressions": 3,
+   "definitions": [
+    "liftBase",
+    "pairAdversary",
+    "pairDraws",
+    "pairOutcome",
+    "pairCollision",
+    "IdentityCollision",
+    "injTerm",
+    "CarriesTo",
+    "CtCollAt",
+    "CtCollEvent",
+    "ctCollEvent",
+    "ctCollTerm"
+   ],
+   "theorems": [
+    "post_lift",
+    "pair_branch",
+    "pair_branch_eval",
+    "pairDraws_eval",
+    "pair_real_draws",
+    "pair_random_le",
+    "pair_first_error",
+    "pair_second_error",
+    "pair_advantage",
+    "pair_cp_le",
+    "pair_pre",
+    "liftBase_decapsulations",
+    "pair_post_decapsulations",
+    "identity_collision_game"
+   ],
+   "axiom_profile": {
+    "propext, Quot.sound": 2,
+    "propext, Classical.choice, Quot.sound": 11,
+    "none": 1
+   },
+   "imports": [
+    "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGap",
+    "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAnomaly"
+   ],
+   "final_check": {
+    "prefix": "ce12/p2/olean3",
+    "exit": 0,
+    "head": "227db4dd0e02c66393e53ed3a74aab043e49726c",
+    "dirty_paths": 4,
+    "log_bytes": 0,
+    "artifact_sha256": "cb234a38bbcae0c3d7f7a250d27f198034cd85a3e2f74e8e120cc141f42bec46",
+    "source_sha256": "0881bf4176bd241efa57517496e390dcd7d68e6e32cc28c30a0905dab34d7fc0"
+   },
+   "earlier_checks": [
+    {
+     "prefix": "olean",
+     "exit": 0,
+     "head": "361ad9f8e06671238b35028918c6d6b6c502464c",
+     "log_bytes": 0,
+     "artifact_sha256": "266460ddd1579b37809ed39eafb538e5bf735611c7a3a6e7f6a5925ee8621cc2",
+     "source_sha256": "5746b91182cd4829e0789f7b4c35d494364467702b3addc9854e3832c8f40e08"
+    },
+    {
+     "prefix": "olean2",
+     "exit": 0,
+     "head": "5553cf770702f9d218404f3170435d775ead1775",
+     "log_bytes": 0,
+     "artifact_sha256": "266460ddd1579b37809ed39eafb538e5bf735611c7a3a6e7f6a5925ee8621cc2",
+     "source_sha256": "5746b91182cd4829e0789f7b4c35d494364467702b3addc9854e3832c8f40e08"
+    }
+   ],
+   "recheck": {
+    "prefix": "ce12/p2/recheck/olean",
+    "exit": 0,
+    "head": "e37ed9e7cccc224cdfd0a316ad21c4568449efe7",
+    "dirty_paths": 0,
+    "log_bytes": 0,
+    "artifact_sha256": "cb234a38bbcae0c3d7f7a250d27f198034cd85a3e2f74e8e120cc141f42bec46",
+    "source_sha256": "0881bf4176bd241efa57517496e390dcd7d68e6e32cc28c30a0905dab34d7fc0",
+    "identical_to_final": true
+   }
+  },
+  {
+   "name": "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic",
+   "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineSymbolic.lean",
+   "sha256": "db635626ef7cd6b0acbe2d072f23c8504fc62ab1056fa4de8279294122dea784",
+   "created_in": "227db4dd0e02c66393e53ed3a74aab043e49726c",
+   "last_changed_in": "3b8a4cd36ea1f538c4d8fe4b70e88c48aab50da9",
+   "theorem_count": 25,
+   "guard_count": 25,
+   "guards_in_order": true,
+   "deprecation_suppressions": 0,
+   "definitions": [
+    "SymHandle",
+    "SymCpartB2s",
+    "SymCpartS2b",
+    "SymCpart",
+    "ForgedAtSym",
+    "OriginFailureSym",
+    "originSym",
+    "UksSenderSymAt",
+    "UksFailureSym",
+    "uksSym",
+    "AppWinSym",
+    "AppWinPeerSym",
+    "appSym",
+    "appPeerSym",
+    "KtSym",
+    "ktSym"
+   ],
+   "theorems": [
+    "acceptReplies_logged",
+    "sessionAt_positional",
+    "owner_cpart_sym",
+    "peer_cpart_sym",
+    "origin_b2s_sym",
+    "origin_s2b_sym",
+    "undesignated_gap",
+    "uks_sym",
+    "app_sym",
+    "app_peer_sym",
+    "kt_sym",
+    "chance_le_add4",
+    "a1_chance",
+    "ce_or_b2s_sym_le",
+    "ce_or_s2b_sym_le",
+    "ce_uks_sym_le",
+    "ce_app_sym_le",
+    "ce_app_server_sym_le",
+    "ce_kt_sym_le",
+    "ce_or_b2s_sym",
+    "ce_or_s2b_sym",
+    "ce_uks_sym",
+    "ce_app_sym",
+    "ce_app_server_sym",
+    "ce_kt_sym"
+   ],
+   "axiom_profile": {
+    "propext, Quot.sound": 1,
+    "propext, Classical.choice, Quot.sound": 24
+   },
+   "imports": [
+    "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineCollision",
+    "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineOrigin",
+    "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineUks",
+    "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineApp",
+    "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineKeyTransfer"
+   ],
+   "final_check": {
+    "prefix": "ce12/p2/olean3",
+    "exit": 0,
+    "head": "227db4dd0e02c66393e53ed3a74aab043e49726c",
+    "dirty_paths": 4,
+    "log_bytes": 0,
+    "artifact_sha256": "f3623b38619a8f551a95894db75f4eba23c55751eabfe188c5ca2411f1c376f1",
+    "source_sha256": "db635626ef7cd6b0acbe2d072f23c8504fc62ab1056fa4de8279294122dea784"
+   },
+   "earlier_checks": [
+    {
+     "prefix": "olean2",
+     "exit": 0,
+     "head": "a981309b2893e399dad4a2810839ec5e305bfb71",
+     "log_bytes": 0,
+     "artifact_sha256": "2450f3d1ffe4c5eef57af26c4f0361c91bed53fc81a0d31cd34ca5618fdee523",
+     "source_sha256": "439be8533e4b4e5ee57137875e4f53eb57844177dc7c83a3834a413a831325bb"
+    }
+   ],
+   "recheck": {
+    "prefix": "ce12/p2/recheck/olean",
+    "exit": 0,
+    "head": "e37ed9e7cccc224cdfd0a316ad21c4568449efe7",
+    "dirty_paths": 0,
+    "log_bytes": 0,
+    "artifact_sha256": "f3623b38619a8f551a95894db75f4eba23c55751eabfe188c5ca2411f1c376f1",
+    "source_sha256": "db635626ef7cd6b0acbe2d072f23c8504fc62ab1056fa4de8279294122dea784",
+    "identical_to_final": true
+   }
+  },
+  {
+   "name": "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolicLor",
+   "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineSymbolicLor.lean",
+   "sha256": "6fc19c22e5ee771778aadfe7c56932cdd15fc2822fad9ce9c196e0db1be96f42",
+   "created_in": "e37ed9e7cccc224cdfd0a316ad21c4568449efe7",
+   "last_changed_in": "e37ed9e7cccc224cdfd0a316ad21c4568449efe7",
+   "theorem_count": 24,
+   "guard_count": 24,
+   "guards_in_order": true,
+   "deprecation_suppressions": 0,
+   "definitions": [
+    "SameField",
+    "nbfFilter",
+    "LorEligSym",
+    "LorWinSym",
+    "lorEligSym",
+    "lorWinSym"
+   ],
+   "theorems": [
+    "findSome_prefix",
+    "owners_prefix",
+    "acceptCount_prefix",
+    "publishes_prefix",
+    "linked_prefix",
+    "linked_carries",
+    "owner_moves",
+    "peer_moves",
+    "moves",
+    "nbfFilter_iff",
+    "ledgerInv_game",
+    "encodedIdentity_injective",
+    "bundle_identity",
+    "field_collision",
+    "designated_sym",
+    "lor_inclusion",
+    "lor_difference",
+    "nested_arith",
+    "chance_eq_support",
+    "symbolic_lor_le",
+    "lor_difference_bound",
+    "ofReal_abs_triangle",
+    "symbolic_lor",
+    "symbolic_lor_bound"
+   ],
+   "axiom_profile": {
+    "propext, Quot.sound": 1,
+    "propext, Classical.choice, Quot.sound": 21,
+    "propext": 2
+   },
+   "imports": [
+    "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic",
+    "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineLor"
+   ],
+   "final_check": {
+    "prefix": "ce12/p2/olean3",
+    "exit": 0,
+    "head": "3b8a4cd36ea1f538c4d8fe4b70e88c48aab50da9",
+    "dirty_paths": 1,
+    "log_bytes": 0,
+    "artifact_sha256": "dafc6dd17d6715237144f40585e89d95e592d5efdb65ca4bfa509170a525f73c",
+    "source_sha256": "6fc19c22e5ee771778aadfe7c56932cdd15fc2822fad9ce9c196e0db1be96f42"
+   },
+   "earlier_checks": [],
+   "recheck": {
+    "prefix": "ce12/p2/recheck/olean",
+    "exit": 0,
+    "head": "e37ed9e7cccc224cdfd0a316ad21c4568449efe7",
+    "dirty_paths": 0,
+    "log_bytes": 0,
+    "artifact_sha256": "dafc6dd17d6715237144f40585e89d95e592d5efdb65ca4bfa509170a525f73c",
+    "source_sha256": "6fc19c22e5ee771778aadfe7c56932cdd15fc2822fad9ce9c196e0db1be96f42",
+    "identical_to_final": true
+   }
+  }
+ ],
+ "theorem_total": 93,
+ "allowed_axioms": [
+  "propext",
+  "Classical.choice",
+  "Quot.sound"
+ ],
+ "scan": {
+  "PqxdhDeploymentHeadlineGap": {
+   "theorems": 30,
+   "guards": 30,
+   "in_order": true,
+   "guard_msgs": 30,
+   "bad_axioms": [],
+   "forbidden": [],
+   "suppressions": 0
+  },
+  "PqxdhDeploymentHeadlineCollision": {
+   "theorems": 14,
+   "guards": 14,
+   "in_order": true,
+   "guard_msgs": 14,
+   "bad_axioms": [],
+   "forbidden": [],
+   "suppressions": 3
+  },
+  "PqxdhDeploymentHeadlineSymbolic": {
+   "theorems": 25,
+   "guards": 25,
+   "in_order": true,
+   "guard_msgs": 25,
+   "bad_axioms": [],
+   "forbidden": [],
+   "suppressions": 0
+  },
+  "PqxdhDeploymentHeadlineSymbolicLor": {
+   "theorems": 24,
+   "guards": 24,
+   "in_order": true,
+   "guard_msgs": 24,
+   "bad_axioms": [],
+   "forbidden": [],
+   "suppressions": 0
+  },
+  "closure_size": 1561,
+  "boundary_imports": []
+ },
+ "forbidden_tokens_found": [],
+ "boundary_imports": [],
+ "handwritten_lean": {
+  "before": 1893,
+  "after": 1899,
+  "note": "1893 -> 1894 (Gap) -> 1895 (Collision) -> 1897 (merge of central c031e4e7: two LQ-F unit D files) -> 1898 (Symbolic) -> 1899 (SymbolicLor); coord.sh inv recount before coord.sh inv rehash"
+ },
+ "headlines": {
+  "server_gap / server_gap_bound": "on every outcome: SymServer peer not designated inside the budget -> OwnerForgery at the owner of the accepted identity key with NoBundleFailureAt; 𝒟[ServerGap] <= ε_A2pub (a2pubTerm, a2pub_owner_bound); premises shortRejects, Phase1ReadBack, Phase2ReadBack, budget",
+  "beacon_gap / beacon_gap_le / ce_a1_linked": "SymBeacon owner (pin S, serverKid) not designated -> A1NoPinnedMatch or CtGap; 𝒟[BeaconGap] <= 𝒟[∃c A1NoPinnedMatch c] + ctGapTerm <= ofReal ε_A1 + ctGapTerm, with the bills of every CE-A1 reduction; premises those of CE-A1",
+  "sym_gap": "𝒟[ServerGap ∨ BeaconGap] <= ε_A2pub + ofReal ε_A1 + ctGapTerm",
+  "finish_accepted": "on every outcome: finishOf tr c = some raw <-> ∃ before, accepted c (regsOf tr) = some (before, raw) (new run invariant FinishReady, ready_game)",
+  "identity_collision_game": "𝒟[IdentityCollision] <= ε_inj (injTerm); premises Phase1ReadBack, Phase2ReadBack, budget",
+  "pair_cp_le": "pairCollision setup <= ofReal Adv^IND-CCA(pairAdversary) + 2·ofReal correctnessError + 2^-256; premise FunctionalDecapsulation; pairAdversary: no pre-challenge query, no decapsulation query after the challenge",
+  "ce_or_b2s_sym": "𝒟[OriginFailureSym .b2s] <= ce_or_b2s bound + ε_A2pub",
+  "ce_or_s2b_sym": "𝒟[OriginFailureSym .s2b] <= ce_or_s2b bound + ofReal ε_A1 + ctGapTerm + ctCollTerm",
+  "ce_uks_sym": "𝒟[UksFailureSym] <= ce_uks_sender bound + ofReal ε_A1 + ctGapTerm + ctCollTerm",
+  "ce_app_sym": "𝒟[AppWinSym] <= ce_app bound + (ε_A2pub + ofReal ε_A1 + ctGapTerm)",
+  "ce_app_server_sym": "𝒟[AppWinPeerSym] <= ce_app_server bound + ε_A2pub",
+  "ce_kt_sym": "𝒟[KtSym] <= ce_kt_sum_le bound + (ε_A2pub + ofReal ε_A1 + ctGapTerm)",
+  "symbolic_lor": "ofReal |adv_sym - adv_CE(nbfFilter)| <= 2⁻¹ * (ε_A2pub + ofReal ε_A1 + ctGapTerm + ε_inj + ctCollTerm), adv = Pr[win] - ½Pr[eligible]",
+  "symbolic_lor_bound": "ofReal |adv_sym| <= ce_lor bound at nbfFilter + 2⁻¹ * (ε_A2pub + ofReal ε_A1 + ctGapTerm + ε_inj + ctCollTerm)"
+ },
+ "deviations_from_design": [
+  "D-ct stop rule fired: Beacon-side terms carry ctGapTerm (F-ct2) instead of ε_ct; owner to be told before publication.",
+  "ctCollTerm explicit: ct_collision_game (game level) not proved; pair_cp_le (KEM level) proved.",
+  "Gap and symbolic events use designateIn (budgeted), as P1; it agrees with designate on the support (range_game).",
+  "SymCpartS2b reads build entries directly (some session that built the peer), not linkOf, so no key-ID or build uniqueness is needed.",
+  "pairAdversary forwards its encapsulation through an explicit liftBase handler instead of liftComp.",
+  "lor_difference takes only Phase1ReadBack (unused premises dropped).",
+  "Not built this session: injective CE-OR forms, bills, AG, ct_collision_game, D-ct."
+ ],
+ "contracts_used": {
+  "new_contracts": [],
+  "new_assumptions": [],
+  "premises": [
+   "Phase1ReadBack codec",
+   "Phase2ReadBack codec",
+   "budget.Respects adversary",
+   "shortRejects (ε_A2pub)",
+   "CE-A1 premises (ε_A1): KemBound, FrameReadBack, ReadWritable, X25519ClassLaw, X25519ScalarSpread, SourceFullCorrect, HasAttachedVerificationAdapter",
+   "FunctionalDecapsulation (pair_cp_le and the P1 headlines)",
+   "P1 headline premises for the composed corollaries (initBound, KemBound, FrameReadBack)"
+  ]
+ },
+ "not_claimed": [
+  "closed ε_ct (D-ct deferred) and closed ε_ctcoll",
+  "injective CE-OR forms",
+  "bills of the new reductions beyond decapsulation counts (splitStep_uniform, ptc_bills, HeadlineBills, pairAdversary uniform bill)",
+  "AG: b2s publisher pin and mode-O plaintext stay symbolic-only",
+  "pins other than (S, serverKid)",
+  "raw-receive positions only (s2b from 2)",
+  "plaintext-linked UKS",
+  "INITIAL_SECRET endpoint",
+  "later-quantum symbolic corollaries (P3)"
+ ],
+ "open_points": [
+  "owner: D-ct stop rule fired (F-ct2)",
+  "ct_collision_game (2-4 days)",
+  "injective CE-OR forms (0.5-1.5 days)",
+  "bills (0.5-1.5 days)",
+  "AG (2-5 days)",
+  "D-ct (4-8 days, deferred)",
+  "P2 review, fix pass, integration; then P3"
+ ],
+ "checks": {
+  "lean_tool": "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean via coord.sh lean claude, -j1 -M8000, timeout 180",
+  "leanpaths": {
+   "leanpath": {
+    "path": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/leanpath",
+    "sha256": "00aff23d99f3498ee0e941dff87d9d4944f4553670ae544fd9291bf830525e77",
+    "first_prefix": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/olean"
+   },
+   "leanpath2": {
+    "path": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/leanpath2",
+    "sha256": "c62e2e5ef9ec78461236ebeea1bbe20b4643e7e860a047856b927904e693980f",
+    "first_prefix": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/olean2"
+   },
+   "leanpath3": {
+    "path": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/leanpath3",
+    "sha256": "54c6b2f83d344ab300727e1f008d8e4da1b50b7e3c0da8fcfcfa4cb18e3948c2",
+    "first_prefix": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/olean3"
+   },
+   "recheck/leanpath": {
+    "path": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/recheck/leanpath",
+    "sha256": "0d55d832f16bf0849fbe05013a7200dcb1272d80fa32c86a1c7ad59b6052782c",
+    "first_prefix": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/recheck/olean"
+   }
+  },
+  "roots": {
+   "logs/final/root-collision.json": {
+    "exit": 0,
+    "head": "361ad9f8e06671238b35028918c6d6b6c502464c",
+    "dirty_paths": 4,
+    "log_bytes": 0
+   },
+   "logs/final/root-gap.json": {
+    "exit": 0,
+    "head": "b88e30124d0c80a762cdf99ccf82569995c4a471",
+    "dirty_paths": 4,
+    "log_bytes": 0
+   },
+   "logs/final2/root-merge1.json": {
+    "exit": 0,
+    "head": "5553cf770702f9d218404f3170435d775ead1775",
+    "dirty_paths": 9,
+    "log_bytes": 0
+   },
+   "logs/final2/root-symbolic.json": {
+    "exit": 0,
+    "head": "a981309b2893e399dad4a2810839ec5e305bfb71",
+    "dirty_paths": 4,
+    "log_bytes": 0
+   },
+   "logs/final3/root-hygiene.json": {
+    "exit": 0,
+    "head": "227db4dd0e02c66393e53ed3a74aab043e49726c",
+    "dirty_paths": 4,
+    "log_bytes": 0
+   },
+   "logs/final3/root-symlor.json": {
+    "exit": 0,
+    "head": "3b8a4cd36ea1f538c4d8fe4b70e88c48aab50da9",
+    "dirty_paths": 4,
+    "log_bytes": 0
+   },
+   "recheck/logs/root-clean.json": {
+    "exit": 0,
+    "head": "e37ed9e7cccc224cdfd0a316ad21c4568449efe7",
+    "dirty_paths": 0,
+    "log_bytes": 0
+   }
+  },
+  "inventories": {
+   "clean-head": {
+    "status": 0,
+    "commit": "e37ed9e7cccc224cdfd0a316ad21c4568449efe7",
+    "start": "2026-10-10T06:21:11Z",
+    "end": "2026-10-10T06:22:56Z",
+    "dirty_before": 0,
+    "dirty_after": 0,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/logs/inventory-clean-head.log",
+    "log_sha256": "797827e1c3adc753f4f299966c2bc91c6f78b39e1a11bef2115460d183fe1369"
+   },
+   "collision": {
+    "status": 0,
+    "commit": "361ad9f8e06671238b35028918c6d6b6c502464c",
+    "start": "2026-10-10T05:46:31Z",
+    "end": "2026-10-10T05:48:18Z",
+    "dirty_before": 4,
+    "dirty_after": 4,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/logs/inventory-collision.log",
+    "log_sha256": "7ceb928d19f32f25ecc13ee69fc59c3087d291c7a5ef228e2d319d97c0dc8727"
+   },
+   "gap": {
+    "status": 0,
+    "commit": "b88e30124d0c80a762cdf99ccf82569995c4a471",
+    "start": "2026-10-10T05:35:51Z",
+    "end": "2026-10-10T05:37:46Z",
+    "dirty_before": 4,
+    "dirty_after": 4,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/logs/inventory-gap.log",
+    "log_sha256": "6b9d77bf5d52fea2b32b3052f7307534126987b32654fd224133d26078881827"
+   },
+   "hygiene": {
+    "status": 2,
+    "commit": "227db4dd0e02c66393e53ed3a74aab043e49726c",
+    "start": "2026-10-10T06:13:04Z",
+    "end": "2026-10-10T06:13:08Z",
+    "dirty_before": 3,
+    "dirty_after": 3,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/logs/inventory-hygiene.log",
+    "log_sha256": "b22d198d87b86429a85bb3d68503eaf89d362716f6a51d6c4998ae50979ef227",
+    "note": "failed only because the three changed module rows were not yet rehashed (coord.sh inv rehash needs the module relpaths); rerun as hygiene2 after the rehash"
+   },
+   "hygiene2": {
+    "status": 0,
+    "commit": "227db4dd0e02c66393e53ed3a74aab043e49726c",
+    "start": "2026-10-10T06:13:13Z",
+    "end": "2026-10-10T06:15:01Z",
+    "dirty_before": 4,
+    "dirty_after": 4,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/logs/inventory-hygiene2.log",
+    "log_sha256": "bc12c83a3a5f3c1f1fea80e10ce5ecc29fd9f0f9afb8dca95a1f83a1d1ab6f31"
+   },
+   "merge1": {
+    "status": 0,
+    "commit": "5553cf770702f9d218404f3170435d775ead1775",
+    "start": "2026-10-10T05:49:39Z",
+    "end": "2026-10-10T05:51:25Z",
+    "dirty_before": 9,
+    "dirty_after": 9,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/logs/inventory-merge1.log",
+    "log_sha256": "4f4900f836100a010074c01cd11aa793389ff67b23965277ce1cf006bd4b1f01"
+   },
+   "symbolic": {
+    "status": 0,
+    "commit": "a981309b2893e399dad4a2810839ec5e305bfb71",
+    "start": "2026-10-10T06:01:27Z",
+    "end": "2026-10-10T06:03:14Z",
+    "dirty_before": 4,
+    "dirty_after": 4,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/logs/inventory-symbolic.log",
+    "log_sha256": "a24028d2251f68f4185598cfcaeb1df94620c8c1be82580e222e5c8fd24dbd2f"
+   },
+   "symlor": {
+    "status": 0,
+    "commit": "3b8a4cd36ea1f538c4d8fe4b70e88c48aab50da9",
+    "start": "2026-10-10T06:15:40Z",
+    "end": "2026-10-10T06:17:29Z",
+    "dirty_before": 4,
+    "dirty_after": 4,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/logs/inventory-symlor.log",
+    "log_sha256": "fb6bfd9468f63849d2b5146a6ccf1ba9c3ec662948208cc38548e906537ce9be"
+   }
+  },
+  "guard_scan": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/logs/scan-clean.json",
+  "merge": {
+   "commit": "a981309b2893e399dad4a2810839ec5e305bfb71",
+   "conflicts": [
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean",
+    "beaconcrypt-core/proofs/reviewed-inventory.txt",
+    "beaconcrypt-core/proofs/check-inventory.sh"
+   ],
+   "resolution": "both sides whole, central first; recount 1897; rehash",
+   "recompiled_identical": [
+    "PqxdhDeploymentHeadlineGap",
+    "PqxdhDeploymentHeadlineCollision"
+   ]
+  }
+ },
+ "review": {
+  "status": "not reviewed"
+ },
+ "git_diff_check": {
+  "range": "b88e30124d0c80a762cdf99ccf82569995c4a471..e37ed9e7cccc224cdfd0a316ad21c4568449efe7",
+  "exit": 0
+ }
+}
