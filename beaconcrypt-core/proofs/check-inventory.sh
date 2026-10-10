@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1894
+	[handwritten-lean]=1895
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -38842,6 +38842,41 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem ce_a1_linked([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGap theorem ce_a1_linked"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineGap\.sym_gap$' "$selected_source_module" "PqxdhDeploymentHeadlineGap dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGap.sym_gap"
 require_line_count 1 '^theorem sym_gap([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGap theorem sym_gap"
+
+# CE-12 P2: collision terms (epsilon_inj game form, pairAdversary and pair_cp_le, CtColl).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineCollision.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineCollision$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentHeadlineCollision root import"
+require_line_count 14 '^theorem ' "$selected_source_module" "PqxdhDeploymentHeadlineCollision theorem inventory"
+require_line_count 14 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentHeadlineCollision guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineCollision\.post_lift$' "$selected_source_module" "PqxdhDeploymentHeadlineCollision dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineCollision.post_lift"
+require_line_count 1 '^theorem post_lift([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineCollision theorem post_lift"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineCollision\.pair_branch$' "$selected_source_module" "PqxdhDeploymentHeadlineCollision dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineCollision.pair_branch"
+require_line_count 1 '^theorem pair_branch([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineCollision theorem pair_branch"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineCollision\.pair_branch_eval$' "$selected_source_module" "PqxdhDeploymentHeadlineCollision dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineCollision.pair_branch_eval"
+require_line_count 1 '^theorem pair_branch_eval([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineCollision theorem pair_branch_eval"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineCollision\.pairDraws_eval$' "$selected_source_module" "PqxdhDeploymentHeadlineCollision dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineCollision.pairDraws_eval"
+require_line_count 1 '^theorem pairDraws_eval([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineCollision theorem pairDraws_eval"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineCollision\.pair_real_draws$' "$selected_source_module" "PqxdhDeploymentHeadlineCollision dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineCollision.pair_real_draws"
+require_line_count 1 '^theorem pair_real_draws([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineCollision theorem pair_real_draws"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineCollision\.pair_random_le$' "$selected_source_module" "PqxdhDeploymentHeadlineCollision dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineCollision.pair_random_le"
+require_line_count 1 '^theorem pair_random_le([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineCollision theorem pair_random_le"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineCollision\.pair_first_error$' "$selected_source_module" "PqxdhDeploymentHeadlineCollision dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineCollision.pair_first_error"
+require_line_count 1 '^theorem pair_first_error([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineCollision theorem pair_first_error"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineCollision\.pair_second_error$' "$selected_source_module" "PqxdhDeploymentHeadlineCollision dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineCollision.pair_second_error"
+require_line_count 1 '^theorem pair_second_error([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineCollision theorem pair_second_error"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineCollision\.pair_advantage$' "$selected_source_module" "PqxdhDeploymentHeadlineCollision dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineCollision.pair_advantage"
+require_line_count 1 '^theorem pair_advantage([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineCollision theorem pair_advantage"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineCollision\.pair_cp_le$' "$selected_source_module" "PqxdhDeploymentHeadlineCollision dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineCollision.pair_cp_le"
+require_line_count 1 '^theorem pair_cp_le([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineCollision theorem pair_cp_le"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineCollision\.pair_pre$' "$selected_source_module" "PqxdhDeploymentHeadlineCollision dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineCollision.pair_pre"
+require_line_count 1 '^theorem pair_pre([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineCollision theorem pair_pre"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineCollision\.liftBase_decapsulations$' "$selected_source_module" "PqxdhDeploymentHeadlineCollision dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineCollision.liftBase_decapsulations"
+require_line_count 1 '^theorem liftBase_decapsulations([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineCollision theorem liftBase_decapsulations"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineCollision\.pair_post_decapsulations$' "$selected_source_module" "PqxdhDeploymentHeadlineCollision dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineCollision.pair_post_decapsulations"
+require_line_count 1 '^theorem pair_post_decapsulations([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineCollision theorem pair_post_decapsulations"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineCollision\.identity_collision_game$' "$selected_source_module" "PqxdhDeploymentHeadlineCollision dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineCollision.identity_collision_game"
+require_line_count 1 '^theorem identity_collision_game([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineCollision theorem identity_collision_game"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"

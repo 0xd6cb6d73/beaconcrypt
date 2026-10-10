@@ -2105,6 +2105,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineLor
 
 import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGap
 
+import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineCollision
+
 /-!
 # Beaconcrypt-core verification root
 
