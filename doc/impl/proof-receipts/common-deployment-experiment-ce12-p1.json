@@ -1,6 +1,6 @@
 {
- "date": "2026-10-10T04:24:22.978689+00:00",
- "scope": "CE-12 P1 (track ce12/p1): the classical headline theorems of the common deployment experiment (design-v2 sections 3-6 and 11): the per-target chain in U7's names, the predict-then-compare anomaly bound, the events and containments, and CE-KT, CE-OR, CE-UKS, CE-APP and CE-LOR, each per target and as an exact sum over the designated targets with coefficient one. Not reviewed and not integrated.",
+ "date": "2026-10-10T04:52:37.207612+00:00",
+ "scope": "CE-12 P1 (track ce12/p1): the classical headline theorems of the common deployment experiment (design-v2 sections 3-6 and 11): the per-target chain in U7's names, the predict-then-compare anomaly bound, the events and containments, and CE-KT, CE-OR, CE-UKS, CE-APP and CE-LOR, each per target and as an exact sum over the designated targets with coefficient one. Reviewed (semantic, composition and hygiene lenses at 4365e748) and every finding fixed (Lean commit 6d13ef8b plus the documentation commit adding this receipt); not integrated.",
  "basis": {
   "start": "ab9986efb4c323c9ca62be9774405e0a880cb747",
   "central_at_receipt": "ab9986efb4c323c9ca62be9774405e0a880cb747",
@@ -9,17 +9,25 @@
  "topic": {
   "branch": "codex/deployment-ce12",
   "worktree": "/tmp/beaconcrypt-deployment-ce12",
-  "head_at_receipt": "68498a95222ef55be4c605b1d1c76100559d25cc",
+  "head_at_receipt": "6d13ef8bb74d7ffdcd80d2668eea85f747afd2cb",
   "note": "the documentation commit that adds this receipt follows head_at_receipt and changes no Lean or inventory file"
  },
  "plan": {
   "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
-  "sha256": "d3b5f34279ca3f8f22d96a6a811812aa0cff5fce09ef5b5560f91f2ce0992f56",
-  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/docs/plan.at-p1-receipt-d3b5f342.md",
-  "section": 98,
+  "sha256": "f3157425eacbaab30a3169b2090cb3c5bc52e7921f25255467afcaac29fa083c",
+  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/docs/plan.at-fix-receipt-f3157425.md",
+  "sections": [
+   98,
+   99
+  ],
+  "dated_copy_at_p1": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/docs/plan.at-p1-receipt-d3b5f342.md",
   "backup_before": {
    "path": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/docs/plan.before-p1-e9ef4f7f.md",
    "sha256": "e9ef4f7f7e840db9f56ec78d77d564c7487ed439cf3cb56ccef6b3b12bd16d6f"
+  },
+  "backup_before_fix": {
+   "path": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/docs/plan.before-fix-d3b5f342.md",
+   "sha256": "d3b5f34279ca3f8f22d96a6a811812aa0cff5fce09ef5b5560f91f2ce0992f56"
   }
  },
  "design": {
@@ -73,11 +81,19 @@
   {
    "commit": "68498a95222ef55be4c605b1d1c76100559d25cc",
    "subject": "Correct three CE-12 event documentation strings"
+  },
+  {
+   "commit": "4365e748ae1cfc40eb29b7362254443ab5d7640e",
+   "subject": "Document CE-12 P1, the classical headline theorems"
+  },
+  {
+   "commit": "6d13ef8bb74d7ffdcd80d2668eea85f747afd2cb",
+   "subject": "Drop the unused decoder agreement from CE-OR"
   }
  ],
  "files_sha256": {
   "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "57e59a09714a0b616e531d6da2dd7812d322b81cea2a24a19f32ed66368fbb1f",
-  "beaconcrypt-core/proofs/reviewed-inventory.txt": "6ba5cc168ff2203fc91bec0bd3f57d50026e68cf02b3682118d91d23c6d03d94",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "f457ac121a999c62ed0fd253ea2d0c795c0952ab1d65ed648815478dd7412079",
   "beaconcrypt-core/proofs/check-inventory.sh": "f3406e58b598583e39a6b7cca6ea318ee6037439128aa41db60615fc68a613f3"
  },
  "modules": [
@@ -147,14 +163,23 @@
     "artifact_sha256": "a4f85806777f3739119e4938fc3650862356d6beacabd9657cf677cac90ccf74",
     "source_sha256": "be75aee7c37cb619e9462ecb30a2013d6364fb9c5b68ebe085a258362eacf200",
     "identical_to_final": true
+   },
+   "fix_check": {
+    "exit": 0,
+    "head": "6d13ef8bb74d7ffdcd80d2668eea85f747afd2cb",
+    "dirty_paths": 0,
+    "log_bytes": 0,
+    "artifact_sha256": "a4f85806777f3739119e4938fc3650862356d6beacabd9657cf677cac90ccf74",
+    "source_sha256": "be75aee7c37cb619e9462ecb30a2013d6364fb9c5b68ebe085a258362eacf200",
+    "identical_to_recheck": true
    }
   },
   {
    "name": "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAnomaly",
    "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineAnomaly.lean",
-   "sha256": "8919c0068d68f65037931f3b95d1c4271db9338c65b5f13305c54ac8212c5ee0",
+   "sha256": "98a3ebccfdf8b12378ded229bf17862e1b7c87fe3b0c38bb12fac33a6471acdf",
    "created_in": "ad17f0441baccb907be35824a4c1d064f3358b0a",
-   "last_changed_in": "ad17f0441baccb907be35824a4c1d064f3358b0a",
+   "last_changed_in": "6d13ef8bb74d7ffdcd80d2668eea85f747afd2cb",
    "theorem_count": 14,
    "guard_count": 14,
    "guards_in_order": true,
@@ -205,14 +230,23 @@
     "artifact_sha256": "5e343bce68bc1ef5a212ae4cd197d0496cda1a9143064ae7a6a09d99ab3c4612",
     "source_sha256": "8919c0068d68f65037931f3b95d1c4271db9338c65b5f13305c54ac8212c5ee0",
     "identical_to_final": true
+   },
+   "fix_check": {
+    "exit": 0,
+    "head": "6d13ef8bb74d7ffdcd80d2668eea85f747afd2cb",
+    "dirty_paths": 0,
+    "log_bytes": 0,
+    "artifact_sha256": "c18a9ee50d8f8c92b9641eda4ff6c2e8e28b318e7a3b99d06bf351e59ae3caf2",
+    "source_sha256": "98a3ebccfdf8b12378ded229bf17862e1b7c87fe3b0c38bb12fac33a6471acdf",
+    "identical_to_recheck": false
    }
   },
   {
    "name": "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineKeyTransfer",
    "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineKeyTransfer.lean",
-   "sha256": "7dceb43ff2f0a1c0299ec2fa9a8643ece335c85e2c37270a4c984f4f216b0504",
+   "sha256": "239b3b52bd343e4219220301887ea38b9d40313ca32b705c0b65f75ba10aedff",
    "created_in": "dc845b6ec9df5ce44c161d496d0e4b60c17f01bf",
-   "last_changed_in": "dc845b6ec9df5ce44c161d496d0e4b60c17f01bf",
+   "last_changed_in": "6d13ef8bb74d7ffdcd80d2668eea85f747afd2cb",
    "theorem_count": 7,
    "guard_count": 7,
    "guards_in_order": true,
@@ -246,6 +280,15 @@
     "artifact_sha256": "386dec3b5fdcea1adc236e6a0a769d94140f468dd68ba7a1e75656a7caf1b772",
     "source_sha256": "7dceb43ff2f0a1c0299ec2fa9a8643ece335c85e2c37270a4c984f4f216b0504",
     "identical_to_final": true
+   },
+   "fix_check": {
+    "exit": 0,
+    "head": "6d13ef8bb74d7ffdcd80d2668eea85f747afd2cb",
+    "dirty_paths": 0,
+    "log_bytes": 0,
+    "artifact_sha256": "db66d595c94eafa90bd5c4a3a2667b1c66710370fb8b0b103588558d9850d6cd",
+    "source_sha256": "239b3b52bd343e4219220301887ea38b9d40313ca32b705c0b65f75ba10aedff",
+    "identical_to_recheck": false
    }
   },
   {
@@ -325,14 +368,23 @@
     "artifact_sha256": "a11c820fec219f17170d58a20ac29bd5f4b08b4e22ce90be4e4f015707d66894",
     "source_sha256": "7536e9636dfdcbdd81694c8daed1a439f0521df9a24990bd4751673b4ba4a76c",
     "identical_to_final": false
+   },
+   "fix_check": {
+    "exit": 0,
+    "head": "6d13ef8bb74d7ffdcd80d2668eea85f747afd2cb",
+    "dirty_paths": 0,
+    "log_bytes": 0,
+    "artifact_sha256": "a11c820fec219f17170d58a20ac29bd5f4b08b4e22ce90be4e4f015707d66894",
+    "source_sha256": "7536e9636dfdcbdd81694c8daed1a439f0521df9a24990bd4751673b4ba4a76c",
+    "identical_to_recheck": true
    }
   },
   {
    "name": "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineContain",
    "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineContain.lean",
-   "sha256": "6d1878b84288d583d48bc70f05f0d691be225ff8ac8de5fd20700d57d3df9e15",
+   "sha256": "df0b6626213a913e0ce20e543595540e03a2a8327e2a3cc698e6dae2ec0c6a32",
    "created_in": "2e67168884595e9c2fb29abaf94b1001107b0261",
-   "last_changed_in": "2e67168884595e9c2fb29abaf94b1001107b0261",
+   "last_changed_in": "6d13ef8bb74d7ffdcd80d2668eea85f747afd2cb",
    "theorem_count": 13,
    "guard_count": 13,
    "guards_in_order": true,
@@ -372,6 +424,15 @@
     "artifact_sha256": "3f1beda656071abe8b1c2d4100e1bfda54db89afa594d6f775391ec794e156e1",
     "source_sha256": "6d1878b84288d583d48bc70f05f0d691be225ff8ac8de5fd20700d57d3df9e15",
     "identical_to_final": true
+   },
+   "fix_check": {
+    "exit": 0,
+    "head": "6d13ef8bb74d7ffdcd80d2668eea85f747afd2cb",
+    "dirty_paths": 0,
+    "log_bytes": 0,
+    "artifact_sha256": "6b0b702b7fa5c284cf5c366c82df6c533181def776c95d2575732002ef58148d",
+    "source_sha256": "df0b6626213a913e0ce20e543595540e03a2a8327e2a3cc698e6dae2ec0c6a32",
+    "identical_to_recheck": false
    }
   },
   {
@@ -413,14 +474,23 @@
     "artifact_sha256": "94eb860e4426a3e4a3d24c4fa60abbed6e839fe6bebce23fcfce12efec47f67b",
     "source_sha256": "09c9ee6bde508ab740a4704dcef7f4f3a28b37f80a10c9d635f53696c27576a0",
     "identical_to_final": true
+   },
+   "fix_check": {
+    "exit": 0,
+    "head": "6d13ef8bb74d7ffdcd80d2668eea85f747afd2cb",
+    "dirty_paths": 0,
+    "log_bytes": 0,
+    "artifact_sha256": "94eb860e4426a3e4a3d24c4fa60abbed6e839fe6bebce23fcfce12efec47f67b",
+    "source_sha256": "09c9ee6bde508ab740a4704dcef7f4f3a28b37f80a10c9d635f53696c27576a0",
+    "identical_to_recheck": true
    }
   },
   {
    "name": "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineOrigin",
    "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineOrigin.lean",
-   "sha256": "7c5d3ac2ca27320cf12e9fe47302186477f8c9214933179749ecf0ec054643aa",
+   "sha256": "aab75bfdf24d2e17d20ded4b59173e7a001e8df62923bc20ef16e88b480d9e1f",
    "created_in": "efb68a156afd164900fc6c968236b04f170a8d7f",
-   "last_changed_in": "efb68a156afd164900fc6c968236b04f170a8d7f",
+   "last_changed_in": "6d13ef8bb74d7ffdcd80d2668eea85f747afd2cb",
    "theorem_count": 5,
    "guard_count": 5,
    "guards_in_order": true,
@@ -454,6 +524,15 @@
     "artifact_sha256": "a76b19e2696eebe6cf86c0c64d2809069d80f016ad00d88b688ff924334f7a94",
     "source_sha256": "7c5d3ac2ca27320cf12e9fe47302186477f8c9214933179749ecf0ec054643aa",
     "identical_to_final": true
+   },
+   "fix_check": {
+    "exit": 0,
+    "head": "6d13ef8bb74d7ffdcd80d2668eea85f747afd2cb",
+    "dirty_paths": 0,
+    "log_bytes": 0,
+    "artifact_sha256": "71cbb7b8280859f76ee7fa6bbbb4c1a71315aa44a90824a4a11f5d33d99656e7",
+    "source_sha256": "aab75bfdf24d2e17d20ded4b59173e7a001e8df62923bc20ef16e88b480d9e1f",
+    "identical_to_recheck": false
    }
   },
   {
@@ -495,6 +574,15 @@
     "artifact_sha256": "037275033404260f3da7865919f4054a1770fd01f1fde30be345434f6913cdf2",
     "source_sha256": "ee3e8c4a2978ca894d983646a35ab62a6b639d322d8cf79c3a31e129dda5416e",
     "identical_to_final": true
+   },
+   "fix_check": {
+    "exit": 0,
+    "head": "6d13ef8bb74d7ffdcd80d2668eea85f747afd2cb",
+    "dirty_paths": 0,
+    "log_bytes": 0,
+    "artifact_sha256": "037275033404260f3da7865919f4054a1770fd01f1fde30be345434f6913cdf2",
+    "source_sha256": "ee3e8c4a2978ca894d983646a35ab62a6b639d322d8cf79c3a31e129dda5416e",
+    "identical_to_recheck": true
    }
   },
   {
@@ -573,6 +661,15 @@
     "artifact_sha256": "3c55c2b8c439a624ae17b3052a7568389fb82e0ac0a85ff9e072286366db816c",
     "source_sha256": "d3a7c3f211166848f654c3c8c75239039cf4e68b8c2d2c6544c044394ad61dca",
     "identical_to_final": true
+   },
+   "fix_check": {
+    "exit": 0,
+    "head": "6d13ef8bb74d7ffdcd80d2668eea85f747afd2cb",
+    "dirty_paths": 0,
+    "log_bytes": 0,
+    "artifact_sha256": "3c55c2b8c439a624ae17b3052a7568389fb82e0ac0a85ff9e072286366db816c",
+    "source_sha256": "d3a7c3f211166848f654c3c8c75239039cf4e68b8c2d2c6544c044394ad61dca",
+    "identical_to_recheck": true
    }
   }
  ],
@@ -591,10 +688,10 @@
  },
  "headlines": {
   "CE-KT": "ce_kt / ce_kt_close (per target, to CE's un-compiled ideal game I_g), ce_kt_sum_le / ce_kt_sum (exact sum over Fin qAccept x Fin qCreate), ce_kt_world / ce_kt_world_close / ce_kt_world_sum (record world with envGD); bill kemLoss + slotLoss; premises FunctionalDecapsulation, Phase1ReadBack, Phase2ReadBack, SourceFullCorrect, budget",
-  "CE-OR": "ce_or_b2s <= sum_g (kemLoss + slotLoss + authLoss_g(dec_g and ISs_g) + publicationTerm B); ce_or_s2b adds beta_g with IS_g; per target ce_or_*_target; premises CE-KT plus KemBound, initBound, FrameReadBack, DecoderAgreement",
+  "CE-OR": "ce_or_b2s <= sum_g (kemLoss + slotLoss + authLoss_g(dec_g and ISs_g) + publicationTerm B); ce_or_s2b adds beta_g with IS_g; per target ce_or_*_target; premises CE-KT plus KemBound, initBound, FrameReadBack (no DecoderAgreement since 6d13ef8b); b2s every Server raw receive (positions from 1), s2b every Beacon raw receive (positions from 2; position 1 is CE-A1, S2b-initial)",
   "CE-UKS": "ce_uks_b2s <= sum_g (kemLoss + slotLoss + authLoss_g(dec_g and ISs_g) + bindingTerm BI_g); ce_uks_sender adds beta_g with IS_g; per target ce_uks_*_target; premises CE-KT plus KemBound, initBound, FrameReadBack",
-  "CE-APP": "mode P: ce_app <= sum_g (kemLoss + slotLoss + beta_g + recLoss_g(dec_g and IS_g) + 2^-min); ce_app_server without beta_g (ISs_g); per target ce_app_*target; premises CE-KT plus KemBound, initBound",
-  "CE-LOR": "mode P, every public filter F: ofReal |Pr[win] - 1/2 Pr[eligible]| <= sum_g (kemLoss_W + slotLoss_W + recLoss_g(dec_g(W) and IS_g) + 1/2 (kemLoss_E + slotLoss_E + recLoss_g(dec_g(E) and IS_g)) + 1/2 beta_g) (ce_lor); ce_lor_server for PeerTests without beta_g; per target ce_lor_target, ce_lor_server_target; premises CE-KT plus KemBound, initBound",
+  "CE-APP": "mode P: ce_app <= sum_g (kemLoss + slotLoss + beta_g + recLoss_g(dec_g and IS_g) + 2^-min), min in bytes (FreshBounds.min; the frozen FreshGuessStatement charges one bit per byte), the sum carries qAccept*qCreate*2^-min; ce_app_server without beta_g (ISs_g); per target ce_app_*target; premises CE-KT plus KemBound, initBound",
+  "CE-LOR": "mode P, every filter F (any function of the mode-P transcript view List (PublicEntry .P)): ofReal |Pr[win] - 1/2 Pr[eligible]| <= sum_g (kemLoss_W + slotLoss_W + recLoss_g(dec_g(W) and IS_g) + 1/2 (kemLoss_E + slotLoss_E + recLoss_g(dec_g(E) and IS_g)) + 1/2 beta_g) (ce_lor); ce_lor_server for PeerTests without beta_g; per target ce_lor_target, ce_lor_server_target; premises CE-KT plus KemBound, initBound",
   "anomaly": "ptc_bound: ctGuessByCca setup guess <= ofReal Adv^IND-CCA(ptc setup.kem guess) + ofReal correctnessError + 2^-256 (FunctionalDecapsulation); anomaly_beta; beta_decapsulations (phase 1 <= budget.finish + 1 decapsulations), ptc_post (phase 2 no query)"
  },
  "design_names_realized_as": {
@@ -619,7 +716,9 @@
   "CE-LOR: per-target events are the existential events with the claim lorClaim = firstTest (D_g of them is LorElig g / LorWin g by lorElig_target); the bound is ofReal |advantage| <= sum in extended non-negative reals; the final-world fact uses hidingOf and decisionHiding; the Server form puts PeerTests into the events.",
   "slots_close / slots_server are realized per headline (view_unslotted, chance_split, chain_server, server_view) rather than as one generic lemma.",
   "ptc takes its guesser over kem.IND_CCA_oracleSpec (definitionally MlKemCCAOracleSpec); two proofs use set_option backward.isDefEq.respectTransparency false.",
-  "Commit 68498a95 corrects three documentation strings of the events module (no statement, proof or guard change)."
+  "Commit 68498a95 corrects three documentation strings of the events module (no statement, proof or guard change).",
+  "Three proofs use set_option linter.deprecated false for VCVio's deprecated probEvent (Pr[...] notation) only: ptc_random_le, ptc_correct_draws (anomaly), chance_split (LOR); copies without the suppression report only probEvent warnings (fix pass; the two suppressions that hid nothing were removed in 6d13ef8b).",
+  "Review fix pass 6d13ef8b: unpublished_final, ce_or_b2s_target, ce_or_b2s, ce_or_s2b_target and ce_or_s2b drop the premise DecoderAgreement route codec.frameRead (strictly stronger: same conclusions under fewer hypotheses); unpublished_final applies PqxdhRecordFactsOriginClosure.idealAuth_unpublished_bound (the third conjunct of origin_statement) instead of origin_statement."
  ],
  "contracts_used": {
   "new_contracts": [],
@@ -632,8 +731,10 @@
    "KemBound setup caps",
    "initBound (total query bound qInit of ensureInit)",
    "FrameReadBack codec (CE-OR, CE-UKS)",
-   "DecoderAgreement route codec.frameRead (CE-OR)",
    "budget.Respects adversary"
+  ],
+  "premises_removed_in_fix_pass": [
+   "DecoderAgreement route codec.frameRead (CE-OR; carried only for the frozen OriginStatement, unused by its proof)"
   ],
   "advantage_terms": [
    "ML-KEM IND-CCA",
@@ -647,8 +748,12 @@
  },
  "not_claimed": [
   "symbolic-eligibility corollaries, gap and collision terms (P2)",
-  "bills of the new reductions beyond ptc's decapsulation count (P2)",
-  "later-quantum headlines (P3)",
+  "bills of the new reductions beyond ptc's decapsulation count (P2); the record lifts' bill conjuncts at BI_g are not restated in P1 (HeadlineBills, P2)",
+  "later-quantum headlines (P3); P3 (CE-12-L) is to cover only CE-KT, CE-APP and CE-LOR: no later-mode origin, UKS or authentication headline",
+  "Beacons pinned other than (S, serverKid): owner designation requires that pin, so they are never targets",
+  "more than one test session (CE-LOR concerns the single test session)",
+  "CE-OR s2b position 1 (the sequence-one record inside the Phase 2 response is CE-A1, S2b-initial)",
+  "smallness of the advantage terms for inefficient events, claims, filters or guesses (the reductions evaluate them)",
   "root secrecy (CE-KT is a transfer)",
   "plaintext-linked UKS; b2s publisher pin and mode-O plaintext agreement (AG)",
   "INITIAL_SECRET endpoint",
@@ -656,7 +761,6 @@
   "ineligible LOR runs (eligibility-weighted advantage)"
  ],
  "open_points": [
-  "P1 review (semantic and hygiene) and fix pass",
   "integration into central (not done: the task excluded it); refresh the committed plan snapshot then",
   "P2 and P3 per design-v2 section 11"
  ],
@@ -672,6 +776,13 @@
    "sha256": "06445a4d9f112bf49bbc1f0f1ef5aa149401443e46605b910f2f3952a455b572",
    "first_prefix": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/olean2"
   },
+  "leanpath3": {
+   "path": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/leanpath3",
+   "sha256": "6f43c4755b4a9145f064c2a42fb5d29eee1c7e9a7f5a1508e3908a76d25bd61f",
+   "first_prefix": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/olean3",
+   "note": "fix pass: all nine modules and the root recompiled at the clean 6d13ef8b; oleans differ from olean2 exactly for Anomaly, KeyTransfer, Contain, Origin"
+  },
+  "fix_dev_checks": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/fix/logs (development checks of the changed modules, exit 0, empty logs; NoDeprecAnomalyFix-1.log: only probEvent warnings)",
   "root_checks": {
    "logs/final/root-anomaly.json": {
     "exit": 0,
@@ -730,6 +841,12 @@
    "logs/recheck/root-final.json": {
     "exit": 0,
     "head": "68498a95222ef55be4c605b1d1c76100559d25cc",
+    "dirty_paths": 0,
+    "log_bytes": 0
+   },
+   "logs/fix3/root-fix.json": {
+    "exit": 0,
+    "head": "6d13ef8bb74d7ffdcd80d2668eea85f747afd2cb",
     "dirty_paths": 0,
     "log_bytes": 0
    }
@@ -796,6 +913,26 @@
     "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/logs/inventory-events2.log",
     "log_sha256": "25d71661233b325d0605dd2381ecb9e850f57c906f47707a47075de553add047"
    },
+   "final-head": {
+    "status": 0,
+    "commit": "4365e748ae1cfc40eb29b7362254443ab5d7640e",
+    "start": "2026-10-10T04:24:38Z",
+    "end": "2026-10-10T04:26:22Z",
+    "dirty_before": 0,
+    "dirty_after": 0,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/logs/inventory-final-head.log",
+    "log_sha256": "b4a67398f6facb195a328633916aa4c6c79d5ba96952b8a67c2ddf82d680cacb"
+   },
+   "fix-lean": {
+    "status": 0,
+    "commit": "6d13ef8bb74d7ffdcd80d2668eea85f747afd2cb",
+    "start": "2026-10-10T04:47:56Z",
+    "end": "2026-10-10T04:49:40Z",
+    "dirty_before": 0,
+    "dirty_after": 0,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/logs/inventory-fix-lean.log",
+    "log_sha256": "f1c73893b3478306cd0b48e308d1f59cb0632e34ec4482f49edfe57b3ef7b76f"
+   },
    "head-clean": {
     "status": 0,
     "commit": "68498a95222ef55be4c605b1d1c76100559d25cc",
@@ -852,6 +989,63 @@
   "diff_check": "git diff --cached --check before every commit: clean"
  },
  "review": {
-  "status": "not reviewed"
+  "status": "reviewed at 4365e748; every finding fixed",
+  "reviewed_head": "4365e748ae1cfc40eb29b7362254443ab5d7640e",
+  "lenses": {
+   "semantic": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/review-semantic",
+   "composition": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/review-composition",
+   "hygiene": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/review-hygiene"
+  },
+  "fix_commits": [
+   "6d13ef8bb74d7ffdcd80d2668eea85f747afd2cb",
+   "the documentation commit adding this receipt"
+  ],
+  "findings": [
+   {
+    "severity": "minor",
+    "title": "ideal game described as two independent uniform keys",
+    "outcome": "fixed: KeyTransfer module doc, guide, analysis (lazily sampled two-entry table, one shared value on the honest pairing)"
+   },
+   {
+    "severity": "minor",
+    "title": "CE-OR s2b docs did not say positions from 2",
+    "outcome": "fixed: Origin module doc, guide CE-OR item, analysis CE-OR paragraph"
+   },
+   {
+    "severity": "nit",
+    "title": "events called publicly recorded; F any condition the adversary can see",
+    "outcome": "fixed: analysis (experiment records, no roots/keys/partnering/ghost; F any function of the mode-P transcript view; efficiency clause), guide"
+   },
+   {
+    "severity": "nit",
+    "title": "bill conjuncts at BI_g not stated by a CE-12 theorem",
+    "outcome": "fixed: guide reworded (not restated in P1; HeadlineBills, P2)"
+   },
+   {
+    "severity": "nit+minor",
+    "title": "CE-OR DecoderAgreement premise unused",
+    "outcome": "fixed in Lean (6d13ef8b): premise removed from five theorems via idealAuth_unpublished_bound; docs updated"
+   },
+   {
+    "severity": "nit",
+    "title": "not claimed: later mode, pin, single test session; N*2^-min",
+    "outcome": "fixed: analysis and guide not-claimed; qAccept*qCreate*2^-min"
+   },
+   {
+    "severity": "nit",
+    "title": "CE-APP 2^-min unit",
+    "outcome": "fixed: min in bytes, one bit per byte (analysis, guide)"
+   },
+   {
+    "severity": "minor",
+    "title": "blanket deprecation suppression hid core if_false",
+    "outcome": "fixed in Lean (6d13ef8b): ite_false; no-op suppressions removed; remaining three disclosed"
+   },
+   {
+    "severity": "nit",
+    "title": "confirmations (semantic, composition)",
+    "outcome": "no change needed"
+   }
+  ]
  }
 }
