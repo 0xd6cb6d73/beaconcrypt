@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1870
+	[handwritten-lean]=1871
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -37944,6 +37944,23 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem bind_clean([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostItemRun theorem bind_clean"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostItemRun\.itemPost_middle$' "$selected_source_module" "PqxdhDeploymentIdealPostItemRun dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostItemRun.itemPost_middle"
 require_line_count 1 '^theorem itemPost_middle([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostItemRun theorem itemPost_middle"
+
+# CE-11b unit U6, fourth part: the active branch and the second compile lemma from the CE side of the middle invariant.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostReduce.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentIdealPostReduce$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentIdealPostReduce root import"
+require_line_count 5 '^theorem ' "$selected_source_module" "PqxdhDeploymentIdealPostReduce theorem inventory"
+require_line_count 5 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentIdealPostReduce guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostReduce\.decision_reset$' "$selected_source_module" "PqxdhDeploymentIdealPostReduce dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostReduce.decision_reset"
+require_line_count 1 '^theorem decision_reset([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostReduce theorem decision_reset"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostReduce\.activeCE_middle$' "$selected_source_module" "PqxdhDeploymentIdealPostReduce dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostReduce.activeCE_middle"
+require_line_count 1 '^theorem activeCE_middle([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostReduce theorem activeCE_middle"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostReduce\.decision_merge$' "$selected_source_module" "PqxdhDeploymentIdealPostReduce dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostReduce.decision_merge"
+require_line_count 1 '^theorem decision_merge([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostReduce theorem decision_merge"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostReduce\.activeBranch_of_middle$' "$selected_source_module" "PqxdhDeploymentIdealPostReduce dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostReduce.activeBranch_of_middle"
+require_line_count 1 '^theorem activeBranch_of_middle([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostReduce theorem activeBranch_of_middle"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostReduce\.ideal_compile_of_middle$' "$selected_source_module" "PqxdhDeploymentIdealPostReduce dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostReduce.ideal_compile_of_middle"
+require_line_count 1 '^theorem ideal_compile_of_middle([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostReduce theorem ideal_compile_of_middle"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
