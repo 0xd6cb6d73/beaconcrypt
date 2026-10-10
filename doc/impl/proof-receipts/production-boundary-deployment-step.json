@@ -1,0 +1,247 @@
+{
+ "stage": "PB-D per-command source step (item 7 increment I3, module 1 of 2)",
+ "topic": "codex/deployment-boundary-classical",
+ "parent_commit": "c27b45336b6c04087239d9b797fcf6f1aba1c85e",
+ "central_basis": "c27b45336b6c04087239d9b797fcf6f1aba1c85e",
+ "state": "checked at central c27b4533 on the topic branch; independent review (D-6) pending; not integrated",
+ "module": "PqxdhBoundaryDeploymentStep",
+ "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryDeploymentStep.lean",
+ "source_sha256": "581383fce4c967ae5b6ddb25f2fd6be07c9f2aafdc32f761810bcd4e19251f1f",
+ "guide": "doc/impl/production-boundary-deployment-step.md",
+ "guide_sha256": "e2a06be14147b59f2f51779adc93f35a222b99071fb625c502982dfa8779274c",
+ "guarded_statements": 15,
+ "theorems": [
+  "step_create",
+  "step_bundle",
+  "step_accept",
+  "step_build",
+  "step_finish",
+  "step_serverSend",
+  "step_beaconSend",
+  "step_serverRaw",
+  "step_beaconRaw",
+  "step_oracles",
+  "step_exact",
+  "step_normal",
+  "route_agreement",
+  "phase1_withReader",
+  "phase2_withReader"
+ ],
+ "axioms_used": [
+  "Classical.choice",
+  "Quot.sound",
+  "propext"
+ ],
+ "axioms_allowed": [
+  "propext",
+  "Classical.choice",
+  "Quot.sound"
+ ],
+ "provenance": "new module written by Claude in item 7 increment I3; no Codex WIP exists for it (the lane plan /tmp/bc-arc-scratch/item7/plan.md section 3 fixes its statement list). It cites the published boundary equalities of PB-01..PB-09 and the D-3 adapter of PqxdhBoundaryProgram (adapted from Codex WIP in increment A).",
+ "authorship": "Claude (lane adopted from Codex on the owner's instruction of 2026-10-10, decision-2026-10-10.txt, message #503)",
+ "statements": {
+  "step_create": "PB-01: sourceStep on create pin keyId equals liftStep of the CE native handler at codec' and route' (PqxdhBoundaryBirth.create_source), every state",
+  "step_bundle": "PB-02: sourceStep on bundle index (bundleSource: owner lookup, coreOwnerProgram over the extracted pqxdh.beacon_start, exact reinstallation) equals the lifted CE command (PqxdhBoundaryPhase1Native.native_bundle, PqxdhBoundaryPhase1Buffers.owner_core), every state",
+  "step_accept": "PB-03: sourceStep on accept raw (PqxdhBoundaryRegistrationAccept.deploymentAccept) equals the lifted CE command (deployment_accept), every state",
+  "step_build": "PB-05: sourceStep on build session payload (onNative (onShared executeNativeBuild)) equals the lifted CE command (PqxdhBoundaryRegistrationBuildNative.deployment_build), every state",
+  "step_finish": "PB-06: the outcome-adapted executeNativeFinish equals the lifted CE finish command at codec' and route' (native_finish_exact, outcome_ok), every state",
+  "step_serverSend": "PB-09: the outcome-adapted executeServerSend at codec' equals the lifted CE serverSend command (handler_serverSend, outcome_ok), every state",
+  "step_beaconSend": "PB-09: the outcome-adapted executeBeaconSend at codec' equals the lifted CE beaconSend command (handler_beaconSend, outcome_ok), every state",
+  "step_serverRaw": "PB-07/PB-08: the outcome-adapted executeServerRaw equals the lifted CE serverRaw command at codec' and route' (PqxdhBoundaryRecordExecution.handler_serverRaw, outcome_ok), every state",
+  "step_beaconRaw": "PB-07/PB-08: the outcome-adapted executeBeaconRaw equals the lifted CE beaconRaw command at codec' and route' (PqxdhBoundaryRecordExecution.handler_beaconRaw, outcome_ok), every owner handle and state",
+  "step_oracles": "E: coins, hmac and hash of sourceStep are the CE model oracles (unifSpec coins, nativeHmac with the Extract-ROM point, nativeHash), definitionally equal to the lifted CE handler branches",
+  "step_exact": "for every query and every complete deployment state, sourceStep setup codec reader erased checks serverSeed query state = PqxdhBoundaryProgram.liftStep (PqxdhDeploymentNative.handler setup (withReader codec reader) checks (RawCtxFrameDecoding.sender reader.model) serverSeed) query state; checks free (PB-14)",
+  "step_normal": "every supported outcome of every source step is ok with a supported reply and complete poststate of the CE native command; the outcome placeholder for fail/div is never observed",
+  "route_agreement": "D-2: DecoderAgreement (RawCtxFrameDecoding.sender reader.model) (withReader codec reader).frameRead, by RawCtxFrameDecoding.decoderAgreement reader.model",
+  "phase1_withReader": "D-2: Phase1ReadBack (withReader codec reader) <-> Phase1ReadBack codec (Iff.rfl)",
+  "phase2_withReader": "D-2: Phase2ReadBack (withReader codec reader) <-> Phase2ReadBack codec (Iff.rfl)"
+ },
+ "checks": {
+  "leanpath": {
+   "path": "/tmp/bc-arc-scratch/item7/i3/leanpath",
+   "sha256": "5a830d1af9d491cc1da2ac00da705fcbf8bd28e0eb02c752bb470a00f19f964d",
+   "note": "item7/i3/olean (registered prefix: resolved-symlink mirror of the first prefix item7/a/int/olean of the published central c27b4533 LEAN_PATH, BeaconcryptCore only, root artifacts skipped, 6378 links, 0 broken; plus the I3 module oleans) followed by the published c27b4533 LEAN_PATH"
+  },
+  "module": {
+   "module": "BeaconcryptCore.Computational.PqxdhBoundaryDeploymentStep",
+   "start": "2026-10-10T09:39:10.454152845Z",
+   "end": "2026-10-10T09:39:14.555728526Z",
+   "exit": 0,
+   "head": "c27b45336b6c04087239d9b797fcf6f1aba1c85e",
+   "dirty_paths": 6,
+   "source_sha256": "581383fce4c967ae5b6ddb25f2fd6be07c9f2aafdc32f761810bcd4e19251f1f",
+   "log_bytes": 0,
+   "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "artifact": "/tmp/bc-arc-scratch/item7/i3/olean/BeaconcryptCore/Computational/PqxdhBoundaryDeploymentStep.olean",
+   "artifact_sha256": "2b578a068ba2d51af6fb96c2f97ffbc8a9830ac62b0fc9176146fdc0144d5c39",
+   "leanpath": "/tmp/bc-arc-scratch/item7/i3/leanpath",
+   "leanpath_sha256": "5a830d1af9d491cc1da2ac00da705fcbf8bd28e0eb02c752bb470a00f19f964d",
+   "command": [
+    "coord.sh",
+    "lean",
+    "claude",
+    "<label>",
+    "--",
+    "timeout",
+    "180",
+    "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+    "-j1",
+    "-M8000",
+    "--root=/tmp/beaconcrypt-deployment-boundary-classical/beaconcrypt-core/proofs/lean",
+    "-o",
+    "/tmp/bc-arc-scratch/item7/i3/olean/BeaconcryptCore/Computational/PqxdhBoundaryDeploymentStep.olean",
+    "/tmp/beaconcrypt-deployment-boundary-classical/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryDeploymentStep.lean"
+   ]
+  },
+  "statement_scan_clean": {
+   "exit": 0,
+   "expected": 0,
+   "json": "/tmp/bc-arc-scratch/item7/i3/scans/PqxdhBoundaryDeploymentStep-statement-clean.json",
+   "json_sha256": "d9de2fff754ccecfa4ab3c1e2773f799a11d23d60e85594e65c31b042f779dee",
+   "declarations": 18,
+   "hits": 0
+  },
+  "statement_scan_live": {
+   "exit": 1,
+   "expected": 1,
+   "json": "/tmp/bc-arc-scratch/item7/i3/scans/PqxdhBoundaryDeploymentStep-statement-live.json",
+   "json_sha256": "3c9f3769a09d746ce677ea64115f3a4cfe5b144249aabba8ae69489f52c364fc",
+   "hits": 25,
+   "live_classes": 11,
+   "dead_classes": [],
+   "negative_control_hits": 0,
+   "liveness_tokens": 25,
+   "missed_tokens": [],
+   "allowance_control": {
+    "allowance_applies": false,
+    "sibling_token_hits_pb_namespace": true,
+    "crypto_token_excused": false,
+    "crypto_token_pb_namespace_hit": true,
+    "ok": true
+   }
+  },
+  "direct_scan_clean": {
+   "wrapper_exit": 0,
+   "expected_lean_exit": 0,
+   "fixture": "/tmp/bc-arc-scratch/item7/i3/scans/PqxdhBoundaryDeploymentStep-scan-clean-v4.lean",
+   "fixture_sha256": "0c22be01ec8a1ee083bcae648fd2d381433287b278821ad7a5d5549cf47d0306",
+   "log": "/tmp/bc-arc-scratch/item7/i3/logs/dev/PqxdhBoundaryDeploymentStep-scan-clean-v4-2.log",
+   "log_sha256": "4bfc9cdfd1c513790bc303b774f13f444e38018fe798c636f69b0960385e0e44",
+   "lean_exit": 0,
+   "module_declarations": 47,
+   "outside_module_namespace": 13,
+   "module_forbidden": 0,
+   "allowed_crypto": 0,
+   "liveness_witnesses": null,
+   "rule_classes_live": null,
+   "rule_classes": null,
+   "witness_targets": null,
+   "witness_targets_missed": null,
+   "negative_control_hits": null,
+   "total_forbidden": null,
+   "allowance_control": null
+  },
+  "direct_scan_live": {
+   "wrapper_exit": 0,
+   "expected_lean_exit": 1,
+   "fixture": "/tmp/bc-arc-scratch/item7/i3/scans/PqxdhBoundaryDeploymentStep-scan-live-v4.lean",
+   "fixture_sha256": "e66cdd5cb94823a7889bcb6231c2788d30d7f517f540e5da8a0270e3e6b387fb",
+   "log": "/tmp/bc-arc-scratch/item7/i3/logs/dev/PqxdhBoundaryDeploymentStep-scan-live-v4-2.log",
+   "log_sha256": "8329cbd07640c4efcae6235403d72f65342886e1ac0f1377daa564f9bb5eb433",
+   "lean_exit": 1,
+   "module_declarations": 47,
+   "outside_module_namespace": 13,
+   "module_forbidden": 0,
+   "allowed_crypto": 0,
+   "liveness_witnesses": 21,
+   "rule_classes_live": 11,
+   "rule_classes": 11,
+   "witness_targets": 21,
+   "witness_targets_missed": 0,
+   "negative_control_hits": 0,
+   "total_forbidden": 54,
+   "allowance_control": {
+    "allowance_applies": false,
+    "sibling_target_pb_namespace": true,
+    "sibling_crypto_excused": false,
+    "sibling_crypto_pb_namespace_hit": true,
+    "other_witnesses_excused_crypto": 0
+   }
+  },
+  "scan_spec": {
+   "path": "/tmp/bc-arc-scratch/item7/i3/scans/scan-spec-v4.json",
+   "sha256": "8b7aa722c6cf806c0f264554ac16c614035f84335419e3693678b53db1397d29",
+   "version": 4,
+   "note": "version 4 = version 3 of increment A (item7/a/nits/scans/scan-spec.json, sha256 f9a9e443ce062af9c49a84166969ac02b77a5cca2c3729a64e4a59e273c458d6, copied unchanged to item7/i3/scans/scan-spec-v3.json) plus the D-1(b) allowance module PqxdhBoundaryDeployment (field d1b_extension); the allowlist itself stays the one projection name",
+   "d1b_extension": "Lane plan decision D-1(b): the one-name allowance of the projection BeaconcryptCore.Computational.PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource.crypto is extended by module name to PqxdhBoundaryDeployment (item 7 increment I3, PB-D classical join) only. Condition met: the direct-reference scan under version 3 finds the projection in that module (sourceGame, sourceGame.eq_1, classical: item7/i3/logs/dev/PqxdhBoundaryDeployment-scan-clean-v3-1.log) and the site probe item7/i3/probe/CryptoSites.lean (item7/i3/logs/dev/CryptoSites-4.log) shows that all 64 occurrences (62 in classical, 1 each in sourceGame and sourceGame.eq_1) are the first explicit argument (position 3) of PqxdhDeploymentSecrecy.wrap applied to setup.source, that is CE passing setup.source.crypto to its own ledger/test/fresh wrapper; PqxdhBoundaryDeploymentStep has none. No use on the root input; the root 192-byte zero-salt Extract stays the request to the shared interpreter at CE Extract-ROM point (the hmac command of the source step is CE native public HMAC oracle, unchanged; no Correct premise)."
+  },
+  "scan_tools": {
+   "check.sh (item7/i3/scripts)": "8f3407295a0b11fc50278b69c2789bdcbcb8e944b36f6890179ba59e5ef0bc2a",
+   "dev.sh (item7/i3/scripts)": "aa5883d4c36953f8aec6f15c2db3511dd3681811fc9fd1db5effa3543decb354",
+   "direct_scan.py (item7/i3/scripts)": "026a05441b640c5f60b42ddaa8ec31c96b4a3e77c77108d1ceffba28bd0c2264",
+   "guards.py (item7/i3/scripts)": "a40ee2a10b0602ad87e987ccda0a932ec392e82079c2e57a1046e56caf08eeb7",
+   "invblock.py (item7/i3/scripts)": "b25f6f0b596923ccbcfe81e8345a5017715aa7714f1db0cd0b1276e5a0f33dbb",
+   "make_spec.py (item7/i3/scripts)": "caf4f06a1bb0de74a40a8b4aa71fc4e19c389af7ff2bfff22155887cfe4eba22",
+   "mirror.py (item7/i3/scripts)": "8e2e0dcb59efeddbac4da89b2541b4143f6455edc5e99e6506e9c6ca65a94d82",
+   "receipt.py (item7/i3/scripts)": "09738d5f8439aa380ba5ee3b3f2c6c82e069a61d0590ce615bf41136a0e6b757",
+   "scans.sh (item7/i3/scripts)": "36a1b4c750216f33e4a454375e473115c6831352e9d9bb08b6579f51775e9c9a",
+   "stmt_scan.py (item7/i3/scripts)": "7ba92512730d04f206500f0998dc66e48eb842c877975137f665d6d8fd0d3ac4",
+   "CryptoSites.lean (item7/i3/probe)": "dc4d4ca805be9e7178319d8193df32193fe447fdcbe97882ead081ee93394e6b"
+  },
+  "scan_inputs": {
+   "source_equals_module_check": true,
+   "module_olean": "/tmp/bc-arc-scratch/item7/i3/olean/BeaconcryptCore/Computational/PqxdhBoundaryDeploymentStep.olean",
+   "module_olean_sha256": "2b578a068ba2d51af6fb96c2f97ffbc8a9830ac62b0fc9176146fdc0144d5c39",
+   "olean_equals_module_check": true,
+   "results": {
+    "path": "/tmp/bc-arc-scratch/item7/i3/logs/scans.jsonl",
+    "sha256": "1404e4677b8f4798925650d7375452fe09a40a1d7a441efb5d24c55f220b5eaa"
+   }
+  },
+  "scope": "The statement scan reads the types and binders of named declarations in the source text. The direct-reference scan reads the elaborated types and bodies (theorem bodies included) of every constant whose declaring module is this module. Neither is an import-graph audit.",
+  "branch_tip_checks": "root import, inv recount before inv rehash, focused check-inventory under a @nix lease and git diff --check at the branch tip are recorded in doc/impl/proof-receipts/production-boundary-increment-i3.json"
+ },
+ "review": {
+  "status": "pending: decision D-6 (fresh-context Claude reviewer sub-agent with a written verdict) has not run for this module",
+  "plan": "/tmp/bc-arc-scratch/item7/plan.md section 0 D-6"
+ },
+ "not_run": [
+  "make verify",
+  "full lake build",
+  "mutation testing",
+  "nix-collect-garbage",
+  "transcript-fidelity cargo tests (no inventory metadata they read changed)"
+ ],
+ "remaining": [
+  "D-6 independent fresh-context review of both I3 modules",
+  "integration into central (not done in this task)",
+  "I4 PqxdhBoundaryDeploymentLater (PB-13) and I5 ledger and CE-14"
+ ],
+ "rust_reference": "no new Rust correspondence: each command cites the published boundary equality of its survey row (PB-01 beacon.rs:65-82; PB-02 beacon.rs:300-357; PB-03 server.rs:332; PB-05 server.rs:424-500; PB-06 beacon.rs:402; PB-07/PB-08 ratchet.rs:354-355, 449; PB-09 ratchet.rs:414), whose own guides and receipts carry the Rust anchors and the reviewed-transcription (RT) items",
+ "deviations": [
+  "sourceStep runs the build, accept, bundle, hmac and send programs at the production codec withReader codec reader (they read no frame reader, so this is the same codec on every field they use) and the receive/finish executors with codec and reader, exactly as their published equalities are stated",
+  "the coins, hmac and hash branches are the CE model oracles written out (StateT.lift unifSpec.query, onNative (onShared nativeHmac ...), onNative (onShared nativeHash ...)); step_oracles is definitional",
+  "bundleSource is a new local definition (owner lookup and reinstallation around the published coreOwnerProgram), proved equal to the CE command from native_bundle and owner_core"
+ ],
+ "crypto_allowance": {
+  "decision": "D-1: the .crypto allowance does not apply to this module",
+  "elaborated_occurrences": [],
+  "statement_occurrences": [],
+  "live_control": {
+   "direct": {
+    "allowance_applies": false,
+    "sibling_target_pb_namespace": true,
+    "sibling_crypto_excused": false,
+    "sibling_crypto_pb_namespace_hit": true,
+    "other_witnesses_excused_crypto": 0
+   },
+   "statement": {
+    "allowance_applies": false,
+    "sibling_token_hits_pb_namespace": true,
+    "crypto_token_excused": false,
+    "crypto_token_pb_namespace_hit": true,
+    "ok": true
+   }
+  }
+ }
+}

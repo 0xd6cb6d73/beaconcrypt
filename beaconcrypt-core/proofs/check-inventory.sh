@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1919
+	[handwritten-lean]=1920
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -39704,6 +39704,43 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBounda
 require_line_count 1 '^theorem create_rejects([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryBirth theorem create_rejects"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryBirth\.create_bills$' "$selected_source_module" "PqxdhBoundaryBirth dependency BeaconcryptCore.Computational.PqxdhBoundaryBirth.create_bills"
 require_line_count 1 '^theorem create_bills([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryBirth theorem create_bills"
+
+# Item 7 PB-D: per-command source step at the production codec (increment I3, Claude).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryDeploymentStep.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhBoundaryDeploymentStep$' proofs/lean/BeaconcryptCore.lean "PqxdhBoundaryDeploymentStep root import"
+require_line_count 15 '^theorem ' "$selected_source_module" "PqxdhBoundaryDeploymentStep theorem inventory"
+require_line_count 15 '^#guard_msgs in$' "$selected_source_module" "PqxdhBoundaryDeploymentStep guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryDeploymentStep\.step_create$' "$selected_source_module" "PqxdhBoundaryDeploymentStep dependency BeaconcryptCore.Computational.PqxdhBoundaryDeploymentStep.step_create"
+require_line_count 1 '^theorem step_create([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryDeploymentStep theorem step_create"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryDeploymentStep\.step_bundle$' "$selected_source_module" "PqxdhBoundaryDeploymentStep dependency BeaconcryptCore.Computational.PqxdhBoundaryDeploymentStep.step_bundle"
+require_line_count 1 '^theorem step_bundle([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryDeploymentStep theorem step_bundle"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryDeploymentStep\.step_accept$' "$selected_source_module" "PqxdhBoundaryDeploymentStep dependency BeaconcryptCore.Computational.PqxdhBoundaryDeploymentStep.step_accept"
+require_line_count 1 '^theorem step_accept([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryDeploymentStep theorem step_accept"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryDeploymentStep\.step_build$' "$selected_source_module" "PqxdhBoundaryDeploymentStep dependency BeaconcryptCore.Computational.PqxdhBoundaryDeploymentStep.step_build"
+require_line_count 1 '^theorem step_build([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryDeploymentStep theorem step_build"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryDeploymentStep\.step_finish$' "$selected_source_module" "PqxdhBoundaryDeploymentStep dependency BeaconcryptCore.Computational.PqxdhBoundaryDeploymentStep.step_finish"
+require_line_count 1 '^theorem step_finish([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryDeploymentStep theorem step_finish"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryDeploymentStep\.step_serverSend$' "$selected_source_module" "PqxdhBoundaryDeploymentStep dependency BeaconcryptCore.Computational.PqxdhBoundaryDeploymentStep.step_serverSend"
+require_line_count 1 '^theorem step_serverSend([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryDeploymentStep theorem step_serverSend"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryDeploymentStep\.step_beaconSend$' "$selected_source_module" "PqxdhBoundaryDeploymentStep dependency BeaconcryptCore.Computational.PqxdhBoundaryDeploymentStep.step_beaconSend"
+require_line_count 1 '^theorem step_beaconSend([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryDeploymentStep theorem step_beaconSend"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryDeploymentStep\.step_serverRaw$' "$selected_source_module" "PqxdhBoundaryDeploymentStep dependency BeaconcryptCore.Computational.PqxdhBoundaryDeploymentStep.step_serverRaw"
+require_line_count 1 '^theorem step_serverRaw([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryDeploymentStep theorem step_serverRaw"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryDeploymentStep\.step_beaconRaw$' "$selected_source_module" "PqxdhBoundaryDeploymentStep dependency BeaconcryptCore.Computational.PqxdhBoundaryDeploymentStep.step_beaconRaw"
+require_line_count 1 '^theorem step_beaconRaw([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryDeploymentStep theorem step_beaconRaw"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryDeploymentStep\.step_oracles$' "$selected_source_module" "PqxdhBoundaryDeploymentStep dependency BeaconcryptCore.Computational.PqxdhBoundaryDeploymentStep.step_oracles"
+require_line_count 1 '^theorem step_oracles([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryDeploymentStep theorem step_oracles"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryDeploymentStep\.step_exact$' "$selected_source_module" "PqxdhBoundaryDeploymentStep dependency BeaconcryptCore.Computational.PqxdhBoundaryDeploymentStep.step_exact"
+require_line_count 1 '^theorem step_exact([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryDeploymentStep theorem step_exact"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryDeploymentStep\.step_normal$' "$selected_source_module" "PqxdhBoundaryDeploymentStep dependency BeaconcryptCore.Computational.PqxdhBoundaryDeploymentStep.step_normal"
+require_line_count 1 '^theorem step_normal([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryDeploymentStep theorem step_normal"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryDeploymentStep\.route_agreement$' "$selected_source_module" "PqxdhBoundaryDeploymentStep dependency BeaconcryptCore.Computational.PqxdhBoundaryDeploymentStep.route_agreement"
+require_line_count 1 '^theorem route_agreement([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryDeploymentStep theorem route_agreement"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryDeploymentStep\.phase1_withReader$' "$selected_source_module" "PqxdhBoundaryDeploymentStep dependency BeaconcryptCore.Computational.PqxdhBoundaryDeploymentStep.phase1_withReader"
+require_line_count 1 '^theorem phase1_withReader([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryDeploymentStep theorem phase1_withReader"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryDeploymentStep\.phase2_withReader$' "$selected_source_module" "PqxdhBoundaryDeploymentStep dependency BeaconcryptCore.Computational.PqxdhBoundaryDeploymentStep.phase2_withReader"
+require_line_count 1 '^theorem phase2_withReader([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryDeploymentStep theorem phase2_withReader"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
