@@ -1,0 +1,133 @@
+{
+ "stage": "item 7 increment I4: PB-D LQ-F source join (survey row PB-13; lane plan sections 2-3)",
+ "topic": "codex/deployment-boundary-later",
+ "worktree": "/tmp/beaconcrypt-deployment-boundary-later",
+ "central_basis": "e0b8810bb048499ed8fbcadba5fe8a560f3ad083",
+ "central_note": "central e0b8810b contains increment I3 (integrated df7727c3..e0b8810b, message #515); the topic branched from freshly fetched origin/codex/full-proof-composition = e0b8810b",
+ "tip_checked": "7a05e22c123f35c7b84519175df210ad79e87694",
+ "commits": [
+  {
+   "sha": "7a05e22c123f35c7b84519175df210ad79e87694",
+   "subject": "Add the PB-D LQ-F source join of the later-quantum game"
+  }
+ ],
+ "state": "module built and checked at central e0b8810b; independent review (D-6) pending; not integrated (as instructed)",
+ "modules": {
+  "PqxdhBoundaryDeploymentLater": {
+   "receipt": "doc/impl/proof-receipts/production-boundary-deployment-later.json",
+   "receipt_sha256": "4b41ba285ad89a17b70c958f94aad863533bd095d02885eea3f184e5ab465a61",
+   "guide": "doc/impl/production-boundary-deployment-later.md",
+   "guide_sha256": "86cf94314abf1f25a97fc294f14d85ea868d654d782ee6f83d24ba253c475067",
+   "source_sha256": "1f27a737da73b5603d5b96b24461d222c25efd63607accf71ca33069c29c69bc",
+   "guarded_statements": 17,
+   "theorems": [
+    "loggedStep_quiet",
+    "loggedStep_exact",
+    "laterStep_finish",
+    "laterStep_accept",
+    "laterStep_quiet",
+    "laterStep_exact",
+    "laterStep_normal",
+    "execute_exact",
+    "exec_exact",
+    "unwrap_okMap",
+    "later",
+    "later_zero",
+    "later_normal",
+    "later_continuation",
+    "later_observe",
+    "later_evalDist",
+    "later_probEvent"
+   ],
+   "module_check": {
+    "json": "/tmp/bc-arc-scratch/item7/i4/logs/PqxdhBoundaryDeploymentLater-2.json",
+    "exit": 0,
+    "log_bytes": 0,
+    "artifact_sha256": "bb87022da2c216e4ab8b7bcd1b39207f38260caaeebade5e19ded65da7e1a006"
+   },
+   "scans_all_as_expected": true,
+   "allowed_crypto": 3,
+   "crypto_sites": {
+    "table_bad": 0,
+    "sites": 29,
+    "declarations": 3,
+    "outside": 0,
+    "blind": 0
+   }
+  }
+ },
+ "guarded_statements": 17,
+ "d2_notice": {
+  "message": "#511",
+  "to": "all",
+  "re": "#415",
+  "note": "the D-2 answer already names the LQ-F game at the same codec' and route'; I4 matches it, so no new notice was sent"
+ },
+ "tip_checks": {
+  "root_import": {
+   "json": "/tmp/bc-arc-scratch/item7/i4/logs/root-2.json",
+   "exit": 0,
+   "log_bytes": 0,
+   "head": "7a05e22c123f35c7b84519175df210ad79e87694",
+   "dirty_paths": 0,
+   "artifact": "/tmp/bc-arc-scratch/item7/i4/olean/BeaconcryptCore.olean",
+   "artifact_sha256": "7110e8ace800c402b0aaf8e55b8061ff70a29933e9a160afebea7ee588228e1a",
+   "leanpath": "/tmp/bc-arc-scratch/item7/i4/leanpath",
+   "leanpath_sha256": "4ef2da7f02525e6d5db7e902cad07b6d4181f94652b8c9a707040244f55e5d37",
+   "note": "a first root import on the uncommitted tree (logs/root-1.json) also exited 0 with an empty log"
+  },
+  "inventory_counts": {
+   "recount_before_rehash": true,
+   "handwritten_lean": "1929 -> 1930 (module commit); rehash of the root (858af675 -> f9ff648a) and check-inventory.sh (d0b282ec -> fc58d5d1) rows; recount and rehash idempotent at the tip (count 1930, every rehashed row unchanged)"
+  },
+  "check_inventory": {
+   "command": "coord.sh lease mem claude @nix item7-i4-inventory-tip1 --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C /tmp/beaconcrypt-deployment-boundary-later/beaconcrypt-core check-inventory SHELL=bash",
+   "lease_ticket": "00000550",
+   "start": "2026-10-10T11:56:09Z",
+   "end": "2026-10-10T11:58:00Z",
+   "exit": 0,
+   "commit": "7a05e22c123f35c7b84519175df210ad79e87694",
+   "dirt_before": 0,
+   "dirt_after": 0,
+   "log": "/tmp/bc-arc-scratch/item7/i4/logs/inventory-tip1.log",
+   "log_sha256": "8fc33e2a5cff9a6f50e89f1416b831099a481329a21e35608473102a854c8458",
+   "result": "Formal-verification inventory matches the reviewed boundary."
+  },
+  "diff_check": {
+   "command": "git diff --check e0b8810b..7a05e22c",
+   "result": "clean"
+  },
+  "fidelity": "not run: no inventory metadata read by the transcript-fidelity tests changed"
+ },
+ "receipt_hash_walk": {
+  "claims": 28,
+  "mismatches": 0,
+  "note": "every sha256 claim of the module receipt whose target path is named in the same object, plus every scan tool hash, recomputed at the tip"
+ },
+ "scan_spec": {
+  "path": "/tmp/bc-arc-scratch/item7/i4/scans/scan-spec-v6.json",
+  "sha256": "9c59979cf47b6675962a083011f46c03f1d3d078da07868c8794f17a680cbe4a",
+  "base_version5_sha256": "d2ae3887c9039baa6bc45d0e7fdbc649e455e82434461ccb7592ad648361d87a",
+  "change": "allowance module PqxdhBoundaryDeploymentLater with a one-entry site table (PqxdhDeploymentSecrecy.wrap argument 3 on Setup.source; field d1b_extension_i4); allowlist still the one projection name"
+ },
+ "leanpath": {
+  "path": "/tmp/bc-arc-scratch/item7/i4/leanpath",
+  "sha256": "4ef2da7f02525e6d5db7e902cad07b6d4181f94652b8c9a707040244f55e5d37",
+  "first_prefix": "/tmp/bc-arc-scratch/item7/i4/olean",
+  "mirror_of": "/tmp/bc-arc-scratch/item7/i3/int/olean (first prefix of the published e0b8810b LEAN_PATH), resolved symlinks, root artifacts skipped, 6388 links, 0 broken"
+ },
+ "premises": "no new assumption, contract or premise: the per-command citations are published boundary equalities (W4 deployment_exact, I3 step_exact) and frozen LQ-F lemmas (handler_quiet, later_run_wrap), all quantified over every state; checks stays universally quantified (PB-14); no owner-level stop condition of plan section 6 fired; no Rust change",
+ "not_run": [
+  "make verify",
+  "full lake build",
+  "mutation testing",
+  "nix-collect-garbage",
+  "transcript-fidelity cargo tests"
+ ],
+ "remaining": [
+  "D-6 independent fresh-context semantic and hygiene reviews (with the D-1(b) reviewer condition for the version 6 site entry)",
+  "integration into central",
+  "I5 ledger and CE-14"
+ ],
+ "note": "this receipt is committed after the checked tip; the commit adds only this JSON file, so every check above holds for the receipt commit too (no Lean source, inventory or root change)"
+}
