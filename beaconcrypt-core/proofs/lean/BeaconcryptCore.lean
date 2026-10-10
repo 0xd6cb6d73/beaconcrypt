@@ -2225,6 +2225,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctCommit
 
 import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctStep
 
+import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctInvariant
+
 /-!
 # Beaconcrypt-core verification root
 
