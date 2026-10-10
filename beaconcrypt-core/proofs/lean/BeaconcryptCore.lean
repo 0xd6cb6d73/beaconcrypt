@@ -2235,6 +2235,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlainGated
 
 import BeaconcryptCore.Computational.PqxdhDeploymentProductionTransfer
 
+import BeaconcryptCore.Computational.PqxdhDeploymentProductionHeadlinesClassical
+
 /-!
 # Beaconcrypt-core verification root
 
