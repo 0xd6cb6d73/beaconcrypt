@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1903
+	[handwritten-lean]=1904
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -39101,6 +39101,33 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem splitL_uniform([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemRoot theorem splitL_uniform"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemRoot\.opaqueBranchL_uniform$' "$selected_source_module" "PqxdhDeploymentLaterServerItemRoot dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemRoot.opaqueBranchL_uniform"
 require_line_count 1 '^theorem opaqueBranchL_uniform([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemRoot theorem opaqueBranchL_uniform"
+
+# LQ-F upstream unit A2: stage S3b of item 2 over the logged source (the logged skeleton under the factored services and entry 0's distinguisher).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerItemFactor.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemFactor$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentLaterServerItemFactor root import"
+require_line_count 10 '^theorem ' "$selected_source_module" "PqxdhDeploymentLaterServerItemFactor theorem inventory"
+require_line_count 10 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentLaterServerItemFactor guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemFactor\.acceptStepL_run$' "$selected_source_module" "PqxdhDeploymentLaterServerItemFactor dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemFactor.acceptStepL_run"
+require_line_count 1 '^theorem acceptStepL_run([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemFactor theorem acceptStepL_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemFactor\.acceptStepL_rel$' "$selected_source_module" "PqxdhDeploymentLaterServerItemFactor dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemFactor.acceptStepL_rel"
+require_line_count 1 '^theorem acceptStepL_rel([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemFactor theorem acceptStepL_rel"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemFactor\.skelImplL_rel$' "$selected_source_module" "PqxdhDeploymentLaterServerItemFactor dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemFactor.skelImplL_rel"
+require_line_count 1 '^theorem skelImplL_rel([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemFactor theorem skelImplL_rel"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemFactor\.skelImplL_run$' "$selected_source_module" "PqxdhDeploymentLaterServerItemFactor dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemFactor.skelImplL_run"
+require_line_count 1 '^theorem skelImplL_run([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemFactor theorem skelImplL_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemFactor\.skelResumeL_factor$' "$selected_source_module" "PqxdhDeploymentLaterServerItemFactor dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemFactor.skelResumeL_factor"
+require_line_count 1 '^theorem skelResumeL_factor([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemFactor theorem skelResumeL_factor"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemFactor\.postSkelL_factor$' "$selected_source_module" "PqxdhDeploymentLaterServerItemFactor dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemFactor.postSkelL_factor"
+require_line_count 1 '^theorem postSkelL_factor([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemFactor theorem postSkelL_factor"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemFactor\.rootClientL_entry$' "$selected_source_module" "PqxdhDeploymentLaterServerItemFactor dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemFactor.rootClientL_entry"
+require_line_count 1 '^theorem rootClientL_entry([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemFactor theorem rootClientL_entry"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemFactor\.eager_entryDL$' "$selected_source_module" "PqxdhDeploymentLaterServerItemFactor dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemFactor.eager_entryDL"
+require_line_count 1 '^theorem eager_entryDL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemFactor theorem eager_entryDL"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemFactor\.uniformGameL_entry$' "$selected_source_module" "PqxdhDeploymentLaterServerItemFactor dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemFactor.uniformGameL_entry"
+require_line_count 1 '^theorem uniformGameL_entry([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemFactor theorem uniformGameL_entry"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemFactor\.rootClientL_entryDL$' "$selected_source_module" "PqxdhDeploymentLaterServerItemFactor dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemFactor.rootClientL_entryDL"
+require_line_count 1 '^theorem rootClientL_entryDL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemFactor theorem rootClientL_entryDL"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
