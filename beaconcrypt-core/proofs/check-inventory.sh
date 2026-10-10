@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1898
+	[handwritten-lean]=1899
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -38944,6 +38944,25 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem later_view_slots_pk([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterSlots theorem later_view_slots_pk"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterSlots\.later_view_slots_ct$' "$selected_source_module" "PqxdhDeploymentIdealLaterSlots dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSlots.later_view_slots_ct"
 require_line_count 1 '^theorem later_view_slots_ct([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterSlots theorem later_view_slots_ct"
+
+# LQ-F upstream unit C4: the range of the public designation in the LQ-F later game (LQ-F design-v2 section 4.2, F15).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterTargetRange.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentLaterTargetRange$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentLaterTargetRange root import"
+require_line_count 6 '^theorem ' "$selected_source_module" "PqxdhDeploymentLaterTargetRange theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentLaterTargetRange guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterTargetRange\.range_game_create_later$' "$selected_source_module" "PqxdhDeploymentLaterTargetRange dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterTargetRange.range_game_create_later"
+require_line_count 1 '^theorem range_game_create_later([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterTargetRange theorem range_game_create_later"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterTargetRange\.range_game_later$' "$selected_source_module" "PqxdhDeploymentLaterTargetRange dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterTargetRange.range_game_later"
+require_line_count 1 '^theorem range_game_later([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterTargetRange theorem range_game_later"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterTargetRange\.eligible_designated_later$' "$selected_source_module" "PqxdhDeploymentLaterTargetRange dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterTargetRange.eligible_designated_later"
+require_line_count 1 '^theorem eligible_designated_later([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterTargetRange theorem eligible_designated_later"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterTargetRange\.designated_create_later$' "$selected_source_module" "PqxdhDeploymentLaterTargetRange dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterTargetRange.designated_create_later"
+require_line_count 1 '^theorem designated_create_later([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterTargetRange theorem designated_create_later"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterTargetRange\.split_create_later$' "$selected_source_module" "PqxdhDeploymentLaterTargetRange dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterTargetRange.split_create_later"
+require_line_count 1 '^theorem split_create_later([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterTargetRange theorem split_create_later"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterTargetRange\.kem_transfer_server_create_two_sided$' "$selected_source_module" "PqxdhDeploymentLaterTargetRange dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterTargetRange.kem_transfer_server_create_two_sided"
+require_line_count 1 '^theorem kem_transfer_server_create_two_sided([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterTargetRange theorem kem_transfer_server_create_two_sided"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
