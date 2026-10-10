@@ -1,6 +1,6 @@
 {
  "date": "2026-10-10T04:25:52.935272+00:00",
- "scope": "LQ-F upstream unit D (targets; design-v2 section 4.1 of /tmp/bc-arc-scratch/common-experiment/lqf-up, CE plan section 49 Q1): the frozen definitions and target statements of item 2 over the logged LQ-F source (U-L1: laterSlotGame, slotLossL, rootBillL, OpaqueBranchSlotsTwoTargetL, LaterSlotsTwoTarget) and of the later second compile lemma (U-L2: idealLaterGame, laterOf, ceDecideL, IdealCompileServerTarget), with projections, unfoldings and the postNative bridges of the later ideal game. Two Lean commits (one per module) and one documentation commit (this receipt, the guide sections, the item 2 guide section and the analysis entry). Not reviewed and not integrated at this receipt.",
+ "scope": "LQ-F upstream unit D (targets; design-v2 section 4.1 of /tmp/bc-arc-scratch/common-experiment/lqf-up, CE plan section 49 Q1): the frozen definitions and target statements of item 2 over the logged LQ-F source (U-L1: laterSlotGame, slotLossL, rootBillL, OpaqueBranchSlotsTwoTargetL, LaterSlotsTwoTarget) and of the later second compile lemma (U-L2: idealLaterGame, laterOf, ceDecideL, IdealCompileServerTarget), with projections, unfoldings and the postNative bridges of the later ideal game. Two Lean commits (one per module) and one documentation commit (this receipt, the guide sections, the item 2 guide section and the analysis entry). Reviewed at 28230554 (semantic and hygiene, both APPROVE_WITH_NITS; 2 minor findings and 8 nits); the review fix pass is one Lean commit (822bb9d4: docstrings and one unused open name, inventory rows rehashed) and the documentation commit that updates this receipt (key review). Not integrated at this receipt.",
  "basis": {
   "start": "ab9986efb4c323c9ca62be9774405e0a880cb747",
   "central_at_receipt": "ab9986efb4c323c9ca62be9774405e0a880cb747",
@@ -22,7 +22,15 @@
    }
   ],
   "documentation_commit": "the commit that adds this receipt (on top of head_at_receipt)",
-  "pushed": true
+  "pushed": true,
+  "head_at_review": "282305546a5078ed272f4ec920eb3cd385d2cc22",
+  "review_fix_commits": [
+   {
+    "sha": "822bb9d448378528e65263f64495733e3bd6c1d0",
+    "subject": "Fix the LQ-F unit D docstrings found by review"
+   }
+  ],
+  "review_fix_documentation_commit": "the commit that updates this receipt with the key review (on top of 822bb9d4)"
  },
  "design": {
   "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/design-v2.md",
@@ -102,7 +110,29 @@
     "command": "coord.sh lean claude <label> -- timeout 180 /home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean -j1 -M8000 --root=/tmp/beaconcrypt-deployment-lqf-targets/beaconcrypt-core/proofs/lean -o /tmp/bc-arc-scratch/common-experiment/lqf-up/D/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerItemTargets.olean /tmp/beaconcrypt-deployment-lqf-targets/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerItemTargets.lean",
     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/logs/final/PqxdhDeploymentLaterServerItemTargets.log"
    },
-   "source_sha256_committed": "1c147305323d6d24be03d27f89b8f755ce7f62997e6ddf1681fd79d7b640d00d"
+   "source_sha256_committed": "1c147305323d6d24be03d27f89b8f755ce7f62997e6ddf1681fd79d7b640d00d",
+   "after_review_fix": {
+    "commit": "822bb9d448378528e65263f64495733e3bd6c1d0",
+    "source_sha256": "151cbd20368d399b2567d37f32faffb253b0baf83a9762861adfcbbdaf83c52c",
+    "final": {
+     "module": "BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemTargets",
+     "start": "2026-10-10T04:47:14.947679041Z",
+     "end": "2026-10-10T04:47:19.345567560Z",
+     "exit": 0,
+     "head": "822bb9d448378528e65263f64495733e3bd6c1d0",
+     "dirty_paths": 0,
+     "source_sha256": "151cbd20368d399b2567d37f32faffb253b0baf83a9762861adfcbbdaf83c52c",
+     "log_bytes": 0,
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "artifact": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerItemTargets.olean",
+     "artifact_sha256": "732857602e05061eeda244cda8310381ae652e7b7ec3b56d570313f626bad9a1",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/fix/leanpath",
+     "leanpath_sha256": "7dc1fc7b82c178c14a1b452d672b504fbdd00ffe508ef5468a077e82895ec12b",
+     "command": "coord.sh lean claude <label> -- timeout 180 /home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean -j1 -M8000 --root=/tmp/beaconcrypt-deployment-lqf-targets/beaconcrypt-core/proofs/lean -o /tmp/bc-arc-scratch/common-experiment/lqf-up/D/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerItemTargets.olean /tmp/beaconcrypt-deployment-lqf-targets/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerItemTargets.lean",
+     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/fix/logs/final/PqxdhDeploymentLaterServerItemTargets.log"
+    },
+    "note": "docstrings changed only (and, in D2, the unused selective open name xreveal dropped); theorem and guard lists unchanged"
+   }
   },
   {
    "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterGame",
@@ -149,7 +179,29 @@
     "command": "coord.sh lean claude <label> -- timeout 180 /home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean -j1 -M8000 --root=/tmp/beaconcrypt-deployment-lqf-targets/beaconcrypt-core/proofs/lean -o /tmp/bc-arc-scratch/common-experiment/lqf-up/D/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterGame.olean /tmp/beaconcrypt-deployment-lqf-targets/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterGame.lean",
     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/logs/final/PqxdhDeploymentIdealLaterGame.log"
    },
-   "source_sha256_committed": "a68b94c08f67708750ce716e2b10707771bbd14d997378a31465032375e966c6"
+   "source_sha256_committed": "a68b94c08f67708750ce716e2b10707771bbd14d997378a31465032375e966c6",
+   "after_review_fix": {
+    "commit": "822bb9d448378528e65263f64495733e3bd6c1d0",
+    "source_sha256": "d7644a3d26271e5b63df9bdec7666087471302b162c1bfe09510b025a919eb4a",
+    "final": {
+     "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterGame",
+     "start": "2026-10-10T04:47:22.474671522Z",
+     "end": "2026-10-10T04:47:26.715245309Z",
+     "exit": 0,
+     "head": "822bb9d448378528e65263f64495733e3bd6c1d0",
+     "dirty_paths": 0,
+     "source_sha256": "d7644a3d26271e5b63df9bdec7666087471302b162c1bfe09510b025a919eb4a",
+     "log_bytes": 0,
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "artifact": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterGame.olean",
+     "artifact_sha256": "e2e9dce101c87008bafc75e5dff2ac34d5821982a8041b2bd5db1d16779e3ea1",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/fix/leanpath",
+     "leanpath_sha256": "7dc1fc7b82c178c14a1b452d672b504fbdd00ffe508ef5468a077e82895ec12b",
+     "command": "coord.sh lean claude <label> -- timeout 180 /home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean -j1 -M8000 --root=/tmp/beaconcrypt-deployment-lqf-targets/beaconcrypt-core/proofs/lean -o /tmp/bc-arc-scratch/common-experiment/lqf-up/D/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterGame.olean /tmp/beaconcrypt-deployment-lqf-targets/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterGame.lean",
+     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/fix/logs/final/PqxdhDeploymentIdealLaterGame.log"
+    },
+    "note": "docstrings changed only (and, in D2, the unused selective open name xreveal dropped); theorem and guard lists unchanged"
+   }
   }
  ],
  "leanpath": {
@@ -317,7 +369,20 @@
    "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/logs/dev/Contamination-1.log",
    "log_sha256": "adebefd6101bf1e96b30040d6d32304afc4d690b9c59d1a62f56abceb4990015",
    "exit": 0,
-   "result": "68 declarations of the two modules; 0 forbidden direct references to item 2's fixed-HKDF list; liveness detected; constants with DH/EUF/authentication infixes referenced: only the types MlKem768PublicKey and PqxdhJointGapDh.ScalarBytes and the field Phase1KeyTuple.pqKey"
+   "result": "68 declarations of the two modules; 0 forbidden direct references to item 2's fixed-HKDF list; liveness detected; constants with DH/EUF/authentication infixes referenced: only the types MlKem768PublicKey and PqxdhJointGapDh.ScalarBytes and the field Phase1KeyTuple.pqKey",
+   "kind": "scratch metaprogram, recorded here and in the guide, not a committed check (as item 2's, doc/impl/extract-composition.md, \"Increment 2: deviations from the plan\")",
+   "rerun_after_review_fix": {
+    "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/fix/logs/dev/Contamination-1.log",
+    "log_sha256": "adebefd6101bf1e96b30040d6d32304afc4d690b9c59d1a62f56abceb4990015",
+    "log_bytes": 393,
+    "meta": [
+     "d0bfef56da80be3a2444398a1bfdee51fa0f409327d4f6969f95e47dfe4a9588  /tmp/bc-arc-scratch/common-experiment/lqf-up/D/probe/Contamination.lean",
+     "leanpath /tmp/bc-arc-scratch/common-experiment/lqf-up/D/fix/leanpath",
+     "exit 0 seconds 74"
+    ],
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/fix/leanpath",
+    "result": "log identical to the unit run (same 68 declarations, 0 forbidden references, same three reported names, liveness detected)"
+   }
   },
   "candidate_closure": {
    "probe": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/probe/CandidateClosure.lean",
@@ -325,11 +390,287 @@
    "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/logs/dev/CandidateClosure-1.log",
    "log_sha256": "feaab4fe24d2da1a3c48224707976a76dfbeb43638e48564947f3fe58894a4a7",
    "exit": 0,
-   "result": "closures of sharedClientL, postSkelL, sharedStartL, rootClientL, entryClientL, entryDL, entryDkL, laterSlotGame, slotLossL (with and without types) reach none of 13 candidate-carrying definitions; liveness: the logged opaqueBranch closure reaches 5"
+   "result": "closures of sharedClientL, postSkelL, sharedStartL, rootClientL, entryClientL, entryDL, entryDkL, laterSlotGame, slotLossL (with and without types) reach none of 13 candidate-carrying definitions; liveness: the logged opaqueBranch closure reaches 5",
+   "kind": "scratch metaprogram, recorded here and in the guide, not a committed check (as item 2's, doc/impl/extract-composition.md, \"Increment 2: deviations from the plan\")",
+   "rerun_after_review_fix": {
+    "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/fix/logs/dev/CandidateClosure-1.log",
+    "log_sha256": "feaab4fe24d2da1a3c48224707976a76dfbeb43638e48564947f3fe58894a4a7",
+    "log_bytes": 3359,
+    "meta": [
+     "dc8c6ca9b286e8f4d98a71e28da57d63a997e2f708a06522d89a3126870eeed7  /tmp/bc-arc-scratch/common-experiment/lqf-up/D/probe/CandidateClosure.lean",
+     "leanpath /tmp/bc-arc-scratch/common-experiment/lqf-up/D/fix/leanpath",
+     "exit 0 seconds 3"
+    ],
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/fix/leanpath",
+    "result": "log identical to the unit run"
+   }
   },
   "not_run": "make verify, full lake build, nix-collect-garbage, mutation testing (forbidden by the task); the transcript-fidelity cargo step and the integration steps of PROTOCOL section 6 (integration not requested)"
  },
  "assumptions": "none added; no contract used; the target statements carry SourceFullCorrect, the logged source budget, Phase1ReadBack, Phase2ReadBack and the run/post budgets as hypotheses inside the Prop definitions",
- "review": "not reviewed at this receipt",
- "integration": "not integrated (task: do not integrate)"
+ "review": {
+  "reviewed_commit": "282305546a5078ed272f4ec920eb3cd385d2cc22",
+  "date": "2026-10-10",
+  "kinds": [
+   "semantic",
+   "hygiene"
+  ],
+  "verdict": "no error in the Lean statements or proofs; both parts APPROVE_WITH_NITS; 2 minor findings (semantic: the U-L2 no-post-budget reason; hygiene: the bare name design-v2) and 8 nits, all about docstrings, documentation and records",
+  "notes": [
+   {
+    "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/review-semantic/NOTES.md",
+    "sha256": "2f043bd9f191bfa6454c4b0630fae7dc16725ad338d2d42c5661a2f4e9ca0618"
+   },
+   {
+    "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/review-hygiene/NOTES.md",
+    "sha256": "2e9e80767ce1f4ebd5c426c370b8e79b4c6cad298e30c9795bf7a095086b1d68"
+   }
+  ],
+  "reviewer_checks": {
+   "semantic_module_compiles": {
+    "note": "D1 without -o against the published ab9986ef LEAN_PATH, D2 without -o against lqf-up/D/leanpath (D1 and D2 olean hashes equal to this receipt), both through coord.sh lean on the clean tree at 28230554",
+    "exit": 0,
+    "logs": [
+     {
+      "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/review-semantic/logs/D1.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+     },
+     {
+      "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/review-semantic/logs/D2.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+     }
+    ]
+   },
+   "semantic_faithfulness": "every D1 and D2 definition compared with its classical counterpart at ab9986ef (slotGame, allIdealLoss and the right side of opaqueBranch_slots_two, rootBill, sharedStart, sharedClient, cacheOf, postSkel, skelResume, rootClient, entryClient, entryD, hybrid, entryDk, idealGame, ideal_compile, classicalOf, ceDecide) and with the LQ-F objects it uses (LaterServerCommands.impl, accept, ordered; LaterServerCut.opaqueResume, tagged; LaterServerOpaque.OpaqueContext, sourcePreOpaque, opaqueBranch; laterWith, laterWith_real, realPost, xreveal; join_later, kem_transfer_server, laterTransported): faithful",
+   "composition_probe": {
+    "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/review-semantic/probe/ComposeL.lean",
+    "sha256": "534a14dbe94825d2ad6843ef84c3de95d6dfa9e7a8e26871123248c70108d776",
+    "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/review-semantic/logs/ComposeL-1.log",
+    "log_sha256": "5db2372f79b8a88f5a51827a307835523b044228d3ee697f217e975e82a20f78",
+    "exit": 0,
+    "result": "chain_ideal_later composes kem_transfer_server, LaterSlotsTwoTarget and IdealCompileServerTarget into the CE-KT-L transfer form (axioms propext, Classical.choice, Quot.sound); laterTransported bounds budget post (.inr 0) = budget.create and (.inr 1) = 0 by rfl; laterKind (.inr ()) = none by rfl; scratch, not published"
+   },
+   "hygiene_scan": "D1 33 declarations, 12 theorems, 12 exact guards; D2 12 declarations, 8 theorems, 8 guards; guard order equals theorem order; allowed axioms only; no forbidden token; set_option only autoImplicit false; per-commit scopes clean; footers exact; every backticked name resolves (planned future names labelled)",
+   "hygiene_inventory": "manifest hashes, category counts and the D1 and D2 require_line_count blocks consistent at ab9986ef, 5d580bab, 727d8835 and 28230554 (handwritten Lean 1884, 1885, 1886, 1886)",
+   "clean_tree_inventory": {
+    "head": "282305546a5078ed272f4ec920eb3cd385d2cc22",
+    "lease": "00000444",
+    "start": "2026-10-10T04:32:15Z",
+    "end": "2026-10-10T04:34:00Z",
+    "exit": 0,
+    "dirty_paths_before": 0,
+    "dirty_paths_after": 0,
+    "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/review-hygiene/logs/inventory-28230554.log",
+    "log_sha256": "789df84d65cf5275531793d1d5a9e06d210cb940d406d0fee18c20d1bc05f1ea",
+    "command": "coord.sh lease mem claude @nix <label> -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C /tmp/beaconcrypt-deployment-lqf-targets/beaconcrypt-core check-inventory (locked proof flake, TMPDIR in the review scratch)"
+   },
+   "clean_tree_lean": {
+    "head": "282305546a5078ed272f4ec920eb3cd385d2cc22",
+    "note": "through coord.sh lean (-j1 -M8000, timeout 180) with -o into the review scratch, against lqf-up/D/leanpath; exit 0 and empty logs each",
+    "root_olean_sha256": "3ecd462c6dfabb34a5aa4c51a62de96070c89fef7fac2981e70a810da1f31387",
+    "root_equals_unitD2_root": true,
+    "module_oleans_sha256": {
+     "PqxdhDeploymentLaterServerItemTargets": "34202d1a5082d15843433d82f6d77f18b5e7aa1f3d8d1f18cf19495a5185b904",
+     "PqxdhDeploymentIdealLaterGame": "70f17b6e4bd471b93871d99c86196c516977cfd313e767fcf78d9086b1094ab1"
+    },
+    "module_oleans_equal_implementer": [
+     true,
+     true
+    ]
+   },
+   "contamination_rerun": {
+    "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/review-hygiene/logs/Contamination.log",
+    "log_sha256": "adebefd6101bf1e96b30040d6d32304afc4d690b9c59d1a62f56abceb4990015",
+    "result": "68 declarations, 0 forbidden, liveness detected, the same three reported names"
+   }
+  },
+  "fixes": [
+   {
+    "finding": "minor (semantic): IdealCompileServerTarget takes no post budget; the documented reason cited compile_server_reads (which bounds only the Server read) for \"the post part issues no field read\", and left out that unit B cannot reuse the classical cut lemmas (slotGameAt_cut, item2_prefix, kemCommands_stopped, then PqxdhRegistrationJointKemCommands.creations and PqxdhRegistrationJointOpenCosts.command_program), which take a certified bound in all 14 kinds with unreadIdentity, while at LQ-F laterTransported (.inr 0) = budget.create and the logged scan has no finite coin, HMAC or BLAKE2b cap without a post budget",
+    "fix": "statements unchanged; the docstrings of IdealCompileServerTarget and of the D2 module (Lean commit 822bb9d4) and the guide's \"what is proved\" cite the zero field costs PqxdhDeploymentCompileBudget.cost (.inr _) (postCore _) (behind PqxdhDeploymentLaterCompile.compile_later_reads and, for the KEM field, the proof of compile_server_no_kem); new guide open point 5: unit B proves the target with per-kind step bounds (LaterServerReserve.creations, compile_server_creates, compile_server_no_kem), with the R9 fallback (a primed target with post and postRespects) costing CE-12-L nothing; the analysis gives the corrected reason in plain words"
+   },
+   {
+    "finding": "nit (semantic): slotLossL is the logged form of PqxdhRegistrationJointKemKeyTransfer.allIdealLoss; the docs gave it no classical name",
+    "fix": "the docstrings of slotLossL and of the D1 module, the guide (what is proved, names for consumers with the CE-12-L mirror slotLossL ... (laterTransported bounds budget post)) and the item 2 guide's correspondence table name allIdealLoss"
+   },
+   {
+    "finding": "nit (semantic): the status texts \"not yet reviewed\" (guide status paragraph, analysis) must be updated at integration",
+    "fix": "the status paragraph, the publication bullet and the analysis record the review and the fix pass; the \"not integrated\" sentences remain, and guide open point 1 says that the integration replaces them with its record"
+   },
+   {
+    "finding": "minor (hygiene): bare \"design-v2\" names both CE-11b's design-v2 and the scratch LQ-F upstream design-v2 in the same guide and in the docstrings",
+    "fix": "the status paragraph names the LQ-F upstream design-v2 and its file and introduces \"LQ-F design-v2\", used in every unit D guide section, the item 2 guide's section and the docstrings of both modules (822bb9d4)"
+   },
+   {
+    "finding": "nit (hygiene): clean-tree checks of the committed tip are not recorded (all implementer runs on dirty trees)",
+    "fix": "review.reviewer_checks.clean_tree_inventory and clean_tree_lean, and the guide's checks section, record the hygiene review's clean-tree runs at 28230554 (lease 00000444, exit 0, clean before and after; root olean 3ecd462c; module oleans 34202d1a and 70f17b6e); the fix pass's checks ran on the clean tree of 822bb9d4"
+   },
+   {
+    "finding": "nit (hygiene): scratch-only evidence (contamination scan, closure check, design probes) not labelled as uncommitted checks",
+    "fix": "the guide's checks section and the item 2 guide's section say \"scratch metaprograms, recorded here and in the receipt, not committed checks\"; the analysis says the same in a clause; checks.contamination.kind and checks.candidate_closure.kind here"
+   },
+   {
+    "finding": "nit (hygiene): PqxdhDeploymentIdealLaterGame.postNative_real has the same short name as PqxdhDeploymentEnvironmentReal.postNative_real (different statement)",
+    "fix": "docstring of postNative_real and the D2 module docstring call it the generic form of that lemma (822bb9d4); the guide's names for consumers says that unit C writes qualified names"
+   },
+   {
+    "finding": "nit (hygiene): unused selective open name xreveal in D2",
+    "fix": "dropped (822bb9d4)"
+   },
+   {
+    "finding": "nit (hygiene): \"A2\" used for unit A2 and theorem A2 in the same texts",
+    "fix": "\"theorem A2\" and \"unit A2\" written explicitly in the D1 module docstring (822bb9d4), the guide's checks section and the item 2 guide's section"
+   },
+   {
+    "finding": "nit (hygiene): the D1 module docstring says \"imports\" a DH-keyed component where \"references\" is meant",
+    "fix": "reworded to \"references\", with the three reported names (822bb9d4)"
+   }
+  ],
+  "statements_changed": [],
+  "theorems_added": [],
+  "theorems_removed": [],
+  "definitions_added": [],
+  "definitions_removed": [],
+  "docstrings_changed": [
+   "PqxdhDeploymentLaterServerItemTargets.slotLossL",
+   "PqxdhDeploymentLaterServerItemTargets.rootBillL",
+   "PqxdhDeploymentLaterServerItemTargets.OpaqueBranchSlotsTwoTargetL",
+   "PqxdhDeploymentLaterServerItemTargets.LaterSlotsTwoTarget",
+   "PqxdhDeploymentIdealLaterGame.postNative_real",
+   "PqxdhDeploymentIdealLaterGame.IdealCompileServerTarget"
+  ],
+  "module_docstring_changed": [
+   "PqxdhDeploymentLaterServerItemTargets",
+   "PqxdhDeploymentIdealLaterGame"
+  ],
+  "opens_changed": [
+   "PqxdhDeploymentIdealLaterGame: open PqxdhDeploymentFinishErasure (laterWith laterTail realPost xreveal) -> (laterWith laterTail realPost)"
+  ],
+  "lean_fix_commit": "822bb9d448378528e65263f64495733e3bd6c1d0",
+  "files_changed_lean_commit": [
+   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterGame.lean",
+   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerItemTargets.lean",
+   "beaconcrypt-core/proofs/reviewed-inventory.txt"
+  ],
+  "files_changed_docs_commit": [
+   "doc/formal-verification-analysis.md",
+   "doc/impl/common-deployment-experiment.md",
+   "doc/impl/extract-composition.md",
+   "doc/impl/proof-receipts/lqf-upstream-D.json"
+  ],
+  "docs_fix_commit": "the commit that adds this key (on top of 822bb9d4)",
+  "checks": {
+   "dev_before_commit": [
+    {
+     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/fix/logs/dev/PqxdhDeploymentLaterServerItemTargets-1.log",
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "log_bytes": 0,
+     "meta": [
+      "151cbd20368d399b2567d37f32faffb253b0baf83a9762861adfcbbdaf83c52c  /tmp/beaconcrypt-deployment-lqf-targets/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerItemTargets.lean",
+      "leanpath /tmp/bc-arc-scratch/common-experiment/lqf-up/D/fix/leanpath",
+      "exit 0 seconds 4"
+     ],
+     "module": "PqxdhDeploymentLaterServerItemTargets",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/fix/leanpath"
+    },
+    {
+     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/fix/logs/dev/PqxdhDeploymentIdealLaterGame-1.log",
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "log_bytes": 0,
+     "meta": [
+      "d7644a3d26271e5b63df9bdec7666087471302b162c1bfe09510b025a919eb4a  /tmp/beaconcrypt-deployment-lqf-targets/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterGame.lean",
+      "leanpath /tmp/bc-arc-scratch/common-experiment/lqf-up/D/leanpath",
+      "exit 0 seconds 3"
+     ],
+     "module": "PqxdhDeploymentIdealLaterGame",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/leanpath"
+    }
+   ],
+   "inv_recount_rehash": {
+    "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/fix/logs/inv-recount-rehash.log",
+    "log_sha256": "596151943eb87407a9d6002278f99696631d3e277acb61f790678c23f5f079fa",
+    "result": "handwritten-lean 1886 unchanged; PqxdhDeploymentLaterServerItemTargets 1c147305 -> 151cbd20, PqxdhDeploymentIdealLaterGame a68b94c0 -> d7644a3d; BeaconcryptCore.lean, trusted-boundary.md and check-inventory.sh unchanged"
+   },
+   "module_finals": [
+    {
+     "module": "BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemTargets",
+     "start": "2026-10-10T04:47:14.947679041Z",
+     "end": "2026-10-10T04:47:19.345567560Z",
+     "exit": 0,
+     "head": "822bb9d448378528e65263f64495733e3bd6c1d0",
+     "dirty_paths": 0,
+     "source_sha256": "151cbd20368d399b2567d37f32faffb253b0baf83a9762861adfcbbdaf83c52c",
+     "log_bytes": 0,
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "artifact": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerItemTargets.olean",
+     "artifact_sha256": "732857602e05061eeda244cda8310381ae652e7b7ec3b56d570313f626bad9a1",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/fix/leanpath",
+     "leanpath_sha256": "7dc1fc7b82c178c14a1b452d672b504fbdd00ffe508ef5468a077e82895ec12b",
+     "command": "coord.sh lean claude <label> -- timeout 180 /home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean -j1 -M8000 --root=/tmp/beaconcrypt-deployment-lqf-targets/beaconcrypt-core/proofs/lean -o /tmp/bc-arc-scratch/common-experiment/lqf-up/D/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerItemTargets.olean /tmp/beaconcrypt-deployment-lqf-targets/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerItemTargets.lean",
+     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/fix/logs/final/PqxdhDeploymentLaterServerItemTargets.log"
+    },
+    {
+     "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterGame",
+     "start": "2026-10-10T04:47:22.474671522Z",
+     "end": "2026-10-10T04:47:26.715245309Z",
+     "exit": 0,
+     "head": "822bb9d448378528e65263f64495733e3bd6c1d0",
+     "dirty_paths": 0,
+     "source_sha256": "d7644a3d26271e5b63df9bdec7666087471302b162c1bfe09510b025a919eb4a",
+     "log_bytes": 0,
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "artifact": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterGame.olean",
+     "artifact_sha256": "e2e9dce101c87008bafc75e5dff2ac34d5821982a8041b2bd5db1d16779e3ea1",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/fix/leanpath",
+     "leanpath_sha256": "7dc1fc7b82c178c14a1b452d672b504fbdd00ffe508ef5468a077e82895ec12b",
+     "command": "coord.sh lean claude <label> -- timeout 180 /home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean -j1 -M8000 --root=/tmp/beaconcrypt-deployment-lqf-targets/beaconcrypt-core/proofs/lean -o /tmp/bc-arc-scratch/common-experiment/lqf-up/D/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterGame.olean /tmp/beaconcrypt-deployment-lqf-targets/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterGame.lean",
+     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/fix/logs/final/PqxdhDeploymentIdealLaterGame.log"
+    }
+   ],
+   "root": {
+    "module": "BeaconcryptCore",
+    "start": "2026-10-10T04:47:30.201432974Z",
+    "end": "2026-10-10T04:47:32.799436168Z",
+    "exit": 0,
+    "head": "822bb9d448378528e65263f64495733e3bd6c1d0",
+    "dirty_paths": 0,
+    "source_sha256": "cfef7c2ceb2b6d737d416013a8f46599b283193af423d950adfea52dcf5d65e2",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/fix/root-checks/fix/BeaconcryptCore.olean",
+    "artifact_sha256": "3ecd462c6dfabb34a5aa4c51a62de96070c89fef7fac2981e70a810da1f31387",
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/fix/leanpath",
+    "leanpath_sha256": "7dc1fc7b82c178c14a1b452d672b504fbdd00ffe508ef5468a077e82895ec12b",
+    "command": "coord.sh lean claude <label> -- timeout 180 /home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean -j1 -M8000 --root=/tmp/beaconcrypt-deployment-lqf-targets/beaconcrypt-core/proofs/lean -o /tmp/bc-arc-scratch/common-experiment/lqf-up/D/fix/root-checks/fix/BeaconcryptCore.olean /tmp/beaconcrypt-deployment-lqf-targets/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean",
+    "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/fix/logs/final/root-fix.log",
+    "note": "olean byte-identical to the root check of the D2 commit (checks.root.unitD2)"
+   },
+   "leanpath": {
+    "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/fix/leanpath",
+    "sha256": "7dc1fc7b82c178c14a1b452d672b504fbdd00ffe508ef5468a077e82895ec12b",
+    "first_prefix": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/fix/olean",
+    "first_prefix_note": "registered (claude, active): resolved symlink mirror of the first prefix of the published ab9986ef LEAN_PATH (ce11b/u7/int/olean), 6343 links, root olean skipped, plus the two unit D module oleans of the fix pass; the unit prefix lqf-up/D/olean keeps its oleans",
+    "rest": "/tmp/bc-coord/leanpaths/ab9986efb4c323c9ca62be9774405e0a880cb747.leanpath"
+   },
+   "clean_tree_inventory": [
+    {
+     "tag": "lean-commit",
+     "exit": 0,
+     "head": "822bb9d448378528e65263f64495733e3bd6c1d0",
+     "dirty_paths_before": 0,
+     "dirty_paths_after": 0,
+     "start": "2026-10-10T04:47:37Z",
+     "end": "2026-10-10T04:49:21Z",
+     "lease": "00000446",
+     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/fix/logs/inventory-lean-commit.log",
+     "log_sha256": "8e7121fb5ddc4940d110a4be2c56a4c9e53e74ec1c0cee04051206cc42c95484",
+     "command": "coord.sh lease mem claude @nix lqf-Dfix-inventory-lean-commit --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C /tmp/beaconcrypt-deployment-lqf-targets/beaconcrypt-core check-inventory SHELL=bash"
+    }
+   ],
+   "clean_tree_inventory_note": "the documentation commit changes only files under doc/, which check-inventory does not read, so the run at 822bb9d4 covers its tree; a run on the clean tip after the documentation commit is left to the confirming review or the integration checks receipt",
+   "diff_check": "git diff --cached --check clean before the Lean commit; git diff --check clean on the documentation changes"
+  },
+  "status": "review fix pass complete; awaiting a confirming review; not integrated"
+ },
+ "integration": "not integrated (task: do not integrate); the integration replaces the \"not integrated\" sentences of the guide status paragraph and the analysis entry with its record"
 }
