@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1952
+	[handwritten-lean]=1953
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -41179,6 +41179,53 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem handler_effectLift([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePinControl theorem handler_effectLift"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePinControl\.nativeImpl_env$' "$selected_source_module" "PqxdhDeploymentHeadlinePinControl dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinControl.nativeImpl_env"
 require_line_count 1 '^theorem nativeImpl_env([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePinControl theorem nativeImpl_env"
+
+# CE-12 P4 step 2 (AG lift R1): the two env_g ideal-world invariants of the pin lift
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlinePinInvariant.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinInvariant$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentHeadlinePinInvariant root import"
+require_line_count 20 '^theorem ' "$selected_source_module" "PqxdhDeploymentHeadlinePinInvariant theorem inventory"
+require_line_count 20 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentHeadlinePinInvariant guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePinInvariant\.summarize_owners_extend$' "$selected_source_module" "PqxdhDeploymentHeadlinePinInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinInvariant.summarize_owners_extend"
+require_line_count 1 '^theorem summarize_owners_extend([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePinInvariant theorem summarize_owners_extend"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePinInvariant\.pinOk_extend$' "$selected_source_module" "PqxdhDeploymentHeadlinePinInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinInvariant.pinOk_extend"
+require_line_count 1 '^theorem pinOk_extend([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePinInvariant theorem pinOk_extend"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePinInvariant\.shellsOk_extend$' "$selected_source_module" "PqxdhDeploymentHeadlinePinInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinInvariant.shellsOk_extend"
+require_line_count 1 '^theorem shellsOk_extend([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePinInvariant theorem shellsOk_extend"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePinInvariant\.fits_of_ok$' "$selected_source_module" "PqxdhDeploymentHeadlinePinInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinInvariant.fits_of_ok"
+require_line_count 1 '^theorem fits_of_ok([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePinInvariant theorem fits_of_ok"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePinInvariant\.quiet_of_envQuery$' "$selected_source_module" "PqxdhDeploymentHeadlinePinInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinInvariant.quiet_of_envQuery"
+require_line_count 1 '^theorem quiet_of_envQuery([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePinInvariant theorem quiet_of_envQuery"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePinInvariant\.uniformBytes_quiet$' "$selected_source_module" "PqxdhDeploymentHeadlinePinInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinInvariant.uniformBytes_quiet"
+require_line_count 1 '^theorem uniformBytes_quiet([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePinInvariant theorem uniformBytes_quiet"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePinInvariant\.send_quiet$' "$selected_source_module" "PqxdhDeploymentHeadlinePinInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinInvariant.send_quiet"
+require_line_count 1 '^theorem send_quiet([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePinInvariant theorem send_quiet"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePinInvariant\.drawBit_quiet$' "$selected_source_module" "PqxdhDeploymentHeadlinePinInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinInvariant.drawBit_quiet"
+require_line_count 1 '^theorem drawBit_quiet([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePinInvariant theorem drawBit_quiet"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePinInvariant\.secrecy_quiet$' "$selected_source_module" "PqxdhDeploymentHeadlinePinInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinInvariant.secrecy_quiet"
+require_line_count 1 '^theorem secrecy_quiet([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePinInvariant theorem secrecy_quiet"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePinInvariant\.summarize_quiet$' "$selected_source_module" "PqxdhDeploymentHeadlinePinInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinInvariant.summarize_quiet"
+require_line_count 1 '^theorem summarize_quiet([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePinInvariant theorem summarize_quiet"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePinInvariant\.inv_append$' "$selected_source_module" "PqxdhDeploymentHeadlinePinInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinInvariant.inv_append"
+require_line_count 1 '^theorem inv_append([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePinInvariant theorem inv_append"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePinInvariant\.forward_quiet$' "$selected_source_module" "PqxdhDeploymentHeadlinePinInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinInvariant.forward_quiet"
+require_line_count 1 '^theorem forward_quiet([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePinInvariant theorem forward_quiet"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePinInvariant\.forward_env$' "$selected_source_module" "PqxdhDeploymentHeadlinePinInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinInvariant.forward_env"
+require_line_count 1 '^theorem forward_env([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePinInvariant theorem forward_env"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePinInvariant\.secrecy_inv$' "$selected_source_module" "PqxdhDeploymentHeadlinePinInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinInvariant.secrecy_inv"
+require_line_count 1 '^theorem secrecy_inv([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePinInvariant theorem secrecy_inv"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePinInvariant\.full_inv$' "$selected_source_module" "PqxdhDeploymentHeadlinePinInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinInvariant.full_inv"
+require_line_count 1 '^theorem full_inv([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePinInvariant theorem full_inv"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePinInvariant\.effects_coin_control$' "$selected_source_module" "PqxdhDeploymentHeadlinePinInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinInvariant.effects_coin_control"
+require_line_count 1 '^theorem effects_coin_control([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePinInvariant theorem effects_coin_control"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePinInvariant\.startup_facts$' "$selected_source_module" "PqxdhDeploymentHeadlinePinInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinInvariant.startup_facts"
+require_line_count 1 '^theorem startup_facts([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePinInvariant theorem startup_facts"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePinInvariant\.install_facts$' "$selected_source_module" "PqxdhDeploymentHeadlinePinInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinInvariant.install_facts"
+require_line_count 1 '^theorem install_facts([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePinInvariant theorem install_facts"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePinInvariant\.ctxRun_pinFacts$' "$selected_source_module" "PqxdhDeploymentHeadlinePinInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinInvariant.ctxRun_pinFacts"
+require_line_count 1 '^theorem ctxRun_pinFacts([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePinInvariant theorem ctxRun_pinFacts"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePinInvariant\.idealAuth_pinFacts$' "$selected_source_module" "PqxdhDeploymentHeadlinePinInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinInvariant.idealAuth_pinFacts"
+require_line_count 1 '^theorem idealAuth_pinFacts([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePinInvariant theorem idealAuth_pinFacts"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
