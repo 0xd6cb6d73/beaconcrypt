@@ -1013,5 +1013,465 @@
    "receipt": "doc/impl/proof-receipts/production-headlines-registration.json",
    "note": "everything else in this receipt records CE-13 as integrated at fc27fded9bdef0ab05248b9431f4840d4a098d86; its rows keep their production_central values of that state"
   }
- ]
+ ],
+ "final_verification": {
+  "name": "CE-13 final verification: every column entry re-verified from the committed files after the registration follow-up reached central",
+  "date": "2026-10-11",
+  "authorship": "Claude",
+  "basis": "central codex/full-proof-composition at 8f4c055d5f4f2b8aa0aeb49bd68a0ca9f6770b5b (registration follow-up integrated, coordination message 535)",
+  "branch": "codex/deployment-ce13-final (from origin/codex/full-proof-composition 8f4c055d; not integrated)",
+  "commit": "the commit that adds this record (child of 8f4c055d5f4f2b8aa0aeb49bd68a0ca9f6770b5b)",
+  "why": "the first adversarial pass over the column had seen truncated cell text; since CE-13 was written central gained the production forms of the D-ct closed headlines (a2665670) and of the registration claims (8f4c055d)",
+  "method": "per row group an independent read-only verification against the Lean statements, the ProVerif queries and processes, doc/proverif-fs-event-meaning.md and the Rust code at central; each finding re-checked against the same sources before it was applied; where a proposed text differed from the source, the source decided",
+  "groups": [
+   {
+    "group": "G1",
+    "entries": "key transfer and root secrecy: S3-server 601, S3-beacon 602, A1-root 3168",
+    "findings": 5,
+    "applied": true
+   },
+   {
+    "group": "G2",
+    "entries": "b2s origin: L2-origin 3179, b2s-C2 633, b2s-C2-chosen-fs 634, b2s-C4 636, far-b2s-C4 3174",
+    "findings": 6,
+    "applied": true
+   },
+   {
+    "group": "G3",
+    "entries": "s2b origin and the initial record: S2b-origin 3183, s2b-C1 615, s2b-C4 617, far-s2b-C4 3175, A1-delayed 3167 and S2b-initial 3184",
+    "findings": 12,
+    "applied": true
+   },
+   {
+    "group": "G4",
+    "entries": "registration authentication, provenance and replay: A1-delayed/S2b-initial, A1 597, s2b-A1 613, b2s-A1 631, encoding-A1 649, A2-provenance 3161, A2 598, s2b-A2 614, b2s-A2 632, encoding-A2 650, R1 599, encoding-R1 651, R1' 600, encoding-R1' 652, s2b-C3 616, b2s-C3 635",
+    "findings": 12,
+    "applied": true
+   },
+   {
+    "group": "G5",
+    "entries": "application secrecy: App-b2s 3188, b2s-S2 637, App-s2b 3189, s2b-S1 618",
+    "findings": 11,
+    "applied": true
+   },
+   {
+    "group": "G6, G7, G8, prose",
+    "entries": "left-or-right secrecy, unknown key share, passive and live services, and a pass over the prose of the five documents",
+    "findings": "not in the task text of this step",
+    "applied": false
+   }
+  ],
+  "finding_counts": {
+   "total_applied": 46,
+   "major": 2,
+   "minor": 22,
+   "nit": 22,
+   "rejected": 0
+  },
+  "findings": [
+   {
+    "id": "G1-1",
+    "severity": "minor",
+    "where": "source scope, A1-root production",
+    "finding": "omitted the production forms of the D-ct theorems the entry calls strongest; no module prefix",
+    "resolution": "applied as proposed"
+   },
+   {
+    "id": "G1-2",
+    "severity": "minor",
+    "where": "this receipt, rows 602 and 3168 production_central",
+    "finding": "stale already at fc27fded (the S3-beacon cell cited the production _dct form)",
+    "resolution": "rows kept historical; after-state in final_verification.rows_production_after (the proposal's second option, in this record rather than integration_merge)"
+   },
+   {
+    "id": "G1-3",
+    "severity": "minor",
+    "where": "source scope, S3-server and S3-beacon symbolic-only",
+    "finding": "several Server objects of FsRegistrationMain (fs-registration-k3.pvl:14-20) not listed",
+    "resolution": "applied as proposed"
+   },
+   {
+    "id": "G1-4",
+    "severity": "minor",
+    "where": "analysis, CE-13 'What is now computational' (intro, key transfer, LQ-F)",
+    "finding": "key transfer described as an attack bound and for any event; Lean transfers the event with a designating claim and keeps the ideal-game probability",
+    "resolution": "applied as proposed"
+   },
+   {
+    "id": "G1-5",
+    "severity": "nit",
+    "where": "guide, compile argument after step 8",
+    "finding": "World forms said to use step 5; they use CE-11b's equality ideal_world",
+    "resolution": "applied as proposed"
+   },
+   {
+    "id": "G2-1",
+    "severity": "minor",
+    "where": "source scope, b2s-C4 / far-b2s-C4 symbolic-only",
+    "finding": "fs_far_chain and the fail-stop process listed for far-b2s-C4, whose literal recipes discharge the L3 label and which runs K_r = 1 without fail-stop",
+    "resolution": "applied as proposed; the s2b-C4 list split the same way (same evidence, source-scope line 5)"
+   },
+   {
+    "id": "G2-2",
+    "severity": "minor",
+    "where": "source scope, b2s-C4 theorems and production",
+    "finding": "'ce_or_fields_b2s implies them' overclaimed; its production forms missing",
+    "resolution": "applied as proposed"
+   },
+   {
+    "id": "G2-3",
+    "severity": "minor",
+    "where": "source scope, L2-origin bound",
+    "finding": "'at the event's own decision' wrong for ce_plain_every_b2s and the symbolic forms",
+    "resolution": "applied as proposed"
+   },
+   {
+    "id": "G2-4",
+    "severity": "nit",
+    "where": "source scope, index rows 633 and 634; this receipt's rows",
+    "finding": "status understated the field limits compared with L2-origin",
+    "resolution": "applied as proposed; receipt rows via final_verification.rows_status_after"
+   },
+   {
+    "id": "G2-5",
+    "severity": "nit",
+    "where": "source scope, b2s-C2 ProVerif line",
+    "finding": "honest-pin process FsRecordsB2sMain not named",
+    "resolution": "applied as proposed"
+   },
+   {
+    "id": "G2-6",
+    "severity": "nit",
+    "where": "source scope, b2s-C2 production",
+    "finding": "no statement that replay_never and replay_owner_published have no production form",
+    "resolution": "applied with the wording adjusted: replay_owner_published is an inclusion (ReplayOwnerEvent inside the per-owner published-tuple forgery), whose event the production r1prime_owner_bound bounds"
+   },
+   {
+    "id": "G3-1",
+    "severity": "major",
+    "where": "source scope, S2b-origin production (inherited by s2b-C1, s2b-C4, far-s2b-C4)",
+    "finding": "the production forms of the s2b _dct theorems the entry calls strongest were not cited; 'keep ctGapTerm explicit' stale",
+    "resolution": "applied; the twelve s2b _dct production forms split by closure (six fully closed, six keeping ctCollTerm as their sources do)"
+   },
+   {
+    "id": "G3-2",
+    "severity": "major",
+    "where": "source scope, s2b-C1 and A1-delayed/S2b-initial production",
+    "finding": "production ce_a1_linked_dct and sym_gap_dct not cited",
+    "resolution": "applied (merged with G4-4)"
+   },
+   {
+    "id": "G3-3",
+    "severity": "minor",
+    "where": "source scope index 3183 and S2b-origin status; guide rows table",
+    "finding": "status implied every field but kid and root; owner designation does not constrain the identity key",
+    "resolution": "applied; the index cell also names the identity limitation, as the entry and the guide do"
+   },
+   {
+    "id": "G3-4",
+    "severity": "minor",
+    "where": "source scope, A1-delayed/S2b-initial symbolic-only",
+    "finding": "(S, other key ID) pins of S2b-initial and the O15/O16 disclosures missing",
+    "resolution": "applied with delayed-response.pvl:34 (the proposal's :33 is the leak_initial branch, off in A1Main(false))"
+   },
+   {
+    "id": "G3-5",
+    "severity": "minor",
+    "where": "source scope, S2b-origin symbolic-only",
+    "finding": "O15/O16 and the ledgerImpl inspection caveat missing",
+    "resolution": "applied as proposed"
+   },
+   {
+    "id": "G3-6",
+    "severity": "minor",
+    "where": "source scope, s2b-C1",
+    "finding": "no eligibility and conditions bullet",
+    "resolution": "applied as proposed"
+   },
+   {
+    "id": "G3-7",
+    "severity": "minor",
+    "where": "this receipt, rows 3183, 3184, 3167 and follow_ups rows 615, 3167",
+    "finding": "no production D-ct forms recorded",
+    "resolution": "final_verification.rows_production_after (rows and follow_ups kept historical)"
+   },
+   {
+    "id": "G3-8",
+    "severity": "nit",
+    "where": "source scope, S2b-origin bound and eligibility",
+    "finding": "publication term attributed to the plaintext-only forms; modes not stated",
+    "resolution": "applied as proposed"
+   },
+   {
+    "id": "G3-9",
+    "severity": "nit",
+    "where": "source scope, S2b-origin production",
+    "finding": "production ce_plain_every_s2b omitted",
+    "resolution": "applied as proposed"
+   },
+   {
+    "id": "G3-10",
+    "severity": "nit",
+    "where": "source scope, s2b-C4 / far-s2b-C4",
+    "finding": "kid listed though the query is unreachability; windows and far-event explanation missing",
+    "resolution": "applied ('at any position from 2')"
+   },
+   {
+    "id": "G3-11",
+    "severity": "nit",
+    "where": "source scope, A1-delayed theorems; guide name index",
+    "finding": "frozen injective_bound not cited",
+    "resolution": "applied (same as G4-11)"
+   },
+   {
+    "id": "G3-12",
+    "severity": "nit",
+    "where": "analysis, production composition 'What is not claimed'",
+    "finding": "'production versions ... will follow' stale",
+    "resolution": "applied as proposed"
+   },
+   {
+    "id": "G4-1",
+    "severity": "minor",
+    "where": "source scope, A2-provenance symbolic-only; guide O27 row",
+    "finding": "O27 attributed to A2-provenance; only the negative control A2-C-triple has two publications",
+    "resolution": "applied as proposed"
+   },
+   {
+    "id": "G4-2",
+    "severity": "minor",
+    "where": "source scope A2-provenance, A2 rows, R1'; analysis symbolic-only list; guide not-claimed",
+    "finding": "accepts under the protected Server's own identity key covered symbolically, not by CE-A2, CE-A2pub or CE-R1'",
+    "resolution": "applied ('created Beacon owners only (their identities are generated)')"
+   },
+   {
+    "id": "G4-3",
+    "severity": "minor",
+    "where": "source scope, A1 group ProVerif text and symbolic-only; analysis eligibility",
+    "finding": "b2s-A1's pinned key ID is attacker-chosen; (S, other key ID) Beacons missing; the never-establish remark is an inspection, not a theorem",
+    "resolution": "applied (the symbolic-only part merged with G4-6)"
+   },
+   {
+    "id": "G4-4",
+    "severity": "minor",
+    "where": "source scope, A1-delayed production and s2b-C1 position 1; this receipt's follow_ups",
+    "finding": "production ce_a1_linked_dct and sym_gap_dct missing",
+    "resolution": "applied (merged with G3-2; beacon_gap_le marked ctGapTerm explicit with no _dct form); receipt via final_verification"
+   },
+   {
+    "id": "G4-5",
+    "severity": "minor",
+    "where": "source scope, A2 group symbolic-only",
+    "finding": "inherited A2-provenance's process capabilities the legacy Beacons lack; legacy remainder missing",
+    "resolution": "applied as proposed"
+   },
+   {
+    "id": "G4-6",
+    "severity": "nit",
+    "where": "source scope, A1 group symbolic-only",
+    "finding": "inherited A1-delayed's cross-object builds and paper reflection; fs_kid merge exact only for the record processes",
+    "resolution": "applied, with G4-3's b2s-A1 pin remainder"
+   },
+   {
+    "id": "G4-7",
+    "severity": "nit",
+    "where": "source scope, A2-provenance conditions",
+    "finding": "Phase laws presented as premises of a2_bound",
+    "resolution": "applied as proposed"
+   },
+   {
+    "id": "G4-8",
+    "severity": "nit",
+    "where": "analysis, registration bullet",
+    "finding": "CE-A2 read as a statement about the experiment, without its probability",
+    "resolution": "applied as proposed"
+   },
+   {
+    "id": "G4-9",
+    "severity": "nit",
+    "where": "source scope, R1'",
+    "finding": "one Server object and the per-object remainder not stated",
+    "resolution": "applied as proposed"
+   },
+   {
+    "id": "G4-10",
+    "severity": "nit",
+    "where": "source scope, C3",
+    "finding": "multi-object remainder missing",
+    "resolution": "applied, worded per row (peers for b2s-C3, Beacon sessions for s2b-C3)"
+   },
+   {
+    "id": "G4-11",
+    "severity": "nit",
+    "where": "guide name index; source scope A1-delayed theorems",
+    "finding": "frozen injective_bound not listed",
+    "resolution": "applied as proposed"
+   },
+   {
+    "id": "G4-12",
+    "severity": "nit",
+    "where": "composition assumptions, CE-13 basis",
+    "finding": "registration follow-up not named as adding no assumption",
+    "resolution": "applied as proposed"
+   },
+   {
+    "id": "G5-1",
+    "severity": "minor",
+    "where": "source scope, App-b2s production",
+    "finding": "production D-ct forms of the strongest theorems missing",
+    "resolution": "applied as proposed"
+   },
+   {
+    "id": "G5-2",
+    "severity": "minor",
+    "where": "source scope, App-s2b production",
+    "finding": "either-side production D-ct forms missing",
+    "resolution": "applied as proposed"
+   },
+   {
+    "id": "G5-3",
+    "severity": "minor",
+    "where": "source scope, s2b-S1",
+    "finding": "no eligibility, conditions, bound or production line",
+    "resolution": "applied as proposed"
+   },
+   {
+    "id": "G5-4",
+    "severity": "minor",
+    "where": "source scope, App-b2s, App-s2b (and b2s-S2, s2b-S1) symbolic-only",
+    "finding": "O15/O16 disclosures (and E6) missing",
+    "resolution": "applied; b2s-S2 reads 'as App-b2s without the stronger process's disclosures'"
+   },
+   {
+    "id": "G5-5",
+    "severity": "minor",
+    "where": "source scope, App-b2s and App-s2b conditions",
+    "finding": "either-side forms take [A1] and [A2]",
+    "resolution": "applied as proposed"
+   },
+   {
+    "id": "G5-6",
+    "severity": "nit",
+    "where": "source scope, App-b2s theorems",
+    "finding": "ce_app_beacon_sym_dct labelled frozen",
+    "resolution": "applied as proposed"
+   },
+   {
+    "id": "G5-7",
+    "severity": "nit",
+    "where": "guide event projection; source scope conventions",
+    "finding": "selected-identity mapping differs in the App rows",
+    "resolution": "applied as proposed"
+   },
+   {
+    "id": "G5-8",
+    "severity": "nit",
+    "where": "guide terms (beta_g); composition assumptions",
+    "finding": "'only Beacon-side claims carry beta_g' understated (ce_app, ce_app_sym carry it)",
+    "resolution": "applied with a corrected text: the proposal would also have covered the key-transfer forms, which name owners but carry no beta_g; the composition version is limited to the CE-designation families it lists"
+   },
+   {
+    "id": "G5-9",
+    "severity": "nit",
+    "where": "analysis, fresh-message bullet",
+    "finding": "equality wording for an upper bound",
+    "resolution": "applied as proposed"
+   },
+   {
+    "id": "G5-10",
+    "severity": "nit",
+    "where": "this receipt, rows 3188 and 3189",
+    "finding": "production D-ct forms not recorded",
+    "resolution": "final_verification.rows_production_after"
+   },
+   {
+    "id": "G5-11",
+    "severity": "nit",
+    "where": "source scope App-b2s symbolic-only; guide event-projection paragraph",
+    "finding": "beacon.rs:492-496 should be 493-498 (the key-ID abort)",
+    "resolution": "applied; the task text was cut inside this finding, which was rebuilt from the group's verification notes and checked against beacon.rs"
+   }
+  ],
+  "consequential_change": "s2b-C4 / far-s2b-C4 symbolic-only split by row as for b2s-C4 (source-scope line 5: the L3 far-material label is discharged for exactly the two exact-far C4 targets)",
+  "task_text_note": "the task text carrying the findings was cut inside the last G5 finding (G5-11), which was rebuilt from that group's verification notes; G5's further note (no later-mode pointer in the application-secrecy entries) and the findings of G6, G7, G8 and the prose pass were not received and are not applied",
+  "rows_production_after": {
+   "602 S3-beacon": "PqxdhDeploymentProductionHeadlinesClassical.ce_kt_beacon_sym (ctGapTerm explicit), ce_kt_sum, ce_kt_close; PqxdhDeploymentProductionHeadlinesDct.ce_kt_beacon_sym_dct (epsCt; central since a2665670)",
+   "3168 A1-root": "PqxdhDeploymentProductionHeadlinesClassical.ce_kt_beacon_sym, ce_kt_sym (ctGapTerm explicit), ce_kt_server_sym, CE-designation forms; PqxdhDeploymentProductionHeadlinesDct.ce_kt_beacon_sym_dct, ce_kt_sym_dct (epsCt; central since a2665670)",
+   "636 b2s-C4": "PqxdhDeploymentProductionHeadlinesClassical.ce_or_b2s, ce_or_b2s_target, ce_or_b2s_sym, ce_or_injective_b2s; PqxdhDeploymentProductionHeadlines.ce_or_fields_b2s, ce_or_fields_b2s_target",
+   "3174 far-b2s-C4": "as b2s-C4",
+   "633 b2s-C2": "as L2-origin; replay_never and replay_owner_published none (support facts); PqxdhDeploymentProductionRegistration.record_replay_game and r1prime_owner_bound cover their use at index 0",
+   "634 b2s-C2-chosen-fs": "as b2s-C2",
+   "3183 S2b-origin": "PqxdhDeploymentProductionHeadlines.ce_or_plain_s2b_billed, ce_plain_every_s2b(_billed), ce_or_injective_s2b_full_closed_billed, ce_or_s2b_sym_closed_billed (ctGapTerm explicit), with the other forms of the column cell; PqxdhDeploymentProductionHeadlinesDct.ce_or_injective_s2b_full_closed_billed_dct, ce_or_s2b_sym_closed_billed_dct (fully closed) and the other ten s2b _dct forms (central since a2665670)",
+   "617 s2b-C4": "as S2b-origin; PqxdhDeploymentProductionHeadlinesDct.ce_or_s2b_sym_closed_billed_dct",
+   "3175 far-s2b-C4": "as S2b-origin; PqxdhDeploymentProductionHeadlinesDct.ce_or_s2b_sym_closed_billed_dct",
+   "615 s2b-C1": "as S2b-origin; for position 1 PqxdhDeploymentProductionRegistration.ce_a1 and ce_a1_injective (identity index 0), PqxdhDeploymentProductionHeadlinesClassical.ce_a1_linked (ctGapTerm explicit) and PqxdhDeploymentProductionHeadlinesDct.ce_a1_linked_dct (fully closed)",
+   "3167 A1-delayed": "PqxdhDeploymentProductionRegistration.ce_a1, a1_sum, a1_bound, ce_a1_billed, injective_bound, ce_a1_injective (index 0 only); PqxdhDeploymentProductionHeadlinesDct.ce_a1_linked_dct, sym_gap_dct (fully closed); PqxdhDeploymentProductionHeadlinesClassical.ce_a1_linked, sym_gap, beacon_gap_le (ctGapTerm explicit), identity_collision_game",
+   "3184 S2b-initial": "as A1-delayed (one cell of the column)",
+   "597 A1, 613 s2b-A1, 631 b2s-A1, 649 encoding-A1": "as A1-delayed",
+   "3188 App-b2s": "PqxdhDeploymentProductionHeadlines.ce_app_billed, ce_app_target_billed, ce_app_beacon_sym_billed, ce_app_sym_billed; PqxdhDeploymentProductionHeadlinesClassical.ce_app, ce_app_target, ce_app_beacon_sym, ce_app_sym (ctGapTerm explicit in the symbolic ones); PqxdhDeploymentProductionHeadlinesDct.ce_app_beacon_sym_billed_dct, ce_app_beacon_sym_dct, ce_app_sym_billed_dct, ce_app_sym_dct (fully closed; central since a2665670)",
+   "637 b2s-S2": "as App-b2s",
+   "3189 App-s2b": "PqxdhDeploymentProductionHeadlinesClassical.ce_app_server, ce_app_server_target, ce_app_server_sym (fully closed); either side PqxdhDeploymentProductionHeadlinesDct.ce_app_sym_billed_dct, ce_app_sym_dct (fully closed), with PqxdhDeploymentProductionHeadlines.ce_app_sym_billed and PqxdhDeploymentProductionHeadlinesClassical.ce_app_sym (ctGapTerm explicit)",
+   "618 s2b-S1": "PqxdhDeploymentProductionHeadlinesClassical.ce_app_server, ce_app_server_target, ce_app_server_sym (fully closed; now stated in the column)"
+  },
+  "rows_status_after": {
+   "633 b2s-C2": "computational (root symbolic-only; Server pin and plaintext under CE designation only; injectivity by named modes)",
+   "634 b2s-C2-chosen-fs": "computational (root symbolic-only; Server pin and plaintext under CE designation only; injectivity by named modes)",
+   "3183 S2b-origin": "computational (assigned key ID and root symbolic-only; plaintext under CE designation only, identity under symbolic eligibility only)"
+  },
+  "rows_note": "the rows[] array and follow_ups keep their recorded values; these maps give the cells after this record",
+  "lean_probe": {
+   "command": "coord.sh lean claude ce13-final-apply-probe -- env LEAN_PATH=<published LEAN_PATH of 8f4c055d> timeout 180 lean -j1 -M8000 Probe.lean (Lean 4.34.0)",
+   "exit": 0,
+   "printed_axiom_guards": 27,
+   "axioms": "propext, Classical.choice, Quot.sound only",
+   "names": "the production forms newly cited (PqxdhDeploymentProductionHeadlinesDct: ce_kt_beacon_sym_dct, ce_kt_sym_dct, ce_a1_linked_dct, sym_gap_dct, ce_app_beacon_sym_billed_dct, ce_app_beacon_sym_dct, ce_app_sym_billed_dct, ce_app_sym_dct and the twelve s2b _dct forms; PqxdhDeploymentProductionHeadlines: ce_or_fields_b2s, ce_or_fields_b2s_target, ce_plain_every_s2b, ce_plain_every_s2b_billed; PqxdhDeploymentProductionRegistration: record_replay_game, r1prime_owner_bound) and PqxdhDeploymentServerAuthInjectiveGame.injective_bound; #check of PqxdhDeploymentPublishedTuple.ReplayOwnerEvent and PqxdhDeploymentIdealHandoff.ideal_world"
+  },
+  "name_check": {
+   "method": "every backticked Module.name in the added lines of the diff resolved against the declarations of beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/*.lean at central 8f4c055d",
+   "qualified_names_checked": 48,
+   "unresolved": []
+  },
+  "documents_edits": {
+   "source_scope": "computational column: conventions (App selected-identity correspondence), index rows 633, 634, 3183, entries S3-server, S3-beacon, A1-root, L2-origin, b2s-C2, b2s-C4, S2b-origin, s2b-C1 (new eligibility bullet), s2b-C4, A1-delayed/S2b-initial, A1 group, A2-provenance, A2 group, R1', C3, App-b2s, b2s-S2, App-s2b, s2b-S1 (new eligibility and production bullet)",
+   "guide": "status paragraph (one sentence), compile argument (CE-KT World forms), terms (beta_g), event projection (two rows), event-map paragraph (beacon.rs citation), O27 row, rows table (s2b origin), name index (CE-A1 row), not-claimed list (one bullet), new section 'CE-13: final verification'",
+   "analysis": "production composition 'What is not claimed' (stale 'will follow'); CE-13 section: 'What is now computational' (intro, registration, fresh-message, key-transfer and LQ-F bullets), eligibility (pin remark), symbolic-only list (Server's own identity key), 'How the map was checked' (one sentence on this verification)",
+   "composition_assumptions": "CE-13 section basis (registration follow-up), beta_g bullet",
+   "plan_snapshot": "wholesale refresh through working-plan section 126 (this verification), header names the copied SHA-256"
+  },
+  "documents_sha256_after": {
+   "guide": "94fcf87a07bf7a158ca891945dbb2d54623da84a12e0c57940eb480778249a7a",
+   "source_scope": "ef25d3afe5b7cab5871ef05799b3637eda8c10b2bde2c83a4bc070e45a233847",
+   "composition_assumptions": "c62d8b0d85ce0a33aafdf2aca3cb9d44996f8ab95a64203f12f8a7fa0bc543c8",
+   "analysis": "c61e5f13872aa132b6aa24024268686a17aea8b3997e1b72d15b40eba44b62dd",
+   "plan_snapshot": "95666ef0822d14540e854942e11526eb0f3249a5f87da02627cd74fd95aec004"
+  },
+  "documents_unchanged": [
+   "trusted_boundary",
+   "reviewed_inventory"
+  ],
+  "plan": {
+   "working_plan_sha256": "6194d2d69e80d305f75aac9340ea101aeaffb8099ee11f7ae4943ce0f288042f",
+   "sections_through": 126,
+   "new_sections": [
+    126
+   ],
+   "snapshot_body_equals_working_plan": true
+  },
+  "inventory": "no inventory-covered file changed (no doc/ file is in reviewed-inventory.txt or read by check-inventory.sh); no recount, rehash or check-inventory needed",
+  "checks": [
+   "git diff --check (clean)",
+   "name check (48 qualified names, none unresolved)",
+   "Lean probe exit 0",
+   "snapshot body equal to the working plan through section 126",
+   "document hashes recomputed from the committed files"
+  ],
+  "not_run": [
+   "make verify",
+   "full lake build",
+   "mutation testing",
+   "nix-collect-garbage",
+   "transcript-fidelity cargo tests (no ProVerif, Rust or fidelity input changed)"
+  ],
+  "lean_change": "none"
+ }
 }
