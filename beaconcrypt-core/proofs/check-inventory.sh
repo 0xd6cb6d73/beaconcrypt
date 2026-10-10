@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1885
+	[handwritten-lean]=1886
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -38511,6 +38511,29 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem slotLossL_transported([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemTargets theorem slotLossL_transported"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemTargets\.laterSlotsTwo_of_generic$' "$selected_source_module" "PqxdhDeploymentLaterServerItemTargets dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemTargets.laterSlotsTwo_of_generic"
 require_line_count 1 '^theorem laterSlotsTwo_of_generic([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemTargets theorem laterSlotsTwo_of_generic"
+
+# LQ-F upstream unit D2: the later ideal game IL_g with the real post phase, its postNative form, the projection laterOf, the decision ceDecideL and the U-L2 target statement.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterGame.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterGame$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentIdealLaterGame root import"
+require_line_count 8 '^theorem ' "$selected_source_module" "PqxdhDeploymentIdealLaterGame theorem inventory"
+require_line_count 8 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentIdealLaterGame guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterGame\.laterWith_split$' "$selected_source_module" "PqxdhDeploymentIdealLaterGame dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterGame.laterWith_split"
+require_line_count 1 '^theorem laterWith_split([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterGame theorem laterWith_split"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterGame\.laterWith_postNative$' "$selected_source_module" "PqxdhDeploymentIdealLaterGame dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterGame.laterWith_postNative"
+require_line_count 1 '^theorem laterWith_postNative([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterGame theorem laterWith_postNative"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterGame\.realRegAt_hmac$' "$selected_source_module" "PqxdhDeploymentIdealLaterGame dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterGame.realRegAt_hmac"
+require_line_count 1 '^theorem realRegAt_hmac([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterGame theorem realRegAt_hmac"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterGame\.postNative_real$' "$selected_source_module" "PqxdhDeploymentIdealLaterGame dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterGame.postNative_real"
+require_line_count 1 '^theorem postNative_real([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterGame theorem postNative_real"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterGame\.idealReg_hmac$' "$selected_source_module" "PqxdhDeploymentIdealLaterGame dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterGame.idealReg_hmac"
+require_line_count 1 '^theorem idealReg_hmac([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterGame theorem idealReg_hmac"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterGame\.postNative_ideal$' "$selected_source_module" "PqxdhDeploymentIdealLaterGame dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterGame.postNative_ideal"
+require_line_count 1 '^theorem postNative_ideal([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterGame theorem postNative_ideal"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterGame\.idealLater_postNative$' "$selected_source_module" "PqxdhDeploymentIdealLaterGame dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterGame.idealLater_postNative"
+require_line_count 1 '^theorem idealLater_postNative([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterGame theorem idealLater_postNative"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterGame\.laterOf_real$' "$selected_source_module" "PqxdhDeploymentIdealLaterGame dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterGame.laterOf_real"
+require_line_count 1 '^theorem laterOf_real([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterGame theorem laterOf_real"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
