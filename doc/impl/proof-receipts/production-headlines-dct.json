@@ -1,16 +1,16 @@
 {
- "kind": "items 3+7 production composition follow-up: production forms of the CE-12 D-ct closed headlines (PqxdhDeploymentProductionHeadlinesDct), review fix pass",
+ "kind": "items 3+7 production composition follow-up: production forms of the CE-12 D-ct closed headlines (PqxdhDeploymentProductionHeadlinesDct), review fix pass and confirming review",
  "author": "Claude (item 7 lane adopted from Codex, owner decision #503; item 3 is Claude's)",
  "provenance": "new work; no Codex WIP exists for this module (nothing adapted from Codex WIP)",
  "sibling_of": "doc/impl/proof-receipts/production-headlines.json",
  "branch": "codex/deployment-boundary-production",
  "basis_central": "529e2c8bf414f680ac57b159365280aab2e2f3f2",
  "basis_note": "central (origin/codex/full-proof-composition, git ls-remote, the central worktree and coord.sh leanpath current) is still 529e2c8b; no merge",
- "state": "built (fa57acd9 Lean, 5b288801 documents); reviewed (three independent reviews of 5b288801); fixed (0543c7e6 Lean, a module docstring line; documents in the commit that adds this version of the receipt); not confirmed; not integrated",
+ "state": "built (fa57acd9 Lean, 5b288801 documents); reviewed (three independent reviews of 5b288801); fixed (0543c7e6 Lean, a module docstring line; 02cec0fd documents); confirmed (confirming review of 5b288801..02cec0fd: every finding F1-F12 resolved; its four optional documentation nits taken by the commit that adds this version of the receipt); not integrated at that commit",
  "lean_commit": "fa57acd91147d72482ef4f0e2086e6e8c6f1d587",
  "documents_commit": "5b288801cf14edef352300d7635b14aee658f429",
  "lean_fix_commit": "0543c7e6ef415cc5fc55766320f1f1d3167f3ee1",
- "fix_pass_documents_commit": "the commit that adds this version of the receipt (analysis entry, guide edits and new section, ledger status note, this receipt)",
+ "fix_pass_documents_commit": "02cec0fda7f6f880bde7254c77cb7c900100d56c",
  "module": {
   "name": "BeaconcryptCore.Computational.PqxdhDeploymentProductionHeadlinesDct",
   "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentProductionHeadlinesDct.lean",
@@ -127,6 +127,23 @@
   "lqf_source_game_occurrences": 28,
   "lqf_forms": 16,
   "keep_ctCollTerm": 15,
+  "keep_ctCollTerm_forms": [
+   "ce_or_s2b_sym_dct",
+   "ce_uks_sym_dct",
+   "symbolic_lor_dct",
+   "symbolic_lor_bound_dct",
+   "ce_or_injective_s2b_dct",
+   "ce_or_injective_s2b_full_dct",
+   "ce_or_s2b_sym_billed_dct",
+   "ce_uks_sym_billed_dct",
+   "symbolic_lor_bound_billed_dct",
+   "ce_or_injective_s2b_billed_dct",
+   "ce_or_injective_s2b_full_billed_dct",
+   "symbolic_lor_later_dct",
+   "symbolic_lor_later_bound_dct",
+   "symbolic_lor_later_bound_billed_dct",
+   "symbolic_lor_later_bound_billed_dct_full"
+  ],
   "no_explicit_experiment_term_among_46": 31,
   "bounds_of_the_31_without_explicit_term": {
    "note": "no_explicit_experiment_term_among_46 counts the closed forms without ctGapTerm, ctCollTerm or any other CE/LQ-F game probability; of these 31, 27 have bounds made only of advantages of attackers built by CE-12 reductions and stated statistical terms, and 4 keep, as their frozen sources, the per-target probability of the event in CE's ideal key-transfer game at codec' and route' (finding F1)",
@@ -136,31 +153,15 @@
     "ce_kt_beacon_sym_dct": "PqxdhDeploymentIdealSteps.idealGame",
     "ce_kt_later_sym_dct": "PqxdhDeploymentIdealLaterGame.idealLaterGame",
     "ce_kt_beacon_later_sym_dct": "PqxdhDeploymentIdealLaterGame.idealLaterGame"
-   },
-   "probability_block_heads": {
-    "PqxdhBoundaryDeployment.sourceGame": 42,
-    "PqxdhDeploymentIdealSteps.idealGame": 2,
-    "PqxdhBoundaryDeploymentLater.laterSourceGame": 28,
-    "PqxdhDeploymentIdealLaterGame.idealLaterGame": 2
-   },
-   "keep_ctCollTerm": [
-    "ce_or_s2b_sym_dct",
-    "ce_uks_sym_dct",
-    "symbolic_lor_dct",
-    "symbolic_lor_bound_dct",
-    "ce_or_injective_s2b_dct",
-    "ce_or_injective_s2b_full_dct",
-    "ce_or_s2b_sym_billed_dct",
-    "ce_uks_sym_billed_dct",
-    "symbolic_lor_bound_billed_dct",
-    "ce_or_injective_s2b_billed_dct",
-    "ce_or_injective_s2b_full_billed_dct",
-    "symbolic_lor_later_dct",
-    "symbolic_lor_later_bound_dct",
-    "symbolic_lor_later_bound_billed_dct",
-    "symbolic_lor_later_bound_billed_dct_full"
-   ]
-  }
+   }
+  },
+  "probability_block_heads": {
+   "PqxdhBoundaryDeployment.sourceGame": 42,
+   "PqxdhDeploymentIdealSteps.idealGame": 2,
+   "PqxdhBoundaryDeploymentLater.laterSourceGame": 28,
+   "PqxdhDeploymentIdealLaterGame.idealLaterGame": 2
+  },
+  "probability_block_heads_note": "occurrences of each game head in the probability blocks of all 48 statements (moved here from bounds_of_the_31_without_explicit_term on the confirming review's nit; the counts were always over all 48 statements)"
  },
  "guard_profile": "every theorem exactly one #guard_msgs over #print axioms listing propext, Classical.choice, Quot.sound",
  "hygiene": {
@@ -364,7 +365,7 @@
     "log": "/tmp/bc-arc-scratch/item7/prod-dct/fix1/build/dev/PqxdhDeploymentProductionHeadlinesDct-scan-livegateprobe-v7-1.log",
     "log_sha256": "ea62f2e7287e0263ca6e483cdd99894b7a76ca93ccb612c2c0573162d28aabec",
     "change": "the site gate throwError turned into a logInfo line; nothing else changed (finding F9)",
-    "result": "all 11 rule classes live; all 21 witness targets hit their own class; allowance control ok; site gate controls ok; negative control clean; 98 forbidden references; exactly one error, \"forbidden direct reference\""
+    "result": "all 11 rule classes live; all 21 witness targets hit their own class; allowance control ok; site gate controls ok; negative control clean; 98 forbidden references from the module's declarations (152 with the liveness witnesses); exactly one error, \"forbidden direct reference\""
    }
   },
   "differential": {
@@ -412,9 +413,46 @@
    "F11": "guide Checks: \"no code line over 120 columns apart from five #print axioms lines whose fully qualified names are longer\"; hygiene.long_print_axioms_lines; note on the published hygiene bullet (one 122-column #print line in the Later module)",
    "F12": "item7/NOTES.md pointer corrected (the step's notes are in item7/NOTES.md); the second registry slip of the build session recorded in protocol"
   },
-  "analysis_shape": "two paragraphs appended to the production section without a heading (the brief: \"a short paragraph appended to the production section's end-of-file area, at Claude's anchor\"); one paragraph could not carry both the claim and the corrected term split"
+  "analysis_shape": "two paragraphs appended to the production section without a heading (the brief: \"a short paragraph appended to the production section's end-of-file area, at Claude's anchor\"); one paragraph could not carry both the claim and the corrected term split",
+  "confirming_review": {
+   "kind": "confirming review of the review fix pass (fresh-context Claude sub-agent, read only)",
+   "reviewed_range": "5b288801cf14edef352300d7635b14aee658f429..02cec0fda7f6f880bde7254c77cb7c900100d56c",
+   "scratch": "/tmp/bc-arc-scratch/item7/prod-dct/confirm",
+   "result": "every finding from the reviews of 5b288801 (F1-F12) is resolved at 02cec0fd; no statement is weaker; the guards match the theorems; the scans are clean; the receipt matches HEAD",
+   "record": "/tmp/bc-arc-scratch/item7/prod-dct/int/docs/confirming-review-relayed.json",
+   "record_sha256": "e3e5dfb8712cfbd8e444711aff6ab9e131e12aa2b3421a910ab1b29c33d8abb8",
+   "record_note": "no verdict file was written; the result and nits were relayed by the workflow orchestrator and are transcribed verbatim",
+   "nits": [
+    {
+     "n": 1,
+     "title": "optional: \"with its proved bills where the form is billed\" is loose for three of the 27 (their bills do not cover epsCt's attackers)",
+     "disposition": "taken in the analysis entry: \"(in the three later-quantum billed `_dct` forms among them, the bills of `epsCt`'s attackers are stated by their `_full` siblings)\"; checked first: ce_app_later_sym_billed_dct, ce_app_beacon_later_sym_billed_dct and symbolic_lor_later_bound_closed_billed_dct carry LaterTargetBills only, their _full siblings add TargetBills, the classical billed forms carry TargetBills"
+    },
+    {
+     "n": 2,
+     "title": "optional: the shortened checks sentence drops the closure-lemma qualifier on where inherited scan references come from",
+     "disposition": "taken in the analysis entry: \"(for the two closure statements, also the definition of the gap term)\""
+    },
+    {
+     "n": 3,
+     "title": "optional, receipt only: all-48 block counts and the 15 ctCollTerm forms nested under bounds_of_the_31_without_explicit_term",
+     "disposition": "taken: production_forms.probability_block_heads (with probability_block_heads_note) and production_forms.keep_ctCollTerm_forms (production_forms.keep_ctCollTerm keeps the count 15)"
+    },
+    {
+     "n": 4,
+     "title": "optional: the gate-probe result says 98 forbidden references; the probe log's total is 152",
+     "disposition": "taken in the guide scans bullet and scans.direct_scan_v7.gate_bypass_probe.result: \"98 forbidden references from the module's declarations (152 with the liveness witnesses)\""
+    }
+   ],
+   "also_recorded": "guide: status lines, open point removed, the fix-pass checks paragraph's receipt pointer corrected (the receipt has no section review_fix_pass; found in this pass), new section \"D-ct follow-up: confirming review\"; analysis entry: review status sentence; ledger: status note of the D-ct follow-up paragraph"
+  }
  },
  "documents_sha256": {
+  "doc/impl/production-headlines.md": "ce6d7a60367bdd89b9da6eaddf4d5efdb8595126cb79b90b81cfcd004210f98a",
+  "doc/impl/production-boundary-ledger.md": "5c5d9ac5a61db9ea886ad126b6787956eab24e2568bc756cb05557949f23dbab",
+  "doc/formal-verification-analysis.md": "038460ea3adaec5f536517682a48ea57b30d232d4e3017fce35f900897ea0f32"
+ },
+ "documents_fix_pass_sha256": {
   "doc/impl/production-headlines.md": "ba7d476354adaaffa0f281cc107b0370b6f716a1e003616b375133011fec5514",
   "doc/impl/production-boundary-ledger.md": "ad5e8c1f7aad76553ac09bacde74559acc79c8fabbca19c25208125c76629846",
   "doc/formal-verification-analysis.md": "cdf2403d36c8287dc98fca93e59e76e35994947875b24226620b31bc7b910810"
@@ -462,11 +500,22 @@
   "bounds made only of attacker advantages and statistical terms for ce_kt_sym_dct, ce_kt_beacon_sym_dct, ce_kt_later_sym_dct and ce_kt_beacon_later_sym_dct (they keep the ideal key-transfer game probability, as their sources)"
  ],
  "remaining": [
-  "confirming review of the fix pass",
   "integration into central (PROTOCOL section 6)",
   "item 8 (owner)"
  ],
- "protocol": "all Lean checks through coord.sh lean with one in flight; fix pass: item7/prod-dct/fix1 and its subdirectories, the olean prefix and the leanpath registered before creation; mail only peeked; no make verify, full lake build, mutation testing or nix-collect-garbage; no deletion. Build session slips (item7/NOTES.md): probe/rederive registered right after its creation; after the documents commit 5b288801 a stray `registry add ... probe/rederive active \"x\"` overwrote that row's note, re-added with the proper note right after (row count unchanged), which the first-pass receipt could not record",
+ "protocol": "all Lean checks through coord.sh lean with one in flight; fix pass: item7/prod-dct/fix1 and its subdirectories, the olean prefix and the leanpath registered before creation; mail only peeked; no make verify, full lake build, mutation testing or nix-collect-garbage; no deletion. Build session slips (item7/NOTES.md): probe/rederive registered right after its creation; after the documents commit 5b288801 a stray `registry add ... probe/rederive active \"x\"` overwrote that row's note, re-added with the proper note right after (row count unchanged), which the first-pass receipt could not record; confirming-review nits and integration: item7/prod-dct/int and its subdirectories, its olean prefix and leanpath registered before creation",
+ "receipt_scripts_confirm": {
+  "nits_edits": "/tmp/bc-arc-scratch/item7/prod-dct/int/scripts/nits_edits.py",
+  "nits_edits_sha256": "89e24f2851bd1f949b0baa3267701faf07bff353429fa0131693ab418fbd331b",
+  "receipt_confirm": "/tmp/bc-arc-scratch/item7/prod-dct/int/scripts/receipt_confirm.py",
+  "receipt_confirm_sha256": "5c8d0b875cd31fd0bbef7e193a32872b187b5f3cce1ff273088ccbeefb3520b4",
+  "befores": {
+   "formal-verification-analysis.md.before-nits": "cdf2403d36c8287dc98fca93e59e76e35994947875b24226620b31bc7b910810",
+   "production-boundary-ledger.md.before-nits": "ad5e8c1f7aad76553ac09bacde74559acc79c8fabbca19c25208125c76629846",
+   "production-headlines-dct.json.before-nits": "eb9a223dd94efca990246732c8168bc1afa5f2a7b43b0a443a5831bf83e0ca93",
+   "production-headlines.md.before-nits": "ba7d476354adaaffa0f281cc107b0370b6f716a1e003616b375133011fec5514"
+  }
+ },
  "first_pass": {
   "kind": "items 3+7 production composition follow-up: production forms of the CE-12 D-ct closed headlines (PqxdhDeploymentProductionHeadlinesDct), build session 1",
   "author": "Claude (item 7 lane adopted from Codex, owner decision #503; item 3 is Claude's)",
