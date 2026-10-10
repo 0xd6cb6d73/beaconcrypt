@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1884
+	[handwritten-lean]=1885
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -38480,6 +38480,53 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem ideal_world_view_slots([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealHandoff theorem ideal_world_view_slots"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealHandoff\.ideal_world_view_ct$' "$selected_source_module" "PqxdhDeploymentIdealHandoff dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealHandoff.ideal_world_view_ct"
 require_line_count 1 '^theorem ideal_world_view_ct([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealHandoff theorem ideal_world_view_ct"
+
+# CE-12 P1: the per-target chain of the headlines (C1-C7 in U7's names, the slot conjunction, the record lifts at frame_idealD, the exact split).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineChain.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineChain$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentHeadlineChain root import"
+require_line_count 20 '^theorem ' "$selected_source_module" "PqxdhDeploymentHeadlineChain theorem inventory"
+require_line_count 20 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentHeadlineChain guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineChain\.idealSlots_server$' "$selected_source_module" "PqxdhDeploymentHeadlineChain dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineChain.idealSlots_server"
+require_line_count 1 '^theorem idealSlots_server([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineChain theorem idealSlots_server"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineChain\.le_add_of_ofReal_abs$' "$selected_source_module" "PqxdhDeploymentHeadlineChain dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineChain.le_add_of_ofReal_abs"
+require_line_count 1 '^theorem le_add_of_ofReal_abs([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineChain theorem le_add_of_ofReal_abs"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineChain\.le_add_of_ofReal_abs_symm$' "$selected_source_module" "PqxdhDeploymentHeadlineChain dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineChain.le_add_of_ofReal_abs_symm"
+require_line_count 1 '^theorem le_add_of_ofReal_abs_symm([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineChain theorem le_add_of_ofReal_abs_symm"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineChain\.chance_ne_top$' "$selected_source_module" "PqxdhDeploymentHeadlineChain dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineChain.chance_ne_top"
+require_line_count 1 '^theorem chance_ne_top([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineChain theorem chance_ne_top"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineChain\.chain_slot$' "$selected_source_module" "PqxdhDeploymentHeadlineChain dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineChain.chain_slot"
+require_line_count 1 '^theorem chain_slot([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineChain theorem chain_slot"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineChain\.chain_slot_close$' "$selected_source_module" "PqxdhDeploymentHeadlineChain dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineChain.chain_slot_close"
+require_line_count 1 '^theorem chain_slot_close([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineChain theorem chain_slot_close"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineChain\.chain_ideal$' "$selected_source_module" "PqxdhDeploymentHeadlineChain dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineChain.chain_ideal"
+require_line_count 1 '^theorem chain_ideal([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineChain theorem chain_ideal"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineChain\.chain_ideal_close$' "$selected_source_module" "PqxdhDeploymentHeadlineChain dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineChain.chain_ideal_close"
+require_line_count 1 '^theorem chain_ideal_close([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineChain theorem chain_ideal_close"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineChain\.chain_view$' "$selected_source_module" "PqxdhDeploymentHeadlineChain dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineChain.chain_view"
+require_line_count 1 '^theorem chain_view([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineChain theorem chain_view"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineChain\.chain_close$' "$selected_source_module" "PqxdhDeploymentHeadlineChain dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineChain.chain_close"
+require_line_count 1 '^theorem chain_close([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineChain theorem chain_close"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineChain\.chain_slots$' "$selected_source_module" "PqxdhDeploymentHeadlineChain dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineChain.chain_slots"
+require_line_count 1 '^theorem chain_slots([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineChain theorem chain_slots"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineChain\.real_slots_server$' "$selected_source_module" "PqxdhDeploymentHeadlineChain dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineChain.real_slots_server"
+require_line_count 1 '^theorem real_slots_server([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineChain theorem real_slots_server"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineChain\.chain_server$' "$selected_source_module" "PqxdhDeploymentHeadlineChain dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineChain.chain_server"
+require_line_count 1 '^theorem chain_server([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineChain theorem chain_server"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineChain\.anomaly_view$' "$selected_source_module" "PqxdhDeploymentHeadlineChain dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineChain.anomaly_view"
+require_line_count 1 '^theorem anomaly_view([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineChain theorem anomaly_view"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineChain\.view_unslotted$' "$selected_source_module" "PqxdhDeploymentHeadlineChain dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineChain.view_unslotted"
+require_line_count 1 '^theorem view_unslotted([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineChain theorem view_unslotted"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineChain\.auth_close$' "$selected_source_module" "PqxdhDeploymentHeadlineChain dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineChain.auth_close"
+require_line_count 1 '^theorem auth_close([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineChain theorem auth_close"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineChain\.auth_le$' "$selected_source_module" "PqxdhDeploymentHeadlineChain dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineChain.auth_le"
+require_line_count 1 '^theorem auth_le([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineChain theorem auth_le"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineChain\.records_close$' "$selected_source_module" "PqxdhDeploymentHeadlineChain dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineChain.records_close"
+require_line_count 1 '^theorem records_close([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineChain theorem records_close"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineChain\.records_le$' "$selected_source_module" "PqxdhDeploymentHeadlineChain dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineChain.records_le"
+require_line_count 1 '^theorem records_le([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineChain theorem records_le"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineChain\.split_named$' "$selected_source_module" "PqxdhDeploymentHeadlineChain dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineChain.split_named"
+require_line_count 1 '^theorem split_named([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineChain theorem split_named"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
