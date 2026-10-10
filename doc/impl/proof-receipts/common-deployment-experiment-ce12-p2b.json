@@ -1,5 +1,5 @@
 {
- "date": "2026-10-10T12:11:29.017907+00:00",
+ "date": "2026-10-10T12:16:19.645919+00:00",
  "scope": "CE-12 P2b (track ce12/p2b), steps 1 to 3. Step 1: the rest of the bills of design-v2 section 9 (splitStep_uniform, guessBill and ptc_bills, HeadlineBills with headline_bills, the billed forms of the fifteen frozen headline forms with beta_g and of anomaly_beta). Step 2: design-v2 section 7.4's ct_collision_game (ctCollTerm <= qCreate * C(qAccept, 2) * pairCollision), the closed bound epsilon_ctcoll through pair_cp_le (ct_coll_le), and the closed forms of the six frozen headline forms with ctCollTerm and of the five billed forms of step 1 among them. Step 3 (after the merge of central df7727c3 at 5a9213dc): design-v2 section 7.7's AG, AgreementStatement in idealAuth (agreement_statement, no premise) with its three ingredients (seal-context invariant ctxRun_sealAd, receive-side AD retention ctxRun_entryAd, injectivity associatedBytes_inj) and the identity forms; the lift of AG to the common deployment experiment (section 7.6 b2s Server-pin and mode-O plaintext rows) is not built (remainder in open_points). Not reviewed; not integrated.",
  "basis": {
   "start": "f0dc46bb6473ab37ecf48e623f1ccb192bd6b3af",
@@ -12,7 +12,7 @@
    }
   ],
   "central_at_receipt": "e0b8810bb048499ed8fbcadba5fe8a560f3ad083",
-  "central_note": "central moved during step 2 (f0dc46bb -> c72db84a LQ-F unit A2 -> c27b4533 item 7 increment A) and then to df7727c3 (LQ-F unit B); step 3 merged df7727c3 at 5a9213dc before its modules",
+  "central_note": "central moved during step 2 (f0dc46bb -> c72db84a LQ-F unit A2 -> c27b4533 item 7 increment A) and then to df7727c3 (LQ-F unit B); step 3 merged df7727c3 at 5a9213dc before its modules; central moved again during step 3 to e0b8810b (item 7 increment I3, messages 514/515), not merged into this topic; a trial merge (git merge-tree) conflicts only at the append anchors (check-inventory.sh, the root, reviewed-inventory.txt, the analysis)",
   "published_leanpath": {
    "path": "/tmp/bc-coord/leanpaths/f0dc46bb6473ab37ecf48e623f1ccb192bd6b3af.leanpath",
    "sha256": "8b2da583f6e190857e288154143ba371fd3067ff81bf7466e95e7954e1db8f84"
@@ -25,7 +25,7 @@
  "topic": {
   "branch": "codex/deployment-ce12",
   "worktree": "/tmp/beaconcrypt-deployment-ce12",
-  "head_at_receipt": "1428752290867a6df232959189bfe5ab576a7fab",
+  "head_at_receipt": "f8a20c85058e734847362a3bee0ef9e421e702a2",
   "note": "the documentation commit that adds this receipt follows head_at_receipt; it changes no Lean file"
  },
  "plan": {
@@ -109,6 +109,10 @@
   {
    "commit": "1428752290867a6df232959189bfe5ab576a7fab",
    "subject": "Prove AG's AgreementStatement in idealAuth (CE-12 P2b step 3)"
+  },
+  {
+   "commit": "f8a20c85058e734847362a3bee0ef9e421e702a2",
+   "subject": "Document CE-12 P2b step 3: AG in idealAuth"
   }
  ],
  "commit_message_corrections": [
@@ -1137,7 +1141,8 @@
   "step 3: AG stated on the full ideal-world outcome (control and private dictionaries): the record-lift view and the CE observation carry no handle AD or seal plaintext",
   "step 3: the design's public AD lemma realized as handleAd (AD from the install data in the source control) with its stability AdKept; reading the install data from the CE transcript belongs to the CE lift (remainder)",
   "step 3: the lift of AG to the common deployment experiment (section 7.6 b2s Server-pin and mode-O plaintext rows) is not built; remainder R1 and R2 in open_points",
-  "step 3: the commit of PqxdhDeploymentHeadlineAgreeSeal was made by hand after the helper stopped on a relative message path (same content; helper fixed)"
+  "step 3: the commit of PqxdhDeploymentHeadlineAgreeSeal was made by hand after the helper stopped on a relative message path (same content; helper fixed)",
+  "step 3: the explicit registry entries of the three module names were added after the Lean commits; before creation only coord.sh registry owner was checked (prefix PqxdhDeployment* is Claude's)"
  ],
  "contracts_used": {
   "new_contracts": [],
@@ -1371,6 +1376,17 @@
     "log_sha256": "cdf53c35e41b1407290b6d1dd2b37c40a495c8f2efdeec5925cac9b136ea2cc6",
     "note": ""
    },
+   "clean-head3": {
+    "status": 0,
+    "commit": "f8a20c85058e734847362a3bee0ef9e421e702a2",
+    "start": "2026-10-10T12:13:40Z",
+    "end": "2026-10-10T12:15:31Z",
+    "dirty_before": 0,
+    "dirty_after": 0,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/logs/inventory-clean-head3.log",
+    "log_sha256": "abddcd8e88741aceb14c4c7f587376835c03fae75ffe44c9f35f3b3855b3ef0a",
+    "note": ""
+   },
    "ctclosed": {
     "status": 0,
     "commit": "1483b62f605dade62a7656bdefc5fcf034474d96",
@@ -1459,6 +1475,17 @@
     "log_sha256": "1cbf745a830275c6ff21e2fc6010f705ebe82427767ca2d7bc6642cbf6694390",
     "note": ""
    },
+   "docs4": {
+    "status": 0,
+    "commit": "1428752290867a6df232959189bfe5ab576a7fab",
+    "start": "2026-10-10T12:11:35Z",
+    "end": "2026-10-10T12:13:25Z",
+    "dirty_before": 3,
+    "dirty_after": 3,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/logs/inventory-docs4.log",
+    "log_sha256": "523ef1d741c4f882a6ce115b56690fa7000ad5756394f856b4d8f38187df432a",
+    "note": ""
+   },
    "gated": {
     "status": 0,
     "commit": "f147bf69e764627a5ca23975f7d1908cc240aeee",
@@ -1507,7 +1534,7 @@
   "guard_scan": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/logs/scan-3.json",
   "guard_scan_steps_1_2": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/logs/scan-2.json",
   "git_diff_check": {
-   "range": "f0dc46bb6473ab37ecf48e623f1ccb192bd6b3af..1428752290867a6df232959189bfe5ab576a7fab",
+   "range": "f0dc46bb6473ab37ecf48e623f1ccb192bd6b3af..f8a20c85058e734847362a3bee0ef9e421e702a2",
    "exit": 0
   }
  },
