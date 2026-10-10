@@ -1,14 +1,14 @@
 {
  "stage": "PB-01: generated Server birth and admitted Beacon creation (item 7 increment A, module 5 of 5)",
  "topic": "codex/deployment-boundary-a",
- "parent_commit": "b549973cd59725bd4243bf5eb0d095e5315927d5",
+ "parent_commit": "67b3e2b4334cf8064953cd27b6baa599d29cd968",
  "central_basis": "f0dc46bb6473ab37ecf48e623f1ccb192bd6b3af",
- "state": "checked at central f0dc46bb on the topic branch; both D-6 reviews of b549973c APPROVE_WITH_NITS, all findings fixed in this revision, confirming review pending; not integrated",
+ "state": "checked at central f0dc46bb on the topic branch; both D-6 reviews of b549973c APPROVE_WITH_NITS, all findings fixed in 9b3676e4; confirming review of 67b3e2b4 APPROVE_WITH_NITS, its three remarks addressed in the commit that records it (scan spec version 3 with both scans re-run, survey PB-14 wording; documentation and receipts only, no Lean change); not integrated at the record commit",
  "module": "PqxdhBoundaryBirth",
  "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryBirth.lean",
  "source_sha256": "20e6ce97aef9cf96f53413c2113bdd55b18d3c6b4ca5b25cd4fc9f3b5274a9c4",
  "guide": "doc/impl/production-boundary-birth.md",
- "guide_sha256": "565369541a42c35f664ab54fd7663a6fac3ea69b036abc60b806d5a37de616c7",
+ "guide_sha256": "400895370911c3ca7c7e8aad7d185778ea30076714323be6af256f6466b987f6",
  "guarded_statements": 8,
  "theorems": [
   "server_source",
@@ -82,27 +82,36 @@
   "statement_scan_clean": {
    "exit": 0,
    "expected": 0,
-   "json": "/tmp/bc-arc-scratch/item7/a/fix1/scans/PqxdhBoundaryBirth-statement-clean.json",
-   "json_sha256": "43e146d920c08fa806dba6b1c22ab9667fc5c305aa2b9b5ae5312b3b127fca7a",
+   "json": "/tmp/bc-arc-scratch/item7/a/nits/scans/PqxdhBoundaryBirth-statement-clean.json",
+   "json_sha256": "583555a97996dc728bfb803c0b902da77fe9657e4dfdb5bb1847e3e7327d9dda",
    "declarations": 10,
    "hits": 0
   },
   "statement_scan_live": {
    "exit": 1,
    "expected": 1,
-   "json": "/tmp/bc-arc-scratch/item7/a/fix1/scans/PqxdhBoundaryBirth-statement-live.json",
-   "json_sha256": "ca39c2c96a88f8b36af5bb91e887693d7e17ab5b393d7b453efd8dc46a4ce15b",
-   "hits": 21,
+   "json": "/tmp/bc-arc-scratch/item7/a/nits/scans/PqxdhBoundaryBirth-statement-live.json",
+   "json_sha256": "f187a75bd1b9884ebd77d2106d8e77afde881f5941d1b3bff448c5289d73e76a",
+   "hits": 25,
    "live_classes": 11,
    "dead_classes": [],
-   "negative_control_hits": 0
+   "negative_control_hits": 0,
+   "liveness_tokens": 25,
+   "missed_tokens": [],
+   "allowance_control": {
+    "allowance_applies": false,
+    "sibling_token_hits_pb_namespace": true,
+    "crypto_token_excused": false,
+    "crypto_token_pb_namespace_hit": true,
+    "ok": true
+   }
   },
   "direct_scan_clean": {
    "wrapper_exit": 0,
    "expected_lean_exit": 0,
-   "fixture": "/tmp/bc-arc-scratch/item7/a/fix1/scans/PqxdhBoundaryBirth-scan-clean.lean",
-   "fixture_sha256": "54eda64fa50d059ccfcc6caf14fd060e2eb78705cc7ad50bef28f7121a194f25",
-   "log": "/tmp/bc-arc-scratch/item7/a/fix1/logs/dev/PqxdhBoundaryBirth-scan-clean-1.log",
+   "fixture": "/tmp/bc-arc-scratch/item7/a/nits/scans/PqxdhBoundaryBirth-scan-clean.lean",
+   "fixture_sha256": "dea97cea79a72f8776df3cddd311035724322240bbaace915e6a457458c903e8",
+   "log": "/tmp/bc-arc-scratch/item7/a/nits/logs/dev/PqxdhBoundaryBirth-scan-clean-1.log",
    "log_sha256": "6de9ca0b530eb9cab382662d7f7e0fd16cdabb6587cbe75054668edacf7ce140",
    "lean_exit": 0,
    "module_declarations": 14,
@@ -112,51 +121,88 @@
    "liveness_witnesses": null,
    "rule_classes_live": null,
    "rule_classes": null,
+   "witness_targets": null,
+   "witness_targets_missed": null,
    "negative_control_hits": null,
-   "total_forbidden": null
+   "total_forbidden": null,
+   "allowance_control": null
   },
   "direct_scan_live": {
    "wrapper_exit": 0,
    "expected_lean_exit": 1,
-   "fixture": "/tmp/bc-arc-scratch/item7/a/fix1/scans/PqxdhBoundaryBirth-scan-live.lean",
-   "fixture_sha256": "b6a043342b7556708dfbade1b94a27998fc57079293b4b3bdc6f209b9684d7c0",
-   "log": "/tmp/bc-arc-scratch/item7/a/fix1/logs/dev/PqxdhBoundaryBirth-scan-live-1.log",
-   "log_sha256": "b1b995ae60b9f4eec15407f5ad24b834c070a498e1e693a6d8272fb9ad55cc8c",
+   "fixture": "/tmp/bc-arc-scratch/item7/a/nits/scans/PqxdhBoundaryBirth-scan-live.lean",
+   "fixture_sha256": "8823405e5374c3a17455c71a1e68bf7267fa482beff970492fdde8dbe725b30f",
+   "log": "/tmp/bc-arc-scratch/item7/a/nits/logs/dev/PqxdhBoundaryBirth-scan-live-1.log",
+   "log_sha256": "29bbe136439dc287e49383103ec019768b1464d5d457062dc20beff32f4c5759",
    "lean_exit": 1,
    "module_declarations": 14,
    "outside_module_namespace": 1,
    "module_forbidden": 0,
    "allowed_crypto": 0,
-   "liveness_witnesses": 18,
+   "liveness_witnesses": 21,
    "rule_classes_live": 11,
    "rule_classes": 11,
+   "witness_targets": 21,
+   "witness_targets_missed": 0,
    "negative_control_hits": 0,
-   "total_forbidden": 49
-  },
-  "scan_spec": {
-   "path": "/tmp/bc-arc-scratch/item7/a/fix1/scans/scan-spec.json",
-   "sha256": "8392e6614f27e9500f9bd070661ac50a5082e79d3e44c26b191c8c2b16d496bd",
-   "note": "version 2 after the D-6 hygiene review: Codex scan-spec 5b817691 plus pb_parts actual_extracted and evolving_actual_extracted (B9/B11 extracted forms); eleven explicit rule classes; join_later, c6_, finishErased, PqxdhRecordLiftLater and PqxdhRecordLiftWorldCompiler as name-component prefixes; CE idealGame as the full-name prefix BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps.idealGame (the dead entry idealGame° removed); the C7 erasure statements PqxdhDeploymentFinishErasure.erase_* and PqxdhDeploymentHiddenKernels.finish_erase* as full-name prefixes; the one-name .crypto allowance applies only to the modules listed in functional_field_allowlist_modules (D-1)",
-   "superseded": {
-    "path": "/tmp/bc-arc-scratch/item7/a/scans/scan-spec.json",
-    "sha256": "6c72b02503316b7699becd206706e0fafde58bff9574b18955b4f10c9cf8be36",
-    "note": "version 1, used for the b549973c receipts; exact-part matching"
+   "total_forbidden": 54,
+   "allowance_control": {
+    "allowance_applies": false,
+    "sibling_target_pb_namespace": true,
+    "sibling_crypto_excused": false,
+    "sibling_crypto_pb_namespace_hit": true,
+    "other_witnesses_excused_crypto": 0
    }
   },
+  "scan_spec": {
+   "path": "/tmp/bc-arc-scratch/item7/a/nits/scans/scan-spec.json",
+   "sha256": "f9a9e443ce062af9c49a84166969ac02b77a5cca2c3729a64e4a59e273c458d6",
+   "note": "version 3 after the confirming review of 67b3e2b4: version 2 (Codex scan-spec 5b817691 plus pb_parts actual_extracted and evolving_actual_extracted, the B9/B11 extracted forms; eleven explicit rule classes; join_later, c6_, finishErased, PqxdhRecordLiftLater and PqxdhRecordLiftWorldCompiler as name-component prefixes; the C7 erasure statements PqxdhDeploymentFinishErasure.erase_* and PqxdhDeploymentHiddenKernels.finish_erase* as full-name prefixes) plus the full-name prefixes BeaconcryptCore.Computational.PqxdhDeploymentIdealErase. and BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps.idealCoreErased for the plan's CE.idealGame°, the C7 ideal-registration erasure (idealGameErased, erase_ideal, erase_idealGame, idealPair, idealPair_erased, idealCoreErased); BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps.idealGame is the un-erased CE.idealGame, kept as a conservative extra; entry-specific liveness witnesses (@PqxdhDeploymentIdealErase.idealGameErased, @PqxdhDeploymentIdealSteps.idealCoreErased), every witness held to its own target, and the restored allowance-sibling control; the one-name .crypto allowance applies only to the modules listed in functional_field_allowlist_modules (D-1)",
+   "superseded": [
+    {
+     "path": "/tmp/bc-arc-scratch/item7/a/fix1/scans/scan-spec.json",
+     "sha256": "8392e6614f27e9500f9bd070661ac50a5082e79d3e44c26b191c8c2b16d496bd",
+     "results": {
+      "path": "/tmp/bc-arc-scratch/item7/a/fix1/logs/final.jsonl",
+      "sha256": "c2f3a220ddde5ce914249fad5f34474ac8195d8b9fcbb53a9d756ecbda2dd465"
+     },
+     "note": "version 2, used for the 9b3676e4/67b3e2b4 receipts; it mapped the plan's CE.idealGame° to the un-erased PqxdhDeploymentIdealSteps.idealGame, so the erased game CE.idealGame° (PqxdhDeploymentIdealErase.idealGameErased) and the rest of the C7 ideal-registration erasure were not scanned, and its live fixture had no allowance-sibling witness (confirming review remarks 1 and 2)"
+    },
+    {
+     "path": "/tmp/bc-arc-scratch/item7/a/scans/scan-spec.json",
+     "sha256": "6c72b02503316b7699becd206706e0fafde58bff9574b18955b4f10c9cf8be36",
+     "note": "version 1, used for the b549973c receipts; exact-part matching"
+    }
+   ]
+  },
   "scan_tools": {
-   "stmt_scan.py": "f70361fd45548abe678728354b9d19cc2ed8fff06c98e07cc056bdd13544447d",
-   "direct_scan.py": "61bee78e087a3de6217a65af92f70dce387bacbea6df1ca5ac165b7625735dbd",
-   "check.sh": "9e8ba24b233ec7e5a0c0226829306dfba3909ca77fc0e0592e7e1048ff34e273",
-   "dev.sh": "fbbca13403ee98896d59c634c0a5e86f109fcccb813dee70942896fd0d13e984",
-   "final.sh": "4bfbbc5f52d807a9db7215ec03e16bf8f3297f1adaf97044e2240f5eb850f3e9",
-   "receipt.py": "dcb5041a2b8d4a6e25e3dabdf14b64bfadcf495945d97380384e2d70ff115e98",
+   "make_spec.py (item7/a/nits/scripts)": "5d63a2148c671cb868b5cce0ca042ac0df49a02a598177f13e6e0eb186036ff9",
+   "stmt_scan.py (item7/a/nits/scripts)": "b020b3fd229fd39ea927d6c7ddbf4d4e81bd56b70ac0f3a56f30854baea3c729",
+   "direct_scan.py (item7/a/nits/scripts)": "2e7e87e4fc409ac3f5ae5946e5d14770af8abec0c1816b4c338e5b6a32e81547",
+   "dev.sh (item7/a/nits/scripts)": "840b1a16a5c35654ba7ea898357e68f5be6e5f9f841c4e394c0045f2ca507d3b",
+   "scans.sh (item7/a/nits/scripts)": "5611622d408e8b09e78698e797816346a1ec8336bfe16f56a27d1ac729025fd5",
+   "docs_record.py (item7/a/nits/scripts)": "4fb0d593ff9ee368a9a3891361d14e2663a860451e52cf29af5f84838dc20fcb",
+   "record.py (item7/a/nits/scripts)": "699f966f3223ad2b7c304d87cb7fa87a51e920b61116571127cc63e07d65c932",
+   "check.sh (item7/a/fix1/scripts, module checks)": "9e8ba24b233ec7e5a0c0226829306dfba3909ca77fc0e0592e7e1048ff34e273",
+   "final.sh (item7/a/fix1/scripts, module checks)": "4bfbbc5f52d807a9db7215ec03e16bf8f3297f1adaf97044e2240f5eb850f3e9",
    "guards.py (item7/a/scripts, guards unchanged)": "d346a4518d510cc2e0d80fda4fc68076ec6a4cd498d566376ab8882cbd528eb4"
   },
   "branch_tip_checks": "root import, inv recount before inv rehash, focused check-inventory under a @nix lease and git diff --check are run at the branch tip and recorded in doc/impl/proof-receipts/production-boundary-increment-a.json",
-  "scope": "The statement scan reads the types and binders of named declarations in the source text. The direct-reference scan reads the elaborated types and bodies of every constant whose declaring module is this module (Environment.getModuleIdxFor?), including the auxiliary constants Lean generates under other names (_private match equations and splitters, equation lemmas for imported definitions); module_declarations counts them and outside_module_namespace counts those not under the module namespace. Each liveness run gives every rule class its own witness and checks a negative control. Neither scan is an import-graph audit."
+  "scope": "The statement scan reads the types and binders of named declarations in the source text. The direct-reference scan reads the elaborated types and bodies of every constant whose declaring module is this module (Environment.getModuleIdxFor?), including the auxiliary constants Lean generates under other names (_private match equations and splitters, equation lemmas for imported definitions); module_declarations counts them and outside_module_namespace counts those not under the module namespace. Each liveness run gives every rule class and each version 3 entry its own witness, requires every witness to hit its own target under its intended class, runs the allowance-sibling control (FixedHkdfSha512NoSaltSource.prefixConsistent hits pb_namespace; its .crypto reference is excused exactly in the allowance modules and a pb_namespace hit elsewhere) and checks a negative control. The scans import the module olean compiled by the fix-pass module check (same source bytes; scan_inputs). Neither scan is an import-graph audit.",
+  "scan_inputs": {
+   "source_sha256": "20e6ce97aef9cf96f53413c2113bdd55b18d3c6b4ca5b25cd4fc9f3b5274a9c4",
+   "source_equals_fix1_final": true,
+   "module_olean": "/tmp/bc-arc-scratch/item7/a/olean/BeaconcryptCore/Computational/PqxdhBoundaryBirth.olean",
+   "module_olean_sha256": "b5330fb7f82027763ea97d12ee80d829c657e631c94566d2b473b11919338225",
+   "olean_equals_fix1_final": true,
+   "results": {
+    "path": "/tmp/bc-arc-scratch/item7/a/nits/logs/scans.jsonl",
+    "sha256": "e174c83d1f33551a9219e1d36650ded6bd47bd5c6a877b43244d59de30cc2194"
+   }
+  }
  },
  "review": {
-  "status": "reviewed: both D-6 reviews of b549973c returned APPROVE_WITH_NITS; all findings are fixed in this revision; a confirming review of the fixes is pending",
+  "status": "reviewed: both D-6 reviews of b549973c returned APPROVE_WITH_NITS and all findings are fixed in 9b3676e4; the confirming review of 67b3e2b4 returned APPROVE_WITH_NITS and its three remarks are addressed in the commit that records it",
   "reviews": [
    {
     "kind": "D-6 semantic review (fresh-context Claude sub-agent, read only)",
@@ -179,6 +225,19 @@
   "prior_evidence": {
    "kind": "none",
    "note": "Codex left module logs only; last check exit 0 at 21:41:19Z with two unused-done warnings"
+  },
+  "confirming_review": {
+   "kind": "confirming review of the D-6 fix pass (fresh-context Claude sub-agent, read only)",
+   "reviewed": "b549973c..67b3e2b4",
+   "verdict": "APPROVE_WITH_NITS",
+   "scratch": "/tmp/bc-arc-scratch/item7/a/confirm",
+   "record": "/tmp/bc-arc-scratch/item7/NOTES.md (confirming review entry)",
+   "confirmed_resolved": "findings 1, 3, 4, 5, 7 and 8; finding 2 apart from the PB-14 nit; finding 6 apart from the CE.idealGame° target",
+   "remarks": {
+    "path": "/tmp/bc-arc-scratch/item7/a/nits/docs/confirm-remarks.json",
+    "sha256": "bd97491aac71faf335bae0899743e6c3910df09d47c9f22c11ddb8c74167a0c6"
+   },
+   "disposition": "all three remarks addressed in the commit that records this review: scan spec version 3 (C7 ideal-registration erasure prefixes with their own witnesses; restored allowance-sibling control), both scans re-run on all five modules, guides and receipts corrected, survey status paragraph names PB-14; no Lean change"
   }
  },
  "not_run": [
@@ -189,15 +248,36 @@
   "transcript-fidelity cargo tests (no inventory metadata they read changed)"
  ],
  "remaining": [
-  "confirming review of the D-6 fix pass (findings: /tmp/bc-arc-scratch/item7/a/fix1/docs/review-findings.json)",
   "I3 PqxdhBoundaryDeploymentStep (step_create) and PqxdhBoundaryDeployment (birth in the classical game)",
   "D1 (no ensure_init at creation) and generation failures stay E/RT",
-  "central integration"
+  "central integration (PROTOCOL section 6) after the record commit"
  ],
  "crypto_allowance": {
   "decision": "D-1: the .crypto allowance does not apply to this module",
   "elaborated_occurrences": [],
-  "statement_occurrences": []
+  "statement_occurrences": [],
+  "live_control": {
+   "source": "Codex's allowance-sibling witness (#393 live fixture), restored in scan spec version 3 after confirming review remark 2",
+   "direct": {
+    "log": "/tmp/bc-arc-scratch/item7/a/nits/logs/dev/PqxdhBoundaryBirth-scan-live-1.log",
+    "log_sha256": "29bbe136439dc287e49383103ec019768b1464d5d457062dc20beff32f4c5759",
+    "allowance_applies": false,
+    "sibling_target_pb_namespace": true,
+    "sibling_crypto_excused": false,
+    "sibling_crypto_pb_namespace_hit": true,
+    "other_witnesses_excused_crypto": 0
+   },
+   "statement": {
+    "json": "/tmp/bc-arc-scratch/item7/a/nits/scans/PqxdhBoundaryBirth-statement-live.json",
+    "json_sha256": "f187a75bd1b9884ebd77d2106d8e77afde881f5941d1b3bff448c5289d73e76a",
+    "allowance_applies": false,
+    "sibling_token_hits_pb_namespace": true,
+    "crypto_token_excused": false,
+    "crypto_token_pb_namespace_hit": true,
+    "ok": true
+   },
+   "reading": "the allowance does not apply to this module: the sibling witness FixedHkdfSha512NoSaltSource.prefixConsistent is a pb_namespace hit and its .crypto reference is a pb_namespace hit as well, not excused"
+  }
  },
  "rust_reference": "beaconcrypt/src/server.rs:154-168 (Server::try_new, id_seed None), beaconcrypt/src/beacon.rs:65-82 (Beacon::try_new; pin parse beacon.rs:68, identity beacon.rs:70, prekey beacon.rs:77, ML-KEM beacon.rs:78)",
  "deviations": [

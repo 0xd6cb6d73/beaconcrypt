@@ -4,7 +4,7 @@
  "worktree": "/tmp/beaconcrypt-deployment-boundary-a",
  "central_basis": "f0dc46bb6473ab37ecf48e623f1ccb192bd6b3af",
  "checked_tip": "9b3676e40ed32507996ba8d49d093bd93aa3d31d",
- "state": "checked on the topic branch; both D-6 reviews (semantic and hygiene) of b549973c returned APPROVE_WITH_NITS; all eight findings fixed in 9b3676e4 and re-checked there; confirming review of the fixes pending; not integrated into central",
+ "state": "checked on the topic branch; both D-6 reviews (semantic and hygiene) of b549973c returned APPROVE_WITH_NITS; all eight findings fixed in 9b3676e4 and re-checked there; the confirming review of 67b3e2b4 returned APPROVE_WITH_NITS; its three remarks are addressed in the commit that records it (scan spec version 3 with both scans re-run on all five modules, survey PB-14 wording; documentation and receipts only); not integrated into central at the record commit",
  "owner_decision": "/tmp/bc-coord/decision-2026-10-10.txt (message #503): \"Codex ran out of budget. Adopt its lane.\"",
  "plan": "/tmp/bc-arc-scratch/item7/plan.md (decisions D-1 to D-6)",
  "commits": [
@@ -39,6 +39,10 @@
   {
    "commit": "9b3676e40ed32507996ba8d49d093bd93aa3d31d",
    "subject": "Fix the item 7 increment A review findings"
+  },
+  {
+   "commit": "67b3e2b4334cf8064953cd27b6baa599d29cd968",
+   "subject": "Record the item 7 increment A review fix checks"
   }
  ],
  "modules": [
@@ -58,9 +62,9 @@
    "guarded_statements": 8,
    "source_sha256": "f33544fdae633624ecf33d93b67c36c976888e3f424e09522b27f19d9bdbded5",
    "guide": "doc/impl/production-boundary-registration-build.md",
-   "guide_sha256": "4ef82df6d402e8cb949c7a75fef7c9a7437eea174541f8cf53cc2bc2ec0a675d",
+   "guide_sha256": "5315270cd257213dfc44792fcd75fb95b201a66893f4cd097fb4e0e656db857a",
    "receipt": "doc/impl/proof-receipts/production-boundary-registration-build.json",
-   "receipt_sha256": "250fc5df8cf201f3eba3fcb81feeece737cfcaec10ad71cad5efb07ff1fa2170",
+   "receipt_sha256": "7d829aab6791cd7853ea559003c75d2a91d2b786b4aa3ca617c54e86f447616f",
    "provenance": "adapted from Codex WIP f33544fdae633624ecf33d93b67c36c976888e3f424e09522b27f19d9bdbded5 (Lean source, committed byte for byte) and 676f64be7c7bae0bb07412b3ffeb4c6eb75313b87a17bcbf8767ae22315c2488 (guide text, kept verbatim with a Claude section appended); preserved copies in /tmp/bc-arc-scratch/item7/inherited/pb05-build (mirror of codex/deployment-boundary-wip 52ff9f3c)",
    "direct_scan_module_declarations": 48,
    "outside_module_namespace": 24
@@ -81,9 +85,9 @@
    "guarded_statements": 8,
    "source_sha256": "8972a59dacbeae22b171d66edae3525864368c81116210fe090cb7a1b3cef732",
    "guide": "doc/impl/production-boundary-registration-build-native.md",
-   "guide_sha256": "96cab101888caa41fdd9e3f92f3906b45a3da6e0a4f4a21326ffc4aad39eb029",
+   "guide_sha256": "b74e68ff11d8f490d813cc023670ccf48891a21279766932be0802577216ac52",
    "receipt": "doc/impl/proof-receipts/production-boundary-registration-build-native.json",
-   "receipt_sha256": "1bb8a2be484d6e220117c62eb7a0a50374ef81d54bb855c08bedefbf4c97134e",
+   "receipt_sha256": "4ebd475c3ce87ff06fcc8a0daa46843a00c1bb0773fc8c4f23a6095d3842b44e",
    "provenance": "adapted from Codex WIP 161348b44861174b71b105ce91864808f397ec901f5d4d4efcf4db1e8cbba47b (Lean source, committed byte for byte in 4a948258; after the D-6 review only the docstring of token_consumed was reworded) and b326ec01dba5dcf333aafa22d1874c3cb5de34fedae46fe605fa9a677997387f (guide text, kept verbatim with a Claude section appended in 4a948258; after the D-6 review three wording corrections: Codex-reviewed for reviewed, and PqxdhBoundaryRegistrationBuild twice for the Codex shorthand Build8); preserved copies in /tmp/bc-arc-scratch/item7/inherited/pb05-build-native",
    "direct_scan_module_declarations": 20,
    "outside_module_namespace": 7
@@ -109,9 +113,9 @@
    "guarded_statements": 13,
    "source_sha256": "fbeedc5d0d3944cb324ee57cc9b9a16f158c40fa36f256fa45c62156b65562c6",
    "guide": "doc/impl/production-boundary-program.md",
-   "guide_sha256": "1bbf2c48c61002f2dc69a4cd2694fefb589591ad4409f6e265b257a76d022715",
+   "guide_sha256": "84cd8b5fdce072c25c5762e98df57bc3c8e6a2ae8c1598445f52cdf1496bf890",
    "receipt": "doc/impl/proof-receipts/production-boundary-program.json",
-   "receipt_sha256": "59f7fec19f92458e0a673bac6ccc08809933098fbd00b8ed6fa21895e7c383c3",
+   "receipt_sha256": "d63030f0317a7d6870816ba712757f71c2968993a8ea6297d515a12c363699f1",
    "provenance": "adapted from Codex WIP 185bfab26f38c518b4d544c98fc2625181e2e129e5a527ce39bb85eba2fabb59 (Lean source: nine theorems and their proofs kept unchanged; the nine plain #print axioms lines replaced by exact #guard_msgs guards; outcome, ofResult and four theorems added) and d67a206c35d625ce69912befcbfa9286f6bf5f30c1df67c3166de047d883ddbc (guide draft: one sentence corrected, two sections added); preserved copies in /tmp/bc-arc-scratch/item7/inherited/pbd-program",
    "direct_scan_module_declarations": 27,
    "outside_module_namespace": 0
@@ -132,9 +136,9 @@
    "guarded_statements": 8,
    "source_sha256": "bbf90a6b0d40e2e1d1cf3bcaf31a60b443b485ecfd49e65d7f2496e34227631b",
    "guide": "doc/impl/production-boundary-logged-accept.md",
-   "guide_sha256": "432b87cf01a8022205e286dac324278a60860bdf160368d0b5dc64ae37eab1b8",
+   "guide_sha256": "b486964a1faa69d4e0a40e09e814bc5d88aa7e79436b010a263f67298e9fee7d",
    "receipt": "doc/impl/proof-receipts/production-boundary-logged-accept.json",
-   "receipt_sha256": "cc13a480462238e54fd4714bb84b555c3051826997d935c5828400884d597aa9",
+   "receipt_sha256": "f9fb3200880bc131002786c3f521fa68d94a4f39834851a4e32eb1bf2714eb09",
    "provenance": "adapted from Codex WIP 2c9dc5d843573f0ea25042e691adaf9029342a0a12a3108e5ffc13049aafed00 (Lean source: five definitions and five theorems kept unchanged; three theorems and eight exact guards added); preserved copy in /tmp/bc-arc-scratch/item7/inherited/pbd-logged-accept",
    "direct_scan_module_declarations": 31,
    "outside_module_namespace": 12
@@ -155,9 +159,9 @@
    "guarded_statements": 8,
    "source_sha256": "20e6ce97aef9cf96f53413c2113bdd55b18d3c6b4ca5b25cd4fc9f3b5274a9c4",
    "guide": "doc/impl/production-boundary-birth.md",
-   "guide_sha256": "565369541a42c35f664ab54fd7663a6fac3ea69b036abc60b806d5a37de616c7",
+   "guide_sha256": "400895370911c3ca7c7e8aad7d185778ea30076714323be6af256f6466b987f6",
    "receipt": "doc/impl/proof-receipts/production-boundary-birth.json",
-   "receipt_sha256": "286923ce1cbefcbd80751a9da6e20560d92aaa042aadde085ed9f958838b18d8",
+   "receipt_sha256": "b7e49e6680c3b62ea7449c78d3f09183ec3010a059799842b848f25cbf5cbb21",
    "provenance": "adapted from Codex WIP 02b9c3b89caba696a3e719e6cdb4f53d1c161077d592ad0b53253a63890d3f22 (Lean source: serverBirth, server_source and server_continuation kept, two unused done tactics removed; the Beacon creation half, the bills and eight exact guards added); preserved copy in /tmp/bc-arc-scratch/item7/inherited/pb01-birth",
    "direct_scan_module_declarations": 14,
    "outside_module_namespace": 1
@@ -165,15 +169,15 @@
  ],
  "survey": {
   "path": "doc/impl/production-boundary-survey.md",
-  "sha256": "394395e647ad54ab2f38b0ed19968a66e177595a9eba58aa5846703f09e76db4",
+  "sha256": "ede5c17c43ad0be5ede6f4dda5c2cce9d28eca5f4510971aa304945e55b8785f",
   "codex_wip_sha256": "781fb253a8636564c1c3a44a275face29f8b353c6a0c595bc3b058d6548af190",
-  "difference": "one added status and provenance paragraph (line 3, its PB-C wording corrected in the fix pass) and the blank line after it; every other line verbatim"
+  "difference": "one added status and provenance paragraph (line 3; its PB-C wording corrected in the fix pass, and its PB-05 wording made to name PB-14 as PB-C's remaining row after the confirming review) and the blank line after it; every other line verbatim"
  },
  "decisions_applied": {
-  "D1": ".crypto allowance extended by name to PqxdhBoundaryRegistrationBuild only (one source occurrence, line 104; elaborated references exactly executeCandidate, executeCandidate.eq_1, candidate_exact, confirmed by the hygiene review and the fix-pass scan); no other module references the projection",
+  "D1": ".crypto allowance extended by name to PqxdhBoundaryRegistrationBuild only (one source occurrence, line 104; elaborated references exactly executeCandidate, executeCandidate.eq_1, candidate_exact, confirmed by the hygiene review and the fix-pass scan); no other module references the projection; the restored allowance-sibling control of scan spec version 3 shows live that the allowance covers one name and applies only to this module (the sibling's .crypto reference is excused in PqxdhBoundaryRegistrationBuild and a forbidden hit in the four other modules)",
   "D3": "ofResult adapter with outcome_ok, outcome_normal, ofResult_ok, ofResult_normal in PqxdhBoundaryProgram",
   "D5": "survey published verbatim with one status paragraph",
-  "D6": "done: fresh-context semantic and hygiene reviews of b549973c, both APPROVE_WITH_NITS; findings fixed in 9b3676e4; a confirming review of the fixes is pending"
+  "D6": "done: fresh-context semantic and hygiene reviews of b549973c, both APPROVE_WITH_NITS; findings fixed in 9b3676e4; confirming review of 67b3e2b4 APPROVE_WITH_NITS, its three remarks addressed in the record commit"
  },
  "not_run": [
   "make verify",
@@ -181,7 +185,7 @@
   "mutation testing",
   "nix-collect-garbage",
   "transcript-fidelity cargo tests (no inventory metadata they read changed: only Lean rows, root imports and check-inventory module blocks)",
-  "central integration"
+  "central integration (follows the record commit)"
  ],
  "note": "The commits that add or update this receipt change only doc/impl/proof-receipts, which check-inventory does not read.",
  "first_pass": {
@@ -290,7 +294,9 @@
    "command": "coord.sh lease mem claude @nix item7-a-fix1-inventory-tip-9b3676e4 --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C /tmp/beaconcrypt-deployment-boundary-a/beaconcrypt-core check-inventory SHELL=bash"
   },
   "git_diff_check": "git diff --check f0dc46bb..9b3676e4 clean; the fix commit was also checked with git diff --cached --check before committing",
-  "contamination_scans": "both scans per module with spec version 2 (eleven rule classes, each with its own liveness witness, and a negative control), results in the per-module receipts; spec /tmp/bc-arc-scratch/item7/a/fix1/scans/scan-spec.json sha256 8392e6614f27e9500f9bd070661ac50a5082e79d3e44c26b191c8c2b16d496bd; tools under /tmp/bc-arc-scratch/item7/a/fix1/scripts; results /tmp/bc-arc-scratch/item7/a/fix1/logs/final.jsonl sha256 c2f3a220ddde5ce914249fad5f34474ac8195d8b9fcbb53a9d756ecbda2dd465"
+  "contamination_scans": "both scans per module re-run with spec version 3 after the confirming review (eleven rule classes and each version 3 entry with its own liveness witness, every witness on its own target, the allowance-sibling control, a negative control): all five modules clean (statement 0 hits; direct 0 forbidden over 48/20/27/31/14 module declarations, W1 .crypto references exactly executeCandidate, executeCandidate.eq_1, candidate_exact) and all live (11/11 classes, 21/21 direct witnesses on target); results in the per-module receipts; spec /tmp/bc-arc-scratch/item7/a/nits/scans/scan-spec.json sha256 f9a9e443ce062af9c49a84166969ac02b77a5cca2c3729a64e4a59e273c458d6; tools under /tmp/bc-arc-scratch/item7/a/nits/scripts; results /tmp/bc-arc-scratch/item7/a/nits/logs/scans.jsonl sha256 e174c83d1f33551a9219e1d36650ded6bd47bd5c6a877b43244d59de30cc2194",
+  "contamination_scans_version_2": "both scans per module with spec version 2 (eleven rule classes, each with its own liveness witness, and a negative control), results in the per-module receipts; spec /tmp/bc-arc-scratch/item7/a/fix1/scans/scan-spec.json sha256 8392e6614f27e9500f9bd070661ac50a5082e79d3e44c26b191c8c2b16d496bd; tools under /tmp/bc-arc-scratch/item7/a/fix1/scripts; results /tmp/bc-arc-scratch/item7/a/fix1/logs/final.jsonl sha256 c2f3a220ddde5ce914249fad5f34474ac8195d8b9fcbb53a9d756ecbda2dd465",
+  "record_commit": "the commit that records the confirming review changes only documentation and receipts (five guides, the survey status paragraph, five analysis paragraphs, six receipts); no Lean file, root import, inventory row or check-inventory block changes, so the checks above at 9b3676e4 carry over; the integration re-runs the module, root, inventory and fidelity checks on its tip"
  },
  "review": {
   "reviews": [
@@ -361,6 +367,18 @@
     "disposition": "fixed: W1 receipt reviewer_condition and the W1 guide sentence cite the hygiene review's confirmation (line 104 only, initialResponse = c.hkdf input info 64 at PqxdhRootTableInitialization.lean:26-29, the same call as candidateTail at PqxdhServerRegistrationPublication.lean:165, elaborated references exactly executeCandidate, eq_1, candidate_exact, in no statement, never on the 192-byte root input), as #393 requires"
    }
   ],
-  "confirming_review": "pending"
+  "confirming_review": {
+   "kind": "confirming review of the D-6 fix pass (fresh-context Claude sub-agent, read only)",
+   "reviewed": "b549973c..67b3e2b4",
+   "verdict": "APPROVE_WITH_NITS",
+   "scratch": "/tmp/bc-arc-scratch/item7/a/confirm",
+   "record": "/tmp/bc-arc-scratch/item7/NOTES.md (confirming review entry)",
+   "confirmed_resolved": "findings 1, 3, 4, 5, 7 and 8; finding 2 apart from the PB-14 nit; finding 6 apart from the CE.idealGame° target",
+   "remarks": {
+    "path": "/tmp/bc-arc-scratch/item7/a/nits/docs/confirm-remarks.json",
+    "sha256": "bd97491aac71faf335bae0899743e6c3910df09d47c9f22c11ddb8c74167a0c6"
+   },
+   "disposition": "all three remarks addressed in the commit that records this review: scan spec version 3 (C7 ideal-registration erasure prefixes with their own witnesses; restored allowance-sibling control), both scans re-run on all five modules, guides and receipts corrected, survey status paragraph names PB-14; no Lean change"
+  }
  }
 }
