@@ -1,10 +1,11 @@
 {
- "date": "2026-10-10T10:18:35.770884+00:00",
+ "date": "2026-10-10T10:23:29.599394+00:00",
  "scope": "CE-12 P2b (track ce12/p2b), steps 1 and 2. Step 1: the rest of the bills of design-v2 section 9 (splitStep_uniform, guessBill and ptc_bills, HeadlineBills with headline_bills, the billed forms of the fifteen frozen headline forms with beta_g and of anomaly_beta). Step 2: design-v2 section 7.4's ct_collision_game (ctCollTerm <= qCreate * C(qAccept, 2) * pairCollision), the closed bound epsilon_ctcoll through pair_cp_le (ct_coll_le), and the closed forms of the six frozen headline forms with ctCollTerm and of the five billed forms of step 1 among them. Not reviewed; not integrated.",
  "basis": {
   "start": "f0dc46bb6473ab37ecf48e623f1ccb192bd6b3af",
   "merges": [],
   "central_at_receipt": "c27b45336b6c04087239d9b797fcf6f1aba1c85e",
+  "central_note": "central moved during step 2 (f0dc46bb -> c72db84a LQ-F unit A2 -> c27b4533 item 7 increment A); this topic is not merged with it; a trial merge conflicts only at the append anchors (root imports, reviewed-inventory.txt, check-inventory.sh, guide, analysis)",
   "published_leanpath": {
    "path": "/tmp/bc-coord/leanpaths/f0dc46bb6473ab37ecf48e623f1ccb192bd6b3af.leanpath",
    "sha256": "8b2da583f6e190857e288154143ba371fd3067ff81bf7466e95e7954e1db8f84"
@@ -13,18 +14,18 @@
  "topic": {
   "branch": "codex/deployment-ce12",
   "worktree": "/tmp/beaconcrypt-deployment-ce12",
-  "head_at_receipt": "6c47cc49a88b01f0c1ba6c65d3022a6da2ed66e9",
+  "head_at_receipt": "647260efa837249733bd870084d314105da53fbf",
   "note": "the documentation commit that adds this receipt follows head_at_receipt; it changes no Lean file"
  },
  "plan": {
   "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
-  "sha256": "bf5feb829b5ce8d4ff4b6111e43244b09ac9c986f85b613ca869b2663bfd45f5",
+  "sha256": "aa6cce5264401b27b762cf5038a4a58d64bf71b5e430a8f99af4a87afe6e6a91",
   "sections": [
    105,
    106
   ],
-  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/docs/plan.at-p2b2-bf5feb82.md",
-  "dated_copy_sha256": "bf5feb829b5ce8d4ff4b6111e43244b09ac9c986f85b613ca869b2663bfd45f5",
+  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/docs/plan.at-p2b2-aa6cce52.md",
+  "dated_copy_sha256": "aa6cce5264401b27b762cf5038a4a58d64bf71b5e430a8f99af4a87afe6e6a91",
   "backup_before": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/docs/plan.before-p2b2-0cb1cc66.md",
   "backup_before_step1": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/docs/plan.before-p2b-d44add0e.md"
  },
@@ -70,6 +71,10 @@
   {
    "commit": "6c47cc49a88b01f0c1ba6c65d3022a6da2ed66e9",
    "subject": "Close ctCollTerm in the CE-12 headlines that carry it"
+  },
+  {
+   "commit": "647260efa837249733bd870084d314105da53fbf",
+   "subject": "Document CE-12 P2b step 2: ct_collision_game and epsilon_ctcoll"
   }
  ],
  "commit_message_corrections": [
@@ -906,6 +911,17 @@
     "log_sha256": "89cc1fe437a49e414ff2761986c4585450fd53931b6f1bb8aaf1a8484bb6e3ce",
     "note": ""
    },
+   "clean-head2": {
+    "status": 0,
+    "commit": "647260efa837249733bd870084d314105da53fbf",
+    "start": "2026-10-10T10:20:40Z",
+    "end": "2026-10-10T10:22:28Z",
+    "dirty_before": 0,
+    "dirty_after": 0,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/logs/inventory-clean-head2.log",
+    "log_sha256": "cdf53c35e41b1407290b6d1dd2b37c40a495c8f2efdeec5925cac9b136ea2cc6",
+    "note": ""
+   },
    "ctclosed": {
     "status": 0,
     "commit": "1483b62f605dade62a7656bdefc5fcf034474d96",
@@ -972,6 +988,17 @@
     "log_sha256": "d2c2f7e336bd44a25cc85fdfcd45c22506c836db3183bbeda77220c34c7e98e8",
     "note": ""
    },
+   "docs2": {
+    "status": 0,
+    "commit": "6c47cc49a88b01f0c1ba6c65d3022a6da2ed66e9",
+    "start": "2026-10-10T10:18:40Z",
+    "end": "2026-10-10T10:20:28Z",
+    "dirty_before": 3,
+    "dirty_after": 3,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/logs/inventory-docs2.log",
+    "log_sha256": "4967846433dcef339b5e532f6d0740fefb57250eb10449391c6f5da42411a776",
+    "note": ""
+   },
    "gated": {
     "status": 0,
     "commit": "f147bf69e764627a5ca23975f7d1908cc240aeee",
@@ -1008,7 +1035,7 @@
   },
   "guard_scan": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/logs/scan-2.json",
   "git_diff_check": {
-   "range": "f0dc46bb6473ab37ecf48e623f1ccb192bd6b3af..6c47cc49a88b01f0c1ba6c65d3022a6da2ed66e9",
+   "range": "f0dc46bb6473ab37ecf48e623f1ccb192bd6b3af..647260efa837249733bd870084d314105da53fbf",
    "exit": 0
   }
  },
