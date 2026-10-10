@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1895
+	[handwritten-lean]=1896
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -38829,6 +38829,49 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem idealLater_postNative([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterGame theorem idealLater_postNative"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterGame\.laterOf_real$' "$selected_source_module" "PqxdhDeploymentIdealLaterGame dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterGame.laterOf_real"
 require_line_count 1 '^theorem laterOf_real([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterGame theorem laterOf_real"
+
+# LQ-F upstream unit A1: stages S0a and S0b of item 2 over the logged source (the logged source client as two layers, the observer-free, marked and router-free logged branches).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerItemFree.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemFree$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentLaterServerItemFree root import"
+require_line_count 18 '^theorem ' "$selected_source_module" "PqxdhDeploymentLaterServerItemFree theorem inventory"
+require_line_count 18 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentLaterServerItemFree guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemFree\.run_layers$' "$selected_source_module" "PqxdhDeploymentLaterServerItemFree dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemFree.run_layers"
+require_line_count 1 '^theorem run_layers([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemFree theorem run_layers"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemFree\.logClient_step$' "$selected_source_module" "PqxdhDeploymentLaterServerItemFree dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemFree.logClient_step"
+require_line_count 1 '^theorem logClient_step([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemFree theorem logClient_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemFree\.impl_clientL$' "$selected_source_module" "PqxdhDeploymentLaterServerItemFree dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemFree.impl_clientL"
+require_line_count 1 '^theorem impl_clientL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemFree theorem impl_clientL"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemFree\.run_clientL$' "$selected_source_module" "PqxdhDeploymentLaterServerItemFree dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemFree.run_clientL"
+require_line_count 1 '^theorem run_clientL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemFree theorem run_clientL"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemFree\.acceptL_neverRead$' "$selected_source_module" "PqxdhDeploymentLaterServerItemFree dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemFree.acceptL_neverRead"
+require_line_count 1 '^theorem acceptL_neverRead([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemFree theorem acceptL_neverRead"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemFree\.implL_neverRead$' "$selected_source_module" "PqxdhDeploymentLaterServerItemFree dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemFree.implL_neverRead"
+require_line_count 1 '^theorem implL_neverRead([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemFree theorem implL_neverRead"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemFree\.resume_freeL$' "$selected_source_module" "PqxdhDeploymentLaterServerItemFree dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemFree.resume_freeL"
+require_line_count 1 '^theorem resume_freeL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemFree theorem resume_freeL"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemFree\.post_freeL$' "$selected_source_module" "PqxdhDeploymentLaterServerItemFree dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemFree.post_freeL"
+require_line_count 1 '^theorem post_freeL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemFree theorem post_freeL"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemFree\.opaqueBranchL_free$' "$selected_source_module" "PqxdhDeploymentLaterServerItemFree dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemFree.opaqueBranchL_free"
+require_line_count 1 '^theorem opaqueBranchL_free([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemFree theorem opaqueBranchL_free"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemFree\.client_markedL$' "$selected_source_module" "PqxdhDeploymentLaterServerItemFree dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemFree.client_markedL"
+require_line_count 1 '^theorem client_markedL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemFree theorem client_markedL"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemFree\.resume_markedL$' "$selected_source_module" "PqxdhDeploymentLaterServerItemFree dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemFree.resume_markedL"
+require_line_count 1 '^theorem resume_markedL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemFree theorem resume_markedL"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemFree\.post_markedL$' "$selected_source_module" "PqxdhDeploymentLaterServerItemFree dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemFree.post_markedL"
+require_line_count 1 '^theorem post_markedL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemFree theorem post_markedL"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemFree\.opaqueBranchL_marked$' "$selected_source_module" "PqxdhDeploymentLaterServerItemFree dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemFree.opaqueBranchL_marked"
+require_line_count 1 '^theorem opaqueBranchL_marked([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemFree theorem opaqueBranchL_marked"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemFree\.accept_freeL$' "$selected_source_module" "PqxdhDeploymentLaterServerItemFree dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemFree.accept_freeL"
+require_line_count 1 '^theorem accept_freeL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemFree theorem accept_freeL"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemFree\.client_unmarkedL$' "$selected_source_module" "PqxdhDeploymentLaterServerItemFree dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemFree.client_unmarkedL"
+require_line_count 1 '^theorem client_unmarkedL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemFree theorem client_unmarkedL"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemFree\.markedResumeL_unmarked$' "$selected_source_module" "PqxdhDeploymentLaterServerItemFree dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemFree.markedResumeL_unmarked"
+require_line_count 1 '^theorem markedResumeL_unmarked([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemFree theorem markedResumeL_unmarked"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemFree\.markedPostL_free$' "$selected_source_module" "PqxdhDeploymentLaterServerItemFree dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemFree.markedPostL_free"
+require_line_count 1 '^theorem markedPostL_free([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemFree theorem markedPostL_free"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemFree\.opaqueBranchL_freeRouter$' "$selected_source_module" "PqxdhDeploymentLaterServerItemFree dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemFree.opaqueBranchL_freeRouter"
+require_line_count 1 '^theorem opaqueBranchL_freeRouter([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemFree theorem opaqueBranchL_freeRouter"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
