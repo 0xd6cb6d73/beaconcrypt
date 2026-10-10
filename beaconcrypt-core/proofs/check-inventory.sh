@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1971
+	[handwritten-lean]=1972
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -42061,6 +42061,25 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem symbolic_lor_later_dct([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedLater theorem symbolic_lor_later_dct"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctClosedLater\.symbolic_lor_later_bound_dct$' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedLater dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctClosedLater.symbolic_lor_later_bound_dct"
 require_line_count 1 '^theorem symbolic_lor_later_bound_dct([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedLater theorem symbolic_lor_later_bound_dct"
+
+# CE-12 D-ct: closed forms (_dct) of the six P4 run-phase forms (ctGapTerm of first replaced by epsCt).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineDctClosedLaterP4.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctClosedLaterP4$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentHeadlineDctClosedLaterP4 root import"
+require_line_count 6 '^theorem ' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedLaterP4 theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedLaterP4 guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctClosedLaterP4\.ce_app_later_sym_billed_dct$' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedLaterP4 dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctClosedLaterP4.ce_app_later_sym_billed_dct"
+require_line_count 1 '^theorem ce_app_later_sym_billed_dct([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedLaterP4 theorem ce_app_later_sym_billed_dct"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctClosedLaterP4\.ce_app_beacon_later_sym_billed_dct$' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedLaterP4 dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctClosedLaterP4.ce_app_beacon_later_sym_billed_dct"
+require_line_count 1 '^theorem ce_app_beacon_later_sym_billed_dct([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedLaterP4 theorem ce_app_beacon_later_sym_billed_dct"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctClosedLaterP4\.symbolic_lor_later_bound_billed_dct$' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedLaterP4 dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctClosedLaterP4.symbolic_lor_later_bound_billed_dct"
+require_line_count 1 '^theorem symbolic_lor_later_bound_billed_dct([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedLaterP4 theorem symbolic_lor_later_bound_billed_dct"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctClosedLaterP4\.symbolic_lor_later_closed_dct$' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedLaterP4 dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctClosedLaterP4.symbolic_lor_later_closed_dct"
+require_line_count 1 '^theorem symbolic_lor_later_closed_dct([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedLaterP4 theorem symbolic_lor_later_closed_dct"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctClosedLaterP4\.symbolic_lor_later_bound_closed_dct$' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedLaterP4 dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctClosedLaterP4.symbolic_lor_later_bound_closed_dct"
+require_line_count 1 '^theorem symbolic_lor_later_bound_closed_dct([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedLaterP4 theorem symbolic_lor_later_bound_closed_dct"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctClosedLaterP4\.symbolic_lor_later_bound_closed_billed_dct$' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedLaterP4 dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctClosedLaterP4.symbolic_lor_later_bound_closed_billed_dct"
+require_line_count 1 '^theorem symbolic_lor_later_bound_closed_billed_dct([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedLaterP4 theorem symbolic_lor_later_bound_closed_billed_dct"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
