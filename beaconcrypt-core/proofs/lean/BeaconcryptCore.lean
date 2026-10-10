@@ -2077,6 +2077,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentIdealPost
 
 import BeaconcryptCore.Computational.PqxdhDeploymentIdealCompile
 
+import BeaconcryptCore.Computational.PqxdhDeploymentIdealHandoff
+
 /-!
 # Beaconcrypt-core verification root
 

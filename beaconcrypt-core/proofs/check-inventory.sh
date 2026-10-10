@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1880
+	[handwritten-lean]=1881
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -38250,6 +38250,59 @@ require_line_count 1 '^theorem ' "$selected_source_module" "PqxdhDeploymentIdeal
 require_line_count 1 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentIdealCompile guarded dependencies"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealCompile\.ideal_compile$' "$selected_source_module" "PqxdhDeploymentIdealCompile dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealCompile.ideal_compile"
 require_line_count 1 '^theorem ideal_compile([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealCompile theorem ideal_compile"
+
+# CE-11b unit U7: the hand-off to CE-12 (run_origins on the record lift's view, ideal_world, ideal_world_slots and the view forms).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealHandoff.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentIdealHandoff$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentIdealHandoff root import"
+require_line_count 23 '^theorem ' "$selected_source_module" "PqxdhDeploymentIdealHandoff theorem inventory"
+require_line_count 23 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentIdealHandoff guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealHandoff\.originMap_two$' "$selected_source_module" "PqxdhDeploymentIdealHandoff dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealHandoff.originMap_two"
+require_line_count 1 '^theorem originMap_two([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealHandoff theorem originMap_two"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealHandoff\.annotatedView_analysis$' "$selected_source_module" "PqxdhDeploymentIdealHandoff dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealHandoff.annotatedView_analysis"
+require_line_count 1 '^theorem annotatedView_analysis([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealHandoff theorem annotatedView_analysis"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealHandoff\.handler_project$' "$selected_source_module" "PqxdhDeploymentIdealHandoff dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealHandoff.handler_project"
+require_line_count 1 '^theorem handler_project([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealHandoff theorem handler_project"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealHandoff\.schedule_project$' "$selected_source_module" "PqxdhDeploymentIdealHandoff dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealHandoff.schedule_project"
+require_line_count 1 '^theorem schedule_project([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealHandoff theorem schedule_project"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealHandoff\.run_origins$' "$selected_source_module" "PqxdhDeploymentIdealHandoff dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealHandoff.run_origins"
+require_line_count 1 '^theorem run_origins([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealHandoff theorem run_origins"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealHandoff\.chainView_split$' "$selected_source_module" "PqxdhDeploymentIdealHandoff dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealHandoff.chainView_split"
+require_line_count 1 '^theorem chainView_split([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealHandoff theorem chainView_split"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealHandoff\.protocol_view$' "$selected_source_module" "PqxdhDeploymentIdealHandoff dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealHandoff.protocol_view"
+require_line_count 1 '^theorem protocol_view([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealHandoff theorem protocol_view"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealHandoff\.realChains_view$' "$selected_source_module" "PqxdhDeploymentIdealHandoff dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealHandoff.realChains_view"
+require_line_count 1 '^theorem realChains_view([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealHandoff theorem realChains_view"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealHandoff\.realChains_analysis_slots$' "$selected_source_module" "PqxdhDeploymentIdealHandoff dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealHandoff.realChains_analysis_slots"
+require_line_count 1 '^theorem realChains_analysis_slots([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealHandoff theorem realChains_analysis_slots"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealHandoff\.realChains_support$' "$selected_source_module" "PqxdhDeploymentIdealHandoff dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealHandoff.realChains_support"
+require_line_count 1 '^theorem realChains_support([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealHandoff theorem realChains_support"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealHandoff\.decision_observe$' "$selected_source_module" "PqxdhDeploymentIdealHandoff dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealHandoff.decision_observe"
+require_line_count 1 '^theorem decision_observe([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealHandoff theorem decision_observe"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealHandoff\.ceDecide_observed$' "$selected_source_module" "PqxdhDeploymentIdealHandoff dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealHandoff.ceDecide_observed"
+require_line_count 1 '^theorem ceDecide_observed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealHandoff theorem ceDecide_observed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealHandoff\.evalDist_le_add$' "$selected_source_module" "PqxdhDeploymentIdealHandoff dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealHandoff.evalDist_le_add"
+require_line_count 1 '^theorem evalDist_le_add([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealHandoff theorem evalDist_le_add"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealHandoff\.viewObserved_chainView$' "$selected_source_module" "PqxdhDeploymentIdealHandoff dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealHandoff.viewObserved_chainView"
+require_line_count 1 '^theorem viewObserved_chainView([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealHandoff theorem viewObserved_chainView"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealHandoff\.viewObserved_annotated$' "$selected_source_module" "PqxdhDeploymentIdealHandoff dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealHandoff.viewObserved_annotated"
+require_line_count 1 '^theorem viewObserved_annotated([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealHandoff theorem viewObserved_annotated"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealHandoff\.ideal_world$' "$selected_source_module" "PqxdhDeploymentIdealHandoff dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealHandoff.ideal_world"
+require_line_count 1 '^theorem ideal_world([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealHandoff theorem ideal_world"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealHandoff\.ideal_world_slots$' "$selected_source_module" "PqxdhDeploymentIdealHandoff dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealHandoff.ideal_world_slots"
+require_line_count 1 '^theorem ideal_world_slots([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealHandoff theorem ideal_world_slots"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealHandoff\.ideal_world_slots_le$' "$selected_source_module" "PqxdhDeploymentIdealHandoff dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealHandoff.ideal_world_slots_le"
+require_line_count 1 '^theorem ideal_world_slots_le([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealHandoff theorem ideal_world_slots_le"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealHandoff\.ideal_world_slots_ct$' "$selected_source_module" "PqxdhDeploymentIdealHandoff dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealHandoff.ideal_world_slots_ct"
+require_line_count 1 '^theorem ideal_world_slots_ct([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealHandoff theorem ideal_world_slots_ct"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealHandoff\.ideal_view_slots$' "$selected_source_module" "PqxdhDeploymentIdealHandoff dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealHandoff.ideal_view_slots"
+require_line_count 1 '^theorem ideal_view_slots([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealHandoff theorem ideal_view_slots"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealHandoff\.ideal_world_view$' "$selected_source_module" "PqxdhDeploymentIdealHandoff dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealHandoff.ideal_world_view"
+require_line_count 1 '^theorem ideal_world_view([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealHandoff theorem ideal_world_view"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealHandoff\.ideal_world_view_slots$' "$selected_source_module" "PqxdhDeploymentIdealHandoff dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealHandoff.ideal_world_view_slots"
+require_line_count 1 '^theorem ideal_world_view_slots([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealHandoff theorem ideal_world_view_slots"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealHandoff\.ideal_world_view_ct$' "$selected_source_module" "PqxdhDeploymentIdealHandoff dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealHandoff.ideal_world_view_ct"
+require_line_count 1 '^theorem ideal_world_view_ct([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealHandoff theorem ideal_world_view_ct"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
