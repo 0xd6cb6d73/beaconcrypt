@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1910
+	[handwritten-lean]=1911
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -39475,6 +39475,25 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem ptc_base([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGuessBill theorem ptc_base"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineGuessBill\.ptc_bills$' "$selected_source_module" "PqxdhDeploymentHeadlineGuessBill dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGuessBill.ptc_bills"
 require_line_count 1 '^theorem ptc_bills([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGuessBill theorem ptc_bills"
+
+# CE-12 P2b: HeadlineBills, the bills of every CE-12 headline reduction at the deployment budget.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineBillsFull.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineBillsFull$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentHeadlineBillsFull root import"
+require_line_count 6 '^theorem ' "$selected_source_module" "PqxdhDeploymentHeadlineBillsFull theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentHeadlineBillsFull guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineBillsFull\.a1_bills$' "$selected_source_module" "PqxdhDeploymentHeadlineBillsFull dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineBillsFull.a1_bills"
+require_line_count 1 '^theorem a1_bills([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineBillsFull theorem a1_bills"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineBillsFull\.target_bills$' "$selected_source_module" "PqxdhDeploymentHeadlineBillsFull dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineBillsFull.target_bills"
+require_line_count 1 '^theorem target_bills([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineBillsFull theorem target_bills"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineBillsFull\.a1_bills_all$' "$selected_source_module" "PqxdhDeploymentHeadlineBillsFull dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineBillsFull.a1_bills_all"
+require_line_count 1 '^theorem a1_bills_all([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineBillsFull theorem a1_bills_all"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineBillsFull\.a2_bills_all$' "$selected_source_module" "PqxdhDeploymentHeadlineBillsFull dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineBillsFull.a2_bills_all"
+require_line_count 1 '^theorem a2_bills_all([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineBillsFull theorem a2_bills_all"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineBillsFull\.inj_bills$' "$selected_source_module" "PqxdhDeploymentHeadlineBillsFull dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineBillsFull.inj_bills"
+require_line_count 1 '^theorem inj_bills([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineBillsFull theorem inj_bills"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineBillsFull\.headline_bills$' "$selected_source_module" "PqxdhDeploymentHeadlineBillsFull dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineBillsFull.headline_bills"
+require_line_count 1 '^theorem headline_bills([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineBillsFull theorem headline_bills"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
