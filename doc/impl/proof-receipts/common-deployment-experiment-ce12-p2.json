@@ -1,6 +1,6 @@
 {
- "date": "2026-10-10T06:26:09.936624+00:00",
- "scope": "CE-12 P2 first session (track ce12/p2): the D-ct spike (stop rule fired; F-ct2), the symbolic-eligibility predicates and gap lemmas, the identity-collision and KEM-level ciphertext-collision terms, the symbolic corollaries of CE-OR (both directions), CE-UKS (sender), CE-APP and CE-KT, and symbolic_lor with the NoBundleFailure filter (design-v2 sections 7.1-7.5, 8). Not built: injective CE-OR forms, bills, AG, ct_collision_game, D-ct. Not reviewed and not integrated.",
+ "date": "2026-10-10T06:42:35.761867+00:00",
+ "scope": "CE-12 P2 first session (track ce12/p2): the D-ct spike (stop rule fired; F-ct2), the symbolic-eligibility predicates and gap lemmas, the identity-collision and KEM-level ciphertext-collision terms, the symbolic corollaries of CE-OR (both directions), CE-UKS (sender), CE-APP and CE-KT, symbolic_lor with the NoBundleFailure filter, the injective CE-OR forms, and the bills of pairAdversary and of the record lifts at BI_g (design-v2 sections 7.1-7.5, 8, 9 in part). Not built: ptc guessBill with HeadlineBills, AG, ct_collision_game, D-ct. Not reviewed and not integrated.",
  "basis": {
   "start": "b88e30124d0c80a762cdf99ccf82569995c4a471",
   "central_merged": "c031e4e752e72c35890cdef16469e49ea06c0fc5",
@@ -14,14 +14,14 @@
  "topic": {
   "branch": "codex/deployment-ce12",
   "worktree": "/tmp/beaconcrypt-deployment-ce12",
-  "head_at_receipt": "e37ed9e7cccc224cdfd0a316ad21c4568449efe7",
+  "head_at_receipt": "4b8a01edb166ad685ff7009c96a3376e8a6bebbe",
   "note": "the documentation commit that adds this receipt follows head_at_receipt and changes no Lean or inventory file"
  },
  "plan": {
   "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
-  "sha256": "54f613b99678526a6359ab323a3c85152c355bbd8bff49e69afca07c9c79d3a1",
+  "sha256": "d8b7f7265295a7654c691f13698dc5a111224747379cd0a593851f7fd0b5d770",
   "section": 102,
-  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/docs/plan.at-p2-receipt-54f613b9.md",
+  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/docs/plan.at-p2-final-d8b7f726.md",
   "backup_before": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/docs/plan.before-p2-817e02d8.md"
  },
  "design": {
@@ -71,12 +71,24 @@
   {
    "commit": "e37ed9e7cccc224cdfd0a316ad21c4568449efe7",
    "subject": "Add the CE-12 symbolic LOR corollary"
+  },
+  {
+   "commit": "a0dda4f97ca9b700e120a0a414bb6058ca158b7a",
+   "subject": "Document CE-12 P2, first session"
+  },
+  {
+   "commit": "8253a4a3f42bf15de30c7b8ad15a2eba8247fe6d",
+   "subject": "Add the injective forms of the symbolic CE-OR corollaries"
+  },
+  {
+   "commit": "4b8a01edb166ad685ff7009c96a3376e8a6bebbe",
+   "subject": "Add bills of CE-12 P2 reductions"
   }
  ],
  "files_sha256": {
-  "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "e13da928668c21be80d96994dce2c881e4c18f3d2c07ee5bda32c1278cc88bda",
-  "beaconcrypt-core/proofs/reviewed-inventory.txt": "8a6c6eb60956eba96b9eaab7110f572872a482fb5f5d58daabe52a1c15ae75e5",
-  "beaconcrypt-core/proofs/check-inventory.sh": "7df4029475082820eff542e236b5706bdf904b1d5584b37405dac609279b6195"
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "cc94fe895db0b52998393efe959375a011a96227ac1e2fd5743b49b6bb7ae8b7",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "386db0a745bb0501924c568c7e8e47a3798333e0815ed3427d5335d94c0ae2c7",
+  "beaconcrypt-core/proofs/check-inventory.sh": "1e43969eb6091b2af40ec49a54fc5dd681305daf36ae1f6affd3f32d411425ea"
  },
  "modules": [
   {
@@ -174,10 +186,17 @@
      "source_sha256": "67a36f9eeccad05617d73df239c2ce572b98a2766b620ffe81cf01f665069f1f"
     }
    ],
-   "recheck": {
+   "first_recheck": {
     "prefix": "ce12/p2/recheck/olean",
     "exit": 0,
     "head": "e37ed9e7cccc224cdfd0a316ad21c4568449efe7",
+    "artifact_sha256": "d264c383ecdb0808b572bfa830cf0bcb0604b3efa0eaad7a399a64743128c2c5",
+    "identical_to_final": true
+   },
+   "recheck": {
+    "prefix": "ce12/p2/recheck2/olean",
+    "exit": 0,
+    "head": "4b8a01edb166ad685ff7009c96a3376e8a6bebbe",
     "dirty_paths": 0,
     "log_bytes": 0,
     "artifact_sha256": "d264c383ecdb0808b572bfa830cf0bcb0604b3efa0eaad7a399a64743128c2c5",
@@ -261,10 +280,17 @@
      "source_sha256": "5746b91182cd4829e0789f7b4c35d494364467702b3addc9854e3832c8f40e08"
     }
    ],
-   "recheck": {
+   "first_recheck": {
     "prefix": "ce12/p2/recheck/olean",
     "exit": 0,
     "head": "e37ed9e7cccc224cdfd0a316ad21c4568449efe7",
+    "artifact_sha256": "cb234a38bbcae0c3d7f7a250d27f198034cd85a3e2f74e8e120cc141f42bec46",
+    "identical_to_final": true
+   },
+   "recheck": {
+    "prefix": "ce12/p2/recheck2/olean",
+    "exit": 0,
+    "head": "4b8a01edb166ad685ff7009c96a3376e8a6bebbe",
     "dirty_paths": 0,
     "log_bytes": 0,
     "artifact_sha256": "cb234a38bbcae0c3d7f7a250d27f198034cd85a3e2f74e8e120cc141f42bec46",
@@ -357,10 +383,17 @@
      "source_sha256": "439be8533e4b4e5ee57137875e4f53eb57844177dc7c83a3834a413a831325bb"
     }
    ],
-   "recheck": {
+   "first_recheck": {
     "prefix": "ce12/p2/recheck/olean",
     "exit": 0,
     "head": "e37ed9e7cccc224cdfd0a316ad21c4568449efe7",
+    "artifact_sha256": "f3623b38619a8f551a95894db75f4eba23c55751eabfe188c5ca2411f1c376f1",
+    "identical_to_final": true
+   },
+   "recheck": {
+    "prefix": "ce12/p2/recheck2/olean",
+    "exit": 0,
+    "head": "4b8a01edb166ad685ff7009c96a3376e8a6bebbe",
     "dirty_paths": 0,
     "log_bytes": 0,
     "artifact_sha256": "f3623b38619a8f551a95894db75f4eba23c55751eabfe188c5ca2411f1c376f1",
@@ -431,19 +464,126 @@
     "source_sha256": "6fc19c22e5ee771778aadfe7c56932cdd15fc2822fad9ce9c196e0db1be96f42"
    },
    "earlier_checks": [],
-   "recheck": {
+   "first_recheck": {
     "prefix": "ce12/p2/recheck/olean",
     "exit": 0,
     "head": "e37ed9e7cccc224cdfd0a316ad21c4568449efe7",
+    "artifact_sha256": "dafc6dd17d6715237144f40585e89d95e592d5efdb65ca4bfa509170a525f73c",
+    "identical_to_final": true
+   },
+   "recheck": {
+    "prefix": "ce12/p2/recheck2/olean",
+    "exit": 0,
+    "head": "4b8a01edb166ad685ff7009c96a3376e8a6bebbe",
     "dirty_paths": 0,
     "log_bytes": 0,
     "artifact_sha256": "dafc6dd17d6715237144f40585e89d95e592d5efdb65ca4bfa509170a525f73c",
     "source_sha256": "6fc19c22e5ee771778aadfe7c56932cdd15fc2822fad9ce9c196e0db1be96f42",
     "identical_to_final": true
    }
+  },
+  {
+   "name": "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineInjective",
+   "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineInjective.lean",
+   "sha256": "d4197c31d2b072aa94570cc2cb70d1157116f19b08428d792283e34dfd2effa4",
+   "created_in": "8253a4a3f42bf15de30c7b8ad15a2eba8247fe6d",
+   "last_changed_in": "8253a4a3f42bf15de30c7b8ad15a2eba8247fe6d",
+   "theorem_count": 5,
+   "guard_count": 5,
+   "guards_in_order": true,
+   "deprecation_suppressions": 0,
+   "definitions": [
+    "PeerReplay",
+    "OwnerReplay",
+    "injectiveB2s",
+    "injectiveS2b"
+   ],
+   "theorems": [
+    "replay_never",
+    "injective_b2s_le",
+    "ce_or_injective_b2s",
+    "injective_s2b_le",
+    "ce_or_injective_s2b"
+   ],
+   "axiom_profile": {
+    "propext, Classical.choice, Quot.sound": 5
+   },
+   "imports": [
+    "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic",
+    "BeaconcryptCore.Computational.PqxdhDeploymentRecordReplay"
+   ],
+   "final_check": {
+    "prefix": "ce12/p2/olean3",
+    "exit": 0,
+    "head": "a0dda4f97ca9b700e120a0a414bb6058ca158b7a",
+    "dirty_paths": 1,
+    "log_bytes": 0,
+    "artifact_sha256": "ddf380cea4c00c246e8257888a045b1036ca2be8628b7543bcc001f7e50caaa4",
+    "source_sha256": "d4197c31d2b072aa94570cc2cb70d1157116f19b08428d792283e34dfd2effa4"
+   },
+   "earlier_checks": [],
+   "first_recheck": null,
+   "recheck": {
+    "prefix": "ce12/p2/recheck2/olean",
+    "exit": 0,
+    "head": "4b8a01edb166ad685ff7009c96a3376e8a6bebbe",
+    "dirty_paths": 0,
+    "log_bytes": 0,
+    "artifact_sha256": "ddf380cea4c00c246e8257888a045b1036ca2be8628b7543bcc001f7e50caaa4",
+    "source_sha256": "d4197c31d2b072aa94570cc2cb70d1157116f19b08428d792283e34dfd2effa4",
+    "identical_to_final": true
+   }
+  },
+  {
+   "name": "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineBills",
+   "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineBills.lean",
+   "sha256": "89090f26edefa26f1a5355540ae68f308c01b588f52b8e69c9e8aeb59354da84",
+   "created_in": "4b8a01edb166ad685ff7009c96a3376e8a6bebbe",
+   "last_changed_in": "4b8a01edb166ad685ff7009c96a3376e8a6bebbe",
+   "theorem_count": 6,
+   "guard_count": 6,
+   "guards_in_order": true,
+   "deprecation_suppressions": 0,
+   "definitions": [],
+   "theorems": [
+    "liftBase_bound",
+    "uniform_lifted",
+    "base_lifted",
+    "pair_bills",
+    "auth_bills",
+    "records_bills"
+   ],
+   "axiom_profile": {
+    "propext, Classical.choice, Quot.sound": 4,
+    "propext": 2
+   },
+   "imports": [
+    "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineCollision"
+   ],
+   "final_check": {
+    "prefix": "ce12/p2/olean3",
+    "exit": 0,
+    "head": "8253a4a3f42bf15de30c7b8ad15a2eba8247fe6d",
+    "dirty_paths": 1,
+    "log_bytes": 0,
+    "artifact_sha256": "0b1bcdd0a15882f5e687cda291925e16021e4ed97d98d302ac84e3110bd19807",
+    "source_sha256": "89090f26edefa26f1a5355540ae68f308c01b588f52b8e69c9e8aeb59354da84"
+   },
+   "earlier_checks": [],
+   "first_recheck": null,
+   "recheck": {
+    "prefix": "ce12/p2/recheck2/olean",
+    "exit": 0,
+    "head": "4b8a01edb166ad685ff7009c96a3376e8a6bebbe",
+    "dirty_paths": 0,
+    "log_bytes": 0,
+    "artifact_sha256": "0b1bcdd0a15882f5e687cda291925e16021e4ed97d98d302ac84e3110bd19807",
+    "source_sha256": "89090f26edefa26f1a5355540ae68f308c01b588f52b8e69c9e8aeb59354da84",
+    "identical_to_final": true
+   }
   }
  ],
- "theorem_total": 93,
+ "theorem_total": 104,
  "allowed_axioms": [
   "propext",
   "Classical.choice",
@@ -486,15 +626,33 @@
    "forbidden": [],
    "suppressions": 0
   },
-  "closure_size": 1561,
+  "PqxdhDeploymentHeadlineInjective": {
+   "theorems": 5,
+   "guards": 5,
+   "in_order": true,
+   "guard_msgs": 5,
+   "bad_axioms": [],
+   "forbidden": [],
+   "suppressions": 0
+  },
+  "PqxdhDeploymentHeadlineBills": {
+   "theorems": 6,
+   "guards": 6,
+   "in_order": true,
+   "guard_msgs": 6,
+   "bad_axioms": [],
+   "forbidden": [],
+   "suppressions": 0
+  },
+  "closure_size": 1565,
   "boundary_imports": []
  },
  "forbidden_tokens_found": [],
  "boundary_imports": [],
  "handwritten_lean": {
   "before": 1893,
-  "after": 1899,
-  "note": "1893 -> 1894 (Gap) -> 1895 (Collision) -> 1897 (merge of central c031e4e7: two LQ-F unit D files) -> 1898 (Symbolic) -> 1899 (SymbolicLor); coord.sh inv recount before coord.sh inv rehash"
+  "after": 1901,
+  "note": "1893 -> 1894 (Gap) -> 1895 (Collision) -> 1897 (merge of central c031e4e7: two LQ-F unit D files) -> 1898 (Symbolic) -> 1899 (SymbolicLor) -> 1900 (Injective) -> 1901 (Bills); coord.sh inv recount before coord.sh inv rehash"
  },
  "headlines": {
   "server_gap / server_gap_bound": "on every outcome: SymServer peer not designated inside the budget -> OwnerForgery at the owner of the accepted identity key with NoBundleFailureAt; 𝒟[ServerGap] <= ε_A2pub (a2pubTerm, a2pub_owner_bound); premises shortRejects, Phase1ReadBack, Phase2ReadBack, budget",
@@ -510,7 +668,11 @@
   "ce_app_server_sym": "𝒟[AppWinPeerSym] <= ce_app_server bound + ε_A2pub",
   "ce_kt_sym": "𝒟[KtSym] <= ce_kt_sum_le bound + (ε_A2pub + ofReal ε_A1 + ctGapTerm)",
   "symbolic_lor": "ofReal |adv_sym - adv_CE(nbfFilter)| <= 2⁻¹ * (ε_A2pub + ofReal ε_A1 + ctGapTerm + ε_inj + ctCollTerm), adv = Pr[win] - ½Pr[eligible]",
-  "symbolic_lor_bound": "ofReal |adv_sym| <= ce_lor bound at nbfFilter + 2⁻¹ * (ε_A2pub + ofReal ε_A1 + ctGapTerm + ε_inj + ctCollTerm)"
+  "symbolic_lor_bound": "ofReal |adv_sym| <= ce_lor bound at nbfFilter + 2⁻¹ * (ε_A2pub + ofReal ε_A1 + ctGapTerm + ε_inj + ctCollTerm)",
+  "ce_or_injective_b2s": "𝒟[OriginFailureSym .b2s ∨ ReplayOwnerEvent ∨ PeerReplay] <= ce_or_b2s bound + ε_A2pub",
+  "ce_or_injective_s2b": "𝒟[OriginFailureSym .s2b ∨ (∃ c c', SharedMatch c c') ∨ OwnerReplay] <= ce_or_s2b bound + ofReal ε_A1inj + ctGapTerm + ctCollTerm (ε_A1inj = ce_a1_injective right side)",
+  "pair_bills": "(pairAdversary setup.kem).MakesAtMostQueries 0 0 0 caps.encapsUniform caps.encapsBase 0 (KemBound)",
+  "auth_bills / records_bills": "RecordAuthBounded / RecordBounded of record_auth_lift / record_lift at envGD of each target with the frame of frame_idealD, at BI_g = inputG caps qInit budget bounds"
  },
  "deviations_from_design": [
   "D-ct stop rule fired: Beacon-side terms carry ctGapTerm (F-ct2) instead of ε_ct; owner to be told before publication.",
@@ -519,7 +681,9 @@
   "SymCpartS2b reads build entries directly (some session that built the peer), not linkOf, so no key-ID or build uniqueness is needed.",
   "pairAdversary forwards its encapsulation through an explicit liftBase handler instead of liftComp.",
   "lor_difference takes only Phase1ReadBack (unused premises dropped).",
-  "Not built this session: injective CE-OR forms, bills, AG, ct_collision_game, D-ct."
+  "Injective CE-OR forms stated with the existing injectivity events (CE-R1' ReplayOwnerEvent, CE-C3 record replay, SharedMatch); no new uniqueness invariant.",
+  "Bills: only pairAdversary and the record lifts at BI_g are new; guessBill (splitStep_uniform) and HeadlineBills not built.",
+  "Not built this session: guessBill with HeadlineBills, AG, ct_collision_game, D-ct."
  ],
  "contracts_used": {
   "new_contracts": [],
@@ -536,8 +700,7 @@
  },
  "not_claimed": [
   "closed ε_ct (D-ct deferred) and closed ε_ctcoll",
-  "injective CE-OR forms",
-  "bills of the new reductions beyond decapsulation counts (splitStep_uniform, ptc_bills, HeadlineBills, pairAdversary uniform bill)",
+  "ptc phase-1 uniform bill (guessBill via splitStep_uniform) and the aggregate HeadlineBills",
   "AG: b2s publisher pin and mode-O plaintext stay symbolic-only",
   "pins other than (S, serverKid)",
   "raw-receive positions only (s2b from 2)",
@@ -548,8 +711,7 @@
  "open_points": [
   "owner: D-ct stop rule fired (F-ct2)",
   "ct_collision_game (2-4 days)",
-  "injective CE-OR forms (0.5-1.5 days)",
-  "bills (0.5-1.5 days)",
+  "bills remainder: splitStep_uniform, ptc guessBill, HeadlineBills (0.5-1.5 days)",
   "AG (2-5 days)",
   "D-ct (4-8 days, deferred)",
   "P2 review, fix pass, integration; then P3"
@@ -576,6 +738,11 @@
     "path": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/recheck/leanpath",
     "sha256": "0d55d832f16bf0849fbe05013a7200dcb1272d80fa32c86a1c7ad59b6052782c",
     "first_prefix": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/recheck/olean"
+   },
+   "recheck2/leanpath": {
+    "path": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/recheck2/leanpath",
+    "sha256": "0899e47fd86553915a988a856aa22bff99e0411ed527981223aba69d11f2a23b",
+    "first_prefix": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/recheck2/olean"
    }
   },
   "roots": {
@@ -603,9 +770,21 @@
     "dirty_paths": 4,
     "log_bytes": 0
    },
+   "logs/final3/root-bills.json": {
+    "exit": 0,
+    "head": "8253a4a3f42bf15de30c7b8ad15a2eba8247fe6d",
+    "dirty_paths": 4,
+    "log_bytes": 0
+   },
    "logs/final3/root-hygiene.json": {
     "exit": 0,
     "head": "227db4dd0e02c66393e53ed3a74aab043e49726c",
+    "dirty_paths": 4,
+    "log_bytes": 0
+   },
+   "logs/final3/root-injective.json": {
+    "exit": 0,
+    "head": "a0dda4f97ca9b700e120a0a414bb6058ca158b7a",
     "dirty_paths": 4,
     "log_bytes": 0
    },
@@ -620,9 +799,25 @@
     "head": "e37ed9e7cccc224cdfd0a316ad21c4568449efe7",
     "dirty_paths": 0,
     "log_bytes": 0
+   },
+   "recheck2/logs/root-clean2.json": {
+    "exit": 0,
+    "head": "4b8a01edb166ad685ff7009c96a3376e8a6bebbe",
+    "dirty_paths": 0,
+    "log_bytes": 0
    }
   },
   "inventories": {
+   "bills": {
+    "status": 0,
+    "commit": "8253a4a3f42bf15de30c7b8ad15a2eba8247fe6d",
+    "start": "2026-10-10T06:36:06Z",
+    "end": "2026-10-10T06:37:51Z",
+    "dirty_before": 4,
+    "dirty_after": 4,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/logs/inventory-bills.log",
+    "log_sha256": "8bb64d3b5d4e232be8d5628dc3036c18d0fc303e5a11b09868e425d5861f2a2b"
+   },
    "clean-head": {
     "status": 0,
     "commit": "e37ed9e7cccc224cdfd0a316ad21c4568449efe7",
@@ -633,6 +828,16 @@
     "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/logs/inventory-clean-head.log",
     "log_sha256": "797827e1c3adc753f4f299966c2bc91c6f78b39e1a11bef2115460d183fe1369"
    },
+   "clean-head2": {
+    "status": 0,
+    "commit": "4b8a01edb166ad685ff7009c96a3376e8a6bebbe",
+    "start": "2026-10-10T06:39:21Z",
+    "end": "2026-10-10T06:41:07Z",
+    "dirty_before": 0,
+    "dirty_after": 0,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/logs/inventory-clean-head2.log",
+    "log_sha256": "14c32cb47e41cf42db8552a4559fc0711c6da97e409f1d554a812dd624ce92b6"
+   },
    "collision": {
     "status": 0,
     "commit": "361ad9f8e06671238b35028918c6d6b6c502464c",
@@ -642,6 +847,16 @@
     "dirty_after": 4,
     "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/logs/inventory-collision.log",
     "log_sha256": "7ceb928d19f32f25ecc13ee69fc59c3087d291c7a5ef228e2d319d97c0dc8727"
+   },
+   "docs": {
+    "status": 0,
+    "commit": "e37ed9e7cccc224cdfd0a316ad21c4568449efe7",
+    "start": "2026-10-10T06:26:14Z",
+    "end": "2026-10-10T06:28:02Z",
+    "dirty_before": 3,
+    "dirty_after": 3,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/logs/inventory-docs.log",
+    "log_sha256": "ffd4371dc9f26346b9ce6497f1bd1f5194768eef7ebeaa4ca9817b5df663fcc5"
    },
    "gap": {
     "status": 0,
@@ -674,6 +889,16 @@
     "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/logs/inventory-hygiene2.log",
     "log_sha256": "bc12c83a3a5f3c1f1fea80e10ce5ecc29fd9f0f9afb8dca95a1f83a1d1ab6f31"
    },
+   "injective": {
+    "status": 0,
+    "commit": "a0dda4f97ca9b700e120a0a414bb6058ca158b7a",
+    "start": "2026-10-10T06:31:37Z",
+    "end": "2026-10-10T06:33:24Z",
+    "dirty_before": 4,
+    "dirty_after": 4,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/logs/inventory-injective.log",
+    "log_sha256": "a62b9223060ee3a5f265207e5d6002cef7337f4220d6e5634f145d3fb2e2eee5"
+   },
    "merge1": {
     "status": 0,
     "commit": "5553cf770702f9d218404f3170435d775ead1775",
@@ -705,7 +930,7 @@
     "log_sha256": "fb6bfd9468f63849d2b5146a6ccf1ba9c3ec662948208cc38548e906537ce9be"
    }
   },
-  "guard_scan": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/logs/scan-clean.json",
+  "guard_scan": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/logs/scan-clean2.json",
   "merge": {
    "commit": "a981309b2893e399dad4a2810839ec5e305bfb71",
    "conflicts": [
@@ -724,7 +949,7 @@
   "status": "not reviewed"
  },
  "git_diff_check": {
-  "range": "b88e30124d0c80a762cdf99ccf82569995c4a471..e37ed9e7cccc224cdfd0a316ad21c4568449efe7",
+  "range": "b88e30124d0c80a762cdf99ccf82569995c4a471..4b8a01edb166ad685ff7009c96a3376e8a6bebbe",
   "exit": 0
  }
 }
