@@ -1,14 +1,14 @@
 {
  "stage": "PB-03 under LQ-F: source acceptance with the private ephemeral log (item 7 increment A, module 4 of 5)",
  "topic": "codex/deployment-boundary-a",
- "parent_commit": "5e2609a76faee2d1e6eb3a4be1d07100b297ab84",
+ "parent_commit": "b549973cd59725bd4243bf5eb0d095e5315927d5",
  "central_basis": "f0dc46bb6473ab37ecf48e623f1ccb192bd6b3af",
- "state": "checked at central f0dc46bb on the topic branch; independent fresh-context review (decision D-6) pending; not integrated",
+ "state": "checked at central f0dc46bb on the topic branch; both D-6 reviews of b549973c APPROVE_WITH_NITS, all findings fixed in this revision, confirming review pending; not integrated",
  "module": "PqxdhBoundaryLoggedAccept",
  "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryLoggedAccept.lean",
  "source_sha256": "bbf90a6b0d40e2e1d1cf3bcaf31a60b443b485ecfd49e65d7f2496e34227631b",
  "guide": "doc/impl/production-boundary-logged-accept.md",
- "guide_sha256": "8581897252b75aac3d9c3e96fec6f1f0c294e6456a1b1a2c61e85a0e187702e7",
+ "guide_sha256": "432b87cf01a8022205e286dac324278a60860bdf160368d0b5dc64ae37eab1b8",
  "guarded_statements": 8,
  "theorems": [
   "collection_exact",
@@ -50,11 +50,11 @@
   },
   "module": {
    "module": "BeaconcryptCore.Computational.PqxdhBoundaryLoggedAccept",
-   "start": "2026-10-10T08:04:15.344518940Z",
-   "end": "2026-10-10T08:04:19.052768261Z",
+   "start": "2026-10-10T08:41:43.699122491Z",
+   "end": "2026-10-10T08:41:47.524820354Z",
    "exit": 0,
-   "head": "f0dc46bb6473ab37ecf48e623f1ccb192bd6b3af",
-   "dirty_paths": 5,
+   "head": "b549973cd59725bd4243bf5eb0d095e5315927d5",
+   "dirty_paths": 2,
    "source_sha256": "bbf90a6b0d40e2e1d1cf3bcaf31a60b443b485ecfd49e65d7f2496e34227631b",
    "log_bytes": 0,
    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -82,60 +82,99 @@
   "statement_scan_clean": {
    "exit": 0,
    "expected": 0,
-   "json": "/tmp/bc-arc-scratch/item7/a/scans/PqxdhBoundaryLoggedAccept-statement-clean.json",
-   "json_sha256": "f0745e84a81be4cffc4853cd41f30e7749774d4e801d0da8846e66ad18facc85",
+   "json": "/tmp/bc-arc-scratch/item7/a/fix1/scans/PqxdhBoundaryLoggedAccept-statement-clean.json",
+   "json_sha256": "3e33a43736ce2d2533da05fd8367a8cfb793e3b0ec8627385bf5c21f48eec926",
    "declarations": 12,
    "hits": 0
   },
   "statement_scan_live": {
    "exit": 1,
    "expected": 1,
-   "json": "/tmp/bc-arc-scratch/item7/a/scans/PqxdhBoundaryLoggedAccept-statement-live.json",
-   "json_sha256": "c94ef731fe3ff7ca18ab5e9e9617b5775e0524d1ccf8a699e088e2cbc266dd95",
-   "hits": 8
+   "json": "/tmp/bc-arc-scratch/item7/a/fix1/scans/PqxdhBoundaryLoggedAccept-statement-live.json",
+   "json_sha256": "c49419bf3baeb3696445ca102ed11fb39d58a4f51648c1beac60e8a939689da6",
+   "hits": 21,
+   "live_classes": 11,
+   "dead_classes": [],
+   "negative_control_hits": 0
   },
   "direct_scan_clean": {
    "wrapper_exit": 0,
    "expected_lean_exit": 0,
-   "fixture": "/tmp/bc-arc-scratch/item7/a/scans/PqxdhBoundaryLoggedAccept-scan-clean.lean",
-   "fixture_sha256": "b9ac97ce194ac4f2d7fdaf8ace60e7e0400ac8b02605274b69a0e0111df92d1e",
-   "log": "/tmp/bc-arc-scratch/item7/a/logs/dev/PqxdhBoundaryLoggedAccept-scan-clean-2.log",
-   "log_sha256": "51921203db4089dc80106dd2510d9d51e9607b1b8c7ed2b1c3288c6ef7b5104d",
+   "fixture": "/tmp/bc-arc-scratch/item7/a/fix1/scans/PqxdhBoundaryLoggedAccept-scan-clean.lean",
+   "fixture_sha256": "660f20d4bb4430e6da57b1d5be45a9c74576ecbd873695fbad3b37973748639b",
+   "log": "/tmp/bc-arc-scratch/item7/a/fix1/logs/dev/PqxdhBoundaryLoggedAccept-scan-clean-1.log",
+   "log_sha256": "6a93b2db2db9357231e645af5ce990ebc8b389cbf4bfa67ee354a4b030626171",
    "lean_exit": 0,
-   "declarations": "19",
-   "forbidden": "0",
-   "allowed_crypto": "0"
+   "module_declarations": 31,
+   "outside_module_namespace": 12,
+   "module_forbidden": 0,
+   "allowed_crypto": 0,
+   "liveness_witnesses": null,
+   "rule_classes_live": null,
+   "rule_classes": null,
+   "negative_control_hits": null,
+   "total_forbidden": null
   },
   "direct_scan_live": {
    "wrapper_exit": 0,
    "expected_lean_exit": 1,
-   "fixture": "/tmp/bc-arc-scratch/item7/a/scans/PqxdhBoundaryLoggedAccept-scan-live.lean",
-   "fixture_sha256": "a5de5a5a4214b8f4d0714a7d69913b8b8dea61df60a31111aba65616eb76a1fd",
-   "log": "/tmp/bc-arc-scratch/item7/a/logs/dev/PqxdhBoundaryLoggedAccept-scan-live-2.log",
-   "log_sha256": "f4d16d11e74d603651fa70ef5c2aac44f7a9c6585ae8df2c9a8b97405a7a1764",
+   "fixture": "/tmp/bc-arc-scratch/item7/a/fix1/scans/PqxdhBoundaryLoggedAccept-scan-live.lean",
+   "fixture_sha256": "e9381108b4dedb169f8e29f20f6ebd13c288e57fd1dac19881f53c190952e3a1",
+   "log": "/tmp/bc-arc-scratch/item7/a/fix1/logs/dev/PqxdhBoundaryLoggedAccept-scan-live-1.log",
+   "log_sha256": "d1f10d613141625ad15b3f045e40aac9b5c4fa3d86633434a294fa3ced398dbc",
    "lean_exit": 1,
-   "declarations": "25",
-   "forbidden": "18",
-   "allowed_crypto": "0"
+   "module_declarations": 31,
+   "outside_module_namespace": 12,
+   "module_forbidden": 0,
+   "allowed_crypto": 0,
+   "liveness_witnesses": 18,
+   "rule_classes_live": 11,
+   "rule_classes": 11,
+   "negative_control_hits": 0,
+   "total_forbidden": 49
   },
   "scan_spec": {
-   "path": "/tmp/bc-arc-scratch/item7/a/scans/scan-spec.json",
-   "sha256": "6c72b02503316b7699becd206706e0fafde58bff9574b18955b4f10c9cf8be36",
-   "note": "Codex scan-spec 5b817691 plus pb_parts actual_extracted and evolving_actual_extracted (B9/B11 extracted forms); the one-name .crypto allowance applies only to the modules listed in functional_field_allowlist_modules (D-1)"
+   "path": "/tmp/bc-arc-scratch/item7/a/fix1/scans/scan-spec.json",
+   "sha256": "8392e6614f27e9500f9bd070661ac50a5082e79d3e44c26b191c8c2b16d496bd",
+   "note": "version 2 after the D-6 hygiene review: Codex scan-spec 5b817691 plus pb_parts actual_extracted and evolving_actual_extracted (B9/B11 extracted forms); eleven explicit rule classes; join_later, c6_, finishErased, PqxdhRecordLiftLater and PqxdhRecordLiftWorldCompiler as name-component prefixes; CE idealGame as the full-name prefix BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps.idealGame (the dead entry idealGame° removed); the C7 erasure statements PqxdhDeploymentFinishErasure.erase_* and PqxdhDeploymentHiddenKernels.finish_erase* as full-name prefixes; the one-name .crypto allowance applies only to the modules listed in functional_field_allowlist_modules (D-1)",
+   "superseded": {
+    "path": "/tmp/bc-arc-scratch/item7/a/scans/scan-spec.json",
+    "sha256": "6c72b02503316b7699becd206706e0fafde58bff9574b18955b4f10c9cf8be36",
+    "note": "version 1, used for the b549973c receipts; exact-part matching"
+   }
   },
   "scan_tools": {
-   "stmt_scan.py": "56e115aff38e3e5baa017e0ee34520ef2a26054493ad6fd91319517a03f29456",
-   "direct_scan.py": "36f43a112018e6dd5a05e416dfbc7a3f6cb7331591ec630a02529ce3a8a2eb6a",
-   "check.sh": "153c5750b0d3ee3c76adda15724fb95e8c61558e078fd1966ce038ca76d87cc8",
-   "dev.sh": "35740d6d32f4cc61f958d8908fb0686fc4abc383c118556b5024704a4a6a9460",
-   "final.sh": "d1763a0e943aae37c6034f81b015d10f4cc5f9d64f3f0aca7589a785c166eb01",
-   "guards.py": "d346a4518d510cc2e0d80fda4fc68076ec6a4cd498d566376ab8882cbd528eb4"
+   "stmt_scan.py": "f70361fd45548abe678728354b9d19cc2ed8fff06c98e07cc056bdd13544447d",
+   "direct_scan.py": "61bee78e087a3de6217a65af92f70dce387bacbea6df1ca5ac165b7625735dbd",
+   "check.sh": "9e8ba24b233ec7e5a0c0226829306dfba3909ca77fc0e0592e7e1048ff34e273",
+   "dev.sh": "fbbca13403ee98896d59c634c0a5e86f109fcccb813dee70942896fd0d13e984",
+   "final.sh": "4bfbbc5f52d807a9db7215ec03e16bf8f3297f1adaf97044e2240f5eb850f3e9",
+   "receipt.py": "dcb5041a2b8d4a6e25e3dabdf14b64bfadcf495945d97380384e2d70ff115e98",
+   "guards.py (item7/a/scripts, guards unchanged)": "d346a4518d510cc2e0d80fda4fc68076ec6a4cd498d566376ab8882cbd528eb4"
   },
   "branch_tip_checks": "root import, inv recount before inv rehash, focused check-inventory under a @nix lease and git diff --check are run at the branch tip and recorded in doc/impl/proof-receipts/production-boundary-increment-a.json",
-  "scope": "The statement scan reads types and binders of named declarations; the direct-reference scan reads the elaborated types and bodies of every constant in the module namespace. Neither is an import-graph audit."
+  "scope": "The statement scan reads the types and binders of named declarations in the source text. The direct-reference scan reads the elaborated types and bodies of every constant whose declaring module is this module (Environment.getModuleIdxFor?), including the auxiliary constants Lean generates under other names (_private match equations and splitters, equation lemmas for imported definitions); module_declarations counts them and outside_module_namespace counts those not under the module namespace. Each liveness run gives every rule class its own witness and checks a negative control. Neither scan is an import-graph audit."
  },
  "review": {
-  "status": "pending",
+  "status": "reviewed: both D-6 reviews of b549973c returned APPROVE_WITH_NITS; all findings are fixed in this revision; a confirming review of the fixes is pending",
+  "reviews": [
+   {
+    "kind": "D-6 semantic review (fresh-context Claude sub-agent, read only)",
+    "verdict": "APPROVE_WITH_NITS",
+    "scratch": "/tmp/bc-arc-scratch/item7/a/review-semantic",
+    "record": "/tmp/bc-arc-scratch/item7/NOTES.md (D-6 independent semantic review entry)"
+   },
+   {
+    "kind": "D-6 hygiene review (fresh-context Claude sub-agent, read only)",
+    "verdict": "APPROVE_WITH_NITS",
+    "scratch": "/tmp/bc-arc-scratch/item7/a/review-hygiene",
+    "record": "/tmp/bc-arc-scratch/item7/a/review-hygiene/NOTES.md"
+   }
+  ],
+  "findings": {
+   "path": "/tmp/bc-arc-scratch/item7/a/fix1/docs/review-findings.json",
+   "sha256": "b83850312cdab6220d6ad0ee17581f5109a1326962de03d85583c891db1683df"
+  },
   "plan": "decision D-6 of /tmp/bc-arc-scratch/item7/plan.md: a fresh-context Claude reviewer sub-agent with a written verdict",
   "prior_evidence": {
    "kind": "none",
@@ -150,18 +189,30 @@
   "transcript-fidelity cargo tests (no inventory metadata they read changed)"
  ],
  "remaining": [
-  "independent fresh-context review (D-6)",
+  "confirming review of the D-6 fix pass (findings: /tmp/bc-arc-scratch/item7/a/fix1/docs/review-findings.json)",
   "I4 PqxdhBoundaryDeploymentLater consumes deployment_exact",
   "PB-GHOST capture site server.rs:368 stays RT",
-  "central integration"
+  "central integration",
+  "PB-E ledger: record the PqxdhDeploymentLaterServerGame exception (b) citation correction (known_corrections)"
  ],
  "crypto_allowance": {
   "decision": "D-1: the .crypto allowance does not apply to this module",
   "elaborated_occurrences": [],
   "statement_occurrences": []
  },
- "rust_reference": "beaconcrypt/src/server.rs:332 (get_shared_secret), ephemeral generation server.rs:368, PQ-key parse server.rs:369-372, encapsulation server.rs:373",
+ "rust_reference": "beaconcrypt/src/server.rs:332 (get_shared_secret), ephemeral generation server.rs:368, encapsulation server.rs:373 with the ML-KEM public-key admission inside it (the model step .parseKem, interpreted as checks.kemKey; survey PB-13/PB-14); server.rs:369-372 is a width-only from_bytes of the already fixed 1184-byte beacon_pq_public_key() (&[u8; MLKEM768_PUBLIC_KEY_SIZE], beaconcrypt-core/src/pqxdh.rs:187; libsodium-rs 0.2.4 crypto_kem::mlkem768 from_bytes checks only the length, crypto_kem.rs:264-275) and cannot reject; after generation the only rejection is inside encapsulate (crypto_kem_mlkem768_enc nonzero, crypto_kem.rs:374-393); LQ-F exception (b) is generation at :368 followed by rejection at the :373 admission",
  "deviations": [
   "the plan named the cap theorem logged_caps with callback counts equal to source_callback_caps plus one optional log entry; it is split into logged_caps (22-callback cap, from PqxdhServerRootPreparation.collect_bound) and deployment_log (exactly one appended entry)"
+ ],
+ "known_corrections": [
+  {
+   "for": "PB-E ledger (beside the PB-05 inner-writer correction)",
+   "site": "module docstring of the frozen central module PqxdhDeploymentLaterServerGame (line 5), also doc/impl/later-quantum-lqf-spike.md and the scope fields of doc/impl/proof-receipts/common-deployment-experiment-lqf.json and common-deployment-experiment-lqf-spike.json",
+   "stale": "exception (b) dropped when the PQ-key parse rejects at server.rs:369-372",
+   "correct": "exception (b) is generation at server.rs:368 followed by rejection of the KEM-key admission inside encapsulate at server.rs:373 (checks.kemKey, .parseKem); :369-372 is width-only and cannot reject",
+   "lean_impact": "none: the model order generate, parseKem, encapsulate matches Rust under the approved interpretation",
+   "action": "frozen module and published LQ-F documents left unedited; recorded here and in /tmp/bc-arc-scratch/item7/plan.md section 4 for the PB-E ledger",
+   "history": "the first version of this receipt, guide and analysis paragraph (e4a8feb1) copied the stale citation; found by the D-6 semantic review of b549973c"
+  }
  ]
 }

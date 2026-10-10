@@ -1,14 +1,14 @@
 {
- "stage": "PB-05 BuildNative8: native pending-token settlement and the CE build command (item 7 increment A, module 2 of 5)",
+ "stage": "PB-05: native pending-token settlement and the CE build command, PqxdhBoundaryRegistrationBuildNative (item 7 increment A, module 2 of 5)",
  "topic": "codex/deployment-boundary-a",
- "parent_commit": "0c7b05d2283ee8fadfc0964af0f653872ee1818f",
+ "parent_commit": "b549973cd59725bd4243bf5eb0d095e5315927d5",
  "central_basis": "f0dc46bb6473ab37ecf48e623f1ccb192bd6b3af",
- "state": "checked at central f0dc46bb on the topic branch; independent fresh-context review (decision D-6) pending; not integrated",
+ "state": "checked at central f0dc46bb on the topic branch; both D-6 reviews of b549973c APPROVE_WITH_NITS, all findings fixed in this revision, confirming review pending; not integrated",
  "module": "PqxdhBoundaryRegistrationBuildNative",
  "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryRegistrationBuildNative.lean",
- "source_sha256": "161348b44861174b71b105ce91864808f397ec901f5d4d4efcf4db1e8cbba47b",
+ "source_sha256": "8972a59dacbeae22b171d66edae3525864368c81116210fe090cb7a1b3cef732",
  "guide": "doc/impl/production-boundary-registration-build-native.md",
- "guide_sha256": "8b9fd12268aa7568315cb37ee1b4b1911d1ad5960e6d64e38506652406f8027c",
+ "guide_sha256": "96cab101888caa41fdd9e3f92f3906b45a3da6e0a4f4a21326ffc4aad39eb029",
  "guarded_statements": 8,
  "theorems": [
   "native_exact",
@@ -30,8 +30,8 @@
   "Classical.choice",
   "Quot.sound"
  ],
- "provenance": "adapted from Codex WIP 161348b44861174b71b105ce91864808f397ec901f5d4d4efcf4db1e8cbba47b (Lean source, committed byte for byte) and b326ec01dba5dcf333aafa22d1874c3cb5de34fedae46fe605fa9a677997387f (guide text, kept verbatim with a Claude section appended); preserved copies in /tmp/bc-arc-scratch/item7/inherited/pb05-build-native",
- "authorship": "Codex wrote the module and the guide text before the takeover section; Claude added the takeover section, the receipt and the analysis paragraph, re-ran every check and changed no Lean byte",
+ "provenance": "adapted from Codex WIP 161348b44861174b71b105ce91864808f397ec901f5d4d4efcf4db1e8cbba47b (Lean source, committed byte for byte in 4a948258; after the D-6 review only the docstring of token_consumed was reworded) and b326ec01dba5dcf333aafa22d1874c3cb5de34fedae46fe605fa9a677997387f (guide text, kept verbatim with a Claude section appended in 4a948258; after the D-6 review three wording corrections: Codex-reviewed for reviewed, and PqxdhBoundaryRegistrationBuild twice for the Codex shorthand Build8); preserved copies in /tmp/bc-arc-scratch/item7/inherited/pb05-build-native",
+ "authorship": "Codex wrote the module and the guide text before the takeover section; Claude added the takeover section, the receipt and the analysis paragraph, re-ran every check, and after the D-6 review reworded the token_consumed docstring and three words of the guide text; no statement, definition, proof or guard was changed",
  "statements": {
   "native_exact": "the native token wrapper with its build program replaced by the extracted executor equals CE nativeBuild",
   "native_present": "a present token runs the complete extracted builder and settles its returned Server state, primitive cache and seal log; every other native field kept",
@@ -50,16 +50,16 @@
   },
   "module": {
    "module": "BeaconcryptCore.Computational.PqxdhBoundaryRegistrationBuildNative",
-   "start": "2026-10-10T08:03:51.203585076Z",
-   "end": "2026-10-10T08:03:55.253068795Z",
+   "start": "2026-10-10T08:41:21.050142322Z",
+   "end": "2026-10-10T08:41:24.875366554Z",
    "exit": 0,
-   "head": "f0dc46bb6473ab37ecf48e623f1ccb192bd6b3af",
-   "dirty_paths": 5,
-   "source_sha256": "161348b44861174b71b105ce91864808f397ec901f5d4d4efcf4db1e8cbba47b",
+   "head": "b549973cd59725bd4243bf5eb0d095e5315927d5",
+   "dirty_paths": 2,
+   "source_sha256": "8972a59dacbeae22b171d66edae3525864368c81116210fe090cb7a1b3cef732",
    "log_bytes": 0,
    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "artifact": "/tmp/bc-arc-scratch/item7/a/olean/BeaconcryptCore/Computational/PqxdhBoundaryRegistrationBuildNative.olean",
-   "artifact_sha256": "84e47d94566a8e2d2340113ac6ab9a2047084c598f231d23d722edde71a5f817",
+   "artifact_sha256": "c2a23e404ef4635bc735afa98e3ef428632be91ec4351be279e1294c32cf5f35",
    "leanpath": "/tmp/bc-arc-scratch/item7/a/leanpath",
    "leanpath_sha256": "fe146755bd6d790bb1b58d39711a03481bf30bd15aecf8479e4d96b091ccda29",
    "command": [
@@ -82,60 +82,99 @@
   "statement_scan_clean": {
    "exit": 0,
    "expected": 0,
-   "json": "/tmp/bc-arc-scratch/item7/a/scans/PqxdhBoundaryRegistrationBuildNative-statement-clean.json",
-   "json_sha256": "56bbff861d336bbcb1d2398002657aa1e99a6e11fc1a3d44abbbc84767c6b368",
+   "json": "/tmp/bc-arc-scratch/item7/a/fix1/scans/PqxdhBoundaryRegistrationBuildNative-statement-clean.json",
+   "json_sha256": "7299c9e20d6ed82705cbb0108996d7a05f842f2fa76721861e7f68fb57ee1ef9",
    "declarations": 9,
    "hits": 0
   },
   "statement_scan_live": {
    "exit": 1,
    "expected": 1,
-   "json": "/tmp/bc-arc-scratch/item7/a/scans/PqxdhBoundaryRegistrationBuildNative-statement-live.json",
-   "json_sha256": "41369d2fe4fbfbc500cb163a0fc261c25c3613f75d8792139ca54a49db82cf32",
-   "hits": 8
+   "json": "/tmp/bc-arc-scratch/item7/a/fix1/scans/PqxdhBoundaryRegistrationBuildNative-statement-live.json",
+   "json_sha256": "1dc3737b01457b1478489d3a19e6fbf0aacf89d12a89df203e200bda4dbe9155",
+   "hits": 21,
+   "live_classes": 11,
+   "dead_classes": [],
+   "negative_control_hits": 0
   },
   "direct_scan_clean": {
    "wrapper_exit": 0,
    "expected_lean_exit": 0,
-   "fixture": "/tmp/bc-arc-scratch/item7/a/scans/PqxdhBoundaryRegistrationBuildNative-scan-clean.lean",
-   "fixture_sha256": "5b796fcee0f9f8731abecdc7e6636d8bd0e5010da204b6bdeca722d6710c9d02",
-   "log": "/tmp/bc-arc-scratch/item7/a/logs/dev/PqxdhBoundaryRegistrationBuildNative-scan-clean-2.log",
-   "log_sha256": "c9da2abb94f6f239c2f2d53a6e03397bd275885a565d456d60b76eec216115d3",
+   "fixture": "/tmp/bc-arc-scratch/item7/a/fix1/scans/PqxdhBoundaryRegistrationBuildNative-scan-clean.lean",
+   "fixture_sha256": "cae7342b36604fcef150258c3485bd213cf5e85b354829ee7021d43230155b5e",
+   "log": "/tmp/bc-arc-scratch/item7/a/fix1/logs/dev/PqxdhBoundaryRegistrationBuildNative-scan-clean-1.log",
+   "log_sha256": "a0b2d2e90299f3f53fa7fdb778dff601a69cbeb51cca94c90eec272454917e41",
    "lean_exit": 0,
-   "declarations": "13",
-   "forbidden": "0",
-   "allowed_crypto": "0"
+   "module_declarations": 20,
+   "outside_module_namespace": 7,
+   "module_forbidden": 0,
+   "allowed_crypto": 0,
+   "liveness_witnesses": null,
+   "rule_classes_live": null,
+   "rule_classes": null,
+   "negative_control_hits": null,
+   "total_forbidden": null
   },
   "direct_scan_live": {
    "wrapper_exit": 0,
    "expected_lean_exit": 1,
-   "fixture": "/tmp/bc-arc-scratch/item7/a/scans/PqxdhBoundaryRegistrationBuildNative-scan-live.lean",
-   "fixture_sha256": "a013e00dbf61a089166555844f1152746e8f9b7f76d1cb06e4840b456303e489",
-   "log": "/tmp/bc-arc-scratch/item7/a/logs/dev/PqxdhBoundaryRegistrationBuildNative-scan-live-2.log",
-   "log_sha256": "d6b51cd979a489b135d53c6aeb95801b0223f9383ae86a3e2ee7b7ab65d472ce",
+   "fixture": "/tmp/bc-arc-scratch/item7/a/fix1/scans/PqxdhBoundaryRegistrationBuildNative-scan-live.lean",
+   "fixture_sha256": "e562681a34e33556d64849117c2ad87bdfba6167cabaa7a843d8f72e9b609cb1",
+   "log": "/tmp/bc-arc-scratch/item7/a/fix1/logs/dev/PqxdhBoundaryRegistrationBuildNative-scan-live-1.log",
+   "log_sha256": "d80e35ec6db337002485a81f5633100c7498e77f9c2deccc79de208d1b32f8af",
    "lean_exit": 1,
-   "declarations": "19",
-   "forbidden": "18",
-   "allowed_crypto": "0"
+   "module_declarations": 20,
+   "outside_module_namespace": 7,
+   "module_forbidden": 0,
+   "allowed_crypto": 0,
+   "liveness_witnesses": 18,
+   "rule_classes_live": 11,
+   "rule_classes": 11,
+   "negative_control_hits": 0,
+   "total_forbidden": 49
   },
   "scan_spec": {
-   "path": "/tmp/bc-arc-scratch/item7/a/scans/scan-spec.json",
-   "sha256": "6c72b02503316b7699becd206706e0fafde58bff9574b18955b4f10c9cf8be36",
-   "note": "Codex scan-spec 5b817691 plus pb_parts actual_extracted and evolving_actual_extracted (B9/B11 extracted forms); the one-name .crypto allowance applies only to the modules listed in functional_field_allowlist_modules (D-1)"
+   "path": "/tmp/bc-arc-scratch/item7/a/fix1/scans/scan-spec.json",
+   "sha256": "8392e6614f27e9500f9bd070661ac50a5082e79d3e44c26b191c8c2b16d496bd",
+   "note": "version 2 after the D-6 hygiene review: Codex scan-spec 5b817691 plus pb_parts actual_extracted and evolving_actual_extracted (B9/B11 extracted forms); eleven explicit rule classes; join_later, c6_, finishErased, PqxdhRecordLiftLater and PqxdhRecordLiftWorldCompiler as name-component prefixes; CE idealGame as the full-name prefix BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps.idealGame (the dead entry idealGame° removed); the C7 erasure statements PqxdhDeploymentFinishErasure.erase_* and PqxdhDeploymentHiddenKernels.finish_erase* as full-name prefixes; the one-name .crypto allowance applies only to the modules listed in functional_field_allowlist_modules (D-1)",
+   "superseded": {
+    "path": "/tmp/bc-arc-scratch/item7/a/scans/scan-spec.json",
+    "sha256": "6c72b02503316b7699becd206706e0fafde58bff9574b18955b4f10c9cf8be36",
+    "note": "version 1, used for the b549973c receipts; exact-part matching"
+   }
   },
   "scan_tools": {
-   "stmt_scan.py": "56e115aff38e3e5baa017e0ee34520ef2a26054493ad6fd91319517a03f29456",
-   "direct_scan.py": "36f43a112018e6dd5a05e416dfbc7a3f6cb7331591ec630a02529ce3a8a2eb6a",
-   "check.sh": "153c5750b0d3ee3c76adda15724fb95e8c61558e078fd1966ce038ca76d87cc8",
-   "dev.sh": "35740d6d32f4cc61f958d8908fb0686fc4abc383c118556b5024704a4a6a9460",
-   "final.sh": "d1763a0e943aae37c6034f81b015d10f4cc5f9d64f3f0aca7589a785c166eb01",
-   "guards.py": "d346a4518d510cc2e0d80fda4fc68076ec6a4cd498d566376ab8882cbd528eb4"
+   "stmt_scan.py": "f70361fd45548abe678728354b9d19cc2ed8fff06c98e07cc056bdd13544447d",
+   "direct_scan.py": "61bee78e087a3de6217a65af92f70dce387bacbea6df1ca5ac165b7625735dbd",
+   "check.sh": "9e8ba24b233ec7e5a0c0226829306dfba3909ca77fc0e0592e7e1048ff34e273",
+   "dev.sh": "fbbca13403ee98896d59c634c0a5e86f109fcccb813dee70942896fd0d13e984",
+   "final.sh": "4bfbbc5f52d807a9db7215ec03e16bf8f3297f1adaf97044e2240f5eb850f3e9",
+   "receipt.py": "dcb5041a2b8d4a6e25e3dabdf14b64bfadcf495945d97380384e2d70ff115e98",
+   "guards.py (item7/a/scripts, guards unchanged)": "d346a4518d510cc2e0d80fda4fc68076ec6a4cd498d566376ab8882cbd528eb4"
   },
   "branch_tip_checks": "root import, inv recount before inv rehash, focused check-inventory under a @nix lease and git diff --check are run at the branch tip and recorded in doc/impl/proof-receipts/production-boundary-increment-a.json",
-  "scope": "The statement scan reads types and binders of named declarations; the direct-reference scan reads the elaborated types and bodies of every constant in the module namespace. Neither is an import-graph audit."
+  "scope": "The statement scan reads the types and binders of named declarations in the source text. The direct-reference scan reads the elaborated types and bodies of every constant whose declaring module is this module (Environment.getModuleIdxFor?), including the auxiliary constants Lean generates under other names (_private match equations and splitters, equation lemmas for imported definitions); module_declarations counts them and outside_module_namespace counts those not under the module namespace. Each liveness run gives every rule class its own witness and checks a negative control. Neither scan is an import-graph audit."
  },
  "review": {
-  "status": "pending",
+  "status": "reviewed: both D-6 reviews of b549973c returned APPROVE_WITH_NITS; all findings are fixed in this revision; a confirming review of the fixes is pending",
+  "reviews": [
+   {
+    "kind": "D-6 semantic review (fresh-context Claude sub-agent, read only)",
+    "verdict": "APPROVE_WITH_NITS",
+    "scratch": "/tmp/bc-arc-scratch/item7/a/review-semantic",
+    "record": "/tmp/bc-arc-scratch/item7/NOTES.md (D-6 independent semantic review entry)"
+   },
+   {
+    "kind": "D-6 hygiene review (fresh-context Claude sub-agent, read only)",
+    "verdict": "APPROVE_WITH_NITS",
+    "scratch": "/tmp/bc-arc-scratch/item7/a/review-hygiene",
+    "record": "/tmp/bc-arc-scratch/item7/a/review-hygiene/NOTES.md"
+   }
+  ],
+  "findings": {
+   "path": "/tmp/bc-arc-scratch/item7/a/fix1/docs/review-findings.json",
+   "sha256": "b83850312cdab6220d6ad0ee17581f5109a1326962de03d85583c891db1683df"
+  },
   "plan": "decision D-6 of /tmp/bc-arc-scratch/item7/plan.md: a fresh-context Claude reviewer sub-agent with a written verdict",
   "prior_evidence": {
    "kind": "none; Codex froze a review candidate only",
@@ -150,7 +189,7 @@
   "transcript-fidelity cargo tests (no inventory metadata they read changed)"
  ],
  "remaining": [
-  "independent fresh-context review (D-6)",
+  "confirming review of the D-6 fix pass (findings: /tmp/bc-arc-scratch/item7/a/fix1/docs/review-findings.json)",
   "PB-E ledger row 05 (I5)",
   "central integration",
   "I3 DeploymentStep consumes deployment_build for the build command"
@@ -160,5 +199,16 @@
   "elaborated_occurrences": [],
   "statement_occurrences": []
  },
- "rust_reference": "beaconcrypt/src/server.rs:424-502 (build_registration_response takes RegistrationOutput by value)"
+ "rust_reference": "beaconcrypt/src/server.rs:424-502 (build_registration_response takes RegistrationOutput by value)",
+ "edits_after_review": {
+  "token_consumed docstring": {
+   "before": "Every supported outcome consumes the addressed token, including absent tokens, all ordinary rejections and both writer failures. No allocation or success premise is needed.",
+   "after": "Every supported outcome leaves the addressed pending slot empty: a present token is removed on success, on all ordinary rejections and on both writer failures, and an absent slot stays empty. No allocation or success premise is needed."
+  },
+  "guide": [
+   "reviewed -> Codex-reviewed (first paragraph)",
+   "Build8 -> PqxdhBoundaryRegistrationBuild (twice)"
+  ],
+  "analysis": "reviewed -> Codex-reviewed (Codex paragraph), with a note in Claude's paragraph"
+ }
 }

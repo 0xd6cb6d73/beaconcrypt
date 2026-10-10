@@ -1,14 +1,14 @@
 {
- "stage": "PB-05 Build8: real Server registration build source executor (item 7 increment A, module 1 of 5)",
+ "stage": "PB-05: real Server registration build source executor, PqxdhBoundaryRegistrationBuild (item 7 increment A, module 1 of 5)",
  "topic": "codex/deployment-boundary-a",
- "parent_commit": "f0dc46bb6473ab37ecf48e623f1ccb192bd6b3af",
+ "parent_commit": "b549973cd59725bd4243bf5eb0d095e5315927d5",
  "central_basis": "f0dc46bb6473ab37ecf48e623f1ccb192bd6b3af",
- "state": "checked at central f0dc46bb on the topic branch; independent fresh-context review (decision D-6) pending; not integrated",
+ "state": "checked at central f0dc46bb on the topic branch; both D-6 reviews of b549973c APPROVE_WITH_NITS, all findings fixed in this revision, confirming review pending; not integrated",
  "module": "PqxdhBoundaryRegistrationBuild",
  "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryRegistrationBuild.lean",
  "source_sha256": "f33544fdae633624ecf33d93b67c36c976888e3f424e09522b27f19d9bdbded5",
  "guide": "doc/impl/production-boundary-registration-build.md",
- "guide_sha256": "c10e90736be3149038ad975c391441adb5b49da9ee5e7c3b5d587bbbbdf7c73c",
+ "guide_sha256": "4ef82df6d402e8cb949c7a75fef7c9a7437eea174541f8cf53cc2bc2ec0a675d",
  "guarded_statements": 8,
  "theorems": [
   "send_exact",
@@ -50,11 +50,11 @@
   },
   "module": {
    "module": "BeaconcryptCore.Computational.PqxdhBoundaryRegistrationBuild",
-   "start": "2026-10-10T08:03:37.658249589Z",
-   "end": "2026-10-10T08:03:42.283289067Z",
+   "start": "2026-10-10T08:41:09.725947948Z",
+   "end": "2026-10-10T08:41:13.632717356Z",
    "exit": 0,
-   "head": "f0dc46bb6473ab37ecf48e623f1ccb192bd6b3af",
-   "dirty_paths": 5,
+   "head": "b549973cd59725bd4243bf5eb0d095e5315927d5",
+   "dirty_paths": 1,
    "source_sha256": "f33544fdae633624ecf33d93b67c36c976888e3f424e09522b27f19d9bdbded5",
    "log_bytes": 0,
    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -82,60 +82,99 @@
   "statement_scan_clean": {
    "exit": 0,
    "expected": 0,
-   "json": "/tmp/bc-arc-scratch/item7/a/scans/PqxdhBoundaryRegistrationBuild-statement-clean.json",
-   "json_sha256": "c36ff43a40adb995b96c310b2490a97f1be88ac39fc97d2fa191c07c4cb7b150",
+   "json": "/tmp/bc-arc-scratch/item7/a/fix1/scans/PqxdhBoundaryRegistrationBuild-statement-clean.json",
+   "json_sha256": "3b8bc729e4e80599146710b6784876d9231196cd3e951b6aa7e1ce276cd0088b",
    "declarations": 13,
    "hits": 0
   },
   "statement_scan_live": {
    "exit": 1,
    "expected": 1,
-   "json": "/tmp/bc-arc-scratch/item7/a/scans/PqxdhBoundaryRegistrationBuild-statement-live.json",
-   "json_sha256": "56fe3db4d10195be640abf4eba0ed726654345d5803294266ea5bb8135144e11",
-   "hits": 8
+   "json": "/tmp/bc-arc-scratch/item7/a/fix1/scans/PqxdhBoundaryRegistrationBuild-statement-live.json",
+   "json_sha256": "202e11f633a8b4ca73b3292ca4f2210c393f0fd66c7585ee133a0395f7e4a0b2",
+   "hits": 21,
+   "live_classes": 11,
+   "dead_classes": [],
+   "negative_control_hits": 0
   },
   "direct_scan_clean": {
    "wrapper_exit": 0,
    "expected_lean_exit": 0,
-   "fixture": "/tmp/bc-arc-scratch/item7/a/scans/PqxdhBoundaryRegistrationBuild-scan-clean.lean",
-   "fixture_sha256": "196b26ec81e2b52379040bb442cf3064016ee1888430fb33a9703795809d6f44",
-   "log": "/tmp/bc-arc-scratch/item7/a/logs/dev/PqxdhBoundaryRegistrationBuild-scan-clean-2.log",
-   "log_sha256": "1f08770d63e6fcfd920c8c1b1236c47337076b354f4343284fd07880f9d08393",
+   "fixture": "/tmp/bc-arc-scratch/item7/a/fix1/scans/PqxdhBoundaryRegistrationBuild-scan-clean.lean",
+   "fixture_sha256": "f29935e744cdbb2d534f7fbec44122f3d634c531c44fcf699cd6b743770c91af",
+   "log": "/tmp/bc-arc-scratch/item7/a/fix1/logs/dev/PqxdhBoundaryRegistrationBuild-scan-clean-1.log",
+   "log_sha256": "5268a1fe81c2f13bfac20c49192b1b2fe8c75e7c5104482fd29972e139abbaf4",
    "lean_exit": 0,
-   "declarations": "24",
-   "forbidden": "0",
-   "allowed_crypto": "3"
+   "module_declarations": 48,
+   "outside_module_namespace": 24,
+   "module_forbidden": 0,
+   "allowed_crypto": 3,
+   "liveness_witnesses": null,
+   "rule_classes_live": null,
+   "rule_classes": null,
+   "negative_control_hits": null,
+   "total_forbidden": null
   },
   "direct_scan_live": {
    "wrapper_exit": 0,
    "expected_lean_exit": 1,
-   "fixture": "/tmp/bc-arc-scratch/item7/a/scans/PqxdhBoundaryRegistrationBuild-scan-live.lean",
-   "fixture_sha256": "a41e819b606bfddd4a2803e4e687e92261fbf2943cc99aa21e4242c01cec25c1",
-   "log": "/tmp/bc-arc-scratch/item7/a/logs/dev/PqxdhBoundaryRegistrationBuild-scan-live-2.log",
-   "log_sha256": "84e75904fd8855b9403103343abd05fbee2e621c2f7fbffbd97b57442344c5d6",
+   "fixture": "/tmp/bc-arc-scratch/item7/a/fix1/scans/PqxdhBoundaryRegistrationBuild-scan-live.lean",
+   "fixture_sha256": "b167f29a660f3fed0925b7de5b242218fb0eff3ea0f05295f4ddbc640f28807d",
+   "log": "/tmp/bc-arc-scratch/item7/a/fix1/logs/dev/PqxdhBoundaryRegistrationBuild-scan-live-1.log",
+   "log_sha256": "c4dd49218e2c1b4b4d26de65b04bc1302e922d22f60d152e56a1be3d0ea378c7",
    "lean_exit": 1,
-   "declarations": "30",
-   "forbidden": "15",
-   "allowed_crypto": "6"
+   "module_declarations": 48,
+   "outside_module_namespace": 24,
+   "module_forbidden": 0,
+   "allowed_crypto": 3,
+   "liveness_witnesses": 18,
+   "rule_classes_live": 11,
+   "rule_classes": 11,
+   "negative_control_hits": 0,
+   "total_forbidden": 46
   },
   "scan_spec": {
-   "path": "/tmp/bc-arc-scratch/item7/a/scans/scan-spec.json",
-   "sha256": "6c72b02503316b7699becd206706e0fafde58bff9574b18955b4f10c9cf8be36",
-   "note": "Codex scan-spec 5b817691 plus pb_parts actual_extracted and evolving_actual_extracted (B9/B11 extracted forms); the one-name .crypto allowance applies only to the modules listed in functional_field_allowlist_modules (D-1)"
+   "path": "/tmp/bc-arc-scratch/item7/a/fix1/scans/scan-spec.json",
+   "sha256": "8392e6614f27e9500f9bd070661ac50a5082e79d3e44c26b191c8c2b16d496bd",
+   "note": "version 2 after the D-6 hygiene review: Codex scan-spec 5b817691 plus pb_parts actual_extracted and evolving_actual_extracted (B9/B11 extracted forms); eleven explicit rule classes; join_later, c6_, finishErased, PqxdhRecordLiftLater and PqxdhRecordLiftWorldCompiler as name-component prefixes; CE idealGame as the full-name prefix BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps.idealGame (the dead entry idealGame° removed); the C7 erasure statements PqxdhDeploymentFinishErasure.erase_* and PqxdhDeploymentHiddenKernels.finish_erase* as full-name prefixes; the one-name .crypto allowance applies only to the modules listed in functional_field_allowlist_modules (D-1)",
+   "superseded": {
+    "path": "/tmp/bc-arc-scratch/item7/a/scans/scan-spec.json",
+    "sha256": "6c72b02503316b7699becd206706e0fafde58bff9574b18955b4f10c9cf8be36",
+    "note": "version 1, used for the b549973c receipts; exact-part matching"
+   }
   },
   "scan_tools": {
-   "stmt_scan.py": "56e115aff38e3e5baa017e0ee34520ef2a26054493ad6fd91319517a03f29456",
-   "direct_scan.py": "36f43a112018e6dd5a05e416dfbc7a3f6cb7331591ec630a02529ce3a8a2eb6a",
-   "check.sh": "153c5750b0d3ee3c76adda15724fb95e8c61558e078fd1966ce038ca76d87cc8",
-   "dev.sh": "35740d6d32f4cc61f958d8908fb0686fc4abc383c118556b5024704a4a6a9460",
-   "final.sh": "d1763a0e943aae37c6034f81b015d10f4cc5f9d64f3f0aca7589a785c166eb01",
-   "guards.py": "d346a4518d510cc2e0d80fda4fc68076ec6a4cd498d566376ab8882cbd528eb4"
+   "stmt_scan.py": "f70361fd45548abe678728354b9d19cc2ed8fff06c98e07cc056bdd13544447d",
+   "direct_scan.py": "61bee78e087a3de6217a65af92f70dce387bacbea6df1ca5ac165b7625735dbd",
+   "check.sh": "9e8ba24b233ec7e5a0c0226829306dfba3909ca77fc0e0592e7e1048ff34e273",
+   "dev.sh": "fbbca13403ee98896d59c634c0a5e86f109fcccb813dee70942896fd0d13e984",
+   "final.sh": "4bfbbc5f52d807a9db7215ec03e16bf8f3297f1adaf97044e2240f5eb850f3e9",
+   "receipt.py": "dcb5041a2b8d4a6e25e3dabdf14b64bfadcf495945d97380384e2d70ff115e98",
+   "guards.py (item7/a/scripts, guards unchanged)": "d346a4518d510cc2e0d80fda4fc68076ec6a4cd498d566376ab8882cbd528eb4"
   },
   "branch_tip_checks": "root import, inv recount before inv rehash, focused check-inventory under a @nix lease and git diff --check are run at the branch tip and recorded in doc/impl/proof-receipts/production-boundary-increment-a.json",
-  "scope": "The statement scan reads types and binders of named declarations; the direct-reference scan reads the elaborated types and bodies of every constant in the module namespace. Neither is an import-graph audit."
+  "scope": "The statement scan reads the types and binders of named declarations in the source text. The direct-reference scan reads the elaborated types and bodies of every constant whose declaring module is this module (Environment.getModuleIdxFor?), including the auxiliary constants Lean generates under other names (_private match equations and splitters, equation lemmas for imported definitions); module_declarations counts them and outside_module_namespace counts those not under the module namespace. Each liveness run gives every rule class its own witness and checks a negative control. Neither scan is an import-graph audit."
  },
  "review": {
-  "status": "pending",
+  "status": "reviewed: both D-6 reviews of b549973c returned APPROVE_WITH_NITS; all findings are fixed in this revision; a confirming review of the fixes is pending",
+  "reviews": [
+   {
+    "kind": "D-6 semantic review (fresh-context Claude sub-agent, read only)",
+    "verdict": "APPROVE_WITH_NITS",
+    "scratch": "/tmp/bc-arc-scratch/item7/a/review-semantic",
+    "record": "/tmp/bc-arc-scratch/item7/NOTES.md (D-6 independent semantic review entry)"
+   },
+   {
+    "kind": "D-6 hygiene review (fresh-context Claude sub-agent, read only)",
+    "verdict": "APPROVE_WITH_NITS",
+    "scratch": "/tmp/bc-arc-scratch/item7/a/review-hygiene",
+    "record": "/tmp/bc-arc-scratch/item7/a/review-hygiene/NOTES.md"
+   }
+  ],
+  "findings": {
+   "path": "/tmp/bc-arc-scratch/item7/a/fix1/docs/review-findings.json",
+   "sha256": "b83850312cdab6220d6ad0ee17581f5109a1326962de03d85583c891db1683df"
+  },
   "plan": "decision D-6 of /tmp/bc-arc-scratch/item7/plan.md: a fresh-context Claude reviewer sub-agent with a written verdict",
   "prior_evidence": {
    "kind": "Codex-internal review, prior evidence only",
@@ -152,7 +191,7 @@
   "transcript-fidelity cargo tests (no inventory metadata they read changed)"
  ],
  "remaining": [
-  "independent fresh-context review (D-6)",
+  "confirming review of the D-6 fix pass (findings: /tmp/bc-arc-scratch/item7/a/fix1/docs/review-findings.json)",
   "PB-E ledger row 05 (I5)",
   "central integration",
   "public Rust adapter transcription stays RT; codec/runtime/allocator contracts unchanged"
@@ -169,8 +208,8 @@
   ],
   "statement_occurrences": [],
   "use": "the real 64-byte initializer HKDF initialResponse (c.hkdf input info 64) of the supplied root output, the same call CE candidateTail makes with source.crypto",
-  "reviewer_condition": "no use on the root input: the 192-byte root input never occurs in this module (the root arrives as the PqxdhSecretInputKdf.RootOutput of the pending token, produced by the shared Extract-ROM interpreter at acceptance, PB-04); no functional extract and no correctness premise on a ROM-answered call; author-checked, to be confirmed by the independent review"
+  "reviewer_condition": "no use on the root input: the 192-byte root input never occurs in this module (the root arrives as the PqxdhSecretInputKdf.RootOutput of the pending token, produced by the shared Extract-ROM interpreter at acceptance, PB-04); no functional extract and no correctness premise on a ROM-answered call. Confirmed by the independent D-6 hygiene review of b549973c, as #393 requires: the only source occurrence is line 104, initialResponse setup.source.crypto; initialResponse is c.hkdf input info 64 (PqxdhRootTableInitialization.lean:26-29), the real 64-byte initializer, the same call candidateTail makes at PqxdhServerRegistrationPublication.lean:165; its elaborated references are exactly executeCandidate, executeCandidate.eq_1 and candidate_exact; it appears in no statement and is never applied to the 192-byte root input. The fix-pass direct scan (selection by declaring module) reproduces exactly these three references."
  },
- "statement_route_check": "author check against the Rust reference (independent review pending): next key ID (rejects on error), occupancy, server_prepare_commit, identity-key width parse and try_reserve(1) as requests, extracted initializer on the derived root, empty-payload rejection after the initializer, checked 8+len and try_reserve_exact as a request, binding then payload, encrypt_message_with_ratchet with the inner writer at ratchet.rs:400, zeroize before the send result is examined, outer writer at server.rs:488, then server_commit, peer insertion and control update; every rejection returns None with the Server state unchanged; the token is moved (token_consumed in PqxdhBoundaryRegistrationBuildNative); the empty-input check of encrypt_message_with_ratchet cannot fire here and stays RT",
- "rust_reference": "beaconcrypt/src/server.rs:424-502 (build_registration_response), inner frame writer beaconcrypt/src/ratchet.rs:400 (seal_frame), outer response writer beaconcrypt/src/server.rs:488, empty-input check ratchet.rs:421 (vacuous on this path)"
+ "statement_route_check": "author check against the Rust reference, re-derived by the D-6 semantic review of b549973c: next key ID (rejects on error), occupancy, server_prepare_commit, identity-key width parse and try_reserve(1) as requests, extracted initializer on the derived root, empty-payload rejection after the initializer, checked 8+len and try_reserve_exact as a request, binding then payload, encrypt_message_with_ratchet with the inner writer at ratchet.rs:400, zeroize before the send result is examined, outer writer at server.rs:488, then server_commit, peer insertion and control update; every rejection returns None with the Server state unchanged; the token is moved (token_consumed in PqxdhBoundaryRegistrationBuildNative); the empty-input check of encrypt_message_with_ratchet (ratchet.rs:421) cannot fire here: central PqxdhServerRegistrationPublication.authenticated_length proves that the authenticated input absBytes binding.bytes ++ plaintext has length 8 + plaintext.length and is never empty; the absence of the Rust guard from the transcription stays RT",
+ "rust_reference": "beaconcrypt/src/server.rs:424-502 (build_registration_response), inner frame writer beaconcrypt/src/ratchet.rs:400 (seal_frame), outer response writer beaconcrypt/src/server.rs:488, empty-input check ratchet.rs:421 (unreachable on this path; Lean-side fact PqxdhServerRegistrationPublication.authenticated_length)"
 }

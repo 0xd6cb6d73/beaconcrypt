@@ -71,7 +71,7 @@ theorem native_missing (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
   rw [nativeGet_bind, missing]
   rfl
 
-/-- Every supported outcome consumes the addressed token, including absent tokens, all ordinary rejections and both writer failures. No allocation or success premise is needed. -/
+/-- Every supported outcome leaves the addressed pending slot empty: a present token is removed on success, on all ordinary rejections and on both writer failures, and an absent slot stays empty. No allocation or success premise is needed. -/
 theorem token_consumed (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (checks : Checks) (session : Nat) (payload : Option Pqxdh.Bytes) (state : NativeState KemSK)
     (result : Option PqxdhServerRegistrationPublication.Response × NativeState KemSK)
