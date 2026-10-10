@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1907
+	[handwritten-lean]=1908
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -39245,6 +39245,59 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem laterSlotsTwoTarget_holds([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemKeys theorem laterSlotsTwoTarget_holds"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemKeys\.later_slots_two$' "$selected_source_module" "PqxdhDeploymentLaterServerItemKeys dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemKeys.later_slots_two"
 require_line_count 1 '^theorem later_slots_two([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemKeys theorem later_slots_two"
+
+# LQ-F upstream unit A2: the bills of the item 2 reductions over the logged source (inheritance chain, logged weights, coin bills, rootBillL).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerItemBills.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemBills$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentLaterServerItemBills root import"
+require_line_count 23 '^theorem ' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills theorem inventory"
+require_line_count 23 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemBills\.inheritL_forward$' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemBills.inheritL_forward"
+require_line_count 1 '^theorem inheritL_forward([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills theorem inheritL_forward"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemBills\.scanL_inherit$' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemBills.scanL_inherit"
+require_line_count 1 '^theorem scanL_inherit([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills theorem scanL_inherit"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemBills\.commandsL_inherit$' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemBills.commandsL_inherit"
+require_line_count 1 '^theorem commandsL_inherit([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills theorem commandsL_inherit"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemBills\.opaqueScanL_inherit$' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemBills.opaqueScanL_inherit"
+require_line_count 1 '^theorem opaqueScanL_inherit([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills theorem opaqueScanL_inherit"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemBills\.sourcePreOpaqueL_inherit$' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemBills.sourcePreOpaqueL_inherit"
+require_line_count 1 '^theorem sourcePreOpaqueL_inherit([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills theorem sourcePreOpaqueL_inherit"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemBills\.sharedStartL_inherit$' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemBills.sharedStartL_inherit"
+require_line_count 1 '^theorem sharedStartL_inherit([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills theorem sharedStartL_inherit"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemBills\.wGL_le$' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemBills.wGL_le"
+require_line_count 1 '^theorem wGL_le([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills theorem wGL_le"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemBills\.skelImplL_cost$' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemBills.skelImplL_cost"
+require_line_count 1 '^theorem skelImplL_cost([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills theorem skelImplL_cost"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemBills\.groupedClientL_cost$' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemBills.groupedClientL_cost"
+require_line_count 1 '^theorem groupedClientL_cost([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills theorem groupedClientL_cost"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemBills\.sumL$' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemBills.sumL"
+require_line_count 1 '^theorem sumL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills theorem sumL"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemBills\.skelResumeL_cost$' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemBills.skelResumeL_cost"
+require_line_count 1 '^theorem skelResumeL_cost([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills theorem skelResumeL_cost"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemBills\.postSkelL_cost$' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemBills.postSkelL_cost"
+require_line_count 1 '^theorem postSkelL_cost([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills theorem postSkelL_cost"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemBills\.sourcePreOpaqueL_total$' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemBills.sourcePreOpaqueL_total"
+require_line_count 1 '^theorem sourcePreOpaqueL_total([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills theorem sourcePreOpaqueL_total"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemBills\.sharedStartL_total$' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemBills.sharedStartL_total"
+require_line_count 1 '^theorem sharedStartL_total([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills theorem sharedStartL_total"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemBills\.sharedStartL_kinds$' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemBills.sharedStartL_kinds"
+require_line_count 1 '^theorem sharedStartL_kinds([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills theorem sharedStartL_kinds"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemBills\.rootClientL_coins$' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemBills.rootClientL_coins"
+require_line_count 1 '^theorem rootClientL_coins([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills theorem rootClientL_coins"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemBills\.entryClientL_coins$' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemBills.entryClientL_coins"
+require_line_count 1 '^theorem entryClientL_coins([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills theorem entryClientL_coins"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemBills\.entryDL_total$' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemBills.entryDL_total"
+require_line_count 1 '^theorem entryDL_total([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills theorem entryDL_total"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemBills\.entryDkL_total$' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemBills.entryDkL_total"
+require_line_count 1 '^theorem entryDkL_total([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills theorem entryDkL_total"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemBills\.prfL_bills$' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemBills.prfL_bills"
+require_line_count 1 '^theorem prfL_bills([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills theorem prfL_bills"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemBills\.idealKeysL_bills$' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemBills.idealKeysL_bills"
+require_line_count 1 '^theorem idealKeysL_bills([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills theorem idealKeysL_bills"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemBills\.laterSlot_bills$' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemBills.laterSlot_bills"
+require_line_count 1 '^theorem laterSlot_bills([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills theorem laterSlot_bills"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemBills\.laterSlot_bills_compiled$' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemBills.laterSlot_bills_compiled"
+require_line_count 1 '^theorem laterSlot_bills_compiled([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemBills theorem laterSlot_bills_compiled"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
