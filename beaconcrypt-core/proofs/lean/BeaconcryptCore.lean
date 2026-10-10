@@ -2049,6 +2049,14 @@ import BeaconcryptCore.Computational.PqxdhDeploymentIdealPostHidden
 
 import BeaconcryptCore.Computational.PqxdhDeploymentIdealPostFinish
 
+import BeaconcryptCore.Computational.PqxdhDeploymentIdealBeaconFacts
+
+import BeaconcryptCore.Computational.PqxdhDeploymentIdealBeacon
+
+import BeaconcryptCore.Computational.PqxdhDeploymentIdealGuess
+
+import BeaconcryptCore.Computational.PqxdhDeploymentIdealAnomalyBound
+
 import BeaconcryptCore.Computational.PqxdhDeploymentIdealPostChallenge
 
 import BeaconcryptCore.Computational.PqxdhDeploymentIdealPostInvariant
