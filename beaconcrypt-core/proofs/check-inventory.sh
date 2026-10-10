@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1958
+	[handwritten-lean]=1959
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -41417,6 +41417,29 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem ce_or_plain_s2b_billed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePlainGated theorem ce_or_plain_s2b_billed"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePlainGated\.ce_plain_every_s2b_billed$' "$selected_source_module" "PqxdhDeploymentHeadlinePlainGated dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlainGated.ce_plain_every_s2b_billed"
 require_line_count 1 '^theorem ce_plain_every_s2b_billed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePlainGated theorem ce_plain_every_s2b_billed"
+
+# Items 3+7 production composition: generic transfer lemmas from the CE and LQ-F experiments at the production codec and route to the PB-D production source games (index 0)
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentProductionTransfer.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentProductionTransfer$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentProductionTransfer root import"
+require_line_count 8 '^theorem ' "$selected_source_module" "PqxdhDeploymentProductionTransfer theorem inventory"
+require_line_count 8 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentProductionTransfer guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProductionTransfer\.observe_zero$' "$selected_source_module" "PqxdhDeploymentProductionTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentProductionTransfer.observe_zero"
+require_line_count 1 '^theorem observe_zero([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProductionTransfer theorem observe_zero"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProductionTransfer\.evalDist_zero$' "$selected_source_module" "PqxdhDeploymentProductionTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentProductionTransfer.evalDist_zero"
+require_line_count 1 '^theorem evalDist_zero([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProductionTransfer theorem evalDist_zero"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProductionTransfer\.chance$' "$selected_source_module" "PqxdhDeploymentProductionTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentProductionTransfer.chance"
+require_line_count 1 '^theorem chance([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProductionTransfer theorem chance"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProductionTransfer\.observe_later_zero$' "$selected_source_module" "PqxdhDeploymentProductionTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentProductionTransfer.observe_later_zero"
+require_line_count 1 '^theorem observe_later_zero([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProductionTransfer theorem observe_later_zero"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProductionTransfer\.evalDist_later_zero$' "$selected_source_module" "PqxdhDeploymentProductionTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentProductionTransfer.evalDist_later_zero"
+require_line_count 1 '^theorem evalDist_later_zero([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProductionTransfer theorem evalDist_later_zero"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProductionTransfer\.chance_later$' "$selected_source_module" "PqxdhDeploymentProductionTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentProductionTransfer.chance_later"
+require_line_count 1 '^theorem chance_later([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProductionTransfer theorem chance_later"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProductionTransfer\.frameReadBack_withReader$' "$selected_source_module" "PqxdhDeploymentProductionTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentProductionTransfer.frameReadBack_withReader"
+require_line_count 1 '^theorem frameReadBack_withReader([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProductionTransfer theorem frameReadBack_withReader"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProductionTransfer\.readWritable_withReader$' "$selected_source_module" "PqxdhDeploymentProductionTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentProductionTransfer.readWritable_withReader"
+require_line_count 1 '^theorem readWritable_withReader([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProductionTransfer theorem readWritable_withReader"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
