@@ -1,0 +1,479 @@
+{
+ "stage": "PB-D LQ-F source join, survey row PB-13 (item 7 increment I4, one module)",
+ "topic": "codex/deployment-boundary-later",
+ "parent_commit": "e0b8810bb048499ed8fbcadba5fe8a560f3ad083",
+ "central_basis": "e0b8810bb048499ed8fbcadba5fe8a560f3ad083",
+ "state": "checked at central e0b8810b on the topic branch; D-6 semantic and hygiene reviews of 40630f35 approved with nits (six, none owner-level); all addressed in the review fix pass, in documentation and receipts only (no Lean change); confirming review of c5276b6c APPROVE_WITH_NITS, its documentation nit (the guide and known_for_ledger sentence on which arms of PqxdhRegistrationSchedule.handler name nativeAccept and nativeBuild) addressed in the commit that records it (documentation and receipts only, no Lean change); not integrated at the record commit",
+ "module": "PqxdhBoundaryDeploymentLater",
+ "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryDeploymentLater.lean",
+ "source_sha256": "1f27a737da73b5603d5b96b24461d222c25efd63607accf71ca33069c29c69bc",
+ "guide": "doc/impl/production-boundary-deployment-later.md",
+ "guide_sha256": "83c246ebec54b9a4503566b16ac070fcb54923c6509e122f58add564c1e9e3da",
+ "guarded_statements": 17,
+ "theorems": [
+  "loggedStep_quiet",
+  "loggedStep_exact",
+  "laterStep_finish",
+  "laterStep_accept",
+  "laterStep_quiet",
+  "laterStep_exact",
+  "laterStep_normal",
+  "execute_exact",
+  "exec_exact",
+  "unwrap_okMap",
+  "later",
+  "later_zero",
+  "later_normal",
+  "later_continuation",
+  "later_observe",
+  "later_evalDist",
+  "later_probEvent"
+ ],
+ "axioms_used": [
+  "Classical.choice",
+  "Quot.sound",
+  "propext"
+ ],
+ "axioms_allowed": [
+  "propext",
+  "Classical.choice",
+  "Quot.sound"
+ ],
+ "provenance": "new module written by Claude in item 7 increment I4; no Codex WIP exists for it (the lane plan /tmp/bc-arc-scratch/item7/plan.md section 3 fixes its statements). It composes Codex's PqxdhBoundaryProgram.source_exact and resume (adapted from Codex WIP 185bfab26f38c518b4d544c98fc2625181e2e129e5a527ce39bb85eba2fabb59 in increment A; published receipt doc/impl/proof-receipts/production-boundary-program.json) and PqxdhBoundaryLoggedAccept.deployment_exact (adapted from Codex WIP 2c9dc5d843573f0ea25042e691adaf9029342a0a12a3108e5ffc13049aafed00 in increment A; published receipt doc/impl/proof-receipts/production-boundary-logged-accept.json) with Claude's I3 PqxdhBoundaryDeploymentStep.step_exact and the frozen LQ-F lemmas PqxdhDeploymentLaterServerGame.handler_quiet and later_run_wrap",
+ "authorship": "Claude (lane adopted from Codex on the owner's instruction of 2026-10-10, decision-2026-10-10.txt, message #503)",
+ "statements": {
+  "loggedStep_quiet": "for every command that is not a raw accept, every deployment state and log: loggedStep setup codec reader erased checks serverSeed query (state, log) = (fun result => (result.1, (result.2, log))) <$> sourceStep setup codec reader erased checks serverSeed query state",
+  "loggedStep_exact": "for every command, deployment state and log: loggedStep setup codec reader erased checks serverSeed query state = liftStep (PqxdhDeploymentLaterServerGame.handler setup codec' checks route' serverSeed) query state (codec' = withReader codec reader, route' = RawCtxFrameDecoding.sender reader.model); raw accept by PqxdhBoundaryLoggedAccept.deployment_exact, every other command by PqxdhBoundaryDeploymentStep.step_exact and PqxdhDeploymentLaterServerGame.handler_quiet",
+  "laterStep_finish": "laterStep setup codec reader erased checks serverSeed (.inr (.finish index raw)) state = (fun result => (result.1, (snapshotAt state.1 state.2.1.native.owners (some index), (result.2, state.2.2)))) <$> sourceStep setup codec reader erased checks serverSeed (.inr (.finish index raw)) state.2.1 (capture from the pre-command owners, then the classical source finish; log kept)",
+  "laterStep_accept": "laterStep setup codec reader erased checks serverSeed (.inr (.accept raw)) state = (fun result => (ok result.1, (state.1, result.2))) <$> (PqxdhBoundaryLoggedAccept.deployment setup codec' checks serverSeed raw).run state.2 (W4 logged acceptance; snapshot kept)",
+  "laterStep_quiet": "for every command that is neither a raw accept nor a finish (finishOwner query = none): laterStep setup codec reader erased checks serverSeed query state = (fun result => (result.1, (state.1, (result.2, state.2.2)))) <$> sourceStep setup codec reader erased checks serverSeed query state.2.1",
+  "laterStep_exact": "for every command and every run state (snapshot, deployment state, log): laterStep setup codec reader erased checks serverSeed query state = liftStep (PqxdhDeploymentLaterServerGame.snapImpl setup codec' checks route' serverSeed) query state (codec' = withReader codec reader, route' = RawCtxFrameDecoding.sender reader.model; checks free, PB-14)",
+  "laterStep_normal": "every supported outcome of laterStep … query state is (ok reply.1, reply.2) for a supported reply of (PqxdhDeploymentLaterServerGame.snapImpl setup codec' checks route' serverSeed query).run state",
+  "execute_exact": "for every native-interface program and run state: PqxdhBoundaryProgram.execute (laterStep setup codec reader erased checks serverSeed) work state = (fun result => (ok result.1, result.2)) <$> (simulateQ (PqxdhDeploymentLaterServerGame.snapImpl setup codec' checks route' serverSeed) work).run state",
+  "exec_exact": "for every deployment state start: laterSourceExec setup codec reader erased checks serverSeed bounds mode first second start = (fun result => (ok (result.1, result.2.1), result.2.2)) <$> PqxdhDeploymentLaterServerGame.exec setup codec' checks route' serverSeed bounds mode first second start",
+  "unwrap_okMap": "unwrap (okMap outcome) = outcome for every LQ-F game value and runtime",
+  "later": "(laterSourceGame setup codec reader erased checks ensureInit identityIndex bounds mode first second).run runtime = okMap <$> (PqxdhDeploymentLaterServerGame.game setup codec' checks route' ensureInit identityIndex bounds mode first second).run runtime, for every setup, codec, reader, erased, checks, ensureInit, identityIndex, bounds, mode, first, second and runtime (codec' = withReader codec reader, route' = RawCtxFrameDecoding.sender reader.model); full returned value: created Server, A2's output, the run's ledger, the finish snapshot, the complete final deployment state, the ephemeral log, the runtime",
+  "later_zero": "the identityIndex = 0 instance of later (PB-D pin #415)",
+  "later_normal": "every supported outcome of the source game is okMap value for a supported outcome value of the LQ-F game at codec'/route' (no fail or div)",
+  "later_continuation": "for every continuation next: (laterSourceGame …).run runtime >>= next = (PqxdhDeploymentLaterServerGame.game setup codec' checks route' …).run runtime >>= fun outcome => next (okMap outcome)",
+  "later_observe": "for every observation observe of the LQ-F game value: (fun outcome => observe (unwrap outcome)) <$> (laterSourceGame …).run runtime = observe <$> (PqxdhDeploymentLaterServerGame.game setup codec' checks route' …).run runtime",
+  "later_evalDist": "for every observation observe into a measurable space: 𝒟[(fun outcome => observe (unwrap outcome)) <$> (laterSourceGame …).run runtime] = 𝒟[observe <$> (PqxdhDeploymentLaterServerGame.game setup codec' checks route' …).run runtime]",
+  "later_probEvent": "for every event: Pr[event ∘ unwrap | (laterSourceGame …).run runtime] = Pr[event | (PqxdhDeploymentLaterServerGame.game setup codec' checks route' …).run runtime] (deprecated Pr API, under set_option linter.deprecated false in)"
+ },
+ "scope_deviations": "the run-phase commands are CE's approved interface under its deviations D1-D5 (classification E; survey deviation table; PB-E ledger), as for increment I3; the reveal and the post phase are the approved modeled post-run interface of LQ-F (E: modeled disclosure, not physical erasure or a source getter; classical post-run queries; no later authentication claim); ghost capture sites (Server seed at birth, Beacon keys at creation, one-time scalar at beacon.rs:302, finish snapshot at its cut (the InitSent state read at the entry of Beacon::finish_registration, beacon.rs:402-420; see rust_reference), Server ephemeral at server.rs:368, exceptions (a) failed-bundle one-time scalars and (b) ephemerals of accepts failing the KEM-key admission inside encapsulate at server.rs:373) stay RT under the proposed PB-GHOST, not implemented (D-4)",
+ "checks": {
+  "leanpath": {
+   "path": "/tmp/bc-arc-scratch/item7/i4/leanpath",
+   "sha256": "4ef2da7f02525e6d5db7e902cad07b6d4181f94652b8c9a707040244f55e5d37",
+   "note": "item7/i4/olean (registered prefix: resolved-symlink mirror of the first prefix item7/i3/int/olean of the published central e0b8810b LEAN_PATH, BeaconcryptCore only, root artifacts skipped, 6388 links, 0 broken; plus the I4 module olean and the root olean of the topic) followed by the published e0b8810b LEAN_PATH"
+  },
+  "module": {
+   "module": "BeaconcryptCore.Computational.PqxdhBoundaryDeploymentLater",
+   "start": "2026-10-10T11:50:58.338802694Z",
+   "end": "2026-10-10T11:51:02.535060649Z",
+   "exit": 0,
+   "head": "e0b8810bb048499ed8fbcadba5fe8a560f3ad083",
+   "dirty_paths": 1,
+   "source_sha256": "1f27a737da73b5603d5b96b24461d222c25efd63607accf71ca33069c29c69bc",
+   "log_bytes": 0,
+   "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "artifact": "/tmp/bc-arc-scratch/item7/i4/olean/BeaconcryptCore/Computational/PqxdhBoundaryDeploymentLater.olean",
+   "artifact_sha256": "bb87022da2c216e4ab8b7bcd1b39207f38260caaeebade5e19ded65da7e1a006",
+   "leanpath": "/tmp/bc-arc-scratch/item7/i4/leanpath",
+   "leanpath_sha256": "4ef2da7f02525e6d5db7e902cad07b6d4181f94652b8c9a707040244f55e5d37",
+   "command": [
+    "coord.sh",
+    "lean",
+    "claude",
+    "<label>",
+    "--",
+    "timeout",
+    "180",
+    "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+    "-j1",
+    "-M8000",
+    "--root=/tmp/beaconcrypt-deployment-boundary-later/beaconcrypt-core/proofs/lean",
+    "-o",
+    "/tmp/bc-arc-scratch/item7/i4/olean/BeaconcryptCore/Computational/PqxdhBoundaryDeploymentLater.olean",
+    "/tmp/beaconcrypt-deployment-boundary-later/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryDeploymentLater.lean"
+   ],
+   "json": "/tmp/bc-arc-scratch/item7/i4/logs/PqxdhBoundaryDeploymentLater-2.json"
+  },
+  "statement_scan_clean": {
+   "exit": 0,
+   "expected": 0,
+   "json": "/tmp/bc-arc-scratch/item7/i4/scans/PqxdhBoundaryDeploymentLater-statement-clean-v6.json",
+   "json_sha256": "245d9a2f34767ac98379067cd7ee6e01874eb93373f7ae69fb60139db82d62cb",
+   "declarations": 27,
+   "hits": 0
+  },
+  "statement_scan_live": {
+   "exit": 1,
+   "expected": 1,
+   "json": "/tmp/bc-arc-scratch/item7/i4/scans/PqxdhBoundaryDeploymentLater-statement-live-v6.json",
+   "json_sha256": "3056eed26b65cf01ce18d7a289ac8c5df66b69e0511faf25ea0ebb4d35b32767",
+   "hits": 24,
+   "live_classes": 11,
+   "dead_classes": [],
+   "negative_control_hits": 0,
+   "liveness_tokens": 25,
+   "missed_tokens": [],
+   "allowance_control": {
+    "allowance_applies": true,
+    "sibling_token_hits_pb_namespace": true,
+    "crypto_token_excused": true,
+    "crypto_token_pb_namespace_hit": false,
+    "ok": true
+   }
+  },
+  "direct_scan_clean": {
+   "wrapper_exit": 0,
+   "expected_lean_exit": 0,
+   "fixture": "/tmp/bc-arc-scratch/item7/i4/scans/PqxdhBoundaryDeploymentLater-scan-clean-v6.lean",
+   "fixture_sha256": "f55fd7b505405310998406e03632c5d04131eb74887e8492eff396e28b1d7172",
+   "log": "/tmp/bc-arc-scratch/item7/i4/logs/dev/PqxdhBoundaryDeploymentLater-scan-clean-v6-3.log",
+   "log_sha256": "1c21cef739bbffd4e4cc1da6b710f2f7cb44195d399ffa6404f92874cff2c727",
+   "lean_exit": 0,
+   "module_declarations": 60,
+   "outside_module_namespace": 18,
+   "module_forbidden": 0,
+   "allowed_crypto": 3,
+   "liveness_witnesses": null,
+   "rule_classes_live": null,
+   "rule_classes": null,
+   "witness_targets": null,
+   "witness_targets_missed": null,
+   "negative_control_hits": null,
+   "total_forbidden": null,
+   "site_gate": {
+    "table_bad": 0,
+    "sites": 29,
+    "declarations": 3,
+    "outside": 0,
+    "blind": 0
+   },
+   "site_controls": null,
+   "allowance_control": null
+  },
+  "direct_scan_live": {
+   "wrapper_exit": 0,
+   "expected_lean_exit": 1,
+   "fixture": "/tmp/bc-arc-scratch/item7/i4/scans/PqxdhBoundaryDeploymentLater-scan-live-v6.lean",
+   "fixture_sha256": "75615732c1bab71db3b202e805dfeeb226340428d8209924fdc3bfc57ee50497",
+   "log": "/tmp/bc-arc-scratch/item7/i4/logs/dev/PqxdhBoundaryDeploymentLater-scan-live-v6-3.log",
+   "log_sha256": "86dea7334b0a86dd1a29f9da14c4b72cf17043530175774a9e6067ec4ad2f87d",
+   "lean_exit": 1,
+   "module_declarations": 60,
+   "outside_module_namespace": 18,
+   "module_forbidden": 0,
+   "allowed_crypto": 3,
+   "liveness_witnesses": 21,
+   "rule_classes_live": 11,
+   "rule_classes": 11,
+   "witness_targets": 21,
+   "witness_targets_missed": 0,
+   "negative_control_hits": 0,
+   "total_forbidden": 50,
+   "site_gate": {
+    "table_bad": 0,
+    "sites": 29,
+    "declarations": 3,
+    "outside": 0,
+    "blind": 0
+   },
+   "site_controls": {
+    "expect_wrap_passes": true,
+    "expect_initial_passes": false,
+    "wrap": true,
+    "initial": true,
+    "bare": true,
+    "projection": true
+   },
+   "allowance_control": {
+    "allowance_applies": true,
+    "sibling_target_pb_namespace": true,
+    "sibling_crypto_excused": true,
+    "sibling_crypto_pb_namespace_hit": false,
+    "other_witnesses_excused_crypto": 3
+   }
+  },
+  "scan_spec": {
+   "path": "/tmp/bc-arc-scratch/item7/i4/scans/scan-spec-v6.json",
+   "sha256": "9c59979cf47b6675962a083011f46c03f1d3d078da07868c8794f17a680cbe4a",
+   "version": 6,
+   "note": "version 6 = version 5 (item7/i3/fix1/scans/scan-spec-v5.json, sha256 d2ae3887c9039baa6bc45d0e7fdbc649e455e82434461ccb7592ad648361d87a, copied unchanged to item7/i4/scans/scan-spec-v5.json) plus the allowance module PqxdhBoundaryDeploymentLater with its one-entry site table (field d1b_extension_i4); rule classes, allowlist, site gate and the other modules' tables unchanged. A first draft of version 6 (item7/i4/scans/scan-spec-v6-draft1.json, sha256 1b5eb5b4338a12209dab924e39b1a267788d7307a9335e7f5a2292955efabb41) cited the identical trial and probe runs on a build that differed from the final source by one wrapped line; it is superseded and kept for the record",
+   "functional_field_allowlist_sites": {
+    "PqxdhBoundaryRegistrationBuild": [
+     {
+      "head": "BeaconcryptCore.Computational.PqxdhRootTableInitialization.initialResponse",
+      "position": 0,
+      "argument_head": "BeaconcryptCore.Computational.PqxdhServerAuthExperiment.Setup.source",
+      "decision": "D-1(a): W1 line 104, PqxdhRootTableInitialization.initialResponse setup.source.crypto, the real 64-byte initializer Expand"
+     }
+    ],
+    "PqxdhBoundaryDeployment": [
+     {
+      "head": "BeaconcryptCore.Computational.PqxdhDeploymentSecrecy.wrap",
+      "position": 3,
+      "argument_head": "BeaconcryptCore.Computational.PqxdhServerAuthExperiment.Setup.source",
+      "decision": "D-1(b): CE passing setup.source.crypto to its own ledger/test/fresh wrapper (wrap has the implicit Reader, Response, X before crypto)"
+     },
+     {
+      "head": "BeaconcryptCore.Computational.PqxdhDeploymentSecrecy.ledgerImpl",
+      "position": 2,
+      "argument_head": "BeaconcryptCore.Computational.PqxdhServerAuthExperiment.Setup.source",
+      "decision": "D-1(b): the same parameter of ledgerImpl, which wrap simulates (implicit Reader, Response before crypto); listed by D-1(b), not used today"
+     }
+    ],
+    "PqxdhBoundaryDeploymentLater": [
+     {
+      "head": "BeaconcryptCore.Computational.PqxdhDeploymentSecrecy.wrap",
+      "position": 3,
+      "argument_head": "BeaconcryptCore.Computational.PqxdhServerAuthExperiment.Setup.source",
+      "decision": "D-1(b), item 7 increment I4: CE passing setup.source.crypto to its own ledger/test/fresh wrapper, here as the wrapped run-phase adversary A1 of the LQ-F source execution laterSourceExec (wrap has the implicit Reader, Response, X before crypto); the only site the I4 trial and probe found"
+     }
+    ]
+   },
+   "site_gate": "The direct-reference scan walks the elaborated type and value (theorem bodies included, value? with allowOpaque) of every constant whose declaring module is the scanned module and records every occurrence of the projection FixedHkdfSha512NoSaltSource.crypto as (enclosing application head, argument position, head constant of the projected argument), metadata looked through; an occurrence outside an argument position is recorded with its position kind (lambda_body, let_value, declaration_value, ...) and an unapplied one as bare; every primitive projection node Expr.proj over the structure FixedHkdfSha512NoSaltSource is recorded with head primitive_projection. The scan fails (crypto site outside the allowed sites) unless every recorded site of the module is an entry (head, position, argument_head) of functional_field_allowlist_sites for that module (none for modules outside functional_field_allowlist_modules), and fails (site walker blind) when a declaration has an excused .crypto reference by getUsedConstants but no recorded site. Every table entry is checked against the head's type: the binder at that position must have type Pqxdh.Crypto. So the one-name allowance excuses the projection only at the listed sites of the listed modules, and a later edit that adds any other use fails the scan.",
+   "d1b_extension_i4": "Lane plan decision D-1(b), item 7 increment I4 (PB-D LQ-F source join, PB-13): the one-name allowance of the projection BeaconcryptCore.Computational.PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource.crypto is extended to PqxdhBoundaryDeploymentLater, only at the site PqxdhDeploymentSecrecy.wrap argument 3 with projected argument Setup.source (functional_field_allowlist_sites), enforced by the site gate on every scan run; PqxdhDeploymentSecrecy.ledgerImpl argument 2 is not listed for this module because it is not used there. Need: under version 5 (no allowance for this module) the direct-reference scan of the final I4 source (sha256 1f27a737da73b5603d5b96b24461d222c25efd63607accf71ca33069c29c69bc, 60 module declarations) fails with exactly three forbidden references, all the projection (class pb_namespace), in laterSourceExec, laterSourceExec.eq_1 and exec_exact, and its site walker records 29 sites in those three declarations, all (PqxdhDeploymentSecrecy.wrap, 3, Setup.source) (item7/i4/logs/dev/PqxdhBoundaryDeploymentLater-scan-clean-v5-2.log, sha256 8a30a4ba3e3512902910389bb7c67e8b89eea3db44a7195d729b66865ee89655; live run PqxdhBoundaryDeploymentLater-scan-live-v5-2.log, sha256 e76f7065e153f514a2c984f37dfb31546be871cb0acd0cf28c1bbc4d187eaf98); the independent site probe item7/i4/probe/CryptoSitesLater.lean (sha256 f752b0e8481ff3e392b930f4730ae339a337780115e493b0eaf5e0c2c925179e, log item7/i4/logs/dev/CryptoSitesLater-2.log, sha256 bd9fdc0b97c7c946d53a3d232e6c678fec62604d5832537b6b840700be8d4b9c), a copy of item7/i3/fix1/probe/CryptoSitesArg.lean with per-declaration counts, finds the same 29 sites (1 in laterSourceExec, 1 in laterSourceExec.eq_1, 27 in exec_exact), all wrap argument 3 on Setup.source, and reproduces the I3 control (PqxdhBoundaryDeployment: 64 sites, 62/1/1, all wrap argument 3). The statement scan of the module is clean under version 5 (no .crypto token in any statement). No use on the root input; the root 192-byte zero-salt Extract stays the request to the shared interpreter at the CE Extract-ROM point (the hmac command of the source step and of the post phase is the CE native public HMAC oracle, unchanged; no Correct premise)."
+  },
+  "scan_tools": {
+   "check.sh (item7/i4/scripts)": "b904bd1ff7c60f7d1d6735fe7ae6690694b7879c3d0d380b21b03cac6d1ee535",
+   "dev.sh (item7/i4/scripts)": "26596293cb8df12f2293b81b9a8c08652b903d08662f25847f27cdfb263a4af7",
+   "direct_scan.py (item7/i4/scripts)": "da57012c35859c01c23b3be3833e8d3d2cb5ae8ed4819d7d12d2f57388dbf0e5",
+   "guards.py (item7/i4/scripts)": "e1c9d8c62bd650b3a1180817c8ac3f97c88f3cbd5dcc5e4c61d7a59e07efed37",
+   "invblock.py (item7/i4/scripts)": "d440b3242cbaba20596dc85a311849e2890b4ddf8e3e9b4b5806d24e88c350b0",
+   "inventory.sh (item7/i4/scripts)": "40d290d0a783e303c3748015a570333bbb42d3f4902e60bf9d10a3d4e3745e95",
+   "make_spec_v6.py (item7/i4/scripts)": "d70db244e72f1d217f73e98c58b86ee50d5a448bd7e39d0dbbe29c7a1a7e5412",
+   "mirror.py (item7/i4/scripts)": "630a20c01095f668501375fa33c6e9c03f7ddb9f9d70dd59e62cc368acb93dc7",
+   "receipt.py (item7/i4/scripts)": "cda1fd6c6941b2b6fb5948544bb048f4df56b369704e26bcc34951a24e7d58a6",
+   "scans.sh (item7/i4/scripts)": "65e29a093851b9f1377b598580fa342933e7f8b037d611d96a58e96b6d927027",
+   "stmt_scan.py (item7/i4/scripts)": "8545acfff01cd07b26dd288f113b015f75384ef860c46731b658ed20c08a5b59",
+   "CryptoSitesLater.lean (item7/i4/probe)": "f752b0e8481ff3e392b930f4730ae339a337780115e493b0eaf5e0c2c925179e"
+  },
+  "scan_inputs": {
+   "source_equals_module_check": true,
+   "module_olean": "/tmp/bc-arc-scratch/item7/i4/olean/BeaconcryptCore/Computational/PqxdhBoundaryDeploymentLater.olean",
+   "module_olean_sha256": "bb87022da2c216e4ab8b7bcd1b39207f38260caaeebade5e19ded65da7e1a006",
+   "olean_equals_module_check": true,
+   "results": {
+    "path": "/tmp/bc-arc-scratch/item7/i4/logs/scans.jsonl",
+    "sha256": "05b05c3e31a40aad051f62f6b3196a5795a474f1b06130ae8a8ee525d47433c6"
+   }
+  },
+  "scope": "The statement scan reads the types and binders of named declarations in the source text. The direct-reference scan reads the elaborated types and bodies (theorem bodies included) of every constant whose declaring module is this module, and its site gate walks the same expressions for .crypto sites and primitive projections over FixedHkdfSha512NoSaltSource. Neither is an import-graph audit.",
+  "branch_tip_checks": "root import, inv recount before inv rehash, focused check-inventory under a @nix lease and git diff --check at the branch tip are recorded in doc/impl/proof-receipts/production-boundary-increment-i4.json"
+ },
+ "crypto_allowance": {
+  "decision": "D-1(b): the one-name .crypto allowance is extended to this module, from scan spec version 6, only at the site of functional_field_allowlist_sites (PqxdhDeploymentSecrecy.wrap argument 3 on Setup.source), enforced by the direct scan on every run (lane plan section 4: its own entry, not a module-wide allowance)",
+  "condition": "only where CE itself passes setup.source.crypto to its ledger/test/fresh wrapper (here the wrapped run-phase adversary A1 of laterSourceExec), checked against the function type (binder of type Pqxdh.Crypto), and only because the direct-reference scan actually finds it here",
+  "need": {
+   "trial_spec": "/tmp/bc-arc-scratch/item7/i4/scans/scan-spec-v5.json",
+   "trial_spec_sha256": "d2ae3887c9039baa6bc45d0e7fdbc649e455e82434461ccb7592ad648361d87a",
+   "note": "version 5, no allowance or table entry for this module, on the final source",
+   "log": "/tmp/bc-arc-scratch/item7/i4/logs/dev/PqxdhBoundaryDeploymentLater-scan-clean-v5-2.log",
+   "log_sha256": "8a30a4ba3e3512902910389bb7c67e8b89eea3db44a7195d729b66865ee89655",
+   "lean_exit": 1,
+   "live_log": "/tmp/bc-arc-scratch/item7/i4/logs/dev/PqxdhBoundaryDeploymentLater-scan-live-v5-2.log",
+   "live_log_sha256": "e76f7065e153f514a2c984f37dfb31546be871cb0acd0cf28c1bbc4d187eaf98",
+   "forbidden_hits": "exactly three, all the projection PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource.crypto (class pb_namespace): in laterSourceExec, laterSourceExec.eq_1 and exec_exact",
+   "site_gate": {
+    "table_bad": 0,
+    "sites": 29,
+    "declarations": 3,
+    "outside": 29,
+    "blind": 0
+   },
+   "statement_scan": {
+    "hits": 0,
+    "declarations": 27
+   }
+  },
+  "elaborated_occurrences": [
+   "exec_exact",
+   "laterSourceExec",
+   "laterSourceExec.eq_1"
+  ],
+  "statement_occurrences": [],
+  "site_gate": {
+   "clean": {
+    "table_bad": 0,
+    "sites": 29,
+    "declarations": 3,
+    "outside": 0,
+    "blind": 0
+   },
+   "live": {
+    "table_bad": 0,
+    "sites": 29,
+    "declarations": 3,
+    "outside": 0,
+    "blind": 0
+   },
+   "controls": {
+    "expect_wrap_passes": true,
+    "expect_initial_passes": false,
+    "wrap": true,
+    "initial": true,
+    "bare": true,
+    "projection": true
+   },
+   "table": [
+    {
+     "head": "BeaconcryptCore.Computational.PqxdhDeploymentSecrecy.wrap",
+     "position": 3,
+     "argument_head": "BeaconcryptCore.Computational.PqxdhServerAuthExperiment.Setup.source",
+     "decision": "D-1(b), item 7 increment I4: CE passing setup.source.crypto to its own ledger/test/fresh wrapper, here as the wrapped run-phase adversary A1 of the LQ-F source execution laterSourceExec (wrap has the implicit Reader, Response, X before crypto); the only site the I4 trial and probe found"
+    }
+   ],
+   "result": "29 sites in laterSourceExec (1), laterSourceExec.eq_1 (1) and exec_exact (27), all (PqxdhDeploymentSecrecy.wrap, 3, Setup.source); 0 outside the table; no primitive projection; no excused declaration without a site; the version 5 trial is the negative control (no entry: all 29 sites flagged)"
+  },
+  "site_probe": {
+   "source": "/tmp/bc-arc-scratch/item7/i4/probe/CryptoSitesLater.lean",
+   "source_sha256": "f752b0e8481ff3e392b930f4730ae339a337780115e493b0eaf5e0c2c925179e",
+   "log": "/tmp/bc-arc-scratch/item7/i4/logs/dev/CryptoSitesLater-2.log",
+   "log_sha256": "bd9fdc0b97c7c946d53a3d232e6c678fec62604d5832537b6b840700be8d4b9c",
+   "result": "independent of the scan walker (copy of item7/i3/fix1/probe/CryptoSitesArg.lean with per-declaration counts): PqxdhBoundaryDeploymentLater 60 declarations, 29 sites (laterSourceExec.eq_1 1, laterSourceExec 1, exec_exact 27), all (wrap, 3, Setup.source); control PqxdhBoundaryDeployment 25 declarations, 64 sites (classical 62, sourceGame 1, sourceGame.eq_1 1), all (wrap, 3, Setup.source); the projection function value itself is a primitive projection"
+  },
+  "reviewer_condition": "no use on the root input: the accept command is the published W4 logged acceptance (PqxdhBoundaryLoggedAccept.deployment) with the CE root client and its approved request interpreter unchanged, every other run-phase command is the I3 step (no .crypto site), and the hmac command of the run phase and of the post phase (PqxdhDeploymentLater.postImpl) is the CE native public HMAC oracle at the Extract-ROM point (no functional extract, no Correct premise on a ROM-answered call; no theorem of this module has a hypothesis other than the shape premises notAccept/notFinish, support membership and the MeasurableSpace instance of later_evalDist). wrap reaches the record only through crypto.verify (ledgerImpl -> SameSession -> PqxdhDeploymentTranscript.designate -> acceptedKeys -> crypto.verify), as both I3 D-6 reviewers confirmed for the same function. Confirmed by both I4 D-6 reviewers of 40630f35: the semantic review (all 29 sites are wrap argument 3 on Setup.source; wrap reaches the record only via ledgerImpl -> SameSession -> designate -> acceptedKeys -> crypto.verify, PqxdhDeploymentTranscript.lean:131-132; no root input, no functional Extract, no Correct premise) and the hygiene review (probe /tmp/bc-arc-scratch/item7/i4/review-hygiene/logs/dev/WrapCryptoReach-1.log, sha256 1b288274b47c8c16919a80344b59185a5d724ce7ad190f0995d08e46fea7de0b: from PqxdhDeploymentSecrecy.wrap the only Pqxdh.Crypto field reached is verify).",
+  "live_control": {
+   "direct": {
+    "allowance_applies": true,
+    "sibling_target_pb_namespace": true,
+    "sibling_crypto_excused": true,
+    "sibling_crypto_pb_namespace_hit": false,
+    "other_witnesses_excused_crypto": 3
+   },
+   "statement": {
+    "allowance_applies": true,
+    "sibling_token_hits_pb_namespace": true,
+    "crypto_token_excused": true,
+    "crypto_token_pb_namespace_hit": false,
+    "ok": true
+   }
+  }
+ },
+ "review": {
+  "status": "D-6 fresh-context semantic and hygiene reviews of e0b8810b..40630f35: both APPROVE_WITH_NITS (four and two nits, none owner-level); every finding is addressed in the review fix pass, in documentation and receipts only (no Lean change); confirming review of c5276b6c APPROVE_WITH_NITS, its documentation nit addressed in the commit that records it",
+  "verdicts": {
+   "semantic": {
+    "path": "/tmp/bc-arc-scratch/item7/i4/review-semantic/verdict.json",
+    "sha256": "4b17b33ff30d69d0f10ce9fcd95d2405e5ed2561afeab35df10ef6e5f73acabf",
+    "verdict": "APPROVE_WITH_NITS"
+   },
+   "hygiene": {
+    "path": "/tmp/bc-arc-scratch/item7/i4/review-hygiene/verdict.json",
+    "sha256": "7efaa458d4122565dcb665eae6e802e17cdb8e2b5e3eef1d167160bbba1877cb",
+    "verdict": "APPROVE_WITH_NITS"
+   }
+  },
+  "findings_record": {
+   "path": "/tmp/bc-arc-scratch/item7/i4/fix1/docs/review-findings.json",
+   "sha256": "3f1856ac4c94637321895808ac4f0fd0ec8eb575f8d73c7827719ab277b36778"
+  },
+  "findings": [
+   {
+    "n": 1,
+    "source": "semantic #1",
+    "severity": "nit",
+    "title": "Guide and receipt do not say that the modeled post phase reaches the CE native handler",
+    "change": "Guide, 'What stays outside': new sentences saying exactly that (with the arms of the handler, PostSpec's three commands, step_oracles by rfl, the run-phase constants, the carry-over of the I3 observation to the run phase only and the reviewer's reach probe). Module receipt: known_for_ledger entry 'definition closure'. Analysis paragraph: one clause in the review sentence. Lane plan section 4: recorded for PB-E row 13. No Lean change."
+   },
+   {
+    "n": 2,
+    "source": "semantic #2",
+    "severity": "nit",
+    "title": "Analysis paragraph omits the D1-D5 interface-scope clause, which matters for LQ-F reveal completeness",
+    "change": "Analysis paragraph: added 'As in the classical module, the commands are the experiment's approved interface under its deviations D1-D5, not every Rust entry point, so the snapshot and the reveal are complete relative to that command set; for example, Rust's public Beacon helpers delete_onetime_keypair and delete_pq_keypair, which can abort a Beacon that is waiting for its registration finish and drop its secrets without a finish (so no snapshot is taken), are omitted under D3.' (checked against beacon.rs:257-295 and survey lines 63 and 173)."
+   },
+   {
+    "n": 3,
+    "source": "semantic #3",
+    "severity": "nit",
+    "title": "Analysis wording: one optional log entry per accept, and an unqualified 'never returns a Rust failure'",
+    "change": "Analysis paragraph: 'a private log of the Server ephemeral secret generated by each registration accept' became 'a private log with one entry per registration accept, holding the Server ephemeral secret when one was generated'; 'that the source game never returns a Rust failure' became 'that the source game never returns a Rust failure in the source model'."
+   },
+   {
+    "n": 4,
+    "source": "semantic #4",
+    "severity": "nit",
+    "title": "Finish snapshot capture site has no Rust anchor in the RT list",
+    "change": "Guide, 'What stays outside': the capture-site list names the cut (the InitSent state read at the entry of Beacon::finish_registration, beacon.rs:402-420) and a new sentence gives the getters (get_prekey_sk at beacon.rs:193, get_onetime_sk at :210; the two functions span :193-216), their phases, the drop by Established at :504 or abort_registration (:176, called at :489, :496, :500), and that finish has no server.rs path (the Server-side ghost is the accept ephemeral at server.rs:368, logged by W4). Module receipt: scope_deviations and rust_reference carry the anchor. Analysis paragraph: the plain-English snapshot point. Lane plan section 4: PB-GHOST RT list. The Lean module docstring is not changed (documentation-only pass); it keeps 'the finish snapshot at its cut'."
+   },
+   {
+    "n": 5,
+    "source": "hygiene #1",
+    "severity": "nit",
+    "title": "Module receipt says the import closure was not re-audited; this review has now done it, and the result should be recorded",
+    "change": "Module receipt known_for_ledger entry 2 replaced by the re-audit result (6969 modules, no excluded module, 113 expected new modules, transitive reach 1576 constants touching only FixedHkdfSha512NoSaltSource, .mk, .crypto and PqxdhHeadlineBridges.parsedBytes, with the probe log hash), keeping 'neither contamination scan is an import-graph audit'. Guide: the same result after the scan sentence. Lane plan section 4: recorded for PB-E rows 12 and 13."
+   },
+   {
+    "n": 6,
+    "source": "hygiene #2",
+    "severity": "nit",
+    "title": "Lane decision labels and mailbox numbers only resolve to files under /tmp",
+    "change": "Guide Review paragraph: one sentence glossing D-1(b), D-2 (with #511 and #415), D-4 and D-6, so the guide's citations resolve inside it. Module receipt known_for_ledger entry 'lane decision labels'. Lane plan section 4: the I5 ledger must publish one-line glosses of D-1 to D-6 and the cited message numbers (lane-wide, also for the A and I3 documents)."
+   }
+  ],
+  "plan": "/tmp/bc-arc-scratch/item7/plan.md section 0 D-6",
+  "confirming_review": {
+   "kind": "confirming review of the D-6 fix pass (fresh-context Claude sub-agent, read only)",
+   "reviewed": "40630f35..c5276b6c",
+   "verdict": "APPROVE_WITH_NITS",
+   "scratch": "/tmp/bc-arc-scratch/item7/i4/confirm",
+   "verdict_record": {
+    "path": "/tmp/bc-arc-scratch/item7/i4/nits/docs/confirming-review-relayed.json",
+    "sha256": "74c6c54d3a1345bfa289ca6c751f1f2fcbdd0d8a9c9510413b7728f04865989c",
+    "note": "the reviewer wrote notes, logs and a probe but no verdict file; the verdict and its one nit are transcribed verbatim from the integration task that relayed them"
+   },
+   "reviewer_notes": {
+    "path": "/tmp/bc-arc-scratch/item7/i4/confirm/README.txt",
+    "sha256": "3edf158d32b64fbe09ed20b884d363c9c53010b7f0ae1fd37abc299f535e2410"
+   },
+   "arm_reach_probe": {
+    "source": "/tmp/bc-arc-scratch/item7/i4/confirm/probe/ArmReach.lean",
+    "source_sha256": "b8c5ccbf878f5fa61a4d2178c5c9d97815aa27191c828c4c195ed3652e822278",
+    "log": "/tmp/bc-arc-scratch/item7/i4/confirm/logs/dev/ArmReach-1.log",
+    "log_sha256": "794b3cf93c738bf56b70ba39dac89f29e42ec42032bf468ea11cecc56aa5e320"
+   },
+   "confirmed": "Lean source unchanged (sha256 1f27a737); 17 theorems with 17 exact guards; module recompiled at c5276b6c exit 0 with an empty log; both version 6 scans re-run with results identical to the fix pass; receipt hash walk without mismatch apart from the deliberate first_pass block; the Rust anchors of the guide in beacon.rs and server.rs checked",
+   "nits": [
+    "the post-phase reach sentence (guide 'What stays outside' and known_for_ledger entry 3 of the module receipt) said that nativeAccept and nativeBuild are reached through the handler's bundle, finish and create arms; the reviewer's probe shows that those three arms reach neither and that the handler names both only in its accept and build arms"
+   ],
+   "disposition": "fixed in the commit that records this review: the guide sentence and known_for_ledger entry 3 now read 'with its create, bundle and finish arms and, in its accept and build arms, PqxdhServerAuthNative.nativeAccept and nativeBuild', and lane plan section 4 (I4 review results for rows 12 and 13) carries the corrected wording into the I5 PB-E ledger; guide_sha256 refreshed in this receipt and the increment receipt, receipt_sha256 in the increment receipt; no Lean change"
+  }
+ },
+ "known_for_ledger": [
+  "the frozen docstring of PqxdhDeploymentLaterServerGame (line 5) places the drop of LQ-F exception (b) at the width-only from_bytes at server.rs:369-372; the rejection is the KEM-key admission inside encapsulate at server.rs:373 (known correction already recorded by the W4 guide/receipt and plan section 4); this module's docstring and guide use the corrected site; no Lean statement is affected",
+  "import closure (re-audited by the D-6 hygiene review of 40630f35, probe log /tmp/bc-arc-scratch/item7/i4/review-hygiene/logs/dev/MyProbe-2.log, sha256 c12a2ffd600ce6632dee915f87a51f1a8e04b714539f547252165f6cfcb63163): 6969 modules; no PqxdhRecordLift*, PqxdhDeploymentIdealLater*, IdealErase, FinishErasure, HiddenKernels or HiddenEntry module; the 113 BeaconcryptCore modules not in the closure of the I3 step module are the expected LQ-F modules PqxdhDeploymentLater, PqxdhDeploymentLaterServerSource, PqxdhDeploymentLaterServerNative and PqxdhDeploymentLaterServerGame, PqxdhBoundaryLoggedAccept and the CE secrecy and registration-joint chain; the closure contains that of PqxdhBoundaryDeploymentStep (I3 known_for_ledger: PqxdhHeadlineBridges through the published PB-03 module PqxdhBoundaryRegistrationAccept, and the item 2 rejected-route modules through published CE dependencies). The transitive reach inside BeaconcryptCore of all module constants (1576 constants) touches, of the scanned exclusions and the allowance, only FixedHkdfSha512NoSaltSource, .mk and .crypto and PqxdhHeadlineBridges.parsedBytes, as for I3; no bridge, C6, C7 or record-lift constant is reached. Neither contamination scan is an import-graph audit. For the PB-E ledger rows 12 and 13",
+  "definition closure (D-6 semantic review of 40630f35, reach probe /tmp/bc-arc-scratch/item7/i4/review-semantic/reach-1.log, sha256 ecf190a2c2e9749d6933ec600aea4387d62c4187b1879b0ec75d8239232ef7f3): laterSourceGame, laterSourceExec and postPhase contain PqxdhRegistrationSchedule.handler (with its create, bundle and finish arms and, in its accept and build arms, PqxdhServerAuthNative.nativeAccept and nativeBuild) only through the modeled post-phase handler PqxdhDeploymentLater.postImpl (E; PostSpec has only coin, hmac and hash, so only the hmac and hash arms run, and they are definitionally the model oracle arms of the I3 run phase: PqxdhBoundaryDeploymentStep.step_oracles holds by rfl), and ledgerImpl only through PqxdhDeploymentSecrecy.wrap (E); with postImpl and wrap as leaves only those two remain. The run phase (laterStep, loggedStep, PqxdhBoundaryLoggedAccept.deployment, I3 sourceStep, PqxdhBoundaryBirth.serverBirth) reaches no CE or LQ-F handler component, so I3's 'the source game reaches no CE handler component' carries over to I4 for the run phase only. For the PB-E ledger row 13",
+  "PB-GHOST RT list: the finish snapshot at its cut: snapshotAt reads the prekey and one-time fields in the phases of the getters get_prekey_sk and get_onetime_sk (beacon.rs:193 and :210; prekey in Fresh/FreshWithCoins/InitSent, one-time key in FreshWithCoins/InitSent) on the pre-command state, which is the InitSent state that Beacon::finish_registration reads at entry (beacon.rs:402-420) before it drops both scalars by self.state = BeaconState::Established (beacon.rs:504) or through abort_registration (beacon.rs:176, called at :489, :496, :500), so the cut is the last point at which both scalars are held; finish has no server.rs path, and the Server-side LQ-F ghost is the accept ephemeral at server.rs:368, logged by W4",
+  "lane decision labels (D-1(b), D-2, D-4, D-6) and mailbox numbers (#415 PB-D interface pin, #511 D-2 answer, #503 owner decision) are defined in the lane plan and the coordination mailbox outside the repository; the guide now glosses D-1(b), D-2, D-4 and D-6 inline, and the PB-E ledger of I5 (doc/impl/production-boundary-ledger.md) is to publish one-line glosses of D-1 to D-6 and the cited message numbers so that the citations of the A, I3 and I4 guides and receipts resolve inside the repository"
+ ],
+ "not_run": [
+  "make verify",
+  "full lake build",
+  "mutation testing",
+  "nix-collect-garbage",
+  "transcript-fidelity cargo tests (no inventory metadata they read changed)"
+ ],
+ "remaining": [
+  "integration into central (PROTOCOL section 6) after the record commit",
+  "I5: PB-E ledger (row 12 = PqxdhBoundaryDeployment and row 13 = this module, with the import-closure and definition-closure results above; RT list with the PB-GHOST capture sites including the finish anchor; the known corrections; one-line glosses of the lane decisions D-1 to D-6) and CE-14",
+  "item 8: instantiate the CE-12-L headline game at codec' = withReader codec reader and route' = RawCtxFrameDecoding.sender reader.model and compose it with later_observe or later_evalDist (D-2 premises as for I3)"
+ ],
+ "rust_reference": "no new Rust correspondence: Server birth cites PqxdhBoundaryBirth.server_source (Server::try_new, beaconcrypt/src/server.rs:154-168, id_seed None); the raw accept cites the published W4 PqxdhBoundaryLoggedAccept.deployment_exact (get_shared_secret, server.rs:332, ephemeral at :368, KEM-key admission and encapsulation at :373); every other command cites its published row through PqxdhBoundaryDeploymentStep.step_exact; the finish snapshot, the log, the reveal, the post phase, the secrecy layer, observation modes and model oracles are CE/LQ-F ghosts and model interfaces (E), with the capture sites RT under proposed PB-GHOST; the finish snapshot at its cut: snapshotAt reads the prekey and one-time fields in the phases of the getters get_prekey_sk and get_onetime_sk (beacon.rs:193 and :210; prekey in Fresh/FreshWithCoins/InitSent, one-time key in FreshWithCoins/InitSent) on the pre-command state, which is the InitSent state that Beacon::finish_registration reads at entry (beacon.rs:402-420) before it drops both scalars by self.state = BeaconState::Established (beacon.rs:504) or through abort_registration (beacon.rs:176, called at :489, :496, :500), so the cut is the last point at which both scalars are held; finish has no server.rs path, and the Server-side LQ-F ghost is the accept ephemeral at server.rs:368, logged by W4 (D-6 semantic review of 40630f35, checked against the code)",
+ "deviations": [
+  "laterStep is defined in two layers, loggedStep (the shape of PqxdhDeploymentLaterServerGame.handler) and the snapshot on top (the shape of snapImpl, snapshotAt with finishOwner for every command), instead of the three explicit cases of plan section 3; the three cases are the lemmas laterStep_finish, laterStep_accept and laterStep_quiet",
+  "the reveal and post phase run through PqxdhBoundaryProgram.resume (postPhase), so a run-phase fail/div would stop with its poststate and no reveal; later_normal shows none occurs",
+  "as in I3, the source value keeps the ledger inside the Rust result next to A2's output, and okMap (a new I4 definition over LaterState) moves it back",
+  "added beyond the plan's list (laterStep_exact, later, later_zero, later_continuation, later_probEvent): loggedStep_quiet, loggedStep_exact, laterStep_finish, laterStep_accept, laterStep_quiet, laterStep_normal, execute_exact, exec_exact, unwrap_okMap, later_normal, later_observe, later_evalDist",
+  "later_probEvent uses the deprecated Pr API under set_option linter.deprecated false in (repo convention); later_evalDist is the evaluation-measure form",
+  "scan spec version 6 lists only the wrap argument 3 site for this module (the I3 table entry for ledgerImpl argument 2 is not repeated because it is not used here)"
+ ],
+ "review_fix_pass": {
+  "lean_change": false,
+  "source_sha256": "1f27a737da73b5603d5b96b24461d222c25efd63607accf71ca33069c29c69bc",
+  "note": "the review fix pass changes only the guide, the analysis paragraph, this receipt and the increment receipt; the module source (sha256 above), its seventeen statements and guards, the root import and the inventory rows are those of 40630f35, so the checks recorded above stay valid; the module check, both contamination scans, the root import, the focused check-inventory and git diff --check are re-run at the fix commit and recorded in doc/impl/proof-receipts/production-boundary-increment-i4.json"
+ }
+}
