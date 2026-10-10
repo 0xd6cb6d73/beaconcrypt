@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1896
+	[handwritten-lean]=1897
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -38872,6 +38872,45 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem join_later_param([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLater theorem join_later_param"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLater\.defer_seeds_later$' "$selected_source_module" "PqxdhDeploymentIdealLater dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLater.defer_seeds_later"
 require_line_count 1 '^theorem defer_seeds_later([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLater theorem defer_seeds_later"
+
+# LQ-F upstream unit C2: CE-11b's split chain and C6 for the later ideal game (LQ-F design-v2 section 4.2).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterEnv.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterEnv$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentIdealLaterEnv root import"
+require_line_count 16 '^theorem ' "$selected_source_module" "PqxdhDeploymentIdealLaterEnv theorem inventory"
+require_line_count 16 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentIdealLaterEnv guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterEnv\.erase_ideal_later$' "$selected_source_module" "PqxdhDeploymentIdealLaterEnv dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterEnv.erase_ideal_later"
+require_line_count 1 '^theorem erase_ideal_later([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterEnv theorem erase_ideal_later"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterEnv\.represent_ideal_later$' "$selected_source_module" "PqxdhDeploymentIdealLaterEnv dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterEnv.represent_ideal_later"
+require_line_count 1 '^theorem represent_ideal_later([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterEnv theorem represent_ideal_later"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterEnv\.seed_move_later$' "$selected_source_module" "PqxdhDeploymentIdealLaterEnv dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterEnv.seed_move_later"
+require_line_count 1 '^theorem seed_move_later([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterEnv theorem seed_move_later"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterEnv\.ideal_to_splitX_later$' "$selected_source_module" "PqxdhDeploymentIdealLaterEnv dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterEnv.ideal_to_splitX_later"
+require_line_count 1 '^theorem ideal_to_splitX_later([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterEnv theorem ideal_to_splitX_later"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterEnv\.ideal_to_splitEager_later$' "$selected_source_module" "PqxdhDeploymentIdealLaterEnv dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterEnv.ideal_to_splitEager_later"
+require_line_count 1 '^theorem ideal_to_splitEager_later([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterEnv theorem ideal_to_splitEager_later"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterEnv\.split_later$' "$selected_source_module" "PqxdhDeploymentIdealLaterEnv dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterEnv.split_later"
+require_line_count 1 '^theorem split_later([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterEnv theorem split_later"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterEnv\.ideal_to_split_later$' "$selected_source_module" "PqxdhDeploymentIdealLaterEnv dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterEnv.ideal_to_split_later"
+require_line_count 1 '^theorem ideal_to_split_later([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterEnv theorem ideal_to_split_later"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterEnv\.idealSplit_hmac$' "$selected_source_module" "PqxdhDeploymentIdealLaterEnv dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterEnv.idealSplit_hmac"
+require_line_count 1 '^theorem idealSplit_hmac([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterEnv theorem idealSplit_hmac"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterEnv\.postNative_split$' "$selected_source_module" "PqxdhDeploymentIdealLaterEnv dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterEnv.postNative_split"
+require_line_count 1 '^theorem postNative_split([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterEnv theorem postNative_split"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterEnv\.c6_split$' "$selected_source_module" "PqxdhDeploymentIdealLaterEnv dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterEnv.c6_split"
+require_line_count 1 '^theorem c6_split([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterEnv theorem c6_split"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterEnv\.c6_ideal$' "$selected_source_module" "PqxdhDeploymentIdealLaterEnv dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterEnv.c6_ideal"
+require_line_count 1 '^theorem c6_ideal([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterEnv theorem c6_ideal"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterEnv\.c6_ideal_public$' "$selected_source_module" "PqxdhDeploymentIdealLaterEnv dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterEnv.c6_ideal_public"
+require_line_count 1 '^theorem c6_ideal_public([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterEnv theorem c6_ideal_public"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterEnv\.c6_idealGame$' "$selected_source_module" "PqxdhDeploymentIdealLaterEnv dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterEnv.c6_idealGame"
+require_line_count 1 '^theorem c6_idealGame([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterEnv theorem c6_idealGame"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterEnv\.ceDecideL_observed$' "$selected_source_module" "PqxdhDeploymentIdealLaterEnv dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterEnv.ceDecideL_observed"
+require_line_count 1 '^theorem ceDecideL_observed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterEnv theorem ceDecideL_observed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterEnv\.c6_idealGame_decide$' "$selected_source_module" "PqxdhDeploymentIdealLaterEnv dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterEnv.c6_idealGame_decide"
+require_line_count 1 '^theorem c6_idealGame_decide([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterEnv theorem c6_idealGame_decide"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterEnv\.envReveal_blind$' "$selected_source_module" "PqxdhDeploymentIdealLaterEnv dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterEnv.envReveal_blind"
+require_line_count 1 '^theorem envReveal_blind([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterEnv theorem envReveal_blind"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
