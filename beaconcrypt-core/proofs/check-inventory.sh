@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1936
+	[handwritten-lean]=1937
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -40527,6 +40527,53 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem initial_sealAd([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeSeal theorem initial_sealAd"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAgreeSeal\.ctxRun_sealAd$' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeSeal dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgreeSeal.ctxRun_sealAd"
 require_line_count 1 '^theorem ctxRun_sealAd([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeSeal theorem ctxRun_sealAd"
+
+# CE-12 P2b step 3: AG, accepted hidden receives keep the receiving handle's AD (AcceptedAd, EntryAd, ctxRun_entryAd).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineAgreeReceive.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgreeReceive$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentHeadlineAgreeReceive root import"
+require_line_count 20 '^theorem ' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeReceive theorem inventory"
+require_line_count 20 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeReceive guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAgreeReceive\.keyRaw_frame_ad$' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeReceive dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgreeReceive.keyRaw_frame_ad"
+require_line_count 1 '^theorem keyRaw_frame_ad([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeReceive theorem keyRaw_frame_ad"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAgreeReceive\.keyed_frame_ad$' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeReceive dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgreeReceive.keyed_frame_ad"
+require_line_count 1 '^theorem keyed_frame_ad([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeReceive theorem keyed_frame_ad"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAgreeReceive\.opening_frame_ad$' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeReceive dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgreeReceive.opening_frame_ad"
+require_line_count 1 '^theorem opening_frame_ad([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeReceive theorem opening_frame_ad"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAgreeReceive\.receive_origin_ad$' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeReceive dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgreeReceive.receive_origin_ad"
+require_line_count 1 '^theorem receive_origin_ad([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeReceive theorem receive_origin_ad"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAgreeReceive\.admitted_origin_ad$' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeReceive dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgreeReceive.admitted_origin_ad"
+require_line_count 1 '^theorem admitted_origin_ad([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeReceive theorem admitted_origin_ad"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAgreeReceive\.kernel_receive_origin_ad$' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeReceive dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgreeReceive.kernel_receive_origin_ad"
+require_line_count 1 '^theorem kernel_receive_origin_ad([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeReceive theorem kernel_receive_origin_ad"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAgreeReceive\.ownerReceive_acceptedAd$' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeReceive dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgreeReceive.ownerReceive_acceptedAd"
+require_line_count 1 '^theorem ownerReceive_acceptedAd([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeReceive theorem ownerReceive_acceptedAd"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAgreeReceive\.ownerRun_acceptedAd$' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeReceive dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgreeReceive.ownerRun_acceptedAd"
+require_line_count 1 '^theorem ownerRun_acceptedAd([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeReceive theorem ownerRun_acceptedAd"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAgreeReceive\.serverReceive_acceptedAd$' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeReceive dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgreeReceive.serverReceive_acceptedAd"
+require_line_count 1 '^theorem serverReceive_acceptedAd([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeReceive theorem serverReceive_acceptedAd"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAgreeReceive\.beaconReceive_acceptedAd$' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeReceive dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgreeReceive.beaconReceive_acceptedAd"
+require_line_count 1 '^theorem beaconReceive_acceptedAd([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeReceive theorem beaconReceive_acceptedAd"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAgreeReceive\.native_serverRaw_acceptedAd$' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeReceive dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgreeReceive.native_serverRaw_acceptedAd"
+require_line_count 1 '^theorem native_serverRaw_acceptedAd([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeReceive theorem native_serverRaw_acceptedAd"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAgreeReceive\.native_beaconRaw_acceptedAd$' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeReceive dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgreeReceive.native_beaconRaw_acceptedAd"
+require_line_count 1 '^theorem native_beaconRaw_acceptedAd([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeReceive theorem native_beaconRaw_acceptedAd"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAgreeReceive\.acceptedAd_mono$' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeReceive dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgreeReceive.acceptedAd_mono"
+require_line_count 1 '^theorem acceptedAd_mono([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeReceive theorem acceptedAd_mono"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAgreeReceive\.entryAd_mono$' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeReceive dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgreeReceive.entryAd_mono"
+require_line_count 1 '^theorem entryAd_mono([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeReceive theorem entryAd_mono"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAgreeReceive\.native_entryAd_before$' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeReceive dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgreeReceive.native_entryAd_before"
+require_line_count 1 '^theorem native_entryAd_before([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeReceive theorem native_entryAd_before"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAgreeReceive\.native_entryAd$' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeReceive dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgreeReceive.native_entryAd"
+require_line_count 1 '^theorem native_entryAd([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeReceive theorem native_entryAd"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAgreeReceive\.full_record_ad$' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeReceive dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgreeReceive.full_record_ad"
+require_line_count 1 '^theorem full_record_ad([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeReceive theorem full_record_ad"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAgreeReceive\.full_invariant_ad$' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeReceive dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgreeReceive.full_invariant_ad"
+require_line_count 1 '^theorem full_invariant_ad([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeReceive theorem full_invariant_ad"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAgreeReceive\.full_program_invariant_ad$' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeReceive dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgreeReceive.full_program_invariant_ad"
+require_line_count 1 '^theorem full_program_invariant_ad([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeReceive theorem full_program_invariant_ad"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAgreeReceive\.ctxRun_entryAd$' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeReceive dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgreeReceive.ctxRun_entryAd"
+require_line_count 1 '^theorem ctxRun_entryAd([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeReceive theorem ctxRun_entryAd"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
