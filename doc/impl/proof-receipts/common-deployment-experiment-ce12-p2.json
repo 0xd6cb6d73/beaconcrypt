@@ -1,6 +1,6 @@
 {
- "date": "2026-10-10T07:32:18.420631+00:00",
- "scope": "CE-12 P2 (track ce12/p2), first session and review fix pass: the D-ct spike (stop rule fired; F-ct2), the symbolic-eligibility predicates and gap lemmas, the identity-collision and KEM-level ciphertext-collision terms, the symbolic corollaries of CE-OR (both directions), CE-UKS (sender), CE-APP and CE-KT with Server-side and Beacon-side forms of CE-APP and CE-KT, symbolic_lor with the NoBundleFailure filter and its Server-side form symbolic_lor_server, the injective CE-OR forms (s2b also with the identity collision), and the bills of pairAdversary and of the record lifts at BI_g (design-v2 sections 7.1-7.5, 8, 9 in part). Not built: ptc guessBill with HeadlineBills, AG, ct_collision_game, D-ct. Reviewed at 757882fa (three lenses), fix pass done, confirming review pending; not integrated.",
+ "date": "2026-10-10T07:47:14.317706+00:00",
+ "scope": "CE-12 P2 (track ce12/p2), first session and review fix pass: the D-ct spike (stop rule fired; F-ct2), the symbolic-eligibility predicates and gap lemmas, the identity-collision and KEM-level ciphertext-collision terms, the symbolic corollaries of CE-OR (both directions), CE-UKS (sender), CE-APP and CE-KT with Server-side and Beacon-side forms of CE-APP and CE-KT, symbolic_lor with the NoBundleFailure filter and its Server-side form symbolic_lor_server, the injective CE-OR forms (s2b also with the identity collision), and the bills of pairAdversary and of the record lifts at BI_g (design-v2 sections 7.1-7.5, 8, 9 in part). Not built: ptc guessBill with HeadlineBills, AG, ct_collision_game, D-ct. Reviewed at 757882fa (three lenses) and every finding fixed (Lean commit 25ca7adc and documentation commit 6b9e29f4); confirming review of 6b9e29f4: every finding resolved, two documentation nits (guide open point 4 said only the last four of the nine component bills of HeadlineBills were proved, while all nine are; D-ct item (2) said an entry drawn before key32_0 is hit, where the derived key f(entry) is meant), taken by the commit that records the review (documentation only); not integrated at the record commit.",
  "basis": {
   "start": "b88e30124d0c80a762cdf99ccf82569995c4a471",
   "merges": [
@@ -23,22 +23,35 @@
  "topic": {
   "branch": "codex/deployment-ce12",
   "worktree": "/tmp/beaconcrypt-deployment-ce12",
-  "head_at_receipt": "25ca7adcf0ea6ca6ad40d6dc0758fa144967d9d6",
-  "note": "the documentation commit that adds this receipt follows head_at_receipt and changes no Lean or inventory file"
+  "head_at_receipt": "6b9e29f46ef329decbb6218d61c30727d65e167f",
+  "note": "the commit that records the confirming review (and last regenerates this receipt) follows head_at_receipt and changes no Lean or inventory file"
  },
  "plan": {
   "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
-  "sha256": "9203754030e023e943b4af457b92d89031f044ebeac1880f8ac3d340c83782f7",
+  "sha256": "11657fb20b85e8cfba36fdf14098314cb2caaa55ae15c62239b6543f1a5c49dc",
   "sections": [
    102,
-   103
+   103,
+   104
   ],
   "section_102_amended": "D-ct item wording and estimate corrected by the review fix pass (section 103)",
-  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/fix/docs/plan.at-fix-92037540.md",
+  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/int/docs/plan.at-record-11657fb2.md",
   "backups_before": [
    "/tmp/bc-arc-scratch/common-experiment/ce12/p2/docs/plan.before-p2-817e02d8.md",
-   "/tmp/bc-arc-scratch/common-experiment/ce12/p2/fix/docs/plan.before-fix-d8b7f726.md"
-  ]
+   "/tmp/bc-arc-scratch/common-experiment/ce12/p2/fix/docs/plan.before-fix-d8b7f726.md",
+   "/tmp/bc-arc-scratch/common-experiment/ce12/p2/int/docs/plan.before-record-92037540.md"
+  ],
+  "section_104": "the confirming review of 6b9e29f4 and its record commit",
+  "dated_copy_sha256": "11657fb20b85e8cfba36fdf14098314cb2caaa55ae15c62239b6543f1a5c49dc",
+  "earlier": [
+   {
+    "note": "hash recorded by the review fix pass 6b9e29f4 (through section 103)",
+    "sha256": "9203754030e023e943b4af457b92d89031f044ebeac1880f8ac3d340c83782f7",
+    "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/fix/docs/plan.at-fix-92037540.md",
+    "dated_copy_sha256": "9203754030e023e943b4af457b92d89031f044ebeac1880f8ac3d340c83782f7"
+   }
+  ],
+  "note": "sections 101-104: P1 integrated, P2 first session, its review fix pass, its confirming review; central adf9d8fc's snapshot body (working plan 125e4463, through section 100) is a prefix of this plan"
  },
  "design": {
   "path": "/tmp/bc-arc-scratch/common-experiment/ce12/design-v2.md",
@@ -58,11 +71,12 @@
   "result": "F-ct2: explicit public term ctGapTerm = 𝒟[happens ctGapEvent <$> game]; D-ct deferred; to be reported to the owner before publication (design-v2 section 14 note 4). The design is not affected: its per-entry bound is a valid statistical fact and no new idealization is needed.",
   "missing": [
    "World invariant tying the marked build sequence-one record and commitment to the cached slot material (buildCachedEnv, buildSplitEnv, buildSplitFwd, PqxdhServerAuthCtxMaterial.factor (joinOutput material dummySeed)) across the five idealStep branches and the World hash cache (1-2 days)",
-   "a Lean lemma for the averaged union bound over the World's dynamic R1 table (1-2 days). The per-entry 2^-256 bound holds by averaging over the uniform marginal of key32_0 (a uniform lazy draw, PqxdhDeploymentIdealKernel.lazyDummy): the Beacon's sequence-one key is a fixed function f of the root (concrete.rs:64-106, start_initial_ratchet_kdf builds its request from the root alone); an entry drawn before key32_0 is hit with probability 2^-256, and for an entry e drawn after it Pr[f(e) = key32_0 and e created] <= E_k[Pr_e[f(e) = k]] = 2^-256. No independence of key32_0 from the view (it seals the visible sequence-one record), no random-oracle or uniformity property of HKDF-Expand and no hybrid is needed; what is missing is proof engineering.",
+   "a Lean lemma for the averaged union bound over the World's dynamic R1 table (1-2 days). The per-entry 2^-256 bound holds by averaging over the uniform marginal of key32_0 (a uniform lazy draw, PqxdhDeploymentIdealKernel.lazyDummy): the Beacon's sequence-one key is a fixed function f of the root (concrete.rs:64-106, start_initial_ratchet_kdf builds its request from the root alone); for an entry drawn before key32_0, f(entry) is a fixed value, which a fresh uniform key32_0 equals with probability 2^-256, and for an entry e drawn after it Pr[f(e) = key32_0 and e created] <= E_k[Pr_e[f(e) = k]] = 2^-256. No independence of key32_0 from the view (it seals the visible sequence-one record), no random-oracle or uniformity property of HKDF-Expand and no hybrid is needed; what is missing is proof engineering.",
    "connection of PqxdhRecordFactsCollision (run_bound, ctxDigest_bound over DrawSpec clients) to the World tables (0.5-1 day)",
    "the c = k* branch through finishChallengeEnv, preparationCE with Shared.known and groupEnv known-root path (0.5-1 day)"
   ],
-  "correction": "the first version of missing[1] said that the per-entry bound was not a statistical fact and needed an identical-until-bad hybrid and a fresh random-oracle derivation (2-4 days, total 4-8); the P2 review showed the averaging argument; F-ct2 stands because items (1), (3), (4) alone exceed the stop rule"
+  "correction": "the first version of missing[1] said that the per-entry bound was not a statistical fact and needed an identical-until-bad hybrid and a fresh random-oracle derivation (2-4 days, total 4-8); the P2 review showed the averaging argument; F-ct2 stands because items (1), (3), (4) alone exceed the stop rule",
+  "missing_wording_note": "missing[1] reworded by the commit that records the confirming review: it said that an entry drawn before key32_0 \"is hit\" with probability 2^-256, where the derived key f(entry) is meant; no change of substance"
  },
  "commits": [
   {
@@ -112,6 +126,10 @@
   {
    "commit": "25ca7adcf0ea6ca6ad40d6dc0758fa144967d9d6",
    "subject": "Add Server-side and Beacon-side symbolic forms and the full injective s2b form"
+  },
+  {
+   "commit": "6b9e29f46ef329decbb6218d61c30727d65e167f",
+   "subject": "Document the CE-12 P2 review fix pass"
   }
  ],
  "files_sha256": {
@@ -867,10 +885,10 @@
  "open_points": [
   "owner, before publication: ctGapTerm (F-ct2, D-ct stop rule fired; the per-entry bound is valid, the missing part is proof engineering) and ctCollTerm (ct_collision_game not proved) are probabilities in the real experiment, not closed advantages. ctGapTerm: ce_or_s2b_sym, ce_uks_sym, ce_app_sym, ce_app_beacon_sym, ce_kt_sym, ce_kt_beacon_sym, symbolic_lor, symbolic_lor_bound, ce_or_injective_s2b, ce_or_injective_s2b_full (and their event forms, beacon_gap_le, ce_a1_linked, sym_gap, lor_difference_bound); ctCollTerm: ce_or_s2b_sym, ce_uks_sym, symbolic_lor, symbolic_lor_bound, ce_or_injective_s2b, ce_or_injective_s2b_full. Affected rows: S2b-origin, s2b-C1, s2b-C4, far-s2b-C4, injective S2b-origin, b2s-UKSr, SSX-b2s, SS-b2s, 167 (both terms); App-b2s, b2s-S2, S3-beacon, A1-root with an owner claim, linked S2b-initial (ctGapTerm). Unaffected Server-side rows: L2-origin, b2s-C2, b2s-C2-chosen-fs, b2s-C4, far-b2s-C4, injective L2-origin, S3-server, A1-root with a Server-peer claim, App-s2b, s2b-S1, SSX-s2b, SS-s2b. Gating: headlines with β_g wait for guessBill; headlines with ctCollTerm wait for ct_collision_game (pair_cp_le, pair_bills consumed only then).",
   "ct_collision_game (2-4 days)",
-  "bills remainder: splitStep_uniform, ptc guessBill, HeadlineBills (0.5-1.5 days)",
+  "bills remainder: splitStep_uniform, ptc guessBill, HeadlineBills (0.5-1.5 days); the nine component bills HeadlineBills is to collect (kem_transfer_bills, allIdeal_bills, prf_bills, auth_bills, records_bills, ce_a1_billed, a2_bills, collider_bills, pair_bills) are already theorems",
   "AG (2-5 days)",
   "D-ct (3-6 days, deferred)",
-  "P2 confirming review, integration; then P3"
+  "integration into central (PROTOCOL section 6), after the commit that records the confirming review (which refreshes the committed plan snapshot, plan_snapshot); if central changes the snapshot before the integration, the integration takes the newer wholesale copy of the working plan; then the rest of P2 (the points above) and P3"
  ],
  "checks": {
   "lean_tool": "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean via coord.sh lean claude, -j1 -M8000, timeout 180",
@@ -1171,7 +1189,7 @@
   ]
  },
  "review": {
-  "status": "reviewed at 757882fa in three lenses (semantic, composition, hygiene); every finding fixed; confirming review pending",
+  "status": "reviewed at 757882fa in three lenses (semantic, composition, hygiene); every finding fixed (25ca7adc, 6b9e29f4); confirming review of 6b9e29f4: every finding resolved, two documentation nits, taken by the commit that records the review; not integrated at the record commit",
   "notes": [
    "/tmp/bc-arc-scratch/common-experiment/ce12/p2/review-semantic/NOTES.md",
    "/tmp/bc-arc-scratch/common-experiment/ce12/p2/review-composition/NOTES.md",
@@ -1180,7 +1198,7 @@
   "fix_commits": {
    "merge": "7c38da803173d0253bd473dade560877d308a1e7",
    "lean": "25ca7adcf0ea6ca6ad40d6dc0758fa144967d9d6",
-   "docs": "the commit that adds this receipt"
+   "docs": "6b9e29f46ef329decbb6218d61c30727d65e167f"
   },
   "statements_changed": [],
   "statements_added": [
@@ -1241,10 +1259,89 @@
     "finding": "composition confirmed (no action)",
     "resolution": "none"
    }
-  ]
+  ],
+  "docs_fix_commit": "6b9e29f46ef329decbb6218d61c30727d65e167f",
+  "confirming_review": {
+   "reviewed_range": "757882fac9ad4e46a956a5cb356c58c051477f5b..6b9e29f46ef329decbb6218d61c30727d65e167f",
+   "reviewed_commit": "6b9e29f46ef329decbb6218d61c30727d65e167f",
+   "date": "2026-10-10",
+   "scope": "the review fix pass (merge 7c38da80, Lean commit 25ca7adc, documentation commit 6b9e29f4): the findings of the P2 review at 757882fa, statements, guards, the receipt, the documentation",
+   "verdict": "every finding of the P2 review resolved at 6b9e29f4 (no further action for any of them); two documentation nits, taken by the commit that records the review; a review process note, no action",
+   "nits": [
+    {
+     "where": "guide, CE-12 P2: open points, point 4",
+     "finding": "said \"(the last four already proved)\" of the nine component bills HeadlineBills is to collect; all nine are theorems (kem_transfer_bills in PqxdhDeploymentKemTransfer; allIdeal_bills, prf_bills in PqxdhRegistrationJointKemKeyTransferBills; ce_a1_billed in PqxdhDeploymentServerAuthBills; a2_bills in PqxdhDeploymentProvenance; collider_bills in PqxdhDeploymentServerAuthInjective; auth_bills, records_bills, pair_bills in PqxdhDeploymentHeadlineBills)",
+     "outcome": "taken: \"(all nine already proved; what is missing is `ptc_bills` with `guessBill`, through `splitStep_uniform`, and the aggregation itself)\"; plan sections 102 and 103 do not repeat the list (unchanged); receipt open point 3 names the nine as theorems"
+    },
+    {
+     "where": "guide, CE-12 P2: the D-ct spike, item (2); receipt spike.missing[1]",
+     "finding": "said an entry drawn before key32_0 \"is hit\" with probability 2^-256, where the derived key f(entry) is meant",
+     "outcome": "taken: \"For an entry drawn before `key32_0`, `f(entry)` is a fixed value, which a fresh uniform `key32_0` equals with probability `2^-256`\" (guide) and the same wording in spike.missing[1]; the analysis already phrased the step through the derived key"
+    }
+   ],
+   "checks": [
+    "the three modules the fix pass changed (Symbolic, SymbolicLor, Injective) recompiled without -o through coord.sh lean at the clean head 6b9e29f4 against ce12/p2/fix/leanpath: exit 0, empty logs",
+    "confirm/scripts/scan.py over the six modules: 120 theorems (30, 14, 34, 29, 7, 6), 120 exact guards in declaration order, every axiom list within propext, Classical.choice, Quot.sound; no forbidden token (the only admit matches, in Symbolic and SymbolicLor, are the words admitted and admits); rerun at 6b9e29f4 for this record (int/logs/confirm-scan-rerun.log), same result"
+   ],
+   "recompiles": {
+    "PqxdhDeploymentHeadlineSymbolic": {
+     "exit": 0,
+     "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/confirm/logs/PqxdhDeploymentHeadlineSymbolic.log",
+     "log_bytes": 0,
+     "head": "6b9e29f46ef329decbb6218d61c30727d65e167f",
+     "dirty_paths": 0,
+     "source_sha256": "4e02773eb4b4da7322e36c84cf76888ae2405ee66119f0ca12add3a67570dbe9",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/fix/leanpath",
+     "leanpath_sha256": "d67d4cd3f50c48f226430513d79259a8e6dc1c27a09f0c11e1fc1e5f7e627f4e",
+     "mode": "without -o"
+    },
+    "PqxdhDeploymentHeadlineSymbolicLor": {
+     "exit": 0,
+     "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/confirm/logs/PqxdhDeploymentHeadlineSymbolicLor.log",
+     "log_bytes": 0,
+     "head": "6b9e29f46ef329decbb6218d61c30727d65e167f",
+     "dirty_paths": 0,
+     "source_sha256": "57b98a8aed3a20b29cca0a1320e32e17abbdb0ab3172372bc606c1bca66c97a9",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/fix/leanpath",
+     "leanpath_sha256": "d67d4cd3f50c48f226430513d79259a8e6dc1c27a09f0c11e1fc1e5f7e627f4e",
+     "mode": "without -o"
+    },
+    "PqxdhDeploymentHeadlineInjective": {
+     "exit": 0,
+     "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/confirm/logs/PqxdhDeploymentHeadlineInjective.log",
+     "log_bytes": 0,
+     "head": "6b9e29f46ef329decbb6218d61c30727d65e167f",
+     "dirty_paths": 0,
+     "source_sha256": "22d8e8f64ff24298ae01e36fad5bb40f0f148c91dc73f672955370bbc82ae779",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/fix/leanpath",
+     "leanpath_sha256": "d67d4cd3f50c48f226430513d79259a8e6dc1c27a09f0c11e1fc1e5f7e627f4e",
+     "mode": "without -o"
+    }
+   },
+   "scan_rerun": {
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/int/logs/confirm-scan-rerun.log",
+    "log_sha256": "f547ebde8bb1ba9b499fe3e8a825d49ce9fc1d7f61ef152de1b4c414ad6bbf26",
+    "script": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/confirm/scripts/scan.py",
+    "script_sha256": "08fcc0e05d9be0e87d8c3eccc68fcf5d3e9f0bf9e452316d712ca222b175cea2"
+   },
+   "scratch": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/confirm/"
+  }
  },
  "git_diff_check": {
-  "range": "b88e30124d0c80a762cdf99ccf82569995c4a471..25ca7adcf0ea6ca6ad40d6dc0758fa144967d9d6",
-  "exit": 0
+  "range": "b88e30124d0c80a762cdf99ccf82569995c4a471..6b9e29f46ef329decbb6218d61c30727d65e167f",
+  "exit": 0,
+  "note": "the commit that records the confirming review is checked with git diff --cached --check before it is made"
+ },
+ "plan_snapshot": {
+  "path": "doc/impl/common-deployment-experiment-plan.md",
+  "sha256": "7a62c845ecd7fb1d906c84c752744a1fb9a6d03ec949929c006f23d17d8c13a0",
+  "refreshed_from_sha256": "11657fb20b85e8cfba36fdf14098314cb2caaa55ae15c62239b6543f1a5c49dc",
+  "through_section": 104,
+  "sections": "0-18 and the decision sections 19-104",
+  "script": {
+   "path": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/int/scripts/snapshot.py",
+   "sha256": "3cb3f794f9194ccc7eb391a38a62d553aaaa1a18c2798feb94401183d581455f"
+  },
+  "note": "refreshed in the commit that records the confirming review as a wholesale copy of the working plan: the body equals the working plan from its third line; the snapshot paragraph, built from central adf9d8fc's, records the hash and the refresh history. This branch carried central adf9d8fc's snapshot (working plan 125e4463, through section 100, a prefix of this body) unchanged until this commit; the refresh adds section 100's integration bullet and sections 101 to 104. If central changes the snapshot before the integration, the integration merge takes the newer wholesale copy instead of merging by hand and states the refresh in the integration record"
  }
 }
