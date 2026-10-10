@@ -1,9 +1,15 @@
 {
- "date": "2026-10-10T12:16:19.645919+00:00",
- "scope": "CE-12 P2b (track ce12/p2b), steps 1 to 3. Step 1: the rest of the bills of design-v2 section 9 (splitStep_uniform, guessBill and ptc_bills, HeadlineBills with headline_bills, the billed forms of the fifteen frozen headline forms with beta_g and of anomaly_beta). Step 2: design-v2 section 7.4's ct_collision_game (ctCollTerm <= qCreate * C(qAccept, 2) * pairCollision), the closed bound epsilon_ctcoll through pair_cp_le (ct_coll_le), and the closed forms of the six frozen headline forms with ctCollTerm and of the five billed forms of step 1 among them. Step 3 (after the merge of central df7727c3 at 5a9213dc): design-v2 section 7.7's AG, AgreementStatement in idealAuth (agreement_statement, no premise) with its three ingredients (seal-context invariant ctxRun_sealAd, receive-side AD retention ctxRun_entryAd, injectivity associatedBytes_inj) and the identity forms; the lift of AG to the common deployment experiment (section 7.6 b2s Server-pin and mode-O plaintext rows) is not built (remainder in open_points). Not reviewed; not integrated.",
+ "date": "2026-10-10T12:54:30.030829+00:00",
+ "scope": "CE-12 P2b (track ce12/p2b), steps 1 to 3. Step 1: the rest of the bills of design-v2 section 9 (splitStep_uniform, guessBill and ptc_bills, HeadlineBills with headline_bills, the billed forms of the fifteen frozen headline forms with beta_g and of anomaly_beta). Step 2: design-v2 section 7.4's ct_collision_game (ctCollTerm <= qCreate * C(qAccept, 2) * pairCollision), the closed bound epsilon_ctcoll through pair_cp_le (ct_coll_le), and the closed forms of the six frozen headline forms with ctCollTerm and of the five billed forms of step 1 among them. Step 3 (after the merge of central df7727c3 at 5a9213dc): design-v2 section 7.7's AG, AgreementStatement in idealAuth (agreement_statement, no premise) with its three ingredients (seal-context invariant ctxRun_sealAd, receive-side AD retention ctxRun_entryAd, injectivity associatedBytes_inj) and the identity forms; the lift of AG to the common deployment experiment (section 7.6 b2s Server-pin and mode-O plaintext rows) is not built (remainder in open_points). Review fix pass (after the three-lens review at 472adf82): merge of central 2a33faf5 at d3b12d00 and one documentation commit; no Lean module, theorem statement or check changed. Reviewed; not integrated.",
  "basis": {
   "start": "f0dc46bb6473ab37ecf48e623f1ccb192bd6b3af",
   "merges": [
+   {
+    "merge_commit": "d3b12d001d25b293afcdbef165c5fdcd40c2a717",
+    "central": "2a33faf53a902ba6925c575f5135ef9181b49a5d",
+    "step": "review fix pass",
+    "conflicts": "append anchors only (root import block, [handwritten-lean] count line and module blocks of check-inventory.sh, digest rows of the root and check-inventory.sh and module rows of reviewed-inventory.txt, end of the analysis); central first, then the topic; count and digest lines from central, then inv recount 1930 -> 1941 and inv rehash; central adds PqxdhBoundaryDeploymentStep, PqxdhBoundaryDeployment and PqxdhBoundaryDeploymentLater and changes no existing Lean module except the root"
+   },
    {
     "merge_commit": "5a9213dcb76e955869a8d3447d3a63dd5b34488b",
     "central": "df7727c3238f70388e3ea739df109ad025ace097",
@@ -11,11 +17,15 @@
     "conflicts": "append anchors only (root import block, [handwritten-lean] count line and module blocks of check-inventory.sh, digest rows of the root and check-inventory.sh and module rows of reviewed-inventory.txt, end of the analysis, the guide's status paragraphs); central first, then the topic; count and digest lines from central, then inv recount 1927 -> 1935 and inv rehash"
    }
   ],
-  "central_at_receipt": "e0b8810bb048499ed8fbcadba5fe8a560f3ad083",
-  "central_note": "central moved during step 2 (f0dc46bb -> c72db84a LQ-F unit A2 -> c27b4533 item 7 increment A) and then to df7727c3 (LQ-F unit B); step 3 merged df7727c3 at 5a9213dc before its modules; central moved again during step 3 to e0b8810b (item 7 increment I3, messages 514/515), not merged into this topic; a trial merge (git merge-tree) conflicts only at the append anchors (check-inventory.sh, the root, reviewed-inventory.txt, the analysis)",
+  "central_at_receipt": "2a33faf53a902ba6925c575f5135ef9181b49a5d",
+  "central_note": "central moved during step 2 (f0dc46bb -> c72db84a LQ-F unit A2 -> c27b4533 item 7 increment A) and then to df7727c3 (LQ-F unit B); step 3 merged df7727c3 at 5a9213dc before its modules; central moved again during step 3 to e0b8810b (item 7 increment I3, messages 514/515), not merged into this topic; a trial merge (git merge-tree) conflicts only at the append anchors (check-inventory.sh, the root, reviewed-inventory.txt, the analysis); central then moved to 2a33faf5 (item 7 increment I4) during the review fix pass, which merged it at d3b12d00",
   "published_leanpath": {
    "path": "/tmp/bc-coord/leanpaths/f0dc46bb6473ab37ecf48e623f1ccb192bd6b3af.leanpath",
    "sha256": "8b2da583f6e190857e288154143ba371fd3067ff81bf7466e95e7954e1db8f84"
+  },
+  "published_leanpath_fix": {
+   "path": "/tmp/bc-coord/leanpaths/2a33faf53a902ba6925c575f5135ef9181b49a5d.leanpath",
+   "sha256": "205aabc645b08a909cbee874c53266fdadd689f74477f0b59d059d9221c98eb5"
   },
   "published_leanpath_step3": {
    "path": "/tmp/bc-coord/leanpaths/df7727c3238f70388e3ea739df109ad025ace097.leanpath",
@@ -25,20 +35,28 @@
  "topic": {
   "branch": "codex/deployment-ce12",
   "worktree": "/tmp/beaconcrypt-deployment-ce12",
-  "head_at_receipt": "f8a20c85058e734847362a3bee0ef9e421e702a2",
-  "note": "the documentation commit that adds this receipt follows head_at_receipt; it changes no Lean file"
+  "head_at_receipt": "d3b12d001d25b293afcdbef165c5fdcd40c2a717",
+  "note": "the documentation commit of the review fix pass, which adds this receipt, follows head_at_receipt (the merge commit d3b12d00); it changes no Lean file"
  },
  "plan": {
   "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
-  "sha256": "00b636177ddf778d8ce1a5248b151e4a2d69e43b7468b4db1086d4e7cfdf878a",
+  "sha256": "5a147c8821792bb91a860551000885cf8a1ad52cc408ae2ec870baeca6c60c0a",
   "sections": [
    105,
    106,
-   108
+   108,
+   110
   ],
-  "other_lane_section": 107,
-  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/docs/plan.at-p2b3-00b63617.md",
-  "dated_copy_sha256": "00b636177ddf778d8ce1a5248b151e4a2d69e43b7468b4db1086d4e7cfdf878a",
+  "other_lane_sections": [
+   107,
+   109,
+   111
+  ],
+  "note": "the plan as it stands for the review fix pass documentation commit: section 110 appended and section 108 corrected (public AD lemma); not amended again for that commit",
+  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/docs/plan.at-p2bfix-5a147c88.md",
+  "dated_copy_sha256": "5a147c8821792bb91a860551000885cf8a1ad52cc408ae2ec870baeca6c60c0a",
+  "backup_before_fix": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/docs/plan.before-p2bfix-a4d85abc.md",
+  "step3_dated_copy_after_amendment": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/docs/plan.at-p2b3-b683b299.md",
   "backup_before": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/docs/plan.before-p2b3-54ce9bfb.md",
   "backup_before_step2": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/docs/plan.before-p2b2-0cb1cc66.md",
   "backup_before_step1": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/docs/plan.before-p2b-d44add0e.md"
@@ -113,6 +131,14 @@
   {
    "commit": "f8a20c85058e734847362a3bee0ef9e421e702a2",
    "subject": "Document CE-12 P2b step 3: AG in idealAuth"
+  },
+  {
+   "commit": "472adf823a68b0d1e020f2bbee47f71894b5d2ea",
+   "subject": "Record that central moved during CE-12 P2b step 3"
+  },
+  {
+   "commit": "d3b12d001d25b293afcdbef165c5fdcd40c2a717",
+   "subject": "Merge central 2a33faf5 into CE-12 P2b"
   }
  ],
  "commit_message_corrections": [
@@ -128,9 +154,9 @@
   }
  ],
  "files_sha256": {
-  "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "e4cc7bd0a36be6abb7c09b68e334a95b57f6a5858968b9df5ec828180b0e3e55",
-  "beaconcrypt-core/proofs/reviewed-inventory.txt": "90b09d1307d6ca688179e497a9a27406ac1f6ec917e86372c2aa908491686949",
-  "beaconcrypt-core/proofs/check-inventory.sh": "66e745d23e28ee6928cae6706f08005a9dc7d0c402cceab853b0659a3a63373e"
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "6f0321ab8f11b5c5280a5ae115462d5d17a8b54f14df235cb0ddcb07b3aec132",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "3a8a0fdcafadd20d3e516a31e4ded2757482fc8211f3d4897133e78e5c74b302",
+  "beaconcrypt-core/proofs/check-inventory.sh": "994d7e0be4b2047c3976bee70e817481e1365565c49f058905c717da50fb9439"
  },
  "modules": [
   {
@@ -217,6 +243,18 @@
     "start": "2026-10-10T08:39:05.860870831Z",
     "end": "2026-10-10T08:39:21.735979776Z"
    },
+   "fix_recheck": {
+    "prefix": "ce12/p2b/olean3",
+    "note": "recompiled after the merge of central 2a33faf5 (d3b12d00), review fix pass",
+    "exit": 0,
+    "head_when_checked": "472adf823a68b0d1e020f2bbee47f71894b5d2ea",
+    "dirty_paths_when_checked": 15,
+    "log_bytes": 0,
+    "artifact_sha256": "5a8b11ba8619d3bb6f23e3dc82e43a904f48bf4b04272b7b167908625f9e7409",
+    "artifact_identical_to_final": true,
+    "source_sha256": "a5763c6fc2915c3db804ea669d2894336afe9d36c986fafc1d07c27579a80c92",
+    "source_equals_current": true
+   },
    "merge_recheck": {
     "prefix": "ce12/p2b/olean2",
     "note": "recompiled after the merge of central df7727c3 (5a9213dc)",
@@ -286,6 +324,18 @@
     "start": "2026-10-10T08:43:02.144121571Z",
     "end": "2026-10-10T08:43:08.564928051Z"
    },
+   "fix_recheck": {
+    "prefix": "ce12/p2b/olean3",
+    "note": "recompiled after the merge of central 2a33faf5 (d3b12d00), review fix pass",
+    "exit": 0,
+    "head_when_checked": "472adf823a68b0d1e020f2bbee47f71894b5d2ea",
+    "dirty_paths_when_checked": 15,
+    "log_bytes": 0,
+    "artifact_sha256": "7c67698fc11dce299acf28878ab8715eaff61a849e3aa9328e4a18d47e54bc64",
+    "artifact_identical_to_final": true,
+    "source_sha256": "739e9ccb48b36fbfac7dbe7793c077d3b221a540ae5e74a4b6d1cdff996a79c5",
+    "source_equals_current": true
+   },
    "merge_recheck": {
     "prefix": "ce12/p2b/olean2",
     "note": "recompiled after the merge of central df7727c3 (5a9213dc)",
@@ -351,6 +401,18 @@
     },
     "start": "2026-10-10T08:50:14.734206957Z",
     "end": "2026-10-10T08:50:17.665821411Z"
+   },
+   "fix_recheck": {
+    "prefix": "ce12/p2b/olean3",
+    "note": "recompiled after the merge of central 2a33faf5 (d3b12d00), review fix pass",
+    "exit": 0,
+    "head_when_checked": "472adf823a68b0d1e020f2bbee47f71894b5d2ea",
+    "dirty_paths_when_checked": 15,
+    "log_bytes": 0,
+    "artifact_sha256": "0cc4577aa319367f0a3cca36d6c0c5b77e8258c78e3b97d61a80e127a71de38e",
+    "artifact_identical_to_final": true,
+    "source_sha256": "25cc79473346471daf68528eb2a3e9d912e2801e0d615d130c56dfec4efa394e",
+    "source_equals_current": true
    },
    "merge_recheck": {
     "prefix": "ce12/p2b/olean2",
@@ -424,6 +486,18 @@
     },
     "start": "2026-10-10T08:54:52.206618469Z",
     "end": "2026-10-10T08:54:55.739443355Z"
+   },
+   "fix_recheck": {
+    "prefix": "ce12/p2b/olean3",
+    "note": "recompiled after the merge of central 2a33faf5 (d3b12d00), review fix pass",
+    "exit": 0,
+    "head_when_checked": "472adf823a68b0d1e020f2bbee47f71894b5d2ea",
+    "dirty_paths_when_checked": 15,
+    "log_bytes": 0,
+    "artifact_sha256": "f0ac11840d83861c60b3ce1ddd98561c2c6fa76aa7e59393e0ea14beba888711",
+    "artifact_identical_to_final": true,
+    "source_sha256": "32d9482f4ac30959268ffdd92604505d12f354fd50fe0d1a778182e597d60b59",
+    "source_equals_current": true
    },
    "merge_recheck": {
     "prefix": "ce12/p2b/olean2",
@@ -532,6 +606,18 @@
     "start": "2026-10-10T10:03:24.451793310Z",
     "end": "2026-10-10T10:03:29.493466874Z"
    },
+   "fix_recheck": {
+    "prefix": "ce12/p2b/olean3",
+    "note": "recompiled after the merge of central 2a33faf5 (d3b12d00), review fix pass",
+    "exit": 0,
+    "head_when_checked": "472adf823a68b0d1e020f2bbee47f71894b5d2ea",
+    "dirty_paths_when_checked": 15,
+    "log_bytes": 0,
+    "artifact_sha256": "5ee7756ea9b04d75c30985230ea4046fa2f3cb952340ca2a3d98d0b5b02a0637",
+    "artifact_identical_to_final": true,
+    "source_sha256": "1ef90d9a6f3a3d0ba19c339dbe88cf77fb78fa59f5250ddfe7cddc1e38d890d0",
+    "source_equals_current": true
+   },
    "merge_recheck": {
     "prefix": "ce12/p2b/olean2",
     "note": "recompiled after the merge of central df7727c3 (5a9213dc)",
@@ -636,6 +722,18 @@
     "start": "2026-10-10T10:08:14.659761310Z",
     "end": "2026-10-10T10:08:24.466596258Z"
    },
+   "fix_recheck": {
+    "prefix": "ce12/p2b/olean3",
+    "note": "recompiled after the merge of central 2a33faf5 (d3b12d00), review fix pass",
+    "exit": 0,
+    "head_when_checked": "472adf823a68b0d1e020f2bbee47f71894b5d2ea",
+    "dirty_paths_when_checked": 15,
+    "log_bytes": 0,
+    "artifact_sha256": "62290ee3595688e926bbe35d09796d73f3efa01c83febd067a71e270dca74c5f",
+    "artifact_identical_to_final": true,
+    "source_sha256": "8975ec77e19edecf6d13a3a1f43ee5031b24c706da338080cc871d7626d156d5",
+    "source_equals_current": true
+   },
    "merge_recheck": {
     "prefix": "ce12/p2b/olean2",
     "note": "recompiled after the merge of central df7727c3 (5a9213dc)",
@@ -695,6 +793,18 @@
     },
     "start": "2026-10-10T10:10:28.496666178Z",
     "end": "2026-10-10T10:10:31.399702478Z"
+   },
+   "fix_recheck": {
+    "prefix": "ce12/p2b/olean3",
+    "note": "recompiled after the merge of central 2a33faf5 (d3b12d00), review fix pass",
+    "exit": 0,
+    "head_when_checked": "472adf823a68b0d1e020f2bbee47f71894b5d2ea",
+    "dirty_paths_when_checked": 15,
+    "log_bytes": 0,
+    "artifact_sha256": "448a3ee3a26fca446f071be8a774757ad32be2eddf9ac3e91da0233050b16645",
+    "artifact_identical_to_final": true,
+    "source_sha256": "163afe51aa8e23810c02ae4b86a18d90836979569a12ddd9113c5526b12951f7",
+    "source_equals_current": true
    },
    "merge_recheck": {
     "prefix": "ce12/p2b/olean2",
@@ -757,6 +867,18 @@
     },
     "start": "2026-10-10T10:12:57.727187623Z",
     "end": "2026-10-10T10:13:01.251303773Z"
+   },
+   "fix_recheck": {
+    "prefix": "ce12/p2b/olean3",
+    "note": "recompiled after the merge of central 2a33faf5 (d3b12d00), review fix pass",
+    "exit": 0,
+    "head_when_checked": "472adf823a68b0d1e020f2bbee47f71894b5d2ea",
+    "dirty_paths_when_checked": 15,
+    "log_bytes": 0,
+    "artifact_sha256": "310f7caffff069e3a1a878d5ab167904ab0f4052ac8f19134e59717276789064",
+    "artifact_identical_to_final": true,
+    "source_sha256": "db3fe1c508de30d68402861fb22c171a33ff425415a09f2abba237c53d811ab3",
+    "source_equals_current": true
    },
    "merge_recheck": {
     "prefix": "ce12/p2b/olean2",
@@ -855,6 +977,18 @@
     "start": "2026-10-10T11:57:05.625617064Z",
     "end": "2026-10-10T11:57:11.655005895Z"
    },
+   "fix_recheck": {
+    "prefix": "ce12/p2b/olean3",
+    "note": "recompiled after the merge of central 2a33faf5 (d3b12d00), review fix pass",
+    "exit": 0,
+    "head_when_checked": "472adf823a68b0d1e020f2bbee47f71894b5d2ea",
+    "dirty_paths_when_checked": 15,
+    "log_bytes": 0,
+    "artifact_sha256": "919ee855accba85dee57451dcc7be99016912294c15be8a292885bf034c02284",
+    "artifact_identical_to_final": true,
+    "source_sha256": "7193372688936a989835606cd75438d975103a2e50f84e8f0711ef15e9ffae77",
+    "source_equals_current": true
+   },
    "merge_recheck": null
   },
   {
@@ -921,6 +1055,18 @@
     "start": "2026-10-10T11:59:31.124526540Z",
     "end": "2026-10-10T11:59:36.976575071Z"
    },
+   "fix_recheck": {
+    "prefix": "ce12/p2b/olean3",
+    "note": "recompiled after the merge of central 2a33faf5 (d3b12d00), review fix pass",
+    "exit": 0,
+    "head_when_checked": "472adf823a68b0d1e020f2bbee47f71894b5d2ea",
+    "dirty_paths_when_checked": 15,
+    "log_bytes": 0,
+    "artifact_sha256": "eb9c8bc8174fd92666c56361fea968ea8bdd1db673d32505a6ddaf7baa8d47cb",
+    "artifact_identical_to_final": true,
+    "source_sha256": "11a55883593dbac6a8a41b95483c4976b43c0859328d127fdc27684f672be5c7",
+    "source_equals_current": true
+   },
    "merge_recheck": null
   },
   {
@@ -979,6 +1125,18 @@
     },
     "start": "2026-10-10T12:01:44.860542583Z",
     "end": "2026-10-10T12:01:49.075505569Z"
+   },
+   "fix_recheck": {
+    "prefix": "ce12/p2b/olean3",
+    "note": "recompiled after the merge of central 2a33faf5 (d3b12d00), review fix pass",
+    "exit": 0,
+    "head_when_checked": "472adf823a68b0d1e020f2bbee47f71894b5d2ea",
+    "dirty_paths_when_checked": 15,
+    "log_bytes": 0,
+    "artifact_sha256": "6eec6007962fc9d3eac8da0fe46d8b210a33bedda995506e055fdb70bab863b3",
+    "artifact_identical_to_final": true,
+    "source_sha256": "3fb43a9b10fdf376c0a6e1b16baa08e9895e0332a24f068e94aa99b99942b209",
+    "source_equals_current": true
    },
    "merge_recheck": null
   }
@@ -1096,15 +1254,15 @@
  "boundary_imports": [],
  "handwritten_lean": {
   "before": 1908,
-  "after": 1938,
-  "note": "one per module: 1908 -> 1909 (SplitCost) -> 1910 (GuessBill) -> 1911 (BillsFull) -> 1912 (Gated) -> 1913 (CtGhost) -> 1914 (CtTrace) -> 1915 (CtColl) -> 1916 (CtClosed); merge of central df7727c3: 1927 (central) -> 1935; 1936 (AgreeSeal) -> 1937 (AgreeReceive) -> 1938 (Agree); coord.sh inv recount before coord.sh inv rehash each time"
+  "after": 1941,
+  "note": "merge of central 2a33faf5 (review fix pass): 1930 (central) -> 1941; earlier: one per module: 1908 -> 1909 (SplitCost) -> 1910 (GuessBill) -> 1911 (BillsFull) -> 1912 (Gated) -> 1913 (CtGhost) -> 1914 (CtTrace) -> 1915 (CtColl) -> 1916 (CtClosed); merge of central df7727c3: 1927 (central) -> 1935; 1936 (AgreeSeal) -> 1937 (AgreeReceive) -> 1938 (Agree); coord.sh inv recount before coord.sh inv rehash each time"
  },
  "headlines": {
   "splitStep_uniform": "KemBound -> for every t p created query x: ((handlerWith setup codec route (idealSplit setup codec route checks t p created) query).run x).IsTotalQueryBound (splitWeight caps (commandKind query)); splitWeight = [1, 64 + keygenCost, 32, 140 + encapsCost, 108 + 64 + 64, 69 * max 64 decapsCost + 64, 64, 64, 64, 64, 64, 64]",
   "guessStep_uniform / guessStep_base": "every step of guessReg: IsMlKemUniformQuery <= splitWeight caps (commandKind query) (KemBound); IsMlKemBaseQuery 0",
   "flat_uniform / game_uniform": "one complete-interface query: <= guessWeight caps bounds (queryClass query); whole guesser game against a budget-respecting adversary: <= sum_kind guessWeight kind * budget.cap kind",
   "guessWeight_eq": "guessWeight caps bounds = splitWeight on the twelve native classes, test 1 + 64 + 64, fresh bounds.max + 64 + 64",
-  "guessBill / guessBill_eq": "guessBill caps qInit B bounds = (B.create + 1) * keygenCost + (qInit + 32) + sum_kind B.cap kind * guessWeight kind = (qCreate + 1)keygenCost + (qInit + 32) + qCoin + (64 + keygenCost)qCreate + 32 qBundle + (140 + encapsCost)qAccept + 236 qBuild + (69 max(64, decapsCost) + 64)qFinish + 64(qHmac + qHash + qServerSend + qServerRaw + qBeaconSend + qBeaconRaw) + 129 qTest + (bounds.max + 128)qFresh",
+  "guessBill / guessBill_eq": "not tight: the create weight (64 + keygenCost) includes a key generation beyond the pool, which the guesser (pool of qCreate + 1 key pairs, PqxdhDeploymentIdealParams.pool_length; createPool draws only at a missing pool index) never reaches under the budget, so guessBill over-charges by qCreate * keygenCost; guessBill caps qInit B bounds = (B.create + 1) * keygenCost + (qInit + 32) + sum_kind B.cap kind * guessWeight kind = (qCreate + 1)keygenCost + (qInit + 32) + qCoin + (64 + keygenCost)qCreate + 32 qBundle + (140 + encapsCost)qAccept + 236 qBuild + (69 max(64, decapsCost) + 64)qFinish + 64(qHmac + qHash + qServerSend + qServerRaw + qBeaconSend + qBeaconRaw) + 129 qTest + (bounds.max + 128)qFresh",
   "anomalyGuesser_uniform / anomalyGuesser_base": "anomalyGuesser (Target count) ...: IsMlKemUniformQuery <= (count + 1) keygenCost + (qInit + 32) + sum_kind budget.cap kind * guessWeight kind (KemBound, initBound, Respects); IsMlKemBaseQuery 0",
   "ptc_bills": "(ptc setup.kem (anomalyGuesser setup codec route checks (Target.ofCE budget g) ensureInit 0 runtime bounds mode adversary)).MakesAtMostQueries (guessBill caps qInit budget bounds) 0 (budget.finish + 1) 0 0 0 (KemBound, initBound, budget.Respects)",
   "a1_bills": "ReductionBills of serverAuthAdversary c at coinCap, qAccept, romCap, hashCap, totalCap, qFinish from KemBound and the budget alone (no CE-A1 security premise)",
@@ -1139,7 +1297,7 @@
   "step 2: closed forms are new theorems generated from the frozen statements (ce12/p2b/gen/closed.py); symbolic_lor_closed adds FunctionalDecapsulation; the five step-1 billed forms are closed too, with PairBills",
   "step 2: the first focused check-inventory of PqxdhDeploymentHeadlineCtGhost failed (unescaped ? in generated rg patterns); fixed and rerun before the commit; that commit was made by hand after the helper stopped on a relative message path",
   "step 3: AG stated on the full ideal-world outcome (control and private dictionaries): the record-lift view and the CE observation carry no handle AD or seal plaintext",
-  "step 3: the design's public AD lemma realized as handleAd (AD from the install data in the source control) with its stability AdKept; reading the install data from the CE transcript belongs to the CE lift (remainder)",
+  "step 3: the design's public AD lemma realized only at record level, as handleAd (AD from the install data in the private source control) with its stability AdKept; its public (transcript-readable) half, reading the install data from the CE transcript, is the R1 remainder (wording corrected by the review fix pass)",
   "step 3: the lift of AG to the common deployment experiment (section 7.6 b2s Server-pin and mode-O plaintext rows) is not built; remainder R1 and R2 in open_points",
   "step 3: the commit of PqxdhDeploymentHeadlineAgreeSeal was made by hand after the helper stopped on a relative message path (same content; helper fixed)",
   "step 3: the explicit registry entries of the three module names were added after the Lean commits; before creation only coord.sh registry owner was checked (prefix PqxdhDeployment* is Claude's)"
@@ -1161,7 +1319,7 @@
  "not_claimed": [
   "no closed epsilon_ct: ctGapTerm stays an explicit probability in the real experiment (F-ct2, D-ct deferred); ctCollTerm is closed by ct_coll_le in the closed forms, the frozen theorems still carry it",
   "no KEM min-entropy or collision property: CP is bounded only through pair_cp_le (Adv^IND-CCA(pairAdversary) + 2 delta_corr + 2^-256); the union bound over qCreate * C(qAccept, 2) triples is not tight",
-  "the bills are query caps in the existing cost model, not running-time bounds; deterministic local work is not counted; they are worst-case caps and need not be tight",
+  "the bills are query caps in the existing cost model, not running-time bounds; deterministic local work is not counted; they are worst-case caps and need not be tight (test at both send classes; every finish at the real finish's cap; guessBill over-charges by qCreate * keygenCost)",
   "step 3: no statement in the common deployment experiment: AG is proved in idealAuth (every ideal CTX world) and not lifted through the chain, so the b2s Server-pin and mode-O plaintext rows of design-v2 section 7.6 stay symbolic-only",
   "step 3: AG covers handles holding hidden slots and raw receives only; agreement is with a production (published or not)",
   "no D-ct, no later-quantum (P3) form"
@@ -1171,10 +1329,16 @@
   "AG lift, R1 (b2s Server pin, 1-2 actual days): CE event (accepted b2s raw receive on a peer designating g whose counterpart owner g.2 was created with a pin different from the Server identity carried by session g.1's build response, Phase2ReadBack); chain_server, auth_le, containment in AgreeFailure on the support of idealAuth at envGD from ctxRun_peer_agreement and the IdealSlots restriction plus two ideal-environment invariants (installed shell AD = associatedArray(created pin, identity); source control Server identity = identity field of every build response); bound kemLoss + slotLoss + authLoss_g(dec_g and ISs_g)",
   "AG lift, R2 (mode-O plaintext, b2s and s2b, 1.5-3 actual days): ledger-level seal-source invariant (every dictionary seal at a label owned by a handle comes from a transcript command of that handle with its plaintext) and one seal per frame and handle (label position = sequence - 1, at most one successful seal per label); containment in AgreeFailure or the unpublished event (publicationTerm); b2s through chain_server, s2b through chain_beta",
   "D-ct (3-6 days, deferred)",
-  "independent review of P2b steps 1 to 3, fix pass, integration (merging central again if it moved since df7727c3)"
+  "confirming review of the review fix pass, then the integration into central (PROTOCOL section 6), merging central again if it moved since 2a33faf5"
  ],
  "checks": {
   "lean_tool": "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean via coord.sh lean claude, -j1 -M8000, timeout 180",
+  "leanpath_fix": {
+   "path": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/leanpath3",
+   "sha256": "5a3deace2b54aa23c29c83ae323512f1b8c881b637c9c6fda23975941fef1287",
+   "first_prefix": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/olean3",
+   "mirror_of": "/tmp/bc-arc-scratch/item7/i4/int/olean (published 2a33faf5 first prefix; 6389 links, 0 broken, root skipped)"
+  },
   "leanpath_step3": {
    "path": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/leanpath2",
    "sha256": "92c60e9307f395586b1da68a7a70c455da34e324c7ea22bc9b9460fca4b130ae",
@@ -1307,6 +1471,22 @@
     "log_bytes": 0,
     "artifact_sha256": "5feaeb2220e0161fa183e73361acc81779b8532033e186381f99df73063c6cca",
     "source_sha256": "c92bd2b907250916c99586ed6769f6c84565a446b9db7ac3267addc21deca5bf"
+   },
+   "logs/final3/root-clean-d3b12d00.json": {
+    "exit": 0,
+    "head": "d3b12d001d25b293afcdbef165c5fdcd40c2a717",
+    "dirty_paths": 0,
+    "log_bytes": 0,
+    "artifact_sha256": "a8e6317a8e75e5802367a15b2858ca494dbee643bad857a7cbda27b5029cbe90",
+    "source_sha256": "6f0321ab8f11b5c5280a5ae115462d5d17a8b54f14df235cb0ddcb07b3aec132"
+   },
+   "logs/final3/root-merge-2a33faf5.json": {
+    "exit": 0,
+    "head": "472adf823a68b0d1e020f2bbee47f71894b5d2ea",
+    "dirty_paths": 15,
+    "log_bytes": 0,
+    "artifact_sha256": "a8e6317a8e75e5802367a15b2858ca494dbee643bad857a7cbda27b5029cbe90",
+    "source_sha256": "6f0321ab8f11b5c5280a5ae115462d5d17a8b54f14df235cb0ddcb07b3aec132"
    }
   },
   "inventories": {
@@ -1486,6 +1666,28 @@
     "log_sha256": "523ef1d741c4f882a6ce115b56690fa7000ad5756394f856b4d8f38187df432a",
     "note": ""
    },
+   "docs5": {
+    "status": 0,
+    "commit": "f8a20c85058e734847362a3bee0ef9e421e702a2",
+    "start": "2026-10-10T12:16:30Z",
+    "end": "2026-10-10T12:18:20Z",
+    "dirty_before": 2,
+    "dirty_after": 2,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/logs/inventory-docs5.log",
+    "log_sha256": "6731e3f95e9700f60c8213f0723246bd76a2a36fe559815e3a193a429cdaae86",
+    "note": ""
+   },
+   "fixdocs": {
+    "status": 0,
+    "commit": "d3b12d001d25b293afcdbef165c5fdcd40c2a717",
+    "start": "2026-10-10T12:52:19Z",
+    "end": "2026-10-10T12:54:12Z",
+    "dirty_before": 3,
+    "dirty_after": 3,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/logs/inventory-fixdocs.log",
+    "log_sha256": "e5c6208bb779c4ece49bf3485be622b7f92337a5280d0694bceafb2217f0e268",
+    "note": "review fix pass: run on the documentation changes before their commit (dirt: the guide, the analysis and this receipt)"
+   },
    "gated": {
     "status": 0,
     "commit": "f147bf69e764627a5ca23975f7d1908cc240aeee",
@@ -1507,6 +1709,17 @@
     "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/logs/inventory-guessbill.log",
     "log_sha256": "e8614f0e8448409c0c8bd264dae9adf0903937d1053f71e0aebc71b1c23586be",
     "note": "run before the module's Lean commit, with its four staged paths (module, root, reviewed-inventory.txt, check-inventory.sh) as the only dirt"
+   },
+   "merge-2a33faf5": {
+    "status": 0,
+    "commit": "472adf823a68b0d1e020f2bbee47f71894b5d2ea",
+    "start": "2026-10-10T12:43:35Z",
+    "end": "2026-10-10T12:45:24Z",
+    "dirty_before": 15,
+    "dirty_after": 15,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/logs/inventory-merge-2a33faf5.log",
+    "log_sha256": "0feb3692d9bcd0fffaf1627e5c7c4fb48db2807c9a0919103cc0f89d7468ccd4",
+    "note": "review fix pass: run on the resolved merge of central 2a33faf5 before the merge commit d3b12d00 (dirt: the staged merge)"
    },
    "merge-df7727c3": {
     "status": 0,
@@ -1531,14 +1744,115 @@
     "note": "run before the module's Lean commit, with its four staged paths (module, root, reviewed-inventory.txt, check-inventory.sh) as the only dirt"
    }
   },
-  "guard_scan": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/logs/scan-3.json",
+  "guard_scan": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/logs/scan-4.json",
+  "guard_scan_note": "scan-4 at the merge commit d3b12d00 is byte-identical to scan-3 at 14287522",
   "guard_scan_steps_1_2": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/logs/scan-2.json",
   "git_diff_check": {
-   "range": "f0dc46bb6473ab37ecf48e623f1ccb192bd6b3af..f8a20c85058e734847362a3bee0ef9e421e702a2",
-   "exit": 0
+   "range": "f0dc46bb6473ab37ecf48e623f1ccb192bd6b3af..d3b12d001d25b293afcdbef165c5fdcd40c2a717",
+   "exit": 0,
+   "note": "also git diff --check on the staged documentation changes before their commit, exit 0"
   }
  },
  "review": {
-  "status": "not reviewed"
+  "status": "reviewed at 472adf82 (three lenses, approve with nits; no Lean finding); review fix pass done; confirming review pending; not integrated",
+  "reviewed_head": "472adf823a68b0d1e020f2bbee47f71894b5d2ea",
+  "lenses": [
+   "semantic",
+   "composition",
+   "hygiene"
+  ],
+  "review_scratch": [
+   "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/review-semantic",
+   "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/review-composition",
+   "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/review-hygiene"
+  ],
+  "findings": [
+   {
+    "severity": "minor",
+    "lens": "semantic",
+    "title": "analysis step 2 overstated the closed forms: not every remaining term is an attacker advantage",
+    "fix": "analysis \"The closed headlines\": every advantage cites an attacker with a proved bill (five *_closed_billed forms with the bound, headline_bills for the six others); the remaining terms are statistical (publicationTerm, bindingTerm, 2 delta_corr and 2^-256 in ctCollEps and kemLoss, the R1 part of slotLoss) or the explicit ctGapTerm"
+   },
+   {
+    "severity": "nit",
+    "lens": "semantic",
+    "title": "guide text on the ctCollTerm gate stale after step 2 (P2 open point 1, step 1 open point 1, step 1 analysis not-claimed)",
+    "fix": "pointers \"(Added by the CE-12 P2b review fix pass: ...)\" at P2 open point 1, step 1 open point 1 and the step 1 analysis entry"
+   },
+   {
+    "severity": "nit",
+    "lens": "semantic",
+    "title": "analysis step 1 per-command costs did not match the proved weights (ordinary accept 96 + encapsCost; HMAC one Extract-table value)",
+    "fix": "analysis \"The cost of one step\": selected accept 32 + 108; ordinary accept ephemeral key, encapsulation and one 64-coin key-schedule root value; HMAC one Extract-table value (64)"
+   },
+   {
+    "severity": "nit",
+    "lens": "semantic",
+    "title": "analysis step 3 receive-side ingredient stated for every accepted raw receive, but caller-known handles are excluded",
+    "fix": "analysis \"The three ingredients\": accepted raw receives are on a caller-known handle or match a stored seal; a handle holding a hidden key is never caller-known (known_no_slot)"
+   },
+   {
+    "severity": "nit",
+    "lens": "semantic",
+    "title": "calling handleAd with AdKept the realized public AD lemma overstates it",
+    "fix": "guide step 3 decisions and plan section 108: realized only at record level; its public (transcript-readable) half is the R1 remainder"
+   },
+   {
+    "severity": "minor",
+    "lens": "composition",
+    "title": "earlier sections still said the ctCollTerm gate and owner flag stand after step 2 closed them (five places)",
+    "fix": "pointers at P2 open points 1 and 2, step 1 open point 1, step 1 decisions (PairBills: the five *_closed_billed forms conjoin it) and the step 1 analysis not-claimed paragraph; also P2 status, P2 not-claimed bullet 1, step 1 status and the analysis P2 entry"
+   },
+   {
+    "severity": "nit",
+    "lens": "composition",
+    "title": "guessBill charges a KEM key generation twice per created owner (create weight beyond the pool, unreachable with the qCreate + 1 pool)",
+    "fix": "one sentence each in the guide \"bills and their values\", step 1 not-claimed bullet 2, the analysis step 1 not-claimed paragraph and the receipt; no Lean change (valid bound; a tighter bill is not needed)"
+   },
+   {
+    "severity": "nit",
+    "lens": "composition",
+    "title": "composition chain re-derived; no mismatch, double count or missing term",
+    "fix": "no action; evidence scripts kept in ce12/p2b/review-composition (terms.py, cmp.py, cmp2.py)"
+   },
+   {
+    "severity": "minor",
+    "lens": "hygiene",
+    "title": "step 1 and step 2 guide sections not updated after later steps (ctCollTerm gate, \"No AG\", \"AG (2-5 days)\")",
+    "fix": "pointers to step 2 (step 1 open point 1) and to step 3 (step 1 not-claimed bullet 3 and open point 3, step 2 not-claimed bullet 4 and open point 2; also P2 status and not-claimed bullet 2, analysis P2, step 1 and step 2 entries)"
+   },
+   {
+    "severity": "nit",
+    "lens": "hygiene",
+    "title": "analysis cited design-v2 sections 7.6 and 7.7, which exist only in scratch",
+    "fix": "replaced by the guide sections \"CE-12 P2b step 3: what is proved\" and \"CE-12 P2b step 3: not claimed\""
+   },
+   {
+    "severity": "nit",
+    "lens": "hygiene",
+    "title": "receipt hashed the plan before the step 3 plan amendment",
+    "fix": "receipt regenerated with the plan hash and dated copy of the plan as it stands for the fix-pass documentation commit (section 110, section 108 corrected); no later amendment for that commit"
+   },
+   {
+    "severity": "nit",
+    "lens": "hygiene",
+    "title": "registry notes of the branch and the worktree still described step 1",
+    "fix": "refreshed with coord.sh registry add claude branch|worktree"
+   },
+   {
+    "severity": "nit",
+    "lens": "hygiene",
+    "title": "topic not merged with central e0b8810b before integration",
+    "fix": "central 2a33faf5 (item 7 increments I3 and I4) merged at d3b12d00: anchors only, recount 1930 -> 1941, rehash, eleven modules recompiled byte-identical into ce12/p2b/olean3, root and focused inventory exit 0"
+   }
+  ],
+  "finding_count_note": "thirteen findings as raised (three minor, ten nits): semantic 1-5, composition 6-8, hygiene 9-13; the semantic nit on stale ctCollTerm pointers overlaps the composition and hygiene findings",
+  "fix_commits": {
+   "merge": "d3b12d001d25b293afcdbef165c5fdcd40c2a717",
+   "documentation": "the commit that adds this receipt (follows head_at_receipt)"
+  },
+  "lean_changes": "none",
+  "statements_changed": "none",
+  "owner_level": "none"
  }
 }
