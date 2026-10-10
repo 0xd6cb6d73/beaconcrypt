@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1957
+	[handwritten-lean]=1958
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -41472,6 +41472,25 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem split_keyHit([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctTable theorem split_keyHit"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctTable\.world_keyHit$' "$selected_source_module" "PqxdhDeploymentHeadlineDctTable dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctTable.world_keyHit"
 require_line_count 1 '^theorem world_keyHit([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctTable theorem world_keyHit"
+
+# CE-12 D-ct: the World containment (dct_contain), ctgap_world, ctgap_term_le and ctgap_term_billed.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineDctWorld.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctWorld$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentHeadlineDctWorld root import"
+require_line_count 6 '^theorem ' "$selected_source_module" "PqxdhDeploymentHeadlineDctWorld theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentHeadlineDctWorld guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctWorld\.ciphertextOf_written$' "$selected_source_module" "PqxdhDeploymentHeadlineDctWorld dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctWorld.ciphertextOf_written"
+require_line_count 1 '^theorem ciphertextOf_written([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctWorld theorem ciphertextOf_written"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctWorld\.commit_same$' "$selected_source_module" "PqxdhDeploymentHeadlineDctWorld dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctWorld.commit_same"
+require_line_count 1 '^theorem commit_same([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctWorld theorem commit_same"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctWorld\.dct_contain$' "$selected_source_module" "PqxdhDeploymentHeadlineDctWorld dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctWorld.dct_contain"
+require_line_count 1 '^theorem dct_contain([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctWorld theorem dct_contain"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctWorld\.ctgap_world$' "$selected_source_module" "PqxdhDeploymentHeadlineDctWorld dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctWorld.ctgap_world"
+require_line_count 1 '^theorem ctgap_world([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctWorld theorem ctgap_world"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctWorld\.ctgap_term_le$' "$selected_source_module" "PqxdhDeploymentHeadlineDctWorld dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctWorld.ctgap_term_le"
+require_line_count 1 '^theorem ctgap_term_le([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctWorld theorem ctgap_term_le"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctWorld\.ctgap_term_billed$' "$selected_source_module" "PqxdhDeploymentHeadlineDctWorld dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctWorld.ctgap_term_billed"
+require_line_count 1 '^theorem ctgap_term_billed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctWorld theorem ctgap_term_billed"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
