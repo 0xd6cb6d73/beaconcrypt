@@ -3154,7 +3154,7 @@
  },
  "fourth_part": {
   "date": "2026-10-10T01:02:49.145978+00:00",
-  "scope": "CE-11b unit U6, fourth part (track u6b): owner k's challenge finish and the step of every finish after an active selected accept (PqxdhDeploymentIdealPostChallenge), item 2's side of the middle invariant with every simulated request, its preservation and the sim_option instance (PqxdhDeploymentIdealPostInvariant), item 2's side of the selected accept after encapsulation (PqxdhDeploymentIdealPostAccept), item 2's post-challenge phase on an active cut as the middle run (PqxdhDeploymentIdealPostItemRun), the CE side as its merge image and the reduction of ActiveBranch to the CE side of the middle invariant (PqxdhDeploymentIdealPostReduce), CE-3's Good kept by the marked build (PqxdhDeploymentIdealPostGoodBuild) and by owner k's challenge finish (PqxdhDeploymentIdealPostGoodFinish), GoodMid as the CE side of the middle invariant with MiddleInv and MiddleStart (PqxdhDeploymentIdealPostGood), ActiveBranch at every draw (PqxdhDeploymentIdealPost.active_branch) and CE-11b's second compile lemma (PqxdhDeploymentIdealCompile.ideal_compile), under the approved Phase1ReadBack and Phase2ReadBack. Unit U6 has no remaining Lean obligation. Not reviewed; not integrated into central; central moved to 69a24703 during this part (see central_move).",
+  "scope": "CE-11b unit U6, fourth part (track u6b): owner k's challenge finish and the step of every finish after an active selected accept (PqxdhDeploymentIdealPostChallenge), item 2's side of the middle invariant with every simulated request, its preservation and the sim_option instance (PqxdhDeploymentIdealPostInvariant), item 2's side of the selected accept after encapsulation (PqxdhDeploymentIdealPostAccept), item 2's post-challenge phase on an active cut as the middle run (PqxdhDeploymentIdealPostItemRun), the CE side as its merge image and the reduction of ActiveBranch to the CE side of the middle invariant (PqxdhDeploymentIdealPostReduce), CE-3's Good kept by the marked build (PqxdhDeploymentIdealPostGoodBuild) and by owner k's challenge finish (PqxdhDeploymentIdealPostGoodFinish), GoodMid as the CE side of the middle invariant with MiddleInv and MiddleStart (PqxdhDeploymentIdealPostGood), ActiveBranch at every draw (PqxdhDeploymentIdealPost.active_branch) and CE-11b's second compile lemma (PqxdhDeploymentIdealCompile.ideal_compile), under the approved Phase1ReadBack and Phase2ReadBack. Unit U6 has no remaining Lean obligation. Reviewed at ac811823 (semantic and hygiene, both APPROVE_WITH_NITS; the findings, about documentation and records only, are fixed by a documentation-only review fix pass, see review); not integrated into central; central moved to 69a24703 during this part (see central_move).",
   "basis": "dd681f34cd9459993ae5cf19eada13b1694d981d",
   "topic": {
    "branch": "codex/deployment-ce11b-cut",
@@ -3162,17 +3162,27 @@
   },
   "plan": {
    "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
-   "sha256_at_generation": "e0dea8f042cd28e9f80811c3062ef55f2b7ad19ae361a7cf8e4189190449bf98",
-   "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/docs/plan.at-u6b4-receipt-e0dea8f0.md",
-   "dated_copy_sha256": "e0dea8f042cd28e9f80811c3062ef55f2b7ad19ae361a7cf8e4189190449bf98",
-   "sections": "47-50 (A1, A2, Q1-Q3), 63-64, 67, 70-71, 74, 76, 78-79 (U6 earlier parts), 81 (this part, first three modules; a pointer to 85 added) and 85 (this part, completed; 84 was the last section before it)"
+   "sha256_at_generation": "4f0de19a02ea91de2e22ce27bf5c530acd580fe5da753f02db19778526a72122",
+   "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/fix/docs/plan.at-u6b4fix-receipt-4f0de19a.md",
+   "dated_copy_sha256": "4f0de19a02ea91de2e22ce27bf5c530acd580fe5da753f02db19778526a72122",
+   "sections": "47-50 (A1, A2, Q1-Q3), 63-64, 67, 70-71, 74, 76, 78-79 (U6 earlier parts), 81 (this part, first three modules; a pointer to 85 added) and 85 (this part, completed; 84 was the last section before it); 86 (the review fix pass; 85 was the last section before it)",
+   "before_review": {
+    "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/docs/plan.at-u6b4-receipt-e0dea8f0.md",
+    "dated_copy_sha256": "e0dea8f042cd28e9f80811c3062ef55f2b7ad19ae361a7cf8e4189190449bf98",
+    "note": "the plan as pinned by the receipt of ac811823"
+   }
   },
   "design": {
    "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/design-v2.md",
-   "sha256": "e5741a0b2cc7013a68baeaaf909d6eec6b4c8077e30c6b827ad8c861dbed7d7d",
-   "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/docs/design-v2.at-u6b4-receipt-e5741a0b.md",
-   "dated_copy_sha256": "e5741a0b2cc7013a68baeaaf909d6eec6b4c8077e30c6b827ad8c861dbed7d7d",
-   "sections": "8.1, 8.4, 9.1, 11, 25, 27, 30 (this part; bullets for the assembly, the CE side of the invariant and ideal_compile added, the section 11 bullet updated)"
+   "sha256": "bb08cf798fc6bc8536794f4f9b7d508a9fde87d32427ddf9c281663c97234b34",
+   "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/fix/docs/design-v2.at-u6b4fix-receipt-bb08cf79.md",
+   "dated_copy_sha256": "bb08cf798fc6bc8536794f4f9b7d508a9fde87d32427ddf9c281663c97234b34",
+   "sections": "8.1, 8.4, 9.1, 11, 25, 27, 30 (this part; bullets for the assembly, the CE side of the invariant and ideal_compile added, the section 11 bullet updated); the review fix pass adds to section 30 a bullet for U7's inputs (section 9.1: ideal_compile and PqxdhDeploymentIdealEnv.c1_idealGame; run_bindStart superseded by section 15) and cites plan section 86",
+   "before_review": {
+    "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/docs/design-v2.at-u6b4-receipt-e5741a0b.md",
+    "dated_copy_sha256": "e5741a0b2cc7013a68baeaaf909d6eec6b4c8077e30c6b827ad8c861dbed7d7d",
+    "note": "the design as pinned by the receipt of ac811823"
+   }
   },
   "notes": {
    "track_notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/NOTES.md",
@@ -4330,10 +4340,11 @@
    "new_contracts": [],
    "new_assumptions": [],
    "codec_laws": [
-    "PqxdhServerAuthNegativeControl.Phase1ReadBack (approved; good_real, middleInv, active_branch, ideal_compile)",
-    "PqxdhServerAuthNegativeControl.Phase2ReadBack (approved; good_of_build, good_buildHidden, good_real, middleInv, active_branch, ideal_compile)"
+    "PqxdhServerAuthNegativeControl.Phase1ReadBack (approved; good_real, middleInv, active_branch, ideal_compile_of_middle, ideal_compile)",
+    "PqxdhServerAuthNegativeControl.Phase2ReadBack (approved; good_of_build, good_buildHidden, good_real, middleInv, active_branch, ideal_compile_of_middle, ideal_compile)"
    ],
-   "premises": "ideal_compile takes Phase1ReadBack, Phase2ReadBack and budget.Respects adversary, as PqxdhDeploymentIdealActive.ideal_compile_of_active does; the step and simulation lemmas take facts of the middle state (fields of ItemInv) and the constructed Server's public identity being its seed's, which activeBranch_of_middle discharges"
+   "premises": "ideal_compile takes Phase1ReadBack, Phase2ReadBack and budget.Respects adversary, as PqxdhDeploymentIdealActive.ideal_compile_of_active does; the step and simulation lemmas take facts of the middle state (fields of ItemInv) and the constructed Server's public identity being its seed's, which activeBranch_of_middle discharges",
+   "codec_laws_note": "ideal_compile_of_middle (PqxdhDeploymentIdealPostReduce) added by the review fix pass: it takes both contracts and passes them unchanged to the premises of PqxdhDeploymentIdealActive.ideal_compile_of_active; no new contract"
   },
   "central_move": {
    "basis": "dd681f34cd9459993ae5cf19eada13b1694d981d",
@@ -4853,6 +4864,259 @@
    "Compile": "done",
    "U6_total": "about 4.25-4.75 in four parts (design 6.75-11.5)"
   },
-  "review": null
+  "review": {
+   "reviewed_commit": "ac81182374cf982aab23f66797f9adbb998c8351",
+   "kinds": [
+    "semantic",
+    "hygiene"
+   ],
+   "verdict": "no error in the Lean statements or proofs; both parts APPROVE_WITH_NITS; 1 minor finding and 8 nits (two informational, one the record of what was verified)",
+   "notes": [
+    "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/review-semantic/p4/NOTES.md",
+    "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/review-hygiene/r3/NOTES.md"
+   ],
+   "fixes": [
+    {
+     "finding": "minor (semantic): guide open point 2 sends U7 to run_bindStart, which no Lean declaration has; it repeats design-v2 section 9.1, which the decision \"envGD without bindStart\" superseded",
+     "fix": "open point 2 names PqxdhDeploymentIdealEnv.c1_idealGame (C1 for idealGame at the observed projection; c1_ideal at Target.ofCE budget g, composing ideal_to_split under the draw with c1_split, join_param's instance), says that this projection is all that ideal_compile's decision reads (happens and designated through classicalOf and observeGame) and that run_bindStart was replaced; plan section 85 and design-v2 section 30 did not repeat the name; design-v2 section 30 gains a bullet for U7's inputs; plan section 86"
+    },
+    {
+     "finding": "nit (semantic): the analysis calls ideal_compile the statement U7 hands to CE-12",
+     "fix": "reworded: U7 combines it with C1 for the ideal game into the hand-off to CE-12, ideal_world"
+    },
+    {
+     "finding": "nit (semantic): the analysis opening credits the third part with every per-request step except owner k's challenge finish",
+     "fix": "reworded: the second and third parts proved the steps for every source request the compiled continuation can issue after the selected accept, except owner k's challenge finish; identity and KEM field reads cannot occur because the budget carried over to the continuation allows none (transported caps 0); a review paragraph added to the analysis section"
+    },
+    {
+     "finding": "nit (hygiene): guide open point 2 lists run_bindStart as a U7 ingredient although the guide's U3 decisions say join_param replaced it",
+     "fix": "resolved with the minor finding above (c1_idealGame from c1_ideal, which composes ideal_to_split with join_param's instance; run_bindStart replaced by join_param)"
+    },
+    {
+     "finding": "nit (hygiene): ideal_compile_of_middle takes both read-back contracts but is not listed where contract use is recorded",
+     "fix": "added to the guide's \"contracts used\" and to both codec_laws entries of this key (codec_laws_note); no new contract"
+    },
+    {
+     "finding": "nit (hygiene): registry notes stale for PqxdhDeploymentIdealPostChallenge, the branch and the worktree",
+     "fix": "refreshed with coord.sh registry add (module: fourth part, 25 theorems at da5a26ad; branch and worktree: fourth part complete, reviewed at ac811823, fix pass, integration merging 69a24703 first)"
+    },
+    {
+     "finding": "nit (hygiene, disclosed deviation): RD.backup.lean deleted without coord.sh disk check-delete",
+     "fix": "no change; the disclosure stays (guide decisions, plan, deviations_from_design); this fix pass deleted nothing"
+    },
+    {
+     "finding": "nit (hygiene, informational): integration conflicts with 69a24703 confirmed at the tip (five files; central count 1870, 1880 after inv recount)",
+     "fix": "no change; the integration follows PROTOCOL section 6 as in the guide's open point 1"
+    },
+    {
+     "finding": "nit (hygiene): record of the other hygiene checks",
+     "fix": "none needed"
+    }
+   ],
+   "statements_changed": [],
+   "theorems_added": [],
+   "theorems_removed": [],
+   "definitions_added": [],
+   "docstrings_added": [],
+   "module_docstring_changed": [],
+   "lean_fix_commit": null,
+   "files_changed": [
+    "doc/formal-verification-analysis.md",
+    "doc/impl/common-deployment-experiment.md",
+    "doc/impl/proof-receipts/common-deployment-experiment-ce11b-u6b.json"
+   ],
+   "docs_fix_commit": "the commit that adds this key (child of ac811823)",
+   "checks": {
+    "rechecks": {
+     "PqxdhDeploymentIdealPostChallenge": {
+      "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealPostChallenge",
+      "exit": 0,
+      "log_bytes": 0,
+      "head": "ac81182374cf982aab23f66797f9adbb998c8351",
+      "dirty_paths": 2,
+      "source_equals_head_blob": true,
+      "source_sha256": "7ca6b3b9a0acd82ceb0a25dc1cd11a4061a37e1b4e781545374dead09b0e7987",
+      "start": "2026-10-10T01:19:48.283145398Z",
+      "end": "2026-10-10T01:19:55.493430628Z",
+      "record": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/fix/logs/PqxdhDeploymentIdealPostChallenge.json",
+      "record_sha256": "2f3405dfa3e9af62a5f589a5b405b2d452aaa0ef1581414746706dc90cc56e6f"
+     },
+     "PqxdhDeploymentIdealPostInvariant": {
+      "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealPostInvariant",
+      "exit": 0,
+      "log_bytes": 0,
+      "head": "ac81182374cf982aab23f66797f9adbb998c8351",
+      "dirty_paths": 2,
+      "source_equals_head_blob": true,
+      "source_sha256": "8f073661dc19440e453f8f540a7a9c8631a7ac02d1d2aa49d8bba39edc8d95ee",
+      "start": "2026-10-10T01:19:53.300861998Z",
+      "end": "2026-10-10T01:19:58.065621074Z",
+      "record": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/fix/logs/PqxdhDeploymentIdealPostInvariant.json",
+      "record_sha256": "38908ef1b7a76c9f56983d9d3b7486c53569bb8bc776d33dd7139752b9acde94"
+     },
+     "PqxdhDeploymentIdealPostAccept": {
+      "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealPostAccept",
+      "exit": 0,
+      "log_bytes": 0,
+      "head": "ac81182374cf982aab23f66797f9adbb998c8351",
+      "dirty_paths": 2,
+      "source_equals_head_blob": true,
+      "source_sha256": "eff465c7763b57f66c68bac7e299c40b94ed16b5c56502903d9a1460ccac612b",
+      "start": "2026-10-10T01:19:55.534689480Z",
+      "end": "2026-10-10T01:20:00.152973195Z",
+      "record": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/fix/logs/PqxdhDeploymentIdealPostAccept.json",
+      "record_sha256": "173263ef53ac68732e0cecdffd54dff908d8f548306956dcb9a8130af1e9404b"
+     },
+     "PqxdhDeploymentIdealPostItemRun": {
+      "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealPostItemRun",
+      "exit": 0,
+      "log_bytes": 0,
+      "head": "ac81182374cf982aab23f66797f9adbb998c8351",
+      "dirty_paths": 2,
+      "source_equals_head_blob": true,
+      "source_sha256": "ee9a819d1b1ea39204d0d30fdca56ec3c0f607359801ad3b05299d7c6ee3e056",
+      "start": "2026-10-10T01:19:58.109324025Z",
+      "end": "2026-10-10T01:20:02.739289800Z",
+      "record": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/fix/logs/PqxdhDeploymentIdealPostItemRun.json",
+      "record_sha256": "fc53905928ab67aafed62990b31cff699c28ebf01a6e4014d72e89e3e8bf8be8"
+     },
+     "PqxdhDeploymentIdealPostReduce": {
+      "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealPostReduce",
+      "exit": 0,
+      "log_bytes": 0,
+      "head": "ac81182374cf982aab23f66797f9adbb998c8351",
+      "dirty_paths": 2,
+      "source_equals_head_blob": true,
+      "source_sha256": "45be0600b5c4c0c430ae3582c8337db242a2012b16697fa8f43273f1c09b2bf5",
+      "start": "2026-10-10T01:20:00.195675795Z",
+      "end": "2026-10-10T01:20:04.167353647Z",
+      "record": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/fix/logs/PqxdhDeploymentIdealPostReduce.json",
+      "record_sha256": "fc4490cceabbda3faf2a835df7990bb043aa4c04c83710b0117e5ab5abfc1e43"
+     },
+     "PqxdhDeploymentIdealPostGoodBuild": {
+      "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealPostGoodBuild",
+      "exit": 0,
+      "log_bytes": 0,
+      "head": "ac81182374cf982aab23f66797f9adbb998c8351",
+      "dirty_paths": 2,
+      "source_equals_head_blob": true,
+      "source_sha256": "1555ba36b9729226e9940bf5d44d3c93893b6fd0962314251c1191b4c4bb9a55",
+      "start": "2026-10-10T01:20:02.782061619Z",
+      "end": "2026-10-10T01:20:07.453700528Z",
+      "record": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/fix/logs/PqxdhDeploymentIdealPostGoodBuild.json",
+      "record_sha256": "e0b9216b210b891f084b130af483551fe7e430362630d3d88252c914fbc88163"
+     },
+     "PqxdhDeploymentIdealPostGoodFinish": {
+      "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealPostGoodFinish",
+      "exit": 0,
+      "log_bytes": 0,
+      "head": "ac81182374cf982aab23f66797f9adbb998c8351",
+      "dirty_paths": 2,
+      "source_equals_head_blob": true,
+      "source_sha256": "486af8870ccdc429a9b8d1232651af4358512ecd1642aa5f401d73aaaaf68387",
+      "start": "2026-10-10T01:20:04.213993874Z",
+      "end": "2026-10-10T01:20:11.215887347Z",
+      "record": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/fix/logs/PqxdhDeploymentIdealPostGoodFinish.json",
+      "record_sha256": "43d2cb70a5eb6be4b2fb4f69ad70f7b506987ae3598e95ad9b71509631425cb1"
+     },
+     "PqxdhDeploymentIdealPostGood": {
+      "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealPostGood",
+      "exit": 0,
+      "log_bytes": 0,
+      "head": "ac81182374cf982aab23f66797f9adbb998c8351",
+      "dirty_paths": 2,
+      "source_equals_head_blob": true,
+      "source_sha256": "b9e298df12702c6e717d02b456deffcdb6a8991715337d4000504bfaaa494f7d",
+      "start": "2026-10-10T01:20:07.496305916Z",
+      "end": "2026-10-10T01:20:16.073325288Z",
+      "record": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/fix/logs/PqxdhDeploymentIdealPostGood.json",
+      "record_sha256": "5bcace19855cee18a8bcaefdbf5b26ec88539b8991d909cb228ab81e0ed3862a"
+     },
+     "PqxdhDeploymentIdealPost": {
+      "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealPost",
+      "exit": 0,
+      "log_bytes": 0,
+      "head": "ac81182374cf982aab23f66797f9adbb998c8351",
+      "dirty_paths": 2,
+      "source_equals_head_blob": true,
+      "source_sha256": "433da7a876d58463c43e98a0f2e60f9cd00980ba051fbe0dfca6fe9c5cd71e8d",
+      "start": "2026-10-10T01:20:11.261395688Z",
+      "end": "2026-10-10T01:20:14.670706695Z",
+      "record": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/fix/logs/PqxdhDeploymentIdealPost.json",
+      "record_sha256": "e2257fa967e788d4ce2a6a2e3e7f3d4f36220e7d6bda67d59aa43c885bdc7de3"
+     },
+     "PqxdhDeploymentIdealCompile": {
+      "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealCompile",
+      "exit": 0,
+      "log_bytes": 0,
+      "head": "ac81182374cf982aab23f66797f9adbb998c8351",
+      "dirty_paths": 2,
+      "source_equals_head_blob": true,
+      "source_sha256": "b8b7e9ec5854341c41941614051c5e030f8fb6b4918ce2e3e2bcb8eba56403c5",
+      "start": "2026-10-10T01:20:16.117131131Z",
+      "end": "2026-10-10T01:20:19.354009882Z",
+      "record": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/fix/logs/PqxdhDeploymentIdealCompile.json",
+      "record_sha256": "87f0eddae6cbf76ba6332c2bccfc91bcff75b4afa0833a9ea43f42ab7d1bc928"
+     },
+     "root": {
+      "module": "BeaconcryptCore",
+      "exit": 0,
+      "log_bytes": 0,
+      "head": "ac81182374cf982aab23f66797f9adbb998c8351",
+      "dirty_paths": 2,
+      "source_equals_head_blob": true,
+      "source_sha256": "92127e27a06ae746f749cb4ed8d7d668db31de08e19e1ddf3632e1abf6eb9cce",
+      "start": "2026-10-10T01:20:14.712242283Z",
+      "end": "2026-10-10T01:20:17.432955880Z",
+      "record": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/fix/logs/root.json",
+      "record_sha256": "24f4a14041ca6c79906544c6e1262b815ce2cdb76b5fd576bb74f292c679cfd8"
+     }
+    },
+    "rechecks_note": "each module and the root rechecked without -o through coord.sh lean (Lean 4.34, -j1, -M8000, timeout 180) against ce11b/u6b/p4/leanpath, on ac811823 with only the guide and the analysis changed (Lean sources equal to the ac811823 blobs)",
+    "leanpath": {
+     "manifest": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/leanpath",
+     "sha256": "af7d95403b1c512a7c0867e4f19d10f0d39122cfe0ad1f652bcbe1981dba21c4"
+    },
+    "negative_probe": {
+     "source": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/fix/probe/ProbeNeg.lean",
+     "source_sha256": "c825fb722e282c3e7a7bd9e6306e81e946cf5d23e041a0d66273c07acaa38ece",
+     "exit": 1,
+     "log": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/fix/logs/probeneg.log",
+     "log_sha256": "db076baac6fb69d543fdef75da7ee6112f4d0e7769f2c7a27470f0bb26d4ff22",
+     "note": "a deliberately wrong guard ([propext]) on ideal_compile fails with the mismatch reported"
+    },
+    "inventory_recount_rehash": "coord.sh inv recount (handwritten-lean count unchanged, 1876) and inv rehash (BeaconcryptCore.lean, trusted-boundary.md, check-inventory.sh unchanged): no change",
+    "focused_inventory": {
+     "exit": 0,
+     "start": "2026-10-10T01:22:05Z",
+     "end": "2026-10-10T01:23:49Z",
+     "head_at_run": "ac81182374cf982aab23f66797f9adbb998c8351",
+     "working_tree_dirt_lines": 2,
+     "log": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/fix/logs/inventory-fix1.log",
+     "log_sha256": "9ad97467848bb74e4871a1979cb3cacbc2288f5d26ebadf7ef77f51ce668de2c",
+     "result_line": "Formal-verification inventory matches the reviewed boundary.",
+     "note": "with the guide and analysis changes in the tree (no file under beaconcrypt-core changed)"
+    },
+    "reviewer_inventory": {
+     "log": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/review-hygiene/r3/logs/inventory.log",
+     "log_sha256": "cb9cffc7cca5a9db72e00d76d9fc59dae9abce4f5a0b5311d5b5016d3bc6e458",
+     "status": "0",
+     "commit": "ac81182374cf982aab23f66797f9adbb998c8351",
+     "note": "the hygiene reviewer's own focused check-inventory (@nix lease 00000407) on the clean tree at ac811823"
+    },
+    "reviewer_trial_merge": {
+     "log": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/review-hygiene/r3/logs/trial-merge.txt",
+     "log_sha256": "b15821b00453265bd591d231d5e59310fbad2e79caf9734f8f1079ac0598af2b"
+    },
+    "git_diff_check": {
+     "range": "ac81182374cf982aab23f66797f9adbb998c8351..working tree",
+     "exit": 0
+    }
+   },
+   "notes_fix_pass": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/fix/NOTES.md",
+   "scratch": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/fix",
+   "status": "reviewed once (ac811823); review fix pass done (documentation only, the commit that adds this key); a confirming review and the integration (which merges central 69a24703 or later first) remain",
+   "date": "2026-10-10T01:24:37.796124+00:00"
+  }
  }
 }
