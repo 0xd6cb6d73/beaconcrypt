@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1928
+	[handwritten-lean]=1929
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -40089,6 +40089,27 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem records_le_later([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineChain theorem records_le_later"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineChain\.split_named_later$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineChain dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineChain.split_named_later"
 require_line_count 1 '^theorem split_named_later([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineChain theorem split_named_later"
+
+# CE-12 P3: CE-KT-L, the later-quantum key transfer to the later ideal game (per target, two-sided, summed, later World forms)
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterHeadlineKeyTransfer.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineKeyTransfer$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentLaterHeadlineKeyTransfer root import"
+require_line_count 7 '^theorem ' "$selected_source_module" "PqxdhDeploymentLaterHeadlineKeyTransfer theorem inventory"
+require_line_count 7 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineKeyTransfer guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineKeyTransfer\.ce_kt_later$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineKeyTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineKeyTransfer.ce_kt_later"
+require_line_count 1 '^theorem ce_kt_later([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineKeyTransfer theorem ce_kt_later"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineKeyTransfer\.ce_kt_later_close$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineKeyTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineKeyTransfer.ce_kt_later_close"
+require_line_count 1 '^theorem ce_kt_later_close([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineKeyTransfer theorem ce_kt_later_close"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineKeyTransfer\.ce_kt_later_sum_le$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineKeyTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineKeyTransfer.ce_kt_later_sum_le"
+require_line_count 1 '^theorem ce_kt_later_sum_le([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineKeyTransfer theorem ce_kt_later_sum_le"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineKeyTransfer\.ce_kt_later_sum$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineKeyTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineKeyTransfer.ce_kt_later_sum"
+require_line_count 1 '^theorem ce_kt_later_sum([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineKeyTransfer theorem ce_kt_later_sum"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineKeyTransfer\.ce_kt_later_world$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineKeyTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineKeyTransfer.ce_kt_later_world"
+require_line_count 1 '^theorem ce_kt_later_world([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineKeyTransfer theorem ce_kt_later_world"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineKeyTransfer\.ce_kt_later_world_close$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineKeyTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineKeyTransfer.ce_kt_later_world_close"
+require_line_count 1 '^theorem ce_kt_later_world_close([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineKeyTransfer theorem ce_kt_later_world_close"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineKeyTransfer\.ce_kt_later_world_sum$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineKeyTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineKeyTransfer.ce_kt_later_world_sum"
+require_line_count 1 '^theorem ce_kt_later_world_sum([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineKeyTransfer theorem ce_kt_later_world_sum"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
