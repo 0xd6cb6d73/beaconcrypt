@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1955
+	[handwritten-lean]=1956
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -41296,6 +41296,41 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem split_dctInv([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctInvariant theorem split_dctInv"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctInvariant\.world_dctInv$' "$selected_source_module" "PqxdhDeploymentHeadlineDctInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctInvariant.world_dctInv"
 require_line_count 1 '^theorem world_dctInv([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctInvariant theorem world_dctInv"
+
+# CE-12 D-ct: the World's BLAKE2b birthday term (stopped potential, world_step_coll, coll_world).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineDctHash.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctHash$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentHeadlineDctHash root import"
+require_line_count 14 '^theorem ' "$selected_source_module" "PqxdhDeploymentHeadlineDctHash theorem inventory"
+require_line_count 14 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentHeadlineDctHash guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctHash\.ctxColl_collIn$' "$selected_source_module" "PqxdhDeploymentHeadlineDctHash dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctHash.ctxColl_collIn"
+require_line_count 1 '^theorem ctxColl_collIn([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctHash theorem ctxColl_collIn"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctHash\.draw_step$' "$selected_source_module" "PqxdhDeploymentHeadlineDctHash dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctHash.draw_step"
+require_line_count 1 '^theorem draw_step([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctHash theorem draw_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctHash\.expected_countCoin$' "$selected_source_module" "PqxdhDeploymentHeadlineDctHash dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctHash.expected_countCoin"
+require_line_count 1 '^theorem expected_countCoin([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctHash theorem expected_countCoin"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctHash\.primitive_step$' "$selected_source_module" "PqxdhDeploymentHeadlineDctHash dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctHash.primitive_step"
+require_line_count 1 '^theorem primitive_step([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctHash theorem primitive_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctHash\.primitiveRun_step$' "$selected_source_module" "PqxdhDeploymentHeadlineDctHash dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctHash.primitiveRun_step"
+require_line_count 1 '^theorem primitiveRun_step([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctHash theorem primitiveRun_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctHash\.quiet_step$' "$selected_source_module" "PqxdhDeploymentHeadlineDctHash dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctHash.quiet_step"
+require_line_count 1 '^theorem quiet_step([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctHash theorem quiet_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctHash\.resolve_quiet$' "$selected_source_module" "PqxdhDeploymentHeadlineDctHash dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctHash.resolve_quiet"
+require_line_count 1 '^theorem resolve_quiet([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctHash theorem resolve_quiet"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctHash\.capability_quiet$' "$selected_source_module" "PqxdhDeploymentHeadlineDctHash dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctHash.capability_quiet"
+require_line_count 1 '^theorem capability_quiet([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctHash theorem capability_quiet"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctHash\.serverStep_coll$' "$selected_source_module" "PqxdhDeploymentHeadlineDctHash dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctHash.serverStep_coll"
+require_line_count 1 '^theorem serverStep_coll([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctHash theorem serverStep_coll"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctHash\.beaconStep_coll$' "$selected_source_module" "PqxdhDeploymentHeadlineDctHash dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctHash.beaconStep_coll"
+require_line_count 1 '^theorem beaconStep_coll([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctHash theorem beaconStep_coll"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctHash\.world_step_coll$' "$selected_source_module" "PqxdhDeploymentHeadlineDctHash dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctHash.world_step_coll"
+require_line_count 1 '^theorem world_step_coll([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctHash theorem world_step_coll"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctHash\.world_hash_count$' "$selected_source_module" "PqxdhDeploymentHeadlineDctHash dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctHash.world_hash_count"
+require_line_count 1 '^theorem world_hash_count([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctHash theorem world_hash_count"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctHash\.size_empty$' "$selected_source_module" "PqxdhDeploymentHeadlineDctHash dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctHash.size_empty"
+require_line_count 1 '^theorem size_empty([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctHash theorem size_empty"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctHash\.coll_world$' "$selected_source_module" "PqxdhDeploymentHeadlineDctHash dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctHash.coll_world"
+require_line_count 1 '^theorem coll_world([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctHash theorem coll_world"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
