@@ -348,7 +348,6 @@ noncomputable def injTerm (setup : Setup baseSpec KemSK) (budget : Budget) : ℝ
   ∑ target : Fin (budget.create + 1), PqxdhJointIdentity.advantage setup.joint
     (PqxdhDeploymentServerAuthInjective.collider setup.joint budget.create target)
 
-set_option linter.deprecated false in
 /-- `identity_collision_game` (design-v2 section 7.4): in the experiment of a budget-respecting adversary (identity index 0), the probability that two distinct owners have equal identity public keys is at most `ε_inj`. It is the second half of `PqxdhDeploymentServerAuthInjectiveGame.injective_bound`, through CE-COMPILE, the constructor, `owners_collision` and `collision_bound`. Premises: the approved Phase 1 and Phase 2 read-back contracts and the budget. No distributional property of key generation is assumed: a collision of identity keys gives a forgery by signing correctness. -/
 theorem identity_collision_game (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)

@@ -548,7 +548,6 @@ theorem acceptCount_logged (transcript : List Entry) :
   · cases command <;> rfl
   · rcases secrecy with ⟨_, _, _⟩ | ⟨_, _⟩ <;> rfl
 
-set_option linter.deprecated false in
 /-- Session handles are positional on every outcome of the experiment (identity index zero): a session handle that an accept returned is below the number of accept attempts, and it is the first accept returning it that `acceptOf` reads, with the same bytes. -/
 theorem accept_positional (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)
@@ -623,7 +622,6 @@ theorem candidateTuple_pq (candidate : PqxdhEd25519EufCma.Phase1Candidate) (keys
   obtain ⟨_, _, _, _, pq, pqFound, _, _, _, _, pqKey, pqKeyFound, rfl⟩ := found
   simp [publishedPq, pqFound, pqKeyFound]
 
-set_option linter.deprecated false in
 /-- `server_gap` (design-v2 section 7.1): on every outcome of the experiment of a budget-respecting adversary, a Server peer that is symbolically eligible (`SymServer` with the final native identity keys) and not designated inside the budget witnesses a published-tuple forgery at the owner whose identity key the accepted candidate carries, and that owner made no rejected bundle call in Fresh (CE-A2pub's `OwnerForgery`). If the owner's published tuple were the accepted one, the owner's honest bundle (read back with `Phase1ReadBack`) would carry the accepted identity field and PQ key, so `designate` would name the session and an owner (`designate_peer_complete`), inside the budget (`PqxdhDeploymentTargetRange.range_game`). -/
 theorem server_gap (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)
@@ -699,7 +697,6 @@ theorem accept_entry (transcript : List Entry) (raw : Pqxdh.Bytes) (reply : Opti
     | _ => simp [regOfEntry] at found
   · cases found
 
-set_option linter.deprecated false in
 /-- `beacon_gap` (design-v2 section 7.1): on every outcome of the experiment of a budget-respecting adversary, an owner that is symbolically eligible (`SymBeacon` with the constructed Server's identity as pin and the protected key ID) and not designated inside the budget either is a CE-A1 failure (`A1NoPinnedMatch`: no session matches it with the pin before its acceptance) or has a pinned match whose build ciphertext differs from its finish ciphertext (`CtGap`). Native ingredients: an Established owner has an accepting finish (`established_accepted`), which is its first successful finish and comes after its creation (`ready_game`, the native finish of `beacon.rs` that rejects outside `InitSent`); session handles are positional (`accept_positional`); every build response carries the constructed Server's identity (`PqxdhDeploymentServerAuth.build_pin`) and a ciphertext (`Phase2ReadBack`). With equal ciphertexts the pinned match is `Linked`, so `designate` would name the owner (`designate_owner_complete`), inside the budget. -/
 theorem beacon_gap (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)
@@ -849,7 +846,6 @@ noncomputable def ctGapTerm (setup : Setup baseSpec KemSK) (codec : Codec Reader
   𝒟[(fun outcome => happens (ctGapEvent setup.source.crypto codec) outcome) <$>
     (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode adversary).run runtime] {true}
 
-set_option linter.deprecated false in
 /-- Support monotonicity of the probability of a Boolean event. -/
 theorem chance_le_support {α : Type} (run : ProbComp α) (first second : α → Bool)
     (implies : ∀ a ∈ support run, first a = true → second a = true) :
@@ -858,7 +854,6 @@ theorem chance_le_support {α : Type} (run : ProbComp α) (first second : α →
     probEvent_map, probEvent_map]
   exact probEvent_mono fun a member held => implies a member held
 
-set_option linter.deprecated false in
 /-- The union bound on the support for Boolean events. -/
 theorem chance_le_add_support {α : Type} (run : ProbComp α) (first second third : α → Bool)
     (implies : ∀ a ∈ support run, first a = true → second a = true ∨ third a = true) :

@@ -89,7 +89,6 @@ theorem acceptReplies_logged (transcript : List Entry) :
   · cases command <;> rfl
   · rfl
 
-set_option linter.deprecated false in
 /-- Session handles are positional on every outcome of the experiment (identity index zero): a session handle that an accept returned is the session of the raw accept attempt of that ordinal (`PqxdhDeploymentIdealTrace.sessionAt`). -/
 theorem sessionAt_positional (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)
@@ -130,7 +129,6 @@ theorem sessionAt_positional (setup : Setup baseSpec KemSK) (codec : Codec Reade
     rw [acceptReplies_logged, ← logEq, List.getElem?_map, positionFound]
     rfl
 
-set_option linter.deprecated false in
 /-- The CE counterpart of a designated, symbolically eligible owner is one of its symbolic counterparts, unless CE-A1 fails at the owner, the owner has a ciphertext gap, or two sessions carry one ciphertext to an owner's published PQ key (design-v2 section 7.3). The owner's pinned match `j` (else `A1NoPinnedMatch`) is linked (else `CtGap`), so the designated session, the smallest linked one, is `j` (else `CtColl`); `j`'s accepted keys are the owner's published keys, identity included, and session handles are positional, so the counterpart, the Server peer `j` built, is a symbolic counterpart. -/
 theorem owner_cpart_sym (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)
@@ -324,7 +322,6 @@ theorem origin_b2s_sym (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
           subst named
           exact unpublished _ (peer_cpart_sym _ codec _ budget _ keyId g designatedFound)
 
-set_option linter.deprecated false in
 /-- The s2b containment (design-v2 section 7.3): on every outcome of the experiment of a budget-respecting adversary, a symbolic s2b origin failure is a CE s2b origin failure, a CE-A1 failure, a ciphertext gap or a ciphertext collision. An undesignated owner is CE-A1's or a gap's (`beacon_gap`); a designated owner's CE counterpart is a symbolic counterpart unless one of those holds (`owner_cpart_sym`). Premises: the approved Phase 1 and Phase 2 read-back contracts and the budget. -/
 theorem origin_s2b_sym (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)
@@ -480,7 +477,6 @@ theorem undesignated_gap (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
   | peer keyId => exact Or.inl ⟨created, output, final, found, keyId, sym, undesignated⟩
   | owner c => exact Or.inr ⟨created, output, final, found, c, sym, undesignated⟩
 
-set_option linter.deprecated false in
 /-- The UKS containment (design-v2 section 7.3): on every outcome of the experiment of a budget-respecting adversary, a sender-eligible symbolic UKS witness is a CE sender-side UKS witness, a CE-A1 failure, a ciphertext gap or a ciphertext collision (`beacon_gap`, `owner_cpart_sym`: the owner's CE partner is a symbolic counterpart, so a receiver outside the symbolic counterparts is not the CE partner). Premises: the approved Phase 1 and Phase 2 read-back contracts and the budget. -/
 theorem uks_sym (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)
