@@ -1,0 +1,315 @@
+{
+ "date": "2026-10-10T13:49:10.744541+00:00",
+ "scope": "CE-12 P4 step 1 (track ce12/p4, P3b): the billed forms of the CE-12 P3 later forms whose bound carries beta_g (with CE-12 P2b's ptc_bills at the run-phase adversary, P3's later bills with the post budget, and P2b's A1/A2/Inj bills at the run-phase adversary) and the closed forms of the P3 later forms with ctCollTerm (ct_coll_le at the run-phase adversary). Compositions only; confidentiality only. Not reviewed; not integrated. Steps 2 and 3 of P4 (the AG lift R1, R2) are not part of this receipt.",
+ "basis": {
+  "start": "e5af70242aca601df0004e89155c2ff5029f0b87",
+  "merges": [],
+  "central_at_receipt": "e5af70242aca601df0004e89155c2ff5029f0b87",
+  "published_leanpath": {
+   "path": "/tmp/bc-coord/leanpaths/e5af70242aca601df0004e89155c2ff5029f0b87.leanpath",
+   "sha256": "4bbd826d912cd41705d21e5f3830f2a7d5fdc0544697739c30b90477ae266dca"
+  }
+ },
+ "topic": {
+  "branch": "codex/deployment-ce12-p4",
+  "worktree": "/tmp/beaconcrypt-deployment-ce12-p4",
+  "head_at_receipt": "a1b3693f1476ba51664e92f13d5ed29fbf46948e",
+  "note": "the documentation commit that adds this receipt follows head_at_receipt; it changes no Lean file"
+ },
+ "plan": {
+  "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
+  "sections": [
+   115
+  ],
+  "copy_after_section_115": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/docs/plan.after-115.md",
+  "copy_sha256": "7960c5bcf2b8178a9f29f573d0961b9c1532b612fe3284390139e62f6e02af63",
+  "note": "the working plan is shared with other lanes; the copy pins it right after section 115 was appended"
+ },
+ "design": {
+  "paths": [
+   "/tmp/bc-arc-scratch/common-experiment/ce12/design-v2.md"
+  ],
+  "sha256": [
+   "9866f32e40a4fdb3742d4bc36709971a0ade2932882896fe1975b8ac334cbb4e"
+  ],
+  "sections": "design-v2 7.4 (ct_collision_game), 9 (bills), 10 (later headlines)"
+ },
+ "upstream": {
+  "central": {
+   "CE-12 P3": "1c9dbf4c (message 519)",
+   "CE-12 P2b": "e5af7024 (message 521)"
+  },
+  "consumed": [
+   "PqxdhDeploymentLaterHeadlineApp.ce_app_later_target, ce_app_later",
+   "PqxdhDeploymentLaterHeadlineLor.ce_lor_later_target, ce_lor_later",
+   "PqxdhDeploymentLaterHeadlineSymbolic.ce_app_later_sym, ce_app_beacon_later_sym",
+   "PqxdhDeploymentLaterHeadlineSymbolicLor.symbolic_lor_later, symbolic_lor_later_bound",
+   "PqxdhDeploymentLaterHeadlineBills.kem_bills_later, slot_bills_later, records_bills_later, hash_route_later",
+   "PqxdhDeploymentHeadlineGuessBill.ptc_bills, guessBill",
+   "PqxdhDeploymentHeadlineBillsFull.A1Bills, A2Bills, InjBills, PairBills, a1_bills_all, a2_bills_all, inj_bills",
+   "PqxdhDeploymentHeadlineBills.pair_bills",
+   "PqxdhDeploymentHeadlineCtColl.ctCollEps, ct_coll_le"
+  ]
+ },
+ "notes": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/NOTES.md",
+ "commits": [
+  {
+   "commit": "53b57d05b70e79db9ab7600fa73cca5967a60341",
+   "subject": "Add the billed forms of the later CE-12 headlines with beta_g"
+  },
+  {
+   "commit": "a1b3693f1476ba51664e92f13d5ed29fbf46948e",
+   "subject": "Close ctCollTerm in the later symbolic LOR forms"
+  }
+ ],
+ "files_sha256": {
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "7e60fc708dd6c85fbfd2fe16906a4079aba69c78da7226575ed45fcb185c841f",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "1a6a17b1ea884f72f88da708e23153b4719f166f658479012e8ff31c6dcdcf83",
+  "beaconcrypt-core/proofs/check-inventory.sh": "1e2f880a0ac439ced45c1432b1dd72d2ec01986863acbd890f630b5bcb87378b"
+ },
+ "modules": [
+  {
+   "name": "BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineGated",
+   "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterHeadlineGated.lean",
+   "sha256": "9ff887781c23065535b4043f6fc3846525d627ac55124790b7d5197f16f011bf",
+   "created_in": "53b57d05b70e79db9ab7600fa73cca5967a60341",
+   "last_changed_in": "53b57d05b70e79db9ab7600fa73cca5967a60341",
+   "theorem_count": 9,
+   "guard_count": 9,
+   "guards_in_order": true,
+   "deprecation_suppressions": 0,
+   "other_options": [
+    "autoImplicit false"
+   ],
+   "definitions": [
+    "LaterTargetBills",
+    "LaterHeadlineBills"
+   ],
+   "theorems": [
+    "later_target_bills_full",
+    "later_headline_bills",
+    "ce_app_later_target_billed",
+    "ce_app_later_billed",
+    "ce_lor_later_target_billed",
+    "ce_lor_later_billed",
+    "ce_app_later_sym_billed",
+    "ce_app_beacon_later_sym_billed",
+    "symbolic_lor_later_bound_billed"
+   ],
+   "axiom_profile": {
+    "propext, Classical.choice, Quot.sound": 9
+   },
+   "imports": [
+    "BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineBills",
+    "BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineApp",
+    "BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineLor",
+    "BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineSymbolic",
+    "BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineSymbolicLor",
+    "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineBillsFull"
+   ],
+   "final_check": {
+    "prefix": "ce12/p4/olean",
+    "leanpath_first_prefix_mirrors": "published e5af7024 first prefix ce12/p2b/int/olean",
+    "exit": 0,
+    "head_when_checked": "e5af70242aca601df0004e89155c2ff5029f0b87",
+    "dirty_paths_when_checked": 2,
+    "log_bytes": 0,
+    "artifact_sha256": "24f042f50b2d23636295da80d99839e6f124844f09fce062ba34fc560ea0b235",
+    "source_sha256": "9ff887781c23065535b4043f6fc3846525d627ac55124790b7d5197f16f011bf",
+    "source_equals_current": true,
+    "source_equals_commit": {
+     "53b57d05b70e79db9ab7600fa73cca5967a60341": true
+    },
+    "start": "2026-10-10T13:37:58.920880255Z",
+    "end": "2026-10-10T13:38:02.552272495Z"
+   }
+  },
+  {
+   "name": "BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineClosed",
+   "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterHeadlineClosed.lean",
+   "sha256": "cbdd769a7b753b02c84728fe0f3022a4dede7cd06cab1b345f6428ac2d915eb8",
+   "created_in": "a1b3693f1476ba51664e92f13d5ed29fbf46948e",
+   "last_changed_in": "a1b3693f1476ba51664e92f13d5ed29fbf46948e",
+   "theorem_count": 3,
+   "guard_count": 3,
+   "guards_in_order": true,
+   "deprecation_suppressions": 0,
+   "other_options": [
+    "autoImplicit false"
+   ],
+   "definitions": [],
+   "theorems": [
+    "symbolic_lor_later_closed",
+    "symbolic_lor_later_bound_closed",
+    "symbolic_lor_later_bound_closed_billed"
+   ],
+   "axiom_profile": {
+    "propext, Classical.choice, Quot.sound": 3
+   },
+   "imports": [
+    "BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineGated",
+    "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineCtColl"
+   ],
+   "final_check": {
+    "prefix": "ce12/p4/olean",
+    "leanpath_first_prefix_mirrors": "published e5af7024 first prefix ce12/p2b/int/olean",
+    "exit": 0,
+    "head_when_checked": "53b57d05b70e79db9ab7600fa73cca5967a60341",
+    "dirty_paths_when_checked": 1,
+    "log_bytes": 0,
+    "artifact_sha256": "eeefc8230567f39cb3c45540dcb03c6a24ebd4b262441ad0aa687592201ca141",
+    "source_sha256": "cbdd769a7b753b02c84728fe0f3022a4dede7cd06cab1b345f6428ac2d915eb8",
+    "source_equals_current": true,
+    "source_equals_commit": {
+     "a1b3693f1476ba51664e92f13d5ed29fbf46948e": true
+    },
+    "start": "2026-10-10T13:40:16.006100467Z",
+    "end": "2026-10-10T13:40:19.237227303Z"
+   }
+  }
+ ],
+ "theorem_total": 12,
+ "allowed_axioms": [
+  "propext",
+  "Classical.choice",
+  "Quot.sound"
+ ],
+ "scans": {
+  "guardscan-1.log": {
+   "path": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/logs/guardscan-1.log",
+   "sha256": "8c044400dcfdc99f14dba50b236d10b6b79018a19c68ce35c3aa7db8f6956cd1"
+  },
+  "closure-1.log": {
+   "path": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/logs/closure-1.log",
+   "sha256": "ed4d1cee31390ef1f76a20048597e5c5b675e573ff33493f5b623abce621e175"
+  },
+  "wordcheck-1.log": {
+   "path": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/logs/wordcheck-1.log",
+   "sha256": "57b0744497c747c5c2284728601ce7bff8405bcef78a95a1e41cbda5878995dc"
+  },
+  "diffcheck-1.log": {
+   "path": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/logs/diffcheck-1.log",
+   "sha256": "9abf0f62f8ace8f0f87094a93b9b17d08fed198f0a1f8e9efb1d6a04617297e0"
+  }
+ },
+ "handwritten_lean": {
+  "before": 1948,
+  "after": 1950,
+  "note": "one per module, coord.sh inv recount before coord.sh inv rehash each time"
+ },
+ "statements": {
+  "LaterTargetBills / later_target_bills_full": "for every event, claim, target g and view event: kem (kem_bills_later), slot (slot_bills_later), beta (ptc_bills at first: MakesAtMostQueries (guessBill caps qInit budget bounds) 0 (qFinish + 1) 0 0 0; = TargetBills.beta at first), records (records_bills_later, LaterRecordBounded at inputL), hashRoute (hash_route_later); premises SourceFullCorrect, KemBound, initBound, budget.Respects first, post budget of second",
+  "LaterHeadlineBills / later_headline_bills": "LaterTargetBills ∧ A1Bills ∧ A2Bills ∧ InjBills ∧ PairBills (P2b) at first; same premises",
+  "ce_app_later_target_billed, ce_app_later_billed": "P3 bound (kemLossL + slotLossL + beta(first) g + recLossL(slotted) + 2^-min, per target / summed) ∧ LaterTargetBills",
+  "ce_lor_later_target_billed, ce_lor_later_billed": "P3 bound (win terms + ½ elig terms + ½ beta(first) g, per target / summed) ∧ LaterTargetBills",
+  "ce_app_later_sym_billed": "P3 bound (CE-APP-L + a2pubTerm + a1Term + ctGapTerm of first) ∧ LaterTargetBills ∧ A2Bills ∧ A1Bills",
+  "ce_app_beacon_later_sym_billed": "P3 bound (CE-APP-L + a1Term + ctGapTerm of first) ∧ LaterTargetBills ∧ A1Bills",
+  "symbolic_lor_later_bound_billed": "P3 bound (CE-LOR-L at nbfFilter + ½(a2pubTerm + a1Term + ctGapTerm + injTerm + ctCollTerm)) ∧ LaterTargetBills ∧ A2Bills ∧ A1Bills ∧ InjBills",
+  "symbolic_lor_later_closed": "|adv_sym − adv_CE(nbfFilter)| on the LQ-F game ≤ ½(a2pubTerm + a1Term + ctGapTerm + injTerm + ctCollEps setup budget); premises of symbolic_lor_later + FunctionalDecapsulation",
+  "symbolic_lor_later_bound_closed": "symbolic_lor_later_bound with ctCollTerm replaced by ctCollEps setup budget; same premises",
+  "symbolic_lor_later_bound_closed_billed": "closed bound ∧ (LaterTargetBills ∧ A2Bills ∧ A1Bills ∧ InjBills) ∧ PairBills setup caps"
+ },
+ "deviations_from_design": [
+  "billed/closed selection follows CE-12 P2b's criterion (forms with beta_g billed, forms with ctCollTerm closed) and P3 open point 2; forms without beta_g are not restated (covered by later_headline_bills)",
+  "chain_beta_later (a chain step) not restated; its billed anomaly step is P2b's anomaly_beta_billed at first",
+  "two modules (Gated with the bill structures, Closed) instead of P2b's three (BillsFull, Gated, CtClosed)",
+  "LaterTargetBills has no auth field (no later authentication term) and adds hashRoute (P3's later_target_bills conjoins the C4 hash route)",
+  "symbolic_lor_later_closed adds FunctionalDecapsulation (premise of pair_cp_le), as P2b's symbolic_lor_closed"
+ ],
+ "contracts_used": {
+  "new_contracts": [],
+  "new_assumptions": [],
+  "premises": [
+   "the P3 theorems' own premises",
+   "symbolic_lor_later_closed: + FunctionalDecapsulation setup.kem"
+  ]
+ },
+ "not_claimed": [
+  "confidentiality only: no later CE-OR, CE-UKS, origin, binding or authentication; no A2, T5 or T8 on the later compiled program (textual scan: no PqxdhDeploymentProvenance constant, no authenticated_* name; PrfBills only)",
+  "ctGapTerm explicit (F-ct2; D-ct separate lane); owner flag stands",
+  "bills count coins and oracle calls, not running time; worst-case caps",
+  "AG lift rows R1 (b2s Server pin) and R2 (mode-O plaintext) still symbolic-only (P4 steps 2 and 3)"
+ ],
+ "open_points": [
+  "independent review and integration (merge e5af7024 or newer first; recount then rehash)",
+  "plan snapshot doc/impl/common-deployment-experiment-plan.md not refreshed by this step",
+  "P4 steps 2 and 3 (AG lift R1, R2)"
+ ],
+ "checks": {
+  "lean_tool": "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean via coord.sh lean claude, -j1 -M8000, timeout 180",
+  "leanpath": {
+   "path": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/leanpath",
+   "sha256": "7a6ab6fc0bf3ddd5f0728095b9e0cf256b2a2884ca8ebee74846867e98722ef7",
+   "first_prefix": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/olean",
+   "mirror_of": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/int/olean (published e5af7024 first prefix; 6407 links, root skipped, 0 broken)"
+  },
+  "roots": {
+   "logs/final/root-clean-a1b3693f.json": {
+    "exit": 0,
+    "head": "a1b3693f1476ba51664e92f13d5ed29fbf46948e",
+    "dirty_paths": 0,
+    "log_bytes": 0,
+    "artifact_sha256": "df4e8a47bacad800c3f58ce823623b7c241e94d018a46e78b8ab50002da583a7",
+    "source_sha256": "7e60fc708dd6c85fbfd2fe16906a4079aba69c78da7226575ed45fcb185c841f"
+   },
+   "logs/final/root-closed.json": {
+    "exit": 0,
+    "head": "53b57d05b70e79db9ab7600fa73cca5967a60341",
+    "dirty_paths": 4,
+    "log_bytes": 0,
+    "artifact_sha256": "df4e8a47bacad800c3f58ce823623b7c241e94d018a46e78b8ab50002da583a7",
+    "source_sha256": "7e60fc708dd6c85fbfd2fe16906a4079aba69c78da7226575ed45fcb185c841f"
+   },
+   "logs/final/root-gated.json": {
+    "exit": 0,
+    "head": "e5af70242aca601df0004e89155c2ff5029f0b87",
+    "dirty_paths": 5,
+    "log_bytes": 0,
+    "artifact_sha256": "22025b77677fba05d8f2717c1bc94440b7c3ff343ee6925e0f58439411760195",
+    "source_sha256": "89c8b000c687b10d19504027e904bac80e0de6950dbacf90469ce9cf0567ae63"
+   }
+  },
+  "inventories": {
+   "closed": {
+    "status": 0,
+    "commit": "53b57d05b70e79db9ab7600fa73cca5967a60341",
+    "start": "2026-10-10T13:40:23Z",
+    "end": "2026-10-10T13:42:13Z",
+    "dirty_before": 4,
+    "dirty_after": 4,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/logs/inventory-closed.log",
+    "log_sha256": "544b5a2afcf99bea5fd223c7607d5b4c4e3579a3a1bf6af35a9cb96823d9c0b6",
+    "note": "run before the module's Lean commit, with its four staged paths (module, root, reviewed-inventory.txt, check-inventory.sh) as the only dirt; the other untracked module moved out"
+   },
+   "docs": {
+    "status": 0,
+    "commit": "a1b3693f1476ba51664e92f13d5ed29fbf46948e",
+    "start": "2026-10-10T13:47:08Z",
+    "end": "2026-10-10T13:49:05Z",
+    "dirty_before": 3,
+    "dirty_after": 3,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/logs/inventory-docs.log",
+    "log_sha256": "4fffd36de11bc7dd49fe11b2a6b606646eb75a4714941f9279799762c1cec47a",
+    "note": "documentation tree before its commit"
+   },
+   "gated": {
+    "status": 0,
+    "commit": "e5af70242aca601df0004e89155c2ff5029f0b87",
+    "start": "2026-10-10T13:38:06Z",
+    "end": "2026-10-10T13:39:56Z",
+    "dirty_before": 4,
+    "dirty_after": 4,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/logs/inventory-gated.log",
+    "log_sha256": "554d986ae0677cb293bc7e67aa64bec7dece0c6864edc37a28fc2537ccbee296",
+    "note": "run before the module's Lean commit, with its four staged paths (module, root, reviewed-inventory.txt, check-inventory.sh) as the only dirt; the other untracked module moved out"
+   }
+  },
+  "git_diff_check": {
+   "range": "e5af70242aca601df0004e89155c2ff5029f0b87..a1b3693f1476ba51664e92f13d5ed29fbf46948e",
+   "exit": 0
+  }
+ },
+ "review": {
+  "status": "not reviewed"
+ }
+}
