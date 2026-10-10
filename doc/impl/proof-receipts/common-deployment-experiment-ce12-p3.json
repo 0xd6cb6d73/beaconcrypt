@@ -1,11 +1,11 @@
 {
- "date": "2026-10-10T12:20:57.829180+00:00",
- "scope": "CE-12 P3 (track ce12/p3): the later-quantum (LQ-F) headlines of the common deployment experiment: CE-KT-L, CE-APP-L, CE-LOR-L (with Server-peer forms), their symbolic-eligibility corollaries (APP, KT and LOR; the symbolic terms are run-phase classical terms of the run-phase adversary through game_classical_event and a support transfer) and their bills with the post budget. Confidentiality only. Not reviewed; not integrated.",
+ "date": "2026-10-10T12:55:31.222883+00:00",
+ "scope": "CE-12 P3 (track ce12/p3): the later-quantum (LQ-F) headlines of the common deployment experiment: CE-KT-L, CE-APP-L, CE-LOR-L (with Server-peer forms), their symbolic-eligibility corollaries (APP, KT and LOR; the gap and collision events are carried to the classical experiment of the run-phase adversary by game_classical_event and a support transfer, where eps_A2pub, eps_A1, ctGapTerm and ctCollTerm are terms of first and eps_inj is the fixed collider advantage of the setup at qCreate) and their bills with the post budget. Confidentiality only. Reviewed (semantic, composition, hygiene) at 049f1d5b; every finding fixed by the review fix pass; confirming review pending; not integrated.",
  "basis": {
   "start": "df7727c3238f70388e3ea739df109ad025ace097",
   "merges": [],
-  "central_at_receipt": "e0b8810bb048499ed8fbcadba5fe8a560f3ad083",
-  "central_note": "central moved to e0b8810b (item 7 increment I3, PqxdhBoundaryDeployment{Step,}; messages 514/515) during the track; the topic did not merge it",
+  "central_at_receipt": "2a33faf53a902ba6925c575f5135ef9181b49a5d",
+  "central_note": "central moved to e0b8810b (item 7 increment I3, PqxdhBoundaryDeployment{Step,}; messages 514/515) during the track and to 2a33faf5 (item 7 increment I4, 1930 handwritten Lean files) during the fix pass; the topic merged neither",
   "published_leanpath": {
    "path": "/tmp/bc-coord/leanpaths/df7727c3238f70388e3ea739df109ad025ace097.leanpath",
    "sha256": "bb539cc34f9ae1361b4a314adb8eb8661d57115080459f8e518081cf7126ecea"
@@ -14,19 +14,20 @@
  "topic": {
   "branch": "codex/deployment-ce12-later",
   "worktree": "/tmp/beaconcrypt-deployment-ce12-later",
-  "head_at_receipt": "1f5c4624ac17c096ffd9cbb742af369e72656ef7",
-  "note": "the documentation commit that adds this receipt follows head_at_receipt; it changes no Lean file"
+  "head_at_receipt": "f1c615bb7a57c0a4e1109c1b091211e92bba9a0f",
+  "note": "the fix-pass documentation commit that regenerates this receipt follows head_at_receipt; it changes no Lean file"
  },
  "plan": {
   "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
-  "sha256": "a4d85abc6fcd5722152756ce82ddcbc0eb5589b7a8f4ed5a558c4119cf6adae4",
+  "sha256": "5a147c8821792bb91a860551000885cf8a1ad52cc408ae2ec870baeca6c60c0a",
   "sections": [
    107,
-   109
+   109,
+   111
   ],
-  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/docs/plan.at-p3-a4d85abc.md",
-  "dated_copy_sha256": "a4d85abc6fcd5722152756ce82ddcbc0eb5589b7a8f4ed5a558c4119cf6adae4",
-  "note": "section 108 is CE-12 P2b step 3 (concurrent track)"
+  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/docs/plan.at-p3-fix-20261010T125142Z.md",
+  "dated_copy_sha256": "cfc14110a5e966654683c4605494174afdab1b05b1db4527cf973c8394639d7b",
+  "note": "sections 108 and 110 are CE-12 P2b (concurrent track)"
  },
  "design": {
   "paths": [
@@ -39,7 +40,7 @@
    "9866f32e40a4fdb3742d4bc36709971a0ade2932882896fe1975b8ac334cbb4e",
    "8d8aa59762f648098c18f48973a232e0dbeea07bec2f09e0191756a7640d1531"
   ],
-  "sections": "design.md 9.1-9.2, design-v2 10 (and 11-12 for the layout and the VC rows); LQ-F upstream design-v2 7"
+  "sections": "design.md 9.1-9.2, design-v2 10 (section 4 for the one-module-per-headline layout, section 11 for the estimate, 12 for the VC rows); LQ-F upstream design-v2 7"
  },
  "upstream": {
   "units": {
@@ -97,11 +98,19 @@
   {
    "commit": "1f5c4624ac17c096ffd9cbb742af369e72656ef7",
    "subject": "Add symbolic_lor for the later-quantum game"
+  },
+  {
+   "commit": "049f1d5ba99727eb828086d6049e83c37b9b1d30",
+   "subject": "Document CE-12 P3, the later-quantum headlines"
+  },
+  {
+   "commit": "f1c615bb7a57c0a4e1109c1b091211e92bba9a0f",
+   "subject": "Describe eps_inj as the setup's collider advantage in symbolic_lor_later"
   }
  ],
  "files_sha256": {
   "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "b0f38ebf929cf3323cc8fd0d483465f2fd5661bcacc87149a2a0627e30a897f9",
-  "beaconcrypt-core/proofs/reviewed-inventory.txt": "18236c9d8db71e935c0c676598de46ae09bb22087ec48547ad156dac545ede85",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "95023f4098f54b01f8af534d738169c10880cf94be0f71884211cf9d96f7b82e",
   "beaconcrypt-core/proofs/check-inventory.sh": "ee05cd74da468894b65599df3585c5d92aaa2e3db9b4b12fc617ba998c3d93f6"
  },
  "modules": [
@@ -431,9 +440,9 @@
   {
    "name": "BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineSymbolicLor",
    "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterHeadlineSymbolicLor.lean",
-   "sha256": "1357db959e3cefe38f30bb6ab42fd39dd7111187e23de4b59c78b60b2440c175",
+   "sha256": "0b3cedc8e0ecc0df089b1c7321a8b64e382603c4598c7c08cb2e0a9d8d75fdcb",
    "created_in": "1f5c4624ac17c096ffd9cbb742af369e72656ef7",
-   "last_changed_in": "1f5c4624ac17c096ffd9cbb742af369e72656ef7",
+   "last_changed_in": "f1c615bb7a57c0a4e1109c1b091211e92bba9a0f",
    "theorem_count": 24,
    "guard_count": 24,
    "guards_in_order": true,
@@ -479,20 +488,32 @@
     "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolicLor"
    ],
    "final_check": {
+    "prefix": "ce12/p3/fix/olean",
+    "leanpath_first_prefix_mirrors": "resolved mirror of ce12/p3/olean without this module (fix pass)",
+    "exit": 0,
+    "head_when_checked": "049f1d5ba99727eb828086d6049e83c37b9b1d30",
+    "dirty_paths_when_checked": 1,
+    "log_bytes": 0,
+    "artifact_sha256": "be6e20b3ed70e1565aa77a26e97113af700e3f271e8559bcb6db81de648f4fd0",
+    "source_sha256": "0b3cedc8e0ecc0df089b1c7321a8b64e382603c4598c7c08cb2e0a9d8d75fdcb",
+    "source_equals_current": true,
+    "source_equals_commit": {
+     "f1c615bb7a57c0a4e1109c1b091211e92bba9a0f": true
+    },
+    "start": "2026-10-10T12:42:49.817842796Z",
+    "end": "2026-10-10T12:42:54.615103768Z"
+   },
+   "first_final_check": {
     "prefix": "ce12/p3/olean",
-    "leanpath_first_prefix_mirrors": "published df7727c3 first prefix lqf-up/B/int/olean",
     "exit": 0,
     "head_when_checked": "7fb124dd9cc71b99f0cae993c1cf9e4c36846e57",
-    "dirty_paths_when_checked": 1,
     "log_bytes": 0,
     "artifact_sha256": "fb24548aa2a7de2fd63485757683e6d666b09af2186256be899d4bbb44122578",
     "source_sha256": "1357db959e3cefe38f30bb6ab42fd39dd7111187e23de4b59c78b60b2440c175",
-    "source_equals_current": true,
     "source_equals_commit": {
      "1f5c4624ac17c096ffd9cbb742af369e72656ef7": true
     },
-    "start": "2026-10-10T12:11:36.383440147Z",
-    "end": "2026-10-10T12:11:40.946077845Z"
+    "note": "the final check of the module as first committed; the fix pass changed docstrings only"
    }
   }
  ],
@@ -567,14 +588,61 @@
    "suppressions": 0
   },
   "closure_size": 1617,
+  "closure_beaconcryptcore_modules": 1579,
+  "closure_external_import_names": [
+   "Aeneas",
+   "CoreModels",
+   "Examples.CommitmentScheme.Common",
+   "Mathlib.Algebra.BigOperators.Group.Finset.Piecewise",
+   "Mathlib.Data.Fintype.BigOperators",
+   "Mathlib.Data.Nat.Digits.Lemmas",
+   "Mathlib.Data.Nat.Notation",
+   "Mathlib.Logic.Equiv.Fin.Basic",
+   "Mathlib.Logic.Function.Iterate",
+   "Mathlib.Tactic.FailIfNoProgress",
+   "Mathlib.Tactic.SplitIfs",
+   "ToMathlib.MeasureTheory.Measure.Bool",
+   "VCVio.CryptoFoundations.KeyEncapMech",
+   "VCVio.CryptoFoundations.SecExp",
+   "VCVio.CryptoFoundations.SignatureAlg",
+   "VCVio.EvalDist.Monad.Basic",
+   "VCVio.OracleComp.Coercions.Add",
+   "VCVio.OracleComp.Constructions.SampleableType",
+   "VCVio.OracleComp.Constructions.SampleableType.MeasureCompatibility",
+   "VCVio.OracleComp.ProbComp",
+   "VCVio.OracleComp.QueryTracking.Birthday",
+   "VCVio.OracleComp.QueryTracking.LoggingOracle",
+   "VCVio.OracleComp.QueryTracking.ProgrammingOracle",
+   "VCVio.OracleComp.QueryTracking.QueryBound",
+   "VCVio.OracleComp.QueryTracking.QueryBound.Basic",
+   "VCVio.OracleComp.QueryTracking.QueryBound.Partition",
+   "VCVio.OracleComp.QueryTracking.RandomOracle.Basic",
+   "VCVio.OracleComp.QueryTracking.RandomOracle.DeferredSampling",
+   "VCVio.OracleComp.QueryTracking.RandomOracle.EagerTable",
+   "VCVio.OracleComp.QueryTracking.Structures",
+   "VCVio.OracleComp.QueryTracking.SubSpec",
+   "VCVio.OracleComp.SimSemantics.Append",
+   "VCVio.OracleComp.SimSemantics.StateT.StateProjection",
+   "VCVio.OracleComp.SimSemantics.StateT.StateSeparating",
+   "VCVio.ProgramLogic.Relational.Basic",
+   "VCVio.ProgramLogic.Relational.ProgrammingOracle",
+   "VCVio.ProgramLogic.Relational.SimulateQ",
+   "VCVio.ProgramLogic.Relational.SimulateQ.Epsilon"
+  ],
+  "closure_note": "closure_size counts the BeaconcryptCore modules of the transitive import closure plus the external top-level import names, which are not expanded",
   "boundary_imports": []
+ },
+ "scan_first": {
+  "path": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/logs/scan-1.json",
+  "closure_size": 1617,
+  "note": "closure_size counted the 1579 BeaconcryptCore modules of the transitive import closure plus 38 external top-level import names that the scan does not expand; scan (fix pass, scan-2 at f1c615bb) reports both separately"
  },
  "forbidden_tokens_found": [],
  "boundary_imports": [],
  "handwritten_lean": {
   "before": 1927,
   "after": 1934,
-  "note": "one per module, coord.sh inv recount before coord.sh inv rehash each time"
+  "note": "one per module, coord.sh inv recount before coord.sh inv rehash each time; fix pass: recount 1934 unchanged, then rehash of the SymbolicLor row"
  },
  "headlines": {
   "ce_kt_later_close": "|Pr_LQF[happens event ∧ designated claim = some g] − Pr[ceDecideL g on idealLaterGame g]| ≤ kemLossL g d_g + slotLossL g d_g (FunctionalDecapsulation, Phase1ReadBack, Phase2ReadBack, SourceFullCorrect, budget.Respects first, post budget of second)",
@@ -582,11 +650,12 @@
   "ce_app_later": "mode P: Pr_LQF[AppWin (claim read from the post output)] ≤ Σ_g (kemLossL + slotLossL + beta(first) g + recLossL(slotted) + 2^-min); ce_app_server_later: AppWinPeer, serverSlotted, no beta",
   "ce_lor_later": "mode P, every filter F, guess : Out → Bool: ofReal |Pr[win] − ½ Pr[elig]| ≤ Σ_g (kemLossL W + slotLossL W + recLossL(slotted W) + ½(kemLossL E + slotLossL E + recLossL(slotted E)) + ½ beta(first) g); ce_lor_server_later: PeerTests, serverSlotted, no beta",
   "symbolic (Symbolic)": "ce_app_later_sym (+ a2pubTerm + ofReal a1Term + ctGapTerm of first), ce_app_server_later_sym (+ a2pubTerm), ce_app_beacon_later_sym (+ a1Term + ctGapTerm), ce_kt_later_sym / ce_kt_server_later_sym / ce_kt_beacon_later_sym (CE-KT-L one-sided summed bound + same terms); events on asClassical",
-  "symbolic LOR (SymbolicLor)": "symbolic_lor_later: |adv_sym − adv_CE(nbfFilter)| ≤ ½(a2pubTerm + a1Term + ctGapTerm + injTerm + ctCollTerm) of first; symbolic_lor_later_bound with ce_lor_later; symbolic_lor_server_later ½(a2pubTerm + injTerm); symbolic_lor_server_later_bound",
+  "symbolic LOR (SymbolicLor)": "symbolic_lor_later: |adv_sym − adv_CE(nbfFilter)| ≤ ½(a2pubTerm + a1Term + ctGapTerm + injTerm + ctCollTerm), where a2pubTerm, a1Term, ctGapTerm and ctCollTerm are terms of first and injTerm setup budget is the fixed collider advantage of the setup at qCreate (independent of the adversary); symbolic_lor_later_bound with ce_lor_later; symbolic_lor_server_later ½(a2pubTerm of first + injTerm); symbolic_lor_server_later_bound",
   "bills (Bills)": "slotLossL_eq ((qAccept + qFinish + (qHmac + qHmac2))/2^256 + PRF + key schedule), kem_bills_later, slot_bills_later, records_bills_later (LaterRecordBounded at inputL), records_hash_later (sharedHashTotal BI_g + postHash), hash_route_later (qHash + S + R + qBuild + qFinish + qHash2), beta_decapsulations_later (qFinish + 1), later_target_bills"
  },
  "deviations_from_design": [
-  "seven modules (Chain, KeyTransfer, App, Lor, Symbolic, Bills, SymbolicLor) instead of design.md section 12's two (PqxdhDeploymentLaterHeadlineChain, PqxdhDeploymentLaterHeadlines); design-v2 section 11 one module per headline",
+  "seven modules (Chain, KeyTransfer, App, Lor, Symbolic, Bills, SymbolicLor) instead of design.md section 12's two (PqxdhDeploymentLaterHeadlineChain, PqxdhDeploymentLaterHeadlines), following design-v2 section 4's one-module-per-headline layout of the classical headlines",
+  "91 theorems against design-v2 section 11's estimate of 40 to 80 for P3: the chain, the three headlines with their World and Server-peer forms, and the bills take 43 (Chain 16, KeyTransfer 7, App 5, Lor 7, Bills 8), the symbolic modules 48 (Symbolic 24, SymbolicLor 24); the excess comes from the forms added beyond design.md section 9.1 (World forms, Server-peer forms, Server-side and Beacon-side symbolic forms, later symbolic LOR with its support transfer)",
   "the anomaly is carried by unit C's later_anomaly_eq (PqxdhRecordLiftLater.run_event with laterReal_source) inside later_view_slots_le, not by laterReal_event itself (design-v2 section 10); bound anomaly_le_pk on first's run and ptc_bound as designed",
   "later_real_slots_server is new (Server-side form of unit C's later_slots)",
   "additional forms: CE-KT-L World forms, Server-peer CE-APP-L and CE-LOR-L, Server/Beacon symbolic forms, the later symbolic LOR with a support transfer (support_later, Kin)",
@@ -605,17 +674,17 @@
    "budget.Respects first",
    "post budget: ∀ output reveal, post.Respects (second output reveal)",
    "KemBound setup caps and initBound (APP-L, LOR-L, bills)",
-   "symbolic forms: shortRejects; CE-A1 premises (FrameReadBack, ReadWritable, X25519ClassLaw, X25519ScalarSpread, HasAttachedVerificationAdapter)"
+   "symbolic forms, besides the premises of their headline: the Server-side forms (ce_app_server_later_sym, ce_kt_server_later_sym, symbolic_lor_server_later(_bound)) add shortRejects; the Beacon-side forms (ce_app_beacon_later_sym, ce_kt_beacon_later_sym) add the CE-A1 premises (KemBound setup caps, new for the KT forms, FrameReadBack, ReadWritable, X25519ClassLaw, X25519ScalarSpread, HasAttachedVerificationAdapter); the combined forms (ce_app_later_sym, ce_kt_later_sym) and symbolic_lor_later(_bound) need both sets; the difference forms symbolic_lor_later and symbolic_lor_server_later need neither FunctionalDecapsulation nor a post budget"
   ]
  },
  "not_claimed": [
   "confidentiality only: no later CE-OR, CE-UKS, origin, binding or authentication; no A2, T5 or T8 on the later compiled program",
   "classical adversary with a post-run reveal: no QPT or QROM claim; no soundness transfer from ProVerif",
   "classical limits stay: (S, serverKid) pin, single test session, eligibility-weighted LOR, KT not root secrecy",
-  "ctGapTerm and ctCollTerm explicit; beta's phase-1 uniform/base bill is P2b's"
+  "ctGapTerm and ctCollTerm explicit; beta's phase-1 uniform/base bill is P2b's ptc_bills (not on central); P3 proves its decapsulation count qFinish + 1"
  ],
  "open_points": [
-  "independent review (semantic, composition, hygiene), fix pass, confirming review and integration (merge e0b8810b or newer first; recount to 1936)",
+  "confirming review of the fix pass, then integration (merge central 2a33faf5 or newer first; recount 1930 + 7 = 1937 at 2a33faf5)",
   "after P2b is integrated: billed later forms with ptc_bills at first and closed later symbolic forms with epsilon_ctcoll",
   "plan snapshot doc/impl/common-deployment-experiment-plan.md not refreshed (integration)"
  ],
@@ -691,6 +760,14 @@
     "log_bytes": 0,
     "artifact_sha256": "c0cb103d4f9b303c2d4abc2f81ed2827782202713f1402aecea2cafbf16c8380",
     "source_sha256": "b0f38ebf929cf3323cc8fd0d483465f2fd5661bcacc87149a2a0627e30a897f9"
+   },
+   "fix/logs/final/root-fix-lean.json": {
+    "exit": 0,
+    "head": "049f1d5ba99727eb828086d6049e83c37b9b1d30",
+    "dirty_paths": 2,
+    "log_bytes": 0,
+    "artifact_sha256": "c0cb103d4f9b303c2d4abc2f81ed2827782202713f1402aecea2cafbf16c8380",
+    "source_sha256": "b0f38ebf929cf3323cc8fd0d483465f2fd5661bcacc87149a2a0627e30a897f9"
    }
   },
   "inventories": {
@@ -701,9 +778,16 @@
     "end": "2026-10-10T11:46:19Z",
     "dirty_before": 4,
     "dirty_after": 4,
+    "dirt": [
+     " M beaconcrypt-core/proofs/check-inventory.sh",
+     " M beaconcrypt-core/proofs/lean/BeaconcryptCore.lean",
+     " M beaconcrypt-core/proofs/reviewed-inventory.txt",
+     "?? beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterHeadlineApp.lean"
+    ],
+    "comm_warnings": 3,
     "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/logs/inventory-app.log",
     "log_sha256": "7b0baa4780bbc83cffe4e8d95f64faa4b7c907a4ebba30e44007614941f53d2d",
-    "note": "run before the module's Lean commit, with its four staged paths (module, root, reviewed-inventory.txt, check-inventory.sh) as the only dirt"
+    "note": "run before the module's Lean commit; nothing was staged: the dirt was the three unstaged modified paths (check-inventory.sh, BeaconcryptCore.lean, reviewed-inventory.txt) and the untracked new module, and the log has three \"comm: ... not in sorted order\" warnings (the untracked module meets the locale-sorted comm -23 of check-inventory.sh); the documentation run, the clean-head run at 049f1d5b and the hygiene review's HEAD run have none, and the hygiene review's LC_ALL=C check of every commit found no unreviewed tracked proof file"
    },
    "bills": {
     "status": 0,
@@ -712,9 +796,16 @@
     "end": "2026-10-10T12:01:28Z",
     "dirty_before": 4,
     "dirty_after": 4,
+    "dirt": [
+     " M beaconcrypt-core/proofs/check-inventory.sh",
+     " M beaconcrypt-core/proofs/lean/BeaconcryptCore.lean",
+     " M beaconcrypt-core/proofs/reviewed-inventory.txt",
+     "?? beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterHeadlineBills.lean"
+    ],
+    "comm_warnings": 3,
     "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/logs/inventory-bills.log",
     "log_sha256": "0ce72b202e10edcb46a79be88ce789e76710903e48084b60bb5b5a7f12296b75",
-    "note": "run before the module's Lean commit, with its four staged paths (module, root, reviewed-inventory.txt, check-inventory.sh) as the only dirt"
+    "note": "run before the module's Lean commit; nothing was staged: the dirt was the three unstaged modified paths (check-inventory.sh, BeaconcryptCore.lean, reviewed-inventory.txt) and the untracked new module, and the log has three \"comm: ... not in sorted order\" warnings (the untracked module meets the locale-sorted comm -23 of check-inventory.sh); the documentation run, the clean-head run at 049f1d5b and the hygiene review's HEAD run have none, and the hygiene review's LC_ALL=C check of every commit found no unreviewed tracked proof file"
    },
    "chain": {
     "status": 0,
@@ -723,9 +814,29 @@
     "end": "2026-10-10T11:41:45Z",
     "dirty_before": 4,
     "dirty_after": 4,
+    "dirt": [
+     " M beaconcrypt-core/proofs/check-inventory.sh",
+     " M beaconcrypt-core/proofs/lean/BeaconcryptCore.lean",
+     " M beaconcrypt-core/proofs/reviewed-inventory.txt",
+     "?? beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterHeadlineChain.lean"
+    ],
+    "comm_warnings": 3,
     "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/logs/inventory-chain.log",
     "log_sha256": "9a67efe62c6a0540fb121f04aed05d77522357cc000f4d08060af9961641dae0",
-    "note": "run before the module's Lean commit, with its four staged paths (module, root, reviewed-inventory.txt, check-inventory.sh) as the only dirt"
+    "note": "run before the module's Lean commit; nothing was staged: the dirt was the three unstaged modified paths (check-inventory.sh, BeaconcryptCore.lean, reviewed-inventory.txt) and the untracked new module, and the log has three \"comm: ... not in sorted order\" warnings (the untracked module meets the locale-sorted comm -23 of check-inventory.sh); the documentation run, the clean-head run at 049f1d5b and the hygiene review's HEAD run have none, and the hygiene review's LC_ALL=C check of every commit found no unreviewed tracked proof file"
+   },
+   "clean": {
+    "status": 0,
+    "commit": "049f1d5ba99727eb828086d6049e83c37b9b1d30",
+    "start": "2026-10-10T12:21:10Z",
+    "end": "2026-10-10T12:23:01Z",
+    "dirty_before": 0,
+    "dirty_after": 0,
+    "dirt": [],
+    "comm_warnings": 0,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/logs/inventory-clean.log",
+    "log_sha256": "b648dc77b46442ef5127919e1e9390e7a563fb721f71d13fb23d73053fe3a159",
+    "note": "clean head 049f1d5b after the documentation commit (no dirt)"
    },
    "docs": {
     "status": 0,
@@ -734,6 +845,12 @@
     "end": "2026-10-10T12:20:40Z",
     "dirty_before": 3,
     "dirty_after": 3,
+    "dirt": [
+     " M doc/formal-verification-analysis.md",
+     " M doc/impl/common-deployment-experiment.md",
+     "?? doc/impl/proof-receipts/common-deployment-experiment-ce12-p3.json"
+    ],
+    "comm_warnings": 0,
     "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/logs/inventory-docs.log",
     "log_sha256": "68167e5858550b9e01ae447710fe91323f822df35c66dcf9c8ac5fbaa7a8a660",
     "note": "documentation tree before its commit"
@@ -745,9 +862,16 @@
     "end": "2026-10-10T11:44:01Z",
     "dirty_before": 4,
     "dirty_after": 4,
+    "dirt": [
+     " M beaconcrypt-core/proofs/check-inventory.sh",
+     " M beaconcrypt-core/proofs/lean/BeaconcryptCore.lean",
+     " M beaconcrypt-core/proofs/reviewed-inventory.txt",
+     "?? beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterHeadlineKeyTransfer.lean"
+    ],
+    "comm_warnings": 3,
     "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/logs/inventory-keytransfer.log",
     "log_sha256": "cb52c07231984540a83f123ed53ab7f1cf197749a7f6f20e38397646b2ca1893",
-    "note": "run before the module's Lean commit, with its four staged paths (module, root, reviewed-inventory.txt, check-inventory.sh) as the only dirt"
+    "note": "run before the module's Lean commit; nothing was staged: the dirt was the three unstaged modified paths (check-inventory.sh, BeaconcryptCore.lean, reviewed-inventory.txt) and the untracked new module, and the log has three \"comm: ... not in sorted order\" warnings (the untracked module meets the locale-sorted comm -23 of check-inventory.sh); the documentation run, the clean-head run at 049f1d5b and the hygiene review's HEAD run have none, and the hygiene review's LC_ALL=C check of every commit found no unreviewed tracked proof file"
    },
    "lor": {
     "status": 0,
@@ -756,9 +880,16 @@
     "end": "2026-10-10T11:48:46Z",
     "dirty_before": 4,
     "dirty_after": 4,
+    "dirt": [
+     " M beaconcrypt-core/proofs/check-inventory.sh",
+     " M beaconcrypt-core/proofs/lean/BeaconcryptCore.lean",
+     " M beaconcrypt-core/proofs/reviewed-inventory.txt",
+     "?? beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterHeadlineLor.lean"
+    ],
+    "comm_warnings": 3,
     "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/logs/inventory-lor.log",
     "log_sha256": "9f9b30d019fc8687c570f33a03eb803ab7634d510647934a6450417455377b1e",
-    "note": "run before the module's Lean commit, with its four staged paths (module, root, reviewed-inventory.txt, check-inventory.sh) as the only dirt"
+    "note": "run before the module's Lean commit; nothing was staged: the dirt was the three unstaged modified paths (check-inventory.sh, BeaconcryptCore.lean, reviewed-inventory.txt) and the untracked new module, and the log has three \"comm: ... not in sorted order\" warnings (the untracked module meets the locale-sorted comm -23 of check-inventory.sh); the documentation run, the clean-head run at 049f1d5b and the hygiene review's HEAD run have none, and the hygiene review's LC_ALL=C check of every commit found no unreviewed tracked proof file"
    },
    "symbolic": {
     "status": 0,
@@ -767,9 +898,16 @@
     "end": "2026-10-10T11:56:55Z",
     "dirty_before": 4,
     "dirty_after": 4,
+    "dirt": [
+     " M beaconcrypt-core/proofs/check-inventory.sh",
+     " M beaconcrypt-core/proofs/lean/BeaconcryptCore.lean",
+     " M beaconcrypt-core/proofs/reviewed-inventory.txt",
+     "?? beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterHeadlineSymbolic.lean"
+    ],
+    "comm_warnings": 3,
     "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/logs/inventory-symbolic.log",
     "log_sha256": "b85e4c1adddfc6504b3bfb1372b8893912f2fef761fce2951a4252305623e027",
-    "note": "run before the module's Lean commit, with its four staged paths (module, root, reviewed-inventory.txt, check-inventory.sh) as the only dirt"
+    "note": "run before the module's Lean commit; nothing was staged: the dirt was the three unstaged modified paths (check-inventory.sh, BeaconcryptCore.lean, reviewed-inventory.txt) and the untracked new module, and the log has three \"comm: ... not in sorted order\" warnings (the untracked module meets the locale-sorted comm -23 of check-inventory.sh); the documentation run, the clean-head run at 049f1d5b and the hygiene review's HEAD run have none, and the hygiene review's LC_ALL=C check of every commit found no unreviewed tracked proof file"
    },
    "symboliclor": {
     "status": 0,
@@ -778,18 +916,145 @@
     "end": "2026-10-10T12:13:33Z",
     "dirty_before": 4,
     "dirty_after": 4,
+    "dirt": [
+     " M beaconcrypt-core/proofs/check-inventory.sh",
+     " M beaconcrypt-core/proofs/lean/BeaconcryptCore.lean",
+     " M beaconcrypt-core/proofs/reviewed-inventory.txt",
+     "?? beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterHeadlineSymbolicLor.lean"
+    ],
+    "comm_warnings": 3,
     "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/logs/inventory-symboliclor.log",
     "log_sha256": "b61d6d4aa7fbf21b6969ac781dee96fbb0ec65c06e8abd798eeb18e81b9d2de3",
-    "note": "run before the module's Lean commit, with its four staged paths (module, root, reviewed-inventory.txt, check-inventory.sh) as the only dirt"
+    "note": "run before the module's Lean commit; nothing was staged: the dirt was the three unstaged modified paths (check-inventory.sh, BeaconcryptCore.lean, reviewed-inventory.txt) and the untracked new module, and the log has three \"comm: ... not in sorted order\" warnings (the untracked module meets the locale-sorted comm -23 of check-inventory.sh); the documentation run, the clean-head run at 049f1d5b and the hygiene review's HEAD run have none, and the hygiene review's LC_ALL=C check of every commit found no unreviewed tracked proof file"
+   },
+   "fix/fix-docs": {
+    "status": 0,
+    "commit": "f1c615bb7a57c0a4e1109c1b091211e92bba9a0f",
+    "start": "2026-10-10T12:53:36Z",
+    "end": "2026-10-10T12:55:27Z",
+    "dirty_before": 3,
+    "dirty_after": 3,
+    "dirt": [
+     " M doc/formal-verification-analysis.md",
+     " M doc/impl/common-deployment-experiment.md",
+     " M doc/impl/proof-receipts/common-deployment-experiment-ce12-p3.json"
+    ],
+    "comm_warnings": 0,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/fix/logs/inventory-fix-docs.log",
+    "log_sha256": "96a87345819f3236abf0391143189104f5694f0c3e551d5a1a888e7981aa2e5a",
+    "note": "fix pass: documentation tree before its commit"
+   },
+   "fix/fix-lean": {
+    "status": 0,
+    "commit": "049f1d5ba99727eb828086d6049e83c37b9b1d30",
+    "start": "2026-10-10T12:43:30Z",
+    "end": "2026-10-10T12:45:19Z",
+    "dirty_before": 2,
+    "dirty_after": 2,
+    "dirt": [
+     "M  beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterHeadlineSymbolicLor.lean",
+     "M  beaconcrypt-core/proofs/reviewed-inventory.txt"
+    ],
+    "comm_warnings": 0,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/fix/logs/inventory-fix-lean.log",
+    "log_sha256": "cd1f676344e86f0ef10f7e34f0ad6a648d56ff210d30c1de7dd93d50ac6bfaee",
+    "note": "fix pass: the staged Lean commit (module and reviewed-inventory.txt staged, nothing else dirty)"
    }
   },
-  "guard_scan": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/logs/scan-1.json",
+  "guard_scan": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/fix/logs/scan-2.json",
+  "guard_scan_first": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/logs/scan-1.json",
+  "direct_reference_scan": {
+   "probe": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/fix/probe/Refs.lean",
+   "probe_sha256": "07601f3c551fb6c13407c3993833d1e5a495aea6bf4eb7c4b859439771e7fd1c",
+   "runner": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/fix/scripts/probe.sh",
+   "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/fix/leanpath",
+   "leanpath_sha256": "b2a7f91389ac5f793662d2f40f4a3cab33e27b0f550fa0e84a999732bcd912ef",
+   "head": "f1c615bb7a57c0a4e1109c1b091211e92bba9a0f",
+   "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/fix/logs/Refs-2.log",
+   "log_sha256": "f3137ba5f2b5ba4742e4fb9aa8b9986acbf52add40c9681b78447576c9e8b167",
+   "exit": 0,
+   "first_run": {
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/fix/logs/Refs-1.log",
+    "exit": 1,
+    "note": "liveness declarations had invalid syntax (theorem without a type); fixed, then run 2"
+   },
+   "result": [
+    "constants scanned 113; forbidden (A2/T5/T8) direct references 0: []",
+    "liveness: [CE12P3FixRefs.liveA2: [BeaconcryptCore.Computational.PqxdhDeploymentProvenance.a2_bound, BeaconcryptCore.Computational.PqxdhDeploymentProvenance.reduction], CE12P3FixRefs.liveT5: [BeaconcryptCore.Computational.PqxdhRegistrationJointAuthenticatedSelectedKem.authenticated_selected_kem], CE12P3FixRefs.liveT8: [BeaconcryptCore.Computational.PqxdhRegistrationJointKemKeyTransfer.idealKeys_loss]]",
+    "BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineChain: 20 constants",
+    "BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineKeyTransfer: 7 constants",
+    "BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineApp: 5 constants",
+    "BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineLor: 7 constants",
+    "BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineSymbolic: 33 constants",
+    "BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineBills: 8 constants",
+    "BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineSymbolicLor: 33 constants"
+   ],
+   "note": "every constant of the seven modules (113): direct references (getUsedConstantsAsSet) flagged as A2 (any constant of PqxdhDeploymentProvenance or a name containing a2_bound), T5 (last component authenticated*, any constant of PqxdhRegistrationJointAuthenticatedSelectedKem) or T8 (a theorem of a PqxdhRegistrationJointKemKeyTransfer* module): none; liveness cases (a2_bound, authenticated_selected_kem, idealKeys_loss) all flagged. References into watched modules (Authenticated, Provenance, Origin, Uks, Binding, Injective, Euf, GapDh, KemKeyTransfer, Boundary): Ed25519PublicKey, HasAttachedVerificationAdapter, PqxdhJointGapDh.ScalarBytes, PqxdhDeploymentServerAuthInjective.Collision and identities, PqxdhRegistrationJointKemKeyTransfer.PrfBills (bill predicate). External theorems cited by the symbolic modules: server_gap_bound, sym_gap, ce_a1_linked, identity_collision_game (CE-12 P2), applied to PqxdhDeploymentSecrecy.game ... first after gaps_later, serverGap_later, beaconGap_later, collisions_later or identity_later; the log lists every external BeaconcryptCore theorem cited per module. Scratch probe, not a committed check; the semantic and hygiene reviews ran comparable probes (review-semantic/probe/Refs.lean, review-hygiene/probe/DirectRefs.lean)"
+  },
   "git_diff_check": {
-   "range": "df7727c3238f70388e3ea739df109ad025ace097..1f5c4624ac17c096ffd9cbb742af369e72656ef7",
+   "range": "df7727c3238f70388e3ea739df109ad025ace097..f1c615bb7a57c0a4e1109c1b091211e92bba9a0f",
    "exit": 0
   }
  },
  "review": {
-  "status": "not reviewed"
+  "status": "reviewed at 049f1d5b (semantic, composition, hygiene; scratch ce12/p3/review-semantic, review-composition, review-hygiene): no defect in any Lean statement, composition re-derived hop by hop (no double count, post budget billed); eleven findings (three minor, eight nits, one a record with no action), all fixed by the review fix pass; confirming review pending",
+  "findings_fixed": [
+   "minor: analysis did not state the premises of the symbolic forms and the receipt left KemBound off the symbolic KT forms: analysis Symbolic eligibility premises sentence; guide premises per form; contracts_used.premises",
+   "nit: no recorded scan behind the no-A2/T5/T8 claim: direct-reference scan (checks.direct_reference_scan), guide checks, analysis",
+   "nit: eps_inj described as a term of first: guide, analysis, receipt and SymbolicLor docstrings (Lean commit f1c615bb, docstrings only) now call it the fixed collider advantage of the setup at qCreate",
+   "nit: layout deviation cited design-v2 section 11 and did not record the count: now design-v2 section 4, 91 theorems against the 40 to 80 estimate with the reason",
+   "minor: P3 guide and analysis dropped P1's premises clause and scope caveats: premises clause and records/efficiency caveats (extended to second) in the guide and the analysis",
+   "minor: analysis said every reduction has a bill on central: reworded with the ptc_bills exception (P2b, not on central) and the decapsulation count qFinish + 1",
+   "nit: post budget places and the halving of the symbolic LOR terms: analysis names the R1 term, the bills at the transported caps and the record layer's integrity hash term and bills; half of the sum of all terms; guide recLossL item",
+   "nit (record, no action): composition re-derived hop by hop, no defect",
+   "nit: pre-commit inventory runs described as staged and warning-free: guide checks and checks.inventories notes now give the dirt and the comm warnings",
+   "nit: /tmp worktree path in the guide status paragraph: dropped (topic.worktree keeps it)",
+   "nit: closure size 1617 was not a closure size: 1579 BeaconcryptCore modules (scan.closure_beaconcryptcore_modules), 38 external names separate"
+  ]
+ },
+ "fix_pass": {
+  "start": "049f1d5ba99727eb828086d6049e83c37b9b1d30",
+  "lean_commit": "f1c615bb7a57c0a4e1109c1b091211e92bba9a0f",
+  "statements_changed": [],
+  "theorems_added": [],
+  "theorems_removed": [],
+  "note": "docstrings of PqxdhDeploymentLaterHeadlineSymbolicLor only (eps_inj wording; symbolic_lor_later premises listed); 91 theorems, 91 guards unchanged",
+  "olean_prefix": {
+   "path": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/fix/olean",
+   "mirror_of": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/olean",
+   "links": 6392,
+   "links_to_p3_files": 6,
+   "skipped": "PqxdhDeploymentLaterHeadlineSymbolicLor.olean",
+   "broken": 0,
+   "script": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/fix/scripts/mirror_fix.py"
+  },
+  "leanpath": {
+   "path": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/fix/leanpath",
+   "sha256": "b2a7f91389ac5f793662d2f40f4a3cab33e27b0f550fa0e84a999732bcd912ef"
+  },
+  "recount": {
+   "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/fix/logs/recount.log",
+   "result": "handwritten-lean count unchanged (1934)"
+  },
+  "rehash": {
+   "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/fix/logs/rehash-2.log",
+   "result": [
+    "proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterHeadlineSymbolicLor.lean: 1357db959e3c -> 0b3cedc8e0ec",
+    "proofs/lean/BeaconcryptCore.lean: unchanged",
+    "proofs/trusted-boundary.md: unchanged",
+    "proofs/check-inventory.sh: unchanged"
+   ],
+   "note": "a first rehash without paths (logs/rehash.log) changed nothing: the module row needs its path"
+  },
+  "scripts": [
+   "/tmp/bc-arc-scratch/common-experiment/ce12/p3/fix/scripts/check.sh",
+   "/tmp/bc-arc-scratch/common-experiment/ce12/p3/fix/scripts/docs_fix.py",
+   "/tmp/bc-arc-scratch/common-experiment/ce12/p3/fix/scripts/inventory.sh",
+   "/tmp/bc-arc-scratch/common-experiment/ce12/p3/fix/scripts/lean_doc.py",
+   "/tmp/bc-arc-scratch/common-experiment/ce12/p3/fix/scripts/mirror_fix.py",
+   "/tmp/bc-arc-scratch/common-experiment/ce12/p3/fix/scripts/probe.sh",
+   "/tmp/bc-arc-scratch/common-experiment/ce12/p3/fix/scripts/receipt_fix.py",
+   "/tmp/bc-arc-scratch/common-experiment/ce12/p3/fix/scripts/scan.py"
+  ]
  }
 }
