@@ -2107,6 +2107,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemTargets
 
 import BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterGame
 
+import BeaconcryptCore.Computational.PqxdhDeploymentIdealLater
+
 /-!
 # Beaconcrypt-core verification root
 

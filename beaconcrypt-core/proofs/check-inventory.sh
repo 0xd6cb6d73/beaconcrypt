@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1895
+	[handwritten-lean]=1896
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -38829,6 +38829,49 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem idealLater_postNative([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterGame theorem idealLater_postNative"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterGame\.laterOf_real$' "$selected_source_module" "PqxdhDeploymentIdealLaterGame dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterGame.laterOf_real"
 require_line_count 1 '^theorem laterOf_real([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterGame theorem laterOf_real"
+
+# LQ-F upstream unit C1: the generic later forms of CE-11b's split chain and of C1 with drawn parameters (LQ-F design-v2 section 4.2).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLater.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentIdealLater$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentIdealLater root import"
+require_line_count 18 '^theorem ' "$selected_source_module" "PqxdhDeploymentIdealLater theorem inventory"
+require_line_count 18 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentIdealLater guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLater\.laterTail_map$' "$selected_source_module" "PqxdhDeploymentIdealLater dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLater.laterTail_map"
+require_line_count 1 '^theorem laterTail_map([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLater theorem laterTail_map"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLater\.laterWith_map$' "$selected_source_module" "PqxdhDeploymentIdealLater dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLater.laterWith_map"
+require_line_count 1 '^theorem laterWith_map([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLater theorem laterWith_map"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLater\.laterWith_proj$' "$selected_source_module" "PqxdhDeploymentIdealLater dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLater.laterWith_proj"
+require_line_count 1 '^theorem laterWith_proj([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLater theorem laterWith_proj"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLater\.xreveal_mapBackend$' "$selected_source_module" "PqxdhDeploymentIdealLater dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLater.xreveal_mapBackend"
+require_line_count 1 '^theorem xreveal_mapBackend([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLater theorem xreveal_mapBackend"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLater\.realPost_mapBackend$' "$selected_source_module" "PqxdhDeploymentIdealLater dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLater.realPost_mapBackend"
+require_line_count 1 '^theorem realPost_mapBackend([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLater theorem realPost_mapBackend"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLater\.represent_run$' "$selected_source_module" "PqxdhDeploymentIdealLater dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLater.represent_run"
+require_line_count 1 '^theorem represent_run([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLater theorem represent_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLater\.represent_later$' "$selected_source_module" "PqxdhDeploymentIdealLater dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLater.represent_later"
+require_line_count 1 '^theorem represent_later([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLater theorem represent_later"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLater\.represent_split_later$' "$selected_source_module" "PqxdhDeploymentIdealLater dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLater.represent_split_later"
+require_line_count 1 '^theorem represent_split_later([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLater theorem represent_split_later"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLater\.realPost_moveSeeds$' "$selected_source_module" "PqxdhDeploymentIdealLater dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLater.realPost_moveSeeds"
+require_line_count 1 '^theorem realPost_moveSeeds([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLater theorem realPost_moveSeeds"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLater\.game_moveSeeds_later$' "$selected_source_module" "PqxdhDeploymentIdealLater dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLater.game_moveSeeds_later"
+require_line_count 1 '^theorem game_moveSeeds_later([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLater theorem game_moveSeeds_later"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLater\.postNative_param$' "$selected_source_module" "PqxdhDeploymentIdealLater dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLater.postNative_param"
+require_line_count 1 '^theorem postNative_param([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLater theorem postNative_param"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLater\.laterWith_param$' "$selected_source_module" "PqxdhDeploymentIdealLater dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLater.laterWith_param"
+require_line_count 1 '^theorem laterWith_param([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLater theorem laterWith_param"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLater\.run_split_from$' "$selected_source_module" "PqxdhDeploymentIdealLater dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLater.run_split_from"
+require_line_count 1 '^theorem run_split_from([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLater theorem run_split_from"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLater\.join_later_from$' "$selected_source_module" "PqxdhDeploymentIdealLater dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLater.join_later_from"
+require_line_count 1 '^theorem join_later_from([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLater theorem join_later_from"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLater\.later_program_draw$' "$selected_source_module" "PqxdhDeploymentIdealLater dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLater.later_program_draw"
+require_line_count 1 '^theorem later_program_draw([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLater theorem later_program_draw"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLater\.join_later_draw$' "$selected_source_module" "PqxdhDeploymentIdealLater dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLater.join_later_draw"
+require_line_count 1 '^theorem join_later_draw([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLater theorem join_later_draw"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLater\.join_later_param$' "$selected_source_module" "PqxdhDeploymentIdealLater dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLater.join_later_param"
+require_line_count 1 '^theorem join_later_param([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLater theorem join_later_param"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLater\.defer_seeds_later$' "$selected_source_module" "PqxdhDeploymentIdealLater dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLater.defer_seeds_later"
+require_line_count 1 '^theorem defer_seeds_later([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLater theorem defer_seeds_later"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
