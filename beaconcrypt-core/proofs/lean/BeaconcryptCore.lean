@@ -2137,6 +2137,8 @@ import BeaconcryptCore.Computational.PqxdhBoundaryRegistrationBuild
 
 import BeaconcryptCore.Computational.PqxdhBoundaryRegistrationBuildNative
 
+import BeaconcryptCore.Computational.PqxdhBoundaryProgram
+
 /-!
 # Beaconcrypt-core verification root
 

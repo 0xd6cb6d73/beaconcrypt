@@ -1,0 +1,169 @@
+{
+ "stage": "PB-D generic adaptive RustM full-state executor (item 7 increment A, module 3 of 5)",
+ "topic": "codex/deployment-boundary-a",
+ "parent_commit": "4a94825821238ffb34f6547f9b31022579f36889",
+ "central_basis": "f0dc46bb6473ab37ecf48e623f1ccb192bd6b3af",
+ "state": "checked at central f0dc46bb on the topic branch; independent fresh-context review (decision D-6) pending; not integrated",
+ "module": "PqxdhBoundaryProgram",
+ "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryProgram.lean",
+ "source_sha256": "fbeedc5d0d3944cb324ee57cc9b9a16f158c40fa36f256fa45c62156b65562c6",
+ "guide": "doc/impl/production-boundary-program.md",
+ "guide_sha256": "ef91c9fe5144546d10134582156fa688b849de34c13c88beb0b193bb2e2d74ef",
+ "guarded_statements": 13,
+ "theorems": [
+  "execute_pure",
+  "execute_query",
+  "execute_bind",
+  "execute_fail",
+  "execute_div",
+  "execute_congr",
+  "execute_lift",
+  "source_exact",
+  "source_continuation",
+  "outcome_ok",
+  "outcome_normal",
+  "ofResult_ok",
+  "ofResult_normal"
+ ],
+ "axioms_used": [
+  "Quot.sound",
+  "propext"
+ ],
+ "axioms_allowed": [
+  "propext",
+  "Classical.choice",
+  "Quot.sound"
+ ],
+ "provenance": "adapted from Codex WIP 185bfab26f38c518b4d544c98fc2625181e2e129e5a527ce39bb85eba2fabb59 (Lean source: nine theorems and their proofs kept unchanged; the nine plain #print axioms lines replaced by exact #guard_msgs guards; outcome, ofResult and four theorems added) and d67a206c35d625ce69912befcbfa9286f6bf5f30c1df67c3166de047d883ddbc (guide draft: one sentence corrected, two sections added); preserved copies in /tmp/bc-arc-scratch/item7/inherited/pbd-program",
+ "authorship": "Codex (sub-thread facts_origin per its registry note) wrote execute, liftStep and the nine theorems; Claude added outcome, ofResult, outcome_ok, outcome_normal, ofResult_ok, ofResult_normal, the exact guards, the guide sections, the receipt and the analysis paragraph",
+ "statements": {
+  "execute_pure": "execution of pure returns ok with the unchanged state",
+  "execute_query": "one command decides by its literal Rust outcome whether the adaptive continuation runs",
+  "execute_bind": "sequential execution: the continuation runs only after a successful complete prefix",
+  "execute_fail": "a failed command keeps its poststate and stops",
+  "execute_div": "a diverging command keeps its poststate and stops",
+  "execute_congr": "pointwise equal steps (reply and full state) execute equally",
+  "execute_lift": "execution of a lifted native implementation equals its full simulateQ run",
+  "source_exact": "a step proved equal to a lifted native implementation for every query and state executes as the native simulation",
+  "source_continuation": "source_exact under an arbitrary continuation of the complete result and state",
+  "outcome_ok": "(Claude, D-3) the adapter applied to a normal-returning computation is the lifted native result",
+  "outcome_normal": "(Claude, D-3) every supported adapted outcome of a normal-returning computation is ok with a supported native reply and poststate",
+  "ofResult_ok": "(Claude, D-3) a family of normal-returning executors adapts to exactly liftStep of the native implementation",
+  "ofResult_normal": "(Claude, D-3) every supported outcome of such an adapted family is ok; the entry-state placeholder is never supported"
+ },
+ "checks": {
+  "leanpath": {
+   "path": "/tmp/bc-arc-scratch/item7/a/leanpath",
+   "sha256": "fe146755bd6d790bb1b58d39711a03481bf30bd15aecf8479e4d96b091ccda29",
+   "note": "item7/a/olean (resolved symlink mirror of the first prefix of the published central f0dc46bb LEAN_PATH without root artifacts, plus the increment A module oleans) in front of the published f0dc46bb LEAN_PATH"
+  },
+  "module": {
+   "module": "BeaconcryptCore.Computational.PqxdhBoundaryProgram",
+   "start": "2026-10-10T08:04:05.447205050Z",
+   "end": "2026-10-10T08:04:08.809409102Z",
+   "exit": 0,
+   "head": "f0dc46bb6473ab37ecf48e623f1ccb192bd6b3af",
+   "dirty_paths": 5,
+   "source_sha256": "fbeedc5d0d3944cb324ee57cc9b9a16f158c40fa36f256fa45c62156b65562c6",
+   "log_bytes": 0,
+   "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "artifact": "/tmp/bc-arc-scratch/item7/a/olean/BeaconcryptCore/Computational/PqxdhBoundaryProgram.olean",
+   "artifact_sha256": "eebcd4fe9fc421e4a69fd5f905ae80c205ab63ff706d6f2bf4549ce59de2dedb",
+   "leanpath": "/tmp/bc-arc-scratch/item7/a/leanpath",
+   "leanpath_sha256": "fe146755bd6d790bb1b58d39711a03481bf30bd15aecf8479e4d96b091ccda29",
+   "command": [
+    "coord.sh",
+    "lean",
+    "claude",
+    "<label>",
+    "--",
+    "timeout",
+    "180",
+    "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+    "-j1",
+    "-M8000",
+    "--root=/tmp/beaconcrypt-deployment-boundary-a/beaconcrypt-core/proofs/lean",
+    "-o",
+    "/tmp/bc-arc-scratch/item7/a/olean/BeaconcryptCore/Computational/PqxdhBoundaryProgram.olean",
+    "/tmp/beaconcrypt-deployment-boundary-a/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryProgram.lean"
+   ]
+  },
+  "statement_scan_clean": {
+   "exit": 0,
+   "expected": 0,
+   "json": "/tmp/bc-arc-scratch/item7/a/scans/PqxdhBoundaryProgram-statement-clean.json",
+   "json_sha256": "fec27f89800977cd5becbe59a95b18dce65bb5ad77c6830e19e920528501210e",
+   "declarations": 19,
+   "hits": 0
+  },
+  "statement_scan_live": {
+   "exit": 1,
+   "expected": 1,
+   "json": "/tmp/bc-arc-scratch/item7/a/scans/PqxdhBoundaryProgram-statement-live.json",
+   "json_sha256": "f139c6984b992f6f3cf617b4681b8f2e1d44e4f0a725e93107ca843bed632022",
+   "hits": 8
+  },
+  "direct_scan_clean": {
+   "wrapper_exit": 0,
+   "expected_lean_exit": 0,
+   "fixture": "/tmp/bc-arc-scratch/item7/a/scans/PqxdhBoundaryProgram-scan-clean.lean",
+   "fixture_sha256": "37e5368a18c3cc0a2f9c78620a92b557ca48ca583faf81f64b552537ada909f1",
+   "log": "/tmp/bc-arc-scratch/item7/a/logs/dev/PqxdhBoundaryProgram-scan-clean-2.log",
+   "log_sha256": "a04696015b8e78fd74d37fa39181401c9b42fddaf563acc3058d56b6b91a1eb0",
+   "lean_exit": 0,
+   "declarations": "27",
+   "forbidden": "0",
+   "allowed_crypto": "0"
+  },
+  "direct_scan_live": {
+   "wrapper_exit": 0,
+   "expected_lean_exit": 1,
+   "fixture": "/tmp/bc-arc-scratch/item7/a/scans/PqxdhBoundaryProgram-scan-live.lean",
+   "fixture_sha256": "3449234c94c7567e234ec275a980d7d7d0f245169494e694861ccc535cdf328b",
+   "log": "/tmp/bc-arc-scratch/item7/a/logs/dev/PqxdhBoundaryProgram-scan-live-2.log",
+   "log_sha256": "9643454587158c71d42f6917e5dfe20594d7e03628462d48c995457ad29af67c",
+   "lean_exit": 1,
+   "declarations": "33",
+   "forbidden": "18",
+   "allowed_crypto": "0"
+  },
+  "scan_spec": {
+   "path": "/tmp/bc-arc-scratch/item7/a/scans/scan-spec.json",
+   "sha256": "6c72b02503316b7699becd206706e0fafde58bff9574b18955b4f10c9cf8be36",
+   "note": "Codex scan-spec 5b817691 plus pb_parts actual_extracted and evolving_actual_extracted (B9/B11 extracted forms); the one-name .crypto allowance applies only to the modules listed in functional_field_allowlist_modules (D-1)"
+  },
+  "scan_tools": {
+   "stmt_scan.py": "56e115aff38e3e5baa017e0ee34520ef2a26054493ad6fd91319517a03f29456",
+   "direct_scan.py": "36f43a112018e6dd5a05e416dfbc7a3f6cb7331591ec630a02529ce3a8a2eb6a",
+   "check.sh": "153c5750b0d3ee3c76adda15724fb95e8c61558e078fd1966ce038ca76d87cc8",
+   "dev.sh": "35740d6d32f4cc61f958d8908fb0686fc4abc383c118556b5024704a4a6a9460",
+   "final.sh": "d1763a0e943aae37c6034f81b015d10f4cc5f9d64f3f0aca7589a785c166eb01",
+   "guards.py": "d346a4518d510cc2e0d80fda4fc68076ec6a4cd498d566376ab8882cbd528eb4"
+  },
+  "branch_tip_checks": "root import, inv recount before inv rehash, focused check-inventory under a @nix lease and git diff --check are run at the branch tip and recorded in doc/impl/proof-receipts/production-boundary-increment-a.json",
+  "scope": "The statement scan reads types and binders of named declarations; the direct-reference scan reads the elaborated types and bodies of every constant in the module namespace. Neither is an import-graph audit."
+ },
+ "review": {
+  "status": "pending",
+  "plan": "decision D-6 of /tmp/bc-arc-scratch/item7/plan.md: a fresh-context Claude reviewer sub-agent with a written verdict",
+  "prior_evidence": {
+   "kind": "none",
+   "note": "Codex left module logs only; its last check (exit 0, 21:40:41Z) printed plain axiom lists"
+  }
+ },
+ "not_run": [
+  "make verify",
+  "full lake build",
+  "mutation testing",
+  "nix-collect-garbage",
+  "transcript-fidelity cargo tests (no inventory metadata they read changed)"
+ ],
+ "remaining": [
+  "independent fresh-context review (D-6)",
+  "concrete consumers I3 PqxdhBoundaryDeploymentStep / PqxdhBoundaryDeployment and I4 PqxdhBoundaryDeploymentLater",
+  "central integration"
+ ],
+ "deviations": [
+  "D-3 implemented as planned (ofResult with ofResult_ok and ofResult_normal), plus the single-computation forms outcome_ok and outcome_normal for per-command use in I3"
+ ]
+}

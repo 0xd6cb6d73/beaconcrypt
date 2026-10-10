@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1910
+	[handwritten-lean]=1911
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -39409,6 +39409,39 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBounda
 require_line_count 1 '^theorem deployment_complete([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRegistrationBuildNative theorem deployment_complete"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRegistrationBuildNative\.native_uniform$' "$selected_source_module" "PqxdhBoundaryRegistrationBuildNative dependency BeaconcryptCore.Computational.PqxdhBoundaryRegistrationBuildNative.native_uniform"
 require_line_count 1 '^theorem native_uniform([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRegistrationBuildNative theorem native_uniform"
+
+# Item 7 PB-D: generic adaptive source executor (Codex WIP, completed by Claude).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryProgram.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhBoundaryProgram$' proofs/lean/BeaconcryptCore.lean "PqxdhBoundaryProgram root import"
+require_line_count 13 '^theorem ' "$selected_source_module" "PqxdhBoundaryProgram theorem inventory"
+require_line_count 13 '^#guard_msgs in$' "$selected_source_module" "PqxdhBoundaryProgram guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryProgram\.execute_pure$' "$selected_source_module" "PqxdhBoundaryProgram dependency BeaconcryptCore.Computational.PqxdhBoundaryProgram.execute_pure"
+require_line_count 1 '^theorem execute_pure([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryProgram theorem execute_pure"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryProgram\.execute_query$' "$selected_source_module" "PqxdhBoundaryProgram dependency BeaconcryptCore.Computational.PqxdhBoundaryProgram.execute_query"
+require_line_count 1 '^theorem execute_query([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryProgram theorem execute_query"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryProgram\.execute_bind$' "$selected_source_module" "PqxdhBoundaryProgram dependency BeaconcryptCore.Computational.PqxdhBoundaryProgram.execute_bind"
+require_line_count 1 '^theorem execute_bind([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryProgram theorem execute_bind"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryProgram\.execute_fail$' "$selected_source_module" "PqxdhBoundaryProgram dependency BeaconcryptCore.Computational.PqxdhBoundaryProgram.execute_fail"
+require_line_count 1 '^theorem execute_fail([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryProgram theorem execute_fail"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryProgram\.execute_div$' "$selected_source_module" "PqxdhBoundaryProgram dependency BeaconcryptCore.Computational.PqxdhBoundaryProgram.execute_div"
+require_line_count 1 '^theorem execute_div([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryProgram theorem execute_div"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryProgram\.execute_congr$' "$selected_source_module" "PqxdhBoundaryProgram dependency BeaconcryptCore.Computational.PqxdhBoundaryProgram.execute_congr"
+require_line_count 1 '^theorem execute_congr([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryProgram theorem execute_congr"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryProgram\.execute_lift$' "$selected_source_module" "PqxdhBoundaryProgram dependency BeaconcryptCore.Computational.PqxdhBoundaryProgram.execute_lift"
+require_line_count 1 '^theorem execute_lift([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryProgram theorem execute_lift"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryProgram\.source_exact$' "$selected_source_module" "PqxdhBoundaryProgram dependency BeaconcryptCore.Computational.PqxdhBoundaryProgram.source_exact"
+require_line_count 1 '^theorem source_exact([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryProgram theorem source_exact"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryProgram\.source_continuation$' "$selected_source_module" "PqxdhBoundaryProgram dependency BeaconcryptCore.Computational.PqxdhBoundaryProgram.source_continuation"
+require_line_count 1 '^theorem source_continuation([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryProgram theorem source_continuation"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryProgram\.outcome_ok$' "$selected_source_module" "PqxdhBoundaryProgram dependency BeaconcryptCore.Computational.PqxdhBoundaryProgram.outcome_ok"
+require_line_count 1 '^theorem outcome_ok([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryProgram theorem outcome_ok"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryProgram\.outcome_normal$' "$selected_source_module" "PqxdhBoundaryProgram dependency BeaconcryptCore.Computational.PqxdhBoundaryProgram.outcome_normal"
+require_line_count 1 '^theorem outcome_normal([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryProgram theorem outcome_normal"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryProgram\.ofResult_ok$' "$selected_source_module" "PqxdhBoundaryProgram dependency BeaconcryptCore.Computational.PqxdhBoundaryProgram.ofResult_ok"
+require_line_count 1 '^theorem ofResult_ok([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryProgram theorem ofResult_ok"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryProgram\.ofResult_normal$' "$selected_source_module" "PqxdhBoundaryProgram dependency BeaconcryptCore.Computational.PqxdhBoundaryProgram.ofResult_normal"
+require_line_count 1 '^theorem ofResult_normal([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryProgram theorem ofResult_normal"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
