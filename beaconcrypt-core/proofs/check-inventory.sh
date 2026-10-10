@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1909
+	[handwritten-lean]=1910
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -39386,6 +39386,29 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBounda
 require_line_count 1 '^theorem seal_complete([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRegistrationBuild theorem seal_complete"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRegistrationBuild\.after_initialization_failure$' "$selected_source_module" "PqxdhBoundaryRegistrationBuild dependency BeaconcryptCore.Computational.PqxdhBoundaryRegistrationBuild.after_initialization_failure"
 require_line_count 1 '^theorem after_initialization_failure([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRegistrationBuild theorem after_initialization_failure"
+
+# Item 7 PB-05: native Server build and pending-token settlement (Codex WIP, adopted by Claude).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryRegistrationBuildNative.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhBoundaryRegistrationBuildNative$' proofs/lean/BeaconcryptCore.lean "PqxdhBoundaryRegistrationBuildNative root import"
+require_line_count 8 '^theorem ' "$selected_source_module" "PqxdhBoundaryRegistrationBuildNative theorem inventory"
+require_line_count 8 '^#guard_msgs in$' "$selected_source_module" "PqxdhBoundaryRegistrationBuildNative guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRegistrationBuildNative\.native_exact$' "$selected_source_module" "PqxdhBoundaryRegistrationBuildNative dependency BeaconcryptCore.Computational.PqxdhBoundaryRegistrationBuildNative.native_exact"
+require_line_count 1 '^theorem native_exact([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRegistrationBuildNative theorem native_exact"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRegistrationBuildNative\.native_present$' "$selected_source_module" "PqxdhBoundaryRegistrationBuildNative dependency BeaconcryptCore.Computational.PqxdhBoundaryRegistrationBuildNative.native_present"
+require_line_count 1 '^theorem native_present([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRegistrationBuildNative theorem native_present"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRegistrationBuildNative\.native_missing$' "$selected_source_module" "PqxdhBoundaryRegistrationBuildNative dependency BeaconcryptCore.Computational.PqxdhBoundaryRegistrationBuildNative.native_missing"
+require_line_count 1 '^theorem native_missing([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRegistrationBuildNative theorem native_missing"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRegistrationBuildNative\.token_consumed$' "$selected_source_module" "PqxdhBoundaryRegistrationBuildNative dependency BeaconcryptCore.Computational.PqxdhBoundaryRegistrationBuildNative.token_consumed"
+require_line_count 1 '^theorem token_consumed([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRegistrationBuildNative theorem token_consumed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRegistrationBuildNative\.scheduler_build$' "$selected_source_module" "PqxdhBoundaryRegistrationBuildNative dependency BeaconcryptCore.Computational.PqxdhBoundaryRegistrationBuildNative.scheduler_build"
+require_line_count 1 '^theorem scheduler_build([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRegistrationBuildNative theorem scheduler_build"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRegistrationBuildNative\.deployment_build$' "$selected_source_module" "PqxdhBoundaryRegistrationBuildNative dependency BeaconcryptCore.Computational.PqxdhBoundaryRegistrationBuildNative.deployment_build"
+require_line_count 1 '^theorem deployment_build([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRegistrationBuildNative theorem deployment_build"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRegistrationBuildNative\.deployment_complete$' "$selected_source_module" "PqxdhBoundaryRegistrationBuildNative dependency BeaconcryptCore.Computational.PqxdhBoundaryRegistrationBuildNative.deployment_complete"
+require_line_count 1 '^theorem deployment_complete([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRegistrationBuildNative theorem deployment_complete"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRegistrationBuildNative\.native_uniform$' "$selected_source_module" "PqxdhBoundaryRegistrationBuildNative dependency BeaconcryptCore.Computational.PqxdhBoundaryRegistrationBuildNative.native_uniform"
+require_line_count 1 '^theorem native_uniform([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRegistrationBuildNative theorem native_uniform"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
