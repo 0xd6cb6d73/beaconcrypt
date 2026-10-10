@@ -1,14 +1,14 @@
 {
  "stage": "PB-D per-command source step (item 7 increment I3, module 1 of 2)",
  "topic": "codex/deployment-boundary-classical",
- "parent_commit": "c27b45336b6c04087239d9b797fcf6f1aba1c85e",
+ "parent_commit": "77cd687c697cc19c51236b5cdebc3c1637e5f1b8",
  "central_basis": "c27b45336b6c04087239d9b797fcf6f1aba1c85e",
- "state": "checked at central c27b4533 on the topic branch; independent review (D-6) pending; not integrated",
+ "state": "checked at central c27b4533 on the topic branch; D-6 semantic and hygiene reviews of 77cd687c approved with nits; review fix pass applied; confirming review pending; not integrated",
  "module": "PqxdhBoundaryDeploymentStep",
  "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryDeploymentStep.lean",
- "source_sha256": "581383fce4c967ae5b6ddb25f2fd6be07c9f2aafdc32f761810bcd4e19251f1f",
+ "source_sha256": "847b391867a7aebb0331cc70bfc3628eb08952e69c22f93b328dd5cdcc7f34ea",
  "guide": "doc/impl/production-boundary-deployment-step.md",
- "guide_sha256": "e2a06be14147b59f2f51779adc93f35a222b99071fb625c502982dfa8779274c",
+ "guide_sha256": "eab2b1dd9d7d3fad0ed316dd6f0dd077b6622e3c944afb941fee75a5bb1df18f",
  "guarded_statements": 15,
  "theorems": [
   "step_create",
@@ -37,7 +37,7 @@
   "Classical.choice",
   "Quot.sound"
  ],
- "provenance": "new module written by Claude in item 7 increment I3; no Codex WIP exists for it (the lane plan /tmp/bc-arc-scratch/item7/plan.md section 3 fixes its statement list). It cites the published boundary equalities of PB-01..PB-09 and the D-3 adapter of PqxdhBoundaryProgram (adapted from Codex WIP in increment A).",
+ "provenance": "new module written by Claude in item 7 increment I3; no Codex WIP exists for it (the lane plan /tmp/bc-arc-scratch/item7/plan.md section 3 fixes its statement list). It cites the published boundary equalities of PB-01..PB-09 and the D-3 adapter of PqxdhBoundaryProgram (adapted from Codex WIP 185bfab26f38c518b4d544c98fc2625181e2e129e5a527ce39bb85eba2fabb59 in increment A; published receipt doc/impl/proof-receipts/production-boundary-program.json).",
  "authorship": "Claude (lane adopted from Codex on the owner's instruction of 2026-10-10, decision-2026-10-10.txt, message #503)",
  "statements": {
   "step_create": "PB-01: sourceStep on create pin keyId equals liftStep of the CE native handler at codec' and route' (PqxdhBoundaryBirth.create_source), every state",
@@ -56,24 +56,26 @@
   "phase1_withReader": "D-2: Phase1ReadBack (withReader codec reader) <-> Phase1ReadBack codec (Iff.rfl)",
   "phase2_withReader": "D-2: Phase2ReadBack (withReader codec reader) <-> Phase2ReadBack codec (Iff.rfl)"
  },
+ "scope_deviations": "the commands of sourceStep are CE's approved interface under its deviations D1-D5 (classification E; survey deviation table; PB-E ledger): create is Beacon::try_new after D1 (no second ensure_init; KeyGenError paths not modeled), the build payload is adversary-chosen (D4; no literal build-payload network oracle claimed), D2, D3, D5 bound the surface",
+ "codec_route_generality": "create_source, native_bundle/owner_core, deployment_accept, deployment_build, handler_serverSend and handler_beaconSend hold for every codec and route (instantiated at codec' and route'); handler_serverRaw and handler_beaconRaw are stated at codec' = withReader codec reader and route' = RawCtxFrameDecoding.sender reader.model; native_finish_exact is stated at codec' for every route (instantiated at route')",
  "checks": {
   "leanpath": {
    "path": "/tmp/bc-arc-scratch/item7/i3/leanpath",
    "sha256": "5a830d1af9d491cc1da2ac00da705fcbf8bd28e0eb02c752bb470a00f19f964d",
-   "note": "item7/i3/olean (registered prefix: resolved-symlink mirror of the first prefix item7/a/int/olean of the published central c27b4533 LEAN_PATH, BeaconcryptCore only, root artifacts skipped, 6378 links, 0 broken; plus the I3 module oleans) followed by the published c27b4533 LEAN_PATH"
+   "note": "item7/i3/olean (registered prefix: resolved-symlink mirror of the first prefix item7/a/int/olean of the published central c27b4533 LEAN_PATH, BeaconcryptCore only, root artifacts skipped, 6378 links, 0 broken; plus the I3 module oleans, rewritten by the fix-pass module checks) followed by the published c27b4533 LEAN_PATH"
   },
   "module": {
    "module": "BeaconcryptCore.Computational.PqxdhBoundaryDeploymentStep",
-   "start": "2026-10-10T09:39:10.454152845Z",
-   "end": "2026-10-10T09:39:14.555728526Z",
+   "start": "2026-10-10T10:09:50.956918213Z",
+   "end": "2026-10-10T10:09:55.071152172Z",
    "exit": 0,
-   "head": "c27b45336b6c04087239d9b797fcf6f1aba1c85e",
-   "dirty_paths": 6,
-   "source_sha256": "581383fce4c967ae5b6ddb25f2fd6be07c9f2aafdc32f761810bcd4e19251f1f",
+   "head": "77cd687c697cc19c51236b5cdebc3c1637e5f1b8",
+   "dirty_paths": 2,
+   "source_sha256": "847b391867a7aebb0331cc70bfc3628eb08952e69c22f93b328dd5cdcc7f34ea",
    "log_bytes": 0,
    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "artifact": "/tmp/bc-arc-scratch/item7/i3/olean/BeaconcryptCore/Computational/PqxdhBoundaryDeploymentStep.olean",
-   "artifact_sha256": "2b578a068ba2d51af6fb96c2f97ffbc8a9830ac62b0fc9176146fdc0144d5c39",
+   "artifact_sha256": "c0534180428b743bd94eb436ce22dd4a254c52316c60bab53c0cdd7eb85125db",
    "leanpath": "/tmp/bc-arc-scratch/item7/i3/leanpath",
    "leanpath_sha256": "5a830d1af9d491cc1da2ac00da705fcbf8bd28e0eb02c752bb470a00f19f964d",
    "command": [
@@ -91,21 +93,22 @@
     "-o",
     "/tmp/bc-arc-scratch/item7/i3/olean/BeaconcryptCore/Computational/PqxdhBoundaryDeploymentStep.olean",
     "/tmp/beaconcrypt-deployment-boundary-classical/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryDeploymentStep.lean"
-   ]
+   ],
+   "json": "/tmp/bc-arc-scratch/item7/i3/fix1/logs/PqxdhBoundaryDeploymentStep-1.json"
   },
   "statement_scan_clean": {
    "exit": 0,
    "expected": 0,
-   "json": "/tmp/bc-arc-scratch/item7/i3/scans/PqxdhBoundaryDeploymentStep-statement-clean.json",
-   "json_sha256": "d9de2fff754ccecfa4ab3c1e2773f799a11d23d60e85594e65c31b042f779dee",
+   "json": "/tmp/bc-arc-scratch/item7/i3/fix1/scans/PqxdhBoundaryDeploymentStep-statement-clean.json",
+   "json_sha256": "89bc832233e4d1dc4a45cc1192bc027452c783dc488572a99e01c45ea10c0fb3",
    "declarations": 18,
    "hits": 0
   },
   "statement_scan_live": {
    "exit": 1,
    "expected": 1,
-   "json": "/tmp/bc-arc-scratch/item7/i3/scans/PqxdhBoundaryDeploymentStep-statement-live.json",
-   "json_sha256": "3c9f3769a09d746ce677ea64115f3a4cfe5b144249aabba8ae69489f52c364fc",
+   "json": "/tmp/bc-arc-scratch/item7/i3/fix1/scans/PqxdhBoundaryDeploymentStep-statement-live.json",
+   "json_sha256": "325c531233a6280009f4069edea22ca7a60ee5b697214639784b8ac5d1270540",
    "hits": 25,
    "live_classes": 11,
    "dead_classes": [],
@@ -123,10 +126,10 @@
   "direct_scan_clean": {
    "wrapper_exit": 0,
    "expected_lean_exit": 0,
-   "fixture": "/tmp/bc-arc-scratch/item7/i3/scans/PqxdhBoundaryDeploymentStep-scan-clean-v4.lean",
-   "fixture_sha256": "0c22be01ec8a1ee083bcae648fd2d381433287b278821ad7a5d5549cf47d0306",
-   "log": "/tmp/bc-arc-scratch/item7/i3/logs/dev/PqxdhBoundaryDeploymentStep-scan-clean-v4-2.log",
-   "log_sha256": "4bfc9cdfd1c513790bc303b774f13f444e38018fe798c636f69b0960385e0e44",
+   "fixture": "/tmp/bc-arc-scratch/item7/i3/fix1/scans/PqxdhBoundaryDeploymentStep-scan-clean-v5.lean",
+   "fixture_sha256": "9d6a7741e658401203d40e8b274e24a36fcc3244d705b7ca3c33efb2d37ed43b",
+   "log": "/tmp/bc-arc-scratch/item7/i3/fix1/logs/dev/PqxdhBoundaryDeploymentStep-scan-clean-v5-2.log",
+   "log_sha256": "4b5de7ec7c9019201444b6b88ddacbb872b8427184786eb1260d298ce174d7ee",
    "lean_exit": 0,
    "module_declarations": 47,
    "outside_module_namespace": 13,
@@ -139,15 +142,23 @@
    "witness_targets_missed": null,
    "negative_control_hits": null,
    "total_forbidden": null,
+   "site_gate": {
+    "table_bad": 0,
+    "sites": 0,
+    "declarations": 0,
+    "outside": 0,
+    "blind": 0
+   },
+   "site_controls": null,
    "allowance_control": null
   },
   "direct_scan_live": {
    "wrapper_exit": 0,
    "expected_lean_exit": 1,
-   "fixture": "/tmp/bc-arc-scratch/item7/i3/scans/PqxdhBoundaryDeploymentStep-scan-live-v4.lean",
-   "fixture_sha256": "e66cdd5cb94823a7889bcb6231c2788d30d7f517f540e5da8a0270e3e6b387fb",
-   "log": "/tmp/bc-arc-scratch/item7/i3/logs/dev/PqxdhBoundaryDeploymentStep-scan-live-v4-2.log",
-   "log_sha256": "8329cbd07640c4efcae6235403d72f65342886e1ac0f1377daa564f9bb5eb433",
+   "fixture": "/tmp/bc-arc-scratch/item7/i3/fix1/scans/PqxdhBoundaryDeploymentStep-scan-live-v5.lean",
+   "fixture_sha256": "2a91c02fd23c84d5a06d0e2a6c0b6f2ea70ab73c9b0fd622f5f9e80f797ec6d1",
+   "log": "/tmp/bc-arc-scratch/item7/i3/fix1/logs/dev/PqxdhBoundaryDeploymentStep-scan-live-v5-2.log",
+   "log_sha256": "3f5b4fef650ef5aec05b6b8f62a73066436a7da63880935f138e3cd0ddff085a",
    "lean_exit": 1,
    "module_declarations": 47,
    "outside_module_namespace": 13,
@@ -160,6 +171,21 @@
    "witness_targets_missed": 0,
    "negative_control_hits": 0,
    "total_forbidden": 54,
+   "site_gate": {
+    "table_bad": 0,
+    "sites": 0,
+    "declarations": 0,
+    "outside": 0,
+    "blind": 0
+   },
+   "site_controls": {
+    "expect_wrap_passes": false,
+    "expect_initial_passes": false,
+    "wrap": true,
+    "initial": true,
+    "bare": true,
+    "projection": true
+   },
    "allowance_control": {
     "allowance_applies": false,
     "sibling_target_pb_namespace": true,
@@ -169,42 +195,194 @@
    }
   },
   "scan_spec": {
-   "path": "/tmp/bc-arc-scratch/item7/i3/scans/scan-spec-v4.json",
-   "sha256": "8b7aa722c6cf806c0f264554ac16c614035f84335419e3693678b53db1397d29",
-   "version": 4,
-   "note": "version 4 = version 3 of increment A (item7/a/nits/scans/scan-spec.json, sha256 f9a9e443ce062af9c49a84166969ac02b77a5cca2c3729a64e4a59e273c458d6, copied unchanged to item7/i3/scans/scan-spec-v3.json) plus the D-1(b) allowance module PqxdhBoundaryDeployment (field d1b_extension); the allowlist itself stays the one projection name",
-   "d1b_extension": "Lane plan decision D-1(b): the one-name allowance of the projection BeaconcryptCore.Computational.PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource.crypto is extended by module name to PqxdhBoundaryDeployment (item 7 increment I3, PB-D classical join) only. Condition met: the direct-reference scan under version 3 finds the projection in that module (sourceGame, sourceGame.eq_1, classical: item7/i3/logs/dev/PqxdhBoundaryDeployment-scan-clean-v3-1.log) and the site probe item7/i3/probe/CryptoSites.lean (item7/i3/logs/dev/CryptoSites-4.log) shows that all 64 occurrences (62 in classical, 1 each in sourceGame and sourceGame.eq_1) are the first explicit argument (position 3) of PqxdhDeploymentSecrecy.wrap applied to setup.source, that is CE passing setup.source.crypto to its own ledger/test/fresh wrapper; PqxdhBoundaryDeploymentStep has none. No use on the root input; the root 192-byte zero-salt Extract stays the request to the shared interpreter at CE Extract-ROM point (the hmac command of the source step is CE native public HMAC oracle, unchanged; no Correct premise)."
+   "path": "/tmp/bc-arc-scratch/item7/i3/fix1/scans/scan-spec-v5.json",
+   "sha256": "d2ae3887c9039baa6bc45d0e7fdbc649e455e82434461ccb7592ad648361d87a",
+   "version": 5,
+   "note": "version 5 = version 4 (item7/i3/scans/scan-spec-v4.json, sha256 8b7aa722c6cf806c0f264554ac16c614035f84335419e3693678b53db1397d29) plus the per-module site table functional_field_allowlist_sites enforced by the direct scan (site_gate field) and the corrected d1b_extension: version 4 cited the runs PqxdhBoundaryDeployment-scan-clean-v3-1.log and CryptoSites-4.log of an earlier 23-declaration build of PqxdhBoundaryDeployment, with the same results (three hits; 64 sites, 62/1/1, all wrap argument 3) as the final first-pass runs v3-3 and CryptoSites-6 cited by version 5 and by this receipt. Rule classes, allowlist (one projection name) and allowance modules unchanged.",
+   "functional_field_allowlist_sites": {
+    "PqxdhBoundaryRegistrationBuild": [
+     {
+      "head": "BeaconcryptCore.Computational.PqxdhRootTableInitialization.initialResponse",
+      "position": 0,
+      "argument_head": "BeaconcryptCore.Computational.PqxdhServerAuthExperiment.Setup.source",
+      "decision": "D-1(a): W1 line 104, PqxdhRootTableInitialization.initialResponse setup.source.crypto, the real 64-byte initializer Expand"
+     }
+    ],
+    "PqxdhBoundaryDeployment": [
+     {
+      "head": "BeaconcryptCore.Computational.PqxdhDeploymentSecrecy.wrap",
+      "position": 3,
+      "argument_head": "BeaconcryptCore.Computational.PqxdhServerAuthExperiment.Setup.source",
+      "decision": "D-1(b): CE passing setup.source.crypto to its own ledger/test/fresh wrapper (wrap has the implicit Reader, Response, X before crypto)"
+     },
+     {
+      "head": "BeaconcryptCore.Computational.PqxdhDeploymentSecrecy.ledgerImpl",
+      "position": 2,
+      "argument_head": "BeaconcryptCore.Computational.PqxdhServerAuthExperiment.Setup.source",
+      "decision": "D-1(b): the same parameter of ledgerImpl, which wrap simulates (implicit Reader, Response before crypto); listed by D-1(b), not used today"
+     }
+    ]
+   },
+   "site_gate": "The direct-reference scan walks the elaborated type and value (theorem bodies included, value? with allowOpaque) of every constant whose declaring module is the scanned module and records every occurrence of the projection FixedHkdfSha512NoSaltSource.crypto as (enclosing application head, argument position, head constant of the projected argument), metadata looked through; an occurrence outside an argument position is recorded with its position kind (lambda_body, let_value, declaration_value, ...) and an unapplied one as bare; every primitive projection node Expr.proj over the structure FixedHkdfSha512NoSaltSource is recorded with head primitive_projection. The scan fails (crypto site outside the allowed sites) unless every recorded site of the module is an entry (head, position, argument_head) of functional_field_allowlist_sites for that module (none for modules outside functional_field_allowlist_modules), and fails (site walker blind) when a declaration has an excused .crypto reference by getUsedConstants but no recorded site. Every table entry is checked against the head's type: the binder at that position must have type Pqxdh.Crypto. So the one-name allowance excuses the projection only at the listed sites of the listed modules, and a later edit that adds any other use fails the scan.",
+   "d1b_extension": "Lane plan decision D-1(b): the one-name allowance of the projection BeaconcryptCore.Computational.PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource.crypto is extended to PqxdhBoundaryDeployment (item 7 increment I3, PB-D classical join) only, and from version 5 only at the sites of functional_field_allowlist_sites (PqxdhDeploymentSecrecy.wrap argument 3, PqxdhDeploymentSecrecy.ledgerImpl argument 2, projected argument Setup.source), enforced by the site gate on every scan run. Need: under version 3 (no allowance for this module) the direct-reference scan of the final I3 source (77cd687c, 24 declarations) fails with exactly three hits, all the projection, in sourceGame, sourceGame.eq_1 and classical (item7/i3/logs/dev/PqxdhBoundaryDeployment-scan-clean-v3-3.log, sha256 987f7676...), and the site probe item7/i3/probe/CryptoSites.lean (item7/i3/logs/dev/CryptoSites-6.log, sha256 493a2a05...) shows that all 64 occurrences (62 in classical, 1 each in sourceGame and sourceGame.eq_1) are argument 3 of PqxdhDeploymentSecrecy.wrap applied to setup.source; PqxdhBoundaryDeploymentStep has none. Version 4's text cited the runs PqxdhBoundaryDeployment-scan-clean-v3-1.log and CryptoSites-4.log, which were made on an earlier 23-declaration build of the module; the results (three hits; 64 sites, 62/1/1, all wrap argument 3) are the same as in the final runs cited here and in the fix-pass probe item7/i3/fix1/probe/CryptoSitesArg.lean (item7/i3/fix1/logs/dev/CryptoSitesArg-1.log). No use on the root input; the root 192-byte zero-salt Extract stays the request to the shared interpreter at the CE Extract-ROM point (the hmac command of the source step is the CE native public HMAC oracle, unchanged; no Correct premise)."
   },
   "scan_tools": {
-   "check.sh (item7/i3/scripts)": "8f3407295a0b11fc50278b69c2789bdcbcb8e944b36f6890179ba59e5ef0bc2a",
-   "dev.sh (item7/i3/scripts)": "aa5883d4c36953f8aec6f15c2db3511dd3681811fc9fd1db5effa3543decb354",
-   "direct_scan.py (item7/i3/scripts)": "026a05441b640c5f60b42ddaa8ec31c96b4a3e77c77108d1ceffba28bd0c2264",
-   "guards.py (item7/i3/scripts)": "a40ee2a10b0602ad87e987ccda0a932ec392e82079c2e57a1046e56caf08eeb7",
-   "invblock.py (item7/i3/scripts)": "b25f6f0b596923ccbcfe81e8345a5017715aa7714f1db0cd0b1276e5a0f33dbb",
-   "make_spec.py (item7/i3/scripts)": "caf4f06a1bb0de74a40a8b4aa71fc4e19c389af7ff2bfff22155887cfe4eba22",
-   "mirror.py (item7/i3/scripts)": "8e2e0dcb59efeddbac4da89b2541b4143f6455edc5e99e6506e9c6ca65a94d82",
-   "receipt.py (item7/i3/scripts)": "09738d5f8439aa380ba5ee3b3f2c6c82e069a61d0590ce615bf41136a0e6b757",
-   "scans.sh (item7/i3/scripts)": "36a1b4c750216f33e4a454375e473115c6831352e9d9bb08b6579f51775e9c9a",
-   "stmt_scan.py (item7/i3/scripts)": "7ba92512730d04f206500f0998dc66e48eb842c877975137f665d6d8fd0d3ac4",
-   "CryptoSites.lean (item7/i3/probe)": "dc4d4ca805be9e7178319d8193df32193fe447fdcbe97882ead081ee93394e6b"
+   "check.sh (item7/i3/fix1/scripts)": "29a79b68d63a23d6ae40e3aaa41ac81eaa1444ccf3ff3273b2f235908f37e582",
+   "dev.sh (item7/i3/fix1/scripts)": "e64f34821acf2940a744ada178764109787f415e3edd82c5509e3529a7b26f13",
+   "direct_scan.py (item7/i3/fix1/scripts)": "a3be61055bc33df467a36e6efef7d1bbf63ace5aeb90018694a9e6f12397bf9e",
+   "make_spec_v5.py (item7/i3/fix1/scripts)": "35da9b545bc79fca10f5e0ad82ac4f054d89019ae03dd4d3744536ae11ee4ddf",
+   "receipt.py (item7/i3/fix1/scripts)": "5b41a22501f623a8f0af6e482c89198c2bf5cd6ce920e856f6b6b6513ca6de09",
+   "scans.sh (item7/i3/fix1/scripts)": "c736cf30c6f5418c2ccf65b3dff975a0409ac4f7f25efdd1f30fba66fb7488cc",
+   "stmt_scan.py (item7/i3/fix1/scripts)": "a63600fd5240c897c1f3b16ec6217f585669520227444343417352b90dc30085",
+   "CryptoSitesAll.lean (item7/i3/fix1/probe)": "baf8eb08352f2b05ee71538496cea6f60cf0ac30ca1d2bf0d14bae77bb71d476",
+   "CryptoSitesArg.lean (item7/i3/fix1/probe)": "db09d734c2d7e36dfb71cea2775920fbded291b6d14ecfaedf8b800e4a773547",
+   "GateMutation.lean (item7/i3/fix1/probe)": "c5e1099a107ebe1a059337a1d4a84b1e45d982e3df15370423d45ba390cf0f22",
+   "SiteControls.lean (item7/i3/fix1/probe)": "064b0253b04cc9eefd9ca01cae25c710b8b6c48a796691df52e786537786f9cc",
+   "CryptoSites.lean (item7/i3/probe, first pass)": "dc4d4ca805be9e7178319d8193df32193fe447fdcbe97882ead081ee93394e6b"
   },
   "scan_inputs": {
    "source_equals_module_check": true,
    "module_olean": "/tmp/bc-arc-scratch/item7/i3/olean/BeaconcryptCore/Computational/PqxdhBoundaryDeploymentStep.olean",
-   "module_olean_sha256": "2b578a068ba2d51af6fb96c2f97ffbc8a9830ac62b0fc9176146fdc0144d5c39",
+   "module_olean_sha256": "c0534180428b743bd94eb436ce22dd4a254c52316c60bab53c0cdd7eb85125db",
    "olean_equals_module_check": true,
    "results": {
-    "path": "/tmp/bc-arc-scratch/item7/i3/logs/scans.jsonl",
-    "sha256": "1404e4677b8f4798925650d7375452fe09a40a1d7a441efb5d24c55f220b5eaa"
+    "path": "/tmp/bc-arc-scratch/item7/i3/fix1/logs/scans.jsonl",
+    "sha256": "cfb7e21618c4808f992d8878ef44cd4b5b87a89a773b74764a0eaed5abd1ab4d"
    }
   },
-  "scope": "The statement scan reads the types and binders of named declarations in the source text. The direct-reference scan reads the elaborated types and bodies (theorem bodies included) of every constant whose declaring module is this module. Neither is an import-graph audit.",
+  "scope": "The statement scan reads the types and binders of named declarations in the source text. The direct-reference scan reads the elaborated types and bodies (theorem bodies included) of every constant whose declaring module is this module, and its site gate walks the same expressions for .crypto sites and primitive projections over FixedHkdfSha512NoSaltSource. Neither is an import-graph audit.",
   "branch_tip_checks": "root import, inv recount before inv rehash, focused check-inventory under a @nix lease and git diff --check at the branch tip are recorded in doc/impl/proof-receipts/production-boundary-increment-i3.json"
  },
  "review": {
-  "status": "pending: decision D-6 (fresh-context Claude reviewer sub-agent with a written verdict) has not run for this module",
+  "status": "D-6 fresh-context semantic and hygiene reviews of c27b4533..77cd687c: both APPROVE_WITH_NITS; every finding is addressed in the review fix pass (none owner-level); confirming review pending",
+  "verdicts": {
+   "semantic": {
+    "path": "/tmp/bc-arc-scratch/item7/i3/review-semantic/verdict.json",
+    "sha256": "3b80c594b76821e1853941d3704c20c0d5c2fbc9fe3952717aa47e23f5bf7feb",
+    "verdict": "APPROVE_WITH_NITS"
+   },
+   "hygiene": {
+    "path": "/tmp/bc-arc-scratch/item7/i3/review-hygiene/verdict.json",
+    "sha256": "0469bbd88fa1c4d60cc71e904557cdaeb427a7ff32ae5d930457d8f39769435d",
+    "verdict": "APPROVE_WITH_NITS"
+   }
+  },
+  "findings_record": {
+   "path": "/tmp/bc-arc-scratch/item7/i3/fix1/docs/review-findings.json",
+   "sha256": "cead674bb00ddc68f39502c63f5a8aea4624cc68364a76c706ddc581e93a5721"
+  },
+  "findings": [
+   {
+    "n": 1,
+    "source": "semantic #1",
+    "severity": "minor",
+    "title": "The PB-D docs say the game 'runs the source programs' without restating the approved CE deviations D1-D5",
+    "change": "Added the scope sentence (commands are CE's approved interface under its deviations D1-D5, classification E, survey deviation table, to be collected in the PB-E ledger; create is Beacon::try_new after D1 with no second ensure_init and generation failures not modeled; D4 adversary-chosen build payload with no literal build-payload network oracle claimed; D2, D3, D5 bound the surface) to: the Step module docstring, the Deployment module docstring (pointer), the 'What stays outside' paragraphs of both guides, the Step guide's create row, and both analysis paragraphs."
+   },
+   {
+    "n": 2,
+    "source": "semantic #2",
+    "severity": "minor",
+    "title": "A Step guide parenthetical misstates which published equalities hold for any codec and route",
+    "change": "Reworded after re-reading the published signatures: create_source, native_bundle/owner_core, deployment_accept, deployment_build and handler_serverSend/handler_beaconSend hold for every codec and route and are instantiated at codec'/route'; handler_serverRaw/handler_beaconRaw are stated at codec'/route'; native_finish_exact is stated at codec' for every route. The 'Production instance' paragraph and the Step module docstring now say the same (raw-receive equalities fix reader and route, the finish equality fixes the reader)."
+   },
+   {
+    "n": 3,
+    "source": "semantic #3",
+    "severity": "minor",
+    "title": "The D-1(b) .crypto allowance covers the whole module, but the wrap-only condition is checked only by a one-off probe",
+    "change": "Scan spec version 5 (fix1/scans/scan-spec-v5.json) adds functional_field_allowlist_sites: per allowance module a table of allowed sites (head, argument position, projected-argument head): PqxdhBoundaryDeployment wrap/3 and ledgerImpl/2 on Setup.source, PqxdhBoundaryRegistrationBuild initialResponse/0 on Setup.source. The direct scan v5 walks every module constant (types and values, theorem bodies included) and fails on any .crypto site or primitive projection over FixedHkdfSha512NoSaltSource outside the table, on an excused reference without a recorded site, and on a table entry whose binder is not Pqxdh.Crypto; live controls (allowed-site shapes per module, bare projection, primitive projection) are two-sided. So the gate is in place before I4 extends the allowance to PqxdhBoundaryDeploymentLater (that extension will need its own table entry)."
+   },
+   {
+    "n": 4,
+    "source": "semantic #4",
+    "severity": "nit",
+    "title": "scan-spec-v4 d1b_extension cites intermediate logs from an earlier version of the module",
+    "change": "Spec v5's d1b_extension cites the final runs PqxdhBoundaryDeployment-scan-clean-v3-3.log and CryptoSites-6.log and states that v4's text named the runs v3-1 and CryptoSites-4 of an earlier 23-declaration build with identical results; the receipts' scan_spec note says the same."
+   },
+   {
+    "n": 5,
+    "source": "semantic #5",
+    "severity": "nit",
+    "title": "The Deployment guide gives 12 statement-scan declarations; the scan and receipt give 13",
+    "change": "Corrected; with classical_evalDist (finding 10) the count is now 14, and the guide says 14 (13 before the fix pass; 12 was wrong)."
+   },
+   {
+    "n": 6,
+    "source": "semantic #6",
+    "severity": "nit",
+    "title": "Two analysis phrases read as claims about the Rust code rather than about the source model",
+    "change": "Step analysis paragraph: 'the source's complete-frame decoder over the abstract message reader' and 'settled for the source model: in the source model, every outcome is a normal return (a fact about the extracted local steps and the reviewed adapter transcriptions, not a panic-freedom result for the Rust code)'; the Deployment paragraph says 'none occurs in the source model'; the Deployment guide qualifies classical_normal the same way."
+   },
+   {
+    "n": 7,
+    "source": "hygiene #1",
+    "severity": "minor",
+    "title": "The D-1(b) .crypto allowance is enforced by module name only; the wrap-argument condition is checked only by a one-off probe",
+    "change": "Same fix as finding 3: the direct scan enforces the site condition on every run (total .crypto sites must all be table sites; 64 of 64 at wrap argument 3 on the current source), and a mutation run with the wrap entry removed fails on all 64 sites (fix1/probe/GateMutation.lean)."
+   },
+   {
+    "n": 8,
+    "source": "hygiene #2",
+    "severity": "nit",
+    "title": "The Deployment guide gives 12 statement-scan declarations; the scan and the receipt give 13",
+    "change": "Same fix as finding 5; guide_sha256 refreshed in both module receipts and the increment receipt (regenerated)."
+   },
+   {
+    "n": 9,
+    "source": "hygiene #3",
+    "severity": "nit",
+    "title": "Scan spec v4's d1b_extension cites logs from an earlier build of the module",
+    "change": "Same fix as finding 4 (spec v5 with the final log names and a note on v4)."
+   },
+   {
+    "n": 10,
+    "source": "hygiene #4",
+    "severity": "nit",
+    "title": "classical_probEvent relies on the deprecated probability API",
+    "change": "Added theorem classical_evalDist (no premises beyond [MeasurableSpace Z]): 𝒟[(fun outcome => observe (unwrap outcome)) <$> source] = 𝒟[observe <$> game] for every observation into a measurable space; with Z = Bool and {true} it is the event form of the CE-12 headlines. classical_probEvent is kept unchanged."
+   },
+   {
+    "n": 11,
+    "source": "hygiene #5",
+    "severity": "nit",
+    "title": "Informational: the I3 import closure and transitive reach touch PqxdhHeadlineBridges through the published PB-03 module",
+    "change": "No change to I3 statements; recorded for the PB-E ledger (I5) in plan.md section 4, in both module receipts (known_for_ledger) and the increment receipt, and mentioned in both guides' review paragraphs."
+   },
+   {
+    "n": 12,
+    "source": "hygiene #6",
+    "severity": "nit",
+    "title": "The guides name a /tmp scratch path in their Record sections",
+    "change": "Replaced by 'a registered scratch olean prefix ... see the receipt' in both guides."
+   },
+   {
+    "n": 13,
+    "source": "hygiene #7",
+    "severity": "nit",
+    "title": "Provenance for PqxdhBoundaryProgram lacks its sha256",
+    "change": "Both module receipts' provenance now cite 'adapted from Codex WIP 185bfab26f38c518b4d544c98fc2625181e2e129e5a527ce39bb85eba2fabb59' and the published receipt doc/impl/proof-receipts/production-boundary-program.json; commits stay unamended."
+   }
+  ],
+  "statement_changes": {
+   "changed": [],
+   "removed": [],
+   "added": [
+    "PqxdhBoundaryDeployment.classical_evalDist"
+   ],
+   "note": "no existing statement was changed, weakened or deleted; the only Lean changes are two module docstrings and the added theorem with its exact guard"
+  },
   "plan": "/tmp/bc-arc-scratch/item7/plan.md section 0 D-6"
  },
+ "previous_receipt": {
+  "commit": "77cd687c697cc19c51236b5cdebc3c1637e5f1b8",
+  "path": "doc/impl/proof-receipts/production-boundary-deployment-step.json",
+  "sha256": "668d00e49ab2e7fcb60a90a304b58fbbbeec3c696648000485b085c68c59fe6c",
+  "note": "first-pass receipt (scan spec version 4, review pending); superseded by this one"
+ },
+ "known_for_ledger": [
+  "for the PB-E ledger (I5; hygiene review finding of 77cd687c): the import closure of the I3 modules contains PqxdhHeadlineBridges (PqxdhBoundaryDeploymentStep imports the published PB-03 module PqxdhBoundaryRegistrationAccept, which imports it) and, through published CE dependencies, the item 2 rejected-route modules (PqxdhJointKdfGame, PqxdhHiddenRoot, PqxdhCorrelatedExpand and others); the transitive reach inside BeaconcryptCore of all module constants touches only PqxdhHeadlineBridges.parsedBytes (a byte parser used by PB-03) and FixedHkdfSha512NoSaltSource, .mk and .crypto; no direct reference, and no bridge, C6, C7 or record-lift constant is reached"
+ ],
  "not_run": [
   "make verify",
   "full lake build",
@@ -213,9 +391,9 @@
   "transcript-fidelity cargo tests (no inventory metadata they read changed)"
  ],
  "remaining": [
-  "D-6 independent fresh-context review of both I3 modules",
-  "integration into central (not done in this task)",
-  "I4 PqxdhBoundaryDeploymentLater (PB-13) and I5 ledger and CE-14"
+  "confirming review of the D-6 fix pass",
+  "integration into central",
+  "I4 PqxdhBoundaryDeploymentLater (PB-13, adaptive LQ-F join; its .crypto allowance, if needed, gets its own entry in the site table of the scan spec) and I5 ledger and CE-14"
  ],
  "rust_reference": "no new Rust correspondence: each command cites the published boundary equality of its survey row (PB-01 beacon.rs:65-82; PB-02 beacon.rs:300-357; PB-03 server.rs:332; PB-05 server.rs:424-500; PB-06 beacon.rs:402; PB-07/PB-08 ratchet.rs:354-355, 449; PB-09 ratchet.rs:414), whose own guides and receipts carry the Rust anchors and the reviewed-transcription (RT) items",
  "deviations": [
@@ -224,9 +402,35 @@
   "bundleSource is a new local definition (owner lookup and reinstallation around the published coreOwnerProgram), proved equal to the CE command from native_bundle and owner_core"
  ],
  "crypto_allowance": {
-  "decision": "D-1: the .crypto allowance does not apply to this module",
+  "decision": "D-1: the .crypto allowance does not apply to this module (no entry in functional_field_allowlist_sites)",
   "elaborated_occurrences": [],
   "statement_occurrences": [],
+  "site_gate": {
+   "clean": {
+    "table_bad": 0,
+    "sites": 0,
+    "declarations": 0,
+    "outside": 0,
+    "blind": 0
+   },
+   "live": {
+    "table_bad": 0,
+    "sites": 0,
+    "declarations": 0,
+    "outside": 0,
+    "blind": 0
+   },
+   "controls": {
+    "expect_wrap_passes": false,
+    "expect_initial_passes": false,
+    "wrap": true,
+    "initial": true,
+    "bare": true,
+    "projection": true
+   },
+   "table": [],
+   "result": "0 sites and no primitive projection over FixedHkdfSha512NoSaltSource in the 47 module constants"
+  },
   "live_control": {
    "direct": {
     "allowance_applies": false,

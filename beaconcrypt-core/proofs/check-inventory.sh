@@ -39746,8 +39746,8 @@ require_line_count 1 '^theorem phase2_withReader([[:space:]]|$)' "$selected_sour
 
 selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryDeployment.lean
 require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhBoundaryDeployment$' proofs/lean/BeaconcryptCore.lean "PqxdhBoundaryDeployment root import"
-require_line_count 8 '^theorem ' "$selected_source_module" "PqxdhBoundaryDeployment theorem inventory"
-require_line_count 8 '^#guard_msgs in$' "$selected_source_module" "PqxdhBoundaryDeployment guarded dependencies"
+require_line_count 9 '^theorem ' "$selected_source_module" "PqxdhBoundaryDeployment theorem inventory"
+require_line_count 9 '^#guard_msgs in$' "$selected_source_module" "PqxdhBoundaryDeployment guarded dependencies"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryDeployment\.execute_exact$' "$selected_source_module" "PqxdhBoundaryDeployment dependency BeaconcryptCore.Computational.PqxdhBoundaryDeployment.execute_exact"
 require_line_count 1 '^theorem execute_exact([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryDeployment theorem execute_exact"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryDeployment\.unwrap_okMap$' "$selected_source_module" "PqxdhBoundaryDeployment dependency BeaconcryptCore.Computational.PqxdhBoundaryDeployment.unwrap_okMap"
@@ -39762,6 +39762,8 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBounda
 require_line_count 1 '^theorem classical_continuation([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryDeployment theorem classical_continuation"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryDeployment\.classical_observe$' "$selected_source_module" "PqxdhBoundaryDeployment dependency BeaconcryptCore.Computational.PqxdhBoundaryDeployment.classical_observe"
 require_line_count 1 '^theorem classical_observe([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryDeployment theorem classical_observe"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryDeployment\.classical_evalDist$' "$selected_source_module" "PqxdhBoundaryDeployment dependency BeaconcryptCore.Computational.PqxdhBoundaryDeployment.classical_evalDist"
+require_line_count 1 '^theorem classical_evalDist([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryDeployment theorem classical_evalDist"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryDeployment\.classical_probEvent$' "$selected_source_module" "PqxdhBoundaryDeployment dependency BeaconcryptCore.Computational.PqxdhBoundaryDeployment.classical_probEvent"
 require_line_count 1 '^theorem classical_probEvent([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryDeployment theorem classical_probEvent"
 

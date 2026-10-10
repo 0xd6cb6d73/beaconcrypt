@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.PqxdhBoundaryDeploymentStep
 import BeaconcryptCore.Computational.PqxdhDeploymentSecrecy
 
-/-! PB-D classical source join (item 7, increment I3; survey rows PB-12 and PB-14). `sourceGame` is the adaptive source execution of the whole common deployment experiment: the source-ordered Server birth of `PqxdhBoundaryBirth.serverBirth` (initialization, then one generated seed; a failed initialization keeps its runtime and draws nothing), then `PqxdhBoundaryProgram.execute` of the per-command source step `PqxdhBoundaryDeploymentStep.sourceStep` on the adversary wrapped by CE's own secrecy layer (`PqxdhDeploymentSecrecy.wrap`, which keeps the transcript, the test session and the fresh messages and issues only coins and sends for the secrecy commands), from the initial deployment state of the created Server. `classical` equates it with the CE game `PqxdhDeploymentSecrecy.game` at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model` on the full returned value: created Server, adversary output, final ledger, complete final deployment state (owners, Server, pending tokens, both caches, raw-attempt counters, produced frames) and runtime, with no projection, conditioning or event premise. The only change of shape is `okMap`, which wraps the adversary output and ledger in Rust `ok` exactly where `wrap` returns them; `unwrap` reads a source value back, so every event transfers (`classical_probEvent`). The identity index is arbitrary (`classical_zero` is the index-0 instance of the PB-D pin #415) and `checks` is a free parameter (PB-14); the seven-site `Checks` mapping stays reviewed transcription (RT). No assumption or contract is added: the per-command join cites only published boundary equalities, all quantified over every deployment state. The secrecy layer, the model oracles and the post-run ledger are CE's own (classification E). Persistence, snapshots and Cap'n Proto are out of scope. -/
+/-! PB-D classical source join (item 7, increment I3; survey rows PB-12 and PB-14). `sourceGame` is the adaptive source execution of the whole common deployment experiment: the source-ordered Server birth of `PqxdhBoundaryBirth.serverBirth` (initialization, then one generated seed; a failed initialization keeps its runtime and draws nothing), then `PqxdhBoundaryProgram.execute` of the per-command source step `PqxdhBoundaryDeploymentStep.sourceStep` (whose commands are CE's approved interface under its deviations D1-D5, classification E; see that module) on the adversary wrapped by CE's own secrecy layer (`PqxdhDeploymentSecrecy.wrap`, which keeps the transcript, the test session and the fresh messages and issues only coins and sends for the secrecy commands), from the initial deployment state of the created Server. `classical` equates it with the CE game `PqxdhDeploymentSecrecy.game` at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model` on the full returned value: created Server, adversary output, final ledger, complete final deployment state (owners, Server, pending tokens, both caches, raw-attempt counters, produced frames) and runtime, with no projection, conditioning or event premise. The only change of shape is `okMap`, which wraps the adversary output and ledger in Rust `ok` exactly where `wrap` returns them; `unwrap` reads a source value back, so every observation and every event transfers (`classical_observe`; `classical_evalDist` in the evaluation-measure form `𝒟[·]` of the CE-12 headlines; `classical_probEvent` in the deprecated `Pr[·]` form). The identity index is arbitrary (`classical_zero` is the index-0 instance of the PB-D pin #415) and `checks` is a free parameter (PB-14); the seven-site `Checks` mapping stays reviewed transcription (RT). No assumption or contract is added: the per-command join cites only published boundary equalities, all quantified over every deployment state. The secrecy layer, the model oracles and the post-run ledger are CE's own (classification E). Persistence, snapshots and Cap'n Proto are out of scope. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -131,6 +131,17 @@ theorem classical_observe {Z : Type} (setup : Setup baseSpec KemSK) (codec : Cod
   rw [classical, Functor.map_map]
   simp only [unwrap_okMap]
 
+/-- Generic distribution transfer for item 8 without the deprecated probability API: for every observation `observe` of the CE game's returned value into a measurable space, the evaluation measure `𝒟[·]` of observing the source game through `unwrap` equals that of observing the CE game at the production instance. With `Z = Bool` and the set `{true}` this is the event form `𝒟[decision <$> game] {true}` of the CE-12 headlines, the replacement of `classical_probEvent` that VCVio's deprecation of `Pr[·]` asks for. -/
+theorem classical_evalDist {Z : Type} [MeasurableSpace Z] (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 229#usize) (checks : Checks)
+    (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat) (bounds : FreshBounds) (mode : Mode)
+    (adversary : OracleComp (ModeSpec mode) X) (runtime : A) (observe : GameOutcome KemSK X × A → Z) :
+    𝒟[(fun outcome => observe (unwrap outcome)) <$>
+        (sourceGame setup codec reader erased checks ensureInit identityIndex bounds mode adversary).run runtime] =
+      𝒟[observe <$> (PqxdhDeploymentSecrecy.game setup (PqxdhBoundaryRecordPrelude.withReader codec reader) checks
+        (RawCtxFrameDecoding.sender reader.model) ensureInit identityIndex bounds mode adversary).run runtime] := by
+  rw [classical_observe]
+
 set_option linter.deprecated false in
 /-- Generic event transfer for item 8: for every event `event` of the CE game's returned value, its probability in the CE game at the production instance equals the probability of `event ∘ unwrap` in the source game. -/
 theorem classical_probEvent (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
@@ -206,6 +217,14 @@ info: 'BeaconcryptCore.Computational.PqxdhBoundaryDeployment.classical_observe' 
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhBoundaryDeployment.classical_observe
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhBoundaryDeployment.classical_evalDist' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhBoundaryDeployment.classical_evalDist
 
 /--
 info: 'BeaconcryptCore.Computational.PqxdhBoundaryDeployment.classical_probEvent' depends on axioms: [propext,
