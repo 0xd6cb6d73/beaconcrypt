@@ -39184,12 +39184,12 @@ require_line_count 1 '^theorem pair_post_decapsulations([[:space:]]|$)' "$select
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineCollision\.identity_collision_game$' "$selected_source_module" "PqxdhDeploymentHeadlineCollision dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineCollision.identity_collision_game"
 require_line_count 1 '^theorem identity_collision_game([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineCollision theorem identity_collision_game"
 
-# CE-12 P2: symbolic corollaries (OR both directions, UKS sender, APP, KT; F-ct2 form).
+# CE-12 P2: symbolic corollaries (OR both directions, UKS sender, APP, KT, with the Server-side and Beacon-side APP and KT forms; F-ct2 form).
 
 selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineSymbolic.lean
 require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentHeadlineSymbolic root import"
-require_line_count 25 '^theorem ' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolic theorem inventory"
-require_line_count 25 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolic guarded dependencies"
+require_line_count 34 '^theorem ' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolic theorem inventory"
+require_line_count 34 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolic guarded dependencies"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineSymbolic\.acceptReplies_logged$' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolic dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic.acceptReplies_logged"
 require_line_count 1 '^theorem acceptReplies_logged([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolic theorem acceptReplies_logged"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineSymbolic\.sessionAt_positional$' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolic dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic.sessionAt_positional"
@@ -39212,6 +39212,12 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem app_peer_sym([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolic theorem app_peer_sym"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineSymbolic\.kt_sym$' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolic dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic.kt_sym"
 require_line_count 1 '^theorem kt_sym([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolic theorem kt_sym"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineSymbolic\.app_owner_sym$' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolic dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic.app_owner_sym"
+require_line_count 1 '^theorem app_owner_sym([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolic theorem app_owner_sym"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineSymbolic\.kt_peer_sym$' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolic dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic.kt_peer_sym"
+require_line_count 1 '^theorem kt_peer_sym([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolic theorem kt_peer_sym"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineSymbolic\.kt_owner_sym$' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolic dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic.kt_owner_sym"
+require_line_count 1 '^theorem kt_owner_sym([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolic theorem kt_owner_sym"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineSymbolic\.chance_le_add4$' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolic dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic.chance_le_add4"
 require_line_count 1 '^theorem chance_le_add4([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolic theorem chance_le_add4"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineSymbolic\.a1_chance$' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolic dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic.a1_chance"
@@ -39228,6 +39234,12 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem ce_app_server_sym_le([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolic theorem ce_app_server_sym_le"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineSymbolic\.ce_kt_sym_le$' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolic dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic.ce_kt_sym_le"
 require_line_count 1 '^theorem ce_kt_sym_le([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolic theorem ce_kt_sym_le"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineSymbolic\.ce_app_beacon_sym_le$' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolic dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic.ce_app_beacon_sym_le"
+require_line_count 1 '^theorem ce_app_beacon_sym_le([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolic theorem ce_app_beacon_sym_le"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineSymbolic\.ce_kt_server_sym_le$' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolic dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic.ce_kt_server_sym_le"
+require_line_count 1 '^theorem ce_kt_server_sym_le([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolic theorem ce_kt_server_sym_le"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineSymbolic\.ce_kt_beacon_sym_le$' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolic dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic.ce_kt_beacon_sym_le"
+require_line_count 1 '^theorem ce_kt_beacon_sym_le([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolic theorem ce_kt_beacon_sym_le"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineSymbolic\.ce_or_b2s_sym$' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolic dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic.ce_or_b2s_sym"
 require_line_count 1 '^theorem ce_or_b2s_sym([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolic theorem ce_or_b2s_sym"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineSymbolic\.ce_or_s2b_sym$' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolic dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic.ce_or_s2b_sym"
@@ -39240,13 +39252,19 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem ce_app_server_sym([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolic theorem ce_app_server_sym"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineSymbolic\.ce_kt_sym$' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolic dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic.ce_kt_sym"
 require_line_count 1 '^theorem ce_kt_sym([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolic theorem ce_kt_sym"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineSymbolic\.ce_app_beacon_sym$' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolic dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic.ce_app_beacon_sym"
+require_line_count 1 '^theorem ce_app_beacon_sym([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolic theorem ce_app_beacon_sym"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineSymbolic\.ce_kt_server_sym$' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolic dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic.ce_kt_server_sym"
+require_line_count 1 '^theorem ce_kt_server_sym([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolic theorem ce_kt_server_sym"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineSymbolic\.ce_kt_beacon_sym$' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolic dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic.ce_kt_beacon_sym"
+require_line_count 1 '^theorem ce_kt_beacon_sym([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolic theorem ce_kt_beacon_sym"
 
-# CE-12 P2: symbolic_lor with the NoBundleFailure filter (F-ct2 form, explicit ctCollTerm).
+# CE-12 P2: symbolic_lor with the NoBundleFailure filter (F-ct2 form, explicit ctCollTerm) and symbolic_lor_server for Server-peer tests (no explicit term).
 
 selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineSymbolicLor.lean
 require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolicLor$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentHeadlineSymbolicLor root import"
-require_line_count 24 '^theorem ' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolicLor theorem inventory"
-require_line_count 24 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolicLor guarded dependencies"
+require_line_count 29 '^theorem ' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolicLor theorem inventory"
+require_line_count 29 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolicLor guarded dependencies"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineSymbolicLor\.findSome_prefix$' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolicLor dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolicLor.findSome_prefix"
 require_line_count 1 '^theorem findSome_prefix([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolicLor theorem findSome_prefix"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineSymbolicLor\.owners_prefix$' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolicLor dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolicLor.owners_prefix"
@@ -39281,6 +39299,8 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem lor_inclusion([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolicLor theorem lor_inclusion"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineSymbolicLor\.lor_difference$' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolicLor dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolicLor.lor_difference"
 require_line_count 1 '^theorem lor_difference([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolicLor theorem lor_difference"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineSymbolicLor\.lor_difference_peer$' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolicLor dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolicLor.lor_difference_peer"
+require_line_count 1 '^theorem lor_difference_peer([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolicLor theorem lor_difference_peer"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineSymbolicLor\.nested_arith$' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolicLor dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolicLor.nested_arith"
 require_line_count 1 '^theorem nested_arith([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolicLor theorem nested_arith"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineSymbolicLor\.chance_eq_support$' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolicLor dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolicLor.chance_eq_support"
@@ -39295,13 +39315,21 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem symbolic_lor([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolicLor theorem symbolic_lor"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineSymbolicLor\.symbolic_lor_bound$' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolicLor dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolicLor.symbolic_lor_bound"
 require_line_count 1 '^theorem symbolic_lor_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolicLor theorem symbolic_lor_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineSymbolicLor\.symbolic_lor_server_le$' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolicLor dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolicLor.symbolic_lor_server_le"
+require_line_count 1 '^theorem symbolic_lor_server_le([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolicLor theorem symbolic_lor_server_le"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineSymbolicLor\.lor_difference_server_bound$' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolicLor dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolicLor.lor_difference_server_bound"
+require_line_count 1 '^theorem lor_difference_server_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolicLor theorem lor_difference_server_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineSymbolicLor\.symbolic_lor_server$' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolicLor dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolicLor.symbolic_lor_server"
+require_line_count 1 '^theorem symbolic_lor_server([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolicLor theorem symbolic_lor_server"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineSymbolicLor\.symbolic_lor_server_bound$' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolicLor dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolicLor.symbolic_lor_server_bound"
+require_line_count 1 '^theorem symbolic_lor_server_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolicLor theorem symbolic_lor_server_bound"
 
-# CE-12 P2: injective forms of the symbolic CE-OR corollaries.
+# CE-12 P2: injective forms of the symbolic CE-OR corollaries (s2b also with the identity collision).
 
 selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineInjective.lean
 require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineInjective$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentHeadlineInjective root import"
-require_line_count 5 '^theorem ' "$selected_source_module" "PqxdhDeploymentHeadlineInjective theorem inventory"
-require_line_count 5 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentHeadlineInjective guarded dependencies"
+require_line_count 7 '^theorem ' "$selected_source_module" "PqxdhDeploymentHeadlineInjective theorem inventory"
+require_line_count 7 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentHeadlineInjective guarded dependencies"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineInjective\.replay_never$' "$selected_source_module" "PqxdhDeploymentHeadlineInjective dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineInjective.replay_never"
 require_line_count 1 '^theorem replay_never([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineInjective theorem replay_never"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineInjective\.injective_b2s_le$' "$selected_source_module" "PqxdhDeploymentHeadlineInjective dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineInjective.injective_b2s_le"
@@ -39312,6 +39340,10 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem injective_s2b_le([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineInjective theorem injective_s2b_le"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineInjective\.ce_or_injective_s2b$' "$selected_source_module" "PqxdhDeploymentHeadlineInjective dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineInjective.ce_or_injective_s2b"
 require_line_count 1 '^theorem ce_or_injective_s2b([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineInjective theorem ce_or_injective_s2b"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineInjective\.injective_s2b_full_le$' "$selected_source_module" "PqxdhDeploymentHeadlineInjective dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineInjective.injective_s2b_full_le"
+require_line_count 1 '^theorem injective_s2b_full_le([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineInjective theorem injective_s2b_full_le"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineInjective\.ce_or_injective_s2b_full$' "$selected_source_module" "PqxdhDeploymentHeadlineInjective dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineInjective.ce_or_injective_s2b_full"
+require_line_count 1 '^theorem ce_or_injective_s2b_full([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineInjective theorem ce_or_injective_s2b_full"
 
 # CE-12 P2: bills (pairAdversary, record lifts at BI_g).
 

@@ -11,9 +11,9 @@ import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineKeyTransfer
 The designation-free symbolic events of the CE-12 headlines and their corollaries: the headline events with the public designation replaced by symbolic eligibility (`PqxdhDeploymentHeadlineGap.SymServer`, `SymBeacon`, here `SymHandle`) and the CE counterpart replaced by identity-based symbolic counterpart sets, which are handle-level readings of the ProVerif conclusions. All events are read on the experiment's outcome (final transcript, final native identity keys, constructed Server).
 
 - Counterpart sets (design-v2 section 7.2): `SymCpartB2s` (b2s, L2Published's `B`: the owners whose first published bundle carries the identity field of the accepted candidate of the session that built the peer) and `SymCpartS2b` (s2b, S2b-origin's "installed for `B`": the Server peers built by a session whose accepted candidate verifies to the owner's identity key).
-- Events: `OriginFailureSym` (`ForgedAtSym`: an accepted raw receive on a symbolically eligible handle whose decoded frame no symbolic counterpart published before), `UksFailureSym` (`UksSenderSymAt`: an owner with `SymBeacon` returned a frame that a raw receive accepted on a handle outside its symbolic counterparts; the sender-eligible UKSr), `AppWinSym` and `AppWinPeerSym` (CE-APP's win on a symbolically eligible handle, on a Server peer), `KtSym` (an event whose claim is symbolically eligible).
-- Containments on every outcome (design-v2 section 7.3): `origin_b2s_sym` (b2s: a CE b2s failure or a Server-side gap, no term, because a designated peer's CE counterpart is a symbolic counterpart, `peer_cpart_sym`); `origin_s2b_sym` and `uks_sym` (a CE event, a CE-A1 failure, a ciphertext gap or a ciphertext collision: the owner's pinned match is linked unless `CtGap`, and it is the designated session unless `CtColl`, so the CE counterpart is a symbolic counterpart, `owner_cpart_sym`, using positional sessions, `sessionAt_positional`); `app_sym`, `app_peer_sym`, `kt_sym` (a CE event or a gap).
-- Corollaries in event form (`ce_or_b2s_sym_le`, `ce_or_s2b_sym_le`, `ce_uks_sym_le`, `ce_app_sym_le`, `ce_app_server_sym_le`, `ce_kt_sym_le`) and with the CE-12 bounds: `ce_or_b2s_sym` (CE-OR b2s's bound + `ε_A2pub`), `ce_or_s2b_sym` (CE-OR s2b's bound + `ε_A1` + `ctGapTerm` + `ctCollTerm`), `ce_uks_sym` (CE-UKS sender's bound + `ε_A1` + `ctGapTerm` + `ctCollTerm`), `ce_app_sym` (CE-APP's bound + `ε_A2pub + ε_A1` + `ctGapTerm`), `ce_app_server_sym` (CE-APP Server's bound + `ε_A2pub`), `ce_kt_sym` (CE-KT's one-sided bound + `ε_A2pub + ε_A1` + `ctGapTerm`).
+- Events: `OriginFailureSym` (`ForgedAtSym`: an accepted raw receive on a symbolically eligible handle whose decoded frame no symbolic counterpart published before), `UksFailureSym` (`UksSenderSymAt`: an owner with `SymBeacon` returned a frame that a raw receive accepted on a handle outside its symbolic counterparts; the sender-eligible UKSr), `AppWinSym`, `AppWinPeerSym` and `AppWinOwnerSym` (CE-APP's win on a symbolically eligible handle, on a Server peer, on a Beacon owner), `KtSym`, `KtPeerSym` and `KtOwnerSym` (an event whose claim is symbolically eligible, a Server peer with `SymServer`, an owner with `SymBeacon`).
+- Containments on every outcome (design-v2 section 7.3): `origin_b2s_sym` (b2s: a CE b2s failure or a Server-side gap, no term, because a designated peer's CE counterpart is a symbolic counterpart, `peer_cpart_sym`); `origin_s2b_sym` and `uks_sym` (a CE event, a CE-A1 failure, a ciphertext gap or a ciphertext collision: the owner's pinned match is linked unless `CtGap`, and it is the designated session unless `CtColl`, so the CE counterpart is a symbolic counterpart, `owner_cpart_sym`, using positional sessions, `sessionAt_positional`); `app_sym`, `kt_sym` (a CE event or a gap); `app_peer_sym`, `kt_peer_sym` (a CE event or a Server-side gap); `app_owner_sym`, `kt_owner_sym` (a CE event or a Beacon-side gap).
+- Corollaries in event form (`ce_or_b2s_sym_le`, `ce_or_s2b_sym_le`, `ce_uks_sym_le`, `ce_app_sym_le`, `ce_app_server_sym_le`, `ce_app_beacon_sym_le`, `ce_kt_sym_le`, `ce_kt_server_sym_le`, `ce_kt_beacon_sym_le`) and with the CE-12 bounds: `ce_or_b2s_sym` (CE-OR b2s's bound + `ε_A2pub`), `ce_or_s2b_sym` (CE-OR s2b's bound + `ε_A1` + `ctGapTerm` + `ctCollTerm`), `ce_uks_sym` (CE-UKS sender's bound + `ε_A1` + `ctGapTerm` + `ctCollTerm`), `ce_app_sym` (CE-APP's bound + `ε_A2pub + ε_A1` + `ctGapTerm`, any claimed handle), `ce_app_server_sym` (CE-APP Server's bound + `ε_A2pub`), `ce_app_beacon_sym` (CE-APP's bound + `ε_A1` + `ctGapTerm`), `ce_kt_sym` (CE-KT's one-sided bound + `ε_A2pub + ε_A1` + `ctGapTerm`, any claim), `ce_kt_server_sym` (CE-KT's one-sided bound + `ε_A2pub`, no CE-A1 premise), `ce_kt_beacon_sym` (CE-KT's one-sided bound + `ε_A1` + `ctGapTerm`). The Server-side forms carry neither explicit term.
 
 Explicit terms: `ctGapTerm` is F-ct2's public ciphertext-gap term (the D-ct spike stopped, design-v2 section 8) and `ctCollTerm` is the public ciphertext-collision term, which design-v2 section 7.4 would bound by `ε_ctcoll` through a game-level step not proved here (`PqxdhDeploymentHeadlineCollision`). Not here: the injective CE-OR forms, `symbolic_lor`, the bills. The b2s publisher pin and the mode-O plaintext are not part of these events (design-v2 section 7.6). No new assumption or contract; the premises are those of the CE-12 headlines, of CE-A2pub and of CE-A1.
 -/
@@ -464,6 +464,54 @@ noncomputable def ktSym (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
     Bool :=
   decide (KtSym setup codec event claim outcome)
 
+/-- `AppWinSym` on a Beacon owner (the Beacon-side symbolic APP event): the claimed fresh message was sent on an owner with `SymBeacon` (pinned to the constructed Server and the protected key ID) and equals the guess. -/
+def AppWinOwnerSym (setup : Setup baseSpec KemSK) (appClaim : X → Option (Nat × Pqxdh.Bytes))
+    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A) :
+    Prop :=
+  ∃ created output final, outcome.1 = some (created, output, final) ∧ ∃ index guess entry c,
+    appClaim output = some (index, guess) ∧ final.1.fresh[index]? = some entry ∧ entry.handle = .owner c ∧
+    SymBeacon final.1.transcript (protectedBinding setup created).1 setup.serverKeyId c ∧ entry.message = guess
+
+open Classical in
+/-- `AppWinOwnerSym` as a Boolean of the outcome. -/
+noncomputable def appOwnerSym (setup : Setup baseSpec KemSK) (appClaim : X → Option (Nat × Pqxdh.Bytes))
+    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A) :
+    Bool :=
+  decide (AppWinOwnerSym setup appClaim outcome)
+
+/-- `KtSym` with the claim a Server peer (the Server-side symbolic form of CE-KT's event, design-v2 section 12's S3-server row): the event holds and the claim names a Server peer with `SymServer` under the final native identity keys. -/
+def KtPeerSym (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (event : Observed X → Bool)
+    (claim : Observed X → Option Handle)
+    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A) :
+    Prop :=
+  happens event outcome = true ∧ ∃ created output final, outcome.1 = some (created, output, final) ∧ ∃ keyId,
+    claim (output, final.1, final.2.produced) = some (.peer keyId) ∧
+    SymServer setup.source.crypto codec final.1.transcript (ownerIdentities setup final.2.native) keyId
+
+open Classical in
+/-- `KtPeerSym` as a Boolean of the outcome. -/
+noncomputable def ktPeerSym (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (event : Observed X → Bool)
+    (claim : Observed X → Option Handle)
+    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A) :
+    Bool :=
+  decide (KtPeerSym setup codec event claim outcome)
+
+/-- `KtSym` with the claim a Beacon owner (the Beacon-side symbolic form of CE-KT's event, design-v2 section 12's S3-beacon row): the event holds and the claim names an owner with `SymBeacon` (pinned to the constructed Server and the protected key ID). -/
+def KtOwnerSym (setup : Setup baseSpec KemSK) (event : Observed X → Bool) (claim : Observed X → Option Handle)
+    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A) :
+    Prop :=
+  happens event outcome = true ∧ ∃ created output final, outcome.1 = some (created, output, final) ∧ ∃ c,
+    claim (output, final.1, final.2.produced) = some (.owner c) ∧
+    SymBeacon final.1.transcript (protectedBinding setup created).1 setup.serverKeyId c
+
+open Classical in
+/-- `KtOwnerSym` as a Boolean of the outcome. -/
+noncomputable def ktOwnerSym (setup : Setup baseSpec KemSK) (event : Observed X → Bool)
+    (claim : Observed X → Option Handle)
+    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A) :
+    Bool :=
+  decide (KtOwnerSym setup event claim outcome)
+
 /-- An undesignated symbolically eligible handle is a Server-side or Beacon-side gap. -/
 theorem undesignated_gap (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (budget : Budget)
     (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A)
@@ -584,6 +632,61 @@ theorem kt_sym (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (b
   cases designatedFound : designate setup.source.crypto codec setup.serverKeyId final.1.transcript handle with
   | none =>
       refine Or.inr (undesignated_gap setup codec budget outcome created output final found handle sym ?_)
+      simp [PqxdhDeploymentTranscript.designateIn, designatedFound]
+  | some pair =>
+      left
+      refine ⟨happened, ?_⟩
+      simp [PqxdhDeploymentTargetRange.eligible, observeGame, found, claimed, designatedFound]
+
+/-- The Beacon-side APP containment: on every outcome, a symbolic APP win on a Beacon owner is a CE APP win or a Beacon-side gap. -/
+theorem app_owner_sym (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (budget : Budget)
+    (appClaim : X → Option (Nat × Pqxdh.Bytes))
+    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A)
+    (holds : AppWinOwnerSym setup appClaim outcome) :
+    happens (PqxdhDeploymentHeadlineEvents.appEvent setup.source.crypto codec setup.serverKeyId budget appClaim)
+        outcome = true ∨
+      BeaconGap setup codec budget outcome := by
+  classical
+  obtain ⟨created, output, final, found, index, guess, entry, c, claimed, freshFound, handled, sym, message⟩ := holds
+  cases designatedFound : designateIn setup.source.crypto codec setup.serverKeyId budget final.1.transcript
+      (.owner c) with
+  | none => exact Or.inr ⟨created, output, final, found, c, sym, designatedFound⟩
+  | some g =>
+      left
+      simp only [happens, observeGame, found, Option.map_some, Option.any_some,
+        PqxdhDeploymentHeadlineEvents.appEvent, decide_eq_true_eq]
+      exact ⟨index, guess, entry, claimed, freshFound, by rw [handled, designatedFound]; rfl, message⟩
+
+/-- The Server-side KT containment: on every outcome, an event whose claim names a Server peer with `SymServer` is the event with a designated claim (`PqxdhDeploymentTargetRange.eligible`) or a Server-side gap. -/
+theorem kt_peer_sym (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (budget : Budget)
+    (event : Observed X → Bool) (claim : Observed X → Option Handle)
+    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A)
+    (holds : KtPeerSym setup codec event claim outcome) :
+    (happens event outcome = true ∧
+        (PqxdhDeploymentTargetRange.eligible setup.source.crypto codec setup.serverKeyId claim outcome).isSome) ∨
+      ServerGap setup codec budget outcome := by
+  obtain ⟨happened, created, output, final, found, keyId, claimed, sym⟩ := holds
+  cases designatedFound : designate setup.source.crypto codec setup.serverKeyId final.1.transcript (.peer keyId) with
+  | none =>
+      refine Or.inr ⟨created, output, final, found, keyId, sym, ?_⟩
+      simp [PqxdhDeploymentTranscript.designateIn, designatedFound]
+  | some pair =>
+      left
+      refine ⟨happened, ?_⟩
+      simp [PqxdhDeploymentTargetRange.eligible, observeGame, found, claimed, designatedFound]
+
+/-- The Beacon-side KT containment: on every outcome, an event whose claim names an owner with `SymBeacon` is the event with a designated claim (`PqxdhDeploymentTargetRange.eligible`) or a Beacon-side gap. -/
+theorem kt_owner_sym (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (budget : Budget)
+    (event : Observed X → Bool) (claim : Observed X → Option Handle)
+    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A)
+    (holds : KtOwnerSym setup event claim outcome) :
+    (happens event outcome = true ∧
+        (PqxdhDeploymentTargetRange.eligible setup.source.crypto codec setup.serverKeyId claim outcome).isSome) ∨
+      BeaconGap setup codec budget outcome := by
+  obtain ⟨happened, created, output, final, found, c, claimed, sym⟩ := holds
+  cases designatedFound : designate setup.source.crypto codec setup.serverKeyId final.1.transcript (.owner c) with
+  | none =>
+      refine Or.inr ⟨created, output, final, found, c, sym, ?_⟩
       simp [PqxdhDeploymentTranscript.designateIn, designatedFound]
   | some pair =>
       left
@@ -770,6 +873,64 @@ theorem ce_kt_sym_le (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
   · right
     simp [beaconGap, gap]
 
+/-- `ce_app_beacon_sym` in event form: the symbolic APP win on a Beacon owner is at most the CE APP win plus the Beacon-side gap (`app_owner_sym`). -/
+theorem ce_app_beacon_sym_le (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool) (bounds : FreshBounds)
+    (mode : Mode) (adversary : OracleComp (ModeSpec mode) X) (budget : Budget) (runtime : A)
+    (appClaim : X → Option (Nat × Pqxdh.Bytes)) :
+    𝒟[appOwnerSym setup appClaim <$>
+      (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode adversary).run runtime] {true} ≤
+      𝒟[(fun outcome => happens (appEvent setup.source.crypto codec setup.serverKeyId budget appClaim) outcome) <$>
+        (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode adversary).run runtime] {true} +
+      𝒟[beaconGap setup codec budget <$>
+        (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode adversary).run runtime] {true} := by
+  refine chance_le_add_support _ _ _ _ fun outcome _ held => ?_
+  simp only [appOwnerSym, decide_eq_true_eq] at held
+  rcases app_owner_sym setup codec budget appClaim outcome held with ce | gap
+  · exact Or.inl ce
+  · right
+    simp [beaconGap, gap]
+
+/-- `ce_kt_server_sym` in event form: the event with a claim naming a Server peer with `SymServer` is at most the event with a designated claim plus the Server-side gap (`kt_peer_sym`). -/
+theorem ce_kt_server_sym_le (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool) (bounds : FreshBounds)
+    (mode : Mode) (adversary : OracleComp (ModeSpec mode) X) (budget : Budget) (runtime : A)
+    (event : Observed X → Bool) (claim : Observed X → Option Handle) :
+    𝒟[ktPeerSym setup codec event claim <$>
+      (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode adversary).run runtime] {true} ≤
+      𝒟[(fun outcome => decide (happens event outcome = true ∧
+          (PqxdhDeploymentTargetRange.eligible setup.source.crypto codec setup.serverKeyId claim outcome).isSome)) <$>
+        (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode adversary).run runtime] {true} +
+      𝒟[serverGap setup codec budget <$>
+        (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode adversary).run runtime] {true} := by
+  refine chance_le_add_support _ _ _ _ fun outcome _ held => ?_
+  simp only [ktPeerSym, decide_eq_true_eq] at held
+  rcases kt_peer_sym setup codec budget event claim outcome held with ce | gap
+  · left
+    simpa using ce
+  · right
+    simp [serverGap, gap]
+
+/-- `ce_kt_beacon_sym` in event form: the event with a claim naming an owner with `SymBeacon` is at most the event with a designated claim plus the Beacon-side gap (`kt_owner_sym`). -/
+theorem ce_kt_beacon_sym_le (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool) (bounds : FreshBounds)
+    (mode : Mode) (adversary : OracleComp (ModeSpec mode) X) (budget : Budget) (runtime : A)
+    (event : Observed X → Bool) (claim : Observed X → Option Handle) :
+    𝒟[ktOwnerSym setup event claim <$>
+      (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode adversary).run runtime] {true} ≤
+      𝒟[(fun outcome => decide (happens event outcome = true ∧
+          (PqxdhDeploymentTargetRange.eligible setup.source.crypto codec setup.serverKeyId claim outcome).isSome)) <$>
+        (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode adversary).run runtime] {true} +
+      𝒟[beaconGap setup codec budget <$>
+        (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode adversary).run runtime] {true} := by
+  refine chance_le_add_support _ _ _ _ fun outcome _ held => ?_
+  simp only [ktOwnerSym, decide_eq_true_eq] at held
+  rcases kt_owner_sym setup codec budget event claim outcome held with ce | gap
+  · left
+    simpa using ce
+  · right
+    simp [beaconGap, gap]
+
 end Corollaries
 
 /-! ### The symbolic corollaries with the CE-12 bounds -/
@@ -906,7 +1067,7 @@ theorem ce_uks_sym (setup : Setup baseSpec KemSK)
       (a1_chance setup codec checks caps bounded route ensureInit phase1 phase2 frameReadBack writable law spread correct
         adapter bounds mode adversary budget respects runtime a1Fallback signatureFallback)) le_rfl) le_rfl)
 
-/-- `ce_app_sym` (design-v2 section 7.3; VC rows App-b2s, b2s-S2 and App-s2b, s2b-S1 on symbolic eligibility, mode P): the probability that the adversary's claimed fresh message, sent on a symbolically eligible handle, equals its guess is at most CE-APP's bound (`PqxdhDeploymentHeadlineApp.ce_app`) plus `ε_A2pub + ε_A1` plus the explicit public term `ctGapTerm` (F-ct2), through `sym_gap`. Premises: those of `ce_app`, of `server_gap_bound` and of CE-A1. -/
+/-- `ce_app_sym` (design-v2 section 7.3; the APP rows on symbolic eligibility of any claimed handle, mode P; the side-specific forms are `ce_app_server_sym` (App-s2b, s2b-S1: `ε_A2pub` only) and `ce_app_beacon_sym` (App-b2s, b2s-S2: `ε_A1 + ctGapTerm` only)): the probability that the adversary's claimed fresh message, sent on a symbolically eligible handle, equals its guess is at most CE-APP's bound (`PqxdhDeploymentHeadlineApp.ce_app`) plus `ε_A2pub + ε_A1` plus the explicit public term `ctGapTerm` (F-ct2), through `sym_gap`. Premises: those of `ce_app`, of `server_gap_bound` and of CE-A1. -/
 theorem ce_app_sym (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)
     (codec : Codec Reader Response) (checks : Checks) (route : RawCtxServerRouting.SenderDecoder)
@@ -988,7 +1149,7 @@ theorem ce_app_server_sym (setup : Setup baseSpec KemSK)
       (PqxdhDeploymentHeadlineGap.server_gap_bound setup codec checks shortRejects route ensureInit phase1 phase2 bounds
         .P adversary budget respects runtime identityFallback ordinaryFallback))
 
-/-- `ce_kt_sym` (design-v2 section 7.3; VC rows A1-root, S3-server, S3-beacon on symbolic eligibility): the probability of an event whose claim names a symbolically eligible handle is at most CE-KT's one-sided bound (`PqxdhDeploymentHeadlineKeyTransfer.ce_kt_sum_le`: the sum over the targets of the ideal game's probability plus `kemLoss` and `slotLoss`) plus `ε_A2pub + ε_A1` plus the explicit public term `ctGapTerm` (F-ct2). Premises: those of `ce_kt_sum_le`, of `server_gap_bound` and of CE-A1 (CE-KT's own premises do not include `KemBound`, which CE-A1 needs). -/
+/-- `ce_kt_sym` (design-v2 section 7.3; the KT rows on symbolic eligibility of any claimed handle; for a claim known to be a Server peer, `ce_kt_server_sym` (S3-server) has `ε_A2pub` only, and for a claim known to be an owner, `ce_kt_beacon_sym` (S3-beacon) has `ε_A1 + ctGapTerm` only; A1-root uses the form of its claim's side): the probability of an event whose claim names a symbolically eligible handle is at most CE-KT's one-sided bound (`PqxdhDeploymentHeadlineKeyTransfer.ce_kt_sum_le`: the sum over the targets of the ideal game's probability plus `kemLoss` and `slotLoss`) plus `ε_A2pub + ε_A1` plus the explicit public term `ctGapTerm` (F-ct2). Premises: those of `ce_kt_sum_le`, of `server_gap_bound` and of CE-A1 (CE-KT's own premises do not include `KemBound`, which CE-A1 needs). -/
 theorem ce_kt_sym (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)
     (codec : Codec Reader Response) (checks : Checks) (route : RawCtxServerRouting.SenderDecoder)
@@ -1032,6 +1193,121 @@ theorem ce_kt_sym (setup : Setup baseSpec KemSK)
       (PqxdhDeploymentHeadlineGap.sym_gap setup codec checks caps bounded shortRejects route ensureInit phase1 phase2
         frameReadBack writable law spread correct adapter bounds mode adversary budget respects runtime identityFallback
         ordinaryFallback a1Fallback signatureFallback))
+
+/-- `ce_app_beacon_sym` (design-v2 section 7.3; VC rows App-b2s, b2s-S2 on Beacon-side symbolic eligibility, mode P): the probability that the adversary's claimed fresh message, sent on a Beacon owner with `SymBeacon`, equals its guess is at most CE-APP's bound (`PqxdhDeploymentHeadlineApp.ce_app`) plus `ε_A1` plus the explicit public term `ctGapTerm` (F-ct2), through `ce_a1_linked`; unlike `ce_app_sym`, no `ε_A2pub`. Premises: those of `ce_app` and of CE-A1 (`FrameReadBack`, `ReadWritable`, `X25519ClassLaw`, `X25519ScalarSpread`, `HasAttachedVerificationAdapter`). -/
+theorem ce_app_beacon_sym (setup : Setup baseSpec KemSK)
+    (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)
+    (codec : Codec Reader Response) (checks : Checks) (route : RawCtxServerRouting.SenderDecoder)
+    (ensureInit : StateT A ProbComp Bool) (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
+    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
+    (correct : PqxdhFullSecretInputKdf.SourceFullCorrect setup.source setup.hmac) (caps : KemCaps)
+    (bounded : KemBound setup caps) (qInit : ℕ) (initBound : ∀ state, (ensureInit.run state).IsTotalQueryBound qInit)
+    (frameReadBack : PqxdhServerAuthNegativeControl.FrameReadBack codec)
+    (writable : PqxdhFirstBeaconRecordCanonical.ReadWritable codec.frameWrite codec.frameRead)
+    (law : PqxdhServerAuthAssumptions.X25519ClassLaw setup.source.crypto)
+    (spread : PqxdhServerAuthAssumptions.X25519ScalarSpread setup.source.crypto)
+    (adapter : PqxdhEd25519EufCma.HasAttachedVerificationAdapter
+      (fun identity => setup.source.crypto.verify identity.toList) setup.joint.verify)
+    (bounds : FreshBounds) (adversary : OracleComp (ModeSpec .P) X) (budget : Budget)
+    (respects : budget.Respects adversary) (runtime : A) (fallback : CtxNonceAeadIntCtxt.ModifiedNonceAeadForgery)
+    (appClaim : X → Option (Nat × Pqxdh.Bytes))
+    (a1Fallback : CtxNonceAeadIntCtxt.ModifiedNonceAeadForgery) (signatureFallback : PqxdhJointIdentity.Forgery) :
+    𝒟[appOwnerSym setup appClaim <$>
+      (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds .P adversary).run runtime] {true} ≤
+      (∑ g : Fin budget.accept × Fin budget.create,
+        (ENNReal.ofReal (kemLoss setup codec checks route ensureInit bounds .P adversary budget
+            (appEvent setup.source.crypto codec setup.serverKeyId budget appClaim) (appHandle appClaim)
+            (g.1, g.2.castSucc) runtime) +
+          ENNReal.ofReal (slotLoss setup codec checks route ensureInit bounds .P adversary budget
+            (appEvent setup.source.crypto codec setup.serverKeyId budget appClaim) (appHandle appClaim)
+            (g.1, g.2.castSucc) runtime) +
+          beta setup codec route checks ensureInit bounds .P adversary budget (g.1, g.2.castSucc) runtime +
+          recLoss setup codec checks route ensureInit bounds .P adversary budget (g.1, g.2.castSucc) runtime fallback
+            caps qInit (slotted setup codec budget (appEvent setup.source.crypto codec setup.serverKeyId budget appClaim)
+              (appHandle appClaim) (g.1, g.2.castSucc)) +
+          ((2 ^ bounds.min : ℕ) : ℝ≥0∞)⁻¹)) +
+      (ENNReal.ofReal (a1Term setup codec checks caps route bounds .P adversary budget a1Fallback signatureFallback) +
+        ctGapTerm setup codec checks route ensureInit bounds .P adversary runtime) :=
+  (ce_app_beacon_sym_le setup codec checks route ensureInit bounds .P adversary budget runtime appClaim).trans
+    (add_le_add (PqxdhDeploymentHeadlineApp.ce_app setup functional codec checks route ensureInit phase1 phase2 correct
+      caps bounded qInit initBound bounds adversary budget respects runtime fallback appClaim)
+      (PqxdhDeploymentHeadlineGap.ce_a1_linked setup codec checks caps bounded route ensureInit phase1 phase2
+        frameReadBack writable law spread correct adapter bounds .P adversary budget respects runtime a1Fallback
+        signatureFallback).1)
+
+/-- `ce_kt_server_sym` (design-v2 section 7.3 and section 12's S3-server row; VC row S3-server, and A1-root with a Server-peer claim, on Server-side symbolic eligibility): the probability of an event whose claim names a Server peer with `SymServer` is at most CE-KT's one-sided bound (`PqxdhDeploymentHeadlineKeyTransfer.ce_kt_sum_le`) plus `ε_A2pub`; no `ε_A1`, no `ctGapTerm`, no CE-A1 premise. Premises: those of `ce_kt_sum_le` and of `server_gap_bound` (`shortRejects`). -/
+theorem ce_kt_server_sym (setup : Setup baseSpec KemSK)
+    (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)
+    (codec : Codec Reader Response) (checks : Checks) (route : RawCtxServerRouting.SenderDecoder)
+    (ensureInit : StateT A ProbComp Bool) (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
+    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
+    (correct : PqxdhFullSecretInputKdf.SourceFullCorrect setup.source setup.hmac)
+    (shortRejects : ∀ (publicKey : PqxdhEd25519EufCma.Ed25519PublicKey) bytes, bytes.length < 64 →
+      setup.source.crypto.verify publicKey.toList bytes = none)
+    (bounds : FreshBounds) (mode : Mode)
+    (adversary : OracleComp (ModeSpec mode) X) (budget : Budget) (respects : budget.Respects adversary)
+    (event : Observed X → Bool) (claim : Observed X → Option Handle) (runtime : A)
+    (identityFallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : PqxdhJointIdentity.Forgery) :
+    𝒟[ktPeerSym setup codec event claim <$>
+      (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode adversary).run runtime] {true} ≤
+      (∑ g : Fin budget.accept × Fin budget.create,
+        (𝒟[(fun outcome => decide (happens event (PqxdhDeploymentIdealBranch.classicalOf outcome) = true ∧
+            PqxdhDeploymentKemTransfer.designated setup.source.crypto codec setup.serverKeyId budget claim
+              (PqxdhDeploymentIdealBranch.classicalOf outcome) =
+                some ((g.1, g.2.castSucc) : Fin budget.accept × Fin budget.capacity))) <$>
+          (PqxdhDeploymentIdealSteps.idealGame setup codec route checks budget (g.1, g.2.castSucc) ensureInit bounds
+            mode adversary).run runtime] {true} +
+        ENNReal.ofReal (kemLoss setup codec checks route ensureInit bounds mode adversary budget event claim
+          (g.1, g.2.castSucc) runtime) +
+        ENNReal.ofReal (slotLoss setup codec checks route ensureInit bounds mode adversary budget event claim
+          (g.1, g.2.castSucc) runtime))) +
+      a2pubTerm setup codec checks route ensureInit bounds mode adversary budget runtime identityFallback
+        ordinaryFallback :=
+  (ce_kt_server_sym_le setup codec checks route ensureInit bounds mode adversary budget runtime event claim).trans
+    (add_le_add (PqxdhDeploymentHeadlineKeyTransfer.ce_kt_sum_le setup functional codec checks route ensureInit phase1
+      phase2 correct bounds mode adversary budget respects event claim runtime)
+      (PqxdhDeploymentHeadlineGap.server_gap_bound setup codec checks shortRejects route ensureInit phase1 phase2 bounds
+        mode adversary budget respects runtime identityFallback ordinaryFallback))
+
+/-- `ce_kt_beacon_sym` (design-v2 section 7.3 and section 12's S3-beacon row; VC row S3-beacon, and A1-root with an owner claim, on Beacon-side symbolic eligibility): the probability of an event whose claim names an owner with `SymBeacon` is at most CE-KT's one-sided bound (`PqxdhDeploymentHeadlineKeyTransfer.ce_kt_sum_le`) plus `ε_A1` plus the explicit public term `ctGapTerm` (F-ct2), through `ce_a1_linked`; no `ε_A2pub`. Premises: those of `ce_kt_sum_le` and of CE-A1 (`KemBound`, `FrameReadBack`, `ReadWritable`, `X25519ClassLaw`, `X25519ScalarSpread`, `HasAttachedVerificationAdapter`). -/
+theorem ce_kt_beacon_sym (setup : Setup baseSpec KemSK)
+    (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)
+    (codec : Codec Reader Response) (checks : Checks) (route : RawCtxServerRouting.SenderDecoder)
+    (ensureInit : StateT A ProbComp Bool) (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
+    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
+    (correct : PqxdhFullSecretInputKdf.SourceFullCorrect setup.source setup.hmac) (caps : KemCaps)
+    (bounded : KemBound setup caps)
+    (frameReadBack : PqxdhServerAuthNegativeControl.FrameReadBack codec)
+    (writable : PqxdhFirstBeaconRecordCanonical.ReadWritable codec.frameWrite codec.frameRead)
+    (law : PqxdhServerAuthAssumptions.X25519ClassLaw setup.source.crypto)
+    (spread : PqxdhServerAuthAssumptions.X25519ScalarSpread setup.source.crypto)
+    (adapter : PqxdhEd25519EufCma.HasAttachedVerificationAdapter
+      (fun identity => setup.source.crypto.verify identity.toList) setup.joint.verify)
+    (bounds : FreshBounds) (mode : Mode)
+    (adversary : OracleComp (ModeSpec mode) X) (budget : Budget) (respects : budget.Respects adversary)
+    (event : Observed X → Bool) (claim : Observed X → Option Handle) (runtime : A)
+    (a1Fallback : CtxNonceAeadIntCtxt.ModifiedNonceAeadForgery) (signatureFallback : PqxdhJointIdentity.Forgery) :
+    𝒟[ktOwnerSym setup event claim <$>
+      (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode adversary).run runtime] {true} ≤
+      (∑ g : Fin budget.accept × Fin budget.create,
+        (𝒟[(fun outcome => decide (happens event (PqxdhDeploymentIdealBranch.classicalOf outcome) = true ∧
+            PqxdhDeploymentKemTransfer.designated setup.source.crypto codec setup.serverKeyId budget claim
+              (PqxdhDeploymentIdealBranch.classicalOf outcome) =
+                some ((g.1, g.2.castSucc) : Fin budget.accept × Fin budget.capacity))) <$>
+          (PqxdhDeploymentIdealSteps.idealGame setup codec route checks budget (g.1, g.2.castSucc) ensureInit bounds
+            mode adversary).run runtime] {true} +
+        ENNReal.ofReal (kemLoss setup codec checks route ensureInit bounds mode adversary budget event claim
+          (g.1, g.2.castSucc) runtime) +
+        ENNReal.ofReal (slotLoss setup codec checks route ensureInit bounds mode adversary budget event claim
+          (g.1, g.2.castSucc) runtime))) +
+      (ENNReal.ofReal (a1Term setup codec checks caps route bounds mode adversary budget a1Fallback signatureFallback) +
+        ctGapTerm setup codec checks route ensureInit bounds mode adversary runtime) :=
+  (ce_kt_beacon_sym_le setup codec checks route ensureInit bounds mode adversary budget runtime event claim).trans
+    (add_le_add (PqxdhDeploymentHeadlineKeyTransfer.ce_kt_sum_le setup functional codec checks route ensureInit phase1
+      phase2 correct bounds mode adversary budget respects event claim runtime)
+      (PqxdhDeploymentHeadlineGap.ce_a1_linked setup codec checks caps bounded route ensureInit phase1 phase2
+        frameReadBack writable law spread correct adapter bounds mode adversary budget respects runtime a1Fallback
+        signatureFallback).1)
 
 end Headlines
 
@@ -1127,6 +1403,30 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic.kt_sym' dep
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic.kt_sym
 
 /--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic.app_owner_sym' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic.app_owner_sym
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic.kt_peer_sym' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic.kt_peer_sym
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic.kt_owner_sym' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic.kt_owner_sym
+
+/--
 info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic.chance_le_add4' depends on axioms: [propext,
  Classical.choice,
  Quot.sound]
@@ -1191,6 +1491,30 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic.ce_kt_sym_l
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic.ce_kt_sym_le
 
 /--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic.ce_app_beacon_sym_le' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic.ce_app_beacon_sym_le
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic.ce_kt_server_sym_le' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic.ce_kt_server_sym_le
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic.ce_kt_beacon_sym_le' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic.ce_kt_beacon_sym_le
+
+/--
 info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic.ce_or_b2s_sym' depends on axioms: [propext,
  Classical.choice,
  Quot.sound]
@@ -1237,3 +1561,27 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic.ce_kt_sym' 
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic.ce_kt_sym
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic.ce_app_beacon_sym' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic.ce_app_beacon_sym
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic.ce_kt_server_sym' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic.ce_kt_server_sym
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic.ce_kt_beacon_sym' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic.ce_kt_beacon_sym

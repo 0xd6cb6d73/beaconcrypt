@@ -10,8 +10,9 @@ The symbolic left-or-right corollary of CE-LOR with the public NoBundleFailure f
 - Inclusion (`lor_inclusion`, design-v2 `e_CE ∧ NBF ⊆ e_sym ∧ NBF`): a designated handle on a NoBundleFailure run is symbolically eligible (`designated_sym`: a designated peer's accepted identity key is the designated owner's, whose honest bundle carries it; a designated owner's linked build response carries the constructed Server's identity, `build_pin`).
 - Difference (`lor_difference`): symbolic eligibility without CE eligibility is a gap (an admitted handle undesignated, `ServerGap`/`BeaconGap`) or a movement of designation after an admission. Admitted tests share the first test's session at admission (`SameSession`), the ledger's test session starts at the first admissible test (`ledgerInv_game`, from `PqxdhRecordLiftFlat.ledger_inv`), and designations of a prefix move only by `moves` (`peer_moves`: the designated owner decreases only when two distinct owners published one identity field, `SameField`, an identity collision on every outcome, `field_collision`; `owner_moves`: the designated session decreases only when two sessions carry the owner's ciphertext to its published PQ key, `CtCollAt`), using prefix stability of the transcript functions (`findSome_prefix`, `owners_prefix`, `publishes_prefix`, `linked_prefix`).
 - `symbolic_lor_le`: the two advantages (`Pr[W] − ½Pr[E]`) differ by at most half the probability of the difference event (nested sets, `nested_arith`). `lor_difference_bound`: that probability is at most `ε_A2pub + ε_A1 + ctGapTerm + ε_inj + ctCollTerm` (`sym_gap`, `identity_collision_game`). `symbolic_lor`: `|adv_sym − adv_CE| ≤ ½(ε_A2pub + ε_A1 + ctGapTerm + ε_inj + ctCollTerm)`; `symbolic_lor_bound`: `|adv_sym| ≤` CE-LOR's bound at `nbfFilter` `+ ½(…)`.
+- Server-side form (every admitted test handle a Server peer, CE-LOR's `PeerTests`; `LorEligPeerSym`, `LorWinPeerSym`): the difference is a Server-side gap or an identity collision (`lor_difference_peer`: an undesignated admitted peer is `ServerGap`, and a peer's designation moves only by `SameField`; neither the Beacon-side gap nor `CtColl` arises). `symbolic_lor_server_le`, `lor_difference_server_bound` (`ε_A2pub + ε_inj`), `symbolic_lor_server`: `|adv_sym_peer − adv_CE_peer| ≤ ½(ε_A2pub + ε_inj)`; `symbolic_lor_server_bound`: `|adv_sym_peer| ≤` `ce_lor_server`'s bound at `nbfFilter` (no `β_g`) `+ ½(ε_A2pub + ε_inj)`. No explicit term and no CE-A1 premise on this side.
 
-Explicit terms: `ctGapTerm` (F-ct2: the D-ct spike stopped, design-v2 section 8) and `ctCollTerm` (design-v2 section 7.4's `ε_ctcoll` needs the game-level `ct_collision_game`, not proved). No `StableTest` condition. No new assumption or contract.
+Explicit terms (`symbolic_lor`, `symbolic_lor_bound` only): `ctGapTerm` (F-ct2: the D-ct spike stopped, design-v2 section 8) and `ctCollTerm` (design-v2 section 7.4's `ε_ctcoll` needs the game-level `ct_collision_game`, not proved). No `StableTest` condition. No new assumption or contract.
 -/
 
 open OracleComp OracleSpec ENNReal
@@ -239,6 +240,34 @@ noncomputable def lorWinSym (setup : Setup baseSpec KemSK) (codec : Codec Reader
     (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A) :
     Bool :=
   decide (LorWinSym setup codec guess outcome)
+
+/-- The Server-side `e_sym`: `e_sym` with every admitted test handle a Server peer (CE-LOR's `PeerTests` on the final observation, the condition of `ce_lor_server`). -/
+def LorEligPeerSym (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A) :
+    Prop :=
+  LorEligSym setup codec outcome ∧ ∃ created output final, outcome.1 = some (created, output, final) ∧
+    PqxdhDeploymentHeadlineEvents.PeerTests setup.source.crypto codec setup.serverKeyId (output, final.1, final.2.produced)
+
+/-- The Server-side `e_sym` and a correct guess of the test bit. -/
+def LorWinPeerSym (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (guess : X → Bool)
+    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A) :
+    Prop :=
+  LorEligPeerSym setup codec outcome ∧ ∃ created output final, outcome.1 = some (created, output, final) ∧
+    final.1.test.map PqxdhDeploymentSecrecy.TestState.bit = some (guess output)
+
+open Classical in
+/-- `LorEligPeerSym` as a Boolean of the outcome. -/
+noncomputable def lorEligPeerSym (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A) :
+    Bool :=
+  decide (LorEligPeerSym setup codec outcome)
+
+open Classical in
+/-- `LorWinPeerSym` as a Boolean of the outcome. -/
+noncomputable def lorWinPeerSym (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (guess : X → Bool)
+    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A) :
+    Bool :=
+  decide (LorWinPeerSym setup codec guess outcome)
 
 end Events
 
@@ -510,6 +539,120 @@ theorem lor_difference (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
         congr 1
         exact Prod.ext (Fin.ext late₀.1.symm) (Fin.ext late₀.2.symm)
 
+/-- The Server-side difference (design-v2 section 7.5 restricted to Server-peer tests) on every outcome of the experiment: the Server-side symbolic eligibility without the Server-side CE-LOR eligibility (NoBundleFailure filter) is a Server-side gap (some admitted peer undesignated) or an identity collision (`IdentityCollision`: a peer's designated owner moved after an admission, `peer_moves`, `field_collision`). Neither the Beacon-side gap nor a ciphertext collision arises, because every admitted test handle is a Server peer. -/
+theorem lor_difference_peer (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)
+    (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec) (bounds : FreshBounds) (mode : Mode)
+    (adversary : OracleComp (ModeSpec mode) X) (budget : Budget) (runtime : A)
+    (outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.State KemSK) × A)
+    (member : outcome ∈ support ((PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode
+      adversary).run runtime))
+    (holds : LorEligPeerSym setup codec outcome) :
+    happens (PqxdhDeploymentHeadlineEvents.lorEligPeerEvent setup.source.crypto codec setup.serverKeyId budget
+        nbfFilter) outcome = true ∨
+      ServerGap setup codec budget outcome ∨ IdentityCollision setup outcome := by
+  classical
+  obtain ⟨⟨created, output, final, found, tested, clean, symbolic⟩, created', output', final', found', peers⟩ := holds
+  rw [found, Option.some.injEq, Prod.mk.injEq, Prod.mk.injEq] at found'
+  obtain ⟨rfl, rfl, rfl⟩ := found'
+  have observed : observeGame outcome.1 = some (output, final.1, final.2.produced) := by
+    rw [found]
+    rfl
+  by_cases gap : ServerGap setup codec budget outcome
+  · exact Or.inr (Or.inl gap)
+  by_cases collision : IdentityCollision setup outcome
+  · exact Or.inr (Or.inr collision)
+  left
+  have designatedOf : ∀ before entry after handle left right, final.1.transcript = before ++ entry :: after →
+      entry.query = .inr (.test handle left right) →
+      AdmittedTest setup.source.crypto codec setup.serverKeyId before handle left right →
+      (∃ keyId, handle = .peer keyId) ∧
+        ∃ g, designateIn setup.source.crypto codec setup.serverKeyId budget final.1.transcript handle = some g := by
+    intro before entry after handle left right split query admits
+    obtain ⟨keyId, rfl⟩ := peers before entry after handle left right split query admits
+    refine ⟨⟨keyId, rfl⟩, ?_⟩
+    cases designatedFound : designateIn setup.source.crypto codec setup.serverKeyId budget final.1.transcript
+        (.peer keyId) with
+    | none =>
+        exact absurd ⟨created, output, final, found, keyId,
+          symbolic before entry after (.peer keyId) left right split query admits, designatedFound⟩ gap
+    | some g => exact ⟨g, rfl⟩
+  have stays : ∀ (before rest : List Entry), final.1.transcript = before ++ rest → ∀ handle early late,
+      (∃ keyId, handle = .peer keyId) →
+      designate setup.source.crypto codec setup.serverKeyId before handle = some early →
+      designate setup.source.crypto codec setup.serverKeyId final.1.transcript handle = some late → late = early := by
+    intro before rest split handle early late isPeer earlyFound lateFound
+    obtain ⟨keyId, rfl⟩ := isPeer
+    rw [split] at lateFound
+    obtain ⟨sessionEq, same | field⟩ := peer_moves setup.source.crypto codec setup.serverKeyId before rest keyId
+      early.1 late.1 early.2 late.2 earlyFound lateFound
+    · exact Prod.ext sessionEq same
+    · rw [← split] at field
+      exact absurd (field_collision setup codec checks route ensureInit phase1 bounds mode adversary runtime outcome
+        member created output final found _ _ field) collision
+  have inv := ledgerInv_game setup codec checks route ensureInit 0 bounds mode adversary runtime outcome member created
+    output final found
+  obtain ⟨state, stateFound⟩ := Option.isSome_iff_exists.mp tested
+  have firstFound : firstTest final.1.transcript = some state.first := by
+    unfold PqxdhRecordLiftFlat.LedgerInv at inv
+    rw [← inv, stateFound]
+    rfl
+  obtain ⟨pre, entry₀, post, split₀, admissible₀, noneBefore⟩ := List.findSome?_eq_some_iff.mp firstFound
+  have firstNone : firstTest pre = none := List.findSome?_eq_none_iff.mpr noneBefore
+  have entryTest : ∃ left right, entry₀.query = .inr (.test state.first left right) ∧
+      PqxdhDeploymentSecrecy.Admissible left right := by
+    rcases entry₀ with ⟨query, reply⟩
+    rcases query with (coin | command) | (⟨handle, left, right⟩ | ⟨handle, length⟩)
+    · cases admissible₀
+    · cases admissible₀
+    · simp only [admissibleTest] at admissible₀
+      split at admissible₀
+      · rename_i good
+        simp only [Option.some.injEq] at admissible₀
+        exact ⟨left, right, by rw [admissible₀], good⟩
+      · cases admissible₀
+    · cases admissible₀
+  obtain ⟨left₀, right₀, query₀, good₀⟩ := entryTest
+  have admitted₀ : AdmittedTest setup.source.crypto codec setup.serverKeyId pre state.first left₀ right₀ :=
+    ⟨good₀, fun first found => by rw [firstNone] at found; cases found⟩
+  obtain ⟨isPeer₀, g, gFound⟩ := designatedOf pre entry₀ post state.first left₀ right₀ split₀ query₀ admitted₀
+  simp only [happens, observed, Option.any_some, PqxdhDeploymentHeadlineEvents.lorEligPeerEvent, decide_eq_true_eq]
+  refine ⟨⟨g, tested, (nbfFilter_iff _).mpr clean, ⟨state.first, firstFound, gFound⟩, ?_⟩, peers⟩
+  intro before entry after handle left right split query admits
+  obtain ⟨isPeerH, gh, ghFound⟩ := designatedOf before entry after handle left right split query admits
+  rw [ghFound]
+  cases firstBefore : firstTest before with
+  | none =>
+      have firstIs : firstTest final.1.transcript = some handle := by
+        rw [split, firstTest, List.findSome?_append, List.findSome?_cons]
+        rw [firstTest] at firstBefore
+        rw [firstBefore]
+        simp [admissibleTest, query, admits.1]
+      rw [firstFound, Option.some.injEq] at firstIs
+      rw [← firstIs] at ghFound
+      rw [gFound] at ghFound
+      exact ghFound.symm
+  | some first =>
+      have firstStable : firstTest final.1.transcript = some first := by
+        rw [split, firstTest]
+        exact findSome_prefix _ before _ first firstBefore
+      rw [firstFound, Option.some.injEq] at firstStable
+      rcases admits.2 first firstBefore with same | ⟨target, firstAt, handleAt⟩
+      · rw [same, ← firstStable] at ghFound
+        rw [gFound] at ghFound
+        exact ghFound.symm
+      · have early₀ : designate setup.source.crypto codec setup.serverKeyId before state.first = some target := by
+          rw [firstStable]
+          exact firstAt
+        have late₀ := stays before (entry :: after) split _ target _ isPeer₀ early₀
+          (PqxdhDeploymentKemTransfer.designateIn_some _ codec _ budget _ _ g gFound)
+        have lateH := stays before (entry :: after) split _ target _ isPeerH handleAt
+          (PqxdhDeploymentKemTransfer.designateIn_some _ codec _ budget _ _ gh ghFound)
+        rw [← lateH] at late₀
+        simp only [Prod.mk.injEq] at late₀
+        congr 1
+        exact Prod.ext (Fin.ext late₀.1.symm) (Fin.ext late₀.2.symm)
+
 end Containments
 
 /-! ### `symbolic_lor` -/
@@ -520,7 +663,7 @@ open PqxdhDeploymentHeadlineEvents (LorElig LorWin lorEligEvent lorWinEvent lorC
 open PqxdhDeploymentHeadlineGap (serverGap beaconGap a2pubTerm a1Term ctGapTerm chance_le_support
   chance_le_add_support)
 open PqxdhDeploymentHeadlineCollision (ctCollTerm injTerm)
-open PqxdhDeploymentHeadlineChain (kemLoss slotLoss recLoss slotted)
+open PqxdhDeploymentHeadlineChain (kemLoss slotLoss recLoss slotted serverSlotted)
 open PqxdhDeploymentHeadlineAnomaly (beta)
 
 /-- The real-number core of `symbolic_lor`: for nested events with `0 ≤ dW ≤ d`, the two advantages differ by `dW − d/2`, at most `d/2` in absolute value. -/
@@ -696,7 +839,7 @@ theorem ofReal_abs_triangle (a b : ℝ) (first second : ℝ≥0∞) (close : ENN
     linarith
   exact (ENNReal.ofReal_le_ofReal split).trans (ENNReal.ofReal_add_le.trans (add_le_add base close))
 
-/-- `symbolic_lor` (design-v2 section 7.5; VC rows SSX-b2s, SS-b2s, SSX-s2b, SS-s2b, 167/173 on symbolic eligibility, mode P): the symbolic LOR advantage (eligibility `e_sym`: a test session, no rejected bundle call in Fresh, every admitted test handle symbolically eligible, `SymServer` or `SymBeacon`) differs from CE-LOR's advantage with the public NoBundleFailure filter (`nbfFilter`) by at most `½(ε_A2pub + ε_A1 + ctGapTerm + ε_inj + ctCollTerm)`. `ctGapTerm` is F-ct2's explicit term (D-ct deferred) and `ctCollTerm` the explicit ciphertext-collision term (design-v2 section 7.4's `ε_ctcoll` needs the unproved game-level `ct_collision_game`). Premises: the approved Phase 1, Phase 2 and frame read-back contracts, `KemBound`, `shortRejects`, and CE-A1's (`ReadWritable`, `X25519ClassLaw`, `X25519ScalarSpread`, `SourceFullCorrect`, `HasAttachedVerificationAdapter`), and the budget. -/
+/-- `symbolic_lor` (design-v2 section 7.5; VC rows SSX-b2s, SS-b2s, 167/173 on symbolic eligibility, with any admitted test handles; the Server-side rows SSX-s2b, SS-s2b, whose tests are on Server peers, use `symbolic_lor_server` with `½(ε_A2pub + ε_inj)`; mode P): the symbolic LOR advantage (eligibility `e_sym`: a test session, no rejected bundle call in Fresh, every admitted test handle symbolically eligible, `SymServer` or `SymBeacon`) differs from CE-LOR's advantage with the public NoBundleFailure filter (`nbfFilter`) by at most `½(ε_A2pub + ε_A1 + ctGapTerm + ε_inj + ctCollTerm)`. `ctGapTerm` is F-ct2's explicit term (D-ct deferred) and `ctCollTerm` the explicit ciphertext-collision term (design-v2 section 7.4's `ε_ctcoll` needs the unproved game-level `ct_collision_game`). Premises: the approved Phase 1, Phase 2 and frame read-back contracts, `KemBound`, `shortRejects`, and CE-A1's (`ReadWritable`, `X25519ClassLaw`, `X25519ScalarSpread`, `SourceFullCorrect`, `HasAttachedVerificationAdapter`), and the budget. -/
 theorem symbolic_lor (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (caps : KemCaps) (bounded : KemBound setup caps)
     (shortRejects : ∀ (publicKey : PqxdhEd25519EufCma.Ed25519PublicKey) bytes, bytes.length < 64 →
@@ -799,6 +942,232 @@ theorem symbolic_lor_bound (setup : Setup baseSpec KemSK)
   have sym := symbolic_lor setup codec checks caps bounded shortRejects route ensureInit phase1 phase2 frameBack writable
     law spread correct adapter bounds adversary budget respects runtime guess identityFallback ordinaryFallback a1Fallback
     signatureFallback
+  exact ofReal_abs_triangle _ _ _ _ sym ce
+
+/-- `symbolic_lor_server` in event form: the Server-side symbolic LOR advantage (eligibility `LorEligPeerSym`: `e_sym` with every admitted test handle a Server peer) and the Server-side CE-LOR advantage with the NoBundleFailure filter (`lorEligPeerEvent`, `lorWinPeerEvent`) differ by at most half the probability of the Server-side difference event, because the Server-side CE eligibility is contained in the Server-side symbolic eligibility on the support (`lor_inclusion` with the same `PeerTests`). Premises: the approved Phase 1 and Phase 2 read-back contracts. -/
+theorem symbolic_lor_server_le (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)
+    (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
+    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec) (bounds : FreshBounds)
+    (adversary : OracleComp (ModeSpec .P) X) (budget : Budget) (runtime : A) (guess : X → Bool) :
+    ENNReal.ofReal |((𝒟[lorWinPeerSym setup codec guess <$>
+        (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds .P adversary).run runtime]
+          {true}).toReal -
+        (1 / 2) * (𝒟[lorEligPeerSym setup codec <$>
+          (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds .P adversary).run runtime]
+            {true}).toReal) -
+      ((𝒟[(fun outcome => happens (PqxdhDeploymentHeadlineEvents.lorWinPeerEvent setup.source.crypto codec
+          setup.serverKeyId budget guess nbfFilter) outcome) <$>
+        (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds .P adversary).run runtime]
+          {true}).toReal -
+        (1 / 2) * (𝒟[(fun outcome => happens (PqxdhDeploymentHeadlineEvents.lorEligPeerEvent setup.source.crypto
+          codec setup.serverKeyId budget nbfFilter) outcome) <$>
+          (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds .P adversary).run runtime]
+            {true}).toReal)| ≤
+      2⁻¹ * 𝒟[(fun outcome => lorEligPeerSym setup codec outcome &&
+          !happens (PqxdhDeploymentHeadlineEvents.lorEligPeerEvent setup.source.crypto codec setup.serverKeyId budget
+            nbfFilter) outcome) <$>
+        (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds .P adversary).run runtime] {true} := by
+  classical
+  set run := (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds .P adversary).run runtime
+  set eCE := fun outcome => happens (PqxdhDeploymentHeadlineEvents.lorEligPeerEvent setup.source.crypto codec
+    setup.serverKeyId budget nbfFilter) outcome
+  set wCE := fun outcome => happens (PqxdhDeploymentHeadlineEvents.lorWinPeerEvent setup.source.crypto codec
+    setup.serverKeyId budget guess nbfFilter) outcome
+  have unpackElig : ∀ outcome, eCE outcome = true → ∃ created output final, outcome.1 = some (created, output, final) ∧
+      (∃ g, LorElig setup.source.crypto codec setup.serverKeyId budget nbfFilter g (output, final.1, final.2.produced)) ∧
+      PqxdhDeploymentHeadlineEvents.PeerTests setup.source.crypto codec setup.serverKeyId
+        (output, final.1, final.2.produced) := by
+    intro outcome held
+    simp only [eCE, happens] at held
+    rcases found : outcome.1 with _ | ⟨created, output, final⟩
+    · simp [observeGame, found] at held
+    · simp only [observeGame, found, Option.map_some, Option.any_some,
+        PqxdhDeploymentHeadlineEvents.lorEligPeerEvent, decide_eq_true_eq] at held
+      exact ⟨created, output, final, rfl, held⟩
+  have symOf : ∀ outcome ∈ support run, ∀ created output final, outcome.1 = some (created, output, final) →
+      (∃ g, LorElig setup.source.crypto codec setup.serverKeyId budget nbfFilter g (output, final.1, final.2.produced)) →
+      PqxdhDeploymentHeadlineEvents.PeerTests setup.source.crypto codec setup.serverKeyId
+        (output, final.1, final.2.produced) →
+      LorEligPeerSym setup codec outcome := by
+    intro outcome member created output final found ⟨g, eligible⟩ peers
+    exact ⟨lor_inclusion setup codec checks route ensureInit phase1 phase2 bounds .P adversary budget runtime outcome
+      member created output final found g eligible, created, output, final, found, peers⟩
+  have splitW := PqxdhDeploymentHeadlineLor.chance_split run (lorWinPeerSym setup codec guess)
+    (fun outcome => eCE outcome = true)
+  have splitE := PqxdhDeploymentHeadlineLor.chance_split run (lorEligPeerSym setup codec)
+    (fun outcome => eCE outcome = true)
+  have winSame : 𝒟[(fun outcome => decide (lorWinPeerSym setup codec guess outcome = true ∧ eCE outcome = true)) <$>
+      run] {true} = 𝒟[wCE <$> run] {true} := by
+    refine chance_eq_support run _ _ fun outcome member => ?_
+    simp only [decide_eq_true_eq, lorWinPeerSym, wCE]
+    constructor
+    · rintro ⟨⟨_, created, output, final, found, bit⟩, elig⟩
+      obtain ⟨created', output', final', found', ⟨g, eligible⟩, peers⟩ := unpackElig outcome elig
+      rw [found] at found'
+      simp only [Option.some.injEq, Prod.mk.injEq] at found'
+      obtain ⟨rfl, rfl, rfl⟩ := found'
+      simp only [happens, observeGame, found, Option.map_some, Option.any_some,
+        PqxdhDeploymentHeadlineEvents.lorWinPeerEvent, decide_eq_true_eq]
+      exact ⟨⟨g, eligible, bit⟩, peers⟩
+    · intro won
+      simp only [happens] at won
+      rcases found : outcome.1 with _ | ⟨created, output, final⟩
+      · simp [observeGame, found] at won
+      · simp only [observeGame, found, Option.map_some, Option.any_some,
+          PqxdhDeploymentHeadlineEvents.lorWinPeerEvent, decide_eq_true_eq] at won
+        obtain ⟨⟨g, eligible, bit⟩, peers⟩ := won
+        refine ⟨⟨symOf outcome member created output final found ⟨g, eligible⟩ peers, created, output, final, found,
+          bit⟩, ?_⟩
+        simp only [eCE, happens, observeGame, found, Option.map_some, Option.any_some,
+          PqxdhDeploymentHeadlineEvents.lorEligPeerEvent, decide_eq_true_eq]
+        exact ⟨⟨g, eligible⟩, peers⟩
+  have eligSame : 𝒟[(fun outcome => decide (lorEligPeerSym setup codec outcome = true ∧ eCE outcome = true)) <$> run]
+      {true} = 𝒟[eCE <$> run] {true} := by
+    refine chance_eq_support run _ _ fun outcome member => ?_
+    simp only [decide_eq_true_eq]
+    constructor
+    · exact fun held => held.2
+    · intro elig
+      refine ⟨?_, elig⟩
+      obtain ⟨created, output, final, found, eligible, peers⟩ := unpackElig outcome elig
+      simp only [lorEligPeerSym, decide_eq_true_eq]
+      exact symOf outcome member created output final found eligible peers
+  have dBelow : 𝒟[(fun outcome => decide (lorWinPeerSym setup codec guess outcome = true ∧ ¬eCE outcome = true)) <$>
+      run] {true} ≤ 𝒟[(fun outcome => decide (lorEligPeerSym setup codec outcome = true ∧ ¬eCE outcome = true)) <$>
+        run] {true} := by
+    refine chance_le_support run _ _ fun outcome _ held => ?_
+    simp only [decide_eq_true_eq, lorWinPeerSym, lorEligPeerSym] at held ⊢
+    exact ⟨held.1.1, held.2⟩
+  have dSame : 𝒟[(fun outcome => decide (lorEligPeerSym setup codec outcome = true ∧ ¬eCE outcome = true)) <$> run]
+      {true} = 𝒟[(fun outcome => lorEligPeerSym setup codec outcome && !eCE outcome) <$> run] {true} := by
+    refine chance_eq_support run _ _ fun outcome _ => ?_
+    simp
+  have finite : ∀ f : _ → Bool, 𝒟[f <$> run] {true} ≠ ⊤ := fun f => UniformTargetSelection.chance_ne_top run f
+  rw [winSame] at splitW
+  rw [eligSame] at splitE
+  have core := nested_arith _ _ _ _ _ _
+    (congrArg ENNReal.toReal splitW |>.trans (ENNReal.toReal_add (finite _) (finite _)))
+    (congrArg ENNReal.toReal splitE |>.trans (ENNReal.toReal_add (finite _) (finite _)))
+    ENNReal.toReal_nonneg (ENNReal.toReal_mono (finite _) dBelow)
+  refine (ENNReal.ofReal_le_ofReal core).trans ?_
+  rw [PqxdhDeploymentHeadlineLor.ofReal_half, ENNReal.ofReal_toReal (finite _), dSame]
+
+/-- The Server-side difference event of `symbolic_lor_server` is bounded by `ε_A2pub + ε_inj` (`lor_difference_peer`, `server_gap_bound`, `identity_collision_game`); no `ε_A1`, `ctGapTerm` or `ctCollTerm`. -/
+theorem lor_difference_server_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (shortRejects : ∀ (publicKey : PqxdhEd25519EufCma.Ed25519PublicKey) bytes, bytes.length < 64 →
+      setup.source.crypto.verify publicKey.toList bytes = none)
+    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)
+    (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
+    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
+    (bounds : FreshBounds) (adversary : OracleComp (ModeSpec .P) X) (budget : Budget)
+    (respects : budget.Respects adversary) (runtime : A)
+    (identityFallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : PqxdhJointIdentity.Forgery) :
+    𝒟[(fun outcome => lorEligPeerSym setup codec outcome &&
+          !happens (PqxdhDeploymentHeadlineEvents.lorEligPeerEvent setup.source.crypto codec setup.serverKeyId budget
+            nbfFilter) outcome) <$>
+        (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds .P adversary).run runtime] {true} ≤
+      a2pubTerm setup codec checks route ensureInit bounds .P adversary budget runtime identityFallback
+        ordinaryFallback +
+      injTerm setup budget := by
+  classical
+  refine (chance_le_add_support _ _ (serverGap setup codec budget)
+    (fun outcome => @decide (IdentityCollision setup outcome) (Classical.propDecidable _))
+    fun outcome member held => ?_).trans ?_
+  · simp only [Bool.and_eq_true, Bool.not_eq_true', lorEligPeerSym, decide_eq_true_eq] at held
+    rcases lor_difference_peer setup codec checks route ensureInit phase1 bounds .P adversary budget runtime outcome
+      member held.1 with elig | gap | collision
+    · rw [elig] at held
+      cases held.2
+    · left
+      simp [serverGap, gap]
+    · right
+      simp [collision]
+  · exact add_le_add (PqxdhDeploymentHeadlineGap.server_gap_bound setup codec checks shortRejects route ensureInit
+      phase1 phase2 bounds .P adversary budget respects runtime identityFallback ordinaryFallback)
+      (PqxdhDeploymentHeadlineCollision.identity_collision_game setup codec checks route ensureInit phase1 phase2 bounds
+        .P adversary budget respects runtime)
+
+/-- `symbolic_lor_server` (design-v2 section 7.5 restricted to Server-peer tests; VC rows SSX-s2b, SS-s2b on Server-side symbolic eligibility, mode P): the Server-side symbolic LOR advantage (eligibility `LorEligPeerSym`: a test session, no rejected bundle call in Fresh, every admitted test handle a Server peer with `SymServer`) differs from the Server-side CE-LOR advantage with the public NoBundleFailure filter (`ce_lor_server`'s events at `nbfFilter`) by at most `½(ε_A2pub + ε_inj)`; no `ε_A1`, `ctGapTerm` or `ctCollTerm`. Premises: the approved Phase 1 and Phase 2 read-back contracts, `shortRejects` and the budget. -/
+theorem symbolic_lor_server (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (shortRejects : ∀ (publicKey : PqxdhEd25519EufCma.Ed25519PublicKey) bytes, bytes.length < 64 →
+      setup.source.crypto.verify publicKey.toList bytes = none)
+    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)
+    (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
+    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
+    (bounds : FreshBounds) (adversary : OracleComp (ModeSpec .P) X) (budget : Budget)
+    (respects : budget.Respects adversary) (runtime : A) (guess : X → Bool)
+    (identityFallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : PqxdhJointIdentity.Forgery) :
+    ENNReal.ofReal |((𝒟[lorWinPeerSym setup codec guess <$>
+        (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds .P adversary).run runtime]
+          {true}).toReal -
+        (1 / 2) * (𝒟[lorEligPeerSym setup codec <$>
+          (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds .P adversary).run runtime]
+            {true}).toReal) -
+      ((𝒟[(fun outcome => happens (PqxdhDeploymentHeadlineEvents.lorWinPeerEvent setup.source.crypto codec
+          setup.serverKeyId budget guess nbfFilter) outcome) <$>
+        (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds .P adversary).run runtime]
+          {true}).toReal -
+        (1 / 2) * (𝒟[(fun outcome => happens (PqxdhDeploymentHeadlineEvents.lorEligPeerEvent setup.source.crypto
+          codec setup.serverKeyId budget nbfFilter) outcome) <$>
+          (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds .P adversary).run runtime]
+            {true}).toReal)| ≤
+      2⁻¹ * (a2pubTerm setup codec checks route ensureInit bounds .P adversary budget runtime identityFallback
+          ordinaryFallback +
+        injTerm setup budget) :=
+  (symbolic_lor_server_le setup codec checks route ensureInit phase1 phase2 bounds adversary budget runtime guess).trans
+    (mul_le_mul_right (lor_difference_server_bound setup codec checks shortRejects route ensureInit phase1 phase2 bounds
+      adversary budget respects runtime identityFallback ordinaryFallback) _)
+
+/-- `symbolic_lor_server` with CE-LOR's Server-side bound (`PqxdhDeploymentHeadlineLor.ce_lor_server` at the NoBundleFailure filter, no `β_g`): the Server-side symbolic LOR advantage is at most `ce_lor_server`'s bound plus `½(ε_A2pub + ε_inj)`. Premises: those of `ce_lor_server` and of `symbolic_lor_server`. -/
+theorem symbolic_lor_server_bound (setup : Setup baseSpec KemSK)
+    (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)
+    (codec : Codec Reader Response) (checks : Checks) (caps : KemCaps) (bounded : KemBound setup caps)
+    (shortRejects : ∀ (publicKey : PqxdhEd25519EufCma.Ed25519PublicKey) bytes, bytes.length < 64 →
+      setup.source.crypto.verify publicKey.toList bytes = none)
+    (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)
+    (qInit : ℕ) (initBound : ∀ state, (ensureInit.run state).IsTotalQueryBound qInit)
+    (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
+    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
+    (correct : PqxdhFullSecretInputKdf.SourceFullCorrect setup.source setup.hmac)
+    (bounds : FreshBounds) (adversary : OracleComp (ModeSpec .P) X) (budget : Budget)
+    (respects : budget.Respects adversary) (runtime : A) (fallback : CtxNonceAeadIntCtxt.ModifiedNonceAeadForgery)
+    (guess : X → Bool)
+    (identityFallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : PqxdhJointIdentity.Forgery) :
+    ENNReal.ofReal |((𝒟[lorWinPeerSym setup codec guess <$>
+        (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds .P adversary).run runtime]
+          {true}).toReal -
+        (1 / 2) * (𝒟[lorEligPeerSym setup codec <$>
+          (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds .P adversary).run runtime]
+            {true}).toReal)| ≤
+      (∑ g : Fin budget.accept × Fin budget.create,
+        (ENNReal.ofReal (kemLoss setup codec checks route ensureInit bounds .P adversary budget
+            (PqxdhDeploymentHeadlineEvents.lorWinPeerEvent setup.source.crypto codec setup.serverKeyId budget guess
+              nbfFilter) lorClaim (g.1, g.2.castSucc) runtime) +
+          ENNReal.ofReal (slotLoss setup codec checks route ensureInit bounds .P adversary budget
+            (PqxdhDeploymentHeadlineEvents.lorWinPeerEvent setup.source.crypto codec setup.serverKeyId budget guess
+              nbfFilter) lorClaim (g.1, g.2.castSucc) runtime) +
+          recLoss setup codec checks route ensureInit bounds .P adversary budget (g.1, g.2.castSucc) runtime fallback
+            caps qInit (serverSlotted setup codec budget
+              (PqxdhDeploymentHeadlineEvents.lorWinPeerEvent setup.source.crypto codec setup.serverKeyId budget guess
+                nbfFilter) lorClaim (g.1, g.2.castSucc)) +
+          2⁻¹ * (ENNReal.ofReal (kemLoss setup codec checks route ensureInit bounds .P adversary budget
+              (PqxdhDeploymentHeadlineEvents.lorEligPeerEvent setup.source.crypto codec setup.serverKeyId budget
+                nbfFilter) lorClaim (g.1, g.2.castSucc) runtime) +
+            ENNReal.ofReal (slotLoss setup codec checks route ensureInit bounds .P adversary budget
+              (PqxdhDeploymentHeadlineEvents.lorEligPeerEvent setup.source.crypto codec setup.serverKeyId budget
+                nbfFilter) lorClaim (g.1, g.2.castSucc) runtime) +
+            recLoss setup codec checks route ensureInit bounds .P adversary budget (g.1, g.2.castSucc) runtime fallback
+              caps qInit (serverSlotted setup codec budget
+                (PqxdhDeploymentHeadlineEvents.lorEligPeerEvent setup.source.crypto codec setup.serverKeyId budget
+                  nbfFilter) lorClaim (g.1, g.2.castSucc))))) +
+      2⁻¹ * (a2pubTerm setup codec checks route ensureInit bounds .P adversary budget runtime identityFallback
+          ordinaryFallback +
+        injTerm setup budget) := by
+  have ce := PqxdhDeploymentHeadlineLor.ce_lor_server setup functional codec checks route ensureInit phase1 phase2
+    correct caps bounded qInit initBound bounds adversary budget respects runtime fallback guess nbfFilter
+  have sym := symbolic_lor_server setup codec checks shortRejects route ensureInit phase1 phase2 bounds adversary budget
+    respects runtime guess identityFallback ordinaryFallback
   exact ofReal_abs_triangle _ _ _ _ sym ce
 
 end Bound
@@ -939,6 +1308,14 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolicLor.lor_diff
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolicLor.lor_difference
 
 /--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolicLor.lor_difference_peer' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolicLor.lor_difference_peer
+
+/--
 info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolicLor.nested_arith' depends on axioms: [propext,
  Classical.choice,
  Quot.sound]
@@ -993,3 +1370,35 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolicLor.symbolic
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolicLor.symbolic_lor_bound
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolicLor.symbolic_lor_server_le' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolicLor.symbolic_lor_server_le
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolicLor.lor_difference_server_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolicLor.lor_difference_server_bound
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolicLor.symbolic_lor_server' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolicLor.symbolic_lor_server
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolicLor.symbolic_lor_server_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolicLor.symbolic_lor_server_bound
