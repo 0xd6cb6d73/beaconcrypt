@@ -2123,6 +2123,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemSplit
 
 import BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterParams
 
+import BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterPool
+
 /-!
 # Beaconcrypt-core verification root
 

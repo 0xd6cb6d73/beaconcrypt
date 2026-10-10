@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1903
+	[handwritten-lean]=1904
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -39095,6 +39095,71 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem draws_swapL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterParams theorem draws_swapL"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterParams\.laterSlotGame_pool$' "$selected_source_module" "PqxdhDeploymentIdealLaterParams dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterParams.laterSlotGame_pool"
 require_line_count 1 '^theorem laterSlotGame_pool([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterParams theorem laterSlotGame_pool"
+
+# LQ-F upstream unit B1: the logged handlers with the KEM creations reading the challenger's pool
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterPool.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterPool$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentIdealLaterPool root import"
+require_line_count 29 '^theorem ' "$selected_source_module" "PqxdhDeploymentIdealLaterPool theorem inventory"
+require_line_count 29 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentIdealLaterPool guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterPool\.nativePoolL_quiet$' "$selected_source_module" "PqxdhDeploymentIdealLaterPool dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterPool.nativePoolL_quiet"
+require_line_count 1 '^theorem nativePoolL_quiet([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterPool theorem nativePoolL_quiet"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterPool\.nativePoolL_program_quiet$' "$selected_source_module" "PqxdhDeploymentIdealLaterPool dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterPool.nativePoolL_program_quiet"
+require_line_count 1 '^theorem nativePoolL_program_quiet([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterPool theorem nativePoolL_program_quiet"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterPool\.compiledPoolL_accept$' "$selected_source_module" "PqxdhDeploymentIdealLaterPool dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterPool.compiledPoolL_accept"
+require_line_count 1 '^theorem compiledPoolL_accept([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterPool theorem compiledPoolL_accept"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterPool\.compiledPoolL_quiet$' "$selected_source_module" "PqxdhDeploymentIdealLaterPool dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterPool.compiledPoolL_quiet"
+require_line_count 1 '^theorem compiledPoolL_quiet([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterPool theorem compiledPoolL_quiet"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterPool\.handlerPoolL_quiet$' "$selected_source_module" "PqxdhDeploymentIdealLaterPool dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterPool.handlerPoolL_quiet"
+require_line_count 1 '^theorem handlerPoolL_quiet([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterPool theorem handlerPoolL_quiet"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterPool\.compiledPoolL_server$' "$selected_source_module" "PqxdhDeploymentIdealLaterPool dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterPool.compiledPoolL_server"
+require_line_count 1 '^theorem compiledPoolL_server([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterPool theorem compiledPoolL_server"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterPool\.step_merge_poolL$' "$selected_source_module" "PqxdhDeploymentIdealLaterPool dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterPool.step_merge_poolL"
+require_line_count 1 '^theorem step_merge_poolL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterPool theorem step_merge_poolL"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterPool\.good_step_poolL$' "$selected_source_module" "PqxdhDeploymentIdealLaterPool dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterPool.good_step_poolL"
+require_line_count 1 '^theorem good_step_poolL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterPool theorem good_step_poolL"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterPool\.compile_simulation_poolL$' "$selected_source_module" "PqxdhDeploymentIdealLaterPool dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterPool.compile_simulation_poolL"
+require_line_count 1 '^theorem compile_simulation_poolL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterPool theorem compile_simulation_poolL"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterPool\.sourcePoolL_quiet$' "$selected_source_module" "PqxdhDeploymentIdealLaterPool dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterPool.sourcePoolL_quiet"
+require_line_count 1 '^theorem sourcePoolL_quiet([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterPool theorem sourcePoolL_quiet"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterPool\.sourcePoolL_native$' "$selected_source_module" "PqxdhDeploymentIdealLaterPool dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterPool.sourcePoolL_native"
+require_line_count 1 '^theorem sourcePoolL_native([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterPool theorem sourcePoolL_native"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterPool\.programPool_nativeL$' "$selected_source_module" "PqxdhDeploymentIdealLaterPool dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterPool.programPool_nativeL"
+require_line_count 1 '^theorem programPool_nativeL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterPool theorem programPool_nativeL"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterPool\.executeWithL_bind$' "$selected_source_module" "PqxdhDeploymentIdealLaterPool dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterPool.executeWithL_bind"
+require_line_count 1 '^theorem executeWithL_bind([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterPool theorem executeWithL_bind"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterPool\.generic_reservedL$' "$selected_source_module" "PqxdhDeploymentIdealLaterPool dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterPool.generic_reservedL"
+require_line_count 1 '^theorem generic_reservedL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterPool theorem generic_reservedL"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterPool\.sourcePoolL_accept$' "$selected_source_module" "PqxdhDeploymentIdealLaterPool dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterPool.sourcePoolL_accept"
+require_line_count 1 '^theorem sourcePoolL_accept([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterPool theorem sourcePoolL_accept"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterPool\.accept_reservedL$' "$selected_source_module" "PqxdhDeploymentIdealLaterPool dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterPool.accept_reservedL"
+require_line_count 1 '^theorem accept_reservedL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterPool theorem accept_reservedL"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterPool\.query_reservedL$' "$selected_source_module" "PqxdhDeploymentIdealLaterPool dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterPool.query_reservedL"
+require_line_count 1 '^theorem query_reservedL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterPool theorem query_reservedL"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterPool\.sourcePoolL_projection$' "$selected_source_module" "PqxdhDeploymentIdealLaterPool dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterPool.sourcePoolL_projection"
+require_line_count 1 '^theorem sourcePoolL_projection([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterPool theorem sourcePoolL_projection"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterPool\.sourcePoolL_owned$' "$selected_source_module" "PqxdhDeploymentIdealLaterPool dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterPool.sourcePoolL_owned"
+require_line_count 1 '^theorem sourcePoolL_owned([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterPool theorem sourcePoolL_owned"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterPool\.program_reservedL$' "$selected_source_module" "PqxdhDeploymentIdealLaterPool dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterPool.program_reservedL"
+require_line_count 1 '^theorem program_reservedL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterPool theorem program_reservedL"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterPool\.kemCommands_stoppedL$' "$selected_source_module" "PqxdhDeploymentIdealLaterPool dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterPool.kemCommands_stoppedL"
+require_line_count 1 '^theorem kemCommands_stoppedL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterPool theorem kemCommands_stoppedL"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterPool\.snapPoolL_real$' "$selected_source_module" "PqxdhDeploymentIdealLaterPool dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterPool.snapPoolL_real"
+require_line_count 1 '^theorem snapPoolL_real([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterPool theorem snapPoolL_real"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterPool\.realRegAt_view$' "$selected_source_module" "PqxdhDeploymentIdealLaterPool dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterPool.realRegAt_view"
+require_line_count 1 '^theorem realRegAt_view([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterPool theorem realRegAt_view"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterPool\.onBase_view$' "$selected_source_module" "PqxdhDeploymentIdealLaterPool dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterPool.onBase_view"
+require_line_count 1 '^theorem onBase_view([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterPool theorem onBase_view"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterPool\.idealReg_liftL$' "$selected_source_module" "PqxdhDeploymentIdealLaterPool dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterPool.idealReg_liftL"
+require_line_count 1 '^theorem idealReg_liftL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterPool theorem idealReg_liftL"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterPool\.preStepL$' "$selected_source_module" "PqxdhDeploymentIdealLaterPool dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterPool.preStepL"
+require_line_count 1 '^theorem preStepL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterPool theorem preStepL"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterPool\.preScanL$' "$selected_source_module" "PqxdhDeploymentIdealLaterPool dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterPool.preScanL"
+require_line_count 1 '^theorem preScanL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterPool theorem preScanL"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterPool\.stopped_stepL$' "$selected_source_module" "PqxdhDeploymentIdealLaterPool dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterPool.stopped_stepL"
+require_line_count 1 '^theorem stopped_stepL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterPool theorem stopped_stepL"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterPool\.stopped_programL$' "$selected_source_module" "PqxdhDeploymentIdealLaterPool dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterPool.stopped_programL"
+require_line_count 1 '^theorem stopped_programL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterPool theorem stopped_programL"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
