@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1888
+	[handwritten-lean]=1889
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -38610,6 +38610,39 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem appPeer_named([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineEvents theorem appPeer_named"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineEvents\.lorElig_target$' "$selected_source_module" "PqxdhDeploymentHeadlineEvents dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineEvents.lorElig_target"
 require_line_count 1 '^theorem lorElig_target([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineEvents theorem lorElig_target"
+
+# CE-12 P1: the containments of the headlines on every record-lift view (C8).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineContain.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineContain$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentHeadlineContain root import"
+require_line_count 13 '^theorem ' "$selected_source_module" "PqxdhDeploymentHeadlineContain theorem inventory"
+require_line_count 13 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentHeadlineContain guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineContain\.designation_peer$' "$selected_source_module" "PqxdhDeploymentHeadlineContain dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineContain.designation_peer"
+require_line_count 1 '^theorem designation_peer([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineContain theorem designation_peer"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineContain\.designation_owner$' "$selected_source_module" "PqxdhDeploymentHeadlineContain dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineContain.designation_owner"
+require_line_count 1 '^theorem designation_owner([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineContain theorem designation_owner"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineContain\.designation_slot$' "$selected_source_module" "PqxdhDeploymentHeadlineContain dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineContain.designation_slot"
+require_line_count 1 '^theorem designation_slot([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineContain theorem designation_slot"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineContain\.decision_unpack$' "$selected_source_module" "PqxdhDeploymentHeadlineContain dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineContain.decision_unpack"
+require_line_count 1 '^theorem decision_unpack([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineContain theorem decision_unpack"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineContain\.origin_b2s$' "$selected_source_module" "PqxdhDeploymentHeadlineContain dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineContain.origin_b2s"
+require_line_count 1 '^theorem origin_b2s([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineContain theorem origin_b2s"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineContain\.origin_s2b$' "$selected_source_module" "PqxdhDeploymentHeadlineContain dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineContain.origin_s2b"
+require_line_count 1 '^theorem origin_s2b([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineContain theorem origin_s2b"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineContain\.uks_receiver$' "$selected_source_module" "PqxdhDeploymentHeadlineContain dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineContain.uks_receiver"
+require_line_count 1 '^theorem uks_receiver([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineContain theorem uks_receiver"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineContain\.uks_sender$' "$selected_source_module" "PqxdhDeploymentHeadlineContain dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineContain.uks_sender"
+require_line_count 1 '^theorem uks_sender([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineContain theorem uks_sender"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineContain\.app_hit$' "$selected_source_module" "PqxdhDeploymentHeadlineContain dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineContain.app_hit"
+require_line_count 1 '^theorem app_hit([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineContain theorem app_hit"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineContain\.app_peer_hit$' "$selected_source_module" "PqxdhDeploymentHeadlineContain dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineContain.app_peer_hit"
+require_line_count 1 '^theorem app_peer_hit([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineContain theorem app_peer_hit"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineContain\.lor_hidden$' "$selected_source_module" "PqxdhDeploymentHeadlineContain dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineContain.lor_hidden"
+require_line_count 1 '^theorem lor_hidden([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineContain theorem lor_hidden"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineContain\.lor_peer_hidden$' "$selected_source_module" "PqxdhDeploymentHeadlineContain dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineContain.lor_peer_hidden"
+require_line_count 1 '^theorem lor_peer_hidden([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineContain theorem lor_peer_hidden"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineContain\.chance_mono$' "$selected_source_module" "PqxdhDeploymentHeadlineContain dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineContain.chance_mono"
+require_line_count 1 '^theorem chance_mono([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineContain theorem chance_mono"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
