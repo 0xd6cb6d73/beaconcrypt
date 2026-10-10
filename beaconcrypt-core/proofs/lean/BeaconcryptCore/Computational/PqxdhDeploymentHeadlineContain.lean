@@ -327,7 +327,6 @@ end Contain
 
 /-! ### Monotonicity of a pointwise containment -/
 
-set_option linter.deprecated false in
 /-- A Boolean observation that implies another on every outcome has at most its probability. -/
 theorem chance_mono {α : Type} (run : ProbComp α) (first second : α → Bool)
     (implies : ∀ a, first a = true → second a = true) : 𝒟[first <$> run] {true} ≤ 𝒟[second <$> run] {true} := by

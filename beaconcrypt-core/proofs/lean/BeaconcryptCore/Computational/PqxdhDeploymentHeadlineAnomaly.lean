@@ -137,7 +137,6 @@ theorem ctGuess_draws (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
   unfold PqxdhDeploymentIdealAnomalyGuesser.ctGuessByCca
   rw [program, simulateQ_map]
 
-set_option linter.deprecated false in
 /-- The real branch of `ptc` succeeds exactly when the prediction is the challenge ciphertext and its decapsulation is the encapsulated key. -/
 theorem ptc_real_draws (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (functional : FunctionalDecapsulation setup.kem)
@@ -183,7 +182,7 @@ theorem ptc_random_le (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
                 $ᵗ MlKemSharedSecret]
               ≤ Pr[fun candidate => candidate = k | $ᵗ MlKemSharedSecret] := by
                 refine probEvent_mono fun candidate _ hit => ?_
-                simp only [Function.comp_apply, ptcOutcome, mapped, Bool.false_eq_true, if_false,
+                simp only [Function.comp_apply, ptcOutcome, mapped, Bool.false_eq_true, ite_false,
                   decide_eq_true_eq] at hit
                 exact hit.2.symm
             _ = (2 ^ 256 : ℝ≥0∞)⁻¹ := by
