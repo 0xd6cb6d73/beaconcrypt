@@ -20,7 +20,6 @@ open PqxdhServerAuthNative (NativeState eraseObservers)
 open PqxdhSecretInputKdf (HmacOracle RootOutput)
 open PqxdhRegistrationJointKemObserverFree (eraseImpl run_eraseOption eraseOptionImpl eraseJoint eraseJoint_idem
   evaluate_map post_neverRead)
-open PqxdhRegistrationJointKemCommands (Outcome)
 open PqxdhRegistrationJointKemResume (ResultState)
 open PqxdhRegistrationJointAcceptCutTag (Tag decideTag)
 open PqxdhRegistrationJointAcceptKemCut (hide)
@@ -28,9 +27,9 @@ open PqxdhRegistrationJointGeneratedFinish (EncodedEntry)
 open PqxdhRegistrationJointKemOpaqueResume (liftImpl clientNative forwardClient)
 open PqxdhRegistrationJointBeaconOpaqueFinish (layered)
 open PqxdhRegistrationJointBeaconOpaqueFinishRouter (placeholder)
-open PqxdhRegistrationJointKemPostSkeleton (GSpec groupedClient groupedImpl groupedPoolLift client_grouped SplitC join
+open PqxdhRegistrationJointKemPostSkeleton (groupedClient groupedImpl groupedPoolLift client_grouped SplitC join
   opRoot coinsEnc tableAt split_run resumeImpl resumeImpl_split groupedImpl_split nativeServices liftT acceptTail
-  encLift tableAt_encLift liftT_split split_acceptTail lift_native_run compileHidden shared_compile push_stateless
+  encLift tableAt_encLift liftT_split split_acceptTail compileHidden shared_compile push_stateless
   push_option actual_coins router_coins evalLayer evalLayer_coins evaluate_layer clean SkelState)
 open PqxdhDeploymentLaterServerSource (Log)
 open PqxdhDeploymentLaterServerCommands (Local)
