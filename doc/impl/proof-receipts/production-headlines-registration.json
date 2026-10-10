@@ -8,12 +8,12 @@
  "basis_central": "fc27fded9bdef0ab05248b9431f4840d4a098d86",
  "basis_central_build": "a266567005a8fc84833d64cbcfb0bbe09228eaf5",
  "basis_note": "built at central a2665670 (the requested merge was then a no-op); central moved to fc27fded (the CE-13 documents, coordination message 533; git diff --name-only a2665670 fc27fded lists no .lean file; the published fc27fded LEAN_PATH is byte-identical to the a2665670 one); the review fix pass merged it into the branch (merge e6b8ef37564e2fedc212f80f8b4fb8c9483a9365); fetched; origin/codex/full-proof-composition, git ls-remote, the central worktree and coord.sh leanpath current at fc27fded during the fix pass",
- "state": "built (Lean 59e08934, documents c7f8b210); reviewed (three independent reviews of c7f8b210: no Lean error; ten entries, three major, three minor, four nits, none owner-level); fixed (merge e6b8ef37 of central fc27fded; Lean 3d397233, three docstring lines; documents in the commit that adds this version of the receipt); not confirmed; not integrated",
+ "state": "built (Lean 59e08934, documents c7f8b210); reviewed (three independent reviews of c7f8b210: no Lean error; ten entries, three major, three minor, four nits, none owner-level); fixed (merge e6b8ef37 of central fc27fded; Lean 3d397233, three docstring lines; documents d4737c62); confirmed (confirming review of c7f8b210..d4737c62: all ten findings resolved, no statement weaker; its residual CE-13 production cell s2b-C1 and two optional nits taken by the commit that adds this version of the receipt); not integrated at that commit",
  "lean_commit": "59e08934ef2272359a17b26cc418b13a383c4d8a",
  "documents_commit": "c7f8b210b2c6df08afc7f3aa8d1340b46664f6c4",
  "merge_commit": "e6b8ef37564e2fedc212f80f8b4fb8c9483a9365",
  "lean_fix_commit": "3d3972337ce49321e4b82794c6be18f3cb61b084",
- "fix_pass_documents_commit": "the commit that adds this version of the receipt (child of 3d397233)",
+ "fix_pass_documents_commit": "d4737c62cebaedaa6852363184676bf56a35bde2",
  "statements_changed": [],
  "statements_check": "the module with comments and docstrings removed equals that of 59e08934, and its 13 guards are identical; the three changed lines are docstrings (module header; replay_game; record_replay_game), so every statement is exactly as strong as before",
  "module": {
@@ -244,6 +244,7 @@
   "rehash": "coord.sh inv rehash claude <core> <module relpath> plus the default set: module row 3ad3dbcd -> 2bb40c01, BeaconcryptCore.lean, trusted-boundary.md and check-inventory.sh unchanged (the default set does not include the module row); a second pass changed nothing; 2398 digests match",
   "focused_check_inventory": {
    "module-commit": {
+    "label": "item7-prodregfix-inventory-module-commit",
     "start": "2026-10-10T22:43:49Z",
     "end": "2026-10-10T22:45:45Z",
     "commit": "3d3972337ce49321e4b82794c6be18f3cb61b084",
@@ -253,9 +254,46 @@
     "log": "/tmp/bc-arc-scratch/item7/prod-reg/fix1/build/inventory-module-commit.log",
     "log_sha256": "f0575187b42047aa7481451d37b21c184b4a96f9041a51352c573543f95ab940",
     "last_line": "Formal-verification inventory matches the reviewed boundary."
+   },
+   "staged-docs": {
+    "label": "item7-prodregfix-inventory-staged-docs",
+    "start": "2026-10-10T22:53:53Z",
+    "end": "2026-10-10T22:55:46Z",
+    "commit": "3d3972337ce49321e4b82794c6be18f3cb61b084",
+    "status": 0,
+    "dirt_lines": 8,
+    "dirt_after_lines": 8,
+    "dirt": [
+     "M  doc/formal-verification-analysis.md",
+     "M  doc/impl/deployment-experiment.md",
+     "M  doc/impl/production-boundary-ledger.md",
+     "M  doc/impl/production-headlines.md",
+     "M  doc/impl/proof-receipts/common-deployment-experiment-ce13.json",
+     "M  doc/impl/proof-receipts/production-headlines-registration.json",
+     "M  doc/impl/proof-receipts/production-headlines.json",
+     "M  doc/proverif-source-scope.md"
+    ],
+    "log": "/tmp/bc-arc-scratch/item7/prod-reg/fix1/build/inventory-staged-docs.log",
+    "log_sha256": "13e8078f89e8785694f22da3163598d91bf1178fa2c1d7f666cae028da9ccc18",
+    "last_line": "Formal-verification inventory matches the reviewed boundary.",
+    "note": "head 3d397233 with the fix pass's 8 documents staged (dirt lists them); the documents commit d4737c62 is this staged tree"
+   },
+   "docs-commit": {
+    "label": "item7-prodregfix-inventory-docs-commit",
+    "start": "2026-10-10T22:56:03Z",
+    "end": "2026-10-10T22:58:00Z",
+    "commit": "d4737c62cebaedaa6852363184676bf56a35bde2",
+    "status": 0,
+    "dirt_lines": 0,
+    "dirt_after_lines": 0,
+    "dirt": [],
+    "log": "/tmp/bc-arc-scratch/item7/prod-reg/fix1/build/inventory-docs-commit.log",
+    "log_sha256": "5046f74a8736d0c4a52b6d9878f8f1b513cabd5eb31027e1850e50ec32305a19",
+    "last_line": "Formal-verification inventory matches the reviewed boundary."
    }
   },
-  "command": "coord.sh lease mem claude @nix <label> --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C <worktree>/beaconcrypt-core check-inventory SHELL=bash"
+  "command": "coord.sh lease mem claude @nix <label> --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C <worktree>/beaconcrypt-core check-inventory SHELL=bash",
+  "focused_check_inventory_note": "the staged-docs and docs-commit runs were added after the confirming review (its optional nit 3); the first version of this receipt recorded only the module-commit run"
  },
  "git_diff_check": "clean (staged merge before the merge commit; staged Lean fix before 3d397233; documents before the commit that adds this receipt)",
  "generator": {
@@ -451,10 +489,57 @@
    "F7 (D-ct closures)": "guide and scratch plan name ce_a1_linked_dct and sym_gap_dct",
    "F8 (deterministic docstrings)": "replay_game and record_replay_game docstrings (Lean 3d397233) cite classical_normal and unwrap_okMap",
    "F10 (plan hash)": "selection.plan now a frozen snapshot with its hash; first_pass.note_plan_sha256; every hash of this receipt checked against the files (fix1/scripts/receipt_check.py)"
+  },
+  "confirming_review": {
+   "kind": "confirming review of the review fix pass (fresh-context Claude sub-agent, read only)",
+   "reviewed_range": "c7f8b210b2c6df08afc7f3aa8d1340b46664f6c4..d4737c62cebaedaa6852363184676bf56a35bde2",
+   "scratch": "/tmp/bc-arc-scratch/item7/prod-reg/confirm",
+   "result": "all ten findings of the reviews of c7f8b210 are resolved at d4737c62; no statement is weaker; the guards match the theorems; the scans are clean; the receipt matches HEAD; the committed module recompiled against the published fc27fded LEAN_PATH (exit 0, empty log); one residual: the s2b-C1 (VC 615) production cell of doc/proverif-source-scope.md and rows 615 and 3184 of the CE-13 receipt follow-up",
+   "record": "/tmp/bc-arc-scratch/item7/prod-reg/int/docs/confirming-review-relayed.json",
+   "record_sha256": "7047a28e175b4aee8a424e2e55136444cfdd5a8e7bbb2953885052fb8cdeb8ab",
+   "record_note": "no verdict file was written; the result and nits were relayed by the workflow orchestrator and are transcribed verbatim",
+   "notes": "/tmp/bc-arc-scratch/item7/prod-reg/confirm/NOTES.txt",
+   "notes_sha256": "bb3397c5fe21df5e20fed8f2b6ce48f38229b891795946d43bee44698c354d78",
+   "nits": [
+    {
+     "n": 1,
+     "title": "one CE-13 production cell still says CE-A1 has no production form (s2b-C1, VC 615); the CE-13 receipt follow-up skips rows 615 and 3184",
+     "disposition": "taken: the cell replaced by the suggested sentence; rows_production_after gains 615 s2b-C1 and 3184 S2b-initial; the guide's fix-pass bullet and (found in this pass) the CE-13 guide's status sentence name the s2b-C1 cell; documents.sha256_after here and documents_sha256_after in the CE-13 follow-up recomputed (fix-pass values kept)"
+    },
+    {
+     "n": 2,
+     "title": "optional: \"two module docstrings\" undercounts the docstrings that changed",
+     "disposition": "taken: \"the module docstring and two theorem docstrings\" in the guide's fix-pass status paragraph and the analysis paragraph Checks and status"
+    },
+    {
+     "n": 3,
+     "title": "optional: the receipt records only the module-commit run of check-inventory",
+     "disposition": "taken: inventory.focused_check_inventory gains staged-docs and docs-commit (label, commit, status, dirt, log, log sha256); module-commit gains its label"
+    },
+    {
+     "n": 4,
+     "title": "outside this branch: the CE-12 section of the analysis still calls B^coll_t zero-query",
+     "disposition": "not taken (no action needed for this branch, as the review says; the CE-12 section belongs to the item 3 lane's published record)"
+    },
+    {
+     "n": 5,
+     "title": "confirmation (no action)",
+     "disposition": "none"
+    }
+   ]
   }
  },
  "documents": {
   "sha256_after": {
+   "doc/impl/production-headlines.md": "8349b32aec3a06824cd344f47eab586f388dbf8f6d03a40c3b8696e72b4cba36",
+   "doc/impl/production-boundary-ledger.md": "b462e978a9b7567c11de9f5969026e1315ce51288abea03b8a256f5630d683af",
+   "doc/formal-verification-analysis.md": "58c79f8c694b9ccc2838bcdc63c966b6362c11c994e3014448c0870ace13086a",
+   "doc/impl/deployment-experiment.md": "0f40fe128c095716568d3a3e8d0babf5e44a38671c33ae84e336554965093442",
+   "doc/proverif-source-scope.md": "3c685fa49cc98d7ecc3c39b0702c9931721dbfbe37edae5590eec30370917547",
+   "doc/impl/proof-receipts/common-deployment-experiment-ce13.json": "43a38a11321d842f4c45e9ebe339c4ab6821ff66239e6aea7e1ae3e123fedcee",
+   "doc/impl/proof-receipts/production-headlines.json": "7d8117c7ca9b46afb84f4e0201002353fe1338da92e329ec808feccbd3e814cf"
+  },
+  "sha256_fix_pass": {
    "doc/impl/production-headlines.md": "b382650c06fc87c6ebecae3230bf42b7027b2f13d49cbd3b49e206f69e073268",
    "doc/impl/production-boundary-ledger.md": "c316e369f7c275f7bb3fa92996ea73fa595ede2e74435a493357c447431916aa",
    "doc/formal-verification-analysis.md": "83d5e915ff8cf508ec83bd26795ade7c59f4c7f7753a50489f559e39cef72c47",
@@ -475,7 +560,8 @@
   },
   "guide_sections": [
    "Registration follow-up: production forms of the registration-authentication and replay claims",
-   "Registration follow-up: review fix pass"
+   "Registration follow-up: review fix pass",
+   "Registration follow-up: confirming review"
   ],
   "edits": {
    "script": "/tmp/bc-arc-scratch/item7/prod-reg/fix1/scripts/fix_docs.py",
@@ -488,6 +574,16 @@
    "deployment_experiment": "section Production forms, name index row and note, status sentence",
    "proverif_source_scope": "paragraph Production; production cells of A1-delayed, A2-provenance, R1, R1', C3",
    "receipts": "CE-13 receipt follow_ups record; published receipt registration record (lean_docstring_commit, review_fix_pass); this receipt rewritten (first build under first_pass)"
+  },
+  "edits_confirming_review": {
+   "script": "/tmp/bc-arc-scratch/item7/prod-reg/int/scripts/nits_edits.py",
+   "script_sha256": "e50792dd4ada5d57a09aa8dd4fb91722ffd90711f4df68a3bec5ae77be6f23a8",
+   "proverif_source_scope": "s2b-C1 (VC 615) production cell: position 1 now names PqxdhDeploymentProductionRegistration.ce_a1 and ce_a1_injective (identity index 0) beside ce_a1_linked",
+   "guide": "top Second follow-up sentence and open points bullet (status), section status, fix-pass status paragraph (the module docstring and two theorem docstrings), fix-pass bullet (s2b-C1 cell), new section Registration follow-up: confirming review",
+   "ledger": "status note of the registration paragraph, its guide sections",
+   "analysis": "paragraph Checks and status of the registration follow-up (docstring count, confirming review, guide sections)",
+   "deployment_experiment": "status sentence: the list of corrected cells names s2b-C1 (position 1); found in this pass",
+   "receipts": "CE-13 receipt follow_ups[0] (rows 615 and 3184, edits, hashes, confirming_review_update); published receipt registration record (confirming_review); this receipt (receipt_confirm.py)"
   }
  },
  "scripts_sha256": {
@@ -520,7 +616,6 @@
   "the Rust code beyond the reviewed transcription (RT and E entries unchanged)"
  ],
  "remaining": [
-  "confirming review",
   "integration into central (PROTOCOL section 6)",
   "item 8 (owner)"
  ],
@@ -535,7 +630,26 @@
    "the default coord.sh inv rehash set does not include the module row; it was rehashed by naming its path",
    "a first gate-probe call with the kind argument livegateprobe stopped in Python before any Lean run (the kind is live)"
   ],
-  "no": "no deletion, no make verify, no full lake build, no mutation testing, no nix-collect-garbage"
+  "no": "no deletion, no make verify, no full lake build, no mutation testing, no nix-collect-garbage",
+  "confirming_review_nits_and_integration": "item7/prod-reg/int and its subdirectories scripts, logs, logs/dev, docs, scans, its olean prefix item7/prod-reg/int/olean and leanpath item7/prod-reg/int/leanpath registered before creation; mail peeked only (0 unread, cursor 502)"
+ },
+ "receipt_scripts_confirm": {
+  "write_relayed": "/tmp/bc-arc-scratch/item7/prod-reg/int/scripts/write_relayed.py",
+  "write_relayed_sha256": "78140843d6f839711133a97429ca3dfc5aacba1f34d47741e6e72301e572d254",
+  "nits_edits": "/tmp/bc-arc-scratch/item7/prod-reg/int/scripts/nits_edits.py",
+  "nits_edits_sha256": "e50792dd4ada5d57a09aa8dd4fb91722ffd90711f4df68a3bec5ae77be6f23a8",
+  "receipt_confirm": "/tmp/bc-arc-scratch/item7/prod-reg/int/scripts/receipt_confirm.py",
+  "receipt_confirm_sha256": "5dba2591d80ae49967563207f37a998116b7198196d408cea82a7b83d7c384fe",
+  "befores": {
+   "common-deployment-experiment-ce13.json.before-nits": "72d5fbcb3301cf38f1ee77778a99e030654866585d75e17a5500e2384f34945a",
+   "deployment-experiment.md.before-nits": "27d804014911e36103d2a8de563ef53f9bb04511e942b48445fbd84103bc0ddc",
+   "formal-verification-analysis.md.before-nits": "83d5e915ff8cf508ec83bd26795ade7c59f4c7f7753a50489f559e39cef72c47",
+   "production-boundary-ledger.md.before-nits": "c316e369f7c275f7bb3fa92996ea73fa595ede2e74435a493357c447431916aa",
+   "production-headlines-registration.json.before-nits": "5965e1e9a2ff2b096c69d5ff89a29603c539cc1a1a5337e23e1a09cdd9e720c3",
+   "production-headlines.json.before-nits": "5839b7f2b4b1d62cd9730ff356b29b8f910259cca107bb41d9484734405f3a2a",
+   "production-headlines.md.before-nits": "b382650c06fc87c6ebecae3230bf42b7027b2f13d49cbd3b49e206f69e073268",
+   "proverif-source-scope.md.before-nits": "4df51a1a0704248c2eea11785dba039d2a5d99ad0c18d191ba3c0b34bd3aa433"
+  }
  },
  "first_pass": {
   "kind": "items 3+7 production composition, second follow-up: production forms of the registration-authentication and replay claims of item 3 over the CE experiment (PqxdhDeploymentProductionRegistration)",

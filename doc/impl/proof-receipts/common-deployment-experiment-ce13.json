@@ -966,9 +966,15 @@
    "name": "registration follow-up of the production composition (PqxdhDeploymentProductionRegistration), review fix pass",
    "branch": "codex/deployment-boundary-production",
    "merge_of_central": "e6b8ef37564e2fedc212f80f8b4fb8c9483a9365 (central fc27fded9bdef0ab05248b9431f4840d4a098d86, which carries this receipt, merged into that branch)",
-   "commit": "the commit that adds this record (child of the docstring-only Lean commit 3d3972337ce49321e4b82794c6be18f3cb61b084)",
+   "commit": "d4737c62cebaedaa6852363184676bf56a35bde2 (the commit that added this record, child of the docstring-only Lean commit 3d3972337ce49321e4b82794c6be18f3cb61b084)",
+   "confirming_review_update": "the commit that adds this version of the record (child of d4737c62cebaedaa6852363184676bf56a35bde2), after the confirming review of the fix pass c7f8b210..d4737c62 (sibling receipt review.confirming_review): the position-1 part of the s2b-C1 (VC 615) production cell corrected, rows 615 s2b-C1 and 3184 S2b-initial added to rows_production_after, the CE-13 guide's status sentence names the s2b-C1 cell, document hashes recomputed (the fix-pass values under documents_sha256_after_fix_pass)",
    "why": "the registration statements that precede CE-12 (CE-A1 in six forms, CE-A2pub, CE-R1', R1, C3) have production forms at Server identity index 0 since that follow-up; CE-A2 itself and replay_never still have none",
    "documents_sha256_after": {
+    "guide": "0f40fe128c095716568d3a3e8d0babf5e44a38671c33ae84e336554965093442",
+    "source_scope": "3c685fa49cc98d7ecc3c39b0702c9931721dbfbe37edae5590eec30370917547",
+    "analysis": "58c79f8c694b9ccc2838bcdc63c966b6362c11c994e3014448c0870ace13086a"
+   },
+   "documents_sha256_after_fix_pass": {
     "guide": "27d804014911e36103d2a8de563ef53f9bb04511e942b48445fbd84103bc0ddc",
     "source_scope": "4df51a1a0704248c2eea11785dba039d2a5d99ad0c18d191ba3c0b34bd3aa433",
     "analysis": "83d5e915ff8cf508ec83bd26795ade7c59f4c7f7753a50489f559e39cef72c47"
@@ -980,16 +986,18 @@
    ],
    "reviewed_inventory_note": "the branch adds and rehashes its own rows (module row, root import, check-inventory.sh); the trusted_boundary row of this receipt is unchanged",
    "edits": {
-    "guide": "section \"Production forms\" (registration sentences), name index row PqxdhDeploymentProductionRegistration and its note, one sentence at the end of the status paragraph; record sections unchanged",
-    "source_scope": "paragraph \"Production\" (registration sentence) and the production cells of A1-delayed, A2-provenance, R1, R1' and C3",
+    "guide": "section \"Production forms\" (registration sentences), name index row PqxdhDeploymentProductionRegistration and its note, one sentence at the end of the status paragraph; record sections unchanged; after the confirming review, the status sentence's list of corrected cells names s2b-C1 (position 1)",
+    "source_scope": "paragraph \"Production\" (registration sentence) and the production cells of A1-delayed, A2-provenance, R1, R1' and C3; after the confirming review, the position-1 part of the production cell of s2b-C1 (VC 615)",
     "analysis": "CE-13 section, paragraph \"For the production code\" (registration sentences); the follow-up's own paragraphs end the production section before it"
    },
    "rows_production_after": {
     "3167 A1-delayed": "PqxdhDeploymentProductionRegistration.ce_a1, a1_sum, a1_bound, ce_a1_billed, injective_bound, ce_a1_injective (index 0 only); ce_a1_linked (ctGapTerm explicit), beacon_gap_le, sym_gap, identity_collision_game",
+    "3184 S2b-initial": "as A1-delayed (one cell of the column)",
     "597 A1": "as A1-delayed",
     "613 s2b-A1": "as A1-delayed",
     "631 b2s-A1": "as A1-delayed",
     "649 encoding-A1": "as A1-delayed",
+    "615 s2b-C1": "as S2b-origin; for position 1 PqxdhDeploymentProductionRegistration.ce_a1 and ce_a1_injective (identity index 0; registration follow-up) and PqxdhDeploymentProductionHeadlinesClassical.ce_a1_linked (ctGapTerm explicit)",
     "3161 A2-provenance": "CE-A2pub: PqxdhDeploymentProductionRegistration.a2pub_owner_bound, a2pub_bound (index 0); CE-A2 itself none (not over the experiment); server_gap_bound for ServerGap <= eps_A2pub",
     "598 A2": "as A2-provenance",
     "614 s2b-A2": "as A2-provenance",

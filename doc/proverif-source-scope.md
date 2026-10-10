@@ -220,7 +220,7 @@ Later mode, for these three rows: the LQ-F key transfer CE-KT-L bounds the same 
 - Status: partial.
 - Theorems: positions from 2 as S2b-origin (`ce_or_injective_s2b_full_closed_billed_dct`, `ce_or_plain_s2b_billed`); position 1 through CE-A1 (`PqxdhDeploymentServerAuth.ce_a1`, `PqxdhDeploymentServerAuthInjectiveGame.ce_a1_injective`, `PqxdhDeploymentHeadlineDctClosed.ce_a1_linked_dct`).
 - Bound: as S2b-origin for positions from 2; `ε_A1` (CE-A1), `ε_A1inj` (injective) or `ofReal ε_A1 + epsCt` (linked) for position 1.
-- Production: as S2b-origin; for position 1 only `PqxdhDeploymentProductionHeadlinesClassical.ce_a1_linked` (`ctGapTerm` explicit).
+- Production: as S2b-origin; for position 1 `PqxdhDeploymentProductionRegistration.ce_a1` and `ce_a1_injective` (identity index 0; registration follow-up) and `PqxdhDeploymentProductionHeadlinesClassical.ce_a1_linked` (`ctGapTerm` explicit).
 - Symbolic-only: at position 1 the root, the associated data, the assigned key ID and the application payload, which CE-A1's matching does not state; `kid` at every position; at position 1 Beacons with a rejected bundle call in Fresh (CE-A1's condition), and from position 2, under symbolic eligibility, the same owners; no single statement combines injectivity with the plaintext field; the window.
 
 **s2b-C4 (VC 617) and far-s2b-C4 (VC 3175).** ProVerif: `event(FsFarAccepted(s2b, s, b, kid, root, t))` unreachable with honest pins; 617 at `(2, 3, 3)`, 3175 the exact-far transfer at first-far targets 4..54.
