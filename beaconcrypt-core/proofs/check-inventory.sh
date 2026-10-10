@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1959
+	[handwritten-lean]=1960
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -41522,6 +41522,49 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem ce_or_injective_s2b_dct([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosed theorem ce_or_injective_s2b_dct"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctClosed\.ce_or_injective_s2b_full_dct$' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosed dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctClosed.ce_or_injective_s2b_full_dct"
 require_line_count 1 '^theorem ce_or_injective_s2b_full_dct([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosed theorem ce_or_injective_s2b_full_dct"
+
+# CE-12 D-ct: closed forms (_dct) of the P2b closed and gated headlines (ctGapTerm replaced by epsCt).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineDctClosedP2b.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctClosedP2b$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentHeadlineDctClosedP2b root import"
+require_line_count 18 '^theorem ' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedP2b theorem inventory"
+require_line_count 18 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedP2b guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctClosedP2b\.ce_or_s2b_sym_closed_dct$' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedP2b dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctClosedP2b.ce_or_s2b_sym_closed_dct"
+require_line_count 1 '^theorem ce_or_s2b_sym_closed_dct([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedP2b theorem ce_or_s2b_sym_closed_dct"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctClosedP2b\.ce_or_s2b_sym_closed_billed_dct$' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedP2b dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctClosedP2b.ce_or_s2b_sym_closed_billed_dct"
+require_line_count 1 '^theorem ce_or_s2b_sym_closed_billed_dct([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedP2b theorem ce_or_s2b_sym_closed_billed_dct"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctClosedP2b\.ce_uks_sym_closed_dct$' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedP2b dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctClosedP2b.ce_uks_sym_closed_dct"
+require_line_count 1 '^theorem ce_uks_sym_closed_dct([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedP2b theorem ce_uks_sym_closed_dct"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctClosedP2b\.ce_uks_sym_closed_billed_dct$' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedP2b dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctClosedP2b.ce_uks_sym_closed_billed_dct"
+require_line_count 1 '^theorem ce_uks_sym_closed_billed_dct([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedP2b theorem ce_uks_sym_closed_billed_dct"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctClosedP2b\.symbolic_lor_closed_dct$' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedP2b dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctClosedP2b.symbolic_lor_closed_dct"
+require_line_count 1 '^theorem symbolic_lor_closed_dct([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedP2b theorem symbolic_lor_closed_dct"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctClosedP2b\.symbolic_lor_bound_closed_dct$' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedP2b dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctClosedP2b.symbolic_lor_bound_closed_dct"
+require_line_count 1 '^theorem symbolic_lor_bound_closed_dct([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedP2b theorem symbolic_lor_bound_closed_dct"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctClosedP2b\.symbolic_lor_bound_closed_billed_dct$' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedP2b dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctClosedP2b.symbolic_lor_bound_closed_billed_dct"
+require_line_count 1 '^theorem symbolic_lor_bound_closed_billed_dct([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedP2b theorem symbolic_lor_bound_closed_billed_dct"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctClosedP2b\.ce_or_injective_s2b_closed_dct$' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedP2b dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctClosedP2b.ce_or_injective_s2b_closed_dct"
+require_line_count 1 '^theorem ce_or_injective_s2b_closed_dct([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedP2b theorem ce_or_injective_s2b_closed_dct"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctClosedP2b\.ce_or_injective_s2b_closed_billed_dct$' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedP2b dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctClosedP2b.ce_or_injective_s2b_closed_billed_dct"
+require_line_count 1 '^theorem ce_or_injective_s2b_closed_billed_dct([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedP2b theorem ce_or_injective_s2b_closed_billed_dct"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctClosedP2b\.ce_or_injective_s2b_full_closed_dct$' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedP2b dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctClosedP2b.ce_or_injective_s2b_full_closed_dct"
+require_line_count 1 '^theorem ce_or_injective_s2b_full_closed_dct([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedP2b theorem ce_or_injective_s2b_full_closed_dct"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctClosedP2b\.ce_or_injective_s2b_full_closed_billed_dct$' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedP2b dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctClosedP2b.ce_or_injective_s2b_full_closed_billed_dct"
+require_line_count 1 '^theorem ce_or_injective_s2b_full_closed_billed_dct([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedP2b theorem ce_or_injective_s2b_full_closed_billed_dct"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctClosedP2b\.ce_or_s2b_sym_billed_dct$' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedP2b dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctClosedP2b.ce_or_s2b_sym_billed_dct"
+require_line_count 1 '^theorem ce_or_s2b_sym_billed_dct([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedP2b theorem ce_or_s2b_sym_billed_dct"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctClosedP2b\.ce_uks_sym_billed_dct$' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedP2b dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctClosedP2b.ce_uks_sym_billed_dct"
+require_line_count 1 '^theorem ce_uks_sym_billed_dct([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedP2b theorem ce_uks_sym_billed_dct"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctClosedP2b\.ce_app_beacon_sym_billed_dct$' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedP2b dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctClosedP2b.ce_app_beacon_sym_billed_dct"
+require_line_count 1 '^theorem ce_app_beacon_sym_billed_dct([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedP2b theorem ce_app_beacon_sym_billed_dct"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctClosedP2b\.ce_app_sym_billed_dct$' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedP2b dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctClosedP2b.ce_app_sym_billed_dct"
+require_line_count 1 '^theorem ce_app_sym_billed_dct([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedP2b theorem ce_app_sym_billed_dct"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctClosedP2b\.symbolic_lor_bound_billed_dct$' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedP2b dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctClosedP2b.symbolic_lor_bound_billed_dct"
+require_line_count 1 '^theorem symbolic_lor_bound_billed_dct([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedP2b theorem symbolic_lor_bound_billed_dct"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctClosedP2b\.ce_or_injective_s2b_billed_dct$' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedP2b dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctClosedP2b.ce_or_injective_s2b_billed_dct"
+require_line_count 1 '^theorem ce_or_injective_s2b_billed_dct([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedP2b theorem ce_or_injective_s2b_billed_dct"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctClosedP2b\.ce_or_injective_s2b_full_billed_dct$' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedP2b dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctClosedP2b.ce_or_injective_s2b_full_billed_dct"
+require_line_count 1 '^theorem ce_or_injective_s2b_full_billed_dct([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctClosedP2b theorem ce_or_injective_s2b_full_billed_dct"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
