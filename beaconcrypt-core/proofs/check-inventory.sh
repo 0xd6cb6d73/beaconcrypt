@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1905
+	[handwritten-lean]=1906
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -39191,6 +39191,31 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem splitL_uniform_two([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemOnce theorem splitL_uniform_two"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemOnce\.opaqueBranchL_uniform_two$' "$selected_source_module" "PqxdhDeploymentLaterServerItemOnce dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemOnce.opaqueBranchL_uniform_two"
 require_line_count 1 '^theorem opaqueBranchL_uniform_two([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemOnce theorem opaqueBranchL_uniform_two"
+
+# LQ-F upstream unit A2: the hybrid of item 2 stage S7, generic in the client.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerItemHybrid.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemHybrid$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentLaterServerItemHybrid root import"
+require_line_count 9 '^theorem ' "$selected_source_module" "PqxdhDeploymentLaterServerItemHybrid theorem inventory"
+require_line_count 9 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentLaterServerItemHybrid guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemHybrid\.hybridOf_root$' "$selected_source_module" "PqxdhDeploymentLaterServerItemHybrid dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemHybrid.hybridOf_root"
+require_line_count 1 '^theorem hybridOf_root([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemHybrid theorem hybridOf_root"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemHybrid\.hybridOf_uniform$' "$selected_source_module" "PqxdhDeploymentLaterServerItemHybrid dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemHybrid.hybridOf_uniform"
+require_line_count 1 '^theorem hybridOf_uniform([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemHybrid theorem hybridOf_uniform"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemHybrid\.hybridOf_hop$' "$selected_source_module" "PqxdhDeploymentLaterServerItemHybrid dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemHybrid.hybridOf_hop"
+require_line_count 1 '^theorem hybridOf_hop([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemHybrid theorem hybridOf_hop"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemHybrid\.hybridOf_telescope$' "$selected_source_module" "PqxdhDeploymentLaterServerItemHybrid dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemHybrid.hybridOf_telescope"
+require_line_count 1 '^theorem hybridOf_telescope([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemHybrid theorem hybridOf_telescope"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemHybrid\.entryDkOf_zero$' "$selected_source_module" "PqxdhDeploymentLaterServerItemHybrid dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemHybrid.entryDkOf_zero"
+require_line_count 1 '^theorem entryDkOf_zero([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemHybrid theorem entryDkOf_zero"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemHybrid\.uniform_hybridOf$' "$selected_source_module" "PqxdhDeploymentLaterServerItemHybrid dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemHybrid.uniform_hybridOf"
+require_line_count 1 '^theorem uniform_hybridOf([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemHybrid theorem uniform_hybridOf"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemHybrid\.hybridOf_all$' "$selected_source_module" "PqxdhDeploymentLaterServerItemHybrid dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemHybrid.hybridOf_all"
+require_line_count 1 '^theorem hybridOf_all([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemHybrid theorem hybridOf_all"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemHybrid\.slotGameOf_all$' "$selected_source_module" "PqxdhDeploymentLaterServerItemHybrid dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemHybrid.slotGameOf_all"
+require_line_count 1 '^theorem slotGameOf_all([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemHybrid theorem slotGameOf_all"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemHybrid\.slotOf_telescope$' "$selected_source_module" "PqxdhDeploymentLaterServerItemHybrid dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemHybrid.slotOf_telescope"
+require_line_count 1 '^theorem slotOf_telescope([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemHybrid theorem slotOf_telescope"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"

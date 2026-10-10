@@ -2127,6 +2127,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemFactor
 
 import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemOnce
 
+import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemHybrid
+
 /-!
 # Beaconcrypt-core verification root
 
