@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1887
+	[handwritten-lean]=1888
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -38583,6 +38583,33 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem ce_kt_world_close([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineKeyTransfer theorem ce_kt_world_close"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineKeyTransfer\.ce_kt_world_sum$' "$selected_source_module" "PqxdhDeploymentHeadlineKeyTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineKeyTransfer.ce_kt_world_sum"
 require_line_count 1 '^theorem ce_kt_world_sum([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineKeyTransfer theorem ce_kt_world_sum"
+
+# CE-12 P1: the public events and claims of the headlines (CE-OR, CE-UKS, CE-APP, CE-LOR) and first-entry claims.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineEvents.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineEvents$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentHeadlineEvents root import"
+require_line_count 10 '^theorem ' "$selected_source_module" "PqxdhDeploymentHeadlineEvents theorem inventory"
+require_line_count 10 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentHeadlineEvents guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineEvents\.firstFrom_some$' "$selected_source_module" "PqxdhDeploymentHeadlineEvents dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineEvents.firstFrom_some"
+require_line_count 1 '^theorem firstFrom_some([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineEvents theorem firstFrom_some"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineEvents\.firstFrom_isSome$' "$selected_source_module" "PqxdhDeploymentHeadlineEvents dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineEvents.firstFrom_isSome"
+require_line_count 1 '^theorem firstFrom_isSome([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineEvents theorem firstFrom_isSome"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineEvents\.firstHandle_some$' "$selected_source_module" "PqxdhDeploymentHeadlineEvents dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineEvents.firstHandle_some"
+require_line_count 1 '^theorem firstHandle_some([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineEvents theorem firstHandle_some"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineEvents\.firstHandle_isSome$' "$selected_source_module" "PqxdhDeploymentHeadlineEvents dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineEvents.firstHandle_isSome"
+require_line_count 1 '^theorem firstHandle_isSome([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineEvents theorem firstHandle_isSome"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineEvents\.origin_named$' "$selected_source_module" "PqxdhDeploymentHeadlineEvents dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineEvents.origin_named"
+require_line_count 1 '^theorem origin_named([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineEvents theorem origin_named"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineEvents\.uksReceiver_named$' "$selected_source_module" "PqxdhDeploymentHeadlineEvents dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineEvents.uksReceiver_named"
+require_line_count 1 '^theorem uksReceiver_named([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineEvents theorem uksReceiver_named"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineEvents\.uksSender_named$' "$selected_source_module" "PqxdhDeploymentHeadlineEvents dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineEvents.uksSender_named"
+require_line_count 1 '^theorem uksSender_named([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineEvents theorem uksSender_named"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineEvents\.app_named$' "$selected_source_module" "PqxdhDeploymentHeadlineEvents dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineEvents.app_named"
+require_line_count 1 '^theorem app_named([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineEvents theorem app_named"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineEvents\.appPeer_named$' "$selected_source_module" "PqxdhDeploymentHeadlineEvents dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineEvents.appPeer_named"
+require_line_count 1 '^theorem appPeer_named([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineEvents theorem appPeer_named"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineEvents\.lorElig_target$' "$selected_source_module" "PqxdhDeploymentHeadlineEvents dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineEvents.lorElig_target"
+require_line_count 1 '^theorem lorElig_target([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineEvents theorem lorElig_target"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
