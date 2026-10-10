@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1977
+	[handwritten-lean]=1978
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -42497,6 +42497,39 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem ctgap_term_le([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProductionHeadlinesDct theorem ctgap_term_le"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProductionHeadlinesDct\.ctgap_term_billed$' "$selected_source_module" "PqxdhDeploymentProductionHeadlinesDct dependency BeaconcryptCore.Computational.PqxdhDeploymentProductionHeadlinesDct.ctgap_term_billed"
 require_line_count 1 '^theorem ctgap_term_billed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProductionHeadlinesDct theorem ctgap_term_billed"
+
+# Items 3+7 production composition, second follow-up: the registration-authentication and replay claims (CE-A1 a1_bound, a1_sum, ce_a1, ce_a1_billed, injective_bound, ce_a1_injective; CE-A2pub; CE-R1'; CE-R1 replay_game; CE-C3 record_replay_game) and support_zero on the PB-D production source game at the production codec and route
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentProductionRegistration.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentProductionRegistration$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentProductionRegistration root import"
+require_line_count 13 '^theorem ' "$selected_source_module" "PqxdhDeploymentProductionRegistration theorem inventory"
+require_line_count 13 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentProductionRegistration guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProductionRegistration\.support_zero$' "$selected_source_module" "PqxdhDeploymentProductionRegistration dependency BeaconcryptCore.Computational.PqxdhDeploymentProductionRegistration.support_zero"
+require_line_count 1 '^theorem support_zero([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProductionRegistration theorem support_zero"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProductionRegistration\.a1_bound$' "$selected_source_module" "PqxdhDeploymentProductionRegistration dependency BeaconcryptCore.Computational.PqxdhDeploymentProductionRegistration.a1_bound"
+require_line_count 1 '^theorem a1_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProductionRegistration theorem a1_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProductionRegistration\.a1_sum$' "$selected_source_module" "PqxdhDeploymentProductionRegistration dependency BeaconcryptCore.Computational.PqxdhDeploymentProductionRegistration.a1_sum"
+require_line_count 1 '^theorem a1_sum([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProductionRegistration theorem a1_sum"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProductionRegistration\.ce_a1$' "$selected_source_module" "PqxdhDeploymentProductionRegistration dependency BeaconcryptCore.Computational.PqxdhDeploymentProductionRegistration.ce_a1"
+require_line_count 1 '^theorem ce_a1([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProductionRegistration theorem ce_a1"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProductionRegistration\.ce_a1_billed$' "$selected_source_module" "PqxdhDeploymentProductionRegistration dependency BeaconcryptCore.Computational.PqxdhDeploymentProductionRegistration.ce_a1_billed"
+require_line_count 1 '^theorem ce_a1_billed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProductionRegistration theorem ce_a1_billed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProductionRegistration\.injective_bound$' "$selected_source_module" "PqxdhDeploymentProductionRegistration dependency BeaconcryptCore.Computational.PqxdhDeploymentProductionRegistration.injective_bound"
+require_line_count 1 '^theorem injective_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProductionRegistration theorem injective_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProductionRegistration\.ce_a1_injective$' "$selected_source_module" "PqxdhDeploymentProductionRegistration dependency BeaconcryptCore.Computational.PqxdhDeploymentProductionRegistration.ce_a1_injective"
+require_line_count 1 '^theorem ce_a1_injective([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProductionRegistration theorem ce_a1_injective"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProductionRegistration\.a2pub_owner_bound$' "$selected_source_module" "PqxdhDeploymentProductionRegistration dependency BeaconcryptCore.Computational.PqxdhDeploymentProductionRegistration.a2pub_owner_bound"
+require_line_count 1 '^theorem a2pub_owner_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProductionRegistration theorem a2pub_owner_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProductionRegistration\.a2pub_bound$' "$selected_source_module" "PqxdhDeploymentProductionRegistration dependency BeaconcryptCore.Computational.PqxdhDeploymentProductionRegistration.a2pub_bound"
+require_line_count 1 '^theorem a2pub_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProductionRegistration theorem a2pub_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProductionRegistration\.r1prime_owner_bound$' "$selected_source_module" "PqxdhDeploymentProductionRegistration dependency BeaconcryptCore.Computational.PqxdhDeploymentProductionRegistration.r1prime_owner_bound"
+require_line_count 1 '^theorem r1prime_owner_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProductionRegistration theorem r1prime_owner_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProductionRegistration\.r1prime_bound$' "$selected_source_module" "PqxdhDeploymentProductionRegistration dependency BeaconcryptCore.Computational.PqxdhDeploymentProductionRegistration.r1prime_bound"
+require_line_count 1 '^theorem r1prime_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProductionRegistration theorem r1prime_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProductionRegistration\.replay_game$' "$selected_source_module" "PqxdhDeploymentProductionRegistration dependency BeaconcryptCore.Computational.PqxdhDeploymentProductionRegistration.replay_game"
+require_line_count 1 '^theorem replay_game([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProductionRegistration theorem replay_game"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProductionRegistration\.record_replay_game$' "$selected_source_module" "PqxdhDeploymentProductionRegistration dependency BeaconcryptCore.Computational.PqxdhDeploymentProductionRegistration.record_replay_game"
+require_line_count 1 '^theorem record_replay_game([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProductionRegistration theorem record_replay_game"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
