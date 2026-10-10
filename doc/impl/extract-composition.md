@@ -820,3 +820,35 @@ Remaining total: 1.5 to 3 agent-days. The review should check in particular the 
 ### Increment 4: not claimed
 
 Stage T bounds a count of hidden reads; it adds no probability statement of its own. The two-slot restatements of S2, T7 and S7 are two-sided transfers of the registration segment for an arbitrary decision, valid only under the random-oracle model of the zero-key 192-byte Extract slice for their first term. Theorem T8 and its variants are one-sided, have no test query and are not secrecy theorems; they cover no evolving key, skipped key, record replay or later record. Stage S6 is a pair of distribution equalities. Stage S8 and theorem T8b are resource bounds: they make no security claim, count random draws and challenge queries, not running time, and add no premise to T8. Not covered: persistence, snapshots, codec internals, running-code access and primitive implementations (owner scope).
+
+## Item 2 over the logged LQ-F source (LQ-F upstream)
+
+The compiled program of the exact later-quantum profile LQ-F (`PqxdhDeploymentLaterServerCompile.compileServer`) is a program of the logged source `PqxdhDeploymentLaterServerSource.Spec = RevealSchedule.Spec + LaterRead`: every raw accept also returns the Server ephemeral it generated, which the source appends to a log, and the Server read returns the Server's identity seed with the log. Item 2's stages S1b to S8 take programs of source14 (`RevealSchedule.Spec`), and no source14 request returns these two values, so item 2 is lifted to the logged source rather than reduced to it (the LQ-F upstream design-v2, `lqf-up/design-v2.md` in the CE scratch directory, decisions D1 and D9; called "LQ-F design-v2" below to keep it apart from CE-11b's design-v2). The lift is the LQ-F upstream lane's unit A1 (S0a to S1c) and unit A2 (S2 to S8), stated with the definitions that unit D1 freezes. The common-deployment guide `doc/impl/common-deployment-experiment.md` records unit D (sections "LQ-F upstream unit D: ...").
+
+### Unit D1: the frozen definitions (`PqxdhDeploymentLaterServerItemTargets`)
+
+Each logged definition is the classical one with one change; the classical modules are unchanged.
+
+| Classical (item 2) | Logged (unit D1) | Change |
+| --- | --- | --- |
+| `KemPostSkeleton.GSpec` | `GSpecL = GSpec + AcceptL` | one new request, the logged accept (raw bytes in, session and logged scalar out) |
+| `KemPostSkeleton.acceptStep` | `acceptStepL` | the LQ-F logged collector `LaterServerCommands.ordered`; `acceptStepL_fst` gives `acceptStep` back |
+| `KemPostSkeleton.skelImpl` | `skelImplL` | `skelImpl` on `.inl` (`skelImplL_inl`), `acceptStepL` on the new request (`skelImplL_accept`) |
+| `KemPostSkeleton.groupedClient` | `groupedClientL` | state: owners and log; a source14 request other than the raw accept is `groupedClient` with the log kept (`groupedClientL_inl`); the raw accept sends the logged accept and appends the entry (`groupedClientL_accept`); the Server read sends the identity-pool reveal of the Server's slot and returns it with the log (`groupedClientL_read`) |
+| `KemPostSkeleton.skelResume` | `skelResumeL` | the rest of the tagged logged program from the log at the cut extended by the selected accept's explicit ephemeral (as `LaterServerCut.opaqueResume`) |
+| `KemPostSkeleton.postSkel`, `cacheOf` | `postSkelL`, `cacheOfL` | the logged opaque context `LaterServerOpaque.OpaqueContext`; no candidate argument |
+| `KemPostSkeleton.sharedStart`, `sharedClient` | `sharedStartL`, `sharedClientL` | the logged opaque prephase `LaterServerOpaque.sourcePreOpaque` |
+| `KemRootExpand.rootClient` | `rootClientL` | `sharedStartL`, `postSkelL` |
+| `KemEntryFactor.entryClient`, `entryD` | `entryClientL`, `entryDL` | `sharedStartL`, `postSkelL` |
+| `KemSecondEntry.hybrid`, `entryDk` | `hybridOf`, `entryDkOf` (generic in the client), `entryDkL` | the classical forms are instances (`hybrid_hybridOf`, `entryDk_entryDkOf`, by `rfl`) |
+| `KemSecondEntry.slotGame` | `laterSlotGame` | `entryClientL` |
+| `KemKeyTransfer.allIdealLoss`, the right side of `BeaconFinishOnce.opaqueBranch_slots_two` | `slotLossL` | `rootClientL`, `entryDkL` (term by term) |
+| `KemRootCosts.rootBill` | `rootBillL` | none (`rootBillL_eq`; LQ-F design-v2 D8) |
+| `BeaconFinishOnce.opaqueBranch_slots_two` | the target `OpaqueBranchSlotsTwoTargetL` (`Prop`) | the logged opaque branch `LaterServerOpaque.opaqueBranch`; the source budget per kind through `LaterServerReserve.laterKind` (the Server read has none) |
+| (none) | the target `LaterSlotsTwoTarget` (`Prop`) | the instance at `compileServer`, at the transported caps `laterTransported bounds budget post`; implied by the generic target (`laterSlotsTwo_of_generic`) |
+
+CE-12's classical loss `slotLoss` is `allIdealLoss` at the transported caps `PqxdhDeploymentCompileCaps.transported bounds budget` (`PqxdhDeploymentHeadlineChain` on `codex/deployment-ce12`), so CE-12-L can state its later loss as `slotLossL … (laterTransported bounds budget post)`.
+
+The post-run HMAC queries are charged in the existing guessing term with coefficient one: at the transported caps the term is `(qAccept + qFinish + qHmac + qHmac₂)/2^256` (`later_guess_term`, `slotLossL_transported`). The decorrelation caveat of T7 (route R1) is sharper in LQ-F and is recorded in the docstrings of `slotLossL` and of both targets: the post-run adversary knows both hidden entries' 128-byte DH coordinates exactly, and their unpredictability and independence rest on R1 alone; classically the coordinates also contain honest-honest DH values that item 2 never uses but that a reader could take as a second line of defence. The premises are those of the classical T7 (R1, the HMAC-SHA-512 PRF game, the Extract game on `uniform32`, `SourceFullCorrect`, the source budget). LQ-F claims confidentiality only: T5, theorem A2 and T8 are not cited on `compileServer`, and the key-first stage S6 is not lifted (no consumer).
+
+Notes for units A1 and A2: item 2's per-request lemmas apply to the logged layers on `.inl` through `skelImplL_inl` and `groupedClientL_inl`; the new cases are the logged accept (`acceptStepL`, projected by `acceptStepL_fst`) and the Server read (the identity-pool reveal of the Server's slot, which the skeleton forwards to the private pool unchanged); the source budget premise is `∀ kind, work.IsQueryBoundP (fun query => laterKind query = some kind) (budget kind)`; `later_slots_two` follows from `opaqueBranchL_slots_two` by `laterSlotsTwo_of_generic`. The candidate-freedom closure check of LQ-F design-v2 section 5.1 already passes for `sharedClientL`, `postSkelL`, `sharedStartL`, `rootClientL`, `entryClientL`, `entryDL`, `entryDkL`, `laterSlotGame` and `slotLossL` (common-deployment guide, "LQ-F upstream unit D: checks"); like item 2's own closure check ("Increment 2: deviations from the plan"), it is a scratch metaprogram, recorded there and in the receipt, not a committed check.
