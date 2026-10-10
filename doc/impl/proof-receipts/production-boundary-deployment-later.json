@@ -3,12 +3,12 @@
  "topic": "codex/deployment-boundary-later",
  "parent_commit": "e0b8810bb048499ed8fbcadba5fe8a560f3ad083",
  "central_basis": "e0b8810bb048499ed8fbcadba5fe8a560f3ad083",
- "state": "checked at central e0b8810b on the topic branch; independent review (D-6) pending; not integrated",
+ "state": "checked at central e0b8810b on the topic branch; D-6 semantic and hygiene reviews of 40630f35 approved with nits (six, none owner-level); all addressed in the review fix pass, in documentation and receipts only (no Lean change); not integrated",
  "module": "PqxdhBoundaryDeploymentLater",
  "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryDeploymentLater.lean",
  "source_sha256": "1f27a737da73b5603d5b96b24461d222c25efd63607accf71ca33069c29c69bc",
  "guide": "doc/impl/production-boundary-deployment-later.md",
- "guide_sha256": "86cf94314abf1f25a97fc294f14d85ea868d654d782ee6f83d24ba253c475067",
+ "guide_sha256": "e7206d410115a2ed60822cc8db5f1aae6849c3f90685679d6ab5019acf29fda6",
  "guarded_statements": 17,
  "theorems": [
   "loggedStep_quiet",
@@ -60,7 +60,7 @@
   "later_evalDist": "for every observation observe into a measurable space: 𝒟[(fun outcome => observe (unwrap outcome)) <$> (laterSourceGame …).run runtime] = 𝒟[observe <$> (PqxdhDeploymentLaterServerGame.game setup codec' checks route' …).run runtime]",
   "later_probEvent": "for every event: Pr[event ∘ unwrap | (laterSourceGame …).run runtime] = Pr[event | (PqxdhDeploymentLaterServerGame.game setup codec' checks route' …).run runtime] (deprecated Pr API, under set_option linter.deprecated false in)"
  },
- "scope_deviations": "the run-phase commands are CE's approved interface under its deviations D1-D5 (classification E; survey deviation table; PB-E ledger), as for increment I3; the reveal and the post phase are the approved modeled post-run interface of LQ-F (E: modeled disclosure, not physical erasure or a source getter; classical post-run queries; no later authentication claim); ghost capture sites (Server seed at birth, Beacon keys at creation, one-time scalar at beacon.rs:302, finish snapshot at its cut, Server ephemeral at server.rs:368, exceptions (a) failed-bundle one-time scalars and (b) ephemerals of accepts failing the KEM-key admission inside encapsulate at server.rs:373) stay RT under the proposed PB-GHOST, not implemented (D-4)",
+ "scope_deviations": "the run-phase commands are CE's approved interface under its deviations D1-D5 (classification E; survey deviation table; PB-E ledger), as for increment I3; the reveal and the post phase are the approved modeled post-run interface of LQ-F (E: modeled disclosure, not physical erasure or a source getter; classical post-run queries; no later authentication claim); ghost capture sites (Server seed at birth, Beacon keys at creation, one-time scalar at beacon.rs:302, finish snapshot at its cut (the InitSent state read at the entry of Beacon::finish_registration, beacon.rs:402-420; see rust_reference), Server ephemeral at server.rs:368, exceptions (a) failed-bundle one-time scalars and (b) ephemerals of accepts failing the KEM-key admission inside encapsulate at server.rs:373) stay RT under the proposed PB-GHOST, not implemented (D-4)",
  "checks": {
   "leanpath": {
    "path": "/tmp/bc-arc-scratch/item7/i4/leanpath",
@@ -335,7 +335,7 @@
    "log_sha256": "bd9fdc0b97c7c946d53a3d232e6c678fec62604d5832537b6b840700be8d4b9c",
    "result": "independent of the scan walker (copy of item7/i3/fix1/probe/CryptoSitesArg.lean with per-declaration counts): PqxdhBoundaryDeploymentLater 60 declarations, 29 sites (laterSourceExec.eq_1 1, laterSourceExec 1, exec_exact 27), all (wrap, 3, Setup.source); control PqxdhBoundaryDeployment 25 declarations, 64 sites (classical 62, sourceGame 1, sourceGame.eq_1 1), all (wrap, 3, Setup.source); the projection function value itself is a primitive projection"
   },
-  "reviewer_condition": "no use on the root input: the accept command is the published W4 logged acceptance (PqxdhBoundaryLoggedAccept.deployment) with the CE root client and its approved request interpreter unchanged, every other run-phase command is the I3 step (no .crypto site), and the hmac command of the run phase and of the post phase (PqxdhDeploymentLater.postImpl) is the CE native public HMAC oracle at the Extract-ROM point (no functional extract, no Correct premise on a ROM-answered call; no theorem of this module has a hypothesis other than the shape premises notAccept/notFinish, support membership and the MeasurableSpace instance of later_evalDist). wrap reaches the record only through crypto.verify (ledgerImpl -> SameSession -> PqxdhDeploymentTranscript.designate -> acceptedKeys -> crypto.verify), as both I3 D-6 reviewers confirmed for the same function. To be confirmed by the I4 D-6 reviewer.",
+  "reviewer_condition": "no use on the root input: the accept command is the published W4 logged acceptance (PqxdhBoundaryLoggedAccept.deployment) with the CE root client and its approved request interpreter unchanged, every other run-phase command is the I3 step (no .crypto site), and the hmac command of the run phase and of the post phase (PqxdhDeploymentLater.postImpl) is the CE native public HMAC oracle at the Extract-ROM point (no functional extract, no Correct premise on a ROM-answered call; no theorem of this module has a hypothesis other than the shape premises notAccept/notFinish, support membership and the MeasurableSpace instance of later_evalDist). wrap reaches the record only through crypto.verify (ledgerImpl -> SameSession -> PqxdhDeploymentTranscript.designate -> acceptedKeys -> crypto.verify), as both I3 D-6 reviewers confirmed for the same function. Confirmed by both I4 D-6 reviewers of 40630f35: the semantic review (all 29 sites are wrap argument 3 on Setup.source; wrap reaches the record only via ledgerImpl -> SameSession -> designate -> acceptedKeys -> crypto.verify, PqxdhDeploymentTranscript.lean:131-132; no root input, no functional Extract, no Correct premise) and the hygiene review (probe /tmp/bc-arc-scratch/item7/i4/review-hygiene/logs/dev/WrapCryptoReach-1.log, sha256 1b288274b47c8c16919a80344b59185a5d724ce7ad190f0995d08e46fea7de0b: from PqxdhDeploymentSecrecy.wrap the only Pqxdh.Crypto field reached is verify).",
   "live_control": {
    "direct": {
     "allowance_applies": true,
@@ -354,12 +354,75 @@
   }
  },
  "review": {
-  "status": "pending: decision D-6 (fresh-context Claude reviewer sub-agents with written verdicts) has not run for this increment",
+  "status": "D-6 fresh-context semantic and hygiene reviews of e0b8810b..40630f35: both APPROVE_WITH_NITS (four and two nits, none owner-level); every finding is addressed in the review fix pass, in documentation and receipts only (no Lean change)",
+  "verdicts": {
+   "semantic": {
+    "path": "/tmp/bc-arc-scratch/item7/i4/review-semantic/verdict.json",
+    "sha256": "4b17b33ff30d69d0f10ce9fcd95d2405e5ed2561afeab35df10ef6e5f73acabf",
+    "verdict": "APPROVE_WITH_NITS"
+   },
+   "hygiene": {
+    "path": "/tmp/bc-arc-scratch/item7/i4/review-hygiene/verdict.json",
+    "sha256": "7efaa458d4122565dcb665eae6e802e17cdb8e2b5e3eef1d167160bbba1877cb",
+    "verdict": "APPROVE_WITH_NITS"
+   }
+  },
+  "findings_record": {
+   "path": "/tmp/bc-arc-scratch/item7/i4/fix1/docs/review-findings.json",
+   "sha256": "3f1856ac4c94637321895808ac4f0fd0ec8eb575f8d73c7827719ab277b36778"
+  },
+  "findings": [
+   {
+    "n": 1,
+    "source": "semantic #1",
+    "severity": "nit",
+    "title": "Guide and receipt do not say that the modeled post phase reaches the CE native handler",
+    "change": "Guide, 'What stays outside': new sentences saying exactly that (with the arms of the handler, PostSpec's three commands, step_oracles by rfl, the run-phase constants, the carry-over of the I3 observation to the run phase only and the reviewer's reach probe). Module receipt: known_for_ledger entry 'definition closure'. Analysis paragraph: one clause in the review sentence. Lane plan section 4: recorded for PB-E row 13. No Lean change."
+   },
+   {
+    "n": 2,
+    "source": "semantic #2",
+    "severity": "nit",
+    "title": "Analysis paragraph omits the D1-D5 interface-scope clause, which matters for LQ-F reveal completeness",
+    "change": "Analysis paragraph: added 'As in the classical module, the commands are the experiment's approved interface under its deviations D1-D5, not every Rust entry point, so the snapshot and the reveal are complete relative to that command set; for example, Rust's public Beacon helpers delete_onetime_keypair and delete_pq_keypair, which can abort a Beacon that is waiting for its registration finish and drop its secrets without a finish (so no snapshot is taken), are omitted under D3.' (checked against beacon.rs:257-295 and survey lines 63 and 173)."
+   },
+   {
+    "n": 3,
+    "source": "semantic #3",
+    "severity": "nit",
+    "title": "Analysis wording: one optional log entry per accept, and an unqualified 'never returns a Rust failure'",
+    "change": "Analysis paragraph: 'a private log of the Server ephemeral secret generated by each registration accept' became 'a private log with one entry per registration accept, holding the Server ephemeral secret when one was generated'; 'that the source game never returns a Rust failure' became 'that the source game never returns a Rust failure in the source model'."
+   },
+   {
+    "n": 4,
+    "source": "semantic #4",
+    "severity": "nit",
+    "title": "Finish snapshot capture site has no Rust anchor in the RT list",
+    "change": "Guide, 'What stays outside': the capture-site list names the cut (the InitSent state read at the entry of Beacon::finish_registration, beacon.rs:402-420) and a new sentence gives the getters (get_prekey_sk at beacon.rs:193, get_onetime_sk at :210; the two functions span :193-216), their phases, the drop by Established at :504 or abort_registration (:176, called at :489, :496, :500), and that finish has no server.rs path (the Server-side ghost is the accept ephemeral at server.rs:368, logged by W4). Module receipt: scope_deviations and rust_reference carry the anchor. Analysis paragraph: the plain-English snapshot point. Lane plan section 4: PB-GHOST RT list. The Lean module docstring is not changed (documentation-only pass); it keeps 'the finish snapshot at its cut'."
+   },
+   {
+    "n": 5,
+    "source": "hygiene #1",
+    "severity": "nit",
+    "title": "Module receipt says the import closure was not re-audited; this review has now done it, and the result should be recorded",
+    "change": "Module receipt known_for_ledger entry 2 replaced by the re-audit result (6969 modules, no excluded module, 113 expected new modules, transitive reach 1576 constants touching only FixedHkdfSha512NoSaltSource, .mk, .crypto and PqxdhHeadlineBridges.parsedBytes, with the probe log hash), keeping 'neither contamination scan is an import-graph audit'. Guide: the same result after the scan sentence. Lane plan section 4: recorded for PB-E rows 12 and 13."
+   },
+   {
+    "n": 6,
+    "source": "hygiene #2",
+    "severity": "nit",
+    "title": "Lane decision labels and mailbox numbers only resolve to files under /tmp",
+    "change": "Guide Review paragraph: one sentence glossing D-1(b), D-2 (with #511 and #415), D-4 and D-6, so the guide's citations resolve inside it. Module receipt known_for_ledger entry 'lane decision labels'. Lane plan section 4: the I5 ledger must publish one-line glosses of D-1 to D-6 and the cited message numbers (lane-wide, also for the A and I3 documents)."
+   }
+  ],
   "plan": "/tmp/bc-arc-scratch/item7/plan.md section 0 D-6"
  },
  "known_for_ledger": [
   "the frozen docstring of PqxdhDeploymentLaterServerGame (line 5) places the drop of LQ-F exception (b) at the width-only from_bytes at server.rs:369-372; the rejection is the KEM-key admission inside encapsulate at server.rs:373 (known correction already recorded by the W4 guide/receipt and plan section 4); this module's docstring and guide use the corrected site; no Lean statement is affected",
-  "the import closure of this module contains that of PqxdhBoundaryDeploymentStep (I3 known_for_ledger: PqxdhHeadlineBridges through the published PB-03 module PqxdhBoundaryRegistrationAccept, and the item 2 rejected-route modules through published CE dependencies), plus PqxdhBoundaryLoggedAccept and the LQ-F modules; it was not re-audited in this increment; neither contamination scan is an import-graph audit"
+  "import closure (re-audited by the D-6 hygiene review of 40630f35, probe log /tmp/bc-arc-scratch/item7/i4/review-hygiene/logs/dev/MyProbe-2.log, sha256 c12a2ffd600ce6632dee915f87a51f1a8e04b714539f547252165f6cfcb63163): 6969 modules; no PqxdhRecordLift*, PqxdhDeploymentIdealLater*, IdealErase, FinishErasure, HiddenKernels or HiddenEntry module; the 113 BeaconcryptCore modules not in the closure of the I3 step module are the expected LQ-F modules PqxdhDeploymentLater, PqxdhDeploymentLaterServerSource, PqxdhDeploymentLaterServerNative and PqxdhDeploymentLaterServerGame, PqxdhBoundaryLoggedAccept and the CE secrecy and registration-joint chain; the closure contains that of PqxdhBoundaryDeploymentStep (I3 known_for_ledger: PqxdhHeadlineBridges through the published PB-03 module PqxdhBoundaryRegistrationAccept, and the item 2 rejected-route modules through published CE dependencies). The transitive reach inside BeaconcryptCore of all module constants (1576 constants) touches, of the scanned exclusions and the allowance, only FixedHkdfSha512NoSaltSource, .mk and .crypto and PqxdhHeadlineBridges.parsedBytes, as for I3; no bridge, C6, C7 or record-lift constant is reached. Neither contamination scan is an import-graph audit. For the PB-E ledger rows 12 and 13",
+  "definition closure (D-6 semantic review of 40630f35, reach probe /tmp/bc-arc-scratch/item7/i4/review-semantic/reach-1.log, sha256 ecf190a2c2e9749d6933ec600aea4387d62c4187b1879b0ec75d8239232ef7f3): laterSourceGame, laterSourceExec and postPhase contain PqxdhRegistrationSchedule.handler (with its bundle, finish and create arms and, through them, PqxdhServerAuthNative.nativeAccept and nativeBuild) only through the modeled post-phase handler PqxdhDeploymentLater.postImpl (E; PostSpec has only coin, hmac and hash, so only the hmac and hash arms run, and they are definitionally the model oracle arms of the I3 run phase: PqxdhBoundaryDeploymentStep.step_oracles holds by rfl), and ledgerImpl only through PqxdhDeploymentSecrecy.wrap (E); with postImpl and wrap as leaves only those two remain. The run phase (laterStep, loggedStep, PqxdhBoundaryLoggedAccept.deployment, I3 sourceStep, PqxdhBoundaryBirth.serverBirth) reaches no CE or LQ-F handler component, so I3's 'the source game reaches no CE handler component' carries over to I4 for the run phase only. For the PB-E ledger row 13",
+  "PB-GHOST RT list: the finish snapshot at its cut: snapshotAt reads the prekey and one-time fields in the phases of the getters get_prekey_sk and get_onetime_sk (beacon.rs:193 and :210; prekey in Fresh/FreshWithCoins/InitSent, one-time key in FreshWithCoins/InitSent) on the pre-command state, which is the InitSent state that Beacon::finish_registration reads at entry (beacon.rs:402-420) before it drops both scalars by self.state = BeaconState::Established (beacon.rs:504) or through abort_registration (beacon.rs:176, called at :489, :496, :500), so the cut is the last point at which both scalars are held; finish has no server.rs path, and the Server-side LQ-F ghost is the accept ephemeral at server.rs:368, logged by W4",
+  "lane decision labels (D-1(b), D-2, D-4, D-6) and mailbox numbers (#415 PB-D interface pin, #511 D-2 answer, #503 owner decision) are defined in the lane plan and the coordination mailbox outside the repository; the guide now glosses D-1(b), D-2, D-4 and D-6 inline, and the PB-E ledger of I5 (doc/impl/production-boundary-ledger.md) is to publish one-line glosses of D-1 to D-6 and the cited message numbers so that the citations of the A, I3 and I4 guides and receipts resolve inside the repository"
  ],
  "not_run": [
   "make verify",
@@ -369,12 +432,12 @@
   "transcript-fidelity cargo tests (no inventory metadata they read changed)"
  ],
  "remaining": [
-  "D-6 fresh-context semantic and hygiene reviews of this increment (including the D-1(b) reviewer condition for the v6 site entry and a transitive-reach probe as in I3)",
-  "integration into central (PROTOCOL section 6) after the review",
-  "I5: PB-E ledger (row 13 = this module; RT list with PB-GHOST capture sites; the known corrections) and CE-14",
+  "confirming review of the review fix pass",
+  "integration into central (PROTOCOL section 6) after the confirming review",
+  "I5: PB-E ledger (row 12 = PqxdhBoundaryDeployment and row 13 = this module, with the import-closure and definition-closure results above; RT list with the PB-GHOST capture sites including the finish anchor; the known corrections; one-line glosses of the lane decisions D-1 to D-6) and CE-14",
   "item 8: instantiate the CE-12-L headline game at codec' = withReader codec reader and route' = RawCtxFrameDecoding.sender reader.model and compose it with later_observe or later_evalDist (D-2 premises as for I3)"
  ],
- "rust_reference": "no new Rust correspondence: Server birth cites PqxdhBoundaryBirth.server_source (Server::try_new, beaconcrypt/src/server.rs:154-168, id_seed None); the raw accept cites the published W4 PqxdhBoundaryLoggedAccept.deployment_exact (get_shared_secret, server.rs:332, ephemeral at :368, KEM-key admission and encapsulation at :373); every other command cites its published row through PqxdhBoundaryDeploymentStep.step_exact; the finish snapshot, the log, the reveal, the post phase, the secrecy layer, observation modes and model oracles are CE/LQ-F ghosts and model interfaces (E), with the capture sites RT under proposed PB-GHOST",
+ "rust_reference": "no new Rust correspondence: Server birth cites PqxdhBoundaryBirth.server_source (Server::try_new, beaconcrypt/src/server.rs:154-168, id_seed None); the raw accept cites the published W4 PqxdhBoundaryLoggedAccept.deployment_exact (get_shared_secret, server.rs:332, ephemeral at :368, KEM-key admission and encapsulation at :373); every other command cites its published row through PqxdhBoundaryDeploymentStep.step_exact; the finish snapshot, the log, the reveal, the post phase, the secrecy layer, observation modes and model oracles are CE/LQ-F ghosts and model interfaces (E), with the capture sites RT under proposed PB-GHOST; the finish snapshot at its cut: snapshotAt reads the prekey and one-time fields in the phases of the getters get_prekey_sk and get_onetime_sk (beacon.rs:193 and :210; prekey in Fresh/FreshWithCoins/InitSent, one-time key in FreshWithCoins/InitSent) on the pre-command state, which is the InitSent state that Beacon::finish_registration reads at entry (beacon.rs:402-420) before it drops both scalars by self.state = BeaconState::Established (beacon.rs:504) or through abort_registration (beacon.rs:176, called at :489, :496, :500), so the cut is the last point at which both scalars are held; finish has no server.rs path, and the Server-side LQ-F ghost is the accept ephemeral at server.rs:368, logged by W4 (D-6 semantic review of 40630f35, checked against the code)",
  "deviations": [
   "laterStep is defined in two layers, loggedStep (the shape of PqxdhDeploymentLaterServerGame.handler) and the snapshot on top (the shape of snapImpl, snapshotAt with finishOwner for every command), instead of the three explicit cases of plan section 3; the three cases are the lemmas laterStep_finish, laterStep_accept and laterStep_quiet",
   "the reveal and post phase run through PqxdhBoundaryProgram.resume (postPhase), so a run-phase fail/div would stop with its poststate and no reveal; later_normal shows none occurs",
@@ -382,5 +445,10 @@
   "added beyond the plan's list (laterStep_exact, later, later_zero, later_continuation, later_probEvent): loggedStep_quiet, loggedStep_exact, laterStep_finish, laterStep_accept, laterStep_quiet, laterStep_normal, execute_exact, exec_exact, unwrap_okMap, later_normal, later_observe, later_evalDist",
   "later_probEvent uses the deprecated Pr API under set_option linter.deprecated false in (repo convention); later_evalDist is the evaluation-measure form",
   "scan spec version 6 lists only the wrap argument 3 site for this module (the I3 table entry for ledgerImpl argument 2 is not repeated because it is not used here)"
- ]
+ ],
+ "review_fix_pass": {
+  "lean_change": false,
+  "source_sha256": "1f27a737da73b5603d5b96b24461d222c25efd63607accf71ca33069c29c69bc",
+  "note": "the review fix pass changes only the guide, the analysis paragraph, this receipt and the increment receipt; the module source (sha256 above), its seventeen statements and guards, the root import and the inventory rows are those of 40630f35, so the checks recorded above stay valid; the module check, both contamination scans, the root import, the focused check-inventory and git diff --check are re-run at the fix commit and recorded in doc/impl/proof-receipts/production-boundary-increment-i4.json"
+ }
 }
