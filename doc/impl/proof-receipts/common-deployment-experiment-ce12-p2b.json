@@ -1,0 +1,543 @@
+{
+ "date": "2026-10-10T09:04:12.029923+00:00",
+ "scope": "CE-12 P2b step 1 (track ce12/p2b): the rest of the bills of design-v2 section 9: splitStep_uniform (the per-step uniform bound of the anomaly guesser's split handler), guessBill and ptc_bills (the query bill of beta_g's predict-then-compare adversary), HeadlineBills with headline_bills (the bills of every reduction behind the CE-12 headline terms at the deployment budget), and the billed forms of the fifteen frozen headline forms with beta_g and of anomaly_beta. Not reviewed; not integrated.",
+ "basis": {
+  "start": "f0dc46bb6473ab37ecf48e623f1ccb192bd6b3af",
+  "merges": [],
+  "central_at_receipt": "f0dc46bb6473ab37ecf48e623f1ccb192bd6b3af",
+  "published_leanpath": {
+   "path": "/tmp/bc-coord/leanpaths/f0dc46bb6473ab37ecf48e623f1ccb192bd6b3af.leanpath",
+   "sha256": "8b2da583f6e190857e288154143ba371fd3067ff81bf7466e95e7954e1db8f84"
+  }
+ },
+ "topic": {
+  "branch": "codex/deployment-ce12",
+  "worktree": "/tmp/beaconcrypt-deployment-ce12",
+  "head_at_receipt": "0072644d1ba5419569f3307177fbbcca7ac72f6c",
+  "note": "the documentation commit that adds this receipt follows head_at_receipt; it changes no Lean file"
+ },
+ "plan": {
+  "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
+  "sha256": "0cb1cc66ce4c8f7491bba861d88ab4213c96b212f00624135f8029ea6ec223df",
+  "sections": [
+   105
+  ],
+  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/docs/plan.at-p2b-0cb1cc66.md",
+  "dated_copy_sha256": "0cb1cc66ce4c8f7491bba861d88ab4213c96b212f00624135f8029ea6ec223df",
+  "backup_before": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/docs/plan.before-p2b-d44add0e.md"
+ },
+ "design": {
+  "path": "/tmp/bc-arc-scratch/common-experiment/ce12/design-v2.md",
+  "sha256": "9866f32e40a4fdb3742d4bc36709971a0ade2932882896fe1975b8ac334cbb4e",
+  "sections": "9 (bills), 2 (beta_g), 6 (ptc), 14-15 (owner notes, not claimed)"
+ },
+ "notes": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/NOTES.md",
+ "commits": [
+  {
+   "commit": "90764af567b93292f5c747d83ec1082370c9e109",
+   "subject": "Add the per-step uniform bound of the anomaly guesser's split handler"
+  },
+  {
+   "commit": "3b12a590e0097d13fb0da0a59d1a201da3cdf2af",
+   "subject": "Add guessBill and the bills of beta_g's predict-then-compare adversary"
+  },
+  {
+   "commit": "f147bf69e764627a5ca23975f7d1908cc240aeee",
+   "subject": "Collect the bills of every CE-12 headline reduction at the deployment budget"
+  },
+  {
+   "commit": "0072644d1ba5419569f3307177fbbcca7ac72f6c",
+   "subject": "Add the billed forms of the CE-12 headlines with beta_g"
+  }
+ ],
+ "commit_message_corrections": [
+  {
+   "commit": "3b12a590e0097d13fb0da0a59d1a201da3cdf2af",
+   "says": "17 guarded theorems",
+   "actual": 14
+  },
+  {
+   "commit": "f147bf69e764627a5ca23975f7d1908cc240aeee",
+   "says": "7 guarded theorems",
+   "actual": 6
+  }
+ ],
+ "files_sha256": {
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "639f7dec32e28bcb87621522034a49a363eb584cef9225c12394c005ae6c0f73",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "417d787de2e7bed1c75d9b8c4a3991f71ed2265f2ae38cca4f2733be1023a5cc",
+  "beaconcrypt-core/proofs/check-inventory.sh": "89058587ba50c26e232f8882f7894e55275cb271358ea76d48f472531044d6fe"
+ },
+ "modules": [
+  {
+   "name": "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSplitCost",
+   "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineSplitCost.lean",
+   "sha256": "a5763c6fc2915c3db804ea669d2894336afe9d36c986fafc1d07c27579a80c92",
+   "created_in": "90764af567b93292f5c747d83ec1082370c9e109",
+   "last_changed_in": "90764af567b93292f5c747d83ec1082370c9e109",
+   "theorem_count": 35,
+   "guard_count": 35,
+   "guards_in_order": true,
+   "deprecation_suppressions": 0,
+   "other_options": [
+    "autoImplicit false"
+   ],
+   "definitions": [
+    "nativeCost",
+    "wOwner",
+    "splitWeight"
+   ],
+   "theorems": [
+    "record_uniform",
+    "serverStep_uniform",
+    "beaconStep_uniform",
+    "onNative_uniform",
+    "native_uniform",
+    "later_uniform",
+    "rom_uniform",
+    "nativePrim_uniform",
+    "finishErased_uniform",
+    "hiddenAfter_uniform",
+    "tailImpl_uniform",
+    "loggedSend_uniform",
+    "hiddenBuild_uniform",
+    "onBase_uniform",
+    "nativeCtx_uniform",
+    "slotRunX_uniform",
+    "realRegAt_uniform",
+    "createReg_uniform",
+    "buildHidden_uniform",
+    "seed_uniform",
+    "seedQuery_uniform",
+    "xInstall_uniform",
+    "onSlots_cost",
+    "acceptStep_cost",
+    "buildStepC_cost",
+    "groupCE_cost",
+    "ownerCE_cost",
+    "finishChallenge_cost",
+    "challenge_le",
+    "finishStepC_cost",
+    "serverInstall_uniform",
+    "beaconInstall_uniform",
+    "splitBuild_uniform",
+    "splitFinish_uniform",
+    "splitStep_uniform"
+   ],
+   "axiom_profile": {
+    "propext, Classical.choice, Quot.sound": 32,
+    "propext": 2,
+    "propext, Quot.sound": 1
+   },
+   "imports": [
+    "BeaconcryptCore.Computational.PqxdhDeploymentIdealAnomalyGuesser",
+    "BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvCost",
+    "BeaconcryptCore.Computational.PqxdhDeploymentCompileSecrecy",
+    "BeaconcryptCore.Computational.PqxdhRegistrationScheduleResources",
+    "BeaconcryptCore.Computational.PqxdhServerAuthTailCosts"
+   ],
+   "final_check": {
+    "prefix": "ce12/p2b/olean",
+    "leanpath_first_prefix_mirrors": "published f0dc46bb first prefix ce12/p2/int/olean",
+    "exit": 0,
+    "head_when_checked": "f0dc46bb6473ab37ecf48e623f1ccb192bd6b3af",
+    "dirty_paths_when_checked": 1,
+    "log_bytes": 0,
+    "artifact_sha256": "5a8b11ba8619d3bb6f23e3dc82e43a904f48bf4b04272b7b167908625f9e7409",
+    "source_sha256": "a5763c6fc2915c3db804ea669d2894336afe9d36c986fafc1d07c27579a80c92",
+    "source_equals_current": true,
+    "source_equals_commit": {
+     "90764af567b93292f5c747d83ec1082370c9e109": true
+    },
+    "start": "2026-10-10T08:39:05.860870831Z",
+    "end": "2026-10-10T08:39:21.735979776Z"
+   }
+  },
+  {
+   "name": "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGuessBill",
+   "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineGuessBill.lean",
+   "sha256": "739e9ccb48b36fbfac7dbe7793c077d3b221a540ae5e74a4b6d1cdff996a79c5",
+   "created_in": "3b12a590e0097d13fb0da0a59d1a201da3cdf2af",
+   "last_changed_in": "3b12a590e0097d13fb0da0a59d1a201da3cdf2af",
+   "theorem_count": 14,
+   "guard_count": 14,
+   "guards_in_order": true,
+   "deprecation_suppressions": 0,
+   "other_options": [
+    "autoImplicit false",
+    "backward.isDefEq.respectTransparency false"
+   ],
+   "definitions": [
+    "guessWeight",
+    "guessBill"
+   ],
+   "theorems": [
+    "oracleFinish_uniform",
+    "oracleFinish_base",
+    "guessStep_uniform",
+    "guessStep_base",
+    "guessWeight_eq",
+    "flat_uniform",
+    "flat_base",
+    "game_uniform",
+    "guessBill_eq",
+    "anomalyGuesser_uniform",
+    "anomalyGuesser_base",
+    "ptc_uniform",
+    "ptc_base",
+    "ptc_bills"
+   ],
+   "axiom_profile": {
+    "propext, Classical.choice, Quot.sound": 14
+   },
+   "imports": [
+    "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSplitCost",
+    "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAnomaly"
+   ],
+   "final_check": {
+    "prefix": "ce12/p2b/olean",
+    "leanpath_first_prefix_mirrors": "published f0dc46bb first prefix ce12/p2/int/olean",
+    "exit": 0,
+    "head_when_checked": "90764af567b93292f5c747d83ec1082370c9e109",
+    "dirty_paths_when_checked": 1,
+    "log_bytes": 0,
+    "artifact_sha256": "7c67698fc11dce299acf28878ab8715eaff61a849e3aa9328e4a18d47e54bc64",
+    "source_sha256": "739e9ccb48b36fbfac7dbe7793c077d3b221a540ae5e74a4b6d1cdff996a79c5",
+    "source_equals_current": true,
+    "source_equals_commit": {
+     "3b12a590e0097d13fb0da0a59d1a201da3cdf2af": true
+    },
+    "start": "2026-10-10T08:43:02.144121571Z",
+    "end": "2026-10-10T08:43:08.564928051Z"
+   }
+  },
+  {
+   "name": "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineBillsFull",
+   "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineBillsFull.lean",
+   "sha256": "25cc79473346471daf68528eb2a3e9d912e2801e0d615d130c56dfec4efa394e",
+   "created_in": "f147bf69e764627a5ca23975f7d1908cc240aeee",
+   "last_changed_in": "f147bf69e764627a5ca23975f7d1908cc240aeee",
+   "theorem_count": 6,
+   "guard_count": 6,
+   "guards_in_order": true,
+   "deprecation_suppressions": 0,
+   "other_options": [
+    "autoImplicit false"
+   ],
+   "definitions": [
+    "TargetBills",
+    "A1Bills",
+    "A2Bills",
+    "InjBills",
+    "PairBills",
+    "HeadlineBills"
+   ],
+   "theorems": [
+    "a1_bills",
+    "target_bills",
+    "a1_bills_all",
+    "a2_bills_all",
+    "inj_bills",
+    "headline_bills"
+   ],
+   "axiom_profile": {
+    "propext, Classical.choice, Quot.sound": 6
+   },
+   "imports": [
+    "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGuessBill",
+    "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineBills",
+    "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGap",
+    "BeaconcryptCore.Computational.PqxdhRegistrationJointKemKeyTransferBills"
+   ],
+   "final_check": {
+    "prefix": "ce12/p2b/olean",
+    "leanpath_first_prefix_mirrors": "published f0dc46bb first prefix ce12/p2/int/olean",
+    "exit": 0,
+    "head_when_checked": "3b12a590e0097d13fb0da0a59d1a201da3cdf2af",
+    "dirty_paths_when_checked": 1,
+    "log_bytes": 0,
+    "artifact_sha256": "0cc4577aa319367f0a3cca36d6c0c5b77e8258c78e3b97d61a80e127a71de38e",
+    "source_sha256": "25cc79473346471daf68528eb2a3e9d912e2801e0d615d130c56dfec4efa394e",
+    "source_equals_current": true,
+    "source_equals_commit": {
+     "f147bf69e764627a5ca23975f7d1908cc240aeee": true
+    },
+    "start": "2026-10-10T08:50:14.734206957Z",
+    "end": "2026-10-10T08:50:17.665821411Z"
+   }
+  },
+  {
+   "name": "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGated",
+   "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineGated.lean",
+   "sha256": "32d9482f4ac30959268ffdd92604505d12f354fd50fe0d1a778182e597d60b59",
+   "created_in": "0072644d1ba5419569f3307177fbbcca7ac72f6c",
+   "last_changed_in": "0072644d1ba5419569f3307177fbbcca7ac72f6c",
+   "theorem_count": 16,
+   "guard_count": 16,
+   "guards_in_order": true,
+   "deprecation_suppressions": 0,
+   "other_options": [
+    "autoImplicit false"
+   ],
+   "definitions": [],
+   "theorems": [
+    "anomaly_beta_billed",
+    "ce_app_target_billed",
+    "ce_app_billed",
+    "ce_or_s2b_target_billed",
+    "ce_or_s2b_billed",
+    "ce_uks_sender_target_billed",
+    "ce_uks_sender_billed",
+    "ce_lor_target_billed",
+    "ce_lor_billed",
+    "ce_or_s2b_sym_billed",
+    "ce_uks_sym_billed",
+    "ce_app_beacon_sym_billed",
+    "ce_app_sym_billed",
+    "symbolic_lor_bound_billed",
+    "ce_or_injective_s2b_billed",
+    "ce_or_injective_s2b_full_billed"
+   ],
+   "axiom_profile": {
+    "propext, Classical.choice, Quot.sound": 16
+   },
+   "imports": [
+    "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineBillsFull",
+    "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineApp",
+    "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineOrigin",
+    "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineUks",
+    "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineLor",
+    "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic",
+    "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolicLor",
+    "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineInjective"
+   ],
+   "final_check": {
+    "prefix": "ce12/p2b/olean",
+    "leanpath_first_prefix_mirrors": "published f0dc46bb first prefix ce12/p2/int/olean",
+    "exit": 0,
+    "head_when_checked": "f147bf69e764627a5ca23975f7d1908cc240aeee",
+    "dirty_paths_when_checked": 1,
+    "log_bytes": 0,
+    "artifact_sha256": "f0ac11840d83861c60b3ce1ddd98561c2c6fa76aa7e59393e0ea14beba888711",
+    "source_sha256": "32d9482f4ac30959268ffdd92604505d12f354fd50fe0d1a778182e597d60b59",
+    "source_equals_current": true,
+    "source_equals_commit": {
+     "0072644d1ba5419569f3307177fbbcca7ac72f6c": true
+    },
+    "start": "2026-10-10T08:54:52.206618469Z",
+    "end": "2026-10-10T08:54:55.739443355Z"
+   }
+  }
+ ],
+ "theorem_total": 71,
+ "allowed_axioms": [
+  "propext",
+  "Classical.choice",
+  "Quot.sound"
+ ],
+ "scan": {
+  "PqxdhDeploymentHeadlineSplitCost": {
+   "theorems": 35,
+   "guards": 35,
+   "in_order": true,
+   "guard_msgs": 35,
+   "bad_axioms": [],
+   "forbidden": [],
+   "suppressions": 0
+  },
+  "PqxdhDeploymentHeadlineGuessBill": {
+   "theorems": 14,
+   "guards": 14,
+   "in_order": true,
+   "guard_msgs": 14,
+   "bad_axioms": [],
+   "forbidden": [],
+   "suppressions": 0
+  },
+  "PqxdhDeploymentHeadlineBillsFull": {
+   "theorems": 6,
+   "guards": 6,
+   "in_order": true,
+   "guard_msgs": 6,
+   "bad_axioms": [],
+   "forbidden": [],
+   "suppressions": 0
+  },
+  "PqxdhDeploymentHeadlineGated": {
+   "theorems": 16,
+   "guards": 16,
+   "in_order": true,
+   "guard_msgs": 16,
+   "bad_axioms": [],
+   "forbidden": [],
+   "suppressions": 0
+  },
+  "closure_size": 1571,
+  "boundary_imports": []
+ },
+ "forbidden_tokens_found": [],
+ "boundary_imports": [],
+ "handwritten_lean": {
+  "before": 1908,
+  "after": 1912,
+  "note": "one per module: 1908 -> 1909 (SplitCost) -> 1910 (GuessBill) -> 1911 (BillsFull) -> 1912 (Gated); coord.sh inv recount before coord.sh inv rehash each time"
+ },
+ "headlines": {
+  "splitStep_uniform": "KemBound -> for every t p created query x: ((handlerWith setup codec route (idealSplit setup codec route checks t p created) query).run x).IsTotalQueryBound (splitWeight caps (commandKind query)); splitWeight = [1, 64 + keygenCost, 32, 140 + encapsCost, 108 + 64 + 64, 69 * max 64 decapsCost + 64, 64, 64, 64, 64, 64, 64]",
+  "guessStep_uniform / guessStep_base": "every step of guessReg: IsMlKemUniformQuery <= splitWeight caps (commandKind query) (KemBound); IsMlKemBaseQuery 0",
+  "flat_uniform / game_uniform": "one complete-interface query: <= guessWeight caps bounds (queryClass query); whole guesser game against a budget-respecting adversary: <= sum_kind guessWeight kind * budget.cap kind",
+  "guessWeight_eq": "guessWeight caps bounds = splitWeight on the twelve native classes, test 1 + 64 + 64, fresh bounds.max + 64 + 64",
+  "guessBill / guessBill_eq": "guessBill caps qInit B bounds = (B.create + 1) * keygenCost + (qInit + 32) + sum_kind B.cap kind * guessWeight kind = (qCreate + 1)keygenCost + (qInit + 32) + qCoin + (64 + keygenCost)qCreate + 32 qBundle + (140 + encapsCost)qAccept + 236 qBuild + (69 max(64, decapsCost) + 64)qFinish + 64(qHmac + qHash + qServerSend + qServerRaw + qBeaconSend + qBeaconRaw) + 129 qTest + (bounds.max + 128)qFresh",
+  "anomalyGuesser_uniform / anomalyGuesser_base": "anomalyGuesser (Target count) ...: IsMlKemUniformQuery <= (count + 1) keygenCost + (qInit + 32) + sum_kind budget.cap kind * guessWeight kind (KemBound, initBound, Respects); IsMlKemBaseQuery 0",
+  "ptc_bills": "(ptc setup.kem (anomalyGuesser setup codec route checks (Target.ofCE budget g) ensureInit 0 runtime bounds mode adversary)).MakesAtMostQueries (guessBill caps qInit budget bounds) 0 (budget.finish + 1) 0 0 0 (KemBound, initBound, budget.Respects)",
+  "a1_bills": "ReductionBills of serverAuthAdversary c at coinCap, qAccept, romCap, hashCap, totalCap, qFinish from KemBound and the budget alone (no CE-A1 security premise)",
+  "headline_bills": "HeadlineBills = TargetBills (kem: kem_transfer_bills; slot: allIdeal_bills at compileFull, transported caps; beta: ptc_bills; auth/records at BI_g) and A1Bills, A2Bills (a2_bills), InjBills (collider_bills), PairBills (pair_bills); premises SourceFullCorrect, KemBound, initBound, budget.Respects",
+  "billed forms (PqxdhDeploymentHeadlineGated)": "ce_app(_target)_billed, ce_or_s2b(_target)_billed, ce_uks_sender(_target)_billed, ce_lor(_target)_billed: frozen bound and TargetBills; ce_or_s2b_sym_billed, ce_uks_sym_billed, ce_app_beacon_sym_billed: and TargetBills and A1Bills; ce_app_sym_billed: TargetBills, A2Bills, A1Bills; symbolic_lor_bound_billed: TargetBills, A2Bills, A1Bills, InjBills; ce_or_injective_s2b(_full)_billed: TargetBills, A1Bills, InjBills; anomaly_beta_billed: anomaly_beta and ptc_bills. Same binders and premises as the frozen theorems (anomaly_beta_billed adds KemBound, initBound, Respects)."
+ },
+ "deviations_from_design": [
+  "weights of the guesser game proved on the split handler itself (splitWeight) rather than valued by idealStep_bound, uniformCap and OpenUniform.total: query bounds do not transfer along ideal_splits (an equality in law; plan section 93 (a))",
+  "one finish weight (the real finish's 69 * max 64 decapsCost, which dominates the challenge finish by challenge_le) plus the Beacon install seed",
+  "a test query is charged at both send classes (wrapCost), so u(test) = 129",
+  "CE-A1 bills through a1_bills (resource premises only) rather than ce_a1_billed (security premises)",
+  "HeadlineBills split into five parts so that each billed headline conjoins only the bills of its terms; PairBills only in HeadlineBills",
+  "billed forms generated textually from the frozen statements (ce12/p2b/gen/gated.py); the per-target P1 forms and anomaly_beta billed too; ce_kt forms (no beta_g) not billed",
+  "commit messages of 3b12a590 and f147bf69 miscount their theorems (17 and 7 for 14 and 6)"
+ ],
+ "contracts_used": {
+  "new_contracts": [],
+  "new_assumptions": [],
+  "premises": [
+   "KemBound setup caps",
+   "initBound (total query bound qInit of the runtime initializer)",
+   "budget.Respects adversary",
+   "SourceFullCorrect setup.source setup.hmac (record-lift bills only)",
+   "the premises of each frozen headline for its billed form"
+  ]
+ },
+ "not_claimed": [
+  "no closed epsilon_ct or epsilon_ctcoll: ctGapTerm and ctCollTerm stay explicit probabilities with no bill; the headlines with ctCollTerm stay gated on ct_collision_game",
+  "the bills are query caps in the existing cost model, not running-time bounds; deterministic local work is not counted; they are worst-case caps and need not be tight",
+  "no AG, no D-ct, no later-quantum (P3) form"
+ ],
+ "open_points": [
+  "owner flag of P2 (ctGapTerm, ctCollTerm explicit) stands; the beta_g gate on guessBill is closed",
+  "ct_collision_game (2-4 days), the next P2b step",
+  "AG (2-5 days), D-ct (3-6 days, deferred)",
+  "independent review of P2b step 1, fix pass, integration"
+ ],
+ "checks": {
+  "lean_tool": "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean via coord.sh lean claude, -j1 -M8000, timeout 180",
+  "leanpath": {
+   "path": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/leanpath",
+   "sha256": "1b84b8f8376ecd48732707964b8df84bb6c3b197d26ab7843db9f465cab51643",
+   "first_prefix": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/olean",
+   "mirror_of": "/tmp/bc-arc-scratch/common-experiment/ce12/p2/int/olean (published f0dc46bb first prefix; 6367 links, root skipped)"
+  },
+  "roots": {
+   "logs/final/root-billsfull.json": {
+    "exit": 0,
+    "head": "3b12a590e0097d13fb0da0a59d1a201da3cdf2af",
+    "dirty_paths": 4,
+    "log_bytes": 0,
+    "artifact_sha256": "4a419a82c646493e7a609acc497dde9515a6b0bb1eb4b2555d555f049715e1d8",
+    "source_sha256": "ea72f13b508bfa9e7d0614651138fa8d7526bfdff14010ff27bf09bb5796bd3e"
+   },
+   "logs/final/root-clean.json": {
+    "exit": 0,
+    "head": "0072644d1ba5419569f3307177fbbcca7ac72f6c",
+    "dirty_paths": 0,
+    "log_bytes": 0,
+    "artifact_sha256": "1627cbb822bd59f2944d041d0567f4cf1c9c2500b7f4193768bd0589784724ea",
+    "source_sha256": "639f7dec32e28bcb87621522034a49a363eb584cef9225c12394c005ae6c0f73"
+   },
+   "logs/final/root-gated.json": {
+    "exit": 0,
+    "head": "f147bf69e764627a5ca23975f7d1908cc240aeee",
+    "dirty_paths": 4,
+    "log_bytes": 0,
+    "artifact_sha256": "1627cbb822bd59f2944d041d0567f4cf1c9c2500b7f4193768bd0589784724ea",
+    "source_sha256": "639f7dec32e28bcb87621522034a49a363eb584cef9225c12394c005ae6c0f73"
+   },
+   "logs/final/root-guessbill.json": {
+    "exit": 0,
+    "head": "90764af567b93292f5c747d83ec1082370c9e109",
+    "dirty_paths": 4,
+    "log_bytes": 0,
+    "artifact_sha256": "7e56eb6fe1627b823841f2d8e5bb1d01b74ce47aac8ce67174cbc1ad26e4b6c4",
+    "source_sha256": "7868b3a711722bc401c0606ffdc2f08b5d888a74d2dcc328dcb2cb00af3050d4"
+   },
+   "logs/final/root-splitcost.json": {
+    "exit": 0,
+    "head": "f0dc46bb6473ab37ecf48e623f1ccb192bd6b3af",
+    "dirty_paths": 4,
+    "log_bytes": 0,
+    "artifact_sha256": "e03f8fff61547335adde3aaec571b201f56740f5c1ed0c5655907f4ced1f6ddc",
+    "source_sha256": "7522f3e3f55f2455c218be7a6625127b97990f84a14a9a2fb1b2726d83eac224"
+   }
+  },
+  "inventories": {
+   "billsfull": {
+    "status": 0,
+    "commit": "3b12a590e0097d13fb0da0a59d1a201da3cdf2af",
+    "start": "2026-10-10T08:50:20Z",
+    "end": "2026-10-10T08:52:09Z",
+    "dirty_before": 4,
+    "dirty_after": 4,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/logs/inventory-billsfull.log",
+    "log_sha256": "e251111d97104792f3863f5015988e2064753257e5bfdbf19822f2813b5e3ac3",
+    "note": "run before the module's Lean commit, with its four staged paths (module, root, reviewed-inventory.txt, check-inventory.sh) as the only dirt"
+   },
+   "docs": {
+    "status": 0,
+    "commit": "0072644d1ba5419569f3307177fbbcca7ac72f6c",
+    "start": "2026-10-10T09:02:14Z",
+    "end": "2026-10-10T09:04:02Z",
+    "dirty_before": 3,
+    "dirty_after": 3,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/logs/inventory-docs.log",
+    "log_sha256": "d2c2f7e336bd44a25cc85fdfcd45c22506c836db3183bbeda77220c34c7e98e8",
+    "note": "run on the documentation tree before its commit (dirt: the guide, the analysis and this receipt as first generated); the commit changes no inventory-tracked file"
+   },
+   "gated": {
+    "status": 0,
+    "commit": "f147bf69e764627a5ca23975f7d1908cc240aeee",
+    "start": "2026-10-10T08:54:58Z",
+    "end": "2026-10-10T08:56:46Z",
+    "dirty_before": 4,
+    "dirty_after": 4,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/logs/inventory-gated.log",
+    "log_sha256": "b408152e15ef8b624319fd34d249726641943d1da44023dae91f1a01e872d27f",
+    "note": "run before the module's Lean commit, with its four staged paths (module, root, reviewed-inventory.txt, check-inventory.sh) as the only dirt"
+   },
+   "guessbill": {
+    "status": 0,
+    "commit": "90764af567b93292f5c747d83ec1082370c9e109",
+    "start": "2026-10-10T08:43:11Z",
+    "end": "2026-10-10T08:45:06Z",
+    "dirty_before": 4,
+    "dirty_after": 4,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/logs/inventory-guessbill.log",
+    "log_sha256": "e8614f0e8448409c0c8bd264dae9adf0903937d1053f71e0aebc71b1c23586be",
+    "note": "run before the module's Lean commit, with its four staged paths (module, root, reviewed-inventory.txt, check-inventory.sh) as the only dirt"
+   },
+   "splitcost": {
+    "status": 0,
+    "commit": "f0dc46bb6473ab37ecf48e623f1ccb192bd6b3af",
+    "start": "2026-10-10T08:39:48Z",
+    "end": "2026-10-10T08:41:35Z",
+    "dirty_before": 4,
+    "dirty_after": 4,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/logs/inventory-splitcost.log",
+    "log_sha256": "f501a589b7bc54156022cab4b45012c32015e3950476828429619018a1870689",
+    "note": "run before the module's Lean commit, with its four staged paths (module, root, reviewed-inventory.txt, check-inventory.sh) as the only dirt"
+   }
+  },
+  "guard_scan": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/logs/scan-1.json",
+  "git_diff_check": {
+   "range": "f0dc46bb6473ab37ecf48e623f1ccb192bd6b3af..0072644d1ba5419569f3307177fbbcca7ac72f6c",
+   "exit": 0
+  }
+ },
+ "review": {
+  "status": "not reviewed"
+ }
+}
