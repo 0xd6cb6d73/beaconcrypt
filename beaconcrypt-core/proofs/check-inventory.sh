@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1902
+	[handwritten-lean]=1903
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -39082,6 +39082,19 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem shared_splitL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit theorem shared_splitL"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemSplit\.opaqueBranchL_split$' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemSplit.opaqueBranchL_split"
 require_line_count 1 '^theorem opaqueBranchL_split([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit theorem opaqueBranchL_split"
+
+# LQ-F upstream unit B1: the challenger's draws and the draw swap of item 2's logged prefix
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterParams.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterParams$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentIdealLaterParams root import"
+require_line_count 3 '^theorem ' "$selected_source_module" "PqxdhDeploymentIdealLaterParams theorem inventory"
+require_line_count 3 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentIdealLaterParams guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterParams\.preOpaque_poolL$' "$selected_source_module" "PqxdhDeploymentIdealLaterParams dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterParams.preOpaque_poolL"
+require_line_count 1 '^theorem preOpaque_poolL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterParams theorem preOpaque_poolL"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterParams\.draws_swapL$' "$selected_source_module" "PqxdhDeploymentIdealLaterParams dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterParams.draws_swapL"
+require_line_count 1 '^theorem draws_swapL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterParams theorem draws_swapL"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterParams\.laterSlotGame_pool$' "$selected_source_module" "PqxdhDeploymentIdealLaterParams dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterParams.laterSlotGame_pool"
+require_line_count 1 '^theorem laterSlotGame_pool([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterParams theorem laterSlotGame_pool"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
