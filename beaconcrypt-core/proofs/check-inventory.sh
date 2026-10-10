@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1891
+	[handwritten-lean]=1892
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -38677,6 +38677,23 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem ce_or_s2b_target([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineOrigin theorem ce_or_s2b_target"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineOrigin\.ce_or_s2b$' "$selected_source_module" "PqxdhDeploymentHeadlineOrigin dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineOrigin.ce_or_s2b"
 require_line_count 1 '^theorem ce_or_s2b([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineOrigin theorem ce_or_s2b"
+
+# CE-12 P1: CE-UKS, the unknown-key-share headline (b2s receiver side without beta_g, sender side with it; per target and summed).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineUks.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineUks$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentHeadlineUks root import"
+require_line_count 5 '^theorem ' "$selected_source_module" "PqxdhDeploymentHeadlineUks theorem inventory"
+require_line_count 5 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentHeadlineUks guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineUks\.cross_final$' "$selected_source_module" "PqxdhDeploymentHeadlineUks dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineUks.cross_final"
+require_line_count 1 '^theorem cross_final([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineUks theorem cross_final"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineUks\.ce_uks_b2s_target$' "$selected_source_module" "PqxdhDeploymentHeadlineUks dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineUks.ce_uks_b2s_target"
+require_line_count 1 '^theorem ce_uks_b2s_target([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineUks theorem ce_uks_b2s_target"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineUks\.ce_uks_b2s$' "$selected_source_module" "PqxdhDeploymentHeadlineUks dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineUks.ce_uks_b2s"
+require_line_count 1 '^theorem ce_uks_b2s([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineUks theorem ce_uks_b2s"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineUks\.ce_uks_sender_target$' "$selected_source_module" "PqxdhDeploymentHeadlineUks dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineUks.ce_uks_sender_target"
+require_line_count 1 '^theorem ce_uks_sender_target([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineUks theorem ce_uks_sender_target"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineUks\.ce_uks_sender$' "$selected_source_module" "PqxdhDeploymentHeadlineUks dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineUks.ce_uks_sender"
+require_line_count 1 '^theorem ce_uks_sender([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineUks theorem ce_uks_sender"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"

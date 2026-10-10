@@ -2099,6 +2099,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineApp
 
 import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineOrigin
 
+import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineUks
+
 /-!
 # Beaconcrypt-core verification root
 
