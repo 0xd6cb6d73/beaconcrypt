@@ -1,0 +1,795 @@
+{
+ "date": "2026-10-10T12:20:57.829180+00:00",
+ "scope": "CE-12 P3 (track ce12/p3): the later-quantum (LQ-F) headlines of the common deployment experiment: CE-KT-L, CE-APP-L, CE-LOR-L (with Server-peer forms), their symbolic-eligibility corollaries (APP, KT and LOR; the symbolic terms are run-phase classical terms of the run-phase adversary through game_classical_event and a support transfer) and their bills with the post budget. Confidentiality only. Not reviewed; not integrated.",
+ "basis": {
+  "start": "df7727c3238f70388e3ea739df109ad025ace097",
+  "merges": [],
+  "central_at_receipt": "e0b8810bb048499ed8fbcadba5fe8a560f3ad083",
+  "central_note": "central moved to e0b8810b (item 7 increment I3, PqxdhBoundaryDeployment{Step,}; messages 514/515) during the track; the topic did not merge it",
+  "published_leanpath": {
+   "path": "/tmp/bc-coord/leanpaths/df7727c3238f70388e3ea739df109ad025ace097.leanpath",
+   "sha256": "bb539cc34f9ae1361b4a314adb8eb8661d57115080459f8e518081cf7126ecea"
+  }
+ },
+ "topic": {
+  "branch": "codex/deployment-ce12-later",
+  "worktree": "/tmp/beaconcrypt-deployment-ce12-later",
+  "head_at_receipt": "1f5c4624ac17c096ffd9cbb742af369e72656ef7",
+  "note": "the documentation commit that adds this receipt follows head_at_receipt; it changes no Lean file"
+ },
+ "plan": {
+  "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
+  "sha256": "a4d85abc6fcd5722152756ce82ddcbc0eb5589b7a8f4ed5a558c4119cf6adae4",
+  "sections": [
+   107,
+   109
+  ],
+  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/docs/plan.at-p3-a4d85abc.md",
+  "dated_copy_sha256": "a4d85abc6fcd5722152756ce82ddcbc0eb5589b7a8f4ed5a558c4119cf6adae4",
+  "note": "section 108 is CE-12 P2b step 3 (concurrent track)"
+ },
+ "design": {
+  "paths": [
+   "/tmp/bc-arc-scratch/common-experiment/ce12/design.md",
+   "/tmp/bc-arc-scratch/common-experiment/ce12/design-v2.md",
+   "/tmp/bc-arc-scratch/common-experiment/lqf-up/design-v2.md"
+  ],
+  "sha256": [
+   "4c52e00c57e0b8c6a4918ba20158bb4c355d0a4419d8764c5f614190e57dd978",
+   "9866f32e40a4fdb3742d4bc36709971a0ade2932882896fe1975b8ac334cbb4e",
+   "8d8aa59762f648098c18f48973a232e0dbeea07bec2f09e0191756a7640d1531"
+  ],
+  "sections": "design.md 9.1-9.2, design-v2 10 (and 11-12 for the layout and the VC rows); LQ-F upstream design-v2 7"
+ },
+ "upstream": {
+  "units": {
+   "D": "c031e4e7",
+   "C": "1b322f16",
+   "A1": "adf9d8fc",
+   "A2": "c72db84a (messages 507/508)",
+   "B": "df7727c3 (messages 512/513)"
+  },
+  "consumed": [
+   "PqxdhDeploymentLaterServerTransfer.kem_transfer_server",
+   "PqxdhDeploymentLaterKemTwoSided.kem_transfer_server_two_sided",
+   "PqxdhDeploymentLaterServerItemKeys.later_slots_two (LaterSlotsTwoTarget)",
+   "PqxdhDeploymentIdealLaterCompile.ideal_compile_server (IdealCompileServerTarget)",
+   "PqxdhDeploymentIdealLaterEnv.c6_idealGame_decide",
+   "PqxdhRecordLiftLaterWorlds.laterReal_game, laterChains_split",
+   "PqxdhDeploymentIdealLaterSlots.later_slots, later_anomaly_eq, later_view_slots_le, continueWith_noinstall",
+   "PqxdhDeploymentLaterTargetRange.split_create_later, eligibleL",
+   "PqxdhRecordLiftLaterLift.later_record_lift",
+   "PqxdhRecordFactsLaterFresh.later_idealRecords_fresh",
+   "PqxdhRecordFactsLaterLor.later_idealRecords_lor",
+   "PqxdhDeploymentLaterServerGame.game_classical_event, game_frame, runPhase_classical",
+   "PqxdhDeploymentLaterServerItemBills.laterSlot_bills_compiled",
+   "PqxdhDeploymentLaterServerTransfer.kem_transfer_server_bills",
+   "PqxdhDeploymentIdealFrame.c4_ideal_later, frame_idealD",
+   "CE-12 P1/P2 events, containments, anomaly, gap and symbolic modules"
+  ]
+ },
+ "notes": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/NOTES.md",
+ "commits": [
+  {
+   "commit": "c88029f484635191eabf694185b3e56bc61c019b",
+   "subject": "Add the later per-target chain of the CE-12 headlines"
+  },
+  {
+   "commit": "76d91c8d91e345775874f5556132824d13179290",
+   "subject": "Add CE-KT-L, the later-quantum key transfer headline"
+  },
+  {
+   "commit": "31716925a3867ae7ddd8786ad072bd09deff2785",
+   "subject": "Add CE-APP-L, the later-quantum fresh-message headline"
+  },
+  {
+   "commit": "555197966cf4ed39af44ab83f4588261388d6164",
+   "subject": "Add CE-LOR-L, the later-quantum left-or-right headline"
+  },
+  {
+   "commit": "1bcc51fda041cfd047b1442524caf56291f51d92",
+   "subject": "Add the symbolic corollaries of CE-APP-L and CE-KT-L"
+  },
+  {
+   "commit": "7fb124dd9cc71b99f0cae993c1cf9e4c36846e57",
+   "subject": "Add the bills of the later-quantum CE-12 headlines"
+  },
+  {
+   "commit": "1f5c4624ac17c096ffd9cbb742af369e72656ef7",
+   "subject": "Add symbolic_lor for the later-quantum game"
+  }
+ ],
+ "files_sha256": {
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "b0f38ebf929cf3323cc8fd0d483465f2fd5661bcacc87149a2a0627e30a897f9",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "18236c9d8db71e935c0c676598de46ae09bb22087ec48547ad156dac545ede85",
+  "beaconcrypt-core/proofs/check-inventory.sh": "ee05cd74da468894b65599df3585c5d92aaa2e3db9b4b12fc617ba998c3d93f6"
+ },
+ "modules": [
+  {
+   "name": "BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineChain",
+   "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterHeadlineChain.lean",
+   "sha256": "5f5ed9e5961ecf7ac0fd4b3bd6fa7d3ffe04f0346eb13e807c2cecf0d07c6ea2",
+   "created_in": "c88029f484635191eabf694185b3e56bc61c019b",
+   "last_changed_in": "c88029f484635191eabf694185b3e56bc61c019b",
+   "theorem_count": 16,
+   "guard_count": 16,
+   "guards_in_order": true,
+   "deprecation_suppressions": 0,
+   "other_options": [
+    "autoImplicit false"
+   ],
+   "definitions": [
+    "kemLossL",
+    "slotLossL",
+    "inputL",
+    "recLossL"
+   ],
+   "theorems": [
+    "chain_slot_later",
+    "chain_slot_later_close",
+    "chain_ideal_later",
+    "chain_ideal_later_close",
+    "ideal_world_later",
+    "ideal_world_view_later",
+    "chain_view_later",
+    "chain_close_later",
+    "later_real_slots_server",
+    "later_view_unslotted",
+    "chain_server_later",
+    "chain_slots_later",
+    "chain_beta_later",
+    "records_close_later",
+    "records_le_later",
+    "split_named_later"
+   ],
+   "axiom_profile": {
+    "propext, Classical.choice, Quot.sound": 16
+   },
+   "imports": [
+    "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAnomaly",
+    "BeaconcryptCore.Computational.PqxdhDeploymentLaterKemTwoSided",
+    "BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemKeys",
+    "BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterCompile",
+    "BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterEnv",
+    "BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSlots",
+    "BeaconcryptCore.Computational.PqxdhDeploymentLaterTargetRange",
+    "BeaconcryptCore.Computational.PqxdhRecordLiftLaterLift"
+   ],
+   "final_check": {
+    "prefix": "ce12/p3/olean",
+    "leanpath_first_prefix_mirrors": "published df7727c3 first prefix lqf-up/B/int/olean",
+    "exit": 0,
+    "head_when_checked": "df7727c3238f70388e3ea739df109ad025ace097",
+    "dirty_paths_when_checked": 4,
+    "log_bytes": 0,
+    "artifact_sha256": "774c24ca7ca8f010af120d784489e85331da76954f041dce6af1851c25c9b9e9",
+    "source_sha256": "5f5ed9e5961ecf7ac0fd4b3bd6fa7d3ffe04f0346eb13e807c2cecf0d07c6ea2",
+    "source_equals_current": true,
+    "source_equals_commit": {
+     "c88029f484635191eabf694185b3e56bc61c019b": true
+    },
+    "start": "2026-10-10T11:39:47.606283598Z",
+    "end": "2026-10-10T11:39:52.792229362Z"
+   }
+  },
+  {
+   "name": "BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineKeyTransfer",
+   "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterHeadlineKeyTransfer.lean",
+   "sha256": "02eb91dfe02f37fe619ccf2a11d99c29cc7807187e2da450ea25244ad6857b31",
+   "created_in": "76d91c8d91e345775874f5556132824d13179290",
+   "last_changed_in": "76d91c8d91e345775874f5556132824d13179290",
+   "theorem_count": 7,
+   "guard_count": 7,
+   "guards_in_order": true,
+   "deprecation_suppressions": 0,
+   "other_options": [
+    "autoImplicit false"
+   ],
+   "definitions": [],
+   "theorems": [
+    "ce_kt_later",
+    "ce_kt_later_close",
+    "ce_kt_later_sum_le",
+    "ce_kt_later_sum",
+    "ce_kt_later_world",
+    "ce_kt_later_world_close",
+    "ce_kt_later_world_sum"
+   ],
+   "axiom_profile": {
+    "propext, Classical.choice, Quot.sound": 7
+   },
+   "imports": [
+    "BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineChain"
+   ],
+   "final_check": {
+    "prefix": "ce12/p3/olean",
+    "leanpath_first_prefix_mirrors": "published df7727c3 first prefix lqf-up/B/int/olean",
+    "exit": 0,
+    "head_when_checked": "c88029f484635191eabf694185b3e56bc61c019b",
+    "dirty_paths_when_checked": 3,
+    "log_bytes": 0,
+    "artifact_sha256": "648a176698eca3463a3cbd1b8798e2fdf50df4b778e874794db98408e2affcdf",
+    "source_sha256": "02eb91dfe02f37fe619ccf2a11d99c29cc7807187e2da450ea25244ad6857b31",
+    "source_equals_current": true,
+    "source_equals_commit": {
+     "76d91c8d91e345775874f5556132824d13179290": true
+    },
+    "start": "2026-10-10T11:42:06.491893164Z",
+    "end": "2026-10-10T11:42:09.436671075Z"
+   }
+  },
+  {
+   "name": "BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineApp",
+   "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterHeadlineApp.lean",
+   "sha256": "0f00b007f3276e14caae7ad24c815c8cc59d5ab0fabca08045744456ba2257e9",
+   "created_in": "31716925a3867ae7ddd8786ad072bd09deff2785",
+   "last_changed_in": "31716925a3867ae7ddd8786ad072bd09deff2785",
+   "theorem_count": 5,
+   "guard_count": 5,
+   "guards_in_order": true,
+   "deprecation_suppressions": 0,
+   "other_options": [
+    "autoImplicit false"
+   ],
+   "definitions": [],
+   "theorems": [
+    "fresh_final_later",
+    "ce_app_later_target",
+    "ce_app_later",
+    "ce_app_server_later_target",
+    "ce_app_server_later"
+   ],
+   "axiom_profile": {
+    "propext, Classical.choice, Quot.sound": 5
+   },
+   "imports": [
+    "BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineChain",
+    "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineContain",
+    "BeaconcryptCore.Computational.PqxdhRecordFactsLaterFresh"
+   ],
+   "final_check": {
+    "prefix": "ce12/p3/olean",
+    "leanpath_first_prefix_mirrors": "published df7727c3 first prefix lqf-up/B/int/olean",
+    "exit": 0,
+    "head_when_checked": "76d91c8d91e345775874f5556132824d13179290",
+    "dirty_paths_when_checked": 2,
+    "log_bytes": 0,
+    "artifact_sha256": "7654e0367b108525fdd47b46cdbb956b41f444ac88953a0ad8e7ab6a9e2210e6",
+    "source_sha256": "0f00b007f3276e14caae7ad24c815c8cc59d5ab0fabca08045744456ba2257e9",
+    "source_equals_current": true,
+    "source_equals_commit": {
+     "31716925a3867ae7ddd8786ad072bd09deff2785": true
+    },
+    "start": "2026-10-10T11:44:21.369565830Z",
+    "end": "2026-10-10T11:44:27.076529228Z"
+   }
+  },
+  {
+   "name": "BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineLor",
+   "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterHeadlineLor.lean",
+   "sha256": "34d3e6a88971cea4115ba4a58fd39bbbae457748ef1a9d2198c6990e29e9fd33",
+   "created_in": "555197966cf4ed39af44ab83f4588261388d6164",
+   "last_changed_in": "555197966cf4ed39af44ab83f4588261388d6164",
+   "theorem_count": 7,
+   "guard_count": 7,
+   "guards_in_order": true,
+   "deprecation_suppressions": 0,
+   "other_options": [
+    "autoImplicit false"
+   ],
+   "definitions": [],
+   "theorems": [
+    "lor_final_later",
+    "lor_peer_final_later",
+    "server_view_later",
+    "ce_lor_later_target",
+    "ce_lor_later",
+    "ce_lor_server_later_target",
+    "ce_lor_server_later"
+   ],
+   "axiom_profile": {
+    "propext, Classical.choice, Quot.sound": 7
+   },
+   "imports": [
+    "BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineChain",
+    "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineLor",
+    "BeaconcryptCore.Computational.PqxdhRecordFactsLaterLor"
+   ],
+   "final_check": {
+    "prefix": "ce12/p3/olean",
+    "leanpath_first_prefix_mirrors": "published df7727c3 first prefix lqf-up/B/int/olean",
+    "exit": 0,
+    "head_when_checked": "31716925a3867ae7ddd8786ad072bd09deff2785",
+    "dirty_paths_when_checked": 1,
+    "log_bytes": 0,
+    "artifact_sha256": "5acf806286e2b824a21a3a99d66ceac49813060f6776e8684355552e9c74b748",
+    "source_sha256": "34d3e6a88971cea4115ba4a58fd39bbbae457748ef1a9d2198c6990e29e9fd33",
+    "source_equals_current": true,
+    "source_equals_commit": {
+     "555197966cf4ed39af44ab83f4588261388d6164": true
+    },
+    "start": "2026-10-10T11:46:45.649463756Z",
+    "end": "2026-10-10T11:46:54.253338065Z"
+   }
+  },
+  {
+   "name": "BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineSymbolic",
+   "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterHeadlineSymbolic.lean",
+   "sha256": "595e68a44fce84556d7ac5fcfa855e5a80cd2a9f5f213e0d0d7ac14ddd36b789",
+   "created_in": "1bcc51fda041cfd047b1442524caf56291f51d92",
+   "last_changed_in": "1bcc51fda041cfd047b1442524caf56291f51d92",
+   "theorem_count": 24,
+   "guard_count": 24,
+   "guards_in_order": true,
+   "deprecation_suppressions": 0,
+   "other_options": [
+    "autoImplicit false"
+   ],
+   "definitions": [
+    "asClassical",
+    "runOutcome"
+   ],
+   "theorems": [
+    "happens_asClassical",
+    "eligible_asClassical",
+    "serverGap_some",
+    "beaconGap_some",
+    "gaps_none",
+    "serverGap_run",
+    "beaconGap_run",
+    "gapRun_caches",
+    "classical_later",
+    "gaps_later",
+    "serverGap_later",
+    "beaconGap_later",
+    "ce_app_later_sym_le",
+    "ce_app_server_later_sym_le",
+    "ce_app_beacon_later_sym_le",
+    "ce_kt_later_sym_le",
+    "ce_kt_server_later_sym_le",
+    "ce_kt_beacon_later_sym_le",
+    "ce_app_later_sym",
+    "ce_app_server_later_sym",
+    "ce_app_beacon_later_sym",
+    "ce_kt_later_sym",
+    "ce_kt_server_later_sym",
+    "ce_kt_beacon_later_sym"
+   ],
+   "axiom_profile": {
+    "propext, Classical.choice, Quot.sound": 24
+   },
+   "imports": [
+    "BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineKeyTransfer",
+    "BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineApp",
+    "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolic"
+   ],
+   "final_check": {
+    "prefix": "ce12/p3/olean",
+    "leanpath_first_prefix_mirrors": "published df7727c3 first prefix lqf-up/B/int/olean",
+    "exit": 0,
+    "head_when_checked": "555197966cf4ed39af44ab83f4588261388d6164",
+    "dirty_paths_when_checked": 1,
+    "log_bytes": 0,
+    "artifact_sha256": "708c918fc92ca53f4e66e5b546d757e79fb4ab503a59c058a828ae8e8f79f9a7",
+    "source_sha256": "595e68a44fce84556d7ac5fcfa855e5a80cd2a9f5f213e0d0d7ac14ddd36b789",
+    "source_equals_current": true,
+    "source_equals_commit": {
+     "1bcc51fda041cfd047b1442524caf56291f51d92": true
+    },
+    "start": "2026-10-10T11:54:58.047326967Z",
+    "end": "2026-10-10T11:55:02.369312692Z"
+   }
+  },
+  {
+   "name": "BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineBills",
+   "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterHeadlineBills.lean",
+   "sha256": "16d3f13e034df630edf018dcad65274e098e78918e3c7bed315d4acee7e70248",
+   "created_in": "7fb124dd9cc71b99f0cae993c1cf9e4c36846e57",
+   "last_changed_in": "7fb124dd9cc71b99f0cae993c1cf9e4c36846e57",
+   "theorem_count": 8,
+   "guard_count": 8,
+   "guards_in_order": true,
+   "deprecation_suppressions": 0,
+   "other_options": [
+    "autoImplicit false"
+   ],
+   "definitions": [],
+   "theorems": [
+    "slotLossL_eq",
+    "kem_bills_later",
+    "slot_bills_later",
+    "records_bills_later",
+    "records_hash_later",
+    "hash_route_later",
+    "beta_decapsulations_later",
+    "later_target_bills"
+   ],
+   "axiom_profile": {
+    "propext, Classical.choice, Quot.sound": 8
+   },
+   "imports": [
+    "BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineChain",
+    "BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemBills"
+   ],
+   "final_check": {
+    "prefix": "ce12/p3/olean",
+    "leanpath_first_prefix_mirrors": "published df7727c3 first prefix lqf-up/B/int/olean",
+    "exit": 0,
+    "head_when_checked": "1bcc51fda041cfd047b1442524caf56291f51d92",
+    "dirty_paths_when_checked": 1,
+    "log_bytes": 0,
+    "artifact_sha256": "9cb5de9fff61bd8a64bd9366c8882bf856fe994060deaa366f475b2e71979635",
+    "source_sha256": "16d3f13e034df630edf018dcad65274e098e78918e3c7bed315d4acee7e70248",
+    "source_equals_current": true,
+    "source_equals_commit": {
+     "7fb124dd9cc71b99f0cae993c1cf9e4c36846e57": true
+    },
+    "start": "2026-10-10T11:59:33.151130660Z",
+    "end": "2026-10-10T11:59:37.049008530Z"
+   }
+  },
+  {
+   "name": "BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineSymbolicLor",
+   "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterHeadlineSymbolicLor.lean",
+   "sha256": "1357db959e3cefe38f30bb6ab42fd39dd7111187e23de4b59c78b60b2440c175",
+   "created_in": "1f5c4624ac17c096ffd9cbb742af369e72656ef7",
+   "last_changed_in": "1f5c4624ac17c096ffd9cbb742af369e72656ef7",
+   "theorem_count": 24,
+   "guard_count": 24,
+   "guards_in_order": true,
+   "deprecation_suppressions": 0,
+   "other_options": [
+    "autoImplicit false"
+   ],
+   "definitions": [
+    "Kin"
+   ],
+   "theorems": [
+    "caches_refl",
+    "kin_lorEligSym",
+    "kin_lorEligPeerSym",
+    "kin_serverGap",
+    "kin_beaconGap",
+    "kin_identity",
+    "kin_happens",
+    "kin_ctColl",
+    "kin_identity_decide",
+    "support_later",
+    "lor_inclusion_later",
+    "lor_difference_later",
+    "lor_difference_peer_later",
+    "kin_run",
+    "collisions_later",
+    "identity_later",
+    "symbolic_lor_later_le",
+    "lor_difference_later_bound",
+    "symbolic_lor_later",
+    "symbolic_lor_later_bound",
+    "symbolic_lor_server_later_le",
+    "lor_difference_server_later_bound",
+    "symbolic_lor_server_later",
+    "symbolic_lor_server_later_bound"
+   ],
+   "axiom_profile": {
+    "propext, Classical.choice, Quot.sound": 24
+   },
+   "imports": [
+    "BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineSymbolic",
+    "BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineLor",
+    "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolicLor"
+   ],
+   "final_check": {
+    "prefix": "ce12/p3/olean",
+    "leanpath_first_prefix_mirrors": "published df7727c3 first prefix lqf-up/B/int/olean",
+    "exit": 0,
+    "head_when_checked": "7fb124dd9cc71b99f0cae993c1cf9e4c36846e57",
+    "dirty_paths_when_checked": 1,
+    "log_bytes": 0,
+    "artifact_sha256": "fb24548aa2a7de2fd63485757683e6d666b09af2186256be899d4bbb44122578",
+    "source_sha256": "1357db959e3cefe38f30bb6ab42fd39dd7111187e23de4b59c78b60b2440c175",
+    "source_equals_current": true,
+    "source_equals_commit": {
+     "1f5c4624ac17c096ffd9cbb742af369e72656ef7": true
+    },
+    "start": "2026-10-10T12:11:36.383440147Z",
+    "end": "2026-10-10T12:11:40.946077845Z"
+   }
+  }
+ ],
+ "theorem_total": 91,
+ "allowed_axioms": [
+  "propext",
+  "Classical.choice",
+  "Quot.sound"
+ ],
+ "scan": {
+  "PqxdhDeploymentLaterHeadlineChain": {
+   "theorems": 16,
+   "guards": 16,
+   "in_order": true,
+   "guard_msgs": 16,
+   "bad_axioms": [],
+   "forbidden": [],
+   "suppressions": 0
+  },
+  "PqxdhDeploymentLaterHeadlineKeyTransfer": {
+   "theorems": 7,
+   "guards": 7,
+   "in_order": true,
+   "guard_msgs": 7,
+   "bad_axioms": [],
+   "forbidden": [],
+   "suppressions": 0
+  },
+  "PqxdhDeploymentLaterHeadlineApp": {
+   "theorems": 5,
+   "guards": 5,
+   "in_order": true,
+   "guard_msgs": 5,
+   "bad_axioms": [],
+   "forbidden": [],
+   "suppressions": 0
+  },
+  "PqxdhDeploymentLaterHeadlineLor": {
+   "theorems": 7,
+   "guards": 7,
+   "in_order": true,
+   "guard_msgs": 7,
+   "bad_axioms": [],
+   "forbidden": [],
+   "suppressions": 0
+  },
+  "PqxdhDeploymentLaterHeadlineSymbolic": {
+   "theorems": 24,
+   "guards": 24,
+   "in_order": true,
+   "guard_msgs": 24,
+   "bad_axioms": [],
+   "forbidden": [],
+   "suppressions": 0
+  },
+  "PqxdhDeploymentLaterHeadlineBills": {
+   "theorems": 8,
+   "guards": 8,
+   "in_order": true,
+   "guard_msgs": 8,
+   "bad_axioms": [],
+   "forbidden": [],
+   "suppressions": 0
+  },
+  "PqxdhDeploymentLaterHeadlineSymbolicLor": {
+   "theorems": 24,
+   "guards": 24,
+   "in_order": true,
+   "guard_msgs": 24,
+   "bad_axioms": [],
+   "forbidden": [],
+   "suppressions": 0
+  },
+  "closure_size": 1617,
+  "boundary_imports": []
+ },
+ "forbidden_tokens_found": [],
+ "boundary_imports": [],
+ "handwritten_lean": {
+  "before": 1927,
+  "after": 1934,
+  "note": "one per module, coord.sh inv recount before coord.sh inv rehash each time"
+ },
+ "headlines": {
+  "ce_kt_later_close": "|Pr_LQF[happens event ∧ designated claim = some g] − Pr[ceDecideL g on idealLaterGame g]| ≤ kemLossL g d_g + slotLossL g d_g (FunctionalDecapsulation, Phase1ReadBack, Phase2ReadBack, SourceFullCorrect, budget.Respects first, post budget of second)",
+  "ce_kt_later_sum": "|Pr_LQF[happens ∧ eligibleL isSome] − Σ_{g ∈ Fin qAccept × Fin qCreate} Pr[IL_g decides g]| ≤ Σ_g (kemLossL + slotLossL); one-sided ce_kt_later, ce_kt_later_sum_le; World forms ce_kt_later_world(_close,_sum) with PqxdhRecordLiftLater.run (envGD) envReveal",
+  "ce_app_later": "mode P: Pr_LQF[AppWin (claim read from the post output)] ≤ Σ_g (kemLossL + slotLossL + beta(first) g + recLossL(slotted) + 2^-min); ce_app_server_later: AppWinPeer, serverSlotted, no beta",
+  "ce_lor_later": "mode P, every filter F, guess : Out → Bool: ofReal |Pr[win] − ½ Pr[elig]| ≤ Σ_g (kemLossL W + slotLossL W + recLossL(slotted W) + ½(kemLossL E + slotLossL E + recLossL(slotted E)) + ½ beta(first) g); ce_lor_server_later: PeerTests, serverSlotted, no beta",
+  "symbolic (Symbolic)": "ce_app_later_sym (+ a2pubTerm + ofReal a1Term + ctGapTerm of first), ce_app_server_later_sym (+ a2pubTerm), ce_app_beacon_later_sym (+ a1Term + ctGapTerm), ce_kt_later_sym / ce_kt_server_later_sym / ce_kt_beacon_later_sym (CE-KT-L one-sided summed bound + same terms); events on asClassical",
+  "symbolic LOR (SymbolicLor)": "symbolic_lor_later: |adv_sym − adv_CE(nbfFilter)| ≤ ½(a2pubTerm + a1Term + ctGapTerm + injTerm + ctCollTerm) of first; symbolic_lor_later_bound with ce_lor_later; symbolic_lor_server_later ½(a2pubTerm + injTerm); symbolic_lor_server_later_bound",
+  "bills (Bills)": "slotLossL_eq ((qAccept + qFinish + (qHmac + qHmac2))/2^256 + PRF + key schedule), kem_bills_later, slot_bills_later, records_bills_later (LaterRecordBounded at inputL), records_hash_later (sharedHashTotal BI_g + postHash), hash_route_later (qHash + S + R + qBuild + qFinish + qHash2), beta_decapsulations_later (qFinish + 1), later_target_bills"
+ },
+ "deviations_from_design": [
+  "seven modules (Chain, KeyTransfer, App, Lor, Symbolic, Bills, SymbolicLor) instead of design.md section 12's two (PqxdhDeploymentLaterHeadlineChain, PqxdhDeploymentLaterHeadlines); design-v2 section 11 one module per headline",
+  "the anomaly is carried by unit C's later_anomaly_eq (PqxdhRecordLiftLater.run_event with laterReal_source) inside later_view_slots_le, not by laterReal_event itself (design-v2 section 10); bound anomaly_le_pk on first's run and ptc_bound as designed",
+  "later_real_slots_server is new (Server-side form of unit C's later_slots)",
+  "additional forms: CE-KT-L World forms, Server-peer CE-APP-L and CE-LOR-L, Server/Beacon symbolic forms, the later symbolic LOR with a support transfer (support_later, Kin)",
+  "slotLossL (CE-12-L per-target abbreviation) has the same short name as unit D's generic PqxdhDeploymentLaterServerItemTargets.slotLossL",
+  "ptc_bills (CE-12 P2b, not on central) not restated; applies unchanged to beta(first)",
+  "c88029f4 committed by hand after the finalize script failed at the commit step on a relative message path (every check had passed on the staged tree); the script was fixed"
+ ],
+ "contracts_used": {
+  "new_contracts": [],
+  "new_assumptions": [],
+  "premises": [
+   "FunctionalDecapsulation setup.kem",
+   "Phase1ReadBack codec",
+   "Phase2ReadBack codec",
+   "SourceFullCorrect setup.source setup.hmac",
+   "budget.Respects first",
+   "post budget: ∀ output reveal, post.Respects (second output reveal)",
+   "KemBound setup caps and initBound (APP-L, LOR-L, bills)",
+   "symbolic forms: shortRejects; CE-A1 premises (FrameReadBack, ReadWritable, X25519ClassLaw, X25519ScalarSpread, HasAttachedVerificationAdapter)"
+  ]
+ },
+ "not_claimed": [
+  "confidentiality only: no later CE-OR, CE-UKS, origin, binding or authentication; no A2, T5 or T8 on the later compiled program",
+  "classical adversary with a post-run reveal: no QPT or QROM claim; no soundness transfer from ProVerif",
+  "classical limits stay: (S, serverKid) pin, single test session, eligibility-weighted LOR, KT not root secrecy",
+  "ctGapTerm and ctCollTerm explicit; beta's phase-1 uniform/base bill is P2b's"
+ ],
+ "open_points": [
+  "independent review (semantic, composition, hygiene), fix pass, confirming review and integration (merge e0b8810b or newer first; recount to 1936)",
+  "after P2b is integrated: billed later forms with ptc_bills at first and closed later symbolic forms with epsilon_ctcoll",
+  "plan snapshot doc/impl/common-deployment-experiment-plan.md not refreshed (integration)"
+ ],
+ "checks": {
+  "lean_tool": "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean via coord.sh lean claude, -j1 -M8000, timeout 180",
+  "leanpath": {
+   "path": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/leanpath",
+   "sha256": "dc17ca8f7efab2fdc82ad7fd1ce8f09bcb746af9301356e9e36ab6bcf01398db",
+   "first_prefix": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/olean",
+   "mirror_of": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/int/olean (published df7727c3 first prefix; 6386 links, root skipped, 0 broken)"
+  },
+  "roots": {
+   "logs/final/root-app.json": {
+    "exit": 0,
+    "head": "76d91c8d91e345775874f5556132824d13179290",
+    "dirty_paths": 5,
+    "log_bytes": 0,
+    "artifact_sha256": "d3db1fb2d83905c64acf5088549f938ba809001fae50d699a7518672e2cfbf04",
+    "source_sha256": "2ebc3397c5ea359248285e00ddf14599da6701eeb11e10ff976f1198ee7d65b5"
+   },
+   "logs/final/root-bills.json": {
+    "exit": 0,
+    "head": "1bcc51fda041cfd047b1442524caf56291f51d92",
+    "dirty_paths": 4,
+    "log_bytes": 0,
+    "artifact_sha256": "26b9318d2c03351b4dfe675626ae2038b56b661c038a77f3defd6d5c5ef2af83",
+    "source_sha256": "a147e21de18db911d0314f1ab1244439949418e36485e87e2740d450dd21a2e7"
+   },
+   "logs/final/root-chain.json": {
+    "exit": 0,
+    "head": "df7727c3238f70388e3ea739df109ad025ace097",
+    "dirty_paths": 7,
+    "log_bytes": 0,
+    "artifact_sha256": "a0e640a65e7271b8f00c8d196b9e2ae67301d6e42d715d74ac98d3627463d2da",
+    "source_sha256": "120d49c0c29884fbb5efc901e79c37821c615b6966cad5e18f12ac43719b0a3d"
+   },
+   "logs/final/root-clean.json": {
+    "exit": 0,
+    "head": "1f5c4624ac17c096ffd9cbb742af369e72656ef7",
+    "dirty_paths": 0,
+    "log_bytes": 0,
+    "artifact_sha256": "c0cb103d4f9b303c2d4abc2f81ed2827782202713f1402aecea2cafbf16c8380",
+    "source_sha256": "b0f38ebf929cf3323cc8fd0d483465f2fd5661bcacc87149a2a0627e30a897f9"
+   },
+   "logs/final/root-keytransfer.json": {
+    "exit": 0,
+    "head": "c88029f484635191eabf694185b3e56bc61c019b",
+    "dirty_paths": 6,
+    "log_bytes": 0,
+    "artifact_sha256": "dd409961fad9000067c96e2a2967de041039f6e48c7d74be4baf465e4142f2f0",
+    "source_sha256": "999e90ba02467ef0947dd05ab1a3fb9ea26f50d4dc71534fe470eceac463ed71"
+   },
+   "logs/final/root-lor.json": {
+    "exit": 0,
+    "head": "31716925a3867ae7ddd8786ad072bd09deff2785",
+    "dirty_paths": 4,
+    "log_bytes": 0,
+    "artifact_sha256": "6803fd498980e100d95180cbb02c94d636e0275f071286a699d226cad640d90a",
+    "source_sha256": "7fa8ad3793577ed716b0c4347a2d49de0d9361e30f0b674962db057f31d7baff"
+   },
+   "logs/final/root-symbolic.json": {
+    "exit": 0,
+    "head": "555197966cf4ed39af44ab83f4588261388d6164",
+    "dirty_paths": 4,
+    "log_bytes": 0,
+    "artifact_sha256": "db6d54cd6b732ae4efaf321608098f611b7983085853da15ab13dadca908f958",
+    "source_sha256": "9f910674979c3ed7573f37c2749208f9fc81a7054b2a2c0b497f0fbb2a988ada"
+   },
+   "logs/final/root-symboliclor.json": {
+    "exit": 0,
+    "head": "7fb124dd9cc71b99f0cae993c1cf9e4c36846e57",
+    "dirty_paths": 4,
+    "log_bytes": 0,
+    "artifact_sha256": "c0cb103d4f9b303c2d4abc2f81ed2827782202713f1402aecea2cafbf16c8380",
+    "source_sha256": "b0f38ebf929cf3323cc8fd0d483465f2fd5661bcacc87149a2a0627e30a897f9"
+   }
+  },
+  "inventories": {
+   "app": {
+    "status": 0,
+    "commit": "76d91c8d91e345775874f5556132824d13179290",
+    "start": "2026-10-10T11:44:30Z",
+    "end": "2026-10-10T11:46:19Z",
+    "dirty_before": 4,
+    "dirty_after": 4,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/logs/inventory-app.log",
+    "log_sha256": "7b0baa4780bbc83cffe4e8d95f64faa4b7c907a4ebba30e44007614941f53d2d",
+    "note": "run before the module's Lean commit, with its four staged paths (module, root, reviewed-inventory.txt, check-inventory.sh) as the only dirt"
+   },
+   "bills": {
+    "status": 0,
+    "commit": "1bcc51fda041cfd047b1442524caf56291f51d92",
+    "start": "2026-10-10T11:59:40Z",
+    "end": "2026-10-10T12:01:28Z",
+    "dirty_before": 4,
+    "dirty_after": 4,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/logs/inventory-bills.log",
+    "log_sha256": "0ce72b202e10edcb46a79be88ce789e76710903e48084b60bb5b5a7f12296b75",
+    "note": "run before the module's Lean commit, with its four staged paths (module, root, reviewed-inventory.txt, check-inventory.sh) as the only dirt"
+   },
+   "chain": {
+    "status": 0,
+    "commit": "df7727c3238f70388e3ea739df109ad025ace097",
+    "start": "2026-10-10T11:39:56Z",
+    "end": "2026-10-10T11:41:45Z",
+    "dirty_before": 4,
+    "dirty_after": 4,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/logs/inventory-chain.log",
+    "log_sha256": "9a67efe62c6a0540fb121f04aed05d77522357cc000f4d08060af9961641dae0",
+    "note": "run before the module's Lean commit, with its four staged paths (module, root, reviewed-inventory.txt, check-inventory.sh) as the only dirt"
+   },
+   "docs": {
+    "status": 0,
+    "commit": "1f5c4624ac17c096ffd9cbb742af369e72656ef7",
+    "start": "2026-10-10T12:18:50Z",
+    "end": "2026-10-10T12:20:40Z",
+    "dirty_before": 3,
+    "dirty_after": 3,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/logs/inventory-docs.log",
+    "log_sha256": "68167e5858550b9e01ae447710fe91323f822df35c66dcf9c8ac5fbaa7a8a660",
+    "note": "documentation tree before its commit"
+   },
+   "keytransfer": {
+    "status": 0,
+    "commit": "c88029f484635191eabf694185b3e56bc61c019b",
+    "start": "2026-10-10T11:42:12Z",
+    "end": "2026-10-10T11:44:01Z",
+    "dirty_before": 4,
+    "dirty_after": 4,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/logs/inventory-keytransfer.log",
+    "log_sha256": "cb52c07231984540a83f123ed53ab7f1cf197749a7f6f20e38397646b2ca1893",
+    "note": "run before the module's Lean commit, with its four staged paths (module, root, reviewed-inventory.txt, check-inventory.sh) as the only dirt"
+   },
+   "lor": {
+    "status": 0,
+    "commit": "31716925a3867ae7ddd8786ad072bd09deff2785",
+    "start": "2026-10-10T11:46:57Z",
+    "end": "2026-10-10T11:48:46Z",
+    "dirty_before": 4,
+    "dirty_after": 4,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/logs/inventory-lor.log",
+    "log_sha256": "9f9b30d019fc8687c570f33a03eb803ab7634d510647934a6450417455377b1e",
+    "note": "run before the module's Lean commit, with its four staged paths (module, root, reviewed-inventory.txt, check-inventory.sh) as the only dirt"
+   },
+   "symbolic": {
+    "status": 0,
+    "commit": "555197966cf4ed39af44ab83f4588261388d6164",
+    "start": "2026-10-10T11:55:05Z",
+    "end": "2026-10-10T11:56:55Z",
+    "dirty_before": 4,
+    "dirty_after": 4,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/logs/inventory-symbolic.log",
+    "log_sha256": "b85e4c1adddfc6504b3bfb1372b8893912f2fef761fce2951a4252305623e027",
+    "note": "run before the module's Lean commit, with its four staged paths (module, root, reviewed-inventory.txt, check-inventory.sh) as the only dirt"
+   },
+   "symboliclor": {
+    "status": 0,
+    "commit": "7fb124dd9cc71b99f0cae993c1cf9e4c36846e57",
+    "start": "2026-10-10T12:11:44Z",
+    "end": "2026-10-10T12:13:33Z",
+    "dirty_before": 4,
+    "dirty_after": 4,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/logs/inventory-symboliclor.log",
+    "log_sha256": "b61d6d4aa7fbf21b6969ac781dee96fbb0ec65c06e8abd798eeb18e81b9d2de3",
+    "note": "run before the module's Lean commit, with its four staged paths (module, root, reviewed-inventory.txt, check-inventory.sh) as the only dirt"
+   }
+  },
+  "guard_scan": "/tmp/bc-arc-scratch/common-experiment/ce12/p3/logs/scan-1.json",
+  "git_diff_check": {
+   "range": "df7727c3238f70388e3ea739df109ad025ace097..1f5c4624ac17c096ffd9cbb742af369e72656ef7",
+   "exit": 0
+  }
+ },
+ "review": {
+  "status": "not reviewed"
+ }
+}
