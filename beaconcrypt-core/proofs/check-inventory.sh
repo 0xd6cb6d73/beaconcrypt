@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1951
+	[handwritten-lean]=1952
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -41134,6 +41134,51 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem envGD_ok([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePinEnv theorem envGD_ok"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePinEnv\.envGD_start$' "$selected_source_module" "PqxdhDeploymentHeadlinePinEnv dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinEnv.envGD_start"
 require_line_count 1 '^theorem envGD_start([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePinEnv theorem envGD_start"
+
+# CE-12 P4 step 2 (AG lift R1): record-control side of the pin lift
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlinePinControl.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinControl$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentHeadlinePinControl root import"
+require_line_count 19 '^theorem ' "$selected_source_module" "PqxdhDeploymentHeadlinePinControl theorem inventory"
+require_line_count 19 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentHeadlinePinControl guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePinControl\.shellsOk_append$' "$selected_source_module" "PqxdhDeploymentHeadlinePinControl dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinControl.shellsOk_append"
+require_line_count 1 '^theorem shellsOk_append([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePinControl theorem shellsOk_append"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePinControl\.shellsOk_setInactive$' "$selected_source_module" "PqxdhDeploymentHeadlinePinControl dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinControl.shellsOk_setInactive"
+require_line_count 1 '^theorem shellsOk_setInactive([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePinControl theorem shellsOk_setInactive"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePinControl\.shellsOk_setEstablished$' "$selected_source_module" "PqxdhDeploymentHeadlinePinControl dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinControl.shellsOk_setEstablished"
+require_line_count 1 '^theorem shellsOk_setEstablished([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePinControl theorem shellsOk_setEstablished"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePinControl\.lift_ok$' "$selected_source_module" "PqxdhDeploymentHeadlinePinControl dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinControl.lift_ok"
+require_line_count 1 '^theorem lift_ok([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePinControl theorem lift_ok"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePinControl\.capability_ok$' "$selected_source_module" "PqxdhDeploymentHeadlinePinControl dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinControl.capability_ok"
+require_line_count 1 '^theorem capability_ok([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePinControl theorem capability_ok"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePinControl\.effects_ok$' "$selected_source_module" "PqxdhDeploymentHeadlinePinControl dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinControl.effects_ok"
+require_line_count 1 '^theorem effects_ok([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePinControl theorem effects_ok"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePinControl\.initialize_ok$' "$selected_source_module" "PqxdhDeploymentHeadlinePinControl dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinControl.initialize_ok"
+require_line_count 1 '^theorem initialize_ok([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePinControl theorem initialize_ok"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePinControl\.serverStep_ok$' "$selected_source_module" "PqxdhDeploymentHeadlinePinControl dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinControl.serverStep_ok"
+require_line_count 1 '^theorem serverStep_ok([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePinControl theorem serverStep_ok"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePinControl\.beaconStep_ok$' "$selected_source_module" "PqxdhDeploymentHeadlinePinControl dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinControl.beaconStep_ok"
+require_line_count 1 '^theorem beaconStep_ok([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePinControl theorem beaconStep_ok"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePinControl\.handler_ok$' "$selected_source_module" "PqxdhDeploymentHeadlinePinControl dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinControl.handler_ok"
+require_line_count 1 '^theorem handler_ok([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePinControl theorem handler_ok"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePinControl\.keep_bounded$' "$selected_source_module" "PqxdhDeploymentHeadlinePinControl dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinControl.keep_bounded"
+require_line_count 1 '^theorem keep_bounded([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePinControl theorem keep_bounded"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePinControl\.effects_program_ok$' "$selected_source_module" "PqxdhDeploymentHeadlinePinControl dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinControl.effects_program_ok"
+require_line_count 1 '^theorem effects_program_ok([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePinControl theorem effects_program_ok"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePinControl\.run_value$' "$selected_source_module" "PqxdhDeploymentHeadlinePinControl dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinControl.run_value"
+require_line_count 1 '^theorem run_value([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePinControl theorem run_value"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePinControl\.lift_world_run$' "$selected_source_module" "PqxdhDeploymentHeadlinePinControl dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinControl.lift_world_run"
+require_line_count 1 '^theorem lift_world_run([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePinControl theorem lift_world_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePinControl\.lift_request_ok$' "$selected_source_module" "PqxdhDeploymentHeadlinePinControl dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinControl.lift_request_ok"
+require_line_count 1 '^theorem lift_request_ok([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePinControl theorem lift_request_ok"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePinControl\.nativeImpl_quiet$' "$selected_source_module" "PqxdhDeploymentHeadlinePinControl dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinControl.nativeImpl_quiet"
+require_line_count 1 '^theorem nativeImpl_quiet([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePinControl theorem nativeImpl_quiet"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePinControl\.native_env_run$' "$selected_source_module" "PqxdhDeploymentHeadlinePinControl dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinControl.native_env_run"
+require_line_count 1 '^theorem native_env_run([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePinControl theorem native_env_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePinControl\.handler_effectLift$' "$selected_source_module" "PqxdhDeploymentHeadlinePinControl dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinControl.handler_effectLift"
+require_line_count 1 '^theorem handler_effectLift([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePinControl theorem handler_effectLift"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePinControl\.nativeImpl_env$' "$selected_source_module" "PqxdhDeploymentHeadlinePinControl dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinControl.nativeImpl_env"
+require_line_count 1 '^theorem nativeImpl_env([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePinControl theorem nativeImpl_env"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
