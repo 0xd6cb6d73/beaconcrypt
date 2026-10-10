@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1886
+	[handwritten-lean]=1887
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -38562,6 +38562,27 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem chain_beta([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAnomaly theorem chain_beta"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAnomaly\.beta_decapsulations$' "$selected_source_module" "PqxdhDeploymentHeadlineAnomaly dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAnomaly.beta_decapsulations"
 require_line_count 1 '^theorem beta_decapsulations([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAnomaly theorem beta_decapsulations"
+
+# CE-12 P1: CE-KT, the key-transfer headline (one-sided, two-sided, summed; World forms).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineKeyTransfer.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineKeyTransfer$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentHeadlineKeyTransfer root import"
+require_line_count 7 '^theorem ' "$selected_source_module" "PqxdhDeploymentHeadlineKeyTransfer theorem inventory"
+require_line_count 7 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentHeadlineKeyTransfer guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineKeyTransfer\.ce_kt$' "$selected_source_module" "PqxdhDeploymentHeadlineKeyTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineKeyTransfer.ce_kt"
+require_line_count 1 '^theorem ce_kt([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineKeyTransfer theorem ce_kt"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineKeyTransfer\.ce_kt_close$' "$selected_source_module" "PqxdhDeploymentHeadlineKeyTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineKeyTransfer.ce_kt_close"
+require_line_count 1 '^theorem ce_kt_close([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineKeyTransfer theorem ce_kt_close"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineKeyTransfer\.ce_kt_sum_le$' "$selected_source_module" "PqxdhDeploymentHeadlineKeyTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineKeyTransfer.ce_kt_sum_le"
+require_line_count 1 '^theorem ce_kt_sum_le([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineKeyTransfer theorem ce_kt_sum_le"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineKeyTransfer\.ce_kt_sum$' "$selected_source_module" "PqxdhDeploymentHeadlineKeyTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineKeyTransfer.ce_kt_sum"
+require_line_count 1 '^theorem ce_kt_sum([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineKeyTransfer theorem ce_kt_sum"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineKeyTransfer\.ce_kt_world$' "$selected_source_module" "PqxdhDeploymentHeadlineKeyTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineKeyTransfer.ce_kt_world"
+require_line_count 1 '^theorem ce_kt_world([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineKeyTransfer theorem ce_kt_world"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineKeyTransfer\.ce_kt_world_close$' "$selected_source_module" "PqxdhDeploymentHeadlineKeyTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineKeyTransfer.ce_kt_world_close"
+require_line_count 1 '^theorem ce_kt_world_close([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineKeyTransfer theorem ce_kt_world_close"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineKeyTransfer\.ce_kt_world_sum$' "$selected_source_module" "PqxdhDeploymentHeadlineKeyTransfer dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineKeyTransfer.ce_kt_world_sum"
+require_line_count 1 '^theorem ce_kt_world_sum([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineKeyTransfer theorem ce_kt_world_sum"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
