@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1897
+	[handwritten-lean]=1898
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -38901,6 +38901,53 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem groupedBranchL_shared([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemShared theorem groupedBranchL_shared"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemShared\.opaqueBranchL_shared$' "$selected_source_module" "PqxdhDeploymentLaterServerItemShared dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemShared.opaqueBranchL_shared"
 require_line_count 1 '^theorem opaqueBranchL_shared([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemShared theorem opaqueBranchL_shared"
+
+# LQ-F upstream unit A1: stage S1c of item 2 over the logged source (the cut-split of the logged source budget and G1 at coefficient one on the logged prefix and client).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerItemSplit.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemSplit$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentLaterServerItemSplit root import"
+require_line_count 20 '^theorem ' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit theorem inventory"
+require_line_count 20 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemSplit\.tableKindL_later$' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemSplit.tableKindL_later"
+require_line_count 1 '^theorem tableKindL_later([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit theorem tableKindL_later"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemSplit\.certified_tableL$' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemSplit.certified_tableL"
+require_line_count 1 '^theorem certified_tableL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit theorem certified_tableL"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemSplit\.scanL_forward$' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemSplit.scanL_forward"
+require_line_count 1 '^theorem scanL_forward([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit theorem scanL_forward"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemSplit\.scanL_potential$' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemSplit.scanL_potential"
+require_line_count 1 '^theorem scanL_potential([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit theorem scanL_potential"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemSplit\.acceptL_grows$' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemSplit.acceptL_grows"
+require_line_count 1 '^theorem acceptL_grows([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit theorem acceptL_grows"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemSplit\.implL_grows$' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemSplit.implL_grows"
+require_line_count 1 '^theorem implL_grows([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit theorem implL_grows"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemSplit\.client_boundL$' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemSplit.client_boundL"
+require_line_count 1 '^theorem client_boundL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit theorem client_boundL"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemSplit\.commandsL_cut$' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemSplit.commandsL_cut"
+require_line_count 1 '^theorem commandsL_cut([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit theorem commandsL_cut"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemSplit\.rejectRunL_complete$' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemSplit.rejectRunL_complete"
+require_line_count 1 '^theorem rejectRunL_complete([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit theorem rejectRunL_complete"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemSplit\.opaqueScanL_fits$' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemSplit.opaqueScanL_fits"
+require_line_count 1 '^theorem opaqueScanL_fits([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit theorem opaqueScanL_fits"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemSplit\.sourcePreOpaqueL_fits$' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemSplit.sourcePreOpaqueL_fits"
+require_line_count 1 '^theorem sourcePreOpaqueL_fits([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit theorem sourcePreOpaqueL_fits"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemSplit\.sharedStartL_fits$' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemSplit.sharedStartL_fits"
+require_line_count 1 '^theorem sharedStartL_fits([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit theorem sharedStartL_fits"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemSplit\.skelImplL_reads$' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemSplit.skelImplL_reads"
+require_line_count 1 '^theorem skelImplL_reads([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit theorem skelImplL_reads"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemSplit\.groupedClientL_bound$' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemSplit.groupedClientL_bound"
+require_line_count 1 '^theorem groupedClientL_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit theorem groupedClientL_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemSplit\.skelResumeL_reads$' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemSplit.skelResumeL_reads"
+require_line_count 1 '^theorem skelResumeL_reads([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit theorem skelResumeL_reads"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemSplit\.postSkelL_direct$' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemSplit.postSkelL_direct"
+require_line_count 1 '^theorem postSkelL_direct([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit theorem postSkelL_direct"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemSplit\.sharedClientL_direct$' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemSplit.sharedClientL_direct"
+require_line_count 1 '^theorem sharedClientL_direct([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit theorem sharedClientL_direct"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemSplit\.sharedClientL_inactive$' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemSplit.sharedClientL_inactive"
+require_line_count 1 '^theorem sharedClientL_inactive([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit theorem sharedClientL_inactive"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemSplit\.shared_splitL$' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemSplit.shared_splitL"
+require_line_count 1 '^theorem shared_splitL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit theorem shared_splitL"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemSplit\.opaqueBranchL_split$' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemSplit.opaqueBranchL_split"
+require_line_count 1 '^theorem opaqueBranchL_split([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemSplit theorem opaqueBranchL_split"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
