@@ -1,6 +1,6 @@
 {
- "date": "2026-10-10T18:48:18.103681+00:00",
- "scope": "CE-12 D-ct (track ce12/dct): the closed ciphertext-gap term. ctgap_world (the decision of (ctGapNamed, ctClaim) on the World of each target is at most ctStat = r1Cap/2^256 + C(ctxCap, 2)/2^512), ctgap_term_le (ctGapTerm <= epsCt), ctgap_term_billed, and 42 closed forms T_dct of every headline that carried ctGapTerm (36 frozen at e5af7024, 6 of CE-12 P4). No new assumption or contract; no frozen theorem changed.",
+ "date": "2026-10-10T19:26:00.018793+00:00",
+ "scope": "CE-12 D-ct (track ce12/dct): the closed ciphertext-gap term. ctgap_world (the decision of (ctGapNamed, ctClaim) on the World of each target is at most ctStat = r1Cap/2^256 + C(ctxCap, 2)/2^512), ctgap_term_le (ctGapTerm <= epsCt), ctgap_term_billed, and 42 closed forms T_dct of every headline that carried ctGapTerm (36 frozen at e5af7024, 6 of CE-12 P4); after the review fix pass also four siblings *_billed_dct_full of the P4 billed forms with the bills of epsCt's reductions at first. No new assumption or contract; no frozen theorem changed.",
  "basis": {
   "start": "e5af70242aca601df0004e89155c2ff5029f0b87",
   "merges": [
@@ -25,7 +25,7 @@
  "topic": {
   "branch": "codex/deployment-ce12-dct",
   "worktree": "/tmp/beaconcrypt-deployment-ce12-dct",
-  "head_at_receipt": "c747d243bfe17ad103728710d9628d47e0217fbc",
+  "head_at_receipt": "10c557cb1062ebe6794a4634254cd5021da22bf9",
   "note": "the documentation commit that adds this receipt follows head_at_receipt"
  },
  "design": {
@@ -36,11 +36,14 @@
  "plan": {
   "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
   "sections": [
-   120
+   120,
+   121
   ],
   "copy_after_section_120": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/docs/plan.after-120.md",
   "copy_sha256": "516b61e637b726884391722d08cbab0abcee2c906cfdf10207f7bd974d081771",
-  "note": "the working plan is shared with other lanes; the copy pins it right after section 120 was appended; the committed snapshot doc/impl/common-deployment-experiment-plan.md is not refreshed by this track"
+  "copy_after_section_121": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/docs/plan.after-121-8f984e7d.md",
+  "copy_after_section_121_sha256": "8f984e7d1115ebaf9bee8105a386ead08781111051a183dbf9e310e1bc185b98",
+  "note": "the working plan is shared with other lanes; the copies pin it right after sections 120 and 121 were appended (the second also has the review fix pass pointers in the owner flags of sections 103 and 114); the committed snapshot doc/impl/common-deployment-experiment-plan.md is not refreshed by this track (the integration refreshes it)"
  },
  "notes": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/NOTES.md",
  "commits": [
@@ -103,12 +106,20 @@
   {
    "commit": "c747d243bfe17ad103728710d9628d47e0217fbc",
    "subject": "Close ctGapTerm in the CE-12 P4 run-phase forms"
+  },
+  {
+   "commit": "e291c58fddb59be0f0d935a341e8030a8053d397",
+   "subject": "Document CE-12 D-ct: the closed ciphertext-gap term"
+  },
+  {
+   "commit": "10c557cb1062ebe6794a4634254cd5021da22bf9",
+   "subject": "Bill the ciphertext-gap reductions of the CE-12 P4 billed forms"
   }
  ],
  "files_sha256": {
   "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "1da113171d863b22882119a7cb2ab11753cd31c28bb988a7609a1c50e9d2e8f9",
-  "beaconcrypt-core/proofs/reviewed-inventory.txt": "47ea2dc3129e37479e38f9affe25b376872ec46d4a1e7dd70454f7281c24593d",
-  "beaconcrypt-core/proofs/check-inventory.sh": "0969c508a604abcf79d9f5a902ee44218ff9f535aec7a3082703bcf0128864cb"
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "918484e90ba174b887a298efb88c7e5bac86448fbfc510d3f0960c4b6481ce38",
+  "beaconcrypt-core/proofs/check-inventory.sh": "11acd49210dd8079f40620b16d132ebaf1461ecc5d85c7452fe8aec27b1d7dd8"
  },
  "modules": [
   {
@@ -814,7 +825,7 @@
    "name": "PqxdhDeploymentHeadlineDctClosedLater",
    "stage": "S8",
    "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineDctClosedLater.lean",
-   "sha256": "c52998c615711d39a508e031a551a254d5d3bf4d86c76f046cd6410c489811ab",
+   "sha256": "bad3272ac2b80b2854353c561b8cc44ecb8660cf1e6d92fd8bc8d88ca580a895",
    "created_in": "57ad69f6",
    "theorem_count": 6,
    "guard_count": 6,
@@ -839,33 +850,47 @@
    "final_check": {
     "exit": 0,
     "log_bytes": 0,
+    "source_sha256": "bad3272ac2b80b2854353c561b8cc44ecb8660cf1e6d92fd8bc8d88ca580a895",
+    "artifact": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/olean3/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineDctClosedLater.olean",
+    "artifact_sha256": "24c1ecd9a652f819a70135d8a9a443b2667780058867f511b375a083046d6442",
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/leanpath3",
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/logs/final3/PqxdhDeploymentHeadlineDctClosedLater.log"
+   },
+   "earlier_final_check": {
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/logs/final/PqxdhDeploymentHeadlineDctClosedLater.log",
+    "exit": 0,
+    "log_bytes": 0,
     "source_sha256": "c52998c615711d39a508e031a551a254d5d3bf4d86c76f046cd6410c489811ab",
     "artifact": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/olean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineDctClosedLater.olean",
     "artifact_sha256": "e5b4dfdd8b9314c4251243314168bfd409b2941017dd5a1c51c6d7f0df3dc89c",
-    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/leanpath",
-    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/logs/final/PqxdhDeploymentHeadlineDctClosedLater.log"
-   }
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/leanpath"
+   },
+   "changed_by_fix_pass": true
   },
   {
    "name": "PqxdhDeploymentHeadlineDctClosedLaterP4",
    "stage": "S8 (after the merge of P4)",
    "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineDctClosedLaterP4.lean",
-   "sha256": "560c6856066d4622df6923dc02c295833c1aebae5d6d20b65d5844ed51a922ef",
+   "sha256": "cdd61732d94e55a7ddc13f7b6238ba7654a97611de7fdc7b363131e6ef105a5a",
    "created_in": "c747d243",
-   "theorem_count": 6,
-   "guard_count": 6,
+   "theorem_count": 10,
+   "guard_count": 10,
    "guards_in_order": true,
    "definitions": [],
    "theorems": [
     "ce_app_later_sym_billed_dct",
+    "ce_app_later_sym_billed_dct_full",
     "ce_app_beacon_later_sym_billed_dct",
+    "ce_app_beacon_later_sym_billed_dct_full",
     "symbolic_lor_later_bound_billed_dct",
+    "symbolic_lor_later_bound_billed_dct_full",
     "symbolic_lor_later_closed_dct",
     "symbolic_lor_later_bound_closed_dct",
-    "symbolic_lor_later_bound_closed_billed_dct"
+    "symbolic_lor_later_bound_closed_billed_dct",
+    "symbolic_lor_later_bound_closed_billed_dct_full"
    ],
    "axiom_profile": {
-    "propext, Classical.choice, Quot.sound": 6
+    "propext, Classical.choice, Quot.sound": 10
    },
    "imports": [
     "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctWorld",
@@ -875,15 +900,25 @@
    "final_check": {
     "exit": 0,
     "log_bytes": 0,
+    "source_sha256": "cdd61732d94e55a7ddc13f7b6238ba7654a97611de7fdc7b363131e6ef105a5a",
+    "artifact": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/olean3/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineDctClosedLaterP4.olean",
+    "artifact_sha256": "9e3bbfa086e32618ee8d71912653db0238717071644276b711480df97012d6f9",
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/leanpath3",
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/logs/final3/PqxdhDeploymentHeadlineDctClosedLaterP4.log"
+   },
+   "earlier_final_check": {
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/logs/final/PqxdhDeploymentHeadlineDctClosedLaterP4.log",
+    "exit": 0,
+    "log_bytes": 0,
     "source_sha256": "560c6856066d4622df6923dc02c295833c1aebae5d6d20b65d5844ed51a922ef",
     "artifact": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/olean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineDctClosedLaterP4.olean",
     "artifact_sha256": "a44ca41d95cfec86cbb11f17a27689a7b410ddf9517a956aff72b29c573cd076",
-    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/leanpath2",
-    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/logs/final/PqxdhDeploymentHeadlineDctClosedLaterP4.log"
-   }
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/leanpath2"
+   },
+   "changed_by_fix_pass": true
   }
  ],
- "theorem_total": 283,
+ "theorem_total": 287,
  "allowed_axioms": [
   "propext",
   "Classical.choice",
@@ -892,7 +927,7 @@
  "main_theorems": {
   "ctgap_world": "PqxdhDeploymentHeadlineDctWorld.ctgap_world: 𝒟[(observed result).any (decisionOn setup codec budget (ctGapNamed setup codec budget) (ctClaim setup.source.crypto codec) g) <$> World.run (envGD (Target.ofCE budget g) ensureInit 0 runtime)] {true} ≤ ctStat budget; premises Phase1ReadBack, Phase2ReadBack, FrameReadBack, KemBound setup caps, qInit/initBound, budget.Respects adversary",
   "ctgap_term_le": "PqxdhDeploymentHeadlineDctWorld.ctgap_term_le: ctGapTerm setup codec checks route ensureInit bounds mode adversary runtime ≤ epsCt setup codec checks route ensureInit bounds mode adversary budget runtime; premises additionally FunctionalDecapsulation and SourceFullCorrect",
-  "ctgap_term_billed": "ctgap_term_le ∧ PqxdhDeploymentHeadlineBillsFull.TargetBills (kem and slot fields quantified over every event and claim)",
+  "ctgap_term_billed": "ctgap_term_le ∧ PqxdhDeploymentHeadlineBillsFull.TargetBills (kem and slot fields quantified over every event and claim); at mode .P and adversary first it gives the bills that the four P4 billed _dct forms lack, stated with them by the *_billed_dct_full siblings",
   "components": "dct_contain (World containment in KeyHit or CtxColl), world_keyHit (r1Cap/2^256), coll_world (C(ctxCap,2)/2^512), world_dctInv, ctgap_term_world"
  },
  "closed_forms": [
@@ -1225,6 +1260,36 @@
    "carries_ctGapTerm": false
   }
  ],
+ "bills_siblings": [
+  {
+   "theorem": "PqxdhDeploymentHeadlineDctClosedLaterP4.ce_app_later_sym_billed_dct_full",
+   "extends": "PqxdhDeploymentHeadlineDctClosedLaterP4.ce_app_later_sym_billed_dct",
+   "added_conjunct": "PqxdhDeploymentHeadlineBillsFull.TargetBills setup codec checks route caps ensureInit qInit bounds .P first budget runtime",
+   "proof": "⟨T_dct …, PqxdhDeploymentHeadlineBillsFull.target_bills … .P first budget respects runtime fallback⟩",
+   "added_premises": []
+  },
+  {
+   "theorem": "PqxdhDeploymentHeadlineDctClosedLaterP4.ce_app_beacon_later_sym_billed_dct_full",
+   "extends": "PqxdhDeploymentHeadlineDctClosedLaterP4.ce_app_beacon_later_sym_billed_dct",
+   "added_conjunct": "PqxdhDeploymentHeadlineBillsFull.TargetBills setup codec checks route caps ensureInit qInit bounds .P first budget runtime",
+   "proof": "⟨T_dct …, PqxdhDeploymentHeadlineBillsFull.target_bills … .P first budget respects runtime fallback⟩",
+   "added_premises": []
+  },
+  {
+   "theorem": "PqxdhDeploymentHeadlineDctClosedLaterP4.symbolic_lor_later_bound_billed_dct_full",
+   "extends": "PqxdhDeploymentHeadlineDctClosedLaterP4.symbolic_lor_later_bound_billed_dct",
+   "added_conjunct": "PqxdhDeploymentHeadlineBillsFull.TargetBills setup codec checks route caps ensureInit qInit bounds .P first budget runtime",
+   "proof": "⟨T_dct …, PqxdhDeploymentHeadlineBillsFull.target_bills … .P first budget respects runtime fallback⟩",
+   "added_premises": []
+  },
+  {
+   "theorem": "PqxdhDeploymentHeadlineDctClosedLaterP4.symbolic_lor_later_bound_closed_billed_dct_full",
+   "extends": "PqxdhDeploymentHeadlineDctClosedLaterP4.symbolic_lor_later_bound_closed_billed_dct",
+   "added_conjunct": "PqxdhDeploymentHeadlineBillsFull.TargetBills setup codec checks route caps ensureInit qInit bounds .P first budget runtime",
+   "proof": "⟨T_dct …, PqxdhDeploymentHeadlineBillsFull.target_bills … .P first budget respects runtime fallback⟩",
+   "added_premises": []
+  }
+ ],
  "closed_summary": {
   "count": 42,
   "fully_closed": 28,
@@ -1249,12 +1314,34 @@
    "path": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/logs/diffcheck-final.log",
    "bytes": 0,
    "range": "e5af7024..c747d243"
+  },
+  "diffcheck-fix.log": {
+   "path": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/logs/diffcheck-fix.log",
+   "content": "# git diff --check e291c58f..10c557cb\nexit 0\n# git diff --check e5af7024..10c557cb\nexit 0\n# git diff --check (working tree, docs edits)\nexit 0",
+   "ranges": [
+    "e291c58f..10c557cb",
+    "e5af7024..10c557cb",
+    "working tree of the documentation commit"
+   ]
+  },
+  "cmpfull.log": {
+   "path": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/logs/cmpfull.log",
+   "script": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/tools/cmpfull.py",
+   "content": "OK  ce_app_later_sym_billed_dct dct unchanged True full matches True\nOK  ce_app_beacon_later_sym_billed_dct dct unchanged True full matches True\nOK  symbolic_lor_later_bound_billed_dct dct unchanged True full matches True\nOK  symbolic_lor_later_bound_closed_billed_dct dct unchanged True full matches True\npairs 4 ok 4"
+  },
+  "review_CmpClosed": {
+   "path": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/review-semantic/CmpClosed.lean",
+   "sha256": "66fd9b4bf7ed72b2ba4bca01c7ba1c0a76848884be019f29c0914722172b5d27",
+   "log": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/review-semantic/CmpClosed.log",
+   "log_sha256": "1de07d9df6e8adb537bb1f1a78a85416603d29f43cb9f53d2dae4e3e4ab5fbdd",
+   "result": "pairs 42 ok 42",
+   "note": "the review's elaborated comparison of the 42 closed forms with their frozen sources (coord.sh lean, leanpath2, exit 0); the 42 _dct statements are unchanged by the fix pass"
   }
  },
  "handwritten_lean": {
   "before": 1948,
   "after": 1972,
-  "note": "one per module (1948 -> 1958 before the merge, 1971 after merging central 427758b6 with its ten P4 modules, 1972 after the last module)"
+  "note": "one per module (1948 -> 1958 before the merge, 1971 after merging central 427758b6 with its ten P4 modules, 1972 after the last module); unchanged by the review fix pass"
  },
  "checks": {
   "lean_tool": "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean via coord.sh lean claude, -j1 -M8000, timeout 180",
@@ -1268,107 +1355,170 @@
     "sha256": "ad8143b0fa793746e877c640d810c7b282705260e7170c539c24f7e289d3486f"
    },
    "olean_prefix": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/olean",
+   "fix_pass": {
+    "path": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/leanpath3",
+    "sha256": "92a43f113477dc391577c9668e3a1266b6e65ea863921188cf73a869c034ddf3",
+    "olean_prefix": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/olean3",
+    "note": "review fix pass: resolved mirror of ce12/dct/impl/olean without the DctClosedLater and DctClosedLaterP4 artifacts (scripts/mirror3.py, 6429 links, none broken), then the published 427758b6 LEAN_PATH; finals and root in logs/final3 (scripts/check3.sh)"
+   },
    "note": "olean: resolved mirror of the first prefix of the published e5af7024 LEAN_PATH (ce12/p2b/int/olean, 6407 links, root skipped) plus the D-ct finals; after the merge the ten P4 oleans of ce12/p4/int/olean were mirrored in (scripts/mirroradd.py)"
   },
   "roots": {
    "dctclosed": {
     "exit": 0,
     "log_bytes": 0,
-    "head": "903b6788f5d2e18dc9cf158fb8039e97f934f1ca",
-    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/leanpath"
+    "head_before_commit": "903b6788f5d2e18dc9cf158fb8039e97f934f1ca",
+    "dirty_paths_when_checked": 6,
+    "root_source_sha256": "fc65241aa8e947383a2ce70bef43732441bb1529d7c1328d96586c2917f3ad0a",
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/leanpath",
+    "record": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/logs/final/root-dctclosed.json"
    },
    "dctclosedlater": {
     "exit": 0,
     "log_bytes": 0,
-    "head": "c43cfcb01be51a6de90ecf730a795d5e3c24223f",
-    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/leanpath"
+    "head_before_commit": "c43cfcb01be51a6de90ecf730a795d5e3c24223f",
+    "dirty_paths_when_checked": 4,
+    "root_source_sha256": "ba57dd8feddfd16c8719a741f6c337bd9fe79fc4101d33d5eb3457ad04a70ca2",
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/leanpath",
+    "record": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/logs/final/root-dctclosedlater.json"
    },
    "dctclosedlaterp4": {
     "exit": 0,
     "log_bytes": 0,
-    "head": "877939df5792baa0e0fbcd0575ab5635aef5f777",
-    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/leanpath2"
+    "head_before_commit": "877939df5792baa0e0fbcd0575ab5635aef5f777",
+    "dirty_paths_when_checked": 4,
+    "root_source_sha256": "1da113171d863b22882119a7cb2ab11753cd31c28bb988a7609a1c50e9d2e8f9",
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/leanpath2",
+    "record": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/logs/final/root-dctclosedlaterp4.json"
    },
    "dctclosedp2b": {
     "exit": 0,
     "log_bytes": 0,
-    "head": "9b417b57b604f9518372960a419d410a4d2be1fe",
-    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/leanpath"
+    "head_before_commit": "9b417b57b604f9518372960a419d410a4d2be1fe",
+    "dirty_paths_when_checked": 5,
+    "root_source_sha256": "dd8fa5dddfbdda455214a8c9d264ab90a1543543ab2f18ae7085714c4d0f210f",
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/leanpath",
+    "record": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/logs/final/root-dctclosedp2b.json"
    },
    "dctcommit": {
     "exit": 0,
     "log_bytes": 0,
-    "head": "5ad77f7bce8ad21b3646a0d92f1ae049ed537c15",
-    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/leanpath"
+    "head_before_commit": "5ad77f7bce8ad21b3646a0d92f1ae049ed537c15",
+    "dirty_paths_when_checked": 4,
+    "root_source_sha256": "0a37c5406fe342c7e86131b73519cc2d3ecbd152b625692bd6144dabba27b7bb",
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/leanpath",
+    "record": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/logs/final/root-dctcommit.json"
    },
    "dctevent": {
     "exit": 0,
     "log_bytes": 0,
-    "head": "c34e75e633fcbf6e77b20006b1ac740b234ebec6",
-    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/leanpath"
+    "head_before_commit": "c34e75e633fcbf6e77b20006b1ac740b234ebec6",
+    "dirty_paths_when_checked": 4,
+    "root_source_sha256": "c9d1a3b54bccbfdfb3fd8cd4b06998314b8b6a8845287e27038fed28e4afb70f",
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/leanpath",
+    "record": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/logs/final/root-dctevent.json"
    },
    "dctfinish": {
     "exit": 0,
     "log_bytes": 0,
-    "head": "62d12c22d8c87fcfc8c5c233235eae10761525c1",
-    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/leanpath"
+    "head_before_commit": "62d12c22d8c87fcfc8c5c233235eae10761525c1",
+    "dirty_paths_when_checked": 4,
+    "root_source_sha256": "e67f237d19b89921082382735151b358406ad9bdcc54f6c25c5173433ff7e40e",
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/leanpath",
+    "record": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/logs/final/root-dctfinish.json"
    },
    "dcthash": {
     "exit": 0,
     "log_bytes": 0,
-    "head": "dfdf1f9a425dc9fa5837d004be1dbfd8659127fa",
-    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/leanpath"
+    "head_before_commit": "dfdf1f9a425dc9fa5837d004be1dbfd8659127fa",
+    "dirty_paths_when_checked": 4,
+    "root_source_sha256": "21af058b344762585e95ca6120370ff8f7e13af5d209386fd033af296bf893cc",
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/leanpath",
+    "record": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/logs/final/root-dcthash.json"
    },
    "dctinv": {
     "exit": 0,
     "log_bytes": 0,
-    "head": "0d3ee0967d34a317e5f07b7d5fb928fd3b82b807",
-    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/leanpath"
+    "head_before_commit": "0d3ee0967d34a317e5f07b7d5fb928fd3b82b807",
+    "dirty_paths_when_checked": 4,
+    "root_source_sha256": "4d798950d768e0f5bc0040178656021e4c69cb49ea7063b50bc842abfe3c3d60",
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/leanpath",
+    "record": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/logs/final/root-dctinv.json"
    },
    "dctreceive": {
     "exit": 0,
     "log_bytes": 0,
-    "head": "648d1461b0ee4fff550ab94598b8ae62b6b26b8a",
-    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/leanpath"
+    "head_before_commit": "648d1461b0ee4fff550ab94598b8ae62b6b26b8a",
+    "dirty_paths_when_checked": 4,
+    "root_source_sha256": "534447a897394a68317f8b320eebe97e870800e1c768e44e078d38be094d222f",
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/leanpath",
+    "record": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/logs/final/root-dctreceive.json"
    },
    "dctstep": {
     "exit": 0,
     "log_bytes": 0,
-    "head": "7f0474eca283e6c84fccfae0453ecb5ecc9328fa",
-    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/leanpath"
+    "head_before_commit": "7f0474eca283e6c84fccfae0453ecb5ecc9328fa",
+    "dirty_paths_when_checked": 4,
+    "root_source_sha256": "0388c9bbfb729c42cfcc0d34cfd07cfb04011ef0cf5be73a36fbd2410406c2bf",
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/leanpath",
+    "record": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/logs/final/root-dctstep.json"
    },
    "dcttable": {
     "exit": 0,
     "log_bytes": 0,
-    "head": "a3feffee42616e6a686a97246c81e6a586ec37fe",
-    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/leanpath"
+    "head_before_commit": "a3feffee42616e6a686a97246c81e6a586ec37fe",
+    "dirty_paths_when_checked": 4,
+    "root_source_sha256": "61c5c8e10a2edf674a08a22d299b31b92daca04bcdc54645f5044f82e959c64b",
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/leanpath",
+    "record": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/logs/final/root-dcttable.json"
    },
    "dcttools": {
     "exit": 0,
     "log_bytes": 0,
-    "head": "e5af70242aca601df0004e89155c2ff5029f0b87",
-    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/leanpath"
+    "head_before_commit": "e5af70242aca601df0004e89155c2ff5029f0b87",
+    "dirty_paths_when_checked": 4,
+    "root_source_sha256": "6b1493a345fdf837e53c9dbfccc4851c4fc4dc4862476626534fdc19953fb766",
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/leanpath",
+    "record": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/logs/final/root-dcttools.json"
    },
    "dctworld": {
     "exit": 0,
     "log_bytes": 0,
-    "head": "79d5e511aa2cbea531a25625f8a5e62609127c3b",
-    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/leanpath"
+    "head_before_commit": "79d5e511aa2cbea531a25625f8a5e62609127c3b",
+    "dirty_paths_when_checked": 4,
+    "root_source_sha256": "3f918230bba4bb217fff45bbd3e9f847e9aa9bbee5bc0914efa2d798073ca7d6",
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/leanpath",
+    "record": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/logs/final/root-dctworld.json"
    },
    "merge427": {
     "exit": 1,
     "log_bytes": 330,
-    "head": "57ad69f6c91adc178bb518c69a37c5c55ba76db8",
-    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/leanpath2"
+    "head_before_commit": "57ad69f6c91adc178bb518c69a37c5c55ba76db8",
+    "dirty_paths_when_checked": 19,
+    "root_source_sha256": "942147d49a58b93169884c558fc045df1a0fa0c2b22ee402862260a0babc59e6",
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/leanpath2",
+    "record": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/logs/final/root-merge427.json"
    },
    "merge427b": {
     "exit": 0,
     "log_bytes": 0,
-    "head": "57ad69f6c91adc178bb518c69a37c5c55ba76db8",
-    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/leanpath2"
+    "head_before_commit": "57ad69f6c91adc178bb518c69a37c5c55ba76db8",
+    "dirty_paths_when_checked": 19,
+    "root_source_sha256": "942147d49a58b93169884c558fc045df1a0fa0c2b22ee402862260a0babc59e6",
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/leanpath2",
+    "record": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/logs/final/root-merge427b.json"
+   },
+   "fixpass": {
+    "exit": 0,
+    "log_bytes": 0,
+    "head_before_commit": "e291c58fddb59be0f0d935a341e8030a8053d397",
+    "dirty_paths_when_checked": 4,
+    "root_source_sha256": "1da113171d863b22882119a7cb2ab11753cd31c28bb988a7609a1c50e9d2e8f9",
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/leanpath3",
+    "record": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/logs/final3/root-fixpass.json"
    }
   },
-  "roots_note": "root-merge427 (exit 1) ran before the ten P4 oleans were mirrored into the first prefix (Lean resolves BeaconcryptCore modules only there); root-merge427b after mirroring: exit 0, empty log",
+  "roots_note": "head_before_commit is the HEAD of the worktree when the root check ran; each check ran on a working tree that already held the change being finalized (a new module, the merge, or the fix pass), so the checked tree is identified by dirty_paths_when_checked and root_source_sha256 together with the module final checks (source_sha256 in modules[].final_check), not by that commit. root-merge427 (exit 1) ran before the ten P4 oleans were mirrored into the first prefix (Lean resolves BeaconcryptCore modules only there); root-merge427b after mirroring: exit 0, empty log; root-fixpass: the review fix pass, against leanpath3",
   "inventories": {
    "dctclosed": {
     "status": 0,
@@ -1440,23 +1590,140 @@
     "commit": "79d5e511aa2cbea531a25625f8a5e62609127c3b",
     "log": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/logs/inventory-dctworld.log"
    },
+   "fixdocs": {
+    "status": 0,
+    "commit": "10c557cb1062ebe6794a4634254cd5021da22bf9",
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/logs/inventory-fixdocs.log"
+   },
+   "fixlean": {
+    "status": 0,
+    "commit": "e291c58fddb59be0f0d935a341e8030a8053d397",
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/logs/inventory-fixlean.log"
+   },
    "merge427": {
     "status": 0,
     "commit": "57ad69f6c91adc178bb518c69a37c5c55ba76db8",
     "log": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/logs/inventory-merge427.log"
    }
   },
-  "git_diff_check": "git diff --cached --check before every commit (finalize.sh) and git diff --check e5af7024..c747d243: clean"
+  "git_diff_check": "git diff --cached --check before every commit (finalize.sh) and git diff --check e5af7024..c747d243, e291c58f..10c557cb and e5af7024..10c557cb: clean"
  },
  "owner_flags": [
-  "Acknowledge the birthday term C(ctxCap, 2)/2^512 in place of design-v2 section 8's linear H/2^512 before publication (design section 2, owner note 1).",
-  "ctgap_world takes the existing resource premises KemBound, qInit and initBound besides the read-back premises; ten of the 42 closed forms add existing premises (qInit, initBound, and in four of them FunctionalDecapsulation)."
+  "Acknowledge the birthday term C(ctxCap, 2)/2^512 in place of design-v2 section 8's linear H/2^512 before publication (design section 2, owner note 1). Gates the integration; not acknowledged through coordination message 525.",
+  "Design owner note 2 (no decision needed): ctgap_world takes the existing resource premises KemBound, qInit and initBound besides the read-back premises and the budget.",
+  "Design owner note 3 (no decision needed): ten of the 42 closed forms add existing premises (qInit and initBound, and in four of them FunctionalDecapsulation); the four *_billed_dct_full siblings add none.",
+  "Design owner note 4 (no decision needed): the event CtGapEvent with ctClaim is refined to (ctGapNamed, ctClaim); ctgap_split_sum is an equality, so ctgap_term_le loses nothing; the frozen ctGapTerm is unchanged."
  ],
  "open_points": [
-  "Owner acknowledgment of the birthday term (owner flag 1).",
-  "An independent review (semantic, composition, hygiene), its fix pass and a confirming review, then the integration into central (PROTOCOL section 6), which refreshes the committed plan snapshot."
+  "Owner acknowledgment of the birthday term (owner flag 1); the integration waits for it, and the integration report carries owner flags 1 to 4.",
+  "A confirming review of the review fix pass, then the integration into central (PROTOCOL section 6), which merges central if it has moved since 427758b6 and refreshes the committed plan snapshot."
  ],
  "review": {
-  "status": "not reviewed"
+  "status": "reviewed at e291c58f; review fix pass applied; confirming review pending",
+  "reviewed_commit": "e291c58fddb59be0f0d935a341e8030a8053d397",
+  "lenses": [
+   "semantic",
+   "composition",
+   "hygiene"
+  ],
+  "scratch": [
+   "/tmp/bc-arc-scratch/common-experiment/ce12/dct/review-semantic",
+   "/tmp/bc-arc-scratch/common-experiment/ce12/dct/review-composition",
+   "/tmp/bc-arc-scratch/common-experiment/ce12/dct/review-hygiene"
+  ],
+  "summary": "no soundness problem; twelve findings (six minor, six nits), one coverage record without action; four points found by two lenses (1 and 9, 2 and 10, 3 and 8, 5 and 11), eight distinct points",
+  "findings": [
+   {
+    "number": 1,
+    "severity": "minor",
+    "title": "Owner gate: the BLAKE2b term is a birthday term, not the binding design's H/2^512; integration must wait for the owner's acknowledgment",
+    "fix": "No Lean change. Guide open point 1 now says that the integration waits for the acknowledgment and that the integration report carries the flag together with design owner notes 2 to 4 (resource premises of ctgap_world, ten closed forms with added existing premises, the event refinement); the receipt owner_flags list all four; plan section 121 records the gate.",
+    "outcome": "owner-level: documented; the acknowledgment itself is the owner's and is outstanding"
+   },
+   {
+    "number": 2,
+    "severity": "minor",
+    "title": "Stale module docstring: DctClosedLater says P4's six forms are not on central and not closed",
+    "fix": "Docstring now says that P4, integrated at central 427758b6, has its six forms closed in PqxdhDeploymentHeadlineDctClosedLaterP4; module recompiled with the same guards (logs/final3), inventory row rehashed (recount unchanged).",
+    "outcome": "fixed in 10c557cb"
+   },
+   {
+    "number": 3,
+    "severity": "minor",
+    "title": "The four P4 billed _dct forms carry epsCt at first, but their bills conjunct does not bill epsCt's KEM and slot reductions",
+    "fix": "The _dct statements are kept word for word; four siblings *_billed_dct_full conjoin TargetBills at .P first (target_bills; no added premise). DctClosedLaterP4 docstring, guide (what is proved, decisions and deviations) and analysis (the closed headlines) state where these bills come from.",
+    "outcome": "fixed in 10c557cb and the documentation commit"
+   },
+   {
+    "number": 4,
+    "severity": "minor",
+    "title": "Earlier owner flags and the P4 field-table cells marked computational up to ctGapTerm get no forward pointer",
+    "fix": "Pointers \"(Added by CE-12 D-ct: ...)\" at 23 paragraphs and 3 field-table cells of the guide and 8 paragraphs and 3 field-table cells of the analysis (owner flags, deferred/explicit statements, field-table paragraphs and cells); the D-ct analysis entry names the cells that become computational through ce_or_s2b_sym_closed_dct, ce_uks_sym_closed_dct and their billed forms; pointers in the owner flags of working plan sections 103 and 114 (the committed snapshot takes them in at the integration).",
+    "outcome": "fixed in the documentation commit"
+   },
+   {
+    "number": 5,
+    "severity": "nit",
+    "title": "Analysis wording: shared secret replaced by a uniform 108-byte value per slot, and two public facts that hold on every run; linear term written ctxCap/2^512",
+    "fix": "Reworded: the 108-byte key-schedule output derived from the shared secret is replaced per slot, a slot holds the 44-byte material in the split form; the designation holds on the runs where the gap holds for budget-respecting adversaries; the linear term is written H/2^512 in the analysis and the guide.",
+    "outcome": "fixed in the documentation commit"
+   },
+   {
+    "number": 6,
+    "severity": "nit",
+    "title": "Guide overstates why the closed forms must match their frozen statements",
+    "fix": "The decisions bullet now says that compilation alone does not show the match and cites the review's exact elaborated comparison (CmpClosed.lean, 42/42) and cmpclosed.py (42/42).",
+    "outcome": "fixed in the documentation commit"
+   },
+   {
+    "number": 7,
+    "severity": "nit",
+    "title": "Review coverage: what was verified (no action)",
+    "fix": "None.",
+    "outcome": "no change needed"
+   },
+   {
+    "number": 8,
+    "severity": "minor",
+    "title": "The four P4 run-phase billed _dct forms leave the attackers behind epsCt without bills",
+    "fix": "Same fix as finding 3: siblings *_billed_dct_full with TargetBills at .P first, proved by target_bills from existing binders; guide, analysis and DctClosedLaterP4 docstring say which bills the run-phase billed forms add.",
+    "outcome": "fixed in 10c557cb and the documentation commit"
+   },
+   {
+    "number": 9,
+    "severity": "minor",
+    "title": "Owner acknowledgment of the birthday term is still outstanding and gates integration",
+    "fix": "Recorded in guide open point 1, receipt owner_flags and plan section 121 that the integration waits for the acknowledgment; no acknowledgment found through coordination message 525 or the decision files.",
+    "outcome": "owner-level: outstanding"
+   },
+   {
+    "number": 10,
+    "severity": "nit",
+    "title": "The DctClosedLater module docstring is stale after the merge of P4",
+    "fix": "Same fix as finding 2.",
+    "outcome": "fixed in 10c557cb"
+   },
+   {
+    "number": 11,
+    "severity": "nit",
+    "title": "Two loose phrasings in the analysis entry (shared secret vs key-schedule output; coll_world as the step)",
+    "fix": "Same rewording as finding 5; world_step_coll is cited for the step and coll_world for the bound.",
+    "outcome": "fixed in the documentation commit"
+   },
+   {
+    "number": 12,
+    "severity": "nit",
+    "title": "The receipt's per-module root-check head values are the HEAD before each module's commit",
+    "fix": "checks.roots[*] now record head_before_commit, dirty_paths_when_checked, root_source_sha256 and the path of the check record; roots_note explains the field.",
+    "outcome": "fixed in the documentation commit"
+   }
+  ],
+  "fix_pass": {
+   "lean_commit": "10c557cb1062ebe6794a4634254cd5021da22bf9",
+   "documentation_commit": "follows head_at_receipt",
+   "statements_before_after": "No existing statement changed: the 42 _dct forms are byte-identical to e291c58f (cmpfull.py for the four P4 billed forms; the other modules' statements untouched) and the DctClosedLater change is docstring only. Added: ce_app_later_sym_billed_dct_full, ce_app_beacon_later_sym_billed_dct_full, symbolic_lor_later_bound_billed_dct_full, symbolic_lor_later_bound_closed_billed_dct_full; each concludes (conclusion of its _dct form) ∧ TargetBills … .P first budget runtime with the same binders, so it implies its _dct form and is at least as strong.",
+   "theorems_before": 283,
+   "theorems_after": 287
+  }
  }
 }
