@@ -1,0 +1,350 @@
+{
+ "kind": "items 3+7 production composition follow-up: production forms of the CE-12 D-ct closed headlines (PqxdhDeploymentProductionHeadlinesDct), build session 1",
+ "author": "Claude (item 7 lane adopted from Codex, owner decision #503; item 3 is Claude's)",
+ "provenance": "new work; no Codex WIP exists for this module (nothing adapted from Codex WIP)",
+ "sibling_of": "doc/impl/proof-receipts/production-headlines.json",
+ "branch": "codex/deployment-boundary-production",
+ "basis_central": "529e2c8bf414f680ac57b159365280aab2e2f3f2",
+ "basis_note": "central (origin/codex/full-proof-composition, git ls-remote, the central worktree and coord.sh leanpath current) was 529e2c8b at the start and did not move; no merge",
+ "state": "built; not reviewed; not integrated",
+ "lean_commit": "fa57acd91147d72482ef4f0e2086e6e8c6f1d587",
+ "documents_commit": "the commit that adds this receipt (guide section, ledger paragraph, analysis section, follow_ups record of the sibling receipt)",
+ "module": {
+  "name": "BeaconcryptCore.Computational.PqxdhDeploymentProductionHeadlinesDct",
+  "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentProductionHeadlinesDct.lean",
+  "sha256": "1e488ddc0aa24698bc9b60c7d4b26114c139352ce7e0f91684385c7ffcfd9744",
+  "theorems": 48,
+  "guards": 48,
+  "lines": 5748,
+  "open_classical_in": 18,
+  "commit": "fa57acd91147d72482ef4f0e2086e6e8c6f1d587",
+  "checks": {
+   "run1": {
+    "record": "/tmp/bc-arc-scratch/item7/prod-dct/build/PqxdhDeploymentProductionHeadlinesDct-1.json",
+    "start": "2026-10-10T20:20:54.674888425Z",
+    "end": "2026-10-10T20:21:06.197058161Z",
+    "exit": 0,
+    "head": "529e2c8bf414f680ac57b159365280aab2e2f3f2",
+    "dirty_paths": 1,
+    "log_bytes": 0,
+    "olean_sha256": "151ba5f48925f3ac97fd5896b23d142a1b178ebe8b1fd220e77c06da2b82011e"
+   },
+   "run2": {
+    "record": "/tmp/bc-arc-scratch/item7/prod-dct/build/PqxdhDeploymentProductionHeadlinesDct-2.json",
+    "start": "2026-10-10T20:26:22.897287244Z",
+    "end": "2026-10-10T20:26:31.115269799Z",
+    "exit": 0,
+    "head": "fa57acd91147d72482ef4f0e2086e6e8c6f1d587",
+    "dirty_paths": 0,
+    "log_bytes": 0,
+    "olean_sha256": "151ba5f48925f3ac97fd5896b23d142a1b178ebe8b1fd220e77c06da2b82011e"
+   }
+  },
+  "imports": [
+   "BeaconcryptCore.Computational.PqxdhDeploymentProductionTransfer",
+   "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctClosed",
+   "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctClosedP2b",
+   "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctClosedLater",
+   "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctClosedLaterP4",
+   "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctWorld"
+  ]
+ },
+ "production_forms": {
+  "total": 48,
+  "dct_forms": 42,
+  "billed_dct_full_siblings": 4,
+  "closure_lemmas": [
+   "ctgap_term_le",
+   "ctgap_term_billed"
+  ],
+  "by_frozen_module": {
+   "PqxdhDeploymentHeadlineDctClosed": [
+    "ce_a1_linked_dct",
+    "sym_gap_dct",
+    "ce_or_s2b_sym_dct",
+    "ce_uks_sym_dct",
+    "ce_app_sym_dct",
+    "ce_kt_sym_dct",
+    "ce_app_beacon_sym_dct",
+    "ce_kt_beacon_sym_dct",
+    "symbolic_lor_dct",
+    "symbolic_lor_bound_dct",
+    "ce_or_injective_s2b_dct",
+    "ce_or_injective_s2b_full_dct"
+   ],
+   "PqxdhDeploymentHeadlineDctClosedP2b": [
+    "ce_or_s2b_sym_closed_dct",
+    "ce_or_s2b_sym_closed_billed_dct",
+    "ce_uks_sym_closed_dct",
+    "ce_uks_sym_closed_billed_dct",
+    "symbolic_lor_closed_dct",
+    "symbolic_lor_bound_closed_dct",
+    "symbolic_lor_bound_closed_billed_dct",
+    "ce_or_injective_s2b_closed_dct",
+    "ce_or_injective_s2b_closed_billed_dct",
+    "ce_or_injective_s2b_full_closed_dct",
+    "ce_or_injective_s2b_full_closed_billed_dct",
+    "ce_or_s2b_sym_billed_dct",
+    "ce_uks_sym_billed_dct",
+    "ce_app_beacon_sym_billed_dct",
+    "ce_app_sym_billed_dct",
+    "symbolic_lor_bound_billed_dct",
+    "ce_or_injective_s2b_billed_dct",
+    "ce_or_injective_s2b_full_billed_dct"
+   ],
+   "PqxdhDeploymentHeadlineDctClosedLater": [
+    "ce_app_later_sym_dct",
+    "ce_app_beacon_later_sym_dct",
+    "ce_kt_later_sym_dct",
+    "ce_kt_beacon_later_sym_dct",
+    "symbolic_lor_later_dct",
+    "symbolic_lor_later_bound_dct"
+   ],
+   "PqxdhDeploymentHeadlineDctClosedLaterP4": [
+    "ce_app_later_sym_billed_dct",
+    "ce_app_later_sym_billed_dct_full",
+    "ce_app_beacon_later_sym_billed_dct",
+    "ce_app_beacon_later_sym_billed_dct_full",
+    "symbolic_lor_later_bound_billed_dct",
+    "symbolic_lor_later_bound_billed_dct_full",
+    "symbolic_lor_later_closed_dct",
+    "symbolic_lor_later_bound_closed_dct",
+    "symbolic_lor_later_bound_closed_billed_dct",
+    "symbolic_lor_later_bound_closed_billed_dct_full"
+   ],
+   "PqxdhDeploymentHeadlineDctWorld": [
+    "ctgap_term_le",
+    "ctgap_term_billed"
+   ]
+  },
+  "classical_source_game_occurrences": 42,
+  "classical_forms": 32,
+  "lqf_source_game_occurrences": 28,
+  "lqf_forms": 16,
+  "keep_ctCollTerm": 15,
+  "no_explicit_experiment_term_among_46": 31
+ },
+ "guard_profile": "every theorem exactly one #guard_msgs over #print axioms listing propext, Classical.choice, Quot.sound",
+ "hygiene": {
+  "record": "/tmp/bc-arc-scratch/item7/prod-dct/docs/hygiene.json",
+  "sha256": "0fd340310b95752888325d9215194d2887b81290f928fc4867ce23abc8a30aaa",
+  "forbidden_tokens": [],
+  "bad_set_options": [],
+  "long_code_lines": [],
+  "defs": 0,
+  "ok": true
+ },
+ "development_check": {
+  "log": "/tmp/bc-arc-scratch/item7/prod-dct/build/dev/PqxdhDeploymentProductionHeadlinesDct-1.log",
+  "sha256": "094f84c7f7e0c95b16c37eb25866af8cbd7fae1b72202479ab3b8ae0aed4570a",
+  "meta": "f70e02ea01c8e6ae76cea47093000a5db72212ecf1e99ae01c98c4303e1d78d7  /tmp/bc-arc-scratch/item7/prod-dct/gen/PqxdhDeploymentProductionHeadlinesDct.lean\nexit 0 seconds 9",
+  "axiom_messages": 48,
+  "other_messages": 0,
+  "source": "item7/prod-dct/gen/PqxdhDeploymentProductionHeadlinesDct.lean (unguarded generator output)"
+ },
+ "root_import": {
+  "record": "/tmp/bc-arc-scratch/item7/prod-dct/build/root-2.json",
+  "exit": 0,
+  "log_bytes": 0,
+  "head": "fa57acd91147d72482ef4f0e2086e6e8c6f1d587",
+  "dirty_paths": 0,
+  "olean_sha256": "dbeefc93a3dc42c04efc111b3749a4d22fd15048b64f31ecb7040e35d4f90099",
+  "earlier_run": "/tmp/bc-arc-scratch/item7/prod-dct/build/root-1.json (same source, before the commit; exit 0, empty log)"
+ },
+ "olean_prefix": {
+  "path": "/tmp/bc-arc-scratch/item7/prod-dct/olean",
+  "leanpath": "/tmp/bc-arc-scratch/item7/prod-dct/leanpath",
+  "leanpath_sha256": "d203cdd9851db0fb58367648dd44adbae71a458dcc53901efc8081f652a611e7",
+  "mirror": "resolved symlink mirror of the BeaconcryptCore part of the published 529e2c8b first prefix /tmp/bc-arc-scratch/item7/prod/int/olean (6435 links, including the four published PqxdhDeploymentProduction* oleans; root olean skipped; 0 broken), by scripts/mirror.py",
+  "published_leanpath": "/tmp/bc-coord/leanpaths/529e2c8bf414f680ac57b159365280aab2e2f3f2.leanpath"
+ },
+ "lean_command": "coord.sh lean claude <label> -- timeout 180 lean -j1 -M8000 [--root=<worktree lean dir> -o <olean>] <file>, one check in flight",
+ "inventory": {
+  "recount": "coord.sh inv recount claude <core>: [handwritten-lean] 1976 -> 1977, before inv rehash",
+  "rehash": "coord.sh inv rehash claude <core> on the new module row (unchanged), then the default set (BeaconcryptCore.lean a0f29be9 -> c11262b6, check-inventory.sh c4aa303a -> 1014297e); a second recount and rehash changed nothing",
+  "edits": "scripts/invblock.py: root import at the end of the import block, reviewed-inventory row at the end, check-inventory block (48 theorems) before the primitive-fidelity profile",
+  "focused_check_inventory": {
+   "start": "2026-10-10T20:24:16Z",
+   "end": "2026-10-10T20:26:11Z",
+   "commit": "fa57acd91147d72482ef4f0e2086e6e8c6f1d587",
+   "status": 0,
+   "dirt_bytes": 0,
+   "dirt_after_bytes": 0,
+   "log": "/tmp/bc-arc-scratch/item7/prod-dct/build/inventory-lean-commit.log",
+   "log_sha256": "1bb1b8764bad575b1bdddd0efff612a1be4dd92a3b5a60af557afeb0fde46159",
+   "command": "coord.sh lease mem claude @nix <label> --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C <worktree>/beaconcrypt-core check-inventory SHELL=bash"
+  }
+ },
+ "git_diff_check": "clean for 529e2c8b..HEAD (checked before the Lean commit and before the documents commit)",
+ "generator": {
+  "script": "/tmp/bc-arc-scratch/item7/prod-dct/scripts/gendct.py",
+  "sha256": "cdb01cf9c86ba6edeb778bb3055e3cd7c84841ef4a9333f502874214b71a9d5b",
+  "base": "/tmp/bc-arc-scratch/item7/prod-dct/scripts/gen3.py",
+  "base_sha256": "90c074e4300f1e2de4b1576275ace6f35a63f334a378896a789a97f96e241743",
+  "base_note": "unchanged copy of the published generator item7/prod/fix1/scripts/gen3.py",
+  "changes": "D-ct docstring titles; the section-variable binders of the two DctWorld closure lemmas; flag ctgap unfolding ctGapTerm (as ctcoll unfolds ctCollTerm)",
+  "selection": "/tmp/bc-arc-scratch/item7/prod-dct/docs/headline-list-dct.txt",
+  "selection_sha256": "2f2d9702145ee1a9ea4d505536ef1cdc9e23a7b78746b26331e171362ea799a5",
+  "rederivation": "gendct.py re-run on the frozen sources reproduces gen/ byte for byte; with guards.py and the development log it reproduces the committed module byte for byte (probe/rederive)"
+ },
+ "frozen_inputs_sha256": {
+  "PqxdhDeploymentHeadlineDctClosed": "d326aeca14f7691349567dd613add98cc2abb4997bcf7e872821e998d0bde9a2",
+  "PqxdhDeploymentHeadlineDctClosedP2b": "74509236f1f517b432fd06fd53255fb5a32e187fc249bde74efe71d446c00d00",
+  "PqxdhDeploymentHeadlineDctClosedLater": "bad3272ac2b80b2854353c561b8cc44ecb8660cf1e6d92fd8bc8d88ca580a895",
+  "PqxdhDeploymentHeadlineDctClosedLaterP4": "cdd61732d94e55a7ddc13f7b6238ba7654a97611de7fdc7b363131e6ef105a5a",
+  "PqxdhDeploymentHeadlineDctWorld": "e5e21c19d1eaa085771f9786331d1f8a0232711a4fd9acad8d70620e65d97605",
+  "PqxdhDeploymentHeadlineGap": "31149250f7013b6ef8e646eccd8a1b629ca65189fa08702b9bfaca026d0569f7",
+  "PqxdhDeploymentProductionTransfer": "46ef566033afeb628655685dd7316201c98daeceb9ed7135ddc1ad4847332ec2"
+ },
+ "frozen_inputs_note": "unchanged between central 529e2c8b and HEAD (git diff --quiet)",
+ "premises": {
+  "table": "/tmp/bc-arc-scratch/item7/prod-dct/docs/premises-dct.json",
+  "sha256": "9c29b91fa52fd6eb251b3e32ce027ff1fb36013ebd10ce6e230b42025a150f48",
+  "totals": {
+   "Phase1ReadBack codec": 48,
+   "Phase2ReadBack codec": 48,
+   "FrameReadBack codec′": 48,
+   "ReadWritable codec′": 46,
+   "DecoderAgreement": 0,
+   "FunctionalDecapsulation setup.kem": 48,
+   "SourceFullCorrect setup.source setup.hmac": 48,
+   "KemBound setup caps": 48,
+   "initBound": 48,
+   "X25519ClassLaw": 46,
+   "X25519ScalarSpread": 46,
+   "HasAttachedVerificationAdapter": 46,
+   "shortRejects": 22,
+   "budget.Respects": 48,
+   "post.Respects": 14
+  },
+  "other_codec_or_route_binders": [],
+  "owner_level_stop": false,
+  "note": "no codec- or route-dependent binder other than Phase1ReadBack/Phase2ReadBack at codec and FrameReadBack/ReadWritable at codec′"
+ },
+ "scans": {
+  "spec": "/tmp/bc-arc-scratch/item7/prod-dct/scans/scan-spec-v7.json",
+  "spec_sha256": "34b96e5c6cb22ca89e8a3639cb21d86c913cac54f005778382e5289388d71e7e",
+  "crypto_allowance": "not extended (decision D-1 not invoked); inherited references recorded, not excused",
+  "statement_scan_v7": {
+   "clean": "/tmp/bc-arc-scratch/item7/prod-dct/scans/PqxdhDeploymentProductionHeadlinesDct-statement-clean-v7.json",
+   "clean_sha256": "e4158a1c308f762f1d683eda023d50d4e1c78866eb09027599f1e890a940f000",
+   "clean_exit": 1,
+   "module_hits": [
+    [
+     "ce_kt_sym_dct",
+     "PqxdhDeploymentIdealSteps.idealGame"
+    ],
+    [
+     "ce_kt_beacon_sym_dct",
+     "PqxdhDeploymentIdealSteps.idealGame"
+    ]
+   ],
+   "live": "/tmp/bc-arc-scratch/item7/prod-dct/scans/PqxdhDeploymentProductionHeadlinesDct-statement-live-v7.json",
+   "live_sha256": "96c206523a5dbc861d774f3be3ddfae173dcac48b1d5945f68ba75695b8ffea2",
+   "live_exit": 4,
+   "live_classes": 11,
+   "live_note": "exit 4 only because of the two inherited module hits (as for the published classical module); no dead class, no missed token, negative control clean, allowance control ok"
+  },
+  "production_side_split": {
+   "clean": "/tmp/bc-arc-scratch/item7/prod-dct/scans/PqxdhDeploymentProductionHeadlinesDct-split-clean.json",
+   "clean_sha256": "391ce4e95b44495a45baee771b7d910193cad42aa37925b8c28df972fdce73c3",
+   "clean_exit": 0,
+   "module_failures": [],
+   "inherited_rest_hits": {
+    "PqxdhDeploymentIdealSteps.idealGame": 2
+   },
+   "production_side_crypto_count": 10,
+   "live": "/tmp/bc-arc-scratch/item7/prod-dct/scans/PqxdhDeploymentProductionHeadlinesDct-split-live.json",
+   "live_sha256": "3650f297a7f8e24076c6491f815d5d33ca477bf77e1f5333970bb0c62d40fa6e",
+   "live_exit": 0,
+   "live_ok": true
+  },
+  "direct_scan_v7": {
+   "clean_log": "/tmp/bc-arc-scratch/item7/prod-dct/build/dev/PqxdhDeploymentProductionHeadlinesDct-scan-clean-v7-1.log",
+   "clean_log_sha256": "9ab3b1bfa6ef267d6cd55ee220da3352fa8b8dc76526f9dd907b677a970c4690",
+   "clean_exit": "lean 1, tool 3 (fails as restated statements must; recorded)",
+   "declarations": 48,
+   "references": 98,
+   "by_constant": {
+    "PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource.crypto": 48,
+    "PqxdhChallengeSecretRouting.FunctionalDecapsulation": 48,
+    "PqxdhDeploymentIdealSteps.idealGame": 2
+   },
+   "site_gate": "fails (no site table for this module)",
+   "live_log": "/tmp/bc-arc-scratch/item7/prod-dct/build/dev/PqxdhDeploymentProductionHeadlinesDct-scan-live-v7-1.log",
+   "live_log_sha256": "466091456d271f471e0a794e09f2176482aface48b116dab302fa869bd66000f",
+   "live_note": "the site gate throws before the liveness part, so the tool's liveness cannot be shown on this module; it is recorded for the transfer module in the published receipt"
+  },
+  "differential": {
+   "clean_log": "/tmp/bc-arc-scratch/item7/prod-dct/build/dev/PqxdhDeploymentProductionHeadlinesDct-diff-clean-1.log",
+   "clean_log_sha256": "2cdc89adccb04bd44b161a70c73fda66ed070fb3423abb2deafb5e10b1413590",
+   "clean": "exit 0, 48 declarations checked, 0 failures; 12 .crypto site kinds, all on Setup.source (ctGapEvent/3 for the two closure lemmas, from the definition of ctGapTerm)",
+   "live_log": "/tmp/bc-arc-scratch/item7/prod-dct/build/dev/PqxdhDeploymentProductionHeadlinesDct-diff-live-1.log",
+   "live_log_sha256": "17ba2ede0c4aa94e2c67db3fda8836a3e09f162bf7dff269f830c2fce9e3b756",
+   "live": "exit 1 as intended: diffLiveExtraConst {a,e}, diffLiveSite {c,e}, diffLiveValueOnly {b,e}, diffLiveValueSite {b,d,e}"
+  },
+  "text_scan": "no PqxdhDeploymentProvenance, authenticated_*, PqxdhRegistrationJointAuthenticatedSelectedKem or PqxdhRegistrationJointKemKeyTransfer* name",
+  "outputs_sha256": {
+   "stmt-scan.out": "766c1777923c784e5285a8ec767e3f796c8b603b04d0458f22b9b5546db3a7db",
+   "stmt-scan-live.out": "3a1e738a0b67480f149025dbaaa3ac075ed321348ca6c6a15eede053c8c54c38",
+   "split.out": "7aba20421eeb555fd6a504ac6562c5454fb349564464571324caac8ada1360f5",
+   "split-live.out": "994f0c4e0abf9e96c6f1da3e44a7773916736f8f350125158cf1ba86513547e2",
+   "direct-clean.out": "2043970d9ddeed127d21f65b1946f0604143315a43798d4b3bcc60d695c50489",
+   "direct-live.out": "4dbf1bfcd31c70eaf7bbfbd2b65b551d319373dd200518b1fe33b1a2db69873f",
+   "diff-clean.out": "8a0545a033786c369af04b717f60554ad8f67232c3a8c7ec54293b9772528f1d",
+   "diff-live.out": "789dcbd413258d419437f598dc5a78166401214f9b8047db7c050eb05693b49f"
+  }
+ },
+ "documents_sha256": {
+  "doc/impl/production-headlines.md": "534a38645fd10e64c59e5710d7e459389346b37d8deabd5851f2cb8fa3364ab3",
+  "doc/impl/production-boundary-ledger.md": "806f2e91b3d2fafc83c0da452c4c6e6e04a1799bbe7b8ef7bb1e0db2e19f198e",
+  "doc/formal-verification-analysis.md": "2bb1b58f41243b3e90335a6a2301cdea2eeb9e02362d3e78e218e6e8202ddc45"
+ },
+ "documents_before_sha256": {
+  "production-headlines.md.before-dct": "7a09a9d1be1ebeb82280c7bc5db66e8b68251c0d950d67b19daf1b6f899a7dcc",
+  "production-boundary-ledger.md.before-dct": "5fe2f4176df9e2767e8ed55cc4d31fb2e44e8f8fbb845e4759b1edb2fb372a48",
+  "formal-verification-analysis.md.before-dct": "36fd0b1123c6dacdc41d334f80fef3747f3822997eb47f483345e70437c0d5b8",
+  "production-headlines.json.before-dct": "84b95bbc42d0f8ee26edc127d8772aa23548bdce01888acc6d070a9ddf9801ef"
+ },
+ "document_edits": {
+  "guide": "scripts/guide_edits.py (status sentence, not-claimed follow-up sentence, open point done plus follow-up bullet, new section appended), then two recorded manual rewordings (docs/edit-log.txt)",
+  "ledger": "scripts/ledger_edits.py (one paragraph after the Built paragraph of \"What item 8 must carry\"; existing text unchanged, asserted)",
+  "analysis": "scripts/analysis_edits.py (one section appended at the end, Claude's anchor; existing text unchanged, asserted)",
+  "sibling_receipt": "this script adds the record follow_ups to the published receipt; nothing else in it changes (asserted)"
+ },
+ "scripts_sha256": {
+  "analysis_edits.py": "c2bb13fb8ac54f49e424857e91d867d1ada60a53e8b1a77eb2a2803b90efc057",
+  "check.sh": "aae45645b205339db3f76e30c09b1af1a74aabb942c371a68915f433aafe1547",
+  "devcheck.sh": "7ac47004b6a164fe3b34edec4183ba2b08ea27df9de9c0d87fc8ba6f1433e912",
+  "diff_scan.py": "285efd830dfddc0cb401932e3f1ee6e7f53b0884496166f0c984f2fef6ba0c38",
+  "direct_scan.py": "3fee8aa85ac6ffed342d7d5e2b59022c19d3fff2f33bc7ca7ea958f4ba57ec68",
+  "gen3.py": "90c074e4300f1e2de4b1576275ace6f35a63f334a378896a789a97f96e241743",
+  "gendct.py": "cdb01cf9c86ba6edeb778bb3055e3cd7c84841ef4a9333f502874214b71a9d5b",
+  "guards.py": "1d544c7bb1b624c35bbdd5b6bbf4be0b1d27b0d1291a901321011474cc5f1585",
+  "guide_edits.py": "f4932b416f9483903e034c22082ff4d46c48bbc3b76b9163933656f3231b4bf6",
+  "hygiene.py": "23ad900cf3a03d25befd816fb5f35084eb7e5d60f664533fe19b31c63d3f527e",
+  "invblock.py": "7baf5964ab315ea940af5c46217810cb6a744b55d72964e80b0ae860cc0efd56",
+  "inventory.sh": "09d824f0a43b1d56e841137973068d1e5f7d5d29f299825a3571d3c2652a43b2",
+  "ledger_edits.py": "d56ec4e29266fa60de5e3302840b2ac047df132f3e31c6ac32bc513554f76893",
+  "mirror.py": "7d3c015dff0fdf5bfbee867710a3a0973d9c6ca38408f5dd67f5784f203a4a6d",
+  "premises_dct.py": "d44152fd782c75e48879f555bb65f0ca9ec3044e36bbe3b373d08c8f57af4e00",
+  "receipt_dct.py": "98573af029f1d22d243952dcae6b476c9f40e1ff3ced4319777e8bfca42b2ed2",
+  "stmt_scan.py": "7e1e973d9e011287e0133ffb256c7ffd024671be87af15102c2c7b0364f03099",
+  "stmt_split.py": "ac34a5caad961fcf019580c46b6aac4407436d012a109710d7a0ce1b05993cf1"
+ },
+ "not_claimed": [
+  "persistence-wrapped C, Go and Python Server surface (Beacons through the bindings only beside the plain Rust Server)",
+  "later-quantum origin, UKS, binding or authentication",
+  "closed production forms of the seven intermediate lemmas that D-ct does not close (beacon_gap_le among them)",
+  "tightness of ctStat (birthday BLAKE2b term of the D-ct owner note)",
+  "running time",
+  "identity indices other than 0, a varying checks, codecs other than codec'",
+  "anything beyond the reviewed transcription of the Rust adapter"
+ ],
+ "remaining": [
+  "independent review (semantic, composition, hygiene), fix pass and confirming review of the follow-up",
+  "integration into central (PROTOCOL section 6)",
+  "item 8 (owner)"
+ ],
+ "protocol": "all Lean checks through coord.sh lean with one in flight; registrations before creation (one slip: probe/rederive registered right after creation, recorded in item7/NOTES.md); mail only peeked; no make verify, full lake build, mutation testing or nix-collect-garbage; no deletion"
+}

@@ -1576,5 +1576,16 @@
    "item 8 (owner)"
   ],
   "protocol": "all Lean checks through coord.sh lean with one in flight; registrations before creation; no deletion in /tmp (one stray mkdir/rmdir of an empty /dev/shm/x in one command, outside /tmp); mail only peeked; no make verify, full lake build, mutation testing or nix-collect-garbage"
- }
+ },
+ "follow_ups": [
+  {
+   "name": "D-ct follow-up: production forms of the CE-12 D-ct closed headlines",
+   "module": "BeaconcryptCore.Computational.PqxdhDeploymentProductionHeadlinesDct",
+   "theorems": 48,
+   "lean_commit": "fa57acd91147d72482ef4f0e2086e6e8c6f1d587",
+   "receipt": "doc/impl/proof-receipts/production-headlines-dct.json",
+   "guide_section": "D-ct follow-up: production forms of the closed ciphertext-gap headlines",
+   "note": "added after this receipt; the guide, the ledger paragraph and the analysis changed with it (their hashes at that commit are in the sibling receipt); everything else in this receipt describes the four modules as integrated at 529e2c8b"
+  }
+ ]
 }
