@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1930
+	[handwritten-lean]=1931
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -40127,6 +40127,27 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem ce_app_server_later_target([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineApp theorem ce_app_server_later_target"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineApp\.ce_app_server_later$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineApp dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineApp.ce_app_server_later"
 require_line_count 1 '^theorem ce_app_server_later([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineApp theorem ce_app_server_later"
+
+# CE-12 P3: CE-LOR-L, later-quantum left-or-right secrecy of the single test session with the guess read from the post adversary's output (per target, summed, Server-peer form)
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterHeadlineLor.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineLor$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentLaterHeadlineLor root import"
+require_line_count 7 '^theorem ' "$selected_source_module" "PqxdhDeploymentLaterHeadlineLor theorem inventory"
+require_line_count 7 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineLor guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineLor\.lor_final_later$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineLor dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineLor.lor_final_later"
+require_line_count 1 '^theorem lor_final_later([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineLor theorem lor_final_later"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineLor\.lor_peer_final_later$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineLor dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineLor.lor_peer_final_later"
+require_line_count 1 '^theorem lor_peer_final_later([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineLor theorem lor_peer_final_later"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineLor\.server_view_later$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineLor dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineLor.server_view_later"
+require_line_count 1 '^theorem server_view_later([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineLor theorem server_view_later"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineLor\.ce_lor_later_target$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineLor dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineLor.ce_lor_later_target"
+require_line_count 1 '^theorem ce_lor_later_target([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineLor theorem ce_lor_later_target"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineLor\.ce_lor_later$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineLor dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineLor.ce_lor_later"
+require_line_count 1 '^theorem ce_lor_later([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineLor theorem ce_lor_later"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineLor\.ce_lor_server_later_target$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineLor dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineLor.ce_lor_server_later_target"
+require_line_count 1 '^theorem ce_lor_server_later_target([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineLor theorem ce_lor_server_later_target"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineLor\.ce_lor_server_later$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineLor dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineLor.ce_lor_server_later"
+require_line_count 1 '^theorem ce_lor_server_later([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineLor theorem ce_lor_server_later"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"

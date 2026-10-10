@@ -2177,6 +2177,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineKeyTransfer
 
 import BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineApp
 
+import BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineLor
+
 /-!
 # Beaconcrypt-core verification root
 
