@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1893
+	[handwritten-lean]=1894
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -38775,6 +38775,73 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem ce_lor_server_target([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineLor theorem ce_lor_server_target"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineLor\.ce_lor_server$' "$selected_source_module" "PqxdhDeploymentHeadlineLor dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineLor.ce_lor_server"
 require_line_count 1 '^theorem ce_lor_server([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineLor theorem ce_lor_server"
+
+# CE-12 P2: symbolic eligibility and the gap lemmas (F-ct2 form).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineGap.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGap$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentHeadlineGap root import"
+require_line_count 30 '^theorem ' "$selected_source_module" "PqxdhDeploymentHeadlineGap theorem inventory"
+require_line_count 30 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentHeadlineGap guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineGap\.finishReg_regsOf$' "$selected_source_module" "PqxdhDeploymentHeadlineGap dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGap.finishReg_regsOf"
+require_line_count 1 '^theorem finishReg_regsOf([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGap theorem finishReg_regsOf"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineGap\.established_accepted$' "$selected_source_module" "PqxdhDeploymentHeadlineGap dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGap.established_accepted"
+require_line_count 1 '^theorem established_accepted([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGap theorem established_accepted"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineGap\.acceptedFrom_first$' "$selected_source_module" "PqxdhDeploymentHeadlineGap dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGap.acceptedFrom_first"
+require_line_count 1 '^theorem acceptedFrom_first([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGap theorem acceptedFrom_first"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineGap\.owners_foldl_prefix$' "$selected_source_module" "PqxdhDeploymentHeadlineGap dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGap.owners_foldl_prefix"
+require_line_count 1 '^theorem owners_foldl_prefix([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGap theorem owners_foldl_prefix"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineGap\.owners_prefix_get$' "$selected_source_module" "PqxdhDeploymentHeadlineGap dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGap.owners_prefix_get"
+require_line_count 1 '^theorem owners_prefix_get([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGap theorem owners_prefix_get"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineGap\.regsOf_snoc$' "$selected_source_module" "PqxdhDeploymentHeadlineGap dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGap.regsOf_snoc"
+require_line_count 1 '^theorem regsOf_snoc([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGap theorem regsOf_snoc"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineGap\.finishReady_snoc$' "$selected_source_module" "PqxdhDeploymentHeadlineGap dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGap.finishReady_snoc"
+require_line_count 1 '^theorem finishReady_snoc([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGap theorem finishReady_snoc"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineGap\.ready_step$' "$selected_source_module" "PqxdhDeploymentHeadlineGap dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGap.ready_step"
+require_line_count 1 '^theorem ready_step([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGap theorem ready_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineGap\.ready_empty$' "$selected_source_module" "PqxdhDeploymentHeadlineGap dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGap.ready_empty"
+require_line_count 1 '^theorem ready_empty([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGap theorem ready_empty"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineGap\.ready_game$' "$selected_source_module" "PqxdhDeploymentHeadlineGap dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGap.ready_game"
+require_line_count 1 '^theorem ready_game([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGap theorem ready_game"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineGap\.acceptedFrom_split$' "$selected_source_module" "PqxdhDeploymentHeadlineGap dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGap.acceptedFrom_split"
+require_line_count 1 '^theorem acceptedFrom_split([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGap theorem acceptedFrom_split"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineGap\.accepted_split$' "$selected_source_module" "PqxdhDeploymentHeadlineGap dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGap.accepted_split"
+require_line_count 1 '^theorem accepted_split([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGap theorem accepted_split"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineGap\.ready_accepted$' "$selected_source_module" "PqxdhDeploymentHeadlineGap dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGap.ready_accepted"
+require_line_count 1 '^theorem ready_accepted([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGap theorem ready_accepted"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineGap\.first_acceptedFrom$' "$selected_source_module" "PqxdhDeploymentHeadlineGap dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGap.first_acceptedFrom"
+require_line_count 1 '^theorem first_acceptedFrom([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGap theorem first_acceptedFrom"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineGap\.finish_accepted$' "$selected_source_module" "PqxdhDeploymentHeadlineGap dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGap.finish_accepted"
+require_line_count 1 '^theorem finish_accepted([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGap theorem finish_accepted"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineGap\.accept_logged$' "$selected_source_module" "PqxdhDeploymentHeadlineGap dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGap.accept_logged"
+require_line_count 1 '^theorem accept_logged([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGap theorem accept_logged"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineGap\.acceptCount_logged$' "$selected_source_module" "PqxdhDeploymentHeadlineGap dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGap.acceptCount_logged"
+require_line_count 1 '^theorem acceptCount_logged([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGap theorem acceptCount_logged"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineGap\.accept_positional$' "$selected_source_module" "PqxdhDeploymentHeadlineGap dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGap.accept_positional"
+require_line_count 1 '^theorem accept_positional([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGap theorem accept_positional"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineGap\.acceptedKeys_identity$' "$selected_source_module" "PqxdhDeploymentHeadlineGap dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGap.acceptedKeys_identity"
+require_line_count 1 '^theorem acceptedKeys_identity([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGap theorem acceptedKeys_identity"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineGap\.candidateTuple_pq$' "$selected_source_module" "PqxdhDeploymentHeadlineGap dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGap.candidateTuple_pq"
+require_line_count 1 '^theorem candidateTuple_pq([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGap theorem candidateTuple_pq"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineGap\.server_gap$' "$selected_source_module" "PqxdhDeploymentHeadlineGap dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGap.server_gap"
+require_line_count 1 '^theorem server_gap([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGap theorem server_gap"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineGap\.accept_entry$' "$selected_source_module" "PqxdhDeploymentHeadlineGap dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGap.accept_entry"
+require_line_count 1 '^theorem accept_entry([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGap theorem accept_entry"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineGap\.beacon_gap$' "$selected_source_module" "PqxdhDeploymentHeadlineGap dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGap.beacon_gap"
+require_line_count 1 '^theorem beacon_gap([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGap theorem beacon_gap"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineGap\.chance_le_support$' "$selected_source_module" "PqxdhDeploymentHeadlineGap dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGap.chance_le_support"
+require_line_count 1 '^theorem chance_le_support([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGap theorem chance_le_support"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineGap\.chance_le_add_support$' "$selected_source_module" "PqxdhDeploymentHeadlineGap dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGap.chance_le_add_support"
+require_line_count 1 '^theorem chance_le_add_support([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGap theorem chance_le_add_support"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineGap\.server_gap_le$' "$selected_source_module" "PqxdhDeploymentHeadlineGap dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGap.server_gap_le"
+require_line_count 1 '^theorem server_gap_le([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGap theorem server_gap_le"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineGap\.server_gap_bound$' "$selected_source_module" "PqxdhDeploymentHeadlineGap dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGap.server_gap_bound"
+require_line_count 1 '^theorem server_gap_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGap theorem server_gap_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineGap\.beacon_gap_le$' "$selected_source_module" "PqxdhDeploymentHeadlineGap dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGap.beacon_gap_le"
+require_line_count 1 '^theorem beacon_gap_le([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGap theorem beacon_gap_le"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineGap\.ce_a1_linked$' "$selected_source_module" "PqxdhDeploymentHeadlineGap dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGap.ce_a1_linked"
+require_line_count 1 '^theorem ce_a1_linked([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGap theorem ce_a1_linked"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineGap\.sym_gap$' "$selected_source_module" "PqxdhDeploymentHeadlineGap dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGap.sym_gap"
+require_line_count 1 '^theorem sym_gap([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGap theorem sym_gap"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
