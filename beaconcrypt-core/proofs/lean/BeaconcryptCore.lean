@@ -2087,6 +2087,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentIdealHandoff
 
 import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineChain
 
+import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAnomaly
+
 /-!
 # Beaconcrypt-core verification root
 

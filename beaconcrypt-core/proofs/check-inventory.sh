@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1885
+	[handwritten-lean]=1886
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -38527,6 +38527,41 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem records_le([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineChain theorem records_le"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineChain\.split_named$' "$selected_source_module" "PqxdhDeploymentHeadlineChain dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineChain.split_named"
 require_line_count 1 '^theorem split_named([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineChain theorem split_named"
+
+# CE-12 P1: the anomaly term (predict-then-compare ptc, ptc_bound with coefficient one, beta and anomaly_beta, query bounds).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineAnomaly.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAnomaly$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentHeadlineAnomaly root import"
+require_line_count 14 '^theorem ' "$selected_source_module" "PqxdhDeploymentHeadlineAnomaly theorem inventory"
+require_line_count 14 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentHeadlineAnomaly guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAnomaly\.ptc_pre$' "$selected_source_module" "PqxdhDeploymentHeadlineAnomaly dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAnomaly.ptc_pre"
+require_line_count 1 '^theorem ptc_pre([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAnomaly theorem ptc_pre"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAnomaly\.ptc_branch$' "$selected_source_module" "PqxdhDeploymentHeadlineAnomaly dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAnomaly.ptc_branch"
+require_line_count 1 '^theorem ptc_branch([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAnomaly theorem ptc_branch"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAnomaly\.ptc_branch_eval$' "$selected_source_module" "PqxdhDeploymentHeadlineAnomaly dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAnomaly.ptc_branch_eval"
+require_line_count 1 '^theorem ptc_branch_eval([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAnomaly theorem ptc_branch_eval"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAnomaly\.ctGuess_draws$' "$selected_source_module" "PqxdhDeploymentHeadlineAnomaly dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAnomaly.ctGuess_draws"
+require_line_count 1 '^theorem ctGuess_draws([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAnomaly theorem ctGuess_draws"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAnomaly\.ptc_real_draws$' "$selected_source_module" "PqxdhDeploymentHeadlineAnomaly dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAnomaly.ptc_real_draws"
+require_line_count 1 '^theorem ptc_real_draws([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAnomaly theorem ptc_real_draws"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAnomaly\.ptc_random_le$' "$selected_source_module" "PqxdhDeploymentHeadlineAnomaly dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAnomaly.ptc_random_le"
+require_line_count 1 '^theorem ptc_random_le([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAnomaly theorem ptc_random_le"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAnomaly\.ptc_correct_draws$' "$selected_source_module" "PqxdhDeploymentHeadlineAnomaly dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAnomaly.ptc_correct_draws"
+require_line_count 1 '^theorem ptc_correct_draws([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAnomaly theorem ptc_correct_draws"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAnomaly\.ptc_advantage$' "$selected_source_module" "PqxdhDeploymentHeadlineAnomaly dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAnomaly.ptc_advantage"
+require_line_count 1 '^theorem ptc_advantage([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAnomaly theorem ptc_advantage"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAnomaly\.ptc_bound$' "$selected_source_module" "PqxdhDeploymentHeadlineAnomaly dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAnomaly.ptc_bound"
+require_line_count 1 '^theorem ptc_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAnomaly theorem ptc_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAnomaly\.ptc_decapsulations$' "$selected_source_module" "PqxdhDeploymentHeadlineAnomaly dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAnomaly.ptc_decapsulations"
+require_line_count 1 '^theorem ptc_decapsulations([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAnomaly theorem ptc_decapsulations"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAnomaly\.ptc_post$' "$selected_source_module" "PqxdhDeploymentHeadlineAnomaly dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAnomaly.ptc_post"
+require_line_count 1 '^theorem ptc_post([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAnomaly theorem ptc_post"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAnomaly\.anomaly_beta$' "$selected_source_module" "PqxdhDeploymentHeadlineAnomaly dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAnomaly.anomaly_beta"
+require_line_count 1 '^theorem anomaly_beta([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAnomaly theorem anomaly_beta"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAnomaly\.chain_beta$' "$selected_source_module" "PqxdhDeploymentHeadlineAnomaly dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAnomaly.chain_beta"
+require_line_count 1 '^theorem chain_beta([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAnomaly theorem chain_beta"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAnomaly\.beta_decapsulations$' "$selected_source_module" "PqxdhDeploymentHeadlineAnomaly dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAnomaly.beta_decapsulations"
+require_line_count 1 '^theorem beta_decapsulations([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAnomaly theorem beta_decapsulations"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
