@@ -4,7 +4,7 @@
  "provenance": "new work; no Codex WIP exists for these modules",
  "branch": "codex/deployment-boundary-production",
  "basis_central": "427758b600d30ba5e71c5e4c7f5d86f5a3bd2d1d",
- "state": "reviewed (three independent reviews of f1fe6ba8), fixed (87599dd5 Lean, c22a20e7 documents) and confirmed (confirming review of f1fe6ba8..c22a20e7: all eleven actionable findings resolved; its two documentation nits taken by the commit that records it); not integrated at that commit",
+ "state": "reviewed (three independent reviews of f1fe6ba8), fixed (87599dd5 Lean, c22a20e7 documents) and confirmed (confirming review of f1fe6ba8..c22a20e7; nits taken in cbf79a0a); central 16956129 (CE-12 D-ct) merged at 8bd2c619 and the documents updated for it by the commit that adds this version of the receipt; not integrated at that commit",
  "module_commits": {
   "PqxdhDeploymentProductionTransfer": "9a5899c9ec4180e504910baf05fde385cceb8830",
   "PqxdhDeploymentProductionHeadlinesClassical": "87599dd5b0eb64434f658aa20776974b0a503f4b",
@@ -776,6 +776,11 @@
   }
  },
  "documents_sha256": {
+  "doc/impl/production-headlines.md": "7a09a9d1be1ebeb82280c7bc5db66e8b68251c0d950d67b19daf1b6f899a7dcc",
+  "doc/impl/production-boundary-ledger.md": "5fe2f4176df9e2767e8ed55cc4d31fb2e44e8f8fbb845e4759b1edb2fb372a48",
+  "doc/formal-verification-analysis.md": "36fd0b1123c6dacdc41d334f80fef3747f3822997eb47f483345e70437c0d5b8"
+ },
+ "documents_confirm_nits_sha256": {
   "doc/impl/production-headlines.md": "fd614ff4a92864ff8dd1757c7cecf7115bc9e545abeaa34d69d7f44c5c3d3f7f",
   "doc/impl/production-boundary-ledger.md": "0b4d71034145eb5ed6a03c5495d6a649e099e851030f8ce2d249d2fc7ada36f7",
   "doc/formal-verification-analysis.md": "e118e85c9d9e2933a5e9c016629263ef9879b95bc877efc4d0d9e8979f513e05"
@@ -813,7 +818,7 @@
  "not_claimed": [
   "persistence-wrapped C, Go and Python Server surface",
   "later-quantum origin, UKS, binding or authentication",
-  "closure of ctGapTerm (D-ct, not on central; follow-up)",
+  "closure of ctGapTerm at the production instance (D-ct, which closes it in the experiment's forms, reached central at 16956129 and is merged at 8bd2c619; production versions of its forms are a follow-up)",
   "designation-free pin or plaintext forms, the root, plaintext-linked UKS",
   "running time",
   "identity indices other than 0, a varying checks, codecs other than codec'",
@@ -835,6 +840,32 @@
    "production-headlines.json.before-nits": "f4822735f6812cc516edcf8843bb23435cf7d629d0a8ae75877ad56c70df6bbf",
    "production-headlines.md.before-nits": "2c7e806f7f3186dbcc77483c6170b1c2c6411a5fc13280ee2a9b4800a65708e7"
   }
+ },
+ "integration_merge": {
+  "central_before": "427758b600d30ba5e71c5e4c7f5d86f5a3bd2d1d",
+  "central": "16956129e6f5a5070cc2ee5323fcf31f7b376223",
+  "central_lane": "CE-12 D-ct (#527)",
+  "merge_commit": "8bd2c619eee148bfbc35a6b77f6e41e4d63fbd66",
+  "parents": [
+   "cbf79a0a955d926b936cba499dd9272eb9a43d10",
+   "16956129e6f5a5070cc2ee5323fcf31f7b376223"
+  ],
+  "resolution": "central first at Claude's anchors: BeaconcryptCore.lean the 14 D-ct imports then the 4 production imports (1960 imports, none twice); reviewed-inventory.txt the D-ct rows then the production rows, root and check-inventory.sh digests from central then rehashed; check-inventory.sh count from central then recounted, D-ct and production blocks auto-merged in that order before the primitive-fidelity profile; doc/formal-verification-analysis.md central's file followed by the production section (asserted exactly)",
+  "resolver": "/tmp/bc-arc-scratch/item7/prod/int/scripts/resolve.py",
+  "resolver_sha256": "f4e38ae492a140a293a01bc803427575aac9ed8a434fa4a3647a7ffd5d7756ea",
+  "inv_recount": "[handwritten-lean] 1972 -> 1976; second pass unchanged",
+  "inv_rehash": "BeaconcryptCore.lean 1da11317 -> a0f29be9, check-inventory.sh 11acd492 -> c4aa303a, trusted-boundary.md unchanged; second pass unchanged",
+  "against_central": "add-only apart from the [handwritten-lean] count line and the root and check-inventory.sh digest lines",
+  "analysis_at_merge_sha256": "cb4fb7f89a2d95bcab98fab40ef29b055cdc1486507f6f50a5c7ce7549b9a1ce",
+  "frozen_inputs": "all 26 frozen inputs keep their hashes (no existing Lean module changed on either side)",
+  "post_merge_documents": "guide status line, not-claimed sentence, D-ct open point and new section \"Integration merge\"; ledger Built paragraph D-ct sentence; analysis D-ct sentence of \"What is not claimed\"; this receipt",
+  "post_merge_scripts": {
+   "merge_docs": "/tmp/bc-arc-scratch/item7/prod/int/scripts/merge_docs.py",
+   "merge_docs_sha256": "915eebd99872f81607a47ed492ceed0b19d30ce5ff0433f431feaa48b8d05284",
+   "receipt_merge": "/tmp/bc-arc-scratch/item7/prod/int/scripts/receipt_merge.py",
+   "receipt_merge_sha256": "6eacdf7c0f0078703ee427ed2ede157c4a4fd8164f11aac0048ecdebf6d29c34"
+  },
+  "checks": "checks on the integration tip are recorded in /tmp/bc-arc-scratch/item7/prod/int/checks-receipt.json (scratch) and the integration notice"
  },
  "first_pass": {
   "kind": "items 3+7 production composition (CE-12 headlines on the PB-D production source games), build session 1",
