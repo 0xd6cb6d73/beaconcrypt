@@ -1,0 +1,869 @@
+{
+ "kind": "items 3+7 production composition follow-up: production forms of the CE-12 D-ct closed headlines (PqxdhDeploymentProductionHeadlinesDct), review fix pass and confirming review",
+ "author": "Claude (item 7 lane adopted from Codex, owner decision #503; item 3 is Claude's)",
+ "provenance": "new work; no Codex WIP exists for this module (nothing adapted from Codex WIP)",
+ "sibling_of": "doc/impl/proof-receipts/production-headlines.json",
+ "branch": "codex/deployment-boundary-production",
+ "basis_central": "529e2c8bf414f680ac57b159365280aab2e2f3f2",
+ "basis_note": "central (origin/codex/full-proof-composition, git ls-remote, the central worktree and coord.sh leanpath current) is still 529e2c8b; no merge",
+ "state": "built (fa57acd9 Lean, 5b288801 documents); reviewed (three independent reviews of 5b288801); fixed (0543c7e6 Lean, a module docstring line; 02cec0fd documents); confirmed (confirming review of 5b288801..02cec0fd: every finding F1-F12 resolved; its four optional documentation nits taken by the commit that adds this version of the receipt); not integrated at that commit",
+ "lean_commit": "fa57acd91147d72482ef4f0e2086e6e8c6f1d587",
+ "documents_commit": "5b288801cf14edef352300d7635b14aee658f429",
+ "lean_fix_commit": "0543c7e6ef415cc5fc55766320f1f1d3167f3ee1",
+ "fix_pass_documents_commit": "02cec0fda7f6f880bde7254c77cb7c900100d56c",
+ "module": {
+  "name": "BeaconcryptCore.Computational.PqxdhDeploymentProductionHeadlinesDct",
+  "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentProductionHeadlinesDct.lean",
+  "sha256": "1f8f5b254d498b3fa23b9f42762b8eaa9254edda75a14b7f77706b93f56b924f",
+  "theorems": 48,
+  "guards": 48,
+  "lines": 5748,
+  "open_classical_in": 18,
+  "commit": "0543c7e6ef415cc5fc55766320f1f1d3167f3ee1",
+  "checks": {
+   "run1": {
+    "record": "/tmp/bc-arc-scratch/item7/prod-dct/fix1/build/PqxdhDeploymentProductionHeadlinesDct-1.json",
+    "start": "2026-10-10T21:08:36.410819173Z",
+    "end": "2026-10-10T21:08:44.505263913Z",
+    "exit": 0,
+    "head": "5b288801cf14edef352300d7635b14aee658f429",
+    "dirty_paths": 1,
+    "log_bytes": 0,
+    "olean_sha256": "4eda40dffcca8459e626e35197ca8c7b01a4b506357c4123bba4085113a59589"
+   },
+   "run2": {
+    "record": "/tmp/bc-arc-scratch/item7/prod-dct/fix1/build/PqxdhDeploymentProductionHeadlinesDct-2.json",
+    "start": "2026-10-10T21:09:37.062609986Z",
+    "end": "2026-10-10T21:09:45.463542640Z",
+    "exit": 0,
+    "head": "0543c7e6ef415cc5fc55766320f1f1d3167f3ee1",
+    "dirty_paths": 0,
+    "log_bytes": 0,
+    "olean_sha256": "4eda40dffcca8459e626e35197ca8c7b01a4b506357c4123bba4085113a59589"
+   }
+  },
+  "imports": [
+   "BeaconcryptCore.Computational.PqxdhDeploymentProductionTransfer",
+   "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctClosed",
+   "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctClosedP2b",
+   "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctClosedLater",
+   "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctClosedLaterP4",
+   "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctWorld"
+  ],
+  "change_since_lean_commit": "only line 18, inside the module docstring: the list of bound terms that stay CE-model quantities also names the per-target ideal key-transfer game probabilities of ce_kt_sym_dct, ce_kt_beacon_sym_dct, ce_kt_later_sym_dct and ce_kt_beacon_later_sym_dct (findings F2, F6); with the docstring removed both versions are identical (asserted)",
+  "first_build_sha256": "1e488ddc0aa24698bc9b60c7d4b26114c139352ce7e0f91684385c7ffcfd9744"
+ },
+ "statements_changed": [],
+ "production_forms": {
+  "total": 48,
+  "dct_forms": 42,
+  "billed_dct_full_siblings": 4,
+  "closure_lemmas": [
+   "ctgap_term_le",
+   "ctgap_term_billed"
+  ],
+  "by_frozen_module": {
+   "PqxdhDeploymentHeadlineDctClosed": [
+    "ce_a1_linked_dct",
+    "sym_gap_dct",
+    "ce_or_s2b_sym_dct",
+    "ce_uks_sym_dct",
+    "ce_app_sym_dct",
+    "ce_kt_sym_dct",
+    "ce_app_beacon_sym_dct",
+    "ce_kt_beacon_sym_dct",
+    "symbolic_lor_dct",
+    "symbolic_lor_bound_dct",
+    "ce_or_injective_s2b_dct",
+    "ce_or_injective_s2b_full_dct"
+   ],
+   "PqxdhDeploymentHeadlineDctClosedP2b": [
+    "ce_or_s2b_sym_closed_dct",
+    "ce_or_s2b_sym_closed_billed_dct",
+    "ce_uks_sym_closed_dct",
+    "ce_uks_sym_closed_billed_dct",
+    "symbolic_lor_closed_dct",
+    "symbolic_lor_bound_closed_dct",
+    "symbolic_lor_bound_closed_billed_dct",
+    "ce_or_injective_s2b_closed_dct",
+    "ce_or_injective_s2b_closed_billed_dct",
+    "ce_or_injective_s2b_full_closed_dct",
+    "ce_or_injective_s2b_full_closed_billed_dct",
+    "ce_or_s2b_sym_billed_dct",
+    "ce_uks_sym_billed_dct",
+    "ce_app_beacon_sym_billed_dct",
+    "ce_app_sym_billed_dct",
+    "symbolic_lor_bound_billed_dct",
+    "ce_or_injective_s2b_billed_dct",
+    "ce_or_injective_s2b_full_billed_dct"
+   ],
+   "PqxdhDeploymentHeadlineDctClosedLater": [
+    "ce_app_later_sym_dct",
+    "ce_app_beacon_later_sym_dct",
+    "ce_kt_later_sym_dct",
+    "ce_kt_beacon_later_sym_dct",
+    "symbolic_lor_later_dct",
+    "symbolic_lor_later_bound_dct"
+   ],
+   "PqxdhDeploymentHeadlineDctClosedLaterP4": [
+    "ce_app_later_sym_billed_dct",
+    "ce_app_later_sym_billed_dct_full",
+    "ce_app_beacon_later_sym_billed_dct",
+    "ce_app_beacon_later_sym_billed_dct_full",
+    "symbolic_lor_later_bound_billed_dct",
+    "symbolic_lor_later_bound_billed_dct_full",
+    "symbolic_lor_later_closed_dct",
+    "symbolic_lor_later_bound_closed_dct",
+    "symbolic_lor_later_bound_closed_billed_dct",
+    "symbolic_lor_later_bound_closed_billed_dct_full"
+   ],
+   "PqxdhDeploymentHeadlineDctWorld": [
+    "ctgap_term_le",
+    "ctgap_term_billed"
+   ]
+  },
+  "classical_source_game_occurrences": 42,
+  "classical_forms": 32,
+  "lqf_source_game_occurrences": 28,
+  "lqf_forms": 16,
+  "keep_ctCollTerm": 15,
+  "keep_ctCollTerm_forms": [
+   "ce_or_s2b_sym_dct",
+   "ce_uks_sym_dct",
+   "symbolic_lor_dct",
+   "symbolic_lor_bound_dct",
+   "ce_or_injective_s2b_dct",
+   "ce_or_injective_s2b_full_dct",
+   "ce_or_s2b_sym_billed_dct",
+   "ce_uks_sym_billed_dct",
+   "symbolic_lor_bound_billed_dct",
+   "ce_or_injective_s2b_billed_dct",
+   "ce_or_injective_s2b_full_billed_dct",
+   "symbolic_lor_later_dct",
+   "symbolic_lor_later_bound_dct",
+   "symbolic_lor_later_bound_billed_dct",
+   "symbolic_lor_later_bound_billed_dct_full"
+  ],
+  "no_explicit_experiment_term_among_46": 31,
+  "bounds_of_the_31_without_explicit_term": {
+   "note": "no_explicit_experiment_term_among_46 counts the closed forms without ctGapTerm, ctCollTerm or any other CE/LQ-F game probability; of these 31, 27 have bounds made only of advantages of attackers built by CE-12 reductions and stated statistical terms, and 4 keep, as their frozen sources, the per-target probability of the event in CE's ideal key-transfer game at codec' and route' (finding F1)",
+   "advantages_and_statistical_terms_only": 27,
+   "keep_ideal_key_transfer_game": {
+    "ce_kt_sym_dct": "PqxdhDeploymentIdealSteps.idealGame",
+    "ce_kt_beacon_sym_dct": "PqxdhDeploymentIdealSteps.idealGame",
+    "ce_kt_later_sym_dct": "PqxdhDeploymentIdealLaterGame.idealLaterGame",
+    "ce_kt_beacon_later_sym_dct": "PqxdhDeploymentIdealLaterGame.idealLaterGame"
+   }
+  },
+  "probability_block_heads": {
+   "PqxdhBoundaryDeployment.sourceGame": 42,
+   "PqxdhDeploymentIdealSteps.idealGame": 2,
+   "PqxdhBoundaryDeploymentLater.laterSourceGame": 28,
+   "PqxdhDeploymentIdealLaterGame.idealLaterGame": 2
+  },
+  "probability_block_heads_note": "occurrences of each game head in the probability blocks of all 48 statements (moved here from bounds_of_the_31_without_explicit_term on the confirming review's nit; the counts were always over all 48 statements)"
+ },
+ "guard_profile": "every theorem exactly one #guard_msgs over #print axioms listing propext, Classical.choice, Quot.sound",
+ "hygiene": {
+  "record": "/tmp/bc-arc-scratch/item7/prod-dct/fix1/docs/hygiene.json",
+  "sha256": "b1815082755467724903d5d18f2e52ca6a847f270ae5a575b5c2c21c95fb3e10",
+  "forbidden_tokens": [],
+  "bad_set_options": [],
+  "long_code_lines": [],
+  "defs": 0,
+  "ok": true,
+  "long_code_lines_note": "hygiene.py skips lines starting with #print; five #print axioms lines of this module are over 120 columns and cannot be wrapped (finding F11)",
+  "long_print_axioms_lines": {
+   "record": "/tmp/bc-arc-scratch/item7/prod-dct/fix1/docs/long-print-lines.json",
+   "sha256": "8990bdad74453ab218bc2cdb1dd23a80326b041ba4c2322a441b41a2d7d86f52",
+   "this_module": [
+    [
+     5548,
+     124,
+     "ce_or_injective_s2b_full_closed_billed_dct"
+    ],
+    [
+     5684,
+     121,
+     "ce_app_beacon_later_sym_billed_dct_full"
+    ],
+    [
+     5700,
+     122,
+     "symbolic_lor_later_bound_billed_dct_full"
+    ],
+    [
+     5724,
+     124,
+     "symbolic_lor_later_bound_closed_billed_dct"
+    ],
+    [
+     5732,
+     129,
+     "symbolic_lor_later_bound_closed_billed_dct_full"
+    ]
+   ],
+   "published_modules": {
+    "PqxdhDeploymentProductionHeadlinesLater": [
+     [
+      3004,
+      122,
+      "symbolic_lor_later_bound_closed_billed"
+     ]
+    ]
+   },
+   "published_note": "the published hygiene bullet of the guide (\"no code line over 120 columns\") has this one exception; recorded by a note in the guide, not edited"
+  }
+ },
+ "development_check": {
+  "log": "/tmp/bc-arc-scratch/item7/prod-dct/fix1/build/dev/PqxdhDeploymentProductionHeadlinesDct-1.log",
+  "sha256": "094f84c7f7e0c95b16c37eb25866af8cbd7fae1b72202479ab3b8ae0aed4570a",
+  "meta": "a3f8fc7df2a2e59c0a65140e2f18e3e759fc6f7020aea170151cd33df0c4cb17  /tmp/bc-arc-scratch/item7/prod-dct/fix1/gen/PqxdhDeploymentProductionHeadlinesDct.lean\nexit 0 seconds 7",
+  "axiom_messages": 48,
+  "other_messages": 0,
+  "source": "item7/prod-dct/fix1/gen/PqxdhDeploymentProductionHeadlinesDct.lean (unguarded generator output)",
+  "identical_to_first_build": true
+ },
+ "root_import": {
+  "record": "/tmp/bc-arc-scratch/item7/prod-dct/fix1/build/root-1.json",
+  "exit": 0,
+  "log_bytes": 0,
+  "head": "0543c7e6ef415cc5fc55766320f1f1d3167f3ee1",
+  "dirty_paths": 0,
+  "olean_sha256": "dbeefc93a3dc42c04efc111b3749a4d22fd15048b64f31ecb7040e35d4f90099",
+  "note": "root olean identical to the first build's"
+ },
+ "olean_prefix": {
+  "path": "/tmp/bc-arc-scratch/item7/prod-dct/fix1/olean",
+  "leanpath": "/tmp/bc-arc-scratch/item7/prod-dct/fix1/leanpath",
+  "leanpath_sha256": "da4b60e413b39f2ddd68c41db1beb73db7709cce9c19e92c30f9a9391104c42a",
+  "mirror": "resolved symlink mirror of the BeaconcryptCore part of the published 529e2c8b first prefix /tmp/bc-arc-scratch/item7/prod/int/olean (6435 links; root olean skipped; 0 broken), by fix1/scripts/mirror.py",
+  "published_leanpath": "/tmp/bc-coord/leanpaths/529e2c8bf414f680ac57b159365280aab2e2f3f2.leanpath"
+ },
+ "lean_command": "coord.sh lean claude <label> -- timeout 180 lean -j1 -M8000 [--root=<worktree lean dir> -o <olean>] <file>, one check in flight",
+ "inventory": {
+  "recount": "coord.sh inv recount claude <core>: [handwritten-lean] 1977, unchanged, before inv rehash",
+  "rehash": "coord.sh inv rehash claude <core> on the module row (1e488ddc -> 1f8f5b25), then the default set (BeaconcryptCore.lean, trusted-boundary.md, check-inventory.sh unchanged); a second recount changed nothing",
+  "focused_check_inventory": {
+   "start": "2026-10-10T21:09:57Z",
+   "end": "2026-10-10T21:11:54Z",
+   "commit": "0543c7e6ef415cc5fc55766320f1f1d3167f3ee1",
+   "status": 0,
+   "dirt_bytes": 0,
+   "dirt_after_bytes": 0,
+   "log": "/tmp/bc-arc-scratch/item7/prod-dct/fix1/build/inventory-lean-commit.log",
+   "log_sha256": "f7160dbad43f0f371302932967f766a41f009610427a38b155d811ba5c540bc7",
+   "command": "coord.sh lease mem claude @nix <label> --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C <worktree>/beaconcrypt-core check-inventory SHELL=bash"
+  }
+ },
+ "git_diff_check": "clean for 529e2c8b..HEAD and 5b288801..HEAD (checked before the Lean fix commit and before the documents commit)",
+ "generator": {
+  "script": "/tmp/bc-arc-scratch/item7/prod-dct/fix1/scripts/gendct.py",
+  "sha256": "ad5e9aa76965dc134d2e2055cdf516128c7a439831c3f40395af9c3260a9f129",
+  "base": "/tmp/bc-arc-scratch/item7/prod-dct/fix1/scripts/gen3.py",
+  "base_sha256": "90c074e4300f1e2de4b1576275ace6f35a63f334a378896a789a97f96e241743",
+  "first_build_script_sha256": "cdb01cf9c86ba6edeb778bb3055e3cd7c84841ef4a9333f502874214b71a9d5b",
+  "changes": "fix-pass copy of item7/prod-dct/scripts/gendct.py: paths moved to fix1 and the module docstring term list extended (F2, F6); nothing else",
+  "selection": "/tmp/bc-arc-scratch/item7/prod-dct/fix1/docs/headline-list-dct.txt",
+  "selection_sha256": "2f2d9702145ee1a9ea4d505536ef1cdc9e23a7b78746b26331e171362ea799a5",
+  "rederivation": "gendct.py re-run reproduces fix1/gen byte for byte (fix1/probe/rederive); with guards.py and the fix-pass development log it reproduces the committed module byte for byte"
+ },
+ "frozen_inputs_sha256": {
+  "PqxdhDeploymentHeadlineDctClosed": "d326aeca14f7691349567dd613add98cc2abb4997bcf7e872821e998d0bde9a2",
+  "PqxdhDeploymentHeadlineDctClosedP2b": "74509236f1f517b432fd06fd53255fb5a32e187fc249bde74efe71d446c00d00",
+  "PqxdhDeploymentHeadlineDctClosedLater": "bad3272ac2b80b2854353c561b8cc44ecb8660cf1e6d92fd8bc8d88ca580a895",
+  "PqxdhDeploymentHeadlineDctClosedLaterP4": "cdd61732d94e55a7ddc13f7b6238ba7654a97611de7fdc7b363131e6ef105a5a",
+  "PqxdhDeploymentHeadlineDctWorld": "e5e21c19d1eaa085771f9786331d1f8a0232711a4fd9acad8d70620e65d97605",
+  "PqxdhDeploymentHeadlineGap": "31149250f7013b6ef8e646eccd8a1b629ca65189fa08702b9bfaca026d0569f7",
+  "PqxdhDeploymentProductionTransfer": "46ef566033afeb628655685dd7316201c98daeceb9ed7135ddc1ad4847332ec2"
+ },
+ "frozen_inputs_note": "unchanged between central 529e2c8b and HEAD (git diff --quiet) and equal to the first build's",
+ "premises": {
+  "table": "/tmp/bc-arc-scratch/item7/prod-dct/fix1/docs/premises-dct.json",
+  "sha256": "9c29b91fa52fd6eb251b3e32ce027ff1fb36013ebd10ce6e230b42025a150f48",
+  "totals": {
+   "Phase1ReadBack codec": 48,
+   "Phase2ReadBack codec": 48,
+   "FrameReadBack codec′": 48,
+   "ReadWritable codec′": 46,
+   "DecoderAgreement": 0,
+   "FunctionalDecapsulation setup.kem": 48,
+   "SourceFullCorrect setup.source setup.hmac": 48,
+   "KemBound setup caps": 48,
+   "initBound": 48,
+   "X25519ClassLaw": 46,
+   "X25519ScalarSpread": 46,
+   "HasAttachedVerificationAdapter": 46,
+   "shortRejects": 22,
+   "budget.Respects": 48,
+   "post.Respects": 14
+  },
+  "other_codec_or_route_binders": [],
+  "owner_level_stop": false,
+  "note": "byte-identical to the first build's table"
+ },
+ "scans": {
+  "spec": "/tmp/bc-arc-scratch/item7/prod-dct/fix1/scans/scan-spec-v7.json",
+  "spec_sha256": "34b96e5c6cb22ca89e8a3639cb21d86c913cac54f005778382e5289388d71e7e",
+  "crypto_allowance": "not extended (decision D-1 not invoked); inherited references recorded, not excused",
+  "rerun_note": "all scans re-run on the fixed module with the fix-pass copies of the scripts; JSON outputs equal to the first build's apart from the source hash and paths, Lean logs equal apart from paths (asserted)",
+  "statement_scan_v7": {
+   "clean": "/tmp/bc-arc-scratch/item7/prod-dct/fix1/scans/PqxdhDeploymentProductionHeadlinesDct-statement-clean-v7.json",
+   "clean_sha256": "5e52ef7c5b4c1fa687f8fcffaf99938ebb03839f7393035d0beff6f70196e9c4",
+   "clean_exit": 1,
+   "module_hits": [
+    [
+     "ce_kt_sym_dct",
+     "PqxdhDeploymentIdealSteps.idealGame"
+    ],
+    [
+     "ce_kt_beacon_sym_dct",
+     "PqxdhDeploymentIdealSteps.idealGame"
+    ]
+   ],
+   "live": "/tmp/bc-arc-scratch/item7/prod-dct/fix1/scans/PqxdhDeploymentProductionHeadlinesDct-statement-live-v7.json",
+   "live_sha256": "3fcb49a8d0982a770053613f39a7fc7958e20597d2a82afd647bf2e6f8724b5c",
+   "live_exit": 4,
+   "live_classes": 11,
+   "live_note": "exit 4 only because of the two inherited module hits (as for the published classical module); no dead class, no missed token, negative control clean, allowance control ok",
+   "not_scanned": "PqxdhDeploymentIdealLaterGame.idealLaterGame (in ce_kt_later_sym_dct and ce_kt_beacon_later_sym_dct) is not a token of specification v7, so no scan reports it (finding F1)"
+  },
+  "production_side_split": {
+   "clean": "/tmp/bc-arc-scratch/item7/prod-dct/fix1/scans/PqxdhDeploymentProductionHeadlinesDct-split-clean.json",
+   "clean_sha256": "a84c48db45bade05912d896a84b9f1e95dabe17dd633d58e2aa2288b3c76da15",
+   "clean_exit": 0,
+   "module_failures": [],
+   "inherited_rest_hits": {
+    "PqxdhDeploymentIdealSteps.idealGame": 2
+   },
+   "production_side_crypto_count": 10,
+   "live": "/tmp/bc-arc-scratch/item7/prod-dct/fix1/scans/PqxdhDeploymentProductionHeadlinesDct-split-live.json",
+   "live_sha256": "24b736ecd1fef6d3f29f3f66bcff106315d57a0b67459649ef646d1dc6730b50",
+   "live_exit": 0,
+   "live_ok": true
+  },
+  "direct_scan_v7": {
+   "clean_log": "/tmp/bc-arc-scratch/item7/prod-dct/fix1/build/dev/PqxdhDeploymentProductionHeadlinesDct-scan-clean-v7-1.log",
+   "clean_log_sha256": "c762be8e6ecd10980e9abd470078488b5a4f675550d0ae7f05728f3608d7cc21",
+   "clean_exit": "lean 1, tool 3 (fails as restated statements must; recorded)",
+   "declarations": 48,
+   "references": 98,
+   "by_constant": {
+    "PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource.crypto": 48,
+    "PqxdhChallengeSecretRouting.FunctionalDecapsulation": 48,
+    "PqxdhDeploymentIdealSteps.idealGame": 2
+   },
+   "site_gate": "fails (no site table for this module)",
+   "live_log": "/tmp/bc-arc-scratch/item7/prod-dct/fix1/build/dev/PqxdhDeploymentProductionHeadlinesDct-scan-live-v7-1.log",
+   "live_log_sha256": "b1c651943cba5393c54faf78d74778a38a07fcf76f7b8f111fd7b04b99ddb9ef",
+   "live_note": "the site gate throws before the liveness part of the recorded live run",
+   "gate_bypass_probe": {
+    "script": "/tmp/bc-arc-scratch/item7/prod-dct/fix1/scripts/direct_scan_gateprobe.py",
+    "script_sha256": "764c5a5d0dd934f464246397adbdebb3c42aac4731e4dd81dcc5692a1da36824",
+    "fixture": "/tmp/bc-arc-scratch/item7/prod-dct/fix1/scans/PqxdhDeploymentProductionHeadlinesDct-scan-livegateprobe-v7.lean",
+    "fixture_sha256": "f691bb123c331a27946db4aaa95bdf1cc94cad36d9a523619258661fbf54f9c4",
+    "log": "/tmp/bc-arc-scratch/item7/prod-dct/fix1/build/dev/PqxdhDeploymentProductionHeadlinesDct-scan-livegateprobe-v7-1.log",
+    "log_sha256": "ea62f2e7287e0263ca6e483cdd99894b7a76ca93ccb612c2c0573162d28aabec",
+    "change": "the site gate throwError turned into a logInfo line; nothing else changed (finding F9)",
+    "result": "all 11 rule classes live; all 21 witness targets hit their own class; allowance control ok; site gate controls ok; negative control clean; 98 forbidden references from the module's declarations (152 with the liveness witnesses); exactly one error, \"forbidden direct reference\""
+   }
+  },
+  "differential": {
+   "clean_log": "/tmp/bc-arc-scratch/item7/prod-dct/fix1/build/dev/PqxdhDeploymentProductionHeadlinesDct-diff-clean-1.log",
+   "clean_log_sha256": "2cdc89adccb04bd44b161a70c73fda66ed070fb3423abb2deafb5e10b1413590",
+   "clean": "exit 0, 48 declarations checked, 0 failures; 12 .crypto site kinds, all on Setup.source (ctGapEvent/3 for the two closure lemmas, from the definition of ctGapTerm)",
+   "live_log": "/tmp/bc-arc-scratch/item7/prod-dct/fix1/build/dev/PqxdhDeploymentProductionHeadlinesDct-diff-live-1.log",
+   "live_log_sha256": "2fe1561bdcd928103081cf670828cf1ffa72da42dca2aa7e0f24b69a8d591cf5",
+   "live": "exit 1 as intended: diffLiveExtraConst {a,e}, diffLiveSite {c,e}, diffLiveValueOnly {b,e}, diffLiveValueSite {b,d,e}"
+  },
+  "text_scan": "no PqxdhDeploymentProvenance, authenticated_*, PqxdhRegistrationJointAuthenticatedSelectedKem or PqxdhRegistrationJointKemKeyTransfer* name",
+  "outputs_sha256": {
+   "stmt-scan.out": "766c1777923c784e5285a8ec767e3f796c8b603b04d0458f22b9b5546db3a7db",
+   "stmt-scan-live.out": "3a1e738a0b67480f149025dbaaa3ac075ed321348ca6c6a15eede053c8c54c38",
+   "split.out": "dfef4852873e7dccc73b427f714df08917f14bde4147213bd3bf0ac3c2578e1b",
+   "split-live.out": "24b9b7e39ee47c2a934cf7ed263f679a7f662d893fce25e1354a960805b87a7f",
+   "direct-clean.out": "bbb1e4ab5f8c6a486ecc553aff8231b01f2660b8e42ddcbdef5ea9c565bdc0d1",
+   "direct-live.out": "3e774790812c44dd68b66c46e7faf86b2be0773454e770534859608c348b00f4",
+   "direct-gateprobe-live.out": "9798cd5f5622f1837585a76633c712b8fa15711ce7ba1757b8fcac9dc240f5db",
+   "diff-clean.out": "edcf01c729660e70bbce5bfa0f86ceb0cb0139d6a78f328404dc5c06a435ac10",
+   "diff-live.out": "b8253ea3b62e7ac5b87f4d37046e4168a81eb6d695488725aac638926e7a75e3"
+  }
+ },
+ "review": {
+  "findings": "/tmp/bc-arc-scratch/item7/prod-dct/fix1/docs/review-findings.json",
+  "findings_sha256": "b518071a397cb6d8cc4d46056b925a0baaeb9d7c6290fa1f16a52fb916221517",
+  "reviewed_commit": "5b288801cf14edef352300d7635b14aee658f429",
+  "reviews": [
+   "semantic",
+   "composition",
+   "hygiene"
+  ],
+  "result": "no error in any Lean statement or proof; 1 major, 3 minor and 8 nit findings (the major one reported by all three reviews, the analysis length by two), none owner-level",
+  "fixes": {
+   "F1": "analysis entry: the 31 closed forms without explicit term split into 27 (advantages of attackers built by CE-12 reductions, including the fixed collision attackers, and stated statistical terms) and the four symbolic KT forms, which keep the ideal (later) key-transfer game probability; checks sentence: the ideal game in four bounds, the scans flag the two classical ones; note that the published CE-12 D-ct sentence has the same four exceptions (not edited)",
+   "F2": "guide \"What stays as in the frozen forms\": the four KT forms keep idealGame / idealLaterGame at codec' and route', the other 27 advantages and statistical terms; scans bullets name idealLaterGame; module docstring (with F6)",
+   "F3": "analysis entry: Beacons through the bindings only beside the plain Rust Server \"by the ledger's reviewed classification, RT, not a proof\"",
+   "F4": "analysis entry: \"Besides the contracts of the other bound terms, unchanged ..., the closure adds through epsCt those of ...\"",
+   "F5": "as F1; guide parenthetical \"neither ctGapTerm nor ctCollTerm nor any other probability of the CE or LQ-F experiment\" plus the four-form sentence",
+   "F6": "module docstring term list names the per-target ideal key-transfer game probabilities of the four KT forms (generator fix-pass copy; Lean commit 0543c7e6; guards unchanged; inventory row rehashed)",
+   "F7": "analysis entry shortened from a five-paragraph section with its own heading to two paragraphs appended to the production section, pointing at the guide; decision of detail recorded in the guide, the scratch plan and this receipt",
+   "F8": "as F1",
+   "F9": "gate-bypass probe of the v7 direct scan run on the fixed module and recorded (guide scans bullet, scans.direct_scan_v7.gate_bypass_probe)",
+   "F10": "as F7",
+   "F11": "guide Checks: \"no code line over 120 columns apart from five #print axioms lines whose fully qualified names are longer\"; hygiene.long_print_axioms_lines; note on the published hygiene bullet (one 122-column #print line in the Later module)",
+   "F12": "item7/NOTES.md pointer corrected (the step's notes are in item7/NOTES.md); the second registry slip of the build session recorded in protocol"
+  },
+  "analysis_shape": "two paragraphs appended to the production section without a heading (the brief: \"a short paragraph appended to the production section's end-of-file area, at Claude's anchor\"); one paragraph could not carry both the claim and the corrected term split",
+  "confirming_review": {
+   "kind": "confirming review of the review fix pass (fresh-context Claude sub-agent, read only)",
+   "reviewed_range": "5b288801cf14edef352300d7635b14aee658f429..02cec0fda7f6f880bde7254c77cb7c900100d56c",
+   "scratch": "/tmp/bc-arc-scratch/item7/prod-dct/confirm",
+   "result": "every finding from the reviews of 5b288801 (F1-F12) is resolved at 02cec0fd; no statement is weaker; the guards match the theorems; the scans are clean; the receipt matches HEAD",
+   "record": "/tmp/bc-arc-scratch/item7/prod-dct/int/docs/confirming-review-relayed.json",
+   "record_sha256": "e3e5dfb8712cfbd8e444711aff6ab9e131e12aa2b3421a910ab1b29c33d8abb8",
+   "record_note": "no verdict file was written; the result and nits were relayed by the workflow orchestrator and are transcribed verbatim",
+   "nits": [
+    {
+     "n": 1,
+     "title": "optional: \"with its proved bills where the form is billed\" is loose for three of the 27 (their bills do not cover epsCt's attackers)",
+     "disposition": "taken in the analysis entry: \"(in the three later-quantum billed `_dct` forms among them, the bills of `epsCt`'s attackers are stated by their `_full` siblings)\"; checked first: ce_app_later_sym_billed_dct, ce_app_beacon_later_sym_billed_dct and symbolic_lor_later_bound_closed_billed_dct carry LaterTargetBills only, their _full siblings add TargetBills, the classical billed forms carry TargetBills"
+    },
+    {
+     "n": 2,
+     "title": "optional: the shortened checks sentence drops the closure-lemma qualifier on where inherited scan references come from",
+     "disposition": "taken in the analysis entry: \"(for the two closure statements, also the definition of the gap term)\""
+    },
+    {
+     "n": 3,
+     "title": "optional, receipt only: all-48 block counts and the 15 ctCollTerm forms nested under bounds_of_the_31_without_explicit_term",
+     "disposition": "taken: production_forms.probability_block_heads (with probability_block_heads_note) and production_forms.keep_ctCollTerm_forms (production_forms.keep_ctCollTerm keeps the count 15)"
+    },
+    {
+     "n": 4,
+     "title": "optional: the gate-probe result says 98 forbidden references; the probe log's total is 152",
+     "disposition": "taken in the guide scans bullet and scans.direct_scan_v7.gate_bypass_probe.result: \"98 forbidden references from the module's declarations (152 with the liveness witnesses)\""
+    }
+   ],
+   "also_recorded": "guide: status lines, open point removed, the fix-pass checks paragraph's receipt pointer corrected (the receipt has no section review_fix_pass; found in this pass), new section \"D-ct follow-up: confirming review\"; analysis entry: review status sentence; ledger: status note of the D-ct follow-up paragraph"
+  }
+ },
+ "documents_sha256": {
+  "doc/impl/production-headlines.md": "ce6d7a60367bdd89b9da6eaddf4d5efdb8595126cb79b90b81cfcd004210f98a",
+  "doc/impl/production-boundary-ledger.md": "5c5d9ac5a61db9ea886ad126b6787956eab24e2568bc756cb05557949f23dbab",
+  "doc/formal-verification-analysis.md": "038460ea3adaec5f536517682a48ea57b30d232d4e3017fce35f900897ea0f32"
+ },
+ "documents_fix_pass_sha256": {
+  "doc/impl/production-headlines.md": "ba7d476354adaaffa0f281cc107b0370b6f716a1e003616b375133011fec5514",
+  "doc/impl/production-boundary-ledger.md": "ad5e8c1f7aad76553ac09bacde74559acc79c8fabbca19c25208125c76629846",
+  "doc/formal-verification-analysis.md": "cdf2403d36c8287dc98fca93e59e76e35994947875b24226620b31bc7b910810"
+ },
+ "documents_before_fix_pass_sha256": {
+  "doc/impl/production-headlines.md": "534a38645fd10e64c59e5710d7e459389346b37d8deabd5851f2cb8fa3364ab3",
+  "doc/impl/production-boundary-ledger.md": "806f2e91b3d2fafc83c0da452c4c6e6e04a1799bbe7b8ef7bb1e0db2e19f198e",
+  "doc/formal-verification-analysis.md": "2bb1b58f41243b3e90335a6a2301cdea2eeb9e02362d3e78e218e6e8202ddc45",
+  "doc/impl/proof-receipts/production-headlines-dct.json": "e2f723c532f5388a64a7358a5747c228ad1e111478ead9e8038d7fd6cc0fe58f"
+ },
+ "document_edits": {
+  "guide": "fix1/scripts/guide_fix.py (eleven guarded replacements and the new section \"D-ct follow-up: review fix pass\" appended)",
+  "ledger": "fix1/scripts/ledger_fix.py (status note of the D-ct follow-up paragraph only)",
+  "analysis": "fix1/scripts/analysis_fix.py (the follow-up section replaced by two paragraphs at the end of the production section; everything before it asserted equal to the published 529e2c8b file)",
+  "published_receipt": "unchanged (its follow_ups record points here)"
+ },
+ "scripts_sha256": {
+  "analysis_fix.py": "ae443363546edd262ce87a74c9a4d458a2da6a0b09bd611b6e47f22d76bbdc7e",
+  "check.sh": "a595a8b2390846dc74e2278567a91b34a930622a491287223c2d531c98279da0",
+  "devcheck.sh": "e510e9f8fc4522d6566a1a345bcff64c8bc92e04a09974c19cad92efbca9162f",
+  "diff_scan.py": "740a4a6b26874af03e657c9aef79ea268398ec737b74ecd094d5047ca026152a",
+  "direct_scan.py": "b49743cae1738c28718e4112704ba8db6e61e9a572a6578a00827655821b8376",
+  "direct_scan_gateprobe.py": "764c5a5d0dd934f464246397adbdebb3c42aac4731e4dd81dcc5692a1da36824",
+  "gen3.py": "90c074e4300f1e2de4b1576275ace6f35a63f334a378896a789a97f96e241743",
+  "gendct.py": "ad5e9aa76965dc134d2e2055cdf516128c7a439831c3f40395af9c3260a9f129",
+  "guards.py": "1d544c7bb1b624c35bbdd5b6bbf4be0b1d27b0d1291a901321011474cc5f1585",
+  "guide_fix.py": "96932f5351b727ff1bb55bf60d12826ab9e743400458abd9089b065b199c19e0",
+  "hygiene.py": "4fe85518f5a8b070652e6d287b11c66fe0f5fce2c2f42b8a37d72d0d33e15fc6",
+  "inventory.sh": "80f0297d1305cda1ca0d03969490148fa6f58b6ef1f48828fdce3ddd16b2a3e7",
+  "ledger_fix.py": "6c82dbbf432cdd728e8f4c9e8eef65511f9e25dc042e790eb45bc85d70790ac3",
+  "long_prints.py": "1c2a96ae951ec26f202de2267123d3fbf42bba8563b98d99b4d7c615b1973d26",
+  "mirror.py": "2fcdeb16a0c6f90ffd54727f0a039c6202fdfe8711888436953ea0f5c3a02c05",
+  "receipt_fix.py": "9e9912d28990eb37c4c9aeb0e5412e83d2fa37824f5f853214eafa8cdfb417d7",
+  "stmt_scan.py": "69788161ba50a24ee0ff6a58f16f765d9face225148f1dcbd62a019e9f2ba019",
+  "stmt_split.py": "3fa5b33990c939bc151a4d4734fc01b7f067a232433dc1d260034a5064848cd0"
+ },
+ "not_claimed": [
+  "persistence-wrapped C, Go and Python Server surface (Beacons through the bindings only beside the plain Rust Server)",
+  "later-quantum origin, UKS, binding or authentication",
+  "closed production forms of the seven intermediate lemmas that D-ct does not close (beacon_gap_le among them)",
+  "tightness of ctStat (birthday BLAKE2b term of the D-ct owner note)",
+  "running time",
+  "identity indices other than 0, a varying checks, codecs other than codec'",
+  "anything beyond the reviewed transcription of the Rust adapter",
+  "bounds made only of attacker advantages and statistical terms for ce_kt_sym_dct, ce_kt_beacon_sym_dct, ce_kt_later_sym_dct and ce_kt_beacon_later_sym_dct (they keep the ideal key-transfer game probability, as their sources)"
+ ],
+ "remaining": [
+  "integration into central (PROTOCOL section 6)",
+  "item 8 (owner)"
+ ],
+ "protocol": "all Lean checks through coord.sh lean with one in flight; fix pass: item7/prod-dct/fix1 and its subdirectories, the olean prefix and the leanpath registered before creation; mail only peeked; no make verify, full lake build, mutation testing or nix-collect-garbage; no deletion. Build session slips (item7/NOTES.md): probe/rederive registered right after its creation; after the documents commit 5b288801 a stray `registry add ... probe/rederive active \"x\"` overwrote that row's note, re-added with the proper note right after (row count unchanged), which the first-pass receipt could not record; confirming-review nits and integration: item7/prod-dct/int and its subdirectories, its olean prefix and leanpath registered before creation",
+ "receipt_scripts_confirm": {
+  "nits_edits": "/tmp/bc-arc-scratch/item7/prod-dct/int/scripts/nits_edits.py",
+  "nits_edits_sha256": "89e24f2851bd1f949b0baa3267701faf07bff353429fa0131693ab418fbd331b",
+  "receipt_confirm": "/tmp/bc-arc-scratch/item7/prod-dct/int/scripts/receipt_confirm.py",
+  "receipt_confirm_sha256": "5c8d0b875cd31fd0bbef7e193a32872b187b5f3cce1ff273088ccbeefb3520b4",
+  "befores": {
+   "formal-verification-analysis.md.before-nits": "cdf2403d36c8287dc98fca93e59e76e35994947875b24226620b31bc7b910810",
+   "production-boundary-ledger.md.before-nits": "ad5e8c1f7aad76553ac09bacde74559acc79c8fabbca19c25208125c76629846",
+   "production-headlines-dct.json.before-nits": "eb9a223dd94efca990246732c8168bc1afa5f2a7b43b0a443a5831bf83e0ca93",
+   "production-headlines.md.before-nits": "ba7d476354adaaffa0f281cc107b0370b6f716a1e003616b375133011fec5514"
+  }
+ },
+ "first_pass": {
+  "kind": "items 3+7 production composition follow-up: production forms of the CE-12 D-ct closed headlines (PqxdhDeploymentProductionHeadlinesDct), build session 1",
+  "author": "Claude (item 7 lane adopted from Codex, owner decision #503; item 3 is Claude's)",
+  "provenance": "new work; no Codex WIP exists for this module (nothing adapted from Codex WIP)",
+  "sibling_of": "doc/impl/proof-receipts/production-headlines.json",
+  "branch": "codex/deployment-boundary-production",
+  "basis_central": "529e2c8bf414f680ac57b159365280aab2e2f3f2",
+  "basis_note": "central (origin/codex/full-proof-composition, git ls-remote, the central worktree and coord.sh leanpath current) was 529e2c8b at the start and did not move; no merge",
+  "state": "built; not reviewed; not integrated",
+  "lean_commit": "fa57acd91147d72482ef4f0e2086e6e8c6f1d587",
+  "documents_commit": "the commit that adds this receipt (guide section, ledger paragraph, analysis section, follow_ups record of the sibling receipt)",
+  "module": {
+   "name": "BeaconcryptCore.Computational.PqxdhDeploymentProductionHeadlinesDct",
+   "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentProductionHeadlinesDct.lean",
+   "sha256": "1e488ddc0aa24698bc9b60c7d4b26114c139352ce7e0f91684385c7ffcfd9744",
+   "theorems": 48,
+   "guards": 48,
+   "lines": 5748,
+   "open_classical_in": 18,
+   "commit": "fa57acd91147d72482ef4f0e2086e6e8c6f1d587",
+   "checks": {
+    "run1": {
+     "record": "/tmp/bc-arc-scratch/item7/prod-dct/build/PqxdhDeploymentProductionHeadlinesDct-1.json",
+     "start": "2026-10-10T20:20:54.674888425Z",
+     "end": "2026-10-10T20:21:06.197058161Z",
+     "exit": 0,
+     "head": "529e2c8bf414f680ac57b159365280aab2e2f3f2",
+     "dirty_paths": 1,
+     "log_bytes": 0,
+     "olean_sha256": "151ba5f48925f3ac97fd5896b23d142a1b178ebe8b1fd220e77c06da2b82011e"
+    },
+    "run2": {
+     "record": "/tmp/bc-arc-scratch/item7/prod-dct/build/PqxdhDeploymentProductionHeadlinesDct-2.json",
+     "start": "2026-10-10T20:26:22.897287244Z",
+     "end": "2026-10-10T20:26:31.115269799Z",
+     "exit": 0,
+     "head": "fa57acd91147d72482ef4f0e2086e6e8c6f1d587",
+     "dirty_paths": 0,
+     "log_bytes": 0,
+     "olean_sha256": "151ba5f48925f3ac97fd5896b23d142a1b178ebe8b1fd220e77c06da2b82011e"
+    }
+   },
+   "imports": [
+    "BeaconcryptCore.Computational.PqxdhDeploymentProductionTransfer",
+    "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctClosed",
+    "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctClosedP2b",
+    "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctClosedLater",
+    "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctClosedLaterP4",
+    "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctWorld"
+   ]
+  },
+  "production_forms": {
+   "total": 48,
+   "dct_forms": 42,
+   "billed_dct_full_siblings": 4,
+   "closure_lemmas": [
+    "ctgap_term_le",
+    "ctgap_term_billed"
+   ],
+   "by_frozen_module": {
+    "PqxdhDeploymentHeadlineDctClosed": [
+     "ce_a1_linked_dct",
+     "sym_gap_dct",
+     "ce_or_s2b_sym_dct",
+     "ce_uks_sym_dct",
+     "ce_app_sym_dct",
+     "ce_kt_sym_dct",
+     "ce_app_beacon_sym_dct",
+     "ce_kt_beacon_sym_dct",
+     "symbolic_lor_dct",
+     "symbolic_lor_bound_dct",
+     "ce_or_injective_s2b_dct",
+     "ce_or_injective_s2b_full_dct"
+    ],
+    "PqxdhDeploymentHeadlineDctClosedP2b": [
+     "ce_or_s2b_sym_closed_dct",
+     "ce_or_s2b_sym_closed_billed_dct",
+     "ce_uks_sym_closed_dct",
+     "ce_uks_sym_closed_billed_dct",
+     "symbolic_lor_closed_dct",
+     "symbolic_lor_bound_closed_dct",
+     "symbolic_lor_bound_closed_billed_dct",
+     "ce_or_injective_s2b_closed_dct",
+     "ce_or_injective_s2b_closed_billed_dct",
+     "ce_or_injective_s2b_full_closed_dct",
+     "ce_or_injective_s2b_full_closed_billed_dct",
+     "ce_or_s2b_sym_billed_dct",
+     "ce_uks_sym_billed_dct",
+     "ce_app_beacon_sym_billed_dct",
+     "ce_app_sym_billed_dct",
+     "symbolic_lor_bound_billed_dct",
+     "ce_or_injective_s2b_billed_dct",
+     "ce_or_injective_s2b_full_billed_dct"
+    ],
+    "PqxdhDeploymentHeadlineDctClosedLater": [
+     "ce_app_later_sym_dct",
+     "ce_app_beacon_later_sym_dct",
+     "ce_kt_later_sym_dct",
+     "ce_kt_beacon_later_sym_dct",
+     "symbolic_lor_later_dct",
+     "symbolic_lor_later_bound_dct"
+    ],
+    "PqxdhDeploymentHeadlineDctClosedLaterP4": [
+     "ce_app_later_sym_billed_dct",
+     "ce_app_later_sym_billed_dct_full",
+     "ce_app_beacon_later_sym_billed_dct",
+     "ce_app_beacon_later_sym_billed_dct_full",
+     "symbolic_lor_later_bound_billed_dct",
+     "symbolic_lor_later_bound_billed_dct_full",
+     "symbolic_lor_later_closed_dct",
+     "symbolic_lor_later_bound_closed_dct",
+     "symbolic_lor_later_bound_closed_billed_dct",
+     "symbolic_lor_later_bound_closed_billed_dct_full"
+    ],
+    "PqxdhDeploymentHeadlineDctWorld": [
+     "ctgap_term_le",
+     "ctgap_term_billed"
+    ]
+   },
+   "classical_source_game_occurrences": 42,
+   "classical_forms": 32,
+   "lqf_source_game_occurrences": 28,
+   "lqf_forms": 16,
+   "keep_ctCollTerm": 15,
+   "no_explicit_experiment_term_among_46": 31
+  },
+  "guard_profile": "every theorem exactly one #guard_msgs over #print axioms listing propext, Classical.choice, Quot.sound",
+  "hygiene": {
+   "record": "/tmp/bc-arc-scratch/item7/prod-dct/docs/hygiene.json",
+   "sha256": "0fd340310b95752888325d9215194d2887b81290f928fc4867ce23abc8a30aaa",
+   "forbidden_tokens": [],
+   "bad_set_options": [],
+   "long_code_lines": [],
+   "defs": 0,
+   "ok": true
+  },
+  "development_check": {
+   "log": "/tmp/bc-arc-scratch/item7/prod-dct/build/dev/PqxdhDeploymentProductionHeadlinesDct-1.log",
+   "sha256": "094f84c7f7e0c95b16c37eb25866af8cbd7fae1b72202479ab3b8ae0aed4570a",
+   "meta": "f70e02ea01c8e6ae76cea47093000a5db72212ecf1e99ae01c98c4303e1d78d7  /tmp/bc-arc-scratch/item7/prod-dct/gen/PqxdhDeploymentProductionHeadlinesDct.lean\nexit 0 seconds 9",
+   "axiom_messages": 48,
+   "other_messages": 0,
+   "source": "item7/prod-dct/gen/PqxdhDeploymentProductionHeadlinesDct.lean (unguarded generator output)"
+  },
+  "root_import": {
+   "record": "/tmp/bc-arc-scratch/item7/prod-dct/build/root-2.json",
+   "exit": 0,
+   "log_bytes": 0,
+   "head": "fa57acd91147d72482ef4f0e2086e6e8c6f1d587",
+   "dirty_paths": 0,
+   "olean_sha256": "dbeefc93a3dc42c04efc111b3749a4d22fd15048b64f31ecb7040e35d4f90099",
+   "earlier_run": "/tmp/bc-arc-scratch/item7/prod-dct/build/root-1.json (same source, before the commit; exit 0, empty log)"
+  },
+  "olean_prefix": {
+   "path": "/tmp/bc-arc-scratch/item7/prod-dct/olean",
+   "leanpath": "/tmp/bc-arc-scratch/item7/prod-dct/leanpath",
+   "leanpath_sha256": "d203cdd9851db0fb58367648dd44adbae71a458dcc53901efc8081f652a611e7",
+   "mirror": "resolved symlink mirror of the BeaconcryptCore part of the published 529e2c8b first prefix /tmp/bc-arc-scratch/item7/prod/int/olean (6435 links, including the four published PqxdhDeploymentProduction* oleans; root olean skipped; 0 broken), by scripts/mirror.py",
+   "published_leanpath": "/tmp/bc-coord/leanpaths/529e2c8bf414f680ac57b159365280aab2e2f3f2.leanpath"
+  },
+  "lean_command": "coord.sh lean claude <label> -- timeout 180 lean -j1 -M8000 [--root=<worktree lean dir> -o <olean>] <file>, one check in flight",
+  "inventory": {
+   "recount": "coord.sh inv recount claude <core>: [handwritten-lean] 1976 -> 1977, before inv rehash",
+   "rehash": "coord.sh inv rehash claude <core> on the new module row (unchanged), then the default set (BeaconcryptCore.lean a0f29be9 -> c11262b6, check-inventory.sh c4aa303a -> 1014297e); a second recount and rehash changed nothing",
+   "edits": "scripts/invblock.py: root import at the end of the import block, reviewed-inventory row at the end, check-inventory block (48 theorems) before the primitive-fidelity profile",
+   "focused_check_inventory": {
+    "start": "2026-10-10T20:24:16Z",
+    "end": "2026-10-10T20:26:11Z",
+    "commit": "fa57acd91147d72482ef4f0e2086e6e8c6f1d587",
+    "status": 0,
+    "dirt_bytes": 0,
+    "dirt_after_bytes": 0,
+    "log": "/tmp/bc-arc-scratch/item7/prod-dct/build/inventory-lean-commit.log",
+    "log_sha256": "1bb1b8764bad575b1bdddd0efff612a1be4dd92a3b5a60af557afeb0fde46159",
+    "command": "coord.sh lease mem claude @nix <label> --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C <worktree>/beaconcrypt-core check-inventory SHELL=bash"
+   }
+  },
+  "git_diff_check": "clean for 529e2c8b..HEAD (checked before the Lean commit and before the documents commit)",
+  "generator": {
+   "script": "/tmp/bc-arc-scratch/item7/prod-dct/scripts/gendct.py",
+   "sha256": "cdb01cf9c86ba6edeb778bb3055e3cd7c84841ef4a9333f502874214b71a9d5b",
+   "base": "/tmp/bc-arc-scratch/item7/prod-dct/scripts/gen3.py",
+   "base_sha256": "90c074e4300f1e2de4b1576275ace6f35a63f334a378896a789a97f96e241743",
+   "base_note": "unchanged copy of the published generator item7/prod/fix1/scripts/gen3.py",
+   "changes": "D-ct docstring titles; the section-variable binders of the two DctWorld closure lemmas; flag ctgap unfolding ctGapTerm (as ctcoll unfolds ctCollTerm)",
+   "selection": "/tmp/bc-arc-scratch/item7/prod-dct/docs/headline-list-dct.txt",
+   "selection_sha256": "2f2d9702145ee1a9ea4d505536ef1cdc9e23a7b78746b26331e171362ea799a5",
+   "rederivation": "gendct.py re-run on the frozen sources reproduces gen/ byte for byte; with guards.py and the development log it reproduces the committed module byte for byte (probe/rederive)"
+  },
+  "frozen_inputs_sha256": {
+   "PqxdhDeploymentHeadlineDctClosed": "d326aeca14f7691349567dd613add98cc2abb4997bcf7e872821e998d0bde9a2",
+   "PqxdhDeploymentHeadlineDctClosedP2b": "74509236f1f517b432fd06fd53255fb5a32e187fc249bde74efe71d446c00d00",
+   "PqxdhDeploymentHeadlineDctClosedLater": "bad3272ac2b80b2854353c561b8cc44ecb8660cf1e6d92fd8bc8d88ca580a895",
+   "PqxdhDeploymentHeadlineDctClosedLaterP4": "cdd61732d94e55a7ddc13f7b6238ba7654a97611de7fdc7b363131e6ef105a5a",
+   "PqxdhDeploymentHeadlineDctWorld": "e5e21c19d1eaa085771f9786331d1f8a0232711a4fd9acad8d70620e65d97605",
+   "PqxdhDeploymentHeadlineGap": "31149250f7013b6ef8e646eccd8a1b629ca65189fa08702b9bfaca026d0569f7",
+   "PqxdhDeploymentProductionTransfer": "46ef566033afeb628655685dd7316201c98daeceb9ed7135ddc1ad4847332ec2"
+  },
+  "frozen_inputs_note": "unchanged between central 529e2c8b and HEAD (git diff --quiet)",
+  "premises": {
+   "table": "/tmp/bc-arc-scratch/item7/prod-dct/docs/premises-dct.json",
+   "sha256": "9c29b91fa52fd6eb251b3e32ce027ff1fb36013ebd10ce6e230b42025a150f48",
+   "totals": {
+    "Phase1ReadBack codec": 48,
+    "Phase2ReadBack codec": 48,
+    "FrameReadBack codec′": 48,
+    "ReadWritable codec′": 46,
+    "DecoderAgreement": 0,
+    "FunctionalDecapsulation setup.kem": 48,
+    "SourceFullCorrect setup.source setup.hmac": 48,
+    "KemBound setup caps": 48,
+    "initBound": 48,
+    "X25519ClassLaw": 46,
+    "X25519ScalarSpread": 46,
+    "HasAttachedVerificationAdapter": 46,
+    "shortRejects": 22,
+    "budget.Respects": 48,
+    "post.Respects": 14
+   },
+   "other_codec_or_route_binders": [],
+   "owner_level_stop": false,
+   "note": "no codec- or route-dependent binder other than Phase1ReadBack/Phase2ReadBack at codec and FrameReadBack/ReadWritable at codec′"
+  },
+  "scans": {
+   "spec": "/tmp/bc-arc-scratch/item7/prod-dct/scans/scan-spec-v7.json",
+   "spec_sha256": "34b96e5c6cb22ca89e8a3639cb21d86c913cac54f005778382e5289388d71e7e",
+   "crypto_allowance": "not extended (decision D-1 not invoked); inherited references recorded, not excused",
+   "statement_scan_v7": {
+    "clean": "/tmp/bc-arc-scratch/item7/prod-dct/scans/PqxdhDeploymentProductionHeadlinesDct-statement-clean-v7.json",
+    "clean_sha256": "e4158a1c308f762f1d683eda023d50d4e1c78866eb09027599f1e890a940f000",
+    "clean_exit": 1,
+    "module_hits": [
+     [
+      "ce_kt_sym_dct",
+      "PqxdhDeploymentIdealSteps.idealGame"
+     ],
+     [
+      "ce_kt_beacon_sym_dct",
+      "PqxdhDeploymentIdealSteps.idealGame"
+     ]
+    ],
+    "live": "/tmp/bc-arc-scratch/item7/prod-dct/scans/PqxdhDeploymentProductionHeadlinesDct-statement-live-v7.json",
+    "live_sha256": "96c206523a5dbc861d774f3be3ddfae173dcac48b1d5945f68ba75695b8ffea2",
+    "live_exit": 4,
+    "live_classes": 11,
+    "live_note": "exit 4 only because of the two inherited module hits (as for the published classical module); no dead class, no missed token, negative control clean, allowance control ok"
+   },
+   "production_side_split": {
+    "clean": "/tmp/bc-arc-scratch/item7/prod-dct/scans/PqxdhDeploymentProductionHeadlinesDct-split-clean.json",
+    "clean_sha256": "391ce4e95b44495a45baee771b7d910193cad42aa37925b8c28df972fdce73c3",
+    "clean_exit": 0,
+    "module_failures": [],
+    "inherited_rest_hits": {
+     "PqxdhDeploymentIdealSteps.idealGame": 2
+    },
+    "production_side_crypto_count": 10,
+    "live": "/tmp/bc-arc-scratch/item7/prod-dct/scans/PqxdhDeploymentProductionHeadlinesDct-split-live.json",
+    "live_sha256": "3650f297a7f8e24076c6491f815d5d33ca477bf77e1f5333970bb0c62d40fa6e",
+    "live_exit": 0,
+    "live_ok": true
+   },
+   "direct_scan_v7": {
+    "clean_log": "/tmp/bc-arc-scratch/item7/prod-dct/build/dev/PqxdhDeploymentProductionHeadlinesDct-scan-clean-v7-1.log",
+    "clean_log_sha256": "9ab3b1bfa6ef267d6cd55ee220da3352fa8b8dc76526f9dd907b677a970c4690",
+    "clean_exit": "lean 1, tool 3 (fails as restated statements must; recorded)",
+    "declarations": 48,
+    "references": 98,
+    "by_constant": {
+     "PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource.crypto": 48,
+     "PqxdhChallengeSecretRouting.FunctionalDecapsulation": 48,
+     "PqxdhDeploymentIdealSteps.idealGame": 2
+    },
+    "site_gate": "fails (no site table for this module)",
+    "live_log": "/tmp/bc-arc-scratch/item7/prod-dct/build/dev/PqxdhDeploymentProductionHeadlinesDct-scan-live-v7-1.log",
+    "live_log_sha256": "466091456d271f471e0a794e09f2176482aface48b116dab302fa869bd66000f",
+    "live_note": "the site gate throws before the liveness part, so the tool's liveness cannot be shown on this module; it is recorded for the transfer module in the published receipt"
+   },
+   "differential": {
+    "clean_log": "/tmp/bc-arc-scratch/item7/prod-dct/build/dev/PqxdhDeploymentProductionHeadlinesDct-diff-clean-1.log",
+    "clean_log_sha256": "2cdc89adccb04bd44b161a70c73fda66ed070fb3423abb2deafb5e10b1413590",
+    "clean": "exit 0, 48 declarations checked, 0 failures; 12 .crypto site kinds, all on Setup.source (ctGapEvent/3 for the two closure lemmas, from the definition of ctGapTerm)",
+    "live_log": "/tmp/bc-arc-scratch/item7/prod-dct/build/dev/PqxdhDeploymentProductionHeadlinesDct-diff-live-1.log",
+    "live_log_sha256": "17ba2ede0c4aa94e2c67db3fda8836a3e09f162bf7dff269f830c2fce9e3b756",
+    "live": "exit 1 as intended: diffLiveExtraConst {a,e}, diffLiveSite {c,e}, diffLiveValueOnly {b,e}, diffLiveValueSite {b,d,e}"
+   },
+   "text_scan": "no PqxdhDeploymentProvenance, authenticated_*, PqxdhRegistrationJointAuthenticatedSelectedKem or PqxdhRegistrationJointKemKeyTransfer* name",
+   "outputs_sha256": {
+    "stmt-scan.out": "766c1777923c784e5285a8ec767e3f796c8b603b04d0458f22b9b5546db3a7db",
+    "stmt-scan-live.out": "3a1e738a0b67480f149025dbaaa3ac075ed321348ca6c6a15eede053c8c54c38",
+    "split.out": "7aba20421eeb555fd6a504ac6562c5454fb349564464571324caac8ada1360f5",
+    "split-live.out": "994f0c4e0abf9e96c6f1da3e44a7773916736f8f350125158cf1ba86513547e2",
+    "direct-clean.out": "2043970d9ddeed127d21f65b1946f0604143315a43798d4b3bcc60d695c50489",
+    "direct-live.out": "4dbf1bfcd31c70eaf7bbfbd2b65b551d319373dd200518b1fe33b1a2db69873f",
+    "diff-clean.out": "8a0545a033786c369af04b717f60554ad8f67232c3a8c7ec54293b9772528f1d",
+    "diff-live.out": "789dcbd413258d419437f598dc5a78166401214f9b8047db7c050eb05693b49f"
+   }
+  },
+  "documents_sha256": {
+   "doc/impl/production-headlines.md": "534a38645fd10e64c59e5710d7e459389346b37d8deabd5851f2cb8fa3364ab3",
+   "doc/impl/production-boundary-ledger.md": "806f2e91b3d2fafc83c0da452c4c6e6e04a1799bbe7b8ef7bb1e0db2e19f198e",
+   "doc/formal-verification-analysis.md": "2bb1b58f41243b3e90335a6a2301cdea2eeb9e02362d3e78e218e6e8202ddc45"
+  },
+  "documents_before_sha256": {
+   "production-headlines.md.before-dct": "7a09a9d1be1ebeb82280c7bc5db66e8b68251c0d950d67b19daf1b6f899a7dcc",
+   "production-boundary-ledger.md.before-dct": "5fe2f4176df9e2767e8ed55cc4d31fb2e44e8f8fbb845e4759b1edb2fb372a48",
+   "formal-verification-analysis.md.before-dct": "36fd0b1123c6dacdc41d334f80fef3747f3822997eb47f483345e70437c0d5b8",
+   "production-headlines.json.before-dct": "84b95bbc42d0f8ee26edc127d8772aa23548bdce01888acc6d070a9ddf9801ef"
+  },
+  "document_edits": {
+   "guide": "scripts/guide_edits.py (status sentence, not-claimed follow-up sentence, open point done plus follow-up bullet, new section appended), then two recorded manual rewordings (docs/edit-log.txt)",
+   "ledger": "scripts/ledger_edits.py (one paragraph after the Built paragraph of \"What item 8 must carry\"; existing text unchanged, asserted)",
+   "analysis": "scripts/analysis_edits.py (one section appended at the end, Claude's anchor; existing text unchanged, asserted)",
+   "sibling_receipt": "this script adds the record follow_ups to the published receipt; nothing else in it changes (asserted)"
+  },
+  "scripts_sha256": {
+   "analysis_edits.py": "c2bb13fb8ac54f49e424857e91d867d1ada60a53e8b1a77eb2a2803b90efc057",
+   "check.sh": "aae45645b205339db3f76e30c09b1af1a74aabb942c371a68915f433aafe1547",
+   "devcheck.sh": "7ac47004b6a164fe3b34edec4183ba2b08ea27df9de9c0d87fc8ba6f1433e912",
+   "diff_scan.py": "285efd830dfddc0cb401932e3f1ee6e7f53b0884496166f0c984f2fef6ba0c38",
+   "direct_scan.py": "3fee8aa85ac6ffed342d7d5e2b59022c19d3fff2f33bc7ca7ea958f4ba57ec68",
+   "gen3.py": "90c074e4300f1e2de4b1576275ace6f35a63f334a378896a789a97f96e241743",
+   "gendct.py": "cdb01cf9c86ba6edeb778bb3055e3cd7c84841ef4a9333f502874214b71a9d5b",
+   "guards.py": "1d544c7bb1b624c35bbdd5b6bbf4be0b1d27b0d1291a901321011474cc5f1585",
+   "guide_edits.py": "f4932b416f9483903e034c22082ff4d46c48bbc3b76b9163933656f3231b4bf6",
+   "hygiene.py": "23ad900cf3a03d25befd816fb5f35084eb7e5d60f664533fe19b31c63d3f527e",
+   "invblock.py": "7baf5964ab315ea940af5c46217810cb6a744b55d72964e80b0ae860cc0efd56",
+   "inventory.sh": "09d824f0a43b1d56e841137973068d1e5f7d5d29f299825a3571d3c2652a43b2",
+   "ledger_edits.py": "d56ec4e29266fa60de5e3302840b2ac047df132f3e31c6ac32bc513554f76893",
+   "mirror.py": "7d3c015dff0fdf5bfbee867710a3a0973d9c6ca38408f5dd67f5784f203a4a6d",
+   "premises_dct.py": "d44152fd782c75e48879f555bb65f0ca9ec3044e36bbe3b373d08c8f57af4e00",
+   "receipt_dct.py": "98573af029f1d22d243952dcae6b476c9f40e1ff3ced4319777e8bfca42b2ed2",
+   "stmt_scan.py": "7e1e973d9e011287e0133ffb256c7ffd024671be87af15102c2c7b0364f03099",
+   "stmt_split.py": "ac34a5caad961fcf019580c46b6aac4407436d012a109710d7a0ce1b05993cf1"
+  },
+  "not_claimed": [
+   "persistence-wrapped C, Go and Python Server surface (Beacons through the bindings only beside the plain Rust Server)",
+   "later-quantum origin, UKS, binding or authentication",
+   "closed production forms of the seven intermediate lemmas that D-ct does not close (beacon_gap_le among them)",
+   "tightness of ctStat (birthday BLAKE2b term of the D-ct owner note)",
+   "running time",
+   "identity indices other than 0, a varying checks, codecs other than codec'",
+   "anything beyond the reviewed transcription of the Rust adapter"
+  ],
+  "remaining": [
+   "independent review (semantic, composition, hygiene), fix pass and confirming review of the follow-up",
+   "integration into central (PROTOCOL section 6)",
+   "item 8 (owner)"
+  ],
+  "protocol": "all Lean checks through coord.sh lean with one in flight; registrations before creation (one slip: probe/rederive registered right after creation, recorded in item7/NOTES.md); mail only peeked; no make verify, full lake build, mutation testing or nix-collect-garbage; no deletion"
+ }
+}
