@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1909
+	[handwritten-lean]=1910
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -39440,6 +39440,41 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem splitFinish_uniform([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineSplitCost theorem splitFinish_uniform"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineSplitCost\.splitStep_uniform$' "$selected_source_module" "PqxdhDeploymentHeadlineSplitCost dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSplitCost.splitStep_uniform"
 require_line_count 1 '^theorem splitStep_uniform([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineSplitCost theorem splitStep_uniform"
+
+# CE-12 P2b: guessBill and ptc_bills, the query bills of beta_g's predict-then-compare adversary.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineGuessBill.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGuessBill$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentHeadlineGuessBill root import"
+require_line_count 14 '^theorem ' "$selected_source_module" "PqxdhDeploymentHeadlineGuessBill theorem inventory"
+require_line_count 14 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentHeadlineGuessBill guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineGuessBill\.oracleFinish_uniform$' "$selected_source_module" "PqxdhDeploymentHeadlineGuessBill dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGuessBill.oracleFinish_uniform"
+require_line_count 1 '^theorem oracleFinish_uniform([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGuessBill theorem oracleFinish_uniform"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineGuessBill\.oracleFinish_base$' "$selected_source_module" "PqxdhDeploymentHeadlineGuessBill dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGuessBill.oracleFinish_base"
+require_line_count 1 '^theorem oracleFinish_base([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGuessBill theorem oracleFinish_base"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineGuessBill\.guessStep_uniform$' "$selected_source_module" "PqxdhDeploymentHeadlineGuessBill dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGuessBill.guessStep_uniform"
+require_line_count 1 '^theorem guessStep_uniform([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGuessBill theorem guessStep_uniform"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineGuessBill\.guessStep_base$' "$selected_source_module" "PqxdhDeploymentHeadlineGuessBill dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGuessBill.guessStep_base"
+require_line_count 1 '^theorem guessStep_base([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGuessBill theorem guessStep_base"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineGuessBill\.guessWeight_eq$' "$selected_source_module" "PqxdhDeploymentHeadlineGuessBill dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGuessBill.guessWeight_eq"
+require_line_count 1 '^theorem guessWeight_eq([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGuessBill theorem guessWeight_eq"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineGuessBill\.flat_uniform$' "$selected_source_module" "PqxdhDeploymentHeadlineGuessBill dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGuessBill.flat_uniform"
+require_line_count 1 '^theorem flat_uniform([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGuessBill theorem flat_uniform"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineGuessBill\.flat_base$' "$selected_source_module" "PqxdhDeploymentHeadlineGuessBill dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGuessBill.flat_base"
+require_line_count 1 '^theorem flat_base([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGuessBill theorem flat_base"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineGuessBill\.game_uniform$' "$selected_source_module" "PqxdhDeploymentHeadlineGuessBill dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGuessBill.game_uniform"
+require_line_count 1 '^theorem game_uniform([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGuessBill theorem game_uniform"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineGuessBill\.guessBill_eq$' "$selected_source_module" "PqxdhDeploymentHeadlineGuessBill dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGuessBill.guessBill_eq"
+require_line_count 1 '^theorem guessBill_eq([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGuessBill theorem guessBill_eq"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineGuessBill\.anomalyGuesser_uniform$' "$selected_source_module" "PqxdhDeploymentHeadlineGuessBill dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGuessBill.anomalyGuesser_uniform"
+require_line_count 1 '^theorem anomalyGuesser_uniform([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGuessBill theorem anomalyGuesser_uniform"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineGuessBill\.anomalyGuesser_base$' "$selected_source_module" "PqxdhDeploymentHeadlineGuessBill dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGuessBill.anomalyGuesser_base"
+require_line_count 1 '^theorem anomalyGuesser_base([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGuessBill theorem anomalyGuesser_base"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineGuessBill\.ptc_uniform$' "$selected_source_module" "PqxdhDeploymentHeadlineGuessBill dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGuessBill.ptc_uniform"
+require_line_count 1 '^theorem ptc_uniform([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGuessBill theorem ptc_uniform"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineGuessBill\.ptc_base$' "$selected_source_module" "PqxdhDeploymentHeadlineGuessBill dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGuessBill.ptc_base"
+require_line_count 1 '^theorem ptc_base([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGuessBill theorem ptc_base"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineGuessBill\.ptc_bills$' "$selected_source_module" "PqxdhDeploymentHeadlineGuessBill dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGuessBill.ptc_bills"
+require_line_count 1 '^theorem ptc_bills([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineGuessBill theorem ptc_bills"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"

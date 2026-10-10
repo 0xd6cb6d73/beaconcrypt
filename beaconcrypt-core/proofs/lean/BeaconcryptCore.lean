@@ -2135,6 +2135,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineBills
 
 import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSplitCost
 
+import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGuessBill
+
 /-!
 # Beaconcrypt-core verification root
 
