@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1899
+	[handwritten-lean]=1900
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -39043,6 +39043,23 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem symbolic_lor([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolicLor theorem symbolic_lor"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineSymbolicLor\.symbolic_lor_bound$' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolicLor dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolicLor.symbolic_lor_bound"
 require_line_count 1 '^theorem symbolic_lor_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineSymbolicLor theorem symbolic_lor_bound"
+
+# CE-12 P2: injective forms of the symbolic CE-OR corollaries.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineInjective.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineInjective$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentHeadlineInjective root import"
+require_line_count 5 '^theorem ' "$selected_source_module" "PqxdhDeploymentHeadlineInjective theorem inventory"
+require_line_count 5 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentHeadlineInjective guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineInjective\.replay_never$' "$selected_source_module" "PqxdhDeploymentHeadlineInjective dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineInjective.replay_never"
+require_line_count 1 '^theorem replay_never([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineInjective theorem replay_never"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineInjective\.injective_b2s_le$' "$selected_source_module" "PqxdhDeploymentHeadlineInjective dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineInjective.injective_b2s_le"
+require_line_count 1 '^theorem injective_b2s_le([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineInjective theorem injective_b2s_le"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineInjective\.ce_or_injective_b2s$' "$selected_source_module" "PqxdhDeploymentHeadlineInjective dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineInjective.ce_or_injective_b2s"
+require_line_count 1 '^theorem ce_or_injective_b2s([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineInjective theorem ce_or_injective_b2s"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineInjective\.injective_s2b_le$' "$selected_source_module" "PqxdhDeploymentHeadlineInjective dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineInjective.injective_s2b_le"
+require_line_count 1 '^theorem injective_s2b_le([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineInjective theorem injective_s2b_le"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineInjective\.ce_or_injective_s2b$' "$selected_source_module" "PqxdhDeploymentHeadlineInjective dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineInjective.ce_or_injective_s2b"
+require_line_count 1 '^theorem ce_or_injective_s2b([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineInjective theorem ce_or_injective_s2b"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
