@@ -1,6 +1,6 @@
 {
- "date": "2026-10-10T12:54:30.030829+00:00",
- "scope": "CE-12 P2b (track ce12/p2b), steps 1 to 3. Step 1: the rest of the bills of design-v2 section 9 (splitStep_uniform, guessBill and ptc_bills, HeadlineBills with headline_bills, the billed forms of the fifteen frozen headline forms with beta_g and of anomaly_beta). Step 2: design-v2 section 7.4's ct_collision_game (ctCollTerm <= qCreate * C(qAccept, 2) * pairCollision), the closed bound epsilon_ctcoll through pair_cp_le (ct_coll_le), and the closed forms of the six frozen headline forms with ctCollTerm and of the five billed forms of step 1 among them. Step 3 (after the merge of central df7727c3 at 5a9213dc): design-v2 section 7.7's AG, AgreementStatement in idealAuth (agreement_statement, no premise) with its three ingredients (seal-context invariant ctxRun_sealAd, receive-side AD retention ctxRun_entryAd, injectivity associatedBytes_inj) and the identity forms; the lift of AG to the common deployment experiment (section 7.6 b2s Server-pin and mode-O plaintext rows) is not built (remainder in open_points). Review fix pass (after the three-lens review at 472adf82): merge of central 2a33faf5 at d3b12d00 and one documentation commit; no Lean module, theorem statement or check changed. Reviewed; not integrated.",
+ "date": "2026-10-10T13:13:56.700329+00:00",
+ "scope": "CE-12 P2b (track ce12/p2b), steps 1 to 3. Step 1: the rest of the bills of design-v2 section 9 (splitStep_uniform, guessBill and ptc_bills, HeadlineBills with headline_bills, the billed forms of the fifteen frozen headline forms with beta_g and of anomaly_beta). Step 2: design-v2 section 7.4's ct_collision_game (ctCollTerm <= qCreate * C(qAccept, 2) * pairCollision), the closed bound epsilon_ctcoll through pair_cp_le (ct_coll_le), and the closed forms of the six frozen headline forms with ctCollTerm and of the five billed forms of step 1 among them. Step 3 (after the merge of central df7727c3 at 5a9213dc): design-v2 section 7.7's AG, AgreementStatement in idealAuth (agreement_statement, no premise) with its three ingredients (seal-context invariant ctxRun_sealAd, receive-side AD retention ctxRun_entryAd, injectivity associatedBytes_inj) and the identity forms; the lift of AG to the common deployment experiment (section 7.6 b2s Server-pin and mode-O plaintext rows) is not built (remainder in open_points). Review fix pass (after the three-lens review at 472adf82): merge of central 2a33faf5 at d3b12d00 and one documentation commit; no Lean module, theorem statement or check changed. Confirming review of 0c15ac73: all thirteen findings resolved, four documentation nits (P2 open point 5 still listed the public AD lemma among step 3's ingredients; finding 1's list of statistical terms left out the birthday and guessing terms inside the CE-A1 and record-layer losses; the step 1 and step 2 status paragraphs and review open points still described the review as pending; the registry notes of the eleven modules still said not reviewed), taken by the commit that records the review (documentation only) and, for the registry notes, by the integration. Not integrated at the record commit.",
  "basis": {
   "start": "f0dc46bb6473ab37ecf48e623f1ccb192bd6b3af",
   "merges": [
@@ -35,31 +35,44 @@
  "topic": {
   "branch": "codex/deployment-ce12",
   "worktree": "/tmp/beaconcrypt-deployment-ce12",
-  "head_at_receipt": "d3b12d001d25b293afcdbef165c5fdcd40c2a717",
-  "note": "the documentation commit of the review fix pass, which adds this receipt, follows head_at_receipt (the merge commit d3b12d00); it changes no Lean file"
+  "head_at_receipt": "0c15ac73799b2c06888117e8e8c0a5e7fda38cff",
+  "note": "the commit that records the confirming review (and last regenerates this receipt) follows head_at_receipt and changes no Lean or inventory file"
  },
  "plan": {
   "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
-  "sha256": "5a147c8821792bb91a860551000885cf8a1ad52cc408ae2ec870baeca6c60c0a",
+  "sha256": "97ebe8f8c271edf9584f1dc06bc86f207bde9ac3e2042a2b9614a56f9f2ff0ec",
   "sections": [
    105,
    106,
    108,
-   110
+   110,
+   114
   ],
   "other_lane_sections": [
    107,
    109,
-   111
+   111,
+   112,
+   113
   ],
-  "note": "the plan as it stands for the review fix pass documentation commit: section 110 appended and section 108 corrected (public AD lemma); not amended again for that commit",
-  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/docs/plan.at-p2bfix-5a147c88.md",
-  "dated_copy_sha256": "5a147c8821792bb91a860551000885cf8a1ad52cc408ae2ec870baeca6c60c0a",
+  "note": "the plan as it stands for the commit that records the confirming review: section 114 appended (CE-12 P3 had appended 113, item 7 increment I5 112 and its in-place edits of sections 2, 13, 14, 16 and 19); the integration bullet of section 114, written after the integration, is not part of this hash or of the committed snapshot",
+  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/int/docs/plan.at-record-97ebe8f8.md",
+  "dated_copy_sha256": "97ebe8f8c271edf9584f1dc06bc86f207bde9ac3e2042a2b9614a56f9f2ff0ec",
   "backup_before_fix": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/docs/plan.before-p2bfix-a4d85abc.md",
   "step3_dated_copy_after_amendment": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/docs/plan.at-p2b3-b683b299.md",
   "backup_before": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/docs/plan.before-p2b3-54ce9bfb.md",
   "backup_before_step2": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/docs/plan.before-p2b2-0cb1cc66.md",
-  "backup_before_step1": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/docs/plan.before-p2b-d44add0e.md"
+  "backup_before_step1": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/docs/plan.before-p2b-d44add0e.md",
+  "section_114": "the confirming review of 0c15ac73 and its record commit",
+  "backup_before_record": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/int/docs/plan.before-record-bc07a643.md",
+  "earlier": [
+   {
+    "note": "hash recorded by the review fix pass 0c15ac73 (through section 111; section 110 this track's)",
+    "sha256": "5a147c8821792bb91a860551000885cf8a1ad52cc408ae2ec870baeca6c60c0a",
+    "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/docs/plan.at-p2bfix-5a147c88.md",
+    "dated_copy_sha256": "5a147c8821792bb91a860551000885cf8a1ad52cc408ae2ec870baeca6c60c0a"
+   }
+  ]
  },
  "design": {
   "path": "/tmp/bc-arc-scratch/common-experiment/ce12/design-v2.md",
@@ -139,6 +152,10 @@
   {
    "commit": "d3b12d001d25b293afcdbef165c5fdcd40c2a717",
    "subject": "Merge central 2a33faf5 into CE-12 P2b"
+  },
+  {
+   "commit": "0c15ac73799b2c06888117e8e8c0a5e7fda38cff",
+   "subject": "Fix the CE-12 P2b review findings in the documents"
   }
  ],
  "commit_message_corrections": [
@@ -1329,7 +1346,7 @@
   "AG lift, R1 (b2s Server pin, 1-2 actual days): CE event (accepted b2s raw receive on a peer designating g whose counterpart owner g.2 was created with a pin different from the Server identity carried by session g.1's build response, Phase2ReadBack); chain_server, auth_le, containment in AgreeFailure on the support of idealAuth at envGD from ctxRun_peer_agreement and the IdealSlots restriction plus two ideal-environment invariants (installed shell AD = associatedArray(created pin, identity); source control Server identity = identity field of every build response); bound kemLoss + slotLoss + authLoss_g(dec_g and ISs_g)",
   "AG lift, R2 (mode-O plaintext, b2s and s2b, 1.5-3 actual days): ledger-level seal-source invariant (every dictionary seal at a label owned by a handle comes from a transcript command of that handle with its plaintext) and one seal per frame and handle (label position = sequence - 1, at most one successful seal per label); containment in AgreeFailure or the unpublished event (publicationTerm); b2s through chain_server, s2b through chain_beta",
   "D-ct (3-6 days, deferred)",
-  "confirming review of the review fix pass, then the integration into central (PROTOCOL section 6), merging central again if it moved since 2a33faf5"
+  "integration into central (PROTOCOL section 6), after the commit that records the confirming review (which refreshes the committed plan snapshot, plan_snapshot), merging central first if it moved since 2a33faf5; if central changes the plan snapshot before the integration (CE-12 P3 and item 7 increment I5 refresh it too), the merge takes a new wholesale copy of the working plan and states the refresh in the integration record; the registry notes of the eleven modules are refreshed at the integration"
  ],
  "checks": {
   "lean_tool": "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean via coord.sh lean claude, -j1 -M8000, timeout 180",
@@ -1748,13 +1765,13 @@
   "guard_scan_note": "scan-4 at the merge commit d3b12d00 is byte-identical to scan-3 at 14287522",
   "guard_scan_steps_1_2": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/logs/scan-2.json",
   "git_diff_check": {
-   "range": "f0dc46bb6473ab37ecf48e623f1ccb192bd6b3af..d3b12d001d25b293afcdbef165c5fdcd40c2a717",
+   "range": "f0dc46bb6473ab37ecf48e623f1ccb192bd6b3af..0c15ac73799b2c06888117e8e8c0a5e7fda38cff",
    "exit": 0,
-   "note": "also git diff --check on the staged documentation changes before their commit, exit 0"
+   "note": "the commit that records the confirming review is checked with git diff --cached --check before it is made; earlier record: f0dc46bb6473ab37ecf48e623f1ccb192bd6b3af..d3b12d001d25b293afcdbef165c5fdcd40c2a717 exit 0"
   }
  },
  "review": {
-  "status": "reviewed at 472adf82 (three lenses, approve with nits; no Lean finding); review fix pass done; confirming review pending; not integrated",
+  "status": "reviewed at 472adf82 (three lenses, approve with nits; no Lean finding); review fix pass d3b12d00 (merge) and 0c15ac73 (documentation); confirming review of 0c15ac73: approve with nits, all thirteen findings resolved, four documentation nits taken by the commit that records the review and by the integration (registry notes); not integrated at the record commit",
   "reviewed_head": "472adf823a68b0d1e020f2bbee47f71894b5d2ea",
   "lenses": [
    "semantic",
@@ -1849,10 +1866,190 @@
   "finding_count_note": "thirteen findings as raised (three minor, ten nits): semantic 1-5, composition 6-8, hygiene 9-13; the semantic nit on stale ctCollTerm pointers overlaps the composition and hygiene findings",
   "fix_commits": {
    "merge": "d3b12d001d25b293afcdbef165c5fdcd40c2a717",
-   "documentation": "the commit that adds this receipt (follows head_at_receipt)"
+   "documentation": "0c15ac73799b2c06888117e8e8c0a5e7fda38cff"
   },
   "lean_changes": "none",
   "statements_changed": "none",
-  "owner_level": "none"
+  "owner_level": "none",
+  "confirming_review": {
+   "reviewed_range": "472adf823a68b0d1e020f2bbee47f71894b5d2ea..0c15ac73799b2c06888117e8e8c0a5e7fda38cff",
+   "reviewed_commit": "0c15ac73799b2c06888117e8e8c0a5e7fda38cff",
+   "date": "2026-10-10",
+   "scope": "the review fix pass (merge d3b12d00 of central 2a33faf5, documentation commit 0c15ac73): the thirteen findings of the P2b review at 472adf82, statements, guards, the merge, the receipt, the documentation, the registry",
+   "verdict": "APPROVE_WITH_NITS: all thirteen findings resolved at 0c15ac73, no Lean change; four documentation nits",
+   "lean": "472adf82..0c15ac73 changes only central's three PqxdhBoundaryDeployment* modules (byte-equal to central) and the root (the eleven P2b imports after central's); against f0dc46bb no existing Lean file except the root changed (frozen P1 and P2 modules untouched); 0c15ac73 itself changes only the guide, the analysis and the receipt",
+   "merge": "d3b12d00 against 472adf82: only central's additions, the count line (1938 -> 1941) and two digest rows; against central 2a33faf5: only the topic's additions, the count line (1930 -> 1941), two digest rows and pure appends to five P2 guide paragraphs and the P2 analysis entry",
+   "nits": [
+    {
+     "where": "guide, CE-12 P2: open points, point 5",
+     "finding": "still said that P2b step 3 proves AG \"with these three ingredients\", whose list includes the public associated-data lemma (finding 5 corrected this elsewhere)",
+     "outcome": "taken: a note says that the lemma is realized only at record level (handleAd with AdKept), that its public half is the R1 remainder (\"CE-12 P2b step 3: decisions and deviations\"), and that the step's second ingredient is the receive-side retention ctxRun_entryAd"
+    },
+    {
+     "where": "analysis \"The closed headlines\"; guide \"CE-12 P2b: review fix pass\", first bullet",
+     "finding": "finding 1's list of statistical terms left out the birthday and guessing terms inside the CE-A1 and record-layer losses (CE-A1's C(Q,2)*64/2^256 and (2H+1)/2^128 + 2^-512, integrityLoss's qHash/2^128 + qRaw/2^512)",
+     "outcome": "taken: both lists now also name the birthday and guessing terms inside the CE-A1 and record-layer losses, with the examples C(Q, 2)*64/2^256, qHash/2^128 and qRaw/2^512; plan section 110 and review.findings keep the list as the fix pass wrote it (historical records)"
+    },
+    {
+     "where": "guide: status paragraphs of P2b steps 1 and 2, step 1 open point 4, step 2 open point 3",
+     "finding": "still described the review as pending",
+     "outcome": "taken: each ends with a pointer to the review at 472adf82 (and, in the open points, to the fix pass and the confirming review); step 3 open point 3 also points to \"CE-12 P2b: confirming review\""
+    },
+    {
+     "where": "coordination registry, the eleven P2b module entries",
+     "finding": "notes still said \"not reviewed\"",
+     "outcome": "refreshed at the integration with coord.sh registry add claude module <name> active <note>, as for P1 and P2"
+    }
+   ],
+   "label_note": "the nits proposed the label \"(Added by the CE-12 P2b review fix pass: ...)\"; the notes are added after the fix pass, so they carry \"(Added by the commit that records the CE-12 P2b confirming review: ...)\"",
+   "checks": [
+    "the eleven modules and the root recompiled without -o through coord.sh lean at the clean head 0c15ac73 against ce12/p2b/leanpath3: exit 0, empty logs (confirm/scripts/recheck.sh)",
+    "guard scan (confirm/scripts/guards.py): 239 theorems, 239 exact #guard_msgs over #print axioms (block at the module end, declaration order, fully qualified), axioms within propext, Classical.choice, Quot.sound; set_option only autoImplicit false and the two documented backward.isDefEq.respectTransparency false in PqxdhDeploymentHeadlineGuessBill",
+    "import closure (confirm/scripts/closure.py): 1540 BeaconcryptCore modules, no PqxdhBoundary*",
+    "receipt (confirm/scripts/receipt_check.py): 3 file hashes, 11 module hashes, 239 theorems, plan sha 5a147c88 = working plan at the review = dated copy, design sha current, 18 commits ancestors of the head with matching subjects, head_at_receipt d3b12d00 (documentation commit follows, documented), ce12/p2b/olean3 artifacts = recorded hashes"
+   ],
+   "recompiles": {
+    "PqxdhDeploymentHeadlineSplitCost": {
+     "exit": 0,
+     "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/confirm/logs/PqxdhDeploymentHeadlineSplitCost.log",
+     "log_bytes": 0,
+     "head": "0c15ac73799b2c06888117e8e8c0a5e7fda38cff",
+     "source_sha256_prefix": "a5763c6fc2915c3d",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/leanpath3",
+     "leanpath_sha256": "5a3deace2b54aa23c29c83ae323512f1b8c881b637c9c6fda23975941fef1287",
+     "mode": "without -o"
+    },
+    "PqxdhDeploymentHeadlineGuessBill": {
+     "exit": 0,
+     "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/confirm/logs/PqxdhDeploymentHeadlineGuessBill.log",
+     "log_bytes": 0,
+     "head": "0c15ac73799b2c06888117e8e8c0a5e7fda38cff",
+     "source_sha256_prefix": "739e9ccb48b36fbf",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/leanpath3",
+     "leanpath_sha256": "5a3deace2b54aa23c29c83ae323512f1b8c881b637c9c6fda23975941fef1287",
+     "mode": "without -o"
+    },
+    "PqxdhDeploymentHeadlineBillsFull": {
+     "exit": 0,
+     "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/confirm/logs/PqxdhDeploymentHeadlineBillsFull.log",
+     "log_bytes": 0,
+     "head": "0c15ac73799b2c06888117e8e8c0a5e7fda38cff",
+     "source_sha256_prefix": "25cc79473346471d",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/leanpath3",
+     "leanpath_sha256": "5a3deace2b54aa23c29c83ae323512f1b8c881b637c9c6fda23975941fef1287",
+     "mode": "without -o"
+    },
+    "PqxdhDeploymentHeadlineGated": {
+     "exit": 0,
+     "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/confirm/logs/PqxdhDeploymentHeadlineGated.log",
+     "log_bytes": 0,
+     "head": "0c15ac73799b2c06888117e8e8c0a5e7fda38cff",
+     "source_sha256_prefix": "32d9482f4ac30959",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/leanpath3",
+     "leanpath_sha256": "5a3deace2b54aa23c29c83ae323512f1b8c881b637c9c6fda23975941fef1287",
+     "mode": "without -o"
+    },
+    "PqxdhDeploymentHeadlineCtGhost": {
+     "exit": 0,
+     "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/confirm/logs/PqxdhDeploymentHeadlineCtGhost.log",
+     "log_bytes": 0,
+     "head": "0c15ac73799b2c06888117e8e8c0a5e7fda38cff",
+     "source_sha256_prefix": "1ef90d9a6f3a3d0b",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/leanpath3",
+     "leanpath_sha256": "5a3deace2b54aa23c29c83ae323512f1b8c881b637c9c6fda23975941fef1287",
+     "mode": "without -o"
+    },
+    "PqxdhDeploymentHeadlineCtTrace": {
+     "exit": 0,
+     "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/confirm/logs/PqxdhDeploymentHeadlineCtTrace.log",
+     "log_bytes": 0,
+     "head": "0c15ac73799b2c06888117e8e8c0a5e7fda38cff",
+     "source_sha256_prefix": "8975ec77e19edecf",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/leanpath3",
+     "leanpath_sha256": "5a3deace2b54aa23c29c83ae323512f1b8c881b637c9c6fda23975941fef1287",
+     "mode": "without -o"
+    },
+    "PqxdhDeploymentHeadlineCtColl": {
+     "exit": 0,
+     "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/confirm/logs/PqxdhDeploymentHeadlineCtColl.log",
+     "log_bytes": 0,
+     "head": "0c15ac73799b2c06888117e8e8c0a5e7fda38cff",
+     "source_sha256_prefix": "163afe51aa8e2381",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/leanpath3",
+     "leanpath_sha256": "5a3deace2b54aa23c29c83ae323512f1b8c881b637c9c6fda23975941fef1287",
+     "mode": "without -o"
+    },
+    "PqxdhDeploymentHeadlineCtClosed": {
+     "exit": 0,
+     "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/confirm/logs/PqxdhDeploymentHeadlineCtClosed.log",
+     "log_bytes": 0,
+     "head": "0c15ac73799b2c06888117e8e8c0a5e7fda38cff",
+     "source_sha256_prefix": "db3fe1c508de30d6",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/leanpath3",
+     "leanpath_sha256": "5a3deace2b54aa23c29c83ae323512f1b8c881b637c9c6fda23975941fef1287",
+     "mode": "without -o"
+    },
+    "PqxdhDeploymentHeadlineAgreeSeal": {
+     "exit": 0,
+     "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/confirm/logs/PqxdhDeploymentHeadlineAgreeSeal.log",
+     "log_bytes": 0,
+     "head": "0c15ac73799b2c06888117e8e8c0a5e7fda38cff",
+     "source_sha256_prefix": "7193372688936a98",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/leanpath3",
+     "leanpath_sha256": "5a3deace2b54aa23c29c83ae323512f1b8c881b637c9c6fda23975941fef1287",
+     "mode": "without -o"
+    },
+    "PqxdhDeploymentHeadlineAgreeReceive": {
+     "exit": 0,
+     "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/confirm/logs/PqxdhDeploymentHeadlineAgreeReceive.log",
+     "log_bytes": 0,
+     "head": "0c15ac73799b2c06888117e8e8c0a5e7fda38cff",
+     "source_sha256_prefix": "11a55883593dbac6",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/leanpath3",
+     "leanpath_sha256": "5a3deace2b54aa23c29c83ae323512f1b8c881b637c9c6fda23975941fef1287",
+     "mode": "without -o"
+    },
+    "PqxdhDeploymentHeadlineAgree": {
+     "exit": 0,
+     "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/confirm/logs/PqxdhDeploymentHeadlineAgree.log",
+     "log_bytes": 0,
+     "head": "0c15ac73799b2c06888117e8e8c0a5e7fda38cff",
+     "source_sha256_prefix": "3fb43a9b10fdf376",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/leanpath3",
+     "leanpath_sha256": "5a3deace2b54aa23c29c83ae323512f1b8c881b637c9c6fda23975941fef1287",
+     "mode": "without -o"
+    },
+    "root": {
+     "exit": 0,
+     "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/confirm/logs/root.log",
+     "log_bytes": 0,
+     "head": "0c15ac73799b2c06888117e8e8c0a5e7fda38cff",
+     "source_sha256_prefix": "6f0321ab8f11b5c5",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/leanpath3",
+     "leanpath_sha256": "5a3deace2b54aa23c29c83ae323512f1b8c881b637c9c6fda23975941fef1287",
+     "mode": "without -o"
+    }
+   },
+   "scripts": {
+    "closure.py": "0df82a2aa9a26431ff27e90b6a3c6c75f060d036ed0f4ac51fa38dadabc16ccd",
+    "guards.py": "1f71f99880ac39e5c662f67b0da69e02374f1ddbe10ba3e9f6f551232048097b",
+    "linediff.py": "3e7a30038e8190d9d456a084acb543f468ea094d9d88ece0c59ff5294d25520a",
+    "receipt_check.py": "bd109e54da14138d598ac2d8c0d8bc6f730ef72d6660dc15dda29d56b4e685eb",
+    "recheck.sh": "aace84ebb4f82fc87b9ff7ad73652fd9b37e4ff2d2fdd3c16f4263f86accf142"
+   },
+   "scratch": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/confirm/"
+  }
+ },
+ "plan_snapshot": {
+  "path": "doc/impl/common-deployment-experiment-plan.md",
+  "sha256": "d91ff30a46d99e98261415758ddcbd2f9e3596e1a94338916f557aba9073d9ea",
+  "refreshed_from_sha256": "97ebe8f8c271edf9584f1dc06bc86f207bde9ac3e2042a2b9614a56f9f2ff0ec",
+  "through_section": 114,
+  "sections": "0-18 and the decision sections 19-114",
+  "script": {
+   "path": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/int/scripts/snapshot.py",
+   "sha256": "bb5b0d69297bb0c9c641ff9f383b48f8f632af7aae0f8a3029816aefead7c515"
+  },
+  "note": "refreshed in the commit that records the confirming review as a wholesale copy of the working plan: the body equals the working plan from its third line; the snapshot paragraph, built from central 2a33faf5's (= f0dc46bb's), records the hash and the refresh history. This branch carried central 2a33faf5's snapshot (working plan 11657fb2, through section 104) unchanged until this commit; the refresh adds item 7 increment I5's in-place edits of six lines of sections 2, 13, 14, 16 and 19 (which cite doc/impl/production-boundary-ledger.md, not on central at this commit), section 104's integration bullet and sections 105 to 114. CE-12 P3 (codex/deployment-ce12-later, record commit 01a745f8) and item 7 increment I5 (codex/deployment-boundary-ledger) refresh the snapshot too; if either is integrated first, the integration merge takes a new wholesale copy of the working plan instead of merging by hand and states the refresh in the integration record"
  }
 }
