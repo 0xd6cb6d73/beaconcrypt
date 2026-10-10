@@ -1,6 +1,6 @@
 {
- "date": "2026-10-10T09:20:19.160935+00:00",
- "scope": "LQ-F upstream unit B (the later second compile lemma U-L2: the spike B0, unit B1 params/pool/cut/branch and unit B2 mid/steps/post/compile; LQ-F upstream design-v2 sections 4.5 to 4.7 of /tmp/bc-arc-scratch/common-experiment/lqf-up, CE plan section 49 Q1): eight Lean modules proving unit D2's frozen target PqxdhDeploymentIdealLaterGame.IdealCompileServerTarget exactly as stated (PqxdhDeploymentIdealLaterCompile.ideal_compile_server). Reviewed at 66e5c888 (semantic and hygiene, both APPROVE_WITH_NITS; 3 minor findings, 9 nits and 1 verification record with no action); the review fix pass is one Lean commit (8081ac51: the Pool premises sentence, the upperLayerL_read docstring and 38 unused selectively opened names, inventory rows rehashed) and the documentation commit that updates this receipt (key review). Not integrated at this receipt.",
+ "date": "2026-10-10T10:21:27.038697+00:00",
+ "scope": "LQ-F upstream unit B (the later second compile lemma U-L2: the spike B0, unit B1 params/pool/cut/branch and unit B2 mid/steps/post/compile; LQ-F upstream design-v2 sections 4.5 to 4.7 of /tmp/bc-arc-scratch/common-experiment/lqf-up, CE plan section 49 Q1): eight Lean modules proving unit D2's frozen target PqxdhDeploymentIdealLaterGame.IdealCompileServerTarget exactly as stated (PqxdhDeploymentIdealLaterCompile.ideal_compile_server). Reviewed at 66e5c888 (semantic and hygiene, both APPROVE_WITH_NITS; 3 minor findings, 9 nits and 1 verification record with no action); the review fix pass is one Lean commit (8081ac51: the Pool premises sentence, the upperLayerL_read docstring and 38 unused selectively opened names, inventory rows rehashed) and the documentation commit that updates this receipt (key review). Confirming review of 409ed4d4: APPROVE_WITH_NITS (every finding resolved, no statement weaker; two documentation nits and one record, taken by the commit that records it, documentation only). Not integrated at the record commit; central moved to c27b4533 (unit A2, CE-12 P2 and item 7 increment A integrated) after the unit's base adf9d8fc, so the integration (PROTOCOL section 6) merges central into the branch above the record commit, runs the checks on that merge and fast-forwards central to it (or to a merge of a newer central, if central moves again first).",
  "basis": {
   "start": "adf9d8fc0300202830315d5f835bfb2268b0ec8f",
   "central_at_receipt": "c27b45336b6c04087239d9b797fcf6f1aba1c85e",
@@ -54,7 +54,9 @@
     "subject": "Fix the LQ-F unit B docstrings and opens found by review"
    }
   ],
-  "review_fix_documentation_commit": "the commit that updates this receipt with the key review (on top of 8081ac51)"
+  "review_fix_documentation_commit": "409ed4d488b1a8ab861c01f207c40a0b99e869d9",
+  "head_at_confirming_review": "409ed4d488b1a8ab861c01f207c40a0b99e869d9",
+  "confirming_review_record_commit": "the commit that adds review.confirming_review (on top of 409ed4d4)"
  },
  "design": {
   "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/../design-v2.md",
@@ -963,7 +965,7 @@
    "probe_sha256": "11529d30346692da09bb2ea86424384a6c2aa3d4b7a19e2f8ff2b0873e115362",
    "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/logs/dev/Contamination-1.log",
    "result": "scanned 395 declarations of 8 modules; forbidden direct references: 0 []\nreported names (DH/auth/T5/T8 infixes): [BeaconcryptCore.Computational.PqxdhEd25519EufCma.MlKem768PublicKey,\n BeaconcryptCore.Computational.PqxdhJointGapDh.ScalarBytes,\n BeaconcryptCore.Computational.PqxdhEd25519EufCma.Phase1KeyTuple.pqKey,\n BeaconcryptCore.Computational.PqxdhEd25519EufCma.Ed25519PublicKey]\nliveness: [BeaconcryptCore.Computational.PqxdhCorrelatedExtractFamily.realGame]",
-   "note": "item 2's fixed-HKDF list (as unit C's scan) over all 395 declarations of the eight modules: no forbidden direct reference; the report list of DH, authentication and T5/T8 infixes finds only the types MlKem768PublicKey, PqxdhJointGapDh.ScalarBytes, Ed25519PublicKey and the field Phase1KeyTuple.pqKey; liveness detected; scratch metaprogram, not a committed check. The hygiene review's module-level reference probe (lqf-up/B/review-hygiene/probe/Modules.lean, logs/Modules-1.log) shows the only other direct references into DH- or KDF-named modules: PqxdhJointDhExtractFamily.State and State.cache (the Extract-table cache record, allowed as in unit A1's review) and PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource.crypto through setup.source.crypto (19 declarations), all allowed by item 2's plan risk 9 and present in the frozen D1/D2 targets and CE-11b U5/U6; it also lists the types PqxdhServerRelatedRootConsumer.Returned and Auxiliary (allowed by the review). Its closure comparison (ClosureDiff.lean, logs/ClosureDiff-1.log): closure of ideal_compile_server 29448 constants against 29215 for the frozen target with the classical PqxdhDeploymentIdealCompile.ideal_compile; none of unit B's own constants from an authentication-, DH- or KDF-named module; no constant from the T5, T8, RawOpaque, SigningHistory, Provenance or Origins modules (added by the review fix pass)",
+   "note": "item 2's fixed-HKDF list (as unit C's scan) over all 395 declarations of the eight modules: no forbidden direct reference; the report list of DH, authentication and T5/T8 infixes finds only the types MlKem768PublicKey, PqxdhJointGapDh.ScalarBytes, Ed25519PublicKey and the field Phase1KeyTuple.pqKey; liveness detected; scratch metaprogram, not a committed check. The hygiene review's module-level reference probe (lqf-up/B/review-hygiene/probe/Modules.lean, logs/Modules-1.log) shows the only other direct references into DH- or KDF-named modules: PqxdhJointDhExtractFamily.State and State.cache (the Extract-table cache record, allowed as in unit A1's review) and PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource.crypto through setup.source.crypto (19 declarations), both allowed by item 2's plan risk 9 and present in the frozen D1/D2 targets and CE-11b U5/U6; PqxdhSecretInputKdf.HmacOracle, RootOutput and HmacBlock (the HMAC oracle spec and byte types, allowed); and PqxdhFullSecretInputKdf.FullOutput (the 76-byte output type of the full expand, allowed) (the last four added by the confirming-review record commit: the confirming review found the first three missing (Modules-1.log, watch PqxdhSecretInputKdf), and the record commit's probe record_commit_probe, over every module whose name contains Dh, Kdf or Hkdf, found the fourth, from a module outside the hygiene probe's watch list, and finds exactly these eight and PqxdhJointGapDh.ScalarBytes); it also lists the types PqxdhServerRelatedRootConsumer.Returned and Auxiliary (allowed by the review). Its closure comparison (ClosureDiff.lean, logs/ClosureDiff-1.log): closure of ideal_compile_server 29448 constants against 29215 for the frozen target with the classical PqxdhDeploymentIdealCompile.ideal_compile; none of the constants only in unit B's closure is from an authentication-, DH- or KDF-named module (the first wording, \"none of unit B's own constants from an authentication-, DH- or KDF-named module\", was corrected by the confirming-review record commit); no constant from the T5, T8, RawOpaque, SigningHistory, Provenance or Origins modules (added by the review fix pass)",
    "review_probes": [
     {
      "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/review-hygiene/probe/Modules.lean",
@@ -988,6 +990,17 @@
     ],
     "leanpath": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/leanpath",
     "result": "log byte-identical to the unit run (395 declarations, 0 forbidden references, the same four reported names, liveness detected)"
+   },
+   "record_commit_probe": {
+    "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/int/probe/DhKdfRefs.lean",
+    "sha256": "8deda05129fc699c6349c9d648ae6ae559e7e521b3b5099ee475a7b6f5e942e5",
+    "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/int/logs/DhKdfRefs-1.log",
+    "log_sha256": "969f9a8e47dac508bb4bffd9a639fd798b9cab17d9fb7ed7cecba63abd41354c",
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/leanpath",
+    "leanpath_sha256": "9981497dd2b15033eb13d783ecf99bc6041dd05495e97dd0c9716f89e2e35a65",
+    "exit": 0,
+    "command": "coord.sh lean claude lqf-B-int-DhKdfRefs -- timeout 180 lean -j1 -M8000 <probe> (no -o), LEAN_PATH = lqf-up/B/fix/leanpath (the unit B oleans of 8081ac51, the Lean of 409ed4d4)",
+    "result": "scanned 395 declarations; constants of DH- or KDF-named modules (name contains Dh, Kdf or Hkdf) referenced directly: PqxdhFullSecretInputKdf.FullOutput (17 declarations), PqxdhJointDhExtractFamily.State (28) and State.cache (8), PqxdhJointGapDh.ScalarBytes (74), PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource.crypto (19), PqxdhSecretInputKdf.HmacBlock (22), HmacOracle (18) and RootOutput (17)"
    }
   },
   "spike": {
@@ -1039,11 +1052,11 @@
   "the budget route (unit D open point 5; added by the review fix pass): unit D predicted per-kind step bounds as the LQ-F chain does (PqxdhDeploymentLaterServerReserve.creations, compile_server_creates, compile_server_no_kem) with the R9 primed target in reserve; unit B instead cuts inside the run part (compileServer_split by rfl, restOf_quiet, compile_scanServer) and applies the logged copies of the classical cut lemmas (laterSlotGameAt_cut, item2_prefixL, kemCommands_stoppedL, which calls PqxdhRegistrationJointKemCommands.creations and PqxdhRegistrationJointOpenCosts.command_program) only to the compiled scan of the run part at runBudget, finite in all 14 kinds from budget.Respects first (run_certified via FinitePartitionQueryBounds.weighted_bound, scan_certifiedL) with identity and KEM caps 0 and creations budget.create (runBudget_caps); the rest needs no cap (itemRestL_dead via LazyOracleDiscard.lawEq_drop in the dead branches; restOf_allowed and restOf_costly in the active branch); per-kind step bounds and the R9 primed target were not needed and compile_server_creates, compile_server_no_kem and LaterServerReserve.creations are not used; the route sentence of the frozen unit D2 docstring of IdealCompileServerTarget is superseded and not edited (frozen module); unit D's open point 5, re-estimate and what-is-proved sentence carry a closing note, and unit B's analysis entry corrects unit D's",
   "one review cycle for units B1 and B2 (added by the review fix pass): LQ-F design-v2 section 4.7 places unit B2 on the same branch with a second review cycle; B1 and B2 were built in one session and reviewed together at 66e5c888"
  ],
- "remainder": "none within unit B's scope; next: a confirming review of the review fix pass and the integration (PROTOCOL section 6, after a merge of central c27b4533 or newer); then P3's later ideal_world composition and the CE-12-L headlines",
+ "remainder": "none within unit B's scope; next: the integration (integration; PROTOCOL section 6, after a merge of central c27b4533 or newer; the confirming review of the review fix pass is recorded under review.confirming_review); then P3's later ideal_world composition and the CE-12-L headlines",
  "docs": [
-  "doc/impl/common-deployment-experiment.md: status paragraph of LQ-F upstream unit B; sections \"LQ-F upstream unit B: what is proved\", \"... decisions and deviations\", \"... names for consumers\", \"... contracts used\", \"... open points\", \"... re-estimate\", \"... checks\", \"... review fix pass\" (added by the review fix pass, which also adds closing notes to unit D's \"what is proved\", open point 5 and re-estimate)",
-  "doc/impl/extract-composition.md: section \"Unit B: item 2's side of the later second compile lemma (PqxdhDeploymentIdealLaterSteps)\" (its closing note on references into DH- and KDF-named modules extended by the review fix pass)",
-  "doc/formal-verification-analysis.md: section \"Common deployment experiment, LQ-F upstream unit B: the later second compile lemma\" (the review fix pass adds its Review paragraph, the correction of unit D's route prediction and the projection of unit C's law equality)",
+  "doc/impl/common-deployment-experiment.md: status paragraph of LQ-F upstream unit B; sections \"LQ-F upstream unit B: what is proved\", \"... decisions and deviations\", \"... names for consumers\", \"... contracts used\", \"... open points\", \"... re-estimate\", \"... checks\", \"... review fix pass\" (added by the review fix pass, which also adds closing notes to unit D's \"what is proved\", open point 5 and re-estimate), \"... confirming review\" (added by the confirming-review record commit, which also updates the status paragraph, open points 1 to 3 and \"... checks\")",
+  "doc/impl/extract-composition.md: section \"Unit B: item 2's side of the later second compile lemma (PqxdhDeploymentIdealLaterSteps)\" (its closing note on references into DH- and KDF-named modules extended by the review fix pass and completed by the confirming-review record commit)",
+  "doc/formal-verification-analysis.md: section \"Common deployment experiment, LQ-F upstream unit B: the later second compile lemma\" (the review fix pass adds its Review paragraph, the correction of unit D's route prediction and the projection of unit C's law equality; the confirming-review record commit replaces its last sentence with the confirming review and the integration's route)",
   "doc/impl/proof-receipts/lqf-upstream-B.json (this receipt)"
  ],
  "review": {
@@ -1298,7 +1311,7 @@
    "doc/impl/extract-composition.md",
    "doc/impl/proof-receipts/lqf-upstream-B.json"
   ],
-  "docs_fix_commit": "the commit that adds this key (on top of 8081ac51)",
+  "docs_fix_commit": "409ed4d488b1a8ab861c01f207c40a0b99e869d9",
   "checks": {
    "inv_recount_rehash": {
     "rows_diff": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/logs/inv-rows-66e5c888-8081ac51.diff",
@@ -1485,7 +1498,7 @@
      "command": "coord.sh lease mem claude @nix lqf-Bfix-inventory-lean-commit --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C /tmp/beaconcrypt-deployment-lqf-compile/beaconcrypt-core check-inventory SHELL=bash"
     }
    ],
-   "clean_tree_inventory_note": "the documentation commit changes only files under doc/, which check-inventory does not read, so the run at 8081ac51 covers its tree; a run on the clean tip after the documentation commit is left to the confirming review or the integration checks receipt",
+   "clean_tree_inventory_note": "the documentation commit changes only files under doc/, which check-inventory does not read, so the run at 8081ac51 covers its tree; a run on the clean tip after the documentation commit is left to the confirming review or the integration checks receipt (it ran at 409ed4d4, lease 00000530, exit 0, empty working-tree status before and after; recorded under review.confirming_review.clean_tree_inventory)",
    "opens_scans": {
     "scope": {
      "script": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/scripts/opens_scope.py",
@@ -1542,9 +1555,218 @@
    },
    "diff_check": "git diff --check clean before the Lean commit and on the documentation changes"
   },
-  "status": "review fix pass complete; awaiting a confirming review; not integrated"
+  "status": "review fix pass complete (8081ac51, 409ed4d4) and confirmed by a confirming review of 409ed4d4 (APPROVE_WITH_NITS: every finding resolved, no statement weaker; two documentation nits and one record, taken by the commit that records it); not integrated at the record commit",
+  "confirming_review": {
+   "reviewed_range": "66e5c8887af04d42bf31a3d0a52aa4a101ed588d..409ed4d488b1a8ab861c01f207c40a0b99e869d9",
+   "reviewed_commit": "409ed4d488b1a8ab861c01f207c40a0b99e869d9",
+   "date": "2026-10-10",
+   "kind": "review of the fix pass, read only; one trial git merge-tree --write-tree 409ed4d4 c27b4533 wrote unreferenced objects into the shared object store (no ref and no worktree file changed)",
+   "scope": "the review fix pass (8081ac51: selective open lists and two docstrings; 409ed4d4: common-deployment guide, item 2 guide, analysis, receipt): the findings of the review of 66e5c888, statements, guards, axiom profiles, inventory rows, receipt hashes, the contracts-used list against the signatures, the budget-route names, central's history, rebuilds of the eight modules and the root at the clean head, and a declaration-level comparison of the oleans before and after the fix pass",
+   "verdict": "APPROVE_WITH_NITS: every finding of the 66e5c888 review resolved at 409ed4d4, no statement weaker, guards match the theorems, the receipt matches HEAD; two nits (the \"only (other) direct references into DH- or KDF-named modules\" sentences of the guide's open point 3, this receipt's checks.contamination.note and the item 2 guide leave out PqxdhSecretInputKdf.HmacOracle, RootOutput and HmacBlock, and the item 2 guide also PqxdhJointGapDh.ScalarBytes; this receipt described the closure comparison as \"unit B's own constants\") and one record (checked, no action), all taken by the commit that records the review",
+   "checks": [
+    "HEAD = origin/codex/deployment-lqf-compile = 409ed4d4, worktree clean; range 8081ac51 (Lean: docstrings and opens) and 409ed4d4 (documentation), footers exact",
+    "Lean diff: only selective open lists and two docstrings (the Pool module premises sentence, Steps.upperLayerL_read); all 38 removed names have no identifier use in their scope at 66e5c888 (comments and opens excluded); PqxdhDeploymentBackend and PqxdhServerRootPreparation (whose full open lines were removed) declare nothing scoped (opens_check.py): no statement, definition or proof change",
+    "per module: source SHA-256 = the receipt's after_review_fix hash = the inventory row; the fix oleans match; theorems = guards = the receipt's names, in order (3, 29, 24, 21, 27, 28, 12, 1 = 145); axiom profiles match (Pool onBase_view propext, Quot.sound) (receipt_check.py)",
+    "the contracts-used list is complete and exact against the signatures (premises.py); the budget-route names exist; compile_server_creates, compile_server_no_kem and LaterServerReserve.creations are unused in the eight modules",
+    "rebuilds at the clean 409ed4d4 through coord.sh lean (-j1 -M8000, timeout 180, -o into confirm/out, LEAN_PATH lqf-up/B/fix/leanpath, one at a time, empty working-tree status before and after): the eight modules and the root, exit 0, empty logs, byte-identical to the receipt's after_review_fix finals (rebuilds below)",
+    "declaration-level comparison (probe/Decls.lean, decls.sh): the 395 constants of the eight modules (name, kind, universe levels, type hash, value hash), lqf-up/B/leanpath (66e5c888 oleans) against lqf-up/B/fix/leanpath (8081ac51 oleans): byte-identical logs (SHA-256 68b1bcd2...); no axiom or opaque constant",
+    "receipt: 103 absolute path/hash pairs verified, 0 mismatches or missing (hashpairs.py); the 1910 handwritten-lean inventory rows match the HEAD files",
+    "leases 00000528 (8081ac51) and 00000530 (409ed4d4) in the lease history, exit 0, clean before and after",
+    "central: the published LEAN_PATH c27b4533 (09:12:09Z) predates 738e4e70 (09:20:35Z); adf9d8fc..c27b4533 changes, besides adding Lean modules, only the root, check-inventory.sh, reviewed-inventory.txt, the analysis, the guide, the working plan and the item 2 guide; the documents say c27b4533 (c72db84a only in correction notes)"
+   ],
+   "check_scripts": {
+    "check.sh": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/confirm/scripts/check.sh",
+     "sha256": "8c50b6e20e6989417d2cb85b3b0ed14e48de8fbd2015254bc5c24c4d254aafd8"
+    },
+    "decls.sh": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/confirm/scripts/decls.sh",
+     "sha256": "683c4a024fbb81f476cfbe0f510039c70504f50151f55edcf9bd0ee294b5c06d"
+    },
+    "hashpairs.py": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/confirm/scripts/hashpairs.py",
+     "sha256": "fef1b253cfb2e1a3e632a318e5af642e50c0ab55e08994b1c767a760d6981490"
+    },
+    "opens_check.py": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/confirm/scripts/opens_check.py",
+     "sha256": "98e454ebb5a0862776aa75d4e665d91aaa7abb958a979ab06ff108e9cdcd7cc9"
+    },
+    "premises.py": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/confirm/scripts/premises.py",
+     "sha256": "3af7ee73a02dae581d3d9d899b4a26ccaa904aae90833c33daf760e0d89adfcd"
+    },
+    "receipt_check.py": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/confirm/scripts/receipt_check.py",
+     "sha256": "3ac939b3771dac2b37eef49105615a35100bd46268ed8563ab1f2dce2c9f7f54"
+    },
+    "run_to_log.sh": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/confirm/scripts/run_to_log.sh",
+     "sha256": "a346ee0ad577a04bbcb28452286be284d2695279b82444ab5bac10586845d1a3"
+    }
+   },
+   "rebuilds": [
+    {
+     "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterParams",
+     "head": "409ed4d488b1a8ab861c01f207c40a0b99e869d9",
+     "dirty_paths_before": 0,
+     "dirty_paths_after": 0,
+     "exit": 0,
+     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/confirm/logs/PqxdhDeploymentIdealLaterParams.log",
+     "log_bytes": 0,
+     "artifact": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/confirm/out/PqxdhDeploymentIdealLaterParams.olean",
+     "artifact_sha256": "8e771b1423dd78c4c16ecf2342b49be591994acde5c4dbb1ef7a519012e0c632",
+     "equals_fix_pass_final": true
+    },
+    {
+     "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterPool",
+     "head": "409ed4d488b1a8ab861c01f207c40a0b99e869d9",
+     "dirty_paths_before": 0,
+     "dirty_paths_after": 0,
+     "exit": 0,
+     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/confirm/logs/PqxdhDeploymentIdealLaterPool.log",
+     "log_bytes": 0,
+     "artifact": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/confirm/out/PqxdhDeploymentIdealLaterPool.olean",
+     "artifact_sha256": "0f42a2839b67ee11a5f365d8554fc679c0d87e7019bc54ee85df1b031a60117e",
+     "equals_fix_pass_final": true
+    },
+    {
+     "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterCut",
+     "head": "409ed4d488b1a8ab861c01f207c40a0b99e869d9",
+     "dirty_paths_before": 0,
+     "dirty_paths_after": 0,
+     "exit": 0,
+     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/confirm/logs/PqxdhDeploymentIdealLaterCut.log",
+     "log_bytes": 0,
+     "artifact": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/confirm/out/PqxdhDeploymentIdealLaterCut.olean",
+     "artifact_sha256": "2eea9c81088ef3da660046da818ec69ca60542966e96db0ab2f331f56c903986",
+     "equals_fix_pass_final": true
+    },
+    {
+     "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterBranch",
+     "head": "409ed4d488b1a8ab861c01f207c40a0b99e869d9",
+     "dirty_paths_before": 0,
+     "dirty_paths_after": 0,
+     "exit": 0,
+     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/confirm/logs/PqxdhDeploymentIdealLaterBranch.log",
+     "log_bytes": 0,
+     "artifact": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/confirm/out/PqxdhDeploymentIdealLaterBranch.olean",
+     "artifact_sha256": "7b2105201316e5468870790708df677fbf937e0d4adf725172f6c1c39975cf29",
+     "equals_fix_pass_final": true
+    },
+    {
+     "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterMid",
+     "head": "409ed4d488b1a8ab861c01f207c40a0b99e869d9",
+     "dirty_paths_before": 0,
+     "dirty_paths_after": 0,
+     "exit": 0,
+     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/confirm/logs/PqxdhDeploymentIdealLaterMid.log",
+     "log_bytes": 0,
+     "artifact": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/confirm/out/PqxdhDeploymentIdealLaterMid.olean",
+     "artifact_sha256": "c33bc39f5d3939c2f5788d62a17eb098f8366735b0ca68cb8a40ad5622c1cefc",
+     "equals_fix_pass_final": true
+    },
+    {
+     "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSteps",
+     "head": "409ed4d488b1a8ab861c01f207c40a0b99e869d9",
+     "dirty_paths_before": 0,
+     "dirty_paths_after": 0,
+     "exit": 0,
+     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/confirm/logs/PqxdhDeploymentIdealLaterSteps.log",
+     "log_bytes": 0,
+     "artifact": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/confirm/out/PqxdhDeploymentIdealLaterSteps.olean",
+     "artifact_sha256": "3c4871ddb5dc569fd8f309d80fe71884a8592cab677a69ec5065eff4637b489f",
+     "equals_fix_pass_final": true
+    },
+    {
+     "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterPost",
+     "head": "409ed4d488b1a8ab861c01f207c40a0b99e869d9",
+     "dirty_paths_before": 0,
+     "dirty_paths_after": 0,
+     "exit": 0,
+     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/confirm/logs/PqxdhDeploymentIdealLaterPost.log",
+     "log_bytes": 0,
+     "artifact": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/confirm/out/PqxdhDeploymentIdealLaterPost.olean",
+     "artifact_sha256": "37f027b241345fd014617115f0628168ce738dab7eac410c45c920c8e99213fc",
+     "equals_fix_pass_final": true
+    },
+    {
+     "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterCompile",
+     "head": "409ed4d488b1a8ab861c01f207c40a0b99e869d9",
+     "dirty_paths_before": 0,
+     "dirty_paths_after": 0,
+     "exit": 0,
+     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/confirm/logs/PqxdhDeploymentIdealLaterCompile.log",
+     "log_bytes": 0,
+     "artifact": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/confirm/out/PqxdhDeploymentIdealLaterCompile.olean",
+     "artifact_sha256": "822ef5a3c929401c61691f4e572bebea477f4870514b529e8d2b35b68fc4345f",
+     "equals_fix_pass_final": true
+    },
+    {
+     "module": "BeaconcryptCore",
+     "head": "409ed4d488b1a8ab861c01f207c40a0b99e869d9",
+     "dirty_paths_before": 0,
+     "dirty_paths_after": 0,
+     "exit": 0,
+     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/confirm/logs/root.log",
+     "log_bytes": 0,
+     "artifact": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/confirm/out/BeaconcryptCore.olean",
+     "artifact_sha256": "126818c4c98542b4dccd5217012b10d9535d14fb725c651eb7195a33e6ecf116",
+     "equals_fix_pass_final": true
+    }
+   ],
+   "declaration_comparison": {
+    "probe": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/confirm/probe/Decls.lean",
+    "probe_sha256": "69fc3840465f02627ed70c6942dde40edd0d709f1fe32f8273ee87fea5dd6eea",
+    "old_log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/confirm/logs/Decls-old.log",
+    "new_log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/confirm/logs/Decls-new.log",
+    "log_sha256": "68b1bcd25cb68bcebf435865f945aad18faa4e4646b5c871ad407aba496fb5a5",
+    "constants": 395
+   },
+   "clean_tree_inventory": {
+    "tag": "tip-clean",
+    "who": "implementer, after the review fix pass documentation commit",
+    "exit": 0,
+    "head": "409ed4d488b1a8ab861c01f207c40a0b99e869d9",
+    "dirty_paths_before": 0,
+    "dirty_paths_after": 0,
+    "start": "2026-10-10T10:00:44Z",
+    "end": "2026-10-10T10:02:32Z",
+    "lease": "00000530",
+    "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/logs/inventory-tip-clean.log",
+    "log_sha256": "7cfe83120004dcab0af713ace53a32ce45500b6809dab07ab9993d221ab934d6",
+    "result_line": "Formal-verification inventory matches the reviewed boundary.",
+    "command": "coord.sh lease mem claude @nix lqf-Bfix-inventory-tip-clean --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C /tmp/beaconcrypt-deployment-lqf-compile/beaconcrypt-core check-inventory SHELL=bash",
+    "note": "on the clean tree at 409ed4d4 (empty git status before and after); recorded only in scratch (B/fix/NOTES.md) until this record; the integration's checks receipt repeats check-inventory on the merged tip"
+   },
+   "findings_fixed": [
+    "nit: the guide's open point 3, checks.contamination.note here and the item 2 guide's notes for item 2's units now name PqxdhSecretInputKdf.HmacOracle, RootOutput and HmacBlock (the HMAC oracle spec and byte types, allowed), the item 2 guide also PqxdhJointGapDh.ScalarBytes (the ephemeral scalar type); the record commit's own probe (checks.contamination.record_commit_probe) found one more, PqxdhFullSecretInputKdf.FullOutput (the 76-byte output type of the full expand, allowed), outside the hygiene probe's watch list, now named in all three places, so that \"only\" holds",
+    "nit: checks.contamination.note now says \"none of the constants only in unit B's closure is from an authentication-, DH- or KDF-named module\" (the guide's wording), with a note of the first wording"
+   ],
+   "records": [
+    "the confirming review's own checks, above (checked, no action)",
+    "the status paragraph of the guide and the analysis entry's last sentence: the \"not integrated\" sentences now record the confirming review and the integration's route (merge of central above the record commit, checks on the merge, fast-forward of central); the integration message records the outcome",
+    "the clean-tip check-inventory run at 409ed4d4 (lease 00000530) and the confirming rebuilds are now cited in the guide's \"LQ-F upstream unit B: checks\" and here"
+   ],
+   "files_changed": [
+    "doc/formal-verification-analysis.md",
+    "doc/impl/common-deployment-experiment.md",
+    "doc/impl/extract-composition.md",
+    "doc/impl/proof-receipts/lqf-upstream-B.json"
+   ],
+   "lean_change": "none (no file under beaconcrypt-core/ changed)",
+   "notes": {
+    "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/confirm/NOTES.md",
+    "sha256": "d67b09a61692aef02590553212e84b6deae55872553945c9a59fb13f6b0bf547"
+   },
+   "scratch": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/confirm/ (review checks), /tmp/bc-arc-scratch/common-experiment/lqf-up/B/int (record-commit scripts, probe, backups, integration)",
+   "git_diff_check": {
+    "range": "409ed4d488b1a8ab861c01f207c40a0b99e869d9..working tree (the confirming-review record, before this receipt was written)",
+    "exit": 0,
+    "output": ""
+   }
+  }
  },
- "integration": "not integrated (task instruction); integration (PROTOCOL section 6) by fast-forward of central to the branch's checked tip after a merge of central c27b4533 or newer (the first wording said c72db84a; corrected by the review fix pass)",
+ "integration": "not integrated at the record commit; central moved to c27b4533 (unit A2, CE-12 P2 and item 7 increment A integrated) after the unit's base adf9d8fc, so the integration (PROTOCOL section 6) merges central into the branch above the record commit, runs the checks on that merge and fast-forwards central to it (or to a merge of a newer central, if central moves again first), with the checks of that tip in the checks receipt /tmp/bc-arc-scratch/common-experiment/lqf-up/B/int/checks-receipt.json and the outcome in the integration message to all; the record commit replaced the \"not integrated\" sentences of the guide's status paragraph and of the analysis entry with this route (the first wording of this key said c72db84a; corrected by the review fix pass)",
  "contracts_used_by": {
   "phase_readback": {
    "note": "Phase1ReadBack codec and Phase2ReadBack codec as explicit arguments (keymatch_later and game_markedL take Phase1ReadBack only); ideal_compile_server through the hypotheses of IdealCompileServerTarget",
