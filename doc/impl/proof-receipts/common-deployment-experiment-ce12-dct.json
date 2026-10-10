@@ -1,5 +1,5 @@
 {
- "date": "2026-10-10T19:26:00.018793+00:00",
+ "date": "2026-10-10T19:47:25.379471+00:00",
  "scope": "CE-12 D-ct (track ce12/dct): the closed ciphertext-gap term. ctgap_world (the decision of (ctGapNamed, ctClaim) on the World of each target is at most ctStat = r1Cap/2^256 + C(ctxCap, 2)/2^512), ctgap_term_le (ctGapTerm <= epsCt), ctgap_term_billed, and 42 closed forms T_dct of every headline that carried ctGapTerm (36 frozen at e5af7024, 6 of CE-12 P4); after the review fix pass also four siblings *_billed_dct_full of the P4 billed forms with the bills of epsCt's reductions at first. No new assumption or contract; no frozen theorem changed.",
  "basis": {
   "start": "e5af70242aca601df0004e89155c2ff5029f0b87",
@@ -25,8 +25,8 @@
  "topic": {
   "branch": "codex/deployment-ce12-dct",
   "worktree": "/tmp/beaconcrypt-deployment-ce12-dct",
-  "head_at_receipt": "10c557cb1062ebe6794a4634254cd5021da22bf9",
-  "note": "the documentation commit that adds this receipt follows head_at_receipt"
+  "head_at_receipt": "78055c37528b3ea6dbd3c8abd0011021ce5ac02e",
+  "note": "the commit that records the confirming review follows head_at_receipt and adds this version of the receipt; it is the commit integrated into central (after a merge of central if it moves first)"
  },
  "design": {
   "path": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/final/design.md",
@@ -37,13 +37,16 @@
   "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
   "sections": [
    120,
-   121
+   121,
+   122
   ],
   "copy_after_section_120": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/docs/plan.after-120.md",
   "copy_sha256": "516b61e637b726884391722d08cbab0abcee2c906cfdf10207f7bd974d081771",
   "copy_after_section_121": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/impl/docs/plan.after-121-8f984e7d.md",
   "copy_after_section_121_sha256": "8f984e7d1115ebaf9bee8105a386ead08781111051a183dbf9e310e1bc185b98",
-  "note": "the working plan is shared with other lanes; the copies pin it right after sections 120 and 121 were appended (the second also has the review fix pass pointers in the owner flags of sections 103 and 114); the committed snapshot doc/impl/common-deployment-experiment-plan.md is not refreshed by this track (the integration refreshes it)"
+  "note": "the working plan is shared with other lanes; the copies pin it right after sections 120, 121 and 122 were appended (the second also has the review fix pass pointers in the owner flags of sections 103 and 114); the committed snapshot doc/impl/common-deployment-experiment-plan.md is refreshed by the commit that records the confirming review (plan_snapshot)",
+  "copy_after_section_122": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/int/docs/plan.at-record-825d9dca.md",
+  "copy_after_section_122_sha256": "825d9dca0c9deb7b51f988b28dbc05c57115a6b4685904fe9dc1eda3072f75ec"
  },
  "notes": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/NOTES.md",
  "commits": [
@@ -114,6 +117,10 @@
   {
    "commit": "10c557cb1062ebe6794a4634254cd5021da22bf9",
    "subject": "Bill the ciphertext-gap reductions of the CE-12 P4 billed forms"
+  },
+  {
+   "commit": "78055c37528b3ea6dbd3c8abd0011021ce5ac02e",
+   "subject": "Document the CE-12 D-ct review fix pass"
   }
  ],
  "files_sha256": {
@@ -1609,17 +1616,17 @@
   "git_diff_check": "git diff --cached --check before every commit (finalize.sh) and git diff --check e5af7024..c747d243, e291c58f..10c557cb and e5af7024..10c557cb: clean"
  },
  "owner_flags": [
-  "Acknowledge the birthday term C(ctxCap, 2)/2^512 in place of design-v2 section 8's linear H/2^512 before publication (design section 2, owner note 1). Gates the integration; not acknowledged through coordination message 525.",
+  "Owner-visible note (design section 2, owner note 1): the birthday term C(ctxCap, 2)/2^512 in place of design-v2 section 8's linear H/2^512. Reported to the owner on 2026-10-10; accepted by Claude under the owner's 2026-10-07 delegation of proof-internal choices; the linear form would need a ChaCha20-Poly1305 tag or X25519 coordinate unpredictability property, which is not assumed, and extra guess terms; the birthday term is below 2^-385 for ctxCap <= 2^64. A weaker bound, not a new assumption, contract or scope change; it does not gate the integration (decision of Claude's orchestrator, 2026-10-10; the earlier wording requested the owner's acknowledgment before the integration).",
   "Design owner note 2 (no decision needed): ctgap_world takes the existing resource premises KemBound, qInit and initBound besides the read-back premises and the budget.",
   "Design owner note 3 (no decision needed): ten of the 42 closed forms add existing premises (qInit and initBound, and in four of them FunctionalDecapsulation); the four *_billed_dct_full siblings add none.",
   "Design owner note 4 (no decision needed): the event CtGapEvent with ctClaim is refined to (ctGapNamed, ctClaim); ctgap_split_sum is an equality, so ctgap_term_le loses nothing; the frozen ctGapTerm is unchanged."
  ],
  "open_points": [
-  "Owner acknowledgment of the birthday term (owner flag 1); the integration waits for it, and the integration report carries owner flags 1 to 4.",
-  "A confirming review of the review fix pass, then the integration into central (PROTOCOL section 6), which merges central if it has moved since 427758b6 and refreshes the committed plan snapshot."
+  "Owner-visible note on the birthday term (owner flag 1): Reported to the owner on 2026-10-10; accepted by Claude under the owner's 2026-10-07 delegation of proof-internal choices; the linear form would need a ChaCha20-Poly1305 tag or X25519 coordinate unpredictability property, which is not assumed, and extra guess terms; the birthday term is below 2^-385 for ctxCap <= 2^64; it does not gate the integration, and the integration report carries owner flags 1 to 4.",
+  "The integration into central (PROTOCOL section 6) follows the commit that records the confirming review; central 427758b6 is already merged (877939df); if central moves first, it is merged in (central's side first at Claude's anchors), with inv recount, inv rehash and the checks on the merged tip."
  ],
  "review": {
-  "status": "reviewed at e291c58f; review fix pass applied; confirming review pending",
+  "status": "reviewed at e291c58f; review fix pass applied (10c557cb, 78055c37); confirming review at 78055c37: APPROVE_WITH_NITS, both nits taken by the commit that records it",
   "reviewed_commit": "e291c58fddb59be0f0d935a341e8030a8053d397",
   "lenses": [
    "semantic",
@@ -1638,7 +1645,8 @@
     "severity": "minor",
     "title": "Owner gate: the BLAKE2b term is a birthday term, not the binding design's H/2^512; integration must wait for the owner's acknowledgment",
     "fix": "No Lean change. Guide open point 1 now says that the integration waits for the acknowledgment and that the integration report carries the flag together with design owner notes 2 to 4 (resource premises of ctgap_world, ten closed forms with added existing premises, the event refinement); the receipt owner_flags list all four; plan section 121 records the gate.",
-    "outcome": "owner-level: documented; the acknowledgment itself is the owner's and is outstanding"
+    "outcome": "owner-level: documented; the acknowledgment itself is the owner's and is outstanding",
+    "superseded": "by the commit that records the confirming review: the decision of Claude's orchestrator (2026-10-10) settles the birthday term without an acknowledgment; Reported to the owner on 2026-10-10; accepted by Claude under the owner's 2026-10-07 delegation of proof-internal choices; the linear form would need a ChaCha20-Poly1305 tag or X25519 coordinate unpredictability property, which is not assumed, and extra guess terms; the birthday term is below 2^-385 for ctxCap <= 2^64; it does not gate the integration"
    },
    {
     "number": 2,
@@ -1694,7 +1702,8 @@
     "severity": "minor",
     "title": "Owner acknowledgment of the birthday term is still outstanding and gates integration",
     "fix": "Recorded in guide open point 1, receipt owner_flags and plan section 121 that the integration waits for the acknowledgment; no acknowledgment found through coordination message 525 or the decision files.",
-    "outcome": "owner-level: outstanding"
+    "outcome": "owner-level: outstanding",
+    "superseded": "by the commit that records the confirming review: the decision of Claude's orchestrator (2026-10-10) settles the birthday term without an acknowledgment; Reported to the owner on 2026-10-10; accepted by Claude under the owner's 2026-10-07 delegation of proof-internal choices; the linear form would need a ChaCha20-Poly1305 tag or X25519 coordinate unpredictability property, which is not assumed, and extra guess terms; the birthday term is below 2^-385 for ctxCap <= 2^64; it does not gate the integration"
    },
    {
     "number": 10,
@@ -1724,6 +1733,103 @@
    "statements_before_after": "No existing statement changed: the 42 _dct forms are byte-identical to e291c58f (cmpfull.py for the four P4 billed forms; the other modules' statements untouched) and the DctClosedLater change is docstring only. Added: ce_app_later_sym_billed_dct_full, ce_app_beacon_later_sym_billed_dct_full, symbolic_lor_later_bound_billed_dct_full, symbolic_lor_later_bound_closed_billed_dct_full; each concludes (conclusion of its _dct form) ∧ TargetBills … .P first budget runtime with the same binders, so it implies its _dct form and is at least as strong.",
    "theorems_before": 283,
    "theorems_after": 287
+  },
+  "confirming_review": {
+   "reviewed_range": "e291c58f..78055c37",
+   "reviewed_commit": "78055c37528b3ea6dbd3c8abd0011021ce5ac02e",
+   "date": "2026-10-10",
+   "scratch": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/confirm",
+   "scope": "the review fix pass (Lean commit 10c557cb, documentation commit 78055c37): the findings of the D-ct review at e291c58f, statements, guards, the receipt, the documentation",
+   "verdict": "APPROVE_WITH_NITS: every finding of the e291c58f review resolved at 78055c37; no statement weaker; two documentation nits",
+   "lean": "e291c58f..78055c37 changes only the module docstring of PqxdhDeploymentHeadlineDctClosedLater and, in PqxdhDeploymentHeadlineDctClosedLaterP4, the module docstring plus four added theorems (*_billed_dct_full) and their guards; against 427758b6 the files added are the fourteen D-ct modules and the receipt, the existing files changed are the root import block, the two inventory files, the analysis and the guide; no published module changed",
+   "receipt": "receiptcheck.py at 78055c37: all 14 module sha256 = receipt, theorem lists and counts = receipt, 287 theorems = 287 guards in order, axioms within propext, Classical.choice, Quot.sound (4 depend on none), no sorry/admit/axiom; files_sha256 (root, reviewed-inventory, check-inventory) and olean artifacts match; the 17 root-check records match head_before_commit, dirty count and root sha256; reviewed-inventory rows of the D-ct files, check-inventory.sh and the root: 16 rows, 0 mismatches; handwritten-lean 1972",
+   "comparison": {
+    "file": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/confirm/CmpFull.lean",
+    "file_sha256": "e313742f8d561f7cf99aee1838d400fd8a86d5bf17cf2ea7bb97c6b7f0f50b43",
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/confirm/CmpFull.log",
+    "log_sha256": "71add0ae05c94b8327c128606920d192f44dbc42c9537cb55dae247c07d87022",
+    "mode": "coord.sh lean claude, ce12/dct/impl/leanpath3, exit 0",
+    "result": "4/4 OK: binders equal (names, binder infos, types, order); first conjunct == conclusion of the _dct form; second conjunct == ctgap_term_billed's at mode .P, adversary first, the mode and adversary of epsCt in the _dct form"
+   },
+   "recompiles": {
+    "mode": "without -o, coord.sh lean claude, ce12/dct/impl/leanpath3",
+    "logs": {
+     "PqxdhDeploymentHeadlineDctClosedLaterP4": {
+      "log": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/confirm/recheck-PqxdhDeploymentHeadlineDctClosedLaterP4.log",
+      "log_bytes": 0,
+      "exit": 0
+     },
+     "PqxdhDeploymentHeadlineDctClosedLater": {
+      "log": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/confirm/recheck-PqxdhDeploymentHeadlineDctClosedLater.log",
+      "log_bytes": 0,
+      "exit": 0
+     }
+    }
+   },
+   "p2b_billed": "the twelve billed _dct forms of P2b each state TargetBills at the mode and adversary of their epsCt (textual)",
+   "nits": [
+    {
+     "n": 1,
+     "where": "guide status paragraph of CE-12 D-ct, \"CE-12 D-ct: decisions and deviations\", open point 1, fix pass finding 1; analysis D-ct entry and six pointers \"(Added by CE-12 D-ct: ...)\"; this receipt (owner_flags[0], open_points, review findings 1 and 9)",
+     "finding": "the documents at 78055c37 say that the integration waits for the owner's acknowledgment of the birthday term, which conflicts with the later decision of Claude's orchestrator (2026-10-10) that the term is a proof-internal bound choice covered by the owner's 2026-10-07 delegation and does not gate the integration",
+     "outcome": "taken: the decision stands; every place carries the recorded note (Reported to the owner on 2026-10-10; accepted by Claude under the owner's 2026-10-07 delegation of proof-internal choices; the linear form would need a ChaCha20-Poly1305 tag or X25519 coordinate unpredictability property, which is not assumed, and extra guess terms; the birthday term is below 2^-385 for ctxCap <= 2^64); the third clause follows design section 2 and amendment A2 (a single AEAD property would not suffice); kept visible in the analysis (D-ct entry, paragraph \"Owner note\") and in the integration report; the fix pass's finding 1 and the receipt's findings 1 and 9 keep their text with a superseding note; plan sections 120 and 121 keep their wording as historical records, read with section 122"
+    },
+    {
+     "n": 2,
+     "where": "guide 63 (status of P2b step 1) and 75 (status of P4 step 3); analysis 5588 (P4 step 2, not claimed) and 5614 (P4 step 3, not claimed); optionally guide 1650 (P2 bullet on F-ct2)",
+     "finding": "four more statements of the kind finding 4 targeted had no D-ct pointer",
+     "outcome": "taken: a pointer \"(Added by CE-12 D-ct: ...)\" in the wording of the existing ones at all four places and at the optional fifth"
+    }
+   ],
+   "scripts": {
+    "tools/receiptcheck.py": "39889ac1aa842fa175fc22680d008f077fd4517543e004bdf07c8a15eb62335c",
+    "intradiff.py": "a33129248be15f28ecd01fd8646063dbc640e7f2b847ba11f17e37b9d6b9b438"
+   }
   }
+ },
+ "commits_note": "the commit that records the confirming review follows the last listed commit and adds this version of the receipt",
+ "record": {
+  "commit": "the commit that records the confirming review (follows 78055c37; it adds this version of the receipt)",
+  "lean_changes": "none",
+  "documents": {
+   "script": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/int/scripts/docs_record.py",
+   "script_sha256": "692f31351da2e422f8ed577074e13202cb71ba862e46593ec870ee835f3a47c0",
+   "followup_sha256": "0f306e6374cbfea5335281719c9b21bc4f63686e9f72d072e1097ba8882e51c5",
+   "log": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/int/logs/docs_record.log",
+   "followup": "applied after the script, recorded in /tmp/bc-arc-scratch/common-experiment/ce12/dct/int/scripts/docs_record_fix.py: the pointer-count wording in the status paragraph and the analysis D-ct entry (four named by the review plus the optional fifth), and the analysis D-ct entry's CtxColl paragraph, which also asked for the acknowledgment (reworded to the note)",
+   "backups": {
+    "guide.before-record.md": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/int/docs/guide.before-record.md",
+    "analysis.before-record.md": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/int/docs/analysis.before-record.md",
+    "receipt.before-record.json": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/int/docs/receipt.before-record.json",
+    "snapshot.before-record.md": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/int/docs/snapshot.before-record.md",
+    "plan.before-record-8f984e7d.md": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/int/docs/plan.before-record-8f984e7d.md"
+   }
+  },
+  "plan": {
+   "script": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/int/scripts/plan_edit.py",
+   "script_sha256": "fd808202fc36299971082a7be801f54da45c5f28847f5918d6f0659295c2bb49",
+   "section": 122,
+   "before": "8f984e7d1115ebaf9bee8105a386ead08781111051a183dbf9e310e1bc185b98",
+   "after": "825d9dca0c9deb7b51f988b28dbc05c57115a6b4685904fe9dc1eda3072f75ec"
+  },
+  "recount": {
+   "log": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/int/logs/recount-record.log",
+   "result": "handwritten-lean count unchanged (1972)"
+  },
+  "rehash": {
+   "log": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/int/logs/rehash-record.log",
+   "result": "unchanged (no Lean or inventory file edited)"
+  },
+  "owner_note_decision": "decision of Claude's orchestrator (2026-10-10), recorded in /tmp/bc-arc-scratch/common-experiment/ce12/dct/NOTES.md (ORCHESTRATOR DECISION): the birthday term is a proof-internal bound choice under the owner's 2026-10-07 delegation; it was reported to the owner on 2026-10-10 and does not gate the integration"
+ },
+ "plan_snapshot": {
+  "path": "doc/impl/common-deployment-experiment-plan.md",
+  "sha256": "7461897543d1ad1f60d22b6beed49e6dd651d0668e34197640d63aca0de84959",
+  "body": "wholesale copy of the working plan 825d9dca0c9deb7b51f988b28dbc05c57115a6b4685904fe9dc1eda3072f75ec (through section 122) after the two title lines, with the snapshot paragraph as the third line",
+  "previous": "central 427758b6 snapshot (CE-12 P4 refresh, working plan 7ea72bc4 through section 119)",
+  "delta": "CE-12 P4's integration bullet at the end of section 119, the D-ct pointers in the owner flags of sections 103 and 114, and sections 120 to 122 (120 D-ct, 121 its review fix pass, 122 its confirming review)",
+  "script": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/int/scripts/snapshot.py",
+  "script_sha256": "5b411f8b9890ef43b51c9c64e535177aa5881b6296f8bd4dcd2174a5ecae12b9",
+  "backup_before_record": "/tmp/bc-arc-scratch/common-experiment/ce12/dct/int/docs/snapshot.before-record.md"
  }
 }
