@@ -10,7 +10,7 @@ The events and claims of the classical headlines on the deployment experiment's 
 - CE-OR (design-v2 section 4.2): `cpart` (the CE counterpart of a handle designated `g`: owner `k` for a Server peer, the target's Server peer for an owner), `ForgedAtCE` (an accepted raw receive in a direction on a handle designated `g` whose decoded frame no CE counterpart published before), `FailsAt`, `OriginFailure` and the claim `orClaim` (the receiving handle of the first failing entry).
 - CE-UKS (design-v2 section 4.3): `CEPartners` (the designated partners of `g`), the receiver side `UksReceiverAt` (an accepted raw receive on a Server peer designated `g`, of a decoded frame that a handle other than its CE partner returned anywhere in the transcript; the CE form of b2s-UKSr) with `uksReceiverClaim`, and the sender side `UksSenderAt` (an owner designated `g` returned a frame that a handle other than its CE partner accepted) with `uksSenderClaim`.
 - CE-APP (design-v2 section 4.4): `AppWin` (the adversary's claimed fresh message, sent on a designated handle, equals its guess), `AppWinPeer` (the same on a Server peer) and the claim `appHandle`.
-- CE-LOR (design-v2 section 4.5): `LorElig` (a test session exists, a public filter `F` on the mode-P transcript view holds, the first admitted test entry's handle designates `g`, and every admitted test entry's handle designates `g`), `LorWin` (eligible and the guess equals the test bit), and the claim `PqxdhRecordLiftIdeal.firstTest`; `LorEligPeer` and `LorWinPeer` add that every admitted test handle is a Server peer.
+- CE-LOR (design-v2 section 4.5): `LorElig` (a test session exists, a public filter `F` on the mode-P transcript view holds, the first admitted test entry's handle designates `g`, and every admitted test entry's handle designates `g`), `LorWin` (eligible and the guess equals the test bit), and the claim `lorClaim` (`PqxdhRecordLiftIdeal.firstTest` of the transcript); `PeerTests` (every admitted test handle is a Server peer) with the Server-side events `lorEligPeerEvent` and `lorWinPeerEvent`.
 
 Each event comes with its Boolean form (classical decision). No probability and no security claim is made here.
 -/
@@ -132,7 +132,7 @@ def cpart (g : Fin budget.accept × Fin budget.capacity) (transcript : List Entr
   | .peer _ => some (.owner g.2.val)
   | .owner _ => (peerOf (Target.ofCE budget g) transcript).map .peer
 
-/-- `ForgedAtCE` (design-v2 section 4.2): the entry, with pre `before` in the final transcript `transcript`, is an accepted raw receive in the direction on a handle designated `g`, whose decoded frame the CE counterpart did not publish before. -/
+/-- `ForgedAtCE` (design-v2 section 4.2): the entry, with prefix `before` in the final transcript `transcript`, is an accepted raw receive in the direction on a handle designated `g`, whose decoded frame the CE counterpart did not publish before. -/
 def ForgedAtCE (direction : Direction) (g : Fin budget.accept × Fin budget.capacity)
     (transcript before : List Entry) (entry : Entry) : Prop :=
   ∃ receiver raw decrypted handle frame, entry.received = some (receiver, raw, .Some decrypted) ∧
@@ -345,7 +345,7 @@ section Lor
 variable (crypto : Pqxdh.Crypto) (codec : Codec Reader Response) (serverKid : Aeneas.Std.U64) (budget : Budget)
   (guess : X → Bool) (filter : List (PqxdhDeploymentInterface.PublicEntry .P) → Bool)
 
-/-- `LorElig` (design-v2 section 4.5): a test session exists, the public filter holds on the mode-P transcript view, the first admitted test entry's handle designates `g`, and every admitted test entry's handle designates `g` (admission recomputed from the transcript pre, `PqxdhRecordLiftIdeal.AdmittedTest`). -/
+/-- `LorElig` (design-v2 section 4.5): a test session exists, the public filter holds on the mode-P transcript view, the first admitted test entry's handle designates `g`, and every admitted test entry's handle designates `g` (admission recomputed from the transcript prefix, `PqxdhRecordLiftIdeal.AdmittedTest`). -/
 def LorElig (g : Fin budget.accept × Fin budget.capacity) (observed : Observed X) : Prop :=
   observed.2.1.test.isSome ∧ filter (observed.2.1.transcript.map (Entry.view .P)) = true ∧
     (∃ first, firstTest observed.2.1.transcript = some first ∧
