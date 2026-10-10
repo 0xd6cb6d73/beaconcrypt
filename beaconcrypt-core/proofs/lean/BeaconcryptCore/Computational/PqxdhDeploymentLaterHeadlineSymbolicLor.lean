@@ -11,9 +11,9 @@ The symbolic left-or-right corollary of CE-LOR-L with the public NoBundleFailure
 - Related outcomes (`Kin`): the same constructed Server (or none), the same ledger and deployment states that differ at most in the caches. Every event of the corollary holds on related outcomes alike, whatever their outputs (`kin_lorEligSym`, `kin_lorEligPeerSym`, `kin_serverGap`, `kin_beaconGap`, `kin_identity`, `kin_identity_decide`, `kin_happens`, `kin_ctColl`; `caches_refl`, `kin_run`).
 - The support transfer (`support_later`): every outcome of the LQ-F game is related, through its classical projection, to an outcome of the classical common deployment experiment of the run-phase adversary `first` (`PqxdhDeploymentLaterServerGame.game_frame`, `runPhase_classical`). With it, CE-12 P2's support facts hold on the LQ-F game: the inclusion `e_CE ∧ NBF ⊆ e_sym ∧ NBF` (`lor_inclusion_later`) and the differences (`lor_difference_later`: a Server-side or Beacon-side gap, an identity collision or a ciphertext collision; `lor_difference_peer_later`: a Server-side gap or an identity collision).
 - The run-phase transfer of the difference terms (`collisions_later`, `identity_later`, with `PqxdhDeploymentLaterHeadlineSymbolic.gaps_later` and `serverGap_later`): each has its probability on the classical experiment of `first` (`game_classical_event`).
-- `symbolic_lor_later_le`, `lor_difference_later_bound`, `symbolic_lor_later` (`|adv_sym − adv_CE| ≤ ½(ε_A2pub + ε_A1 + ctGapTerm + ε_inj + ctCollTerm)` of `first`) and `symbolic_lor_later_bound` (with CE-LOR-L's bound at `nbfFilter`); the Server-side forms `symbolic_lor_server_later_le`, `lor_difference_server_later_bound`, `symbolic_lor_server_later` (`½(ε_A2pub + ε_inj)`) and `symbolic_lor_server_later_bound` (with `ce_lor_server_later`'s bound, no `β_g`).
+- `symbolic_lor_later_le`, `lor_difference_later_bound`, `symbolic_lor_later` (`|adv_sym − adv_CE| ≤ ½(ε_A2pub + ε_A1 + ctGapTerm + ε_inj + ctCollTerm)`; `ε_inj` the fixed collider advantage of the setup at `qCreate`, the other four terms of `first`) and `symbolic_lor_later_bound` (with CE-LOR-L's bound at `nbfFilter`); the Server-side forms `symbolic_lor_server_later_le`, `lor_difference_server_later_bound`, `symbolic_lor_server_later` (`½(ε_A2pub + ε_inj)`; `ε_A2pub` of `first`) and `symbolic_lor_server_later_bound` (with `ce_lor_server_later`'s bound, no `β_g`).
 
-Every symbolic term is a run-phase classical term of `first`: CE-A2pub, CE-A1, the ciphertext gap, the identity collision and the ciphertext collision are never cited on the later compiled program. Explicit terms: `ctGapTerm` (F-ct2) and `ctCollTerm` (CE-12 P2's explicit ciphertext-collision term; its closed form `ε_ctcoll` is CE-12 P2b's `ct_collision_game`, not on central). No new assumption or contract; the premises are those of CE-LOR-L and of CE-12 P2's `symbolic_lor` at `first`. Later mode claims confidentiality only: no origin, binding or authentication statement.
+The symbolic terms `ε_A2pub`, `ε_A1`, `ctGapTerm` and `ctCollTerm` are run-phase classical terms of `first`. `ε_inj` (`PqxdhDeploymentHeadlineCollision.injTerm setup budget`) is the sum over the `qCreate + 1` identity indices of the joint weak-EUF advantage of the zero-query collider reductions of the setup: it depends only on the setup and `qCreate`, not on the adversary, and bounds the identity-collision event of the classical experiment of `first` (`identity_collision_game`). CE-A2pub, CE-A1, the ciphertext gap, the identity collision and the ciphertext collision are never cited on the later compiled program. Explicit terms: `ctGapTerm` (F-ct2) and `ctCollTerm` (CE-12 P2's explicit ciphertext-collision term; its closed form `ε_ctcoll` is CE-12 P2b's `ct_collision_game`, not on central). No new assumption or contract; the premises are those of CE-LOR-L and of CE-12 P2's `symbolic_lor` at `first`. Later mode claims confidentiality only: no origin, binding or authentication statement.
 -/
 
 open OracleComp OracleSpec ENNReal
@@ -552,7 +552,7 @@ theorem symbolic_lor_later_le (setup : Setup baseSpec KemSK) (codec : Codec Read
   refine (ENNReal.ofReal_le_ofReal core).trans ?_
   rw [PqxdhDeploymentHeadlineLor.ofReal_half, ENNReal.ofReal_toReal (finite _), dSame]
 
-/-- The difference event of `symbolic_lor_later` is bounded by `ε_A2pub + ε_A1 + ctGapTerm + ε_inj + ctCollTerm`, each a run-phase classical term of `first` (`lor_difference_later`; the gap, identity-collision and ciphertext-collision events are carried to the classical experiment of `first` by `gaps_later` and `collisions_later`, then `sym_gap` and `identity_collision_game`). -/
+/-- The difference event of `symbolic_lor_later` is bounded by `ε_A2pub + ε_A1 + ctGapTerm + ε_inj + ctCollTerm`, where `ε_A2pub`, `ε_A1`, `ctGapTerm` and `ctCollTerm` are run-phase classical terms of `first` and `ε_inj` is the fixed collider advantage of the setup at `qCreate`, independent of the adversary (`lor_difference_later`; the gap, identity-collision and ciphertext-collision events are carried to the classical experiment of `first` by `gaps_later` and `collisions_later`, then `sym_gap` and `identity_collision_game`). -/
 theorem lor_difference_later_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (caps : KemCaps) (bounded : KemBound setup caps)
     (shortRejects : ∀ (publicKey : PqxdhEd25519EufCma.Ed25519PublicKey) bytes, bytes.length < 64 →
@@ -615,7 +615,7 @@ theorem lor_difference_later_bound (setup : Setup baseSpec KemSK) (codec : Codec
       identityFallback ordinaryFallback a1Fallback signatureFallback) rest).trans (le_of_eq ?_)
     ring
 
-/-- `symbolic_lor` on the LQ-F game (mode P; the later forms of VC rows SSX-b2s, SS-b2s and 173 on symbolic eligibility): the symbolic LOR advantage of the LQ-F game (eligibility `e_sym` read on the classical projection, the guess read from the post adversary's output) differs from CE-LOR-L's advantage with the public NoBundleFailure filter by at most `½(ε_A2pub + ε_A1 + ctGapTerm + ε_inj + ctCollTerm)`, each a run-phase classical term of `first`. Premises: those of CE-12 P2's `symbolic_lor` at `first`. -/
+/-- `symbolic_lor` on the LQ-F game (mode P; the later forms of VC rows SSX-b2s, SS-b2s and 173 on symbolic eligibility): the symbolic LOR advantage of the LQ-F game (eligibility `e_sym` read on the classical projection, the guess read from the post adversary's output) differs from CE-LOR-L's advantage with the public NoBundleFailure filter by at most `½(ε_A2pub + ε_A1 + ctGapTerm + ε_inj + ctCollTerm)`, where `ε_A2pub`, `ε_A1`, `ctGapTerm` and `ctCollTerm` are run-phase classical terms of `first` and `ε_inj` is the fixed collider advantage of the setup at `qCreate` (independent of the adversary). Premises: those of CE-12 P2's `symbolic_lor` at `first`: `KemBound setup caps`, `shortRejects`, the approved Phase 1 and Phase 2 read-back contracts, `FrameReadBack`, `ReadWritable`, `X25519ClassLaw`, `X25519ScalarSpread`, `SourceFullCorrect`, `HasAttachedVerificationAdapter` and the run budget of `first`; the post adversary `second` is arbitrary (no post budget). -/
 theorem symbolic_lor_later (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (caps : KemCaps) (bounded : KemBound setup caps)
     (shortRejects : ∀ (publicKey : PqxdhEd25519EufCma.Ed25519PublicKey) bytes, bytes.length < 64 →
@@ -654,7 +654,7 @@ theorem symbolic_lor_later (setup : Setup baseSpec KemSK) (codec : Codec Reader 
       ensureInit phase1 phase2 frameBack writable law spread correct adapter bounds first second budget respects runtime
       identityFallback ordinaryFallback a1Fallback signatureFallback) _)
 
-/-- `symbolic_lor_later` with CE-LOR-L's bound (`PqxdhDeploymentLaterHeadlineLor.ce_lor_later` at the NoBundleFailure filter): the symbolic LOR advantage of the LQ-F game is at most CE-LOR-L's bound plus `½(ε_A2pub + ε_A1 + ctGapTerm + ε_inj + ctCollTerm)` of `first`. Premises: those of `ce_lor_later` and of `symbolic_lor_later`. -/
+/-- `symbolic_lor_later` with CE-LOR-L's bound (`PqxdhDeploymentLaterHeadlineLor.ce_lor_later` at the NoBundleFailure filter): the symbolic LOR advantage of the LQ-F game is at most CE-LOR-L's bound plus `½(ε_A2pub + ε_A1 + ctGapTerm + ε_inj + ctCollTerm)` (`ε_inj` the fixed collider advantage of the setup at `qCreate`, the other four terms of `first`). Premises: those of `ce_lor_later` and of `symbolic_lor_later`. -/
 theorem symbolic_lor_later_bound (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)
     (codec : Codec Reader Response) (checks : Checks)
@@ -830,7 +830,7 @@ theorem symbolic_lor_server_later_le (setup : Setup baseSpec KemSK) (codec : Cod
   refine (ENNReal.ofReal_le_ofReal core).trans ?_
   rw [PqxdhDeploymentHeadlineLor.ofReal_half, ENNReal.ofReal_toReal (finite _), dSame]
 
-/-- The Server-side difference event of `symbolic_lor_server_later` is bounded by `ε_A2pub + ε_inj` of `first` (`lor_difference_peer_later`; `serverGap_later` and `identity_later`, then `server_gap_bound` and `identity_collision_game`); no `ε_A1`, `ctGapTerm` or `ctCollTerm`. -/
+/-- The Server-side difference event of `symbolic_lor_server_later` is bounded by `ε_A2pub` of `first` plus `ε_inj`, the fixed collider advantage of the setup at `qCreate` (`lor_difference_peer_later`; `serverGap_later` and `identity_later`, then `server_gap_bound` and `identity_collision_game`); no `ε_A1`, `ctGapTerm` or `ctCollTerm`. -/
 theorem lor_difference_server_later_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (checks : Checks)
     (shortRejects : ∀ (publicKey : PqxdhEd25519EufCma.Ed25519PublicKey) bytes, bytes.length < 64 →
@@ -867,7 +867,7 @@ theorem lor_difference_server_later_bound (setup : Setup baseSpec KemSK) (codec 
       (PqxdhDeploymentHeadlineCollision.identity_collision_game setup codec checks route ensureInit phase1 phase2 bounds
         .P first budget respects runtime)
 
-/-- `symbolic_lor_server` on the LQ-F game (mode P; the later forms of VC rows SSX-s2b, SS-s2b on Server-side symbolic eligibility): the Server-side symbolic LOR advantage differs from the Server-side CE-LOR-L advantage with the public NoBundleFailure filter by at most `½(ε_A2pub + ε_inj)` of `first`; no `ε_A1`, `ctGapTerm` or `ctCollTerm`. Premises: the approved Phase 1 and Phase 2 read-back contracts, `shortRejects` and the budget. -/
+/-- `symbolic_lor_server` on the LQ-F game (mode P; the later forms of VC rows SSX-s2b, SS-s2b on Server-side symbolic eligibility): the Server-side symbolic LOR advantage differs from the Server-side CE-LOR-L advantage with the public NoBundleFailure filter by at most `½(ε_A2pub + ε_inj)` (`ε_A2pub` of `first`, `ε_inj` the fixed collider advantage of the setup at `qCreate`); no `ε_A1`, `ctGapTerm` or `ctCollTerm`. Premises: the approved Phase 1 and Phase 2 read-back contracts, `shortRejects` and the budget. -/
 theorem symbolic_lor_server_later (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (shortRejects : ∀ (publicKey : PqxdhEd25519EufCma.Ed25519PublicKey) bytes, bytes.length < 64 →
       setup.source.crypto.verify publicKey.toList bytes = none)
@@ -894,7 +894,7 @@ theorem symbolic_lor_server_later (setup : Setup baseSpec KemSK) (codec : Codec 
     guess).trans (mul_le_mul_right (lor_difference_server_later_bound setup codec checks shortRejects route ensureInit
       phase1 phase2 bounds first second budget respects runtime identityFallback ordinaryFallback) _)
 
-/-- `symbolic_lor_server_later` with CE-LOR-L's Server-side bound (`PqxdhDeploymentLaterHeadlineLor.ce_lor_server_later` at the NoBundleFailure filter, no `β_g`): the Server-side symbolic LOR advantage of the LQ-F game is at most `ce_lor_server_later`'s bound plus `½(ε_A2pub + ε_inj)` of `first`. Premises: those of `ce_lor_server_later` and of `symbolic_lor_server_later`. -/
+/-- `symbolic_lor_server_later` with CE-LOR-L's Server-side bound (`PqxdhDeploymentLaterHeadlineLor.ce_lor_server_later` at the NoBundleFailure filter, no `β_g`): the Server-side symbolic LOR advantage of the LQ-F game is at most `ce_lor_server_later`'s bound plus `½(ε_A2pub + ε_inj)` (`ε_A2pub` of `first`, `ε_inj` the fixed collider advantage of the setup at `qCreate`). Premises: those of `ce_lor_server_later` and of `symbolic_lor_server_later`. -/
 theorem symbolic_lor_server_later_bound (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)
     (codec : Codec Reader Response) (checks : Checks) (caps : KemCaps) (bounded : KemBound setup caps)
