@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1954
+	[handwritten-lean]=1955
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -41259,6 +41259,35 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem ce_or_pin_b2s_target([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePin theorem ce_or_pin_b2s_target"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePin\.ce_or_pin_b2s$' "$selected_source_module" "PqxdhDeploymentHeadlinePin dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePin.ce_or_pin_b2s"
 require_line_count 1 '^theorem ce_or_pin_b2s([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePin theorem ce_or_pin_b2s"
+
+# CE-12 P4 step 3 (AG lift R2): one successful seal per label and label/sequence alignment in every ideal CTX world
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlinePlainUnique.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlainUnique$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentHeadlinePlainUnique root import"
+require_line_count 11 '^theorem ' "$selected_source_module" "PqxdhDeploymentHeadlinePlainUnique theorem inventory"
+require_line_count 11 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentHeadlinePlainUnique guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePlainUnique\.service_sealEffect$' "$selected_source_module" "PqxdhDeploymentHeadlinePlainUnique dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlainUnique.service_sealEffect"
+require_line_count 1 '^theorem service_sealEffect([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePlainUnique theorem service_sealEffect"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePlainUnique\.keep_satisfying$' "$selected_source_module" "PqxdhDeploymentHeadlinePlainUnique dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlainUnique.keep_satisfying"
+require_line_count 1 '^theorem keep_satisfying([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePlainUnique theorem keep_satisfying"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePlainUnique\.aligned_step$' "$selected_source_module" "PqxdhDeploymentHeadlinePlainUnique dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlainUnique.aligned_step"
+require_line_count 1 '^theorem aligned_step([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePlainUnique theorem aligned_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePlainUnique\.initial_seals$' "$selected_source_module" "PqxdhDeploymentHeadlinePlainUnique dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlainUnique.initial_seals"
+require_line_count 1 '^theorem initial_seals([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePlainUnique theorem initial_seals"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePlainUnique\.ctxRun_aligned$' "$selected_source_module" "PqxdhDeploymentHeadlinePlainUnique dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlainUnique.ctxRun_aligned"
+require_line_count 1 '^theorem ctxRun_aligned([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePlainUnique theorem ctxRun_aligned"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePlainUnique\.traced_run$' "$selected_source_module" "PqxdhDeploymentHeadlinePlainUnique dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlainUnique.traced_run"
+require_line_count 1 '^theorem traced_run([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePlainUnique theorem traced_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePlainUnique\.counted_step$' "$selected_source_module" "PqxdhDeploymentHeadlinePlainUnique dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlainUnique.counted_step"
+require_line_count 1 '^theorem counted_step([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePlainUnique theorem counted_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePlainUnique\.ctxRun_counted$' "$selected_source_module" "PqxdhDeploymentHeadlinePlainUnique dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlainUnique.ctxRun_counted"
+require_line_count 1 '^theorem ctxRun_counted([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePlainUnique theorem ctxRun_counted"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePlainUnique\.eq_of_length_le_one$' "$selected_source_module" "PqxdhDeploymentHeadlinePlainUnique dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlainUnique.eq_of_length_le_one"
+require_line_count 1 '^theorem eq_of_length_le_one([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePlainUnique theorem eq_of_length_le_one"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePlainUnique\.ctxRun_unique$' "$selected_source_module" "PqxdhDeploymentHeadlinePlainUnique dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlainUnique.ctxRun_unique"
+require_line_count 1 '^theorem ctxRun_unique([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePlainUnique theorem ctxRun_unique"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePlainUnique\.frame_seal_unique$' "$selected_source_module" "PqxdhDeploymentHeadlinePlainUnique dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlainUnique.frame_seal_unique"
+require_line_count 1 '^theorem frame_seal_unique([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePlainUnique theorem frame_seal_unique"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
