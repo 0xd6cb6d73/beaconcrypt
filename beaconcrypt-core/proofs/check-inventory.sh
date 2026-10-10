@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1872
+	[handwritten-lean]=1873
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -37992,6 +37992,35 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem compiledMid_buildHidden([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostGoodBuild theorem compiledMid_buildHidden"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostGoodBuild\.good_buildHidden$' "$selected_source_module" "PqxdhDeploymentIdealPostGoodBuild dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostGoodBuild.good_buildHidden"
 require_line_count 1 '^theorem good_buildHidden([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostGoodBuild theorem good_buildHidden"
+
+# CE-11b unit U6, fourth part: CE-3's invariant across owner k's challenge finish of the middle execution (challenge-handle preparation and grouped finish footprint).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostGoodFinish.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentIdealPostGoodFinish$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentIdealPostGoodFinish root import"
+require_line_count 11 '^theorem ' "$selected_source_module" "PqxdhDeploymentIdealPostGoodFinish theorem inventory"
+require_line_count 11 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentIdealPostGoodFinish guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostGoodFinish\.collectCE_inputs$' "$selected_source_module" "PqxdhDeploymentIdealPostGoodFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostGoodFinish.collectCE_inputs"
+require_line_count 1 '^theorem collectCE_inputs([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostGoodFinish theorem collectCE_inputs"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostGoodFinish\.prepareCE_facts$' "$selected_source_module" "PqxdhDeploymentIdealPostGoodFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostGoodFinish.prepareCE_facts"
+require_line_count 1 '^theorem prepareCE_facts([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostGoodFinish theorem prepareCE_facts"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostGoodFinish\.staged_opening$' "$selected_source_module" "PqxdhDeploymentIdealPostGoodFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostGoodFinish.staged_opening"
+require_line_count 1 '^theorem staged_opening([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostGoodFinish theorem staged_opening"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostGoodFinish\.afterRoot_opening$' "$selected_source_module" "PqxdhDeploymentIdealPostGoodFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostGoodFinish.afterRoot_opening"
+require_line_count 1 '^theorem afterRoot_opening([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostGoodFinish theorem afterRoot_opening"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostGoodFinish\.hiddenAfter_opening$' "$selected_source_module" "PqxdhDeploymentIdealPostGoodFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostGoodFinish.hiddenAfter_opening"
+require_line_count 1 '^theorem hiddenAfter_opening([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostGoodFinish theorem hiddenAfter_opening"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostGoodFinish\.groupCE_footprint$' "$selected_source_module" "PqxdhDeploymentIdealPostGoodFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostGoodFinish.groupCE_footprint"
+require_line_count 1 '^theorem groupCE_footprint([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostGoodFinish theorem groupCE_footprint"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostGoodFinish\.finish_shape$' "$selected_source_module" "PqxdhDeploymentIdealPostGoodFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostGoodFinish.finish_shape"
+require_line_count 1 '^theorem finish_shape([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostGoodFinish theorem finish_shape"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostGoodFinish\.groupedOwnerCE_footprint$' "$selected_source_module" "PqxdhDeploymentIdealPostGoodFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostGoodFinish.groupedOwnerCE_footprint"
+require_line_count 1 '^theorem groupedOwnerCE_footprint([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostGoodFinish theorem groupedOwnerCE_footprint"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostGoodFinish\.good_of_finish$' "$selected_source_module" "PqxdhDeploymentIdealPostGoodFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostGoodFinish.good_of_finish"
+require_line_count 1 '^theorem good_of_finish([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostGoodFinish theorem good_of_finish"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostGoodFinish\.compiledMid_challenge$' "$selected_source_module" "PqxdhDeploymentIdealPostGoodFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostGoodFinish.compiledMid_challenge"
+require_line_count 1 '^theorem compiledMid_challenge([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostGoodFinish theorem compiledMid_challenge"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostGoodFinish\.good_challenge$' "$selected_source_module" "PqxdhDeploymentIdealPostGoodFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostGoodFinish.good_challenge"
+require_line_count 1 '^theorem good_challenge([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostGoodFinish theorem good_challenge"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
