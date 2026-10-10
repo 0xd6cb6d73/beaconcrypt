@@ -8,7 +8,7 @@ The first half of `anomaly_le` (design-v2 section 7.2, item 6): the Beacon-side 
 
 - A generic coupling of two stateful simulations of one program that are identical until a stop and keep a frozen observable once stopped (`UntilStop`, `relTriple_until_stop`, the variant of `PqxdhServerAuthEntryFactor.relTriple_until_bad` that carries the observable), with the equality in law (`LazyOracleDiscard.LawEq`) of every view that agrees on such coupled final states (`lawEq_until_stop`).
 - The transcript guess: `cutAt` (the prefix of a transcript before its raw accept attempt of a given ordinal; `cutAt_prefix`, `acceptCount_cons`, `cutAt_append`, `cutAt_keeps`), `earlyFinish` (the input of owner `k`'s first successful finish made before the selected raw accept; `earlyFinish_eq`: under `FinishBefore` it is the input of owner `k`'s first successful finish), and `guessCt` (the bytes of the Phase 2 ciphertext of that input), which later entries do not change once the selected raw accept happened (`guessCt_append`).
-- `anomaly_guess`: on every outcome of the record world with the ideal environment of a target, under `Phase1ReadBack` and `Phase2ReadBack`, the anomaly implies that the transcript guess is the challenge ciphertext of the drawn parameters (from the Beacon provenance invariant of `PqxdhDeploymentIdealBeacon`).
+- `anomaly_guess`: on every outcome of the record world with the ideal environment of a target, under `Phase1ReadBack` and `Phase2ReadBack`, the anomaly implies that the transcript guess is the challenge ciphertext of the drawn parameters (from the Beacon provenance invariant of `PqxdhDeploymentIdealBeacon`). `anomaly_prefix_guess`: so does the anomaly on any prefix of the transcript, the exceptional alternative of `PqxdhDeploymentIdealBeacon.ideal_slots_prefix` (designation is not monotone in the transcript, so it need not be the anomaly on the final transcript).
 
 These are definitions, a generic coupling and support facts; no security claim is made here.
 -/
@@ -68,7 +68,6 @@ theorem relTriple_until_stop {α σ₁ σ₂ V : Type}
         exact ih right.1 left.2 right.2 rel
       · exact bothStopped _ _ left.2 right.2 value leftStop rightStop
 
-set_option linter.deprecated false in
 /-- Identical until a stop with a frozen observable gives the two simulations the same law (`LazyOracleDiscard.LawEq`) of every view that agrees on related final states and on final states stopped with the same observable. -/
 theorem lawEq_until_stop {α σ₁ σ₂ V β : Type}
     (impl₁ : QueryImpl spec (StateT σ₁ ProbComp)) (impl₂ : QueryImpl spec (StateT σ₂ ProbComp))
@@ -290,6 +289,47 @@ theorem anomaly_guess (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack co
   unfold guessCt
   rw [earlyFinish_eq t _ early, rawFound, Option.bind_some, ciphertextFound, Option.map_some, same]
 
+/-- The anomaly on a prefix implies the same guess event as the anomaly: on every outcome of the record world with the ideal environment of a target, under `Phase1ReadBack` and `Phase2ReadBack`, if owner `k` designates the target on a prefix `pre` of the final transcript through a finish made before the selected raw accept (`Anomaly … pre`, that is `BeaconLinked … pre ∧ FinishBefore t pre`, the exceptional alternative of `PqxdhDeploymentIdealBeacon.ideal_slots_prefix`), then the transcript guess of the final transcript is the challenge ciphertext of the drawn parameters. Designation is not monotone in the transcript, so the anomaly on a prefix need not be the anomaly on the final transcript; but the designating finish is owner `k`'s first successful finish in the final transcript too, made before the selected raw accept (`earlyFinish_eq`), and the build response that the designation links it to stays in the transcript, so the argument of `anomaly_guess` applies (`PqxdhDeploymentIdealBeacon.keyFacts_marked_prefix`). The anomaly on the final transcript is the case with an empty rest. -/
+theorem anomaly_prefix_guess (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
+    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec) (t : Target count)
+    (ensureInit : StateT A ProbComp Bool) (identityIndex : ℕ) (runtime : A) (serverKid : Std.U64)
+    (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
+    (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) :
+    ∀ result ∈ support (PqxdhRecordLiftWorld.run setup codec route
+        (PqxdhDeploymentIdealEnv.envGD setup codec checks t ensureInit identityIndex runtime) setup.serverKeyId bounds
+          mode adversary),
+      ∀ value, result.1 = some value → ∀ pre rest, value.2.1.2.transcript = pre ++ rest →
+        Anomaly setup.source.crypto codec serverKid t pre →
+        guessCt codec t value.2.1.2.transcript = some value.2.2.backend.1.challenge := by
+  intro result member value found pre rest split anomaly
+  obtain ⟨linked, early⟩ := anomaly
+  obtain ⟨annotated, annotatedMember, sameValue, _⟩ := PqxdhDeploymentIdealProvenance.annotated_cover setup codec route
+    _ setup.serverKeyId bounds mode adversary result member
+  obtain ⟨_, _, _, prov, holds⟩ := PqxdhDeploymentIdealBeacon.world_beacon setup codec route checks t ensureInit
+    identityIndex runtime setup.serverKeyId bounds mode adversary annotated annotatedMember value
+    (by rw [sameValue]; exact found)
+  have facts := PqxdhDeploymentIdealTrace.world_keyFacts setup codec route checks t ensureInit identityIndex runtime
+    bounds mode adversary result member value found
+  have marked := PqxdhDeploymentIdealBeacon.keyFacts_marked_prefix setup codec checks phase1 serverKid t _ _ pre rest
+    split _ facts (.owner t.kem.val) linked
+  obtain ⟨⟨s, c⟩, marks⟩ := Option.isSome_iff_exists.mp marked
+  have selected := (prov.marked s c marks).1
+  subst selected
+  obtain ⟨-, -, pin, raw, ciphertext, published, pqKey, -, rawFound, ciphertextFound, -, -, -, link⟩ :=
+    PqxdhDeploymentTranscript.designate_owner setup.source.crypto codec serverKid pre t.kem.val _ _ linked
+  obtain ⟨response, -, -, builtFound, responseCiphertext, -⟩ := link
+  obtain ⟨payload, built⟩ := PqxdhDeploymentKeyMatch.buildOf_mem pre _ response builtFound
+  have written := holds.built _ c response marks ⟨payload, by rw [split]; exact List.mem_append_left rest built⟩
+  have same := PqxdhDeploymentIdealBeacon.written_read codec phase2 _ response written ciphertext responseCiphertext
+  have earlyAll : PqxdhDeploymentIdealTrace.FinishBefore t value.2.1.2.transcript := by
+    obtain ⟨before, raw', reply, after, preSplit, count⟩ := early
+    exact ⟨before, raw', reply, after ++ rest, by rw [split, preSplit]; simp, count⟩
+  have finishEq : PqxdhDeploymentTranscript.finishOf value.2.1.2.transcript t.kem.val = some raw := by
+    unfold PqxdhDeploymentTranscript.finishOf at rawFound ⊢
+    rw [split, List.findSome?_append, rawFound, Option.some_or]
+  unfold guessCt
+  rw [earlyFinish_eq t _ earlyAll, finishEq, Option.bind_some, ciphertextFound, Option.map_some, same]
+
 end World
 
 end BeaconcryptCore.Computational.PqxdhDeploymentIdealGuess
@@ -361,3 +401,11 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealGuess.anomaly_guess' de
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealGuess.anomaly_guess
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealGuess.anomaly_prefix_guess' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealGuess.anomaly_prefix_guess

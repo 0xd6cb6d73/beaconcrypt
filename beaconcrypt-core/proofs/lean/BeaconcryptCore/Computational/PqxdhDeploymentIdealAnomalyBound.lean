@@ -5,13 +5,13 @@ import BeaconcryptCore.Computational.PqxdhDeploymentIdealAnomaly
 /-!
 # `anomaly_le`: the Beacon-side anomaly is bounded by the KEM ciphertext guess (CE-11b, unit U4)
 
-The second half of `anomaly_le` (design-v2 section 7.2, item 6). On the record world with the ideal environment of a target, under `Phase1ReadBack` and `Phase2ReadBack`, the Beacon-side anomaly `PqxdhDeploymentIdealTrace.Anomaly` has probability at most `ctGuessPk` (`anomaly_le_pk_sup`), hence at most `ctGuess` (`anomaly_le`).
+The second half of `anomaly_le` (design-v2 section 7.2, item 6). On the record world with the ideal environment of a target, under `Phase1ReadBack` and `Phase2ReadBack`, the Beacon-side anomaly `PqxdhDeploymentIdealTrace.Anomaly` has probability at most `ctGuessPk` (`anomaly_le_pk_sup`), hence at most `ctGuess` (`anomaly_le`); so has the anomaly on a prefix of the transcript, the exceptional alternative of `PqxdhDeploymentIdealBeacon.ideal_slots_prefix` (`anomaly_prefix_le_pk_sup`, `anomaly_prefix_le`).
 
-- The anomaly implies a public event of the transcript and the drawn parameters, that the transcript guess is the challenge ciphertext (`PqxdhDeploymentIdealGuess.anomaly_guess`), whose probability is the same on the challenger's draws followed by the final split game (`PqxdhDeploymentIdealEnv.c1_split`).
+- The anomaly, and the anomaly on a prefix, imply a public event of the transcript and the drawn parameters, that the transcript guess is the challenge ciphertext (`PqxdhDeploymentIdealGuess.anomaly_guess`, `PqxdhDeploymentIdealGuess.anomaly_prefix_guess`), whose probability is the same on the challenger's draws followed by the final split game (`PqxdhDeploymentIdealEnv.c1_split`); `guess_le_pk_sup` bounds that event on the record world by `ctGuessPk` without a read-back premise.
 - The final split game does not read the challenge ciphertext before the selected raw accept: while the selected accept was not active and marked no session, every command other than the selected raw accept is the same at every challenge (`idealSplit_challenge`, `handler_challenge`, through the U3 bridges `PqxdhDeploymentIdealEnvStep.idealSplit_*`; `coinSend_same` for the secrecy layer's coins and sends). On the game flattened with the secrecy layer (`splitHandler`, `splitHandler_run`), the joint states before the selected raw accept (`Early`: the transcript's raw accept attempts are the accept counter, at most the selected ordinal, the selected accept neither active nor marking) are kept by every other step (`handler_backend`, `splitHandler_transcript`, `early_step`, `early_initial`), the selected raw accept stops both runs with the guess of the same transcript (`SelectedQ`, `cutAt_selected`, `stopGuess`, `selected_stop`), and the guess does not change after it (`stopGuess_keeps`). So the two games at different challenges are coupled identically until the selected raw accept (`split_step`) and the guess has the same law at every challenge (`split_guess_law`, `guessView`, `game_guess`, `game_guess_law`, with `PqxdhDeploymentIdealGuess.lawEq_until_stop`).
 - The challenge encapsulation is then drawn after the guess (`LazyOracleDiscard.lawEq_swap`), and a guess of the key pair made before the encapsulation hits it with probability at most `ctGuessPk`, through the best guess of the public key (`pairGuess_le`, with `PqxdhDeploymentIdealAnomaly.encapsHit_max`); `split_guess_le` is the bound on the split side, `evalDist_decide_mono` the support monotonicity of Boolean observations.
 
-`ctGuessPk` is a supremum over all functions of the public key, an information-theoretic quantity of the scheme that no approved assumption bounds (plan section 40). The form that CE-12a's IND-CCA reduction consumes, the anomaly bounded by `PqxdhDeploymentIdealAnomaly.ctGuessBy` at a guesser program constructed from the adversary that does not read the selected secret key (`anomaly_le_pk`), is not proved here: the guess above is a random variable of the whole selected key pair. These are equalities in law and bounds; no assumption is added.
+`ctGuessPk` is a supremum over all functions of the public key, an information-theoretic quantity of the scheme that no approved assumption bounds (plan section 40). The form that CE-12a's IND-CCA reduction consumes, the anomaly bounded by `PqxdhDeploymentIdealAnomaly.ctGuessBy` at a guesser program constructed from the adversary that does not read the selected secret key (`anomaly_le_pk`, and its prefix form), is not proved here: the guess above is a random variable of the whole selected key pair. It is planned for the follow-up module `PqxdhDeploymentIdealAnomalyGuesser`. These are equalities in law and bounds; no assumption is added.
 -/
 
 open OracleComp OracleSpec CoreModels Aeneas
@@ -690,7 +690,6 @@ variable {ι : Type} {baseSpec : OracleSpec ι} {Reader Response A X : Type}
   (checks : Checks) {count : ℕ}
 open PqxdhDeploymentIdealTrace (Anomaly)
 
-set_option linter.deprecated false in
 /-- A Boolean observation that implies another on the support has at most its probability. -/
 theorem evalDist_decide_mono {α : Type} (mx : ProbComp α) (P Q : α → Prop) [DecidablePred P] [DecidablePred Q]
     (implies : ∀ a ∈ support mx, P a → Q a) :
@@ -700,14 +699,12 @@ theorem evalDist_decide_mono {α : Type} (mx : ProbComp α) (P Q : α → Prop) 
   exact probEvent_mono fun a member held => by simpa using implies a member (by simpa using held)
 
 open Classical in
-/-- `anomaly_le` with the public-key supremum (design-v2 section 7.2, item 6): under `Phase1ReadBack` and `Phase2ReadBack`, the record world with the ideal environment of a target has the Beacon-side anomaly with probability at most `ctGuessPk`. Route: the anomaly implies that the transcript guess is the challenge ciphertext (`PqxdhDeploymentIdealGuess.anomaly_guess`); this public event of the transcript and the drawn parameters has the same probability on the challenger's draws followed by the final split game (`PqxdhDeploymentIdealEnv.c1_split`), where it is at most `ctGuessPk` (`split_guess_le`). `ctGuessPk` is a supremum over all functions of the public key, an information-theoretic quantity; the form with a constructed guesser (`ctGuessBy`), which CE-12a's IND-CCA reduction consumes, is open. -/
-theorem anomaly_le_pk_sup (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
-    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec) (t : Target count)
-    (ensureInit : StateT A ProbComp Bool) (identityIndex : ℕ) (runtime : A) (serverKid : Std.U64)
+/-- The transcript guess event on the record world with the ideal environment of a target: the transcript guess (`PqxdhDeploymentIdealGuess.guessCt`) is the challenge ciphertext of the drawn parameters with probability at most `ctGuessPk`. This public event of the transcript and the drawn parameters has the same probability on the challenger's draws followed by the final split game (`PqxdhDeploymentIdealEnv.c1_split`, whose projection keeps the drawn parameters), where it is at most `ctGuessPk` (`split_guess_le`). It takes no read-back premise; the anomaly bounds below reduce to it. -/
+theorem guess_le_pk_sup (t : Target count) (ensureInit : StateT A ProbComp Bool) (identityIndex : ℕ) (runtime : A)
     (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
     (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) :
     𝒟[(fun result => decide (∃ value, result.1 = some value ∧
-        Anomaly setup.source.crypto codec serverKid t value.2.1.2.transcript)) <$>
+        guessCt codec t value.2.1.2.transcript = some value.2.2.backend.1.challenge)) <$>
       PqxdhRecordLiftWorld.run setup codec route
         (PqxdhDeploymentIdealEnv.envGD setup codec checks t ensureInit identityIndex runtime) setup.serverKeyId bounds
           mode adversary] {true} ≤ PqxdhDeploymentIdealTrace.ctGuessPk setup := by
@@ -716,11 +713,9 @@ theorem anomaly_le_pk_sup (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBac
     fun outcome => ∃ value, outcome = some value ∧
       guessCt codec t value.2.2.1.transcript = some value.2.2.2.backend.1.challenge
   refine (evalDist_decide_mono _ _ (fun result => hit (PqxdhDeploymentEnvironmentJoin.joined result))
-    fun result member ⟨value, found, anomaly⟩ => ⟨(value.1, value.2.1.1, value.2.1.2,
+    fun result _ ⟨value, found, guessed⟩ => ⟨(value.1, value.2.1.1, value.2.1.2,
       PqxdhDeploymentEnvironmentJoin.merge value.2.2 result.2), by
-        simp only [PqxdhDeploymentEnvironmentJoin.joined, found, Option.map_some],
-      PqxdhDeploymentIdealGuess.anomaly_guess setup codec route checks phase1 phase2 t ensureInit identityIndex runtime
-        serverKid bounds mode adversary result member value found anomaly⟩).trans ?_
+        simp only [PqxdhDeploymentEnvironmentJoin.joined, found, Option.map_some], guessed⟩).trans ?_
   have law := (PqxdhDeploymentIdealEnv.c1_split setup codec route checks t ensureInit identityIndex runtime bounds mode
     adversary).map (fun outcome => decide (hit outcome))
   have joinedEq : (fun result => decide (hit (PqxdhDeploymentEnvironmentJoin.joined result))) <$>
@@ -745,6 +740,25 @@ theorem anomaly_le_pk_sup (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBac
   · simp [hit, guessView, PqxdhDeploymentEnvironmentDraw.withX]
 
 open Classical in
+/-- `anomaly_le` with the public-key supremum (design-v2 section 7.2, item 6): under `Phase1ReadBack` and `Phase2ReadBack`, the record world with the ideal environment of a target has the Beacon-side anomaly with probability at most `ctGuessPk`. Route: the anomaly implies that the transcript guess is the challenge ciphertext (`PqxdhDeploymentIdealGuess.anomaly_guess`); this public event of the transcript and the drawn parameters has the same probability on the challenger's draws followed by the final split game (`PqxdhDeploymentIdealEnv.c1_split`), where it is at most `ctGuessPk` (`split_guess_le`; the transfer is `guess_le_pk_sup`). `ctGuessPk` is a supremum over all functions of the public key, an information-theoretic quantity; the form with a constructed guesser (`ctGuessBy`), which CE-12a's IND-CCA reduction consumes, is open. -/
+theorem anomaly_le_pk_sup (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
+    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec) (t : Target count)
+    (ensureInit : StateT A ProbComp Bool) (identityIndex : ℕ) (runtime : A) (serverKid : Std.U64)
+    (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
+    (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) :
+    𝒟[(fun result => decide (∃ value, result.1 = some value ∧
+        Anomaly setup.source.crypto codec serverKid t value.2.1.2.transcript)) <$>
+      PqxdhRecordLiftWorld.run setup codec route
+        (PqxdhDeploymentIdealEnv.envGD setup codec checks t ensureInit identityIndex runtime) setup.serverKeyId bounds
+          mode adversary] {true} ≤ PqxdhDeploymentIdealTrace.ctGuessPk setup :=
+  (evalDist_decide_mono _ _ (fun result => ∃ value, result.1 = some value ∧
+      guessCt codec t value.2.1.2.transcript = some value.2.2.backend.1.challenge)
+    fun result member ⟨value, found, anomaly⟩ => ⟨value, found,
+      PqxdhDeploymentIdealGuess.anomaly_guess setup codec route checks phase1 phase2 t ensureInit identityIndex runtime
+        serverKid bounds mode adversary result member value found anomaly⟩).trans
+    (guess_le_pk_sup setup codec route checks t ensureInit identityIndex runtime bounds mode adversary)
+
+open Classical in
 /-- `anomaly_le` (design-v2 section 7.2, item 6): under `Phase1ReadBack` and `Phase2ReadBack`, the record world with the ideal environment of a target has the Beacon-side anomaly with probability at most `ctGuess`, through `anomaly_le_pk_sup` and `PqxdhDeploymentIdealTrace.ctGuessPk_le`. -/
 theorem anomaly_le (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
     (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec) (t : Target count)
@@ -756,6 +770,40 @@ theorem anomaly_le (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec
       PqxdhRecordLiftWorld.run setup codec route
         (PqxdhDeploymentIdealEnv.envGD setup codec checks t ensureInit identityIndex runtime) setup.serverKeyId bounds
           mode adversary] {true} ≤ PqxdhDeploymentIdealTrace.ctGuess setup := (anomaly_le_pk_sup setup codec route checks phase1 phase2 t ensureInit identityIndex runtime serverKid bounds
+    mode adversary).trans (PqxdhDeploymentIdealTrace.ctGuessPk_le setup)
+
+open Classical in
+/-- `anomaly_le_pk_sup` for the anomaly on a prefix: under `Phase1ReadBack` and `Phase2ReadBack`, on the record world with the ideal environment of a target, the event that owner `k` designates the target on some prefix `pre` of the final transcript through a finish made before the selected raw accept (`Anomaly … pre`, that is `BeaconLinked … pre ∧ FinishBefore t pre`: the exceptional alternative of `PqxdhDeploymentIdealBeacon.ideal_slots_prefix`, for consumers that designate at an intermediate time) has probability at most `ctGuessPk`. Designation is not monotone in the transcript, so this event is not contained in the anomaly of the final transcript, which is its case with an empty rest; it implies the same transcript guess event (`PqxdhDeploymentIdealGuess.anomaly_prefix_guess`), bounded by `guess_le_pk_sup`. -/
+theorem anomaly_prefix_le_pk_sup (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
+    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec) (t : Target count)
+    (ensureInit : StateT A ProbComp Bool) (identityIndex : ℕ) (runtime : A) (serverKid : Std.U64)
+    (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
+    (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) :
+    𝒟[(fun result => decide (∃ value, result.1 = some value ∧ ∃ pre rest, value.2.1.2.transcript = pre ++ rest ∧
+        Anomaly setup.source.crypto codec serverKid t pre)) <$>
+      PqxdhRecordLiftWorld.run setup codec route
+        (PqxdhDeploymentIdealEnv.envGD setup codec checks t ensureInit identityIndex runtime) setup.serverKeyId bounds
+          mode adversary] {true} ≤ PqxdhDeploymentIdealTrace.ctGuessPk setup :=
+  (evalDist_decide_mono _ _ (fun result => ∃ value, result.1 = some value ∧
+      guessCt codec t value.2.1.2.transcript = some value.2.2.backend.1.challenge)
+    fun result member ⟨value, found, pre, rest, split, anomaly⟩ => ⟨value, found,
+      PqxdhDeploymentIdealGuess.anomaly_prefix_guess setup codec route checks phase1 phase2 t ensureInit identityIndex
+        runtime serverKid bounds mode adversary result member value found pre rest split anomaly⟩).trans
+    (guess_le_pk_sup setup codec route checks t ensureInit identityIndex runtime bounds mode adversary)
+
+open Classical in
+/-- `anomaly_le` for the anomaly on a prefix: under `Phase1ReadBack` and `Phase2ReadBack`, the event of `anomaly_prefix_le_pk_sup` has probability at most `ctGuess`, through `PqxdhDeploymentIdealTrace.ctGuessPk_le`. -/
+theorem anomaly_prefix_le (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
+    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec) (t : Target count)
+    (ensureInit : StateT A ProbComp Bool) (identityIndex : ℕ) (runtime : A) (serverKid : Std.U64)
+    (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
+    (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) :
+    𝒟[(fun result => decide (∃ value, result.1 = some value ∧ ∃ pre rest, value.2.1.2.transcript = pre ++ rest ∧
+        Anomaly setup.source.crypto codec serverKid t pre)) <$>
+      PqxdhRecordLiftWorld.run setup codec route
+        (PqxdhDeploymentIdealEnv.envGD setup codec checks t ensureInit identityIndex runtime) setup.serverKeyId bounds
+          mode adversary] {true} ≤ PqxdhDeploymentIdealTrace.ctGuess setup :=
+  (anomaly_prefix_le_pk_sup setup codec route checks phase1 phase2 t ensureInit identityIndex runtime serverKid bounds
     mode adversary).trans (PqxdhDeploymentIdealTrace.ctGuessPk_le setup)
 
 end World
@@ -917,6 +965,14 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealAnomalyBound.evalDist_d
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealAnomalyBound.evalDist_decide_mono
 
 /--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealAnomalyBound.guess_le_pk_sup' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealAnomalyBound.guess_le_pk_sup
+
+/--
 info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealAnomalyBound.anomaly_le_pk_sup' depends on axioms: [propext,
  Classical.choice,
  Quot.sound]
@@ -931,3 +987,19 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealAnomalyBound.anomaly_le
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealAnomalyBound.anomaly_le
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealAnomalyBound.anomaly_prefix_le_pk_sup' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealAnomalyBound.anomaly_prefix_le_pk_sup
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealAnomalyBound.anomaly_prefix_le' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealAnomalyBound.anomaly_prefix_le
