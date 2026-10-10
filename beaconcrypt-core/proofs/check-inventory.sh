@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1907
+	[handwritten-lean]=1908
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -39325,6 +39325,69 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem restOf_middle([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterMid theorem restOf_middle"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterMid\.laterTail_middle$' "$selected_source_module" "PqxdhDeploymentIdealLaterMid dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterMid.laterTail_middle"
 require_line_count 1 '^theorem laterTail_middle([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterMid theorem laterTail_middle"
+
+# LQ-F upstream unit B2: item 2's side of the middle run of the later second compile lemma
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterSteps.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSteps$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentIdealLaterSteps root import"
+require_line_count 28 '^theorem ' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps theorem inventory"
+require_line_count 28 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterSteps\.skelImplL_lift$' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSteps.skelImplL_lift"
+require_line_count 1 '^theorem skelImplL_lift([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps theorem skelImplL_lift"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterSteps\.upperLayerL_inl$' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSteps.upperLayerL_inl"
+require_line_count 1 '^theorem upperLayerL_inl([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps theorem upperLayerL_inl"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterSteps\.stepAtCL_of_stepAtL$' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSteps.stepAtCL_of_stepAtL"
+require_line_count 1 '^theorem stepAtCL_of_stepAtL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps theorem stepAtCL_of_stepAtL"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterSteps\.stepAtCL_of_stepAtC$' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSteps.stepAtCL_of_stepAtC"
+require_line_count 1 '^theorem stepAtCL_of_stepAtC([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps theorem stepAtCL_of_stepAtC"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterSteps\.upperLayerL_read$' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSteps.upperLayerL_read"
+require_line_count 1 '^theorem upperLayerL_read([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps theorem upperLayerL_read"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterSteps\.step_serverRead$' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSteps.step_serverRead"
+require_line_count 1 '^theorem step_serverRead([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps theorem step_serverRead"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterSteps\.upperLayerL_accept$' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSteps.upperLayerL_accept"
+require_line_count 1 '^theorem upperLayerL_accept([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps theorem upperLayerL_accept"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterSteps\.prefix_chainL$' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSteps.prefix_chainL"
+require_line_count 1 '^theorem prefix_chainL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps theorem prefix_chainL"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterSteps\.orderedL_bound$' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSteps.orderedL_bound"
+require_line_count 1 '^theorem orderedL_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps theorem orderedL_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterSteps\.acceptSource_run$' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSteps.acceptSource_run"
+require_line_count 1 '^theorem acceptSource_run([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps theorem acceptSource_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterSteps\.step_acceptL$' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSteps.step_acceptL"
+require_line_count 1 '^theorem step_acceptL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps theorem step_acceptL"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterSteps\.step_acceptCL$' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSteps.step_acceptCL"
+require_line_count 1 '^theorem step_acceptCL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps theorem step_acceptCL"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterSteps\.lowerE_poolL$' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSteps.lowerE_poolL"
+require_line_count 1 '^theorem lowerE_poolL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps theorem lowerE_poolL"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterSteps\.upperLayer_identity$' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSteps.upperLayer_identity"
+require_line_count 1 '^theorem upperLayer_identity([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps theorem upperLayer_identity"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterSteps\.step_identity$' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSteps.step_identity"
+require_line_count 1 '^theorem step_identity([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps theorem step_identity"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterSteps\.step_identityCL$' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSteps.step_identityCL"
+require_line_count 1 '^theorem step_identityCL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps theorem step_identityCL"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterSteps\.step_allL$' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSteps.step_allL"
+require_line_count 1 '^theorem step_allL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps theorem step_allL"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterSteps\.keep_allL$' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSteps.keep_allL"
+require_line_count 1 '^theorem keep_allL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps theorem keep_allL"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterSteps\.item_simL$' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSteps.item_simL"
+require_line_count 1 '^theorem item_simL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps theorem item_simL"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterSteps\.ghostFree_acceptStepL$' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSteps.ghostFree_acceptStepL"
+require_line_count 1 '^theorem ghostFree_acceptStepL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps theorem ghostFree_acceptStepL"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterSteps\.skelImplL_ghostFree$' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSteps.skelImplL_ghostFree"
+require_line_count 1 '^theorem skelImplL_ghostFree([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps theorem skelImplL_ghostFree"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterSteps\.upperLayerL_neverRead$' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSteps.upperLayerL_neverRead"
+require_line_count 1 '^theorem upperLayerL_neverRead([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps theorem upperLayerL_neverRead"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterSteps\.skelResumeL_upper$' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSteps.skelResumeL_upper"
+require_line_count 1 '^theorem skelResumeL_upper([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps theorem skelResumeL_upper"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterSteps\.itemPostL_active$' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSteps.itemPostL_active"
+require_line_count 1 '^theorem itemPostL_active([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps theorem itemPostL_active"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterSteps\.itemPostL_erased$' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSteps.itemPostL_erased"
+require_line_count 1 '^theorem itemPostL_erased([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps theorem itemPostL_erased"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterSteps\.itemPostL_clean$' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSteps.itemPostL_clean"
+require_line_count 1 '^theorem itemPostL_clean([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps theorem itemPostL_clean"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterSteps\.itemPost_middleL$' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSteps.itemPost_middleL"
+require_line_count 1 '^theorem itemPost_middleL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps theorem itemPost_middleL"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterSteps\.simulate_keeps$' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSteps.simulate_keeps"
+require_line_count 1 '^theorem simulate_keeps([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterSteps theorem simulate_keeps"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
