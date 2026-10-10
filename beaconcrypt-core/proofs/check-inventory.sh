@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1920
+	[handwritten-lean]=1921
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -39741,6 +39741,29 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBounda
 require_line_count 1 '^theorem phase1_withReader([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryDeploymentStep theorem phase1_withReader"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryDeploymentStep\.phase2_withReader$' "$selected_source_module" "PqxdhBoundaryDeploymentStep dependency BeaconcryptCore.Computational.PqxdhBoundaryDeploymentStep.phase2_withReader"
 require_line_count 1 '^theorem phase2_withReader([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryDeploymentStep theorem phase2_withReader"
+
+# Item 7 PB-D: classical source join of the whole deployment game (PB-12, PB-14; increment I3, Claude).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryDeployment.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhBoundaryDeployment$' proofs/lean/BeaconcryptCore.lean "PqxdhBoundaryDeployment root import"
+require_line_count 8 '^theorem ' "$selected_source_module" "PqxdhBoundaryDeployment theorem inventory"
+require_line_count 8 '^#guard_msgs in$' "$selected_source_module" "PqxdhBoundaryDeployment guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryDeployment\.execute_exact$' "$selected_source_module" "PqxdhBoundaryDeployment dependency BeaconcryptCore.Computational.PqxdhBoundaryDeployment.execute_exact"
+require_line_count 1 '^theorem execute_exact([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryDeployment theorem execute_exact"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryDeployment\.unwrap_okMap$' "$selected_source_module" "PqxdhBoundaryDeployment dependency BeaconcryptCore.Computational.PqxdhBoundaryDeployment.unwrap_okMap"
+require_line_count 1 '^theorem unwrap_okMap([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryDeployment theorem unwrap_okMap"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryDeployment\.classical$' "$selected_source_module" "PqxdhBoundaryDeployment dependency BeaconcryptCore.Computational.PqxdhBoundaryDeployment.classical"
+require_line_count 1 '^theorem classical([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryDeployment theorem classical"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryDeployment\.classical_zero$' "$selected_source_module" "PqxdhBoundaryDeployment dependency BeaconcryptCore.Computational.PqxdhBoundaryDeployment.classical_zero"
+require_line_count 1 '^theorem classical_zero([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryDeployment theorem classical_zero"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryDeployment\.classical_normal$' "$selected_source_module" "PqxdhBoundaryDeployment dependency BeaconcryptCore.Computational.PqxdhBoundaryDeployment.classical_normal"
+require_line_count 1 '^theorem classical_normal([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryDeployment theorem classical_normal"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryDeployment\.classical_continuation$' "$selected_source_module" "PqxdhBoundaryDeployment dependency BeaconcryptCore.Computational.PqxdhBoundaryDeployment.classical_continuation"
+require_line_count 1 '^theorem classical_continuation([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryDeployment theorem classical_continuation"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryDeployment\.classical_observe$' "$selected_source_module" "PqxdhBoundaryDeployment dependency BeaconcryptCore.Computational.PqxdhBoundaryDeployment.classical_observe"
+require_line_count 1 '^theorem classical_observe([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryDeployment theorem classical_observe"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryDeployment\.classical_probEvent$' "$selected_source_module" "PqxdhBoundaryDeployment dependency BeaconcryptCore.Computational.PqxdhBoundaryDeployment.classical_probEvent"
+require_line_count 1 '^theorem classical_probEvent([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryDeployment theorem classical_probEvent"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
