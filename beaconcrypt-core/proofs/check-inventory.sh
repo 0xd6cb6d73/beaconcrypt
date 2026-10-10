@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1952
+	[handwritten-lean]=1953
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -41085,6 +41085,59 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem keepLift_run([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctFinish theorem keepLift_run"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctFinish\.finishChallenge_keyed$' "$selected_source_module" "PqxdhDeploymentHeadlineDctFinish dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctFinish.finishChallenge_keyed"
 require_line_count 1 '^theorem finishChallenge_keyed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctFinish theorem finishChallenge_keyed"
+
+# CE-12 D-ct: the witness steps on the split state (finish_root, the marked build's keyed seal, markedBuild_commit).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineDctCommit.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctCommit$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentHeadlineDctCommit root import"
+require_line_count 23 '^theorem ' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit theorem inventory"
+require_line_count 23 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctCommit\.commitAt_mono$' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctCommit.commitAt_mono"
+require_line_count 1 '^theorem commitAt_mono([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit theorem commitAt_mono"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctCommit\.beaconInstall_keeps$' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctCommit.beaconInstall_keeps"
+require_line_count 1 '^theorem beaconInstall_keeps([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit theorem beaconInstall_keeps"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctCommit\.slotRunX_support$' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctCommit.slotRunX_support"
+require_line_count 1 '^theorem slotRunX_support([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit theorem slotRunX_support"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctCommit\.finishStepC_root$' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctCommit.finishStepC_root"
+require_line_count 1 '^theorem finishStepC_root([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit theorem finishStepC_root"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctCommit\.finish_root$' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctCommit.finish_root"
+require_line_count 1 '^theorem finish_root([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit theorem finish_root"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctCommit\.sealHash_take$' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctCommit.sealHash_take"
+require_line_count 1 '^theorem sealHash_take([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit theorem sealHash_take"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctCommit\.tailSeal_keyed$' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctCommit.tailSeal_keyed"
+require_line_count 1 '^theorem tailSeal_keyed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit theorem tailSeal_keyed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctCommit\.firstSend_keyed$' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctCommit.firstSend_keyed"
+require_line_count 1 '^theorem firstSend_keyed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit theorem firstSend_keyed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctCommit\.afterInit_keyed$' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctCommit.afterInit_keyed"
+require_line_count 1 '^theorem afterInit_keyed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit theorem afterInit_keyed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctCommit\.candidate_keyed$' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctCommit.candidate_keyed"
+require_line_count 1 '^theorem candidate_keyed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit theorem candidate_keyed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctCommit\.genericBuild_keyed$' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctCommit.genericBuild_keyed"
+require_line_count 1 '^theorem genericBuild_keyed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit theorem genericBuild_keyed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctCommit\.hiddenBuild_keyed$' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctCommit.hiddenBuild_keyed"
+require_line_count 1 '^theorem hiddenBuild_keyed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit theorem hiddenBuild_keyed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctCommit\.join_key$' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctCommit.join_key"
+require_line_count 1 '^theorem join_key([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit theorem join_key"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctCommit\.buildHidden_keyed$' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctCommit.buildHidden_keyed"
+require_line_count 1 '^theorem buildHidden_keyed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit theorem buildHidden_keyed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctCommit\.written_frame$' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctCommit.written_frame"
+require_line_count 1 '^theorem written_frame([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit theorem written_frame"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctCommit\.serverInstall_keeps$' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctCommit.serverInstall_keeps"
+require_line_count 1 '^theorem serverInstall_keeps([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit theorem serverInstall_keeps"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctCommit\.lazyRead$' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctCommit.lazyRead"
+require_line_count 1 '^theorem lazyRead([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit theorem lazyRead"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctCommit\.nativeBuild_pending$' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctCommit.nativeBuild_pending"
+require_line_count 1 '^theorem nativeBuild_pending([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit theorem nativeBuild_pending"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctCommit\.realBuild_pending$' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctCommit.realBuild_pending"
+require_line_count 1 '^theorem realBuild_pending([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit theorem realBuild_pending"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctCommit\.buildStepC_pending$' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctCommit.buildStepC_pending"
+require_line_count 1 '^theorem buildStepC_pending([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit theorem buildStepC_pending"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctCommit\.markedBuild_commit$' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctCommit.markedBuild_commit"
+require_line_count 1 '^theorem markedBuild_commit([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit theorem markedBuild_commit"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctCommit\.ciphertextOf_of_challengeRead$' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctCommit.ciphertextOf_of_challengeRead"
+require_line_count 1 '^theorem ciphertextOf_of_challengeRead([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit theorem ciphertextOf_of_challengeRead"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctCommit\.not_challengeRead$' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctCommit.not_challengeRead"
+require_line_count 1 '^theorem not_challengeRead([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctCommit theorem not_challengeRead"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
