@@ -1586,6 +1586,15 @@
    "receipt": "doc/impl/proof-receipts/production-headlines-dct.json",
    "guide_section": "D-ct follow-up: production forms of the closed ciphertext-gap headlines",
    "note": "added after this receipt; the guide, the ledger paragraph and the analysis changed with it (their hashes at that commit are in the sibling receipt); everything else in this receipt describes the four modules as integrated at 529e2c8b"
+  },
+  {
+   "name": "Registration follow-up: production forms of the registration-authentication and replay claims",
+   "module": "BeaconcryptCore.Computational.PqxdhDeploymentProductionRegistration",
+   "theorems": 13,
+   "lean_commit": "59e08934ef2272359a17b26cc418b13a383c4d8a",
+   "receipt": "doc/impl/proof-receipts/production-headlines-registration.json",
+   "guide_section": "Registration follow-up: production forms of the registration-authentication and replay claims",
+   "note": "added after this receipt; corrects the coverage statement (the selection here is CE-12 only); the guide, the ledger paragraph and the analysis changed with it (their hashes are in the sibling receipt); everything else in this receipt is unchanged"
   }
  ]
 }
