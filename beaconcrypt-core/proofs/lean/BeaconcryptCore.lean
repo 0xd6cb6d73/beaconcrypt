@@ -2077,6 +2077,12 @@ import BeaconcryptCore.Computational.PqxdhDeploymentIdealPost
 
 import BeaconcryptCore.Computational.PqxdhDeploymentIdealCompile
 
+import BeaconcryptCore.Computational.PqxdhDeploymentIdealKeySwap
+
+import BeaconcryptCore.Computational.PqxdhDeploymentIdealAnomalyGuesser
+
+import BeaconcryptCore.Computational.PqxdhDeploymentIdealKeyFirst
+
 import BeaconcryptCore.Computational.PqxdhDeploymentIdealHandoff
 
 /-!
