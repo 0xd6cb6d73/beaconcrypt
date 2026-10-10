@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1937
+	[handwritten-lean]=1938
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -40574,6 +40574,37 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem full_program_invariant_ad([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeReceive theorem full_program_invariant_ad"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAgreeReceive\.ctxRun_entryAd$' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeReceive dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgreeReceive.ctxRun_entryAd"
 require_line_count 1 '^theorem ctxRun_entryAd([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAgreeReceive theorem ctxRun_entryAd"
+
+# CE-12 P2b step 3: AG, AgreementStatement in idealAuth (agreement_statement, ctxRun_agreement, associatedBytes_inj).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineAgree.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgree$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentHeadlineAgree root import"
+require_line_count 12 '^theorem ' "$selected_source_module" "PqxdhDeploymentHeadlineAgree theorem inventory"
+require_line_count 12 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentHeadlineAgree guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAgree\.associatedBytes_inj$' "$selected_source_module" "PqxdhDeploymentHeadlineAgree dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgree.associatedBytes_inj"
+require_line_count 1 '^theorem associatedBytes_inj([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAgree theorem associatedBytes_inj"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAgree\.ownsLabel_unique$' "$selected_source_module" "PqxdhDeploymentHeadlineAgree dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgree.ownsLabel_unique"
+require_line_count 1 '^theorem ownsLabel_unique([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAgree theorem ownsLabel_unique"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAgree\.ctxRun_agreement$' "$selected_source_module" "PqxdhDeploymentHeadlineAgree dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgree.ctxRun_agreement"
+require_line_count 1 '^theorem ctxRun_agreement([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAgree theorem ctxRun_agreement"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAgree\.ctxRun_agree$' "$selected_source_module" "PqxdhDeploymentHeadlineAgree dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgree.ctxRun_agree"
+require_line_count 1 '^theorem ctxRun_agree([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAgree theorem ctxRun_agree"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAgree\.counterpart_peer$' "$selected_source_module" "PqxdhDeploymentHeadlineAgree dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgree.counterpart_peer"
+require_line_count 1 '^theorem counterpart_peer([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAgree theorem counterpart_peer"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAgree\.owner_pin$' "$selected_source_module" "PqxdhDeploymentHeadlineAgree dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgree.owner_pin"
+require_line_count 1 '^theorem owner_pin([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAgree theorem owner_pin"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAgree\.ctxRun_peer_agreement$' "$selected_source_module" "PqxdhDeploymentHeadlineAgree dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgree.ctxRun_peer_agreement"
+require_line_count 1 '^theorem ctxRun_peer_agreement([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAgree theorem ctxRun_peer_agreement"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAgree\.counterpart_owner$' "$selected_source_module" "PqxdhDeploymentHeadlineAgree dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgree.counterpart_owner"
+require_line_count 1 '^theorem counterpart_owner([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAgree theorem counterpart_owner"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAgree\.ctxRun_owner_agreement$' "$selected_source_module" "PqxdhDeploymentHeadlineAgree dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgree.ctxRun_owner_agreement"
+require_line_count 1 '^theorem ctxRun_owner_agreement([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAgree theorem ctxRun_owner_agreement"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAgree\.ctxRun_agree_zero$' "$selected_source_module" "PqxdhDeploymentHeadlineAgree dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgree.ctxRun_agree_zero"
+require_line_count 1 '^theorem ctxRun_agree_zero([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAgree theorem ctxRun_agree_zero"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAgree\.agreement_statement$' "$selected_source_module" "PqxdhDeploymentHeadlineAgree dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgree.agreement_statement"
+require_line_count 1 '^theorem agreement_statement([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAgree theorem agreement_statement"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAgree\.idealRecords_agree_zero$' "$selected_source_module" "PqxdhDeploymentHeadlineAgree dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgree.idealRecords_agree_zero"
+require_line_count 1 '^theorem idealRecords_agree_zero([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAgree theorem idealRecords_agree_zero"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"

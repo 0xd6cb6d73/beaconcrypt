@@ -2191,6 +2191,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgreeSeal
 
 import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgreeReceive
 
+import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgree
+
 /-!
 # Beaconcrypt-core verification root
 
