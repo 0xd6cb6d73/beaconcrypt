@@ -1,10 +1,11 @@
 {
- "date": "2026-10-10T13:49:10.744541+00:00",
- "scope": "CE-12 P4 step 1 (track ce12/p4, P3b): the billed forms of the CE-12 P3 later forms whose bound carries beta_g (with CE-12 P2b's ptc_bills at the run-phase adversary, P3's later bills with the post budget, and P2b's A1/A2/Inj bills at the run-phase adversary) and the closed forms of the P3 later forms with ctCollTerm (ct_coll_le at the run-phase adversary). Compositions only; confidentiality only. Not reviewed; not integrated. Steps 2 and 3 of P4 (the AG lift R1, R2) are not part of this receipt.",
+ "date": "2026-10-10T16:30:36.272811+00:00",
+ "scope": "CE-12 P4 (track ce12/p4) steps 1 and 2: step 1 (P3b, billed and closed later forms) and step 2 (the AG lift R1, the b2s Server pin); per-step scope, statements, deviations, premises and limits under steps. Not reviewed; not integrated. Step 3 of P4 (R2) is not part of this receipt.",
  "basis": {
   "start": "e5af70242aca601df0004e89155c2ff5029f0b87",
   "merges": [],
-  "central_at_receipt": "e5af70242aca601df0004e89155c2ff5029f0b87",
+  "central_at_receipt": "3dd5cabc2db80d43ac8de85f57d3f8d770ce7401",
+  "note": "central moved e5af7024 -> 3dd5cabc (item 7 I5, documents only, message 523) during step 2; not merged",
   "published_leanpath": {
    "path": "/tmp/bc-coord/leanpaths/e5af70242aca601df0004e89155c2ff5029f0b87.leanpath",
    "sha256": "4bbd826d912cd41705d21e5f3830f2a7d5fdc0544697739c30b90477ae266dca"
@@ -13,43 +14,175 @@
  "topic": {
   "branch": "codex/deployment-ce12-p4",
   "worktree": "/tmp/beaconcrypt-deployment-ce12-p4",
-  "head_at_receipt": "a1b3693f1476ba51664e92f13d5ed29fbf46948e",
+  "head_at_receipt": "4ca18db3fe6a0d56291784600eeaf0ac53b419af",
   "note": "the documentation commit that adds this receipt follows head_at_receipt; it changes no Lean file"
  },
  "plan": {
   "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
   "sections": [
-   115
+   115,
+   116
   ],
   "copy_after_section_115": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/docs/plan.after-115.md",
   "copy_sha256": "7960c5bcf2b8178a9f29f573d0961b9c1532b612fe3284390139e62f6e02af63",
-  "note": "the working plan is shared with other lanes; the copy pins it right after section 115 was appended"
+  "copy_after_step2_section": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/docs/plan.after-116.md",
+  "copy_step2_sha256": "e82f925f7ca576d1721301e309b26b372f60603bb8066a57597007f6259b3b3f",
+  "note": "the working plan is shared with other lanes; each copy pins it right after the step's section was appended"
  },
- "design": {
-  "paths": [
-   "/tmp/bc-arc-scratch/common-experiment/ce12/design-v2.md"
-  ],
-  "sha256": [
-   "9866f32e40a4fdb3742d4bc36709971a0ade2932882896fe1975b8ac334cbb4e"
-  ],
-  "sections": "design-v2 7.4 (ct_collision_game), 9 (bills), 10 (later headlines)"
- },
- "upstream": {
-  "central": {
-   "CE-12 P3": "1c9dbf4c (message 519)",
-   "CE-12 P2b": "e5af7024 (message 521)"
+ "steps": {
+  "1": {
+   "scope": "CE-12 P4 step 1 (track ce12/p4, P3b): the billed forms of the CE-12 P3 later forms whose bound carries beta_g (with CE-12 P2b's ptc_bills at the run-phase adversary, P3's later bills with the post budget, and P2b's A1/A2/Inj bills at the run-phase adversary) and the closed forms of the P3 later forms with ctCollTerm (ct_coll_le at the run-phase adversary). Compositions only; confidentiality only.",
+   "commits": [
+    "53b57d05 (PqxdhDeploymentLaterHeadlineGated)",
+    "a1b3693f (PqxdhDeploymentLaterHeadlineClosed)",
+    "8f63ac03 (documentation and the step-1 receipt)"
+   ],
+   "plan_section": 115,
+   "design": {
+    "paths": [
+     "/tmp/bc-arc-scratch/common-experiment/ce12/design-v2.md"
+    ],
+    "sha256": [
+     "9866f32e40a4fdb3742d4bc36709971a0ade2932882896fe1975b8ac334cbb4e"
+    ],
+    "sections": "design-v2 7.4 (ct_collision_game), 9 (bills), 10 (later headlines)"
+   },
+   "upstream": {
+    "central": {
+     "CE-12 P3": "1c9dbf4c (message 519)",
+     "CE-12 P2b": "e5af7024 (message 521)"
+    },
+    "consumed": [
+     "PqxdhDeploymentLaterHeadlineApp.ce_app_later_target, ce_app_later",
+     "PqxdhDeploymentLaterHeadlineLor.ce_lor_later_target, ce_lor_later",
+     "PqxdhDeploymentLaterHeadlineSymbolic.ce_app_later_sym, ce_app_beacon_later_sym",
+     "PqxdhDeploymentLaterHeadlineSymbolicLor.symbolic_lor_later, symbolic_lor_later_bound",
+     "PqxdhDeploymentLaterHeadlineBills.kem_bills_later, slot_bills_later, records_bills_later, hash_route_later",
+     "PqxdhDeploymentHeadlineGuessBill.ptc_bills, guessBill",
+     "PqxdhDeploymentHeadlineBillsFull.A1Bills, A2Bills, InjBills, PairBills, a1_bills_all, a2_bills_all, inj_bills",
+     "PqxdhDeploymentHeadlineBills.pair_bills",
+     "PqxdhDeploymentHeadlineCtColl.ctCollEps, ct_coll_le"
+    ]
+   },
+   "statements": {
+    "LaterTargetBills / later_target_bills_full": "for every event, claim, target g and view event: kem (kem_bills_later), slot (slot_bills_later), beta (ptc_bills at first: MakesAtMostQueries (guessBill caps qInit budget bounds) 0 (qFinish + 1) 0 0 0; = TargetBills.beta at first), records (records_bills_later, LaterRecordBounded at inputL), hashRoute (hash_route_later); premises SourceFullCorrect, KemBound, initBound, budget.Respects first, post budget of second",
+    "LaterHeadlineBills / later_headline_bills": "LaterTargetBills ∧ A1Bills ∧ A2Bills ∧ InjBills ∧ PairBills (P2b) at first; same premises",
+    "ce_app_later_target_billed, ce_app_later_billed": "P3 bound (kemLossL + slotLossL + beta(first) g + recLossL(slotted) + 2^-min, per target / summed) ∧ LaterTargetBills",
+    "ce_lor_later_target_billed, ce_lor_later_billed": "P3 bound (win terms + ½ elig terms + ½ beta(first) g, per target / summed) ∧ LaterTargetBills",
+    "ce_app_later_sym_billed": "P3 bound (CE-APP-L + a2pubTerm + a1Term + ctGapTerm of first) ∧ LaterTargetBills ∧ A2Bills ∧ A1Bills",
+    "ce_app_beacon_later_sym_billed": "P3 bound (CE-APP-L + a1Term + ctGapTerm of first) ∧ LaterTargetBills ∧ A1Bills",
+    "symbolic_lor_later_bound_billed": "P3 bound (CE-LOR-L at nbfFilter + ½(a2pubTerm + a1Term + ctGapTerm + injTerm + ctCollTerm)) ∧ LaterTargetBills ∧ A2Bills ∧ A1Bills ∧ InjBills",
+    "symbolic_lor_later_closed": "|adv_sym − adv_CE(nbfFilter)| on the LQ-F game ≤ ½(a2pubTerm + a1Term + ctGapTerm + injTerm + ctCollEps setup budget); premises of symbolic_lor_later + FunctionalDecapsulation",
+    "symbolic_lor_later_bound_closed": "symbolic_lor_later_bound with ctCollTerm replaced by ctCollEps setup budget; same premises",
+    "symbolic_lor_later_bound_closed_billed": "closed bound ∧ (LaterTargetBills ∧ A2Bills ∧ A1Bills ∧ InjBills) ∧ PairBills setup caps"
+   },
+   "deviations_from_design": [
+    "billed/closed selection follows CE-12 P2b's criterion (forms with beta_g billed, forms with ctCollTerm closed) and P3 open point 2; forms without beta_g are not restated (covered by later_headline_bills)",
+    "chain_beta_later (a chain step) not restated; its billed anomaly step is P2b's anomaly_beta_billed at first",
+    "two modules (Gated with the bill structures, Closed) instead of P2b's three (BillsFull, Gated, CtClosed)",
+    "LaterTargetBills has no auth field (no later authentication term) and adds hashRoute (P3's later_target_bills conjoins the C4 hash route)",
+    "symbolic_lor_later_closed adds FunctionalDecapsulation (premise of pair_cp_le), as P2b's symbolic_lor_closed"
+   ],
+   "contracts_used": {
+    "new_contracts": [],
+    "new_assumptions": [],
+    "premises": [
+     "the P3 theorems' own premises",
+     "symbolic_lor_later_closed: + FunctionalDecapsulation setup.kem"
+    ]
+   },
+   "not_claimed": [
+    "confidentiality only: no later CE-OR, CE-UKS, origin, binding or authentication; no A2, T5 or T8 on the later compiled program (textual scan: no PqxdhDeploymentProvenance constant, no authenticated_* name; PrfBills only)",
+    "ctGapTerm explicit (F-ct2; D-ct separate lane); owner flag stands",
+    "bills count coins and oracle calls, not running time; worst-case caps"
+   ],
+   "scans": [
+    "guardscan-1.log",
+    "closure-1.log",
+    "wordcheck-1.log",
+    "diffcheck-1.log",
+    "mdcheck-1.log"
+   ]
   },
-  "consumed": [
-   "PqxdhDeploymentLaterHeadlineApp.ce_app_later_target, ce_app_later",
-   "PqxdhDeploymentLaterHeadlineLor.ce_lor_later_target, ce_lor_later",
-   "PqxdhDeploymentLaterHeadlineSymbolic.ce_app_later_sym, ce_app_beacon_later_sym",
-   "PqxdhDeploymentLaterHeadlineSymbolicLor.symbolic_lor_later, symbolic_lor_later_bound",
-   "PqxdhDeploymentLaterHeadlineBills.kem_bills_later, slot_bills_later, records_bills_later, hash_route_later",
-   "PqxdhDeploymentHeadlineGuessBill.ptc_bills, guessBill",
-   "PqxdhDeploymentHeadlineBillsFull.A1Bills, A2Bills, InjBills, PairBills, a1_bills_all, a2_bills_all, inj_bills",
-   "PqxdhDeploymentHeadlineBills.pair_bills",
-   "PqxdhDeploymentHeadlineCtColl.ctCollEps, ct_coll_le"
-  ]
+  "2": {
+   "scope": "CE-12 P4 step 2 (track ce12/p4, the AG lift R1): the b2s Server-pin field of the field table becomes computational. The two env_g ideal-world invariants of the P2b remainder ((a) installed shell associated data of an established owner = associatedArray(created pin, some Beacon identity); (b) every successful build entry is the Phase 2 writer output of fields with the Server identity) on every CTX-world outcome with the ideal environment of a target; the CE event PinFailure; its containment into AG's AgreeFailure under dec_g ∧ ISs_g; probability 0 in idealAuth; the CE bound by the coefficient-one chain terms (chain_server, auth_le); and the CE-OR b2s form with the pin field (new theorems next to the frozen ce_or_b2s). Authentication side; the later mode is untouched.",
+   "commits": [
+    "446344e4 (Add the environment side of the CE-12 pin lift)",
+    "16956af9 (Add the record-control side of the CE-12 pin lift)",
+    "0b2720aa (Prove the two ideal-world invariants of the CE-12 pin lift)",
+    "4ca18db3 (Make the b2s Server pin computational on the deployment experiment)"
+   ],
+   "plan_section": 116,
+   "design": {
+    "paths": [
+     "/tmp/bc-arc-scratch/common-experiment/ce12/design-v2.md"
+    ],
+    "sha256": [
+     "9866f32e40a4fdb3742d4bc36709971a0ade2932882896fe1975b8ac334cbb4e"
+    ],
+    "sections": "design-v2 7.6 (AG and the lift rows R1/R2), 9 (bills)"
+   },
+   "upstream": {
+    "central": {
+     "CE-12 P2b (AG, chain, ce_or_b2s)": "e5af7024 (message 521)"
+    },
+    "remainder": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/NOTES.md (AG section: the two env_g invariants and the pin event)",
+    "consumed": [
+     "PqxdhDeploymentHeadlineAgree.AgreeFailure, agreeEvent, agreement_statement, counterpart_peer, owner_pin",
+     "PqxdhDeploymentHeadlineChain.chain_server, auth_le, split_named, ServerSlots, serverSlotted, kemLoss, slotLoss, authLoss",
+     "PqxdhRecordLiftIdeal.idealAuth, ctxView, unpublishedEvent, publicationTerm",
+     "PqxdhDeploymentHeadlineOrigin.ce_or_b2s (frozen; the pattern of the combined form), unpublished_final",
+     "PqxdhDeploymentHeadlineEvents.OriginFailure, orClaim, firstHandle, receivedHandle",
+     "PqxdhRecordLiftFlat.ctxRun_flat, fullImpl_run, nativeImpl_run",
+     "PqxdhDeploymentIdealEnv.envGD, idealStep and its command paths; PqxdhDeploymentIdealPostGoodFinish",
+     "PqxdhDeploymentEligibility.BuildShaped",
+     "PqxdhServerAuthNegativeControl.Phase2ReadBack, FrameReadBack"
+    ]
+   },
+   "statements": {
+    "PinAt / PinFailsAt / PinFailure / pinEvent / pinClaim / pin_named": "PinAt g transcript entry: entry.received = some (.server, raw, .Some decrypted), route raw = some keyId, designateIn … transcript (.peer keyId) = some g, codec.frameRead raw = some frame, (summarize transcript).owners[g.2] = some (pin, keyId'), buildOf transcript g.1 = some response, (codec.read2 response.serialized).bind codec.serverIdentity = some identity, pin ≠ identity; PinFailure: some entry of the final transcript satisfies PinAt for some g; pinClaim: receivedHandle of the first such entry; pin_named: a failure names a designated claim",
+    "PinFacts / ctxRun_pinFacts / idealAuth_pinFacts": "for every result in the support of ctxRun modes replace … (envGD … t …) (every key modes, plaintext replacement, target, bounds, mode, adversary), and of idealAuth: for every value of the client output, (b) when the control holds a Server, every transcript entry is BuildShaped codec server.identity; (a) every established owner's shell has associatedData = associatedArray pin beacon with (pin, keyId) the summary's created owner; no premise",
+    "pin_agree": "Phase2ReadBack codec → PinFacts codec result → serverSlotted (pinEvent) (pinClaim) g (ctxView result) = true → AgreeFailure codec route result",
+    "idealAuth_pin_zero": "Phase2ReadBack → 𝒟[serverSlotted pinEvent pinClaim g <$> (ctxView <$> idealAuth … (envGD … (Target.ofCE budget g) …) …)] {true} = 0",
+    "ce_pin_b2s_target": "premises of ce_or_b2s without FrameReadBack → 𝒟[pin failure ∧ designated pinClaim = some g on the CE game] {true} ≤ ofReal kemLoss_g + ofReal slotLoss_g + authLoss_g(serverSlotted pinEvent pinClaim g)",
+    "ce_pin_b2s": "same premises → 𝒟[pin failure on the CE game] {true} ≤ Σ g : Fin accept × Fin create, (ofReal kemLoss + ofReal slotLoss + authLoss) at (g.1, g.2.castSucc)",
+    "OriginPinFailure / originPinEvent / originPinClaim / originPin_named / originPin_contain": "OriginFailure .b2s ∨ PinFailure; claim: orClaim .b2s if the origin fails, else pinClaim; containment: PinFacts and Phase2ReadBack → dec_g ∧ ISs_g → unpublishedEvent ∨ AgreeFailure",
+    "idealAuth_originPin_le": "premises of the frozen idealAuth origin bound (KemBound, initBound, Phase2ReadBack, FrameReadBack, budget.Respects) → 𝒟[serverSlotted originPinEvent originPinClaim g <$> (ctxView <$> idealAuth … envGD …)] {true} ≤ publicationTerm budget",
+    "ce_or_pin_b2s_target, ce_or_pin_b2s": "premises of ce_or_b2s → the frozen ce_or_b2s bound shape (kemLoss + slotLoss + authLoss + publicationTerm budget, per target / summed over Fin accept × Fin create with castSucc) for OriginPinFailure",
+    "environment facts (PqxdhDeploymentHeadlinePinEnv)": "idealStep_move / envGD_move: every outcome of every step of the ideal environment satisfies PinMove (Server identity kept; pins move as the summary's created pins; build replies BuildShaped with the Server identity); idealStep_ok / envGD_ok: every Beacon install issued satisfies InstallOk (as IsQueryBoundP … 0 of badInstall); envGD_start",
+    "control facts (PqxdhDeploymentHeadlinePinControl)": "handler_ok, effects_program_ok: ControlOk (ServerIs identity ∧ ShellsOk ok) is kept by every compiled-client request whose install fits; nativeImpl_quiet, nativeImpl_env: the flattened world's native commands"
+   },
+   "deviations_from_design": [
+    "containment proved directly into AgreeFailure (identity form via counterpart_peer and owner_pin), not through ctxRun_peer_agreement (its positive form)",
+    "the Server identity is read from session i's first build response (buildOf), the one the designation and Linked use; invariant (b) covers every build entry",
+    "the invariants are proved for every CTX world (every key mode and plaintext replacement), not only idealAuth; the environment facts hold for every reply of every environment request (answer-agnostic supports)",
+    "combined CE-OR form uses one event and one claim (union, origin claim first), giving one set of chain terms; the frozen ce_or_b2s is unchanged",
+    "four modules instead of one or two (the environment's ten command paths are analysed separately)",
+    "central moved to 3dd5cabc (item 7 I5, documents only) during the step; not merged; Lean checks against the e5af7024 first-prefix mirror (same Lean modules)"
+   ],
+   "contracts_used": {
+    "new_contracts": [],
+    "new_assumptions": [],
+    "premises": [
+     "ce_pin_b2s(_target): FunctionalDecapsulation, Phase1ReadBack, Phase2ReadBack, SourceFullCorrect, KemBound, initBound, budget.Respects (fallback a parameter of authLoss)",
+     "ce_or_pin_b2s(_target): the same + FrameReadBack (as ce_or_b2s)",
+     "pin_agree, idealAuth_pin_zero, originPin_contain: Phase2ReadBack",
+     "PinFacts, ctxRun_pinFacts, idealAuth_pinFacts, environment and control facts: none"
+    ]
+   },
+   "not_claimed": [
+    "R2 (mode-O plaintext rows, b2s and s2b) stays symbolic-only until step 3; the root stays symbolic-only; the later mode is untouched (no later origin or authentication statement)",
+    "the pin event compares the created pin with the Server identity the Phase 2 reader extracts; nothing about response bytes it does not parse",
+    "not tight: authLoss_g is the full integrity record-lift loss of the target, as in ce_or_b2s; the pin part has probability 0 in idealAuth",
+    "the s2b column's Server-pin row was already computational (SymBeacon's pin, design-v2 section 7.6) and is not restated",
+    "ctGapTerm untouched (D-ct separate lane)"
+   ],
+   "scans": [
+    "guardscan-2.log",
+    "closure-2.log",
+    "diffcheck-2.log"
+   ]
+  }
  },
  "notes": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/NOTES.md",
  "commits": [
@@ -60,16 +193,37 @@
   {
    "commit": "a1b3693f1476ba51664e92f13d5ed29fbf46948e",
    "subject": "Close ctCollTerm in the later symbolic LOR forms"
+  },
+  {
+   "commit": "8f63ac03e988d08a9c84e5a2d7d07ac875c7bd44",
+   "subject": "Document CE-12 P4 step 1, the billed and closed later forms"
+  },
+  {
+   "commit": "446344e414cd68c176eaf211c8f11019fa46161e",
+   "subject": "Add the environment side of the CE-12 pin lift"
+  },
+  {
+   "commit": "16956af92d7341717c51ade215550f836fc5adbb",
+   "subject": "Add the record-control side of the CE-12 pin lift"
+  },
+  {
+   "commit": "0b2720aa0a50e88d5f2120a9ac909d5bdb8a1abe",
+   "subject": "Prove the two ideal-world invariants of the CE-12 pin lift"
+  },
+  {
+   "commit": "4ca18db3fe6a0d56291784600eeaf0ac53b419af",
+   "subject": "Make the b2s Server pin computational on the deployment experiment"
   }
  ],
  "files_sha256": {
-  "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "7e60fc708dd6c85fbfd2fe16906a4079aba69c78da7226575ed45fcb185c841f",
-  "beaconcrypt-core/proofs/reviewed-inventory.txt": "1a6a17b1ea884f72f88da708e23153b4719f166f658479012e8ff31c6dcdcf83",
-  "beaconcrypt-core/proofs/check-inventory.sh": "1e2f880a0ac439ced45c1432b1dd72d2ec01986863acbd890f630b5bcb87378b"
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "2a2e5986419cf70cbcf678ffab24629a3e37899be76a4095037028c32539f75d",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "256d36b577e475c7c049cd42ef7b6451618ce387ce07aa3dc2cb3937793f45a8",
+  "beaconcrypt-core/proofs/check-inventory.sh": "fcfdff0803faff2de8e6dae136d6754f7f064f87a44e09252fab46e53d30567a"
  },
  "modules": [
   {
    "name": "BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineGated",
+   "step": 1,
    "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterHeadlineGated.lean",
    "sha256": "9ff887781c23065535b4043f6fc3846525d627ac55124790b7d5197f16f011bf",
    "created_in": "53b57d05b70e79db9ab7600fa73cca5967a60341",
@@ -126,6 +280,7 @@
   },
   {
    "name": "BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineClosed",
+   "step": 1,
    "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterHeadlineClosed.lean",
    "sha256": "cbdd769a7b753b02c84728fe0f3022a4dede7cd06cab1b345f6428ac2d915eb8",
    "created_in": "a1b3693f1476ba51664e92f13d5ed29fbf46948e",
@@ -166,9 +321,339 @@
     "start": "2026-10-10T13:40:16.006100467Z",
     "end": "2026-10-10T13:40:19.237227303Z"
    }
+  },
+  {
+   "name": "BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinEnv",
+   "step": 2,
+   "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlinePinEnv.lean",
+   "sha256": "8736f7698db72de3b5782cb9652e616f9c4544721d64168d2aa42338139c0af6",
+   "created_in": "446344e414cd68c176eaf211c8f11019fa46161e",
+   "last_changed_in": "446344e414cd68c176eaf211c8f11019fa46161e",
+   "theorem_count": 75,
+   "guard_count": 75,
+   "guards_in_order": true,
+   "deprecation_suppressions": 0,
+   "other_options": [
+    "autoImplicit false"
+   ],
+   "definitions": [
+    "InstallPin",
+    "StagedFor",
+    "pins",
+    "serverId",
+    "InstallOk",
+    "badInstall",
+    "TailKeeps",
+    "tailBad",
+    "Wrote",
+    "WriteDet",
+    "AuxWriteDet",
+    "writeImpl",
+    "ReplyWrote",
+    "PinMove"
+   ],
+   "theorems": [
+    "associatedData_array",
+    "installPin_refl",
+    "installPin_inactive",
+    "finish_pin",
+    "finish_serverIdentity",
+    "prepare_candidate",
+    "tail_staged",
+    "opened_for",
+    "owner_pin",
+    "nativeOwner_pin",
+    "badInstall_iff",
+    "badInstall_admin",
+    "ok_of_noAdmin",
+    "coins_ok",
+    "issue_ok",
+    "ownerEffect_ok",
+    "hiddenOwnerEffect_ok",
+    "strip_pins",
+    "pins_set",
+    "finishStep_pin",
+    "finishStep_ok",
+    "finishedEnv_pin",
+    "commitEnv_member",
+    "commitEnv_ok",
+    "clearedMetadata_fields",
+    "finishSplitFwd_for",
+    "markedRoot_game",
+    "groupEnv_member",
+    "groupEnv_ok",
+    "finishChallengeEnv_pin",
+    "finishChallengeEnv_ok",
+    "bundled_pin",
+    "bundleStep_pin",
+    "bundleStep_ok",
+    "acceptLogged_server",
+    "acceptStep_pin",
+    "acceptStep_ok",
+    "hmacStep_pin",
+    "hmacStep_ok",
+    "createPoolStep_pin",
+    "createPoolStep_ok",
+    "tailBad_iff",
+    "tailCE_keeps",
+    "tail_keeps",
+    "acceptExposed_server",
+    "acceptSelectedEnv_pin",
+    "acceptSelectedEnv_ok",
+    "wrote_map",
+    "after_wrote",
+    "candidate_wrote",
+    "build_wrote",
+    "afterInitializationG_wrote",
+    "continueRust_wrote",
+    "candidateG_wrote",
+    "genericBuild_wrote",
+    "nativeTailFwd_writeImpl",
+    "tailFwd_det",
+    "freeBuild_wrote",
+    "settle_wrote",
+    "buildStep_pin",
+    "serverEffect_ok",
+    "buildStep_ok",
+    "buildSplitFwd_wrote",
+    "buildCachedEnv_pin",
+    "hiddenServerEffect_ok",
+    "buildCachedEnv_ok",
+    "stepCommand_owners",
+    "pinMove_quiet",
+    "pinMove_build",
+    "idealStep_move",
+    "badInstall_congr",
+    "idealStep_ok",
+    "envGD_move",
+    "envGD_ok",
+    "envGD_start"
+   ],
+   "axiom_profile": {
+    "propext, Classical.choice, Quot.sound": 75
+   },
+   "imports": [
+    "BeaconcryptCore.Computational.PqxdhDeploymentIdealEnv",
+    "BeaconcryptCore.Computational.PqxdhDeploymentIdealPostGoodFinish"
+   ],
+   "final_check": {
+    "prefix": "ce12/p4/olean",
+    "leanpath_first_prefix_mirrors": "published e5af7024 first prefix ce12/p2b/int/olean",
+    "exit": 0,
+    "head_when_checked": "8f63ac03e988d08a9c84e5a2d7d07ac875c7bd44",
+    "dirty_paths_when_checked": 4,
+    "log_bytes": 0,
+    "artifact_sha256": "e2eeb1e8d2e790c0d4920b69f3b0d43204d7cf6cd0ef86f3b5b072d7bd0557b4",
+    "source_sha256": "8736f7698db72de3b5782cb9652e616f9c4544721d64168d2aa42338139c0af6",
+    "source_equals_current": true,
+    "source_equals_commit": {
+     "446344e414cd68c176eaf211c8f11019fa46161e": true
+    },
+    "start": "2026-10-10T15:00:32.627719283Z",
+    "end": "2026-10-10T15:00:42.123275351Z"
+   }
+  },
+  {
+   "name": "BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinControl",
+   "step": 2,
+   "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlinePinControl.lean",
+   "sha256": "85c58f2d162e41d82605b1eca664d7f4a719ce0225c107db3670bad05aa147ee",
+   "created_in": "16956af92d7341717c51ade215550f836fc5adbb",
+   "last_changed_in": "16956af92d7341717c51ade215550f836fc5adbb",
+   "theorem_count": 19,
+   "guard_count": 19,
+   "guards_in_order": true,
+   "deprecation_suppressions": 0,
+   "other_options": [
+    "autoImplicit false"
+   ],
+   "definitions": [
+    "ServerIs",
+    "ShellsOk",
+    "ControlOk",
+    "InstallFits",
+    "Quiet"
+   ],
+   "theorems": [
+    "shellsOk_append",
+    "shellsOk_setInactive",
+    "shellsOk_setEstablished",
+    "lift_ok",
+    "capability_ok",
+    "effects_ok",
+    "initialize_ok",
+    "serverStep_ok",
+    "beaconStep_ok",
+    "handler_ok",
+    "keep_bounded",
+    "effects_program_ok",
+    "run_value",
+    "lift_world_run",
+    "lift_request_ok",
+    "nativeImpl_quiet",
+    "native_env_run",
+    "handler_effectLift",
+    "nativeImpl_env"
+   ],
+   "axiom_profile": {
+    "propext, Classical.choice, Quot.sound": 18,
+    "propext, Quot.sound": 1
+   },
+   "imports": [
+    "BeaconcryptCore.Computational.PqxdhRecordLiftFlat",
+    "BeaconcryptCore.Computational.PqxdhRecordLiftProtocolHistory"
+   ],
+   "final_check": {
+    "prefix": "ce12/p4/olean",
+    "leanpath_first_prefix_mirrors": "published e5af7024 first prefix ce12/p2b/int/olean",
+    "exit": 0,
+    "head_when_checked": "446344e414cd68c176eaf211c8f11019fa46161e",
+    "dirty_paths_when_checked": 3,
+    "log_bytes": 0,
+    "artifact_sha256": "789d542c3c3a8f8f48e8be10635957b10d5eb0fbf29bc3c62e891461772d6d86",
+    "source_sha256": "85c58f2d162e41d82605b1eca664d7f4a719ce0225c107db3670bad05aa147ee",
+    "source_equals_current": true,
+    "source_equals_commit": {
+     "16956af92d7341717c51ade215550f836fc5adbb": true
+    },
+    "start": "2026-10-10T15:04:05.811032924Z",
+    "end": "2026-10-10T15:04:10.624232658Z"
+   }
+  },
+  {
+   "name": "BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinInvariant",
+   "step": 2,
+   "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlinePinInvariant.lean",
+   "sha256": "c8489467a2d1346091c0ba16678d013e99aad467211b2db99bdc912ac2237a01",
+   "created_in": "0b2720aa0a50e88d5f2120a9ac909d5bdb8a1abe",
+   "last_changed_in": "0b2720aa0a50e88d5f2120a9ac909d5bdb8a1abe",
+   "theorem_count": 20,
+   "guard_count": 20,
+   "guards_in_order": true,
+   "deprecation_suppressions": 0,
+   "other_options": [
+    "autoImplicit false"
+   ],
+   "definitions": [
+    "PinOk",
+    "envQuery",
+    "GD",
+    "Inv",
+    "PinFacts"
+   ],
+   "theorems": [
+    "summarize_owners_extend",
+    "pinOk_extend",
+    "shellsOk_extend",
+    "fits_of_ok",
+    "quiet_of_envQuery",
+    "uniformBytes_quiet",
+    "send_quiet",
+    "drawBit_quiet",
+    "secrecy_quiet",
+    "summarize_quiet",
+    "inv_append",
+    "forward_quiet",
+    "forward_env",
+    "secrecy_inv",
+    "full_inv",
+    "effects_coin_control",
+    "startup_facts",
+    "install_facts",
+    "ctxRun_pinFacts",
+    "idealAuth_pinFacts"
+   ],
+   "axiom_profile": {
+    "propext, Classical.choice, Quot.sound": 19,
+    "propext": 1
+   },
+   "imports": [
+    "BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinEnv",
+    "BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinControl"
+   ],
+   "final_check": {
+    "prefix": "ce12/p4/olean",
+    "leanpath_first_prefix_mirrors": "published e5af7024 first prefix ce12/p2b/int/olean",
+    "exit": 0,
+    "head_when_checked": "16956af92d7341717c51ade215550f836fc5adbb",
+    "dirty_paths_when_checked": 2,
+    "log_bytes": 0,
+    "artifact_sha256": "e6dac773f815d914576fbfbc9ea25795ebedc53c78e586f8396914a4e60b541b",
+    "source_sha256": "c8489467a2d1346091c0ba16678d013e99aad467211b2db99bdc912ac2237a01",
+    "source_equals_current": true,
+    "source_equals_commit": {
+     "0b2720aa0a50e88d5f2120a9ac909d5bdb8a1abe": true
+    },
+    "start": "2026-10-10T16:23:51.837599262Z",
+    "end": "2026-10-10T16:23:58.367934284Z"
+   }
+  },
+  {
+   "name": "BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePin",
+   "step": 2,
+   "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlinePin.lean",
+   "sha256": "fb6b5b149177c6d17b36381712f141a66c6a5902c8534aeaed4b8f721fd677ef",
+   "created_in": "4ca18db3fe6a0d56291784600eeaf0ac53b419af",
+   "last_changed_in": "4ca18db3fe6a0d56291784600eeaf0ac53b419af",
+   "theorem_count": 13,
+   "guard_count": 13,
+   "guards_in_order": true,
+   "deprecation_suppressions": 0,
+   "other_options": [
+    "autoImplicit false"
+   ],
+   "definitions": [
+    "PinAt",
+    "PinFailsAt",
+    "PinFailure",
+    "pinEvent",
+    "pinClaim",
+    "OriginPinFailure",
+    "originPinEvent",
+    "originPinClaim"
+   ],
+   "theorems": [
+    "pin_named",
+    "originPin_named",
+    "chance_mono_support",
+    "chance_or_le",
+    "pin_agree",
+    "decision_transfer",
+    "originPin_contain",
+    "idealAuth_pin_zero",
+    "ce_pin_b2s_target",
+    "ce_pin_b2s",
+    "idealAuth_originPin_le",
+    "ce_or_pin_b2s_target",
+    "ce_or_pin_b2s"
+   ],
+   "axiom_profile": {
+    "propext, Classical.choice, Quot.sound": 13
+   },
+   "imports": [
+    "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineOrigin",
+    "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgree",
+    "BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinInvariant"
+   ],
+   "final_check": {
+    "prefix": "ce12/p4/olean",
+    "leanpath_first_prefix_mirrors": "published e5af7024 first prefix ce12/p2b/int/olean",
+    "exit": 0,
+    "head_when_checked": "0b2720aa0a50e88d5f2120a9ac909d5bdb8a1abe",
+    "dirty_paths_when_checked": 1,
+    "log_bytes": 0,
+    "artifact_sha256": "9266bf87f6d83fe237469bd83819af88926c4a02fb9e46cb0ddd4177563b33ae",
+    "source_sha256": "fb6b5b149177c6d17b36381712f141a66c6a5902c8534aeaed4b8f721fd677ef",
+    "source_equals_current": true,
+    "source_equals_commit": {
+     "4ca18db3fe6a0d56291784600eeaf0ac53b419af": true
+    },
+    "start": "2026-10-10T16:26:13.268898636Z",
+    "end": "2026-10-10T16:26:18.352835592Z"
+   }
   }
  ],
- "theorem_total": 12,
+ "theorem_total": 139,
  "allowed_axioms": [
   "propext",
   "Classical.choice",
@@ -190,50 +675,33 @@
   "diffcheck-1.log": {
    "path": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/logs/diffcheck-1.log",
    "sha256": "9abf0f62f8ace8f0f87094a93b9b17d08fed198f0a1f8e9efb1d6a04617297e0"
+  },
+  "mdcheck-1.log": {
+   "path": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/logs/mdcheck-1.log",
+   "sha256": "caa7ab18e048449dff2b55b69fd1023e1583b0a3c8baf02c03ebe2ec45156bd5"
+  },
+  "guardscan-2.log": {
+   "path": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/logs/guardscan-2.log",
+   "sha256": "2b77bdcaa5838edc15c8c13b196ed8633ce30215b6a4630de5f91ded3c0f5dfc"
+  },
+  "closure-2.log": {
+   "path": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/logs/closure-2.log",
+   "sha256": "50670188e359f97ae56cf2f554f0713485fe1f11846930d9827c10607f444fa7"
+  },
+  "diffcheck-2.log": {
+   "path": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/logs/diffcheck-2.log",
+   "sha256": "865d9fb982c27421061644187c7f24fef6d6be7e5446a5f65d3fad0856e39819"
   }
  },
  "handwritten_lean": {
   "before": 1948,
-  "after": 1950,
-  "note": "one per module, coord.sh inv recount before coord.sh inv rehash each time"
+  "after": 1954,
+  "note": "one per module (1948 -> 1950 in step 1, 1950 -> 1954 in step 2), coord.sh inv recount before coord.sh inv rehash each time"
  },
- "statements": {
-  "LaterTargetBills / later_target_bills_full": "for every event, claim, target g and view event: kem (kem_bills_later), slot (slot_bills_later), beta (ptc_bills at first: MakesAtMostQueries (guessBill caps qInit budget bounds) 0 (qFinish + 1) 0 0 0; = TargetBills.beta at first), records (records_bills_later, LaterRecordBounded at inputL), hashRoute (hash_route_later); premises SourceFullCorrect, KemBound, initBound, budget.Respects first, post budget of second",
-  "LaterHeadlineBills / later_headline_bills": "LaterTargetBills ∧ A1Bills ∧ A2Bills ∧ InjBills ∧ PairBills (P2b) at first; same premises",
-  "ce_app_later_target_billed, ce_app_later_billed": "P3 bound (kemLossL + slotLossL + beta(first) g + recLossL(slotted) + 2^-min, per target / summed) ∧ LaterTargetBills",
-  "ce_lor_later_target_billed, ce_lor_later_billed": "P3 bound (win terms + ½ elig terms + ½ beta(first) g, per target / summed) ∧ LaterTargetBills",
-  "ce_app_later_sym_billed": "P3 bound (CE-APP-L + a2pubTerm + a1Term + ctGapTerm of first) ∧ LaterTargetBills ∧ A2Bills ∧ A1Bills",
-  "ce_app_beacon_later_sym_billed": "P3 bound (CE-APP-L + a1Term + ctGapTerm of first) ∧ LaterTargetBills ∧ A1Bills",
-  "symbolic_lor_later_bound_billed": "P3 bound (CE-LOR-L at nbfFilter + ½(a2pubTerm + a1Term + ctGapTerm + injTerm + ctCollTerm)) ∧ LaterTargetBills ∧ A2Bills ∧ A1Bills ∧ InjBills",
-  "symbolic_lor_later_closed": "|adv_sym − adv_CE(nbfFilter)| on the LQ-F game ≤ ½(a2pubTerm + a1Term + ctGapTerm + injTerm + ctCollEps setup budget); premises of symbolic_lor_later + FunctionalDecapsulation",
-  "symbolic_lor_later_bound_closed": "symbolic_lor_later_bound with ctCollTerm replaced by ctCollEps setup budget; same premises",
-  "symbolic_lor_later_bound_closed_billed": "closed bound ∧ (LaterTargetBills ∧ A2Bills ∧ A1Bills ∧ InjBills) ∧ PairBills setup caps"
- },
- "deviations_from_design": [
-  "billed/closed selection follows CE-12 P2b's criterion (forms with beta_g billed, forms with ctCollTerm closed) and P3 open point 2; forms without beta_g are not restated (covered by later_headline_bills)",
-  "chain_beta_later (a chain step) not restated; its billed anomaly step is P2b's anomaly_beta_billed at first",
-  "two modules (Gated with the bill structures, Closed) instead of P2b's three (BillsFull, Gated, CtClosed)",
-  "LaterTargetBills has no auth field (no later authentication term) and adds hashRoute (P3's later_target_bills conjoins the C4 hash route)",
-  "symbolic_lor_later_closed adds FunctionalDecapsulation (premise of pair_cp_le), as P2b's symbolic_lor_closed"
- ],
- "contracts_used": {
-  "new_contracts": [],
-  "new_assumptions": [],
-  "premises": [
-   "the P3 theorems' own premises",
-   "symbolic_lor_later_closed: + FunctionalDecapsulation setup.kem"
-  ]
- },
- "not_claimed": [
-  "confidentiality only: no later CE-OR, CE-UKS, origin, binding or authentication; no A2, T5 or T8 on the later compiled program (textual scan: no PqxdhDeploymentProvenance constant, no authenticated_* name; PrfBills only)",
-  "ctGapTerm explicit (F-ct2; D-ct separate lane); owner flag stands",
-  "bills count coins and oracle calls, not running time; worst-case caps",
-  "AG lift rows R1 (b2s Server pin) and R2 (mode-O plaintext) still symbolic-only (P4 steps 2 and 3)"
- ],
  "open_points": [
-  "independent review and integration (merge e5af7024 or newer first; recount then rehash)",
-  "plan snapshot doc/impl/common-deployment-experiment-plan.md not refreshed by this step",
-  "P4 steps 2 and 3 (AG lift R1, R2)"
+  "independent review and integration (merge the then-current central, 3dd5cabc or newer, first; recount then rehash)",
+  "plan snapshot doc/impl/common-deployment-experiment-plan.md not refreshed by this track",
+  "P4 step 3 (AG lift R2, mode-O plaintext rows)"
  ],
  "checks": {
   "lean_tool": "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean via coord.sh lean claude, -j1 -M8000, timeout 180",
@@ -244,6 +712,14 @@
    "mirror_of": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/int/olean (published e5af7024 first prefix; 6407 links, root skipped, 0 broken)"
   },
   "roots": {
+   "logs/final/root-clean-4ca18db3.json": {
+    "exit": 0,
+    "head": "4ca18db3fe6a0d56291784600eeaf0ac53b419af",
+    "dirty_paths": 0,
+    "log_bytes": 0,
+    "artifact_sha256": "9ec67586b23a30177d37f00ca568e9f7ed2e0e360e40d7257214c0546087671c",
+    "source_sha256": "2a2e5986419cf70cbcf678ffab24629a3e37899be76a4095037028c32539f75d"
+   },
    "logs/final/root-clean-a1b3693f.json": {
     "exit": 0,
     "head": "a1b3693f1476ba51664e92f13d5ed29fbf46948e",
@@ -267,6 +743,38 @@
     "log_bytes": 0,
     "artifact_sha256": "22025b77677fba05d8f2717c1bc94440b7c3ff343ee6925e0f58439411760195",
     "source_sha256": "89c8b000c687b10d19504027e904bac80e0de6950dbacf90469ce9cf0567ae63"
+   },
+   "logs/final/root-pin.json": {
+    "exit": 0,
+    "head": "0b2720aa0a50e88d5f2120a9ac909d5bdb8a1abe",
+    "dirty_paths": 4,
+    "log_bytes": 0,
+    "artifact_sha256": "9ec67586b23a30177d37f00ca568e9f7ed2e0e360e40d7257214c0546087671c",
+    "source_sha256": "2a2e5986419cf70cbcf678ffab24629a3e37899be76a4095037028c32539f75d"
+   },
+   "logs/final/root-pincontrol.json": {
+    "exit": 0,
+    "head": "446344e414cd68c176eaf211c8f11019fa46161e",
+    "dirty_paths": 6,
+    "log_bytes": 0,
+    "artifact_sha256": "be9b26eb7e9284020d7149a397cd49518a0f67fe75d6e540a86cb31bcdff8111",
+    "source_sha256": "3d6e2cedc81dd213b7ad40d153d33568767662dce47853c9f8c6cea6cfdd7fed"
+   },
+   "logs/final/root-pinenv.json": {
+    "exit": 0,
+    "head": "8f63ac03e988d08a9c84e5a2d7d07ac875c7bd44",
+    "dirty_paths": 7,
+    "log_bytes": 0,
+    "artifact_sha256": "c905f6687fa4f25b6afa83b1a10fd8b367003cd9e460efb0f7571bf94dfc0e93",
+    "source_sha256": "80f8677314691704de3438d869e7b1d0cd5603ea66e62a8275c98a6f6df40d36"
+   },
+   "logs/final/root-pininvariant.json": {
+    "exit": 0,
+    "head": "16956af92d7341717c51ade215550f836fc5adbb",
+    "dirty_paths": 5,
+    "log_bytes": 0,
+    "artifact_sha256": "b4d3bd2e170ba2e40c076545c6e1f87c240e816101278cb41bb1755e3759742c",
+    "source_sha256": "ca2e271dc8635699ae8835252715f0168d195a750983e6269d7fff951e71caa5"
    }
   },
   "inventories": {
@@ -279,7 +787,18 @@
     "dirty_after": 4,
     "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/logs/inventory-closed.log",
     "log_sha256": "544b5a2afcf99bea5fd223c7607d5b4c4e3579a3a1bf6af35a9cb96823d9c0b6",
-    "note": "run before the module's Lean commit, with its four staged paths (module, root, reviewed-inventory.txt, check-inventory.sh) as the only dirt; the other untracked module moved out"
+    "note": "run before the module's Lean commit, with its four staged paths (module, root, reviewed-inventory.txt, check-inventory.sh) as the only dirt; the other untracked modules moved out"
+   },
+   "docs-clean": {
+    "status": 0,
+    "commit": "8f63ac03e988d08a9c84e5a2d7d07ac875c7bd44",
+    "start": "2026-10-10T13:49:42Z",
+    "end": "2026-10-10T13:51:35Z",
+    "dirty_before": 0,
+    "dirty_after": 0,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/logs/inventory-docs-clean.log",
+    "log_sha256": "7d143e1e46101d968ce05b9c27de2ecc80b518777267bde0435faa11c0865b9b",
+    "note": "clean head"
    },
    "docs": {
     "status": 0,
@@ -301,11 +820,55 @@
     "dirty_after": 4,
     "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/logs/inventory-gated.log",
     "log_sha256": "554d986ae0677cb293bc7e67aa64bec7dece0c6864edc37a28fc2537ccbee296",
-    "note": "run before the module's Lean commit, with its four staged paths (module, root, reviewed-inventory.txt, check-inventory.sh) as the only dirt; the other untracked module moved out"
+    "note": "run before the module's Lean commit, with its four staged paths (module, root, reviewed-inventory.txt, check-inventory.sh) as the only dirt; the other untracked modules moved out"
+   },
+   "pin": {
+    "status": 0,
+    "commit": "0b2720aa0a50e88d5f2120a9ac909d5bdb8a1abe",
+    "start": "2026-10-10T16:26:22Z",
+    "end": "2026-10-10T16:28:12Z",
+    "dirty_before": 4,
+    "dirty_after": 4,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/logs/inventory-pin.log",
+    "log_sha256": "abc3b8556926439e7657cd88d40c6b8b87171aa491a5d7a1379e5a693b4efcaa",
+    "note": "run before the module's Lean commit, with its four staged paths (module, root, reviewed-inventory.txt, check-inventory.sh) as the only dirt; the other untracked modules moved out"
+   },
+   "pincontrol": {
+    "status": 0,
+    "commit": "446344e414cd68c176eaf211c8f11019fa46161e",
+    "start": "2026-10-10T15:04:14Z",
+    "end": "2026-10-10T15:06:06Z",
+    "dirty_before": 4,
+    "dirty_after": 4,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/logs/inventory-pincontrol.log",
+    "log_sha256": "ec7cc58a92b79b59b73e13444dc36487b9371e2e132cc98d23119c4e62e89d7e",
+    "note": "run before the module's Lean commit, with its four staged paths (module, root, reviewed-inventory.txt, check-inventory.sh) as the only dirt; the other untracked modules moved out"
+   },
+   "pinenv": {
+    "status": 0,
+    "commit": "8f63ac03e988d08a9c84e5a2d7d07ac875c7bd44",
+    "start": "2026-10-10T15:00:46Z",
+    "end": "2026-10-10T15:02:38Z",
+    "dirty_before": 4,
+    "dirty_after": 4,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/logs/inventory-pinenv.log",
+    "log_sha256": "c3362a149877b49bd7cc66a090f79cd0c0cc12c19b9533466c5751f9e6472d80",
+    "note": "run before the module's Lean commit, with its four staged paths (module, root, reviewed-inventory.txt, check-inventory.sh) as the only dirt; the other untracked modules moved out"
+   },
+   "pininvariant": {
+    "status": 0,
+    "commit": "16956af92d7341717c51ade215550f836fc5adbb",
+    "start": "2026-10-10T16:24:02Z",
+    "end": "2026-10-10T16:25:53Z",
+    "dirty_before": 4,
+    "dirty_after": 4,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/logs/inventory-pininvariant.log",
+    "log_sha256": "723e7a425c9caab79ee83bda0d7882850b849ec9da90ae985e510ebf6dcb8bcc",
+    "note": "run before the module's Lean commit, with its four staged paths (module, root, reviewed-inventory.txt, check-inventory.sh) as the only dirt; the other untracked modules moved out"
    }
   },
   "git_diff_check": {
-   "range": "e5af70242aca601df0004e89155c2ff5029f0b87..a1b3693f1476ba51664e92f13d5ed29fbf46948e",
+   "range": "e5af70242aca601df0004e89155c2ff5029f0b87..4ca18db3fe6a0d56291784600eeaf0ac53b419af",
    "exit": 0
   }
  },
