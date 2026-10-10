@@ -1,6 +1,6 @@
 {
- "date": "2026-10-10T18:03:38.002777+00:00",
- "scope": "CE-12 P4 (track ce12/p4) steps 1 to 3 and the review fix pass: step 1 (P3b, billed and closed later forms), step 2 (the AG lift R1, the b2s Server pin), step 3 (the AG lift R2, the mode-O plaintext, b2s and s2b) and the fix pass of the review at ad7aab12 (billed forms of the five step-3 forms with beta_g; docstring and documentation corrections); per-step scope, statements, deviations, premises, bills and limits under steps, the fix pass under fix_pass and review. Reviewed at ad7aab12; confirming review of the fix pass pending; not integrated.",
+ "date": "2026-10-10T18:25:20.675114+00:00",
+ "scope": "CE-12 P4 (track ce12/p4) steps 1 to 3 and the review fix pass: step 1 (P3b, billed and closed later forms), step 2 (the AG lift R1, the b2s Server pin), step 3 (the AG lift R2, the mode-O plaintext, b2s and s2b) and the fix pass of the review at ad7aab12 (billed forms of the five step-3 forms with beta_g; docstring and documentation corrections); per-step scope, statements, deviations, premises, bills and limits under steps, the fix pass under fix_pass and review. Reviewed at ad7aab12; confirming review of the fix pass at ea2ebaac: approve with nits, every finding resolved; two documentation nits (beta_g described as taken at the combined event and claim, and without the ML-KEM correctness error and 2^-256; the top-level commit list omitted ad7aab12), taken by the commit that records the review (documents, this receipt, plan section 119, the plan snapshot, and docstrings of PqxdhDeploymentHeadlinePlain and PqxdhDeploymentHeadlinePlainGated; no declaration changed). Not integrated at the record commit.",
  "basis": {
   "start": "e5af70242aca601df0004e89155c2ff5029f0b87",
   "merges": [],
@@ -14,8 +14,8 @@
  "topic": {
   "branch": "codex/deployment-ce12-p4",
   "worktree": "/tmp/beaconcrypt-deployment-ce12-p4",
-  "head_at_receipt": "5d29d6382fbba4bf1a144dc762b8d7e02cf00d62",
-  "note": "the documentation commit of the review fix pass that adds this version of the receipt follows head_at_receipt; it changes no Lean file"
+  "head_at_receipt": "ea2ebaac57db062b50d51e73f6f780e21b37c9be",
+  "note": "the commit that records the confirming review (and last regenerates this receipt) follows head_at_receipt; it changes the docstrings of PqxdhDeploymentHeadlinePlain and PqxdhDeploymentHeadlinePlainGated (no declaration), their two reviewed-inventory rows, the guide, the analysis, the plan snapshot and this receipt"
  },
  "plan": {
   "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
@@ -23,7 +23,8 @@
    115,
    116,
    117,
-   118
+   118,
+   119
   ],
   "copy_after_section_115": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/docs/plan.after-115.md",
   "copy_sha256": "7960c5bcf2b8178a9f29f573d0961b9c1532b612fe3284390139e62f6e02af63",
@@ -31,9 +32,12 @@
   "copy_step2_sha256": "e82f925f7ca576d1721301e309b26b372f60603bb8066a57597007f6259b3b3f",
   "copy_after_step3_section": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/docs/plan.after-117.md",
   "copy_step3_sha256": "572ec62d95a2754ac7b07f793a01eb03f77c20b1c5874743bdecc5c2df02cbeb",
-  "note": "the working plan is shared with other lanes; each copy pins it right after the step's section was appended; the review fix pass corrected sections 115 and 117 in place (findings 1, 2 and 4) and appended section 118, so the earlier copies keep the uncorrected texts of 115 and 117",
+  "note": "the working plan is shared with other lanes; each copy pins it right after the step's section was appended; the review fix pass corrected sections 115 and 117 in place (findings 1, 2 and 4) and appended section 118, so the earlier copies keep the uncorrected texts of 115 and 117; section 119 (the confirming review and its record commit) appended by the record commit (the integration bullet of section 119, written after the integration, is not part of copy_record_sha256 or of the committed snapshot)",
   "copy_after_fix_section": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/fix/docs/plan.after-118.md",
-  "copy_fix_sha256": "385b1ada6e3463e3399ef5813a4061b120fda04f81a613a4d1a74154aa924d05"
+  "copy_fix_sha256": "385b1ada6e3463e3399ef5813a4061b120fda04f81a613a4d1a74154aa924d05",
+  "copy_after_record_section": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/int/docs/plan.at-record-7ea72bc4.md",
+  "copy_record_sha256": "7ea72bc4329582157261683b5a332d0b425fbd07f50e3a829265267f04d01372",
+  "backup_before_record": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/int/docs/plan.before-record-385b1ada.md"
  },
  "steps": {
   "1": {
@@ -331,17 +335,25 @@
    "subject": "Make the mode-O plaintext computational on the deployment experiment"
   },
   {
+   "commit": "ad7aab1234939db9cb8ceda3b1a75332e151fab9",
+   "subject": "Document CE-12 P4 step 3, the mode-O plaintext lift"
+  },
+  {
    "commit": "0f0230bebc709444695d0423f1ae0ccc5e611baa",
    "subject": "Correct the reduction wording in two CE-12 P4 docstrings"
   },
   {
    "commit": "5d29d6382fbba4bf1a144dc762b8d7e02cf00d62",
    "subject": "Add the billed forms of the s2b plaintext headlines"
+  },
+  {
+   "commit": "ea2ebaac57db062b50d51e73f6f780e21b37c9be",
+   "subject": "Document the CE-12 P4 review fix pass"
   }
  ],
  "files_sha256": {
   "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "7fa84f8d960120ccd9c602e8e8d1fb368d260505f8f918fc18aa39cbf784a15e",
-  "beaconcrypt-core/proofs/reviewed-inventory.txt": "44647e9daa7510f3301f19decc449ac5f22f05823eaedd088a7701d333b69831",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "18963a0dab7d5998617ed83a2ec4bcb489e4ef694615f502cb263b994e2260dc",
   "beaconcrypt-core/proofs/check-inventory.sh": "fe5fc2a2b9668e0fcec035f0eee023839d6e57d360cbc7a035617d3e65875313"
  },
  "modules": [
@@ -935,9 +947,9 @@
    "name": "BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlain",
    "step": 3,
    "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlinePlain.lean",
-   "sha256": "7b8c06d398f709e5320ae6bdf4e249ecd438270e9f5c777b0db2232773468e89",
+   "sha256": "a62ebdae3eb29548e3cff6aea948f31a06fd0110210d0a8cbde3864a02ec5234",
    "created_in": "2460647ce878476cc7fed32d85d74b098821f80e",
-   "last_changed_in": "0f0230bebc709444695d0423f1ae0ccc5e611baa",
+   "last_changed_in": "the commit that records the confirming review (follows ea2ebaac)",
    "theorem_count": 32,
    "guard_count": 32,
    "guards_in_order": true,
@@ -1037,15 +1049,16 @@
     "start": "2026-10-10T17:47:51.443992275Z",
     "end": "2026-10-10T17:47:58.723443272Z"
    },
-   "fix_pass_note": "review fix pass 0f0230be: module docstring only (findings 2 and 8); statements, proofs and guards unchanged"
+   "fix_pass_note": "review fix pass 0f0230be: module docstring only (findings 2 and 8); statements, proofs and guards unchanged",
+   "record_note": "confirming-review nit 1: docstrings only (beta_g depends only on the target and is the same term as in ce_or_s2b; module docstring line 16); the files with comment blocks removed are byte-equal to ea2ebaac's; statements, proofs and guards unchanged; recompiled with -o at the integration tip"
   },
   {
    "name": "BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlainGated",
    "step": "fix",
    "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlinePlainGated.lean",
-   "sha256": "522d4a14ead433db5881efff526ae0c89889f2a6dc728b7cada0505e136a365f",
+   "sha256": "fbb63bec5122e1b9aacd954a641cf3fa883d96a949c8b458c9b2123f53a97f16",
    "created_in": "5d29d6382fbba4bf1a144dc762b8d7e02cf00d62",
-   "last_changed_in": "5d29d6382fbba4bf1a144dc762b8d7e02cf00d62",
+   "last_changed_in": "the commit that records the confirming review (follows ea2ebaac)",
    "theorem_count": 5,
    "guard_count": 5,
    "guards_in_order": true,
@@ -1084,7 +1097,8 @@
     "start": "2026-10-10T17:48:17.367841244Z",
     "end": "2026-10-10T17:48:20.710385508Z"
    },
-   "generator": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/fix/scripts/gen_plaingated.py (statements copied verbatim from PqxdhDeploymentHeadlinePlain)"
+   "generator": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/fix/scripts/gen_plaingated.py (statements copied verbatim from PqxdhDeploymentHeadlinePlain)",
+   "record_note": "confirming-review nit 1: docstrings only (beta_g depends only on the target and is the same term as in ce_or_s2b; module docstring second bullet, ce_or_plain_s2b(_target)_billed docstrings, and the five TargetBills field lists (\"each field for every target and, except the field of beta_g, for every event\")); the files with comment blocks removed are byte-equal to ea2ebaac's; statements, proofs and guards unchanged; recompiled with -o at the integration tip"
   }
  ],
  "theorem_total": 204,
@@ -1165,9 +1179,10 @@
   "note": "one per module (1948 -> 1950 in step 1, 1950 -> 1954 in step 2, 1954 -> 1957 in step 3, 1957 -> 1958 in the review fix pass; the docstring commit left it at 1957), coord.sh inv recount before coord.sh inv rehash each time"
  },
  "open_points": [
-  "confirming review of the review fix pass; then integration (merge the then-current central, 3dd5cabc or newer, first; recount then rehash; P4 adds ten handwritten Lean files)",
-  "plan snapshot doc/impl/common-deployment-experiment-plan.md not refreshed by this track",
-  "optional: a Lean lemma that every Entry.published entry of the final ledger is a Sent production (finding 7; checked by inspection)"
+  "integration into central (PROTOCOL section 6) after the commit that records the confirming review: merge central 3dd5cabc (item 7 increment I5, documents only) or newer first, central's side first at Claude's anchors, recount then rehash; the ten modules and the root compiled with -o into a fresh prefix at the tip; P4 adds ten handwritten Lean files",
+  "plan snapshot refreshed by the record commit (through section 119, plan_snapshot)",
+  "optional: a Lean lemma that every Entry.published entry of the final ledger is a Sent production (finding 7; checked by inspection)",
+  "the field-table cells marked \"computational up to ctGapTerm\" wait for D-ct (a separate lane); the owner flag on ctGapTerm stands"
  ],
  "checks": {
   "lean_tool": "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean via coord.sh lean claude, -j1 -M8000, timeout 180",
@@ -1519,7 +1534,7 @@
   }
  },
  "review": {
-  "status": "reviewed at ad7aab12 (semantic, composition, hygiene; scratch ce12/p4/review-semantic, review-composition, review-hygiene): no error in any Lean statement or proof, composition re-derived on paper (nothing counted twice or missing); findings merged across the lenses: three minor, six nits, one record with no action; all fixed by the review fix pass (0f0230be, 5d29d638 and the documentation commit); confirming review pending; not integrated",
+  "status": "reviewed at ad7aab12 (semantic, composition, hygiene; scratch ce12/p4/review-semantic, review-composition, review-hygiene): no error in any Lean statement or proof, composition re-derived on paper (nothing counted twice or missing); findings merged across the lenses: three minor, six nits, one record with no action; all fixed by the review fix pass (0f0230be, 5d29d638 and the documentation commit ea2ebaac); confirming review of ea2ebaac: approve with nits, every finding resolved, two documentation nits taken by the commit that records the review; not integrated at the record commit",
   "reviewed_head": "ad7aab1234939db9cb8ceda3b1a75332e151fab9",
   "lenses": [
    "semantic",
@@ -1602,7 +1617,75 @@
     "title": "composition re-derived on paper; no defect",
     "fix": "none"
    }
-  ]
+  ],
+  "confirming_review": {
+   "reviewed_range": "ad7aab12..ea2ebaac",
+   "reviewed_commit": "ea2ebaac57db062b50d51e73f6f780e21b37c9be",
+   "date": "2026-10-10",
+   "scope": "the review fix pass (Lean commits 0f0230be and 5d29d638, documentation commit ea2ebaac): the findings of the P4 review at ad7aab12, statements, guards, the receipt, the documentation",
+   "verdict": "APPROVE_WITH_NITS: every finding resolved at ea2ebaac; two documentation nits",
+   "lean": "ad7aab12..ea2ebaac changes only docstring hunks of PqxdhDeploymentLaterHeadlineGated and PqxdhDeploymentHeadlinePlain and adds PqxdhDeploymentHeadlinePlainGated, whose five bounds equal the five beta_g bounds of PqxdhDeploymentHeadlinePlain verbatim (confirm/scripts/cmp_gated.py), each with TargetBills via target_bills; no other step-3 form carries beta_g; guards = theorems in all ten modules (204, axioms among propext, Classical.choice, Quot.sound; confirm/scripts/guards.py); against e5af7024 only the root import block, the two inventory files and the two documents among existing files changed",
+   "receipt": "inventory hashes and the receipt's module and file hashes, theorem lists, definitions and imports equal the head",
+   "recompiles": {
+    "mode": "without -o, coord.sh lean claude, ce12/p4/fix/leanpath",
+    "modules": [
+     "PqxdhDeploymentHeadlinePlainGated",
+     "PqxdhDeploymentHeadlinePlain",
+     "PqxdhDeploymentLaterHeadlineGated",
+     "PqxdhDeploymentLaterHeadlineClosed",
+     "BeaconcryptCore (root)"
+    ],
+    "logs": {
+     "LaterClosed.log": {
+      "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/confirm/logs/LaterClosed.log",
+      "log_bytes": 0,
+      "exit": 0
+     },
+     "LaterGated.log": {
+      "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/confirm/logs/LaterGated.log",
+      "log_bytes": 0,
+      "exit": 0
+     },
+     "Plain.log": {
+      "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/confirm/logs/Plain.log",
+      "log_bytes": 0,
+      "exit": 0
+     },
+     "PlainGated.log": {
+      "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/confirm/logs/PlainGated.log",
+      "log_bytes": 0,
+      "exit": 0
+     },
+     "root.log": {
+      "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/confirm/logs/root.log",
+      "log_bytes": 0,
+      "exit": 0
+     }
+    }
+   },
+   "nits": [
+    {
+     "n": 1,
+     "where": "analysis step 3 \"The theorems\" (line 5590), guide \"CE-12 P4: review fix pass\" finding 2 (line 2479), PqxdhDeploymentHeadlinePlain module docstring (line 16); analysis \"The billed plaintext headlines\" (line 5614)",
+     "finding": "beta_g listed among the chain terms \"taken at the combined event and claim\", but beta_g does not depend on the event; the analysis called beta_g \"the IND-CCA advantage\" without the ML-KEM correctness error and 2^-256",
+     "outcome": "taken: \"kemLoss, slotLoss and authLoss_g taken at the combined event and claim; beta_g (which depends only on the target) and publicationTerm budget are the same terms as in ce_or_s2b\" in the three places; the analysis describes beta_g as the IND-CCA advantage of the predict-then-compare attacker built from the anomaly guesser of the target plus the ML-KEM correctness error and 2^-256, as the beta docstring does; for the same wording also PqxdhDeploymentHeadlinePlainGated (module docstring second bullet, ce_or_plain_s2b(_target)_billed docstrings, the five TargetBills field lists); plan sections 117 and 118 keep their wording (\"the chain terms at the combined event and claim\") as historical records, read with section 119's correction"
+    },
+    {
+     "n": 2,
+     "where": "this receipt, top-level commits",
+     "finding": "omitted the step-3 documentation commit ad7aab12",
+     "outcome": "taken: inserted after 2460647c; ea2ebaac appended after 5d29d638"
+    }
+   ],
+   "scripts": {
+    "beta_forms.py": "35bb7bdb92b8b67e39ce0f0d3070d554bc9e73af7d034f553dfe296f14a1c233",
+    "cmp_gated.py": "0a65a51c0c62aff7339b7afed909ebda98fd41f48260a956e96499791ee6c673",
+    "guards.py": "af9d94a63797b997ce5787660e15d3b6c979592e610b060b79dd9adfbb1db0b5",
+    "terms.py": "f86cd1fd12578bea21a485af6e8ec8563c404043b7181618498518e81304ad14"
+   },
+   "scratch": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/confirm/",
+   "notes": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/NOTES.md (section \"P4 confirming review of the fix pass\")"
+  }
  },
  "fix_pass": {
   "start": "ad7aab1234939db9cb8ceda3b1a75332e151fab9",
@@ -1788,6 +1871,93 @@
    "/tmp/bc-arc-scratch/common-experiment/ce12/p4/fix/msgs/doc.txt",
    "/tmp/bc-arc-scratch/common-experiment/ce12/p4/fix/msgs/plaingated.txt"
   ],
-  "docs_commit": "the commit that adds this version of the receipt"
+  "docs_commit": "ea2ebaac57db062b50d51e73f6f780e21b37c9be"
+ },
+ "commits_note": "every commit of the branch since e5af7024 up to head_at_receipt; ad7aab12 (the step 3 documentation commit) was inserted and ea2ebaac (the fix pass documentation commit, which added the previous version of this receipt) appended by the commit that records the confirming review (its nit 2); that commit itself follows head_at_receipt",
+ "record": {
+  "commit": "the commit that records the confirming review (follows ea2ebaac; it adds this version of the receipt)",
+  "lean_changes": {
+   "PqxdhDeploymentHeadlinePlain": {
+    "before": "7b8c06d398f709e5320ae6bdf4e249ecd438270e9f5c777b0db2232773468e89",
+    "after": "a62ebdae3eb29548e3cff6aea948f31a06fd0110210d0a8cbde3864a02ec5234",
+    "scope": "docstrings only"
+   },
+   "PqxdhDeploymentHeadlinePlainGated": {
+    "before": "522d4a14ead433db5881efff526ae0c89889f2a6dc728b7cada0505e136a365f",
+    "after": "fbb63bec5122e1b9aacd954a641cf3fa883d96a949c8b458c9b2123f53a97f16",
+    "scope": "docstrings only"
+   }
+  },
+  "docstring_only_check": {
+   "script": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/int/scripts/doconly.py",
+   "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/int/logs/doconly-record.log",
+   "log_sha256": "060d2da6fdaf9f555b70509c0be7ee473a92ed4e918d30d25b442387972463f8",
+   "result": "both files with /-! -/ and /-- -/ blocks removed are byte-equal to ea2ebaac's"
+  },
+  "dev_checks": {
+   "PqxdhDeploymentHeadlinePlain-1": {
+    "source_sha256": "a62ebdae3eb29548e3cff6aea948f31a06fd0110210d0a8cbde3864a02ec5234",
+    "result": "exit 0 seconds 8",
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/int/logs/dev/PqxdhDeploymentHeadlinePlain-1.log",
+    "log_bytes": 0
+   },
+   "PqxdhDeploymentHeadlinePlainGated-1": {
+    "source_sha256": "fbb63bec5122e1b9aacd954a641cf3fa883d96a949c8b458c9b2123f53a97f16",
+    "result": "exit 0 seconds 3",
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/int/logs/dev/PqxdhDeploymentHeadlinePlainGated-1.log",
+    "log_bytes": 0
+   }
+  },
+  "dev_leanpath": {
+   "path": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/fix/leanpath",
+   "sha256": "67156d5ed6bc068c3c38b02859bdba9d217cca1c36552090be942439ddc6d392"
+  },
+  "recount": {
+   "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/int/logs/recount-record.log",
+   "result": "handwritten-lean count unchanged (1958)"
+  },
+  "rehash": [
+   {
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/int/logs/rehash-record-2.log",
+    "result": [
+     "proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlinePlain.lean: 7b8c06d398f7 -> a62ebdae3eb2",
+     "proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlinePlainGated.lean: 522d4a14ead4 -> fbb63bec5122"
+    ]
+   },
+   {
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/int/logs/rehash-record-3.log",
+    "result": [
+     "proofs/lean/BeaconcryptCore.lean: unchanged",
+     "proofs/trusted-boundary.md: unchanged",
+     "proofs/check-inventory.sh: unchanged"
+    ]
+   }
+  ],
+  "final_checks": "at the integration tip: the ten P4 modules and the root compiled with -o into a fresh prefix ce12/p4/int/olean (integration checks receipt in ce12/p4/int)",
+  "scripts": {
+   "lean_nit.py": "9804bc3c4f104b5aca054e9b080f23d4959fe9e696633d4b0759615972e06ab3",
+   "dev.sh": "25360ab7b023291871e4fb2d655c80ac46dc55512d2f035a0ce76c5d5b3947a2",
+   "doconly.py": "08020bc36b3ca8f19e6103be64d40972e967045c41fb367ee16074095e1d207e",
+   "docs_record.py": "1c2d668c09cbdf4fb67a7e58e3bb88eb18bd6e2c6efc485bdf175f650fb5a353",
+   "plan_edit.py": "578eb73b9e5485aa4dd0b2d5ce9eb56904f57ef877d9b732f1b60ef5492c3fac",
+   "snapshot.py": "750842fd05e3451ad8408e8bfb2f37fa1dc606298ae09ecfc43fded108ee14ae",
+   "receipt_record.py": "f2a3cdd808c6ca3b9aa1a571cb3aa7e0264a7b6631f5b6caff09724806725260"
+  },
+  "docs_backups": [
+   "/tmp/bc-arc-scratch/common-experiment/ce12/p4/int/docs/analysis.before-record.md",
+   "/tmp/bc-arc-scratch/common-experiment/ce12/p4/int/docs/guide.before-record.md",
+   "/tmp/bc-arc-scratch/common-experiment/ce12/p4/int/docs/receipt.before-record.json",
+   "/tmp/bc-arc-scratch/common-experiment/ce12/p4/int/docs/snapshot.before-record.md",
+   "/tmp/bc-arc-scratch/common-experiment/ce12/p4/int/docs/lean-before/"
+  ]
+ },
+ "plan_snapshot": {
+  "path": "doc/impl/common-deployment-experiment-plan.md",
+  "sha256": "2feaf9673ebe8fb75f6ea8d885b7e2c853c7e00e11bed69c5417705c89a990c1",
+  "body": "wholesale copy of the working plan 7ea72bc4329582157261683b5a332d0b425fbd07f50e3a829265267f04d01372 (through section 119) after the two title lines, with the snapshot paragraph as the third line",
+  "previous": "central 3dd5cabc = e5af7024 snapshot (CE-12 P2b refresh, working plan 344bc486 through section 114)",
+  "delta": "item 7 increment I5's two bullets at the end of section 112, CE-12 P2b's integration bullet at the end of section 114, and sections 115 to 119 (P4 steps 1 to 3 with 115 and 117 as corrected by the fix pass, 118 the fix pass, 119 the confirming review)",
+  "script": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/int/scripts/snapshot.py",
+  "backup_before_record": "/tmp/bc-arc-scratch/common-experiment/ce12/p4/int/docs/snapshot.before-record.md"
  }
 }
