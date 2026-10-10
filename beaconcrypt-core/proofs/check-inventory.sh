@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1949
+	[handwritten-lean]=1950
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -40984,6 +40984,49 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem keyPart_card([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctTools theorem keyPart_card"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctTools\.material_marginal$' "$selected_source_module" "PqxdhDeploymentHeadlineDctTools dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctTools.material_marginal"
 require_line_count 1 '^theorem material_marginal([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctTools theorem material_marginal"
+
+# CE-12 D-ct CE side: the named ciphertext-gap event, key-ID links, the split over targets and the per-target ideal worlds.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineDctEvent.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctEvent$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentHeadlineDctEvent root import"
+require_line_count 18 '^theorem ' "$selected_source_module" "PqxdhDeploymentHeadlineDctEvent theorem inventory"
+require_line_count 18 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentHeadlineDctEvent guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctEvent\.peersKept_trans$' "$selected_source_module" "PqxdhDeploymentHeadlineDctEvent dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctEvent.peersKept_trans"
+require_line_count 1 '^theorem peersKept_trans([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctEvent theorem peersKept_trans"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctEvent\.peerStep_kept$' "$selected_source_module" "PqxdhDeploymentHeadlineDctEvent dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctEvent.peerStep_kept"
+require_line_count 1 '^theorem peerStep_kept([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctEvent theorem peerStep_kept"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctEvent\.putPeer_kept$' "$selected_source_module" "PqxdhDeploymentHeadlineDctEvent dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctEvent.putPeer_kept"
+require_line_count 1 '^theorem putPeer_kept([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctEvent theorem putPeer_kept"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctEvent\.serverStep_kept$' "$selected_source_module" "PqxdhDeploymentHeadlineDctEvent dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctEvent.serverStep_kept"
+require_line_count 1 '^theorem serverStep_kept([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctEvent theorem serverStep_kept"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctEvent\.native_peers_kept$' "$selected_source_module" "PqxdhDeploymentHeadlineDctEvent dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctEvent.native_peers_kept"
+require_line_count 1 '^theorem native_peers_kept([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctEvent theorem native_peers_kept"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctEvent\.run_peers_kept$' "$selected_source_module" "PqxdhDeploymentHeadlineDctEvent dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctEvent.run_peers_kept"
+require_line_count 1 '^theorem run_peers_kept([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctEvent theorem run_peers_kept"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctEvent\.buildKeyId_mem$' "$selected_source_module" "PqxdhDeploymentHeadlineDctEvent dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctEvent.buildKeyId_mem"
+require_line_count 1 '^theorem buildKeyId_mem([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctEvent theorem buildKeyId_mem"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctEvent\.mem_buildKeyId$' "$selected_source_module" "PqxdhDeploymentHeadlineDctEvent dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctEvent.mem_buildKeyId"
+require_line_count 1 '^theorem mem_buildKeyId([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctEvent theorem mem_buildKeyId"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctEvent\.native_build_fresh$' "$selected_source_module" "PqxdhDeploymentHeadlineDctEvent dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctEvent.native_build_fresh"
+require_line_count 1 '^theorem native_build_fresh([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctEvent theorem native_build_fresh"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctEvent\.keyId_step$' "$selected_source_module" "PqxdhDeploymentHeadlineDctEvent dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctEvent.keyId_step"
+require_line_count 1 '^theorem keyId_step([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctEvent theorem keyId_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctEvent\.keyId_game$' "$selected_source_module" "PqxdhDeploymentHeadlineDctEvent dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctEvent.keyId_game"
+require_line_count 1 '^theorem keyId_game([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctEvent theorem keyId_game"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctEvent\.link_of_distinct$' "$selected_source_module" "PqxdhDeploymentHeadlineDctEvent dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctEvent.link_of_distinct"
+require_line_count 1 '^theorem link_of_distinct([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctEvent theorem link_of_distinct"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctEvent\.build_keyId_link$' "$selected_source_module" "PqxdhDeploymentHeadlineDctEvent dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctEvent.build_keyId_link"
+require_line_count 1 '^theorem build_keyId_link([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctEvent theorem build_keyId_link"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctEvent\.linkedGap_of_gap$' "$selected_source_module" "PqxdhDeploymentHeadlineDctEvent dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctEvent.linkedGap_of_gap"
+require_line_count 1 '^theorem linkedGap_of_gap([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctEvent theorem linkedGap_of_gap"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctEvent\.linkedGap_designated$' "$selected_source_module" "PqxdhDeploymentHeadlineDctEvent dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctEvent.linkedGap_designated"
+require_line_count 1 '^theorem linkedGap_designated([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctEvent theorem linkedGap_designated"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctEvent\.ctgap_named$' "$selected_source_module" "PqxdhDeploymentHeadlineDctEvent dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctEvent.ctgap_named"
+require_line_count 1 '^theorem ctgap_named([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctEvent theorem ctgap_named"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctEvent\.ctgap_split_sum$' "$selected_source_module" "PqxdhDeploymentHeadlineDctEvent dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctEvent.ctgap_split_sum"
+require_line_count 1 '^theorem ctgap_split_sum([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctEvent theorem ctgap_split_sum"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineDctEvent\.ctgap_term_world$' "$selected_source_module" "PqxdhDeploymentHeadlineDctEvent dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctEvent.ctgap_term_world"
+require_line_count 1 '^theorem ctgap_term_world([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineDctEvent theorem ctgap_term_world"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
