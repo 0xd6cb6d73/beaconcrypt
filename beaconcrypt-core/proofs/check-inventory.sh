@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1955
+	[handwritten-lean]=1956
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -41288,6 +41288,47 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem ctxRun_unique([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePlainUnique theorem ctxRun_unique"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePlainUnique\.frame_seal_unique$' "$selected_source_module" "PqxdhDeploymentHeadlinePlainUnique dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlainUnique.frame_seal_unique"
 require_line_count 1 '^theorem frame_seal_unique([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePlainUnique theorem frame_seal_unique"
+
+# CE-12 P4 step 3 (AG lift R2): the sealed plaintext of every CE production in every ideal CTX world
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlinePlainSend.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlainSend$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentHeadlinePlainSend root import"
+require_line_count 17 '^theorem ' "$selected_source_module" "PqxdhDeploymentHeadlinePlainSend theorem inventory"
+require_line_count 17 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentHeadlinePlainSend guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePlainSend\.sealing_plain$' "$selected_source_module" "PqxdhDeploymentHeadlinePlainSend dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlainSend.sealing_plain"
+require_line_count 1 '^theorem sealing_plain([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePlainSend theorem sealing_plain"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePlainSend\.kernelSend_plain$' "$selected_source_module" "PqxdhDeploymentHeadlinePlainSend dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlainSend.kernelSend_plain"
+require_line_count 1 '^theorem kernelSend_plain([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePlainSend theorem kernelSend_plain"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePlainSend\.ownerSend_plain$' "$selected_source_module" "PqxdhDeploymentHeadlinePlainSend dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlainSend.ownerSend_plain"
+require_line_count 1 '^theorem ownerSend_plain([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePlainSend theorem ownerSend_plain"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePlainSend\.ownerRun_plain$' "$selected_source_module" "PqxdhDeploymentHeadlinePlainSend dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlainSend.ownerRun_plain"
+require_line_count 1 '^theorem ownerRun_plain([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePlainSend theorem ownerRun_plain"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePlainSend\.serverSend_plain$' "$selected_source_module" "PqxdhDeploymentHeadlinePlainSend dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlainSend.serverSend_plain"
+require_line_count 1 '^theorem serverSend_plain([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePlainSend theorem serverSend_plain"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePlainSend\.beaconSend_plain$' "$selected_source_module" "PqxdhDeploymentHeadlinePlainSend dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlainSend.beaconSend_plain"
+require_line_count 1 '^theorem beaconSend_plain([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePlainSend theorem beaconSend_plain"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePlainSend\.publishedPlain_mono$' "$selected_source_module" "PqxdhDeploymentHeadlinePlainSend dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlainSend.publishedPlain_mono"
+require_line_count 1 '^theorem publishedPlain_mono([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePlainSend theorem publishedPlain_mono"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePlainSend\.native_serverSend_plain$' "$selected_source_module" "PqxdhDeploymentHeadlinePlainSend dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlainSend.native_serverSend_plain"
+require_line_count 1 '^theorem native_serverSend_plain([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePlainSend theorem native_serverSend_plain"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePlainSend\.native_beaconSend_plain$' "$selected_source_module" "PqxdhDeploymentHeadlinePlainSend dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlainSend.native_beaconSend_plain"
+require_line_count 1 '^theorem native_beaconSend_plain([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePlainSend theorem native_beaconSend_plain"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePlainSend\.native_final$' "$selected_source_module" "PqxdhDeploymentHeadlinePlainSend dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlainSend.native_final"
+require_line_count 1 '^theorem native_final([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePlainSend theorem native_final"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePlainSend\.native_send_plain$' "$selected_source_module" "PqxdhDeploymentHeadlinePlainSend dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlainSend.native_send_plain"
+require_line_count 1 '^theorem native_send_plain([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePlainSend theorem native_send_plain"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePlainSend\.entryPlain_forward$' "$selected_source_module" "PqxdhDeploymentHeadlinePlainSend dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlainSend.entryPlain_forward"
+require_line_count 1 '^theorem entryPlain_forward([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePlainSend theorem entryPlain_forward"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePlainSend\.native_entryPlain$' "$selected_source_module" "PqxdhDeploymentHeadlinePlainSend dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlainSend.native_entryPlain"
+require_line_count 1 '^theorem native_entryPlain([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePlainSend theorem native_entryPlain"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePlainSend\.ledger_plain$' "$selected_source_module" "PqxdhDeploymentHeadlinePlainSend dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlainSend.ledger_plain"
+require_line_count 1 '^theorem ledger_plain([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePlainSend theorem ledger_plain"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePlainSend\.full_invariant_plain$' "$selected_source_module" "PqxdhDeploymentHeadlinePlainSend dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlainSend.full_invariant_plain"
+require_line_count 1 '^theorem full_invariant_plain([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePlainSend theorem full_invariant_plain"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePlainSend\.full_program_invariant_plain$' "$selected_source_module" "PqxdhDeploymentHeadlinePlainSend dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlainSend.full_program_invariant_plain"
+require_line_count 1 '^theorem full_program_invariant_plain([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePlainSend theorem full_program_invariant_plain"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlinePlainSend\.ctxRun_sentPlain$' "$selected_source_module" "PqxdhDeploymentHeadlinePlainSend dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlainSend.ctxRun_sentPlain"
+require_line_count 1 '^theorem ctxRun_sentPlain([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlinePlainSend theorem ctxRun_sentPlain"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
