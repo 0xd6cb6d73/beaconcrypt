@@ -1,0 +1,710 @@
+{
+ "kind": "items 3+7 production composition (CE-12 headlines on the PB-D production source games), build session 1",
+ "author": "Claude (item 7 lane adopted from Codex, owner decision #503; item 3 is Claude's)",
+ "provenance": "new work; no Codex WIP exists for these modules",
+ "branch": "codex/deployment-boundary-production",
+ "basis_central": "427758b600d30ba5e71c5e4c7f5d86f5a3bd2d1d",
+ "basis_note": "the topic was fast-forwarded from central 3dd5cabc (its creation point, no commit of its own) to central 427758b6 (CE-12 P4, #525) before any commit",
+ "module_commits": {
+  "PqxdhDeploymentProductionTransfer": "9a5899c9ec4180e504910baf05fde385cceb8830",
+  "PqxdhDeploymentProductionHeadlinesClassical": "f84226e9ed2a29baa3dbf55331153ce05fa65ac3",
+  "PqxdhDeploymentProductionHeadlinesLater": "0d5aa0e226027be7cf1c200dd8f0a0c8e07bf6ab",
+  "PqxdhDeploymentProductionHeadlines": "543a505c1d585c2344db8a36028c18cc5c11a14c"
+ },
+ "documents_commit": "the commit that adds this receipt (guide, ledger paragraph, analysis section)",
+ "modules": {
+  "PqxdhDeploymentProductionTransfer": {
+   "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentProductionTransfer.lean",
+   "sha256": "46ef566033afeb628655685dd7316201c98daeceb9ed7135ddc1ad4847332ec2",
+   "theorems": 8,
+   "guards": 8,
+   "lines": 198,
+   "open_classical_in": 0,
+   "commit": "9a5899c9ec4180e504910baf05fde385cceb8830",
+   "check": {
+    "record": "/tmp/bc-arc-scratch/item7/prod/build427/PqxdhDeploymentProductionTransfer-1.json",
+    "start": "2026-10-10T18:40:51.584539571Z",
+    "end": "2026-10-10T18:40:54.678305980Z",
+    "exit": 0,
+    "log": "/tmp/bc-arc-scratch/item7/prod/build427/PqxdhDeploymentProductionTransfer-1.log",
+    "log_bytes": 0,
+    "olean": "/tmp/bc-arc-scratch/item7/prod/olean427/BeaconcryptCore/Computational/PqxdhDeploymentProductionTransfer.olean",
+    "olean_sha256": "bdc1b0c4aa47987d18d430d7b60160dd1bde4032427d0472a54ef0bdf49a585d",
+    "head": "427758b600d30ba5e71c5e4c7f5d86f5a3bd2d1d",
+    "dirty_paths": 1,
+    "leanpath": "/tmp/bc-arc-scratch/item7/prod/leanpath427",
+    "leanpath_sha256": "c57df904014771768cbe214a7495bec6dc2653204d574b40c625939196952123"
+   }
+  },
+  "PqxdhDeploymentProductionHeadlinesClassical": {
+   "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentProductionHeadlinesClassical.lean",
+   "sha256": "cba4421caf81e049f1d47790b1e24cbb36f0ace2d17c2376d7f8fd9288f71be0",
+   "theorems": 45,
+   "guards": 45,
+   "lines": 3308,
+   "open_classical_in": 4,
+   "commit": "f84226e9ed2a29baa3dbf55331153ce05fa65ac3",
+   "check": {
+    "record": "/tmp/bc-arc-scratch/item7/prod/build427/PqxdhDeploymentProductionHeadlinesClassical-1.json",
+    "start": "2026-10-10T18:42:05.090925513Z",
+    "end": "2026-10-10T18:42:12.929804436Z",
+    "exit": 0,
+    "log": "/tmp/bc-arc-scratch/item7/prod/build427/PqxdhDeploymentProductionHeadlinesClassical-1.log",
+    "log_bytes": 0,
+    "olean": "/tmp/bc-arc-scratch/item7/prod/olean427/BeaconcryptCore/Computational/PqxdhDeploymentProductionHeadlinesClassical.olean",
+    "olean_sha256": "b32ba992721f153e17cfe59eb6302f181105870aefcec4336361ff89b5b3070a",
+    "head": "427758b600d30ba5e71c5e4c7f5d86f5a3bd2d1d",
+    "dirty_paths": 3,
+    "leanpath": "/tmp/bc-arc-scratch/item7/prod/leanpath427",
+    "leanpath_sha256": "c57df904014771768cbe214a7495bec6dc2653204d574b40c625939196952123"
+   }
+  },
+  "PqxdhDeploymentProductionHeadlinesLater": {
+   "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentProductionHeadlinesLater.lean",
+   "sha256": "11563bca74374d1a21522a456b701ce11fa50c3c4391fde72b40cf6ce634fb8b",
+   "theorems": 35,
+   "guards": 35,
+   "lines": 3004,
+   "open_classical_in": 6,
+   "commit": "0d5aa0e226027be7cf1c200dd8f0a0c8e07bf6ab",
+   "check": {
+    "record": "/tmp/bc-arc-scratch/item7/prod/build427/PqxdhDeploymentProductionHeadlinesLater-1.json",
+    "start": "2026-10-10T18:42:17.111915644Z",
+    "end": "2026-10-10T18:42:24.972432514Z",
+    "exit": 0,
+    "log": "/tmp/bc-arc-scratch/item7/prod/build427/PqxdhDeploymentProductionHeadlinesLater-1.log",
+    "log_bytes": 0,
+    "olean": "/tmp/bc-arc-scratch/item7/prod/olean427/BeaconcryptCore/Computational/PqxdhDeploymentProductionHeadlinesLater.olean",
+    "olean_sha256": "33979f5774efb4bb96961c14edc6300c6f46676d36a6069d299f1061e235ac15",
+    "head": "427758b600d30ba5e71c5e4c7f5d86f5a3bd2d1d",
+    "dirty_paths": 3,
+    "leanpath": "/tmp/bc-arc-scratch/item7/prod/leanpath427",
+    "leanpath_sha256": "c57df904014771768cbe214a7495bec6dc2653204d574b40c625939196952123"
+   }
+  },
+  "PqxdhDeploymentProductionHeadlines": {
+   "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentProductionHeadlines.lean",
+   "sha256": "5e3fadc14fd1cacf2c4dc2654b4481dbb4054de086ae8fe6f80360f593ec727d",
+   "theorems": 50,
+   "guards": 50,
+   "lines": 4288,
+   "open_classical_in": 20,
+   "commit": "543a505c1d585c2344db8a36028c18cc5c11a14c",
+   "check": {
+    "record": "/tmp/bc-arc-scratch/item7/prod/build427/PqxdhDeploymentProductionHeadlines-1.json",
+    "start": "2026-10-10T18:42:36.107670270Z",
+    "end": "2026-10-10T18:42:43.487287627Z",
+    "exit": 0,
+    "log": "/tmp/bc-arc-scratch/item7/prod/build427/PqxdhDeploymentProductionHeadlines-1.log",
+    "log_bytes": 0,
+    "olean": "/tmp/bc-arc-scratch/item7/prod/olean427/BeaconcryptCore/Computational/PqxdhDeploymentProductionHeadlines.olean",
+    "olean_sha256": "2228444ceeeeacf990a667cb24aff39e7b41fc4025d70b7fa66fea1533d06b69",
+    "head": "427758b600d30ba5e71c5e4c7f5d86f5a3bd2d1d",
+    "dirty_paths": 4,
+    "leanpath": "/tmp/bc-arc-scratch/item7/prod/leanpath427",
+    "leanpath_sha256": "c57df904014771768cbe214a7495bec6dc2653204d574b40c625939196952123"
+   }
+  }
+ },
+ "total_theorems": 138,
+ "production_forms": 128,
+ "guards": 138,
+ "guard_profile": "every theorem exactly one #guard_msgs over #print axioms listing propext, Classical.choice, Quot.sound",
+ "hygiene": {
+  "PqxdhDeploymentProductionTransfer": {
+   "forbidden_tokens": [],
+   "bad_set_options": [],
+   "long_code_lines": [],
+   "defs": 0,
+   "ok": true
+  },
+  "PqxdhDeploymentProductionHeadlinesClassical": {
+   "forbidden_tokens": [],
+   "bad_set_options": [],
+   "long_code_lines": [],
+   "defs": 0,
+   "ok": true
+  },
+  "PqxdhDeploymentProductionHeadlinesLater": {
+   "forbidden_tokens": [],
+   "bad_set_options": [],
+   "long_code_lines": [],
+   "defs": 0,
+   "ok": true
+  },
+  "PqxdhDeploymentProductionHeadlines": {
+   "forbidden_tokens": [],
+   "bad_set_options": [],
+   "long_code_lines": [],
+   "defs": 0,
+   "ok": true
+  }
+ },
+ "development_checks": {
+  "PqxdhDeploymentProductionHeadlinesClassical": {
+   "log": "/tmp/bc-arc-scratch/item7/prod/build427/dev/PqxdhDeploymentProductionHeadlinesClassical-1.log",
+   "sha256": "86b1b12fb26746116c62b671c350151fdbe21b08cbacb76d4324e4f56f3cb855",
+   "meta": "be97e1a64db5105829282eec000dba29b934eec7da4bc61694c03b66fbe0b615  /tmp/bc-arc-scratch/item7/prod/gen/PqxdhDeploymentProductionHeadlinesClassical.lean\nexit 0 seconds 6",
+   "axiom_messages": 45,
+   "other_messages": 0
+  },
+  "PqxdhDeploymentProductionHeadlinesLater": {
+   "log": "/tmp/bc-arc-scratch/item7/prod/build427/dev/PqxdhDeploymentProductionHeadlinesLater-1.log",
+   "sha256": "a22d5045282d51d69c15063c59aea2bfe8f433b8a471095001374694148fbf76",
+   "meta": "8fcfdf072538830395569e6eb076fd20d35001e7f12aec28ca5b1b916b1a5d85  /tmp/bc-arc-scratch/item7/prod/gen/PqxdhDeploymentProductionHeadlinesLater.lean\nexit 0 seconds 6",
+   "axiom_messages": 35,
+   "other_messages": 0
+  },
+  "PqxdhDeploymentProductionHeadlines": {
+   "log": "/tmp/bc-arc-scratch/item7/prod/build427/dev/PqxdhDeploymentProductionHeadlines-1.log",
+   "sha256": "3e2a032a6cca709421f7f783dd15301282cd2c5ac60acf97568a0bcbb4e733c0",
+   "meta": "e5316624eb892d5c14e6553c81605f7760596d58319c1584adefe6fcafae8b1a  /tmp/bc-arc-scratch/item7/prod/gen/PqxdhDeploymentProductionHeadlines.lean\nexit 0 seconds 7",
+   "axiom_messages": 50,
+   "other_messages": 0
+  }
+ },
+ "transfer_first_attempt": {
+  "note": "PqxdhDeploymentProductionTransfer was first checked with -o at central 3dd5cabc in the first attempt of this session (same source)",
+  "record": "/tmp/bc-arc-scratch/item7/prod/build/PqxdhDeploymentProductionTransfer-1.json",
+  "exit": 0
+ },
+ "root_import": {
+  "record": "/tmp/bc-arc-scratch/item7/prod/build427/root-1.json",
+  "exit": 0,
+  "log_bytes": 0,
+  "head": "543a505c1d585c2344db8a36028c18cc5c11a14c",
+  "olean_sha256": "eecc2d63882e9bd98e4671e6e8cd7e67b4e7b533a21312851fd5e99598531a88"
+ },
+ "olean_prefix": {
+  "path": "/tmp/bc-arc-scratch/item7/prod/olean427",
+  "leanpath": "/tmp/bc-arc-scratch/item7/prod/leanpath427",
+  "leanpath_sha256": "c57df904014771768cbe214a7495bec6dc2653204d574b40c625939196952123",
+  "mirror": "resolved symlink mirror of the BeaconcryptCore part of the published 427758b6 first prefix /tmp/bc-arc-scratch/common-experiment/ce12/p4/int/olean without its root olean (scripts/mirror427.py: 6417 links, 0 broken)",
+  "published_leanpath": "/tmp/bc-coord/leanpaths/427758b600d30ba5e71c5e4c7f5d86f5a3bd2d1d.leanpath"
+ },
+ "lean_command": "coord.sh lean claude <label> -- timeout 180 lean -j1 -M8000 [--root=<worktree lean dir> -o <olean>] <file>, one check in flight",
+ "inventory": {
+  "recount": "coord.sh inv recount claude <core> before coord.sh inv rehash claude <core> at each module commit; [handwritten-lean] 1958 -> 1959 -> 1960 -> 1961 -> 1962",
+  "focused_check_inventory": {
+   "start": "2026-10-10T18:44:54Z",
+   "end": "2026-10-10T18:46:46Z",
+   "commit": "543a505c1d585c2344db8a36028c18cc5c11a14c",
+   "status": 0,
+   "dirt_bytes": 0,
+   "dirt_after_bytes": 0,
+   "log": "/tmp/bc-arc-scratch/item7/prod/build427/inventory-modules.log",
+   "log_sha256": "1e1932854700cbf02894a0c63ea3d44eccd1baedbb051b76048a3973527f1fda"
+  },
+  "command": "coord.sh lease mem claude @nix item7-prod-inventory-modules --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C <worktree>/beaconcrypt-core check-inventory SHELL=bash"
+ },
+ "git_diff_check": "clean for 427758b6..HEAD at the documents commit (checked before committing and after)",
+ "generator": {
+  "script": "/tmp/bc-arc-scratch/item7/prod/scripts/gen2.py",
+  "sha256": "a4d24eb0d821e13ea1492f54c2bc3d609c5a4a8c9e8fa3f4d5ad27cdbdf4bc35",
+  "planning_generator_sha256": "79f00ccf59ce68c29432719d4b8111057ee2e8f5dcccd884b776ebdfffb8d519",
+  "selection": "/tmp/bc-arc-scratch/item7/prod/docs/headline-list-v2.txt",
+  "selection_sha256": "640228a20ce4c889f923290b08e62cc900a134fe7616e9ef574939aab1f6045f",
+  "guards_script_sha256": "2262e042911f7b5f1068d7483cbf6436de1a51c634abba1ee11f6f14e8c92089",
+  "rederivation": "gen2.py re-run on the frozen sources reproduced gen/*.lean byte for byte, and gen output plus guards from the development logs equals the committed headline modules byte for byte"
+ },
+ "plan": {
+  "path": "/tmp/bc-arc-scratch/item7/prod/plan.md",
+  "sha256": "3c1d05ff31e5e04032b7934b9162728b468d5a90ca88bf1a5a77e1234dd36663",
+  "amendment": "section 12 (amendment A1): CE-12 P4 forms (31) added, module placement, document names, scan approach"
+ },
+ "frozen_inputs_sha256": {
+  "PqxdhDeploymentHeadlineApp": "09c9ee6bde508ab740a4704dcef7f4f3a28b37f80a10c9d635f53696c27576a0",
+  "PqxdhDeploymentHeadlineCollision": "0881bf4176bd241efa57517496e390dcd7d68e6e32cc28c30a0905dab34d7fc0",
+  "PqxdhDeploymentHeadlineCtClosed": "db3fe1c508de30d68402861fb22c171a33ff425415a09f2abba237c53d811ab3",
+  "PqxdhDeploymentHeadlineCtColl": "163afe51aa8e23810c02ae4b86a18d90836979569a12ddd9113c5526b12951f7",
+  "PqxdhDeploymentHeadlineGap": "31149250f7013b6ef8e646eccd8a1b629ca65189fa08702b9bfaca026d0569f7",
+  "PqxdhDeploymentHeadlineGated": "32d9482f4ac30959268ffdd92604505d12f354fd50fe0d1a778182e597d60b59",
+  "PqxdhDeploymentHeadlineInjective": "22d8e8f64ff24298ae01e36fad5bb40f0f148c91dc73f672955370bbc82ae779",
+  "PqxdhDeploymentHeadlineKeyTransfer": "239b3b52bd343e4219220301887ea38b9d40313ca32b705c0b65f75ba10aedff",
+  "PqxdhDeploymentHeadlineLor": "d3a7c3f211166848f654c3c8c75239039cf4e68b8c2d2c6544c044394ad61dca",
+  "PqxdhDeploymentHeadlineOrigin": "aab75bfdf24d2e17d20ded4b59173e7a001e8df62923bc20ef16e88b480d9e1f",
+  "PqxdhDeploymentHeadlinePin": "fb6b5b149177c6d17b36381712f141a66c6a5902c8534aeaed4b8f721fd677ef",
+  "PqxdhDeploymentHeadlinePlain": "a62ebdae3eb29548e3cff6aea948f31a06fd0110210d0a8cbde3864a02ec5234",
+  "PqxdhDeploymentHeadlinePlainGated": "fbb63bec5122e1b9aacd954a641cf3fa883d96a949c8b458c9b2123f53a97f16",
+  "PqxdhDeploymentHeadlineSymbolic": "4e02773eb4b4da7322e36c84cf76888ae2405ee66119f0ca12add3a67570dbe9",
+  "PqxdhDeploymentHeadlineSymbolicLor": "57b98a8aed3a20b29cca0a1320e32e17abbdb0ab3172372bc606c1bca66c97a9",
+  "PqxdhDeploymentHeadlineUks": "ee3e8c4a2978ca894d983646a35ab62a6b639d322d8cf79c3a31e129dda5416e",
+  "PqxdhDeploymentLaterHeadlineApp": "0f00b007f3276e14caae7ad24c815c8cc59d5ab0fabca08045744456ba2257e9",
+  "PqxdhDeploymentLaterHeadlineClosed": "cbdd769a7b753b02c84728fe0f3022a4dede7cd06cab1b345f6428ac2d915eb8",
+  "PqxdhDeploymentLaterHeadlineGated": "0c978b07206f2ac8e8449edd45a9f3ed6eb8ee3f893c772f46406a63ce1f352b",
+  "PqxdhDeploymentLaterHeadlineKeyTransfer": "02eb91dfe02f37fe619ccf2a11d99c29cc7807187e2da450ea25244ad6857b31",
+  "PqxdhDeploymentLaterHeadlineLor": "34d3e6a88971cea4115ba4a58fd39bbbae457748ef1a9d2198c6990e29e9fd33",
+  "PqxdhDeploymentLaterHeadlineSymbolic": "595e68a44fce84556d7ac5fcfa855e5a80cd2a9f5f213e0d0d7ac14ddd36b789",
+  "PqxdhDeploymentLaterHeadlineSymbolicLor": "0b3cedc8e0ecc0df089b1c7321a8b64e382603c4598c7c08cb2e0a9d8d75fdcb",
+  "PqxdhBoundaryDeployment": "c806497c4c23f0dba0927fbfb9422c39c984c6f1067b609f7e859ab72d8c727f",
+  "PqxdhBoundaryDeploymentLater": "1f27a737da73b5603d5b96b24461d222c25efd63607accf71ca33069c29c69bc",
+  "PqxdhBoundaryDeploymentStep": "847b391867a7aebb0331cc70bfc3628eb08952e69c22f93b328dd5cdcc7f34ea"
+ },
+ "premises": {
+  "table": "/tmp/bc-arc-scratch/item7/prod/docs/premises-production.json",
+  "sha256": "166ae9313f7ce1e39f8c866bd9d4adad23e4fba43f477f33948469aab9870369",
+  "totals": {
+   "Phase1ReadBack codec": 128,
+   "Phase2ReadBack codec": 128,
+   "FrameReadBack codec′": 75,
+   "ReadWritable codec′": 42,
+   "DecoderAgreement": 0,
+   "FunctionalDecapsulation setup.kem": 119,
+   "SourceFullCorrect setup.source setup.hmac": 121,
+   "KemBound setup caps": 106,
+   "initBound": 95,
+   "X25519ClassLaw": 42,
+   "X25519ScalarSpread": 42,
+   "HasAttachedVerificationAdapter": 42,
+   "shortRejects": 30,
+   "budget.Respects": 128,
+   "post.Respects": 32
+  },
+  "other_codec_or_route_binders": 0,
+  "owner_level_stop": false
+ },
+ "scans": {
+  "spec": "/tmp/bc-arc-scratch/item7/prod/scans/scan-spec-v7.json",
+  "spec_sha256": "34b96e5c6cb22ca89e8a3639cb21d86c913cac54f005778382e5289388d71e7e",
+  "statement_scan_v7": {
+   "PqxdhDeploymentProductionTransfer": {
+    "clean": "/tmp/bc-arc-scratch/item7/prod/scans/PqxdhDeploymentProductionTransfer-statement-clean-v7.json",
+    "clean_sha256": "e5b4eff8dc727e8c71e94de3809556aad51fa79def9550a5315130bd9fc773ab",
+    "declarations": 8,
+    "module_hits": 0,
+    "hit_tokens": [],
+    "live": "/tmp/bc-arc-scratch/item7/prod/scans/PqxdhDeploymentProductionTransfer-statement-live-v7.json",
+    "live_sha256": "5e3edddb3378af93c6820798cf42d9edee910eeb26cf806a8aa9f4d277e38b4f",
+    "live_classes": 11,
+    "missed_tokens": []
+   },
+   "PqxdhDeploymentProductionHeadlinesClassical": {
+    "clean": "/tmp/bc-arc-scratch/item7/prod/scans/PqxdhDeploymentProductionHeadlinesClassical-statement-clean-v7.json",
+    "clean_sha256": "74d60b42482ad576f0015227969bdfb596ff1bed43e2d4da816b51c7b1fecc48",
+    "declarations": 45,
+    "module_hits": 7,
+    "hit_tokens": [
+     "PqxdhDeploymentIdealSteps.idealGame"
+    ],
+    "live": "/tmp/bc-arc-scratch/item7/prod/scans/PqxdhDeploymentProductionHeadlinesClassical-statement-live-v7.json",
+    "live_sha256": "805e4490f8b165cf9ce0fafe7e7a29ec1fe144415bdf79959ed8c86c5e503c2f",
+    "live_classes": 11,
+    "missed_tokens": []
+   },
+   "PqxdhDeploymentProductionHeadlinesLater": {
+    "clean": "/tmp/bc-arc-scratch/item7/prod/scans/PqxdhDeploymentProductionHeadlinesLater-statement-clean-v7.json",
+    "clean_sha256": "88c1707ef7f897856fada1157a389b6164c60b34b9ee680aecefc7dc61b03e7b",
+    "declarations": 35,
+    "module_hits": 3,
+    "hit_tokens": [
+     "PqxdhRecordLiftLater.run"
+    ],
+    "live": "/tmp/bc-arc-scratch/item7/prod/scans/PqxdhDeploymentProductionHeadlinesLater-statement-live-v7.json",
+    "live_sha256": "a6d201d77293858405a213a25e72872413595d016c567e62c1d8c4a5d7c1549f",
+    "live_classes": 11,
+    "missed_tokens": []
+   },
+   "PqxdhDeploymentProductionHeadlines": {
+    "clean": "/tmp/bc-arc-scratch/item7/prod/scans/PqxdhDeploymentProductionHeadlines-statement-clean-v7.json",
+    "clean_sha256": "4782ce83f9cdcf97fb40de65d7c4b8fb9d2d41d01b6503ae44698ba66be3efd6",
+    "declarations": 50,
+    "module_hits": 0,
+    "hit_tokens": [],
+    "live": "/tmp/bc-arc-scratch/item7/prod/scans/PqxdhDeploymentProductionHeadlines-statement-live-v7.json",
+    "live_sha256": "ed63c9c5d200e52a8198d5e0413042ce40ab98aec70cc743632a2dceb881c410",
+    "live_classes": 11,
+    "missed_tokens": []
+   }
+  },
+  "production_side_statement_scan": {
+   "PqxdhDeploymentProductionTransfer": {
+    "clean": "/tmp/bc-arc-scratch/item7/prod/scans/PqxdhDeploymentProductionTransfer-split-clean.json",
+    "clean_sha256": "1bec130e6e882f325acffdfd7d5041622a864bf51ae9575a3031f4faf65b63e3",
+    "theorems": 8,
+    "production_side_failures": 0,
+    "production_side_crypto_tokens": [],
+    "production_side_crypto_count": 0,
+    "inherited_rest_hits": {},
+    "live": "/tmp/bc-arc-scratch/item7/prod/scans/PqxdhDeploymentProductionTransfer-split-live.json",
+    "live_sha256": "964b6d2c62fde9f9ae473b45ecd086ade245cc87bd16f4b0d62a24724f23f080",
+    "live_classes": 11,
+    "rest_control": [
+     [
+      "splitLiveRest",
+      "not inherited PqxdhDeploymentIdealSteps.idealGame ['pb_full_prefix']"
+     ]
+    ],
+    "negative_control_hits": []
+   },
+   "PqxdhDeploymentProductionHeadlinesClassical": {
+    "clean": "/tmp/bc-arc-scratch/item7/prod/scans/PqxdhDeploymentProductionHeadlinesClassical-split-clean.json",
+    "clean_sha256": "8fe57eca1f32cc1d098dd49c3f3e1ce61a3717beb13dd14d7ceac45bc9d3c9d1",
+    "theorems": 45,
+    "production_side_failures": 0,
+    "production_side_crypto_tokens": [
+     "setup.source.crypto"
+    ],
+    "production_side_crypto_count": 47,
+    "inherited_rest_hits": {
+     "PqxdhDeploymentIdealSteps.idealGame": 7
+    },
+    "live": "/tmp/bc-arc-scratch/item7/prod/scans/PqxdhDeploymentProductionHeadlinesClassical-split-live.json",
+    "live_sha256": "6f87f745617ca569a34abbad10bf7dd1ec7540934254625c4bd060be3b8e7fd9",
+    "live_classes": 11,
+    "rest_control": [
+     [
+      "splitLiveRest",
+      "not inherited PqxdhDeploymentIdealSteps.idealGame ['pb_full_prefix']"
+     ]
+    ],
+    "negative_control_hits": []
+   },
+   "PqxdhDeploymentProductionHeadlinesLater": {
+    "clean": "/tmp/bc-arc-scratch/item7/prod/scans/PqxdhDeploymentProductionHeadlinesLater-split-clean.json",
+    "clean_sha256": "2bbad7fa33c93b9e162f05ff335ea321f16903c9a53521d484e15119df7216ec",
+    "theorems": 35,
+    "production_side_failures": 0,
+    "production_side_crypto_tokens": [
+     "setup.source.crypto"
+    ],
+    "production_side_crypto_count": 40,
+    "inherited_rest_hits": {
+     "PqxdhRecordLiftLater.run": 3
+    },
+    "live": "/tmp/bc-arc-scratch/item7/prod/scans/PqxdhDeploymentProductionHeadlinesLater-split-live.json",
+    "live_sha256": "aaeb1916e0f3b094904bb9e07c980294e6160851a39d7645b88a1fde8dffaf57",
+    "live_classes": 11,
+    "rest_control": [
+     [
+      "splitLiveRest",
+      "not inherited PqxdhDeploymentIdealSteps.idealGame ['pb_full_prefix']"
+     ]
+    ],
+    "negative_control_hits": []
+   },
+   "PqxdhDeploymentProductionHeadlines": {
+    "clean": "/tmp/bc-arc-scratch/item7/prod/scans/PqxdhDeploymentProductionHeadlines-split-clean.json",
+    "clean_sha256": "c38bbcb7416bc72ed68472f983cca929f7474b05939aabfde994ed2b04598d7c",
+    "theorems": 50,
+    "production_side_failures": 0,
+    "production_side_crypto_tokens": [
+     "setup.source.crypto"
+    ],
+    "production_side_crypto_count": 61,
+    "inherited_rest_hits": {},
+    "live": "/tmp/bc-arc-scratch/item7/prod/scans/PqxdhDeploymentProductionHeadlines-split-live.json",
+    "live_sha256": "c3bb596acc5901d46949288c0e789595d8461dd1db76de468a75ae0882e7e946",
+    "live_classes": 11,
+    "rest_control": [
+     [
+      "splitLiveRest",
+      "not inherited PqxdhDeploymentIdealSteps.idealGame ['pb_full_prefix']"
+     ]
+    ],
+    "negative_control_hits": []
+   }
+  },
+  "direct_reference_scan_v7": {
+   "PqxdhDeploymentProductionTransfer": {
+    "clean": {
+     "fixture": "/tmp/bc-arc-scratch/item7/prod/scans/PqxdhDeploymentProductionTransfer-scan-clean-v7.lean",
+     "fixture_sha256": "34f377d46e402694ab148a363dece2db4ce4628d493d536381f432a504844117",
+     "log": "/tmp/bc-arc-scratch/item7/prod/build427/dev/PqxdhDeploymentProductionTransfer-scan-clean-v7-1.log",
+     "log_sha256": "862e336e07851de84241cdfd4c0994d11d45811ba1aa2ec6a046273d9b79394f",
+     "lean_exit": 0,
+     "declarations": 8,
+     "outside_namespace": 0,
+     "forbidden_references": 0,
+     "referenced_constants": {},
+     "crypto_sites": 0,
+     "crypto_site_declarations": 0,
+     "site_gate_error": false
+    },
+    "live": {
+     "fixture": "/tmp/bc-arc-scratch/item7/prod/scans/PqxdhDeploymentProductionTransfer-scan-live-v7.lean",
+     "fixture_sha256": "3826deed6cbbd6b7365b308684e358edb3dd18857e739d009faf7352d05b4d41",
+     "log": "/tmp/bc-arc-scratch/item7/prod/build427/dev/PqxdhDeploymentProductionTransfer-scan-live-v7-1.log",
+     "log_sha256": "7566b3d4e4e124b63a403375ff1b61fc3abfd7cf0e504e8751f8664df3e22d4d",
+     "lean_exit": 1,
+     "declarations": 8,
+     "outside_namespace": 0,
+     "forbidden_references": 0,
+     "referenced_constants": {},
+     "crypto_sites": 0,
+     "crypto_site_declarations": 0,
+     "site_gate_error": false
+    }
+   },
+   "PqxdhDeploymentProductionHeadlinesClassical": {
+    "clean": {
+     "fixture": "/tmp/bc-arc-scratch/item7/prod/scans/PqxdhDeploymentProductionHeadlinesClassical-scan-clean-v7.lean",
+     "fixture_sha256": "83558a1f1577061188e583fdee13e2635b877ac438c9b0107b2d99ede089119e",
+     "log": "/tmp/bc-arc-scratch/item7/prod/build427/dev/PqxdhDeploymentProductionHeadlinesClassical-scan-clean-v7-1.log",
+     "log_sha256": "f589a05adec5f2d941de8e9a2baba126ccd11c2cb159232ea0c7381f2900ee03",
+     "lean_exit": 1,
+     "declarations": 45,
+     "outside_namespace": 0,
+     "forbidden_references": 88,
+     "referenced_constants": {
+      "BeaconcryptCore.Computational.PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource.crypto": 44,
+      "BeaconcryptCore.Computational.PqxdhChallengeSecretRouting.FunctionalDecapsulation": 37,
+      "BeaconcryptCore.Computational.PqxdhDeploymentIdealSteps.idealGame": 7
+     },
+     "crypto_sites": 2606,
+     "crypto_site_declarations": 44,
+     "site_gate_error": true
+    },
+    "expected": "fails: restated CE-12 statements carry the references of their frozen statements; recorded, not excused (no D-1 extension)"
+   },
+   "PqxdhDeploymentProductionHeadlinesLater": {
+    "clean": {
+     "fixture": "/tmp/bc-arc-scratch/item7/prod/scans/PqxdhDeploymentProductionHeadlinesLater-scan-clean-v7.lean",
+     "fixture_sha256": "e479e22ee9fbcddc38ccf0ed8120a0dffd7d026cde31d71781961a733446b0bb",
+     "log": "/tmp/bc-arc-scratch/item7/prod/build427/dev/PqxdhDeploymentProductionHeadlinesLater-scan-clean-v7-1.log",
+     "log_sha256": "91f77f2635701a091fa5b10893945e77fce5fcd6c7bdb8f2bfe263721c12ab2f",
+     "lean_exit": 1,
+     "declarations": 35,
+     "outside_namespace": 0,
+     "forbidden_references": 71,
+     "referenced_constants": {
+      "BeaconcryptCore.Computational.PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource.crypto": 35,
+      "BeaconcryptCore.Computational.PqxdhChallengeSecretRouting.FunctionalDecapsulation": 33,
+      "BeaconcryptCore.Computational.PqxdhRecordLiftLater.run": 3
+     },
+     "crypto_sites": 2408,
+     "crypto_site_declarations": 35,
+     "site_gate_error": true
+    },
+    "expected": "fails: restated CE-12 statements carry the references of their frozen statements; recorded, not excused (no D-1 extension)"
+   },
+   "PqxdhDeploymentProductionHeadlines": {
+    "clean": {
+     "fixture": "/tmp/bc-arc-scratch/item7/prod/scans/PqxdhDeploymentProductionHeadlines-scan-clean-v7.lean",
+     "fixture_sha256": "98059730ba96cbed383d7aab567e8ea105f45c8ccfa26f6503ec720e6b71873c",
+     "log": "/tmp/bc-arc-scratch/item7/prod/build427/dev/PqxdhDeploymentProductionHeadlines-scan-clean-v7-1.log",
+     "log_sha256": "c6f5f72506232faacea06897b78eea82b071188f186cc430d49c02bfd14bdf84",
+     "lean_exit": 1,
+     "declarations": 50,
+     "outside_namespace": 0,
+     "forbidden_references": 99,
+     "referenced_constants": {
+      "BeaconcryptCore.Computational.PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource.crypto": 50,
+      "BeaconcryptCore.Computational.PqxdhChallengeSecretRouting.FunctionalDecapsulation": 49
+     },
+     "crypto_sites": 4060,
+     "crypto_site_declarations": 50,
+     "site_gate_error": true
+    },
+    "expected": "fails: restated CE-12 statements carry the references of their frozen statements; recorded, not excused (no D-1 extension)"
+   }
+  },
+  "differential_scan": {
+   "PqxdhDeploymentProductionHeadlinesClassical": {
+    "clean_fixture": "/tmp/bc-arc-scratch/item7/prod/scans/PqxdhDeploymentProductionHeadlinesClassical-diff-clean.lean",
+    "clean_fixture_sha256": "f5883b1bfe04a4883ca5a9400906fa0cd4311c6ac16f2f74242f523559e1ee21",
+    "clean_log": "/tmp/bc-arc-scratch/item7/prod/build427/dev/PqxdhDeploymentProductionHeadlinesClassical-diff-clean-1.log",
+    "clean_log_sha256": "cf671b5b74e8ac29380127b3b731aeb938bec42c6d55086be29d1e152cc91732",
+    "declarations_checked": 45,
+    "failures": 0,
+    "summary": "rule-class constants in production types (constant, classes, declarations): [(PqxdhChallengeSecretRouting.FunctionalDecapsulation, ([item2_prefix], 37)), (PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource.crypto, ([pb_namespace], 44)), (PqxdhDeploymentIdealSteps.idealGame, ([pb_full_prefix], 7))]; .crypto sites in production types (site, declarations): [((PqxdhDeploymentKemTransfer.designated, (5, PqxdhServerAuthExperiment.Setup.source)), 17), ((PqxdhDeploymentTargetRange.eligible, (5, PqxdhServerAuthExperiment.Setup.source)), 3), ((PqxdhDeploymentHeadlineEvents.originEvent, (3, PqxdhServerAuthExperiment.Setup.source)), 9), ((PqxdhDeploymentHeadlineEvents.orClaim, (3, PqxdhServerAuthExperiment.Setup.source)), 9), ((PqxdhDeploymentHeadlineEvents.uksReceiverEvent, (3, PqxdhServerAuthExperiment.Setup.source)), 2), ((PqxdhDeploymentHeadlineEvents.uksReceiverClaim, (3, PqxdhServerAuthExperiment.Setup.source)), 2), ((PqxdhDeploymentHeadlineEvents.uksSenderEvent, (3, PqxdhServerAuthExperiment.Setup.source)), 3), ((PqxdhDeploymentHeadlineEvents.uksSenderClaim, (3, PqxdhServerAuthExperiment.Setup.source)), 3), ((PqxdhDeploymentHeadlineEvents.appEvent, (3, PqxdhServerAuthExperiment.Setup.source)), 4), ((PqxdhDeploymentHeadlineEvents.appPeerEvent, (3, PqxdhServerAuthExperiment.Setup.source)), 3), ((PqxdhDeploymentHeadlineEvents.lorWinEvent, (3, PqxdhServerAuthExperiment.Setup.source)), 4), ((PqxdhDeploymentHeadlineEvents.lorEligEvent, (3, PqxdhServerAuthExperiment.Setup.source)), 4), ((PqxdhDeploymentHeadlineEvents.lorWinPeerEvent, (3, PqxdhServerAuthExperiment.Setup.source)), 4), ((PqxdhDeploymentHeadlineEvents.lorEligPeerEvent, (3, PqxdhServerAuthExperiment.Setup.source)), 4), ((Pqxdh.Crypto.verify, (0, PqxdhServerAuthExperiment.Setup.source)), 19), ((PqxdhServerAuthAssumptions.X25519ClassLaw, (0, PqxdhServerAuthExperiment.Setup.source)), 12), ((PqxdhServerAuthAssumptions.X25519ScalarSpread, (0, PqxdhServerAuthExperiment.Setup.source)), 12), ((PqxdhDeploymentHeadlineGap.ctGapEvent, (3, PqxdhServerAuthExperiment.Setup.source)), 1), ((PqxdhDeploymentHeadlineCollision.ctCollEvent, (3, PqxdhServerAuthExperiment.Setup.source)), 1)]",
+    "live_fixture": "/tmp/bc-arc-scratch/item7/prod/scans/PqxdhDeploymentProductionHeadlinesClassical-diff-live.lean",
+    "live_fixture_sha256": "a9c5b867cc776bf24835ec50c04c12484638d76671f102ca60debab837bd686b",
+    "live_log": "/tmp/bc-arc-scratch/item7/prod/build427/dev/PqxdhDeploymentProductionHeadlinesClassical-diff-live-2.log",
+    "live_log_sha256": "d68b3a2b0212d19bde2abf41391529ec3ac801d9912457f3ec1cd4b72218e9c5",
+    "live_failures": [
+     [
+      "diffLiveExtraConst",
+      "a"
+     ],
+     [
+      "diffLiveExtraConst",
+      "e"
+     ],
+     [
+      "diffLiveSite",
+      "c"
+     ],
+     [
+      "diffLiveSite",
+      "e"
+     ],
+     [
+      "diffLiveValueOnly",
+      "b"
+     ],
+     [
+      "diffLiveValueOnly",
+      "e"
+     ],
+     [
+      "diffLiveValueSite",
+      "b"
+     ],
+     [
+      "diffLiveValueSite",
+      "d"
+     ],
+     [
+      "diffLiveValueSite",
+      "e"
+     ]
+    ]
+   },
+   "PqxdhDeploymentProductionHeadlinesLater": {
+    "clean_fixture": "/tmp/bc-arc-scratch/item7/prod/scans/PqxdhDeploymentProductionHeadlinesLater-diff-clean.lean",
+    "clean_fixture_sha256": "f52d2dc91d4dced7c6c0e9773080db0d4aa0f3ef13b79a91e2c20e82ab79962d",
+    "clean_log": "/tmp/bc-arc-scratch/item7/prod/build427/dev/PqxdhDeploymentProductionHeadlinesLater-diff-clean-1.log",
+    "clean_log_sha256": "e81f533b84743dbe33ef0ecefaed0a73bba8110600e4e7a7b74970d8f0057772",
+    "declarations_checked": 35,
+    "failures": 0,
+    "summary": "rule-class constants in production types (constant, classes, declarations): [(PqxdhChallengeSecretRouting.FunctionalDecapsulation, ([item2_prefix], 33)), (PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource.crypto, ([pb_namespace], 35)), (PqxdhRecordLiftLater.run, ([pb_namespace_prefix], 3))]; .crypto sites in production types (site, declarations): [((PqxdhDeploymentLaterServerTransfer.designated, (5, PqxdhServerAuthExperiment.Setup.source)), 10), ((PqxdhDeploymentLaterTargetRange.eligibleL, (5, PqxdhServerAuthExperiment.Setup.source)), 3), ((PqxdhDeploymentHeadlineEvents.appEvent, (3, PqxdhServerAuthExperiment.Setup.source)), 8), ((PqxdhDeploymentHeadlineEvents.appPeerEvent, (3, PqxdhServerAuthExperiment.Setup.source)), 3), ((PqxdhDeploymentHeadlineEvents.lorWinEvent, (3, PqxdhServerAuthExperiment.Setup.source)), 10), ((PqxdhDeploymentHeadlineEvents.lorEligEvent, (3, PqxdhServerAuthExperiment.Setup.source)), 10), ((PqxdhDeploymentHeadlineEvents.lorWinPeerEvent, (3, PqxdhServerAuthExperiment.Setup.source)), 4), ((PqxdhDeploymentHeadlineEvents.lorEligPeerEvent, (3, PqxdhServerAuthExperiment.Setup.source)), 4), ((Pqxdh.Crypto.verify, (0, PqxdhServerAuthExperiment.Setup.source)), 16), ((PqxdhServerAuthAssumptions.X25519ClassLaw, (0, PqxdhServerAuthExperiment.Setup.source)), 12), ((PqxdhServerAuthAssumptions.X25519ScalarSpread, (0, PqxdhServerAuthExperiment.Setup.source)), 12)]",
+    "live_fixture": "/tmp/bc-arc-scratch/item7/prod/scans/PqxdhDeploymentProductionHeadlinesLater-diff-live.lean",
+    "live_fixture_sha256": "48ad25d372c84e1cb68f04f63c1f8caffa4348aad648fa81b67e2db06e35e3e7",
+    "live_log": "/tmp/bc-arc-scratch/item7/prod/build427/dev/PqxdhDeploymentProductionHeadlinesLater-diff-live-1.log",
+    "live_log_sha256": "cf87df458647d229485a202f8f4fc6f3bc39e1bbdaa0e179e0360db9f8c71774",
+    "live_failures": [
+     [
+      "diffLiveExtraConst",
+      "a"
+     ],
+     [
+      "diffLiveExtraConst",
+      "e"
+     ],
+     [
+      "diffLiveSite",
+      "c"
+     ],
+     [
+      "diffLiveSite",
+      "e"
+     ],
+     [
+      "diffLiveValueOnly",
+      "b"
+     ],
+     [
+      "diffLiveValueOnly",
+      "e"
+     ],
+     [
+      "diffLiveValueSite",
+      "b"
+     ],
+     [
+      "diffLiveValueSite",
+      "d"
+     ],
+     [
+      "diffLiveValueSite",
+      "e"
+     ]
+    ]
+   },
+   "PqxdhDeploymentProductionHeadlines": {
+    "clean_fixture": "/tmp/bc-arc-scratch/item7/prod/scans/PqxdhDeploymentProductionHeadlines-diff-clean.lean",
+    "clean_fixture_sha256": "c1d26e2c1c226c8644ff4e87c311a70d2f861ca67d8279de08a22ac1c15fbe1d",
+    "clean_log": "/tmp/bc-arc-scratch/item7/prod/build427/dev/PqxdhDeploymentProductionHeadlines-diff-clean-1.log",
+    "clean_log_sha256": "aac1c63d86549413d93e4d11af02f2035fa0e3a5ffdf11aa5e348e1b84670cc1",
+    "declarations_checked": 50,
+    "failures": 0,
+    "summary": "rule-class constants in production types (constant, classes, declarations): [(PqxdhChallengeSecretRouting.FunctionalDecapsulation, ([item2_prefix], 49)), (PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource.crypto, ([pb_namespace], 50))]; .crypto sites in production types (site, declarations): [((PqxdhDeploymentHeadlineEvents.appEvent, (3, PqxdhServerAuthExperiment.Setup.source)), 4), ((PqxdhDeploymentKemTransfer.designated, (5, PqxdhServerAuthExperiment.Setup.source)), 13), ((PqxdhDeploymentHeadlineEvents.originEvent, (3, PqxdhServerAuthExperiment.Setup.source)), 11), ((PqxdhDeploymentHeadlineEvents.orClaim, (3, PqxdhServerAuthExperiment.Setup.source)), 11), ((PqxdhDeploymentHeadlineEvents.uksSenderEvent, (3, PqxdhServerAuthExperiment.Setup.source)), 5), ((PqxdhDeploymentHeadlineEvents.uksSenderClaim, (3, PqxdhServerAuthExperiment.Setup.source)), 5), ((PqxdhDeploymentHeadlineEvents.lorWinEvent, (3, PqxdhServerAuthExperiment.Setup.source)), 6), ((PqxdhDeploymentHeadlineEvents.lorEligEvent, (3, PqxdhServerAuthExperiment.Setup.source)), 6), ((PqxdhServerAuthAssumptions.X25519ClassLaw, (0, PqxdhServerAuthExperiment.Setup.source)), 18), ((PqxdhServerAuthAssumptions.X25519ScalarSpread, (0, PqxdhServerAuthExperiment.Setup.source)), 18), ((Pqxdh.Crypto.verify, (0, PqxdhServerAuthExperiment.Setup.source)), 18), ((PqxdhDeploymentHeadlineCollision.ctCollEvent, (3, PqxdhServerAuthExperiment.Setup.source)), 3), ((PqxdhDeploymentHeadlinePin.pinEvent, (3, PqxdhServerAuthExperiment.Setup.source)), 2), ((PqxdhDeploymentHeadlinePin.pinClaim, (3, PqxdhServerAuthExperiment.Setup.source)), 2), ((PqxdhDeploymentHeadlinePin.originPinEvent, (3, PqxdhServerAuthExperiment.Setup.source)), 2), ((PqxdhDeploymentHeadlinePin.originPinClaim, (3, PqxdhServerAuthExperiment.Setup.source)), 2), ((PqxdhDeploymentHeadlinePlain.plainEvent, (3, PqxdhServerAuthExperiment.Setup.source)), 9), ((PqxdhDeploymentHeadlinePlain.plainClaim, (3, PqxdhServerAuthExperiment.Setup.source)), 9), ((PqxdhDeploymentHeadlinePlain.originPlainEvent, (3, PqxdhServerAuthExperiment.Setup.source)), 6), ((PqxdhDeploymentHeadlinePlain.originPlainClaim, (3, PqxdhServerAuthExperiment.Setup.source)), 6), ((PqxdhDeploymentHeadlinePlain.plainEveryEvent, (3, PqxdhServerAuthExperiment.Setup.source)), 3), ((PqxdhDeploymentHeadlinePlain.originFieldsEvent, (3, PqxdhServerAuthExperiment.Setup.source)), 2), ((PqxdhDeploymentHeadlinePlain.originFieldsClaim, (3, PqxdhServerAuthExperiment.Setup.source)), 2)]",
+    "live_fixture": "/tmp/bc-arc-scratch/item7/prod/scans/PqxdhDeploymentProductionHeadlines-diff-live.lean",
+    "live_fixture_sha256": "13f244bef32d6abb183f5c4e40ef303326b535a8daf4dda232ac6bb4fae68cd7",
+    "live_log": "/tmp/bc-arc-scratch/item7/prod/build427/dev/PqxdhDeploymentProductionHeadlines-diff-live-1.log",
+    "live_log_sha256": "42aaa1d79c46e0b9349a0db4a6687b5734f79c780c7d14e4b565b975661a77eb",
+    "live_failures": [
+     [
+      "diffLiveExtraConst",
+      "a"
+     ],
+     [
+      "diffLiveExtraConst",
+      "e"
+     ],
+     [
+      "diffLiveSite",
+      "c"
+     ],
+     [
+      "diffLiveSite",
+      "e"
+     ],
+     [
+      "diffLiveValueOnly",
+      "b"
+     ],
+     [
+      "diffLiveValueOnly",
+      "e"
+     ],
+     [
+      "diffLiveValueSite",
+      "b"
+     ],
+     [
+      "diffLiveValueSite",
+      "d"
+     ],
+     [
+      "diffLiveValueSite",
+      "e"
+     ]
+    ]
+   },
+   "note": "The first live run on the classical module (build427/dev/PqxdhDeploymentProductionHeadlinesClassical-diff-live-1.log) used a first fixture version whose fixtures cited ce_kt through `have`, which put its type into their values; it failed more checks than intended (no real declaration failed) and the fixtures were rewritten (no citation, expected sets {a,e}, {c,e}, {b,e}, {b,d,e}); the fixture file was regenerated in place."
+  },
+  "text_scan": "no PqxdhDeploymentProvenance, authenticated_, PqxdhRegistrationJointAuthenticatedSelectedKem or PqxdhRegistrationJointKemKeyTransfer name in the four modules",
+  "crypto_allowance": "not extended (no D-1 extension); the inherited references are recorded and explained by the differential scan"
+ },
+ "documents_sha256": {
+  "doc/impl/production-headlines.md": "c892c5f5594861396db40c48fb9e5ba64db363ee422fe0e17eeadf8f95bcb072",
+  "doc/impl/production-boundary-ledger.md": "f8f1b15b812c8baee94e0e314672a0c7c7a3c2dd96d9d92f7e0e2c54bebc9e15",
+  "doc/formal-verification-analysis.md": "79f6f8f9db1c122efd03d880504e3f1e762831f1a7eb83975a58698983b6b89a"
+ },
+ "scripts_sha256": {
+  "analyze.py": "5e75aee0ca03a457ae075008ed6aea770af141585eae08267b7c602c154a40a0",
+  "appendix.py": "3f5e9d8eebe8d0ec51b313282cffd0ccea464ada75e19072293710058581fd07",
+  "check.sh": "4cc5820102d7454da660f7438380d368e61288cde7d9cdd5db8a5f7bc4feddfe",
+  "check427.sh": "add055b16512d2821dd560bfda29db65a538f4c6e0e65ee427babbf63c047cb6",
+  "compare_inherited.py": "398fb94f6bb09056608daa42f12f97ef33a59feddc8ee3c59b81fcafeec5dd50",
+  "dev.sh": "8136be2ff86379a22107daab242fa079d93db304c916b15b1bdcae8bf4dd98c4",
+  "devcheck.sh": "d1b3c97262e71ad891dc8e76ecab50640e4e040daefe82e2703c25caf3468c13",
+  "devcheck427.sh": "fc721a6dc4bb4103e4062cdd093cc05813193bce1ba20a726a71e966c5585a74",
+  "diff_scan.py": "c50ca9354689f81ce24ce7479dc07becfa536083a0a64d14544df0919975edb2",
+  "direct_scan.py": "f4fb301295a39c5020d9ea82b68cac664481c8bc3baf38a55885cf002791ca0c",
+  "docs_of.py": "591be66b4dc7b4f9a0eebb3306e5b5c588a44933b24c839102b81c9ec2cf80e5",
+  "extract.py": "cc25a6c4191a2e63f37d25e7a3727cebacee817de6927a1bf1a73aa80e6d5da6",
+  "gen.py": "79f00ccf59ce68c29432719d4b8111057ee2e8f5dcccd884b776ebdfffb8d519",
+  "gen2.py": "a4d24eb0d821e13ea1492f54c2bc3d609c5a4a8c9e8fa3f4d5ad27cdbdf4bc35",
+  "guards.py": "2262e042911f7b5f1068d7483cbf6436de1a51c634abba1ee11f6f14e8c92089",
+  "hygiene.py": "2827ecf86b7dea67278abf0a741f0a983168a86af104c9eb68c359ed7e213e8a",
+  "inherited_scan.py": "8c2ae97b0a409238cedf06c64cc7bf5a62bc1413796d1f101fd55834ff8530ed",
+  "invblock.py": "5f243a5ae0006ba47a764af5e02546ab9389db767c7a060880c9486fff6bcadf",
+  "inventory.sh": "9a5be55d243d96f9978fa666701cfa9d823fd520144b17cb750a79959ce7c0ae",
+  "mirror.py": "25eb55681a2772d10667a5907989e718a64223239c558bbb8de8a25584cb04d6",
+  "mirror427.py": "22ba8bc13296eed9f37360d4ee985325cf23b6ac9ab053f86a22df72f97b6023",
+  "premise_codes.py": "e7e229084c9e71b9bef1779250db72e7c7ef3ec0865e335090e9479137a9c80f",
+  "premises_prod.py": "be09fa58aa7e6574479f0bde9da33bc9314aca2c6a36a14276fd9cba7e2b39f9",
+  "receipt.py": "130054076eb783fd3cd815936cfc2a27e8d55ef266e98acf9d1cb52bf4494fcf",
+  "stmt_scan.py": "d74a3de46840e0b8b60b659a7c411a7a1575852926916b3a9a4e966efdd976ec",
+  "stmt_split.py": "0fe72e3a8ac563a411e0c51255b31241b402d2834a89c305610e6d0399853e9c",
+  "summarize_inherited.py": "3f4ad40e5bf0f66b7503653cfce22f5bbb2bd4a315226724497615252b96a896"
+ },
+ "not_claimed": [
+  "persistence-wrapped C, Go and Python Server surface",
+  "later-quantum origin, UKS, binding or authentication",
+  "closure of ctGapTerm (D-ct, not on central; follow-up)",
+  "designation-free pin or plaintext forms, the root, plaintext-linked UKS",
+  "running time",
+  "identity indices other than 0, a varying checks, codecs other than codec'",
+  "anything beyond the reviewed transcription of the Rust adapter"
+ ],
+ "remaining": [
+  "D-6 fresh-context semantic and hygiene reviews",
+  "integration into central",
+  "production versions of the D-ct forms (follow-up module)",
+  "item 8 (owner)"
+ ],
+ "protocol": "all Lean checks through coord.sh lean with one in flight; registrations before creation; no deletion in /tmp (one stray mkdir/rmdir of an empty /dev/shm/x in one command, outside /tmp); mail only peeked; no make verify, full lake build, mutation testing or nix-collect-garbage"
+}
