@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1884
+	[handwritten-lean]=1885
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -38480,6 +38480,37 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem ideal_world_view_slots([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealHandoff theorem ideal_world_view_slots"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealHandoff\.ideal_world_view_ct$' "$selected_source_module" "PqxdhDeploymentIdealHandoff dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealHandoff.ideal_world_view_ct"
 require_line_count 1 '^theorem ideal_world_view_ct([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealHandoff theorem ideal_world_view_ct"
+
+# LQ-F upstream unit D1: the frozen targets of item 2 over the logged source (the logged grouped interface and skeleton, laterSlotGame, slotLossL, rootBillL and the U-L1 target statements).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerItemTargets.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemTargets$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentLaterServerItemTargets root import"
+require_line_count 12 '^theorem ' "$selected_source_module" "PqxdhDeploymentLaterServerItemTargets theorem inventory"
+require_line_count 12 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentLaterServerItemTargets guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemTargets\.acceptStepL_fst$' "$selected_source_module" "PqxdhDeploymentLaterServerItemTargets dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemTargets.acceptStepL_fst"
+require_line_count 1 '^theorem acceptStepL_fst([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemTargets theorem acceptStepL_fst"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemTargets\.skelImplL_inl$' "$selected_source_module" "PqxdhDeploymentLaterServerItemTargets dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemTargets.skelImplL_inl"
+require_line_count 1 '^theorem skelImplL_inl([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemTargets theorem skelImplL_inl"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemTargets\.skelImplL_accept$' "$selected_source_module" "PqxdhDeploymentLaterServerItemTargets dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemTargets.skelImplL_accept"
+require_line_count 1 '^theorem skelImplL_accept([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemTargets theorem skelImplL_accept"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemTargets\.groupedClientL_inl$' "$selected_source_module" "PqxdhDeploymentLaterServerItemTargets dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemTargets.groupedClientL_inl"
+require_line_count 1 '^theorem groupedClientL_inl([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemTargets theorem groupedClientL_inl"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemTargets\.groupedClientL_accept$' "$selected_source_module" "PqxdhDeploymentLaterServerItemTargets dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemTargets.groupedClientL_accept"
+require_line_count 1 '^theorem groupedClientL_accept([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemTargets theorem groupedClientL_accept"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemTargets\.groupedClientL_read$' "$selected_source_module" "PqxdhDeploymentLaterServerItemTargets dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemTargets.groupedClientL_read"
+require_line_count 1 '^theorem groupedClientL_read([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemTargets theorem groupedClientL_read"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemTargets\.hybrid_hybridOf$' "$selected_source_module" "PqxdhDeploymentLaterServerItemTargets dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemTargets.hybrid_hybridOf"
+require_line_count 1 '^theorem hybrid_hybridOf([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemTargets theorem hybrid_hybridOf"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemTargets\.entryDk_entryDkOf$' "$selected_source_module" "PqxdhDeploymentLaterServerItemTargets dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemTargets.entryDk_entryDkOf"
+require_line_count 1 '^theorem entryDk_entryDkOf([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemTargets theorem entryDk_entryDkOf"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemTargets\.rootBillL_eq$' "$selected_source_module" "PqxdhDeploymentLaterServerItemTargets dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemTargets.rootBillL_eq"
+require_line_count 1 '^theorem rootBillL_eq([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemTargets theorem rootBillL_eq"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemTargets\.later_guess_term$' "$selected_source_module" "PqxdhDeploymentLaterServerItemTargets dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemTargets.later_guess_term"
+require_line_count 1 '^theorem later_guess_term([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemTargets theorem later_guess_term"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemTargets\.slotLossL_transported$' "$selected_source_module" "PqxdhDeploymentLaterServerItemTargets dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemTargets.slotLossL_transported"
+require_line_count 1 '^theorem slotLossL_transported([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemTargets theorem slotLossL_transported"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemTargets\.laterSlotsTwo_of_generic$' "$selected_source_module" "PqxdhDeploymentLaterServerItemTargets dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemTargets.laterSlotsTwo_of_generic"
+require_line_count 1 '^theorem laterSlotsTwo_of_generic([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemTargets theorem laterSlotsTwo_of_generic"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
