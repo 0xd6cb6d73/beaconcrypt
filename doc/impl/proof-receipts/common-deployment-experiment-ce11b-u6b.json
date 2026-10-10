@@ -3153,8 +3153,8 @@
   }
  },
  "fourth_part": {
-  "date": "2026-10-10T00:04:21.763329+00:00",
-  "scope": "CE-11b unit U6, fourth part (track u6b): owner k's challenge finish and the step of every finish after an active selected accept (PqxdhDeploymentIdealPostChallenge), item 2's side of the middle invariant with every simulated request, its preservation and the sim_option instance (PqxdhDeploymentIdealPostInvariant), and item 2's side of the selected accept after encapsulation (PqxdhDeploymentIdealPostAccept). The CE side of the middle invariant, ActiveBranch, PqxdhDeploymentIdealPost and PqxdhDeploymentIdealCompile are not built; ideal_compile is not claimed. Not reviewed; not integrated into central.",
+  "date": "2026-10-10T01:02:49.145978+00:00",
+  "scope": "CE-11b unit U6, fourth part (track u6b): owner k's challenge finish and the step of every finish after an active selected accept (PqxdhDeploymentIdealPostChallenge), item 2's side of the middle invariant with every simulated request, its preservation and the sim_option instance (PqxdhDeploymentIdealPostInvariant), item 2's side of the selected accept after encapsulation (PqxdhDeploymentIdealPostAccept), item 2's post-challenge phase on an active cut as the middle run (PqxdhDeploymentIdealPostItemRun), the CE side as its merge image and the reduction of ActiveBranch to the CE side of the middle invariant (PqxdhDeploymentIdealPostReduce), CE-3's Good kept by the marked build (PqxdhDeploymentIdealPostGoodBuild) and by owner k's challenge finish (PqxdhDeploymentIdealPostGoodFinish), GoodMid as the CE side of the middle invariant with MiddleInv and MiddleStart (PqxdhDeploymentIdealPostGood), ActiveBranch at every draw (PqxdhDeploymentIdealPost.active_branch) and CE-11b's second compile lemma (PqxdhDeploymentIdealCompile.ideal_compile), under the approved Phase1ReadBack and Phase2ReadBack. Unit U6 has no remaining Lean obligation. Not reviewed; not integrated into central; central moved to 69a24703 during this part (see central_move).",
   "basis": "dd681f34cd9459993ae5cf19eada13b1694d981d",
   "topic": {
    "branch": "codex/deployment-ce11b-cut",
@@ -3162,17 +3162,17 @@
   },
   "plan": {
    "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
-   "sha256_at_generation": "ba5633901652ff88919ef7bdd40e3a0f03ed44bfd8a294002601efa5d17f7b34",
-   "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/docs/plan.at-u6b4-receipt-ba563390.md",
-   "dated_copy_sha256": "ba5633901652ff88919ef7bdd40e3a0f03ed44bfd8a294002601efa5d17f7b34",
-   "sections": "47-50 (A1, A2, Q1-Q3), 63-64, 67, 70-71, 74, 76, 78-79 (U6 earlier parts), 81 (this part, new; 80 was the last section)"
+   "sha256_at_generation": "e0dea8f042cd28e9f80811c3062ef55f2b7ad19ae361a7cf8e4189190449bf98",
+   "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/docs/plan.at-u6b4-receipt-e0dea8f0.md",
+   "dated_copy_sha256": "e0dea8f042cd28e9f80811c3062ef55f2b7ad19ae361a7cf8e4189190449bf98",
+   "sections": "47-50 (A1, A2, Q1-Q3), 63-64, 67, 70-71, 74, 76, 78-79 (U6 earlier parts), 81 (this part, first three modules; a pointer to 85 added) and 85 (this part, completed; 84 was the last section before it)"
   },
   "design": {
    "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/design-v2.md",
-   "sha256": "da2a92adabb87e604fdaa9fe33396b70b998d26205f10bb7ad0b307a5ee011da",
-   "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/docs/design-v2.at-u6b4-receipt-da2a92ad.md",
-   "dated_copy_sha256": "da2a92adabb87e604fdaa9fe33396b70b998d26205f10bb7ad0b307a5ee011da",
-   "sections": "8.4, 11, 25, 27, 30 (this part, new; 29 was the last section)"
+   "sha256": "e5741a0b2cc7013a68baeaaf909d6eec6b4c8077e30c6b827ad8c861dbed7d7d",
+   "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/docs/design-v2.at-u6b4-receipt-e5741a0b.md",
+   "dated_copy_sha256": "e5741a0b2cc7013a68baeaaf909d6eec6b4c8077e30c6b827ad8c861dbed7d7d",
+   "sections": "8.1, 8.4, 9.1, 11, 25, 27, 30 (this part; bullets for the assembly, the CE side of the invariant and ideal_compile added, the section 11 bullet updated)"
   },
   "notes": {
    "track_notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/NOTES.md",
@@ -3190,16 +3190,55 @@
    {
     "commit": "9314c5b2fc536336fc03c8de6f200872825fd4a4",
     "subject": "Add item 2's side of the selected accept after encapsulation"
+   },
+   {
+    "commit": "a9a6cb6d3d1655774b413bce6cb3a1cdea18d8d6",
+    "subject": "Document the CE-11b unit U6 fourth part"
+   },
+   {
+    "commit": "f4af68b46dfeb3c6db9938889a336d7d63b1eb3f",
+    "subject": "Add item 2's post-challenge phase as the middle run"
+   },
+   {
+    "commit": "e0475b88998119cf647fe25879a0d387b9e32584",
+    "subject": "Reduce the active branch to the CE side of the middle invariant"
+   },
+   {
+    "commit": "166e1ab7db8f05f6ee0cc78549413662703609a2",
+    "subject": "Keep CE-3's invariant across the marked build of the middle execution"
+   },
+   {
+    "commit": "6ee235ecfd8d6e2acfe17c61c37a1f1c8a430752",
+    "subject": "Keep CE-3's invariant across owner k's challenge finish"
+   },
+   {
+    "commit": "24dbfebd6915930bb26a0c345b7c2fadf9395c03",
+    "subject": "Add the CE side of the middle invariant"
+   },
+   {
+    "commit": "7125b2130e79544baacba926c04ceb24e57bfb3c",
+    "subject": "Prove the active branch of the second compile lemma"
+   },
+   {
+    "commit": "7e4d7c35f3b895c50ebf47f87cd90802ac9151fd",
+    "subject": "Prove CE-11b's second compile lemma"
    }
   ],
-  "commits_note": "First-parent commits on the topic after the basis that were made before this key was generated; the documentation commit that adds it is not listed.",
+  "commits_note": "First-parent commits on the topic after the basis that were made before this key was generated (ten Lean commits and the first documentation commit a9a6cb6d); the second documentation commit, which adds this version of the key, is not listed.",
   "files_sha256": {
    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostChallenge.lean": "7ca6b3b9a0acd82ceb0a25dc1cd11a4061a37e1b4e781545374dead09b0e7987",
    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostInvariant.lean": "8f073661dc19440e453f8f540a7a9c8631a7ac02d1d2aa49d8bba39edc8d95ee",
    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostAccept.lean": "eff465c7763b57f66c68bac7e299c40b94ed16b5c56502903d9a1460ccac612b",
-   "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "357572b9c1e474dddc76264e5e2ffa697724afe1097dacc639f66ce57305993d",
-   "beaconcrypt-core/proofs/check-inventory.sh": "194983d2e643d9c0c98e82167d0eda53dbe30621c083e2390ce73c78ae3fe7da",
-   "beaconcrypt-core/proofs/reviewed-inventory.txt": "679d0dd596221234c80889f7041dc63c6eb2ab5a2407eede6ff922c997a96112"
+   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostItemRun.lean": "ee9a819d1b1ea39204d0d30fdca56ec3c0f607359801ad3b05299d7c6ee3e056",
+   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostReduce.lean": "45be0600b5c4c0c430ae3582c8337db242a2012b16697fa8f43273f1c09b2bf5",
+   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostGoodBuild.lean": "1555ba36b9729226e9940bf5d44d3c93893b6fd0962314251c1191b4c4bb9a55",
+   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostGoodFinish.lean": "486af8870ccdc429a9b8d1232651af4358512ecd1642aa5f401d73aaaaf68387",
+   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostGood.lean": "b9e298df12702c6e717d02b456deffcdb6a8991715337d4000504bfaaa494f7d",
+   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPost.lean": "433da7a876d58463c43e98a0f2e60f9cd00980ba051fbe0dfca6fe9c5cd71e8d",
+   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealCompile.lean": "b8b7e9ec5854341c41941614051c5e030f8fb6b4918ce2e3e2bcb8eba56403c5",
+   "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "92127e27a06ae746f749cb4ed8d7d668db31de08e19e1ddf3632e1abf6eb9cce",
+   "beaconcrypt-core/proofs/check-inventory.sh": "6e01ad4cf0e7ec004ff27220fbda20ffe6b8317ce8ea92c9cd4b3356669322d1",
+   "beaconcrypt-core/proofs/reviewed-inventory.txt": "121f6cfed7c7642247d367b4f9efe4408ce97cee273ccbc114579427cdd66591"
   },
   "modules": [
    {
@@ -3677,9 +3716,587 @@
      ],
      "source_matches_worktree": true
     }
+   },
+   {
+    "name": "BeaconcryptCore.Computational.PqxdhDeploymentIdealPostItemRun",
+    "theorem_count": 4,
+    "theorems": [
+     "acceptAfter_keeps",
+     "itemInv_after",
+     "bind_clean",
+     "itemPost_middle"
+    ],
+    "definitions": [
+     "AcceptRun",
+     "afterSelected"
+    ],
+    "guarded": 4,
+    "axiom_profile": {
+     "acceptAfter_keeps": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "itemInv_after": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "bind_clean": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "itemPost_middle": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    "direct_check_final": {
+     "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealPostItemRun",
+     "start": "2026-10-10T00:10:41.190337968Z",
+     "end": "2026-10-10T00:10:45.964413341Z",
+     "exit": 0,
+     "head": "a9a6cb6d3d1655774b413bce6cb3a1cdea18d8d6",
+     "dirty_paths": 1,
+     "source_sha256": "ee9a819d1b1ea39204d0d30fdca56ec3c0f607359801ad3b05299d7c6ee3e056",
+     "log_bytes": 0,
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "artifact": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostItemRun.olean",
+     "artifact_sha256": "68a7b6e9cb4ac4deb3c1463a16166be5259efd70c41dcc7bef28d80666281499",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/leanpath",
+     "leanpath_sha256": "af7d95403b1c512a7c0867e4f19d10f0d39122cfe0ad1f652bcbe1981dba21c4",
+     "command": [
+      "coord.sh",
+      "lean",
+      "claude",
+      "<label>",
+      "--",
+      "timeout",
+      "180",
+      "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+      "-j1",
+      "-M8000",
+      "--root=/tmp/beaconcrypt-deployment-ce11b-cut/beaconcrypt-core/proofs/lean",
+      "-o",
+      "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostItemRun.olean",
+      "/tmp/beaconcrypt-deployment-ce11b-cut/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostItemRun.lean"
+     ],
+     "source_matches_worktree": true
+    }
+   },
+   {
+    "name": "BeaconcryptCore.Computational.PqxdhDeploymentIdealPostReduce",
+    "theorem_count": 5,
+    "theorems": [
+     "decision_reset",
+     "activeCE_middle",
+     "decision_merge",
+     "activeBranch_of_middle",
+     "ideal_compile_of_middle"
+    ],
+    "definitions": [
+     "copiesAfter",
+     "cutMid",
+     "MiddleInv",
+     "MiddleStart"
+    ],
+    "guarded": 5,
+    "axiom_profile": {
+     "decision_reset": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "activeCE_middle": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "decision_merge": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "activeBranch_of_middle": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "ideal_compile_of_middle": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    "direct_check_final": {
+     "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealPostReduce",
+     "start": "2026-10-10T00:17:49.649588431Z",
+     "end": "2026-10-10T00:17:53.782145880Z",
+     "exit": 0,
+     "head": "f4af68b46dfeb3c6db9938889a336d7d63b1eb3f",
+     "dirty_paths": 1,
+     "source_sha256": "45be0600b5c4c0c430ae3582c8337db242a2012b16697fa8f43273f1c09b2bf5",
+     "log_bytes": 0,
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "artifact": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostReduce.olean",
+     "artifact_sha256": "4e64d07bb01a8f847ce354d235b009dd2544f05d9f684b4bfafe0130d37bc7a9",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/leanpath",
+     "leanpath_sha256": "af7d95403b1c512a7c0867e4f19d10f0d39122cfe0ad1f652bcbe1981dba21c4",
+     "command": [
+      "coord.sh",
+      "lean",
+      "claude",
+      "<label>",
+      "--",
+      "timeout",
+      "180",
+      "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+      "-j1",
+      "-M8000",
+      "--root=/tmp/beaconcrypt-deployment-ce11b-cut/beaconcrypt-core/proofs/lean",
+      "-o",
+      "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostReduce.olean",
+      "/tmp/beaconcrypt-deployment-ce11b-cut/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostReduce.lean"
+     ],
+     "source_matches_worktree": true
+    }
+   },
+   {
+    "name": "BeaconcryptCore.Computational.PqxdhDeploymentIdealPostGoodBuild",
+    "theorem_count": 12,
+    "theorems": [
+     "afterInitializationW_shape",
+     "continueRust_shape",
+     "candidateW_shape",
+     "genericBuildW_shape",
+     "tailImpl_write",
+     "factored_logged",
+     "freeWrite_shape",
+     "hiddenBuild_shape",
+     "buildHidden_footprint",
+     "good_of_build",
+     "compiledMid_buildHidden",
+     "good_buildHidden"
+    ],
+    "definitions": [
+     "WBuilt",
+     "writeImpl",
+     "NBuilt",
+     "BuildFootprint"
+    ],
+    "guarded": 12,
+    "axiom_profile": {
+     "afterInitializationW_shape": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "continueRust_shape": [
+      "Quot.sound",
+      "propext"
+     ],
+     "candidateW_shape": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "genericBuildW_shape": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "tailImpl_write": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "factored_logged": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "freeWrite_shape": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "hiddenBuild_shape": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "buildHidden_footprint": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "good_of_build": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "compiledMid_buildHidden": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "good_buildHidden": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    "direct_check_final": {
+     "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealPostGoodBuild",
+     "start": "2026-10-10T00:35:05.920935464Z",
+     "end": "2026-10-10T00:35:10.528078878Z",
+     "exit": 0,
+     "head": "e0475b88998119cf647fe25879a0d387b9e32584",
+     "dirty_paths": 1,
+     "source_sha256": "1555ba36b9729226e9940bf5d44d3c93893b6fd0962314251c1191b4c4bb9a55",
+     "log_bytes": 0,
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "artifact": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostGoodBuild.olean",
+     "artifact_sha256": "de54554bd0795396b9ad11abf417d07d35c2e6c1ed9eafa5741d938f992296df",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/leanpath",
+     "leanpath_sha256": "af7d95403b1c512a7c0867e4f19d10f0d39122cfe0ad1f652bcbe1981dba21c4",
+     "command": [
+      "coord.sh",
+      "lean",
+      "claude",
+      "<label>",
+      "--",
+      "timeout",
+      "180",
+      "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+      "-j1",
+      "-M8000",
+      "--root=/tmp/beaconcrypt-deployment-ce11b-cut/beaconcrypt-core/proofs/lean",
+      "-o",
+      "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostGoodBuild.olean",
+      "/tmp/beaconcrypt-deployment-ce11b-cut/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostGoodBuild.lean"
+     ],
+     "source_matches_worktree": true
+    }
+   },
+   {
+    "name": "BeaconcryptCore.Computational.PqxdhDeploymentIdealPostGoodFinish",
+    "theorem_count": 11,
+    "theorems": [
+     "collectCE_inputs",
+     "prepareCE_facts",
+     "staged_opening",
+     "afterRoot_opening",
+     "hiddenAfter_opening",
+     "groupCE_footprint",
+     "finish_shape",
+     "groupedOwnerCE_footprint",
+     "good_of_finish",
+     "compiledMid_challenge",
+     "good_challenge"
+    ],
+    "definitions": [],
+    "guarded": 11,
+    "axiom_profile": {
+     "collectCE_inputs": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "prepareCE_facts": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "staged_opening": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "afterRoot_opening": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "hiddenAfter_opening": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "groupCE_footprint": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "finish_shape": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "groupedOwnerCE_footprint": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "good_of_finish": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "compiledMid_challenge": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "good_challenge": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    "direct_check_final": {
+     "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealPostGoodFinish",
+     "start": "2026-10-10T00:45:32.945826943Z",
+     "end": "2026-10-10T00:45:40.344756549Z",
+     "exit": 0,
+     "head": "166e1ab7db8f05f6ee0cc78549413662703609a2",
+     "dirty_paths": 1,
+     "source_sha256": "486af8870ccdc429a9b8d1232651af4358512ecd1642aa5f401d73aaaaf68387",
+     "log_bytes": 0,
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "artifact": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostGoodFinish.olean",
+     "artifact_sha256": "73c2b0009e9b44133804ed04b6ae66e87230528721193979ce521e1c63b32eb2",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/leanpath",
+     "leanpath_sha256": "af7d95403b1c512a7c0867e4f19d10f0d39122cfe0ad1f652bcbe1981dba21c4",
+     "command": [
+      "coord.sh",
+      "lean",
+      "claude",
+      "<label>",
+      "--",
+      "timeout",
+      "180",
+      "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+      "-j1",
+      "-M8000",
+      "--root=/tmp/beaconcrypt-deployment-ce11b-cut/beaconcrypt-core/proofs/lean",
+      "-o",
+      "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostGoodFinish.olean",
+      "/tmp/beaconcrypt-deployment-ce11b-cut/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostGoodFinish.lean"
+     ],
+     "source_matches_worktree": true
+    }
+   },
+   {
+    "name": "BeaconcryptCore.Computational.PqxdhDeploymentIdealPostGood",
+    "theorem_count": 11,
+    "theorems": [
+     "real_shape",
+     "good_real",
+     "middleInv",
+     "identityOf_verified",
+     "suffix_verified",
+     "accept_token",
+     "tailCE_client_footprint",
+     "tailCE_tail_footprint",
+     "acceptAfter_footprint",
+     "good_of_accept",
+     "middleStart"
+    ],
+    "definitions": [
+     "GoodMid"
+    ],
+    "guarded": 11,
+    "axiom_profile": {
+     "real_shape": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "good_real": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "middleInv": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "identityOf_verified": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "suffix_verified": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "accept_token": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "tailCE_client_footprint": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "tailCE_tail_footprint": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "acceptAfter_footprint": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "good_of_accept": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ],
+     "middleStart": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    "direct_check_final": {
+     "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealPostGood",
+     "start": "2026-10-10T00:54:35.566644303Z",
+     "end": "2026-10-10T00:54:43.608240161Z",
+     "exit": 0,
+     "head": "6ee235ecfd8d6e2acfe17c61c37a1f1c8a430752",
+     "dirty_paths": 1,
+     "source_sha256": "b9e298df12702c6e717d02b456deffcdb6a8991715337d4000504bfaaa494f7d",
+     "log_bytes": 0,
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "artifact": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostGood.olean",
+     "artifact_sha256": "535ce4b9b75f72a46d26ac3711e67a02ef641df27ea21f76cc5bb54f740ed23b",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/leanpath",
+     "leanpath_sha256": "af7d95403b1c512a7c0867e4f19d10f0d39122cfe0ad1f652bcbe1981dba21c4",
+     "command": [
+      "coord.sh",
+      "lean",
+      "claude",
+      "<label>",
+      "--",
+      "timeout",
+      "180",
+      "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+      "-j1",
+      "-M8000",
+      "--root=/tmp/beaconcrypt-deployment-ce11b-cut/beaconcrypt-core/proofs/lean",
+      "-o",
+      "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostGood.olean",
+      "/tmp/beaconcrypt-deployment-ce11b-cut/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostGood.lean"
+     ],
+     "source_matches_worktree": true
+    }
+   },
+   {
+    "name": "BeaconcryptCore.Computational.PqxdhDeploymentIdealPost",
+    "theorem_count": 1,
+    "theorems": [
+     "active_branch"
+    ],
+    "definitions": [],
+    "guarded": 1,
+    "axiom_profile": {
+     "active_branch": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    "direct_check_final": {
+     "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealPost",
+     "start": "2026-10-10T00:55:50.794978240Z",
+     "end": "2026-10-10T00:55:54.008292637Z",
+     "exit": 0,
+     "head": "24dbfebd6915930bb26a0c345b7c2fadf9395c03",
+     "dirty_paths": 1,
+     "source_sha256": "433da7a876d58463c43e98a0f2e60f9cd00980ba051fbe0dfca6fe9c5cd71e8d",
+     "log_bytes": 0,
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "artifact": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPost.olean",
+     "artifact_sha256": "b91e20d1dfb96ddcaad8bd2dd867450118df77e9f1bf29dc9d1d6d197373e93c",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/leanpath",
+     "leanpath_sha256": "af7d95403b1c512a7c0867e4f19d10f0d39122cfe0ad1f652bcbe1981dba21c4",
+     "command": [
+      "coord.sh",
+      "lean",
+      "claude",
+      "<label>",
+      "--",
+      "timeout",
+      "180",
+      "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+      "-j1",
+      "-M8000",
+      "--root=/tmp/beaconcrypt-deployment-ce11b-cut/beaconcrypt-core/proofs/lean",
+      "-o",
+      "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPost.olean",
+      "/tmp/beaconcrypt-deployment-ce11b-cut/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPost.lean"
+     ],
+     "source_matches_worktree": true
+    }
+   },
+   {
+    "name": "BeaconcryptCore.Computational.PqxdhDeploymentIdealCompile",
+    "theorem_count": 1,
+    "theorems": [
+     "ideal_compile"
+    ],
+    "definitions": [],
+    "guarded": 1,
+    "axiom_profile": {
+     "ideal_compile": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+     ]
+    },
+    "direct_check_final": {
+     "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealCompile",
+     "start": "2026-10-10T00:56:30.871396918Z",
+     "end": "2026-10-10T00:56:34.179366789Z",
+     "exit": 0,
+     "head": "7125b2130e79544baacba926c04ceb24e57bfb3c",
+     "dirty_paths": 1,
+     "source_sha256": "b8b7e9ec5854341c41941614051c5e030f8fb6b4918ce2e3e2bcb8eba56403c5",
+     "log_bytes": 0,
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "artifact": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealCompile.olean",
+     "artifact_sha256": "c32ea8005b2830df2a98cbaf045c019840a44ab3f4511b079de3e87c8e62e747",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/leanpath",
+     "leanpath_sha256": "af7d95403b1c512a7c0867e4f19d10f0d39122cfe0ad1f652bcbe1981dba21c4",
+     "command": [
+      "coord.sh",
+      "lean",
+      "claude",
+      "<label>",
+      "--",
+      "timeout",
+      "180",
+      "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+      "-j1",
+      "-M8000",
+      "--root=/tmp/beaconcrypt-deployment-ce11b-cut/beaconcrypt-core/proofs/lean",
+      "-o",
+      "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealCompile.olean",
+      "/tmp/beaconcrypt-deployment-ce11b-cut/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealCompile.lean"
+     ],
+     "source_matches_worktree": true
+    }
    }
   ],
-  "theorem_total": 56,
+  "theorem_total": 101,
   "allowed_axioms": [
    "Classical.choice",
    "Quot.sound",
@@ -3689,7 +4306,10 @@
    "owner k's challenge finish (8.4)": "PqxdhDeploymentIdealPostChallenge.step_challenge (via RelabelCalls/prepare_relabel, stack_prepProgram, stack_challengeC, owner_challenge, sourceMid_challenge); step_finishActive for every finish after an active selected accept, with finish_other deriving step_finish's premise",
    "middle invariant, item 2 side (8.4)": "PqxdhDeploymentIdealPostInvariant.ItemInv with step_all, keep_all, item_sim (sim_option instance)",
    "selected accept after encapsulation, item 2 side (8.4)": "PqxdhDeploymentIdealPostAccept.resume_accept (with stack_suffix, SplitC, splitC_tail), resume_clean",
-   "middle invariant, CE side; ActiveBranch; ideal_compile (8.1, 8.4)": "not proved; remaining per the guide open points 1-3"
+   "assembly of the active branch (8.1, 8.4)": "PqxdhDeploymentIdealPostItemRun.itemPost_middle (item 2 side as the middle run) and PqxdhDeploymentIdealPostReduce.activeCE_middle (CE side as its merge image), decision_merge, activeBranch_of_middle (ActiveBranch from MiddleInv and MiddleStart)",
+   "middle invariant, CE side (8.4)": "PqxdhDeploymentIdealPostGood.GoodMid (CE-3 Good with t.accept < accepts) with middleInv (real commands: good_real; marked build: PqxdhDeploymentIdealPostGoodBuild.good_buildHidden; owner k challenge finish: PqxdhDeploymentIdealPostGoodFinish.good_challenge) and middleStart (CutRel.good, acceptAfter_footprint)",
+   "ActiveBranch (8.1)": "PqxdhDeploymentIdealPost.active_branch",
+   "ideal_compile (8.1, 9.1)": "PqxdhDeploymentIdealCompile.ideal_compile (form of PqxdhDeploymentIdealActive.ideal_compile_of_active)"
   },
   "deviations_from_design": [
    "one-owner relabelling of the opaque preparation (RelabelCalls) instead of a relabelling function",
@@ -3698,13 +4318,41 @@
    "simulated requests exclude only identity and KEM field reads (weaker than the second part's open point 2)",
    "a split framework for the CE-native resumed tail through the allocator (SplitC)",
    "fresh olean prefix ce11b/u6b/p4/olean instead of the existing ce11b/u6b/olean",
-   "U6 published in three further modules (PqxdhDeploymentIdealPostChallenge, PqxdhDeploymentIdealPostInvariant, PqxdhDeploymentIdealPostAccept; all registered); the CE side of the invariant, PqxdhDeploymentIdealPost and PqxdhDeploymentIdealCompile remain"
+   "the CE side of the middle invariant is CE-3 Good with the selected accept behind the accept counter (GoodMid); it needs neither ItemInv nor the creation room",
+   "the marked build footprint through a writer-answering generic build shape (genericBuildW_shape, writeImpl, tailImpl_write, factored_logged) instead of hiddenBuild_factor, which needs a root output",
+   "the challenge-handle preparation facts at the ProbComp level (collectCE_inputs, prepareCE_facts) through slot_prep, since prepare_origin needs a StateT A ProbComp handler",
+   "CE-3 preservation arguments restated from footprints (good_of_build, good_of_finish, good_of_accept) and step_real program equation restated (real_shape); continueRust_shape restated (EnvBuild not in the import closure); PqxdhDeploymentSplitFactor imported",
+   "central moved to 69a24703 during this part and was not merged into the topic (see central_move)",
+   "the track deleted its own temporary file ce11b/u6b/p4/dev/RD.backup.lean without coord.sh disk check-delete",
+   "U6 published in ten modules in this part (PqxdhDeploymentIdealPostChallenge, PqxdhDeploymentIdealPostInvariant, PqxdhDeploymentIdealPostAccept, PqxdhDeploymentIdealPostItemRun, PqxdhDeploymentIdealPostReduce, PqxdhDeploymentIdealPostGoodBuild, PqxdhDeploymentIdealPostGoodFinish, PqxdhDeploymentIdealPostGood, PqxdhDeploymentIdealPost, PqxdhDeploymentIdealCompile; all registered)"
   ],
   "contracts_used": {
    "new_contracts": [],
    "new_assumptions": [],
-   "codec_laws": [],
-   "premises": "none in published claims; the step and simulation lemmas take facts of the middle state (fields of ItemInv) and the constructed Server's public identity being its seed's; these are intermediate results of the unit or facts of the Server's construction"
+   "codec_laws": [
+    "PqxdhServerAuthNegativeControl.Phase1ReadBack (approved; good_real, middleInv, active_branch, ideal_compile)",
+    "PqxdhServerAuthNegativeControl.Phase2ReadBack (approved; good_of_build, good_buildHidden, good_real, middleInv, active_branch, ideal_compile)"
+   ],
+   "premises": "ideal_compile takes Phase1ReadBack, Phase2ReadBack and budget.Respects adversary, as PqxdhDeploymentIdealActive.ideal_compile_of_active does; the step and simulation lemmas take facts of the middle state (fields of ItemInv) and the constructed Server's public identity being its seed's, which activeBranch_of_middle discharges"
+  },
+  "central_move": {
+   "basis": "dd681f34cd9459993ae5cf19eada13b1694d981d",
+   "central_now": "69a2470358f7433fd41b8c13a5dfba0e40bc34c7",
+   "moved_by": "69a24703 Merge central dd681f34 into CE-11b unit U4 remainder (2026-10-10 02:30:51 +0200), after e0475b88 and before 166e1ab7",
+   "merged_into_topic": false,
+   "trial_merge": {
+    "command": "git merge-tree --write-tree --name-only --messages origin/codex/full-proof-composition HEAD (GIT_OBJECT_DIRECTORY=ce11b/u6b/p4/trial-objects, alternates the shared object store; no writes to the shared repository)",
+    "head": "7e4d7c35f3b895c50ebf47f87cd90802ac9151fd",
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/logs/trial-merge-69a24703.txt",
+    "log_sha256": "6a43395789289a248239072d41dc1e7dc793811af29a73b3d9dc8b60956766d2",
+    "conflicts": [
+     "beaconcrypt-core/proofs/check-inventory.sh (module blocks; handwritten-lean count line 1870 vs 1876, recount to 1880)",
+     "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean (end of the import block)",
+     "beaconcrypt-core/proofs/reviewed-inventory.txt (digest rows of the root and of check-inventory.sh; module rows at the end)",
+     "doc/formal-verification-analysis.md (end of the file)",
+     "doc/impl/common-deployment-experiment.md (status paragraphs and section block)"
+    ]
+   }
   },
   "scratch": {
    "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/dev/CH.lean": {
@@ -3742,6 +4390,90 @@
      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     "note": "development copy of PqxdhDeploymentIdealPostAccept, identical to the committed module"
+   },
+   "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/dev/IR.lean": {
+    "sha256": "ee9a819d1b1ea39204d0d30fdca56ec3c0f607359801ad3b05299d7c6ee3e056",
+    "sorry_free": true,
+    "last_dev_check": {
+     "run": "IR-10",
+     "source_sha256": "ee9a819d1b1ea39204d0d30fdca56ec3c0f607359801ad3b05299d7c6ee3e056",
+     "result": "exit 0 seconds 5",
+     "log_bytes": 0,
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "note": "development copy of PqxdhDeploymentIdealPostItemRun, identical to the committed module"
+   },
+   "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/dev/RD.lean": {
+    "sha256": "45be0600b5c4c0c430ae3582c8337db242a2012b16697fa8f43273f1c09b2bf5",
+    "sorry_free": true,
+    "last_dev_check": {
+     "run": "RD-12",
+     "source_sha256": "45be0600b5c4c0c430ae3582c8337db242a2012b16697fa8f43273f1c09b2bf5",
+     "result": "exit 0 seconds 4",
+     "log_bytes": 0,
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "note": "development copy of PqxdhDeploymentIdealPostReduce, identical to the committed module"
+   },
+   "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/dev/GB.lean": {
+    "sha256": "1555ba36b9729226e9940bf5d44d3c93893b6fd0962314251c1191b4c4bb9a55",
+    "sorry_free": true,
+    "last_dev_check": {
+     "run": "GB-8",
+     "source_sha256": "23bf2c884c038f0b8fbbe0d0c3ee03f57749473d11f7ed63a1f13ea323ad3898",
+     "result": "exit 0 seconds 5",
+     "log_bytes": 0,
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "note": "development copy of PqxdhDeploymentIdealPostGoodBuild, identical to the committed module"
+   },
+   "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/dev/GF.lean": {
+    "sha256": "486af8870ccdc429a9b8d1232651af4358512ecd1642aa5f401d73aaaaf68387",
+    "sorry_free": true,
+    "last_dev_check": {
+     "run": "GF-16",
+     "source_sha256": "31c930ecc6dc3466801a4972b37acb815962693b40b6c7e356441da1ee0a4560",
+     "result": "exit 0 seconds 7",
+     "log_bytes": 0,
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "note": "development copy of PqxdhDeploymentIdealPostGoodFinish, identical to the committed module"
+   },
+   "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/dev/GD.lean": {
+    "sha256": "b9e298df12702c6e717d02b456deffcdb6a8991715337d4000504bfaaa494f7d",
+    "sorry_free": true,
+    "last_dev_check": {
+     "run": "GD-13",
+     "source_sha256": "c15ce8b7885539813e04ff6089aae682d398a8024d669459a8a332c7fe8bfb2d",
+     "result": "exit 0 seconds 8",
+     "log_bytes": 0,
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "note": "development copy of PqxdhDeploymentIdealPostGood, identical to the committed module"
+   },
+   "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/dev/GP.lean": {
+    "sha256": "433da7a876d58463c43e98a0f2e60f9cd00980ba051fbe0dfca6fe9c5cd71e8d",
+    "sorry_free": true,
+    "last_dev_check": {
+     "run": "GP-1",
+     "source_sha256": "8a7cd0a3c08de1f22f948d4f41b10735c0b236fe153c353b9c5640a6cd7774c7",
+     "result": "exit 0 seconds 3",
+     "log_bytes": 0,
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "note": "development copy of PqxdhDeploymentIdealPost, identical to the committed module"
+   },
+   "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/dev/GC.lean": {
+    "sha256": "b8b7e9ec5854341c41941614051c5e030f8fb6b4918ce2e3e2bcb8eba56403c5",
+    "sorry_free": true,
+    "last_dev_check": {
+     "run": "GC-1",
+     "source_sha256": "b82e348ac60cc1fbccf1e7399796a85eee2412d43a90fb85ff11904c73c5f639",
+     "result": "exit 0 seconds 3",
+     "log_bytes": 0,
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "note": "development copy of PqxdhDeploymentIdealCompile, identical to the committed module"
    }
   },
   "leanpath": {
@@ -3842,6 +4574,223 @@
      "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/root-checks/postaccept1/BeaconcryptCore.olean",
      "/tmp/beaconcrypt-deployment-ce11b-cut/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
     ]
+   },
+   "postitemrun1": {
+    "module": "BeaconcryptCore",
+    "start": "2026-10-10T00:10:46.175104668Z",
+    "end": "2026-10-10T00:10:48.561818672Z",
+    "exit": 0,
+    "head": "a9a6cb6d3d1655774b413bce6cb3a1cdea18d8d6",
+    "dirty_paths": 4,
+    "source_sha256": "278429189f8e64443a133cdd1bffdead93ded3e42d95c6d82c7ae2438504fcc5",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/root-checks/postitemrun1/BeaconcryptCore.olean",
+    "artifact_sha256": "3c28a2f34bd3f960a1e1e1cd7584c095a91eff8c5ecb063feb307ad48791b0c7",
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/leanpath",
+    "leanpath_sha256": "af7d95403b1c512a7c0867e4f19d10f0d39122cfe0ad1f652bcbe1981dba21c4",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-ce11b-cut/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/root-checks/postitemrun1/BeaconcryptCore.olean",
+     "/tmp/beaconcrypt-deployment-ce11b-cut/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+    ]
+   },
+   "postreduce1": {
+    "module": "BeaconcryptCore",
+    "start": "2026-10-10T00:17:54.004730841Z",
+    "end": "2026-10-10T00:17:56.419572801Z",
+    "exit": 0,
+    "head": "f4af68b46dfeb3c6db9938889a336d7d63b1eb3f",
+    "dirty_paths": 4,
+    "source_sha256": "bfebd612eac0818d00bc4aea2d27927529272c292f98ab8a84f4d75e7d19409a",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/root-checks/postreduce1/BeaconcryptCore.olean",
+    "artifact_sha256": "123d5569372fbc31a4bf696dd66987d90f3247409a8fe3b3665387b1b77e5ff3",
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/leanpath",
+    "leanpath_sha256": "af7d95403b1c512a7c0867e4f19d10f0d39122cfe0ad1f652bcbe1981dba21c4",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-ce11b-cut/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/root-checks/postreduce1/BeaconcryptCore.olean",
+     "/tmp/beaconcrypt-deployment-ce11b-cut/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+    ]
+   },
+   "postgoodbuild1": {
+    "module": "BeaconcryptCore",
+    "start": "2026-10-10T00:35:22.132715464Z",
+    "end": "2026-10-10T00:35:24.527375106Z",
+    "exit": 0,
+    "head": "e0475b88998119cf647fe25879a0d387b9e32584",
+    "dirty_paths": 4,
+    "source_sha256": "87ca73a18d079ad6552ff017592b75a3be52d2e11762821f68ba2d4b6e0ceb32",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/root-checks/postgoodbuild1/BeaconcryptCore.olean",
+    "artifact_sha256": "30cf2d8ef421f828de4fd4640685cf0b91e2dab6c904923002a500380bb58737",
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/leanpath",
+    "leanpath_sha256": "af7d95403b1c512a7c0867e4f19d10f0d39122cfe0ad1f652bcbe1981dba21c4",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-ce11b-cut/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/root-checks/postgoodbuild1/BeaconcryptCore.olean",
+     "/tmp/beaconcrypt-deployment-ce11b-cut/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+    ]
+   },
+   "postgoodfinish1": {
+    "module": "BeaconcryptCore",
+    "start": "2026-10-10T00:45:44.911197605Z",
+    "end": "2026-10-10T00:45:47.440887488Z",
+    "exit": 0,
+    "head": "166e1ab7db8f05f6ee0cc78549413662703609a2",
+    "dirty_paths": 4,
+    "source_sha256": "6c3650b249ab10fbe6682c561627f180fb9b3e0d7c1d1a341e46afe852c7ff9a",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/root-checks/postgoodfinish1/BeaconcryptCore.olean",
+    "artifact_sha256": "4adaef8e5df60ea133e128c7c0352f6221c4c0beffc965a1b0d9ddc20e7f4eed",
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/leanpath",
+    "leanpath_sha256": "af7d95403b1c512a7c0867e4f19d10f0d39122cfe0ad1f652bcbe1981dba21c4",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-ce11b-cut/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/root-checks/postgoodfinish1/BeaconcryptCore.olean",
+     "/tmp/beaconcrypt-deployment-ce11b-cut/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+    ]
+   },
+   "postgood1": {
+    "module": "BeaconcryptCore",
+    "start": "2026-10-10T00:54:52.630906692Z",
+    "end": "2026-10-10T00:54:54.982649826Z",
+    "exit": 0,
+    "head": "6ee235ecfd8d6e2acfe17c61c37a1f1c8a430752",
+    "dirty_paths": 4,
+    "source_sha256": "798af319eaae3409aa831ccd0ed3d67e57aac85428df7a0c5e930bb774baf094",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/root-checks/postgood1/BeaconcryptCore.olean",
+    "artifact_sha256": "dfbfe0d7f905e5bccde02af151c52fce426d5a6f9f1b4cefb0c082be0fd8a89e",
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/leanpath",
+    "leanpath_sha256": "af7d95403b1c512a7c0867e4f19d10f0d39122cfe0ad1f652bcbe1981dba21c4",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-ce11b-cut/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/root-checks/postgood1/BeaconcryptCore.olean",
+     "/tmp/beaconcrypt-deployment-ce11b-cut/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+    ]
+   },
+   "post1": {
+    "module": "BeaconcryptCore",
+    "start": "2026-10-10T00:55:54.093597680Z",
+    "end": "2026-10-10T00:55:56.501143132Z",
+    "exit": 0,
+    "head": "24dbfebd6915930bb26a0c345b7c2fadf9395c03",
+    "dirty_paths": 4,
+    "source_sha256": "768d0c47a15f076609da6cf9fd0247225aa7693d8113c1aa9a0189e3e0df5acc",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/root-checks/post1/BeaconcryptCore.olean",
+    "artifact_sha256": "9287d506bf9a152ad457ed39578e63a1b8bae2e8d3d5295cddcfb1e3d6a69762",
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/leanpath",
+    "leanpath_sha256": "af7d95403b1c512a7c0867e4f19d10f0d39122cfe0ad1f652bcbe1981dba21c4",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-ce11b-cut/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/root-checks/post1/BeaconcryptCore.olean",
+     "/tmp/beaconcrypt-deployment-ce11b-cut/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+    ]
+   },
+   "compile1": {
+    "module": "BeaconcryptCore",
+    "start": "2026-10-10T00:56:34.258908176Z",
+    "end": "2026-10-10T00:56:36.596289592Z",
+    "exit": 0,
+    "head": "7125b2130e79544baacba926c04ceb24e57bfb3c",
+    "dirty_paths": 4,
+    "source_sha256": "92127e27a06ae746f749cb4ed8d7d668db31de08e19e1ddf3632e1abf6eb9cce",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/root-checks/compile1/BeaconcryptCore.olean",
+    "artifact_sha256": "01b0e4b3e681ae143016c9686b925c17872ef36dc7acbe4301b6a394d3df6a88",
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/leanpath",
+    "leanpath_sha256": "af7d95403b1c512a7c0867e4f19d10f0d39122cfe0ad1f652bcbe1981dba21c4",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-ce11b-cut/beaconcrypt-core/proofs/lean",
+     "-o",
+     "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/root-checks/compile1/BeaconcryptCore.olean",
+     "/tmp/beaconcrypt-deployment-ce11b-cut/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean"
+    ]
    }
   },
   "root_checks_note": "each root check ran before its Lean commit with the root import and the module in the tree (head = parent commit, uncommitted paths counted)",
@@ -3854,11 +4803,20 @@
     "working_tree_dirt_lines": 0,
     "log_sha256": "d550a2083f670197b5d3682fa4caab606419d825c3103475789f48f00b321621",
     "result_line": "Formal-verification inventory matches the reviewed boundary."
+   },
+   "inventory-lean2": {
+    "exit": 0,
+    "start": "2026-10-10T00:57:00Z",
+    "end": "2026-10-10T00:58:45Z",
+    "head_at_run": "7e4d7c35f3b895c50ebf47f87cd90802ac9151fd",
+    "working_tree_dirt_lines": 0,
+    "log_sha256": "c4894221d7398d1cdf7f8b88a9cdb0db2be81dd6bae2ce47c1a53227eea29129",
+    "result_line": "Formal-verification inventory matches the reviewed boundary."
    }
   },
   "inventory": {
    "handwritten_lean_rows_before": 1866,
-   "handwritten_lean_rows_after": 1869,
+   "handwritten_lean_rows_after": 1876,
    "rehashed": [
     "proofs/lean/BeaconcryptCore.lean",
     "proofs/check-inventory.sh"
@@ -3868,7 +4826,14 @@
   "forbidden_scan": {
    "PqxdhDeploymentIdealPostChallenge": [],
    "PqxdhDeploymentIdealPostInvariant": [],
-   "PqxdhDeploymentIdealPostAccept": []
+   "PqxdhDeploymentIdealPostAccept": [],
+   "PqxdhDeploymentIdealPostItemRun": [],
+   "PqxdhDeploymentIdealPostReduce": [],
+   "PqxdhDeploymentIdealPostGoodBuild": [],
+   "PqxdhDeploymentIdealPostGoodFinish": [],
+   "PqxdhDeploymentIdealPostGood": [],
+   "PqxdhDeploymentIdealPost": [],
+   "PqxdhDeploymentIdealCompile": []
   },
   "git_diff_check": {
    "range": "dd681f34cd9459993ae5cf19eada13b1694d981d..working tree",
@@ -3883,9 +4848,10 @@
   "reestimate": {
    "unit": "nominal agent-days",
    "ActiveBranch_remaining_before": "2.25-4.5 (third part)",
-   "U6_fourth_part_took": "about 0.5",
-   "ActiveBranch_remaining": "1.25-2.5",
-   "Compile": "about 0.25"
+   "U6_fourth_part_took": "about 1",
+   "ActiveBranch_remaining": "0 (done)",
+   "Compile": "done",
+   "U6_total": "about 4.25-4.75 in four parts (design 6.75-11.5)"
   },
   "review": null
  }
