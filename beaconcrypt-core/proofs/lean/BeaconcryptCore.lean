@@ -2061,6 +2061,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentIdealKeySwap
 
 import BeaconcryptCore.Computational.PqxdhDeploymentIdealAnomalyGuesser
 
+import BeaconcryptCore.Computational.PqxdhDeploymentIdealKeyFirst
+
 /-!
 # Beaconcrypt-core verification root
 

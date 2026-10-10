@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1872
+	[handwritten-lean]=1873
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -38116,6 +38116,45 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem flat_decapsulate([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealAnomalyGuesser theorem flat_decapsulate"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealAnomalyGuesser\.anomalyGuesser_decapsulations$' "$selected_source_module" "PqxdhDeploymentIdealAnomalyGuesser dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealAnomalyGuesser.anomalyGuesser_decapsulations"
 require_line_count 1 '^theorem anomalyGuesser_decapsulations([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealAnomalyGuesser theorem anomalyGuesser_decapsulations"
+
+# CE-11b unit U8 (track u4c): CE.idealGame and the final split form with the message key first or last.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealKeyFirst.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentIdealKeyFirst$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentIdealKeyFirst root import"
+require_line_count 16 '^theorem ' "$selected_source_module" "PqxdhDeploymentIdealKeyFirst theorem inventory"
+require_line_count 16 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentIdealKeyFirst guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealKeyFirst\.outcomeMap_erase$' "$selected_source_module" "PqxdhDeploymentIdealKeyFirst dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealKeyFirst.outcomeMap_erase"
+require_line_count 1 '^theorem outcomeMap_erase([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealKeyFirst theorem outcomeMap_erase"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealKeyFirst\.game_eager$' "$selected_source_module" "PqxdhDeploymentIdealKeyFirst dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealKeyFirst.game_eager"
+require_line_count 1 '^theorem game_eager([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealKeyFirst theorem game_eager"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealKeyFirst\.slotImpl_commutes$' "$selected_source_module" "PqxdhDeploymentIdealKeyFirst dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealKeyFirst.slotImpl_commutes"
+require_line_count 1 '^theorem slotImpl_commutes([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealKeyFirst theorem slotImpl_commutes"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealKeyFirst\.slotImpl_commutes_of$' "$selected_source_module" "PqxdhDeploymentIdealKeyFirst dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealKeyFirst.slotImpl_commutes_of"
+require_line_count 1 '^theorem slotImpl_commutes_of([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealKeyFirst theorem slotImpl_commutes_of"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealKeyFirst\.slotCore_commutes$' "$selected_source_module" "PqxdhDeploymentIdealKeyFirst dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealKeyFirst.slotCore_commutes"
+require_line_count 1 '^theorem slotCore_commutes([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealKeyFirst theorem slotCore_commutes"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealKeyFirst\.handler_commutes$' "$selected_source_module" "PqxdhDeploymentIdealKeyFirst dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealKeyFirst.handler_commutes"
+require_line_count 1 '^theorem handler_commutes([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealKeyFirst theorem handler_commutes"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealKeyFirst\.output_key_first$' "$selected_source_module" "PqxdhDeploymentIdealKeyFirst dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealKeyFirst.output_key_first"
+require_line_count 1 '^theorem output_key_first([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealKeyFirst theorem output_key_first"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealKeyFirst\.idealGame_lazy$' "$selected_source_module" "PqxdhDeploymentIdealKeyFirst dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealKeyFirst.idealGame_lazy"
+require_line_count 1 '^theorem idealGame_lazy([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealKeyFirst theorem idealGame_lazy"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealKeyFirst\.idealGame_key_first$' "$selected_source_module" "PqxdhDeploymentIdealKeyFirst dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealKeyFirst.idealGame_key_first"
+require_line_count 1 '^theorem idealGame_key_first([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealKeyFirst theorem idealGame_key_first"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealKeyFirst\.idealGame_keyFirst_keyLast$' "$selected_source_module" "PqxdhDeploymentIdealKeyFirst dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealKeyFirst.idealGame_keyFirst_keyLast"
+require_line_count 1 '^theorem idealGame_keyFirst_keyLast([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealKeyFirst theorem idealGame_keyFirst_keyLast"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealKeyFirst\.idealGame_key_last$' "$selected_source_module" "PqxdhDeploymentIdealKeyFirst dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealKeyFirst.idealGame_key_last"
+require_line_count 1 '^theorem idealGame_key_last([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealKeyFirst theorem idealGame_key_last"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealKeyFirst\.slotRunX_commutes$' "$selected_source_module" "PqxdhDeploymentIdealKeyFirst dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealKeyFirst.slotRunX_commutes"
+require_line_count 1 '^theorem slotRunX_commutes([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealKeyFirst theorem slotRunX_commutes"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealKeyFirst\.installStep_commutes$' "$selected_source_module" "PqxdhDeploymentIdealKeyFirst dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealKeyFirst.installStep_commutes"
+require_line_count 1 '^theorem installStep_commutes([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealKeyFirst theorem installStep_commutes"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealKeyFirst\.split_handler_commutes$' "$selected_source_module" "PqxdhDeploymentIdealKeyFirst dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealKeyFirst.split_handler_commutes"
+require_line_count 1 '^theorem split_handler_commutes([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealKeyFirst theorem split_handler_commutes"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealKeyFirst\.split_key_first$' "$selected_source_module" "PqxdhDeploymentIdealKeyFirst dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealKeyFirst.split_key_first"
+require_line_count 1 '^theorem split_key_first([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealKeyFirst theorem split_key_first"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealKeyFirst\.split_key_last$' "$selected_source_module" "PqxdhDeploymentIdealKeyFirst dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealKeyFirst.split_key_last"
+require_line_count 1 '^theorem split_key_last([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealKeyFirst theorem split_key_last"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
