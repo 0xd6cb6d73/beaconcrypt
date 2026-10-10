@@ -2133,6 +2133,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineInjective
 
 import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineBills
 
+import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSplitCost
+
 /-!
 # Beaconcrypt-core verification root
 
