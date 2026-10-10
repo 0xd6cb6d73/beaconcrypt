@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1911
+	[handwritten-lean]=1912
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -39442,6 +39442,29 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBounda
 require_line_count 1 '^theorem ofResult_ok([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryProgram theorem ofResult_ok"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryProgram\.ofResult_normal$' "$selected_source_module" "PqxdhBoundaryProgram dependency BeaconcryptCore.Computational.PqxdhBoundaryProgram.ofResult_normal"
 require_line_count 1 '^theorem ofResult_normal([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryProgram theorem ofResult_normal"
+
+# Item 7 PB-03 under LQ-F: source acceptance with the private ephemeral log (Codex WIP, completed by Claude).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryLoggedAccept.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhBoundaryLoggedAccept$' proofs/lean/BeaconcryptCore.lean "PqxdhBoundaryLoggedAccept root import"
+require_line_count 8 '^theorem ' "$selected_source_module" "PqxdhBoundaryLoggedAccept theorem inventory"
+require_line_count 8 '^#guard_msgs in$' "$selected_source_module" "PqxdhBoundaryLoggedAccept guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryLoggedAccept\.collection_exact$' "$selected_source_module" "PqxdhBoundaryLoggedAccept dependency BeaconcryptCore.Computational.PqxdhBoundaryLoggedAccept.collection_exact"
+require_line_count 1 '^theorem collection_exact([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryLoggedAccept theorem collection_exact"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryLoggedAccept\.preparation_exact$' "$selected_source_module" "PqxdhBoundaryLoggedAccept dependency BeaconcryptCore.Computational.PqxdhBoundaryLoggedAccept.preparation_exact"
+require_line_count 1 '^theorem preparation_exact([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryLoggedAccept theorem preparation_exact"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryLoggedAccept\.accept_exact$' "$selected_source_module" "PqxdhBoundaryLoggedAccept dependency BeaconcryptCore.Computational.PqxdhBoundaryLoggedAccept.accept_exact"
+require_line_count 1 '^theorem accept_exact([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryLoggedAccept theorem accept_exact"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryLoggedAccept\.deployment_exact$' "$selected_source_module" "PqxdhBoundaryLoggedAccept dependency BeaconcryptCore.Computational.PqxdhBoundaryLoggedAccept.deployment_exact"
+require_line_count 1 '^theorem deployment_exact([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryLoggedAccept theorem deployment_exact"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryLoggedAccept\.deployment_complete$' "$selected_source_module" "PqxdhBoundaryLoggedAccept dependency BeaconcryptCore.Computational.PqxdhBoundaryLoggedAccept.deployment_complete"
+require_line_count 1 '^theorem deployment_complete([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryLoggedAccept theorem deployment_complete"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryLoggedAccept\.deployment_erase$' "$selected_source_module" "PqxdhBoundaryLoggedAccept dependency BeaconcryptCore.Computational.PqxdhBoundaryLoggedAccept.deployment_erase"
+require_line_count 1 '^theorem deployment_erase([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryLoggedAccept theorem deployment_erase"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryLoggedAccept\.logged_caps$' "$selected_source_module" "PqxdhBoundaryLoggedAccept dependency BeaconcryptCore.Computational.PqxdhBoundaryLoggedAccept.logged_caps"
+require_line_count 1 '^theorem logged_caps([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryLoggedAccept theorem logged_caps"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryLoggedAccept\.deployment_log$' "$selected_source_module" "PqxdhBoundaryLoggedAccept dependency BeaconcryptCore.Computational.PqxdhBoundaryLoggedAccept.deployment_log"
+require_line_count 1 '^theorem deployment_log([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryLoggedAccept theorem deployment_log"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
