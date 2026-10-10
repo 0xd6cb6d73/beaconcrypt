@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1906
+	[handwritten-lean]=1907
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -39264,6 +39264,67 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem selected_of_activeL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterBranch theorem selected_of_activeL"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterBranch\.ideal_compile_server_of_active$' "$selected_source_module" "PqxdhDeploymentIdealLaterBranch dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterBranch.ideal_compile_server_of_active"
 require_line_count 1 '^theorem ideal_compile_server_of_active([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterBranch theorem ideal_compile_server_of_active"
+
+# LQ-F upstream unit B2: the CE layer of the middle run of the later second compile lemma
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterMid.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterMid$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentIdealLaterMid root import"
+require_line_count 27 '^theorem ' "$selected_source_module" "PqxdhDeploymentIdealLaterMid theorem inventory"
+require_line_count 27 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentIdealLaterMid guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterMid\.sourceMidL_embed$' "$selected_source_module" "PqxdhDeploymentIdealLaterMid dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterMid.sourceMidL_embed"
+require_line_count 1 '^theorem sourceMidL_embed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterMid theorem sourceMidL_embed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterMid\.sourceMidL_inl$' "$selected_source_module" "PqxdhDeploymentIdealLaterMid dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterMid.sourceMidL_inl"
+require_line_count 1 '^theorem sourceMidL_inl([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterMid theorem sourceMidL_inl"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterMid\.sourceMidS_quiet$' "$selected_source_module" "PqxdhDeploymentIdealLaterMid dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterMid.sourceMidS_quiet"
+require_line_count 1 '^theorem sourceMidS_quiet([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterMid theorem sourceMidS_quiet"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterMid\.preRead_mid$' "$selected_source_module" "PqxdhDeploymentIdealLaterMid dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterMid.preRead_mid"
+require_line_count 1 '^theorem preRead_mid([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterMid theorem preRead_mid"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterMid\.unghost_mergeXL$' "$selected_source_module" "PqxdhDeploymentIdealLaterMid dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterMid.unghost_mergeXL"
+require_line_count 1 '^theorem unghost_mergeXL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterMid theorem unghost_mergeXL"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterMid\.realRegAt_ghost$' "$selected_source_module" "PqxdhDeploymentIdealLaterMid dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterMid.realRegAt_ghost"
+require_line_count 1 '^theorem realRegAt_ghost([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterMid theorem realRegAt_ghost"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterMid\.onBase_ghost$' "$selected_source_module" "PqxdhDeploymentIdealLaterMid dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterMid.onBase_ghost"
+require_line_count 1 '^theorem onBase_ghost([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterMid theorem onBase_ghost"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterMid\.onSlots_ghost$' "$selected_source_module" "PqxdhDeploymentIdealLaterMid dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterMid.onSlots_ghost"
+require_line_count 1 '^theorem onSlots_ghost([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterMid theorem onSlots_ghost"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterMid\.slotCore_ghost$' "$selected_source_module" "PqxdhDeploymentIdealLaterMid dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterMid.slotCore_ghost"
+require_line_count 1 '^theorem slotCore_ghost([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterMid theorem slotCore_ghost"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterMid\.idealProg_ghost$' "$selected_source_module" "PqxdhDeploymentIdealLaterMid dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterMid.idealProg_ghost"
+require_line_count 1 '^theorem idealProg_ghost([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterMid theorem idealProg_ghost"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterMid\.idealStep_ghost$' "$selected_source_module" "PqxdhDeploymentIdealLaterMid dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterMid.idealStep_ghost"
+require_line_count 1 '^theorem idealStep_ghost([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterMid theorem idealStep_ghost"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterMid\.handler_acceptOther$' "$selected_source_module" "PqxdhDeploymentIdealLaterMid dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterMid.handler_acceptOther"
+require_line_count 1 '^theorem handler_acceptOther([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterMid theorem handler_acceptOther"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterMid\.compiledMidL_quiet$' "$selected_source_module" "PqxdhDeploymentIdealLaterMid dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterMid.compiledMidL_quiet"
+require_line_count 1 '^theorem compiledMidL_quiet([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterMid theorem compiledMidL_quiet"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterMid\.acceptSource_source$' "$selected_source_module" "PqxdhDeploymentIdealLaterMid dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterMid.acceptSource_source"
+require_line_count 1 '^theorem acceptSource_source([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterMid theorem acceptSource_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterMid\.compiledMidL_accept$' "$selected_source_module" "PqxdhDeploymentIdealLaterMid dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterMid.compiledMidL_accept"
+require_line_count 1 '^theorem compiledMidL_accept([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterMid theorem compiledMidL_accept"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterMid\.step_mergeMidL$' "$selected_source_module" "PqxdhDeploymentIdealLaterMid dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterMid.step_mergeMidL"
+require_line_count 1 '^theorem step_mergeMidL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterMid theorem step_mergeMidL"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterMid\.goodMidL_step$' "$selected_source_module" "PqxdhDeploymentIdealLaterMid dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterMid.goodMidL_step"
+require_line_count 1 '^theorem goodMidL_step([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterMid theorem goodMidL_step"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterMid\.compile_simulationMidL$' "$selected_source_module" "PqxdhDeploymentIdealLaterMid dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterMid.compile_simulationMidL"
+require_line_count 1 '^theorem compile_simulationMidL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterMid theorem compile_simulationMidL"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterMid\.compiled_run$' "$selected_source_module" "PqxdhDeploymentIdealLaterMid dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterMid.compiled_run"
+require_line_count 1 '^theorem compiled_run([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterMid theorem compiled_run"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterMid\.sourceStep_field$' "$selected_source_module" "PqxdhDeploymentIdealLaterMid dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterMid.sourceStep_field"
+require_line_count 1 '^theorem sourceStep_field([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterMid theorem sourceStep_field"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterMid\.read_mid$' "$selected_source_module" "PqxdhDeploymentIdealLaterMid dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterMid.read_mid"
+require_line_count 1 '^theorem read_mid([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterMid theorem read_mid"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterMid\.terminal_mid$' "$selected_source_module" "PqxdhDeploymentIdealLaterMid dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterMid.terminal_mid"
+require_line_count 1 '^theorem terminal_mid([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterMid theorem terminal_mid"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterMid\.serverRead_mid$' "$selected_source_module" "PqxdhDeploymentIdealLaterMid dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterMid.serverRead_mid"
+require_line_count 1 '^theorem serverRead_mid([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterMid theorem serverRead_mid"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterMid\.post_zero$' "$selected_source_module" "PqxdhDeploymentIdealLaterMid dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterMid.post_zero"
+require_line_count 1 '^theorem post_zero([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterMid theorem post_zero"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterMid\.post_mid$' "$selected_source_module" "PqxdhDeploymentIdealLaterMid dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterMid.post_mid"
+require_line_count 1 '^theorem post_mid([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterMid theorem post_mid"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterMid\.restOf_middle$' "$selected_source_module" "PqxdhDeploymentIdealLaterMid dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterMid.restOf_middle"
+require_line_count 1 '^theorem restOf_middle([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterMid theorem restOf_middle"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterMid\.laterTail_middle$' "$selected_source_module" "PqxdhDeploymentIdealLaterMid dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterMid.laterTail_middle"
+require_line_count 1 '^theorem laterTail_middle([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterMid theorem laterTail_middle"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"

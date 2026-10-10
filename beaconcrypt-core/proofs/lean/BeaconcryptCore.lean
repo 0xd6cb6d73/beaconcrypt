@@ -2129,6 +2129,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterCut
 
 import BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterBranch
 
+import BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterMid
+
 /-!
 # Beaconcrypt-core verification root
 
