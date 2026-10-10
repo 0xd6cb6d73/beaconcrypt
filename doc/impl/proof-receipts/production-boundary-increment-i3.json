@@ -22,13 +22,13 @@
    "subject": "Fix the item 7 increment I3 review findings"
   }
  ],
- "state": "both modules checked at central c27b4533; D-6 semantic and hygiene reviews of 77cd687c approved with nits; all thirteen findings addressed in the review fix pass (none owner-level); confirming review pending; not integrated",
+ "state": "both modules checked at central c27b4533; D-6 semantic and hygiene reviews of 77cd687c approved with nits; all thirteen findings addressed in the review fix pass (none owner-level); confirming review of 3a6ba307 APPROVE_WITH_NITS, its documentation nit (the Deployment guide's item 8 sentence now names classical_evalDist) addressed in the commit that records it (documentation and receipts only, no Lean change); not integrated at the record commit",
  "modules": {
   "PqxdhBoundaryDeploymentStep": {
    "receipt": "doc/impl/proof-receipts/production-boundary-deployment-step.json",
-   "receipt_sha256": "935a0765d6061858f4fc9c302323073630bdcbf956832490bde653ab7b358bba",
+   "receipt_sha256": "0f350d3b9fc9ec7ad0291982a5da660343b34d7d2a8b35d008389e6dcc7acf39",
    "guide": "doc/impl/production-boundary-deployment-step.md",
-   "guide_sha256": "eab2b1dd9d7d3fad0ed316dd6f0dd077b6622e3c944afb941fee75a5bb1df18f",
+   "guide_sha256": "c6c8e6ac6a28e7c93642843e0df7f28d8aa5ec828248637f398b73411b0e2818",
    "source_sha256": "847b391867a7aebb0331cc70bfc3628eb08952e69c22f93b328dd5cdcc7f34ea",
    "guarded_statements": 15,
    "theorems": [
@@ -74,9 +74,9 @@
   },
   "PqxdhBoundaryDeployment": {
    "receipt": "doc/impl/proof-receipts/production-boundary-deployment.json",
-   "receipt_sha256": "e3a9072d1181c1b6bb4dddcb4165bcf208c679ab71400ad67f1a1a95033772c0",
+   "receipt_sha256": "c990e44f84966199d733bd250798c9f75d702b9d9e0eda4928927b7793cd8360",
    "guide": "doc/impl/production-boundary-deployment.md",
-   "guide_sha256": "dbda490ff410c4cb0787bb732eee108ec4385926300cba80bdf76209f3e79764",
+   "guide_sha256": "ae593fcd59b6b607eefa20a42c6f0d7a822b7613be2f80e777665a0edf537b94",
    "source_sha256": "c806497c4c23f0dba0927fbfb9422c39c984c6f1067b609f7e859ab72d8c727f",
    "guarded_statements": 9,
    "theorems": [
@@ -234,7 +234,24 @@
    ],
    "note": "no existing statement was changed, weakened or deleted; the only Lean changes are two module docstrings and the added theorem with its exact guard"
   },
-  "owner_level": []
+  "owner_level": [],
+  "confirming_review": {
+   "kind": "confirming review of the D-6 fix pass (fresh-context Claude sub-agent, read only)",
+   "reviewed": "77cd687c..3a6ba307",
+   "verdict": "APPROVE_WITH_NITS",
+   "scratch": "/tmp/bc-arc-scratch/item7/i3/confirm",
+   "verdict_file": {
+    "path": "/tmp/bc-arc-scratch/item7/i3/confirm/verdict.json",
+    "sha256": "651786c66cf8016c3cc21de49d20936daae7e76a1b5854918ee83e194fc103ae"
+   },
+   "record": "/tmp/bc-arc-scratch/item7/NOTES.md (confirming review entry)",
+   "confirmed": "both modules recompiled at 3a6ba307 (exit 0, empty logs, oleans byte-identical to i3/olean); 15/15 and 9/9 exact guards; Lean diff 77cd687c..3a6ba307 only two module docstrings plus classical_evalDist and its guard; spec version 5 scans re-run clean and live; 52 receipt hash claims OK; the [MeasurableSpace Z] binder of classical_evalDist is required",
+   "nits": [
+    "the Deployment guide's item 8 sentence named only classical_observe and classical_probEvent",
+    "informational: central moved to df7727c3 (LQ-F unit B); four files overlap with the I3 branch, so the integration merges it and re-runs the checks on the merged tip"
+   ],
+   "disposition": "first nit fixed in the commit that records this review (the item 8 sentence now reads 'composes them with `classical_observe` or `classical_evalDist` (or, in the deprecated form, `classical_probEvent`)'; guide_sha256 refreshed in the module receipts and the increment receipt); second nit handled by the PROTOCOL section 6 integration (merge of df7727c3, then recount, rehash, check-inventory, module checks and the root import on the merged tip, recorded in the checks receipt); no Lean change"
+  }
  },
  "d2_notice": {
   "message": "#511",
@@ -316,8 +333,7 @@
   "transcript-fidelity cargo tests"
  ],
  "remaining": [
-  "confirming review of the D-6 fix pass",
-  "integration into central",
+  "integration into central (PROTOCOL section 6, merging central df7727c3) after the record commit",
   "I4 PqxdhBoundaryDeploymentLater (PB-13; its own entry in the scan spec site table if it needs the .crypto allowance)",
   "I5 ledger and CE-14 (including the parsedBytes reach)"
  ],
@@ -471,5 +487,6 @@
    "note": "this receipt is committed after the checked tip; the commit adds only this JSON file, so every check above holds for the receipt commit too (no Lean source, inventory or root change)"
   }
  },
- "note": "this receipt is committed after the checked tip; the commit adds only this JSON file, so every check above holds for the receipt commit too (no Lean source, inventory or root change)"
+ "note": "this receipt is committed after the checked tip; the commit adds only this JSON file, so every check above holds for the receipt commit too (no Lean source, inventory or root change)",
+ "record_commit": "the commit that records the confirming review changes only documentation and receipts (the two I3 guides, the two I3 analysis paragraphs, the two module receipts and this receipt); no Lean file, root import, inventory row or check-inventory block changes, so the tip checks at 95cb5a2f carry over; the integration re-runs the module, root, inventory and fidelity checks on its merged tip"
 }

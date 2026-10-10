@@ -3,12 +3,12 @@
  "topic": "codex/deployment-boundary-classical",
  "parent_commit": "77cd687c697cc19c51236b5cdebc3c1637e5f1b8",
  "central_basis": "c27b45336b6c04087239d9b797fcf6f1aba1c85e",
- "state": "checked at central c27b4533 on the topic branch; D-6 semantic and hygiene reviews of 77cd687c approved with nits; review fix pass applied; confirming review pending; not integrated",
+ "state": "checked at central c27b4533 on the topic branch; D-6 semantic and hygiene reviews of 77cd687c approved with nits; review fix pass applied; confirming review of 3a6ba307 APPROVE_WITH_NITS, its documentation nit (the Deployment guide's item 8 sentence now names classical_evalDist) addressed in the commit that records it (documentation and receipts only, no Lean change); not integrated at the record commit",
  "module": "PqxdhBoundaryDeploymentStep",
  "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryDeploymentStep.lean",
  "source_sha256": "847b391867a7aebb0331cc70bfc3628eb08952e69c22f93b328dd5cdcc7f34ea",
  "guide": "doc/impl/production-boundary-deployment-step.md",
- "guide_sha256": "eab2b1dd9d7d3fad0ed316dd6f0dd077b6622e3c944afb941fee75a5bb1df18f",
+ "guide_sha256": "c6c8e6ac6a28e7c93642843e0df7f28d8aa5ec828248637f398b73411b0e2818",
  "guarded_statements": 15,
  "theorems": [
   "step_create",
@@ -254,7 +254,7 @@
   "branch_tip_checks": "root import, inv recount before inv rehash, focused check-inventory under a @nix lease and git diff --check at the branch tip are recorded in doc/impl/proof-receipts/production-boundary-increment-i3.json"
  },
  "review": {
-  "status": "D-6 fresh-context semantic and hygiene reviews of c27b4533..77cd687c: both APPROVE_WITH_NITS; every finding is addressed in the review fix pass (none owner-level); confirming review pending",
+  "status": "D-6 fresh-context semantic and hygiene reviews of c27b4533..77cd687c: both APPROVE_WITH_NITS; every finding is addressed in the review fix pass (none owner-level); confirming review of 3a6ba307 APPROVE_WITH_NITS, its documentation nit addressed in the commit that records it",
   "verdicts": {
    "semantic": {
     "path": "/tmp/bc-arc-scratch/item7/i3/review-semantic/verdict.json",
@@ -372,7 +372,24 @@
    ],
    "note": "no existing statement was changed, weakened or deleted; the only Lean changes are two module docstrings and the added theorem with its exact guard"
   },
-  "plan": "/tmp/bc-arc-scratch/item7/plan.md section 0 D-6"
+  "plan": "/tmp/bc-arc-scratch/item7/plan.md section 0 D-6",
+  "confirming_review": {
+   "kind": "confirming review of the D-6 fix pass (fresh-context Claude sub-agent, read only)",
+   "reviewed": "77cd687c..3a6ba307",
+   "verdict": "APPROVE_WITH_NITS",
+   "scratch": "/tmp/bc-arc-scratch/item7/i3/confirm",
+   "verdict_file": {
+    "path": "/tmp/bc-arc-scratch/item7/i3/confirm/verdict.json",
+    "sha256": "651786c66cf8016c3cc21de49d20936daae7e76a1b5854918ee83e194fc103ae"
+   },
+   "record": "/tmp/bc-arc-scratch/item7/NOTES.md (confirming review entry)",
+   "confirmed": "both modules recompiled at 3a6ba307 (exit 0, empty logs, oleans byte-identical to i3/olean); 15/15 and 9/9 exact guards; Lean diff 77cd687c..3a6ba307 only two module docstrings plus classical_evalDist and its guard; spec version 5 scans re-run clean and live; 52 receipt hash claims OK; the [MeasurableSpace Z] binder of classical_evalDist is required",
+   "nits": [
+    "the Deployment guide's item 8 sentence named only classical_observe and classical_probEvent",
+    "informational: central moved to df7727c3 (LQ-F unit B); four files overlap with the I3 branch, so the integration merges it and re-runs the checks on the merged tip"
+   ],
+   "disposition": "first nit fixed in the commit that records this review (the item 8 sentence now reads 'composes them with `classical_observe` or `classical_evalDist` (or, in the deprecated form, `classical_probEvent`)'; guide_sha256 refreshed in the module receipts and the increment receipt); second nit handled by the PROTOCOL section 6 integration (merge of df7727c3, then recount, rehash, check-inventory, module checks and the root import on the merged tip, recorded in the checks receipt); no Lean change"
+  }
  },
  "previous_receipt": {
   "commit": "77cd687c697cc19c51236b5cdebc3c1637e5f1b8",
@@ -391,8 +408,7 @@
   "transcript-fidelity cargo tests (no inventory metadata they read changed)"
  ],
  "remaining": [
-  "confirming review of the D-6 fix pass",
-  "integration into central",
+  "integration into central (PROTOCOL section 6, merging central df7727c3) after the record commit",
   "I4 PqxdhBoundaryDeploymentLater (PB-13, adaptive LQ-F join; its .crypto allowance, if needed, gets its own entry in the site table of the scan spec) and I5 ledger and CE-14"
  ],
  "rust_reference": "no new Rust correspondence: each command cites the published boundary equality of its survey row (PB-01 beacon.rs:65-82; PB-02 beacon.rs:300-357; PB-03 server.rs:332; PB-05 server.rs:424-500; PB-06 beacon.rs:402; PB-07/PB-08 ratchet.rs:354-355, 449; PB-09 ratchet.rs:414), whose own guides and receipts carry the Rust anchors and the reviewed-transcription (RT) items",
