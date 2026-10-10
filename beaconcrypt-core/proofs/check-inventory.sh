@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1900
+	[handwritten-lean]=1901
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -39060,6 +39060,25 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem injective_s2b_le([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineInjective theorem injective_s2b_le"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineInjective\.ce_or_injective_s2b$' "$selected_source_module" "PqxdhDeploymentHeadlineInjective dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineInjective.ce_or_injective_s2b"
 require_line_count 1 '^theorem ce_or_injective_s2b([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineInjective theorem ce_or_injective_s2b"
+
+# CE-12 P2: bills (pairAdversary, record lifts at BI_g).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineBills.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineBills$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentHeadlineBills root import"
+require_line_count 6 '^theorem ' "$selected_source_module" "PqxdhDeploymentHeadlineBills theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentHeadlineBills guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineBills\.liftBase_bound$' "$selected_source_module" "PqxdhDeploymentHeadlineBills dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineBills.liftBase_bound"
+require_line_count 1 '^theorem liftBase_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineBills theorem liftBase_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineBills\.uniform_lifted$' "$selected_source_module" "PqxdhDeploymentHeadlineBills dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineBills.uniform_lifted"
+require_line_count 1 '^theorem uniform_lifted([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineBills theorem uniform_lifted"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineBills\.base_lifted$' "$selected_source_module" "PqxdhDeploymentHeadlineBills dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineBills.base_lifted"
+require_line_count 1 '^theorem base_lifted([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineBills theorem base_lifted"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineBills\.pair_bills$' "$selected_source_module" "PqxdhDeploymentHeadlineBills dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineBills.pair_bills"
+require_line_count 1 '^theorem pair_bills([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineBills theorem pair_bills"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineBills\.auth_bills$' "$selected_source_module" "PqxdhDeploymentHeadlineBills dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineBills.auth_bills"
+require_line_count 1 '^theorem auth_bills([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineBills theorem auth_bills"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineBills\.records_bills$' "$selected_source_module" "PqxdhDeploymentHeadlineBills dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineBills.records_bills"
+require_line_count 1 '^theorem records_bills([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineBills theorem records_bills"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
