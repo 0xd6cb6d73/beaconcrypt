@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1948
+	[handwritten-lean]=1949
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -40939,6 +40939,31 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem agreement_statement([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAgree theorem agreement_statement"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineAgree\.idealRecords_agree_zero$' "$selected_source_module" "PqxdhDeploymentHeadlineAgree dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgree.idealRecords_agree_zero"
 require_line_count 1 '^theorem idealRecords_agree_zero([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineAgree theorem idealRecords_agree_zero"
+
+# CE-12 P4 step 1 (P3b): the later-quantum CE-12 headlines with beta_g, billed (LaterTargetBills with ptc_bills at the run-phase adversary, LaterHeadlineBills).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterHeadlineGated.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineGated$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentLaterHeadlineGated root import"
+require_line_count 9 '^theorem ' "$selected_source_module" "PqxdhDeploymentLaterHeadlineGated theorem inventory"
+require_line_count 9 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineGated guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineGated\.later_target_bills_full$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineGated dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineGated.later_target_bills_full"
+require_line_count 1 '^theorem later_target_bills_full([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineGated theorem later_target_bills_full"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineGated\.later_headline_bills$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineGated dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineGated.later_headline_bills"
+require_line_count 1 '^theorem later_headline_bills([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineGated theorem later_headline_bills"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineGated\.ce_app_later_target_billed$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineGated dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineGated.ce_app_later_target_billed"
+require_line_count 1 '^theorem ce_app_later_target_billed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineGated theorem ce_app_later_target_billed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineGated\.ce_app_later_billed$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineGated dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineGated.ce_app_later_billed"
+require_line_count 1 '^theorem ce_app_later_billed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineGated theorem ce_app_later_billed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineGated\.ce_lor_later_target_billed$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineGated dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineGated.ce_lor_later_target_billed"
+require_line_count 1 '^theorem ce_lor_later_target_billed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineGated theorem ce_lor_later_target_billed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineGated\.ce_lor_later_billed$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineGated dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineGated.ce_lor_later_billed"
+require_line_count 1 '^theorem ce_lor_later_billed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineGated theorem ce_lor_later_billed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineGated\.ce_app_later_sym_billed$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineGated dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineGated.ce_app_later_sym_billed"
+require_line_count 1 '^theorem ce_app_later_sym_billed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineGated theorem ce_app_later_sym_billed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineGated\.ce_app_beacon_later_sym_billed$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineGated dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineGated.ce_app_beacon_later_sym_billed"
+require_line_count 1 '^theorem ce_app_beacon_later_sym_billed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineGated theorem ce_app_beacon_later_sym_billed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineGated\.symbolic_lor_later_bound_billed$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineGated dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineGated.symbolic_lor_later_bound_billed"
+require_line_count 1 '^theorem symbolic_lor_later_bound_billed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineGated theorem symbolic_lor_later_bound_billed"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"

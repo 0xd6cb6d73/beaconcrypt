@@ -2213,6 +2213,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgreeReceive
 
 import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgree
 
+import BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineGated
+
 /-!
 # Beaconcrypt-core verification root
 
