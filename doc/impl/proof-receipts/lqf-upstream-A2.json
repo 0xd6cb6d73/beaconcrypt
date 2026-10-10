@@ -1,6 +1,6 @@
 {
- "date": "2026-10-10T08:00:55.418988+00:00",
- "scope": "LQ-F upstream unit A2 (item 2 over the logged LQ-F source, stages S2, T, S3b, S7, T7 and S8 with the bills; LQ-F upstream design-v2 section 4.4 of /tmp/bc-arc-scratch/common-experiment/lqf-up, CE plan section 49 Q1): six Lean modules on unit D1's frozen definitions; proves the frozen U-L1 targets OpaqueBranchSlotsTwoTargetL and LaterSlotsTwoTarget exactly as stated (PqxdhDeploymentLaterServerItemKeys.opaqueBranchSlotsTwoTargetL_holds, laterSlotsTwoTarget_holds via laterSlotsTwo_of_generic, with the explicit forms opaqueBranchL_slots_two and later_slots_two). Reviewed at 57d046ed (semantic and hygiene, both APPROVE_WITH_NITS; 2 minor findings and 12 nits, some raised by both parts, including 2 record-only findings and 2 integration notes); the review fix pass is one Lean commit (d2fe186e: the docstrings of finishBoundL_le and preLowL_mono, the Once inventory row rehashed) and the documentation commit that updates this receipt (key review). Not integrated at this receipt.",
+ "date": "2026-10-10T09:01:49.533025+00:00",
+ "scope": "LQ-F upstream unit A2 (item 2 over the logged LQ-F source, stages S2, T, S3b, S7, T7 and S8 with the bills; LQ-F upstream design-v2 section 4.4 of /tmp/bc-arc-scratch/common-experiment/lqf-up, CE plan section 49 Q1): six Lean modules on unit D1's frozen definitions; proves the frozen U-L1 targets OpaqueBranchSlotsTwoTargetL and LaterSlotsTwoTarget exactly as stated (PqxdhDeploymentLaterServerItemKeys.opaqueBranchSlotsTwoTargetL_holds, laterSlotsTwoTarget_holds via laterSlotsTwo_of_generic, with the explicit forms opaqueBranchL_slots_two and later_slots_two). Reviewed at 57d046ed (semantic and hygiene, both APPROVE_WITH_NITS; 2 minor findings and 12 nits, some raised by both parts, including 2 record-only findings and 2 integration notes); the review fix pass is one Lean commit (d2fe186e: the docstrings of finishBoundL_le and preLowL_mono, the Once inventory row rehashed) and the documentation commit that updates this receipt (key review). Confirming review of 5cf0a1af: APPROVE_WITH_NITS (every finding resolved, no statement weaker; two documentation nits, one optional nit and one record, taken by the commit that records it, documentation only). Not integrated at the record commit; central moved to f0dc46bb (CE-12 P2) after the unit's base adf9d8fc, so the integration (PROTOCOL section 6) merges central into the branch above the record commit, runs the checks on that merge and fast-forwards central to it (or to a merge of a newer central, if central moves again first).",
  "basis": {
   "start": "adf9d8fc0300202830315d5f835bfb2268b0ec8f",
   "central_at_receipt": "f0dc46bb6473ab37ecf48e623f1ccb192bd6b3af",
@@ -52,7 +52,9 @@
     "subject": "Fix the LQ-F unit A2 docstrings found by review"
    }
   ],
-  "review_fix_documentation_commit": "the commit that updates this receipt with the key review (on top of d2fe186e)"
+  "review_fix_documentation_commit": "5cf0a1af2c9a6a757d2d05cf592ff6f9e74f217e",
+  "head_at_confirming_review": "5cf0a1af2c9a6a757d2d05cf592ff6f9e74f217e",
+  "confirming_review_record_commit": "the commit that adds review.confirming_review (on top of 5cf0a1af)"
  },
  "design": {
   "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/design-v2.md",
@@ -859,7 +861,7 @@
   }
  },
  "assumptions": "none added; no contract used; the premises of the targets are those of unit D1's frozen statements (R1, the HMAC-SHA-512 PRF game, the Extract game on uniform32, SourceFullCorrect, the logged source budget certified); the bills take the logged source budget, a Server-read cap that enters no bill (LQ-F design-v2 F17), KemBound and initBound",
- "claims": "confidentiality only; no T5, theorem A2 or T8 cited; no definition of unit A2 references a DH-keyed component (contamination scan); no fixed-HKDF item; no QPT or QROM claim; the sharpened R1 caveat (LQ-F design-v2 section 5) in the docstrings of opaqueBranchL_idealKeys_two, opaqueBranchL_slots_two, later_slots_two and the Keys module; item 2's confidentiality transfer only: T8, its compositions with T5 (authenticated_*) and the key-first stage S6 are not lifted (the first design's decision D7, kept by design-v2)",
+ "claims": "confidentiality only; no T5, theorem A2 or T8 cited; no definition of unit A2 references a DH-keyed component (contamination scan); no fixed-HKDF item; no QPT or QROM claim; the sharpened R1 caveat (LQ-F design-v2 section 5) in the docstrings of opaqueBranchL_idealKeys_two, opaqueBranchL_slots_two, later_slots_two and the Keys module; item 2's confidentiality transfer only: T8 (its authenticated_* forms, the composites with T5) and the key-first stage S6 are not lifted (the first design's decision D7, kept by design-v2)",
  "deviations": [
   "87 theorems against the estimate 101-135 (LQ-F design-v2 section 6; per module 14-18, 18-24, 20-28, 12-16, 10-14, 27-35, section 4.4): Root 6, Factor 10, Once 28, Hybrid 9, Keys 11, Bills 23",
   "Root: the 1 + qFinish per-request hidden counts (skelImplL_hidden, groupedClientL_group, postSkelL_hidden) and the 1 + qFinish rootClientL_root not built (the first design, section 3.10: only the two-read forms are needed); rootClientL_root and entryClientL_value are the forms with any bound n on the hidden reads of postSkelL; stage T's skelImplL_marked and groupedClientL_marked replace the per-request counts; splitL_uniform and opaqueBranchL_uniform additional",
@@ -870,11 +872,11 @@
   "Bills: logged grouped weight wGL charges private-pool requests their pool weight (so the Server read weighs 0; classically the identity reveal's class .other weighs 1); additional inheritL_forward, wGL_le, budgetL, sumL, sharedStartL_kinds, entryClientL_coins, entryDL_total, entryDkL_total, prfL_bills, idealKeysL_bills, laterSlot_bills_compiled and the definitions InheritsCutL, InheritsL; imports PqxdhRegistrationJointKemKeyTransferBills for PrfBills",
   "the commit message of 41b65c01 (Hybrid) says 10 guarded theorems; the module has 9"
  ],
- "remainder": "none within unit A2's scope: both U-L1 targets are proved and every module of LQ-F design-v2 section 4.4 is built; T8, its compositions with T5 and the key-first stage S6 are not lifted, by design; next: a confirming review of the review fix pass, then the integration (integration_notes), and unit B's ideal_compile_server for the later-quantum headlines",
+ "remainder": "none within unit A2's scope: both U-L1 targets are proved and every module of LQ-F design-v2 section 4.4 is built; T8 (its authenticated_* forms, the composites with T5) and the key-first stage S6 are not lifted, by design; next: the integration (integration, integration_notes; the confirming review of the review fix pass is recorded under review.confirming_review), and unit B's ideal_compile_server for the later-quantum headlines",
  "docs": [
-  "doc/impl/extract-composition.md: sections \"Unit A2: stages S2 to S8 over the logged source\", \"Unit A2: deviations from LQ-F design-v2\", \"Unit A2: names for consumers\", \"Unit A2: checks\", \"Unit A2: not claimed, and what remains\", \"Unit A2: review fix pass\"",
+  "doc/impl/extract-composition.md: sections \"Unit A2: stages S2 to S8 over the logged source\", \"Unit A2: deviations from LQ-F design-v2\", \"Unit A2: names for consumers\", \"Unit A2: checks\", \"Unit A2: not claimed, and what remains\", \"Unit A2: review fix pass\", \"Unit A2: confirming review\"",
   "doc/impl/common-deployment-experiment.md: status paragraph of LQ-F upstream unit A2; sections \"LQ-F upstream unit A2: what is proved\", \"LQ-F upstream unit A2: decisions, deviations and checks\"",
-  "doc/formal-verification-analysis.md: section \"Common deployment experiment, LQ-F upstream unit A2: item 2's remaining stages over the logged later-quantum source and the slot theorem\" (at the end)",
+  "doc/formal-verification-analysis.md: section \"Common deployment experiment, LQ-F upstream unit A2: item 2's confidentiality stages over the logged later-quantum source and the slot theorem\" (at the end; retitled by the confirming-review record commit, first \"... item 2's remaining stages over ...\")",
   "doc/impl/lqf-upstream-design-v2.md and doc/impl/lqf-upstream-design.md: snapshots of LQ-F design-v2 and the first LQ-F upstream design (added by the review fix pass)"
  ],
  "review": {
@@ -1137,7 +1139,7 @@
    "doc/impl/lqf-upstream-design.md",
    "doc/impl/proof-receipts/lqf-upstream-A2.json"
   ],
-  "docs_fix_commit": "the commit that adds this key (on top of d2fe186e)",
+  "docs_fix_commit": "5cf0a1af2c9a6a757d2d05cf592ff6f9e74f217e",
   "checks": {
    "dev_before_commit": [
     {
@@ -1311,7 +1313,7 @@
      "command": "coord.sh lease mem claude @nix lqf-A2fix-inventory-lean-commit --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C /tmp/beaconcrypt-deployment-lqf-item2/beaconcrypt-core check-inventory SHELL=bash"
     }
    ],
-   "clean_tree_inventory_note": "the documentation commit changes only files under doc/, which check-inventory does not read, so the run at d2fe186e covers its tree; a run on the clean tip after the documentation commit is left to the confirming review or the integration checks receipt",
+   "clean_tree_inventory_note": "the documentation commit changes only files under doc/, which check-inventory does not read, so the run at d2fe186e covers its tree; a run on the clean tip after the documentation commit is left to the confirming review or the integration checks receipt (it ran at 5cf0a1af, lease 00000511, exit 0, empty working-tree status before and after; recorded under review.confirming_review.clean_tree_inventory)",
    "docstring_scan": {
     "script": "/tmp/bc-arc-scratch/common-experiment/lqf-up/A2/fix/scripts/opens_check.py",
     "script_sha256": "f7ba2ce7fe5684fb25a53abdc99e47a845b67eec7ea94808177639d6d37fee5f",
@@ -1333,13 +1335,114 @@
    },
    "diff_check": "git diff --cached --check clean before the Lean commit; git diff --check clean on the documentation changes"
   },
-  "status": "review fix pass complete; awaiting a confirming review; not integrated"
+  "status": "review fix pass complete (d2fe186e, 5cf0a1af) and confirmed by a confirming review of 5cf0a1af (APPROVE_WITH_NITS: every finding resolved, no statement weaker; two documentation nits, one optional nit and one record, taken by the commit that records it); not integrated at the record commit",
+  "confirming_review": {
+   "reviewed_range": "57d046ed0083901bfb54c61aa27af7d9f760321f..5cf0a1af2c9a6a757d2d05cf592ff6f9e74f217e",
+   "reviewed_commit": "5cf0a1af2c9a6a757d2d05cf592ff6f9e74f217e",
+   "date": "2026-10-10",
+   "kind": "review of the fix pass; no ref changed (its merge preview wrote no object)",
+   "scope": "the review fix pass (d2fe186e: the docstrings of finishBoundL_le and preLowL_mono, the Once inventory row; 5cf0a1af: analysis, item 2 guide, common-deployment guide, receipt, two design snapshots): the findings of the review of 57d046ed, statements, guards, inventory rows, receipt hashes, documentation claims against the code, central's history, the snapshots, one Lean check of Once, and a merge preview with central f0dc46bb",
+   "verdict": "APPROVE_WITH_NITS: every finding of the 57d046ed review resolved at 5cf0a1af, no statement weaker; two nits (the integration notes listed five conflicting files where the merge with f0dc46bb conflicts in three, and called the previews read-only; the analysis entry named T8 in two inconsistent ways, and \"T8, its compositions with T5\" was redundant), one optional nit (the analysis heading still said \"remaining stages\") and one record (the review's own checks; no action), all taken by the commit that records the review",
+   "checks": [
+    "HEAD = origin/codex/deployment-lqf-item2 = 5cf0a1af, worktree clean; range d2fe186e (Lean) and 5cf0a1af (documentation), both commit messages end with the exact footer",
+    "Lean diff 57d046ed..5cf0a1af: only the two docstring lines of finishBoundL_le and preLowL_mono in the Once module (and its inventory row 6f4417c1 -> 1663fd23); the docstrings match the code (ownerCount; CountsCreates, stepMono_composeOpt with combine_mono)",
+    "guards: 6/10/28/9/11/23 exact guards, one per theorem, allowed axioms only (propext, Classical.choice, Quot.sound); 15 definitions; no sorry, admit, axiom, opaque or native_decide (guards.py)",
+    "Once at the clean head without -o through coord.sh lean against lqf-up/A2/fix/leanpath: exit 0, empty log (once below)",
+    "inventory: the rows of the six modules, the root and check-inventory.sh equal the SHA-256 of the head's files; 1908 handwritten-lean rows = 1915 .lean files less 7 extraction files",
+    "the module oleans of lqf-up/A2/fix/olean match the receipt's hashes after the fix pass; the root olean ef51deec matches",
+    "receipt: 86 path/hash pairs checked, 85 match; the remaining one, modules[2].source_sha256_committed, is Once's source at a0a204f1, historical by design (after the fix pass the receipt records 1663fd23) (rcheck.py)",
+    "central's reflog: fast-forward adf9d8fc..f0dc46bb at 09:52:13 +0200, after the last Lean commit (09:51:45) and before 3fbe5933 (10:01:11); messages 505 (09:47:44) and 506 (09:53:28); basis.central_note accurate",
+    "snapshots: removing the inserted paragraph and its blank line restores the scratch design-v2.md (8d8aa597) and design.md (542035f6) byte for byte; no wrapped lines (snapcheck.py); decision D7 in both designs; open point 3 of later-quantum-lqf-spike.md lists T8",
+    "documentation claims verified against the code: the bill constants (PrfBills, entryDL_total + 64, entryDkL_total + 216), keyScheduleBound with four advantages, RelC, Rel and liftT_rel, compile_server_reads (at most one Server read)",
+    "leases 00000507 (d2fe186e) and 00000511 (5cf0a1af) in the lease history, exit 0, clean before and after",
+    "merge preview without object writes: git merge-file (Myers and histogram) on scratch copies of the adf9d8fc, f0dc46bb and 5cf0a1af blobs: conflicts only in BeaconcryptCore.lean (1 hunk), reviewed-inventory.txt (3) and the analysis (1); check-inventory.sh (central's sections first, count line 1908) and the common-deployment guide merge without a conflict (the same at 57d046ed)"
+   ],
+   "check_scripts": {
+    "guards.py": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/A2/confirm/scripts/guards.py",
+     "sha256": "d632acdf97e64a6a0c95ed412d0fbc0fb1973775c2304fbcbd4d659345d8f5ff"
+    },
+    "rcheck.py": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/A2/confirm/scripts/rcheck.py",
+     "sha256": "63516a88549eac20913f4900309982261d944b9e6a12c98d483b9f654daf550e"
+    },
+    "snapcheck.py": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/A2/confirm/scripts/snapcheck.py",
+     "sha256": "7f3b2bbe1d18d2453e5d20c739499a0592e7268dd0d4a8b217678b238b0f2a32"
+    }
+   },
+   "once": {
+    "module": "BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemOnce",
+    "head": "5cf0a1af2c9a6a757d2d05cf592ff6f9e74f217e",
+    "source_sha256": "1663fd2347d256dc09d70afd842a7aa48208969bc1d30624f3401a86a6815cf2",
+    "exit": 0,
+    "start": "2026-10-10T08:48:32Z",
+    "end": "2026-10-10T08:48:40Z",
+    "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/A2/confirm/logs/once.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "log_bytes": 0,
+    "leanpath": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/A2/fix/leanpath",
+     "sha256": "5150c34319b5815806e242f63ba21a202a8c45d212975911794f4a25c2a31dc1"
+    },
+    "command": "coord.sh lean claude <label> -- timeout 180 lean -j1 -M8000 --root=<worktree>/beaconcrypt-core/proofs/lean <Once source> (no -o), LEAN_PATH = lqf-up/A2/fix/leanpath"
+   },
+   "clean_tree_inventory": {
+    "tag": "tip-clean",
+    "who": "implementer, after the review fix pass documentation commit",
+    "exit": 0,
+    "head": "5cf0a1af2c9a6a757d2d05cf592ff6f9e74f217e",
+    "dirty_paths_before": 0,
+    "dirty_paths_after": 0,
+    "start": "2026-10-10T08:44:33Z",
+    "end": "2026-10-10T08:46:20Z",
+    "lease": "00000511",
+    "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/A2/fix/logs/inventory-tip-clean.log",
+    "log_sha256": "2dcd19039919e9a1bef8337ab82a82fe01ff23afd8be951fd1fc2d31f1b607b0",
+    "result_line": "Formal-verification inventory matches the reviewed boundary.",
+    "command": "coord.sh lease mem claude @nix lqf-A2fix-inventory-tip-clean --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C /tmp/beaconcrypt-deployment-lqf-item2/beaconcrypt-core check-inventory SHELL=bash",
+    "note": "on the clean tree at 5cf0a1af (empty git status before and after); recorded only in scratch (A2/fix/NOTES.md) until this record; the integration's checks receipt repeats check-inventory on the merged tip"
+   },
+   "merge_preview": {
+    "dir": "/tmp/bc-arc-scratch/common-experiment/lqf-up/A2/confirm/merge",
+    "files": 39,
+    "note": "scratch copies of base (adf9d8fc), ours (5cf0a1af), theirs (f0dc46bb) and git merge-file results (.merged Myers, .mergedh histogram)"
+   },
+   "findings_fixed": [
+    "nit: integration_notes[1] and the item 2 guide's \"Integration notes\" now say that the merge conflicts in BeaconcryptCore.lean, reviewed-inventory.txt and the analysis, and that check-inventory.sh and the common-deployment guide merge without a conflict (check-inventory.sh with central's sections first and the count line silently at 1908); \"read-only\" is replaced by \"no ref or file changed\" (the semantic review's trial git merge-tree --write-tree wrote unreferenced objects); both keep a note of the first wording",
+    "nit: the analysis entry's \"What this means\" paragraph now says \"Item 2's theorem T8 (the composite of the authentication theorem T5 with T7, in its `authenticated_*` forms) and the key-first stage S6 are deliberately not carried to this program\"; optional part taken: the item 2 guide (\"Unit A2: not claimed, and what remains\"), the common-deployment guide's open points, claims and remainder here write \"T8 (its authenticated_* forms, the composites with T5)\"; the records of the review fix pass (review.findings, the fix-pass bullets) keep the wording they quote",
+    "nit (optional): the analysis heading is now \"Common deployment experiment, LQ-F upstream unit A2: item 2's confidentiality stages over the logged later-quantum source and the slot theorem\", and docs[2] matches; the guides' unit labels (\"stages S2 to S8\") are kept, their texts state which stages are carried over"
+   ],
+   "records": [
+    "the confirming review's own checks, above (no action)",
+    "the status paragraphs of both guides and the analysis entry's last sentences: the \"not integrated\" sentences now record the confirming review and the integration's route (merge of central above the record commit, checks on the merge, fast-forward of central); the integration message records the outcome",
+    "unit A1's status paragraph in the item 2 guide still said \"Not integrated\" although unit A1 was integrated at adf9d8fc; corrected by the same commit"
+   ],
+   "files_changed": [
+    "doc/formal-verification-analysis.md",
+    "doc/impl/common-deployment-experiment.md",
+    "doc/impl/extract-composition.md",
+    "doc/impl/proof-receipts/lqf-upstream-A2.json"
+   ],
+   "lean_change": "none (no file under beaconcrypt-core/ changed)",
+   "notes": {
+    "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/A2/confirm/NOTES.md",
+    "sha256": "c42193932ba2b8b8b57b10f3c07ee557bec85d7f72f3d8841de2a6cfb02c3b4f"
+   },
+   "scratch": "/tmp/bc-arc-scratch/common-experiment/lqf-up/A2/confirm/ (review checks, merge preview), /tmp/bc-arc-scratch/common-experiment/lqf-up/A2/int (record-commit scripts, backups, integration)",
+   "git_diff_check": {
+    "range": "5cf0a1af2c9a6a757d2d05cf592ff6f9e74f217e..working tree (the confirming-review record, before this receipt was written)",
+    "exit": 0,
+    "output": ""
+   }
+  }
  },
  "integration_notes": [
   "central is f0dc46bb (CE-12 P2, message 506); merge base adf9d8fc; the branch does not contain f0dc46bb",
-  "the merge conflicts only in beaconcrypt-core/proofs/check-inventory.sh, BeaconcryptCore.lean, reviewed-inventory.txt, doc/formal-verification-analysis.md and doc/impl/common-deployment-experiment.md, each two insertions at the same place; doc/impl/extract-composition.md and this receipt merge cleanly (both reviews, read-only previews)",
+  "the merge conflicts in BeaconcryptCore.lean (the end of the import block), reviewed-inventory.txt (the digest rows of BeaconcryptCore.lean and check-inventory.sh, and the module rows at the end) and the analysis (its end); check-inventory.sh and the common-deployment guide merge without a conflict (check-inventory.sh with central's sections first and the count line silently at 1908); doc/impl/extract-composition.md and this receipt merge cleanly (previews by both reviews and the confirming review; no ref or file changed). Corrected after the confirming review; the note first said: \"the merge conflicts only in beaconcrypt-core/proofs/check-inventory.sh, BeaconcryptCore.lean, reviewed-inventory.txt, doc/formal-verification-analysis.md and doc/impl/common-deployment-experiment.md, each two insertions at the same place; doc/impl/extract-composition.md and this receipt merge cleanly (both reviews, read-only previews)\"",
   "both sides took [handwritten-lean] 1902 -> 1908 with the identical edit, so the count line merges without a conflict at 1908 although the merged tree has 1914 handwritten Lean files (CE-12 P2's six modules and unit A2's six)",
   "at the integration (PROTOCOL section 6): keep both sides whole, central first; coord.sh inv recount and confirm 1914; coord.sh inv rehash (check-inventory.sh last); focused root import check; focused check-inventory on the merge",
   "the per-commit counts of this unit (1902 to 1908) in the guides and this receipt stay correct as branch history"
- ]
+ ],
+ "integration": "not integrated at the record commit; central moved to f0dc46bb (CE-12 P2) after the unit's base adf9d8fc, so the integration (PROTOCOL section 6) merges central into the branch above the record commit, runs the checks on that merge and fast-forwards central to it (or to a merge of a newer central, if central moves again first), with the checks of that tip in the checks receipt /tmp/bc-arc-scratch/common-experiment/lqf-up/A2/int/checks-receipt.json and the outcome in the integration message to all; the record commit replaced the \"not integrated\" sentences of the two guides' status paragraphs and of the analysis entry with this route"
 }
