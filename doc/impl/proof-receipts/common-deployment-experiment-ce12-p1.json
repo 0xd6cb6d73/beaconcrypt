@@ -1,6 +1,6 @@
 {
- "date": "2026-10-10T04:52:37.207612+00:00",
- "scope": "CE-12 P1 (track ce12/p1): the classical headline theorems of the common deployment experiment (design-v2 sections 3-6 and 11): the per-target chain in U7's names, the predict-then-compare anomaly bound, the events and containments, and CE-KT, CE-OR, CE-UKS, CE-APP and CE-LOR, each per target and as an exact sum over the designated targets with coefficient one. Reviewed (semantic, composition and hygiene lenses at 4365e748) and every finding fixed (Lean commit 6d13ef8b plus the documentation commit adding this receipt); not integrated.",
+ "date": "2026-10-10T05:08:03.759790+00:00",
+ "scope": "CE-12 P1 (track ce12/p1): the classical headline theorems of the common deployment experiment (design-v2 sections 3-6 and 11): the per-target chain in U7's names, the predict-then-compare anomaly bound, the events and containments, and CE-KT, CE-OR, CE-UKS, CE-APP and CE-LOR, each per target and as an exact sum over the designated targets with coefficient one. Reviewed (semantic, composition and hygiene lenses at 4365e748) and every finding fixed (Lean commit 6d13ef8b and documentation commit bc86ef4d); confirming review of bc86ef4d: every finding resolved, one optional documentation nit (the analysis's CE-KT table keyed by Diffie-Hellman inputs instead of the 128 bytes of Diffie-Hellman outputs), taken by the commit that records the review (documentation only); not integrated at the record commit.",
  "basis": {
   "start": "ab9986efb4c323c9ca62be9774405e0a880cb747",
   "central_at_receipt": "ab9986efb4c323c9ca62be9774405e0a880cb747",
@@ -9,26 +9,55 @@
  "topic": {
   "branch": "codex/deployment-ce12",
   "worktree": "/tmp/beaconcrypt-deployment-ce12",
-  "head_at_receipt": "6d13ef8bb74d7ffdcd80d2668eea85f747afd2cb",
-  "note": "the documentation commit that adds this receipt follows head_at_receipt and changes no Lean or inventory file"
+  "head_at_receipt": "bc86ef4da3e696a2f582f4a662b0f3c316126c56",
+  "note": "the commit that records the confirming review (and last regenerates this receipt) follows head_at_receipt and changes no Lean or inventory file"
  },
  "plan": {
   "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
-  "sha256": "f3157425eacbaab30a3169b2090cb3c5bc52e7921f25255467afcaac29fa083c",
-  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/docs/plan.at-fix-receipt-f3157425.md",
+  "sha256": "125e44635d4deb34681cf320e61af5d9fea6fefb30fe0691fe5b9ad0b76a7304",
+  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/int/docs/plan.at-record-125e4463.md",
+  "dated_copy_sha256": "125e44635d4deb34681cf320e61af5d9fea6fefb30fe0691fe5b9ad0b76a7304",
   "sections": [
    98,
-   99
+   99,
+   100
   ],
-  "dated_copy_at_p1": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/docs/plan.at-p1-receipt-d3b5f342.md",
-  "backup_before": {
-   "path": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/docs/plan.before-p1-e9ef4f7f.md",
-   "sha256": "e9ef4f7f7e840db9f56ec78d77d564c7487ed439cf3cb56ccef6b3b12bd16d6f"
-  },
-  "backup_before_fix": {
-   "path": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/docs/plan.before-fix-d3b5f342.md",
-   "sha256": "d3b5f34279ca3f8f22d96a6a811812aa0cff5fce09ef5b5560f91f2ce0992f56"
-  }
+  "section_100": "the confirming review of bc86ef4d and its record commit",
+  "note": "sections 95-97 are the CE-11b completion, the CE-12 design and the LQ-F upstream design; 98-100 are this track's; central ab9986ef's snapshot body (working plan 96cb560c, through section 94) is a prefix of this plan",
+  "earlier": [
+   {
+    "note": "hash recorded by the review fix pass bc86ef4d (through section 99)",
+    "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/docs/plan.at-fix-receipt-f3157425.md",
+    "dated_copy_sha256": "f3157425eacbaab30a3169b2090cb3c5bc52e7921f25255467afcaac29fa083c"
+   },
+   {
+    "note": "hash recorded by the documentation commit 4365e748 (through section 98)",
+    "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/docs/plan.at-p1-receipt-d3b5f342.md",
+    "dated_copy_sha256": "d3b5f34279ca3f8f22d96a6a811812aa0cff5fce09ef5b5560f91f2ce0992f56"
+   }
+  ],
+  "backup_before": [
+   {
+    "path": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/docs/plan.before-p1-e9ef4f7f.md",
+    "sha256": "e9ef4f7f7e840db9f56ec78d77d564c7487ed439cf3cb56ccef6b3b12bd16d6f",
+    "note": "the live plan before P1"
+   },
+   {
+    "path": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/docs/plan.before-fix-d3b5f342.md",
+    "sha256": "d3b5f34279ca3f8f22d96a6a811812aa0cff5fce09ef5b5560f91f2ce0992f56",
+    "note": "the live plan before the review fix pass"
+   },
+   {
+    "path": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/int/docs/plan.before-record-f3157425.md",
+    "sha256": "f3157425eacbaab30a3169b2090cb3c5bc52e7921f25255467afcaac29fa083c",
+    "note": "the live plan when the record commit started"
+   },
+   {
+    "path": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/int/docs/plan.at-record-b84a3863.md",
+    "sha256": "b84a3863c402583b0faa1ebcc1b02e164b8e7dcce1017f870973fc61ac9924e7",
+    "note": "intermediate: section 100 first named the receipt key review.docs_record_commit; corrected to review.docs_fix_commit before the commit"
+   }
+  ]
  },
  "design": {
   "path": "/tmp/bc-arc-scratch/common-experiment/ce12/design-v2.md",
@@ -89,6 +118,10 @@
   {
    "commit": "6d13ef8bb74d7ffdcd80d2668eea85f747afd2cb",
    "subject": "Drop the unused decoder agreement from CE-OR"
+  },
+  {
+   "commit": "bc86ef4da3e696a2f582f4a662b0f3c316126c56",
+   "subject": "Document the CE-12 P1 review fix pass"
   }
  ],
  "files_sha256": {
@@ -761,7 +794,7 @@
   "ineligible LOR runs (eligibility-weighted advantage)"
  ],
  "open_points": [
-  "integration into central (not done: the task excluded it); refresh the committed plan snapshot then",
+  "integration into central (PROTOCOL section 6), after the commit that records the confirming review; that commit refreshes the committed plan snapshot (plan_snapshot); if central changes the snapshot before the integration, the integration takes the newer wholesale copy of the working plan",
   "P2 and P3 per design-v2 section 11"
  ],
  "checks": {
@@ -982,6 +1015,17 @@
     "dirty_after": 4,
     "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/logs/inventory-uks.log",
     "log_sha256": "91b8f85f31febe8821d5057b8ef8105baaff2e2ba06742d634e68dfaf47b0bb5"
+   },
+   "fix-final-head": {
+    "status": 0,
+    "commit": "bc86ef4da3e696a2f582f4a662b0f3c316126c56",
+    "start": "2026-10-10T04:53:05Z",
+    "end": "2026-10-10T04:54:51Z",
+    "dirty_before": 0,
+    "dirty_after": 0,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/logs/inventory-fix-final-head.log",
+    "log_sha256": "24079cbfd137bef9441168f077187c9ee09a7be7b8346afedb22782382678539",
+    "note": "focused check-inventory (@nix) on the clean tree right after the review fix pass documentation commit bc86ef4d; recorded by the commit that records the confirming review"
    }
   },
   "guard_scan": "116 theorems, 116 exact guards in declaration order, axioms within propext, Classical.choice, Quot.sound; no sorry, admit, axiom, native_decide or implemented_by",
@@ -989,7 +1033,7 @@
   "diff_check": "git diff --cached --check before every commit: clean"
  },
  "review": {
-  "status": "reviewed at 4365e748; every finding fixed",
+  "status": "reviewed at 4365e748; every finding fixed (6d13ef8b, bc86ef4d); confirming review of bc86ef4d: every finding resolved, one optional documentation nit, taken by the commit that records the review; not integrated at the record commit",
   "reviewed_head": "4365e748ae1cfc40eb29b7362254443ab5d7640e",
   "lenses": {
    "semantic": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/review-semantic",
@@ -998,7 +1042,7 @@
   },
   "fix_commits": [
    "6d13ef8bb74d7ffdcd80d2668eea85f747afd2cb",
-   "the documentation commit adding this receipt"
+   "bc86ef4da3e696a2f582f4a662b0f3c316126c56"
   ],
   "findings": [
    {
@@ -1046,6 +1090,135 @@
     "title": "confirmations (semantic, composition)",
     "outcome": "no change needed"
    }
-  ]
+  ],
+  "docs_fix_commit": "bc86ef4da3e696a2f582f4a662b0f3c316126c56",
+  "confirming_review": {
+   "reviewed_range": "4365e748ae1cfc40eb29b7362254443ab5d7640e..bc86ef4da3e696a2f582f4a662b0f3c316126c56",
+   "reviewed_commit": "bc86ef4da3e696a2f582f4a662b0f3c316126c56",
+   "date": "2026-10-10",
+   "scope": "the review fix pass (Lean commit 6d13ef8b, documentation commit bc86ef4d): the findings of the P1 review at 4365e748, statements, guards, the receipt, the documentation",
+   "verdict": "every finding of the P1 review resolved at bc86ef4d (no further action for any of them); one new optional nit, taken by the commit that records the review",
+   "checks": [
+    "the four modules the fix pass changed (Anomaly, Contain, KeyTransfer, Origin) recompiled without -o through coord.sh lean at the clean head bc86ef4d against ce12/p1/leanpath2 (logs tagged lp2), and Origin and Lor against ce12/p1/leanpath3 (logs tagged lp3): exit 0, empty logs",
+    "confirm/guards.py over the nine modules: 116 theorems, 116 exact guards in declaration order, every axiom list within propext, Classical.choice, Quot.sound",
+    "confirm/receipt_check.py: the receipt's hashes of the root, reviewed-inventory.txt and check-inventory.sh, the commit list, and each module's source hash, theorem list, guard count, axiom profile, imports, last commit and fix-pass recheck record match the head; the olean2/olean3 comparison and the leanpath3 hash match"
+   ],
+   "recompiles": {
+    "PqxdhDeploymentHeadlineAnomaly.lp2": {
+     "exit": 0,
+     "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/confirm/logs/PqxdhDeploymentHeadlineAnomaly.lp2.log",
+     "log_bytes": 0,
+     "head": "bc86ef4da3e696a2f582f4a662b0f3c316126c56",
+     "dirty_paths": 0,
+     "source_sha256": "98a3ebccfdf8b12378ded229bf17862e1b7c87fe3b0c38bb12fac33a6471acdf",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/leanpath2"
+    },
+    "PqxdhDeploymentHeadlineContain.lp2": {
+     "exit": 0,
+     "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/confirm/logs/PqxdhDeploymentHeadlineContain.lp2.log",
+     "log_bytes": 0,
+     "head": "bc86ef4da3e696a2f582f4a662b0f3c316126c56",
+     "dirty_paths": 0,
+     "source_sha256": "df0b6626213a913e0ce20e543595540e03a2a8327e2a3cc698e6dae2ec0c6a32",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/leanpath2"
+    },
+    "PqxdhDeploymentHeadlineKeyTransfer.lp2": {
+     "exit": 0,
+     "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/confirm/logs/PqxdhDeploymentHeadlineKeyTransfer.lp2.log",
+     "log_bytes": 0,
+     "head": "bc86ef4da3e696a2f582f4a662b0f3c316126c56",
+     "dirty_paths": 0,
+     "source_sha256": "239b3b52bd343e4219220301887ea38b9d40313ca32b705c0b65f75ba10aedff",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/leanpath2"
+    },
+    "PqxdhDeploymentHeadlineOrigin.lp2": {
+     "exit": 0,
+     "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/confirm/logs/PqxdhDeploymentHeadlineOrigin.lp2.log",
+     "log_bytes": 0,
+     "head": "bc86ef4da3e696a2f582f4a662b0f3c316126c56",
+     "dirty_paths": 0,
+     "source_sha256": "aab75bfdf24d2e17d20ded4b59173e7a001e8df62923bc20ef16e88b480d9e1f",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/leanpath2"
+    },
+    "PqxdhDeploymentHeadlineOrigin.lp3": {
+     "exit": 0,
+     "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/confirm/logs/PqxdhDeploymentHeadlineOrigin.lp3.log",
+     "log_bytes": 0,
+     "head": "bc86ef4da3e696a2f582f4a662b0f3c316126c56",
+     "dirty_paths": 0,
+     "source_sha256": "aab75bfdf24d2e17d20ded4b59173e7a001e8df62923bc20ef16e88b480d9e1f",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/leanpath3"
+    },
+    "PqxdhDeploymentHeadlineLor.lp3": {
+     "exit": 0,
+     "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/confirm/logs/PqxdhDeploymentHeadlineLor.lp3.log",
+     "log_bytes": 0,
+     "head": "bc86ef4da3e696a2f582f4a662b0f3c316126c56",
+     "dirty_paths": 0,
+     "source_sha256": "d3a7c3f211166848f654c3c8c75239039cf4e68b8c2d2c6544c044394ad61dca",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/leanpath3"
+    }
+   },
+   "reruns_for_this_record": {
+    "guards": {
+     "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/int/logs/confirm-guards-rerun.log",
+     "log_sha256": "58d82691d402a57438d0cbd45faac8a9969f7b69be6c96f47d2bf40aee2a10f3",
+     "result": "total theorems 116 guards 116; order_ok in all nine modules; no bad guard"
+    },
+    "receipt_check": {
+     "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/int/logs/confirm-receipt-rerun.log",
+     "log_sha256": "3066a4525b825fbb120395dd2a54b449922f066217d1bd93ca6024ce5116c7e6",
+     "result": "every check passes (files ok, commits, nine modules OK, theorem_total 116, leanpath3 sha)"
+    }
+   },
+   "check_scripts": {
+    "check.sh": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/confirm/check.sh",
+     "sha256": "207dbe2fde20ab0b21d7b268ba4cd90f1227f0ac6be6fb59c8c22efee50056f6"
+    },
+    "guards.py": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/confirm/guards.py",
+     "sha256": "6ac89d2ee73f01fbd94a07318c52d051d4d4f3fb1cfebabfed59f4ec90a027ac"
+    },
+    "receipt_check.py": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/confirm/receipt_check.py",
+     "sha256": "7c33964f58c03cd53d8c451eb41c5323eee09fa83bc4cbc458db4570bcf09d37"
+    }
+   },
+   "findings_fixed": [
+    "nit (optional, analysis): the CE-KT paragraph said the ideal game's two-entry table is keyed by \"their Diffie-Hellman inputs\" and the honest pairing \"uses the same Diffie-Hellman inputs\"; it now says \"keyed by the 128 bytes of Diffie-Hellman outputs that feed the key schedule\" and \"reads the same Diffie-Hellman outputs\" (the guide and the module documentation already said so)"
+   ],
+   "records": [
+    "every finding of the P1 review at 4365e748 resolved at bc86ef4d (no action)",
+    "the post-commit focused check-inventory at the clean bc86ef4d (checks.inventories.fix-final-head) is recorded"
+   ],
+   "files_changed": [
+    "doc/impl/common-deployment-experiment.md",
+    "doc/impl/common-deployment-experiment-plan.md",
+    "doc/formal-verification-analysis.md",
+    "doc/impl/proof-receipts/common-deployment-experiment-ce12-p1.json"
+   ],
+   "lean_change": "none (no file under beaconcrypt-core/ changed)",
+   "scratch": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/confirm/ (review checks), /tmp/bc-arc-scratch/common-experiment/ce12/p1/int/ (record-commit scripts, plan copies, integration)"
+  }
+ },
+ "plan_snapshot": {
+  "path": "doc/impl/common-deployment-experiment-plan.md",
+  "sha256": "30abaef7f283fc0b69909ec3d40a02739488056077d805d9534cac18b49081b8",
+  "refreshed_from_sha256": "125e44635d4deb34681cf320e61af5d9fea6fefb30fe0691fe5b9ad0b76a7304",
+  "through_section": 100,
+  "sections": "0-18 and the decision sections 19-100",
+  "script": {
+   "path": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/int/scripts/snapshot.py",
+   "sha256": "dd737012e357aae2cce53d586f732280e54bbcf06ac71c4eb26f4bfa04b886a9"
+  },
+  "note": "refreshed in the commit that records the confirming review as a wholesale copy of the working plan: the body equals the working plan from its third line; the snapshot paragraph, built from central ab9986ef's, records the hash and the refresh history. This branch carried central ab9986ef's snapshot (working plan 96cb560c, through section 94, a prefix of this body) unchanged until this commit; the refresh adds section 94's integration bullet and sections 95 to 100. If central changes the snapshot before the integration, the integration merge takes the newer wholesale copy instead of merging by hand and states the refresh in the integration record"
+ },
+ "commits_note": "Commits on the topic after the basis made before this receipt was last generated; the commit that records the confirming review (and last regenerates this receipt) is not listed.",
+ "integration_notes": "/tmp/bc-arc-scratch/common-experiment/ce12/p1/int/NOTES.md",
+ "git_diff_check": {
+  "range": "ab9986efb4c323c9ca62be9774405e0a880cb747..working tree (with the confirming-review record, before this receipt was written)",
+  "exit": 0,
+  "output": ""
  }
 }
