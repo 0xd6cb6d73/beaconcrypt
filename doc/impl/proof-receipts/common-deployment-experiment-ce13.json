@@ -2,7 +2,7 @@
  "stage": "CE-13: the documentation stage of the common deployment experiment (handoff item 3), the computational column of the symbolic/computational matrix; documents, plus one section of the trust-boundary inventory in the review fix pass",
  "topic": "codex/deployment-ce13",
  "central_basis": "529e2c8bf414f680ac57b159365280aab2e2f3f2",
- "central_note": "codex/full-proof-composition with CE-12 P1, P2, P2b, P3, P4, D-ct (integration message 527) and the production composition of items 3 and 7 (integration message 529) integrated",
+ "central_note": "codex/full-proof-composition with CE-12 P1, P2, P2b, P3, P4, D-ct (integration message 527) and the production composition of items 3 and 7 (integration message 529) integrated; merged before integration with central a2665670 (the production forms of the CE-12 D-ct closed forms, integration message 531)",
  "production_dct_pending": {
   "branch": "codex/deployment-boundary-production",
   "lean_commit": "fa57acd91147d72482ef4f0e2086e6e8c6f1d587",
@@ -10,26 +10,26 @@
   "documents_commit": "5b288801cf14edef352300d7635b14aee658f429",
   "branch_tip_at_fix_pass": "02cec0fda7f6f880bde7254c77cb7c900100d56c",
   "theorems": "48: 42 _dct and 4 _dct_full closed forms, ctgap_term_le, ctgap_term_billed (module PqxdhDeploymentProductionHeadlinesDct)",
-  "status": "not on central at this receipt; mentioned as pending integration, not cited as results"
+  "status": "superseded: not on central at the first version and the review fix pass; on central since a2665670 (integration message 531, Lean fa57acd9 with the docstring change 0543c7e6), merged into the topic before its integration; cited as results since the integration-merge note commit"
  },
  "authorship": "Claude",
- "state": "written (986262ab); reviewed by an independent review (semantic, completeness, hygiene lenses) of 986262ab; review fix pass 4dc0c791; confirming review of 4dc0c791: APPROVE_WITH_NITS, its four nits taken in the commit that records it; not integrated",
+ "state": "written (986262ab); reviewed by an independent review (semantic, completeness, hygiene lenses) of 986262ab; review fix pass 4dc0c791; confirming review of 4dc0c791: APPROVE_WITH_NITS, its four nits taken in the commit that records it; merged with central a2665670 (8358d8e3) before integration; not integrated at this receipt",
  "documents": {
   "guide": {
    "path": "doc/impl/deployment-experiment.md",
-   "sha256": "b636dd1713843185105b8d235cda8ece5f3fcb4bc41cab9e889d3d40f3a6c379"
+   "sha256": "6452088961959ecb02b4a1fc8eb5c61d708e2af6db9b42eb2387c68332ef0a96"
   },
   "source_scope": {
    "path": "doc/proverif-source-scope.md",
-   "sha256": "8547733cd0a4efd3c4bb160a160085de7cc9ab750a2db165e050b5c72dfd77dd"
+   "sha256": "0a4ebb3469aba752356b748bbf287be267fcf203488572be03da83a671e05624"
   },
   "composition_assumptions": {
    "path": "doc/composition-assumptions.md",
-   "sha256": "3c86850c4d07cf4bdf16b812178229448c981c91ea836c8df2e9fa84175c650f"
+   "sha256": "5a131522c8f099b4fb73e3c7376b854de98b854b3b13d451db1f3ad78fde458a"
   },
   "analysis": {
    "path": "doc/formal-verification-analysis.md",
-   "sha256": "7dce72bdce7ff5175afdfaefd8984268c4b4b091132f814f0d753f399140dddb"
+   "sha256": "6e681e8591806d20f0e086bbddecea038419c084dab26a9368b93ca3d65e2305"
   },
   "plan_snapshot": {
    "path": "doc/impl/common-deployment-experiment-plan.md",
@@ -41,17 +41,17 @@
   },
   "reviewed_inventory": {
    "path": "beaconcrypt-core/proofs/reviewed-inventory.txt",
-   "sha256": "910213d6a4380b6aa1dce87215fa47704a4346231eb239eb56cf44eb1383d450"
+   "sha256": "2c055a5eb358b8fcf84d060912dcc46df35d4570de17e75937d44011d4acb444"
   }
  },
  "documents_edits": {
-  "guide": "new file; review fix pass: status line, finish row (plan section 25), budgets (plan section 22 cap loosening), compile argument (gap, collision and D-ct closures, item 7 joins), terms and bills, rows table, production forms, new section 'Name index of the published forms', not-claimed bullet, corrections 1, 2 and 11, checks, new section 'Review fix pass'; confirming-review record: nits 2, 3 and 4 (production paragraph, event-projection paragraph, correction 5, review fix pass item 1), status line, new section 'Confirming review'",
-  "source_scope": "new final section 'Computational column: the common deployment experiment'; review fix pass: conventions (exception (a)), premise bundles (setup-carried contracts), terms (closures), production paragraph, index statuses (A2 rows, A2-provenance, L2-origin), NBF owners in the symbolic-only lists, A1-root pin line 116, CE-A1 condition per owner, either-side ce_app_sym family, later CE-APP-L and CE-LOR-L forms, new entry for CE-KT-L at rows 168-173, ce_plain_every_b2s without _target form; confirming-review record: s2b-S1 symbolic-only list names the owners with a rejected bundle call in Fresh (nit 1), production paragraph names the symbolic-eligibility forms and the gap bounds (nit 3), App-b2s eligibility wording (nit 4)",
-  "composition_assumptions": "reveal-capability text of section 'The experiment a composition theorem must cover' (formerly line 33) amended to the plan section 19 profile with the section 27 exceptions; a note appended to the CE-3 codec paragraph; new final section 'Common deployment experiment: approved profile and scope of the headline claims (CE-13)'; review fix pass: scope lists of the final section (random-oracle model and setup-carried contracts of every statement, the CE-KT/CE-OR/CE-UKS/CE-APP/CE-LOR bullet, CE-A1 with Phase1ReadBack, SourceFullCorrect, the random oracles and KemBound, which statements use the Phase laws, CE-APP-L and CE-LOR-L as the later forms, R1 and C3 on every outcome), the plan section 22 cap note and the pointer to the trust-boundary inventory",
-  "analysis": "new final section 'Common deployment experiment, CE-13: what is computational now'; review fix pass: production coverage, reveal exception (a), decoded frames, CE-A1 condition and the registration bullet, which claims have symbolic-eligibility corollaries and their per-family cost, beacon_gap_le, the conditions paragraph, symbolic-only additions, the fix-pass sentence; confirming-review record: replay_never named separately as the CE-12 P2 support fact (nit 2)",
+  "guide": "new file; review fix pass: status line, finish row (plan section 25), budgets (plan section 22 cap loosening), compile argument (gap, collision and D-ct closures, item 7 joins), terms and bills, rows table, production forms, new section 'Name index of the published forms', not-claimed bullet, corrections 1, 2 and 11, checks, new section 'Review fix pass'; confirming-review record: nits 2, 3 and 4 (production paragraph, event-projection paragraph, correction 5, review fix pass item 1), status line, new section 'Confirming review'; integration merge: status line, section 'Production forms', name index row PqxdhDeploymentProductionHeadlinesDct, corrections 1 and 4 pointers, new section 'Integration merge'",
+  "source_scope": "new final section 'Computational column: the common deployment experiment'; review fix pass: conventions (exception (a)), premise bundles (setup-carried contracts), terms (closures), production paragraph, index statuses (A2 rows, A2-provenance, L2-origin), NBF owners in the symbolic-only lists, A1-root pin line 116, CE-A1 condition per owner, either-side ce_app_sym family, later CE-APP-L and CE-LOR-L forms, new entry for CE-KT-L at rows 168-173, ce_plain_every_b2s without _target form; confirming-review record: s2b-S1 symbolic-only list names the owners with a rejected bundle call in Fresh (nit 1), production paragraph names the symbolic-eligibility forms and the gap bounds (nit 3), App-b2s eligibility wording (nit 4); integration merge: paragraph 'Production' (production D-ct forms on central since a2665670) and the S3-beacon production line",
+  "composition_assumptions": "reveal-capability text of section 'The experiment a composition theorem must cover' (formerly line 33) amended to the plan section 19 profile with the section 27 exceptions; a note appended to the CE-3 codec paragraph; new final section 'Common deployment experiment: approved profile and scope of the headline claims (CE-13)'; review fix pass: scope lists of the final section (random-oracle model and setup-carried contracts of every statement, the CE-KT/CE-OR/CE-UKS/CE-APP/CE-LOR bullet, CE-A1 with Phase1ReadBack, SourceFullCorrect, the random oracles and KemBound, which statements use the Phase laws, CE-APP-L and CE-LOR-L as the later forms, R1 and C3 on every outcome), the plan section 22 cap note and the pointer to the trust-boundary inventory; integration merge: the basis of the final section names the merge of central a2665670",
+  "analysis": "new final section 'Common deployment experiment, CE-13: what is computational now'; review fix pass: production coverage, reveal exception (a), decoded frames, CE-A1 condition and the registration bullet, which claims have symbolic-eligibility corollaries and their per-family cost, beacon_gap_le, the conditions paragraph, symbolic-only additions, the fix-pass sentence; confirming-review record: replay_never named separately as the CE-12 P2 support fact (nit 2); integration merge: the production paragraph names the closed production siblings (all but beacon_gap_le); central's two production-headlines paragraphs precede the section",
   "plan_snapshot": "wholesale copy of the working plan through section 125 with the snapshot header paragraph updated (confirming-review record; the header now names the SHA-256 of the copied working plan, which the two earlier CE-13 refreshes had left at the D-ct refresh's 825d9dca); review fix pass: wholesale copy through section 124",
   "trusted_boundary": "review fix pass: new final section 'Common deployment experiment: codec contracts and reveal profile' (plan section 19: the codec laws in both assumption lists)",
-  "reviewed_inventory": "review fix pass: digest of proofs/trusted-boundary.md recomputed by coord.sh inv rehash (1a231e855385... -> 346f1f0f7b6e...); no row added or removed"
+  "reviewed_inventory": "review fix pass: digest of proofs/trusted-boundary.md recomputed by coord.sh inv rehash (1a231e855385... -> 346f1f0f7b6e...); no row added or removed; integration merge: the check-inventory.sh digest is central's (a2665670); inv recount and rehash unchanged"
  },
  "plan": {
   "working_plan_sha256": "fd6fff038638903933950ade81a19a5e2afc55410de2215f9734e17bb124a381",
@@ -747,7 +747,7 @@
   "name_index_names_checked": 264,
   "unresolved": [],
   "placeholder_ignored": "PqxdhDeploymentX.name (naming convention example)",
-  "expected_non_declarations": "epsCt is listed in the DctWorld row with its module PqxdhDeploymentHeadlineDctEvent; anomaly_beta_billed is named in a production row as excluded; PqxdhDeploymentProductionHeadlinesDct is on the branch only"
+  "expected_non_declarations": "epsCt is listed in the DctWorld row with its module PqxdhDeploymentHeadlineDctEvent; anomaly_beta_billed is named in a production row as excluded; PqxdhDeploymentProductionHeadlinesDct was on the branch only until central a2665670 (now resolved)"
  },
  "lean_change": "none",
  "inventory": "first version: not needed (no doc/ file is in reviewed-inventory.txt or read by check-inventory.sh). Review fix pass: proofs/trusted-boundary.md (category inventory) changed; its digest was recomputed by coord.sh inv rehash (1a231e855385ed010b1760319bf0c06d800527c89b6159fc19dd23e03b8b3a25 -> 346f1f0f7b6e193f7834bd4c838462cd87d9c6d3c3832846468d70248e4706ab); no file added or removed, so no recount; make -C beaconcrypt-core check-inventory in the locked proof shell (nix develop path:/tmp/bc-arc-scratch/proof-flake#proofs) under coord lease 00000639 (@nix): exit 0, 'Formal-verification inventory matches the reviewed boundary'",
@@ -769,9 +769,11 @@
  ],
  "coordination_messages": [
   527,
-  529
+  529,
+  531,
+  532
  ],
- "next": "integration (PROTOCOL section 6): merge central a2665670 (production D-ct forms, message 531), update the documents' own sentences that call those forms pending, checks on the tip, integration lease",
+ "next": "checks on the tip (focused check-inventory, transcript fidelity, git diff --check; no Lean file differs from central, so no Lean check and the published LEAN_PATH a2665670 is reused), push, integration lease (PROTOCOL section 6)",
  "review": {
   "reviewed_commit": "986262abde35b93036b6aab2ba023de09616ea98",
   "lenses": [
@@ -923,5 +925,40 @@
    "also_fixed": "the plan snapshot header named the D-ct refresh's working-plan SHA-256 (825d9dca) in the two earlier CE-13 refreshes; it now names the copied working plan",
    "record": "guide section 'Confirming review'; working plan section 125 (snapshot through section 125)"
   }
+ },
+ "documents_confirm_nits_sha256": {
+  "guide": "b636dd1713843185105b8d235cda8ece5f3fcb4bc41cab9e889d3d40f3a6c379",
+  "source_scope": "8547733cd0a4efd3c4bb160a160085de7cc9ab750a2db165e050b5c72dfd77dd",
+  "composition_assumptions": "3c86850c4d07cf4bdf16b812178229448c981c91ea836c8df2e9fa84175c650f",
+  "analysis": "7dce72bdce7ff5175afdfaefd8984268c4b4b091132f814f0d753f399140dddb",
+  "plan_snapshot": "0333b4f334410f4297352f6fe0a83b69fdefc5ac77278a8eea0ef845a6c34f9b",
+  "trusted_boundary": "346f1f0f7b6e193f7834bd4c838462cd87d9c6d3c3832846468d70248e4706ab",
+  "reviewed_inventory": "910213d6a4380b6aa1dce87215fa47704a4346231eb239eb56cf44eb1383d450"
+ },
+ "production_dct": {
+  "module": "PqxdhDeploymentProductionHeadlinesDct",
+  "central": "a266567005a8fc84833d64cbcfb0bbe09228eaf5",
+  "theorems": "48: 42 _dct and 4 _dct_full production forms under the frozen names, ctgap_term_le, ctgap_term_billed",
+  "coverage_check": "every published production form whose statement carries ctGapTerm (45) has a production _dct sibling except beacon_gap_le, ctGapTerm_source and ctCollTerm_source (42 of 45); every production _dct form has such a production base",
+  "premises": "those of the frozen D-ct forms at codec' and route', Phase1ReadBack and Phase2ReadBack stated at codec; no DecoderAgreement; no assumption or contract added (module docstring)"
+ },
+ "integration_merge": {
+  "merge_commit": "8358d8e35434d268068693f9abfd33529c0c25b5",
+  "parents": [
+   "567324e9defb2892172b77a34a4d1c4c4acac002",
+   "a266567005a8fc84833d64cbcfb0bbe09228eaf5"
+  ],
+  "central_before_topic": "529e2c8bf414f680ac57b159365280aab2e2f3f2",
+  "central_merged": "a266567005a8fc84833d64cbcfb0bbe09228eaf5",
+  "conflicts": [
+   "doc/formal-verification-analysis.md (end of file: central's two production-headlines paragraphs first, then the CE-13 section)",
+   "beaconcrypt-core/proofs/reviewed-inventory.txt (adjacent digest rows: central's proofs/check-inventory.sh, the topic's proofs/trusted-boundary.md)"
+  ],
+  "inv_recount": "handwritten-lean unchanged (1977)",
+  "inv_rehash": "proofs/lean/BeaconcryptCore.lean, proofs/trusted-boundary.md, proofs/check-inventory.sh unchanged",
+  "digests": "2397 inventory digest rows recomputed, 0 mismatches",
+  "lean_files_differing_from_central": 0,
+  "note_commit": "updates the topic's own sentences that called the production D-ct forms pending: guide status line, section 'Production forms', name index row PqxdhDeploymentProductionHeadlinesDct, pointers in corrections 1 and 4, new section 'Integration merge'; column paragraph 'Production' and S3-beacon entry; analysis paragraph on the production code; composition section basis. The record sections 'Review fix pass' and 'Confirming review' are left as they were (state at 529e2c8b)",
+  "name_check": "the qualified names of the added text resolve (11); the production _dct names cited exist in PqxdhDeploymentProductionHeadlinesDct"
  }
 }
