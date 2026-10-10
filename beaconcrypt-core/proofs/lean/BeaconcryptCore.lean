@@ -2217,6 +2217,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineGated
 
 import BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineClosed
 
+import BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinEnv
+
 /-!
 # Beaconcrypt-core verification root
 
