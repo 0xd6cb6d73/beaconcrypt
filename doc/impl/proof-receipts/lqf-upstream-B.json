@@ -45,7 +45,8 @@
    }
   ],
   "head_at_receipt": "ab0de0990de74345597cb19739931d95ebee56f3",
-  "documentation_commit": "the commit that adds this receipt (sections of the two guides and the analysis entry)"
+  "documentation_commit": "738e4e705f35645519a1169b04524ca2bc166091",
+  "record_commit": "the commit that adds checks.clean_tip (changes only doc/impl/common-deployment-experiment.md and this receipt)"
  },
  "design": {
   "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/../design-v2.md",
@@ -759,6 +760,34 @@
    "sha256": "838318a878237611228524d7a16d7db4bc485c8c38dba73b17153fd30e0cb8e6",
    "logs": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/logs/dev/Spike-*.log",
    "result": "B0 items (i) stepAtCL_of_stepAtC, (ii) step_acceptL/step_acceptCL, (iii) step_serverRead closed in scratch in under half an hour (worktree created 07:09 UTC, Spike.lean last changed 07:28 UTC); stop rule held"
+  },
+  "clean_tip": {
+   "commit": "738e4e705f35645519a1169b04524ca2bc166091",
+   "focused_inventory": {
+    "tag": "clean-tip",
+    "status": 0,
+    "lease": "00000525",
+    "start": "2026-10-10T09:20:39Z",
+    "end": "2026-10-10T09:22:33Z",
+    "head": "738e4e705f35645519a1169b04524ca2bc166091",
+    "dirty_before": [],
+    "dirty_after": [],
+    "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/logs/inventory-clean-tip.log"
+   },
+   "root_import": {
+    "exit": 0,
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/root-checks/clean-tip/BeaconcryptCore.olean",
+    "artifact_sha256": "126818c4c98542b4dccd5217012b10d9535d14fb725c651eb7195a33e6ecf116",
+    "source_sha256": "73d9d8a5b4ce1b90ea4ff869608b603029494b9207091363995ff0e8abc9b059",
+    "start": "2026-10-10T09:22:39.050033124Z",
+    "end": "2026-10-10T09:22:42.855729044Z",
+    "head": "738e4e705f35645519a1169b04524ca2bc166091",
+    "dirty_paths": 0,
+    "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/logs/final/root-clean-tip.log",
+    "note": "root olean byte-identical to the root check of the last Lean commit ab0de099 (126818c4...)"
+   }
   }
  },
  "assumptions": "none added; contracts used: Phase1ReadBack codec and Phase2ReadBack codec (approved 2026-10-06); the run-phase budget budget.Respects first; no post budget",
