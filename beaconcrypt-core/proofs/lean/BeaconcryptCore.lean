@@ -2141,6 +2141,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineBillsFull
 
 import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGated
 
+import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineCtGhost
+
 /-!
 # Beaconcrypt-core verification root
 
