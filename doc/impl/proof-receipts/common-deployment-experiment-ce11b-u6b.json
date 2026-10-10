@@ -3153,8 +3153,8 @@
   }
  },
  "fourth_part": {
-  "date": "2026-10-10T01:02:49.145978+00:00",
-  "scope": "CE-11b unit U6, fourth part (track u6b): owner k's challenge finish and the step of every finish after an active selected accept (PqxdhDeploymentIdealPostChallenge), item 2's side of the middle invariant with every simulated request, its preservation and the sim_option instance (PqxdhDeploymentIdealPostInvariant), item 2's side of the selected accept after encapsulation (PqxdhDeploymentIdealPostAccept), item 2's post-challenge phase on an active cut as the middle run (PqxdhDeploymentIdealPostItemRun), the CE side as its merge image and the reduction of ActiveBranch to the CE side of the middle invariant (PqxdhDeploymentIdealPostReduce), CE-3's Good kept by the marked build (PqxdhDeploymentIdealPostGoodBuild) and by owner k's challenge finish (PqxdhDeploymentIdealPostGoodFinish), GoodMid as the CE side of the middle invariant with MiddleInv and MiddleStart (PqxdhDeploymentIdealPostGood), ActiveBranch at every draw (PqxdhDeploymentIdealPost.active_branch) and CE-11b's second compile lemma (PqxdhDeploymentIdealCompile.ideal_compile), under the approved Phase1ReadBack and Phase2ReadBack. Unit U6 has no remaining Lean obligation. Reviewed at ac811823 (semantic and hygiene, both APPROVE_WITH_NITS; the findings, about documentation and records only, are fixed by a documentation-only review fix pass, see review); not integrated into central; central moved to 69a24703 during this part (see central_move).",
+  "date": "2026-10-10T01:39:21.405584+00:00",
+  "scope": "CE-11b unit U6, fourth part (track u6b): owner k's challenge finish and the step of every finish after an active selected accept (PqxdhDeploymentIdealPostChallenge), item 2's side of the middle invariant with every simulated request, its preservation and the sim_option instance (PqxdhDeploymentIdealPostInvariant), item 2's side of the selected accept after encapsulation (PqxdhDeploymentIdealPostAccept), item 2's post-challenge phase on an active cut as the middle run (PqxdhDeploymentIdealPostItemRun), the CE side as its merge image and the reduction of ActiveBranch to the CE side of the middle invariant (PqxdhDeploymentIdealPostReduce), CE-3's Good kept by the marked build (PqxdhDeploymentIdealPostGoodBuild) and by owner k's challenge finish (PqxdhDeploymentIdealPostGoodFinish), GoodMid as the CE side of the middle invariant with MiddleInv and MiddleStart (PqxdhDeploymentIdealPostGood), ActiveBranch at every draw (PqxdhDeploymentIdealPost.active_branch) and CE-11b's second compile lemma (PqxdhDeploymentIdealCompile.ideal_compile), under the approved Phase1ReadBack and Phase2ReadBack. Unit U6 has no remaining Lean obligation. Reviewed at ac811823 (semantic and hygiene, both APPROVE_WITH_NITS; the findings, about documentation and records only, are fixed by a documentation-only review fix pass, ec2e085a, see review); confirming review of ec2e085a: APPROVE_WITH_NITS, all nine findings resolved, its two optional wording nits (the analysis's description of run_bindStart; the tree of the fix pass's first focused check-inventory) taken by the commit that records it before the integration (documentation only); not integrated into central at the recording commit; central moved to 69a24703 during this part (see central_move; the integration merges it, handwritten Lean count 1870 + 10 = 1880).",
   "basis": "dd681f34cd9459993ae5cf19eada13b1694d981d",
   "topic": {
    "branch": "codex/deployment-ce11b-cut",
@@ -3162,14 +3162,26 @@
   },
   "plan": {
    "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
-   "sha256_at_generation": "4f0de19a02ea91de2e22ce27bf5c530acd580fe5da753f02db19778526a72122",
-   "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/fix/docs/plan.at-u6b4fix-receipt-4f0de19a.md",
-   "dated_copy_sha256": "4f0de19a02ea91de2e22ce27bf5c530acd580fe5da753f02db19778526a72122",
-   "sections": "47-50 (A1, A2, Q1-Q3), 63-64, 67, 70-71, 74, 76, 78-79 (U6 earlier parts), 81 (this part, first three modules; a pointer to 85 added) and 85 (this part, completed; 84 was the last section before it); 86 (the review fix pass; 85 was the last section before it)",
+   "sha256_at_generation": "f8a234058bab99ce76deed4cb8e5c55164ebd0ca45b77afa82f1e44b05cdac1e",
+   "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/int/docs/plan.at-record-f8a23405.md",
+   "dated_copy_sha256": "f8a234058bab99ce76deed4cb8e5c55164ebd0ca45b77afa82f1e44b05cdac1e",
+   "sections": "47-50 (A1, A2, Q1-Q3), 63-64, 67, 70-71, 74, 76, 78-79 (U6 earlier parts), 81 (this part, first three modules; a pointer to 85 added) and 85 (this part, completed; 84 was the last section before it); 86 (the review fix pass; 85 was the last section before it); 87 (its confirming review; 86 was the last section before it)",
+   "earlier": [
+    {
+     "note": "hash recorded by the review fix pass receipt (ec2e085a; through section 86)",
+     "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/fix/docs/plan.at-u6b4fix-receipt-4f0de19a.md",
+     "dated_copy_sha256": "4f0de19a02ea91de2e22ce27bf5c530acd580fe5da753f02db19778526a72122"
+    }
+   ],
    "before_review": {
     "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/docs/plan.at-u6b4-receipt-e0dea8f0.md",
     "dated_copy_sha256": "e0dea8f042cd28e9f80811c3062ef55f2b7ad19ae361a7cf8e4189190449bf98",
     "note": "the plan as pinned by the receipt of ac811823"
+   },
+   "before_record_copy": {
+    "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/int/docs/plan.before-record-4f0de19a.md",
+    "sha256": "4f0de19a02ea91de2e22ce27bf5c530acd580fe5da753f02db19778526a72122",
+    "note": "the working plan just before section 87 was appended (equal to the fix pass receipt's copy)"
    }
   },
   "design": {
@@ -3186,7 +3198,10 @@
   },
   "notes": {
    "track_notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/NOTES.md",
-   "third_part_notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p3/NOTES.md"
+   "third_part_notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p3/NOTES.md",
+   "confirm_notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/confirm/NOTES.md",
+   "fix_pass_notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/fix/NOTES.md",
+   "integration_notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/int/NOTES.md"
   },
   "commits": [
    {
@@ -3232,9 +3247,17 @@
    {
     "commit": "7e4d7c35f3b895c50ebf47f87cd90802ac9151fd",
     "subject": "Prove CE-11b's second compile lemma"
+   },
+   {
+    "commit": "ac81182374cf982aab23f66797f9adbb998c8351",
+    "subject": "Document the completed CE-11b unit U6 fourth part"
+   },
+   {
+    "commit": "ec2e085af6e818b30102b3f144866d3ce06296f6",
+    "subject": "Record the CE-11b unit U6 fourth part review fix pass"
    }
   ],
-  "commits_note": "First-parent commits on the topic after the basis that were made before this key was generated (ten Lean commits and the first documentation commit a9a6cb6d); the second documentation commit, which adds this version of the key, is not listed.",
+  "commits_note": "First-parent commits on the topic after the basis that were made before this key was last generated (ten Lean commits, the documentation commits a9a6cb6d and ac811823, and the review fix pass ec2e085a); the commit that records the confirming review (and last regenerates this key) is not listed.",
   "files_sha256": {
    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostChallenge.lean": "7ca6b3b9a0acd82ceb0a25dc1cd11a4061a37e1b4e781545374dead09b0e7987",
    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostInvariant.lean": "8f073661dc19440e453f8f540a7a9c8631a7ac02d1d2aa49d8bba39edc8d95ee",
@@ -4847,7 +4870,7 @@
    "PqxdhDeploymentIdealCompile": []
   },
   "git_diff_check": {
-   "range": "dd681f34cd9459993ae5cf19eada13b1694d981d..working tree",
+   "range": "dd681f34cd9459993ae5cf19eada13b1694d981d..working tree (with the confirming-review record): the topic's own changes",
    "exit": 0
   },
   "not_run": [
@@ -4925,7 +4948,7 @@
     "doc/impl/common-deployment-experiment.md",
     "doc/impl/proof-receipts/common-deployment-experiment-ce11b-u6b.json"
    ],
-   "docs_fix_commit": "the commit that adds this key (child of ac811823)",
+   "docs_fix_commit": "ec2e085af6e818b30102b3f144866d3ce06296f6",
    "checks": {
     "rechecks": {
      "PqxdhDeploymentIdealPostChallenge": {
@@ -5115,8 +5138,90 @@
    },
    "notes_fix_pass": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/fix/NOTES.md",
    "scratch": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/fix",
-   "status": "reviewed once (ac811823); review fix pass done (documentation only, the commit that adds this key); a confirming review and the integration (which merges central 69a24703 or later first) remain",
-   "date": "2026-10-10T01:24:37.796124+00:00"
+   "status": "reviewed once (ac811823); review fix pass done (ec2e085a, documentation only); fix pass confirmed by a confirming review of ec2e085a (APPROVE_WITH_NITS), recorded before the integration together with its two optional wording nits",
+   "date": "2026-10-10T01:24:37.796124+00:00",
+   "confirming_review": {
+    "reviewed_range": "ac81182374cf982aab23f66797f9adbb998c8351..ec2e085af6e818b30102b3f144866d3ce06296f6",
+    "reviewed_commit": "ec2e085af6e818b30102b3f144866d3ce06296f6",
+    "scope": "the review fix pass ec2e085a (one documentation commit: guide, analysis, receipt): statements, guards, receipt, documentation of every finding, central",
+    "verdict": "APPROVE_WITH_NITS: all nine findings of the review of ac811823 resolved (none needed beyond the fix pass); two optional wording nits: (a) the analysis's Review paragraph says run_bindStart \"no longer exists\", while it never was a Lean declaration (a lemma only planned in the design); (b) the guide's fix-pass Checks paragraph says the focused check-inventory passed \"with this commit's changes in the tree\", while that run (fix1) had only the guide and analysis changes in the tree (the receipt was written after it), and the post-commit clean-tree run (fix2) was recorded only in the fix pass's notes; documentation is not inventoried, so neither affects a check",
+    "checks": [
+     "diff ac811823..ec2e085a: only the guide, the analysis and the receipt; no Lean file, reviewed-inventory.txt or check-inventory.sh change, so no statement changed; footer exact (one Co-Authored-By line, last); git diff --check clean; no CR; new Markdown lines are whole paragraphs; no /tmp path in the guide or analysis additions",
+     "receipt against HEAD (confirm/p4/scripts/receipt_guards.py, log confirm/p4/logs/receipt_guards.txt): files_sha256 equal the HEAD blobs (13); 101 theorems = 101 exact guards (25/13/18/4/5/12/11/11/1/1), names equal the receipt, axiom profiles equal the guards, allowed axioms only; direct checks and root artifacts hashes ok; plan and design live = dated copies = receipt, before_review copies ok; commit list a first-parent prefix; review.rechecks: 11 records, sources = HEAD = ac811823 blobs, exit 0, empty logs; negative probe, inventory and trial-merge log hashes ok; only fourth_part changed in the receipt",
+     "own rechecks at ec2e085a with a clean tree (confirm/p4/scripts/check1.sh through coord.sh lean; -j1 -M8000, timeout 180, no -o, LEAN_PATH = ce11b/u6b/p4/leanpath): PqxdhDeploymentIdealPostReduce, PqxdhDeploymentIdealCompile, root: exit 0, empty logs",
+     "findings 1 and 4: c1_idealGame = c1_ideal at Target.ofCE budget g, identity index 0, projection (output, ledger, base.produced) = observeGame after classicalOf; c1_ideal = ideal_to_split pointwise + c1_split (join_param instance); design-v2 section 15 records the replacement; the before-review copies of plan section 85 and design-v2 section 30 have no bindStart; design-v2 section 30 bullet added, plan section 86",
+     "findings 2 and 3: step_coin, step_hash, step_reveal in PqxdhDeploymentIdealPostSteps; Allowed excludes identity and KEM field reads; transported caps 0 used in activeBranch_of_middle; resume_accept and ItemInv.done exist",
+     "finding 5: the guide's contracts used and both codec_laws lists name ideal_compile_of_middle; finding 6: registry notes of the module, the branch and the worktree; findings 7 to 9: no change needed, the disclosure kept",
+     "central still 69a24703 (leanpaths/current)"
+    ],
+    "check_logs": {
+     "PostReduce": {
+      "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/confirm/p4/logs/PostReduce.log",
+      "bytes": 0
+     },
+     "Compile": {
+      "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/confirm/p4/logs/Compile.log",
+      "bytes": 0
+     },
+     "root": {
+      "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/confirm/p4/logs/root.log",
+      "bytes": 0
+     }
+    },
+    "logs": {
+     "receipt_guards.txt": {
+      "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/confirm/p4/logs/receipt_guards.txt",
+      "sha256": "47a336c709fb73c2b5b2d1da443e53872cc31335a23e956cd17cc8d1adcd8f19"
+     },
+     "analysis-section.md": {
+      "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/confirm/p4/logs/analysis-section.md",
+      "sha256": "32880d3cae2296e575b787064bc0c59d9dd70324147491f1a4b20e36945fa5af"
+     }
+    },
+    "scripts": {
+     "check1.sh": {
+      "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/confirm/p4/scripts/check1.sh",
+      "sha256": "4d6a6f866aa95a631d2228f5b436bbd57cd735d1be3d40c17aa74a4ceab70902"
+     },
+     "receipt_guards.py": {
+      "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/confirm/p4/scripts/receipt_guards.py",
+      "sha256": "1a758d23e1767eb3340b87db0705cb3f04feacfe72b03a10a93c208a4f9bec39"
+     }
+    },
+    "fix_pass_inventory_after_commit": {
+     "exit": 0,
+     "start": "2026-10-10T01:25:13Z",
+     "end": "2026-10-10T01:26:58Z",
+     "head_at_run": "ec2e085af6e818b30102b3f144866d3ce06296f6",
+     "working_tree_dirt_lines": 0,
+     "log": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/fix/logs/inventory-fix2.log",
+     "log_sha256": "56530cd132d9fc287b0761b5122dc0ab2cd82132133b9a16677f46910605c9a6",
+     "result_line": "Formal-verification inventory matches the reviewed boundary.",
+     "note": "the fix pass's second focused check-inventory (@nix lease), run after its commit on the clean tree at ec2e085a; before this record it was noted only in /tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/fix/NOTES.md"
+    },
+    "findings_fixed": [
+     "nit (a): the analysis's Review paragraph now says that the guide sent the next unit to a lemma that was only planned in the design and never written (an earlier decision replaced it)",
+     "nit (b): the guide's fix-pass Checks paragraph now says that the focused check-inventory passed with the guide and analysis changes in the tree; the post-commit clean-tree run fix2 (exit 0) is recorded in fix_pass_inventory_after_commit, in the guide's new section \"CE-11b unit U6, fourth part: confirming review\" and in the integration's checks receipt",
+     "the analysis's sentence that the work was not yet integrated now says only that central moved during this part and that the integration merges that move first",
+     "status lines: the guide status paragraph, open point 1 (which also says that the integration keeps this branch's refreshed plan snapshot), the analysis Review paragraph and this key (review.status, scope) no longer say that the fix pass is not re-reviewed; new guide section \"CE-11b unit U6, fourth part: confirming review\"; working plan section 87 and the committed snapshot"
+    ],
+    "record_commit_lean_change": null,
+    "record_commit_note": "documentation only: no file under beaconcrypt-core/ changes, so no statement, proof, guard, definition or inventory row changes; the integration checks compile the ten modules and the root on the merged topic tip with -o into a fresh prefix",
+    "files_changed": [
+     "doc/impl/common-deployment-experiment.md",
+     "doc/impl/common-deployment-experiment-plan.md",
+     "doc/formal-verification-analysis.md",
+     "doc/impl/proof-receipts/common-deployment-experiment-ce11b-u6b.json"
+    ],
+    "notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/confirm/NOTES.md (section \"Confirming review of the u6b fourth part fix pass (ec2e085a)\")",
+    "scratch": "/tmp/bc-arc-scratch/common-experiment/ce11b/u6b/confirm/p4 (review checks), /tmp/bc-arc-scratch/common-experiment/ce11b/u6b/p4/int (record-commit scripts, plan copies)"
+   }
+  },
+  "plan_snapshot": {
+   "path": "doc/impl/common-deployment-experiment-plan.md",
+   "refreshed_from_sha256": "f8a234058bab99ce76deed4cb8e5c55164ebd0ca45b77afa82f1e44b05cdac1e",
+   "sections": "0-18 and the decision sections 19-87",
+   "note": "refreshed in the commit that records the confirming review: the body equals the working plan from its third line; the snapshot paragraph records the hash and the refresh history, built from central 69a24703's paragraph (the u4b refresh 45f3f79b, through section 83). On this branch the snapshot it replaces is central dd681f34's (through section 79; its body is a prefix of this one). Central's current snapshot (since 69a24703, through section 83) differs from this body only by two later edits of the working plan (section 81 ends with a pointer to section 85; section 83 ends with the integration bullet of track u4b) and the new sections 84 to 87, so the integration merge keeps this version"
   }
  }
 }
