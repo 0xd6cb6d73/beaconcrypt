@@ -1,10 +1,10 @@
 {
- "kind": "items 3+7 production composition (CE-12 headlines on the PB-D production source games), build session 1 and review fix pass",
+ "kind": "items 3+7 production composition (CE-12 headlines on the PB-D production source games), build session 1, review fix pass and confirming review",
  "author": "Claude (item 7 lane adopted from Codex, owner decision #503; item 3 is Claude's)",
  "provenance": "new work; no Codex WIP exists for these modules",
  "branch": "codex/deployment-boundary-production",
  "basis_central": "427758b600d30ba5e71c5e4c7f5d86f5a3bd2d1d",
- "state": "reviewed (three independent reviews of f1fe6ba8) and fixed; not integrated",
+ "state": "reviewed (three independent reviews of f1fe6ba8), fixed (87599dd5 Lean, c22a20e7 documents) and confirmed (confirming review of f1fe6ba8..c22a20e7: all eleven actionable findings resolved; its two documentation nits taken by the commit that records it); not integrated at that commit",
  "module_commits": {
   "PqxdhDeploymentProductionTransfer": "9a5899c9ec4180e504910baf05fde385cceb8830",
   "PqxdhDeploymentProductionHeadlinesClassical": "87599dd5b0eb64434f658aa20776974b0a503f4b",
@@ -13,6 +13,7 @@
  },
  "lean_fix_commit": "87599dd5b0eb64434f658aa20776974b0a503f4b",
  "documents_commit": "the commit that adds this version of the receipt (guide, ledger paragraph, analysis section)",
+ "fix_pass_documents_commit": "c22a20e707f01b90fb00556a23d4b632b1f1895f",
  "modules": {
   "PqxdhDeploymentProductionTransfer": {
    "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentProductionTransfer.lean",
@@ -745,9 +746,41 @@
    "F11": "guide (Premises and contracts carried) and analysis: the two frame laws at codec′ are joint conditions on the abstract writer and the production decoder and hold together for a suitable writer exactly when every frame the decoder returns for some input it also returns for a nonempty one (argument from the definitions, not a Lean lemma)",
    "F12": "no action (verified)"
   },
-  "statement_changes": "none: no first-pass statement changed; one theorem added (beacon_gap_le production form), so the branch states at least everything the first pass stated"
+  "statement_changes": "none: no first-pass statement changed; one theorem added (beacon_gap_le production form), so the branch states at least everything the first pass stated",
+  "confirming_review": {
+   "kind": "confirming review of the review fix pass (fresh-context Claude sub-agent, read only)",
+   "reviewed_range": "f1fe6ba8f0416ac7e36142d78308950a83060ccf..c22a20e707f01b90fb00556a23d4b632b1f1895f",
+   "scratch": "/tmp/bc-arc-scratch/item7/prod/confirm",
+   "result": "all eleven actionable findings (F1-F11) resolved at c22a20e7; no statement is weaker; the guards equal the theorems; the scans are clean; the receipt equals HEAD",
+   "record": "/tmp/bc-arc-scratch/item7/prod/int/docs/confirming-review-relayed.json",
+   "record_sha256": "1879c6020a20c63e98209ceb5e3f2e5c4bf1c84a372110a5080b0269636167db",
+   "record_note": "no verdict file was written; the result and nits were relayed by the workflow orchestrator and are transcribed verbatim",
+   "nits": [
+    {
+     "n": 1,
+     "title": "analysis first paragraph imprecise for beacon_gap_le since F9 (published bound unchanged; moved probability = left side)",
+     "disposition": "taken in the analysis: \"in particular the rest of the published bound, is unchanged\" and \"For a one-sided headline this is its left side (in `beacon_gap_le` also the CE-A1 probability in its bound)\""
+    },
+    {
+     "n": 2,
+     "title": "guide points to a receipt section fix_pass that does not exist",
+     "disposition": "taken in the guide's fix-pass checks paragraph: \"(central still `427758b6`; receipt top level; the first pass is under `first_pass`)\""
+    },
+    {
+     "n": 3,
+     "title": "optional, outside the diff: the item 7 PB-E analysis section's unqualified sentence on the binding Beacon surface",
+     "disposition": "not taken: conditional on touching the item 7 section again, which this branch does not do"
+    }
+   ],
+   "also_recorded": "guide: status line, open point removed, new section \"Confirming review\"; analysis: one sentence in the review paragraph and the status sentence of \"Checks and status\""
+  }
  },
  "documents_sha256": {
+  "doc/impl/production-headlines.md": "fd614ff4a92864ff8dd1757c7cecf7115bc9e545abeaa34d69d7f44c5c3d3f7f",
+  "doc/impl/production-boundary-ledger.md": "0b4d71034145eb5ed6a03c5495d6a649e099e851030f8ce2d249d2fc7ada36f7",
+  "doc/formal-verification-analysis.md": "e118e85c9d9e2933a5e9c016629263ef9879b95bc877efc4d0d9e8979f513e05"
+ },
+ "documents_fix_pass_sha256": {
   "doc/impl/production-headlines.md": "2c7e806f7f3186dbcc77483c6170b1c2c6411a5fc13280ee2a9b4800a65708e7",
   "doc/impl/production-boundary-ledger.md": "0b4d71034145eb5ed6a03c5495d6a649e099e851030f8ce2d249d2fc7ada36f7",
   "doc/formal-verification-analysis.md": "db37bd212a3a9f0bb1de48b3d1f01bb0894cb6cd41e8c3fbbf69891e0e7d5e38"
@@ -787,12 +820,22 @@
   "anything beyond the reviewed transcription of the Rust adapter"
  ],
  "remaining": [
-  "confirming review of the fix pass",
-  "integration into central",
+  "integration into central (PROTOCOL section 6)",
   "production versions of the D-ct forms (follow-up module)",
   "item 8 (owner)"
  ],
  "protocol": "all Lean checks through coord.sh lean with one in flight; registrations before creation; mail only peeked; no make verify, full lake build, mutation testing or nix-collect-garbage; one no-op `rm -f gen/*.lean.tmp` in the registered fix1/gen (no file matched; nothing deleted)",
+ "receipt_scripts_confirm": {
+  "nits_edits": "/tmp/bc-arc-scratch/item7/prod/int/scripts/nits_edits.py",
+  "nits_edits_sha256": "8e1901a0ab6cc58538ab8d40b72227d89e443a553b02a74e7db3c31f024d0ea9",
+  "receipt_nits": "/tmp/bc-arc-scratch/item7/prod/int/scripts/receipt_nits.py",
+  "receipt_nits_sha256": "109403618ffd95cc2d9d97ba8a6adc99c7eced415ae988b2e67843a917df3314",
+  "befores": {
+   "formal-verification-analysis.md.before-nits": "db37bd212a3a9f0bb1de48b3d1f01bb0894cb6cd41e8c3fbbf69891e0e7d5e38",
+   "production-headlines.json.before-nits": "f4822735f6812cc516edcf8843bb23435cf7d629d0a8ae75877ad56c70df6bbf",
+   "production-headlines.md.before-nits": "2c7e806f7f3186dbcc77483c6170b1c2c6411a5fc13280ee2a9b4800a65708e7"
+  }
+ },
  "first_pass": {
   "kind": "items 3+7 production composition (CE-12 headlines on the PB-D production source games), build session 1",
   "author": "Claude (item 7 lane adopted from Codex, owner decision #503; item 3 is Claude's)",
