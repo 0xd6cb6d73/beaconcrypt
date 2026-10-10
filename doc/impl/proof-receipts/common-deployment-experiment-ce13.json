@@ -960,5 +960,50 @@
   "lean_files_differing_from_central": 0,
   "note_commit": "updates the topic's own sentences that called the production D-ct forms pending: guide status line, section 'Production forms', name index row PqxdhDeploymentProductionHeadlinesDct, pointers in corrections 1 and 4, new section 'Integration merge'; column paragraph 'Production' and S3-beacon entry; analysis paragraph on the production code; composition section basis. The record sections 'Review fix pass' and 'Confirming review' are left as they were (state at 529e2c8b)",
   "name_check": "the qualified names of the added text resolve (11); the production _dct names cited exist in PqxdhDeploymentProductionHeadlinesDct"
- }
+ },
+ "follow_ups": [
+  {
+   "name": "registration follow-up of the production composition (PqxdhDeploymentProductionRegistration), review fix pass",
+   "branch": "codex/deployment-boundary-production",
+   "merge_of_central": "e6b8ef37564e2fedc212f80f8b4fb8c9483a9365 (central fc27fded9bdef0ab05248b9431f4840d4a098d86, which carries this receipt, merged into that branch)",
+   "commit": "the commit that adds this record (child of the docstring-only Lean commit 3d3972337ce49321e4b82794c6be18f3cb61b084)",
+   "why": "the registration statements that precede CE-12 (CE-A1 in six forms, CE-A2pub, CE-R1', R1, C3) have production forms at Server identity index 0 since that follow-up; CE-A2 itself and replay_never still have none",
+   "documents_sha256_after": {
+    "guide": "27d804014911e36103d2a8de563ef53f9bb04511e942b48445fbd84103bc0ddc",
+    "source_scope": "4df51a1a0704248c2eea11785dba039d2a5d99ad0c18d191ba3c0b34bd3aa433",
+    "analysis": "83d5e915ff8cf508ec83bd26795ade7c59f4c7f7753a50489f559e39cef72c47"
+   },
+   "documents_unchanged": [
+    "composition_assumptions",
+    "plan_snapshot",
+    "trusted_boundary"
+   ],
+   "reviewed_inventory_note": "the branch adds and rehashes its own rows (module row, root import, check-inventory.sh); the trusted_boundary row of this receipt is unchanged",
+   "edits": {
+    "guide": "section \"Production forms\" (registration sentences), name index row PqxdhDeploymentProductionRegistration and its note, one sentence at the end of the status paragraph; record sections unchanged",
+    "source_scope": "paragraph \"Production\" (registration sentence) and the production cells of A1-delayed, A2-provenance, R1, R1' and C3",
+    "analysis": "CE-13 section, paragraph \"For the production code\" (registration sentences); the follow-up's own paragraphs end the production section before it"
+   },
+   "rows_production_after": {
+    "3167 A1-delayed": "PqxdhDeploymentProductionRegistration.ce_a1, a1_sum, a1_bound, ce_a1_billed, injective_bound, ce_a1_injective (index 0 only); ce_a1_linked (ctGapTerm explicit), beacon_gap_le, sym_gap, identity_collision_game",
+    "597 A1": "as A1-delayed",
+    "613 s2b-A1": "as A1-delayed",
+    "631 b2s-A1": "as A1-delayed",
+    "649 encoding-A1": "as A1-delayed",
+    "3161 A2-provenance": "CE-A2pub: PqxdhDeploymentProductionRegistration.a2pub_owner_bound, a2pub_bound (index 0); CE-A2 itself none (not over the experiment); server_gap_bound for ServerGap <= eps_A2pub",
+    "598 A2": "as A2-provenance",
+    "614 s2b-A2": "as A2-provenance",
+    "632 b2s-A2": "as A2-provenance",
+    "650 encoding-A2": "as A2-provenance",
+    "599 R1": "PqxdhDeploymentProductionRegistration.replay_game (index 0 only; every source-game outcome read back through unwrap)",
+    "651 encoding-R1": "PqxdhDeploymentProductionRegistration.replay_game (index 0 only; every source-game outcome read back through unwrap)",
+    "600 R1'": "PqxdhDeploymentProductionRegistration.r1prime_owner_bound, r1prime_bound (index 0)",
+    "652 encoding-R1'": "PqxdhDeploymentProductionRegistration.r1prime_owner_bound, r1prime_bound (index 0)",
+    "616 s2b-C3": "PqxdhDeploymentProductionRegistration.record_replay_game (index 0 only; every source-game outcome read back through unwrap); replay_never none (covered by that form)",
+    "635 b2s-C3": "PqxdhDeploymentProductionRegistration.record_replay_game (index 0 only; every source-game outcome read back through unwrap); replay_never none (covered by that form)"
+   },
+   "receipt": "doc/impl/proof-receipts/production-headlines-registration.json",
+   "note": "everything else in this receipt records CE-13 as integrated at fc27fded9bdef0ab05248b9431f4840d4a098d86; its rows keep their production_central values of that state"
+  }
+ ]
 }

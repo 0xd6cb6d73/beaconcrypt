@@ -1594,7 +1594,9 @@
    "lean_commit": "59e08934ef2272359a17b26cc418b13a383c4d8a",
    "receipt": "doc/impl/proof-receipts/production-headlines-registration.json",
    "guide_section": "Registration follow-up: production forms of the registration-authentication and replay claims",
-   "note": "added after this receipt; corrects the coverage statement (the selection here is CE-12 only); the guide, the ledger paragraph and the analysis changed with it (their hashes are in the sibling receipt); everything else in this receipt is unchanged"
+   "note": "added after this receipt; corrects the coverage statement (the selection here is CE-12 only); the guide, the ledger paragraph and the analysis changed with it (their hashes are in the sibling receipt); everything else in this receipt is unchanged",
+   "lean_docstring_commit": "3d3972337ce49321e4b82794c6be18f3cb61b084",
+   "review_fix_pass": "three independent reviews of c7f8b210 answered by a fix pass (merge e6b8ef37 of central fc27fded, docstring-only Lean commit 3d397233, documents); see the sibling receipt"
   }
  ]
 }
