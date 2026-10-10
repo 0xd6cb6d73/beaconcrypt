@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1897
+	[handwritten-lean]=1898
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -38911,6 +38911,39 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem c6_idealGame_decide([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterEnv theorem c6_idealGame_decide"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterEnv\.envReveal_blind$' "$selected_source_module" "PqxdhDeploymentIdealLaterEnv dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterEnv.envReveal_blind"
 require_line_count 1 '^theorem envReveal_blind([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterEnv theorem envReveal_blind"
+
+# LQ-F upstream unit C3: the post-phase slot invariance U-L4 (LQ-F design-v2 section 4.2).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterSlots.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSlots$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentIdealLaterSlots root import"
+require_line_count 13 '^theorem ' "$selected_source_module" "PqxdhDeploymentIdealLaterSlots theorem inventory"
+require_line_count 13 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentIdealLaterSlots guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterSlots\.handler_quiet$' "$selected_source_module" "PqxdhDeploymentIdealLaterSlots dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSlots.handler_quiet"
+require_line_count 1 '^theorem handler_quiet([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterSlots theorem handler_quiet"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterSlots\.schedule_quiet$' "$selected_source_module" "PqxdhDeploymentIdealLaterSlots dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSlots.schedule_quiet"
+require_line_count 1 '^theorem schedule_quiet([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterSlots theorem schedule_quiet"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterSlots\.coins_coinEffect$' "$selected_source_module" "PqxdhDeploymentIdealLaterSlots dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSlots.coins_coinEffect"
+require_line_count 1 '^theorem coins_coinEffect([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterSlots theorem coins_coinEffect"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterSlots\.effectLift_quiet$' "$selected_source_module" "PqxdhDeploymentIdealLaterSlots dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSlots.effectLift_quiet"
+require_line_count 1 '^theorem effectLift_quiet([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterSlots theorem effectLift_quiet"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterSlots\.post_quiet$' "$selected_source_module" "PqxdhDeploymentIdealLaterSlots dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSlots.post_quiet"
+require_line_count 1 '^theorem post_quiet([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterSlots theorem post_quiet"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterSlots\.envGD_hmacCoins$' "$selected_source_module" "PqxdhDeploymentIdealLaterSlots dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSlots.envGD_hmacCoins"
+require_line_count 1 '^theorem envGD_hmacCoins([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterSlots theorem envGD_hmacCoins"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterSlots\.post_noinstall$' "$selected_source_module" "PqxdhDeploymentIdealLaterSlots dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSlots.post_noinstall"
+require_line_count 1 '^theorem post_noinstall([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterSlots theorem post_noinstall"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterSlots\.continueWith_noinstall$' "$selected_source_module" "PqxdhDeploymentIdealLaterSlots dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSlots.continueWith_noinstall"
+require_line_count 1 '^theorem continueWith_noinstall([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterSlots theorem continueWith_noinstall"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterSlots\.later_slots$' "$selected_source_module" "PqxdhDeploymentIdealLaterSlots dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSlots.later_slots"
+require_line_count 1 '^theorem later_slots([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterSlots theorem later_slots"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterSlots\.later_anomaly_eq$' "$selected_source_module" "PqxdhDeploymentIdealLaterSlots dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSlots.later_anomaly_eq"
+require_line_count 1 '^theorem later_anomaly_eq([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterSlots theorem later_anomaly_eq"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterSlots\.later_view_slots_le$' "$selected_source_module" "PqxdhDeploymentIdealLaterSlots dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSlots.later_view_slots_le"
+require_line_count 1 '^theorem later_view_slots_le([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterSlots theorem later_view_slots_le"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterSlots\.later_view_slots_pk$' "$selected_source_module" "PqxdhDeploymentIdealLaterSlots dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSlots.later_view_slots_pk"
+require_line_count 1 '^theorem later_view_slots_pk([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterSlots theorem later_view_slots_pk"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterSlots\.later_view_slots_ct$' "$selected_source_module" "PqxdhDeploymentIdealLaterSlots dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSlots.later_view_slots_ct"
+require_line_count 1 '^theorem later_view_slots_ct([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterSlots theorem later_view_slots_ct"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"

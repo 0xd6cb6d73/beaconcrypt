@@ -2111,6 +2111,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentIdealLater
 
 import BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterEnv
 
+import BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSlots
+
 /-!
 # Beaconcrypt-core verification root
 
