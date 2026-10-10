@@ -1,6 +1,6 @@
 {
- "date": "2026-10-10T04:25:52.935272+00:00",
- "scope": "LQ-F upstream unit D (targets; design-v2 section 4.1 of /tmp/bc-arc-scratch/common-experiment/lqf-up, CE plan section 49 Q1): the frozen definitions and target statements of item 2 over the logged LQ-F source (U-L1: laterSlotGame, slotLossL, rootBillL, OpaqueBranchSlotsTwoTargetL, LaterSlotsTwoTarget) and of the later second compile lemma (U-L2: idealLaterGame, laterOf, ceDecideL, IdealCompileServerTarget), with projections, unfoldings and the postNative bridges of the later ideal game. Two Lean commits (one per module) and one documentation commit (this receipt, the guide sections, the item 2 guide section and the analysis entry). Reviewed at 28230554 (semantic and hygiene, both APPROVE_WITH_NITS; 2 minor findings and 8 nits); the review fix pass is one Lean commit (822bb9d4: docstrings and one unused open name, inventory rows rehashed) and the documentation commit that updates this receipt (key review). Not integrated at this receipt.",
+ "date": "2026-10-10T05:11:06.591847+00:00",
+ "scope": "LQ-F upstream unit D (targets; design-v2 section 4.1 of /tmp/bc-arc-scratch/common-experiment/lqf-up, CE plan section 49 Q1): the frozen definitions and target statements of item 2 over the logged LQ-F source (U-L1: laterSlotGame, slotLossL, rootBillL, OpaqueBranchSlotsTwoTargetL, LaterSlotsTwoTarget) and of the later second compile lemma (U-L2: idealLaterGame, laterOf, ceDecideL, IdealCompileServerTarget), with projections, unfoldings and the postNative bridges of the later ideal game. Two Lean commits (one per module) and one documentation commit (this receipt, the guide sections, the item 2 guide section and the analysis entry). Reviewed at 28230554 (semantic and hygiene, both APPROVE_WITH_NITS; 2 minor findings and 8 nits); the review fix pass is one Lean commit (822bb9d4: docstrings and one unused open name, inventory rows rehashed) and the documentation commit that updates this receipt (key review). Confirming review of 42488632: APPROVE_WITH_NITS (all ten findings resolved, no statement weaker; two documentation nits and one optional record, taken by the commit that records it, documentation only). Not integrated at the record commit; the integration (PROTOCOL section 6) fast-forwards central to the branch's checked tip (the record commit, or a merge of a newer central above it).",
  "basis": {
   "start": "ab9986efb4c323c9ca62be9774405e0a880cb747",
   "central_at_receipt": "ab9986efb4c323c9ca62be9774405e0a880cb747",
@@ -30,7 +30,9 @@
     "subject": "Fix the LQ-F unit D docstrings found by review"
    }
   ],
-  "review_fix_documentation_commit": "the commit that updates this receipt with the key review (on top of 822bb9d4)"
+  "review_fix_documentation_commit": "424886324a1d82cdb91a594fe6ed4104e9b0ffc9",
+  "head_at_confirming_review": "424886324a1d82cdb91a594fe6ed4104e9b0ffc9",
+  "confirming_review_record_commit": "the commit that adds review.confirming_review (on top of 42488632)"
  },
  "design": {
   "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/design-v2.md",
@@ -558,7 +560,7 @@
    "doc/impl/extract-composition.md",
    "doc/impl/proof-receipts/lqf-upstream-D.json"
   ],
-  "docs_fix_commit": "the commit that adds this key (on top of 822bb9d4)",
+  "docs_fix_commit": "424886324a1d82cdb91a594fe6ed4104e9b0ffc9",
   "checks": {
    "dev_before_commit": [
     {
@@ -670,7 +672,141 @@
    "clean_tree_inventory_note": "the documentation commit changes only files under doc/, which check-inventory does not read, so the run at 822bb9d4 covers its tree; a run on the clean tip after the documentation commit is left to the confirming review or the integration checks receipt",
    "diff_check": "git diff --cached --check clean before the Lean commit; git diff --check clean on the documentation changes"
   },
-  "status": "review fix pass complete; awaiting a confirming review; not integrated"
+  "status": "review fix pass complete (822bb9d4, 42488632) and confirmed by a confirming review of 42488632 (APPROVE_WITH_NITS: all ten findings resolved, no statement weaker; two documentation nits and one optional record, taken by the commit that records it); not integrated at the record commit",
+  "confirming_review": {
+   "reviewed_range": "282305546a5078ed272f4ec920eb3cd385d2cc22..424886324a1d82cdb91a594fe6ed4104e9b0ffc9",
+   "reviewed_commit": "424886324a1d82cdb91a594fe6ed4104e9b0ffc9",
+   "date": "2026-10-10",
+   "kind": "read only",
+   "scope": "the review fix pass (822bb9d4: docstrings and one unused open name; 42488632: guide, item 2 guide, analysis, receipt): the ten findings of the review of 28230554, statements, guards, inventory rows, receipt hashes, documentation claims against the code, clean-head rebuilds of D1, D2 and the root",
+   "verdict": "APPROVE_WITH_NITS: all ten findings of the 28230554 review resolved at 42488632, no statement weaker; two documentation nits (the re-estimate assigned the budget-route question to B0's spike, whose scope in LQ-F design-v2 section 4.5 does not test it; the fix-pass section repeated the review's count of 35 Lean modules citing CE-11b's design-v2, 33 at ab9986ef) and one optional record (cite the tip-clean check-inventory run, lease 00000449, and the rebuilds in the integration receipt), all taken by the commit that records the review",
+   "checks": [
+    "HEAD = origin/codex/deployment-lqf-targets = 42488632, porcelain clean",
+    "Lean diff 28230554..42488632: comment-stripped code identical for D1; D2 differs only by dropping xreveal from the selective open (strip.py)",
+    "guards: 12/12 and 8/8 exact, allowed axioms only (propext, Classical.choice, Quot.sound) (guards.py)",
+    "inventory rows equal the sha256 of the HEAD files (D1 151cbd20, D2 d7644a3d); root BeaconcryptCore.lean cfef7c2c unchanged; all 1886 handwritten-lean rows match their files",
+    "receipt: 67 path/hash pairs verified against disk, 0 mismatches (receipt_check.py)",
+    "fix-pass inventory logs (lean-commit 822bb9d4 lease 00000446, tip-clean 42488632 lease 00000449): exit 0, clean before and after; leases in the lease history",
+    "documentation claims verified: postCore = ![0,6,7]; cost (.inr _) of cores 0, 6 and 7 is zero; compile_later_reads uses zero field costs for all cores; the proof of compile_server_no_kem uses cost (.inr 1) core = 0 for the post part; the classical cut lemmas carry certified, unreadIdentity and unreadKem; allIdealLoss term by term = slotLossL; CE-12 slotLoss = allIdealLoss at transported (origin/codex/deployment-ce12); LQ-F design-v2 sections 4.1, 4.3, 4.4, 4.5, 4.7, 5.1, 6, 8 (R9), 9, 10 and decisions D1, D5, D8, D9 exist",
+    "clean-head rebuilds of D1, D2 and the root through coord.sh lean (-j1 -M8000 timeout 180, -o into confirm/out, LEAN_PATH D/fix/leanpath): exit 0, empty logs, oleans byte-identical to the fix pass's (rebuilds below)"
+   ],
+   "check_scripts": {
+    "check.sh": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/confirm/scripts/check.sh",
+     "sha256": "9460950aa61d21c3a0aee7823480b7316ee52a79b906cf2ce35fe0ce48ec00f1"
+    },
+    "guards.py": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/confirm/scripts/guards.py",
+     "sha256": "355837b50fc14f3122b7902d93c781d218df12e388aecaa47d6c1faa79551064"
+    },
+    "receipt_check.py": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/confirm/scripts/receipt_check.py",
+     "sha256": "fc317e3abd87b6146eddada2a6d54566cf7650c3187faa7dd3a0008a22cff66b"
+    },
+    "strip.py": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/confirm/scripts/strip.py",
+     "sha256": "3670102abdf5093d7f1b68b29638ff9d468bd16fa92f853bd8194af5955244c9"
+    }
+   },
+   "rebuilds": [
+    {
+     "module": "BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemTargets",
+     "head": "424886324a1d82cdb91a594fe6ed4104e9b0ffc9",
+     "dirty_paths_before": 0,
+     "dirty_paths_after": 0,
+     "start": "2026-10-10T05:03:19Z",
+     "end": "2026-10-10T05:03:23Z",
+     "exit": 0,
+     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/confirm/logs/PqxdhDeploymentLaterServerItemTargets.log",
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "log_bytes": 0,
+     "artifact": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/confirm/out/PqxdhDeploymentLaterServerItemTargets.olean",
+     "artifact_sha256": "732857602e05061eeda244cda8310381ae652e7b7ec3b56d570313f626bad9a1",
+     "meta": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/confirm/logs/PqxdhDeploymentLaterServerItemTargets.meta",
+     "meta_sha256": "84b8b30f153e77017b5d577e4db1a0544ed50b8f9f65b4f36d8974a676e00be8",
+     "equals_fix_pass_final": true
+    },
+    {
+     "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterGame",
+     "head": "424886324a1d82cdb91a594fe6ed4104e9b0ffc9",
+     "dirty_paths_before": 0,
+     "dirty_paths_after": 0,
+     "start": "2026-10-10T05:03:26Z",
+     "end": "2026-10-10T05:03:29Z",
+     "exit": 0,
+     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/confirm/logs/PqxdhDeploymentIdealLaterGame.log",
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "log_bytes": 0,
+     "artifact": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/confirm/out/PqxdhDeploymentIdealLaterGame.olean",
+     "artifact_sha256": "e2e9dce101c87008bafc75e5dff2ac34d5821982a8041b2bd5db1d16779e3ea1",
+     "meta": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/confirm/logs/PqxdhDeploymentIdealLaterGame.meta",
+     "meta_sha256": "d997e9aae2be0ccc68701754b8527207fafdb756cb3fcac9c9b99993accf6ee5",
+     "equals_fix_pass_final": true
+    },
+    {
+     "module": "BeaconcryptCore",
+     "head": "424886324a1d82cdb91a594fe6ed4104e9b0ffc9",
+     "dirty_paths_before": 0,
+     "dirty_paths_after": 0,
+     "start": "2026-10-10T05:03:32Z",
+     "end": "2026-10-10T05:03:34Z",
+     "exit": 0,
+     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/confirm/logs/root.log",
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "log_bytes": 0,
+     "artifact": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/confirm/out/root.olean",
+     "artifact_sha256": "3ecd462c6dfabb34a5aa4c51a62de96070c89fef7fac2981e70a810da1f31387",
+     "meta": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/confirm/logs/root.meta",
+     "meta_sha256": "86b33da0213476660abb3297564bb1acdb15ef0df36e915e8d0d278ecee5c07b",
+     "equals_fix_pass_root": true
+    }
+   ],
+   "rebuilds_leanpath": {
+    "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/fix/leanpath",
+    "sha256": "7dc1fc7b82c178c14a1b452d672b504fbdd00ffe508ef5468a077e82895ec12b"
+   },
+   "clean_tree_inventory": {
+    "tag": "tip-clean",
+    "who": "implementer, after the review fix pass documentation commit",
+    "exit": 0,
+    "head": "424886324a1d82cdb91a594fe6ed4104e9b0ffc9",
+    "dirty_paths_before": 0,
+    "dirty_paths_after": 0,
+    "start": "2026-10-10T04:57:21Z",
+    "end": "2026-10-10T04:59:06Z",
+    "lease": "00000449",
+    "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/fix/logs/inventory-tip-clean.log",
+    "log_sha256": "5801449e1285472332997dd5176874e7258778b90e6f2705ed8b9aa23acf826c",
+    "result_line": "Formal-verification inventory matches the reviewed boundary.",
+    "command": "coord.sh lease mem claude @nix lqf-Dfix-inventory-tip-clean --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C /tmp/beaconcrypt-deployment-lqf-targets/beaconcrypt-core check-inventory SHELL=bash",
+    "note": "on the clean tree at 42488632 (empty git status before and after); recorded only in scratch (D/fix/NOTES.md) until this record (the confirming review's optional record); the integration's checks receipt repeats it"
+   },
+   "findings_fixed": [
+    "nit: the guide's re-estimate now says that B0's spike as LQ-F design-v2 section 4.5 scopes it ((i) stepAtC_ghost, (ii) the non-selected logged accept step, (iii) step_serverRead) does not test the per-kind budget route of open point 5, that the orchestrator should add a per-kind budget step to B0's spike scope, and that otherwise unit B1 re-estimates once the route is tried (with a note of the first wording); LQ-F design-v2 unedited",
+    "nit: the guide's fix-pass bullet on the bare \"design-v2\" now says 33 existing Lean modules at ab9986ef (git grep -l design-v2 over the Lean sources: 33 at ab9986ef, 35 at 42488632 with D1 and D2), with a note of the first wording; review.fixes keeps the review's finding as written",
+    "record: the clean-tip check-inventory run at 42488632 (lease 00000449) and the confirming rebuilds are cited in clean_tree_inventory and rebuilds above, in the guide's \"LQ-F upstream unit D: checks\" and in its new section \"LQ-F upstream unit D: confirming review\"; the integration's checks receipt repeats them"
+   ],
+   "records": [
+    "all ten findings of the review of 28230554 resolved at 42488632; no statement weaker (no action)",
+    "the guide's status paragraph, publication bullet and open point 1 and the analysis entry's last sentence: the \"not integrated\" sentences, which open point 1 said the integration replaces with its record, now record the confirming review and the integration's route (fast-forward of central to the branch's checked tip); the integration message records the outcome"
+   ],
+   "files_changed": [
+    "doc/formal-verification-analysis.md",
+    "doc/impl/common-deployment-experiment.md",
+    "doc/impl/proof-receipts/lqf-upstream-D.json"
+   ],
+   "lean_change": "none (no file under beaconcrypt-core/ changed)",
+   "notes": {
+    "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/confirm/NOTES.md",
+    "sha256": "27317ab058c19aa22cf660fae954a1b23222907165407d1b9189329be5378acc"
+   },
+   "scratch": "/tmp/bc-arc-scratch/common-experiment/lqf-up/D/confirm/ (review checks), /tmp/bc-arc-scratch/common-experiment/lqf-up/D/int (record-commit scripts, backups, integration)",
+   "git_diff_check": {
+    "range": "424886324a1d82cdb91a594fe6ed4104e9b0ffc9..working tree (the confirming-review record, before this receipt was written)",
+    "exit": 0,
+    "output": ""
+   }
+  }
  },
- "integration": "not integrated (task: do not integrate); the integration replaces the \"not integrated\" sentences of the guide status paragraph and the analysis entry with its record"
+ "integration": "not integrated at the record commit; integration (PROTOCOL section 6) by fast-forward of central to the branch's checked tip (the record commit, or a merge of a newer central above it), with the checks of that tip in the checks receipt /tmp/bc-arc-scratch/common-experiment/lqf-up/D/int/checks-receipt.json and the outcome in the integration message to all; the record commit replaced the \"not integrated\" sentences of the guide status paragraph and the analysis entry with this route"
 }
