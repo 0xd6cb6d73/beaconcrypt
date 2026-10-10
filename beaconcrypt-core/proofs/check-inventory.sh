@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1909
+	[handwritten-lean]=1910
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -39419,6 +39419,15 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem run_slotL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterPost theorem run_slotL"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterPost\.active_branchL$' "$selected_source_module" "PqxdhDeploymentIdealLaterPost dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterPost.active_branchL"
 require_line_count 1 '^theorem active_branchL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterPost theorem active_branchL"
+
+# LQ-F upstream unit B2: the later second compile lemma (U-L2, IdealCompileServerTarget)
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterCompile.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterCompile$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentIdealLaterCompile root import"
+require_line_count 1 '^theorem ' "$selected_source_module" "PqxdhDeploymentIdealLaterCompile theorem inventory"
+require_line_count 1 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentIdealLaterCompile guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealLaterCompile\.ideal_compile_server$' "$selected_source_module" "PqxdhDeploymentIdealLaterCompile dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterCompile.ideal_compile_server"
+require_line_count 1 '^theorem ideal_compile_server([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealLaterCompile theorem ideal_compile_server"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
