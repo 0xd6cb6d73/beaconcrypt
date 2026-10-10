@@ -41445,8 +41445,8 @@ require_line_count 1 '^theorem readWritable_withReader([[:space:]]|$)' "$selecte
 
 selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentProductionHeadlinesClassical.lean
 require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentProductionHeadlinesClassical$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentProductionHeadlinesClassical root import"
-require_line_count 45 '^theorem ' "$selected_source_module" "PqxdhDeploymentProductionHeadlinesClassical theorem inventory"
-require_line_count 45 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentProductionHeadlinesClassical guarded dependencies"
+require_line_count 46 '^theorem ' "$selected_source_module" "PqxdhDeploymentProductionHeadlinesClassical theorem inventory"
+require_line_count 46 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentProductionHeadlinesClassical guarded dependencies"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProductionHeadlinesClassical\.ce_kt$' "$selected_source_module" "PqxdhDeploymentProductionHeadlinesClassical dependency BeaconcryptCore.Computational.PqxdhDeploymentProductionHeadlinesClassical.ce_kt"
 require_line_count 1 '^theorem ce_kt([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProductionHeadlinesClassical theorem ce_kt"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProductionHeadlinesClassical\.ce_kt_close$' "$selected_source_module" "PqxdhDeploymentProductionHeadlinesClassical dependency BeaconcryptCore.Computational.PqxdhDeploymentProductionHeadlinesClassical.ce_kt_close"
@@ -41495,6 +41495,8 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem ce_lor_server([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProductionHeadlinesClassical theorem ce_lor_server"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProductionHeadlinesClassical\.server_gap_bound$' "$selected_source_module" "PqxdhDeploymentProductionHeadlinesClassical dependency BeaconcryptCore.Computational.PqxdhDeploymentProductionHeadlinesClassical.server_gap_bound"
 require_line_count 1 '^theorem server_gap_bound([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProductionHeadlinesClassical theorem server_gap_bound"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProductionHeadlinesClassical\.beacon_gap_le$' "$selected_source_module" "PqxdhDeploymentProductionHeadlinesClassical dependency BeaconcryptCore.Computational.PqxdhDeploymentProductionHeadlinesClassical.beacon_gap_le"
+require_line_count 1 '^theorem beacon_gap_le([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProductionHeadlinesClassical theorem beacon_gap_le"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProductionHeadlinesClassical\.ce_a1_linked$' "$selected_source_module" "PqxdhDeploymentProductionHeadlinesClassical dependency BeaconcryptCore.Computational.PqxdhDeploymentProductionHeadlinesClassical.ce_a1_linked"
 require_line_count 1 '^theorem ce_a1_linked([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProductionHeadlinesClassical theorem ce_a1_linked"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProductionHeadlinesClassical\.sym_gap$' "$selected_source_module" "PqxdhDeploymentProductionHeadlinesClassical dependency BeaconcryptCore.Computational.PqxdhDeploymentProductionHeadlinesClassical.sym_gap"

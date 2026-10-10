@@ -1487,6 +1487,43 @@ open PqxdhDeploymentServerAuthEvent (Reg regsOf regOfEntry summarizeReg stepReg 
 open PqxdhDeploymentServerAuth (PinnedMatchAt PinnedMatch A1NoPinnedMatch)
 open PqxdhDeploymentPublishedTuple (OwnerForgery OwnerEvent ownerIdentities publishedTuple candidateTuple)
 
+/-- Production form of `PqxdhDeploymentHeadlineGap.beacon_gap_le` (frozen: The Beacon-side gap is contained in the union of CE-A1's event and the public ciphertext-gap event on every outcome of the experiment (`beacon_gap`)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`); the same bound (every other term at the production codec and route). The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
+theorem beacon_gap_le (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
+    (checks : Checks) (ensureInit : StateT A ProbComp Bool)
+    (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
+    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec) (bounds : FreshBounds) (mode : Mode)
+    (adversary : OracleComp (ModeSpec mode) X) (budget : Budget) (respects : budget.Respects adversary) (runtime : A) :
+    𝒟[(beaconGap setup (PqxdhBoundaryRecordPrelude.withReader codec reader) budget ∘ PqxdhBoundaryDeployment.unwrap) <$>
+        (PqxdhBoundaryDeployment.sourceGame setup codec reader erased checks ensureInit 0 bounds mode adversary).run
+          runtime] {true} ≤
+      𝒟[((fun outcome => @decide (∃ c, A1NoPinnedMatch setup (PqxdhBoundaryRecordPrelude.withReader codec reader) c
+        outcome) (Classical.propDecidable _)) ∘ PqxdhBoundaryDeployment.unwrap) <$>
+        (PqxdhBoundaryDeployment.sourceGame setup codec reader erased checks ensureInit 0 bounds mode adversary).run
+          runtime] {true} +
+      ctGapTerm setup (PqxdhBoundaryRecordPrelude.withReader codec reader) checks
+        (RawCtxFrameDecoding.sender reader.model) ensureInit bounds mode adversary runtime := by
+  simp only [PqxdhDeploymentProductionTransfer.chance]
+  exact PqxdhDeploymentHeadlineGap.beacon_gap_le setup (PqxdhBoundaryRecordPrelude.withReader codec reader) checks
+      (RawCtxFrameDecoding.sender reader.model) ensureInit
+      ((PqxdhBoundaryDeploymentStep.phase1_withReader codec reader).mpr phase1)
+      ((PqxdhBoundaryDeploymentStep.phase2_withReader codec reader).mpr phase2) bounds mode adversary budget respects
+      runtime
+
+end
+
+section
+open PqxdhDeploymentHeadlineGap
+open PqxdhServerAuthExperiment (Setup Codec Checks)
+open PqxdhDeploymentInterface (Handle Entry FreshBounds Mode ModeSpec Budget)
+open PqxdhDeploymentKemTransfer (Observed happens)
+open PqxdhDeploymentTranscript (summarize phase linkOf acceptOf buildOf finishOf bundleOf candidateOf acceptedKeys
+  publishedPq NoBundleFailureAt designate designateIn Publishes Linked acceptCount)
+open PqxdhDeploymentServerAuthEvent (Reg regsOf regOfEntry summarizeReg stepReg accepted acceptedFrom publishedKeys
+  keysOfBundle bundleOfReg protectedBinding)
+open PqxdhDeploymentServerAuth (PinnedMatchAt PinnedMatch A1NoPinnedMatch)
+open PqxdhDeploymentPublishedTuple (OwnerForgery OwnerEvent ownerIdentities publishedTuple candidateTuple)
+
 /-- Production form of `PqxdhDeploymentHeadlineGap.ce_a1_linked` (frozen: `ce_a1_linked` in the F-ct2 form (design-v2 sections 7.1 and 8)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`); the same bound (every other term at the production codec and route). The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. -/
 theorem ce_a1_linked (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 229#usize)
@@ -3138,6 +3175,14 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentProductionHeadlinesClassical
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentProductionHeadlinesClassical.server_gap_bound
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentProductionHeadlinesClassical.beacon_gap_le' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentProductionHeadlinesClassical.beacon_gap_le
 
 /--
 info: 'BeaconcryptCore.Computational.PqxdhDeploymentProductionHeadlinesClassical.ce_a1_linked' depends on axioms: [propext,
