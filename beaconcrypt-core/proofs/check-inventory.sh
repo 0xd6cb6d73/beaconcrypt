@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1869
+	[handwritten-lean]=1870
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -37929,6 +37929,21 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem tail_clean([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostAccept theorem tail_clean"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostAccept\.resume_clean$' "$selected_source_module" "PqxdhDeploymentIdealPostAccept dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostAccept.resume_clean"
 require_line_count 1 '^theorem resume_clean([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostAccept theorem resume_clean"
+
+# CE-11b unit U6, fourth part: item 2's post-challenge phase on an active cut as the middle run.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealPostItemRun.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentIdealPostItemRun$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentIdealPostItemRun root import"
+require_line_count 4 '^theorem ' "$selected_source_module" "PqxdhDeploymentIdealPostItemRun theorem inventory"
+require_line_count 4 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentIdealPostItemRun guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostItemRun\.acceptAfter_keeps$' "$selected_source_module" "PqxdhDeploymentIdealPostItemRun dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostItemRun.acceptAfter_keeps"
+require_line_count 1 '^theorem acceptAfter_keeps([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostItemRun theorem acceptAfter_keeps"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostItemRun\.itemInv_after$' "$selected_source_module" "PqxdhDeploymentIdealPostItemRun dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostItemRun.itemInv_after"
+require_line_count 1 '^theorem itemInv_after([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostItemRun theorem itemInv_after"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostItemRun\.bind_clean$' "$selected_source_module" "PqxdhDeploymentIdealPostItemRun dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostItemRun.bind_clean"
+require_line_count 1 '^theorem bind_clean([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostItemRun theorem bind_clean"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentIdealPostItemRun\.itemPost_middle$' "$selected_source_module" "PqxdhDeploymentIdealPostItemRun dependency BeaconcryptCore.Computational.PqxdhDeploymentIdealPostItemRun.itemPost_middle"
+require_line_count 1 '^theorem itemPost_middle([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentIdealPostItemRun theorem itemPost_middle"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
