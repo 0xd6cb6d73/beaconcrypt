@@ -1,6 +1,6 @@
 {
  "date": "2026-10-10T01:53:32.822401+00:00",
- "scope": "CE-11b unit U4 follow-up (track u4c): anomaly_le_pk and anomaly_prefix_le_pk by the route of plan section 84 (the anomaly, and the anomaly on a prefix, on the record world with envGD at most ctGuessByCca setup (anomalyGuesser ...), the ciphertext guess of an explicit guesser over the IND-CCA oracle interface that receives the selected public key and a decapsulation oracle for the selected secret key, never the secret key or the challenge), with the decapsulation query bound (at most budget.finish); and unit U8 (plan section 49 Q3, native form): CE.idealGame g and the final split form with slot 0's message key drawn first or last.",
+ "scope": "CE-11b unit U4 follow-up (track u4c): anomaly_le_pk and anomaly_prefix_le_pk by the route of plan section 84 (the anomaly, and the anomaly on a prefix, on the record world with envGD at most ctGuessByCca setup (anomalyGuesser ...), the ciphertext guess of an explicit guesser over the IND-CCA oracle interface that receives the selected public key and a decapsulation oracle for the selected secret key, never the secret key or the challenge), with the decapsulation query bound (at most budget.finish); and unit U8 (plan section 49 Q3, native form): CE.idealGame g and the final split form with slot 0's message key drawn first or last. Reviewed at c7f33970 (semantic and hygiene, APPROVE_WITH_NITS: one minor finding and four nits, documentation and records only); review fix pass: one documentation commit, no Lean file or statement changed.",
  "basis": {
   "start": "69a2470358f7433fd41b8c13a5dfba0e40bc34c7",
   "central_at_receipt": "82b5fe43b1812c70ef284d4493ba2008d3575bf2",
@@ -634,7 +634,7 @@
   "the defined quantity is named ctGuessByCca (the brief wrote ctGuessBy, which names the frozen oracle-free form); ctGuessByCca_ambient and ctGuessByCca_le_pk relate them",
   "the guesser outputs an optional ciphertext; the hit event is some of the encapsulation ciphertext",
   "two modules for anomaly_le_pk (PqxdhDeploymentIdealKeySwap registered in this track, PqxdhDeploymentIdealAnomalyGuesser)",
-  "the guesser's uniform-query count and zero base-oracle count are not stated as theorems (open for CE-12a if its headline lists the adversary caps)",
+  "the guesser's query caps: only the decapsulation count is a theorem here (anomalyGuesser_decapsulations, at most budget.finish); the uniform-query cap and the zero base-oracle cap are definite CE-12a obligations in the existing cost model, not conditional ones (corrected after the review of c7f33970; first recorded as 'open for CE-12a if its headline lists the adversary caps'): CE-12a states OneKeyAdversary.MakesAtMostQueries for its predict-then-compare adversary as kem_transfer_bills does for the KEM step, with phase-1 caps budget.finish + 1 decapsulations, 0 base queries (PqxdhPrivateRootQueryBounds.ccaCoins_excluded at IsMlKemBaseQuery, lifted like ccaCoins_decapsulate) and (count + 1) * keygenCost + (qInit + 32) + sum_kind budget.cap kind * u kind uniform queries (ccaCoins_uniform, keygen_uniform, sampleFamily_uniform, construct_uniform, per-class weights from idealStep_bound, uniformCap and OpenUniform.total, weighted_bound), from the premises kem_transfer_bills already takes (KemBound setup caps, initBound, budget.Respects adversary); no new contract or assumption",
   "U8 statements hold for every view erasing the hidden-slot service state; the key-first game runs over the lazy slot cache (lazyService) after idealGame_lazy, because the counted table breaks exact commutation with completions"
  ],
  "contracts_used": {
@@ -949,6 +949,272 @@
   "U8": "complete"
  },
  "review": {
-  "status": "not reviewed; not integrated"
+  "status": "reviewed at c7f33970 (independent semantic and hygiene lenses): no wrong statement, proof or hidden assumption; APPROVE_WITH_NITS with one minor finding and four nits, all about documentation and records, addressed by the review fix pass (key fix_pass); not re-reviewed; not integrated",
+  "reviewed_commit": "c7f3397067b8082dec2bbe611d6aa82f54308cee",
+  "reviewed_range": "69a2470358f7433fd41b8c13a5dfba0e40bc34c7..c7f3397067b8082dec2bbe611d6aa82f54308cee",
+  "lenses": [
+   "semantic",
+   "hygiene"
+  ],
+  "verdict": "APPROVE_WITH_NITS",
+  "review_scratch": [
+   "/tmp/bc-arc-scratch/common-experiment/ce11b/u4c/review-semantic",
+   "/tmp/bc-arc-scratch/common-experiment/ce11b/u4c/review-hygiene"
+  ],
+  "review_notes": [
+   "/tmp/bc-arc-scratch/common-experiment/ce11b/u4c/review-semantic/NOTES.md",
+   "/tmp/bc-arc-scratch/common-experiment/ce11b/u4c/review-hygiene/NOTES.txt"
+  ],
+  "checks": [
+   "the three modules and the root recompiled through coord.sh lean (semantic: KeySwap and KeyFirst against the published 69a24703 LEAN_PATH, AnomalyGuesser against u4c/leanpath; hygiene: all four), exit 0, empty logs; oleans byte-identical to the track's finals",
+   "guards = theorems 31/31/16 (78), exact, only propext, Classical.choice, Quot.sound; no forbidden token",
+   "ctGuessByCca is OneKeyAdversary's phase 1 under KEMScheme.IND_CCA_preChallengeImpl (decapsulation queries answered under the selected secret key) followed by the encapsulation; anomalyGuesser's type gives it no secret key and no challenge; the coupling is machine-checked",
+   "U8: the statements are LawEq for outcomeMap eraseService, a finer view than design v1's observeView, related to the published idealGame through idealGame_lazy",
+   "per-commit inventory (inv_per_commit.py) at 69a24703, e8eb00f8, c988bf7c, 6ae3f97b, c7f33970: every reviewed-inventory row hash matches the commit's blobs, category counts equal expected_category_counts (handwritten Lean 1870/1871/1872/1873/1873), no unlisted .lean file; block_eval.sh: every require_line_count line of the new blocks evaluates against each commit's own blobs (65/130/165/165 lines, 0 failures)",
+   "receipt equals HEAD; documentation one paragraph per line, no /tmp path in added guide or analysis lines; footers exact; git ls-remote = HEAD; registry; git diff --check clean; trial merge with 82b5fe43 reproduced"
+  ],
+  "findings": [
+   {
+    "severity": "minor",
+    "title": "open point on the guesser's uniform and base query caps written as conditional, although the CE chain already bills IND-CCA adversary caps (kem_transfer_bills: MakesAtMostQueries with uniform, base and decapsulation caps)"
+   },
+   {
+    "severity": "nit",
+    "title": "guide wording suggested that U8 has a key-indistinguishability consumer; design-v2 section 10.2 and Q3: none"
+   },
+   {
+    "severity": "nit",
+    "title": "plan section 84 cited, but the branch's committed plan snapshot stops at section 83 (central 82b5fe43's snapshot has it, byte-identical)"
+   },
+   {
+    "severity": "nit",
+    "title": "status paragraph: \"import only modules published at 69a24703\" (AnomalyGuesser imports KeySwap, added by this track); conclusion holds"
+   },
+   {
+    "severity": "nit",
+    "title": "no implementer check-inventory run at e8eb00f8 or at the committed tip c7f33970 (covered by the review)"
+   }
+  ],
+  "inventory_at_tip": {
+   "log": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4c/review-hygiene/logs/inventory-head.log",
+   "log_sha256": "ae61302a0c896a70430552435116cdb4837793f9dc7631cc146abb4cb0edc6fa",
+   "exit": 0,
+   "seconds": 105,
+   "head_at_run": "c7f3397067b8082dec2bbe611d6aa82f54308cee",
+   "working_tree_dirt_lines": 0,
+   "working_tree_dirt_lines_after": 0,
+   "command": "coord.sh lease mem claude @nix ... -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C beaconcrypt-core check-inventory",
+   "log_tail": [
+    "Formal-verification inventory matches the reviewed boundary.",
+    "make: Leaving directory '/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core'"
+   ],
+   "note": "run by the hygiene review at the committed tip (the track itself ran the focused inventory at c988bf7c and 6ae3f97b only); check-inventory reads nothing under doc/"
+  }
+ },
+ "fix_pass": {
+  "commits": {
+   "documentation": "the commit that adds this record (one documentation commit over c7f33970; its hash is recorded by the commit that records the confirming review)"
+  },
+  "changed_files": [
+   "doc/impl/common-deployment-experiment.md",
+   "doc/formal-verification-analysis.md",
+   "doc/impl/proof-receipts/common-deployment-experiment-ce11b-u4c.json"
+  ],
+  "per_finding": [
+   {
+    "finding": "minor: conditional open point on the guesser's uniform and zero base-oracle caps",
+    "fix": "rewritten as a definite CE-12a obligation in the guide's open points (bullet \"CE-12a obligation\"): MakesAtMostQueries for the predict-then-compare adversary; phase 2 no query; phase 1 at most budget.finish + 1 logical decapsulations (anomalyGuesser_decapsulations), 0 base-oracle queries (ccaCoins_excluded at IsMlKemBaseQuery lifted like ccaCoins_decapsulate, no budget premise) and (count + 1) * keygenCost + (qInit + 32) + sum_kind budget.cap kind * u kind uniform queries (ccaCoins_uniform; keygen_uniform, sampleFamily_uniform; construct_uniform; per-class weights from idealStep_bound, uniformCap, OpenUniform.total; weighted_bound); premises KemBound setup caps, initBound, budget.Respects adversary, as kem_transfer_bills; also the decision \"Query accounting\", the analysis's Limits paragraph, plan section 89 (corrected) and deviations_from_design"
+   },
+   {
+    "finding": "nit: U8 \"the form a key-indistinguishability consumer expects\"",
+    "fix": "the plain-terms paragraph now says: the analogue of item 2's stage S6; no CE-12 headline consumes it (design-v2 section 10.2); built because plan section 49 Q3 keeps plan section 14's row; the analysis's Limits says the same"
+   },
+   {
+    "finding": "nit: plan section 84 cited but absent from the branch's committed plan snapshot",
+    "fix": "recorded in the guide's integration bullet: the commit that records the confirming review refreshes the committed snapshot through the working plan's newest section (sections 84 onward on this branch; 88 onward against central 82b5fe43's, through 87); the integration merge of 82b5fe43 (or later) keeps it and confirms section 84; no snapshot change in this commit (a refresh now would conflict with central's snapshot without need)"
+   },
+   {
+    "finding": "nit: status paragraph \"import only modules published at 69a24703\"",
+    "fix": "now \"published at 69a24703 or added by this track (PqxdhDeploymentIdealAnomalyGuesser imports PqxdhDeploymentIdealKeySwap)\", with the reason the merge changes no import: 69a24703..82b5fe43 adds ten Lean modules and changes no existing Lean file except the root"
+   },
+   {
+    "finding": "nit (record): no implementer check-inventory run at e8eb00f8 or at the tip",
+    "fix": "the review's tip run is recorded in review.inventory_at_tip; this fix pass ran the focused inventory with its changes in the tree (focused_inventory)"
+   }
+  ],
+  "changed_statements": "none: no Lean file, inventory row or check-inventory.sh block changed; the 78 theorems keep their statements and exact guards",
+  "strength": "unchanged: no statement changed or removed; the documentation states the remaining CE-12a obligation more precisely, without weakening any claim",
+  "rechecks": {
+   "PqxdhDeploymentIdealKeySwap": {
+    "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealKeySwap",
+    "start": "2026-10-10T02:18:09.931220990Z",
+    "end": "2026-10-10T02:18:16.345715564Z",
+    "exit": 0,
+    "source_sha256": "c7dbb86cbca10c2cff7631cbf98592e4d3e108481a2839ce2510894c6b53ea51",
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4c/fix/logs/PqxdhDeploymentIdealKeySwap.log",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4c/leanpath",
+    "leanpath_sha256": "886b1629c40860c52bc0e27b1dcb2a3bf759064cf5f0bb63da7b1f7784228a12",
+    "head": "c7f3397067b8082dec2bbe611d6aa82f54308cee",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean",
+     "<source>"
+    ]
+   },
+   "PqxdhDeploymentIdealAnomalyGuesser": {
+    "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealAnomalyGuesser",
+    "start": "2026-10-10T02:18:18.969999926Z",
+    "end": "2026-10-10T02:18:36.264993777Z",
+    "exit": 0,
+    "source_sha256": "00280c1d44b46ea884cdab9049c9e63156962f11053b49fce79106642558ef3f",
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4c/fix/logs/PqxdhDeploymentIdealAnomalyGuesser.log",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4c/leanpath",
+    "leanpath_sha256": "886b1629c40860c52bc0e27b1dcb2a3bf759064cf5f0bb63da7b1f7784228a12",
+    "head": "c7f3397067b8082dec2bbe611d6aa82f54308cee",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean",
+     "<source>"
+    ]
+   },
+   "PqxdhDeploymentIdealKeyFirst": {
+    "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealKeyFirst",
+    "start": "2026-10-10T02:18:38.986928757Z",
+    "end": "2026-10-10T02:18:43.665640299Z",
+    "exit": 0,
+    "source_sha256": "49fb3b6f8d396dc9c30b6dca2ef57cd09bf2be22a64d5b33816ea235f4c0ae26",
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4c/fix/logs/PqxdhDeploymentIdealKeyFirst.log",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4c/leanpath",
+    "leanpath_sha256": "886b1629c40860c52bc0e27b1dcb2a3bf759064cf5f0bb63da7b1f7784228a12",
+    "head": "c7f3397067b8082dec2bbe611d6aa82f54308cee",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean",
+     "<source>"
+    ]
+   },
+   "root": {
+    "module": "BeaconcryptCore",
+    "start": "2026-10-10T02:18:46.392208792Z",
+    "end": "2026-10-10T02:18:48.848820286Z",
+    "exit": 0,
+    "source_sha256": "80cbb59a61660922fabae940392ab43dae19d5a1d60b5c009ed3459289a0147d",
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4c/fix/logs/root.log",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4c/leanpath",
+    "leanpath_sha256": "886b1629c40860c52bc0e27b1dcb2a3bf759064cf5f0bb63da7b1f7784228a12",
+    "head": "c7f3397067b8082dec2bbe611d6aa82f54308cee",
+    "command": [
+     "coord.sh",
+     "lean",
+     "claude",
+     "<label>",
+     "--",
+     "timeout",
+     "180",
+     "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean",
+     "-j1",
+     "-M8000",
+     "--root=/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core/proofs/lean",
+     "<source>"
+    ]
+   }
+  },
+  "rechecks_note": "no -o; against ce11b/u4c/leanpath (u4c/olean, then the published 69a24703 LEAN_PATH); sources equal the receipt's files_sha256 (no Lean change)",
+  "focused_inventory": {
+   "fix1": {
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4c/fix/logs/inventory-fix1.log",
+    "log_sha256": "0bbde97384a68b0258df40ba5f5223b361ad7c12c5770a1e7fc193d57de29f7e",
+    "exit": 0,
+    "start": "2026-10-10T02:19:56Z",
+    "end": "2026-10-10T02:21:40Z",
+    "head_at_run": "c7f3397067b8082dec2bbe611d6aa82f54308cee",
+    "working_tree_dirt_lines": 3,
+    "working_tree_dirt_lines_after": 3,
+    "log_tail": [
+     "Formal-verification inventory matches the reviewed boundary.",
+     "make: Leaving directory '/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core'"
+    ]
+   }
+  },
+  "focused_inventory_note": "run with all of this fix pass's changes in the tree except this record of the run; check-inventory reads nothing under doc/",
+  "plan": {
+   "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
+   "sha256": "575b313721d665f8e51062bf6cd4a9fa9e21162814f44dcf839b77e9f8597ae8",
+   "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4c/fix/docs/plan.at-u4c-fix-receipt-575b3137.md",
+   "dated_copy_sha256": "575b313721d665f8e51062bf6cd4a9fa9e21162814f44dcf839b77e9f8597ae8",
+   "sections": [
+    89,
+    91
+   ],
+   "section_89_corrected": "the open sentence: the guesser's caps are a definite CE-12a obligation (was: 'if the headline lists the adversary's caps')",
+   "section_91": "this review fix pass",
+   "note": "section 90 belongs to track u7 (appended while this fix pass ran)",
+   "backup_before": [
+    "/tmp/bc-arc-scratch/common-experiment/ce11b/u4c/fix/docs/plan.before-u4c-fix-feca373c.md",
+    "/tmp/bc-arc-scratch/common-experiment/ce11b/u4c/fix/docs/plan.before-u4c-fix-fee2f081.md"
+   ]
+  },
+  "notes": {
+   "track_notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4c/NOTES.md (section \"Review fix pass\")",
+   "ce11b_notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/NOTES.md (section \"Track u4c\")"
+  },
+  "scripts": {
+   "recheck.sh": {
+    "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4c/fix/recheck.sh",
+    "sha256": "a023a0137322de6e68c0ce97d6530000e19389efd665c16adc3d5f68ba672132"
+   },
+   "inventory.sh": {
+    "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4c/fix/inventory.sh",
+    "sha256": "ab8459bc4d7b0f023547acad588d02cf25f5df91033e0ae6fe95ff2c2c7148e3"
+   },
+   "receipt_fix.py": {
+    "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4c/fix/receipt_fix.py",
+    "sha256": "18d06a0094a85470897c5b57973b8374fb182f3368753e99b84c4237be0a415d"
+   },
+   "plan_edit.py": {
+    "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4c/fix/plan_edit.py",
+    "sha256": "c9bbb16251f69a0ec13437b8088101aafc91c4145f911fc17a78026ed35ecd3c"
+   }
+  },
+  "git_diff_check": {
+   "range": "c7f33970..working tree (this fix pass)",
+   "exit": 0,
+   "output": ""
+  }
  }
 }
