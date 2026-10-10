@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1949
+	[handwritten-lean]=1950
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -40964,6 +40964,19 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem ce_app_beacon_later_sym_billed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineGated theorem ce_app_beacon_later_sym_billed"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineGated\.symbolic_lor_later_bound_billed$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineGated dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineGated.symbolic_lor_later_bound_billed"
 require_line_count 1 '^theorem symbolic_lor_later_bound_billed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineGated theorem symbolic_lor_later_bound_billed"
+
+# CE-12 P4 step 1 (P3b): the later-quantum CE-12 forms with ctCollTerm, closed with epsilon_ctcoll at the run-phase adversary (and the billed form).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterHeadlineClosed.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineClosed$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentLaterHeadlineClosed root import"
+require_line_count 3 '^theorem ' "$selected_source_module" "PqxdhDeploymentLaterHeadlineClosed theorem inventory"
+require_line_count 3 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineClosed guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineClosed\.symbolic_lor_later_closed$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineClosed dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineClosed.symbolic_lor_later_closed"
+require_line_count 1 '^theorem symbolic_lor_later_closed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineClosed theorem symbolic_lor_later_closed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineClosed\.symbolic_lor_later_bound_closed$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineClosed dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineClosed.symbolic_lor_later_bound_closed"
+require_line_count 1 '^theorem symbolic_lor_later_bound_closed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineClosed theorem symbolic_lor_later_bound_closed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterHeadlineClosed\.symbolic_lor_later_bound_closed_billed$' "$selected_source_module" "PqxdhDeploymentLaterHeadlineClosed dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineClosed.symbolic_lor_later_bound_closed_billed"
+require_line_count 1 '^theorem symbolic_lor_later_bound_closed_billed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterHeadlineClosed theorem symbolic_lor_later_bound_closed_billed"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
