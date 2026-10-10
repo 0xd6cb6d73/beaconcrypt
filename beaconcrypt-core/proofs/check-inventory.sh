@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1914
+	[handwritten-lean]=1915
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -39701,6 +39701,27 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem game_counts([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineCtTrace theorem game_counts"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineCtTrace\.ctColl_triple$' "$selected_source_module" "PqxdhDeploymentHeadlineCtTrace dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineCtTrace.ctColl_triple"
 require_line_count 1 '^theorem ctColl_triple([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineCtTrace theorem ctColl_triple"
+
+# CE-12 P2b: ct_collision_game and the closed bound epsilon_ctcoll (ct_coll_le).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineCtColl.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineCtColl$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentHeadlineCtColl root import"
+require_line_count 7 '^theorem ' "$selected_source_module" "PqxdhDeploymentHeadlineCtColl theorem inventory"
+require_line_count 7 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentHeadlineCtColl guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineCtColl\.sum_pairs$' "$selected_source_module" "PqxdhDeploymentHeadlineCtColl dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineCtColl.sum_pairs"
+require_line_count 1 '^theorem sum_pairs([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineCtColl theorem sum_pairs"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineCtColl\.sum_triples$' "$selected_source_module" "PqxdhDeploymentHeadlineCtColl dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineCtColl.sum_triples"
+require_line_count 1 '^theorem sum_triples([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineCtColl theorem sum_triples"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineCtColl\.triple_expect$' "$selected_source_module" "PqxdhDeploymentHeadlineCtColl dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineCtColl.triple_expect"
+require_line_count 1 '^theorem triple_expect([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineCtColl theorem triple_expect"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineCtColl\.ct_collision_game$' "$selected_source_module" "PqxdhDeploymentHeadlineCtColl dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineCtColl.ct_collision_game"
+require_line_count 1 '^theorem ct_collision_game([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineCtColl theorem ct_collision_game"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineCtColl\.ct_coll_le$' "$selected_source_module" "PqxdhDeploymentHeadlineCtColl dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineCtColl.ct_coll_le"
+require_line_count 1 '^theorem ct_coll_le([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineCtColl theorem ct_coll_le"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineCtColl\.ctCollEps_le_design$' "$selected_source_module" "PqxdhDeploymentHeadlineCtColl dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineCtColl.ctCollEps_le_design"
+require_line_count 1 '^theorem ctCollEps_le_design([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineCtColl theorem ctCollEps_le_design"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentHeadlineCtColl\.ct_coll_billed$' "$selected_source_module" "PqxdhDeploymentHeadlineCtColl dependency BeaconcryptCore.Computational.PqxdhDeploymentHeadlineCtColl.ct_coll_billed"
+require_line_count 1 '^theorem ct_coll_billed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentHeadlineCtColl theorem ct_coll_billed"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
