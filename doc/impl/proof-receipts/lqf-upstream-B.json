@@ -1,11 +1,11 @@
 {
  "date": "2026-10-10T09:20:19.160935+00:00",
- "scope": "LQ-F upstream unit B (the later second compile lemma U-L2: the spike B0, unit B1 params/pool/cut/branch and unit B2 mid/steps/post/compile; LQ-F upstream design-v2 sections 4.5 to 4.7 of /tmp/bc-arc-scratch/common-experiment/lqf-up, CE plan section 49 Q1): eight Lean modules proving unit D2's frozen target PqxdhDeploymentIdealLaterGame.IdealCompileServerTarget exactly as stated (PqxdhDeploymentIdealLaterCompile.ideal_compile_server). Not reviewed, not integrated.",
+ "scope": "LQ-F upstream unit B (the later second compile lemma U-L2: the spike B0, unit B1 params/pool/cut/branch and unit B2 mid/steps/post/compile; LQ-F upstream design-v2 sections 4.5 to 4.7 of /tmp/bc-arc-scratch/common-experiment/lqf-up, CE plan section 49 Q1): eight Lean modules proving unit D2's frozen target PqxdhDeploymentIdealLaterGame.IdealCompileServerTarget exactly as stated (PqxdhDeploymentIdealLaterCompile.ideal_compile_server). Reviewed at 66e5c888 (semantic and hygiene, both APPROVE_WITH_NITS; 3 minor findings, 9 nits and 1 verification record with no action); the review fix pass is one Lean commit (8081ac51: the Pool premises sentence, the upperLayerL_read docstring and 38 unused selectively opened names, inventory rows rehashed) and the documentation commit that updates this receipt (key review). Not integrated at this receipt.",
  "basis": {
   "start": "adf9d8fc0300202830315d5f835bfb2268b0ec8f",
   "central_at_receipt": "c27b45336b6c04087239d9b797fcf6f1aba1c85e",
   "merges": [],
-  "central_note": "fresh worktree from fetched origin/codex/full-proof-composition = adf9d8fc (unit A1 integrated); central moved during the unit to c72db84a (unit A2 and CE-12 P2 integrated); not merged (the integration merges central first; documentation and inventory files changed on both sides)"
+  "central_note": "fresh worktree from fetched origin/codex/full-proof-composition = adf9d8fc (unit A1 integrated); central moved during the unit to c27b4533 (\"Merge central c72db84a into item 7 increment A\": unit A2, CE-12 P2 and item 7 increment A integrated), already before the documentation commit 738e4e70 (the first wording of this note said c72db84a; corrected by the review fix pass); not merged (the integration merges central c27b4533 or newer first; central since adf9d8fc only adds Lean modules, but changes BeaconcryptCore.lean, check-inventory.sh, reviewed-inventory.txt, the analysis, the guide, the working plan and the item 2 guide, which need the union of both sides; the handwritten Lean count is recounted after the merge)"
  },
  "topic": {
   "branch": "codex/deployment-lqf-compile",
@@ -46,7 +46,15 @@
   ],
   "head_at_receipt": "ab0de0990de74345597cb19739931d95ebee56f3",
   "documentation_commit": "738e4e705f35645519a1169b04524ca2bc166091",
-  "record_commit": "the commit that adds checks.clean_tip (changes only doc/impl/common-deployment-experiment.md and this receipt)"
+  "record_commit": "the commit that adds checks.clean_tip (changes only doc/impl/common-deployment-experiment.md and this receipt)",
+  "head_at_review": "66e5c8887af04d42bf31a3d0a52aa4a101ed588d",
+  "review_fix_commits": [
+   {
+    "sha": "8081ac519b3e613ba1a7ff28ffc2e32b3cd191a0",
+    "subject": "Fix the LQ-F unit B docstrings and opens found by review"
+   }
+  ],
+  "review_fix_documentation_commit": "the commit that updates this receipt with the key review (on top of 8081ac51)"
  },
  "design": {
   "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/../design-v2.md",
@@ -75,7 +83,32 @@
    ],
    "instances": 0,
    "source_sha256": "79758a600eb7c90586dfdacdbfbda3a78ea8f5c3904a3754db672fb08fcd8908",
-   "olean_sha256": "8e771b1423dd78c4c16ecf2342b49be591994acde5c4dbb1ef7a519012e0c632"
+   "olean_sha256": "8e771b1423dd78c4c16ecf2342b49be591994acde5c4dbb1ef7a519012e0c632",
+   "axiom_profiles": {
+    "propext, Classical.choice, Quot.sound": 3
+   },
+   "after_review_fix": {
+    "commit": "8081ac519b3e613ba1a7ff28ffc2e32b3cd191a0",
+    "source_sha256": "8a99da8559f88d09a283f9464bbc373d4a4ac600a3a9fad0a1241009ba4bf6e2",
+    "final": {
+     "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterParams",
+     "start": "2026-10-10T09:47:55.264780796Z",
+     "end": "2026-10-10T09:47:58.046726586Z",
+     "exit": 0,
+     "head": "8081ac519b3e613ba1a7ff28ffc2e32b3cd191a0",
+     "dirty_paths": 0,
+     "source_sha256": "8a99da8559f88d09a283f9464bbc373d4a4ac600a3a9fad0a1241009ba4bf6e2",
+     "log_bytes": 0,
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "artifact": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterParams.olean",
+     "artifact_sha256": "8e771b1423dd78c4c16ecf2342b49be591994acde5c4dbb1ef7a519012e0c632",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/leanpath",
+     "leanpath_sha256": "9981497dd2b15033eb13d783ecf99bc6041dd05495e97dd0c9716f89e2e35a65",
+     "command": "coord.sh lean claude <label> -- timeout 180 /home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean -j1 -M8000 --root=/tmp/beaconcrypt-deployment-lqf-compile/beaconcrypt-core/proofs/lean -o /tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterParams.olean /tmp/beaconcrypt-deployment-lqf-compile/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterParams.lean",
+     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/logs/final/PqxdhDeploymentIdealLaterParams.log"
+    },
+    "note": "the unused selectively opened name MlKem768PublicKey dropped; no docstring changed; olean byte-identical to the unit final; theorem, definition, instance and guard lists unchanged"
+   }
   },
   {
    "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterPool",
@@ -126,7 +159,34 @@
    ],
    "instances": 0,
    "source_sha256": "198bc251a6b565c065ca835b0ccdcff38eab7ff4d001527d6443dd43e3a9df72",
-   "olean_sha256": "a8848cf9182d891e75f310e51b1a41554c20bf273659dfa4241ba397c7d64f76"
+   "olean_sha256": "a8848cf9182d891e75f310e51b1a41554c20bf273659dfa4241ba397c7d64f76",
+   "axiom_profiles": {
+    "propext, Classical.choice, Quot.sound": 28,
+    "propext, Quot.sound": 1
+   },
+   "axiom_profiles_note": "from the exact guards; onBase_view: propext, Quot.sound (added by the review fix pass)",
+   "after_review_fix": {
+    "commit": "8081ac519b3e613ba1a7ff28ffc2e32b3cd191a0",
+    "source_sha256": "00109790c4aaa179bc903abd444a056896a447749f0b82c5bd65de7436adb97f",
+    "final": {
+     "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterPool",
+     "start": "2026-10-10T09:48:00.672957121Z",
+     "end": "2026-10-10T09:48:08.067792939Z",
+     "exit": 0,
+     "head": "8081ac519b3e613ba1a7ff28ffc2e32b3cd191a0",
+     "dirty_paths": 0,
+     "source_sha256": "00109790c4aaa179bc903abd444a056896a447749f0b82c5bd65de7436adb97f",
+     "log_bytes": 0,
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "artifact": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterPool.olean",
+     "artifact_sha256": "0f42a2839b67ee11a5f365d8554fc679c0d87e7019bc54ee85df1b031a60117e",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/leanpath",
+     "leanpath_sha256": "9981497dd2b15033eb13d783ecf99bc6041dd05495e97dd0c9716f89e2e35a65",
+     "command": "coord.sh lean claude <label> -- timeout 180 /home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean -j1 -M8000 --root=/tmp/beaconcrypt-deployment-lqf-compile/beaconcrypt-core/proofs/lean -o /tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterPool.olean /tmp/beaconcrypt-deployment-lqf-compile/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterPool.lean",
+     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/logs/final/PqxdhDeploymentIdealLaterPool.log"
+    },
+    "note": "module docstring: a Premises sentence (the codec contracts of good_step_poolL and compile_simulation_poolL); the unused selectively opened names attach, createPool, withAccepts and CutCE dropped; theorem, definition, instance and guard lists unchanged"
+   }
   },
   {
    "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterCut",
@@ -177,7 +237,32 @@
    ],
    "instances": 0,
    "source_sha256": "a8f0a3b9194c53641395856a98d84bb1cbc1493ef31ca9a2a267489447044248",
-   "olean_sha256": "eaec75905f4adde05ce216cbe342c454613aed96d193ccac9debd0c6574c44db"
+   "olean_sha256": "eaec75905f4adde05ce216cbe342c454613aed96d193ccac9debd0c6574c44db",
+   "axiom_profiles": {
+    "propext, Classical.choice, Quot.sound": 24
+   },
+   "after_review_fix": {
+    "commit": "8081ac519b3e613ba1a7ff28ffc2e32b3cd191a0",
+    "source_sha256": "4dbbdb3db47ed6f0e49eca329f90acf4e2d32f89076165843da1bc61df4b0ac1",
+    "final": {
+     "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterCut",
+     "start": "2026-10-10T09:48:10.518325089Z",
+     "end": "2026-10-10T09:48:15.735284520Z",
+     "exit": 0,
+     "head": "8081ac519b3e613ba1a7ff28ffc2e32b3cd191a0",
+     "dirty_paths": 0,
+     "source_sha256": "4dbbdb3db47ed6f0e49eca329f90acf4e2d32f89076165843da1bc61df4b0ac1",
+     "log_bytes": 0,
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "artifact": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterCut.olean",
+     "artifact_sha256": "2eea9c81088ef3da660046da818ec69ca60542966e96db0ab2f331f56c903986",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/leanpath",
+     "leanpath_sha256": "9981497dd2b15033eb13d783ecf99bc6041dd05495e97dd0c9716f89e2e35a65",
+     "command": "coord.sh lean claude <label> -- timeout 180 /home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean -j1 -M8000 --root=/tmp/beaconcrypt-deployment-lqf-compile/beaconcrypt-core/proofs/lean -o /tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterCut.olean /tmp/beaconcrypt-deployment-lqf-compile/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterCut.lean",
+     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/logs/final/PqxdhDeploymentIdealLaterCut.log"
+    },
+    "note": "the unused selectively opened names snapshotAt and, in section Prefix, XState, handlerWith, xinitial, laterView (their open line removed), IdealBk, TableState, laterTail and Ledger dropped; no docstring changed; the olean changes only by the declaration positions after the removed line; theorem, definition, instance and guard lists unchanged"
+   }
   },
   {
    "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterBranch",
@@ -221,7 +306,32 @@
    ],
    "instances": 0,
    "source_sha256": "d207919a12b70292f55d2d5e970450c5581b609343189287b203a939396a4fe3",
-   "olean_sha256": "285d00bf0b2a78e0ba00faffcdcbaa4ca61ac673f769d83c6232bf2c6f28bcee"
+   "olean_sha256": "285d00bf0b2a78e0ba00faffcdcbaa4ca61ac673f769d83c6232bf2c6f28bcee",
+   "axiom_profiles": {
+    "propext, Classical.choice, Quot.sound": 21
+   },
+   "after_review_fix": {
+    "commit": "8081ac519b3e613ba1a7ff28ffc2e32b3cd191a0",
+    "source_sha256": "e07c3f1d64a30b820c519ad23d50898f1f32e11d28f4d6bbbecd0b10734520e7",
+    "final": {
+     "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterBranch",
+     "start": "2026-10-10T09:48:18.060908265Z",
+     "end": "2026-10-10T09:48:23.689931516Z",
+     "exit": 0,
+     "head": "8081ac519b3e613ba1a7ff28ffc2e32b3cd191a0",
+     "dirty_paths": 0,
+     "source_sha256": "e07c3f1d64a30b820c519ad23d50898f1f32e11d28f4d6bbbecd0b10734520e7",
+     "log_bytes": 0,
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "artifact": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterBranch.olean",
+     "artifact_sha256": "7b2105201316e5468870790708df677fbf937e0d4adf725172f6c1c39975cf29",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/leanpath",
+     "leanpath_sha256": "9981497dd2b15033eb13d783ecf99bc6041dd05495e97dd0c9716f89e2e35a65",
+     "command": "coord.sh lean claude <label> -- timeout 180 /home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean -j1 -M8000 --root=/tmp/beaconcrypt-deployment-lqf-compile/beaconcrypt-core/proofs/lean -o /tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterBranch.olean /tmp/beaconcrypt-deployment-lqf-compile/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterBranch.lean",
+     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/logs/final/PqxdhDeploymentIdealLaterBranch.log"
+    },
+    "note": "the unused selectively opened names compileImpl; handlerWith, xinitial and asModeO (section Decision); handlerWith, idealReg and idealInit (Dead); XState, IdealBk, TableState, idealInit and OpaqueCut (Selected); Verified (its open line removed), XState and handlerWith (their open line removed), IdealBk, TableState, laterTail and Ledger (Reduction) dropped; no docstring changed; the olean changes only by the declaration positions after the two removed lines; theorem, definition, instance and guard lists unchanged"
+   }
   },
   {
    "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterMid",
@@ -270,7 +380,32 @@
    ],
    "instances": 0,
    "source_sha256": "146056434f1116a0740845c3324df38224bccc1278118e1bf7bd9ab3031edb70",
-   "olean_sha256": "c33bc39f5d3939c2f5788d62a17eb098f8366735b0ca68cb8a40ad5622c1cefc"
+   "olean_sha256": "c33bc39f5d3939c2f5788d62a17eb098f8366735b0ca68cb8a40ad5622c1cefc",
+   "axiom_profiles": {
+    "propext, Classical.choice, Quot.sound": 27
+   },
+   "after_review_fix": {
+    "commit": "8081ac519b3e613ba1a7ff28ffc2e32b3cd191a0",
+    "source_sha256": "1f3e46f493b255bdb5bd4720e9e43ac63876c6e146572e3f3af9e6dc49c24448",
+    "final": {
+     "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterMid",
+     "start": "2026-10-10T09:48:26.109027353Z",
+     "end": "2026-10-10T09:48:32.790403283Z",
+     "exit": 0,
+     "head": "8081ac519b3e613ba1a7ff28ffc2e32b3cd191a0",
+     "dirty_paths": 0,
+     "source_sha256": "1f3e46f493b255bdb5bd4720e9e43ac63876c6e146572e3f3af9e6dc49c24448",
+     "log_bytes": 0,
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "artifact": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterMid.olean",
+     "artifact_sha256": "c33bc39f5d3939c2f5788d62a17eb098f8366735b0ca68cb8a40ad5622c1cefc",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/leanpath",
+     "leanpath_sha256": "9981497dd2b15033eb13d783ecf99bc6041dd05495e97dd0c9716f89e2e35a65",
+     "command": "coord.sh lean claude <label> -- timeout 180 /home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean -j1 -M8000 --root=/tmp/beaconcrypt-deployment-lqf-compile/beaconcrypt-core/proofs/lean -o /tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterMid.olean /tmp/beaconcrypt-deployment-lqf-compile/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterMid.lean",
+     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/logs/final/PqxdhDeploymentIdealLaterMid.log"
+    },
+    "note": "the unused selectively opened name attach dropped; no docstring changed; olean byte-identical to the unit final; theorem, definition, instance and guard lists unchanged"
+   }
   },
   {
    "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSteps",
@@ -324,7 +459,32 @@
    ],
    "instances": 2,
    "source_sha256": "38fb2983d2d7117e89285b1471b26b910ed659dfa83f5067c26e6ba6705da881",
-   "olean_sha256": "ac8818574e951740d83727529fda0eb0cc2c65e03bb1ce80037ea4059ef923d8"
+   "olean_sha256": "ac8818574e951740d83727529fda0eb0cc2c65e03bb1ce80037ea4059ef923d8",
+   "axiom_profiles": {
+    "propext, Classical.choice, Quot.sound": 28
+   },
+   "after_review_fix": {
+    "commit": "8081ac519b3e613ba1a7ff28ffc2e32b3cd191a0",
+    "source_sha256": "f47be61e308312bbe7469f6f4211057b2d28d79920c2ce19cd73c5b61ff61929",
+    "final": {
+     "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSteps",
+     "start": "2026-10-10T09:48:35.088124752Z",
+     "end": "2026-10-10T09:48:47.052778100Z",
+     "exit": 0,
+     "head": "8081ac519b3e613ba1a7ff28ffc2e32b3cd191a0",
+     "dirty_paths": 0,
+     "source_sha256": "f47be61e308312bbe7469f6f4211057b2d28d79920c2ce19cd73c5b61ff61929",
+     "log_bytes": 0,
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "artifact": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterSteps.olean",
+     "artifact_sha256": "3c4871ddb5dc569fd8f309d80fe71884a8592cab677a69ec5065eff4637b489f",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/leanpath",
+     "leanpath_sha256": "9981497dd2b15033eb13d783ecf99bc6041dd05495e97dd0c9716f89e2e35a65",
+     "command": "coord.sh lean claude <label> -- timeout 180 /home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean -j1 -M8000 --root=/tmp/beaconcrypt-deployment-lqf-compile/beaconcrypt-core/proofs/lean -o /tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterSteps.olean /tmp/beaconcrypt-deployment-lqf-compile/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterSteps.lean",
+     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/logs/final/PqxdhDeploymentIdealLaterSteps.log"
+    },
+    "note": "a docstring added to upperLayerL_read; the unused selectively opened name Allowed dropped; theorem, definition, instance and guard lists unchanged"
+   }
   },
   {
    "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterPost",
@@ -352,7 +512,32 @@
    ],
    "instances": 0,
    "source_sha256": "889bbd23690b03ddea33cbae1f57d08cc21b608e12048c3b14f34a74d46cd968",
-   "olean_sha256": "37f027b241345fd014617115f0628168ce738dab7eac410c45c920c8e99213fc"
+   "olean_sha256": "37f027b241345fd014617115f0628168ce738dab7eac410c45c920c8e99213fc",
+   "axiom_profiles": {
+    "propext, Classical.choice, Quot.sound": 12
+   },
+   "after_review_fix": {
+    "commit": "8081ac519b3e613ba1a7ff28ffc2e32b3cd191a0",
+    "source_sha256": "d20a54ca12547f800c967b971c6c42a5366f7bba053ef737c7b657f6ed462e37",
+    "final": {
+     "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterPost",
+     "start": "2026-10-10T09:48:49.359666409Z",
+     "end": "2026-10-10T09:48:55.950095656Z",
+     "exit": 0,
+     "head": "8081ac519b3e613ba1a7ff28ffc2e32b3cd191a0",
+     "dirty_paths": 0,
+     "source_sha256": "d20a54ca12547f800c967b971c6c42a5366f7bba053ef737c7b657f6ed462e37",
+     "log_bytes": 0,
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "artifact": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterPost.olean",
+     "artifact_sha256": "37f027b241345fd014617115f0628168ce738dab7eac410c45c920c8e99213fc",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/leanpath",
+     "leanpath_sha256": "9981497dd2b15033eb13d783ecf99bc6041dd05495e97dd0c9716f89e2e35a65",
+     "command": "coord.sh lean claude <label> -- timeout 180 /home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean -j1 -M8000 --root=/tmp/beaconcrypt-deployment-lqf-compile/beaconcrypt-core/proofs/lean -o /tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterPost.olean /tmp/beaconcrypt-deployment-lqf-compile/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterPost.lean",
+     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/logs/final/PqxdhDeploymentIdealLaterPost.log"
+    },
+    "note": "the unused selectively opened names attach, Mid and asModeO dropped; no docstring changed; olean byte-identical to the unit final; theorem, definition, instance and guard lists unchanged"
+   }
   },
   {
    "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterCompile",
@@ -367,7 +552,32 @@
    "definitions": [],
    "instances": 0,
    "source_sha256": "973f055bb798f238471f7972df95f5646a9af5ef3d8fa42d04e34dc64435f0f3",
-   "olean_sha256": "822ef5a3c929401c61691f4e572bebea477f4870514b529e8d2b35b68fc4345f"
+   "olean_sha256": "822ef5a3c929401c61691f4e572bebea477f4870514b529e8d2b35b68fc4345f",
+   "axiom_profiles": {
+    "propext, Classical.choice, Quot.sound": 1
+   },
+   "after_review_fix": {
+    "commit": "8081ac519b3e613ba1a7ff28ffc2e32b3cd191a0",
+    "source_sha256": "973f055bb798f238471f7972df95f5646a9af5ef3d8fa42d04e34dc64435f0f3",
+    "final": {
+     "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterCompile",
+     "start": "2026-10-10T09:48:58.434441564Z",
+     "end": "2026-10-10T09:49:02.894877995Z",
+     "exit": 0,
+     "head": "8081ac519b3e613ba1a7ff28ffc2e32b3cd191a0",
+     "dirty_paths": 0,
+     "source_sha256": "973f055bb798f238471f7972df95f5646a9af5ef3d8fa42d04e34dc64435f0f3",
+     "log_bytes": 0,
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "artifact": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterCompile.olean",
+     "artifact_sha256": "822ef5a3c929401c61691f4e572bebea477f4870514b529e8d2b35b68fc4345f",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/leanpath",
+     "leanpath_sha256": "9981497dd2b15033eb13d783ecf99bc6041dd05495e97dd0c9716f89e2e35a65",
+     "command": "coord.sh lean claude <label> -- timeout 180 /home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean -j1 -M8000 --root=/tmp/beaconcrypt-deployment-lqf-compile/beaconcrypt-core/proofs/lean -o /tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterCompile.olean /tmp/beaconcrypt-deployment-lqf-compile/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterCompile.lean",
+     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/logs/final/PqxdhDeploymentIdealLaterCompile.log"
+    },
+    "note": "unchanged (no selective open); olean byte-identical to the unit final, rebuilt against the fix pass oleans; theorem, definition, instance and guard lists unchanged"
+   }
   }
  ],
  "totals": {
@@ -746,14 +956,39 @@
    ],
    "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/logs/inventory-docs-tree.log"
   },
-  "guards": "145 of 145, generated from a #print axioms probe of every theorem (scripts/guards.py; probe logs lqf-up/B/logs/dev/*Probe1-1.log); every theorem depends on exactly propext, Classical.choice and Quot.sound",
+  "guards": "145 of 145, generated from a #print axioms probe of every theorem (scripts/guards.py; probe logs lqf-up/B/logs/dev/*Probe1-1.log); every theorem's axioms are within propext, Classical.choice and Quot.sound: 144 theorems on all three and PqxdhDeploymentIdealLaterPool.onBase_view on propext and Quot.sound only (per module: modules[].axiom_profiles; the first wording said exactly the three, corrected by the review fix pass)",
   "source_hygiene": "no sorry, admit, native_decide, implemented_by, extern, unsafe or axiom token and no opaque declaration in the eight modules; the check-lean-policy regex \\b(?:sorry|admit|axiom)\\b|sorryAx finds nothing in the eight modules or the root; each module's theorem count equals its guard count",
   "contamination": {
    "probe": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/probe/Contamination.lean",
    "probe_sha256": "11529d30346692da09bb2ea86424384a6c2aa3d4b7a19e2f8ff2b0873e115362",
    "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/logs/dev/Contamination-1.log",
    "result": "scanned 395 declarations of 8 modules; forbidden direct references: 0 []\nreported names (DH/auth/T5/T8 infixes): [BeaconcryptCore.Computational.PqxdhEd25519EufCma.MlKem768PublicKey,\n BeaconcryptCore.Computational.PqxdhJointGapDh.ScalarBytes,\n BeaconcryptCore.Computational.PqxdhEd25519EufCma.Phase1KeyTuple.pqKey,\n BeaconcryptCore.Computational.PqxdhEd25519EufCma.Ed25519PublicKey]\nliveness: [BeaconcryptCore.Computational.PqxdhCorrelatedExtractFamily.realGame]",
-   "note": "item 2's fixed-HKDF list (as unit C's scan) over all 395 declarations of the eight modules: no forbidden direct reference; the report list of DH, authentication and T5/T8 infixes finds only the types MlKem768PublicKey, PqxdhJointGapDh.ScalarBytes, Ed25519PublicKey and the field Phase1KeyTuple.pqKey; liveness detected; scratch metaprogram, not a committed check"
+   "note": "item 2's fixed-HKDF list (as unit C's scan) over all 395 declarations of the eight modules: no forbidden direct reference; the report list of DH, authentication and T5/T8 infixes finds only the types MlKem768PublicKey, PqxdhJointGapDh.ScalarBytes, Ed25519PublicKey and the field Phase1KeyTuple.pqKey; liveness detected; scratch metaprogram, not a committed check. The hygiene review's module-level reference probe (lqf-up/B/review-hygiene/probe/Modules.lean, logs/Modules-1.log) shows the only other direct references into DH- or KDF-named modules: PqxdhJointDhExtractFamily.State and State.cache (the Extract-table cache record, allowed as in unit A1's review) and PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource.crypto through setup.source.crypto (19 declarations), all allowed by item 2's plan risk 9 and present in the frozen D1/D2 targets and CE-11b U5/U6; it also lists the types PqxdhServerRelatedRootConsumer.Returned and Auxiliary (allowed by the review). Its closure comparison (ClosureDiff.lean, logs/ClosureDiff-1.log): closure of ideal_compile_server 29448 constants against 29215 for the frozen target with the classical PqxdhDeploymentIdealCompile.ideal_compile; none of unit B's own constants from an authentication-, DH- or KDF-named module; no constant from the T5, T8, RawOpaque, SigningHistory, Provenance or Origins modules (added by the review fix pass)",
+   "review_probes": [
+    {
+     "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/review-hygiene/probe/Modules.lean",
+     "sha256": "1771892d98b3b734b91d623f196629263e95547a946e7378485e6594c009eb91",
+     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/review-hygiene/logs/Modules-1.log",
+     "log_sha256": "e21dcccba1a0ad643dac5612532ff7e2c9d00309ee64eb828f7102982f151be3"
+    },
+    {
+     "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/review-hygiene/probe/ClosureDiff.lean",
+     "sha256": "89bbe259386ca663c8ae023f3540d8f99d82f2a2008ed9dacb9575d22e081165",
+     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/review-hygiene/logs/ClosureDiff-1.log",
+     "log_sha256": "8b1f59627423b09d863166fbf0917c39ac826b397f46f6488a50022367c306c0"
+    }
+   ],
+   "rerun_after_review_fix": {
+    "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/logs/dev/Contamination-1.log",
+    "log_sha256": "34469f5a180fd8b21a8836e215e27d6c7c1dfbb7fc85af2af41feafb869adaea",
+    "log_bytes": 462,
+    "meta": [
+     "11529d30346692da09bb2ea86424384a6c2aa3d4b7a19e2f8ff2b0873e115362  /tmp/bc-arc-scratch/common-experiment/lqf-up/B/probe/Contamination.lean",
+     "exit 0 seconds 75"
+    ],
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/leanpath",
+    "result": "log byte-identical to the unit run (395 declarations, 0 forbidden references, the same four reported names, liveness detected)"
+   }
   },
   "spike": {
    "file": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/probe/Spike.lean",
@@ -790,7 +1025,7 @@
    }
   }
  },
- "assumptions": "none added; contracts used: Phase1ReadBack codec and Phase2ReadBack codec (approved 2026-10-06); the run-phase budget budget.Respects first; no post budget",
+ "assumptions": "none added; contracts used: Phase1ReadBack codec and Phase2ReadBack codec (approved 2026-10-06); the run-phase budget budget.Respects first; no post budget; where they are used: doc/impl/common-deployment-experiment.md, \"LQ-F upstream unit B: contracts used\" (completed by the review fix pass), and contracts_used_by here",
  "claims": "the frozen target IdealCompileServerTarget, exactly as stated; an equality of probabilities that charges nothing; confidentiality only; no T5, theorem A2 or T8 cited; no DH-keyed component (contamination scan); no QPT or QROM claim",
  "deviations": [
   "an added module PqxdhDeploymentIdealLaterPool (29 theorems; registered before creation) for the pool create on the logged layers; design-v2 lists Params, Branch and Cut for unit B1",
@@ -800,17 +1035,561 @@
   "the Server slot on the CE side along the run part from item 2's invariant ItemInvL (run_slotL through simulate_keeps and keep_allL), since GoodMidL does not carry the identity pool",
   "145 theorems against the estimate 199-287 (B1 77 in 77-113; B2 68 against 122-174): unit U6's middle run reused as it stands",
   "process: the scratch file lqf-up/B/dev/BranchT.lean (unit B's own, unpublished) was deleted with rm -f without coord.sh disk check-delete, against PROTOCOL's deletion rule; a backup copy lqf-up/B/dev/Branch.backup.lean remains in the unit's scratch",
-  "process: the first focused inventory run for Params failed (exit 2) because a later module file was present; rerun with the later modules moved aside (exit 0)"
+  "process: the first focused inventory run for Params failed (exit 2) because a later module file was present; rerun with the later modules moved aside (exit 0)",
+  "the budget route (unit D open point 5; added by the review fix pass): unit D predicted per-kind step bounds as the LQ-F chain does (PqxdhDeploymentLaterServerReserve.creations, compile_server_creates, compile_server_no_kem) with the R9 primed target in reserve; unit B instead cuts inside the run part (compileServer_split by rfl, restOf_quiet, compile_scanServer) and applies the logged copies of the classical cut lemmas (laterSlotGameAt_cut, item2_prefixL, kemCommands_stoppedL, which calls PqxdhRegistrationJointKemCommands.creations and PqxdhRegistrationJointOpenCosts.command_program) only to the compiled scan of the run part at runBudget, finite in all 14 kinds from budget.Respects first (run_certified via FinitePartitionQueryBounds.weighted_bound, scan_certifiedL) with identity and KEM caps 0 and creations budget.create (runBudget_caps); the rest needs no cap (itemRestL_dead via LazyOracleDiscard.lawEq_drop in the dead branches; restOf_allowed and restOf_costly in the active branch); per-kind step bounds and the R9 primed target were not needed and compile_server_creates, compile_server_no_kem and LaterServerReserve.creations are not used; the route sentence of the frozen unit D2 docstring of IdealCompileServerTarget is superseded and not edited (frozen module); unit D's open point 5, re-estimate and what-is-proved sentence carry a closing note, and unit B's analysis entry corrects unit D's",
+  "one review cycle for units B1 and B2 (added by the review fix pass): LQ-F design-v2 section 4.7 places unit B2 on the same branch with a second review cycle; B1 and B2 were built in one session and reviewed together at 66e5c888"
  ],
- "remainder": "none within unit B's scope; next: unit B's independent review (semantic and hygiene), its fix pass and the integration (PROTOCOL section 6, after a merge of central c72db84a); then P3's later ideal_world composition and the CE-12-L headlines",
+ "remainder": "none within unit B's scope; next: a confirming review of the review fix pass and the integration (PROTOCOL section 6, after a merge of central c27b4533 or newer); then P3's later ideal_world composition and the CE-12-L headlines",
  "docs": [
-  "doc/impl/common-deployment-experiment.md: status paragraph of LQ-F upstream unit B; sections \"LQ-F upstream unit B: what is proved\", \"... decisions and deviations\", \"... names for consumers\", \"... contracts used\", \"... open points\", \"... re-estimate\", \"... checks\"",
-  "doc/impl/extract-composition.md: section \"Unit B: item 2's side of the later second compile lemma (PqxdhDeploymentIdealLaterSteps)\"",
-  "doc/formal-verification-analysis.md: section \"Common deployment experiment, LQ-F upstream unit B: the later second compile lemma\"",
+  "doc/impl/common-deployment-experiment.md: status paragraph of LQ-F upstream unit B; sections \"LQ-F upstream unit B: what is proved\", \"... decisions and deviations\", \"... names for consumers\", \"... contracts used\", \"... open points\", \"... re-estimate\", \"... checks\", \"... review fix pass\" (added by the review fix pass, which also adds closing notes to unit D's \"what is proved\", open point 5 and re-estimate)",
+  "doc/impl/extract-composition.md: section \"Unit B: item 2's side of the later second compile lemma (PqxdhDeploymentIdealLaterSteps)\" (its closing note on references into DH- and KDF-named modules extended by the review fix pass)",
+  "doc/formal-verification-analysis.md: section \"Common deployment experiment, LQ-F upstream unit B: the later second compile lemma\" (the review fix pass adds its Review paragraph, the correction of unit D's route prediction and the projection of unit C's law equality)",
   "doc/impl/proof-receipts/lqf-upstream-B.json (this receipt)"
  ],
  "review": {
-  "status": "not reviewed"
+  "reviewed_commit": "66e5c8887af04d42bf31a3d0a52aa4a101ed588d",
+  "date": "2026-10-10",
+  "kinds": [
+   "semantic",
+   "hygiene"
+  ],
+  "verdict": "no error in the Lean statements or proofs; both parts APPROVE_WITH_NITS; 3 minor findings (semantic: unit D's budget-route prediction not closed by unit B's documents; hygiene: the axiom wording \"exactly\", central named as c72db84a instead of c27b4533), 9 nits (semantic: central c27b4533, the contracts-used list and the Pool premises sentence, the projection of unit C's law equality, \"ninth module\" in the implementer's report; hygiene: the contamination wording, the upperLayerL_read docstring, 28 unused selectively opened names, the BranchT.lean deletion without check-delete, the second review cycle of LQ-F design-v2 section 4.7 not in the deviations) and 1 verification record with no action (semantic: the main theorem is the frozen target with no hidden premise and no overclaim), all about documentation, docstrings, opens and records",
+  "notes": [
+   {
+    "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/review-semantic/NOTES.md",
+    "sha256": "7fb3a807d8de8bc6fa24156fefbd66061de96777dc79d8c8e228658e6bd51be3"
+   },
+   {
+    "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/review-hygiene/NOTES.md",
+    "sha256": "eba24ef787ffba3c694aa189fd727d7e0495215a48d1f04520af236904d40544"
+   }
+  ],
+  "reviewer_checks": {
+   "semantic_module_compiles": {
+    "note": "the eight modules without -o against lqf-up/B/leanpath (read only) through coord.sh lean on the clean tree at 66e5c888, one at a time",
+    "exit": 0,
+    "logs": [
+     {
+      "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/review-semantic/logs/Params.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+     },
+     {
+      "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/review-semantic/logs/Pool.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+     },
+     {
+      "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/review-semantic/logs/Cut.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+     },
+     {
+      "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/review-semantic/logs/Branch.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+     },
+     {
+      "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/review-semantic/logs/Mid.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+     },
+     {
+      "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/review-semantic/logs/Steps.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+     },
+     {
+      "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/review-semantic/logs/Post.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+     },
+     {
+      "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/review-semantic/logs/Compile.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+     }
+    ]
+   },
+   "semantic_axioms_probe": {
+    "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/review-semantic/probe/Axioms.lean",
+    "sha256": "218d75481bd3db57dcfe130fdfbd7081f7a9a82f8ec418b49e0771e31a24c221",
+    "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/review-semantic/logs/probe-axioms2.log",
+    "log_sha256": "45e9f4f48e2f9ea992f4e38686d0f808e7b1e9f65b1267028b1649b0c05378ca",
+    "exit": 0,
+    "result": "example : IdealCompileServerTarget := ideal_compile_server elaborates; collectAxioms over every constant of the eight modules: only propext, Classical.choice and Quot.sound; no axiom or opaque declaration; source theorem counts equal the guards (3, 29, 24, 21, 27, 28, 12, 1 = 145); scratch, not published (the first run, probe-axioms.log, exit 1, was the reviewer's own probe syntax)"
+   },
+   "semantic_world_probe": {
+    "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/review-semantic/probe/World.lean",
+    "sha256": "bf0a0a9bfe1b3942f336915adffdd899be929f37c6080412e7b1c911166943d8",
+    "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/review-semantic/logs/probe-world2.log",
+    "log_sha256": "ee78bbf55545ade31a7a11741352834a2bd167156b9b2e07579d9132e5d3452c",
+    "exit": 0,
+    "result": "ideal_compile_server ... |>.trans (c6_idealGame_decide ...) composes with no new proof, allowed axioms only (the later ideal_world for P3); scratch, not published (the first run, probe-world.log, exit 1, was the reviewer's own probe syntax)"
+   },
+   "semantic_faithfulness": "the frozen modules PqxdhDeploymentIdealLaterGame, PqxdhDeploymentLaterServerItemTargets and PqxdhDeploymentLaterServerCompile unchanged from c031e4e7; ideal_compile_server is ideal_compile_server_of_active applied with active_branchL at every draw (phase1 and phase2 only); SelectedBranchL and ActiveBranchL are discharged internal Props; draws first (laterSlotGame_pool), one common prefix cut at the selected accept in the run part, dead branches false on both sides, both sides of the active branch functions of one sourceMidL run of compiledNextL (item 2 via itemPost_middleL and item_simL, identity reads via step_identity and lowerE_poolL, the Server read via step_serverRead, logged accepts via step_acceptCL; CE via mergeXL with idealStep_ghost, step_mergeMidL and compile_simulationMidL; the post continuation via restOf_middle and laterTail_middle with the Server slot from run_slotL; decisions by decision_mergeL; log entries by acceptAfter_logged and beforeLogged_some); confidentiality only; no T5, A2 or T8; ten commit footers exact",
+   "hygiene_clean_tree_lean": {
+    "head": "66e5c8887af04d42bf31a3d0a52aa4a101ed588d",
+    "note": "through coord.sh lean (-j1 -M8000, timeout 180) with -o into the review scratch (own resolved mirror of the adf9d8fc first prefix, 6361 links), exit 0 and empty logs each",
+    "module_oleans_sha256": {
+     "PqxdhDeploymentIdealLaterParams": "8e771b1423dd78c4c16ecf2342b49be591994acde5c4dbb1ef7a519012e0c632",
+     "PqxdhDeploymentIdealLaterPool": "a8848cf9182d891e75f310e51b1a41554c20bf273659dfa4241ba397c7d64f76",
+     "PqxdhDeploymentIdealLaterCut": "eaec75905f4adde05ce216cbe342c454613aed96d193ccac9debd0c6574c44db",
+     "PqxdhDeploymentIdealLaterBranch": "285d00bf0b2a78e0ba00faffcdcbaa4ca61ac673f769d83c6232bf2c6f28bcee",
+     "PqxdhDeploymentIdealLaterMid": "c33bc39f5d3939c2f5788d62a17eb098f8366735b0ca68cb8a40ad5622c1cefc",
+     "PqxdhDeploymentIdealLaterSteps": "ac8818574e951740d83727529fda0eb0cc2c65e03bb1ce80037ea4059ef923d8",
+     "PqxdhDeploymentIdealLaterPost": "37f027b241345fd014617115f0628168ce738dab7eac410c45c920c8e99213fc",
+     "PqxdhDeploymentIdealLaterCompile": "822ef5a3c929401c61691f4e572bebea477f4870514b529e8d2b35b68fc4345f"
+    },
+    "module_oleans_equal_unit_finals": true,
+    "root_olean_sha256": "126818c4c98542b4dccd5217012b10d9535d14fb725c651eb7195a33e6ecf116",
+    "root_equals_unit_clean_tip_root": true
+   },
+   "hygiene_clean_tree_inventory": {
+    "head": "66e5c8887af04d42bf31a3d0a52aa4a101ed588d",
+    "lease": "00000526",
+    "start": "2026-10-10T09:27:54Z",
+    "end": "2026-10-10T09:29:42Z",
+    "exit": 0,
+    "dirty_paths_before": 0,
+    "dirty_paths_after": 0,
+    "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/review-hygiene/logs/inventory-66e5c888.log",
+    "log_sha256": "1190c6f2df19d09b525c29c55805d4863911d93962471900f95264e6ad027d37",
+    "command": "coord.sh lease mem claude @nix <label> -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C /tmp/beaconcrypt-deployment-lqf-compile/beaconcrypt-core check-inventory (locked proof flake)"
+   },
+   "hygiene_static_inventory": "per commit adf9d8fc..66e5c888: manifest hashes (check-inventory.sh and root rows included) match every commit, handwritten Lean 1902 -> 1910 one per Lean commit, the require_line_count blocks complete (3 + 2 per theorem), 0 failures",
+   "hygiene_scan": "guards 3, 29, 24, 21, 27, 28, 12 and 1 = 145, each an exact #guard_msgs over #print axioms in theorem order; axioms within {propext, Classical.choice, Quot.sound} (144 on all three, onBase_view on propext and Quot.sound); no forbidden code token; set_option only autoImplicit false; footers exact (10/10); pushes within seconds of each commit; git diff --check clean overall and per commit; 116 qualified names of the documentation resolve; check_lean_panic_freedom.py exit 0",
+   "hygiene_probes": "contamination probe copy: log byte-identical to the implementer's; module-level reference probe (Modules.lean) over the 395 declarations and closure comparison (ClosureDiff.lean): see checks.contamination.note and review_probes"
+  },
+  "fixes": [
+   {
+    "finding": "minor (semantic): unit D's prediction of unit B's budget route (frozen D2 docstring of IdealCompileServerTarget, guide unit D \"what is proved\", open point 5 and re-estimate, unit D's analysis Review paragraph: per-kind step bounds as the LQ-F chain does, R9 primed target in reserve, a B0 budget step or a B1 re-estimate before any branch commit) is now wrong, and unit B's documents do not close it",
+    "fix": "guide \"LQ-F upstream unit B: decisions and deviations\", bullet \"The budget route (unit D open point 5)\" (compileServer_split, restOf_quiet, compile_scanServer; the logged classical cut lemmas at runBudget with run_certified, scan_certifiedL, runBudget_caps; the rest via itemRestL_dead or restOf_allowed and restOf_costly; per-kind step bounds and the R9 primed target not needed; the frozen D2 docstring superseded, not edited); \"Closed by unit B\" notes on unit D's \"what is proved\" sentence, open point 5 and re-estimate; one sentence in unit B's analysis entry correcting unit D's \"will bound each kind separately\"; deviations entry here"
+   },
+   {
+    "finding": "minor (hygiene) and nit (semantic): the guide status paragraph, open point 1 and the receipt's basis.central_note, remainder and integration say central moved to c72db84a; central was c27b4533 (item 7 increment A) before the documentation commit 738e4e70, as basis.central_at_receipt says",
+    "fix": "c27b4533 (unit A2, CE-12 P2 and item 7 increment A integrated; \"c27b4533 or newer\" for the integration) in all five places; open point 1 lists the files central changes besides adding modules and the recount of the handwritten Lean count after the merge"
+   },
+   {
+    "finding": "minor (hygiene): the guide (\"what is proved\" and checks) and checks.guards say every theorem depends on exactly propext, Classical.choice and Quot.sound; PqxdhDeploymentIdealLaterPool.onBase_view depends on propext and Quot.sound only; the receipt has no per-module axiom profiles",
+    "fix": "\"within\" the three with the exception named, in both guide places and checks.guards; modules[].axiom_profiles (Pool: 28 on all three, 1 on propext and Quot.sound; every other module all three) and modules[1].axiom_profiles_note"
+   },
+   {
+    "finding": "nit (semantic): \"LQ-F upstream unit B: contracts used\" names only some of the theorems that take Phase1ReadBack/Phase2ReadBack or budget.Respects first; the Pool module docstring has no Premises sentence",
+    "fix": "the guide section lists every such theorem (Pool, Cut, Branch, Mid, Post, Compile; run budget: run_certified, scan_certifiedL, both reductions, ideal_compile_server); contracts_used_by here (checked against the sources at 8081ac51); a Premises sentence in the Pool module docstring (8081ac51)"
+   },
+   {
+    "finding": "nit (semantic): the analysis says unit C gives \"the same law\" without the projection (c6_idealGame is a LawEq at the observed projection, c6_idealGame_decide an equality of decision probabilities)",
+    "fix": "\"the same law on what the decision reads (the post-run output, the run-phase ledger and the produced frames)\""
+   },
+   {
+    "finding": "nit (semantic): the implementer's report says \"ninth module\"; the unit has eight modules",
+    "fix": "no repository change (the guide, the analysis and this receipt already say eight); the plan's record of this unit should say \"an added (eighth) module\" (left to the plan's owner, guide open point 4)"
+   },
+   {
+    "finding": "nit (hygiene): the guide (open point 3) and checks.contamination describe only the contamination report's list; the review's module-level probe also finds PqxdhJointDhExtractFamily.State and State.cache and FixedHkdfSha512NoSaltSource.crypto through setup.source (allowed: item 2 plan risk 9, unit A1's review, frozen targets)",
+    "fix": "one sentence in open point 3, the item 2 guide's unit B notes and checks.contamination.note (with review_probes)"
+   },
+   {
+    "finding": "nit (hygiene): PqxdhDeploymentIdealLaterSteps.upperLayerL_read has no docstring",
+    "fix": "docstring added (8081ac51)"
+   },
+   {
+    "finding": "nit (hygiene): 28 selectively opened names never used (Params 1, Pool 4, Cut 8, Branch 10, Mid 1, Steps 1, Post 3)",
+    "fix": "the review's 28 and 10 more that a scope-aware scan finds (opens_scope.py: each open to the end of its section, comments and other open statements excluded) dropped in 8081ac51; three open lines left empty removed; both scans find none at 8081ac51 (review.checks.opens_scans)"
+   },
+   {
+    "finding": "nit (hygiene, process): lqf-up/B/dev/BranchT.lean deleted with rm -f without coord.sh disk check-delete (self-reported in the deviations)",
+    "fix": "no repository change: already recorded (deviations, guide \"Process records\"); the file was the unit's own unpublished scratch; the backup lqf-up/B/dev/Branch.backup.lean stays in the unit's registered scratch until a clean-up through check-delete"
+   },
+   {
+    "finding": "nit (hygiene): the second review cycle that LQ-F design-v2 section 4.7 plans for unit B2 is not in the deviations",
+    "fix": "guide bullet \"One review cycle for units B1 and B2\" and a deviations entry here"
+   },
+   {
+    "finding": "verification record (semantic): the main theorem is the frozen target, with no hidden premise and no overclaim",
+    "fix": "none needed; recorded in review.reviewer_checks"
+   }
+  ],
+  "statements_changed": [],
+  "theorems_added": [],
+  "theorems_removed": [],
+  "definitions_added": [],
+  "definitions_removed": [],
+  "instances_added": [],
+  "instances_removed": [],
+  "docstrings_added": [
+   "PqxdhDeploymentIdealLaterSteps.upperLayerL_read"
+  ],
+  "module_docstring_changed": [
+   "PqxdhDeploymentIdealLaterPool"
+  ],
+  "opens_dropped": {
+   "review_criterion": 28,
+   "scope_criterion": 38,
+   "open_lines_removed": 3,
+   "per_module": {
+    "Params": [
+     "MlKem768PublicKey"
+    ],
+    "Pool": [
+     "attach",
+     "createPool",
+     "withAccepts",
+     "CutCE"
+    ],
+    "Cut": [
+     "snapshotAt",
+     "XState",
+     "handlerWith",
+     "xinitial",
+     "laterView",
+     "IdealBk",
+     "TableState",
+     "laterTail",
+     "Ledger"
+    ],
+    "Branch": [
+     "compileImpl",
+     "handlerWith (Decision)",
+     "xinitial",
+     "asModeO",
+     "handlerWith (Dead)",
+     "idealReg (Dead)",
+     "idealInit (Dead)",
+     "XState (Selected)",
+     "IdealBk (Selected)",
+     "TableState (Selected)",
+     "idealInit (Selected)",
+     "OpaqueCut",
+     "Verified",
+     "XState (Reduction)",
+     "handlerWith (Reduction)",
+     "IdealBk (Reduction)",
+     "TableState (Reduction)",
+     "laterTail",
+     "Ledger"
+    ],
+    "Mid": [
+     "attach"
+    ],
+    "Steps": [
+     "Allowed"
+    ],
+    "Post": [
+     "attach",
+     "Mid",
+     "asModeO"
+    ]
+   },
+   "beyond_review": [
+    "Cut Ledger (Prefix)",
+    "Branch handlerWith and asModeO (Decision)",
+    "Branch handlerWith, idealReg and idealInit (Dead)",
+    "Branch XState, IdealBk, TableState and idealInit (Selected)"
+   ]
+  },
+  "lean_fix_commit": "8081ac519b3e613ba1a7ff28ffc2e32b3cd191a0",
+  "files_changed_lean_commit": [
+   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterBranch.lean",
+   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterCut.lean",
+   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterMid.lean",
+   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterParams.lean",
+   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterPool.lean",
+   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterPost.lean",
+   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterSteps.lean",
+   "beaconcrypt-core/proofs/reviewed-inventory.txt"
+  ],
+  "files_changed_docs_commit": [
+   "doc/formal-verification-analysis.md",
+   "doc/impl/common-deployment-experiment.md",
+   "doc/impl/extract-composition.md",
+   "doc/impl/proof-receipts/lqf-upstream-B.json"
+  ],
+  "docs_fix_commit": "the commit that adds this key (on top of 8081ac51)",
+  "checks": {
+   "inv_recount_rehash": {
+    "rows_diff": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/logs/inv-rows-66e5c888-8081ac51.diff",
+    "rows_diff_sha256": "d939a8e6075cea45bbaaac110ce9815c89a920bd29b37b9d51d8c626e8188c9e",
+    "result": "handwritten-lean 1910 unchanged; rows Params 79758a60 -> 8a99da85, Pool 198bc251 -> 00109790, Cut a8f0a3b9 -> 4dbbdb3d, Branch d207919a -> e07c3f1d, Mid 14605643 -> 1f3e46f4, Steps 38fb2983 -> f47be61e, Post 889bbd23 -> d20a54ca; BeaconcryptCore.lean, trusted-boundary.md and check-inventory.sh unchanged (the require_line_count blocks unchanged)"
+   },
+   "module_finals": [
+    {
+     "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterParams",
+     "start": "2026-10-10T09:47:55.264780796Z",
+     "end": "2026-10-10T09:47:58.046726586Z",
+     "exit": 0,
+     "head": "8081ac519b3e613ba1a7ff28ffc2e32b3cd191a0",
+     "dirty_paths": 0,
+     "source_sha256": "8a99da8559f88d09a283f9464bbc373d4a4ac600a3a9fad0a1241009ba4bf6e2",
+     "log_bytes": 0,
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "artifact": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterParams.olean",
+     "artifact_sha256": "8e771b1423dd78c4c16ecf2342b49be591994acde5c4dbb1ef7a519012e0c632",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/leanpath",
+     "leanpath_sha256": "9981497dd2b15033eb13d783ecf99bc6041dd05495e97dd0c9716f89e2e35a65",
+     "command": "coord.sh lean claude <label> -- timeout 180 /home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean -j1 -M8000 --root=/tmp/beaconcrypt-deployment-lqf-compile/beaconcrypt-core/proofs/lean -o /tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterParams.olean /tmp/beaconcrypt-deployment-lqf-compile/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterParams.lean",
+     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/logs/final/PqxdhDeploymentIdealLaterParams.log"
+    },
+    {
+     "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterPool",
+     "start": "2026-10-10T09:48:00.672957121Z",
+     "end": "2026-10-10T09:48:08.067792939Z",
+     "exit": 0,
+     "head": "8081ac519b3e613ba1a7ff28ffc2e32b3cd191a0",
+     "dirty_paths": 0,
+     "source_sha256": "00109790c4aaa179bc903abd444a056896a447749f0b82c5bd65de7436adb97f",
+     "log_bytes": 0,
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "artifact": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterPool.olean",
+     "artifact_sha256": "0f42a2839b67ee11a5f365d8554fc679c0d87e7019bc54ee85df1b031a60117e",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/leanpath",
+     "leanpath_sha256": "9981497dd2b15033eb13d783ecf99bc6041dd05495e97dd0c9716f89e2e35a65",
+     "command": "coord.sh lean claude <label> -- timeout 180 /home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean -j1 -M8000 --root=/tmp/beaconcrypt-deployment-lqf-compile/beaconcrypt-core/proofs/lean -o /tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterPool.olean /tmp/beaconcrypt-deployment-lqf-compile/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterPool.lean",
+     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/logs/final/PqxdhDeploymentIdealLaterPool.log"
+    },
+    {
+     "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterCut",
+     "start": "2026-10-10T09:48:10.518325089Z",
+     "end": "2026-10-10T09:48:15.735284520Z",
+     "exit": 0,
+     "head": "8081ac519b3e613ba1a7ff28ffc2e32b3cd191a0",
+     "dirty_paths": 0,
+     "source_sha256": "4dbbdb3db47ed6f0e49eca329f90acf4e2d32f89076165843da1bc61df4b0ac1",
+     "log_bytes": 0,
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "artifact": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterCut.olean",
+     "artifact_sha256": "2eea9c81088ef3da660046da818ec69ca60542966e96db0ab2f331f56c903986",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/leanpath",
+     "leanpath_sha256": "9981497dd2b15033eb13d783ecf99bc6041dd05495e97dd0c9716f89e2e35a65",
+     "command": "coord.sh lean claude <label> -- timeout 180 /home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean -j1 -M8000 --root=/tmp/beaconcrypt-deployment-lqf-compile/beaconcrypt-core/proofs/lean -o /tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterCut.olean /tmp/beaconcrypt-deployment-lqf-compile/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterCut.lean",
+     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/logs/final/PqxdhDeploymentIdealLaterCut.log"
+    },
+    {
+     "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterBranch",
+     "start": "2026-10-10T09:48:18.060908265Z",
+     "end": "2026-10-10T09:48:23.689931516Z",
+     "exit": 0,
+     "head": "8081ac519b3e613ba1a7ff28ffc2e32b3cd191a0",
+     "dirty_paths": 0,
+     "source_sha256": "e07c3f1d64a30b820c519ad23d50898f1f32e11d28f4d6bbbecd0b10734520e7",
+     "log_bytes": 0,
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "artifact": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterBranch.olean",
+     "artifact_sha256": "7b2105201316e5468870790708df677fbf937e0d4adf725172f6c1c39975cf29",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/leanpath",
+     "leanpath_sha256": "9981497dd2b15033eb13d783ecf99bc6041dd05495e97dd0c9716f89e2e35a65",
+     "command": "coord.sh lean claude <label> -- timeout 180 /home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean -j1 -M8000 --root=/tmp/beaconcrypt-deployment-lqf-compile/beaconcrypt-core/proofs/lean -o /tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterBranch.olean /tmp/beaconcrypt-deployment-lqf-compile/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterBranch.lean",
+     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/logs/final/PqxdhDeploymentIdealLaterBranch.log"
+    },
+    {
+     "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterMid",
+     "start": "2026-10-10T09:48:26.109027353Z",
+     "end": "2026-10-10T09:48:32.790403283Z",
+     "exit": 0,
+     "head": "8081ac519b3e613ba1a7ff28ffc2e32b3cd191a0",
+     "dirty_paths": 0,
+     "source_sha256": "1f3e46f493b255bdb5bd4720e9e43ac63876c6e146572e3f3af9e6dc49c24448",
+     "log_bytes": 0,
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "artifact": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterMid.olean",
+     "artifact_sha256": "c33bc39f5d3939c2f5788d62a17eb098f8366735b0ca68cb8a40ad5622c1cefc",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/leanpath",
+     "leanpath_sha256": "9981497dd2b15033eb13d783ecf99bc6041dd05495e97dd0c9716f89e2e35a65",
+     "command": "coord.sh lean claude <label> -- timeout 180 /home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean -j1 -M8000 --root=/tmp/beaconcrypt-deployment-lqf-compile/beaconcrypt-core/proofs/lean -o /tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterMid.olean /tmp/beaconcrypt-deployment-lqf-compile/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterMid.lean",
+     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/logs/final/PqxdhDeploymentIdealLaterMid.log"
+    },
+    {
+     "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSteps",
+     "start": "2026-10-10T09:48:35.088124752Z",
+     "end": "2026-10-10T09:48:47.052778100Z",
+     "exit": 0,
+     "head": "8081ac519b3e613ba1a7ff28ffc2e32b3cd191a0",
+     "dirty_paths": 0,
+     "source_sha256": "f47be61e308312bbe7469f6f4211057b2d28d79920c2ce19cd73c5b61ff61929",
+     "log_bytes": 0,
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "artifact": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterSteps.olean",
+     "artifact_sha256": "3c4871ddb5dc569fd8f309d80fe71884a8592cab677a69ec5065eff4637b489f",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/leanpath",
+     "leanpath_sha256": "9981497dd2b15033eb13d783ecf99bc6041dd05495e97dd0c9716f89e2e35a65",
+     "command": "coord.sh lean claude <label> -- timeout 180 /home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean -j1 -M8000 --root=/tmp/beaconcrypt-deployment-lqf-compile/beaconcrypt-core/proofs/lean -o /tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterSteps.olean /tmp/beaconcrypt-deployment-lqf-compile/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterSteps.lean",
+     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/logs/final/PqxdhDeploymentIdealLaterSteps.log"
+    },
+    {
+     "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterPost",
+     "start": "2026-10-10T09:48:49.359666409Z",
+     "end": "2026-10-10T09:48:55.950095656Z",
+     "exit": 0,
+     "head": "8081ac519b3e613ba1a7ff28ffc2e32b3cd191a0",
+     "dirty_paths": 0,
+     "source_sha256": "d20a54ca12547f800c967b971c6c42a5366f7bba053ef737c7b657f6ed462e37",
+     "log_bytes": 0,
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "artifact": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterPost.olean",
+     "artifact_sha256": "37f027b241345fd014617115f0628168ce738dab7eac410c45c920c8e99213fc",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/leanpath",
+     "leanpath_sha256": "9981497dd2b15033eb13d783ecf99bc6041dd05495e97dd0c9716f89e2e35a65",
+     "command": "coord.sh lean claude <label> -- timeout 180 /home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean -j1 -M8000 --root=/tmp/beaconcrypt-deployment-lqf-compile/beaconcrypt-core/proofs/lean -o /tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterPost.olean /tmp/beaconcrypt-deployment-lqf-compile/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterPost.lean",
+     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/logs/final/PqxdhDeploymentIdealLaterPost.log"
+    },
+    {
+     "module": "BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterCompile",
+     "start": "2026-10-10T09:48:58.434441564Z",
+     "end": "2026-10-10T09:49:02.894877995Z",
+     "exit": 0,
+     "head": "8081ac519b3e613ba1a7ff28ffc2e32b3cd191a0",
+     "dirty_paths": 0,
+     "source_sha256": "973f055bb798f238471f7972df95f5646a9af5ef3d8fa42d04e34dc64435f0f3",
+     "log_bytes": 0,
+     "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "artifact": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterCompile.olean",
+     "artifact_sha256": "822ef5a3c929401c61691f4e572bebea477f4870514b529e8d2b35b68fc4345f",
+     "leanpath": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/leanpath",
+     "leanpath_sha256": "9981497dd2b15033eb13d783ecf99bc6041dd05495e97dd0c9716f89e2e35a65",
+     "command": "coord.sh lean claude <label> -- timeout 180 /home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean -j1 -M8000 --root=/tmp/beaconcrypt-deployment-lqf-compile/beaconcrypt-core/proofs/lean -o /tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/olean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterCompile.olean /tmp/beaconcrypt-deployment-lqf-compile/beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealLaterCompile.lean",
+     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/logs/final/PqxdhDeploymentIdealLaterCompile.log"
+    }
+   ],
+   "module_finals_note": "Params, Mid, Post and Compile oleans byte-identical to the unit finals; Pool and Steps changed by their docstrings; Cut and Branch by the declaration positions after their removed open lines",
+   "root": {
+    "module": "BeaconcryptCore",
+    "start": "2026-10-10T09:49:05.355599487Z",
+    "end": "2026-10-10T09:49:08.570102246Z",
+    "exit": 0,
+    "head": "8081ac519b3e613ba1a7ff28ffc2e32b3cd191a0",
+    "dirty_paths": 0,
+    "source_sha256": "73d9d8a5b4ce1b90ea4ff869608b603029494b9207091363995ff0e8abc9b059",
+    "log_bytes": 0,
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifact": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/root-checks/fix-lean/BeaconcryptCore.olean",
+    "artifact_sha256": "126818c4c98542b4dccd5217012b10d9535d14fb725c651eb7195a33e6ecf116",
+    "leanpath": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/leanpath",
+    "leanpath_sha256": "9981497dd2b15033eb13d783ecf99bc6041dd05495e97dd0c9716f89e2e35a65",
+    "command": "coord.sh lean claude <label> -- timeout 180 /home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean -j1 -M8000 --root=/tmp/beaconcrypt-deployment-lqf-compile/beaconcrypt-core/proofs/lean -o /tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/root-checks/fix-lean/BeaconcryptCore.olean /tmp/beaconcrypt-deployment-lqf-compile/beaconcrypt-core/proofs/lean/BeaconcryptCore.lean",
+    "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/logs/final/root-fix-lean.log",
+    "note": "olean byte-identical to the unit's clean-tip root check (checks.clean_tip.root_import)"
+   },
+   "leanpath": {
+    "path": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/leanpath",
+    "sha256": "9981497dd2b15033eb13d783ecf99bc6041dd05495e97dd0c9716f89e2e35a65",
+    "first_prefix": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/olean",
+    "first_prefix_note": "registered (claude, active): resolved symlink mirror of the first prefix of the published adf9d8fc LEAN_PATH (lqf-up/A1/int/olean), 6361 links, root olean skipped, plus the eight unit B module oleans of the fix pass; the unit prefix lqf-up/B/olean keeps its oleans",
+    "rest": "/tmp/bc-coord/leanpaths/adf9d8fc0300202830315d5f835bfb2268b0ec8f.leanpath",
+    "rest_sha256": "8848f0fdf761114e63228e020023d161c627879a60101b5bd2ab9c511c7d8297"
+   },
+   "clean_tree_inventory": [
+    {
+     "tag": "lean-commit",
+     "exit": 0,
+     "head": "8081ac519b3e613ba1a7ff28ffc2e32b3cd191a0",
+     "dirty_paths_before": 0,
+     "dirty_paths_after": 0,
+     "start": "2026-10-10T09:49:23Z",
+     "end": "2026-10-10T09:51:16Z",
+     "lease": "00000528",
+     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/logs/inventory-lean-commit.log",
+     "log_sha256": "9f832b6eb6fc6d51362630573c551e75e044e7299475555193870d49e375385e",
+     "command": "coord.sh lease mem claude @nix lqf-Bfix-inventory-lean-commit --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C /tmp/beaconcrypt-deployment-lqf-compile/beaconcrypt-core check-inventory SHELL=bash"
+    }
+   ],
+   "clean_tree_inventory_note": "the documentation commit changes only files under doc/, which check-inventory does not read, so the run at 8081ac51 covers its tree; a run on the clean tip after the documentation commit is left to the confirming review or the integration checks receipt",
+   "opens_scans": {
+    "scope": {
+     "script": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/scripts/opens_scope.py",
+     "script_sha256": "fe9e7a838f09b8966a3b4b2e4e2bd9b1d1b09a60d401781fb3daa7fe5a1f6b77",
+     "before": {
+      "commit": "66e5c8887af04d42bf31a3d0a52aa4a101ed588d",
+      "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/logs/opens-scope-66e5c888.log",
+      "log_sha256": "d64bb6b95fee08075cc4e7a363d8d5ce75f282b36404c2dbc91a60ff79908bb8"
+     },
+     "after": {
+      "commit": "8081ac519b3e613ba1a7ff28ffc2e32b3cd191a0",
+      "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/logs/opens-scope-8081ac51.log",
+      "log_sha256": "190ad119e02ff00e73a7148e046f6e3dcfbc5eeb2350bbf974b2c2803bb50380"
+     },
+     "result": "38 of 436 selectively opened names unused in their scope at 66e5c888; 0 of 398 at 8081ac51"
+    },
+    "review": {
+     "script": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/scripts/opens_review.py",
+     "script_sha256": "f6571848f55c9d0b72abbb62d5b222e7e7c9572e0d824fd5818d19fc30ebccd8",
+     "before": {
+      "commit": "66e5c8887af04d42bf31a3d0a52aa4a101ed588d",
+      "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/logs/opens-review-66e5c888.log",
+      "log_sha256": "d91dacd74c5caddce7b80c313fc9ecfae00edfef44fce8de49d18af86c5ac4ab"
+     },
+     "after": {
+      "commit": "8081ac519b3e613ba1a7ff28ffc2e32b3cd191a0",
+      "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/logs/opens-review-8081ac51.log",
+      "log_sha256": "a4f833c82cb7293748abaf652be73f467043b7496a37fee5113f7151e6e9478e"
+     },
+     "result": "the review's criterion (a use anywhere after the open, later open statements included) reproduces its 28 at 66e5c888 (1, 4, 8, 10, 1, 1, 3); 0 at 8081ac51"
+    }
+   },
+   "strip_compare": {
+    "script": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/scripts/strip_compare.py",
+    "script_sha256": "0edf5e9f5fbfe7845c006f71ae6ea2051bb1fef343cae306e5fcca72a63d31e7",
+    "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/logs/strip-compare.log",
+    "log_sha256": "e97c5079b5d247e4707307c7ecd293108a01b35551674de40ba765be8d0ed045",
+    "result": "with docstrings, comments and selective open statements removed and the guard messages kept, the eight modules are identical at 66e5c888 and 8081ac51 (95, 911, 893, 846, 808, 1094, 502 and 20 code lines; 145 guard messages)"
+   },
+   "axiom_profiles": {
+    "script": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/scripts/axiom_profiles.py",
+    "script_sha256": "897cc0b5303a86fa6400863295b4fcbb8cb0396bb88334bfe5e7b8f87cfd013c",
+    "before": {
+     "commit": "66e5c8887af04d42bf31a3d0a52aa4a101ed588d",
+     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/logs/axiom-profiles-66e5c888.log",
+     "log_sha256": "c23009d089786630b8002629ce481032755d8d00741475c71a88abda922813a3"
+    },
+    "after": {
+     "commit": "8081ac519b3e613ba1a7ff28ffc2e32b3cd191a0",
+     "log": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/fix/logs/axiom-profiles-8081ac51.log",
+     "log_sha256": "c23009d089786630b8002629ce481032755d8d00741475c71a88abda922813a3"
+    },
+    "result": "from the exact guards, guard order equal to theorem order in every module; identical before and after"
+   },
+   "diff_check": "git diff --check clean before the Lean commit and on the documentation changes"
+  },
+  "status": "review fix pass complete; awaiting a confirming review; not integrated"
  },
- "integration": "not integrated (task instruction); integration (PROTOCOL section 6) by fast-forward of central to the branch's checked tip after a merge of central c72db84a or newer"
+ "integration": "not integrated (task instruction); integration (PROTOCOL section 6) by fast-forward of central to the branch's checked tip after a merge of central c27b4533 or newer (the first wording said c72db84a; corrected by the review fix pass)",
+ "contracts_used_by": {
+  "phase_readback": {
+   "note": "Phase1ReadBack codec and Phase2ReadBack codec as explicit arguments (keymatch_later and game_markedL take Phase1ReadBack only); ideal_compile_server through the hypotheses of IdealCompileServerTarget",
+   "PqxdhDeploymentIdealLaterPool": [
+    "good_step_poolL",
+    "compile_simulation_poolL"
+   ],
+   "PqxdhDeploymentIdealLaterCut": [
+    "pool_scan_sourceL",
+    "ideal_prefixL",
+    "cut_goodL",
+    "cut_relL"
+   ],
+   "PqxdhDeploymentIdealLaterBranch": [
+    "keymatch_later",
+    "game_markedL",
+    "ideal_compile_server_of_selected",
+    "ideal_compile_server_of_active"
+   ],
+   "PqxdhDeploymentIdealLaterMid": [
+    "goodMidL_step",
+    "compile_simulationMidL",
+    "post_mid",
+    "restOf_middle",
+    "laterTail_middle"
+   ],
+   "PqxdhDeploymentIdealLaterPost": [
+    "activeCE_middleL",
+    "active_branchL"
+   ],
+   "PqxdhDeploymentIdealLaterCompile": [
+    "ideal_compile_server"
+   ]
+  },
+  "run_budget": {
+   "note": "budget.Respects first as an explicit argument; ideal_compile_server through the hypotheses of IdealCompileServerTarget",
+   "PqxdhDeploymentIdealLaterBranch": [
+    "run_certified",
+    "scan_certifiedL",
+    "ideal_compile_server_of_selected",
+    "ideal_compile_server_of_active"
+   ],
+   "PqxdhDeploymentIdealLaterCompile": [
+    "ideal_compile_server"
+   ]
+  }
+ }
 }
