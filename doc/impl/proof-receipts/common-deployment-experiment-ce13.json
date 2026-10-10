@@ -1,0 +1,964 @@
+{
+ "stage": "CE-13: the documentation stage of the common deployment experiment (handoff item 3), the computational column of the symbolic/computational matrix; documents, plus one section of the trust-boundary inventory in the review fix pass",
+ "topic": "codex/deployment-ce13",
+ "central_basis": "529e2c8bf414f680ac57b159365280aab2e2f3f2",
+ "central_note": "codex/full-proof-composition with CE-12 P1, P2, P2b, P3, P4, D-ct (integration message 527) and the production composition of items 3 and 7 (integration message 529) integrated; merged before integration with central a2665670 (the production forms of the CE-12 D-ct closed forms, integration message 531)",
+ "production_dct_pending": {
+  "branch": "codex/deployment-boundary-production",
+  "lean_commit": "fa57acd91147d72482ef4f0e2086e6e8c6f1d587",
+  "lean_docstring_commit": "0543c7e6",
+  "documents_commit": "5b288801cf14edef352300d7635b14aee658f429",
+  "branch_tip_at_fix_pass": "02cec0fda7f6f880bde7254c77cb7c900100d56c",
+  "theorems": "48: 42 _dct and 4 _dct_full closed forms, ctgap_term_le, ctgap_term_billed (module PqxdhDeploymentProductionHeadlinesDct)",
+  "status": "superseded: not on central at the first version and the review fix pass; on central since a2665670 (integration message 531, Lean fa57acd9 with the docstring change 0543c7e6), merged into the topic before its integration; cited as results since the integration-merge note commit"
+ },
+ "authorship": "Claude",
+ "state": "written (986262ab); reviewed by an independent review (semantic, completeness, hygiene lenses) of 986262ab; review fix pass 4dc0c791; confirming review of 4dc0c791: APPROVE_WITH_NITS, its four nits taken in the commit that records it; merged with central a2665670 (8358d8e3) before integration; not integrated at this receipt",
+ "documents": {
+  "guide": {
+   "path": "doc/impl/deployment-experiment.md",
+   "sha256": "6452088961959ecb02b4a1fc8eb5c61d708e2af6db9b42eb2387c68332ef0a96"
+  },
+  "source_scope": {
+   "path": "doc/proverif-source-scope.md",
+   "sha256": "0a4ebb3469aba752356b748bbf287be267fcf203488572be03da83a671e05624"
+  },
+  "composition_assumptions": {
+   "path": "doc/composition-assumptions.md",
+   "sha256": "5a131522c8f099b4fb73e3c7376b854de98b854b3b13d451db1f3ad78fde458a"
+  },
+  "analysis": {
+   "path": "doc/formal-verification-analysis.md",
+   "sha256": "6e681e8591806d20f0e086bbddecea038419c084dab26a9368b93ca3d65e2305"
+  },
+  "plan_snapshot": {
+   "path": "doc/impl/common-deployment-experiment-plan.md",
+   "sha256": "0333b4f334410f4297352f6fe0a83b69fdefc5ac77278a8eea0ef845a6c34f9b"
+  },
+  "trusted_boundary": {
+   "path": "beaconcrypt-core/proofs/trusted-boundary.md",
+   "sha256": "346f1f0f7b6e193f7834bd4c838462cd87d9c6d3c3832846468d70248e4706ab"
+  },
+  "reviewed_inventory": {
+   "path": "beaconcrypt-core/proofs/reviewed-inventory.txt",
+   "sha256": "2c055a5eb358b8fcf84d060912dcc46df35d4570de17e75937d44011d4acb444"
+  }
+ },
+ "documents_edits": {
+  "guide": "new file; review fix pass: status line, finish row (plan section 25), budgets (plan section 22 cap loosening), compile argument (gap, collision and D-ct closures, item 7 joins), terms and bills, rows table, production forms, new section 'Name index of the published forms', not-claimed bullet, corrections 1, 2 and 11, checks, new section 'Review fix pass'; confirming-review record: nits 2, 3 and 4 (production paragraph, event-projection paragraph, correction 5, review fix pass item 1), status line, new section 'Confirming review'; integration merge: status line, section 'Production forms', name index row PqxdhDeploymentProductionHeadlinesDct, corrections 1 and 4 pointers, new section 'Integration merge'",
+  "source_scope": "new final section 'Computational column: the common deployment experiment'; review fix pass: conventions (exception (a)), premise bundles (setup-carried contracts), terms (closures), production paragraph, index statuses (A2 rows, A2-provenance, L2-origin), NBF owners in the symbolic-only lists, A1-root pin line 116, CE-A1 condition per owner, either-side ce_app_sym family, later CE-APP-L and CE-LOR-L forms, new entry for CE-KT-L at rows 168-173, ce_plain_every_b2s without _target form; confirming-review record: s2b-S1 symbolic-only list names the owners with a rejected bundle call in Fresh (nit 1), production paragraph names the symbolic-eligibility forms and the gap bounds (nit 3), App-b2s eligibility wording (nit 4); integration merge: paragraph 'Production' (production D-ct forms on central since a2665670) and the S3-beacon production line",
+  "composition_assumptions": "reveal-capability text of section 'The experiment a composition theorem must cover' (formerly line 33) amended to the plan section 19 profile with the section 27 exceptions; a note appended to the CE-3 codec paragraph; new final section 'Common deployment experiment: approved profile and scope of the headline claims (CE-13)'; review fix pass: scope lists of the final section (random-oracle model and setup-carried contracts of every statement, the CE-KT/CE-OR/CE-UKS/CE-APP/CE-LOR bullet, CE-A1 with Phase1ReadBack, SourceFullCorrect, the random oracles and KemBound, which statements use the Phase laws, CE-APP-L and CE-LOR-L as the later forms, R1 and C3 on every outcome), the plan section 22 cap note and the pointer to the trust-boundary inventory; integration merge: the basis of the final section names the merge of central a2665670",
+  "analysis": "new final section 'Common deployment experiment, CE-13: what is computational now'; review fix pass: production coverage, reveal exception (a), decoded frames, CE-A1 condition and the registration bullet, which claims have symbolic-eligibility corollaries and their per-family cost, beacon_gap_le, the conditions paragraph, symbolic-only additions, the fix-pass sentence; confirming-review record: replay_never named separately as the CE-12 P2 support fact (nit 2); integration merge: the production paragraph names the closed production siblings (all but beacon_gap_le); central's two production-headlines paragraphs precede the section",
+  "plan_snapshot": "wholesale copy of the working plan through section 125 with the snapshot header paragraph updated (confirming-review record; the header now names the SHA-256 of the copied working plan, which the two earlier CE-13 refreshes had left at the D-ct refresh's 825d9dca); review fix pass: wholesale copy through section 124",
+  "trusted_boundary": "review fix pass: new final section 'Common deployment experiment: codec contracts and reveal profile' (plan section 19: the codec laws in both assumption lists)",
+  "reviewed_inventory": "review fix pass: digest of proofs/trusted-boundary.md recomputed by coord.sh inv rehash (1a231e855385... -> 346f1f0f7b6e...); no row added or removed; integration merge: the check-inventory.sh digest is central's (a2665670); inv recount and rehash unchanged"
+ },
+ "plan": {
+  "working_plan_sha256": "fd6fff038638903933950ade81a19a5e2afc55410de2215f9734e17bb124a381",
+  "sections_through": 125,
+  "new_sections": [
+   123,
+   124,
+   125
+  ],
+  "earlier_working_plan_sha256": {
+   "123": "899f76ad5c44aab2fc8ec8e28d2a843348f09abc3b7383c2d977801ce73a70aa",
+   "124": "23338214eca84d3449ba6698fa205afb9e9a513d49b6e77258f89344908f32eb"
+  },
+  "snapshot_body_equals_working_plan": true
+ },
+ "rows": [
+  {
+   "vc": "601",
+   "target": "S3-server",
+   "checker": "check-free-schedule.py",
+   "status": "partial",
+   "entry": "key transfer",
+   "strongest_theorems": "PqxdhDeploymentHeadlineSymbolic.ce_kt_server_sym; PqxdhDeploymentHeadlineKeyTransfer.ce_kt_sum, ce_kt_close",
+   "production_central": "PqxdhDeploymentProductionHeadlinesClassical.ce_kt_server_sym, ce_kt_sum, ce_kt_close"
+  },
+  {
+   "vc": "602",
+   "target": "S3-beacon",
+   "checker": "check-free-schedule.py",
+   "status": "partial",
+   "entry": "key transfer",
+   "strongest_theorems": "PqxdhDeploymentHeadlineDctClosed.ce_kt_beacon_sym_dct; ce_kt_sum, ce_kt_close",
+   "production_central": "PqxdhDeploymentProductionHeadlinesClassical.ce_kt_beacon_sym (ctGapTerm explicit)"
+  },
+  {
+   "vc": "3168",
+   "target": "A1-root",
+   "checker": "check-delayed-response.py",
+   "status": "partial",
+   "entry": "key transfer",
+   "strongest_theorems": "ce_kt_beacon_sym_dct (owner claim), ce_kt_server_sym (peer claim), PqxdhDeploymentHeadlineDctClosed.ce_kt_sym_dct",
+   "production_central": "ce_kt_beacon_sym, ce_kt_sym (ctGapTerm explicit), ce_kt_server_sym"
+  },
+  {
+   "vc": "3179",
+   "target": "L2-origin",
+   "checker": "check-record-origin.py",
+   "status": "computational (root symbolic-only; Server pin and plaintext under CE designation only)",
+   "entry": "b2s origin",
+   "strongest_theorems": "PqxdhDeploymentHeadlinePlain.ce_or_fields_b2s; PqxdhDeploymentHeadlineInjective.ce_or_injective_b2s; PqxdhDeploymentHeadlineSymbolic.ce_or_b2s_sym",
+   "production_central": "PqxdhDeploymentProductionHeadlines.ce_or_fields_b2s; PqxdhDeploymentProductionHeadlinesClassical.ce_or_injective_b2s, ce_or_b2s_sym"
+  },
+  {
+   "vc": "3180",
+   "target": "L2-identity",
+   "checker": "check-record-origin.py",
+   "status": "no endpoint",
+   "entry": "auxiliary",
+   "strongest_theorems": "",
+   "production_central": ""
+  },
+  {
+   "vc": "633",
+   "target": "b2s-C2",
+   "checker": "check-free-schedule.py",
+   "status": "computational (injectivity by named modes)",
+   "entry": "b2s origin",
+   "strongest_theorems": "ce_or_fields_b2s; ce_or_injective_b2s",
+   "production_central": "as L2-origin"
+  },
+  {
+   "vc": "634",
+   "target": "b2s-C2-chosen-fs",
+   "checker": "check-free-schedule.py",
+   "status": "computational (injectivity by named modes)",
+   "entry": "b2s origin",
+   "strongest_theorems": "ce_or_fields_b2s; ce_or_injective_b2s",
+   "production_central": "as L2-origin"
+  },
+  {
+   "vc": "636",
+   "target": "b2s-C4",
+   "checker": "check-free-schedule.py",
+   "status": "computational",
+   "entry": "b2s origin",
+   "strongest_theorems": "PqxdhDeploymentHeadlineOrigin.ce_or_b2s; ce_or_b2s_sym; ce_or_injective_b2s",
+   "production_central": "PqxdhDeploymentProductionHeadlinesClassical.ce_or_b2s, ce_or_b2s_sym, ce_or_injective_b2s"
+  },
+  {
+   "vc": "3174",
+   "target": "far-b2s-C4",
+   "checker": "check-exact-far.py",
+   "status": "computational",
+   "entry": "b2s origin",
+   "strongest_theorems": "ce_or_b2s; ce_or_b2s_sym; ce_or_injective_b2s",
+   "production_central": "as b2s-C4"
+  },
+  {
+   "vc": "3183",
+   "target": "S2b-origin",
+   "checker": "check-tasking-origin.py",
+   "status": "computational (assigned key ID and root symbolic-only)",
+   "entry": "s2b origin",
+   "strongest_theorems": "PqxdhDeploymentHeadlinePlainGated.ce_or_plain_s2b_billed; PqxdhDeploymentHeadlineDctClosedP2b.ce_or_injective_s2b_full_closed_billed_dct, ce_or_s2b_sym_closed_billed_dct",
+   "production_central": "PqxdhDeploymentProductionHeadlines.ce_or_plain_s2b_billed, ce_or_injective_s2b_full_closed_billed, ce_or_s2b_sym_closed_billed (ctGapTerm explicit)"
+  },
+  {
+   "vc": "615",
+   "target": "s2b-C1",
+   "checker": "check-free-schedule.py",
+   "status": "partial",
+   "entry": "s2b origin",
+   "strongest_theorems": "positions from 2 as S2b-origin; position 1 PqxdhDeploymentServerAuth.ce_a1, PqxdhDeploymentServerAuthInjectiveGame.ce_a1_injective, PqxdhDeploymentHeadlineDctClosed.ce_a1_linked_dct",
+   "production_central": "as S2b-origin; PqxdhDeploymentProductionHeadlinesClassical.ce_a1_linked"
+  },
+  {
+   "vc": "617",
+   "target": "s2b-C4",
+   "checker": "check-free-schedule.py",
+   "status": "computational",
+   "entry": "s2b origin",
+   "strongest_theorems": "ce_or_s2b; ce_or_s2b_billed; ce_or_s2b_sym_closed_billed_dct",
+   "production_central": "as S2b-origin"
+  },
+  {
+   "vc": "3175",
+   "target": "far-s2b-C4",
+   "checker": "check-exact-far.py",
+   "status": "computational",
+   "entry": "s2b origin",
+   "strongest_theorems": "ce_or_s2b; ce_or_s2b_billed; ce_or_s2b_sym_closed_billed_dct",
+   "production_central": "as S2b-origin"
+  },
+  {
+   "vc": "3184",
+   "target": "S2b-initial",
+   "checker": "check-tasking-origin.py",
+   "status": "partial",
+   "entry": "initial response",
+   "strongest_theorems": "ce_a1, ce_a1_billed, ce_a1_injective, ce_a1_linked_dct",
+   "production_central": "PqxdhDeploymentProductionHeadlinesClassical.ce_a1_linked only"
+  },
+  {
+   "vc": "3185",
+   "target": "S2b-identity",
+   "checker": "check-tasking-origin.py",
+   "status": "no endpoint",
+   "entry": "auxiliary",
+   "strongest_theorems": "",
+   "production_central": ""
+  },
+  {
+   "vc": "3167",
+   "target": "A1-delayed",
+   "checker": "check-delayed-response.py",
+   "status": "partial",
+   "entry": "initial response",
+   "strongest_theorems": "ce_a1, PqxdhDeploymentServerAuthBills.ce_a1_billed, ce_a1_injective, ce_a1_linked_dct",
+   "production_central": "ce_a1_linked only"
+  },
+  {
+   "vc": "597",
+   "target": "A1",
+   "checker": "check-free-schedule.py",
+   "status": "partial",
+   "entry": "initial response",
+   "strongest_theorems": "as A1-delayed",
+   "production_central": "as A1-delayed"
+  },
+  {
+   "vc": "613",
+   "target": "s2b-A1",
+   "checker": "check-free-schedule.py",
+   "status": "partial",
+   "entry": "initial response",
+   "strongest_theorems": "as A1-delayed",
+   "production_central": "as A1-delayed"
+  },
+  {
+   "vc": "631",
+   "target": "b2s-A1",
+   "checker": "check-free-schedule.py",
+   "status": "partial",
+   "entry": "initial response",
+   "strongest_theorems": "as A1-delayed",
+   "production_central": "as A1-delayed"
+  },
+  {
+   "vc": "649",
+   "target": "encoding-A1",
+   "checker": "check-primitive-fidelity.py",
+   "status": "partial",
+   "entry": "initial response",
+   "strongest_theorems": "as A1-delayed",
+   "production_central": "as A1-delayed"
+  },
+  {
+   "vc": "3161",
+   "target": "A2-provenance",
+   "checker": "check-registration-provenance.py",
+   "status": "computational (publication reading on NBF owners)",
+   "entry": "provenance",
+   "strongest_theorems": "PqxdhDeploymentProvenance.a2_bound, a2_generated_bound; PqxdhDeploymentPublishedTuple.a2pub_owner_bound, a2pub_bound",
+   "production_central": "none"
+  },
+  {
+   "vc": "3162",
+   "target": "A2-beacon-key",
+   "checker": "check-registration-provenance.py",
+   "status": "no endpoint",
+   "entry": "auxiliary",
+   "strongest_theorems": "",
+   "production_central": ""
+  },
+  {
+   "vc": "3163",
+   "target": "A2-server-key",
+   "checker": "check-registration-provenance.py",
+   "status": "no endpoint",
+   "entry": "auxiliary",
+   "strongest_theorems": "",
+   "production_central": ""
+  },
+  {
+   "vc": "598",
+   "target": "A2",
+   "checker": "check-free-schedule.py",
+   "status": "computational (publication reading on NBF owners)",
+   "entry": "provenance",
+   "strongest_theorems": "as A2-provenance",
+   "production_central": "none"
+  },
+  {
+   "vc": "614",
+   "target": "s2b-A2",
+   "checker": "check-free-schedule.py",
+   "status": "computational (publication reading on NBF owners)",
+   "entry": "provenance",
+   "strongest_theorems": "as A2-provenance",
+   "production_central": "none"
+  },
+  {
+   "vc": "632",
+   "target": "b2s-A2",
+   "checker": "check-free-schedule.py",
+   "status": "computational (publication reading on NBF owners)",
+   "entry": "provenance",
+   "strongest_theorems": "as A2-provenance",
+   "production_central": "none"
+  },
+  {
+   "vc": "650",
+   "target": "encoding-A2",
+   "checker": "check-primitive-fidelity.py",
+   "status": "computational (publication reading on NBF owners)",
+   "entry": "provenance",
+   "strongest_theorems": "as A2-provenance",
+   "production_central": "none"
+  },
+  {
+   "vc": "599",
+   "target": "R1",
+   "checker": "check-free-schedule.py",
+   "status": "computational (zero loss)",
+   "entry": "replay",
+   "strongest_theorems": "PqxdhDeploymentReplay.replay_game",
+   "production_central": "none"
+  },
+  {
+   "vc": "651",
+   "target": "encoding-R1",
+   "checker": "check-primitive-fidelity.py",
+   "status": "computational (zero loss)",
+   "entry": "replay",
+   "strongest_theorems": "PqxdhDeploymentReplay.replay_game",
+   "production_central": "none"
+  },
+  {
+   "vc": "600",
+   "target": "R1'",
+   "checker": "check-free-schedule.py",
+   "status": "computational (NBF owners)",
+   "entry": "replay",
+   "strongest_theorems": "PqxdhDeploymentPublishedTuple.r1prime_owner_bound, r1prime_bound",
+   "production_central": "none"
+  },
+  {
+   "vc": "652",
+   "target": "encoding-R1'",
+   "checker": "check-primitive-fidelity.py",
+   "status": "computational (NBF owners)",
+   "entry": "replay",
+   "strongest_theorems": "PqxdhDeploymentPublishedTuple.r1prime_owner_bound, r1prime_bound",
+   "production_central": "none"
+  },
+  {
+   "vc": "616",
+   "target": "s2b-C3",
+   "checker": "check-free-schedule.py",
+   "status": "computational (zero loss)",
+   "entry": "replay",
+   "strongest_theorems": "PqxdhDeploymentRecordReplay.record_replay_game; PqxdhDeploymentHeadlineInjective.replay_never",
+   "production_central": "none"
+  },
+  {
+   "vc": "635",
+   "target": "b2s-C3",
+   "checker": "check-free-schedule.py",
+   "status": "computational (zero loss)",
+   "entry": "replay",
+   "strongest_theorems": "PqxdhDeploymentRecordReplay.record_replay_game; PqxdhDeploymentHeadlineInjective.replay_never",
+   "production_central": "none"
+  },
+  {
+   "vc": "3188",
+   "target": "App-b2s",
+   "checker": "check-application-secrecy.py",
+   "status": "computational",
+   "entry": "application secrecy",
+   "strongest_theorems": "PqxdhDeploymentHeadlineGated.ce_app_billed; PqxdhDeploymentHeadlineDctClosedP2b.ce_app_beacon_sym_billed_dct; either side PqxdhDeploymentHeadlineDctClosedP2b.ce_app_sym_billed_dct",
+   "production_central": "PqxdhDeploymentProductionHeadlines.ce_app_billed, ce_app_beacon_sym_billed (ctGapTerm explicit); ce_app_sym_billed, PqxdhDeploymentProductionHeadlinesClassical.ce_app_sym (ctGapTerm explicit)"
+  },
+  {
+   "vc": "637",
+   "target": "b2s-S2",
+   "checker": "check-free-schedule.py",
+   "status": "computational",
+   "entry": "application secrecy",
+   "strongest_theorems": "as App-b2s",
+   "production_central": "as App-b2s"
+  },
+  {
+   "vc": "3189",
+   "target": "App-s2b",
+   "checker": "check-application-secrecy.py",
+   "status": "computational",
+   "entry": "application secrecy",
+   "strongest_theorems": "PqxdhDeploymentHeadlineApp.ce_app_server; PqxdhDeploymentHeadlineSymbolic.ce_app_server_sym; either side ce_app_sym_billed_dct",
+   "production_central": "PqxdhDeploymentProductionHeadlinesClassical.ce_app_server, ce_app_server_sym"
+  },
+  {
+   "vc": "618",
+   "target": "s2b-S1",
+   "checker": "check-free-schedule.py",
+   "status": "partial",
+   "entry": "application secrecy",
+   "strongest_theorems": "ce_app_server, ce_app_server_sym (uniform fresh messages from position 2)",
+   "production_central": "as App-s2b"
+  },
+  {
+   "vc": "3192",
+   "target": "SSX-b2s",
+   "checker": "check-exact-interface-strong.py",
+   "status": "computational (one test session)",
+   "entry": "left-or-right secrecy",
+   "strongest_theorems": "PqxdhDeploymentHeadlineGated.ce_lor_billed; PqxdhDeploymentHeadlineDctClosedP2b.symbolic_lor_bound_closed_billed_dct, symbolic_lor_closed_dct",
+   "production_central": "PqxdhDeploymentProductionHeadlines.ce_lor_billed, symbolic_lor_bound_closed_billed (ctGapTerm explicit)"
+  },
+  {
+   "vc": "3155",
+   "target": "SS-b2s",
+   "checker": "check-active-strong-secrecy.py",
+   "status": "computational (one test session)",
+   "entry": "left-or-right secrecy",
+   "strongest_theorems": "as SSX-b2s",
+   "production_central": "as SSX-b2s"
+  },
+  {
+   "vc": "3193",
+   "target": "SSX-s2b",
+   "checker": "check-exact-interface-strong.py",
+   "status": "computational (one test session)",
+   "entry": "left-or-right secrecy",
+   "strongest_theorems": "PqxdhDeploymentHeadlineLor.ce_lor_server; PqxdhDeploymentHeadlineSymbolicLor.symbolic_lor_server_bound, symbolic_lor_server",
+   "production_central": "PqxdhDeploymentProductionHeadlinesClassical.ce_lor_server, symbolic_lor_server_bound"
+  },
+  {
+   "vc": "3156",
+   "target": "SS-s2b",
+   "checker": "check-active-strong-secrecy.py",
+   "status": "computational (one test session)",
+   "entry": "left-or-right secrecy",
+   "strongest_theorems": "as SSX-s2b",
+   "production_central": "as SSX-s2b"
+  },
+  {
+   "vc": "3194",
+   "target": "SSX-b2s-origin",
+   "checker": "check-exact-interface-strong.py",
+   "status": "no endpoint",
+   "entry": "auxiliary",
+   "strongest_theorems": "",
+   "production_central": ""
+  },
+  {
+   "vc": "3195",
+   "target": "SSX-s2b-origin",
+   "checker": "check-exact-interface-strong.py",
+   "status": "no endpoint",
+   "entry": "auxiliary",
+   "strongest_theorems": "",
+   "production_central": ""
+  },
+  {
+   "vc": "638",
+   "target": "b2s-UKSr",
+   "checker": "check-free-schedule.py",
+   "status": "partial",
+   "entry": "unknown key share",
+   "strongest_theorems": "PqxdhDeploymentHeadlineUks.ce_uks_b2s; PqxdhDeploymentHeadlineGated.ce_uks_sender_billed; PqxdhDeploymentHeadlineDctClosedP2b.ce_uks_sym_closed_billed_dct",
+   "production_central": "PqxdhDeploymentProductionHeadlinesClassical.ce_uks_b2s; PqxdhDeploymentProductionHeadlines.ce_uks_sender_billed, ce_uks_sym_closed_billed (ctGapTerm explicit)"
+  },
+  {
+   "vc": "162",
+   "target": "passive-classical 1",
+   "checker": "check-results.awk",
+   "status": "symbolic-only",
+   "entry": "passive",
+   "strongest_theorems": "",
+   "production_central": ""
+  },
+  {
+   "vc": "163",
+   "target": "passive-classical 2",
+   "checker": "check-results.awk",
+   "status": "computational (fresh-message reading)",
+   "entry": "passive",
+   "strongest_theorems": "ce_app_server, ce_app_server_sym",
+   "production_central": "as App-s2b"
+  },
+  {
+   "vc": "164",
+   "target": "passive-classical 3",
+   "checker": "check-results.awk",
+   "status": "computational (fresh-message reading)",
+   "entry": "passive",
+   "strongest_theorems": "ce_app_server, ce_app_server_sym",
+   "production_central": "as App-s2b"
+  },
+  {
+   "vc": "165",
+   "target": "passive-classical 4",
+   "checker": "check-results.awk",
+   "status": "computational (fresh-message reading)",
+   "entry": "passive",
+   "strongest_theorems": "ce_app_server, ce_app_server_sym",
+   "production_central": "as App-s2b"
+  },
+  {
+   "vc": "166",
+   "target": "passive-classical 5",
+   "checker": "check-results.awk",
+   "status": "computational (fresh-message reading)",
+   "entry": "passive",
+   "strongest_theorems": "ce_app_billed, ce_app_beacon_sym_billed_dct",
+   "production_central": "as App-b2s"
+  },
+  {
+   "vc": "167",
+   "target": "passive-classical-equivalence",
+   "checker": "check-results.awk",
+   "status": "partial",
+   "entry": "passive",
+   "strongest_theorems": "ce_lor_billed, symbolic_lor_bound_closed_billed_dct",
+   "production_central": "as SSX-b2s"
+  },
+  {
+   "vc": "168",
+   "target": "passive-quantum 1",
+   "checker": "check-results.awk",
+   "status": "symbolic-only",
+   "entry": "passive",
+   "strongest_theorems": "",
+   "production_central": "",
+   "ce_kt_l": "CE-KT-L listed as a transfer (PqxdhDeploymentLaterHeadlineKeyTransfer.ce_kt_later_sum, ce_kt_later_close; symbolic ce_kt_server_later_sym, PqxdhDeploymentHeadlineDctClosedLater.ce_kt_beacon_later_sym_dct, ce_kt_later_sym_dct); status unchanged"
+  },
+  {
+   "vc": "169",
+   "target": "passive-quantum 2",
+   "checker": "check-results.awk",
+   "status": "partial",
+   "entry": "passive",
+   "strongest_theorems": "PqxdhDeploymentLaterHeadlineApp.ce_app_server_later; PqxdhDeploymentLaterHeadlineSymbolic.ce_app_server_later_sym; either side PqxdhDeploymentHeadlineDctClosedLaterP4.ce_app_later_sym_billed_dct_full",
+   "production_central": "PqxdhDeploymentProductionHeadlinesLater.ce_app_server_later, ce_app_server_later_sym",
+   "ce_kt_l": "CE-KT-L listed as a transfer (PqxdhDeploymentLaterHeadlineKeyTransfer.ce_kt_later_sum, ce_kt_later_close; symbolic ce_kt_server_later_sym, PqxdhDeploymentHeadlineDctClosedLater.ce_kt_beacon_later_sym_dct, ce_kt_later_sym_dct); status unchanged"
+  },
+  {
+   "vc": "170",
+   "target": "passive-quantum 3",
+   "checker": "check-results.awk",
+   "status": "partial",
+   "entry": "passive",
+   "strongest_theorems": "as 169; either side PqxdhDeploymentHeadlineDctClosedLaterP4.ce_app_later_sym_billed_dct_full",
+   "production_central": "as 169",
+   "ce_kt_l": "CE-KT-L listed as a transfer (PqxdhDeploymentLaterHeadlineKeyTransfer.ce_kt_later_sum, ce_kt_later_close; symbolic ce_kt_server_later_sym, PqxdhDeploymentHeadlineDctClosedLater.ce_kt_beacon_later_sym_dct, ce_kt_later_sym_dct); status unchanged"
+  },
+  {
+   "vc": "171",
+   "target": "passive-quantum 4",
+   "checker": "check-results.awk",
+   "status": "partial",
+   "entry": "passive",
+   "strongest_theorems": "as 169; either side PqxdhDeploymentHeadlineDctClosedLaterP4.ce_app_later_sym_billed_dct_full",
+   "production_central": "as 169",
+   "ce_kt_l": "CE-KT-L listed as a transfer (PqxdhDeploymentLaterHeadlineKeyTransfer.ce_kt_later_sum, ce_kt_later_close; symbolic ce_kt_server_later_sym, PqxdhDeploymentHeadlineDctClosedLater.ce_kt_beacon_later_sym_dct, ce_kt_later_sym_dct); status unchanged"
+  },
+  {
+   "vc": "172",
+   "target": "passive-quantum 5",
+   "checker": "check-results.awk",
+   "status": "partial",
+   "entry": "passive",
+   "strongest_theorems": "PqxdhDeploymentLaterHeadlineGated.ce_app_later_billed; PqxdhDeploymentHeadlineDctClosedLaterP4.ce_app_beacon_later_sym_billed_dct_full; either side PqxdhDeploymentHeadlineDctClosedLaterP4.ce_app_later_sym_billed_dct_full",
+   "production_central": "PqxdhDeploymentProductionHeadlinesLater.ce_app_later_billed, ce_app_beacon_later_sym_billed (ctGapTerm explicit)",
+   "ce_kt_l": "CE-KT-L listed as a transfer (PqxdhDeploymentLaterHeadlineKeyTransfer.ce_kt_later_sum, ce_kt_later_close; symbolic ce_kt_server_later_sym, PqxdhDeploymentHeadlineDctClosedLater.ce_kt_beacon_later_sym_dct, ce_kt_later_sym_dct); status unchanged"
+  },
+  {
+   "vc": "173",
+   "target": "passive-quantum-equivalence",
+   "checker": "check-results.awk",
+   "status": "partial",
+   "entry": "passive",
+   "strongest_theorems": "PqxdhDeploymentLaterHeadlineGated.ce_lor_later_billed; PqxdhDeploymentHeadlineDctClosedLaterP4.symbolic_lor_later_bound_closed_billed_dct_full; ce_lor_server_later, symbolic_lor_server_later_bound",
+   "production_central": "PqxdhDeploymentProductionHeadlinesLater.ce_lor_later_billed, symbolic_lor_later_bound_closed_billed, ce_lor_server_later, symbolic_lor_server_later_bound",
+   "ce_kt_l": "CE-KT-L listed as a transfer (PqxdhDeploymentLaterHeadlineKeyTransfer.ce_kt_later_sum, ce_kt_later_close; symbolic ce_kt_server_later_sym, PqxdhDeploymentHeadlineDctClosedLater.ce_kt_beacon_later_sym_dct, ce_kt_later_sym_dct); status unchanged"
+  },
+  {
+   "vc": "127",
+   "target": "live-material-origin",
+   "checker": "check-results.awk",
+   "status": "partial",
+   "entry": "live services",
+   "strongest_theorems": "component PqxdhRecordLiftCtx.ctxReduction inside record_auth_lift (authLoss_g)",
+   "production_central": ""
+  },
+  {
+   "vc": "130",
+   "target": "live-private-application-no-api",
+   "checker": "check-results.awk",
+   "status": "partial",
+   "entry": "live services",
+   "strongest_theorems": "as 127",
+   "production_central": ""
+  },
+  {
+   "vc": "132",
+   "target": "live-private-application-no-key",
+   "checker": "check-results.awk",
+   "status": "partial",
+   "entry": "live services",
+   "strongest_theorems": "as 127",
+   "production_central": ""
+  },
+  {
+   "vc": "134",
+   "target": "live-private-application-origin (position 1)",
+   "checker": "check-results.awk",
+   "status": "partial",
+   "entry": "live services",
+   "strongest_theorems": "as 127",
+   "production_central": ""
+  },
+  {
+   "vc": "135",
+   "target": "live-private-application-origin (position 2)",
+   "checker": "check-results.awk",
+   "status": "partial",
+   "entry": "live services",
+   "strongest_theorems": "component PqxdhRecordLiftCtxPriv.privReduction inside record_lift (recLoss_g)",
+   "production_central": ""
+  }
+ ],
+ "remaining_lines": [
+  {
+   "group": "active-classical 2-15, baseline 34-47, failed-receive 53-58 and 69",
+   "lines": 35,
+   "computational": "regression evidence; covered by the claims above where they coincide"
+  },
+  {
+   "group": "compromise 48, 52; failed-receive-compromise 70, 73-75",
+   "lines": 6,
+   "computational": "none: outside the approved reveal profile"
+  },
+  {
+   "group": "general-registration 707-3128",
+   "lines": 61,
+   "computational": "sequence-one admission inside CE's finish; no separate claim"
+  },
+  {
+   "group": "phase2-x25519-alias 689-692, 697-704",
+   "lines": 12,
+   "computational": "CE-A1 compares decoded values, never raw response bytes"
+  },
+  {
+   "group": "kem-controller 658-666",
+   "lines": 9,
+   "computational": "support: no KEM algebra used"
+  },
+  {
+   "group": "registration-set 271",
+   "lines": 1,
+   "computational": "CE-A2 and CE-R1"
+  }
+ ],
+ "row_counts": {
+  "listed_individually": 61,
+  "remaining_grouped": 124
+ },
+ "corrections": [
+  {
+   "n": 1,
+   "rows": "all production cells",
+   "correction": "production composition cited from central 529e2c8b (fast-forward from 16956129, message 529); the production _dct forms only on branch codex/deployment-boundary-production (fa57acd9), marked pending integration",
+   "source": "git log of central and of the branch; the adversarial verification of the row groups"
+  },
+  {
+   "n": 2,
+   "rows": "S3-beacon 602, A1-root 3168",
+   "correction": "every ProVerif Beacon pins (ed_public(SERVER_IDENTITY_SECRET), SERVER_KEY_ID); 'any assigned key ID' is the Beacon's own assigned ID; no pin remainder for these rows (the first mapping had listed (S, other key ID) Beacons as a remainder)",
+   "source": "fs-registration.pvl:238,285,313; delayed-response.pvl:88,116 (re-read: mapping and verification disagreed; the line of the pin was corrected from 113 to 116 in the review fix pass)"
+  },
+  {
+   "n": 3,
+   "rows": "S3-server 601",
+   "correction": "SymServer ranges over the created owners' identities only; a peer that accepted the Server's own identity or a non-owner identity is ineligible",
+   "source": "PqxdhDeploymentHeadlineGap.SymServer"
+  },
+  {
+   "n": 4,
+   "rows": "S3-beacon 602",
+   "correction": "ce_kt_beacon_sym_dct also takes qInit and initBound; production ce_kt_beacon_sym keeps ctGapTerm (ctGapTerm_source)",
+   "source": "guide 'CE-12 D-ct: premises'; production module"
+  },
+  {
+   "n": 5,
+   "rows": "all symbolic-eligibility cells (event map)",
+   "correction": "on runs with no rejected bundle call in Fresh, designated implies symbolic eligibility (designated_sym, a sufficient condition; nothing is stated for other runs); symbolic eligibility implies designated or a gap on every run (server_gap, beacon_gap)",
+   "source": "PqxdhDeploymentHeadlineSymbolicLor.designated_sym",
+   "wording_fixed_by": "confirming review, nit 4 (the first wording read as a necessary condition)"
+  },
+  {
+   "n": 6,
+   "rows": "L2-origin 3179, b2s-C2 633/634, b2s-C4 636/3174",
+   "correction": "the strongest symbolic-eligibility form is ce_or_injective_b2s (same binders and bound as ce_or_b2s_sym, larger event), also listed in production; designations have k < qCreate (Fin qCreate sums)",
+   "source": "PqxdhDeploymentHeadlineInjective.ce_or_injective_b2s and PqxdhDeploymentHeadlineSymbolic.ce_or_b2s_sym compared; range_game_create"
+  },
+  {
+   "n": 7,
+   "rows": "S2b-origin 3183, s2b-C1 615, s2b-C4 617",
+   "correction": "kid of the ProVerif s2b events is the Beacon's stored assigned key ID, compared by no CE event: symbolic-only; s2b-C1 position 1 is CE-A1's, whose matching states no root, AD, kid or payload",
+   "source": "doc/proverif-fs-event-meaning.md (kid row); PqxdhDeploymentServerAuth module documentation"
+  },
+  {
+   "n": 8,
+   "rows": "A1 group 3167, 3184, 597, 613, 631, 649; A2 group",
+   "correction": "symbolic-only list includes the assigned key ID and the application payload; CE-A2 on the report-instrumented execution related by report_game at index 0 under Phase1/2ReadBack",
+   "source": "PqxdhDeploymentServerAuth, PqxdhDeploymentProvenance"
+  },
+  {
+   "n": 9,
+   "rows": "App-b2s 3188, b2s-S2 637, App-s2b 3189, passive 169-172",
+   "correction": "later production forms on laterSourceGame via PqxdhBoundaryDeploymentLater.unwrap; production Beacon-sym forms carry FrameReadBack and ReadWritable at codec'; mixed-side forms need shortRejects and the forgery parameters (billed: A2Bills) and CE-A1's premises; LQ-F reveal omits only kind (a)",
+   "source": "production modules; PqxdhDeploymentLaterServerGame documentation"
+  },
+  {
+   "n": 10,
+   "rows": "SSX-b2s 3192, SS-b2s 3155, SSX-s2b 3193, SS-s2b 3156",
+   "correction": "SS-b2s has no OD5 partner channel (fs_strong_partner only in the SS-s2b interface and taskings); SSX accept-time root release and chain disclosures (exact-interface-strong-*.pvl:35-36) symbolic-only; (S, other key ID) Beacons ProVerif-eligible, never CE-eligible",
+   "source": "grep fs_strong_partner; exact-interface-strong-b2s.pvl and -s2b.pvl lines 33-37"
+  },
+  {
+   "n": 11,
+   "rows": "A1-root, S3-server, S3-beacon (LQ-F cell)",
+   "correction": "CE-KT-L recorded as a later-mode analogue of the classical rows, not a counterpart; in the review fix pass listed for the passive-quantum rows 168-173 as a transfer, as its module documentation assigns it",
+   "source": "PqxdhDeploymentLaterHeadlineKeyTransfer module documentation"
+  },
+  {
+   "n": 12,
+   "rows": "b2s-UKSr 638",
+   "correction": "no mapped or verified cell; mapped from source: frame-linked CE-UKS, plaintext link symbolic-only; status partial",
+   "source": "fs-records-b2s-uksr.pv; PqxdhDeploymentHeadlineEvents.UksReceiverAt, UksSenderAt; PqxdhDeploymentHeadlineSymbolic.UksSenderSymAt"
+  }
+ ],
+ "deviations": [
+  "the task text carrying the mapped and verified cells was truncated inside the b2s-C4 cell; the cells of the s2b, registration, application, left-or-right, unknown-key-share and passive groups were rebuilt from the Lean and ProVerif sources at central with the CE-13 inventory and the verification notes",
+  "the unknown-key-share row had no mapped or verified cell and was mapped in this stage",
+  "one git fetch was run with -C on the owner's repository path (refs only, no working-tree change) before the CE-13 worktree existed"
+ ],
+ "d2_evidence": "ratchet_status derivability: reviewed reading of ratchet.rs:203-209, 414-444, 499-532 and beaconcrypt-core/src/ratchet/control.rs:63-95; recorded as reviewed transcription, not a Lean statement",
+ "name_check": {
+  "method": "first version: every backticked Module.name token in the guide and in the added text of the other three documents resolved against the declarations of beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/*.lean at central 529e2c8b. Review fix pass: the same check on the added text of the five documents against 529e2c8b (the trust-boundary section included); every name of the guide's name index checked to be a declaration of the module of its row; every production name in the column and the guide checked against the theorems of the three production modules; reverse coverage of the headline modules against the added text: every uncited theorem is an intermediate lemma of the kinds the name index excludes",
+  "distinct_qualified_names_resolved": 196,
+  "name_index_names_checked": 264,
+  "unresolved": [],
+  "placeholder_ignored": "PqxdhDeploymentX.name (naming convention example)",
+  "expected_non_declarations": "epsCt is listed in the DctWorld row with its module PqxdhDeploymentHeadlineDctEvent; anomaly_beta_billed is named in a production row as excluded; PqxdhDeploymentProductionHeadlinesDct was on the branch only until central a2665670 (now resolved)"
+ },
+ "lean_change": "none",
+ "inventory": "first version: not needed (no doc/ file is in reviewed-inventory.txt or read by check-inventory.sh). Review fix pass: proofs/trusted-boundary.md (category inventory) changed; its digest was recomputed by coord.sh inv rehash (1a231e855385ed010b1760319bf0c06d800527c89b6159fc19dd23e03b8b3a25 -> 346f1f0f7b6e193f7834bd4c838462cd87d9c6d3c3832846468d70248e4706ab); no file added or removed, so no recount; make -C beaconcrypt-core check-inventory in the locked proof shell (nix develop path:/tmp/bc-arc-scratch/proof-flake#proofs) under coord lease 00000639 (@nix): exit 0, 'Formal-verification inventory matches the reviewed boundary'",
+ "checks": [
+  "git diff --check (clean)",
+  "Markdown tables: no code span containing a pipe; constant column counts",
+  "snapshot body byte-identical to the working plan (through section 124)",
+  "check-inventory exit 0 (review fix pass, after the trust-boundary rehash)",
+  "qualified names, name index names and production names resolved (name_check)",
+  "confirming-review record: git diff --check clean; snapshot body equals the working plan through section 125; document hashes recomputed"
+ ],
+ "not_run": [
+  "make verify",
+  "full lake build",
+  "mutation testing",
+  "nix-collect-garbage",
+  "Lean checks (documents only; every statement read from source)",
+  "transcript-fidelity cargo tests (no ProVerif, Rust or fidelity input changed)"
+ ],
+ "coordination_messages": [
+  527,
+  529,
+  531,
+  532
+ ],
+ "next": "checks on the tip (focused check-inventory, transcript fidelity, git diff --check; no Lean file differs from central, so no Lean check and the published LEAN_PATH a2665670 is reused), push, integration lease (PROTOCOL section 6)",
+ "review": {
+  "reviewed_commit": "986262abde35b93036b6aab2ba023de09616ea98",
+  "lenses": [
+   "semantic",
+   "completeness",
+   "hygiene"
+  ],
+  "findings": [
+   {
+    "n": 1,
+    "severity": "major",
+    "title": "production coverage overstated (analysis; opening sentence of the guide and column)",
+    "fix": "every CE-12 headline bound on a probability of the experiment published before D-ct (129 forms) has a production form; D-ct forms on a branch only; registration statements before CE-12 have none (only ce_a1_linked and the gap and collision bounds of their family)"
+   },
+   {
+    "n": 2,
+    "severity": "major",
+    "title": "plan section 19: codec laws not in the second assumption list (trusted-boundary.md)",
+    "fix": "new trust-boundary section 'Common deployment experiment: codec contracts and reveal profile'; inv rehash; check-inventory exit 0"
+   },
+   {
+    "n": 3,
+    "severity": "minor",
+    "title": "analysis implied symbolic-eligibility corollaries for the Server-pin and plaintext fields",
+    "fix": "the analysis names the claims with such corollaries and lists pin and plaintext under ProVerif's eligibility as symbolic-only"
+   },
+   {
+    "n": 4,
+    "severity": "minor",
+    "title": "LQ-F reveal without exception (a) in the analysis and the column conventions",
+    "fix": "exception (a) stated in both; the analysis adds that kind (b) is revealed anyway"
+   },
+   {
+    "n": 5,
+    "severity": "minor",
+    "title": "CE-A1 without its no-failed-bundle condition in the analysis",
+    "fix": "registration bullet and conditions paragraph"
+   },
+   {
+    "n": 6,
+    "severity": "minor",
+    "title": "composition scope lists ('Every headline', CE-A1 without Phase1ReadBack, Phase-law users, later CE-OR/CE-UKS)",
+    "fix": "scope lists rewritten as recorded in documents_edits.composition_assumptions"
+   },
+   {
+    "n": 7,
+    "severity": "nit",
+    "title": "beacon_gap_le has no closed sibling",
+    "fix": "excepted in the analysis, the guide and the column (closed use ce_a1_linked_dct); the six intermediate lemmas named in the guide"
+   },
+   {
+    "n": 8,
+    "severity": "nit",
+    "title": "imprecise cost of the symbolic corollaries",
+    "fix": "per-family terms in the analysis"
+   },
+   {
+    "n": 9,
+    "severity": "nit",
+    "title": "'that exact record'",
+    "fix": "'a record with the same decoded frame'"
+   },
+   {
+    "n": 10,
+    "severity": "nit",
+    "title": "wrong ProVerif line of the A1Beacon pin",
+    "fix": "delayed-response.pvl:116 in correction 2 and the A1-root entry"
+   },
+   {
+    "n": 11,
+    "severity": "nit",
+    "title": "not-claimed bullet misstated the conditional replay claim",
+    "fix": "CE-A2pub, CE-R1' and CE-A1 for owners with a rejected bundle call; CE-A2, R1 and C3 on every run"
+   },
+   {
+    "n": 12,
+    "severity": "nit",
+    "title": "index statuses and symbolic-only lists inconsistent",
+    "fix": "A2 and A2-provenance rows, L2-origin qualifier, NBF owners in every symbolic-only list, NBF owners instead of NBF runs"
+   },
+   {
+    "n": 13,
+    "severity": "minor",
+    "title": "CE-KT-L had no row",
+    "fix": "entry 'Key transfer in LQ-F for rows 168 to 173 (CE-KT-L)' as a transfer; statuses unchanged"
+   },
+   {
+    "n": 14,
+    "severity": "minor",
+    "title": "either-side ce_app_sym family uncited",
+    "fix": "cited under App-b2s, App-s2b and rows 169-172 with frozen, _dct and production forms"
+   },
+   {
+    "n": 15,
+    "severity": "minor",
+    "title": "uncited headline-level names and modules (task text cut inside this finding; remainder rebuilt from the completeness review's notes)",
+    "fix": "ct_collision_game, ct_coll_billed, ctCollEps_le_design, ctgap_world, the bills, anomaly_beta, the item 7 joins and transfer lemmas, PqxdhDeploymentLaterHeadlineClosed and the later forms cited; name index of the published forms in the guide"
+   }
+  ],
+  "further_points_fixed": [
+   "ce_plain_every_b2s has no _target form (L2-origin entry)",
+   "no citation of the scratch CE-12 design document in the documents",
+   "finish row records the owner ruling of plan section 25 (PqxdhDeploymentHiddenEntry.finish_accounting)",
+   "coin and BLAKE2b cap loosening of plan section 22 (awaiting owner confirmation) recorded in the guide and the composition assumptions",
+   "production D-ct module counted as 48 theorems; branch tip 02cec0fd",
+   "receipt correction sources no longer refer to scratch notes"
+  ],
+  "lean_change": "none; no assumption, contract or idealization added",
+  "confirming_review": {
+   "reviewed_commit": "4dc0c791a31db0889bfb98f55f6e433c978ae109",
+   "diff": "986262ab..4dc0c791",
+   "central_basis": "529e2c8bf414f680ac57b159365280aab2e2f3f2",
+   "mode": "read-only, independent of the author",
+   "checked": [
+    "every finding of the review of 986262ab resolved; no statement weaker",
+    "receipt document hashes equal the committed files (7/7); working plan 23338214 equals the receipt; snapshot body equals the working plan",
+    "trusted-boundary.md digest 346f1f0f equals its reviewed-inventory row; check-inventory log exit message OK",
+    "every qualified name of the guide, the column section, the composition section and line 33, the analysis section and the new trust-boundary section resolves at central; every name-index row resolves in its module (epsCt in PqxdhDeploymentHeadlineDctEvent as documented)",
+    "the ctGapTerm forms without a _dct sibling are beacon_gap_le and the six named intermediate lemmas",
+    "the dct term scan matches the analysis cost sentence; FunctionalDecapsulation is added in exactly four _dct forms",
+    "premises: ce_a1 (Phase1ReadBack, SourceFullCorrect, KemBound; no FunctionalDecapsulation), a2_bound (shortRejects only), report_game, a2pub_owner_bound and r1prime_owner_bound (Phase1ReadBack, Phase2ReadBack), replay_game and record_replay_game (none)",
+    "ProVerif pin lines delayed-response.pvl:88, 116, 147 and fs-registration.pvl:238, 285, 313",
+    "compile caps of PqxdhDeploymentCompileCaps match the section 22 text",
+    "git diff --check clean; no /tmp or scratch-design citations in the new text; one paragraph per line; commit trailer exact"
+   ],
+   "verdict": "APPROVE_WITH_NITS",
+   "nits": [
+    {
+     "n": 1,
+     "nit": "s2b-S1 cites a symbolic-eligibility form (ce_app_server_sym) but its symbolic-only list left out the owners with a rejected bundle call in Fresh, although review fix pass item 12 says every such entry lists them",
+     "fix": "'under symbolic eligibility, owners with a rejected bundle call in Fresh' added to the s2b-S1 symbolic-only list (column)"
+    },
+    {
+     "n": 2,
+     "nit": "replay_never was grouped with the registration statements that precede CE-12, but it is a CE-12 P2 lemma (PqxdhDeploymentHeadlineInjective)",
+     "fix": "named separately as the CE-12 P2 support fact for C3 at index 0, not a probability bound and without production form (guide production paragraph and review fix pass item 1, analysis production paragraph)"
+    },
+    {
+     "n": 3,
+     "nit": "guide and column said the Beacon-side and mixed/either-side production forms keep ctGapTerm; only the symbolic-eligibility forms (and the gap bounds) do",
+     "fix": "both say 'the Beacon-side and either-side symbolic-eligibility production forms (and the gap bounds beacon_gap_le, ce_a1_linked and sym_gap)' keep ctGapTerm explicit at central 529e2c8b"
+    },
+    {
+     "n": 4,
+     "nit": "designated_sym was paraphrased as a necessary condition; it proves a sufficient one (pre-existing wording)",
+     "fix": "'conversely, on runs with no rejected bundle call in Fresh a designated handle is symbolically eligible (designated_sym; nothing is stated for other runs)' in the event-projection paragraph and correction 5; the column's App-b2s eligibility says the symbolic-eligibility forms use a symbolically eligible handle"
+    }
+   ],
+   "also_fixed": "the plan snapshot header named the D-ct refresh's working-plan SHA-256 (825d9dca) in the two earlier CE-13 refreshes; it now names the copied working plan",
+   "record": "guide section 'Confirming review'; working plan section 125 (snapshot through section 125)"
+  }
+ },
+ "documents_confirm_nits_sha256": {
+  "guide": "b636dd1713843185105b8d235cda8ece5f3fcb4bc41cab9e889d3d40f3a6c379",
+  "source_scope": "8547733cd0a4efd3c4bb160a160085de7cc9ab750a2db165e050b5c72dfd77dd",
+  "composition_assumptions": "3c86850c4d07cf4bdf16b812178229448c981c91ea836c8df2e9fa84175c650f",
+  "analysis": "7dce72bdce7ff5175afdfaefd8984268c4b4b091132f814f0d753f399140dddb",
+  "plan_snapshot": "0333b4f334410f4297352f6fe0a83b69fdefc5ac77278a8eea0ef845a6c34f9b",
+  "trusted_boundary": "346f1f0f7b6e193f7834bd4c838462cd87d9c6d3c3832846468d70248e4706ab",
+  "reviewed_inventory": "910213d6a4380b6aa1dce87215fa47704a4346231eb239eb56cf44eb1383d450"
+ },
+ "production_dct": {
+  "module": "PqxdhDeploymentProductionHeadlinesDct",
+  "central": "a266567005a8fc84833d64cbcfb0bbe09228eaf5",
+  "theorems": "48: 42 _dct and 4 _dct_full production forms under the frozen names, ctgap_term_le, ctgap_term_billed",
+  "coverage_check": "every published production form whose statement carries ctGapTerm (45) has a production _dct sibling except beacon_gap_le, ctGapTerm_source and ctCollTerm_source (42 of 45); every production _dct form has such a production base",
+  "premises": "those of the frozen D-ct forms at codec' and route', Phase1ReadBack and Phase2ReadBack stated at codec; no DecoderAgreement; no assumption or contract added (module docstring)"
+ },
+ "integration_merge": {
+  "merge_commit": "8358d8e35434d268068693f9abfd33529c0c25b5",
+  "parents": [
+   "567324e9defb2892172b77a34a4d1c4c4acac002",
+   "a266567005a8fc84833d64cbcfb0bbe09228eaf5"
+  ],
+  "central_before_topic": "529e2c8bf414f680ac57b159365280aab2e2f3f2",
+  "central_merged": "a266567005a8fc84833d64cbcfb0bbe09228eaf5",
+  "conflicts": [
+   "doc/formal-verification-analysis.md (end of file: central's two production-headlines paragraphs first, then the CE-13 section)",
+   "beaconcrypt-core/proofs/reviewed-inventory.txt (adjacent digest rows: central's proofs/check-inventory.sh, the topic's proofs/trusted-boundary.md)"
+  ],
+  "inv_recount": "handwritten-lean unchanged (1977)",
+  "inv_rehash": "proofs/lean/BeaconcryptCore.lean, proofs/trusted-boundary.md, proofs/check-inventory.sh unchanged",
+  "digests": "2397 inventory digest rows recomputed, 0 mismatches",
+  "lean_files_differing_from_central": 0,
+  "note_commit": "updates the topic's own sentences that called the production D-ct forms pending: guide status line, section 'Production forms', name index row PqxdhDeploymentProductionHeadlinesDct, pointers in corrections 1 and 4, new section 'Integration merge'; column paragraph 'Production' and S3-beacon entry; analysis paragraph on the production code; composition section basis. The record sections 'Review fix pass' and 'Confirming review' are left as they were (state at 529e2c8b)",
+  "name_check": "the qualified names of the added text resolve (11); the production _dct names cited exist in PqxdhDeploymentProductionHeadlinesDct"
+ }
+}
