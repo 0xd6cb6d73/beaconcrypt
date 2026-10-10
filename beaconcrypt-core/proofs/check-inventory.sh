@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1906
+	[handwritten-lean]=1907
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -39216,6 +39216,35 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem slotGameOf_all([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemHybrid theorem slotGameOf_all"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemHybrid\.slotOf_telescope$' "$selected_source_module" "PqxdhDeploymentLaterServerItemHybrid dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemHybrid.slotOf_telescope"
 require_line_count 1 '^theorem slotOf_telescope([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemHybrid theorem slotOf_telescope"
+
+# LQ-F upstream unit A2: theorem T7 and stage S7 of item 2 over the logged source and the U-L1 targets.
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentLaterServerItemKeys.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemKeys$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentLaterServerItemKeys root import"
+require_line_count 11 '^theorem ' "$selected_source_module" "PqxdhDeploymentLaterServerItemKeys theorem inventory"
+require_line_count 11 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentLaterServerItemKeys guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemKeys\.entryDkL_zero$' "$selected_source_module" "PqxdhDeploymentLaterServerItemKeys dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemKeys.entryDkL_zero"
+require_line_count 1 '^theorem entryDkL_zero([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemKeys theorem entryDkL_zero"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemKeys\.uniform_hybridL$' "$selected_source_module" "PqxdhDeploymentLaterServerItemKeys dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemKeys.uniform_hybridL"
+require_line_count 1 '^theorem uniform_hybridL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemKeys theorem uniform_hybridL"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemKeys\.uniform_idealKeysL$' "$selected_source_module" "PqxdhDeploymentLaterServerItemKeys dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemKeys.uniform_idealKeysL"
+require_line_count 1 '^theorem uniform_idealKeysL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemKeys theorem uniform_idealKeysL"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemKeys\.opaqueBranchL_idealKeys_two$' "$selected_source_module" "PqxdhDeploymentLaterServerItemKeys dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemKeys.opaqueBranchL_idealKeys_two"
+require_line_count 1 '^theorem opaqueBranchL_idealKeys_two([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemKeys theorem opaqueBranchL_idealKeys_two"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemKeys\.laterSlotGame_two$' "$selected_source_module" "PqxdhDeploymentLaterServerItemKeys dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemKeys.laterSlotGame_two"
+require_line_count 1 '^theorem laterSlotGame_two([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemKeys theorem laterSlotGame_two"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemKeys\.uniform_slotsL$' "$selected_source_module" "PqxdhDeploymentLaterServerItemKeys dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemKeys.uniform_slotsL"
+require_line_count 1 '^theorem uniform_slotsL([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemKeys theorem uniform_slotsL"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemKeys\.opaqueBranchL_allIdeal_two$' "$selected_source_module" "PqxdhDeploymentLaterServerItemKeys dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemKeys.opaqueBranchL_allIdeal_two"
+require_line_count 1 '^theorem opaqueBranchL_allIdeal_two([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemKeys theorem opaqueBranchL_allIdeal_two"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemKeys\.opaqueBranchL_slots_two$' "$selected_source_module" "PqxdhDeploymentLaterServerItemKeys dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemKeys.opaqueBranchL_slots_two"
+require_line_count 1 '^theorem opaqueBranchL_slots_two([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemKeys theorem opaqueBranchL_slots_two"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemKeys\.opaqueBranchSlotsTwoTargetL_holds$' "$selected_source_module" "PqxdhDeploymentLaterServerItemKeys dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemKeys.opaqueBranchSlotsTwoTargetL_holds"
+require_line_count 1 '^theorem opaqueBranchSlotsTwoTargetL_holds([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemKeys theorem opaqueBranchSlotsTwoTargetL_holds"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemKeys\.laterSlotsTwoTarget_holds$' "$selected_source_module" "PqxdhDeploymentLaterServerItemKeys dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemKeys.laterSlotsTwoTarget_holds"
+require_line_count 1 '^theorem laterSlotsTwoTarget_holds([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemKeys theorem laterSlotsTwoTarget_holds"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentLaterServerItemKeys\.later_slots_two$' "$selected_source_module" "PqxdhDeploymentLaterServerItemKeys dependency BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemKeys.later_slots_two"
+require_line_count 1 '^theorem later_slots_two([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentLaterServerItemKeys theorem later_slots_two"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
