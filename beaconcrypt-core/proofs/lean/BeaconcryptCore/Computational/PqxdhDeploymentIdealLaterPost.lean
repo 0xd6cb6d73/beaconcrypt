@@ -26,9 +26,9 @@ open PqxdhDeploymentLaterCompile (compileSnapImpl)
 open PqxdhDeploymentLaterServerSource (Log embed)
 open PqxdhDeploymentBackend (XState handlerWith)
 open PqxdhDeploymentIdealSteps (IdealBk TableState idealReg)
-open PqxdhDeploymentIdealSlots (detach attach)
+open PqxdhDeploymentIdealSlots (detach)
 open PqxdhDeploymentIdealParams (Target Params)
-open PqxdhDeploymentIdealPostSource (Mid mergeY)
+open PqxdhDeploymentIdealPostSource (mergeY)
 open PqxdhDeploymentIdealPostReduce (copiesAfter)
 open PqxdhDeploymentIdealPostItemRun (AcceptRun afterSelected)
 open PqxdhDeploymentIdealLaterMid (MidL sourceMidL compiledMidL mergeXL GoodMidL)
@@ -394,7 +394,7 @@ end Start
 /-! ### The active branch -/
 
 section Active
-open PqxdhDeploymentInterface (Budget FreshBounds Mode ModeSpec asModeO)
+open PqxdhDeploymentInterface (Budget FreshBounds Mode ModeSpec)
 open PqxdhDeploymentKemTransfer (Observed)
 open LazyOracleDiscard (LawEq)
 open PqxdhDeploymentIdealLaterSteps (AllowedL CostlyL)

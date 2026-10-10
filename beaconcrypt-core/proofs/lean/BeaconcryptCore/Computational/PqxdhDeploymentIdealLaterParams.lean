@@ -14,7 +14,7 @@ set_option autoImplicit false
 
 namespace BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterParams
 open PqxdhServerAuthExperiment (Setup Codec Checks)
-open PqxdhKemIndCca (MlKem768PublicKey MlKem768Ciphertext)
+open PqxdhKemIndCca (MlKem768Ciphertext)
 open PqxdhInitializerSecrecy (kemAmbientImpl)
 open PqxdhLiveKemReservation (Pair)
 open LazyOracleDiscard (LawEq)

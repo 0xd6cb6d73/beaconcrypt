@@ -11,7 +11,7 @@ import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerInitialized
 - The ideal registration before the cut, on the LQ-F view (`PqxdhDeploymentBackend.laterView`: snapshot, deployment state, log): `realRegAt_view`, `onBase_view`, `idealReg_liftL`, `preStepL` and `preScanL` are `PqxdhDeploymentIdealCut.idealReg_lift`, `preStep` and `preScan` with the ghosts kept: before the cut every request projects to `snapPoolL`.
 - The stopped router with identity reveals: `stopped_stepL` and `stopped_programL` are `PqxdhDeploymentIdealPoolSource.stopped_step` and `stopped_program` with only KEM reveals excluded (`kemReveal`); the classical forms also exclude identity reveals, which the compiled LQ-F program issues after its run (terminal identity reads and the Server read).
 
-These are program equalities and invariant facts. They charge nothing and make no security claim. -/
+Premises: the approved codec contracts `Phase1ReadBack` and `Phase2ReadBack` (`good_step_poolL` and `compile_simulation_poolL`, as `PqxdhDeploymentLaterServerCompile.server_good` and `server_run` take them); otherwise the invariants and bounds that the statements carry (CE-3's invariant, item 2's pool ownership, the state before the cut, the stopped router's pool prefix and room). These are program equalities and invariant facts. They charge nothing and make no security claim. -/
 
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
@@ -557,11 +557,11 @@ end Reserved
 
 section Pre
 open PqxdhDeploymentBackend (XState handlerWith laterView)
-open PqxdhDeploymentIdealSlots (detach attach)
-open PqxdhDeploymentIdealSteps (realRegAt liftS IdealCore IdealBk TableState idealReg idealProg createPool)
+open PqxdhDeploymentIdealSlots (detach)
+open PqxdhDeploymentIdealSteps (realRegAt liftS IdealCore IdealBk TableState idealReg idealProg)
 open PqxdhDeploymentIdealParams (Target Params)
-open PqxdhDeploymentIdealCut (PreCut bump withAccepts)
-open PqxdhDeploymentIdealCut (CutCE scanCE)
+open PqxdhDeploymentIdealCut (PreCut bump)
+open PqxdhDeploymentIdealCut (scanCE)
 variable (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
   (checks : Checks)
 

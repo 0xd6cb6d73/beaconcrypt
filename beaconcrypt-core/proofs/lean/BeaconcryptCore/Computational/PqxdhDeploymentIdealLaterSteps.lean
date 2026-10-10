@@ -183,6 +183,7 @@ variable (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (route :
   (checks : Checks) {count : ℕ} (t : Target count) (p : Params KemSK count)
   (created : PqxdhLiveServerConstruction.Created Unit)
 
+/-- The logged upper layers on the Server read: the identity-pool reveal of the Server's identity slot (`identityIndex`) through the skeleton's encapsulator lift, returned with the log, the state unchanged. -/
 theorem upperLayerL_read {V : Type} (identityIndex : ℕ) (publicIdentity : PqxdhJointIdentity.PublicIdentity)
     (selected : ℕ) (challenge : MlKem768Ciphertext) (services : PqxdhRegistrationJointKemPostSkeleton.Services V Response)
     (state : (List EncodedEntry × Log) × SkelState KemSK V) :
@@ -530,7 +531,7 @@ end Identity
 /-! ### Item 2's invariant and the simulation of the logged middle run -/
 
 section Invariant
-open PqxdhDeploymentIdealPostInvariant (Allowed Costly room ItemInv)
+open PqxdhDeploymentIdealPostInvariant (Costly room ItemInv)
 open PqxdhRegistrationJointRevealCosts (sourceKind)
 
 /-- The logged source requests that item 2's side simulates: every request but a KEM field read (identity field reads and the Server read included). -/

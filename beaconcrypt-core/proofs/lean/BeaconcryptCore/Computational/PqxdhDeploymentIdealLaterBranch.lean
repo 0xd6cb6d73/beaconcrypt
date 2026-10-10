@@ -21,7 +21,7 @@ set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterBranch
 open PqxdhServerAuthExperiment (Setup Codec Checks)
 open PqxdhDeploymentInterface (Spec)
-open PqxdhDeploymentCompile (Local merge compileImpl)
+open PqxdhDeploymentCompile (Local merge)
 open PqxdhDeploymentLater (Snap PostSpec)
 open PqxdhDeploymentLaterCompile (compileSnapImpl)
 open PqxdhDeploymentLaterServerSource (Log embed)
@@ -35,13 +35,13 @@ variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response X : Type}
 /-! ### The later decision reads the mark -/
 
 section Decision
-open PqxdhDeploymentBackend (XState handlerWith xinitial gameWith)
+open PqxdhDeploymentBackend (XState gameWith)
 open PqxdhDeploymentIdealSteps (IdealBk TableState idealReg idealInit)
 open PqxdhDeploymentIdealParams (Target Params)
 open PqxdhDeploymentFinishErasure (laterWith laterTail realPost)
 open PqxdhDeploymentKemTransfer (Observed)
 open PqxdhDeploymentLaterServerTransfer (happens designated)
-open PqxdhDeploymentInterface (Budget FreshBounds Mode ModeSpec asModeO)
+open PqxdhDeploymentInterface (Budget FreshBounds Mode ModeSpec)
 variable {A Out : Type} (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
   (route : RawCtxServerRouting.SenderDecoder) (checks : Checks)
 
@@ -209,8 +209,8 @@ end Item2
 /-! ### The branches without an active cut -/
 
 section Dead
-open PqxdhDeploymentBackend (XState handlerWith)
-open PqxdhDeploymentIdealSteps (IdealBk TableState idealReg idealInit)
+open PqxdhDeploymentBackend (XState)
+open PqxdhDeploymentIdealSteps (IdealBk TableState)
 open PqxdhDeploymentIdealParams (Target Params)
 open PqxdhDeploymentFinishErasure (laterTail realPost)
 open PqxdhDeploymentLaterServerOpaque (OpaqueCut rejectRun)
@@ -353,11 +353,11 @@ end Dead
 
 section Selected
 open PqxdhServerRootPreparation (Verified)
-open PqxdhDeploymentBackend (XState handlerWith)
-open PqxdhDeploymentIdealSteps (IdealBk TableState idealReg idealInit)
+open PqxdhDeploymentBackend (handlerWith)
+open PqxdhDeploymentIdealSteps (idealReg)
 open PqxdhDeploymentIdealParams (Target Params)
 open PqxdhDeploymentFinishErasure (laterTail realPost)
-open PqxdhDeploymentLaterServerOpaque (OpaqueCut rejectRun)
+open PqxdhDeploymentLaterServerOpaque (rejectRun)
 open PqxdhDeploymentSecrecy (Ledger)
 open PqxdhDeploymentIdealActive (selectedStep acceptAfter)
 open LazyOracleDiscard (LawEq)
@@ -645,14 +645,12 @@ end Budget
 /-! ### The reduction of the later second compile lemma -/
 
 section Reduction
-open PqxdhServerRootPreparation (Verified)
-open PqxdhDeploymentBackend (XState handlerWith)
-open PqxdhDeploymentIdealSteps (IdealBk TableState idealReg idealInit)
+open PqxdhDeploymentIdealSteps (idealReg idealInit)
 open PqxdhDeploymentIdealParams (Target Params drawParams)
-open PqxdhDeploymentFinishErasure (laterWith laterTail realPost)
+open PqxdhDeploymentFinishErasure (laterWith realPost)
 open PqxdhDeploymentInterface (Budget FreshBounds Mode ModeSpec asModeO)
 open PqxdhDeploymentKemTransfer (Observed selectedKem)
-open PqxdhDeploymentSecrecy (Ledger wrap)
+open PqxdhDeploymentSecrecy (wrap)
 open LazyOracleDiscard (LawEq)
 variable (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
   (checks : Checks) {A Out : Type}
