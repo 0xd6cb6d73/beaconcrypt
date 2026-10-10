@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1912
+	[handwritten-lean]=1913
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -39465,6 +39465,29 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBounda
 require_line_count 1 '^theorem logged_caps([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryLoggedAccept theorem logged_caps"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryLoggedAccept\.deployment_log$' "$selected_source_module" "PqxdhBoundaryLoggedAccept dependency BeaconcryptCore.Computational.PqxdhBoundaryLoggedAccept.deployment_log"
 require_line_count 1 '^theorem deployment_log([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryLoggedAccept theorem deployment_log"
+
+# Item 7 PB-01: generated Server birth and admitted Beacon creation (Codex WIP, completed by Claude).
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryBirth.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhBoundaryBirth$' proofs/lean/BeaconcryptCore.lean "PqxdhBoundaryBirth root import"
+require_line_count 8 '^theorem ' "$selected_source_module" "PqxdhBoundaryBirth theorem inventory"
+require_line_count 8 '^#guard_msgs in$' "$selected_source_module" "PqxdhBoundaryBirth guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryBirth\.server_source$' "$selected_source_module" "PqxdhBoundaryBirth dependency BeaconcryptCore.Computational.PqxdhBoundaryBirth.server_source"
+require_line_count 1 '^theorem server_source([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryBirth theorem server_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryBirth\.server_continuation$' "$selected_source_module" "PqxdhBoundaryBirth dependency BeaconcryptCore.Computational.PqxdhBoundaryBirth.server_continuation"
+require_line_count 1 '^theorem server_continuation([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryBirth theorem server_continuation"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryBirth\.server_bills$' "$selected_source_module" "PqxdhBoundaryBirth dependency BeaconcryptCore.Computational.PqxdhBoundaryBirth.server_bills"
+require_line_count 1 '^theorem server_bills([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryBirth theorem server_bills"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryBirth\.beaconCreate_native$' "$selected_source_module" "PqxdhBoundaryBirth dependency BeaconcryptCore.Computational.PqxdhBoundaryBirth.beaconCreate_native"
+require_line_count 1 '^theorem beaconCreate_native([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryBirth theorem beaconCreate_native"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryBirth\.create_source$' "$selected_source_module" "PqxdhBoundaryBirth dependency BeaconcryptCore.Computational.PqxdhBoundaryBirth.create_source"
+require_line_count 1 '^theorem create_source([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryBirth theorem create_source"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryBirth\.create_continuation$' "$selected_source_module" "PqxdhBoundaryBirth dependency BeaconcryptCore.Computational.PqxdhBoundaryBirth.create_continuation"
+require_line_count 1 '^theorem create_continuation([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryBirth theorem create_continuation"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryBirth\.create_rejects$' "$selected_source_module" "PqxdhBoundaryBirth dependency BeaconcryptCore.Computational.PqxdhBoundaryBirth.create_rejects"
+require_line_count 1 '^theorem create_rejects([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryBirth theorem create_rejects"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryBirth\.create_bills$' "$selected_source_module" "PqxdhBoundaryBirth dependency BeaconcryptCore.Computational.PqxdhBoundaryBirth.create_bills"
+require_line_count 1 '^theorem create_bills([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryBirth theorem create_bills"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
