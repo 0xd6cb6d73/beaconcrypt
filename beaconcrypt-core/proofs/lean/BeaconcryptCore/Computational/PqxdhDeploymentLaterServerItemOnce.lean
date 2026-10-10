@@ -53,6 +53,7 @@ def finishBoundL (selected : Nat) : (PqxdhDeploymentLaterServerSource.Spec KemSK
   | .inl query, owners => PqxdhRegistrationJointBeaconFinishOnce.finishBound (KemSK := KemSK) selected query owners
   | .inr _, _ => 0
 
+/-- The hidden-read bound of a logged-source request is at most `ownerCount`, the number of owners holding the selected KEM index: by `PqxdhRegistrationJointBeaconFinishOnce.finishBound_le` on a source14 request; the Server read's bound is 0. -/
 theorem finishBoundL_le (selected : Nat) (query : (PqxdhDeploymentLaterServerSource.Spec KemSK).Domain)
     (owners : List EncodedEntry) : finishBoundL selected query owners ≤ ownerCount selected owners := by
   rcases query with query | read
@@ -450,6 +451,7 @@ variable {coins : {X : Type} → ProbComp X → OracleComp spec' X} {primitives 
   {pool : QueryImpl (PqxdhLiveKemBirth.PoolSpec KemSK)
     (OptionT (StateT (PqxdhDynamicKemRouter.State KemSK) (OracleComp spec')))}
 
+/-- The logged prefix backend `preLowL` on the combined KEM router is monotone in the router's KEM creation counter `created` when the pool counts its creations (`CountsCreates`): no step decreases it (`stepMono_composeOpt` with `combine_mono`). -/
 theorem preLowL_mono (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (counts : CountsCreates pool) :
     StepMono (preLowL (Response := Response) setup codec checks identityIndex publicIdentity
