@@ -68,3 +68,310 @@ T0 free-constructor equalities are explicit idealizations. The computational int
 The Lean lanes retain source-complete operations, query bounds and component reductions, but those facts must meet these same selected events, schedules and freshness/observation rules in the common experiment. All omitted source calls, failed work, public HKDF evaluations, primitive histories and ambient replicated work remain chargeable. These symbolic papers assert no numeric session/identity/record selection loss, finite-byte guessing or collision term, global query cap, efficient implementation of an arbitrary semantic predicate, or negligible nonce-refusal probability. Finite symbolic fresh names are not such bounds.
 
 The common computational public optional-plaintext experiment remains separate from private-application symbolic confidentiality. It must retain challenger-produced optional plaintext, actual cache/replay/rollback behavior and its precise target-opening/release freshness with aliases and repeated attempts. A source event or state-product correspondence alone does not establish deduction preservation, paired-context equivalence or an end-to-end reduction. Closing that composition, within the owner's stated scope, remains proof work; this catalogue only prevents the already proved pieces from being overstated or overlooked.
+
+## Computational column: the common deployment experiment
+
+This section adds the computational column of the symbolic/computational matrix (CE-13, Claude, 2026-10-10). For each security-class target it names the published Lean statements of the common deployment experiment (handoff item 3) that cover the same property, with their eligibility, premises, bound, production form and the part of the symbolic conclusion that stays symbolic-only. Basis: central `codex/full-proof-composition` at `529e2c8bf414f680ac57b159365280aab2e2f3f2`, with CE-12 P1 to P4, D-ct and the production composition of items 3 and 7 integrated. The [deployment experiment guide](impl/deployment-experiment.md) describes the experiment, its interface, the deviations D1-D6, the compile argument, the selection and the event map; the [common deployment experiment record](impl/common-deployment-experiment.md) records how each statement was built. The relation between a row and its CE statement is the documented event and capability map of the guide, not a computational-soundness transfer: no ProVerif result becomes a premise or a consequence of a CE statement, each bounded symbolic result stays on its own window (`K_reg`, `K_s`, `K_r`, `T_max`, near positions, cutoffs), and the CE statements are parametric in the adversary's budget. Nothing in this section changes the scopes recorded above.
+
+### Conventions
+
+Module names are short: `PqxdhDeploymentX.name` is `BeaconcryptCore.Computational.PqxdhDeploymentX.name`. The classical game is `PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode adversary` (Server identity index 0, generated seed, `supplied = none`, no reveal command, `budget.Respects adversary`); "every mode" means observation modes O and P. The LQ-F game is `PqxdhDeploymentLaterServerGame.game setup codec checks route ensureInit 0 bounds mode first second` (post-run reveal of every honest identity seed and X25519 scalar, confidentiality only). A target is `g = (i, k)`, summed over `Fin qAccept × Fin qCreate` with coefficient one.
+
+Eligibility. "CE designation" is `PqxdhDeploymentTranscript.designateIn`: a Server peer is designated through the session that built it and the smallest created owner whose published bundle carries the accepted identity field and PQ key (no pin and no bundle-failure condition); an owner is designated when it is Established, pinned to the protected key ID `serverKid`, and its finish ciphertext and published PQ key link it to a session. "Symbolic eligibility" is `PqxdhDeploymentHeadlineGap.SymServer` (the accepted identity is a created owner's final identity key and that owner had no rejected bundle call in Fresh; ProVerif's `L2SelectedIdentity`) or `SymBeacon` (Established, created with the constructed Server's identity and `serverKid`, no rejected bundle call in Fresh; ProVerif's `S2bSelectedIdentity` on `(S, serverKid)` pins). "NBF" abbreviates the no-rejected-bundle-call-in-Fresh condition (`NoBundleFailureAt`, `NoBundleFailure`).
+
+Premise bundles. [KT]: `FunctionalDecapsulation setup.kem`, `Phase1ReadBack codec`, `Phase2ReadBack codec`, `SourceFullCorrect setup.source setup.hmac`, `budget.Respects adversary`. [REC]: [KT] plus `KemBound setup caps` and the total query bound `qInit` of `ensureInit` (`initBound`); the origin and unknown-key-share forms add `FrameReadBack codec`. [A2]: `shortRejects` (verification rejects inputs shorter than 64 bytes) with the forgery parameters `identityFallback` and `ordinaryFallback`. [A1]: `KemBound setup caps`, `FrameReadBack codec`, `ReadWritable codec.frameWrite codec.frameRead`, `X25519ClassLaw`, `X25519ScalarSpread`, `HasAttachedVerificationAdapter`, `SourceFullCorrect`, the Phase read-back laws and the budget, with the forgery parameters of the CE-A1 reductions. The `_dct` forms add `qInit` and `initBound` where their source lacks them (and, in four forms, `FunctionalDecapsulation`). The AEAD forgery fallback is a parameter of every record-lift loss. All of these are existing, owner-approved contracts or query bounds; none is new.
+
+Terms (defined in the guide, section "The terms of the bounds"): `kemLoss_g`, `slotLoss_g`, `β_g`, `authLoss_g e`, `recLoss_g e` (with the ideal-slot conditions `IS_g`, `ISs_g`), `publicationTerm B = 2RS/2^512`, `bindingTerm BI_g`, `2^-min`, `ε_A2pub`, `ε_A1`, `ε_inj`, `ε_A1inj = ε_A1 + ε_inj`, `ctGapTerm`, `ctCollTerm`, `ε_ctcoll`, `epsCt`, and the later `kemLossL_g`, `slotLossL_g`, `recLossL_g`. A bound is fully closed when it carries neither `ctGapTerm` nor `ctCollTerm` (both explicit probabilities in the experiment); fully closed bounds consist of attacker advantages of constructed reductions, statistical terms and, for CE-KT, the probability of the ideal game.
+
+Production. At central every published CE-12 headline form has a production form under its frozen name (`PqxdhDeploymentProductionHeadlinesClassical`, `PqxdhDeploymentProductionHeadlinesLater`, `PqxdhDeploymentProductionHeadlines`): the bound is the frozen one word for word at codec′ = `PqxdhBoundaryRecordPrelude.withReader codec reader` and route′ = `RawCtxFrameDecoding.sender reader.model`, every probability of the experiment is moved to `PqxdhBoundaryDeployment.sourceGame` (LQ-F: `PqxdhBoundaryDeploymentLater.laterSourceGame`) read back through `unwrap`, `Phase1ReadBack` and `Phase2ReadBack` stay at `codec`, and `FrameReadBack` and `ReadWritable` move to codec′. The production forms of the `_dct` closed forms are not on central (they are on branch `codex/deployment-boundary-production` at `fa57acd9`, pending integration), so on central the Beacon-side and mixed-side production forms keep `ctGapTerm` explicit, which `ctGapTerm_source` reads as a probability of the source game. The persistence-wrapped Server surface of the C, Go and Python bindings is outside every production form.
+
+Statuses. "Computational": a published theorem covers the row's conclusion at parametric budgets, with the eligibility named and the listed fields excepted. "Partial": the CE claim covers a weaker or different property (plan section 12). "Symbolic-only": no CE endpoint. "No endpoint": an auxiliary check of the stronger symbolic process with no CE counterpart, not advertised.
+
+### Index of rows
+
+| VC | Target | Checker | Status | Entry |
+| --- | --- | --- | --- | --- |
+| 601 | S3-server | check-free-schedule.py | partial | key transfer |
+| 602 | S3-beacon | check-free-schedule.py | partial | key transfer |
+| 3168 | A1-root | check-delayed-response.py | partial | key transfer |
+| 3179 | L2-origin | check-record-origin.py | computational | b2s origin |
+| 3180 | L2-identity | check-record-origin.py | no endpoint | auxiliary |
+| 633 | b2s-C2 | check-free-schedule.py | computational (injectivity by named modes) | b2s origin |
+| 634 | b2s-C2-chosen-fs | check-free-schedule.py | computational (injectivity by named modes) | b2s origin |
+| 636 | b2s-C4 | check-free-schedule.py | computational | b2s origin |
+| 3174 | far-b2s-C4 | check-exact-far.py | computational | b2s origin |
+| 3183 | S2b-origin | check-tasking-origin.py | computational (assigned key ID and root symbolic-only) | s2b origin |
+| 615 | s2b-C1 | check-free-schedule.py | partial | s2b origin |
+| 617 | s2b-C4 | check-free-schedule.py | computational | s2b origin |
+| 3175 | far-s2b-C4 | check-exact-far.py | computational | s2b origin |
+| 3184 | S2b-initial | check-tasking-origin.py | partial | initial response |
+| 3185 | S2b-identity | check-tasking-origin.py | no endpoint | auxiliary |
+| 3167 | A1-delayed | check-delayed-response.py | partial | initial response |
+| 597 | A1 | check-free-schedule.py | partial | initial response |
+| 613 | s2b-A1 | check-free-schedule.py | partial | initial response |
+| 631 | b2s-A1 | check-free-schedule.py | partial | initial response |
+| 649 | encoding-A1 | check-primitive-fidelity.py | partial | initial response |
+| 3161 | A2-provenance | check-registration-provenance.py | computational | provenance |
+| 3162 | A2-beacon-key | check-registration-provenance.py | no endpoint | auxiliary |
+| 3163 | A2-server-key | check-registration-provenance.py | no endpoint | auxiliary |
+| 598 | A2 | check-free-schedule.py | computational | provenance |
+| 614 | s2b-A2 | check-free-schedule.py | computational | provenance |
+| 632 | b2s-A2 | check-free-schedule.py | computational | provenance |
+| 650 | encoding-A2 | check-primitive-fidelity.py | computational | provenance |
+| 599 | R1 | check-free-schedule.py | computational (zero loss) | replay |
+| 651 | encoding-R1 | check-primitive-fidelity.py | computational (zero loss) | replay |
+| 600 | R1' | check-free-schedule.py | computational (NBF owners) | replay |
+| 652 | encoding-R1' | check-primitive-fidelity.py | computational (NBF owners) | replay |
+| 616 | s2b-C3 | check-free-schedule.py | computational (zero loss) | replay |
+| 635 | b2s-C3 | check-free-schedule.py | computational (zero loss) | replay |
+| 3188 | App-b2s | check-application-secrecy.py | computational | application secrecy |
+| 637 | b2s-S2 | check-free-schedule.py | computational | application secrecy |
+| 3189 | App-s2b | check-application-secrecy.py | computational | application secrecy |
+| 618 | s2b-S1 | check-free-schedule.py | partial | application secrecy |
+| 3192 | SSX-b2s | check-exact-interface-strong.py | computational (one test session) | left-or-right secrecy |
+| 3155 | SS-b2s | check-active-strong-secrecy.py | computational (one test session) | left-or-right secrecy |
+| 3193 | SSX-s2b | check-exact-interface-strong.py | computational (one test session) | left-or-right secrecy |
+| 3156 | SS-s2b | check-active-strong-secrecy.py | computational (one test session) | left-or-right secrecy |
+| 3194 | SSX-b2s-origin | check-exact-interface-strong.py | no endpoint | auxiliary |
+| 3195 | SSX-s2b-origin | check-exact-interface-strong.py | no endpoint | auxiliary |
+| 638 | b2s-UKSr | check-free-schedule.py | partial | unknown key share |
+| 162 | passive-classical 1 (`INITIAL_SECRET`) | check-results.awk | symbolic-only | passive |
+| 163, 164, 165 | passive-classical 2-4 (`CACHED_SECRET`, `ADVANCE_SECRET`, `FUTURE_SECRET`) | check-results.awk | computational (fresh-message reading) | passive |
+| 166 | passive-classical 5 (`BEACON_RECORD_SECRET`) | check-results.awk | computational (fresh-message reading) | passive |
+| 167 | passive-classical-equivalence | check-results.awk | partial | passive |
+| 168 | passive-quantum 1 (`INITIAL_SECRET`) | check-results.awk | symbolic-only | passive |
+| 169, 170, 171 | passive-quantum 2-4 | check-results.awk | partial | passive |
+| 172 | passive-quantum 5 | check-results.awk | partial | passive |
+| 173 | passive-quantum-equivalence | check-results.awk | partial | passive |
+| 127 | live-material-origin | check-results.awk | partial | live services |
+| 130 | live-private-application-no-api | check-results.awk | partial | live services |
+| 132 | live-private-application-no-key | check-results.awk | partial | live services |
+| 134 | live-private-application-origin (position 1) | check-results.awk | partial | live services |
+| 135 | live-private-application-origin (position 2) | check-results.awk | partial | live services |
+| other 124 | active-classical, baseline, failed-receive, compromise, general-registration, alias, kem-controller, registration-set | as listed | regression or symbolic-only | remaining lines |
+
+### Key transfer and root secrecy
+
+**S3-server (VC 601).** ProVerif: `event(FsServerCommitted(obj, s, ed_public(k), init, kid, root, ad, p)) && attacker(root) ==> attacker(k)` in the free-schedule process, bounded `K_reg = 3`.
+- Status: partial. CE-KT transfers an arbitrary decision of the experiment to the ideal game; it is not secrecy of the root.
+- Theorems. Symbolic eligibility, fully closed: `PqxdhDeploymentHeadlineSymbolic.ce_kt_server_sym` (event `KtPeerSym`: the claim names a Server peer with `SymServer`). CE designation: `PqxdhDeploymentHeadlineKeyTransfer.ce_kt_sum` (two-sided, summed) and `ce_kt_close` (two-sided, per target), with the one-sided `ce_kt` and `ce_kt_sum_le` and the World forms `ce_kt_world`, `ce_kt_world_close`, `ce_kt_world_sum` (the record world of the target's ideal environment in place of the ideal game). Bills, as separate theorems: `PqxdhDeploymentHeadlineBillsFull.target_bills` (fields `kem`, `slot`) and `headline_bills` (field `a2`).
+- Eligibility and conditions: the classical game in every mode; the event and the claim are arbitrary functions of the observation. [KT]; the symbolic form adds [A2] and takes no `KemBound` and no CE-A1 premise.
+- Bound: `Pr_CE[E ∧ KtPeerSym] ≤ Σ_g (Pr_idealGame_g[D_g] + kemLoss_g + slotLoss_g) + ε_A2pub`; per target `|Pr_CE[E ∧ designated = g] − Pr_idealGame_g[D_g]| ≤ kemLoss_g + slotLoss_g`; summed `|Pr_CE[E ∧ eligible] − Σ_g Pr_idealGame_g[D_g]| ≤ Σ_g (kemLoss_g + slotLoss_g)`. Fully closed; the ideal-game probability stays on the right.
+- Production (central): `PqxdhDeploymentProductionHeadlinesClassical.ce_kt_server_sym` (fully closed), `ce_kt_sum`, `ce_kt_close`, `ce_kt`, `ce_kt_sum_le`, `ce_kt_world`, `ce_kt_world_close`, `ce_kt_world_sum`.
+- Symbolic-only: `attacker(root)` itself (no root-guess endpoint; events cannot read the root; plan section 19, owner input 16); the corruption disjunct `attacker(k)` has no counterpart (the classical core reveals nothing, and an ineligible peer gets no claim); `SymServer` ranges over the created owners' identities, so a peer that accepted the Server's own identity or any non-owner identity is ineligible; owners with a rejected bundle call in Fresh; the bounded window `K_reg = 3`.
+
+**S3-beacon (VC 602).** ProVerif: `event(FsBeaconEstablished(s, b, init, kid, root, ad, p)) && attacker(root)` unreachable, bounded `K_reg = 3`; every ProVerif Beacon pins `(ed_public(SERVER_IDENTITY_SECRET), SERVER_KEY_ID)` (`fs-registration.pvl:238`, :285, :313) and accepts any assigned key ID.
+- Status: partial (as S3-server).
+- Theorems. Symbolic eligibility, fully closed: `PqxdhDeploymentHeadlineDctClosed.ce_kt_beacon_sym_dct` (event `KtOwnerSym`: the claim names an owner with `SymBeacon`), the frozen `PqxdhDeploymentHeadlineSymbolic.ce_kt_beacon_sym` with `ctGapTerm` replaced by `epsCt` through `PqxdhDeploymentHeadlineDctWorld.ctgap_term_le`. CE designation: as S3-server. Bills: `target_bills`, `headline_bills` (field `a1`), `PqxdhDeploymentHeadlineDctWorld.ctgap_term_billed`.
+- Eligibility and conditions: the classical game in every mode. [KT], [A1], `qInit` and `initBound`.
+- Bound: `Pr_CE[E ∧ KtOwnerSym] ≤ Σ_g (Pr_idealGame_g[D_g] + kemLoss_g + slotLoss_g) + ofReal ε_A1 + epsCt`. Fully closed. `epsCt`'s `C(ctxCap, 2)/2^512` is a birthday term, weaker than the design's linear term (owner-visible note, not an assumption).
+- Production (central): `PqxdhDeploymentProductionHeadlinesClassical.ce_kt_beacon_sym` keeps `ctGapTerm` explicit (`ctGapTerm_source`); the CE-designation forms as for S3-server. No production `_dct` form on central.
+- Symbolic-only: `attacker(root)`; owners with a rejected bundle call in Fresh; the window `K_reg = 3`. No pin is lost: CE's `(S, serverKid)` eligibility is exactly the pin of every ProVerif Beacon here.
+
+**A1-root (VC 3168).** ProVerif: `event(A1Root(root)) && attacker(root)` in `A1Main(false)`; `A1Root` is emitted in the selected Beacon's finish next to `FsBeaconEstablished` (`delayed-response.pvl:147`), and that Beacon pins `(S, SERVER_KEY_ID)` (`delayed-response.pvl:88`, :113). Scope: exact T0 projection, one selected fresh Beacon, unbounded accepts and delayed one-use pending contexts, post-initial Server chain and initial Beacon chain disclosed.
+- Status: partial.
+- Theorems: with an owner claim (the natural reading) `ce_kt_beacon_sym_dct`; with a Server-peer claim `ce_kt_server_sym`; with the side not fixed `PqxdhDeploymentHeadlineDctClosed.ce_kt_sym_dct` (frozen `ce_kt_sym`); CE designation as S3-server.
+- Eligibility and conditions: as S3-beacon, S3-server, or both sets of premises for `ce_kt_sym_dct`.
+- Bound: owner side as S3-beacon; peer side as S3-server; either side `Σ_g (Pr_idealGame_g[D_g] + kemLoss_g + slotLoss_g) + ε_A2pub + ofReal ε_A1 + epsCt`. All fully closed.
+- Production (central): `ce_kt_beacon_sym` and `ce_kt_sym` (`ctGapTerm` explicit), `ce_kt_server_sym` (fully closed), and the CE-designation forms.
+- Symbolic-only: completed-root secrecy `attacker(root)`; the fixed chain disclosures of the ProVerif process (O15), which CE's adversary does not have; builds on another same-binding Server object (CE-M not built); the window shape (one selected Beacon, the exact T0 projection).
+
+Later mode, for these three rows: the LQ-F key transfer CE-KT-L (`PqxdhDeploymentLaterHeadlineKeyTransfer.ce_kt_later_sum`, `ce_kt_later_close` and their one-sided and World forms; symbolic `PqxdhDeploymentLaterHeadlineSymbolic.ce_kt_server_later_sym`, fully closed, and `PqxdhDeploymentHeadlineDctClosedLater.ce_kt_beacon_later_sym_dct`, `ce_kt_later_sym_dct`) bounds the same kind of transfer after the post-run reveal, per target by `kemLossL_g + slotLossL_g`. It is a later-mode analogue, not a counterpart of these classical rows; its own module documentation assigns it to the passive-quantum rows. Production forms: `PqxdhDeploymentProductionHeadlinesLater.ce_kt_later*`, `ce_kt_server_later_sym` (fully closed), `ce_kt_beacon_later_sym` and `ce_kt_later_sym` (`ctGapTerm` explicit).
+
+### b2s origin
+
+**L2-origin (VC 3179).** ProVerif: `FsReceived(b2s, s, ed_public(k), kid, root, t, m) && L2SelectedIdentity(k) ==> L2Published(b2s, s, ed_public(k), kid, root, t, m)`; ordinary origin, injectivity by the reviewed paper argument C3; `K_s = 2`, `K_r = 3`, AnyPin selected Beacon, first-far cutoff.
+- Status: computational. Under CE designation every field except the root (counterpart, frame with sequence `t` and sender key ID `kid`, identity, Server pin `s`, mode-O plaintext `m`); under symbolic eligibility the counterpart, the frame and the identity.
+- Theorems. CE designation, all fields: `PqxdhDeploymentHeadlinePlain.ce_or_fields_b2s` (per target `ce_or_fields_b2s_target`), with the components `PqxdhDeploymentHeadlineOrigin.ce_or_b2s`, `PqxdhDeploymentHeadlinePin.ce_pin_b2s`, `ce_or_pin_b2s`, `PqxdhDeploymentHeadlinePlain.ce_plain_b2s`, `ce_plain_every_b2s`, `ce_or_plain_b2s` (each with its `_target` form). Symbolic eligibility, fully closed: `PqxdhDeploymentHeadlineInjective.ce_or_injective_b2s` (the strongest: same binders and bound as `PqxdhDeploymentHeadlineSymbolic.ce_or_b2s_sym`, on the larger event `OriginFailureSym .b2s ∨ ReplayOwnerEvent ∨ PeerReplay`) and `ce_or_b2s_sym`. Supporting ideal-world statements (not experiment claims): `PqxdhDeploymentHeadlineAgree.agreement_statement`, `PqxdhDeploymentHeadlinePin.idealAuth_pin_zero`, `PqxdhDeploymentHeadlinePlain.idealAuth_plain_b2s_zero`, `idealAuth_originFields_le`. Bills: `target_bills` (`kem`, `slot`, `auth`), `PqxdhDeploymentHeadlineBillsFull.a2_bills_all`; no billed, later or `_dct` form is needed (no `β_g`, no explicit term).
+- Eligibility and conditions: every mode; the plaintext field compares mode-O plaintexts, which the ledger records in both modes. CE peer designation (no pin or NBF condition, so AnyPin owners are covered); symbolic `SymServer` with counterparts `SymCpartB2s` (owners whose first published bundle carries the accepted identity field). [REC] with `FrameReadBack` (`ce_pin_b2s` and its per-target form without it); the symbolic forms add [A2]. No `DecoderAgreement`.
+- Bound: `Σ_g (kemLoss_g + slotLoss_g + authLoss_g(dec_g ∧ ISs_g) + publicationTerm B)` at the event's own decision (the pin-only and plaintext-only forms without `publicationTerm B`); the symbolic forms add `ε_A2pub`. Fully closed. Union bounds, not tight.
+- Positions: every Server raw receive, every b2s position from 1, near and far alike; each receive makes at most 51 chain derivations (`RATCHET_MAX_GAP = 50`, `beaconcrypt-core/src/ratchet/control.rs:7`), a property of the modelled receive.
+- Production (central): `PqxdhDeploymentProductionHeadlines.ce_or_fields_b2s`, `ce_or_pin_b2s`, `ce_pin_b2s`, `ce_or_plain_b2s`, `ce_plain_b2s`, `ce_plain_every_b2s` (with their `_target` forms); `PqxdhDeploymentProductionHeadlinesClassical.ce_or_b2s`, `ce_or_b2s_target`, `ce_or_b2s_sym`, `ce_or_injective_b2s`. All fully closed.
+- Symbolic-only: the root (not a CE observable); the Server pin and the plaintext under symbolic eligibility (no designation-free form); the reading of the plaintext forms as the full ProVerif plaintext claim uses that every published record is a production (checked by inspection of `PqxdhDeploymentSecrecy.ledgerImpl`, not a Lean lemma); the exact near window and first-far cutoff; the T0 equal-root paper injectivity (CE uses named replay modes); the stronger process's chain disclosures and root release (O15, O16); raw-byte events (CE compares decoded frames).
+
+**b2s-C2 (VC 633) and b2s-C2-chosen-fs (VC 634).** ProVerif: `inj-event(FsReceived(b2s, s, ed_public(k), kid, root, t, m)) ==> inj-event(FsSent(b2s, s, ed_public(k), kid, root, t, m)) || attacker(k)`; `K_reg = 1`, `(K_s, K_r, T_max) = (2, 3, 2)`; 633 with fresh plaintexts and interleaved failed opens, 634 with adversary-chosen plaintexts and fail-stop receive (E21).
+- Status: computational for the non-injective correspondence; injectivity through named failure modes.
+- Theorems: CE designation `ce_or_fields_b2s` and its components (as L2-origin); symbolic eligibility `ce_or_injective_b2s` (registration replay under one Beacon identity, `ReplayOwnerEvent`, and a peer accepting a sequence twice, `PeerReplay`, besides the symbolic origin failure), with `PqxdhDeploymentHeadlineInjective.replay_never` and `PqxdhDeploymentPublishedTuple.replay_owner_published`.
+- Eligibility and conditions: the disjunct `attacker(k)` corresponds to an ineligible peer. CE's sends take adversary-chosen plaintexts and the fresh and test messages are the experiment's own; a failed receive restores the Server and the run continues, so one CE statement covers the interleaved and the fail-stop schedules. Premises as L2-origin.
+- Bound: as L2-origin; `ce_or_injective_b2s`'s bound is `ce_or_b2s`'s plus `ε_A2pub` (peer record replay costs zero, registration replay is charged to `ε_A2pub`). Fully closed.
+- Production: as L2-origin.
+- Symbolic-only: the root; the full injective correspondence (that the named modes exhaust injectivity failure is argued in prose, not proved); no single statement combines injectivity with the pin or plaintext fields, or the pin or plaintext fields with symbolic eligibility; `FsSent` is allocation-based where CE uses publication (stronger); the fail-stop argument (E21) and E3 pin independence; the bounded window.
+
+**b2s-C4 (VC 636) and far-b2s-C4 (VC 3174).** ProVerif: `event(FsFarAccepted(b2s, s, ed_public(k), kid, root, t)) ==> attacker(k)`; 636 is the abstraction witness of the AnyPin fail-stop process at `(2, 3, 2)`; 3174 is the exact-far model-level transfer with the literal public HKDF recipes at first-far targets 3..53, `K_reg = 1`, `K_s = 2`, `K_r = 1`.
+- Status: computational. CE has no separate far event: every accepted raw receive at any position (at most 51 derivations ahead) whose frame the counterpart did not publish before is an origin failure.
+- Theorems: `ce_or_b2s` (per target `ce_or_b2s_target`); symbolic `ce_or_b2s_sym` and `ce_or_injective_b2s`; the all-field `ce_or_fields_b2s` implies them under CE designation. The module documentation of `ce_or_b2s` and the docstring of `ce_or_b2s_sym` name both rows.
+- Eligibility and conditions: AnyPin owners are inside the CE claim through `create` with any pin (O17). Premises as L2-origin.
+- Bound: `Σ_g (kemLoss_g + slotLoss_g + authLoss_g(dec_g ∧ ISs_g) + publicationTerm B)`, plus `ε_A2pub` for the symbolic forms. Fully closed.
+- Production: `PqxdhDeploymentProductionHeadlinesClassical.ce_or_b2s`, `ce_or_b2s_target`, `ce_or_b2s_sym`, `ce_or_injective_b2s`.
+- Symbolic-only: the far-chain abstraction `fs_far_chain` (L3, OD4) and, for far-b2s-C4, the legacy-process obligations L1, L2, E19 and L3 to L5 of the exact-far section above; the windows and the fail-stop process.
+
+### s2b origin
+
+**S2b-origin (VC 3183).** ProVerif: `FsReceived(s2b, S, ed_public(k), kid, root, t, m) && S2bSelectedIdentity(k) ==> S2bPublished(s2b, S, ed_public(k), kid, root, t, m)`; near positions 2/3 after the consumed registration record 1; `K_s = 2`, `K_r = 3`, first-far cutoff; injectivity by reviewed single-worker uniqueness.
+- Status: computational from position 2, except the Beacon's assigned key ID `kid` and the root.
+- Theorems. CE designation: `PqxdhDeploymentHeadlinePlainGated.ce_or_plain_s2b_billed` (frame and plaintext, with bills; per target `ce_or_plain_s2b_target_billed`), `PqxdhDeploymentHeadlineGated.ce_or_s2b_billed`, `PqxdhDeploymentHeadlineOrigin.ce_or_s2b`, `PqxdhDeploymentHeadlinePlain.ce_plain_s2b`, `ce_plain_every_s2b` and their billed forms. Symbolic eligibility, fully closed and billed: `PqxdhDeploymentHeadlineDctClosedP2b.ce_or_injective_s2b_full_closed_billed_dct` (the strongest: symbolic s2b origin failure, shared match, identity collision or owner record replay) and `ce_or_s2b_sym_closed_billed_dct`; frozen sources `PqxdhDeploymentHeadlineSymbolic.ce_or_s2b_sym`, `PqxdhDeploymentHeadlineInjective.ce_or_injective_s2b_full`, `PqxdhDeploymentHeadlineCtClosed.*_closed*`.
+- Eligibility and conditions: CE owner designation; symbolic `SymBeacon` with counterparts `SymCpartS2b` (peers built by a session whose accepted candidate verifies to the owner's identity key). [REC] with `FrameReadBack`; the symbolic forms add [A1].
+- Bound: CE `Σ_g (kemLoss_g + slotLoss_g + β_g + authLoss_g(dec_g ∧ IS_g) + publicationTerm B)`; symbolic closed forms add `ofReal ε_A1 + epsCt + ε_ctcoll` (`ofReal ε_A1inj + epsCt + ε_ctcoll` for the injective form). Fully closed.
+- Positions: every Beacon raw receive, every s2b position from 2; position 1, the record inside the Phase 2 response, is decrypted by `finish_registration` and is CE-A1's (S2b-initial).
+- Production (central): `PqxdhDeploymentProductionHeadlinesClassical.ce_or_s2b`, `ce_or_s2b_target`, `ce_or_s2b_sym`, `ce_or_injective_s2b`, `ce_or_injective_s2b_full`; `PqxdhDeploymentProductionHeadlines.ce_or_s2b_billed`, `ce_or_s2b_sym_billed`, `ce_or_s2b_sym_closed`, `ce_or_s2b_sym_closed_billed`, `ce_or_injective_s2b_closed_billed`, `ce_or_injective_s2b_full_closed_billed`, `ce_plain_s2b`, `ce_or_plain_s2b` and their billed and per-target forms. The symbolic production forms keep `ctGapTerm` explicit.
+- Symbolic-only: the root; `kid`, which on Beacon receives is the Beacon's stored assigned key ID (the `kid` row of [the event-meaning document](proverif-fs-event-meaning.md)) and which no CE event compares; the plaintext under symbolic eligibility; near positions 2/3, window and cutoff; Beacons pinned to `(S, other key ID)`; the injective exhaustiveness (prose) and the key-ID uniqueness read from `server.rs:434-451`.
+
+**s2b-C1 (VC 615).** ProVerif: `inj-event(FsReceived(s2b, s, b, kid, root, t, m)) ==> inj-event(FsSent(s2b, s, b, kid, root, t, m))` for Beacons pinning the honest Server, at the finish (`t = 1`) and at later receives; `K_reg = 1`, `(2, 3, 3)`.
+- Status: partial.
+- Theorems: positions from 2 as S2b-origin (`ce_or_injective_s2b_full_closed_billed_dct`, `ce_or_plain_s2b_billed`); position 1 through CE-A1 (`PqxdhDeploymentServerAuth.ce_a1`, `PqxdhDeploymentServerAuthInjectiveGame.ce_a1_injective`, `PqxdhDeploymentHeadlineDctClosed.ce_a1_linked_dct`).
+- Bound: as S2b-origin for positions from 2; `ε_A1` (CE-A1), `ε_A1inj` (injective) or `ofReal ε_A1 + epsCt` (linked) for position 1.
+- Production: as S2b-origin; for position 1 only `PqxdhDeploymentProductionHeadlinesClassical.ce_a1_linked` (`ctGapTerm` explicit).
+- Symbolic-only: at position 1 the root, the associated data, the assigned key ID and the application payload, which CE-A1's matching does not state; `kid` at every position; no single statement combines injectivity with the plaintext field; the window.
+
+**s2b-C4 (VC 617) and far-s2b-C4 (VC 3175).** ProVerif: `event(FsFarAccepted(s2b, s, b, kid, root, t))` unreachable with honest pins; 617 at `(2, 3, 3)`, 3175 the exact-far transfer at first-far targets 4..54.
+- Status: computational (positions from 2).
+- Theorems: `ce_or_s2b`, `ce_or_s2b_billed`; symbolic `ce_or_s2b_sym_closed_billed_dct`.
+- Bound and premises: as S2b-origin.
+- Production: as S2b-origin.
+- Symbolic-only: `fs_far_chain` (L3, OD4); for far-s2b-C4 the legacy-process obligations of the exact-far section; `kid`.
+
+### Initial response and registration authentication
+
+**A1-delayed (VC 3167) and S2b-initial (VC 3184).** ProVerif: A1-delayed `inj-event(FsBeaconEstablished(S, B, init, kid, root, ad, p)) ==> inj-event(FsServerCommitted(obj, S, B, init, kid, root, ad, p))` with accept and build delayed and possibly on different same-binding objects; S2b-initial the same-process initial-finish origin for the selected Beacon (`S2bSelectedIdentity`).
+- Status: partial. CE-A1's public matching is weaker than the eleven-field common session: an accept on bytes whose candidate verifies with the Beacon's identity key and published key tuple, and a build that returned the decoded sequence-one record that the Beacon accepted, both before the acceptance (`PqxdhDeploymentServerAuth` module documentation).
+- Theorems: `PqxdhDeploymentServerAuth.ce_a1` (`∃ c, A1NoPinnedMatch c`), `a1_sum`, `a1_bound`; billed `PqxdhDeploymentServerAuthBills.ce_a1_billed`; injective `PqxdhDeploymentServerAuthInjectiveGame.ce_a1_injective` (adds `SharedMatch`); linked `PqxdhDeploymentHeadlineGap.ce_a1_linked` and its closed form `PqxdhDeploymentHeadlineDctClosed.ce_a1_linked_dct` (the matching carries the ciphertext, the pin and the PQ key).
+- Eligibility and conditions: a Beacon pinned to `(S, serverKid)` before its acceptance, on runs with `NoBundleFailure_c` (bundle-writer option (b) of plan section 19); `ce_a1` for every identity index, the injective and linked forms at index 0. [A1] with the reduction caps (`ce_a1`) or the transported caps (`ce_a1_billed`).
+- Bound: `ε_A1 = Σ_{c < qCreate} serverAuthBound(R_c)`; injective `ε_A1 + ε_inj`; linked `ofReal ε_A1 + epsCt` (`_dct`, fully closed).
+- Production (central): only `PqxdhDeploymentProductionHeadlinesClassical.ce_a1_linked` (`ctGapTerm` explicit), `beacon_gap_le`, `sym_gap` and `identity_collision_game`; `ce_a1`, `ce_a1_billed` and `ce_a1_injective` have no production form.
+- Symbolic-only: agreement of the root, the associated data, the assigned key ID and the application payload; builds on another same-binding Server object (CE-M); injectivity from distinct fresh names (CE pays `ε_inj`); the windows and the paper source reflection.
+
+**A1 (VC 597), s2b-A1 (VC 613), b2s-A1 (VC 631), encoding-A1 (VC 649).** ProVerif: the injective `FsBeaconEstablished ==> FsServerCommitted` correspondence of the legacy fs processes (b2s-A1 with the honest pin in the AnyPin process; encoding-A1 under the encoding interface `crypto-fs-encoding.pvl`).
+- Status: partial (as A1-delayed).
+- Theorems, conditions, bound and production: as A1-delayed.
+- Symbolic-only: as A1-delayed, plus the adjacent build on one object (E4), the `fs_kid(1)` merge (L2), the `K_reg` bounds and, for encoding-A1, the symbolic encoding interface.
+
+**A2-provenance (VC 3161).** ProVerif: `ProvAccepted(ed_public(k), init, rid) ==> ProvPublished(ed_public(k), init, rid) || attacker(k)`, T0 signature-only source-profile projection.
+- Status: computational (signing-history reading unconditional; publication reading on NBF runs).
+- Theorems: CE-A2 `PqxdhDeploymentProvenance.a2_bound` and `a2_generated_bound` (against each owner's chronological signing history), stated on the report-instrumented execution, which `PqxdhDeploymentProvenance.report_game` relates to the experiment at index 0 under the two Phase read-back laws; CE-A2pub `PqxdhDeploymentPublishedTuple.a2pub_owner_bound` (per owner with NBF) and `a2pub_bound` (global NBF). Bills `PqxdhDeploymentProvenance.a2_bills`, `PqxdhDeploymentHeadlineBillsFull.a2_bills_all`.
+- Eligibility and conditions: generated owners only (the adversary's own identities are the `attacker(k)` case). [A2] and the Phase read-back laws and the budget; no selection factor.
+- Bound: `ε_A2 = Σ_{t < qCreate + 1}` joint weak-EUF advantages of the A2 reductions; `ε_A2pub` (the same reductions) for the publication reading.
+- Production: none (outside the production selection); the Server-side gap `PqxdhDeploymentProductionHeadlinesClassical.server_gap_bound` is the production form of the related `ServerGap ≤ ε_A2pub`.
+- Symbolic-only: the T0 occurrence and target-key reflection argument; the capabilities beyond CE: a DH service on honest seeds (O23), identity key output at allocation (O26), two published triples per owner (O27).
+
+**A2 (VC 598), s2b-A2 (VC 614), b2s-A2 (VC 632), encoding-A2 (VC 650).** ProVerif: `event(FsServerAccepted(obj, s, ed_public(k), init, rid, root)) ==> event(FsBeaconStarted(s2, ed_public(k), init, rid)) || attacker(k)`.
+- Status: computational; `FsBeaconStarted` is a returned bundle, so the publication reading CE-A2pub applies on NBF runs, and CE-A2 holds unconditionally against the signing history.
+- Theorems, conditions, bound and production: as A2-provenance.
+- Symbolic-only: as A2-provenance, plus the legacy windows and the encoding interface.
+
+**R1 (VC 599) and encoding-R1 (VC 651).** ProVerif: one Server object never accepts one registration ID twice.
+- Status: computational, zero loss.
+- Theorem: `PqxdhDeploymentReplay.replay_game` (every outcome, every mode, every identity index, no budget; deterministic). The registration ID is the identity public key followed by the one-time public key (`beaconcrypt-core/src/pqxdh.rs:195-204`); the consumed set is that of the one live Server object (`server.rs:354-415`).
+- Production: none (deterministic fact; outside the production selection).
+- Symbolic-only: same-seed Server objects (R4, an expected limitation of the one-object experiment); the `K_reg` windows.
+
+**R1' (VC 600) and encoding-R1' (VC 652).** ProVerif: two accepts under one Beacon identity `k` coincide or `attacker(k)`.
+- Status: computational on NBF owners.
+- Theorems: `PqxdhDeploymentPublishedTuple.r1prime_owner_bound` (the replay event of an owner with NBF at most `ε_A2pub`), `r1prime_bound`, the pointwise inclusion `replay_owner_published`.
+- Bound: `ε_A2pub`. Conditions: [A2], the Phase read-back laws, the budget.
+- Production: none.
+- Symbolic-only: the L5 lifecycle collapse (one signing per Beacon symbolically; CE has one publication and handles failed signing attempts by the NBF condition).
+
+**s2b-C3 (VC 616) and b2s-C3 (VC 635).** ProVerif: no Beacon (s2b, the finish's sequence 1 included) and no Server peer (b2s) accepts one sequence twice in one session.
+- Status: computational, zero loss.
+- Theorems: `PqxdhDeploymentRecordReplay.record_replay_game` (on every outcome, every mode, every index, no budget: every peer's and every owner's accepted sequence numbers, the owner's finish sequence one included, have no duplicates); `PqxdhDeploymentHeadlineInjective.replay_never` at index 0.
+- Production: none.
+- Symbolic-only: none of substance; replay across copies, restoration or persistence is outside the experiment.
+
+### Application secrecy
+
+**App-b2s (VC 3188).** ProVerif: `L2FreshPublished(b2s, S, ed_public(k), kid, root, t, m) && L2SelectedIdentity(k) && attacker(m)` unreachable; the selected fresh Beacon publishes; trusted-application no-echo profile, near positions 1/2.
+- Status: computational (mode P).
+- Theorems. CE designation: `PqxdhDeploymentHeadlineGated.ce_app_billed` (per target `ce_app_target_billed`), `PqxdhDeploymentHeadlineApp.ce_app`. Symbolic eligibility (the publishing owner with `SymBeacon`), fully closed and billed: `PqxdhDeploymentHeadlineDctClosedP2b.ce_app_beacon_sym_billed_dct` (frozen `PqxdhDeploymentHeadlineSymbolic.ce_app_beacon_sym`, `PqxdhDeploymentHeadlineGated.ce_app_beacon_sym_billed`).
+- Eligibility and conditions: mode P; the adversary's claim `(i, m)` wins when the `i`-th admitted fresh message was sent on a designated (symbolically eligible) handle and equals `m`, whether or not its send succeeded. [REC]; the symbolic form adds [A1].
+- Bound: `Σ_g (kemLoss_g + slotLoss_g + β_g + recLoss_g(dec_g ∧ IS_g) + 2^-min)`, plus `ofReal ε_A1 + epsCt` for the symbolic form. Fully closed.
+- Production (central): `PqxdhDeploymentProductionHeadlines.ce_app_billed`, `ce_app_target_billed`, `ce_app_beacon_sym_billed`; `PqxdhDeploymentProductionHeadlinesClassical.ce_app`, `ce_app_target`, `ce_app_beacon_sym` (`ctGapTerm` explicit).
+- Symbolic-only: fresh-name secrecy without a finite-byte bound (CE: an experiment-drawn uniform message of an adversary-chosen length of at least `min` bytes, charged `2^-min`); the no-echo trusted application (CE builds it in through mode P); the near window; Beacons pinned to `(S, other key ID)` (ProVerif-eligible, never CE-eligible, never established with the one-key-ID Server, `beacon.rs:492-496`); owners with a rejected bundle call in Fresh.
+
+**b2s-S2 (VC 637).** ProVerif: `FsSent(b2s, ed_public(SERVER_IDENTITY_SECRET), b, kid, root, t, m) && attacker(m)` unreachable for every Beacon pinning the honest Server, in the AnyPin process.
+- Status: computational (mode P). `FsSent` is allocation-based; CE's fresh entries are recorded whether or not the send succeeds.
+- Theorems, conditions, bound and production: as App-b2s.
+- Symbolic-only: as App-b2s, with the legacy window `K_reg = 1`, `(2, 3, 2)`.
+
+**App-s2b (VC 3189).** ProVerif: `S2bFreshPublished(s2b, S, ed_public(k), kid, root, t, m) && S2bSelectedIdentity(k) && attacker(m)` unreachable; the Server publishes to the selected Beacon's peer, near positions 2/3.
+- Status: computational (mode P).
+- Theorems. CE designation: `PqxdhDeploymentHeadlineApp.ce_app_server` (per target `ce_app_server_target`). Symbolic eligibility (the publishing peer with `SymServer`), fully closed: `PqxdhDeploymentHeadlineSymbolic.ce_app_server_sym`. Bills: `target_bills`, `a2_bills_all` (no `β_g`, so no billed restatement).
+- Conditions: mode P; [REC]; the symbolic form adds [A2].
+- Bound: `Σ_g (kemLoss_g + slotLoss_g + recLoss_g(dec_g ∧ ISs_g) + 2^-min)`, plus `ε_A2pub`. Fully closed.
+- Production (central): `PqxdhDeploymentProductionHeadlinesClassical.ce_app_server`, `ce_app_server_target`, `ce_app_server_sym` (fully closed).
+- Symbolic-only: fresh-name secrecy without a byte bound; the no-echo application; the near window.
+
+**s2b-S1 (VC 618).** ProVerif: `event(FsSent(s2b, s, ed_public(k), kid, root, t, m)) && attacker(m) ==> attacker(k)`: the Server's plaintext at sequence 1 (the registration payload) and at later taskings (fresh bytes behind an adversary-chosen 8-byte prefix).
+- Status: partial.
+- Theorems: for wholly uniform fresh messages from position 2, as App-s2b (`ce_app_server`, `ce_app_server_sym`).
+- Symbolic-only: the sequence-one payload (in CE the build payload is adversary-chosen, D4, so it has no secrecy endpoint); the chosen-prefix taskings (CE fresh messages are wholly uniform); the window.
+
+### Left-or-right secrecy
+
+**SSX-b2s (VC 3192) and SS-b2s (VC 3155).** ProVerif: observational equivalence of two eligible equal-length nonempty Beacon alternatives; SSX-b2s through the exact public interface (`K_s = 2`, `K_r = 3`), SS-b2s in the legacy AnyPin process (`K_reg = 1`, `K_s = 2`, `K_r = 1`, `T_max = 2`, honest-Server-pin challenge eligibility); both test only the pinned identity, with an attacker-chosen key ID.
+- Status: computational for one test session, as an eligibility-weighted left-or-right advantage.
+- Theorems. CE designation: `PqxdhDeploymentHeadlineGated.ce_lor_billed` (per target `ce_lor_target_billed`), `PqxdhDeploymentHeadlineLor.ce_lor`. Symbolic eligibility, fully closed and billed: `PqxdhDeploymentHeadlineDctClosedP2b.symbolic_lor_bound_closed_billed_dct` and the difference form `symbolic_lor_closed_dct` (frozen `PqxdhDeploymentHeadlineSymbolicLor.symbolic_lor`, `symbolic_lor_bound`).
+- Eligibility and conditions: mode P, the single test session of the experiment (both directions of it may carry tests); every filter of the mode-P view; the symbolic form at the NBF filter `nbfFilter` with every admitted test handle symbolically eligible. [REC]; the symbolic forms add [A1] and [A2].
+- Bound: `ofReal |Pr[win] − ½·Pr[eligible]| ≤ Σ_g (kemLoss_g(W) + slotLoss_g(W) + recLoss_g(dec_g(W) ∧ IS_g) + ½·(kemLoss_g(E) + slotLoss_g(E) + recLoss_g(dec_g(E) ∧ IS_g)) + ½·β_g)`; the symbolic bound adds `½·(ε_A2pub + ofReal ε_A1 + epsCt + ε_inj + ε_ctcoll)`. Fully closed.
+- Production (central): `PqxdhDeploymentProductionHeadlines.ce_lor_billed`, `ce_lor_target_billed`, `symbolic_lor_bound_billed`, `symbolic_lor_closed`, `symbolic_lor_bound_closed`, `symbolic_lor_bound_closed_billed`; `PqxdhDeploymentProductionHeadlinesClassical.ce_lor`, `ce_lor_target`, `symbolic_lor`, `symbolic_lor_bound` (`ctGapTerm` explicit).
+- Symbolic-only: the equivalence form itself (CE: the advantage of one hidden bit, weighted by the eligibility); the directional windows, near positions and separate directions; the paired-context paper proof; per-call eligibility (an ineligible SSX call sends `left` in both worlds and corresponds to an ordinary CE send of `left`); SSX-b2s's accept-time root release and chain disclosures (`exact-interface-strong-b2s.pvl:35-36`, O15, O16); SS-b2s's `K_r = 1`; Beacons pinned to `(S, other key ID)`; several test sessions.
+
+**SSX-s2b (VC 3193) and SS-s2b (VC 3156).** ProVerif: the equivalence for Server alternatives sent to the selected Beacon's peer; SS-s2b with honest pins, a deferred matching `(kid, root)` challenge slot, `T_max = 3`, and the OD5 private partner channel.
+- Status: computational for one test session.
+- Theorems. CE designation: `PqxdhDeploymentHeadlineLor.ce_lor_server` (per target `ce_lor_server_target`; every admitted test handle a Server peer). Symbolic eligibility, fully closed: `PqxdhDeploymentHeadlineSymbolicLor.symbolic_lor_server_bound` and `symbolic_lor_server`.
+- Conditions: mode P; [REC]; the symbolic forms add [A2].
+- Bound: as SSX-b2s with `ISs_g` and without `β_g`; the symbolic bound adds `½·(ε_A2pub + ε_inj)`. Fully closed.
+- Production (central): `PqxdhDeploymentProductionHeadlinesClassical.ce_lor_server`, `ce_lor_server_target`, `symbolic_lor_server`, `symbolic_lor_server_bound` (all fully closed).
+- Symbolic-only: as SSX-b2s, with SSX-s2b's accept-time disclosures (`exact-interface-strong-s2b.pvl:35-36`); SS-s2b's private partner channel (CE uses the public counterpart of the designation, O19) and `K_r = 1`.
+
+Later mode, for these four rows and row 173: CE-LOR-L (`PqxdhDeploymentLaterHeadlineGated.ce_lor_later_billed`, `PqxdhDeploymentLaterHeadlineLor.ce_lor_server_later`; symbolic `PqxdhDeploymentHeadlineDctClosedLaterP4.symbolic_lor_later_bound_closed_billed_dct_full`, `PqxdhDeploymentLaterHeadlineSymbolicLor.symbolic_lor_server_later_bound`), with the guess read from the post adversary's output after the reveal.
+
+### Unknown key share
+
+**b2s-UKSr (VC 638).** ProVerif: `event(FsReceived(b2s, s, b1, kid1, root1, t1, m)) && event(FsSent(b2s, s, b2, kid2, root2, t2, m)) ==> b1 = b2` in the AnyPin process, `K_reg = 1`, `(2, 3, 2)`: the accepting peer's identity is that of the sending Beacon, with the two events linked by the fresh plaintext `m`.
+- Status: partial. CE links the receive to the send by the decoded frame, not by the plaintext.
+- Theorems. Receiver side, CE designation: `PqxdhDeploymentHeadlineUks.ce_uks_b2s` (an accepted raw receive on a designated peer of a frame that a handle other than the target's CE partners returned). Sender side, CE designation: `PqxdhDeploymentHeadlineGated.ce_uks_sender_billed` (`PqxdhDeploymentHeadlineUks.ce_uks_sender`). Sender-eligible symbolic form, fully closed and billed: `PqxdhDeploymentHeadlineDctClosedP2b.ce_uks_sym_closed_billed_dct` (a frame returned by an owner with `SymBeacon` and accepted on a handle outside its symbolic counterparts, which are the peers whose accepted identity is the owner's: `b1 = b2`).
+- Conditions: every mode; [REC] with `FrameReadBack`; the symbolic form adds [A1].
+- Bound: receiver `Σ_g (kemLoss_g + slotLoss_g + authLoss_g(dec_g ∧ ISs_g) + bindingTerm BI_g)`; sender the same with `β_g` and `IS_g`; symbolic the sender bound plus `ofReal ε_A1 + epsCt + ε_ctcoll`. Fully closed.
+- Production (central): `PqxdhDeploymentProductionHeadlinesClassical.ce_uks_b2s`, `ce_uks_b2s_target`, `ce_uks_sender`, `ce_uks_sender_target`, `ce_uks_sym`; `PqxdhDeploymentProductionHeadlines.ce_uks_sender_billed`, `ce_uks_sym_billed`, `ce_uks_sym_closed`, `ce_uks_sym_closed_billed` (`ctGapTerm` explicit in the symbolic ones).
+- Symbolic-only: the plaintext-linked reading (mode O returns receive plaintexts and mode P hides them; no CE event links a receive to a send by plaintext); `FsSent` allocation where CE uses returned records; Beacons pinned to `(S, other key ID)`; the `fs-control-uks` profile; the window.
+
+### Passive classical and passive quantum (`passive.pv`, `passive-strong-secrecy.pv`)
+
+The passive model runs one bounded honest trace: the Server sends `INITIAL_SECRET` (the registration payload, s2b sequence 1, inside Phase 2) and `CACHED_SECRET`, `ADVANCE_SECRET`, `FUTURE_SECRET` (s2b records at positions 2 to 4); the Beacon sends `BEACON_RECORD_SECRET` (b2s position 1). The passive-quantum lines add `quantum-capabilities.pvl`: classical secret recovery from Ed25519 and X25519 public keys, ML-KEM opaque.
+
+**Passive-classical 1 (VC 162) and passive-quantum 1 (VC 168).** Status: symbolic-only. The registration payload is adversary-chosen in CE (D4), so there is no `INITIAL_SECRET` endpoint (design-v2 owner-visible note 1).
+
+**Passive-classical 2-4 (VC 163, 164, 165).** Status: computational (fresh-message reading). Theorems: `PqxdhDeploymentHeadlineApp.ce_app_server` and the symbolic `PqxdhDeploymentHeadlineSymbolic.ce_app_server_sym` (fully closed), mode P, with the App-s2b conditions, bound and production forms. CE's adversary is active, which is stronger than the passive observer. Symbolic-only: fixed-name secrecy (CE: a uniform fresh message of at least `min` bytes, charged `2^-min`); the fixed schedule.
+
+**Passive-classical 5 (VC 166).** Status: computational (fresh-message reading). Theorems: `ce_app_billed` and `ce_app_beacon_sym_billed_dct`, with the App-b2s conditions, bound and production forms. Symbolic-only: as rows 163 to 165.
+
+**Passive-classical-equivalence (VC 167).** Status: partial. Theorems: CE-LOR (`ce_lor_billed`, `symbolic_lor_bound_closed_billed_dct`), whose one test session may carry the four record challenges in both directions. Symbolic-only: the `INITIAL_SECRET` choice (no counterpart, D4); the bounded-trace equivalence form (CE: an eligibility-weighted advantage of one hidden bit).
+
+**Passive-quantum 2-4 (VC 169, 170, 171) and 5 (VC 172).** Status: partial. Theorems: CE-APP-L in LQ-F, mode P: `PqxdhDeploymentLaterHeadlineApp.ce_app_server_later` (169 to 171; symbolic `PqxdhDeploymentLaterHeadlineSymbolic.ce_app_server_later_sym`, fully closed) and `PqxdhDeploymentLaterHeadlineGated.ce_app_later_billed` (172; symbolic `PqxdhDeploymentHeadlineDctClosedLaterP4.ce_app_beacon_later_sym_billed_dct_full`, fully closed, billed). Conditions: [REC] with `budget.Respects first` and the post budget of `second` on every input; the symbolic terms are classical terms of `first`. Bound: `Σ_g (kemLossL_g + slotLossL_g + β_g(first) + recLossL_g(dec_g ∧ IS_g) + 2^-min)` (the Server-peer form without `β_g`, with `ISs_g`), plus `ε_A2pub` or `ofReal ε_A1 + epsCt` at `first`. Production (central): `PqxdhDeploymentProductionHeadlinesLater.ce_app_server_later`, `ce_app_later_billed`, `ce_app_server_later_sym`, `ce_app_beacon_later_sym_billed` (`ctGapTerm` explicit). Symbolic-only: the quantum adversary itself (LQ-F's post adversary is classical and receives its reveal after the run; no QPT or QROM claim, no transfer from these rows); fixed-name secrecy.
+
+**Passive-quantum-equivalence (VC 173).** Status: partial. Theorems: CE-LOR-L (`ce_lor_later_billed`, `symbolic_lor_later_bound_closed_billed_dct_full`; Server-only tests `ce_lor_server_later`, `symbolic_lor_server_later_bound`). Production: `PqxdhDeploymentProductionHeadlinesLater.ce_lor_later_billed`, `symbolic_lor_later_bound_closed_billed`, `ce_lor_server_later`, `symbolic_lor_server_later_bound`. Symbolic-only: as rows 167 and 169 to 172.
+
+### Live material and private-application services
+
+**live-material-origin (VC 127), live-private-application-no-api (VC 130), live-private-application-no-key (VC 132), live-private-application-origin position 1 (VC 134).** ProVerif: in a typed single-key service, an opening implies a matching sealing or a disclosure of the key (`PS1PrimitiveOpen ==> PS1PrimitiveSeal || PS1PrimitiveReveal(key)`).
+- Status: partial. There is no separate CE claim: the selected key against known calls is a component inside the integrity record lift (`PqxdhRecordLiftCtx.ctxReduction` inside `PqxdhRecordLiftComposition.record_auth_lift`), charged in `authLoss_g` of the origin headlines.
+- Symbolic-only: the ideal single-key service shape; the service's reveal operation (the classical core has no reveal command, and the LQ-F reveal is post-run and contains no record key).
+
+**live-private-application-origin position 2 (VC 135).** ProVerif: `LiveHonestMessage(key, plaintext) && attacker(plaintext) ==> PS1PrimitiveReveal(key) || LiveApiPlaintext(key, plaintext)`.
+- Status: partial. The privacy component (`PqxdhRecordLiftCtxPriv.privReduction` inside `PqxdhRecordLift.record_lift`) is charged in `recLoss_g` of CE-APP and CE-LOR.
+- Symbolic-only: the service shape, its reveal operation and the API-plaintext disjunct (CE's mode P hides receive plaintexts).
+
+### Auxiliary checks with no endpoint
+
+L2-identity (VC 3180), S2b-identity (VC 3185), A2-beacon-key (VC 3162) and A2-server-key (VC 3163) are seed-secrecy checks of the stronger symbolic processes; the CE reductions never need them and CE advertises no identity-secrecy claim (in LQ-F the identity seeds are revealed after the run by design). SSX-b2s-origin (VC 3194) and SSX-s2b-origin (VC 3195) check exact full-response origin, which is false under X25519 encoding aliases; CE replaces the response lookup by designation through the session handle (O21).
+
+### The remaining 124 security-class lines
+
+| Group (VC) | Lines | Computational side |
+| --- | --- | --- |
+| active-classical (2-15), baseline (34-47), failed-receive (53-58, 69) | 35 | regression evidence; covered by the claims above where they coincide (CE-A1, CE-A2, CE-OR, CE-C3, secrecy) |
+| compromise (48, 52), failed-receive-compromise (70, 73-75) | 6 | none: chain and skipped-key reveal schedules lie outside the approved profile; the LQ-F post-run reveal is not a compromise schedule |
+| general-registration generated targets (707-3128) | 61 | sequence-one admission inside CE's finish; no separate claim; they do not establish admission at 2..51 |
+| phase2-x25519-alias canonical and projected (689-692, 697-704) | 12 | CE-A1's matching compares decoded values (the published key tuple and the decoded sequence-one record), never raw response bytes |
+| kem-controller authentication (658-666) | 9 | support for CE-A1 and CE-A2: no KEM algebra is used (KEM routing by creation index, no KEM injectivity) |
+| registration-set correspondences (271) | 1 | CE-A2 and CE-R1 (local replicated admission) |
