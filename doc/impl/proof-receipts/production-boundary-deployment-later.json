@@ -3,12 +3,12 @@
  "topic": "codex/deployment-boundary-later",
  "parent_commit": "e0b8810bb048499ed8fbcadba5fe8a560f3ad083",
  "central_basis": "e0b8810bb048499ed8fbcadba5fe8a560f3ad083",
- "state": "checked at central e0b8810b on the topic branch; D-6 semantic and hygiene reviews of 40630f35 approved with nits (six, none owner-level); all addressed in the review fix pass, in documentation and receipts only (no Lean change); not integrated",
+ "state": "checked at central e0b8810b on the topic branch; D-6 semantic and hygiene reviews of 40630f35 approved with nits (six, none owner-level); all addressed in the review fix pass, in documentation and receipts only (no Lean change); confirming review of c5276b6c APPROVE_WITH_NITS, its documentation nit (the guide and known_for_ledger sentence on which arms of PqxdhRegistrationSchedule.handler name nativeAccept and nativeBuild) addressed in the commit that records it (documentation and receipts only, no Lean change); not integrated at the record commit",
  "module": "PqxdhBoundaryDeploymentLater",
  "source": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhBoundaryDeploymentLater.lean",
  "source_sha256": "1f27a737da73b5603d5b96b24461d222c25efd63607accf71ca33069c29c69bc",
  "guide": "doc/impl/production-boundary-deployment-later.md",
- "guide_sha256": "e7206d410115a2ed60822cc8db5f1aae6849c3f90685679d6ab5019acf29fda6",
+ "guide_sha256": "83c246ebec54b9a4503566b16ac070fcb54923c6509e122f58add564c1e9e3da",
  "guarded_statements": 17,
  "theorems": [
   "loggedStep_quiet",
@@ -354,7 +354,7 @@
   }
  },
  "review": {
-  "status": "D-6 fresh-context semantic and hygiene reviews of e0b8810b..40630f35: both APPROVE_WITH_NITS (four and two nits, none owner-level); every finding is addressed in the review fix pass, in documentation and receipts only (no Lean change)",
+  "status": "D-6 fresh-context semantic and hygiene reviews of e0b8810b..40630f35: both APPROVE_WITH_NITS (four and two nits, none owner-level); every finding is addressed in the review fix pass, in documentation and receipts only (no Lean change); confirming review of c5276b6c APPROVE_WITH_NITS, its documentation nit addressed in the commit that records it",
   "verdicts": {
    "semantic": {
     "path": "/tmp/bc-arc-scratch/item7/i4/review-semantic/verdict.json",
@@ -415,12 +415,38 @@
     "change": "Guide Review paragraph: one sentence glossing D-1(b), D-2 (with #511 and #415), D-4 and D-6, so the guide's citations resolve inside it. Module receipt known_for_ledger entry 'lane decision labels'. Lane plan section 4: the I5 ledger must publish one-line glosses of D-1 to D-6 and the cited message numbers (lane-wide, also for the A and I3 documents)."
    }
   ],
-  "plan": "/tmp/bc-arc-scratch/item7/plan.md section 0 D-6"
+  "plan": "/tmp/bc-arc-scratch/item7/plan.md section 0 D-6",
+  "confirming_review": {
+   "kind": "confirming review of the D-6 fix pass (fresh-context Claude sub-agent, read only)",
+   "reviewed": "40630f35..c5276b6c",
+   "verdict": "APPROVE_WITH_NITS",
+   "scratch": "/tmp/bc-arc-scratch/item7/i4/confirm",
+   "verdict_record": {
+    "path": "/tmp/bc-arc-scratch/item7/i4/nits/docs/confirming-review-relayed.json",
+    "sha256": "74c6c54d3a1345bfa289ca6c751f1f2fcbdd0d8a9c9510413b7728f04865989c",
+    "note": "the reviewer wrote notes, logs and a probe but no verdict file; the verdict and its one nit are transcribed verbatim from the integration task that relayed them"
+   },
+   "reviewer_notes": {
+    "path": "/tmp/bc-arc-scratch/item7/i4/confirm/README.txt",
+    "sha256": "3edf158d32b64fbe09ed20b884d363c9c53010b7f0ae1fd37abc299f535e2410"
+   },
+   "arm_reach_probe": {
+    "source": "/tmp/bc-arc-scratch/item7/i4/confirm/probe/ArmReach.lean",
+    "source_sha256": "b8c5ccbf878f5fa61a4d2178c5c9d97815aa27191c828c4c195ed3652e822278",
+    "log": "/tmp/bc-arc-scratch/item7/i4/confirm/logs/dev/ArmReach-1.log",
+    "log_sha256": "794b3cf93c738bf56b70ba39dac89f29e42ec42032bf468ea11cecc56aa5e320"
+   },
+   "confirmed": "Lean source unchanged (sha256 1f27a737); 17 theorems with 17 exact guards; module recompiled at c5276b6c exit 0 with an empty log; both version 6 scans re-run with results identical to the fix pass; receipt hash walk without mismatch apart from the deliberate first_pass block; the Rust anchors of the guide in beacon.rs and server.rs checked",
+   "nits": [
+    "the post-phase reach sentence (guide 'What stays outside' and known_for_ledger entry 3 of the module receipt) said that nativeAccept and nativeBuild are reached through the handler's bundle, finish and create arms; the reviewer's probe shows that those three arms reach neither and that the handler names both only in its accept and build arms"
+   ],
+   "disposition": "fixed in the commit that records this review: the guide sentence and known_for_ledger entry 3 now read 'with its create, bundle and finish arms and, in its accept and build arms, PqxdhServerAuthNative.nativeAccept and nativeBuild', and lane plan section 4 (I4 review results for rows 12 and 13) carries the corrected wording into the I5 PB-E ledger; guide_sha256 refreshed in this receipt and the increment receipt, receipt_sha256 in the increment receipt; no Lean change"
+  }
  },
  "known_for_ledger": [
   "the frozen docstring of PqxdhDeploymentLaterServerGame (line 5) places the drop of LQ-F exception (b) at the width-only from_bytes at server.rs:369-372; the rejection is the KEM-key admission inside encapsulate at server.rs:373 (known correction already recorded by the W4 guide/receipt and plan section 4); this module's docstring and guide use the corrected site; no Lean statement is affected",
   "import closure (re-audited by the D-6 hygiene review of 40630f35, probe log /tmp/bc-arc-scratch/item7/i4/review-hygiene/logs/dev/MyProbe-2.log, sha256 c12a2ffd600ce6632dee915f87a51f1a8e04b714539f547252165f6cfcb63163): 6969 modules; no PqxdhRecordLift*, PqxdhDeploymentIdealLater*, IdealErase, FinishErasure, HiddenKernels or HiddenEntry module; the 113 BeaconcryptCore modules not in the closure of the I3 step module are the expected LQ-F modules PqxdhDeploymentLater, PqxdhDeploymentLaterServerSource, PqxdhDeploymentLaterServerNative and PqxdhDeploymentLaterServerGame, PqxdhBoundaryLoggedAccept and the CE secrecy and registration-joint chain; the closure contains that of PqxdhBoundaryDeploymentStep (I3 known_for_ledger: PqxdhHeadlineBridges through the published PB-03 module PqxdhBoundaryRegistrationAccept, and the item 2 rejected-route modules through published CE dependencies). The transitive reach inside BeaconcryptCore of all module constants (1576 constants) touches, of the scanned exclusions and the allowance, only FixedHkdfSha512NoSaltSource, .mk and .crypto and PqxdhHeadlineBridges.parsedBytes, as for I3; no bridge, C6, C7 or record-lift constant is reached. Neither contamination scan is an import-graph audit. For the PB-E ledger rows 12 and 13",
-  "definition closure (D-6 semantic review of 40630f35, reach probe /tmp/bc-arc-scratch/item7/i4/review-semantic/reach-1.log, sha256 ecf190a2c2e9749d6933ec600aea4387d62c4187b1879b0ec75d8239232ef7f3): laterSourceGame, laterSourceExec and postPhase contain PqxdhRegistrationSchedule.handler (with its bundle, finish and create arms and, through them, PqxdhServerAuthNative.nativeAccept and nativeBuild) only through the modeled post-phase handler PqxdhDeploymentLater.postImpl (E; PostSpec has only coin, hmac and hash, so only the hmac and hash arms run, and they are definitionally the model oracle arms of the I3 run phase: PqxdhBoundaryDeploymentStep.step_oracles holds by rfl), and ledgerImpl only through PqxdhDeploymentSecrecy.wrap (E); with postImpl and wrap as leaves only those two remain. The run phase (laterStep, loggedStep, PqxdhBoundaryLoggedAccept.deployment, I3 sourceStep, PqxdhBoundaryBirth.serverBirth) reaches no CE or LQ-F handler component, so I3's 'the source game reaches no CE handler component' carries over to I4 for the run phase only. For the PB-E ledger row 13",
+  "definition closure (D-6 semantic review of 40630f35, reach probe /tmp/bc-arc-scratch/item7/i4/review-semantic/reach-1.log, sha256 ecf190a2c2e9749d6933ec600aea4387d62c4187b1879b0ec75d8239232ef7f3): laterSourceGame, laterSourceExec and postPhase contain PqxdhRegistrationSchedule.handler (with its create, bundle and finish arms and, in its accept and build arms, PqxdhServerAuthNative.nativeAccept and nativeBuild) only through the modeled post-phase handler PqxdhDeploymentLater.postImpl (E; PostSpec has only coin, hmac and hash, so only the hmac and hash arms run, and they are definitionally the model oracle arms of the I3 run phase: PqxdhBoundaryDeploymentStep.step_oracles holds by rfl), and ledgerImpl only through PqxdhDeploymentSecrecy.wrap (E); with postImpl and wrap as leaves only those two remain. The run phase (laterStep, loggedStep, PqxdhBoundaryLoggedAccept.deployment, I3 sourceStep, PqxdhBoundaryBirth.serverBirth) reaches no CE or LQ-F handler component, so I3's 'the source game reaches no CE handler component' carries over to I4 for the run phase only. For the PB-E ledger row 13",
   "PB-GHOST RT list: the finish snapshot at its cut: snapshotAt reads the prekey and one-time fields in the phases of the getters get_prekey_sk and get_onetime_sk (beacon.rs:193 and :210; prekey in Fresh/FreshWithCoins/InitSent, one-time key in FreshWithCoins/InitSent) on the pre-command state, which is the InitSent state that Beacon::finish_registration reads at entry (beacon.rs:402-420) before it drops both scalars by self.state = BeaconState::Established (beacon.rs:504) or through abort_registration (beacon.rs:176, called at :489, :496, :500), so the cut is the last point at which both scalars are held; finish has no server.rs path, and the Server-side LQ-F ghost is the accept ephemeral at server.rs:368, logged by W4",
   "lane decision labels (D-1(b), D-2, D-4, D-6) and mailbox numbers (#415 PB-D interface pin, #511 D-2 answer, #503 owner decision) are defined in the lane plan and the coordination mailbox outside the repository; the guide now glosses D-1(b), D-2, D-4 and D-6 inline, and the PB-E ledger of I5 (doc/impl/production-boundary-ledger.md) is to publish one-line glosses of D-1 to D-6 and the cited message numbers so that the citations of the A, I3 and I4 guides and receipts resolve inside the repository"
  ],
@@ -432,8 +458,7 @@
   "transcript-fidelity cargo tests (no inventory metadata they read changed)"
  ],
  "remaining": [
-  "confirming review of the review fix pass",
-  "integration into central (PROTOCOL section 6) after the confirming review",
+  "integration into central (PROTOCOL section 6) after the record commit",
   "I5: PB-E ledger (row 12 = PqxdhBoundaryDeployment and row 13 = this module, with the import-closure and definition-closure results above; RT list with the PB-GHOST capture sites including the finish anchor; the known corrections; one-line glosses of the lane decisions D-1 to D-6) and CE-14",
   "item 8: instantiate the CE-12-L headline game at codec' = withReader codec reader and route' = RawCtxFrameDecoding.sender reader.model and compose it with later_observe or later_evalDist (D-2 premises as for I3)"
  ],

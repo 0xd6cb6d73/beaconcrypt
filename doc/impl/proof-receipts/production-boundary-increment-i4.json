@@ -19,13 +19,13 @@
    "subject": "Fix the item 7 increment I4 review findings"
   }
  ],
- "state": "module checked at central e0b8810b; D-6 semantic and hygiene reviews of 40630f35 approved with nits (six, none owner-level); all addressed in the review fix pass 3ed45a8c, in documentation and receipts only (no Lean change); rechecks at the clean fix tip below; not integrated (as instructed)",
+ "state": "module checked at central e0b8810b; D-6 semantic and hygiene reviews of 40630f35 approved with nits (six, none owner-level); all addressed in the review fix pass 3ed45a8c, in documentation and receipts only (no Lean change); rechecks at the clean fix tip below; confirming review of c5276b6c APPROVE_WITH_NITS, its documentation nit (the guide and known_for_ledger sentence on which arms of PqxdhRegistrationSchedule.handler name nativeAccept and nativeBuild) addressed in the commit that records it (documentation and receipts only, no Lean change); not integrated at the record commit",
  "modules": {
   "PqxdhBoundaryDeploymentLater": {
    "receipt": "doc/impl/proof-receipts/production-boundary-deployment-later.json",
-   "receipt_sha256": "af1c3d530c7480fa604ab07d6b1ce73f1443eb8f3c6522b343187efb5da0ddc6",
+   "receipt_sha256": "aa6c04a1793a8b40011900c4cb6365a65ec448987f6dee1411ba3c9fffd0f95f",
    "guide": "doc/impl/production-boundary-deployment-later.md",
-   "guide_sha256": "e7206d410115a2ed60822cc8db5f1aae6849c3f90685679d6ab5019acf29fda6",
+   "guide_sha256": "83c246ebec54b9a4503566b16ac070fcb54923c6509e122f58add564c1e9e3da",
    "source_sha256": "1f27a737da73b5603d5b96b24461d222c25efd63607accf71ca33069c29c69bc",
    "guarded_statements": 17,
    "theorems": [
@@ -125,7 +125,33 @@
     "title": "Lane decision labels and mailbox numbers only resolve to files under /tmp"
    }
   ],
-  "disposition": "all six applied in 3ed45a8c (guide, analysis paragraph, module receipt); the PB-E ledger items (rows 12 and 13, PB-GHOST finish anchor, D-1 to D-6 glosses) are recorded in the lane plan section 4 for I5; per-finding changes in the module receipt review.findings"
+  "disposition": "all six applied in 3ed45a8c (guide, analysis paragraph, module receipt); the PB-E ledger items (rows 12 and 13, PB-GHOST finish anchor, D-1 to D-6 glosses) are recorded in the lane plan section 4 for I5; per-finding changes in the module receipt review.findings",
+  "confirming_review": {
+   "kind": "confirming review of the D-6 fix pass (fresh-context Claude sub-agent, read only)",
+   "reviewed": "40630f35..c5276b6c",
+   "verdict": "APPROVE_WITH_NITS",
+   "scratch": "/tmp/bc-arc-scratch/item7/i4/confirm",
+   "verdict_record": {
+    "path": "/tmp/bc-arc-scratch/item7/i4/nits/docs/confirming-review-relayed.json",
+    "sha256": "74c6c54d3a1345bfa289ca6c751f1f2fcbdd0d8a9c9510413b7728f04865989c",
+    "note": "the reviewer wrote notes, logs and a probe but no verdict file; the verdict and its one nit are transcribed verbatim from the integration task that relayed them"
+   },
+   "reviewer_notes": {
+    "path": "/tmp/bc-arc-scratch/item7/i4/confirm/README.txt",
+    "sha256": "3edf158d32b64fbe09ed20b884d363c9c53010b7f0ae1fd37abc299f535e2410"
+   },
+   "arm_reach_probe": {
+    "source": "/tmp/bc-arc-scratch/item7/i4/confirm/probe/ArmReach.lean",
+    "source_sha256": "b8c5ccbf878f5fa61a4d2178c5c9d97815aa27191c828c4c195ed3652e822278",
+    "log": "/tmp/bc-arc-scratch/item7/i4/confirm/logs/dev/ArmReach-1.log",
+    "log_sha256": "794b3cf93c738bf56b70ba39dac89f29e42ec42032bf468ea11cecc56aa5e320"
+   },
+   "confirmed": "Lean source unchanged (sha256 1f27a737); 17 theorems with 17 exact guards; module recompiled at c5276b6c exit 0 with an empty log; both version 6 scans re-run with results identical to the fix pass; receipt hash walk without mismatch apart from the deliberate first_pass block; the Rust anchors of the guide in beacon.rs and server.rs checked",
+   "nits": [
+    "the post-phase reach sentence (guide 'What stays outside' and known_for_ledger entry 3 of the module receipt) said that nativeAccept and nativeBuild are reached through the handler's bundle, finish and create arms; the reviewer's probe shows that those three arms reach neither and that the handler names both only in its accept and build arms"
+   ],
+   "disposition": "fixed in the commit that records this review: the guide sentence and known_for_ledger entry 3 now read 'with its create, bundle and finish arms and, in its accept and build arms, PqxdhServerAuthNative.nativeAccept and nativeBuild', and lane plan section 4 (I4 review results for rows 12 and 13) carries the corrected wording into the I5 PB-E ledger; guide_sha256 refreshed in this receipt and the increment receipt, receipt_sha256 in the increment receipt; no Lean change"
+  }
  },
  "d2_notice": {
   "message": "#511",
@@ -260,8 +286,7 @@
   "transcript-fidelity cargo tests"
  ],
  "remaining": [
-  "confirming review of the review fix pass",
-  "integration into central (PROTOCOL section 6) after the confirming review",
+  "integration into central (PROTOCOL section 6) after the record commit",
   "I5 ledger (with the lane plan section 4 items from this review) and CE-14"
  ],
  "first_pass": {
@@ -400,5 +425,6 @@
    "note": "this receipt is committed after the checked tip; the commit adds only this JSON file, so every check above holds for the receipt commit too (no Lean source, inventory or root change)"
   }
  },
- "note": "this receipt is committed after the checked fix tip; the commit changes only this JSON file, so every check above holds for the receipt commit too (no Lean source, inventory or root change)"
+ "note": "this receipt is committed after the checked fix tip; the commit changes only this JSON file, so every check above holds for the receipt commit too (no Lean source, inventory or root change)",
+ "record_commit": "the commit that records the confirming review changes only documentation and receipts (the I4 guide, the I4 analysis paragraph, the module receipt and this receipt); no Lean file, root import, inventory row or check-inventory block changes, so the rechecks at the fix tip 3ed45a8c carry over; the integration re-runs the module, root, inventory and fidelity checks on its tip"
 }
