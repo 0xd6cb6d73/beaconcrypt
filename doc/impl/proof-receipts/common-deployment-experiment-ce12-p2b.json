@@ -1,38 +1,52 @@
 {
- "date": "2026-10-10T10:23:29.599394+00:00",
- "scope": "CE-12 P2b (track ce12/p2b), steps 1 and 2. Step 1: the rest of the bills of design-v2 section 9 (splitStep_uniform, guessBill and ptc_bills, HeadlineBills with headline_bills, the billed forms of the fifteen frozen headline forms with beta_g and of anomaly_beta). Step 2: design-v2 section 7.4's ct_collision_game (ctCollTerm <= qCreate * C(qAccept, 2) * pairCollision), the closed bound epsilon_ctcoll through pair_cp_le (ct_coll_le), and the closed forms of the six frozen headline forms with ctCollTerm and of the five billed forms of step 1 among them. Not reviewed; not integrated.",
+ "date": "2026-10-10T12:11:29.017907+00:00",
+ "scope": "CE-12 P2b (track ce12/p2b), steps 1 to 3. Step 1: the rest of the bills of design-v2 section 9 (splitStep_uniform, guessBill and ptc_bills, HeadlineBills with headline_bills, the billed forms of the fifteen frozen headline forms with beta_g and of anomaly_beta). Step 2: design-v2 section 7.4's ct_collision_game (ctCollTerm <= qCreate * C(qAccept, 2) * pairCollision), the closed bound epsilon_ctcoll through pair_cp_le (ct_coll_le), and the closed forms of the six frozen headline forms with ctCollTerm and of the five billed forms of step 1 among them. Step 3 (after the merge of central df7727c3 at 5a9213dc): design-v2 section 7.7's AG, AgreementStatement in idealAuth (agreement_statement, no premise) with its three ingredients (seal-context invariant ctxRun_sealAd, receive-side AD retention ctxRun_entryAd, injectivity associatedBytes_inj) and the identity forms; the lift of AG to the common deployment experiment (section 7.6 b2s Server-pin and mode-O plaintext rows) is not built (remainder in open_points). Not reviewed; not integrated.",
  "basis": {
   "start": "f0dc46bb6473ab37ecf48e623f1ccb192bd6b3af",
-  "merges": [],
-  "central_at_receipt": "c27b45336b6c04087239d9b797fcf6f1aba1c85e",
-  "central_note": "central moved during step 2 (f0dc46bb -> c72db84a LQ-F unit A2 -> c27b4533 item 7 increment A); this topic is not merged with it; a trial merge conflicts only at the append anchors (root imports, reviewed-inventory.txt, check-inventory.sh, guide, analysis)",
+  "merges": [
+   {
+    "merge_commit": "5a9213dcb76e955869a8d3447d3a63dd5b34488b",
+    "central": "df7727c3238f70388e3ea739df109ad025ace097",
+    "step": 3,
+    "conflicts": "append anchors only (root import block, [handwritten-lean] count line and module blocks of check-inventory.sh, digest rows of the root and check-inventory.sh and module rows of reviewed-inventory.txt, end of the analysis, the guide's status paragraphs); central first, then the topic; count and digest lines from central, then inv recount 1927 -> 1935 and inv rehash"
+   }
+  ],
+  "central_at_receipt": "e0b8810bb048499ed8fbcadba5fe8a560f3ad083",
+  "central_note": "central moved during step 2 (f0dc46bb -> c72db84a LQ-F unit A2 -> c27b4533 item 7 increment A) and then to df7727c3 (LQ-F unit B); step 3 merged df7727c3 at 5a9213dc before its modules",
   "published_leanpath": {
    "path": "/tmp/bc-coord/leanpaths/f0dc46bb6473ab37ecf48e623f1ccb192bd6b3af.leanpath",
    "sha256": "8b2da583f6e190857e288154143ba371fd3067ff81bf7466e95e7954e1db8f84"
+  },
+  "published_leanpath_step3": {
+   "path": "/tmp/bc-coord/leanpaths/df7727c3238f70388e3ea739df109ad025ace097.leanpath",
+   "sha256": "bb539cc34f9ae1361b4a314adb8eb8661d57115080459f8e518081cf7126ecea"
   }
  },
  "topic": {
   "branch": "codex/deployment-ce12",
   "worktree": "/tmp/beaconcrypt-deployment-ce12",
-  "head_at_receipt": "647260efa837249733bd870084d314105da53fbf",
+  "head_at_receipt": "1428752290867a6df232959189bfe5ab576a7fab",
   "note": "the documentation commit that adds this receipt follows head_at_receipt; it changes no Lean file"
  },
  "plan": {
   "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
-  "sha256": "aa6cce5264401b27b762cf5038a4a58d64bf71b5e430a8f99af4a87afe6e6a91",
+  "sha256": "00b636177ddf778d8ce1a5248b151e4a2d69e43b7468b4db1086d4e7cfdf878a",
   "sections": [
    105,
-   106
+   106,
+   108
   ],
-  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/docs/plan.at-p2b2-aa6cce52.md",
-  "dated_copy_sha256": "aa6cce5264401b27b762cf5038a4a58d64bf71b5e430a8f99af4a87afe6e6a91",
-  "backup_before": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/docs/plan.before-p2b2-0cb1cc66.md",
+  "other_lane_section": 107,
+  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/docs/plan.at-p2b3-00b63617.md",
+  "dated_copy_sha256": "00b636177ddf778d8ce1a5248b151e4a2d69e43b7468b4db1086d4e7cfdf878a",
+  "backup_before": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/docs/plan.before-p2b3-54ce9bfb.md",
+  "backup_before_step2": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/docs/plan.before-p2b2-0cb1cc66.md",
   "backup_before_step1": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/docs/plan.before-p2b-d44add0e.md"
  },
  "design": {
   "path": "/tmp/bc-arc-scratch/common-experiment/ce12/design-v2.md",
   "sha256": "9866f32e40a4fdb3742d4bc36709971a0ade2932882896fe1975b8ac334cbb4e",
-  "sections": "step 1: 9 (bills), 2 (beta_g), 6 (ptc); step 2: 7.4 (collision terms), 2 (epsilon_ctcoll), 14-15 (owner notes, not claimed)"
+  "sections": "step 1: 9 (bills), 2 (beta_g), 6 (ptc); step 2: 7.4 (collision terms), 2 (epsilon_ctcoll), 14-15 (owner notes, not claimed); step 3: 7.7 (AG), 7.6 (field status), 14 note 3, 15"
  },
  "notes": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/NOTES.md",
  "commits": [
@@ -75,6 +89,26 @@
   {
    "commit": "647260efa837249733bd870084d314105da53fbf",
    "subject": "Document CE-12 P2b step 2: ct_collision_game and epsilon_ctcoll"
+  },
+  {
+   "commit": "3f386da8754ee6d3241a2641a4ca40d5d6ae7181",
+   "subject": "Record that central moved during CE-12 P2b step 2"
+  },
+  {
+   "commit": "5a9213dcb76e955869a8d3447d3a63dd5b34488b",
+   "subject": "Merge central df7727c3 into CE-12 P2b"
+  },
+  {
+   "commit": "9d202c7649c74333cc74d3de4f69478edbd797c5",
+   "subject": "Add the seal-context invariant of AG (CE-12 P2b step 3)"
+  },
+  {
+   "commit": "5d1b98d5a162f151caee643f24bc38cfc0601a5d",
+   "subject": "Keep the receiving handle's AD on accepted hidden receives (CE-12 P2b step 3)"
+  },
+  {
+   "commit": "1428752290867a6df232959189bfe5ab576a7fab",
+   "subject": "Prove AG's AgreementStatement in idealAuth (CE-12 P2b step 3)"
   }
  ],
  "commit_message_corrections": [
@@ -90,9 +124,9 @@
   }
  ],
  "files_sha256": {
-  "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "ea17e5340c0b54eaba3025810bc2e18a196579b22b6291b5fa9184ebb4e633da",
-  "beaconcrypt-core/proofs/reviewed-inventory.txt": "3b7e7e8b8ee03efcf784cdb89b4f0e14fcb1c70fc0f98956193dbe324c41b5c7",
-  "beaconcrypt-core/proofs/check-inventory.sh": "58c99f24a9a0b587ac92978ba14948ee5fdad12eb32ddede50cecf4ba3589ff1"
+  "beaconcrypt-core/proofs/lean/BeaconcryptCore.lean": "e4cc7bd0a36be6abb7c09b68e334a95b57f6a5858968b9df5ec828180b0e3e55",
+  "beaconcrypt-core/proofs/reviewed-inventory.txt": "90b09d1307d6ca688179e497a9a27406ac1f6ec917e86372c2aa908491686949",
+  "beaconcrypt-core/proofs/check-inventory.sh": "66e745d23e28ee6928cae6706f08005a9dc7d0c402cceab853b0659a3a63373e"
  },
  "modules": [
   {
@@ -178,6 +212,16 @@
     },
     "start": "2026-10-10T08:39:05.860870831Z",
     "end": "2026-10-10T08:39:21.735979776Z"
+   },
+   "merge_recheck": {
+    "prefix": "ce12/p2b/olean2",
+    "note": "recompiled after the merge of central df7727c3 (5a9213dc)",
+    "exit": 0,
+    "head_when_checked": "3f386da8754ee6d3241a2641a4ca40d5d6ae7181",
+    "log_bytes": 0,
+    "artifact_sha256": "5a8b11ba8619d3bb6f23e3dc82e43a904f48bf4b04272b7b167908625f9e7409",
+    "artifact_identical_to_final": true,
+    "source_sha256": "a5763c6fc2915c3db804ea669d2894336afe9d36c986fafc1d07c27579a80c92"
    }
   },
   {
@@ -237,6 +281,16 @@
     },
     "start": "2026-10-10T08:43:02.144121571Z",
     "end": "2026-10-10T08:43:08.564928051Z"
+   },
+   "merge_recheck": {
+    "prefix": "ce12/p2b/olean2",
+    "note": "recompiled after the merge of central df7727c3 (5a9213dc)",
+    "exit": 0,
+    "head_when_checked": "3f386da8754ee6d3241a2641a4ca40d5d6ae7181",
+    "log_bytes": 0,
+    "artifact_sha256": "7c67698fc11dce299acf28878ab8715eaff61a849e3aa9328e4a18d47e54bc64",
+    "artifact_identical_to_final": true,
+    "source_sha256": "739e9ccb48b36fbfac7dbe7793c077d3b221a540ae5e74a4b6d1cdff996a79c5"
    }
   },
   {
@@ -293,6 +347,16 @@
     },
     "start": "2026-10-10T08:50:14.734206957Z",
     "end": "2026-10-10T08:50:17.665821411Z"
+   },
+   "merge_recheck": {
+    "prefix": "ce12/p2b/olean2",
+    "note": "recompiled after the merge of central df7727c3 (5a9213dc)",
+    "exit": 0,
+    "head_when_checked": "3f386da8754ee6d3241a2641a4ca40d5d6ae7181",
+    "log_bytes": 0,
+    "artifact_sha256": "0cc4577aa319367f0a3cca36d6c0c5b77e8258c78e3b97d61a80e127a71de38e",
+    "artifact_identical_to_final": true,
+    "source_sha256": "25cc79473346471daf68528eb2a3e9d912e2801e0d615d130c56dfec4efa394e"
    }
   },
   {
@@ -356,6 +420,16 @@
     },
     "start": "2026-10-10T08:54:52.206618469Z",
     "end": "2026-10-10T08:54:55.739443355Z"
+   },
+   "merge_recheck": {
+    "prefix": "ce12/p2b/olean2",
+    "note": "recompiled after the merge of central df7727c3 (5a9213dc)",
+    "exit": 0,
+    "head_when_checked": "3f386da8754ee6d3241a2641a4ca40d5d6ae7181",
+    "log_bytes": 0,
+    "artifact_sha256": "f0ac11840d83861c60b3ce1ddd98561c2c6fa76aa7e59393e0ea14beba888711",
+    "artifact_identical_to_final": true,
+    "source_sha256": "32d9482f4ac30959268ffdd92604505d12f354fd50fe0d1a778182e597d60b59"
    }
   },
   {
@@ -453,6 +527,16 @@
     },
     "start": "2026-10-10T10:03:24.451793310Z",
     "end": "2026-10-10T10:03:29.493466874Z"
+   },
+   "merge_recheck": {
+    "prefix": "ce12/p2b/olean2",
+    "note": "recompiled after the merge of central df7727c3 (5a9213dc)",
+    "exit": 0,
+    "head_when_checked": "3f386da8754ee6d3241a2641a4ca40d5d6ae7181",
+    "log_bytes": 0,
+    "artifact_sha256": "5ee7756ea9b04d75c30985230ea4046fa2f3cb952340ca2a3d98d0b5b02a0637",
+    "artifact_identical_to_final": true,
+    "source_sha256": "1ef90d9a6f3a3d0ba19c339dbe88cf77fb78fa59f5250ddfe7cddc1e38d890d0"
    }
   },
   {
@@ -547,6 +631,16 @@
     },
     "start": "2026-10-10T10:08:14.659761310Z",
     "end": "2026-10-10T10:08:24.466596258Z"
+   },
+   "merge_recheck": {
+    "prefix": "ce12/p2b/olean2",
+    "note": "recompiled after the merge of central df7727c3 (5a9213dc)",
+    "exit": 0,
+    "head_when_checked": "3f386da8754ee6d3241a2641a4ca40d5d6ae7181",
+    "log_bytes": 0,
+    "artifact_sha256": "62290ee3595688e926bbe35d09796d73f3efa01c83febd067a71e270dca74c5f",
+    "artifact_identical_to_final": true,
+    "source_sha256": "8975ec77e19edecf6d13a3a1f43ee5031b24c706da338080cc871d7626d156d5"
    }
   },
   {
@@ -597,6 +691,16 @@
     },
     "start": "2026-10-10T10:10:28.496666178Z",
     "end": "2026-10-10T10:10:31.399702478Z"
+   },
+   "merge_recheck": {
+    "prefix": "ce12/p2b/olean2",
+    "note": "recompiled after the merge of central df7727c3 (5a9213dc)",
+    "exit": 0,
+    "head_when_checked": "3f386da8754ee6d3241a2641a4ca40d5d6ae7181",
+    "log_bytes": 0,
+    "artifact_sha256": "448a3ee3a26fca446f071be8a774757ad32be2eddf9ac3e91da0233050b16645",
+    "artifact_identical_to_final": true,
+    "source_sha256": "163afe51aa8e23810c02ae4b86a18d90836979569a12ddd9113c5526b12951f7"
    }
   },
   {
@@ -649,10 +753,233 @@
     },
     "start": "2026-10-10T10:12:57.727187623Z",
     "end": "2026-10-10T10:13:01.251303773Z"
+   },
+   "merge_recheck": {
+    "prefix": "ce12/p2b/olean2",
+    "note": "recompiled after the merge of central df7727c3 (5a9213dc)",
+    "exit": 0,
+    "head_when_checked": "3f386da8754ee6d3241a2641a4ca40d5d6ae7181",
+    "log_bytes": 0,
+    "artifact_sha256": "310f7caffff069e3a1a878d5ab167904ab0f4052ac8f19134e59717276789064",
+    "artifact_identical_to_final": true,
+    "source_sha256": "db3fe1c508de30d68402861fb22c171a33ff425415a09f2abba237c53d811ab3"
    }
+  },
+  {
+   "step": 3,
+   "name": "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgreeSeal",
+   "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineAgreeSeal.lean",
+   "sha256": "7193372688936a989835606cd75438d975103a2e50f84e8f0711ef15e9ffae77",
+   "created_in": "9d202c7649c74333cc74d3de4f69478edbd797c5",
+   "last_changed_in": "9d202c7649c74333cc74d3de4f69478edbd797c5",
+   "theorem_count": 41,
+   "guard_count": 41,
+   "guards_in_order": true,
+   "deprecation_suppressions": 0,
+   "other_options": [
+    "autoImplicit false"
+   ],
+   "definitions": [
+    "handleAd",
+    "AdKept",
+    "SealsBy",
+    "NewSealsAd",
+    "SealAd"
+   ],
+   "theorems": [
+    "handleAd_peer",
+    "handleAd_owner",
+    "adKept_refl",
+    "adKept_trans",
+    "adKept_of",
+    "initialize_adKept",
+    "lift_adKept",
+    "installServer_adKept",
+    "installBeacon_adKept",
+    "capability_adKept",
+    "effects_adKept",
+    "server_store_adKept",
+    "server_raw_adKept",
+    "beacon_store_adKept",
+    "serverStep_adKept",
+    "beaconStep_adKept",
+    "handler_adKept",
+    "schedule_adKept",
+    "interpreted_adKept",
+    "native_adKept",
+    "native_program_adKept",
+    "full_adKept",
+    "sealsBy_keys",
+    "sealsBy_trans",
+    "sealing_sealsBy",
+    "kernelSend_sealsBy",
+    "knownSend_keys",
+    "knownReceive_keys",
+    "ownerSend_sealsBy",
+    "ownerReceive_keys",
+    "ownerRun_sealsBy",
+    "newSealsAd_of_sealsBy",
+    "newSealsAd_keys",
+    "serverStep_newSealsAd",
+    "beaconStep_newSealsAd",
+    "sealAd_step",
+    "handler_newSealsAd",
+    "handler_sealAd",
+    "schedule_sealAd",
+    "initial_sealAd",
+    "ctxRun_sealAd"
+   ],
+   "axiom_profile": {
+    "propext, Classical.choice, Quot.sound": 41
+   },
+   "imports": [
+    "BeaconcryptCore.Computational.PqxdhRecordFactsOriginGlobal"
+   ],
+   "final_check": {
+    "prefix": "ce12/p2b/olean2",
+    "leanpath_first_prefix_mirrors": "published df7727c3 first prefix lqf-up/B/int/olean",
+    "exit": 0,
+    "head_when_checked": "5a9213dcb76e955869a8d3447d3a63dd5b34488b",
+    "dirty_paths_when_checked": 3,
+    "log_bytes": 0,
+    "artifact_sha256": "919ee855accba85dee57451dcc7be99016912294c15be8a292885bf034c02284",
+    "source_sha256": "7193372688936a989835606cd75438d975103a2e50f84e8f0711ef15e9ffae77",
+    "source_equals_current": true,
+    "source_equals_commit": {
+     "9d202c7649c74333cc74d3de4f69478edbd797c5": true
+    },
+    "start": "2026-10-10T11:57:05.625617064Z",
+    "end": "2026-10-10T11:57:11.655005895Z"
+   },
+   "merge_recheck": null
+  },
+  {
+   "step": 3,
+   "name": "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgreeReceive",
+   "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineAgreeReceive.lean",
+   "sha256": "11a55883593dbac6a8a41b95483c4976b43c0859328d127fdc27684f672be5c7",
+   "created_in": "5d1b98d5a162f151caee643f24bc38cfc0601a5d",
+   "last_changed_in": "5d1b98d5a162f151caee643f24bc38cfc0601a5d",
+   "theorem_count": 20,
+   "guard_count": 20,
+   "guards_in_order": true,
+   "deprecation_suppressions": 0,
+   "other_options": [
+    "autoImplicit false"
+   ],
+   "definitions": [
+    "ReceiveOriginAd",
+    "AcceptedAd",
+    "EntryAd",
+    "InvariantAd"
+   ],
+   "theorems": [
+    "keyRaw_frame_ad",
+    "keyed_frame_ad",
+    "opening_frame_ad",
+    "receive_origin_ad",
+    "admitted_origin_ad",
+    "kernel_receive_origin_ad",
+    "ownerReceive_acceptedAd",
+    "ownerRun_acceptedAd",
+    "serverReceive_acceptedAd",
+    "beaconReceive_acceptedAd",
+    "native_serverRaw_acceptedAd",
+    "native_beaconRaw_acceptedAd",
+    "acceptedAd_mono",
+    "entryAd_mono",
+    "native_entryAd_before",
+    "native_entryAd",
+    "full_record_ad",
+    "full_invariant_ad",
+    "full_program_invariant_ad",
+    "ctxRun_entryAd"
+   ],
+   "axiom_profile": {
+    "propext, Classical.choice, Quot.sound": 20
+   },
+   "imports": [
+    "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgreeSeal"
+   ],
+   "final_check": {
+    "prefix": "ce12/p2b/olean2",
+    "leanpath_first_prefix_mirrors": "published df7727c3 first prefix lqf-up/B/int/olean",
+    "exit": 0,
+    "head_when_checked": "9d202c7649c74333cc74d3de4f69478edbd797c5",
+    "dirty_paths_when_checked": 2,
+    "log_bytes": 0,
+    "artifact_sha256": "eb9c8bc8174fd92666c56361fea968ea8bdd1db673d32505a6ddaf7baa8d47cb",
+    "source_sha256": "11a55883593dbac6a8a41b95483c4976b43c0859328d127fdc27684f672be5c7",
+    "source_equals_current": true,
+    "source_equals_commit": {
+     "5d1b98d5a162f151caee643f24bc38cfc0601a5d": true
+    },
+    "start": "2026-10-10T11:59:31.124526540Z",
+    "end": "2026-10-10T11:59:36.976575071Z"
+   },
+   "merge_recheck": null
+  },
+  {
+   "step": 3,
+   "name": "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgree",
+   "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineAgree.lean",
+   "sha256": "3fb43a9b10fdf376c0a6e1b16baa08e9895e0332a24f068e94aa99b99942b209",
+   "created_in": "1428752290867a6df232959189bfe5ab576a7fab",
+   "last_changed_in": "1428752290867a6df232959189bfe5ab576a7fab",
+   "theorem_count": 12,
+   "guard_count": 12,
+   "guards_in_order": true,
+   "deprecation_suppressions": 0,
+   "other_options": [
+    "autoImplicit false"
+   ],
+   "definitions": [
+    "Production",
+    "AgreeFailure",
+    "agreeEvent",
+    "AgreementStatement"
+   ],
+   "theorems": [
+    "associatedBytes_inj",
+    "ownsLabel_unique",
+    "ctxRun_agreement",
+    "ctxRun_agree",
+    "counterpart_peer",
+    "owner_pin",
+    "ctxRun_peer_agreement",
+    "counterpart_owner",
+    "ctxRun_owner_agreement",
+    "ctxRun_agree_zero",
+    "agreement_statement",
+    "idealRecords_agree_zero"
+   ],
+   "axiom_profile": {
+    "propext, Classical.choice, Quot.sound": 10,
+    "propext": 2
+   },
+   "imports": [
+    "BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgreeReceive"
+   ],
+   "final_check": {
+    "prefix": "ce12/p2b/olean2",
+    "leanpath_first_prefix_mirrors": "published df7727c3 first prefix lqf-up/B/int/olean",
+    "exit": 0,
+    "head_when_checked": "5d1b98d5a162f151caee643f24bc38cfc0601a5d",
+    "dirty_paths_when_checked": 1,
+    "log_bytes": 0,
+    "artifact_sha256": "6eec6007962fc9d3eac8da0fe46d8b210a33bedda995506e055fdb70bab863b3",
+    "source_sha256": "3fb43a9b10fdf376c0a6e1b16baa08e9895e0332a24f068e94aa99b99942b209",
+    "source_equals_current": true,
+    "source_equals_commit": {
+     "1428752290867a6df232959189bfe5ab576a7fab": true
+    },
+    "start": "2026-10-10T12:01:44.860542583Z",
+    "end": "2026-10-10T12:01:49.075505569Z"
+   },
+   "merge_recheck": null
   }
  ],
- "theorem_total": 166,
+ "theorem_total": 239,
  "allowed_axioms": [
   "propext",
   "Classical.choice",
@@ -731,15 +1058,42 @@
    "forbidden": [],
    "suppressions": 0
   },
-  "closure_size": 1575,
+  "PqxdhDeploymentHeadlineAgreeSeal": {
+   "theorems": 41,
+   "guards": 41,
+   "in_order": true,
+   "guard_msgs": 41,
+   "bad_axioms": [],
+   "forbidden": [],
+   "suppressions": 0
+  },
+  "PqxdhDeploymentHeadlineAgreeReceive": {
+   "theorems": 20,
+   "guards": 20,
+   "in_order": true,
+   "guard_msgs": 20,
+   "bad_axioms": [],
+   "forbidden": [],
+   "suppressions": 0
+  },
+  "PqxdhDeploymentHeadlineAgree": {
+   "theorems": 12,
+   "guards": 12,
+   "in_order": true,
+   "guard_msgs": 12,
+   "bad_axioms": [],
+   "forbidden": [],
+   "suppressions": 0
+  },
+  "closure_size": 1578,
   "boundary_imports": []
  },
  "forbidden_tokens_found": [],
  "boundary_imports": [],
  "handwritten_lean": {
   "before": 1908,
-  "after": 1916,
-  "note": "one per module: 1908 -> 1909 (SplitCost) -> 1910 (GuessBill) -> 1911 (BillsFull) -> 1912 (Gated) -> 1913 (CtGhost) -> 1914 (CtTrace) -> 1915 (CtColl) -> 1916 (CtClosed); coord.sh inv recount before coord.sh inv rehash each time"
+  "after": 1938,
+  "note": "one per module: 1908 -> 1909 (SplitCost) -> 1910 (GuessBill) -> 1911 (BillsFull) -> 1912 (Gated) -> 1913 (CtGhost) -> 1914 (CtTrace) -> 1915 (CtColl) -> 1916 (CtClosed); merge of central df7727c3: 1927 (central) -> 1935; 1936 (AgreeSeal) -> 1937 (AgreeReceive) -> 1938 (Agree); coord.sh inv recount before coord.sh inv rehash each time"
  },
  "headlines": {
   "splitStep_uniform": "KemBound -> for every t p created query x: ((handlerWith setup codec route (idealSplit setup codec route checks t p created) query).run x).IsTotalQueryBound (splitWeight caps (commandKind query)); splitWeight = [1, 64 + keygenCost, 32, 140 + encapsCost, 108 + 64 + 64, 69 * max 64 decapsCost + 64, 64, 64, 64, 64, 64, 64]",
@@ -759,7 +1113,14 @@
   "ctColl_triple": "on every outcome of gameG of a budget-respecting adversary: happens (ctCollEvent crypto codec) (forget outcome) -> exists k < qCreate, j < qAccept, i < j, TripleColl k i j outcome",
   "ct_collision_game": "ctCollTerm setup codec checks route ensureInit bounds mode adversary runtime <= ((budget.create * budget.accept.choose 2 : Nat) : ENNReal) * pairCollision setup (Phase1ReadBack, Phase2ReadBack, budget.Respects)",
   "ct_coll_le / ctCollEps": "ctCollTerm ... <= ctCollEps setup budget = (qCreate * C(qAccept, 2)) * (ofReal Adv^IND-CCA(pairAdversary) + 2 * ofReal correctnessError + 2^-256) (adds FunctionalDecapsulation, through pair_cp_le); ct_coll_billed adds pair_bills (KemBound); ctCollEps_le_design: at most the design form with (qCreate + 1)",
-  "closed forms (PqxdhDeploymentHeadlineCtClosed)": "ce_or_s2b_sym_closed, ce_uks_sym_closed, symbolic_lor_closed (+ FunctionalDecapsulation), symbolic_lor_bound_closed, ce_or_injective_s2b_closed, ce_or_injective_s2b_full_closed: frozen bound with ctCollTerm replaced by ctCollEps setup budget, frozen premises; ce_or_s2b_sym_closed_billed, ce_uks_sym_closed_billed, symbolic_lor_bound_closed_billed, ce_or_injective_s2b_closed_billed, ce_or_injective_s2b_full_closed_billed: closed bound, the bills of the Gated billed form, and PairBills setup caps"
+  "closed forms (PqxdhDeploymentHeadlineCtClosed)": "ce_or_s2b_sym_closed, ce_uks_sym_closed, symbolic_lor_closed (+ FunctionalDecapsulation), symbolic_lor_bound_closed, ce_or_injective_s2b_closed, ce_or_injective_s2b_full_closed: frozen bound with ctCollTerm replaced by ctCollEps setup budget, frozen premises; ce_or_s2b_sym_closed_billed, ce_uks_sym_closed_billed, symbolic_lor_bound_closed_billed, ce_or_injective_s2b_closed_billed, ce_or_injective_s2b_full_closed_billed: closed bound, the bills of the Gated billed form, and PairBills setup caps",
+  "handleAd / AdKept": "handleAd control (.peer keyId) = associatedBytes server.identity peer.identity (serverOwner); handleAd control (.owner c) = absBytes shell.associatedData (beaconOwner, established); AdKept (every present AD kept): handler_adKept, schedule_adKept, interpreted_adKept, native_adKept, native_program_adKept, full_adKept",
+  "SealAd / ctxRun_sealAd": "SealAd control secret := forall label entry in (secret.keys label).1.successfulSeals, exists handle, OwnsLabel control label handle and handleAd control handle = some entry.input.context.ad.bytes; holds on every supported outcome of every ideal CTX world (modes not real, any replace, env, adversary)",
+  "AcceptedAd / ctxRun_entryAd": "AcceptedAd = frozen Accepted plus handleAd control handle = some entry.input.context.ad.bytes; ctxRun_entryAd: every transcript entry of every supported outcome satisfies EntryAd (each successful raw receive has its receiving handle and AcceptedAd) at the final control and private state; no FrameReadBack premise",
+  "Production / AgreeFailure": "Production control secret h frame ad m := exists label entry, OwnsLabel control label h, entry in dict(label), Matches frame entry, (some h, frame) in produced, entry AD bytes = ad, entry plaintext = m; AgreeFailure: exists accepted raw receive (transcript, receivingHandle, hidden slot, frameRead) with no other ad, Counterpart slot h other, Production other frame ad decrypted.plaintext, handleAd h = some ad, handleAd other = some ad",
+  "agreement_statement": "AgreementStatement setup codec route serverKid bounds n := forall E X env mode adversary, D[agreeEvent codec route <$> idealAuth setup codec route env serverKid bounds mode adversary] {true} = 0; proved for every argument with no premise (ctxRun_agree_zero for every ideal mode assignment, idealRecords_agree_zero)",
+  "ctxRun_agreement / ctxRun_peer_agreement / ctxRun_owner_agreement / owner_pin": "pointwise positive AG on every supported outcome; Server peer receive: established owner holding the slot produced the frame with the received plaintext and AD associatedBytes(server.identity, peer.identity), and its shell AD is that AD; owner receive: symmetric with the Server peer; owner_pin: shell AD = associatedBytes server peer and shell.associatedData = associatedArray pin beacon -> pin = server and beacon = peer",
+  "associatedBytes_inj": "associatedBytes server peer = associatedBytes server2 peer2 -> server = server2 and peer = peer2 (extracted build_associated_data, Rust beaconcrypt-core/src/pqxdh.rs:928-947; via associatedBytes_exact and Pqxdh.assocData_inj)"
  },
  "deviations_from_design": [
   "weights of the guesser game proved on the split handler itself (splitWeight) rather than valued by idealStep_bound, uniformCap and OpenUniform.total: query bounds do not transfer along ideal_splits (an equality in law; plan section 93 (a))",
@@ -772,7 +1133,11 @@
   "step 2: factor qCreate * C(qAccept, 2) instead of (qCreate + 1) * C(qAccept, 2): only created owners hold KEM keys and the transcript counts bound them by qCreate (ctCollEps_le_design records the comparison)",
   "step 2: route via a ghost-instrumented copy of the experiment and an expected-potential (supermartingale) argument per triple instead of a game decomposition at two accept ordinals; the design's hit set is replaced by the union over triples, and an owner created after the earlier accept is covered by the KG factor, so CP is averaged over key generation (pairCollision)",
   "step 2: closed forms are new theorems generated from the frozen statements (ce12/p2b/gen/closed.py); symbolic_lor_closed adds FunctionalDecapsulation; the five step-1 billed forms are closed too, with PairBills",
-  "step 2: the first focused check-inventory of PqxdhDeploymentHeadlineCtGhost failed (unescaped ? in generated rg patterns); fixed and rerun before the commit; that commit was made by hand after the helper stopped on a relative message path"
+  "step 2: the first focused check-inventory of PqxdhDeploymentHeadlineCtGhost failed (unescaped ? in generated rg patterns); fixed and rerun before the commit; that commit was made by hand after the helper stopped on a relative message path",
+  "step 3: AG stated on the full ideal-world outcome (control and private dictionaries): the record-lift view and the CE observation carry no handle AD or seal plaintext",
+  "step 3: the design's public AD lemma realized as handleAd (AD from the install data in the source control) with its stability AdKept; reading the install data from the CE transcript belongs to the CE lift (remainder)",
+  "step 3: the lift of AG to the common deployment experiment (section 7.6 b2s Server-pin and mode-O plaintext rows) is not built; remainder R1 and R2 in open_points",
+  "step 3: the commit of PqxdhDeploymentHeadlineAgreeSeal was made by hand after the helper stopped on a relative message path (same content; helper fixed)"
  ],
  "contracts_used": {
   "new_contracts": [],
@@ -783,6 +1148,7 @@
    "budget.Respects adversary",
    "SourceFullCorrect setup.source setup.hmac (record-lift bills only)",
    "Phase1ReadBack and Phase2ReadBack (step 2: ct_collision_game and the run invariant)",
+   "step 3: none (agreement_statement and every AG lemma take no premise)",
    "FunctionalDecapsulation setup.kem (step 2: ct_coll_le, through pair_cp_le; symbolic_lor_closed adds it)",
    "the premises of each frozen headline for its billed and closed forms"
   ]
@@ -791,15 +1157,25 @@
   "no closed epsilon_ct: ctGapTerm stays an explicit probability in the real experiment (F-ct2, D-ct deferred); ctCollTerm is closed by ct_coll_le in the closed forms, the frozen theorems still carry it",
   "no KEM min-entropy or collision property: CP is bounded only through pair_cp_le (Adv^IND-CCA(pairAdversary) + 2 delta_corr + 2^-256); the union bound over qCreate * C(qAccept, 2) triples is not tight",
   "the bills are query caps in the existing cost model, not running-time bounds; deterministic local work is not counted; they are worst-case caps and need not be tight",
-  "no AG, no D-ct, no later-quantum (P3) form"
+  "step 3: no statement in the common deployment experiment: AG is proved in idealAuth (every ideal CTX world) and not lifted through the chain, so the b2s Server-pin and mode-O plaintext rows of design-v2 section 7.6 stay symbolic-only",
+  "step 3: AG covers handles holding hidden slots and raw receives only; agreement is with a production (published or not)",
+  "no D-ct, no later-quantum (P3) form"
  ],
  "open_points": [
   "owner flag of P2 open point 1 (a): the ctGapTerm half stands (F-ct2); the ctCollTerm half and the gate of the headlines with ctCollTerm on ct_collision_game are closed by ct_coll_le and the closed forms; the beta_g gate on guessBill is closed (step 1)",
-  "AG (2-5 days), D-ct (3-6 days, deferred)",
-  "independent review of P2b steps 1 and 2, fix pass, integration"
+  "AG lift, R1 (b2s Server pin, 1-2 actual days): CE event (accepted b2s raw receive on a peer designating g whose counterpart owner g.2 was created with a pin different from the Server identity carried by session g.1's build response, Phase2ReadBack); chain_server, auth_le, containment in AgreeFailure on the support of idealAuth at envGD from ctxRun_peer_agreement and the IdealSlots restriction plus two ideal-environment invariants (installed shell AD = associatedArray(created pin, identity); source control Server identity = identity field of every build response); bound kemLoss + slotLoss + authLoss_g(dec_g and ISs_g)",
+  "AG lift, R2 (mode-O plaintext, b2s and s2b, 1.5-3 actual days): ledger-level seal-source invariant (every dictionary seal at a label owned by a handle comes from a transcript command of that handle with its plaintext) and one seal per frame and handle (label position = sequence - 1, at most one successful seal per label); containment in AgreeFailure or the unpublished event (publicationTerm); b2s through chain_server, s2b through chain_beta",
+  "D-ct (3-6 days, deferred)",
+  "independent review of P2b steps 1 to 3, fix pass, integration (merging central again if it moved since df7727c3)"
  ],
  "checks": {
   "lean_tool": "/home/user/.elan/toolchains/leanprover--lean4---v4.34.0/bin/lean via coord.sh lean claude, -j1 -M8000, timeout 180",
+  "leanpath_step3": {
+   "path": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/leanpath2",
+   "sha256": "92c60e9307f395586b1da68a7a70c455da34e324c7ea22bc9b9460fca4b130ae",
+   "first_prefix": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/olean2",
+   "mirror_of": "/tmp/bc-arc-scratch/common-experiment/lqf-up/B/int/olean (published df7727c3 first prefix; 6386 links, 0 broken, root skipped)"
+  },
   "leanpath": {
    "path": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/leanpath",
    "sha256": "1b84b8f8376ecd48732707964b8df84bb6c3b197d26ab7843db9f465cab51643",
@@ -886,9 +1262,82 @@
     "log_bytes": 0,
     "artifact_sha256": "e03f8fff61547335adde3aaec571b201f56740f5c1ed0c5655907f4ced1f6ddc",
     "source_sha256": "7522f3e3f55f2455c218be7a6625127b97990f84a14a9a2fb1b2726d83eac224"
+   },
+   "logs/final2/root-agree.json": {
+    "exit": 0,
+    "head": "5d1b98d5a162f151caee643f24bc38cfc0601a5d",
+    "dirty_paths": 4,
+    "log_bytes": 0,
+    "artifact_sha256": "68887fb007f865ea66ca30939849b77ad4530219119ec43f4b571a0fdd5efce3",
+    "source_sha256": "e4cc7bd0a36be6abb7c09b68e334a95b57f6a5858968b9df5ec828180b0e3e55"
+   },
+   "logs/final2/root-agreereceive.json": {
+    "exit": 0,
+    "head": "9d202c7649c74333cc74d3de4f69478edbd797c5",
+    "dirty_paths": 5,
+    "log_bytes": 0,
+    "artifact_sha256": "c3b5e4a7844f029907876ce029f631295f4c014505ffcedb982f99552c58a00f",
+    "source_sha256": "7e538140914ab737e48a8aaed0c4784f54ab94450fc79329c435112ee54cd5cc"
+   },
+   "logs/final2/root-agreeseal.json": {
+    "exit": 0,
+    "head": "5a9213dcb76e955869a8d3447d3a63dd5b34488b",
+    "dirty_paths": 6,
+    "log_bytes": 0,
+    "artifact_sha256": "83a7ad63be528411e197def2f660207935995c1c9b6f031812677ee62c319d64",
+    "source_sha256": "1c000878289545782cee65116bcc06e560f43e8241cccc190f3f0025ea4a8658"
+   },
+   "logs/final2/root-clean3.json": {
+    "exit": 0,
+    "head": "1428752290867a6df232959189bfe5ab576a7fab",
+    "dirty_paths": 0,
+    "log_bytes": 0,
+    "artifact_sha256": "68887fb007f865ea66ca30939849b77ad4530219119ec43f4b571a0fdd5efce3",
+    "source_sha256": "e4cc7bd0a36be6abb7c09b68e334a95b57f6a5858968b9df5ec828180b0e3e55"
+   },
+   "logs/final2/root-merge-df7727c3.json": {
+    "exit": 0,
+    "head": "3f386da8754ee6d3241a2641a4ca40d5d6ae7181",
+    "dirty_paths": 41,
+    "log_bytes": 0,
+    "artifact_sha256": "5feaeb2220e0161fa183e73361acc81779b8532033e186381f99df73063c6cca",
+    "source_sha256": "c92bd2b907250916c99586ed6769f6c84565a446b9db7ac3267addc21deca5bf"
    }
   },
   "inventories": {
+   "agree": {
+    "status": 0,
+    "commit": "5d1b98d5a162f151caee643f24bc38cfc0601a5d",
+    "start": "2026-10-10T12:01:52Z",
+    "end": "2026-10-10T12:03:41Z",
+    "dirty_before": 4,
+    "dirty_after": 4,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/logs/inventory-agree.log",
+    "log_sha256": "b9f0b72c0a60d86e39a4e60a2f383ca890934a851a832ec756fc277cd7be03f7",
+    "note": "run before the module's Lean commit, with its four staged paths (module, root, reviewed-inventory.txt, check-inventory.sh) as the only dirt"
+   },
+   "agreereceive": {
+    "status": 0,
+    "commit": "9d202c7649c74333cc74d3de4f69478edbd797c5",
+    "start": "2026-10-10T11:59:40Z",
+    "end": "2026-10-10T12:01:28Z",
+    "dirty_before": 4,
+    "dirty_after": 4,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/logs/inventory-agreereceive.log",
+    "log_sha256": "a029b15d48b6b117fa718ce748bbf91540ab77e9358cd452d77c18ad463ebc4f",
+    "note": "run before the module's Lean commit, with its four staged paths (module, root, reviewed-inventory.txt, check-inventory.sh) as the only dirt"
+   },
+   "agreeseal": {
+    "status": 0,
+    "commit": "5a9213dcb76e955869a8d3447d3a63dd5b34488b",
+    "start": "2026-10-10T11:57:15Z",
+    "end": "2026-10-10T11:59:04Z",
+    "dirty_before": 4,
+    "dirty_after": 4,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/logs/inventory-agreeseal.log",
+    "log_sha256": "4f0313345567dcc30a3017b1e66b81a44b629545137429d4d152540d29c4ddd1",
+    "note": "run before the module's Lean commit, with its four staged paths (module, root, reviewed-inventory.txt, check-inventory.sh) as the only dirt"
+   },
    "billsfull": {
     "status": 0,
     "commit": "3b12a590e0097d13fb0da0a59d1a201da3cdf2af",
@@ -999,6 +1448,17 @@
     "log_sha256": "4967846433dcef339b5e532f6d0740fefb57250eb10449391c6f5da42411a776",
     "note": ""
    },
+   "docs3": {
+    "status": 0,
+    "commit": "647260efa837249733bd870084d314105da53fbf",
+    "start": "2026-10-10T10:23:38Z",
+    "end": "2026-10-10T10:25:29Z",
+    "dirty_before": 2,
+    "dirty_after": 2,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/logs/inventory-docs3.log",
+    "log_sha256": "1cbf745a830275c6ff21e2fc6010f705ebe82427767ca2d7bc6642cbf6694390",
+    "note": ""
+   },
    "gated": {
     "status": 0,
     "commit": "f147bf69e764627a5ca23975f7d1908cc240aeee",
@@ -1021,6 +1481,17 @@
     "log_sha256": "e8614f0e8448409c0c8bd264dae9adf0903937d1053f71e0aebc71b1c23586be",
     "note": "run before the module's Lean commit, with its four staged paths (module, root, reviewed-inventory.txt, check-inventory.sh) as the only dirt"
    },
+   "merge-df7727c3": {
+    "status": 0,
+    "commit": "3f386da8754ee6d3241a2641a4ca40d5d6ae7181",
+    "start": "2026-10-10T11:26:06Z",
+    "end": "2026-10-10T11:27:54Z",
+    "dirty_before": 41,
+    "dirty_after": 41,
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/logs/inventory-merge-df7727c3.log",
+    "log_sha256": "cdc2904d9215c4078742d5c97701e138d59b482b76db04dd2eaf750fc81e4d4d",
+    "note": "run on the resolved merge of central df7727c3 before the merge commit 5a9213dc (dirt: the staged merge)"
+   },
    "splitcost": {
     "status": 0,
     "commit": "f0dc46bb6473ab37ecf48e623f1ccb192bd6b3af",
@@ -1033,9 +1504,10 @@
     "note": "run before the module's Lean commit, with its four staged paths (module, root, reviewed-inventory.txt, check-inventory.sh) as the only dirt"
    }
   },
-  "guard_scan": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/logs/scan-2.json",
+  "guard_scan": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/logs/scan-3.json",
+  "guard_scan_steps_1_2": "/tmp/bc-arc-scratch/common-experiment/ce12/p2b/logs/scan-2.json",
   "git_diff_check": {
-   "range": "f0dc46bb6473ab37ecf48e623f1ccb192bd6b3af..647260efa837249733bd870084d314105da53fbf",
+   "range": "f0dc46bb6473ab37ecf48e623f1ccb192bd6b3af..1428752290867a6df232959189bfe5ab576a7fab",
    "exit": 0
   }
  },
