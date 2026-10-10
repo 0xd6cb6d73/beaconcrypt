@@ -1,6 +1,6 @@
 {
- "date": "2026-10-10T01:53:32.822401+00:00",
- "scope": "CE-11b unit U4 follow-up (track u4c): anomaly_le_pk and anomaly_prefix_le_pk by the route of plan section 84 (the anomaly, and the anomaly on a prefix, on the record world with envGD at most ctGuessByCca setup (anomalyGuesser ...), the ciphertext guess of an explicit guesser over the IND-CCA oracle interface that receives the selected public key and a decapsulation oracle for the selected secret key, never the secret key or the challenge), with the decapsulation query bound (at most budget.finish); and unit U8 (plan section 49 Q3, native form): CE.idealGame g and the final split form with slot 0's message key drawn first or last. Reviewed at c7f33970 (semantic and hygiene, APPROVE_WITH_NITS: one minor finding and four nits, documentation and records only); review fix pass: one documentation commit, no Lean file or statement changed.",
+ "date": "2026-10-10T02:38:48.283102+00:00",
+ "scope": "CE-11b unit U4 follow-up (track u4c): anomaly_le_pk and anomaly_prefix_le_pk by the route of plan section 84 (the anomaly, and the anomaly on a prefix, on the record world with envGD at most ctGuessByCca setup (anomalyGuesser ...), the ciphertext guess of an explicit guesser over the IND-CCA oracle interface that receives the selected public key and a decapsulation oracle for the selected secret key, never the secret key or the challenge), with the decapsulation query bound (at most budget.finish); and unit U8 (plan section 49 Q3, native form): CE.idealGame g and the final split form with slot 0's message key drawn first or last. Reviewed at c7f33970 (semantic and hygiene, APPROVE_WITH_NITS: one minor finding and four nits, documentation and records only); review fix pass: one documentation commit, no Lean file or statement changed. Confirming review of 47b32508: APPROVE_WITH_NITS (all five findings resolved; statements, guards and receipt intact; two documentation nits and one record, taken by the commit that records it, documentation only).",
  "basis": {
   "start": "69a2470358f7433fd41b8c13a5dfba0e40bc34c7",
   "central_at_receipt": "82b5fe43b1812c70ef284d4493ba2008d3575bf2",
@@ -24,19 +24,39 @@
  "topic": {
   "branch": "codex/deployment-ce11b",
   "worktree": "/tmp/beaconcrypt-deployment-ce11b",
-  "head_at_receipt": "6ae3f97b585b75aebaf345282b56c6866846f702"
+  "head_at_receipt": "47b32508503047d89cbf98b5adcb7d0a2b7b7c08"
  },
  "plan": {
   "path": "/tmp/bc-arc-scratch/common-experiment/plan.md",
-  "sha256": "fee2f08156bef2d90cd9cd029ffa31b3aa0ddbe2fbd5c710298c07a5d42a30e4",
-  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4c/docs/plan.at-u4c-receipt-fee2f081.md",
-  "dated_copy_sha256": "fee2f08156bef2d90cd9cd029ffa31b3aa0ddbe2fbd5c710298c07a5d42a30e4",
+  "sha256": "93720dffcfe51df163a9077b116b685240d5e272017c633f612bd6fbcaeba8c5",
+  "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4c/int/docs/plan.at-record-93720dff.md",
+  "dated_copy_sha256": "93720dffcfe51df163a9077b116b685240d5e272017c633f612bd6fbcaeba8c5",
   "sections": [
-   89
+   89,
+   91,
+   93
   ],
-  "note": "sections 85-88 belong to track u6b and the CE coordination; 84 is the route decision this track follows",
+  "section_89_corrected": "twice: by the review fix pass (the open sentence: the guesser's caps are a definite CE-12a obligation) and by the commit that records the confirming review (a clause: idealStep_bound supplies the per-step weights' values, a per-step uniform bound for the split handler the guesser runs is itself a CE-12a lemma from the component bills)",
+  "section_91": "the review fix pass (recorded in fix_pass.plan)",
+  "section_93": "the confirming review of 47b32508 and its record commit",
+  "note": "sections 85-88 belong to track u6b and the CE coordination, 90 and 92 to track u7; 84 is the route decision this track follows",
+  "earlier": [
+   {
+    "note": "hash recorded by the receipt of the documentation commit c7f33970 (through section 89)",
+    "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4c/docs/plan.at-u4c-receipt-fee2f081.md",
+    "dated_copy_sha256": "fee2f08156bef2d90cd9cd029ffa31b3aa0ddbe2fbd5c710298c07a5d42a30e4"
+   },
+   {
+    "note": "hash recorded by the review fix pass 47b32508 (fix_pass.plan; through section 91)",
+    "dated_copy": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4c/fix/docs/plan.at-u4c-fix-receipt-575b3137.md",
+    "dated_copy_sha256": "575b313721d665f8e51062bf6cd4a9fa9e21162814f44dcf839b77e9f8597ae8"
+   }
+  ],
   "backup_before": [
-   "/tmp/bc-arc-scratch/common-experiment/ce11b/u4c/docs/plan.before-u4c-cce6258a.md"
+   "/tmp/bc-arc-scratch/common-experiment/ce11b/u4c/docs/plan.before-u4c-cce6258a.md",
+   "/tmp/bc-arc-scratch/common-experiment/ce11b/u4c/fix/docs/plan.before-u4c-fix-feca373c.md",
+   "/tmp/bc-arc-scratch/common-experiment/ce11b/u4c/fix/docs/plan.before-u4c-fix-fee2f081.md",
+   "/tmp/bc-arc-scratch/common-experiment/ce11b/u4c/int/docs/plan.before-record-3163263c.md"
   ]
  },
  "design": {
@@ -53,7 +73,10 @@
  },
  "notes": {
   "track_notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4c/NOTES.md",
-  "ce11b_notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/NOTES.md (section \"Track u4c\")"
+  "ce11b_notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/NOTES.md (section \"Track u4c\")",
+  "fix_notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4c/NOTES.md (section \"Review fix pass\")",
+  "confirm_notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4c/confirm/NOTES.md",
+  "integration_notes": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4c/int/NOTES.md"
  },
  "commits": [
   {
@@ -67,9 +90,17 @@
   {
    "commit": "6ae3f97b585b75aebaf345282b56c6866846f702",
    "subject": "Draw the CE-11b slot 0 message key first or last"
+  },
+  {
+   "commit": "c7f3397067b8082dec2bbe611d6aa82f54308cee",
+   "subject": "Document the CE-11b anomaly guesser and unit U8"
+  },
+  {
+   "commit": "47b32508503047d89cbf98b5adcb7d0a2b7b7c08",
+   "subject": "Document the CE-11b unit U4 follow-up review fix pass"
   }
  ],
- "commits_note": "First-parent commits on the topic after the basis made before this receipt was last generated; the documentation commit that adds this receipt is not listed.",
+ "commits_note": "First-parent commits on the topic after the basis made before this receipt was last generated; the commit that records the confirming review (and last regenerates this receipt) is not listed.",
  "files_sha256": {
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealKeySwap.lean": "c7dbb86cbca10c2cff7631cbf98592e4d3e108481a2839ce2510894c6b53ea51",
   "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentIdealAnomalyGuesser.lean": "00280c1d44b46ea884cdab9049c9e63156962f11053b49fce79106642558ef3f",
@@ -634,7 +665,7 @@
   "the defined quantity is named ctGuessByCca (the brief wrote ctGuessBy, which names the frozen oracle-free form); ctGuessByCca_ambient and ctGuessByCca_le_pk relate them",
   "the guesser outputs an optional ciphertext; the hit event is some of the encapsulation ciphertext",
   "two modules for anomaly_le_pk (PqxdhDeploymentIdealKeySwap registered in this track, PqxdhDeploymentIdealAnomalyGuesser)",
-  "the guesser's query caps: only the decapsulation count is a theorem here (anomalyGuesser_decapsulations, at most budget.finish); the uniform-query cap and the zero base-oracle cap are definite CE-12a obligations in the existing cost model, not conditional ones (corrected after the review of c7f33970; first recorded as 'open for CE-12a if its headline lists the adversary caps'): CE-12a states OneKeyAdversary.MakesAtMostQueries for its predict-then-compare adversary as kem_transfer_bills does for the KEM step, with phase-1 caps budget.finish + 1 decapsulations, 0 base queries (PqxdhPrivateRootQueryBounds.ccaCoins_excluded at IsMlKemBaseQuery, lifted like ccaCoins_decapsulate) and (count + 1) * keygenCost + (qInit + 32) + sum_kind budget.cap kind * u kind uniform queries (ccaCoins_uniform, keygen_uniform, sampleFamily_uniform, construct_uniform, per-class weights from idealStep_bound, uniformCap and OpenUniform.total, weighted_bound), from the premises kem_transfer_bills already takes (KemBound setup caps, initBound, budget.Respects adversary); no new contract or assumption",
+  "the guesser's query caps: only the decapsulation count is a theorem here (anomalyGuesser_decapsulations, at most budget.finish); the uniform-query cap and the zero base-oracle cap are definite CE-12a obligations in the existing cost model, not conditional ones (corrected after the review of c7f33970; first recorded as 'open for CE-12a if its headline lists the adversary caps'): CE-12a states OneKeyAdversary.MakesAtMostQueries for its predict-then-compare adversary as kem_transfer_bills does for the KEM step, with phase-1 caps budget.finish + 1 decapsulations, 0 base queries (PqxdhPrivateRootQueryBounds.ccaCoins_excluded at IsMlKemBaseQuery, lifted like ccaCoins_decapsulate) and (count + 1) * keygenCost + (qInit + 32) + sum_kind budget.cap kind * u kind uniform queries (ccaCoins_uniform, keygen_uniform, sampleFamily_uniform, construct_uniform, per-class weights from idealStep_bound, uniformCap and OpenUniform.total, weighted_bound; idealStep_bound supplies the weights' values, not the per-step bound: it bounds the ideal environment's step (PqxdhDeploymentIdealEnv.idealStep), which ideal_splits relates to the final split form only in law, so a per-step uniform bound for the split handler handlerWith (idealSplit ...) that the guesser runs (through guessReg, under flat) is itself a CE-12a lemma, proved from the same premises with the component bills (acceptSelected_bound, finishChallenge_bound, createPool_uniform, lazyDummy_bound, ...), no Lean change in this track; clause added after the confirming review of 47b32508), from the premises kem_transfer_bills already takes (KemBound setup caps, initBound, budget.Respects adversary); no new contract or assumption",
   "U8 statements hold for every view erasing the hidden-slot service state; the key-first game runs over the lazy slot cache (lazyService) after idealGame_lazy, because the counted table breaks exact commutation with completions"
  ],
  "contracts_used": {
@@ -931,7 +962,7 @@
   }
  },
  "git_diff_check": {
-  "range": "69a2470358f7433fd41b8c13a5dfba0e40bc34c7..working tree (with this documentation)",
+  "range": "69a2470358f7433fd41b8c13a5dfba0e40bc34c7..working tree (with the confirming-review record, before this receipt was written)",
   "exit": 0,
   "output": ""
  },
@@ -949,7 +980,7 @@
   "U8": "complete"
  },
  "review": {
-  "status": "reviewed at c7f33970 (independent semantic and hygiene lenses): no wrong statement, proof or hidden assumption; APPROVE_WITH_NITS with one minor finding and four nits, all about documentation and records, addressed by the review fix pass (key fix_pass); not re-reviewed; not integrated",
+  "status": "reviewed at c7f33970 (independent semantic and hygiene lenses): no wrong statement, proof or hidden assumption; APPROVE_WITH_NITS with one minor finding and four nits, all about documentation and records, addressed by the review fix pass (key fix_pass); fix pass confirmed by a confirming review of 47b32508 (APPROVE_WITH_NITS: all five findings resolved; two documentation nits and one record, taken by the commit that records it), recorded before the integration; not integrated at the record commit",
   "reviewed_commit": "c7f3397067b8082dec2bbe611d6aa82f54308cee",
   "reviewed_range": "69a2470358f7433fd41b8c13a5dfba0e40bc34c7..c7f3397067b8082dec2bbe611d6aa82f54308cee",
   "lenses": [
@@ -1009,11 +1040,68 @@
     "make: Leaving directory '/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core'"
    ],
    "note": "run by the hygiene review at the committed tip (the track itself ran the focused inventory at c988bf7c and 6ae3f97b only); check-inventory reads nothing under doc/"
+  },
+  "confirming_review": {
+   "reviewed_range": "c7f3397067b8082dec2bbe611d6aa82f54308cee..47b32508503047d89cbf98b5adcb7d0a2b7b7c08",
+   "reviewed_commit": "47b32508503047d89cbf98b5adcb7d0a2b7b7c08",
+   "scope": "the review fix pass 47b32508 (one documentation commit over c7f33970: guide, analysis, receipt): the five findings of the review of c7f33970, statements, guards, receipt, documentation, names cited by the CE-12a obligation, plan snapshot record, imports after central 82b5fe43",
+   "verdict": "APPROVE_WITH_NITS: all five earlier findings resolved; statements, guards and receipt intact; two documentation nits (the source of the guesser's per-step weights; the extent of the plan snapshot's refresh) and one record (the inventory run fix2), all taken by the commit that records the review",
+   "checks": [
+    "diff c7f33970..47b32508 touches only doc/formal-verification-analysis.md, doc/impl/common-deployment-experiment.md and this receipt; no file under beaconcrypt-core/; git diff --check clean; new Markdown lines whole paragraphs; no /tmp path in the added guide or analysis lines",
+    "commit footer exact (one Co-Authored-By line, last line); git ls-remote shows 47b32508",
+    "Lean blobs unchanged since c7f33970; at the head theorems = guards = #print lines 31/31/16, names matching one to one, axiom sets within propext, Classical.choice, Quot.sound; no forbidden token; no Lean recheck (sources unchanged; the fix pass rechecks have empty logs and matching hashes)",
+    "receipt (confirm/scripts/receipt_check.py): files_sha256 equal the head blobs (3/3); fix_pass.rechecks source hashes equal the head (including the root), log and LEAN_PATH hashes match, logs empty; fix1 and review.inventory_at_tip log hashes match; fix_pass.plan hash = working plan at the time = dated copy; script hashes match",
+    "minor finding: the open point CE-12a obligation, the decision Query accounting, the analysis Limits paragraph, plan section 89 and deviation 5 are definite; cited names exist (kem_transfer_bills, MakesAtMostQueries, IsMlKemBaseQuery, ccaCoins_excluded, ccaCoins_uniform, keygen_uniform, sampleFamily_uniform, construct_uniform, weighted_bound, idealStep_bound, uniformCap, OpenUniform.total, KemBound; initBound is kem_transfer_bills' hypothesis name); (count + 1) * keygenCost matches the guesser's own pair plus sampleFamily's count; qInit + 32 matches construct with no supplied seed; base cap 0 by ccaCoins_excluded (IsMlKemBaseQuery false on the coin queries), no budget premise",
+    "nits: S6 analogue per plan section 14's row, design-v2 section 10.2 quoted correctly; central 82b5fe43's snapshot ends at section 87, its sections 84-86 byte-identical to the working plan, its section 87 lacks the later integration bullet; 69a24703..82b5fe43 adds ten Lean modules and modifies only the root among existing Lean files, imports verified; review.inventory_at_tip recorded, log hash matches, head c7f33970, dirt 0/0",
+    "the post-commit focused inventory fix2 at 47b32508: exit 0, clean tree before and after (then only in the fix pass notes)"
+   ],
+   "check_scripts": {
+    "receipt_check.py": {
+     "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4c/confirm/scripts/receipt_check.py",
+     "sha256": "fc8f520caf258f01fd84d6442003b62ef33d7d14a51ed7892100e82c33f224b7"
+    }
+   },
+   "findings_fixed": [
+    "nit: the CE-12a obligation named idealStep_bound as the source of the guesser's per-step weights, but that bound is for the ideal environment's step and ideal_splits relates it to the split handler handlerWith (idealSplit ...) the guesser runs (under flat) only in law; a clause in the guide's open point CE-12a obligation, plan section 89 and deviation 5 now says that a per-step uniform bound for the split handler is itself a CE-12a lemma, proved from the same premises with the component bills (acceptSelected_bound, finishChallenge_bound, createPool_uniform, lazyDummy_bound, ...), and that idealStep_bound supplies the weights' values, not the bound; no Lean change",
+    "nit: the plan-snapshot refresh parentheticals (guide integration open point and fix-pass section, plan section 91, fix_pass.per_finding) understated the refresh; the snapshot is now a wholesale copy of the working plan through section 93, and the guide's integration open point, plan section 93 and plan_snapshot state it exactly (on this branch sections 84 onward, 85-87 included, with the pointer at the end of section 81 and the integration bullet of section 83; against central 82b5fe43, section 87's integration bullet and sections 88 onward); the fix-pass records keep their wording"
+   ],
+   "records": [
+    "all five findings of the review of c7f33970 resolved at 47b32508; statements, guards and receipt intact (no action)",
+    "the inventory run fix2 at 47b32508 recorded in inventory_fix2 below"
+   ],
+   "inventory_fix2": {
+    "log": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4c/fix/logs/inventory-fix2.log",
+    "log_sha256": "6ee497dfb17c57869d0d60a3b2ff1b35b7638e9e737a1cd48d682dd96871acbc",
+    "exit": 0,
+    "start": "2026-10-10T02:22:04Z",
+    "end": "2026-10-10T02:23:49Z",
+    "head_at_run": "47b32508503047d89cbf98b5adcb7d0a2b7b7c08",
+    "working_tree_dirt_lines": 0,
+    "working_tree_dirt_lines_after": 0,
+    "command": "coord.sh lease mem claude @nix ce11b-u4c-fix-inventory-fix2 --eta 10m -- nix develop --no-update-lock-file path:/tmp/bc-arc-scratch/proof-flake#proofs -c make -C beaconcrypt-core check-inventory SHELL=bash (u4c/fix/inventory.sh fix2)",
+    "log_tail": [
+     "Formal-verification inventory matches the reviewed boundary.",
+     "make: Leaving directory '/tmp/beaconcrypt-deployment-ce11b/beaconcrypt-core'"
+    ],
+    "note": "the fix pass's post-commit focused inventory on a clean tree at 47b32508 (the fix pass recorded only fix1, run with its changes in the tree); recorded here after the confirming review (its record nit)"
+   },
+   "files_changed": [
+    "doc/impl/common-deployment-experiment.md",
+    "doc/impl/common-deployment-experiment-plan.md",
+    "doc/formal-verification-analysis.md",
+    "doc/impl/proof-receipts/common-deployment-experiment-ce11b-u4c.json"
+   ],
+   "lean_change": "none (no file under beaconcrypt-core/ changed)",
+   "notes": {
+    "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4c/confirm/NOTES.md",
+    "sha256": "cc1d27de3f7d85ba175e4b0d494f427af0b6156abda980c50f539f49b1289dc3"
+   },
+   "scratch": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4c/confirm (review checks), /tmp/bc-arc-scratch/common-experiment/ce11b/u4c/int (record-commit scripts, plan copies, integration)"
   }
  },
  "fix_pass": {
   "commits": {
-   "documentation": "the commit that adds this record (one documentation commit over c7f33970; its hash is recorded by the commit that records the confirming review)"
+   "documentation": "47b32508503047d89cbf98b5adcb7d0a2b7b7c08"
   },
   "changed_files": [
    "doc/impl/common-deployment-experiment.md",
@@ -1216,5 +1304,15 @@
    "exit": 0,
    "output": ""
   }
+ },
+ "plan_snapshot": {
+  "path": "doc/impl/common-deployment-experiment-plan.md",
+  "refreshed_from_sha256": "93720dffcfe51df163a9077b116b685240d5e272017c633f612bd6fbcaeba8c5",
+  "sections": "0-18 and the decision sections 19-93",
+  "script": {
+   "path": "/tmp/bc-arc-scratch/common-experiment/ce11b/u4c/int/scripts/snapshot.py",
+   "sha256": "7a49453b829b972cdebb54e1f4fdd7beebc323bc729c2bc47bd1b044a4f45c74"
+  },
+  "note": "refreshed in the commit that records the confirming review as a wholesale copy of the working plan: the body equals the working plan from its third line; the snapshot paragraph, built from central 82b5fe43's (the newest), records the hash and the refresh history. Against this branch's snapshot (central 69a24703's, working plan 45f3f79b through section 83) the refresh adds sections 84 to 93 (85 to 87 included), the pointer to section 85 at the end of section 81 and the integration bullet at the end of section 83; against central 82b5fe43's (working plan f8a23405 through section 87, a prefix of this body) it adds section 87's integration bullet and sections 88 to 93; the integration merge keeps this snapshot and confirms that it contains section 84"
  }
 }
