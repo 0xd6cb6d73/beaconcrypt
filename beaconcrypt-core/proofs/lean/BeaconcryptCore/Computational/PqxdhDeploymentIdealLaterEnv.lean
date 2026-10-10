@@ -19,7 +19,7 @@ set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterEnv
 open PqxdhServerAuthExperiment (Setup Codec Checks)
 open PqxdhDeploymentInterface (Budget FreshBounds Mode ModeSpec Handle)
-open PqxdhDeploymentBackend (XState RegImpl)
+open PqxdhDeploymentBackend (XState)
 open PqxdhDeploymentFinishErasure (outcomeMap laterWith realPost fullX)
 open PqxdhDeploymentSeedSplit (mapBackend joinTable seedFree)
 open PqxdhDeploymentIdealSlots (Coord)

@@ -20,7 +20,7 @@ set_option autoImplicit false
 
 namespace BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSlots
 open PqxdhServerAuthExperiment (Setup Codec Checks)
-open PqxdhRecordLiftInterface (Environment WorldSpec EnvEffects Capability effectLift)
+open PqxdhRecordLiftInterface (Environment WorldSpec EnvEffects effectLift)
 open PqxdhRecordLiftProtocol (Control ServiceSpec schedule)
 open PqxdhRecordLiftLaterWorlds (Outcome continueWith laterRealChains)
 open PqxdhDeploymentInterface (FreshBounds Mode ModeSpec)

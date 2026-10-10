@@ -3,7 +3,7 @@ import BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterGame
 import BeaconcryptCore.Computational.PqxdhDeploymentIdealDefer
 import BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentDraw
 
-/-! LQ-F upstream, unit C1: the generic later forms of CE-11b's split chain and of C1 with drawn parameters (unit 11b-L of the CE plan, LQ-F upstream design-v2 section 4.2). CE-11b proved, for the run-phase experiment `PqxdhDeploymentBackend.gameWith`, the represent step, the seed relocation, the seed deferral with lists of points, the parameter in the backend and C1 for an environment that draws its parameters at startup. This module proves the same steps for the LQ-F later game `PqxdhDeploymentFinishErasure.laterWith`, whose post phase runs after the run phase from the run's final state and whose second adversary receives the LQ-F reveal of that state.
+/-! LQ-F upstream, unit C1: the generic later forms of CE-11b's split chain and of the hand-off obligation C1 with drawn parameters (unit 11b-L of the CE plan, LQ-F upstream design-v2 section 4.2). CE-11b proved, for the run-phase experiment `PqxdhDeploymentBackend.gameWith`, the represent step, the seed relocation, the seed deferral with lists of points, the parameter in the backend and the obligation C1 for an environment that draws its parameters at startup. This module proves the same steps for the LQ-F later game `PqxdhDeploymentFinishErasure.laterWith`, whose post phase runs after the run phase from the run's final state and whose second adversary receives the LQ-F reveal of that state.
 
 - Transport along a state map (`laterTail_map`, `laterWith_map`, `laterWith_proj`): when the post handlers commute with a map of the extended state and the reveal does not see what the map changes, the later games with two registration handlers are related exactly (`laterWith_map`, the run phases related exactly per command) or in law (`laterWith_proj`, the run phases related in law per constructed Server), up to the map of the final state.
 - The represent step (`represent_later`, `represent_split_later`): for a natural registration core and a service projection, the later games with the two services and the fixed real post phase `realPost` have the same law up to the service projection of the final state. The real post phase runs on the deployment state only, so it commutes with every replacement of the service state (`realPost_mapBackend`), and the reveal reads neither the service state (`xreveal_mapBackend`) nor the seed table.
@@ -32,7 +32,7 @@ open PqxdhDeploymentIdealErase (SlotFrame)
 open PqxdhRegistrationJointKemSecondEntry (Alloc)
 open PqxdhDeploymentEnvironment (EnvState EnvStep)
 open PqxdhDeploymentEnvironmentJoin (Splits Stable joined uncount initialized postNative envReveal)
-open PqxdhDeploymentEnvironmentDraw (paramReg paramStep paramInv paramEnv withX)
+open PqxdhDeploymentEnvironmentDraw (paramReg paramInv paramEnv withX)
 open PqxdhDeploymentLater (PostSpec)
 open PqxdhRecordLiftInterface (EnvQuery Environment)
 open LazyOracleDiscard (Commutes LawEq)
