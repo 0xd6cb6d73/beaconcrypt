@@ -2213,6 +2213,26 @@ import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgreeReceive
 
 import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgree
 
+import BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineGated
+
+import BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineClosed
+
+import BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinEnv
+
+import BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinControl
+
+import BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinInvariant
+
+import BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePin
+
+import BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlainUnique
+
+import BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlainSend
+
+import BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlain
+
+import BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlainGated
+
 import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctTools
 
 import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctEvent
