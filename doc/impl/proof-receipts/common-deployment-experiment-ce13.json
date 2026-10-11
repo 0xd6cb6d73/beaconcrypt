@@ -1473,5 +1473,425 @@
    "transcript-fidelity cargo tests (no ProVerif, Rust or fidelity input changed)"
   ],
   "lean_change": "none"
+ },
+ "final_verification_follow_up": {
+  "name": "CE-13 final verification, follow-up: the left-or-right, unknown-key-share and passive/live groups, the prose pass, G5's later-mode note and the confirming review's nits",
+  "date": "2026-10-11",
+  "authorship": "Claude",
+  "basis": "central codex/full-proof-composition at 8f4c055d5f4f2b8aa0aeb49bd68a0ca9f6770b5b (unchanged); branch codex/deployment-ce13-final at 04e695454ce984d007952d8db3b06f388e727548 (the final_verification step)",
+  "branch": "codex/deployment-ce13-final (not integrated)",
+  "commit": "the commit that adds this record (child of 04e695454ce984d007952d8db3b06f388e727548)",
+  "confirming_review": {
+   "reviewed_commit": "04e695454ce984d007952d8db3b06f388e727548",
+   "mode": "read-only, against central 8f4c055d, the Lean statements, the .pv sources and the Rust code; Lean probe through coord.sh lean exit 0",
+   "verdict": "APPROVE_WITH_NITS; not to be integrated as the final CE-13 verification before the G6-G8/prose follow-up",
+   "findings": [
+    {
+     "id": "CR-1",
+     "severity": "major (open work, not a defect of 04e69545)",
+     "finding": "the findings of G6, G7, G8, the prose pass and G5-12 were not applied; the analysis's 'How the map was checked' sentence did not say so",
+     "resolution": "all applied in this follow-up; the analysis sentence now covers all eight groups and the prose pass"
+    },
+    {
+     "id": "CR-2",
+     "severity": "nit",
+     "finding": "guide beta_g sentence misses the beta-free either-side difference forms symbolic_lor (closed, _dct, closed _dct, later)",
+     "resolution": "applied"
+    },
+    {
+     "id": "CR-3",
+     "severity": "nit",
+     "finding": "plan snapshot header 'sections 19 to 125'",
+     "resolution": "applied: 'sections 19 to 127' (the snapshot now runs through section 127)"
+    },
+    {
+     "id": "CR-4",
+     "severity": "nit",
+     "finding": "the A1 group's '(L2)' label covers all four rows",
+     "resolution": "applied: L2 for s2b-A1 and b2s-A1 only; A1 and encoding-A1 run FsRegistrationMain (fs_kid(n) per object)"
+    },
+    {
+     "id": "CR-5",
+     "severity": "nit",
+     "finding": "guide final-verification item 4 attributes the A1 group and R1' to the legacy record processes",
+     "resolution": "applied as proposed"
+    }
+   ]
+  },
+  "why": "the final_verification step had applied only G1-G5 (its task text was cut inside G5's last finding); the confirming review asked for the remaining findings before integration",
+  "method": "findings taken from the verification notes of G5 (item 12), G6, G7, G8 and the prose pass and each re-checked against the source before it was applied: statement scans of the frozen and production modules (ctGapTerm, ctCollTerm, epsCt, beta, nbfFilter, premises), the event definitions (LorEligSym, LorEligPeerSym, NoBundleFailure, LorElig, SameSession, CEPartners, UksReceiverAt), slotLossL_eq, injTerm and collider, the .pv queries and processes (fs-records-b2s-uksr.pv, fs-records-b2s.pvl:392-401, fs-registration.pvl, fs-registration-a1.pv, fs-records-*-a1.pv, -c3.pv, passive-strong-secrecy.pv) and plan section 19; where a note left the text open, the wording follows the Lean statement",
+  "finding_counts": {
+   "in_notes": 40,
+   "by_pass": {
+    "G5 (item 12)": 1,
+    "G6": 9,
+    "G7": 6,
+    "G8": 11,
+    "prose": 13
+   },
+   "already_resolved_by_final_verification": 5,
+   "applied": 35,
+   "rejected": 0,
+   "confirming_review": {
+    "major": 1,
+    "nit": 4,
+    "applied": 5
+   }
+  },
+  "findings": [
+   {
+    "id": "G5-12",
+    "severity": "nit",
+    "where": "source scope, application-secrecy section",
+    "finding": "no later-mode pointer",
+    "resolution": "applied: a 'Later mode' paragraph pointing to CE-APP-L at rows 169-172 (its module documentation's assignment), with its per-target bound"
+   },
+   {
+    "id": "G6-1",
+    "severity": "not recorded in the notes",
+    "where": "source scope, SSX-b2s production",
+    "finding": "production D-ct forms of the LOR family missing; ctGapTerm marked explicit only on the Classical group",
+    "resolution": "applied: six PqxdhDeploymentProductionHeadlinesDct forms split by closure (three fully closed, three keeping ctCollTerm); ctGapTerm marked in the symbolic forms of PqxdhDeploymentProductionHeadlines too"
+   },
+   {
+    "id": "G6-2",
+    "severity": "not recorded in the notes",
+    "where": "source scope, later LOR paragraph (and row 173)",
+    "finding": "'except the _dct ones' with no pointer to PqxdhDeploymentProductionHeadlinesDct (eight later forms)",
+    "resolution": "applied (same as G8-1)"
+   },
+   {
+    "id": "G6-3",
+    "severity": "not recorded in the notes",
+    "where": "source scope, SSX-s2b conditions",
+    "finding": "symbolic eligibility (nbfFilter, LorEligPeerSym) not stated",
+    "resolution": "applied, with the premises of the difference form symbolic_lor_server ([A2], Phase read-back laws, budget)"
+   },
+   {
+    "id": "G6-4",
+    "severity": "not recorded in the notes",
+    "where": "source scope, SSX-b2s and SSX-s2b symbolic-only and eligibility",
+    "finding": "the NBF remainder of the symbolic LOR forms is whole-run NoBundleFailure, not per owner",
+    "resolution": "applied (nbfFilter_iff, LorEligSym; row 167 too)"
+   },
+   {
+    "id": "G6-5",
+    "severity": "not recorded in the notes",
+    "where": "analysis, eligibility paragraph (and symbolic-only list)",
+    "finding": "per-Beacon NBF wording wrong for the LOR corollaries",
+    "resolution": "applied; the guide's not-claimed bullet too (also PROSE-4)"
+   },
+   {
+    "id": "G6-6",
+    "severity": "not recorded in the notes",
+    "where": "this receipt, row 3192 production_central",
+    "finding": "stale (no production D-ct forms)",
+    "resolution": "after-state in final_verification_follow_up.rows_production_after; rows kept historical"
+   },
+   {
+    "id": "G6-7",
+    "severity": "nit",
+    "where": "guide, SSX simulation remark",
+    "finding": "'which SameSession admission enforces' overstates admission: eligibility needs every admitted test to designate the same target on the final transcript",
+    "resolution": "applied (LorElig, SameSession)"
+   },
+   {
+    "id": "G6-8",
+    "severity": "nit",
+    "where": "source scope, SSX-b2s theorems",
+    "finding": "frozen-form list incomplete (CtClosed and Gated sources, other D-ct forms)",
+    "resolution": "applied"
+   },
+   {
+    "id": "G6-9",
+    "severity": "nit",
+    "where": "analysis, production composition 'What is not claimed'",
+    "finding": "stale 'will follow'",
+    "resolution": "already resolved by the final_verification step (04e69545)"
+   },
+   {
+    "id": "G7-1",
+    "severity": "minor",
+    "where": "source scope, b2s-UKSr production",
+    "finding": "production D-ct forms and ce_uks_sender_target_billed missing",
+    "resolution": "applied: four PqxdhDeploymentProductionHeadlinesDct forms split by closure and PqxdhDeploymentProductionHeadlines.ce_uks_sender_target_billed"
+   },
+   {
+    "id": "G7-2",
+    "severity": "minor",
+    "where": "this receipt, row 638 production_central",
+    "finding": "same as G7-1",
+    "resolution": "after-state in final_verification_follow_up.rows_production_after"
+   },
+   {
+    "id": "G7-3",
+    "severity": "nit",
+    "where": "source scope, b2s-UKSr receiver parenthetical",
+    "finding": "narrower than UksReceiverAt (only the CEPartners pair is excepted; the receiving peer as sender counts)",
+    "resolution": "applied"
+   },
+   {
+    "id": "G7-4",
+    "severity": "nit",
+    "where": "analysis, unknown-key-share bullet",
+    "finding": "'the Server peer built for that Beacon's identity' wrong (the counterpart is the linked session's peer; symbolic counterparts may be several)",
+    "resolution": "applied"
+   },
+   {
+    "id": "G7-5",
+    "severity": "nit",
+    "where": "analysis, production composition 'What is not claimed'",
+    "finding": "stale 'will follow'",
+    "resolution": "already resolved by the final_verification step (04e69545)"
+   },
+   {
+    "id": "G7-6",
+    "severity": "nit",
+    "where": "source scope, b2s-UKSr symbolic-only",
+    "finding": "same-seed Server objects (CE-M) missing",
+    "resolution": "applied (FsRecordsB2sMainAnyPin, fs-records-b2s.pvl:392-401)"
+   },
+   {
+    "id": "G8-1",
+    "severity": "major",
+    "where": "source scope, later LOR paragraph and row 173 production",
+    "finding": "'except the _dct ones' stale; row 173 lacks symbolic_lor_later_bound_closed_billed_dct_full",
+    "resolution": "applied"
+   },
+   {
+    "id": "G8-2",
+    "severity": "minor",
+    "where": "source scope, rows 169-172 production",
+    "finding": "production D-ct forms of the cited later CE-APP theorems missing",
+    "resolution": "applied (six forms)"
+   },
+   {
+    "id": "G8-3",
+    "severity": "minor",
+    "where": "source scope, rows 169-172 conditions",
+    "finding": "[A1]/[A2] of the symbolic forms not stated",
+    "resolution": "applied"
+   },
+   {
+    "id": "G8-4",
+    "severity": "minor",
+    "where": "source scope, later LOR paragraph and row 173",
+    "finding": "no conditions or bound for CE-LOR-L",
+    "resolution": "applied from PqxdhDeploymentLaterHeadlineLor.ce_lor_later and the closed later _dct forms (eps_inj and eps_ctcoll independent of the adversary)"
+   },
+   {
+    "id": "G8-5",
+    "severity": "minor",
+    "where": "source scope, row 167",
+    "finding": "no conditions, bound or production pointer",
+    "resolution": "applied ('as SSX-b2s')"
+   },
+   {
+    "id": "G8-6",
+    "severity": "minor",
+    "where": "source scope, CE-KT-L production",
+    "finding": "ce_kt_beacon_later_sym_dct and ce_kt_later_sym_dct production forms missing",
+    "resolution": "applied"
+   },
+   {
+    "id": "G8-7",
+    "severity": "minor",
+    "where": "source scope, CE-KT-L remark",
+    "finding": "'the qHmac2 term' imprecise",
+    "resolution": "applied: the R1 guessing term (qAccept + qFinish + qHmac + qHmac2)/2^256 of slotLossL_g (slotLossL_eq)"
+   },
+   {
+    "id": "G8-8",
+    "severity": "minor",
+    "where": "this receipt, rows 169, 172 and 173 production_central",
+    "finding": "production D-ct forms missing",
+    "resolution": "after-state in final_verification_follow_up.rows_production_after"
+   },
+   {
+    "id": "G8-9",
+    "severity": "nit",
+    "where": "source scope, live rows",
+    "finding": "later reductions (laterCtxReduction, laterPrivReduction in later_record_lift, recLossL_g) not named",
+    "resolution": "applied"
+   },
+   {
+    "id": "G8-10",
+    "severity": "nit",
+    "where": "source scope, row 167 (173 inherits)",
+    "finding": "CE's test admits only equal-length nonempty pairs; the symbolic choice is between fixed names",
+    "resolution": "applied"
+   },
+   {
+    "id": "G8-11",
+    "severity": "nit",
+    "where": "source scope, rows 166 and 167",
+    "finding": "unqualified theorem names",
+    "resolution": "applied (row 173 too)"
+   },
+   {
+    "id": "PROSE-1",
+    "severity": "not recorded in the notes",
+    "where": "analysis 5656",
+    "finding": "stale 'will follow'",
+    "resolution": "already resolved by the final_verification step (04e69545)"
+   },
+   {
+    "id": "PROSE-2",
+    "severity": "not recorded in the notes",
+    "where": "analysis, production composition (first paragraph)",
+    "finding": "'every published headline form of CE-12' overstates the 129 forms",
+    "resolution": "applied: the forms published before D-ct that bound a probability of the experiment"
+   },
+   {
+    "id": "PROSE-3",
+    "severity": "not recorded in the notes",
+    "where": "analysis registration bullet; CE-A2 elsewhere",
+    "finding": "CE-A2 'on every run'",
+    "resolution": "the analysis bullet was fixed by G4-8; the remaining places (source scope A2-provenance and A2 rows, guide rows table and not-claimed bullet, analysis eligibility paragraph) now say 'with no bundle condition'; R1 and C3 keep 'on every run'"
+   },
+   {
+    "id": "PROSE-4",
+    "severity": "not recorded in the notes",
+    "where": "analysis eligibility paragraph; guide not-claimed bullet",
+    "finding": "run-wide NBF of the symbolic LOR forms",
+    "resolution": "applied (with G6-5)"
+   },
+   {
+    "id": "PROSE-5",
+    "severity": "not recorded in the notes",
+    "where": "analysis, CE-13 section basis",
+    "finding": "basis named only 529e2c8b",
+    "resolution": "applied: names a2665670, 8f4c055d and the re-verification"
+   },
+   {
+    "id": "PROSE-6",
+    "severity": "not recorded in the notes",
+    "where": "analysis, 'For the production code'",
+    "finding": "list of statements without production form incomplete or ambiguous",
+    "resolution": "applied: bills-only statements; record-world anomaly_beta with its billed form, agreement facts and ctgap_world"
+   },
+   {
+    "id": "PROSE-7",
+    "severity": "not recorded in the notes",
+    "where": "guide terms (eps_inj); composition assumptions",
+    "finding": "'zero-query collider' unexplained",
+    "resolution": "applied: the reduction PqxdhDeploymentServerAuthInjective.collider is named with its queries (no signing or static-DH query, uniform seed bytes only); the guide adds that eps_inj does not depend on the adversary"
+   },
+   {
+    "id": "PROSE-8",
+    "severity": "not recorded in the notes",
+    "where": "guide name index",
+    "finding": "injective_bound missing",
+    "resolution": "already resolved by the final_verification step (04e69545)"
+   },
+   {
+    "id": "PROSE-9",
+    "severity": "not recorded in the notes",
+    "where": "guide, section 'Integration merge'",
+    "finding": "'42 of 45': ctCollTerm_source does not carry ctGapTerm",
+    "resolution": "applied: 42 of 44; this receipt's production_dct.coverage_check corrected in corrections_of_this_receipt"
+   },
+   {
+    "id": "PROSE-10",
+    "severity": "not recorded in the notes",
+    "where": "trusted-boundary inventory, codec contracts",
+    "finding": "ReadWritable attributed to plan section 19",
+    "resolution": "applied: it is the named message-model premise of the first-record modules (PqxdhFirstBeaconRecordCanonical)"
+   },
+   {
+    "id": "PROSE-11",
+    "severity": "not recorded in the notes",
+    "where": "trusted-boundary inventory, other contracts",
+    "finding": "prefixConsistent missing",
+    "resolution": "applied"
+   },
+   {
+    "id": "PROSE-12",
+    "severity": "not recorded in the notes",
+    "where": "composition assumptions, CE-13 basis",
+    "finding": "registration production forms not mentioned",
+    "resolution": "already resolved by the final_verification step (04e69545)"
+   },
+   {
+    "id": "PROSE-13",
+    "severity": "not recorded in the notes",
+    "where": "production-headlines guide, 'Not claimed'",
+    "finding": "closure of ctGapTerm at the production instance listed as not claimed",
+    "resolution": "applied: the follow-up note says the D-ct follow-up closed it (production ctgap_term_le)"
+   }
+  ],
+  "rows_production_after": {
+   "3192 SSX-b2s": "PqxdhDeploymentProductionHeadlines.ce_lor_billed, ce_lor_target_billed, symbolic_lor_bound_billed, symbolic_lor_closed, symbolic_lor_bound_closed, symbolic_lor_bound_closed_billed (ctGapTerm explicit in the symbolic ones); PqxdhDeploymentProductionHeadlinesClassical.ce_lor, ce_lor_target, symbolic_lor, symbolic_lor_bound (ctGapTerm explicit in the symbolic ones); PqxdhDeploymentProductionHeadlinesDct.symbolic_lor_bound_closed_billed_dct, symbolic_lor_closed_dct, symbolic_lor_bound_closed_dct (fully closed), symbolic_lor_bound_billed_dct, symbolic_lor_dct, symbolic_lor_bound_dct (epsCt; ctCollTerm explicit)",
+   "3155 SS-b2s": "as SSX-b2s",
+   "638 b2s-UKSr": "PqxdhDeploymentProductionHeadlinesClassical.ce_uks_b2s, ce_uks_b2s_target, ce_uks_sender, ce_uks_sender_target, ce_uks_sym; PqxdhDeploymentProductionHeadlines.ce_uks_sender_billed, ce_uks_sender_target_billed, ce_uks_sym_billed, ce_uks_sym_closed, ce_uks_sym_closed_billed (ctGapTerm explicit in the symbolic ones); PqxdhDeploymentProductionHeadlinesDct.ce_uks_sym_closed_billed_dct, ce_uks_sym_closed_dct (fully closed), ce_uks_sym_billed_dct, ce_uks_sym_dct (epsCt; ctCollTerm explicit)",
+   "166 passive-classical 5": "as App-b2s",
+   "167 passive-classical-equivalence": "as SSX-b2s",
+   "169 passive-quantum 2 (170, 171 as 169)": "PqxdhDeploymentProductionHeadlinesLater.ce_app_server_later, ce_app_server_later_target, ce_app_server_later_sym (fully closed); either side PqxdhDeploymentProductionHeadlinesLater.ce_app_later_sym, ce_app_later_sym_billed (ctGapTerm explicit) and PqxdhDeploymentProductionHeadlinesDct.ce_app_later_sym_billed_dct_full, ce_app_later_sym_billed_dct, ce_app_later_sym_dct (fully closed)",
+   "172 passive-quantum 5": "PqxdhDeploymentProductionHeadlinesLater.ce_app_later_billed, ce_app_later_target_billed, ce_app_later, ce_app_later_target, ce_app_beacon_later_sym_billed, ce_app_beacon_later_sym (ctGapTerm explicit); PqxdhDeploymentProductionHeadlinesDct.ce_app_beacon_later_sym_billed_dct_full, ce_app_beacon_later_sym_billed_dct, ce_app_beacon_later_sym_dct (fully closed); either side as 169",
+   "173 passive-quantum-equivalence": "PqxdhDeploymentProductionHeadlinesLater.ce_lor_later_billed, symbolic_lor_later_bound_closed_billed (ctGapTerm explicit), ce_lor_server_later, symbolic_lor_server_later_bound and the other later LOR forms; PqxdhDeploymentProductionHeadlinesDct.symbolic_lor_later_bound_closed_billed_dct_full and the other seven later LOR _dct forms (four fully closed, four keeping ctCollTerm)",
+   "168-173 ce_kt_l": "PqxdhDeploymentProductionHeadlinesLater.ce_kt_later, ce_kt_later_close, ce_kt_later_sum_le, ce_kt_later_sum, ce_kt_later_world, ce_kt_later_world_close, ce_kt_later_world_sum, ce_kt_server_later_sym (fully closed), ce_kt_beacon_later_sym, ce_kt_later_sym (ctGapTerm explicit); PqxdhDeploymentProductionHeadlinesDct.ce_kt_beacon_later_sym_dct, ce_kt_later_sym_dct (epsCt; the later ideal game's probability stays on the right)"
+  },
+  "rows_note": "the rows[] array, follow_ups and final_verification keep their recorded values; this map gives the cells after this record",
+  "corrections_of_this_receipt": {
+   "production_dct.coverage_check": "44 published production forms carry ctGapTerm (ctCollTerm_source does not); 42 have a production _dct sibling, the exceptions are beacon_gap_le and ctGapTerm_source; every production _dct form has such a base (the recorded value said 45 and 42 of 45)"
+  },
+  "lean_probe": {
+   "command": "coord.sh lean claude ce13-final-followup-probe -- env LEAN_PATH=<published LEAN_PATH of 8f4c055d> timeout 180 lean -j1 -M8000 Probe.lean (Lean 4.34.0)",
+   "exit": 0,
+   "printed_axiom_guards": 44,
+   "axioms": "propext, Classical.choice, Quot.sound only",
+   "checked_definitions": 12,
+   "names": "the 26 production _dct forms newly cited and ctgap_term_le (PqxdhDeploymentProductionHeadlinesDct), PqxdhDeploymentProductionHeadlines.ce_uks_sender_target_billed, the frozen CtClosed/Gated/DctClosed/DctClosedP2b LOR sources, nbfFilter_iff, slotLossL_eq, ce_lor_server_later, symbolic_lor_server_later_bound, symbolic_lor_later_bound_closed_billed_dct_full, later_record_lift, ctgap_world, anomaly_beta; #check of LorEligSym, LorEligPeerSym, nbfFilter, CEPartners, LorElig, SameSession, Admissible, laterCtxReduction, laterPrivReduction, collider, ReadWritable, injTerm"
+  },
+  "name_check": {
+   "method": "every backticked Module.name in the added lines of the diff resolved against the declarations of beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/*.lean at central 8f4c055d",
+   "qualified_names_checked": 77,
+   "unresolved": []
+  },
+  "documents_edits": {
+   "source_scope": "computational column: A1 group (L2 for s2b-A1 and b2s-A1 only), A2-provenance and A2 group status (CE-A2 with no bundle condition), new later-mode paragraph of the application-secrecy section, SSX-b2s (theorems, eligibility, production, symbolic-only), SSX-s2b (eligibility and conditions), later LOR paragraph (conditions, bound, production), b2s-UKSr (receiver event, production, symbolic-only), rows 166, 167, 169-172, 173, CE-KT-L, live rows",
+   "guide": "status paragraph, terms (beta_g, eps_inj), rows table (provenance and replay), SSX remark, not-claimed list (one bullet), 'Integration merge' (count 42 of 44), 'CE-13: final verification' (one sentence, item 4, new subsection 'Follow-up: the other three row groups, the prose pass and the confirming review')",
+   "analysis": "production composition (first paragraph, scope of the 129 forms); CE-13 section: basis, unknown-key-share bullet, eligibility paragraph, 'For the production code' (no-production list), symbolic-only list, 'How the map was checked'",
+   "composition_assumptions": "symbolic-eligibility bullet (the collision reduction of eps_inj)",
+   "trusted_boundary": "section 'Common deployment experiment: codec contracts and reveal profile': ReadWritable not a section 19 law; prefixConsistent in the contract list",
+   "reviewed_inventory": "digest of proofs/trusted-boundary.md rehashed",
+   "production_headlines": "'What the production forms say, and what they do not': the follow-up note on the closure of ctGapTerm",
+   "plan_snapshot": "wholesale refresh through working-plan section 127 (this follow-up); header names the copied SHA-256 and the decision sections 19 to 127"
+  },
+  "documents_sha256_after": {
+   "guide": "38204279a1f1048afec477485de675a9d27ba0a26006cacc850931e466cdbf44",
+   "source_scope": "d95245aa9106027594cf52246b1f29e66c66b9daba8f68ed4882063c45d42bce",
+   "composition_assumptions": "db9de28a4939615cead787fb8e94b6a4a976ec4974827d643857d03dea3848ec",
+   "analysis": "a7f9b93328d4e6ad26aa9aff3c1c61cc188f1a009a5b3c6910e5e301e07b3326",
+   "plan_snapshot": "9564ba7a277a6d4637dc7cdbdc6a0f9376facc888bcbb6f3ac4a5cb9b820ff36",
+   "trusted_boundary": "32b5935d4eeab8d8cd40db24c8ce44a6cbee43dc29daf53a07129386f6ea1a9c",
+   "reviewed_inventory": "dff25d2c87f1969f1613ed1d1af5bb777c8923289c77136b57c8f4745fcd4a55",
+   "production_headlines": "e94b1eee5e37e6dddedacace7111987e3315af96c589b4d8dda545e1a63c2e69"
+  },
+  "plan": {
+   "working_plan_sha256": "802c83526d839f944eb0bcaa84e4087b9f649aa2e87927a72c34ae33204043de",
+   "sections_through": 127,
+   "new_sections": [
+    127
+   ],
+   "snapshot_body_equals_working_plan": true
+  },
+  "inventory": "proofs/trusted-boundary.md changed: coord.sh inv rehash (digest 346f1f0f... -> 32b5935d...), coord.sh inv recount unchanged, make check-inventory in the proof flake (coord.sh lease mem @nix) exit 0",
+  "checks": [
+   "git diff --check (clean)",
+   "name check (77 qualified names, none unresolved)",
+   "Lean probe exit 0",
+   "check-inventory exit 0",
+   "snapshot body equal to the working plan through section 127",
+   "document hashes recomputed from the committed files"
+  ],
+  "not_run": [
+   "make verify",
+   "full lake build",
+   "mutation testing",
+   "nix-collect-garbage",
+   "transcript-fidelity cargo tests (no ProVerif, Rust or fidelity input changed)"
+  ],
+  "lean_change": "none"
  }
 }
