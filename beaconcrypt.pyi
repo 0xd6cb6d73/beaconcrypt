@@ -1,5 +1,51 @@
 from collections.abc import Sequence
-from typing import final
+from typing import Literal, Protocol, final
+
+class PersistenceError(ValueError):
+    """Persistence failure; callback exceptions are preserved as __cause__."""
+
+    code: Literal[
+        "missing_snapshot",
+        "invalid_snapshot",
+        "non_canonical_snapshot",
+        "stale_generation",
+        "generation_exhausted",
+        "encoding",
+        "output_encoding",
+        "initialization",
+        "digest",
+        "poisoned",
+    ]
+
+@final
+class SnapshotHead:
+    def __new__(
+        cls, lineage: bytes, generation: int, digest: bytes
+    ) -> SnapshotHead: ...
+    @property
+    def lineage(self) -> bytes: ...
+    @property
+    def generation(self) -> int: ...
+    @property
+    def digest(self) -> bytes: ...
+    def __hash__(self) -> int: ...
+    def __eq__(self, other: object) -> bool: ...
+
+class _SnapshotStore(Protocol):
+    """Trusted durable, linearizable, rollback-resistant storage; callbacks cannot reenter the same server."""
+
+    def load(self) -> bytes | None: ...
+    def compare_and_swap(
+        self, expected: SnapshotHead | None, replacement: bytes
+    ) -> bool: ...
+
+def snapshot_head(data: Sequence[int]) -> SnapshotHead:
+    """Parse an envelope head without authenticating its provenance."""
+
+def validate_snapshot_successor(
+    data: Sequence[int], expected: SnapshotHead | None = None
+) -> SnapshotHead:
+    """Validate envelope succession inside the store's atomic comparison transaction."""
 
 @final
 class BeaconCryptBeacon:
@@ -21,9 +67,26 @@ class BeaconCryptBeacon:
 
 @final
 class BeaconCryptServer:
-    def __new__(cls, /, kid: int, id_seed: bytes | None) -> BeaconCryptServer:
-        """Raise ValueError on a bad seed length or reported initialization/key-generation failure."""
+    """Protocol rejection returns None; persistence failures raise PersistenceError and failed commits poison the owner."""
 
+    def __new__(cls, /, kid: int, id_seed: bytes | None) -> BeaconCryptServer:
+        """Create an in-memory checkpoint owner; persistence failures raise PersistenceError."""
+
+    @staticmethod
+    def create_with_store(
+        kid: int,
+        id_seed: bytes | None,
+        store: _SnapshotStore,
+        lineage: bytes | None = None,
+    ) -> BeaconCryptServer:
+        """Create and durably commit generation zero before returning; store callbacks cannot reenter this server."""
+
+    @staticmethod
+    def restore(store: _SnapshotStore) -> BeaconCryptServer:
+        """Validate and activate the current trusted snapshot by compare-and-swap before returning."""
+
+    def head(self) -> SnapshotHead: ...
+    def is_poisoned(self) -> bool: ...
     def decrypt_and_update(self, /, data: Sequence[int]) -> EncryptState | None: ...
     def decrypt_and_update_json(self, /, data: Sequence[int]) -> str | None: ...
     def decrypt_beacon_message(self, /, data: Sequence[int]) -> bytes | None: ...
@@ -36,9 +99,9 @@ class BeaconCryptServer:
     def encrypt_to_beacon(self, /, data: Sequence[int], kid: int) -> bytes | None: ...
     def export_state(self, /) -> bytes:
         """
-        Export the current plaintext checkpoint.
+        Read this owner's committed plaintext checkpoint from its trusted store.
 
-        Save it immediately after every accepted receive or other state-changing call and before using that call's output. A normal rejected receive leaves the checkpoint unchanged.
+        With the default in-memory store, save after every potentially mutating call, including failures, and before using its output. Rejected receives leave the checkpoint unchanged. Persistence failures raise PersistenceError rather than returning None.
         """
 
     @staticmethod

@@ -94,5 +94,8 @@ mod pybinds;
 #[pyo3::pymodule]
 mod beaconcrypt {
 	#[pymodule_export]
-	use crate::pybinds::{Beacon, EncryptStatePy, RegResponsePy, Server};
+	use crate::pybinds::{
+		Beacon, EncryptStatePy, PersistenceError, RegResponsePy, Server, SnapshotHeadPy,
+		snapshot_head, validate_snapshot_successor,
+	};
 }

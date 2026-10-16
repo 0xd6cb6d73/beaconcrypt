@@ -30,3 +30,9 @@ jobs:
       run: cargo check -p beaconcrypt --no-default-features --features pqxdh,beacon --lib
     - name: Run tests
       run: cargo test --verbose --workspace
+    - name: Test C persistence callbacks
+      run: |
+        cargo test -p beaconcrypt --features cbinds --lib --locked
+        cargo build -p beaconcrypt --features cbinds --locked
+        cc -std=c11 -Wall -Wextra -Werror -Ibeaconcrypt beaconcrypt/tests/c_persistence.c -Ltarget/debug -lbeaconcrypt -Wl,-rpath,"$PWD/target/debug" -o target/c-persistence
+        target/c-persistence

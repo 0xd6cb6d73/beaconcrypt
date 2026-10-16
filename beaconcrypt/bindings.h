@@ -46,6 +46,32 @@
 
 #define beaconcrypt_ED25519_SEED_SIZE 32
 
+#define beaconcrypt_STATUS_OK 0
+
+#define beaconcrypt_STATUS_REJECTED 1
+
+#define beaconcrypt_STATUS_INVALID_ARGUMENT 2
+
+#define beaconcrypt_STATUS_MISSING_SNAPSHOT 3
+
+#define beaconcrypt_STATUS_INVALID_SNAPSHOT 4
+
+#define beaconcrypt_STATUS_NON_CANONICAL_SNAPSHOT 5
+
+#define beaconcrypt_STATUS_STALE_GENERATION 6
+
+#define beaconcrypt_STATUS_GENERATION_EXHAUSTED 7
+
+#define beaconcrypt_STATUS_ENCODING 8
+
+#define beaconcrypt_STATUS_OUTPUT_ENCODING 9
+
+#define beaconcrypt_STATUS_INITIALIZATION 10
+
+#define beaconcrypt_STATUS_DIGEST 11
+
+#define beaconcrypt_STATUS_POISONED 12
+
 /**
  * Opaque beacon handle exposed by the C API and owned by its caller.
  */
@@ -53,6 +79,11 @@ typedef struct beaconcrypt_Beacon beaconcrypt_Beacon;
 
 /**
  * Opaque server handle owned by the C caller.
+ *
+ * Callers must serialize all access to one handle, including queries and destruction. Store callbacks must not reenter their owning handle.
+ */
+/**
+ * Server backed by trusted snapshot storage. Store callbacks must not reenter this server.
  */
 typedef struct beaconcrypt_Server beaconcrypt_Server;
 
@@ -75,6 +106,32 @@ typedef struct beaconcrypt_Buffer {
    */
   uintptr_t cap;
 } beaconcrypt_Buffer;
+
+/**
+ * Non-secret identity of one complete server snapshot. Its digest is not an authenticator.
+ */
+typedef struct beaconcrypt_SnapshotHeadInfo {
+  uint8_t lineage[32];
+  uint64_t generation;
+  uint8_t digest[32];
+} beaconcrypt_SnapshotHeadInfo;
+
+/**
+ * Trusted, rollback-resistant, linearizable durable storage for one server lineage.
+ *
+ * `load` returns false without calling `sink` for an empty store. Otherwise it calls `sink` synchronously exactly once with nonempty borrowed snapshot bytes and returns true; Rust copies the bytes before `sink` returns. `compare_and_swap` compares the complete current head against `expected` (null means an empty store), validates the successor, and durably stores the exact replacement bytes and head before returning true. The store must protect integrity, provenance and freshness; snapshot bytes and digests do not authenticate themselves.
+ *
+ * Constructors take ownership of `context` immediately, including on failure. `destroy`, when supplied, runs exactly once after the final callback; otherwise the caller manages the context lifetime. All callbacks and borrowed arguments remain valid until they return, must not unwind, retain borrowed pointers, call the sink after `load` returns, or reenter the owning handle. The caller serializes access to the handle and store.
+ */
+typedef struct beaconcrypt_SnapshotStoreCallbacks {
+  void *context;
+  bool (*load)(void *context, void *sink_context, void (*sink)(void*, const uint8_t*, uintptr_t));
+  bool (*compare_and_swap)(void *context,
+                           const struct beaconcrypt_SnapshotHeadInfo *expected,
+                           const uint8_t *replacement,
+                           uintptr_t replacement_len);
+  void (*destroy)(void *context);
+} beaconcrypt_SnapshotStoreCallbacks;
 
 /**
  * Result returned after a successful server-side beacon registration.
@@ -144,6 +201,72 @@ struct beaconcrypt_Server *beaconcrypt_server_new(uint64_t server_kid);
 struct beaconcrypt_Server *beaconcrypt_server_new_from_seed(uint64_t server_kid,
                                                             const uint8_t *seed_ptr,
                                                             uintptr_t seed_len);
+
+/**
+ * Create a server whose results are released only after the store's durable compare-and-swap succeeds.
+ *
+ * The callbacks take ownership of their context even when construction fails. A null seed or zero seed length selects a random identity. `status_out` may be null; otherwise it receives a `beaconcrypt_STATUS_*` code. Returns null on failure.
+ */
+struct beaconcrypt_Server *beaconcrypt_server_create_with_store(uint64_t server_kid,
+                                                                const uint8_t *seed_ptr,
+                                                                uintptr_t seed_len,
+                                                                struct beaconcrypt_SnapshotStoreCallbacks callbacks,
+                                                                uint32_t *status_out);
+
+/**
+ * Create a durable server under a caller-provisioned 32-byte lineage.
+ *
+ * Allocate each lineage to exactly one rollback-resistant authoritative store head. Callback context ownership and `status_out` follow `beaconcrypt_server_create_with_store`.
+ */
+struct beaconcrypt_Server *beaconcrypt_server_create_with_store_and_lineage(uint64_t server_kid,
+                                                                            const uint8_t *seed_ptr,
+                                                                            uintptr_t seed_len,
+                                                                            struct beaconcrypt_SnapshotStoreCallbacks callbacks,
+                                                                            const uint8_t *lineage_ptr,
+                                                                            uintptr_t lineage_len,
+                                                                            uint32_t *status_out);
+
+/**
+ * Restore the trusted current snapshot and durably claim its next generation before returning a live owner.
+ *
+ * Callback context ownership and `status_out` follow `beaconcrypt_server_create_with_store`. The store must protect snapshot integrity, provenance and freshness and coordinate concurrent owners.
+ */
+struct beaconcrypt_Server *beaconcrypt_server_restore_with_store(struct beaconcrypt_SnapshotStoreCallbacks callbacks,
+                                                                 uint32_t *status_out);
+
+/**
+ * Read the owner's current non-secret snapshot head. Returns a status code without changing the last operation's status.
+ */
+uint32_t beaconcrypt_server_head(const struct beaconcrypt_Server *handle,
+                                 struct beaconcrypt_SnapshotHeadInfo *out);
+
+/**
+ * Query whether a failed commit has fenced this owner. Returns false for null and preserves the last operation's status.
+ */
+bool beaconcrypt_server_is_poisoned(const struct beaconcrypt_Server *handle);
+
+/**
+ * Return the last server operation's status, or `beaconcrypt_STATUS_INVALID_ARGUMENT` for null.
+ * Head, identity and poison-state queries preserve this value; checkpoint export records its own status.
+ */
+uint32_t beaconcrypt_server_last_status(const struct beaconcrypt_Server *handle);
+
+/**
+ * Parse a snapshot envelope and compute its exact-byte head. This does not authenticate bytes or establish freshness.
+ */
+uint32_t beaconcrypt_snapshot_head(const uint8_t *bytes,
+                                   uintptr_t len,
+                                   struct beaconcrypt_SnapshotHeadInfo *out);
+
+/**
+ * Check a snapshot's lineage, next generation and exact parent digest against `expected` (null for an empty store).
+ *
+ * This does not authenticate bytes or make the store atomic. A store must perform this check together with comparison against its trusted current head inside its durable compare-and-swap transaction.
+ */
+uint32_t beaconcrypt_snapshot_validate_successor(const uint8_t *bytes,
+                                                 uintptr_t len,
+                                                 const struct beaconcrypt_SnapshotHeadInfo *expected,
+                                                 struct beaconcrypt_SnapshotHeadInfo *out);
 
 /**
  * Restore a server from trusted checkpoint bytes.

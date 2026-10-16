@@ -48,6 +48,20 @@ pub struct SnapshotHead {
 }
 
 impl SnapshotHead {
+	/// Reconstruct a store's trusted comparison value without authenticating its provenance.
+	/// Callers must obtain these fields from their authoritative storage domain.
+	pub const fn from_parts(
+		lineage: SnapshotLineage,
+		generation: u64,
+		digest: [u8; DIGEST_SIZE],
+	) -> Self {
+		Self {
+			lineage,
+			generation,
+			digest,
+		}
+	}
+
 	pub const fn lineage(self) -> SnapshotLineage {
 		self.lineage
 	}
@@ -255,13 +269,26 @@ pub trait SnapshotStore {
 	) -> bool;
 }
 
-/// In-memory checkpoint storage used by language bindings that cannot supply a Rust
-/// [`SnapshotStore`] implementation.
+impl<S: SnapshotStore + ?Sized> SnapshotStore for Box<S> {
+	fn load(&self) -> Option<ServerSnapshot> {
+		(**self).load()
+	}
+
+	fn compare_and_swap(
+		&mut self,
+		expected: Option<&SnapshotHead>,
+		replacement: &ServerSnapshot,
+	) -> bool {
+		(**self).compare_and_swap(expected, replacement)
+	}
+}
+
+/// In-memory storage for compatibility constructors that export checkpoints for manual saving.
 ///
 /// Importing bytes into this store explicitly trusts them as the current authoritative state.
 /// It provides in-process CAS fencing, but exporting its bytes is not a durable commit and cannot
-/// detect rollback to an older exported checkpoint. Production Rust deployments that need crash
-/// durability or multi-owner coordination must provide their own conforming [`SnapshotStore`].
+/// detect rollback to an older exported checkpoint. Deployments that need crash durability or
+/// coordination between owners must supply a conforming [`SnapshotStore`] through their language's store-backed API.
 #[derive(Default)]
 #[cfg(any(feature = "cbinds", feature = "pybinds"))]
 pub(crate) struct BindingSnapshotStore {
@@ -278,10 +305,6 @@ impl BindingSnapshotStore {
 			snapshot: Some(Zeroizing::new(snapshot.as_bytes().to_vec())),
 			head: Some(head),
 		})
-	}
-
-	pub(crate) fn as_bytes(&self) -> Option<&[u8]> {
-		self.snapshot.as_deref().map(Vec::as_slice)
 	}
 }
 
@@ -387,6 +410,16 @@ impl<S: SnapshotStore> PersistentServer<S> {
 
 	pub const fn is_poisoned(&self) -> bool {
 		self.poisoned
+	}
+
+	/// Read the trusted store's committed snapshot only if it still belongs to this owner.
+	/// The returned bytes contain plaintext secrets and do not authenticate themselves.
+	pub fn snapshot(&self) -> Result<ServerSnapshot, PersistenceError> {
+		let snapshot = self.store.load().ok_or(PersistenceError::MissingSnapshot)?;
+		if snapshot.head()? != self.head {
+			return Err(PersistenceError::StaleGeneration);
+		}
+		Ok(snapshot)
 	}
 
 	pub fn identity_pk(&self) -> &libsodium_rs::crypto_sign::PublicKey {
@@ -559,30 +592,6 @@ impl<S: SnapshotStore> PersistentServer<S> {
 		self.head = successor_head;
 		self.poisoned = false;
 		Ok(output)
-	}
-}
-
-#[cfg(any(feature = "cbinds", feature = "pybinds"))]
-pub(crate) type BindingServer = PersistentServer<BindingSnapshotStore>;
-
-#[cfg(any(feature = "cbinds", feature = "pybinds"))]
-impl PersistentServer<BindingSnapshotStore> {
-	pub(crate) fn create_binding(
-		server_kid: u64,
-		id_seed: Option<&[u8]>,
-	) -> Result<Self, PersistenceError> {
-		Self::create(server_kid, id_seed, BindingSnapshotStore::default())
-	}
-
-	pub(crate) fn restore_binding(bytes: Vec<u8>) -> Result<Self, PersistenceError> {
-		Self::restore(BindingSnapshotStore::from_bytes(bytes)?)
-	}
-
-	pub(crate) fn export_binding_state(&self) -> Result<Vec<u8>, PersistenceError> {
-		self.store
-			.as_bytes()
-			.map(<[u8]>::to_vec)
-			.ok_or(PersistenceError::MissingSnapshot)
 	}
 }
 
