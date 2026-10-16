@@ -23,7 +23,7 @@ fails the test.
 BLAKE2b is used by the commitment construction, but Wycheproof does not
 currently publish BLAKE2b vectors. It is covered by the Rooterberg suite and
 the independent known-answer, context-binding and multi-opening tests in
-`src/shared.rs`.
+`beaconcrypt/src/shared.rs`.
 The protocol-specific use of all primitives is additionally covered by the
 registration, tampering, ratchet and end-to-end tests.
 

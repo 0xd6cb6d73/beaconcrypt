@@ -58,23 +58,36 @@ I don't use rust a lot, so the code is probably fairly naive. It provides both a
 
 The reference implementation expects that all beacons are compiled with the server's public key, and that beaconcrypt is initialized with it.
 
-The server is currently not very usable as it doesn't support saving the state of any individual beacon. This means that if your server goes down, you will not be able to communicate with any previously-registered beacons anymore. The server does support being initialized with an Ed25519 seed (32 random bytes). Users wishing to use the server in practical cases should use this interface to ensure their server keeps its identity across reboots.
+The Rust API supports durable full-server state through `PersistentServer` and a caller-supplied `SnapshotStore`. Snapshots contain plaintext secrets and are not self-authenticating; the store must protect their integrity and provenance, maintain one rollback-resistant authoritative head, and implement linearizable durable compare-and-swap. Accepted receives and other state-changing results are committed before release, while a normally rejected receive preserves the complete state and performs no snapshot encoding or compare-and-swap. C, Go, and Python expose trusted-checkpoint export and restoration for single-owner applications. Save those checkpoints immediately after every state-changing operation; standalone checkpoint files cannot detect rollback. See [server-state persistence](doc/persistence.md) and the runnable examples for [Rust](beaconcrypt/examples/rust/main.rs), [Python](examples/python/main.py), [C](examples/c/main.c), and [Go](examples/go/main.go).
 
 ## Building
 You will need [Capn'Proto](https://capnproto.org/install.html) (just the binaries) and a recent version of rust for every build.
+
+The repository is a Cargo workspace containing the public `beaconcrypt` adapter and the `no_std` `beaconcrypt-core` state machines.
 
 For windows, I prefer building with stable-gnu for normal usage, and nightly-gnu for release builds. You can find the exact arguments I use to the the static library as small as possible in [release.yml](/.github\workflows\release.yml). The MSVC toolchain is expected to work just as well, I just like mingw.
 
 Build and run all tests:
 ```bash
-cargo test
-cargo build --features gobinds --release --target x86_64-pc-windows-gnu
+cargo test --workspace
+cargo build -p beaconcrypt --features gobinds --release --target x86_64-pc-windows-gnu
 go test -a -count=1 .
 uv run maturin develop --uv
 uv run pytest tests
 ```
 
 The `-a` flag is required after rebuilding the Rust static library because Go's build cache does not detect changes to libraries linked through cgo. `-count=1` also prevents reuse of a cached successful test result.
+
+### Mutation testing
+
+Install `cargo-mutants` 27.1.0 and run the complete workspace mutation suite:
+
+```bash
+cargo install --locked cargo-mutants@27.1.0
+cargo mutants --workspace --jobs 8
+```
+
+The [configuration](.cargo/mutants.toml) exercises both crates through workspace tests and documents exclusions for equivalent private-state mutations and adapters covered by the Go and Python suites. After substantial code additions, every viable mutant must be caught; `mutants.out/missed.txt` and `mutants.out/timeout.txt` must be empty. Finish validation with a complete run without `--iterate`.
 
 ### Reproducing known-answer test vectors
 
@@ -126,11 +139,13 @@ matrix, upstream format caveats and update procedure.
 ## Usage
 The reference implementation is a library that can currently be used either from rust, through C FFI, go and python bindings. The C interface is currently only tested through the go bindings. Note that 0-length messages are explicitly disallowed by the reference implementation, as my feeling is that such messages have no purpose except testing parser edge cases. The library also doesn't handle chnking of any kind and will try to process entire messages at once in memory. It is expected that the caller should handle chunking itself if that is required.
 
-From Rust, usage is mostly just instantiating `CryptoProvider` objects. See the [example](examples/rust/main.rs) for usage.
+From Rust, usage is mostly just constructing role-specific `Server` and `Beacon` objects. See the [example](beaconcrypt/examples/rust/main.rs) for usage.
+
+Existing Rust callers must replace `BeaconCryptPqxdh` with the appropriate `Server` or `Beacon` type. C callers must use the matching `beaconcrypt_server_free` or `beaconcrypt_beacon_free` and role-specific identity functions; `beaconcrypt_export_state` is now `beaconcrypt_server_export_state`. Server checkpoints are binary snapshots: Go's `NewServerFromState` accepts `[]byte`, and Python's state export and restoration use `bytes` instead of JSON strings. See the persistence documentation for format compatibility and storage requirements.
 
 From python, you can just use the wheels published to pypi, see the [example](examples/python/main.py) for usage.
 
-The [C interface](src/cbinds.rs) emulates the class interface, the caller is responsible for providing a valid state object to every function. See the [example](examples/c/main.c) for usage.
+The [C interface](beaconcrypt/src/cbinds.rs) uses opaque role-specific handles; the caller is responsible for their lifetimes and for freeing returned buffers. See the [example](examples/c/main.c) for usage.
 
 Go is unfortunately the worst off as the bindings use cgo and therefore building your binary requires being able to link to a version of the library built with the `gobinds` feature. See the [example](examples/go/main.go) for usage.
 

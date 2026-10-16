@@ -8,7 +8,7 @@ then verify the resulting fixture in:
 
 * scripts/generate_kat_vectors.py (PyCryptodome)
 * scripts/generate_kat_vectors.go (golang.org/x/crypto)
-* src/shared.rs (libsodium-rs)
+* beaconcrypt/src/shared.rs (libsodium-rs)
 
 The accompanying algebra and verification procedure are documented in
 doc/multi-opening-fixture.md.
