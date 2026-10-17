@@ -428,6 +428,6 @@ O21 is integrated. The O21 modules are in central since `c6ee2307`; this guide's
 
 ## Owner decisions of 2026-10-17, second round
 
-Status (Claude, 2026-10-17): documentation only, on branch `codex/final-decisions-2026-10-17` over central `32300275`; not reviewed, not integrated. No Lean statement, assumption, contract, idealization or row status changes.
+Status (Claude, 2026-10-17): documentation only, on branch `codex/final-decisions-2026-10-17` over central `32300275`; independently reviewed at `8d0c1aa2` (APPROVE_WITH_NITS); a fix pass on the same branch, not reviewed again, applied its findings, except the correction of the status marks after integration, which waits for the integration; not integrated. No Lean statement, assumption, contract, idealization or row status changes.
 
 After the completion fixes, the owner took the remaining decisions (plan section 132). For O21, option R-a is accepted (section "O21: ten of the eleven session fields", last paragraph). The production forms rest on the reviewed transcriptions RT-01 to RT-20 of [the PB-E ledger](production-boundary-ledger.md) as their last link from the Rust adapter, which the owner accepted as that link without the proposed mechanical pins. The reading that the approval of `ReadWritable` for CE-A1 covers its instance at the production codec `codec′` is confirmed. No owner-optional follow-up is wanted for now: no CE-M, no CE-RG, no several test sessions for CE-LOR and no payload or assigned key ID agreement, so the statements that this guide marks as not claimed stay not claimed.
