@@ -2278,6 +2278,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentSessionFieldsInvariant
 import BeaconcryptCore.Computational.PqxdhDeploymentSessionFields
 import BeaconcryptCore.Computational.PqxdhDeploymentSessionAgreement
 
+import BeaconcryptCore.Computational.PqxdhDeploymentProductionSessionAgreement
+
 /-!
 # Beaconcrypt-core verification root
 
