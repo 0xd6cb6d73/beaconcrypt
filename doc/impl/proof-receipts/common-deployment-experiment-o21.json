@@ -532,5 +532,13 @@
   ],
   "lean_change": "documentation only: module and declaration documentation of PqxdhDeploymentSessionFieldsInvariant, PqxdhDeploymentSessionFields and PqxdhDeploymentSessionAgreement and one check-inventory.sh comment; no statement, proof, guard or import changed; PqxdhDeploymentProductionSessionAgreement and the root import are unchanged and their oleans are bit-identical to the build",
   "checks": "each module and the root import compile with empty logs through coord.sh lean at the clean Lean tip 16d35934 (module_check_at_clean_lean_tip, root_import_check_at_clean_lean_tip); hygiene scan ok (47 theorems, 47 exact guards); focused check-inventory exit 0 on the staged Lean change (inventory.review_fix) and on the staged documents; git diff --check clean"
+ },
+ "integration": {
+  "state": "integrated into central codex/full-proof-composition by fast-forward, d95dd6dd..c6ee2307, on 2026-10-17 (coordination intent message 542, integration message 543); the fields state and review.status above describe the documents commit c6ee2307 itself, before its integration",
+  "basis": "central d95dd6dd, an ancestor of the topic tip c6ee2307, so no merge commit",
+  "checks_on_tip": "the four modules and the root import BeaconcryptCore.lean through coord.sh lean (lean -j1 -M8000, timeout 180) into a fresh registered prefix mirroring the published d95dd6dd first prefix: each exit 0 with empty stdout and stderr, oleans byte-identical to those of the fix pass; guard and hygiene scan 47 of 47 theorems guarded, 0 bad guards, 0 forbidden tokens; coord.sh inv recount 1982 unchanged and inv rehash unchanged; all 2402 inventory digests recomputed with 0 mismatches; focused check-inventory exit 0; transcript fidelity exit 0 (python 20/20, cargo 30/30); git diff --check clean on d95dd6dd..c6ee2307",
+  "integration_script": "exit 0; HEAD = origin = ls-remote = c6ee2307; owner dirt preserved; LEAN_PATH of c6ee2307 published",
+  "confirming_review": "not run: the review fix pass (16d35934, c6ee2307) was integrated without a separate confirming review",
+  "recorded_by": "the completion fixes of 2026-10-17 (branch codex/completion-fixes-2026-10-17, plan section 131); this record is added after the fact and changes no other field of this receipt"
  }
 }
