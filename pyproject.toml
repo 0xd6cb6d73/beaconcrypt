@@ -15,7 +15,10 @@ dynamic = ["version"]
 [tool.maturin]
 bindings = "pyo3"
 features = ["pybinds"]
-include = ["beaconcrypt.pyi"]
+include = [
+    "beaconcrypt.pyi",
+    { path = "LICENSE", format = "sdist" },
+]
 manifest-path = "beaconcrypt/Cargo.toml"
 
 [tool.uv]

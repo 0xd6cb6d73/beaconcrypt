@@ -67,6 +67,26 @@ jobs:
       - name: Build source distribution
         run: uv run maturin sdist --out dist
 
+      - name: Check source distribution license files
+        run: |
+          uv run python - <<'PY'
+          from email.parser import BytesParser
+          from pathlib import Path
+          import tarfile
+
+          sdists = list(Path("dist").glob("*.tar.gz"))
+          if not sdists:
+              raise RuntimeError("No source distribution found")
+          for path in sdists:
+              root = path.name.removesuffix(".tar.gz")
+              with tarfile.open(path, "r:gz") as archive:
+                  metadata = BytesParser().parsebytes(archive.extractfile(f"{root}/PKG-INFO").read())
+                  for license_file in metadata.get_all("License-File", []):
+                      if not archive.getmember(f"{root}/{license_file}").isfile():
+                          raise RuntimeError(f"Missing license file in {path}: {license_file}")
+              print(f"Validated license files in {path}")
+          PY
+
       - name: Upload source distribution
         uses: actions/upload-artifact@v7
         with:
