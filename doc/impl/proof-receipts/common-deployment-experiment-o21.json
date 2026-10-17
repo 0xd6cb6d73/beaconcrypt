@@ -4,25 +4,27 @@
  "provenance": "new work: implements the O21 final design (a judge synthesis of two independent designs); nothing adapted from Codex WIP",
  "branch": "codex/deployment-o21",
  "basis_central": "d95dd6dd0a390f52b4fbc8e41088b81d393379e9",
- "basis_leanpath": "the published LEAN_PATH of d95dd6dd, preceded by a fresh prefix that mirrors its first prefix by resolved symlinks (6437 links, 1 to a regular file, root skipped, 0 broken) plus the new oleans",
- "state": "built and pushed; not reviewed; not integrated",
+ "basis_leanpath": "the published LEAN_PATH of d95dd6dd, preceded by a fresh prefix that mirrors its first prefix by resolved symlinks (6437 links, 1 to a regular file, root skipped, 0 broken) plus the new oleans; the review fix pass rechecked against a second fresh prefix of the same construction (6437 links, 1 to a regular file, root skipped, 0 broken)",
+ "state": "built and pushed; independently reviewed at ad719d6e (semantic and hygiene lenses, both APPROVE_WITH_NITS); all eight findings applied (Lean documentation commit 16d35934 and the documents commit that adds the review record); confirming review pending; not integrated",
  "lean_commits": [
   "d4edaddf2b47d0bdf4991bfc192d4db53ef1ae6e",
   "d2034fd881d2ae63191913793956bf3763d41ba9",
-  "38fd6cd6347f469e39e5acf6e531dad20358be35"
+  "38fd6cd6347f469e39e5acf6e531dad20358be35",
+  "16d35934e5eaa2724a9c31641574f90bae6c82d4"
  ],
- "documents_commit": "the commit that adds this receipt",
+ "documents_commit": "ad719d6ee833d6ef056bcd568f814432d73d65a7 adds this receipt; the documents commit of the review fix pass, which adds the record review, updates it",
  "goal": "O21 (plan section 11 row O21, section 12.1 rows 3194/3195): a CE-level statement on PqxdhDeploymentSecrecy.game (identity index 0, supplied = none) that, for every Beacon owner pinned to (S, serverKid) on NoBundleFailure runs, the accepted initial response looked up by session handle agrees with the Server production on the eleven ServerAuth fields, at a bound of the CE-A1 form, with its production form",
  "delivered": "ten of the eleven fields (all but the root) as the event A1NoAgreement; ce_a1_agreement and ce_a1_agreement_billed at CE-A1 bound verbatim (sum over c < qCreate of serverAuthBound of R_c, coefficient one, every bill); production forms at codec prime and route prime",
  "partial_scope": {
-  "root": "not an event of the outcome: the experiment retains no Beacon root and no function of it; root agreement is paid inside R_c (ServerAuth failure excludes the agreement, root included) but cannot be stated about this experiment; informal negative control: with an AEAD that ignores its key, re-encapsulation to the Beacon PQ key and relay of another session first record gives a pinned match with all ten fields and different roots",
+  "root": "not an event of the outcome: the experiment retains no labelled Beacon root (the Extract entry from which the Beacon root is expanded sits unlabelled in the shared HMAC cache, PqxdhServerAuthNative.sourceRoot, and the established ratchet kernel is derived from the root, but no field of the outcome is the Beacon root, so root equality is not a readout); inside the ServerAuth run of each R_c non-failure includes root agreement, and eps_A1 sums upper bounds on those failure probabilities, but transferring this to the experiment's own roots needs the unbuilt state-carrying coupling (R-b), so no root guarantee about this experiment is claimed, not even informally at eps_A1; informal negative control: before the AEAD the Beacon checks the CTX commitment T* = BLAKE2b(K, N, A, T, LE64(seq), LE64(kid)) over its chain-derived key and nonce (beaconcrypt/src/ratchet.rs:456-466, build_commitment at 553-567), so with an AEAD that ignores its key and nonce, and on a positive-probability BLAKE2b-ROM collision of the commitment, an adversary can replace the KEM ciphertext in the response the Server built for c's own accept by a fresh encapsulation to c's PQ key (the key-ID binding is only LE64 of the assigned key ID, beaconcrypt-core/src/pqxdh.rs:579-590), giving a pinned match with all ten fields and different roots",
   "payload_and_assigned_key_id": "outside the eleven fields; not stated",
   "identity_index": "the ten-field forms are at identity index 0 (pinned_agree uses positional session handles); ce_a1 itself holds at every index",
   "owner_options": [
    "R-a (recommended): accept root only inside R_c",
-   "R-b: an observationally extended game logging (owner, root) at each Beacon finish, with an erasure lemma and a state-carrying coupling of the CE-A1 chain; 12 to 30 agent-days; the claim would be about the extended game"
+   "R-b: an observationally extended game logging (owner, root) at each Beacon finish, with an erasure lemma and a state-carrying coupling of the CE-A1 chain; 12 to 30 agent-days; the claim would be about the extended game",
+   "R-b-prime (R-b with a prime in the guide; added by the review fix pass): a weaker kernel-lineage event on PqxdhDeploymentSecrecy.game itself (owner c's ratchet kernel descends, through c's own record traffic, from the initial kernel of the root the Server logged for the matched handle); no game extension or erasure lemma, but the same state-carrying coupling, the bulk of R-b's estimate; not estimated separately"
   ],
-  "coincidence": "on the support at index 0, A1NoAgreement coincides with A1NoPinnedMatch (noAgreement_iff): the theorem adds no probability content; its content is the support-level agreement of both parties actual states on the ten fields whenever the public pinned match holds"
+  "coincidence": "on the support at index 0, A1NoAgreement coincides with A1NoPinnedMatch (noAgreement_iff): the theorem adds no probability content; its content is the support-level agreement of the ten fields read from the experiment's final state (each party's state and the transcript) whenever the public pinned match holds"
  },
  "fields": {
   "list": [
@@ -49,7 +51,9 @@
    "server.rs:458-475 first seal with candidate associated data",
    "server.rs:218-222 later AD recomputed with build_associated_data",
    "pqxdh.rs:928 build_associated_data"
-  ]
+  ],
+  "read_from": "the experiment's final state, that is each party's state and the transcript: the Server-side beaconIdentity, initKex, registrationId, prekey, oneTime and pqKey are public-reader decodings of the accept bytes in the transcript, and the Beacon-side initKex, registrationId, prekey, oneTime and pqKey combine the owner's identity key with its first published bundle in the transcript",
+  "state_level_beyond_ce_a1": "the associated data of the Server's first logged seal context equals the Beacon's stored 153-byte associated data; the Beacon's pinned key ID equals the Server's key ID; the accepted identity key is the owner's identity-seed key; the registration ID is in the Server's consumed list (the key equality is a conjunct of PinnedMatchAt, the Beacon pin equals the binding premise, and the origin is c on both sides by construction)"
  },
  "headline_statements": [
   "PqxdhDeploymentSessionAgreement.ce_a1_agreement",
@@ -86,7 +90,7 @@
   {
    "name": "BeaconcryptCore.Computational.PqxdhDeploymentSessionFieldsInvariant",
    "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentSessionFieldsInvariant.lean",
-   "sha256": "52ac6b410d903a0faf08634a63b6a73809dd8e81e37306e8a5471a8af1780bd2",
+   "sha256": "3e27790ee96a58aae82917ae651b0b5c83ee4669315063f18189eaf93036d713",
    "lines": 1530,
    "theorems": 35,
    "guards": 35,
@@ -146,7 +150,7 @@
     "BeaconcryptCore.Computational.PqxdhServerAuthRootSessionFields"
    ],
    "commit": "d4edaddf2b47d0bdf4991bfc192d4db53ef1ae6e",
-   "module_check_at_clean_lean_tip": {
+   "module_check_at_build_lean_tip": {
     "exit": 0,
     "head": "38fd6cd6347f469e39e5acf6e531dad20358be35",
     "dirty_paths": 0,
@@ -156,13 +160,25 @@
     "leanpath_sha256": "243034974e5cf9ab0c3f1530f1b80a5736da377e509bb7c3cb8135813c175ee3",
     "start": "2026-10-17T12:09:38.260193624Z",
     "end": "2026-10-17T12:09:45.734302339Z"
-   }
+   },
+   "module_check_at_clean_lean_tip": {
+    "exit": 0,
+    "head": "16d35934e5eaa2724a9c31641574f90bae6c82d4",
+    "dirty_paths": 0,
+    "source_sha256": "3e27790ee96a58aae82917ae651b0b5c83ee4669315063f18189eaf93036d713",
+    "log_bytes": 0,
+    "artifact_sha256": "5cd03c5e4a6debd88ebf7a06e19e28da0f04a1518a73612a2bd0ecb94c1cb4bf",
+    "leanpath_sha256": "3bf66b00f84ae9456d4fc11cc9b26a929ca588dbeb71603866575bf9afa6252d",
+    "start": "2026-10-17T12:49:01.014477972Z",
+    "end": "2026-10-17T12:49:08.415763242Z"
+   },
+   "documentation_revised_in": "16d35934e5eaa2724a9c31641574f90bae6c82d4"
   },
   {
    "name": "BeaconcryptCore.Computational.PqxdhDeploymentSessionFields",
    "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentSessionFields.lean",
-   "sha256": "2c274ac337f7ac4dde8c364f57741eb88997059747cec0b6d23fa037949022cd",
-   "lines": 224,
+   "sha256": "bd19ade1f6dc6193778bf69cc0345cfee52505f0d8008fdfbfcc8e3c57d56fbc",
+   "lines": 226,
    "theorems": 4,
    "guards": 4,
    "theorem_names": [
@@ -183,7 +199,7 @@
     "BeaconcryptCore.Computational.PqxdhDeploymentReplay"
    ],
    "commit": "d2034fd881d2ae63191913793956bf3763d41ba9",
-   "module_check_at_clean_lean_tip": {
+   "module_check_at_build_lean_tip": {
     "exit": 0,
     "head": "38fd6cd6347f469e39e5acf6e531dad20358be35",
     "dirty_paths": 0,
@@ -193,12 +209,24 @@
     "leanpath_sha256": "243034974e5cf9ab0c3f1530f1b80a5736da377e509bb7c3cb8135813c175ee3",
     "start": "2026-10-17T12:09:45.805950547Z",
     "end": "2026-10-17T12:09:50.145939816Z"
-   }
+   },
+   "module_check_at_clean_lean_tip": {
+    "exit": 0,
+    "head": "16d35934e5eaa2724a9c31641574f90bae6c82d4",
+    "dirty_paths": 0,
+    "source_sha256": "bd19ade1f6dc6193778bf69cc0345cfee52505f0d8008fdfbfcc8e3c57d56fbc",
+    "log_bytes": 0,
+    "artifact_sha256": "bda641f1d448491adbe0f44e580ad74eb4ed9c7b548492ae9a49f10eba3e0a23",
+    "leanpath_sha256": "3bf66b00f84ae9456d4fc11cc9b26a929ca588dbeb71603866575bf9afa6252d",
+    "start": "2026-10-17T12:49:15.966132108Z",
+    "end": "2026-10-17T12:49:20.212642813Z"
+   },
+   "documentation_revised_in": "16d35934e5eaa2724a9c31641574f90bae6c82d4"
   },
   {
    "name": "BeaconcryptCore.Computational.PqxdhDeploymentSessionAgreement",
    "path": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentSessionAgreement.lean",
-   "sha256": "33fb7a1bd641d040fb1db1d741f4ea9566aacb3e5725e00f96283d204af8cb64",
+   "sha256": "6b9433860b384b8da4eb7b5fa2530bcbabf113769351fbefe72b4b6f14196bce",
    "lines": 249,
    "theorems": 6,
    "guards": 6,
@@ -219,7 +247,7 @@
     "BeaconcryptCore.Computational.PqxdhDeploymentServerAuthBills"
    ],
    "commit": "d2034fd881d2ae63191913793956bf3763d41ba9",
-   "module_check_at_clean_lean_tip": {
+   "module_check_at_build_lean_tip": {
     "exit": 0,
     "head": "38fd6cd6347f469e39e5acf6e531dad20358be35",
     "dirty_paths": 0,
@@ -229,7 +257,19 @@
     "leanpath_sha256": "243034974e5cf9ab0c3f1530f1b80a5736da377e509bb7c3cb8135813c175ee3",
     "start": "2026-10-17T12:09:50.211214492Z",
     "end": "2026-10-17T12:09:54.533294061Z"
-   }
+   },
+   "module_check_at_clean_lean_tip": {
+    "exit": 0,
+    "head": "16d35934e5eaa2724a9c31641574f90bae6c82d4",
+    "dirty_paths": 0,
+    "source_sha256": "6b9433860b384b8da4eb7b5fa2530bcbabf113769351fbefe72b4b6f14196bce",
+    "log_bytes": 0,
+    "artifact_sha256": "c37676808740ffba25b6ad26fa9c760c7508d5b2929355bc256f9e859fa9f9c2",
+    "leanpath_sha256": "3bf66b00f84ae9456d4fc11cc9b26a929ca588dbeb71603866575bf9afa6252d",
+    "start": "2026-10-17T12:49:20.273776152Z",
+    "end": "2026-10-17T12:49:24.565203077Z"
+   },
+   "documentation_revised_in": "16d35934e5eaa2724a9c31641574f90bae6c82d4"
   },
   {
    "name": "BeaconcryptCore.Computational.PqxdhDeploymentProductionSessionAgreement",
@@ -248,7 +288,7 @@
     "BeaconcryptCore.Computational.PqxdhDeploymentProductionTransfer"
    ],
    "commit": "38fd6cd6347f469e39e5acf6e531dad20358be35",
-   "module_check_at_clean_lean_tip": {
+   "module_check_at_build_lean_tip": {
     "exit": 0,
     "head": "38fd6cd6347f469e39e5acf6e531dad20358be35",
     "dirty_paths": 0,
@@ -258,6 +298,17 @@
     "leanpath_sha256": "243034974e5cf9ab0c3f1530f1b80a5736da377e509bb7c3cb8135813c175ee3",
     "start": "2026-10-17T12:09:54.596056643Z",
     "end": "2026-10-17T12:09:58.691765526Z"
+   },
+   "module_check_at_clean_lean_tip": {
+    "exit": 0,
+    "head": "16d35934e5eaa2724a9c31641574f90bae6c82d4",
+    "dirty_paths": 0,
+    "source_sha256": "32bd6315f39e46fde60c1b2c4c184916c01da9bf5764d3a1e35c61faa51eea37",
+    "log_bytes": 0,
+    "artifact_sha256": "b6dcd74ec64e11a8a03390e85e253ac50a8c9bc3a1b9f84d78f2413f8582a989",
+    "leanpath_sha256": "3bf66b00f84ae9456d4fc11cc9b26a929ca588dbeb71603866575bf9afa6252d",
+    "start": "2026-10-17T12:49:24.624819393Z",
+    "end": "2026-10-17T12:49:28.588390168Z"
    }
   }
  ],
@@ -268,7 +319,7 @@
   "total_theorems": 47,
   "per_module": {
    "PqxdhDeploymentSessionFieldsInvariant": {
-    "sha256": "52ac6b410d903a0faf08634a63b6a73809dd8e81e37306e8a5471a8af1780bd2",
+    "sha256": "3e27790ee96a58aae82917ae651b0b5c83ee4669315063f18189eaf93036d713",
     "theorems": 35,
     "guards": 35,
     "names_match": true,
@@ -278,7 +329,7 @@
     "long_code_lines": []
    },
    "PqxdhDeploymentSessionFields": {
-    "sha256": "2c274ac337f7ac4dde8c364f57741eb88997059747cec0b6d23fa037949022cd",
+    "sha256": "bd19ade1f6dc6193778bf69cc0345cfee52505f0d8008fdfbfcc8e3c57d56fbc",
     "theorems": 4,
     "guards": 4,
     "names_match": true,
@@ -288,7 +339,7 @@
     "long_code_lines": []
    },
    "PqxdhDeploymentSessionAgreement": {
-    "sha256": "33fb7a1bd641d040fb1db1d741f4ea9566aacb3e5725e00f96283d204af8cb64",
+    "sha256": "6b9433860b384b8da4eb7b5fa2530bcbabf113769351fbefe72b4b6f14196bce",
     "theorems": 6,
     "guards": 6,
     "names_match": true,
@@ -309,24 +360,14 @@
    }
   }
  },
- "root_import_check_at_clean_lean_tip": {
-  "exit": 0,
-  "head": "38fd6cd6347f469e39e5acf6e531dad20358be35",
-  "dirty_paths": 0,
-  "source_sha256": "9dc5a20663d27e345997c4007d1022e45a859cd232b1478016b0571f8699cff1",
-  "log_bytes": 0,
-  "artifact_sha256": "168642731b76117fdc797b35343e39d52e8197c9a0c816d6cd9f9375aa0a0a63",
-  "leanpath_sha256": "243034974e5cf9ab0c3f1530f1b80a5736da377e509bb7c3cb8135813c175ee3",
-  "start": "2026-10-17T12:09:58.751567878Z",
-  "end": "2026-10-17T12:10:01.785045620Z"
- },
  "module_check_command": "coord.sh lean claude <label> -- timeout 180 lean -j1 -M8000 --root=<worktree>/beaconcrypt-core/proofs/lean -o <prefix>/<module>.olean <source>; the wrapper output redirected to a log file",
  "axiom_walk": {
   "tool": "a copy of the completion audit O3 cross-module body walker with roots restricted to the theorems of the four modules; validated on a planted two-hop sorry (detected)",
   "result": "[CE] roots: 118; BeaconcryptCore constants walked: 11860 (theorems 6455, constants referenced by their proofs 350434); external constants (precomputed data): 2260; BeaconcryptCore modules touched: 449; missing constants: 0 []",
   "axioms": "[CE] axioms reached: [Quot.sound, Classical.choice, propext]",
   "named": "ce_a1_agreement and production ce_a1_agreement_billed: only propext, Classical.choice, Quot.sound; 0 missing constants",
-  "exit": 0
+  "exit": 0,
+  "after_review_fix": "not rerun: the review fix changes documentation only (no statement, proof, guard or import), and the 47 exact guards pass at 16d35934 with empty logs"
  },
  "inventory": {
   "handwritten_lean_count": "1978 -> 1979 -> 1981 -> 1982 (coord.sh inv recount before coord.sh inv rehash at each Lean commit)",
@@ -358,14 +399,30 @@
    "proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentSessionFields.lean",
    "proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentSessionAgreement.lean",
    "proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentProductionSessionAgreement.lean"
-  ]
+  ],
+  "review_fix": {
+   "handwritten_lean_count": "1982 unchanged (coord.sh inv recount before coord.sh inv rehash)",
+   "rehashed": [
+    "proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentSessionFieldsInvariant.lean",
+    "proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentSessionFields.lean",
+    "proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentSessionAgreement.lean",
+    "proofs/check-inventory.sh"
+   ],
+   "focused_check_inventory_staged_lean": {
+    "status": 0,
+    "head_before_commit": "ad719d6ee833d6ef056bcd568f814432d73d65a7",
+    "staged_paths": 5,
+    "log_sha256": "a17ee58e0f6de0695a9db24157093914abd84b6548d505f7eb88d6ffee26d654",
+    "last_line": "Formal-verification inventory matches the reviewed boundary."
+   }
+  }
  },
  "git_diff_check": "clean on every staged commit",
  "documents": {
-  "guide": "doc/impl/deployment-experiment.md: rows O21, initial response and registration (now with 3194 and 3195), s2b origin, auxiliary; name index row; What is not claimed bullet; new section O21: eleven-field agreement",
+  "guide": "doc/impl/deployment-experiment.md: rows O21, initial response and registration (now with 3194 and 3195), s2b origin, auxiliary; name index row; What is not claimed bullet; new section O21: ten of the eleven session fields (named O21: eleven-field agreement before the review fix pass), with its review paragraph",
   "ledger": "doc/proverif-source-scope.md: index rows 3167, 3184, 597, 613, 631, 649, 3194, 3195; entries A1-delayed/S2b-initial, A1 group, s2b-C1 position 1; new entry SSX-b2s-origin/SSX-s2b-origin; auxiliary paragraph",
-  "analysis": "doc/formal-verification-analysis.md: new section Common deployment experiment, O21: ten of the eleven session fields as an event of the experiment",
-  "plan": "working plan: section 11 row O21, section 12.1 row 3194/3195, new section 129; snapshot doc/impl/common-deployment-experiment-plan.md refreshed wholesale through section 129",
+  "analysis": "doc/formal-verification-analysis.md: new section Common deployment experiment, O21: ten of the eleven session fields as an event of the experiment, with the obligation 3 sentence and the review paragraph added by the review fix pass",
+  "plan": "working plan: section 11 row O21, section 12.1 row 3194/3195, new section 129; the review fix pass corrected the wording of the section 11 row O21 and of section 129 in place and added section 130; snapshot doc/impl/common-deployment-experiment-plan.md refreshed wholesale through section 130",
   "handoff": "doc/impl/handover/completion-2026-10-11/README.md not edited (dated record); its obligation 3 point (a) narrows to the root, stated in the guide and the analysis"
  },
  "not_claimed": [
@@ -376,5 +433,104 @@
   "Beacons pinned to (S, other key ID) or with a rejected bundle call in Fresh",
   "several same-seed Server objects (CE-M)"
  ],
- "forbidden_actions": "none run: no make verify, no full lake build, no mutation testing, no nix-collect-garbage; mail only peeked"
+ "forbidden_actions": "none run: no make verify, no full lake build, no mutation testing, no nix-collect-garbage; mail only peeked",
+ "root_import_check_at_build_lean_tip": {
+  "exit": 0,
+  "head": "38fd6cd6347f469e39e5acf6e531dad20358be35",
+  "dirty_paths": 0,
+  "source_sha256": "9dc5a20663d27e345997c4007d1022e45a859cd232b1478016b0571f8699cff1",
+  "log_bytes": 0,
+  "artifact_sha256": "168642731b76117fdc797b35343e39d52e8197c9a0c816d6cd9f9375aa0a0a63",
+  "leanpath_sha256": "243034974e5cf9ab0c3f1530f1b80a5736da377e509bb7c3cb8135813c175ee3",
+  "start": "2026-10-17T12:09:58.751567878Z",
+  "end": "2026-10-17T12:10:01.785045620Z"
+ },
+ "root_import_check_at_clean_lean_tip": {
+  "exit": 0,
+  "head": "16d35934e5eaa2724a9c31641574f90bae6c82d4",
+  "dirty_paths": 0,
+  "source_sha256": "9dc5a20663d27e345997c4007d1022e45a859cd232b1478016b0571f8699cff1",
+  "log_bytes": 0,
+  "artifact_sha256": "168642731b76117fdc797b35343e39d52e8197c9a0c816d6cd9f9375aa0a0a63",
+  "leanpath_sha256": "3bf66b00f84ae9456d4fc11cc9b26a929ca588dbeb71603866575bf9afa6252d",
+  "start": "2026-10-17T12:49:28.658988601Z",
+  "end": "2026-10-17T12:49:31.628125485Z"
+ },
+ "review": {
+  "status": "reviewed at ad719d6e; review fix pass applied (16d35934 and the documents commit that adds this record); confirming review pending",
+  "reviewed_commit": "ad719d6ee833d6ef056bcd568f814432d73d65a7",
+  "lenses": [
+   "semantic",
+   "hygiene"
+  ],
+  "verdicts": {
+   "semantic": "APPROVE_WITH_NITS",
+   "hygiene": "APPROVE_WITH_NITS"
+  },
+  "summary": "no error in a Lean statement or proof; the ten fields are PqxdhServerAuthRootSession.Session without root and faithful to the Rust adapter; the bound is ce_a1 verbatim; no hidden premise; every hygiene check passed; eight findings, all wording, none owner-level",
+  "findings": [
+   {
+    "id": "SEM-1",
+    "severity": "minor",
+    "title": "Root-retention claim overstated: the outcome keeps root-derived state, it just does not label it",
+    "fix": "guide, analysis, receipt partial_scope.root, plan section 129 and the module documentation (16d35934) say that the experiment retains no labelled Beacon root (Extract entry unlabelled in the shared HMAC cache, kernel derived from the root, root equality not a readout); the kernel-lineage variant R-b-prime is added to the owner options in the guide, the receipt and plan sections 129 and 130",
+    "outcome": "applied"
+   },
+   {
+    "id": "SEM-2",
+    "severity": "minor",
+    "title": "Informal root negative control misdescribes the mechanism (ignores the CTX commitment and the chain-derived nonce)",
+    "fix": "guide, analysis and receipt restate it: an AEAD that ignores its key and nonce, a positive-probability BLAKE2b-ROM collision of the commitment, and only the KEM ciphertext replaced in the response the Server built for c's own accept",
+    "outcome": "applied"
+   },
+   {
+    "id": "SEM-3",
+    "severity": "minor",
+    "title": "'Read from both parties' actual final states' overstates for most of the ten fields",
+    "fix": "guide, analysis, ledger, plan row O21 and section 129, receipt and the module documentation (16d35934) say read from the experiment's final state (each party's state and the transcript); the guide, the analysis, the receipt fields record and the PqxdhDeploymentSessionFields documentation name the state-level content beyond CE-A1 (associated data, pinned key ID, identity-seed key, consumed registration ID)",
+    "outcome": "applied"
+   },
+   {
+    "id": "SEM-4",
+    "severity": "minor",
+    "title": "'Root agreement is still paid for' reads as a CE guarantee that is not proved",
+    "fix": "guide, analysis, ledger, receipt, plan section 129 and the PqxdhDeploymentSessionAgreement documentation (16d35934) say that non-failure includes root agreement only inside the ServerAuth run of each R_c, that eps_A1 sums upper bounds, and that no root guarantee about this experiment is claimed, not even informally at eps_A1, because the transfer needs the unbuilt state-carrying coupling",
+    "outcome": "applied"
+   },
+   {
+    "id": "SEM-5",
+    "severity": "minor",
+    "title": "Analysis attributes the eleven ServerAuth fields to the symbolic model",
+    "fix": "the analysis attributes the eleven fields to the single-Beacon Server-authentication game (PqxdhServerAuthRootSession.Session) and gives the symbolic tuple FsBeaconEstablished(S, B, init, kid, root, ad, p) separately",
+    "outcome": "applied"
+   },
+   {
+    "id": "SEM-6",
+    "severity": "nit",
+    "title": "Guide section title says 'eleven-field agreement' for a ten-field delivery; small qualifier gaps",
+    "fix": "guide section renamed O21: ten of the eleven session fields with every citation (guide, analysis, ledger, receipt); the analysis coincidence sentence carries the support and identity-index-0 qualifier; the analysis discloses that the origin tag agrees by construction",
+    "outcome": "applied"
+   },
+   {
+    "id": "H-1",
+    "severity": "minor",
+    "title": "Guide section heading names an eleven-field agreement that the section does not deliver",
+    "fix": "as SEM-6",
+    "outcome": "applied"
+   },
+   {
+    "id": "H-2",
+    "severity": "nit",
+    "title": "Receipt says the obligation 3 narrowing is stated in the analysis; only the guide states it",
+    "fix": "the analysis O21 section now states that it narrows point (a) of obligation 3 of the completion handoff to the root (and, outside the eleven values, the payload and the assigned key ID); the receipt documents.handoff entry is therefore accurate",
+    "outcome": "applied"
+   }
+  ],
+  "fix_commits": [
+   "16d35934e5eaa2724a9c31641574f90bae6c82d4",
+   "the documents commit that adds this record"
+  ],
+  "lean_change": "documentation only: module and declaration documentation of PqxdhDeploymentSessionFieldsInvariant, PqxdhDeploymentSessionFields and PqxdhDeploymentSessionAgreement and one check-inventory.sh comment; no statement, proof, guard or import changed; PqxdhDeploymentProductionSessionAgreement and the root import are unchanged and their oleans are bit-identical to the build",
+  "checks": "each module and the root import compile with empty logs through coord.sh lean at the clean Lean tip 16d35934 (module_check_at_clean_lean_tip, root_import_check_at_clean_lean_tip); hygiene scan ok (47 theorems, 47 exact guards); focused check-inventory exit 0 on the staged Lean change (inventory.review_fix) and on the staged documents; git diff --check clean"
+ }
 }
