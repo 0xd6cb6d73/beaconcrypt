@@ -3,7 +3,7 @@ import BeaconcryptCore.Computational.PqxdhDeploymentSessionFieldsInvariant
 import BeaconcryptCore.Computational.PqxdhDeploymentReplay
 
 /-!
-# Ten of the eleven session fields, read from both parties' final states (O21, part 2)
+# Ten of the eleven session fields, read from the experiment's final state (O21, part 2)
 
 `Fields` is `PqxdhServerAuthRootSession.Session` without `root`, with ServerAuth's one-constructor `Position` replaced by the CE creation index. On a final state of `PqxdhDeploymentSecrecy.game`:
 
@@ -11,9 +11,11 @@ import BeaconcryptCore.Computational.PqxdhDeploymentReplay
 - `beaconFields` is owner `c`'s acceptance: its native pin, identity key (from its identity seed) and pinned key ID, its stored 153-byte associated data, and the prekey, one-time and PQ keys of its first published bundle (the finish drops the secrets, as in Rust).
 - `FieldsAgree c session`: both are defined and equal, and the registration ID is in the Server's consumed list.
 
+The fields are read from each party's state and from the transcript. The Server-side Beacon identity, initial key exchange, registration ID and keys are public-reader decodings of the accept bytes in the transcript, and the Beacon-side initial key exchange, registration ID and keys combine its identity key with its first published bundle in the transcript; the equality of the keys is a conjunct of CE-A1's `PinnedMatchAt` itself. The state-level content beyond CE-A1's matching is the equality of the associated data of the Server's first logged seal context with the Beacon's stored one, of the Beacon's pinned key ID with the Server's key ID, and of the accepted identity key with the owner's identity-seed key, and the Server's consumption of the registration ID.
+
 `pinned_agree` (identity index 0, generated seed): on every outcome, a session that pin-matches an accepted owner pinned to the protected binding (CE-A1's `PqxdhDeploymentServerAuth.PinnedMatchAt`) agrees with it on the ten fields. Ingredients: the run invariants of `PqxdhDeploymentSessionFieldsInvariant` (`inv_game`), positional session handles (`PqxdhDeploymentHeadlineGap.accept_positional`), `PqxdhDeploymentServerAuthInjectiveGame.keys_identity`, `PqxdhDeploymentEligibility.agree_game` and `PqxdhDeploymentReplay.replay_game`; premises: the approved Phase 1 and Phase 2 read-back contracts. `established_end`: an accepted owner is established at the end. `identityOf_accepted` and `publishedKeys_prefix` are the two public-reader facts used.
 
-The root is not among the fields: the experiment keeps the Server's session roots in its touch log but no Beacon root, so no event of the outcome can state root agreement. The payload and the assigned key ID are not among the eleven ServerAuth fields and are not stated.
+The root is not among the fields. The experiment retains no labelled Beacon root: the Server's session roots are in its touch log, the Extract entry from which the Beacon's root is expanded sits unlabelled in the shared HMAC cache, and the Beacon's evolving ratchet kernel is derived from that root, but no field of the outcome is the Beacon's root, so root equality is not a readout of the outcome. The payload and the assigned key ID are not among the eleven ServerAuth fields and are not stated.
 -/
 
 open OracleComp OracleSpec CoreModels Aeneas
@@ -119,7 +121,7 @@ theorem established_end (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
   (PqxdhDeploymentSessionFieldsInvariant.inv_game setup codec checks route ensureInit identityIndex bounds mode
     adversary runtime outcome supported created output final reached).2.2.accepts c before raw found
 
-/-- The deterministic core at identity index 0: a session that pin-matches an accepted owner pinned to the protected binding agrees with it on the ten fields read from both parties' final states, and the Server consumed its registration ID. The accept is looked up by the session handle (`PqxdhDeploymentHeadlineGap.accept_positional`), the Server's seal context by the handle in its ghost seal log (`ServerInv.sealed`), and the owner's identity key, pin, pinned key ID and stored associated data in its native state (`PqxdhDeploymentServerAuthInjectiveGame.keys_identity`, `PqxdhDeploymentEligibility.Agree`, `BeaconInv`); the consumed registration IDs are the transcript's (`PqxdhDeploymentReplay.replay_game`). Premises: the approved Phase 1 and Phase 2 read-back contracts. -/
+/-- The deterministic core at identity index 0: a session that pin-matches an accepted owner pinned to the protected binding agrees with it on the ten fields read from the experiment's final state, and the Server consumed its registration ID. The accept is looked up by the session handle (`PqxdhDeploymentHeadlineGap.accept_positional`), the Server's seal context by the handle in its ghost seal log (`ServerInv.sealed`), and the owner's identity key, pin, pinned key ID and stored associated data in its native state (`PqxdhDeploymentServerAuthInjectiveGame.keys_identity`, `PqxdhDeploymentEligibility.Agree`, `BeaconInv`); the consumed registration IDs are the transcript's (`PqxdhDeploymentReplay.replay_game`). Premises: the approved Phase 1 and Phase 2 read-back contracts. -/
 theorem pinned_agree (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)

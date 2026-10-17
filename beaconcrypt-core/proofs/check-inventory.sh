@@ -42608,7 +42608,7 @@ require_line_count 1 '^theorem inv_initial([[:space:]]|$)' "$selected_source_mod
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSessionFieldsInvariant\.inv_game$' "$selected_source_module" "PqxdhDeploymentSessionFieldsInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentSessionFieldsInvariant.inv_game"
 require_line_count 1 '^theorem inv_game([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSessionFieldsInvariant theorem inv_game"
 
-# O21 (ten-field session agreement, parts 2 and 3): the ten fields of both parties' final states with pinned_agree, and the CE-level event A1NoAgreement with ce_a1_agreement, ce_a1_agreement_billed and lookup_agree at the CE-A1 bound
+# O21 (ten-field session agreement, parts 2 and 3): the ten fields read from the experiment's final state with pinned_agree, and the CE-level event A1NoAgreement with ce_a1_agreement, ce_a1_agreement_billed and lookup_agree at the CE-A1 bound
 
 selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentSessionFields.lean
 require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentSessionFields$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentSessionFields root import"
