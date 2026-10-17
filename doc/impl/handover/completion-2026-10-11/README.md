@@ -218,7 +218,7 @@ Assumptions: those of obligation 2, plus:
 - The `NoBundleFailure` run condition (option b).
 - `ReductionCaps` for the unbilled CE-A1 forms; the billed forms discharge it.
 
-Owner acknowledgement needed:
+Owner acknowledgement points, with their state after 2026-10-17:
 
 - (a) The O21 initial-response "eleven-field agreement" endpoint was not delivered as an event in the experiment. CE-A1 (`PqxdhDeploymentServerAuth.A1NoPinnedMatch`) states only a public matching pinned to the Server identity. It states no root, assigned key ID, associated data or payload agreement, so the CE-13 rows A1-delayed, S2b-initial, A1, s2b-A1, b2s-A1, encoding-A1 and the position-1 part of s2b-C1 are partial.
   - This was a Claude decision (plan section 30) and is disclosed. O21 is not among the capabilities the owner accepted as symbolic-only (input 18: O15, O16, O23, O25-O27).
