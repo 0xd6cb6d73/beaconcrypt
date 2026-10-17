@@ -25,8 +25,12 @@ jobs:
     - name: Build
       run: cargo build --verbose
     - name: Check PQXDH server build
+      env:
+        RUSTFLAGS: -Dwarnings
       run: cargo check -p beaconcrypt --no-default-features --features pqxdh,server --lib
     - name: Check PQXDH beacon build
+      env:
+        RUSTFLAGS: -Dwarnings
       run: cargo check -p beaconcrypt --no-default-features --features pqxdh,beacon --lib
     - name: Run tests
       run: cargo test --verbose --workspace

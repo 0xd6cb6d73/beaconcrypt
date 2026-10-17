@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: 0BSD
 
-use crate::shared::{DhSecret, KEX_KDF_OUT_LEN, KexDerivedSecret, SignaturePk};
+#[cfg(feature = "server")]
+use crate::shared::SignaturePk;
+use crate::shared::{DhSecret, KEX_KDF_OUT_LEN, KexDerivedSecret};
 use beaconcrypt_core::pqxdh as verified_pqxdh;
 use libsodium_rs::{crypto_kdf, crypto_kem, crypto_kx, crypto_sign};
 use zeroize::Zeroize;
@@ -17,6 +19,7 @@ const _: () =
 const _: () =
 	assert!(crypto_kem::mlkem768::SHAREDSECRETBYTES == verified_pqxdh::SHARED_SECRET_SIZE);
 
+#[cfg(feature = "server")]
 impl SignaturePk for crypto_sign::PublicKey {}
 
 pub(crate) fn shared_secrets(

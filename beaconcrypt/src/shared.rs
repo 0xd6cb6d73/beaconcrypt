@@ -11,7 +11,9 @@ use std::marker::{PhantomData, PhantomPinned};
 use std::vec;
 use zeroize::Zeroizing;
 
-use crate::ratchet::{KDF_STATE_SIZE, RatchetManager};
+use crate::ratchet::KDF_STATE_SIZE;
+#[cfg(any(feature = "server", test))]
+use crate::ratchet::RatchetManager;
 
 #[cfg(test)]
 use crate::ratchet::{
@@ -177,6 +179,7 @@ pub(crate) mod systems {
 	#[cfg(feature = "server")]
 	#[derive(PartialEq)]
 	pub struct Ed25519;
+	#[cfg(any(feature = "server", test))]
 	#[derive(PartialEq)]
 	pub struct HkdfSha512;
 	#[derive(PartialEq)]
@@ -240,12 +243,17 @@ pub(crate) mod systems {
 	}
 }
 pub mod roles {
+	#[cfg(feature = "server")]
 	pub trait ChainKey {}
 	#[derive(PartialEq)]
 	pub struct DerivedSecret;
+	#[cfg(any(feature = "server", test))]
 	pub struct ChainSendKey;
+	#[cfg(feature = "server")]
 	impl ChainKey for ChainSendKey {}
+	#[cfg(any(feature = "server", test))]
 	pub struct ChainRecvKey;
+	#[cfg(feature = "server")]
 	impl ChainKey for ChainRecvKey {}
 	#[cfg(feature = "server")]
 	pub struct EncryptionRecvKey;
@@ -426,13 +434,16 @@ impl<const S: usize, System, Role> Clone for SecretArr<S, System, Role> {
 pub type DhSecret = SecretArr<DH_OUT_LEN, systems::X25519, roles::DerivedSecret>;
 pub type KexDerivedSecret = SecretArr<KDF_STATE_SIZE, systems::Pqxdh, roles::DerivedSecret>;
 
+#[cfg(any(feature = "server", test))]
 pub trait SignaturePk {}
 
+#[cfg(any(feature = "server", test))]
 pub struct EstablishedRemote<PkType: SignaturePk> {
 	pk: PkType,
 	ratchet: RatchetManager,
 }
 
+#[cfg(any(feature = "server", test))]
 impl<PkType: SignaturePk> EstablishedRemote<PkType> {
 	pub(crate) fn new(pk: PkType, ratchet: RatchetManager) -> Self {
 		Self { pk, ratchet }
