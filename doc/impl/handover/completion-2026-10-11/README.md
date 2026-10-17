@@ -1,18 +1,21 @@
 # BeaconCrypt proof completion handoff — 2026-10-11 (audit rerun and verified 2026-10-17)
 
-This handoff records an independent completion audit of the open obligations listed in [the 2026-10-06 handoff](../pause-2026-10-06/README.md), section "What has not been proved", items 1 to 8. It is written for the owner's final validation. It adds no proof, assumption, contract or check, and it does not change any theorem, model or production file. It was written by Claude on branch `codex/completion-handoff-2026-10-11`, which is not integrated into the composition branch.
+This handoff records an independent completion audit of the open obligations listed in [the 2026-10-06 handoff](../pause-2026-10-06/README.md), section "What has not been proved", items 1 to 8. It is written for the owner's final validation. It adds no proof, assumption or contract and no maintained check, and it does not change any theorem, model or production file. The two step 7 programs of the checklist are for the owner's run and are not wired into any gate. It was written by Claude on branch `codex/completion-handoff-2026-10-11`, which is not integrated into the composition branch. Besides this file, the branch adds only a pointer section at the end of `doc/formal-verification-analysis.md` and a pointer paragraph in `doc/impl/handover/README.md`.
 
 ## Start here
 
 The audited basis is the composition branch `codex/full-proof-composition` at `2cadb9be1b0575b7fb25b295c9df83ce3c94919d`, equal to its pushed ref when fetched on 2026-10-17. The branch has not moved since 2026-10-11. Its only owner dirt is the untracked `beaconcrypt-core/proofs/lean/statements.out` (SHA-256 `bc35a10599cc89a861b7ac3a186e964d26b2596be99d908d8a8eeecd1de976fa`). The submodules are at `rooterberg` `85c1ae75` and `wycheproof` `b61843a9`.
 
-Each of obligations 1 to 7 was audited on 2026-10-11 (the first obligation 1 run was interrupted and left no result) and again on 2026-10-17. Two cross-cutting audits ran alongside: ASSUME covers every premise of the final theorems, and AXIOMS covers axioms, escape hatches, guards and the inventory. Every audit result was then checked by a separate adversarial verifier that tried to refute it. Where a verifier disagreed with its audit, Claude checked the disputed points against the committed sources before writing this file; the statuses below are the corrected ones. The audits read central only. All Lean probes ran one module at a time against the published `LEAN_PATH` of `2cadb9be`. None of the audits ran `make verify`, a full `lake build`, ProVerif, mutation testing or `nix-collect-garbage`.
+Each of obligations 1 to 7 was audited on 2026-10-11 (the first obligation 1 run was interrupted and left no result) and again on 2026-10-17. Two cross-cutting audits ran alongside: ASSUME covers every premise of the final theorems, and AXIOMS covers axioms, escape hatches, guards and the inventory. Every audit result was then checked by a separate adversarial verifier that tried to refute it. Where a verifier disagreed with its audit, Claude checked the disputed points against the committed sources before writing this file; the statuses below are the corrected ones. The audits read central only. All Lean probes ran one module at a time against the published `LEAN_PATH` of `2cadb9be`. None of the audits ran `make verify`, a full `lake build`, ProVerif, mutation testing or `nix-collect-garbage`. An independent review of this file on 2026-10-17 found three major and ten smaller defects (among them an incomplete restatement of owner input 13, a Rust test command that skipped `beaconcrypt-core`, and an axiom check with no runnable program); they were fixed in a follow-up commit on this branch, which also adds the step 7 programs.
+
+How owner input 13 enters the statuses. Owner input 13 of the common-experiment plan asks the owner to confirm, per headline, the extension of approved games, idealizations and contracts to the headlines of the common experiment (restated in full under obligation 3 (b)). It has no recorded answer. It therefore conditions every theorem stated in the common experiment: the CE headlines and their LQ-F, D-ct and production forms. It does not condition the component theorems of items 1, 2, 4 and 5, which rest on the decisions and contracts approved for their own lines, nor the premise-free boundary equalities of item 7. Where an obligation of the 2026-10-06 handoff is met only through such a headline composition, that part is reported below as closed in Lean and pending input 13, as for obligation 3.
 
 Summary:
 
-- Obligations 1, 2, 4, 5 and 6 are closed within the approved scope.
+- Obligations 1 and 6 are closed within the approved scope. For obligation 1, owner decision 6 (existential owner address, unread `chosenOwner`) is still recorded as unconfirmed; confirming it cannot weaken a statement.
+- Obligations 2, 4 and 5 are closed in Lean. Their component theorems are within the approved scope. The parts that the 2026-10-06 handoff requires and that are delivered only through the common experiment's headlines are pending owner input 13: for obligation 2 both directions, evolving and skipped keys and replay; for obligation 4 the target and session selection; for obligation 5 the common-experiment composition. Obligation 2 also needs the setup-carried `PublicDomain.available` contract listed (see the assumption ledger).
 - Obligation 3 is closed in Lean. As a handoff obligation it stays pending until the owner acknowledges three scope points: the initial-response field agreement that was not delivered, owner input 13, and the per-operation accounting.
-- Obligation 7 is closed within the approved scope, provided the owner accepts the reviewed transcriptions RT-01 to RT-20 as the last link from the Rust adapter to the Lean source programs.
+- Obligation 7 is closed within the approved scope, provided the owner accepts the reviewed transcriptions RT-01 to RT-20 as the last link from the Rust adapter to the Lean source programs. Its production headline forms carry the conditions of the CE headlines and so are pending owner input 13, including `ReadWritable` at the production codec `codec'`.
 - No assumption was added to close any obligation, and no component theorem was renamed into a closure.
 - One pre-existing ambient contract is carried by every final theorem but is missing from the consolidated CE-13 assumption list: the X25519 public-domain availability laws inside `Setup`. It is called out below and needs explicit owner listing.
 - No repository Lean source contains `sorry`, `admit`, a custom axiom or another escape hatch. An exact reachability check finds only `propext`, `Classical.choice` and `Quot.sound`. The maintained guard and policy gates are weaker than that check, so the AXIOMS audit stays partially closed.
@@ -21,12 +24,12 @@ Summary:
 | # | Obligation | Audit status | Verifier | Status used here |
 | --- | --- | --- | --- | --- |
 | 1 | Authenticated root theorem | closed within the approved scope | agrees | closed within the approved scope; owner decision 6 still unconfirmed |
-| 2 | Extract/HKDF composition | closed within the approved scope | agrees, with two qualifiers | closed within the approved scope, qualified: the setup-carried `PublicDomain.available` contract needs listing, and owner input 13 covers the BLAKE2b and AEAD games of the record headlines |
+| 2 | Extract/HKDF composition | closed within the approved scope | agrees, with two qualifiers | closed in Lean; item 2's own theorems are within the approved scope; the CE-composed part (both directions, evolving and skipped keys, replay) is pending owner input 13 (its CE-KT bullet, and for the records also the BLAKE2b and AEAD games); the setup-carried `PublicDomain.available` contract needs listing |
 | 3 | Common computational/symbolic experiment | closed within the approved scope, conditional | disagrees | closed in Lean; pending owner acknowledgement of (a) the O21 eleven-field agreement, (b) owner input 13 and (c) the per-operation selection/query/loss accounting |
-| 4 | CTX/AEAD lift to the global raw receive | closed within the approved scope | agrees | closed within the approved scope |
-| 5 | Evolving-chain source event | closed within the approved scope | agrees | closed within the approved scope |
+| 4 | CTX/AEAD lift to the global raw receive | closed within the approved scope | agrees | closed within the approved scope for the lift theorems; the target and session selection, charged only in the CE headlines, is pending owner input 13 |
+| 5 | Evolving-chain source event | closed within the approved scope | agrees | closed within the approved scope for the chain lift; the common-experiment composition is closed in Lean and pending owner input 13 |
 | 6 | ProVerif coverage | closed within the approved scope | agrees | closed within the approved scope: the obligation's conditions hold; no unbounded coverage is proved |
-| 7 | Production/source boundary | closed within the approved scope, conditional | agrees | closed within the approved scope if the owner accepts RT-01..RT-20 (and `ReadWritable` at the production codec under input 13) |
+| 7 | Production/source boundary | closed within the approved scope, conditional | agrees | closed within the approved scope if the owner accepts RT-01..RT-20; the production headline forms are pending owner input 13 like the CE headlines, including `ReadWritable` at the production codec |
 | ASSUME | Premises of all final theorems | partially closed | disagrees | closed within the approved scope on the Lean side; documentation defects in the CE-13 list |
 | AXIOMS | Axioms, guards, inventory | partially closed | agrees | partially closed: the axiom property holds exactly, but guard coverage and the policy gate have gaps, and there has been no full build |
 | 8 | Final validation matrix | not run (owner) | — | open; checklist below |
@@ -35,15 +38,15 @@ Owner decisions that remain open are collected in [Owner decisions and acknowled
 
 ## Basis, method and what Claude checked
 
-Theorem names below are Lean declarations under `BeaconcryptCore.Computational` unless a namespace is given. Line numbers refer to the files at `2cadb9be`. Every theorem named here has an exact in-file `#guard_msgs` guard over `#print axioms` listing `propext`, `Classical.choice` and `Quot.sound`. Every module named here is imported by `beaconcrypt-core/proofs/lean/BeaconcryptCore.lean` and listed in `beaconcrypt-core/proofs/reviewed-inventory.txt` with a matching SHA-256.
+Theorem names below are Lean declarations under `BeaconcryptCore.Computational` unless a namespace is given. Line numbers refer to the files at `2cadb9be`. Every theorem named here, except three, has an exact in-file `#guard_msgs` guard over `#print axioms` listing `propext`, `Classical.choice` and `Quot.sound`. The three exceptions: `PqxdhDeploymentIdealSlots.attach_detach` is guarded as depending on no axioms and `PqxdhDeploymentIdealLaterPool.onBase_view` as depending on `[propext, Quot.sound]` (both are under-reported lists, see the axiom scan), and `Pqxdh.INFO_PQ_ne_INFO_R` (`BeaconcryptCore/Model/Pqxdh/Primitives.lean:93`) has no guard. The exact walk of checklist step 7 covers all three. Every module named here is imported by `beaconcrypt-core/proofs/lean/BeaconcryptCore.lean` and listed in `beaconcrypt-core/proofs/reviewed-inventory.txt` with a matching SHA-256.
 
 The audits' Lean evidence:
 
 - Rebuilds. Single-module rebuilds from central's committed sources against the published `LEAN_PATH`, each through the coordination wrapper with `lean -j1 -M8000` and a 180 s timeout. All exited 0, and the oleans were byte-identical to the published ones. Counts: 28 item 1 modules, 56 item 2 and headline modules, 48 experiment, headline, registration and production modules, the 212-module item 4 closure, 5 item 5 key modules plus the root, and all 25 item 7 modules.
 - Semantic comparison. 192 lake-built base modules of the item 5 closure that predate a later commit to their sources were rebuilt and compared semantically (lake-built oleans cannot be compared byte for byte; see the risks). All 192 were identical.
 - Kernel replay. Every one of the 1,985 published oleans was kernel-replayed against its published imports. All 1,985 replayed with no failure, and a negative control failed as expected.
-- Axiom reachability. An exact axiom-reachability walk was run from all 94,891 project constants.
-- Probes. Mechanical premise and closure probes were run on the headline, production and component theorems.
+- Axiom reachability. An exact axiom-reachability walk was run from all 94,891 project constants. Checklist step 7 gives the program.
+- Probes. Mechanical premise and closure probes were run on the headline, production and component theorems. ASSUME's set of 330 final theorems consists of every theorem named in the CE-13 computational column of `doc/proverif-source-scope.md`, in the CE-13 section of `doc/composition-assumptions.md` and in `doc/impl/production-headlines.md` (145 of these names are theorems), all 200 theorems of the six `PqxdhDeploymentProduction*` modules, and the item 2, 4 and 5 components that these theorems consume. Counts "of the 330 final theorems" below refer to this set.
 
 The audits' working files are in the agents' registered scratch area on the shared machine. That area is transient and is not evidence of record, so every finding this handoff relies on is restated here.
 
@@ -56,7 +59,7 @@ Before writing, Claude checked the following against the committed sources:
 - The X25519 public-domain contracts:
   - Definitions: `PqxdhServerStaticDhSource.PublicDomain` (`available : ∀ seed input, (joint.staticDh seed input).isSome = accepts input`) and `PqxdhPhase2GapDhSource.PublicDomain` (`available`, `nonzero`).
   - Placement: they are fields `serverDomain` and `beaconDomain` of `PqxdhServerAuthExperiment.Setup` (lines 70-71).
-  - Use: the proofs of `PqxdhDeploymentKemTwoSided.kem_transfer_two_sided`, `PqxdhDeploymentIdealCompile.ideal_compile` and `PqxdhDeploymentIdealHandoff.ideal_world_view` use `serverDomain.available`, according to the verifier's probe output.
+  - Use: the proofs of `PqxdhDeploymentKemTwoSided.kem_transfer_two_sided`, `PqxdhDeploymentIdealCompile.ideal_compile` and `PqxdhDeploymentIdealHandoff.ideal_world_view` use `serverDomain.available`: the reachability walk of checklist step 7, started from each of them, reaches the projection `PqxdhServerStaticDhSource.PublicDomain.available`. Started from item 2's `PqxdhRegistrationJointKemKeyTransfer.allIdeal_loss`, `PqxdhRegistrationJointKemPostSkeleton.opaqueBranch_shared` and `PqxdhRegistrationJointBeaconFinishOnce.slotGame_two`, it does not. The second check of step 7 prints these six results; Claude ran it in that form on 2026-10-17 against the published olean set.
   - Ledgers: they are recorded only in prose, at `beaconcrypt-core/proofs/trusted-boundary.md:449` ("native optional-DH availability law") and `doc/composition-assumptions.md:186` ("public optional availability"). The CE-13 list of `doc/composition-assumptions.md` names only `prefixConsistent` and `setup.wiring` as setup-carried.
   - Origin: they predate the handoff (commits `4136ea17` and `bf5cf596` of 2026-09-24, `Setup` in `aec2ee23` of 2026-09-30). They appear in the Milestone B design's `Setup` (`doc/impl/server-authentication-design.md`, "Every field is an existing functional contract").
 - Rust. No production Rust, Go, bindings header, test or example file changed between the handoff basis `4d4ecf0c` and `2cadb9be`. Central's production Rust differs from `vcvio` (`8330cdef`, an ancestor of central, 977 commits behind) only by `5cbd76e3` (HB-95, sequence-one registration check) and `12d5dfcc` (extracted record wrapper): 4 files, +293/−60. Both commits predate the handoff, and neither is in `vcvio` or `main` (`61df2845`). `main` has two documentation-only commits not in central.
@@ -67,7 +70,7 @@ Before writing, Claude checked the following against the committed sources:
 
 ### 1. Authenticated root theorem
 
-Status: closed within the approved scope. The verifier agrees.
+Status: closed within the approved scope. The verifier agrees. Owner decision 6 is still recorded as unconfirmed (see the remaining gaps); confirming it cannot weaken a statement.
 
 The handoff requires three things. (a) Join the actual source14 accept/report execution to the retained Phase-1 EUF reduction and to the selected one-key ML-KEM challenge. (b) Cover honest unchanged, honest changed and attacker-owned candidates and rejection, with no honest-target premise. (c) Keep the candidate/KEM value out of the KDF distinguisher's public context.
 
@@ -82,7 +85,7 @@ Theorems:
 - (c) is covered by two steps:
   - `PqxdhRegistrationJointKemRawOpaque.branchRaw_opaque` (T6) is a premise-free program equality, used in `authenticated_selected_opaque`.
   - `PqxdhRegistrationJointKemKeyTransfer.authenticated_ideal_keys`, `authenticated_all_ideal` and `authenticated_slots` (T8) are each `compose_right` of T5 with item 2's loss. Every Extract game in that loss has `Context := Unit` and sampler `uniform32`, and the HMAC-PRF games sample their own key.
-  - Related forms: `PqxdhRegistrationJointKemKeyFirst.authenticated_key_first` and `authenticated_key_last`, and the bills `idealKeys_bills` and `allIdeal_bills` (T8b).
+  - Related forms: `PqxdhRegistrationJointKemKeyFirst.authenticated_key_first` and `authenticated_key_last`, and the bills `PqxdhRegistrationJointKemKeyTransfer.idealKeys_bills` and `allIdeal_bills` (T8b), which are declared in module `PqxdhRegistrationJointKemKeyTransferBills` inside namespace `PqxdhRegistrationJointKemKeyTransfer`.
 - The supporting components are `PqxdhRegistrationJointKemRawBridge.actual_le_real` (T4) and `PqxdhRegistrationJointKemRawCertified.real_le_ideal`.
 
 Assumptions:
@@ -106,7 +109,7 @@ Remaining gaps:
 
 ### 2. Extract/HKDF composition at the actual joint sampler
 
-Status: closed within the approved scope, with two qualifiers. The verifier agrees.
+Status: closed in Lean. Item 2's own theorems are closed within the approved scope. The part of the obligation that is delivered only through the common experiment (see qualifier (ii)) is pending owner input 13. The setup-carried `PublicDomain.available` contract needs listing (qualifier (i)). The audit and its verifier had reported "closed within the approved scope, with two qualifiers"; the review of this file showed that qualifier (ii) was too narrow.
 
 Lean builds one correlated ordered hybrid per target `g`. Its steps, in order:
 
@@ -139,13 +142,13 @@ Assumptions:
 Qualifiers found by the verifier:
 
 - (i) The CE composition uses the setup-carried `Setup.serverDomain.available` in the proofs of `kem_transfer_two_sided`, `ideal_compile` and `ideal_world_view`, so every headline cited here depends on it. Item 2's own theorems (`allIdeal_loss`, `opaqueBranch_shared`, `slotGame_two`) do not.
-- (ii) Extending the BLAKE2b random oracle and the AEAD games to the record headlines is part of owner input 13, which has no recorded answer.
+- (ii) The hybrid starts from the experiment's real deployment game, and records enter only through the CE composition (`records_close`, `ce_kt_sum` and the record-consuming headlines). So the obligation's full list (both directions, evolving keys, skipped keys, replay) is met only by CE headlines. Owner input 13 asks the owner to confirm, for CE-KT, the R1 Extract-ROM, the HMAC-PRF, Extract on `uniform32`, `SourceFullCorrect`, `prefixConsistent` and ML-KEM IND-CCA with its correctness error and `FunctionalDecapsulation`; for the record headlines it adds the BLAKE2b random oracle and the AEAD games. The 2026-10-06 item 2 decisions settle this only in part (`doc/impl/extract-composition-plan.md`, section 16). They accept the HMAC-PRF and Extract on a uniform 32-byte key as ordinary primitive games without a scope limit, but they extend R1 only "to this line", the item 2 line, and allow `SourceFullCorrect` only "as a premise of T7/T8"; and input 13 still lists all of these for CE-KT. The common-experiment plan reads them as inherited by the experiment (its section 2 table and section 17), but it still lists them under input 13 for confirmation. Until the owner answers input 13, this part of obligation 2 is closed in Lean and pending, as obligation 3 is.
 
 Remaining gaps:
 
 - Permitted reveals and descendant-only compromise hold only vacuously in the classical core, which has no reveal command. They are moot, not discharged. LQ-F covers a post-run reveal of identity seeds and X25519 scalars only, for confidentiality.
 - There is no computational root-secrecy statement. The uniform root appears only as an intermediate hybrid world.
-- Item 2's own theorems are stated over source14 (registration). Records enter only through the CE composition, by design.
+- Item 2's own theorems are stated over source14 (registration). Records enter only through the CE composition, by design, which is why qualifier (ii) applies.
 - The hybrid is per target, summed exactly. It is not a single all-sessions hybrid.
 - Everything holds in the random-oracle model of the slice. No theorem relates the R1 table to production HKDF-Extract.
 - Bills count queries and coins, not running time.
@@ -200,7 +203,7 @@ Theorems:
   - CE-A2: `PqxdhDeploymentProvenance.a2_bound` and `a2_generated_bound`.
   - CE-A2pub and CE-R1': `PqxdhDeploymentPublishedTuple.a2pub_bound`, `a2pub_owner_bound`, `r1prime_bound` and `r1prime_owner_bound`.
   - CE-R1 and CE-C3: `PqxdhDeploymentReplay.replay_game` and `PqxdhDeploymentRecordReplay.record_replay_game`.
-- Production: the 192 theorems of the five production headline modules of obligation 7, obtained through its premise-free whole-game equalities.
+- Production: the 192 theorems of the five production headline modules of obligation 7 (the 189 forms counted there, plus the three helpers `PqxdhDeploymentProductionHeadlinesClassical.ctGapTerm_source` and `ctCollTerm_source` and `PqxdhDeploymentProductionRegistration.support_zero`), obtained through its premise-free whole-game equalities.
 - Every loss term is the advantage of a constructed reduction plus explicit statistical terms. The record lifts are proved theorems, not hypotheses.
 - A binder scan of 1,597 theorems, 430 of them headline-type, found no premise beyond the documented ones.
 - A cross-module axiom walk over 37,817 constants reachable from 16,711 experiment theorems found only the three standard axioms.
@@ -218,13 +221,15 @@ Owner acknowledgement needed:
 - (a) The O21 initial-response "eleven-field agreement" endpoint was not delivered as an event in the experiment. CE-A1 (`PqxdhDeploymentServerAuth.A1NoPinnedMatch`) states only a public matching pinned to the Server identity. It states no root, assigned key ID, associated data or payload agreement, so the CE-13 rows A1-delayed, S2b-initial, A1, s2b-A1, b2s-A1, encoding-A1 and the position-1 part of s2b-C1 are partial.
   - This was a Claude decision (plan section 30) and is disclosed. O21 is not among the capabilities the owner accepted as symbolic-only (input 18: O15, O16, O23, O25-O27).
   - The eleven-field agreement itself is proved for the single-Beacon ServerAuth game (`PqxdhServerAuthCommonAuthentication.common_authentication_with_resources`), which CE-A1 consumes.
-- (b) Owner input 13, the extension to the experiment's headlines of each approved game and contract, has no recorded answer. Each headline family uses its items unconditionally, as explicit premises or reduction advantages:
-  - the BLAKE2b random oracle;
-  - Gap-DH;
-  - the joint weak EUF;
-  - the AEAD IND$ and INT-CTXT games;
-  - the contracts `X25519ClassLaw`, `X25519ScalarSpread`, `HasAttachedVerificationAdapter`, `ReadWritable`, `shortRejects`, `prefixConsistent` and `FunctionalDecapsulation`.
-  - Plan lines 88 and 642 say these are used only after approval. The sentence "every item below was approved before (2026-10-06, 2026-10-07)" in the CE-13 section of `doc/composition-assumptions.md` has no owner record behind it for these extensions. They are not hidden: each is an explicit premise or a named advantage.
+- (b) Owner input 13 (`doc/impl/common-deployment-experiment-plan.md`, section 16, item 13) has no recorded answer. It asks the owner to "confirm the scope extension to CE of each of the following, per headline":
+  - CE-A2, CE-A2pub, CE-R1': joint Ed25519/X25519 weak EUF (`PqxdhJointIdentity`), and `shortRejects` with `setup.wiring`.
+  - CE-A1: Gap-DH, the classical programmable R1 Extract-ROM, the classical programmable BLAKE2b random oracle, joint weak EUF, the record and schedule loss terms of `PqxdhRegistrationR1Authentication.generated_authentication` (the plan requires their primitive games to be listed in CE-13), and the premises `X25519ClassLaw`, `X25519ScalarSpread`, `SourceFullCorrect`, `HasAttachedVerificationAdapter`, `ReadWritable`, `Phase2ReadBack` and `FrameReadBack`.
+  - CE-KT: ML-KEM IND-CCA with its correctness error and `FunctionalDecapsulation`, the R1 Extract-ROM, the HMAC-PRF, Extract on `uniform32`, `SourceFullCorrect`, and `prefixConsistent` inside `setup`.
+  - CE-OR, CE-UKS, CE-APP, CE-LOR: everything above, plus the BLAKE2b random oracle, the modified-nonce AEAD IND$ and INT-CTXT games of the CTX components, and whatever item 4's receive-side lift needs (for example `DecoderAgreement`).
+  - CE-R1, CE-C3: nothing (deterministic).
+  - The LQ-F, D-ct and production forms are forms of these headlines and carry the same items. The production forms add `ReadWritable` at `codec'`.
+  - Each headline family uses its items unconditionally, as explicit premises or reduction advantages. The codec contracts of plan section 19 answer input 14, not input 13.
+  - The plan says that these extensions are used only after approval (section 2 table, line 88, and section 17). Its section 17 also says that item 2's R1 extension, Extract on `uniform32` and `SourceFullCorrect` are "inherited exactly as the owner approved them on 2026-10-06". Of those decisions, the R1 extension is scoped to the item 2 line and `SourceFullCorrect` to T7/T8, and input 13 still lists these items for CE-KT and CE-A1 (see obligation 2, qualifier (ii)). The sentence "every item below was approved before (2026-10-06, 2026-10-07)" in the CE-13 section of `doc/composition-assumptions.md` has no owner record behind it for these extensions. They are not hidden: each is an explicit premise or a named advantage.
 - (c) The handoff asks for every ProVerif ideal operation's "selection/query/loss accounting". Lean proves selection globally (`split_named`) and query bills globally (`headline_bills`, `later_headline_bills`). The per-operation table is not current: the plan section 11 table still says "Planned" for O5-O9, O18 and O20 and "CE-12" for O21, and the updated guide table gives only the endpoint. The owner can accept the global Lean accounting as meeting the requirement or ask for an updated per-operation table.
 - Not blocking: the plan section 22 cap loosening is a choice of bill parameters. The BLAKE2b cap is `qHash + S + R + qTest + qFresh`, and the coin cap is `qCoin + qTest + qFreshBytes`. Every bill is proved at these sound caps. It is still recorded as awaiting confirmation.
 
@@ -237,7 +242,7 @@ Other gaps, all approved partial rows or disclosed exclusions:
 
 ### 4. Typed CTX/AEAD results lifted to the global adaptive raw receive interface
 
-Status: closed within the approved scope. The verifier agrees and found citation and counting defects only.
+Status: the lift theorems are closed within the approved scope. The verifier agrees and found citation and counting defects only. The obligation also asks to "charge target/session/record selection". Record selection is charged inside the lift (its hops). Target and session selection are charged only in the CE headlines (`PqxdhDeploymentHeadlineChain.split_named`), so that part is closed in Lean and pending owner input 13, like obligation 3.
 
 Theorems:
 
@@ -270,13 +275,13 @@ Remaining gaps:
 
 ### 5. Evolving-chain source event
 
-Status: closed within the approved scope. The verifier agrees.
+Status: the chain lift is closed within the approved scope. The verifier agrees. The obligation also asks for the "common-experiment composition", which exists only in the CE headlines. That part is closed in Lean and pending owner input 13, like obligation 3.
 
 The obligation is closed through the record-lift route of the common experiment. The family-B line (HB-111/HB-112, MarkedTransfer15 at `94bc9538`) is not used by any statement or premise; `94bc9538` is not on central.
 
 Theorems:
 
-- `PqxdhRecordLiftChainLift.chain_lift` proves `PqxdhRecordLiftIdeal.ChainLiftTarget`. Its aliasing and refusal terms are both `noTerm` (zero, by `rfl`). It is two-sided, holds in every mode and for every budget-respecting adversary, and has the sole premise `SourceFullCorrect`. Each of its `(sends + 51·receives)·(n·2)` hops costs one Extract-on-uniform32 and one HMAC-PRF advantage.
+- `PqxdhRecordLiftChainLift.chain_lift` proves `PqxdhRecordLiftIdeal.ChainLiftTarget`. Its aliasing and refusal terms are both `noTerm` (zero, by `rfl`). It is two-sided, holds in every mode and for every budget-respecting adversary, and has the sole contract premise `SourceFullCorrect`. Its target unfolds to `PqxdhRecordLiftIdeal.ChainLiftBool` and `ChainLiftEvent`, which also quantify over environments satisfying `Frame env startup allowance` (discharged later by `PqxdhDeploymentIdealFrame.frame_idealD`), `budget.Respects` and, in the Boolean form, a query bound on the decision. Each of its `(sends + 51·receives)·(n·2)` hops costs one Extract-on-uniform32 and one HMAC-PRF advantage.
 - Supporting theorems: `PqxdhRecordLiftChainHybrid.chain_loss`, `chains_terminal`, `terminal_safe`, `PqxdhRecordLiftChainHop.hop_bound` and `PqxdhRecordLiftChainBills.observerAt_total`.
 - The kernels are the extracted `ConcreteRatchetKernel.from_counters` (`PqxdhRecordLiftSeed.serverKernel` and `beaconKernel`, by `rfl`). `PqxdhRecordLiftWorldCompiler.run_erasure` ties the compiler to the world.
 - The zero CTX refusal rests on `PqxdhRecordLiftProtocolHistory.program_fresh`, consumed by `PqxdhRecordLiftCtxHybrid.allReal_bare`.
@@ -323,7 +328,7 @@ Remaining gaps:
 
 ### 7. Production/source boundary
 
-Status: closed within the approved scope, on condition that the owner accepts the reviewed transcriptions RT-01 to RT-20 as the final link from the unextracted Rust adapter (`beaconcrypt/src`) to the Lean source programs. If the owner instead requires the seven proposed mechanical pins (PB-D1, PB-SURFACE, PB-CHECKS, PB-CAP, PB-TRANSITION, PB-AD, PB-GHOST), obligation 7 stays partially closed until they exist with mutation rows. None exists, by lane decision D-4, not by owner decision. The verifier agrees.
+Status: closed within the approved scope, on condition that the owner accepts the reviewed transcriptions RT-01 to RT-20 as the final link from the unextracted Rust adapter (`beaconcrypt/src`) to the Lean source programs. If the owner instead requires the seven proposed mechanical pins (PB-D1, PB-SURFACE, PB-CHECKS, PB-CAP, PB-TRANSITION, PB-AD, PB-GHOST), obligation 7 stays partially closed until they exist with mutation rows. None exists, by lane decision D-4, not by owner decision. The verifier agrees. The boundary equalities need no answer to owner input 13, but the production headline forms carry the conditions of the CE headlines, so they are pending input 13 as obligation 3 is, including `ReadWritable codec'.frameWrite codec'.frameRead` at the production codec.
 
 Theorems:
 
@@ -364,7 +369,7 @@ Remaining gaps:
 **No assumption was added to close obligations 1 to 7.** Every premise of the final theorems is an explicit binder or a field of an argument structure: there is no `variable` instance, `Fact` or global hypothesis, and no component theorem was renamed. One contract that is a field of the `Setup` argument, and so ambient to every final theorem, is nevertheless missing from the consolidated CE-13 assumption list:
 
 - `Setup.serverDomain.available` (`PqxdhServerStaticDhSource.PublicDomain`): X25519 static-DH availability depends only on a public predicate of the peer encoding, not on the secret seed.
-- `Setup.beaconDomain.available` and `Setup.beaconDomain.nonzero` (`PqxdhPhase2GapDhSource.PublicDomain`). The `nonzero` law is redundant.
+- `Setup.beaconDomain.available` and `Setup.beaconDomain.nonzero` (`PqxdhPhase2GapDhSource.PublicDomain`). The `nonzero` law is redundant at the instance that `Setup` fixes: `beaconDomain` is a `PublicDomain` of `PqxdhJointGapDh.sourceInterface`, whose DH function `PqxdhJointGapDh.sourceScalarDh` returns `none` on an all-zero output, so every `some` value is nonzero by definition. It is still used, by `PqxdhPhase2DhMetadata.selected_nonzero` (`PqxdhPhase2DhMetadata.lean:21`).
 
 Every final theorem quantifies over a `Setup` that carries these fields, and the experiment's KEM-transfer and ideal-world equalities use `serverDomain.available`. The laws are true of clamped X25519 as libsodium implements it: the output is all-zero exactly for small-order peers, independent of the scalar. They predate the handoff and are part of the Milestone B `Setup` design. They are recorded in prose ("native optional-DH availability law", `trusted-boundary.md:449`; "public optional availability", `composition-assumptions.md:186`), but no ledger names them, and the CE-13 list says that `setup` carries only `prefixConsistent` and `wiring`. ASSUME first classified this as a hidden contract. Its verifier reclassified it as an approved but under-documented contract, and Claude agrees after reading the sources. The owner should list it explicitly.
 
@@ -396,7 +401,7 @@ These are not reached by any final statement: the correlated Extract family, the
 
 ### Functional and codec contracts
 
-- Codec contracts approved on 2026-10-06 (plan section 19): `Phase1ReadBack` and `Phase2ReadBack` (premises of most of the 330 final theorems), `FrameReadBack`, and one codec for registration and records with `DecoderAgreement`. No headline takes `DecoderAgreement`; it is an inner hypothesis of `origin_statement` only, and it is proved at the production instance.
+- Codec contracts approved on 2026-10-06 (plan section 19): `Phase1ReadBack` and `Phase2ReadBack` (premises of 271 and 273 of the 330 final theorems defined under the basis above), `FrameReadBack`, and one codec for registration and records with `DecoderAgreement`. No headline takes `DecoderAgreement`; it is an inner hypothesis of `origin_statement` only, and it is proved at the production instance.
 - `ReadWritable codec.frameWrite codec.frameRead`: a restricted writer totality. It is the approved message-model premise of the first-record line (Milestone B and audit remediation C), not a section 19 law. Its use in the experiment and at `codec'` is part of input 13.
 - `SourceFullCorrect setup.source setup.hmac`: item 2 decision of 2026-10-06.
 - `FunctionalDecapsulation setup.kem`: deterministic decapsulation.
@@ -447,6 +452,7 @@ What is closed:
   - a non-local macro, syntax, elaborator or notation (only 1,025 `local notation` declarations).
 - An exact axiom-reachability walk imported all 1,985 project modules and followed `getUsedConstants` of every type and value and every constructor, without Lean's precomputed axiom data. It ran from all 94,891 project constants, reached 121,768 constants with 0 unresolved references, and found only `propext`, `Classical.choice` and `Quot.sound`.
 - A second implementation reproduced the walk exactly.
+- Checklist step 7 gives this walk as a program. Claude ran that program text on 2026-10-17 against the published olean set: it printed the same counts and exited 0 in 20 s. A control file, in which an axiom is reachable only through a structure field type, made it fail with exit 1. The comment- and string-stripping scan of step 7 also reports 0 hits on the 1,985 files; on a control file containing each forbidden token it reports every one.
 - The environment declares 33 axiom constants, including Aeneas opaque-type and spec axioms and `native_decide` axioms of Hax `CoreModels`. None is reachable.
 - All 19,646 guards are exact and agree with `#print axioms`.
 - All 367 distinct deliverable theorems cited for items 2 to 7 carry an exact three-axiom guard, and their exact reachable axiom sets are those three.
@@ -455,7 +461,9 @@ What is closed:
 
 What is not closed:
 
-- Guard coverage. 1,225 public theorems in 72 modules created 2026-08-31 to 2026-09-06, before the rule "guard on every public theorem", have no guard. Nor do 528 private helpers in 194 modules. Their axioms are clean by the walk but are not gate-enforced.
+- Guard coverage in `Computational`. 1,225 public theorems in 72 modules created 2026-08-31 to 2026-09-06, before the rule "guard on every public theorem", have no guard. Nor do 528 private helpers in 194 modules.
+- Guard coverage in the older `Model`, `PanicFreedom` and `Refinement` layers, which the AXIOMS audit describes as largely unguarded by design. Public theorems without an in-file guard: 140 of 143 in `Model` (10 modules), 557 of 567 in `PanicFreedom` (12 modules), and 556 of 648 in `Refinement` (63 modules), 2 of which are guarded in another module. That is 1,251 more public theorems with no guard anywhere, and 2,476 in the whole tree.
+- The axioms of all these theorems are clean by the walk, but no maintained gate enforces it.
 - Guards are not a complete axiom gate in Lean 4.34. `#print axioms` and every `#guard_msgs` guard read per-module axiom lists precomputed when each olean was written (`exportedAxiomsExt`). These lists can under-report axioms that are reachable only through constructor field types. 20 guarded experiment theorems already list fewer standard axioms than they reach, for example `PqxdhDeploymentIdealSlots.attach_detach`, which is guarded as axiom-free. No non-standard axiom is affected today.
 - The policy gate. `make check-lean-policy` rejects only `sorry`, `admit`, `axiom` and `sorryAx` in repository sources. It does not reject `native_decide`, `decide +native`, `implemented_by`, `extern`, `unsafe` or `opaque`.
 - The dependency layer. The trusted Aeneas and Hax libraries declare axioms, and no ledger records this. `trusted-boundary.md:112` is silent on that layer.
@@ -482,7 +490,7 @@ What is not closed:
 
 ## Owner decisions and acknowledgements needed
 
-1. Owner input 13 (plan section 16): confirm the extension to the headlines of the experiment, per family, of the approved games, idealizations and contracts listed under obligation 3 (b). This includes the BLAKE2b random oracle and the AEAD games for CE-OR, CE-UKS, CE-APP and CE-LOR, and `ReadWritable` at the production codec `codec'`.
+1. Owner input 13 (plan section 16): confirm, per headline, the extension to the experiment's headlines of the games, idealizations and contracts listed under obligation 3 (b). This includes, for CE-KT, the R1 Extract-ROM, the HMAC-PRF, Extract on `uniform32`, `SourceFullCorrect`, `prefixConsistent` and ML-KEM IND-CCA with its correctness error and `FunctionalDecapsulation`; for CE-A1, the R1 Extract-ROM, Gap-DH, the BLAKE2b random oracle, joint weak EUF, the loss terms of `PqxdhRegistrationR1Authentication.generated_authentication` and its contract premises; for CE-OR, CE-UKS, CE-APP and CE-LOR, in addition the BLAKE2b random oracle and the AEAD games; and `ReadWritable` at the production codec `codec'`. The answer settles the pending parts of obligations 2, 3, 4, 5 and 7. If the owner holds that the 2026-10-06 item 2 decisions already cover the CE-KT items, saying so settles those items.
 2. List the setup-carried X25519 `PublicDomain` contracts and the model-level reading of the `Pqxdh.Crypto` laws explicitly in both assumption ledgers. Add `ReductionCaps` to the CE-13 query bounds.
 3. Acknowledge that the O21 eleven-field agreement is not an event in the experiment, so the CE-A1 rows are partial.
 4. Accept the global Lean selection and query accounting for obligation 3, or ask for an updated per-operation selection/query/loss table.
@@ -508,18 +516,19 @@ Basis:
 Steps:
 
 1. Submodules. Run `git submodule update --init --recursive` and confirm `rooterberg` at `85c1ae75` and `wycheproof` at `b61843a9`.
-2. Rust (toolchain 1.96, Cap'n Proto binaries installed):
-   - `cargo build` and `cargo test`;
-   - the two role/feature checks, `cargo check -p beaconcrypt --no-default-features --features pqxdh,beacon --lib` and `cargo check -p beaconcrypt --no-default-features --features pqxdh,server --lib`;
-   - `cargo fmt --all --check` and `cargo clippy --workspace --all-targets --all-features`.
+2. Rust (toolchain 1.96, Cap'n Proto binaries installed). Set `CARGO_TARGET_DIR` to a directory outside the clone for steps 2 to 4, so that a Nix proof-shell copy of the clone (step 5) does not include the cargo build directory.
+   - `cargo build --workspace --locked` and `cargo test --workspace --all-features --locked`. The bare `cargo build` and `cargo test` of `AGENTS.md` cover only the default member `beaconcrypt` (`default-members` in the root `Cargo.toml`). They skip the 110 tests of `beaconcrypt-core`, including `beaconcrypt-core/tests/general_registration_admission.rs`. CI runs `cargo test --verbose --workspace` (`.github/workflows/rust.yml`), and the last complete matrix ran `cargo test --workspace --all-features --locked` (285 tests then, `doc/impl/staged-verification-record.md`).
+   - The two role/feature checks: `cargo check -p beaconcrypt --no-default-features --features pqxdh,beacon --lib` and `cargo check -p beaconcrypt --no-default-features --features pqxdh,server --lib`.
+   - `cargo fmt --all -- --check`.
+   - `cargo clippy --workspace --all-targets --all-features --locked`. It fails only on errors, not on lints. The last complete matrix recorded "existing unrelated lint warnings", so `-- -D warnings` would fail on those and is not the gate. Review the warnings instead: a new warning in a file changed by the merge is a finding.
 3. Bindings:
    - Go: `cargo build -p beaconcrypt --release --features gobinds`, then `go test -race ./...`.
    - Python: `uv run maturin develop --uv`, then `uv run pytest tests`.
-   - Formatting: Black and `gofmt`.
-4. Transcript fidelity: `make -C beaconcrypt-core check-proverif-transcript-fidelity` inside the proof shell. It runs `test-verdict-classes.py` and `cargo test --locked -p beaconcrypt-core --test proverif_transcript_fidelity`.
-5. Full verification: `make -C beaconcrypt-core verify`. It enters the locked proof shell and runs these in one invocation, which has never been done since the fs and extension groups were added:
+   - Formatting, from the clone root: `uv run black --check --extend-exclude '/(wycheproof|rooterberg|\.lake)/' .` (Black is in the `dev` dependency group; the pinned test-vector submodules are not project sources, and `wycheproof` contains a Python file) and `test -z "$(gofmt -l .)"`. The audits ran neither Black nor `go test`; `gofmt -l .` printed nothing on central's tree on 2026-10-17.
+4. Transcript fidelity, inside the proof shell (see "Proof shell" below): `make -C <clone>/beaconcrypt-core check-proverif-transcript-fidelity SHELL=bash`. It runs `test-verdict-classes.py` and `cargo test --locked -p beaconcrypt-core --test proverif_transcript_fidelity`.
+5. Full verification: `make -C beaconcrypt-core verify` (add `SHELL=bash` on a host without `/bin/bash`). It enters the locked proof shell and runs these in one invocation, which has never been done since the fs and extension groups were added:
    - `check-toolchain` and `extract-proverif`;
-   - `check-proverif`: the legacy roster with 35 scenarios in parallel, including the live-material, private-application and KEM-controller groups;
+   - `check-proverif`: the legacy roster of 35 scenarios in parallel, plus three groups that are prerequisites of the target and not roster scenarios: live material (5 targets), private application (3 targets) and the KEM-controller authentication gate (1 target);
    - `check-proverif-fs`: the serial free-schedule group;
    - the eleven extension targets;
    - `extract-lean`;
@@ -527,12 +536,154 @@ Steps:
    - `check-inventory`.
 
    Afterwards `git status --short` must show no drift in `beaconcrypt-core/proofs/pro-verif/extraction` or the generated Lean paths. These are the paths `make check-generated` checks, but that target reruns `verify`.
-6. Inventory: run `make -C beaconcrypt-core check-inventory` separately, as `AGENTS.md` asks.
-7. Forbidden-placeholder and axiom scans, beyond `check-lean-policy`:
-   - Scan the repository Lean sources for `native_decide`, `decide +native`, `implemented_by`, `extern`, `unsafe`, `opaque` and `partial def`, ignoring comments and strings. The audit found none.
-   - On the full build's output, run an exact axiom-reachability check over all `BeaconcryptCore` constants: import every module, follow the used constants of every type, value and constructor, and collect the axioms reached. The expected set is exactly `propext`, `Classical.choice` and `Quot.sound`. Do not rely on `#print axioms` alone, because of the Lean 4.34 under-report described above.
+6. Inventory: run `make -C <clone>/beaconcrypt-core check-inventory SHELL=bash` separately inside the proof shell, as `AGENTS.md` asks.
+7. Forbidden-placeholder and axiom scans, beyond `check-lean-policy`. Both programs are given in full under "Step 7 programs" below.
+   - The source scan. It blanks comments, strings and character literals in every tracked Lean file and reports `sorry`, `admit`, `sorryAx`, `axiom`, `native_decide`, `decide +native`, `ofReduceBool`, `ofReduceNat`, `implemented_by`, `extern`, `unsafe`, `opaque`, `partial def`, `csimp`, `#exit`, `#eval`, `run_cmd`, `run_tac`, `run_elab`, `addDecl`, `import Lean`, `debug.` options, `skipKernelTC`, `trustCompiler`, `allowUnsafe` and every non-local `macro`, `syntax`, `elab` or `notation` command. Expected at `2cadb9be`: `LEAN-SCAN files 1985 hits 0` and exit 0. Any hit exits 1.
+   - The exact axiom walk, on the full build's output. It imports every module and follows the constants used by every type, value (opaque values included) and constructor, from every `BeaconcryptCore` constant, without Lean's precomputed axiom data. It fails unless every name resolves and the axioms reached are exactly `propext`, `Classical.choice` and `Quot.sound`. Do not rely on `#print axioms` alone, because of the Lean 4.34 under-report described above. Its second check reproduces the `serverDomain.available` usage finding. Expected output at `2cadb9be`, with exit 0 (the counts change only if the merge changes Lean sources):
+
+     ```text
+     AXIOM-WALK roots 94891 reached 121768 unresolved 0
+     AXIOM-WALK axioms [Classical.choice, Quot.sound, propext]
+     SERVER-DOMAIN PqxdhDeploymentKemTwoSided.kem_transfer_two_sided true
+     SERVER-DOMAIN PqxdhDeploymentIdealCompile.ideal_compile true
+     SERVER-DOMAIN PqxdhDeploymentIdealHandoff.ideal_world_view true
+     SERVER-DOMAIN PqxdhRegistrationJointKemKeyTransfer.allIdeal_loss false
+     SERVER-DOMAIN PqxdhRegistrationJointKemPostSkeleton.opaqueBranch_shared false
+     SERVER-DOMAIN PqxdhRegistrationJointBeaconFinishOnce.slotGame_two false
+     ```
+
 8. Mutation testing. It is required only if production Rust changes. The item 1 to 7 work changed none: `beaconcrypt/src`, `beaconcrypt-core/src`, the Go files, `beaconcrypt/bindings.h`, tests and examples are identical between `4d4ecf0c` and `2cadb9be`. Relative to `vcvio` and `main`, however, central carries `5cbd76e3` and `12d5dfcc`. If the exact merge brings them into a branch that lacks them, that merge is a production Rust change, and the `AGENTS.md` mutation requirement applies to it: run the complete configured `cargo mutants --workspace --jobs 6` and fix every missed or timed-out viable mutant.
 9. Nix clean-up. `AGENTS.md` asks for `nix-collect-garbage` after the last Nix-backed verification. On this shared machine it must never run while another agent or process uses Nix; that is the owner's call.
+
+Proof shell. Steps 4, 6 and 7 run inside the locked proof shell. Make a directory `<flake>` that holds only copies of the clone's `flake.nix` and `flake.lock` (the flake refers to no other file), and enter the shell with `nix --extra-experimental-features 'nix-command flakes' develop --no-update-lock-file 'path:<flake>#proofs'`, adding `-c <command>` to run one command. Entering through the clone itself, as the `verify` target does with `path:..#proofs`, copies the whole clone into the Nix store, including any `target/` and, after step 5, the about 22 GiB `.lake` (see the operational notes). `beaconcrypt-core/Makefile` sets `SHELL := /bin/bash`; on a host without `/bin/bash`, such as NixOS, pass `SHELL=bash` to `make`, as the earlier verification records did.
+
+Step 7 programs. Save both files in a directory `<dir>` outside the clone. The programs change no tracked file.
+
+The source scan, `<dir>/lean-scan.py`, runs with `cd <clone>/beaconcrypt-core/proofs/lean && python3 -I <dir>/lean-scan.py` (it does not need the build):
+
+```python
+import re, subprocess, sys
+
+# Blank Lean comments (nested /- -/, --), string literals (also s!/m!/f! and r#"..."#) and
+# character literals, keeping line structure, then report forbidden tokens.
+def strip(t):
+    out, i, n, depth = [], 0, len(t), 0
+    keep = lambda s: re.sub(r'[^\n]', ' ', s)
+    while i < n:
+        if t.startswith('/-', i):
+            j, depth = i + 2, 1
+            while j < n and depth:
+                if t.startswith('/-', j): depth, j = depth + 1, j + 2
+                elif t.startswith('-/', j): depth, j = depth - 1, j + 2
+                else: j += 1
+            out.append(keep(t[i:j])); i = j
+        elif t.startswith('--', i):
+            j = t.find('\n', i); j = n if j < 0 else j
+            out.append(keep(t[i:j])); i = j
+        elif (m := re.compile(r'r(#*)"').match(t, i)) and (i == 0 or not re.match(r'[\w.\'!?]', t[i - 1])):
+            end = t.find('"' + m.group(1), m.end()); j = n if end < 0 else end + 1 + len(m.group(1))
+            out.append(keep(t[i:j])); i = j
+        elif t[i] == '"':
+            j = i + 1
+            while j < n and t[j] != '"': j += 2 if t[j] == '\\' else 1
+            out.append(keep(t[i:j + 1])); i = j + 1
+        elif t[i] == "'" and (i == 0 or not re.match(r'[\w.\'!?₀-ₜ]', t[i - 1])) and \
+                (m := re.compile(r"'(\\(?:x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|.)|[^\\'\n])'").match(t, i)):
+            out.append(keep(m.group(0))); i = m.end()
+        else:
+            out.append(t[i]); i += 1
+    return ''.join(out)
+
+FORBIDDEN = re.compile(
+    r"\b(sorry|admit|sorryAx|axiom|native_decide|ofReduceBool|ofReduceNat|implemented_by|extern"
+    r"|unsafe|opaque|csimp|run_cmd|run_tac|run_elab|addDecl|trustCompiler|skipKernelTC|allowUnsafe)\b"
+    r"|\bdecide\s*\+\s*native\b|\bpartial\s+def\b|#exit\b|#eval\b|^\s*import\s+Lean\b|\bset_option\s+debug\."
+    r"|^(?:@\[[^\]]*\]\s*)?(?:scoped\s+)?(?:macro|macro_rules|syntax|elab|elab_rules|notation|infixl?|infixr"
+    r"|prefix|postfix)\b", re.M)
+
+files = sys.argv[1:] or subprocess.run(['git', 'ls-files', '*.lean'], capture_output=True, text=True,
+                                      check=True).stdout.split()
+hits = 0
+for f in files:
+    s = strip(open(f, encoding='utf-8').read())
+    for m in FORBIDDEN.finditer(s):
+        hits += 1
+        print(f'{f}:{s.count(chr(10), 0, m.start()) + 1}: {m.group(0).strip()}')
+print(f'LEAN-SCAN files {len(files)} hits {hits}')
+sys.exit(1 if hits else 0)
+```
+
+The axiom walk. Save the following text as `<dir>/axiom-walk-body.lean`:
+
+```lean
+open Lean Elab Command
+
+namespace AxiomWalk
+
+/-- Every constant reachable from `roots` through the constants used by types and values
+(opaque values included) and by the constructors of inductive types. No precomputed axiom
+data is used. Returns the reached constants and the names that do not resolve. -/
+def reach (env : Environment) (roots : Array Name) : NameHashSet × Array Name := Id.run do
+  let mut seen : NameHashSet := {}
+  for r in roots do seen := seen.insert r
+  let mut work := roots
+  let mut missing : Array Name := #[]
+  while 0 < work.size do
+    let c := work.back!
+    work := work.pop
+    match env.find? c with
+    | none => missing := missing.push c
+    | some ci =>
+      let mut used := ci.type.getUsedConstants
+      if let some v := ci.value? (allowOpaque := true) then used := used ++ v.getUsedConstants
+      if let .inductInfo iv := ci then used := used ++ iv.ctors.toArray
+      for d in used do
+        unless seen.contains d do
+          seen := seen.insert d
+          work := work.push d
+  return (seen, missing)
+
+end AxiomWalk
+
+open AxiomWalk in
+#eval show CommandElabM Unit from do
+  let env ← getEnv
+  let mods := env.header.moduleNames
+  let roots := env.constants.map₁.fold (init := #[]) fun acc n _ =>
+    match env.getModuleIdxFor? n with
+    | some i => if (`BeaconcryptCore).isPrefixOf mods[i.toNat]! then acc.push n else acc
+    | none => acc
+  let (seen, missing) := reach env roots
+  let found := seen.fold (init := #[]) fun acc n =>
+    if (env.find? n) matches some (.axiomInfo _) then acc.push n.toString else acc
+  logInfo m!"AXIOM-WALK roots {roots.size} reached {seen.size} unresolved {missing.size}"
+  logInfo m!"AXIOM-WALK axioms {found.qsort (· < ·)}"
+  unless missing.isEmpty && found.all (["Classical.choice", "Quot.sound", "propext"].contains ·) do
+    throwError "AXIOM-WALK FAILED"
+
+open AxiomWalk in
+#eval show CommandElabM Unit from do
+  let env ← getEnv
+  let c := `BeaconcryptCore.Computational
+  let target := c ++ `PqxdhServerStaticDhSource.PublicDomain.available
+  for t in [`PqxdhDeploymentKemTwoSided.kem_transfer_two_sided,
+      `PqxdhDeploymentIdealCompile.ideal_compile, `PqxdhDeploymentIdealHandoff.ideal_world_view,
+      `PqxdhRegistrationJointKemKeyTransfer.allIdeal_loss,
+      `PqxdhRegistrationJointKemPostSkeleton.opaqueBranch_shared,
+      `PqxdhRegistrationJointBeaconFinishOnce.slotGame_two] do
+    unless env.contains (c ++ t) do throwError "missing {t}"
+    let (seen, _) := reach env #[c ++ t]
+    logInfo m!"SERVER-DOMAIN {t} {seen.contains target}"
+```
+
+After step 5, inside the proof shell, build the walk file from the import list of every tracked module and run it with the full build's oleans:
+
+```sh
+cd <clone>/beaconcrypt-core/proofs/lean
+{ git ls-files 'BeaconcryptCore.lean' 'BeaconcryptCore/*.lean' | sed 's/\.lean$//; s|/|.|g; s/^/import /'
+  cat <dir>/axiom-walk-body.lean; } > <dir>/AxiomWalk.lean
+lake env lean <dir>/AxiomWalk.lean
+```
 
 Expected resources. Sources: committed files where they exist; otherwise measurements on this machine recorded by the coordination tooling and the audits, which are restated here because those records are machine-local.
 
@@ -540,22 +691,23 @@ Expected resources. Sources: committed files where they exist; otherwise measure
 | --- | --- | --- | --- |
 | Full `lake --rehash build` | Unmeasured. The last full build (`edc701e7`, 2026-10-01) had 4,728 lake jobs for 1,186 handwritten Lean files; there are now 1,978 handwritten and 7 generated, so expect proportionally more. Single-module compiles take 3 to 7 s; sequential rebuild samples ran 5 to 6.5 s per module including queueing (192 modules in 1,219 s), so about 3 h on one worker for the 1,985 project modules, less in parallel. Dependency builds (Mathlib v4.34.0, VCVio, Aeneas and Hax with the repository patches) come on top unless their outputs are reused. | Unmeasured for a full build. A single Lean check peaks at 3.97 GiB RSS on average and 4.32 GiB at most, mostly shared olean page cache. The coordination class for an 8-worker `lake build` is an 8,192 MiB estimate. Heartbeat limits of one full build are unmeasured. | `doc/impl/handover/pause-2026-10-01/integrated-evidence/beaconcrypt-common-integration-after-make.json` (job count); machine measurements (RSS, rebuild timings) |
 | `.lake` disk | about 22 GiB per full tree; 249.7 GiB free on 2026-10-17 | — | machine survey of 2026-10-07; disk report of 2026-10-17 |
-| fs group (`check-proverif-fs`) | 2 h 54 min wall in the last pass, 96.5% of the about 3 h OD7 budget; CI allows 210 min; must run serially and alone on the machine | fs-registration A1 kept only 3.3% of the 10 GiB address-space cap as headroom (peak 10,135,500 KiB, 9.67 GiB) | `doc/impl/proverif-free-schedule-records-b2s.md`; `.github/workflows/formal-verification.yml`; machine measurement (peak) |
+| fs group (`check-proverif-fs`) | 2 h 54 min wall in the last pass, 96.5% of the about 3 h OD7 budget; CI allows 210 min; must run serially and alone on the machine | fs-registration A1 kept only 3.3% of the 10 GiB address-space cap as headroom (peak 10,135,500 KiB, 9.67 GiB) | `doc/impl/proverif-free-schedule-records-b2s.md` (wall time in "Budget (OD7)", A1 peak at line 179); `.github/workflows/formal-verification.yml` |
 | Extension group | CI allows 180 min; 1,800 s and 10 GiB per target; SS-b2s took 1,426 s of its 1,800 s cap | up to 10 GiB per target | `.github/workflows/formal-verification.yml`; OD7; `doc/impl/handover/resume-2026-10-05/active-strong-secrecy/proverif-receipts.json` |
 | Legacy roster (`check-proverif`) | the general-registration family has a 240 min CI job | 35 scenarios at once (`-j35`); the median recorded ProVerif run on this machine peaks at 0.65 GiB, but the roster's combined peak with 35 parallel scenarios is unmeasured | `.github/workflows/formal-verification.yml`; `beaconcrypt-core/Makefile`; machine measurement |
 | `check-inventory` | about 2 min per run in the proof shell | unmeasured (2,048 MiB lease estimate) | machine lease history |
 | Transcript fidelity | 12 to 15 s per test run; about 20 to 30 s per warm cargo invocation | unmeasured (3,072 MiB lease estimate at `CARGO_BUILD_JOBS=2`) | guides (for example `doc/impl/kem-functional-graph.md`); machine lease history |
 | Mutation suite, if required | 1,173 cases in 36 min with `--jobs 6` (last complete run) | — | `doc/impl/staged-verification-record.md` |
+| Step 7 programs | source scan about 15 s; axiom walk 20 s against the published olean set | axiom walk 5.0 GiB peak RSS | Claude's runs of the step 7 program text on 2026-10-17 (machine-local) |
 
 Operational notes for the owner's run:
 
-- Proof-shell copy. `beaconcrypt-core/Makefile` uses `PROOF_SHELL := path:..#proofs`, so every `nix develop` copies the working tree, including a built `.lake` of about 22 GiB, into the Nix store. Run `make verify` once in the fresh clone. For any rerun, enter the proof shell from a separate directory that holds only `flake.nix` and `flake.lock` (`nix develop --no-update-lock-file path:<that directory>#proofs`), then run `make -C <clone>/beaconcrypt-core verify-in-shell`.
+- Proof-shell copy. `beaconcrypt-core/Makefile` uses `PROOF_SHELL := path:..#proofs`, so every `nix develop` copies the working tree, including a built `.lake` of about 22 GiB, into the Nix store. Run `make verify` once in the fresh clone. For any rerun, enter the proof shell from a separate directory that holds only `flake.nix` and `flake.lock` (`nix develop --no-update-lock-file path:<that directory>#proofs`), then run `make -C <clone>/beaconcrypt-core verify-in-shell` (with `SHELL=bash` where needed; see "Proof shell" above).
 - ProVerif lock. Ten extension checkers take a blocking `flock` on their default lock `/tmp/bc-arc-scratch/proverif.lock`, and the Makefile passes no `--lock`. Do not run the gates under `coord.sh pv`, which holds that lock for the whole command and would deadlock (a visible hang, not a false pass). Make sure no agent holds the lock during the run. The checkers create `/tmp/bc-arc-scratch` if it is absent.
 - Machine load. Pause both agents' heavy jobs; the fs group needs the machine to itself.
 
 ## Known risks
 
-- **Modules never built together.** No full `lake build` has ever covered the item 1 to 7 modules. None of the modules of the `PqxdhRegistrationJoint*`, `PqxdhDeployment*`, `PqxdhRecordLift*`, `PqxdhBoundary*`, `PqxdhExtractRomHiddenSuffix` and `PqxdhKeyScheduleFromRoot` families (about 490) has an olean in central's `.lake/build`, which was last written on 2026-10-01 and holds 908 of the 1,985 module oleans.
+- **Modules never built together.** No full `lake build` has ever covered the item 1 to 7 modules. None of the modules of the `PqxdhRegistrationJoint*`, `PqxdhDeployment*`, `PqxdhRecordLift*`, `PqxdhBoundary*`, `PqxdhExtractRomHiddenSuffix` and `PqxdhKeyScheduleFromRoot` families (491 modules) has an olean in central's `.lake/build`. That directory was last written on 2026-10-01 and holds 1,057 module oleans: 1,056 `BeaconcryptCore.*` modules and the root. The published `LEAN_PATH` resolves 908 modules to it; for the other 149 it resolves to oleans in other directories.
   - The evidence is per-module `lean -o` builds stitched together through the published `LEAN_PATH` from 115 build directories.
   - 563 lake-built modules have an olean older than some transitive import, so lake would rebuild them. Kernel replay of all 1,985 published oleans passed, and the 95 modules whose direct import was regenerated after them re-elaborate cleanly.
   - Lake-built oleans cannot be compared byte for byte with `lean -o` rebuilds: they embed the package and sometimes the source path. They were compared semantically instead.
@@ -566,14 +718,14 @@ Operational notes for the owner's run:
   - The systemd-tmpfiles cleaner deleted 18 tracked central files and 2,041 submodule files; they were restored on 2026-10-16.
   - It also deleted 522 tracked files of the shared dependency worktree `/tmp/beaconcrypt-server-auth-ctx-observer-integration`, including `beaconcrypt-core/proofs/lean/lakefile.toml`, `lean-toolchain` and `patches/`, and 575 of `/tmp/beaconcrypt-server-auth-common-integration`. Their `.lake` outputs, which supply dependency oleans of the published `LEAN_PATH`, are intact. This is not yet recorded in a coordination decision.
   - Committed documents contain about 16,400 `/tmp` references in 377 files. The 21 production receipts hold about 1,540 of them, and their evidence will not survive the cleaner. Restoring the dependency worktrees from their git objects, and extending the access-time refresh to them, are owner decisions.
-- **Axiom gate.** In Lean 4.34, guards can under-report (see above), and `check-lean-policy` does not reject `native_decide`, `implemented_by`, `extern`, `unsafe` or `opaque`. A future change that reaches a dependency axiom through a structure field could pass every guard and the gate.
+- **Axiom gate.** In Lean 4.34, guards can under-report (see above), and `check-lean-policy` does not reject `native_decide`, `implemented_by`, `extern`, `unsafe` or `opaque`. A future change that reaches a dependency axiom through a structure field could pass every guard and the gate. The step 7 programs check both properties for the owner's run, but they are not maintained gates; committing them as reviewed checks would be a separate, owner-approved change.
 - **ProVerif margins.** The fs group uses 96.5% of its time budget, and A1 uses 96.7% of the memory cap. The general-registration checker changed after its last solver run; its expected verdicts are AST-identical. The complete configured gate has never run in one invocation.
 - **Stale Lean docstrings.** Fixing the stale docstrings listed below changes oleans. Any such edit before item 8 needs those modules and their dependents re-checked, and the inventory re-hashed.
 - **No joint-satisfiability witness for the full premise bundle in Lean.** The production codec's satisfiability is a prose argument (`doc/impl/production-headlines.md:80`).
 
 ## Documentation defects found by the audits (not fixed here)
 
-Most of these understate what Lean proves. The exceptions, which say slightly more than the sources support, are the two exact-far lines (obligation 6), the incomplete CE-13 assumption list with its approval sentence, the quoted under-reported axiom lists and the HB-111 wording. None claims a Lean statement that does not exist. Line numbers are at `2cadb9be`.
+Most of these understate what Lean proves. The exceptions, which say slightly more than the sources support, are the two exact-far lines (obligation 6), the incomplete CE-13 assumption list with its approval sentence, the quoted under-reported axiom lists and the HB-111 wording. None claims a Lean statement that does not exist. Line numbers are at `2cadb9be`. One further defect is fixed on this branch: `doc/impl/handover/README.md` named the 2026-10-01 pause handoff as current, and now has a pointer paragraph to the later handoffs, with the old paragraph kept as history.
 
 - Assumption lists:
   - `doc/composition-assumptions.md`, CE-13 section: the setup bullet omits the `PublicDomain` laws and the `Pqxdh.Crypto` laws, the query bounds omit `ReductionCaps`, and the cap loosening is still marked as awaiting confirmation.
@@ -598,7 +750,6 @@ Most of these understate what Lean proves. The exceptions, which say slightly mo
 - `doc/proverif-source-scope.md`: lines 64-70 predate CE-13.
 - `doc/impl/common-deployment-experiment.md`: lines 2119, 2182 and 2212 quote the under-reported axiom list of `PqxdhDeploymentIdealLaterPool.onBase_view`.
 - `doc/impl/extract-composition.md`: its status line is stale.
-- `doc/impl/handover/README.md`: it still names the 2026-10-01 pause handoff as current.
 - `doc/impl/proof-receipts/extract-composition-inc4.json`: records a pre-review hash of `PqxdhRegistrationJointKemKeyFirst.lean` (a docstring-only fix, `7f795e19`).
 - Module docstrings:
   - `PqxdhRecordLiftComposition`, `PqxdhRecordLiftCtxBills`, `PqxdhRecordLiftInterface` (including `Caps.derivations`), `PqxdhRecordLiftLater`, `PqxdhRecordLiftCtxHybrid` and `PqxdhRecordLiftWorld`: they still describe delivered parts as open.

@@ -2,6 +2,8 @@
 
 ## Current pause handoff
 
+Later handoffs supersede the 2026-10-01 one named in the next paragraph. The latest pause handoff is [the 2026-10-06 pause handoff](pause-2026-10-06/README.md), after [the 2026-10-05 one](pause-2026-10-05/README.md). [The completion handoff of 2026-10-11](completion-2026-10-11/README.md) records the independent audit of the 2026-10-06 handoff's open obligations and the owner's final validation checklist.
+
 Read [the 2026-10-01 pause handoff](pause-2026-10-01/README.md) for the latest integrated validation, topic checkpoints, unfinished proof states, publication holds and exact resume instructions. General proof work is paused at the owner’s request. The remediation report below records the earlier milestone state.
 
 This is the handover for the whole remediation of the proof audit at `0b4039e` (audit report: `/home/user/worktrees/beaconcrypt-proof-audit/doc/impl/proof-audit-0b4039e.md`, a separate worktree that is read-only for this work). It covers Step 0 and Milestones A, B, C and D. Milestones A, C and D are complete and verified. Milestone B (server authentication, finding F1) is about half built and has its own detailed handover in `milestone-b/README.md`.
