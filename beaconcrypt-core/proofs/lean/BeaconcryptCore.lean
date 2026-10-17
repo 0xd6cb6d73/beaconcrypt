@@ -2273,6 +2273,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentProductionHeadlinesDct
 
 import BeaconcryptCore.Computational.PqxdhDeploymentProductionRegistration
 
+import BeaconcryptCore.Computational.PqxdhDeploymentSessionFieldsInvariant
+
 /-!
 # Beaconcrypt-core verification root
 
