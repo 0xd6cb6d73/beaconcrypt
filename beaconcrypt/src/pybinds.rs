@@ -58,7 +58,7 @@ fn persistence_result<T>(
 }
 
 /// Immutable comparison token obtained from authoritative snapshot storage.
-#[pyclass(name = "SnapshotHead", frozen, eq, skip_from_py_object)]
+#[pyclass(name = "SnapshotHead", frozen, eq)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct SnapshotHeadPy {
 	inner: SnapshotHead,

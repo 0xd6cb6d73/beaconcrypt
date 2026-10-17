@@ -443,12 +443,8 @@ fn mlkem768_encapsulation_wycheproof() {
 			let randomness = decode_hex(&test.m);
 			assert_eq!(randomness.len(), 32, "{label}");
 
-			// ML-KEM Encaps_internal consumes a 32-byte m. libsodium-rs currently
-			// exposes that native function through its 64-byte keygen Seed type;
-			// the native function consumes the first 32 bytes.
-			let mut deterministic_seed = [0u8; mlkem768::SEEDBYTES];
-			deterministic_seed[..randomness.len()].copy_from_slice(&randomness);
-			let deterministic_seed = mlkem768::Seed::from(deterministic_seed);
+			let deterministic_seed =
+				mlkem768::EncapsulationSeed::from_bytes(&randomness).expect(&label);
 			let actual = mlkem768::PublicKey::from_bytes(&public_key).and_then(|public_key| {
 				mlkem768::encapsulate_deterministic(&public_key, &deterministic_seed)
 			});
