@@ -48,7 +48,7 @@ declare -A expected_category_counts=(
 	[control]=13
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1979
+	[handwritten-lean]=1981
 	[handwritten-proverif]=291
 	[inventory]=2
 	[lean-control]=12
@@ -42607,6 +42607,38 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploy
 require_line_count 1 '^theorem inv_initial([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSessionFieldsInvariant theorem inv_initial"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSessionFieldsInvariant\.inv_game$' "$selected_source_module" "PqxdhDeploymentSessionFieldsInvariant dependency BeaconcryptCore.Computational.PqxdhDeploymentSessionFieldsInvariant.inv_game"
 require_line_count 1 '^theorem inv_game([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSessionFieldsInvariant theorem inv_game"
+
+# O21 (ten-field session agreement, parts 2 and 3): the ten fields of both parties' final states with pinned_agree, and the CE-level event A1NoAgreement with ce_a1_agreement, ce_a1_agreement_billed and lookup_agree at the CE-A1 bound
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentSessionFields.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentSessionFields$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentSessionFields root import"
+require_line_count 4 '^theorem ' "$selected_source_module" "PqxdhDeploymentSessionFields theorem inventory"
+require_line_count 4 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentSessionFields guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSessionFields\.identityOf_accepted$' "$selected_source_module" "PqxdhDeploymentSessionFields dependency BeaconcryptCore.Computational.PqxdhDeploymentSessionFields.identityOf_accepted"
+require_line_count 1 '^theorem identityOf_accepted([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSessionFields theorem identityOf_accepted"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSessionFields\.publishedKeys_prefix$' "$selected_source_module" "PqxdhDeploymentSessionFields dependency BeaconcryptCore.Computational.PqxdhDeploymentSessionFields.publishedKeys_prefix"
+require_line_count 1 '^theorem publishedKeys_prefix([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSessionFields theorem publishedKeys_prefix"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSessionFields\.established_end$' "$selected_source_module" "PqxdhDeploymentSessionFields dependency BeaconcryptCore.Computational.PqxdhDeploymentSessionFields.established_end"
+require_line_count 1 '^theorem established_end([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSessionFields theorem established_end"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSessionFields\.pinned_agree$' "$selected_source_module" "PqxdhDeploymentSessionFields dependency BeaconcryptCore.Computational.PqxdhDeploymentSessionFields.pinned_agree"
+require_line_count 1 '^theorem pinned_agree([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSessionFields theorem pinned_agree"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentSessionAgreement.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.PqxdhDeploymentSessionAgreement$' proofs/lean/BeaconcryptCore.lean "PqxdhDeploymentSessionAgreement root import"
+require_line_count 6 '^theorem ' "$selected_source_module" "PqxdhDeploymentSessionAgreement theorem inventory"
+require_line_count 6 '^#guard_msgs in$' "$selected_source_module" "PqxdhDeploymentSessionAgreement guarded dependencies"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSessionAgreement\.noPinnedMatch_noAgreement$' "$selected_source_module" "PqxdhDeploymentSessionAgreement dependency BeaconcryptCore.Computational.PqxdhDeploymentSessionAgreement.noPinnedMatch_noAgreement"
+require_line_count 1 '^theorem noPinnedMatch_noAgreement([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSessionAgreement theorem noPinnedMatch_noAgreement"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSessionAgreement\.noAgreement_noPinnedMatch$' "$selected_source_module" "PqxdhDeploymentSessionAgreement dependency BeaconcryptCore.Computational.PqxdhDeploymentSessionAgreement.noAgreement_noPinnedMatch"
+require_line_count 1 '^theorem noAgreement_noPinnedMatch([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSessionAgreement theorem noAgreement_noPinnedMatch"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSessionAgreement\.noAgreement_iff$' "$selected_source_module" "PqxdhDeploymentSessionAgreement dependency BeaconcryptCore.Computational.PqxdhDeploymentSessionAgreement.noAgreement_iff"
+require_line_count 1 '^theorem noAgreement_iff([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSessionAgreement theorem noAgreement_iff"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSessionAgreement\.ce_a1_agreement$' "$selected_source_module" "PqxdhDeploymentSessionAgreement dependency BeaconcryptCore.Computational.PqxdhDeploymentSessionAgreement.ce_a1_agreement"
+require_line_count 1 '^theorem ce_a1_agreement([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSessionAgreement theorem ce_a1_agreement"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSessionAgreement\.ce_a1_agreement_billed$' "$selected_source_module" "PqxdhDeploymentSessionAgreement dependency BeaconcryptCore.Computational.PqxdhDeploymentSessionAgreement.ce_a1_agreement_billed"
+require_line_count 1 '^theorem ce_a1_agreement_billed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSessionAgreement theorem ce_a1_agreement_billed"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentSessionAgreement\.lookup_agree$' "$selected_source_module" "PqxdhDeploymentSessionAgreement dependency BeaconcryptCore.Computational.PqxdhDeploymentSessionAgreement.lookup_agree"
+require_line_count 1 '^theorem lookup_agree([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentSessionAgreement theorem lookup_agree"
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
