@@ -540,5 +540,12 @@
   "integration_script": "exit 0; HEAD = origin = ls-remote = c6ee2307; owner dirt preserved; LEAN_PATH of c6ee2307 published",
   "confirming_review": "not run: the review fix pass (16d35934, c6ee2307) was integrated without a separate confirming review",
   "recorded_by": "the completion fixes of 2026-10-17 (branch codex/completion-fixes-2026-10-17, plan section 131); this record is added after the fact and changes no other field of this receipt"
+ },
+ "owner_decision": {
+  "date": "2026-10-17",
+  "decision": "option R-a accepted in the owner's second round of decisions of 2026-10-17: root agreement is covered only inside the ServerAuth runs of CE-A1's reductions R_c (paid for in eps_A1); O21 states the other ten session fields as an event of the experiment; R-b and R-b-prime are not scheduled; the optional payload and assigned key ID follow-up is not wanted for now",
+  "source": "owner decision in Claude's session, recorded in the coordination decision record /tmp/bc-coord/decision-2026-10-17.txt (items 3 and 6) and in plan section 132",
+  "effect": "no statement, premise, bound or row status changes; partial_scope and not_claimed above stand",
+  "recorded_by": "branch codex/final-decisions-2026-10-17 (documents only, from central 32300275); this record is added after the fact and changes no other field of this receipt"
  }
 }
