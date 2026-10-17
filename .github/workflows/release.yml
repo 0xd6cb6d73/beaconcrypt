@@ -11,7 +11,12 @@ jobs:
   unix-build:
     strategy:
       matrix:
-        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest, macos-15-intel]
+        os:
+          - ubuntu-latest
+          - ubuntu-24.04-arm
+          # Disabled until Cap'n Proto builds succeed on macOS.
+          # - macos-latest
+          # - macos-15-intel
     runs-on: ${{ matrix.os }}
     permissions:
       contents: read

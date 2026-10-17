@@ -27,7 +27,8 @@ jobs:
         os:
           - ubuntu-latest
           - ubuntu-24.04-arm
-          - macos-latest
+          # Disabled until Cap'n Proto builds succeed on macOS.
+          # - macos-latest
           - windows-latest
 
     steps:
