@@ -78,7 +78,7 @@ theorem ReceiveKdf.resume_progress {Context : Type} (pending : ReceiveKdf Contex
       all_goals first | exact ⟨_, rfl, rfl, True.intro⟩ | skip
       repeat' first | exact ⟨_, rfl, rfl, True.intro⟩ | split
       all_goals simp only [control.array_index_eq_ok pending.staged_slots (UScalar.cast UScalarTy.Usize slot)
-        (by scalar_tac), core.option.Option.is_some, bind_tc_ok, ite_self, RustM.ok.injEq, ResumeProgress, effectEntry]
+        (by scalar_tac), BeaconcryptCore.core_option_is_some_eq_ok, bind_tc_ok, ite_self, RustM.ok.injEq, ResumeProgress, effectEntry]
       all_goals first | exact ⟨_, rfl, rfl, True.intro⟩ | skip
       obtain ⟨skipped, hskipped, _⟩ := control.uscalar_add_eq_ok pending.skipped 1#u8 (by scalar_tac)
       obtain ⟨remaining, hremaining, hremainingval⟩ := control.uscalar_sub_eq_ok pending.remaining 1#u8 (by scalar_tac)
@@ -238,3 +238,9 @@ theorem receiveNext_failure_preserves_capacity {Context Output : Type} (execute 
   exact ⟨rfl, rfl⟩
 
 end beaconcrypt_core.ratchet.concrete
+
+/-- info: 'beaconcrypt_core.ratchet.concrete.ReceiveKdf.resume_progress' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms beaconcrypt_core.ratchet.concrete.ReceiveKdf.resume_progress

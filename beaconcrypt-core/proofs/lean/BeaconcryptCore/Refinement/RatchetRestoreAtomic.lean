@@ -37,7 +37,7 @@ theorem refined_restore_receive_key_of_append {SendChain ReceiveChain Material :
     if_neg (by scalar_tac : ¬UScalar.cast UScalarTy.Usize step.slot ≥ UScalar.cast UScalarTy.Usize 50#u64),
     array_index_bang r.receive_slots (UScalar.cast UScalarTy.Usize step.slot) (by scalar_tac),
     show (UScalar.cast UScalarTy.Usize step.slot).val = step.slot.val by simp_scalar,
-    hempty, core.option.Option.is_some, Std.core.option.Option.is_some, Option.isSome,
+    hempty, BeaconcryptCore.core_option_is_some_eq_ok, Std.core.option.Option.is_some, Option.isSome,
     core.option.Option.None, Bool.false_eq_true, if_false, Bool.false_or,
     massert, decide_eq_true (by scalar_tac : UScalar.cast UScalarTy.Usize step.slot < 50#usize), if_true]
   simp only [Array.index_mut_usize,
@@ -61,7 +61,7 @@ theorem refined_restore_receive_key_rejected {SendChain ReceiveChain Material : 
     split_ifs at hrun with hcap
     · simpa using hrun.symm
     · simp only [array_index_bang r.receive_slots (UScalar.cast UScalarTy.Usize step.slot) (by scalar_tac),
-        bind_tc_ok, core.option.Option.is_some, Std.core.option.Option.is_some,
+        bind_tc_ok, BeaconcryptCore.core_option_is_some_eq_ok, Std.core.option.Option.is_some,
         massert, decide_eq_true (by scalar_tac : UScalar.cast UScalarTy.Usize step.slot < 50#usize),
         Bool.or_true, if_true] at hrun
       cases hslot : r.receive_slots.val[(UScalar.cast UScalarTy.Usize step.slot).val]! with
@@ -97,3 +97,15 @@ theorem refined_restore_receive_key_logical_rejection {SendChain ReceiveChain Ma
   simp only [refined_restore_receive_key, hreject, bind_tc_ok]
 
 end beaconcrypt_core.ratchet.refined
+
+/-- info: 'beaconcrypt_core.ratchet.refined.refined_restore_receive_key_of_append' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms beaconcrypt_core.ratchet.refined.refined_restore_receive_key_of_append
+
+/-- info: 'beaconcrypt_core.ratchet.refined.refined_restore_receive_key_rejected' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms beaconcrypt_core.ratchet.refined.refined_restore_receive_key_rejected

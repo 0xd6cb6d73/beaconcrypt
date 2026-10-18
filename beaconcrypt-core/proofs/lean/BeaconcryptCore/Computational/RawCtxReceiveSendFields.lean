@@ -99,7 +99,7 @@ theorem resume_good (pending : ReceiveKdf Context) (response : RatchetKdfRespons
       all_goals first | (cases RustM.ok.inj actual; trivial) | skip
       repeat' first | (solve | cases RustM.ok.inj actual; trivial) | split at actual
       all_goals simp only [array_index_eq_ok pending.staged_slots (UScalar.cast UScalarTy.Usize slot)
-        (by scalar_tac), core.option.Option.is_some, bind_tc_ok, ite_self] at actual
+        (by scalar_tac), BeaconcryptCore.core_option_is_some_eq_ok, bind_tc_ok, ite_self] at actual
       all_goals first | (cases RustM.ok.inj actual; trivial) | skip
       obtain ⟨skipped, skippedEq, _⟩ := uscalar_add_eq_ok pending.skipped 1#u8 (by scalar_tac)
       obtain ⟨remaining, remainingEq, _⟩ := uscalar_sub_eq_ok pending.remaining 1#u8 (by scalar_tac)

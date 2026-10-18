@@ -153,9 +153,33 @@ theorem verified_registration_id_ok (registration : pqxdh.VerifiedInitKex) :
     ∃ result, pqxdh.VerifiedInitKex.registration_id registration = ok result :=
   registration_id_ok registration
 
+open Std.Do WP in
+/-- Hax-Lean v0.3.30 models `[T; N]::clone` as an element-wise `array.Array.map`; for bytes it still returns the input array. -/
+theorem core_array_clone_u8_eq_ok {N : Std.Usize} (a : Std.Array Std.U8 N) :
+    core.Array.Insts.CoreCloneClone.clone core.U8.Insts.CoreCloneClone a = ok a := by
+  have hspec := rust_primitives.slice.array_map_spec
+    (core.array.CloneArray.clone.closure.Insts.CoreOpsFunctionFnMutTupleTT N
+      core.U8.Insts.CoreCloneClone) a ()
+    (fun x _ => WP.triple_iff_exists_ok.2 ⟨(x, ()), rfl, rfl⟩)
+  obtain ⟨b, hb, hpt⟩ := WP.triple_iff_exists_ok.1 hspec
+  have hba : b = a := by
+    apply Subtype.ext
+    have hb' := b.property
+    have ha' := a.property
+    apply List.ext_getElem (by omega)
+    intro i hi₁ hi₂
+    obtain ⟨y, hy, hyb⟩ := WP.triple_iff_exists_ok.1 (hpt i (by omega))
+    cases hy
+    exact hyb.symm
+  subst hba
+  simpa [core.Array.Insts.CoreCloneClone.clone, core.array.Array.map] using hb
+
 theorem established_peer_clone_ok (peer : pqxdh.EstablishedPeer) :
     ∃ result, pqxdh.EstablishedPeer.Insts.CoreCloneClone.clone peer = ok result :=
-  ⟨peer, rfl⟩
+  ⟨peer, by
+    cases peer
+    simp [pqxdh.EstablishedPeer.Insts.CoreCloneClone.clone, core.U64.Insts.CoreCloneClone.clone,
+      core_array_clone_u8_eq_ok]⟩
 
 theorem established_peer_eq_ok (peer other : pqxdh.EstablishedPeer) :
     ∃ result, pqxdh.EstablishedPeer.Insts.CoreCmpPartialEqEstablishedPeer.eq peer other = ok result := by
@@ -169,3 +193,11 @@ theorem established_peer_ne_ok (peer other : pqxdh.EstablishedPeer) :
     ⟨!result, by simp [pqxdh.EstablishedPeer.Insts.CoreCmpPartialEqEstablishedPeer.ne, hresult]⟩
 
 end BeaconcryptCore.PanicFreedom
+
+/-- info: 'BeaconcryptCore.PanicFreedom.core_array_clone_u8_eq_ok' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.PanicFreedom.core_array_clone_u8_eq_ok
+
+/-- info: 'BeaconcryptCore.PanicFreedom.established_peer_clone_ok' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.PanicFreedom.established_peer_clone_ok

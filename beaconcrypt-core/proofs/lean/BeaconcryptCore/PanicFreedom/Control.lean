@@ -158,3 +158,16 @@ theorem RatchetState.receive_key_at_total (state : RatchetState) (slot : Std.U8)
   SequenceCache.entry_total state.receive_cache slot
 
 end beaconcrypt_core.ratchet.control
+
+namespace BeaconcryptCore
+
+/-- Hax-Lean v0.3.30 generates `core.option.Option.is_some` from the Rust core model as a match instead of redirecting it to Aeneas. This restates it in the redirected form that the ratchet proofs unfold. -/
+theorem core_option_is_some_eq_ok {T : Type} (o : core.option.Option T) :
+    core.option.Option.is_some o = ok (Std.core.option.Option.is_some o) := by
+  cases o <;> rfl
+
+end BeaconcryptCore
+
+/-- info: 'BeaconcryptCore.core_option_is_some_eq_ok' does not depend on any axioms -/
+#guard_msgs in
+#print axioms BeaconcryptCore.core_option_is_some_eq_ok

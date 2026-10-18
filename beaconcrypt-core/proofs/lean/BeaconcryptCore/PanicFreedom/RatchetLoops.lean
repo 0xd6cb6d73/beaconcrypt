@@ -74,13 +74,13 @@ theorem refined_receive_slots_are_empty_loop_ok
     by_cases hcap : 50 ≤ slot.val
     · simp [hcap]
     · rw [if_neg (by scalar_tac)]
-      simp only [array_index_eq_ok state.receive_slots (UScalar.cast UScalarTy.Usize slot) (by scalar_tac), core.option.Option.is_some, bind_tc_ok]
+      simp only [array_index_eq_ok state.receive_slots (UScalar.cast UScalarTy.Usize slot) (by scalar_tac), BeaconcryptCore.core_option_is_some_eq_ok, bind_tc_ok]
       by_cases hsome : Std.core.option.Option.is_some (state.receive_slots.val[(UScalar.cast UScalarTy.Usize slot).val]'(by scalar_tac)) = true
       · exact ⟨false, by simp only [if_pos hsome]⟩
       · rw [if_neg hsome]
         obtain ⟨slot', hslot, _⟩ := uscalar_add_eq_ok slot 1#u8 (by scalar_tac)
         obtain ⟨left', hnext, hnextval⟩ := uscalar_sub_eq_ok left 1#u8 (by scalar_tac)
-        simpa only [refined_receive_slots_are_empty_loop, refined_receive_slots_are_empty_loop.body, lift, capacity_eq_ok, core.option.Option.is_some, hslot, hnext, bind_tc_ok] using ih slot' left' (by scalar_tac)
+        simpa only [refined_receive_slots_are_empty_loop, refined_receive_slots_are_empty_loop.body, lift, capacity_eq_ok, BeaconcryptCore.core_option_is_some_eq_ok, hslot, hnext, bind_tc_ok] using ih slot' left' (by scalar_tac)
 
 /-- Empty-slot validation is total on arbitrary typed states. -/
 theorem refined_receive_slots_are_empty_ok
@@ -141,7 +141,7 @@ theorem pending_receive_slots_are_valid_loop_ok
     by_cases hcap : 50 ≤ slot.val
     · simp [hcap]
     · rw [if_neg (by scalar_tac)]
-      simp only [array_index_eq_ok state.receive_slots (UScalar.cast UScalarTy.Usize slot) (by scalar_tac), array_index_eq_ok pending.staged_slots (UScalar.cast UScalarTy.Usize slot) (by scalar_tac), core.option.Option.is_some, core.option.Option.as_ref, bind_tc_ok]
+      simp only [array_index_eq_ok state.receive_slots (UScalar.cast UScalarTy.Usize slot) (by scalar_tac), array_index_eq_ok pending.staged_slots (UScalar.cast UScalarTy.Usize slot) (by scalar_tac), BeaconcryptCore.core_option_is_some_eq_ok, core.option.Option.as_ref, bind_tc_ok]
       by_cases hsome : Std.core.option.Option.is_some (state.receive_slots.val[(UScalar.cast UScalarTy.Usize slot).val]'(by scalar_tac)) = true
       · exact ⟨false, by simp only [if_pos hsome]⟩
       · rw [if_neg hsome]
@@ -158,7 +158,7 @@ theorem pending_receive_slots_are_valid_loop_ok
           have hval : expected.val ≠ (core.num.U64.MAX).val := fun hc => hmax (UScalar.eq_of_val_eq hc)
           simp [core.num.U64.MAX, U64.rMax] at hval
           obtain ⟨expected', hexpected, _⟩ := uscalar_add_eq_ok expected 1#u64 (by scalar_tac)
-          simpa only [pending_receive_slots_are_valid_loop, pending_receive_slots_are_valid_loop.body, lift, capacity_eq_ok, core.option.Option.is_some, core.option.Option.as_ref, hslot, hexpected, bind_tc_ok] using ih slot' expected' left' (by scalar_tac)
+          simpa only [pending_receive_slots_are_valid_loop, pending_receive_slots_are_valid_loop.body, lift, capacity_eq_ok, BeaconcryptCore.core_option_is_some_eq_ok, core.option.Option.as_ref, hslot, hexpected, bind_tc_ok] using ih slot' expected' left' (by scalar_tac)
 
 /-- The staged-slot validation wrapper is total on arbitrary typed inputs. -/
 theorem pending_receive_slots_are_valid_ok
@@ -169,3 +169,15 @@ theorem pending_receive_slots_are_valid_ok
   exact pending_receive_slots_are_valid_loop_ok state pending left.val slot expected left rfl
 
 end beaconcrypt_core.ratchet.refined
+
+/-- info: 'beaconcrypt_core.ratchet.refined.refined_receive_slots_are_empty_loop_ok' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms beaconcrypt_core.ratchet.refined.refined_receive_slots_are_empty_loop_ok
+
+/-- info: 'beaconcrypt_core.ratchet.refined.pending_receive_slots_are_valid_loop_ok' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms beaconcrypt_core.ratchet.refined.pending_receive_slots_are_valid_loop_ok

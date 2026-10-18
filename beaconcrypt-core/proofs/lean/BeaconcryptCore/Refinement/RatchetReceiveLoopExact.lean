@@ -139,7 +139,7 @@ theorem pending_receive_slots_are_valid_loop_true
       if_neg (by scalar_tac : ¬ UScalar.cast UScalarTy.Usize slot ≥ UScalar.cast UScalarTy.Usize 50#u64),
       array_index_bang state.receive_slots (UScalar.cast UScalarTy.Usize slot) (by scalar_tac),
       array_index_bang pending.staged_slots (UScalar.cast UScalarTy.Usize slot) (by scalar_tac),
-      hcast, hempty slot.val (by omega) (by omega), core.option.Option.is_some,
+      hcast, hempty slot.val (by omega) (by omega), BeaconcryptCore.core_option_is_some_eq_ok,
       Std.core.option.Option.is_some, hcached, core.option.Option.as_ref]
     simp only [Option.isSome, core.option.Option.None, Bool.false_eq_true, if_false, heq, if_true,
       receive_key_at_exact pending.committed_control slot (by omega) (by omega), hkey,
@@ -158,7 +158,7 @@ theorem pending_receive_slots_are_valid_loop_true
           exact ⟨next, by convert hnextcached using 2; scalar_tac,
             by scalar_tac, by convert hnextkey using 2; scalar_tac⟩)
       simp! only [pending_receive_slots_are_valid_loop, pending_receive_slots_are_valid_loop.body,
-        lift, capacity_eq_ok, bind_tc_ok, core.option.Option.is_some, Std.core.option.Option.is_some,
+        lift, capacity_eq_ok, bind_tc_ok, BeaconcryptCore.core_option_is_some_eq_ok, Std.core.option.Option.is_some,
         Option.isSome, core.option.Option.as_ref, core.option.Option.Insts.CoreCmpPartialEqOption.eq,
         core.U64.Insts.CoreCmpPartialEqU64] at hrun
       simp only [Option.isSome, core.option.Option.as_ref,
@@ -203,14 +203,14 @@ theorem refined_receive_slots_are_empty_loop_true
       if_neg (by scalar_tac : ¬UScalar.cast UScalarTy.Usize slot ≥ UScalar.cast UScalarTy.Usize 50#u64),
       array_index_bang state.receive_slots (UScalar.cast UScalarTy.Usize slot) (by scalar_tac),
       show (UScalar.cast UScalarTy.Usize slot).val = slot.val by simp_scalar,
-      hempty slot.val (by omega) (by omega), core.option.Option.is_some,
+      hempty slot.val (by omega) (by omega), BeaconcryptCore.core_option_is_some_eq_ok,
       Std.core.option.Option.is_some, Option.isSome, core.option.Option.None, Bool.false_eq_true, if_false]
     obtain ⟨slot', hslot, hslotval⟩ := uscalar_add_eq_ok slot 1#u8 (by scalar_tac)
     obtain ⟨left', hnext, hnextval⟩ := uscalar_sub_eq_ok left 1#u8 (by scalar_tac)
     have hrun := ih slot' left' (by scalar_tac) (by scalar_tac)
       (fun i hi hj => hempty i (by scalar_tac) (by scalar_tac))
     simp only [refined_receive_slots_are_empty_loop, refined_receive_slots_are_empty_loop.body,
-      lift, capacity_eq_ok, core.option.Option.is_some, Std.core.option.Option.is_some, Option.isSome,
+      lift, capacity_eq_ok, BeaconcryptCore.core_option_is_some_eq_ok, Std.core.option.Option.is_some, Option.isSome,
       bind_tc_ok] at hrun
     simpa only [hslot, hnext, bind_tc_ok] using hrun
 
@@ -298,7 +298,7 @@ theorem pending_receive_is_valid_true
   obtain ⟨gap, hgap, hgapval⟩ := uscalar_sub_eq_ok requested state.control.receive_sequence (by scalar_tac)
   obtain ⟨steps, hsteps, hstepsval⟩ := uscalar_add_eq_ok (UScalar.cast UScalarTy.U64 pending.skipped) 1#u64 (by scalar_tac)
   simp only [hgap, lift, bind_tc_ok, hsteps, if_pos (by scalar_tac : gap = steps), hlookup,
-    core.option.Option.is_some, Std.core.option.Option.is_some, Option.isSome,
+    BeaconcryptCore.core_option_is_some_eq_ok, Std.core.option.Option.is_some, Option.isSome,
     core.option.Option.None, Bool.false_eq_true, if_false]
   obtain ⟨last, hlast, hlastval⟩ := uscalar_add_eq_ok (UScalar.cast UScalarTy.Usize state.control.receive_cache.len)
     (UScalar.cast UScalarTy.Usize pending.skipped) (by scalar_tac)
@@ -326,3 +326,21 @@ theorem pending_receive_is_valid_true
   · simp only [if_neg hlastcap, hexpected, bind_tc_ok, ←hfirst, hstaged_ok]
 
 end beaconcrypt_core.ratchet.refined
+
+/-- info: 'beaconcrypt_core.ratchet.refined.pending_receive_slots_are_valid_loop_true' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms beaconcrypt_core.ratchet.refined.pending_receive_slots_are_valid_loop_true
+
+/-- info: 'beaconcrypt_core.ratchet.refined.refined_receive_slots_are_empty_loop_true' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms beaconcrypt_core.ratchet.refined.refined_receive_slots_are_empty_loop_true
+
+/-- info: 'beaconcrypt_core.ratchet.refined.pending_receive_is_valid_true' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms beaconcrypt_core.ratchet.refined.pending_receive_is_valid_true

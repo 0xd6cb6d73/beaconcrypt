@@ -67,7 +67,7 @@ theorem pending_receive_is_valid_ok
     obtain ⟨key, hkey⟩ := lookup_receive_key_total pending.committed_control requested
     obtain ⟨prefix_matches, hprefix⟩ := receive_control_prefix_matches_ok state.control pending.committed_control 0#u8 pending.first_slot
     obtain ⟨valid_slots, hslots⟩ := pending_receive_slots_are_valid_ok state pending pending.first_slot expected pending.skipped
-    simp only [hderivations, hskipped, hlen, hexpected, hkey, hprefix, hslots, capacity_eq_ok, core.option.Option.is_some, bind_tc_ok]
+    simp only [hderivations, hskipped, hlen, hexpected, hkey, hprefix, hslots, capacity_eq_ok, BeaconcryptCore.core_option_is_some_eq_ok, bind_tc_ok]
     by_cases hidx : committed_len.val < 50
     · simp only [if_pos (show committed_len < UScalar.cast UScalarTy.Usize 50#u64 by scalar_tac), array_index_eq_ok state.receive_slots committed_len (by scalar_tac), array_index_eq_ok pending.staged_slots committed_len (by scalar_tac), bind_tc_ok]
       simp only [← apply_ite (f := RustM.ok), RustM.ok.injEq, exists_eq']
@@ -75,3 +75,9 @@ theorem pending_receive_is_valid_ok
       simp only [← apply_ite (f := RustM.ok), RustM.ok.injEq, exists_eq']
 
 end beaconcrypt_core.ratchet.refined
+
+/-- info: 'beaconcrypt_core.ratchet.refined.pending_receive_is_valid_ok' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms beaconcrypt_core.ratchet.refined.pending_receive_is_valid_ok

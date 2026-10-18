@@ -360,7 +360,7 @@ theorem resume_progress {Material Context : Type} (pending : Kdf Material Contex
       all_goals first | exact ⟨_, rfl, rfl, True.intro⟩ | skip
       repeat' first | exact ⟨_, rfl, rfl, True.intro⟩ | split
       all_goals simp only [ratchet.control.array_index_eq_ok pending.staged_slots
-        (UScalar.cast UScalarTy.Usize slot) (by scalar_tac), core.option.Option.is_some,
+        (UScalar.cast UScalarTy.Usize slot) (by scalar_tac), BeaconcryptCore.core_option_is_some_eq_ok,
         bind_tc_ok, ite_self, RustM.ok.injEq, Progress, effectEntry]
       all_goals first | exact ⟨_, rfl, rfl, True.intro⟩ | skip
       obtain ⟨skipped, hskipped, _⟩ := ratchet.control.uscalar_add_eq_ok pending.skipped 1#u8 (by scalar_tac)
