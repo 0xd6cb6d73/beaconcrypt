@@ -13,9 +13,8 @@ jobs:
         os:
           - ubuntu-24.04
           - ubuntu-24.04-arm
-          # macOS remains disabled pending platform validation.
-          # - macos-latest
-          # - macos-15-intel
+          - macos-latest
+          - macos-15-intel
     runs-on: ${{ matrix.os }}
     permissions:
       contents: read
