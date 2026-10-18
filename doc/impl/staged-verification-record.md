@@ -371,3 +371,52 @@ The separate Rust 1.96 matrix passed `cargo fmt --all -- --check`, locked Clippy
 After verification, the tracked integration worktree was clean and all 156 reviewed file hashes still matched the frozen manifest. Static comparison against `ac096ede` preserves all 1,097 prior Lean files outside the root importer, all 116 prior ProVerif-directory files, all 36 Rust files and all three schemas byte-for-byte. The full Make log is `/tmp/beaconcrypt-common-integration-verify-edc701e.log`, SHA-256 `61fd5f169c25ad2baa07ae91b508cd938b0dfdd992ac23a7e1f18ce9358c3f9d`; the successful Rust log is `/tmp/beaconcrypt-common-integration-rust-matrix.log`, SHA-256 `a45cc740bdb8915b62d263907769c32db23becd9000b2d0246b4e90c4fd84b4e`; the final static receipt is `/tmp/beaconcrypt-common-integration-after-make.json`, SHA-256 `b8440ba0cada5c751948b9501a76f3f32523c4bc9505d5f8a0598411258ee5b1`. The frozen semantic-review manifest is `/tmp/beaconcrypt-common-integration-manifest.json`, SHA-256 `1d85e73cbac832effc5b0e28187a400879c01de4f5de6c52375d2a4246c681e3`. This validation entry changes no proof or validation code after the successful complete run.
 
 The full proof goal remains active. The dynamic registration scheduler and its indexed identity/KEM consumer, actual singleton-to-global restriction, later-record secrecy/integrity, adaptive target/reveal composition and the shared computational/symbolic event experiment still require their stated consuming proofs. Separately published creation and later-record topics are not included in this frozen aggregate. Primitive implementations, saved-state restoration, persistence and serialization implementation remain outside scope. This result validates the actual one-session authentication composition and does not claim full bridge completion.
+
+## Item 8 validation run (2026-10-18)
+
+On 2026-10-18 the owner ran item 8, the final validation matrix of the [completion handoff](handover/completion-2026-10-11/README.md#item-8-the-owners-validation-checklist), on a fresh clone `~/bc-item8` of origin (`ssh://git@git.mschn.fr/amn/beaconcrypt`) at `codex/full-proof-composition` `4aaa1b8558c83383fc86f97d6a160804530686be`, with the submodules initialized at `rooterberg` `85c1ae75` and `wycheproof` `b61843a9`. The machine was the 32 GiB / 16 CPU NixOS host, with no other agent running. Claude wrote this entry from the owner's report and from its own step 7 runs. All reported checks passed. The owner ran the full verification, the Rust, Go and Python checks and the mutation suite; their results below are owner-reported, Claude did not see their full output, and no log of them is cited. Claude ran the two step 7 scans, read only, on the owner's clone.
+
+Full verification (checklist step 5), owner-reported. The owner entered the locked proof shell through a two-file flake copy (`~/bc-flake`, holding only `flake.nix` and `flake.lock`) and ran `make -C beaconcrypt-core verify-in-shell SHELL=bash`, which passed. That target runs, in one invocation, the toolchain check, ProVerif extraction, the legacy ProVerif roster with its prerequisite groups, the free-schedule group, the eleven extension targets, `extract-lean`, `check-lean` (dependency patches, policy, root and panic-freedom gates, then the full `lake --rehash build`) and `check-inventory` (`beaconcrypt-core/Makefile`). It was the first single full `lake build` that covered the item 1 to 7 modules together. The owner reports that the Lean build passed "with a lot of warnings". The output overflowed the terminal buffer and no log was retained, so this entry records no job, theorem, gate or warning counts. The separate transcript-fidelity run (step 4) and inventory run (step 6) were not reported separately; both targets also run inside `verify-in-shell` (`check-proverif` depends on `check-proverif-transcript-fidelity`, and `check-inventory` is its last target).
+
+Rust, Go and Python (checklist steps 2 and 3), owner-reported, all passed, run outside the proof shell: `cargo build --workspace --locked`; `cargo test --workspace --all-features --locked`; both role/feature checks (`cargo check -p beaconcrypt --no-default-features --features pqxdh,beacon --lib` and the same with `pqxdh,server`); `cargo fmt --all -- --check`; `cargo clippy --workspace --all-targets --all-features --locked`; the `gobinds` release build and `go test -race ./...`; `uv run maturin develop --uv` and `uv run pytest tests`; Black, with the exclusion of correction 6 below (64 files unchanged), and `gofmt`. No test counts or Clippy warnings are recorded.
+
+Mutation suite (checklist step 8), owner-reported. The owner's terminal output, verbatim:
+
+```text
+[user@nixos:~/bc-item8]$ env -u CARGO_TARGET_DIR cargo mutants --workspace --jobs 12
+ WARN --jobs=12 is probably too high and may overload your machine: each job runs a separate `cargo` process, and cargo may internally start many threads and subprocesses; values <= 8 are usually safe
+Found 1190 mutants to test
+ok       Unmutated baseline in 17s build + 13s test
+ INFO Auto-set test timeout to 70s
+1190 mutants tested in 16m: 816 caught, 374 unviable
+```
+
+The 816 caught and 374 unviable mutants account for all 1,190, so no viable mutant was missed and none timed out. This is the first complete run on a tree that contains `5cbd76e3` (HB-95) and `12d5dfcc`; the previous complete run, recorded in the section "ProVerif result and validation" above (1,173 cases in 36 minutes with `--jobs 6`, 816 caught, 357 unviable), predates them.
+
+Forbidden-placeholder and axiom scans (checklist step 7), run by Claude on the owner's clone, read only. Claude used the handoff's two programs: `lean-scan.py` (SHA-256 `61deb5fdff698e45c7fc3180820c214aa4d6f22e6c96ace03f87a040f1248880`) and `axiom-walk-body.lean` (SHA-256 `eb157a8a5c5a8b50f1a7f828d850174b8ab3e66e073903dd469f23b01947f5be`), each byte-identical to the corresponding program text in the handoff's "Step 7 programs". The programs and their outputs are in Claude's machine-local scratch (`/tmp/bc-arc-scratch/completion-audit/step7/`, transient), and the clone's `git status` was clean before and after. The source scan printed `LEAN-SCAN files 1989 hits 0` and exited 0 in 17 s. The exact axiom walk, `AxiomWalk.lean` with 1,989 imports, ran with `lake env lean` inside the proof shell against the full build's oleans, exited 0 in 22 s and printed the following, line for line identical to the handoff's expected block:
+
+```text
+AXIOM-WALK roots 95086 reached 121963 unresolved 0
+AXIOM-WALK axioms [Classical.choice, Quot.sound, propext]
+SERVER-DOMAIN PqxdhDeploymentKemTwoSided.kem_transfer_two_sided true
+SERVER-DOMAIN PqxdhDeploymentIdealCompile.ideal_compile true
+SERVER-DOMAIN PqxdhDeploymentIdealHandoff.ideal_world_view true
+SERVER-DOMAIN PqxdhRegistrationJointKemKeyTransfer.allIdeal_loss false
+SERVER-DOMAIN PqxdhRegistrationJointKemPostSkeleton.opaqueBranch_shared false
+SERVER-DOMAIN PqxdhRegistrationJointBeaconFinishOnce.slotGame_two false
+```
+
+Before these lines the walk printed two warnings that the `Hax` and `aeneas` repositories under `.lake/packages` have local changes. The changed files there, 2 in `Hax` and 28 in `aeneas`, are exactly those of `beaconcrypt-core/proofs/lean/patches/hax-lean-4.34.patch` and `patches/aeneas-lean-4.34.patch`, and both patches reverse-apply cleanly (`git apply --reverse --check`), so the local changes are exactly the repository's dependency patches.
+
+Checklist corrections found during this run, applied to the handoff's item 8 section on 2026-10-18:
+
+1. The Rust, Go and Python steps run outside the proof shell. The proof shell is Hax's CI environment with rustc 1.93.0-nightly, while `beaconcrypt` declares `rust-version = "1.96"`.
+2. On this NixOS host the system rustc is 1.95. A 1.96.0 toolchain exists under `~/.rustup/toolchains/1.96.0-x86_64-unknown-linux-gnu` (`rustup` itself is not on `PATH`); its `bin` goes first on `PATH`.
+3. That toolchain was installed by nixpkgs' rustup, whose patched `gcc-ld/ld.lld` wrapper points into a garbage-collected store path, so linking fails unless rust-lld is bypassed with `export RUSTFLAGS="-C linker-features=-lld"` (the system `cc` and `ld` are then used; verified).
+4. `capnp`, `cargo-mutants` and GNU make are missing from the host `PATH` (`libsodium-sys-stable` builds the vendored libsodium from source with make); they come from `nix --extra-experimental-features 'nix-command flakes' shell nixpkgs#capnproto nixpkgs#cargo-mutants nixpkgs#gnumake`.
+5. The Go bindings link from `${SRCDIR}/target/release` (`beaconcrypt.go:8`), so the `gobinds` build must not use `CARGO_TARGET_DIR`: `env -u CARGO_TARGET_DIR cargo build -p beaconcrypt --release --features gobinds && go test -race ./...`. `cargo mutants` also runs without `CARGO_TARGET_DIR`, because its parallel jobs would share one target directory.
+6. Black runs with `--target-version py311` (`requires-python >= 3.11`; this avoids a spurious Python 3.15 safety-check warning) and also excludes `doc/impl/handover`, whose three archived handover scripts are committed as evidence and are not Black-formatted (CI does not run Black): `uv run black --check --target-version py311 --extend-exclude '/(wycheproof|rooterberg|\.lake|doc/impl/handover)/' .` reported 64 files unchanged.
+7. The commands run one at a time, or chained with `&&`: pasting the block continues after a failure and buries the first error.
+8. To retain evidence, long steps are piped through `tee`, for example `make -C beaconcrypt-core verify-in-shell SHELL=bash 2>&1 | tee ~/item8-verify.log`.
+
+Not done. The merge basis is the owner's decision and was not taken in this run: central contains `5cbd76e3` (HB-95) and `12d5dfcc`, which `vcvio` and `main` lack. `nix-collect-garbage` (step 9) was not run. This entry records the validation run and changes no proof, model, validation code or production file.
