@@ -391,7 +391,7 @@ ok       Unmutated baseline in 17s build + 13s test
 1190 mutants tested in 16m: 816 caught, 374 unviable
 ```
 
-The 816 caught and 374 unviable mutants account for all 1,190, so no viable mutant was missed and none timed out. This is the first complete run on a tree that contains `5cbd76e3` (HB-95) and `12d5dfcc`; the previous complete run, recorded in the section "ProVerif result and validation" above (1,173 cases in 36 minutes with `--jobs 6`, 816 caught, 357 unviable), predates them.
+The 816 caught and 374 unviable mutants account for all 1,190, so no viable mutant was missed and none timed out.
 
 Forbidden-placeholder and axiom scans (checklist step 7), run by Claude on the owner's clone, read only. Claude used the handoff's two programs: `lean-scan.py` (SHA-256 `61deb5fdff698e45c7fc3180820c214aa4d6f22e6c96ace03f87a040f1248880`) and `axiom-walk-body.lean` (SHA-256 `eb157a8a5c5a8b50f1a7f828d850174b8ab3e66e073903dd469f23b01947f5be`), each byte-identical to the corresponding program text in the handoff's "Step 7 programs". The programs and their outputs are in Claude's machine-local scratch (`/tmp/bc-arc-scratch/completion-audit/step7/`, transient), and the clone's `git status` was clean before and after. The source scan printed `LEAN-SCAN files 1989 hits 0` and exited 0 in 17 s. The exact axiom walk, `AxiomWalk.lean` with 1,989 imports, ran with `lake env lean` inside the proof shell against the full build's oleans, exited 0 in 22 s and printed the following, line for line identical to the handoff's expected block:
 
