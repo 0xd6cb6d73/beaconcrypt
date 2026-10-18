@@ -57,6 +57,81 @@ fn response_bytes(value: KexResponse<'_>) -> Vec<u8> {
 	out
 }
 
+const INIT_IDENTITY: [u8; 33] = [0x11; 33];
+const INIT_PREKEY: [u8; 98] = [0x22; 98];
+const INIT_ONE_TIME: [u8; 98] = [0x33; 98];
+const INIT_PQ: [u8; 1249] = [0x44; 1249];
+const RESPONSE_IDENTITY: [u8; 32] = [0x55; 32];
+const RESPONSE_EPHEMERAL: [u8; 32] = [0x66; 32];
+const RESPONSE_KEM: [u8; 1088] = [0x77; 1088];
+
+fn valid_init() -> InitKex<'static> {
+	InitKex {
+		identity_key: &INIT_IDENTITY,
+		pre_key: &INIT_PREKEY,
+		one_time_key: &INIT_ONE_TIME,
+		pq_key: &INIT_PQ,
+	}
+}
+
+fn valid_response(app_cipher_text: &[u8], key_id: u64) -> KexResponse<'_> {
+	KexResponse {
+		identity_key: &RESPONSE_IDENTITY,
+		ephemeral_key: &RESPONSE_EPHEMERAL,
+		kem_cipher_text: &RESPONSE_KEM,
+		app_cipher_text,
+		key_id,
+	}
+}
+
+// Independent fixture construction permits malformed lengths that the generated encoder rejects.
+fn append_argument(wire: &mut Vec<u8>, major: u8, value: u64) {
+	let (information, width) = match value {
+		0..=23 => {
+			wire.push(major << 5 | value as u8);
+			return;
+		}
+		24..=255 => (24, 1),
+		256..=65_535 => (25, 2),
+		65_536..=4_294_967_295 => (26, 4),
+		_ => (27, 8),
+	};
+	wire.push(major << 5 | information);
+	wire.extend_from_slice(&value.to_be_bytes()[8 - width..]);
+}
+
+fn append_bytes(wire: &mut Vec<u8>, bytes: &[u8]) {
+	append_argument(wire, 2, bytes.len() as u64);
+	wire.extend_from_slice(bytes);
+}
+
+fn independent_init(value: InitKex<'_>) -> Vec<u8> {
+	let mut wire = vec![0x86, 1, 0];
+	for bytes in [
+		value.identity_key,
+		value.pre_key,
+		value.one_time_key,
+		value.pq_key,
+	] {
+		append_bytes(&mut wire, bytes);
+	}
+	wire
+}
+
+fn independent_response(value: KexResponse<'_>) -> Vec<u8> {
+	let mut wire = vec![0x87, 1, 1];
+	for bytes in [
+		value.identity_key,
+		value.ephemeral_key,
+		value.kem_cipher_text,
+		value.app_cipher_text,
+	] {
+		append_bytes(&mut wire, bytes);
+	}
+	append_argument(&mut wire, 0, value.key_id);
+	wire
+}
+
 #[derive(Clone, Copy, Debug)]
 enum Kind {
 	Frame,
@@ -65,18 +140,27 @@ enum Kind {
 }
 
 impl Kind {
-	fn minimal(self) -> &'static [u8] {
+	fn minimal(self) -> Vec<u8> {
 		match self {
-			Self::Frame => &[0x85, 1, 2, 0, 0, 0x40],
-			Self::Init => &[0x86, 1, 0, 0x40, 0x40, 0x40, 0x40],
-			Self::Response => &[0x87, 1, 1, 0x40, 0x40, 0x40, 0x40, 0],
+			Self::Frame => vec![0x85, 1, 2, 0, 0, 0x40],
+			Self::Init => independent_init(valid_init()),
+			Self::Response => independent_response(valid_response(&[], 0)),
 		}
 	}
 
 	fn byte_fields(self) -> &'static [usize] {
 		match self {
 			Self::Frame => &[5],
-			Self::Init | Self::Response => &[3, 4, 5, 6],
+			Self::Init => &[3, 38, 138, 238],
+			Self::Response => &[3, 37, 71, 1162],
+		}
+	}
+
+	fn byte_field_lengths(self) -> &'static [(usize, usize)] {
+		match self {
+			Self::Frame => &[(5, 0)],
+			Self::Init => &[(3, 33), (38, 98), (138, 98), (238, 1249)],
+			Self::Response => &[(3, 32), (37, 32), (71, 1088), (1162, 0)],
 		}
 	}
 
@@ -84,7 +168,7 @@ impl Kind {
 		match self {
 			Self::Frame => &[3, 4],
 			Self::Init => &[],
-			Self::Response => &[7],
+			Self::Response => &[1163],
 		}
 	}
 
@@ -124,26 +208,20 @@ fn hand_authored_cbor_matches_the_schema_and_encoder() {
 	assert!(decode_frame(&wire) == Some(frame));
 	assert_eq!(frame_bytes(frame), wire);
 
-	let init = InitKex {
-		identity_key: &[0x11],
-		pre_key: &[0x22, 0x23],
-		one_time_key: &[],
-		pq_key: &[0x33],
-	};
-	let wire = [0x86, 1, 0, 0x41, 0x11, 0x42, 0x22, 0x23, 0x40, 0x41, 0x33];
+	let init = valid_init();
+	let wire = independent_init(init);
+	assert_eq!(&wire[..5], &[0x86, 1, 0, 0x58, 33]);
+	assert_eq!(&wire[38..40], &[0x58, 98]);
+	assert_eq!(&wire[138..140], &[0x58, 98]);
+	assert_eq!(&wire[238..241], &[0x59, 4, 0xe1]);
 	assert!(decode_init(&wire) == Some(init));
 	assert_eq!(init_bytes(init), wire);
 
-	let response = KexResponse {
-		identity_key: &[0x10],
-		ephemeral_key: &[0x20],
-		kem_cipher_text: &[0x30],
-		app_cipher_text: &[0x40],
-		key_id: 42,
-	};
-	let wire = [
-		0x87, 1, 1, 0x41, 0x10, 0x41, 0x20, 0x41, 0x30, 0x41, 0x40, 0x18, 42,
-	];
+	let response = valid_response(&[0x40], 42);
+	let wire = independent_response(response);
+	assert_eq!(&wire[..5], &[0x87, 1, 1, 0x58, 32]);
+	assert_eq!(&wire[71..74], &[0x59, 4, 0x40]);
+	assert_eq!(&wire[1162..], &[0x41, 0x40, 0x18, 42]);
 	assert!(decode_response(&wire) == Some(response));
 	assert_eq!(response_bytes(response), wire);
 }
@@ -157,15 +235,11 @@ fn integer_and_byte_length_boundaries_roundtrip() {
 			cipher_text: b"payload",
 		};
 		assert!(decode_frame(&frame_bytes(frame)) == Some(frame));
-		let response = KexResponse {
-			identity_key: b"identity",
-			ephemeral_key: b"ephemeral",
-			kem_cipher_text: b"kem",
-			app_cipher_text: b"application",
-			key_id: number,
-		};
+		let response = valid_response(b"application", number);
 		assert!(decode_response(&response_bytes(response)) == Some(response));
 	}
+	let init = valid_init();
+	assert!(decode_init(&init_bytes(init)) == Some(init));
 	for &length in BYTE_LENGTH_BOUNDARIES {
 		let data: Vec<u8> = (0..length).map(|i| i as u8).collect();
 		let frame = CryptoFrame {
@@ -174,20 +248,7 @@ fn integer_and_byte_length_boundaries_roundtrip() {
 			cipher_text: &data,
 		};
 		assert!(decode_frame(&frame_bytes(frame)) == Some(frame));
-		let init = InitKex {
-			identity_key: &data,
-			pre_key: &data,
-			one_time_key: &data,
-			pq_key: &data,
-		};
-		assert!(decode_init(&init_bytes(init)) == Some(init));
-		let response = KexResponse {
-			identity_key: &data,
-			ephemeral_key: &data,
-			kem_cipher_text: &data,
-			app_cipher_text: &data,
-			key_id: 0,
-		};
+		let response = valid_response(&data, 0);
 		assert!(decode_response(&response_bytes(response)) == Some(response));
 	}
 }
@@ -204,24 +265,10 @@ fn every_truncation_and_nonempty_suffix_is_rejected() {
 				cipher_text: &data,
 			}),
 		),
-		(
-			Kind::Init,
-			init_bytes(InitKex {
-				identity_key: &data,
-				pre_key: &data[..24],
-				one_time_key: &[],
-				pq_key: &data[..1],
-			}),
-		),
+		(Kind::Init, init_bytes(valid_init())),
 		(
 			Kind::Response,
-			response_bytes(KexResponse {
-				identity_key: &data[..1],
-				ephemeral_key: &[],
-				kem_cipher_text: &data,
-				app_cipher_text: &data[..24],
-				key_id: u64::MAX,
-			}),
+			response_bytes(valid_response(&data[..24], u64::MAX)),
 		),
 	];
 	for (kind, wire) in cases {
@@ -238,22 +285,22 @@ fn every_truncation_and_nonempty_suffix_is_rejected() {
 }
 
 #[test]
-fn empty_byte_strings_are_syntactically_valid() {
-	// Cryptographic key and ciphertext lengths are a separate validation boundary.
-	for &kind in KINDS {
-		assert!(kind.accepts(kind.minimal()));
-	}
+fn variable_cipher_byte_strings_may_be_empty() {
+	assert!(decode_frame(&[0x85, 1, 2, 0, 0, 0x40]).is_some());
+	let response = valid_response(&[], 0);
+	assert!(decode_response(&response_bytes(response)) == Some(response));
 }
 
 #[test]
 fn wrong_version_type_arity_and_major_types_are_rejected() {
 	for &kind in KINDS {
-		let wire = kind.minimal();
+		let fixture = kind.minimal();
+		let wire = fixture.as_slice();
 		kind.reject("unsupported version", &replacing(wire, 1, &[2]));
 		kind.reject("unknown message type", &replacing(wire, 2, &[3]));
 		for other in KINDS {
 			if other.minimal()[2] != wire[2] {
-				kind.reject("different message type", other.minimal());
+				kind.reject("different message type", &other.minimal());
 			}
 		}
 		for arity in [wire[0] - 1, wire[0] + 1] {
@@ -289,7 +336,8 @@ fn wrong_version_type_arity_and_major_types_are_rejected() {
 #[test]
 fn nonminimal_integers_and_lengths_are_rejected() {
 	for &kind in KINDS {
-		let wire = kind.minimal();
+		let fixture = kind.minimal();
+		let wire = fixture.as_slice();
 		kind.reject(
 			"overlong array length",
 			&replacing(wire, 0, &[0x98, wire[0] & 0x1f]),
@@ -310,17 +358,23 @@ fn nonminimal_integers_and_lengths_are_rejected() {
 				);
 			}
 		}
-		for &offset in kind.byte_fields() {
-			for replacement in [
-				vec![0x58, 0],
-				vec![0x59, 0, 0],
-				vec![0x5a, 0, 0, 0, 0],
-				vec![0x5b, 0, 0, 0, 0, 0, 0, 0, 0],
-			] {
-				kind.reject(
-					"overlong byte string length",
-					&replacing(wire, offset, &replacement),
-				);
+		for &(offset, length) in kind.byte_field_lengths() {
+			let canonical_width = match length {
+				0..=23 => 0,
+				24..=255 => 1,
+				_ => 2,
+			};
+			for (header, width) in [(0x58, 1), (0x59, 2), (0x5a, 4), (0x5b, 8)] {
+				if width > canonical_width {
+					let mut changed = wire[..offset].to_vec();
+					changed.push(header);
+					changed.extend_from_slice(&(length as u64).to_be_bytes()[8 - width..]);
+					changed.extend_from_slice(&wire[offset + canonical_width + 1..]);
+					kind.reject(
+						"overlong byte string length with unchanged payload",
+						&changed,
+					);
+				}
 			}
 		}
 	}
@@ -329,7 +383,8 @@ fn nonminimal_integers_and_lengths_are_rejected() {
 #[test]
 fn indefinite_containers_tags_and_unrepresentable_values_are_rejected() {
 	for &kind in KINDS {
-		let wire = kind.minimal();
+		let fixture = kind.minimal();
+		let wire = fixture.as_slice();
 		let mut indefinite = replacing(wire, 0, &[0x9f]);
 		indefinite.push(0xff);
 		kind.reject("indefinite array", &indefinite);
@@ -399,7 +454,7 @@ fn bounded_hostile_inputs_do_not_panic() {
 				for &offset in kind.byte_fields() {
 					kind.reject(
 						"nested container or tag in byte field",
-						&replacing(kind.minimal(), offset, &nested),
+						&replacing(&kind.minimal(), offset, &nested),
 					);
 				}
 			}
@@ -422,12 +477,7 @@ fn parsers_borrow_every_byte_string_from_the_input() {
 		cipher_text: b"frame",
 	});
 	assert_borrowed(&frame, decode_frame(&frame).unwrap().cipher_text);
-	let init = init_bytes(InitKex {
-		identity_key: b"identity",
-		pre_key: b"pre",
-		one_time_key: b"once",
-		pq_key: b"pq",
-	});
+	let init = init_bytes(valid_init());
 	let value = decode_init(&init).unwrap();
 	for field in [
 		value.identity_key,
@@ -437,13 +487,7 @@ fn parsers_borrow_every_byte_string_from_the_input() {
 	] {
 		assert_borrowed(&init, field);
 	}
-	let response = response_bytes(KexResponse {
-		identity_key: b"identity",
-		ephemeral_key: b"ephemeral",
-		kem_cipher_text: b"kem",
-		app_cipher_text: b"application",
-		key_id: 3,
-	});
+	let response = response_bytes(valid_response(b"application", 3));
 	let value = decode_response(&response).unwrap();
 	for field in [
 		value.identity_key,
@@ -478,20 +522,9 @@ fn insufficient_output_capacity_returns_zero_and_exact_capacity_succeeds() {
 		cipher_text: b"ciphertext",
 	};
 	assert_output_sizes(&frame_bytes(frame), |out| encode_frame(frame, out));
-	let init = InitKex {
-		identity_key: b"identity",
-		pre_key: b"pre",
-		one_time_key: b"once",
-		pq_key: &[0xa5; 256],
-	};
+	let init = valid_init();
 	assert_output_sizes(&init_bytes(init), |out| encode_init(init, out));
-	let response = KexResponse {
-		identity_key: b"identity",
-		ephemeral_key: b"ephemeral",
-		kem_cipher_text: b"kem",
-		app_cipher_text: b"application",
-		key_id: u64::MAX,
-	};
+	let response = valid_response(b"application", u64::MAX);
 	assert_output_sizes(&response_bytes(response), |out| {
 		encode_response(response, out)
 	});
@@ -499,20 +532,31 @@ fn insufficient_output_capacity_returns_zero_and_exact_capacity_succeeds() {
 
 #[test]
 fn complete_encoded_limit_is_inclusive_and_oversized_encoders_do_not_write() {
-	// Reuse one large allocation for all layouts and both sides of the limit.
+	// Fixed registration requests are always 1490 bytes; variable ciphertext can reach the limit.
+	assert_eq!(init_bytes(valid_init()).len(), 1490);
 	let mut wire = vec![0xa5; MAX_MESSAGE_SIZE + 1];
-	for kind in KINDS {
+	for kind in [Kind::Frame, Kind::Response] {
 		for oversized in [false, true] {
 			let total = MAX_MESSAGE_SIZE + usize::from(oversized);
-			let (prefix, tail): (&[u8], usize) = match kind {
-				Kind::Frame => (&[0x85, 1, 2, 0, 0, 0x5a], 0),
-				Kind::Init => (&[0x86, 1, 0, 0x40, 0x40, 0x40, 0x5a], 0),
-				Kind::Response => (&[0x87, 1, 1, 0x40, 0x40, 0x40, 0x5a], 1),
+			let (mut prefix, tail) = match kind {
+				Kind::Frame => (vec![0x85, 1, 2, 0, 0, 0x5a], 0),
+				Kind::Response => {
+					let mut prefix = vec![0x87, 1, 1];
+					for field in [
+						&RESPONSE_IDENTITY[..],
+						&RESPONSE_EPHEMERAL[..],
+						&RESPONSE_KEM[..],
+					] {
+						append_bytes(&mut prefix, field);
+					}
+					prefix.push(0x5a);
+					(prefix, 1)
+				}
+				Kind::Init => unreachable!(),
 			};
 			let payload_length = total - prefix.len() - 4 - tail;
-			wire[..prefix.len()].copy_from_slice(prefix);
-			wire[prefix.len()..prefix.len() + 4]
-				.copy_from_slice(&(payload_length as u32).to_be_bytes());
+			prefix.extend_from_slice(&(payload_length as u32).to_be_bytes());
+			wire[..prefix.len()].copy_from_slice(&prefix);
 			if tail == 1 {
 				wire[total - 1] = 0;
 			}
@@ -540,51 +584,140 @@ fn complete_encoded_limit_is_inclusive_and_oversized_encoders_do_not_write() {
 						);
 					}
 				}
-				Kind::Init | Kind::Response => {
-					// Every byte-string position contributes to the complete encoded size.
-					for field in 0..4 {
-						let mut lengths = [0; 4];
-						lengths[field] = payload_length;
-						let mut values: [&[u8]; 4] = [&[]; 4];
-						values[field] = &wire[..payload_length];
-						if matches!(kind, Kind::Init) {
-							assert_eq!(encoded_init_len(lengths), expected);
-							if oversized {
-								assert_eq!(
-									encode_init(
-										InitKex {
-											identity_key: values[0],
-											pre_key: values[1],
-											one_time_key: values[2],
-											pq_key: values[3]
-										},
-										&mut output
-									),
-									0
-								);
-							}
-						} else {
-							assert_eq!(encoded_response_len(lengths, 0), expected);
-							if oversized {
-								assert_eq!(
-									encode_response(
-										KexResponse {
-											identity_key: values[0],
-											ephemeral_key: values[1],
-											kem_cipher_text: values[2],
-											app_cipher_text: values[3],
-											key_id: 0
-										},
-										&mut output
-									),
-									0
-								);
-							}
-						}
+				Kind::Response => {
+					assert_eq!(
+						encoded_response_len([32, 32, 1088, payload_length], 0),
+						expected
+					);
+					if oversized {
+						assert_eq!(
+							encode_response(
+								valid_response(&wire[..payload_length], 0),
+								&mut output
+							),
+							0
+						);
 					}
 				}
+				Kind::Init => unreachable!(),
 			}
 			assert_eq!(output, [0x5a; 64], "oversized encoder touched output");
+		}
+	}
+	// The complete-message budget also rejects oversized fixed-field requests before writing.
+	let mut output = [0x5a; 64];
+	assert_eq!(
+		encode_init(
+			InitKex {
+				pq_key: &wire[..MAX_MESSAGE_SIZE],
+				..valid_init()
+			},
+			&mut output
+		),
+		0
+	);
+	assert_eq!(output, [0x5a; 64]);
+}
+
+#[test]
+fn fixed_registration_field_lengths_reject_one_short_and_one_long_wire_inputs() {
+	for field in 0..4 {
+		for adjustment in [-1isize, 1] {
+			let mut values = [
+				&INIT_IDENTITY[..],
+				&INIT_PREKEY[..],
+				&INIT_ONE_TIME[..],
+				&INIT_PQ[..],
+			];
+			let malformed = vec![0x5a; values[field].len().checked_add_signed(adjustment).unwrap()];
+			values[field] = &malformed;
+			let wire = independent_init(InitKex {
+				identity_key: values[0],
+				pre_key: values[1],
+				one_time_key: values[2],
+				pq_key: values[3],
+			});
+			assert!(
+				decode_init(&wire).is_none(),
+				"init field {field}, adjustment {adjustment}"
+			);
+		}
+	}
+	for field in 0..3 {
+		for adjustment in [-1isize, 1] {
+			let mut values = [
+				&RESPONSE_IDENTITY[..],
+				&RESPONSE_EPHEMERAL[..],
+				&RESPONSE_KEM[..],
+			];
+			let malformed = vec![0x5a; values[field].len().checked_add_signed(adjustment).unwrap()];
+			values[field] = &malformed;
+			let wire = independent_response(KexResponse {
+				identity_key: values[0],
+				ephemeral_key: values[1],
+				kem_cipher_text: values[2],
+				app_cipher_text: &[],
+				key_id: 0,
+			});
+			assert!(
+				decode_response(&wire).is_none(),
+				"response field {field}, adjustment {adjustment}"
+			);
+		}
+	}
+}
+
+#[test]
+fn fixed_registration_field_lengths_reject_one_short_and_one_long_encoder_inputs() {
+	let mut output = [0u8; 2048];
+	for field in 0..4 {
+		for adjustment in [-1isize, 1] {
+			let mut values = [
+				&INIT_IDENTITY[..],
+				&INIT_PREKEY[..],
+				&INIT_ONE_TIME[..],
+				&INIT_PQ[..],
+			];
+			let malformed = vec![0x5a; values[field].len().checked_add_signed(adjustment).unwrap()];
+			values[field] = &malformed;
+			assert_eq!(
+				encode_init(
+					InitKex {
+						identity_key: values[0],
+						pre_key: values[1],
+						one_time_key: values[2],
+						pq_key: values[3]
+					},
+					&mut output
+				),
+				0,
+				"init field {field}, adjustment {adjustment}"
+			);
+		}
+	}
+	for field in 0..3 {
+		for adjustment in [-1isize, 1] {
+			let mut values = [
+				&RESPONSE_IDENTITY[..],
+				&RESPONSE_EPHEMERAL[..],
+				&RESPONSE_KEM[..],
+			];
+			let malformed = vec![0x5a; values[field].len().checked_add_signed(adjustment).unwrap()];
+			values[field] = &malformed;
+			assert_eq!(
+				encode_response(
+					KexResponse {
+						identity_key: values[0],
+						ephemeral_key: values[1],
+						kem_cipher_text: values[2],
+						app_cipher_text: &[],
+						key_id: 0
+					},
+					&mut output
+				),
+				0,
+				"response field {field}, adjustment {adjustment}"
+			);
 		}
 	}
 }

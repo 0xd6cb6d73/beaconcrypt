@@ -16,7 +16,7 @@ The script verifies the archive checksum and invokes `cddl.exe --rust --mname Tr
 | File under `src/generated/` | Bytes | SHA-256 |
 | --- | ---: | --- |
 | `cbordetver.rs` | 20,416 | `e60e27d58b3fe7eeaca202e9751b596c88884b4a76d5bf57a345a21861066d6c` |
-| `cbordetveraux.rs` | 194,288 | `8f1b347cb137ff91e956735cbded8632d17c9961c4fcdd73f86460560053e082` |
-| `transport.rs` | 102,176 | `b177c38bd51ca256a16c8f6c4ec43edcc7255c868f99f2055ed1d4926b5e32e1` |
+| `cbordetveraux.rs` | 194,647 | `36420e78b9feed0a4c4a1b6a57b28aeba16ae38be9c61f5ff8165fa088ac3589` |
+| `transport.rs` | 181,142 | `0853835c205590395386537ad2b658df942cc7b5a3835e3751e839c4bfb1e1a8` |
 
 Generation verifies the schema-specific F* module against shipped prechecked dependencies. This does not prove extracted Rust, handwritten wrappers, the compiler, or end-to-end protocol behavior.

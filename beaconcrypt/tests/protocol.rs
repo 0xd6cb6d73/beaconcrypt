@@ -1463,6 +1463,81 @@ fn server_rejects_replayed_registration_bundle() {
 }
 
 #[test]
+fn registration_request_field_lengths_reject_before_consuming_replay_material() {
+	let (mut server, mut beacon) = new_pair();
+	let original = beacon.get_registration_bundle().unwrap();
+	let init = decode_init(&original).unwrap();
+	let fields = [
+		init.identity_key,
+		init.pre_key,
+		init.one_time_key,
+		init.pq_key,
+	];
+	assert_eq!(fields.map(<[u8]>::len), [33, 98, 98, 1_249]);
+	assert_eq!(common::encode_unchecked_init(init), original);
+	for field in 0..fields.len() {
+		for length in [fields[field].len() - 1, fields[field].len() + 1] {
+			let mut changed = fields.map(<[u8]>::to_vec);
+			changed[field].resize(length, 0);
+			let candidate = common::encode_unchecked_init(InitKex {
+				identity_key: &changed[0],
+				pre_key: &changed[1],
+				one_time_key: &changed[2],
+				pq_key: &changed[3],
+			});
+			assert!(
+				decode_init(&candidate).is_none(),
+				"field {field}, length {length}"
+			);
+			assert!(server.get_shared_secret(&candidate).is_none());
+			assert_eq!(server.server_kid(), SERVER_KID);
+			assert!(server.pk_by_kid(1).is_none());
+		}
+	}
+	assert!(server.get_shared_secret(&original).is_some());
+	assert!(server.get_shared_secret(&original).is_none());
+}
+
+#[test]
+fn registration_response_field_length_rejection_is_terminal() {
+	for (field, expected_length) in [(0, 32), (1, 32), (2, 1_088)] {
+		for length in [expected_length - 1, expected_length + 1] {
+			let (mut beacon, original) = pending_registration(b"field length checks");
+			assert_eq!(
+				common::encode_unchecked_response(decode_response(&original).unwrap()),
+				original
+			);
+			let mut parts = parse_kex_response(&original);
+			let changed = match field {
+				0 => &mut parts.identity_key,
+				1 => &mut parts.ephemeral_key,
+				_ => &mut parts.kem_ciphertext,
+			};
+			assert_eq!(changed.len(), expected_length);
+			changed.resize(length, 0);
+			let candidate = common::encode_unchecked_response(KexResponse {
+				identity_key: &parts.identity_key,
+				ephemeral_key: &parts.ephemeral_key,
+				kem_cipher_text: &parts.kem_ciphertext,
+				app_cipher_text: &parts.app_ciphertext,
+				key_id: parts.key_id,
+			});
+			assert!(
+				decode_response(&candidate).is_none(),
+				"field {field}, length {length}"
+			);
+			assert!(beacon.finish_registration(&candidate).is_none());
+			assert!(beacon.ratchet_status().is_none());
+			assert!(beacon.associated_data().is_none());
+			assert!(beacon.get_prekey_sk().is_none());
+			assert!(beacon.get_onetime_sk().is_none());
+			assert!(beacon.pq_sk().is_none());
+			assert!(beacon.finish_registration(&original).is_none());
+		}
+	}
+}
+
+#[test]
 fn replay_detection_uses_identity_and_one_time_key_across_distinct_signed_prekeys() {
 	use beaconcrypt_core::pqxdh::{KEM_TYPE_X25519, KEY_ROLE_PREKEY};
 	use libsodium_rs::{crypto_kx, crypto_sign};

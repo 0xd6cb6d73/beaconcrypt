@@ -182,6 +182,21 @@ pub(crate) fn sizet_lte_u64(b: usize, a: u64) -> bool
     }
 }
 
+pub(crate) fn u64_lte_sizet(a: u64, b: usize) -> bool
+{
+    let q1: usize = b.wrapping_div(32768usize);
+    let q2: usize = q1.wrapping_div(32768usize);
+    let q3: usize = q2.wrapping_div(32768usize);
+    let q4: usize = q3.wrapping_div(32768usize);
+    if q4 >= 16usize
+    { true }
+    else
+    {
+        let b64: u64 = b as u64;
+        a <= b64
+    }
+}
+
 pub(crate) const cddl_simple_value_false: u8 = 20u8;
 
 pub(crate) const cddl_simple_value_true: u8 = 21u8;

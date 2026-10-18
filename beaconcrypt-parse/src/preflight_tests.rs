@@ -187,3 +187,16 @@ fn generated_validation_retains_responsibility_for_minimal_primitive_encodings()
 	assert_eq!(preflight(&frame, &[0x85, 1, 2], &[0, 0, 2]), Some(()));
 	assert!(super::decode_frame(&frame).is_none());
 }
+
+#[test]
+fn generated_validation_checks_fixed_registration_sizes_after_flat_shape_preflight() {
+	let init = [0x86, 1, 0, 0x40, 0x40, 0x40, 0x40];
+	assert_eq!(preflight(&init, &[0x86, 1, 0], &[2, 2, 2, 2]), Some(()));
+	assert!(super::decode_init(&init).is_none());
+	let response = [0x87, 1, 1, 0x40, 0x40, 0x40, 0x40, 0];
+	assert_eq!(
+		preflight(&response, &[0x87, 1, 1], &[2, 2, 2, 2, 0]),
+		Some(())
+	);
+	assert!(super::decode_response(&response).is_none());
+}

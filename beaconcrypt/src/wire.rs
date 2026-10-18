@@ -87,7 +87,7 @@ mod tests {
 	}
 
 	#[test]
-	fn output_bound_handles_full_width_metadata_and_empty_fields() {
+	fn output_bound_handles_full_width_metadata_and_empty_ciphertexts() {
 		let frame = CryptoFrame {
 			seq: u64::MAX,
 			key_id: u64::MAX,
@@ -95,16 +95,16 @@ mod tests {
 		};
 		assert!(beaconcrypt_parse::decode_frame(&encode_frame(frame).unwrap()) == Some(frame));
 		let init = InitKex {
-			identity_key: &[],
-			pre_key: &[],
-			one_time_key: &[],
-			pq_key: &[],
+			identity_key: &[0; 33],
+			pre_key: &[0; 98],
+			one_time_key: &[0; 98],
+			pq_key: &[0; 1_249],
 		};
 		assert!(beaconcrypt_parse::decode_init(&encode_init(init).unwrap()) == Some(init));
 		let response = KexResponse {
-			identity_key: &[],
-			ephemeral_key: &[],
-			kem_cipher_text: &[],
+			identity_key: &[0; 32],
+			ephemeral_key: &[0; 32],
+			kem_cipher_text: &[0; 1_088],
 			app_cipher_text: &[],
 			key_id: u64::MAX,
 		};
