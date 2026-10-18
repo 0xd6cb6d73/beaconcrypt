@@ -17,6 +17,12 @@ const (
 	ratchetStateBytes = 32
 )
 
+func TestMaxMessageSize(t *testing.T) {
+	if MaxMessageSize != 32*1024*1024 {
+		t.Fatalf("maximum encoded message size: got %d want %d", MaxMessageSize, 32*1024*1024)
+	}
+}
+
 func TestNewBeaconRejectsIncorrectKeyLengths(t *testing.T) {
 	for _, length := range []int{0, 1, 31, 33, 64} {
 		beacon, err := NewBeacon(19, make([]byte, length))

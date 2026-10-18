@@ -1,8 +1,11 @@
 use beaconcrypt::*;
-use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
+use beaconcrypt_parse::{CryptoFrame, decode_frame};
+
 use libsodium_rs::crypto_sign;
 use std::sync::{Arc, Barrier, Mutex};
 use std::thread;
+
+mod common;
 
 const SNAPSHOT_HEADER_SIZE: usize = 16 + 2 + 1 + 1 + 32 + 8 + 32 + 8;
 const SNAPSHOT_PARENT_DIGEST_OFFSET: usize = 16 + 2 + 1 + 1 + 32 + 8;
@@ -232,22 +235,16 @@ fn rewrite_crypto_frame(
 	serialized: &[u8],
 	mutate: impl FnOnce(&mut u64, &mut u64, &mut Vec<u8>),
 ) -> Vec<u8> {
-	let message = capnp::serialize::read_message(serialized, ReaderOptions::new()).unwrap();
-	let typed = TypedReader::<_, cryptoframe_capnp::crypto_frame::Owned>::new(message);
-	let frame = typed.get().unwrap();
-	let mut seq = frame.get_seq();
-	let mut kid = frame.get_key_id();
-	let mut ciphertext = frame.get_cipher_text().unwrap().to_vec();
+	let frame = decode_frame(serialized).unwrap();
+	let mut seq = frame.seq;
+	let mut kid = frame.key_id;
+	let mut ciphertext = frame.cipher_text.to_vec();
 	mutate(&mut seq, &mut kid, &mut ciphertext);
-
-	let mut message = TypedBuilder::<cryptoframe_capnp::crypto_frame::Owned>::new_default();
-	let mut corrupted = message.init_root();
-	corrupted.set_seq(seq);
-	corrupted.set_key_id(kid);
-	corrupted.set_cipher_text(&ciphertext);
-	let mut serialized = Vec::new();
-	capnp::serialize::write_message(&mut serialized, message.borrow_inner()).unwrap();
-	serialized
+	common::encode_frame(CryptoFrame {
+		seq,
+		key_id: kid,
+		cipher_text: &ciphertext,
+	})
 }
 
 fn corrupt_crypto_frame_ciphertext(serialized: &[u8]) -> Vec<u8> {

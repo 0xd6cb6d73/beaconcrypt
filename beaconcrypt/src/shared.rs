@@ -576,27 +576,16 @@ mod tests {
 	}
 
 	fn corrupt_crypto_frame_body(serialized: &[u8]) -> Vec<u8> {
-		let message =
-			capnp::serialize::read_message(serialized, capnp::message::ReaderOptions::new())
-				.unwrap();
-		let typed =
-			capnp::message::TypedReader::<_, crate::cryptoframe_capnp::crypto_frame::Owned>::new(
-				message,
-			);
-		let frame = typed.get().unwrap();
-		let mut ciphertext = frame.get_cipher_text().unwrap().to_vec();
+		let frame = beaconcrypt_parse::decode_frame(serialized).unwrap();
+		let mut ciphertext = frame.cipher_text.to_vec();
 		ciphertext[0] ^= 1;
 
-		let mut message = capnp::message::TypedBuilder::<
-			crate::cryptoframe_capnp::crypto_frame::Owned,
-		>::new_default();
-		let mut corrupted = message.init_root();
-		corrupted.set_seq(frame.get_seq());
-		corrupted.set_key_id(frame.get_key_id());
-		corrupted.set_cipher_text(&ciphertext);
-		let mut output = Vec::new();
-		capnp::serialize::write_message(&mut output, message.borrow_inner()).unwrap();
-		output
+		crate::wire::encode_frame(beaconcrypt_parse::CryptoFrame {
+			seq: frame.seq,
+			key_id: frame.key_id,
+			cipher_text: &ciphertext,
+		})
+		.unwrap()
 	}
 
 	fn set_counters(ratchet: &mut RatchetManager, send_sequence: u64, receive_sequence: u64) {

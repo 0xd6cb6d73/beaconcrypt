@@ -1,0 +1,10 @@
+; SPDX-License-Identifier: 0BSD
+; Wire version 1; Rust wrappers limit complete encoded messages to 32 MiB.
+; app-cipher-text is raw ciphertext || tag || commitment, with implicit sequence 1.
+
+init-kex = [1, 0, identity-key: bstr, pre-key: bstr, one-time-key: bstr, pq-key: bstr]
+kex-response = [1, 1, identity-key: bstr, ephemeral-key: bstr, kem-cipher-text: bstr, app-cipher-text: bstr, key-id: uint]
+crypto-frame = [1, 2, seq: uint, key-id: uint, cipher-text: bstr]
+
+uint = #0
+bstr = #2

@@ -1176,23 +1176,15 @@ mod tests {
 		let server = create_durable(&state, &destroyed);
 		let (mut beacon, _) = register(&server);
 		let inbound = beacon.encrypt_message(b"authentic").unwrap();
-		let reader =
-			capnp::serialize::read_message(inbound.as_ref(), capnp::message::ReaderOptions::new())
-				.unwrap();
-		let original = reader
-			.get_root::<crate::cryptoframe_capnp::crypto_frame::Reader<'_>>()
-			.unwrap();
-		let mut payload = original.get_cipher_text().unwrap().to_vec();
+		let original = beaconcrypt_parse::decode_frame(inbound.as_ref()).unwrap();
+		let mut payload = original.cipher_text.to_vec();
 		*payload.last_mut().unwrap() ^= 1;
-		let mut builder = capnp::message::TypedBuilder::<
-			crate::cryptoframe_capnp::crypto_frame::Owned,
-		>::new_default();
-		let mut frame = builder.init_root();
-		frame.set_seq(original.get_seq());
-		frame.set_key_id(original.get_key_id());
-		frame.set_cipher_text(&payload);
-		let mut corrupted = Vec::new();
-		capnp::serialize::write_message(&mut corrupted, builder.borrow_inner()).unwrap();
+		let corrupted = crate::wire::encode_frame(beaconcrypt_parse::CryptoFrame {
+			seq: original.seq,
+			key_id: original.key_id,
+			cipher_text: &payload,
+		})
+		.unwrap();
 		let before = state.lock().unwrap().bytes.clone();
 		let attempts = state.lock().unwrap().attempts;
 		assert!(

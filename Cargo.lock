@@ -75,8 +75,7 @@ name = "beaconcrypt"
 version = "0.5.2"
 dependencies = [
  "beaconcrypt-core",
- "capnp",
- "capnpc",
+ "beaconcrypt-parse",
  "cbindgen",
  "libsodium-rs",
  "pyo3",
@@ -91,6 +90,10 @@ version = "0.1.1"
 dependencies = [
  "zeroize",
 ]
+
+[[package]]
+name = "beaconcrypt-parse"
+version = "0.1.0"
 
 [[package]]
 name = "bitflags"
@@ -109,24 +112,6 @@ name = "bytes"
 version = "1.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc652a48c352aef3ea3aed32080501cf3ef6ed5da78602a020c991775b0aff04"
-
-[[package]]
-name = "capnp"
-version = "0.27.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "93f7ce2b1b49d58b2b754f9146ef07e3244f9b67e7563bc1292fbd5f01b142f0"
-dependencies = [
- "embedded-io",
-]
-
-[[package]]
-name = "capnpc"
-version = "0.27.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "82ca16312ddb64529d31c8dc46148671c22e57b80134fa5f17811ad5a6a79492"
-dependencies = [
- "capnp",
-]
 
 [[package]]
 name = "cbindgen"
@@ -226,12 +211,6 @@ name = "dary_heap"
 version = "0.3.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8b1e3a325bc115f096c8b77bbf027a7c2592230e70be2d985be950d3d5e60ebe"
-
-[[package]]
-name = "embedded-io"
-version = "0.7.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9eb1aa714776b75c7e67e1da744b81a129b3ff919c8712b5e1b32252c1f07cc7"
 
 [[package]]
 name = "equivalent"

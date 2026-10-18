@@ -1,6 +1,11 @@
 use beaconcrypt::*;
-use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
+use beaconcrypt_parse::{
+	CryptoFrame, InitKex, KexResponse, decode_frame, decode_init, decode_response, encode_init,
+};
+
 use std::panic::{AssertUnwindSafe, catch_unwind};
+
+mod common;
 
 #[derive(serde::Deserialize)]
 struct SerializedStateUpdate {
@@ -84,51 +89,30 @@ fn register_beacon(
 }
 
 fn corrupt_aead_ciphertext(serialized: &[u8]) -> Vec<u8> {
-	let message = capnp::serialize::read_message(serialized, ReaderOptions::new()).unwrap();
-	let typed_reader = TypedReader::<_, cryptoframe_capnp::crypto_frame::Owned>::new(message);
-	let frame = typed_reader.get().unwrap();
-	let mut ciphertext = frame.get_cipher_text().unwrap().to_vec();
+	let frame = decode_frame(serialized).unwrap();
+	let mut ciphertext = frame.cipher_text.to_vec();
 	ciphertext[0] ^= 0x01;
-
-	let mut message = TypedBuilder::<cryptoframe_capnp::crypto_frame::Owned>::new_default();
-	let mut corrupted = message.init_root();
-	corrupted.set_seq(frame.get_seq());
-	corrupted.set_key_id(frame.get_key_id());
-	corrupted.set_cipher_text(&ciphertext);
-
-	let mut serialized = vec![];
-	capnp::serialize::write_message(&mut serialized, message.borrow_inner()).unwrap();
-	serialized
+	serialize_crypto_frame(frame.seq, frame.key_id, &ciphertext)
 }
 
 fn serialize_crypto_frame(seq: u64, key_id: u64, ciphertext: &[u8]) -> Vec<u8> {
-	let mut message = TypedBuilder::<cryptoframe_capnp::crypto_frame::Owned>::new_default();
-	let mut frame = message.init_root();
-	frame.set_seq(seq);
-	frame.set_key_id(key_id);
-	frame.set_cipher_text(ciphertext);
-
-	let mut serialized = vec![];
-	capnp::serialize::write_message(&mut serialized, message.borrow_inner()).unwrap();
-	serialized
+	common::encode_frame(CryptoFrame {
+		seq,
+		key_id,
+		cipher_text: ciphertext,
+	})
 }
 
 fn crypto_frame_seq(serialized: &[u8]) -> u64 {
-	let message = capnp::serialize::read_message(serialized, ReaderOptions::new()).unwrap();
-	let typed = TypedReader::<_, cryptoframe_capnp::crypto_frame::Owned>::new(message);
-	typed.get().unwrap().get_seq()
+	decode_frame(serialized).unwrap().seq
 }
 
 fn crypto_frame_key_id(serialized: &[u8]) -> u64 {
-	let message = capnp::serialize::read_message(serialized, ReaderOptions::new()).unwrap();
-	let typed = TypedReader::<_, cryptoframe_capnp::crypto_frame::Owned>::new(message);
-	typed.get().unwrap().get_key_id()
+	decode_frame(serialized).unwrap().key_id
 }
 
 fn crypto_frame_ciphertext(serialized: &[u8]) -> Vec<u8> {
-	let message = capnp::serialize::read_message(serialized, ReaderOptions::new()).unwrap();
-	let typed = TypedReader::<_, cryptoframe_capnp::crypto_frame::Owned>::new(message);
-	typed.get().unwrap().get_cipher_text().unwrap().to_vec()
+	decode_frame(serialized).unwrap().cipher_text.to_vec()
 }
 
 fn rewrite_crypto_frame_seq(serialized: &[u8], seq: u64) -> Vec<u8> {
@@ -596,30 +580,24 @@ struct KexResponseParts {
 }
 
 fn parse_kex_response(serialized: &[u8]) -> KexResponseParts {
-	let message = capnp::serialize_packed::read_message(serialized, ReaderOptions::new()).unwrap();
-	let typed = TypedReader::<_, phase2_capnp::kex_response::Owned>::new(message);
-	let response = typed.get().unwrap();
+	let response = decode_response(serialized).unwrap();
 	KexResponseParts {
-		identity_key: response.get_identity_key().unwrap().to_vec(),
-		ephemeral_key: response.get_ephemeral_key().unwrap().to_vec(),
-		kem_ciphertext: response.get_kem_cipher_text().unwrap().to_vec(),
-		app_ciphertext: response.get_app_cipher_text().unwrap().to_vec(),
-		key_id: response.get_key_id(),
+		identity_key: response.identity_key.to_vec(),
+		ephemeral_key: response.ephemeral_key.to_vec(),
+		kem_ciphertext: response.kem_cipher_text.to_vec(),
+		app_ciphertext: response.app_cipher_text.to_vec(),
+		key_id: response.key_id,
 	}
 }
 
 fn serialize_kex_response(parts: &KexResponseParts) -> Vec<u8> {
-	let mut message = TypedBuilder::<phase2_capnp::kex_response::Owned>::new_default();
-	let mut response = message.init_root();
-	response.set_identity_key(&parts.identity_key);
-	response.set_ephemeral_key(&parts.ephemeral_key);
-	response.set_kem_cipher_text(&parts.kem_ciphertext);
-	response.set_app_cipher_text(&parts.app_ciphertext);
-	response.set_key_id(parts.key_id);
-
-	let mut serialized = vec![];
-	capnp::serialize_packed::write_message(&mut serialized, message.borrow_inner()).unwrap();
-	serialized
+	common::encode_response(KexResponse {
+		identity_key: &parts.identity_key,
+		ephemeral_key: &parts.ephemeral_key,
+		kem_cipher_text: &parts.kem_ciphertext,
+		app_cipher_text: &parts.app_ciphertext,
+		key_id: parts.key_id,
+	})
 }
 
 fn pending_registration(initial_message: &[u8]) -> (Beacon, Vec<u8>) {
@@ -633,19 +611,8 @@ fn pending_registration(initial_message: &[u8]) -> (Beacon, Vec<u8>) {
 }
 
 fn rewrite_crypto_frame_key_id(serialized: &[u8], key_id: u64) -> Vec<u8> {
-	let message = capnp::serialize::read_message(serialized, ReaderOptions::new()).unwrap();
-	let typed = TypedReader::<_, cryptoframe_capnp::crypto_frame::Owned>::new(message);
-	let original = typed.get().unwrap();
-
-	let mut message = TypedBuilder::<cryptoframe_capnp::crypto_frame::Owned>::new_default();
-	let mut rewritten = message.init_root();
-	rewritten.set_seq(original.get_seq());
-	rewritten.set_key_id(key_id);
-	rewritten.set_cipher_text(original.get_cipher_text().unwrap());
-
-	let mut serialized = vec![];
-	capnp::serialize::write_message(&mut serialized, message.borrow_inner()).unwrap();
-	serialized
+	let frame = decode_frame(serialized).unwrap();
+	serialize_crypto_frame(frame.seq, key_id, frame.cipher_text)
 }
 
 #[test]
@@ -1424,7 +1391,7 @@ fn beacon_rejects_tampered_registration_kem_ciphertext() {
 fn failed_initial_ciphertext_is_terminal_and_clears_registration_state() {
 	let (mut beacon, response) = pending_registration(b"initial message");
 	let mut parts = parse_kex_response(&response);
-	parts.app_ciphertext = corrupt_aead_ciphertext(&parts.app_ciphertext);
+	parts.app_ciphertext[0] ^= 0x01;
 
 	assert!(
 		beacon
@@ -1449,6 +1416,7 @@ fn failed_initial_ciphertext_is_terminal_and_clears_registration_state() {
 fn malformed_initial_ciphertext_is_rejected_without_panicking() {
 	for malformed_app_ciphertext in [
 		Vec::new(),
+		vec![0xA5; 79],
 		serialize_crypto_frame(1, SERVER_KID, &[0xA5; 79]),
 	] {
 		let (mut beacon, response) = pending_registration(b"initial message");
@@ -1495,14 +1463,69 @@ fn server_rejects_replayed_registration_bundle() {
 }
 
 #[test]
-fn replay_detection_uses_semantic_registration_material() {
+fn replay_detection_uses_identity_and_one_time_key_across_distinct_signed_prekeys() {
+	use beaconcrypt_core::pqxdh::{KEM_TYPE_X25519, KEY_ROLE_PREKEY};
+	use libsodium_rs::{crypto_kx, crypto_sign};
+
+	let seed = [0x4a; 32];
+	let mut server = Server::new(SERVER_KID, Some(&seed));
+	let mut beacon = Beacon::new(SERVER_KID, server.identity_pk().as_bytes());
+	let original = beacon.get_registration_bundle().unwrap();
+	let init = decode_init(&original).unwrap();
+	let replacement = crypto_kx::KeyPair::generate().unwrap();
+	let mut typed_prekey = vec![KEM_TYPE_X25519, KEY_ROLE_PREKEY];
+	typed_prekey.extend_from_slice(replacement.public_key.as_bytes());
+	let signed_prekey = crypto_sign::sign(&typed_prekey, beacon.identity_sk()).unwrap();
+	assert_ne!(signed_prekey, init.pre_key);
+	let mut changed = vec![0; original.len() + 64];
+	let written = encode_init(
+		InitKex {
+			identity_key: init.identity_key,
+			pre_key: &signed_prekey,
+			one_time_key: init.one_time_key,
+			pq_key: init.pq_key,
+		},
+		&mut changed,
+	);
+	assert_ne!(written, 0);
+	changed.truncate(written);
+	assert_ne!(original, changed);
+	let changed_init = decode_init(&changed).unwrap();
+	assert_eq!(changed_init.identity_key, init.identity_key);
+	assert_eq!(changed_init.one_time_key, init.one_time_key);
+
+	// Both canonical requests are valid before their shared registration material is consumed.
+	for request in [&original, &changed] {
+		let mut fresh = Server::new(SERVER_KID, Some(&seed));
+		assert!(fresh.get_shared_secret(request).is_some());
+	}
+	assert!(server.get_shared_secret(&original).is_some());
+	assert!(server.get_shared_secret(&changed).is_none());
+	assert!(server.get_shared_secret(&original).is_none());
+}
+
+#[test]
+fn malformed_registration_framing_does_not_consume_replay_material() {
 	let (mut server, mut beacon) = new_pair();
 	let phase_1 = beacon.get_registration_bundle().unwrap();
-	let mut alternate_wire_encoding = phase_1.clone();
-	alternate_wire_encoding.extend_from_slice(&[0; 8]);
-
-	assert!(server.get_shared_secret(&alternate_wire_encoding).is_some());
+	let before = server.server_kid();
+	for cut in 0..phase_1.len() {
+		assert!(server.get_shared_secret(&phase_1[..cut]).is_none());
+		assert_eq!(server.server_kid(), before);
+	}
+	for suffix in [&[0u8][..], &[0u8; 8][..], phase_1.as_slice()] {
+		let mut malformed = phase_1.clone();
+		malformed.extend_from_slice(suffix);
+		assert!(server.get_shared_secret(&malformed).is_none());
+		assert_eq!(server.server_kid(), before);
+	}
+	let pending = server.get_shared_secret(&phase_1).unwrap();
 	assert!(server.get_shared_secret(&phase_1).is_none());
+	let response = server.build_registration_response(pending, None).unwrap();
+	assert_eq!(
+		beacon.finish_registration(&response.serialized),
+		Some(vec![0xFF])
+	);
 }
 
 #[test]

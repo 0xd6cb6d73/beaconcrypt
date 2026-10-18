@@ -20,8 +20,6 @@ jobs:
     - uses: actions/checkout@v7
       with:
         submodules: recursive
-    - name: Install cap'n proto
-      run: sudo apt update && sudo apt install capnproto
     - name: Build
       run: cargo build --verbose
     - name: Check PQXDH server build

@@ -11,6 +11,11 @@ mod ratchet;
 #[cfg(feature = "server")]
 mod server;
 mod shared;
+mod wire;
+
+/// Maximum complete encoded transport message size in bytes, including all framing.
+pub const MAX_MESSAGE_SIZE: usize = 33_554_432;
+const _: () = assert!(MAX_MESSAGE_SIZE == beaconcrypt_parse::MAX_MESSAGE_SIZE);
 
 /// # Safety
 /// This is a horrible hack to compensate for the fact that libsodium 0.2.4 fails to link to `memset_explicit` on Windows when using the GNU toolchain. You probably should not use this
@@ -80,10 +85,6 @@ pub use server::{
 };
 pub use shared::{DH_OUT_LEN, Decrypted, ED25519_SEED_SIZE, Encrypted, KEX_KDF_OUT_LEN, SignType};
 
-capnp::generated_code!(pub mod phase1_capnp);
-capnp::generated_code!(pub mod phase2_capnp);
-capnp::generated_code!(pub mod cryptoframe_capnp);
-
 #[cfg(any(feature = "cbinds", feature = "gobinds"))]
 mod cbinds;
 
@@ -93,6 +94,10 @@ mod pybinds;
 #[cfg(feature = "pybinds")]
 #[pyo3::pymodule]
 mod beaconcrypt {
+	/// Maximum complete encoded transport message in bytes; snapshots and JSON state are uncapped.
+	#[pymodule_export]
+	const MAX_MESSAGE_SIZE: usize = crate::MAX_MESSAGE_SIZE;
+
 	#[pymodule_export]
 	use crate::pybinds::{
 		Beacon, EncryptStatePy, PersistenceError, RegResponsePy, Server, SnapshotHeadPy,

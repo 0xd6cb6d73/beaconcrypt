@@ -446,6 +446,9 @@ impl<S: SnapshotStore> PersistentServer<S> {
 		&mut self,
 		buffer: &[u8],
 	) -> Result<Option<RegistrationOutput>, PersistenceError> {
+		if buffer.len() > beaconcrypt_parse::MAX_MESSAGE_SIZE {
+			return self.reject_oversized();
+		}
 		self.commit(|server| server.get_shared_secret(buffer))
 	}
 
@@ -454,6 +457,9 @@ impl<S: SnapshotStore> PersistentServer<S> {
 		registration: RegistrationOutput,
 		data: Option<&[u8]>,
 	) -> Result<Option<RegResponse>, PersistenceError> {
+		if !self.server.registration_response_fits(data) {
+			return self.reject_oversized();
+		}
 		self.commit(|server| server.build_registration_response(registration, data))
 	}
 
@@ -462,6 +468,9 @@ impl<S: SnapshotStore> PersistentServer<S> {
 		bytes: &[u8],
 		kid: u64,
 	) -> Result<Option<Encrypted>, PersistenceError> {
+		if !self.outgoing_message_fits(bytes.len(), kid) {
+			return self.reject_oversized();
+		}
 		self.commit(|server| server.encrypt_message(bytes, kid))
 	}
 
@@ -476,6 +485,9 @@ impl<S: SnapshotStore> PersistentServer<S> {
 		bytes: &[u8],
 		kid: u64,
 	) -> Result<Option<SendState>, PersistenceError> {
+		if !self.outgoing_message_fits(bytes.len(), kid) {
+			return self.reject_oversized();
+		}
 		self.commit(|server| server.encrypt_and_update(bytes, kid))
 	}
 
@@ -493,7 +505,26 @@ impl<S: SnapshotStore> PersistentServer<S> {
 		bytes: &[u8],
 		kid: u64,
 	) -> Result<Option<String>, PersistenceError> {
+		if !self.outgoing_message_fits(bytes.len(), kid) {
+			return self.reject_oversized();
+		}
 		self.commit(|server| server.encrypt_and_update_json(bytes, kid))
+	}
+
+	fn outgoing_message_fits(&self, plaintext_len: usize, kid: u64) -> bool {
+		let sequence = self
+			.server
+			.ratchet_status(kid)
+			.map_or(0, |status| status.send_sequence().saturating_add(1));
+		crate::wire::frame_len(plaintext_len, sequence, self.server.identity_key_kid()).is_some()
+	}
+
+	fn reject_oversized<T>(&self) -> Result<Option<T>, PersistenceError> {
+		if self.poisoned {
+			Err(PersistenceError::Poisoned)
+		} else {
+			Ok(None)
+		}
 	}
 
 	pub fn decrypt_and_update_json(
@@ -919,27 +950,15 @@ mod tests {
 		let _second = beacon.encrypt_message(b"second").unwrap();
 		let third = beacon.encrypt_message(b"third").unwrap();
 
-		let message = capnp::serialize::read_message(
-			third.ciphertext.as_slice(),
-			capnp::message::ReaderOptions::new(),
-		)
-		.unwrap();
-		let typed =
-			capnp::message::TypedReader::<_, crate::cryptoframe_capnp::crypto_frame::Owned>::new(
-				message,
-			);
-		let frame = typed.get().unwrap();
-		let mut ciphertext = frame.get_cipher_text().unwrap().to_vec();
+		let frame = beaconcrypt_parse::decode_frame(&third.ciphertext).unwrap();
+		let mut ciphertext = frame.cipher_text.to_vec();
 		ciphertext[0] ^= 1;
-		let mut message = capnp::message::TypedBuilder::<
-			crate::cryptoframe_capnp::crypto_frame::Owned,
-		>::new_default();
-		let mut corrupted = message.init_root();
-		corrupted.set_seq(frame.get_seq());
-		corrupted.set_key_id(frame.get_key_id());
-		corrupted.set_cipher_text(&ciphertext);
-		let mut rejected = Vec::new();
-		capnp::serialize::write_message(&mut rejected, message.borrow_inner()).unwrap();
+		let rejected = crate::wire::encode_frame(beaconcrypt_parse::CryptoFrame {
+			seq: frame.seq,
+			key_id: frame.key_id,
+			cipher_text: &ciphertext,
+		})
+		.unwrap();
 
 		let live = persistent.server.serialize_state().unwrap();
 		let head = persistent.head();
@@ -1008,27 +1027,15 @@ mod tests {
 		let full_state = restored.head();
 		let full_snapshot = restored.store.snapshot.clone();
 		let target = &frames[RATCHET_MAX_GAP as usize - 1].1;
-		let message = capnp::serialize::read_message(
-			target.ciphertext.as_slice(),
-			capnp::message::ReaderOptions::new(),
-		)
-		.unwrap();
-		let typed =
-			capnp::message::TypedReader::<_, crate::cryptoframe_capnp::crypto_frame::Owned>::new(
-				message,
-			);
-		let frame = typed.get().unwrap();
-		let mut ciphertext = frame.get_cipher_text().unwrap().to_vec();
+		let frame = beaconcrypt_parse::decode_frame(&target.ciphertext).unwrap();
+		let mut ciphertext = frame.cipher_text.to_vec();
 		ciphertext[0] ^= 1;
-		let mut message = capnp::message::TypedBuilder::<
-			crate::cryptoframe_capnp::crypto_frame::Owned,
-		>::new_default();
-		let mut corrupted = message.init_root();
-		corrupted.set_seq(frame.get_seq());
-		corrupted.set_key_id(frame.get_key_id());
-		corrupted.set_cipher_text(&ciphertext);
-		let mut rejected = Vec::new();
-		capnp::serialize::write_message(&mut rejected, message.borrow_inner()).unwrap();
+		let rejected = crate::wire::encode_frame(beaconcrypt_parse::CryptoFrame {
+			seq: frame.seq,
+			key_id: frame.key_id,
+			cipher_text: &ciphertext,
+		})
+		.unwrap();
 
 		assert!(restored.decrypt_message(&rejected).unwrap().is_none());
 		assert_eq!(restored.head(), full_state);

@@ -1,5 +1,8 @@
 from collections.abc import Sequence
-from typing import Literal, Protocol, final
+from typing import Final, Literal, Protocol, final
+
+MAX_MESSAGE_SIZE: Final[int]
+"""Maximum complete encoded transport message in bytes; snapshots and JSON state are uncapped."""
 
 class PersistenceError(ValueError):
     """Persistence failure; callback exceptions are preserved as __cause__."""

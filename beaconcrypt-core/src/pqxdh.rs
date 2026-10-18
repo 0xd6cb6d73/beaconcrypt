@@ -113,7 +113,7 @@ pub struct BeaconCoins {
 /// The deterministic, unsigned payloads of an InitKex message.
 ///
 /// The adapter signs `prekey`, `one_time_key`, and `pq_key`, then places the
-/// resulting signed buffers and `identity_key` into Cap'n Proto. The X25519
+/// resulting signed buffers and `identity_key` into the wire message. The X25519
 /// payloads are `[type, role, key]`; validation assigns meaning from the
 /// authenticated role byte rather than from the wire field position alone.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

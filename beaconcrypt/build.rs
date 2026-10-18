@@ -4,21 +4,10 @@ fn main() {
 	let crate_dir = std::path::PathBuf::from(
 		std::env::var_os("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR is set by Cargo"),
 	);
-	let schema_dir = crate_dir.join("src/schema");
 
 	if cfg!(windows) {
 		println!("cargo:rustc-link-lib=bcrypt");
 	}
-
-	capnpc::CompilerCommand::new()
-		.src_prefix(&schema_dir)
-		.import_path(&schema_dir)
-		//.output_path("src/")
-		.file(schema_dir.join("phase1.capnp"))
-		.file(schema_dir.join("phase2.capnp"))
-		.file(schema_dir.join("cryptoframe.capnp"))
-		.run()
-		.expect("schema compiler command");
 
 	//let deps_to_parse = "libsodium_rs";
 	//

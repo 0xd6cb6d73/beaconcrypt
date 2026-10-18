@@ -17,6 +17,9 @@ import (
 	"sync"
 )
 
+// MaxMessageSize is the maximum complete encoded transport message in bytes, including framing, authentication tags, and commitments. It does not limit snapshots or JSON state.
+const MaxMessageSize = int(C.beaconcrypt_MAX_MESSAGE_SIZE)
+
 var (
 	ErrClosed    = errors.New("beaconcrypt: handle is closed")
 	ErrCrypto    = errors.New("beaconcrypt: cryptographic operation failed")
