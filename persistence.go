@@ -150,15 +150,14 @@ func newServerWithStore(serverKID uint64, seed []byte, store SnapshotStore, line
 func createServerWithStoreContext(serverKID uint64, seed []byte, context *snapshotStoreContext, lineage *[32]byte) (*Server, error) {
 	seedPtr, freeSeed := cBytes(seed)
 	defer freeSeed()
-	callbacks := C.beaconcrypt_go_store_callbacks(C.uintptr_t(context.handle))
 	var status C.uint32_t
 	var handle *C.beaconcrypt_Server
 	if lineage == nil {
-		handle = C.beaconcrypt_server_create_with_store(C.uint64_t(serverKID), seedPtr, C.uintptr_t(len(seed)), callbacks, &status)
+		handle = C.beaconcrypt_go_server_create_with_store(C.uint64_t(serverKID), seedPtr, C.uintptr_t(len(seed)), C.uintptr_t(context.handle), &status)
 	} else {
 		lineagePtr, freeLineage := cBytes(lineage[:])
 		defer freeLineage()
-		handle = C.beaconcrypt_server_create_with_store_and_lineage(C.uint64_t(serverKID), seedPtr, C.uintptr_t(len(seed)), callbacks, lineagePtr, 32, &status)
+		handle = C.beaconcrypt_go_server_create_with_store_and_lineage(C.uint64_t(serverKID), seedPtr, C.uintptr_t(len(seed)), C.uintptr_t(context.handle), lineagePtr, 32, &status)
 	}
 	if handle == nil {
 		return nil, &PersistenceError{Code: PersistenceStatus(status), Cause: context.takeError()}
@@ -179,9 +178,8 @@ func RestoreServer(store SnapshotStore) (*Server, error) {
 }
 
 func restoreServerWithStoreContext(context *snapshotStoreContext) (*Server, error) {
-	callbacks := C.beaconcrypt_go_store_callbacks(C.uintptr_t(context.handle))
 	var status C.uint32_t
-	handle := C.beaconcrypt_server_restore_with_store(callbacks, &status)
+	handle := C.beaconcrypt_go_server_restore_with_store(C.uintptr_t(context.handle), &status)
 	if handle == nil {
 		return nil, &PersistenceError{Code: PersistenceStatus(status), Cause: context.takeError()}
 	}

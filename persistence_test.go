@@ -5,6 +5,7 @@ package beaconcrypt
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"runtime"
 	"runtime/cgo"
 	"strings"
@@ -422,6 +423,79 @@ func TestSnapshotCallbackLifetimeAndFailedConstructors(t *testing.T) {
 				var persistenceErr *PersistenceError
 				if !errors.As(err, &persistenceErr) || persistenceErr.Cause == nil || !strings.Contains(err.Error(), "panic") {
 					t.Fatalf("callback panic lost its cause: %v", err)
+				}
+			}
+		})
+	}
+}
+
+type stackPressureSnapshotStore struct {
+	*testSnapshotStore
+}
+
+func (store stackPressureSnapshotStore) Load() ([]byte, error) {
+	growSnapshotCallbackStack(64)
+	return store.testSnapshotStore.Load()
+}
+
+func (store stackPressureSnapshotStore) CompareAndSwap(expected *SnapshotHead, replacement []byte) (bool, error) {
+	growSnapshotCallbackStack(64)
+	return store.testSnapshotStore.CompareAndSwap(expected, replacement)
+}
+
+//go:noinline
+func growSnapshotCallbackStack(depth int) byte {
+	var padding [4096]byte
+	for i := range padding {
+		padding[i] = byte(i + depth)
+	}
+	var child byte
+	if depth == 0 {
+		runtime.GC()
+	} else {
+		child = growSnapshotCallbackStack(depth - 1)
+	}
+	result := padding[depth%len(padding)] ^ child
+	runtime.KeepAlive(&padding)
+	return result
+}
+
+// Constructors must keep callback tokens as integers while Go can scan or copy
+// their stacks. Load and CAS may allocate, grow the stack and run a collection.
+func TestSnapshotConstructorsAcrossCallbackStackGrowth(t *testing.T) {
+	for _, explicitLineage := range []bool{false, true} {
+		t.Run(fmt.Sprintf("lineage=%v", explicitLineage), func(t *testing.T) {
+			for iteration := 0; iteration < 4; iteration++ {
+				store := stackPressureSnapshotStore{&testSnapshotStore{}}
+				done := make(chan error, 1)
+				go func() {
+					var server *Server
+					var err error
+					if explicitLineage {
+						server, err = NewServerWithStoreAndLineage(19, nil, store, [32]byte{1})
+					} else {
+						server, err = NewServerWithStore(19, nil, store)
+					}
+					if err != nil {
+						done <- err
+						return
+					}
+					server.Close()
+					done <- nil
+				}()
+				if err := <-done; err != nil {
+					t.Fatal(err)
+				}
+				// Restore starts on a fresh small stack as well.
+				go func() {
+					restored, err := RestoreServer(store)
+					if err == nil {
+						restored.Close()
+					}
+					done <- err
+				}()
+				if err := <-done; err != nil {
+					t.Fatal(err)
 				}
 			}
 		})
