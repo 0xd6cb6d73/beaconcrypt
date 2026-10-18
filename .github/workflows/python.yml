@@ -31,9 +31,6 @@ jobs:
         uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
       - name: Set up Python
         run: uv python install 3.14
-      - name: Install cap'n proto
-        run: |
-          sudo apt install capnproto
 
       - name: Run Python tests
         run: |
@@ -57,9 +54,6 @@ jobs:
         uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
       - name: Set up Python
         run: uv python install 3.14
-      - name: Install cap'n proto
-        run: |
-          sudo apt install capnproto
 
       - name: Generate Python stubs
         run: uv run python scripts/generate_python_stubs.py
@@ -67,7 +61,7 @@ jobs:
       - name: Build source distribution
         run: uv run maturin sdist --out dist
 
-      - name: Check source distribution license files
+      - name: Check source distribution parser and license files
         run: |
           uv run python - <<'PY'
           from email.parser import BytesParser
@@ -84,7 +78,27 @@ jobs:
                   for license_file in metadata.get_all("License-File", []):
                       if not archive.getmember(f"{root}/{license_file}").isfile():
                           raise RuntimeError(f"Missing license file in {path}: {license_file}")
-              print(f"Validated license files in {path}")
+                  parser_files = (
+                      "Cargo.toml",
+                      "LICENSE-0BSD",
+                      "README.md",
+                      "generated/LICENSE",
+                      "generated/README.md",
+                      "schema/transport.cddl",
+                      "scripts/regenerate.py",
+                      "src/lib.rs",
+                      "src/preflight_tests.rs",
+                      "src/sizing.rs",
+                      "src/generated/cbordetver.rs",
+                      "src/generated/cbordetveraux.rs",
+                      "src/generated/transport.rs",
+                      "tests/codec.rs",
+                  )
+                  for parser_file in parser_files:
+                      member = f"{root}/beaconcrypt-parse/{parser_file}"
+                      if not archive.getmember(member).isfile():
+                          raise RuntimeError(f"Missing parser file in {path}: {parser_file}")
+              print(f"Validated parser and license files in {path}")
           PY
 
       - name: Upload source distribution

@@ -27,8 +27,8 @@ jobs:
         os:
           - ubuntu-24.04
           - ubuntu-24.04-arm
-          # Disabled until Cap'n Proto builds succeed on macOS.
-          # - macos-latest
+          - macos-latest
+          - macos-15-intel
           - windows-latest
 
     steps:
@@ -48,21 +48,9 @@ jobs:
           msystem: UCRT64
           install: mingw-w64-ucrt-x86_64-gcc
 
-      - name: Install cap'n proto on Linux
-        if: runner.os == 'Linux'
-        run: sudo apt update && sudo apt install capnproto
-
-      - name: Install cap'n proto on macOS
-        if: runner.os == 'macOS'
-        run: brew install capnp
-
-      - name: Install cap'n proto on Windows
+      - name: Add MinGW UCRT64 to PATH on Windows
         if: runner.os == 'Windows'
-        run: |
-          "${{ steps.msys2.outputs.msys2-location }}\ucrt64\bin" >> $env:GITHUB_PATH
-          curl.exe -O https://capnproto.org/capnproto-c++-win32-1.5.0.zip
-          Expand-Archive capnproto-c++-win32-1.5.0.zip
-          "$pwd\capnproto-c++-win32-1.5.0\capnproto-tools-win32-1.5.0" >> $env:GITHUB_PATH
+        run: '"${{ steps.msys2.outputs.msys2-location }}\ucrt64\bin" >> $env:GITHUB_PATH'
 
       - name: Build native library
         if: runner.os != 'Windows'

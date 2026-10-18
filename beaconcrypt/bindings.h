@@ -10,6 +10,11 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+/**
+ * Maximum complete encoded transport message size in bytes, including all framing.
+ */
+#define beaconcrypt_MAX_MESSAGE_SIZE 33554432
+
 
 
 #define beaconcrypt_KDF_STATE_SIZE 32

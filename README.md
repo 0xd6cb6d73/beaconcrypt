@@ -40,9 +40,9 @@ The ML-KEM public key and ciphertext combined take up ~2.2kb by themselves.
 This overhead will grow larger when hybrid signatures are implemented.
 Thankfully, this only affects the registration handshake.
 No subsequent messages are affected, as they only use symmetric cryptography.
-However, this does not impact any follow on messages, for which the only overhead is the captn' proto framing.
+Follow-on messages use symmetric cryptography with CBOR framing.
 
-The reference implementation is large, ~6.5MB for the static lib. It goes down to ~2MB if building the stdlib ourselves with a nightly toolchain. This is largely due to the fact that we need to bring a bunch of rust stuff with us. Unfortunately, most crypto libraries aren't really meant to run in 40KB images, so there's always going to be some floor there. It should however be easy to cut the rust-related stuff by implementing this protocol in C or C++, though you'll still have to pay for the libsodium + captn proto libraries.
+Earlier builds measured ~6.5MB for the static lib, or ~2MB when building the stdlib with a nightly toolchain. This is largely due to the fact that we need to bring a bunch of rust stuff with us. Unfortunately, most crypto libraries aren't really meant to run in 40KB images, so there's always going to be some floor there. It should however be easy to cut the rust-related stuff by implementing this protocol in C or C++, though you'll still have to pay for the libsodium library.
 
 It is very likely that neither the rust nor C interfaces are thread-safe.
 
@@ -58,12 +58,14 @@ I don't use rust a lot, so the code is probably fairly naive. It provides both a
 
 The reference implementation expects that all beacons are compiled with the server's public key, and that beaconcrypt is initialized with it.
 
+Transport uses deterministic CBOR with an inclusive 32 MiB limit on complete encoded messages, including framing, authentication tags, and commitments; plaintext snapshots and JSON state are unaffected. The former Cap'n Proto wire format and public generated Rust modules are removed, so peers and queued messages must use the new [wire format](doc/protocol.md#wire-encoding).
+
 Rust, C, Go, and Python support durable full-server state through a caller-supplied snapshot store. Snapshots contain plaintext secrets and are not self-authenticating; the store must protect their integrity and provenance, maintain one rollback-resistant authoritative head, and implement linearizable durable compare-and-swap. Store-backed servers commit accepted receives and other state-changing results before release, while a normally rejected receive preserves the complete state and performs no snapshot encoding or compare-and-swap. The bindings also retain checkpoint-only export and restoration for single-owner applications; those constructors require manual saving after every state-changing operation, and standalone checkpoint files cannot detect rollback. See [server-state persistence](doc/persistence.md) and the runnable examples for [Rust](beaconcrypt/examples/rust/main.rs), [Python](examples/python/main.py), [C](examples/c/main.c), and [Go](examples/go/main.go).
 
 ## Building
-You will need [Capn'Proto](https://capnproto.org/install.html) (just the binaries) and a recent version of rust for every build.
+You will need a recent version of Rust; checked-in generated parsers require no schema compiler for normal builds.
 
-The repository is a Cargo workspace containing the public `beaconcrypt` adapter and the `no_std` `beaconcrypt-core` state machines.
+The Cargo workspace contains the public `beaconcrypt` adapter, `no_std` `beaconcrypt-core` state machines, and [`beaconcrypt-parse`](beaconcrypt-parse/README.md) transport codecs.
 
 For windows, I prefer building with stable-gnu for normal usage, and nightly-gnu for release builds. You can find the exact arguments I use to the the static library as small as possible in [release.yml](/.github\workflows\release.yml). The MSVC toolchain is expected to work just as well, I just like mingw.
 
@@ -87,7 +89,7 @@ cargo install --locked cargo-mutants@27.1.0
 cargo mutants --workspace --jobs 8
 ```
 
-The [configuration](.cargo/mutants.toml) exercises both crates through workspace tests and documents exclusions for equivalent private-state mutations and adapters covered by the Go and Python suites. After substantial code additions, every viable mutant must be caught; `mutants.out/missed.txt` and `mutants.out/timeout.txt` must be empty. Finish validation with a complete run without `--iterate`.
+The [configuration](.cargo/mutants.toml) exercises all three crates through workspace tests and excludes imported generated parser sources, equivalent private-state mutations, and adapters covered by the Go and Python suites. After substantial code additions, every viable mutant must be caught; `mutants.out/missed.txt` and `mutants.out/timeout.txt` must be empty. Finish validation with a complete run without `--iterate`.
 
 ### Reproducing known-answer test vectors
 
@@ -151,5 +153,7 @@ Go is unfortunately the worst off as the bindings use cgo and therefore building
 
 # Copyright
 This work is dedicated to the public domain.
+
+Imported generated parsers retain their [Apache-2.0 license](beaconcrypt-parse/generated/LICENSE).
 
 The C and go bindings, as well as most tests and the GH action code were generated by an LLM. This includes the KAT generation scripts, the ChaCha20-Poly1305 invisible salamanders implementation and its associated documentation.
