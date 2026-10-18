@@ -2,6 +2,6 @@ module github.com/0xd6cb6d73/beaconcrypt_example
 
 go 1.23.0
 
-require github.com/0xd6cb6d73/beaconcrypt v0.5.2
+require github.com/0xd6cb6d73/beaconcrypt v0.6.0
 
 replace github.com/0xd6cb6d73/beaconcrypt => ../..
