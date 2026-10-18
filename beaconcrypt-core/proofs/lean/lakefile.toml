@@ -22,7 +22,7 @@ rev = "v4.34.0"
 [[require]]
 name = "Hax"
 git = { url = "https://github.com/cryspen/hax-lean" }
-rev = "v0.3.17"
+rev = "v0.3.30"
 
 [[require]]
 name = "VCVio"

@@ -6,7 +6,7 @@ NIX ?= nix
 PROOF_SHELL := path:..\#proofs
 EXPECTED_RUSTC := rustc 1.93.0-nightly (843f8ce2e 2025-11-07)
 EXPECTED_CARGO := cargo 1.93.0-nightly (636800288 2025-10-31)
-EXPECTED_HAX := 0.4.0
+EXPECTED_HAX := 0.4.2
 EXPECTED_PROVERIF := Proverif 2.05. Cryptographic protocol verifier, by Bruno Blanchet, Vincent Cheval, and Marc Sylvestre
 HAX_PROVERIF_ITEMS := -** \
 	+!beaconcrypt_core::pqxdh::InitKex \

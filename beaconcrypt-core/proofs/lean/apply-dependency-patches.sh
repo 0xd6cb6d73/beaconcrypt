@@ -12,10 +12,10 @@ readonly manifest="${lean_dir}/lake-manifest.json"
 readonly lakefile="${lean_dir}/lakefile.toml"
 readonly toolchain="${lean_dir}/lean-toolchain"
 readonly hax_config="${repo_root}/hax.toml"
-readonly manifest_sha256="8074eb307aef827181df03b0b4e0cbccf7ab654b1eb9ebec1d045b5d9f96d949"
-readonly lakefile_sha256="7ca8d167a315dbeb402a063d6e917ae51925f543a28bb70e5094423b5191521b"
+readonly manifest_sha256="a8215c1806343c7e4cf1e0ea44404526553148db551b41bdf3f018c1e4adb528"
+readonly lakefile_sha256="283764189b6b806c4db280f9cdd8c2ea53c5c3671f38d409868640a22fdf1dfc"
 readonly toolchain_sha256="8733782dc070a99b312039cda424f601b80f3be6f6f512627da5ba25adc27632"
-readonly hax_config_sha256="24392e4e24eb99e916b013905d45944573e5e860473686fcb08f9c6578b72323"
+readonly hax_config_sha256="f1fee525fcba3dbdd3334c9f19f62f6259cb84e67e5f59a7c211536a52de868b"
 
 die() {
 	printf 'error: %s\n' "$*" >&2
@@ -190,7 +190,7 @@ apply_dependency_patch \
 apply_dependency_patch \
 	Hax-Lean \
 	"$hax_checkout" \
-	"b49608d5e402577b400569ee989c3f1b69e4aaf3" \
+	"174840bf2f633ae3bae955e08f781b3737ffc0b8" \
 	"${patch_dir}/hax-lean-4.34.patch" \
-	"8ab124902ac7d8ba2194dd23139220864d5cc2c2b9a8112e535200ddcf4a6b04" \
-	"8ab124902ac7d8ba2194dd23139220864d5cc2c2b9a8112e535200ddcf4a6b04"
+	"0e00e9a90566e40be3ba86ef091cd07852342743e642da81ff146e9e49976d14" \
+	"0e00e9a90566e40be3ba86ef091cd07852342743e642da81ff146e9e49976d14"

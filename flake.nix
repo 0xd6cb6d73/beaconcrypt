@@ -4,7 +4,7 @@
   description = "Hermetic beaconcrypt formal-verification toolchain";
 
   inputs = {
-    hax.url = "github:cryspen/hax/f8fe69339b69e48a01b8a6a6bcb2ab5e5c5e424d";
+    hax.url = "github:cryspen/hax/5ccf89dd2e996c9f88f2267eaa2a64739c4ca41a";
     nixpkgs.follows = "hax/nixpkgs";
   };
 
