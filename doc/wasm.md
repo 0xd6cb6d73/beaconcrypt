@@ -48,15 +48,15 @@ still requires the storage guarantees described in [persistence.md](persistence.
 After building the guest, run:
 
 ```sh
-python3 scripts/package-wasm.py --version v0.6.0 --output-dir dist/wasm
+python3 scripts/package-wasm.py --version v0.6.1 --output-dir dist/wasm
 ```
 
 Release CI adds `--require-clean`. The command rejects a changed Wasm artifact,
 revision or Rust/build inputs since generation. Its outputs are:
 
-- `beaconcrypt-go-v0.6.0-wasm.tar.gz`, containing the complete root Go package,
+- `beaconcrypt-go-v0.6.1-wasm.tar.gz`, containing the complete root Go package,
   internal Go packages, C shim/header sources, `go.mod`, `go.sum`, licenses,
-  embedded Wasm and a manifest under `beaconcrypt-go-v0.6.0/`.
+  embedded Wasm and a manifest under `beaconcrypt-go-v0.6.1/`.
 - `beaconcrypt.wasm`, the standalone guest module.
 - `beaconcrypt-wasm-manifest.json`, with ABI version 1, exact source revision,
   dirty-source marker, tool versions, build inputs, import/export inventory and
