@@ -2280,6 +2280,12 @@ import BeaconcryptCore.Computational.PqxdhDeploymentSessionAgreement
 
 import BeaconcryptCore.Computational.PqxdhDeploymentProductionSessionAgreement
 
+import BeaconcryptCore.Computational.VCVioForwardEvalDist
+import BeaconcryptCore.Computational.VCVioForwardOracleComp
+import BeaconcryptCore.Computational.VCVioForwardProbabilityTheory
+import BeaconcryptCore.Computational.VCVioForwardProgramLogic
+import BeaconcryptCore.Computational.VCVioLegacyBridge
+
 /-!
 # Beaconcrypt-core verification root
 
