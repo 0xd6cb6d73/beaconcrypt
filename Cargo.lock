@@ -96,6 +96,15 @@ name = "beaconcrypt-parse"
 version = "0.1.0"
 
 [[package]]
+name = "beaconcrypt-wasm"
+version = "0.6.0"
+dependencies = [
+ "beaconcrypt",
+ "serde_json",
+ "zeroize",
+]
+
+[[package]]
 name = "bitflags"
 version = "2.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"

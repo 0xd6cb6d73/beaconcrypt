@@ -7,6 +7,9 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  wasm-build:
+    uses: ./.github/workflows/wasm.yml
+
   unix-build:
     strategy:
       matrix:
@@ -108,7 +111,7 @@ jobs:
         retention-days: 1
 
   release:
-    needs: [unix-build, windows-build, windows-mingw-build]
+    needs: [unix-build, windows-build, windows-mingw-build, wasm-build]
     if: ${{ github.ref_type == 'tag' }}
     runs-on: ubuntu-24.04
     permissions:
@@ -119,6 +122,7 @@ jobs:
       uses: actions/download-artifact@v8
       with:
         path: ./dist
+        pattern: beaconcrypt-*
         merge-multiple: true
     - name: Publish built binary to GitHub releases
       run: |

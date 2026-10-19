@@ -1,0 +1,51 @@
+name: Build embedded Wasm
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install pinned Rust target
+        run: |
+          rustup toolchain install 1.97.1 --profile minimal --target wasm32-wasip1
+          echo 'RUSTUP_TOOLCHAIN=1.97.1' >> "$GITHUB_ENV"
+      - uses: mlugg/setup-zig@v2
+        with:
+          version: 0.16.0
+      - name: Test release packaging
+        run: python3 -m unittest discover -s scripts -p 'test_package_wasm.py' -v
+      - name: Build Wasm once
+        run: bash scripts/build-wasm.sh
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - name: Validate the embedded artifact
+        run: |
+          CGO_ENABLED=0 go test ./...
+          CGO_ENABLED=1 go test -tags=beaconcrypt_wazero ./...
+      - name: Assemble Go module release bundle
+        run: |
+          if [[ "$GITHUB_REF_TYPE" == tag ]]; then
+            bundle_version="$GITHUB_REF_NAME"
+          else
+            bundle_version="ci-${GITHUB_SHA:0:12}"
+          fi
+          python3 scripts/package-wasm.py --version "$bundle_version" --require-clean
+      - uses: actions/upload-artifact@v7
+        with:
+          name: wasm-generated
+          path: |
+            internal/wasm/beaconcrypt.wasm
+            internal/wasm/beaconcrypt.build.json
+          retention-days: 1
+      - uses: actions/upload-artifact@v7
+        with:
+          name: beaconcrypt-wasm-release
+          path: dist/wasm/*
+          retention-days: 1

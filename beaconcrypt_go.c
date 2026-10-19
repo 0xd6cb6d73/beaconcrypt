@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: 0BSD
 
+//go:build cgo && !beaconcrypt_wazero
+
 #include "beaconcrypt_go.h"
 #include "_cgo_export.h"
 

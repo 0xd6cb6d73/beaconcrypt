@@ -1,4 +1,7 @@
 /target
+/internal/wasm/beaconcrypt.wasm
+/internal/wasm/beaconcrypt.build.json
+/.build/
 /mutants.out/
 /mutants.out.old/
 
