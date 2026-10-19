@@ -1,0 +1,590 @@
+{
+ "date": "2026-10-20",
+ "scope": "VCVio deprecation migration, stage S0, amendment A1 (/tmp/bc-arc-scratch/vcvio-migration/AMENDMENTS.md; recorded in doc/impl/vcvio-deprecation-migration-plan.md): the step 7 source scan stays a zero-hit gate; the `=ᵈ` notation is not backported (statements write `EvalDistEq A B`); the legacy bridge keeps its 14 lemmas only; the certificate and transitional-twin tooling moves out of the build into scratch tooling (CertTools); transitional twins become plain generated source text. Supersedes, for the current state of the branch, the step 7, declaration-count and tooling entries of vcvio-deprecations-s0.json, which stays the record of 41564767.",
+ "basis": "b8db7926ba1f9145ddfdb8b7d3f3e1202cb4221e",
+ "previous_head": "41564767add2a14722fa1d9fca0f45d63ccccae7",
+ "topic": {
+  "branch": "codex/vcvio-migration-S0",
+  "clone": "/home/user/bc-vmig-S0"
+ },
+ "commits": {
+  "765e060a": "Move VCVio migration tooling out of the build",
+  "docs": "the commit that adds this receipt"
+ },
+ "owner_decisions": {
+  "D7 (decision 2026-10-19 item 5)": "Lean-only validation per stage: make check-lean, make check-inventory, the step 7 scans and the certificates; no verify-in-shell, ProVerif, transcript fidelity, cargo, Go or Python checks in this migration"
+ },
+ "lean_changes": {
+  "VCVioForwardEvalDist": "infix `=ᵈ` removed; 16 theorem statements written `EvalDistEq A B`; docstrings name upstream's notation",
+  "VCVioForwardOracleComp": "6 statements written `EvalDistEq A B`",
+  "VCVioLegacyBridge": "14 guarded bridge lemmas only (tactic macro, certificate and twin commands, dump reader and inverse map removed)",
+  "declarations_vs_41564767": "95248 -> 95198: only the 50 notation, tactic, command and metaprogramming declarations removed; 0 kind, module, universe, type or value changes"
+ },
+ "build": {
+  "command": "make -C beaconcrypt-core check-lean SHELL=bash (proof shell, two-file flake copy of central's flake.nix/flake.lock)",
+  "lease": "00000763",
+  "window": "2026-10-19T23:18:35+02:00..23:40:02+02:00",
+  "jobs": 5535,
+  "errors": 0,
+  "rc": 0,
+  "log_sha256": "01d6d353ddfa736171c3259e862ee681fd1452b26a727f61fc38e8be54057625",
+  "committed_tree_check": "make check-lean on clean 765e060a (lease 00000765, 2026-10-20T00:06:28..00:06:33): rc 0, Build completed successfully (5535 jobs), nothing rebuilt"
+ },
+ "gates": {
+  "G1": {
+   "base_unique": 1359,
+   "stage_unique": 1338,
+   "expected_stage_unique": 1338,
+   "decreased_file_name_counts": {
+    "BeaconcryptCore/Computational/AdaptiveCtxPrefixValidation.lean|ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage": 2,
+    "BeaconcryptCore/Computational/CtxComputationalPrivacy.lean|ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage": 2,
+    "BeaconcryptCore/Computational/CtxComputationalSecurity.lean|ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage": 2,
+    "BeaconcryptCore/Computational/CtxNonceAeadIndDollar.lean|ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage": 1,
+    "BeaconcryptCore/Computational/CtxNonceAeadIndDollarValidation.lean|ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage": 1,
+    "BeaconcryptCore/Computational/CtxUnclaimedAcceptance.lean|ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage": 1,
+    "BeaconcryptCore/Computational/PqxdhFirstRecordStopTagged.lean|SPMF": 2,
+    "BeaconcryptCore/Computational/PqxdhFirstRecordStopTagged.lean|evalSPMF": 5,
+    "BeaconcryptCore/Computational/PqxdhProjectionCollisions.lean|ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage": 1,
+    "BeaconcryptCore/Computational/RawCtxBadEventMixture.lean|ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage": 1,
+    "BeaconcryptCore/Computational/RawCtxFullPreimageTester.lean|ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage": 1,
+    "BeaconcryptCore/Computational/RawCtxScaledBadEventMixture.lean|ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage": 1,
+    "BeaconcryptCore/Computational/RawCtxSupportedMixture.lean|ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage": 1
+   },
+   "increased_file_name_counts": {},
+   "decrease_outside_stage_files": [],
+   "removed_by_name": {
+    "SPMF": 2,
+    "ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage": 14,
+    "evalSPMF": 5
+   },
+   "pass": true
+  },
+  "G2": {
+   "base_sites": 1753,
+   "stage_sites": 1724,
+   "base_warned": 1359,
+   "stage_warned": 1338,
+   "base_suppressed": 394,
+   "stage_suppressed": 386,
+   "removed_sites": 29,
+   "added_sites": [],
+   "suppression_lines_stage_outside_bridge": 182,
+   "suppression_lines_base": 183,
+   "stage_new_modules_sites": [],
+   "twin_sites_exempt": 0,
+   "twin_lines": [],
+   "twin_names_expected": [],
+   "pass": true
+  },
+  "G3": {
+   "base": 756,
+   "stage": 756,
+   "stage_in_new_modules": [],
+   "stage_in_stage_modules": [],
+   "pass": true
+  },
+  "G4": {
+   "count_base": 95092,
+   "count_stage": 95198,
+   "removed": [
+    "BeaconcryptCore.Computational.PqxdhFirstRecordStopTagged.product_coupling._simp_1_1",
+    "BeaconcryptCore.Computational.PqxdhServerAuthEntryFactor.relTriple_support._simp_1_1"
+   ],
+   "added_by_module": {
+    "BeaconcryptCore.Computational.VCVioForwardProbabilityTheory": 3,
+    "BeaconcryptCore.Computational.VCVioLegacyBridge": 14,
+    "BeaconcryptCore.Computational.VCVioForwardEvalDist": 63,
+    "BeaconcryptCore.Computational.VCVioForwardOracleComp": 28
+   },
+   "kind_changed": [],
+   "module_changed": [],
+   "levels_changed": [],
+   "type_changed_allowed": [],
+   "type_changed_unexpected": [],
+   "def_value_changed_allowed": [],
+   "def_value_changed_unexpected": [],
+   "theorem_value_changed": [
+    "BeaconcryptCore.Computational.AdaptiveCtxPrefixValidation.loggedProbe_le_indDollar",
+    "BeaconcryptCore.Computational.AdaptiveCtxPrefixValidation.probEvent_le_add_ofReal_tvDist",
+    "BeaconcryptCore.Computational.CtxComputationalPrivacy.ctxPrivacySecretPrefixProbability_le_booleanINDDollar",
+    "BeaconcryptCore.Computational.CtxComputationalPrivacy.ctxPrivacySecretPrefixProbability_le_probeINDDollar",
+    "BeaconcryptCore.Computational.CtxComputationalSecurity.ctxClassifiedForgeryGame_le_direct_add_prefix",
+    "BeaconcryptCore.Computational.CtxComputationalSecurity.ctxTypedFullFreshForgeryGame_le_direct_add_prefix",
+    "BeaconcryptCore.Computational.CtxNonceAeadIndDollar.ctxSecretPrefixQueriedProbability_le_modifiedNonceAeadINDDollar",
+    "BeaconcryptCore.Computational.CtxNonceAeadIndDollarValidation.ctxSecretPrefixQueriedProbability_le_booleanINDDollar",
+    "BeaconcryptCore.Computational.CtxUnclaimedAcceptance.acceptedGame_le_direct_add_prefix",
+    "BeaconcryptCore.Computational.PqxdhFirstRecordStopTagged.product_coupling",
+    "BeaconcryptCore.Computational.PqxdhProjectionCollisions.sourceProjectionCollision_real_le",
+    "BeaconcryptCore.Computational.PqxdhServerAuthControlWitness.instCountableUScalar_beaconcryptCore",
+    "BeaconcryptCore.Computational.PqxdhServerAuthEntryFactor.relTriple_support",
+    "BeaconcryptCore.Computational.PqxdhServerAuthPublicationPrivacy.canonical_bound",
+    "BeaconcryptCore.Computational.RawCtxBadEventMixture.local_probability",
+    "BeaconcryptCore.Computational.RawCtxFullPreimageTester.source_alias_bound",
+    "BeaconcryptCore.Computational.RawCtxScaledBadEventMixture.local_probability",
+    "BeaconcryptCore.Computational.RawCtxSupportedMixture.probability"
+   ],
+   "added_outside_new_modules": [],
+   "unexplained_removed": [],
+   "unexplained_added_outside_new_modules": [],
+   "unexplained_type_changes": [],
+   "unexplained_levels_changes": [],
+   "theorem_value_changed_outside_edited": [
+    "BeaconcryptCore.Computational.PqxdhServerAuthControlWitness.instCountableUScalar_beaconcryptCore"
+   ],
+   "pass": true
+  },
+  "G5": {
+   "residual_pairs_base": 3221,
+   "residual_pairs_stage": 3210,
+   "residual_pairs_stage_excluding_exempt": 3193,
+   "residual_new_pairs": [
+    [
+     "BeaconcryptCore.Computational.VCVioForwardOracleComp",
+     "OracleSpec.Fintype"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioForwardOracleComp",
+     "OracleSpec.Fintype.mk"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioForwardOracleComp",
+     "OracleSpec.IsMeasureSpec"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioForwardOracleComp",
+     "OracleSpec.IsUniformMeasureSpec"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioForwardProbabilityTheory",
+     "ProbComp.boolBiasAdvantage._proof_1"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioForwardProbabilityTheory",
+     "ProbComp.boolDistAdvantage"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioForwardProbabilityTheory",
+     "ProbComp.boolDistAdvantage.eq_1"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioForwardProbabilityTheory",
+     "ProbComp.evalDist_apply_true_le_add_ofReal_boolDistAdvantage"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "DiscreteEvalDistCompatible"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "OracleSpec.IsUniformSpec"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "SPMF"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "evalDist_apply_setOf"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "evalDist_apply_singleton"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "evalSPMF"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "evalSPMF_ext"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "probEvent"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "probOutput"
+    ]
+   ],
+   "residual_removed_pairs": [
+    [
+     "BeaconcryptCore.Computational.AdaptiveCtxPrefixValidation",
+     "ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage"
+    ],
+    [
+     "BeaconcryptCore.Computational.CtxComputationalPrivacy",
+     "ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage"
+    ],
+    [
+     "BeaconcryptCore.Computational.CtxComputationalSecurity",
+     "ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage"
+    ],
+    [
+     "BeaconcryptCore.Computational.CtxNonceAeadIndDollar",
+     "ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage"
+    ],
+    [
+     "BeaconcryptCore.Computational.CtxNonceAeadIndDollarValidation",
+     "ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage"
+    ],
+    [
+     "BeaconcryptCore.Computational.CtxUnclaimedAcceptance",
+     "ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhFirstRecordStopTagged",
+     "NeverFail.probFailure_eq_zero"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhFirstRecordStopTagged",
+     "OracleComp.ProgramLogic.Relational.mem_spmf_support_bind_iff"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhFirstRecordStopTagged",
+     "SPMF.Coupling.prod"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhFirstRecordStopTagged",
+     "SPMF.run_eq_toPMF"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhFirstRecordStopTagged",
+     "SPMF.support_pure"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhFirstRecordStopTagged",
+     "SPMF.toPMF"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhProjectionCollisions",
+     "ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhServerAuthEntrySimulation",
+     "OracleComp.ProgramLogic.Relational.mem_spmf_support_bind_iff"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhServerAuthEntrySimulation",
+     "SPMF.Coupling"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhServerAuthEntrySimulation",
+     "SPMF.Coupling.prod"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhServerAuthEntrySimulation",
+     "SPMF.IsCoupling"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhServerAuthEntrySimulation",
+     "SPMF.mem_support_iff"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhServerAuthEntrySimulation",
+     "SPMF.run_eq_toPMF"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhServerAuthEntrySimulation",
+     "SPMF.support"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhServerAuthEntrySimulation",
+     "SPMF.support_pure"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhServerAuthEntrySimulation",
+     "SPMF.toPMF"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhServerAuthEntrySimulation",
+     "mem_support_iff_evalSPMF_apply_ne_zero"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhServerAuthPublicationPrivacy",
+     "ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage"
+    ],
+    [
+     "BeaconcryptCore.Computational.RawCtxBadEventMixture",
+     "ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage"
+    ],
+    [
+     "BeaconcryptCore.Computational.RawCtxFullPreimageTester",
+     "ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage"
+    ],
+    [
+     "BeaconcryptCore.Computational.RawCtxScaledBadEventMixture",
+     "ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage"
+    ],
+    [
+     "BeaconcryptCore.Computational.RawCtxSupportedMixture",
+     "ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage"
+    ]
+   ],
+   "forbidden_new_pairs": [
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "DiscreteEvalDistCompatible"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "PFunctor.FreeM.instDiscreteEvalDistCompatibleOfCompatible"
+    ]
+   ],
+   "forbidden_in_stage_modules": [
+    [
+     "BeaconcryptCore.Computational.AdaptiveCtxPrefixValidation",
+     "PFunctor.FreeM.instDiscreteEvalDistCompatibleOfCompatible"
+    ],
+    [
+     "BeaconcryptCore.Computational.CtxComputationalPrivacy",
+     "PFunctor.FreeM.instDiscreteEvalDistCompatibleOfCompatible"
+    ],
+    [
+     "BeaconcryptCore.Computational.CtxComputationalSecurity",
+     "PFunctor.FreeM.instDiscreteEvalDistCompatibleOfCompatible"
+    ],
+    [
+     "BeaconcryptCore.Computational.CtxUnclaimedAcceptance",
+     "PFunctor.FreeM.instDiscreteEvalDistCompatibleOfCompatible"
+    ],
+    [
+     "BeaconcryptCore.Computational.PqxdhFirstRecordStopTagged",
+     "PFunctor.FreeM.instDiscreteEvalDistCompatibleOfCompatible"
+    ],
+    [
+     "BeaconcryptCore.Computational.RawCtxBadEventMixture",
+     "PFunctor.FreeM.instDiscreteEvalDistCompatibleOfCompatible"
+    ],
+    [
+     "BeaconcryptCore.Computational.RawCtxScaledBadEventMixture",
+     "PFunctor.FreeM.instDiscreteEvalDistCompatibleOfCompatible"
+    ],
+    [
+     "BeaconcryptCore.Computational.RawCtxSupportedMixture",
+     "PFunctor.FreeM.instDiscreteEvalDistCompatibleOfCompatible"
+    ]
+   ],
+   "absent_upstream_in_new_modules": [
+    [
+     "BeaconcryptCore.Computational.VCVioForwardOracleComp",
+     "OracleSpec.Fintype"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioForwardOracleComp",
+     "OracleSpec.Fintype.mk"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioForwardOracleComp",
+     "OracleSpec.IsMeasureSpec"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioForwardOracleComp",
+     "OracleSpec.IsUniformMeasureSpec"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioForwardProbabilityTheory",
+     "ProbComp.boolBiasAdvantage._proof_1"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioForwardProbabilityTheory",
+     "ProbComp.boolDistAdvantage"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioForwardProbabilityTheory",
+     "ProbComp.boolDistAdvantage.eq_1"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioForwardProbabilityTheory",
+     "ProbComp.evalDist_apply_true_le_add_ofReal_boolDistAdvantage"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "DiscreteEvalDistCompatible"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "OracleSpec.IsUniformSpec"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "SPMF"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "evalDist_apply_setOf"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "evalDist_apply_singleton"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "evalSPMF"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "evalSPMF_ext"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "probEvent"
+    ],
+    [
+     "BeaconcryptCore.Computational.VCVioLegacyBridge",
+     "probOutput"
+    ]
+   ],
+   "forbidden_new_outside_bridge": [],
+   "forbidden_in_stage_modules_new": [],
+   "pass": true
+  }
+ },
+ "declaration_dumps": {
+  "base": {
+   "declarations": 95092,
+   "sha256": "31a7bc47ff91caf75ed03d297d31dd851373d1d48fd84ac97482aec839870044"
+  },
+  "stage": {
+   "declarations": 95198,
+   "sha256": "4cae2b110982e2473160f5f41ccb18fc1b10fe4a67df37e724da7870241e2cbc"
+  }
+ },
+ "certificates": {
+  "tooling": {
+   "CertTools.lean": "a9828d8c59c27a30af41727d9cc4e2144f09ac7907776d636ebb92cb81197917",
+   "imports": "Lean, VCVio.EvalDist.ProbabilityNotation (no project module)",
+   "olean_sha256": "7b8e3efcbf913bda6a1e0db1d65975b1dba95d8568db9cf573a0ff1bf7bcc4d8"
+  },
+  "stage_file": {
+   "entries": 0,
+   "result": "rc 0, no restated declaration, no twin",
+   "sha256": "aec90ed6599a0cdc1bfdc5791699e709368d7ae313761f25489cdca771bcc17d"
+  },
+  "self_test": {
+   "pre_stage_dump_sha256": "7999062b4591a311c5779d43a6213550e5f3b306bc2145d23fc53e90ae3e30c4",
+   "subjects_sha256": "c606782234e8541f68922311b6dceec306ad28744a6e0c29f914cb49ff708ae7",
+   "file_sha256": "fa7c000220db4b6dac1b55efcd682a71547af415b1e1ccd5d5ffeeb88c2cae16",
+   "certificates": [
+    "certificate PASS VCVioFeasibility.ctx_binding_bound_tight_s0SelfTest against VCVioFeasibility.ctx_binding_bound_tight: event mask 0 of 0 ambiguous nodes; old statement hash 1395186899 and pp.all text equal; VCVioFeasibility.ctx_binding_bound_tight_s0SelfTest ↔ old statement proved",
+    "certificate PASS RawKeyPartition.sampled_partition_s0SelfTest against RawKeyPartition.sampled_partition: event mask 0 of 0 ambiguous nodes; old statement hash 3551526074 and pp.all text equal; RawKeyPartition.sampled_partition_s0SelfTest ↔ old statement proved",
+    "certificate PASS StatefulGoodEvent.output_good_s0SelfTest against StatefulGoodEvent.output_good: event mask 0 of 4 ambiguous nodes; old statement hash 3385220471 and pp.all text equal; StatefulGoodEvent.output_good_s0SelfTest ↔ old statement proved",
+    "certificate PASS StatefulGoodEvent.event_good_s0SelfTest against StatefulGoodEvent.event_good: event mask 0 of 2 ambiguous nodes; old statement hash 3685531767 and pp.all text equal; StatefulGoodEvent.event_good_s0SelfTest ↔ old statement proved",
+    "certificate PASS JointEagerTable.independent_comm_spmf_s0SelfTest against JointEagerTable.independent_comm_spmf: event mask 0 of 0 ambiguous nodes; old statement hash 2392043918 and pp.all text equal; JointEagerTable.independent_comm_spmf_s0SelfTest ↔ old statement proved",
+    "certificate PASS JointTableFreshCandidates.fixed_fresh_guess_bound_s0SelfTest against JointTableFreshCandidates.fixed_fresh_guess_bound: event mask 0 of 0 ambiguous nodes; old statement hash 963609539 and pp.all text equal; JointTableFreshCandidates.fixed_fresh_guess_bound_s0SelfTest ↔ old statement proved",
+    "certificate PASS CtxRomAuth.ctxFreshAliasGame_le_inv_s0SelfTest against CtxRomAuth.ctxFreshAliasGame_le_inv: event mask 0 of 0 ambiguous nodes; old statement hash 3353333368 and pp.all text equal; CtxRomAuth.ctxFreshAliasGame_le_inv_s0SelfTest ↔ old statement proved",
+    "certificate PASS PqxdhSecretInputKdf.zeroSalt_key_probability_s0SelfTest against PqxdhSecretInputKdf.zeroSalt_key_probability: event mask 1 of 1 ambiguous nodes; old statement hash 2986595921 and pp.all text equal; PqxdhSecretInputKdf.zeroSalt_key_probability_s0SelfTest ↔ old statement proved",
+    "certificate PASS CtxReduction.ctxMisattributionAdvantage_s0SelfTest against CtxReduction.ctxMisattributionAdvantage: type unchanged; event mask 0 of 1; old body hash 2683253796 and pp.all text equal; CtxReduction.ctxMisattributionAdvantage_s0SelfTest = old body proved",
+    "certificate PASS CtxAuthClassification.ctxAcceptedFullFreshForgeryProbability_s0SelfTest against CtxAuthClassification.ctxAcceptedFullFreshForgeryProbability: type unchanged; event mask 0 of 1; old body hash 603213692 and pp.all text equal; CtxAuthClassification.ctxAcceptedFullFreshForgeryProbability_s0SelfTest = old body proved"
+   ],
+   "twin_texts": [
+    "twin TEXT VCVioFeasibility.ctx_binding_bound_tight_s0SelfTest_vcvioLegacy for VCVioFeasibility.ctx_binding_bound_tight_s0SelfTest (dump VCVioFeasibility.ctx_binding_bound_tight; pp fullNames); insert after line 32 of S0SelfTestDecls:",
+    "twin TEXT RawKeyPartition.sampled_partition_s0SelfTest_vcvioLegacy for RawKeyPartition.sampled_partition_s0SelfTest (dump RawKeyPartition.sampled_partition; pp fullNames); insert after line 55 of S0SelfTestDecls:",
+    "twin TEXT StatefulGoodEvent.output_good_s0SelfTest_vcvioLegacy for StatefulGoodEvent.output_good_s0SelfTest (dump StatefulGoodEvent.output_good; pp fullNames); insert after line 87 of S0SelfTestDecls:",
+    "twin TEXT StatefulGoodEvent.event_good_s0SelfTest_vcvioLegacy for StatefulGoodEvent.event_good_s0SelfTest (dump StatefulGoodEvent.event_good; pp fullNames); insert after line 112 of S0SelfTestDecls:",
+    "twin TEXT JointEagerTable.independent_comm_spmf_s0SelfTest_vcvioLegacy for JointEagerTable.independent_comm_spmf_s0SelfTest (dump JointEagerTable.independent_comm_spmf; pp fullNames); insert after line 134 of S0SelfTestDecls:",
+    "twin TEXT JointTableFreshCandidates.fixed_fresh_guess_bound_s0SelfTest_vcvioLegacy for JointTableFreshCandidates.fixed_fresh_guess_bound_s0SelfTest (dump JointTableFreshCandidates.fixed_fresh_guess_bound; pp fullNames); insert after line 158 of S0SelfTestDecls:",
+    "twin TEXT CtxRomAuth.ctxFreshAliasGame_le_inv_s0SelfTest_vcvioLegacy for CtxRomAuth.ctxFreshAliasGame_le_inv_s0SelfTest (dump CtxRomAuth.ctxFreshAliasGame_le_inv; pp fullNames); insert after line 180 of S0SelfTestDecls:",
+    "twin TEXT PqxdhSecretInputKdf.zeroSalt_key_probability_s0SelfTest_vcvioLegacy for PqxdhSecretInputKdf.zeroSalt_key_probability_s0SelfTest (dump PqxdhSecretInputKdf.zeroSalt_key_probability; pp fullNames); insert after line 201 of S0SelfTestDecls:",
+    "twin TEXT CtxReduction.ctxMisattributionAdvantage_s0SelfTest_vcvioLegacy for CtxReduction.ctxMisattributionAdvantage_s0SelfTest (dump CtxReduction.ctxMisattributionAdvantage; pp fullNames); insert after line 210 of S0SelfTestDecls:",
+    "twin TEXT CtxAuthClassification.ctxAcceptedFullFreshForgeryProbability_s0SelfTest_vcvioLegacy for CtxAuthClassification.ctxAcceptedFullFreshForgeryProbability_s0SelfTest (dump CtxAuthClassification.ctxAcceptedFullFreshForgeryProbability; pp fullNames); insert after line 220 of S0SelfTestDecls:"
+   ],
+   "twins_inserted": [
+    "S0SelfTestDecls.lean: 10 twin(s) inserted",
+    "total 10 twin(s)"
+   ],
+   "twin_build": "copy of the subjects with the 10 printed twins, compiled without CertTools: rc 0, warnings 34 (34 without twins)",
+   "twin_check_file_sha256": "d63c93e35804f266b51e8d79e9697110d69fa4fa0de37c94c488764008056b74",
+   "twin_check": [
+    "same-type PASS VCVioFeasibility.ctx_binding_bound_tight_s0SelfTest_vcvioLegacy against VCVioFeasibility.ctx_binding_bound_tight: type hash 1395186899 and pp.all text equal to the dump",
+    "same-type PASS RawKeyPartition.sampled_partition_s0SelfTest_vcvioLegacy against RawKeyPartition.sampled_partition: type hash 3551526074 and pp.all text equal to the dump",
+    "same-type PASS StatefulGoodEvent.output_good_s0SelfTest_vcvioLegacy against StatefulGoodEvent.output_good: type hash 3385220471 and pp.all text equal to the dump",
+    "same-type PASS StatefulGoodEvent.event_good_s0SelfTest_vcvioLegacy against StatefulGoodEvent.event_good: type hash 3685531767 and pp.all text equal to the dump",
+    "same-type PASS JointEagerTable.independent_comm_spmf_s0SelfTest_vcvioLegacy against JointEagerTable.independent_comm_spmf: type hash 2392043918 and pp.all text equal to the dump",
+    "same-type PASS JointTableFreshCandidates.fixed_fresh_guess_bound_s0SelfTest_vcvioLegacy against JointTableFreshCandidates.fixed_fresh_guess_bound: type hash 963609539 and pp.all text equal to the dump",
+    "same-type PASS CtxRomAuth.ctxFreshAliasGame_le_inv_s0SelfTest_vcvioLegacy against CtxRomAuth.ctxFreshAliasGame_le_inv: type hash 3353333368 and pp.all text equal to the dump",
+    "same-type PASS PqxdhSecretInputKdf.zeroSalt_key_probability_s0SelfTest_vcvioLegacy against PqxdhSecretInputKdf.zeroSalt_key_probability: type hash 2986595921 and pp.all text equal to the dump",
+    "same-body PASS CtxReduction.ctxMisattributionAdvantage_s0SelfTest_vcvioLegacy against CtxReduction.ctxMisattributionAdvantage: CtxReduction.ctxMisattributionAdvantage_s0SelfTest = old body, whose value hash 2683253796 and pp.all text, and whose type, equal the dump",
+    "same-body PASS CtxAuthClassification.ctxAcceptedFullFreshForgeryProbability_s0SelfTest_vcvioLegacy against CtxAuthClassification.ctxAcceptedFullFreshForgeryProbability: CtxAuthClassification.ctxAcceptedFullFreshForgeryProbability_s0SelfTest = old body, whose value hash 603213692 and pp.all text, and whose type, equal the dump"
+   ],
+   "twin_removal": "twins.py remove restores the subjects file byte for byte"
+  },
+  "negative_control": {
+   "file_sha256": "90b493c42c5dcd41cf1b654e542c37e8f09ccff3de6d10c22b5a6de75cf6027d",
+   "output": [
+    "certificate FAIL CtxRomAuth.ctxFreshAliasGame_le_inv_weakened against CtxRomAuth.ctxFreshAliasGame_le_inv: no event mask of 0 ambiguous nodes reproduces the dump; mask 0 gives hash 1599414687 vs 3353333368",
+    "twin: no event mask reproduces the dump entry of CtxRomAuth.ctxFreshAliasGame_le_inv"
+   ]
+  },
+  "tool_corrections": [
+   "twin proofs are elaborated synchronously (no snapshot context, Elab.async false): before, the proof ran in a snapshot task whose messages were not read, so a failing first proof candidate was accepted",
+   "twin statement text keeps the names of named non-dependent hypotheses (pp.piBinderNames) and must reproduce the rebuilt old statement's pp.all text, not only its term up to binder names",
+   "a second twin header `set_option linter.deprecated false in set_option linter.unusedVariables false in` is used only when the printed statement names binders that its text never references",
+   "round-trip elaboration attempts no longer leak messages; certificate proofs run without error recovery and reject sorry and metavariables",
+   "twins.py reads the info output of Lean 4.34, which has no file:line:col prefix"
+  ]
+ },
+ "forward_replay": {
+  "upstream": "VCVio afa6593f15e1e79ecb3cf22fc56191cecb452bb0 scratch build",
+  "laws": 80,
+  "hand_written": 2,
+  "result": "all pass (EvalDistEq spelling)",
+  "negative_control": "two altered statements fail, at exactly those two",
+  "file_sha256": "a3919ab345b3808487bc08504bf14f41cee784933eab18dafe5a28ddcb963e4c",
+  "log_sha256": "386f675ec6359190c9d8bb2ae2c1e182f11c1fc419fbd4fa3d747323e0c6efb8"
+ },
+ "step7": {
+  "axiom_walk": [
+   "AXIOM-WALK roots 95198 reached 122188 unresolved 0",
+   "AXIOM-WALK axioms [Classical.choice, Quot.sound, propext]",
+   "SERVER-DOMAIN PqxdhDeploymentKemTwoSided.kem_transfer_two_sided true",
+   "SERVER-DOMAIN PqxdhDeploymentIdealCompile.ideal_compile true",
+   "SERVER-DOMAIN PqxdhDeploymentIdealHandoff.ideal_world_view true",
+   "SERVER-DOMAIN PqxdhRegistrationJointKemKeyTransfer.allIdeal_loss false",
+   "SERVER-DOMAIN PqxdhRegistrationJointKemPostSkeleton.opaqueBranch_shared false",
+   "SERVER-DOMAIN PqxdhRegistrationJointBeaconFinishOnce.slotGame_two false"
+  ],
+  "source_scan": [
+   "LEAN-SCAN files 1994 hits 0"
+  ],
+  "lean_scan_sha256": "61deb5fdff698e45c7fc3180820c214aa4d6f22e6c96ace03f87a040f1248880"
+ },
+ "inventory": {
+  "recount": "handwritten-lean unchanged (1987)",
+  "rehash": [
+   "VCVioForwardEvalDist.lean",
+   "VCVioForwardOracleComp.lean",
+   "VCVioLegacyBridge.lean",
+   "trusted-boundary.md",
+   "check-inventory.sh"
+  ],
+  "pins": "EvalDistEq definition text line replaces the infix pin; zero-count pins for notation, syntax, elaborator, initializer and simp-attribute declarations and for `import Lean`, addDecl, Lean.Elab, Lean.Meta, run_cmd and #eval in the five migration modules replace the macro and syntax pins",
+  "check_inventory": "Formal-verification inventory matches the reviewed boundary (lease 00000764)"
+ },
+ "axiom_guards": {
+  "new_theorems": 97,
+  "propext_classical_choice_quot_sound": 96,
+  "propext_quot_sound": [
+   "bind_eq_attach_bind"
+  ]
+ },
+ "not_run": [
+  "verify-in-shell, ProVerif, transcript fidelity, cargo, Go and Python tests (owner decision 2026-10-19 item 5: only Lean files change)"
+ ],
+ "tool_sha256": {
+  "tools/gates.py": "f5ebf4fb54077717a574fbfa879bbc83f755208b31731424c9f03dd8be744aaf",
+  "tools/gen_certificates.py": "b20f0553c42aec3f0d608426bce1508ce0689c7cf24f1e059a202f9e8a604398",
+  "tools/twins.py": "7b60d0d8bef7acdcfb634906a9a4f20f6a8041665ade7d623928c2f8aa95243d",
+  "tools/a1-certificates.sh": "0e8f9f28c379b8ef66631ddd11ffb666301efa9419f5bb7fa9ba9f3a6a8063e3",
+  "tools/a1-postbuild.sh": "a85cc53abb91efe9a31924c84dfd09b5bae270150ee254d05c3db6d9fbf56f7e",
+  "tools/scan_sources.py": "ae67c92d4ab3acc921e4582f78cc62f127ed97f10e12d54624dd03c559ed170a",
+  "tools/gen_replay.py": "654a61e625854d45dcc12db0f10b4dea229ac7548c5498dd8ccb761ca3b3e04d",
+  "tools/warn_categories.py": "160cb0a9791c5bacfad1856f16d4c9c98eb8c361306f6fd6a9fd6cd395739703",
+  "tools/DeclsAll.lean.in": "d326f3ed2dd7829edfcc921698975d325c0d4dce18a60cbe4a253237cc66703f",
+  "tools/DumpPpAll.lean.in": "8bcdf9b5becb53b91c6e44ab0dc9a26372ba4e367f8f54af8897ee1b6c15a404",
+  "step7/AxiomWalkVal.lean": "f93cd6e6da2ccc6b3cfd51c1cd4a095731f3d87ca22bb5046f2f2987335b11ba",
+  "../tools/build-certtools.sh": "cdb916c42f0e6e214cc341d2495e608968aae47d9dc0820a058d2a76ef165a21"
+ },
+ "logs": "machine-local, /tmp/bc-arc-scratch/vcvio-migration/S0/logs/ (a1-*, check-lean-6, check-lean-7, certtools-9, probe-twinasync*)",
+ "reviews": "none yet"
+}
