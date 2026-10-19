@@ -1,0 +1,18 @@
+[package]
+name = "beaconcrypt-wasm"
+version = "0.6.0"
+edition = "2024"
+rust-version = "1.96"
+license-file = "../LICENSE"
+description = "WASI guest ABI for Beaconcrypt's Go bindings"
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+beaconcrypt = { path = "../beaconcrypt", default-features = false, features = ["beacon", "server", "pqxdh"] }
+zeroize = "1.9"
+
+[dev-dependencies]
+serde_json = "1"

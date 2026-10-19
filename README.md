@@ -149,7 +149,12 @@ From python, you can just use the wheels published to pypi, see the [example](ex
 
 The [C interface](beaconcrypt/src/cbinds.rs) uses opaque role-specific handles; the caller is responsible for their lifetimes and for freeing returned buffers. See the [example](examples/c/main.c) for usage.
 
-Go is unfortunately the worst off as the bindings use cgo and therefore building your binary requires being able to link to a version of the library built with the `gobinds` feature. See the [example](examples/go/main.go) for usage.
+Go supports the native CGO bindings and an embedded Wasm backend through wazero,
+using the same import path and public API. Native builds link the Rust library
+built with `gobinds`. Both backends require Go 1.25 or newer. CGO-free builds use a generated guest included in the Go
+release bundle; no binary artifacts are committed to Git. See the
+[Wasm build and release instructions](doc/wasm.md) and the unchanged
+[Go example](examples/go/main.go).
 
 # Copyright
 This work is dedicated to the public domain.

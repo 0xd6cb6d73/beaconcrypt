@@ -1,0 +1,6 @@
+{
+  "rust": "1.97.1",
+  "zig": "0.17.0",
+  "target": "wasm32-wasip1",
+  "wasm_abi_version": 1
+}

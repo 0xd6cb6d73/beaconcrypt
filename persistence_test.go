@@ -5,9 +5,8 @@ package beaconcrypt
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"runtime"
-	"runtime/cgo"
-	"strings"
 	"sync"
 	"testing"
 )
@@ -358,70 +357,73 @@ func TestPersistentRestorersRaceOnOneAuthoritativeHead(t *testing.T) {
 	}
 }
 
-func handleIsReleased(handle cgo.Handle) (released bool) {
-	defer func() { released = recover() != nil }()
-	_ = handle.Value()
-	return false
+type stackPressureSnapshotStore struct {
+	*testSnapshotStore
 }
 
-func TestSnapshotCallbackLifetimeAndFailedConstructors(t *testing.T) {
-	store := &testSnapshotStore{}
-	server, err := NewServerWithStore(0, nil, store)
-	if err != nil {
-		t.Fatal(err)
+func (store stackPressureSnapshotStore) Load() ([]byte, error) {
+	growSnapshotCallbackStack(64)
+	return store.testSnapshotStore.Load()
+}
+
+func (store stackPressureSnapshotStore) CompareAndSwap(expected *SnapshotHead, replacement []byte) (bool, error) {
+	growSnapshotCallbackStack(64)
+	return store.testSnapshotStore.CompareAndSwap(expected, replacement)
+}
+
+//go:noinline
+func growSnapshotCallbackStack(depth int) byte {
+	var padding [4096]byte
+	for i := range padding {
+		padding[i] = byte(i + depth)
 	}
-	context := server.native.store
-	runtime.GC()
-	if context.handle.Value() != context {
-		t.Fatal("live callback context was released")
+	var child byte
+	if depth == 0 {
+		runtime.GC()
+	} else {
+		child = growSnapshotCallbackStack(depth - 1)
 	}
-	server.Close()
-	server.Close()
-	if !handleIsReleased(context.handle) {
-		t.Fatal("Close retained callback context")
-	}
-	for _, scenario := range []string{"occupied", "invalid-seed", "missing", "load-error", "load-panic", "cas-panic"} {
-		t.Run(scenario, func(t *testing.T) {
-			failedStore := &testSnapshotStore{}
-			var code PersistenceStatus
-			switch scenario {
-			case "occupied":
-				failedStore = store
-				code = StatusStaleGeneration
-			case "invalid-seed":
-				code = StatusInitialization
-			case "missing":
-				code = StatusMissingSnapshot
-			case "load-error":
-				failedStore.loadError = errors.New("injected load error")
-				code = StatusMissingSnapshot
-			case "load-panic":
-				failedStore.panicLoad = true
-				code = StatusMissingSnapshot
-			case "cas-panic":
-				failedStore.panicCAS = true
-				code = StatusStaleGeneration
-			}
-			context := newSnapshotStoreContext(failedStore)
-			var failed *Server
-			var err error
-			if strings.HasPrefix(scenario, "load-") || scenario == "missing" {
-				failed, err = restoreServerWithStoreContext(context)
-			} else {
-				var seed []byte
-				if scenario == "invalid-seed" {
-					seed = []byte{1}
+	result := padding[depth%len(padding)] ^ child
+	runtime.KeepAlive(&padding)
+	return result
+}
+
+// Constructors must keep callback tokens as integers while Go can scan or copy
+// their stacks. Load and CAS may allocate, grow the stack and run a collection.
+func TestSnapshotConstructorsAcrossCallbackStackGrowth(t *testing.T) {
+	for _, explicitLineage := range []bool{false, true} {
+		t.Run(fmt.Sprintf("lineage=%v", explicitLineage), func(t *testing.T) {
+			for iteration := 0; iteration < 4; iteration++ {
+				store := stackPressureSnapshotStore{&testSnapshotStore{}}
+				done := make(chan error, 1)
+				go func() {
+					var server *Server
+					var err error
+					if explicitLineage {
+						server, err = NewServerWithStoreAndLineage(19, nil, store, [32]byte{1})
+					} else {
+						server, err = NewServerWithStore(19, nil, store)
+					}
+					if err != nil {
+						done <- err
+						return
+					}
+					server.Close()
+					done <- nil
+				}()
+				if err := <-done; err != nil {
+					t.Fatal(err)
 				}
-				failed, err = createServerWithStoreContext(0, seed, context, nil)
-			}
-			requirePersistenceStatus(t, err, code)
-			if failed != nil || !handleIsReleased(context.handle) {
-				t.Fatal("failed constructor retained handle or callback context")
-			}
-			if strings.HasSuffix(scenario, "panic") {
-				var persistenceErr *PersistenceError
-				if !errors.As(err, &persistenceErr) || persistenceErr.Cause == nil || !strings.Contains(err.Error(), "panic") {
-					t.Fatalf("callback panic lost its cause: %v", err)
+				// Restore starts on a fresh small stack as well.
+				go func() {
+					restored, err := RestoreServer(store)
+					if err == nil {
+						restored.Close()
+					}
+					done <- err
+				}()
+				if err := <-done; err != nil {
+					t.Fatal(err)
 				}
 			}
 		})

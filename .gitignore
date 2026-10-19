@@ -1,4 +1,9 @@
 /target
+/internal/wasm/beaconcrypt.wasm
+/internal/wasm/beaconcrypt.build.json
+/.build/
+# setup-zig stores both local and global compiler caches in the checkout.
+/.zig-cache/
 /mutants.out/
 /mutants.out.old/
 
