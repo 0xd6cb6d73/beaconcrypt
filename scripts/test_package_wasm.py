@@ -62,7 +62,7 @@ class PackagingTest(unittest.TestCase):
             "LICENSE": b"0BSD fixture\n",
             "Cargo.toml": b"[workspace]\n",
             "Cargo.lock": b"# pinned fixture\n",
-            "scripts/wasm-toolchain.json": b'{"rust":"1.97.1","zig":"0.16.0","target":"wasm32-wasip1","wasm_abi_version":1}',
+            "scripts/wasm-toolchain.json": b'{"rust":"1.97.1","zig":"0.17.0","target":"wasm32-wasip1","wasm_abi_version":1}',
             "internal/wasm/beaconcrypt.wasm": guest(),
             "internal/wasm/runtime.go": b"package wasm\n",
             "testdata/fixture.json": b'{"fixture":true}',
@@ -79,7 +79,7 @@ class PackagingTest(unittest.TestCase):
 
     def record_build(self):
         versions = {("rustc", "--version"): "rustc 1.97.1 (fixture)",
-                    ("cargo", "--version"): "cargo 1.97.1 (fixture)", ("zig", "version"): "0.16.0"}
+                    ("cargo", "--version"): "cargo 1.97.1 (fixture)", ("zig", "version"): "0.17.0"}
         original_command = packager.command
         with patch.object(packager, "command", side_effect=lambda repo, *args:
                           versions[args] if args in versions else original_command(repo, *args)):

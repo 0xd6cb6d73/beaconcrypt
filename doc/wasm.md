@@ -20,7 +20,7 @@ the missing artifact.
 ## Build the guest from source
 
 Install the versions in [wasm-toolchain.json](../scripts/wasm-toolchain.json):
-Rust 1.97.1, its `wasm32-wasip1` target, and Zig 0.16.0 on `PATH`. Then run:
+Rust 1.97.1, its `wasm32-wasip1` target, and Zig 0.17.0 on `PATH`. Then run:
 
 ```sh
 rustup toolchain install 1.97.1 --profile minimal --target wasm32-wasip1

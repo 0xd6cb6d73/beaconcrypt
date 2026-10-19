@@ -17,7 +17,7 @@ jobs:
           echo 'RUSTUP_TOOLCHAIN=1.97.1' >> "$GITHUB_ENV"
       - uses: vercel-labs/setup-zig@83c1594f26b86da8a9a8ddd9b5ee5f3af0f96943 # v1.0.2
         with:
-          version: 0.16.0
+          version: 0.17.0
       - name: Test release packaging
         run: python3 -m unittest discover -s scripts -p 'test_package_wasm.py' -v
       - name: Build Wasm once
