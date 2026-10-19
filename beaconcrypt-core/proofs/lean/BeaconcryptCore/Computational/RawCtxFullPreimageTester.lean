@@ -39,7 +39,7 @@ theorem full_card : Fintype.card FullOutput = 2 ^ 608 := by
   calc
     256 ^ 76 = (2 ^ 8) ^ 76 := by norm_num
     _ = 2 ^ (8 * 76) := by rw [pow_mul]
-    _ = 2 ^ 608 := by norm_num
+    _ = 2 ^ 608 := by rw [show 8 * 76 = 608 by norm_num]
 
 /-- The complete fixed 32-byte input image occupies at most a 2^-352 fraction of uniform full 76-byte outputs. -/
 theorem uniform_image352 (function : RootOutput → FullOutput) :

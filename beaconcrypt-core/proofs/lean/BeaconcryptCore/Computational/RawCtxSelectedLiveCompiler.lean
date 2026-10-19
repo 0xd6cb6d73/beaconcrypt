@@ -138,9 +138,9 @@ theorem nested_step {Metadata Auxiliary : Type} {serverCount beaconCount : Nat}
       StateT.run, StateT.mk, state_map, Functor.map_map, Prod.map_def, id_eq, Function.comp_def,
       SourceSpec, RawCtxSelectedPublicTrace.SourceSpec, OracleSpec.Range, OracleSpec.add_def, Sum.elim] using lifted
   | inr read =>
-    simp [nested, observedImpl, QueryImpl.flattenStateT, splitState, joinState,
+    simp [nested, observedImpl, QueryImpl.flattenStateT, splitState,
       recorded, RawCtxSelectedQueryTrace.recorded, handler, inputs,
-      StateT.run, StateT.mk, state_map, state_pure, bind_pure_comp]
+      StateT.run, StateT.mk, state_map, bind_pure_comp]
     rfl
 
 def regroup {Metadata Auxiliary Result : Type} {serverCount beaconCount : Nat} :

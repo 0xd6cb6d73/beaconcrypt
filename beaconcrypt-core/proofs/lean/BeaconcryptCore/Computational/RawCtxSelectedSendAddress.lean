@@ -92,7 +92,7 @@ theorem selected_advance {Context : Type} (prior : Prior) (target : RootOutput) 
     (RawCtxInterpretedSend.ready pending (RawCtxSelectedMessageKdf.step prior target nonce next pending.request)).advanced =
       { pending.entry with control := pending.committed_control, send_chain := concreteChain next } := by
   have same := (step_selected prior target nonce chosen next pending.request).mp selected
-  simp only [RawCtxInterpretedSend.ready, RawCtxSelectedMessageKdf.step, if_pos same.1]
+  simp only [RawCtxInterpretedSend.ready, RawCtxSelectedMessageKdf.step, ite_eq_left same.1]
 
 /-- Address equality at the fixed production label means actual chain-byte equality; this is representation injectivity, not HKDF injectivity. -/
 theorem address_injective : Function.Injective RawCtxSelectedPendingCut.requestAddress := by
@@ -117,7 +117,7 @@ theorem selected_later_advance {Context : Type} (prior : Prior) (parent : Entry)
     (RawCtxInterpretedSend.ready pending (later prior parent target nonce next pending.request)).advanced =
       { pending.entry with control := pending.committed_control, send_chain := concreteChain next } := by
   have same := (later_selected prior parent target nonce chosen next pending.request).mp selected
-  simp only [RawCtxInterpretedSend.ready, later, if_neg same.1, RawCtxSelectedMessageKdf.step, if_pos same.2.1]
+  simp only [RawCtxInterpretedSend.ready, later, ite_eq_right same.1, RawCtxSelectedMessageKdf.step, ite_eq_left same.2.1]
 
 /-- Every selected seal attempt publishes send advancement even when its exact optional writer reply is None. -/
 theorem selected_finish {Context Output : Type} (prior : Prior) (target : RootOutput)

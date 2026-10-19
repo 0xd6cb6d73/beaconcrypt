@@ -699,7 +699,7 @@ theorem CachedOpenRefines.material_exact
   simp [ratchet.concrete.ReceiveOpen.material, hphase,
     ratchet.control.RECEIVE_CACHE_CAPACITY, lift, Array.index_usize,
     core.option.Option.as_ref]
-  rw [if_neg (by omega), List.getElem?_eq_getElem hlen]
+  rw [ite_eq_right (by omega), List.getElem?_eq_getElem hlen]
   simp [hcached', hcachedSequence, hcachedMaterial]
 
 theorem CachedOpenRefines.openReply_some
@@ -753,6 +753,8 @@ def CachedPublicationRefines
       skipped := receive.skipped.filter (fun p => !(p.1 == index)) }
     { refined := published }
 
+-- The published name repeats `ratchet` (check-inventory.sh and the docs cite it).
+set_option linter.dupNamespace false in
 /-- Consuming one live control-cache entry refines filtering the corresponding ideal
 skipped key.  This is the control-plane half of cached publication; the material-array
 swap is handled separately below. -/

@@ -27,9 +27,9 @@ private theorem array_set_bang {α : Type} [Inhabited α] {n : Std.Usize}
     (v : Std.Array α n) (i : Std.Usize) (x : α) (j : Nat) (h : j < v.length) :
     (v.set i x).val[j]! = if i.val = j then x else v.val[j]! := by
   by_cases heq : i.val = j
-  · simpa only [if_pos heq, Array.getElem!_Nat_eq] using
+  · simpa only [ite_eq_left heq, Array.getElem!_Nat_eq] using
       Array.getElem!_Nat_set_eq v i j x ⟨heq, h⟩
-  · simpa only [if_neg heq, Array.getElem!_Nat_eq] using
+  · simpa only [ite_eq_right heq, Array.getElem!_Nat_eq] using
       Array.getElem!_Nat_set_ne v i j x heq
 
 private theorem cacheSeqs_append (cache next : SequenceCache) (sequence : Std.U64)
@@ -42,8 +42,8 @@ private theorem cacheSeqs_append (cache next : SequenceCache) (sequence : Std.U6
   · apply List.map_congr_left
     intro i hi
     simp only [List.mem_range] at hi
-    rw [array_set_bang _ _ _ _ (by scalar_tac), if_neg (by scalar_tac)]
-  · rw [array_set_bang _ _ _ _ (by scalar_tac), if_pos (by simp_scalar)]
+    rw [array_set_bang _ _ _ _ (by scalar_tac), ite_eq_right (by scalar_tac)]
+  · rw [array_set_bang _ _ _ _ (by scalar_tac), ite_eq_left (by simp_scalar)]
 
 /-- Appending a positive sequence above all previously restored keys preserves structural control validity. -/
 theorem restore_control_append_valid (state : RatchetState) (h : ValidControl state)
@@ -98,9 +98,9 @@ theorem ValidRestore.append {SendChain ReceiveChain Material : Type}
     restore := { state := { r.logical.state with receive_cache := cache }, last_sequence := sequence }
     slot := r.logical.state.receive_cache.len }
   have hstep : restore_receive_key_with_slot r.logical sequence = ok (core.option.Option.Some step) := by
-    simp only [restore_receive_key_with_slot, if_neg (by scalar_tac : sequence ≠ 0#u64),
-      if_neg (by scalar_tac : ¬sequence > r.logical.state.receive_sequence),
-      if_neg (by scalar_tac : ¬sequence ≤ r.logical.last_sequence), happend, bind_tc_ok, step]
+    simp only [restore_receive_key_with_slot, ite_eq_right (by scalar_tac : sequence ≠ 0#u64),
+      ite_eq_right (by scalar_tac : ¬sequence > r.logical.state.receive_sequence),
+      ite_eq_right (by scalar_tac : ¬sequence ≤ r.logical.last_sequence), happend, bind_tc_ok, step]
     rfl
   have hrun := refined_restore_receive_key_of_append r sequence material step hstep hcap
     (h.slots.empty r.logical.state.receive_cache.len.val (by rfl) hcap)

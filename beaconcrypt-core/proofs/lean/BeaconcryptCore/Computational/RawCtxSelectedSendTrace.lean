@@ -68,7 +68,7 @@ theorem repeated_source (decode : RawDecoder) (c : Pqxdh.Crypto) (key : RootOutp
           simp only [mem_support_bind_iff, mem_support_pure_iff] at supported
           obtain ⟨reply, _, impossible⟩ := supported
           cases impossible
-      · simp only [RawCtxSelectedSealConsumer.call, RawCtxSelectedMessageSealing.selected, dif_neg width,
+      · simp only [RawCtxSelectedSealConsumer.call, RawCtxSelectedMessageSealing.selected, dite_eq_right width,
           simulateQ_pure, StateT.run_pure, mem_support_pure_iff] at supported
         cases supported
 
@@ -89,7 +89,7 @@ theorem stopped_source (decode : RawDecoder) (c : Pqxdh.Crypto) (key : RootOutpu
       refine ⟨value, ?_, used, same.trans state⟩
       change pending.material = .hidden value at material
       change pending.context.associatedData.length = 153 at width
-      simp only [nonce, material, if_pos width]
+      simp only [nonce, material, ite_eq_left width]
   | completed ciphertext =>
       have impossible := congrArg Prod.fst equal
       simp only [found, RawCtxSelectedSealConsumer.reply] at impossible
@@ -133,7 +133,7 @@ theorem call_used (decode : RawDecoder) (c : Pqxdh.Crypto) (key : RootOutput)
           · subst candidate
             exact Or.inr ⟨rfl, width⟩
           · exact Or.inl old
-      · simp only [RawCtxSelectedSealConsumer.call, RawCtxSelectedMessageSealing.selected, dif_neg width,
+      · simp only [RawCtxSelectedSealConsumer.call, RawCtxSelectedMessageSealing.selected, dite_eq_right width,
           simulateQ_pure, StateT.run_pure, mem_support_pure_iff, Prod.mk.injEq] at supported
         rcases supported with ⟨_, rfl⟩
         exact fun _ found => Or.inl found
@@ -182,7 +182,7 @@ theorem scalar_used (decode : RawDecoder) (c : Pqxdh.Crypto) (key : RootOutput)
   · obtain ⟨material, width⟩ := selected
     change pending.material = .hidden value at material
     change pending.context.associatedData.length = 153 at width
-    exact Or.inr (by simp only [nonce, material, if_pos width])
+    exact Or.inr (by simp only [nonce, material, ite_eq_left width])
 
 /-- Every actual scalar sealing outcome preserves the occurrence invariant, including writer rejection and nonce stopping. -/
 theorem tracked_step {Owner : Type} (decode : RawDecoder) (c : Pqxdh.Crypto) (key : RootOutput)

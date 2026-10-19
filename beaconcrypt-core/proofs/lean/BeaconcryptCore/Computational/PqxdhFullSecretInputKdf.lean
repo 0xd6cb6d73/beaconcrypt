@@ -258,7 +258,7 @@ theorem local_uniform_query_bound {A : Type} {computation : ProbComp A} {q : Nat
     (spec := unifSpec) (superSpec := HmacAdversarySpec) (p := fun _ => True)
     (hpq := fun query => by simp [IsHmacUniformQuery, SubSpec.onQuery])
   simpa only [OracleComp.IsQueryBoundP, OracleComp.IsTotalQueryBound,
-    not_true_eq_false, false_or, if_true] using bound
+    not_true_eq_false, false_or, ite_true] using bound
 
 /-- The sampler and observer budgets are retained separately from challenge queries. -/
 theorem fullExpandReduction_uniform_query_bound {Context : Type}

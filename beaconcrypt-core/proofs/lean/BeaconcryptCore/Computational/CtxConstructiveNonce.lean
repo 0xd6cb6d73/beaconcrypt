@@ -86,7 +86,7 @@ def chooseNonce (used : List CtxNonce) : CtxNonce :=
 theorem chooseNonce_not_mem (used : List CtxNonce) (bounded : used.length < 256 ^ 12) :
     chooseNonce used ∉ used := by
   unfold chooseNonce
-  simp only [bounded, dif_pos]
+  simp only [bounded, dite_eq_left]
   cases found : (candidates used.length bounded).find? (fun nonce => decide (nonce ∉ used)) with
   | none =>
     have noneFound := List.find?_eq_none.mp found

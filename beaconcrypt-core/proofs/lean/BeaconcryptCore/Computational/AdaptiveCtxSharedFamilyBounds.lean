@@ -293,7 +293,7 @@ theorem family_union_bound {count : Nat} {Result : Type} (adversary : OracleComp
     · intro answer
       refine (ih answer _ _ (hl.2 answer) (hr.2 answer)).mono ?_
       by_cases hleft : left query <;> by_cases hright : right query
-      all_goals simp only [hleft, hright, not_true_eq_false, false_or, not_false_eq_true, true_or, if_true, if_false] at hl hr ⊢
+      all_goals simp only [hleft, hright, not_true_eq_false, false_or, not_false_eq_true, true_or, ite_true, ite_false] at hl hr ⊢
       all_goals omega
 
 /-- Caller uniform requests at every key belong to the same original global uniform class. -/

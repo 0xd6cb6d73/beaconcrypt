@@ -34,12 +34,12 @@ theorem refined_restore_receive_key_of_append {SendChain ReceiveChain Material :
             (core.option.Option.Some { sequence, material }) }) := by
   simp only [refined_restore_receive_key, hstep,
     lift, capacity_eq_ok, bind_tc_ok,
-    if_neg (by scalar_tac : ¬UScalar.cast UScalarTy.Usize step.slot ≥ UScalar.cast UScalarTy.Usize 50#u64),
+    ite_eq_right (by scalar_tac : ¬UScalar.cast UScalarTy.Usize step.slot ≥ UScalar.cast UScalarTy.Usize 50#u64),
     array_index_bang r.receive_slots (UScalar.cast UScalarTy.Usize step.slot) (by scalar_tac),
     show (UScalar.cast UScalarTy.Usize step.slot).val = step.slot.val by simp_scalar,
     hempty, BeaconcryptCore.core_option_is_some_eq_ok, Std.core.option.Option.is_some, Option.isSome,
-    core.option.Option.None, Bool.false_eq_true, if_false, Bool.false_or,
-    massert, decide_eq_true (by scalar_tac : UScalar.cast UScalarTy.Usize step.slot < 50#usize), if_true]
+    core.option.Option.None, Bool.false_eq_true, ite_false, Bool.false_or,
+    massert, decide_eq_true (by scalar_tac : UScalar.cast UScalarTy.Usize step.slot < 50#usize), ite_true]
   simp only [Array.index_mut_usize,
     array_index_bang r.receive_slots (UScalar.cast UScalarTy.Usize step.slot) (by scalar_tac),
     bind_tc_ok]
@@ -63,17 +63,17 @@ theorem refined_restore_receive_key_rejected {SendChain ReceiveChain Material : 
     · simp only [array_index_bang r.receive_slots (UScalar.cast UScalarTy.Usize step.slot) (by scalar_tac),
         bind_tc_ok, BeaconcryptCore.core_option_is_some_eq_ok, Std.core.option.Option.is_some,
         massert, decide_eq_true (by scalar_tac : UScalar.cast UScalarTy.Usize step.slot < 50#usize),
-        Bool.or_true, if_true] at hrun
+        Bool.or_true, ite_true] at hrun
       cases hslot : r.receive_slots.val[(UScalar.cast UScalarTy.Usize step.slot).val]! with
       | none =>
-        simp only [hslot, Option.isSome, Bool.false_eq_true, if_false] at hrun
+        simp only [hslot, Option.isSome, Bool.false_eq_true, ite_false] at hrun
         simp only [Array.index_mut_usize,
           array_index_bang r.receive_slots (UScalar.cast UScalarTy.Usize step.slot) (by scalar_tac),
           bind_tc_ok] at hrun
         dsimp! only at hrun
         rw [Array.set_getElem!_eq, array_update_eq_ok _ _ _ (by scalar_tac)] at hrun
         simp only [bind_tc_ok, RustM.ok.injEq, Prod.mk.injEq, Bool.true_eq_false, false_and] at hrun
-      | some cached => simpa only [hslot, Option.isSome, if_true, RustM.ok.injEq,
+      | some cached => simpa only [hslot, Option.isSome, ite_true, RustM.ok.injEq,
           Prod.mk.injEq, true_and] using hrun.symm
 
 /-- Logical restoration rejects exactly when a required order, counter, or capacity condition fails. -/

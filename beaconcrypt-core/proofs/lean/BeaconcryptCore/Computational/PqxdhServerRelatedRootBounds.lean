@@ -40,7 +40,7 @@ theorem client_uniform {A Reader E : Type}
   have step (query : PqxdhServerRelatedRootConsumer.Spec.Domain) (before : State A) :
       ((impl family aux query).run before).IsQueryBoundP (fun _ => True)
         (if isFamily query then qFamily else qAux) := by
-    cases query <;> simp only [impl, familyImpl, auxImpl, StateT.run, isFamily, Bool.false_eq_true, if_false, if_true, isQueryBoundP_map_iff]
+    cases query <;> simp only [impl, familyImpl, auxImpl, StateT.run, isFamily, Bool.false_eq_true, ite_false, ite_true, isQueryBoundP_map_iff]
     · exact (familyBound _ _).isQueryBoundP
     · exact (auxBound _ _).isQueryBoundP
   apply (isQueryBoundP_true_iff _ _).mp

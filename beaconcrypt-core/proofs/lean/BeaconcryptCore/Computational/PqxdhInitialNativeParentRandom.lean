@@ -114,8 +114,8 @@ theorem source_random (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMix
       retainedDecision prior root selected number ancestors disclosed result := by
     intro prior result ambient
     by_cases good : PqxdhInitialPublishedEvent.Gate selected number result
-    · simp only [observe, gate, good, decide_true, if_true, retainedDecision, RawCtxPublishedLineage.lineage]
-    · simp only [observe, gate, good, decide_false, Bool.false_eq_true, if_false, retainedDecision, false_and, decide_false]
+    · simp only [observe, gate, good, decide_true, ite_true, retainedDecision, RawCtxPublishedLineage.lineage]
+    · simp only [observe, gate, good, decide_false, Bool.false_eq_true, ite_false, retainedDecision, false_and, decide_false]
   simp only [observed] at equality
   exact evalDist_eq_of_evalSPMF_eq _ _ equality
 
@@ -123,7 +123,7 @@ theorem source_random (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMix
 theorem child_cursor (state : State A N C) (address : JointKdfAddress) (parent : FullOutput)
     (matching : matched state.1.1.2.2 address = true) :
     cursorAddress (updated address parent state).1.1.2.2 = targetAddress (nextChain parent) := by
-  simp only [updated, advance, matching, if_true, cursorAddress]
+  simp only [updated, advance, matching, ite_true, cursorAddress]
   exact (PqxdhInitialNativeLineageCheck.request_concrete (nextChain parent)).symm
 
 /-- The same original full result has precisely the partial observer's native freshness decision after the early child draw. -/
@@ -183,7 +183,7 @@ theorem parent_random (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMix
     rw [child_cursor state address parent matching]
     simpa only [updated, QueryCache.cacheQuery_of_ne (spec := JointKdfRO) _ parent separate] using childMissing
   have stage : (updated address parent state).1.1.2.2.depth + 1 = state.1.1.2.2.depth + 2 := by
-    simp only [updated, advance, matching, if_true, Nat.add_assoc]
+    simp only [updated, advance, matching, ite_true, Nat.add_assoc]
   have equality := source_random source writer external client (updated address parent state) childAbsent root selected number
     (by omega) ancestors disclosed (by simpa only [stage] using published)
   rw [stage, child_cursor state address parent matching] at equality

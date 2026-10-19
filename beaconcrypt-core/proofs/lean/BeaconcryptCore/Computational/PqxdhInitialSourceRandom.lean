@@ -37,8 +37,8 @@ theorem initial_view (root : RootOutput) (output : PqxdhFullSecretInputKdf.FullO
         (RawCtxSelectedParentPrivatePatch.targetAddress root) = some output := by
       rw [address]
       exact QueryCache.cacheQuery_self _ _ _
-    simp only [RawCtxSelectedParentTable.view, hit, Option.getD_some, RawCtxSelectedParentPrivatePatch.privatePatch, if_true]
-  · simp only [RawCtxSelectedParentTable.view, RawCtxSelectedParentPrivatePatch.privatePatch, if_neg same]
+    simp only [RawCtxSelectedParentTable.view, hit, Option.getD_some, RawCtxSelectedParentPrivatePatch.privatePatch, ite_true]
+  · simp only [RawCtxSelectedParentTable.view, RawCtxSelectedParentPrivatePatch.privatePatch, ite_eq_right same]
     rw [QueryCache.cacheQuery_of_ne (spec := JointKdfRO) _ output (by simpa only [← address] using same)]
     rfl
 

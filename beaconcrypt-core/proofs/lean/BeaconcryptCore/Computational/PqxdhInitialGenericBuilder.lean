@@ -58,16 +58,16 @@ theorem candidate_native (interpret : Kernel → ConcreteRatchetKernel)
   apply bind_congr
   intro valid
   cases valid
-  · simp only [Bool.not_false, if_true, simulateQ_pure, map_pure]
+  · simp only [Bool.not_false, ite_true, simulateQ_pure, map_pure]
     rfl
-  · simp only [Bool.not_true, Bool.false_eq_true, if_false, simulateQ_bind, simulateQ_spec_query,
+  · simp only [Bool.not_true, Bool.false_eq_true, ite_false, simulateQ_bind, simulateQ_spec_query,
       PqxdhServerRegistrationPublication.nativeAdapter, nativeImpl, map_bind]
     apply bind_congr
     intro reserved
     cases reserved
-    · simp only [Bool.not_false, if_true, simulateQ_pure, map_pure]
+    · simp only [Bool.not_false, ite_true, simulateQ_pure, map_pure]
       rfl
-    · simp only [Bool.not_true, Bool.false_eq_true, if_false]
+    · simp only [Bool.not_true, Bool.false_eq_true, ite_false]
       cases initial with
       | fail error =>
           simp only [show (interpret <$> (fail error : RustM Kernel)) = fail error from rfl,
@@ -80,25 +80,25 @@ theorem candidate_native (interpret : Kernel → ConcreteRatchetKernel)
       | ok kernel =>
           simp only [RawCtxMaterialInterpretation.rust_map_ok, PqxdhServerRegistrationPublication.continueRust, continueRust]
           by_cases empty : (data.getD registrationWitness).isEmpty = true
-          · simp only [empty, if_true, simulateQ_pure, map_pure, RawCtxMaterialInterpretation.rust_map_ok,
+          · simp only [empty, ite_true, simulateQ_pure, map_pure, RawCtxMaterialInterpretation.rust_map_ok,
               Prod.map_apply, id_eq]
-          · simp only [empty, Bool.false_eq_true, if_false]
+          · simp only [empty, Bool.false_eq_true, ite_false]
             by_cases fits : 8 + (data.getD registrationWitness).length ≤ Usize.max
-            · simp only [fits, if_true, simulateQ_bind, simulateQ_spec_query,
+            · simp only [fits, ite_true, simulateQ_bind, simulateQ_spec_query,
                 PqxdhServerRegistrationPublication.nativeAdapter, nativeImpl, map_bind]
               apply bind_congr
               intro allocated
               cases allocated
-              · simp only [Bool.not_false, if_true, simulateQ_pure, map_pure, RawCtxMaterialInterpretation.rust_map_ok,
+              · simp only [Bool.not_false, ite_true, simulateQ_pure, map_pure, RawCtxMaterialInterpretation.rust_map_ok,
                   Prod.map_apply, id_eq]
-              · simp only [Bool.not_true, Bool.false_eq_true, if_false]
+              · simp only [Bool.not_true, Bool.false_eq_true, ite_false]
                 cases binding : pending.key_id_binding with
                 | fail error => simp only [simulateQ_pure, map_pure]; rfl
                 | div => simp only [simulateQ_pure, map_pure]; rfl
                 | ok binding =>
                     simp only [simulateQ_map, after_native interpret calls backend aux sendRealized, Functor.map_map]
                     rfl
-            · simp only [fits, if_false, simulateQ_pure, map_pure, RawCtxMaterialInterpretation.rust_map_ok,
+            · simp only [fits, ite_false, simulateQ_pure, map_pure, RawCtxMaterialInterpretation.rust_map_ok,
                 Prod.map_apply, id_eq]
 
 noncomputable def usedBuild

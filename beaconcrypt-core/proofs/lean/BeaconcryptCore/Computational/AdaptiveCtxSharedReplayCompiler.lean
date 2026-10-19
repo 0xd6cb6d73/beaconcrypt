@@ -46,7 +46,7 @@ theorem family_uniform_step {count : Nat} (c : Pqxdh.Crypto) (keys : Fin count �
       (fun answer => (answer, state)) <$> (unifSpec.query coin : ProbComp _) := by
   cases selected : real index <;>
     simp only [AdaptiveSealKeyFamily.familyImpl, AdaptiveSealKeyFamily.localImpl,
-      selected, Bool.false_eq_true, if_false, if_true, StateT.run]
+      selected, Bool.false_eq_true, ite_false, ite_true, StateT.run]
   all_goals
     change (do
       let result ← (do let answer ← unifSpec.query coin; pure (answer, state index) : ProbComp _)
@@ -193,7 +193,7 @@ theorem original_run {count : Nat} (decode : Fin count → RawDecoder)
         (simulateQ hashImpl
           ((AdaptiveCtxSharedReplay.localImpl (decode query.1) c (keys query.1) query.2).run (state.1 query.1))).run state.2 := by
   simp only [originalImpl, AdaptiveCtxSharedModes.targetImpl, AdaptiveCtxSharedModes.localImpl,
-    Bool.false_eq_true, if_false, QueryImpl.flattenStateT, QueryImpl.mapStateTBase,
+    Bool.false_eq_true, ite_false, QueryImpl.flattenStateT, QueryImpl.mapStateTBase,
     StateT.run, StateT.mk, bind_pure_comp, Functor.map_map]
 
 set_option backward.isDefEq.respectTransparency false in

@@ -352,7 +352,7 @@ theorem routeImpl_preserves_count {count : ℕ} (publicKeys : Fin count → Publ
           ((GlobalSpec count).query (.inl (.inr (⟨identity, h.2⟩, request))) : OracleComp (GlobalSpec count) _) >>= fun answer =>
             pure (some answer, appendObservation (.inr (.service identity request)) (some answer) state)
           else pure (none, appendObservation (.inr (.service identity request)) none state)) at supported
-        rw [dif_pos available, mem_support_bind_iff] at supported
+        rw [dite_eq_left available, mem_support_bind_iff] at supported
         obtain ⟨answer, _, supported⟩ := supported
         obtain rfl := OracleComp.eq_of_mem_support_pure _ supported
         exact valid
@@ -366,7 +366,7 @@ theorem routeImpl_preserves_count {count : ℕ} (publicKeys : Fin count → Publ
           ((GlobalSpec count).query (.inr ⟨identity, h.2⟩) : OracleComp (GlobalSpec count) _) >>= fun answer =>
             pure (some answer, appendObservation (.inr (.reveal identity)) (some answer) state)
           else pure (none, appendObservation (.inr (.reveal identity)) none state)) at supported
-        rw [dif_pos available, mem_support_bind_iff] at supported
+        rw [dite_eq_left available, mem_support_bind_iff] at supported
         obtain ⟨answer, _, supported⟩ := supported
         obtain rfl := OracleComp.eq_of_mem_support_pure _ supported
         exact valid
@@ -594,14 +594,14 @@ theorem dynamicEvent_implies_global (primitives : Primitives) (count : ℕ) (fal
       if result.1.1.identity < result.1.2.created then
         some (seeds ⟨result.1.1.identity, valid⟩) else none := by
     by_cases created : result.1.1.identity < result.1.2.created
-    · rw [sourceState_lookup seeds result.1.2 result.1.1.identity created valid, if_pos created]
-    · rw [sourceState_uncreated seeds result.1.2 result.1.1.identity (Nat.le_of_not_gt created), if_neg created]
+    · rw [sourceState_lookup seeds result.1.2 result.1.1.identity created valid, ite_eq_left created]
+    · rw [sourceState_uncreated seeds result.1.2 result.1.1.identity (Nat.le_of_not_gt created), ite_eq_right created]
   change (sourceState seeds result.1.2).seeds[result.1.1.identity]? = some seed at lookup
   rw [lookupExact] at lookup
   by_cases created : result.1.1.identity < result.1.2.created
-  · rw [if_pos created] at lookup
+  · rw [ite_eq_left created] at lookup
     have seedEq := Option.some.inj lookup
-    simp only [GlobalEvent, TargetEvent, selectedForgery, dif_pos valid]
+    simp only [GlobalEvent, TargetEvent, selectedForgery, dite_eq_left valid]
     exact ⟨fresh, by simpa only [projection, familyPublic, seedEq] using signature⟩
   · simp [created] at lookup
 

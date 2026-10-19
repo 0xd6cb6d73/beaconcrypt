@@ -53,8 +53,8 @@ theorem step_exact (prior : Prior) (key target : RootOutput) (nonce : NonceOutpu
       ((step prior target nonce next request).1, interpret key (step prior target nonce next request).2) := by
   by_cases same : RawCtxKdfRequestTable.address request = RawCtxSelectedParentPrivatePatch.targetAddress target
   · simp only [RawCtxFunctionalFamily.execute, RawCtxSelectedParentPrivatePatch.privatePatch, step,
-      if_pos same, decoded_response, interpret]
-  · simp only [RawCtxFunctionalFamily.execute, RawCtxSelectedParentPrivatePatch.privatePatch, step, if_neg same]
+      ite_eq_left same, decoded_response, interpret]
+  · simp only [RawCtxFunctionalFamily.execute, RawCtxSelectedParentPrivatePatch.privatePatch, step, ite_eq_right same]
     exact (known_exact key _).symm
 
 /-- Retained predecessor priority and every address-collision branch agree with the actual source private lookup; no separation premise removes a collision. -/
@@ -64,16 +64,16 @@ theorem later_exact (prior : Prior) (entry : Entry) (key target : RootOutput) (n
       (lookup (RawCtxSelectedParentPrivatePatch.privatePatch prior target (response key nonce next)) entry target) request) =
       ((later prior entry target nonce next request).1, interpret key (later prior entry target nonce next request).2) := by
   by_cases parent : RawCtxKdfRequestTable.address request = entry.address
-  · simp only [RawCtxFunctionalFamily.execute, lookup, later, if_pos parent]
+  · simp only [RawCtxFunctionalFamily.execute, lookup, later, ite_eq_left parent]
     exact (known_exact key _).symm
-  · simp only [RawCtxFunctionalFamily.execute, lookup, later, if_neg parent]
+  · simp only [RawCtxFunctionalFamily.execute, lookup, later, ite_eq_right parent]
     exact step_exact prior key target nonce next request
 
 /-- A predecessor retry returns the original retained full response even when its address is also the selected child address. -/
 theorem later_parent (prior : Prior) (entry : Entry) (target : RootOutput) (nonce : NonceOutput) (next : RootOutput)
     (request : SymmetricRatchetKdfRequest) (parent : RawCtxKdfRequestTable.address request = entry.address) :
     later prior entry target nonce next request = (concreteChain target, .known (concreteMaterial entry.material)) := by
-  simp only [later, if_pos parent, known, RawCtxSelectedParentEntry.decoded_response]
+  simp only [later, ite_eq_left parent, known, RawCtxSelectedParentEntry.decoded_response]
 
 /-- The exact selected private request resumes the complete original receive effect, retaining rollback state, staged skipped keys, validation and later continuation. -/
 theorem receive_step {Context : Type} (prior : Prior) (key target : RootOutput) (nonce : NonceOutput) (next : RootOutput)

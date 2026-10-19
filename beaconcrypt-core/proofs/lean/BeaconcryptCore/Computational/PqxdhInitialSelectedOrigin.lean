@@ -42,10 +42,10 @@ theorem value_origin (fixed : FixedHkdfSha512NoSaltSource) (selected : Message)
     rfl
   | family message =>
     by_cases same : message = selected
-    · simp only [value, same, if_true, StateT.run_pure, mem_support_pure_iff] at supported
+    · simp only [value, same, ite_true, StateT.run_pure, mem_support_pure_iff] at supported
       subst result
       simp only [selectedRequest, same, decide_true, Sum.isRight_inr]
-    · simp only [value, same, if_false, StateT.run_bind, mem_support_bind_iff] at supported
+    · simp only [value, same, ite_false, StateT.run_bind, mem_support_bind_iff] at supported
       obtain ⟨root, rootReached, final⟩ := supported
       simp only [StateT.run_pure, mem_support_pure_iff] at final
       subst result

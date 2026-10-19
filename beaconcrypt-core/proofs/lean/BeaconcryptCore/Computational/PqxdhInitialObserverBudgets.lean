@@ -81,7 +81,7 @@ theorem target_uniform
           simp only [PqxdhInitialLabelPost.target, PqxdhInitialLabelPost.finish, StateT.run, isQueryBoundP_map_iff]
           simpa only [postCost, PqxdhPhase2SourceSchedulerBounds.classify,
             PqxdhPhase2PostSchedulerBounds.cost, PqxdhPhase2PostSchedulerBounds.finishCost,
-            if_true, Nat.mul_zero, Nat.mul_one, Nat.add_zero, PqxdhBeaconPhase2Preparation.State,
+            ite_true, Nat.mul_zero, Nat.mul_one, Nat.add_zero, PqxdhBeaconPhase2Preparation.State,
             StateT.run] using
             (owner_bounds attachedVerify primitives count fixed localImpl baseImpl kem secret challenge
               qLocal qBase qDecap localBound baseBound decapBound decode raw (state.1.roles.1.2 index) (state.1.primitive, state.2)).1
@@ -104,7 +104,7 @@ theorem target_service
       cases query with
       | finish index raw =>
           simp only [PqxdhInitialLabelPost.target, PqxdhInitialLabelPost.finish, StateT.run, isQueryBoundP_map_iff,
-            PqxdhPhase2SourceSchedulerBounds.classify, if_true]
+            PqxdhPhase2SourceSchedulerBounds.classify, ite_true]
           exact (PqxdhInitialFusedBudgets.owner_service decode raw (state.1.roles.1.2 index)).simulateQ_run_StateT_of_step
             (fun query before => compiler_service attachedVerify primitives count fixed localImpl baseImpl kem secret challenge query before)
             (state.1.primitive, state.2)
@@ -154,14 +154,14 @@ theorem labelled_step (fixed : FixedHkdfSha512NoSaltSource) (selected : PqxdhCor
         (liftM (unifSpec.query coin) : ProbComp _)).IsTotalQueryBound 1
       exact ⟨Nat.zero_lt_succ 0, fun _ => True.intro⟩
   | inr query =>
-      simp only [labelledFull, QueryImpl.add_apply_inr, IsCoin, IsService, if_true, if_false, Nat.zero_add]
+      simp only [labelledFull, QueryImpl.add_apply_inr, IsCoin, IsService, ite_true, ite_false, Nat.zero_add]
       cases query with
       | known root => trivial
       | family message =>
           by_cases same : message = selected
-          · simp only [labelled, same, if_true]
+          · simp only [labelled, same, ite_true]
             trivial
-          · simp only [labelled, same, if_false]
+          · simp only [labelled, same, ite_false]
             simp only [native, StateT.run, bind_pure_comp]
             rw [IsTotalQueryBound, isQueryBound_map_iff]
             exact PqxdhCorrelatedExpandQueryBounds.cached_step ($ᵗ RootOutput) 32

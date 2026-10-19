@@ -68,7 +68,7 @@ theorem source_fresh (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixe
         (RawCtxSelectedChain.interpret (RawCtxFreshChainCut.concreteChain (nextChain parent))) ++
         ((earlier ++ [state.1.1.2.2.input]).map RawCtxFreshChainCut.concreteChain ++ ancestors)) disclosed history := by
   have past : state.1.1.2.2.depth + 1 ≤ (updated address parent state).1.1.2.2.depth := by
-    simp only [updated, advance, matching, if_true, le_refl]
+    simp only [updated, advance, matching, ite_true, le_refl]
   apply PqxdhInitialPublishedEvent.source_checked_fresh source
     (view (productionStream source.crypto) state.1.1.2.1) (fromOutput address parent) (nextChain parent)
     (view (productionStream source.crypto) state.1.1.2.1 (targetAddress (nextChain parent))) separate

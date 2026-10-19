@@ -226,7 +226,7 @@ private theorem pending_step_valid {Send Receive Material Context : Type}
 private theorem map_branch {Input Output : Type} (f : Input → Output) (condition : Prop)
     [Decidable condition] (left right : RustM Input) :
     f <$> (if condition then left else right) = if condition then f <$> left else f <$> right := by
-  by_cases h : condition <;> simp only [h, if_true, if_false]
+  by_cases h : condition <;> simp only [h, ite_true, ite_false]
 
 /-- The complete source skip/target resume preserves rollback state and the opaque next-chain request. -/
 theorem native_resume {Send Receive Material Context : Type}

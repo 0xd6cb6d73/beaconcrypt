@@ -25,7 +25,7 @@ theorem prepare_cached_receive_total {SendChain ReceiveChain Material : Type}
   · exact ⟨_, rfl⟩
   · obtain ⟨logical, hlogical⟩ := control.RatchetState.receive_key_at_total state.control targetSlot
     cases logical <;> simp only [hlogical, core.option.Option.Insts.CoreCmpPartialEqOption.eq,
-      core.U64.Insts.CoreCmpPartialEqU64, bind_tc_ok, Bool.false_eq_true, if_false]
+      core.U64.Insts.CoreCmpPartialEqU64, bind_tc_ok, Bool.false_eq_true, ite_false]
     all_goals first | exact ⟨_, rfl⟩ | skip
     simp only [control.array_index_eq_ok state.receive_slots (UScalar.cast UScalarTy.Usize targetSlot)
       (by scalar_tac), core.option.Option.as_ref, bind_tc_ok, control.RatchetState.receive_cache_len]
@@ -97,7 +97,7 @@ theorem begin_receive_total {Context : Type} (kernel : ConcreteRatchetKernel)
     cases empty <;> by_cases hgap : skipped > control.RATCHET_MAX_GAP <;>
       simp only [hskipped, lift, control.RatchetState.receive_cache_len, hempty, hgap,
         RatchetChain.as_bytes, SymmetricRatchetKdfRequest.new, refined.empty_material_slots,
-        bind_tc_ok, Bool.false_eq_true, if_false, if_true, RustM.ok.injEq, exists_eq']
+        bind_tc_ok, Bool.false_eq_true, ite_false, ite_true, RustM.ok.injEq, exists_eq']
 
 /-- Receive completion always returns normally, including interpreter rejection and malformed prepared states. -/
 theorem ReceiveOpen.finish_total {Context Plaintext : Type} (pending : ReceiveOpen Context)
@@ -120,7 +120,7 @@ theorem ReceiveKdf.resume_total {Context : Type} (pending : ReceiveKdf Context)
     ∃ result, pending.resume response = ok result := by
   by_cases hzero : pending.remaining = 0#u8
   · simp [ReceiveKdf.resume, hzero, receive_rejected]
-  · simp only [ReceiveKdf.resume, hzero, if_false]
+  · simp only [ReceiveKdf.resume, hzero, ite_false]
     split
     · obtain ⟨advanced, hadvanced⟩ := control.advance_receive_target_total pending.working_control
       cases hseq : advanced.sequence <;> simp only [hadvanced, hseq, bind_tc_ok, receive_rejected]
@@ -145,7 +145,7 @@ theorem ReceiveKdf.resume_total {Context : Type} (pending : ReceiveKdf Context)
         (by scalar_tac)
       cases logical <;> simp only [hlogical, core.option.Option.Insts.CoreCmpPartialEqOption.eq,
         core.U64.Insts.CoreCmpPartialEqU64, control.capacity_eq_ok, hnextSlot, bind_tc_ok,
-        Bool.false_eq_true, if_false]
+        Bool.false_eq_true, ite_false]
       all_goals first | exact ⟨_, rfl⟩ | skip
       repeat' first | exact ⟨_, rfl⟩ | split
       all_goals simp only [control.array_index_eq_ok pending.staged_slots (UScalar.cast UScalarTy.Usize slot)

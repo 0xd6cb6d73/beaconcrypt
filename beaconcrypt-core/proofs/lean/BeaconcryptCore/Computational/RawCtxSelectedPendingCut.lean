@@ -112,7 +112,7 @@ theorem response_requested (prior : Prior) (request : RatchetChain) (output : Fu
     RawCtxSelectedParentSource.response prior (fromOutput (requestAddress request) output)
       (nextChain output) (RawCtxChainSend.nativeRequest request) =
       RawCtxKdfRequestTable.fullResponse output := by
-  rw [RawCtxSelectedParentSource.response, lookup, if_pos (show
+  rw [RawCtxSelectedParentSource.response, lookup, ite_eq_left (show
     RawCtxKdfRequestTable.address (RawCtxChainSend.nativeRequest request) =
       (fromOutput (requestAddress request) output).address from rfl), realize_fromOutput]
 

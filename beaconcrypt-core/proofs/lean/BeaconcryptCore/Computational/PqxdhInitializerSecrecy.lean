@@ -1100,7 +1100,7 @@ theorem initializerPostToJointKdfViewImpl_root_query_bound_step
       IsHiddenRootDomainQuery
       (if IsInitializerRootQuery query then 1 else 0) := by
   by_cases hroot : IsInitializerRootQuery query
-  · rw [if_pos hroot]
+  · rw [ite_eq_left hroot]
     rcases query with ccaQuery | viewQuery
     · simp [IsInitializerRootQuery] at hroot
     · simp only [initializerPostToJointKdfViewImpl]
@@ -1109,7 +1109,7 @@ theorem initializerPostToJointKdfViewImpl_root_query_bound_step
           IsHiddenRootDomainQuery 1
       exact (OracleComp.isQueryBoundP_query_iff
         IsHiddenRootDomainQuery (.inr viewQuery) 1).2 (by simp)
-  · rw [if_neg hroot]
+  · rw [ite_eq_right hroot]
     rcases query with ccaQuery | viewQuery
     · simp only [initializerPostToJointKdfViewImpl]
       exact ambientToJointKdfViewImpl_no_root_queries baseImpl
@@ -1132,7 +1132,7 @@ theorem initializerPostToJointKdfViewImpl_symmetric_query_bound_step
       IsHiddenRootSymmetricQuery
       (if IsInitializerSymmetricQuery query then 1 else 0) := by
   by_cases hsym : IsInitializerSymmetricQuery query
-  · rw [if_pos hsym]
+  · rw [ite_eq_left hsym]
     rcases query with ccaQuery | viewQuery
     · simp [IsInitializerSymmetricQuery] at hsym
     · simp only [initializerPostToJointKdfViewImpl]
@@ -1141,7 +1141,7 @@ theorem initializerPostToJointKdfViewImpl_symmetric_query_bound_step
           IsHiddenRootSymmetricQuery 1
       exact (OracleComp.isQueryBoundP_query_iff
         IsHiddenRootSymmetricQuery (.inr viewQuery) 1).2 (by simp)
-  · rw [if_neg hsym]
+  · rw [ite_eq_right hsym]
     rcases query with ccaQuery | viewQuery
     · simp only [initializerPostToJointKdfViewImpl]
       exact ambientToJointKdfViewImpl_no_symmetric_queries baseImpl
@@ -1220,7 +1220,7 @@ structure InitializerExplicitReductionBounds
       IsJointKdfViewUniformQuery (qKemPost + qUPost)
 
 /-- Derive the stated typed KDF-domain upper bounds from the source bounds; only the uniform ambient split remains an explicit interpretation budget. -/
-def InitializerExplicitReductionBounds.toKdfBounds
+theorem InitializerExplicitReductionBounds.toKdfBounds
     {qKemAmbient qKemPrefix qKemPost qUPre qBPre qDPre
       qUPost qBPost qDPost qRoot qSym : ℕ}
     {source : FixedHkdfSha512NoSaltSource}

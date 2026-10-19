@@ -61,7 +61,7 @@ theorem decoder_pack (read : RawCtxReceive.FrameDecoder) (value : Envelope)
     decoder read (pack value) = some (RawCtxKeyFreeDecoder.target value.nonce frame.sequence frame
       value.ad.toList slices parsed value.ad.2) := by
   simp only [decoder, decodeFrame, unpack_pack, Option.bind_eq_bind, Option.bind_some, nonempty,
-    Bool.false_eq_true, if_false, decoded]
+    Bool.false_eq_true, ite_false, decoded]
   split
   · simp_all
   · rename_i other same
@@ -77,7 +77,7 @@ theorem decoder_unframed (read : RawCtxReceive.FrameDecoder) (bytes : Pqxdh.Byte
 /-- The original source empty-input rejection survives the private framing. -/
 theorem decoder_empty (read : RawCtxReceive.FrameDecoder) (value : Envelope)
     (empty : value.raw.isEmpty = true) : decoder read (pack value) = none := by
-  simp only [decoder, decodeFrame, unpack_pack, Option.bind_eq_bind, Option.bind_some, empty, if_true]
+  simp only [decoder, decodeFrame, unpack_pack, Option.bind_eq_bind, Option.bind_some, empty, ite_true]
 
 /-- Malformed original frame bytes reject after exact removal of the private metadata. -/
 theorem decoder_malformed (read : RawCtxReceive.FrameDecoder) (value : Envelope)

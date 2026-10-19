@@ -24,7 +24,7 @@ theorem resume_small {Material Context : Type} (pending : Kdf Material Context)
   by_cases hzero : pending.remaining = 0#u8
   · simp [resume, hzero, rejected, cost]
   · have hone : pending.remaining = 1#u8 := by scalar_tac
-    simp only [resume, hone, if_true]
+    simp only [resume, hone, ite_true]
     obtain ⟨advanced, hadvanced⟩ := control.advance_receive_target_total pending.working_control
     cases hseq : advanced.sequence <;> simp only [hadvanced, hseq, bind_tc_ok, rejected]
     all_goals first | exact ⟨_, rfl, rfl⟩ | skip
@@ -71,7 +71,7 @@ theorem program_cost {Material Context Plaintext : Type} (effect : Effect Materi
       simp [cost]
     | kdfRequested pending =>
       rw [program, isQueryBoundP_query_bind_iff]
-      simp only [Sum.isLeft, not_true_eq_false, false_or, if_true]
+      simp only [Sum.isLeft, not_true_eq_false, false_or, ite_true]
       refine ⟨by simp [cost], fun reply => ?_⟩
       apply (ih _ (hdepth ▸ normalResume_rank pending reply) _ rfl).mono
       have decrease := resume_cost pending reply
@@ -126,7 +126,7 @@ theorem receive_callback {Context Plaintext : Type} (parent : Option Entry) (tar
     have bound := derive_forward (RawCtxInterpretedOpening.Opening RatchetChain RatchetChain Slot Context →ₒ core.option.Option Plaintext)
       parent target nonce next request selected
     cases selected <;> simpa only [Sum.isLeft, Bool.false_eq_true, Bool.true_eq_false,
-      if_true, if_false] using bound
+      ite_true, ite_false] using bound
   | inr pending => exact (isQueryBoundP_query_iff _ _ _).mpr (by cases selected <;> simp)
 
 /-- A send callback preserves the explicit prior-lookup or sealing class with at most one request in that class. -/
@@ -143,7 +143,7 @@ theorem send_callback {Context Output : Type} (parent : Option Entry) (target : 
       (fun service => service.isLeft = selected) (if true = selected then 1 else 0)
     have bound := derive_forward (RawCtxInterpretedSend.Seal Slot Context →ₒ Option Output)
       parent target nonce next request selected
-    cases selected <;> simpa only [Sum.isLeft, Bool.false_eq_true, Bool.true_eq_false, if_true, if_false] using bound
+    cases selected <;> simpa only [Sum.isLeft, Bool.false_eq_true, Bool.true_eq_false, ite_true, ite_false] using bound
   | inr pending => exact (isQueryBoundP_query_iff _ _ _).mpr (by cases selected <;> simp)
 
 /-- The actual complete selected-material receive costs at most 51 prior-table lookups, counting repeated fallback requests. -/

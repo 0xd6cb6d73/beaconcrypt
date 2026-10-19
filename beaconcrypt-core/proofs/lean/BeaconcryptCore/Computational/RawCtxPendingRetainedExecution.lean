@@ -74,7 +74,7 @@ theorem parent_resume {M P I D K : Type} (source : FixedHkdfSha512NoSaltSource)
         ((RawCtxSelectedFamilyContext.frame sender route decode context).2
           (RawCtxSelectedFamilyNativeContext.reply sender route decode context output))).run state.1.1 := by
   have past : depth + 1 ≤ (RawCtxLoggedParentResponse.updated context output state).1.2.2.depth := by
-    simp only [RawCtxLoggedParentResponse.updated, advance_depth, selected, if_true, sameDepth]
+    simp only [RawCtxLoggedParentResponse.updated, advance_depth, selected, ite_true, sameDepth]
     exact Nat.le_refl _
   have actual := logged_retained source writer (depth + 1)
     ((RawCtxSelectedFamilyContext.frame sender route decode context).2

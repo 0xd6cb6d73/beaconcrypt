@@ -79,16 +79,16 @@ theorem RelativeFutureKdf.resume_more
   }
   refine ⟨next, ?_, ?_⟩
   · simp only [ReceiveKdf.resume,
-      if_neg (show pending.remaining ≠ 0#u8 by scalar_tac),
-      if_neg (show pending.remaining ≠ 1#u8 by scalar_tac),
+      ite_eq_right (show pending.remaining ≠ 0#u8 by scalar_tac),
+      ite_eq_right (show pending.remaining ≠ 1#u8 by scalar_tac),
       hadvanced, hadvancedSequence, hadvancedSlot, lift, hget,
       core.option.Option.Insts.CoreCmpPartialEqOption.eq, core.U64.Insts.CoreCmpPartialEqU64,
       bind_tc_ok, capacity_eq_ok]
-    simp only [beq_self_eq_true, if_true,
-      if_neg (show ¬UScalar.cast UScalarTy.Usize pending.working_control.receive_cache.len ≥ UScalar.cast UScalarTy.Usize 50#u64 by scalar_tac),
-      hsum, hnextSlot, hindex, core.option.Option.is_some, Std.core.option.Option.is_some,
-      bind_tc_ok, if_neg (show ¬advanced.state.receive_sequence ≥ pending.target by scalar_tac)]
-    simp only [core.option.Option.None, Option.isSome_none, Bool.false_eq_true, if_false]
+    simp only [beq_self_eq_true, ite_true,
+      ite_eq_right (show ¬UScalar.cast UScalarTy.Usize pending.working_control.receive_cache.len ≥ UScalar.cast UScalarTy.Usize 50#u64 by scalar_tac),
+      hsum, hnextSlot, hindex, core.option.Option.is_some,
+      bind_tc_ok, ite_eq_right (show ¬advanced.state.receive_sequence ≥ pending.target by scalar_tac)]
+    simp only [Bool.false_eq_true, ite_false]
     rw [hresponse]
     simp only [bind_tc_ok, hskippedNext, hremainingNext, RatchetChain.as_bytes, SymmetricRatchetKdfRequest.new]
     rw [array_update_eq_ok _ _ _ (by scalar_tac)]
@@ -125,9 +125,9 @@ theorem relative_begin_receive_future
   }
   refine ⟨pending, ?_, ?_⟩
   · simp only [begin_receive, hplan, bind_tc_ok,
-      if_neg (show derivations ≠ 0#u64 by scalar_tac),
-      hskipped, if_neg (show ¬skipped > RATCHET_MAX_GAP by scalar_tac),
-      lift, RatchetState.receive_cache_len, hempty, if_true, RatchetChain.as_bytes,
+      ite_eq_right (show derivations ≠ 0#u64 by scalar_tac),
+      hskipped, ite_eq_right (show ¬skipped > RATCHET_MAX_GAP by scalar_tac),
+      lift, RatchetState.receive_cache_len, hempty, ite_true, RatchetChain.as_bytes,
       SymmetricRatchetKdfRequest.new, hslots]
     rfl
   · refine ⟨h, rfl, rfl, rfl, hfuture, hcapacity, by omega, rfl, rfl,
@@ -265,14 +265,14 @@ theorem RelativeFutureKdf.resume_last
     simp only [transaction, hsteps, Ratchet.chainAt, Function.iterate_succ_apply']
   refine ⟨{ entry, context, prepared := ratchet.refined.PreparedReceive.PreparedReceiveFutureCase transaction },
     ?_, ⟨transaction, rfl, rfl, rfl, htransaction⟩⟩
-  simp only [ReceiveKdf.resume, if_neg (show pending.remaining ≠ 0#u8 by scalar_tac),
-    if_pos (show pending.remaining = 1#u8 by scalar_tac), hadvanced, hadvresult,
-    hadvtarget, h.targetEq, if_true, bind_tc_ok]
+  simp only [ReceiveKdf.resume, ite_eq_right (show pending.remaining ≠ 0#u8 by scalar_tac),
+    ite_eq_left (show pending.remaining = 1#u8 by scalar_tac), hadvanced, hadvresult,
+    hadvtarget, h.targetEq, ite_true, bind_tc_ok]
   rw [hresponse]
   simp only [bind_tc_ok, h.entryEq, h.contextEq]
   have hvalid := htransaction.valid cr entry target transaction
   dsimp only [transaction] at hvalid
-  simp only [hvalid, bind_tc_ok, if_true, transaction]
+  simp only [hvalid, bind_tc_ok, ite_true, transaction]
 
 
 /-- The remaining counter is a constructive bound for the exact extracted KDF execution. -/
@@ -422,12 +422,12 @@ theorem RelativeFuturePending.publication
     targetAbsent := by simpa only [hcontrol] using h.target_absent cr entry target pending }, hcontrol⟩
   · intro i hi
     rw [hslots _ (by have hc := h.capacity; omega),
-      if_neg (by simp only [h.firstSlot]; omega)]
+      ite_eq_right (by simp only [h.firstSlot]; omega)]
   · intro j hj
     obtain ⟨cached, hcached, hsequence, hmaterial⟩ := h.staging.staged j hj
     refine ⟨cached, ?_, hsequence, hmaterial⟩
     rw [hslots _ (by have hc := h.capacity; omega),
-      if_pos (by simp only [h.firstSlot, h.skipped]; omega)]
+      ite_eq_left (by simp only [h.firstSlot, h.skipped]; omega)]
     exact hcached
 
 /-- Any successful callback publishes the exact structurally valid relative future result. -/

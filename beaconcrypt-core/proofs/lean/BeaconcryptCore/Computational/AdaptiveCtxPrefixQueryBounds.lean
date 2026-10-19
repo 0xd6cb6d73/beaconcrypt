@@ -54,9 +54,9 @@ theorem sourceCtx_uniform (routed : Bool) (c : Pqxdh.Crypto) (key : CtxKey)
           splitRandom_uniform key input state.ctx.cache
       | inr input => exact keyFreeSeal_uniform c key input state.ctx
   cases routed with
-  | false => simpa only [Bool.false_eq_true, if_false, independentCtx, bind_pure_comp,
+  | false => simpa only [Bool.false_eq_true, ite_false, independentCtx, bind_pure_comp,
       OracleComp.IsTotalQueryBound, OracleComp.isQueryBound_map_iff] using baseBound false
-  | true => simpa only [if_true, splitCtx, bind_pure_comp,
+  | true => simpa only [ite_true, splitCtx, bind_pure_comp,
       OracleComp.IsTotalQueryBound, OracleComp.isQueryBound_map_iff] using baseBound true
 
 /-- Every well-formed raw attempt can incur one 64-byte cache miss, including commitment/opening rejection. -/
@@ -130,11 +130,11 @@ theorem run_uniform_pair_bound {State Result : Type}
     (fun query budget allowed => by
       by_cases coins : SourceUniform query
       · simp only [SourceWork, coins, not_true_eq_false, false_or, not_false_eq_true,
-          true_or, if_true, if_false] at allowed ⊢
+          true_or, ite_true, ite_false] at allowed ⊢
         change 1 + (budget.1 - 1 + 64 * budget.2) = budget.1 + 64 * budget.2
         omega
       · simp only [SourceWork, coins, not_true_eq_false, false_or, not_false_eq_true,
-          true_or, if_true, if_false] at allowed ⊢
+          true_or, ite_true, ite_false] at allowed ⊢
         change 64 + (budget.1 + 64 * (budget.2 - 1)) = budget.1 + 64 * budget.2
         omega)
     state
@@ -165,7 +165,7 @@ theorem retainedRoutedGame_uniform_bound (decode : RawDecoder) (c : Pqxdh.Crypto
   unfold retainedRoutedGame
   apply OracleComp.isTotalQueryBound_bind (CtxComputationalSecurity.uniformFixedBytes_isTotalQueryBound 32)
   intro key
-  simpa only [splitGame, sourceImpl, if_true, bind_pure_comp, OracleComp.IsTotalQueryBound, OracleComp.isQueryBound_map_iff] using
+  simpa only [splitGame, sourceImpl, ite_true, bind_pure_comp, OracleComp.IsTotalQueryBound, OracleComp.isQueryBound_map_iff] using
     run_uniform_pair_bound (sourceImpl true decode c key) (sourceImpl_uniform_step true decode c key)
       adversary qCoins (qHash + qSeal + qRaw) coinBound
       (sourceWork_bound adversary qHash qSeal qRaw hashBound sealBound rawBound) initialState

@@ -102,7 +102,7 @@ theorem cachedGuess_bound {Result : Type} {bound : ℕ} (decode : RawDecoder)
       simp only [bind_pure_comp, probEvent_map, Function.comp_def]
       apply probEvent_eq_one
       exact ⟨by simp, fun tail _ => cachedGuess_implies_completed selector result tail won⟩
-    simp only [won, if_pos, chance, mul_one]
+    simp only [won, ite_eq_left, chance, mul_one]
     exact le_rfl
   · simp only [won]
     exact zero_le
@@ -234,16 +234,16 @@ theorem firstDiscrepancy_le_indexed_sum {Result : Type} (decode : RawDecoder) (c
       apply AdaptiveRawNonceAead.probEvent_bind_le_sum
       intro result supported
       by_cases bad : RawBad decode raw result.2
-      · rw [if_pos bad]
+      · rw [ite_eq_left bad]
         have current : Pr[CachedGuess (oneSlot decode) | (pure (some raw, result.2) : ProbComp _)] = 1 := by
-          simp only [probEvent_pure, oneSlot_some, bad, if_true]
+          simp only [probEvent_pure, oneSlot_some, bad, ite_true]
         calc
           Pr[fun flag => flag = true | (pure true : ProbComp Bool)] = 1 := by simp
           _ = Pr[CachedGuess (oneSlot decode) | (pure (some raw, result.2) : ProbComp _)] := current.symm
           _ ≤ _ := by
             rw [Finset.sum_range_succ']
             exact le_add_of_nonneg_left zero_le
-      · rw [if_neg bad]
+      · rw [ite_eq_right bad]
         have restBound : (next result.1).IsQueryBoundP AdaptiveCtxReceive.IsRawQuery remaining := by
           simpa only [ite_eq_left (show AdaptiveCtxReceive.IsRawQuery (.inr raw) from trivial),
             Nat.succ_sub_one] using bounded.2 result.1

@@ -50,7 +50,7 @@ theorem ccaCoins_uniform {Result : Type} (client : ProbComp Result) (q : Nat)
       rw [isQueryBoundP_query_bind_iff]
       refine ⟨Or.inr bound.1, ?_⟩
       intro answer
-      simpa only [IsMlKemUniformQuery, if_true] using ih answer _ (bound.2 answer)
+      simpa only [IsMlKemUniformQuery, ite_true] using ih answer _ (bound.2 answer)
 
 set_option backward.isDefEq.respectTransparency false in
 /-- Source interpreter coins issue no other CCA resource class. -/
@@ -68,7 +68,7 @@ theorem ccaCoins_excluded {Result : Type} (client : ProbComp Result)
       rw [isQueryBoundP_query_bind_iff]
       refine ⟨Or.inl (excluded coin), ?_⟩
       intro answer
-      simpa only [excluded coin, if_false, ccaCoins] using ih answer
+      simpa only [excluded coin, ite_false, ccaCoins] using ih answer
 
 /-- The selector's direct ordinary CCA resource remains distinct from every identity source service. -/
 def SelectorCCA (predicate : (MlKemCCAOracleSpec baseSpec).Domain → Prop) :
@@ -91,11 +91,11 @@ theorem borrowed_uniform_step
        (if SelectorCCA (baseSpec := baseSpec) IsMlKemUniformQuery query then 1 else 0)) := by
   cases query with
   | inl request =>
-      simpa only [borrowedSelector, StateT.run, SelectorSource, SelectorCCA, if_false, Nat.add_zero] using
+      simpa only [borrowedSelector, StateT.run, SelectorSource, SelectorCCA, ite_false, Nat.add_zero] using
         ccaCoins_uniform ((bareImpl attachedVerify primitives count request).run state) _
           (bare_uniform_step attachedVerify primitives count request state)
   | inr request =>
-      simp only [borrowedSelector, StateT.run, SelectorSource, SelectorCCA, if_false, Nat.zero_add,
+      simp only [borrowedSelector, StateT.run, SelectorSource, SelectorCCA, ite_false, Nat.zero_add,
         bind_pure_comp, isQueryBoundP_map_iff]
       exact (isQueryBoundP_query_iff (spec := MlKemCCAOracleSpec baseSpec)
         (p := IsMlKemUniformQuery) request _).2 (by split_ifs <;> simp_all)
@@ -136,7 +136,7 @@ theorem borrowed_class_step
       (if SelectorCCA (baseSpec := baseSpec) predicate query then 1 else 0) := by
   cases query with
   | inl request =>
-      simpa only [borrowedSelector, StateT.run, SelectorCCA, if_false] using
+      simpa only [borrowedSelector, StateT.run, SelectorCCA, ite_false] using
         ccaCoins_excluded ((bareImpl attachedVerify primitives count request).run state) predicate excluded
   | inr request =>
       simp only [borrowedSelector, StateT.run, SelectorCCA, bind_pure_comp, isQueryBoundP_map_iff]
@@ -170,7 +170,7 @@ theorem postCoins_uniform {Result : Type} (client : ProbComp Result) (q : Nat)
       rw [isQueryBoundP_query_bind_iff]
       refine ⟨Or.inr bound.1, ?_⟩
       intro answer
-      simpa only [IsInitializerUniformQuery, IsMlKemUniformQuery, if_true] using ih answer _ (bound.2 answer)
+      simpa only [IsInitializerUniformQuery, IsMlKemUniformQuery, ite_true] using ih answer _ (bound.2 answer)
 
 set_option backward.isDefEq.respectTransparency false in
 /-- Source interpreter coins issue no other initializer resource class. -/
@@ -188,7 +188,7 @@ theorem postCoins_excluded {Result : Type} (client : ProbComp Result)
       rw [isQueryBoundP_query_bind_iff]
       refine ⟨Or.inl (excluded coin), ?_⟩
       intro answer
-      simpa only [excluded coin, if_false, postCoins] using ih answer
+      simpa only [excluded coin, ite_false, postCoins] using ih answer
 
 /-- Original source classes in the post-root protocol interface. -/
 def PostSource (predicate : SourceSpec.Domain → Prop) : (PostSourceSpec baseSpec).Domain → Prop
@@ -219,11 +219,11 @@ theorem postSource_uniform_step
        (if PostDirect (baseSpec := baseSpec) IsInitializerUniformQuery query then 1 else 0)) := by
   cases query with
   | inl request =>
-      simpa only [postSourceImpl, StateT.run, PostSource, PostDirect, if_false, Nat.add_zero] using
+      simpa only [postSourceImpl, StateT.run, PostSource, PostDirect, ite_false, Nat.add_zero] using
         postCoins_uniform ((bareImpl attachedVerify primitives count request).run state) _
           (bare_uniform_step attachedVerify primitives count request state)
   | inr request =>
-      simp only [postSourceImpl, StateT.run, PostSource, PostDirect, if_false, Nat.zero_add,
+      simp only [postSourceImpl, StateT.run, PostSource, PostDirect, ite_false, Nat.zero_add,
         bind_pure_comp, isQueryBoundP_map_iff]
       exact (isQueryBoundP_query_iff (spec := InitializerPostSpec baseSpec)
         (p := IsInitializerUniformQuery) request _).2 (by split_ifs <;> simp_all)
@@ -264,7 +264,7 @@ theorem postSource_class_step
       (if PostDirect (baseSpec := baseSpec) predicate query then 1 else 0) := by
   cases query with
   | inl request =>
-      simpa only [postSourceImpl, StateT.run, PostDirect, if_false] using
+      simpa only [postSourceImpl, StateT.run, PostDirect, ite_false] using
         postCoins_excluded ((bareImpl attachedVerify primitives count request).run state) predicate excluded
   | inr request =>
       simp only [postSourceImpl, StateT.run, PostDirect, bind_pure_comp, isQueryBoundP_map_iff]
@@ -455,13 +455,13 @@ theorem blockChallenge_bound {Result : Type} (challenge : MlKem768Ciphertext)
         split_ifs <;> simp_all
     | inr ciphertext =>
         by_cases same : ciphertext = challenge
-        · simp only [blockChallenge, same, if_true, isQueryBoundP_pure]
-        · simp only [blockChallenge, same, if_false]
+        · simp only [blockChallenge, same, ite_true, isQueryBoundP_pure]
+        · simp only [blockChallenge, same, ite_false]
           rw [isQueryBoundP_query_iff]
           split_ifs <;> simp_all
   exact isQueryBoundP_simulateQ_of_step_noUniform bounded
-    (fun query hit => by simpa only [hit, if_true] using step query)
-    (fun query miss => by simpa only [miss, if_false] using step query)
+    (fun query hit => by simpa only [hit, ite_true] using step query)
+    (fun query miss => by simpa only [miss, ite_false] using step query)
 
 /-- The actual target encapsulation continuation retains all observer work and counts its logical blocked requests before suppression. -/
 theorem targetAfterEncapsulation_bound

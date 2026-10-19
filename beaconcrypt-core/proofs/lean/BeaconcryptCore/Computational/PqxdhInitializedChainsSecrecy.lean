@@ -539,6 +539,8 @@ structure InitializedChainsExplicitReductionBounds
         ⟨sampled.publicKey, sampled.ciphertext, publicContext⟩ known root)).IsQueryBoundP
       IsJointKdfViewUniformQuery (qKemPost + qUPost)
 
+-- Kept as `def`: proofs/check-inventory.sh pins it as a reviewed definition.
+set_option linter.defProp false in
 /-- Package the observer's unchanged caps and its two added symmetric queries for direct use by HB-66. -/
 def InitializedChainsExplicitReductionBounds.toInitializerBounds
     {qKemAmbient qKemPrefix qKemPost qUPre qBPre qDPre

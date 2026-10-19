@@ -71,12 +71,12 @@ theorem ctxSealOracle_eq_directSample_of_good (c : Pqxdh.Crypto) (key : CtxKey)
   by_cases hused : input.nonce ∈ state.usedNonces
   · change (if input.nonce ∈ state.usedNonces then pure (none, state) else _) =
       (if input.nonce ∈ state.usedNonces then pure (none, state) else _)
-    rw [if_pos hused, if_pos hused]
+    rw [ite_eq_left hused, ite_eq_left hused]
   · have hfresh := ctxSeal_query_fresh_of_good_unused c key input state
       hinvariant hflag hused
     change (if input.nonce ∈ state.usedNonces then pure (none, state) else _) =
       (if input.nonce ∈ state.usedNonces then pure (none, state) else _)
-    rw [if_neg hused, if_neg hused]
+    rw [ite_eq_right hused, ite_eq_right hused]
     rw [ctxRandomOracle,
       QueryImpl.withCaching_run_none uniformSampleImpl hfresh]
     rw [bind_map_left]

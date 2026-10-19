@@ -70,7 +70,7 @@ theorem ValidRefined.future_publication {SendChain ReceiveChain Material : Type}
   by_cases hold : i < state.control.receive_cache.len.val
   · obtain ⟨cached, hcached, hsequence⟩ := h.slots.live h.control.capacity i hold
     have hout : published.receive_slots.val[i]! = core.option.Option.Some cached := by
-      rw [hslots i hi, if_neg (by simp only [hfirst]; omega)]
+      rw [hslots i hi, ite_eq_right (by simp only [hfirst]; omega)]
       exact hcached
     simp only [hout, hpublishedControl]
     exact ⟨by rw [hlength, hfirst]; omega, hsequence.trans (hprefix i hold).symm⟩
@@ -80,12 +80,12 @@ theorem ValidRefined.future_publication {SendChain ReceiveChain Material : Type}
       have hij : pending.first_slot.val + j = i := by dsimp only [j]; rw [hfirst]; omega
       obtain ⟨cached, hcached, hsequence⟩ := hstaged j hj
       have hout : published.receive_slots.val[i]! = core.option.Option.Some cached := by
-        rw [hslots i hi, if_pos (by rw [hfirst] at *; omega), ← hij]
+        rw [hslots i hi, ite_eq_left (by rw [hfirst] at *; omega), ← hij]
         exact hcached
       simp only [hout, hpublishedControl]
       exact ⟨hlive, by simpa only [hij] using hsequence⟩
     · have hout : published.receive_slots.val[i]! = core.option.Option.None := by
-        rw [hslots i hi, if_neg (by omega)]
+        rw [hslots i hi, ite_eq_right (by omega)]
         exact h.slots.empty i (by omega) hi
       simp only [hout, hpublishedControl]
       omega

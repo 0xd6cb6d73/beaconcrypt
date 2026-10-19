@@ -77,7 +77,7 @@ theorem agree_good {ι State : Type} {spec : OracleSpec ι}
       exact Bool.false_ne_true (hit_marked implementation record target query (state, false)
         hit (reply, (next, false)) supported)
     rw [zero, zero]
-  · simp only [marked, StateT.run, RawCtxSelectedQueryTrace.recorded, routed, hit, if_false]
+  · simp only [marked, StateT.run, RawCtxSelectedQueryTrace.recorded, routed, hit, ite_false]
 
 /-- The full adaptive result, primitive state and input history differ by at most the first matching-input event in the original interpreter. -/
 theorem marked_distance {ι State Result : Type} {spec : OracleSpec ι}

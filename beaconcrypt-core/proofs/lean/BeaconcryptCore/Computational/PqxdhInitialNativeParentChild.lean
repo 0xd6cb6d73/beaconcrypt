@@ -28,13 +28,13 @@ theorem child_view (source : FixedHkdfSha512NoSaltSource) (state : State A N C)
   funext request
   by_cases child : request = targetAddress (nextChain parent)
   · subst request
-    simp only [view, QueryCache.cacheQuery_self, Option.getD_some, lookup, fromOutput, separate, if_false, privatePatch, if_true]
+    simp only [view, QueryCache.cacheQuery_self, Option.getD_some, lookup, fromOutput, separate, ite_false, privatePatch, ite_true]
   · rw [show view (productionStream source.crypto)
         ((updated address parent state).1.1.2.1.cacheQuery (targetAddress (nextChain parent)) output) request =
         view (productionStream source.crypto) (updated address parent state).1.1.2.1 request by
           simp only [view, QueryCache.cacheQuery_of_ne (spec := JointKdfRO) _ output child]]
     rw [PqxdhInitialNativeParentContinuation.updated_view]
-    simp only [lookup, privatePatch, if_neg child]
+    simp only [lookup, privatePatch, ite_eq_right child]
 
 section Interpreter
 variable (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)

@@ -48,7 +48,7 @@ theorem restore_receive_key_with_slot_ahead (r : RatchetRestore) (sequence : Std
     (h : r.state.receive_sequence.val < sequence.val) :
     restore_receive_key_with_slot r sequence = ok core.option.Option.None := by
   simp only [restore_receive_key_with_slot]
-  rw [if_neg (by scalar_tac), if_pos (by scalar_tac)]
+  rw [ite_eq_right (by scalar_tac), ite_eq_left (by scalar_tac)]
 
 /-- The restore scan is strictly increasing: a sequence number that does not exceed the
 one restored last is refused. -/
@@ -57,7 +57,7 @@ theorem restore_receive_key_with_slot_not_increasing (r : RatchetRestore) (seque
     (h : sequence.val ≤ r.last_sequence.val) :
     restore_receive_key_with_slot r sequence = ok core.option.Option.None := by
   simp only [restore_receive_key_with_slot]
-  rw [if_neg (by scalar_tac), if_neg (by scalar_tac), if_pos (by scalar_tac)]
+  rw [ite_eq_right (by scalar_tac), ite_eq_right (by scalar_tac), ite_eq_left (by scalar_tac)]
 
 /-- **The bound of 50 survives a restore.**  Once 50 skipped keys have been rebuilt, no
 further key is accepted. -/
@@ -163,14 +163,14 @@ theorem advance_send_for_peer_wf (requested_peer : Std.U64) (peer : PeerRatchetS
           ok { peer := { peer with ratchet := peer.ratchet },
                sequence := core.option.Option.None,
                key := { sequence := 0#u64, available := false } } := by
-        simp only [advance_send_for_peer, if_pos h, advance_send_max _ hmax, bind_tc_ok,
+        simp only [advance_send_for_peer, ite_eq_left h, advance_send_max _ hmax, bind_tc_ok,
           replace_ratchet_for_peer_match _ _ _ h]
       exact ⟨_, heq, rfl, rfl, rfl, hpeer⟩
     · obtain ⟨adv, hadv, -, hrs, hrc, -, -⟩ := advance_send_ok peer.ratchet hmax
       have heq : advance_send_for_peer requested_peer peer =
           ok { peer := { peer with ratchet := adv.state },
                sequence := adv.sequence, key := adv.key } := by
-        simp only [advance_send_for_peer, if_pos h, hadv, bind_tc_ok,
+        simp only [advance_send_for_peer, ite_eq_left h, hadv, bind_tc_ok,
           replace_ratchet_for_peer_match _ _ _ h]
       refine ⟨_, heq, rfl, hrc, hrs, ?_⟩
       simp only [RatchetState.Wf] at hpeer ⊢

@@ -75,7 +75,7 @@ theorem finish_receive_with_removal_preserves_other_physical_slot
       ∀ i, i < result.state.receive_cache.len.val → i ≠ slot.val →
         result.state.receive_cache.entries.val[i]! = state.receive_cache.entries.val[i]! := by
   obtain ⟨result, hresult, _, _, _, _, _, hentries⟩ := finish_receive_consumed state sequence slot hvalid.capacity hlive hentry
-  exact ⟨result, hresult, fun i hi hne => by simpa only [if_neg hne] using hentries i hi⟩
+  exact ⟨result, hresult, fun i hi hne => by simpa only [ite_eq_right hne] using hentries i hi⟩
 
 end beaconcrypt_core.ratchet.control
 
@@ -114,7 +114,7 @@ theorem begin_receive_cached_result_shape {Context : Type}
     cases empty <;> by_cases hgap : skipped > control.RATCHET_MAX_GAP <;>
       simp only [hskipped, lift, control.RatchetState.receive_cache_len, hempty, hgap,
         RatchetChain.as_bytes, SymmetricRatchetKdfRequest.new, refined.empty_material_slots,
-        bind_tc_ok, Bool.false_eq_true, if_false, if_true, RustM.ok.injEq, reduceCtorEq] at hbegin
+        bind_tc_ok, Bool.false_eq_true, ite_false, ite_true, RustM.ok.injEq, reduceCtorEq] at hbegin
 
 /-- A cached helper rejection returns the original complete entry through the synchronous driver. -/
 theorem receiveNext_cached_rejected {Context Output : Type}
@@ -125,7 +125,7 @@ theorem receiveNext_cached_rejected {Context Output : Type}
     begin_receive kernel target context = ok (.ReceiveRejected kernel context) ∧
       receiveNext execute kernel target context openReply = ok (kernel, core.option.Option.None) := by
   have hbegin : begin_receive kernel target context = ok (.ReceiveRejected kernel context) := by
-    simp only [begin_receive, hplan, hprepare, bind_tc_ok, if_true, receive_rejected]
+    simp only [begin_receive, hplan, hprepare, bind_tc_ok, ite_true, receive_rejected]
   exact ⟨hbegin, (show ReceiveRun execute openReply kernel target context kernel core.option.Option.None from
     ⟨_, hbegin, .rejected kernel context⟩).driver_eq⟩
 

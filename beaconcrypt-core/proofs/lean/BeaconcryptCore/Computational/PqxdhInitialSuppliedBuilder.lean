@@ -23,12 +23,12 @@ theorem candidate_supplied {Metadata PeerMetadata Consumed : Type}
   intro valid
   cases valid
   · simp
-  · simp only [Bool.not_true, Bool.false_eq_true, if_false, simulateQ_bind]
+  · simp only [Bool.not_true, Bool.false_eq_true, ite_false, simulateQ_bind]
     apply bind_congr
     intro reserved
     cases reserved
     · simp
-    · simp only [Bool.not_true, Bool.false_eq_true, if_false, simulateQ_bind,
+    · simp only [Bool.not_true, Bool.false_eq_true, ite_false, simulateQ_bind,
         kernel_supplied, pure_bind, PqxdhInitialReplyErasure.original_program]
       rfl
 

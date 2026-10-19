@@ -115,9 +115,9 @@ theorem post_real
         (simulateQ_spec_query (publicImpl kem secretKey challenge) request).symm
   | inr request =>
       by_cases same : request.ciphertext = challenge
-      · simp only [QueryImpl.compose, post, same, if_true, simulateQ_map, root_real source hmac correct,
+      · simp only [QueryImpl.compose, post, same, ite_true, simulateQ_map, root_real source hmac correct,
           map_pure, suppliedImpl, route, pure_bind, simulateQ_pure, Option.map_some]
-      · simp only [QueryImpl.compose, post, same, if_false, simulateQ_bind, coins_real, simulateQ_pure,
+      · simp only [QueryImpl.compose, post, same, ite_false, simulateQ_bind, coins_real, simulateQ_pure,
           suppliedImpl, route]
         have reply := congrArg (simulateQ (kemAmbientImpl baseImpl))
           ((simulateQ_spec_query (publicImpl kem secretKey challenge) (.inr request.ciphertext)).trans
@@ -232,7 +232,7 @@ theorem correlated_advantage_eq
       (randomMain source kem (runtimeOfImpl (kemAmbientImpl baseImpl)) protocol)).boolDistAdvantage
       (randomGame (reduction source hmac baseImpl kem protocol)) =
       advantage hmac (reduction source hmac baseImpl kem protocol) := by
-  simp only [advantage, ProbComp.boolDistAdvantage, probOutput_def, real_eq_correlated source hmac correct]
+  simp only [advantage, ProbComp.boolDistAdvantage, real_eq_correlated source hmac correct]
 
 theorem familyInput_message_injective (secret : MlKemSharedSecret) :
     Function.Injective (fun message => familyInput message secret) := by

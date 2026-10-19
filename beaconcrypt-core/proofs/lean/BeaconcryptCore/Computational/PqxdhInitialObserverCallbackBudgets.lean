@@ -125,10 +125,10 @@ theorem work_caps
         (if PqxdhPhase2SharedBounds.IsOwnerDecapsulation query then 1 else 0) := by
     refine ⟨?_, ?_, ?_⟩
     · simpa only [PqxdhPhase2PostSchedulerBounds.selected, PqxdhPhase2PostSchedulerBounds.perCall,
-        PqxdhPhase2PostSchedulerBounds.predicate, PqxdhPhase2PostSchedulerBounds.publicPredicate, if_true] using
+        PqxdhPhase2PostSchedulerBounds.predicate, PqxdhPhase2PostSchedulerBounds.publicPredicate, ite_true] using
         PqxdhPhase2PostSchedulerBounds.handles_step attachedVerify primitives count fixed localImpl qLocal localBound challenge .uniform query state
     · simpa only [PqxdhPhase2PostSchedulerBounds.selected, PqxdhPhase2PostSchedulerBounds.predicate,
-        PqxdhPhase2PostSchedulerBounds.publicPredicate, if_false] using
+        PqxdhPhase2PostSchedulerBounds.publicPredicate, ite_false] using
         PqxdhPhase2PostSchedulerBounds.handles_step attachedVerify primitives count fixed localImpl qLocal localBound challenge .base query state
     · simpa only [PqxdhPhase2PostSchedulerBounds.selected, PqxdhPhase2PostSchedulerBounds.perCall,
         PqxdhPhase2PostSchedulerBounds.predicate, PqxdhPhase2PostSchedulerBounds.publicPredicate] using
@@ -194,20 +194,20 @@ theorem compiler_uniform
       simp only [PqxdhInitialFusedCompiler.compiler, StateT.run]
       apply coins_uniform
       by_cases selected : PqxdhPhase2SharedBounds.IsDecapsulation query
-      · simpa only [callbackKind, selected, if_true, callbackCost, BaseDecapsulation,
+      · simpa only [callbackKind, selected, ite_true, callbackCost, BaseDecapsulation,
           Nat.mul_zero, Nat.add_zero, Nat.mul_one, interpreted, StateT.run] using bounded (.inl query)
-      · simpa only [callbackKind, selected, if_false, callbackCost, BaseDecapsulation,
+      · simpa only [callbackKind, selected, ite_false, callbackCost, BaseDecapsulation,
           Nat.mul_zero, Nat.add_zero, interpreted, StateT.run] using bounded (.inl query)
   | inr query =>
       cases query with
       | inl query =>
           simp only [PqxdhInitialFusedCompiler.compiler, StateT.run]
           apply coins_uniform
-          simpa only [callbackKind, callbackCost, BaseDecapsulation, if_false,
+          simpa only [callbackKind, callbackCost, BaseDecapsulation, ite_false,
             Nat.mul_zero, Nat.add_zero, interpreted, StateT.run] using bounded (.inr query)
       | inr secrets =>
           simp only [PqxdhInitialFusedCompiler.compiler, StateT.run, callbackKind, callbackCost,
-            isQueryBoundP_query_bind_iff, IsCoin, not_false_eq_true, true_or, if_false, true_and]
+            isQueryBoundP_query_bind_iff, IsCoin, not_false_eq_true, true_or, ite_false, true_and]
           intro response
           trivial
 
@@ -230,7 +230,7 @@ theorem compiler_service
       | inl query => exact coins_service _
       | inr secrets =>
           simp only [PqxdhInitialFusedCompiler.compiler, StateT.run,
-            PqxdhInitialFusedBudgets.IsService, PqxdhInitialFusedBudgets.IsTailService, if_true,
+            PqxdhInitialFusedBudgets.IsService, PqxdhInitialFusedBudgets.IsTailService, ite_true,
             isQueryBoundP_query_bind_iff, IsService, not_true_eq_false, false_or]
           exact ⟨by decide, fun _ => by trivial⟩
 

@@ -262,7 +262,7 @@ theorem accepted_rid (state acceptedState : pqxdh.ServerState)
   obtain ⟨rid, hrid, hbytes⟩ := registration_id_abs registration
   cases status <;> cases rootResult <;>
     simp only [pqxdh.server_accept, pqxdh.validate_registration_status, hroot, hrid,
-      if_true, if_false, bind_tc_ok, RustM.ok.injEq, core.result.Result.Ok.injEq,
+      ite_true, ite_false, bind_tc_ok, RustM.ok.injEq, core.result.Result.Ok.injEq,
       Prod.mk.injEq, reduceCtorEq] at accepted
   rcases accepted with ⟨rfl, rfl⟩
   simpa only [Pqxdh.ValidInit.rid] using hbytes

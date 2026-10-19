@@ -93,11 +93,11 @@ theorem source_run_pair_bound {count : Nat} (real : Fin (count + 1) → Bool)
     (fun query budget allowed => by
       by_cases coins : SourceUniform query.2
       · simp only [SourceClass, AdaptiveCtxSharedMultiKeyBounds.SourceClass, SourceWork, coins, not_true_eq_false, false_or,
-          not_false_eq_true, true_or, if_true, if_false] at allowed ⊢
+          not_false_eq_true, true_or, ite_true, ite_false] at allowed ⊢
         change 1 + (budget.1 - 1 + 64 * budget.2) = budget.1 + 64 * budget.2
         omega
       · simp only [SourceClass, AdaptiveCtxSharedMultiKeyBounds.SourceClass, SourceWork, coins, not_true_eq_false, false_or,
-          not_false_eq_true, true_or, if_true, if_false] at allowed ⊢
+          not_false_eq_true, true_or, ite_true, ite_false] at allowed ⊢
         change 64 + (budget.1 + 64 * (budget.2 - 1)) = budget.1 + 64 * budget.2
         omega) state
 

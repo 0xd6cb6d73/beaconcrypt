@@ -109,7 +109,7 @@ theorem observation_uniform {Result : Type}
     client qPublic qHonest bounded honestBound state
   have logged := (public_observation_bound (impl source writer sender route decode application)
     client state (fun _ => True) (qPublic * 64 + qHonest * qApplication)).mpr bound
-  simpa only [IsTotalQueryBound, IsQueryBoundP, not_true_eq_false, false_or, if_true] using logged
+  simpa only [IsTotalQueryBound, IsQueryBoundP, not_true_eq_false, false_or, ite_true] using logged
 
 /-- The complete experiment additionally pays every query of its actual joint initial sampler; no ambient role, application or primitive preparation is free. -/
 theorem initial_uniform {PublicContext Result : Type}

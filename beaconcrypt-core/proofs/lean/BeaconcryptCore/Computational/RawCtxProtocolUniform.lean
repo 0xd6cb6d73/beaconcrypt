@@ -105,7 +105,7 @@ theorem schedule_uniform {Metadata PeerMetadata Identity DhPair KemPair Auxiliar
     (fun query state => (source_step source writer serverCount beaconCount senderId route decode query state).isQueryBoundP)
     state
   simpa only [uniform_bill, Nat.zero_mul, Nat.add_zero, IsTotalQueryBound, IsQueryBoundP,
-    not_true_eq_false, false_or, if_true] using bound
+    not_true_eq_false, false_or, ite_true] using bound
 
 end BeaconcryptCore.Computational.RawCtxProtocolUniform
 

@@ -97,14 +97,14 @@ theorem private_lineage (source : FixedHkdfSha512NoSaltSource) (stage : Nat)
   rw [state] at retained ⊢
   cases matching : matched store.2 request with
   | false =>
-    exact ⟨earlier, by simpa only [advance, matching, Bool.false_eq_true, if_false] using retained⟩
+    exact ⟨earlier, by simpa only [advance, matching, Bool.false_eq_true, ite_false] using retained⟩
   | true =>
     have same : request = inputAddress store.2.input := by
       have reflected : request = cursorAddress store.2 :=
         of_decide_eq_true (by simpa only [matched] using matching)
       simpa only [cursorAddress, inputAddress] using reflected
     refine ⟨earlier ++ [store.2.input], ?_⟩
-    simp only [advance, matching, if_true]
+    simp only [advance, matching, ite_true]
     simp [walk, retained, nextChain]
     rw [← same]
     simp

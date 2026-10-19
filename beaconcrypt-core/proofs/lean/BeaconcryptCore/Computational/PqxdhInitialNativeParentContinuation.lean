@@ -113,7 +113,7 @@ theorem parent_retained (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origi
           (PqxdhInitialNativeRetained.project state) := by
   have past : state.1.1.2.2.depth + 1 ≤
       (PqxdhInitialNativeResponse.updated (PqxdhInitialBuilderContext.address context.original) output state).1.1.2.2.depth := by
-    simp only [PqxdhInitialNativeResponse.updated, RawCtxSelectiveChainGame.advance_depth, matching, if_true]
+    simp only [PqxdhInitialNativeResponse.updated, RawCtxSelectiveChainGame.advance_depth, matching, ite_true]
     exact Nat.le_refl _
   rw [PqxdhInitialNativeRetained.retained_run source writer _ _ _ _ past, updated_view]
   rw [retained_program]

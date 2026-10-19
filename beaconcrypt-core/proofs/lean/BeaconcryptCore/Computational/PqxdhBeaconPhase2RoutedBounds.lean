@@ -34,7 +34,7 @@ theorem handles_root_step
     ((handles source challenge aux query).run auxiliary).IsQueryBoundP
       (IsPrivateRoot (baseSpec := baseSpec)) (if rootCall query = true then 1 else 0) := by
   rcases query with pre | tail
-  · cases pre <;> simp only [rootCall, Bool.false_eq_true, if_false]
+  · cases pre <;> simp only [rootCall, Bool.false_eq_true, ite_false]
     all_goals first | exact sharedAux_no_root aux _ auxiliary | skip
     case eraseShared => simp [handles, StateT.run_pure]
     case decapsulate value key =>
@@ -73,7 +73,7 @@ theorem handles_root_step
               (sharedAux_no_root aux _ auxiliary)
   · rcases tail with query | tail
     · exact sharedAux_no_root aux _ auxiliary
-    · cases tail <;> simp only [rootCall, isRoot, Bool.false_eq_true, if_false, if_true]
+    · cases tail <;> simp only [rootCall, isRoot, Bool.false_eq_true, ite_false, ite_true]
       all_goals first | exact sharedAux_no_root aux _ auxiliary | skip
       case root secrets =>
         have handled :

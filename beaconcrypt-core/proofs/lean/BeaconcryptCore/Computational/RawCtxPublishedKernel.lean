@@ -28,10 +28,10 @@ theorem owner (calls : RawCtxChainOwner.Calls Kernel (StateT State ProbComp))
     sent.sequence = sequence result.1.2.kernel := by
   unfold RawCtxChainOwner.sendOwner at supported
   by_cases empty : plaintext.isEmpty = true
-  · simp only [empty, if_true] at supported
+  · simp only [empty, ite_true] at supported
     subst result
     cases published
-  · simp only [empty, Bool.false_eq_true, if_false, bind_pure_comp] at supported
+  · simp only [empty, Bool.false_eq_true, ite_false, bind_pure_comp] at supported
     change result ∈ support (((fun reply => (reply.2, {entry with kernel := reply.1})) <$>
       calls.send entry.kernel ⟨plaintext, entry.expectedSender, sender, entry.associatedData⟩).run state) at supported
     rw [StateT.run_map, support_map] at supported

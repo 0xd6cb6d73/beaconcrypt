@@ -247,7 +247,7 @@ theorem guessEvent_implies_freshHit {Result : Type} {bound : ℕ} (c : Pqxdh.Cry
   have absent := freshGuess_address_absent c key result.1.2 result.2 invariant aligned target tail
     eligible.1 eligible.2 guessed
   refine ⟨index, ?_⟩
-  simp only [candidates, List.Vector.get_map, selected, candidate, if_pos eligible,
+  simp only [candidates, List.Vector.get_map, selected, candidate, ite_eq_left eligible,
     JointTableFreshCandidates.FreshHit]
   exact ⟨absent, guessed.symm⟩
 
@@ -257,8 +257,8 @@ theorem honestCompletion_guess_bound {Result : Type} {bound : ℕ} (decode : Raw
     (selector : Result → List.Vector (Option CtxUnclaimedAcceptance.Target) bound) :
     Pr[GuessEvent selector | mixedCompletedLazy (honestClient decode c key adversary) ∅] ≤
       (bound : ℝ≥0∞) / (2 ^ 512 : ℕ) := by
-  letI : MeasurableSpace CtxDigest := ⊤
-  letI : DiscreteMeasurableSpace CtxDigest := ⟨fun _ => by simp⟩
+  let : MeasurableSpace CtxDigest := ⊤
+  let : DiscreteMeasurableSpace CtxDigest := ⟨fun _ => by simp⟩
   unfold mixedCompletedLazy
   apply probEvent_bind_le_of_forall_le
   intro result supported

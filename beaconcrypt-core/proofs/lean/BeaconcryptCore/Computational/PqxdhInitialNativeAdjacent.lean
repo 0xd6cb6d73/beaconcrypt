@@ -59,7 +59,7 @@ theorem normalization (depth k qPost : Nat)
       ∑ j ∈ Finset.range (7 + qPost * 67), ((k + j + 1 : Nat) : ℝ≥0∞) * (2 ^ 256 : ℝ≥0∞)⁻¹ := by
   classical
   rw [← (source_adjacent source writer mark sender route decode execution external depth state valid.2.1).2, normalized]
-  exact (ofReal_tvDist_bind_left_event_le _ _ _ Cached (fun cut good => by simp only [good, if_false])).trans
+  exact (ofReal_tvDist_bind_left_event_le _ _ _ Cached (fun cut good => by simp only [good, ite_false])).trans
     (cached_risk source writer mark sender route decode execution depth k qPost external bounded state valid clean)
 
 /-- A common complete-state observation, including an appended private lineage check, preserves the one cached-branch charge. -/

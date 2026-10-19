@@ -115,10 +115,10 @@ theorem family_bound {count : Nat} (decode : Fin (count + 1) → RawDecoder) (c 
         (modifiedNonceAeadINTCTXTAdvantage c (reduction target decode c fallback client index)).toReal := by
   have bound := PqxdhComposition.finiteHybridBound_of_hop_bounds (game decode c client) (count + 1)
     (hopLoss decode c fallback client rawCount) (fun hop valid => by
-      simpa only [hopLoss, dif_pos valid] using
+      simpa only [hopLoss, dite_eq_left valid] using
         hop_bound ⟨hop, valid⟩ decode c fallback client (rawCount ⟨hop, valid⟩) (bounded ⟨hop, valid⟩))
   rw [← Fin.sum_univ_eq_sum_range] at bound
-  simpa only [hopLoss, dif_pos (Fin.isLt _)] using bound
+  simpa only [hopLoss, dite_eq_left (Fin.isLt _)] using bound
 
 /-- The initial hybrid uses actual opening at every original key index. -/
 theorem first_flags (count : Nat) : realAt count 0 = fun _ => true := by

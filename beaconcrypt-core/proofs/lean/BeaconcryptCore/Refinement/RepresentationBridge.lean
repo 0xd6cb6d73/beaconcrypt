@@ -195,9 +195,9 @@ theorem recvStep_commutes (c : Pqxdh.Crypto) (execute : KdfInterpreter)
       simp only [List.filter_map, Function.comp_def]
   | none =>
     simp only [Option.map_none]
-    by_cases hlt : message.idx < receive.n <;> simp only [hlt, if_true, if_false]
+    by_cases hlt : message.idx < receive.n <;> simp only [hlt, ite_true, ite_false]
     by_cases hskip : Ratchet.maxSkip < message.idx - receive.n + receive.skipped.length <;>
-      simp only [hskip, if_true, if_false]
+      simp only [hskip, ite_true, ite_false]
     cases (Pqxdh.ratchetCrypto c).dec
         (Ratchet.msgKeyAt (Pqxdh.ratchetCrypto c) (absChain receive.ck) (message.idx - receive.n)) ad message.ct <;>
       simp only [chainAt_commutes c execute hlaw, List.map_append, skipKeys_commutes c execute hlaw]

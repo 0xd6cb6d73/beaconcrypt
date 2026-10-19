@@ -72,9 +72,9 @@ theorem compile_post
   | inl request => exact compile_coins hmac _
   | inr request =>
       by_cases same : request.ciphertext = challenge
-      · simp only [QueryImpl.compose, rootPost, post, same, if_true, simulateQ_map]
+      · simp only [QueryImpl.compose, rootPost, post, same, ite_true, simulateQ_map]
         rfl
-      · simp only [QueryImpl.compose, rootPost, post, same, if_false, simulateQ_bind, compile_coins, simulateQ_pure]
+      · simp only [QueryImpl.compose, rootPost, post, same, ite_false, simulateQ_bind, compile_coins, simulateQ_pure]
 
 /-- The root-valued source keeps every original continuation before either cryptographic interpreter is applied. -/
 theorem compile_resume
@@ -89,7 +89,7 @@ theorem compile_resume
       simp only [pure_bind, ← QueryImpl.simulateQ_compose, compile_post]
       rfl
   | some known =>
-      simp only [simulateQ_bind, simulateQ_map, simulateQ_spec_query,
+      simp only [simulateQ_bind,
         ← QueryImpl.simulateQ_compose, compile_post]
       rfl
 

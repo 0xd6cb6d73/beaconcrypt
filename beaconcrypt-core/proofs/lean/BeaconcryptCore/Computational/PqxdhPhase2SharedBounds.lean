@@ -121,7 +121,7 @@ private theorem simulate_excluded {ι κ Result : Type} {source : OracleSpec ι}
     (excluded : ∀ query, (handler query).IsQueryBoundP predicate 0) (client : OracleComp source Result) :
     (simulateQ handler client).IsQueryBoundP predicate 0 := by
   exact RawCtxSourceOpen.simulate_bound handler (fun _ => False) predicate client 0
-    (isQueryBoundP_false client 0) (fun query => by simpa only [if_false] using excluded query)
+    (isQueryBoundP_false client 0) (fun query => by simpa only [ite_false] using excluded query)
 
 def IsTailRoot : (TailSpec Response Shared).Domain → Prop
   | .inr (.root _) => True
@@ -133,7 +133,7 @@ instance : DecidablePred (IsTailRoot (Response := Response) (Shared := Shared)) 
 /-- Initializer, app getter and arbitrary native raw work have no private-root callback. -/
 theorem afterRoot_no_root (decode : RawCtxReceive.FrameDecoder) (pending : Prepared Response Shared) (root : Word32) :
     (afterRoot decode pending root).IsQueryBoundP IsTailRoot 0 := by
-  simp only [afterRoot, isQueryBoundP_query_bind_iff, IsTailRoot, not_false_eq_true, true_or, if_false, true_and]
+  simp only [afterRoot, isQueryBoundP_query_bind_iff, IsTailRoot, not_false_eq_true, true_or, true_and]
   intro response reply
   cases reply with
   | none => trivial
@@ -146,7 +146,7 @@ theorem afterRoot_no_root (decode : RawCtxReceive.FrameDecoder) (pending : Prepa
 /-- The complete tail issues at most its one private root query, independent of all later raw replies. -/
 theorem tail_root (decode : RawCtxReceive.FrameDecoder) (pending : Prepared Response Shared) :
     (tail decode pending).IsQueryBoundP IsTailRoot 1 := by
-  simp only [tail, isQueryBoundP_query_bind_iff, IsTailRoot, not_true_eq_false, false_or, if_true]
+  simp only [tail, isQueryBoundP_query_bind_iff, IsTailRoot, not_true_eq_false, false_or]
   exact ⟨by decide, fun reply => by cases reply with
     | none => trivial
     | some root => exact afterRoot_no_root decode pending root⟩
@@ -184,7 +184,7 @@ theorem owner_root (decode : RawCtxReceive.FrameDecoder) (raw : Bytes) (state : 
         exact fun query => (isQueryBoundP_query_iff (spec := FullSpec I D K X Response Shared)
           (p := IsOwnerRoot) (.inr query) _).mpr (by
             intro selected
-            simpa only [if_pos (show IsTailRoot query from selected)] using Nat.zero_lt_one)
+            simpa only [ite_eq_left (show IsTailRoot query from selected)] using Nat.zero_lt_one)
   | _ => simp only [owner, active]; trivial
 
 /-- Every attempted finish can invoke its retained KEM decapsulation at most once, with no repeat in the tail. -/
@@ -199,7 +199,7 @@ theorem owner_decapsulation (decode : RawCtxReceive.FrameDecoder) (raw : Bytes) 
       exact fun query => (isQueryBoundP_query_iff (spec := FullSpec I D K X Response Shared)
         (p := IsOwnerDecapsulation) (.inl query) _).mpr (by
           intro selected
-          simpa only [if_pos (show IsDecapsulation query from selected)] using Nat.zero_lt_one)
+          simpa only [ite_eq_left (show IsDecapsulation query from selected)] using Nat.zero_lt_one)
     · intro pending _
       cases pending with
       | none => trivial

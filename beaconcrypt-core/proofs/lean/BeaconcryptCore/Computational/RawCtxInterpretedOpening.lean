@@ -135,9 +135,9 @@ theorem material_map {SendChain ReceiveChain Material Value Context : Type}
     congr 1
     funext capacity
     by_cases outside : index ≥ capacity
-    · simp only [outside, if_true]
+    · simp only [outside, ite_true]
       rfl
-    · simp only [outside, if_false, map_bind]
+    · simp only [outside, ite_false, map_bind]
       congr 1
       funext entry
       cases entry with

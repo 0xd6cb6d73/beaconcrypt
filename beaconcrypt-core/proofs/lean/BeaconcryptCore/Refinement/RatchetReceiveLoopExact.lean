@@ -26,9 +26,9 @@ private theorem array_set_bang {α : Type} [Inhabited α] {n : Std.Usize}
     (v : Std.Array α n) (i : Std.Usize) (x : α) (j : Nat) (h : j < v.length) :
     (v.set i x).val[j]! = if i.val = j then x else v.val[j]! := by
   by_cases heq : i.val = j
-  · simpa only [if_pos heq, Array.getElem!_Nat_eq] using
+  · simpa only [ite_eq_left heq, Array.getElem!_Nat_eq] using
       Array.getElem!_Nat_set_eq v i j x ⟨heq, h⟩
-  · simpa only [if_neg heq, Array.getElem!_Nat_eq] using
+  · simpa only [ite_eq_right heq, Array.getElem!_Nat_eq] using
       Array.getElem!_Nat_set_ne v i j x heq
 
 /-- Publication copies precisely its bounded window and clears precisely the same staged slots. -/
@@ -53,13 +53,13 @@ theorem publish_future_receive_slots_loop_exact (n : Nat) :
     intro state staged slot left hleft hbound
     rw [publish_future_receive_slots_loop, loop.eq_def]
     simp only [publish_future_receive_slots_loop.body,
-      if_pos (by scalar_tac : left > 0#u8), lift, capacity_eq_ok, bind_tc_ok,
-      if_neg (by scalar_tac : ¬ UScalar.cast UScalarTy.Usize slot ≥ UScalar.cast UScalarTy.Usize 50#u64)]
+      ite_eq_left (by scalar_tac : left > 0#u8), lift, capacity_eq_ok, bind_tc_ok,
+      ite_eq_right (by scalar_tac : ¬ UScalar.cast UScalarTy.Usize slot ≥ UScalar.cast UScalarTy.Usize 50#u64)]
     simp only [Array.index_mut_usize,
       array_index_bang staged (UScalar.cast UScalarTy.Usize slot) (by scalar_tac),
       array_index_bang state.receive_slots (UScalar.cast UScalarTy.Usize slot) (by scalar_tac),
       bind_tc_ok, core.option.Option.take, Std.core.option.Option.take, massert,
-      if_pos (by scalar_tac : UScalar.cast UScalarTy.Usize slot < 50#usize)]
+      ite_eq_left (by scalar_tac : UScalar.cast UScalarTy.Usize slot < 50#usize)]
     dsimp! only
     rw [Array.set_getElem!_eq, array_update_eq_ok _ _ _ (by scalar_tac)]
     obtain ⟨slot', hslot, hslotval⟩ := uscalar_add_eq_ok slot 1#u8 (by scalar_tac)
@@ -103,8 +103,8 @@ private theorem receive_key_at_exact (state : ratchet.control.RatchetState) (slo
     ratchet.control.RatchetState.receive_key_at state slot =
       ok (core.option.Option.Some state.receive_cache.entries.val[slot.val]!) := by
   simp only [ratchet.control.RatchetState.receive_key_at, SequenceCache.entry, lift, capacity_eq_ok,
-    bind_tc_ok, if_pos (by scalar_tac : slot < state.receive_cache.len),
-    if_pos (by scalar_tac : UScalar.cast UScalarTy.Usize slot < UScalar.cast UScalarTy.Usize 50#u64),
+    bind_tc_ok, ite_eq_left (by scalar_tac : slot < state.receive_cache.len),
+    ite_eq_left (by scalar_tac : UScalar.cast UScalarTy.Usize slot < UScalar.cast UScalarTy.Usize 50#u64),
     entries_index_eq_ok _ _ hcap]
 
 /-- Exact staged sequence matches and empty destination slots make validation succeed. -/
@@ -126,7 +126,7 @@ theorem pending_receive_slots_are_valid_loop_true
   | zero =>
     intro slot expected left hleft hcap hlen hseq hempty hstaged
     simp only [pending_receive_slots_are_valid_loop, loop.eq_def,
-      pending_receive_slots_are_valid_loop.body, if_neg (by scalar_tac : ¬left > 0#u8)]
+      pending_receive_slots_are_valid_loop.body, ite_eq_right (by scalar_tac : ¬left > 0#u8)]
   | succ n ih =>
     intro slot expected left hleft hcap hlen hseq hempty hstaged
     obtain ⟨cached, hcached, hcachedseq, hkey⟩ := hstaged 0 (by omega)
@@ -135,19 +135,19 @@ theorem pending_receive_slots_are_valid_loop_true
     have hcast : (UScalar.cast UScalarTy.Usize slot).val = slot.val := by simp_scalar
     rw [pending_receive_slots_are_valid_loop, loop.eq_def]
     simp only [pending_receive_slots_are_valid_loop.body,
-      if_pos (by scalar_tac : left > 0#u8), lift, capacity_eq_ok, bind_tc_ok,
-      if_neg (by scalar_tac : ¬ UScalar.cast UScalarTy.Usize slot ≥ UScalar.cast UScalarTy.Usize 50#u64),
+      ite_eq_left (by scalar_tac : left > 0#u8), lift, capacity_eq_ok, bind_tc_ok,
+      ite_eq_right (by scalar_tac : ¬ UScalar.cast UScalarTy.Usize slot ≥ UScalar.cast UScalarTy.Usize 50#u64),
       array_index_bang state.receive_slots (UScalar.cast UScalarTy.Usize slot) (by scalar_tac),
       array_index_bang pending.staged_slots (UScalar.cast UScalarTy.Usize slot) (by scalar_tac),
       hcast, hempty slot.val (by omega) (by omega), BeaconcryptCore.core_option_is_some_eq_ok,
       Std.core.option.Option.is_some, hcached, core.option.Option.as_ref]
-    simp only [Option.isSome, core.option.Option.None, Bool.false_eq_true, if_false, heq, if_true,
+    simp only [Option.isSome, core.option.Option.None, Bool.false_eq_true, ite_false, heq, ite_true,
       receive_key_at_exact pending.committed_control slot (by omega) (by omega), hkey,
       core.option.Option.Insts.CoreCmpPartialEqOption.eq, core.U64.Insts.CoreCmpPartialEqU64,
       bind_tc_ok, beq_self_eq_true]
     obtain ⟨left', hnext, hnextval⟩ := uscalar_sub_eq_ok left 1#u8 (by scalar_tac)
     by_cases hz : left' = 0#u8
-    · simp only [hnext, bind_tc_ok, hz, if_true]
+    · simp only [hnext, bind_tc_ok, hz, ite_true]
     · have hmax : expected ≠ core.num.U64.MAX := by simp only [core.num.U64.MAX, U64.rMax]; scalar_tac
       obtain ⟨slot', hslot, hslotval⟩ := uscalar_add_eq_ok slot 1#u8 (by scalar_tac)
       obtain ⟨expected', hexpected, hexpectedval⟩ := uscalar_add_eq_ok expected 1#u64 (by scalar_tac)
@@ -163,7 +163,7 @@ theorem pending_receive_slots_are_valid_loop_true
         core.U64.Insts.CoreCmpPartialEqU64] at hrun
       simp only [Option.isSome, core.option.Option.as_ref,
         core.option.Option.Insts.CoreCmpPartialEqOption.eq] at hrun
-      simpa only [hnext, hslot, hexpected, bind_tc_ok, if_neg hz, if_neg hmax] using hrun
+      simpa only [hnext, hslot, hexpected, bind_tc_ok, ite_eq_right hz, ite_eq_right hmax] using hrun
 
 /-- Staged validation accepts a bounded consecutive sequence window with empty destinations. -/
 theorem pending_receive_slots_are_valid_true
@@ -194,17 +194,17 @@ theorem refined_receive_slots_are_empty_loop_true
   | zero =>
     intro slot left hleft hcap hempty
     simp only [refined_receive_slots_are_empty_loop, loop.eq_def,
-      refined_receive_slots_are_empty_loop.body, if_neg (by scalar_tac : ¬left > 0#u8)]
+      refined_receive_slots_are_empty_loop.body, ite_eq_right (by scalar_tac : ¬left > 0#u8)]
   | succ n ih =>
     intro slot left hleft hcap hempty
     rw [refined_receive_slots_are_empty_loop, loop.eq_def]
-    simp only [refined_receive_slots_are_empty_loop.body, if_pos (by scalar_tac : left > 0#u8),
+    simp only [refined_receive_slots_are_empty_loop.body, ite_eq_left (by scalar_tac : left > 0#u8),
       lift, capacity_eq_ok, bind_tc_ok,
-      if_neg (by scalar_tac : ¬UScalar.cast UScalarTy.Usize slot ≥ UScalar.cast UScalarTy.Usize 50#u64),
+      ite_eq_right (by scalar_tac : ¬UScalar.cast UScalarTy.Usize slot ≥ UScalar.cast UScalarTy.Usize 50#u64),
       array_index_bang state.receive_slots (UScalar.cast UScalarTy.Usize slot) (by scalar_tac),
       show (UScalar.cast UScalarTy.Usize slot).val = slot.val by simp_scalar,
       hempty slot.val (by omega) (by omega), BeaconcryptCore.core_option_is_some_eq_ok,
-      Std.core.option.Option.is_some, Option.isSome, core.option.Option.None, Bool.false_eq_true, if_false]
+      Std.core.option.Option.is_some, Option.isSome, core.option.Option.None, Bool.false_eq_true, ite_false]
     obtain ⟨slot', hslot, hslotval⟩ := uscalar_add_eq_ok slot 1#u8 (by scalar_tac)
     obtain ⟨left', hnext, hnextval⟩ := uscalar_sub_eq_ok left 1#u8 (by scalar_tac)
     have hrun := ih slot' left' (by scalar_tac) (by scalar_tac)
@@ -236,17 +236,17 @@ theorem receive_control_prefix_matches_loop_true
   | zero =>
     intro slot left hleft hcap hentry hcommitted hmatch
     simp only [receive_control_prefix_matches_loop, loop.eq_def,
-      receive_control_prefix_matches_loop.body, if_neg (by scalar_tac : ¬left > 0#u8)]
+      receive_control_prefix_matches_loop.body, ite_eq_right (by scalar_tac : ¬left > 0#u8)]
   | succ n ih =>
     intro slot left hleft hcap hentry hcommitted hmatch
     rw [receive_control_prefix_matches_loop, loop.eq_def]
-    simp only [receive_control_prefix_matches_loop.body, if_pos (by scalar_tac : left > 0#u8),
+    simp only [receive_control_prefix_matches_loop.body, ite_eq_left (by scalar_tac : left > 0#u8),
       lift, capacity_eq_ok, bind_tc_ok,
-      if_neg (by scalar_tac : ¬UScalar.cast UScalarTy.Usize slot ≥ UScalar.cast UScalarTy.Usize 50#u64),
+      ite_eq_right (by scalar_tac : ¬UScalar.cast UScalarTy.Usize slot ≥ UScalar.cast UScalarTy.Usize 50#u64),
       receive_key_at_exact entry slot (by omega) (by omega),
       receive_key_at_exact committed slot (by omega) (by omega),
       hmatch slot.val (by omega) (by omega), core.option.Option.Insts.CoreCmpPartialEqOption.eq,
-      core.U64.Insts.CoreCmpPartialEqU64, beq_self_eq_true, if_true]
+      core.U64.Insts.CoreCmpPartialEqU64, beq_self_eq_true, ite_true]
     obtain ⟨slot', hslot, hslotval⟩ := uscalar_add_eq_ok slot 1#u8 (by scalar_tac)
     obtain ⟨left', hnext, hnextval⟩ := uscalar_sub_eq_ok left 1#u8 (by scalar_tac)
     have hrun := ih slot' left' (by scalar_tac) (by scalar_tac) (by scalar_tac) (by scalar_tac)
@@ -293,22 +293,22 @@ theorem pending_receive_is_valid_true
       pending.committed_control.receive_cache.entries.val[pending.first_slot.val + j]! = cached.sequence) :
     pending_receive_is_valid state pending requested = ok true := by
   simp only [pending_receive_is_valid, RatchetState.impl.receive_sequence, RatchetState.impl.send_sequence,
-    RatchetState.receive_cache_len, bind_tc_ok, htarget, if_true,
-    if_neg (by scalar_tac : ¬requested ≤ state.control.receive_sequence), hfirst, hsend, hreceive]
+    RatchetState.receive_cache_len, bind_tc_ok, htarget, ite_true,
+    ite_eq_right (by scalar_tac : ¬requested ≤ state.control.receive_sequence), hfirst, hsend, hreceive]
   obtain ⟨gap, hgap, hgapval⟩ := uscalar_sub_eq_ok requested state.control.receive_sequence (by scalar_tac)
   obtain ⟨steps, hsteps, hstepsval⟩ := uscalar_add_eq_ok (UScalar.cast UScalarTy.U64 pending.skipped) 1#u64 (by scalar_tac)
-  simp only [hgap, lift, bind_tc_ok, hsteps, if_pos (by scalar_tac : gap = steps), hlookup,
+  simp only [hgap, lift, bind_tc_ok, hsteps, ite_eq_left (by scalar_tac : gap = steps), hlookup,
     BeaconcryptCore.core_option_is_some_eq_ok, Std.core.option.Option.is_some, Option.isSome,
-    core.option.Option.None, Bool.false_eq_true, if_false]
+    core.option.Option.None, Bool.false_eq_true, ite_false]
   obtain ⟨last, hlast, hlastval⟩ := uscalar_add_eq_ok (UScalar.cast UScalarTy.Usize state.control.receive_cache.len)
     (UScalar.cast UScalarTy.Usize pending.skipped) (by scalar_tac)
   have hprefix_ok := receive_control_prefix_matches_true state.control pending.committed_control
     0#u8 state.control.receive_cache.len (by scalar_tac) (by scalar_tac) (by scalar_tac)
     (fun i hi hj => (hprefix i (by scalar_tac)).symm)
   simp only [hlast, capacity_eq_ok, bind_tc_ok,
-    if_neg (by scalar_tac : ¬last > UScalar.cast UScalarTy.Usize 50#u64),
-    if_pos (by scalar_tac : UScalar.cast UScalarTy.Usize pending.committed_control.receive_cache.len = last),
-    hprefix_ok, if_true]
+    ite_eq_right (by scalar_tac : ¬last > UScalar.cast UScalarTy.Usize 50#u64),
+    ite_eq_left (by scalar_tac : UScalar.cast UScalarTy.Usize pending.committed_control.receive_cache.len = last),
+    hprefix_ok, ite_true]
   obtain ⟨expected, hexpected, hexpectedval⟩ := uscalar_add_eq_ok state.control.receive_sequence 1#u64 (by scalar_tac)
   have hstaged_ok := pending_receive_slots_are_valid_true state pending pending.first_slot expected pending.skipped
     hcap (by omega) (by scalar_tac)
@@ -317,13 +317,13 @@ theorem pending_receive_is_valid_true
       obtain ⟨cached, hcached, hsequence, hlogical⟩ := hstaged j hj
       exact ⟨cached, hcached, by scalar_tac, hlogical⟩)
   by_cases hlastcap : last < UScalar.cast UScalarTy.Usize 50#u64
-  · simp only [if_pos hlastcap,
+  · simp only [ite_eq_left hlastcap,
       array_index_bang state.receive_slots last (by scalar_tac),
       array_index_bang pending.staged_slots last (by scalar_tac),
       hempty last.val (by scalar_tac) (by scalar_tac),
       hstaged_empty last.val (by scalar_tac) (by scalar_tac),
-      bind_tc_ok, core.option.Option.None, if_false, Bool.false_eq_true, hexpected, ←hfirst, hstaged_ok]
-  · simp only [if_neg hlastcap, hexpected, bind_tc_ok, ←hfirst, hstaged_ok]
+      bind_tc_ok, core.option.Option.None, ite_false, Bool.false_eq_true, hexpected, ←hfirst, hstaged_ok]
+  · simp only [ite_eq_right hlastcap, hexpected, bind_tc_ok, ←hfirst, hstaged_ok]
 
 end beaconcrypt_core.ratchet.refined
 

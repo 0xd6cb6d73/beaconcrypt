@@ -48,7 +48,7 @@ theorem finish_kernel (control : pqxdh.BeaconInitSent)
     · cases found
     · split at found
       · cases found
-      · exact ⟨staged, rfl, Option.some.inj found, by simp_all only [if_false, Option.isSome_some]⟩
+      · exact ⟨staged, rfl, Option.some.inj found, by simp_all only [ite_false, Option.isSome_some]⟩
 
 private theorem finish_some (control : pqxdh.BeaconInitSent)
     (before : RawCtxGenericRoleStorage.BeaconState (KernelOf Chain) I D K)

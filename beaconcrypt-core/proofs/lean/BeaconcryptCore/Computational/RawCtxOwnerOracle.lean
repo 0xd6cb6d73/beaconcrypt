@@ -180,7 +180,7 @@ theorem program_kdf_bound {Context Plaintext : Type} (effect : ReceiveEffect Con
           simp
       | ReceiveKdfRequested pending =>
           rw [program, isQueryBoundP_query_bind_iff]
-          simp only [Sum.isLeft, not_true_eq_false, false_or, if_true]
+          simp only [Sum.isLeft, not_true_eq_false, false_or, ite_true]
           refine ⟨by simp only [effectDepth] at hdepth; omega, fun response => ?_⟩
           exact (ih _ (hdepth ▸ resume_rank pending response) _ rfl).mono
             (Nat.le_pred_of_lt (hdepth ▸ resume_rank pending response))
@@ -200,7 +200,7 @@ theorem program_open_bound {Context Plaintext : Type} (effect : ReceiveEffect Co
       | ReceiveKdfRequested pending =>
           rw [program, isQueryBoundP_query_bind_iff]
           simp only [Sum.isRight, Bool.false_eq_true, not_false_eq_true, true_or,
-            if_false, true_and]
+            ite_false, true_and]
           exact fun response => ih _ (hdepth ▸ resume_rank pending response) _ rfl
 
 /-- Failed probabilistic callbacks roll back the source kernel without constraining their final state. -/

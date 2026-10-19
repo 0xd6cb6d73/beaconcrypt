@@ -556,7 +556,7 @@ theorem jointKdfViewForwardImpl_uniform_query_bound_step
       (if IsJointKdfViewUniformQuery query then 1 else 0) := by
   rcases query with randomQuery | viewQuery
   · simp only [jointKdfViewForwardImpl_uniform,
-      IsJointKdfViewUniformQuery, if_true]
+      IsJointKdfViewUniformQuery]
     change (liftM
       (FixedHkdfSha512JointStreamSpec.query (.inl randomQuery)) :
         OracleComp FixedHkdfSha512JointStreamSpec
@@ -565,7 +565,7 @@ theorem jointKdfViewForwardImpl_uniform_query_bound_step
     rw [OracleComp.isQueryBoundP_query_iff]
     simp [IsFixedHkdfSha512UniformQuery]
   · simp only [jointKdfViewForwardImpl_projection,
-      IsJointKdfViewUniformQuery, if_false, bind_pure_comp]
+      IsJointKdfViewUniformQuery, bind_pure_comp]
     change (viewQuery.project <$> (liftM
       (FixedHkdfSha512JointStreamSpec.query (.inr viewQuery.address)) :
         OracleComp FixedHkdfSha512JointStreamSpec
@@ -585,7 +585,7 @@ theorem jointKdfViewForwardImpl_stream_query_bound_step
       (if IsJointKdfViewProjectionQuery query then 1 else 0) := by
   rcases query with randomQuery | viewQuery
   · simp only [jointKdfViewForwardImpl_uniform,
-      IsJointKdfViewProjectionQuery, if_false]
+      IsJointKdfViewProjectionQuery]
     change (liftM
       (FixedHkdfSha512JointStreamSpec.query (.inl randomQuery)) :
         OracleComp FixedHkdfSha512JointStreamSpec
@@ -594,7 +594,7 @@ theorem jointKdfViewForwardImpl_stream_query_bound_step
     rw [OracleComp.isQueryBoundP_query_iff]
     simp [IsFixedHkdfSha512StreamQuery]
   · simp only [jointKdfViewForwardImpl_projection,
-      IsJointKdfViewProjectionQuery, if_true, bind_pure_comp]
+      IsJointKdfViewProjectionQuery, bind_pure_comp]
     change (viewQuery.project <$> (liftM
       (FixedHkdfSha512JointStreamSpec.query (.inr viewQuery.address)) :
         OracleComp FixedHkdfSha512JointStreamSpec

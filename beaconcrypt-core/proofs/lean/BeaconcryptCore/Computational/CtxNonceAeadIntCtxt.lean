@@ -380,17 +380,17 @@ theorem ctxRetainedBaseReductionImpl_seal_query_bound_step
       (if IsCtxSealQuery query then 1 else 0) := by
   rcases query with query | input
   · simp only [ctxRetainedBaseReductionImpl, QueryImpl.add_apply_inl,
-      IsCtxSealQuery, if_false]
+      IsCtxSealQuery]
     exact liftProbComp_no_modifiedNonceAeadSealQueries
       ((ctxIndependentPublicOracle query).run state)
   · by_cases hused : input.nonce ∈ state.usedNonces
     · simp only [ctxRetainedBaseReductionImpl, QueryImpl.add_apply_inr,
-        IsCtxSealQuery, if_true]
+        IsCtxSealQuery]
       unfold ctxRetainedBaseSealOracle
       simp [StateT.run, hused]
     · simp only [ctxRetainedBaseReductionImpl, QueryImpl.add_apply_inr,
-        ctxRetainedBaseSealOracle, IsCtxSealQuery, if_true, hused,
-        if_false, StateT.run]
+        ctxRetainedBaseSealOracle, IsCtxSealQuery, hused,
+        ite_false, StateT.run]
       unfold queryModifiedNonceAeadSeal
       refine OracleComp.isQueryBoundP_bind (n := 1) (m := 0) ?_ ?_
       · exact (OracleComp.isQueryBoundP_query_iff
@@ -522,7 +522,7 @@ theorem ctxRetainedBaseSealOracle_projection
     rfl
   · unfold ctxDirectSampleKeyFreeSealOracle
       ctxRetainedBaseSealOracle
-    simp only [StateT.run, hused, if_false]
+    simp only [StateT.run, hused, ite_false]
     rw [simulateQ_bind, simulateQ_queryModifiedNonceAeadSeal]
     change _ = _ <$>
       ((modifiedNonceAeadSealOracle c key
@@ -530,7 +530,7 @@ theorem ctxRetainedBaseSealOracle_projection
           (ctxIndependentTagStateToModifiedNonceAead state) >>= fun result => _)
     rw [modifiedNonceAeadSealOracle_run_ctx]
     simp only [ctxIndependentTagStateToModifiedNonceAead,
-      hused, if_false, pure_bind]
+      hused, ite_false, pure_bind]
     rw [simulateQ_bind, simulateQ_modifiedNonceAeadDigest]
     simp only [simulateQ_pure]
     simp only [bind_pure_comp, Functor.map_map]

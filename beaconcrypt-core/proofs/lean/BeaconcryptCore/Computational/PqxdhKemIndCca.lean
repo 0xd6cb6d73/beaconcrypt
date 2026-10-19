@@ -167,26 +167,26 @@ theorem oneKey_indCCAAdvantage_eq_branchDist
     kem.IND_CCA_Advantage runtime adversary.toINDCCA =
       (oneKeyBranch kem runtime adversary true).boolDist
         (oneKeyBranch kem runtime adversary false) := by
-  letI : MeasurableSpace MlKem768PublicKey := ⊤
-  letI : DiscreteMeasurableSpace MlKem768PublicKey := ⟨fun _ => by simp⟩
-  letI : MeasurableSpace MlKem768Ciphertext := ⊤
-  letI : DiscreteMeasurableSpace MlKem768Ciphertext := ⟨fun _ => by simp⟩
-  letI : MeasurableSpace MlKemSharedSecret := ⊤
-  letI : DiscreteMeasurableSpace MlKemSharedSecret := ⟨fun _ => by simp⟩
-  letI : MeasurableSpace SK := ⊤
-  letI : DiscreteMeasurableSpace SK := ⟨fun _ => by simp⟩
-  letI : MeasurableSpace adversary.Context := ⊤
-  letI : DiscreteMeasurableSpace adversary.Context := ⟨fun _ => by simp⟩
-  letI : MeasurableSpace (MlKem768PublicKey × SK) := ⊤
-  letI : DiscreteMeasurableSpace (MlKem768PublicKey × SK) := ⟨fun _ => by simp⟩
-  letI : MeasurableSpace (MlKem768Ciphertext × MlKemSharedSecret) := ⊤
-  letI : DiscreteMeasurableSpace (MlKem768Ciphertext × MlKemSharedSecret) :=
+  let : MeasurableSpace MlKem768PublicKey := ⊤
+  let : DiscreteMeasurableSpace MlKem768PublicKey := ⟨fun _ => by simp⟩
+  let : MeasurableSpace MlKem768Ciphertext := ⊤
+  let : DiscreteMeasurableSpace MlKem768Ciphertext := ⟨fun _ => by simp⟩
+  let : MeasurableSpace MlKemSharedSecret := ⊤
+  let : DiscreteMeasurableSpace MlKemSharedSecret := ⟨fun _ => by simp⟩
+  let : MeasurableSpace SK := ⊤
+  let : DiscreteMeasurableSpace SK := ⟨fun _ => by simp⟩
+  let : MeasurableSpace adversary.Context := ⊤
+  let : DiscreteMeasurableSpace adversary.Context := ⟨fun _ => by simp⟩
+  let : MeasurableSpace (MlKem768PublicKey × SK) := ⊤
+  let : DiscreteMeasurableSpace (MlKem768PublicKey × SK) := ⟨fun _ => by simp⟩
+  let : MeasurableSpace (MlKem768Ciphertext × MlKemSharedSecret) := ⊤
+  let : DiscreteMeasurableSpace (MlKem768Ciphertext × MlKemSharedSecret) :=
     ⟨fun _ => by simp⟩
-  letI : MeasurableSpace (MlKem768PublicKey × adversary.Context) := ⊤
-  letI : DiscreteMeasurableSpace (MlKem768PublicKey × adversary.Context) :=
+  let : MeasurableSpace (MlKem768PublicKey × adversary.Context) := ⊤
+  let : DiscreteMeasurableSpace (MlKem768PublicKey × adversary.Context) :=
     ⟨fun _ => by simp⟩
-  letI : MeasurableSpace (MlKem768PublicKey × SK × adversary.Context) := ⊤
-  letI : DiscreteMeasurableSpace (MlKem768PublicKey × SK × adversary.Context) :=
+  let : MeasurableSpace (MlKem768PublicKey × SK × adversary.Context) := ⊤
+  let : DiscreteMeasurableSpace (MlKem768PublicKey × SK × adversary.Context) :=
     ⟨fun _ => by simp⟩
   let : EvalDistSemantics (OracleComp (unifSpec + baseSpec)) := {
     denote mx := runtime.evalDist mx
@@ -562,21 +562,21 @@ theorem mlKem768RecipientCorrectness_recovered_eq
     {recovered : Option MlKemSharedSecret}
     (hdecaps : runtime.evalDist (kem.decaps sk cStar) {recovered} ≠ 0) :
     recovered = some kReal := by
-  letI : MeasurableSpace MlKem768PublicKey := ⊤
-  letI : DiscreteMeasurableSpace MlKem768PublicKey := ⟨fun _ => by simp⟩
-  letI : MeasurableSpace MlKem768Ciphertext := ⊤
-  letI : DiscreteMeasurableSpace MlKem768Ciphertext := ⟨fun _ => by simp⟩
-  letI : MeasurableSpace MlKemSharedSecret := ⊤
-  letI : DiscreteMeasurableSpace MlKemSharedSecret := ⟨fun _ => by simp⟩
-  letI : MeasurableSpace SK := ⊤
-  letI : DiscreteMeasurableSpace SK := ⟨fun _ => by simp⟩
-  letI : MeasurableSpace (MlKem768PublicKey × SK) := ⊤
-  letI : DiscreteMeasurableSpace (MlKem768PublicKey × SK) := ⟨fun _ => by simp⟩
-  letI : MeasurableSpace (MlKem768Ciphertext × MlKemSharedSecret) := ⊤
-  letI : DiscreteMeasurableSpace (MlKem768Ciphertext × MlKemSharedSecret) :=
+  let : MeasurableSpace MlKem768PublicKey := ⊤
+  let : DiscreteMeasurableSpace MlKem768PublicKey := ⟨fun _ => by simp⟩
+  let : MeasurableSpace MlKem768Ciphertext := ⊤
+  let : DiscreteMeasurableSpace MlKem768Ciphertext := ⟨fun _ => by simp⟩
+  let : MeasurableSpace MlKemSharedSecret := ⊤
+  let : DiscreteMeasurableSpace MlKemSharedSecret := ⟨fun _ => by simp⟩
+  let : MeasurableSpace SK := ⊤
+  let : DiscreteMeasurableSpace SK := ⟨fun _ => by simp⟩
+  let : MeasurableSpace (MlKem768PublicKey × SK) := ⊤
+  let : DiscreteMeasurableSpace (MlKem768PublicKey × SK) := ⟨fun _ => by simp⟩
+  let : MeasurableSpace (MlKem768Ciphertext × MlKemSharedSecret) := ⊤
+  let : DiscreteMeasurableSpace (MlKem768Ciphertext × MlKemSharedSecret) :=
     ⟨fun _ => by simp⟩
-  letI : MeasurableSpace (Option MlKemSharedSecret) := ⊤
-  letI : DiscreteMeasurableSpace (Option MlKemSharedSecret) := ⟨fun _ => by simp⟩
+  let : MeasurableSpace (Option MlKemSharedSecret) := ⊤
+  let : DiscreteMeasurableSpace (Option MlKemSharedSecret) := ⟨fun _ => by simp⟩
   let : EvalDistSemantics (OracleComp (unifSpec + baseSpec)) := {
     denote mx := runtime.evalDist mx
     apply_univ_le_one mx := runtime.evalDist_apply_univ_le_one mx }

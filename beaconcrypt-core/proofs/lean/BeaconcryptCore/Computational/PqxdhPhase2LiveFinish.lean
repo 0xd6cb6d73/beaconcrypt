@@ -213,7 +213,7 @@ theorem live_query_bound {ι : Type} {base : OracleSpec ι} {Result : Type}
     | inr query => exact finish_query_bound native decode predicate qCall nativeCost query state
   have counted := FinitePartitionQueryBounds.weighted_bound (fun query => query.isRight) cost budget
     (liveImpl old native decode) predicate client bounded step state
-  simpa only [Fintype.sum_bool, cost, budget, Bool.false_eq_true, if_false, if_true, Nat.add_comm] using counted
+  simpa only [Fintype.sum_bool, cost, budget, Bool.false_eq_true, ite_false, ite_true, Nat.add_comm] using counted
 
 /-- Every original source operation preserves registration fields and advances the existing history exactly once. -/
 theorem old_step_history

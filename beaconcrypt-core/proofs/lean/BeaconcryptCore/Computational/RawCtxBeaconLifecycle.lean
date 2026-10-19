@@ -302,10 +302,10 @@ theorem source_schedule {Identity DhPair KemPair PrimitiveState Result : Type}
       have rest := ih step.1 _ (hRaw.2 step.1) step.2 result htail
       refine ⟨?_, rest.2.trans hlocal.2⟩
       by_cases right : query.isRight = true
-      · simp only [right, if_true] at hlocal rest
+      · simp only [right, ite_true] at hlocal rest
         have positive : 0 < qRaw := hRaw.1.resolve_left (not_not.mpr right)
         omega
-      · simp only [right, Bool.false_eq_true, if_false, Nat.add_zero] at hlocal rest
+      · simp only [right, Bool.false_eq_true, ite_false, Nat.add_zero] at hlocal rest
         omega
 
 end BeaconcryptCore.Computational.RawCtxBeaconLifecycle

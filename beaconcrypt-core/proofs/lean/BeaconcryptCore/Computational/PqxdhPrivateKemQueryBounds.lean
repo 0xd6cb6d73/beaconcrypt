@@ -25,7 +25,7 @@ theorem localCoins_excluded {Result : Type} (client : ProbComp Result)
       rw [isQueryBoundP_query_bind_iff]
       refine ⟨Or.inl (coinsExcluded query), ?_⟩
       intro answer
-      simpa only [localCoins, translated, coinsExcluded query, if_false] using ih answer
+      simpa only [localCoins, translated, coinsExcluded query, ite_false] using ih answer
 
 set_option backward.isDefEq.respectTransparency false in
 /-- Forwarding a public source program preserves every original class count through all possible replies. -/
@@ -77,7 +77,7 @@ theorem localSelector_source_bound {Result : Type} (baseImpl : QueryImpl baseSpe
       | inr query =>
           have continuation : ∀ answer, (simulateQ (localSelector baseImpl kem secret) (next answer)).IsQueryBoundP
               (fun query => predicate (translated query)) bound := fun answer =>
-            ih answer bound (by simpa only [SelectorSource, if_false] using bounded.2 answer)
+            ih answer bound (by simpa only [SelectorSource, ite_false] using bounded.2 answer)
           change ((localCoins (evalKem baseImpl kem secret ((MlKemCCAOracleSpec baseSpec).query query)) :
             OracleComp PrivateSourceSpec ((MlKemCCAOracleSpec baseSpec).Range query)) >>=
             fun answer => simulateQ (localSelector baseImpl kem secret) (next answer)).IsQueryBoundP _ bound

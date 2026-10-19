@@ -139,7 +139,7 @@ theorem target_step_bound {count : Nat} (real : Fin count → Bool)
       exact (isQueryBoundP_query_iff p target _).mpr (by intro hit; simp [hit])
   | inr other =>
       simp only [reductionImpl, StateT.run, bind_pure_comp, isQueryBoundP_map_iff]
-      rw [if_neg (by simp only [TargetClass, not_false_eq_true])]
+      rw [ite_eq_right (by simp only [TargetClass, not_false_eq_true])]
       exact lift_no_class p noUniform
         ((adaptiveImpl (real other.1) (decode other.1) c (keys other.1) other.2).run (state other.1))
 

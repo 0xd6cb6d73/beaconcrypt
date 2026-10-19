@@ -30,8 +30,8 @@ theorem completedLazy_eq_eager {Result : Type} [MeasurableSpace Result]
     simp [completedLazy, simulateQ_pure, StateT.run_pure, evalWithAnswerFn_pure]
   | query_bind query next ih =>
     classical
-    letI := Fintype.ofFinite R
-    haveI : Nonempty (D → R) := ⟨fun _ => Classical.arbitrary R⟩
+    let := Fintype.ofFinite R
+    have : Nonempty (D → R) := ⟨fun _ => Classical.arbitrary R⟩
     have reduce : completedLazy (liftM ((D →ₒ R).query query) >>= next) cache =
         (randomOracle (spec := D →ₒ R) query).run cache >>= fun reply =>
           completedLazy (next reply.1) reply.2 := by

@@ -32,7 +32,7 @@ theorem evalKem_query_uniform_bound
   rcases query with (coin | query) | ciphertext
   all_goals simp only [localKemPreChallengeImpl, KEMScheme.IND_CCA_preChallengeImpl,
     IsMlKemUniformQuery, IsMlKemBaseQuery,
-    IsMlKemLogicalDecapsulationQuery, if_true, if_false, Nat.zero_add, Nat.add_zero]
+    IsMlKemLogicalDecapsulationQuery, ite_true, ite_false, Nat.zero_add, Nat.add_zero]
   · change (simulateQ (kemAmbientImpl baseImpl)
       ((unifSpec + baseSpec).query (.inl coin))).IsTotalQueryBound 1
     rw [simulateQ_spec_query]

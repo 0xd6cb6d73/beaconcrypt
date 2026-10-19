@@ -194,7 +194,7 @@ private theorem array_eq_loop_aux {n : Std.Usize} (a b : Std.Array Std.U8 n) (k 
     unfold core.Array.Insts.CoreCmpPartialEqArray.eq_loop
     rw [loop_unfold]
     unfold core.Array.Insts.CoreCmpPartialEqArray.eq_loop.body
-    rw [if_neg hnot]
+    rw [ite_eq_right hnot]
     simp only [bind_tc_ok]
     congr 1
     symm
@@ -207,14 +207,14 @@ private theorem array_eq_loop_aux {n : Std.Usize} (a b : Std.Array Std.U8 n) (k 
     unfold core.Array.Insts.CoreCmpPartialEqArray.eq_loop
     rw [loop_unfold]
     unfold core.Array.Insts.CoreCmpPartialEqArray.eq_loop.body
-    rw [if_pos hlt, array_index_eq a i hia]
+    rw [ite_eq_left hlt, array_index_eq a i hia]
     simp only [bind_tc_ok]
     rw [array_index_eq b i hia]
     simp only [bind_tc_ok, core.U8.Insts.CoreCmpPartialEqU8]
     by_cases heq : a.val[i.val]! = b.val[i.val]!
     · have hnb : n.val < 2 ^ System.Platform.numBits := n.bv.isLt
       obtain ⟨z, hz, hzv⟩ := usize_add_val i 1#usize (by simp; omega)
-      simp only [heq, beq_self_eq_true, if_true, hz, bind_tc_ok]
+      simp only [heq, beq_self_eq_true, ite_true, hz, bind_tc_ok]
       have hih := ih z (by rw [hzv]; simp; omega)
       unfold core.Array.Insts.CoreCmpPartialEqArray.eq_loop
         core.Array.Insts.CoreCmpPartialEqArray.eq_loop.body at hih
@@ -231,7 +231,7 @@ private theorem array_eq_loop_aux {n : Std.Usize} (a b : Std.Array Std.U8 n) (k 
       · intro h j h1 h2
         exact h j (by omega) h2
     · have hne : (a.val[i.val]! == b.val[i.val]!) = false := by simpa using heq
-      simp only [hne, if_false, bind_tc_ok, Bool.false_eq_true]
+      simp only [hne, ite_false, bind_tc_ok, Bool.false_eq_true]
       congr 1
       symm
       simp only [decide_eq_false_iff_not]

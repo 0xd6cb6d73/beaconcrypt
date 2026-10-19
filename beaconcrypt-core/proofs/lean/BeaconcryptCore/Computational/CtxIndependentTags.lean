@@ -218,7 +218,7 @@ theorem ctxRandomOracle_split_projection (key : CtxKey)
           QueryImpl.withCaching_run_none uniformSampleImpl hcache]
         unfold ctxSplitRandomOracle
         unfold ctxKeyFreeSuffixStep
-        simp only [StateT.run, hprefix, if_pos]
+        simp only [StateT.run, hprefix, ite_eq_left]
         rw [hsuffix]
         simp only [uniformSampleImpl, Functor.map_map]
         rw [bind_pure_comp]
@@ -250,7 +250,7 @@ theorem ctxRandomOracle_split_projection (key : CtxKey)
         unfold ctxSplitRandomOracle
         simp only [StateT.run, hprefix]
         rw [hsplit]
-        simp only [if_false]
+        simp only [ite_false]
         simp only [uniformSampleImpl, Functor.map_map]
         rw [bind_pure_comp]
         apply congrArg (fun f : CtxDigest → CtxDigest × SplitCache =>
@@ -281,7 +281,7 @@ theorem ctxSplitRandomOracle_outerInput_eq_keyFreeSuffix
       ((), outerInput key nonce context tag)).run cache =
         (ctxKeyFreeSuffixOracle (outerSuffix nonce context tag)).run cache := by
   unfold ctxSplitRandomOracle ctxKeyFreeSuffixOracle
-  simp only [StateT.run, secretPrefixQuery_outerInput, if_pos]
+  simp only [StateT.run, secretPrefixQuery_outerInput, ite_eq_left]
   rw [secretSuffix_outerInput]
 
 /-- Public canonical queries routed through the split representation. -/
@@ -348,7 +348,7 @@ theorem ctxSealOracle_split_projection (c : Pqxdh.Crypto) (key : CtxKey)
     simp [StateT.run, hused, splitHandlerState]
   · unfold ctxSealOracle ctxKeyFreeSealOracle
     simp only [StateT.run]
-    simp only [hused, if_false, splitHandlerState]
+    simp only [hused, ite_false, splitHandlerState]
     simp only [map_bind, map_pure]
     simp only [Prod.map, id_eq, splitHandlerState_addSeal]
     rw [← bind_map_left]
@@ -560,7 +560,7 @@ theorem ctxSplitRoutedPublicOracle_eq_independent_of_not_prefix
   | none =>
       unfold ctxSplitRoutedPublicOracle ctxIndependentPublicOracle
       unfold ctxSplitRandomOracle
-      simp only [StateT.run, hprefix, if_false, hcache]
+      simp only [StateT.run, hprefix, ite_false, hcache]
       have horacle :
           ctxRandomOracle query state.cache.publicCache =
             (fun digest =>
@@ -572,7 +572,7 @@ theorem ctxSplitRoutedPublicOracle_eq_independent_of_not_prefix
   | some digest =>
       unfold ctxSplitRoutedPublicOracle ctxIndependentPublicOracle
       unfold ctxSplitRandomOracle
-      simp only [StateT.run, hprefix, if_false, hcache]
+      simp only [StateT.run, hprefix, ite_false, hcache]
       have horacle :
           ctxRandomOracle query state.cache.publicCache =
             pure (digest, state.cache.publicCache) :=

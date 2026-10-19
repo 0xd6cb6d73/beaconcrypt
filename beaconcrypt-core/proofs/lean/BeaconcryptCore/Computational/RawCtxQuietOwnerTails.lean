@@ -62,9 +62,9 @@ theorem step_tail {Metadata Result : Type}
   rcases request with (plaintext | raw) | externalRequest
   · simp only [compiler, RawCtxChainOwner.ownerImpl, RawCtxChainOwner.sendOwner, StateT.run] at occurs
     by_cases empty : plaintext.isEmpty = true
-    · simp only [empty, if_true, pure_bind] at occurs
+    · simp only [empty, ite_true, pure_bind] at occurs
       exact (no_occurrence sender decode _ (quiet none) _ query next occurs).elim
-    · simp only [empty, Bool.false_eq_true, if_false, calls, bind_assoc, pure_bind] at occurs
+    · simp only [empty, Bool.false_eq_true, ite_false, calls, bind_assoc, pure_bind] at occurs
       exact RawCtxPendingQueryTails.send_occurs (sendRest sender decode state outside)
         (QuietTail sender decode)
         (fun result innerQuery innerNext innerOccurs _ =>
@@ -74,9 +74,9 @@ theorem step_tail {Metadata Result : Type}
         query next occurs selected
   · simp only [compiler, RawCtxChainOwner.ownerImpl, RawCtxChainOwner.rawReceive, StateT.run] at occurs
     by_cases empty : raw.isEmpty = true
-    · simp only [empty, if_true, pure_bind] at occurs
+    · simp only [empty, ite_true, pure_bind] at occurs
       exact (no_occurrence sender decode _ (quiet .None) _ query next occurs).elim
-    · simp only [empty, Bool.false_eq_true, if_false] at occurs
+    · simp only [empty, Bool.false_eq_true, ite_false] at occurs
       cases decoded : decode raw with
       | none =>
           simp only [decoded, pure_bind] at occurs
@@ -84,7 +84,7 @@ theorem step_tail {Metadata Result : Type}
       | some frame =>
           simp only [decoded] at occurs
           by_cases valid : RawCtxReceive.ValidFrame state.expectedSender state.associatedData frame
-          · simp only [valid, if_true, calls, bind_assoc, pure_bind] at occurs
+          · simp only [valid, ite_true, calls, bind_assoc, pure_bind] at occurs
             exact RawCtxPendingQueryTails.receive_occurs (receiveRest sender decode state outside)
               (QuietTail sender decode)
               (fun result innerQuery innerNext innerOccurs _ =>
@@ -92,7 +92,7 @@ theorem step_tail {Metadata Result : Type}
               (fun pending => ⟨.receive state outside pending, rfl, quiet⟩)
               (RawCtxChainReceive.normalBegin state.kernel frame.sequence ⟨raw, frame, state.associatedData⟩)
               query next occurs selected
-          · simp only [valid, if_false, pure_bind] at occurs
+          · simp only [valid, ite_false, pure_bind] at occurs
             exact (no_occurrence sender decode _ (quiet .None) _ query next occurs).elim
   · simp only [compiler, StateT.run, publicForward, bind_assoc, pure_bind] at occurs
     rcases query_cases query (.inr (.inr externalRequest)) next

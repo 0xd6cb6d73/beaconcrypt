@@ -63,7 +63,7 @@ theorem quiet_program (target : RootOutput)
     simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind, mem_support_bind_iff] at supported
     obtain ⟨reply, reached, rest⟩ := supported
     have first := rules.quiet query unselected state reply reached
-    have later := ih reply.1 (by simpa only [unselected, if_false] using quiet.2 reply.1) reply.2 result rest
+    have later := ih reply.1 (by simpa only [unselected, ite_false] using quiet.2 reply.1) reply.2 result rest
     exact ⟨later.1.trans first.1, List.Subset.trans first.2 later.2⟩
 
 /-- A preserved candidate prefix and flag retain the exact same original-history disclosure invariant. -/
@@ -299,7 +299,7 @@ theorem trace_keep {κ V : Type} {spec : OracleSpec κ}
     obtain ⟨reply, reached, rest⟩ := supported
     simp only [RawCtxFlaggedQueryTrace.trace, StateT.run, bind_pure_comp, support_map] at reached
     obtain ⟨actual, _, rfl⟩ := reached
-    have later := ih actual.1 (by simpa only [flagEq, Bool.false_eq_true, if_false] using quiet.2 actual.1) _ result rest
+    have later := ih actual.1 (by simpa only [flagEq, Bool.false_eq_true, ite_false] using quiet.2 actual.1) _ result rest
     exact ⟨by simpa only [flagEq, Bool.or_false] using later.1,
       List.Subset.trans (List.subset_append_left _ _) later.2⟩
 

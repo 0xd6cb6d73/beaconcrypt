@@ -50,7 +50,7 @@ theorem routed_eq_real (source : FixedHkdfSha512NoSaltSource)
         (PqxdhChallengeSecretRouting.reduction source kem protocol) true := by
   simp only [routedMain, PqxdhAuthenticatedRootCorrectness.main,
     PqxdhAuthenticatedRootCorrectness.prepare, PqxdhAuthenticatedRootCorrectness.after,
-    protocolPrefix, routedAfter, if_true, oneKeyBranch, runtimeOfImpl_evalDist,
+    protocolPrefix, routedAfter, ite_true, oneKeyBranch, runtimeOfImpl_evalDist,
     oneKeyBranchMain, oneKeyPrefix, oneKeyFinish, PqxdhChallengeSecretRouting.reduction,
     simulateQ_bind, pure_bind, bind_assoc, runtimeOfImpl_liftProbComp,
     simulateQ_kemAmbient_liftProbComp]

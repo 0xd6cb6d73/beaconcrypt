@@ -140,12 +140,12 @@ theorem ctxKeyFreeSealOracle_publicInputs
     result.2.publicInputs = state.publicInputs := by
   by_cases hused : input.nonce ∈ state.usedNonces
   · unfold ctxKeyFreeSealOracle at hresult
-    simp only [StateT.run, hused, if_true, support_pure,
+    simp only [StateT.run, hused, ite_true, support_pure,
       Set.mem_singleton_iff] at hresult
     subst result
     rfl
   · unfold ctxKeyFreeSealOracle at hresult
-    simp only [StateT.run, hused, if_false] at hresult
+    simp only [StateT.run, hused, ite_false] at hresult
     rw [mem_support_bind_iff] at hresult
     obtain ⟨oracleResult, _, hresult⟩ := hresult
     simp only [support_pure, Set.mem_singleton_iff] at hresult
@@ -261,12 +261,12 @@ theorem ctxDirectSampleKeyFreeSealOracle_publicInputs
     result.2.publicInputs = state.publicInputs := by
   by_cases hused : input.nonce ∈ state.usedNonces
   · unfold ctxDirectSampleKeyFreeSealOracle at hresult
-    simp only [StateT.run, hused, if_true, support_pure,
+    simp only [StateT.run, hused, ite_true, support_pure,
       Set.mem_singleton_iff] at hresult
     subst result
     rfl
   · unfold ctxDirectSampleKeyFreeSealOracle at hresult
-    simp only [StateT.run, hused, if_false] at hresult
+    simp only [StateT.run, hused, ite_false] at hresult
     rw [mem_support_bind_iff] at hresult
     obtain ⟨commit, _, hresult⟩ := hresult
     simp only [support_pure, Set.mem_singleton_iff] at hresult
@@ -316,10 +316,10 @@ theorem ctxDirectSampleIndependentTag_run_publicInputs_length_le_of_main
       have hrec := ih stepResult.1 (hbound.2 stepResult.1)
         stepResult.2 result hrest
       by_cases hpublic : IsCtxPublicQuery query
-      · simp only [hpublic, if_true] at hstepLength hrec
+      · simp only [hpublic, ite_true] at hstepLength hrec
         have hn : 0 < n := hbound.1.resolve_left (not_not.mpr hpublic)
         omega
-      · simp only [hpublic, if_false] at hstepLength hrec
+      · simp only [hpublic, ite_false] at hstepLength hrec
         omega
 
 /-- Compatibility wrapper for the authenticity adversary output. -/

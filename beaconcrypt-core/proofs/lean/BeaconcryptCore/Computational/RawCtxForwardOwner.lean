@@ -202,19 +202,19 @@ theorem program_erase {Metadata Result : Type}
     · simp only [RawCtxPendingOwnerQueries.compiler, RawCtxChainOwner.ownerImpl,
         RawCtxChainOwner.rawReceive, StateT.run]
       by_cases empty : raw.isEmpty = true
-      · simp only [empty, if_true, pure_bind]
+      · simp only [empty, ite_true, pure_bind]
         exact ih .None _
-      · simp only [empty, Bool.false_eq_true, if_false]
+      · simp only [empty, Bool.false_eq_true, ite_false]
         cases decoded : decode raw with
         | none =>
           simp only [pure_bind]
           exact ih .None _
         | some frame =>
           by_cases valid : RawCtxReceive.ValidFrame state.expectedSender state.associatedData frame
-          · simp only [valid, if_true, RawCtxPendingOwnerQueries.calls, bind_assoc, pure_bind]
+          · simp only [valid, ite_true, RawCtxPendingOwnerQueries.calls, bind_assoc, pure_bind]
             rw [receive_erase]
             exact bind_congr fun result => ih (RawCtxChainOwner.publish state result).1 (RawCtxChainOwner.publish state result).2
-          · simp only [valid, if_false, pure_bind]
+          · simp only [valid, ite_false, pure_bind]
             exact ih .None _
     · simp only [RawCtxPendingOwnerQueries.compiler, StateT.run, simulateQ_bind,
         simulateQ_spec_query, erase, RawCtxPendingOwnerQueries.publicForward, bind_assoc, pure_bind]
@@ -308,21 +308,21 @@ theorem program_sound {Metadata Result : Type}
         · intro result
           exact ih result.2 {state with kernel := result.1}
     · by_cases empty : raw.isEmpty = true
-      · simp only [empty, if_true]
+      · simp only [empty, ite_true]
         exact ih .None _
-      · simp only [empty, Bool.false_eq_true, if_false]
+      · simp only [empty, Bool.false_eq_true, ite_false]
         cases decoded : decode raw with
         | none => exact ih .None _
         | some frame =>
           by_cases valid : RawCtxReceive.ValidFrame state.expectedSender state.associatedData frame
-          · simp only [valid, if_true]
+          · simp only [valid, ite_true]
             apply receive_sound sender decode
             · intro result
               exact program_erase sender decode (outside (RawCtxChainOwner.publish state result).1)
                 (RawCtxChainOwner.publish state result).2
             · intro result
               exact ih (RawCtxChainOwner.publish state result).1 (RawCtxChainOwner.publish state result).2
-          · simp only [valid, if_false]
+          · simp only [valid, ite_false]
             exact ih .None _
     · rw [sound_query]
       constructor
@@ -347,18 +347,18 @@ theorem program_covered {Metadata Result : Type}
         intro result
         exact ih result.2 {state with kernel := result.1}
     · by_cases empty : raw.isEmpty = true
-      · simp only [empty, if_true]
+      · simp only [empty, ite_true]
         exact ih .None _
-      · simp only [empty, Bool.false_eq_true, if_false]
+      · simp only [empty, Bool.false_eq_true, ite_false]
         cases decoded : decode raw with
         | none => exact ih .None _
         | some frame =>
           by_cases valid : RawCtxReceive.ValidFrame state.expectedSender state.associatedData frame
-          · simp only [valid, if_true]
+          · simp only [valid, ite_true]
             apply receive_covered
             intro result
             exact ih (RawCtxChainOwner.publish state result).1 (RawCtxChainOwner.publish state result).2
-          · simp only [valid, if_false]
+          · simp only [valid, ite_false]
             exact ih .None _
     · rw [RawCtxForwardCoverage.covered_query]
       exact ⟨rfl, fun reply => ih reply state⟩

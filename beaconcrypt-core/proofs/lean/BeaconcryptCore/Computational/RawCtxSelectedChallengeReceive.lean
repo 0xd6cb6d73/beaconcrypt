@@ -182,10 +182,10 @@ theorem raw_source {Metadata : Type} (source : FixedHkdfSha512NoSaltSource) (wri
           (raw prior parent target nonce next read bytes owner)).run state := by
   simp only [RawCtxWholeOwner.rawReceive, raw, RawCtxChainOwner.rawReceive, RawCtxChainOwner.nativeState, StateT.run]
   by_cases empty : bytes.isEmpty = true
-  · simp only [empty, if_true, simulateQ_pure,
+  · simp only [empty, ite_true, simulateQ_pure,
       RawCtxWholeOwner.publish, RawCtxChainOwner.publish]
     rfl
-  · simp only [empty, Bool.false_eq_true, if_false]
+  · simp only [empty, Bool.false_eq_true, ite_false]
     cases decoded : read bytes with
     | none =>
       simp only [simulateQ_pure, RawCtxWholeOwner.publish,
@@ -193,7 +193,7 @@ theorem raw_source {Metadata : Type} (source : FixedHkdfSha512NoSaltSource) (wri
       rfl
     | some frame =>
       by_cases valid : RawCtxReceive.ValidFrame owner.expectedSender owner.associatedData frame
-      · simp only [valid, if_true, receiver, bind_pure_comp, simulateQ_map, ← QueryImpl.simulateQ_compose]
+      · simp only [valid, ite_true, receiver, bind_pure_comp, simulateQ_map, ← QueryImpl.simulateQ_compose]
         change (StateT.run _ (ambient, state.cache)) = _ <$> StateT.run _ state
         rw [StateT.run_map, StateT.run_map]
         obtain ⟨slices, parsed⟩ := (RawCtxFrameDecoding.fromPayload_some_iff frame.payload).mpr valid.2.1
@@ -205,7 +205,7 @@ theorem raw_source {Metadata : Type} (source : FixedHkdfSha512NoSaltSource) (wri
             result.2)) <$> work) actual
         simpa only [Functor.map_map, ← QueryImpl.simulateQ_compose, RawCtxWholeOwner.publish,
           RawCtxChainOwner.publish, RawCtxChainOwner.nativeState] using mapped
-      · simp only [valid, if_false, simulateQ_pure,
+      · simp only [valid, ite_false, simulateQ_pure,
           RawCtxWholeOwner.publish, RawCtxChainOwner.publish]
         rfl
 

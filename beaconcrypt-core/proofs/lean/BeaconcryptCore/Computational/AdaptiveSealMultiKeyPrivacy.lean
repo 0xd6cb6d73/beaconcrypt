@@ -37,7 +37,7 @@ theorem random_reduction {count : Nat} (target : Fin (count + 1)) (real : Fin co
   apply evalDist_eq_of_evalSPMF_eq
   rw [evalSPMF_map, source_prepared_selection target false real c client, ← evalSPMF_map]
   simp only [map_bind, Functor.map_map, modifiedNonceAeadINDDollarRandomExp, reduction,
-    simulateQ_map, StateT.run_map, bind_pure_comp, localImpl, Bool.false_eq_true, if_false, reconstruct]
+    simulateQ_map, StateT.run_map, bind_pure_comp, localImpl, Bool.false_eq_true, ite_false, reconstruct]
   exact OracleComp.DeferredSampling.evalSPMF_bind_const_neverFails ($ᵗ CtxKey) (by simp) _
 
 /-- One original key replacement is exactly the constructed ordinary Boolean IND$ game. -/
@@ -73,10 +73,10 @@ theorem family_bound {count : Nat} (c : Pqxdh.Crypto) (client : OracleComp (Spec
         (reduction target (otherReal target) c client) := by
   have bound := PqxdhComposition.finiteHybridBound_of_hop_bounds (game c client) (count + 1)
     (hopLoss c client) (fun hop valid => by
-      simpa only [hopLoss, dif_pos valid] using
+      simpa only [hopLoss, dite_eq_left valid] using
         (hop_advantage ⟨hop, valid⟩ c client).le)
   rw [← Fin.sum_univ_eq_sum_range] at bound
-  simpa only [hopLoss, dif_pos (Fin.isLt _)] using bound
+  simpa only [hopLoss, dite_eq_left (Fin.isLt _)] using bound
 
 /-- The actual all-real indexed family is bounded against the same all-random indexed family. -/
 theorem all_keys_bound {count : Nat} (c : Pqxdh.Crypto) (client : OracleComp (Spec (count + 1)) Bool) :

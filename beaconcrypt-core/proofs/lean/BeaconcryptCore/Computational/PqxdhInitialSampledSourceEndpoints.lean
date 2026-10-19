@@ -63,7 +63,7 @@ theorem actual_mixture :
         simp only [pure_bind, PqxdhInitialSampledParent.native, observation, Sum.map_inl, id_eq]
         exact OracleComp.DeferredSampling.evalSPMF_bind_const_neverFails ($ᵗ FullOutput) (by simp) (pure decision)
       | inr input =>
-        simp only [bind_assoc, pure_bind, Sum.map_inr, observation, localModel, Bool.false_eq_true, if_false,
+        simp only [bind_assoc, pure_bind, Sum.map_inr, observation, localModel, Bool.false_eq_true, ite_false,
           PqxdhInitialSampledParent.native, PqxdhInitialSampledParent.address]
         simp only [PqxdhInitialSourcePreparedSecrecy.actual, PqxdhInitialCommonSecrecy.actual,
           RawCtxSelectedParentCandidates.sample, bind_assoc, pure_bind]
@@ -91,7 +91,7 @@ theorem random_mixture :
         rw [OracleComp.DeferredSampling.evalSPMF_bind_const_neverFails ($ᵗ FullOutput) (by simp)]
         exact OracleComp.DeferredSampling.evalSPMF_bind_const_neverFails ($ᵗ FullOutput) (by simp) (pure decision)
       | inr input =>
-        simp only [bind_assoc, pure_bind, Sum.map_inr, observation, localModel, if_true,
+        simp only [bind_assoc, pure_bind, Sum.map_inr, observation, localModel, ite_true,
           PqxdhInitialSampledParent.native, PqxdhInitialSampledParent.address]
         simp only [PqxdhInitialSourcePreparedSecrecy.random, PqxdhInitialCommonSecrecy.random,
           RawCtxSelectedParentCandidates.sample, bind_assoc, pure_bind]
@@ -114,7 +114,7 @@ theorem local_real (start : Start extra M P I D K X Response A N S B) (qPost : N
   have same := PqxdhInitialSourceLaterMixture.resumed_real source writer start.1.selectedMessage zeroRoot (response start) start.1.other
     sender route decode start.1.index start.1.metadata { start.1.ready with root := zeroRoot } start.1.post start.1.before
     start.1.selected start.1.number start.1.ancestors start.1.disclosed start.1.shared start.1.privateState start.1.cache depth
-  simpa only [ProbComp.boolDistAdvantage, congrArg (fun μ : MeasureTheory.Measure Bool => μ {true}) same, sourceGame, localModel, Bool.false_eq_true, if_false] using
+  simpa only [ProbComp.boolDistAdvantage, congrArg (fun μ : MeasureTheory.Measure Bool => μ {true}) same, sourceGame, localModel, Bool.false_eq_true, ite_false] using
     compared.trans collision
 
 /-- Averaging the exact real source endpoint over the original preparation and shared initial64 draw retains its one collision allowance without a target-response selection factor. -/
@@ -165,7 +165,7 @@ theorem local_random (start : Start extra M P I D K X Response A N S B) (qPost :
     start.1.selected start.1.number start.1.ancestors start.1.disclosed start.1.shared start.1.privateState start.1.cache depth
   have back : ENNReal.ofReal (normalized.boolDistAdvantage (localModel source writer sender route decode depth remaining true start)) ≤
       ((8 + qPost * 67 : Nat) : ENNReal) * (2 ^ 256 : ENNReal)⁻¹ := by
-    simpa only [ProbComp.boolDistAdvantage, congrArg (fun μ : MeasureTheory.Measure Bool => μ {true}) same, normalized, marker, localModel, if_true] using compared.trans collision
+    simpa only [ProbComp.boolDistAdvantage, congrArg (fun μ : MeasureTheory.Measure Bool => μ {true}) same, normalized, marker, localModel, ite_true] using compared.trans collision
   have normal := PqxdhInitialSourceExperiment.normalization source writer start.1.selectedMessage zeroRoot (response start) start.1.other
     sender route decode start.1.index start.1.metadata { start.1.ready with root := zeroRoot } start.1.post start.1.before
     start.1.selected start.1.number start.1.ancestors start.1.disclosed start.1.shared start.1.privateState start.1.cache depth qPost bounded

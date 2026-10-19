@@ -137,7 +137,7 @@ theorem recordOpening_selected (input : RawCtxWholeOwner.OpenInput)
   · rename_i actual found
     have same := Option.some.inj (found.symm.trans hslices)
     subst actual
-    rw [dif_pos had]
+    rw [dite_eq_left had]
 
 /-- The actual source-selected opening equals its concrete canonical handler before any reply is known. -/
 theorem canonical_selected {Auxiliary : Type} (c : Pqxdh.Crypto)

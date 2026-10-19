@@ -26,15 +26,15 @@ theorem raw_map {Kernel Other Metadata : Type} {m : Type → Type*} [Monad m] [L
       Prod.map id (mapOwner interpret) <$> (rawReceive calls decode raw).run state := by
   simp only [rawReceive, mapOwner, StateT.run]
   by_cases empty : raw.isEmpty = true
-  · simp only [empty, if_true, map_pure, publish, Prod.map_def, id_eq, mapOwner]
-  · simp only [empty, Bool.false_eq_true, if_false]
+  · simp only [empty, ite_true, map_pure, publish, Prod.map_def, id_eq, mapOwner]
+  · simp only [empty, Bool.false_eq_true, ite_false]
     cases decoded : decode raw with
     | some frame =>
       by_cases valid : RawCtxReceive.ValidFrame state.expectedSender state.associatedData frame
-      · simp only [valid, if_true, bind_pure_comp]
+      · simp only [valid, ite_true, bind_pure_comp]
         rw [receiveMap, Functor.map_map, Functor.map_map]
         rfl
-      · simp only [valid, if_false, map_pure, publish, Prod.map_def, id_eq, mapOwner]
+      · simp only [valid, ite_false, map_pure, publish, Prod.map_def, id_eq, mapOwner]
     | none => simp only [map_pure, publish, Prod.map_def, id_eq, mapOwner]
 
 /-- Empty sends reject before callbacks; all other send outcomes retain their actual post-kernel and every owner field. -/
@@ -47,8 +47,8 @@ theorem send_map {Kernel Other Metadata : Type} {m : Type → Type*} [Monad m] [
       Prod.map id (mapOwner interpret) <$> (sendOwner calls sender plaintext).run state := by
   simp only [sendOwner, mapOwner, StateT.run]
   by_cases empty : plaintext.isEmpty = true
-  · simp only [empty, if_true, map_pure, Prod.map_def, id_eq, mapOwner]
-  · simp only [empty, Bool.false_eq_true, if_false, bind_pure_comp]
+  · simp only [empty, ite_true, map_pure, Prod.map_def, id_eq, mapOwner]
+  · simp only [empty, Bool.false_eq_true, ite_false, bind_pure_comp]
     rw [sendMap, Functor.map_map, Functor.map_map]
     rfl
 

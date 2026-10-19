@@ -663,8 +663,8 @@ theorem statefulPhase1FieldSubstitutionAdvantage_le_eufCma {SecretKey : Type}
     (deterministic : HasDeterministicVerification sigAlg verifyFn) :
     StatefulPhase1FieldSubstitutionAdvantage runtime sigAlg kem setup selector verifyFn ≤
       (statefulPhase1ToEUFCMA sigAlg kem setup selector).advantage runtime := by
-  letI : MeasurableSpace (StatefulPhase1Result kem setup selector) := ⊤
-  letI : DiscreteMeasurableSpace (StatefulPhase1Result kem setup selector) :=
+  let : MeasurableSpace (StatefulPhase1Result kem setup selector) := ⊤
+  let : DiscreteMeasurableSpace (StatefulPhase1Result kem setup selector) :=
     ⟨fun _ => by simp⟩
   unfold StatefulPhase1FieldSubstitutionAdvantage SignatureAlg.unforgeableAdv.advantage
   rw [unforgeableExp_statefulPhase1ToEUFCMA_eq_reference runtime sigAlg kem setup

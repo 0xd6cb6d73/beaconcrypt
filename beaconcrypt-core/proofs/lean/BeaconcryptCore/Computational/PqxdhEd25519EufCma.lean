@@ -1067,8 +1067,8 @@ theorem phase1FieldSubstitutionAdvantage_le_eufCma {ι : Type}
     Phase1FieldSubstitutionAdvantage runtime sigAlg materialGenerator adversary
         verifyFn ≤
       (phase1ToEUFCMA sigAlg materialGenerator adversary).advantage runtime := by
-  letI : MeasurableSpace (Phase1SharedResult Context) := ⊤
-  letI : DiscreteMeasurableSpace (Phase1SharedResult Context) :=
+  let : MeasurableSpace (Phase1SharedResult Context) := ⊤
+  let : DiscreteMeasurableSpace (Phase1SharedResult Context) :=
     ⟨fun _ => by simp⟩
   unfold Phase1FieldSubstitutionAdvantage SignatureAlg.unforgeableAdv.advantage
   rw [phase1FieldSubstitutionExp_eq_shared runtime sigAlg materialGenerator

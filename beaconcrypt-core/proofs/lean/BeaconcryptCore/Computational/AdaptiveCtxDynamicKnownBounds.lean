@@ -30,7 +30,7 @@ theorem target_step (c : Pqxdh.Crypto) (p : ReceiveSpec.Domain → Prop) [Decida
     exact (isQueryBoundP_query_iff p selected _).mpr (by intro hit; simp [hit])
   | inr known =>
     simp only [AdaptiveCtxDynamicKnownKeys.reductionImpl, StateT.run, bind_pure_comp,
-      isQueryBoundP_map_iff, TargetClass, if_false]
+      isQueryBoundP_map_iff, TargetClass, ite_false]
     apply forward_bound
     simp only [unavailable]
     exact isQueryBoundP_false _ 0
@@ -96,7 +96,7 @@ theorem uniform_step (c : Pqxdh.Crypto) (query : Spec.Domain) (state : Reduction
       isQueryBoundP_map_iff, UniformRoute]
     apply forward_bound
     simp only [forward_uniform_class]
-    simpa only [ModePrivate, if_true, if_false, StateT.run] using
+    simpa only [ModePrivate, ite_true, ite_false, StateT.run] using
       mode_uniform_step true known.decode c known.key known.request (state.others known.slot)
 
 /-- The dynamic reduction retains the complete explicit random-query allowance. -/

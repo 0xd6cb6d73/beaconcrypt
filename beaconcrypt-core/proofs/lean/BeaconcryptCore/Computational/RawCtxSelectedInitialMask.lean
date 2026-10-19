@@ -78,7 +78,7 @@ theorem routed_eq {Auxiliary : Type}
   funext query
   by_cases hit : root ∈ privateInputs query
   · simp [RawCtxSelectedAliasCoupling.routed, hit]
-  · simpa only [RawCtxSelectedAliasCoupling.routed, if_neg hit] using
+  · simpa only [RawCtxSelectedAliasCoupling.routed, ite_eq_right hit] using
       query_safe source writer prior root other left right nonce output reader view query hit
 
 /-- The full adaptive replacement costs the actual initializer-root candidate event, with every prior candidate and separate live-disclosure flag retained. -/

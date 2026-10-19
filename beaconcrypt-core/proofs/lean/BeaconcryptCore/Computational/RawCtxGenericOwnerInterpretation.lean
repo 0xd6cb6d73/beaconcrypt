@@ -26,13 +26,13 @@ theorem raw_interpretation {Kernel Metadata ι : Type} {spec : OracleSpec ι}
       (rawReceive (interpretedCalls impl calls) decode raw).run state := by
   simp only [rawReceive, StateT.run]
   by_cases empty : raw.isEmpty = true
-  · simp only [empty, if_true, simulateQ_pure]
-  · simp only [empty, Bool.false_eq_true, if_false]
+  · simp only [empty, ite_true, simulateQ_pure]
+  · simp only [empty, Bool.false_eq_true, ite_false]
     cases decoded : decode raw with
     | some frame =>
       by_cases valid : RawCtxReceive.ValidFrame state.expectedSender state.associatedData frame
-      · simp only [valid, if_true, interpretedCalls, bind_pure_comp, simulateQ_map]
-      · simp only [valid, if_false, simulateQ_pure]
+      · simp only [valid, ite_true, interpretedCalls, bind_pure_comp, simulateQ_map]
+      · simp only [valid, ite_false, simulateQ_pure]
     | none => simp only [simulateQ_pure]
 
 /-- The same send interpreter preserves empty rejection, actual optional sealing and failed-seal advancement. -/
@@ -44,8 +44,8 @@ theorem send_interpretation {Kernel Metadata ι : Type} {spec : OracleSpec ι}
       (sendOwner (interpretedCalls impl calls) sender plaintext).run state := by
   simp only [sendOwner, StateT.run]
   by_cases empty : plaintext.isEmpty = true
-  · simp only [empty, if_true, simulateQ_pure]
-  · simp only [empty, Bool.false_eq_true, if_false, interpretedCalls, bind_pure_comp, simulateQ_map]
+  · simp only [empty, ite_true, simulateQ_pure]
+  · simp only [empty, Bool.false_eq_true, ite_false, interpretedCalls, bind_pure_comp, simulateQ_map]
 
 /-- The complete original mixed-owner step uses exactly the separately interpreted source callbacks. -/
 theorem owner_interpretation {Kernel Metadata ι : Type} {spec : OracleSpec ι}

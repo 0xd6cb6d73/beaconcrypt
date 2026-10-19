@@ -49,12 +49,12 @@ theorem candidate_quiet (first : RustM (KernelOf Slot)) (candidate : pqxdh.Serve
   intro valid _
   cases valid
   · trivial
-  · simp only [Bool.not_true, Bool.false_eq_true, if_false]
+  · simp only [Bool.not_true, Bool.false_eq_true, ite_false]
     apply isQueryBoundP_bind (n := 0) (m := 0) (aux_quiet _)
     intro reserved _
     cases reserved
     · trivial
-    · simp only [Bool.not_true, Bool.false_eq_true, if_false]
+    · simp only [Bool.not_true, Bool.false_eq_true, ite_false]
       cases first with
       | fail error => trivial
       | div => trivial
@@ -67,7 +67,7 @@ theorem candidate_quiet (first : RustM (KernelOf Slot)) (candidate : pqxdh.Serve
               intro allocated _
               cases allocated
               · trivial
-              · simp only [Bool.not_true, Bool.false_eq_true, if_false]
+              · simp only [Bool.not_true, Bool.false_eq_true, ite_false]
                 cases binding : candidate.key_id_binding with
                 | fail error => trivial
                 | div => trivial

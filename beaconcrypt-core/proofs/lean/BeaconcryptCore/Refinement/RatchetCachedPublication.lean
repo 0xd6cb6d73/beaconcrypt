@@ -28,12 +28,12 @@ theorem publish_cached_receive_exact {SendChain ReceiveChain Material : Type}
         else if i = prepared.target_slot.val then state.receive_slots.val[prepared.last_slot.val]!
         else state.receive_slots.val[i]! := by
   simp only [publish_cached_receive, lift, capacity_eq_ok, bind_tc_ok,
-    if_neg (by scalar_tac : ¬UScalar.cast UScalarTy.Usize prepared.target_slot ≥ UScalar.cast UScalarTy.Usize 50#u64),
-    if_neg (by scalar_tac : ¬UScalar.cast UScalarTy.Usize prepared.last_slot ≥ UScalar.cast UScalarTy.Usize 50#u64)]
+    ite_eq_right (by scalar_tac : ¬UScalar.cast UScalarTy.Usize prepared.target_slot ≥ UScalar.cast UScalarTy.Usize 50#u64),
+    ite_eq_right (by scalar_tac : ¬UScalar.cast UScalarTy.Usize prepared.last_slot ≥ UScalar.cast UScalarTy.Usize 50#u64)]
   simp! only [array_index_mut_eq_ok state.receive_slots
     (UScalar.cast UScalarTy.Usize prepared.last_slot) (by scalar_tac),
     core.option.Option.take, Std.core.option.Option.take, bind_tc_ok, massert,
-    if_pos (by scalar_tac : UScalar.cast UScalarTy.Usize prepared.target_slot < 50#usize)]
+    ite_eq_left (by scalar_tac : UScalar.cast UScalarTy.Usize prepared.target_slot < 50#usize)]
   simp! only [array_index_mut_eq_ok
     (state.receive_slots.set (UScalar.cast UScalarTy.Usize prepared.last_slot) none)
     (UScalar.cast UScalarTy.Usize prepared.target_slot) (by scalar_tac), bind_tc_ok]
@@ -113,7 +113,7 @@ theorem KernelRefines.cached_publication
         kernel.refined.control.receive_cache.entries.val[j]! := by
       simpa only [j, hlast, apply_ite] using hentries i hi'
     have hslotAt : published.receive_slots.val[i]! = kernel.refined.receive_slots.val[j]! := by
-      simpa only [j, apply_ite, if_neg (by omega : i ≠ prepared.last_slot.val)] using
+      simpa only [j, apply_ite, ite_eq_right (by omega : i ≠ prepared.last_slot.val)] using
         hslots i (by omega)
     have hmem : p.1 + 1 ∈ cacheSeqs prepared.committed_control.receive_cache :=
       (mem_cacheSeqs_iff _ _).mpr ⟨i, hi', by rw [hentryAt, ← hsequence, hvalue]⟩
@@ -143,7 +143,7 @@ theorem KernelRefines.cached_publication
         kernel.refined.control.receive_cache.entries.val[i]! := by
       simpa only [← hlast, ← apply_ite, hsource] using hentries j hj
     have hslotAt : published.receive_slots.val[j]! = kernel.refined.receive_slots.val[i]! := by
-      simpa only [if_neg (by omega : j ≠ prepared.last_slot.val), ← apply_ite, hsource] using
+      simpa only [ite_eq_right (by omega : j ≠ prepared.last_slot.val), ← apply_ite, hsource] using
         hslots j (by omega)
     exact ⟨j, by simpa only [hcontrol] using hj, cached, hslotAt.trans hcached,
       by simpa only [hcontrol] using hsequence.trans hentryAt.symm, hvalue, hmaterial⟩
@@ -151,8 +151,8 @@ theorem KernelRefines.cached_publication
     have hlo' : prepared.committed_control.receive_cache.len.val ≤ i := by
       simpa only [hcontrol] using hlo
     by_cases hilast : i = prepared.last_slot.val
-    · simpa only [if_pos hilast] using hslots i hi
-    · simpa only [if_neg hilast, if_neg (by omega : i ≠ prepared.target_slot.val),
+    · simpa only [ite_eq_left hilast] using hslots i hi
+    · simpa only [ite_eq_right hilast, ite_eq_right (by omega : i ≠ prepared.target_slot.val),
         h.slotsAboveLenEmpty i (by omega) hi] using hslots i hi
 
 /-- Cached success returns the ideal plaintext and preserves the complete kernel relation, with publication derived from the extracted implementation. -/

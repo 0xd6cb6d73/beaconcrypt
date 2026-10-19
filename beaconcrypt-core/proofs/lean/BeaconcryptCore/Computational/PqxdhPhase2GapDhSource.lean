@@ -174,7 +174,7 @@ theorem collect_realization {joint : Primitives} (dh : DhInterface joint) (domai
     try simp only [simulateQ_bind, simulateQ_spec_query, simulateQ_pure, map_bind, map_pure,
       nativeImpl, prefixImpl, ← selected_reply dh domain scalar, selectedReply,
       Option.elim_none, Option.elim_some, Option.map_none, Option.map_some, bind_assoc, pure_bind]
-    first | rfl | (congr 1 <;> first | rfl | (funext reply; cases reply)) | (split <;> try simp_all only [if_pos, if_neg]))
+    first | rfl | (congr 1 <;> first | rfl | (funext reply; cases reply)) | (split <;> try simp_all only [ite_eq_left, ite_eq_right]))
   all_goals simp only [Option.elim, simulateQ_pure, map_pure, Option.map]
 
 /-- The equality is retained by the complete remaining computation, rather than only by a marginal root-input projection. -/
@@ -331,7 +331,7 @@ theorem interpreted_bound {joint : Primitives} {dh : DhInterface joint} (domain 
     intro query state
     cases query with
     | selected input =>
-      simp only [prefixImpl, StateT.run_bind, StateT.run_pure, selectedQuery, if_true]
+      simp only [prefixImpl, StateT.run_bind, StateT.run_pure, selectedQuery, ite_true]
       simpa only [Nat.add_zero] using isQueryBoundP_bind (visitBound input state)
         (fun _ _ => isQueryBoundP_pure predicate _ 0)
     | _ => exact auxBound _ state

@@ -40,7 +40,7 @@ theorem begin_receive_entry_exact {Context : Type} (kernel : ConcreteRatchetKern
     cases empty <;> by_cases hgap : skipped > control.RATCHET_MAX_GAP <;>
       simp only [hskipped, lift, control.RatchetState.receive_cache_len, hempty, hgap,
         RatchetChain.as_bytes, SymmetricRatchetKdfRequest.new, refined.empty_material_slots,
-        bind_tc_ok, Bool.false_eq_true, if_false, if_true, RustM.ok.injEq, effectEntry]
+        bind_tc_ok, Bool.false_eq_true, ite_false, ite_true, RustM.ok.injEq, effectEntry]
     all_goals exact ⟨_, rfl, rfl⟩
 
 
@@ -49,7 +49,7 @@ theorem ReceiveKdf.resume_progress {Context : Type} (pending : ReceiveKdf Contex
     ∃ result, pending.resume response = ok result ∧ ResumeProgress pending result := by
   by_cases hzero : pending.remaining = 0#u8
   · simp [ReceiveKdf.resume, hzero, receive_rejected, ResumeProgress, effectEntry]
-  · simp only [ReceiveKdf.resume, hzero, if_false]
+  · simp only [ReceiveKdf.resume, hzero, ite_false]
     split
     · obtain ⟨advanced, hadvanced⟩ := control.advance_receive_target_total pending.working_control
       cases hseq : advanced.sequence <;> simp only [hadvanced, hseq, bind_tc_ok, receive_rejected]
@@ -74,7 +74,7 @@ theorem ReceiveKdf.resume_progress {Context : Type} (pending : ReceiveKdf Contex
         (by scalar_tac)
       cases logical <;> simp only [hlogical, core.option.Option.Insts.CoreCmpPartialEqOption.eq,
         core.U64.Insts.CoreCmpPartialEqU64, control.capacity_eq_ok, hnextSlot, bind_tc_ok,
-        Bool.false_eq_true, if_false]
+        Bool.false_eq_true, ite_false]
       all_goals first | exact ⟨_, rfl, rfl, True.intro⟩ | skip
       repeat' first | exact ⟨_, rfl, rfl, True.intro⟩ | split
       all_goals simp only [control.array_index_eq_ok pending.staged_slots (UScalar.cast UScalarTy.Usize slot)

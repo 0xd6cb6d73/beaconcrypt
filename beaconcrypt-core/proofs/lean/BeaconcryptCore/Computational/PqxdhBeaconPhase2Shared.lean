@@ -83,12 +83,12 @@ theorem admitted_exact {Response Shared : Type} (interpret : Shared → Word32)
           control.beacon_identity_public_key = ok (associatedData control) :=
         (BeaconcryptCore.PanicFreedom.build_associated_data_ok _ _).choose_spec
       simp [concreteInputs, pqxdh.beacon_prepare_finish, array_eq_abs, identity, rootEq, adEq] at actual
-      simp only [concreteInputs, ← actual, optionalMetadata, candidateMetadata, admitted, identity, dh, if_true]
+      simp only [concreteInputs, ← actual, optionalMetadata, candidateMetadata, admitted, identity, dh, ite_true]
     · have rootEq := (build_root_key_input_abs (concreteSecrets interpret inputs.secrets)).2 dh
       simp [concreteInputs, pqxdh.beacon_prepare_finish, array_eq_abs, identity, rootEq] at actual
-      simp only [concreteInputs, ← actual, optionalMetadata, admitted, identity, dh, if_true, if_false]
+      simp only [concreteInputs, ← actual, optionalMetadata, admitted, identity, dh, ite_true, ite_false]
   · simp [concreteInputs, pqxdh.beacon_prepare_finish, array_eq_abs, identity] at actual
-    simp only [concreteInputs, ← actual, optionalMetadata, admitted, identity, if_false]
+    simp only [concreteInputs, ← actual, optionalMetadata, admitted, identity, ite_false]
 
 /-- Only the decapsulation reply and temporary-secret erasure carry opaque shared values; all original request arguments are retained. -/
 inductive Query (I D K X Response Shared : Type) where

@@ -26,12 +26,12 @@ theorem total_of_partition {ι Result : Type} {spec : OracleSpec ι}
       rw [isQueryBoundP_query_bind_iff] at left right
       rw [isTotalQueryBound_query_bind_iff]
       by_cases selected : predicate query
-      · simp only [selected, not_true_eq_false, false_or, if_true, not_false_eq_true,
-          true_or, if_false, true_and] at left right
+      · simp only [selected, not_true_eq_false, false_or, ite_true, not_false_eq_true,
+          true_or, ite_false, true_and] at left right
         refine ⟨by omega, fun reply => ?_⟩
         exact (ih reply (first - 1) second (left.2 reply) (right reply)).mono (by omega)
-      · simp only [selected, not_false_eq_true, true_or, if_false, true_and,
-          not_true_eq_false, false_or, if_true] at left right
+      · simp only [selected, not_false_eq_true, true_or, ite_false, true_and,
+          not_true_eq_false, false_or, ite_true] at left right
         refine ⟨by omega, fun reply => ?_⟩
         exact (ih reply first (second - 1) (left reply) (right.2 reply)).mono (by omega)
 
@@ -57,13 +57,13 @@ theorem query_union {ι Result : Type} {spec : OracleSpec ι}
   | query_bind query next ih =>
       rw [isQueryBoundP_query_bind_iff] at left right ⊢
       by_cases hp : p query <;> by_cases hq : q query
-      · simp only [hp, hq, true_or, if_true, not_true_eq_false, false_or] at left right ⊢
+      · simp only [hp, hq, true_or, ite_true, not_true_eq_false, false_or] at left right ⊢
         exact ⟨by omega, fun reply => (ih reply (first - 1) (second - 1) (left.2 reply) (right.2 reply)).mono (by omega)⟩
-      · simp only [hp, hq, true_or, if_true, if_false, true_and, not_true_eq_false, not_false_eq_true, false_or] at left right ⊢
+      · simp only [hp, hq, true_or, ite_true, ite_false, true_and, not_true_eq_false, not_false_eq_true, false_or] at left right ⊢
         exact ⟨by omega, fun reply => (ih reply (first - 1) second (left.2 reply) (right reply)).mono (by omega)⟩
-      · simp only [hp, hq, true_or, if_true, if_false, true_and, not_true_eq_false, not_false_eq_true, false_or] at left right ⊢
+      · simp only [hp, hq, true_or, ite_true, ite_false, true_and, not_true_eq_false, not_false_eq_true, false_or] at left right ⊢
         exact ⟨by omega, fun reply => (ih reply first (second - 1) (left reply) (right.2 reply)).mono (by omega)⟩
-      · simp only [hp, hq, false_or, if_false, not_false_eq_true, true_or, true_and] at left right ⊢
+      · simp only [hp, hq, false_or, ite_false, not_false_eq_true, true_or, true_and] at left right ⊢
         exact fun reply => ih reply first second (left reply) (right reply)
 
 /-- The actual admitted source receiver retains its 51 KDF cap and at most one opening, including all rejected initial sequences. -/
@@ -272,7 +272,7 @@ theorem interpreted_total_bound {ι κ Result A : Type} {spec : OracleSpec ι} {
   have bound := FinitePartitionQueryBounds.weighted_bound (fun (_ : spec.Domain) => ())
     (fun _ => qCall) (fun _ => budget) handler predicate client
     (fun kind => by cases kind; simpa only [IsTotalQueryBound, IsQueryBoundP, not_true_eq_false,
-      false_or, if_true] using bounded) step auxiliary
+      false_or, ite_true] using bounded) step auxiliary
   simpa only [Finset.univ_unique, Finset.sum_singleton, Nat.mul_comm] using bound
 
 /-- The expanded native adapter charges every primitive/codec callback's selected work, including work before terminal abort. -/

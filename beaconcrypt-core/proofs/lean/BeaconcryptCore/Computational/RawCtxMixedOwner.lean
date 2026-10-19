@@ -302,7 +302,7 @@ theorem source_step {Metadata PrimitiveState : Type} {ι : Type} {base : OracleS
       obtain ⟨sent, hsent, rfl⟩ := supported
       have metadata := RawCtxSourceSend.sendGame_publication (impl ∘ₛ sendAdapter)
         senderId plaintext state.1 state.2 sent hsent
-      simp only [Sum.isRight, Bool.false_eq_true, if_false, Nat.add_zero, ownerFields,
+      simp only [Sum.isRight, Bool.false_eq_true, ite_false, Nat.add_zero, ownerFields,
         metadata.1, metadata.2.1, metadata.2.2.1, metadata.2.2.2, and_self]
   | inr raw =>
       change core.option.Option RawCtxWholeOwner.Decrypted × (RawCtxWholeOwner.OwnerState Metadata × PrimitiveState) at result
@@ -312,7 +312,7 @@ theorem source_step {Metadata PrimitiveState : Type} {ι : Type} {base : OracleS
       obtain ⟨sent, hsent, rfl⟩ := supported
       have metadata := RawCtxWholeOwner.rawGame_preserves_metadata (impl ∘ₛ receiveAdapter)
         decode raw state.1 state.2 sent hsent
-      simp only [Sum.isRight, if_true, ownerFields,
+      simp only [Sum.isRight, ite_true, ownerFields,
         metadata.1, metadata.2.1, metadata.2.2.1, metadata.2.2.2, and_self]
 
 /-- The actual mixed schedule bounds its receive counter and preserves route, AD and complete metadata. -/
@@ -339,10 +339,10 @@ theorem source_schedule {Metadata PrimitiveState Result : Type} {ι : Type} {bas
       have rest := ih step.1 _ (hRaw.2 step.1) step.2 result htail
       refine ⟨?_, rest.2.trans hlocal.2⟩
       by_cases right : query.isRight = true
-      · simp only [right, if_true] at hlocal rest
+      · simp only [right, ite_true] at hlocal rest
         have positive : 0 < qRaw := hRaw.1.resolve_left (not_not.mpr right)
         omega
-      · simp only [right, Bool.false_eq_true, if_false, Nat.add_zero] at hlocal rest
+      · simp only [right, Bool.false_eq_true, ite_false, Nat.add_zero] at hlocal rest
         omega
 
 end BeaconcryptCore.Computational.RawCtxMixedOwner

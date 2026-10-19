@@ -125,7 +125,7 @@ theorem records
     (((fun a => (a.1.1, { before with roles := a.1.2, primitive := a.2 })) <$>
       PqxdhInitialPendingAmbient.cacheLive implementation query before.roles before.primitive).run cache)
   rw [StateT.run_map, cache_run]
-  simp only [Functor.map_map, Function.comp_def]
+  simp only [Functor.map_map]
 
 
 section Current

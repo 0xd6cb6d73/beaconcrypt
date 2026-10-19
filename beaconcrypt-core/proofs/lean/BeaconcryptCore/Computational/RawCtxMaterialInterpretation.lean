@@ -56,9 +56,9 @@ theorem receive_key_map {SendChain ReceiveChain Material Value : Type} (interpre
     congr 1
     funext capacity
     by_cases outside : index ≥ capacity
-    · simp only [outside, if_true]
+    · simp only [outside, ite_true]
       rfl
-    · simp only [outside, if_false, map_bind, bind_map_left]
+    · simp only [outside, ite_false, map_bind, bind_map_left]
       congr 1
       funext entry
       cases entry <;> simp [mapOption, mapCached, core.option.Option.as_ref]
@@ -93,8 +93,8 @@ theorem prepare_cached_map {SendChain ReceiveChain Material Value : Type} (inter
     congr 1
     funext capacity
     by_cases outside : index ≥ capacity
-    · simp only [outside, if_true]
-    · simp only [outside, if_false]
+    · simp only [outside, ite_true]
+    · simp only [outside, ite_false]
       congr 1
       funext selected
       congr 1
@@ -177,20 +177,20 @@ theorem publish_cached_map {SendChain ReceiveChain Material Value : Type} (inter
   congr 1
   funext capacity
   by_cases targetOutside : targetIndex ≥ capacity
-  · simp only [targetOutside, if_true, rust_map_ok, mapRefined]
-  · simp only [targetOutside, if_false]
+  · simp only [targetOutside, ite_true, rust_map_ok, mapRefined]
+  · simp only [targetOutside, ite_false]
     by_cases lastOutside : lastIndex ≥ capacity
-    · simp only [lastOutside, if_true, rust_map_ok, mapRefined]
-    · simp only [lastOutside, if_false]
+    · simp only [lastOutside, ite_true, rust_map_ok, mapRefined]
+    · simp only [lastOutside, ite_false]
       by_cases same : targetIndex = lastIndex
-      · simp only [same, if_true, map_bind]
+      · simp only [same, ite_true, map_bind]
         congr 1
         funext entry
         exact congrArg (fun slots => RustM.ok
           { mapRefined interpret state with control := prepared.committed_control, receive_slots := slots })
           (mapArray_set (mapOption (mapCached interpret)) state.receive_slots lastIndex
             core.option.Option.None).symm
-      · simp only [same, if_false, map_bind]
+      · simp only [same, ite_false, map_bind]
         congr 1
         funext moved
         change (massert (targetIndex < 50#usize) >>= _) =
@@ -291,9 +291,9 @@ theorem publish_future_map_bounded {SendChain ReceiveChain Material Value : Type
     uscalar_sub_eq_ok (UScalar.cast UScalarTy.Usize 50#u64)
       (UScalar.cast UScalarTy.Usize pending.first_slot) (by scalar_tac)
   simp only [publish_future_receive, mapPending, mapRefined, lift, capacity_eq_ok, bind_tc_ok,
-    if_neg (by scalar_tac : ¬UScalar.cast UScalarTy.Usize pending.first_slot >
+    ite_eq_right (by scalar_tac : ¬UScalar.cast UScalarTy.Usize pending.first_slot >
       UScalar.cast UScalarTy.Usize 50#u64), subtraction,
-    if_neg (by scalar_tac : ¬UScalar.cast UScalarTy.Usize pending.skipped > available)]
+    ite_eq_right (by scalar_tac : ¬UScalar.cast UScalarTy.Usize pending.skipped > available)]
   change (publish_future_receive_slots (mapRefined interpret state)
       (mapArray (mapOption (mapCached interpret)) pending.staged_slots)
       pending.first_slot pending.skipped >>= _) = _
@@ -310,12 +310,12 @@ theorem publish_future_rejected {SendChain ReceiveChain Material : Type}
     publish_future_receive state pending = RustM.ok state := by
   simp only [publish_future_receive, lift, capacity_eq_ok, bind_tc_ok]
   by_cases firstOutside : 50 < pending.first_slot.val
-  · rw [if_pos (by scalar_tac)]
-  · rw [if_neg (by scalar_tac)]
+  · rw [ite_eq_left (by scalar_tac)]
+  · rw [ite_eq_right (by scalar_tac)]
     obtain ⟨available, subtraction, availableValue⟩ :=
       uscalar_sub_eq_ok (UScalar.cast UScalarTy.Usize 50#u64)
         (UScalar.cast UScalarTy.Usize pending.first_slot) (by scalar_tac)
-    simp only [subtraction, bind_tc_ok, if_pos (by scalar_tac :
+    simp only [subtraction, bind_tc_ok, ite_eq_left (by scalar_tac :
       UScalar.cast UScalarTy.Usize pending.skipped > available)]
 
 /-- Full actual future publication commutes for every typed pending transaction, including malformed windows. -/
@@ -376,7 +376,7 @@ theorem pending_slots_body_map {SendChain ReceiveChain Material Value : Type}
   cases occupied with
   | true => rfl
   | false =>
-    simp only [Bool.false_eq_true, if_false]
+    simp only [Bool.false_eq_true, ite_false]
     congr 1
     funext staged
     cases staged <;> rfl

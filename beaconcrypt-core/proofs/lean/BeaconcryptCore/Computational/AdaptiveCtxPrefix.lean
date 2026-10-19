@@ -252,9 +252,9 @@ theorem independentRun_public_count (decode : RawDecoder) (c : Pqxdh.Crypto) (ke
     have remaining := ih answer _ (bounded.2 answer) next result tail
     by_cases isHash : AdaptiveCtxQueryBounds.SourceHash query
     · have positive : 0 < count := bounded.1.resolve_left (not_not.mpr isHash)
-      simp only [isHash, if_pos] at stepCount remaining
+      simp only [isHash, ite_eq_left] at stepCount remaining
       omega
-    · simp only [isHash, if_false] at stepCount remaining
+    · simp only [isHash, ite_false] at stepCount remaining
       omega
 
 /-- The bounded public prefix-probe vector tests precisely the actual source event. It does not create a key guess for a private cache lookup. -/
@@ -302,7 +302,7 @@ theorem retainedRoutedGame_distance_le_prefix (decode : RawDecoder) (c : Pqxdh.C
       exact mul_le_mul_of_nonneg_left ((tvDist_map_le (Prod.mk key) _ _).trans pointwise)
         ENNReal.toReal_nonneg
     _ = _ := by
-      simp only [bind_pure_comp, probEvent_bind_eq_tsum, probEvent_map]
+      simp only [probEvent_bind_eq_tsum, probEvent_map]
       rw [tsum_fintype, ENNReal.toReal_sum]
       · simp only [Function.comp_def, RetainedPrefix, ENNReal.toReal_mul]
       · intro key _

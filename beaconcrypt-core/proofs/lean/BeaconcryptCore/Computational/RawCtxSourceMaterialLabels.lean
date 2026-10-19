@@ -181,7 +181,7 @@ theorem initialize_interpreted (source : PqxdhJointKdfGame.FixedHkdfSha512NoSalt
         (RawCtxSourceHkdf.initialResponse source.crypto)) =
       (fun kernel => (⟨mapRefined (materialOf source) kernel⟩ : ConcreteRatchetKernel)) <$>
         initialLabels source beacon root := by
-  cases beacon <;> simp only [initialLabels, Bool.false_eq_true, if_false, if_true,
+  cases beacon <;> simp only [initialLabels, Bool.false_eq_true, ite_false, ite_true,
     BeaconcryptCore.Refinement.PqxdhConcreteSession.initializeBeacon,
     BeaconcryptCore.Refinement.PqxdhConcreteSession.initializeServer,
     map_bind, resume_initial_interpreted source]

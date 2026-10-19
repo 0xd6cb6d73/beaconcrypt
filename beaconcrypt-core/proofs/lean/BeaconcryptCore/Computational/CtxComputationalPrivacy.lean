@@ -514,7 +514,7 @@ theorem ctxPrivacyRandomSealOracle_projection
     simp [StateT.run, hused]
     rfl
   · unfold ctxPrivacyIdealSealOracle ctxRetainedBaseSealOracle
-    simp only [StateT.run, hused, if_false]
+    simp only [StateT.run, hused, ite_false]
     rw [simulateQ_bind, simulateQ_queryModifiedNonceAeadSeal_random]
     change _ = _ <$>
       ((modifiedNonceAeadINDDollarRandomSealOracle
@@ -522,7 +522,7 @@ theorem ctxPrivacyRandomSealOracle_projection
           (ctxIndependentTagStateToModifiedNonceAead state) >>= fun result => _)
     unfold modifiedNonceAeadINDDollarRandomSealOracle
     simp only [StateT.run, ctxIndependentTagStateToModifiedNonceAead,
-      toModifiedNonceAeadSealInput_nonce, hused, if_false]
+      toModifiedNonceAeadSealInput_nonce, hused, ite_false]
     simp only [bind_assoc, pure_bind]
     simp_rw [simulateQ_bind, simulateQ_modifiedNonceAeadDigest_random]
     simp_rw [simulateQ_pure]

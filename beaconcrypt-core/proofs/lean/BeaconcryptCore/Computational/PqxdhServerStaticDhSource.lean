@@ -92,10 +92,10 @@ theorem collectVerified_realization (joint : Primitives) (domain : PublicDomain 
   simp only [collectVerified, OptionT.run_bind, OptionT.run_monadLift, Option.elimM, bind_map_left, simulateQ_bind, simulateQ_spec_query]
   simp only [nativeImpl, prefixImpl, map_bind]
   repeat' (
-    try simp only [OptionT.run_bind, OptionT.run_mk, OptionT.run_pure, OptionT.run_monadLift, OptionT.run_failure, Option.elimM, bind_map_left, Bool.not_true, Bool.not_false, Bool.false_eq_true, if_false, if_true, simulateQ_bind, simulateQ_spec_query, simulateQ_pure, map_bind, map_pure,
+    try simp only [OptionT.run_bind, OptionT.run_mk, OptionT.run_pure, OptionT.run_monadLift, OptionT.run_failure, Option.elimM, bind_map_left, Bool.not_true, Bool.not_false, Bool.false_eq_true, ite_false, ite_true, simulateQ_bind, simulateQ_spec_query, simulateQ_pure, map_bind, map_pure,
       nativeImpl, prefixImpl, ← selected_reply joint domain seed, selectedReply,
       Option.elim_none, Option.elim_some, Option.map_none, Option.map_some, bind_assoc, pure_bind]
-    first | rfl | (congr 1 <;> first | rfl | (funext reply; cases reply)) | (split <;> try simp_all only [if_pos, if_neg]))
+    first | rfl | (congr 1 <;> first | rfl | (funext reply; cases reply)) | (split <;> try simp_all only [ite_eq_left, ite_eq_right]))
   all_goals first | rfl | simp [OptionT.run_failure, simulateQ_pure]
 
 /-- Raw parsing and all three attached verification positions are identical in both interpretations; no selected-DH response is queried during verification. -/
@@ -108,7 +108,7 @@ theorem verifyInput_realization (joint : Primitives) (domain : PublicDomain join
   repeat' (
     try simp only [simulateQ_pure, simulateQ_bind, simulateQ_spec_query, nativeImpl, prefixImpl]
     first | rfl | (congr 1 <;> first | rfl | (funext reply; cases reply)) |
-      (split <;> try simp_all only [if_pos, if_neg]))
+      (split <;> try simp_all only [ite_eq_left, ite_eq_right]))
   all_goals simp only [simulateQ_pure]
 
 /-- The complete raw Server prefix keeps every failed callback's poststate and source generator order while withholding the selected static DH value from its executable client. -/
@@ -151,7 +151,7 @@ theorem collectVerified_references {joint : Primitives} (domain : PublicDomain j
     simulateQ_bind, simulateQ_spec_query, StateT.run_bind, mem_support_bind_iff] at reached
   repeat' first
     | (simp only [OptionT.run_bind, OptionT.run_mk, OptionT.run_pure, OptionT.run_monadLift, OptionT.run_failure,
-        Option.elimM, bind_map_left, Bool.not_true, Bool.not_false, Bool.false_eq_true, if_false, if_true,
+        Option.elimM, bind_map_left, Bool.not_true, Bool.not_false, Bool.false_eq_true, ite_false, ite_true,
         Option.elim_none, Option.elim_some, simulateQ_bind, simulateQ_spec_query, simulateQ_pure,
         StateT.run_bind, StateT.run_pure, mem_support_bind_iff, prefixImpl, selectedReply,
         bind_assoc, pure_bind, support_pure, Set.mem_singleton_iff, Prod.mk.injEq, Option.some.injEq,

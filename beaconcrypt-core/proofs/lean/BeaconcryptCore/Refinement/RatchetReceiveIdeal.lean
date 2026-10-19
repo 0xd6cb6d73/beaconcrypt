@@ -41,10 +41,10 @@ private theorem begin_receive_cached_entry (entry : ConcreteRatchetKernel) (targ
   cases prepared with
   | none =>
     simp only [begin_receive, plan_receive_until_replay entry.refined.control target hpast,
-      bind_tc_ok, if_true, hprepared, receive_rejected, RustM.ok.injEq, reduceCtorEq] at hbegin
+      bind_tc_ok, ite_true, hprepared, receive_rejected, RustM.ok.injEq, reduceCtorEq] at hbegin
   | some prepared =>
     simp only [begin_receive, plan_receive_until_replay entry.refined.control target hpast,
-      bind_tc_ok, if_true, hprepared, RustM.ok.injEq, ReceiveEffect.ReceiveOpenRequested.injEq] at hbegin
+      bind_tc_ok, ite_true, hprepared, RustM.ok.injEq, ReceiveEffect.ReceiveOpenRequested.injEq] at hbegin
     exact (congrArg ReceiveOpen.entry hbegin).symm
 
 /-- Complete extracted execution returns exactly the ideal plaintext outcome and refines the ideal poststate; every ideal rejection returns the exact entry kernel. -/

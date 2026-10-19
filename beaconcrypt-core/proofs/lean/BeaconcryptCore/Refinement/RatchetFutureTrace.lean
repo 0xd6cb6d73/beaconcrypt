@@ -66,14 +66,14 @@ theorem FutureKdfRefines.resume_last
     simp only [transaction, hsteps, Ratchet.chainAt, Function.iterate_succ_apply']
   refine ⟨{ entry, context, prepared := ratchet.refined.PreparedReceive.PreparedReceiveFutureCase transaction },
     ?_, ⟨transaction, rfl, rfl, rfl, htransaction⟩⟩
-  simp only [ReceiveKdf.resume, if_neg (show pending.remaining ≠ 0#u8 by scalar_tac),
-    if_pos (show pending.remaining = 1#u8 by scalar_tac), hadvanced, hadvresult,
-    hadvtarget, h.targetEq, if_true, bind_tc_ok]
+  simp only [ReceiveKdf.resume, ite_eq_right (show pending.remaining ≠ 0#u8 by scalar_tac),
+    ite_eq_left (show pending.remaining = 1#u8 by scalar_tac), hadvanced, hadvresult,
+    hadvtarget, h.targetEq, ite_true, bind_tc_ok]
   rw [hresponse]
   simp only [bind_tc_ok, h.entryEq, h.contextEq]
   have hvalid := htransaction.valid cr origin send receive entry target transaction
   dsimp only [transaction] at hvalid
-  simp only [hvalid, bind_tc_ok, if_true, transaction]
+  simp only [hvalid, bind_tc_ok, ite_true, transaction]
 
 /-- The remaining counter is a constructive bound for the exact extracted KDF execution. -/
 theorem future_kdf_trace_count

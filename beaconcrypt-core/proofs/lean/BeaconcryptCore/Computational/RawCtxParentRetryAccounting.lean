@@ -57,7 +57,7 @@ theorem parent_retry_logged (reader : RawCtxSelectedLiveTrace.Reader) (target : 
       pure ((.hidden, RawCtxFreshChainCut.concreteMaterial entry.material),
         ((state, candidates ++ [RawCtxSelectedQueryTrace.rootVector chain]), flag)) := by
   rw [known_logged]
-  simp only [if_neg different, RawCtxSelectedParentTable.step, if_pos parent]
+  simp only [ite_eq_right different, RawCtxSelectedParentTable.step, ite_eq_left parent]
   rfl
 
 /-- The concrete hidden send request reuses its one full child response without inventing a known-input candidate. -/
@@ -155,7 +155,7 @@ theorem source_hidden (reader : RawCtxSelectedLiveTrace.Reader) (target : RootOu
       subst result
       by_cases same : target = RawCtxSelectedQueryTrace.rootVector chain
       · simp [same, RawCtxSelectedParentTable.step] at hidden
-      · have parent := (hidden_next prior entry output (.known chain)).mp (by simpa only [if_neg same] using hidden)
+      · have parent := (hidden_next prior entry output (.known chain)).mp (by simpa only [ite_eq_right same] using hidden)
         obtain ⟨actual, equal, address⟩ := parent
         cases Slot.known.inj equal
         exact ⟨chain, rfl, address, same, rfl⟩

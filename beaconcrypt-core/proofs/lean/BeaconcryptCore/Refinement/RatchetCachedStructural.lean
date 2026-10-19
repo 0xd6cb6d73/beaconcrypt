@@ -77,7 +77,7 @@ theorem ReceiveSuccess.replay {Context Output : Type} {target : Std.U64} {result
     receiveNext execute result target context openReply = ok (result, core.option.Option.None) := by
   have hbegin : begin_receive result target context = ok (ReceiveEffect.ReceiveRejected result context) := by
     simp only [begin_receive, plan_receive_until_replay result.refined.control target h.received,
-      bind_tc_ok, if_true, ratchet.refined.prepare_cached_receive, h.consumed, receive_rejected]
+      bind_tc_ok, ite_true, ratchet.refined.prepare_cached_receive, h.consumed, receive_rejected]
   exact (show ReceiveRun execute openReply result target context result core.option.Option.None from
     ⟨_, hbegin, .rejected result context⟩).driver_eq
 

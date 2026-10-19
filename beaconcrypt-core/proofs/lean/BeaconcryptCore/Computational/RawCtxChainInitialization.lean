@@ -68,14 +68,14 @@ theorem initial_split {Atom : Type}
         ⟨(chainOf source roots parent).bytes, ratchet.SYM_RATCHET_INFO⟩).bytes
     simpa only [chain_eq_of_refines hleft (initial_halves source roots parent).1,
       chain_eq_of_refines hright (initial_halves source roots parent).2,
-      initialSend, initialReceive, Bool.false_eq_true, if_false, serverPending] using split
+      initialSend, initialReceive, Bool.false_eq_true, ite_false, serverPending] using split
   | true =>
     obtain ⟨left, right, split, hleft, hright⟩ := splitInitialBeacon_exact
       (RawCtxSourceHkdf.initialResponse source.crypto
         ⟨(chainOf source roots parent).bytes, ratchet.SYM_RATCHET_INFO⟩).bytes
     simpa only [chain_eq_of_refines hleft (initial_halves source roots parent).2,
       chain_eq_of_refines hright (initial_halves source roots parent).1,
-      initialSend, initialReceive, if_true, beaconPending] using split
+      initialSend, initialReceive, ite_true, beaconPending] using split
 
 /-- Initial kernel handles reuse the supplied input; no new root, owner, or independent chain is sampled. -/
 def initialHandles {Atom : Type} (beacon : Bool) (parent : Chain Atom) : RustM (HandleKernel Atom) :=
@@ -88,7 +88,7 @@ theorem initial_source {Atom : Type}
     RawCtxInitializedKdfFamily.initialReply source ⟨beacon, (chainOf source roots parent).bytes⟩ =
       nativeKernel source roots <$> initialHandles beacon parent := by
   have split := initial_split source roots beacon parent
-  cases beacon <;> simp only [RawCtxInitializedKdfFamily.initialReply, Bool.false_eq_true, if_false, if_true,
+  cases beacon <;> simp only [RawCtxInitializedKdfFamily.initialReply, Bool.false_eq_true, ite_false, ite_true,
     BeaconcryptCore.Refinement.PqxdhConcreteSession.initializeServer_eq,
     BeaconcryptCore.Refinement.PqxdhConcreteSession.initializeBeacon_eq,
     pqxdh.concrete.resume_initial_ratchet_kdf_is_core_partition] at split ⊢

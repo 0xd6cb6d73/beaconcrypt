@@ -30,7 +30,7 @@ theorem step {ι State : Type} {spec : OracleSpec ι}
       simp only [handler, StateT.run, bind_pure_comp, support_map, Set.mem_image] at supported
       rcases supported with ⟨reply, replySupport, rfl⟩
       rw [private_state source stage request state.2 reply replySupport]
-      simp only [advance_depth, Sum.isRight_inr, if_true]
+      simp only [advance_depth, Sum.isRight_inr, ite_true]
       split_ifs <;> omega
 
 /-- Every complete adaptive schedule preserves prior depth and spends at most its all-reply private-query cap, including cache hits. -/

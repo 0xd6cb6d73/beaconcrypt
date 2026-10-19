@@ -311,9 +311,9 @@ theorem abstractSeal_projection (c : Pqxdh.Crypto) (key : CtxKey) (input : CtxSe
     Prod.fst <$> (simulateQ lazyDictionary (abstractSeal c key input state)).run dictionary =
       independentCtx c key (.inr input) state := by
   by_cases used : input.nonce ∈ state.ctx.usedNonces
-  · simp only [abstractSeal, used, if_true, simulateQ_pure, StateT.run_pure, map_pure]
+  · simp only [abstractSeal, used, ite_true, simulateQ_pure, StateT.run_pure, map_pure]
     simp [independentCtx, ctxIndependentTagImpl, ctxKeyFreeSealOracle, used, sealPrivateInputs, StateT.run]
-  · simp only [abstractSeal, used, if_false, bind_pure_comp, simulateQ_map, StateT.run_map, Functor.map_map]
+  · simp only [abstractSeal, used, ite_false, bind_pure_comp, simulateQ_map, StateT.run_map, Functor.map_map]
     let base := c.aeadSeal key.toList input.nonce.toList input.context.ad.bytes input.plaintext
     let address := typedSuffix input.nonce input.context base.2 (c.aeadSeal_tag_length _ _ _ _)
     let finish : CtxDigest × SplitCache → Option CtxRomRecord × AdaptiveCtxReceive.ReceiveState := fun lookup =>
@@ -350,10 +350,10 @@ theorem abstractSeal_preserves (c : Pqxdh.Crypto) (key : CtxKey) (input : CtxSea
     (supported : result ∈ support ((simulateQ lazyDictionary (abstractSeal c key input state)).run dictionary)) :
     DictionaryAligned result.1.2.ctx.cache result.2 := by
   by_cases used : input.nonce ∈ state.ctx.usedNonces
-  · simp only [abstractSeal, used, if_true, simulateQ_pure, StateT.run_pure, mem_support_pure_iff] at supported
+  · simp only [abstractSeal, used, ite_true, simulateQ_pure, StateT.run_pure, mem_support_pure_iff] at supported
     subst result
     exact aligned
-  · simp only [abstractSeal, used, if_false, bind_pure_comp, simulateQ_map, StateT.run_map] at supported
+  · simp only [abstractSeal, used, ite_false, bind_pure_comp, simulateQ_map, StateT.run_map] at supported
     obtain ⟨lookup, step, rfl⟩ := OracleComp.mem_support_map_peel _ _ supported
     exact abstractSuffix_preserves _ state.ctx.cache dictionary aligned lookup step
 

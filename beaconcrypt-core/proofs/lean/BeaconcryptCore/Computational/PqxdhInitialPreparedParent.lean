@@ -118,10 +118,10 @@ theorem collect_pending (depth : Nat) (cut : Carried extra M P I D K Result Orig
     cut = .pending context state ∧ state.1.1.1.2.1 (PqxdhInitialBuilderContext.address context.original) = none := by
   classical
   cases cut with
-  | complete result reached => simp [collect, support_map]
+  | complete result reached => simp [collect]
   | pending saved reached =>
     simp only [collect]
-    split <;> simp_all [support_map]
+    split <;> simp_all
     all_goals grind
 
 /-- Prepared pending support is exactly the actual audited source cut plus the checked missing-cache condition. No selected key or source history is assumed. -/

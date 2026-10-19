@@ -83,7 +83,7 @@ theorem native_step (fixed : FixedHkdfSha512NoSaltSource) (selected : Message) (
         rfl
       · have lookup : completeCache selected root cache message = cache message := by
           simp [completeCache, QueryCache.cacheQuery_of_ne, same]
-        simp only [labelled, same, if_false]
+        simp only [labelled, same, ite_false]
         change Prod.map id (completeCache selected root) <$>
           (do let result ← (uniformImpl (.inr message)).run cache
               pure (realInitial fixed result.1, result.2)) =
@@ -157,7 +157,7 @@ theorem labelled_uniform_bound (fixed : FixedHkdfSha512NoSaltSource) (selected :
       · subst message
         rw [selected_reply]
         trivial
-      · simp only [labelled, same, if_false]
+      · simp only [labelled, same, ite_false]
         change (do let result ← (uniformImpl (.inr message)).run cache
                    pure (realInitial fixed result.1, result.2)).IsTotalQueryBound 32
         cases found : cache message with

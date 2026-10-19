@@ -98,7 +98,7 @@ theorem step
     rw [StateT.run_map, StateT.run_map, StateT.run_map]
     rw [lift_run]
     rw [StateT.run_map, cache_run]
-    simp only [Functor.map_map, Function.comp_def]
+    simp only [Functor.map_map]
   case inl.inr =>
     simp only [QueryImpl.flattenStateT, interpreted, PqxdhInitialPostPacking.separated,
       StateT.run, StateT.mk, bind_pure_comp]

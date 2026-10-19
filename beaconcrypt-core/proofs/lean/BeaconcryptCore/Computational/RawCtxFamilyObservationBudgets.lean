@@ -110,7 +110,7 @@ theorem handler_uniform {Auxiliary : Type}
     rw [_root_.simulateQ_spec_query]
     change ((RawCtxMixedShared.sharedImpl source.crypto writer (RawCtxSourceHkdf.kdfImpl source)
       (.inr (.inr (.inr (.inl hash))))).run state).IsTotalQueryBound 64
-    simpa only [RawCtxMixedOwner.callKind, if_true, Nat.mul_one] using
+    simpa only [RawCtxMixedOwner.callKind, ite_true, Nat.mul_one] using
       RawCtxSelectiveChainBudgets.native_uniform source writer (.inr (.inr (.inr (.inl hash)))) state
   case inl.inr.inr.inl =>
     simp only [RawCtxSelectedParentLive.handler, QueryImpl.apply_compose, RawCtxServerServices.publicLift]

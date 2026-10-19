@@ -198,13 +198,13 @@ private theorem candidate_erase (mark : PqxdhBeaconPhase2Shared.Secrets Shared �
   apply bind_congr
   intro valid
   cases valid
-  · simp only [Bool.not_false, if_true, finished_erase, sourceFinished, pure_bind]
-  · simp only [Bool.not_true, Bool.false_eq_true, if_false, simulateQ_bind, plain_erase, bind_assoc]
+  · simp only [Bool.not_false, ite_true, finished_erase, sourceFinished, pure_bind]
+  · simp only [Bool.not_true, Bool.false_eq_true, ite_false, simulateQ_bind, plain_erase, bind_assoc]
     apply bind_congr
     intro reserved
     cases reserved
-    · simp only [Bool.not_false, if_true, finished_erase, sourceFinished, pure_bind]
-    · simp only [Bool.not_true, Bool.false_eq_true, if_false]
+    · simp only [Bool.not_false, ite_true, finished_erase, sourceFinished, pure_bind]
+    · simp only [Bool.not_true, Bool.false_eq_true, ite_false]
       cases initial with
       | fail error => simp only [PqxdhInitialGenericBuilder.continueRust, finished_erase, sourceFinished, pure_bind]
       | div => simp only [PqxdhInitialGenericBuilder.continueRust, finished_erase, sourceFinished, pure_bind]
@@ -217,8 +217,8 @@ private theorem candidate_erase (mark : PqxdhBeaconPhase2Shared.Secrets Shared �
               apply bind_congr
               intro allocated
               cases allocated
-              · simp only [Bool.not_false, if_true, finished_erase, sourceFinished, pure_bind]
-              · simp only [Bool.not_true, Bool.false_eq_true, if_false]
+              · simp only [Bool.not_false, ite_true, finished_erase, sourceFinished, pure_bind]
+              · simp only [Bool.not_true, Bool.false_eq_true, ite_false]
                 cases binding : pending.key_id_binding with
                 | fail error => simp only [finished_erase, sourceFinished, pure_bind]
                 | div => simp only [finished_erase, sourceFinished, pure_bind]
@@ -392,12 +392,12 @@ private theorem candidate_good (mark : PqxdhBeaconPhase2Shared.Secrets Shared �
   intro valid
   cases valid
   · exact finished_good mark origin sender route decode index before trace outside _
-  · simp only [Bool.not_true, Bool.false_eq_true, if_false]
+  · simp only [Bool.not_true, Bool.false_eq_true, ite_false]
     apply aux_good
     intro reserved
     cases reserved
     · exact finished_good mark origin sender route decode index before trace outside _
-    · simp only [Bool.not_true, Bool.false_eq_true, if_false]
+    · simp only [Bool.not_true, Bool.false_eq_true, ite_false]
       cases initial with
       | fail error => exact finished_good mark origin sender route decode index before trace outside _
       | div => exact finished_good mark origin sender route decode index before trace outside _
@@ -410,7 +410,7 @@ private theorem candidate_good (mark : PqxdhBeaconPhase2Shared.Secrets Shared �
               intro allocated
               cases allocated
               · exact finished_good mark origin sender route decode index before trace outside _
-              · simp only [Bool.not_true, Bool.false_eq_true, if_false]
+              · simp only [Bool.not_true, Bool.false_eq_true, ite_false]
                 cases binding : pending.key_id_binding with
                 | fail error => exact finished_good mark origin sender route decode index before trace outside _
                 | div => exact finished_good mark origin sender route decode index before trace outside _

@@ -28,23 +28,23 @@ theorem lookup_receive_key_loop_total (st : RatchetState) (sequence : Std.U64) :
     intro slot remaining hrem
     have hpos : remaining > 0#u8 := by scalar_tac
     rw [lookup_receive_key_loop, loop.eq_def]
-    simp only [lookup_receive_key_loop.body, hpos, if_true, lift, bind_tc_ok]
+    simp only [lookup_receive_key_loop.body, hpos, ite_true, lift, bind_tc_ok]
     by_cases hcap : 50 ≤ slot.val
-    · simpa only [if_pos (show UScalar.cast UScalarTy.Usize slot ≥
+    · simpa only [ite_eq_left (show UScalar.cast UScalarTy.Usize slot ≥
           UScalar.cast UScalarTy.Usize 50#u64 by scalar_tac), RustM.ok.injEq]
         using Exists.intro core.option.Option.None rfl
-    · rw [if_neg (by scalar_tac)]
+    · rw [ite_eq_right (by scalar_tac)]
       by_cases hlen : st.receive_cache.len.val ≤ slot.val
-      · simpa only [if_pos (show slot ≥ st.receive_cache.len by scalar_tac), RustM.ok.injEq]
+      · simpa only [ite_eq_left (show slot ≥ st.receive_cache.len by scalar_tac), RustM.ok.injEq]
           using Exists.intro core.option.Option.None rfl
-      · rw [if_neg (by scalar_tac), entries_index_eq_ok st.receive_cache slot (by omega)]
+      · rw [ite_eq_right (by scalar_tac), entries_index_eq_ok st.receive_cache slot (by omega)]
         simp only [bind_tc_ok]
         by_cases hhit : st.receive_cache.entries.val[slot.val]! = sequence
-        · simp only [if_pos hhit, RustM.ok.injEq, exists_eq']
+        · simp only [ite_eq_left hhit, RustM.ok.injEq, exists_eq']
         · obtain ⟨slot', hslot', hslotval⟩ := uscalar_add_eq_ok slot 1#u8 (by scalar_tac)
           obtain ⟨rem', hrem', hremval⟩ := uscalar_sub_eq_ok remaining 1#u8 (by scalar_tac)
           obtain ⟨r, hr⟩ := ih slot' rem' (by simp at hremval; omega)
-          simpa only [if_neg hhit, hslot', hrem', bind_tc_ok, lookup_receive_key_loop,
+          simpa only [ite_eq_right hhit, hslot', hrem', bind_tc_ok, lookup_receive_key_loop,
             lookup_receive_key_loop.body, lift] using Exists.intro r hr
 
 /-- Lookup is safe for every extracted state, including an excessive cache length. -/

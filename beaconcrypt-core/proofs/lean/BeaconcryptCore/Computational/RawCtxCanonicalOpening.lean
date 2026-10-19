@@ -91,8 +91,8 @@ theorem selectedDecoder_source (input : RawCtxWholeOwner.OpenInput)
     | mk raw frame ad =>
       simp only at hraw hdecode hvalid hsequence hslices ⊢
       subst sequence
-      simp only [selectedDecoder, hraw, Bool.false_eq_true, if_false, hdecode,
-        dif_pos hvalid]
+      simp only [selectedDecoder, hraw, Bool.false_eq_true, ite_false, hdecode,
+        dite_eq_left hvalid]
       split <;> simp_all only [Option.some.injEq, reduceCtorEq]
       rename_i actual heq
       have equal := Option.some.inj (heq.symm.trans hslices)

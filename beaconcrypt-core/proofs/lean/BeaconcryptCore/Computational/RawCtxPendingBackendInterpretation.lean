@@ -32,7 +32,7 @@ theorem pending_compose {ι : Type} {spec : OracleSpec ι} {m : Type → Type*} 
     funext query
     rcases query with (query | query) | ((query | query) | query)
     all_goals simp only [QueryImpl.apply_compose, original]
-    all_goals first | exact receive_compose impl native _ | exact send_compose impl native _ | rfl
+    all_goals first | exact receive_compose impl native _ | exact send_compose impl native _
   funext query
   simp only [pending, QueryImpl.apply_compose]
   rw [← QueryImpl.simulateQ_compose, same]

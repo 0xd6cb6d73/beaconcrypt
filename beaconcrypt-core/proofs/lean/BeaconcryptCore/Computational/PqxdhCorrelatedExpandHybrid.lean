@@ -269,7 +269,7 @@ theorem indexed_advantage (hmac : HmacSha512) (client : OracleComp RootSpec Bool
     (hybridGame hmac client index).boolDistAdvantage (hybridGame hmac client (index + 1)) =
       (hmacPrfRealGame hmac (indexedReduction hmac client index)).boolDistAdvantage
         (hmacPrfRandomGame (indexedReduction hmac client index)) := by
-  simp only [ProbComp.boolDistAdvantage, probOutput_def]
+  simp only [ProbComp.boolDistAdvantage]
   rw [indexed_real hmac client index, indexed_random hmac client index]
 
 /-- The ordered family has one ordinary HMAC term per original root position, without another selection factor. -/

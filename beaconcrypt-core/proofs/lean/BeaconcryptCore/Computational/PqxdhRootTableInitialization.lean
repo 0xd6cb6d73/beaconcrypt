@@ -69,9 +69,9 @@ theorem initialize_refines {AD PT CT : Type} (source : FixedHkdfSha512NoSaltSour
       ratchet.concrete.KernelRefines cr kernel.refined.receive_chain
         ⟨kernel.refined.send_chain, 0⟩ ⟨kernel.refined.receive_chain, 0, []⟩ kernel := by
   cases beacon
-  · simpa only [initialKernelRun, Bool.false_eq_true, if_false, rootArray_bytes] using
+  · simpa only [initialKernelRun, Bool.false_eq_true, ite_false, rootArray_bytes] using
       initializeServer_refines source.crypto cr (rootArray root) (initialResponse source.crypto) (initialResponse_law _)
-  · simpa only [initialKernelRun, if_true, rootArray_bytes] using
+  · simpa only [initialKernelRun, ite_true, rootArray_bytes] using
       initializeBeacon_refines source.crypto cr (rootArray root) (initialResponse source.crypto) (initialResponse_law _)
 
 /-- Ownership and orientation are source bookkeeping; only the unchanged coordinates select a root-table entry. -/
@@ -323,7 +323,7 @@ theorem complementary_kernels {AD PT CT : Type} (source : FixedHkdfSha512NoSaltS
       beacon.refined.receive_chain = server.refined.send_chain ∧
       ∀ n, Ratchet.msgKeyAt cr beacon.refined.send_chain n = Ratchet.msgKeyAt cr server.refined.receive_chain n ∧
         Ratchet.msgKeyAt cr server.refined.send_chain n = Ratchet.msgKeyAt cr beacon.refined.receive_chain n := by
-  simpa only [initialKernelRun, if_true, Bool.false_eq_true, if_false] using
+  simpa only [initialKernelRun, ite_true, Bool.false_eq_true, ite_false] using
     initialize_establishes_concrete_session cr (rootArray root) (initialResponse source.crypto)
 
 /-- Source classes track the actual forwarded coin/root request; public fixed-HKDF calls remain separate deterministic work. -/
@@ -360,8 +360,8 @@ theorem compile_bound {Result : Type} (source : FixedHkdfSha512NoSaltSource)
     (bounded : client.IsQueryBoundP (Forwarded predicate) q) (history : InitHistory) :
     ((simulateQ (initCompile source) client).run history).IsQueryBoundP predicate q := by
   exact bounded.simulateQ_run_of_step
-    (fun request selected history => by simpa only [selected, if_true] using compile_step source predicate request history)
-    (fun request omitted history => by simpa only [omitted, if_false] using compile_step source predicate request history) history
+    (fun request selected history => by simpa only [selected, ite_true] using compile_step source predicate request history)
+    (fun request omitted history => by simpa only [omitted, ite_false] using compile_step source predicate request history) history
 
 /-- Actual root misses cost 32 draws; every caller coin remains charged once, and public fixed-HKDF evaluations add no sampling. -/
 theorem source_uniform_bound {Result : Type} (source : FixedHkdfSha512NoSaltSource)
@@ -386,7 +386,7 @@ theorem source_initial_count (source : FixedHkdfSha512NoSaltSource) (request : I
     obtain ⟨answer, _, rfl⟩ := supported
     simp [Forwarded, IsRoot]
   · obtain ⟨root, _, history, _⟩ := source_initial_result source request state result supported
-    simp only [history, List.length_append, List.length_singleton, Forwarded, IsRoot, if_true]
+    simp only [history, List.length_append, List.length_singleton, Forwarded, IsRoot, ite_true]
   · simp only [sourceImpl, StateT.run, mem_support_pure_iff] at supported
     subst result
     simp [Forwarded]
@@ -411,10 +411,10 @@ theorem source_run_initial_count {Result : Type} (source : FixedHkdfSha512NoSalt
       have count := source_initial_count source request state step stepSupported
       have positive := bounded.1
       by_cases selected : Forwarded IsRoot request
-      · simp only [selected, if_true] at later count
+      · simp only [selected, ite_true] at later count
         have := positive.resolve_left (not_not.mpr selected)
         omega
-      · simp only [selected, if_false] at later count
+      · simp only [selected, ite_false] at later count
         omega
 
 /-- The source's actual reached initializer returns a valid complete native kernel with the same cached root and private ownership history. -/
@@ -459,7 +459,7 @@ theorem source_hkdf_calls {Result : Type} (client : OracleComp InitSpec Result) 
   | query_bind request next ih =>
       rw [isQueryBoundP_query_bind_iff] at initial publicCap ⊢
       rcases request with coin | (request | publicQuery)
-      · simp only [Forwarded, IsRoot, IsPublic, false_or, not_false_eq_true, if_false] at initial publicCap ⊢
+      · simp only [Forwarded, IsRoot, IsPublic, false_or, not_false_eq_true, ite_false] at initial publicCap ⊢
         exact ⟨Or.inl True.intro, fun answer => ih answer _ _ (initial.2 answer) (publicCap.2 answer)⟩
       · simp only [
           ite_eq_left (show Forwarded IsRoot (.inr (.inl request)) from True.intro),

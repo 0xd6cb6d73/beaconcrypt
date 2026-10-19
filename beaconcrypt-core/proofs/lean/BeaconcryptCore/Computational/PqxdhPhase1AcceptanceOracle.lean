@@ -125,7 +125,7 @@ theorem instrumentedClient_query_bound (primitives : Primitives) {Result : Type}
         (if IsSourceClass predicate query then bound - 1 else bound) = bound := by
       by_cases selected : IsSourceClass predicate query
       · have positive := bounded.1.resolve_left (not_not.mpr selected)
-        simp only [selected, if_true]
+        simp only [selected, ite_true]
         omega
       · simp [selected]
     simpa only [total] using OracleComp.isQueryBoundP_bind
@@ -174,7 +174,7 @@ theorem sourceCandidate_erase (primitives : Primitives) (count : ℕ) (candidate
       ((wrapper primitives count (.inr candidate)).run state.1)).run state.2) = _
   cases translated : translateReport primitives candidate state.1.snapshot with
   | none =>
-    simp only [wrapper, StateT.run, translated, pure_bind, simulateQ_pure]
+    simp only [wrapper, StateT.run, translated, simulateQ_pure]
     rfl
   | some forgery =>
     simp only [wrapper, StateT.run, translated, simulateQ_bind, simulateQ_spec_query,

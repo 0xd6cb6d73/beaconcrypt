@@ -25,7 +25,7 @@ theorem step (query : PqxdhInitialLabelCompiler.Spec.Domain) (state : RootOracle
     change (((unifSpec.query coin : ProbComp _) >>= fun value => pure (value, state)) : ProbComp _).IsTotalQueryBound 1
     exact ⟨Nat.zero_lt_succ 0, fun _ => True.intro⟩
   | inr request =>
-    simp only [IsCoin, IsService, if_true, if_false, Nat.zero_add]
+    simp only [IsCoin, IsService, ite_true, ite_false, Nat.zero_add]
     cases request with
     | known root =>
       simp only [label, QueryImpl.apply_compose, compiler, simulateQ_spec_query,
@@ -33,13 +33,13 @@ theorem step (query : PqxdhInitialLabelCompiler.Spec.Domain) (state : RootOracle
       split <;> trivial
     | family message =>
       by_cases same : message = selected
-      · simp only [label, QueryImpl.apply_compose, compiler, same, if_true, simulateQ_pure, StateT.run_pure]
+      · simp only [label, QueryImpl.apply_compose, compiler, same, ite_true, simulateQ_pure, StateT.run_pure]
         trivial
-      · simp only [label, QueryImpl.apply_compose, compiler, same, if_false,
+      · simp only [label, QueryImpl.apply_compose, compiler, same, ite_false,
           simulateQ_bind, simulateQ_spec_query, StateT.run_bind]
         have rootBound : ((RawCtxSelectedQueryTrace.recorded (consistent source target response) inputs
           (.inr (.inl message))).run state).IsTotalQueryBound 32 := by
-          simp only [RawCtxSelectedQueryTrace.recorded, consistent, RawCtxSelectedAliasCoupling.routed, inputs, List.not_mem_nil, if_false, handler, StateT.run, bind_pure_comp, List.append_nil]
+          simp only [RawCtxSelectedQueryTrace.recorded, consistent, RawCtxSelectedAliasCoupling.routed, inputs, List.not_mem_nil, ite_false, handler, StateT.run, bind_pure_comp, List.append_nil]
           change ((fun result => (result.1, (result.2, state.2))) <$> (uniformImpl (.inr message)).run state.1).IsTotalQueryBound 32
           apply (isQueryBound_map_iff _ _ _ _ _).2
           exact PqxdhCorrelatedExpandQueryBounds.cached_step ($ᵗ RootOutput) 32

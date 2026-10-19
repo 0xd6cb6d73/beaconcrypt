@@ -81,7 +81,7 @@ theorem receiveOne_from_counters {Context Plaintext : Type}
     lift, bind_tc_ok, ite_true, control.lookup_receive_key_unfold,
     control.lookup_receive_key_loop, loop.eq_def, control.lookup_receive_key_loop.body,
     ite_eq_right (by decide : ¬0#u8 < 0#u8), core.option.Option.is_some,
-    Std.core.option.Option.is_some, Option.isSome, Bool.false_eq_true, ite_false,
+    Bool.false_eq_true, ite_false,
     control.capacity_eq_ok,
     ite_eq_right (by decide : ¬0#usize > UScalar.cast .Usize 50#u64),
     receive_control_prefix_matches, receive_control_prefix_matches_loop,

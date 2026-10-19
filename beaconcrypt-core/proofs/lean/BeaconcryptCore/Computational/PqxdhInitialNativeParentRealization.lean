@@ -44,8 +44,8 @@ theorem consistent_patch (prior : Prior) (target : RootOutput) :
   funext address
   by_cases same : address = targetAddress target
   · subst address
-    simp only [privatePatch, if_true]
-  · simp only [privatePatch, if_neg same]
+    simp only [privatePatch, ite_true]
+  · simp only [privatePatch, ite_eq_right same]
 
 section Interpreter
 variable (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)

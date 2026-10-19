@@ -59,11 +59,11 @@ theorem action_commutes (c : Pqxdh.Crypto) (execute : KdfInterpreter)
   | send ad plaintext sealed =>
     simp only [idealAction, byteAction, mapRoleState, mapSend]
     by_cases hmax : entry.send.n = 2 ^ 64 - 1 <;>
-      simp only [hmax, if_true, if_false, Ratchet.sendStep, enc_commutes,
+      simp only [hmax, ite_true, ite_false, Ratchet.sendStep, enc_commutes,
         kdfMsg_commutes c execute hlaw, kdfChain_commutes c execute hlaw]
   | receive target ad ciphertext =>
     by_cases hzero : target = 0#u64 <;>
-      simp only [idealAction, byteAction, hzero, if_true, if_false, mapRoleState]
+      simp only [idealAction, byteAction, hzero, ite_true, ite_false, mapRoleState]
     rw [← recvStep_commutes c execute hlaw entry.receive ad ⟨target.val - 1, ciphertext⟩]
 
 /-- Every finite API history preserves the complete byte-model state and every observation. -/
@@ -131,11 +131,11 @@ theorem byteAction_recvWf (c : Pqxdh.Crypto) (entry : ByteRoleState)
     Ratchet.RecvWf (byteAction c entry action).1.receive := by
   cases action with
   | send ad plaintext sealed =>
-    by_cases hmax : entry.send.n = 2 ^ 64 - 1 <;> simpa only [byteAction, hmax, if_true, if_false] using h
+    by_cases hmax : entry.send.n = 2 ^ 64 - 1 <;> simpa only [byteAction, hmax, ite_true, ite_false] using h
   | receive target ad ciphertext =>
     by_cases hzero : target = 0#u64
-    · simpa only [byteAction, hzero, if_true] using h
-    · simpa only [byteAction, hzero, if_false] using h.recvStep (c := Pqxdh.ratchetCrypto c) ad ⟨target.val - 1, ciphertext⟩
+    · simpa only [byteAction, hzero, ite_true] using h
+    · simpa only [byteAction, hzero, ite_false] using h.recvStep (c := Pqxdh.ratchetCrypto c) ad ⟨target.val - 1, ciphertext⟩
 
 /-- The existing ideal receive invariant holds after every finite byte-model history. -/
 theorem byteTrace_recvWf (c : Pqxdh.Crypto) (entry : ByteRoleState)

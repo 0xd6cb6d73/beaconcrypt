@@ -190,7 +190,7 @@ theorem local_public_history (real : Bool) (decode : RawDecoder) (c : Pqxdh.Cryp
       (localImpl real decode c key query).run entry =
       (localImpl real decode c key query).run (replaceEntryPublic entry history) := by
   cases real <;> rcases query with (coin | (hash | input)) | raw
-  all_goals simp only [StateT.run, localImpl, Bool.false_eq_true, if_false, if_true,
+  all_goals simp only [StateT.run, localImpl, Bool.false_eq_true, ite_false, ite_true,
     AdaptiveCtxSharedHash.localImpl, AdaptiveCtxSharedReplay.localImpl]
   all_goals simp [replaceEntryPublic, nextPublic, AdaptiveCtxSharedHash.localSeal,
     AdaptiveCtxSharedReplay.localSeal, AdaptiveCtxSharedHash.localRaw, AdaptiveCtxSharedReplay.localRaw,

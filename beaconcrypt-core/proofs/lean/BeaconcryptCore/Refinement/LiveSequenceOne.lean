@@ -177,9 +177,9 @@ theorem live_cached_material {Context : Type}
       { entry, context, prepared := .PreparedReceiveCachedCase prepared }) =
         ok (core.option.Option.Some material) := by
   simp only [ReceiveOpen.material, lift, bind_tc_ok, capacity_eq_ok]
-  rw [if_neg (by have bound := ready.target_bound; scalar_tac)]
+  rw [ite_eq_right (by have bound := ready.target_bound; scalar_tac)]
   simp only [BeaconcryptCore.Refinement.RatchetAccessors.material_slots_index _ _ ready.target_bound,
-    stored, bind_tc_ok, core.option.Option.as_ref, ready.sequence_eq, if_true]
+    stored, bind_tc_ok, core.option.Option.as_ref, ready.sequence_eq, ite_true]
 
 /-- The process opening and its publication law are fixed before the callback chooses any optional reply. -/
 structure LiveOpenRefines {AD PT CT Session Context : Type}

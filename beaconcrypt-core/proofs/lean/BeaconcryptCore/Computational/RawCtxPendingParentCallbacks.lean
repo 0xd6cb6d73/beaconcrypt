@@ -108,10 +108,10 @@ theorem kdf_preserve {Auxiliary : Type} {serverCount beaconCount : Nat}
   obtain ⟨output, exactState⟩ := kdf_state source writer stage query address sameAddress state result supported
   rw [exactState, advance_depth]
   cases isMatch : matched state.2.2 address with
-  | false => simpa only [isMatch, Bool.false_eq_true, if_false, Nat.add_zero] using valid
+  | false => simpa only [isMatch, Bool.false_eq_true, ite_false, Nat.add_zero] using valid
   | true =>
     have different : state.2.2.depth ≠ depth := by simpa [parentCut, sameAddress, isMatch] using unchosen
-    simp only [if_true]
+    simp only [ite_true]
     omega
 
 /-- A state at or before the predecessor depth cannot already be the selected fresh child cut. -/

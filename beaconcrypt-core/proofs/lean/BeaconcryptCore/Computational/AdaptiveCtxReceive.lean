@@ -184,7 +184,7 @@ theorem reductionImpl_raw_query_bound_step (decode : RawDecoder)
   | inl query =>
     cases query with
     | inl coin =>
-      simp only [reductionImpl, StateT.run, IsRawQuery, if_false,
+      simp only [reductionImpl, StateT.run, IsRawQuery,
         bind_pure_comp, OracleComp.isQueryBoundP_map_iff]
       exact (OracleComp.isQueryBoundP_query_iff (spec := AdaptiveSpec)
         (p := AdaptiveRawNonceAead.IsRawQuery) (.inl (.inl coin)) 0).mpr (by simp [AdaptiveRawNonceAead.IsRawQuery])

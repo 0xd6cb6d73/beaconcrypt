@@ -86,10 +86,10 @@ theorem registration_id_abs (v : pqxdh.VerifiedInitKex) :
     unfold
       pqxdh.VerifiedInitKex.registration_id.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
     by_cases h : i < 32
-    · rw [if_pos (hlt.mpr h), if_pos h,
+    · rw [ite_eq_left (hlt.mpr h), ite_eq_left h,
         index_usize_eq v.beacon_identity_public_key _ (by rw [hval, usize_val_32]; omega), hval]
       rfl
-    · rw [if_neg (fun hc => absurd (hlt.mp hc) h), if_neg h, sign_public_key_size_eq]
+    · rw [ite_eq_right (fun hc => absurd (hlt.mp hc) h), ite_eq_right h, sign_public_key_size_eq]
       have hsub : (32#usize).val ≤ (⟨BitVec.ofNat _ i⟩ : Std.Usize).val := by
         rw [usize_val_32, hval]; omega
       rw [usize_sub_eq _ _ hsub]
@@ -110,9 +110,9 @@ theorem registration_id_abs (v : pqxdh.VerifiedInitKex) :
     rw [usize_val_64] at hi
     rw [Pqxdh.ValidInit.rid, getElem!_append2 _ _ 32 (by simp)]
     by_cases h : i < 32
-    · rw [if_pos h, if_pos h]
+    · rw [ite_eq_left h, ite_eq_left h]
       exact (absBytes_getElem! _ i (by rw [usize_val_32]; omega)).symm
-    · rw [if_neg h, if_neg h]
+    · rw [ite_eq_right h, ite_eq_right h]
       exact (absBytes_getElem! _ (i - 32) (by rw [usize_val_32]; omega)).symm
   obtain ⟨a, ha, habs⟩ :=
     from_fn_absBytes (F := pqxdh.VerifiedInitKex.registration_id.closure) 64#usize
@@ -182,15 +182,15 @@ theorem build_associated_data_abs (ikS ikB : Std.Array Std.U8 32#usize) :
       intro k; rw [Std.UScalar.lt_equiv, hval]
     refine Eq.trans (build_associated_data_call_mut es eb _) ?_
     by_cases h33 : i < 33
-    · rw [if_pos ((hlt _).mpr (by rw [usize_val_33]; omega)), if_pos h33,
+    · rw [ite_eq_left ((hlt _).mpr (by rw [usize_val_33]; omega)), ite_eq_left h33,
         index_usize_eq es _ (by rw [hval, usize_val_33]; omega), hval]
       rfl
-    · rw [if_neg (fun hc => h33 (by simpa [usize_val_33] using (hlt 33#usize).mp hc)),
-        if_neg h33]
+    · rw [ite_eq_right (fun hc => h33 (by simpa [usize_val_33] using (hlt 33#usize).mp hc)),
+        ite_eq_right h33]
       have hsub33 : (33#usize).val ≤ (⟨BitVec.ofNat _ i⟩ : Std.Usize).val := by
         rw [usize_val_33, hval]; omega
       by_cases h66 : i < 66
-      · rw [if_pos ((hlt _).mpr (by rw [usize_val_66]; omega)), if_pos h66,
+      · rw [ite_eq_left ((hlt _).mpr (by rw [usize_val_66]; omega)), ite_eq_left h66,
           usize_sub_eq _ _ hsub33]
         have h1 : (⟨BitVec.ofNat _ ((⟨BitVec.ofNat _ i⟩ : Std.Usize).val - (33#usize).val)⟩ :
             Std.Usize).val = i - 33 := by
@@ -198,12 +198,12 @@ theorem build_associated_data_abs (ikS ikB : Std.Array Std.U8 32#usize) :
         simp only [bind_tc_ok]
         rw [index_usize_eq eb _ (by rw [h1, usize_val_33]; omega), h1]
         rfl
-      · rw [if_neg (fun hc => h66 (by simpa [usize_val_66] using (hlt 66#usize).mp hc)),
-          if_neg h66]
+      · rw [ite_eq_right (fun hc => h66 (by simpa [usize_val_66] using (hlt 66#usize).mp hc)),
+          ite_eq_right h66]
         have hsub66 : (66#usize).val ≤ (⟨BitVec.ofNat _ i⟩ : Std.Usize).val := by
           rw [usize_val_66, hval]; omega
         by_cases h112 : i < 112
-        · rw [if_pos ((hlt _).mpr (by rw [usize_val_112]; omega)), if_pos h112,
+        · rw [ite_eq_left ((hlt _).mpr (by rw [usize_val_112]; omega)), ite_eq_left h112,
             usize_sub_eq _ _ hsub66]
           have h1 : (⟨BitVec.ofNat _ ((⟨BitVec.ofNat _ i⟩ : Std.Usize).val - (66#usize).val)⟩ :
               Std.Usize).val = i - 66 := by
@@ -211,8 +211,8 @@ theorem build_associated_data_abs (ikS ikB : Std.Array Std.U8 32#usize) :
           simp only [bind_tc_ok]
           rw [index_usize_eq pqxdh.PQXDH_INFO _ (by rw [h1, usize_val_46]; omega), h1]
           rfl
-        · rw [if_neg (fun hc => h112 (by simpa [usize_val_112] using (hlt 112#usize).mp hc)),
-            if_neg h112]
+        · rw [ite_eq_right (fun hc => h112 (by simpa [usize_val_112] using (hlt 112#usize).mp hc)),
+            ite_eq_right h112]
           have hsub112 : (112#usize).val ≤ (⟨BitVec.ofNat _ i⟩ : Std.Usize).val := by
             rw [usize_val_112, hval]; omega
           rw [usize_sub_eq _ _ hsub112]
@@ -234,18 +234,18 @@ theorem build_associated_data_abs (ikS ikB : Std.Array Std.U8 32#usize) :
       getElem!_append2 _ _ 66 (by simp [Pqxdh.tagSig]),
       getElem!_append2 _ _ 33 (by simp [Pqxdh.tagSig])]
     by_cases h33 : i < 33
-    · simp only [if_pos h33, if_pos (show i < 66 by omega), if_pos (show i < 112 by omega)]
+    · simp only [ite_eq_left h33, ite_eq_left (show i < 66 by omega), ite_eq_left (show i < 112 by omega)]
       rw [← hesabs]
       exact (absBytes_getElem! es i (by rw [usize_val_33]; omega)).symm
     · by_cases h66 : i < 66
-      · simp only [if_neg h33, if_pos h66, if_pos (show i < 112 by omega)]
+      · simp only [ite_eq_right h33, ite_eq_left h66, ite_eq_left (show i < 112 by omega)]
         rw [← hebabs]
         exact (absBytes_getElem! eb (i - 33) (by rw [usize_val_33]; omega)).symm
       · by_cases h112 : i < 112
-        · simp only [if_neg h33, if_neg h66, if_pos h112]
+        · simp only [ite_eq_right h33, ite_eq_right h66, ite_eq_left h112]
           rw [← absBytes_PQXDH_INFO]
           exact (absBytes_getElem! pqxdh.PQXDH_INFO (i - 66) (by rw [usize_val_46]; omega)).symm
-        · simp only [if_neg h33, if_neg h66, if_neg h112]
+        · simp only [ite_eq_right h33, ite_eq_right h66, ite_eq_right h112]
           rw [← absBytes_SYM_RATCHET_INFO]
           exact (absBytes_getElem! pqxdh.SYM_RATCHET_INFO (i - 112)
             (by rw [usize_val_41]; omega)).symm
@@ -331,16 +331,16 @@ theorem build_root_key_input_abs (secrets : pqxdh.PqxdhSharedSecrets) :
     rw [is_all_zero_abs, is_all_zero_abs, is_all_zero_abs, is_all_zero_abs]
     simp only [bind_tc_ok]
     by_cases h1 : absBytes secrets.dh1 = Pqxdh.zero32
-    · simp only [h1, decide_true, if_true]
+    · simp only [h1, decide_true, ite_true]
     · simp only [h1, decide_false, Bool.false_eq_true, ite_false]
       by_cases h2 : absBytes secrets.dh2 = Pqxdh.zero32
-      · simp only [h2, decide_true, if_true]
+      · simp only [h2, decide_true, ite_true]
       · simp only [h2, decide_false, Bool.false_eq_true, ite_false]
         by_cases h3 : absBytes secrets.dh3 = Pqxdh.zero32
-        · simp only [h3, decide_true, if_true]
+        · simp only [h3, decide_true, ite_true]
         · simp only [h3, decide_false, Bool.false_eq_true, ite_false]
           by_cases h4 : absBytes secrets.dh4 = Pqxdh.zero32
-          · simp only [h4, decide_true, if_true]
+          · simp only [h4, decide_true, ite_true]
           · simp only [h4, decide_false, Bool.false_eq_true, ite_false]
   constructor
   · rintro ⟨h1, h2, h3, h4⟩
@@ -379,24 +379,24 @@ theorem build_root_key_input_abs (secrets : pqxdh.PqxdhSharedSecrets) :
       unfold pqxdh.build_root_key_input.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
       rw [pqxdh_padding_size_eq, dh_secret_size_eq]
       by_cases h32 : i < 32
-      · rw [if_pos ((hlt _).mpr (by rw [usize_val_32]; omega))]
-        simp only [if_pos h32]
-      · rw [if_neg (fun hc => h32 (by simpa [usize_val_32] using (hlt 32#usize).mp hc)), a1]
-        simp only [bind_tc_ok, if_neg h32]
+      · rw [ite_eq_left ((hlt _).mpr (by rw [usize_val_32]; omega))]
+        simp only [ite_eq_left h32]
+      · rw [ite_eq_right (fun hc => h32 (by simpa [usize_val_32] using (hlt 32#usize).mp hc)), a1]
+        simp only [bind_tc_ok, ite_eq_right h32]
         by_cases h64 : i < 64
-        · rw [if_pos ((hlt _).mpr (by rw [usize_val_64]; omega)),
+        · rw [ite_eq_left ((hlt _).mpr (by rw [usize_val_64]; omega)),
             hsub 32#usize 32 (by simp) (by omega)]
-          simp only [bind_tc_ok, if_pos h64]
+          simp only [bind_tc_ok, ite_eq_left h64]
           rw [index_usize_eq secrets.dh1 _ (by rw [hsubv 32 (by omega), usize_val_32]; omega),
             hsubv 32 (by omega)]
           rfl
-        · rw [if_neg (fun hc => h64 (by simpa [usize_val_64] using (hlt 64#usize).mp hc)),
+        · rw [ite_eq_right (fun hc => h64 (by simpa [usize_val_64] using (hlt 64#usize).mp hc)),
             a2]
-          simp only [bind_tc_ok, if_neg h64]
+          simp only [bind_tc_ok, ite_eq_right h64]
           rw [a3]
           simp only [bind_tc_ok]
           by_cases h96 : i < 96
-          · rw [if_pos ((hlt _).mpr (by rw [usize_val_96]; omega)),
+          · rw [ite_eq_left ((hlt _).mpr (by rw [usize_val_96]; omega)),
               hsub 32#usize 32 (by simp) (by omega)]
             simp only [bind_tc_ok]
             rw [show ((⟨BitVec.ofNat _ (i - 32)⟩ : Std.Usize) - 32#usize)
@@ -404,17 +404,17 @@ theorem build_root_key_input_abs (secrets : pqxdh.PqxdhSharedSecrets) :
               rw [usize_sub_eq _ _ (by rw [hsubv 32 (by omega), usize_val_32]; omega),
                 hsubv 32 (by omega), usize_val_32]
               congr 2]
-            simp only [bind_tc_ok, if_pos h96]
+            simp only [bind_tc_ok, ite_eq_left h96]
             rw [index_usize_eq secrets.dh2 _ (by rw [hsubv 64 (by omega), usize_val_32]; omega),
               hsubv 64 (by omega)]
             rfl
-          · rw [if_neg (fun hc => h96 (by simpa [usize_val_96] using (hlt 96#usize).mp hc)),
+          · rw [ite_eq_right (fun hc => h96 (by simpa [usize_val_96] using (hlt 96#usize).mp hc)),
               a4]
             simp only [bind_tc_ok]
             rw [a5]
-            simp only [bind_tc_ok, if_neg h96]
+            simp only [bind_tc_ok, ite_eq_right h96]
             by_cases h128 : i < 128
-            · rw [if_pos ((hlt _).mpr (by rw [usize_val_128]; omega)),
+            · rw [ite_eq_left ((hlt _).mpr (by rw [usize_val_128]; omega)),
                 hsub 32#usize 32 (by simp) (by omega)]
               simp only [bind_tc_ok]
               rw [show ((⟨BitVec.ofNat _ (i - 32)⟩ : Std.Usize) - 64#usize)
@@ -422,17 +422,17 @@ theorem build_root_key_input_abs (secrets : pqxdh.PqxdhSharedSecrets) :
                 rw [usize_sub_eq _ _ (by rw [hsubv 32 (by omega), usize_val_64]; omega),
                   hsubv 32 (by omega), usize_val_64]
                 congr 2]
-              simp only [bind_tc_ok, if_pos h128]
+              simp only [bind_tc_ok, ite_eq_left h128]
               rw [index_usize_eq secrets.dh3 _ (by rw [hsubv 96 (by omega), usize_val_32]; omega),
                 hsubv 96 (by omega)]
               rfl
-            · rw [if_neg (fun hc => h128 (by simpa [usize_val_128] using (hlt 128#usize).mp hc)),
+            · rw [ite_eq_right (fun hc => h128 (by simpa [usize_val_128] using (hlt 128#usize).mp hc)),
                 a6]
               simp only [bind_tc_ok]
               rw [a7]
-              simp only [bind_tc_ok, if_neg h128]
+              simp only [bind_tc_ok, ite_eq_right h128]
               by_cases h160 : i < 160
-              · rw [if_pos ((hlt _).mpr (by rw [usize_val_160]; omega)),
+              · rw [ite_eq_left ((hlt _).mpr (by rw [usize_val_160]; omega)),
                   hsub 32#usize 32 (by simp) (by omega)]
                 simp only [bind_tc_ok]
                 rw [show ((⟨BitVec.ofNat _ (i - 32)⟩ : Std.Usize) - 96#usize)
@@ -440,12 +440,12 @@ theorem build_root_key_input_abs (secrets : pqxdh.PqxdhSharedSecrets) :
                   rw [usize_sub_eq _ _ (by rw [hsubv 32 (by omega), usize_val_96]; omega),
                     hsubv 32 (by omega), usize_val_96]
                   congr 2]
-                simp only [bind_tc_ok, if_pos h160]
+                simp only [bind_tc_ok, ite_eq_left h160]
                 rw [index_usize_eq secrets.dh4 _
                     (by rw [hsubv 128 (by omega), usize_val_32]; omega),
                   hsubv 128 (by omega)]
                 rfl
-              · rw [if_neg (fun hc => h160 (by simpa [usize_val_160] using (hlt 160#usize).mp hc)),
+              · rw [ite_eq_right (fun hc => h160 (by simpa [usize_val_160] using (hlt 160#usize).mp hc)),
                   hsub 32#usize 32 (by simp) (by omega)]
                 simp only [bind_tc_ok]
                 rw [show ((⟨BitVec.ofNat _ (i - 32)⟩ : Std.Usize) - 128#usize)
@@ -453,7 +453,7 @@ theorem build_root_key_input_abs (secrets : pqxdh.PqxdhSharedSecrets) :
                   rw [usize_sub_eq _ _ (by rw [hsubv 32 (by omega), usize_val_128]; omega),
                     hsubv 32 (by omega), usize_val_128]
                   congr 2]
-                simp only [bind_tc_ok, if_neg h160]
+                simp only [bind_tc_ok, ite_eq_right h160]
                 rw [index_usize_eq secrets.kem_shared_secret _
                     (by rw [hsubv 160 (by omega), usize_val_32]; omega),
                   hsubv 160 (by omega)]
@@ -476,25 +476,25 @@ theorem build_root_key_input_abs (secrets : pqxdh.PqxdhSharedSecrets) :
         getElem!_append2 _ _ 64 (by simp [Pqxdh.padFF32]),
         getElem!_append2 _ _ 32 (by simp [Pqxdh.padFF32])]
       by_cases h32 : i < 32
-      · simp only [if_pos h32, if_pos (show i < 64 by omega), if_pos (show i < 96 by omega),
-          if_pos (show i < 128 by omega), if_pos (show i < 160 by omega)]
+      · simp only [ite_eq_left h32, ite_eq_left (show i < 64 by omega), ite_eq_left (show i < 96 by omega),
+          ite_eq_left (show i < 128 by omega), ite_eq_left (show i < 160 by omega)]
         rw [padFF32_getElem! i h32, absByte_255]
       · by_cases h64 : i < 64
-        · simp only [if_neg h32, if_pos h64, if_pos (show i < 96 by omega),
-            if_pos (show i < 128 by omega), if_pos (show i < 160 by omega)]
+        · simp only [ite_eq_right h32, ite_eq_left h64, ite_eq_left (show i < 96 by omega),
+            ite_eq_left (show i < 128 by omega), ite_eq_left (show i < 160 by omega)]
           exact (absBytes_getElem! secrets.dh1 (i - 32) (by rw [usize_val_32]; omega)).symm
         · by_cases h96 : i < 96
-          · simp only [if_neg h32, if_neg h64, if_pos h96, if_pos (show i < 128 by omega),
-              if_pos (show i < 160 by omega)]
+          · simp only [ite_eq_right h32, ite_eq_right h64, ite_eq_left h96, ite_eq_left (show i < 128 by omega),
+              ite_eq_left (show i < 160 by omega)]
             exact (absBytes_getElem! secrets.dh2 (i - 64) (by rw [usize_val_32]; omega)).symm
           · by_cases h128 : i < 128
-            · simp only [if_neg h32, if_neg h64, if_neg h96, if_pos h128,
-                if_pos (show i < 160 by omega)]
+            · simp only [ite_eq_right h32, ite_eq_right h64, ite_eq_right h96, ite_eq_left h128,
+                ite_eq_left (show i < 160 by omega)]
               exact (absBytes_getElem! secrets.dh3 (i - 96) (by rw [usize_val_32]; omega)).symm
             · by_cases h160 : i < 160
-              · simp only [if_neg h32, if_neg h64, if_neg h96, if_neg h128, if_pos h160]
+              · simp only [ite_eq_right h32, ite_eq_right h64, ite_eq_right h96, ite_eq_right h128, ite_eq_left h160]
                 exact (absBytes_getElem! secrets.dh4 (i - 128) (by rw [usize_val_32]; omega)).symm
-              · simp only [if_neg h32, if_neg h64, if_neg h96, if_neg h128, if_neg h160]
+              · simp only [ite_eq_right h32, ite_eq_right h64, ite_eq_right h96, ite_eq_right h128, ite_eq_right h160]
                 exact (absBytes_getElem! secrets.kem_shared_secret (i - 160)
                   (by rw [usize_val_32]; omega)).symm
     obtain ⟨a, ha, habs⟩ :=
@@ -502,22 +502,22 @@ theorem build_root_key_input_abs (secrets : pqxdh.PqxdhSharedSecrets) :
         pqxdh.build_root_key_input.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8
         secrets _ _ hlen hcall hbyte
     refine ⟨⟨a⟩, ?_, habs⟩
-    rw [hunf, if_neg h1, if_neg h2, if_neg h3, if_neg h4, ha]
+    rw [hunf, ite_eq_right h1, ite_eq_right h2, ite_eq_right h3, ite_eq_right h4, ha]
     rfl
   · intro h
     rw [Pqxdh.dhNonZero] at h
     push Not at h
     rw [hunf]
     by_cases h1 : absBytes secrets.dh1 = Pqxdh.zero32
-    · rw [if_pos h1]
-    · rw [if_neg h1]
+    · rw [ite_eq_left h1]
+    · rw [ite_eq_right h1]
       by_cases h2 : absBytes secrets.dh2 = Pqxdh.zero32
-      · rw [if_pos h2]
-      · rw [if_neg h2]
+      · rw [ite_eq_left h2]
+      · rw [ite_eq_right h2]
         by_cases h3 : absBytes secrets.dh3 = Pqxdh.zero32
-        · rw [if_pos h3]
-        · rw [if_neg h3]
-          rw [if_pos (h h1 h2 h3)]
+        · rw [ite_eq_left h3]
+        · rw [ite_eq_right h3]
+          rw [ite_eq_left (h h1 h2 h3)]
 
 /-! ## The little-endian key-identifier binding (spec §12) -/
 
@@ -529,7 +529,7 @@ theorem u64_shr_val (x : Std.U64) (k : Std.I32) (m : ℕ) (h0 : (0:ℤ) ≤ k.va
   refine ⟨⟨x.bv.ushiftRight m⟩, ?_, ?_⟩
   · show Std.UScalar.shiftRight_IScalar x k = _
     unfold Std.UScalar.shiftRight_IScalar Std.UScalar.shiftRight
-    rw [if_pos h0, hm, if_pos (show m < Std.UScalarTy.U64.numBits from h1)]
+    rw [ite_eq_left h0, hm, ite_eq_left (show m < Std.UScalarTy.U64.numBits from h1)]
   · show (BitVec.ushiftRight x.bv m).toNat = _
     rw [BitVec.ushiftRight_eq, BitVec.toNat_ushiftRight, Nat.shiftRight_eq_div_pow]
     rfl

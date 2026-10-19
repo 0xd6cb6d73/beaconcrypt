@@ -100,7 +100,7 @@ theorem compile_bound {Send Chain Result : Type} {count : Nat}
     apply total.mono
     by_cases hit : query.isLeft = kdf
     · have positive : 0 < bound := bounded.1.resolve_left (not_not_intro hit)
-      simp only [if_pos hit]
+      simp only [ite_eq_left hit]
       omega
     · simp [hit]
 

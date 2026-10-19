@@ -31,7 +31,7 @@ theorem kdf (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.W
   have bound := RawCtxSharedBackendBounds.compiled source writer stage hash (.inr (.inl (.inl request))) state
   simpa only [compiledBackend, QueryImpl.compose, RawCtxServerServices.nativeLift, simulateQ_spec_query,
     cost, RawCtxServerServiceBounds.nativePredicate, RawCtxMixedOwner.callKind, Sum.isLeft, Bool.false_eq_true,
-    reduceCtorEq, if_false, if_true, Nat.mul_one, Nat.zero_add] using bound
+    reduceCtorEq, ite_false, ite_true, Nat.mul_one, Nat.zero_add] using bound
 
 /-- Public caller coins, raw BLAKE requests and real HKDF projections retain their exact classes. -/
 theorem public_calls (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer) (stage : Nat)
@@ -44,12 +44,12 @@ theorem public_calls (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixe
   case inr.inl =>
     have bound := RawCtxSharedBackendBounds.compiled source writer stage hash (.inr (.inl (.inr (.inr (.inr (.inl bytes)))))) state
     simpa only [compiledBackend, cost, publicCost, RawCtxServerServiceBounds.nativePredicate,
-      RawCtxMixedOwner.callKind, Sum.isLeft, Bool.false_eq_true, reduceCtorEq, if_false, if_true,
+      RawCtxMixedOwner.callKind, Sum.isLeft, Bool.false_eq_true, reduceCtorEq, ite_false, ite_true,
       Nat.mul_zero, Nat.zero_add, ite_self] using bound
   case inr.inr =>
     have bound := RawCtxSharedBackendBounds.compiled source writer stage hash (.inr (.inr view)) state
     simpa only [compiledBackend, cost, publicCost, RawCtxServerServiceBounds.nativePredicate,
-    RawCtxMixedOwner.callKind, Sum.isLeft, Bool.false_eq_true, reduceCtorEq, if_false, if_true,
+    RawCtxMixedOwner.callKind, Sum.isLeft, Bool.false_eq_true, reduceCtorEq, ite_false, ite_true,
     Nat.mul_zero, Nat.zero_add, ite_self] using bound
 
 /-- Every actual pending callback keeps the exact hash/uniform reservation through all source branches. -/

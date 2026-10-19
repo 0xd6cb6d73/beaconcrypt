@@ -143,24 +143,24 @@ theorem lookup_receive_key_loop_exact (state : RatchetState) (sequence : Std.U64
     intro slot remaining hrem
     have hpos : remaining > 0#u8 := by scalar_tac
     rw [lookup_receive_key_loop, loop.eq_def]
-    simp only [lookup_receive_key_loop.body, hpos, if_true, lift, bind_tc_ok]
+    simp only [lookup_receive_key_loop.body, hpos, ite_true, lift, bind_tc_ok]
     by_cases hcap : 50 ≤ slot.val
-    · rw [if_pos (by scalar_tac)]
+    · rw [ite_eq_left (by scalar_tac)]
       exact ⟨_, rfl, by simp, by intro _ i hi hlo _ _; omega⟩
-    · rw [if_neg (by scalar_tac)]
+    · rw [ite_eq_right (by scalar_tac)]
       by_cases hlen : state.receive_cache.len.val ≤ slot.val
-      · rw [if_pos (by scalar_tac)]
+      · rw [ite_eq_left (by scalar_tac)]
         exact ⟨_, rfl, by simp, by intro _ i _ hlo hhi _; omega⟩
-      · rw [if_neg (by scalar_tac), entries_index_eq_ok state.receive_cache slot (by omega)]
+      · rw [ite_eq_right (by scalar_tac), entries_index_eq_ok state.receive_cache slot (by omega)]
         simp only [bind_tc_ok]
         by_cases hhit : state.receive_cache.entries.val[slot.val]! = sequence
-        · rw [if_pos hhit]
+        · rw [ite_eq_left hhit]
           exact ⟨_, rfl, fun found hfound => by cases hfound; exact ⟨le_refl _, by omega, by omega, by omega, hhit⟩, by simp⟩
         · obtain ⟨slot', hslot', hslotval⟩ := uscalar_add_eq_ok slot 1#u8 (by scalar_tac)
           obtain ⟨rem', hrem', hremval⟩ := uscalar_sub_eq_ok remaining 1#u8 (by scalar_tac)
           obtain ⟨result, hrun, hsound, hnone⟩ := ih slot' rem' (by simp at hremval; omega)
           refine ⟨result, ?_, ?_, ?_⟩
-          · simpa only [if_neg hhit, hslot', hrem', bind_tc_ok, lookup_receive_key_loop, lookup_receive_key_loop.body, lift] using hrun
+          · simpa only [ite_eq_right hhit, hslot', hrem', bind_tc_ok, lookup_receive_key_loop, lookup_receive_key_loop.body, lift] using hrun
           · intro found hfound
             have hs := hsound found hfound
             exact ⟨by omega, by scalar_tac, hs.2.2⟩

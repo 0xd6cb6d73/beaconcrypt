@@ -94,7 +94,7 @@ theorem bare_run_noSign (attachedVerify : Ed25519PublicKey → Pqxdh.Bytes → O
       (simulateQ (bareImpl attachedVerify primitives count) (next reply.1)).run reply.2) at supported
     obtain ⟨reply, step, rest⟩ := (mem_support_bind_iff _ _ _).mp supported
     have nextBound := noSign.2 reply.1
-    simp only [excluded, if_false] at nextBound
+    simp only [excluded, ite_false] at nextBound
     exact (ih reply.1 nextBound reply.2 result rest).trans
       (bare_step_noSign attachedVerify primitives count index query state reply excluded step)
 
@@ -604,7 +604,7 @@ theorem sourceCandidate_monitor (primitives : Primitives) (count : Nat) (candida
       ((wrapper primitives count (.inr candidate)).run state.1)).run state.2) = _
   cases translated : translateReport primitives candidate state.1.snapshot with
   | none =>
-    simp only [wrapper, StateT.run, translated, pure_bind, simulateQ_pure]
+    simp only [wrapper, StateT.run, translated, simulateQ_pure]
     rfl
   | some forgery =>
     simp only [wrapper, StateT.run, translated, simulateQ_bind, simulateQ_spec_query,
@@ -864,7 +864,7 @@ theorem oneSession_actual_uniform_bound {Context : Type}
       | create => rfl
       | reveal identity => rfl
       | service identity request => cases request <;> simp [dynamicClass, IsClass, PqxdhDynamicIdentityPool.IsUniform]
-  simpa only [reduceCtorEq, if_false, Nat.zero_add, same] using coins
+  simpa only [reduceCtorEq, ite_false, Nat.zero_add, same] using coins
 
 /-- The entire one-target joint challenger charges its private 32-byte seed in addition to all reduction coins. -/
 theorem oneSession_challenger_uniform_bound {Context : Type} (primitives : Primitives)
@@ -880,7 +880,7 @@ theorem oneSession_challenger_uniform_bound {Context : Type} (primitives : Primi
   have coins := oneSession_class_bound setup selector .uniform qSetup qSelector setupBound selectorBound
   apply PqxdhPhase1AcceptanceOracle.reductionGame_uniform_bound primitives 0 0 fallback ordinaryFallback
     (oneSession setup selector) (qSetup + qSelector)
-  simpa only [reduceCtorEq, if_false, Nat.zero_add] using coins
+  simpa only [reduceCtorEq, ite_false, Nat.zero_add] using coins
 
 end BeaconcryptCore.Computational.PqxdhJointPhase1AcceptanceComposition
 

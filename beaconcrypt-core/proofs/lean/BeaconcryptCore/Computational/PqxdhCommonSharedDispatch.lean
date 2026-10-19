@@ -113,10 +113,10 @@ theorem common_source (output : LocalOutput) (cache : CtxRO.QueryCache) :
     simp only [common, selected, PqxdhPrivateAcceptedRoot.allCandidateCommon, Option.bind_some,
       PqxdhBorrowedSharedPrefix.restore, PqxdhPrivateAcceptedRoot.acceptedCommon]
     by_cases replay : identity.toList ++ keys.oneTime.toList ∈ env.server.consumed
-    · simp only [if_pos replay]
+    · simp only [ite_eq_left replay]
       exact completed_source setup env callbacks program post attachedVerify primitives baseImpl kem secret output cache
         ⟨none, none, .error .registrationReplay, env.server⟩
-    · simp only [if_neg replay, simulateQ_bind, StateT.run_bind, map_bind,
+    · simp only [ite_eq_right replay, simulateQ_bind, StateT.run_bind, map_bind,
         RawCtxSelectiveSharedRom.coins_complete, bind_map_left, evalKem_bind,
         ← PqxdhPrivateRootQueryBounds.ccaAmbient_eq_lift, evalKem_ambient]
       apply bind_congr

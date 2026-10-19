@@ -104,13 +104,13 @@ theorem seal_interpretation (c : Pqxdh.Crypto) (key : CtxKey) (input : CtxSealIn
     reassemble <$> (simulateQ hashImpl (localSeal c key input entry)).run cache =
       AdaptiveCtxIndependent.independentCtx c key (.inr input) (install entry cache) := by
   by_cases used : input.nonce ∈ entry.1.usedNonces
-  · simp only [localSeal, used, if_true, simulateQ_pure, StateT.run_pure, map_pure]
+  · simp only [localSeal, used, ite_true, simulateQ_pure, StateT.run_pure, map_pure]
     simp [AdaptiveCtxIndependent.independentCtx, ctxIndependentTagImpl,
       ctxKeyFreeSealOracle, StateT.run, install, AdaptiveCtxCanonical.sealPrivateInputs, reassemble, used]
-  · simp only [localSeal, used, if_false, bind_pure_comp, simulateQ_map, StateT.run_map,
+  · simp only [localSeal, used, ite_false, bind_pure_comp, simulateQ_map, StateT.run_map,
       localPrivate, hash_uniform, Functor.map_map]
     simp only [AdaptiveCtxIndependent.independentCtx, ctxIndependentTagImpl, QueryImpl.add_apply_inr,
-      StateT.run, ctxKeyFreeSealOracle, install, used, if_false, ctxKeyFreeSuffixOracle,
+      StateT.run, ctxKeyFreeSealOracle, install, used, ite_false, ctxKeyFreeSuffixOracle,
       private_lookup_exact, bind_pure_comp]
     simp only [Functor.map_map]
     rfl

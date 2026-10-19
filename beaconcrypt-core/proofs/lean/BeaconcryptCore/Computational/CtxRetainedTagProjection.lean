@@ -96,9 +96,9 @@ theorem openRecord_success_implies_base_success (c : Pqxdh.Crypto)
   · rw [Pqxdh.openRecord, hdecode] at hopen
     simp only [Option.bind_some] at hopen
     by_cases hcommit : record.commit = Pqxdh.ctxCommit c material ad record.tag
-    · rw [if_pos hcommit] at hopen
+    · rw [ite_eq_left hcommit] at hopen
       exact ⟨record, rfl, hcommit, hopen⟩
-    · rw [if_neg hcommit] at hopen
+    · rw [ite_eq_right hcommit] at hopen
       simp at hopen
 
 /-- For fixed material and context, a commitment-valid record whose retained base ciphertext equals the honest base seal is exactly the honest modified-CTX record. -/

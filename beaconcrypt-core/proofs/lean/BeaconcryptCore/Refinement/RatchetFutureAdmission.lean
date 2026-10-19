@@ -49,9 +49,9 @@ theorem KernelRefines.begin_receive_future
   }
   refine ⟨pending, ?_, ?_⟩
   · simp only [begin_receive, hplan, bind_tc_ok,
-      if_neg (show derivations ≠ 0#u64 by have hseq := h.receiveControl.seq; scalar_tac),
-      hskipped, if_neg (show ¬skipped > RATCHET_MAX_GAP by have hseq := h.receiveControl.seq; scalar_tac),
-      lift, RatchetState.receive_cache_len, hempty, if_true, RatchetChain.as_bytes,
+      ite_eq_right (show derivations ≠ 0#u64 by have hseq := h.receiveControl.seq; scalar_tac),
+      hskipped, ite_eq_right (show ¬skipped > RATCHET_MAX_GAP by have hseq := h.receiveControl.seq; scalar_tac),
+      lift, RatchetState.receive_cache_len, hempty, ite_true, RatchetChain.as_bytes,
       SymmetricRatchetKdfRequest.new, hslots]
     rfl
   · refine ⟨h, rfl, rfl, rfl, hfuture, hcapacity, by omega, rfl, rfl,

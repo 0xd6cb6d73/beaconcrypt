@@ -239,13 +239,13 @@ theorem ValidRefined.cached_publication {SendChain ReceiveChain Material : Type}
     have hentryAt : prepared.committed_control.receive_cache.entries.val[i]! = state.control.receive_cache.entries.val[j]! := by
       simpa only [j, hlast, apply_ite] using hentries i hlive
     have hslotAt : published.receive_slots.val[i]! = state.receive_slots.val[j]! := by
-      simpa only [j, apply_ite, if_neg (by omega : i ≠ prepared.last_slot.val)] using hslots i hi
+      simpa only [j, apply_ite, ite_eq_right (by omega : i ≠ prepared.last_slot.val)] using hslots i hi
     simp only [hslotAt, hcached, hcontrol]
     exact ⟨hlive, hsequence.trans hentryAt.symm⟩
   · have hempty : published.receive_slots.val[i]! = core.option.Option.None := by
       by_cases hlastSlot : i = prepared.last_slot.val
-      · simpa only [if_pos hlastSlot] using hslots i hi
-      · simpa only [if_neg hlastSlot, if_neg (by omega : i ≠ prepared.target_slot.val),
+      · simpa only [ite_eq_left hlastSlot] using hslots i hi
+      · simpa only [ite_eq_right hlastSlot, ite_eq_right (by omega : i ≠ prepared.target_slot.val),
           h.slots.empty i (by omega) hi] using hslots i hi
     simp only [hempty, hcontrol]
     omega

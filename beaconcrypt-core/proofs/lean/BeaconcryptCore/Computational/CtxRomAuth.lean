@@ -95,6 +95,8 @@ def CtxRomRecord.encode (record : CtxRomRecord) : Pqxdh.Bytes :=
   exact Pqxdh.decodeRecord_encode record.toRecordCipher record.tagLength
     (ctxDigest_toList_length record.commit)
 
+-- Kept as `def`: proofs/check-inventory.sh pins it as a reviewed definition.
+set_option linter.defProp false in
 /-- Exact well-formedness evidence for a typed key, nonce, and record context. -/
 def recordWf (key : CtxKey) (nonce : CtxNonce)
     (context : CtxRecordContext) :
@@ -286,7 +288,7 @@ theorem ctxSealOracle_preserves_invariant (c : Pqxdh.Crypto)
   by_cases hused : input.nonce ∈ state.usedNonces
   · change result ∈ support
       (if input.nonce ∈ state.usedNonces then pure (none, state) else _) at hresult
-    rw [if_pos hused, support_pure, Set.mem_singleton_iff] at hresult
+    rw [ite_eq_left hused, support_pure, Set.mem_singleton_iff] at hresult
     simpa [hresult] using hinvariant
   · let base := c.aeadSeal key.toList input.nonce.toList
       input.context.ad.bytes input.plaintext
@@ -299,7 +301,7 @@ theorem ctxSealOracle_preserves_invariant (c : Pqxdh.Crypto)
             ⟨base.1, base.2, c.aeadSeal_tag_length _ _ _ _, oracleResult.1⟩
           pure (some record,
             state.addSeal ⟨input, record⟩ oracleResult.2)) at hresult
-    rw [if_neg hused, mem_support_bind_iff] at hresult
+    rw [ite_eq_right hused, mem_support_bind_iff] at hresult
     obtain ⟨oracleResult, horacle, hresult⟩ := hresult
     simp only [support_pure, Set.mem_singleton_iff] at hresult
     subst result
@@ -626,10 +628,10 @@ theorem ctxFreshAliasGame_le_inv (c : Pqxdh.Crypto)
   rcases p with ⟨before, cache⟩
   simp only
   by_cases hfresh : cache ((), before.targetInput) = none
-  · rw [if_pos hfresh, uniformSampleImpl.probEvent_simulateQ]
+  · rw [ite_eq_left hfresh, uniformSampleImpl.probEvent_simulateQ]
     exact ctxFreshAliasVerifier_le_inv c before cache hfresh
-  · rw [if_neg hfresh]
-    simp only [probEvent_pure, Bool.false_eq_true, if_false]
+  · rw [ite_eq_right hfresh]
+    simp only [probEvent_pure, Bool.false_eq_true, ite_false]
     exact bot_le
 
 theorem ctxDigest_card : Fintype.card CtxDigest = 2 ^ 512 := by
@@ -641,7 +643,7 @@ theorem ctxDigest_card : Fintype.card CtxDigest = 2 ^ 512 := by
   calc
     256 ^ 64 = (2 ^ 8) ^ 64 := by norm_num
     _ = 2 ^ (8 * 64) := by rw [pow_mul]
-    _ = 2 ^ 512 := by norm_num
+    _ = 2 ^ 512 := by rw [show 8 * 64 = 512 by norm_num]
 
 /-- The fresh-alias bound with the BLAKE2b-512 width exposed numerically. -/
 theorem ctxFreshAliasGame_le_inv_512 (c : Pqxdh.Crypto)

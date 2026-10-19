@@ -45,9 +45,9 @@ theorem ValidRestore.restore_with_slot (restore : RatchetRestore) (h : ValidRest
       restore.last_sequence h.frontier sequence cache hadmit.1 hadmit.2.1 hadmit.2.2.1 hadmit.2.2.2 hlen hentries
     let step : ReceiveRestoreStep := { restore := { state := { restore.state with receive_cache := cache }, last_sequence := sequence }, slot := restore.state.receive_cache.len }
     refine ⟨core.option.Option.Some step, ?_, ?_⟩
-    · simp only [restore_receive_key_with_slot, if_neg (by scalar_tac : sequence ≠ 0#u64),
-        if_neg (by scalar_tac : ¬sequence > restore.state.receive_sequence),
-        if_neg (by scalar_tac : ¬sequence ≤ restore.last_sequence), happend, bind_tc_ok, step]
+    · simp only [restore_receive_key_with_slot, ite_eq_right (by scalar_tac : sequence ≠ 0#u64),
+        ite_eq_right (by scalar_tac : ¬sequence > restore.state.receive_sequence),
+        ite_eq_right (by scalar_tac : ¬sequence ≤ restore.last_sequence), happend, bind_tc_ok, step]
       rfl
     · intro other heq
       obtain rfl : step = other := by simpa using heq

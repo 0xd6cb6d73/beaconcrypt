@@ -117,9 +117,9 @@ theorem replayRun_raw_bound (decode : RawDecoder) (c : Pqxdh.Crypto) (key : CtxK
     have count := replayImpl_raw_count decode c key query state value step
     by_cases raw : IsRawQuery query
     · have positive : 0 < qRaw := bounded.1.resolve_left (not_not.mpr raw)
-      simp only [raw, if_true] at rest count
+      simp only [raw, ite_true] at rest count
       omega
-    · simp only [raw, if_false] at rest count
+    · simp only [raw, ite_false] at rest count
       omega
 
 end BeaconcryptCore.Computational.AdaptiveCtxAliasQueryBounds

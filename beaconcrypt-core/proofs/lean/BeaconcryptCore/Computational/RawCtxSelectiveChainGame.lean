@@ -164,7 +164,7 @@ theorem private_state (source : FixedHkdfSha512NoSaltSource) (stage : Nat)
     rfl
   | none =>
     by_cases chosen : (matched store.2 request && decide (store.2.depth < stage)) = true
-    · simp only [privateStep, found, chosen, if_true, mem_support_bind_iff, mem_support_pure_iff] at supported
+    · simp only [privateStep, found, chosen, ite_true, mem_support_bind_iff, mem_support_pure_iff] at supported
       rcases supported with ⟨output, _, rfl⟩
       rfl
     · simp only [privateStep, found, chosen, pure_bind] at supported

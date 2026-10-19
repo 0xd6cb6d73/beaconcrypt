@@ -73,10 +73,10 @@ theorem seal_complete (c : Pqxdh.Crypto) (key : CtxKey)
     (simulateQ (realImpl c key) (compiledSeal input entry)).run (baseState entry) =
       (fun result => (result, baseState result.2)) <$> localSeal c key input entry := by
   by_cases used : input.nonce ∈ entry.1.usedNonces
-  · simp only [compiledSeal, localSeal, used, if_true, simulateQ_pure, StateT.run_pure, map_pure]
-  · simp only [compiledSeal, localSeal, used, if_false, simulateQ_bind, simulateQ_spec_query, StateT.run_bind]
+  · simp only [compiledSeal, localSeal, used, ite_true, simulateQ_pure, StateT.run_pure, map_pure]
+  · simp only [compiledSeal, localSeal, used, ite_false, simulateQ_bind, simulateQ_spec_query, StateT.run_bind]
     simp only [realImpl, StateT.run, modifiedNonceAeadSealOracle, baseState,
-      CtxSealInput.toModifiedNonceAeadSealInput, used, if_false, OracleComp.liftComp_pure, pure_bind]
+      CtxSealInput.toModifiedNonceAeadSealInput, used, ite_false, OracleComp.liftComp_pure, pure_bind]
     change (simulateQ (realImpl c key) _).run _ = _
     simp only [bind_pure_comp, simulateQ_map, StateT.run_map, forward_hash, Functor.map_map]
     simp only [localPrivate, bind_pure_comp, Functor.map_map, List.map_cons,

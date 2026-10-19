@@ -100,8 +100,7 @@ theorem driver_private {KemSK : Type} {setup : StatefulPhase1Setup baseSpec}
   apply congrArg (evalKem baseImpl kem secret)
   have original := congrArg (fun work => unpackSelection <$> work)
     (driver_borrowed env program attachedVerify primitives count index publicIdentity generated transcript identities)
-  simp only [Functor.map_map, unpackSelection, PqxdhPhase2OldSource.unpackState_packState,
-    Prod.mk.eta] at original
+  simp only [Functor.map_map, unpackSelection, PqxdhPhase2OldSource.unpackState_packState] at original
   change (id <$> _) = _ at original
   rw [id_map] at original
   exact original

@@ -172,10 +172,10 @@ theorem appended_cached (source : FixedHkdfSha512NoSaltSource) (stage : Nat)
   apply bind_congr_of_forall_mem_support
   intro result reached
   cases good : gate result.1 with
-  | false => simp only [Bool.false_eq_true, if_false, simulateQ_pure, StateT.run_pure, pure_bind]
+  | false => simp only [Bool.false_eq_true, ite_false, simulateQ_pure, StateT.run_pure, pure_bind]
   | true =>
     obtain ⟨path, walked⟩ := published result reached good
-    simp only [if_true, bind_pure_comp, simulateQ_map, StateT.run_map, Functor.map_map]
+    simp only [ite_true, bind_pure_comp, simulateQ_map, StateT.run_map, Functor.map_map]
     have read := cached_walk source stage other result.2.2.1 n root path walked result.2.1 result.2.2.2
     simpa only [Functor.map_map, map_pure, Prod.eta] using congrArg
       (fun work : ProbComp (List RatchetChain × (T × Table)) =>
@@ -194,8 +194,8 @@ theorem appended_retained (prior : Prior) (other : QueryImpl spec (StateT T Prob
   apply bind_congr
   intro result
   cases gate result.1 with
-  | false => simp only [Bool.false_eq_true, if_false, simulateQ_pure, StateT.run_pure]
-  | true => simp only [if_true, simulateQ_bind, simulateQ_pure, retained, pure_bind, StateT.run_pure]
+  | false => simp only [Bool.false_eq_true, ite_false, simulateQ_pure, StateT.run_pure]
+  | true => simp only [ite_true, simulateQ_bind, simulateQ_pure, retained, pure_bind, StateT.run_pure]
 
 /-- The complete source lineage observation commutes with the one remaining deferred full76 draw, using the actual source's publication cache witness and preserving every result and ambient field. -/
 theorem appended_uniform (source : FixedHkdfSha512NoSaltSource)
@@ -227,9 +227,9 @@ theorem appended_queries (client : OracleComp (spec + JointKdfRO) Result) (gate 
   apply isTotalQueryBound_bind bounded
   intro result
   cases gate result with
-  | false => simp only [Bool.false_eq_true, if_false]; trivial
+  | false => simp only [Bool.false_eq_true, ite_false]; trivial
   | true =>
-    simpa only [if_true, bind_pure_comp, IsTotalQueryBound, isQueryBound_map_iff] using
+    simpa only [ite_true, bind_pure_comp, IsTotalQueryBound, isQueryBound_map_iff] using
       queries (spec := spec) n (RawCtxFreshChainCut.concreteChain root)
 
 variable {I D K X Response Shared A N C : Type} {extra : OracleSpec ι} {S B : Nat}

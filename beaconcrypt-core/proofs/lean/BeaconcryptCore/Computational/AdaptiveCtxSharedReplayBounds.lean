@@ -29,18 +29,18 @@ theorem replay_hash_step (decode : RawDecoder) (c : Pqxdh.Crypto) (key : CtxKey)
       (if SourceHash query then 1 else 0) := by
   rcases query with (coin | (hash | input)) | raw
   · simp only [AdaptiveCtxSharedReplay.localImpl, StateT.run, bind_pure_comp, isQueryBoundP_map_iff,
-      SourceHash, if_false, isQueryBoundP_query_iff, HashClass]
+      SourceHash, ite_false, isQueryBoundP_query_iff, HashClass]
     decide
   · simp only [AdaptiveCtxSharedReplay.localImpl, StateT.run, bind_pure_comp, isQueryBoundP_map_iff,
-      SourceHash, if_true, isQueryBoundP_query_iff, HashClass]
+      SourceHash, ite_true, isQueryBoundP_query_iff, HashClass]
     decide
   · simp only [AdaptiveCtxSharedReplay.localImpl, StateT.run, AdaptiveCtxSharedReplay.localSeal,
-      SourceHash, if_false]
+      SourceHash, ite_false]
     split
     · trivial
     · simpa only [bind_pure_comp, isQueryBoundP_map_iff] using private_hash_bound _ entry
   · simp only [AdaptiveCtxSharedReplay.localImpl, StateT.run, AdaptiveCtxSharedReplay.localRaw,
-      SourceHash, if_false]
+      SourceHash, ite_false]
     split
     · trivial
     · simpa only [bind_pure_comp, isQueryBoundP_map_iff] using private_hash_bound _ _
@@ -59,7 +59,7 @@ theorem mode_hash_step (real : Bool) (decode : RawDecoder) (c : Pqxdh.Crypto) (k
       (if ModeHash real query then 1 else 0) := by
   cases real
   · exact replay_hash_step decode c key query entry
-  · simpa only [AdaptiveCtxSharedModes.localImpl, StateT.run, if_true, bind_pure_comp,
+  · simpa only [AdaptiveCtxSharedModes.localImpl, StateT.run, ite_true, bind_pure_comp,
       isQueryBoundP_map_iff, ModeHash, SourceClass] using
       AdaptiveCtxSharedHash.local_step_bound true decode c key query entry.1
 
@@ -97,18 +97,18 @@ theorem replay_uniform_step (decode : RawDecoder) (c : Pqxdh.Crypto) (key : CtxK
       (if SourceUniform query then 1 else if SourceHash query then 0 else 64) := by
   rcases query with (coin | (hash | input)) | raw
   · simp only [AdaptiveCtxSharedReplay.localImpl, StateT.run, bind_pure_comp, isQueryBoundP_map_iff,
-      SourceUniform, if_true, isQueryBoundP_query_iff, HashClass]
+      SourceUniform, ite_true, isQueryBoundP_query_iff, HashClass]
     decide
   · simp only [AdaptiveCtxSharedReplay.localImpl, StateT.run, bind_pure_comp, isQueryBoundP_map_iff,
-      SourceUniform, SourceHash, if_false, if_true, isQueryBoundP_query_iff, HashClass]
+      SourceUniform, SourceHash, ite_false, ite_true, isQueryBoundP_query_iff, HashClass]
     decide
   · simp only [AdaptiveCtxSharedReplay.localImpl, StateT.run, AdaptiveCtxSharedReplay.localSeal,
-      SourceUniform, SourceHash, if_false]
+      SourceUniform, SourceHash, ite_false]
     split
     · trivial
     · simpa only [bind_pure_comp, isQueryBoundP_map_iff] using private_uniform_bound _ entry
   · simp only [AdaptiveCtxSharedReplay.localImpl, StateT.run, AdaptiveCtxSharedReplay.localRaw,
-      SourceUniform, SourceHash, if_false]
+      SourceUniform, SourceHash, ite_false]
     split
     · trivial
     · simpa only [bind_pure_comp, isQueryBoundP_map_iff] using private_uniform_bound _ _
@@ -122,7 +122,7 @@ instance (real : Bool) : DecidablePred (ModePrivate real) := fun query => by
 
 theorem mode_private_not_uniform (real : Bool) (query : ReceiveSpec.Domain)
     (privateCall : ModePrivate real query) : ¬SourceUniform query := by
-  cases real <;> simp only [ModePrivate, Bool.false_eq_true, if_false, if_true] at privateCall
+  cases real <;> simp only [ModePrivate, Bool.false_eq_true, ite_false, ite_true] at privateCall
   · exact privateCall.1
 
 set_option backward.isDefEq.respectTransparency false in
@@ -133,10 +133,10 @@ theorem mode_uniform_step (real : Bool) (decode : RawDecoder) (c : Pqxdh.Crypto)
   cases real
   · have bound := replay_uniform_step decode c key query entry
     by_cases coins : SourceUniform query <;> by_cases hash : SourceHash query <;>
-      simpa only [AdaptiveCtxSharedModes.localImpl, StateT.run, Bool.false_eq_true, if_false,
-        ModePrivate, coins, hash, not_true_eq_false, not_false_eq_true, false_and, true_and, if_true] using bound
-  · simpa only [AdaptiveCtxSharedModes.localImpl, StateT.run, if_true, bind_pure_comp,
-      isQueryBoundP_map_iff, ModePrivate, if_false, SourceClass, Bool.false_eq_true] using
+      simpa only [AdaptiveCtxSharedModes.localImpl, StateT.run, Bool.false_eq_true, ite_false,
+        ModePrivate, coins, hash, not_true_eq_false, not_false_eq_true, false_and, true_and, ite_true] using bound
+  · simpa only [AdaptiveCtxSharedModes.localImpl, StateT.run, ite_true, bind_pure_comp,
+      isQueryBoundP_map_iff, ModePrivate, ite_false, SourceClass, Bool.false_eq_true] using
       AdaptiveCtxSharedHash.local_step_bound false decode c key query entry.1
 
 theorem mode_uniform_schedule (real : Bool) (decode : RawDecoder) (c : Pqxdh.Crypto) (key : CtxKey)
@@ -154,16 +154,16 @@ theorem mode_uniform_schedule (real : Bool) (decode : RawDecoder) (c : Pqxdh.Cry
     (fun query budget allowed => by
       by_cases coins : SourceUniform query
       · have noPrivate : ¬ModePrivate real query := fun hit => mode_private_not_uniform real query hit coins
-        simp only [coins, noPrivate, if_true, if_false] at allowed ⊢
+        simp only [coins, noPrivate, ite_true, ite_false] at allowed ⊢
         change 1 + (budget.1 - 1 + 64 * budget.2) = budget.1 + 64 * budget.2
         simp only [not_true_eq_false, false_or] at allowed
         omega
       · by_cases privateCall : ModePrivate real query
-        · simp only [coins, privateCall, if_true, if_false] at allowed ⊢
+        · simp only [coins, privateCall, ite_true, ite_false] at allowed ⊢
           change 64 + (budget.1 + 64 * (budget.2 - 1)) = budget.1 + 64 * budget.2
           simp only [not_true_eq_false, false_or] at allowed
           omega
-        · simp only [coins, privateCall, if_false]
+        · simp only [coins, privateCall, ite_false]
           change 0 + (budget.1 + 64 * budget.2) = budget.1 + 64 * budget.2
           exact Nat.zero_add _) entry
 

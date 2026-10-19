@@ -453,11 +453,11 @@ private theorem builder_candidate_counter (source : FixedHkdfSha512NoSaltSource)
   simp only [PqxdhInitialGenericBuilder.candidate, simulateQ_bind, StateT.run_bind,
     mem_support_bind_iff] at supported
   obtain ⟨⟨valid, afterCheck⟩, _, supported⟩ := supported
-  cases valid <;> simp only [Bool.not_false, Bool.not_true, Bool.false_eq_true, if_true, if_false,
+  cases valid <;> simp only [Bool.not_false, Bool.not_true, Bool.false_eq_true, ite_true, ite_false,
     simulateQ_pure, StateT.run_pure, mem_support_pure_iff, Prod.mk.injEq, RustM.ok.injEq,
     reduceCtorEq, false_and, simulateQ_bind, StateT.run_bind, mem_support_bind_iff] at supported
   obtain ⟨⟨reserved, afterReserve⟩, _, supported⟩ := supported
-  cases reserved <;> simp only [Bool.not_false, Bool.not_true, Bool.false_eq_true, if_true, if_false,
+  cases reserved <;> simp only [Bool.not_false, Bool.not_true, Bool.false_eq_true, ite_true, ite_false,
     simulateQ_pure, StateT.run_pure, mem_support_pure_iff, Prod.mk.injEq, RustM.ok.injEq,
     reduceCtorEq, false_and] at supported
   cases initialEq : initial <;> simp only [initialEq, PqxdhInitialGenericBuilder.continueRust,
@@ -468,7 +468,7 @@ private theorem builder_candidate_counter (source : FixedHkdfSha512NoSaltSource)
     Prod.mk.injEq, RustM.ok.injEq, reduceCtorEq, false_and, simulateQ_bind, StateT.run_bind,
     mem_support_bind_iff] at supported
   obtain ⟨⟨allocated, afterAllocation⟩, _, supported⟩ := supported
-  cases allocated <;> simp only [Bool.not_false, Bool.not_true, Bool.false_eq_true, if_true, if_false,
+  cases allocated <;> simp only [Bool.not_false, Bool.not_true, Bool.false_eq_true, ite_true, ite_false,
     simulateQ_pure, StateT.run_pure, mem_support_pure_iff, Prod.mk.injEq, RustM.ok.injEq,
     reduceCtorEq, false_and] at supported
   cases binding : candidate.key_id_binding <;> simp only [binding, simulateQ_pure, StateT.run_pure,

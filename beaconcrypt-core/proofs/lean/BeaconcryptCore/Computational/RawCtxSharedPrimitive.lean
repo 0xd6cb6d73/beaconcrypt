@@ -148,7 +148,7 @@ theorem native_uniform_bound {Auxiliary Result : Type} (c : Pqxdh.Crypto)
     cases query with
     | inl request =>
       simp only [Sum.isLeft, openingPredicate, Bool.false_eq_true, eq_self,
-        if_true, if_false, not_true_eq_false, false_or] at kdfQueries ⊢
+        ite_true, ite_false, not_true_eq_false, false_or] at kdfQueries ⊢
       have enough : kdfCoins ≤ kdfCoins * qKdf := by
         simpa only [Nat.mul_one] using Nat.mul_le_mul_left kdfCoins kdfQueries.1
       rw [Nat.mul_sub_left_distrib]
@@ -157,7 +157,7 @@ theorem native_uniform_bound {Auxiliary Result : Type} (c : Pqxdh.Crypto)
       cases request with
       | inl bytes =>
         simp only [Sum.isLeft, openingPredicate, Bool.false_eq_true, eq_self,
-          if_true, if_false, not_true_eq_false, false_or] at hashQueries ⊢
+          ite_true, ite_false, not_true_eq_false, false_or] at hashQueries ⊢
         omega
       | inr input => simp [openingPredicate]
 

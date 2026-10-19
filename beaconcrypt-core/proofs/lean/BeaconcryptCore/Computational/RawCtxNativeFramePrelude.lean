@@ -36,7 +36,7 @@ theorem payload_exact (payload : Slice Std.U8) (ad : Std.Array Std.U8 153#usize)
   | some context =>
     simp only [NativeRecordWrapper.PayloadView] at fields
     simp only [projectOption, contextSlices, sliceBytes, absBytes, RawCtxFrameDecoding.fromPayload,
-      List.length_map, if_neg (by omega : ¬ payload.val.length ≤ 80), fields.2.1,
+      List.length_map, ite_eq_right (by omega : ¬ payload.val.length ≤ 80), fields.2.1,
       fields.2.2.1, fields.2.2.2.1, List.map_take, List.map_drop, List.length_take,
       Nat.min_eq_left (Nat.sub_le _ _)]
     rw [Nat.sub_sub]

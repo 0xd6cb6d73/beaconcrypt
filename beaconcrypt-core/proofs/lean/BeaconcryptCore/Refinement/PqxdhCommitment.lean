@@ -124,16 +124,16 @@ theorem build_commitment_transcript_abs
     have hi229 : i < 229 := by simpa using hi
     rw [build_commitment_transcript_call_mut]
     by_cases h32 : i < 32
-    · rw [if_pos ((hlt 32#usize).mpr (by simpa using h32)),
+    · rw [ite_eq_left ((hlt 32#usize).mpr (by simpa using h32)),
           index_usize_eq key _ (by
             rw [hval]
             simp
             omega), hval]
-      simp only [if_pos h32]
+      simp only [ite_eq_left h32]
       rfl
     · by_cases h44 : i < 44
-      · rw [if_neg (fun hc => h32 (by simpa using (hlt 32#usize).mp hc)),
-          if_pos ((hlt 44#usize).mpr (by simpa using h44))]
+      · rw [ite_eq_right (fun hc => h32 (by simpa using (hlt 32#usize).mp hc)),
+          ite_eq_left ((hlt 44#usize).mpr (by simpa using h44))]
         have hsub : (32#usize).val ≤ (⟨BitVec.ofNat _ i⟩ : Std.Usize).val := by
           rw [hval]
           simp
@@ -149,12 +149,12 @@ theorem build_commitment_transcript_abs
           rw [h1]
           simp
           omega), h1]
-        simp only [if_neg h32, if_pos h44]
+        simp only [ite_eq_right h32, ite_eq_left h44]
         rfl
       · by_cases h197 : i < 197
-        · rw [if_neg (fun hc => h32 (by simpa using (hlt 32#usize).mp hc)),
-            if_neg (fun hc => h44 (by simpa using (hlt 44#usize).mp hc)),
-            if_pos ((hlt 197#usize).mpr (by simpa using h197))]
+        · rw [ite_eq_right (fun hc => h32 (by simpa using (hlt 32#usize).mp hc)),
+            ite_eq_right (fun hc => h44 (by simpa using (hlt 44#usize).mp hc)),
+            ite_eq_left ((hlt 197#usize).mpr (by simpa using h197))]
           have hsub : (44#usize).val ≤ (⟨BitVec.ofNat _ i⟩ : Std.Usize).val := by
             rw [hval]
             simp
@@ -170,13 +170,13 @@ theorem build_commitment_transcript_abs
             rw [h1]
             simp
             omega), h1]
-          simp only [if_neg h32, if_neg h44, if_pos h197]
+          simp only [ite_eq_right h32, ite_eq_right h44, ite_eq_left h197]
           rfl
         · by_cases h213 : i < 213
-          · rw [if_neg (fun hc => h32 (by simpa using (hlt 32#usize).mp hc)),
-              if_neg (fun hc => h44 (by simpa using (hlt 44#usize).mp hc)),
-              if_neg (fun hc => h197 (by simpa using (hlt 197#usize).mp hc)),
-              if_pos ((hlt 213#usize).mpr (by simpa using h213))]
+          · rw [ite_eq_right (fun hc => h32 (by simpa using (hlt 32#usize).mp hc)),
+              ite_eq_right (fun hc => h44 (by simpa using (hlt 44#usize).mp hc)),
+              ite_eq_right (fun hc => h197 (by simpa using (hlt 197#usize).mp hc)),
+              ite_eq_left ((hlt 213#usize).mpr (by simpa using h213))]
             have hsub : (197#usize).val ≤ (⟨BitVec.ofNat _ i⟩ : Std.Usize).val := by
               rw [hval]
               simp
@@ -192,14 +192,14 @@ theorem build_commitment_transcript_abs
               rw [h1]
               simp
               omega), h1]
-            simp only [if_neg h32, if_neg h44, if_neg h197, if_pos h213]
+            simp only [ite_eq_right h32, ite_eq_right h44, ite_eq_right h197, ite_eq_left h213]
             rfl
           · by_cases h221 : i < 221
-            · rw [if_neg (fun hc => h32 (by simpa using (hlt 32#usize).mp hc)),
-                if_neg (fun hc => h44 (by simpa using (hlt 44#usize).mp hc)),
-                if_neg (fun hc => h197 (by simpa using (hlt 197#usize).mp hc)),
-                if_neg (fun hc => h213 (by simpa using (hlt 213#usize).mp hc)),
-                if_pos ((hlt 221#usize).mpr (by simpa using h221))]
+            · rw [ite_eq_right (fun hc => h32 (by simpa using (hlt 32#usize).mp hc)),
+                ite_eq_right (fun hc => h44 (by simpa using (hlt 44#usize).mp hc)),
+                ite_eq_right (fun hc => h197 (by simpa using (hlt 197#usize).mp hc)),
+                ite_eq_right (fun hc => h213 (by simpa using (hlt 213#usize).mp hc)),
+                ite_eq_left ((hlt 221#usize).mpr (by simpa using h221))]
               have hsub : (213#usize).val ≤ (⟨BitVec.ofNat _ i⟩ : Std.Usize).val := by
                 rw [hval]
                 simp
@@ -215,13 +215,13 @@ theorem build_commitment_transcript_abs
                 rw [h1]
                 simp
                 omega), h1]
-              simp only [if_neg h32, if_neg h44, if_neg h197, if_neg h213, if_pos h221]
+              simp only [ite_eq_right h32, ite_eq_right h44, ite_eq_right h197, ite_eq_right h213, ite_eq_left h221]
               rfl
-            · rw [if_neg (fun hc => h32 (by simpa using (hlt 32#usize).mp hc)),
-                if_neg (fun hc => h44 (by simpa using (hlt 44#usize).mp hc)),
-                if_neg (fun hc => h197 (by simpa using (hlt 197#usize).mp hc)),
-                if_neg (fun hc => h213 (by simpa using (hlt 213#usize).mp hc)),
-                if_neg (fun hc => h221 (by simpa using (hlt 221#usize).mp hc))]
+            · rw [ite_eq_right (fun hc => h32 (by simpa using (hlt 32#usize).mp hc)),
+                ite_eq_right (fun hc => h44 (by simpa using (hlt 44#usize).mp hc)),
+                ite_eq_right (fun hc => h197 (by simpa using (hlt 197#usize).mp hc)),
+                ite_eq_right (fun hc => h213 (by simpa using (hlt 213#usize).mp hc)),
+                ite_eq_right (fun hc => h221 (by simpa using (hlt 221#usize).mp hc))]
               have hsub : (221#usize).val ≤ (⟨BitVec.ofNat _ i⟩ : Std.Usize).val := by
                 rw [hval]
                 simp
@@ -237,7 +237,7 @@ theorem build_commitment_transcript_abs
                 rw [h1]
                 simp
                 omega), h1]
-              simp only [if_neg h32, if_neg h44, if_neg h197, if_neg h213, if_neg h221]
+              simp only [ite_eq_right h32, ite_eq_right h44, ite_eq_right h197, ite_eq_right h213, ite_eq_right h221]
               rfl
   have hbyte : ∀ i, i < (229#usize).val →
       absByte (if i < 32 then key.val[i]!
@@ -257,27 +257,27 @@ theorem build_commitment_transcript_abs
       getElem!_append2 _ _ 44 (by simp),
       getElem!_append2 _ _ 32 (by simp)]
     by_cases h32 : i < 32
-    · simp only [if_pos h32, if_pos (show i < 44 by omega),
-        if_pos (show i < 197 by omega), if_pos (show i < 213 by omega),
-        if_pos (show i < 221 by omega)]
+    · simp only [ite_eq_left h32, ite_eq_left (show i < 44 by omega),
+        ite_eq_left (show i < 197 by omega), ite_eq_left (show i < 213 by omega),
+        ite_eq_left (show i < 221 by omega)]
       exact (absBytes_getElem! key i (by simp; omega)).symm
     · by_cases h44 : i < 44
-      · simp only [if_neg h32, if_pos h44, if_pos (show i < 197 by omega),
-          if_pos (show i < 213 by omega), if_pos (show i < 221 by omega)]
+      · simp only [ite_eq_right h32, ite_eq_left h44, ite_eq_left (show i < 197 by omega),
+          ite_eq_left (show i < 213 by omega), ite_eq_left (show i < 221 by omega)]
         exact (absBytes_getElem! nonce (i - 32) (by simp; omega)).symm
       · by_cases h197 : i < 197
-        · simp only [if_neg h32, if_neg h44, if_pos h197,
-            if_pos (show i < 213 by omega), if_pos (show i < 221 by omega)]
+        · simp only [ite_eq_right h32, ite_eq_right h44, ite_eq_left h197,
+            ite_eq_left (show i < 213 by omega), ite_eq_left (show i < 221 by omega)]
           exact (absBytes_getElem! associatedData (i - 44) (by simp; omega)).symm
         · by_cases h213 : i < 213
-          · simp only [if_neg h32, if_neg h44, if_neg h197, if_pos h213,
-              if_pos (show i < 221 by omega)]
+          · simp only [ite_eq_right h32, ite_eq_right h44, ite_eq_right h197, ite_eq_left h213,
+              ite_eq_left (show i < 221 by omega)]
             exact (absBytes_getElem! tag (i - 197) (by simp; omega)).symm
           · by_cases h221 : i < 221
-            · simp only [if_neg h32, if_neg h44, if_neg h197, if_neg h213, if_pos h221]
+            · simp only [ite_eq_right h32, ite_eq_right h44, ite_eq_right h197, ite_eq_right h213, ite_eq_left h221]
               rw [← hsequenceAbs]
               exact (absBytes_getElem! sequenceBytes (i - 213) (by simp; omega)).symm
-            · simp only [if_neg h32, if_neg h44, if_neg h197, if_neg h213, if_neg h221]
+            · simp only [ite_eq_right h32, ite_eq_right h44, ite_eq_right h197, ite_eq_right h213, ite_eq_right h221]
               rw [← hsenderAbs]
               exact (absBytes_getElem! senderBytes (i - 221) (by simp; omega)).symm
   obtain ⟨bytes, hfrom, habs⟩ :=

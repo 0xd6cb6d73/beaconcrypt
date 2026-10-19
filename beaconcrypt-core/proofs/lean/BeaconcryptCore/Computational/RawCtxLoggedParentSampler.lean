@@ -99,7 +99,7 @@ private theorem classify_valid (source : FixedHkdfSha512NoSaltSource) (writer : 
       source writer depth (depth + 1) sender route decode client state initial reached query next supported
     have found : ∃ context : Context M P I D K Result S B,
         (⟨query, next⟩ : Frame M P I D K Result S B) = frame sender route decode context := ⟨context, exactFrame⟩
-    simp only [classify, dif_pos found, Valid]
+    simp only [classify, dite_eq_left found, Valid]
     have chosenAddress := (congrArg (fun saved : Frame M P I D K Result S B =>
       RawCtxSelectedFamilyContext.queryAddress saved.1) (Classical.choose_spec found)).trans
         (frame_address sender route decode (Classical.choose found))

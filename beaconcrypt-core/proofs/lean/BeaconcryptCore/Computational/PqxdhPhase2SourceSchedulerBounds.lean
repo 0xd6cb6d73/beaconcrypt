@@ -160,7 +160,7 @@ private theorem compiler_source_bound {Result : Type}
         simp [present]) before
     simpa only [simulateQ_spec_query, compiler, ForwardedSource] using step
   | inr query =>
-    simpa only [compiler, ForwardedSource, if_false, Nat.mul_zero] using
+    simpa only [compiler, ForwardedSource, ite_false, Nat.mul_zero] using
       PqxdhPhase2LiveFinish.finish_query_bound (sourceNative source localImpl) decode
         (PqxdhPrivateKemQueryBounds.SelectorSource (baseSpec := baseSpec) predicate) 0 nativeZero query before
 

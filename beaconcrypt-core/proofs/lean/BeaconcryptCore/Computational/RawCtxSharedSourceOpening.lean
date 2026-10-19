@@ -30,7 +30,7 @@ theorem real_complete (decode : RawDecoder) (c : Pqxdh.Crypto) (key : CtxKey)
   have localEq : (AdaptiveCtxSharedModes.localImpl true decode c key query).run state.1 =
       (fun result => (result.1, (result.2, state.1.2))) <$>
         (AdaptiveCtxSharedHash.localImpl decode c key query).run state.1.1 := by
-    simp only [AdaptiveCtxSharedModes.localImpl, StateT.run, if_true, bind_pure_comp]
+    simp only [AdaptiveCtxSharedModes.localImpl, StateT.run, ite_true, bind_pure_comp]
   rw [target_run, localEq, simulateQ_map, StateT.run_map]
   simpa only [Functor.map_map, retain, AdaptiveCtxSharedHash.reassemble,
     AdaptiveCtxSharedHash.separate_install, canonicalProjection] using full

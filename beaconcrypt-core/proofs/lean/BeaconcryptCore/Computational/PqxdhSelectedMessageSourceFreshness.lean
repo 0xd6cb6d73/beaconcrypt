@@ -24,7 +24,7 @@ theorem first_lineage (prior : RawCtxSelectedParentTable.Prior) (input : RootOut
   change [concreteChain input, RawCtxFiniteLineageCheck.nativeKey
     (RawCtxInterpretedReceive.decodeResponse (RawCtxKdfRequestTable.fullResponse
       (if RawCtxSelectedParentPrivatePatch.targetAddress input = RawCtxSelectedParentPrivatePatch.targetAddress input then output else _))).2] = _
-  rw [if_pos rfl, decoded_parts]
+  rw [ite_eq_left rfl, decoded_parts]
   rfl
 
 /-- The actual first-record source freshness factors into retained input/ancestor checks, hidden-reveal stopping and the explicit selected-key candidate event. -/

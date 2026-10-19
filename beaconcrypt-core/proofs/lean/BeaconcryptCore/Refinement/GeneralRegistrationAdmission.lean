@@ -313,14 +313,14 @@ theorem cached_publication_represents_symbolic_swap {SendChain ReceiveChain Mate
     rw [registrationCacheSwap_length, registrationCacheSwap_lookup cache _ j hjold]
     rw [hslots _ (by omega)]
     have hnotlast : cache.length - 1 - 1 - j ≠ prepared.last_slot.val := by omega
-    rw [if_neg hnotlast]
+    rw [ite_eq_right hnotlast]
     by_cases hselected : cache.length - 1 - prepared.target_slot.val ≠ 0 ∧
         j = cache.length - 1 - prepared.target_slot.val - 1
     · have htargetIndex : cache.length - 1 - 1 - j = prepared.target_slot.val := by omega
-      rw [if_pos hselected, if_pos htargetIndex]
+      rw [ite_eq_left hselected, ite_eq_left htargetIndex]
       simpa only [Nat.sub_zero, hlast] using hcache.2 0 (by omega)
     · have hotherIndex : cache.length - 1 - 1 - j ≠ prepared.target_slot.val := by omega
-      rw [if_neg hselected, if_neg hotherIndex]
+      rw [ite_eq_right hselected, ite_eq_right hotherIndex]
       have hindex : cache.length - 1 - (j + 1) = cache.length - 1 - 1 - j := by omega
       simpa only [hindex] using hcache.2 (j + 1) (by omega)
 

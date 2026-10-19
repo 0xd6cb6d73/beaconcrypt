@@ -725,18 +725,18 @@ theorem isQueryBoundP_or {ι : Type} {spec : OracleSpec.{0, 0} ι} {alpha : Type
         exact hrec.mono (by
           by_cases hl : left query
           · by_cases hr : right query
-            · simp only [hl, hr, true_or, if_true] at hrec ⊢
+            · simp only [hl, hr, true_or, ite_true] at hrec ⊢
               have := hposLeft hl
               have := hposRight hr
               omega
-            · simp only [hl, true_or, if_true, hr, if_false] at hrec ⊢
+            · simp only [hl, true_or, ite_true, hr, ite_false] at hrec ⊢
               have := hposLeft hl
               omega
           · by_cases hr : right query
-            · simp only [hl, false_or, hr, if_true, if_false] at hrec ⊢
+            · simp only [hl, false_or, hr, ite_true, ite_false] at hrec ⊢
               have := hposRight hr
               omega
-            · simp only [hl, hr, false_or, if_false] at hrec ⊢
+            · simp only [hl, hr, false_or, ite_false] at hrec ⊢
               exact le_rfl)
 
 /-- Every source call belongs to exactly one of the six source classes. -/
@@ -2054,12 +2054,12 @@ private lemma card_cacheQuery_collision_le_support
     (fun value₁ hvalue₁ value₂ hvalue₂ hkeys => ?_)
   · have hbad := (Finset.mem_filter.mp hvalue).2
     obtain ⟨_, oldValue, hcache, _⟩ := (hmust value hbad).choose_spec
-    rw [show keyOf value = _ from dif_pos hbad]
+    rw [show keyOf value = _ from dite_eq_left hbad]
     exact hsupport _ (hcache ▸ Option.some_ne_none oldValue)
   · have hbad₁ := (Finset.mem_filter.mp hvalue₁).2
     have hbad₂ := (Finset.mem_filter.mp hvalue₂).2
-    rw [show keyOf value₁ = _ from dif_pos hbad₁,
-      show keyOf value₂ = _ from dif_pos hbad₂] at hkeys
+    rw [show keyOf value₁ = _ from dite_eq_left hbad₁,
+      show keyOf value₂ = _ from dite_eq_left hbad₂] at hkeys
     obtain ⟨_, oldValue₁, hcache₁, hequal₁⟩ := (hmust value₁ hbad₁).choose_spec
     obtain ⟨_, oldValue₂, hcache₂, hequal₂⟩ := (hmust value₂ hbad₂).choose_spec
     suffices hcached : ∀ (left right : spec.Domain)
@@ -2195,7 +2195,7 @@ private lemma probEvent_projectionCacheBad32_run_le_sum_aux
       · rw [run_simulateQ_projectionCoordLazyRandom_uniform_bind]
         refine probEvent_bind_le_of_forall_le fun value _ => ?_
         have hrest := hbound.2 value
-        simp only [IsProjection32Query, if_false] at hrest
+        simp only [IsProjection32Query] at hrest
         exact ih value m k hrest state₀ hnocoll hkeys
       · rcases coordinateQuery with coord | nonceCoord
         · have hmpos : 0 < m := hbound.1.resolve_left (by
@@ -2298,7 +2298,7 @@ private lemma probEvent_projectionCacheBad32_run_le_sum_aux
             rw [run_simulateQ_projectionCoordLazyRandom_nonce_bind_hit
               nonceCoord rest state₀ value hvalue]
             have hrest := hbound.2 value
-            simp only [IsProjection32Query, if_false] at hrest
+            simp only [IsProjection32Query] at hrest
             exact ih value m k hrest state₀ hnocoll hkeys
           · push Not at hhit
             have hnone : state₀.2 nonceCoord = none :=
@@ -2307,7 +2307,7 @@ private lemma probEvent_projectionCacheBad32_run_le_sum_aux
               nonceCoord rest state₀ hnone]
             refine probEvent_bind_le_of_forall_le fun value _ => ?_
             have hrest := hbound.2 value
-            simp only [IsProjection32Query, if_false] at hrest
+            simp only [IsProjection32Query] at hrest
             exact ih value m k hrest
               (state₀.1, state₀.2.cacheQuery nonceCoord value) hnocoll hkeys
 
@@ -2343,7 +2343,7 @@ private lemma probEvent_projectionCacheBad12_run_le_sum_aux
       · rw [run_simulateQ_projectionCoordLazyRandom_uniform_bind]
         refine probEvent_bind_le_of_forall_le fun value _ => ?_
         have hrest := hbound.2 value
-        simp only [IsProjectionNonceQuery, if_false] at hrest
+        simp only [IsProjectionNonceQuery] at hrest
         exact ih value m k hrest state₀ hnocoll hkeys
       · rcases coordinateQuery with coord | nonceCoord
         · by_cases hhit : ∃ value, state₀.1 coord = some value
@@ -2351,7 +2351,7 @@ private lemma probEvent_projectionCacheBad12_run_le_sum_aux
             rw [run_simulateQ_projectionCoordLazyRandom_first_bind_hit
               coord rest state₀ value hvalue]
             have hrest := hbound.2 value
-            simp only [IsProjectionNonceQuery, if_false] at hrest
+            simp only [IsProjectionNonceQuery] at hrest
             exact ih value m k hrest state₀ hnocoll hkeys
           · push Not at hhit
             have hnone : state₀.1 coord = none :=
@@ -2360,7 +2360,7 @@ private lemma probEvent_projectionCacheBad12_run_le_sum_aux
               coord rest state₀ hnone]
             refine probEvent_bind_le_of_forall_le fun value _ => ?_
             have hrest := hbound.2 value
-            simp only [IsProjectionNonceQuery, if_false] at hrest
+            simp only [IsProjectionNonceQuery] at hrest
             exact ih value m k hrest
               (state₀.1.cacheQuery coord value, state₀.2) hnocoll hkeys
         · have hmpos : 0 < m := hbound.1.resolve_left (by
@@ -3250,7 +3250,7 @@ theorem evalSPMF_projectionCoordUnifiedRandom_eq_uniform_prefill
   classical
   induction computation using OracleComp.inductionOn generalizing cache with
   | pure output =>
-      letI : DecidableEq alpha := Classical.decEq alpha
+      let : DecidableEq alpha := Classical.decEq alpha
       apply evalSPMF_ext
       intro candidate
       simp
@@ -4783,7 +4783,7 @@ theorem sourceKdfStreamObservationForwardImpl_uniform_bound_step
       (if IsSourceKdfUniformQuery query then 1 else 0) := by
   rcases query with randomQuery | sourceQuery
   · simp only [sourceKdfStreamObservationForwardImpl, StateT.run_mk,
-      IsSourceKdfUniformQuery, if_true]
+      IsSourceKdfUniformQuery]
     change (liftM (FixedHkdfSha512JointStreamSpec.query (.inl randomQuery)) :
       OracleComp FixedHkdfSha512JointStreamSpec
         (FixedHkdfSha512JointStreamSpec.Range (.inl randomQuery))).IsQueryBoundP
@@ -4791,7 +4791,7 @@ theorem sourceKdfStreamObservationForwardImpl_uniform_bound_step
     rw [OracleComp.isQueryBoundP_query_iff]
     simp [IsFixedHkdfSha512UniformQuery]
   · simp only [sourceKdfStreamObservationForwardImpl, StateT.run_mk,
-      IsSourceKdfUniformQuery, if_false, bind_pure_comp]
+      IsSourceKdfUniformQuery, bind_pure_comp]
     change ((fun stream : FixedHkdfSha512JointStreamSpec.Range
         (.inr sourceQuery.address) =>
       (sourceQuery.output stream, log.record sourceQuery stream)) <$>
@@ -4813,7 +4813,7 @@ theorem sourceKdfStreamObservationForwardImpl_stream_bound_step
       (if IsSourceKdfCallQuery query then 1 else 0) := by
   rcases query with randomQuery | sourceQuery
   · simp only [sourceKdfStreamObservationForwardImpl, StateT.run_mk,
-      IsSourceKdfCallQuery, if_false]
+      IsSourceKdfCallQuery]
     change (liftM (FixedHkdfSha512JointStreamSpec.query (.inl randomQuery)) :
       OracleComp FixedHkdfSha512JointStreamSpec
         (FixedHkdfSha512JointStreamSpec.Range (.inl randomQuery))).IsQueryBoundP
@@ -4821,7 +4821,7 @@ theorem sourceKdfStreamObservationForwardImpl_stream_bound_step
     rw [OracleComp.isQueryBoundP_query_iff]
     simp [IsFixedHkdfSha512StreamQuery]
   · simp only [sourceKdfStreamObservationForwardImpl, StateT.run_mk,
-      IsSourceKdfCallQuery, if_true, bind_pure_comp]
+      IsSourceKdfCallQuery, bind_pure_comp]
     change ((fun stream : FixedHkdfSha512JointStreamSpec.Range
         (.inr sourceQuery.address) =>
       (sourceQuery.output stream, log.record sourceQuery stream)) <$>

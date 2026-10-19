@@ -169,7 +169,7 @@ theorem afterOpening_wrong_sequence (candidate : pqxdh.BeaconRegistrationCandida
     (kernel : ConcreteRatchetKernel) (opened : RawCtxWholeOwner.Decrypted)
     (wrong : opened.sequence ≠ 1#u64) : afterOpening candidate kernel (.Some opened) = none := by
   change (if opened.sequence ≠ 1#u64 then none else _) = none
-  exact if_pos wrong
+  exact ite_eq_left wrong
 
 /-- Every staged success retains the actual raw result/kernel and derives sequence one plus the extracted plaintext-binding acceptance. -/
 theorem afterOpening_success (candidate : pqxdh.BeaconRegistrationCandidate)
@@ -185,7 +185,7 @@ theorem afterOpening_success (candidate : pqxdh.BeaconRegistrationCandidate)
   | some opened =>
       by_cases sequence : opened.sequence = 1#u64
       · by_cases length : 8 < opened.plaintext.length
-        · simp only [afterOpening, sequence, ne_eq, not_true_eq_false, if_false, length, _root_.dite_true] at success
+        · simp only [afterOpening, sequence, ne_eq, not_true_eq_false, ite_false, length, _root_.dite_true] at success
           cases actual : normalAuthenticate candidate opened.keyId
               (ProtocolComposition.plaintextBinding opened.plaintext length) with
           | Err error => simp only [actual] at success; cases success
@@ -194,9 +194,9 @@ theorem afterOpening_success (candidate : pqxdh.BeaconRegistrationCandidate)
               subst staged
               exact ⟨rfl, sequence, rfl, rfl, length,
                 (normalAuthenticate_exact candidate opened.keyId _).trans (congrArg ok actual)⟩
-        · simp only [afterOpening, sequence, ne_eq, not_true_eq_false, if_false, length, _root_.dite_false] at success
+        · simp only [afterOpening, sequence, ne_eq, not_true_eq_false, ite_false, length, _root_.dite_false] at success
           cases success
-      · simp only [afterOpening, sequence, ne_eq, not_false_eq_true, if_true] at success
+      · simp only [afterOpening, sequence, ne_eq, not_false_eq_true, ite_true] at success
         cases success
 
 /-- Publication uses the actual extracted commitment and keeps every unrelated native field. -/

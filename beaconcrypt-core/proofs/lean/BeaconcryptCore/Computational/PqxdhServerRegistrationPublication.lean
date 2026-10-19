@@ -384,7 +384,7 @@ theorem candidate_normal {Metadata PeerMetadata Consumed : Type}
     intro reserved
     cases reserved
     · exact normal_pure _
-    · simp only [Bool.not_true, Bool.false_eq_true, if_false]
+    · simp only [Bool.not_true, Bool.false_eq_true, ite_false]
       split_ifs
       · exact normal_pure _
       · apply normal_bind
@@ -445,13 +445,13 @@ theorem source_candidateTail_exact {Metadata PeerMetadata Consumed PrimitiveStat
     simulateQ_bind, simulateQ_spec_query, functionalImpl, StateT.run_bind, bind_tc_ok]
   simp only [StateT.run, id_bind_eq]
   split_ifs <;> simp_all only [simulateQ_pure, simulateQ_bind, simulateQ_spec_query,
-    functionalImpl, if_true, if_false, Bool.false_eq_true, collectState,
+    functionalImpl, ite_true, ite_false, Bool.false_eq_true, collectState,
     state_bind_eq, state_pure_eq, rust_ok_map]
   generalize aux (.reservePlaintext (8 + (data.getD registrationWitness).length))
     (aux .reservePeer (aux (.checkIdentity candidate.beacon_identity_public_key) primitive).2).2 = allocation
   rcases allocation with ⟨allocated, afterAllocation⟩
   cases allocated <;> simp only [Bool.not_false, Bool.not_true, Bool.false_eq_true,
-    if_true, if_false, simulateQ_pure, state_pure_eq, rust_ok_map, simulateQ_map]
+    ite_true, ite_false, simulateQ_pure, state_pure_eq, rust_ok_map, simulateQ_map]
   all_goals try rfl
   change sourceAfterInitialization execute sealReply aux candidate
       (Pqxdh.LE64 candidate.key_id.val ++ data.getD registrationWitness) kernel metadata state afterAllocation =
@@ -553,7 +553,7 @@ theorem afterInitialization_support {Metadata PeerMetadata Consumed PrimitiveSta
       refine ⟨written, afterWrite, hwritten, ?_⟩
       cases written <;> simpa only [simulateQ_pure, StateT.run_pure,
         mem_support_pure_iff, Option.map_none, Option.map_some, Option.isSome_none,
-        Option.isSome_some, Bool.false_eq_true, if_false, if_true] using hresult
+        Option.isSome_some, Bool.false_eq_true, ite_false, ite_true] using hresult
 
 /-- Current-control rejection and every typed candidate continuation return normally. -/
 theorem build_normal {Metadata PeerMetadata Consumed : Type}
@@ -629,7 +629,7 @@ private theorem sendLift_bound {α : Type} (kind : CallKind)
   intro query
   change (liftM (TailSpec.query (.inl query)) : OracleComp TailSpec _).IsQueryBoundP _ _
   rw [isQueryBoundP_query_iff]
-  cases query <;> simp only [callKind, Sum.isLeft, if_true]
+  cases query <;> simp only [callKind, Sum.isLeft, ite_true]
   all_goals split_ifs <;> simp_all
 
 private theorem selected_bound (kernel : ConcreteRatchetKernel)
@@ -702,14 +702,14 @@ theorem candidate_bound {Metadata PeerMetadata Consumed : Type}
   refine ⟨Or.inr (by decide), fun valid => ?_⟩
   cases valid
   · exact isQueryBoundP_pure _ _ _
-  · simp only [Bool.not_true, Bool.false_eq_true, if_false]
+  · simp only [Bool.not_true, Bool.false_eq_true, ite_false]
     rw [isQueryBoundP_query_bind_iff]
     constructor
     · cases kind <;> simp [callKind, auxKind]
     · intro reserved
       cases reserved
       · exact isQueryBoundP_pure _ _ _
-      · simp only [Bool.not_true, Bool.false_eq_true, if_false]
+      · simp only [Bool.not_true, Bool.false_eq_true, ite_false]
         split
         · exact isQueryBoundP_pure _ _ _
         · split
@@ -719,7 +719,7 @@ theorem candidate_bound {Metadata PeerMetadata Consumed : Type}
             · intro allocated
               cases allocated
               · exact isQueryBoundP_pure _ _ _
-              · simp only [Bool.not_true, Bool.false_eq_true, if_false, isQueryBoundP_map_iff]
+              · simp only [Bool.not_true, Bool.false_eq_true, ite_false, isQueryBoundP_map_iff]
                 apply (afterInitialization_bound candidate _ kernel metadata state kind).mono
                 cases kind <;> simp [callKind, auxKind, afterAllowance]
           · exact isQueryBoundP_pure _ _ _

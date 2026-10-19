@@ -122,7 +122,7 @@ theorem backend_work {count : Nat} (index : Fin count) (coinPrice : Nat)
     have bounded := coin_work index coinPrice sealPrice ((hashImpl hash).run cache) _
       (AdaptiveCtxSharedSourceBounds.hash_step_bound hash cache)
     cases hash <;> simpa only [backend, StateT.run, LocalCost, HashCost,
-      AdaptiveCtxSharedHash.HashClass, Bool.false_eq_true, if_true, if_false, Nat.one_mul] using bounded
+      AdaptiveCtxSharedHash.HashClass, Bool.false_eq_true, ite_true, ite_false, Nat.one_mul] using bounded
   | inr input =>
     simp only [backend, StateT.run, bind_pure_comp, WorkBound, isQueryBound_map_iff,
       isQueryBound_query_iff, IndexedCost, LocalCost, le_refl]
@@ -330,7 +330,7 @@ theorem compiled_uniform {count : Nat} {Result : Type} (decode : Fin count → R
     have prices : SourceSealCost (count := count) (fun _ _ => 0) = fun _ => 0 := by
       funext query
       rcases query with ⟨index, (coin | (hash | input)) | raw⟩ <;> rfl
-    simpa only [prices, if_false] using bounded
+    simpa only [prices, ite_false] using bounded
   have bounded := compiled_aggregate decode 1 (fun _ _ => 0) client qUniform qWork 0 uniformBound workBound noSealCost
   have prices : IndexedCost (count := count) 1 (fun _ _ => 0) =
       fun query => if IsModifiedNonceAeadUniformQuery query.2 then 1 else 0 := by

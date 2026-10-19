@@ -405,20 +405,20 @@ theorem public_query_bound {ApplicationRequest ProtocolState ApplicationState Pr
       predicate (qSource + if AsksApplication request then qApplication else 0) := by
   cases request with
   | source request =>
-      simpa only [publicImpl, AsksApplication, if_false, Nat.add_zero] using
+      simpa only [publicImpl, AsksApplication, ite_false, Nat.add_zero] using
         (source_query_bounds source request state predicate qSource).mpr (sourceBound request (state.1.1, state.2))
   | honestSend owner request =>
-      simpa only [AsksApplication, if_true, Nat.add_comm] using honest_send_bound source application
+      simpa only [AsksApplication, ite_true, Nat.add_comm] using honest_send_bound source application
         owner request state predicate qApplication qSource
         (applicationBound (owner, request) state.1.2)
         (fun plaintext => sourceBound (sendRequest owner plaintext) (state.1.1, state.2))
   | deliverServer index raw =>
-      simpa only [publicImpl, AsksApplication, if_false, Nat.add_zero, StateT.run_map,
+      simpa only [publicImpl, AsksApplication, ite_false, Nat.add_zero, StateT.run_map,
         isQueryBoundP_map_iff] using
         (source_query_bounds source (serverRaw index raw) state predicate qSource).mpr
           (sourceBound (serverRaw index raw) (state.1.1, state.2))
   | deliverBeacon index raw =>
-      simpa only [publicImpl, AsksApplication, if_false, Nat.add_zero, StateT.run_map,
+      simpa only [publicImpl, AsksApplication, ite_false, Nat.add_zero, StateT.run_map,
         isQueryBoundP_map_iff] using
         (source_query_bounds source (beaconRaw index raw) state predicate qSource).mpr
           (sourceBound (beaconRaw index raw) (state.1.1, state.2))
@@ -451,9 +451,9 @@ theorem public_schedule_bound {ApplicationRequest ProtocolState ApplicationState
         have publicRest : qPublic - 1 + 1 = qPublic := by omega
         by_cases asks : AsksApplication request
         · have honestRest : qHonest - 1 + 1 = qHonest := by simp_all; omega
-          simp only [if_pos asks]
+          simp only [ite_eq_left asks]
           nlinarith
-        · simp only [if_neg asks, Nat.add_zero]
+        · simp only [ite_eq_right asks, Nat.add_zero]
           nlinarith
       simpa only [remainder] using isQueryBoundP_bind
         (public_query_bound source application predicate qSource qApplication sourceBound applicationBound request state)

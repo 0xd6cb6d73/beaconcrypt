@@ -23,12 +23,12 @@ theorem candidate_bound {Metadata PeerMetadata Consumed : Type}
   refine ⟨Or.inr (by decide), fun valid => ?_⟩
   cases valid
   · exact isQueryBoundP_pure _ _ _
-  · simp only [Bool.not_true, Bool.false_eq_true, if_false]
+  · simp only [Bool.not_true, Bool.false_eq_true, ite_false]
     rw [isQueryBoundP_query_bind_iff]
     refine ⟨by cases kind <;> simp [callKind, auxKind], fun reserved => ?_⟩
     cases reserved
     all_goals try exact isQueryBoundP_pure _ _ _
-    simp only [Bool.not_true, Bool.false_eq_true, if_false]
+    simp only [Bool.not_true, Bool.false_eq_true, ite_false]
     cases initial
     all_goals try exact isQueryBoundP_pure _ _ _
     dsimp only
@@ -40,7 +40,7 @@ theorem candidate_bound {Metadata PeerMetadata Consumed : Type}
     refine ⟨by cases kind <;> simp [callKind, auxKind], fun allocated => ?_⟩
     cases allocated
     all_goals try exact isQueryBoundP_pure _ _ _
-    simp only [Bool.not_true, Bool.false_eq_true, if_false, isQueryBoundP_map_iff]
+    simp only [Bool.not_true, Bool.false_eq_true, ite_false, isQueryBoundP_map_iff]
     apply (afterInitialization_bound pending _ _ metadata state kind).mono
     cases kind <;> simp [callKind, auxKind, afterAllowance]
 
@@ -136,7 +136,7 @@ theorem protocol_uniform {M P I D K A : Type} {S B : Nat}
       (PqxdhRegistrationProtocolState.consume index ready state)).binding ready metadata
     (PqxdhRegistrationProtocolState.input senderId index metadata
       (PqxdhRegistrationProtocolState.consume index ready state)).state state.primitive
-  simpa only [native_uniform_bill, IsTotalQueryBound, IsQueryBoundP, not_true_eq_false, false_or, if_true,
+  simpa only [native_uniform_bill, IsTotalQueryBound, IsQueryBoundP, not_true_eq_false, false_or, ite_true,
     StateT.run, PqxdhRegistrationProtocolState.consume] using bound
 
 variable {M P I D K A Context : Type} {S B : Nat}

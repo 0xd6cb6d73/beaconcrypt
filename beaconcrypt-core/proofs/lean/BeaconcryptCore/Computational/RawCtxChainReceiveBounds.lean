@@ -27,7 +27,7 @@ theorem resume_small {Send Receive Material Context : Type}
   by_cases hzero : pending.remaining = 0#u8
   · simp [resume, hzero, rejected, kdfCost]
   · have hone : pending.remaining = 1#u8 := by scalar_tac
-    simp only [resume, hone, if_true, if_neg (by decide : (1#u8) ≠ 0#u8)]
+    simp only [resume, hone, ite_true, ite_eq_right (by decide : (1#u8) ≠ 0#u8)]
     obtain ⟨advanced, hadvanced⟩ := control.advance_receive_target_total pending.working_control
     cases hseq : advanced.sequence <;> simp only [hadvanced, hseq, bind_tc_ok, rejected]
     all_goals first | exact ⟨_, rfl, rfl⟩ | skip
@@ -72,7 +72,7 @@ theorem program_cost {Send Receive Material Context Plaintext : Type}
       simp [kdfCost]
     | kdfRequested pending =>
       rw [program, isQueryBoundP_query_bind_iff]
-      simp only [Sum.isLeft, not_true_eq_false, false_or, if_true]
+      simp only [Sum.isLeft, not_true_eq_false, false_or, ite_true]
       refine ⟨by simp [kdfCost], fun reply => ?_⟩
       apply (ih _ (hdepth ▸ normalResume_rank pending reply) _ rfl).mono
       have cost := resume_cost pending reply
@@ -115,7 +115,7 @@ theorem program_open_bound {Send Receive Material Context Plaintext : Type}
       simp
     | kdfRequested pending =>
       rw [program, isQueryBoundP_query_bind_iff]
-      simp only [Sum.isRight, Bool.false_eq_true, not_false_eq_true, true_or, if_false, true_and]
+      simp only [Sum.isRight, Bool.false_eq_true, not_false_eq_true, true_or, ite_false, true_and]
       exact fun reply => ih _ (hdepth ▸ normalResume_rank pending reply) _ rfl
 
 end BeaconcryptCore.Computational.RawCtxChainReceiveBounds

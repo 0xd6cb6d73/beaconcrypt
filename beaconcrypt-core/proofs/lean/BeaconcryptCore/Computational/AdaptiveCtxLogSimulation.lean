@@ -84,7 +84,7 @@ theorem runLogged_query_bound {Result : Type} (decode : RawDecoder)
     | inr raw =>
       rw [runLogged_raw]
       have continued := bounded.2 (simulatedOpen decode history raw)
-      rw [if_neg (by simp only [primitiveClass, not_false_eq_true])] at continued
+      rw [ite_eq_right (by simp only [primitiveClass, not_false_eq_true])] at continued
       exact ih _ history bound continued
 
 /-- The returned simulator log equals the challenger's complete successful encryption log. -/
@@ -175,10 +175,10 @@ theorem ordinary_run_nonce_count (c : Pqxdh.Crypto) (key : CtxKey) {Result : Typ
     have first := primitive_nonce_count c key query state stepResult step
     have later := ih stepResult.1 _ (bounded.2 stepResult.1) stepResult.2 result rest
     by_cases isSeal : IsModifiedNonceAeadSealQuery query
-    · simp only [isSeal, if_true] at first later
+    · simp only [isSeal, ite_true] at first later
       have positive := bounded.1.resolve_left (not_not.mpr isSeal)
       omega
-    · simp only [isSeal, if_false] at first later
+    · simp only [isSeal, ite_false] at first later
       omega
 
 /-- The executable ordinary primitive client retains the entire source CTX result and state as its output. -/

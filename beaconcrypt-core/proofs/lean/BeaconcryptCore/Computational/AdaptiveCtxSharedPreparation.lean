@@ -65,7 +65,7 @@ theorem prepared_interpretation {Context Result : Type} {count : Nat}
 theorem lift_no_class (p : ReceiveSpec.Domain → Prop) [DecidablePred p]
     (noUniform : ∀ coin, ¬p (.inl (.inl coin))) {Result : Type} (work : ProbComp Result) :
     (OracleComp.liftComp work ReceiveSpec).IsQueryBoundP p 0 := by
-  letI : unifSpec ⊂ₒ ReceiveSpec := SubSpec.trans
+  let : unifSpec ⊂ₒ ReceiveSpec := SubSpec.trans
     (inferInstance : unifSpec ⊂ₒ unifSpec + CtxAdversarySpec)
     (inferInstance : unifSpec + CtxAdversarySpec ⊂ₒ ReceiveSpec)
   exact OracleComp.IsQueryBoundP.liftComp_subSpec
@@ -79,7 +79,7 @@ theorem lift_no_class (p : ReceiveSpec.Domain → Prop) [DecidablePred p]
 theorem lift_uniform_bound {Result : Type} (work : ProbComp Result) (bound : Nat)
     (bounded : work.IsTotalQueryBound bound) :
     (OracleComp.liftComp work ReceiveSpec).IsQueryBoundP SourceUniform bound := by
-  letI : unifSpec ⊂ₒ ReceiveSpec := SubSpec.trans
+  let : unifSpec ⊂ₒ ReceiveSpec := SubSpec.trans
     (inferInstance : unifSpec ⊂ₒ unifSpec + CtxAdversarySpec)
     (inferInstance : unifSpec + CtxAdversarySpec ⊂ₒ ReceiveSpec)
   apply OracleComp.IsQueryBoundP.liftComp_subSpec
@@ -112,7 +112,7 @@ theorem prepared_uniform_bound {Context Result : Type} {count : Nat}
   unfold wrapped
   apply isQueryBoundP_bind (lift_uniform_bound prepare setupCount setupBound)
   intro prepared _
-  simpa only [bind_pure_comp, isQueryBoundP_map_iff, TargetResource, Bool.false_eq_true, if_false] using
+  simpa only [bind_pure_comp, isQueryBoundP_map_iff, TargetResource, Bool.false_eq_true, ite_false] using
     wrapped_route_bound decode c prepared.keys false (client prepared.context) clientCount
       (bounded prepared.context) (initialReduction count)
 

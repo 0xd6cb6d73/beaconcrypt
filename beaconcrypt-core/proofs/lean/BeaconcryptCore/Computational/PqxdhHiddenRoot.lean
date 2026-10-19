@@ -276,7 +276,7 @@ theorem jointKdfViewForwardImpl_root_query_bound_step
       IsFixedHkdfRootStreamQuery
       (if IsHiddenRootDomainQuery query then 1 else 0) := by
   rcases query with randomQuery | viewQuery
-  · simp only [jointKdfViewForwardImpl_uniform, IsHiddenRootDomainQuery, if_false]
+  · simp only [jointKdfViewForwardImpl_uniform, IsHiddenRootDomainQuery]
     change (liftM
       (FixedHkdfSha512JointStreamSpec.query (.inl randomQuery)) :
         OracleComp FixedHkdfSha512JointStreamSpec
@@ -286,7 +286,7 @@ theorem jointKdfViewForwardImpl_root_query_bound_step
     simp [IsFixedHkdfRootStreamQuery]
   · by_cases hroot : viewQuery.domain = .pqxdh
     · simp only [jointKdfViewForwardImpl_projection, IsHiddenRootDomainQuery,
-        hroot, if_true, bind_pure_comp]
+        hroot, ite_true, bind_pure_comp]
       change (viewQuery.project <$> (liftM
         (FixedHkdfSha512JointStreamSpec.query (.inr viewQuery.address)) :
           OracleComp FixedHkdfSha512JointStreamSpec
@@ -299,7 +299,7 @@ theorem jointKdfViewForwardImpl_root_query_bound_step
           (by simp [IsFixedHkdfRootStreamQuery, JointKdfViewQuery.address,
             hroot, FixedHkdfDomain.address])
     · simp only [jointKdfViewForwardImpl_projection, IsHiddenRootDomainQuery,
-        hroot, if_false, bind_pure_comp]
+        hroot, ite_false, bind_pure_comp]
       change (viewQuery.project <$> (liftM
         (FixedHkdfSha512JointStreamSpec.query (.inr viewQuery.address)) :
           OracleComp FixedHkdfSha512JointStreamSpec
@@ -323,7 +323,7 @@ theorem jointKdfViewForwardImpl_symmetric_query_bound_step
       IsFixedHkdfSymmetricStreamQuery
       (if IsHiddenRootSymmetricQuery query then 1 else 0) := by
   rcases query with randomQuery | viewQuery
-  · simp only [jointKdfViewForwardImpl_uniform, IsHiddenRootSymmetricQuery, if_false]
+  · simp only [jointKdfViewForwardImpl_uniform, IsHiddenRootSymmetricQuery]
     change (liftM
       (FixedHkdfSha512JointStreamSpec.query (.inl randomQuery)) :
         OracleComp FixedHkdfSha512JointStreamSpec
@@ -333,7 +333,7 @@ theorem jointKdfViewForwardImpl_symmetric_query_bound_step
     simp [IsFixedHkdfSymmetricStreamQuery]
   · by_cases hsym : viewQuery.domain = .ratchet
     · simp only [jointKdfViewForwardImpl_projection, IsHiddenRootSymmetricQuery,
-        hsym, if_true, bind_pure_comp]
+        hsym, ite_true, bind_pure_comp]
       change (viewQuery.project <$> (liftM
         (FixedHkdfSha512JointStreamSpec.query (.inr viewQuery.address)) :
           OracleComp FixedHkdfSha512JointStreamSpec
@@ -346,7 +346,7 @@ theorem jointKdfViewForwardImpl_symmetric_query_bound_step
           (by simp [IsFixedHkdfSymmetricStreamQuery, JointKdfViewQuery.address,
             hsym, FixedHkdfDomain.address])
     · simp only [jointKdfViewForwardImpl_projection, IsHiddenRootSymmetricQuery,
-        hsym, if_false, bind_pure_comp]
+        hsym, ite_false, bind_pure_comp]
       change (viewQuery.project <$> (liftM
         (FixedHkdfSha512JointStreamSpec.query (.inr viewQuery.address)) :
           OracleComp FixedHkdfSha512JointStreamSpec
@@ -737,7 +737,7 @@ theorem hiddenRootRealGame_eq_fixedHkdfSha512JointStreamRealExp
     hiddenRootReduction, hiddenRootReductionMain, queryHiddenRootStream,
     fixedHkdfSha512JointStreamRealImpl, jointKdfViewRealImpl,
     productionHiddenRoot_eq_first32_realStream,
-    QueryImpl.simulateQ_add_liftM_left, QueryImpl.simulateQ_toQueryImpl]
+    QueryImpl.simulateQ_add_liftM_left]
 
 /-- The reduction's random experiment is definitionally the shared lazy-stream root game. -/
 theorem hiddenRootSharedRandomGame_eq_fixedHkdfSha512JointStreamRandomExp
@@ -764,12 +764,10 @@ def jointKdfStreamSplitEquiv :
     apply Prod.ext
     · apply List.Vector.toList_injective
       change List.take 32 (parts.1.toList ++ parts.2.toList) = parts.1.toList
-      simpa using (List.take_left
-        (l₁ := parts.1.toList) (l₂ := parts.2.toList))
+      simp
     · apply List.Vector.toList_injective
       change List.drop 32 (parts.1.toList ++ parts.2.toList) = parts.2.toList
-      simpa using (List.drop_left
-        (l₁ := parts.1.toList) (l₂ := parts.2.toList))
+      simp
 
 /-- The split equivalence's first component is exactly the public first-32 projection. -/
 theorem jointKdfStreamSplitEquiv_fst (stream : JointKdfStream) :
@@ -826,7 +824,7 @@ def hiddenRootProgrammingPolicy (known : KnownPqxdhRootCoordinates)
     hiddenRootProgrammingPolicy known hidden stream
         (hiddenRootAddress known hidden) = some stream := by
   unfold hiddenRootProgrammingPolicy jointKdfSingletonProgrammingPolicy
-  rw [if_pos rfl]
+  rw [ite_eq_left rfl]
 
 theorem hiddenRootProgrammingPolicy_other
     (known : KnownPqxdhRootCoordinates) (hidden : HiddenRootCoordinate)
@@ -834,7 +832,7 @@ theorem hiddenRootProgrammingPolicy_other
     (hne : address ≠ hiddenRootAddress known hidden) :
     hiddenRootProgrammingPolicy known hidden stream address = none := by
   unfold hiddenRootProgrammingPolicy jointKdfSingletonProgrammingPolicy
-  rw [if_neg hne]
+  rw [ite_eq_right hne]
 
 /-- Primitive handler transparent on adversary randomness and programmed at one complete stream. -/
 noncomputable def jointKdfSingletonProgrammedStreamImpl
@@ -925,8 +923,7 @@ theorem jointKdfSingletonProgrammedStream_project_step
   rcases state with ⟨cache, bad⟩
   rcases query with randomQuery | address
   · simp [jointKdfSingletonProgrammedStreamImpl,
-      fixedHkdfSha512JointStreamRandomImpl, hiddenRootPrefillProjection,
-      QueryImpl.liftTarget_apply, OracleComp.liftM_run_StateT]
+      fixedHkdfSha512JointStreamRandomImpl, hiddenRootPrefillProjection]
   · by_cases htarget : address = target
     · subst address
       cases hcache : cache target with
@@ -955,7 +952,7 @@ theorem jointKdfSingletonProgrammedStream_project_step
             simpa [QueryCache.cacheQuery_of_ne cache stream htarget] using hcache
           simp [jointKdfSingletonProgrammedStreamImpl,
             fixedHkdfSha512JointStreamRandomImpl, hiddenRootPrefillProjection,
-            QueryImpl.withProgramming_apply, hcache, hprefill,
+            QueryImpl.withProgramming_apply, hcache,
             jointKdfSingletonProgrammingPolicy, htarget,
             jointKdfCache_cacheQuery_comm cache address target]
           rw [jointKdfLazyRandomStreamImpl_run_miss address
@@ -966,7 +963,7 @@ theorem jointKdfSingletonProgrammedStream_project_step
             simpa [QueryCache.cacheQuery_of_ne cache stream htarget] using hcache
           simp [jointKdfSingletonProgrammedStreamImpl,
             fixedHkdfSha512JointStreamRandomImpl, hiddenRootPrefillProjection,
-            QueryImpl.withProgramming_apply, hcache, hprefill,
+            QueryImpl.withProgramming_apply, hcache,
             jointKdfSingletonProgrammingPolicy, htarget]
           rw [jointKdfLazyRandomStreamImpl_run_hit address
             (cache.cacheQuery target stream) cached hprefill]
@@ -1003,9 +1000,7 @@ theorem jointKdfSingletonProgrammedStream_preserves_invariant
   rcases state with ⟨cache, bad⟩
   rcases query with randomQuery | address
   · intro result hresult
-    simp [jointKdfSingletonProgrammedStreamImpl,
-      QueryImpl.liftTarget_apply, OracleComp.liftM_run_StateT,
-      mem_support_bind_iff] at hresult
+    simp [jointKdfSingletonProgrammedStreamImpl] at hresult
     obtain ⟨sample, _, rfl⟩ := hresult
     exact hinvariant
   · by_cases htarget : address = target
@@ -1030,8 +1025,7 @@ theorem jointKdfSingletonProgrammedStream_preserves_invariant
           intro result hresult
           simp [jointKdfSingletonProgrammedStreamImpl,
             QueryImpl.withProgramming_apply, hcache,
-            jointKdfSingletonProgrammingPolicy, htarget,
-            support_map] at hresult
+            jointKdfSingletonProgrammingPolicy, htarget] at hresult
           obtain ⟨sample, _, rfl⟩ := hresult
           exact hiddenRootProgrammedCacheInvariant_cache_other
             cache bad target address stream sample hinvariant htarget
@@ -1112,8 +1106,7 @@ theorem hiddenRootSharedRandomGame_eq_programmedGame
     hiddenRootReductionMain, queryHiddenRootStream,
     fixedHkdfSha512JointStreamRandomImpl,
     QueryImpl.simulateQ_add_liftM_left,
-    jointKdfLazyRandomStreamImpl_run_miss,
-    hiddenRootProgrammedView_run'_eq_prefilled]
+    jointKdfLazyRandomStreamImpl_run_miss]
   apply bind_congr
   intro hidden
   apply bind_congr
@@ -1160,7 +1153,7 @@ theorem jointKdfSingletonProgrammed_tracking_agree_good
         (cache, false)] := by
   rcases query with randomQuery | address
   · simp [jointKdfSingletonProgrammedStreamImpl,
-      jointKdfSingletonTrackingStreamImpl, QueryImpl.liftTarget_apply]
+      jointKdfSingletonTrackingStreamImpl]
   · cases hcache : cache address with
     | some cached =>
         simp [jointKdfSingletonProgrammedStreamImpl,
@@ -1210,8 +1203,7 @@ theorem jointKdfSingletonProgrammedStream_bad_monotone
   change bad = true at hbad
   subst bad
   rcases query with randomQuery | address
-  · simp [jointKdfSingletonProgrammedStreamImpl,
-      QueryImpl.liftTarget_apply, support_map] at hresult
+  · simp [jointKdfSingletonProgrammedStreamImpl] at hresult
     obtain ⟨sample, _, rfl⟩ := hresult
     rfl
   · exact QueryImpl.withProgramming_bad_monotone
@@ -1232,8 +1224,7 @@ theorem jointKdfSingletonTrackingStream_bad_monotone
   change bad = true at hbad
   subst bad
   rcases query with randomQuery | address
-  · simp [jointKdfSingletonTrackingStreamImpl,
-      QueryImpl.liftTarget_apply, support_map] at hresult
+  · simp [jointKdfSingletonTrackingStreamImpl] at hresult
     obtain ⟨sample, _, rfl⟩ := hresult
     rfl
   · exact QueryImpl.withCachingTrackingPolicy_bad_monotone
@@ -1300,8 +1291,7 @@ theorem jointKdfSingletonTrackingStream_project_step
   rcases state with ⟨cache, bad⟩
   rcases query with randomQuery | address
   · simp [jointKdfSingletonTrackingStreamImpl,
-      fixedHkdfSha512JointStreamRandomImpl, QueryImpl.liftTarget_apply,
-      OracleComp.liftM_run_StateT]
+      fixedHkdfSha512JointStreamRandomImpl]
   · cases hcache : cache address with
     | none =>
         simp [jointKdfSingletonTrackingStreamImpl,
@@ -1369,8 +1359,7 @@ theorem jointKdfSingletonTrackingStream_new_bad_implies_target
     (hbad : result.2.2 = true) :
     query = .inr target := by
   rcases query with randomQuery | address
-  · simp [jointKdfSingletonTrackingStreamImpl,
-      QueryImpl.liftTarget_apply, support_map] at hresult
+  · simp [jointKdfSingletonTrackingStreamImpl] at hresult
     obtain ⟨sample, _, rfl⟩ := hresult
     contradiction
   · cases hcache : cache address with
@@ -1384,8 +1373,7 @@ theorem jointKdfSingletonTrackingStream_new_bad_implies_target
         · exact congrArg Sum.inr htarget
         · simp [jointKdfSingletonTrackingStreamImpl,
             QueryImpl.withCachingTrackingPolicy_apply, hcache,
-            jointKdfSingletonProgrammingPolicy, htarget,
-            support_map] at hresult
+            jointKdfSingletonProgrammingPolicy, htarget] at hresult
           obtain ⟨sample, _, rfl⟩ := hresult
           contradiction
 
@@ -1470,8 +1458,8 @@ theorem getQ_length_le_of_mem_support_withQueryLog
       obtain ⟨response, _, tail, htail, rfl⟩ := hresult
       by_cases hquery : predicate query
       · have htailLength := ih response (hbound.2 response) htail
-        simp only [hquery, if_true] at htailLength
-        simp only [QueryLog.getQ_cons, hquery, if_true, List.length_cons]
+        simp only [hquery, ite_true] at htailLength
+        simp only [QueryLog.getQ_cons, hquery, ite_true, List.length_cons]
         have hpositive : 0 < bound := by
           rcases hbound.1 with hnot | hpos
           · exact (hnot hquery).elim
@@ -1528,8 +1516,8 @@ theorem hiddenRootStreamCandidates_length_le_simulate
       obtain ⟨tailResult, htail, rfl⟩ := htail
       have htailLength := ih response (hbound.2 response) nextState htail
       by_cases hquery : IsFixedHkdfRootStreamQuery query
-      · simp only [hquery, if_true] at htailLength
-        simp only [hiddenRootStreamCandidates, hquery, if_true, List.length_cons]
+      · simp only [hquery, ite_true] at htailLength
+        simp only [hiddenRootStreamCandidates, hquery, ite_true, List.length_cons]
         have hpositive : 0 < qRoot := by
           rcases hbound.1 with hnot | hpos
           · exact (hnot hquery).elim
@@ -1607,7 +1595,7 @@ theorem hiddenRootTarget_in_log_iff_candidate_mem
       rcases entry with ⟨query, response⟩
       by_cases hroot : IsFixedHkdfRootStreamQuery query
       · simp only [List.map_cons, List.mem_cons,
-          hiddenRootStreamCandidates, hroot, if_true]
+          hiddenRootStreamCandidates, hroot, ite_true]
         constructor
         · intro hmem
           rcases hmem with hhead | htail
@@ -1630,7 +1618,7 @@ theorem hiddenRootTarget_in_log_iff_candidate_mem
           simp [IsFixedHkdfRootStreamQuery, hiddenRootAddress,
             FixedHkdfDomain.address]
         simp only [List.map_cons, List.mem_cons,
-          hiddenRootStreamCandidates, hroot, if_false]
+          hiddenRootStreamCandidates, hroot, ite_false]
         rw [or_iff_right hne.symm]
         exact ih
 

@@ -121,24 +121,24 @@ theorem step_erase {Chain Metadata : Type} (sender : Std.U64) (decode : RawCtxRe
   rcases query with (send | raw) | request
   · simp only [compiler, originalCompiler, RawCtxChainOwner.ownerImpl, RawCtxChainOwner.sendOwner, StateT.run]
     by_cases empty : send.isEmpty = true
-    · simp only [empty, if_true]
+    · simp only [empty, ite_true]
       exact simulateQ_pure _ _
-    · simp only [empty, Bool.false_eq_true, if_false, bind_pure_comp]
+    · simp only [empty, Bool.false_eq_true, ite_false, bind_pure_comp]
       refine (simulateQ_map _ _ _).trans ?_
       rw [send_call]
   · simp only [compiler, originalCompiler, RawCtxChainOwner.ownerImpl, RawCtxChainOwner.rawReceive, StateT.run]
     by_cases empty : raw.isEmpty = true
-    · simp only [empty, if_true]
+    · simp only [empty, ite_true]
       exact simulateQ_pure _ _
-    · simp only [empty, Bool.false_eq_true, if_false]
+    · simp only [empty, Bool.false_eq_true, ite_false]
       cases decoded : decode raw with
       | none => exact simulateQ_pure _ _
       | some frame =>
           by_cases valid : RawCtxReceive.ValidFrame state.expectedSender state.associatedData frame
-          · simp only [valid, if_true, bind_pure_comp]
+          · simp only [valid, ite_true, bind_pure_comp]
             refine (simulateQ_map _ _ _).trans ?_
             rw [receive_call]
-          · simp only [valid, if_false]
+          · simp only [valid, ite_false]
             exact simulateQ_pure _ _
   · simp [compiler, originalCompiler, StateT.run, publicForward, originalPublic, erase, OracleSpec.query]
 

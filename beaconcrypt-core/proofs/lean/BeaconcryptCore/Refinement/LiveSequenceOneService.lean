@@ -173,7 +173,7 @@ theorem live_cache_search {Material : Type}
   | cons head rest ih =>
     rcases head with ⟨sequence, value⟩
     simp only [List.cons_append, liveCacheSearch,
-      if_neg (different (sequence, value) (by simp))]
+      ite_eq_right (different (sequence, value) (by simp))]
     simpa only [liveCacheRebuild] using ih ((sequence, value) :: reversed)
       (fun entry member => different entry (by simp [member]))
 

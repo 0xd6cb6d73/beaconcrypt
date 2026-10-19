@@ -120,7 +120,7 @@ def liveWord (sequence : Nat) : Option Std.U64 :=
 theorem live_word_source (sequence : Std.U64) :
     liveWord sequence.val = some sequence := by
   have bounded : sequence.val < 2 ^ 64 := by simpa using sequence.hBounds
-  simp only [liveWord, dif_pos bounded]
+  simp only [liveWord, dite_eq_left bounded]
   congr 1
 
 /-- A fixed source KDF and the actual private frame callback share the same arbitrary effect monad. -/

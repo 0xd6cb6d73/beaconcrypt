@@ -124,11 +124,11 @@ theorem ctxKeyFreeSealOracle_eq_directSample_of_invariant
   by_cases hused : input.nonce ∈ state.usedNonces
   · change (if input.nonce ∈ state.usedNonces then pure (none, state) else _) =
       (if input.nonce ∈ state.usedNonces then pure (none, state) else _)
-    rw [if_pos hused, if_pos hused]
+    rw [ite_eq_left hused, ite_eq_left hused]
   · have hfresh := ctxKeyFreeSeal_suffix_fresh_of_unused
       c key input state hinvariant hused
     unfold ctxKeyFreeSealOracle ctxDirectSampleKeyFreeSealOracle
-    simp only [StateT.run, hused, if_false]
+    simp only [StateT.run, hused, ite_false]
     unfold ctxKeyFreeSuffixOracle ctxKeyFreeSuffixStep
     rw [hfresh]
     simp
@@ -181,7 +181,7 @@ theorem ctxDirectSampleKeyFreeSealOracle_preserves_invariant
     CtxIndependentTagStateInvariant result.2 := by
   by_cases hused : input.nonce ∈ state.usedNonces
   · unfold ctxDirectSampleKeyFreeSealOracle at hresult
-    simp only [StateT.run, hused, if_true, support_pure,
+    simp only [StateT.run, hused, ite_true, support_pure,
       Set.mem_singleton_iff] at hresult
     subst result
     exact hinvariant
@@ -189,7 +189,7 @@ theorem ctxDirectSampleKeyFreeSealOracle_preserves_invariant
       input.context.ad.bytes input.plaintext
     let suffix := outerSuffix input.nonce input.context base.2
     unfold ctxDirectSampleKeyFreeSealOracle at hresult
-    simp only [StateT.run, hused, if_false] at hresult
+    simp only [StateT.run, hused, ite_false] at hresult
     rw [mem_support_bind_iff] at hresult
     obtain ⟨commit, _, hresult⟩ := hresult
     simp only [support_pure, Set.mem_singleton_iff] at hresult

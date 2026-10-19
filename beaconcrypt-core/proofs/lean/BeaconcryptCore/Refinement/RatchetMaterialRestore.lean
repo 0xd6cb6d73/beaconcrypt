@@ -53,12 +53,12 @@ theorem concrete_restore_receive_key_of_append (r : ConcreteRatchetRestore)
             (core.option.Option.Some { sequence, material }) } }) := by
   simp only [concrete_restore_receive_key, refined.refined_restore_receive_key, hstep,
     lift, capacity_eq_ok, bind_tc_ok,
-    if_neg (by scalar_tac : ¬UScalar.cast UScalarTy.Usize step.slot ≥ UScalar.cast UScalarTy.Usize 50#u64),
+    ite_eq_right (by scalar_tac : ¬UScalar.cast UScalarTy.Usize step.slot ≥ UScalar.cast UScalarTy.Usize 50#u64),
     array_index_bang r.refined.receive_slots (UScalar.cast UScalarTy.Usize step.slot) (by scalar_tac),
     show (UScalar.cast UScalarTy.Usize step.slot).val = step.slot.val by simp_scalar,
-    hempty, core.option.Option.is_some, Std.core.option.Option.is_some, Option.isSome,
-    core.option.Option.None, Bool.false_eq_true, if_false, Bool.false_or,
-    massert, decide_eq_true (by scalar_tac : UScalar.cast UScalarTy.Usize step.slot < 50#usize), if_true]
+    hempty, core.option.Option.is_some,
+    core.option.Option.None, Bool.false_eq_true, ite_false, Bool.false_or,
+    massert, decide_eq_true (by scalar_tac : UScalar.cast UScalarTy.Usize step.slot < 50#usize), ite_true]
   simp only [Array.index_mut_usize,
     array_index_bang r.refined.receive_slots (UScalar.cast UScalarTy.Usize step.slot) (by scalar_tac),
     bind_tc_ok]
@@ -70,9 +70,9 @@ private theorem array_set_bang {α : Type} [Inhabited α] {n : Std.Usize}
     (v : Std.Array α n) (i : Std.Usize) (x : α) (j : Nat) (h : j < v.length) :
     (v.set i x).val[j]! = if i.val = j then x else v.val[j]! := by
   by_cases heq : i.val = j
-  · simpa only [if_pos heq, Array.getElem!_Nat_eq] using
+  · simpa only [ite_eq_left heq, Array.getElem!_Nat_eq] using
       Array.getElem!_Nat_set_eq v i j x ⟨heq, h⟩
-  · simpa only [if_neg heq, Array.getElem!_Nat_eq] using
+  · simpa only [ite_eq_right heq, Array.getElem!_Nat_eq] using
       Array.getElem!_Nat_set_ne v i j x heq
 
 private theorem cacheSeqs_append (cache next : SequenceCache) (sequence : Std.U64)
@@ -85,8 +85,8 @@ private theorem cacheSeqs_append (cache next : SequenceCache) (sequence : Std.U6
   · apply List.map_congr_left
     intro i hi
     simp only [List.mem_range] at hi
-    rw [array_set_bang _ _ _ _ (by scalar_tac), if_neg (by scalar_tac)]
-  · rw [array_set_bang _ _ _ _ (by scalar_tac), if_pos (by simp_scalar)]
+    rw [array_set_bang _ _ _ _ (by scalar_tac), ite_eq_right (by scalar_tac)]
+  · rw [array_set_bang _ _ _ _ (by scalar_tac), ite_eq_left (by simp_scalar)]
 
 /-- Inserting a fresh canonical persisted key extends the represented ideal skipped store by exactly one entry. -/
 theorem KernelRefines.append_restored
@@ -143,36 +143,36 @@ theorem KernelRefines.append_restored
     by_cases hold : i < kernel.refined.control.receive_cache.len.val
     · obtain ⟨p, cached, hp, hcached, hlogical, hsequence, hmat⟩ := h.slotSound i hold
       refine ⟨p, cached, List.mem_append_left _ hp, ?_, ?_, hsequence, hmat⟩
-      · rw [array_set_bang _ _ _ _ (by scalar_tac), if_neg (by scalar_tac)]
+      · rw [array_set_bang _ _ _ _ (by scalar_tac), ite_eq_right (by scalar_tac)]
         exact hcached
       · change cached.sequence = next.entries.val[i]!
-        rw [hentries, array_set_bang _ _ _ _ (by scalar_tac), if_neg (by scalar_tac)]
+        rw [hentries, array_set_bang _ _ _ _ (by scalar_tac), ite_eq_right (by scalar_tac)]
         exact hlogical
     · have hi' : i = kernel.refined.control.receive_cache.len.val := by
         change i < next.len.val at hi
         omega
       refine ⟨(sequence.val - 1, material), { sequence, material }, by simp, ?_, ?_, by simp; omega, rfl⟩
-      · rw [array_set_bang _ _ _ _ (by scalar_tac), if_pos (by scalar_tac)]
+      · rw [array_set_bang _ _ _ _ (by scalar_tac), ite_eq_left (by scalar_tac)]
       · change sequence = next.entries.val[i]!
-        rw [hentries, array_set_bang _ _ _ _ (by scalar_tac), if_pos (by scalar_tac)]
+        rw [hentries, array_set_bang _ _ _ _ (by scalar_tac), ite_eq_left (by scalar_tac)]
   · intro p hp
     rcases List.mem_append.mp hp with hold | hnew
     · obtain ⟨i, hi, cached, hcached, hlogical, hsequence, hmat⟩ := h.slotComplete p hold
       refine ⟨i, by change i < next.len.val; omega, cached, ?_, ?_, hsequence, hmat⟩
-      · rw [array_set_bang _ _ _ _ (by scalar_tac), if_neg (by scalar_tac)]
+      · rw [array_set_bang _ _ _ _ (by scalar_tac), ite_eq_right (by scalar_tac)]
         exact hcached
       · change cached.sequence = next.entries.val[i]!
-        rw [hentries, array_set_bang _ _ _ _ (by scalar_tac), if_neg (by scalar_tac)]
+        rw [hentries, array_set_bang _ _ _ _ (by scalar_tac), ite_eq_right (by scalar_tac)]
         exact hlogical
     · rcases List.mem_singleton.mp hnew with rfl
       refine ⟨kernel.refined.control.receive_cache.len.val, by change _ < next.len.val; omega,
         { sequence, material }, ?_, ?_, by simp; omega, rfl⟩
-      · rw [array_set_bang _ _ _ _ (by scalar_tac), if_pos (by simp_scalar)]
+      · rw [array_set_bang _ _ _ _ (by scalar_tac), ite_eq_left (by simp_scalar)]
       · change sequence = next.entries.val[kernel.refined.control.receive_cache.len.val]!
-        rw [hentries, array_set_bang _ _ _ _ (by scalar_tac), if_pos (by simp_scalar)]
+        rw [hentries, array_set_bang _ _ _ _ (by scalar_tac), ite_eq_left (by simp_scalar)]
   · intro i hi hbound
     change next.len.val ≤ i at hi
-    rw [array_set_bang _ _ _ _ (by scalar_tac), if_neg (by scalar_tac)]
+    rw [array_set_bang _ _ _ _ (by scalar_tac), ite_eq_right (by scalar_tac)]
     exact h.slotsAboveLenEmpty i (by omega) hbound
 
 /-- A canonical persisted key within the receive frontier is restored exactly once in increasing order. -/
@@ -197,9 +197,9 @@ theorem RestoreRefines.append
     restore := { state := { r.refined.logical.state with receive_cache := cache }, last_sequence := sequence }
     slot := r.refined.logical.state.receive_cache.len }
   have hstep : restore_receive_key_with_slot r.refined.logical sequence = ok (core.option.Option.Some step) := by
-    simp only [restore_receive_key_with_slot, if_neg (by scalar_tac : sequence ≠ 0#u64),
-      if_neg (by scalar_tac : ¬sequence > r.refined.logical.state.receive_sequence),
-      if_neg (by scalar_tac : ¬sequence ≤ r.refined.logical.last_sequence), happend, bind_tc_ok, step]
+    simp only [restore_receive_key_with_slot, ite_eq_right (by scalar_tac : sequence ≠ 0#u64),
+      ite_eq_right (by scalar_tac : ¬sequence > r.refined.logical.state.receive_sequence),
+      ite_eq_right (by scalar_tac : ¬sequence ≤ r.refined.logical.last_sequence), happend, bind_tc_ok, step]
     rfl
   have hrun := concrete_restore_receive_key_of_append r sequence material step hstep hcap
     (h.kernel.slotsAboveLenEmpty r.refined.logical.state.receive_cache.len.val (by rfl) hcap)

@@ -63,17 +63,17 @@ theorem step_patch (prior : Prior) (entry : Entry) (target : RootOutput) (output
       have notParent : RawCtxSelectedPendingCut.requestAddress chain ≠ entry.address := by
         rw [addressSame]
         exact separate
-      simp only [if_pos same]
+      simp only [ite_eq_left same]
       simp only [RawCtxSelectedParentTable.step]
       change (if RawCtxSelectedPendingCut.requestAddress chain = entry.address then _ else _) = _
-      rw [if_neg notParent]
+      rw [ite_eq_right notParent]
       simp only [privatePatch]
       simp only [RawCtxSelectedPendingCut.requestAddress] at addressSame
-      rw [if_pos addressSame]
+      rw [ite_eq_left addressSame]
     · have addressDifferent := (address_eq target chain).not.mpr same
-      simp only [if_neg same]
+      simp only [ite_eq_right same]
       simp only [RawCtxSelectedParentTable.step]
-      split <;> simp only [privatePatch, show RawCtxKdfRequestTable.address (RawCtxChainSend.nativeRequest chain) ≠ targetAddress target from addressDifferent, if_false]
+      split <;> simp only [privatePatch, show RawCtxKdfRequestTable.address (RawCtxChainSend.nativeRequest chain) ≠ targetAddress target from addressDifferent, ite_false]
 
 /-- The actual native KDF response under the private patch is the interpretation of the same alias-consistent Slot response. -/
 theorem native_step (prior : Prior) (entry : Entry) (target : RootOutput) (output : FullOutput)

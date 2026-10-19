@@ -171,7 +171,7 @@ theorem adapter_raw (decode : RawDecoder) (raw : Pqxdh.Bytes)
     apply OracleComp.bind_congr_of_forall_mem_support
     intro lookup _
     by_cases accepted : target.record.commit = lookup.1
-    · simp only [accepted, if_true, simulateQ_bind, simulateQ_spec_query,
+    · simp only [accepted, ite_true, simulateQ_bind, simulateQ_spec_query,
         simulateQ_pure, StateT.run, map_pure]
       rfl
     · simp [accepted]

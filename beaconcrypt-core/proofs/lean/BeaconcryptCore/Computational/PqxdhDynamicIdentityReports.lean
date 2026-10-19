@@ -237,12 +237,12 @@ theorem occurred_probability_le_stopped (primitives : Primitives) (count : ℕ) 
       rw [stop_report]
       by_cases accepted : reportAccepted primitives candidate (sourceSnapshot primitives source) = true
       · have event := (reportAccepted_iff_source primitives candidate source).mp accepted
-        simp only [accepted, if_pos, simulateQ_pure, StateT.run_pure, StoppedEvent,
+        simp only [accepted, ite_eq_left, simulateQ_pure, StateT.run_pure, StoppedEvent,
           probEvent_pure, event]
         exact probEvent_le_one
       · have rejected : reportAccepted primitives candidate (sourceSnapshot primitives source) = false :=
           Bool.eq_false_iff.mpr accepted
-        rw [if_neg accepted]
+        rw [ite_eq_right accepted]
         simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind, reportingImpl_report, pure_bind, reportedReply, rejected,
           Bool.or_self]
         apply ih () source
@@ -318,7 +318,7 @@ theorem stop_query_bound (primitives : Primitives) (count : ℕ) {Result : Type}
       split
       · trivial
       · have nextBound := bounded.2 ()
-        rw [if_neg (by simp only [reportingClass, not_false_eq_true])] at nextBound
+        rw [ite_eq_right (by simp only [reportingClass, not_false_eq_true])] at nextBound
         exact ih () bound nextBound state
 
 /-- The concrete stopped extractor inherits creation, randomness, signing, DH and reveal request caps. -/
@@ -418,9 +418,9 @@ theorem reportingExecution_report_bound (primitives : Primitives) (count : ℕ)
     have remaining := ih answer _ (bounded.2 answer) next result restSupport
     by_cases selected : IsReport query
     · have positive : 0 < bound := bounded.1.resolve_left (not_not.mpr selected)
-      simp only [selected, if_pos] at stepCount remaining
+      simp only [selected, ite_eq_left] at stepCount remaining
       omega
-    · simp only [selected, if_false] at stepCount remaining
+    · simp only [selected, ite_false] at stepCount remaining
       omega
 
 /-- A report makes no uniform request; actual creation and every explicit source coin retain their exact independent costs. -/
@@ -527,9 +527,9 @@ theorem reportingExecution_trace_bound (primitives : Primitives) (count : ℕ)
     have remaining := ih answer _ (bounded.2 answer) next result restSupport
     by_cases selected : reportingClass predicate query
     · have positive : 0 < bound := bounded.1.resolve_left (not_not.mpr selected)
-      simp only [selected, if_pos] at stepCount remaining
+      simp only [selected, ite_eq_left] at stepCount remaining
       omega
-    · simp only [selected, if_false] at stepCount remaining
+    · simp only [selected, ite_false] at stepCount remaining
       omega
 
 /-- No later compromise, creation, service request or report can erase an already recorded event. -/

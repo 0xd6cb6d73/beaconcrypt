@@ -361,7 +361,7 @@ theorem firstDiscrepancy_le_indexed_sum {Result : Type} (decode : RawDecoder) (c
           obtain ⟨remaining, rfl⟩ := Nat.exists_eq_succ_of_ne_zero (by omega : count ≠ 0)
           rw [firstDiscrepancy_receive]
           by_cases discrepancy : actualOpen decode c key raw ≠ simulatedOpen decode state.successfulSeals raw
-          · rw [if_pos discrepancy]
+          · rw [ite_eq_left discrepancy]
             calc
               Pr[fun bad => bad = true | (pure true : ProbComp Bool)] = 1 := by simp
               _ = Pr[ModifiedNonceAeadINTCTXTWin c | indexedBeforeVerify decode c key fallback
@@ -374,7 +374,7 @@ theorem firstDiscrepancy_le_indexed_sum {Result : Type} (decode : RawDecoder) (c
                   (f := fun index => Pr[ModifiedNonceAeadINTCTXTWin c | indexedBeforeVerify decode c key fallback
                     (liftM (AdaptiveSpec.query (.inr raw)) >>= next) index state])
                   (fun _ _ => zero_le) (Finset.mem_range.mpr (by omega))
-          · rw [if_neg discrepancy]
+          · rw [ite_eq_right discrepancy]
             have remainingBound : (next (simulatedOpen decode state.successfulSeals raw)).IsQueryBoundP
                 IsRawQuery remaining := by
               simpa only [ite_eq_left (show IsRawQuery (.inr raw) from trivial), Nat.succ_sub_one] using
@@ -423,7 +423,7 @@ theorem receiveStep_agree_good (decode : RawDecoder) (c : Pqxdh.Crypto)
     Pr[= (answer, (next, false)) | receiveStep true decode c key raw (state, false)] =
       Pr[= (answer, (next, false)) | receiveStep false decode c key raw (state, false)] := by
   classical
-  letI : DecidableEq ReceiveState := Classical.decEq _
+  let : DecidableEq ReceiveState := Classical.decEq _
   by_cases equal : actualOpen decode c key raw = simulatedOpen decode state.seals.successfulSeals raw
   · simp [receiveStep, equal]
   · simp [receiveStep, equal]
@@ -500,7 +500,7 @@ theorem simulated_bad_eq_firstDiscrepancy (decode : RawDecoder) (c : Pqxdh.Crypt
                 (⟨state.seals, state.attempts + 1⟩,
                   decide (actualOpen decode c key raw ≠ simulatedOpen decode state.seals.successfulSeals raw))] = _
           by_cases discrepancy : actualOpen decode c key raw ≠ simulatedOpen decode state.seals.successfulSeals raw
-          · rw [if_pos discrepancy]
+          · rw [ite_eq_left discrepancy]
             have decision : decide (actualOpen decode c key raw ≠ simulatedOpen decode state.seals.successfulSeals raw) = true :=
               decide_eq_true discrepancy
             rw [decision, adaptive_bad_probability_one]

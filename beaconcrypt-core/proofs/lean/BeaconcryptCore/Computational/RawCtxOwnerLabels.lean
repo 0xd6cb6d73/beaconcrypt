@@ -73,7 +73,7 @@ theorem send_owner (original : Owner S B → RawCtxChainOwner.Calls Kernel (Stat
   obtain ⟨reply, _, rfl⟩ := supported
   rfl
 
-private def rules (original : Owner S B → RawCtxChainOwner.Calls Kernel (StateT State ProbComp))
+private theorem rules (original : Owner S B → RawCtxChainOwner.Calls Kernel (StateT State ProbComp))
     (selected : Owner S B) :
     RawCtxFamilyStateInvariant.Rules (calls original) (fun _ _ => True)
       (fun kernel _ => kernel.1 = selected) where

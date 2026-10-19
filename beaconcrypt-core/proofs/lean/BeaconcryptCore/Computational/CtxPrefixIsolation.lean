@@ -245,7 +245,7 @@ theorem ctxSealOracle_publicInputs (c : Pqxdh.Crypto) (key : CtxKey)
   by_cases hused : input.nonce ∈ state.usedNonces
   · change result ∈ support
       (if input.nonce ∈ state.usedNonces then pure (none, state) else _) at hresult
-    rw [if_pos hused, support_pure, Set.mem_singleton_iff] at hresult
+    rw [ite_eq_left hused, support_pure, Set.mem_singleton_iff] at hresult
     subst result
     rfl
   · let base := c.aeadSeal key.toList input.nonce.toList
@@ -259,7 +259,7 @@ theorem ctxSealOracle_publicInputs (c : Pqxdh.Crypto) (key : CtxKey)
             ⟨base.1, base.2, c.aeadSeal_tag_length _ _ _ _, oracleResult.1⟩
           pure (some record,
             state.addSeal ⟨input, record⟩ oracleResult.2)) at hresult
-    rw [if_neg hused, mem_support_bind_iff] at hresult
+    rw [ite_eq_right hused, mem_support_bind_iff] at hresult
     obtain ⟨oracleResult, _, hresult⟩ := hresult
     simp only [support_pure, Set.mem_singleton_iff] at hresult
     subst result

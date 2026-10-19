@@ -117,13 +117,13 @@ theorem client_source {A Reader E : Type} (kdf : FixedHkdfSha512NoSaltSource) (h
     have tokenRid : (pending binding input).registration_id = original.registration_id :=
       by simpa only [cleared] using congrArg (fun value : pqxdh.PendingServerRegistration => value.registration_id) token.symm
     have rootEq := root_source (A := A) kdf hmac joint dh seed scalar input original address
-    simp only [client, source, accepted, not_true_eq_false, valid, if_false,
+    simp only [client, source, accepted, not_true_eq_false, valid, ite_false,
       simulateQ_bind, simulateQ_spec_query, impl, rootEq]
     simp only [bind_map_left, simulateQ_bind, simulateQ_spec_query, simulateQ_pure, impl, ← token, cleared]
     rw [tokenRid]
     rfl
   · have rejected := accept_failure kdf.crypto joint domain secretOfSeed wiring seed input references valid control binding
-    simp only [client, source, rejected, valid, not_false_eq_true, if_true, simulateQ_bind, simulateQ_spec_query, simulateQ_pure, impl]
+    simp only [client, source, rejected, valid, not_false_eq_true, ite_true, simulateQ_bind, simulateQ_spec_query, simulateQ_pure, impl]
     rfl
 
 /-- The complete executable raw stage retains the original ordered prefix and performs root processing only after its actual supported success. -/

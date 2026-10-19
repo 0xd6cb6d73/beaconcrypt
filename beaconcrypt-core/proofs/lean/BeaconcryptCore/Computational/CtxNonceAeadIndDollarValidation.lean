@@ -111,13 +111,13 @@ theorem ctxDirectSampleKeyFreeSealOracle_usedNonces_length_le
     result.2.usedNonces.length ≤ state.usedNonces.length + 1 := by
   by_cases hused : input.nonce ∈ state.usedNonces
   · unfold ctxDirectSampleKeyFreeSealOracle at hresult
-    simp only [StateT.run, hused, if_true, support_pure,
+    simp only [StateT.run, hused, ite_true, support_pure,
       Set.mem_singleton_iff] at hresult
     subst result
     change state.usedNonces.length ≤ state.usedNonces.length + 1
     omega
   · unfold ctxDirectSampleKeyFreeSealOracle at hresult
-    simp only [StateT.run, hused, if_false] at hresult
+    simp only [StateT.run, hused, ite_false] at hresult
     rw [mem_support_bind_iff] at hresult
     obtain ⟨commit, _, hresult⟩ := hresult
     simp only [support_pure, Set.mem_singleton_iff] at hresult
@@ -167,10 +167,10 @@ theorem ctxDirectSampleIndependentTag_run_usedNonces_length_le_of_main
       have hrec := ih stepResult.1 (hbound.2 stepResult.1)
         stepResult.2 result hrest
       by_cases hseal : IsCtxSealQuery query
-      · simp only [hseal, if_true] at hstepLength hrec
+      · simp only [hseal, ite_true] at hstepLength hrec
         have hn : 0 < n := hbound.1.resolve_left (not_not.mpr hseal)
         omega
-      · simp only [hseal, if_false] at hstepLength hrec
+      · simp only [hseal, ite_false] at hstepLength hrec
         omega
 
 /-- Compatibility wrapper for the authenticity adversary output. -/
@@ -412,7 +412,7 @@ theorem randomValidationContinuation_le
   · unfold modifiedNonceAeadINDDollarRandomSealOracle
     simp [StateT.run, ctxValidationInput, hused, ctxValidationAccept]
   · unfold modifiedNonceAeadINDDollarRandomSealOracle
-    simp only [StateT.run, ctxValidationInput, hused, if_false]
+    simp only [StateT.run, ctxValidationInput, hused, ite_false]
     simp only [bind_assoc, pure_bind]
     rw [← probEvent_eq_eq_probOutput]
     refine probEvent_bind_le_of_forall_le

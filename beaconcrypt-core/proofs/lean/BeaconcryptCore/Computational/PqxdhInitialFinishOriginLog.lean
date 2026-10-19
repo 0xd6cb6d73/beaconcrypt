@@ -29,12 +29,12 @@ private theorem raw_lift (original : RawCtxChainOwner.Calls Kernel m)
   simp only [RawCtxChainOwner.rawReceive, StateT.run]
   by_cases empty : raw.isEmpty = true
   · simp [empty]; rfl
-  · simp only [empty, Bool.false_eq_true, if_false]
+  · simp only [empty, Bool.false_eq_true, ite_false]
     cases decoded : decode raw with
     | none => simp only [map_pure]; rfl
     | some frame =>
       by_cases valid : RawCtxReceive.ValidFrame entry.expectedSender entry.associatedData frame
-      · simp only [valid, if_true, calls, bind_pure_comp]
+      · simp only [valid, ite_true, calls, bind_pure_comp]
         change ((RawCtxChainOwner.publish entry <$> (StateT.lift (original.receive entry.kernel frame.sequence ⟨raw, frame, entry.associatedData⟩) : StateT (Option Origin) m _)).run saved) = _
         simp only [StateT.run_map, StateT.run_lift, bind_pure_comp, Functor.map_map]
       · simp [valid]; rfl

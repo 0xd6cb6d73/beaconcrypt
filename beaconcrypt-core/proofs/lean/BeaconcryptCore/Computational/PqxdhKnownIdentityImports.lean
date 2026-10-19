@@ -423,9 +423,9 @@ theorem wrapperRun_trace_bound (primitives : Primitives) (kind : Cost) {Result :
     have remaining := ih reply.1 _ (bounded.2 reply.1) reply.2 result rest
     by_cases selected : IsCost kind query
     · have positive : 0 < bound := bounded.1.resolve_left (not_not.mpr selected)
-      simp only [selected, if_true] at counted remaining
+      simp only [selected, ite_true] at counted remaining
       omega
-    · simp only [selected, if_false] at counted remaining
+    · simp only [selected, ite_false] at counted remaining
       omega
 
 /-- Actual interpretation cannot introduce a public transcript outside the exact wrapper support. The source keeps the same complete private generated state alongside it. -/

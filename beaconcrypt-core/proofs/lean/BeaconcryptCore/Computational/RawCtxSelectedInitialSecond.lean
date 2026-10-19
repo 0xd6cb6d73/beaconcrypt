@@ -33,12 +33,12 @@ theorem split64_second (request : RawCtxInitializedKdfFamily.InitialRequest) (ot
     obtain ⟨left, right, split, hleft, hright⟩ := splitInitialServer_exact (response64 (other ++ target)).bytes
     simpa only [chain_eq_of_refines hleft (halves64 other target).1,
       chain_eq_of_refines hright (halves64 other target).2,
-      Bool.not_false, sendSlot, receiveSlot, Bool.false_eq_true, if_false, if_true, serverPending, interpret] using split
+      Bool.not_false, sendSlot, receiveSlot, Bool.false_eq_true, ite_false, ite_true, serverPending, interpret] using split
   | true =>
     obtain ⟨left, right, split, hleft, hright⟩ := splitInitialBeacon_exact (response64 (other ++ target)).bytes
     simpa only [chain_eq_of_refines hleft (halves64 other target).2,
       chain_eq_of_refines hright (halves64 other target).1,
-      Bool.not_true, sendSlot, receiveSlot, Bool.false_eq_true, if_false, if_true, beaconPending, interpret] using split
+      Bool.not_true, sendSlot, receiveSlot, Bool.false_eq_true, ite_false, ite_true, beaconPending, interpret] using split
 
 /-- The original64-byte initializer is exactly the second32-hidden constructor in both roles. -/
 theorem from64_second (request : RawCtxInitializedKdfFamily.InitialRequest) (other target : RootOutput) :
@@ -46,7 +46,7 @@ theorem from64_second (request : RawCtxInitializedKdfFamily.InitialRequest) (oth
       nativeKernel (RawCtxFreshChainCut.concreteChain target) <$> initialSecond request.1 other := by
   have split := split64_second request other target
   rcases request with ⟨role, root⟩
-  cases role <;> simp only [from64, Bool.false_eq_true, if_false, if_true,
+  cases role <;> simp only [from64, Bool.false_eq_true, ite_false, ite_true,
     pqxdh.concrete.resume_initial_ratchet_kdf_is_core_partition] at split ⊢
   all_goals rw [split, bind_tc_ok, new_map]
   all_goals rfl

@@ -24,7 +24,6 @@ theorem compiler_step (query : RawCtxServerServices.BackendSpec.Domain) :
       (if needsStream query then 1 else 0) := by
   rcases query with coin | ((request | request) | view) <;>
     simp [compiler, needsStream, isQueryBoundP_map_iff]
-  all_goals exact (isQueryBoundP_query_iff (spec := FamilySpec) (p := fun query => query.isRight = true) _ _).2 (by simp)
 
 /-- Every possible adaptive continuation retains its complete-stream call cap. -/
 theorem compiler_bound {Result : Type}

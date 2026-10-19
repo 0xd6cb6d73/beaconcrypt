@@ -135,8 +135,8 @@ theorem scan_full (joint : Primitives) (dh : DhInterface joint)
   induction candidates generalizing history with
   | nil => rfl
   | cons candidate rest ih =>
-      simp only [scan, simulateQ_bind, simulateQ_spec_query, StateT.run_bind, service_step,
-        reply, challenge, Bool.false_eq_true, if_false]
+      simp only [scan, simulateQ_bind, simulateQ_spec_query, StateT.run_bind,
+        challenge]
       change (simulateQ (serviceImpl joint dh seed scalar)
         (if decide (joint.staticDh seed (dh.publicKey scalar) = some candidate) then
           pure (some candidate) else scan (challenge joint dh seed scalar) rest)).run _ = _
@@ -154,13 +154,13 @@ theorem scan_complete (joint : Primitives) (dh : DhInterface joint)
   | nil => rfl
   | cons candidate rest ih =>
       simp only [scan, simulateQ_bind, simulateQ_spec_query, StateT.run_bind,
-        service_step, reply, challenge, Bool.false_eq_true, if_false]
+        challenge]
       change (Prod.fst <$> (simulateQ (serviceImpl joint dh seed scalar)
         (if decide (joint.staticDh seed (dh.publicKey scalar) = some candidate) then
           pure (some candidate) else scan (challenge joint dh seed scalar) rest)).run _) = _
       by_cases found : joint.staticDh seed (dh.publicKey scalar) = some candidate
       · simp [found, scanResult]
-      · simpa only [found, decide_false, Bool.false_eq_true, if_false, scanResult,
+      · simpa only [found, decide_false, Bool.false_eq_true, ite_false, scanResult,
           List.find?_cons] using ih _
 
 theorem wins_none (target : Option DhOutput) : wins target none = false := by
@@ -381,10 +381,9 @@ theorem testInput_full (joint : Primitives) (dh : DhInterface joint)
   | none => simp [testInput, testOutcome, parsed]
   | some pair =>
     rcases pair with ⟨first, third⟩
-    simp only [testInput, parsed, simulateQ_bind, simulateQ_spec_query, StateT.run_bind,
-      service_step, reply, Bool.false_eq_true, if_false, if_true]
+    simp only [testInput, parsed, simulateQ_bind, simulateQ_spec_query, StateT.run_bind]
     change (pure (_, (history ++ [_]) ++ [_]) : ProbComp _) = _
-    simp [testOutcome, parsed, observation, reply, OracleQuery.snd_query, id_eq, List.append_assoc]
+    simp [testOutcome, parsed, observation, reply, List.append_assoc]
 
 /-- All possible decision replies are counted, independently of their actual distribution. -/
 theorem scan_query_bound (publicValue : PublicChallenge) (candidates : List DhOutput) :
@@ -400,9 +399,9 @@ theorem scan_query_bound (publicValue : PublicChallenge) (candidates : List DhOu
     rw [OracleComp.isTotalQueryBound_query_bind_iff]
     refine ⟨by omega, fun answer => ?_⟩
     by_cases accepted : answer = true
-    · simp only [accepted, if_true]
+    · simp only [accepted, ite_true]
       trivial
-    · simpa only [accepted, Bool.false_eq_true, if_false, Nat.add_sub_cancel] using ih
+    · simpa only [accepted, Bool.false_eq_true, ite_false, Nat.add_sub_cancel] using ih
 
 theorem scan_excludes (publicValue : PublicChallenge) (candidates : List DhOutput)
     (predicate : AdversarySpec.Domain → Prop) [DecidablePred predicate]
@@ -418,11 +417,11 @@ theorem scan_excludes (publicValue : PublicChallenge) (candidates : List DhOutpu
     rw [OracleComp.isQueryBoundP_query_bind_iff]
     have requestExcluded := excluded false publicValue.prekey candidate
     refine ⟨Or.inl requestExcluded, fun answer => ?_⟩
-    simp only [requestExcluded, if_false]
+    simp only [requestExcluded, ite_false]
     by_cases accepted : answer = true
-    · simp only [accepted, if_true]
+    · simp only [accepted, ite_true]
       trivial
-    · simpa only [accepted, Bool.false_eq_true, if_false] using ih
+    · simpa only [accepted, Bool.false_eq_true, ite_false] using ih
 
 theorem testInput_query_bound (address : TupleAddress) (input : Pqxdh.Bytes) :
     (testInput address input).IsTotalQueryBound 2 := by
@@ -433,12 +432,6 @@ theorem testInput_query_bound (address : TupleAddress) (input : Pqxdh.Bytes) :
   | some pair =>
     rcases pair with ⟨first, third⟩
     simp only [testInput, parsed]
-    change ((liftM (AdversarySpec.query
-      (.inr (.decideDh false address.staticPeer first))) : OracleComp AdversarySpec Bool) >>=
-        fun firstAccepted =>
-          (liftM (AdversarySpec.query
-            (.inr (.decideDh true address.prekeyPeer third))) : OracleComp AdversarySpec Bool) >>=
-            fun thirdAccepted => pure (firstAccepted && thirdAccepted)).IsTotalQueryBound 2
     rw [OracleComp.isTotalQueryBound_query_bind_iff]
     exact ⟨by omega, fun _ => (OracleComp.isTotalQueryBound_query_bind_iff).2
       ⟨by omega, fun _ => trivial⟩⟩
@@ -454,16 +447,10 @@ theorem testInput_excludes (address : TupleAddress) (input : Pqxdh.Bytes)
   | some pair =>
     rcases pair with ⟨first, third⟩
     simp only [testInput, parsed]
-    change ((liftM (AdversarySpec.query
-      (.inr (.decideDh false address.staticPeer first))) : OracleComp AdversarySpec Bool) >>=
-        fun firstAccepted =>
-          (liftM (AdversarySpec.query
-            (.inr (.decideDh true address.prekeyPeer third))) : OracleComp AdversarySpec Bool) >>=
-            fun thirdAccepted => pure (firstAccepted && thirdAccepted)).IsQueryBoundP predicate 0
     rw [OracleComp.isQueryBoundP_query_bind_iff]
     have firstExcluded := excluded false address.staticPeer first
     refine ⟨Or.inl firstExcluded, fun firstAccepted => ?_⟩
-    simp only [firstExcluded, if_false]
+    simp only [firstExcluded, ite_false]
     rw [OracleComp.isQueryBoundP_query_bind_iff]
     have thirdExcluded := excluded true address.prekeyPeer third
     exact ⟨Or.inl thirdExcluded, fun _ => by simp [thirdExcluded]⟩
@@ -573,7 +560,7 @@ theorem static_alias_decision (joint : Primitives) (dh : DhInterface joint)
     (left right : PeerEncoding) (candidate : DhOutput) (same : aliases.same left right) :
     reply joint dh seed scalar (.decideDh false left candidate) =
       reply joint dh seed scalar (.decideDh false right candidate) := by
-  simp only [reply, Bool.false_eq_true, if_false, aliases.replies seed left right same]
+  simp only [reply, Bool.false_eq_true, ite_false, aliases.replies seed left right same]
 
 def sourceScalarDh (c : Pqxdh.Crypto) (scalar : ScalarBytes) (peer : PeerEncoding) : Option DhOutput :=
   let output : DhOutput := ⟨c.x25519 scalar.toList peer.toList, c.x25519_length _ _⟩

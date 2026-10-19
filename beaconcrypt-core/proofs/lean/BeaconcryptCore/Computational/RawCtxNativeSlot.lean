@@ -159,7 +159,7 @@ theorem rawGame_failure_owner {Metadata PrimitiveState : Type} {ι : Type} {base
 theorem rawReceive_empty {Metadata : Type} (decode : RawCtxReceive.FrameDecoder)
     (raw : Pqxdh.Bytes) (state : State Metadata) (hempty : raw.isEmpty = true) :
     rawReceive decode raw state = pure (publish state (.ok .None, state.owner.slot)) := by
-  simp only [rawReceive, hempty, if_true]
+  simp only [rawReceive, hempty, ite_true]
 
 /-- Malformed payload decoding rejects before the owner slot is taken. -/
 theorem rawReceive_malformed {Metadata : Type} (decode : RawCtxReceive.FrameDecoder)
@@ -173,7 +173,7 @@ theorem rawReceive_invalid {Metadata : Type} (decode : RawCtxReceive.FrameDecode
     (hdecode : decode raw = some frame)
     (hinvalid : ¬RawCtxReceive.ValidFrame state.owner.expectedSender state.owner.associatedData frame) :
     rawReceive decode raw state = pure (publish state (.ok .None, state.owner.slot)) := by
-  simp only [rawReceive, hdecode, hinvalid, if_false, ite_self]
+  simp only [rawReceive, hdecode, hinvalid, ite_false, ite_self]
 
 end BeaconcryptCore.Computational.RawCtxNativeSlot
 

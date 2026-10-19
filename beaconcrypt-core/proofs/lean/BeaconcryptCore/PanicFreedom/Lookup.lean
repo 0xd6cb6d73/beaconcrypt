@@ -23,9 +23,9 @@ theorem refined.refined_receive_key_total {SendChain ReceiveChain Material : Typ
   | some slot =>
     simp only [lift, control.capacity_eq_ok, bind_tc_ok]
     by_cases hcap : UScalar.cast UScalarTy.Usize slot ≥ UScalar.cast UScalarTy.Usize 50#u64
-    · simpa only [if_pos hcap, RustM.ok.injEq] using Exists.intro core.option.Option.None rfl
+    · simpa only [ite_eq_left hcap, RustM.ok.injEq] using Exists.intro core.option.Option.None rfl
     · have hi : (UScalar.cast UScalarTy.Usize slot).val < state.receive_slots.length := by scalar_tac
-      simp only [if_neg hcap, control.array_index_eq_ok _ _ hi, core.option.Option.as_ref, bind_tc_ok]
+      simp only [ite_eq_right hcap, control.array_index_eq_ok _ _ hi, core.option.Option.as_ref, bind_tc_ok]
       cases state.receive_slots.val[(UScalar.cast UScalarTy.Usize slot).val] <;>
         simp only [bind_tc_ok] <;> first | exact ⟨_, rfl⟩ | split_ifs <;> exact ⟨_, rfl⟩
 
@@ -40,9 +40,9 @@ theorem refined.RefinedRatchet.receive_entry_at_total {SendChain ReceiveChain Ma
   | some sequence =>
     simp only [lift, control.capacity_eq_ok, bind_tc_ok]
     by_cases hcap : UScalar.cast UScalarTy.Usize slot ≥ UScalar.cast UScalarTy.Usize 50#u64
-    · simpa only [if_pos hcap, RustM.ok.injEq] using Exists.intro core.option.Option.None rfl
+    · simpa only [ite_eq_left hcap, RustM.ok.injEq] using Exists.intro core.option.Option.None rfl
     · have hi : (UScalar.cast UScalarTy.Usize slot).val < state.receive_slots.length := by scalar_tac
-      simp only [if_neg hcap, control.array_index_eq_ok _ _ hi, core.option.Option.as_ref, bind_tc_ok]
+      simp only [ite_eq_right hcap, control.array_index_eq_ok _ _ hi, core.option.Option.as_ref, bind_tc_ok]
       cases state.receive_slots.val[(UScalar.cast UScalarTy.Usize slot).val] <;>
         simp only [bind_tc_ok] <;> first | exact ⟨_, rfl⟩ | split_ifs <;> exact ⟨_, rfl⟩
 

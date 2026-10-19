@@ -420,14 +420,14 @@ theorem serverEmit_exhausted (c : Pqxdh.Crypto) (S1 : Pqxdh.ServerState)
     (ikB ds kemCt ePub app : Pqxdh.Bytes) (hmax : S1.n = Pqxdh.maxKeyId) :
     Pqxdh.serverEmit c S1 ikB ds kemCt ePub app =
       (Except.error Pqxdh.ServerError.keyIdExhausted, S1) := by
-  rw [Pqxdh.serverEmit, if_pos hmax]
+  rw [Pqxdh.serverEmit, ite_eq_left hmax]
 
 theorem serverEmit_collision (c : Pqxdh.Crypto) (S1 : Pqxdh.ServerState)
     (ikB ds kemCt ePub app : Pqxdh.Bytes) (hmax : S1.n ≠ Pqxdh.maxKeyId)
     (hocc : (S1.peers.lookup (S1.n + 1)).isSome) :
     Pqxdh.serverEmit c S1 ikB ds kemCt ePub app =
       (Except.error Pqxdh.ServerError.keyIdCollision, S1) := by
-  rw [Pqxdh.serverEmit, if_neg hmax, if_pos hocc]
+  rw [Pqxdh.serverEmit, ite_eq_right hmax, ite_eq_left hocc]
 
 theorem serverEmit_ok (c : Pqxdh.Crypto) (S1 : Pqxdh.ServerState)
     (ikB ds kemCt ePub app : Pqxdh.Bytes) (hmax : S1.n ≠ Pqxdh.maxKeyId)
@@ -437,7 +437,7 @@ theorem serverEmit_ok (c : Pqxdh.Crypto) (S1 : Pqxdh.ServerState)
       resp.keyId = S1.n + 1 ∧ S'.n = S1.n + 1 ∧ S'.consumed = S1.consumed ∧
       S'.peers = (S1.n + 1, pr) :: S1.peers ∧ pr.ikPub = ikB ∧
       pr.ad = Pqxdh.assocData (c.edPub S1.ikSk) ikB := by
-  rw [Pqxdh.serverEmit, if_neg hmax, if_neg hfree]
+  rw [Pqxdh.serverEmit, ite_eq_right hmax, ite_eq_right hfree]
   exact ⟨_, _, _, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
 
 /-- The ideal server reaches response construction exactly when the bundle is valid,

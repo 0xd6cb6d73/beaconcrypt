@@ -48,12 +48,12 @@ theorem candidate_lift
   intro valid
   cases valid
   · rfl
-  · simp only [Bool.not_true, Bool.false_eq_true, if_false, lift_bind]
+  · simp only [Bool.not_true, Bool.false_eq_true, ite_false, lift_bind]
     apply bind_congr
     intro reserved
     cases reserved
     · rfl
-    · simp only [Bool.not_true, Bool.false_eq_true, if_false]
+    · simp only [Bool.not_true, Bool.false_eq_true, ite_false]
       cases initial with
       | fail error => rfl
       | div => rfl
@@ -67,7 +67,7 @@ theorem candidate_lift
               intro allocated
               cases allocated
               · rfl
-              · simp only [Bool.not_true, Bool.false_eq_true, if_false]
+              · simp only [Bool.not_true, Bool.false_eq_true, ite_false]
                 cases binding : pending.key_id_binding with
                 | fail error => rfl
                 | div => rfl

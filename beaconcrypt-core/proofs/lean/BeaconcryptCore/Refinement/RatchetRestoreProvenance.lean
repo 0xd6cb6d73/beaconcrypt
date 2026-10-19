@@ -69,7 +69,7 @@ theorem RestoreProvenance.restore {SendChain ReceiveChain Material : Type}
   obtain ⟨accepted, next, hrun, hvalid, hshape⟩ := h.valid.restore restore sequence material
   refine ⟨accepted, next, hrun, ?_⟩
   cases accepted
-  · simpa only [Bool.false_eq_true, if_false] using hshape ▸ h
+  · simpa only [Bool.false_eq_true, ite_false] using hshape ▸ h
   · obtain ⟨hsend, hreceive, hsendCounter, hreceiveCounter, _, _, _, hslots⟩ := hshape
     refine ⟨hvalid, by simpa only [hsend, hsendCounter] using h.send,
       by simpa only [hreceive, hreceiveCounter] using h.receive, ?_⟩

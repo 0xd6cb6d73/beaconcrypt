@@ -233,9 +233,9 @@ theorem canonicalRun_attempt_bound (decode : RawDecoder) (c : Pqxdh.Crypto) (key
     have remaining := ih answer _ (bounded.2 answer) next result hrest
     by_cases hraw : IsRawQuery query
     · have positive : 0 < count := bounded.1.resolve_left (not_not.mpr hraw)
-      simp only [hraw, if_pos] at stepCount remaining
+      simp only [hraw, ite_eq_left] at stepCount remaining
       omega
-    · simp only [hraw, if_false] at stepCount remaining
+    · simp only [hraw, ite_false] at stepCount remaining
       omega
 
 /-- Canonical receive exposes at most qRaw source attempts; malformed and commitment-rejected inputs have not been dropped from this count. -/

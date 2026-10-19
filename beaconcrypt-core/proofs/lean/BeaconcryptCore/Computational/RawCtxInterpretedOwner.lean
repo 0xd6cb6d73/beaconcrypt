@@ -59,20 +59,20 @@ theorem rawReceive_interpreted {Material Metadata : Type} {m : Type → Type*} [
       Prod.map id (nativeState interpret) <$> simulateQ labels ((rawReceive decode raw).run state) := by
   simp only [RawCtxWholeOwner.rawReceive, rawReceive, nativeState, StateT.run]
   by_cases empty : raw.isEmpty = true
-  · simp only [empty, if_true, simulateQ_pure, map_pure]
+  · simp only [empty, ite_true, simulateQ_pure, map_pure]
     rfl
-  · simp only [empty, Bool.false_eq_true, if_false]
+  · simp only [empty, Bool.false_eq_true, ite_false]
     cases decoded : decode raw with
     | none =>
       simp only [simulateQ_pure, map_pure]
       rfl
     | some frame =>
       by_cases valid : RawCtxReceive.ValidFrame state.expectedSender state.associatedData frame
-      · simp only [valid, if_true, bind_pure_comp, simulateQ_map]
+      · simp only [valid, ite_true, bind_pure_comp, simulateQ_map]
         rw [RawCtxInterpretedArguments.receive_interpreted interpret native labels kdf opening]
         simp only [Functor.map_map]
         rfl
-      · simp only [valid, if_false, simulateQ_pure, map_pure]
+      · simp only [valid, ite_false, simulateQ_pure, map_pure]
         rfl
 
 noncomputable def sendOwner {Material Metadata : Type} (senderId : Std.U64) (plaintext : Pqxdh.Bytes) :
@@ -95,9 +95,9 @@ theorem sendOwner_interpreted {Material Metadata : Type} {m : Type → Type*} [M
       Prod.map id (nativeState interpret) <$> simulateQ labels ((sendOwner senderId plaintext).run state) := by
   simp only [RawCtxSourceSend.sendOwner, sendOwner, nativeState, StateT.run]
   by_cases empty : plaintext.isEmpty = true
-  · simp only [empty, if_true, simulateQ_pure, map_pure]
+  · simp only [empty, ite_true, simulateQ_pure, map_pure]
     rfl
-  · simp only [empty, Bool.false_eq_true, if_false, bind_pure_comp, simulateQ_map]
+  · simp only [empty, Bool.false_eq_true, ite_false, bind_pure_comp, simulateQ_map]
     rw [RawCtxInterpretedArguments.send_interpreted interpret native labels kdf sealing]
     simp only [Functor.map_map]
     rfl

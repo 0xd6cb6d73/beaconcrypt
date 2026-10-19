@@ -24,15 +24,15 @@ theorem refined.refined_restore_receive_key_total {SendChain ReceiveChain Materi
   | some step =>
     simp only [lift, control.capacity_eq_ok, bind_tc_ok]
     by_cases hcap : UScalar.cast UScalarTy.Usize step.slot ≥ UScalar.cast UScalarTy.Usize 50#u64
-    · simpa only [if_pos hcap, RustM.ok.injEq] using Exists.intro (false, restore) rfl
+    · simpa only [ite_eq_left hcap, RustM.ok.injEq] using Exists.intro (false, restore) rfl
     · have hi : (UScalar.cast UScalarTy.Usize step.slot).val < restore.receive_slots.length := by scalar_tac
       have hlt : UScalar.cast UScalarTy.Usize step.slot < 50#usize := by scalar_tac
-      simp only [if_neg hcap, control.array_index_eq_ok _ _ hi, bind_tc_ok,
-        decide_eq_true hlt, Bool.or_true, massert, if_true, control.array_index_mut_eq_ok _ _ hi]
+      simp only [ite_eq_right hcap, control.array_index_eq_ok _ _ hi, bind_tc_ok,
+        decide_eq_true hlt, Bool.or_true, massert, ite_true, control.array_index_mut_eq_ok _ _ hi]
       dsimp! only
       rw [control.array_update_eq_ok _ _ _ (by simpa using hi)]
       cases restore.receive_slots.val[(UScalar.cast UScalarTy.Usize step.slot).val] <;>
-        simp [core.option.Option.is_some, Std.core.option.Option.is_some]
+        simp [core.option.Option.is_some]
 
 /-- Concrete restoration inherits the material restoration guarantee. -/
 theorem concrete.concrete_restore_receive_key_total (restore : concrete.ConcreteRatchetRestore)

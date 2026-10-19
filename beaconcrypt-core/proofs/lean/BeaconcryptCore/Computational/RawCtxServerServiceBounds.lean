@@ -163,7 +163,7 @@ theorem schedule_uniform {Metadata PeerMetadata Auxiliary Result : Type}
     (fun _ => True) (uniformWeight kdfCoins) client budget bounded
     (fun query state => (source_uniform_step source writer kdf kdfCoins kdfBounded
       senderId route decode query state).isQueryBoundP) state
-  simpa only [uniform_bill, IsTotalQueryBound, IsQueryBoundP, not_true_eq_false, false_or, if_true] using bound
+  simpa only [uniform_bill, IsTotalQueryBound, IsQueryBoundP, not_true_eq_false, false_or, ite_true] using bound
 
 def nativePredicate (selected : RawCtxMixedOwner.CallKind) : RawCtxServerServices.BackendSpec.Domain → Prop
   | .inl _ => False

@@ -162,7 +162,7 @@ theorem openInput_typed (c : Pqxdh.Crypto) (input : RawCtxWholeOwner.OpenInput)
     simulateQ (romAdapter c) (openInput input) =
       typedOpen c (sourceKey input) (sourceNonce input) (sourceContext input had)
         (sourceRecord input slices hslices) := by
-  simp only [openInput, hslices, if_pos had, openSlices_rom]
+  simp only [openInput, hslices, ite_eq_left had, openSlices_rom]
   obtain ⟨_, hbase, htag, hcommit, _, _⟩ := sourceRecord_spec input slices hslices
   have hhash : hashInput input slices = CtxRomAuth.outerInput (sourceKey input)
       (sourceNonce input) (sourceContext input had) (sourceRecord input slices hslices).tag :=
@@ -181,7 +181,7 @@ theorem openSlices_hash_bound (input : RawCtxWholeOwner.OpenInput)
     (slices : RawCtxFrameDecoding.Slices) :
     (openSlices input slices).IsQueryBoundP (fun query => query.isLeft = true) 1 := by
   rw [openSlices, isQueryBoundP_query_bind_iff]
-  simp only [Sum.isLeft, not_true_eq_false, false_or, if_true]
+  simp only [Sum.isLeft, not_true_eq_false, false_or, ite_true]
   refine ⟨by omega, fun reply => ?_⟩
   cases reply
   · simp
@@ -193,7 +193,7 @@ theorem openSlices_aead_bound (input : RawCtxWholeOwner.OpenInput)
     (slices : RawCtxFrameDecoding.Slices) :
     (openSlices input slices).IsQueryBoundP (fun query => query.isRight = true) 1 := by
   rw [openSlices, isQueryBoundP_query_bind_iff]
-  simp only [Sum.isRight, Bool.false_eq_true, not_false_eq_true, true_or, if_false, true_and]
+  simp only [Sum.isRight, Bool.false_eq_true, not_false_eq_true, true_or, ite_false, true_and]
   intro reply
   cases reply
   · simp
@@ -348,7 +348,7 @@ theorem owner_open_bound (effect : ReceiveEffect RawCtxWholeOwner.OpenContext)
     exact (isQueryBoundP_query_iff (spec := NativeSpec)
       (p := fun query => openingPredicate p query = true) (.inl request) 0).2 (by simp [openingPredicate])
   · rename_i pending
-    simp only [ownerAdapter, QueryImpl.apply_compose, RawCtxWholeOwner.adapter, Sum.isRight, if_true]
+    simp only [ownerAdapter, QueryImpl.apply_compose, RawCtxWholeOwner.adapter, Sum.isRight, ite_true]
     cases RawCtxWholeOwner.arguments pending
     · simp
     · rename_i input

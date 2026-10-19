@@ -61,7 +61,7 @@ theorem length_bound {ι State Result : Type} {spec : OracleSpec ι}
     have head := stepBound query
     simp only [List.length_append] at tail
     have available := bounded.1
-    by_cases h : predicate query <;> simp only [h, if_true, if_false, not_true_eq_false, false_or] at head tail available <;> omega
+    by_cases h : predicate query <;> simp only [h, ite_true, ite_false, not_true_eq_false, false_or] at head tail available <;> omega
 
 open CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc

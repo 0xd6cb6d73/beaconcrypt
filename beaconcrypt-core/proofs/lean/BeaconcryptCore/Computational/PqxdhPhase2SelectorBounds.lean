@@ -39,7 +39,7 @@ theorem step_bound
         (.inr (.inr (PqxdhPhase2InputBytes.ciphertext value))) _).2 (by
           have bounded := decapsulationBound (PqxdhPhase2InputBytes.ciphertext value)
           intro selected
-          simp only [if_pos selected] at bounded
+          simp only [ite_eq_left selected] at bounded
           omega)
   all_goals simp [StateT.run_pure]
 

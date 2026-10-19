@@ -59,10 +59,10 @@ theorem resume_good (pending : ReceiveKdf Context) (response : RatchetKdfRespons
   generalize effectEq : RawCtxOwnerOracle.resume pending response = effect at actual ⊢
   clear effectEq
   by_cases zero : pending.remaining = 0#u8
-  · simp only [ReceiveKdf.resume, zero, if_true, receive_rejected, RustM.ok.injEq] at actual
+  · simp only [ReceiveKdf.resume, zero, ite_true, receive_rejected, RustM.ok.injEq] at actual
     subst effect
     trivial
-  · simp only [ReceiveKdf.resume, zero, if_false] at actual
+  · simp only [ReceiveKdf.resume, zero, ite_false] at actual
     split at actual
     · obtain ⟨advanced, advancedEq⟩ := advance_receive_target_total pending.working_control
       cases seqEq : advanced.sequence <;> simp only [advancedEq, seqEq, bind_tc_ok, receive_rejected] at actual
@@ -77,7 +77,7 @@ theorem resume_good (pending : ReceiveKdf Context) (response : RatchetKdfRespons
           pending.target
         simp only [steppedEq, validEq, bind_tc_ok] at actual
         split at actual
-        · cases valid <;> simp only [Bool.false_eq_true, if_false, if_true, RustM.ok.injEq] at actual
+        · cases valid <;> simp only [Bool.false_eq_true, ite_false, ite_true, RustM.ok.injEq] at actual
           · subst effect
             trivial
           · subst effect
@@ -95,7 +95,7 @@ theorem resume_good (pending : ReceiveKdf Context) (response : RatchetKdfRespons
         (by scalar_tac)
       cases logical <;> simp only [logicalEq, core.option.Option.Insts.CoreCmpPartialEqOption.eq,
         core.U64.Insts.CoreCmpPartialEqU64, capacity_eq_ok, nextSlotEq, bind_tc_ok,
-        Bool.false_eq_true, if_false] at actual
+        Bool.false_eq_true, ite_false] at actual
       all_goals first | (cases RustM.ok.inj actual; trivial) | skip
       repeat' first | (solve | cases RustM.ok.inj actual; trivial) | split at actual
       all_goals simp only [array_index_eq_ok pending.staged_slots (UScalar.cast UScalarTy.Usize slot)
@@ -138,7 +138,7 @@ theorem begin_good (entry : ConcreteRatchetKernel) (target : Std.U64) (context :
       cases empty <;> by_cases gap : skipped > RATCHET_MAX_GAP <;>
         simp only [skippedEq, lift, RatchetState.receive_cache_len, emptyEq, gap,
           RatchetChain.as_bytes, SymmetricRatchetKdfRequest.new, empty_material_slots,
-          bind_tc_ok, Bool.false_eq_true, if_false, if_true] at actual
+          bind_tc_ok, Bool.false_eq_true, ite_false, ite_true] at actual
       all_goals cases RustM.ok.inj actual; trivial
 
 private theorem cached_fields (entry : ConcreteRatchetKernel) (prepared : PreparedCachedReceive)
@@ -152,12 +152,12 @@ private theorem cached_fields (entry : ConcreteRatchetKernel) (prepared : Prepar
       cases RustM.ok.inj (actualEq.symm.trans published)
       exact ⟨chainEq, controlEq ▸ same⟩
     · simp only [publish_cached_receive, lift, capacity_eq_ok, bind_tc_ok,
-        if_neg (by scalar_tac : ¬UScalar.cast UScalarTy.Usize prepared.target_slot ≥ UScalar.cast UScalarTy.Usize 50#u64),
-        if_pos (by scalar_tac : UScalar.cast UScalarTy.Usize prepared.last_slot ≥ UScalar.cast UScalarTy.Usize 50#u64)] at published
+        ite_eq_right (by scalar_tac : ¬UScalar.cast UScalarTy.Usize prepared.target_slot ≥ UScalar.cast UScalarTy.Usize 50#u64),
+        ite_eq_left (by scalar_tac : UScalar.cast UScalarTy.Usize prepared.last_slot ≥ UScalar.cast UScalarTy.Usize 50#u64)] at published
       cases RustM.ok.inj published
       exact ⟨rfl, rfl⟩
   · simp only [publish_cached_receive, lift, capacity_eq_ok, bind_tc_ok,
-      if_pos (by scalar_tac : UScalar.cast UScalarTy.Usize prepared.target_slot ≥ UScalar.cast UScalarTy.Usize 50#u64)] at published
+      ite_eq_left (by scalar_tac : UScalar.cast UScalarTy.Usize prepared.target_slot ≥ UScalar.cast UScalarTy.Usize 50#u64)] at published
     cases RustM.ok.inj published
     exact ⟨rfl, rfl⟩
 
@@ -172,14 +172,14 @@ private theorem future_fields (entry : ConcreteRatchetKernel) (prepared : Pendin
     exact ⟨chainEq, controlEq ▸ same⟩
   · simp only [publish_future_receive, lift, capacity_eq_ok, bind_tc_ok] at published
     by_cases firstBound : 50 < prepared.first_slot.val
-    · rw [if_pos (by scalar_tac)] at published
+    · rw [ite_eq_left (by scalar_tac)] at published
       cases RustM.ok.inj published
       exact ⟨rfl, rfl⟩
-    · rw [if_neg (by scalar_tac)] at published
+    · rw [ite_eq_right (by scalar_tac)] at published
       obtain ⟨available, availableEq, availableVal⟩ := uscalar_sub_eq_ok
         (UScalar.cast UScalarTy.Usize 50#u64) (UScalar.cast UScalarTy.Usize prepared.first_slot) (by scalar_tac)
       simp only [availableEq, bind_tc_ok,
-        if_pos (by scalar_tac : UScalar.cast UScalarTy.Usize prepared.skipped > available)] at published
+        ite_eq_left (by scalar_tac : UScalar.cast UScalarTy.Usize prepared.skipped > available)] at published
       cases RustM.ok.inj published
       exact ⟨rfl, rfl⟩
 

@@ -39,7 +39,7 @@ theorem selected_call (slot : Nat) (read : RawCtxReceive.FrameDecoder) (expected
         RawCtxCanonicalOpening.sourceOpening c (nativeInput key nonce sequence context)
           (RawCtxCanonicalOpening.selectedTarget (nativeInput key nonce sequence context) slices parsed width)
           (canonicalProjection (entry slot (.hidden nonce) state)) := by
-  simp only [call, dif_pos width, simulateQ_spec_query]
+  simp only [call, dite_eq_left width, simulateQ_spec_query]
   change (do
     let result ← (simulateQ AdaptiveCtxSharedHash.hashImpl
       ((localImpl true (RawCtxUniversalDecoder.decoder read) c key

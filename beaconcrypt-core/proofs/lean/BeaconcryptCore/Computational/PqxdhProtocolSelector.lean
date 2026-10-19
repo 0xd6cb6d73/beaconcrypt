@@ -178,7 +178,7 @@ theorem coins_excluded {Result : Type} (predicate : (SelectorSpec baseSpec).Doma
         let answer ← ((SelectorSpec baseSpec).query (.inr (.inl (.inl query))) : OracleComp (SelectorSpec baseSpec) _)
         coins (next answer)) predicate 0
       rw [isQueryBoundP_query_bind_iff]
-      exact ⟨by simp [excluded query], fun answer => by simpa only [if_neg (excluded query)] using ih answer⟩
+      exact ⟨by simp [excluded query], fun answer => by simpa only [ite_eq_right (excluded query)] using ih answer⟩
 
 def SelectorClass (predicate : (SelectorSpec baseSpec).Domain → Prop) : (Spec baseSpec S B).Domain → Prop
   | .inl _ => False

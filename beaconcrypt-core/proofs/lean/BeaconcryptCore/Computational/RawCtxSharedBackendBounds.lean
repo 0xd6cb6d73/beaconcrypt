@@ -59,7 +59,7 @@ theorem backend (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShar
     have tail := fun (reply : RawCtxServerServices.BackendSpec.Range query × Local A) =>
       ih reply.1 _ _ _ (coinBound.2 reply.1) (kdfBound.2 reply.1) (hashBound.2 reply.1) reply.2
     apply (isQueryBoundP_bind (compiled source writer stage hash query state) (fun reply _ => tail reply)).mono
-    cases hash <;> simp only [cost, bill, Bool.false_eq_true, if_false, if_true]
+    cases hash <;> simp only [cost, bill, Bool.false_eq_true, ite_false, ite_true]
     all_goals split_ifs <;> simp_all only [not_true_eq_false, false_or] <;> omega
 
 noncomputable def compiledBackend (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer) (stage : Nat) :

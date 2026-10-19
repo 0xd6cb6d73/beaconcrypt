@@ -100,9 +100,9 @@ theorem value_uniform (fixed : FixedHkdfSha512NoSaltSource) (selected : Message)
   | known root => trivial
   | family message =>
       by_cases same : message = selected
-      · simp only [value, same, if_true, StateT.run_pure]
+      · simp only [value, same, ite_true, StateT.run_pure]
         trivial
-      · simp only [value, same, if_false]
+      · simp only [value, same, ite_false]
         change (do let result ← (uniformImpl (.inr message)).run cache
                    pure (known fixed result.1, result.2)).IsTotalQueryBound 32
         cases found : cache message with

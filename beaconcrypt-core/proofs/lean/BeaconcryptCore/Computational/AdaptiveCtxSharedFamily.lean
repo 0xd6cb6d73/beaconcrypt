@@ -185,7 +185,7 @@ theorem target_step_bound {count : Nat} (decode : Fin count → RawDecoder) (c :
       simp only [reductionImpl, StateT.run, bind_pure_comp, isQueryBoundP_map_iff, TargetClass]
       exact (isQueryBoundP_query_iff p selected _).mpr (by intro hit; simp [hit])
   | inr other =>
-      simp only [reductionImpl, StateT.run, bind_pure_comp, isQueryBoundP_map_iff, TargetClass, if_false]
+      simp only [reductionImpl, StateT.run, bind_pure_comp, isQueryBoundP_map_iff, TargetClass, ite_false]
       apply forward_bound
       simp only [unavailable]
       exact isQueryBoundP_false _ 0

@@ -38,8 +38,8 @@ theorem structural {Kind ι Result : Type} [DecidableEq Kind] {spec : OracleSpec
     intro kind
     by_cases same : classify query = kind
     · subst kind
-      simpa only [Function.update_self, if_true] using (bounded (classify query)).2 answer
-    · simpa only [Function.update_of_ne (Ne.symm same), same, if_false] using (bounded kind).2 answer
+      simpa only [Function.update_self, ite_true] using (bounded (classify query)).2 answer
+    · simpa only [Function.update_of_ne (Ne.symm same), same, ite_false] using (bounded kind).2 answer
 
 /-- Exact finite weighted composition retains the arbitrary result and complete interpreted state. -/
 theorem weighted_bound {Kind ι κ Result State : Type} [Fintype Kind] [DecidableEq Kind]

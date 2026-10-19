@@ -105,7 +105,7 @@ theorem fromPayload_record (payload : Pqxdh.Bytes) (slices : Slices)
     cases Option.some.inj h
     refine ⟨⟨payload.take (payload.length - 80),
       (payload.drop (payload.length - 80)).take 16, payload.drop (payload.length - 64)⟩, ?_⟩
-    simp only [Pqxdh.decodeRecord, if_pos (show 80 ≤ payload.length by omega),
+    simp only [Pqxdh.decodeRecord, ite_eq_left (show 80 ≤ payload.length by omega),
       true_and, List.length_take, Nat.min_eq_left (Nat.sub_le _ _),
       List.length_drop, List.drop_take]
     simp only [show payload.length - 64 - 16 = payload.length - 80 by omega,

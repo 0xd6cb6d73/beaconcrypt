@@ -35,7 +35,7 @@ theorem extract_uniform (hmac : HmacSha512) (target : Option DhOutput)
     | some prk =>
         rw [protected_hit hmac target bytes cache prk inside hit]
         trivial
-  · simp only [protectedExtract, if_neg inside, actualExtract, StateT.run]
+  · simp only [protectedExtract, ite_eq_right inside, actualExtract, StateT.run]
     trivial
 
 /-- Real fixed primitives add no random draws; explicit client coins still cost one request. -/
@@ -189,8 +189,8 @@ theorem reduction_weighted {Result : Type} (client : OracleComp PqxdhJointDhExtr
           (fun request => rootClassify request = selected) (remaining selected) := by
         by_cases same : rootClassify query = selected
         · subst selected
-          simpa only [remaining, Function.update_self, if_true] using (bounded (rootClassify query)).2 reply
-        · simpa only [remaining, Function.update_of_ne (Ne.symm same), same, if_false] using (bounded selected).2 reply
+          simpa only [remaining, Function.update_self, ite_true] using (bounded (rootClassify query)).2 reply
+        · simpa only [remaining, Function.update_of_ne (Ne.symm same), same, ite_false] using (bounded selected).2 reply
       simp only [simulateQ_bind, simulateQ_spec_query]
       have combined := isQueryBoundP_bind (reduction_step query kind) (fun reply _ => ih reply remaining (tail reply))
       simpa only [remaining, FinitePartitionQueryBounds.bill_step (rootCost kind) budget (rootClassify query) positive] using combined

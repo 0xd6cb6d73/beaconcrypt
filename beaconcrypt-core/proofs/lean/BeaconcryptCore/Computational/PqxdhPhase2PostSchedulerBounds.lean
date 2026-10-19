@@ -48,7 +48,7 @@ theorem publicWork_bound {Result : Type} (resource : Resource)
   intro query
   apply (isQueryBoundP_query_iff (spec := LocalPostSpec baseSpec) (p := predicate (baseSpec := baseSpec) resource) (.inl query) _).mpr
   cases resource <;> simp [predicate, publicPredicate, PublicClass, IsPrivateRoot]
-  all_goals exact fun selected => by simpa only [selected, if_true] using Nat.zero_lt_one
+  all_goals exact fun selected => by simpa only [selected, ite_true] using Nat.zero_lt_one
 
 def auxiliaryCost (qLocal : Nat) : Resource → Nat
   | .uniform => max qLocal 64

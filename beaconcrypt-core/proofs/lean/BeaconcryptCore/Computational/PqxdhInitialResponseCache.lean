@@ -124,7 +124,7 @@ theorem uniform_bound (table : Table) (request : SymmetricRatchetKdfRequest) :
   cases found : table request with
   | none =>
       rw [uniform_miss table request found]
-      simpa only [Option.isSome_none, Bool.false_eq_true, if_false, bind_pure_comp, IsTotalQueryBound, isQueryBound_map_iff] using
+      simpa only [Option.isSome_none, Bool.false_eq_true, ite_false, bind_pure_comp, IsTotalQueryBound, isQueryBound_map_iff] using
         (CtxComputationalSecurity.uniformFixedBytes_isTotalQueryBound 64)
   | some response =>
       rw [uniform_hit table request response found]

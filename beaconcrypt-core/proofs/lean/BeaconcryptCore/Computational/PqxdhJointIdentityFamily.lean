@@ -447,9 +447,9 @@ theorem familyRun_history_bound (primitives : Primitives) {count : ℕ}
     have remaining := ih answer _ (bounded.2 answer) next result restSupport
     by_cases selected : familyClass (IsClass kind) query
     · have positive : 0 < bound := bounded.1.resolve_left (not_not.mpr selected)
-      simp only [selected, if_pos] at stepCount remaining
+      simp only [selected, ite_eq_left] at stepCount remaining
       omega
-    · simp only [selected, if_false] at stepCount remaining
+    · simp only [selected, ite_false] at stepCount remaining
       omega
 
 /-- Rejected static-DH responses are explicitly bounded by all source DH attempts. -/
@@ -505,7 +505,7 @@ theorem reductionGame_uniform_bound (primitives : Primitives) {count : ℕ} (tar
     (bounded : ∀ publicKeys, (adversary publicKeys).IsQueryBoundP (familyClass (IsClass .uniform)) bound) :
     (game primitives (reduction primitives target adversary)).IsTotalQueryBound (32 * (count + 1) + bound) := by
   have counted := jointGame_uniform_bound primitives (reduction primitives target adversary) (32 * count + bound)
-    (fun publicKeys => by simpa only [if_true] using
+    (fun publicKeys => by simpa only [ite_true] using
       reduction_query_bound primitives target adversary .uniform bound bounded publicKeys)
   convert counted using 1
   omega

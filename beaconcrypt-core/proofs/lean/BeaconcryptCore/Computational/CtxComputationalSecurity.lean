@@ -90,7 +90,7 @@ theorem ctxDirectSampleKeyFreeSealOracle_preserves_commitmentsCached
     CtxIndependentTagStateCommitmentsCached result.2 := by
   by_cases hused : input.nonce ∈ state.usedNonces
   · unfold ctxDirectSampleKeyFreeSealOracle at hresult
-    simp only [StateT.run, hused, if_true, support_pure,
+    simp only [StateT.run, hused, ite_true, support_pure,
       Set.mem_singleton_iff] at hresult
     subst result
     exact hsound
@@ -98,7 +98,7 @@ theorem ctxDirectSampleKeyFreeSealOracle_preserves_commitmentsCached
       input.context.ad.bytes input.plaintext
     let suffix := outerSuffix input.nonce input.context base.2
     unfold ctxDirectSampleKeyFreeSealOracle at hresult
-    simp only [StateT.run, hused, if_false] at hresult
+    simp only [StateT.run, hused, ite_false] at hresult
     rw [mem_support_bind_iff] at hresult
     obtain ⟨commit, _, hresult⟩ := hresult
     simp only [support_pure, Set.mem_singleton_iff] at hresult
@@ -841,7 +841,7 @@ theorem ctxRetainedBaseSealOracle_uniform_query_bound
     simp [StateT.run, hused]
   · unfold ctxRetainedBaseSealOracle
     simp only [StateT.run]
-    rw [if_neg hused]
+    rw [ite_eq_right hused]
     refine OracleComp.isQueryBoundP_bind (n := 0) (m := 64) ?_ ?_
     · exact queryModifiedNonceAeadSeal_no_uniform_queries
         (CtxSealInput.toModifiedNonceAeadSealInput input)
@@ -1057,11 +1057,11 @@ theorem modifiedNonceAeadINTCTXTImpl_uniform_to_total_query_bound_step
       (fun _ : ℕ => True)
       (if IsModifiedNonceAeadUniformQuery query then 1 else 0) := by
   rcases query with randomQuery | sealInput
-  · simp only [IsModifiedNonceAeadUniformQuery, if_true]
+  · simp only [IsModifiedNonceAeadUniformQuery]
     exact (OracleComp.isQueryBoundP_true_iff _ _).2
       (modifiedNonceAeadINTCTXTImpl_total_query_bound_step
         c key (.inl randomQuery) state)
-  · simp only [IsModifiedNonceAeadUniformQuery, if_false]
+  · simp only [IsModifiedNonceAeadUniformQuery]
     apply (OracleComp.isQueryBoundP_true_iff _ _).2
     unfold modifiedNonceAeadINTCTXTImpl
     simp only [QueryImpl.add_apply_inr]
@@ -1209,10 +1209,10 @@ theorem ctxDirectSampleKeyFreeSealOracle_total_query_bound
       64 := by
   by_cases hused : input.nonce ∈ state.usedNonces
   · unfold ctxDirectSampleKeyFreeSealOracle
-    simp only [StateT.run, hused, if_true]
+    simp only [StateT.run, hused, ite_true]
     trivial
   · unfold ctxDirectSampleKeyFreeSealOracle
-    simp only [StateT.run, hused, if_false]
+    simp only [StateT.run, hused, ite_false]
     simpa using OracleComp.isTotalQueryBound_bind (n₁ := 64) (n₂ := 0)
       (uniformFixedBytes_isTotalQueryBound 64)
       (fun commit => show IsTotalQueryBound

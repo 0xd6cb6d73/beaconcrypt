@@ -85,12 +85,12 @@ theorem completedSource_eq_eager {Result : Type} (decode : RawDecoder) (c : Pqxd
         let result ← tableRun decode c key table adversary state
         pure (table, result)] := by
   rw [completedSource_eq_mixed decode c key adversary state (sourceDictionary state) (fun _ => rfl)]
-  letI : MeasurableSpace Result := ⊤
-  letI : DiscreteMeasurableSpace Result := ⟨fun _ => by simp⟩
-  letI : MeasurableSpace CtxDigest := ⊤
-  letI : DiscreteMeasurableSpace CtxDigest := ⟨fun _ => by simp⟩
-  letI : MeasurableSpace AdaptiveCtxReceive.ReceiveState := ⊤
-  letI : DiscreteMeasurableSpace AdaptiveCtxReceive.ReceiveState := ⟨fun _ => by simp⟩
+  let : MeasurableSpace Result := ⊤
+  let : DiscreteMeasurableSpace Result := ⟨fun _ => by simp⟩
+  let : MeasurableSpace CtxDigest := ⊤
+  let : DiscreteMeasurableSpace CtxDigest := ⟨fun _ => by simp⟩
+  let : MeasurableSpace AdaptiveCtxReceive.ReceiveState := ⊤
+  let : DiscreteMeasurableSpace AdaptiveCtxReceive.ReceiveState := ⟨fun _ => by simp⟩
   exact evalSPMF_eq_of_evalDist_eq _ _ (mixedCompletedLazy_eq_eager _ _)
 
 /-- Fresh-source specialization: one uniformly reserved private table retains its joint law with all actual source state, adaptive replies, logs and explicit coins. -/
@@ -118,7 +118,7 @@ theorem tracedSuffixCache_cons (table : Suffix → CtxDigest) (address : Suffix)
     (prior : List Pqxdh.Bytes) :
     tracedSuffixCache table (address.toList :: prior) =
       (tracedSuffixCache table prior).cacheQuery address.toList (table address) := by
-  simp only [tracedSuffixCache, address.toList_length, dif_pos]
+  simp only [tracedSuffixCache, address.toList_length, dite_eq_left]
   rfl
 
 /-- Restore all private lookups, including rejected raw requests, in the terminal source state. Every other cache, transcript, nonce, seal and counter field is retained verbatim. -/
@@ -182,7 +182,7 @@ theorem honestSeal_restore (c : Pqxdh.Crypto) (key : CtxKey) (input : CtxSealInp
       simulateQ (mixedEagerImpl table) (abstractSeal c key input (restorePrivate table state)) := by
   by_cases used : input.nonce ∈ state.ctx.usedNonces
   · simp [abstractSeal, used, restorePrivate]
-  · simp only [abstractSeal, restorePrivate, used, if_false, abstractSuffix, bind_pure_comp,
+  · simp only [abstractSeal, restorePrivate, used, ite_false, abstractSuffix, bind_pure_comp,
       simulateQ_map, simulateQ_query, OracleQuery.input_query, OracleQuery.cont_query,
       mixedEagerImpl, map_pure]
     simp only [Prod.map, id_eq, restorePrivate, CtxIndependentTagState.addSeal, tracedSuffixCache_cons]
@@ -254,12 +254,12 @@ theorem completedSource_eq_honestCompletion {Result : Type} (decode : RawDecoder
     𝒮[completedSource decode c key adversary AdaptiveCtxReceive.initialState] =
       𝒮[restoreTerminal <$> mixedCompletedLazy (honestClient decode c key adversary) ∅] := by
   rw [completedSource_initial_eq_uniform]
-  letI : MeasurableSpace Result := ⊤
-  letI : DiscreteMeasurableSpace Result := ⟨fun _ => by simp⟩
-  letI : MeasurableSpace CtxDigest := ⊤
-  letI : DiscreteMeasurableSpace CtxDigest := ⟨fun _ => by simp⟩
-  letI : MeasurableSpace AdaptiveCtxReceive.ReceiveState := ⊤
-  letI : DiscreteMeasurableSpace AdaptiveCtxReceive.ReceiveState := ⟨fun _ => by simp⟩
+  let : MeasurableSpace Result := ⊤
+  let : DiscreteMeasurableSpace Result := ⟨fun _ => by simp⟩
+  let : MeasurableSpace CtxDigest := ⊤
+  let : DiscreteMeasurableSpace CtxDigest := ⟨fun _ => by simp⟩
+  let : MeasurableSpace AdaptiveCtxReceive.ReceiveState := ⊤
+  let : DiscreteMeasurableSpace AdaptiveCtxReceive.ReceiveState := ⟨fun _ => by simp⟩
   have reserved := evalSPMF_map_eq_of_evalSPMF_eq
     (evalSPMF_eq_of_evalDist_eq _ _
       (mixedCompletedLazy_empty_eq_uniform (honestClient decode c key adversary))) restoreTerminal

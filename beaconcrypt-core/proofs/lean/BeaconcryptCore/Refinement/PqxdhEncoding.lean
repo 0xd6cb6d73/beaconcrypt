@@ -52,9 +52,9 @@ theorem getElem!_append (l r : Pqxdh.Bytes) (i : ℕ) :
     (l ++ r)[i]! = if i < l.length then l[i]! else r[i - l.length]! := by
   by_cases h : i < l.length
   · have hi : i < (l ++ r).length := by simp only [List.length_append]; omega
-    rw [if_pos h, getElem!_pos (l ++ r) i hi, getElem!_pos l i h,
+    rw [ite_eq_left h, getElem!_pos (l ++ r) i hi, getElem!_pos l i h,
       List.getElem_append_left h]
-  · rw [if_neg h]
+  · rw [ite_eq_right h]
     by_cases h2 : i - l.length < r.length
     · have hi : i < (l ++ r).length := by simp only [List.length_append]; omega
       rw [getElem!_pos (l ++ r) i hi, getElem!_pos r (i - l.length) h2,
@@ -111,9 +111,9 @@ theorem tag_sign_key_abs (key : Std.Array Std.U8 32#usize) :
     unfold pqxdh.tag_sign_key.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
     by_cases h0 : i = 0
     · subst h0
-      rw [if_pos (hlt1.mpr (by omega))]
+      rw [ite_eq_left (hlt1.mpr (by omega))]
       simp
-    · rw [if_neg (fun h => absurd (hlt1.mp h) (by omega)), if_neg h0]
+    · rw [ite_eq_right (fun h => absurd (hlt1.mp h) (by omega)), ite_eq_right h0]
       have hsub : (1#usize).val ≤ (⟨BitVec.ofNat _ i⟩ : Std.Usize).val := by
         rw [usize_val_1, hval]; omega
       rw [usize_sub_eq _ _ hsub]
@@ -133,7 +133,7 @@ theorem tag_sign_key_abs (key : Std.Array Std.U8 32#usize) :
     | 0 => simp [Pqxdh.tagSig, absByte, pqxdh.SIGN_TYPE_ED25519]
     | (j + 1) =>
       have hj : j < (32#usize).val := by rw [usize_val_32]; omega
-      rw [if_neg (Nat.succ_ne_zero j)]
+      rw [ite_eq_right (Nat.succ_ne_zero j)]
       simp only [Nat.add_sub_cancel, Pqxdh.tagSig, List.getElem!_cons_succ]
       exact (absBytes_getElem! key j hj).symm
   obtain ⟨a, ha, habs⟩ :=
@@ -189,9 +189,9 @@ theorem tag_mlkem768_key_abs (key : Std.Array Std.U8 1184#usize) :
     unfold pqxdh.tag_mlkem768_key.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
     by_cases h0 : i = 0
     · subst h0
-      rw [if_pos (hlt1.mpr (by omega))]
+      rw [ite_eq_left (hlt1.mpr (by omega))]
       simp
-    · rw [if_neg (fun h => absurd (hlt1.mp h) (by omega)), if_neg h0]
+    · rw [ite_eq_right (fun h => absurd (hlt1.mp h) (by omega)), ite_eq_right h0]
       have hsub : (1#usize).val ≤ (⟨BitVec.ofNat _ i⟩ : Std.Usize).val := by
         rw [usize_val_1, hval]; omega
       rw [usize_sub_eq _ _ hsub]
@@ -211,7 +211,7 @@ theorem tag_mlkem768_key_abs (key : Std.Array Std.U8 1184#usize) :
     | 0 => simp [Pqxdh.tagPQ, absByte, pqxdh.KEM_TYPE_MLKEM768]
     | (j + 1) =>
       have hj : j < (1184#usize).val := by rw [usize_val_1184]; omega
-      rw [if_neg (Nat.succ_ne_zero j)]
+      rw [ite_eq_right (Nat.succ_ne_zero j)]
       simp only [Nat.add_sub_cancel, Pqxdh.tagPQ, List.getElem!_cons_succ]
       exact (absBytes_getElem! key j hj).symm
   obtain ⟨a, ha, habs⟩ :=
@@ -258,16 +258,16 @@ theorem tag_x25519_key_abs (role : Std.U8) (key : Std.Array Std.U8 32#usize) :
     rw [tag_x25519_call_mut]
     by_cases h0 : i = 0
     · subst h0
-      rw [if_pos (hlt1.mpr (by omega))]
+      rw [ite_eq_left (hlt1.mpr (by omega))]
       simp
       rfl
-    · rw [if_neg (fun h => absurd (hlt1.mp h) (by omega)), if_neg h0]
+    · rw [ite_eq_right (fun h => absurd (hlt1.mp h) (by omega)), ite_eq_right h0]
       by_cases h1 : i = 1
       · subst h1
-        rw [if_pos (hlt2.mpr (by omega))]
+        rw [ite_eq_left (hlt2.mpr (by omega))]
         simp
         rfl
-      · rw [if_neg (fun h => absurd (hlt2.mp h) (by omega)), if_neg h1]
+      · rw [ite_eq_right (fun h => absurd (hlt2.mp h) (by omega)), ite_eq_right h1]
         have hsub : (2#usize).val ≤ (⟨BitVec.ofNat _ i⟩ : Std.Usize).val := by
           rw [usize_val_2, hval]; omega
         rw [usize_sub_eq _ _ hsub]
@@ -290,7 +290,7 @@ theorem tag_x25519_key_abs (role : Std.U8) (key : Std.Array Std.U8 32#usize) :
     | 1 => simp [Pqxdh.tagX]
     | (j + 2) =>
       have hj : j < (32#usize).val := by rw [usize_val_32]; omega
-      rw [if_neg (by omega), if_neg (by omega)]
+      rw [ite_eq_right (by omega), ite_eq_right (by omega)]
       simp only [Nat.add_sub_cancel, Pqxdh.tagX, List.getElem!_cons_succ]
       exact (absBytes_getElem! key j hj).symm
   obtain ⟨a, ha, habs⟩ :=
@@ -403,13 +403,13 @@ theorem untag_sign_key_abs (encoded : Std.Array Std.U8 33#usize) :
           simp only [bind_tc_ok]
           rw [index_usize_eq encoded z (by rw [hzv', usize_val_33]; omega), hzv']
           rfl)
-    refine Or.inl ⟨a, by rw [hunf, if_pos h, ha]; rfl, ?_⟩
+    refine Or.inl ⟨a, by rw [hunf, ite_eq_left h, ha]; rfl, ?_⟩
     rw [habs]
     conv_lhs => rw [hcons]
-    rw [parseSigTag_cons, if_pos ⟨by rw [h]; simp, hlen1⟩]
-  · refine Or.inr ⟨by rw [hunf, if_neg h], ?_⟩
+    rw [parseSigTag_cons, ite_eq_left ⟨by rw [h]; simp, hlen1⟩]
+  · refine Or.inr ⟨by rw [hunf, ite_eq_right h], ?_⟩
     conv_lhs => rw [hcons]
-    rw [parseSigTag_cons, if_neg]
+    rw [parseSigTag_cons, ite_eq_right]
     rintro ⟨hb, -⟩
     exact h (absByte_injective (by rw [hb]; simp))
 
@@ -448,13 +448,13 @@ theorem untag_mlkem768_key_abs (encoded : Std.Array Std.U8 1185#usize) :
           simp only [bind_tc_ok]
           rw [index_usize_eq encoded z (by rw [hzv', usize_val_1185]; omega), hzv']
           rfl)
-    refine Or.inl ⟨a, by rw [hunf, if_pos h, ha]; rfl, ?_⟩
+    refine Or.inl ⟨a, by rw [hunf, ite_eq_left h, ha]; rfl, ?_⟩
     rw [habs]
     conv_lhs => rw [hcons]
-    rw [parsePQTag_cons, if_pos ⟨by rw [h]; simp, hlen1⟩]
-  · refine Or.inr ⟨by rw [hunf, if_neg h], ?_⟩
+    rw [parsePQTag_cons, ite_eq_left ⟨by rw [h]; simp, hlen1⟩]
+  · refine Or.inr ⟨by rw [hunf, ite_eq_right h], ?_⟩
     conv_lhs => rw [hcons]
-    rw [parsePQTag_cons, if_neg]
+    rw [parsePQTag_cons, ite_eq_right]
     rintro ⟨hb, -⟩
     exact h (absByte_injective (by rw [hb]; simp))
 
@@ -480,9 +480,9 @@ theorem untag_x25519_key_abs (encoded : Std.Array Std.U8 34#usize) (role : Std.U
     rw [index_usize_eq encoded 0#usize (by simp)]
     simp only [bind_tc_ok, usize_val_0]
     by_cases h : encoded.val[0]! = pqxdh.KEM_TYPE_X25519
-    · rw [if_pos h, if_pos h, index_usize_eq encoded 1#usize (by simp)]
+    · rw [ite_eq_left h, ite_eq_left h, index_usize_eq encoded 1#usize (by simp)]
       simp only [bind_tc_ok, usize_val_1]
-    · rw [if_neg h, if_neg h]
+    · rw [ite_eq_right h, ite_eq_right h]
   by_cases h : encoded.val[0]! = pqxdh.KEM_TYPE_X25519
   · by_cases h1 : encoded.val[1]! = role
     · obtain ⟨a, ha, habs⟩ :=
@@ -500,18 +500,18 @@ theorem untag_x25519_key_abs (encoded : Std.Array Std.U8 34#usize) (role : Std.U
             simp only [bind_tc_ok]
             rw [index_usize_eq encoded z (by rw [hzv', usize_val_34]; omega), hzv']
             rfl)
-      refine Or.inl ⟨a, by rw [hunf, if_pos h, if_pos h1, ha]; rfl, ?_⟩
+      refine Or.inl ⟨a, by rw [hunf, ite_eq_left h, ite_eq_left h1, ha]; rfl, ?_⟩
       rw [habs]
       conv_lhs => rw [hcons]
-      rw [parseXTag_cons2, if_pos ⟨by rw [h]; simp, by rw [h1], hlen1⟩]
-    · refine Or.inr ⟨by rw [hunf, if_pos h, if_neg h1], ?_⟩
+      rw [parseXTag_cons2, ite_eq_left ⟨by rw [h]; simp, by rw [h1], hlen1⟩]
+    · refine Or.inr ⟨by rw [hunf, ite_eq_left h, ite_eq_right h1], ?_⟩
       conv_lhs => rw [hcons]
-      rw [parseXTag_cons2, if_neg]
+      rw [parseXTag_cons2, ite_eq_right]
       rintro ⟨-, hb, -⟩
       exact h1 (absByte_injective hb)
-  · refine Or.inr ⟨by rw [hunf, if_neg h], ?_⟩
+  · refine Or.inr ⟨by rw [hunf, ite_eq_right h], ?_⟩
     conv_lhs => rw [hcons]
-    rw [parseXTag_cons2, if_neg]
+    rw [parseXTag_cons2, ite_eq_right]
     rintro ⟨hb, -⟩
     exact h (absByte_injective (by rw [hb]; simp))
 

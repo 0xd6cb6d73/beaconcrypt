@@ -170,7 +170,7 @@ theorem sourceRun_uniform_bound {Result : Type} (source : FixedHkdfSha512NoSaltS
     apply IsQueryBoundP.simulateQ_run_StateT_of_step bound
     intro query state
     cases query <;> simp [sourceImpl, StateT.run, IsCoin, IsNext]
-  simpa only [IsTotalQueryBound, IsQueryBoundP, not_true_eq_false, false_or, if_true] using forwarded
+  simpa only [IsTotalQueryBound, IsQueryBoundP, not_true_eq_false, false_or, ite_true] using forwarded
 
 /-- Tape lookup makes no hidden randomness request, including its unreachable exhausted branch. -/
 theorem tapeRun_uniform_bound {Result : Type} (fallback : Material)
@@ -183,7 +183,7 @@ theorem tapeRun_uniform_bound {Result : Type} (fallback : Material)
     cases query with
     | inl coin => simp [tapeImpl, StateT.run, IsCoin, IsNext]
     | inr request => cases entries : state.remaining <;> simp [tapeImpl, StateT.run, IsCoin, IsNext, entries]
-  simpa only [IsTotalQueryBound, IsQueryBoundP, not_true_eq_false, false_or, if_true] using forwarded
+  simpa only [IsTotalQueryBound, IsQueryBoundP, not_true_eq_false, false_or, ite_true] using forwarded
 
 /-- Complete observer accounting includes all adaptive client coins and every possible final observation. -/
 theorem tapeObserver_uniform_bound {Context Result : Type} (fallback : Material)
@@ -234,9 +234,9 @@ theorem sourceRun_requests_bound {Result : Type} (source : FixedHkdfSha512NoSalt
       (bound.2 reply.1) reply.2 rest
     by_cases advances : IsNext query
     · have positive := bound.1.resolve_left (not_not.mpr advances)
-      simp only [advances, if_true] at step tail
+      simp only [advances, ite_true] at step tail
       omega
-    · simp only [advances, if_false, Nat.add_zero] at step tail
+    · simp only [advances, ite_false, Nat.add_zero] at step tail
       omega
 
 /-- The real adaptive game charges its context, one initial chain, client coins and complete final observation. -/

@@ -68,7 +68,7 @@ theorem interpreted_bound {joint : Primitives} (domain : PublicDomain joint)
   have step (query : (Spec Reader E PeerEncoding).Domain) (before : A) :
       ((prefixImpl domain aux visit query).run before).IsQueryBoundP predicate
         (if selected query then qVisit else qAux) := by
-    cases query <;> simp only [prefixImpl, selected, Bool.false_eq_true, if_false, if_true]
+    cases query <;> simp only [prefixImpl, selected, Bool.false_eq_true, ite_false, ite_true]
     all_goals first | exact auxBound _ before | simpa only [bind_pure_comp, StateT.run_map, isQueryBoundP_map_iff] using visitBound _ before
   simpa [Fintype.sum_bool, Nat.mul_comm, Nat.add_comm] using
     FinitePartitionQueryBounds.weighted_bound selected

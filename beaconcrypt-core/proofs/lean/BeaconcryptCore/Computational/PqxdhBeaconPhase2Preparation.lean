@@ -326,7 +326,7 @@ theorem owner_interpreted_bound {A ι : Type} {base : OracleSpec ι}
   have bound := FinitePartitionQueryBounds.weighted_bound (fun (_ : (Spec I D K X Response).Domain) => ())
     (fun _ => qCall) (fun _ => 13) handler predicate (owner raw state)
     (fun kind => by cases kind; simpa only [IsTotalQueryBound, IsQueryBoundP, not_true_eq_false,
-      false_or, if_true] using owner_bound (X := X) (Response := Response) raw state)
+      false_or, ite_true] using owner_bound (X := X) (Response := Response) raw state)
     (fun query current => bounded query current) auxiliary
   simpa only [Finset.univ_unique, Finset.sum_singleton, Nat.mul_comm] using bound
 

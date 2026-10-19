@@ -31,12 +31,12 @@ theorem scan_risk
   induction client using OracleComp.inductionOn generalizing m k state with
   | pure result =>
       rw [scan_pure, probEvent_pure]
-      simp only [clean, not_true_eq_false, if_false, zero_le]
+      simp only [clean, not_true_eq_false, ite_false, zero_le]
   | query_bind query next ih =>
       cases chosen : selected query state with
       | true =>
           rw [scan_cut selected impl query next state chosen, probEvent_pure]
-          simp only [clean, not_true_eq_false, if_false, zero_le]
+          simp only [clean, not_true_eq_false, ite_false, zero_le]
       | false =>
           rw [scan_other selected impl query next state chosen]
           rw [isQueryBoundP_query_bind_iff] at bound
@@ -47,15 +47,15 @@ theorem scan_risk
                   ∑ j ∈ Finset.range (m - 1), risk (k + 1 + j) := by
               intro result supported stillClean
               apply ih result.1 (m - 1) (k + 1)
-              · simpa only [charged, if_true] using bound.2 result.1
-              · simpa only [charged, if_true] using preserve k query state chosen valid clean result supported
+              · simpa only [charged, ite_true] using bound.2 result.1
+              · simpa only [charged, ite_true] using preserve k query state chosen valid clean result supported
               · exact stillClean
             have combined := probEvent_bind_le_add
               (mx := (impl query).run state)
               (my := fun result => scan selected impl (next result.1) result.2)
               (p := fun result => Clean result.2) (q := fun result => Clean result.2)
               (ε₁ := risk k) (ε₂ := ∑ j ∈ Finset.range (m - 1), risk (k + 1 + j))
-              (by simpa only [charged, if_true] using step k query state chosen valid clean)
+              (by simpa only [charged, ite_true] using step k query state chosen valid clean)
               continuation
             refine combined.trans_eq ?_
             conv_rhs => rw [show m = (m - 1) + 1 by omega]
@@ -72,15 +72,15 @@ theorem scan_risk
                   ∑ j ∈ Finset.range m, risk (k + j) := by
               intro result supported stillClean
               apply ih result.1 m k
-              · simpa only [charged, if_false, Nat.sub_zero] using bound.2 result.1
-              · simpa only [charged, if_false, Nat.add_zero] using preserve k query state chosen valid clean result supported
+              · simpa only [charged, ite_false, Nat.sub_zero] using bound.2 result.1
+              · simpa only [charged, ite_false, Nat.add_zero] using preserve k query state chosen valid clean result supported
               · exact stillClean
             have combined := probEvent_bind_le_add
               (mx := (impl query).run state)
               (my := fun result => scan selected impl (next result.1) result.2)
               (p := fun result => Clean result.2) (q := fun result => Clean result.2)
               (ε₁ := 0) (ε₂ := ∑ j ∈ Finset.range m, risk (k + j))
-              (by simpa only [charged, if_false] using step k query state chosen valid clean)
+              (by simpa only [charged, ite_false] using step k query state chosen valid clean)
               continuation
             simpa only [zero_add] using combined
 

@@ -34,20 +34,20 @@ theorem candidate_initial {Metadata PeerMetadata Consumed : Type}
     (metadata : PeerMetadata) (state : State Metadata PeerMetadata Consumed) :
     (candidate pending root data metadata state).IsQueryBoundP (Initial (base := TailSpec)) 1 := by
   simp only [candidate, original, isQueryBoundP_query_bind_iff, Initial,
-    not_false_eq_true, true_or, if_false, true_and]
+    not_false_eq_true, true_or, ite_false, true_and]
   intro valid
   cases valid
-  · simp only [Bool.not_false, if_true]
+  · simp only [Bool.not_false, ite_true]
     trivial
-  · simp only [Bool.not_true, Bool.false_eq_true, if_false,
+  · simp only [Bool.not_true, Bool.false_eq_true, ite_false,
       isQueryBoundP_query_bind_iff, Initial, not_false_eq_true, true_or, true_and]
     intro reserved
     cases reserved
-    · simp only [Bool.not_false, if_true]
+    · simp only [Bool.not_false, ite_true]
       trivial
-    · simp only [Bool.not_true, Bool.false_eq_true, if_false, kernel, initial,
+    · simp only [Bool.not_true, Bool.false_eq_true, ite_false, kernel, initial,
         bind_assoc, pure_bind, isQueryBoundP_query_bind_iff, Initial, not_true_eq_false,
-        false_or, if_true]
+        false_or, ite_true]
       exact ⟨by decide, fun response => original_bound _⟩
 
 /-- All current allocation and consumed-binding checks precede the same at-most-one initializer site. -/
@@ -72,7 +72,7 @@ theorem tail_initial {A : Type} (fixed : FixedHkdfSha512NoSaltSource) (writer : 
   cases query with
   | inl query => exact original_bound _
   | inr request =>
-      simp only [tailImpl, StateT.run, initial, isQueryBoundP_query_bind_iff, Initial, if_true]
+      simp only [tailImpl, StateT.run, initial, isQueryBoundP_query_bind_iff, Initial, ite_true]
       exact ⟨by decide, fun _ => isQueryBoundP_pure _ _ _⟩
 
 /-- Source role reinstallation adds no initializer calls to the actual at-most-one builder site. -/
@@ -95,7 +95,7 @@ theorem compiler_initial (selected : PqxdhCorrelatedExtractFamily.Message)
   apply RawCtxSourceOpen.simulate_bound _ (Initial (base := unifSpec)) _ client count bounded
   intro query
   cases query <;> simp only [PqxdhInitialLabelBuilder.compiler, isQueryBoundP_query_iff,
-    PqxdhInitialObserverCallbackBudgets.IsService, Initial, if_true, if_false] <;> decide
+    PqxdhInitialObserverCallbackBudgets.IsService, Initial, ite_true, ite_false] <;> decide
 
 /-- The complete labelled Server builder consumes at most one private initializer query, independently of all primitive and local callback coins. -/
 theorem build_initial {M P I D K A : Type} {S B : Nat}

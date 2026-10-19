@@ -35,7 +35,7 @@ private theorem excluded {ι κ Result : Type} {source : OracleSpec ι} {target 
     (steps : ∀ query, (handler query).IsQueryBoundP predicate 0) (client : OracleComp source Result) :
     (simulateQ handler client).IsQueryBoundP predicate 0 := by
   exact RawCtxSourceOpen.simulate_bound handler (fun _ => False) predicate client 0
-    (isQueryBoundP_false client 0) (fun query => by simpa only [if_false] using steps query)
+    (isQueryBoundP_false client 0) (fun query => by simpa only [ite_false] using steps query)
 
 /-- The root-erased application getter and complete original raw receive use at most54 callbacks for every initializer response. -/
 theorem after_total (decode : RawCtxReceive.FrameDecoder)
@@ -91,7 +91,7 @@ theorem after_no_service (decode : RawCtxReceive.FrameDecoder)
     (response : pqxdh.concrete.InitialRatchetKdfResponse) :
     (PqxdhInitialFusedBeacon.afterInitial decode pending response).IsQueryBoundP IsTailService 0 := by
   simp only [PqxdhInitialFusedBeacon.afterInitial, isQueryBoundP_query_bind_iff,
-    IsTailService, not_false_eq_true, true_or, if_false, true_and]
+    IsTailService, not_false_eq_true, true_or, true_and]
   intro reply
   cases reply with
   | none => trivial
@@ -106,7 +106,7 @@ theorem tail_service (decode : RawCtxReceive.FrameDecoder)
     (pending : PqxdhBeaconPhase2Shared.Prepared Response Shared) :
     (PqxdhInitialFusedBeacon.tail decode pending).IsQueryBoundP IsTailService 1 := by
   simp only [PqxdhInitialFusedBeacon.tail, isQueryBoundP_query_bind_iff, IsTailService,
-    not_true_eq_false, false_or, if_true]
+    not_true_eq_false, false_or]
   exact ⟨by decide, fun reply => by cases reply with
     | none => trivial
     | some response => exact after_no_service decode pending response⟩
@@ -131,7 +131,7 @@ theorem owner_service (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes)
             exact fun query => (isQueryBoundP_query_iff (spec := Spec I D K X Response Shared)
               (p := IsService) (.inr query) _).mpr (by
                 intro selected
-                simpa only [IsService, if_pos (show IsTailService query from selected)] using Nat.zero_lt_one)
+                simpa only [IsService, ite_eq_left (show IsTailService query from selected)] using Nat.zero_lt_one)
   | _ => simp only [owner, active]; trivial
 
 /-- The actual collection's single decapsulation bound survives the fused tail; no response-only or raw callback can add a decapsulation. -/
@@ -147,7 +147,7 @@ theorem owner_decapsulation (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.B
         exact fun query => (isQueryBoundP_query_iff (spec := Spec I D K X Response Shared)
           (p := IsDecapsulation) (.inl query) _).mpr (by
             intro selected
-            simpa only [IsDecapsulation, if_pos (show PqxdhPhase2SharedBounds.IsDecapsulation query from selected)] using Nat.zero_lt_one)
+            simpa only [IsDecapsulation, ite_eq_left (show PqxdhPhase2SharedBounds.IsDecapsulation query from selected)] using Nat.zero_lt_one)
       · intro pending _
         cases pending with
         | none => trivial

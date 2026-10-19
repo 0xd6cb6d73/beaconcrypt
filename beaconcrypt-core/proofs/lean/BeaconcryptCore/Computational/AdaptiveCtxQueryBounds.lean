@@ -161,7 +161,7 @@ theorem reductionImpl_uniform_step (decode : AdaptiveCtxReceive.RawDecoder)
   | inl query =>
     cases query with
     | inl coin =>
-      simp only [StateT.run, reductionImpl, SourceUniform, if_true,
+      simp only [StateT.run, reductionImpl, SourceUniform,
         bind_pure_comp, OracleComp.isQueryBoundP_map_iff]
       exact (OracleComp.isQueryBoundP_query_iff (spec := AdaptiveSpec)
         (p := TargetUniform) (.inl (.inl coin)) 1).mpr (by intro _; decide)
@@ -180,7 +180,7 @@ theorem reductionImpl_seal_step (decode : AdaptiveCtxReceive.RawDecoder)
   | inl query =>
     cases query with
     | inl coin =>
-      simp only [StateT.run, reductionImpl, SourceSeal, if_false,
+      simp only [StateT.run, reductionImpl, SourceSeal,
         bind_pure_comp, OracleComp.isQueryBoundP_map_iff]
       exact (OracleComp.isQueryBoundP_query_iff (spec := AdaptiveSpec)
         (p := TargetSeal) (.inl (.inl coin)) 0).mpr (by simp [TargetSeal, primitiveClass, IsModifiedNonceAeadSealQuery])
@@ -214,7 +214,7 @@ theorem query_union_bound {Result : Type} (adversary : OracleComp ReceiveSpec Re
     · intro answer
       refine (ih answer _ _ (hl.2 answer) (hr.2 answer)).mono ?_
       by_cases hleft : left query <;> by_cases hright : right query
-      all_goals simp only [hleft, hright, not_true_eq_false, false_or, not_false_eq_true, true_or, if_true, if_false] at hl hr ⊢
+      all_goals simp only [hleft, hright, not_true_eq_false, false_or, not_false_eq_true, true_or, ite_true, ite_false] at hl hr ⊢
       all_goals omega
 
 /-- The total hash-work cap counts all raw requests, including malformed and repeated rejected attempts. -/
@@ -250,11 +250,11 @@ theorem wrapped_uniform_pair_bound {Result : Type} (decode : AdaptiveCtxReceive.
     (fun query budget allowed => by
       by_cases coins : SourceUniform query
       · simp only [SourceWork, coins, not_true_eq_false, false_or, not_false_eq_true,
-          true_or, if_true, if_false] at allowed ⊢
+          true_or, ite_true, ite_false] at allowed ⊢
         change 1 + (budget.1 - 1 + 64 * budget.2) = budget.1 + 64 * budget.2
         omega
       · simp only [SourceWork, coins, not_true_eq_false, false_or, not_false_eq_true,
-          true_or, if_true, if_false] at allowed ⊢
+          true_or, ite_true, ite_false] at allowed ⊢
         change 64 + (budget.1 + 64 * (budget.2 - 1)) = budget.1 + 64 * budget.2
         omega)
     initialState

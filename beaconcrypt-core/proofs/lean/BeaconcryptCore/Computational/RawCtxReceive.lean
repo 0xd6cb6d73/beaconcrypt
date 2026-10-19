@@ -184,7 +184,7 @@ theorem rawReceive_success_replay (decode : FrameDecoder) (c : Pqxdh.Crypto)
     (h : rawReceive decode c execute expected ad raw entry = ok (result, .Some plaintext)) :
     rawReceive decode c execute expected ad raw result = ok (result, .None) := by
   obtain ⟨frame, hd, hv, hrun⟩ := rawReceive_success_driver decode c execute expected ad raw plaintext entry result h
-  simpa only [rawReceive, hd, if_pos hv] using
+  simpa only [rawReceive, hd, ite_eq_left hv] using
     receiveNext_success_replay (recordCrypto c) execute execute entry frame.sequence
       ⟨frame, ad⟩ (ctxOpenReply c) hvalid result plaintext hrun ⟨frame, ad⟩ (ctxOpenReply c)
 

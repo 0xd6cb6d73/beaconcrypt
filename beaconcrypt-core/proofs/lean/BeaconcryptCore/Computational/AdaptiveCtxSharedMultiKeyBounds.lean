@@ -108,7 +108,7 @@ theorem hash_route_work {count : Nat} (target : Fin (count + 1))
   | some other =>
       simp only [chosen, HashRoute] at hit
       cases mode : otherReal target other <;>
-        simp only [AdaptiveCtxSharedReplayBounds.ModeHash, mode, Bool.false_eq_true, if_false, if_true] at hit
+        simp only [AdaptiveCtxSharedReplayBounds.ModeHash, mode, Bool.false_eq_true, ite_false, ite_true] at hit
       · rcases query with (coin | hash | input) | raw <;> simp_all [SourceClass, SourceHash, SourceWork, SourceUniform]
       · exact hit
 
@@ -123,7 +123,7 @@ theorem private_route_work {count : Nat} (target : Fin (count + 1))
   | some other =>
       simp only [chosen, PrivateRoute] at hit
       cases mode : otherReal target other <;>
-        simp only [AdaptiveCtxSharedReplayBounds.ModePrivate, mode, Bool.false_eq_true, if_false, if_true] at hit
+        simp only [AdaptiveCtxSharedReplayBounds.ModePrivate, mode, Bool.false_eq_true, ite_false, ite_true] at hit
       rcases query with (coin | hash | input) | raw <;>
         simp_all [SourceClass, SourceUniform, SourceHash, SourceSeal, IsRawQuery]
 
@@ -143,7 +143,7 @@ theorem source_union_bound {count : Nat} {Result : Type} (adversary : OracleComp
     · intro answer
       refine (ih answer _ _ (hl.2 answer) (hr.2 answer)).mono ?_
       by_cases hleft : left query <;> by_cases hright : right query
-      all_goals simp only [hleft, hright, not_true_eq_false, false_or, not_false_eq_true, true_or, if_true, if_false] at hl hr ⊢
+      all_goals simp only [hleft, hright, not_true_eq_false, false_or, not_false_eq_true, true_or, ite_true, ite_false] at hl hr ⊢
       all_goals omega
 
 theorem global_work_bound {count : Nat} {Result : Type}

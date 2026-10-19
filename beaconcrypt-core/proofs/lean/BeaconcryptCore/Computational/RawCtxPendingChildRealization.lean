@@ -22,7 +22,7 @@ theorem child_address (context : Context M P I D K Result S B) (parent : FullOut
     (selected : matched state.1.2.2 (address context) = true) :
     cursorAddress (RawCtxLoggedParentResponse.updated context parent state).1.2.2 =
       targetAddress (nextChain parent) := by
-  simp only [RawCtxLoggedParentResponse.updated, advance, selected, if_true]
+  simp only [RawCtxLoggedParentResponse.updated, advance, selected, ite_true]
   change FixedHkdfDomain.ratchet.address (nextChain parent).toList = _
   simp [targetAddress, RawCtxSelectedPendingCut.requestAddress, RawCtxChainSend.nativeRequest,
     RawCtxKdfRequestTable.address, RawCtxFreshChainCut.concreteChain,

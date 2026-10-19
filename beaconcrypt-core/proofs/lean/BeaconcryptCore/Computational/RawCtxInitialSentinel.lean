@@ -40,7 +40,7 @@ def entry (other : RootOutput) (extra : NonceOutput) : Entry := ⟨sentinel, oth
 theorem lookup_private (prior : Prior) (other target : RootOutput) (extra : NonceOutput) (chain : RatchetChain) :
     lookup prior (entry other extra) target (RawCtxKdfRequestTable.address (RawCtxChainSend.nativeRequest chain)) =
       prior (RawCtxKdfRequestTable.address (RawCtxChainSend.nativeRequest chain)) := by
-  simp only [lookup, entry, private_ne, if_false]
+  simp only [lookup, entry, private_ne, ite_false]
 
 /-- The first-child observer reuses one supplied complete child for hidden requests and the original retained lookup for every known request. -/
 noncomputable def firstStep (prior : Prior) (challenge : RatchetKdfResponse) : Slot → Slot × RatchetMaterial
@@ -55,7 +55,7 @@ noncomputable def firstStep (prior : Prior) (challenge : RatchetKdfResponse) : S
 theorem first_step (prior : Prior) (other : RootOutput) (extra : NonceOutput)
     (challenge : RatchetKdfResponse) (slot : Slot) :
     RawCtxSelectedParentTable.step prior (entry other extra) challenge slot = firstStep prior challenge slot := by
-  cases slot <;> simp only [RawCtxSelectedParentTable.step, firstStep, entry, private_ne, if_false]
+  cases slot <;> simp only [RawCtxSelectedParentTable.step, firstStep, entry, private_ne, ite_false]
 
 
 end BeaconcryptCore.Computational.RawCtxInitialSentinel

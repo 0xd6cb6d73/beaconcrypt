@@ -79,13 +79,13 @@ theorem candidate_map (initial : RustM (KernelOf Chain)) (pending : pqxdh.Server
   apply bind_congr
   intro valid
   cases valid
-  · simp only [Bool.not_false, if_true, map_pure]; rfl
-  · simp only [Bool.not_true, Bool.false_eq_true, if_false, map_bind]
+  · simp only [Bool.not_false, ite_true, map_pure]; rfl
+  · simp only [Bool.not_true, Bool.false_eq_true, ite_false, map_bind]
     apply bind_congr
     intro reserved
     cases reserved
-    · simp only [Bool.not_false, if_true, map_pure]; rfl
-    · simp only [Bool.not_true, Bool.false_eq_true, if_false]
+    · simp only [Bool.not_false, ite_true, map_pure]; rfl
+    · simp only [Bool.not_true, Bool.false_eq_true, ite_false]
       cases initial with
       | fail error => simp only [PqxdhInitialGenericBuilder.continueRust, map_pure]; rfl
       | div => simp only [PqxdhInitialGenericBuilder.continueRust, map_pure]; rfl
@@ -98,8 +98,8 @@ theorem candidate_map (initial : RustM (KernelOf Chain)) (pending : pqxdh.Server
               apply bind_congr
               intro allocated
               cases allocated
-              · simp only [Bool.not_false, if_true, map_pure]; rfl
-              · simp only [Bool.not_true, Bool.false_eq_true, if_false]
+              · simp only [Bool.not_false, ite_true, map_pure]; rfl
+              · simp only [Bool.not_true, Bool.false_eq_true, ite_false]
                 cases binding : pending.key_id_binding with
                 | fail error => simp only [map_pure]; rfl
                 | div => simp only [map_pure]; rfl

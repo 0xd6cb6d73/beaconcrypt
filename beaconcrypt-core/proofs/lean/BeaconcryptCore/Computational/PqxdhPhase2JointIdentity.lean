@@ -136,7 +136,7 @@ theorem staticDh_class_bound (handle : Converted) (peer : PeerEncoding)
     (predicate : SourceSpec.Domain → Prop) [DecidablePred predicate] :
     (staticDh handle peer).IsQueryBoundP predicate
       (if predicate (.inl (request handle peer)) then 1 else 0) := by
-  simp only [staticDh, bind_pure_comp, isQueryBoundP_map_iff, isQueryBoundP_query_iff]
+  simp only [staticDh]
   by_cases selected : predicate (.inl (request handle peer)) <;> simp [selected]
 
 /-- All replies use at most one source static-DH request. -/

@@ -132,7 +132,7 @@ private theorem private_risk (source : FixedHkdfSha512NoSaltSource) (stage : Nat
         | some value => exact False.elim (absent (List.mem_append_left _ (covered _ value found)))
       have unchanged : cursorAddress (advance store.2 request output) =
           inputAddress (PqxdhOrderedChainHybrids.nextChain output) := by
-        simp only [advance, matching, if_true]
+        simp only [advance, matching, ite_true]
         rfl
       rw [unchanged, QueryCache.cacheQuery_of_ne (spec := JointKdfRO) store.1 output different, missingNext] at bad
       exact bad rfl
@@ -149,7 +149,7 @@ theorem callback_risk (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMix
       if privateQuery query then ((k + 1 : Nat) : ℝ≥0∞) * (2 ^ 256 : ℝ≥0∞)⁻¹ else 0 := by
   cases found : RawCtxSelectedFamilyContext.queryAddress query with
   | none =>
-    simp only [privateQuery, found, ne_eq, not_true_eq_false, if_false]
+    simp only [privateQuery, found, ne_eq, not_true_eq_false, ite_false]
     apply le_of_eq
     apply probEvent_eq_zero_iff.mpr
     intro result supported bad

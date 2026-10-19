@@ -214,7 +214,7 @@ theorem source_length {Metadata Auxiliary Result : Type}
     obtain ⟨reply, headSupport, tailSupport⟩ := supported
     have head := source_step_length source writer challenge sender decode query state reply headSupport
     have tail := ih reply.1 _ _ (sendBound.2 reply.1) (rawBound.2 reply.1) reply.2 result tailSupport
-    cases query <;> simp only [Sum.isLeft, Sum.isRight, if_true, Bool.false_eq_true, if_false, not_true_eq_false, false_or] at head tail sendBound rawBound <;> omega
+    cases query <;> simp only [Sum.isLeft, Sum.isRight, ite_true, Bool.false_eq_true, ite_false, not_true_eq_false, false_or] at head tail sendBound rawBound <;> omega
 
 open PqxdhFullSecretInputKdf ENNReal
 

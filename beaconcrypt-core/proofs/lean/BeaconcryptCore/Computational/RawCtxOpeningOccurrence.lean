@@ -48,7 +48,7 @@ theorem program_scoped {Context Plaintext : Type} (target : Std.U64) (context : 
           refine ⟨Or.inl ?_, ?_⟩
           · simp only [Outside, not_false_eq_true]
           · intro response
-            rw [if_neg (by simp only [Outside, not_false_eq_true])]
+            rw [ite_eq_right (by simp only [Outside, not_false_eq_true])]
             apply ih _ (hdepth ▸ resume_rank pending response) _ _ rfl
             simpa only [hscope.1, hscope.2] using oracle_resume_scope pending response
 

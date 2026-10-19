@@ -112,9 +112,9 @@ theorem public_consistent {Auxiliary : Type}
   simp only [consistent, RawCtxSelectedAliasCoupling.routed, inputs, RawCtxSelectedPublicTrace.inputs,
     public_input_exact]
   by_cases bytes : view.input = target.toList
-  · simp only [bytes, if_true, alternate, JointKdfViewQuery.address, FixedHkdfDomain.address,
+  · simp only [bytes, ite_true, alternate, JointKdfViewQuery.address, FixedHkdfDomain.address,
       PqxdhJointKdf.JointKdfAddress.mk.injEq, and_true]
-  · simp only [bytes, if_false, JointKdfViewQuery.address, FixedHkdfDomain.address,
+  · simp only [bytes, ite_false, JointKdfViewQuery.address, FixedHkdfDomain.address,
       PqxdhJointKdf.JointKdfAddress.mk.injEq, and_false]
 
 /-- The concrete combined backend changes only at a byte candidate recorded by the same adaptive program. Full original cache, auxiliary state and optional results survive the bound. -/

@@ -13,9 +13,9 @@ theorem randomSeal_uniform_bound (input : ModifiedNonceAeadSealInput)
     ((modifiedNonceAeadINDDollarRandomSealOracle input).run state).IsTotalQueryBound
       (if input.nonce ∈ state.usedNonces then 0 else input.plaintext.length + 16) := by
   by_cases used : input.nonce ∈ state.usedNonces
-  · simp only [modifiedNonceAeadINDDollarRandomSealOracle, StateT.run, used, if_true]
+  · simp only [modifiedNonceAeadINDDollarRandomSealOracle, StateT.run, used, ite_true]
     trivial
-  · simp only [modifiedNonceAeadINDDollarRandomSealOracle, StateT.run, used, if_false]
+  · simp only [modifiedNonceAeadINDDollarRandomSealOracle, StateT.run, used, ite_false]
     apply OracleComp.isTotalQueryBound_bind (uniformFixedBytes_isTotalQueryBound input.plaintext.length)
     intro body
     simpa only [bind_pure_comp, OracleComp.IsTotalQueryBound, OracleComp.isQueryBound_map_iff] using

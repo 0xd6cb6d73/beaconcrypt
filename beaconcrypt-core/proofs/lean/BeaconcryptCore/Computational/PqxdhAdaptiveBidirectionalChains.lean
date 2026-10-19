@@ -228,7 +228,7 @@ theorem sourceRun_uniform_bound {Result : Type} (source : FixedHkdfSha512NoSaltS
     cases query with
     | inl coin => simp [sourceImpl, StateT.run, IsCoin]
     | inr direction => cases direction <;> simp [sourceImpl, StateT.run, IsCoin]
-  simpa only [IsTotalQueryBound, IsQueryBoundP, not_true_eq_false, false_or, if_true] using forwarded
+  simpa only [IsTotalQueryBound, IsQueryBoundP, not_true_eq_false, false_or, ite_true] using forwarded
 
 /-- Both private tapes retain arbitrary client randomness and perform no additional draw when read. -/
 theorem tapeRun_uniform_bound {Result : Type} (fallback : Material)
@@ -243,7 +243,7 @@ theorem tapeRun_uniform_bound {Result : Type} (fallback : Material)
     | inr direction => cases direction with
       | false => cases entries : state.remaining.1 <;> simp [tapeImpl, StateT.run, IsCoin, entries]
       | true => cases entries : state.remaining.2 <;> simp [tapeImpl, StateT.run, IsCoin, entries]
-  simpa only [IsTotalQueryBound, IsQueryBoundP, not_true_eq_false, false_or, if_true] using forwarded
+  simpa only [IsTotalQueryBound, IsQueryBoundP, not_true_eq_false, false_or, ite_true] using forwarded
 
 /-- Every complete finite-history observer retains the entire adaptive client and all final observation work. -/
 theorem tapeObserver_uniform_bound {Context Result : Type} (fallback : Material)
@@ -335,9 +335,9 @@ theorem sourceRun_requests_bound {Result : Type} (source : FixedHkdfSha512NoSalt
       (bound.2 reply.1) reply.2 rest
     by_cases advances : IsDirection selected query
     · have positive := bound.1.resolve_left (not_not.mpr advances)
-      simp only [advances, if_true] at step tail
+      simp only [advances, ite_true] at step tail
       omega
-    · simp only [advances, if_false, Nat.add_zero] at step tail
+    · simp only [advances, ite_false, Nat.add_zero] at step tail
       omega
 
 /-- The initial reduction includes the same complete interleaving client after its two challenge calls. -/

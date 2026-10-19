@@ -82,16 +82,16 @@ theorem program_quiet (sender : Std.U64) (decode : RawCtxReceive.FrameDecoder)
         · exact later _ _
         · exact send_quiet _ _ _ quiet (fun result => later result.2 _) _
       · by_cases empty : raw.isEmpty = true
-        · simp only [empty, if_true]
+        · simp only [empty, ite_true]
           exact later _ _
-        · simp only [empty, Bool.false_eq_true, if_false]
+        · simp only [empty, Bool.false_eq_true, ite_false]
           cases decoded : decode raw with
           | none => exact later _ _
           | some frame =>
             by_cases valid : RawCtxReceive.ValidFrame state.expectedSender state.associatedData frame
-            · simp only [valid, if_true]
+            · simp only [valid, ite_true]
               exact receive_quiet _ _ _ quiet (fun result => later (RawCtxChainOwner.publish state result).1 _) _
-            · simp only [valid, if_false]
+            · simp only [valid, ite_false]
               exact later _ _
       · rw [query_all]
         exact ⟨(fun _ impossible => by cases impossible), fun _ => later _ _⟩

@@ -88,25 +88,25 @@ theorem step_recorded {Metadata Auxiliary : Type}
   rcases query with (send | raw) | request
   · simp only [compiler, nested, RawCtxChainOwner.ownerImpl, RawCtxChainOwner.sendOwner, StateT.run]
     by_cases empty : send.isEmpty = true
-    · simp only [empty, if_true]
+    · simp only [empty, ite_true]
       exact simulateQ_pure _ _
-    · simp only [empty, Bool.false_eq_true, if_false, calls, RawCtxSelectedTraceOwner.calls, bind_pure_comp]
+    · simp only [empty, Bool.false_eq_true, ite_false, calls, RawCtxSelectedTraceOwner.calls, bind_pure_comp]
       refine (simulateQ_map _ _ _).trans ?_
       rw [← QueryImpl.simulateQ_compose, send_recorded]
   · simp only [compiler, nested, RawCtxChainOwner.ownerImpl, RawCtxChainOwner.rawReceive, StateT.run]
     by_cases empty : raw.isEmpty = true
-    · simp only [empty, if_true]
+    · simp only [empty, ite_true]
       exact simulateQ_pure _ _
-    · simp only [empty, Bool.false_eq_true, if_false]
+    · simp only [empty, Bool.false_eq_true, ite_false]
       cases decoded : decode raw with
       | none => exact simulateQ_pure _ _
       | some frame =>
         by_cases valid : RawCtxReceive.ValidFrame state.expectedSender state.associatedData frame
-        · simp only [valid, if_true]
+        · simp only [valid, ite_true]
           simp only [calls, RawCtxSelectedTraceOwner.calls, bind_pure_comp]
           refine (simulateQ_map _ _ _).trans ?_
           rw [← QueryImpl.simulateQ_compose, receive_recorded]
-        · simp only [valid, if_false]
+        · simp only [valid, ite_false]
           exact simulateQ_pure _ _
   · simp only [compiler, nested, StateT.run, bind_pure_comp]
     refine (simulateQ_map _ _ _).trans ?_

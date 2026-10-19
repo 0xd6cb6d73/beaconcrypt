@@ -79,7 +79,7 @@ theorem schedule_bound {Send Chain Metadata Result : Type} {count : Nat}
     have total := isQueryBoundP_bind (raw_bound read bytes state kdf) (fun result _ => tail result)
     apply total.mono
     have positive := bounded.1
-    cases kdf <;> simp only [Bool.false_eq_true, if_false, if_true] <;> omega
+    cases kdf <;> simp only [Bool.false_eq_true, ite_false, ite_true] <;> omega
 
 /-- Every possible raw result publishes exactly one complete kernel and its actual optional reply. -/
 theorem raw_publication {Send Chain Metadata : Type} {count : Nat}

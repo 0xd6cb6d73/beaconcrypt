@@ -178,7 +178,7 @@ theorem afterIdentity_bills (baseImpl : QueryImpl baseSpec ProbComp)
         (IsKind kind) (if kind = Kind.localUniform then qKeygen else 0) := by
     simpa only [bind_pure_comp, isQueryBoundP_map_iff] using coins_bills _ qKeygen keygenBound kind
   have total := isQueryBoundP_bind (coins_bills _ qPrekey prekeyBound kind) (fun before _ => nextBound before)
-  cases kind <;> simpa only [afterIdentity, bind_pure_comp, reduceCtorEq, if_true, if_false, Nat.zero_add] using total
+  cases kind <;> simpa only [afterIdentity, bind_pure_comp, reduceCtorEq, ite_true, ite_false, Nat.zero_add] using total
 
 set_option backward.isDefEq.respectTransparency false in
 /-- One live creation makes one joint create request and charges both local primitive samplers, including optional service rejection. -/
@@ -191,7 +191,7 @@ theorem create_bills (baseImpl : QueryImpl baseSpec ProbComp)
     (kind : Kind) :
     (create baseImpl kem setup).IsQueryBoundP (IsKind kind)
       ((if kind = .joint then 1 else 0) + (if kind = Kind.localUniform then qPrekey + qKeygen else 0)) := by
-  cases kind <;> simp only [create, IsKind, reduceCtorEq, if_true, if_false, Nat.add_zero, Nat.zero_add,
+  cases kind <;> simp only [create, IsKind, reduceCtorEq, ite_true, ite_false, Nat.add_zero, Nat.zero_add,
     isQueryBoundP_query_bind_iff]
   all_goals simp only [not_true_eq_false, false_or, Nat.zero_lt_succ, true_and, not_false_eq_true, true_or, Nat.sub_self]
   all_goals rintro (_ | identity)

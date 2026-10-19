@@ -65,7 +65,7 @@ theorem normalization (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMix
         ((k + j + 1 : Nat) : ℝ≥0∞) * (2 ^ 256 : ℝ≥0∞)⁻¹ := by
   classical
   rw [← (source_adjacent source writer depth sender route decode client state initial valid.2.1).2, normalized]
-  exact (ofReal_tvDist_bind_left_event_le _ _ _ Cached (fun cut good => by simp only [good, if_false])).trans
+  exact (ofReal_tvDist_bind_left_event_le _ _ _ Cached (fun cut good => by simp only [good, ite_false])).trans
     (cached_risk source writer depth k sender route decode client budget bounded state initial valid clean)
 
 /-- Any one common complete-state continuation, including a private appended lineage check, preserves the same cached-branch charge. -/

@@ -151,9 +151,9 @@ theorem program_length {Auxiliary Result : Type} {S B : Nat}
     rw [inputs_length] at rest
     by_cases counted : privateQuery query
     · have positive : 0 < budget := bounded.1.resolve_left (not_not_intro counted)
-      simp only [counted, if_true] at rest
+      simp only [counted, ite_true] at rest
       omega
-    · simpa only [counted, if_false, Nat.add_zero] using rest
+    · simpa only [counted, ite_false, Nat.add_zero] using rest
 
 /-- Every actual state-dependent stopped prefix pays only its executed private callbacks; the saved pending query has not yet been appended. -/
 theorem scan_length {Auxiliary Result : Type} {S B : Nat}
@@ -188,9 +188,9 @@ theorem scan_length {Auxiliary Result : Type} {S B : Nat}
       rw [inputs_length] at rest
       by_cases counted : privateQuery query
       · have positive : 0 < budget := bounded.1.resolve_left (not_not_intro counted)
-        simp only [counted, if_true] at rest
+        simp only [counted, ite_true] at rest
         omega
-      · simpa only [counted, if_false, Nat.add_zero] using rest
+      · simpa only [counted, ite_false, Nat.add_zero] using rest
 
 /-- The actual full native family execution retains its initial root-input list and appends at most S+51R executed private requests. -/
 theorem source_length {M P I D K Auxiliary Result : Type} {S B : Nat}

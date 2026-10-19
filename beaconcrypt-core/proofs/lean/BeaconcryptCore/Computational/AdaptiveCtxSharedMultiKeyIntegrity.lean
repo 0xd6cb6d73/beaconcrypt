@@ -105,11 +105,11 @@ theorem family_bound {count : Nat} (decode : Fin (count + 1) → RawDecoder) (c 
       ∑ target : Fin (count + 1), (loss target decode c fallback client (qHash target) (qRaw target)).toReal := by
   have bound := PqxdhComposition.finiteHybridBound_of_hop_bounds (game decode c client) (count + 1)
     (hopLoss decode c fallback client qHash qRaw) (fun hop valid => by
-      simpa only [hopLoss, dif_pos valid] using
+      simpa only [hopLoss, dite_eq_left valid] using
         hop_bound ⟨hop, valid⟩ decode c fallback client (qHash ⟨hop, valid⟩) (qSeal ⟨hop, valid⟩) (qRaw ⟨hop, valid⟩)
           (hashBound ⟨hop, valid⟩) (sealBound ⟨hop, valid⟩) (rawBound ⟨hop, valid⟩) (small ⟨hop, valid⟩))
   rw [← Fin.sum_univ_eq_sum_range] at bound
-  simpa only [hopLoss, dif_pos (Fin.isLt _)] using bound
+  simpa only [hopLoss, dite_eq_left (Fin.isLt _)] using bound
 
 end BeaconcryptCore.Computational.AdaptiveCtxSharedMultiKeyIntegrity
 

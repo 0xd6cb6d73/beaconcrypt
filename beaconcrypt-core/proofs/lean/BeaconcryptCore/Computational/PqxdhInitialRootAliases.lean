@@ -142,7 +142,7 @@ theorem compiler_evaluations (selected : Message) (response : PqxdhInitialRootLa
           apply (isQueryBoundP_query_iff (spec := Expanded) (p := IsEvaluation) (.inr (.inr root)) 1).mpr
           simp
       | family message =>
-          simp only [compiler, IsInitializer, Sum.isRight_inr, if_true]
+          simp only [compiler, IsInitializer, Sum.isRight_inr, ite_true]
           split
           · trivial
           · rw [isQueryBoundP_query_bind_iff (spec := Expanded)]

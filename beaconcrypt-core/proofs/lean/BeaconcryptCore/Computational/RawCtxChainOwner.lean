@@ -59,15 +59,15 @@ theorem rawReceive_native {Kernel Metadata : Type} {m : Type → Type*} [Monad m
       Prod.map id (nativeState interpret) <$> (rawReceive calls decode raw).run state := by
   simp only [RawCtxWholeOwner.rawReceive, rawReceive, nativeState, StateT.run]
   by_cases empty : raw.isEmpty = true
-  · simp only [empty, if_true, simulateQ_pure, map_pure, RawCtxWholeOwner.publish, publish, Prod.map_def, id_eq, nativeState]
-  · simp only [empty, Bool.false_eq_true, if_false]
+  · simp only [empty, ite_true, simulateQ_pure, map_pure, RawCtxWholeOwner.publish, publish, Prod.map_def, id_eq, nativeState]
+  · simp only [empty, Bool.false_eq_true, ite_false]
     cases decoded : decode raw with
     | some frame =>
       by_cases valid : RawCtxReceive.ValidFrame state.expectedSender state.associatedData frame
-      · simp only [valid, if_true, bind_pure_comp, simulateQ_map, ← QueryImpl.simulateQ_compose]
+      · simp only [valid, ite_true, bind_pure_comp, simulateQ_map, ← QueryImpl.simulateQ_compose]
         rw [realized, Functor.map_map, Functor.map_map]
         rfl
-      · simp only [valid, if_false, simulateQ_pure, map_pure, RawCtxWholeOwner.publish, publish, Prod.map_def, id_eq, nativeState]
+      · simp only [valid, ite_false, simulateQ_pure, map_pure, RawCtxWholeOwner.publish, publish, Prod.map_def, id_eq, nativeState]
     | none =>
       simp only [simulateQ_pure, map_pure, RawCtxWholeOwner.publish, publish, Prod.map_def, id_eq, nativeState]
 
@@ -90,8 +90,8 @@ theorem sendOwner_native {Kernel Metadata : Type} {m : Type → Type*} [Monad m]
       Prod.map id (nativeState interpret) <$> (sendOwner calls senderId plaintext).run state := by
   simp only [RawCtxSourceSend.sendOwner, sendOwner, nativeState, StateT.run]
   by_cases empty : plaintext.isEmpty = true
-  · simp only [empty, if_true, simulateQ_pure, map_pure, Prod.map_def, id_eq, nativeState]
-  · simp only [empty, Bool.false_eq_true, if_false, bind_pure_comp, simulateQ_map, ← QueryImpl.simulateQ_compose]
+  · simp only [empty, ite_true, simulateQ_pure, map_pure, Prod.map_def, id_eq, nativeState]
+  · simp only [empty, Bool.false_eq_true, ite_false, bind_pure_comp, simulateQ_map, ← QueryImpl.simulateQ_compose]
     rw [realized, Functor.map_map, Functor.map_map]
     rfl
 

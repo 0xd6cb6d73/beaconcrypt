@@ -54,7 +54,7 @@ theorem prepare_cached_receive_success_inv {SendChain ReceiveChain Material : Ty
   rename_i htargetBound
   obtain ⟨logical, hlogical⟩ := control.RatchetState.receive_key_at_total state.control targetSlot
   cases logical <;> simp only [hlogical, core.option.Option.Insts.CoreCmpPartialEqOption.eq,
-    core.U64.Insts.CoreCmpPartialEqU64, bind_tc_ok, Bool.false_eq_true, if_false, RustM.ok.injEq, reduceCtorEq] at h
+    core.U64.Insts.CoreCmpPartialEqU64, bind_tc_ok, Bool.false_eq_true, ite_false, RustM.ok.injEq, reduceCtorEq] at h
   rename_i logicalSequence
   split at h <;> try simp only [RustM.ok.injEq, reduceCtorEq] at h
   rename_i hlogicalSequence

@@ -109,17 +109,17 @@ theorem callback_no_root
   cases query with
   | inl query =>
       simp only [work, original, simulateQ_spec_query]
-      simpa only [PqxdhBeaconPhase2SharedBounds.rootCall, PqxdhBeaconPhase2SharedBounds.isRoot, Bool.false_eq_true, if_false] using
+      simpa only [PqxdhBeaconPhase2SharedBounds.rootCall, PqxdhBeaconPhase2SharedBounds.isRoot, Bool.false_eq_true, ite_false] using
         (handle_roots attachedVerify primitives count fixed localImpl challenge (.inl query) state)
   | inr query =>
       cases query with
       | inl query =>
           simp only [work, original, simulateQ_spec_query]
-          simpa only [PqxdhBeaconPhase2SharedBounds.rootCall, PqxdhBeaconPhase2SharedBounds.isRoot, Bool.false_eq_true, if_false] using
+          simpa only [PqxdhBeaconPhase2SharedBounds.rootCall, PqxdhBeaconPhase2SharedBounds.isRoot, Bool.false_eq_true, ite_false] using
             (handle_roots attachedVerify primitives count fixed localImpl challenge (.inr (.inl query)) state)
       | inr response =>
           simp only [work, original, simulateQ_spec_query]
-          simpa only [PqxdhBeaconPhase2SharedBounds.rootCall, PqxdhBeaconPhase2SharedBounds.isRoot, Bool.false_eq_true, if_false] using
+          simpa only [PqxdhBeaconPhase2SharedBounds.rootCall, PqxdhBeaconPhase2SharedBounds.isRoot, Bool.false_eq_true, ite_false] using
             (handle_roots attachedVerify primitives count fixed localImpl challenge (.inr (.inr (.application response))) state)
 
 noncomputable def interpreted

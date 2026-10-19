@@ -247,7 +247,7 @@ theorem wrapper_source_preserves (primitives : Primitives) (count : ℕ)
   | inr report =>
     cases translated : translateReport primitives report monitor.snapshot with
     | none =>
-      simp only [wrapper, StateT.run, translated, pure_bind, simulateQ_pure] at supported
+      simp only [wrapper, StateT.run, translated, simulateQ_pure] at supported
       subst result
       simp only [Compatible, candidateAccepted, translated, Option.any_none, Bool.or_false]
       exact ⟨snapshot, occurred⟩
@@ -314,7 +314,7 @@ theorem wrapper_query_step (primitives : Primitives) (count : ℕ)
     | none => trivial
     | some forgery =>
       simp only [bind_pure_comp, OracleComp.isQueryBoundP_map_iff,
-        OracleComp.isQueryBoundP_query_iff, reportingClass, SourceClass, if_false]
+        OracleComp.isQueryBoundP_query_iff, reportingClass, SourceClass]
       intro impossible
       exact impossible.elim
 
@@ -450,7 +450,7 @@ theorem wrapper_observation (primitives : Primitives) (count : ℕ) (query : Pro
   | inr report =>
     cases translated : translateReport primitives report state.snapshot with
     | none =>
-      simp only [wrapper, StateT.run, translated, pure_bind, mem_support_pure_iff] at supported
+      simp only [wrapper, StateT.run, translated, mem_support_pure_iff] at supported
       subst result
       exact ⟨rfl, by simp only [translated], rfl⟩
     | some forgery =>
@@ -487,9 +487,9 @@ theorem wrapperRun_attempt_bound (primitives : Primitives) (count : ℕ) {Result
     have remaining := ih reply.1 _ (bounded.2 reply.1) reply.2 result rest
     by_cases report : IsCandidateReport query
     · have positive : 0 < qReport := bounded.1.resolve_left (not_not.mpr report)
-      simp only [report, if_true] at counted remaining
+      simp only [report, ite_true] at counted remaining
       omega
-    · simp only [report, if_false] at counted remaining
+    · simp only [report, ite_false] at counted remaining
       omega
 
 /-- Interpreting the same source cannot introduce a public monitor result outside the complete public translation support. -/

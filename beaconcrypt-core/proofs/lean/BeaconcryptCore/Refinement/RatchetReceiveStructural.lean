@@ -22,7 +22,7 @@ theorem begin_receive_old_missing {Context : Type}
     (hmissing : lookup_receive_key entry.refined.control target = ok core.option.Option.None) :
     begin_receive entry target context = ok (ReceiveEffect.ReceiveRejected entry context) := by
   simp only [begin_receive, plan_receive_until_replay entry.refined.control target hpast,
-    bind_tc_ok, if_true, ratchet.refined.prepare_cached_receive, hmissing, receive_rejected]
+    bind_tc_ok, ite_true, ratchet.refined.prepare_cached_receive, hmissing, receive_rejected]
 
 /-- Capacity rejection preserves the entire entry without any validity premise. -/
 theorem begin_receive_capacity_rejected {Context : Type}
@@ -51,7 +51,7 @@ theorem begin_receive_cached_valid {Context : Type}
       ratchet.refined.CachedPreparationFacts entry.refined target prepared := by
   obtain ⟨prepared, hprepare, hfacts⟩ := hvalid.prepare_cached_receive entry.refined target slot hlookup
   exact ⟨prepared, by simp only [begin_receive, plan_receive_until_replay entry.refined.control target hpast,
-    bind_tc_ok, if_true, hprepare], hfacts⟩
+    bind_tc_ok, ite_true, hprepare], hfacts⟩
 
 /-- The prepared authentication request is tied to the original target and exact cached or future transaction. -/
 def PreparedReceiveRefines {AD PT CT Context : Type}

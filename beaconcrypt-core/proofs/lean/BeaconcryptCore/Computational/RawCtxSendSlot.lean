@@ -42,13 +42,13 @@ theorem sendOwner_ready {Metadata : Type} (senderId : Std.U64) (plaintext : Pqxd
 theorem sendOwner_empty {Metadata : Type} (senderId : Std.U64) (plaintext : Pqxdh.Bytes)
     (state : State Metadata) (hempty : plaintext.isEmpty = true) :
     sendOwner senderId plaintext state = pure (.ok none, state) := by
-  simp only [sendOwner, hempty, if_true]
+  simp only [sendOwner, hempty, ite_true]
 
 /-- A nonempty request to an absent slot keeps its assertion diagnostic distinct from API None. -/
 theorem sendOwner_absent {Metadata : Type} (senderId : Std.U64) (plaintext : Pqxdh.Bytes)
     (state : State Metadata) (hnonempty : plaintext.isEmpty = false) (hslot : state.owner.slot = none) :
     sendOwner senderId plaintext state = pure (.error .absent, state) := by
-  simp only [sendOwner, hnonempty, Bool.false_eq_true, if_false, hslot, run_absent, pure_bind]
+  simp only [sendOwner, hnonempty, Bool.false_eq_true, ite_false, hslot, run_absent, pure_bind]
   rw [← hslot]
 
 /-- Concrete private sealing runs outside the local vacant slot and retains its full primitive state. -/

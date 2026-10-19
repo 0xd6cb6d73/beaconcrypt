@@ -116,11 +116,11 @@ theorem pending_source (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
   simp only [prepare, mem_support_bind_iff] at supported
   obtain ⟨cut, head, after⟩ := supported
   cases cut with
-  | complete result before => simp [collect, support_map] at after
-  | other saved => simp [collect, support_map] at after
+  | complete result before => simp [collect] at after
+  | other saved => simp [collect] at after
   | pending original before =>
     cases found : before.1.2.1 (RawCtxSelectedFamilyContext.address original) with
-    | some output => simp [collect, found, support_map] at after
+    | some output => simp [collect, found] at after
     | none =>
       simp only [collect, found, mem_support_pure_iff, Mode.pending.injEq] at after
       obtain ⟨rfl, rfl⟩ := after

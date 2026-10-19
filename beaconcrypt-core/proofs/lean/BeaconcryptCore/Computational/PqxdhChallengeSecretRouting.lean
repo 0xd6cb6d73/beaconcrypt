@@ -22,20 +22,20 @@ theorem honest_decapsulation
     {ciphertext : MlKem768Ciphertext} {secret : MlKemSharedSecret}
     (encapsulated : (ciphertext, secret) ∈ support (simulateQ (kemAmbientImpl baseImpl) (kem.encaps pk))) :
     𝒮[simulateQ (kemAmbientImpl baseImpl) (kem.decaps sk ciphertext)] = pure (some secret) := by
-  letI : MeasurableSpace MlKem768PublicKey := ⊤
-  letI : DiscreteMeasurableSpace MlKem768PublicKey := ⟨fun _ => by simp⟩
-  letI : MeasurableSpace MlKem768Ciphertext := ⊤
-  letI : DiscreteMeasurableSpace MlKem768Ciphertext := ⟨fun _ => by simp⟩
-  letI : MeasurableSpace MlKemSharedSecret := ⊤
-  letI : DiscreteMeasurableSpace MlKemSharedSecret := ⟨fun _ => by simp⟩
-  letI : MeasurableSpace KemSK := ⊤
-  letI : DiscreteMeasurableSpace KemSK := ⟨fun _ => by simp⟩
-  letI : MeasurableSpace (MlKem768PublicKey × KemSK) := ⊤
-  letI : DiscreteMeasurableSpace (MlKem768PublicKey × KemSK) := ⟨fun _ => by simp⟩
-  letI : MeasurableSpace (MlKem768Ciphertext × MlKemSharedSecret) := ⊤
-  letI : DiscreteMeasurableSpace (MlKem768Ciphertext × MlKemSharedSecret) := ⟨fun _ => by simp⟩
-  letI : MeasurableSpace (Option MlKemSharedSecret) := ⊤
-  letI : DiscreteMeasurableSpace (Option MlKemSharedSecret) := ⟨fun _ => by simp⟩
+  let : MeasurableSpace MlKem768PublicKey := ⊤
+  let : DiscreteMeasurableSpace MlKem768PublicKey := ⟨fun _ => by simp⟩
+  let : MeasurableSpace MlKem768Ciphertext := ⊤
+  let : DiscreteMeasurableSpace MlKem768Ciphertext := ⟨fun _ => by simp⟩
+  let : MeasurableSpace MlKemSharedSecret := ⊤
+  let : DiscreteMeasurableSpace MlKemSharedSecret := ⟨fun _ => by simp⟩
+  let : MeasurableSpace KemSK := ⊤
+  let : DiscreteMeasurableSpace KemSK := ⟨fun _ => by simp⟩
+  let : MeasurableSpace (MlKem768PublicKey × KemSK) := ⊤
+  let : DiscreteMeasurableSpace (MlKem768PublicKey × KemSK) := ⟨fun _ => by simp⟩
+  let : MeasurableSpace (MlKem768Ciphertext × MlKemSharedSecret) := ⊤
+  let : DiscreteMeasurableSpace (MlKem768Ciphertext × MlKemSharedSecret) := ⟨fun _ => by simp⟩
+  let : MeasurableSpace (Option MlKemSharedSecret) := ⊤
+  let : DiscreteMeasurableSpace (Option MlKemSharedSecret) := ⟨fun _ => by simp⟩
   let decapsulation := simulateQ (kemAmbientImpl baseImpl) (kem.decaps sk ciphertext)
   have unique : ∀ recovered ∈ support decapsulation, recovered = some secret := by
     intro recovered supported
@@ -59,7 +59,7 @@ theorem honest_decapsulation
     simpa only [SPMF.pure_apply_self] using certain
   · have absent : Pr[= recovered | decapsulation] = 0 :=
       (probOutput_eq_zero_iff _ _).mpr (fun supported => same (unique _ supported))
-    simpa only [SPMF.pure_apply, if_neg same] using absent
+    simpa only [SPMF.pure_apply, ite_eq_right same] using absent
 
 /-- A functional primitive implementation uses no ambient oracle effects during decapsulation. -/
 structure FunctionalDecapsulation
@@ -143,9 +143,9 @@ theorem route_interpreter
       exact simulateQ_spec_query (publicImpl kem secret challenge) request
   | inr request =>
       by_cases same : request.ciphertext = challenge
-      · simp only [QueryImpl.compose, route, actualImpl, same, if_true, agreement, pure_bind]
+      · simp only [QueryImpl.compose, route, actualImpl, same, ite_true, agreement, pure_bind]
         exact simulateQ_pure _ _
-      · simp only [QueryImpl.compose, route, actualImpl, same, if_false]
+      · simp only [QueryImpl.compose, route, actualImpl, same, ite_false]
         change simulateQ (publicImpl kem secret challenge)
           (((MlKemCCAOracleSpec baseSpec).query (.inr request.ciphertext) :
             OracleComp (MlKemCCAOracleSpec baseSpec) (Option MlKemSharedSecret)) >>=
@@ -201,7 +201,7 @@ theorem route_challenge (source : FixedHkdfSha512NoSaltSource)
     (coordinates : KnownPqxdhRootCoordinates) :
     route (baseSpec := baseSpec) source challenge supplied (.inr ⟨challenge, coordinates⟩) =
       pure (some (productionHiddenRoot source coordinates supplied)) := by
-  simp only [route, if_true, pure_bind, Option.map_some]
+  simp only [route, ite_true, pure_bind, Option.map_some]
 
 /-- The complete private protocol context and continuation are internal to the reduction. Only the eventual Boolean is the game observation. -/
 structure Protocol (baseSpec : OracleSpec ι) where
@@ -250,7 +250,7 @@ theorem native_eq_real
       (nativeMain source kem (runtimeOfImpl (kemAmbientImpl baseImpl)) protocol)] =
       oneKeyBranch kem (runtimeOfImpl (kemAmbientImpl baseImpl)) (reduction source kem protocol) true := by
   simp only [nativeMain, oneKeyBranch, runtimeOfImpl_evalDist, oneKeyBranchMain, oneKeyPrefix,
-    oneKeyFinish, reduction, if_true, simulateQ_bind, pure_bind, bind_assoc]
+    oneKeyFinish, reduction, ite_true, simulateQ_bind, pure_bind, bind_assoc]
   apply evalDist_eq_of_evalSPMF_eq
   apply evalSPMF_bind_congr
   rintro ⟨publicKey, secretKey⟩ generated
@@ -289,7 +289,7 @@ theorem random_eq_branch
       (randomMain source kem (runtimeOfImpl (kemAmbientImpl baseImpl)) protocol)] =
       oneKeyBranch kem (runtimeOfImpl (kemAmbientImpl baseImpl)) (reduction source kem protocol) false := by
   simp only [randomMain, oneKeyBranch, runtimeOfImpl_evalDist, oneKeyBranchMain, oneKeyPrefix,
-    oneKeyFinish, reduction, Bool.false_eq_true, if_false, publicImpl, pure_bind, bind_assoc]
+    oneKeyFinish, reduction, Bool.false_eq_true, ite_false, publicImpl, pure_bind, bind_assoc]
   rfl
 
 /-- The complete correlated source hop is one ordinary IND-CCA advantage. It replaces the shared secret jointly, not each derived root independently. -/

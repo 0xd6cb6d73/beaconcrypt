@@ -36,7 +36,7 @@ theorem target_step_bound {count : Nat} (real : Fin count → Bool) (decode : Fi
       simp only [reductionImpl, StateT.run, bind_pure_comp, isQueryBoundP_map_iff, TargetClass]
       exact (isQueryBoundP_query_iff p selected _).mpr (by intro hit; simp [hit])
   | inr other =>
-      simp only [reductionImpl, StateT.run, bind_pure_comp, isQueryBoundP_map_iff, TargetClass, if_false]
+      simp only [reductionImpl, StateT.run, bind_pure_comp, isQueryBoundP_map_iff, TargetClass, ite_false]
       apply forward_bound
       simp only [unavailable]
       exact isQueryBoundP_false _ 0
@@ -110,7 +110,7 @@ theorem uniform_step_bound {count : Nat} (real : Fin count → Bool) (decode : F
   cases query with
   | inl selected =>
       simp only [reductionImpl, StateT.run, bind_pure_comp, isQueryBoundP_map_iff,
-        UniformRoute, PrivateRoute, if_false]
+        UniformRoute, PrivateRoute, ite_false]
       exact (isQueryBoundP_query_iff SourceUniform selected _).mpr (by intro hit; simp [hit])
   | inr other =>
       simp only [reductionImpl, StateT.run, bind_pure_comp, isQueryBoundP_map_iff, UniformRoute, PrivateRoute]
@@ -134,16 +134,16 @@ theorem wrapped_uniform_bound {count : Nat} (real : Fin count → Bool) (decode 
     (fun query budget allowed => by
       by_cases coins : UniformRoute query
       · have noPrivate : ¬PrivateRoute real query := fun hit => private_not_uniform real query hit coins
-        simp only [coins, noPrivate, if_true, if_false] at allowed ⊢
+        simp only [coins, noPrivate, ite_true, ite_false] at allowed ⊢
         change 1 + (budget.1 - 1 + 64 * budget.2) = budget.1 + 64 * budget.2
         simp only [not_true_eq_false, false_or] at allowed
         omega
       · by_cases privateCall : PrivateRoute real query
-        · simp only [coins, privateCall, if_true, if_false] at allowed ⊢
+        · simp only [coins, privateCall, ite_true, ite_false] at allowed ⊢
           change 64 + (budget.1 + 64 * (budget.2 - 1)) = budget.1 + 64 * budget.2
           simp only [not_true_eq_false, false_or] at allowed
           omega
-        · simp only [coins, privateCall, if_false]
+        · simp only [coins, privateCall, ite_false]
           change 0 + (budget.1 + 64 * budget.2) = budget.1 + 64 * budget.2
           exact Nat.zero_add _) entry
 

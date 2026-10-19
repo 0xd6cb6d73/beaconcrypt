@@ -36,9 +36,9 @@ theorem decode_encode (pool : PqxdhLiveKemBirth.Pool KemSK) (selected : Nat)
     (handle : Handle) (known : Known pool handle) :
     decode selected target (encode selected handle) = handle := by
   by_cases same : handle.2 = selected
-  · simpa only [encode, if_pos same, decode] using
+  · simpa only [encode, ite_eq_left same, decode] using
       Prod.ext (selected_public pool selected target secret present handle known same).symm same.symm
-  · simp only [encode, if_neg same, decode]
+  · simp only [encode, ite_eq_right same, decode]
 
 /-- Every retained native KEM payload resolves to the actual private creation pool. Terminal phases contain no such payload. -/
 def Owner (pool : PqxdhLiveKemBirth.Pool KemSK) (state : RawCtxBeaconLifecycle.State I D Handle) : Prop :=

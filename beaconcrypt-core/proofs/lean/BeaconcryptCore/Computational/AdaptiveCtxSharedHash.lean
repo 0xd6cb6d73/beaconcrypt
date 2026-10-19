@@ -81,11 +81,11 @@ theorem seal_interpretation (c : Pqxdh.Crypto) (key : CtxKey) (input : CtxSealIn
     reassemble <$> (simulateQ hashImpl (localSeal c key input state)).run cache =
       canonicalCtx c key (.inr input) (install state cache) := by
   by_cases used : input.nonce ∈ state.usedNonces
-  · simp only [localSeal, used, if_true, simulateQ_pure]
+  · simp only [localSeal, used, ite_true, simulateQ_pure]
     rw [StateT.run_pure]
     simp [map_pure, reassemble, canonicalCtx, ctxAdversaryImpl, ctxSealOracle,
       install, used, StateT.run, sealPrivateInputs]
-  · simp only [localSeal, used, if_false, simulateQ_bind, simulateQ_spec_query, hashImpl,
+  · simp only [localSeal, used, ite_false, simulateQ_bind, simulateQ_spec_query, hashImpl,
       QueryImpl.add_apply_inr, simulateQ_pure]
     rw [StateT.run_bind]
     simp only [StateT.run_pure, map_bind, map_pure, reassemble, install]

@@ -575,7 +575,7 @@ theorem dispatch_complete_eq_source
     intro output
     simp [dispatch, filteredNext, bad, evalKem, complete, rootProtocol]
   · by_cases eligible : targetEligible parameters prepared = true
-    · simp only [dispatch, filteredNext, bad, Bool.false_eq_true, if_false, eligible, if_true,
+    · simp only [dispatch, filteredNext, bad, Bool.false_eq_true, ite_false, eligible, ite_true,
         totalNext, totalTargetContinuation, evalKem_bind, evalKem_ambient, bind_assoc]
       apply evalSPMF_bind_congr'
       intro ephemeral

@@ -157,10 +157,10 @@ theorem occurred_probability_le_stopped (primitives : Primitives) {count : ℕ}
     | inr candidate =>
       rw [stopAtFreshReport_report]
       by_cases accepted : ReportEvent primitives (familyPublic primitives seeds) candidate state
-      · simp only [accepted, if_pos, simulateQ_pure, StateT.run_pure, probEvent_pure,
+      · simp only [accepted, ite_eq_left, simulateQ_pure, StateT.run_pure, probEvent_pure,
           StoppedReportEvent]
         exact probEvent_le_one
-      · simp only [accepted, if_false, simulateQ_query_bind, StateT.run_bind]
+      · simp only [accepted, ite_false, simulateQ_query_bind, StateT.run_bind]
         change Pr[fun result => result.2.occurred = true |
           (pure ((), ReportingState.mk state (false || decide
             (ReportEvent primitives (familyPublic primitives seeds) candidate state)) (reported ++ [candidate])) >>= fun result =>
@@ -355,9 +355,9 @@ theorem reportingExecution_report_bound (primitives : Primitives) {count : ℕ} 
     have remaining := ih answer _ (bounded.2 answer) next result restSupport
     by_cases selected : IsReport query
     · have positive : 0 < bound := bounded.1.resolve_left (not_not.mpr selected)
-      simp only [selected, if_pos] at stepCount remaining
+      simp only [selected, ite_eq_left] at stepCount remaining
       omega
-    · simp only [selected, if_false] at stepCount remaining
+    · simp only [selected, ite_false] at stepCount remaining
       omega
 
 /-- Source event recognition uses public deterministic verification, with no extra random or primitive-oracle request. -/

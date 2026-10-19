@@ -376,9 +376,9 @@ theorem lazyRun_trace_bound (primitives : Primitives)
     have remaining := ih reply.1 _ (bounded.2 reply.1) reply.2 result supported
     by_cases selected : predicate query
     · have positive : 0 < bound := bounded.1.resolve_left (not_not.mpr selected)
-      simp only [selected, if_true] at stepCount remaining
+      simp only [selected, ite_true] at stepCount remaining
       omega
-    · simp only [selected, if_false] at stepCount remaining
+    · simp only [selected, ite_false] at stepCount remaining
       omega
 
 /-- Exactly one new private seed is appended by creation; every other source request retains the prefix. This asserts fresh indices, not distinct seed or public-key bytes. -/
@@ -422,9 +422,9 @@ theorem lazyRun_seed_extension (primitives : Primitives) {Result : Type}
     rw [List.length_append, firstCount]
     by_cases selected : IsCreate query
     · have positive : 0 < qCreate := creates.1.resolve_left (not_not.mpr selected)
-      simp only [selected, if_true] at laterCount ⊢
+      simp only [selected, ite_true] at laterCount ⊢
       omega
-    · simpa only [selected, if_false, Nat.zero_add] using laterCount
+    · simpa only [selected, ite_false, Nat.zero_add] using laterCount
 
 end BeaconcryptCore.Computational.PqxdhDynamicIdentityPool
 

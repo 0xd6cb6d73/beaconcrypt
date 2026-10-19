@@ -126,7 +126,7 @@ def beginSend {Material Context : Type}
 private theorem map_branch {Input Output : Type} (f : Input → Output) (condition : Prop)
     [Decidable condition] (left right : RustM Input) :
     f <$> (if condition then left else right) = if condition then f <$> left else f <$> right := by
-  by_cases h : condition <;> simp only [h, if_true, if_false]
+  by_cases h : condition <;> simp only [h, ite_true, ite_false]
 
 /-- Generic admission specializes to every branch of the original source send admission. -/
 theorem native_begin {Context : Type}
@@ -157,7 +157,7 @@ theorem begin_total {Material Context : Type}
     simp only [beginSend, hadvanced, hseq, bind_tc_ok]
   · exact ⟨_, rfl⟩
   · cases hkey : advanced.key.available <;>
-      simp only [ratchet.control.SendKey.impl.sequence, hkey, Bool.false_eq_true, if_false, if_true,
+      simp only [ratchet.control.SendKey.impl.sequence, hkey, Bool.false_eq_true, ite_false, ite_true,
         core.option.Option.Insts.CoreCmpPartialEqOption.eq, core.U64.Insts.CoreCmpPartialEqU64,
         ratchet.control.RatchetState.impl.send_sequence, RatchetChain.as_bytes,
         SymmetricRatchetKdfRequest.new, bind_tc_ok]

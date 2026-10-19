@@ -36,7 +36,7 @@ theorem cached_step (sample : ProbComp RootOutput) (cost : Nat) (bounded : sampl
           pure (answer, cache))) 1
       exact ⟨Nat.zero_lt_succ 0, fun _ => True.intro⟩
   | inr message =>
-      simp only [IsCoin, IsRoot, if_true, if_false, Nat.zero_add]
+      simp only [IsCoin, IsRoot, ite_true, ite_false, Nat.zero_add]
       cases hit : cache message with
       | none =>
           simp only [cachedImpl, QueryImpl.add_apply_inr, QueryImpl.withCaching_run_none _ hit,
@@ -241,7 +241,7 @@ theorem post_root_step
   cases request with
   | inl request => exact rootCoins_roots _
   | inr request =>
-      simp only [rootPost, IsPrivateRoot, if_true]
+      simp only [rootPost, IsPrivateRoot]
       split
       · exact (isQueryBoundP_map_iff _ some 1).mpr (query_bounds (coordinates request.coordinates)).2
       · simpa only [bind_pure_comp, isQueryBoundP_map_iff] using (rootCoins_roots
@@ -265,9 +265,9 @@ theorem post_root_bound {Result : Type}
       apply combined.mono
       by_cases selected : IsPrivateRoot (baseSpec := baseSpec) request
       · have positive := bounded.1.resolve_left (not_not.mpr selected)
-        simp only [selected, if_true]
+        simp only [selected, ite_true]
         omega
-      · simp only [selected, if_false, Nat.zero_add, le_refl]
+      · simp only [selected, ite_false, Nat.zero_add, le_refl]
 
 theorem resume_bounds
     (source : FixedHkdfSha512NoSaltSource)
@@ -353,7 +353,7 @@ set_option backward.isDefEq.respectTransparency false in
 theorem challengeFrame_complete (hmac : HmacSha512) (result : Bool) (cache : RootOracle.QueryCache) :
     (challengeFrame hmac (.complete result, cache)).IsQueryBoundP IsHmacUniformQuery 0 := by
   simp only [challengeFrame, isQueryBoundP_query_bind_iff, IsHmacUniformQuery,
-    not_false_eq_true, true_or, if_false, true_and]
+    not_false_eq_true, true_or, ite_false, true_and]
   intro block
   simp [finishWithRoot, hmacCoins]
 
@@ -366,7 +366,7 @@ theorem challengeFrame_pending (hmac : HmacSha512) (message : Message)
     (challengeFrame hmac (.pending message next, cache)).IsQueryBoundP IsHmacUniformQuery
       (qCoins + 64 * qRoots) := by
   simp only [challengeFrame, isQueryBoundP_query_bind_iff, IsHmacUniformQuery,
-    not_false_eq_true, true_or, if_false, true_and]
+    not_false_eq_true, true_or, ite_false, true_and]
   intro block
   apply local_hmac_uniform_query_bound
   cases hit : cache message with
@@ -449,7 +449,7 @@ theorem selectedRun_uniform (hmac : HmacSha512) (client : OracleComp RootSpec Bo
               rw [selectedRun_root_succ]
               have step : ((uniformImpl (.inr message)).run cache).IsTotalQueryBound 32 := by
                 change ((cachedImpl ($ᵗ RootOutput) (.inr message)).run cache).IsTotalQueryBound 32
-                simpa only [IsCoin, IsRoot, if_false, if_true, Nat.zero_add] using
+                simpa only [IsCoin, IsRoot, ite_false, ite_true, Nat.zero_add] using
                   cached_step ($ᵗ RootOutput) 32 (CtxComputationalSecurity.uniformFixedBytes_isTotalQueryBound 32)
                     (.inr message) cache
               apply (isQueryBoundP_bind (local_hmac_uniform_query_bound _ step)
@@ -474,9 +474,9 @@ theorem hmac_real_run {Result : Type} (hmac : HmacSha512) (secret : HmacBlock)
         (fun answer => ih answer _ (bounded.2 answer))).mono
       by_cases selected : IsHmacUniformQuery request
       · have positive := bounded.1.resolve_left (not_not.mpr selected)
-        simp only [selected, if_true]
+        simp only [selected, ite_true]
         omega
-      · simp only [selected, if_false, Nat.zero_add, le_refl]
+      · simp only [selected, ite_false, Nat.zero_add, le_refl]
 
 /-- The real HMAC challenger pays its single hidden 64-byte key sample in addition to the client's coins. -/
 theorem hmac_real_game (hmac : HmacSha512) (client : OracleComp HmacAdversarySpec Bool)
@@ -496,7 +496,7 @@ theorem hmac_random_step (request : HmacAdversarySpec.Domain) (cache : HmacOracl
           pure (answer, cache))) 1
       exact ⟨Nat.zero_lt_succ 0, fun _ => True.intro⟩
   | inr message =>
-      simp only [IsHmacUniformQuery, IsHmacChallengeQuery, if_false, if_true, Nat.zero_add,
+      simp only [IsHmacUniformQuery, IsHmacChallengeQuery, ite_false, ite_true, Nat.zero_add,
         hmacRandomImpl, QueryImpl.add_apply_inr, OracleSpec.randomOracle]
       cases hit : cache message with
       | none =>

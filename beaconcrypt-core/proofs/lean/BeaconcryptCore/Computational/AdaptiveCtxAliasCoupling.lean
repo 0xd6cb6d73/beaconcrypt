@@ -95,7 +95,7 @@ theorem flaggedImpl_agree_good (decode : RawDecoder) (c : Pqxdh.Crypto) (key : C
     Pr[= (answer, (next, false)) | (flaggedImpl true decode c key query).run (state, false)] =
       Pr[= (answer, (next, false)) | (flaggedImpl false decode c key query).run (state, false)] := by
   classical
-  letI : DecidableEq AdaptiveCtxReceive.ReceiveState := Classical.decEq _
+  let : DecidableEq AdaptiveCtxReceive.ReceiveState := Classical.decEq _
   cases query with
   | inl request => rfl
   | inr raw =>
@@ -169,10 +169,10 @@ theorem flagged_bad_eq_first {Result : Type} (decode : RawDecoder) (c : Pqxdh.Cr
       have kept := replayRaw_preserves_invariant decode c key raw state invariant result supported
       by_cases bad : RawBad decode raw result.2
       · have decision : decide (postLoggedReply decode raw result.2 ≠ result.1) = true := decide_eq_true (same.mpr bad)
-        rw [decision, flagged_bad_probability_one, if_pos bad]
+        rw [decision, flagged_bad_probability_one, ite_eq_left bad]
         simp
       · have decision : decide (postLoggedReply decode raw result.2 ≠ result.1) = false := decide_eq_false (fun different => bad (same.mp different))
-        rw [decision, if_neg bad, ih result.1 result.2 kept]
+        rw [decision, ite_eq_right bad, ih result.1 result.2 kept]
     | inl request =>
       rw [firstDiscrepancy_primitive]
       simp only [simulateQ_query_bind, StateT.run_bind, OracleQuery.input_query]

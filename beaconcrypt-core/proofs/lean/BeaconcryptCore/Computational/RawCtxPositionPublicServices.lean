@@ -320,10 +320,10 @@ theorem logged_run_count {Metadata Auxiliary Result : Type}
     have rest := ih received.1 _ (bounded.2 received.1) _ result htail
     simp only [queryCount, List.countP_append, List.countP_cons, List.countP_nil, Nat.zero_add] at rest ⊢
     by_cases counted : predicate query = true
-    · simp only [counted, if_true] at rest
+    · simp only [counted, ite_true] at rest
       have positive := bounded.1.resolve_left (not_not.mpr counted)
       omega
-    · simp only [counted, Bool.false_eq_true, if_false] at rest
+    · simp only [counted, Bool.false_eq_true, ite_false] at rest
       omega
 
 /-- Only a raw call can grow private successful-position history, and public effects leave that history unchanged. -/

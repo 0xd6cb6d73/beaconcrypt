@@ -85,12 +85,12 @@ private theorem candidate_fits (sender : M → Std.U64) (route : RawCtxServerRou
   intro valid
   cases valid
   · exact finished_fits sender route decode index before outside qPost bounded _
-  · simp only [Bool.not_true, Bool.false_eq_true, if_false]
+  · simp only [Bool.not_true, Bool.false_eq_true, ite_false]
     apply plain_fits
     intro reserved
     cases reserved
     · exact finished_fits sender route decode index before outside qPost bounded _
-    · simp only [Bool.not_true, Bool.false_eq_true, if_false]
+    · simp only [Bool.not_true, Bool.false_eq_true, ite_false]
       cases initial with
       | fail error => exact finished_fits sender route decode index before outside qPost bounded _
       | div => exact finished_fits sender route decode index before outside qPost bounded _
@@ -103,7 +103,7 @@ private theorem candidate_fits (sender : M → Std.U64) (route : RawCtxServerRou
               intro allocated
               cases allocated
               · exact finished_fits sender route decode index before outside qPost bounded _
-              · simp only [Bool.not_true, Bool.false_eq_true, if_false]
+              · simp only [Bool.not_true, Bool.false_eq_true, ite_false]
                 cases binding : candidate.key_id_binding with
                 | fail error => exact finished_fits sender route decode index before outside qPost bounded _
                 | div => exact finished_fits sender route decode index before outside qPost bounded _

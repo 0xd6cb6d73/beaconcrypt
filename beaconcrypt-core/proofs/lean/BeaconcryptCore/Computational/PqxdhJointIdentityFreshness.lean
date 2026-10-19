@@ -151,11 +151,11 @@ theorem fresh_probability_eq_stopped (primitives : Primitives) {count : ℕ}
               pure (seeds target, { state with reveals := state.reveals ++ [target] }) := rfl
         have stopped : ¬StoppedEvent target observer (none, state) := by
           simp [StoppedEvent]
-        simp only [if_true, simulateQ_query_bind, OracleQuery.input_query, OracleQuery.cont_query,
+        simp only [ite_true, simulateQ_query_bind, OracleQuery.input_query, OracleQuery.cont_query,
           id_eq, monadLift_self, StateT.run_bind, simulateQ_pure, StateT.run_pure, probEvent_pure,
           ite_eq_right stopped, sourceStep, pure_bind]
         exact revealed_fresh_probability_zero primitives seeds target _ _ (by simp) observer
-      · simp only [selected, if_false, simulateQ_query_bind, StateT.run_bind]
+      · simp only [selected, ite_false, simulateQ_query_bind, StateT.run_bind]
         change Pr[fun result => Fresh target result.2 ∧ observer result |
           (pure (seeds identity, { state with reveals := state.reveals ++ [identity] }) >>= fun value =>
             (simulateQ (sourceImpl primitives seeds) (rest value.1)).run value.2 : ProbComp _)] =
@@ -191,7 +191,7 @@ theorem stopBeforeReveal_no_target {count : ℕ} (target : Fin count) {Result : 
       rw [stopBeforeReveal_reveal]
       by_cases selected : identity = target
       · simp [selected]
-      · simp only [selected, if_false, OracleComp.isQueryBoundP_query_bind_iff]
+      · simp only [selected, ite_false, OracleComp.isQueryBoundP_query_bind_iff]
         exact ⟨Or.inl selected, fun answer => by simpa [IsTargetReveal, selected] using ih answer⟩
 
 /-- Stopping at compromise retains every source class cap, including non-target reveal traffic. -/
@@ -211,7 +211,7 @@ theorem stopBeforeReveal_query_bound {count : ℕ} (target : Fin count) {Result 
       rw [stopBeforeReveal_reveal]
       by_cases selected : identity = target
       · simp [selected]
-      · simp only [selected, if_false, OracleComp.isQueryBoundP_query_bind_iff]
+      · simp only [selected, ite_false, OracleComp.isQueryBoundP_query_bind_iff]
         exact ⟨bounded.1, fun answer => ih answer _ (bounded.2 answer)⟩
 
 /-- Locally answer only other identities' reveals and delegate all shared identity services unchanged. The target branch is unreachable in every stopped client. -/
@@ -285,7 +285,7 @@ theorem revealRouting_complete (primitives : Primitives) {count : ℕ} (target :
     rw [← revealRouting_step primitives target seed others query permitted state, bind_map_left]
     apply bind_congr
     intro result
-    exact ih result.1 (by simpa only [permitted, if_false] using noTarget.2 result.1) result.2
+    exact ih result.1 (by simpa only [permitted, ite_false] using noTarget.2 result.1) result.2
 
 /-- The actual stopped global client is eligible for exact local reveal simulation by a proved zero target-reveal bound. -/
 theorem stopped_revealRouting_complete (primitives : Primitives) {count : ℕ}
@@ -516,7 +516,7 @@ theorem globalReductionGame_uniform_bound (primitives : Primitives) {count : ℕ
       (32 * (count + 1) + bound) := by
   have counted := jointGame_uniform_bound primitives (globalReduction primitives target fallback adversary)
     (32 * count + bound) (fun publicKeys => by
-      simpa only [if_true] using
+      simpa only [ite_true] using
         globalReduction_query_bound primitives target fallback adversary .uniform bound bounded publicKeys)
   convert counted using 1
   omega
@@ -568,9 +568,9 @@ theorem sourceRun_reveal_bound (primitives : Primitives) {count : ℕ} (seeds : 
     have remaining := ih answer _ (bounded.2 answer) next result restSupport
     by_cases selected : IsReveal query
     · have positive : 0 < bound := bounded.1.resolve_left (not_not.mpr selected)
-      simp only [selected, if_pos] at stepCount remaining
+      simp only [selected, ite_eq_left] at stepCount remaining
       omega
-    · simp only [selected, if_false] at stepCount remaining
+    · simp only [selected, ite_false] at stepCount remaining
       omega
 
 /-- Source interpretation forwards exactly one random request and uses no additional randomness for a deterministic service or reveal. -/
@@ -647,9 +647,9 @@ theorem sourceRun_history_bound (primitives : Primitives) {count : ℕ} (seeds :
     have remaining := ih answer _ (bounded.2 answer) next result restSupport
     by_cases selected : globalClass (IsClass kind) query
     · have positive : 0 < bound := bounded.1.resolve_left (not_not.mpr selected)
-      simp only [selected, if_pos] at stepCount remaining
+      simp only [selected, ite_eq_left] at stepCount remaining
       omega
-    · simp only [selected, if_false] at stepCount remaining
+    · simp only [selected, ite_false] at stepCount remaining
       omega
 
 /-- Rejected DH requests remain bounded by all actual DH attempts, including around identity reveals. -/

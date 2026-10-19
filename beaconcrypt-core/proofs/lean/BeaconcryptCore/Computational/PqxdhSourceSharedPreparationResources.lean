@@ -57,8 +57,8 @@ theorem completed (hash : Bool) (output : LocalOutput) :
     env.senderId env.route env.decode env.localImpl baseImpl kem secret qSelector qLocal selectorBound localBound
     (post output.context.selection.1 (.ok none)) output.context.selection.2 qPost (postBound _ _)
   cases hash
-  · simpa only [PqxdhCommonSharedContinuation.completed, isQueryBoundP_map_iff, postCost, Bool.false_eq_true, if_false] using bounded.2
-  · simpa only [PqxdhCommonSharedContinuation.completed, isQueryBoundP_map_iff, postCost, if_true] using bounded.1
+  · simpa only [PqxdhCommonSharedContinuation.completed, isQueryBoundP_map_iff, postCost, Bool.false_eq_true, ite_false] using bounded.2
+  · simpa only [PqxdhCommonSharedContinuation.completed, isQueryBoundP_map_iff, postCost, ite_true] using bounded.1
 
 include postBound selectorBound localBound peerBound plaintextBound writerBound in
 /-- Accepted common candidates pay the actual registration builder and then the full adaptive post schedule, for every builder reply. -/
@@ -76,8 +76,8 @@ theorem accepted (hash : Bool) (output : LocalOutput) (ready : PqxdhPrivateAccep
       (PqxdhPhase2OldSource.unpackState (PqxdhOrdinarySharedScheduler.attach output.context.selection.2 ∅)).2))
     qPost (postBound _ _)
   cases hash
-  · simpa only [isQueryBoundP_map_iff, postCost, Bool.false_eq_true, if_false] using bounded.2
-  · simpa only [isQueryBoundP_map_iff, postCost, if_true] using bounded.1
+  · simpa only [isQueryBoundP_map_iff, postCost, Bool.false_eq_true, ite_false] using bounded.2
+  · simpa only [isQueryBoundP_map_iff, postCost, ite_true] using bounded.1
 
 include postBound selectorBound localBound peerBound plaintextBound writerBound in
 /-- Every optional encapsulation and DH-check outcome keeps its corresponding complete common continuation. -/

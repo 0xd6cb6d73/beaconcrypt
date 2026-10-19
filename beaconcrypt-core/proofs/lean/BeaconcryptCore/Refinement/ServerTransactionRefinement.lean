@@ -84,7 +84,7 @@ theorem failed_candidate_differs_from_atomic_emit (c : Pqxdh.Crypto)
     (hfree : ¬ (entry.peers.lookup (entry.n + 1)).isSome) :
     (Pqxdh.serverEmit c entry ikB root kemCipher ephemeral application).2.n ≠
       candidate.previous_state.last_key_id.val := by
-  simp only [Pqxdh.serverEmit, if_neg hmax, if_neg hfree, hcounter]
+  simp only [Pqxdh.serverEmit, ite_eq_right hmax, ite_eq_right hfree, hcounter]
   omega
 
 /-- API publication observations preserve every emitted response and distinguish an externally failed seal from a core rejection. -/
@@ -135,6 +135,6 @@ theorem idealPublication_preserves (c : Pqxdh.Crypto) (entry : Pqxdh.ServerState
   unfold idealPublication
   cases h : Pqxdh.serverEmit c entry ikB root kemCipher ephemeral application with
   | mk output next =>
-      cases output <;> cases sealed <;> simp_all only [Bool.false_eq_true, if_false, if_true]
+      cases output <;> cases sealed <;> simp_all only [Bool.false_eq_true, ite_false, ite_true]
 
 end BeaconcryptCore.Refinement.ServerTransactionRefinement

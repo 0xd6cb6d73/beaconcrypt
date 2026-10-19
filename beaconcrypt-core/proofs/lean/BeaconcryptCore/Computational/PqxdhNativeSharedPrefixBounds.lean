@@ -65,12 +65,12 @@ theorem step_bound (hash : Bool) (query : (PqxdhInitialNativeAudit.Spec extra Ra
     ((compiler source writer stage pre application initial selector aux query).run state).IsQueryBoundP
       (HashClass hash) (if hash then 1 else 76 + qPre + qApplication + qInitial + qSelector + qAux) := by
   rcases query with query | (query | (reply | (secrets | (query | query))))
-  · exact (live_bound source writer stage hash query state).mono (by cases hash <;> simp only [Bool.false_eq_true, if_false, if_true] <;> omega)
-  · exact (local_bound hash (pre query) qPre (preBound query) state).mono (by cases hash <;> simp only [Bool.false_eq_true, if_false, if_true] <;> omega)
-  · exact (local_bound hash (application reply) qApplication (applicationBound reply) state).mono (by cases hash <;> simp only [Bool.false_eq_true, if_false, if_true] <;> omega)
-  · exact (initial_bound hash (initial secrets) qInitial (initialBound secrets) state).mono (by cases hash <;> simp only [Bool.false_eq_true, if_false, if_true] <;> omega)
-  · exact (local_bound hash (selector query) qSelector (selectorBound query) state).mono (by cases hash <;> simp only [Bool.false_eq_true, if_false, if_true] <;> omega)
-  · exact (local_bound hash (aux query) qAux (auxBound query) state).mono (by cases hash <;> simp only [Bool.false_eq_true, if_false, if_true] <;> omega)
+  · exact (live_bound source writer stage hash query state).mono (by cases hash <;> simp only [Bool.false_eq_true, ite_false, ite_true] <;> omega)
+  · exact (local_bound hash (pre query) qPre (preBound query) state).mono (by cases hash <;> simp only [Bool.false_eq_true, ite_false, ite_true] <;> omega)
+  · exact (local_bound hash (application reply) qApplication (applicationBound reply) state).mono (by cases hash <;> simp only [Bool.false_eq_true, ite_false, ite_true] <;> omega)
+  · exact (initial_bound hash (initial secrets) qInitial (initialBound secrets) state).mono (by cases hash <;> simp only [Bool.false_eq_true, ite_false, ite_true] <;> omega)
+  · exact (local_bound hash (selector query) qSelector (selectorBound query) state).mono (by cases hash <;> simp only [Bool.false_eq_true, ite_false, ite_true] <;> omega)
+  · exact (local_bound hash (aux query) qAux (auxBound query) state).mono (by cases hash <;> simp only [Bool.false_eq_true, ite_false, ite_true] <;> omega)
 
 variable (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin)
     (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)

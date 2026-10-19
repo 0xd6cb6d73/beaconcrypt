@@ -45,7 +45,7 @@ theorem valid_step (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedS
       rw [external_handler] at supported
       simp only [support_map, Set.mem_image] at supported
       obtain ⟨reply, actual, rfl⟩ := supported
-      simpa only [counted, if_false, Nat.add_zero, Valid, RawCtxFirstParentRisk.Valid, RawCtxSelectiveFamilyLog.Covered] using valid
+      simpa only [counted, ite_false, Nat.add_zero, Valid, RawCtxFirstParentRisk.Valid, RawCtxSelectiveFamilyLog.Covered] using valid
 
 set_option backward.isDefEq.respectTransparency false in
 /-- Every external callback has zero cache-collision risk; each actual private step has only the existing full76 next-coordinate risk from its chronological inputs. -/

@@ -118,7 +118,7 @@ theorem schedule_uniform {Metadata PeerMetadata Identity DhPair KemPair Auxiliar
     (fun query state => (source_uniform_step source writer serverCount beaconCount senderId route decode query state).isQueryBoundP)
     state
   simpa only [bill, uniform_bill, Nat.zero_mul, Nat.add_zero, IsTotalQueryBound, IsQueryBoundP,
-    not_true_eq_false, false_or, if_true] using bound
+    not_true_eq_false, false_or, ite_true] using bound
 
 /-- All adaptive compromise continuations retain the five explicit native resource caps. -/
 theorem backend_bound {Metadata PeerMetadata Identity DhPair KemPair Result : Type}

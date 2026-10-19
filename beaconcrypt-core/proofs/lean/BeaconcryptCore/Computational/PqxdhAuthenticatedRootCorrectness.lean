@@ -91,13 +91,13 @@ theorem after_bound (baseImpl : QueryImpl baseSpec ProbComp)
       (after baseImpl kem stopped right publicKey secretKey context) ≤
       Pr[= true | simulateQ (kemAmbientImpl baseImpl) (keyError kem publicKey secretKey)].toReal := by
   by_cases proceed : stopped.proceed publicKey context = true
-  · simp only [after, proceed, if_true, keyError, simulateQ_bind, ← probEvent_eq_eq_probOutput]
+  · simp only [after, proceed, ite_true, keyError, simulateQ_bind, ← probEvent_eq_eq_probOutput]
     apply average_supported
     intro pair supported
     by_cases good : functional.result secretKey pair.1 = some pair.2
     · simp only [agreement proceed pair supported good, tvDist_self, ENNReal.toReal_nonneg]
     · simpa only [functional.exact, simulateQ_pure, pure_bind, probEvent_eq_eq_probOutput,
-        probOutput_pure, decide_eq_true good, if_true, ENNReal.toReal_one] using
+        probOutput_pure, decide_eq_true good, ite_true, ENNReal.toReal_one] using
         tvDist_le_one (left publicKey secretKey context pair.1 pair.2)
           (right publicKey secretKey context pair.1 pair.2)
   · simp [after, proceed]
@@ -146,7 +146,7 @@ theorem stopped_branch (baseImpl : QueryImpl baseSpec ProbComp)
     after baseImpl kem stopped next publicKey secretKey context =
       simulateQ (kemAmbientImpl baseImpl)
         (simulateQ (kem.IND_CCA_preChallengeImpl secretKey) (stopped.abort publicKey context)) := by
-  simp only [after, stop, Bool.false_eq_true, if_false]
+  simp only [after, stop, Bool.false_eq_true, ite_false]
 
 /-- The actual interpreted branch pays encapsulation and its entire continuation, or the original abort. These are all-reply uniform-query bills, not local machine-work claims or consequences of distribution equality. -/
 theorem after_uniform_bound (baseImpl : QueryImpl baseSpec ProbComp)

@@ -40,7 +40,7 @@ theorem lift_map (f : α → β) (work : Base A α) :
       ((fun result => (f result.1, result.2)) <$> work.run state.1) =
     (fun result => ((f result.1.1, result.1.2), result.2)) <$>
       ((fun result => ((result.1, (result.2, state.2)), cache)) <$> work.run state.1)
-  simp only [Functor.map_map, Function.comp_def]
+  simp only [Functor.map_map]
 
 /-- An entire original adaptive oracle program commutes with the same full-state callback lift. -/
 theorem simulate_lift (impl : QueryImpl spec (Base A)) (client : OracleComp spec α) :

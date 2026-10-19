@@ -75,7 +75,7 @@ theorem seal_projection (decode : RawDecoder) (c : Pqxdh.Crypto) (key : CtxKey)
   · simp [used, independentCtx, ctxIndependentTagImpl, ctxKeyFreeSealOracle, sealPrivateInputs, StateT.run]
     change (Prod.fst <$> (pure ((none, state), base) : ProbComp _)) = _
     simp
-  · simp only [used, if_false, pure_bind, bind_pure_comp, bind_map_left, simulateQ_map,
+  · simp only [used, ite_false, pure_bind, bind_pure_comp, bind_map_left, simulateQ_map,
       StateT.run_map, simulate_private]
     simp [independentCtx, ctxIndependentTagImpl, ctxKeyFreeSealOracle, StateT.run,
       used, sealPrivateInputs, ctxKeyFreeSuffixOracle, Functor.map_map]
@@ -103,7 +103,7 @@ theorem raw_projection (decode : RawDecoder) (c : Pqxdh.Crypto) (key : CtxKey)
     apply bind_congr
     rintro ⟨digest, cache⟩
     by_cases equal : target.record.commit = digest
-    · simp only [equal, if_true, bind_pure_comp, simulateQ_map, StateT.run_map, simulate_raw]
+    · simp only [equal, ite_true, bind_pure_comp, simulateQ_map, StateT.run_map, simulate_raw]
       simp [AdaptiveRawNonceAead.receiveStep, AdaptiveRawNonceAead.actualOpen,
         baseDecoder, baseTarget, parsed, targetOpen, equal,
         CtxRomRecord.toModifiedNonceAeadCiphertext]
@@ -176,11 +176,11 @@ theorem seal_preserves_aligned (real : Bool) (decode : RawDecoder) (c : Pqxdh.Cr
   simp only [sealStep, simulateQ_bind, StateT.run_bind, simulate_seal,
     modifiedNonceAeadSealOracle_run, CtxSealInput.toModifiedNonceAeadSealInput, nonces] at supported
   by_cases used : input.nonce ∈ state.ctx.usedNonces
-  · simp only [used, if_true, pure_bind, simulateQ_pure, StateT.run_pure,
+  · simp only [used, ite_true, pure_bind, simulateQ_pure, StateT.run_pure,
       mem_support_pure_iff] at supported
     subst result
     exact aligned
-  · simp only [used, if_false, pure_bind, bind_pure_comp, map_pure, simulateQ_map,
+  · simp only [used, ite_false, pure_bind, bind_pure_comp, map_pure, simulateQ_map,
       StateT.run_map, simulate_private, Functor.map_map, support_map, Set.mem_image] at supported
     obtain ⟨value, _, rfl⟩ := supported
     unfold Aligned at aligned ⊢
@@ -205,11 +205,11 @@ theorem raw_preserves_aligned (decode : RawDecoder) (c : Pqxdh.Crypto)
       bind_map_left, mem_support_bind_iff] at supported
     obtain ⟨⟨digest, cache⟩, _, supported⟩ := supported
     by_cases equal : target.record.commit = digest
-    · simp only [equal, if_true, bind_pure_comp, simulateQ_map, StateT.run_map,
+    · simp only [equal, ite_true, bind_pure_comp, simulateQ_map, StateT.run_map,
         simulate_raw, AdaptiveRawNonceAead.receiveStep] at supported
       subst result
       exact aligned
-    · simp only [equal, if_false, simulateQ_pure, StateT.run_pure, mem_support_pure_iff] at supported
+    · simp only [equal, ite_false, simulateQ_pure, StateT.run_pure, mem_support_pure_iff] at supported
       subst result
       exact aligned
 

@@ -89,7 +89,7 @@ theorem initial_program
   cases response with
   | none => rfl
   | some root =>
-    simp only [Option.map_some, PqxdhInitialRootLabelService.realInitial, PqxdhInitialResponseService.pending, Bool.false_eq_true, if_false, PqxdhPhase2InputBytes.word_roundtrip]
+    simp only [Option.map_some, PqxdhInitialRootLabelService.realInitial, PqxdhInitialResponseService.pending, Bool.false_eq_true, ite_false, PqxdhPhase2InputBytes.word_roundtrip]
     rw [PqxdhInitialNativeInitializer.kernel_input_unused (PqxdhPhase2InputBytes.word root) (List.Vector.replicate 32 0)]
     rfl
 

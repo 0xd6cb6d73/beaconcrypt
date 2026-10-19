@@ -83,7 +83,7 @@ theorem hashLift_no_uniform {Result : Type} (work : OracleComp CtxRO Result) :
   | query_bind query next ih =>
     simp only [simulateQ_query_bind, OracleQuery.input_query, monadLift_self, hashLift,
       isQueryBoundP_query_bind_iff, HashClass, Bool.false_eq_true, not_false_eq_true,
-      true_or, if_false]
+      true_or, ite_false]
     exact ⟨trivial, ih⟩
 
 /-- The actual known-material source path adds zero explicit selected-challenger coins. -/
@@ -153,7 +153,7 @@ theorem canonical_fresh (c : Pqxdh.Crypto) (key : CtxKey) (input : CtxSealInput)
       let result ← (simulateQ ctxRandomOracle (ctxSeal c key input)).run state.ctx.cache
       pure (some result.1, afterSeal state input result.1 result.2)) := by
   simp only [AdaptiveCtxCanonical.canonicalCtx, ctxAdversaryImpl, QueryImpl.add_apply_inr,
-    ctxSealOracle, fresh, if_false, ctxSeal, simulateQ_bind, simulateQ_spec_query, simulateQ_pure,
+    ctxSealOracle, fresh, ite_false, ctxSeal, simulateQ_bind, simulateQ_spec_query, simulateQ_pure,
     StateT.run, bind_assoc, pure_bind,
     afterSeal, AdaptiveCtxCanonical.sealPrivateInputs]
   change _ = (((ctxRandomOracle _ state.ctx.cache) >>= fun result =>
@@ -170,7 +170,7 @@ theorem selected_fresh (decode : RawDecoder) (c : Pqxdh.Crypto) (key : RootOutpu
       let result ← (simulateQ ctxRandomOracle (ctxSeal c key (selectedInput nonce sequence context had))).run state.ctx.cache
       pure (.completed (writer ⟨sequence, context.senderId, result.1.encode⟩),
         afterSeal state (selectedInput nonce sequence context had) result.1 result.2)) := by
-  simp only [selected, dif_pos had, simulateQ_bind, simulateQ_spec_query, simulateQ_pure, StateT.run_bind, StateT.run_pure]
+  simp only [selected, dite_eq_left had, simulateQ_bind, simulateQ_spec_query, simulateQ_pure, StateT.run_bind, StateT.run_pure]
   change (do
     let result ← AdaptiveCtxCanonical.canonicalCtx c key (.inr (selectedInput nonce sequence context had)) state
     pure ((match result.1 with
@@ -187,7 +187,7 @@ theorem selected_repeat (decode : RawDecoder) (c : Pqxdh.Crypto) (key : RootOutp
     (state : AdaptiveCtxCanonical.CanonicalState) (used : nonce ∈ state.ctx.usedNonces) :
     (simulateQ (AdaptiveCtxCanonical.canonicalImpl decode c key) (selected writer nonce sequence context)).run state =
       pure (.repeatedNonce, state) := by
-  simp only [selected, dif_pos had, simulateQ_bind, simulateQ_spec_query, simulateQ_pure, StateT.run_bind, StateT.run_pure]
+  simp only [selected, dite_eq_left had, simulateQ_bind, simulateQ_spec_query, simulateQ_pure, StateT.run_bind, StateT.run_pure]
   change (do
     let result ← AdaptiveCtxCanonical.canonicalCtx c key (.inr (selectedInput nonce sequence context had)) state
     pure ((match result.1 with
@@ -255,7 +255,7 @@ theorem selected_invalid (decode : RawDecoder) (c : Pqxdh.Crypto) (key : RootOut
       simulateQ (RawCtxCanonicalSeal.romAdapter c writer)
         (RawCtxSourceSeal.sealInput (selectedNative key nonce sequence context)) = pure none := by
   constructor
-  · simp only [selected, dif_neg invalid, simulateQ_pure, StateT.run_pure]
+  · simp only [selected, dite_eq_right invalid, simulateQ_pure, StateT.run_pure]
   · exact RawCtxCanonicalSeal.sealInput_invalid c writer _ invalid
 
 end BeaconcryptCore.Computational.RawCtxSelectedMessageSealing

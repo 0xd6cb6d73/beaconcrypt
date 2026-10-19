@@ -47,12 +47,12 @@ theorem compiled_uniform {Auxiliary : Type} (source : FixedHkdfSha512NoSaltSourc
   rcases query with coin | ((request | request) | view)
   all_goals simp only [QueryImpl.compose, RawCtxSelectiveKdfFamily.compiler,
     simulateQ_spec_query, simulateQ_map, handler,
-    bind_pure_comp, IsTotalQueryBound, isQueryBound_map_iff]
+    bind_pure_comp, IsTotalQueryBound]
   case inr.inl.inl =>
     rw [StateT.run_map]
     have distinct : RawCtxMixedOwner.CallKind.kdf ≠ .hash := by decide
     simp only [nativePredicate, RawCtxMixedOwner.callKind, distinct, Sum.isLeft, Bool.false_eq_true,
-      if_false, if_true, Nat.mul_one, Nat.mul_zero, Nat.zero_add, Nat.add_zero]
+      ite_false, ite_true, Nat.mul_one, Nat.mul_zero, Nat.zero_add, Nat.add_zero]
     simpa only [StateT.run_map, StateT.run, IsTotalQueryBound, isQueryBound_map_iff] using
       private_uniform source stage (RawCtxKdfRequestTable.address request) state.2
   case inr.inl.inr =>
@@ -65,7 +65,7 @@ theorem compiled_uniform {Auxiliary : Type} (source : FixedHkdfSha512NoSaltSourc
       StateT.run, bind_pure_comp, isQueryBound_map_iff]
   case inr.inr =>
     simp [RawCtxProtocolBackend.backend, RawCtxServerServices.backendImpl, nativePredicate,
-      StateT.run, isQueryBound_map_iff]
+      StateT.run]
 
 
 /-- Every possible backend continuation retains the three separate actual query reservations. -/

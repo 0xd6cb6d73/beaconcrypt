@@ -163,7 +163,7 @@ private theorem map_branch {Input Output : Type} (f : Input → Output) (conditi
     [Decidable condition] (left right : RustM Input) :
     f <$> (if condition then left else right) =
       if condition then f <$> left else f <$> right := by
-  by_cases h : condition <;> simp only [h, if_true, if_false]
+  by_cases h : condition <;> simp only [h, ite_true, ite_false]
 
 /-- Concrete specialization retains the complete extracted native receive-resume result. -/
 theorem native_resume {Context : Type} (pending : Kdf RatchetMaterial Context)
@@ -172,20 +172,18 @@ theorem native_resume {Context : Type} (pending : Kdf RatchetMaterial Context)
       nativeEffect <$> resume pending (nativeStep response) := by
   simp only [nativeKdf]
   by_cases zero : pending.remaining = 0#u8
-  · simp only [ReceiveKdf.resume, resume, zero, if_true, receive_rejected,
+  · simp only [ReceiveKdf.resume, resume, zero, ite_true, receive_rejected,
       rejected, rust_map_ok, nativeEffect]
-  · simp only [ReceiveKdf.resume, resume, zero, if_false, nativeStep,
+  · simp only [ReceiveKdf.resume, resume, zero, ite_false, nativeStep,
       bind_map_left]
     by_cases last : pending.remaining = 1#u8 <;>
-      simp only [last, if_true, if_false, map_bind]
+      simp only [last, ite_true, ite_false, map_bind]
     all_goals
       congr 1
       funext advanced
       cases present : advanced.sequence
     all_goals simp only [receive_rejected, rejected, rust_map_ok, nativeEffect, map_bind, map_branch, toNative]
-    all_goals first
-      | cases slot : advanced.slot
-      | skip
+    all_goals cases slot : advanced.slot
     all_goals simp only [map_bind, map_branch, rust_map_ok, nativeEffect, nativeKdf]
 
 def mapKdf {Material Value Context : Type} (interpret : Material → Value)
@@ -342,7 +340,7 @@ theorem resume_progress {Material Context : Type} (pending : Kdf Material Contex
     ∃ result, resume pending (ok stepped) = ok result ∧ Progress pending result := by
   by_cases hzero : pending.remaining = 0#u8
   · simp [resume, hzero, rejected, Progress, effectEntry]
-  · simp only [resume, hzero, if_false]
+  · simp only [resume, hzero, ite_false]
     split
     case isFalse hlast =>
       obtain ⟨advanced, hadvanced⟩ := ratchet.control.advance_receive_ok pending.working_control
@@ -356,7 +354,7 @@ theorem resume_progress {Material Context : Type} (pending : Kdf Material Contex
         (by scalar_tac)
       cases logical <;> simp only [hlogical, core.option.Option.Insts.CoreCmpPartialEqOption.eq,
         core.U64.Insts.CoreCmpPartialEqU64, ratchet.control.capacity_eq_ok, hnextSlot, bind_tc_ok,
-        Bool.false_eq_true, if_false]
+        Bool.false_eq_true, ite_false]
       all_goals first | exact ⟨_, rfl, rfl, True.intro⟩ | skip
       repeat' first | exact ⟨_, rfl, rfl, True.intro⟩ | split
       all_goals simp only [ratchet.control.array_index_eq_ok pending.staged_slots
@@ -400,7 +398,7 @@ theorem begin_total {Material Context : Type}
     cases empty <;> by_cases hgap : skipped > ratchet.control.RATCHET_MAX_GAP <;>
       simp only [hskipped, lift, ratchet.control.RatchetState.receive_cache_len, hempty, hgap,
         RatchetChain.as_bytes, SymmetricRatchetKdfRequest.new, refined.empty_material_slots,
-        bind_tc_ok, Bool.false_eq_true, if_false, if_true, RustM.ok.injEq, effectEntry]
+        bind_tc_ok, Bool.false_eq_true, ite_false, ite_true, RustM.ok.injEq, effectEntry]
     all_goals exact ⟨_, rfl, rfl⟩
 
 /-- Generic publication is total and returns the exact callback option, including malformed represented pending states. -/
@@ -678,7 +676,7 @@ theorem program_kdf_bound {Material Context Plaintext : Type} (effect : Effect M
       simp
     | kdfRequested pending =>
       rw [program, isQueryBoundP_query_bind_iff]
-      simp only [Sum.isLeft, not_true_eq_false, false_or, if_true]
+      simp only [Sum.isLeft, not_true_eq_false, false_or, ite_true]
       refine ⟨by simp only [effectRank] at hdepth; omega, fun reply => ?_⟩
       exact (ih _ (hdepth ▸ normalResume_rank pending reply) _ rfl).mono
         (Nat.le_pred_of_lt (hdepth ▸ normalResume_rank pending reply))
@@ -696,7 +694,7 @@ theorem program_open_bound {Material Context Plaintext : Type} (effect : Effect 
       simp
     | kdfRequested pending =>
       rw [program, isQueryBoundP_query_bind_iff]
-      simp only [Sum.isRight, Bool.false_eq_true, not_false_eq_true, true_or, if_false, true_and]
+      simp only [Sum.isRight, Bool.false_eq_true, not_false_eq_true, true_or, ite_false, true_and]
       exact fun reply => ih _ (hdepth ▸ normalResume_rank pending reply) _ rfl
 
 /-- The actual native receive retains the same entire primitive poststate under material interpretation. -/

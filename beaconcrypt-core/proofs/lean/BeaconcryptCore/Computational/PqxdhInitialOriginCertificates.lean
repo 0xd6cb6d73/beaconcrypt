@@ -181,12 +181,12 @@ private theorem candidate_fits (mark : PqxdhBeaconPhase2Shared.Secrets Shared 鈫
   intro valid
   cases valid
   路 exact finished_fits mark origin sender route decode index before trace outside qPost bounded _
-  路 simp only [Bool.not_true, Bool.false_eq_true, if_false]
+  路 simp only [Bool.not_true, Bool.false_eq_true, ite_false]
     apply builder_plain_fits
     intro reserved
     cases reserved
     路 exact finished_fits mark origin sender route decode index before trace outside qPost bounded _
-    路 simp only [Bool.not_true, Bool.false_eq_true, if_false]
+    路 simp only [Bool.not_true, Bool.false_eq_true, ite_false]
       cases initial with
       | fail error => exact finished_fits mark origin sender route decode index before trace outside qPost bounded _
       | div => exact finished_fits mark origin sender route decode index before trace outside qPost bounded _
@@ -199,7 +199,7 @@ private theorem candidate_fits (mark : PqxdhBeaconPhase2Shared.Secrets Shared 鈫
               intro allocated
               cases allocated
               路 exact finished_fits mark origin sender route decode index before trace outside qPost bounded _
-              路 simp only [Bool.not_true, Bool.false_eq_true, if_false]
+              路 simp only [Bool.not_true, Bool.false_eq_true, ite_false]
                 cases binding : candidate.key_id_binding with
                 | fail error => exact finished_fits mark origin sender route decode index before trace outside qPost bounded _
                 | div => exact finished_fits mark origin sender route decode index before trace outside qPost bounded _

@@ -71,7 +71,7 @@ theorem loggedRaw_projection (decode : RawDecoder) (c : Pqxdh.Crypto) (key : Ctx
     apply bind_congr
     rintro ⟨digest, cache⟩
     by_cases equal : target.record.commit = digest
-    · simp only [equal, if_true, bind_pure_comp, simulateQ_map, StateT.run_map, simulate_logged_raw]
+    · simp only [equal, ite_true, bind_pure_comp, simulateQ_map, StateT.run_map, simulate_logged_raw]
       simp [AdaptiveRawNonceAead.receiveStep, AdaptiveRawNonceAead.simulatedOpen,
         baseDecoder, parsed, history]
     · simp [equal]
@@ -94,11 +94,11 @@ theorem loggedRaw_preserves_aligned (decode : RawDecoder) (c : Pqxdh.Crypto)
       bind_map_left, mem_support_bind_iff] at supported
     obtain ⟨⟨digest, cache⟩, _, supported⟩ := supported
     by_cases equal : target.record.commit = digest
-    · simp only [equal, if_true, bind_pure_comp, simulateQ_map, StateT.run_map,
+    · simp only [equal, ite_true, bind_pure_comp, simulateQ_map, StateT.run_map,
         simulate_logged_raw, AdaptiveRawNonceAead.receiveStep] at supported
       subst result
       exact aligned
-    · simp only [equal, if_false, simulateQ_pure, StateT.run_pure, mem_support_pure_iff] at supported
+    · simp only [equal, ite_false, simulateQ_pure, StateT.run_pure, mem_support_pure_iff] at supported
       subst result
       exact aligned
 
@@ -121,7 +121,7 @@ theorem loggedLinkedImpl_nonraw (decode : RawDecoder) (c : Pqxdh.Crypto) (key : 
   rcases state with ⟨state, base⟩
   rw [loggedLinkedImpl_run, linkedImpl_run]
   rw [noRaw_mode_eq decode c key _ (by
-    simpa only [notRaw, if_false] using reductionImpl_raw_query_bound_step decode query state) base]
+    simpa only [notRaw, ite_false] using reductionImpl_raw_query_bound_step decode query state) base]
 
 /-- The logged linked execution needs no ambient history-alignment assumption: it preserves the proved initial full-history relation. -/
 theorem loggedLinked_preserves_aligned (decode : RawDecoder) (c : Pqxdh.Crypto) (key : CtxKey) :
@@ -215,11 +215,11 @@ theorem seal_preserves_commitments (c : Pqxdh.Crypto) (key : CtxKey)
     CtxIndependentTagStateCommitmentsCached result.2 := by
   by_cases used : input.nonce ∈ state.usedNonces
   · unfold ctxKeyFreeSealOracle at supported
-    simp only [StateT.run, used, if_true] at supported
+    simp only [StateT.run, used, ite_true] at supported
     obtain rfl := eq_of_mem_support_pure supported
     exact cached
   · unfold ctxKeyFreeSealOracle at supported
-    simp only [StateT.run, used, if_false] at supported
+    simp only [StateT.run, used, ite_false] at supported
     obtain ⟨suffixResult, suffixSupported, supported⟩ := (mem_support_bind_iff _ _ _).mp supported
     obtain rfl := eq_of_mem_support_pure supported
     intro entry member
@@ -239,11 +239,11 @@ theorem seal_preserves_nonces (c : Pqxdh.Crypto) (key : CtxKey)
       CtxIndependentTagStateUniqueSealNonces result.2 := by
   by_cases used : input.nonce ∈ state.usedNonces
   · unfold ctxKeyFreeSealOracle at supported
-    simp only [StateT.run, used, if_true] at supported
+    simp only [StateT.run, used, ite_true] at supported
     obtain rfl := eq_of_mem_support_pure supported
     exact ⟨marked, unique⟩
   · unfold ctxKeyFreeSealOracle at supported
-    simp only [StateT.run, used, if_false] at supported
+    simp only [StateT.run, used, ite_false] at supported
     obtain ⟨suffixResult, _, supported⟩ := (mem_support_bind_iff _ _ _).mp supported
     obtain rfl := eq_of_mem_support_pure supported
     constructor
@@ -271,11 +271,11 @@ theorem seal_preserves_history (c : Pqxdh.Crypto) (key : CtxKey)
       (result.2.successfulSeals.map CtxNonceAeadIntCtxt.CtxSuccessfulSeal.toModifiedNonceAeadSuccessfulSeal) := by
   by_cases used : input.nonce ∈ state.usedNonces
   · unfold ctxKeyFreeSealOracle at supported
-    simp only [StateT.run, used, if_true] at supported
+    simp only [StateT.run, used, ite_true] at supported
     obtain rfl := eq_of_mem_support_pure supported
     exact correct
   · unfold ctxKeyFreeSealOracle at supported
-    simp only [StateT.run, used, if_false] at supported
+    simp only [StateT.run, used, ite_false] at supported
     obtain ⟨suffixResult, _, supported⟩ := (mem_support_bind_iff _ _ _).mp supported
     obtain rfl := eq_of_mem_support_pure supported
     intro entry member
@@ -489,12 +489,12 @@ theorem loggedRaw_acceptedFresh_protected (decode : RawDecoder) (c : Pqxdh.Crypt
     obtain ⟨lookup, lookupSupported, supported⟩ := supported
     obtain rfl := eq_of_mem_support_pure supported
     by_cases commitEq : target.record.commit = lookup.1
-    · simp only [commitEq, if_true] at accepted
+    · simp only [commitEq, ite_true] at accepted
       have hasAlias := loggedFresh_is_alias key state.ctx target lookup.1 lookup.2 invariant.1
         (fresh target parsed) commitEq accepted lookupSupported
       exact ⟨target, rfl, hasAlias, alias_nonce_used key state.ctx target invariant.2.1 hasAlias,
         alias_excludes_honestSuffix key state.ctx target invariant.2.2.1 hasAlias⟩
-    · simp only [commitEq, if_false] at accepted
+    · simp only [commitEq, ite_false] at accepted
       exact False.elim (accepted rfl)
 
 /-- Raw verification increments exactly one source counter slot, regardless of parsing or acceptance. -/
@@ -556,9 +556,9 @@ theorem loggedRun_raw_bound (decode : RawDecoder) (c : Pqxdh.Crypto) (key : CtxK
     have count := loggedImpl_raw_count decode c key query state value step
     by_cases raw : IsRawQuery query
     · have positive : 0 < qRaw := bounded.1.resolve_left (not_not.mpr raw)
-      simp only [raw, if_true] at rest count
+      simp only [raw, ite_true] at rest count
       omega
-    · simp only [raw, if_false] at rest count
+    · simp only [raw, ite_false] at rest count
       omega
 
 /-- Every well-formed logged verification pays at most one 64-byte private digest draw; cache hits reuse the existing value. -/

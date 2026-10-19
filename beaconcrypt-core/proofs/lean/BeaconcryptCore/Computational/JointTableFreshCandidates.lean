@@ -28,7 +28,7 @@ theorem fixed_fresh_guess_bound (cache : (D →ₒ R).QueryCache) (point : D) (g
     Pr[ (fun table : D → R => cache point = none ∧ tableExtending cache table point = guess)
       | $ᵗ (D → R)] ≤ (Nat.card R : ℝ≥0∞)⁻¹ := by
   classical
-  letI := Fintype.ofFinite R
+  let := Fintype.ofFinite R
   by_cases fresh : cache point = none
   · have coordinate : Pr[(fun table : D → R => table point = guess) | $ᵗ (D → R)] =
         (Nat.card R : ℝ≥0∞)⁻¹ := by

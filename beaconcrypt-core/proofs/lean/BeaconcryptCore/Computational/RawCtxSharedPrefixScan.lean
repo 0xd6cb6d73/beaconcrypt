@@ -56,13 +56,13 @@ theorem source
       have nativeChosen : nativeSelected query.2 (attach state cache) = true := (sameSelection query.2 state cache).trans chosen
       rw [RawCtxForwardScan.scan_cut privateQuery nativeSelected nativeSelection nativeImpl query next covered _ nativeChosen]
       change restore attach <$> (simulateQ hashImpl (if chosen : selected query.2 state = true then _ else _)).run cache = _
-      rw [dif_pos chosen]
+      rw [dite_eq_left chosen]
       rfl
     | false =>
       have nativeChosen : nativeSelected query.2 (attach state cache) = false := (sameSelection query.2 state cache).trans chosen
       rw [RawCtxForwardScan.scan_other privateQuery nativeSelected nativeSelection nativeImpl query next covered _ nativeChosen]
       change restore attach <$> (simulateQ hashImpl (if chosen : selected query.2 state = true then _ else _)).run cache = _
-      rw [dif_neg (by rw [chosen]; decide)]
+      rw [dite_eq_right (by rw [chosen]; decide)]
       simp only [simulateQ_bind, StateT.run_bind, map_bind]
       rw [← sameStep query.2 state cache, bind_map_left]
       exact bind_congr fun result => ih result.1.1 (covered.2 result.1.1) result.1.2 result.2

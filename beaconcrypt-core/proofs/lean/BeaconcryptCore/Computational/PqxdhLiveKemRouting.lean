@@ -72,7 +72,7 @@ theorem pre_source (baseImpl : QueryImpl baseSpec ProbComp)
       rw [PqxdhLiveKemBirth.decapsulate_missing baseImpl kem pool handle.2 found]
       simp only [pre, redact, found, Option.map_none, evalKem, simulateQ_pure, map_pure]
     | some pair =>
-      simp only [pre, redact, found, Option.map_some, if_neg same, evalKem_ambient,
+      simp only [pre, redact, found, Option.map_some, ite_eq_right same, evalKem_ambient,
         PqxdhLiveKemBirth.decapsulate_present baseImpl kem pool handle.2 pair found ciphertext,
         bind_pure_comp, Functor.map_map]
       simp
@@ -88,7 +88,7 @@ theorem selected_redacted (pool : PqxdhLiveKemBirth.Pool KemSK) (selected : Nat)
 theorem other_redacted (pool : PqxdhLiveKemBirth.Pool KemSK) (selected index : Nat)
     (other : index ≠ selected) :
     redact selected pool index = (pool.keys[index]?).map (fun pair => (pair.1, some pair.2)) := by
-  simp only [redact, if_neg other]
+  simp only [redact, ite_eq_right other]
 
 /-- A local decapsulation reply cannot acquire the selected-origin tag even if its bytes equal the challenge secret. -/
 theorem known_not_challenge (reply : Option MlKemSharedSecret) :
@@ -273,7 +273,7 @@ theorem pre_schedule_decaps {Result : Type}
     ((simulateQ (preImpl kem selected keys) client).run history).IsQueryBoundP IsMlKemLogicalDecapsulationQuery q := by
   apply ((isQueryBoundP_true_iff client q).2 bounded).simulateQ_run_StateT_of_step
   exact fun query history => by
-    simpa only [preImpl, StateT.run, bind_pure_comp, isQueryBoundP_map_iff, if_true] using
+    simpa only [preImpl, StateT.run, bind_pure_comp, isQueryBoundP_map_iff, ite_true] using
       pre_decaps kem selected keys query.1 query.2
 
 /-- Every local other-key primitive allowance is multiplied by the complete source attempt cap. Both uniform and base classes use this bound. -/

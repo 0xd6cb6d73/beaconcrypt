@@ -58,7 +58,7 @@ theorem source_nonseal (decode : RawDecoder) (c : Pqxdh.Crypto) (key : CtxKey)
       obtain ⟨answer, _, rfl⟩ := supported
       rfl
   | inl query =>
-      simp only [sourceImpl, AdaptiveCtxSharedModes.localImpl, if_true, StateT.run,
+      simp only [sourceImpl, AdaptiveCtxSharedModes.localImpl, ite_true, StateT.run,
         bind_pure_comp, simulateQ_map] at supported
       change result ∈ support ((fun answer => (answer.1.1,
           ({before with selected := answer.1.2, cache := answer.2} : SourceState))) <$>

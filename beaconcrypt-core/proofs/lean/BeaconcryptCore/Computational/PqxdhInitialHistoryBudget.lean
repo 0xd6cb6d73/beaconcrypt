@@ -203,12 +203,12 @@ private theorem candidate_bound (prior : List RatchetChain) (cap : Nat) (mark : 
   intro valid
   cases valid
   · exact finished_bound prior cap mark origin sender route decode index before trace outside qPost bounded available _
-  · simp only [Bool.not_true, Bool.false_eq_true, if_false]
+  · simp only [Bool.not_true, Bool.false_eq_true, ite_false]
     apply builder_plain_bound prior cap
     intro reserved
     cases reserved
     · exact finished_bound prior cap mark origin sender route decode index before trace outside qPost bounded available _
-    · simp only [Bool.not_true, Bool.false_eq_true, if_false]
+    · simp only [Bool.not_true, Bool.false_eq_true, ite_false]
       cases initial with
       | fail error => exact finished_bound prior cap mark origin sender route decode index before trace outside qPost bounded available _
       | div => exact finished_bound prior cap mark origin sender route decode index before trace outside qPost bounded available _
@@ -221,7 +221,7 @@ private theorem candidate_bound (prior : List RatchetChain) (cap : Nat) (mark : 
               intro allocated
               cases allocated
               · exact finished_bound prior cap mark origin sender route decode index before trace outside qPost bounded available _
-              · simp only [Bool.not_true, Bool.false_eq_true, if_false]
+              · simp only [Bool.not_true, Bool.false_eq_true, ite_false]
                 cases binding : candidate.key_id_binding with
                 | fail error => exact finished_bound prior cap mark origin sender route decode index before trace outside qPost bounded available _
                 | div => exact finished_bound prior cap mark origin sender route decode index before trace outside qPost bounded available _

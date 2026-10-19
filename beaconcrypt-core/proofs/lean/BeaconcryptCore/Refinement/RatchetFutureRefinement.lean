@@ -74,9 +74,9 @@ theorem array_set_get! {α : Type} [Inhabited α] {n : Std.Usize}
     (a : Array α n) (slot : Std.Usize) (value : α) (i : Nat) (hi : i < a.length) :
     (a.set slot value).val[i]! = if slot.val = i then value else a.val[i]! := by
   by_cases heq : slot.val = i
-  · simpa only [if_pos heq, ← Array.getElem!_Nat_eq] using
+  · simpa only [ite_eq_left heq, ← Array.getElem!_Nat_eq] using
       (Array.getElem!_Nat_set_eq a slot i value ⟨heq, hi⟩)
-  · simpa only [if_neg heq, ← Array.getElem!_Nat_eq] using
+  · simpa only [ite_eq_right heq, ← Array.getElem!_Nat_eq] using
       (Array.getElem!_Nat_set_ne a slot i value heq)
 
 /-- Appending a skipped derivation preserves the exact control-prefix relation. -/
@@ -98,7 +98,7 @@ theorem FutureControlRefines.advance
   rcases h with ⟨hsend, hseq, hlen, hprefix, happended⟩
   refine ⟨hsend, by simp only [hnextval, hseq, Nat.add_assoc], by simp only [hcachelen, hlen, Nat.add_assoc], ?_, ?_⟩
   · intro i hi
-    rw [hcacheentries, array_set_get! _ _ _ _ (by scalar_tac), if_neg (by scalar_tac)]
+    rw [hcacheentries, array_set_get! _ _ _ _ (by scalar_tac), ite_eq_right (by scalar_tac)]
     exact hprefix i hi
   · intro j hj
     rw [hcacheentries, array_set_get! _ _ _ _ (by scalar_tac)]
@@ -121,11 +121,11 @@ theorem FutureStagedRefines.append
   · intro j hj
     by_cases heq : j = count
     · subst j
-      exact ⟨{ sequence, material := Ratchet.msgKeyAt cr chain count }, by rw [array_set_get! _ _ _ _ (by scalar_tac), if_pos hslot], hsequence, rfl⟩
-    · rw [array_set_get! _ _ _ _ (by scalar_tac), if_neg (by omega)]
+      exact ⟨{ sequence, material := Ratchet.msgKeyAt cr chain count }, by rw [array_set_get! _ _ _ _ (by scalar_tac), ite_eq_left hslot], hsequence, rfl⟩
+    · rw [array_set_get! _ _ _ _ (by scalar_tac), ite_eq_right (by omega)]
       exact h.staged j (by omega)
   · intro i hi hout
-    rw [array_set_get! _ _ _ _ (by simpa [Array.length_eq] using hi), if_neg (by omega)]
+    rw [array_set_get! _ _ _ _ (by simpa [Array.length_eq] using hi), ite_eq_right (by omega)]
     exact h.empty i hi (by omega)
 
 /-- A live bounded logical slot exposes its exact cached sequence. -/
@@ -135,8 +135,8 @@ theorem receive_key_at_some (state : ratchet.control.RatchetState)
     (hentry : state.receive_cache.entries.val[slot.val]! = sequence) :
     RatchetState.receive_key_at state slot = ok (core.option.Option.Some sequence) := by
   simp only [RatchetState.receive_key_at, SequenceCache.entry, lift, capacity_eq_ok, bind_tc_ok,
-    if_pos (show slot < state.receive_cache.len by scalar_tac),
-    if_pos (show UScalar.cast UScalarTy.Usize slot < UScalar.cast UScalarTy.Usize 50#u64 by scalar_tac),
+    ite_eq_left (show slot < state.receive_cache.len by scalar_tac),
+    ite_eq_left (show UScalar.cast UScalarTy.Usize slot < UScalar.cast UScalarTy.Usize 50#u64 by scalar_tac),
     entries_index_eq_ok state.receive_cache slot hcap, hentry]
 
 /-- Bounded array reads agree with the total list-index notation used by the invariants. -/
@@ -191,16 +191,16 @@ theorem FutureKdfRefines.resume_more
   }
   refine ⟨next, ?_, ?_⟩
   · simp only [ReceiveKdf.resume,
-      if_neg (show pending.remaining ≠ 0#u8 by scalar_tac),
-      if_neg (show pending.remaining ≠ 1#u8 by scalar_tac),
+      ite_eq_right (show pending.remaining ≠ 0#u8 by scalar_tac),
+      ite_eq_right (show pending.remaining ≠ 1#u8 by scalar_tac),
       hadvanced, hadvancedSequence, hadvancedSlot, lift, hget,
       core.option.Option.Insts.CoreCmpPartialEqOption.eq, core.U64.Insts.CoreCmpPartialEqU64,
       bind_tc_ok, capacity_eq_ok]
-    simp only [beq_self_eq_true, if_true,
-      if_neg (show ¬UScalar.cast UScalarTy.Usize pending.working_control.receive_cache.len ≥ UScalar.cast UScalarTy.Usize 50#u64 by scalar_tac),
-      hsum, hnextSlot, hindex, core.option.Option.is_some, Std.core.option.Option.is_some,
-      bind_tc_ok, if_neg (show ¬advanced.state.receive_sequence ≥ pending.target by scalar_tac)]
-    simp only [core.option.Option.None, Option.isSome_none, Bool.false_eq_true, if_false]
+    simp only [beq_self_eq_true, ite_true,
+      ite_eq_right (show ¬UScalar.cast UScalarTy.Usize pending.working_control.receive_cache.len ≥ UScalar.cast UScalarTy.Usize 50#u64 by scalar_tac),
+      hsum, hnextSlot, hindex, core.option.Option.is_some,
+      bind_tc_ok, ite_eq_right (show ¬advanced.state.receive_sequence ≥ pending.target by scalar_tac)]
+    simp only [Bool.false_eq_true, ite_false]
     rw [hresponse]
     simp only [bind_tc_ok, hskippedNext, hremainingNext, RatchetChain.as_bytes, SymmetricRatchetKdfRequest.new]
     rw [array_update_eq_ok _ _ _ (by scalar_tac)]

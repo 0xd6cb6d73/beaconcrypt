@@ -73,9 +73,9 @@ theorem admitted_exact {joint : Primitives} (dh : DhInterface joint) (domain : P
     PqxdhBeaconPhase2Shared.admitted_exact]
   simp only [PqxdhBeaconPhase2Shared.admitted, PqxdhBeaconPhase2Shared.nonzero, realized, admitted]
   by_cases known : knownNonzero collected
-  · simp only [known, (source_nonzero dh domain scalar collected references).mpr known, if_true]
+  · simp only [known, (source_nonzero dh domain scalar collected references).mpr known, ite_true]
   · have hidden := mt (source_nonzero dh domain scalar collected references).mp known
-    simp only [known, hidden, if_false]
+    simp only [known, hidden, ite_false]
 
 /-- Pending simulator state stores actual local replies and metadata, without a DH materializer. -/
 structure Prepared (Response : Type) where

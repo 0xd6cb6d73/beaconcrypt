@@ -35,7 +35,7 @@ theorem localCoins_uniform {Result : Type} (client : ProbComp Result) (q : Nat)
       rw [isQueryBoundP_query_bind_iff]
       refine ⟨Or.inr bound.1, ?_⟩
       intro answer
-      simpa only [Uniform, PublicClass, IsMlKemUniformQuery, if_true] using ih answer _ (bound.2 answer)
+      simpa only [Uniform, PublicClass, IsMlKemUniformQuery, ite_true] using ih answer _ (bound.2 answer)
 
 set_option backward.isDefEq.respectTransparency false in
 /-- Source interpreter coins issue no other local resource class. -/
@@ -53,7 +53,7 @@ theorem localCoins_excluded {Result : Type} (client : ProbComp Result)
       rw [isQueryBoundP_query_bind_iff]
       refine ⟨Or.inl (excluded coin), ?_⟩
       intro answer
-      simpa only [excluded coin, if_false, localCoins] using ih answer
+      simpa only [excluded coin, ite_false, localCoins] using ih answer
 
 
 def SourceClass (predicate : SourceSpec.Domain → Prop) : (CorrelatedSpec baseSpec).Domain → Prop
@@ -85,15 +85,15 @@ theorem localSource_uniform_step
        (if SourceClass (baseSpec := baseSpec) SourceUniform query then 1 else 0) +
        (if LocalClass (baseSpec := baseSpec) Uniform query then 1 else 0)) := by
   rcases query with (request | (request | request)) | request
-  · simpa only [localSourceImpl, StateT.run, SourceClass, LocalClass, if_false, Nat.add_zero] using
+  · simpa only [localSourceImpl, StateT.run, SourceClass, LocalClass, ite_false, Nat.add_zero] using
       localCoins_uniform ((bareImpl attachedVerify primitives count request).run state) _
         (bare_uniform_step attachedVerify primitives count request state)
-  · simp only [localSourceImpl, StateT.run, SourceClass, LocalClass, if_false, Nat.zero_add,
+  · simp only [localSourceImpl, StateT.run, SourceClass, LocalClass, ite_false, Nat.zero_add,
       bind_pure_comp, isQueryBoundP_map_iff]
     exact (isQueryBoundP_query_iff (spec := LocalPostSpec baseSpec)
       (p := Uniform) (.inl request) _).2 (by split_ifs <;> simp_all)
   · trivial
-  · simp only [localSourceImpl, StateT.run, SourceClass, LocalClass, Uniform, PublicClass, if_false,
+  · simp only [localSourceImpl, StateT.run, SourceClass, LocalClass, Uniform, PublicClass, ite_false,
       Nat.zero_add, bind_pure_comp, isQueryBoundP_map_iff]
     simp [PublicClass]
 /-- Full adaptive post-root interpretation charges all original source creation/coin requests and every direct initializer uniform request. -/
@@ -134,7 +134,7 @@ theorem localSource_class_step
     ((localSourceImpl source attachedVerify primitives count query).run state).IsQueryBoundP predicate
       (if LocalClass (baseSpec := baseSpec) predicate query then 1 else 0) := by
   rcases query with (request | (request | request)) | request
-  · simpa only [localSourceImpl, StateT.run, LocalClass, if_false] using
+  · simpa only [localSourceImpl, StateT.run, LocalClass, ite_false] using
       localCoins_excluded ((bareImpl attachedVerify primitives count request).run state) predicate excluded
   · simp only [localSourceImpl, StateT.run, LocalClass, bind_pure_comp, isQueryBoundP_map_iff]
     exact (isQueryBoundP_query_iff (spec := LocalPostSpec baseSpec)
@@ -191,8 +191,8 @@ theorem sourcePost_bound {Result : Type}
     (bounded : client.IsQueryBoundP (RoutedClass predicate) q) :
     (simulateQ (sourcePost source challenge) client).IsQueryBoundP predicate q :=
   isQueryBoundP_simulateQ_of_step_noUniform bounded
-    (fun request hit => by simpa only [hit, if_true] using sourcePost_step source challenge predicate request)
-    (fun request miss => by simpa only [miss, if_false] using sourcePost_step source challenge predicate request)
+    (fun request hit => by simpa only [hit, ite_true] using sourcePost_step source challenge predicate request)
+    (fun request miss => by simpa only [miss, ite_false] using sourcePost_step source challenge predicate request)
 
 /-- Independent caps retain the original source and direct channels and every private root attempt. -/
 structure ObserverBounds {Result : Type} (client : OracleComp (CorrelatedSpec baseSpec) Result)
@@ -588,7 +588,7 @@ theorem randomMain_eq_branchMain
     (runtime : ProbCompRuntime (OracleComp (unifSpec + baseSpec))) (protocol : Protocol baseSpec) :
     randomMain source kem runtime protocol = oneKeyBranchMain kem runtime (reduction source kem protocol) false := by
   simp only [randomMain, oneKeyBranchMain, oneKeyPrefix, oneKeyFinish, reduction,
-    Bool.false_eq_true, if_false, publicImpl, pure_bind, bind_assoc]
+    Bool.false_eq_true, ite_false, publicImpl, pure_bind, bind_assoc]
   rfl
 
 /-- Source-shaped completion, explicit correlated randomness, native ghost completion and fair CCA each pay their actual draws. -/

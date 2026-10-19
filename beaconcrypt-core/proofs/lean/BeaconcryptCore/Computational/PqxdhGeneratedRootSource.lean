@@ -207,7 +207,7 @@ theorem dispatch_complete_eq_source
     intro output
     simp [PqxdhPrivateAcceptedRoot.dispatch, PqxdhPrivateAcceptedRoot.filteredNext, bad, evalKem, PqxdhPrivateAcceptedRoot.complete, rootProtocol]
   · by_cases eligible : targetEligible parameters prepared = true
-    · simp only [PqxdhPrivateAcceptedRoot.dispatch, PqxdhPrivateAcceptedRoot.filteredNext, bad, Bool.false_eq_true, if_false, eligible, if_true,
+    · simp only [PqxdhPrivateAcceptedRoot.dispatch, PqxdhPrivateAcceptedRoot.filteredNext, bad, Bool.false_eq_true, ite_false, eligible, ite_true,
         PqxdhPrivateAcceptedRoot.totalNext, PqxdhPrivateAcceptedRoot.totalTargetContinuation, evalKem_bind, evalKem_ambient, bind_assoc]
       apply evalSPMF_bind_congr'
       intro ephemeral

@@ -214,7 +214,7 @@ theorem protected_hit (hmac : HmacSha512) (target : Option DhOutput)
     (bytes : Pqxdh.Bytes) (cache : HmacOracle.QueryCache) (prk : HmacBlock)
     (inside : Protected target bytes) (hit : cache bytes = some prk) :
     (protectedExtract hmac target bytes).run cache = pure (prk, cache) := by
-  simp only [protectedExtract, if_pos inside, randomOracle.apply_eq, StateT.run_bind,
+  simp only [protectedExtract, ite_eq_left inside, randomOracle.apply_eq, StateT.run_bind,
     StateT.run_get, pure_bind, hit, StateT.run_pure]
 
 set_option backward.isDefEq.respectTransparency false in
@@ -225,7 +225,7 @@ theorem protected_miss (hmac : HmacSha512) (target : Option DhOutput)
     (protectedExtract hmac target bytes).run cache = (do
       let prk ← $ᵗ HmacBlock
       pure (prk, cache.cacheQuery bytes prk)) := by
-  simp only [protectedExtract, if_pos inside, randomOracle.apply_eq, StateT.run_bind,
+  simp only [protectedExtract, ite_eq_left inside, randomOracle.apply_eq, StateT.run_bind,
     StateT.run_get, pure_bind, miss, StateT.run_modifyGet]
   change ((do let value ← $ᵗ HmacBlock; pure (value, cache)) >>= fun pair =>
     pure (pair.1, pair.2.cacheQuery bytes pair.1)) = _

@@ -64,7 +64,7 @@ theorem after_bound (source : FixedHkdfSha512NoSaltSource) (baseImpl : QueryImpl
       (simulateQ (kemAmbientImpl baseImpl) (after true source kem protocol publicKey secretKey context)) ≤
       Pr[= true | simulateQ (kemAmbientImpl baseImpl) (keyError kem publicKey secretKey)].toReal := by
   by_cases proceed : protocol.proceed publicKey context = true
-  · simp only [after, proceed, if_true, Bool.false_eq_true, if_false, simulateQ_bind]
+  · simp only [after, proceed, ite_true, Bool.false_eq_true, ite_false, simulateQ_bind]
     let left (pair : MlKem768Ciphertext × MlKemSharedSecret) :=
       simulateQ (kemAmbientImpl baseImpl)
         (simulateQ (actualImpl source kem secretKey pair.1) (protocol.resume publicKey pair.1 context))
@@ -87,7 +87,7 @@ theorem after_bound (source : FixedHkdfSha512NoSaltSource) (baseImpl : QueryImpl
         rw [equal]
         simp
       · simpa only [badRun, functional.exact, pure_bind, simulateQ_pure, probOutput_pure,
-          decide_eq_true good, if_true, ENNReal.toReal_one] using
+          decide_eq_true good, ite_true, ENNReal.toReal_one] using
           tvDist_le_one (left (ciphertext, secret)) (right (ciphertext, secret))
     have averaged := PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind
       (simulateQ (kemAmbientImpl baseImpl) (kem.encaps publicKey)) left right badRun (fun result => result = true)
@@ -154,7 +154,7 @@ theorem stopped_branch (routed : Bool) (source : FixedHkdfSha512NoSaltSource)
     (context : protocol.Context) (stopped : protocol.proceed publicKey context = false) :
     after routed source kem protocol publicKey secretKey context =
       simulateQ (kem.IND_CCA_preChallengeImpl secretKey) (protocol.abort publicKey context) := by
-  simp only [after, stopped, Bool.false_eq_true, if_false]
+  simp only [after, stopped, Bool.false_eq_true, ite_false]
 
 /-- The actual selected branch pays its own interpreted callbacks, including all private-root work. This syntactic bill does not use an evaluated-distribution equality. -/
 theorem after_query_bound (routed : Bool) (source : FixedHkdfSha512NoSaltSource)

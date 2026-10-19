@@ -42,7 +42,7 @@ theorem begin_remaining {Context : Type} (kernel : ConcreteRatchetKernel)
     cases empty <;> by_cases hgap : skipped > control.RATCHET_MAX_GAP <;>
       simp only [hskipped, lift, control.RatchetState.receive_cache_len, hempty, hgap,
         RatchetChain.as_bytes, SymmetricRatchetKdfRequest.new, refined.empty_material_slots,
-        bind_tc_ok, Bool.false_eq_true, if_false, if_true, RustM.ok.injEq, RemainingBound]
+        bind_tc_ok, Bool.false_eq_true, ite_false, ite_true, RustM.ok.injEq, RemainingBound]
     all_goals first | exact ⟨_, rfl, True.intro⟩ | skip
     refine ⟨_, rfl, ?_⟩
     scalar_tac
@@ -59,7 +59,7 @@ theorem resume_small {Context : Type} (pending : ReceiveKdf Context)
   by_cases hzero : pending.remaining = 0#u8
   · simp [ReceiveKdf.resume, hzero, receive_rejected, kdfCost]
   · have hone : pending.remaining = 1#u8 := by scalar_tac
-    simp only [ReceiveKdf.resume, hone, if_true]
+    simp only [ReceiveKdf.resume, hone, ite_true]
     obtain ⟨advanced, hadvanced⟩ := control.advance_receive_target_total pending.working_control
     cases hseq : advanced.sequence <;> simp only [hadvanced, hseq, bind_tc_ok, receive_rejected]
     all_goals first | exact ⟨_, rfl, rfl⟩ | skip
@@ -109,7 +109,7 @@ theorem program_cost {Context Plaintext : Type} (effect : ReceiveEffect Context)
           simp [kdfCost]
       | ReceiveKdfRequested pending =>
           rw [program, isQueryBoundP_query_bind_iff]
-          simp only [Sum.isLeft, not_true_eq_false, false_or, if_true]
+          simp only [Sum.isLeft, not_true_eq_false, false_or, ite_true]
           refine ⟨by simp [kdfCost], fun response => ?_⟩
           apply (ih _ (hdepth ▸ resume_rank pending response) _ rfl).mono
           have cost := resume_cost pending response

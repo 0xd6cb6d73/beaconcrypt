@@ -150,7 +150,7 @@ theorem prepare_decapsulation {I D K X Response Shared : Type} (control : pqxdh.
   | some inputs =>
       unfold afterInputs
       rw [isQueryBoundP_query_bind_iff]
-      simp only [isDecapsulation, Bool.false_eq_true, not_false_eq_true, true_or, if_false, true_and]
+      simp only [isDecapsulation, Bool.false_eq_true, not_false_eq_true, true_or, ite_false, true_and]
       intro erased
       trivial
 
@@ -160,10 +160,10 @@ theorem afterRoot_no_root {Response Shared : Type} (decode : RawCtxReceive.Frame
     (afterRoot decode pending root).IsQueryBoundP (fun query => isRoot query = true) 0 := by
   unfold afterRoot
   rw [isQueryBoundP_query_bind_iff]
-  simp only [isRoot, Bool.false_eq_true, not_false_eq_true, true_or, if_false, true_and]
+  simp only [isRoot, Bool.false_eq_true, not_false_eq_true, true_or, ite_false, true_and]
   intro response
   rw [isQueryBoundP_query_bind_iff]
-  simp only [Bool.false_eq_true, not_false_eq_true, true_or, if_false, true_and]
+  simp only [Bool.false_eq_true, not_false_eq_true, true_or, ite_false, true_and]
   intro reply
   cases reply with
   | none => trivial
@@ -179,7 +179,7 @@ theorem tail_root {Response Shared : Type} (decode : RawCtxReceive.FrameDecoder)
     (tail decode pending).IsQueryBoundP (fun query => isRoot query = true) 1 := by
   unfold tail
   rw [isQueryBoundP_query_bind_iff]
-  simp only [isRoot, not_true_eq_false, false_or, if_true]
+  simp only [isRoot, not_true_eq_false, false_or, ite_true]
   refine ⟨by decide, fun reply => ?_⟩
   cases reply with
   | none => trivial

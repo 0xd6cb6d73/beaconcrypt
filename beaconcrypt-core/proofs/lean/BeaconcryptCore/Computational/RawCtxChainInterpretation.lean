@@ -39,7 +39,7 @@ def mapOpeningChains {Context : Type} (send : Send → SendValue) (receive : Rec
 private theorem rust_map_if {Input Output : Type} (f : Input → Output) (p : Prop) [Decidable p]
     (left right : RustM Input) :
     f <$> (if p then left else right) = if p then f <$> left else f <$> right := by
-  by_cases h : p <;> simp only [h, if_true, if_false]
+  by_cases h : p <;> simp only [h, ite_true, ite_false]
 
 /-- Cached publication keeps all diagnostic branches and the actual slot movement under arbitrary chain maps. -/
 theorem publish_cached_chains (send : Send → SendValue) (receive : Receive → ReceiveValue)
@@ -142,9 +142,9 @@ theorem publish_future_chains_bounded (send : Send → SendValue) (receive : Rec
     uscalar_sub_eq_ok (UScalar.cast UScalarTy.Usize 50#u64)
       (UScalar.cast UScalarTy.Usize pending.first_slot) (by scalar_tac)
   simp only [publish_future_receive, mapPendingChain, mapChains, lift, capacity_eq_ok, bind_tc_ok,
-    if_neg (by scalar_tac : ¬UScalar.cast UScalarTy.Usize pending.first_slot >
+    ite_eq_right (by scalar_tac : ¬UScalar.cast UScalarTy.Usize pending.first_slot >
       UScalar.cast UScalarTy.Usize 50#u64), subtraction,
-    if_neg (by scalar_tac : ¬UScalar.cast UScalarTy.Usize pending.skipped > available)]
+    ite_eq_right (by scalar_tac : ¬UScalar.cast UScalarTy.Usize pending.skipped > available)]
   change (publish_future_receive_slots (mapChains send receive state) pending.staged_slots
       pending.first_slot pending.skipped >>= _) = _
   rw [publish_future_slots_chains send receive state pending.staged_slots pending.first_slot

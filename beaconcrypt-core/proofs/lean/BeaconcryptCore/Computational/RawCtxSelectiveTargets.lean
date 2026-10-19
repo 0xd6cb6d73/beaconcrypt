@@ -170,7 +170,7 @@ theorem selected_missing {Metadata PeerMetadata Identity DhPair KemPair Auxiliar
     (missing : selectedKernel (sender (catalogue target.1) target.2.1) state.1 = none) :
     selectedFamily source writer stage serverCount beaconCount catalogue target senderId route decode client state primitive table =
       selectedFamily source writer 0 serverCount beaconCount catalogue target senderId route decode client state primitive table := by
-  simp only [selectedFamily, starting_missing _ _ _ missing, Option.isSome_none, Bool.false_eq_true, if_false]
+  simp only [selectedFamily, starting_missing _ _ _ missing, Option.isSome_none, Bool.false_eq_true, ite_false]
 
 end BeaconcryptCore.Computational.RawCtxSelectiveTargets
 

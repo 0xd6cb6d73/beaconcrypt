@@ -186,7 +186,7 @@ theorem build_uniform
       (PqxdhRegistrationProtocolState.consume index ready state)).binding ready metadata
     (PqxdhRegistrationProtocolState.input senderId index metadata
       (PqxdhRegistrationProtocolState.consume index ready state)).state state.primitive
-  simpa only [native_uniform_bill, IsTotalQueryBound, IsQueryBoundP, not_true_eq_false, false_or, if_true,
+  simpa only [native_uniform_bill, IsTotalQueryBound, IsQueryBoundP, not_true_eq_false, false_or, ite_true,
     StateT.run, PqxdhRegistrationProtocolState.consume] using bound
 
 /-- The same reached source scheduler keeps the full uniform ledger when registration controls are retained. -/
@@ -234,7 +234,7 @@ theorem continuation_coins_excluded {Result : Type}
             OracleComp (PqxdhPrivateAcceptedRoot.CorrelatedSpec baseSpec) _)
         PqxdhProtocolRegistration.coins (next answer)) predicate 0
       rw [isQueryBoundP_query_bind_iff]
-      exact ⟨by simp [excluded query], fun answer => by simpa only [if_neg (excluded query)] using ih answer⟩
+      exact ⟨by simp [excluded query], fun answer => by simpa only [ite_eq_right (excluded query)] using ih answer⟩
 
 open PqxdhCorrelatedRootQueryBounds PqxdhPrivateRootQueryBounds PqxdhChallengeSecretQueryBounds
 

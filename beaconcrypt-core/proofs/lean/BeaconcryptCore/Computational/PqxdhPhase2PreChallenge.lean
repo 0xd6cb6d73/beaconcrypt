@@ -148,7 +148,7 @@ theorem pre_step_bound
         (.inr (PqxdhPhase2InputBytes.ciphertext value)) _).2 (by
           have bounded := decapsulationBound (PqxdhPhase2InputBytes.ciphertext value)
           intro selected
-          simp only [if_pos selected] at bounded
+          simp only [ite_eq_left selected] at bounded
           omega)
   case inl.eraseShared => simp [pre, StateT.run_pure]
   case inr.inr.root => simp [pre, StateT.run_pure]
