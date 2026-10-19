@@ -2,6 +2,8 @@ import BeaconcryptCore.Computational.PqxdhJointKdfGame
 import VCVio.OracleComp.QueryTracking.Birthday
 import VCVio.OracleComp.QueryTracking.RandomOracle.DeferredSampling
 import VCVio.OracleComp.SimSemantics.StateT.StateProjection
+import BeaconcryptCore.Computational.VCVioForwardProbabilityTheory
+import BeaconcryptCore.Computational.VCVioLegacyBridge
 
 /-!
 # PQXDH joint-HKDF projection collisions
@@ -5087,8 +5089,11 @@ theorem sourceProjectionCollision_real_le
     _ ≤ Pr[= true | fixedHkdfSha512JointStreamRandomExp reduction] +
         ENNReal.ofReal
           ((fixedHkdfSha512JointStreamRealExp source reduction).boolDistAdvantage
-            (fixedHkdfSha512JointStreamRandomExp reduction)) :=
-      ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage _ _
+            (fixedHkdfSha512JointStreamRandomExp reduction)) := by
+      have comparison := VCVioForward.evalDist_apply_true_le_add_ofReal_boolDistAdvantage
+          (fixedHkdfSha512JointStreamRealExp source reduction) (fixedHkdfSha512JointStreamRandomExp reduction)
+      simp only [VCVioLegacy.evalDist_singleton_eq_probOutput] at comparison
+      exact comparison
     _ = Pr[SourceProjectionCollisionEvent |
           sourceProjectionObservedFullRandomRun adversary] +
         ENNReal.ofReal (fixedHkdfSha512JointStreamAdvantage source reduction) := by

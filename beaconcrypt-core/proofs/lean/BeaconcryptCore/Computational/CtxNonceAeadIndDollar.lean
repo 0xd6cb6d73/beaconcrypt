@@ -1,6 +1,8 @@
 import BeaconcryptCore.Computational.CtxNonceAeadIntCtxt
 import VCVio.CryptoFoundations.SecExp
 import VCVio.OracleComp.QueryTracking.QueryBound
+import BeaconcryptCore.Computational.VCVioForwardProbabilityTheory
+import BeaconcryptCore.Computational.VCVioLegacyBridge
 
 /-!
 # Modified nonce-AEAD IND$ reduction for the CTX secret-prefix event
@@ -697,9 +699,11 @@ theorem ctxSecretPrefixQueriedProbability_le_modifiedNonceAeadINDDollar
       exact ctxSecretPrefixQueriedProbability_eq_realProbeReduction c adversary
     _ ≤ Pr[= true | modifiedNonceAeadINDDollarRandomProbeExp reduction] +
           ENNReal.ofReal (modifiedNonceAeadINDDollarProbeAdvantage c reduction) := by
-      exact ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage
-        (modifiedNonceAeadINDDollarRealProbeExp c reduction)
-        (modifiedNonceAeadINDDollarRandomProbeExp reduction)
+      have comparison := VCVioForward.evalDist_apply_true_le_add_ofReal_boolDistAdvantage
+          (modifiedNonceAeadINDDollarRealProbeExp c reduction)
+          (modifiedNonceAeadINDDollarRandomProbeExp reduction)
+      simp only [VCVioLegacy.evalDist_singleton_eq_probOutput] at comparison
+      exact comparison
     _ ≤ (qH : ℝ≥0∞) * (Fintype.card CtxKey : ℝ≥0∞)⁻¹ +
           ENNReal.ofReal (modifiedNonceAeadINDDollarProbeAdvantage c reduction) := by
       gcongr

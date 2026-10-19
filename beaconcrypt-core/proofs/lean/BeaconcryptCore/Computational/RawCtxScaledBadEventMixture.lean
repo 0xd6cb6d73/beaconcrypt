@@ -1,4 +1,6 @@
 import BeaconcryptCore.Computational.RawCtxBadEventMixture
+import BeaconcryptCore.Computational.VCVioForwardProbabilityTheory
+import BeaconcryptCore.Computational.VCVioLegacyBridge
 
 /-!
 A fixed finite coefficient on the same explicit local candidate event remains that coefficient after the original full context sampler is averaged. The sampler's complete distribution is retained. This arithmetic result does not replace a reached source distribution with an independent state or construct a cryptographic reduction; its consumer must supply the actual local comparison and same bad-event game.
@@ -12,7 +14,9 @@ namespace BeaconcryptCore.Computational.RawCtxScaledBadEventMixture
 theorem local_probability (left right bad : ProbComp Bool) (coefficient : Nat)
     (bound : left.boolDistAdvantage right ≤ coefficient * Pr[= true | bad].toReal) :
     Pr[= true | left] ≤ Pr[= true | right] + coefficient * Pr[= true | bad] := by
-  refine (ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage left right).trans ?_
+  have comparison := VCVioForward.evalDist_apply_true_le_add_ofReal_boolDistAdvantage left right
+  simp only [VCVioLegacy.evalDist_singleton_eq_probOutput] at comparison
+  refine comparison.trans ?_
   exact add_le_add le_rfl (by simpa only [ENNReal.ofReal_mul (by positivity : (0 : ℝ) ≤ coefficient),
     ENNReal.ofReal_natCast, ENNReal.ofReal_toReal probOutput_ne_top] using ENNReal.ofReal_le_ofReal bound)
 

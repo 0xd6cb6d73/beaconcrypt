@@ -1,4 +1,6 @@
 import BeaconcryptCore.Computational.AdaptiveCtxLogSimulation
+import BeaconcryptCore.Computational.VCVioForwardProbabilityTheory
+import BeaconcryptCore.Computational.VCVioLegacyBridge
 
 open OracleComp OracleSpec ENNReal
 set_option autoImplicit false
@@ -141,9 +143,10 @@ theorem loggedProbe_le_indDollar {Result : Type} (decode : AdaptiveCtxReceive.Ra
         (qHash : ℝ≥0∞) * (((2 ^ 128 : ℕ) : ℝ≥0∞))⁻¹ := by
   rw [← loggedProbeExp_probability]
   apply (loggedProbe_le_validationReal decode c adversary qHash qSeal bounded small).trans
-  have comparison := ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage
+  have comparison := VCVioForward.evalDist_apply_true_le_add_ofReal_boolDistAdvantage
     (modifiedNonceAeadINDDollarRealExp c (validationReduction decode c adversary qHash))
     (modifiedNonceAeadINDDollarRandomExp (validationReduction decode c adversary qHash))
+  simp only [VCVioLegacy.evalDist_singleton_eq_probOutput] at comparison
   exact comparison.trans (by
     rw [add_comm]
     exact add_le_add le_rfl (validationReduction_random_le decode c adversary qHash))
@@ -154,8 +157,9 @@ theorem probEvent_le_add_ofReal_tvDist {Result : Type} (left right : ProbComp Re
     Pr[event | left] ≤ Pr[event | right] + ENNReal.ofReal (tvDist left right) := by
   classical
   let decideEvent := fun result => decide (event result)
-  have comparison := ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage
+  have comparison := VCVioForward.evalDist_apply_true_le_add_ofReal_boolDistAdvantage
     (decideEvent <$> left) (decideEvent <$> right)
+  simp only [VCVioLegacy.evalDist_singleton_eq_probOutput] at comparison
   have variation : (decideEvent <$> left).boolDistAdvantage (decideEvent <$> right) ≤ tvDist left right := by
     rw [ProbComp.boolDistAdvantage]
     simpa only [evalDist_apply_singleton] using

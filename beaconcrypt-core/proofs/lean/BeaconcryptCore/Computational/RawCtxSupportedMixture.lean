@@ -1,4 +1,6 @@
 import BeaconcryptCore.Computational.PqxdhInitialSourceLaterMixture
+import BeaconcryptCore.Computational.VCVioForwardProbabilityTheory
+import BeaconcryptCore.Computational.VCVioLegacyBridge
 
 /-!
 A uniform statistical comparison bound lifts through the same actual preparation distribution using only supported continuations. This arithmetic lemma preserves every branch and does not replace a mixture of cryptographic advantages by the advantage of an unconstructed reduction.
@@ -17,8 +19,9 @@ theorem probability {Context : Type} (sampler : ProbComp Context) (left right : 
       apply ENNReal.tsum_le_tsum
       intro context
       by_cases supported : context ∈ support sampler
-      · exact mul_le_mul' le_rfl ((ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage (left context) (right context)).trans
-          (add_le_add le_rfl (bound context supported)))
+      · have comparison := VCVioForward.evalDist_apply_true_le_add_ofReal_boolDistAdvantage (left context) (right context)
+        simp only [VCVioLegacy.evalDist_singleton_eq_probOutput] at comparison
+        exact mul_le_mul' le_rfl (comparison.trans (add_le_add le_rfl (bound context supported)))
       · simp only [probOutput_eq_zero_of_not_mem_support supported, zero_mul, le_refl]
     _ = (∑' context, Pr[= context | sampler] * Pr[= true | right context]) + (∑' context, Pr[= context | sampler]) * cost := by
       simp only [mul_add, ENNReal.tsum_add, ENNReal.tsum_mul_right]

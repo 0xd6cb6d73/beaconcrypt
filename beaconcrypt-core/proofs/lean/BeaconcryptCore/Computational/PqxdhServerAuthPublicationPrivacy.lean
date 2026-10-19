@@ -1,4 +1,6 @@
 import BeaconcryptCore.Computational.PqxdhServerAuthPublicationRandom
+import BeaconcryptCore.Computational.VCVioForwardProbabilityTheory
+import BeaconcryptCore.Computational.VCVioLegacyBridge
 
 /-! Ordinary IND$ reductions for the actual pre-raw publication-reference observer. -/
 open OracleComp OracleSpec ENNReal
@@ -46,9 +48,10 @@ theorem canonical_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Wir
     fallback work H 1 0 hashBound sealBound
     (PqxdhServerAuthPublicationRandom.decision_no_raw setup codec checks adversary Q j decode) (by norm_num)
   simp only [Finset.range_zero, Finset.sum_empty, mul_zero, Nat.cast_zero, ENNReal.zero_div, add_zero] at privacy
-  have comparison := ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage
+  have comparison := VCVioForward.evalDist_apply_true_le_add_ofReal_boolDistAdvantage
     (AdaptiveCtxPrivacyGuard.canonicalView decode setup.source.crypto work)
     (AdaptiveCtxPrivacyGuard.randomView decode work)
+  simp only [VCVioLegacy.evalDist_singleton_eq_probOutput] at comparison
   rw [← probEvent_eq_eq_probOutput, ← probEvent_eq_eq_probOutput] at comparison
   exact (comparison.trans (add_le_add
     (PqxdhServerAuthPublicationRandom.random_bound setup codec checks adversary Q j decode) privacy)).trans

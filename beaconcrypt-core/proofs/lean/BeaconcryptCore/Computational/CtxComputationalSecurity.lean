@@ -1,5 +1,7 @@
 import BeaconcryptCore.Computational.CtxNonceAeadIndDollarValidation
 import VCVio.CryptoFoundations.SecExp
+import BeaconcryptCore.Computational.VCVioForwardProbabilityTheory
+import BeaconcryptCore.Computational.VCVioLegacyBridge
 
 /-!
 # Modified CTX computational security
@@ -447,8 +449,11 @@ theorem ctxClassifiedForgeryGame_le_direct_add_prefix
         Pr[= true | ctxDirectClassifiedForgeryGame c adversary] +
           ENNReal.ofReal
             ((ctxClassifiedForgeryGame c adversary).boolDistAdvantage
-              (ctxDirectClassifiedForgeryGame c adversary)) :=
-      ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage _ _
+              (ctxDirectClassifiedForgeryGame c adversary)) := by
+      have comparison := VCVioForward.evalDist_apply_true_le_add_ofReal_boolDistAdvantage
+          (ctxClassifiedForgeryGame c adversary) (ctxDirectClassifiedForgeryGame c adversary)
+      simp only [VCVioLegacy.evalDist_singleton_eq_probOutput] at comparison
+      exact comparison
     _ ≤ Pr[= true | ctxDirectClassifiedForgeryGame c adversary] +
           ENNReal.ofReal
             (ctxSecretPrefixQueriedProbability c adversary).toReal := by
@@ -489,8 +494,11 @@ theorem ctxTypedFullFreshForgeryGame_le_direct_add_prefix
         Pr[= true | ctxDirectTypedFullFreshForgeryGame c adversary] +
           ENNReal.ofReal
             ((ctxTypedFullFreshForgeryGame c adversary).boolDistAdvantage
-              (ctxDirectTypedFullFreshForgeryGame c adversary)) :=
-      ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage _ _
+              (ctxDirectTypedFullFreshForgeryGame c adversary)) := by
+      have comparison := VCVioForward.evalDist_apply_true_le_add_ofReal_boolDistAdvantage
+          (ctxTypedFullFreshForgeryGame c adversary) (ctxDirectTypedFullFreshForgeryGame c adversary)
+      simp only [VCVioLegacy.evalDist_singleton_eq_probOutput] at comparison
+      exact comparison
     _ ≤ Pr[= true | ctxDirectTypedFullFreshForgeryGame c adversary] +
           ENNReal.ofReal
             (ctxSecretPrefixQueriedProbability c adversary).toReal := by

@@ -1,4 +1,6 @@
 import BeaconcryptCore.Computational.PqxdhComposition
+import BeaconcryptCore.Computational.VCVioForwardProbabilityTheory
+import BeaconcryptCore.Computational.VCVioLegacyBridge
 
 /-!
 A shared original sampler averages the same explicit local bad-event costs over its complete context. These arithmetic laws retain the sampler distribution and do not replace it by a worst-case source-independent state. They construct no cryptographic reduction; their consuming protocol proof must discharge each local comparison for its actual continuation.
@@ -12,7 +14,9 @@ namespace BeaconcryptCore.Computational.RawCtxBadEventMixture
 theorem local_probability (left right bad : ProbComp Bool)
     (bound : left.boolDistAdvantage right ≤ Pr[= true | bad].toReal) :
     Pr[= true | left] ≤ Pr[= true | right] + Pr[= true | bad] := by
-  refine (ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage left right).trans ?_
+  have comparison := VCVioForward.evalDist_apply_true_le_add_ofReal_boolDistAdvantage left right
+  simp only [VCVioLegacy.evalDist_singleton_eq_probOutput] at comparison
+  refine comparison.trans ?_
   exact add_le_add le_rfl (by simpa only [ENNReal.ofReal_toReal probOutput_ne_top] using
     (ENNReal.ofReal_le_ofReal bound))
 

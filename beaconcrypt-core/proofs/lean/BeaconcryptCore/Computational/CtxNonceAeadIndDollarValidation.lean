@@ -1,5 +1,7 @@
 import BeaconcryptCore.Computational.CtxConstructiveNonce
 import VCVio.CryptoFoundations.SecExp
+import BeaconcryptCore.Computational.VCVioForwardProbabilityTheory
+import BeaconcryptCore.Computational.VCVioLegacyBridge
 
 /-!
 # Conventional Boolean IND$ validation for modified CTX
@@ -552,9 +554,11 @@ theorem ctxSecretPrefixQueriedProbability_le_booleanINDDollar
     _ ≤ Pr[= true | modifiedNonceAeadINDDollarRandomExp reduction] +
           ENNReal.ofReal
             (modifiedNonceAeadINDDollarAdvantage c reduction) := by
-      exact ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage
-        (modifiedNonceAeadINDDollarRealExp c reduction)
-        (modifiedNonceAeadINDDollarRandomExp reduction)
+      have comparison := VCVioForward.evalDist_apply_true_le_add_ofReal_boolDistAdvantage
+          (modifiedNonceAeadINDDollarRealExp c reduction)
+          (modifiedNonceAeadINDDollarRandomExp reduction)
+      simp only [VCVioLegacy.evalDist_singleton_eq_probOutput] at comparison
+      exact comparison
     _ ≤ (qH : ℝ≥0∞) * (((2 ^ 128 : ℕ) : ℝ≥0∞))⁻¹ +
           ENNReal.ofReal
             (modifiedNonceAeadINDDollarAdvantage c reduction) := by

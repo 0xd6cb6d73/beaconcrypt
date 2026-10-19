@@ -1,5 +1,6 @@
 import BeaconcryptCore.Computational.PqxdhFirstRecordStopBound
 import BeaconcryptCore.Computational.PqxdhFirstBeaconRecordCanonical
+import BeaconcryptCore.Computational.VCVioForwardProgramLogic
 /-!
 # Target-free bound on the first-record stop term
 
@@ -382,25 +383,8 @@ variable {ι : Type} {spec : OracleSpec ι} {σ₁ σ₂ α : Type}
 /-- Two support properties of never-failing computations combine through the product coupling. -/
 theorem product_coupling {β γ : Type} {first : ProbComp β} {second : ProbComp γ} {P : β → Prop} {Q : γ → Prop}
     (left : ∀ value ∈ support first, P value) (right : ∀ value ∈ support second, Q value) :
-    RelTriple first second (fun value other => P value ∧ Q other) := by
-  rw [relTriple_iff_relWP, relWP_iff_couplingPost]
-  have noFirst : (𝒮[first]).toPMF none = 0 := by
-    simpa only [← SPMF.run_eq_toPMF, probFailure_def] using probFailure_eq_zero (mx := first)
-  have noSecond : (𝒮[second]).toPMF none = 0 := by
-    simpa only [← SPMF.run_eq_toPMF, probFailure_def] using probFailure_eq_zero (mx := second)
-  refine ⟨_root_.SPMF.Coupling.prod noFirst noSecond, ?_⟩
-  intro pair reached
-  rcases (mem_spmf_support_bind_iff (𝒮[first])
-    (fun value => 𝒮[second] >>= fun other => (pure (value, other) : SPMF (β × γ))) pair).1 reached with
-    ⟨value, valueReached, rest⟩
-  have valueSupported : value ∈ support first :=
-    (mem_support_iff_evalSPMF_apply_ne_zero first value).2 ((SPMF.mem_support_iff _ _).1 valueReached)
-  rcases (mem_spmf_support_bind_iff (𝒮[second])
-    (fun other => (pure (value, other) : SPMF (β × γ))) pair).1 rest with ⟨other, otherReached, last⟩
-  have otherSupported : other ∈ support second :=
-    (mem_support_iff_evalSPMF_apply_ne_zero second other).2 ((SPMF.mem_support_iff _ _).1 otherReached)
-  obtain rfl : pair = (value, other) := by simpa using last
-  exact ⟨left value valueSupported, right other otherSupported⟩
+    RelTriple first second (fun value other => P value ∧ Q other) :=
+  relTriple_prod left right
 
 /-- From a state in an absorbing set, every final state of a stateful simulation stays in that set. -/
 theorem run_absorbing {σ : Type} (impl : QueryImpl spec (StateT σ ProbComp)) (bad : σ → Prop)

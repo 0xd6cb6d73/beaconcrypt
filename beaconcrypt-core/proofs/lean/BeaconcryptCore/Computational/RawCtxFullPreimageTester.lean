@@ -1,4 +1,6 @@
 import BeaconcryptCore.Computational.RawCtxSelectedInputCandidates
+import BeaconcryptCore.Computational.VCVioForwardProbabilityTheory
+import BeaconcryptCore.Computational.VCVioLegacyBridge
 
 /-!
 A separately constructed full-output distinguisher tests whether any actual public candidate evaluation reproduces the supplied child output. The hidden input is retained only by the private winning event, never passed to this tester. For an independently uniform 76-byte child, acceptance implies membership in the complete image of the fixed 32-byte-input function, whose probability is at most 2^-352 even if the candidate list is chosen adaptively after seeing the child.
@@ -131,8 +133,11 @@ theorem source_alias_bound {Context Result : Type} (source : FixedHkdfSha512NoSa
           (tester (production source) observe candidates)))) := by
   have actualBound := actual_test (production source) sample observe candidates
   rw [← source_test] at actualBound
-  refine actualBound.trans ((ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage _
-    (independentFullGame (byteSampler sample) (tester (production source) observe candidates))).trans ?_)
+  have comparison := VCVioForward.evalDist_apply_true_le_add_ofReal_boolDistAdvantage
+    (sourceFullGame source .ratchet (byteSampler sample) (tester (production source) observe candidates))
+    (independentFullGame (byteSampler sample) (tester (production source) observe candidates))
+  simp only [VCVioLegacy.evalDist_singleton_eq_probOutput] at comparison
+  refine actualBound.trans (comparison.trans ?_)
   exact add_le_add (independent_test (production source) (byteSampler sample) observe candidates)
     (ENNReal.ofReal_le_ofReal (sourceFullAdvantage_le_extract_add_hmac source hmac correct .ratchet
       (byteSampler sample) (tester (production source) observe candidates)))

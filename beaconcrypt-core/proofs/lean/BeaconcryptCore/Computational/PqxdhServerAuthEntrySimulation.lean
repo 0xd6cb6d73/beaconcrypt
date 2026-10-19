@@ -2,6 +2,7 @@ import BeaconcryptCore.Computational.PqxdhServerAuthExperiment
 import BeaconcryptCore.Computational.PqxdhServerAuthKeySchedule
 import VCVio.ProgramLogic.Relational.Basic
 import VCVio.OracleComp.QueryTracking.RandomOracle.DeferredSampling
+import BeaconcryptCore.Computational.VCVioForwardProgramLogic
 
 open OracleComp OracleSpec ENNReal
 open OracleComp.ProgramLogic.Relational
@@ -37,29 +38,12 @@ theorem relTriple_map_same {α β γ : Type} (work : ProbComp α) (left : α →
   obtain ⟨rfl, member⟩ := same
   exact relTriple_pure_pure (related a member)
 
-set_option linter.deprecated false in
-/-- Two support properties combine into a coupling of any two computations (the product coupling; the same statement as VCVio's `relTriple_prod`, whose module is not built in this workspace). -/
+/-- Two support properties combine into a coupling of any two computations: the product coupling, given by VCVio's `relTriple_prod`. -/
 theorem relTriple_support {α β : Type} (left : ProbComp α) (right : ProbComp β) (first : α → Prop)
     (second : β → Prop) (leftHolds : ∀ value ∈ support left, first value)
     (rightHolds : ∀ value ∈ support right, second value) :
-    RelTriple left right (fun a b => first a ∧ second b) := by
-  rw [relTriple_iff_relWP, relWP_iff_couplingPost]
-  have leftMass : (𝒮[left]).toPMF none = 0 := by
-    simpa only [← SPMF.run_eq_toPMF, probFailure_def] using probFailure_eq_zero (mx := left)
-  have rightMass : (𝒮[right]).toPMF none = 0 := by
-    simpa only [← SPMF.run_eq_toPMF, probFailure_def] using probFailure_eq_zero (mx := right)
-  refine ⟨_root_.SPMF.Coupling.prod leftMass rightMass, ?_⟩
-  intro pair member
-  rcases (mem_spmf_support_bind_iff (𝒮[left])
-    (fun a => 𝒮[right] >>= fun b => (pure (a, b) : SPMF (α × β))) pair).1 member with ⟨a, aMember, rest⟩
-  have aSupport : a ∈ support left :=
-    (mem_support_iff_evalSPMF_apply_ne_zero left a).2 ((SPMF.mem_support_iff _ _).1 aMember)
-  rcases (mem_spmf_support_bind_iff (𝒮[right]) (fun b => (pure (a, b) : SPMF (α × β))) pair).1 rest with
-    ⟨b, bMember, last⟩
-  have bSupport : b ∈ support right :=
-    (mem_support_iff_evalSPMF_apply_ne_zero right b).2 ((SPMF.mem_support_iff _ _).1 bMember)
-  obtain rfl : pair = (a, b) := by simpa using last
-  exact ⟨leftHolds a aSupport, rightHolds b bSupport⟩
+    RelTriple left right (fun a b => first a ∧ second b) :=
+  relTriple_prod leftHolds rightHolds
 
 /-- The coupling postcondition of an identical-until-bad argument: equal answers with related states, or both runs bad. -/
 def UntilBad {α σ₁ σ₂ : Type} (related : σ₁ → σ₂ → Prop) (bad₁ : σ₁ → Prop) (bad₂ : σ₂ → Prop)

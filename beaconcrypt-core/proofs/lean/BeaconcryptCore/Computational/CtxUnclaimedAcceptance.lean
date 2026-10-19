@@ -1,4 +1,6 @@
 import BeaconcryptCore.Computational.CtxComputationalSecurity
+import BeaconcryptCore.Computational.VCVioForwardProbabilityTheory
+import BeaconcryptCore.Computational.VCVioLegacyBridge
 
 /-!
 # Modified CTX acceptance without an adversarial plaintext claim
@@ -283,8 +285,11 @@ theorem acceptedGame_le_direct_add_prefix
         Pr[= true | directAcceptedGame c adversary] +
           ENNReal.ofReal
             ((acceptedGame c adversary).boolDistAdvantage
-              (directAcceptedGame c adversary)) :=
-      ProbComp.probOutput_true_le_add_ofReal_boolDistAdvantage _ _
+              (directAcceptedGame c adversary)) := by
+      have comparison := VCVioForward.evalDist_apply_true_le_add_ofReal_boolDistAdvantage
+          (acceptedGame c adversary) (directAcceptedGame c adversary)
+      simp only [VCVioLegacy.evalDist_singleton_eq_probOutput] at comparison
+      exact comparison
     _ ≤ Pr[= true | directAcceptedGame c adversary] +
           ENNReal.ofReal
             (ctxSecretPrefixQueriedProbability c adversary).toReal := by
