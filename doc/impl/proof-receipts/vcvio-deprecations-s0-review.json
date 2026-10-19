@@ -1,0 +1,314 @@
+{
+ "date": "2026-10-20",
+ "scope": "VCVio deprecation migration, stage S0, fixes of the two independent reviews at c385cfb3 (statement equivalence EQ-1..EQ-5, hygiene H1..H6). No Lean file of the build changed. Supplements vcvio-deprecations-s0-a1.json (the record of c385cfb3) for the certificate tooling, the G4 declaration dump, the inventory pins and the phase B exceptions.",
+ "basis": "b8db7926ba1f9145ddfdb8b7d3f3e1202cb4221e",
+ "previous_head": "c385cfb32d2f8031634ae6196f0f684cb5936278",
+ "topic": {
+  "branch": "codex/vcvio-migration-S0",
+  "clone": "/home/user/bc-vmig-S0"
+ },
+ "commits": {
+  "fixes": "the commit that adds this receipt"
+ },
+ "reviews": {
+  "equivalence": {
+   "verdict": "APPROVE_WITH_NITS",
+   "findings_sha256": "b40d0645c093639213c60dcf1305efc34a40796728b9c6066e8a2441acc9615e",
+   "fixed": [
+    "EQ-1",
+    "EQ-2",
+    "EQ-3",
+    "EQ-4",
+    "EQ-5"
+   ]
+  },
+  "hygiene": {
+   "verdict": "REQUEST_CHANGES",
+   "findings_sha256": "003e1da38932ece5476eca4bfeef27028ef1b47d154925244d563217915a5aba",
+   "fixed": [
+    "H1",
+    "H2",
+    "H3",
+    "H4",
+    "H5"
+   ],
+   "no_change": {
+    "H6": "the 41564767 receipt stays byte-stable; this receipt ends with a newline"
+   }
+  },
+  "owner_level": []
+ },
+ "fixes": {
+  "EQ-1": "certificate iff and wrapper-equation proofs are added as throw-away theorems with synchronous kernel checking; axioms must be among propext, Classical.choice, Quot.sound and are printed on each PASS line",
+  "EQ-2": "private declarations are resolved by their user name (unique private constant) in CertTools, DumpPpAll and gen_certificates.py; the twin printer refuses private declarations",
+  "EQ-3": "the G4 declaration dump adds binder-aware type and definition/opaque value fingerprints and the instance flag (the equivalence review's FpDump function), with a built-in self-check; gates.py G4 compares them; binder-annotation and binder-name negative controls in the certificate self-test",
+  "EQ-4": "phase B exception list recorded (13 theorems, left to their owning stages S5, S6, S8); analysis wording corrected",
+  "EQ-5": "pp.maxSteps 10^9 for every pp.all and twin text; a pp.all text containing the omission marker is rejected",
+  "H1": "A1 zero-count pins of check-inventory.sh take the step 7 scan's forms (precedence, scoped, open/set_option ... in), add run_elab/run_meta/run_tac/Lean.Parser, and pin instance declarations (4 in VCVioForwardEvalDist, 0 elsewhere) and instance attributes (0)",
+  "H2": "the five modules registered in /tmp/bc-coord/registry.tsv (late)",
+  "H3": "amendment A1.1 recorded in AMENDMENTS.md and the plan copy; gates.py recognises both twin headers and reads the twin name correctly (unit test)",
+  "H4": "S0 record entry marked as superseded in part; analysis and trust-boundary sections link the A1 and review-fix entries",
+  "H5": "trust-boundary sentence: 80 of 83 forward-shim theorems carry upstream names, 3 are project lemmas"
+ },
+ "build": {
+  "command": "make -C beaconcrypt-core check-lean SHELL=bash (proof shell, two-file flake copy of central's flake.nix/flake.lock)",
+  "lease": "00000769",
+  "result": [
+   "Build completed successfully (5535 jobs)."
+  ],
+  "nothing_rebuilt": true,
+  "vcvio_deprecation_warnings": 1338,
+  "log_sha256": "2e56257e534d106b92a934fce60d59d4aa6435ab3dad9eb4e6cef25accab667c"
+ },
+ "inventory": {
+  "recount": "handwritten-lean unchanged (1987)",
+  "rehash": [
+   "check-inventory.sh",
+   "trusted-boundary.md"
+  ],
+  "check_inventory": [
+   "Formal-verification inventory matches the reviewed boundary."
+  ],
+  "pin_control": [
+   "ok   current VCVioForwardEvalDist notation: 0",
+   "ok   current VCVioForwardEvalDist meta: 0",
+   "ok   current VCVioForwardEvalDist instance attributes: 0",
+   "ok   current VCVioForwardEvalDist instances: 4",
+   "ok   current VCVioForwardOracleComp notation: 0",
+   "ok   current VCVioForwardOracleComp meta: 0",
+   "ok   current VCVioForwardOracleComp instance attributes: 0",
+   "ok   current VCVioForwardOracleComp instances: 0",
+   "ok   current VCVioForwardProbabilityTheory notation: 0",
+   "ok   current VCVioForwardProbabilityTheory meta: 0",
+   "ok   current VCVioForwardProbabilityTheory instance attributes: 0",
+   "ok   current VCVioForwardProbabilityTheory instances: 0",
+   "ok   current VCVioForwardProgramLogic notation: 0",
+   "ok   current VCVioForwardProgramLogic meta: 0",
+   "ok   current VCVioForwardProgramLogic instance attributes: 0",
+   "ok   current VCVioForwardProgramLogic instances: 0",
+   "ok   current VCVioLegacyBridge notation: 0",
+   "ok   current VCVioLegacyBridge meta: 0",
+   "ok   current VCVioLegacyBridge instance attributes: 0",
+   "ok   current VCVioLegacyBridge instances: 0",
+   "ok   pre-A1 EvalDist notation (infix:50): 1",
+   "ok   pre-A1 Bridge notation/syntax/elab (macro, 2 syntax): 3",
+   "ok   probe notation (every line): 25",
+   "ok   probe meta (every line): 11",
+   "ok   probe instance attributes (every line): 5",
+   "ok   probe instances (every line): 9",
+   "ok   clean probe notation: 0",
+   "ok   clean probe meta: 0",
+   "ok   clean probe attributes: 0",
+   "ok   clean probe instances: 0",
+   "PIN-CONTROL failures 0"
+  ]
+ },
+ "step7_source_scan": [
+  "LEAN-SCAN files 1994 hits 0"
+ ],
+ "certificates": {
+  "tooling": {
+   "CertTools.lean": "01da0e00e6f136e5172dcc734e25dcc64c143066d8a815f9ce96c9344da12cad",
+   "olean_sha256": "fef8669ce359bda1e2e7566644ed2591a11304749bad93385796d9ba02669325",
+   "previous_CertTools.lean": "a9828d8c59c27a30af41727d9cc4e2144f09ac7907776d636ebb92cb81197917"
+  },
+  "stage_file": {
+   "entries": 0,
+   "result": "rc 0"
+  },
+  "pre_stage_dump": {
+   "sha256": "7288b1858c21a280ffa9d14cead11798160dd9f60f2c5455d0e714bd9f34a9b5",
+   "entries": 11,
+   "first_ten_identical_to": "7999062b4591a311c5779d43a6213550e5f3b306bc2145d23fc53e90ae3e30c4"
+  },
+  "subjects_sha256": "06b9a97696f103289a2c7bcb2d2f1b16a59be89ee3957b621f49a36667ca823f",
+  "certificates": [
+   "certificate PASS VCVioFeasibility.ctx_binding_bound_tight_s0SelfTest against VCVioFeasibility.ctx_binding_bound_tight: event mask 0 of 0 ambiguous nodes; old statement hash 1395186899 and pp.all text equal; VCVioFeasibility.ctx_binding_bound_tight_s0SelfTest ↔ old statement proved and kernel-checked, axioms [propext,",
+   "certificate PASS RawKeyPartition.sampled_partition_s0SelfTest against RawKeyPartition.sampled_partition: event mask 0 of 0 ambiguous nodes; old statement hash 3551526074 and pp.all text equal; RawKeyPartition.sampled_partition_s0SelfTest ↔ old statement proved and kernel-checked, axioms [propext,",
+   "certificate PASS StatefulGoodEvent.output_good_s0SelfTest against StatefulGoodEvent.output_good: event mask 0 of 4 ambiguous nodes; old statement hash 3385220471 and pp.all text equal; StatefulGoodEvent.output_good_s0SelfTest ↔ old statement proved and kernel-checked, axioms [propext,",
+   "certificate PASS StatefulGoodEvent.event_good_s0SelfTest against StatefulGoodEvent.event_good: event mask 0 of 2 ambiguous nodes; old statement hash 3685531767 and pp.all text equal; StatefulGoodEvent.event_good_s0SelfTest ↔ old statement proved and kernel-checked, axioms [propext,",
+   "certificate PASS JointEagerTable.independent_comm_spmf_s0SelfTest against JointEagerTable.independent_comm_spmf: event mask 0 of 0 ambiguous nodes; old statement hash 2392043918 and pp.all text equal; JointEagerTable.independent_comm_spmf_s0SelfTest ↔ old statement proved and kernel-checked, axioms [propext,",
+   "certificate PASS JointTableFreshCandidates.fixed_fresh_guess_bound_s0SelfTest against JointTableFreshCandidates.fixed_fresh_guess_bound: event mask 0 of 0 ambiguous nodes; old statement hash 963609539 and pp.all text equal; JointTableFreshCandidates.fixed_fresh_guess_bound_s0SelfTest ↔ old statement proved and kernel-checked, axioms [propext,",
+   "certificate PASS CtxRomAuth.ctxFreshAliasGame_le_inv_s0SelfTest against CtxRomAuth.ctxFreshAliasGame_le_inv: event mask 0 of 0 ambiguous nodes; old statement hash 3353333368 and pp.all text equal; CtxRomAuth.ctxFreshAliasGame_le_inv_s0SelfTest ↔ old statement proved and kernel-checked, axioms [propext,",
+   "certificate PASS PqxdhSecretInputKdf.zeroSalt_key_probability_s0SelfTest against PqxdhSecretInputKdf.zeroSalt_key_probability: event mask 1 of 1 ambiguous nodes; old statement hash 2986595921 and pp.all text equal; PqxdhSecretInputKdf.zeroSalt_key_probability_s0SelfTest ↔ old statement proved and kernel-checked, axioms [propext,",
+   "certificate PASS CtxReduction.ctxMisattributionAdvantage_s0SelfTest against CtxReduction.ctxMisattributionAdvantage: type unchanged; event mask 0 of 1; old body hash 2683253796 and pp.all text equal; CtxReduction.ctxMisattributionAdvantage_s0SelfTest = old body proved and kernel-checked, axioms [propext,",
+   "certificate PASS CtxAuthClassification.ctxAcceptedFullFreshForgeryProbability_s0SelfTest against CtxAuthClassification.ctxAcceptedFullFreshForgeryProbability: type unchanged; event mask 0 of 1; old body hash 603213692 and pp.all text equal; CtxAuthClassification.ctxAcceptedFullFreshForgeryProbability_s0SelfTest = old body proved and kernel-checked, axioms [propext,",
+   "certificate PASS RawCtxFirstParentRisk.uniform_address_s0SelfTest (private) against RawCtxFirstParentRisk.uniform_address (private): event mask 0 of 0 ambiguous nodes; old statement hash 597993258 and pp.all text equal; RawCtxFirstParentRisk.uniform_address_s0SelfTest (private) ↔ old statement proved and kernel-checked, axioms [propext,"
+  ],
+  "twin_texts": 10,
+  "twin_check": [
+   "same-type PASS VCVioFeasibility.ctx_binding_bound_tight_s0SelfTest_vcvioLegacy against VCVioFeasibility.ctx_binding_bound_tight: type hash 1395186899 and pp.all text equal to the dump",
+   "same-type PASS RawKeyPartition.sampled_partition_s0SelfTest_vcvioLegacy against RawKeyPartition.sampled_partition: type hash 3551526074 and pp.all text equal to the dump",
+   "same-type PASS StatefulGoodEvent.output_good_s0SelfTest_vcvioLegacy against StatefulGoodEvent.output_good: type hash 3385220471 and pp.all text equal to the dump",
+   "same-type PASS StatefulGoodEvent.event_good_s0SelfTest_vcvioLegacy against StatefulGoodEvent.event_good: type hash 3685531767 and pp.all text equal to the dump",
+   "same-type PASS JointEagerTable.independent_comm_spmf_s0SelfTest_vcvioLegacy against JointEagerTable.independent_comm_spmf: type hash 2392043918 and pp.all text equal to the dump",
+   "same-type PASS JointTableFreshCandidates.fixed_fresh_guess_bound_s0SelfTest_vcvioLegacy against JointTableFreshCandidates.fixed_fresh_guess_bound: type hash 963609539 and pp.all text equal to the dump",
+   "same-type PASS CtxRomAuth.ctxFreshAliasGame_le_inv_s0SelfTest_vcvioLegacy against CtxRomAuth.ctxFreshAliasGame_le_inv: type hash 3353333368 and pp.all text equal to the dump",
+   "same-type PASS PqxdhSecretInputKdf.zeroSalt_key_probability_s0SelfTest_vcvioLegacy against PqxdhSecretInputKdf.zeroSalt_key_probability: type hash 2986595921 and pp.all text equal to the dump",
+   "same-body PASS CtxReduction.ctxMisattributionAdvantage_s0SelfTest_vcvioLegacy against CtxReduction.ctxMisattributionAdvantage: CtxReduction.ctxMisattributionAdvantage_s0SelfTest = old body, whose value hash 2683253796 and pp.all text, and whose type, equal the dump",
+   "same-body PASS CtxAuthClassification.ctxAcceptedFullFreshForgeryProbability_s0SelfTest_vcvioLegacy against CtxAuthClassification.ctxAcceptedFullFreshForgeryProbability: CtxAuthClassification.ctxAcceptedFullFreshForgeryProbability_s0SelfTest = old body, whose value hash 603213692 and pp.all text, and whose type, equal the dump"
+  ],
+  "negative_control": {
+   "file_sha256": "8c4c9650167e27e19a5d61ff7fdbf7223591f7bf607eac92ff44e14e01c10ca8",
+   "checker": [
+    "ok   negative: 9 errors (expected 9)",
+    "ok   negative N1: error at line 30 containing 'certificate FAIL'",
+    "ok   negative N2: error at line 33 containing 'twin: no event mask reproduces'",
+    "ok   negative N3: error at line 45 containing 'certificate FAIL'",
+    "ok   negative N3: rebuilt old statement has the dump's hash (3353333368 vs 3353333368); only the pp.all text separates it",
+    "ok   negative N4: error at line 48 containing 'twin: no event mask reproduces'",
+    "ok   negative N5: error at line 60 containing 'certificate FAIL'",
+    "ok   negative N5: rebuilt old statement has the dump's hash (3353333368 vs 3353333368); only the pp.all text separates it",
+    "ok   negative N6: error at line 63 containing 'twin: no event mask reproduces'",
+    "ok   negative N7: error at line 68 containing 'is private'",
+    "ok   negative K1: error at line 79 containing '(kernel)'",
+    "ok   negative K2: error at line 84 containing 'axioms outside propext, Classical.choice, Quot.sound'",
+    "ok   negative K0: kernel check of True.intro passes with no axiom",
+    "ok   negative: no UNEXPECTED PASS",
+    "ok   negative: nothing certified or twinned",
+    "CHECK-CERTIFICATES failures 0"
+   ]
+  }
+ },
+ "gate_G4_fingerprints": {
+  "base_dump": {
+   "declarations": 95092,
+   "sha256": "91e0d0da27446d94d5e1309eb8fcde2d3bc9147acee7871f1a54d4951b5b4a2f"
+  },
+  "stage_dump": {
+   "declarations": 95198,
+   "sha256": "68a20f04698ee21d8e76b65672fe4c664124862480bc1f44e316a34aac3b22fa"
+  },
+  "first_six_columns_identical_to": {
+   "base": "31a7bc47ff91caf75ed03d297d31dd851373d1d48fd84ac97482aec839870044",
+   "stage": "4cae2b110982e2473160f5f41ccb18fc1b10fe4a67df37e724da7870241e2cbc"
+  },
+  "fingerprints_equal_review_dumps": true,
+  "result": {
+   "fingerprints_compared": true,
+   "type_binder_only_changes": [],
+   "unexplained_type_changes": [],
+   "def_value_binder_only_changes": [],
+   "opaque_value_changed": [],
+   "instance_flag_changed": [],
+   "pass": true
+  },
+  "other_gates": {
+   "G1": true,
+   "G2": true,
+   "G3": true,
+   "G5": true
+  },
+  "negative_control": {
+   "doctored": [
+    "CtxRomAuth.ctxFreshAliasGame_le_inv type fingerprint",
+    "an instance flag"
+   ],
+   "G4_pass": false,
+   "type_binder_only_changes": [
+    "CtxRomAuth.ctxFreshAliasGame_le_inv"
+   ],
+   "instance_flag_changed": [
+    "CtxAuthClassification.CtxAuthClassificationAttempt._sizeOf_inst"
+   ]
+  },
+  "twin_header_unit_test": [
+   "twin lines 10 of which with the unusedVariables header 3",
+   "GATES-TWIN-UNIT pass"
+  ]
+ },
+ "phase_b_exceptions": {
+  "counts": {
+   "total": 13,
+   "wrapper-reached": 8,
+   "facade-direct": 5,
+   "by_stage": {
+    "S5": 8,
+    "S6": 1,
+    "S8": 4
+   }
+  },
+  "exceptions": [
+   {
+    "decl": "CtxComputationalPrivacy.ctxPrivacySecretPrefixProbabilityInner_eq_directSamplePublicPrefix",
+    "stage": "S5",
+    "kind": "wrapper-reached"
+   },
+   {
+    "decl": "CtxComputationalPrivacy.ctxPrivacySecretPrefixProbability_le_booleanINDDollar",
+    "stage": "S5",
+    "kind": "wrapper-reached"
+   },
+   {
+    "decl": "CtxComputationalPrivacy.ctxPrivacySecretPrefixProbability_le_probeINDDollar",
+    "stage": "S5",
+    "kind": "wrapper-reached"
+   },
+   {
+    "decl": "CtxComputationalPrivacy.ofReal_ctxPrivacyAdvantage_le_viewAdvantage_add_secretPrefix",
+    "stage": "S5",
+    "kind": "facade-direct"
+   },
+   {
+    "decl": "CtxNonceAeadIndDollar.ctxIndependentPublicPrefixProbability_eq_directSample",
+    "stage": "S5",
+    "kind": "wrapper-reached"
+   },
+   {
+    "decl": "CtxNonceAeadIndDollar.ctxSecretPrefixQueriedProbabilityInner_eq_directSamplePublicPrefix",
+    "stage": "S5",
+    "kind": "wrapper-reached"
+   },
+   {
+    "decl": "CtxNonceAeadIndDollar.ctxSecretPrefixQueriedProbability_le_modifiedNonceAeadINDDollar",
+    "stage": "S5",
+    "kind": "wrapper-reached"
+   },
+   {
+    "decl": "CtxNonceAeadIndDollarValidation.ctxSecretPrefixQueriedProbability_le_booleanINDDollar",
+    "stage": "S5",
+    "kind": "wrapper-reached"
+   },
+   {
+    "decl": "RawCtxSupportedMixture.bound",
+    "stage": "S6",
+    "kind": "facade-direct"
+   },
+   {
+    "decl": "PqxdhFirstRecordStopTagged.bind_le_support",
+    "stage": "S8",
+    "kind": "facade-direct"
+   },
+   {
+    "decl": "PqxdhFirstRecordStopTagged.source_tagged",
+    "stage": "S8",
+    "kind": "wrapper-reached"
+   },
+   {
+    "decl": "PqxdhFirstRecordStopTagged.support_right",
+    "stage": "S8",
+    "kind": "facade-direct"
+   },
+   {
+    "decl": "PqxdhFirstRecordStopTagged.tagged_game_bound",
+    "stage": "S8",
+    "kind": "facade-direct"
+   }
+  ]
+ },
+ "not_run": [
+  "verify-in-shell, ProVerif, transcript fidelity, cargo, Go and Python tests (owner decision 2026-10-19 item 5: only Lean files change)"
+ ],
+ "tool_sha256": {
+  "tools/gates.py": "35f184bfd39809889f83c8c94c5989fcfdb437fc47ef0f713e5f9696208664e0",
+  "tools/gen_certificates.py": "e84431c2b6400f09ef2915e1a84d2d6b20425e991fa659ee883c263e4b5b4acd",
+  "tools/twins.py": "7b60d0d8bef7acdcfb634906a9a4f20f6a8041665ade7d623928c2f8aa95243d",
+  "tools/DeclsAll.lean.in": "0bc796a2a45c79394ecc9904f90ae45ac4066b0bfec9df80d9503f0539497f1b",
+  "tools/DumpPpAll.lean.in": "1fa038548e58f7d91a70fd732a5952e05757a3966b1c85ae6d25e00acf05c284",
+  "review-fix/certificates.sh": "5d35a4dc882f11a3347e323136e680c73288ea1ee96b7350212caac730c79109",
+  "review-fix/check_certificates.py": "c242307012eb4cab5a5743812f49ca02ceb54c1a3681a750c235523bc824e66a",
+  "review-fix/pin_control.sh": "6b722c70d5a9d4824c0d4b356b7fc704e3d9f96e8504c226c86b649bfa36dee3",
+  "step7/lean-scan.py": "61deb5fdff698e45c7fc3180820c214aa4d6f22e6c96ace03f87a040f1248880"
+ },
+ "logs": "machine-local, /tmp/bc-arc-scratch/vcvio-migration/S0/review-fix/logs/"
+}
