@@ -76,14 +76,14 @@ theorem prEvent_bind_const (mx : OracleComp spec α) (my : OracleComp spec Prop)
 
 /-- A lossless prefix whose result is unused is equal in distribution to its continuation. -/
 theorem EvalDistEq.bind_const {β : Type} (mx : OracleComp spec α) (my : OracleComp spec β) :
-    (mx >>= fun _ ↦ my) =ᵈ my :=
+    EvalDistEq (mx >>= fun _ ↦ my) my :=
   _root_.EvalDistEq.of_forall_prEvent_eq fun p ↦ by
     rw [bind_assoc]
     exact prEvent_bind_const mx (my >>= fun y ↦ pure (p y))
 
 /-- Discarding the result of a lossless computation leaves the constant. -/
 theorem EvalDistEq.map_const {β : Type} (mx : OracleComp spec α) (c : β) :
-    (fun _ ↦ c) <$> mx =ᵈ (pure c : OracleComp spec β) := by
+    EvalDistEq ((fun _ ↦ c) <$> mx) (pure c : OracleComp spec β) := by
   rw [map_eq_bind_pure_comp]
   exact EvalDistEq.bind_const mx (pure c)
 
@@ -115,7 +115,8 @@ theorem prEvent_bind_congr_of_support (mx : OracleComp spec α) (f g : α → Or
 
 /-- Continuations equal in distribution on every possible output of a common draw give binds equal in distribution. -/
 theorem EvalDistEq.bind_congr_of_support {β : Type} (mx : OracleComp spec α)
-    {f g : α → OracleComp spec β} (h : ∀ a ∈ support mx, f a =ᵈ g a) : mx >>= f =ᵈ mx >>= g :=
+    {f g : α → OracleComp spec β} (h : ∀ a ∈ support mx, EvalDistEq (f a) (g a)) :
+    EvalDistEq (mx >>= f) (mx >>= g) :=
   _root_.EvalDistEq.of_forall_prEvent_eq fun p ↦ by
     rw [bind_assoc, bind_assoc]
     exact prEvent_bind_congr_of_support mx _ _ fun a ha ↦ (h a ha).prEvent_eq p
@@ -223,7 +224,7 @@ theorem evalDist_bind_bind_swap_of_uniform [OracleSpec.IsUniformMeasureSpec spec
 /-- Independent oracle computations commute in distribution under a uniform oracle specification. Upstream binder `[OracleSpec.UniformAnswerMeasure spec]`. -/
 theorem EvalDistEq.bind_bind_swap [OracleSpec.IsUniformMeasureSpec spec] {α β γ : Type}
     (mx : OracleComp spec α) (my : OracleComp spec β) (f : α → β → OracleComp spec γ) :
-    (mx >>= fun a ↦ my >>= fun b ↦ f a b) =ᵈ (my >>= fun b ↦ mx >>= fun a ↦ f a b) :=
+    EvalDistEq (mx >>= fun a ↦ my >>= fun b ↦ f a b) (my >>= fun b ↦ mx >>= fun a ↦ f a b) :=
   let : MeasurableSpace γ := ⊤
   _root_.EvalDistEq.of_evalDist_eq (evalDist_bind_bind_swap_of_uniform mx my f)
 
@@ -240,7 +241,7 @@ variable {ι : Type u} {spec : OracleSpec.{u, 0} ι}
 /-- Over finite oracle responses, computations with equal point masses are equal in distribution: both output measures are carried by the finite union of their supports. -/
 theorem evalDistEq_of_forall_prEvent_eq_output [∀ t, Finite (spec.Range t)]
     {mx my : OracleComp spec α} (h : ∀ x, Pr{let y ← mx}[y = x] = Pr{let y ← my}[y = x]) :
-    mx =ᵈ my := by
+    EvalDistEq mx my := by
   refine evalDistEq_iff_evalDist_eq.mpr ?_
   classical
   let : spec.Fintype := { fintypeB := fun t ↦ Fintype.ofFinite (spec.Range t) }
@@ -311,7 +312,7 @@ theorem prEvent_uniformSample_eq_singleton {α : Type} [SampleableType α] [_roo
 /-- A bijection of sample spaces carries a uniform sample to a uniform sample. -/
 theorem map_uniformSample_evalDistEq_of_bijective {α β : Type} [SampleableType α]
     [SampleableType β] {f : α → β} (hf : Function.Bijective f) :
-    f <$> ($ᵗ α : ProbComp α) =ᵈ ($ᵗ β : ProbComp β) := by
+    EvalDistEq (f <$> ($ᵗ α : ProbComp α)) ($ᵗ β : ProbComp β) := by
   let : MeasurableSpace α := ⊤
   let : MeasurableSpace β := ⊤
   have h : 𝒟[f <$> ($ᵗ α : ProbComp α)] = 𝒟[($ᵗ β : ProbComp β)] := by

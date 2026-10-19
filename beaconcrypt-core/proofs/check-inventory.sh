@@ -42765,7 +42765,7 @@ require_line_count 1 '^theorem prEvent_bind_le_prEvent_add_of_support([[:space:]
 require_line_count 1 '^#print axioms evalDist\.ae_of_forall_mem_support$' "$selected_source_module" "VCVioForwardEvalDist dependency evalDist.ae_of_forall_mem_support"
 require_line_count 1 '^theorem ae_of_forall_mem_support([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem evalDist.ae_of_forall_mem_support"
 require_line_count 1 '^def EvalDistEq ' "$selected_source_module" "VCVio forward shim equality-in-distribution definition"
-require_line_count 1 '^@\[inherit_doc\] infix:50 " =ᵈ " => EvalDistEq$' "$selected_source_module" "VCVio forward shim equality-in-distribution notation"
+require_line_count 1 '^  ∀ p : α → Prop, Pr\{let x ← mx\}\[p x\] = Pr\{let y ← my\}\[p y\]$' "$selected_source_module" "VCVio forward shim equality-in-distribution definition text"
 
 selected_source_module=proofs/lean/BeaconcryptCore/Computational/VCVioForwardOracleComp.lean
 require_line_count 1 '^import BeaconcryptCore\.Computational\.VCVioForwardOracleComp$' proofs/lean/BeaconcryptCore.lean "VCVioForwardOracleComp root import"
@@ -42876,9 +42876,10 @@ require_line_count 1 '^theorem oracleComp_probEvent_eq_prEvent([[:space:]]|$)' "
 require_line_count 1 '^#print axioms BeaconcryptCore\.VCVioLegacy\.oracleComp_evalSPMF_eq_iff_evalDistEq$' "$selected_source_module" "VCVioLegacyBridge dependency BeaconcryptCore.VCVioLegacy.oracleComp_evalSPMF_eq_iff_evalDistEq"
 require_line_count 1 '^theorem oracleComp_evalSPMF_eq_iff_evalDistEq([[:space:]]|$)' "$selected_source_module" "VCVioLegacyBridge theorem BeaconcryptCore.VCVioLegacy.oracleComp_evalSPMF_eq_iff_evalDistEq"
 require_line_count 14 '^set_option linter\.deprecated false in$' "$selected_source_module" "VCVio legacy bridge explicit deprecation suppressions"
-require_line_count 1 '^macro "vcvio_legacy" ' "$selected_source_module" "VCVio legacy bridge rewriting tactic"
-require_line_count 1 '^syntax \(name := vcvioLegacyTwin\) "vcvio_legacy_twin " ident' "$selected_source_module" "VCVio legacy bridge transitional twin command"
-require_line_count 1 '^syntax \(name := vcvioLegacyCertificate\)$' "$selected_source_module" "VCVio legacy bridge statement certificate command"
+for selected_source_module in proofs/lean/BeaconcryptCore/Computational/VCVioForwardEvalDist.lean proofs/lean/BeaconcryptCore/Computational/VCVioForwardOracleComp.lean proofs/lean/BeaconcryptCore/Computational/VCVioForwardProbabilityTheory.lean proofs/lean/BeaconcryptCore/Computational/VCVioForwardProgramLogic.lean proofs/lean/BeaconcryptCore/Computational/VCVioLegacyBridge.lean; do
+	require_line_count 0 '^[[:space:]]*(@\[[^]]*\][[:space:]]*)*((private|protected|local|scoped)[[:space:]]+)*(macro|macro_rules|syntax|elab|elab_rules|notation|infix|infixl|infixr|prefix|postfix|declare_syntax_cat|initialize|builtin_initialize|register_simp_attr)([[:space:]]|$)' "$selected_source_module" "VCVio migration module notation, syntax and elaborator declarations (amendment A1)"
+	require_line_count 0 '^import Lean|addDecl|Lean\.Elab|Lean\.Meta|run_cmd|#eval' "$selected_source_module" "VCVio migration module metaprogramming (amendment A1)"
+done
 
 # Separate primitive-fidelity profile: source guards, exact results and serial wiring.
 require_line_count 1 '^check-proverif-primitive-fidelity: check-proverif-extraction check-proverif-transcript-fidelity$' Makefile "primitive-fidelity serial runner"
