@@ -42845,8 +42845,8 @@ require_line_count 1 '^import VCVio\.ProgramLogic\.Relational\.FromUnary$' "$sel
 
 selected_source_module=proofs/lean/BeaconcryptCore/Computational/VCVioLegacyBridge.lean
 require_line_count 1 '^import BeaconcryptCore\.Computational\.VCVioLegacyBridge$' proofs/lean/BeaconcryptCore.lean "VCVioLegacyBridge root import"
-require_line_count 14 '^theorem ' "$selected_source_module" "VCVioLegacyBridge theorem inventory"
-require_line_count 14 '^#guard_msgs in$' "$selected_source_module" "VCVioLegacyBridge guarded dependencies"
+require_line_count 17 '^theorem ' "$selected_source_module" "VCVioLegacyBridge theorem inventory"
+require_line_count 17 '^#guard_msgs in$' "$selected_source_module" "VCVioLegacyBridge guarded dependencies"
 require_line_count 1 '^#print axioms BeaconcryptCore\.VCVioLegacy\.probOutput_eq_evalDist_singleton_of_compatible$' "$selected_source_module" "VCVioLegacyBridge dependency BeaconcryptCore.VCVioLegacy.probOutput_eq_evalDist_singleton_of_compatible"
 require_line_count 1 '^theorem probOutput_eq_evalDist_singleton_of_compatible([[:space:]]|$)' "$selected_source_module" "VCVioLegacyBridge theorem BeaconcryptCore.VCVioLegacy.probOutput_eq_evalDist_singleton_of_compatible"
 require_line_count 1 '^#print axioms BeaconcryptCore\.VCVioLegacy\.probEvent_eq_evalDist_setOf_of_compatible$' "$selected_source_module" "VCVioLegacyBridge dependency BeaconcryptCore.VCVioLegacy.probEvent_eq_evalDist_setOf_of_compatible"
@@ -42875,7 +42875,13 @@ require_line_count 1 '^#print axioms BeaconcryptCore\.VCVioLegacy\.oracleComp_pr
 require_line_count 1 '^theorem oracleComp_probEvent_eq_prEvent([[:space:]]|$)' "$selected_source_module" "VCVioLegacyBridge theorem BeaconcryptCore.VCVioLegacy.oracleComp_probEvent_eq_prEvent"
 require_line_count 1 '^#print axioms BeaconcryptCore\.VCVioLegacy\.oracleComp_evalSPMF_eq_iff_evalDistEq$' "$selected_source_module" "VCVioLegacyBridge dependency BeaconcryptCore.VCVioLegacy.oracleComp_evalSPMF_eq_iff_evalDistEq"
 require_line_count 1 '^theorem oracleComp_evalSPMF_eq_iff_evalDistEq([[:space:]]|$)' "$selected_source_module" "VCVioLegacyBridge theorem BeaconcryptCore.VCVioLegacy.oracleComp_evalSPMF_eq_iff_evalDistEq"
-require_line_count 14 '^set_option linter\.deprecated false in$' "$selected_source_module" "VCVio legacy bridge explicit deprecation suppressions"
+require_line_count 1 '^#print axioms BeaconcryptCore\.VCVioLegacy\.oracleComp_probOutput_eq_prEvent_native$' "$selected_source_module" "VCVioLegacyBridge dependency BeaconcryptCore.VCVioLegacy.oracleComp_probOutput_eq_prEvent_native (stage S1)"
+require_line_count 1 '^theorem oracleComp_probOutput_eq_prEvent_native([[:space:]]|$)' "$selected_source_module" "VCVioLegacyBridge theorem BeaconcryptCore.VCVioLegacy.oracleComp_probOutput_eq_prEvent_native (stage S1)"
+require_line_count 1 '^#print axioms BeaconcryptCore\.VCVioLegacy\.oracleComp_probEvent_eq_prEvent_native$' "$selected_source_module" "VCVioLegacyBridge dependency BeaconcryptCore.VCVioLegacy.oracleComp_probEvent_eq_prEvent_native (stage S1)"
+require_line_count 1 '^theorem oracleComp_probEvent_eq_prEvent_native([[:space:]]|$)' "$selected_source_module" "VCVioLegacyBridge theorem BeaconcryptCore.VCVioLegacy.oracleComp_probEvent_eq_prEvent_native (stage S1)"
+require_line_count 1 '^#print axioms BeaconcryptCore\.VCVioLegacy\.oracleComp_evalSPMF_eq_iff_evalDistEq_native$' "$selected_source_module" "VCVioLegacyBridge dependency BeaconcryptCore.VCVioLegacy.oracleComp_evalSPMF_eq_iff_evalDistEq_native (stage S1)"
+require_line_count 1 '^theorem oracleComp_evalSPMF_eq_iff_evalDistEq_native([[:space:]]|$)' "$selected_source_module" "VCVioLegacyBridge theorem BeaconcryptCore.VCVioLegacy.oracleComp_evalSPMF_eq_iff_evalDistEq_native (stage S1)"
+require_line_count 17 '^set_option linter\.deprecated false in$' "$selected_source_module" "VCVio legacy bridge explicit deprecation suppressions"
 for selected_source_module in proofs/lean/BeaconcryptCore/Computational/VCVioForwardEvalDist.lean proofs/lean/BeaconcryptCore/Computational/VCVioForwardOracleComp.lean proofs/lean/BeaconcryptCore/Computational/VCVioForwardProbabilityTheory.lean proofs/lean/BeaconcryptCore/Computational/VCVioForwardProgramLogic.lean proofs/lean/BeaconcryptCore/Computational/VCVioLegacyBridge.lean; do
 	require_line_count 0 '^[[:space:]]*(@\[[^]]*\][[:space:]]*)*((open|set_option)[[:space:]].*[[:space:]]in[[:space:]]+)*((private|protected|local|scoped|noncomputable|partial|unsafe)(\[[^]]*\])?[[:space:]]+)*(macro|macro_rules|syntax|elab|elab_rules|notation|notation3|infix|infixl|infixr|prefix|postfix|binder_predicate|declare_syntax_cat|initialize|builtin_initialize|register_simp_attr|register_option|simproc|dsimproc|simproc_decl|dsimproc_decl|unif_hint)([[:space:]:(]|$)' "$selected_source_module" "VCVio migration module notation, syntax and elaborator declarations, also precedence-annotated, scoped or after open/set_option ... in (amendment A1)"
 	require_line_count 0 '^[[:space:]]*import[[:space:]]+Lean|addDecl|Lean\.Elab|Lean\.Meta|Lean\.Parser|run_cmd|run_elab|run_meta|run_tac|#eval' "$selected_source_module" "VCVio migration module metaprogramming (amendment A1)"

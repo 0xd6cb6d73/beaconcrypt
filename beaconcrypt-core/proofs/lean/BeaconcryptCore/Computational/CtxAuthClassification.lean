@@ -1,5 +1,6 @@
 import BeaconcryptCore.Computational.CtxRetainedTagProjection
 import VCVio.OracleComp.ProbComp
+import BeaconcryptCore.Computational.VCVioForwardOracleComp
 
 /-!
 # General retained-tag modified-CTX authenticity classification
@@ -13,6 +14,9 @@ Because `seq` and `sid` occur in `T*` but not in the base AEAD associated data, 
 The exhaustive pointwise theorem below exposes the only structural alternative: a prior designated honest input matches the forged base projection but differs in the complete CTX context.
 The corresponding probability theorem is a same-view union bound, not a reduction to standard AEAD authenticity; the history is asserted by the attempt rather than enforced by an encryption oracle.
 Per-key nonce uniqueness is not imposed here and remains a requirement for the eventual nonce-respecting oracle game.
+
+The probabilities are stated in VCVio's forward event vocabulary, `Pr{let attempt ← mx}[E attempt]`.
+The import of `BeaconcryptCore.Computational.VCVioForwardOracleComp` puts the measurable structure of probabilistic computations' answers in scope, so that these events elaborate with VCVio's native measure semantics rather than with the pin's deprecated `SPMF` adapter; it also provides the forward union bound `prEvent_or_le`.
 -/
 
 open OracleComp ENNReal
@@ -187,17 +191,17 @@ theorem contextAliasReplay_has_distinct_ctxPreimages (c : Pqxdh.Crypto)
 /-- Probability of an accepted full-fresh modified-CTX forgery in an arbitrary same-view attempt computation. -/
 noncomputable def ctxAcceptedFullFreshForgeryProbability (c : Pqxdh.Crypto)
     (attemptComputation : ProbComp CtxAuthClassificationAttempt) : ℝ≥0∞ :=
-  Pr[fun attempt => CtxAcceptedFullFreshForgery c attempt | attemptComputation]
+  Pr{let attempt ← attemptComputation}[CtxAcceptedFullFreshForgery c attempt]
 
 /-- Probability of a fresh accepted retained-base projection in the same view. -/
 noncomputable def ctxFreshAcceptedBaseProjectionProbability (c : Pqxdh.Crypto)
     (attemptComputation : ProbComp CtxAuthClassificationAttempt) : ℝ≥0∞ :=
-  Pr[fun attempt => CtxFreshAcceptedBaseProjection c attempt | attemptComputation]
+  Pr{let attempt ← attemptComputation}[CtxFreshAcceptedBaseProjection c attempt]
 
 /-- Probability of an accepted context-alias replay in the same view. -/
 noncomputable def ctxContextAliasReplayProbability (c : Pqxdh.Crypto)
     (attemptComputation : ProbComp CtxAuthClassificationAttempt) : ℝ≥0∞ :=
-  Pr[fun attempt => CtxContextAliasReplay c attempt | attemptComputation]
+  Pr{let attempt ← attemptComputation}[CtxContextAliasReplay c attempt]
 
 /-- **Same-view exhaustive union bound.** The probability of an accepted full-fresh modified-CTX forgery is at most the probability of a fresh accepted base projection plus the probability of a context-alias replay. This is a structural classification, not yet a standard AEAD-authenticity or random-oracle bound. -/
 theorem ctxAcceptedFullFreshForgeryProbability_le_projection_add_alias
@@ -208,9 +212,9 @@ theorem ctxAcceptedFullFreshForgeryProbability_le_projection_add_alias
         ctxContextAliasReplayProbability c attemptComputation := by
   unfold ctxAcceptedFullFreshForgeryProbability
     ctxFreshAcceptedBaseProjectionProbability ctxContextAliasReplayProbability
-  refine (probEvent_mono'' (mx := attemptComputation)
+  refine (prEvent_mono attemptComputation _ _
     (fun attempt hwin => acceptedFullFreshForgery_classification c attempt hwin)).trans ?_
-  exact probEvent_or_le attemptComputation
+  exact prEvent_or_le attemptComputation
     (fun attempt => CtxFreshAcceptedBaseProjection c attempt)
     (fun attempt => CtxContextAliasReplay c attempt)
 
@@ -309,28 +313,25 @@ theorem nonceConsistentAcceptedFullFreshForgery_classification
 /-- Probability of a context-alias replay whose designated honest history is per-key nonce-consistent. -/
 noncomputable def ctxNonceConsistentAliasReplayProbability (c : Pqxdh.Crypto)
     (attemptComputation : ProbComp CtxAuthClassificationAttempt) : ℝ≥0∞ :=
-  Pr[fun attempt => CtxPerKeyNonceConsistent attempt.history ∧
-    CtxContextAliasReplay c attempt | attemptComputation]
+  Pr{let attempt ← attemptComputation}[CtxPerKeyNonceConsistent attempt.history ∧
+    CtxContextAliasReplay c attempt]
 
 /-- Probability of an accepted alias replay with a target outer-hash input fresh from the designated honest history. -/
 noncomputable def ctxFreshTargetOuterHashAliasReplayProbability (c : Pqxdh.Crypto)
     (attemptComputation : ProbComp CtxAuthClassificationAttempt) : ℝ≥0∞ :=
-  Pr[fun attempt => CtxFreshTargetOuterHashAliasReplay c attempt |
-    attemptComputation]
+  Pr{let attempt ← attemptComputation}[CtxFreshTargetOuterHashAliasReplay c attempt]
 
 /-- Probability of a fresh accepted retained-base projection whose designated honest history is per-key nonce-consistent. -/
 noncomputable def ctxNonceConsistentFreshAcceptedBaseProjectionProbability
     (c : Pqxdh.Crypto)
     (attemptComputation : ProbComp CtxAuthClassificationAttempt) : ℝ≥0∞ :=
-  Pr[fun attempt => CtxNonceConsistentFreshAcceptedBaseProjection c attempt |
-    attemptComputation]
+  Pr{let attempt ← attemptComputation}[CtxNonceConsistentFreshAcceptedBaseProjection c attempt]
 
 /-- Probability of an accepted full-fresh forgery whose designated honest history is per-key nonce-consistent. -/
 noncomputable def ctxNonceConsistentAcceptedFullFreshForgeryProbability
     (c : Pqxdh.Crypto)
     (attemptComputation : ProbComp CtxAuthClassificationAttempt) : ℝ≥0∞ :=
-  Pr[fun attempt => CtxNonceConsistentAcceptedFullFreshForgery c attempt |
-    attemptComputation]
+  Pr{let attempt ← attemptComputation}[CtxNonceConsistentAcceptedFullFreshForgery c attempt]
 
 /-- Same-view game hop retaining the complete accepted alias-replay event while replacing nonce consistency by freshness of its target outer-hash input. -/
 theorem ctxNonceConsistentAliasReplayProbability_le_freshTargetOuterHashAliasReplay
@@ -340,7 +341,7 @@ theorem ctxNonceConsistentAliasReplayProbability_le_freshTargetOuterHashAliasRep
       ctxFreshTargetOuterHashAliasReplayProbability c attemptComputation := by
   unfold ctxNonceConsistentAliasReplayProbability
     ctxFreshTargetOuterHashAliasReplayProbability
-  exact probEvent_mono'' (mx := attemptComputation)
+  exact prEvent_mono attemptComputation _ _
     (fun attempt hwin => ⟨hwin.2,
       contextAliasReplay_target_outerHashPreimage_fresh c attempt hwin.1 hwin.2⟩)
 
@@ -356,14 +357,14 @@ theorem ctxNonceConsistentAcceptedFullFreshForgeryProbability_le_nonceConsistent
     ctxNonceConsistentFreshAcceptedBaseProjectionProbability
     CtxNonceConsistentFreshAcceptedBaseProjection
     ctxFreshTargetOuterHashAliasReplayProbability
-  refine (probEvent_mono'' (mx := attemptComputation)
-    (q := fun attempt =>
+  refine (prEvent_mono attemptComputation _
+    (fun attempt =>
       (CtxPerKeyNonceConsistent attempt.history ∧
         CtxFreshAcceptedBaseProjection c attempt) ∨
       CtxFreshTargetOuterHashAliasReplay c attempt)
     (fun attempt hwin =>
       nonceConsistentAcceptedFullFreshForgery_classification c attempt hwin)).trans ?_
-  · exact probEvent_or_le attemptComputation
+  · exact prEvent_or_le attemptComputation
       (fun attempt => CtxPerKeyNonceConsistent attempt.history ∧
         CtxFreshAcceptedBaseProjection c attempt)
       (fun attempt => CtxFreshTargetOuterHashAliasReplay c attempt)

@@ -1,5 +1,6 @@
 import BeaconcryptCore.Model.Pqxdh.Commit
 import VCVio.OracleComp.ProbComp
+import BeaconcryptCore.Computational.VCVioForwardOracleComp
 
 /-!
 # Retained-tag authenticity projection for modified CTX
@@ -11,6 +12,9 @@ The pointwise implication lifts to a factor-one probability inequality over an a
 This is a same-view structural result, not standard nonce-AEAD authenticity.
 The attempt computation is not constrained by an encryption oracle, key hiding is not modeled, and the complete `RecordAD` is fixed.
 Fixing the context matters because `seq` and `sid` occur in `T*` but not in the base AEAD associated data, so whole-payload freshness across changed outer contexts does not by itself imply base-ciphertext freshness.
+
+The probabilities are stated in VCVio's forward event vocabulary, `Pr{let x ← mx}[x = true]`.
+The import of `BeaconcryptCore.Computational.VCVioForwardOracleComp` puts the measurable structure of probabilistic computations' answers in scope, so that these events elaborate with VCVio's native measure semantics rather than with the pin's deprecated `SPMF` adapter.
 -/
 
 open OracleComp ENNReal
@@ -161,7 +165,7 @@ noncomputable def fixedMaterialContextCtxFreshOpeningExp (c : Pqxdh.Crypto)
 noncomputable def fixedMaterialContextCtxFreshOpeningProbability (c : Pqxdh.Crypto)
     (material : Pqxdh.Bytes × Pqxdh.Bytes) (ad : Pqxdh.RecordAD)
     (attemptComputation : ProbComp FixedMaterialContextAttempt) : ℝ≥0∞ :=
-  Pr[= true | fixedMaterialContextCtxFreshOpeningExp c material ad attemptComputation]
+  Pr{let x ← fixedMaterialContextCtxFreshOpeningExp c material ad attemptComputation}[x = true]
 
 /-- Test the projected base fresh-opening event against the same augmented attempt computation. -/
 noncomputable def sameViewBaseFreshOpeningExp (c : Pqxdh.Crypto)
@@ -176,7 +180,7 @@ noncomputable def sameViewBaseFreshOpeningExp (c : Pqxdh.Crypto)
 noncomputable def sameViewBaseFreshOpeningProbability (c : Pqxdh.Crypto)
     (material : Pqxdh.Bytes × Pqxdh.Bytes) (ad : Pqxdh.RecordAD)
     (attemptComputation : ProbComp FixedMaterialContextAttempt) : ℝ≥0∞ :=
-  Pr[= true | sameViewBaseFreshOpeningExp c material ad attemptComputation]
+  Pr{let x ← sameViewBaseFreshOpeningExp c material ad attemptComputation}[x = true]
 
 /-- **Factor-one same-view authenticity projection.** Every fixed-material/context modified-CTX fresh-opening win is a retained-base fresh-opening win pointwise, so probability does not increase under projection. This is not yet a reduction to standard base-AEAD authenticity. -/
 theorem fixedMaterialContext_ctxFreshOpeningProbability_le_sameViewBaseFreshOpeningProbability
@@ -185,12 +189,18 @@ theorem fixedMaterialContext_ctxFreshOpeningProbability_le_sameViewBaseFreshOpen
     (attemptComputation : ProbComp FixedMaterialContextAttempt) :
     fixedMaterialContextCtxFreshOpeningProbability c material ad attemptComputation ≤
       sameViewBaseFreshOpeningProbability c material ad attemptComputation := by
-  unfold fixedMaterialContextCtxFreshOpeningProbability
-    fixedMaterialContextCtxFreshOpeningExp sameViewBaseFreshOpeningProbability
-    sameViewBaseFreshOpeningExp
-  refine probOutput_bind_mono fun attempt _ => ?_
-  apply probOutput_pure_bool_le
-  intro hwin
+  classical
+  have hctx : fixedMaterialContextCtxFreshOpeningExp c material ad attemptComputation =
+      (fun attempt => decide (FixedMaterialContextCtxFreshOpening c material ad attempt)) <$>
+        attemptComputation := by
+    simp only [fixedMaterialContextCtxFreshOpeningExp, bind_pure_comp]
+  have hbase : sameViewBaseFreshOpeningExp c material ad attemptComputation =
+      (fun attempt => decide (SameViewBaseFreshOpening c material ad attempt)) <$>
+        attemptComputation := by
+    simp only [sameViewBaseFreshOpeningExp, bind_pure_comp]
+  unfold fixedMaterialContextCtxFreshOpeningProbability sameViewBaseFreshOpeningProbability
+  rw [hctx, hbase, prEvent_map, prEvent_map]
+  refine prEvent_mono attemptComputation _ _ fun attempt hwin => ?_
   simp only [decide_eq_true_eq] at hwin ⊢
   exact fixedMaterialContext_ctxFreshOpening_implies_baseFreshOpening
     c material ad attempt hwin

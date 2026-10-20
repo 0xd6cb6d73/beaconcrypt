@@ -1,6 +1,7 @@
 import BeaconcryptCore.Extraction.Funs
 import Examples.CommitmentScheme.Binding
 import VCVio.StateSeparating.Hybrid
+import BeaconcryptCore.Computational.VCVioLegacyBridge
 
 /-!
 # VCVio computational-proof feasibility probe
@@ -8,6 +9,8 @@ import VCVio.StateSeparating.Hybrid
 This module records two framework feasibility probes. The first instantiates VCVio's tight and collision-resistance-chain bounded random-oracle commitment theorems with the exact 229-byte transcript width emitted by Aeneas and a 512-bit digest. The second links a public handler to a private consuming-key interface and checks exact one- and two-call observations and final states.
 
 The CTX theorems here remain a generic numerical ROM pilot. `BeaconcryptCore.Computational.CtxReduction` separately defines the real ideal-model raw-payload event and proves its factor-one standard-model reduction without using this generic binding game. Connecting this ROM pilot to that event would require an oracle-parametric verifier, while connecting either ideal surface to production still requires the extracted transcript and adapter hash refinement. Treating deployed BLAKE2b-512 as the random oracle in this module is an idealization, not a proof about the primitive.
+
+The four binding bounds are stated in the forward event vocabulary, `Pr{let result ← ctxBindingGame adversary}[result.1 = true]`, which replaces the deprecated `Pr[fun result => result.1 = true | ctxBindingGame adversary]` of VCVio's retiring probability interface and has the same meaning. VCVio's own `binding_bound` and `binding_bound_via_cr_chain` are still stated in the deprecated form at the pinned commit, so the two base proofs convert them through `BeaconcryptCore.VCVioLegacy.oracleComp_probEvent_eq_prEvent_native`, a transitional bridge that is proved from the pin and is deleted at the VCVio upgrade.
 -/
 
 open OracleSpec OracleComp ENNReal
@@ -46,15 +49,16 @@ def ctxBindingGame {queryBudget : ℕ} (adversary : CtxAdversary queryBudget) :=
 
 /-- The tight generic ROM theorem combines the adversary-cache birthday bound with two fresh verifier queries. -/
 theorem ctx_binding_bound_tight {queryBudget : ℕ} (adversary : CtxAdversary queryBudget) :
-    Pr[fun result => result.1 = true | ctxBindingGame adversary] ≤
+    Pr{let result ← ctxBindingGame adversary}[result.1 = true] ≤
       (((queryBudget * (queryBudget - 1) + 2 : ℕ) : ℝ≥0∞) /
-        (2 * Fintype.card CtxDigest)) :=
-  binding_bound adversary
+        (2 * Fintype.card CtxDigest)) := by
+  rw [← BeaconcryptCore.VCVioLegacy.oracleComp_probEvent_eq_prEvent_native]
+  exact binding_bound adversary
 
 /-- The tight bound with the 512-bit random-oracle range cardinality made explicit. -/
 theorem ctx_binding_bound_tight_512 {queryBudget : ℕ}
     (adversary : CtxAdversary queryBudget) :
-    Pr[fun result => result.1 = true | ctxBindingGame adversary] ≤
+    Pr{let result ← ctxBindingGame adversary}[result.1 = true] ≤
       (((queryBudget * (queryBudget - 1) + 2 : ℕ) : ℝ≥0∞) /
         (2 * ((2 ^ 512 : ℕ) : ℝ≥0∞))) := by
   simpa only [CtxDigest, ← FinEnum.card_eq_fintypeCard, FinEnum.card_bitVec] using
@@ -62,14 +66,15 @@ theorem ctx_binding_bound_tight_512 {queryBudget : ℕ}
 
 /-- The looser collision-resistance-chain theorem bounds a win via at most `queryBudget + 2` lazy-ROM queries. -/
 theorem ctx_binding_bound {queryBudget : ℕ} (adversary : CtxAdversary queryBudget) :
-    Pr[fun result => result.1 = true | ctxBindingGame adversary] ≤
+    Pr{let result ← ctxBindingGame adversary}[result.1 = true] ≤
       ((((queryBudget + 2) * (queryBudget + 1) : ℕ) : ℝ≥0∞) /
-        (2 * Fintype.card CtxDigest)) :=
-  binding_bound_via_cr_chain adversary
+        (2 * Fintype.card CtxDigest)) := by
+  rw [← BeaconcryptCore.VCVioLegacy.oracleComp_probEvent_eq_prEvent_native]
+  exact binding_bound_via_cr_chain adversary
 
 /-- The looser bound with the 512-bit random-oracle range cardinality made explicit. -/
 theorem ctx_binding_bound_512 {queryBudget : ℕ} (adversary : CtxAdversary queryBudget) :
-    Pr[fun result => result.1 = true | ctxBindingGame adversary] ≤
+    Pr{let result ← ctxBindingGame adversary}[result.1 = true] ≤
       ((((queryBudget + 2) * (queryBudget + 1) : ℕ) : ℝ≥0∞) /
         (2 * ((2 ^ 512 : ℕ) : ℝ≥0∞))) := by
   simpa only [CtxDigest, ← FinEnum.card_eq_fintypeCard, FinEnum.card_bitVec] using

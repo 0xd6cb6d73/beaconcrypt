@@ -10,7 +10,7 @@ This is the only project module allowed to contain the deprecated VCVio probabil
 * `𝒮[mx] = 𝒮[my] ↔ EvalDistEq mx my`;
 * the measure forms `Pr[= x | mx] = 𝒟[mx] {x}` (measurable singletons) and `Pr[p | mx] = 𝒟[mx] {x | p x}` (discrete outputs).
 
-The primary bridges are stated for `ProbComp`, so that the pin's `DiscreteEvalDistCompatible` link, which upstream removes, stays inside the bridge's proofs; versions for any monad with that link (suffix `_of_compatible`) and for oracle computations over a variable uniform specification (prefix `oracleComp_`) cover the remaining cases. Migrated proofs use these lemmas, by name in `rw` or `simp only`, where a statement outside the current migration stage, or a VCVio lemma, is still stated in the deprecated form; every such use names `VCVioLegacy`, so the remaining uses are greppable and counted. The module contains lemmas only: no notation, tactic, command or other metaprogram. The migration's statement certificates and the generator of its transitional twins are scratch tooling outside the build, which uses these lemmas. The module is transitional: it is deleted at the VCVio upgrade, after which no deprecated form exists. Nothing here is assumed: every bridge is proved from the pinned VCVio.
+The primary bridges are stated for `ProbComp`, so that the pin's `DiscreteEvalDistCompatible` link, which upstream removes, stays inside the bridge's proofs; versions for any monad with that link (suffix `_of_compatible`) and for oracle computations with uniform answers (prefix `oracleComp_`: over a variable specification under the pin's `SPMF` adapter, and, with the suffix `_native`, over measurable answer types under VCVio's native free-monad semantics) cover the remaining cases. Migrated proofs use these lemmas, by name in `rw` or `simp only`, where a statement outside the current migration stage, or a VCVio lemma, is still stated in the deprecated form; every such use names `VCVioLegacy`, so the remaining uses are greppable and counted. The module contains lemmas only: no notation, tactic, command or other metaprogram. The migration's statement certificates and the generator of its transitional twins are scratch tooling outside the build, which uses these lemmas. The module is transitional: it is deleted at the VCVio upgrade, after which no deprecated form exists. Nothing here is assumed: every bridge is proved from the pinned VCVio.
 -/
 
 open MeasureTheory
@@ -117,7 +117,7 @@ theorem probEvent_eq_evalDist_setOf {α : Type} [MeasurableSpace α] [DiscreteMe
 
 /-! ## Bridges for oracle computations with uniform answers
 
-For oracle computations over a specification with uniform answers that is a variable with an `[IsUniformSpec spec]` hypothesis. Their statements use the semantics available in that context, the pin's `SPMF` adapter; for a concrete specification with measurable answer types, whose computations use VCVio's native free-monad semantics, use the bridges for any compatible monad instead. -/
+For oracle computations over a specification with uniform answers that is a variable with an `[IsUniformSpec spec]` hypothesis. Their statements use the semantics available in that context, the pin's `SPMF` adapter; for a specification with measurable answer types, whose computations use VCVio's native free-monad semantics, use the `_native` bridges of the next section. -/
 
 set_option linter.deprecated false in
 /-- The deprecated output probability of an oracle computation with uniform answers is the forward singleton event. -/
@@ -135,6 +135,34 @@ set_option linter.deprecated false in
 /-- Equal deprecated output distributions of oracle computations with uniform answers are equality in distribution. -/
 theorem oracleComp_evalSPMF_eq_iff_evalDistEq {ι : Type} {spec : OracleSpec ι} [spec.IsUniformSpec]
     {α : Type} (mx my : OracleComp spec α) : 𝒮[mx] = 𝒮[my] ↔ EvalDistEq mx my :=
+  evalSPMF_eq_iff_evalDistEq_of_compatible mx my
+
+/-! ## Bridges for oracle computations under the native free-monad semantics
+
+For oracle computations over a specification with uniform answers whose answer types carry a discrete measurable structure, for example a concrete specification such as VCVio's `CMOracle` with `BitVec` answers. In that context the primary measure semantics is VCVio's native free-monad fold, not the `SPMF` adapter of the previous section, and these statements use it. A migrated proof that consumes a VCVio theorem still stated in the deprecated form about such a computation (for example `binding_bound` in `VCVioFeasibility`) rewrites with these bridges, so the pin's `DiscreteEvalDistCompatible` link between the two semantics stays inside the bridge's proofs (added in migration stage S1). -/
+
+set_option linter.deprecated false in
+/-- The deprecated output probability of an oracle computation with uniform, discretely measurable answers is the forward singleton event of the native semantics. -/
+theorem oracleComp_probOutput_eq_prEvent_native {ι : Type} {spec : OracleSpec ι}
+    [spec.IsUniformSpec] [∀ t, MeasurableSpace (spec.Range t)]
+    [∀ t, DiscreteMeasurableSpace (spec.Range t)] {α : Type} (mx : OracleComp spec α) (x : α) :
+    Pr[= x | mx] = Pr{let y ← mx}[y = x] :=
+  probOutput_eq_prEvent_of_compatible mx x
+
+set_option linter.deprecated false in
+/-- The deprecated event probability of an oracle computation with uniform, discretely measurable answers is the forward event of the native semantics. -/
+theorem oracleComp_probEvent_eq_prEvent_native {ι : Type} {spec : OracleSpec ι}
+    [spec.IsUniformSpec] [∀ t, MeasurableSpace (spec.Range t)]
+    [∀ t, DiscreteMeasurableSpace (spec.Range t)] {α : Type} (mx : OracleComp spec α)
+    (p : α → Prop) : Pr[p | mx] = Pr{let x ← mx}[p x] :=
+  probEvent_eq_prEvent_of_compatible mx p
+
+set_option linter.deprecated false in
+/-- Equal deprecated output distributions of oracle computations with uniform, discretely measurable answers are equality in distribution under the native semantics. -/
+theorem oracleComp_evalSPMF_eq_iff_evalDistEq_native {ι : Type} {spec : OracleSpec ι}
+    [spec.IsUniformSpec] [∀ t, MeasurableSpace (spec.Range t)]
+    [∀ t, DiscreteMeasurableSpace (spec.Range t)] {α : Type} (mx my : OracleComp spec α) :
+    𝒮[mx] = 𝒮[my] ↔ EvalDistEq mx my :=
   evalSPMF_eq_iff_evalDistEq_of_compatible mx my
 
 end BeaconcryptCore.VCVioLegacy
@@ -240,3 +268,27 @@ info: 'BeaconcryptCore.VCVioLegacy.oracleComp_evalSPMF_eq_iff_evalDistEq' depend
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.VCVioLegacy.oracleComp_evalSPMF_eq_iff_evalDistEq
+
+/--
+info: 'BeaconcryptCore.VCVioLegacy.oracleComp_probOutput_eq_prEvent_native' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.VCVioLegacy.oracleComp_probOutput_eq_prEvent_native
+
+/--
+info: 'BeaconcryptCore.VCVioLegacy.oracleComp_probEvent_eq_prEvent_native' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.VCVioLegacy.oracleComp_probEvent_eq_prEvent_native
+
+/--
+info: 'BeaconcryptCore.VCVioLegacy.oracleComp_evalSPMF_eq_iff_evalDistEq_native' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.VCVioLegacy.oracleComp_evalSPMF_eq_iff_evalDistEq_native

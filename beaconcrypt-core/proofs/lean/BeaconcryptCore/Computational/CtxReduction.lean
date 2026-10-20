@@ -81,7 +81,7 @@ noncomputable def ctxMisattributionExp (c : Pqxdh.Crypto)
 /-- Probability that an adversary finds one raw payload with two distinct accepted explanations. -/
 noncomputable def ctxMisattributionAdvantage (c : Pqxdh.Crypto)
     (adversary : ProbComp CtxAttempt) : ℝ≥0∞ :=
-  Pr[= true | ctxMisattributionExp c adversary]
+  Pr{let x ← ctxMisattributionExp c adversary}[x = true]
 
 /-- Black-box reduction from a CTX misattribution adversary to a BLAKE2b collision adversary. -/
 def ctxCollisionReduction (adversary : ProbComp CtxAttempt) :
@@ -95,12 +95,19 @@ theorem ctxMisattributionAdvantage_le_blake2b_cr (c : Pqxdh.Crypto)
     (adversary : ProbComp CtxAttempt) :
     ctxMisattributionAdvantage c adversary ≤
       CollisionResistance.crAdvantage c.blake2b (ctxCollisionReduction adversary) := by
-  unfold ctxMisattributionAdvantage ctxMisattributionExp
-    CollisionResistance.crAdvantage CollisionResistance.crExp ctxCollisionReduction
-  simp only [evalDist_apply_singleton, monad_norm]
-  refine probOutput_bind_mono fun attempt _ => ?_
-  apply probOutput_pure_bool_le
-  intro hwin
+  classical
+  have hexp : ctxMisattributionExp c adversary =
+      (fun attempt => decide (CtxMisattribution c attempt)) <$> adversary := by
+    simp only [ctxMisattributionExp, bind_pure_comp]
+  have hcr : CollisionResistance.crExp c.blake2b (ctxCollisionReduction adversary) =
+      (fun attempt => decide ((ctxCollisionInputs attempt).1 ≠ (ctxCollisionInputs attempt).2 ∧
+        c.blake2b (ctxCollisionInputs attempt).1 = c.blake2b (ctxCollisionInputs attempt).2)) <$>
+        adversary := by
+    simp only [CollisionResistance.crExp, ctxCollisionReduction, bind_pure_comp,
+      Functor.map_map]
+  unfold ctxMisattributionAdvantage CollisionResistance.crAdvantage
+  rw [← prEvent_eq_evalDist_singleton _ true, hexp, hcr, prEvent_map, prEvent_map]
+  refine prEvent_mono adversary _ _ fun attempt hwin => ?_
   simp only [decide_eq_true_eq] at hwin ⊢
   exact ctxMisattribution_implies_blake2b_collision c attempt hwin
 
@@ -187,7 +194,7 @@ noncomputable def ctxFullCommitmentExp (c : Pqxdh.Crypto)
 /-- Probability that two distinct, adversary-chosen complete inputs seal to the same protected payload. -/
 noncomputable def ctxFullCommitmentAdvantage (c : Pqxdh.Crypto)
     (adversary : ProbComp CtxFullCommitmentAttempt) : ℝ≥0∞ :=
-  Pr[= true | ctxFullCommitmentExp c adversary]
+  Pr{let x ← ctxFullCommitmentExp c adversary}[x = true]
 
 /-- The BLAKE2b collision adversary induced by a full-commitment adversary. -/
 def ctxFullCommitmentCollisionReduction (c : Pqxdh.Crypto)
@@ -203,13 +210,21 @@ theorem ctxFullCommitmentAdvantage_le_blake2b_cr (c : Pqxdh.Crypto)
     ctxFullCommitmentAdvantage c adversary ≤
       CollisionResistance.crAdvantage c.blake2b
         (ctxFullCommitmentCollisionReduction c adversary) := by
-  unfold ctxFullCommitmentAdvantage ctxFullCommitmentExp
-    CollisionResistance.crAdvantage CollisionResistance.crExp
-    ctxFullCommitmentCollisionReduction
-  simp only [evalDist_apply_singleton, monad_norm]
-  refine probOutput_bind_mono fun attempt _ => ?_
-  apply probOutput_pure_bool_le
-  intro hwin
+  classical
+  have hexp : ctxFullCommitmentExp c adversary =
+      (fun attempt => decide (CtxFullCommitment c attempt)) <$> adversary := by
+    simp only [ctxFullCommitmentExp, bind_pure_comp]
+  have hcr : CollisionResistance.crExp c.blake2b
+        (ctxFullCommitmentCollisionReduction c adversary) =
+      (fun attempt => decide ((ctxFullCommitmentCollisionInputs c attempt).1 ≠
+          (ctxFullCommitmentCollisionInputs c attempt).2 ∧
+        c.blake2b (ctxFullCommitmentCollisionInputs c attempt).1 =
+          c.blake2b (ctxFullCommitmentCollisionInputs c attempt).2)) <$> adversary := by
+    simp only [CollisionResistance.crExp, ctxFullCommitmentCollisionReduction, bind_pure_comp,
+      Functor.map_map]
+  unfold ctxFullCommitmentAdvantage CollisionResistance.crAdvantage
+  rw [← prEvent_eq_evalDist_singleton _ true, hexp, hcr, prEvent_map, prEvent_map]
+  refine prEvent_mono adversary _ _ fun attempt hwin => ?_
   simp only [decide_eq_true_eq] at hwin ⊢
   exact ctxFullCommitment_implies_blake2b_collision c attempt hwin
 
@@ -389,7 +404,7 @@ noncomputable def ctxRelabelExp (c : Pqxdh.Crypto)
 /-- Probability that an honest source seal opens under a distinct target context. -/
 noncomputable def ctxRelabelAdvantage (c : Pqxdh.Crypto)
     (adversary : ProbComp CtxRelabelClaim) : ℝ≥0∞ :=
-  Pr[= true | ctxRelabelExp c adversary]
+  Pr{let x ← ctxRelabelExp c adversary}[x = true]
 
 /-- **Relabelling an honest seal is no easier than BLAKE2b collision finding.** This specialization also has factor one. -/
 theorem ctxRelabelAdvantage_le_blake2b_cr (c : Pqxdh.Crypto)
@@ -397,15 +412,21 @@ theorem ctxRelabelAdvantage_le_blake2b_cr (c : Pqxdh.Crypto)
     ctxRelabelAdvantage c adversary ≤
       CollisionResistance.crAdvantage c.blake2b
         (ctxCollisionReduction (CtxRelabelClaim.toAttempt c <$> adversary)) := by
-  unfold ctxRelabelAdvantage ctxRelabelExp
+  classical
   refine le_trans ?_
     (ctxMisattributionAdvantage_le_blake2b_cr c
       (CtxRelabelClaim.toAttempt c <$> adversary))
-  unfold ctxMisattributionAdvantage ctxMisattributionExp
-  simp only [map_eq_bind_pure_comp, bind_assoc, pure_bind, Function.comp_apply]
-  refine probOutput_bind_mono fun claim _ => ?_
-  apply probOutput_pure_bool_le
-  intro hsuccess
+  have hrelabel : ctxRelabelExp c adversary =
+      (fun claim => decide (CtxRelabelSuccess c claim)) <$> adversary := by
+    simp only [ctxRelabelExp, bind_pure_comp]
+  have hmisattribution :
+      ctxMisattributionExp c (CtxRelabelClaim.toAttempt c <$> adversary) =
+        (fun claim => decide (CtxMisattribution c (CtxRelabelClaim.toAttempt c claim))) <$>
+          adversary := by
+    simp only [ctxMisattributionExp, bind_pure_comp, Functor.map_map]
+  unfold ctxRelabelAdvantage ctxMisattributionAdvantage
+  rw [hrelabel, hmisattribution, prEvent_map, prEvent_map]
+  refine prEvent_mono adversary _ _ fun claim hsuccess => ?_
   simp only [decide_eq_true_eq] at hsuccess ⊢
   exact ctxRelabelAttempt_win_of_open c claim.source claim.target claim.context_ne hsuccess
 
@@ -466,7 +487,7 @@ noncomputable def ctxWrongSequenceExp (c : Pqxdh.Crypto)
 /-- Probability that an honest source seal opens at a different sequence number. -/
 noncomputable def ctxWrongSequenceAdvantage (c : Pqxdh.Crypto)
     (adversary : ProbComp CtxWrongSequenceClaim) : ℝ≥0∞ :=
-  Pr[= true | ctxWrongSequenceExp c adversary]
+  Pr{let x ← ctxWrongSequenceExp c adversary}[x = true]
 
 /-- The collision adversary induced by a wrong-sequence adversary. -/
 def ctxWrongSequenceCollisionReduction (c : Pqxdh.Crypto)
@@ -543,7 +564,7 @@ noncomputable def ctxWrongSenderExp (c : Pqxdh.Crypto)
 /-- Probability that an honest source seal opens under a different sender identifier at the record layer. -/
 noncomputable def ctxWrongSenderAdvantage (c : Pqxdh.Crypto)
     (adversary : ProbComp CtxWrongSenderClaim) : ℝ≥0∞ :=
-  Pr[= true | ctxWrongSenderExp c adversary]
+  Pr{let x ← ctxWrongSenderExp c adversary}[x = true]
 
 /-- The collision adversary induced by a wrong-sender record-opening adversary. -/
 def ctxWrongSenderCollisionReduction (c : Pqxdh.Crypto)
@@ -620,7 +641,7 @@ noncomputable def ctxCrossSessionExp (c : Pqxdh.Crypto)
 /-- Probability that an honest source seal opens under different session associated data. -/
 noncomputable def ctxCrossSessionAdvantage (c : Pqxdh.Crypto)
     (adversary : ProbComp CtxCrossSessionClaim) : ℝ≥0∞ :=
-  Pr[= true | ctxCrossSessionExp c adversary]
+  Pr{let x ← ctxCrossSessionExp c adversary}[x = true]
 
 /-- The collision adversary induced by a cross-session record-opening adversary. -/
 def ctxCrossSessionCollisionReduction (c : Pqxdh.Crypto)

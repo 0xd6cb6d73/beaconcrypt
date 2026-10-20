@@ -88,15 +88,22 @@ noncomputable def beaconWrongSequenceExp (h : Pqxdh.HonestRun)
 /-- Probability that the honest first record reaches a post-record outcome at a different sequence. -/
 noncomputable def beaconWrongSequenceAdvantage (h : Pqxdh.HonestRun)
     (adversary : ProbComp BeaconWrongSequenceClaim) : ℝ≥0∞ :=
-  Pr[= true | beaconWrongSequenceExp h adversary]
+  Pr{let x ← beaconWrongSequenceExp h adversary}[x = true]
 
 /-- Registration admission at a non-one sequence has zero advantage by the post-opening policy, even if a raw opening succeeds. -/
 theorem beaconWrongSequenceAdvantage_eq_zero (h : Pqxdh.HonestRun)
     (adversary : ProbComp BeaconWrongSequenceClaim) :
     beaconWrongSequenceAdvantage h adversary = 0 := by
+  classical
   have noWin : ∀ claim, ¬ BeaconWrongSequenceSuccess h claim :=
     fun claim admitted => claim.sequence_ne (Pqxdh.beaconRecordAdmitted_sequence h.c _ _ admitted)
-  simp [beaconWrongSequenceAdvantage, beaconWrongSequenceExp, noWin]
+  have hexp : beaconWrongSequenceExp h adversary =
+      (fun claim => decide (BeaconWrongSequenceSuccess h claim)) <$> adversary := by
+    simp only [beaconWrongSequenceExp, bind_pure_comp]
+  unfold beaconWrongSequenceAdvantage
+  rw [hexp, prEvent_map]
+  exact prEvent_eq_zero_of_forall_not adversary _ fun claim hwin =>
+    noWin claim (of_decide_eq_true hwin)
 
 /-- The BLAKE2b collision adversary induced by a reordered-record admission adversary. -/
 def beaconWrongSequenceCollisionReduction (h : Pqxdh.HonestRun)
@@ -113,13 +120,21 @@ theorem beaconWrongSequenceAdvantage_le_blake2b_cr
     beaconWrongSequenceAdvantage h adversary ≤
       CollisionResistance.crAdvantage h.c.blake2b
         (beaconWrongSequenceCollisionReduction h adversary) := by
-  unfold beaconWrongSequenceAdvantage beaconWrongSequenceExp
-    CollisionResistance.crAdvantage CollisionResistance.crExp
-    beaconWrongSequenceCollisionReduction
-  simp only [evalDist_apply_singleton, monad_norm]
-  refine probOutput_bind_mono fun claim _ => ?_
-  apply probOutput_pure_bool_le
-  intro hwin
+  classical
+  have hexp : beaconWrongSequenceExp h adversary =
+      (fun claim => decide (BeaconWrongSequenceSuccess h claim)) <$> adversary := by
+    simp only [beaconWrongSequenceExp, bind_pure_comp]
+  have hcr : CollisionResistance.crExp h.c.blake2b
+        (beaconWrongSequenceCollisionReduction h adversary) =
+      (fun claim => decide ((beaconWrongSequenceCollisionInputs h claim).1 ≠
+          (beaconWrongSequenceCollisionInputs h claim).2 ∧
+        h.c.blake2b (beaconWrongSequenceCollisionInputs h claim).1 =
+          h.c.blake2b (beaconWrongSequenceCollisionInputs h claim).2)) <$> adversary := by
+    simp only [CollisionResistance.crExp, beaconWrongSequenceCollisionReduction, bind_pure_comp,
+      Functor.map_map]
+  unfold beaconWrongSequenceAdvantage CollisionResistance.crAdvantage
+  rw [← prEvent_eq_evalDist_singleton _ true, hexp, hcr, prEvent_map, prEvent_map]
+  refine prEvent_mono adversary _ _ fun claim hwin => ?_
   simp only [decide_eq_true_eq] at hwin ⊢
   exact beaconWrongSequenceSuccess_implies_blake2b_collision h hok hsid claim hwin
 
@@ -158,22 +173,20 @@ noncomputable def beaconWrongSenderExp (h : Pqxdh.HonestRun)
 /-- Probability that a wrong-sender frame reaches a post-record beacon outcome. -/
 noncomputable def beaconWrongSenderAdvantage (h : Pqxdh.HonestRun)
     (adversary : ProbComp (BeaconWrongSenderClaim h)) : ℝ≥0∞ :=
-  Pr[= true | beaconWrongSenderExp h adversary]
+  Pr{let x ← beaconWrongSenderExp h adversary}[x = true]
 
 /-- **Wrong-sender admission has exactly zero advantage.** This is an unconditional control-flow result for an honest run, not a reduction to BLAKE2b collision resistance. -/
 theorem beaconWrongSenderAdvantage_eq_zero (h : Pqxdh.HonestRun) (hok : h.Ok)
     (adversary : ProbComp (BeaconWrongSenderClaim h)) :
     beaconWrongSenderAdvantage h adversary = 0 := by
   classical
-  unfold beaconWrongSenderAdvantage beaconWrongSenderExp
-  refine (probOutput_eq_zero_iff _ _).mpr ?_
-  intro hmem
-  rw [mem_support_bind_iff] at hmem
-  rcases hmem with ⟨claim, _, hclaim⟩
-  have hdecide : decide (BeaconWrongSenderSuccess h claim) = true := by
-    simpa only [support_pure, Set.mem_singleton_iff, eq_comm] using hclaim
-  simp only [decide_eq_true_eq] at hdecide
-  exact beaconWrongSenderSuccess_false h hok claim hdecide
+  have hexp : beaconWrongSenderExp h adversary =
+      (fun claim => decide (BeaconWrongSenderSuccess h claim)) <$> adversary := by
+    simp only [beaconWrongSenderExp, bind_pure_comp]
+  unfold beaconWrongSenderAdvantage
+  rw [hexp, prEvent_map]
+  exact prEvent_eq_zero_of_forall_not adversary _ fun claim hwin =>
+    beaconWrongSenderSuccess_false h hok claim (of_decide_eq_true hwin)
 
 /-! ## Foreign-session ciphertext admission -/
 
@@ -249,7 +262,7 @@ noncomputable def beaconCrossSessionExp (h : Pqxdh.HonestRun)
 /-- Probability that a foreign-session ciphertext reaches a post-record beacon outcome. -/
 noncomputable def beaconCrossSessionAdvantage (h : Pqxdh.HonestRun)
     (adversary : ProbComp (BeaconCrossSessionClaim h)) : ℝ≥0∞ :=
-  Pr[= true | beaconCrossSessionExp h adversary]
+  Pr{let x ← beaconCrossSessionExp h adversary}[x = true]
 
 /-- The BLAKE2b collision adversary induced by a foreign-session admission adversary. -/
 def beaconCrossSessionCollisionReduction (h : Pqxdh.HonestRun)
@@ -266,13 +279,21 @@ theorem beaconCrossSessionAdvantage_le_blake2b_cr
     beaconCrossSessionAdvantage h adversary ≤
       CollisionResistance.crAdvantage h.c.blake2b
         (beaconCrossSessionCollisionReduction h adversary) := by
-  unfold beaconCrossSessionAdvantage beaconCrossSessionExp
-    CollisionResistance.crAdvantage CollisionResistance.crExp
-    beaconCrossSessionCollisionReduction
-  simp only [evalDist_apply_singleton, monad_norm]
-  refine probOutput_bind_mono fun claim _ => ?_
-  apply probOutput_pure_bool_le
-  intro hwin
+  classical
+  have hexp : beaconCrossSessionExp h adversary =
+      (fun claim => decide (BeaconCrossSessionSuccess h claim)) <$> adversary := by
+    simp only [beaconCrossSessionExp, bind_pure_comp]
+  have hcr : CollisionResistance.crExp h.c.blake2b
+        (beaconCrossSessionCollisionReduction h adversary) =
+      (fun claim => decide ((beaconCrossSessionCollisionInputs h claim).1 ≠
+          (beaconCrossSessionCollisionInputs h claim).2 ∧
+        h.c.blake2b (beaconCrossSessionCollisionInputs h claim).1 =
+          h.c.blake2b (beaconCrossSessionCollisionInputs h claim).2)) <$> adversary := by
+    simp only [CollisionResistance.crExp, beaconCrossSessionCollisionReduction, bind_pure_comp,
+      Functor.map_map]
+  unfold beaconCrossSessionAdvantage CollisionResistance.crAdvantage
+  rw [← prEvent_eq_evalDist_singleton _ true, hexp, hcr, prEvent_map, prEvent_map]
+  refine prEvent_mono adversary _ _ fun claim hwin => ?_
   simp only [decide_eq_true_eq] at hwin ⊢
   exact beaconCrossSessionSuccess_implies_blake2b_collision h hok claim hwin
 
