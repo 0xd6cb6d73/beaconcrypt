@@ -971,7 +971,7 @@
    "module_changed_unexplained": [],
    "unexplained_type_changes": [],
    "unexplained_levels_changes": [],
-   "note_type_changes": "Type changes are in the 78 restated theorems, in the equation lemmas PqxdhJointIdentity.advantage.eq_1 and PqxdhJointGapDh.advantage.eq_1 of the two restated advantages (type_changed_allowed; their types follow the restated bodies, plan section 5.1 rule 2) and in the five generated helpers of allowed_generated: three binder-only (sampleFamily_target_first._proof_1_1, target_first._proof_1_4, targetEvent_le_jointAdvantage.match_1_1), the simplification helper take_uniform._simp_1_1 of a rewritten proof (universe parameters u_1 at the base, u, v at the stage) and routed_bound._simp_1_5 of the patched PqxdhServerAuthJointIdentityEuf.routed_bound (S4 review finding EQ-S4-3; see vcvio-deprecations-s4-review.json)",
+   "note_type_changes": "Type changes are in the 78 restated theorems, in the equation lemmas PqxdhJointIdentity.advantage.eq_1 and PqxdhJointGapDh.advantage.eq_1 of the two restated advantages (type_changed_allowed; their types follow the restated bodies, plan section 5.1 rule 2) and in the five generated helpers of allowed_generated: three binder-only (sampleFamily_target_first._proof_1_1, target_first._proof_1_4, targetEvent_le_jointAdvantage.match_1_1), the simplification helper take_uniform._simp_1_1 of a rewritten proof (universe parameters u, v at the base, u_1 at the stage) and routed_bound._simp_1_5 of the patched PqxdhServerAuthJointIdentityEuf.routed_bound (S4 review finding EQ-S4-3; see vcvio-deprecations-s4-review.json)",
    "allowed_generated": {
     "type_changed": [
      "BeaconcryptCore.Computational.PqxdhFullSecretInputKdf.take_uniform._simp_1_1",
