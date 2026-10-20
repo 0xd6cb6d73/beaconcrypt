@@ -126,7 +126,13 @@
    "PqxdhDynamicKemJointStopping.pre_event"
   ],
   "twin_headers_with_unused_variables_switch": [
-   "PqxdhDynamicIdentityPool.sampleSeeds_unused"
+   "PqxdhDynamicIdentityPool.sampleSeeds_unused",
+   "PqxdhDynamicIdentityReports.reporting_advantage_le_identity_sum",
+   "PqxdhJointPhase1Reports.fieldOrigin_advantage_le_sum",
+   "PqxdhPhase1AcceptanceOracle.acceptance_advantage_le_sum",
+   "PqxdhDynamicKemJointSource.selected_source",
+   "PqxdhDynamicKemJointStopping.history_event",
+   "PqxdhDynamicKemJointStopping.pre_event"
   ],
   "consumer_references_renamed": 33,
   "earlier_twin_removed": [
@@ -176,7 +182,7 @@
     "PqxdhServerAuthCommonAuthentication"
    ],
    "tool": "S4/tools/wrapper_patch_s4.py (apply/revert)",
-   "decision": "restated wrappers get no transitional twin in S4 (a twin of PqxdhJointIdentity.advantage would add and later remove a declaration in the hash-pinned file); later-stage proofs that depend on a restated wrapper's old body (unfolding with simp only/rw, closing a goal stated over the old body definitionally, or applying a HonestKeyCompatibility hypothesis as the old equation), which the reference probe cannot see, are patched at their sites through the allowlisted bridge or with the forward lemma; the same replaces the twin of PqxdhStatefulPhase1Authentication.privateSourcePrefix_borrowed_complete, whose old statement's delaboration names the auxiliary matcher privateSourcePrefix.match_1 (auxLemma linter in every header variant)"
+   "decision": "restated wrappers get no transitional twin in S4 (a twin of PqxdhJointIdentity.advantage would add and later remove a declaration in the hash-pinned file); later-stage proofs that depend on a restated wrapper's old body (unfolding with simp only/rw, closing a goal stated over the old body definitionally, or applying a HonestKeyCompatibility hypothesis as the old equation), which the reference probe cannot see, are patched at their sites through the allowlisted bridge or with the forward lemma; the same replaces the twin of PqxdhStatefulPhase1Authentication.privateSourcePrefix_borrowed_complete, whose old statement's delaboration names the auxiliary matcher privateSourcePrefix.match_1 (auxLemma linter in every header variant of the CertTools-printed text; a twin copied verbatim from the base source text, which the S4 equivalence review found to state the base statement up to a structurally identical regenerated matcher, was not tried); ctxPrefixBadProbability needs neither a twin nor a patch (its only later proof user reaches it through equations with unchanged types); recorded after the S4 reviews as amendment A3 of the plan (/tmp/bc-arc-scratch/vcvio-migration/AMENDMENTS.md)"
   }
  },
  "lean_changes": {
@@ -282,7 +288,8 @@
   "toolchain_deprecations": "if_pos and if_neg are deprecated in this Lean core (2026-07-21); the new proofs use ite_eq_left and ite_eq_right",
   "layout": "a continuation line inside Pr{...} left of the column of its let ends the doSeq; multi-line computations are parenthesized",
   "import_order": "a new shim import placed before an existing VCVio import of a low module reordered the downstream import closure and changed which IsProbabilityMeasure instance a later proof (PqxdhInitializerSecrecy.runtimeOfImpl_noFail_bool) synthesized; gate G4 now requires that no theorem outside the edited set changes its proof term",
-  "textual_fallback": "PqxdhFullSecretInputKdf.projectedOutput_uniform has the S3 evalSPMF_first32 shape (two evalSPMF at definitionally equal element types)"
+  "textual_fallback": "PqxdhFullSecretInputKdf.projectedOutput_uniform has the S3 evalSPMF_first32 shape (two evalSPMF at definitionally equal element types)",
+  "twintext_linter_panics": "while CertTools elaborated candidate twin commands in memory (tryCommandText), outside the build, Lean's unused-variable linter panicked on some of them (PANIC at String.Slice.pos!, Init.Data.String.Basic:1661:4, offset not at a valid UTF-8 character boundary, inside Lean.Linter.UnusedVariables.unusedVariables): logs twintext-B1 48, twintext-D1 6, twintext-D2 6, none in twintext-A, -A2 and -C or in the S2 and S3 twin-text logs; the runs exit 0 except B1 (rc 1, the intended failure for privateSourcePrefix_borrowed_complete). No effect on the chosen headers, which depend only on the elaboration messages, or on the build (0 panics in check-lean-0, -4, -5, -6 and the validation run); recorded after the S4 hygiene review (H4)"
  },
  "build": {
   "command": "make -C beaconcrypt-core check-lean SHELL=bash (proof shell, two-file flake copy of central's flake.nix/flake.lock)",
@@ -964,6 +971,7 @@
    "module_changed_unexplained": [],
    "unexplained_type_changes": [],
    "unexplained_levels_changes": [],
+   "note_type_changes": "Type changes are in the 78 restated theorems, in the equation lemmas PqxdhJointIdentity.advantage.eq_1 and PqxdhJointGapDh.advantage.eq_1 of the two restated advantages (type_changed_allowed; their types follow the restated bodies, plan section 5.1 rule 2) and in the five generated helpers of allowed_generated: three binder-only (sampleFamily_target_first._proof_1_1, target_first._proof_1_4, targetEvent_le_jointAdvantage.match_1_1), the simplification helper take_uniform._simp_1_1 of a rewritten proof (universe parameters u_1 at the base, u, v at the stage) and routed_bound._simp_1_5 of the patched PqxdhServerAuthJointIdentityEuf.routed_bound (S4 review finding EQ-S4-3; see vcvio-deprecations-s4-review.json)",
    "allowed_generated": {
     "type_changed": [
      "BeaconcryptCore.Computational.PqxdhFullSecretInputKdf.take_uniform._simp_1_1",
@@ -4906,6 +4914,6 @@
   "s4interleave.py": "054bed892a39e74d6b1248d8720d80ea029073357646804f0d4c84e887bb6ff8",
   "s4layers.py": "cc007c0b3eb693066967aab30eeaee68da04fcbadb5a77d5b79cf6828685bedd"
  },
- "logs": "machine-local, /tmp/bc-arc-scratch/vcvio-migration/S4/logs/ (check-lean-0..5, lake-*, sf/*, twintext-*, twins-insert-*, rename-*, wrapper-patch-*, certificates-1 (first run: the fallback case), certificates-2, certificates-negative-2, check-certificates-2, stage-*, inv-recount, inv-rehash-1/2, check-inventory-1/2, gates-final, warn-categories)",
- "reviews": "not yet (plan section 8 step 6: two independent reviews before integration)"
+ "logs": "machine-local, /tmp/bc-arc-scratch/vcvio-migration/S4/logs/ (check-lean-0..5, lake-*, sf/*, twintext-*, twins-insert-*, rename-*, wrapper-patch-*, certificates-1 (first run: the fallback case), certificates-2, certificates-negative-2, check-certificates-2 (second run, 12:16, against the build of check-lean-4, lease 00000843, before the import-order fix in PqxdhKemIndCca), certificates-3, certificates-negative-3, check-certificates-3 (third run, 12:44, against the final build of check-lean-5, lease 00000845: Lean output identical to run 2 apart from timing, checker RESULT PASS), stage-*, inv-recount, inv-rehash-1/2, check-inventory-1/2, gates-final, warn-categories)",
+ "reviews": "two independent reviews at c8075ef8 (2026-10-20, statement equivalence and hygiene, both APPROVE_WITH_NITS); their fixes and reruns are recorded in vcvio-deprecations-s4-review.json"
 }
