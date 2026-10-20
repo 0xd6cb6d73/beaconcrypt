@@ -33,7 +33,8 @@ theorem nativeNext_eq_total
   split
   · apply evalSPMF_bind_congr'
     intro ephemeral
-    rw [evalSPMF_bind, compatible _ supported, ← evalSPMF_bind]
+    rw [evalSPMF_bind, (VCVioLegacy.evalSPMF_eq_iff_evalDistEq _ _).2 (compatible _ supported),
+      ← evalSPMF_bind]
     simp only [bind_map_left]
   · rfl
 

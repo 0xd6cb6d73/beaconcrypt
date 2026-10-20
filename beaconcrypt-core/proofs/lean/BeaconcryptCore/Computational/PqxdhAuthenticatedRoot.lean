@@ -260,7 +260,8 @@ theorem sourceGame_filtered_eq_initializerReal
         (rootInitializer sigAlg kem setup selector verifyFn protocol)] := by
   apply evalDist_eq_of_evalSPMF_eq
   unfold sourceGame
-  rw [privateSourcePrefix_borrowed_complete]
+  rw [(VCVioLegacy.evalSPMF_eq_iff_evalDistEq _ _).2
+    (privateSourcePrefix_borrowed_complete baseImpl sigAlg kem setup selector _)]
   simp only [initializerRealGame, oneKeyBranchMain, oneKeyPrefix,
     toKemOneKeyAdversary, rootInitializer, conditionalPrefix,
     simulateQ_bind, bind_assoc, pure_bind]

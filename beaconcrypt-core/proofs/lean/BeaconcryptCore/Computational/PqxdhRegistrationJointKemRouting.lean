@@ -82,7 +82,7 @@ theorem fresh_pre_event (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
         PqxdhPrivateKemSource.evalKem setup.baseImpl setup.kem secret
           (pre setup codec checks identityIndex publicIdentity client owners native selected
             (PqxdhDynamicKemRouter.redact selected pairs) (joint, PqxdhDynamicKemRouter.empty))] :=
-  PqxdhDynamicKemJointStopping.pre_event setup.baseImpl setup.joint setup.kem selected pairs target secret present
+  PqxdhDynamicKemJointStopping.pre_event_vcvioLegacy setup.baseImpl setup.joint setup.kem selected pairs target secret present
     (program setup codec checks identityIndex publicIdentity client owners native) joint event
 
 /-- Every prechallenge source finish attempt costs at most one selected logical CCA decapsulation; source rejection and arbitrary optional replies do not increase the cap. -/

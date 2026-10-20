@@ -338,7 +338,7 @@ theorem ce_or_injective_s2b_full (setup : Setup baseSpec KemSK)
       (Classical.propDecidable _))
     fun outcome _ held => by simpa using held
   have finiteSum : PqxdhDeploymentHeadlineCollision.injTerm setup budget ≠ ⊤ :=
-    ENNReal.sum_ne_top.mpr fun _ _ => ne_top_of_le_ne_top ENNReal.one_ne_top probOutput_le_one
+    ENNReal.sum_ne_top.mpr fun _ _ => ne_top_of_le_ne_top ENNReal.one_ne_top (prEvent_le_one _)
   have joint : 𝒟[(fun outcome => @decide ((∃ c, PqxdhDeploymentServerAuth.A1NoPinnedMatch setup codec c outcome) ∨
       PqxdhDeploymentHeadlineCollision.IdentityCollision setup outcome) (Classical.propDecidable _)) <$> run] {true} ≤
       ENNReal.ofReal ((∑ c : Fin budget.create, PqxdhDeploymentServerAuth.serverAuthBound setup codec checks caps

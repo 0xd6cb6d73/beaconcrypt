@@ -1,4 +1,5 @@
 import BeaconcryptCore.Computational.PqxdhJointIdentitySessions
+import BeaconcryptCore.Computational.VCVioForwardOracleComp
 
 /-!
 # Identity reveals and explicit target freshness
@@ -97,10 +98,9 @@ theorem revealed_fresh_probability_zero (primitives : Primitives) {count : ℕ}
     (seeds : Fin count → IdentitySeed) (target : Fin count) {Result : Type}
     (client : OracleComp (GlobalSpec count) Result) (state : GlobalState count)
     (revealed : target ∈ state.reveals) (observer : Result × GlobalState count → Prop) :
-    Pr[fun result => Fresh target result.2 ∧ observer result |
-      (simulateQ (sourceImpl primitives seeds) client).run state] = 0 := by
-  apply probEvent_eq_zero
-  intro result supported accepted
+    Pr{let result ← (simulateQ (sourceImpl primitives seeds) client).run state}[
+      Fresh target result.2 ∧ observer result] = 0 := by
+  refine prEvent_eq_zero_of_forall_mem_support _ _ fun result supported accepted => ?_
   exact accepted.1 (sourceRun_revealed primitives seeds target client state revealed result supported)
 
 /-- Aborted runs have no fresh target output; surviving runs retain the complete client result and global state. -/
@@ -115,13 +115,15 @@ theorem fresh_probability_eq_stopped (primitives : Primitives) {count : ℕ}
     (seeds : Fin count → IdentitySeed) (target : Fin count) {Result : Type}
     (client : OracleComp (GlobalSpec count) Result) (state : GlobalState count)
     (fresh : Fresh target state) (observer : Result × GlobalState count → Prop) :
-    Pr[fun result => Fresh target result.2 ∧ observer result |
-      (simulateQ (sourceImpl primitives seeds) client).run state] =
-    Pr[StoppedEvent target observer |
-      (simulateQ (sourceImpl primitives seeds) (stopBeforeReveal target client)).run state] := by
+    Pr{let result ← (simulateQ (sourceImpl primitives seeds) client).run state}[
+      Fresh target result.2 ∧ observer result] =
+    Pr{let result ← (simulateQ (sourceImpl primitives seeds) (stopBeforeReveal target client)).run state}[
+      StoppedEvent target observer result] := by
   classical
   induction client using OracleComp.inductionOn generalizing state with
   | pure value =>
+      rw [stopBeforeReveal_pure, simulateQ_pure, simulateQ_pure, StateT.run_pure, StateT.run_pure,
+        prEvent_pure, prEvent_pure]
       by_cases accepted : Fresh target state ∧ observer (value, state)
       · simp [StoppedEvent, accepted]
       · simp [StoppedEvent, accepted]
@@ -130,18 +132,25 @@ theorem fresh_probability_eq_stopped (primitives : Primitives) {count : ℕ}
     | inl request =>
       rw [stopBeforeReveal_service]
       simp only [simulateQ_query_bind, StateT.run_bind]
-      change Pr[fun result => Fresh target result.2 ∧ observer result |
-        (((familyImpl primitives seeds request).run state.histories >>= fun result =>
-          pure (result.1, { state with histories := result.2 })) >>= fun result =>
-            (simulateQ (sourceImpl primitives seeds) (rest result.1)).run result.2 : ProbComp _)] =
-        Pr[StoppedEvent target observer |
-        (((familyImpl primitives seeds request).run state.histories >>= fun result =>
-          pure (result.1, { state with histories := result.2 })) >>= fun result =>
-            (simulateQ (sourceImpl primitives seeds) (stopBeforeReveal target (rest result.1))).run result.2 : ProbComp _)]
-      simp only [bind_assoc, pure_bind, probEvent_bind_eq_tsum]
-      apply tsum_congr
-      intro result
-      rw [ih result.1 { state with histories := result.2 } fresh]
+      change Pr{let result ←
+          (((familyImpl primitives seeds request).run state.histories >>= fun result =>
+            pure (result.1, { state with histories := result.2 })) >>= fun result =>
+              (simulateQ (sourceImpl primitives seeds) (rest result.1)).run result.2 : ProbComp _)}[
+          Fresh target result.2 ∧ observer result] =
+        Pr{let result ←
+          (((familyImpl primitives seeds request).run state.histories >>= fun result =>
+            pure (result.1, { state with histories := result.2 })) >>= fun result =>
+              (simulateQ (sourceImpl primitives seeds) (stopBeforeReveal target (rest result.1))).run
+                result.2 : ProbComp _)}[StoppedEvent target observer result]
+      have shape {β : Type} (next : _ → ProbComp β) :
+          (((familyImpl primitives seeds request).run state.histories >>= fun result =>
+            pure (result.1, { state with histories := result.2 })) >>= next) =
+          ((familyImpl primitives seeds request).run state.histories >>= fun result =>
+            next (result.1, { state with histories := result.2 })) := by
+        simp only [bind_assoc, pure_bind]
+      rw [shape, shape]
+      exact prEvent_bind_congr _ _ _ _ _ fun result =>
+        ih result.1 { state with histories := result.2 } fresh
     | inr identity =>
       rw [stopBeforeReveal_reveal]
       by_cases selected : identity = target
@@ -151,18 +160,24 @@ theorem fresh_probability_eq_stopped (primitives : Primitives) {count : ℕ}
               pure (seeds target, { state with reveals := state.reveals ++ [target] }) := rfl
         have stopped : ¬StoppedEvent target observer (none, state) := by
           simp [StoppedEvent]
-        simp only [ite_true, simulateQ_query_bind, OracleQuery.input_query, OracleQuery.cont_query,
-          id_eq, monadLift_self, StateT.run_bind, simulateQ_pure, StateT.run_pure, probEvent_pure,
-          ite_eq_right stopped, sourceStep, pure_bind]
+        have run : (simulateQ (sourceImpl primitives seeds)
+            ((GlobalSpec count).query (.inr target) >>= rest)).run state =
+            (simulateQ (sourceImpl primitives seeds) (rest (seeds target))).run
+              { state with reveals := state.reveals ++ [target] } := by
+          simp only [simulateQ_query_bind, OracleQuery.input_query, OracleQuery.cont_query,
+            id_eq, monadLift_self, StateT.run_bind, sourceStep, pure_bind]
+        rw [ite_eq_left rfl, run, simulateQ_pure, StateT.run_pure, prEvent_pure, ite_eq_right stopped]
         exact revealed_fresh_probability_zero primitives seeds target _ _ (by simp) observer
       · simp only [selected, ite_false, simulateQ_query_bind, StateT.run_bind]
-        change Pr[fun result => Fresh target result.2 ∧ observer result |
-          (pure (seeds identity, { state with reveals := state.reveals ++ [identity] }) >>= fun value =>
-            (simulateQ (sourceImpl primitives seeds) (rest value.1)).run value.2 : ProbComp _)] =
-          Pr[StoppedEvent target observer |
-          (pure (seeds identity, { state with reveals := state.reveals ++ [identity] }) >>= fun value =>
-            (simulateQ (sourceImpl primitives seeds) (stopBeforeReveal target (rest value.1))).run value.2 : ProbComp _)]
-        simp only [pure_bind]
+        change Pr{let result ←
+            (pure (seeds identity, { state with reveals := state.reveals ++ [identity] }) >>= fun value =>
+              (simulateQ (sourceImpl primitives seeds) (rest value.1)).run value.2 : ProbComp _)}[
+            Fresh target result.2 ∧ observer result] =
+          Pr{let result ←
+            (pure (seeds identity, { state with reveals := state.reveals ++ [identity] }) >>= fun value =>
+              (simulateQ (sourceImpl primitives seeds) (stopBeforeReveal target (rest value.1))).run
+                value.2 : ProbComp _)}[StoppedEvent target observer result]
+        rw [pure_bind, pure_bind]
         apply ih
         simpa [Fresh, List.mem_append, selected, Ne.symm selected] using fresh
 
@@ -371,21 +386,20 @@ def globalReduction (primitives : Primitives) {count : ℕ} (target : Fin (count
 theorem freshExecution_le_reductionWork (primitives : Primitives) {count : ℕ}
     (target : Fin (count + 1)) (seed : IdentitySeed) (others : Fin count → IdentitySeed)
     (fallback : Forgery) (client : OracleComp (GlobalSpec (count + 1)) (FamilyForgery (count + 1))) :
-    Pr[fun result => Fresh target result.2 ∧
-      wins primitives (primitives.publicKeys seed) result.1.forgery (result.2.histories target) = true |
-      (simulateQ (sourceImpl primitives (target.insertNth seed others)) client).run (initialState (count + 1))] ≤
-    Pr[fun result => wins primitives (primitives.publicKeys seed)
-      (fallbackForgery fallback result.1.1.1) result.2 = true |
-      (simulateQ (jointImpl primitives seed)
-        (reductionWork primitives target others client [] (emptyHistory count))).run []] := by
+    Pr{let result ← (simulateQ (sourceImpl primitives (target.insertNth seed others)) client).run
+        (initialState (count + 1))}[Fresh target result.2 ∧
+      wins primitives (primitives.publicKeys seed) result.1.forgery (result.2.histories target) = true] ≤
+    Pr{let result ← (simulateQ (jointImpl primitives seed)
+        (reductionWork primitives target others client [] (emptyHistory count))).run []}[
+      wins primitives (primitives.publicKeys seed) (fallbackForgery fallback result.1.1.1) result.2 = true] := by
   rw [fresh_probability_eq_stopped primitives (target.insertNth seed others) target client
     (initialState (count + 1)) (by simp [Fresh, initialState])]
   have exactRun := reductionWork_complete primitives target seed others client [] (emptyHistory count) []
   simp only [combineHistory_empty] at exactRun
   rw [show initialState (count + 1) = ⟨emptyHistory (count + 1), []⟩ from rfl,
-    ← exactRun, probEvent_map]
-  apply probEvent_mono
-  intro result _ accepted
+    ← exactRun, prEvent_map]
+  apply prEvent_mono
+  intro result accepted
   dsimp only [Function.comp_apply, reductionState, StoppedEvent] at accepted
   cases completed : result.1.1.1 with
   | none => simp [completed] at accepted
@@ -398,46 +412,40 @@ theorem targetEvent_le_jointAdvantage (primitives : Primitives) {count : ℕ}
     (target : Fin (count + 1)) (fallback : Forgery)
     (adversary : (Fin (count + 1) → PublicIdentity) →
       OracleComp (GlobalSpec (count + 1)) (FamilyForgery (count + 1))) :
-    Pr[TargetEvent primitives target | globalRun primitives (count + 1) adversary] ≤
+    Pr{let result ← globalRun primitives (count + 1) adversary}[TargetEvent primitives target result] ≤
       advantage primitives (globalReduction primitives target fallback adversary) := by
-  have reordered : Pr[TargetEvent primitives target | globalRun primitives (count + 1) adversary] =
-      Pr[TargetEvent primitives target | do
+  have reordered :
+      Pr{let result ← globalRun primitives (count + 1) adversary}[TargetEvent primitives target result] =
+      Pr{let result ← (do
         let seed ← sampleSeed
         let others ← sampleFamily count
         let (result, state) ← (simulateQ (sourceImpl primitives (target.insertNth seed others))
           (adversary (familyPublic primitives (target.insertNth seed others)))).run (initialState (count + 1))
-        pure (familyPublic primitives (target.insertNth seed others), result, state)] := by
-    exact OracleComp.probEvent_congr' (fun _ _ => Iff.rfl)
-      (sampleFamily_target_first count target _)
+        pure (familyPublic primitives (target.insertNth seed others), result, state))}[
+        TargetEvent primitives target result] :=
+    (sampleFamily_target_first count target _).prEvent_eq _
   rw [reordered]
   simp only [advantage, game, run, globalReduction, simulateQ_bind, StateT.run_bind,
     simulateQ_pure, StateT.run_pure, simulate_joint_uniform, bind_map_left, pure_bind, bind_assoc]
-  rw [probEvent_bind_eq_tsum, probOutput_bind_eq_tsum]
-  apply ENNReal.tsum_le_tsum
-  intro seed
-  apply mul_le_mul' le_rfl
-  rw [probEvent_bind_eq_tsum, probOutput_bind_eq_tsum]
-  apply ENNReal.tsum_le_tsum
-  intro others
-  apply mul_le_mul' le_rfl
-  simp only [bind_pure_comp, probEvent_map, probOutput_map, Function.comp_def,
-    TargetEvent, familyPublic_insertNth, Fin.insertNth_apply_same]
+  refine OracleComp.prEvent_bind_mono_of_support _ _ _ fun seed _ => ?_
+  refine OracleComp.prEvent_bind_mono_of_support _ _ _ fun others _ => ?_
+  simp only [TargetEvent, familyPublic_insertNth, Fin.insertNth_apply_same]
   exact freshExecution_le_reductionWork primitives target seed others fallback _
 
 /-- Adaptive final identity selection incurs one sum over generated identities, even with arbitrary non-target reveals. -/
 theorem global_advantage_le_sum (primitives : Primitives) (count : ℕ) (fallback : Forgery)
     (adversary : (Fin (count + 1) → PublicIdentity) →
       OracleComp (GlobalSpec (count + 1)) (FamilyForgery (count + 1))) :
-    Pr[GlobalEvent primitives | globalRun primitives (count + 1) adversary] ≤
+    Pr{let result ← globalRun primitives (count + 1) adversary}[GlobalEvent primitives result] ≤
       ∑ target : Fin (count + 1), advantage primitives (globalReduction primitives target fallback adversary) := by
   classical
   calc
-    _ ≤ Pr[fun result => ∃ target ∈ (Finset.univ : Finset (Fin (count + 1))),
-        TargetEvent primitives target result | globalRun primitives (count + 1) adversary] :=
-      probEvent_mono (fun result _ accepted => ⟨result.2.1.identity, Finset.mem_univ _, accepted⟩)
-    _ ≤ ∑ target : Fin (count + 1), Pr[TargetEvent primitives target |
-        globalRun primitives (count + 1) adversary] :=
-      probEvent_exists_finset_le_sum Finset.univ _ _
+    _ ≤ Pr{let result ← globalRun primitives (count + 1) adversary}[
+        ∃ target ∈ (Finset.univ : Finset (Fin (count + 1))), TargetEvent primitives target result] :=
+      prEvent_mono _ _ _ (fun result accepted => ⟨result.2.1.identity, Finset.mem_univ _, accepted⟩)
+    _ ≤ ∑ target : Fin (count + 1), Pr{let result ← globalRun primitives (count + 1) adversary}[
+        TargetEvent primitives target result] :=
+      prEvent_exists_finset_le Finset.univ _ _
     _ ≤ _ := Finset.sum_le_sum fun target _ => targetEvent_le_jointAdvantage primitives target fallback adversary
 
 /-- A common bound on each constructed joint-use reduction gives exactly the generated-identity factor. -/
@@ -446,7 +454,7 @@ theorem global_advantage_le_count (primitives : Primitives) (count : ℕ) (fallb
       OracleComp (GlobalSpec (count + 1)) (FamilyForgery (count + 1)))
     (epsilon : ℝ≥0∞)
     (bounded : ∀ target, advantage primitives (globalReduction primitives target fallback adversary) ≤ epsilon) :
-    Pr[GlobalEvent primitives | globalRun primitives (count + 1) adversary] ≤
+    Pr{let result ← globalRun primitives (count + 1) adversary}[GlobalEvent primitives result] ≤
       (count + 1 : ℕ) * epsilon := by
   exact (global_advantage_le_sum primitives count fallback adversary).trans
     ((Finset.sum_le_sum fun target _ => bounded target).trans_eq (by simp))

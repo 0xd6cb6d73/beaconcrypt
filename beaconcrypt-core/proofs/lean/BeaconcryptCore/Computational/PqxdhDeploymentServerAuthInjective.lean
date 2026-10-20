@@ -257,7 +257,7 @@ theorem seeds_eager (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
   induction program using OracleComp.inductionOn generalizing count state with
   | pure value =>
       simp only [simulateQ_pure, StateT.run_pure, map_pure]
-      exact (PqxdhDynamicIdentityPool.sampleSeeds_unused count _).symm
+      exact (PqxdhDynamicIdentityPool.sampleSeeds_unused_vcvioLegacy count _).symm
   | query_bind query next ih =>
       rw [isQueryBoundP_query_bind_iff] at bounded
       simp only [simulateQ_bind, simulateQ_query, OracleQuery.input_query, OracleQuery.cont_query, id_map,
@@ -471,9 +471,9 @@ theorem lower_le_advantage (setup : Setup baseSpec KemSK) (count : Nat) (target 
         pure (decide (LowerCollision setup.joint target seeds))] := by
     rw [bind_pure_comp, probOutput_map]
     simp only [decide_eq_true_eq]
-  have moved := evalSPMF_ext_iff.mp (PqxdhJointIdentityFamily.sampleFamily_target_first count target
+  have moved := evalSPMF_ext_iff.mp (PqxdhJointIdentityFamily.sampleFamily_target_first_vcvioLegacy count target
     (fun seeds => pure (decide (LowerCollision setup.joint target seeds)))) true
-  rw [decided, advantage, collider_game]
+  rw [decided, advantage, ← VCVioLegacy.probOutput_eq_prEvent, collider_game]
   refine le_of_eq_of_le moved ?_
   refine probOutput_bind_mono fun seed _ => probOutput_bind_mono fun others _ => ?_
   by_cases lower : LowerCollision setup.joint target (target.insertNth seed others)

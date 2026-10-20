@@ -112,7 +112,7 @@ theorem random_source (prior : ProbComp (Context extra M P I D K X Response A N 
     ($ᵗ RootOutput) (do let output ← $ᵗ FullOutput; observer source writer sender route decode context output)
   refine discarded.trans ?_
   have projected := congrArg (fun distribution : SPMF HmacBlock => distribution >>= fun output =>
-    𝒮[observe source writer sender route decode context (RawCtxSelectedInitialConstructor.response64 output)]) initialPrefix_uniform
+    𝒮[observe source writer sender route decode context (RawCtxSelectedInitialConstructor.response64 output)]) initialPrefix_uniform_vcvioLegacy
   simpa only [← evalSPMF_bind, bind_map_left, observer] using projected
 
 /-- The actual full source publication/freshness event, starting at an independent32-byte root and retaining both directions, reduces to the exact Extract sampler and ordinary HMAC PRF with coefficient one. -/

@@ -203,7 +203,7 @@ theorem ptc_correct_draws (setup : PqxdhServerAuthExperiment.Setup baseSpec KemS
     rw [evalDist_apply_singleton]
     exact probOutput_ne_top
   rw [PqxdhRegistrationJointKemRawGame.correctnessError, ENNReal.ofReal_toReal finite, evalDist_apply_singleton,
-    evalDist_apply_singleton, PqxdhKemCorrectnessError.error_probability setup.baseImpl setup.kem functional,
+    evalDist_apply_singleton, PqxdhKemCorrectnessError.error_probability_vcvioLegacy setup.baseImpl setup.kem functional,
     ← probEvent_eq_eq_probOutput, probEvent_map]
   have projected : Pr[PqxdhKemCorrectnessError.Bad setup.kem functional |
       simulateQ (kemAmbientImpl setup.baseImpl) (PqxdhKemCorrectnessError.sample setup.kem)] =

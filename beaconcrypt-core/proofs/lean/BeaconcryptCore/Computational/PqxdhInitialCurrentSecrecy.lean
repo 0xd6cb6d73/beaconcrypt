@@ -62,7 +62,7 @@ theorem random_comparison :
   refine evalSPMF_bind_congr' (m := ProbComp) _ (fun pair => ?_)
   have projected := congrArg (fun distribution : SPMF HmacBlock => distribution >>= fun output =>
     𝒮[observe env baseImpl kem attachedVerify primitives program post pair.1
-      (RawCtxSelectedInitialConstructor.response64 output)]) initialPrefix_uniform
+      (RawCtxSelectedInitialConstructor.response64 output)]) initialPrefix_uniform_vcvioLegacy
   simpa only [← evalSPMF_bind, bind_map_left, observer] using projected
 
 /-- The current protocol's actual uniform-root endpoint reduces with coefficient one to fixed-salt Extract at its exact joint sampler and ordinary uniform-secret HMAC PRF. The one selected initializer response remains shared across all repeated source requests. -/

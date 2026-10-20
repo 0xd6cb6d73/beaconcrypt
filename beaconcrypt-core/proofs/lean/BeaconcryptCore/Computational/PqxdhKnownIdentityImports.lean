@@ -244,7 +244,7 @@ theorem report_advantage_le_sum (primitives : Primitives) (count : ℕ)
             (PqxdhDynamicIdentityReports.reportExtractor primitives (count + 1) fallback
               (routedClient primitives client)))) := by
   rw [run_event]
-  apply PqxdhDynamicIdentityReports.reporting_advantage_le_identity_sum
+  apply PqxdhDynamicIdentityReports.reporting_advantage_le_identity_sum_vcvioLegacy
   simpa only [forwarded_create] using
     routedClient_query_bound primitives client .create (count + 1) creates
 

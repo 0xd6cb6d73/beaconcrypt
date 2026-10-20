@@ -227,7 +227,7 @@ theorem real_le_commands (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
   simp only [PqxdhRegistrationJointKemInitialization.commands, Functor.map_map]
   rw [evalDist_apply_singleton, evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, ← probEvent_eq_eq_probOutput,
     probEvent_map, probEvent_map]
-  refine le_trans (le_of_eq ?_) (le_trans (le_of_eq (PqxdhDynamicKemJointStopping.history_event setup.baseImpl
+  refine le_trans (le_of_eq ?_) (le_trans (le_of_eq (PqxdhDynamicKemJointStopping.history_event_vcvioLegacy setup.baseImpl
     setup.joint setup.kem selected.val (List.ofFn (selected.insertNth chosen others))
     (PqxdhRegistrationJointKemCommands.program setup codec checks created.server.server.metadata.identityIndex
       created.publicIdentity (tag work index) [] (PqxdhRegistrationJointInitializedAccept.initial created))

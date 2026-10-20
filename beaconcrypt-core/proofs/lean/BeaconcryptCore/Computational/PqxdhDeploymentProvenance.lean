@@ -200,7 +200,7 @@ theorem a2_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) 
   have creates := client_creates setup codec checks route ensureInit bounds mode adversary budget respects
     (budget.create + 1) runtime
   rw [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map]
-  exact PqxdhJointPhase1Reports.fieldOrigin_advantage_le_sum setup.joint budget.create _ fallback ordinaryFallback
+  exact PqxdhJointPhase1Reports.fieldOrigin_advantage_le_sum_vcvioLegacy setup.joint budget.create _ fallback ordinaryFallback
     (creates.mono (by omega))
 
 /-- The compiled program stopped right after its raw accept at any position issues no identity-field, KEM-field, prekey or one-time read, for every adversary and without a budget: the scan keeps the compiled program's zero caps (`compile_full_unread`) and the stopping step issues only the accept command. -/

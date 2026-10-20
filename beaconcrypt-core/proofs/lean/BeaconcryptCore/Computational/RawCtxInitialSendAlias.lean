@@ -63,7 +63,7 @@ theorem random_source {Context Result : Type} (sample : ProbComp (Context × Roo
   simp only [independentFullGame, sampler, bind_map_left, random]
   refine evalSPMF_bind_congr' sample fun pair => ?_
   have projected := congrArg (fun distribution : SPMF HmacBlock => distribution >>= fun output =>
-    𝒮[observe resume pair.1 (RawCtxSelectedInitialConstructor.response64 output)]) initialPrefix_uniform
+    𝒮[observe resume pair.1 (RawCtxSelectedInitialConstructor.response64 output)]) initialPrefix_uniform_vcvioLegacy
   simpa only [← evalSPMF_bind, bind_map_left, observer] using projected
 
 /-- All source continuation effects occur before the collision decision; even failure or adaptive stopping does not increase the uniform64 half-equality probability. -/

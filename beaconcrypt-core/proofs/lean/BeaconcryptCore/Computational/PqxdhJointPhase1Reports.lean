@@ -276,15 +276,14 @@ theorem run_compatible (primitives : Primitives) (count : ℕ) {Result : Type}
 /-- Full-state event transport changes only product association; original candidates and the actual identity interpreter remain retained. -/
 theorem run_event (primitives : Primitives) (count : ℕ) {Result : Type}
     (client : OracleComp ProtocolSpec Result) :
-    Pr[(fun result => result.2.1.occurred = true) | run primitives count client] =
-      Pr[(fun result => result.2.occurred = true) |
-        reportingRun primitives count (routedClient primitives count client)] := by
+    Pr{let result ← run primitives count client}[result.2.1.occurred = true] =
+      Pr{let result ← reportingRun primitives count (routedClient primitives count client)}[
+        result.2.occurred = true] := by
   calc
-    _ = Pr[(fun result => result.2.2.occurred = true) | run primitives count client] := by
-      apply probEvent_ext
-      intro result supported
+    _ = Pr{let result ← run primitives count client}[result.2.2.occurred = true] := by
+      refine prEvent_congr_of_support _ _ _ fun result supported => ?_
       rw [(run_compatible primitives count client result supported).2]
-    _ = _ := by rw [run_complete, probEvent_map]; rfl
+    _ = _ := by rw [run_complete, prEvent_map]
 
 /-- Each original identity request keeps its source class; candidate reports are separate local verification work. -/
 def SourceClass (predicate : DynamicSpec.Domain → Prop) : ProtocolSpec.Domain → Prop
@@ -330,7 +329,7 @@ theorem routedClient_query_bound (primitives : Primitives) (count : ℕ) {Result
 theorem fieldOrigin_advantage_le_sum (primitives : Primitives) (count : ℕ) {Result : Type}
     (client : OracleComp ProtocolSpec Result) (fallback : DynamicForgery) (ordinaryFallback : Forgery)
     (creates : client.IsQueryBoundP (SourceClass IsCreate) (count + 1)) :
-    Pr[(fun result => result.2.1.occurred = true) | run primitives (count + 1) client] ≤
+    Pr{let result ← run primitives (count + 1) client}[result.2.1.occurred = true] ≤
       ∑ target : Fin (count + 1), advantage primitives
         (globalReduction primitives target ordinaryFallback
           (routedAdversary count ordinaryFallback
@@ -338,6 +337,10 @@ theorem fieldOrigin_advantage_le_sum (primitives : Primitives) (count : ℕ) {Re
   rw [run_event]
   exact reporting_advantage_le_identity_sum primitives count fallback ordinaryFallback _
     (routedClient_query_bound primitives (count + 1) client IsCreate (count + 1) creates)
+
+set_option linter.deprecated false in set_option linter.unusedVariables false in theorem _root_.BeaconcryptCore.Computational.PqxdhJointPhase1Reports.fieldOrigin_advantage_le_sum_vcvioLegacy :
+    ∀ (primitives : BeaconcryptCore.Computational.PqxdhJointIdentity.Primitives) (count : ℕ) {Result : Type} (client : OracleComp BeaconcryptCore.Computational.PqxdhJointPhase1Reports.ProtocolSpec Result) (fallback : BeaconcryptCore.Computational.PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : BeaconcryptCore.Computational.PqxdhJointIdentity.Forgery) (creates : client.IsQueryBoundP (BeaconcryptCore.Computational.PqxdhJointPhase1Reports.SourceClass BeaconcryptCore.Computational.PqxdhDynamicIdentityPool.IsCreate) (count + 1)), (probEvent (BeaconcryptCore.Computational.PqxdhJointPhase1Reports.run primitives (count + 1) client) fun (result : Result × BeaconcryptCore.Computational.PqxdhJointPhase1Reports.Monitor (count + 1) × BeaconcryptCore.Computational.PqxdhDynamicIdentityReports.ReportingState (count + 1)) => result.2.1.occurred = Bool.true) ≤ ∑ target : Fin (count + 1), BeaconcryptCore.Computational.PqxdhJointIdentity.advantage primitives (BeaconcryptCore.Computational.PqxdhJointIdentityFreshness.globalReduction primitives target ordinaryFallback (BeaconcryptCore.Computational.PqxdhDynamicIdentityRouting.routedAdversary count ordinaryFallback (BeaconcryptCore.Computational.PqxdhDynamicIdentityReports.reportExtractor primitives (count + 1) fallback (BeaconcryptCore.Computational.PqxdhJointPhase1Reports.routedClient primitives (count + 1) client)))) :=
+  by simpa only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent] using @BeaconcryptCore.Computational.PqxdhJointPhase1Reports.fieldOrigin_advantage_le_sum
 
 /-- The native attached verifier uses the fixed sixty-four-byte signature prefix and rejects a shorter input. This is a functional primitive-format contract, not signature authentication. -/
 theorem source_attached_adapter (c : Pqxdh.Crypto) (primitives : Primitives)

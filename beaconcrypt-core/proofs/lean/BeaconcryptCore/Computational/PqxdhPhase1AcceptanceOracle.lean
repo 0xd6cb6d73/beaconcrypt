@@ -138,7 +138,7 @@ theorem acceptance_advantage_le_sum
     (count : ℕ) {Result : Type} (client : OracleComp SourceSpec Result)
     (fallback : DynamicForgery) (ordinaryFallback : Forgery)
     (creates : client.IsQueryBoundP (IsSourceClass (SourceClass IsCreate)) (count + 1)) :
-    Pr[(fun result => result.2.1.occurred = true) | actualRun attachedVerify primitives (count + 1) client] ≤
+    Pr{let result ← actualRun attachedVerify primitives (count + 1) client}[result.2.1.occurred = true] ≤
       ∑ target : Fin (count + 1), advantage primitives
         (globalReduction primitives target ordinaryFallback
           (routedAdversary count ordinaryFallback
@@ -147,6 +147,10 @@ theorem acceptance_advantage_le_sum
   rw [actualRun_eq attachedVerify primitives adapter]
   exact fieldOrigin_advantage_le_sum primitives count _ fallback ordinaryFallback
     (instrumentedClient_query_bound primitives client _ (count + 1) creates)
+
+set_option linter.deprecated false in set_option linter.unusedVariables false in theorem _root_.BeaconcryptCore.Computational.PqxdhPhase1AcceptanceOracle.acceptance_advantage_le_sum_vcvioLegacy :
+    ∀ (attachedVerify : BeaconcryptCore.Computational.PqxdhEd25519EufCma.Ed25519PublicKey → Pqxdh.Bytes → Option Pqxdh.Bytes) (primitives : BeaconcryptCore.Computational.PqxdhJointIdentity.Primitives) (adapter : BeaconcryptCore.Computational.PqxdhEd25519EufCma.HasAttachedVerificationAdapter attachedVerify primitives.verify) (count : ℕ) {Result : Type} (client : OracleComp BeaconcryptCore.Computational.PqxdhPhase1AcceptanceOracle.SourceSpec Result) (fallback : BeaconcryptCore.Computational.PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : BeaconcryptCore.Computational.PqxdhJointIdentity.Forgery) (creates : client.IsQueryBoundP (BeaconcryptCore.Computational.PqxdhPhase1AcceptanceOracle.IsSourceClass (BeaconcryptCore.Computational.PqxdhJointPhase1Reports.SourceClass BeaconcryptCore.Computational.PqxdhDynamicIdentityPool.IsCreate)) (count + 1)), (probEvent (BeaconcryptCore.Computational.PqxdhPhase1AcceptanceOracle.actualRun attachedVerify primitives (count + 1) client) fun (result : Result × BeaconcryptCore.Computational.PqxdhPhase1AcceptanceOracle.CompleteState (count + 1)) => result.2.1.occurred = Bool.true) ≤ ∑ target : Fin (count + 1), BeaconcryptCore.Computational.PqxdhJointIdentity.advantage primitives (BeaconcryptCore.Computational.PqxdhJointIdentityFreshness.globalReduction primitives target ordinaryFallback (BeaconcryptCore.Computational.PqxdhDynamicIdentityRouting.routedAdversary count ordinaryFallback (BeaconcryptCore.Computational.PqxdhDynamicIdentityReports.reportExtractor primitives (count + 1) fallback (BeaconcryptCore.Computational.PqxdhJointPhase1Reports.routedClient primitives (count + 1) (BeaconcryptCore.Computational.PqxdhPhase1AcceptanceOracle.instrumentedClient primitives client))))) :=
+  by simpa only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent] using @BeaconcryptCore.Computational.PqxdhPhase1AcceptanceOracle.acceptance_advantage_le_sum
 
 abbrev BareState (count : ℕ) :=
   PqxdhJointIdentityFreshness.GlobalState count × PqxdhDynamicIdentityPool.SourceState

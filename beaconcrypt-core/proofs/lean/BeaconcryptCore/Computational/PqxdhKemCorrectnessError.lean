@@ -1,4 +1,5 @@
 import BeaconcryptCore.Computational.PqxdhChallengeSecretRouting
+import BeaconcryptCore.Computational.VCVioLegacyBridge
 
 /-!
 The ordinary correctness-error endpoint samples one actual key pair, encapsulates to its public key, and invokes actual decapsulation. Rejection and recovery of a different secret both win. This error is separate from IND-CCA; no primitive internals or zero-error contract are proved.
@@ -55,11 +56,15 @@ theorem error_functional (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK)
 theorem error_probability (baseImpl : QueryImpl baseSpec ProbComp)
     (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK))
     (functional : FunctionalDecapsulation kem) :
-    Pr[= true | simulateQ (kemAmbientImpl baseImpl) (errorExperiment kem)] =
-      Pr[Bad kem functional | simulateQ (kemAmbientImpl baseImpl) (sample kem)] := by
+    Pr{let x ← simulateQ (kemAmbientImpl baseImpl) (errorExperiment kem)}[x = true] =
+      Pr{let drawn ← simulateQ (kemAmbientImpl baseImpl) (sample kem)}[Bad kem functional drawn] := by
   classical
-  rw [error_functional kem functional, simulateQ_map, ← probEvent_eq_eq_probOutput, probEvent_map]
-  simp only [Function.comp_def, decide_eq_true_eq]
+  rw [error_functional kem functional, simulateQ_map, prEvent_map]
+  simp only [decide_eq_true_eq]
+
+set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.PqxdhKemCorrectnessError.error_probability_vcvioLegacy :
+    ∀ {ι KemSK : Type} {baseSpec : OracleSpec ι} (baseImpl : QueryImpl baseSpec ProbComp) (kem : BeaconcryptCore.Computational.PqxdhKemIndCca.MlKemScheme (baseSpec := baseSpec) (SK := KemSK)) (functional : BeaconcryptCore.Computational.PqxdhChallengeSecretRouting.FunctionalDecapsulation (baseSpec := baseSpec) kem), Pr[= Bool.true | simulateQ (spec := unifSpec + baseSpec) (BeaconcryptCore.Computational.PqxdhInitializerSecrecy.kemAmbientImpl (baseSpec := baseSpec) baseImpl) (BeaconcryptCore.Computational.PqxdhKemCorrectnessError.errorExperiment (baseSpec := baseSpec) kem)] = probEvent (simulateQ (spec := unifSpec + baseSpec) (BeaconcryptCore.Computational.PqxdhInitializerSecrecy.kemAmbientImpl (baseSpec := baseSpec) baseImpl) (BeaconcryptCore.Computational.PqxdhKemCorrectnessError.sample (baseSpec := baseSpec) kem)) (BeaconcryptCore.Computational.PqxdhKemCorrectnessError.Bad (baseSpec := baseSpec) kem functional) :=
+  by simpa only [BeaconcryptCore.VCVioLegacy.probOutput_eq_prEvent, BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent] using @BeaconcryptCore.Computational.PqxdhKemCorrectnessError.error_probability
 
 /-- Good samples give a literal decapsulation program equality without a perfect-correctness premise. -/
 theorem good_agreement (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK))
@@ -78,16 +83,18 @@ theorem continuation_bound {Result : Type}
     (agree : ∀ drawn, ¬ Bad kem functional drawn → left drawn = right drawn) :
     tvDist (simulateQ (kemAmbientImpl baseImpl) (sample kem) >>= left)
       (simulateQ (kemAmbientImpl baseImpl) (sample kem) >>= right) ≤
-      Pr[= true | simulateQ (kemAmbientImpl baseImpl) (errorExperiment kem)].toReal := by
+      Pr{let x ← simulateQ (kemAmbientImpl baseImpl) (errorExperiment kem)}[x = true].toReal := by
   rw [error_probability baseImpl kem functional]
   have point : ∀ drawn, tvDist (left drawn) (right drawn) ≤
-      Pr[Bad kem functional | (pure drawn : ProbComp (Sample KemSK))].toReal := by
+      Pr{let x ← (pure drawn : ProbComp (Sample KemSK))}[Bad kem functional x].toReal := by
     intro drawn
+    classical
+    rw [prEvent_pure]
     by_cases bad : Bad kem functional drawn
-    · simpa [probEvent_pure, bad] using tvDist_le_one (left drawn) (right drawn)
+    · simpa [bad] using tvDist_le_one (left drawn) (right drawn)
     · rw [agree drawn bad]
-      simp [probEvent_pure, bad]
-  simpa only [bind_pure] using PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind_vcvioLegacy
+      simp [bad]
+  simpa only [bind_pure] using PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind
     (simulateQ (kemAmbientImpl baseImpl) (sample kem)) left right
     (fun drawn => (pure drawn : ProbComp (Sample KemSK))) (Bad kem functional) point
 
@@ -109,7 +116,7 @@ theorem routed_bound {Result State : Type}
         (simulateQ ambient (simulateQ (publicImpl kem drawn.secretKey drawn.ciphertext)
           (simulateQ (route source drawn.ciphertext drawn.secret)
             (client drawn.publicKey drawn.ciphertext)))).run (initial drawn.publicKey drawn.ciphertext)) ≤
-      Pr[= true | simulateQ (kemAmbientImpl baseImpl) (errorExperiment kem)].toReal := by
+      Pr{let x ← simulateQ (kemAmbientImpl baseImpl) (errorExperiment kem)}[x = true].toReal := by
   apply continuation_bound baseImpl kem functional
   intro drawn good
   exact (route_stateful source kem drawn.secretKey drawn.ciphertext drawn.secret

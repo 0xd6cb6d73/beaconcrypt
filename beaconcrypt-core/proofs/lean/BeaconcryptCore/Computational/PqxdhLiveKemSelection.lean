@@ -30,32 +30,33 @@ theorem family_list (sampler : ProbComp (Pair KemSK)) (count : Nat) :
 theorem target_first {Result : Type} (sampler : ProbComp (Pair KemSK))
     (count : Nat) (target : Fin (count + 1))
     (next : (Fin (count + 1) → Pair KemSK) → ProbComp Result) :
-    𝒮[sampleFamily sampler (count + 1) >>= next] =
-      𝒮[do
+    EvalDistEq (sampleFamily sampler (count + 1) >>= next)
+      (do
         let chosen ← sampler
         let others ← sampleFamily sampler count
-        next (target.insertNth chosen others)] := by
+        next (target.insertNth chosen others)) := by
   induction count
   case succ count ih =>
     induction target using Fin.cases
     case succ target =>
-      calc
-        _ = 𝒮[do
+      have step : EvalDistEq (sampleFamily sampler (count + 1 + 1) >>= next)
+          (do
+            let first ← sampler
+            let chosen ← sampler
+            let others ← sampleFamily sampler count
+            next (Fin.cons first (target.insertNth chosen others))) := by
+        change EvalDistEq ((do
           let first ← sampler
-          let chosen ← sampler
+          let others ← sampleFamily sampler (count + 1)
+          pure (Fin.cons first others)) >>= next) _
+        simp only [bind_assoc, pure_bind]
+        refine EvalDistEq.bind_right _ fun first => ?_
+        exact ih target (fun rest => next (Fin.cons first rest))
+      refine step.trans ((PqxdhSecretInputKdf.evalSPMF_sample_comm sampler sampler
+        (fun first chosen => do
           let others ← sampleFamily sampler count
-          next (Fin.cons first (target.insertNth chosen others))] := by
-            change 𝒮[(do
-              let first ← sampler
-              let others ← sampleFamily sampler (count + 1)
-              pure (Fin.cons first others)) >>= next] = _
-            simp only [bind_assoc, pure_bind]
-            apply evalSPMF_bind_congr'
-            intro first
-            exact ih target (fun rest => next (Fin.cons first rest))
-        _ = _ := by
-          rw [PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy sampler sampler]
-          simp [sampleFamily, Fin.insertNth_succ_cons, bind_assoc]
+          next (Fin.cons first (target.insertNth chosen others)))).trans ?_)
+      simp [sampleFamily, Fin.insertNth_succ_cons, bind_assoc]
     case zero => simp [sampleFamily, Fin.insertNth_zero']
   case zero =>
     have targetZero : target = 0 := Fin.ext (by omega)
@@ -67,13 +68,13 @@ theorem source_target_first (baseImpl : QueryImpl baseSpec ProbComp) (primitives
     (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK)) {Result : Type}
     (client : OracleComp (Spec KemSK) Result) (count : Nat) (target : Fin (count + 1))
     (bounded : client.IsQueryBoundP (IsCreate (KemSK := KemSK)) (count + 1)) (state : State KemSK) :
-    𝒮[(simulateQ (impl baseImpl primitives kem) client).run state] =
-      𝒮[do
+    EvalDistEq ((simulateQ (impl baseImpl primitives kem) client).run state)
+      (do
         let chosen ← simulateQ (kemAmbientImpl baseImpl) kem.keygen
         let others ← sampleFamily (simulateQ (kemAmbientImpl baseImpl) kem.keygen) count
         (simulateQ (reserved baseImpl primitives kem
-          (state.2.keys ++ List.ofFn (target.insertNth chosen others))) client).run state] := by
-  rw [complete baseImpl primitives kem client (count + 1) bounded state]
+          (state.2.keys ++ List.ofFn (target.insertNth chosen others))) client).run state) := by
+  refine (complete baseImpl primitives kem client (count + 1) bounded state).trans ?_
   simp only [family_list, bind_map_left]
   exact target_first (simulateQ (kemAmbientImpl baseImpl) kem.keygen) count target
     (fun family => (simulateQ (reserved baseImpl primitives kem (state.2.keys ++ List.ofFn family)) client).run state)

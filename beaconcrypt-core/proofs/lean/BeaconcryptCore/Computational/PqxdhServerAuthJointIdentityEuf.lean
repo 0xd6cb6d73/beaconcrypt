@@ -126,7 +126,7 @@ theorem routed_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
     (adversary : Adversary) (fallback : Forgery) :
     Pr[= true | routedBad setup codec checks adversary] ≤
       PqxdhJointIdentity.advantage setup.joint (reduction setup codec checks adversary fallback) := by
-  simp only [PqxdhJointIdentity.advantage, reduction_game, routedBad,
+  simp only [PqxdhJointIdentity.advantage, ← VCVioLegacy.probOutput_eq_prEvent, reduction_game, routedBad,
     ← probEvent_eq_eq_probOutput, probEvent_map, Function.comp_def]
   apply probEvent_mono
   rintro ⟨seed, result⟩ supported bad

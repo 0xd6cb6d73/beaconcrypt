@@ -1,4 +1,5 @@
 import BeaconcryptCore.Computational.PqxdhKemCorrectnessError
+import BeaconcryptCore.Computational.VCVioForwardOracleComp
 
 /-!
 An actual prechallenge program may stop before encapsulation. Its full private result is retained on either branch. The continuation receives only public key/ciphertext and that original permitted state; sampled key and shared-secret bytes stay in the challenger/interpreter. Correctness error is charged without conditioning on reaching the challenge, and every repeated matching root shares the same event. All original perfect-correctness theorems remain unchanged.
@@ -62,7 +63,7 @@ theorem after_bound (source : FixedHkdfSha512NoSaltSource) (baseImpl : QueryImpl
     (context : protocol.Context) :
     tvDist (simulateQ (kemAmbientImpl baseImpl) (after false source kem protocol publicKey secretKey context))
       (simulateQ (kemAmbientImpl baseImpl) (after true source kem protocol publicKey secretKey context)) ≤
-      Pr[= true | simulateQ (kemAmbientImpl baseImpl) (keyError kem publicKey secretKey)].toReal := by
+      Pr{let x ← simulateQ (kemAmbientImpl baseImpl) (keyError kem publicKey secretKey)}[x = true].toReal := by
   by_cases proceed : protocol.proceed publicKey context = true
   · simp only [after, proceed, ite_true, Bool.false_eq_true, ite_false, simulateQ_bind]
     let left (pair : MlKem768Ciphertext × MlKemSharedSecret) :=
@@ -75,7 +76,7 @@ theorem after_bound (source : FixedHkdfSha512NoSaltSource) (baseImpl : QueryImpl
       simulateQ (kemAmbientImpl baseImpl) (do
         let recovered ← kem.decaps secretKey pair.1
         pure (decide (recovered ≠ some pair.2)))
-    have point : ∀ pair, tvDist (left pair) (right pair) ≤ Pr[= true | badRun pair].toReal := by
+    have point : ∀ pair, tvDist (left pair) (right pair) ≤ Pr{let x ← badRun pair}[x = true].toReal := by
       rintro ⟨ciphertext, secret⟩
       by_cases good : functional.result secretKey ciphertext = some secret
       · have agreement : kem.decaps secretKey ciphertext = pure (some secret) :=
@@ -84,16 +85,21 @@ theorem after_bound (source : FixedHkdfSha512NoSaltSource) (baseImpl : QueryImpl
           congrArg (simulateQ (kemAmbientImpl baseImpl))
             (route_complete source kem secretKey ciphertext secret agreement
               (protocol.resume publicKey ciphertext context)).symm
-        rw [equal]
-        simp
-      · simpa only [badRun, functional.exact, pure_bind, simulateQ_pure, probOutput_pure,
-          decide_eq_true good, ite_true, ENNReal.toReal_one] using
-          tvDist_le_one (left (ciphertext, secret)) (right (ciphertext, secret))
-    have averaged := PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind_vcvioLegacy
+        rw [equal, tvDist_self]
+        exact ENNReal.toReal_nonneg
+      · have run : badRun (ciphertext, secret) = pure true := by
+          simp only [badRun, functional.exact, pure_bind, simulateQ_pure, decide_eq_true good]
+        rw [run, prEvent_pure, ite_eq_left rfl]
+        simpa using tvDist_le_one (left (ciphertext, secret)) (right (ciphertext, secret))
+    have averaged := PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind
       (simulateQ (kemAmbientImpl baseImpl) (kem.encaps publicKey)) left right badRun (fun result => result = true)
-      (fun pair => by simpa only [probEvent_eq_eq_probOutput] using point pair)
-    simpa only [keyError, left, right, badRun, simulateQ_bind, ← probEvent_eq_eq_probOutput] using averaged
-  · simp [after, proceed]
+      point
+    simpa only [keyError, left, right, badRun, simulateQ_bind] using averaged
+  · have same : after false source kem protocol publicKey secretKey context =
+        after true source kem protocol publicKey secretKey context := by
+      simp [after, proceed]
+    rw [same, tvDist_self]
+    exact ENNReal.toReal_nonneg
 
 /-- The actual prechallenge state may select an immediate abort. Averaging its complete continuation never conditions the correctness endpoint on continuing. -/
 theorem prepared_bound (source : FixedHkdfSha512NoSaltSource) (baseImpl : QueryImpl baseSpec ProbComp)
@@ -108,19 +114,17 @@ theorem prepared_bound (source : FixedHkdfSha512NoSaltSource) (baseImpl : QueryI
         let context ← simulateQ (kemAmbientImpl baseImpl)
           (simulateQ (kem.IND_CCA_preChallengeImpl secretKey) (protocol.prepare publicKey))
         simulateQ (kemAmbientImpl baseImpl) (after true source kem protocol publicKey secretKey context)) ≤
-      Pr[= true | simulateQ (kemAmbientImpl baseImpl) (keyError kem publicKey secretKey)].toReal := by
-  have averaged := PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind_vcvioLegacy
+      Pr{let x ← simulateQ (kemAmbientImpl baseImpl) (keyError kem publicKey secretKey)}[x = true].toReal := by
+  have averaged := PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind
     (simulateQ (kemAmbientImpl baseImpl)
       (simulateQ (kem.IND_CCA_preChallengeImpl secretKey) (protocol.prepare publicKey)))
     (fun context => simulateQ (kemAmbientImpl baseImpl) (after false source kem protocol publicKey secretKey context))
     (fun context => simulateQ (kemAmbientImpl baseImpl) (after true source kem protocol publicKey secretKey context))
     (fun _ => simulateQ (kemAmbientImpl baseImpl) (keyError kem publicKey secretKey))
     (fun result => result = true)
-    (fun context => by
-      simpa only [probEvent_eq_eq_probOutput] using
-        (after_bound source baseImpl kem functional protocol publicKey secretKey context))
-  simpa only [probEvent_bind_const, probOutput_bind_const, probFailure_eq_zero, tsub_zero, one_mul,
-    probEvent_eq_eq_probOutput] using averaged
+    (fun context => after_bound source baseImpl kem functional protocol publicKey secretKey context)
+  refine averaged.trans (le_of_eq (congrArg ENNReal.toReal ?_))
+  exact (OracleComp.EvalDistEq.bind_const _ _).prEvent_eq (fun result => result = true)
 
 /-- One ordinary correctness error bounds the same full stopped adaptive protocol. Every matching root shares that event; neither a reached-challenge condition nor an authentication premise appears. -/
 theorem stopped_bound (source : FixedHkdfSha512NoSaltSource) (baseImpl : QueryImpl baseSpec ProbComp)
@@ -128,9 +132,9 @@ theorem stopped_bound (source : FixedHkdfSha512NoSaltSource) (baseImpl : QueryIm
     (protocol : StoppedProtocol baseSpec Result) :
     tvDist (simulateQ (kemAmbientImpl baseImpl) (main false source kem protocol))
       (simulateQ (kemAmbientImpl baseImpl) (main true source kem protocol)) ≤
-      Pr[= true | simulateQ (kemAmbientImpl baseImpl) (errorExperiment kem)].toReal := by
+      Pr{let x ← simulateQ (kemAmbientImpl baseImpl) (errorExperiment kem)}[x = true].toReal := by
   simp only [main, simulateQ_bind]
-  have averaged := PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind_vcvioLegacy
+  have averaged := PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind
     (simulateQ (kemAmbientImpl baseImpl) kem.keygen)
     (fun pair => do
       let context ← simulateQ (kemAmbientImpl baseImpl)
@@ -142,10 +146,8 @@ theorem stopped_bound (source : FixedHkdfSha512NoSaltSource) (baseImpl : QueryIm
       simulateQ (kemAmbientImpl baseImpl) (after true source kem protocol pair.1 pair.2 context))
     (fun pair => simulateQ (kemAmbientImpl baseImpl) (keyError kem pair.1 pair.2))
     (fun result => result = true)
-    (fun pair => by
-      simpa only [probEvent_eq_eq_probOutput] using
-        (prepared_bound source baseImpl kem functional protocol pair.1 pair.2))
-  simpa only [error_keygen, simulateQ_bind, probEvent_eq_eq_probOutput] using averaged
+    (fun pair => prepared_bound source baseImpl kem functional protocol pair.1 pair.2)
+  simpa only [error_keygen, simulateQ_bind] using averaged
 
 /-- A source stop performs the original abort program without drawing a ciphertext or shared secret. -/
 theorem stopped_branch (routed : Bool) (source : FixedHkdfSha512NoSaltSource)

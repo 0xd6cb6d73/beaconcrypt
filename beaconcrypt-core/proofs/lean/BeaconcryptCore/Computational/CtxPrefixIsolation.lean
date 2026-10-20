@@ -1,5 +1,7 @@
 import BeaconcryptCore.Computational.CtxRomAuth
 import VCVio.ProgramLogic.Relational.SimulateQ
+import BeaconcryptCore.Computational.VCVioForwardOracleComp
+import BeaconcryptCore.Computational.VCVioLegacyBridge
 
 open OracleComp OracleSpec ENNReal
 
@@ -148,14 +150,14 @@ theorem ctxRealWithPrefixFlagImpl_proj_run (c : Pqxdh.Crypto) (key : CtxKey)
 theorem ctxReal_prefixIsolated_agree_good (c : Pqxdh.Crypto) (key : CtxKey)
     (query : CtxAdversarySpec.Domain) (state : CtxHandlerState)
     (output : CtxAdversarySpec.Range query) (state' : CtxHandlerState) :
-    Pr[= (output, (state', false)) |
-        (ctxRealWithPrefixFlagImpl c key query).run (state, false)] =
-      Pr[= (output, (state', false)) |
-        (ctxPrefixIsolatedImpl c key query).run (state, false)] := by
+    Pr{let result ← (ctxRealWithPrefixFlagImpl c key query).run (state, false)}[
+        result = (output, (state', false))] =
+      Pr{let result ← (ctxPrefixIsolatedImpl c key query).run (state, false)}[
+        result = (output, (state', false))] := by
   rcases query with query | input
   · by_cases hprefix : SecretPrefixQuery key query.2
-    · rw [probOutput_eq_zero_of_not_mem_support,
-        probOutput_eq_zero_of_not_mem_support]
+    · rw [prEvent_eq_zero_of_not_mem_support,
+        prEvent_eq_zero_of_not_mem_support]
       · intro hsupport
         let step : StateT CtxHandlerState ProbComp
             (CtxAdversarySpec.Range (.inl query)) :=
@@ -175,7 +177,9 @@ theorem ctxReal_prefixIsolated_agree_good (c : Pqxdh.Crypto) (key : CtxKey)
         have htrue := withStickyBad_true step
           (state, false) (output, state', false) hsupport'
         simp at htrue
-    · simp [ctxRealWithPrefixFlagImpl, ctxPrefixIsolatedImpl, hprefix]
+    · rw [show (ctxRealWithPrefixFlagImpl c key (.inl query)).run (state, false) =
+          (ctxPrefixIsolatedImpl c key (.inl query)).run (state, false) by
+        simp [ctxRealWithPrefixFlagImpl, ctxPrefixIsolatedImpl, hprefix]]
   · rfl
 
 /-- The flagged real handler never clears bad. -/
@@ -407,14 +411,12 @@ theorem trackedProjection_realWithPrefixFlag_eq_ctxBeforeVerifyInner
 /-- Fixed-key probability of a public hidden-key-prefix query. -/
 noncomputable def ctxPrefixBadProbability (c : Pqxdh.Crypto) (key : CtxKey)
     (adversary : CtxAdversary) : ℝ≥0∞ :=
-  Pr[fun result => result.2.2 = true |
-    ctxRealWithPrefixFlagBeforeVerify c key adversary]
+  Pr{let result ← ctxRealWithPrefixFlagBeforeVerify c key adversary}[result.2.2 = true]
 
 /-- Fixed-key form of the tracked public hidden-key-prefix probability. -/
 noncomputable def ctxSecretPrefixQueriedProbabilityInner
     (c : Pqxdh.Crypto) (key : CtxKey) (adversary : CtxAdversary) : ℝ≥0∞ :=
-  Pr[fun result => CtxSecretPrefixQueried result.1 |
-    ctxBeforeVerifyInner c adversary key]
+  Pr{let result ← ctxBeforeVerifyInner c adversary key}[CtxSecretPrefixQueried result.1]
 
 /-- The auxiliary sticky-bit probability is exactly the tracked fixed-key prefix event. -/
 theorem ctxPrefixBadProbability_eq_secretPrefixQueriedProbabilityInner
@@ -423,9 +425,8 @@ theorem ctxPrefixBadProbability_eq_secretPrefixQueriedProbabilityInner
       ctxSecretPrefixQueriedProbabilityInner c key adversary := by
   unfold ctxPrefixBadProbability ctxSecretPrefixQueriedProbabilityInner
   rw [← trackedProjection_realWithPrefixFlag_eq_ctxBeforeVerifyInner,
-    probEvent_map]
-  apply OracleComp.probEvent_congr' _ rfl
-  intro result hresult
+    prEvent_map]
+  refine prEvent_congr_of_support _ _ _ fun result hresult => ?_
   have hinvariant := ctxRealWithPrefixFlag_run_prefix_flag
     c key adversary result hresult
   have hnormalize := secretPrefixQueried_toBeforeVerify key result.1 result.2.1
@@ -437,11 +438,16 @@ theorem tvDist_ctxReal_prefixIsolated_le_prefixBad
     tvDist (ctxRealWithPrefixFlagBeforeVerify c key adversary)
         (ctxPrefixIsolatedFlaggedBeforeVerify c key adversary) ≤
       (ctxPrefixBadProbability c key adversary).toReal := by
-  exact OracleComp.ProgramLogic.Relational.tvDist_simulateQ_run_le_probEvent_output_bad
+  have bound := OracleComp.ProgramLogic.Relational.tvDist_simulateQ_run_le_probEvent_output_bad
     (ctxRealWithPrefixFlagImpl c key) (ctxPrefixIsolatedImpl c key)
-    adversary.main emptyCtxHandlerState (ctxReal_prefixIsolated_agree_good c key)
+    adversary.main emptyCtxHandlerState
+    (fun query state output state' => by
+      simpa only [VCVioLegacy.probOutput_eq_prEvent] using
+        ctxReal_prefixIsolated_agree_good c key query state output state')
     (ctxRealWithPrefixFlagImpl_bad_mono c key)
     (ctxPrefixIsolatedImpl_bad_mono c key)
+  rw [VCVioLegacy.probEvent_eq_prEvent] at bound
+  exact bound
 
 /-- Fixed-key fundamental lemma stated directly with the tracked prefix-query event. -/
 theorem tvDist_ctxReal_prefixIsolated_le_secretPrefixQueried
@@ -490,13 +496,12 @@ theorem ctxSecretPrefixQueriedProbability_toReal_eq_tsum
     (c : Pqxdh.Crypto) (adversary : CtxAdversary) :
     (ctxSecretPrefixQueriedProbability c adversary).toReal =
       ∑' key : CtxKey,
-        Pr[= key | $ᵗ CtxKey].toReal *
+        Pr{let sampled ← $ᵗ CtxKey}[sampled = key].toReal *
           (ctxSecretPrefixQueriedProbabilityInner c key adversary).toReal := by
-  simp only [ctxSecretPrefixQueriedProbability_vcvioLegacy]
-  unfold ctxBeforeVerifyGame
-  rw [probEvent_bind_eq_tsum]
+  unfold ctxSecretPrefixQueriedProbability ctxBeforeVerifyGame
+  rw [OracleComp.prEvent_bind_eq_tsum]
   rw [ENNReal.tsum_toReal_eq (fun key =>
-    ENNReal.mul_ne_top probOutput_ne_top probEvent_ne_top)]
+    ENNReal.mul_ne_top (prEvent_ne_top _) (prEvent_ne_top _))]
   refine tsum_congr fun key => ?_
   rw [ENNReal.toReal_mul]
   rfl
@@ -510,6 +515,9 @@ theorem tvDist_ctxBeforeVerifyGame_prefixIsolatedGame_le_secretPrefixQueried
   rw [ctxSecretPrefixQueriedProbability_toReal_eq_tsum]
   unfold ctxBeforeVerifyGame ctxPrefixIsolatedGame
   refine (tvDist_bind_left_le ($ᵗ CtxKey) _ _).trans ?_
+  simp only [VCVioLegacy.probOutput_eq_prEvent]
+  have total : ∑' key : CtxKey, Pr{let sampled ← $ᵗ CtxKey}[sampled = key] ≠ ⊤ :=
+    ne_top_of_le_ne_top one_ne_top (OracleComp.tsum_prEvent_le_one _)
   refine Summable.tsum_le_tsum (fun key => ?_) ?_ ?_
   · exact mul_le_mul_of_nonneg_left
       (tvDist_ctxBeforeVerifyInner_prefixIsolated_le_secretPrefixQueried
@@ -518,11 +526,11 @@ theorem tvDist_ctxBeforeVerifyGame_prefixIsolatedGame_le_secretPrefixQueried
       (fun key => mul_nonneg ENNReal.toReal_nonneg (tvDist_nonneg _ _))
       (fun key => mul_le_of_le_one_right ENNReal.toReal_nonneg
         (tvDist_le_one _ _)) ?_
-    exact ENNReal.summable_toReal tsum_probOutput_ne_top
+    exact ENNReal.summable_toReal total
   · refine Summable.of_nonneg_of_le
       (fun key => mul_nonneg ENNReal.toReal_nonneg ENNReal.toReal_nonneg)
       (fun key => mul_le_of_le_one_right ENNReal.toReal_nonneg ?_) ?_
-    · exact ENNReal.toReal_mono one_ne_top probEvent_le_one
-    · exact ENNReal.summable_toReal tsum_probOutput_ne_top
+    · exact ENNReal.toReal_mono one_ne_top (prEvent_le_one _)
+    · exact ENNReal.summable_toReal total
 
 end BeaconcryptCore.Computational.CtxPrefixIsolation

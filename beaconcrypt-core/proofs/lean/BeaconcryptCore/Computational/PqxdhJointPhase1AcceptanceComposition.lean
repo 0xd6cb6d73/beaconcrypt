@@ -717,16 +717,17 @@ theorem oneSession_authentication_bound {Context : Type}
     (selectorNoCreate : ∀ bundle, (selector bundle).IsQueryBoundP
       (IsSourceClass (SourceClass IsCreate)) 0)
     (fallback : DynamicForgery) (ordinaryFallback : Forgery) :
-    Pr[SessionChanged | actualRun attachedVerify primitives 1 (oneSession setup selector)] ≤
+    Pr{let result ← actualRun attachedVerify primitives 1 (oneSession setup selector)}[
+      SessionChanged result] ≤
       advantage primitives (oneSessionReduction primitives setup selector fallback ordinaryFallback) := by
-  have detected := probEvent_mono (fun result supported changed =>
+  have detected := prEvent_mono_of_support _ _ _ (fun result supported changed =>
     oneSession_changed_recorded attachedVerify primitives adapter 0 setup selector
       setupNoSign selectorNoSign result supported changed)
   have bounded := acceptance_advantage_le_sum attachedVerify primitives adapter 0
     (oneSession setup selector) fallback ordinaryFallback
     (oneSession_create_bound setup selector setupNoCreate selectorNoCreate)
   rw [Fin.sum_univ_succ] at bounded
-  simpa [oneSessionReduction] using detected.trans bounded
+  simpa only [Fin.sum_univ_zero, add_zero, oneSessionReduction] using detected.trans bounded
 
 /-- Every ordinary joint class keeps the setup and selector budgets; only the source writer adds three signing requests. -/
 theorem oneSession_class_bound {Context : Type}

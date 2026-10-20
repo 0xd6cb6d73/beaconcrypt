@@ -1,4 +1,5 @@
 import BeaconcryptCore.Computational.PqxdhSourceAuthenticatedRootQueryBounds
+import BeaconcryptCore.Computational.VCVioForwardOracleComp
 
 /-!
 # Optional source encapsulation and honest-key support
@@ -30,8 +31,8 @@ def HonestKeyCompatibility
     (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK))
     (native : SourceKemInterface baseSpec) : Prop :=
   ∀ pair ∈ support (simulateQ (kemAmbientImpl baseImpl) kem.keygen),
-    𝒮[simulateQ (kemAmbientImpl baseImpl) (native.encaps pair.1)] =
-      𝒮[Option.some <$> simulateQ (kemAmbientImpl baseImpl) (kem.encaps pair.1)]
+    EvalDistEq (simulateQ (kemAmbientImpl baseImpl) (native.encaps pair.1))
+      (Option.some <$> simulateQ (kemAmbientImpl baseImpl) (kem.encaps pair.1))
 
 /-- Native rejection is excluded for generated keys by functional compatibility, not by an IND-CCA security implication. -/
 theorem honestEncapsulation_no_failure
@@ -41,7 +42,9 @@ theorem honestEncapsulation_no_failure
     (pair : PqxdhKemIndCca.MlKem768PublicKey × KemSK)
     (supported : pair ∈ support (simulateQ (kemAmbientImpl baseImpl) kem.keygen)) :
     none ∉ support (simulateQ (kemAmbientImpl baseImpl) (native.encaps pair.1)) := by
-  rw [mem_support_iff_of_evalSPMF_eq (compatible pair supported)]
+  let : MeasurableSpace (Option (MlKem768Ciphertext × MlKemSharedSecret)) := ⊤
+  rw [OracleComp.mem_support_iff_evalDist_singleton_pos, (compatible pair supported).evalDist_eq,
+    ← OracleComp.mem_support_iff_evalDist_singleton_pos]
   simp
 
 /-- Actual source evaluation after an accepted typed registration, for every identity and KEM public key. -/
@@ -154,17 +157,16 @@ theorem directTargetContinuation_eq_total
     (server : Pqxdh.ServerState) (application : Option Pqxdh.Bytes)
     (ephemeralGen : OracleComp (unifSpec + baseSpec) (List.Vector UInt8 32))
     (identitySk : IdentitySK) (result : StatefulPhase1Result kem setup selector) (kemSk : KemSK)
-    (compatible : 𝒮[simulateQ (kemAmbientImpl baseImpl) (native.encaps result.target)] =
-      𝒮[Option.some <$> simulateQ (kemAmbientImpl baseImpl) (kem.encaps result.target)]) :
+    (compatible : EvalDistEq (simulateQ (kemAmbientImpl baseImpl) (native.encaps result.target))
+      (Option.some <$> simulateQ (kemAmbientImpl baseImpl) (kem.encaps result.target))) :
     𝒟[directTargetContinuation source baseImpl kem native setup selector observer server application
       ephemeralGen identitySk result kemSk] =
     𝒟[PqxdhSourceAuthenticatedRoot.directTargetContinuation source baseImpl kem setup selector
       observer server application ephemeralGen identitySk result kemSk] := by
-  apply evalDist_eq_of_evalSPMF_eq
+  refine EvalDistEq.evalDist_eq ?_
   unfold directTargetContinuation PqxdhSourceAuthenticatedRoot.directTargetContinuation
-  apply evalSPMF_bind_congr'
-  intro ephemeral
-  rw [evalSPMF_bind, compatible, ← evalSPMF_bind]
+  refine EvalDistEq.bind_right _ fun ephemeral => ?_
+  refine (compatible.bind_left _).trans ?_
   simp
   rfl
 
@@ -203,8 +205,8 @@ theorem sourceContinuation_eq_actual
     (ephemeralGen : OracleComp (unifSpec + baseSpec) (List.Vector UInt8 32))
     (verifyFn : Ed25519PublicKey → Pqxdh.Bytes → Ed25519Signature → Bool)
     (state : IdentitySK × StatefulPhase1Result kem setup selector × KemSK)
-    (compatible : 𝒮[simulateQ (kemAmbientImpl baseImpl) (native.encaps state.2.1.target)] =
-      𝒮[Option.some <$> simulateQ (kemAmbientImpl baseImpl) (kem.encaps state.2.1.target)]) :
+    (compatible : EvalDistEq (simulateQ (kemAmbientImpl baseImpl) (native.encaps state.2.1.target))
+      (Option.some <$> simulateQ (kemAmbientImpl baseImpl) (kem.encaps state.2.1.target))) :
     𝒟[sourceContinuation source baseImpl kem setup selector verifyFn
       (sourceProtocol source kem native setup selector observer server application ephemeralGen verifyFn) false state] =
     𝒟[actualContinuation source baseImpl kem native setup selector observer server application ephemeralGen verifyFn state] := by
@@ -255,14 +257,13 @@ theorem sourceGame_eq_actualGame
     𝒟[sourceGame source baseImpl sigAlg kem setup selector verifyFn
       (sourceProtocol source kem native setup selector observer server application ephemeralGen verifyFn) false] =
     𝒟[actualGame source baseImpl sigAlg kem native setup selector observer server application ephemeralGen verifyFn] := by
-  apply evalDist_eq_of_evalSPMF_eq
+  refine EvalDistEq.evalDist_eq ?_
   unfold sourceGame actualGame
-  rw [privateSourcePrefix_borrowed_complete, privateSourcePrefix_borrowed_complete]
-  apply evalSPMF_bind_congr
-  intro pair pairSupported
-  apply evalSPMF_bind_congr
-  intro retained retainedSupported
-  apply evalSPMF_eq_of_evalDist_eq
+  refine (privateSourcePrefix_borrowed_complete baseImpl sigAlg kem setup selector _).trans
+    (EvalDistEq.trans ?_ (privateSourcePrefix_borrowed_complete baseImpl sigAlg kem setup selector _).symm)
+  refine OracleComp.EvalDistEq.bind_congr_of_support _ fun pair pairSupported => ?_
+  refine OracleComp.EvalDistEq.bind_congr_of_support _ fun retained retainedSupported => ?_
+  refine EvalDistEq.of_evalDist_eq ?_
   apply sourceContinuation_eq_actual source baseImpl kem native setup selector observer server application ephemeralGen verifyFn
   simpa only [borrowedPrefix_target baseImpl sigAlg kem setup selector pair.1 pair.2 retained retainedSupported] using
     compatible pair pairSupported

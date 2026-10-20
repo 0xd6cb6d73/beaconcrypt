@@ -172,10 +172,6 @@ theorem evalSPMF_split_uniformJointKdfStream :
   SampleableType.map_uniformSample_evalDistEq_of_bijective
     jointKdfStreamProjectionEquiv.bijective
 
-set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_split_uniformJointKdfStream_vcvioLegacy :
-    𝒮[⇑BeaconcryptCore.Computational.PqxdhProjectionCollisions.jointKdfStreamProjectionEquiv <$> ($ᵗ BeaconcryptCore.Computational.PqxdhJointKdf.JointKdfStream)] = 𝒮[$ᵗ (BeaconcryptCore.Computational.PqxdhProjectionCollisions.Projection32Value × BeaconcryptCore.Computational.PqxdhProjectionCollisions.Projection32Value × BeaconcryptCore.Computational.PqxdhProjectionCollisions.Projection12Value)] :=
-  by simpa only [BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq] using @BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_split_uniformJointKdfStream
-
 /-- The library product sampler is exactly sequential independent sampling, stated generically
 so concrete fixed-vector sampler instances remain opaque to the elaborator. -/
 theorem uniformSample_prod_prod_eq {A B C : Type}

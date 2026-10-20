@@ -69,7 +69,7 @@ theorem disclosure_le_gapDh (setup : Setup baseSpec KemSK) (codec : Codec Reader
         (PqxdhJointGapDh.extractor (scanClient setup codec checks adversary qH)) := by
     simpa only [originalDisclosureGame, evalDist_apply_singleton, probOutput_map, decide_eq_true_eq] using
       badB_le_gapDh setup codec checks adversary qH law rom
-  exact ENNReal.toReal_mono probOutput_ne_top bounded
+  exact ENNReal.toReal_mono (prEvent_ne_top _) bounded
 
 /-- The original authentication game is bounded by one constructed Gap-DH advantage, its actual collision event and the finite family of actual uniform-entry games with their same five constructed losses. CTX closure remains explicit. -/
 theorem authentication_intermediate (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)

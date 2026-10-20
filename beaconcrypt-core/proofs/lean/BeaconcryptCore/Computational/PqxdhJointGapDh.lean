@@ -104,7 +104,7 @@ def game (joint : Primitives) (dh : DhInterface joint)
 
 noncomputable def advantage (joint : Primitives) (dh : DhInterface joint)
     (adversary : PublicChallenge → OracleComp AdversarySpec (Option DhOutput)) : ℝ≥0∞ :=
-  Pr[= true | game joint dh adversary]
+  Pr{let x ← game joint dh adversary}[x = true]
 
 /-- Public executable selection uses the ordinary decision service, never either private scalar. -/
 def scan (publicValue : PublicChallenge) : List DhOutput → OracleComp AdversarySpec (Option DhOutput)
@@ -511,8 +511,12 @@ theorem extraction_game {count : Nat} (joint : Primitives) (dh : DhInterface joi
 
 theorem candidate_success_eq_advantage {count : Nat} (joint : Primitives) (dh : DhInterface joint)
     (client : PublicChallenge → OracleComp AdversarySpec (List.Vector DhOutput count)) :
-    Pr[= true | candidateGame joint dh client] = advantage joint dh (extractor client) := by
+    Pr{let x ← candidateGame joint dh client}[x = true] = advantage joint dh (extractor client) := by
   rw [advantage, extraction_game]
+
+set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.PqxdhJointGapDh.candidate_success_eq_advantage_vcvioLegacy :
+    ∀ {count : ℕ} (joint : BeaconcryptCore.Computational.PqxdhJointIdentity.Primitives) (dh : BeaconcryptCore.Computational.PqxdhJointGapDh.DhInterface joint) (client : BeaconcryptCore.Computational.PqxdhJointGapDh.PublicChallenge → OracleComp BeaconcryptCore.Computational.PqxdhJointGapDh.AdversarySpec (List.Vector BeaconcryptCore.Computational.PqxdhJointIdentity.DhOutput count)), Pr[= Bool.true | BeaconcryptCore.Computational.PqxdhJointGapDh.candidateGame joint dh client] = BeaconcryptCore.Computational.PqxdhJointGapDh.advantage joint dh (BeaconcryptCore.Computational.PqxdhJointGapDh.extractor client) :=
+  by simpa only [BeaconcryptCore.VCVioLegacy.probOutput_eq_prEvent] using @BeaconcryptCore.Computational.PqxdhJointGapDh.candidate_success_eq_advantage
 
 theorem extractor_class_bound {count : Nat}
     (client : PublicChallenge → OracleComp AdversarySpec (List.Vector DhOutput count))

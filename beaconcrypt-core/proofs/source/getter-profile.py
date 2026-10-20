@@ -40,7 +40,7 @@ SOURCE_SHA256 = {
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/RawCtxLiveLineage.lean": "a8c5adb13126e1f0a7e0c84f3fc2614de0c5f45ff730d484c9aaaf15e7cb9193",
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/RawCtxSelectedMessageFreshness.lean": "b62c79fa6a4716de40e138534117b023841fc3f7bc74928a47afb2f8401905de",
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/RawCtxSelectedMessageReveals.lean": "5759dc6718dc7e5fc6e26f173deabb45d7dce988c27b5aa65091880dd293a911",
-    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhJointIdentity.lean": "49f2746c41bf71f3b0e9bb966f4fdfa795d70fca95e11442660717ea9a3e3a6c",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhJointIdentity.lean": "d9b9c25ac490e14743fe77ebfe6ae476d01fd22b8e5dba763f3e5faacf0c1a37",
 }
 
 

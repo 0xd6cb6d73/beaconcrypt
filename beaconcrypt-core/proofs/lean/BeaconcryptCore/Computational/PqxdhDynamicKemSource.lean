@@ -155,13 +155,13 @@ theorem selection_sum (baseImpl : QueryImpl baseSpec ProbComp)
     (client : OracleComp (PoolSpec KemSK) Result)
     (bounded : client.IsQueryBoundP IsCreation pairs.length)
     (event : Nat → Option Result × State KemSK → Prop) :
-    Pr[fun result => ∃ index, index < result.2.created ∧ event index result |
-      ((simulateQ (source baseImpl kem selected pairs) client).run).run empty] ≤
+    Pr{let result ← ((simulateQ (source baseImpl kem selected pairs) client).run).run empty}[
+      ∃ index, index < result.2.created ∧ event index result] ≤
       ∑ index ∈ Finset.range pairs.length,
-        Pr[fun result => index < result.2.created ∧ event index result |
-          ((simulateQ (source baseImpl kem selected pairs) client).run).run empty] := by
-  refine le_trans ?_ (probEvent_exists_finset_le_sum _ _ _)
-  apply probEvent_mono
+        Pr{let result ← ((simulateQ (source baseImpl kem selected pairs) client).run).run empty}[
+          index < result.2.created ∧ event index result] := by
+  refine le_trans ?_ (prEvent_exists_finset_le _ _ _)
+  apply prEvent_mono_of_support
   intro result supported selectedEvent
   obtain ⟨index, present, accepts⟩ := selectedEvent
   exact ⟨index, Finset.mem_range.mpr (present.trans_le

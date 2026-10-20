@@ -424,28 +424,29 @@ theorem lazy_eager_history_complete (primitives : Primitives) {Result : Type}
     (count : ℕ) (client : OracleComp DynamicSpec Result)
     (bounded : client.IsQueryBoundP PqxdhDynamicIdentityPool.IsCreate count)
     (history : GlobalState count) (state : PqxdhDynamicIdentityPool.SourceState) :
-    𝒮[(simulateQ (sourceWithHistory count (PqxdhDynamicIdentityPool.lazyImpl primitives)) client).run
-      (history, state)] =
-      𝒮[PqxdhDynamicIdentityPool.sampleSeeds count >>= fun future =>
+    EvalDistEq
+      ((simulateQ (sourceWithHistory count (PqxdhDynamicIdentityPool.lazyImpl primitives)) client).run
+        (history, state))
+      (PqxdhDynamicIdentityPool.sampleSeeds count >>= fun future =>
         (simulateQ (sourceWithHistory count
-          (PqxdhDynamicIdentityPool.eagerImpl primitives (state.seeds ++ future))) client).run (history, state)] := by
+          (PqxdhDynamicIdentityPool.eagerImpl primitives (state.seeds ++ future))) client).run (history, state)) := by
   have law := PqxdhDynamicIdentityPool.lazy_eager_complete primitives
     ((simulateQ (historyImpl count) client).run history) count
     (historyRun_query_bound count client PqxdhDynamicIdentityPool.IsCreate count bounded history) state
-  have mapped := congrArg (fun distribution =>
+  have mapped := law.map
     (fun value : (Result × GlobalState count) × PqxdhDynamicIdentityPool.SourceState =>
-      (value.1.1, (value.1.2, value.2))) <$> distribution) law
+      (value.1.1, (value.1.2, value.2)))
   simp_rw [sourceWithHistory, QueryImpl.Stateful.simulateQ_link_run]
-  change 𝒮[(fun value : (Result × GlobalState count) × PqxdhDynamicIdentityPool.SourceState =>
+  change EvalDistEq ((fun value : (Result × GlobalState count) × PqxdhDynamicIdentityPool.SourceState =>
       (value.1.1, (value.1.2, value.2))) <$>
     (simulateQ (PqxdhDynamicIdentityPool.lazyImpl primitives)
-      ((simulateQ (historyImpl count) client).run history)).run state] =
-    𝒮[PqxdhDynamicIdentityPool.sampleSeeds count >>= fun future =>
+      ((simulateQ (historyImpl count) client).run history)).run state)
+    (PqxdhDynamicIdentityPool.sampleSeeds count >>= fun future =>
       (fun value : (Result × GlobalState count) × PqxdhDynamicIdentityPool.SourceState =>
         (value.1.1, (value.1.2, value.2))) <$>
       (simulateQ (PqxdhDynamicIdentityPool.eagerImpl primitives (state.seeds ++ future))
-        ((simulateQ (historyImpl count) client).run history)).run state]
-  simpa only [evalSPMF_map, evalSPMF_bind, map_bind] using mapped
+        ((simulateQ (historyImpl count) client).run history)).run state)
+  simpa only [map_bind] using mapped
 
 /-- The real source starts with no created identity; only actual creation requests draw fresh seeds. -/
 def dynamicRun (primitives : Primitives) (count : ℕ) {Result : Type}
@@ -468,18 +469,19 @@ def reservedRun (primitives : Primitives) (count : ℕ) {Result : Type}
 theorem dynamic_reserved_complete (primitives : Primitives) (count : ℕ) {Result : Type}
     (client : OracleComp DynamicSpec Result)
     (bounded : client.IsQueryBoundP PqxdhDynamicIdentityPool.IsCreate count) :
-    𝒮[dynamicRun primitives count client] = 𝒮[reservedRun primitives count client] := by
-  rw [dynamicRun, lazy_eager_history_complete primitives count client bounded]
+    EvalDistEq (dynamicRun primitives count client) (reservedRun primitives count client) := by
+  rw [dynamicRun]
+  refine (lazy_eager_history_complete primitives count client bounded _ _).trans ?_
   simp only [PqxdhDynamicIdentityPool.initialState, List.nil_append,
     PqxdhDynamicIdentityPool.sampleSeeds, bind_map_left, reservedRun, bind_pure_comp]
-  apply evalSPMF_bind_congr'
-  intro seeds
+  refine EvalDistEq.bind_right _ fun seeds => ?_
   have exactRun := route_complete primitives seeds client
     (initialPublicState, PqxdhJointIdentityFreshness.initialState count) (Nat.zero_le count)
-  change 𝒮[(simulateQ (sourceWithHistory count (PqxdhDynamicIdentityPool.eagerImpl primitives (List.ofFn seeds)))
-      client).run (projection seeds (initialPublicState, PqxdhJointIdentityFreshness.initialState count))] = _
+  change EvalDistEq ((simulateQ (sourceWithHistory count
+      (PqxdhDynamicIdentityPool.eagerImpl primitives (List.ofFn seeds)))
+      client).run (projection seeds (initialPublicState, PqxdhJointIdentityFreshness.initialState count))) _
   rw [← exactRun]
-  rfl
+  exact EvalDistEq.rfl
 
 /-- Source class counts include attempted service requests even when their generated index does not yet exist. -/
 def dynamicClass (predicate : AdversarySpec.Domain → Prop) : DynamicSpec.Domain → Prop
@@ -608,30 +610,27 @@ theorem dynamicEvent_implies_global (primitives : Primitives) (count : ℕ) (fal
 /-- The complete reserved dynamic execution is bounded by the existing family event, with no loss for creation timing or invalid-index rejection. -/
 theorem reserved_event_le_global (primitives : Primitives) (count : ℕ) (fallback : Forgery)
     (client : OracleComp DynamicSpec DynamicForgery) :
-    Pr[DynamicEvent primitives | reservedRun primitives (count + 1) client] ≤
-      Pr[GlobalEvent primitives | globalRun primitives (count + 1) (routedAdversary count fallback client)] := by
+    Pr{let result ← reservedRun primitives (count + 1) client}[DynamicEvent primitives result] ≤
+      Pr{let result ← globalRun primitives (count + 1) (routedAdversary count fallback client)}[
+        GlobalEvent primitives result] := by
   unfold reservedRun globalRun
-  rw [probEvent_bind_eq_tsum, probEvent_bind_eq_tsum]
-  apply ENNReal.tsum_le_tsum
-  intro seeds
-  apply mul_le_mul' le_rfl
+  refine prEvent_bind_mono_of_forall_le _ _ _ _ _ fun seeds => ?_
   rw [QueryImpl.Stateful.simulateQ_link_run]
-  simp only [routedAdversary, bind_pure_comp, simulateQ_map, StateT.run_map,
-    Functor.map_map, probEvent_map, Function.comp_def]
-  apply probEvent_mono
-  intro result _ accepted
+  simp only [routedAdversary, bind_pure_comp, simulateQ_map, StateT.run_map, Functor.map_map]
+  rw [← bind_pure_comp, ← bind_pure_comp]
+  apply prEvent_mono
+  intro result accepted
   exact dynamicEvent_implies_global primitives count fallback seeds result accepted
 
 /-- Dynamic generated-identity selection reduces to the same explicitly stronger joint-use weak-EUF endpoints. The only selection loss is the sum over the reserved creation cap. -/
 theorem dynamic_advantage_le_sum (primitives : Primitives) (count : ℕ) (fallback : Forgery)
     (client : OracleComp DynamicSpec DynamicForgery)
     (bounded : client.IsQueryBoundP PqxdhDynamicIdentityPool.IsCreate (count + 1)) :
-    Pr[DynamicEvent primitives | dynamicRun primitives (count + 1) client] ≤
+    Pr{let result ← dynamicRun primitives (count + 1) client}[DynamicEvent primitives result] ≤
       ∑ target : Fin (count + 1), advantage primitives
         (globalReduction primitives target fallback (routedAdversary count fallback client)) := by
-  have same := OracleComp.probEvent_congr' (fun _ _ => Iff.rfl)
-    (dynamic_reserved_complete primitives (count + 1) client bounded)
-      (p := DynamicEvent primitives) (q := DynamicEvent primitives)
+  have same := (dynamic_reserved_complete primitives (count + 1) client bounded).prEvent_eq
+    (DynamicEvent primitives)
   rw [same]
   exact (reserved_event_le_global primitives count fallback client).trans
     (global_advantage_le_sum primitives count fallback (routedAdversary count fallback client))
@@ -714,16 +713,15 @@ theorem dynamic_advantage_le_count (primitives : Primitives) (count : ℕ) (fall
     (epsilon : ℝ≥0∞)
     (bounded : ∀ target, advantage primitives
       (globalReduction primitives target fallback (routedAdversary count fallback client)) ≤ epsilon) :
-    Pr[DynamicEvent primitives | dynamicRun primitives (count + 1) client] ≤
+    Pr{let result ← dynamicRun primitives (count + 1) client}[DynamicEvent primitives result] ≤
       (count + 1 : ℕ) * epsilon := by
   exact (dynamic_advantage_le_sum primitives count fallback client creates).trans
     ((Finset.sum_le_sum fun target _ => bounded target).trans_eq (by simp))
 
 /-- With no generated-identity index available the signature event is false, independently of the client's behavior. -/
 theorem zero_identity_event (primitives : Primitives) (client : OracleComp DynamicSpec DynamicForgery) :
-    Pr[DynamicEvent primitives | dynamicRun primitives 0 client] = 0 := by
-  apply probEvent_eq_zero
-  intro result _ accepted
+    Pr{let result ← dynamicRun primitives 0 client}[DynamicEvent primitives result] = 0 := by
+  refine prEvent_eq_zero_of_forall_not _ _ fun result accepted => ?_
   obtain ⟨valid, _⟩ := accepted
   exact Nat.not_lt_zero _ valid
 

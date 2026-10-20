@@ -413,7 +413,7 @@ theorem selected_first (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
           (((simulateQ (PqxdhDynamicKemJointSource.normal setup.baseImpl setup.joint setup.kem selected.val pairs)
             (simulateQ (actual setup) (commands setup codec checks identityIndex publicIdentity work owners log
               state))).run).run (joint, PqxdhDynamicKemRouter.empty))] :=
-  PqxdhDynamicKemJointSource.selected_source setup.baseImpl setup.joint setup.kem _ count selected room joint
+  PqxdhDynamicKemJointSource.selected_source_vcvioLegacy setup.baseImpl setup.joint setup.kem _ count selected room joint
 
 set_option linter.deprecated false in
 /-- The selected-disclosure monitor for the hidden logged command program, by instantiation of the generic `PqxdhDynamicKemJointStopping.history_event`. -/
@@ -431,7 +431,7 @@ theorem monitor (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (
         (simulateQ (actual setup) (commands setup codec checks identityIndex publicIdentity work owners log
           native))).run.run state)
         (fun result => event result ∧ PqxdhDynamicKemJointStopping.Good result.2) :=
-  PqxdhDynamicKemJointStopping.history_event setup.baseImpl setup.joint setup.kem selected pairs _ state tracked event
+  PqxdhDynamicKemJointStopping.history_event_vcvioLegacy setup.baseImpl setup.joint setup.kem selected pairs _ state tracked event
 
 end BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCut
 

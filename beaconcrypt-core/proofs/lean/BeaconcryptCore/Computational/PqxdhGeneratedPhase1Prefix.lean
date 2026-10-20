@@ -400,7 +400,7 @@ theorem authentication_continuation_bound {Result : Type}
   refine (tvDist_bind_left_event_le (privateRun attachedVerify primitives 1 (program baseImpl kem setup driver))
     next _ (fun state => changedBit state = true) (fun state good => by simp [good])).trans ?_
   apply ENNReal.toReal_mono (show advantage primitives
-    (privateReduction primitives baseImpl kem setup driver fallback ordinaryFallback) ≠ ∞ from probOutput_ne_top)
+    (privateReduction primitives baseImpl kem setup driver fallback ordinaryFallback) ≠ ∞ from prEvent_ne_top _)
   simpa only [changedBit_iff] using authentication_bound attachedVerify primitives adapter baseImpl kem setup driver
     driverNoSign driverNoCreate fallback ordinaryFallback
 

@@ -37,7 +37,7 @@ theorem common_authentication (setup : Setup baseSpec KemSK) (codec : Codec Read
   refine (PqxdhServerAuthCommonProbability.ordered_split setup codec checks adversary Q qH qHash budget adapter).trans
     (add_le_add (PqxdhServerAuthSessionRecord.session_record_bound setup codec checks caps bounded adversary
       qCoin Q qH qHash budget coins law spread correct writable responseBack frameBack fallback) ?_)
-  exact ENNReal.toReal_mono (ne_top_of_le_ne_top ENNReal.one_ne_top probOutput_le_one)
+  exact ENNReal.toReal_mono (ne_top_of_le_ne_top ENNReal.one_ne_top (prEvent_le_one _))
     (PqxdhServerAuthJointIdentityEuf.source_bound setup codec checks adversary signatureFallback)
 
 /-- All bills refer to the reductions used in the complete session inequality. The signature simulation includes the local KEM base work and pays the challenge identity's sampler in its whole game. -/

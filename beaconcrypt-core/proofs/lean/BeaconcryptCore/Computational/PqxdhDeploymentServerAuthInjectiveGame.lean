@@ -354,7 +354,7 @@ theorem ce_a1_injective (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
     (fun outcome => ∃ c c', SharedMatch setup codec c c' outcome)
   have finiteSum : ∑ target : Fin (budget.create + 1), advantage setup.joint
       (PqxdhDeploymentServerAuthInjective.collider setup.joint budget.create target) ≠ ⊤ :=
-    ENNReal.sum_ne_top.mpr fun _ _ => ne_top_of_le_ne_top ENNReal.one_ne_top probOutput_le_one
+    ENNReal.sum_ne_top.mpr fun _ _ => ne_top_of_le_ne_top ENNReal.one_ne_top (prEvent_le_one _)
   refine (ENNReal.toReal_mono (ENNReal.add_ne_top.mpr ⟨probEvent_ne_top, probEvent_ne_top⟩) split).trans ?_
   rw [ENNReal.toReal_add probEvent_ne_top probEvent_ne_top]
   refine add_le_add unmatched.1 ?_

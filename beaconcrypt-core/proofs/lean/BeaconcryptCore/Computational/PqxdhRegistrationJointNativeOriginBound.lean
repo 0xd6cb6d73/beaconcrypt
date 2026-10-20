@@ -42,7 +42,7 @@ theorem native_origin_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader
     program runtime IsCreate _
     (PqxdhRegistrationJointReportCosts.initialized_creates setup codec checks ensureInit supplied (count + 1) program runtime budget certified)
   rw [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map]
-  exact PqxdhJointPhase1Reports.fieldOrigin_advantage_le_sum setup.joint count _ fallback ordinaryFallback (creates.mono capacity)
+  exact PqxdhJointPhase1Reports.fieldOrigin_advantage_le_sum_vcvioLegacy setup.joint count _ fallback ordinaryFallback (creates.mono capacity)
 
 /-- Each ordinary reduction preserves the source-derived signing and converted-DH caps. Public terminal reporting adds neither private operation. -/
 theorem service_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)

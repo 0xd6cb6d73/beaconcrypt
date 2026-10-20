@@ -796,7 +796,7 @@ theorem a2pub_owner_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader R
   rw [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map] at transfer
   have creates := PqxdhDeploymentProvenance.client_creates setup codec checks route ensureInit bounds mode adversary
     budget respects (budget.create + 1) runtime
-  have field := PqxdhJointPhase1Reports.fieldOrigin_advantage_le_sum setup.joint budget.create
+  have field := PqxdhJointPhase1Reports.fieldOrigin_advantage_le_sum_vcvioLegacy setup.joint budget.create
     (PqxdhDeploymentProvenance.client setup codec checks route ensureInit bounds mode adversary (budget.create + 1)
       runtime) fallback ordinaryFallback (creates.mono (by omega))
   rw [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map] at transfer

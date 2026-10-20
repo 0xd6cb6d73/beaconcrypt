@@ -1,5 +1,6 @@
 import BeaconcryptCore.Model.Pqxdh.Primitives
 import VCVio.CryptoFoundations.KeyEncapMech
+import BeaconcryptCore.Computational.VCVioForwardOracleComp
 
 /-!
 # One-key ML-KEM-768 IND-CCA bridge for BeaconCrypt PQXDH
@@ -238,7 +239,10 @@ theorem oneKey_indCCAAdvantage_eq_branchDist
   rw [hgame, hbranch true, hbranch false]
   exact boolBias_sharedPrefix_eq_branchDist coin preState
     finish
-    (by simp [coin, Fintype.card_bool]) (by simp [coin, Fintype.card_bool])
+    (by simp only [coin, SampleableType.evalDist_uniformSample_singleton, Fintype.card_bool,
+      Nat.cast_ofNat, one_div])
+    (by simp only [coin, SampleableType.evalDist_uniformSample_singleton, Fintype.card_bool,
+      Nat.cast_ofNat, one_div])
     hrealTotal hrandomTotal
 
 /-- Public-uniform, arbitrary-base, and logical-decapsulation query surface exposed to the two source phases. -/

@@ -1,5 +1,6 @@
 import BeaconcryptCore.Computational.PqxdhDynamicKemSource
 import BeaconcryptCore.Computational.PqxdhDynamicKemPost
+import BeaconcryptCore.Computational.VCVioForwardOracleComp
 
 /-!
 The ordinary reserved source answers a successful selected-key reveal and remembers that disclosure; the executable reduction stops before answering it. Fresh complete output probabilities agree because the retained disclosure flag cannot be cleared by any adaptive suffix. Missing/future handles reject before setting the flag. This is an exact KEM disclosure monitor, not an assumption that an arbitrary adversary decision is false after compromise. The full protocol freshness predicate must still imply this monitor at its selected target.
@@ -111,8 +112,8 @@ theorem bad_output_zero (baseImpl : QueryImpl baseSpec ProbComp)
     (selected : Nat) (pairs : List (MlKem768PublicKey × KemSK))
     (client : OracleComp (PoolSpec KemSK) Result) (state : State KemSK)
     (result : Option Result × State KemSK) (bad : ¬ Good state) (good : Good result.2) :
-    Pr[= result | ((simulateQ (normal baseImpl kem selected pairs) client).run).run state] = 0 :=
-  probOutput_eq_zero_of_not_mem_support fun supported =>
+    Pr{let x ← ((simulateQ (normal baseImpl kem selected pairs) client).run).run state}[x = result] = 0 :=
+  prEvent_eq_zero_of_not_mem_support _ fun supported =>
     bad (schedule_good baseImpl kem selected pairs client state result supported good)
 
 def Discloses (selected : Nat) (pairs : List (MlKem768PublicKey × KemSK)) (query : Query) (state : State KemSK) : Prop :=
@@ -156,8 +157,8 @@ theorem output_good (baseImpl : QueryImpl baseSpec ProbComp)
     (selected : Nat) (pairs : List (MlKem768PublicKey × KemSK))
     (client : OracleComp (PoolSpec KemSK) Result) (state : State KemSK)
     (result : Option Result × State KemSK) (good : Good result.2) :
-    Pr[= result | ((simulateQ (normal baseImpl kem selected pairs) client).run).run state] =
-      Pr[= result | ((simulateQ (source baseImpl kem selected pairs) client).run).run state] := by
+    Pr{let x ← ((simulateQ (normal baseImpl kem selected pairs) client).run).run state}[x = result] =
+      Pr{let x ← ((simulateQ (source baseImpl kem selected pairs) client).run).run state}[x = result] := by
   classical
   induction client using OracleComp.inductionOn generalizing state with
   | pure value => rfl
@@ -165,22 +166,19 @@ theorem output_good (baseImpl : QueryImpl baseSpec ProbComp)
       simp only [simulateQ_bind, simulateQ_spec_query, OptionT.run_bind, Option.elimM, StateT.run_bind]
       by_cases allowed : ¬ Discloses selected pairs query state
       · rw [step_agree baseImpl kem selected pairs query state allowed]
-        rw [probOutput_bind_eq_tsum, probOutput_bind_eq_tsum]
-        apply tsum_congr
-        rintro ⟨none | answer, after⟩
+        refine prEvent_bind_congr _ _ _ _ _ fun head => ?_
+        rcases head with ⟨none | answer, after⟩
         · rfl
-        · exact congrArg (fun probability =>
-            Pr[= (some answer, after) | ((source baseImpl kem selected pairs query).run).run state] * probability)
-            (ih answer after)
+        · exact ih answer after
       · obtain ⟨rfl, pair, found⟩ := discloses_shape selected pairs query state (not_not.mp allowed)
-        simp only [normal, source, OptionT.run_mk, StateT.run, found, ite_true, pure_bind,
-          Option.elim_some, Option.elim_none]
+        simp only [normal, source, OptionT.run_mk, StateT.run, found, ite_true]
+        rw [pure_bind, pure_bind]
+        simp only [Option.elim_some, Option.elim_none]
         refine (bad_output_zero baseImpl kem selected pairs (next (some pair.2))
           (record (.reveal selected) (some pair.2) { state with forbiddenReveal := true })
           result (by simp [Good, record]) good).trans ?_
         symm
-        apply probOutput_eq_zero_of_not_mem_support
-        intro supported
+        refine prEvent_eq_zero_of_not_mem_support _ fun supported => ?_
         change result ∈ support (pure (none, { state with forbiddenReveal := true }) : ProbComp _) at supported
         simp only [mem_support_pure_iff] at supported
         subst result
@@ -192,15 +190,17 @@ theorem event_good (baseImpl : QueryImpl baseSpec ProbComp)
     (selected : Nat) (pairs : List (MlKem768PublicKey × KemSK))
     (client : OracleComp (PoolSpec KemSK) Result) (state : State KemSK)
     (event : Option Result × State KemSK → Prop) :
-    Pr[fun result => event result ∧ Good result.2 | ((simulateQ (normal baseImpl kem selected pairs) client).run).run state] =
-      Pr[fun result => event result ∧ Good result.2 | ((simulateQ (source baseImpl kem selected pairs) client).run).run state] := by
+    Pr{let result ← ((simulateQ (normal baseImpl kem selected pairs) client).run).run state}[
+      event result ∧ Good result.2] =
+      Pr{let result ← ((simulateQ (source baseImpl kem selected pairs) client).run).run state}[
+        event result ∧ Good result.2] := by
   classical
-  rw [probEvent_eq_tsum_ite, probEvent_eq_tsum_ite]
+  rw [OracleComp.prEvent_eq_tsum_ite, OracleComp.prEvent_eq_tsum_ite]
   apply tsum_congr
   intro result
   by_cases good : Good result.2
-  · simp [good, output_good baseImpl kem selected pairs client state result good]
-  · simp [good]
+  · simp only [good, and_true, output_good baseImpl kem selected pairs client state result good]
+  · simp only [good, and_false, ↓reduceIte]
 
 /-- Actual successful reveal observation, as retained in the original source history; failed reveals do not disclose anything. -/
 def disclosed (selected : Nat) (observation : PqxdhLiveKemBirth.Observation KemSK) : Bool :=
@@ -273,23 +273,18 @@ theorem history_event (baseImpl : QueryImpl baseSpec ProbComp)
     (selected : Nat) (pairs : List (MlKem768PublicKey × KemSK))
     (client : OracleComp (PoolSpec KemSK) Result) (state : State KemSK) (trackedBefore : Tracked selected state)
     (event : Option Result × State KemSK → Prop) :
-    Pr[fun result => event result ∧ result.2.history.any (disclosed selected) = false |
-      ((simulateQ (normal baseImpl kem selected pairs) client).run).run state] =
-      Pr[fun result => event result ∧ Good result.2 |
-        ((simulateQ (source baseImpl kem selected pairs) client).run).run state] := by
+    Pr{let result ← ((simulateQ (normal baseImpl kem selected pairs) client).run).run state}[
+      event result ∧ result.2.history.any (disclosed selected) = false] =
+      Pr{let result ← ((simulateQ (source baseImpl kem selected pairs) client).run).run state}[
+        event result ∧ Good result.2] := by
   classical
   calc
-    _ = Pr[fun result => event result ∧ Good result.2 |
-        ((simulateQ (normal baseImpl kem selected pairs) client).run).run state] := by
-      rw [probEvent_eq_tsum_ite, probEvent_eq_tsum_ite]
-      apply tsum_congr
-      intro result
-      by_cases supported : result ∈ support (((simulateQ (normal baseImpl kem selected pairs) client).run).run state)
-      · have tracked := schedule_tracked baseImpl kem selected pairs client state trackedBefore result supported
-        change result.2.forbiddenReveal = result.2.history.any (disclosed selected) at tracked
-        simp only [Good, tracked]
-      · have zero := probOutput_eq_zero_of_not_mem_support supported
-        simp only [zero, ite_self]
+    _ = Pr{let result ← ((simulateQ (normal baseImpl kem selected pairs) client).run).run state}[
+        event result ∧ Good result.2] := by
+      refine prEvent_congr_of_support _ _ _ fun result supported => ?_
+      have tracked := schedule_tracked baseImpl kem selected pairs client state trackedBefore result supported
+      change result.2.forbiddenReveal = result.2.history.any (disclosed selected) at tracked
+      simp only [Good, tracked]
     _ = _ := event_good baseImpl kem selected pairs client state event
 
 /-- The real empty source discharges the tracked-history premise directly. -/
@@ -297,10 +292,10 @@ theorem empty_history_event (baseImpl : QueryImpl baseSpec ProbComp)
     (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK))
     (selected : Nat) (pairs : List (MlKem768PublicKey × KemSK))
     (client : OracleComp (PoolSpec KemSK) Result) (event : Option Result × State KemSK → Prop) :
-    Pr[fun result => event result ∧ result.2.history.any (disclosed selected) = false |
-      ((simulateQ (normal baseImpl kem selected pairs) client).run).run empty] =
-      Pr[fun result => event result ∧ Good result.2 |
-        ((simulateQ (source baseImpl kem selected pairs) client).run).run empty] :=
+    Pr{let result ← ((simulateQ (normal baseImpl kem selected pairs) client).run).run empty}[
+      event result ∧ result.2.history.any (disclosed selected) = false] =
+      Pr{let result ← ((simulateQ (source baseImpl kem selected pairs) client).run).run empty}[
+        event result ∧ Good result.2] :=
   history_event baseImpl kem selected pairs client empty (empty_tracked selected) event
 
 /-- The prechallenge executable CCA router preserves the original complete event under its actual successful-reveal freshness gate, starting from the source empty history. -/
@@ -309,11 +304,11 @@ theorem pre_event (baseImpl : QueryImpl baseSpec ProbComp)
     (selected : Nat) (pairs : List (MlKem768PublicKey × KemSK))
     (target : MlKem768PublicKey) (secret : KemSK) (present : pairs[selected]? = some (target, secret))
     (client : OracleComp (PoolSpec KemSK) Result) (event : Option Result × State KemSK → Prop) :
-    Pr[fun result => event result ∧ result.2.history.any (disclosed selected) = false |
-      ((simulateQ (normal baseImpl kem selected pairs) client).run).run empty] =
-      Pr[fun result => event result ∧ Good result.2 |
-        PqxdhPrivateKemSource.evalKem baseImpl kem secret
-          (((simulateQ (pre kem selected (redact selected pairs)) client).run).run empty)] := by
+    Pr{let result ← ((simulateQ (normal baseImpl kem selected pairs) client).run).run empty}[
+      event result ∧ result.2.history.any (disclosed selected) = false] =
+      Pr{let result ← PqxdhPrivateKemSource.evalKem baseImpl kem secret
+          (((simulateQ (pre kem selected (redact selected pairs)) client).run).run empty)}[
+        event result ∧ Good result.2] := by
   rw [PqxdhDynamicKemRouter.program_source baseImpl kem selected pairs target secret present]
   exact empty_history_event baseImpl kem selected pairs client event
 
@@ -330,11 +325,11 @@ theorem post_event (baseImpl : QueryImpl baseSpec ProbComp)
     (encapsulated : (challenge, candidate) ∈ support (simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl baseImpl) (kem.encaps target)))
     (client : OracleComp (PoolSpec KemSK) Result) (state : State KemSK) (tracked : Tracked selected state)
     (event : Option Result × State KemSK → Prop) :
-    Pr[fun result => event result ∧ result.2.history.any (disclosed selected) = false |
-      ((simulateQ (normal baseImpl kem selected pairs) client).run).run state] =
-      Pr[fun result => event result ∧ Good result.2 |
-        PqxdhDynamicKemPost.evaluate baseImpl kem secret challenge
-          (((simulateQ (post kem selected (redact selected pairs) challenge candidate) client).run).run state)] := by
+    Pr{let result ← ((simulateQ (normal baseImpl kem selected pairs) client).run).run state}[
+      event result ∧ result.2.history.any (disclosed selected) = false] =
+      Pr{let result ← PqxdhDynamicKemPost.evaluate baseImpl kem secret challenge
+          (((simulateQ (post kem selected (redact selected pairs) challenge candidate) client).run).run state)}[
+        event result ∧ Good result.2] := by
   rw [PqxdhDynamicKemPost.supported_source baseImpl kem functional correct selected pairs target secret present generated challenge candidate encapsulated]
   exact history_event baseImpl kem selected pairs client state tracked event
 

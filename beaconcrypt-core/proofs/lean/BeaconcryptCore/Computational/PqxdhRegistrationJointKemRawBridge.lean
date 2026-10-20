@@ -278,7 +278,7 @@ theorem commands_le_real (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
       cases found
       cases found'
       exact ⟨⟨outcome, raw, answer, value, rfl, decided, session, tagged, checked, keyed⟩, good⟩
-  refine le_trans (le_of_eq (PqxdhDynamicKemJointStopping.history_event setup.baseImpl setup.joint setup.kem
+  refine le_trans (le_of_eq (PqxdhDynamicKemJointStopping.history_event_vcvioLegacy setup.baseImpl setup.joint setup.kem
     selected.val (List.ofFn (selected.insertNth chosen others)) _ (joint, PqxdhDynamicKemRouter.empty) rfl
     (fun reached => RunEvent setup codec checks decision selected.val
       (List.ofFn (selected.insertNth chosen others)) reached))) ?_

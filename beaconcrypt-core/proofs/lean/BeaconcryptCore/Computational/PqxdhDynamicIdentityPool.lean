@@ -1,4 +1,5 @@
 import BeaconcryptCore.Computational.PqxdhJointIdentityEvents
+import BeaconcryptCore.Computational.VCVioForwardOracleComp
 
 /-!
 # Dynamically created joint identities
@@ -102,10 +103,12 @@ instance : DecidablePred IsCreate := fun query => by
 
 /-- Unused future seeds can be integrated out only because the ordinary seed sampler never fails. This equality includes the whole subsequent evaluated computation. -/
 theorem sampleSeeds_unused {Result : Type} (count : ℕ) (work : ProbComp Result) :
-    𝒮[sampleSeeds count >>= fun _ => work] = 𝒮[work] := by
-  apply evalSPMF_ext
-  intro result
-  simp only [probOutput_bind_const, probFailure_eq_zero, tsub_zero, one_mul]
+    EvalDistEq (sampleSeeds count >>= fun _ => work) work :=
+  OracleComp.EvalDistEq.bind_const (sampleSeeds count) work
+
+set_option linter.deprecated false in set_option linter.unusedVariables false in theorem _root_.BeaconcryptCore.Computational.PqxdhDynamicIdentityPool.sampleSeeds_unused_vcvioLegacy :
+    ∀ {Result : Type} (count : Nat) (work : ProbComp Result), @Eq.{1} (SPMF.{0} Result) (@evalSPMF.{0, 0} ProbComp (@instMonadLiftTOfMonadLift.{0, 0, 0, 0} ProbComp PMF.{0} SPMF.{0} SPMF.instMonadLiftPMF.{0} (@PFunctor.FreeM.instMonadLiftTPMF.{0, 0} (@OracleSpec.toPFunctor.{0, 0} Nat unifSpec) (@OracleSpec.IsUniformSpec.toIsProbabilitySpec.{0, 0} Nat unifSpec OracleSpec.instIsUniformSpecNatUnifSpec))) Result (@Bind.bind.{0, 0} ProbComp (@PFunctor.FreeM.instBind.{0, 0, 0} (@OracleSpec.toPFunctor.{0, 0} Nat unifSpec)) (List.{0} BeaconcryptCore.Computational.PqxdhJointIdentity.IdentitySeed) Result (BeaconcryptCore.Computational.PqxdhDynamicIdentityPool.sampleSeeds count) fun (x : List.{0} BeaconcryptCore.Computational.PqxdhJointIdentity.IdentitySeed) => work)) (@evalSPMF.{0, 0} ProbComp (@instMonadLiftTOfMonadLift.{0, 0, 0, 0} ProbComp PMF.{0} SPMF.{0} SPMF.instMonadLiftPMF.{0} (@PFunctor.FreeM.instMonadLiftTPMF.{0, 0} (@OracleSpec.toPFunctor.{0, 0} Nat unifSpec) (@OracleSpec.IsUniformSpec.toIsProbabilitySpec.{0, 0} Nat unifSpec OracleSpec.instIsUniformSpecNatUnifSpec))) Result work) :=
+  by simpa only [BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq] using @BeaconcryptCore.Computational.PqxdhDynamicIdentityPool.sampleSeeds_unused
 
 /-- Every create result publishes the next generated index and retains exactly that new private seed. -/
 def createdReply (primitives : Primitives) (state : SourceState) (seed : IdentitySeed) :
@@ -168,20 +171,20 @@ theorem noncreate_seeds_preserved (primitives : Primitives) (query : DynamicSpec
 theorem lazy_eager_complete (primitives : Primitives) {Result : Type}
     (client : OracleComp DynamicSpec Result) (count : ℕ)
     (bounded : client.IsQueryBoundP IsCreate count) (state : SourceState) :
-    𝒮[(simulateQ (lazyImpl primitives) client).run state] =
-      𝒮[sampleSeeds count >>= fun future =>
-        (simulateQ (eagerImpl primitives (state.seeds ++ future)) client).run state] := by
+    EvalDistEq ((simulateQ (lazyImpl primitives) client).run state)
+      (sampleSeeds count >>= fun future =>
+        (simulateQ (eagerImpl primitives (state.seeds ++ future)) client).run state) := by
   induction client using OracleComp.inductionOn generalizing count state with
   | pure value =>
     simpa only [simulateQ_pure, StateT.run_pure] using
       (sampleSeeds_unused count (pure (value, state))).symm
   | query_bind query next ih =>
     rw [OracleComp.isQueryBoundP_query_bind_iff] at bounded
-    change 𝒮[(lazyImpl primitives query).run state >>= fun result =>
-      (simulateQ (lazyImpl primitives) (next result.1)).run result.2] =
-      𝒮[sampleSeeds count >>= fun future =>
+    change EvalDistEq ((lazyImpl primitives query).run state >>= fun result =>
+      (simulateQ (lazyImpl primitives) (next result.1)).run result.2)
+      (sampleSeeds count >>= fun future =>
         (eagerImpl primitives (state.seeds ++ future) query).run state >>= fun result =>
-          (simulateQ (eagerImpl primitives (state.seeds ++ future)) (next result.1)).run result.2]
+          (simulateQ (eagerImpl primitives (state.seeds ++ future)) (next result.1)).run result.2)
     by_cases creates : IsCreate query
     · have queryEq : query = .inr .create := by
         cases query with
@@ -195,8 +198,7 @@ theorem lazy_eager_complete (primitives : Primitives) {Result : Type}
         rw [lazyImpl_create, sampleSeeds_succ]
         simp only [bind_assoc]
         simp only [bind_map_left, pure_bind]
-        apply evalSPMF_bind_congr' sampleSeed
-        intro seed
+        refine EvalDistEq.bind_right sampleSeed fun seed => ?_
         simp only [eagerImpl_create, pure_bind]
         simpa only [createdReply, record, List.append_assoc, List.singleton_append] using
           ih (createdReply primitives state seed).1 count
@@ -205,10 +207,9 @@ theorem lazy_eager_complete (primitives : Primitives) {Result : Type}
     · have stepEq (future : List IdentitySeed) :=
         noncreate_step_eq primitives (state.seeds ++ future) query creates state
       simp_rw [← stepEq]
-      rw [PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy (sampleSeeds count)
-        ((lazyImpl primitives query).run state)]
-      apply evalSPMF_bind_congr
-      intro result supported
+      refine EvalDistEq.trans ?_ (PqxdhSecretInputKdf.evalSPMF_sample_comm (sampleSeeds count)
+        ((lazyImpl primitives query).run state) _).symm
+      refine OracleComp.EvalDistEq.bind_congr_of_support _ fun result supported => ?_
       have sameSeeds := noncreate_seeds_preserved primitives query creates state result supported
       simpa only [sameSeeds] using
         ih result.1 count (by simpa [creates] using bounded.2 result.1) result.2

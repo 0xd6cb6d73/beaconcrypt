@@ -96,7 +96,7 @@ theorem selected_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
           (((simulateQ (PqxdhDynamicKemJointSource.normal setup.baseImpl setup.joint setup.kem selected.val pairs)
             (program setup codec checks identityIndex publicIdentity client owners state)).run).run
               (joint, PqxdhDynamicKemRouter.empty))] := by
-  exact PqxdhDynamicKemJointSource.selected_source setup.baseImpl setup.joint setup.kem
+  exact PqxdhDynamicKemJointSource.selected_source_vcvioLegacy setup.baseImpl setup.joint setup.kem
     (program setup codec checks identityIndex publicIdentity client owners state) count selected
     ((creations setup codec checks identityIndex publicIdentity client budget certified owners state).mono room) joint
 

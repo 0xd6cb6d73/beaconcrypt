@@ -110,12 +110,12 @@ theorem ctxIndependent_badProbability_eq_prefixBad
       (OracleComp.ProgramLogic.Relational.probEvent_output_bad_eq'
         (ctxSplitRoutedWithPrefixFlagImpl c key)
         (ctxIndependentWithPrefixFlagImpl c key)
-        (ctxSplitRouted_independent_agree_good c key)
+        (ctxSplitRouted_independent_agree_good_vcvioLegacy c key)
         (ctxSplitRoutedWithPrefixFlagImpl_bad_mono c key)
         (ctxIndependentWithPrefixFlagImpl_bad_mono c key)
         adversary.main emptyCtxIndependentTagState).symm
     _ = ctxPrefixBadProbability c key adversary :=
-      ctxSplitRouted_badProbability_eq_prefixBad c key adversary
+      ctxSplitRouted_badProbability_eq_prefixBad_vcvioLegacy c key adversary
 
 theorem ctxIndependentPublicOracle_publicInputs
     (query : CtxRO.Domain) (state : CtxIndependentTagState)
@@ -653,8 +653,9 @@ theorem ctxSecretPrefixQueriedProbability_eq_directSampleProbe
   intro key
   congr 1
   rw [ctxDirectSamplePrefixProbeExpInner_probability]
-  exact ctxSecretPrefixQueriedProbabilityInner_eq_directSamplePublicPrefix
-    c key adversary.toCtxAdversary
+  simpa only [ctxSecretPrefixQueriedProbabilityInner, VCVioLegacy.probEvent_eq_prEvent] using
+    ctxSecretPrefixQueriedProbabilityInner_eq_directSamplePublicPrefix
+      c key adversary.toCtxAdversary
 
 /-- The complete real probe reduction equals the direct experiment, including key sampling. -/
 theorem modifiedNonceAeadINDDollarRealProbeExp_reduction_eq_directSample

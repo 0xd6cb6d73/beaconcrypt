@@ -84,7 +84,7 @@ theorem random_comparison {Context : Type} (sample : Sampler Context) (observe :
   simp only [independentFullGame, joint, bind_map_left, random]
   refine evalSPMF_bind_congr' (m := ProbComp) (sample : ProbComp (Context × RootOutput)) (fun pair => ?_)
   have projected := congrArg (fun distribution : SPMF HmacBlock => distribution >>=
-    fun output => evalSPMF (observe pair.1 (pair64 output))) initialPrefix_uniform
+    fun output => evalSPMF (observe pair.1 (pair64 output))) initialPrefix_uniform_vcvioLegacy
   simpa only [← evalSPMF_bind, bind_map_left, observer] using projected
 
 /-- The actual paired64 initializer reduces with coefficient one to fixed-salt Extract on this exact root/context sampler and ordinary HMAC PRF. -/

@@ -115,7 +115,7 @@ def game (primitives : Primitives)
 
 noncomputable def advantage (primitives : Primitives)
     (adversary : PublicIdentity → OracleComp AdversarySpec Forgery) : ℝ≥0∞ :=
-  Pr[= true | game primitives adversary]
+  Pr{let x ← game primitives adversary}[x = true]
 
 /-- Equivalent valid encodings have the same optional DH reply while both exact raw requests remain recorded. -/
 theorem equivalent_peer_reply (primitives : Primitives) (aliases : PeerEquivalence primitives)

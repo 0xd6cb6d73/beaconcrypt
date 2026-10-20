@@ -241,7 +241,7 @@ theorem ctxPrivacySplitRouted_badProbability_eq_secretPrefix
   unfold ctxPrivacySplitRoutedFlaggedExpInner
     ctxPrivacySecretPrefixProbabilityInner
     ctxPrivacyRealFlaggedExpInner
-  exact ctxSplitRouted_badProbability_eq_real_of_main
+  exact ctxSplitRouted_badProbability_eq_real_of_main_vcvioLegacy
     c key adversary.main
 
 /-- Routed and key-free Boolean executions differ only on the single public-prefix event. -/
@@ -267,7 +267,7 @@ theorem tvDist_ctxPrivacySplitRouted_independentTag_le_secretPrefix
           ctxPrivacySplitRoutedFlaggedExpInner c key adversary].toReal := by
       unfold ctxPrivacySplitRoutedFlaggedExpInner
         ctxPrivacyIndependentTagFlaggedExpInner
-      exact tvDist_ctxSplitRouted_independentTag_le_prefixBad_of_main
+      exact tvDist_ctxSplitRouted_independentTag_le_prefixBad_of_main_vcvioLegacy
         c key adversary.main
     _ = (ctxPrivacySecretPrefixProbabilityInner
           c key adversary).toReal := by
@@ -669,7 +669,7 @@ theorem ctxPrivacyIndependent_badProbability_eq_secretPrefix
       (OracleComp.ProgramLogic.Relational.probEvent_output_bad_eq'
         (ctxSplitRoutedWithPrefixFlagImpl c key)
         (ctxIndependentWithPrefixFlagImpl c key)
-        (ctxSplitRouted_independent_agree_good c key)
+        (ctxSplitRouted_independent_agree_good_vcvioLegacy c key)
         (ctxSplitRoutedWithPrefixFlagImpl_bad_mono c key)
         (ctxIndependentWithPrefixFlagImpl_bad_mono c key)
         adversary.main emptyCtxIndependentTagState).symm

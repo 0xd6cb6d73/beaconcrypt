@@ -1,4 +1,5 @@
 import BeaconcryptCore.Computational.PqxdhJointIdentity
+import BeaconcryptCore.Computational.VCVioForwardOracleComp
 
 /-!
 # Bounded family of correlated identity services
@@ -24,11 +25,11 @@ def sampleFamily : (count : ℕ) → ProbComp (Fin count → IdentitySeed)
 /-- Moving a chosen identity's independent seed draw preserves every complete evaluated continuation. -/
 theorem sampleFamily_target_first {Result : Type} (count : ℕ) (target : Fin (count + 1))
     (next : (Fin (count + 1) → IdentitySeed) → ProbComp Result) :
-    𝒮[sampleFamily (count + 1) >>= next] =
-    𝒮[do
-      let seed ← sampleSeed
-      let rest ← sampleFamily count
-      next (target.insertNth seed rest)] := by
+    EvalDistEq (sampleFamily (count + 1) >>= next)
+      (do
+        let seed ← sampleSeed
+        let rest ← sampleFamily count
+        next (target.insertNth seed rest)) := by
   induction count with
   | zero =>
       have targetZero : target = 0 := by apply Fin.ext; omega
@@ -38,23 +39,33 @@ theorem sampleFamily_target_first {Result : Type} (count : ℕ) (target : Fin (c
       induction target using Fin.cases with
       | zero => simp [sampleFamily, Fin.insertNth_zero']
       | succ target =>
-          calc
-            _ = 𝒮[do
+          have step : EvalDistEq (sampleFamily (count + 1 + 1) >>= next)
+              (do
+                let first ← sampleSeed
+                let chosen ← sampleSeed
+                let rest ← sampleFamily count
+                next (Fin.cons first (target.insertNth chosen rest))) := by
+            change EvalDistEq ((do
               let first ← sampleSeed
-              let chosen ← sampleSeed
+              let rest ← sampleFamily (count + 1)
+              pure (Fin.cons first rest)) >>= next) _
+            simp only [bind_assoc, pure_bind]
+            refine EvalDistEq.bind_right _ fun first => ?_
+            exact ih target (fun rest => next (Fin.cons first rest))
+          refine step.trans ((PqxdhSecretInputKdf.evalSPMF_sample_comm sampleSeed sampleSeed
+            (fun first chosen => do
               let rest ← sampleFamily count
-              next (Fin.cons first (target.insertNth chosen rest))] := by
-                change 𝒮[(do
-                  let first ← sampleSeed
-                  let rest ← sampleFamily (count + 1)
-                  pure (Fin.cons first rest)) >>= next] = _
-                simp only [bind_assoc, pure_bind]
-                apply evalSPMF_bind_congr'
-                intro first
-                exact ih target (fun rest => next (Fin.cons first rest))
-            _ = _ := by
-              rw [PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy sampleSeed sampleSeed]
-              simp [sampleFamily, Fin.insertNth_succ_cons, bind_assoc]
+              next (Fin.cons first (target.insertNth chosen rest)))).trans ?_)
+          simp [sampleFamily, Fin.insertNth_succ_cons, bind_assoc]
+
+set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.PqxdhJointIdentityFamily.sampleFamily_target_first_vcvioLegacy :
+    ∀ {Result : Type} (count : ℕ) (target : Fin (count + 1)) (next : (Fin (count + 1) → BeaconcryptCore.Computational.PqxdhJointIdentity.IdentitySeed) → ProbComp Result),
+      𝒮[BeaconcryptCore.Computational.PqxdhJointIdentityFamily.sampleFamily (count + 1) >>= next] =
+        𝒮[do
+          let seed ← BeaconcryptCore.Computational.PqxdhJointIdentity.sampleSeed
+          let rest ← BeaconcryptCore.Computational.PqxdhJointIdentityFamily.sampleFamily count
+          next (target.insertNth seed rest)] :=
+  by simpa only [BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq] using @BeaconcryptCore.Computational.PqxdhJointIdentityFamily.sampleFamily_target_first
 
 /-- Exact family generation cost, including every byte of each independent identity seed. -/
 theorem sampleFamily_uniform_bound (count : ℕ) :
@@ -236,17 +247,15 @@ def familyTest (primitives : Primitives) {count : ℕ}
 theorem targetGame_eq_reduction (primitives : Primitives) {count : ℕ} (target : Fin (count + 1))
     (adversary : (Fin (count + 1) → PublicIdentity) →
       OracleComp (FamilyAdversarySpec (count + 1)) (FamilyForgery (count + 1))) :
-    𝒮[targetTest primitives target <$> familyRun primitives (count + 1) adversary] =
-      𝒮[game primitives (reduction primitives target adversary)] := by
+    EvalDistEq (targetTest primitives target <$> familyRun primitives (count + 1) adversary)
+      (game primitives (reduction primitives target adversary)) := by
   simp only [familyRun, map_bind, map_pure]
-  rw [sampleFamily_target_first count target]
+  refine (sampleFamily_target_first count target _).trans ?_
   simp only [game, run, reduction, simulateQ_bind, StateT.run_bind, simulateQ_pure,
     StateT.run_pure, simulate_joint_uniform,
     bind_map_left, pure_bind, bind_assoc]
-  apply evalSPMF_bind_congr'
-  intro seed
-  apply evalSPMF_bind_congr'
-  intro others
+  refine EvalDistEq.bind_right _ fun seed => ?_
+  refine EvalDistEq.bind_right _ fun others => ?_
   rw [familyPublic_insertNth]
   rw [← combineHistory_empty target, ← targetRouting_complete]
   simp [targetTest, combineHistory]
@@ -255,22 +264,24 @@ theorem targetGame_eq_reduction (primitives : Primitives) {count : ℕ} (target 
 theorem family_advantage_le_sum (primitives : Primitives) (count : ℕ)
     (adversary : (Fin (count + 1) → PublicIdentity) →
       OracleComp (FamilyAdversarySpec (count + 1)) (FamilyForgery (count + 1))) :
-    Pr[fun result => familyTest primitives result = true | familyRun primitives (count + 1) adversary] ≤
+    Pr{let result ← familyRun primitives (count + 1) adversary}[familyTest primitives result = true] ≤
       ∑ target : Fin (count + 1), advantage primitives (reduction primitives target adversary) := by
   classical
   calc
-    _ ≤ Pr[fun result => ∃ target ∈ (Finset.univ : Finset (Fin (count + 1))),
-        targetTest primitives target result = true | familyRun primitives (count + 1) adversary] :=
-      probEvent_mono (fun result _ accepted =>
+    _ ≤ Pr{let result ← familyRun primitives (count + 1) adversary}[
+        ∃ target ∈ (Finset.univ : Finset (Fin (count + 1))),
+          targetTest primitives target result = true] :=
+      prEvent_mono _ _ _ (fun result accepted =>
         ⟨result.2.1.identity, Finset.mem_univ _, accepted⟩)
-    _ ≤ ∑ target : Fin (count + 1), Pr[fun result => targetTest primitives target result = true |
-        familyRun primitives (count + 1) adversary] :=
-      probEvent_exists_finset_le_sum Finset.univ _ _
+    _ ≤ ∑ target : Fin (count + 1), Pr{let result ← familyRun primitives (count + 1) adversary}[
+        targetTest primitives target result = true] :=
+      prEvent_exists_finset_le Finset.univ _ _
     _ = _ := by
       apply Finset.sum_congr rfl
       intro target _
-      have same := evalSPMF_ext_iff.mp (targetGame_eq_reduction primitives target adversary) true
-      simpa [advantage, probOutput_map] using same
+      have same := (targetGame_eq_reduction primitives target adversary).prEvent_eq (· = true)
+      rw [prEvent_map] at same
+      exact same
 
 /-- A uniform per-reduction assumption incurs exactly the number of generated identities. -/
 theorem family_advantage_le_count (primitives : Primitives) (count : ℕ)
@@ -278,7 +289,7 @@ theorem family_advantage_le_count (primitives : Primitives) (count : ℕ)
       OracleComp (FamilyAdversarySpec (count + 1)) (FamilyForgery (count + 1)))
     (epsilon : ℝ≥0∞)
     (bounded : ∀ target, advantage primitives (reduction primitives target adversary) ≤ epsilon) :
-    Pr[fun result => familyTest primitives result = true | familyRun primitives (count + 1) adversary] ≤
+    Pr{let result ← familyRun primitives (count + 1) adversary}[familyTest primitives result = true] ≤
       (count + 1 : ℕ) * epsilon := by
   exact (family_advantage_le_sum primitives count adversary).trans
     ((Finset.sum_le_sum fun target _ => bounded target).trans_eq (by simp))

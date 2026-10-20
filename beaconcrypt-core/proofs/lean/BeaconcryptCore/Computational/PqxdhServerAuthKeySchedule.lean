@@ -287,7 +287,7 @@ theorem stepExpand_real (hmac : HmacSha512) (distinguisher : Distinguisher) :
 theorem stepExpand_random (distinguisher : Distinguisher) :
     𝒟[hmacPrfRandomGame (stepExpandReduction distinguisher)] = 𝒟[uniformGame distinguisher] := by
   apply evalDist_eq_of_evalSPMF_eq
-  rw [stepExpandReduction, fullHmacRandom_eq_independent]
+  rw [stepExpandReduction, fullHmacRandom_eq_independent_vcvioLegacy]
   have joint : (do
       let output ← $ᵗ FullOutput
       let other ← $ᵗ RootOutput

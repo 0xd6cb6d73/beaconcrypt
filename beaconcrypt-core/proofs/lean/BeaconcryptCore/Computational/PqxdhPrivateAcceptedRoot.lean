@@ -415,7 +415,8 @@ theorem nativeTarget_eq_total
   simp only [nativeTargetContinuation, totalTargetContinuation, evalKem_bind, evalKem_ambient]
   apply evalSPMF_bind_congr'
   intro ephemeral
-  rw [evalSPMF_bind, compatible _ supported, ← evalSPMF_bind]
+  rw [evalSPMF_bind, (VCVioLegacy.evalSPMF_eq_iff_evalDistEq _ _).2 (compatible _ supported),
+    ← evalSPMF_bind]
   simp only [bind_map_left]
 
 /-- Only the internally recognized unchanged target uses the ordinary total KEM presentation. Arbitrary selected public keys still use the optional source operation. -/

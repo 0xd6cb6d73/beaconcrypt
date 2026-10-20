@@ -171,7 +171,7 @@ theorem serverGapDhAdvantage_eq (c : Pqxdh.Crypto) (joint : Primitives)
     (adversary : PublicChallenge → OracleComp PqxdhJointGapDh.AdversarySpec (Option DhOutput)) :
     serverGapDhAdvantage c joint secretOfSeed wiring adversary =
       Pr[= true | PqxdhJointGapDh.game joint (sourceInterface c joint secretOfSeed wiring) adversary] :=
-  rfl
+  (VCVioLegacy.probOutput_eq_prEvent _ _).symm
 
 set_option linter.deprecated false in
 /-- The success probability of a candidate client on the byte-model interface equals the Gap-DH term of its executable scanning extractor, with no guessing factor. -/
@@ -180,7 +180,7 @@ theorem candidate_eq_serverGapDh {count : Nat} (c : Pqxdh.Crypto) (joint : Primi
     (client : PublicChallenge → OracleComp PqxdhJointGapDh.AdversarySpec (List.Vector DhOutput count)) :
     Pr[= true | candidateGame joint (sourceInterface c joint secretOfSeed wiring) client] =
       serverGapDhAdvantage c joint secretOfSeed wiring (extractor client) :=
-  candidate_success_eq_advantage joint (sourceInterface c joint secretOfSeed wiring) client
+  candidate_success_eq_advantage_vcvioLegacy joint (sourceInterface c joint secretOfSeed wiring) client
 
 end BeaconcryptCore.Computational.PqxdhServerAuthAssumptions
 

@@ -125,47 +125,60 @@ theorem occurred_probability_le_stopped (primitives : Primitives) {count : ℕ}
     (seeds : Fin count → IdentitySeed) {Result : Type}
     (client : OracleComp (ReportingSpec count) Result) (state : GlobalState count)
     (reported : List (FamilyForgery count)) :
-    Pr[fun result => result.2.occurred = true |
-      (simulateQ (reportingImpl primitives seeds) client).run ⟨state, false, reported⟩] ≤
-    Pr[StoppedReportEvent primitives (familyPublic primitives seeds) |
-      (simulateQ (sourceImpl primitives seeds)
-        (stopAtFreshReport primitives (familyPublic primitives seeds) client state)).run state] := by
+    Pr{let result ← (simulateQ (reportingImpl primitives seeds) client).run ⟨state, false, reported⟩}[
+      result.2.occurred = true] ≤
+    Pr{let result ← (simulateQ (sourceImpl primitives seeds)
+        (stopAtFreshReport primitives (familyPublic primitives seeds) client state)).run state}[
+      StoppedReportEvent primitives (familyPublic primitives seeds) result] := by
   classical
   induction client using OracleComp.inductionOn generalizing state reported with
-  | pure value => simp [StoppedReportEvent]
+  | pure value =>
+      rw [simulateQ_pure, StateT.run_pure, prEvent_pure, ite_eq_right (by simp)]
+      exact zero_le
   | query_bind query rest ih =>
     cases query with
     | inl request =>
       rw [stopAtFreshReport_service]
       simp only [simulateQ_query_bind, StateT.run_bind]
-      change Pr[fun result => result.2.occurred = true |
-        (((sourceImpl primitives seeds request).run state >>= fun result =>
-          pure (result.1, ReportingState.mk result.2 false reported)) >>= fun result =>
-            (simulateQ (reportingImpl primitives seeds) (rest result.1)).run result.2 : ProbComp _)] ≤
-        Pr[StoppedReportEvent primitives (familyPublic primitives seeds) |
+      change Pr{let result ←
+          (((sourceImpl primitives seeds request).run state >>= fun result =>
+            pure (result.1, ReportingState.mk result.2 false reported)) >>= fun result =>
+              (simulateQ (reportingImpl primitives seeds) (rest result.1)).run result.2 : ProbComp _)}[
+          result.2.occurred = true] ≤
+        Pr{let result ←
           ((sourceImpl primitives seeds request).run state >>= fun result =>
             (simulateQ (sourceImpl primitives seeds)
               (stopAtFreshReport primitives (familyPublic primitives seeds) (rest result.1)
-                (publicUpdate request result.1 state))).run result.2 : ProbComp _)]
-      simp only [bind_assoc, pure_bind, probEvent_bind_eq_tsum_subtype]
-      apply ENNReal.tsum_le_tsum
-      intro result
-      apply mul_le_mul' le_rfl
-      have exactState := sourceImpl_publicUpdate primitives seeds request state result.val result.property
+                (publicUpdate request result.1 state))).run result.2 : ProbComp _)}[
+          StoppedReportEvent primitives (familyPublic primitives seeds) result]
+      have shape :
+          (((sourceImpl primitives seeds request).run state >>= fun result =>
+            pure (result.1, ReportingState.mk result.2 false reported)) >>= fun result =>
+              (simulateQ (reportingImpl primitives seeds) (rest result.1)).run result.2 : ProbComp _) =
+          ((sourceImpl primitives seeds request).run state >>= fun result =>
+            (simulateQ (reportingImpl primitives seeds) (rest result.1)).run
+              (ReportingState.mk result.2 false reported)) := by
+        simp only [bind_assoc, pure_bind]
+      rw [shape]
+      refine prEvent_bind_mono_of_forall_le_of_support _ _ _ _ _ fun result supported => ?_
+      have exactState := sourceImpl_publicUpdate primitives seeds request state result supported
       rw [← exactState]
-      exact ih result.val.1 result.val.2 reported
+      exact ih result.1 result.2 reported
     | inr candidate =>
       rw [stopAtFreshReport_report]
       by_cases accepted : ReportEvent primitives (familyPublic primitives seeds) candidate state
-      · simp only [accepted, ite_eq_left, simulateQ_pure, StateT.run_pure, probEvent_pure,
-          StoppedReportEvent]
-        exact probEvent_le_one
+      · have stopped : StoppedReportEvent primitives (familyPublic primitives seeds)
+            (some candidate, state) := accepted
+        rw [ite_eq_left accepted, simulateQ_pure, StateT.run_pure, prEvent_pure, ite_eq_left stopped]
+        exact prEvent_le_one _
       · simp only [accepted, ite_false, simulateQ_query_bind, StateT.run_bind]
-        change Pr[fun result => result.2.occurred = true |
-          (pure ((), ReportingState.mk state (false || decide
-            (ReportEvent primitives (familyPublic primitives seeds) candidate state)) (reported ++ [candidate])) >>= fun result =>
-              (simulateQ (reportingImpl primitives seeds) (rest result.1)).run result.2 : ProbComp _)] ≤ _
-        simpa only [accepted, decide_false, Bool.or_self, pure_bind] using ih () state (reported ++ [candidate])
+        change Pr{let result ←
+            (pure ((), ReportingState.mk state (false || decide
+              (ReportEvent primitives (familyPublic primitives seeds) candidate state)) (reported ++ [candidate])) >>= fun result =>
+                (simulateQ (reportingImpl primitives seeds) (rest result.1)).run result.2 : ProbComp _)}[
+            result.2.occurred = true] ≤ _
+        rw [pure_bind]
+        simpa only [accepted, decide_false, Bool.or_self] using ih () state (reported ++ [candidate])
 
 /-- The executable source client returns the first recognized candidate unchanged; a fixed fallback on no report can only enlarge the final-event bound. -/
 def reportExtractor (primitives : Primitives) {count : ℕ} (fallback : FamilyForgery count)
@@ -187,18 +200,15 @@ def reportingRun (primitives : Primitives) (count : ℕ) {Result : Type}
 theorem reportingRun_le_extractor (primitives : Primitives) (count : ℕ)
     (fallback : FamilyForgery count) {Result : Type}
     (adversary : (Fin count → PublicIdentity) → OracleComp (ReportingSpec count) Result) :
-    Pr[fun result => result.2.occurred = true | reportingRun primitives count adversary] ≤
-      Pr[GlobalEvent primitives | globalRun primitives count (reportExtractor primitives fallback adversary)] := by
+    Pr{let result ← reportingRun primitives count adversary}[result.2.occurred = true] ≤
+      Pr{let result ← globalRun primitives count (reportExtractor primitives fallback adversary)}[
+        GlobalEvent primitives result] := by
   unfold reportingRun globalRun
-  rw [probEvent_bind_eq_tsum, probEvent_bind_eq_tsum]
-  apply ENNReal.tsum_le_tsum
-  intro seeds
-  apply mul_le_mul' le_rfl
+  refine prEvent_bind_mono_of_forall_le _ _ _ _ _ fun seeds => ?_
   apply (occurred_probability_le_stopped primitives seeds _ (initialState count) []).trans
-  simp only [reportExtractor, simulateQ_map, StateT.run_map, bind_pure_comp,
-    probEvent_map, Function.comp_def]
-  apply probEvent_mono
-  intro result _ accepted
+  simp only [reportExtractor, simulateQ_map, StateT.run_map, bind_map_left, bind_assoc, pure_bind]
+  apply prEvent_mono
+  intro result accepted
   dsimp only [StoppedReportEvent] at accepted
   cases candidate : result.1 with
   | none => simp [candidate] at accepted
@@ -210,7 +220,7 @@ theorem reportingRun_le_extractor (primitives : Primitives) (count : ℕ)
 theorem reporting_advantage_le_identity_sum (primitives : Primitives) (count : ℕ)
     (fallback : FamilyForgery (count + 1)) (ordinaryFallback : Forgery) {Result : Type}
     (adversary : (Fin (count + 1) → PublicIdentity) → OracleComp (ReportingSpec (count + 1)) Result) :
-    Pr[fun result => result.2.occurred = true | reportingRun primitives (count + 1) adversary] ≤
+    Pr{let result ← reportingRun primitives (count + 1) adversary}[result.2.occurred = true] ≤
       ∑ target : Fin (count + 1), advantage primitives
         (globalReduction primitives target ordinaryFallback (reportExtractor primitives fallback adversary)) := by
   exact (reportingRun_le_extractor primitives (count + 1) fallback adversary).trans
@@ -394,7 +404,7 @@ theorem reporting_advantage_le_identity_count (primitives : Primitives) (count :
     (epsilon : ℝ≥0∞)
     (bounded : ∀ target, advantage primitives
       (globalReduction primitives target ordinaryFallback (reportExtractor primitives fallback adversary)) ≤ epsilon) :
-    Pr[fun result => result.2.occurred = true | reportingRun primitives (count + 1) adversary] ≤
+    Pr{let result ← reportingRun primitives (count + 1) adversary}[result.2.occurred = true] ≤
       (count + 1 : ℕ) * epsilon := by
   exact (reporting_advantage_le_identity_sum primitives count fallback ordinaryFallback adversary).trans
     ((Finset.sum_le_sum fun target _ => bounded target).trans_eq (by simp))

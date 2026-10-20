@@ -905,7 +905,7 @@ theorem keyPairError_average (setup : Setup baseSpec KemSK)
     ∑' keys, Pr[= keys | keygenRun setup] * keyPairError setup functional keys =
       Pr[= true | simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl)
         (PqxdhKemCorrectnessError.errorExperiment setup.kem)] := by
-  rw [PqxdhKemCorrectnessError.error_probability setup.baseImpl setup.kem functional]
+  rw [PqxdhKemCorrectnessError.error_probability_vcvioLegacy setup.baseImpl setup.kem functional]
   simp only [PqxdhKemCorrectnessError.sample, simulateQ_bind, simulateQ_pure]
   rw [probEvent_bind_eq_tsum]
   refine tsum_congr fun keys => ?_

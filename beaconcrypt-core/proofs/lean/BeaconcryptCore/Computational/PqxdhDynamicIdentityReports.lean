@@ -201,45 +201,59 @@ def StoppedEvent (primitives : Primitives) {count : ℕ}
 theorem occurred_probability_le_stopped (primitives : Primitives) (count : ℕ) {Result : Type}
     (client : OracleComp ReportingSpec Result)
     (source : GlobalState count × PqxdhDynamicIdentityPool.SourceState) (reported : List ReportObservation) :
-    Pr[(fun result => result.2.occurred = true) |
-      (simulateQ (reportingImpl primitives count) client).run
-        ⟨source, sourceSnapshot primitives source, false, reported⟩] ≤
-      Pr[StoppedEvent primitives |
-        (simulateQ (PqxdhDynamicIdentityRouting.sourceWithHistory count (PqxdhDynamicIdentityPool.lazyImpl primitives))
-          (stopAtFreshReport primitives count client (sourceSnapshot primitives source))).run source] := by
+    Pr{let result ← (simulateQ (reportingImpl primitives count) client).run
+        ⟨source, sourceSnapshot primitives source, false, reported⟩}[result.2.occurred = true] ≤
+      Pr{let result ← (simulateQ
+          (PqxdhDynamicIdentityRouting.sourceWithHistory count (PqxdhDynamicIdentityPool.lazyImpl primitives))
+          (stopAtFreshReport primitives count client (sourceSnapshot primitives source))).run source}[
+        StoppedEvent primitives result] := by
   classical
   induction client using OracleComp.inductionOn generalizing source reported with
-  | pure value => simp [StoppedEvent]
+  | pure value =>
+      rw [simulateQ_pure, StateT.run_pure, prEvent_pure, ite_eq_right (by simp)]
+      exact zero_le
   | query_bind query next ih =>
     cases query with
     | inl request =>
       rw [stop_service]
       simp only [simulateQ_query_bind, StateT.run_bind]
-      change Pr[(fun result => result.2.occurred = true) |
-        ((PqxdhDynamicIdentityRouting.sourceWithHistory count (PqxdhDynamicIdentityPool.lazyImpl primitives) request).run source
-          >>= fun reply => pure (reply.1,
-            ReportingState.mk reply.2 (observe request reply.1 (sourceSnapshot primitives source)) false reported)) >>=
-          fun reply => (simulateQ (reportingImpl primitives count) (next reply.1)).run reply.2] ≤
-        Pr[StoppedEvent primitives |
-          (PqxdhDynamicIdentityRouting.sourceWithHistory count (PqxdhDynamicIdentityPool.lazyImpl primitives) request).run source
-            >>= fun reply => (simulateQ
+      change Pr{let result ←
+          (((PqxdhDynamicIdentityRouting.sourceWithHistory count (PqxdhDynamicIdentityPool.lazyImpl primitives)
+            request).run source >>= fun reply => pure (reply.1,
+              ReportingState.mk reply.2 (observe request reply.1 (sourceSnapshot primitives source)) false
+                reported)) >>=
+            fun reply => (simulateQ (reportingImpl primitives count) (next reply.1)).run reply.2)}[
+          result.2.occurred = true] ≤
+        Pr{let result ←
+          ((PqxdhDynamicIdentityRouting.sourceWithHistory count (PqxdhDynamicIdentityPool.lazyImpl primitives)
+            request).run source >>= fun reply => (simulateQ
               (PqxdhDynamicIdentityRouting.sourceWithHistory count (PqxdhDynamicIdentityPool.lazyImpl primitives))
               (stopAtFreshReport primitives count (next reply.1)
-                (observe request reply.1 (sourceSnapshot primitives source)))).run reply.2]
-      simp only [bind_assoc, pure_bind, probEvent_bind_eq_tsum_subtype]
-      apply ENNReal.tsum_le_tsum
-      intro reply
-      apply mul_le_mul' le_rfl
-      have actual := source_snapshot_step primitives count request source reply.val reply.property
+                (observe request reply.1 (sourceSnapshot primitives source)))).run reply.2)}[
+          StoppedEvent primitives result]
+      have shape :
+          (((PqxdhDynamicIdentityRouting.sourceWithHistory count (PqxdhDynamicIdentityPool.lazyImpl primitives)
+            request).run source >>= fun reply => pure (reply.1,
+              ReportingState.mk reply.2 (observe request reply.1 (sourceSnapshot primitives source)) false
+                reported)) >>=
+            fun reply => (simulateQ (reportingImpl primitives count) (next reply.1)).run reply.2) =
+          ((PqxdhDynamicIdentityRouting.sourceWithHistory count (PqxdhDynamicIdentityPool.lazyImpl primitives)
+            request).run source >>= fun reply => (simulateQ (reportingImpl primitives count) (next reply.1)).run
+              (ReportingState.mk reply.2 (observe request reply.1 (sourceSnapshot primitives source)) false
+                reported)) := by
+        simp only [bind_assoc, pure_bind]
+      rw [shape]
+      refine prEvent_bind_mono_of_forall_le_of_support _ _ _ _ _ fun reply supported => ?_
+      have actual := source_snapshot_step primitives count request source reply supported
       rw [← actual]
-      exact ih reply.val.1 reply.val.2 reported
+      exact ih reply.1 reply.2 reported
     | inr candidate =>
       rw [stop_report]
       by_cases accepted : reportAccepted primitives candidate (sourceSnapshot primitives source) = true
       · have event := (reportAccepted_iff_source primitives candidate source).mp accepted
-        simp only [accepted, ite_eq_left, simulateQ_pure, StateT.run_pure, StoppedEvent,
-          probEvent_pure, event]
-        exact probEvent_le_one
+        rw [ite_eq_left accepted, simulateQ_pure, StateT.run_pure, prEvent_pure,
+          ite_eq_left (show StoppedEvent primitives (some candidate, source) from event)]
+        exact prEvent_le_one _
       · have rejected : reportAccepted primitives candidate (sourceSnapshot primitives source) = false :=
           Bool.eq_false_iff.mpr accepted
         rw [ite_eq_right accepted]
@@ -271,16 +285,17 @@ def reportExtractor (primitives : Primitives) (count : ℕ) {Result : Type}
 /-- Earlier source report-time freshness is reduced to final freshness of the stopped source, without imposing final freshness on the original continued execution. -/
 theorem reportingRun_le_extractor (primitives : Primitives) (count : ℕ) {Result : Type}
     (fallback : DynamicForgery) (client : OracleComp ReportingSpec Result) :
-    Pr[(fun result => result.2.occurred = true) | reportingRun primitives count client] ≤
-      Pr[PqxdhDynamicIdentityRouting.DynamicEvent primitives |
-        PqxdhDynamicIdentityRouting.dynamicRun primitives count (reportExtractor primitives count fallback client)] := by
+    Pr{let result ← reportingRun primitives count client}[result.2.occurred = true] ≤
+      Pr{let result ← PqxdhDynamicIdentityRouting.dynamicRun primitives count
+          (reportExtractor primitives count fallback client)}[
+        PqxdhDynamicIdentityRouting.DynamicEvent primitives result] := by
   have captured := occurred_probability_le_stopped primitives count client (initialSource count) []
   rw [initial_snapshot] at captured
   apply captured.trans
-  simp only [PqxdhDynamicIdentityRouting.dynamicRun, reportExtractor, simulateQ_map, StateT.run_map,
-    probEvent_map, Function.comp_def]
-  apply probEvent_mono
-  intro result _ accepted
+  simp only [PqxdhDynamicIdentityRouting.dynamicRun, reportExtractor, simulateQ_map, StateT.run_map]
+  rw [prEvent_map]
+  apply prEvent_mono
+  intro result accepted
   cases candidate : result.1 with
   | none => simp [StoppedEvent, candidate] at accepted
   | some forgery =>
@@ -334,7 +349,7 @@ theorem extractor_query_bound (primitives : Primitives) (count : ℕ) {Result : 
 theorem reporting_advantage_le_identity_sum (primitives : Primitives) (count : ℕ) {Result : Type}
     (fallback : DynamicForgery) (ordinaryFallback : Forgery) (client : OracleComp ReportingSpec Result)
     (creates : client.IsQueryBoundP (reportingClass PqxdhDynamicIdentityPool.IsCreate) (count + 1)) :
-    Pr[(fun result => result.2.occurred = true) | reportingRun primitives (count + 1) client] ≤
+    Pr{let result ← reportingRun primitives (count + 1) client}[result.2.occurred = true] ≤
       ∑ target : Fin (count + 1), advantage primitives
         (globalReduction primitives target ordinaryFallback
           (PqxdhDynamicIdentityRouting.routedAdversary count ordinaryFallback
@@ -343,6 +358,10 @@ theorem reporting_advantage_le_identity_sum (primitives : Primitives) (count : �
     (PqxdhDynamicIdentityRouting.dynamic_advantage_le_sum primitives count ordinaryFallback _
       (extractor_query_bound primitives (count + 1) fallback client
         PqxdhDynamicIdentityPool.IsCreate (count + 1) creates))
+
+set_option linter.deprecated false in set_option linter.unusedVariables false in theorem _root_.BeaconcryptCore.Computational.PqxdhDynamicIdentityReports.reporting_advantage_le_identity_sum_vcvioLegacy :
+    ∀ (primitives : BeaconcryptCore.Computational.PqxdhJointIdentity.Primitives) (count : ℕ) {Result : Type} (fallback : BeaconcryptCore.Computational.PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : BeaconcryptCore.Computational.PqxdhJointIdentity.Forgery) (client : OracleComp BeaconcryptCore.Computational.PqxdhDynamicIdentityReports.ReportingSpec Result) (creates : client.IsQueryBoundP (BeaconcryptCore.Computational.PqxdhDynamicIdentityReports.reportingClass BeaconcryptCore.Computational.PqxdhDynamicIdentityPool.IsCreate) (count + 1)), (probEvent (BeaconcryptCore.Computational.PqxdhDynamicIdentityReports.reportingRun primitives (count + 1) client) fun (result : Result × BeaconcryptCore.Computational.PqxdhDynamicIdentityReports.ReportingState (count + 1)) => result.2.occurred = Bool.true) ≤ ∑ target : Fin (count + 1), BeaconcryptCore.Computational.PqxdhJointIdentity.advantage primitives (BeaconcryptCore.Computational.PqxdhJointIdentityFreshness.globalReduction primitives target ordinaryFallback (BeaconcryptCore.Computational.PqxdhDynamicIdentityRouting.routedAdversary count ordinaryFallback (BeaconcryptCore.Computational.PqxdhDynamicIdentityReports.reportExtractor primitives (count + 1) fallback client))) :=
+  by simpa only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent] using @BeaconcryptCore.Computational.PqxdhDynamicIdentityReports.reporting_advantage_le_identity_sum
 
 /-- Each constructed reduction keeps the original source primitive caps and generates only the other reserved seeds. Public report tests make no challenger query. -/
 theorem reportingReduction_query_bound (primitives : Primitives) (count : ℕ)
@@ -567,7 +586,7 @@ theorem reporting_advantage_le_identity_count (primitives : Primitives) (count :
       (globalReduction primitives target ordinaryFallback
         (PqxdhDynamicIdentityRouting.routedAdversary count ordinaryFallback
           (reportExtractor primitives (count + 1) fallback client))) ≤ epsilon) :
-    Pr[(fun result => result.2.occurred = true) | reportingRun primitives (count + 1) client] ≤
+    Pr{let result ← reportingRun primitives (count + 1) client}[result.2.occurred = true] ≤
       (count + 1 : ℕ) * epsilon := by
   exact (reporting_advantage_le_identity_sum primitives count fallback ordinaryFallback client creates).trans
     ((Finset.sum_le_sum fun target _ => bounded target).trans_eq (by simp))

@@ -58,8 +58,8 @@ theorem session_advantage_le_identity_sum (primitives : Primitives) (identities 
     (owner : Fin sessions → Fin (identities + 1))
     (adversary : (Fin (identities + 1) → PublicIdentity) →
       OracleComp (SessionSpec sessions) (SessionForgery sessions)) :
-    Pr[fun result => familyTest primitives result = true |
-      familyRun primitives (identities + 1) (familyClient owner adversary)] ≤
+    Pr{let result ← familyRun primitives (identities + 1) (familyClient owner adversary)}[
+      familyTest primitives result = true] ≤
     ∑ target : Fin (identities + 1), advantage primitives
       (reduction primitives target (familyClient owner adversary)) :=
   family_advantage_le_sum primitives identities (familyClient owner adversary)

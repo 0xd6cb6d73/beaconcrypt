@@ -1,4 +1,5 @@
 import BeaconcryptCore.Computational.PqxdhLiveKemBirth
+import BeaconcryptCore.Computational.VCVioForwardOracleComp
 
 /-!
 Bounded private KEM reservation is compared with the actual on-demand indexed service through the complete evaluated continuation. Future pairs stay private and uncreated, every source observation is retained, and every sampled pair uses the actual KEM generator. This permits a later selected-creation reduction to move generation only through a checked full-distribution equation. It does not discharge selected-secret freshness or expose an erased key through a production reveal API.
@@ -42,10 +43,8 @@ instance : DecidablePred (IsCreate (KemSK := KemSK)) := fun query => by
 
 /-- The ordinary actual pair sampler is lossless, so privately unused future draws integrate out of the entire continued distribution. -/
 theorem unused {Result : Type} (sampler : ProbComp (Pair KemSK)) (count : Nat) (work : ProbComp Result) :
-    𝒮[samplePairs sampler count >>= fun _ => work] = 𝒮[work] := by
-  apply evalSPMF_ext
-  intro result
-  simp only [probOutput_bind_const, probFailure_eq_zero, tsub_zero, one_mul]
+    EvalDistEq (samplePairs sampler count >>= fun _ => work) work :=
+  OracleComp.EvalDistEq.bind_const (samplePairs sampler count) work
 
 /-- Actual creation appends the generated pair and creation reply while retaining the entire joint service. -/
 theorem source_create (baseImpl : QueryImpl baseSpec ProbComp) (primitives : PqxdhJointIdentity.Primitives)
@@ -106,17 +105,17 @@ theorem complete (baseImpl : QueryImpl baseSpec ProbComp) (primitives : PqxdhJoi
     (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK)) {Result : Type}
     (client : OracleComp (Spec KemSK) Result) (count : Nat)
     (bounded : client.IsQueryBoundP (IsCreate (KemSK := KemSK)) count) (state : State KemSK) :
-    𝒮[(simulateQ (impl baseImpl primitives kem) client).run state] =
-      𝒮[samplePairs (simulateQ (kemAmbientImpl baseImpl) kem.keygen) count >>= fun future =>
-        (simulateQ (reserved baseImpl primitives kem (state.2.keys ++ future)) client).run state] := by
+    EvalDistEq ((simulateQ (impl baseImpl primitives kem) client).run state)
+      (samplePairs (simulateQ (kemAmbientImpl baseImpl) kem.keygen) count >>= fun future =>
+        (simulateQ (reserved baseImpl primitives kem (state.2.keys ++ future)) client).run state) := by
   induction client using OracleComp.inductionOn generalizing count state
   case query_bind query next ih =>
     rw [isQueryBoundP_query_bind_iff] at bounded
-    change 𝒮[(impl baseImpl primitives kem query).run state >>= fun result =>
-      (simulateQ (impl baseImpl primitives kem) (next result.1)).run result.2] =
-      𝒮[samplePairs (simulateQ (kemAmbientImpl baseImpl) kem.keygen) count >>= fun future =>
+    change EvalDistEq ((impl baseImpl primitives kem query).run state >>= fun result =>
+      (simulateQ (impl baseImpl primitives kem) (next result.1)).run result.2)
+      (samplePairs (simulateQ (kemAmbientImpl baseImpl) kem.keygen) count >>= fun future =>
         (reserved baseImpl primitives kem (state.2.keys ++ future) query).run state >>= fun result =>
-          (simulateQ (reserved baseImpl primitives kem (state.2.keys ++ future)) (next result.1)).run result.2]
+          (simulateQ (reserved baseImpl primitives kem (state.2.keys ++ future)) (next result.1)).run result.2)
     by_cases creates : IsCreate (KemSK := KemSK) query
     case pos =>
       have queryEq : query = .inr (.inr .create) := by
@@ -125,8 +124,7 @@ theorem complete (baseImpl : QueryImpl baseSpec ProbComp) (primitives : PqxdhJoi
       obtain ⟨count, rfl⟩ := Nat.exists_eq_succ_of_ne_zero (Nat.ne_of_gt (bounded.1.resolve_left (not_not.mpr creates)))
       rw [source_create, samplePairs]
       simp only [bind_assoc, bind_map_left, pure_bind]
-      apply evalSPMF_bind_congr
-      intro pair _
+      refine EvalDistEq.bind_right _ fun pair => ?_
       simp only [reserved_create, pure_bind]
       simpa only [created, record, List.append_assoc, List.singleton_append] using
         ih (created state.2 pair).1 count (by simpa [IsCreate] using bounded.2 (created state.2 pair).1)
@@ -135,10 +133,10 @@ theorem complete (baseImpl : QueryImpl baseSpec ProbComp) (primitives : PqxdhJoi
       have stepEq (future : List (Pair KemSK)) :=
         noncreate_equal baseImpl primitives kem (state.2.keys ++ future) query creates state
       simp_rw [← stepEq]
-      rw [PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy (samplePairs (simulateQ (kemAmbientImpl baseImpl) kem.keygen) count)
-        ((impl baseImpl primitives kem query).run state)]
-      apply evalSPMF_bind_congr
-      intro result actual
+      refine EvalDistEq.trans ?_ (PqxdhSecretInputKdf.evalSPMF_sample_comm
+        (samplePairs (simulateQ (kemAmbientImpl baseImpl) kem.keygen) count)
+        ((impl baseImpl primitives kem query).run state) _).symm
+      refine OracleComp.EvalDistEq.bind_congr_of_support _ fun result actual => ?_
       simpa only [noncreate_keys baseImpl primitives kem query creates state result actual] using
         ih result.1 count (by simpa [creates] using bounded.2 result.1) result.2
   case pure value =>

@@ -139,7 +139,7 @@ theorem origin_advantage_bound {Context : Type}
   rw [privateRun_eq, ← actualRun_erase, probEvent_map, probEvent_map]
   have detected := probEvent_mono (fun result supported event =>
     compiledCandidate_recorded attachedVerify primitives adapter (count + 1) before result supported event)
-  exact detected.trans (acceptance_advantage_le_sum attachedVerify primitives adapter count _ fallback ordinaryFallback
+  exact detected.trans (acceptance_advantage_le_sum_vcvioLegacy attachedVerify primitives adapter count _ fallback ordinaryFallback
     (compile_bound (candidateProgram before) _ (count + 1) creates []))
 
 end BeaconcryptCore.Computational.PqxdhPrivateCandidateAcceptance
