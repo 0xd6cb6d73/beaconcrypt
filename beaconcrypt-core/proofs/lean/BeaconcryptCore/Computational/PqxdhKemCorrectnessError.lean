@@ -87,7 +87,7 @@ theorem continuation_bound {Result : Type}
     · simpa [probEvent_pure, bad] using tvDist_le_one (left drawn) (right drawn)
     · rw [agree drawn bad]
       simp [probEvent_pure, bad]
-  simpa only [bind_pure] using PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind
+  simpa only [bind_pure] using PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind_vcvioLegacy
     (simulateQ (kemAmbientImpl baseImpl) (sample kem)) left right
     (fun drawn => (pure drawn : ProbComp (Sample KemSK))) (Bad kem functional) point
 

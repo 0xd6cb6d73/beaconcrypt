@@ -181,17 +181,17 @@ theorem real_error (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
       rw [bad]
       exact tvDist_le_one _ _
   unfold branch sourceReal
-  refine le_trans (PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind _ _ _
+  refine le_trans (PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind_vcvioLegacy _ _ _
     (fun pair => simulateQ (kemAmbientImpl setup.baseImpl)
       (PqxdhKemCorrectnessStopped.keyError setup.kem pair.1 pair.2))
     (fun result => result = true) ?_) (le_of_eq ?_)
   · intro chosen
-    refine le_trans (PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind _ _ _
+    refine le_trans (PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind_vcvioLegacy _ _ _
       (fun _ => simulateQ (kemAmbientImpl setup.baseImpl)
         (PqxdhKemCorrectnessStopped.keyError setup.kem chosen.1 chosen.2))
       (fun result => result = true) ?_) (le_of_eq ?_)
     · intro context
-      refine le_trans (PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind _ _ _
+      refine le_trans (PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind_vcvioLegacy _ _ _
         (fun pair => simulateQ (kemAmbientImpl setup.baseImpl) (do
           let recovered ← setup.kem.decaps chosen.2 pair.1
           pure (decide (recovered ≠ some pair.2))))

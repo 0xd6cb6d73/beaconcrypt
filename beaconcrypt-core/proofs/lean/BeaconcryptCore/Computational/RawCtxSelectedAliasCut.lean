@@ -85,7 +85,7 @@ theorem cut_distance {Prior Metadata Auxiliary Result : Type}
     Pr[fun result => result.1 ∈ RawCtxSelectedTraceOwner.candidates result.2 |
       RawCtxFreshChainCut.observedCut sample stop
         (RawCtxSelectedPublicTrace.randomObserver source writer sender decode client)].toReal := by
-  have averaged := PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind (sampleCut sample stop)
+  have averaged := PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind_vcvioLegacy (sampleCut sample stop)
     (left source writer sender decode client) (right source writer sender decode client)
     (left source writer sender decode client)
     (fun result => result.1 ∈ RawCtxSelectedTraceOwner.candidates result.2)

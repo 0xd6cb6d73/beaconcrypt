@@ -1,5 +1,6 @@
 import BeaconcryptCore.Computational.PqxdhCorrelatedExtractFamily
 import VCVio.ProgramLogic.Relational.SimulateQ.Epsilon
+import BeaconcryptCore.Computational.VCVioLegacyBridge
 
 /-!
 # Splitting a random-oracle table at a hidden uniform suffix (item 2, stage S1a, lemma G1)
@@ -22,6 +23,8 @@ Proof outline (route (a) of the plan):
 3. Pure observer: the split world does not use the secret; the flag is a function of the direct-read log (`flag_log`), and the logged split run `splitLog` is secret-free (`splitFlag_log`).
 4. Union bound: for a fixed prefix outcome and a fixed log, a uniform secret makes one of at most `(keys p).card + log.length` byte strings have the hidden shape with probability at most that number over `2^256` (`guess_finset_le`); the log has at most `residual p` entries (`splitLog_length`).
 5. The bound passes from total variation to the Boolean advantage.
+
+Probabilities are written in VCVio's forward vocabulary `Pr{let x ← mx}[p x]`, which replaces the deprecated `Pr[p | mx]` and `Pr[= a | mx]` of VCVio's retiring probability interface and has the same meaning, and equality in distribution as `EvalDistEq A B` (upstream `A =ᵈ B`). Total variation `tvDist` is defined at the pinned VCVio commit from the deprecated output distributions and has no forward counterpart there, and VCVio's identical-until-bad bound `tvDist_simulateQ_run_le_probEvent_output_bad` and the laws `tvDist_bind_left_le` and `abs_probOutput_toReal_sub_le_tvDist` are stated there only in the deprecated form; the proofs reach them through the transitional bridge `BeaconcryptCore.VCVioLegacy`, which is proved from the pin and is deleted at the VCVio upgrade.
 -/
 
 open OracleComp OracleSpec ENNReal
@@ -138,35 +141,32 @@ theorem secret_card : Fintype.card MlKemSharedSecret = 2 ^ 256 := by
   rw [byte]
   norm_num
 
-set_option linter.deprecated false in
 /-- A fixed byte string has the hidden shape for a uniform secret with probability at most `2^-256`. -/
 theorem guess_le (point : Pqxdh.Bytes) :
-    Pr[fun secret => (coordinate secret point).isSome | $ᵗ MlKemSharedSecret] ≤ (2 ^ 256 : ℝ≥0∞)⁻¹ := by
+    Pr{let secret ← $ᵗ MlKemSharedSecret}[(coordinate secret point).isSome] ≤ (2 ^ 256 : ℝ≥0∞)⁻¹ := by
   by_cases exists_secret : ∃ candidate : MlKemSharedSecret, (coordinate candidate point).isSome
   · obtain ⟨candidate, shaped⟩ := exists_secret
-    calc Pr[fun secret => (coordinate secret point).isSome | $ᵗ MlKemSharedSecret]
-        ≤ Pr[fun secret => secret = candidate | $ᵗ MlKemSharedSecret] := by
-          refine probEvent_mono fun secret _ hit => ?_
+    calc Pr{let secret ← $ᵗ MlKemSharedSecret}[(coordinate secret point).isSome]
+        ≤ Pr{let secret ← $ᵗ MlKemSharedSecret}[secret = candidate] := by
+          refine prEvent_mono _ _ _ fun secret hit => ?_
           apply List.Vector.toList_injective
           rw [secret_of_coordinate hit, secret_of_coordinate shaped]
       _ = (2 ^ 256 : ℝ≥0∞)⁻¹ := by
-          rw [probEvent_eq_eq_probOutput, probOutput_uniformSample, secret_card]
+          rw [SampleableType.prEvent_uniformSample_eq_singleton, secret_card]
           norm_num
   · push Not at exists_secret
-    calc Pr[fun secret => (coordinate secret point).isSome | $ᵗ MlKemSharedSecret] = 0 := by
-          rw [probEvent_eq_zero_iff]
-          intro secret _
+    calc Pr{let secret ← $ᵗ MlKemSharedSecret}[(coordinate secret point).isSome] = 0 := by
+          refine prEvent_eq_zero_of_forall_not _ _ fun secret => ?_
           simpa using exists_secret secret
       _ ≤ _ := zero_le
 
-set_option linter.deprecated false in
 /-- Union bound: some string of a finite set has the hidden shape for a uniform secret with probability at most its size over `2^256`. -/
 theorem guess_finset_le (points : Finset Pqxdh.Bytes) :
-    Pr[fun secret => ∃ point ∈ points, (coordinate secret point).isSome | $ᵗ MlKemSharedSecret] ≤
+    Pr{let secret ← $ᵗ MlKemSharedSecret}[∃ point ∈ points, (coordinate secret point).isSome] ≤
       points.card * (2 ^ 256 : ℝ≥0∞)⁻¹ := by
-  refine (probEvent_exists_finset_le_sum points ($ᵗ MlKemSharedSecret)
+  refine (prEvent_exists_finset_le points ($ᵗ MlKemSharedSecret)
     (fun point secret => (coordinate secret point).isSome)).trans ?_
-  calc ∑ point ∈ points, Pr[fun secret => (coordinate secret point).isSome | $ᵗ MlKemSharedSecret]
+  calc ∑ point ∈ points, Pr{let secret ← $ᵗ MlKemSharedSecret}[(coordinate secret point).isSome]
       ≤ ∑ _point ∈ points, (2 ^ 256 : ℝ≥0∞)⁻¹ := Finset.sum_le_sum fun point _ => guess_le point
     _ = points.card * (2 ^ 256 : ℝ≥0∞)⁻¹ := by simp [Finset.sum_const, nsmul_eq_mul]
 
@@ -395,18 +395,21 @@ theorem splitFlag_log {α : Type} (secret : MlKemSharedSecret) (oa : OracleComp 
 
 /-! ### Identical until bad -/
 
-set_option linter.deprecated false in
 theorem flag_agree (secret : MlKemSharedSecret) (query : HiddenSpec.Domain) (tables : Tables)
     (answer : HiddenSpec.Range query) (next : Tables) :
-    Pr[= (answer, (next, false)) | (splitFlag secret query).run (tables, false)] =
-      Pr[= (answer, (next, false)) | (sharedFlag secret query).run (tables, false)] := by
+    Pr{let x ← (splitFlag secret query).run (tables, false)}[x = (answer, (next, false))] =
+      Pr{let x ← (sharedFlag secret query).run (tables, false)}[x = (answer, (next, false))] := by
   rcases query with coin | message | point
   · rfl
   · rfl
   · cases shape : coordinate secret point with
-    | none => simp [splitFlag, sharedFlag, shape]
+    | none =>
+        have same : (splitFlag secret (.inr (.inr point))).run (tables, false) =
+            (sharedFlag secret (.inr (.inr point))).run (tables, false) := by
+          simp [splitFlag, sharedFlag, shape]
+        rw [same]
     | some message =>
-        rw [probOutput_eq_zero_of_not_mem_support, probOutput_eq_zero_of_not_mem_support]
+        rw [prEvent_eq_zero_of_not_mem_support, prEvent_eq_zero_of_not_mem_support]
         · simp [sharedFlag, shape]
         · simp [splitFlag, shape]
 
@@ -456,19 +459,20 @@ theorem sharedFlag_mono (secret : MlKemSharedSecret) (query : HiddenSpec.Domain)
         obtain ⟨_, _, _, rfl⟩ := member
         rfl
 
-set_option linter.deprecated false in
 /-- Identical until bad: the flagged worlds are within the flag probability of the split world. -/
 theorem flagged_tvDist {α : Type} (secret : MlKemSharedSecret) (oa : OracleComp HiddenSpec α)
     (tables : Tables) :
     tvDist ((simulateQ (sharedFlag secret) oa).run (tables, false))
         ((simulateQ (splitFlag secret) oa).run (tables, false)) ≤
-      Pr[fun result : α × Tables × Bool => result.2.2 = true |
-        (simulateQ (splitFlag secret) oa).run (tables, false)].toReal := by
+      Pr{let result ← (simulateQ (splitFlag secret) oa).run (tables, false)}[result.2.2 = true].toReal := by
   rw [tvDist_comm]
-  exact tvDist_simulateQ_run_le_probEvent_output_bad (splitFlag secret) (sharedFlag secret) oa tables
-    (fun query tables answer next => flag_agree secret query tables answer next)
+  have bound := tvDist_simulateQ_run_le_probEvent_output_bad (splitFlag secret) (sharedFlag secret) oa
+    tables
+    (fun query tables answer next => by
+      simpa only [VCVioLegacy.probOutput_eq_prEvent] using flag_agree secret query tables answer next)
     (fun query state flagged => splitFlag_mono secret query state flagged)
     (fun query state flagged => sharedFlag_mono secret query state flagged)
+  simpa only [VCVioLegacy.probEvent_eq_prEvent] using bound
 
 /-! ### The flag is a function of the direct-read log -/
 
@@ -575,29 +579,28 @@ theorem splitLog_length {α : Type} (oa : OracleComp HiddenSpec α) (bound : ℕ
 
 /-! ### Per-prefix bound -/
 
-set_option linter.deprecated false in
 /-- Total variation over a common first draw is bounded by the probability of an event of a joint computation whenever it is bounded pointwise by the event's probability. -/
 theorem tvDist_bind_le_probEvent {α β γ : Type} (mx : ProbComp α) (f g : α → ProbComp β)
     (h : α → ProbComp γ) (event : α → γ → Prop)
-    (bound : ∀ a ∈ support mx, tvDist (f a) (g a) ≤ (Pr[event a | h a]).toReal) :
+    (bound : ∀ a ∈ support mx, tvDist (f a) (g a) ≤ (Pr{let c ← h a}[event a c]).toReal) :
     tvDist (mx >>= f) (mx >>= g) ≤
-      (Pr[fun pair : α × γ => event pair.1 pair.2 | do let a ← mx; let c ← h a; pure (a, c)]).toReal := by
+      (Pr{let pair ← (do let a ← mx; let c ← h a; pure (a, c))}[event pair.1 pair.2]).toReal := by
   refine (tvDist_bind_left_le mx f g).trans ?_
-  have expand : Pr[fun pair : α × γ => event pair.1 pair.2 | do let a ← mx; let c ← h a; pure (a, c)] =
-      ∑' a, Pr[= a | mx] * Pr[event a | h a] := by
-    rw [probEvent_bind_eq_tsum]
+  simp only [VCVioLegacy.probOutput_eq_prEvent]
+  have expand : Pr{let pair ← (do let a ← mx; let c ← h a; pure (a, c))}[event pair.1 pair.2] =
+      ∑' a, Pr{let x ← mx}[x = a] * Pr{let c ← h a}[event a c] := by
+    rw [OracleComp.prEvent_bind_eq_tsum]
     refine tsum_congr fun a => ?_
     congr 1
     rw [show (do let c ← h a; pure (a, c) : ProbComp (α × γ)) = (fun c => (a, c)) <$> h a by
       simp [map_eq_bind_pure_comp]]
-    rw [probEvent_map]
-    rfl
-  have finite : ∑' a, Pr[= a | mx] * Pr[event a | h a] ≠ ⊤ := by
+    rw [prEvent_map]
+  have finite : ∑' a, Pr{let x ← mx}[x = a] * Pr{let c ← h a}[event a c] ≠ ⊤ := by
     rw [← expand]
-    exact probEvent_ne_top
-  rw [expand, ENNReal.tsum_toReal_eq (fun a => ENNReal.mul_ne_top probOutput_ne_top probEvent_ne_top)]
-  have weights : Summable (fun a => (Pr[= a | mx]).toReal) :=
-    ENNReal.summable_toReal (ne_top_of_le_ne_top one_ne_top tsum_probOutput_le_one)
+    exact prEvent_ne_top _
+  rw [expand, ENNReal.tsum_toReal_eq fun a => ENNReal.mul_ne_top (prEvent_ne_top _) (prEvent_ne_top _)]
+  have weights : Summable (fun a => (Pr{let x ← mx}[x = a]).toReal) :=
+    ENNReal.summable_toReal (ne_top_of_le_ne_top one_ne_top (OracleComp.tsum_prEvent_le_one _))
   refine Summable.tsum_le_tsum (fun a => ?_)
     (weights.of_nonneg_of_le (fun a => mul_nonneg ENNReal.toReal_nonneg (tvDist_nonneg _ _))
       (fun a => mul_le_of_le_one_right ENNReal.toReal_nonneg (tvDist_le_one _ _)))
@@ -605,25 +608,23 @@ theorem tvDist_bind_le_probEvent {α β γ : Type} (mx : ProbComp α) (f g : α 
   rw [ENNReal.toReal_mul]
   by_cases member : a ∈ support mx
   · exact mul_le_mul_of_nonneg_left (bound a member) ENNReal.toReal_nonneg
-  · simp [probOutput_eq_zero_of_not_mem_support member]
+  · rw [prEvent_eq_zero_of_not_mem_support _ member]
+    simp only [ENNReal.toReal_zero, zero_mul, le_refl]
 
 /-- The bad event for one prefix outcome: some prefix cache key or some logged direct read has the hidden shape. -/
 def Bad (keys : Finset Pqxdh.Bytes) (secret : MlKemSharedSecret) (tables : Tables) : Prop :=
   ∃ point ∈ keys ∪ tables.log.toFinset, (coordinate secret point).isSome
 
-set_option linter.deprecated false in
 /-- For one secret, the shared and split worlds are within the probability of the bad event in the secret-free logged split world. -/
 theorem secret_tvDist {α : Type} (secret : MlKemSharedSecret) (oa : OracleComp HiddenSpec α)
     (cache : HmacOracle.QueryCache) (keys : Finset Pqxdh.Bytes)
     (covers : ∀ point, cache point ≠ none → point ∈ keys) :
     tvDist ((simulateQ (sharedImpl secret) oa).run' cache) ((simulateQ splitImpl oa).run' (cache, ∅)) ≤
-      (Pr[fun result : α × Tables => Bad keys secret result.2 |
-        (simulateQ splitLog oa).run ⟨cache, ∅, []⟩]).toReal := by
+      (Pr{let result ← (simulateQ splitLog oa).run ⟨cache, ∅, []⟩}[Bad keys secret result.2]).toReal := by
   by_cases collision : ∃ point ∈ keys, (coordinate secret point).isSome
-  · have certain : Pr[fun result : α × Tables => Bad keys secret result.2 |
-        (simulateQ splitLog oa).run ⟨cache, ∅, []⟩] = 1 := by
-      rw [probEvent_eq_one_iff]
-      refine ⟨probFailure_eq_zero, fun result _ => ?_⟩
+  · have certain :
+        Pr{let result ← (simulateQ splitLog oa).run ⟨cache, ∅, []⟩}[Bad keys secret result.2] = 1 := by
+      refine OracleComp.prEvent_eq_one_of_forall_mem_support _ _ fun result _ => ?_
       obtain ⟨point, member, shaped⟩ := collision
       exact ⟨point, Finset.mem_union_left _ member, shaped⟩
     rw [certain, ENNReal.toReal_one]
@@ -635,23 +636,21 @@ theorem secret_tvDist {α : Type} (secret : MlKemSharedSecret) (oa : OracleComp 
       simpa [Option.isSome_iff_ne_none] using this
     rw [shared_project secret oa cache clean, split_project secret oa cache]
     refine (tvDist_map_le _ _ _).trans ((flagged_tvDist secret oa ⟨cache, ∅, []⟩).trans ?_)
-    refine ENNReal.toReal_mono probEvent_ne_top ?_
-    calc Pr[fun result : α × Tables × Bool => result.2.2 = true |
-          (simulateQ (splitFlag secret) oa).run (⟨cache, ∅, []⟩, false)]
-        = Pr[fun result : α × Tables × Bool => ∃ point ∈ result.2.1.log, (coordinate secret point).isSome |
-            (simulateQ (splitFlag secret) oa).run (⟨cache, ∅, []⟩, false)] :=
-          probEvent_ext fun result member => flag_log secret oa ⟨cache, ∅, []⟩ rfl result member
-      _ = Pr[fun result : α × Tables => ∃ point ∈ result.2.log, (coordinate secret point).isSome |
-            (simulateQ splitLog oa).run ⟨cache, ∅, []⟩] := by
-          rw [← splitFlag_log secret oa (⟨cache, ∅, []⟩, false), probEvent_map]
+    refine ENNReal.toReal_mono (prEvent_ne_top _) ?_
+    calc Pr{let result ← (simulateQ (splitFlag secret) oa).run (⟨cache, ∅, []⟩, false)}[result.2.2 = true]
+        = Pr{let result ← (simulateQ (splitFlag secret) oa).run (⟨cache, ∅, []⟩, false)}[
+            ∃ point ∈ result.2.1.log, (coordinate secret point).isSome] :=
+          prEvent_congr_of_support _ _ _ fun result member =>
+            flag_log secret oa ⟨cache, ∅, []⟩ rfl result member
+      _ = Pr{let result ← (simulateQ splitLog oa).run ⟨cache, ∅, []⟩}[
+            ∃ point ∈ result.2.log, (coordinate secret point).isSome] := by
+          rw [← splitFlag_log secret oa (⟨cache, ∅, []⟩, false), prEvent_map]
           rfl
-      _ ≤ Pr[fun result : α × Tables => Bad keys secret result.2 |
-            (simulateQ splitLog oa).run ⟨cache, ∅, []⟩] := by
-          refine probEvent_mono fun result _ hit => ?_
+      _ ≤ Pr{let result ← (simulateQ splitLog oa).run ⟨cache, ∅, []⟩}[Bad keys secret result.2] := by
+          refine prEvent_mono _ _ _ fun result hit => ?_
           obtain ⟨point, member, shaped⟩ := hit
           exact ⟨point, Finset.mem_union_right _ (List.mem_toFinset.mpr member), shaped⟩
 
-set_option linter.deprecated false in
 /-- The per-prefix bound: averaged over the secret, the shared and split worlds are within `(keys.card + residual) / 2^256`. -/
 theorem prefix_tvDist {α : Type} (oa : OracleComp HiddenSpec α) (cache : HmacOracle.QueryCache)
     (keys : Finset Pqxdh.Bytes) (residual : ℕ) (covers : ∀ point, cache point ≠ none → point ∈ keys)
@@ -662,21 +661,22 @@ theorem prefix_tvDist {α : Type} (oa : OracleComp HiddenSpec α) (cache : HmacO
   refine (tvDist_bind_le_probEvent ($ᵗ MlKemSharedSecret) _ _ (fun _ => (simulateQ splitLog oa).run ⟨cache, ∅, []⟩)
     (fun secret result => Bad keys secret result.2)
     (fun secret _ => secret_tvDist secret oa cache keys covers)).trans ?_
-  have swapped := probEvent_bind_bind_swap ($ᵗ MlKemSharedSecret) ((simulateQ splitLog oa).run ⟨cache, ∅, []⟩)
-    (fun secret result => (pure (secret, result) : ProbComp (MlKemSharedSecret × α × Tables)))
+  have swapped := (OracleComp.EvalDistEq.bind_bind_swap ($ᵗ MlKemSharedSecret)
+    ((simulateQ splitLog oa).run ⟨cache, ∅, []⟩)
+    (fun secret result => (pure (secret, result) : ProbComp (MlKemSharedSecret × α × Tables)))).prEvent_eq
     (fun pair => Bad keys pair.1 pair.2.2)
-  have bound : Pr[fun pair : MlKemSharedSecret × α × Tables => Bad keys pair.1 pair.2.2 |
-      ($ᵗ MlKemSharedSecret >>= fun secret => (simulateQ splitLog oa).run ⟨cache, ∅, []⟩ >>= fun result =>
-        pure (secret, result))] ≤ ((keys.card + residual : ℕ) : ℝ≥0∞) * (2 ^ 256 : ℝ≥0∞)⁻¹ := by
+  have bound : Pr{let pair ← ($ᵗ MlKemSharedSecret >>= fun secret =>
+      (simulateQ splitLog oa).run ⟨cache, ∅, []⟩ >>= fun result => pure (secret, result))}[
+        Bad keys pair.1 pair.2.2] ≤ ((keys.card + residual : ℕ) : ℝ≥0∞) * (2 ^ 256 : ℝ≥0∞)⁻¹ := by
     rw [swapped]
-    refine probEvent_bind_le_of_forall_le fun result member => ?_
+    refine prEvent_bind_le_of_forall_le_of_support _ _ _ fun result member => ?_
     have length := splitLog_length oa residual bounded ⟨cache, ∅, []⟩ result member
     simp only [List.length_nil, zero_add] at length
     have mapped : (($ᵗ MlKemSharedSecret >>= fun secret => pure (secret, result)) :
         ProbComp (MlKemSharedSecret × α × Tables)) =
         (fun secret => (secret, result)) <$> ($ᵗ MlKemSharedSecret) := by
       simp [map_eq_bind_pure_comp]
-    rw [mapped, probEvent_map]
+    rw [mapped, prEvent_map]
     refine (guess_finset_le (keys ∪ result.2.log.toFinset)).trans ?_
     gcongr
     exact (Finset.card_union_le _ _).trans
@@ -692,9 +692,9 @@ theorem prefix_tvDist {α : Type} (oa : OracleComp HiddenSpec α) (cache : HmacO
 theorem boolDistAdvantage_le_tvDist (left right : ProbComp Bool) :
     left.boolDistAdvantage right ≤ tvDist left right := by
   rw [ProbComp.boolDistAdvantage]
-  simpa only [evalDist_apply_singleton] using abs_probOutput_toReal_sub_le_tvDist left right
+  simpa only [VCVioLegacy.probOutput_eq_evalDist_singleton] using
+    abs_probOutput_toReal_sub_le_tvDist left right
 
-set_option linter.deprecated false in
 /-- G1: the shared and split worlds are distinguishable with advantage at most `Q / 2^256`, where `Q` bounds, for every prefix outcome, the prefix cache keys (covered by `keys`) plus the client's direct reads after the prefix (`residual`). -/
 theorem hidden_suffix_bound {C : Type} (start : ProbComp (HmacOracle.QueryCache × C))
     (client : C → OracleComp HiddenSpec Bool) (Q : ℕ)
@@ -706,13 +706,13 @@ theorem hidden_suffix_bound {C : Type} (start : ProbComp (HmacOracle.QueryCache 
   refine (boolDistAdvantage_le_tvDist _ _).trans ?_
   let paddedSplit : ProbComp Bool := start >>= fun p => $ᵗ MlKemSharedSecret >>= fun _secret =>
     (simulateQ splitImpl (client p.2)).run' (p.1, ∅)
-  have padded : 𝒮[splitGame start client] = 𝒮[paddedSplit] := by
+  have padded : EvalDistEq (splitGame start client) paddedSplit := by
     unfold splitGame
-    refine OracleComp.DeferredSampling.evalSPMF_bind_congr_left _ _ _ fun p => ?_
-    exact (OracleComp.DeferredSampling.evalSPMF_bind_const_neverFails _ probFailure_eq_zero _).symm
+    refine EvalDistEq.bind_right _ fun p => ?_
+    exact (OracleComp.EvalDistEq.bind_const _ _).symm
   have same : tvDist (sharedGame start client) (splitGame start client) =
       tvDist (sharedGame start client) paddedSplit := by
-    simp only [tvDist, padded]
+    simp only [tvDist, (VCVioLegacy.evalSPMF_eq_iff_evalDistEq _ _).mpr padded]
   rw [same]
   refine tvDist_bind_left_le_const start _ _ _ fun p member => ?_
   refine (prefix_tvDist (client p.2) p.1 (keys p) (residual p) (covers p member) (bounded p member)).trans ?_

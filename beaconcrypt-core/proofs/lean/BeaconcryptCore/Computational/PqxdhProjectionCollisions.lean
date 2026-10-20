@@ -17,6 +17,8 @@ The random model exposes a 76-byte answer as independent 32-byte first, 32-byte 
 12-byte final coordinates. It records the exact source calls `root`, `initial`, `step`, and a
 single public projection without inventing protocol labels or fixed protocol call counts.
 The real-world inequality retains the legacy fixed-public-HKDF/random-table advantage, which is efficiently large in general (`PqxdhPublicKdfCounterexample`). Thus the birthday bound is a random-table result; this module does not discharge computational output noncollision of production HKDF. A useful production transfer still needs a source/distribution-specific reduction that preserves local public evaluation.
+
+Probabilities and output laws are written in VCVio's forward vocabulary: `Pr{let x ← mx}[p x]` for events and outputs and `EvalDistEq A B` (upstream `A =ᵈ B`) for equality in distribution, which replace the deprecated `Pr[p | mx]`, `Pr[= a | mx]` and `𝒮[A] = 𝒮[B]` of VCVio's retiring probability interface and have the same meaning.
 -/
 
 open OracleComp OracleSpec ENNReal
@@ -165,14 +167,14 @@ def jointKdfStreamProjectionEquiv :
 
 /-- A uniform complete stream is exactly a uniform triple of its independent coordinates. -/
 theorem evalSPMF_split_uniformJointKdfStream :
-    evalSPMF (jointKdfStreamProjectionEquiv <$> ($ᵗ JointKdfStream)) =
-      evalSPMF ($ᵗ (Projection32Value × Projection32Value × Projection12Value)) := by
-  exact evalSPMF_ext fun parts =>
-    probOutput_map_bijective_uniform_cross
-      (α := JointKdfStream)
-      (β := Projection32Value × Projection32Value × Projection12Value)
-      jointKdfStreamProjectionEquiv
-      jointKdfStreamProjectionEquiv.bijective parts
+    EvalDistEq (jointKdfStreamProjectionEquiv <$> ($ᵗ JointKdfStream))
+      ($ᵗ (Projection32Value × Projection32Value × Projection12Value)) :=
+  SampleableType.map_uniformSample_evalDistEq_of_bijective
+    jointKdfStreamProjectionEquiv.bijective
+
+set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_split_uniformJointKdfStream_vcvioLegacy :
+    𝒮[⇑BeaconcryptCore.Computational.PqxdhProjectionCollisions.jointKdfStreamProjectionEquiv <$> ($ᵗ BeaconcryptCore.Computational.PqxdhJointKdf.JointKdfStream)] = 𝒮[$ᵗ (BeaconcryptCore.Computational.PqxdhProjectionCollisions.Projection32Value × BeaconcryptCore.Computational.PqxdhProjectionCollisions.Projection32Value × BeaconcryptCore.Computational.PqxdhProjectionCollisions.Projection12Value)] :=
+  by simpa only [BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq] using @BeaconcryptCore.Computational.PqxdhProjectionCollisions.evalSPMF_split_uniformJointKdfStream
 
 /-- The library product sampler is exactly sequential independent sampling, stated generically
 so concrete fixed-vector sampler instances remain opaque to the elaborator. -/
@@ -228,15 +230,14 @@ theorem evalSPMF_randomOracle_eq_uniform_prefill
     [(query : spec.Domain) → SampleableType (spec.Range query)]
     (target : spec.Domain) (computation : OracleComp spec alpha)
     (cache : spec.QueryCache) (hcache : cache target = none) :
-    evalSPMF ((simulateQ randomOracle computation).run' cache) =
-      evalSPMF (($ᵗ spec.Range target) >>= fun value =>
+    EvalDistEq ((simulateQ randomOracle computation).run' cache)
+      (($ᵗ spec.Range target) >>= fun value =>
         (simulateQ randomOracle computation).run'
           (cache.cacheQuery target value)) := by
   induction computation using OracleComp.inductionOn generalizing cache with
   | pure output =>
-      apply evalSPMF_ext
-      intro candidate
-      simp
+      simp only [simulateQ_pure, StateT.run'_eq, StateT.run_pure, map_pure]
+      exact (OracleComp.EvalDistEq.bind_const _ _).symm
   | query_bind query rest ih =>
       simp only [simulateQ_bind, simulateQ_query, OracleQuery.input_query,
         OracleQuery.cont_query, StateT.run'_eq, StateT.run_bind, map_bind]
@@ -310,53 +311,50 @@ theorem evalSPMF_randomOracle_eq_uniform_prefill
             simp_rw [hstepPrefill]
             rw [bind_map_left]
             simp_rw [bind_map_left]
-            change evalSPMF (do
+            change EvalDistEq (m := ProbComp) (m' := ProbComp) (do
                 let response ← $ᵗ spec.Range query
                 (simulateQ randomOracle (rest response)).run'
-                  (cache.cacheQuery query response)) =
-              evalSPMF (do
+                  (cache.cacheQuery query response))
+              (do
                 let targetValue ← $ᵗ spec.Range target
                 let response ← $ᵗ spec.Range query
                 (simulateQ randomOracle (rest response)).run'
                   ((cache.cacheQuery target targetValue).cacheQuery query response))
             calc
-              evalSPMF (do
+              EvalDistEq (m := ProbComp) (m' := ProbComp) (do
                   let response ← $ᵗ spec.Range query
                   (simulateQ randomOracle (rest response)).run'
-                    (cache.cacheQuery query response)) =
-                evalSPMF (do
+                    (cache.cacheQuery query response))
+                (do
                   let response ← $ᵗ spec.Range query
                   let targetValue ← $ᵗ spec.Range target
                   (simulateQ randomOracle (rest response)).run'
                     ((cache.cacheQuery query response).cacheQuery
                       target targetValue)) := by
-                apply OracleComp.DeferredSampling.evalSPMF_bind_congr_left
-                intro response
+                refine EvalDistEq.bind_right _ fun response => ?_
                 apply ih response
                 rw [QueryCache.cacheQuery_of_ne cache response (Ne.symm heq)]
                 exact hcache
-              _ = evalSPMF (do
+              EvalDistEq (m := ProbComp) (m' := ProbComp) _ (do
                   let targetValue ← $ᵗ spec.Range target
                   let response ← $ᵗ spec.Range query
                   (simulateQ randomOracle (rest response)).run'
                     ((cache.cacheQuery query response).cacheQuery
                       target targetValue)) :=
-                OracleComp.DeferredSampling.evalSPMF_bind_comm
+                OracleComp.EvalDistEq.bind_bind_swap
                   ($ᵗ spec.Range query) ($ᵗ spec.Range target)
                     fun response targetValue =>
                     (simulateQ randomOracle (rest response)).run'
                       ((cache.cacheQuery query response).cacheQuery
                         target targetValue)
-              _ = evalSPMF (do
+              EvalDistEq (m := ProbComp) (m' := ProbComp) _ (do
                   let targetValue ← $ᵗ spec.Range target
                   let response ← $ᵗ spec.Range query
                   (simulateQ randomOracle (rest response)).run'
                     ((cache.cacheQuery target targetValue).cacheQuery
                       query response)) := by
-                apply OracleComp.DeferredSampling.evalSPMF_bind_congr_left
-                intro targetValue
-                apply OracleComp.DeferredSampling.evalSPMF_bind_congr_left
-                intro response
+                refine EvalDistEq.bind_right _ fun targetValue => ?_
+                refine EvalDistEq.bind_right _ fun response => ?_
                 rw [dependentQueryCache_cacheQuery_comm cache query target
                   response targetValue heq]
 
@@ -368,9 +366,9 @@ theorem evalSPMF_randomOracle_prefetch_irrelevant
     [(query : spec.Domain) → SampleableType (spec.Range query)]
     (target : spec.Domain) (computation : OracleComp spec alpha)
     (cache : spec.QueryCache) :
-    evalSPMF ((randomOracle (spec := spec) target >>= fun _ =>
-          simulateQ randomOracle computation).run' cache) =
-      evalSPMF ((simulateQ randomOracle computation).run' cache) := by
+    EvalDistEq ((randomOracle (spec := spec) target >>= fun _ =>
+          simulateQ randomOracle computation).run' cache)
+      ((simulateQ randomOracle computation).run' cache) := by
   simp only [StateT.run'_eq, StateT.run_bind, map_bind]
   cases hcache : cache target with
   | some value =>
@@ -379,11 +377,11 @@ theorem evalSPMF_randomOracle_prefetch_irrelevant
   | none =>
       rw [QueryImpl.withCaching_run_none uniformSampleImpl hcache]
       rw [bind_map_left]
-      change evalSPMF (do
+      change EvalDistEq (m := ProbComp) (m' := ProbComp) (do
           let value ← $ᵗ spec.Range target
           (simulateQ randomOracle computation).run'
-            (cache.cacheQuery target value)) =
-        evalSPMF ((simulateQ randomOracle computation).run' cache)
+            (cache.cacheQuery target value))
+        ((simulateQ randomOracle computation).run' cache)
       exact (evalSPMF_randomOracle_eq_uniform_prefill
         target computation cache hcache).symm
 
@@ -1965,24 +1963,23 @@ theorem projectionObservedCollisionEvent_iff_cache
 theorem probEvent_projectionObservedCollision_eq_cache
     {qU r i s pF pS pN : ℕ}
     (adversary : SourceKdfAdversary qU r i s pF pS pN) :
-    Pr[ProjectionObservedCollisionEvent |
-        projectionCollisionObservedRandomRun adversary] =
-      Pr[ProjectionCollisionEvent | projectionCollisionRandomRun adversary] := by
+    Pr{let result ← projectionCollisionObservedRandomRun adversary}[
+        ProjectionObservedCollisionEvent result] =
+      Pr{let result ← projectionCollisionRandomRun adversary}[
+        ProjectionCollisionEvent result] := by
   calc
-    Pr[ProjectionObservedCollisionEvent |
-        projectionCollisionObservedRandomRun adversary] =
-        Pr[fun result => ProjectionCollisionEvent (result.1, result.2.cache) |
-          projectionCollisionObservedRandomRun adversary] :=
-      probEvent_congr'
-        (fun result hresult =>
-          projectionObservedCollisionEvent_iff_cache adversary result hresult)
-        rfl
-    _ = Pr[ProjectionCollisionEvent |
-        Prod.map id ProjectionObservationState.cache <$>
-          projectionCollisionObservedRandomRun adversary] := by
-      rw [probEvent_map]
-      congr 1
-    _ = Pr[ProjectionCollisionEvent | projectionCollisionRandomRun adversary] := by
+    Pr{let result ← projectionCollisionObservedRandomRun adversary}[
+        ProjectionObservedCollisionEvent result] =
+        Pr{let result ← projectionCollisionObservedRandomRun adversary}[
+          ProjectionCollisionEvent (result.1, result.2.cache)] :=
+      prEvent_congr_of_support _ _ _ fun result hresult =>
+        projectionObservedCollisionEvent_iff_cache adversary result hresult
+    _ = Pr{let result ← (Prod.map id ProjectionObservationState.cache <$>
+          projectionCollisionObservedRandomRun adversary)}[ProjectionCollisionEvent result] := by
+      rw [prEvent_map]
+      rfl
+    _ = Pr{let result ← projectionCollisionRandomRun adversary}[
+          ProjectionCollisionEvent result] := by
       rw [projectionCollisionObservedRandomRun_cache_marginal]
 
 /-! ## Exact output-space sizes -/
@@ -2178,15 +2175,16 @@ private lemma probEvent_projectionCacheBad32_run_le_sum_aux
     (hnocoll : ¬ProjectionCacheBad32 state₀)
     (hkeys : ∃ keys : Finset Coord32, keys.card ≤ k ∧
       ∀ coord, state₀.1 coord ≠ none → coord ∈ keys) :
-    Pr[fun result => ProjectionCacheBad32 result.2 |
-        (simulateQ projectionCoordLazyRandomImpl computation).run state₀] ≤
+    Pr{let result ← (simulateQ projectionCoordLazyRandomImpl computation).run state₀}[
+        ProjectionCacheBad32 result.2] ≤
       ∑ j ∈ Finset.range m, ((k + j : ℕ) : ℝ≥0∞) *
         (Fintype.card Projection32Value : ℝ≥0∞)⁻¹ := by
   let cardinality := (Fintype.card Projection32Value : ℝ≥0∞)
   induction computation using OracleComp.inductionOn generalizing m k state₀ with
   | pure output =>
       rw [simulateQ_pure]
-      refine le_of_eq_of_le (probEvent_eq_zero fun result hresult hbad => ?_) zero_le
+      refine le_of_eq_of_le (prEvent_eq_zero_of_forall_mem_support _ _
+        fun result hresult hbad => ?_) zero_le
       change result ∈ support (pure (output, state₀) : ProbComp _) at hresult
       rw [support_pure, Set.mem_singleton_iff] at hresult
       subst result
@@ -2195,7 +2193,7 @@ private lemma probEvent_projectionCacheBad32_run_le_sum_aux
       rw [OracleComp.isQueryBoundP_query_bind_iff] at hbound
       rcases query with randomQuery | coordinateQuery
       · rw [run_simulateQ_projectionCoordLazyRandom_uniform_bind]
-        refine probEvent_bind_le_of_forall_le fun value _ => ?_
+        refine prEvent_bind_le_of_forall_le_of_support _ _ _ fun value _ => ?_
         have hrest := hbound.2 value
         simp only [IsProjection32Query] at hrest
         exact ih value m k hrest state₀ hnocoll hkeys
@@ -2207,8 +2205,8 @@ private lemma probEvent_projectionCacheBad32_run_le_sum_aux
             rw [run_simulateQ_projectionCoordLazyRandom_first_bind_hit
               coord rest state₀ value hvalue]
             calc
-              Pr[fun result => ProjectionCacheBad32 result.2 |
-                  (simulateQ projectionCoordLazyRandomImpl (rest value)).run state₀]
+              Pr{let result ← ((simulateQ projectionCoordLazyRandomImpl (rest value)).run
+                  state₀)}[ProjectionCacheBad32 result.2]
                   ≤ ∑ j ∈ Finset.range (m - 1),
                       ((k + j : ℕ) : ℝ≥0∞) * cardinality⁻¹ := by
                     apply ih value (m - 1) k
@@ -2225,12 +2223,12 @@ private lemma probEvent_projectionCacheBad32_run_le_sum_aux
             rw [run_simulateQ_projectionCoordLazyRandom_first_bind_miss
               coord rest state₀ hnone]
             have himmediate :
-                Pr[fun value => CacheHasCollision (state₀.1.cacheQuery coord value) |
-                    ($ᵗ Projection32Value)] ≤
+                Pr{let value ← $ᵗ Projection32Value}[
+                    CacheHasCollision (state₀.1.cacheQuery coord value)] ≤
                   (k : ℝ≥0∞) * cardinality⁻¹ := by
               classical
               obtain ⟨keys, hcard, hmem⟩ := hkeys
-              rw [probEvent_uniformSample]
+              rw [SampleableType.prEvent_uniformSample]
               have hbadCard :=
                 (card_cacheQuery_collision_le_support
                   (spec := Projection32RO) (query := coord)
@@ -2247,9 +2245,8 @@ private lemma probEvent_projectionCacheBad32_run_le_sum_aux
                   rw [ENNReal.div_eq_inv_mul, mul_comm]
             have hcontinuation : ∀ value ∈ support ($ᵗ Projection32Value),
                 ¬CacheHasCollision (state₀.1.cacheQuery coord value) →
-                Pr[fun result => ProjectionCacheBad32 result.2 |
-                    (simulateQ projectionCoordLazyRandomImpl (rest value)).run
-                      (state₀.1.cacheQuery coord value, state₀.2)] ≤
+                Pr{let result ← ((simulateQ projectionCoordLazyRandomImpl (rest value)).run
+                    (state₀.1.cacheQuery coord value, state₀.2))}[ProjectionCacheBad32 result.2] ≤
                   ∑ j ∈ Finset.range (m - 1),
                     ((k + 1 + j : ℕ) : ℝ≥0∞) * cardinality⁻¹ := by
               intro value _ hnocoll'
@@ -2265,25 +2262,19 @@ private lemma probEvent_projectionCacheBad32_run_le_sum_aux
                     · change state₀.1.cacheQuery coord value other ≠ none at hother
                       rw [QueryCache.cacheQuery_of_ne state₀.1 _ heq] at hother
                       exact Finset.mem_insert_of_mem (hmem other hother)⟩
-            have hcombine := probEvent_bind_le_add
-              (mx := ($ᵗ Projection32Value))
-              (my := fun value =>
-                (simulateQ projectionCoordLazyRandomImpl (rest value)).run
-                  (state₀.1.cacheQuery coord value, state₀.2))
-              (p := fun value =>
-                ¬CacheHasCollision (state₀.1.cacheQuery coord value))
-              (q := fun result => ¬ProjectionCacheBad32 result.2)
-              (ε₁ := (k : ℝ≥0∞) * cardinality⁻¹)
-              (ε₂ := ∑ j ∈ Finset.range (m - 1),
-                ((k + 1 + j : ℕ) : ℝ≥0∞) * cardinality⁻¹)
-              (by simpa [not_not] using himmediate)
-              (by simpa [not_not] using hcontinuation)
-            simp only [not_not] at hcombine
+            have hcombine :=
+              (prEvent_bind_le_prEvent_add_of_support ($ᵗ Projection32Value)
+                (fun value =>
+                  (simulateQ projectionCoordLazyRandomImpl (rest value)).run
+                    (state₀.1.cacheQuery coord value, state₀.2))
+                (fun value => CacheHasCollision (state₀.1.cacheQuery coord value))
+                (fun result => ProjectionCacheBad32 result.2)
+                hcontinuation).trans (add_le_add himmediate le_rfl)
             calc
-              Pr[fun result => ProjectionCacheBad32 result.2 |
-                  ($ᵗ Projection32Value) >>= fun value =>
+              Pr{let result ← (($ᵗ Projection32Value) >>= fun value =>
                     (simulateQ projectionCoordLazyRandomImpl (rest value)).run
-                      (state₀.1.cacheQuery coord value, state₀.2)]
+                      (state₀.1.cacheQuery coord value, state₀.2))}[
+                    ProjectionCacheBad32 result.2]
                   ≤ (k : ℝ≥0∞) * cardinality⁻¹ +
                     ∑ j ∈ Finset.range (m - 1),
                       ((k + 1 + j : ℕ) : ℝ≥0∞) * cardinality⁻¹ := hcombine
@@ -2307,7 +2298,7 @@ private lemma probEvent_projectionCacheBad32_run_le_sum_aux
               Option.eq_none_iff_forall_ne_some.mpr hhit
             rw [run_simulateQ_projectionCoordLazyRandom_nonce_bind_miss
               nonceCoord rest state₀ hnone]
-            refine probEvent_bind_le_of_forall_le fun value _ => ?_
+            refine prEvent_bind_le_of_forall_le_of_support _ _ _ fun value _ => ?_
             have hrest := hbound.2 value
             simp only [IsProjection32Query] at hrest
             exact ih value m k hrest
@@ -2326,15 +2317,16 @@ private lemma probEvent_projectionCacheBad12_run_le_sum_aux
     (hnocoll : ¬ProjectionCacheBad12 state₀)
     (hkeys : ∃ keys : Finset Coord12, keys.card ≤ k ∧
       ∀ coord, state₀.2 coord ≠ none → coord ∈ keys) :
-    Pr[fun result => ProjectionCacheBad12 result.2 |
-        (simulateQ projectionCoordLazyRandomImpl computation).run state₀] ≤
+    Pr{let result ← (simulateQ projectionCoordLazyRandomImpl computation).run state₀}[
+        ProjectionCacheBad12 result.2] ≤
       ∑ j ∈ Finset.range m, ((k + j : ℕ) : ℝ≥0∞) *
         (Fintype.card Projection12Value : ℝ≥0∞)⁻¹ := by
   let cardinality := (Fintype.card Projection12Value : ℝ≥0∞)
   induction computation using OracleComp.inductionOn generalizing m k state₀ with
   | pure output =>
       rw [simulateQ_pure]
-      refine le_of_eq_of_le (probEvent_eq_zero fun result hresult hbad => ?_) zero_le
+      refine le_of_eq_of_le (prEvent_eq_zero_of_forall_mem_support _ _
+        fun result hresult hbad => ?_) zero_le
       change result ∈ support (pure (output, state₀) : ProbComp _) at hresult
       rw [support_pure, Set.mem_singleton_iff] at hresult
       subst result
@@ -2343,7 +2335,7 @@ private lemma probEvent_projectionCacheBad12_run_le_sum_aux
       rw [OracleComp.isQueryBoundP_query_bind_iff] at hbound
       rcases query with randomQuery | coordinateQuery
       · rw [run_simulateQ_projectionCoordLazyRandom_uniform_bind]
-        refine probEvent_bind_le_of_forall_le fun value _ => ?_
+        refine prEvent_bind_le_of_forall_le_of_support _ _ _ fun value _ => ?_
         have hrest := hbound.2 value
         simp only [IsProjectionNonceQuery] at hrest
         exact ih value m k hrest state₀ hnocoll hkeys
@@ -2360,7 +2352,7 @@ private lemma probEvent_projectionCacheBad12_run_le_sum_aux
               Option.eq_none_iff_forall_ne_some.mpr hhit
             rw [run_simulateQ_projectionCoordLazyRandom_first_bind_miss
               coord rest state₀ hnone]
-            refine probEvent_bind_le_of_forall_le fun value _ => ?_
+            refine prEvent_bind_le_of_forall_le_of_support _ _ _ fun value _ => ?_
             have hrest := hbound.2 value
             simp only [IsProjectionNonceQuery] at hrest
             exact ih value m k hrest
@@ -2372,8 +2364,8 @@ private lemma probEvent_projectionCacheBad12_run_le_sum_aux
             rw [run_simulateQ_projectionCoordLazyRandom_nonce_bind_hit
               nonceCoord rest state₀ value hvalue]
             calc
-              Pr[fun result => ProjectionCacheBad12 result.2 |
-                  (simulateQ projectionCoordLazyRandomImpl (rest value)).run state₀]
+              Pr{let result ← ((simulateQ projectionCoordLazyRandomImpl (rest value)).run
+                  state₀)}[ProjectionCacheBad12 result.2]
                   ≤ ∑ j ∈ Finset.range (m - 1),
                       ((k + j : ℕ) : ℝ≥0∞) * cardinality⁻¹ := by
                     apply ih value (m - 1) k
@@ -2390,13 +2382,12 @@ private lemma probEvent_projectionCacheBad12_run_le_sum_aux
             rw [run_simulateQ_projectionCoordLazyRandom_nonce_bind_miss
               nonceCoord rest state₀ hnone]
             have himmediate :
-                Pr[fun value => CacheHasCollision
-                    (state₀.2.cacheQuery nonceCoord value) |
-                    ($ᵗ Projection12Value)] ≤
+                Pr{let value ← $ᵗ Projection12Value}[
+                    CacheHasCollision (state₀.2.cacheQuery nonceCoord value)] ≤
                   (k : ℝ≥0∞) * cardinality⁻¹ := by
               classical
               obtain ⟨keys, hcard, hmem⟩ := hkeys
-              rw [probEvent_uniformSample]
+              rw [SampleableType.prEvent_uniformSample]
               have hbadCard :=
                 (card_cacheQuery_collision_le_support
                   (spec := Projection12RO) (query := nonceCoord)
@@ -2413,9 +2404,9 @@ private lemma probEvent_projectionCacheBad12_run_le_sum_aux
                   rw [ENNReal.div_eq_inv_mul, mul_comm]
             have hcontinuation : ∀ value ∈ support ($ᵗ Projection12Value),
                 ¬CacheHasCollision (state₀.2.cacheQuery nonceCoord value) →
-                Pr[fun result => ProjectionCacheBad12 result.2 |
-                    (simulateQ projectionCoordLazyRandomImpl (rest value)).run
-                      (state₀.1, state₀.2.cacheQuery nonceCoord value)] ≤
+                Pr{let result ← ((simulateQ projectionCoordLazyRandomImpl (rest value)).run
+                    (state₀.1, state₀.2.cacheQuery nonceCoord value))}[
+                    ProjectionCacheBad12 result.2] ≤
                   ∑ j ∈ Finset.range (m - 1),
                     ((k + 1 + j : ℕ) : ℝ≥0∞) * cardinality⁻¹ := by
               intro value _ hnocoll'
@@ -2431,25 +2422,19 @@ private lemma probEvent_projectionCacheBad12_run_le_sum_aux
                     · change state₀.2.cacheQuery nonceCoord value other ≠ none at hother
                       rw [QueryCache.cacheQuery_of_ne state₀.2 _ heq] at hother
                       exact Finset.mem_insert_of_mem (hmem other hother)⟩
-            have hcombine := probEvent_bind_le_add
-              (mx := ($ᵗ Projection12Value))
-              (my := fun value =>
-                (simulateQ projectionCoordLazyRandomImpl (rest value)).run
-                  (state₀.1, state₀.2.cacheQuery nonceCoord value))
-              (p := fun value =>
-                ¬CacheHasCollision (state₀.2.cacheQuery nonceCoord value))
-              (q := fun result => ¬ProjectionCacheBad12 result.2)
-              (ε₁ := (k : ℝ≥0∞) * cardinality⁻¹)
-              (ε₂ := ∑ j ∈ Finset.range (m - 1),
-                ((k + 1 + j : ℕ) : ℝ≥0∞) * cardinality⁻¹)
-              (by simpa [not_not] using himmediate)
-              (by simpa [not_not] using hcontinuation)
-            simp only [not_not] at hcombine
+            have hcombine :=
+              (prEvent_bind_le_prEvent_add_of_support ($ᵗ Projection12Value)
+                (fun value =>
+                  (simulateQ projectionCoordLazyRandomImpl (rest value)).run
+                    (state₀.1, state₀.2.cacheQuery nonceCoord value))
+                (fun value => CacheHasCollision (state₀.2.cacheQuery nonceCoord value))
+                (fun result => ProjectionCacheBad12 result.2)
+                hcontinuation).trans (add_le_add himmediate le_rfl)
             calc
-              Pr[fun result => ProjectionCacheBad12 result.2 |
-                  ($ᵗ Projection12Value) >>= fun value =>
+              Pr{let result ← (($ᵗ Projection12Value) >>= fun value =>
                     (simulateQ projectionCoordLazyRandomImpl (rest value)).run
-                      (state₀.1, state₀.2.cacheQuery nonceCoord value)]
+                      (state₀.1, state₀.2.cacheQuery nonceCoord value))}[
+                    ProjectionCacheBad12 result.2]
                   ≤ (k : ℝ≥0∞) * cardinality⁻¹ +
                     ∑ j ∈ Finset.range (m - 1),
                       ((k + 1 + j : ℕ) : ℝ≥0∞) * cardinality⁻¹ := hcombine
@@ -2479,13 +2464,13 @@ private lemma ennreal_sum_range_mul_inv_eq_choose (n : ℕ) (cardinality : ℝ�
 theorem probEvent_projectionCacheBad32_le_birthday
     {beta : Type} (computation : OracleComp ProjectionCoordChallengeSpec beta)
     (q32 : ℕ) (hbound : computation.IsQueryBoundP IsProjection32Query q32) :
-    Pr[fun result => ProjectionCacheBad32 result.2 |
-        (simulateQ projectionCoordLazyRandomImpl computation).run (∅, ∅)] ≤
+    Pr{let result ← (simulateQ projectionCoordLazyRandomImpl computation).run (∅, ∅)}[
+        ProjectionCacheBad32 result.2] ≤
       (Nat.choose q32 2 : ℝ≥0∞) /
         (Fintype.card Projection32Value : ℝ≥0∞) := by
   calc
-    Pr[fun result => ProjectionCacheBad32 result.2 |
-        (simulateQ projectionCoordLazyRandomImpl computation).run (∅, ∅)]
+    Pr{let result ← (simulateQ projectionCoordLazyRandomImpl computation).run (∅, ∅)}[
+        ProjectionCacheBad32 result.2]
         ≤ ∑ j ∈ Finset.range q32, ((0 + j : ℕ) : ℝ≥0∞) *
             (Fintype.card Projection32Value : ℝ≥0∞)⁻¹ :=
           probEvent_projectionCacheBad32_run_le_sum_aux computation q32 0 hbound
@@ -2505,13 +2490,13 @@ theorem probEvent_projectionCacheBad32_le_birthday
 theorem probEvent_projectionCacheBad12_le_birthday
     {beta : Type} (computation : OracleComp ProjectionCoordChallengeSpec beta)
     (q12 : ℕ) (hbound : computation.IsQueryBoundP IsProjectionNonceQuery q12) :
-    Pr[fun result => ProjectionCacheBad12 result.2 |
-        (simulateQ projectionCoordLazyRandomImpl computation).run (∅, ∅)] ≤
+    Pr{let result ← (simulateQ projectionCoordLazyRandomImpl computation).run (∅, ∅)}[
+        ProjectionCacheBad12 result.2] ≤
       (Nat.choose q12 2 : ℝ≥0∞) /
         (Fintype.card Projection12Value : ℝ≥0∞) := by
   calc
-    Pr[fun result => ProjectionCacheBad12 result.2 |
-        (simulateQ projectionCoordLazyRandomImpl computation).run (∅, ∅)]
+    Pr{let result ← (simulateQ projectionCoordLazyRandomImpl computation).run (∅, ∅)}[
+        ProjectionCacheBad12 result.2]
         ≤ ∑ j ∈ Finset.range q12, ((0 + j : ℕ) : ℝ≥0∞) *
             (Fintype.card Projection12Value : ℝ≥0∞)⁻¹ :=
           probEvent_projectionCacheBad12_run_le_sum_aux computation q12 0 hbound
@@ -2531,8 +2516,7 @@ theorem probEvent_projectionCacheBad12_le_birthday
 theorem sourceProjectionCacheBad32_random_le
     {qU r i s pF pS pN : ℕ}
     (adversary : SourceKdfAdversary qU r i s pF pS pN) :
-    Pr[fun result => ProjectionCacheBad32 result.2 |
-        projectionCollisionRandomRun adversary] ≤
+    Pr{let result ← projectionCollisionRandomRun adversary}[ProjectionCacheBad32 result.2] ≤
       (Nat.choose (sourceQ32 r i s pF pS) 2 : ℝ≥0∞) /
         (2 ^ 256 : ℝ≥0∞) := by
   unfold projectionCollisionRandomRun
@@ -2548,8 +2532,7 @@ theorem sourceProjectionCacheBad32_random_le
 theorem sourceProjectionCacheBad12_random_le
     {qU r i s pF pS pN : ℕ}
     (adversary : SourceKdfAdversary qU r i s pF pS pN) :
-    Pr[fun result => ProjectionCacheBad12 result.2 |
-        projectionCollisionRandomRun adversary] ≤
+    Pr{let result ← projectionCollisionRandomRun adversary}[ProjectionCacheBad12 result.2] ≤
       (Nat.choose (sourceQN s pN) 2 : ℝ≥0∞) /
         (2 ^ 96 : ℝ≥0∞) := by
   unfold projectionCollisionRandomRun
@@ -2566,12 +2549,12 @@ repeated identities or adversary-controlled uniform samples. -/
 theorem sourceProjectionCollision_random_le
     {qU r i s pF pS pN : ℕ}
     (adversary : SourceKdfAdversary qU r i s pF pS pN) :
-    Pr[ProjectionCollisionEvent | projectionCollisionRandomRun adversary] ≤
+    Pr{let result ← projectionCollisionRandomRun adversary}[ProjectionCollisionEvent result] ≤
       (Nat.choose (sourceQ32 r i s pF pS) 2 : ℝ≥0∞) /
           (2 ^ 256 : ℝ≥0∞) +
         (Nat.choose (sourceQN s pN) 2 : ℝ≥0∞) /
           (2 ^ 96 : ℝ≥0∞) := by
-  exact (probEvent_or_le (projectionCollisionRandomRun adversary)
+  exact (prEvent_or_le (projectionCollisionRandomRun adversary)
     (fun result => ProjectionCacheBad32 result.2)
     (fun result => ProjectionCacheBad12 result.2)).trans
       (add_le_add (sourceProjectionCacheBad32_random_le adversary)
@@ -3101,10 +3084,10 @@ private lemma run_simulateQ_jointKdfStreamEagerCoordinateForwardImpl_miss
 private lemma evalSPMF_run_jointKdfStreamEagerCoordinateForwardImpl_miss
     (address : JointKdfAddress) (cache : JointKdfRO.QueryCache)
     (hcache : cache address = none) :
-    evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl
+    EvalDistEq ((simulateQ projectionCoordUnifiedRandomImpl
       (jointKdfStreamEagerCoordinateForwardImpl (.inr address))).run
-        (jointKdfStreamCacheToUnifiedProjectionCoordCache cache)) =
-      evalSPMF ((fun stream : JointKdfStream =>
+        (jointKdfStreamCacheToUnifiedProjectionCoordCache cache))
+      ((fun stream : JointKdfStream =>
         ((show FixedHkdfSha512JointStreamSpec.Range (.inr address) from stream),
           jointKdfStreamCacheToUnifiedProjectionCoordCache
           (cache.cacheQuery address stream))) <$> ($ᵗ JointKdfStream)) := by
@@ -3134,8 +3117,7 @@ private lemma evalSPMF_run_jointKdfStreamEagerCoordinateForwardImpl_miss
             pure (first, second, nonce)) := by
     simpa only [outputOfParts] using hfactor
   rw [hfactor', uniformSample_prod_prod_eq]
-  have htransport := evalSPMF_map_eq_of_evalSPMF_eq
-    evalSPMF_split_uniformJointKdfStream outputOfParts
+  have htransport := evalSPMF_split_uniformJointKdfStream.map outputOfParts
   simpa only [Functor.map_map, Function.comp_apply, outputOfParts,
     Equiv.symm_apply_apply] using htransport.symm
 
@@ -3144,9 +3126,9 @@ coordinate-step distribution after applying the complete-cache embedding. -/
 private lemma evalSPMF_map_fixedJointStreamRandom_query_eq_eagerCoordinates
     (query : FixedHkdfSha512JointStreamSpec.Domain)
     (cache : JointKdfRO.QueryCache) :
-    evalSPMF (Prod.map id jointKdfStreamCacheToUnifiedProjectionCoordCache <$>
-        (fixedHkdfSha512JointStreamRandomImpl query).run cache) =
-      evalSPMF (((projectionCoordUnifiedRandomImpl ∘ₛ
+    EvalDistEq (Prod.map id jointKdfStreamCacheToUnifiedProjectionCoordCache <$>
+        (fixedHkdfSha512JointStreamRandomImpl query).run cache)
+      (((projectionCoordUnifiedRandomImpl ∘ₛ
         jointKdfStreamEagerCoordinateForwardImpl) query).run
           (jointKdfStreamCacheToUnifiedProjectionCoordCache cache)) := by
   rcases query with randomQuery | address
@@ -3154,12 +3136,13 @@ private lemma evalSPMF_map_fixedJointStreamRandom_query_eq_eagerCoordinates
       jointKdfStreamEagerCoordinateForwardImpl,
       projectionCoordUnifiedRandomImpl, QueryImpl.compose,
       Functor.map_map]
+    exact EvalDistEq.rfl
   · cases hcache : cache address with
     | some stream =>
         unfold QueryImpl.compose
-        change evalSPMF (Prod.map id jointKdfStreamCacheToUnifiedProjectionCoordCache <$>
-            (jointKdfLazyRandomStreamImpl address).run cache) =
-          evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl
+        change EvalDistEq (Prod.map id jointKdfStreamCacheToUnifiedProjectionCoordCache <$>
+            (jointKdfLazyRandomStreamImpl address).run cache)
+          ((simulateQ projectionCoordUnifiedRandomImpl
             (jointKdfStreamEagerCoordinateForwardImpl (.inr address))).run
               (jointKdfStreamCacheToUnifiedProjectionCoordCache cache))
         rw [jointKdfLazyRandomStreamImpl_run_hit address cache stream hcache,
@@ -3168,9 +3151,9 @@ private lemma evalSPMF_map_fixedJointStreamRandom_query_eq_eagerCoordinates
         simp
     | none =>
         unfold QueryImpl.compose
-        change evalSPMF (Prod.map id jointKdfStreamCacheToUnifiedProjectionCoordCache <$>
-            (jointKdfLazyRandomStreamImpl address).run cache) =
-          evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl
+        change EvalDistEq (Prod.map id jointKdfStreamCacheToUnifiedProjectionCoordCache <$>
+            (jointKdfLazyRandomStreamImpl address).run cache)
+          ((simulateQ projectionCoordUnifiedRandomImpl
             (jointKdfStreamEagerCoordinateForwardImpl (.inr address))).run
               (jointKdfStreamCacheToUnifiedProjectionCoordCache cache))
         rw [jointKdfLazyRandomStreamImpl_run_miss address cache hcache,
@@ -3179,42 +3162,40 @@ private lemma evalSPMF_map_fixedJointStreamRandom_query_eq_eagerCoordinates
           address cache hcache).symm
 
 /-- Distributional state-map transport for an arbitrary stateful oracle simulation. Unlike the
-pure state-projection theorem, this permits a per-query coupling that is exact only after
-`evalSPMF`, which is required by the stream-splitting bijection. -/
+pure state-projection theorem, this permits a per-query coupling that is exact only in
+distribution (`EvalDistEq`), which is required by the stream-splitting bijection. -/
 private theorem evalSPMF_map_run_simulateQ_eq_of_query_map_evalSPMF_eq
     {iota sigma tau alpha : Type} {spec : OracleSpec.{0, 0} iota}
     (impl₁ : QueryImpl spec (StateT sigma ProbComp))
     (impl₂ : QueryImpl spec (StateT tau ProbComp))
     (stateMap : sigma → tau)
     (hquery : ∀ query state,
-      evalSPMF (Prod.map id stateMap <$> (impl₁ query).run state) =
-        evalSPMF ((impl₂ query).run (stateMap state)))
+      EvalDistEq (Prod.map id stateMap <$> (impl₁ query).run state)
+        ((impl₂ query).run (stateMap state)))
     (computation : OracleComp spec alpha) (state : sigma) :
-    evalSPMF (Prod.map id stateMap <$>
-        (simulateQ impl₁ computation).run state) =
-      evalSPMF ((simulateQ impl₂ computation).run (stateMap state)) := by
+    EvalDistEq (Prod.map id stateMap <$>
+        (simulateQ impl₁ computation).run state)
+      ((simulateQ impl₂ computation).run (stateMap state)) := by
   induction computation using OracleComp.inductionOn generalizing state with
   | pure output => simp
   | query_bind query rest ih =>
       simp only [simulateQ_bind, simulateQ_query, OracleQuery.input_query,
         OracleQuery.cont_query, StateT.run_bind, id_map, map_bind]
       calc
-        evalSPMF ((impl₁ query).run state >>= fun result =>
+        EvalDistEq ((impl₁ query).run state >>= fun result =>
             Prod.map id stateMap <$>
-              (simulateQ impl₁ (rest result.1)).run result.2) =
-          evalSPMF ((impl₁ query).run state >>= fun result =>
-            (simulateQ impl₂ (rest result.1)).run (stateMap result.2)) := by
-              apply evalSPMF_bind_congr'
-              intro result
-              exact ih result.1 result.2
-        _ = evalSPMF ((Prod.map id stateMap <$> (impl₁ query).run state) >>=
+              (simulateQ impl₁ (rest result.1)).run result.2)
+          ((impl₁ query).run state >>= fun result =>
+            (simulateQ impl₂ (rest result.1)).run (stateMap result.2)) :=
+          EvalDistEq.bind_right _ fun result => ih result.1 result.2
+        _ = (Prod.map id stateMap <$> (impl₁ query).run state) >>=
             fun result =>
-              (simulateQ impl₂ (rest result.1)).run result.2) := by
-                rw [bind_map_left]
-                rfl
-        _ = evalSPMF ((impl₂ query).run (stateMap state) >>= fun result =>
-            (simulateQ impl₂ (rest result.1)).run result.2) := by
-              rw [evalSPMF_bind, evalSPMF_bind, hquery query state]
+              (simulateQ impl₂ (rest result.1)).run result.2 := by
+          rw [bind_map_left]
+          rfl
+        EvalDistEq _ ((impl₂ query).run (stateMap state) >>= fun result =>
+            (simulateQ impl₂ (rest result.1)).run result.2) :=
+          (hquery query state).bind_left _
 
 open Classical in
 /-- Replacing the complete-stream lazy random oracle by eager independent coordinates preserves
@@ -3223,8 +3204,8 @@ theorem evalSPMF_fixedJointStreamRandom_eq_eagerCoordinates
     {alpha : Type}
     (computation : OracleComp FixedHkdfSha512JointStreamSpec alpha)
     (cache : JointKdfRO.QueryCache) :
-    evalSPMF ((simulateQ fixedHkdfSha512JointStreamRandomImpl computation).run' cache) =
-      evalSPMF ((simulateQ
+    EvalDistEq ((simulateQ fixedHkdfSha512JointStreamRandomImpl computation).run' cache)
+      ((simulateQ
         (projectionCoordUnifiedRandomImpl ∘ₛ jointKdfStreamEagerCoordinateForwardImpl)
         computation).run'
           (jointKdfStreamCacheToUnifiedProjectionCoordCache cache)) := by
@@ -3234,7 +3215,7 @@ theorem evalSPMF_fixedJointStreamRandom_eq_eagerCoordinates
     jointKdfStreamCacheToUnifiedProjectionCoordCache
     evalSPMF_map_fixedJointStreamRandom_query_eq_eagerCoordinates
     computation cache
-  have hout := evalSPMF_map_eq_of_evalSPMF_eq hrun Prod.fst
+  have hout := hrun.map Prod.fst
   simpa [StateT.run'_eq, Functor.map_map, Function.comp_apply,
     Prod.map] using hout
 
@@ -3245,17 +3226,15 @@ theorem evalSPMF_projectionCoordUnifiedRandom_eq_uniform_prefill
     {alpha : Type} (target : ProjectionCoordSpec.Domain)
     (computation : OracleComp ProjectionCoordChallengeSpec alpha)
     (cache : ProjectionCoordUnifiedCache) (hcache : cache target = none) :
-    evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl computation).run' cache) =
-      evalSPMF (($ᵗ ProjectionCoordSpec.Range target) >>= fun value =>
+    EvalDistEq ((simulateQ projectionCoordUnifiedRandomImpl computation).run' cache)
+      (($ᵗ ProjectionCoordSpec.Range target) >>= fun value =>
         (simulateQ projectionCoordUnifiedRandomImpl computation).run'
           (cache.cacheQuery target value)) := by
   classical
   induction computation using OracleComp.inductionOn generalizing cache with
   | pure output =>
-      let : DecidableEq alpha := Classical.decEq alpha
-      apply evalSPMF_ext
-      intro candidate
-      simp
+      simp only [simulateQ_pure, StateT.run'_eq, StateT.run_pure, map_pure]
+      exact (OracleComp.EvalDistEq.bind_const _ _).symm
   | query_bind query rest ih =>
       rcases query with randomQuery | coordinateQuery
       · change (unifSpec.Range randomQuery →
@@ -3265,23 +3244,22 @@ theorem evalSPMF_projectionCoordUnifiedRandom_eq_uniform_prefill
         simp_rw [run'_simulateQ_projectionCoordUnifiedRandom_uniform_bind
           randomQuery rest]
         calc
-          evalSPMF (do
+          EvalDistEq (m := ProbComp) (m' := ProbComp) (do
               let response ← uniformSampleImpl randomQuery
-              (simulateQ projectionCoordUnifiedRandomImpl (rest response)).run' cache) =
-            evalSPMF (do
+              (simulateQ projectionCoordUnifiedRandomImpl (rest response)).run' cache)
+            (do
               let response ← uniformSampleImpl randomQuery
               let targetValue ← $ᵗ ProjectionCoordSpec.Range target
               (simulateQ projectionCoordUnifiedRandomImpl (rest response)).run'
                 (cache.cacheQuery target targetValue)) := by
-              apply OracleComp.DeferredSampling.evalSPMF_bind_congr_left
-              intro response
+              refine EvalDistEq.bind_right _ fun response => ?_
               exact ih response cache hcache
-          _ = evalSPMF (do
+          EvalDistEq (m := ProbComp) (m' := ProbComp) _ (do
               let targetValue ← $ᵗ ProjectionCoordSpec.Range target
               let response ← uniformSampleImpl randomQuery
               (simulateQ projectionCoordUnifiedRandomImpl (rest response)).run'
                 (cache.cacheQuery target targetValue)) :=
-            OracleComp.DeferredSampling.evalSPMF_bind_comm
+            OracleComp.EvalDistEq.bind_bind_swap
               (uniformSampleImpl randomQuery)
               ($ᵗ ProjectionCoordSpec.Range target)
               fun response targetValue =>
@@ -3326,6 +3304,7 @@ theorem evalSPMF_projectionCoordUnifiedRandom_eq_uniform_prefill
               rw [run'_simulateQ_projectionCoordUnifiedRandom_coordinate_bind_miss
                 target rest cache hcache]
               simp_rw [hstepPrefill]
+              exact EvalDistEq.rfl
             · have hstepPrefill (targetValue : ProjectionCoordSpec.Range target) :
                   (simulateQ projectionCoordUnifiedRandomImpl
                     (liftM (ProjectionCoordChallengeSpec.query (.inr coordinateQuery)) >>=
@@ -3344,44 +3323,41 @@ theorem evalSPMF_projectionCoordUnifiedRandom_eq_uniform_prefill
                 coordinateQuery rest cache hquery]
               simp_rw [hstepPrefill]
               calc
-                evalSPMF (do
+                EvalDistEq (m := ProbComp) (m' := ProbComp) (do
                     let response ← $ᵗ ProjectionCoordSpec.Range coordinateQuery
                     (simulateQ projectionCoordUnifiedRandomImpl (rest response)).run'
-                      (cache.cacheQuery coordinateQuery response)) =
-                  evalSPMF (do
+                      (cache.cacheQuery coordinateQuery response))
+                  (do
                     let response ← $ᵗ ProjectionCoordSpec.Range coordinateQuery
                     let targetValue ← $ᵗ ProjectionCoordSpec.Range target
                     (simulateQ projectionCoordUnifiedRandomImpl (rest response)).run'
                       ((cache.cacheQuery coordinateQuery response).cacheQuery
                         target targetValue)) := by
-                  apply OracleComp.DeferredSampling.evalSPMF_bind_congr_left
-                  intro response
+                  refine EvalDistEq.bind_right _ fun response => ?_
                   apply ih response
                   rw [QueryCache.cacheQuery_of_ne cache response (Ne.symm heq)]
                   exact hcache
-                _ = evalSPMF (do
+                EvalDistEq (m := ProbComp) (m' := ProbComp) _ (do
                     let targetValue ← $ᵗ ProjectionCoordSpec.Range target
                     let response ← $ᵗ ProjectionCoordSpec.Range coordinateQuery
                     (simulateQ projectionCoordUnifiedRandomImpl (rest response)).run'
                       ((cache.cacheQuery coordinateQuery response).cacheQuery
                         target targetValue)) :=
-                  OracleComp.DeferredSampling.evalSPMF_bind_comm
+                  OracleComp.EvalDistEq.bind_bind_swap
                     ($ᵗ ProjectionCoordSpec.Range coordinateQuery)
                     ($ᵗ ProjectionCoordSpec.Range target)
                     fun response targetValue =>
                       (simulateQ projectionCoordUnifiedRandomImpl (rest response)).run'
                         ((cache.cacheQuery coordinateQuery response).cacheQuery
                           target targetValue)
-                _ = evalSPMF (do
+                EvalDistEq (m := ProbComp) (m' := ProbComp) _ (do
                     let targetValue ← $ᵗ ProjectionCoordSpec.Range target
                     let response ← $ᵗ ProjectionCoordSpec.Range coordinateQuery
                     (simulateQ projectionCoordUnifiedRandomImpl (rest response)).run'
                       ((cache.cacheQuery target targetValue).cacheQuery
                         coordinateQuery response)) := by
-                  apply OracleComp.DeferredSampling.evalSPMF_bind_congr_left
-                  intro targetValue
-                  apply OracleComp.DeferredSampling.evalSPMF_bind_congr_left
-                  intro response
+                  refine EvalDistEq.bind_right _ fun targetValue => ?_
+                  refine EvalDistEq.bind_right _ fun response => ?_
                   rw [dependentQueryCache_cacheQuery_comm cache coordinateQuery target
                     response targetValue heq]
 
@@ -3392,13 +3368,13 @@ theorem evalSPMF_projectionCoordUnifiedRandom_prefetch_irrelevant
     {alpha : Type} (target : ProjectionCoordSpec.Domain)
     (computation : OracleComp ProjectionCoordChallengeSpec alpha)
     (cache : ProjectionCoordUnifiedCache) :
-    evalSPMF ((projectionCoordUnifiedRandomImpl (.inr target) >>= fun _ =>
-          simulateQ projectionCoordUnifiedRandomImpl computation).run' cache) =
-      evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl computation).run' cache) := by
-  change evalSPMF (((projectionCoordUnifiedRandomImpl (.inr target) :
+    EvalDistEq ((projectionCoordUnifiedRandomImpl (.inr target) >>= fun _ =>
+          simulateQ projectionCoordUnifiedRandomImpl computation).run' cache)
+      ((simulateQ projectionCoordUnifiedRandomImpl computation).run' cache) := by
+  change EvalDistEq (((projectionCoordUnifiedRandomImpl (.inr target) :
       StateT ProjectionCoordUnifiedCache ProbComp
         (ProjectionCoordSpec.Range target)) >>= fun _ =>
-        simulateQ projectionCoordUnifiedRandomImpl computation).run' cache) = _
+        simulateQ projectionCoordUnifiedRandomImpl computation).run' cache) _
   simp only [StateT.run'_eq, StateT.run_bind, map_bind]
   cases hcache : cache target with
   | some value =>
@@ -3406,18 +3382,18 @@ theorem evalSPMF_projectionCoordUnifiedRandom_prefetch_irrelevant
       simp
   | none =>
       rw [projectionCoordUnifiedRandomImpl_coordinate_run_miss target cache hcache]
-      change evalSPMF ((((fun value : ProjectionCoordSpec.Range target =>
+      change EvalDistEq ((((fun value : ProjectionCoordSpec.Range target =>
           (value, cache.cacheQuery target value)) <$>
             ($ᵗ ProjectionCoordSpec.Range target)) >>= fun result :
               ProjectionCoordSpec.Range target × ProjectionCoordUnifiedCache =>
                 (fun x => x.1) <$>
-                  (simulateQ projectionCoordUnifiedRandomImpl computation).run result.2)) = _
+                  (simulateQ projectionCoordUnifiedRandomImpl computation).run result.2)) _
       rw [bind_map_left]
-      change evalSPMF (do
+      change EvalDistEq (m := ProbComp) (m' := ProbComp) (do
           let value ← $ᵗ ProjectionCoordSpec.Range target
           (simulateQ projectionCoordUnifiedRandomImpl computation).run'
-            (cache.cacheQuery target value)) =
-        evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl computation).run' cache)
+            (cache.cacheQuery target value))
+        ((simulateQ projectionCoordUnifiedRandomImpl computation).run' cache)
       exact (evalSPMF_projectionCoordUnifiedRandom_eq_uniform_prefill
         target computation cache hcache).symm
 
@@ -3426,10 +3402,10 @@ theorem evalSPMF_projectionCoordUnifiedRandom_query_prefetch_irrelevant
     {alpha : Type} (target : ProjectionCoordSpec.Domain)
     (computation : OracleComp ProjectionCoordChallengeSpec alpha)
     (cache : ProjectionCoordUnifiedCache) :
-    evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl
+    EvalDistEq ((simulateQ projectionCoordUnifiedRandomImpl
         (liftM (ProjectionCoordChallengeSpec.query (.inr target)) >>= fun _ =>
-          computation)).run' cache) =
-      evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl computation).run' cache) := by
+          computation)).run' cache)
+      ((simulateQ projectionCoordUnifiedRandomImpl computation).run' cache) := by
   simpa only [simulateQ_bind, simulateQ_spec_query] using
     (evalSPMF_projectionCoordUnifiedRandom_prefetch_irrelevant
       target computation cache)
@@ -3441,15 +3417,14 @@ theorem evalSPMF_projectionCoordUnifiedRandom_insert_prefetch_irrelevant
     (target : ProjectionCoordSpec.Domain)
     (continuation : beta → OracleComp ProjectionCoordChallengeSpec alpha)
     (cache : ProjectionCoordUnifiedCache) :
-    evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl (before >>= fun value =>
+    EvalDistEq ((simulateQ projectionCoordUnifiedRandomImpl (before >>= fun value =>
         liftM (ProjectionCoordChallengeSpec.query (.inr target)) >>= fun _ =>
-          continuation value)).run' cache) =
-      evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl
+          continuation value)).run' cache)
+      ((simulateQ projectionCoordUnifiedRandomImpl
         (before >>= continuation)).run' cache) := by
   simp only [simulateQ_bind, simulateQ_spec_query, StateT.run'_eq,
     StateT.run_bind, map_bind]
-  apply OracleComp.DeferredSampling.evalSPMF_bind_congr_left
-  intro result
+  refine EvalDistEq.bind_right _ fun result => ?_
   simpa only [StateT.run'_eq, StateT.run_bind, map_bind] using
     (evalSPMF_projectionCoordUnifiedRandom_prefetch_irrelevant
       target (continuation result.1) result.2)
@@ -3685,11 +3660,11 @@ theorem evalSPMF_sourceKdfEager_project_second_bind_eq_deferred
     (continuation : Projection32Value × SourceProjectionLog →
       OracleComp ProjectionCoordChallengeSpec alpha)
     (cache : ProjectionCoordUnifiedCache) :
-    evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl
+    EvalDistEq ((simulateQ projectionCoordUnifiedRandomImpl
         ((sourceKdfEagerCoordinateObservationForwardImpl
           (.inr (.project ⟨input, domain, .second32⟩))).run log >>=
-            continuation)).run' cache) =
-      evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl
+            continuation)).run' cache)
+      ((simulateQ projectionCoordUnifiedRandomImpl
         ((sourceKdfCoordinateObservationForwardImpl
           (.inr (.project ⟨input, domain, .second32⟩))).run log >>=
             continuation)).run' cache) := by
@@ -3699,29 +3674,29 @@ theorem evalSPMF_sourceKdfEager_project_second_bind_eq_deferred
   let next : Projection32Value → OracleComp ProjectionCoordChallengeSpec alpha :=
     fun second => continuation (second,
       log.recordOutput (.project ⟨input, domain, .second32⟩) second)
-  change evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl (do
+  change EvalDistEq ((simulateQ projectionCoordUnifiedRandomImpl (do
       let _ ← liftM (ProjectionCoordChallengeSpec.query
         (.inr (.inl (firstCoord address))))
       let second ← querySecondCoord address
       let _ ← liftM (ProjectionCoordChallengeSpec.query (.inr (.inr address)))
-      next second)).run' cache) =
-    evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl (do
+      next second)).run' cache)
+    ((simulateQ projectionCoordUnifiedRandomImpl (do
       let second ← querySecondCoord address
       next second)).run' cache)
   calc
-    evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl (do
+    EvalDistEq ((simulateQ projectionCoordUnifiedRandomImpl (do
         let _ ← liftM (ProjectionCoordChallengeSpec.query
           (.inr (.inl (firstCoord address))))
         let second ← querySecondCoord address
         let _ ← liftM (ProjectionCoordChallengeSpec.query (.inr (.inr address)))
-        next second)).run' cache) =
-      evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl (do
+        next second)).run' cache)
+      ((simulateQ projectionCoordUnifiedRandomImpl (do
         let second ← querySecondCoord address
         let _ ← liftM (ProjectionCoordChallengeSpec.query (.inr (.inr address)))
         next second)).run' cache) :=
       evalSPMF_projectionCoordUnifiedRandom_query_prefetch_irrelevant
         (.inl (firstCoord address)) _ cache
-    _ = evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl (do
+    EvalDistEq _ ((simulateQ projectionCoordUnifiedRandomImpl (do
         let second ← querySecondCoord address
         next second)).run' cache) := by
       exact evalSPMF_projectionCoordUnifiedRandom_insert_prefetch_irrelevant
@@ -3732,10 +3707,10 @@ theorem evalSPMF_sourceKdfEager_root_bind_eq_deferred
     (continuation : Projection32Value × SourceProjectionLog →
       OracleComp ProjectionCoordChallengeSpec alpha)
     (cache : ProjectionCoordUnifiedCache) :
-    evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl
+    EvalDistEq ((simulateQ projectionCoordUnifiedRandomImpl
         ((sourceKdfEagerCoordinateObservationForwardImpl
-          (.inr (.root input))).run log >>= continuation)).run' cache) =
-      evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl
+          (.inr (.root input))).run log >>= continuation)).run' cache)
+      ((simulateQ projectionCoordUnifiedRandomImpl
         ((sourceKdfCoordinateObservationForwardImpl
           (.inr (.root input))).run log >>= continuation)).run' cache) := by
   rw [sourceKdfEagerCoordinateObservationForwardImpl_root_run,
@@ -3743,21 +3718,21 @@ theorem evalSPMF_sourceKdfEager_root_bind_eq_deferred
   let address := FixedHkdfDomain.pqxdh.address input
   let next : Projection32Value → OracleComp ProjectionCoordChallengeSpec alpha :=
     fun first => continuation (first, log.recordOutput (.root input) first)
-  change evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl (do
+  change EvalDistEq ((simulateQ projectionCoordUnifiedRandomImpl (do
       let first ← queryFirstCoord address
       let _ ← querySecondCoord address
       let _ ← queryNonceCoord address
-      next first)).run' cache) =
-    evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl (do
+      next first)).run' cache)
+    ((simulateQ projectionCoordUnifiedRandomImpl (do
       let first ← queryFirstCoord address
       next first)).run' cache)
   calc
-    evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl (do
+    EvalDistEq ((simulateQ projectionCoordUnifiedRandomImpl (do
         let first ← queryFirstCoord address
         let _ ← querySecondCoord address
         let _ ← queryNonceCoord address
-        next first)).run' cache) =
-      evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl (do
+        next first)).run' cache)
+      ((simulateQ projectionCoordUnifiedRandomImpl (do
         let first ← queryFirstCoord address
         let _ ← querySecondCoord address
         next first)).run' cache) := by
@@ -3768,7 +3743,7 @@ theorem evalSPMF_sourceKdfEager_root_bind_eq_deferred
             let _ ← querySecondCoord address
             pure first)
           (.inr address) next cache)
-    _ = evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl (do
+    EvalDistEq _ ((simulateQ projectionCoordUnifiedRandomImpl (do
         let first ← queryFirstCoord address
         next first)).run' cache) := by
       simpa [querySecondCoord] using
@@ -3780,10 +3755,10 @@ theorem evalSPMF_sourceKdfEager_initial_bind_eq_deferred
     (continuation : (Projection32Value × Projection32Value) × SourceProjectionLog →
       OracleComp ProjectionCoordChallengeSpec alpha)
     (cache : ProjectionCoordUnifiedCache) :
-    evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl
+    EvalDistEq ((simulateQ projectionCoordUnifiedRandomImpl
         ((sourceKdfEagerCoordinateObservationForwardImpl
-          (.inr (.initial input))).run log >>= continuation)).run' cache) =
-      evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl
+          (.inr (.initial input))).run log >>= continuation)).run' cache)
+      ((simulateQ projectionCoordUnifiedRandomImpl
         ((sourceKdfCoordinateObservationForwardImpl
           (.inr (.initial input))).run log >>= continuation)).run' cache) := by
   rw [sourceKdfEagerCoordinateObservationForwardImpl_initial_run,
@@ -3793,12 +3768,12 @@ theorem evalSPMF_sourceKdfEager_initial_bind_eq_deferred
       OracleComp ProjectionCoordChallengeSpec alpha :=
     fun output => continuation (output,
       log.recordOutput (.initial input) output)
-  change evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl (do
+  change EvalDistEq ((simulateQ projectionCoordUnifiedRandomImpl (do
       let first ← queryFirstCoord address
       let second ← querySecondCoord address
       let _ ← queryNonceCoord address
-      next (first, second))).run' cache) =
-    evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl (do
+      next (first, second))).run' cache)
+    ((simulateQ projectionCoordUnifiedRandomImpl (do
       let first ← queryFirstCoord address
       let second ← querySecondCoord address
       next (first, second))).run' cache)
@@ -3812,10 +3787,10 @@ theorem evalSPMF_sourceKdfEager_step_bind_eq_deferred
       (Projection32Value × Projection32Value × Projection12Value) ×
         SourceProjectionLog → OracleComp ProjectionCoordChallengeSpec alpha)
     (cache : ProjectionCoordUnifiedCache) :
-    evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl
+    EvalDistEq ((simulateQ projectionCoordUnifiedRandomImpl
         ((sourceKdfEagerCoordinateObservationForwardImpl
-          (.inr (.step input))).run log >>= continuation)).run' cache) =
-      evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl
+          (.inr (.step input))).run log >>= continuation)).run' cache)
+      ((simulateQ projectionCoordUnifiedRandomImpl
         ((sourceKdfCoordinateObservationForwardImpl
           (.inr (.step input))).run log >>= continuation)).run' cache) := by
   rw [sourceKdfEagerCoordinateObservationForwardImpl_step_run,
@@ -3827,11 +3802,11 @@ theorem evalSPMF_sourceKdfEager_project_first_bind_eq_deferred
     (continuation : Projection32Value × SourceProjectionLog →
       OracleComp ProjectionCoordChallengeSpec alpha)
     (cache : ProjectionCoordUnifiedCache) :
-    evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl
+    EvalDistEq ((simulateQ projectionCoordUnifiedRandomImpl
         ((sourceKdfEagerCoordinateObservationForwardImpl
           (.inr (.project ⟨input, domain, .first32⟩))).run log >>=
-            continuation)).run' cache) =
-      evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl
+            continuation)).run' cache)
+      ((simulateQ projectionCoordUnifiedRandomImpl
         ((sourceKdfCoordinateObservationForwardImpl
           (.inr (.project ⟨input, domain, .first32⟩))).run log >>=
             continuation)).run' cache) := by
@@ -3841,21 +3816,21 @@ theorem evalSPMF_sourceKdfEager_project_first_bind_eq_deferred
   let next : Projection32Value → OracleComp ProjectionCoordChallengeSpec alpha :=
     fun first => continuation (first,
       log.recordOutput (.project ⟨input, domain, .first32⟩) first)
-  change evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl (do
+  change EvalDistEq ((simulateQ projectionCoordUnifiedRandomImpl (do
       let first ← queryFirstCoord address
       let _ ← querySecondCoord address
       let _ ← queryNonceCoord address
-      next first)).run' cache) =
-    evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl (do
+      next first)).run' cache)
+    ((simulateQ projectionCoordUnifiedRandomImpl (do
       let first ← queryFirstCoord address
       next first)).run' cache)
   calc
-    evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl (do
+    EvalDistEq ((simulateQ projectionCoordUnifiedRandomImpl (do
         let first ← queryFirstCoord address
         let _ ← querySecondCoord address
         let _ ← queryNonceCoord address
-        next first)).run' cache) =
-      evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl (do
+        next first)).run' cache)
+      ((simulateQ projectionCoordUnifiedRandomImpl (do
         let first ← queryFirstCoord address
         let _ ← querySecondCoord address
         next first)).run' cache) := by
@@ -3866,7 +3841,7 @@ theorem evalSPMF_sourceKdfEager_project_first_bind_eq_deferred
             let _ ← querySecondCoord address
             pure first)
           (.inr address) next cache)
-    _ = evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl (do
+    EvalDistEq _ ((simulateQ projectionCoordUnifiedRandomImpl (do
         let first ← queryFirstCoord address
         next first)).run' cache) := by
       simpa [querySecondCoord] using
@@ -3879,11 +3854,11 @@ theorem evalSPMF_sourceKdfEager_project_nonce_bind_eq_deferred
     (continuation : Projection12Value × SourceProjectionLog →
       OracleComp ProjectionCoordChallengeSpec alpha)
     (cache : ProjectionCoordUnifiedCache) :
-    evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl
+    EvalDistEq ((simulateQ projectionCoordUnifiedRandomImpl
         ((sourceKdfEagerCoordinateObservationForwardImpl
           (.inr (.project ⟨input, domain, .final12⟩))).run log >>=
-            continuation)).run' cache) =
-      evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl
+            continuation)).run' cache)
+      ((simulateQ projectionCoordUnifiedRandomImpl
         ((sourceKdfCoordinateObservationForwardImpl
           (.inr (.project ⟨input, domain, .final12⟩))).run log >>=
             continuation)).run' cache) := by
@@ -3893,32 +3868,32 @@ theorem evalSPMF_sourceKdfEager_project_nonce_bind_eq_deferred
   let next : Projection12Value → OracleComp ProjectionCoordChallengeSpec alpha :=
     fun nonce => continuation (nonce,
       log.recordOutput (.project ⟨input, domain, .final12⟩) nonce)
-  change evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl (do
+  change EvalDistEq ((simulateQ projectionCoordUnifiedRandomImpl (do
       let _ ← liftM (ProjectionCoordChallengeSpec.query
         (.inr (.inl (firstCoord address))))
       let _ ← liftM (ProjectionCoordChallengeSpec.query
         (.inr (.inl (secondCoord address))))
       let nonce ← queryNonceCoord address
-      next nonce)).run' cache) =
-    evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl (do
+      next nonce)).run' cache)
+    ((simulateQ projectionCoordUnifiedRandomImpl (do
       let nonce ← queryNonceCoord address
       next nonce)).run' cache)
   calc
-    evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl (do
+    EvalDistEq ((simulateQ projectionCoordUnifiedRandomImpl (do
         let _ ← liftM (ProjectionCoordChallengeSpec.query
           (.inr (.inl (firstCoord address))))
         let _ ← liftM (ProjectionCoordChallengeSpec.query
           (.inr (.inl (secondCoord address))))
         let nonce ← queryNonceCoord address
-        next nonce)).run' cache) =
-      evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl (do
+        next nonce)).run' cache)
+      ((simulateQ projectionCoordUnifiedRandomImpl (do
         let _ ← liftM (ProjectionCoordChallengeSpec.query
           (.inr (.inl (secondCoord address))))
         let nonce ← queryNonceCoord address
         next nonce)).run' cache) :=
       evalSPMF_projectionCoordUnifiedRandom_query_prefetch_irrelevant
         (.inl (firstCoord address)) _ cache
-    _ = evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl (do
+    EvalDistEq _ ((simulateQ projectionCoordUnifiedRandomImpl (do
         let nonce ← queryNonceCoord address
         next nonce)).run' cache) :=
       evalSPMF_projectionCoordUnifiedRandom_query_prefetch_irrelevant
@@ -3932,10 +3907,10 @@ theorem evalSPMF_sourceKdfEager_query_bind_eq_deferred
     (continuation : SourceKdfAdversarySpec.Range query × SourceProjectionLog →
       OracleComp ProjectionCoordChallengeSpec alpha)
     (cache : ProjectionCoordUnifiedCache) :
-    evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl
+    EvalDistEq ((simulateQ projectionCoordUnifiedRandomImpl
         ((sourceKdfEagerCoordinateObservationForwardImpl query).run log >>=
-          continuation)).run' cache) =
-      evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl
+          continuation)).run' cache)
+      ((simulateQ projectionCoordUnifiedRandomImpl
         ((sourceKdfCoordinateObservationForwardImpl query).run log >>=
           continuation)).run' cache) := by
   rcases query with randomQuery | sourceQuery
@@ -3977,10 +3952,10 @@ caches are deliberately not compared. -/
 theorem evalSPMF_sourceKdfEagerCoordinate_eq_deferred
     {alpha : Type} (computation : OracleComp SourceKdfAdversarySpec alpha)
     (log : SourceProjectionLog) (cache : ProjectionCoordUnifiedCache) :
-    evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl
+    EvalDistEq ((simulateQ projectionCoordUnifiedRandomImpl
         ((simulateQ sourceKdfEagerCoordinateObservationForwardImpl computation).run
-          log)).run' cache) =
-      evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl
+          log)).run' cache)
+      ((simulateQ projectionCoordUnifiedRandomImpl
         ((simulateQ sourceKdfCoordinateObservationForwardImpl computation).run
           log)).run' cache) := by
   induction computation using OracleComp.inductionOn generalizing log cache with
@@ -3989,11 +3964,11 @@ theorem evalSPMF_sourceKdfEagerCoordinate_eq_deferred
       rw [run_simulateQ_sourceProjectionObservation_query_bind,
         run_simulateQ_sourceProjectionObservation_query_bind]
       calc
-        evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl
+        EvalDistEq ((simulateQ projectionCoordUnifiedRandomImpl
             ((sourceKdfEagerCoordinateObservationForwardImpl query).run log >>= fun result =>
               (simulateQ sourceKdfEagerCoordinateObservationForwardImpl
-                (rest result.1)).run result.2)).run' cache) =
-          evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl
+                (rest result.1)).run result.2)).run' cache)
+          ((simulateQ projectionCoordUnifiedRandomImpl
             ((sourceKdfCoordinateObservationForwardImpl query).run log >>= fun result =>
               (simulateQ sourceKdfEagerCoordinateObservationForwardImpl
                 (rest result.1)).run result.2)).run' cache) :=
@@ -4001,13 +3976,12 @@ theorem evalSPMF_sourceKdfEagerCoordinate_eq_deferred
             (fun result =>
               (simulateQ sourceKdfEagerCoordinateObservationForwardImpl
                 (rest result.1)).run result.2) cache
-        _ = evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl
+        EvalDistEq _ ((simulateQ projectionCoordUnifiedRandomImpl
             ((sourceKdfCoordinateObservationForwardImpl query).run log >>= fun result =>
               (simulateQ sourceKdfCoordinateObservationForwardImpl
                 (rest result.1)).run result.2)).run' cache) := by
           simp only [simulateQ_bind, StateT.run'_eq, StateT.run_bind, map_bind]
-          apply OracleComp.DeferredSampling.evalSPMF_bind_congr_left
-          intro result
+          refine EvalDistEq.bind_right _ fun result => ?_
           exact ih result.1.1 result.1.2 result.2
 
 /-- The unified dependent-range coordinate cache is exactly the existing pair of width-specific
@@ -4701,21 +4675,21 @@ output-plus-source-log distributions for every adaptively chosen source computat
 theorem evalSPMF_sourceProjectionObservedFullRandom_eq_deferred
     {qU r i s pF pS pN : ℕ}
     (adversary : SourceKdfAdversary qU r i s pF pS pN) :
-    evalSPMF (sourceProjectionObservedFullRandomRun adversary) =
-      evalSPMF (sourceProjectionObservedDeferredRandomRun adversary) := by
+    EvalDistEq (sourceProjectionObservedFullRandomRun adversary)
+      (sourceProjectionObservedDeferredRandomRun adversary) := by
   unfold sourceProjectionObservedFullRandomRun
     sourceProjectionObservedDeferredRandomRun
   calc
-    evalSPMF ((simulateQ fixedHkdfSha512JointStreamRandomImpl
-        (sourceKdfStreamObservedMain adversary)).run' ∅) =
-      evalSPMF ((simulateQ
+    EvalDistEq ((simulateQ fixedHkdfSha512JointStreamRandomImpl
+        (sourceKdfStreamObservedMain adversary)).run' ∅)
+      ((simulateQ
         (projectionCoordUnifiedRandomImpl ∘ₛ jointKdfStreamEagerCoordinateForwardImpl)
           (sourceKdfStreamObservedMain adversary)).run'
             (jointKdfStreamCacheToUnifiedProjectionCoordCache ∅)) :=
       evalSPMF_fixedJointStreamRandom_eq_eagerCoordinates
         (sourceKdfStreamObservedMain adversary) ∅
-    _ = evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl
-        (sourceKdfEagerCoordinateObservedMain adversary)).run' ∅) := by
+    _ = (simulateQ projectionCoordUnifiedRandomImpl
+        (sourceKdfEagerCoordinateObservedMain adversary)).run' ∅ := by
       simp only [QueryImpl.simulateQ_compose,
         simulateQ_jointKdfStreamEagerCoordinate_sourceKdfStreamObservedMain]
       have hempty : jointKdfStreamCacheToUnifiedProjectionCoordCache ∅ = ∅ := by
@@ -4724,12 +4698,12 @@ theorem evalSPMF_sourceProjectionObservedFullRandom_eq_deferred
         · simp [jointKdfStreamCacheToUnifiedProjectionCoordCache]
         · simp [jointKdfStreamCacheToUnifiedProjectionCoordCache]
       rw [hempty]
-    _ = evalSPMF ((simulateQ projectionCoordUnifiedRandomImpl
+    EvalDistEq _ ((simulateQ projectionCoordUnifiedRandomImpl
         (sourceKdfCoordinateObservedMain adversary)).run' ∅) :=
       evalSPMF_sourceKdfEagerCoordinate_eq_deferred adversary.main
         emptySourceProjectionLog ∅
-    _ = evalSPMF ((simulateQ projectionCoordLazyRandomImpl
-        (sourceKdfCoordinateObservedMain adversary)).run' (∅, ∅)) := by
+    _ = (simulateQ projectionCoordLazyRandomImpl
+        (sourceKdfCoordinateObservedMain adversary)).run' (∅, ∅) := by
       rw [projectionCoordUnifiedRandomImpl_simulateQ_run'_eq_toPair]
       rfl
 
@@ -4743,21 +4717,22 @@ def SourceProjectionCollisionEvent
 theorem probEvent_sourceProjectionCollision_fullRandom_eq_cache
     {qU r i s pF pS pN : ℕ}
     (adversary : SourceKdfAdversary qU r i s pF pS pN) :
-    Pr[SourceProjectionCollisionEvent |
-        sourceProjectionObservedFullRandomRun adversary] =
-      Pr[ProjectionCollisionEvent | projectionCollisionRandomRun adversary] := by
+    Pr{let result ← sourceProjectionObservedFullRandomRun adversary}[
+        SourceProjectionCollisionEvent result] =
+      Pr{let result ← projectionCollisionRandomRun adversary}[
+        ProjectionCollisionEvent result] := by
   calc
-    Pr[SourceProjectionCollisionEvent |
-        sourceProjectionObservedFullRandomRun adversary] =
-      Pr[SourceProjectionCollisionEvent |
-        sourceProjectionObservedDeferredRandomRun adversary] :=
-      probEvent_congr' (fun _ _ => Iff.rfl)
-        (evalSPMF_sourceProjectionObservedFullRandom_eq_deferred adversary)
-    _ = Pr[ProjectionObservedCollisionEvent |
-        projectionCollisionObservedRandomRun adversary] := by
-      rw [sourceProjectionObservedDeferredRandomRun_eq_observed, probEvent_map]
+    Pr{let result ← sourceProjectionObservedFullRandomRun adversary}[
+        SourceProjectionCollisionEvent result] =
+      Pr{let result ← sourceProjectionObservedDeferredRandomRun adversary}[
+        SourceProjectionCollisionEvent result] :=
+      (evalSPMF_sourceProjectionObservedFullRandom_eq_deferred adversary).prEvent_eq _
+    _ = Pr{let result ← projectionCollisionObservedRandomRun adversary}[
+        ProjectionObservedCollisionEvent result] := by
+      rw [sourceProjectionObservedDeferredRandomRun_eq_observed, prEvent_map]
       rfl
-    _ = Pr[ProjectionCollisionEvent | projectionCollisionRandomRun adversary] :=
+    _ = Pr{let result ← projectionCollisionRandomRun adversary}[
+        ProjectionCollisionEvent result] :=
       probEvent_projectionObservedCollision_eq_cache adversary
 
 /-- Exact source-accounted collision bound for the complete-stream random world. Uniform
@@ -4765,8 +4740,8 @@ adversary samples are absent from both birthday terms. -/
 theorem sourceProjectionCollision_fullRandom_le
     {qU r i s pF pS pN : ℕ}
     (adversary : SourceKdfAdversary qU r i s pF pS pN) :
-    Pr[SourceProjectionCollisionEvent |
-        sourceProjectionObservedFullRandomRun adversary] ≤
+    Pr{let result ← sourceProjectionObservedFullRandomRun adversary}[
+        SourceProjectionCollisionEvent result] ≤
       (Nat.choose (sourceQ32 r i s pF pS) 2 : ℝ≥0∞) /
           (2 ^ 256 : ℝ≥0∞) +
         (Nat.choose (sourceQN s pN) 2 : ℝ≥0∞) /
@@ -5031,23 +5006,20 @@ theorem fixedHkdfSha512JointStreamRandomExp_collisionReduction
 probability. -/
 theorem probOutput_collisionBit_eq_probEvent
     (game : ProbComp (Bool × SourceProjectionLog)) :
-    Pr[= true |
-      sourceProjectionCollisionBit <$> game] =
-      Pr[SourceProjectionCollisionEvent | game] := by
-  rw [← probEvent_eq_eq_probOutput, probEvent_map]
-  apply OracleComp.probEvent_congr' _ rfl
-  intro result _
-  simp only [Function.comp_apply, sourceProjectionCollisionBit,
-    decide_eq_true_eq]
+    Pr{let bit ← sourceProjectionCollisionBit <$> game}[bit = true] =
+      Pr{let result ← game}[SourceProjectionCollisionEvent result] := by
+  rw [prEvent_map]
+  refine prEvent_congr _ _ _ fun result => ?_
+  simp only [sourceProjectionCollisionBit, decide_eq_true_eq]
 
 /-- The reduction's real `true` probability is the exact real source-visible collision event. -/
 theorem probOutput_collisionReduction_real_eq_sourceEvent
     (source : FixedHkdfSha512NoSaltSource) {qU r i s pF pS pN : ℕ}
     (adversary : SourceKdfAdversary qU r i s pF pS pN) :
-    Pr[= true | fixedHkdfSha512JointStreamRealExp source
-        (sourceProjectionCollisionReduction adversary)] =
-      Pr[SourceProjectionCollisionEvent |
-        sourceProjectionObservedRealRun source adversary] := by
+    Pr{let bit ← (fixedHkdfSha512JointStreamRealExp source
+        (sourceProjectionCollisionReduction adversary))}[bit = true] =
+      Pr{let result ← sourceProjectionObservedRealRun source adversary}[
+        SourceProjectionCollisionEvent result] := by
   rw [fixedHkdfSha512JointStreamRealExp_collisionReduction]
   exact probOutput_collisionBit_eq_probEvent _
 
@@ -5056,10 +5028,10 @@ event, after the full-stream/deferred normalization. -/
 theorem probOutput_collisionReduction_random_eq_sourceEvent
     {qU r i s pF pS pN : ℕ}
     (adversary : SourceKdfAdversary qU r i s pF pS pN) :
-    Pr[= true | fixedHkdfSha512JointStreamRandomExp
-        (sourceProjectionCollisionReduction adversary)] =
-      Pr[SourceProjectionCollisionEvent |
-        sourceProjectionObservedFullRandomRun adversary] := by
+    Pr{let bit ← (fixedHkdfSha512JointStreamRandomExp
+        (sourceProjectionCollisionReduction adversary))}[bit = true] =
+      Pr{let result ← sourceProjectionObservedFullRandomRun adversary}[
+        SourceProjectionCollisionEvent result] := by
   rw [fixedHkdfSha512JointStreamRandomExp_collisionReduction]
   exact probOutput_collisionBit_eq_probEvent _
 
@@ -5072,8 +5044,8 @@ made here. -/
 theorem sourceProjectionCollision_real_le
     (source : FixedHkdfSha512NoSaltSource) {qU r i s pF pS pN : ℕ}
     (adversary : SourceKdfAdversary qU r i s pF pS pN) :
-    Pr[SourceProjectionCollisionEvent |
-        sourceProjectionObservedRealRun source adversary] ≤
+    Pr{let result ← sourceProjectionObservedRealRun source adversary}[
+        SourceProjectionCollisionEvent result] ≤
       ENNReal.ofReal (fixedHkdfSha512JointStreamAdvantage source
           (sourceProjectionCollisionReduction adversary)) +
         (Nat.choose (sourceQ32 r i s pF pS) 2 : ℝ≥0∞) /
@@ -5082,20 +5054,21 @@ theorem sourceProjectionCollision_real_le
           (2 ^ 96 : ℝ≥0∞) := by
   let reduction := sourceProjectionCollisionReduction adversary
   calc
-    Pr[SourceProjectionCollisionEvent |
-        sourceProjectionObservedRealRun source adversary] =
-      Pr[= true | fixedHkdfSha512JointStreamRealExp source reduction] := by
+    Pr{let result ← sourceProjectionObservedRealRun source adversary}[
+        SourceProjectionCollisionEvent result] =
+      Pr{let bit ← fixedHkdfSha512JointStreamRealExp source reduction}[bit = true] := by
         rw [probOutput_collisionReduction_real_eq_sourceEvent]
-    _ ≤ Pr[= true | fixedHkdfSha512JointStreamRandomExp reduction] +
+    _ ≤ Pr{let bit ← fixedHkdfSha512JointStreamRandomExp reduction}[bit = true] +
         ENNReal.ofReal
           ((fixedHkdfSha512JointStreamRealExp source reduction).boolDistAdvantage
             (fixedHkdfSha512JointStreamRandomExp reduction)) := by
       have comparison := VCVioForward.evalDist_apply_true_le_add_ofReal_boolDistAdvantage
-          (fixedHkdfSha512JointStreamRealExp source reduction) (fixedHkdfSha512JointStreamRandomExp reduction)
-      simp only [VCVioLegacy.evalDist_singleton_eq_probOutput] at comparison
+          (fixedHkdfSha512JointStreamRealExp source reduction)
+          (fixedHkdfSha512JointStreamRandomExp reduction)
+      rw [prEvent_eq_evalDist_singleton, prEvent_eq_evalDist_singleton]
       exact comparison
-    _ = Pr[SourceProjectionCollisionEvent |
-          sourceProjectionObservedFullRandomRun adversary] +
+    _ = Pr{let result ← sourceProjectionObservedFullRandomRun adversary}[
+          SourceProjectionCollisionEvent result] +
         ENNReal.ofReal (fixedHkdfSha512JointStreamAdvantage source reduction) := by
       rw [probOutput_collisionReduction_random_eq_sourceEvent]
       rfl

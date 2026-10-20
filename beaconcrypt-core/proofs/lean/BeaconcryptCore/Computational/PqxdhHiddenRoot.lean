@@ -3,6 +3,7 @@ import VCVio.OracleComp.QueryTracking.LoggingOracle
 import VCVio.OracleComp.QueryTracking.ProgrammingOracle
 import VCVio.OracleComp.QueryTracking.SubSpec
 import VCVio.ProgramLogic.Relational.ProgrammingOracle
+import BeaconcryptCore.Computational.VCVioLegacyBridge
 
 /-!
 # One-hidden-coordinate PQXDH root games
@@ -14,6 +15,8 @@ coordinates and the exact source encoding
 the HKDF address.
 
 The legacy real-to-random endpoint from `PqxdhJointKdfGame` is efficiently distinguishable and is not a sound negligibility assumption. In particular, both terminal root games also replace public adversarial KDF responses by random-table responses: even an observer ignoring the root can compare an unrelated public query with a local fixed-HKDF evaluation. The ROM hidden-query bound and every displayed inequality remain valid, but they do not prove production root secrecy. `PqxdhSecretInputKdf` supplies a separate one-root replacement with real public evaluation retained in both branches.
+
+Probabilities and output laws are written in VCVio's forward vocabulary: `Pr{let x ← mx}[p x]` for events and outputs and `EvalDistEq A B` (upstream `A =ᵈ B`) for equality in distribution, which replace the deprecated `Pr[p | mx]`, `Pr[= a | mx]` and `𝒮[A] = 𝒮[B]` of VCVio's retiring probability interface and have the same meaning. Total variation `tvDist` is defined at the pinned VCVio commit from the deprecated output distributions and has no forward counterpart there, and VCVio's identical-until-bad lemmas `probEvent_output_bad_eq'` and `tvDist_simulateQ_run_le_probEvent_output_bad` and the laws `tvDist_bind_left_le` and `abs_probOutput_toReal_sub_le_tvDist` are stated there only in the deprecated form; the proofs reach them through the transitional bridge `BeaconcryptCore.VCVioLegacy`, which is proved from the pin and is deleted at the VCVio upgrade.
 -/
 
 open OracleComp OracleSpec ENNReal
@@ -777,32 +780,38 @@ theorem jointKdfStreamSplitEquiv_fst (stream : JointKdfStream) :
 
 /-- The first 32 bytes of a uniform 76-byte stream are exactly uniform 32 bytes. -/
 theorem evalSPMF_first32_uniformJointKdfStream :
-    𝒮[JointKdfProjection.first32.project <$> ($ᵗ JointKdfStream)] =
-      𝒮[$ᵗ HiddenRootCoordinate] := by
-  have hsplit :
-      evalSPMF (jointKdfStreamSplitEquiv <$> ($ᵗ JointKdfStream)) =
-        evalSPMF ($ᵗ (HiddenRootCoordinate × List.Vector UInt8 44)) := by
-    apply evalSPMF_ext
-    intro pair
-    exact probOutput_map_bijective_uniform_cross
-      (α := JointKdfStream)
-      (β := HiddenRootCoordinate × List.Vector UInt8 44)
-      jointKdfStreamSplitEquiv
-      jointKdfStreamSplitEquiv.bijective pair
-  rw [evalSPMF_map]
-  change (fun stream : JointKdfStream =>
-    (JointKdfProjection.first32.project stream : HiddenRootCoordinate)) <$>
-      evalSPMF ($ᵗ JointKdfStream) = evalSPMF ($ᵗ HiddenRootCoordinate)
-  simp only [JointKdfProjection.width]
-  change (fun stream : JointKdfStream =>
-      (jointKdfStreamSplitEquiv stream).1) <$>
-        evalSPMF ($ᵗ JointKdfStream) = evalSPMF ($ᵗ HiddenRootCoordinate)
-  rw [← Functor.map_map jointKdfStreamSplitEquiv
-    (fun pair : HiddenRootCoordinate × List.Vector UInt8 44 => pair.1)]
-  rw [← evalSPMF_map]
-  rw [hsplit]
-  rw [← evalSPMF_map]
-  exact evalSPMF_map_fst_uniformSample_prod
+    EvalDistEq (JointKdfProjection.first32.project <$> ($ᵗ JointKdfStream))
+      ($ᵗ HiddenRootCoordinate) := by
+  have split : EvalDistEq (jointKdfStreamSplitEquiv <$> ($ᵗ JointKdfStream))
+      ($ᵗ (HiddenRootCoordinate × List.Vector UInt8 44)) :=
+    SampleableType.map_uniformSample_evalDistEq_of_bijective jointKdfStreamSplitEquiv.bijective
+  have marginal : ∀ (α β : Type) [Fintype α] [DecidableEq α] [Fintype β] [Nonempty β]
+      [SampleableType α] [SampleableType (α × β)],
+      EvalDistEq (Prod.fst <$> ($ᵗ (α × β))) ($ᵗ α) := by
+    intro α β _ _ _ _ _ _
+    refine evalDistEq_iff_forall_prEvent_eq_output.2 fun a => ?_
+    have : Nonempty α := ⟨a⟩
+    rw [prEvent_map, SampleableType.prEvent_uniformSample,
+      SampleableType.prEvent_uniformSample_eq_singleton]
+    have fiber : (Finset.univ.filter fun pair : α × β => pair.1 = a) =
+        ({a} : Finset α) ×ˢ (Finset.univ : Finset β) := by
+      ext ⟨first, second⟩
+      simp only [Finset.mem_filter, Finset.mem_univ, true_and, Finset.mem_product,
+        Finset.mem_singleton, and_true]
+    have positive : (Fintype.card β : ℝ≥0∞) ≠ 0 := by
+      exact_mod_cast Fintype.card_ne_zero
+    have finite : (Fintype.card β : ℝ≥0∞) ≠ ⊤ := ENNReal.natCast_ne_top _
+    rw [fiber, Finset.card_product, Finset.card_singleton, one_mul, Finset.card_univ,
+      Fintype.card_prod, Nat.cast_mul, ENNReal.div_eq_inv_mul,
+      ENNReal.mul_inv (Or.inr finite) (Or.inr positive), mul_assoc,
+      ENNReal.inv_mul_cancel positive finite, mul_one]
+  have shape : JointKdfProjection.first32.project <$> ($ᵗ JointKdfStream) =
+      Prod.fst <$> (jointKdfStreamSplitEquiv <$> ($ᵗ JointKdfStream)) := by
+    simp only [Functor.map_map]
+    rfl
+  rw [shape]
+  exact (split.map_congr Prod.fst).trans
+    (marginal HiddenRootCoordinate (List.Vector UInt8 44))
 
 /-! ## Full-stream programming at the hidden address -/
 
@@ -1145,49 +1154,50 @@ theorem jointKdfSingletonProgrammed_tracking_agree_good
     (cache : JointKdfRO.QueryCache)
     (response : FixedHkdfSha512JointStreamSpec.Range query)
     (nextCache : JointKdfRO.QueryCache) :
-    Pr[= (response, (nextCache, false)) |
-      (jointKdfSingletonProgrammedStreamImpl target stream query).run
-        (cache, false)] =
-    Pr[= (response, (nextCache, false)) |
-      (jointKdfSingletonTrackingStreamImpl target stream query).run
-        (cache, false)] := by
+    Pr{let x ← ((jointKdfSingletonProgrammedStreamImpl target stream query).run
+        (cache, false))}[x = (response, (nextCache, false))] =
+    Pr{let x ← ((jointKdfSingletonTrackingStreamImpl target stream query).run
+        (cache, false))}[x = (response, (nextCache, false))] := by
   rcases query with randomQuery | address
-  · simp [jointKdfSingletonProgrammedStreamImpl,
-      jointKdfSingletonTrackingStreamImpl]
+  · rw [show (jointKdfSingletonProgrammedStreamImpl target stream (.inl randomQuery)).run
+        (cache, false) =
+        (jointKdfSingletonTrackingStreamImpl target stream (.inl randomQuery)).run
+          (cache, false) by
+      simp [jointKdfSingletonProgrammedStreamImpl, jointKdfSingletonTrackingStreamImpl]]
   · cases hcache : cache address with
     | some cached =>
-        simp [jointKdfSingletonProgrammedStreamImpl,
-          jointKdfSingletonTrackingStreamImpl,
-          QueryImpl.withProgramming_apply,
-          QueryImpl.withCachingTrackingPolicy_apply, hcache]
+        rw [show (jointKdfSingletonProgrammedStreamImpl target stream (.inr address)).run
+            (cache, false) =
+            (jointKdfSingletonTrackingStreamImpl target stream (.inr address)).run
+              (cache, false) by
+          simp [jointKdfSingletonProgrammedStreamImpl,
+            jointKdfSingletonTrackingStreamImpl,
+            QueryImpl.withProgramming_apply,
+            QueryImpl.withCachingTrackingPolicy_apply, hcache]]
     | none =>
         cases hpolicy : jointKdfSingletonProgrammingPolicy target stream address with
         | none =>
-            simp [jointKdfSingletonProgrammedStreamImpl,
-              jointKdfSingletonTrackingStreamImpl,
-              QueryImpl.withProgramming_apply,
-              QueryImpl.withCachingTrackingPolicy_apply, hcache, hpolicy]
+            rw [show (jointKdfSingletonProgrammedStreamImpl target stream (.inr address)).run
+                (cache, false) =
+                (jointKdfSingletonTrackingStreamImpl target stream (.inr address)).run
+                  (cache, false) by
+              simp [jointKdfSingletonProgrammedStreamImpl,
+                jointKdfSingletonTrackingStreamImpl,
+                QueryImpl.withProgramming_apply,
+                QueryImpl.withCachingTrackingPolicy_apply, hcache, hpolicy]]
         | some programmed =>
-            simp [jointKdfSingletonProgrammedStreamImpl,
-              jointKdfSingletonTrackingStreamImpl,
-              QueryImpl.withProgramming_apply,
-              QueryImpl.withCachingTrackingPolicy_apply, hcache, hpolicy]
-            have hleft : (response, nextCache, false) ∉
-                support (pure
-                  (programmed, cache.cacheQuery address programmed, true) :
-                    ProbComp (JointKdfStream × JointKdfRO.QueryCache × Bool)) := by
-              simp
-            have hright : (response, nextCache, false) ∉ support
-                ((fun sample : JointKdfStream =>
-                  (sample, cache.cacheQuery address sample, true)) <$>
-                    uniformSampleImpl (spec := JointKdfRO) address) := by
-              intro hright
-              rw [support_map] at hright
-              obtain ⟨sample, _, hresult⟩ := hright
-              have hflag := congrArg (fun result => result.2.2) hresult
-              simp at hflag
-            exact (probOutput_eq_zero_of_not_mem_support hleft).trans
-              (probOutput_eq_zero_of_not_mem_support hright).symm
+            have hleft : (response, (nextCache, false)) ∉ support
+                ((jointKdfSingletonProgrammedStreamImpl target stream (.inr address)).run
+                  (cache, false)) := by
+              simp [jointKdfSingletonProgrammedStreamImpl,
+                QueryImpl.withProgramming_apply, hcache, hpolicy]
+            have hright : (response, (nextCache, false)) ∉ support
+                ((jointKdfSingletonTrackingStreamImpl target stream (.inr address)).run
+                  (cache, false)) := by
+              simp [jointKdfSingletonTrackingStreamImpl,
+                QueryImpl.withCachingTrackingPolicy_apply, hcache, hpolicy]
+            rw [prEvent_eq_zero_of_not_mem_support _ hleft,
+              prEvent_eq_zero_of_not_mem_support _ hright]
 
 /-- Once set, the singleton-programming bad flag remains set. -/
 theorem jointKdfSingletonProgrammedStream_bad_monotone
@@ -1241,22 +1251,24 @@ theorem jointKdfSingletonProgrammed_tracking_tvDist_le_bad
         computation).run' (∅, false))
       ((simulateQ (jointKdfSingletonTrackingStreamImpl target stream)
         computation).run' (∅, false)) ≤
-    Pr[fun result : alpha × JointKdfRO.QueryCache × Bool =>
-        result.2.2 = true |
-      (simulateQ (jointKdfSingletonProgrammedStreamImpl target stream)
-        computation).run (∅, false)].toReal := by
+    Pr{let result ← ((simulateQ (jointKdfSingletonProgrammedStreamImpl target stream)
+        computation).run (∅, false))}[result.2.2 = true].toReal := by
   refine (tvDist_map_le Prod.fst
     ((simulateQ (jointKdfSingletonProgrammedStreamImpl target stream)
       computation).run (∅, false))
     ((simulateQ (jointKdfSingletonTrackingStreamImpl target stream)
       computation).run (∅, false))).trans ?_
-  exact OracleComp.ProgramLogic.Relational.tvDist_simulateQ_run_le_probEvent_output_bad
+  have bound := OracleComp.ProgramLogic.Relational.tvDist_simulateQ_run_le_probEvent_output_bad
     (jointKdfSingletonProgrammedStreamImpl target stream)
     (jointKdfSingletonTrackingStreamImpl target stream)
     computation ∅
-    (jointKdfSingletonProgrammed_tracking_agree_good target stream)
+    (fun query cache response nextCache => by
+      simpa only [VCVioLegacy.probOutput_eq_prEvent] using
+        jointKdfSingletonProgrammed_tracking_agree_good target stream query cache response
+          nextCache)
     (jointKdfSingletonProgrammedStream_bad_monotone target stream)
     (jointKdfSingletonTrackingStream_bad_monotone target stream)
+  simpa only [VCVioLegacy.probEvent_eq_prEvent] using bound
 
 /-- Public projection version of the fixed-target identical-until-bad bound. -/
 theorem hiddenRootProgrammed_tracking_tvDist_le_bad
@@ -1268,16 +1280,14 @@ theorem hiddenRootProgrammed_tracking_tvDist_le_bad
         computation).run' (∅, false))
       ((simulateQ (hiddenRootTrackingViewImpl known hidden stream)
         computation).run' (∅, false)) ≤
-    Pr[fun result : alpha × JointKdfRO.QueryCache × Bool =>
-        result.2.2 = true |
-      (simulateQ (hiddenRootProgrammedViewImpl known hidden stream)
-        computation).run (∅, false)].toReal := by
-  simpa [hiddenRootProgrammedViewImpl, hiddenRootTrackingViewImpl,
+    Pr{let result ← ((simulateQ (hiddenRootProgrammedViewImpl known hidden stream)
+        computation).run (∅, false))}[result.2.2 = true].toReal := by
+  have bound := jointKdfSingletonProgrammed_tracking_tvDist_le_bad
+    (hiddenRootAddress known hidden) stream
+    (simulateQ jointKdfViewForwardImpl computation)
+  simpa only [hiddenRootProgrammedViewImpl, hiddenRootTrackingViewImpl,
     hiddenRootProgrammedStreamImpl, hiddenRootTrackingStreamImpl,
-    QueryImpl.simulateQ_compose] using
-    jointKdfSingletonProgrammed_tracking_tvDist_le_bad
-      (hiddenRootAddress known hidden) stream
-      (simulateQ jointKdfViewForwardImpl computation)
+    QueryImpl.simulateQ_compose] using bound
 
 /-- Forgetting the sticky policy flag turns the primitive tracking handler back into the
 ordinary lazy joint-stream handler. -/
@@ -1685,15 +1695,12 @@ theorem jointKdfSimulate_withQueryLog_probEvent_bad_eq
       (StateT (JointKdfRO.QueryCache × Bool) ProbComp))
     (computation : OracleComp FixedHkdfSha512JointStreamSpec alpha)
     (cache : JointKdfRO.QueryCache) (initialBad : Bool) :
-    Pr[fun result : (alpha ×
-          QueryLog FixedHkdfSha512JointStreamSpec) ×
-          (JointKdfRO.QueryCache × Bool) => result.2.2 = true |
-        (simulateQ impl computation.withQueryLog).run (cache, initialBad)] =
-      Pr[fun result : alpha × JointKdfRO.QueryCache × Bool =>
-          result.2.2 = true |
-        (simulateQ impl computation).run (cache, initialBad)] := by
+    Pr{let result ← ((simulateQ impl computation.withQueryLog).run
+        (cache, initialBad))}[result.2.2 = true] =
+      Pr{let result ← ((simulateQ impl computation).run
+        (cache, initialBad))}[result.2.2 = true] := by
   rw [← jointKdfSimulate_withQueryLog_run_project
-    impl computation (cache, initialBad), probEvent_map]
+    impl computation (cache, initialBad), prEvent_map]
   rfl
 
 /-- Unprogrammed lazy execution with a response-dependent trace of every forwarded logical
@@ -1712,21 +1719,21 @@ noncomputable def hiddenRootLoggedRandomRun
 theorem jointKdfSingletonProgrammed_tracking_probEvent_bad_eq
     {alpha : Type} (target : JointKdfAddress) (stream : JointKdfStream)
     (computation : OracleComp FixedHkdfSha512JointStreamSpec alpha) :
-    Pr[fun result : alpha × JointKdfRO.QueryCache × Bool =>
-        result.2.2 = true |
-      (simulateQ (jointKdfSingletonProgrammedStreamImpl target stream)
-        computation).run (∅, false)] =
-    Pr[fun result : alpha × JointKdfRO.QueryCache × Bool =>
-        result.2.2 = true |
-      (simulateQ (jointKdfSingletonTrackingStreamImpl target stream)
-        computation).run (∅, false)] := by
-  exact OracleComp.ProgramLogic.Relational.probEvent_output_bad_eq'
+    Pr{let result ← ((simulateQ (jointKdfSingletonProgrammedStreamImpl target stream)
+        computation).run (∅, false))}[result.2.2 = true] =
+    Pr{let result ← ((simulateQ (jointKdfSingletonTrackingStreamImpl target stream)
+        computation).run (∅, false))}[result.2.2 = true] := by
+  have equal := OracleComp.ProgramLogic.Relational.probEvent_output_bad_eq'
     (jointKdfSingletonProgrammedStreamImpl target stream)
     (jointKdfSingletonTrackingStreamImpl target stream)
-    (jointKdfSingletonProgrammed_tracking_agree_good target stream)
+    (fun query cache response nextCache => by
+      simpa only [VCVioLegacy.probOutput_eq_prEvent] using
+        jointKdfSingletonProgrammed_tracking_agree_good target stream query cache response
+          nextCache)
     (jointKdfSingletonProgrammedStream_bad_monotone target stream)
     (jointKdfSingletonTrackingStream_bad_monotone target stream)
     computation ∅
+  simpa only [VCVioLegacy.probEvent_eq_prEvent] using equal
 
 /-- Once the trace is retained, forgetting the tracking flag gives the ordinary lazy random
 joint-stream run without changing candidate events. -/
@@ -1735,16 +1742,12 @@ theorem jointKdfSingletonTracking_candidate_probEvent_eq_random
     (target : JointKdfAddress) (stream : JointKdfStream)
     (hidden : HiddenRootCoordinate)
     (computation : OracleComp FixedHkdfSha512JointStreamSpec alpha) :
-    Pr[fun result : (alpha × QueryLog FixedHkdfSha512JointStreamSpec) ×
-          (JointKdfRO.QueryCache × Bool) =>
-        some hidden ∈ hiddenRootStreamCandidates known result.1.2 |
-      (simulateQ (jointKdfSingletonTrackingStreamImpl target stream)
-        computation.withQueryLog).run (∅, false)] =
-    Pr[fun result : (alpha × QueryLog FixedHkdfSha512JointStreamSpec) ×
-          JointKdfRO.QueryCache =>
-        some hidden ∈ hiddenRootStreamCandidates known result.1.2 |
-      (simulateQ fixedHkdfSha512JointStreamRandomImpl
-        computation.withQueryLog).run ∅] := by
+    Pr{let result ← ((simulateQ (jointKdfSingletonTrackingStreamImpl target stream)
+        computation.withQueryLog).run (∅, false))}[
+        some hidden ∈ hiddenRootStreamCandidates known result.1.2] =
+    Pr{let result ← ((simulateQ fixedHkdfSha512JointStreamRandomImpl
+        computation.withQueryLog).run ∅)}[
+        some hidden ∈ hiddenRootStreamCandidates known result.1.2] := by
   have hproject : Prod.map id Prod.fst <$>
         (simulateQ (jointKdfSingletonTrackingStreamImpl target stream)
           computation.withQueryLog).run (∅, false) =
@@ -1753,7 +1756,7 @@ theorem jointKdfSingletonTracking_candidate_probEvent_eq_random
     simpa [jointKdfSingletonTrackingStreamOrnament] using
       (jointKdfSingletonTrackingStreamOrnament target stream).run_eq
         computation.withQueryLog (∅, false) trivial
-  rw [← hproject, probEvent_map]
+  rw [← hproject, prEvent_map]
   rfl
 
 /-- For fixed independent `hidden32` and stream samples, the programming bad event is bounded by
@@ -1762,53 +1765,37 @@ theorem jointKdfSingletonProgrammed_bad_le_random_candidate
     {alpha : Type} (known : KnownPqxdhRootCoordinates)
     (hidden : HiddenRootCoordinate) (stream : JointKdfStream)
     (computation : OracleComp FixedHkdfSha512JointStreamSpec alpha) :
-    Pr[fun result : alpha × JointKdfRO.QueryCache × Bool =>
-        result.2.2 = true |
-      (simulateQ (jointKdfSingletonProgrammedStreamImpl
-        (hiddenRootAddress known hidden) stream) computation).run (∅, false)] ≤
-    Pr[fun result : (alpha × QueryLog FixedHkdfSha512JointStreamSpec) ×
-          JointKdfRO.QueryCache =>
-        some hidden ∈ hiddenRootStreamCandidates known result.1.2 |
-      (simulateQ fixedHkdfSha512JointStreamRandomImpl
-        computation.withQueryLog).run ∅] := by
+    Pr{let result ← ((simulateQ (jointKdfSingletonProgrammedStreamImpl
+        (hiddenRootAddress known hidden) stream) computation).run (∅, false))}[
+        result.2.2 = true] ≤
+    Pr{let result ← ((simulateQ fixedHkdfSha512JointStreamRandomImpl
+        computation.withQueryLog).run ∅)}[
+        some hidden ∈ hiddenRootStreamCandidates known result.1.2] := by
   let target := hiddenRootAddress known hidden
   calc
-    Pr[fun result : alpha × JointKdfRO.QueryCache × Bool =>
-        result.2.2 = true |
-      (simulateQ (jointKdfSingletonProgrammedStreamImpl target stream)
-        computation).run (∅, false)] =
-        Pr[fun result : alpha × JointKdfRO.QueryCache × Bool =>
-          result.2.2 = true |
-        (simulateQ (jointKdfSingletonTrackingStreamImpl target stream)
-          computation).run (∅, false)] :=
+    Pr{let result ← ((simulateQ (jointKdfSingletonProgrammedStreamImpl target stream)
+        computation).run (∅, false))}[result.2.2 = true] =
+        Pr{let result ← ((simulateQ (jointKdfSingletonTrackingStreamImpl target stream)
+          computation).run (∅, false))}[result.2.2 = true] :=
       jointKdfSingletonProgrammed_tracking_probEvent_bad_eq
         target stream computation
-    _ = Pr[fun result : (alpha ×
-          QueryLog FixedHkdfSha512JointStreamSpec) ×
-          (JointKdfRO.QueryCache × Bool) => result.2.2 = true |
-        (simulateQ (jointKdfSingletonTrackingStreamImpl target stream)
-          computation.withQueryLog).run (∅, false)] :=
+    _ = Pr{let result ← ((simulateQ (jointKdfSingletonTrackingStreamImpl target stream)
+          computation.withQueryLog).run (∅, false))}[result.2.2 = true] :=
       (jointKdfSimulate_withQueryLog_probEvent_bad_eq
         (jointKdfSingletonTrackingStreamImpl target stream)
         computation ∅ false).symm
-    _ ≤ Pr[fun result : (alpha ×
-          QueryLog FixedHkdfSha512JointStreamSpec) ×
-          (JointKdfRO.QueryCache × Bool) =>
-          some hidden ∈ hiddenRootStreamCandidates known result.1.2 |
-        (simulateQ (jointKdfSingletonTrackingStreamImpl target stream)
-          computation.withQueryLog).run (∅, false)] := by
-      apply probEvent_mono
-      intro result hresult hbad
+    _ ≤ Pr{let result ← ((simulateQ (jointKdfSingletonTrackingStreamImpl target stream)
+          computation.withQueryLog).run (∅, false))}[
+          some hidden ∈ hiddenRootStreamCandidates known result.1.2] := by
+      refine prEvent_mono_of_support _ _ _ fun result hresult hbad => ?_
       have htarget := jointKdfSingletonTracking_bad_implies_target_in_log
         target stream computation ∅ false result hresult hbad
       simp only [Bool.false_eq_true, false_or] at htarget
       exact (hiddenRootTarget_in_log_iff_candidate_mem known hidden result.1.2).mp
         htarget
-    _ = Pr[fun result : (alpha ×
-          QueryLog FixedHkdfSha512JointStreamSpec) × JointKdfRO.QueryCache =>
-          some hidden ∈ hiddenRootStreamCandidates known result.1.2 |
-        (simulateQ fixedHkdfSha512JointStreamRandomImpl
-          computation.withQueryLog).run ∅] :=
+    _ = Pr{let result ← ((simulateQ fixedHkdfSha512JointStreamRandomImpl
+          computation.withQueryLog).run ∅)}[
+          some hidden ∈ hiddenRootStreamCandidates known result.1.2] :=
       jointKdfSingletonTracking_candidate_probEvent_eq_random
         known target stream hidden computation
 
@@ -1883,27 +1870,28 @@ theorem hiddenRootCoordinate_card :
 `qRoot / 2^256`. -/
 theorem probEvent_uniformHiddenRoot_candidateHit_le {qRoot : ℕ}
     (probes : HiddenRootCandidateProbes qRoot) :
-    Pr[fun hidden => HiddenRootCandidateHit hidden probes |
-        $ᵗ HiddenRootCoordinate] ≤
+    Pr{let hidden ← $ᵗ HiddenRootCoordinate}[HiddenRootCandidateHit hidden probes] ≤
       (qRoot : ℝ≥0∞) *
         (Fintype.card HiddenRootCoordinate : ℝ≥0∞)⁻¹ := by
   classical
   calc
-    Pr[fun hidden => HiddenRootCandidateHit hidden probes |
-        $ᵗ HiddenRootCoordinate] ≤
+    Pr{let hidden ← $ᵗ HiddenRootCoordinate}[HiddenRootCandidateHit hidden probes] ≤
         ∑ index : Fin qRoot,
-          Pr[fun hidden => probes.get index = some hidden |
-            $ᵗ HiddenRootCoordinate] := by
-      simpa [HiddenRootCandidateHit] using
-        (probEvent_exists_finset_le_sum
-          (Finset.univ : Finset (Fin qRoot)) ($ᵗ HiddenRootCoordinate)
-          (fun index hidden => probes.get index = some hidden))
+          Pr{let hidden ← $ᵗ HiddenRootCoordinate}[probes.get index = some hidden] :=
+      prEvent_exists_le ($ᵗ HiddenRootCoordinate)
+        (fun index hidden => probes.get index = some hidden)
     _ ≤ ∑ _index : Fin qRoot,
           (Fintype.card HiddenRootCoordinate : ℝ≥0∞)⁻¹ := by
       refine Finset.sum_le_sum fun index _ => ?_
       cases hprobe : probes.get index with
-      | none => simp
-      | some candidate => simp
+      | none =>
+          rw [prEvent_eq_zero_of_forall_not _ _ fun hidden equal => by cases equal]
+          exact zero_le
+      | some candidate =>
+          rw [prEvent_congr _ _ (fun hidden => hidden = candidate)
+              fun hidden => ⟨fun equal => (Option.some.inj equal).symm,
+                fun equal => equal ▸ rfl⟩,
+            SampleableType.prEvent_uniformSample_eq_singleton]
     _ = (qRoot : ℝ≥0∞) *
         (Fintype.card HiddenRootCoordinate : ℝ≥0∞)⁻¹ := by
       simp [Finset.sum_const, nsmul_eq_mul]
@@ -1931,17 +1919,19 @@ theorem probEvent_hiddenRootIndependentCandidateExperiment_le
     {PublicContext : Type} {qU qRoot qSym : ℕ}
     (adversary : HiddenRootSourceAdversary PublicContext qU qRoot qSym)
     (known : KnownPqxdhRootCoordinates) (publicContext : PublicContext) :
-    Pr[fun result =>
-        some result.1 ∈ hiddenRootStreamCandidates known result.2.1.2 |
-      hiddenRootIndependentCandidateExperiment adversary known publicContext] ≤
+    Pr{let result ← hiddenRootIndependentCandidateExperiment adversary known publicContext}[
+        some result.1 ∈ hiddenRootStreamCandidates known result.2.1.2] ≤
       (qRoot : ℝ≥0∞) *
         (Fintype.card HiddenRootCoordinate : ℝ≥0∞)⁻¹ := by
   unfold hiddenRootIndependentCandidateExperiment
-  refine probEvent_bind_le_of_forall_le fun stream _hstream => ?_
-  refine probEvent_bind_le_of_forall_le fun traced htraced => ?_
-  rw [show (fun hidden : HiddenRootCoordinate => pure (hidden, traced)) =
-      pure ∘ (fun hidden => (hidden, traced)) from rfl,
-    probEvent_bind_pure_comp]
+  refine prEvent_bind_le_of_forall_le_of_support _ _ _ fun stream _hstream => ?_
+  refine prEvent_bind_le_of_forall_le_of_support _ _ _ fun traced htraced => ?_
+  rw [show (($ᵗ HiddenRootCoordinate) >>= fun hidden => pure (hidden, traced) :
+      ProbComp (HiddenRootCoordinate × ((Bool × QueryLog FixedHkdfSha512JointStreamSpec) ×
+        JointKdfRO.QueryCache))) =
+      (fun hidden => (hidden, traced)) <$> ($ᵗ HiddenRootCoordinate) by
+    rw [map_eq_bind_pure_comp]
+    rfl, prEvent_map]
   have htraceLength :
       (hiddenRootStreamCandidates known traced.1.2).length ≤ qRoot := by
     apply hiddenRootStreamCandidates_length_le_simulate known
@@ -1954,16 +1944,12 @@ theorem probEvent_hiddenRootIndependentCandidateExperiment_le
     hiddenRootCandidateVector qRoot
       (hiddenRootStreamCandidates known traced.1.2)
   calc
-    Pr[fun hidden : HiddenRootCoordinate =>
-        some hidden ∈ hiddenRootStreamCandidates known traced.1.2 |
-      $ᵗ HiddenRootCoordinate] =
-        Pr[fun hidden : HiddenRootCoordinate => HiddenRootCandidateHit hidden probes |
-          $ᵗ HiddenRootCoordinate] := by
-      congr 1
-      funext hidden
-      apply propext
-      exact (hiddenRootCandidateVector_hit_iff_of_length_le
-        (hiddenRootStreamCandidates known traced.1.2) hidden htraceLength).symm
+    Pr{let hidden ← $ᵗ HiddenRootCoordinate}[
+        some hidden ∈ hiddenRootStreamCandidates known traced.1.2] =
+        Pr{let hidden ← $ᵗ HiddenRootCoordinate}[HiddenRootCandidateHit hidden probes] :=
+      prEvent_congr _ _ _ fun hidden =>
+        (hiddenRootCandidateVector_hit_iff_of_length_le
+          (hiddenRootStreamCandidates known traced.1.2) hidden htraceLength).symm
     _ ≤ (qRoot : ℝ≥0∞) *
         (Fintype.card HiddenRootCoordinate : ℝ≥0∞)⁻¹ :=
       probEvent_uniformHiddenRoot_candidateHit_le probes
@@ -2018,37 +2004,29 @@ theorem evalSPMF_hiddenRootProjectedStreamGame_eq_independentGame
     {PublicContext : Type} {qU qRoot qSym : ℕ}
     (adversary : HiddenRootSourceAdversary PublicContext qU qRoot qSym)
     (known : KnownPqxdhRootCoordinates) (publicContext : PublicContext) :
-    𝒮[hiddenRootProjectedStreamGame adversary known publicContext] =
-      𝒮[hiddenRootIndependentGame adversary known publicContext] := by
+    EvalDistEq (hiddenRootProjectedStreamGame adversary known publicContext)
+      (hiddenRootIndependentGame adversary known publicContext) := by
   unfold hiddenRootProjectedStreamGame hiddenRootIndependentGame
-  refine evalSPMF_bind_congr' ($ᵗ HiddenRootCoordinate) fun _hidden => ?_
+  refine EvalDistEq.bind_right ($ᵗ HiddenRootCoordinate) fun _hidden => ?_
   let continuation : HiddenRootCoordinate → ProbComp Bool := fun root =>
     (simulateQ jointKdfViewRandomImpl
       (adversary.main known publicContext root)).run' ∅
   change
-    𝒮[($ᵗ JointKdfStream) >>= fun stream =>
-      continuation (jointKdfStreamSplitEquiv stream).1] =
-    𝒮[($ᵗ HiddenRootCoordinate) >>= continuation]
+    EvalDistEq (($ᵗ JointKdfStream) >>= fun stream =>
+      continuation (jointKdfStreamSplitEquiv stream).1)
+      (($ᵗ HiddenRootCoordinate) >>= continuation)
   rw [show (($ᵗ JointKdfStream) >>= fun stream =>
       continuation (jointKdfStreamSplitEquiv stream).1) =
         (Prod.fst <$> (jointKdfStreamSplitEquiv <$> ($ᵗ JointKdfStream))) >>=
           continuation by rw [bind_map_left, bind_map_left]]
-  have hprefix :
-      𝒮[Prod.fst <$> (jointKdfStreamSplitEquiv <$> ($ᵗ JointKdfStream))] =
-        𝒮[$ᵗ HiddenRootCoordinate] := by
-    calc
-      𝒮[Prod.fst <$> (jointKdfStreamSplitEquiv <$> ($ᵗ JointKdfStream))] =
-          𝒮[Prod.fst <$> ($ᵗ
-            (HiddenRootCoordinate × List.Vector UInt8 44))] := by
-        rw [evalSPMF_map, evalSPMF_ext fun pair =>
-          probOutput_map_bijective_uniform_cross
-            (α := JointKdfStream)
-            (β := HiddenRootCoordinate × List.Vector UInt8 44)
-            jointKdfStreamSplitEquiv
-            jointKdfStreamSplitEquiv.bijective pair, ← evalSPMF_map]
-      _ = 𝒮[$ᵗ HiddenRootCoordinate] :=
-        evalSPMF_map_fst_uniformSample_prod
-  rw [evalSPMF_bind, evalSPMF_bind, hprefix]
+  have hprefix : EvalDistEq (Prod.fst <$> (jointKdfStreamSplitEquiv <$> ($ᵗ JointKdfStream)))
+      ($ᵗ HiddenRootCoordinate) := by
+    have first := evalSPMF_first32_uniformJointKdfStream
+    rwa [show JointKdfProjection.first32.project <$> ($ᵗ JointKdfStream) =
+        Prod.fst <$> (jointKdfStreamSplitEquiv <$> ($ᵗ JointKdfStream)) by
+      simp only [Functor.map_map]
+      rfl] at first
+  exact hprefix.bind_left continuation
 
 /-- Stateful programmed execution used only to measure the one sticky target-address event. -/
 noncomputable def hiddenRootProgrammedBadRun
@@ -2078,15 +2056,13 @@ theorem hiddenRootProgrammedView_probEvent_bad_eq
     (adversary : HiddenRootSourceAdversary PublicContext qU qRoot qSym)
     (known : KnownPqxdhRootCoordinates) (publicContext : PublicContext)
     (hidden : HiddenRootCoordinate) (stream : JointKdfStream) :
-    Pr[fun result : Bool × JointKdfRO.QueryCache × Bool =>
-        result.2.2 = true |
-      (simulateQ (hiddenRootProgrammedViewImpl known hidden stream)
+    Pr{let result ← ((simulateQ (hiddenRootProgrammedViewImpl known hidden stream)
         (adversary.main known publicContext
-          (JointKdfProjection.first32.project stream))).run (∅, false)] =
-    Pr[fun result : Bool × JointKdfRO.QueryCache × Bool =>
-        result.2.2 = true |
-      hiddenRootProgrammedBadRun adversary known publicContext hidden stream] := by
-  simp [hiddenRootProgrammedBadRun, hiddenRootProgrammedViewImpl,
+          (JointKdfProjection.first32.project stream))).run (∅, false))}[
+        result.2.2 = true] =
+    Pr{let result ← hiddenRootProgrammedBadRun adversary known publicContext hidden stream}[
+        result.2.2 = true] := by
+  simp only [hiddenRootProgrammedBadRun, hiddenRootProgrammedViewImpl,
     hiddenRootProgrammedStreamImpl, hiddenRootForwardedAdversary,
     QueryImpl.simulateQ_compose]
 
@@ -2109,78 +2085,82 @@ theorem hiddenRootHiddenFirstCandidate_probEvent_eq_independent
     {PublicContext : Type} {qU qRoot qSym : ℕ}
     (adversary : HiddenRootSourceAdversary PublicContext qU qRoot qSym)
     (known : KnownPqxdhRootCoordinates) (publicContext : PublicContext) :
-    Pr[fun result =>
-        some result.1 ∈ hiddenRootStreamCandidates known result.2.1.2 |
-      hiddenRootHiddenFirstCandidateExperiment adversary known publicContext] =
-    Pr[fun result =>
-        some result.1 ∈ hiddenRootStreamCandidates known result.2.1.2 |
-      hiddenRootIndependentCandidateExperiment adversary known publicContext] := by
-  unfold hiddenRootHiddenFirstCandidateExperiment
-    hiddenRootIndependentCandidateExperiment
-  rw [probEvent_bind_bind_swap]
-  refine probEvent_bind_congr' ($ᵗ JointKdfStream) _ fun stream => ?_
-  rw [probEvent_bind_bind_swap]
+    Pr{let result ← hiddenRootHiddenFirstCandidateExperiment adversary known publicContext}[
+        some result.1 ∈ hiddenRootStreamCandidates known result.2.1.2] =
+    Pr{let result ← hiddenRootIndependentCandidateExperiment adversary known publicContext}[
+        some result.1 ∈ hiddenRootStreamCandidates known result.2.1.2] := by
+  have swap : EvalDistEq (hiddenRootHiddenFirstCandidateExperiment adversary known publicContext)
+      (hiddenRootIndependentCandidateExperiment adversary known publicContext) := by
+    unfold hiddenRootHiddenFirstCandidateExperiment hiddenRootIndependentCandidateExperiment
+    exact (OracleComp.EvalDistEq.bind_bind_swap ($ᵗ HiddenRootCoordinate) ($ᵗ JointKdfStream)
+      (fun hidden stream => hiddenRootLoggedRandomRun adversary known publicContext
+        (JointKdfProjection.first32.project stream) >>= fun traced =>
+          pure (hidden, traced))).trans
+      (EvalDistEq.bind_right ($ᵗ JointKdfStream) fun stream =>
+        OracleComp.EvalDistEq.bind_bind_swap ($ᵗ HiddenRootCoordinate)
+          (hiddenRootLoggedRandomRun adversary known publicContext
+            (JointKdfProjection.first32.project stream))
+          (fun hidden traced => pure (hidden, traced)))
+  exact swap.prEvent_eq _
 
 /-- The one programmed sticky-bad event is contained in the hidden-coordinate candidate event. -/
 theorem probEvent_hiddenRootProgrammedBadExperiment_le_hiddenFirstCandidate
     {PublicContext : Type} {qU qRoot qSym : ℕ}
     (adversary : HiddenRootSourceAdversary PublicContext qU qRoot qSym)
     (known : KnownPqxdhRootCoordinates) (publicContext : PublicContext) :
-    Pr[fun result : Bool × JointKdfRO.QueryCache × Bool =>
-        result.2.2 = true |
-      hiddenRootProgrammedBadExperiment adversary known publicContext] ≤
-    Pr[fun result =>
-        some result.1 ∈ hiddenRootStreamCandidates known result.2.1.2 |
-      hiddenRootHiddenFirstCandidateExperiment adversary known publicContext] := by
+    Pr{let result ← hiddenRootProgrammedBadExperiment adversary known publicContext}[
+        result.2.2 = true] ≤
+    Pr{let result ← hiddenRootHiddenFirstCandidateExperiment adversary known publicContext}[
+        some result.1 ∈ hiddenRootStreamCandidates known result.2.1.2] := by
   calc
-    Pr[fun result : Bool × JointKdfRO.QueryCache × Bool =>
-        result.2.2 = true |
-      hiddenRootProgrammedBadExperiment adversary known publicContext] =
+    Pr{let result ← hiddenRootProgrammedBadExperiment adversary known publicContext}[
+        result.2.2 = true] =
         ∑' hidden : HiddenRootCoordinate,
-          Pr[= hidden | $ᵗ HiddenRootCoordinate] *
+          Pr{let x ← $ᵗ HiddenRootCoordinate}[x = hidden] *
             ∑' stream : JointKdfStream,
-              Pr[= stream | $ᵗ JointKdfStream] *
-                Pr[fun result : Bool × JointKdfRO.QueryCache × Bool =>
-                    result.2.2 = true |
-                  hiddenRootProgrammedBadRun adversary known publicContext
-                    hidden stream] := by
+              Pr{let x ← $ᵗ JointKdfStream}[x = stream] *
+                Pr{let result ← (hiddenRootProgrammedBadRun adversary known publicContext
+                    hidden stream)}[result.2.2 = true] := by
       unfold hiddenRootProgrammedBadExperiment
-      rw [probEvent_bind_eq_tsum]
+      rw [OracleComp.prEvent_bind_eq_tsum ($ᵗ HiddenRootCoordinate)]
       refine tsum_congr fun hidden => ?_
-      rw [probEvent_bind_eq_tsum]
+      rw [OracleComp.prEvent_bind_eq_tsum ($ᵗ JointKdfStream)]
     _ ≤ ∑' hidden : HiddenRootCoordinate,
-          Pr[= hidden | $ᵗ HiddenRootCoordinate] *
+          Pr{let x ← $ᵗ HiddenRootCoordinate}[x = hidden] *
             ∑' stream : JointKdfStream,
-              Pr[= stream | $ᵗ JointKdfStream] *
-                Pr[fun traced =>
-                    some hidden ∈ hiddenRootStreamCandidates known traced.1.2 |
-                  hiddenRootLoggedRandomRun adversary known publicContext
-                    (JointKdfProjection.first32.project stream)] := by
+              Pr{let x ← $ᵗ JointKdfStream}[x = stream] *
+                Pr{let traced ← (hiddenRootLoggedRandomRun adversary known publicContext
+                    (JointKdfProjection.first32.project stream))}[
+                    some hidden ∈ hiddenRootStreamCandidates known traced.1.2] := by
       refine ENNReal.tsum_le_tsum fun hidden => ?_
       apply mul_le_mul_right
       refine ENNReal.tsum_le_tsum fun stream => ?_
       apply mul_le_mul_right
-      simpa [hiddenRootProgrammedBadRun, hiddenRootLoggedRandomRun] using
-        (jointKdfSingletonProgrammed_bad_le_random_candidate
-          known hidden stream
-          (hiddenRootForwardedAdversary adversary known publicContext
-            (JointKdfProjection.first32.project stream)))
-    _ = Pr[fun result =>
-        some result.1 ∈ hiddenRootStreamCandidates known result.2.1.2 |
-      hiddenRootHiddenFirstCandidateExperiment adversary known publicContext] := by
+      exact jointKdfSingletonProgrammed_bad_le_random_candidate
+        known hidden stream
+        (hiddenRootForwardedAdversary adversary known publicContext
+          (JointKdfProjection.first32.project stream))
+    _ = Pr{let result ← (hiddenRootHiddenFirstCandidateExperiment adversary known
+          publicContext)}[some result.1 ∈ hiddenRootStreamCandidates known result.2.1.2] := by
       unfold hiddenRootHiddenFirstCandidateExperiment
-      rw [probEvent_bind_eq_tsum]
+      rw [OracleComp.prEvent_bind_eq_tsum ($ᵗ HiddenRootCoordinate)]
       refine tsum_congr fun hidden => ?_
-      rw [probEvent_bind_eq_tsum]
+      rw [OracleComp.prEvent_bind_eq_tsum ($ᵗ JointKdfStream)]
       refine congrArg (fun probability =>
-        Pr[= hidden | $ᵗ HiddenRootCoordinate] * probability) ?_
+        Pr{let x ← $ᵗ HiddenRootCoordinate}[x = hidden] * probability) ?_
       refine tsum_congr fun stream => ?_
       refine congrArg (fun probability =>
-        Pr[= stream | $ᵗ JointKdfStream] * probability) ?_
-      rw [show (fun traced => pure (hidden, traced)) =
-          pure ∘ (fun traced => (hidden, traced)) from rfl,
-        probEvent_bind_pure_comp]
-      rfl
+        Pr{let x ← $ᵗ JointKdfStream}[x = stream] * probability) ?_
+      rw [show (hiddenRootLoggedRandomRun adversary known publicContext
+          (JointKdfProjection.first32.project stream) >>= fun traced =>
+            pure (hidden, traced) :
+          ProbComp (HiddenRootCoordinate × ((Bool × QueryLog FixedHkdfSha512JointStreamSpec) ×
+            JointKdfRO.QueryCache))) =
+          (fun traced => (hidden, traced)) <$>
+            hiddenRootLoggedRandomRun adversary known publicContext
+              (JointKdfProjection.first32.project stream) by
+        rw [map_eq_bind_pure_comp]
+        rfl, prEvent_map]
 
 /-- Average pointwise TV bounds expressed as probabilities over the same shared draw. -/
 theorem tvDist_bind_left_le_probEvent_bind
@@ -2188,27 +2168,32 @@ theorem tvDist_bind_left_le_probEvent_bind
     (left right : alpha → ProbComp beta)
     (badRun : alpha → ProbComp gamma) (bad : gamma → Prop)
     (hpoint : ∀ value,
-      tvDist (left value) (right value) ≤ Pr[bad | badRun value].toReal) :
+      tvDist (left value) (right value) ≤ Pr{let x ← badRun value}[bad x].toReal) :
     tvDist (sample >>= left) (sample >>= right) ≤
-      Pr[bad | sample >>= badRun].toReal := by
-  rw [probEvent_bind_eq_tsum]
+      Pr{let x ← sample >>= badRun}[bad x].toReal := by
+  rw [OracleComp.prEvent_bind_eq_tsum sample]
   rw [ENNReal.tsum_toReal_eq (fun value =>
-    ENNReal.mul_ne_top probOutput_ne_top probEvent_ne_top)]
+    ENNReal.mul_ne_top (prEvent_ne_top _) (prEvent_ne_top _))]
   simp_rw [ENNReal.toReal_mul]
   refine (tvDist_bind_left_le sample left right).trans ?_
+  simp only [VCVioLegacy.probOutput_eq_prEvent]
+  have weights : Summable (fun value => (Pr{let y ← sample}[y = value]).toReal) :=
+    ENNReal.summable_toReal (ne_top_of_le_ne_top one_ne_top (OracleComp.tsum_prEvent_le_one _))
   refine Summable.tsum_le_tsum (fun value => ?_) ?_ ?_
   · exact mul_le_mul_of_nonneg_left (hpoint value) ENNReal.toReal_nonneg
-  · refine Summable.of_nonneg_of_le
+  · exact weights.of_nonneg_of_le
       (fun value => mul_nonneg ENNReal.toReal_nonneg
         (tvDist_nonneg (left value) (right value)))
       (fun value => mul_le_of_le_one_right ENNReal.toReal_nonneg
-        (tvDist_le_one (left value) (right value))) ?_
-    exact ENNReal.summable_toReal tsum_probOutput_ne_top
-  · refine Summable.of_nonneg_of_le
+        (tvDist_le_one (left value) (right value)))
+  · exact weights.of_nonneg_of_le
       (fun value => mul_nonneg ENNReal.toReal_nonneg ENNReal.toReal_nonneg)
-      (fun value => mul_le_of_le_one_right ENNReal.toReal_nonneg ?_) ?_
-    · exact ENNReal.toReal_mono one_ne_top probEvent_le_one
-    · exact ENNReal.summable_toReal tsum_probOutput_ne_top
+      (fun value => mul_le_of_le_one_right ENNReal.toReal_nonneg
+        (ENNReal.toReal_mono one_ne_top (prEvent_le_one _)))
+
+set_option linter.deprecated false in set_option linter.unusedVariables false in theorem _root_.BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind_vcvioLegacy :
+    ∀ {alpha beta gamma : Type} (sample : ProbComp alpha) (left right : alpha → ProbComp beta) (badRun : alpha → ProbComp gamma) (bad : gamma → Prop) (hpoint : ∀ (value : alpha), tvDist (left value) (right value) ≤ (probEvent (badRun value) bad).toReal), tvDist (sample >>= left) (sample >>= right) ≤ (probEvent (sample >>= badRun) bad).toReal :=
+  by simpa only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent] using @BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind
 
 /-- Averaging over the hidden coordinate and complete stream charges singleton programming's
 sticky target-address event exactly once. -/
@@ -2218,9 +2203,8 @@ theorem hiddenRootProgrammed_tracking_tvDist_le_programmedBad
     (known : KnownPqxdhRootCoordinates) (publicContext : PublicContext) :
     tvDist (hiddenRootProgrammedGame adversary known publicContext)
         (hiddenRootTrackingGame adversary known publicContext) ≤
-      Pr[fun result : Bool × JointKdfRO.QueryCache × Bool =>
-          result.2.2 = true |
-        hiddenRootProgrammedBadExperiment adversary known publicContext].toReal := by
+      Pr{let result ← hiddenRootProgrammedBadExperiment adversary known publicContext}[
+          result.2.2 = true].toReal := by
   unfold hiddenRootProgrammedGame hiddenRootTrackingGame
     hiddenRootProgrammedBadExperiment
   refine tvDist_bind_left_le_probEvent_bind
@@ -2239,23 +2223,19 @@ theorem probEvent_hiddenRootProgrammedBadExperiment_le
     {PublicContext : Type} {qU qRoot qSym : ℕ}
     (adversary : HiddenRootSourceAdversary PublicContext qU qRoot qSym)
     (known : KnownPqxdhRootCoordinates) (publicContext : PublicContext) :
-    Pr[fun result : Bool × JointKdfRO.QueryCache × Bool =>
-        result.2.2 = true |
-      hiddenRootProgrammedBadExperiment adversary known publicContext] ≤
+    Pr{let result ← hiddenRootProgrammedBadExperiment adversary known publicContext}[
+        result.2.2 = true] ≤
       (qRoot : ℝ≥0∞) *
         (Fintype.card HiddenRootCoordinate : ℝ≥0∞)⁻¹ := by
   calc
-    Pr[fun result : Bool × JointKdfRO.QueryCache × Bool =>
-        result.2.2 = true |
-      hiddenRootProgrammedBadExperiment adversary known publicContext] ≤
-        Pr[fun result =>
-            some result.1 ∈ hiddenRootStreamCandidates known result.2.1.2 |
-          hiddenRootHiddenFirstCandidateExperiment adversary known publicContext] :=
+    Pr{let result ← hiddenRootProgrammedBadExperiment adversary known publicContext}[
+        result.2.2 = true] ≤
+        Pr{let result ← (hiddenRootHiddenFirstCandidateExperiment adversary known
+          publicContext)}[some result.1 ∈ hiddenRootStreamCandidates known result.2.1.2] :=
       probEvent_hiddenRootProgrammedBadExperiment_le_hiddenFirstCandidate
         adversary known publicContext
-    _ = Pr[fun result =>
-            some result.1 ∈ hiddenRootStreamCandidates known result.2.1.2 |
-          hiddenRootIndependentCandidateExperiment adversary known publicContext] :=
+    _ = Pr{let result ← (hiddenRootIndependentCandidateExperiment adversary known
+          publicContext)}[some result.1 ∈ hiddenRootStreamCandidates known result.2.1.2] :=
       hiddenRootHiddenFirstCandidate_probEvent_eq_independent
         adversary known publicContext
     _ ≤ (qRoot : ℝ≥0∞) *
@@ -2273,8 +2253,8 @@ theorem tvDist_hiddenRootSharedRandomGame_independentGame_le
         (hiddenRootIndependentGame adversary known publicContext) ≤
       ((qRoot : ℝ≥0∞) / (2 ^ 256 : ℝ≥0∞)).toReal := by
   have htracking :
-      𝒮[hiddenRootTrackingGame adversary known publicContext] =
-        𝒮[hiddenRootIndependentGame adversary known publicContext] := by
+      EvalDistEq (hiddenRootTrackingGame adversary known publicContext)
+        (hiddenRootIndependentGame adversary known publicContext) := by
     rw [hiddenRootTrackingGame_eq_projectedStreamGame]
     exact evalSPMF_hiddenRootProjectedStreamGame_eq_independentGame
       adversary known publicContext
@@ -2284,7 +2264,7 @@ theorem tvDist_hiddenRootSharedRandomGame_independentGame_le
         tvDist (hiddenRootProgrammedGame adversary known publicContext)
           (hiddenRootTrackingGame adversary known publicContext) := by
     unfold tvDist
-    rw [htracking]
+    rw [(VCVioLegacy.evalSPMF_eq_iff_evalDistEq _ _).mpr htracking]
   have hbad := probEvent_hiddenRootProgrammedBadExperiment_le
     adversary known publicContext
   have hcard :
@@ -2344,7 +2324,8 @@ theorem hiddenRootAdvantage_le_fixedHkdfSha512JointStreamAdvantage_add
             (hiddenRootIndependentGame adversary known publicContext) ≤
           tvDist (hiddenRootSharedRandomGame adversary known publicContext)
             (hiddenRootIndependentGame adversary known publicContext) := by
-      simpa [ProbComp.boolDistAdvantage] using houtput
+      simpa only [ProbComp.boolDistAdvantage, VCVioLegacy.probOutput_eq_evalDist_singleton] using
+        houtput
     exact hadvantage.trans
       (tvDist_hiddenRootSharedRandomGame_independentGame_le
         adversary known publicContext)

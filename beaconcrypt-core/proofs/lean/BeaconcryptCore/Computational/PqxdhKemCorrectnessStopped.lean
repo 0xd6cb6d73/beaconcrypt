@@ -89,7 +89,7 @@ theorem after_bound (source : FixedHkdfSha512NoSaltSource) (baseImpl : QueryImpl
       · simpa only [badRun, functional.exact, pure_bind, simulateQ_pure, probOutput_pure,
           decide_eq_true good, ite_true, ENNReal.toReal_one] using
           tvDist_le_one (left (ciphertext, secret)) (right (ciphertext, secret))
-    have averaged := PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind
+    have averaged := PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind_vcvioLegacy
       (simulateQ (kemAmbientImpl baseImpl) (kem.encaps publicKey)) left right badRun (fun result => result = true)
       (fun pair => by simpa only [probEvent_eq_eq_probOutput] using point pair)
     simpa only [keyError, left, right, badRun, simulateQ_bind, ← probEvent_eq_eq_probOutput] using averaged
@@ -109,7 +109,7 @@ theorem prepared_bound (source : FixedHkdfSha512NoSaltSource) (baseImpl : QueryI
           (simulateQ (kem.IND_CCA_preChallengeImpl secretKey) (protocol.prepare publicKey))
         simulateQ (kemAmbientImpl baseImpl) (after true source kem protocol publicKey secretKey context)) ≤
       Pr[= true | simulateQ (kemAmbientImpl baseImpl) (keyError kem publicKey secretKey)].toReal := by
-  have averaged := PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind
+  have averaged := PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind_vcvioLegacy
     (simulateQ (kemAmbientImpl baseImpl)
       (simulateQ (kem.IND_CCA_preChallengeImpl secretKey) (protocol.prepare publicKey)))
     (fun context => simulateQ (kemAmbientImpl baseImpl) (after false source kem protocol publicKey secretKey context))
@@ -130,7 +130,7 @@ theorem stopped_bound (source : FixedHkdfSha512NoSaltSource) (baseImpl : QueryIm
       (simulateQ (kemAmbientImpl baseImpl) (main true source kem protocol)) ≤
       Pr[= true | simulateQ (kemAmbientImpl baseImpl) (errorExperiment kem)].toReal := by
   simp only [main, simulateQ_bind]
-  have averaged := PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind
+  have averaged := PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind_vcvioLegacy
     (simulateQ (kemAmbientImpl baseImpl) kem.keygen)
     (fun pair => do
       let context ← simulateQ (kemAmbientImpl baseImpl)

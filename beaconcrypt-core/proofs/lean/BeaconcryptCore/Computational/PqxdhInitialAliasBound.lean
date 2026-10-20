@@ -58,7 +58,7 @@ theorem cut_distance (fixed : FixedHkdfSha512NoSaltSource)
     (sample : ProbComp Context) :
     tvDist (sampleCut sample >>= left fixed selected client) (sampleCut sample >>= right fixed selected client) ≤
       Pr[fun result => result.1 ∈ result.2.2.2.2 | sampleCut sample >>= left fixed selected client].toReal := by
-  exact PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind (sampleCut sample)
+  exact PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind_vcvioLegacy (sampleCut sample)
     (left fixed selected client) (right fixed selected client) (left fixed selected client)
     (fun result => result.1 ∈ result.2.2.2.2) (pointwise fixed selected client)
 

@@ -332,7 +332,7 @@ theorem projectedOutput_uniform :
       (JointKdfProjection.first32.project output, JointKdfProjection.second32.project output,
         JointKdfProjection.final12.project output)) <$> ($ᵗ FullOutput)] =
       𝒮[$ᵗ (RootOutput × RootOutput × NonceOutput)] := by
-  exact PqxdhProjectionCollisions.evalSPMF_split_uniformJointKdfStream
+  exact PqxdhProjectionCollisions.evalSPMF_split_uniformJointKdfStream_vcvioLegacy
 
 /-- The source game charges every sampler and observer random query. -/
 theorem sourceFullGame_uniform_query_bound {Context : Type}
