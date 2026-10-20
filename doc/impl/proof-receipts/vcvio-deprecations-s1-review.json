@@ -1,0 +1,368 @@
+{
+ "date": "2026-10-20",
+ "scope": "VCVio deprecation migration, stage S1, fixes of the two independent reviews at c8637a5a (statement equivalence EQ-S1-1..EQ-S1-3, hygiene H1..H4). No Lean file of the build changed. Supplements vcvio-deprecations-s1.json (the record of c8637a5a) for the phase B probe, the certificate tooling and the wording of the trust boundary and of that receipt.",
+ "basis": "1da1ebf49f2850a531984ad407a48a834c27fcca",
+ "previous_head": "c8637a5ae8a27dd82704a5dd260e928fd2c08ab1",
+ "topic": {
+  "branch": "codex/vcvio-migration-S1",
+  "clone": "/home/user/bc-vmig-S1"
+ },
+ "commits": {
+  "fixes": "the commit that adds this receipt"
+ },
+ "reviews": {
+  "equivalence": {
+   "verdict": "APPROVE_WITH_NITS",
+   "findings_sha256": "2d596841422937021453b43a4a6a9d97dc143fe18951bba827531755cd46ab24",
+   "fixed": [
+    "EQ-S1-1",
+    "EQ-S1-2",
+    "EQ-S1-3"
+   ]
+  },
+  "hygiene": {
+   "verdict": "APPROVE_WITH_NITS",
+   "findings_sha256": "53ed9e870f07b2b837b1e5055d44a63b7b16821656289ba1ce7361214b344695",
+   "fixed": [
+    "H1 (= EQ-S1-3)",
+    "H2",
+    "H3"
+   ],
+   "no_change": {
+    "H4": "process note (one transient unregistered file and edits during the base build, both disclosed, no residue and no effect on the base log); no repository change; later stages use registered scratch paths and make no edits in a clone while a build runs there"
+   }
+  },
+  "owner_level": []
+ },
+ "fixes": {
+  "EQ-S1-1": "phase B probe version 2 (S1/tools/FacadeProbe.lean.in, S1/tools/phaseb.py): every module root (VCVio's Examples library and project constants included), each used constant classified as package, bridge (allowlisted) or project; base and stage probes retaken; the analysis section gives the new counts and names the libraries; the S1 receipt's facade_probe field states the version 1 filter",
+  "EQ-S1-2": "CertTools bridgesNative (oracleComp_probOutput_eq_prEvent_native, oracleComp_probEvent_eq_prEvent_native, oracleComp_evalSPMF_eq_iff_evalDistEq_native): twin proof lemma sets ProbComp, oracle, native, compatible, then the mixtures with ProbComp (native before compatible); keep() covers the _native suffixes; certificate closing tactic and the scratch vcvio_legacy tactic rewrite with ProbComp, native, compatible in that order, the earlier closing tactic kept as a fallback; olean rebuilt; native twin self-test with a control on the earlier tool",
+  "EQ-S1-3 / H1": "trust-boundary S1 paragraph: no type or definition body changed outside the 22 restated declarations apart from the types of the four derived equation lemmas eq_1 of ctxCrossSessionAdvantage, ctxRelabelAdvantage, ctxWrongSenderAdvantage, ctxWrongSequenceAdvantage; link to the review-fix record entry; inventory row rehashed",
+  "H2": "vcvio-deprecations-s1.json: CtxAuthClassification 'adds the import VCVioForwardOracleComp' (was 'instead of VCVioForwardEvalDist', an intermediate state); reviews field points here",
+  "H3": "analysis section and record entry give the bridge's own deprecated source sites (24 -> 28, project total 1748 -> 1730) next to the count outside the bridge; the two _native bridge theorems without a build consumer stay (the certificate tool's native set names them; later stages reconsider them if still unused)"
+ },
+ "certificates": {
+  "tooling": {
+   "CertTools.lean": "b737ffda3c81b84ca66c3377a95daa4e0e3fcd89920c14dda5da7955425cf0c5",
+   "olean_sha256": "6b4f60e34a337f0eb163edc0392e971922ec3b93cf30641f7a8fac471351dde0",
+   "olean_fresh_equal_to_shared_build": true,
+   "previous_CertTools.lean": "01da0e00e6f136e5172dcc734e25dcc64c143066d8a815f9ce96c9344da12cad",
+   "previous_olean_sha256": "fef8669ce359bda1e2e7566644ed2591a11304749bad93385796d9ba02669325",
+   "provenance": "/tmp/bc-arc-scratch/vcvio-migration/S1/review-fix/provenance/"
+  },
+  "pre_stage_dump": {
+   "sha256": "d9c2e07f78d5774d8569f651b5b6464f4a05ed3971bfc5a75733a455171a2f87"
+  },
+  "stage_file": {
+   "entries": 22,
+   "sha256": "8e09fe82f54981254849ccd4c377bdf6c5d05e0ae58ac020d1f9813367af33e9",
+   "pass_lines": 22,
+   "pass_lines_identical_to_validation_run": true,
+   "errors_or_warnings": 0,
+   "log_sha256": "cb7ef1f2edc8c70400e3bad9264750a4a368ebbf14aed3497f992acdc30425b8"
+  },
+  "negative_controls": {
+   "file_sha256": "dc2b206e3d9162eb88b251b3610ca35b1a772b54d550afcf83fb28cda0a7f937",
+   "errors": [
+    "certificate FAIL VCVioFeasibility.ctx_binding_bound against VCVioFeasibility.ctx_binding_bound_tight: no event mask of 0 ambiguous nodes reproduces the dump; mask 0 gives hash 2099811069 vs 1395186899",
+    "certificate FAIL CtxReduction.ctxFullCommitmentAdvantage: type changed (1060987672 vs 999145744)",
+    "certificate FAIL CtxAuthClassification.ctxNonceConsistentAliasReplayProbability against CtxAuthClassification.ctxFreshTargetOuterHashAliasReplayProbability: no event mask reproduces the old body; mask 0 gives hash 837661025",
+    "certificate FAIL VCVioFeasibility.ctx_binding_bound_tight against VCVioFeasibility.ctx_binding_bound_tight: no event mask of 0 ambiguous nodes reproduces the dump; mask 0 gives hash 1395186899 vs 1395186899",
+    "certificate FAIL VCVioFeasibility.ctx_binding_bound_512 against VCVioFeasibility.ctx_binding_bound_512: no event mask of 0 ambiguous nodes reproduces the dump; mask 0 gives hash 551662987 vs 551662988"
+   ]
+  },
+  "checker": [
+   "RESULT PASS"
+  ]
+ },
+ "native_twin_selftest": {
+  "subjects": [
+   "VCVioFeasibility.ctx_binding_bound_tight",
+   "VCVioFeasibility.ctx_binding_bound_tight_512",
+   "VCVioFeasibility.ctx_binding_bound",
+   "VCVioFeasibility.ctx_binding_bound_512"
+  ],
+  "files_sha256": {
+   "S1NativeTwinText.lean": "78843217e79cb75c73080c9689e955dc1331e543f598be4425f452ddc2521271",
+   "S1NativeTwinCheck.lean": "6c00c884a11ced59290bf47b9c9398e36bc1864023c989bbb756f8f5e1a01c05",
+   "twin module (fixed tool)": "244efef97a308798a6400501761973554ac04c5ff0862b9d5625de014fe81b2a",
+   "twin module (earlier tool)": "5611bd992986338a38e97f8b44db9988b71e5069cb69bd10f0999630b7db3d30"
+  },
+  "fixed_tool": {
+   "twin_proofs": [
+    "by simpa only [BeaconcryptCore.VCVioLegacy.oracleComp_probEvent_eq_prEvent_native] using @VCVioFeasibility.ctx_binding_bound_tight",
+    "by simpa only [BeaconcryptCore.VCVioLegacy.oracleComp_probEvent_eq_prEvent_native] using @VCVioFeasibility.ctx_binding_bound_tight_512",
+    "by simpa only [BeaconcryptCore.VCVioLegacy.oracleComp_probEvent_eq_prEvent_native] using @VCVioFeasibility.ctx_binding_bound",
+    "by simpa only [BeaconcryptCore.VCVioLegacy.oracleComp_probEvent_eq_prEvent_native] using @VCVioFeasibility.ctx_binding_bound_512"
+   ],
+   "twin_module_messages": 0,
+   "same_type": [
+    "same-type PASS VCVioFeasibility.ctx_binding_bound_tight_vcvioLegacy against VCVioFeasibility.ctx_binding_bound_tight: type hash 1395186899 and pp.all text equal to the dump",
+    "same-type PASS VCVioFeasibility.ctx_binding_bound_tight_512_vcvioLegacy against VCVioFeasibility.ctx_binding_bound_tight_512: type hash 4000065516 and pp.all text equal to the dump",
+    "same-type PASS VCVioFeasibility.ctx_binding_bound_vcvioLegacy against VCVioFeasibility.ctx_binding_bound: type hash 2099811069 and pp.all text equal to the dump",
+    "same-type PASS VCVioFeasibility.ctx_binding_bound_512_vcvioLegacy against VCVioFeasibility.ctx_binding_bound_512: type hash 551662987 and pp.all text equal to the dump"
+   ],
+   "proof_term": [
+    "NATIVE-TWIN PASS VCVioFeasibility.ctx_binding_bound_tight_vcvioLegacy: proof term names [BeaconcryptCore.VCVioLegacy.oracleComp_probEvent_eq_prEvent_native]; no DiscreteEvalDistCompatible or _of_compatible constant",
+    "NATIVE-TWIN PASS VCVioFeasibility.ctx_binding_bound_tight_512_vcvioLegacy: proof term names [BeaconcryptCore.VCVioLegacy.oracleComp_probEvent_eq_prEvent_native]; no DiscreteEvalDistCompatible or _of_compatible constant",
+    "NATIVE-TWIN PASS VCVioFeasibility.ctx_binding_bound_vcvioLegacy: proof term names [BeaconcryptCore.VCVioLegacy.oracleComp_probEvent_eq_prEvent_native]; no DiscreteEvalDistCompatible or _of_compatible constant",
+    "NATIVE-TWIN PASS VCVioFeasibility.ctx_binding_bound_512_vcvioLegacy: proof term names [BeaconcryptCore.VCVioLegacy.oracleComp_probEvent_eq_prEvent_native]; no DiscreteEvalDistCompatible or _of_compatible constant"
+   ]
+  },
+  "control_earlier_tool": {
+   "twin_proofs": [
+    "by simpa only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent_of_compatible] using @VCVioFeasibility.ctx_binding_bound_tight",
+    "by simpa only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent_of_compatible] using @VCVioFeasibility.ctx_binding_bound_tight_512",
+    "by simpa only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent_of_compatible] using @VCVioFeasibility.ctx_binding_bound",
+    "by simpa only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent_of_compatible] using @VCVioFeasibility.ctx_binding_bound_512"
+   ],
+   "twin_module_messages": 0,
+   "same_type": [
+    "same-type PASS VCVioFeasibility.ctx_binding_bound_tight_vcvioLegacy against VCVioFeasibility.ctx_binding_bound_tight: type hash 1395186899 and pp.all text equal to the dump",
+    "same-type PASS VCVioFeasibility.ctx_binding_bound_tight_512_vcvioLegacy against VCVioFeasibility.ctx_binding_bound_tight_512: type hash 4000065516 and pp.all text equal to the dump",
+    "same-type PASS VCVioFeasibility.ctx_binding_bound_vcvioLegacy against VCVioFeasibility.ctx_binding_bound: type hash 2099811069 and pp.all text equal to the dump",
+    "same-type PASS VCVioFeasibility.ctx_binding_bound_512_vcvioLegacy against VCVioFeasibility.ctx_binding_bound_512: type hash 551662987 and pp.all text equal to the dump"
+   ],
+   "proof_term": [
+    "NATIVE-TWIN FAIL VCVioFeasibility.ctx_binding_bound_tight_vcvioLegacy: forbidden [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent_of_compatible, PFunctor.FreeM.instDiscreteEvalDistCompatibleOfCompatible]; native []",
+    "NATIVE-TWIN FAIL VCVioFeasibility.ctx_binding_bound_tight_512_vcvioLegacy: forbidden [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent_of_compatible, PFunctor.FreeM.instDiscreteEvalDistCompatibleOfCompatible]; native []",
+    "NATIVE-TWIN FAIL VCVioFeasibility.ctx_binding_bound_vcvioLegacy: forbidden [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent_of_compatible, PFunctor.FreeM.instDiscreteEvalDistCompatibleOfCompatible]; native []",
+    "NATIVE-TWIN FAIL VCVioFeasibility.ctx_binding_bound_512_vcvioLegacy: forbidden [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent_of_compatible, PFunctor.FreeM.instDiscreteEvalDistCompatibleOfCompatible]; native []"
+   ]
+  }
+ },
+ "phase_b_probe_v2": {
+  "probe": "S1/tools/FacadeProbe.lean.in version 2 over the five modules and the bridge (bridge declarations excluded), base on the published LEAN_PATH of 1da1ebf4, stage on the S1 build of c8637a5a",
+  "base": {
+   "package": {
+    "rows": 174,
+    "declarations": 38,
+    "by_root": {
+     "Examples": 2,
+     "ToMathlib": 94,
+     "VCVio": 78
+    },
+    "by_module": {
+     "CtxAuthClassification": 35,
+     "CtxReduction": 58,
+     "CtxRetainedTagProjection": 14,
+     "CtxTransitionReduction": 47,
+     "VCVioFeasibility": 20
+    }
+   },
+   "package_v1_roots_VCVio_ToMathlib": {
+    "rows": 172,
+    "declarations": 38
+   },
+   "project": {
+    "rows": 2,
+    "declarations": 2,
+    "by_module": {
+     "VCVioFeasibility": 2
+    },
+    "constants": {
+     "BeaconcryptCore.Computational.VCVioFeasibility.ctx_binding_bound": 1,
+     "BeaconcryptCore.Computational.VCVioFeasibility.ctx_binding_bound_tight": 1
+    }
+   },
+   "bridge": {
+    "rows": 0,
+    "declarations": 0,
+    "constants": {}
+   }
+  },
+  "stage": {
+   "package": {
+    "rows": 8,
+    "declarations": 2,
+    "by_root": {
+     "Examples": 2,
+     "ToMathlib": 4,
+     "VCVio": 2
+    },
+    "by_module": {
+     "VCVioFeasibility": 8
+    }
+   },
+   "package_v1_roots_VCVio_ToMathlib": {
+    "rows": 6,
+    "declarations": 2
+   },
+   "project": {
+    "rows": 0,
+    "declarations": 0,
+    "by_module": {},
+    "constants": {}
+   },
+   "bridge": {
+    "rows": 2,
+    "declarations": 2,
+    "constants": {
+     "BeaconcryptCore.VCVioLegacy.oracleComp_probEvent_eq_prEvent_native": 2
+    }
+   }
+  },
+  "stage_rows": {
+   "package": [
+    [
+     "VCVioFeasibility",
+     "VCVioFeasibility.ctx_binding_bound",
+     "value",
+     "SPMF",
+     "ToMathlib.ProbabilityTheory.SPMF",
+     "dep=1",
+     "fac=0"
+    ],
+    [
+     "VCVioFeasibility",
+     "VCVioFeasibility.ctx_binding_bound",
+     "value",
+     "SPMF.instMonadLiftPMF",
+     "ToMathlib.ProbabilityTheory.SPMF",
+     "dep=0",
+     "fac=1"
+    ],
+    [
+     "VCVioFeasibility",
+     "VCVioFeasibility.ctx_binding_bound",
+     "value",
+     "binding_bound_via_cr_chain",
+     "Examples.CommitmentScheme.Binding",
+     "dep=0",
+     "fac=1"
+    ],
+    [
+     "VCVioFeasibility",
+     "VCVioFeasibility.ctx_binding_bound",
+     "value",
+     "probEvent",
+     "VCVio.EvalDist.Defs.Basic",
+     "dep=1",
+     "fac=1"
+    ],
+    [
+     "VCVioFeasibility",
+     "VCVioFeasibility.ctx_binding_bound_tight",
+     "value",
+     "SPMF",
+     "ToMathlib.ProbabilityTheory.SPMF",
+     "dep=1",
+     "fac=0"
+    ],
+    [
+     "VCVioFeasibility",
+     "VCVioFeasibility.ctx_binding_bound_tight",
+     "value",
+     "SPMF.instMonadLiftPMF",
+     "ToMathlib.ProbabilityTheory.SPMF",
+     "dep=0",
+     "fac=1"
+    ],
+    [
+     "VCVioFeasibility",
+     "VCVioFeasibility.ctx_binding_bound_tight",
+     "value",
+     "binding_bound",
+     "Examples.CommitmentScheme.Binding",
+     "dep=0",
+     "fac=1"
+    ],
+    [
+     "VCVioFeasibility",
+     "VCVioFeasibility.ctx_binding_bound_tight",
+     "value",
+     "probEvent",
+     "VCVio.EvalDist.Defs.Basic",
+     "dep=1",
+     "fac=1"
+    ]
+   ],
+   "project": [],
+   "bridge": [
+    [
+     "VCVioFeasibility",
+     "VCVioFeasibility.ctx_binding_bound",
+     "value",
+     "BeaconcryptCore.VCVioLegacy.oracleComp_probEvent_eq_prEvent_native",
+     "VCVioLegacyBridge",
+     "dep=0",
+     "fac=1"
+    ],
+    [
+     "VCVioFeasibility",
+     "VCVioFeasibility.ctx_binding_bound_tight",
+     "value",
+     "BeaconcryptCore.VCVioLegacy.oracleComp_probEvent_eq_prEvent_native",
+     "VCVioLegacyBridge",
+     "dep=0",
+     "fac=1"
+    ]
+   ]
+  },
+  "adapter_users_stage": [
+   "BeaconcryptCore.Computational.VCVioLegacyBridge"
+  ],
+  "adapter_only_bridge": true,
+  "data_sha256": {
+   "base": "921981b1277f1f2bdc5d571ad808730db71702f6103220da343be61fdc970489",
+   "stage": "9a9b236277561b85eb9d25db498e230bee4f71429ed500a356a550bf09305871",
+   "report": "9264fd68041f9bbab9896485fced3dac33c12632f2652a50d794dd7296e215f8"
+  },
+  "matches_review_all_roots_probe": "10 rows in ctx_binding_bound_tight and ctx_binding_bound (review data/phaseb-all-roots.tsv) = 8 package + 2 bridge rows"
+ },
+ "source_scan_sites": {
+  "base": {
+   "total": 1748,
+   "bridge": 24,
+   "outside_bridge": 1724,
+   "scan_sha256": "dc6e89e817d9d102ba00757b03b39a4cbde7a657f88d0b7da95c7627a6042d4d"
+  },
+  "stage": {
+   "total": 1730,
+   "bridge": 28,
+   "outside_bridge": 1702,
+   "scan_sha256": "c9cf5dfdbf53fea0bc53f9f9a041ca586935734cbdbd28bbd9895a848cd50730"
+  }
+ },
+ "build": {
+  "command": "make -C beaconcrypt-core check-lean SHELL=bash (proof shell, two-file flake copy of central's flake.nix/flake.lock)",
+  "lease": "00000783",
+  "result": [
+   "Build completed successfully (5535 jobs).",
+   "CHECK-LEAN-END 2026-10-20T04:00:52+02:00 rc=0"
+  ],
+  "log_sha256": "a3cdc8f77d1daf08334cfdb8c07fee190f2ae3653507fe65470e73bf62103cb1"
+ },
+ "inventory": {
+  "recount": "handwritten-lean unchanged (1987)",
+  "rehash": [
+   "trusted-boundary.md"
+  ],
+  "lease": "00000782",
+  "check_inventory": [
+   "Formal-verification inventory matches the reviewed boundary.",
+   "INV-END 2026-10-20T04:00:48+02:00 rc=0"
+  ]
+ },
+ "step7_source_scan": [
+  "LEAN-SCAN files 1994 hits 0"
+ ],
+ "not_run": [
+  "verify-in-shell, ProVerif, transcript fidelity, cargo, Go and Python tests (owner decision 2026-10-19 item 5: only Lean files and scratch tools change)",
+  "mutation suite (no Rust source changed)",
+  "nix-collect-garbage"
+ ],
+ "tool_sha256": {
+  "tools/CertTools.lean": "b737ffda3c81b84ca66c3377a95daa4e0e3fcd89920c14dda5da7955425cf0c5",
+  "S1/tools/FacadeProbe.lean.in": "a0641c07c4eb38284d3e30a1c8f2376810b8db36a2134ee7f528ad903f500c8b",
+  "S1/tools/phaseb.py": "ef85d02fe757a7419611d0b6c2aa91565d55372b2fba6c37e08936ea0bdf9b96",
+  "S1/tools/check_certificates.py": "1adf9cb8789a4f23c520d51d01517ece21167bdc0afecf8bf1659da769a5ed27",
+  "S1/tools/twins.py": "7b60d0d8bef7acdcfb634906a9a4f20f6a8041665ade7d623928c2f8aa95243d",
+  "review-fix/scripts/certificates.sh": "3434c6909a42f10f7db50d5a363f396681b68c04a37931ec229cb0ae35c5afed",
+  "review-fix/scripts/twin_module.py": "021e669016b8904465d5ef34392e4c997fe85db5875532d90cec2143bcc2aacd",
+  "review-fix/scripts/facade.sh": "c6160493f4841285322258c60f0a1c028a84c6fdb488c9dee1a10c8ab60673c8",
+  "review-fix/scripts/edit_s1_receipt.py": "3d1d51c532acfe419345a3f52389536aec5abc6ced0d0a4e33fb98858e0fa038",
+  "review-fix/scripts/gen_receipt_s1_review.py": "7f6fe40a52fb54672b9fad18824336579d75259568c62cf4e96643d17a9fbcb5"
+ },
+ "logs": "machine-local, /tmp/bc-arc-scratch/vcvio-migration/S1/review-fix/logs/"
+}

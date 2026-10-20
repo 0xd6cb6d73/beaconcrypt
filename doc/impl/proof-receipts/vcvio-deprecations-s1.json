@@ -51,7 +51,7 @@
   "CtxReduction": "six wrapper bodies; three proofs rewritten (phase B)",
   "CtxTransitionReduction": "three wrapper bodies; four proofs rewritten (phase B)",
   "CtxRetainedTagProjection": "two wrapper bodies; one proof rewritten (phase B); imports VCVioForwardOracleComp (native measure semantics for ProbComp); module doc note",
-  "CtxAuthClassification": "seven wrapper bodies; three proofs rewritten (phase B); imports VCVioForwardOracleComp instead of VCVioForwardEvalDist; module doc note",
+  "CtxAuthClassification": "seven wrapper bodies; three proofs rewritten (phase B); adds the import VCVioForwardOracleComp (native measure semantics for ProbComp); module doc note",
   "VCVioLegacyBridge": "oracleComp_probOutput_eq_prEvent_native, oracleComp_probEvent_eq_prEvent_native, oracleComp_evalSPMF_eq_iff_evalDistEq_native (each under set_option linter.deprecated false in, guarded [propext, Classical.choice, Quot.sound]); module and section docs; 14 -> 17 theorems",
   "phase_b_lemmas_replaced": [
    "probOutput_bind_mono",
@@ -476,7 +476,7 @@
   "log_checker": "tools/check_certificates.py: RESULT PASS"
  },
  "phase_b": {
-  "facade_probe": "S0 equivalence review's FacadeProbe over the five modules (and the bridge, excluded)",
+  "facade_probe": "S0 equivalence review's FacadeProbe over the five modules (and the bridge, excluded); version 1, which counts only constants of the module roots VCVio and ToMathlib; vcvio-deprecations-s1-review.json gives version 2 over every module root",
   "base": {
    "rows_outside_bridge": 172,
    "declarations_outside_bridge": 38,
@@ -632,5 +632,5 @@
   "stage/gates-config.json": "1fdf1f24ab5fff0641d202e76bd79995180be187e6d8b9b00d91a44b79bde02c"
  },
  "logs": "machine-local, /tmp/bc-arc-scratch/vcvio-migration/S1/logs/ (check-lean-0..3, certificates-2, certificates-negative, stage-*-2, check-inventory-1, warn-categories)",
- "reviews": "none yet"
+ "reviews": "two independent reviews at c8637a5a (2026-10-20, statement equivalence and hygiene, both APPROVE_WITH_NITS); their fixes and reruns are recorded in vcvio-deprecations-s1-review.json"
 }
