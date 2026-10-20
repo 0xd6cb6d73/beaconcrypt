@@ -166,10 +166,6 @@ theorem extractUniform_eq_hmacReal {Context : Type} (hmac : HmacSha512)
     evalSPMF_sample_comm (sample : ProbComp (Context × Pqxdh.Bytes)) ($ᵗ HmacBlock)
       (fun pair key => observer pair.1 (expandRoot hmac key))
 
-set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.PqxdhSecretInputKdf.extractUniform_eq_hmacReal_vcvioLegacy :
-    ∀ {Context : Type} (hmac : BeaconcryptCore.Computational.PqxdhSecretInputKdf.HmacSha512) (sample : BeaconcryptCore.Computational.PqxdhSecretInputKdf.SecretInputSampler Context) (observer : BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootObserver Context), 𝒮[BeaconcryptCore.Computational.PqxdhSecretInputKdf.extractUniformGame sample (BeaconcryptCore.Computational.PqxdhSecretInputKdf.extractReduction hmac observer)] = 𝒮[BeaconcryptCore.Computational.PqxdhSecretInputKdf.hmacPrfRealGame hmac (BeaconcryptCore.Computational.PqxdhSecretInputKdf.expandReduction sample observer)] :=
-  by simpa only [BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq] using @BeaconcryptCore.Computational.PqxdhSecretInputKdf.extractUniform_eq_hmacReal
-
 /-- The ideal HMAC reduction receives one fresh block, while local computations leave the table alone. -/
 theorem expandReduction_random {Context : Type}
     (sample : SecretInputSampler Context) (observer : RootObserver Context) :

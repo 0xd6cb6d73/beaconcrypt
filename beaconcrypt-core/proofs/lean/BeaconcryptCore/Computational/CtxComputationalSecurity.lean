@@ -332,8 +332,8 @@ theorem ctxClassifiedVerifier_le_inv_of_direct_support
         adversary.main).run emptyCtxIndependentTagState))
     (hnotRetained : ¬ CtxFreshAcceptedRetainedBase c
       (independentHandlerStateToBeforeVerify key target state)) :
-    Pr[= true | ctxClassifiedVerifier c
-      (independentTrackedProjection key (target, state))] ≤
+    Pr{let x ← (ctxClassifiedVerifier c
+      (independentTrackedProjection key (target, state)))}[x = true] ≤
         (Fintype.card CtxDigest : ℝ≥0∞)⁻¹ := by
   by_cases halias : CtxFullAliasShape
     (independentHandlerStateToBeforeVerify key target state)
@@ -345,11 +345,8 @@ theorem ctxClassifiedVerifier_le_inv_of_direct_support
     unfold ctxKeyFreeSuffixStep
     rw [hfresh]
     simp only [bind_assoc, pure_bind]
-    rw [← probEvent_eq_eq_probOutput, bind_pure_comp, probEvent_map]
-    refine (probEvent_mono''
-      (q := fun x : CtxDigest => x = target.record.commit) ?_).trans ?_
+    refine (prEvent_mono _ _ (fun x : CtxDigest => x = target.record.commit) ?_).trans ?_
     · intro expected haccepted
-      simp only [Function.comp_apply] at haccepted
       have haccepted' : CtxClassifiedForgeryAt c
           (independentHandlerStateToBeforeVerify key target state) expected :=
         @of_decide_eq_true _ (Classical.propDecidable _) haccepted
@@ -357,8 +354,7 @@ theorem ctxClassifiedVerifier_le_inv_of_direct_support
       exact Or.elim haccepted'
         (fun hretained => (hnotRetained hretained).elim)
         (fun haliasAccepted => haliasAccepted.2.1.symm)
-    · rw [probEvent_eq_eq_probOutput,
-        probOutput_uniformSample CtxDigest target.record.commit]
+    · exact le_of_eq (SampleableType.prEvent_uniformSample_eq_singleton target.record.commit)
   · unfold ctxClassifiedVerifier
     unfold independentHandlerStateToBeforeVerify at hnotRetained halias
     simp only [independentTrackedProjection,
@@ -370,14 +366,13 @@ theorem ctxClassifiedVerifier_le_inv_of_direct_support
 theorem ctxTypedFullFreshVerifier_le_classified_of_cache_sound
     (c : Pqxdh.Crypto) (result : CtxBeforeVerify × SplitCache)
     (hsound : CtxHonestCommitmentsCached result.1 result.2) :
-    Pr[= true | ctxTypedFullFreshVerifier c result] ≤
-      Pr[= true | ctxClassifiedVerifier c result] := by
-  rw [← probEvent_eq_eq_probOutput, ← probEvent_eq_eq_probOutput]
+    Pr{let x ← ctxTypedFullFreshVerifier c result}[x = true] ≤
+      Pr{let x ← ctxClassifiedVerifier c result}[x = true] := by
   unfold ctxTypedFullFreshVerifier ctxClassifiedVerifier
-  simp only [bind_pure_comp, probEvent_map]
-  apply probEvent_mono
+  simp only [bind_assoc, pure_bind]
+  apply prEvent_mono_of_support
   intro oracleResult horacle haccepted
-  simp only [Function.comp_apply, decide_eq_true_eq] at haccepted ⊢
+  simp only [decide_eq_true_eq] at haccepted ⊢
   exact acceptedTypedFullFreshAt_implies_classified_of_cache_sound
     c result.1 result.2 oracleResult.2 oracleResult.1 hsound horacle haccepted
 
@@ -387,29 +382,22 @@ theorem ctxDirectTypedFullFreshForgeryGame_le_classified_of_cache_sound
     (hsound : ∀ result ∈ support
       (ctxDirectSampleIndependentTagGame c adversary),
       CtxHonestCommitmentsCached result.1 result.2) :
-    Pr[= true | ctxDirectTypedFullFreshForgeryGame c adversary] ≤
-      Pr[= true | ctxDirectClassifiedForgeryGame c adversary] := by
-  rw [← probEvent_eq_eq_probOutput, ← probEvent_eq_eq_probOutput]
+    Pr{let x ← ctxDirectTypedFullFreshForgeryGame c adversary}[x = true] ≤
+      Pr{let x ← ctxDirectClassifiedForgeryGame c adversary}[x = true] := by
   unfold ctxDirectTypedFullFreshForgeryGame
     ctxDirectClassifiedForgeryGame
-  apply probEvent_bind_mono
-  intro result hresult
-  simpa [probEvent_eq_eq_probOutput] using
-    (ctxTypedFullFreshVerifier_le_classified_of_cache_sound
-      c result (hsound result hresult))
+  refine prEvent_bind_mono_of_forall_le_of_support _ _ _ _ _ fun result hresult => ?_
+  exact ctxTypedFullFreshVerifier_le_classified_of_cache_sound
+    c result (hsound result hresult)
 
 /-- The direct classified game is bounded by retained-base integrity plus one fresh digest. -/
 theorem ctxDirectClassifiedForgeryGame_le_retained_add_inv
     (c : Pqxdh.Crypto) (adversary : CtxAdversary) :
-    Pr[= true | ctxDirectClassifiedForgeryGame c adversary] ≤
-      Pr[fun result : CtxBeforeVerify × SplitCache =>
-          CtxFreshAcceptedRetainedBase c result.1 |
-        ctxDirectSampleIndependentTagGame c adversary] +
+    Pr{let x ← ctxDirectClassifiedForgeryGame c adversary}[x = true] ≤
+      Pr{let result ← ctxDirectSampleIndependentTagGame c adversary}[CtxFreshAcceptedRetainedBase c result.1] +
       (Fintype.card CtxDigest : ℝ≥0∞)⁻¹ := by
-  rw [← probEvent_eq_eq_probOutput]
   unfold ctxDirectClassifiedForgeryGame
-  refine probEvent_bind_le_probEvent_add ?_
-  intro result hresult hnotRetained
+  refine prEvent_bind_le_prEvent_add_of_support _ _ _ _ fun result hresult hnotRetained => ?_
   unfold ctxDirectSampleIndependentTagGame at hresult
   rw [mem_support_bind_iff] at hresult
   obtain ⟨key, _, hresult⟩ := hresult
@@ -417,15 +405,14 @@ theorem ctxDirectClassifiedForgeryGame_le_retained_add_inv
   rw [support_map] at hresult
   obtain ⟨source, hsource, rfl⟩ := hresult
   rcases source with ⟨target, state⟩
-  simpa [probEvent_eq_eq_probOutput] using
-    (ctxClassifiedVerifier_le_inv_of_direct_support
-      c key adversary target state hsource hnotRetained)
+  exact ctxClassifiedVerifier_le_inv_of_direct_support
+    c key adversary target state hsource hnotRetained
 
 /-- The canonical-to-direct hop charges the secret-prefix event exactly once. -/
 theorem ctxClassifiedForgeryGame_le_direct_add_prefix
     (c : Pqxdh.Crypto) (adversary : CtxAdversary) :
-    Pr[= true | ctxClassifiedForgeryGame c adversary] ≤
-      Pr[= true | ctxDirectClassifiedForgeryGame c adversary] +
+    Pr{let x ← ctxClassifiedForgeryGame c adversary}[x = true] ≤
+      Pr{let x ← ctxDirectClassifiedForgeryGame c adversary}[x = true] +
         ctxSecretPrefixQueriedProbability c adversary := by
   have htv : tvDist (ctxClassifiedForgeryGame c adversary)
       (ctxDirectClassifiedForgeryGame c adversary) ≤
@@ -443,33 +430,33 @@ theorem ctxClassifiedForgeryGame_le_direct_add_prefix
       (ctxClassifiedForgeryGame c adversary).boolDistAdvantage
           (ctxDirectClassifiedForgeryGame c adversary) ≤
         (ctxSecretPrefixQueriedProbability c adversary).toReal := by
-    simpa [ProbComp.boolDistAdvantage] using hdiff.trans htv
+    simpa only [ProbComp.boolDistAdvantage, VCVioLegacy.evalDist_singleton_eq_probOutput] using hdiff.trans htv
   calc
-    Pr[= true | ctxClassifiedForgeryGame c adversary] ≤
-        Pr[= true | ctxDirectClassifiedForgeryGame c adversary] +
+    Pr{let x ← ctxClassifiedForgeryGame c adversary}[x = true] ≤
+        Pr{let x ← ctxDirectClassifiedForgeryGame c adversary}[x = true] +
           ENNReal.ofReal
             ((ctxClassifiedForgeryGame c adversary).boolDistAdvantage
               (ctxDirectClassifiedForgeryGame c adversary)) := by
       have comparison := VCVioForward.evalDist_apply_true_le_add_ofReal_boolDistAdvantage
           (ctxClassifiedForgeryGame c adversary) (ctxDirectClassifiedForgeryGame c adversary)
-      simp only [VCVioLegacy.evalDist_singleton_eq_probOutput] at comparison
+      rw [← prEvent_eq_evalDist_singleton (ctxClassifiedForgeryGame c adversary) true,
+        ← prEvent_eq_evalDist_singleton (ctxDirectClassifiedForgeryGame c adversary) true] at comparison
       exact comparison
-    _ ≤ Pr[= true | ctxDirectClassifiedForgeryGame c adversary] +
+    _ ≤ Pr{let x ← ctxDirectClassifiedForgeryGame c adversary}[x = true] +
           ENNReal.ofReal
             (ctxSecretPrefixQueriedProbability c adversary).toReal := by
       gcongr
-    _ = Pr[= true | ctxDirectClassifiedForgeryGame c adversary] +
+    _ = Pr{let x ← ctxDirectClassifiedForgeryGame c adversary}[x = true] +
           ctxSecretPrefixQueriedProbability c adversary := by
       have hprefix : ctxSecretPrefixQueriedProbability c adversary ≠ ⊤ := by
-        simp only [ctxSecretPrefixQueriedProbability_vcvioLegacy]
-        exact probEvent_ne_top
+        exact prEvent_ne_top _
       rw [ENNReal.ofReal_toReal hprefix]
 
 /-- The actual typed full-fresh game pays the same single canonical-to-direct prefix charge. -/
 theorem ctxTypedFullFreshForgeryGame_le_direct_add_prefix
     (c : Pqxdh.Crypto) (adversary : CtxAdversary) :
-    Pr[= true | ctxTypedFullFreshForgeryGame c adversary] ≤
-      Pr[= true | ctxDirectTypedFullFreshForgeryGame c adversary] +
+    Pr{let x ← ctxTypedFullFreshForgeryGame c adversary}[x = true] ≤
+      Pr{let x ← ctxDirectTypedFullFreshForgeryGame c adversary}[x = true] +
         ctxSecretPrefixQueriedProbability c adversary := by
   have htv : tvDist (ctxTypedFullFreshForgeryGame c adversary)
       (ctxDirectTypedFullFreshForgeryGame c adversary) ≤
@@ -488,44 +475,42 @@ theorem ctxTypedFullFreshForgeryGame_le_direct_add_prefix
       (ctxTypedFullFreshForgeryGame c adversary).boolDistAdvantage
           (ctxDirectTypedFullFreshForgeryGame c adversary) ≤
         (ctxSecretPrefixQueriedProbability c adversary).toReal := by
-    simpa [ProbComp.boolDistAdvantage] using hdiff.trans htv
+    simpa only [ProbComp.boolDistAdvantage, VCVioLegacy.evalDist_singleton_eq_probOutput] using hdiff.trans htv
   calc
-    Pr[= true | ctxTypedFullFreshForgeryGame c adversary] ≤
-        Pr[= true | ctxDirectTypedFullFreshForgeryGame c adversary] +
+    Pr{let x ← ctxTypedFullFreshForgeryGame c adversary}[x = true] ≤
+        Pr{let x ← ctxDirectTypedFullFreshForgeryGame c adversary}[x = true] +
           ENNReal.ofReal
             ((ctxTypedFullFreshForgeryGame c adversary).boolDistAdvantage
               (ctxDirectTypedFullFreshForgeryGame c adversary)) := by
       have comparison := VCVioForward.evalDist_apply_true_le_add_ofReal_boolDistAdvantage
           (ctxTypedFullFreshForgeryGame c adversary) (ctxDirectTypedFullFreshForgeryGame c adversary)
-      simp only [VCVioLegacy.evalDist_singleton_eq_probOutput] at comparison
+      rw [← prEvent_eq_evalDist_singleton (ctxTypedFullFreshForgeryGame c adversary) true,
+        ← prEvent_eq_evalDist_singleton (ctxDirectTypedFullFreshForgeryGame c adversary) true] at comparison
       exact comparison
-    _ ≤ Pr[= true | ctxDirectTypedFullFreshForgeryGame c adversary] +
+    _ ≤ Pr{let x ← ctxDirectTypedFullFreshForgeryGame c adversary}[x = true] +
           ENNReal.ofReal
             (ctxSecretPrefixQueriedProbability c adversary).toReal := by
       gcongr
-    _ = Pr[= true | ctxDirectTypedFullFreshForgeryGame c adversary] +
+    _ = Pr{let x ← ctxDirectTypedFullFreshForgeryGame c adversary}[x = true] +
           ctxSecretPrefixQueriedProbability c adversary := by
       have hprefix : ctxSecretPrefixQueriedProbability c adversary ≠ ⊤ := by
-        simp only [ctxSecretPrefixQueriedProbability_vcvioLegacy]
-        exact probEvent_ne_top
+        exact prEvent_ne_top _
       rw [ENNReal.ofReal_toReal hprefix]
 
 /-- Core classified modified-CTX bound before reducing the one prefix event. -/
 theorem ctxClassifiedForgeryProbability_le_intCtxt_add_prefix_add_inv
     (c : Pqxdh.Crypto) (adversary : CtxAdversary) :
-    Pr[= true | ctxClassifiedForgeryGame c adversary] ≤
+    Pr{let x ← ctxClassifiedForgeryGame c adversary}[x = true] ≤
       modifiedNonceAeadINTCTXTAdvantage c
           (ctxRetainedBaseReduction adversary) +
         ctxSecretPrefixQueriedProbability c adversary +
         (((2 ^ 512 : ℕ) : ℝ≥0∞))⁻¹ := by
   calc
-    Pr[= true | ctxClassifiedForgeryGame c adversary] ≤
-        Pr[= true | ctxDirectClassifiedForgeryGame c adversary] +
+    Pr{let x ← ctxClassifiedForgeryGame c adversary}[x = true] ≤
+        Pr{let x ← ctxDirectClassifiedForgeryGame c adversary}[x = true] +
           ctxSecretPrefixQueriedProbability c adversary :=
       ctxClassifiedForgeryGame_le_direct_add_prefix c adversary
-    _ ≤ (Pr[fun result : CtxBeforeVerify × SplitCache =>
-            CtxFreshAcceptedRetainedBase c result.1 |
-          ctxDirectSampleIndependentTagGame c adversary] +
+    _ ≤ (Pr{let result ← ctxDirectSampleIndependentTagGame c adversary}[CtxFreshAcceptedRetainedBase c result.1] +
           (Fintype.card CtxDigest : ℝ≥0∞)⁻¹) +
         ctxSecretPrefixQueriedProbability c adversary := by
       gcongr
@@ -550,24 +535,21 @@ theorem ctxTypedFullFreshForgeryProbability_le_intCtxt_add_prefix_add_inv_of_cac
     (hsound : ∀ result ∈ support
       (ctxDirectSampleIndependentTagGame c adversary),
       CtxHonestCommitmentsCached result.1 result.2) :
-    Pr[= true | ctxTypedFullFreshForgeryGame c adversary] ≤
+    Pr{let x ← ctxTypedFullFreshForgeryGame c adversary}[x = true] ≤
       modifiedNonceAeadINTCTXTAdvantage c
           (ctxRetainedBaseReduction adversary) +
         ctxSecretPrefixQueriedProbability c adversary +
         (((2 ^ 512 : ℕ) : ℝ≥0∞))⁻¹ := by
   calc
-    Pr[= true | ctxTypedFullFreshForgeryGame c adversary] ≤
-        Pr[= true | ctxDirectTypedFullFreshForgeryGame c adversary] +
+    Pr{let x ← ctxTypedFullFreshForgeryGame c adversary}[x = true] ≤
+        Pr{let x ← ctxDirectTypedFullFreshForgeryGame c adversary}[x = true] +
           ctxSecretPrefixQueriedProbability c adversary :=
       ctxTypedFullFreshForgeryGame_le_direct_add_prefix c adversary
-    _ ≤ Pr[= true | ctxDirectClassifiedForgeryGame c adversary] +
-          ctxSecretPrefixQueriedProbability c adversary := by
-      gcongr
-      exact ctxDirectTypedFullFreshForgeryGame_le_classified_of_cache_sound
-        c adversary hsound
-    _ ≤ (Pr[fun result : CtxBeforeVerify × SplitCache =>
-            CtxFreshAcceptedRetainedBase c result.1 |
-          ctxDirectSampleIndependentTagGame c adversary] +
+    _ ≤ Pr{let x ← ctxDirectClassifiedForgeryGame c adversary}[x = true] +
+          ctxSecretPrefixQueriedProbability c adversary :=
+      add_le_add (ctxDirectTypedFullFreshForgeryGame_le_classified_of_cache_sound
+        c adversary hsound) le_rfl
+    _ ≤ (Pr{let result ← ctxDirectSampleIndependentTagGame c adversary}[CtxFreshAcceptedRetainedBase c result.1] +
           (Fintype.card CtxDigest : ℝ≥0∞)⁻¹) +
         ctxSecretPrefixQueriedProbability c adversary := by
       gcongr
@@ -589,7 +571,7 @@ theorem ctxTypedFullFreshForgeryProbability_le_intCtxt_add_prefix_add_inv_of_cac
 /-- Unconditional actual typed full-fresh core bound from the reachable direct cache invariant. -/
 theorem ctxTypedFullFreshForgeryProbability_le_intCtxt_add_prefix_add_inv
     (c : Pqxdh.Crypto) (adversary : CtxAdversary) :
-    Pr[= true | ctxTypedFullFreshForgeryGame c adversary] ≤
+    Pr{let x ← ctxTypedFullFreshForgeryGame c adversary}[x = true] ≤
       modifiedNonceAeadINTCTXTAdvantage c
           (ctxRetainedBaseReduction adversary) +
         ctxSecretPrefixQueriedProbability c adversary +
@@ -602,8 +584,7 @@ theorem ctxTypedFullFreshForgeryProbability_le_intCtxt_add_prefix_add_inv
 theorem ctxClassifiedForgeryProbability_le_intCtxt_add_indDollar_add_guesses
     (c : Pqxdh.Crypto) {qH qE : ℕ}
     (adversary : CtxQueryBoundedAdversary qH qE) :
-    Pr[= true |
-        ctxClassifiedForgeryGame c adversary.toCtxAdversary] ≤
+    Pr{let x ← ctxClassifiedForgeryGame c adversary.toCtxAdversary}[x = true] ≤
       modifiedNonceAeadINTCTXTAdvantage c
           (ctxRetainedBaseReduction adversary.toCtxAdversary) +
         ENNReal.ofReal
@@ -612,8 +593,7 @@ theorem ctxClassifiedForgeryProbability_le_intCtxt_add_indDollar_add_guesses
         (qH : ℝ≥0∞) * (((2 ^ 256 : ℕ) : ℝ≥0∞))⁻¹ +
         (((2 ^ 512 : ℕ) : ℝ≥0∞))⁻¹ := by
   calc
-    Pr[= true |
-        ctxClassifiedForgeryGame c adversary.toCtxAdversary] ≤
+    Pr{let x ← ctxClassifiedForgeryGame c adversary.toCtxAdversary}[x = true] ≤
       modifiedNonceAeadINTCTXTAdvantage c
           (ctxRetainedBaseReduction adversary.toCtxAdversary) +
         ctxSecretPrefixQueriedProbability c adversary.toCtxAdversary +
@@ -643,8 +623,7 @@ theorem ctxClassifiedForgeryProbability_le_intCtxt_add_indDollar_add_guesses
 theorem ctxTypedFullFreshForgeryProbability_le_intCtxt_add_indDollar_add_guesses
     (c : Pqxdh.Crypto) {qH qE : ℕ}
     (adversary : CtxQueryBoundedAdversary qH qE) :
-    Pr[= true |
-        ctxTypedFullFreshForgeryGame c adversary.toCtxAdversary] ≤
+    Pr{let x ← ctxTypedFullFreshForgeryGame c adversary.toCtxAdversary}[x = true] ≤
       modifiedNonceAeadINTCTXTAdvantage c
           (ctxRetainedBaseReduction adversary.toCtxAdversary) +
         ENNReal.ofReal
@@ -653,8 +632,7 @@ theorem ctxTypedFullFreshForgeryProbability_le_intCtxt_add_indDollar_add_guesses
         (qH : ℝ≥0∞) * (((2 ^ 256 : ℕ) : ℝ≥0∞))⁻¹ +
         (((2 ^ 512 : ℕ) : ℝ≥0∞))⁻¹ := by
   calc
-    Pr[= true |
-        ctxTypedFullFreshForgeryGame c adversary.toCtxAdversary] ≤
+    Pr{let x ← ctxTypedFullFreshForgeryGame c adversary.toCtxAdversary}[x = true] ≤
       modifiedNonceAeadINTCTXTAdvantage c
           (ctxRetainedBaseReduction adversary.toCtxAdversary) +
         ctxSecretPrefixQueriedProbability c adversary.toCtxAdversary +
@@ -685,8 +663,7 @@ theorem ctxTypedFullFreshForgeryProbability_le_intCtxt_add_booleanIndDollar_add_
     (c : Pqxdh.Crypto) {qH qE : ℕ}
     (adversary : CtxQueryBoundedAdversary qH qE)
     (hqE : qE < 2 ^ 96) :
-    Pr[= true |
-        ctxTypedFullFreshForgeryGame c adversary.toCtxAdversary] ≤
+    Pr{let x ← ctxTypedFullFreshForgeryGame c adversary.toCtxAdversary}[x = true] ≤
       modifiedNonceAeadINTCTXTAdvantage c
           (ctxRetainedBaseReduction adversary.toCtxAdversary) +
         ENNReal.ofReal
@@ -695,8 +672,7 @@ theorem ctxTypedFullFreshForgeryProbability_le_intCtxt_add_booleanIndDollar_add_
         (qH : ℝ≥0∞) * (((2 ^ 128 : ℕ) : ℝ≥0∞))⁻¹ +
         (((2 ^ 512 : ℕ) : ℝ≥0∞))⁻¹ := by
   calc
-    Pr[= true |
-        ctxTypedFullFreshForgeryGame c adversary.toCtxAdversary] ≤
+    Pr{let x ← ctxTypedFullFreshForgeryGame c adversary.toCtxAdversary}[x = true] ≤
       modifiedNonceAeadINTCTXTAdvantage c
           (ctxRetainedBaseReduction adversary.toCtxAdversary) +
         ctxSecretPrefixQueriedProbability c adversary.toCtxAdversary +

@@ -244,23 +244,26 @@ theorem indexedBeforeVerify_primitive {Result : Type} (decode : RawDecoder) (c :
     (query : ModifiedNonceAeadAdversarySpec.Domain)
     (next : ModifiedNonceAeadAdversarySpec.Range query → OracleComp AdaptiveSpec Result)
     (index : ℕ) (state : ModifiedNonceAeadHandlerState) :
-    Pr[ModifiedNonceAeadINTCTXTWin c | indexedBeforeVerify decode c key fallback
-      (liftM (AdaptiveSpec.query (.inl query)) >>= next) index state] =
-    Pr[ModifiedNonceAeadINTCTXTWin c | do
+    Pr{let x ← (indexedBeforeVerify decode c key fallback
+      (liftM (AdaptiveSpec.query (.inl query)) >>= next) index state)}[ModifiedNonceAeadINTCTXTWin c x] =
+    Pr{let x ← (do
       let (answer, nextState) ← (modifiedNonceAeadINTCTXTImpl c key query).run state
-      indexedBeforeVerify decode c key fallback (next answer) index nextState] := by
+      indexedBeforeVerify decode c key fallback (next answer) index nextState)}[ModifiedNonceAeadINTCTXTWin c x] := by
+  refine EvalDistEq.prEvent_eq ?_ (ModifiedNonceAeadINTCTXTWin c)
   unfold indexedBeforeVerify
   rw [stopAtRaw_primitive]
   simp only [simulateQ_query_bind, OracleQuery.input_query,
     StateT.run_bind, bind_assoc]
-  change Pr[ModifiedNonceAeadINTCTXTWin c | do
+  change EvalDistEq ((modifiedNonceAeadINTCTXTImpl c key query).run state >>= fun result =>
+    (simulateQ (modifiedNonceAeadINTCTXTImpl c key)
+      (stopAtRaw decode fallback (next result.1) index
+        (recordPrimitiveAnswer query result.1 state.successfulSeals))).run result.2 >>= fun final =>
+    pure (⟨key, final.1, final.2.successfulSeals, final.2.usedNonces⟩ : ModifiedNonceAeadBeforeVerify)) (do
     let (answer, nextState) ← (modifiedNonceAeadINTCTXTImpl c key query).run state
     let (target, finalState) ← (simulateQ (modifiedNonceAeadINTCTXTImpl c key)
-      (stopAtRaw decode fallback (next answer) index
-        (recordPrimitiveAnswer query answer state.successfulSeals))).run nextState
-    pure (⟨key, target, finalState.successfulSeals, finalState.usedNonces⟩ : ModifiedNonceAeadBeforeVerify)] = _
-  apply probEvent_bind_congr
-  intro result supported
+      (stopAtRaw decode fallback (next answer) index nextState.successfulSeals)).run nextState
+    pure (⟨key, target, finalState.successfulSeals, finalState.usedNonces⟩ : ModifiedNonceAeadBeforeVerify))
+  refine OracleComp.EvalDistEq.bind_congr_of_support _ fun result supported => ?_
   rcases result with ⟨answer, nextState⟩
   dsimp only
   rw [← primitiveAnswer_history c key query state ⟨answer, nextState⟩ supported]
@@ -270,16 +273,18 @@ theorem probEvent_bind_le_sum {A B C : Type} (sample : ProbComp A)
     (left : A → ProbComp B) (right : ℕ → A → ProbComp C)
     (leftEvent : B → Prop) (rightEvent : C → Prop) (count : ℕ)
     (bounded : ∀ value ∈ support sample,
-      Pr[leftEvent | left value] ≤ ∑ index ∈ Finset.range count, Pr[rightEvent | right index value]) :
-    Pr[leftEvent | sample >>= left] ≤
-      ∑ index ∈ Finset.range count, Pr[rightEvent | sample >>= right index] := by
-  simp only [probEvent_bind_eq_tsum]
+      Pr{let b ← left value}[leftEvent b] ≤
+        ∑ index ∈ Finset.range count, Pr{let c ← right index value}[rightEvent c]) :
+    Pr{let b ← sample >>= left}[leftEvent b] ≤
+      ∑ index ∈ Finset.range count, Pr{let c ← sample >>= right index}[rightEvent c] := by
+  simp only [OracleComp.prEvent_bind_eq_tsum]
   rw [← Summable.tsum_finsetSum (fun _ _ => ENNReal.summable)]
   refine ENNReal.tsum_le_tsum fun value => ?_
   by_cases supported : value ∈ support sample
   · rw [← Finset.mul_sum]
     exact mul_le_mul' le_rfl (bounded value supported)
-  · simp [probOutput_eq_zero_of_not_mem_support supported]
+  · rw [prEvent_eq_zero_of_not_mem_support sample supported]
+    simp only [zero_mul, Finset.sum_const_zero, le_refl]
 
 /-- Source raw-attempt accounting includes rejected decoding and every repeated candidate. -/
 def IsRawQuery : AdaptiveSpec.Domain → Prop
@@ -324,13 +329,16 @@ theorem indexedBeforeVerify_receive_zero_wins {Result : Type} (decode : RawDecod
     (next : Option Pqxdh.Bytes → OracleComp AdaptiveSpec Result)
     (state : ModifiedNonceAeadHandlerState) (correct : HistoryCorrect c key state.successfulSeals)
     (discrepancy : actualOpen decode c key raw ≠ simulatedOpen decode state.successfulSeals raw) :
-    Pr[ModifiedNonceAeadINTCTXTWin c | indexedBeforeVerify decode c key fallback
-      (liftM (AdaptiveSpec.query (.inr raw)) >>= next) 0 state] = 1 := by
+    Pr{let x ← (indexedBeforeVerify decode c key fallback
+      (liftM (AdaptiveSpec.query (.inr raw)) >>= next) 0 state)}[ModifiedNonceAeadINTCTXTWin c x] = 1 := by
   obtain ⟨target, parsed, fresh, opens⟩ :=
     (discrepancy_iff_fresh decode c key state.successfulSeals correct raw).mp discrepancy
   unfold indexedBeforeVerify
   rw [stopAtRaw_receive]
-  simp [parsed, ModifiedNonceAeadINTCTXTWin, fresh, opens]
+  refine OracleComp.prEvent_eq_one_of_forall_mem_support _ _ fun result hresult => ?_
+  simp [parsed] at hresult
+  subst hresult
+  simp [ModifiedNonceAeadINTCTXTWin, fresh, opens]
 
 /-- Each possible first fresh acceptance is charged once in the indexed family; all raw attempts count. -/
 theorem firstDiscrepancy_le_indexed_sum {Result : Type} (decode : RawDecoder) (c : Pqxdh.Crypto)
@@ -338,11 +346,14 @@ theorem firstDiscrepancy_le_indexed_sum {Result : Type} (decode : RawDecoder) (c
     (count : ℕ) (state : ModifiedNonceAeadHandlerState)
     (bounded : adversary.IsQueryBoundP IsRawQuery count)
     (correct : HistoryCorrect c key state.successfulSeals) :
-    Pr[fun bad => bad = true | firstDiscrepancy decode c key adversary state] ≤
+    Pr{let bad ← firstDiscrepancy decode c key adversary state}[bad = true] ≤
       ∑ index ∈ Finset.range count,
-        Pr[ModifiedNonceAeadINTCTXTWin c | indexedBeforeVerify decode c key fallback adversary index state] := by
+        Pr{let x ← indexedBeforeVerify decode c key fallback adversary index state}[ModifiedNonceAeadINTCTXTWin c x] := by
   induction adversary using OracleComp.inductionOn generalizing count state with
-  | pure value => simp
+  | pure value =>
+      classical
+      rw [firstDiscrepancy_pure, prEvent_pure]
+      simp only [Bool.false_eq_true, ↓reduceIte, zero_le]
   | query_bind query next ih =>
       cases query with
       | inl primitive =>
@@ -363,16 +374,18 @@ theorem firstDiscrepancy_le_indexed_sum {Result : Type} (decode : RawDecoder) (c
           by_cases discrepancy : actualOpen decode c key raw ≠ simulatedOpen decode state.successfulSeals raw
           · rw [ite_eq_left discrepancy]
             calc
-              Pr[fun bad => bad = true | (pure true : ProbComp Bool)] = 1 := by simp
-              _ = Pr[ModifiedNonceAeadINTCTXTWin c | indexedBeforeVerify decode c key fallback
-                    (liftM (AdaptiveSpec.query (.inr raw)) >>= next) 0 state] :=
+              Pr{let bad ← (pure true : ProbComp Bool)}[bad = true] = 1 := by
+                rw [prEvent_pure]
+                simp
+              _ = Pr{let x ← (indexedBeforeVerify decode c key fallback
+                    (liftM (AdaptiveSpec.query (.inr raw)) >>= next) 0 state)}[ModifiedNonceAeadINTCTXTWin c x] :=
                 (indexedBeforeVerify_receive_zero_wins decode c key fallback raw next state correct discrepancy).symm
               _ ≤ ∑ index ∈ Finset.range (remaining + 1),
-                    Pr[ModifiedNonceAeadINTCTXTWin c | indexedBeforeVerify decode c key fallback
-                      (liftM (AdaptiveSpec.query (.inr raw)) >>= next) index state] :=
+                    Pr{let x ← (indexedBeforeVerify decode c key fallback
+                      (liftM (AdaptiveSpec.query (.inr raw)) >>= next) index state)}[ModifiedNonceAeadINTCTXTWin c x] :=
                 Finset.single_le_sum
-                  (f := fun index => Pr[ModifiedNonceAeadINTCTXTWin c | indexedBeforeVerify decode c key fallback
-                    (liftM (AdaptiveSpec.query (.inr raw)) >>= next) index state])
+                  (f := fun index => Pr{let x ← (indexedBeforeVerify decode c key fallback
+                    (liftM (AdaptiveSpec.query (.inr raw)) >>= next) index state)}[ModifiedNonceAeadINTCTXTWin c x])
                   (fun _ _ => zero_le) (Finset.mem_range.mpr (by omega))
           · rw [ite_eq_right discrepancy]
             have remainingBound : (next (simulatedOpen decode state.successfulSeals raw)).IsQueryBoundP
@@ -420,20 +433,24 @@ noncomputable def adaptiveGame (real : Bool) (decode : RawDecoder) (c : Pqxdh.Cr
 theorem receiveStep_agree_good (decode : RawDecoder) (c : Pqxdh.Crypto)
     (key : CtxKey) (raw : Pqxdh.Bytes) (state next : ReceiveState)
     (answer : Option Pqxdh.Bytes) :
-    Pr[= (answer, (next, false)) | receiveStep true decode c key raw (state, false)] =
-      Pr[= (answer, (next, false)) | receiveStep false decode c key raw (state, false)] := by
+    Pr{let z ← receiveStep true decode c key raw (state, false)}[z = (answer, (next, false))] =
+      Pr{let z ← receiveStep false decode c key raw (state, false)}[z = (answer, (next, false))] := by
   classical
   let : DecidableEq ReceiveState := Classical.decEq _
   by_cases equal : actualOpen decode c key raw = simulatedOpen decode state.seals.successfulSeals raw
-  · simp [receiveStep, equal]
-  · simp [receiveStep, equal]
+  · simp only [receiveStep]
+    rw [prEvent_pure, prEvent_pure]
+    simp [equal]
+  · simp only [receiveStep]
+    rw [prEvent_pure, prEvent_pure]
+    simp [equal]
 
 /-- All primitive queries agree; receive agreement uses the complete optional answer and retained state. -/
 theorem adaptiveImpl_agree_good (decode : RawDecoder) (c : Pqxdh.Crypto)
     (key : CtxKey) (query : AdaptiveSpec.Domain) (state : ReceiveState)
     (answer : AdaptiveSpec.Range query) (next : ReceiveState) :
-    Pr[= (answer, (next, false)) | (adaptiveImpl true decode c key query).run (state, false)] =
-      Pr[= (answer, (next, false)) | (adaptiveImpl false decode c key query).run (state, false)] := by
+    Pr{let z ← (adaptiveImpl true decode c key query).run (state, false)}[z = (answer, (next, false))] =
+      Pr{let z ← (adaptiveImpl false decode c key query).run (state, false)}[z = (answer, (next, false))] := by
   cases query with
   | inl primitive => rfl
   | inr raw => exact receiveStep_agree_good decode c key raw state next answer
@@ -461,49 +478,49 @@ theorem adaptiveImpl_bad_mono (real : Bool) (decode : RawDecoder) (c : Pqxdh.Cry
 /-- Every continuation retains an already-raised discrepancy; the ordinary probability monad has no failure mass. -/
 theorem adaptive_bad_probability_one (real : Bool) (decode : RawDecoder) (c : Pqxdh.Crypto)
     (key : CtxKey) {Result : Type} (adversary : OracleComp AdaptiveSpec Result) (state : ReceiveState) :
-    Pr[fun result => result.2.2 = true |
-      (simulateQ (adaptiveImpl real decode c key) adversary).run (state, true)] = 1 := by
-  rw [probEvent_eq_one_iff]
-  refine ⟨by simp, ?_⟩
-  exact simulateQ_run_preservesInv (adaptiveImpl real decode c key) (fun pair => pair.2 = true)
-    (adaptiveImpl_bad_mono real decode c key) adversary (state, true) rfl
+    Pr{let result ← (simulateQ (adaptiveImpl real decode c key) adversary).run (state, true)}[
+      result.2.2 = true] = 1 :=
+  OracleComp.prEvent_eq_one_of_forall_mem_support _ _
+    (simulateQ_run_preservesInv (adaptiveImpl real decode c key) (fun pair => pair.2 = true)
+      (adaptiveImpl_bad_mono real decode c key) adversary (state, true) rfl)
 
 /-- The complete simulator's bad marginal is exactly the stopped first-discrepancy monitor. -/
 theorem simulated_bad_eq_firstDiscrepancy (decode : RawDecoder) (c : Pqxdh.Crypto)
     (key : CtxKey) {Result : Type} (adversary : OracleComp AdaptiveSpec Result) (state : ReceiveState) :
-    Pr[fun result => result.2.2 = true |
-      (simulateQ (adaptiveImpl false decode c key) adversary).run (state, false)] =
-    Pr[fun bad => bad = true | firstDiscrepancy decode c key adversary state.seals] := by
+    Pr{let result ← (simulateQ (adaptiveImpl false decode c key) adversary).run (state, false)}[
+      result.2.2 = true] =
+    Pr{let bad ← firstDiscrepancy decode c key adversary state.seals}[bad = true] := by
   induction adversary using OracleComp.inductionOn generalizing state with
-  | pure value => simp
+  | pure value =>
+      simp only [simulateQ_pure, StateT.run_pure, firstDiscrepancy_pure, prEvent_pure]
   | query_bind query next ih =>
       cases query with
       | inl primitive =>
           rw [firstDiscrepancy_primitive]
           simp only [simulateQ_query_bind, OracleQuery.input_query, StateT.run_bind]
-          change Pr[fun result => result.2.2 = true | do
+          change Pr{let result ← (do
             let result ← (do
               let pair ← (modifiedNonceAeadINTCTXTImpl c key primitive).run state.seals
               pure (pair.1, ((⟨pair.2, state.attempts⟩ : ReceiveState), false)))
-            (simulateQ (adaptiveImpl false decode c key) (next result.1)).run result.2] = _
+            (simulateQ (adaptiveImpl false decode c key) (next result.1)).run result.2)}[
+              result.2.2 = true] = _
           simp only [bind_assoc, pure_bind]
-          simp only [probEvent_bind_eq_tsum]
-          apply tsum_congr
-          intro result
-          rw [ih result.1 ⟨result.2, state.attempts⟩]
+          refine OracleComp.prEvent_bind_congr_of_support _ _ _ fun result _ => ?_
+          exact ih result.1 ⟨result.2, state.attempts⟩
       | inr raw =>
           rw [firstDiscrepancy_receive]
           simp only [simulateQ_query_bind, OracleQuery.input_query, StateT.run_bind]
-          change Pr[fun result => result.2.2 = true |
-            (simulateQ (adaptiveImpl false decode c key)
+          change Pr{let result ← ((simulateQ (adaptiveImpl false decode c key)
               (next (simulatedOpen decode state.seals.successfulSeals raw))).run
                 (⟨state.seals, state.attempts + 1⟩,
-                  decide (actualOpen decode c key raw ≠ simulatedOpen decode state.seals.successfulSeals raw))] = _
+                  decide (actualOpen decode c key raw ≠ simulatedOpen decode state.seals.successfulSeals raw)))}[
+              result.2.2 = true] = _
           by_cases discrepancy : actualOpen decode c key raw ≠ simulatedOpen decode state.seals.successfulSeals raw
           · rw [ite_eq_left discrepancy]
             have decision : decide (actualOpen decode c key raw ≠ simulatedOpen decode state.seals.successfulSeals raw) = true :=
               decide_eq_true discrepancy
-            rw [decision, adaptive_bad_probability_one]
+            classical
+            rw [decision, adaptive_bad_probability_one, prEvent_pure]
             simp
           · simp only [discrepancy, decide_false]
             exact ih _ ⟨state.seals, state.attempts + 1⟩
@@ -511,12 +528,17 @@ theorem simulated_bad_eq_firstDiscrepancy (decode : RawDecoder) (c : Pqxdh.Crypt
 /-- Real and simulated complete runs raise discrepancy with exactly equal probability. -/
 theorem adaptiveGame_bad_eq (decode : RawDecoder) (c : Pqxdh.Crypto)
     (key : CtxKey) {Result : Type} (adversary : OracleComp AdaptiveSpec Result) :
-    Pr[fun result => result.2.2 = true | adaptiveGame true decode c key adversary] =
-      Pr[fun result => result.2.2 = true | adaptiveGame false decode c key adversary] :=
-  OracleComp.ProgramLogic.Relational.probEvent_output_bad_eq'
+    Pr{let result ← adaptiveGame true decode c key adversary}[result.2.2 = true] =
+      Pr{let result ← adaptiveGame false decode c key adversary}[result.2.2 = true] := by
+  have equal := OracleComp.ProgramLogic.Relational.probEvent_output_bad_eq'
     (adaptiveImpl true decode c key) (adaptiveImpl false decode c key)
-    (adaptiveImpl_agree_good decode c key) (adaptiveImpl_bad_mono true decode c key)
+    (fun query state answer next => by
+      simpa only [VCVioLegacy.probOutput_eq_prEvent] using
+        adaptiveImpl_agree_good decode c key query state answer next)
+    (adaptiveImpl_bad_mono true decode c key)
     (adaptiveImpl_bad_mono false decode c key) adversary initialState
+  rw [VCVioLegacy.probEvent_eq_prEvent, VCVioLegacy.probEvent_eq_prEvent] at equal
+  exact equal
 
 /-- The ordinary primitive key is uniformly generated once and remains inside the receive challenger. -/
 noncomputable def uniformAdaptiveGame (real : Bool) (decode : RawDecoder) (c : Pqxdh.Crypto)
@@ -529,17 +551,19 @@ noncomputable def uniformAdaptiveGame (real : Bool) (decode : RawDecoder) (c : P
 theorem uniformAdaptive_bad_le_intctxt_sum {Result : Type} (decode : RawDecoder) (c : Pqxdh.Crypto)
     (fallback : ModifiedNonceAeadForgery) (adversary : OracleComp AdaptiveSpec Result)
     (count : ℕ) (bounded : adversary.IsQueryBoundP IsRawQuery count) :
-    Pr[fun result => result.2.2 = true | uniformAdaptiveGame true decode c adversary] ≤
+    Pr{let result ← uniformAdaptiveGame true decode c adversary}[result.2.2 = true] ≤
       ∑ index ∈ Finset.range count,
         modifiedNonceAeadINTCTXTAdvantage c (indexedReduction decode fallback adversary index) := by
-  change Pr[fun result => result.2.2 = true | ($ᵗ CtxKey) >>= fun key => adaptiveGame true decode c key adversary] ≤
-    ∑ index ∈ Finset.range count, Pr[ModifiedNonceAeadINTCTXTWin c |
-      ($ᵗ CtxKey) >>= fun key => indexedBeforeVerify decode c key fallback adversary index emptyModifiedNonceAeadHandlerState]
+  change Pr{let result ← ($ᵗ CtxKey) >>= fun key => adaptiveGame true decode c key adversary}[
+      result.2.2 = true] ≤
+    ∑ index ∈ Finset.range count, Pr{let x ← (($ᵗ CtxKey) >>= fun key =>
+      indexedBeforeVerify decode c key fallback adversary index emptyModifiedNonceAeadHandlerState)}[
+        ModifiedNonceAeadINTCTXTWin c x]
   apply probEvent_bind_le_sum
   intro key _
   rw [adaptiveGame_bad_eq]
-  change Pr[fun result => result.2.2 = true |
-    (simulateQ (adaptiveImpl false decode c key) adversary).run (initialState, false)] ≤ _
+  change Pr{let result ← (simulateQ (adaptiveImpl false decode c key) adversary).run (initialState, false)}[
+    result.2.2 = true] ≤ _
   rw [simulated_bad_eq_firstDiscrepancy]
   exact firstDiscrepancy_le_indexed_sum decode c key fallback adversary count
     emptyModifiedNonceAeadHandlerState bounded (by simp [HistoryCorrect, emptyModifiedNonceAeadHandlerState])
@@ -549,34 +573,41 @@ theorem adaptiveGame_distance_le_discrepancy (decode : RawDecoder) (c : Pqxdh.Cr
     (key : CtxKey) {Result : Type} (adversary : OracleComp AdaptiveSpec Result) :
     tvDist (adaptiveGame true decode c key adversary)
         (adaptiveGame false decode c key adversary) ≤
-      Pr[fun result => result.2.2 = true | adaptiveGame true decode c key adversary].toReal := by
-  exact OracleComp.ProgramLogic.Relational.tvDist_simulateQ_run_le_probEvent_output_bad
+      Pr{let result ← adaptiveGame true decode c key adversary}[result.2.2 = true].toReal := by
+  have bound := OracleComp.ProgramLogic.Relational.tvDist_simulateQ_run_le_probEvent_output_bad
     (adaptiveImpl true decode c key) (adaptiveImpl false decode c key) adversary initialState
-    (adaptiveImpl_agree_good decode c key) (adaptiveImpl_bad_mono true decode c key)
+    (fun query state answer next => by
+      simpa only [VCVioLegacy.probOutput_eq_prEvent] using
+        adaptiveImpl_agree_good decode c key query state answer next)
+    (adaptiveImpl_bad_mono true decode c key)
     (adaptiveImpl_bad_mono false decode c key)
+  rw [VCVioLegacy.probEvent_eq_prEvent] at bound
+  exact bound
 
 /-- Mixing over the challenger's uniformly generated secret key preserves the full-state discrepancy bound. -/
 theorem uniformAdaptiveGame_distance_le_bad {Result : Type} (decode : RawDecoder) (c : Pqxdh.Crypto)
     (adversary : OracleComp AdaptiveSpec Result) :
     tvDist (uniformAdaptiveGame true decode c adversary) (uniformAdaptiveGame false decode c adversary) ≤
-      Pr[fun result => result.2.2 = true | uniformAdaptiveGame true decode c adversary].toReal := by
+      Pr{let result ← uniformAdaptiveGame true decode c adversary}[result.2.2 = true].toReal := by
   have convex := tvDist_bind_left_le ($ᵗ CtxKey)
     (fun key => adaptiveGame true decode c key adversary)
     (fun key => adaptiveGame false decode c key adversary)
   rw [tsum_fintype] at convex
+  simp only [VCVioLegacy.probOutput_eq_prEvent] at convex
   calc
     tvDist (uniformAdaptiveGame true decode c adversary) (uniformAdaptiveGame false decode c adversary)
-        ≤ ∑ key : CtxKey, Pr[= key | ($ᵗ CtxKey)].toReal *
-          (Pr[fun result => result.2.2 = true | adaptiveGame true decode c key adversary]).toReal := by
+        ≤ ∑ key : CtxKey, Pr{let y ← ($ᵗ CtxKey)}[y = key].toReal *
+          (Pr{let result ← adaptiveGame true decode c key adversary}[result.2.2 = true]).toReal := by
       refine convex.trans (Finset.sum_le_sum fun key _ => ?_)
       exact mul_le_mul_of_nonneg_left (adaptiveGame_distance_le_discrepancy decode c key adversary)
         ENNReal.toReal_nonneg
-    _ = Pr[fun result => result.2.2 = true | uniformAdaptiveGame true decode c adversary].toReal := by
+    _ = Pr{let result ← uniformAdaptiveGame true decode c adversary}[result.2.2 = true].toReal := by
       unfold uniformAdaptiveGame
-      rw [probEvent_bind_eq_tsum, tsum_fintype, ENNReal.toReal_sum]
+      rw [prEvent_bind_eq_sum_fintype, ENNReal.toReal_sum]
       · simp only [ENNReal.toReal_mul]
       · intro key _
-        exact ENNReal.mul_ne_top probOutput_ne_top probEvent_ne_top
+        exact ENNReal.mul_ne_top (prEvent_ne_top _) (prEvent_ne_top _)
+  exact le_rfl
 
 /-- Full adaptive optional-plaintext simulation, with every possible first acceptance charged to an ordinary primitive forger. -/
 theorem uniformAdaptiveGame_distance_le_intctxt_sum {Result : Type} (decode : RawDecoder) (c : Pqxdh.Crypto)
@@ -589,11 +620,11 @@ theorem uniformAdaptiveGame_distance_le_intctxt_sum {Result : Type} (decode : Ra
   calc
     ENNReal.ofReal (tvDist (uniformAdaptiveGame true decode c adversary)
         (uniformAdaptiveGame false decode c adversary))
-      ≤ ENNReal.ofReal (Pr[fun result => result.2.2 = true |
-          uniformAdaptiveGame true decode c adversary].toReal) :=
+      ≤ ENNReal.ofReal (Pr{let result ← uniformAdaptiveGame true decode c adversary}[
+          result.2.2 = true].toReal) :=
         ENNReal.ofReal_le_ofReal (uniformAdaptiveGame_distance_le_bad decode c adversary)
-    _ = Pr[fun result => result.2.2 = true | uniformAdaptiveGame true decode c adversary] :=
-      ENNReal.ofReal_toReal probEvent_ne_top
+    _ = Pr{let result ← uniformAdaptiveGame true decode c adversary}[result.2.2 = true] :=
+      ENNReal.ofReal_toReal (prEvent_ne_top _)
     _ ≤ _ := uniformAdaptive_bad_le_intctxt_sum decode c fallback adversary count bounded
 
 /-- Primitive-side private-randomness requests are counted separately from encryption requests. -/

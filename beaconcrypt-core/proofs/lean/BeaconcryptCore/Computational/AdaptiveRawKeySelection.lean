@@ -107,16 +107,16 @@ theorem source_prepared_selection {count : Nat} (target : Fin (count + 1))
     (targetReal : Bool) (targetDecode : RawDecoder) (real : Fin count → Bool)
     (decode : Fin count → RawDecoder) (c : Pqxdh.Crypto) {Result : Type}
     (client : OracleComp (SourceSpec count) Result) :
-    𝒮[sourceGame (join target targetReal real) (join target targetDecode decode) c client] =
-      𝒮[erasePrepared target <$> AdaptiveRawKeyPreparation.source
+    EvalDistEq (sourceGame (join target targetReal real) (join target targetDecode decode) c client)
+      (erasePrepared target <$> AdaptiveRawKeyPreparation.source
         (AdaptiveRawKeyPreparation.independentSetup count ()) targetReal targetDecode real decode c
-          (fun _ => simulateQ (select target) client)] := by
+          (fun _ => simulateQ (select target) client)) := by
   unfold sourceGame
-  rw [partition_continuation_vcvioLegacy count target]
+  refine (partition_continuation count target _).trans ?_
   simp only [AdaptiveRawKeyPreparation.source, AdaptiveRawKeyPreparation.independentSetup,
     uniformSource, fixed_source_selection, map_bind, bind_assoc, pure_bind, map_pure]
   simp only [erasePrepared, bind_pure_comp]
-  exact evalSPMF_bind_bind_swap ($ᵗ CtxKey) ($ᵗ (Fin count → CtxKey)) _
+  exact OracleComp.EvalDistEq.bind_bind_swap ($ᵗ CtxKey) ($ᵗ (Fin count → CtxKey)) _
 
 def SelectionClass {count : Nat} (target : Fin (count + 1))
     (p : (FamilySpec count).Domain → Prop) : (SourceSpec count).Domain → Prop :=
@@ -178,7 +178,9 @@ theorem selected_integrity {count : Nat} (target : Fin (count + 1))
       (fun _ => simulateQ (select target) client))
     (AdaptiveRawKeyPreparation.source (AdaptiveRawKeyPreparation.independentSetup count ()) false targetDecode real decode c
       (fun _ => simulateQ (select target) client)))).trans integrity
-  simpa only [tvDist, ← source_prepared_selection] using mapped
+  have selection := fun targetReal => (VCVioLegacy.evalSPMF_eq_iff_evalDistEq _ _).2
+    (source_prepared_selection target targetReal targetDecode real decode c client)
+  simpa only [tvDist, ← selection] using mapped
 
 /-- Selected resource membership is exactly original-index equality and the local predicate. -/
 theorem selection_target_class {count : Nat} (target : Fin (count + 1))

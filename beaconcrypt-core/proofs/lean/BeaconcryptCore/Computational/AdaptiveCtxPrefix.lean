@@ -55,14 +55,14 @@ theorem flaggedImpl_bad_mono (routed : Bool) (decode : RawDecoder) (c : Pqxdh.Cr
 theorem flaggedImpl_agree_good (decode : RawDecoder) (c : Pqxdh.Crypto)
     (key : CtxKey) (query : ReceiveSpec.Domain) (state : ReceiveState)
     (answer : ReceiveSpec.Range query) (next : ReceiveState) :
-    Pr[= (answer, (next, false)) | (flaggedImpl true decode c key query).run (state, false)] =
-      Pr[= (answer, (next, false)) | (flaggedImpl false decode c key query).run (state, false)] := by
+    Pr{let x ← (flaggedImpl true decode c key query).run (state, false)}[x = (answer, (next, false))] =
+      Pr{let x ← (flaggedImpl false decode c key query).run (state, false)}[x = (answer, (next, false))] := by
   cases fires : prefixFires key query with
   | false => rw [flaggedImpl, flaggedImpl, sourceImpl_eq_of_not_prefix decode c key query fires]
   | true =>
     have zero (routed : Bool) :
-        Pr[= (answer, (next, false)) | (flaggedImpl routed decode c key query).run (state, false)] = 0 := by
-      apply probOutput_eq_zero_of_not_mem_support
+        Pr{let x ← (flaggedImpl routed decode c key query).run (state, false)}[x = (answer, (next, false))] = 0 := by
+      apply prEvent_eq_zero_of_not_mem_support
       intro supported
       have hit := withStickyBad_true (sourceImpl routed decode c key query)
         (state, false) (answer, next, false) (by simpa only [flaggedImpl, fires] using supported)
@@ -87,30 +87,40 @@ theorem flaggedGame_projection (routed : Bool) (decode : RawDecoder) (c : Pqxdh.
 /-- Both adaptive worlds encounter the actual public-prefix event with exactly the same probability. -/
 theorem flaggedGame_bad_eq (decode : RawDecoder) (c : Pqxdh.Crypto)
     (key : CtxKey) {Result : Type} (adversary : OracleComp ReceiveSpec Result) :
-    Pr[fun result => result.2.2 = true | flaggedGame true decode c key adversary] =
-      Pr[fun result => result.2.2 = true | flaggedGame false decode c key adversary] :=
-  OracleComp.ProgramLogic.Relational.probEvent_output_bad_eq'
+    Pr{let result ← flaggedGame true decode c key adversary}[result.2.2 = true] =
+      Pr{let result ← flaggedGame false decode c key adversary}[result.2.2 = true] := by
+  have equal := OracleComp.ProgramLogic.Relational.probEvent_output_bad_eq'
     (flaggedImpl true decode c key) (flaggedImpl false decode c key)
-    (flaggedImpl_agree_good decode c key) (flaggedImpl_bad_mono true decode c key)
+    (fun query state answer next => by
+      simpa only [VCVioLegacy.probOutput_eq_prEvent] using
+        flaggedImpl_agree_good decode c key query state answer next)
+    (flaggedImpl_bad_mono true decode c key)
     (flaggedImpl_bad_mono false decode c key) adversary initialState
+  rw [VCVioLegacy.probEvent_eq_prEvent, VCVioLegacy.probEvent_eq_prEvent] at equal
+  exact equal
 
 /-- The shared-cache routing hop charges its real adaptive prefix event once, while retaining all post-cache effects. -/
 theorem flaggedGame_distance_le_prefix (decode : RawDecoder) (c : Pqxdh.Crypto)
     (key : CtxKey) {Result : Type} (adversary : OracleComp ReceiveSpec Result) :
     tvDist (flaggedGame true decode c key adversary) (flaggedGame false decode c key adversary) ≤
-      Pr[fun result => result.2.2 = true | flaggedGame false decode c key adversary].toReal := by
+      Pr{let result ← flaggedGame false decode c key adversary}[result.2.2 = true].toReal := by
   rw [← flaggedGame_bad_eq]
-  exact OracleComp.ProgramLogic.Relational.tvDist_simulateQ_run_le_probEvent_output_bad
+  have bound := OracleComp.ProgramLogic.Relational.tvDist_simulateQ_run_le_probEvent_output_bad
     (flaggedImpl true decode c key) (flaggedImpl false decode c key)
-    adversary initialState (flaggedImpl_agree_good decode c key)
+    adversary initialState
+    (fun query state answer next => by
+      simpa only [VCVioLegacy.probOutput_eq_prEvent] using
+        flaggedImpl_agree_good decode c key query state answer next)
     (flaggedImpl_bad_mono true decode c key) (flaggedImpl_bad_mono false decode c key)
+  rw [VCVioLegacy.probEvent_eq_prEvent] at bound
+  exact bound
 
 /-- Projected canonical shared-ROM receive and direct independent-public receive differ only at the actual prefix event. -/
 theorem canonicalGame_distance_le_prefix (decode : RawDecoder) (c : Pqxdh.Crypto)
     (key : CtxKey) {Result : Type} (adversary : OracleComp ReceiveSpec Result) :
     tvDist (Prod.map id (splitState key) <$> canonicalGame decode c key adversary)
       (independentGame decode c key adversary) ≤
-      Pr[fun result => result.2.2 = true | flaggedGame false decode c key adversary].toReal := by
+      Pr{let result ← flaggedGame false decode c key adversary}[result.2.2 = true].toReal := by
   rw [canonicalGame_split]
   change tvDist ((simulateQ (sourceImpl true decode c key) adversary).run initialState)
     ((simulateQ (sourceImpl false decode c key) adversary).run initialState) ≤ _
@@ -207,13 +217,11 @@ theorem flaggedGame_prefix (decode : RawDecoder) (c : Pqxdh.Crypto) (key : CtxKe
 /-- The prefix cost is a concrete event on the independent direct source transcript, not a new security premise. -/
 theorem flaggedGame_bad_eq_public_prefix (decode : RawDecoder) (c : Pqxdh.Crypto) (key : CtxKey)
     {Result : Type} (adversary : OracleComp ReceiveSpec Result) :
-    Pr[fun result => result.2.2 = true | flaggedGame false decode c key adversary] =
-      Pr[fun result => ∃ input ∈ result.2.ctx.publicInputs, SecretPrefixQuery key input |
-        independentGame decode c key adversary] := by
-  change _ = Pr[fun result => ∃ input ∈ result.2.ctx.publicInputs, SecretPrefixQuery key input |
-    (simulateQ (sourceImpl false decode c key) adversary).run initialState]
-  rw [← flaggedGame_projection, probEvent_map]
-  apply OracleComp.probEvent_congr' _ rfl
+    Pr{let result ← flaggedGame false decode c key adversary}[result.2.2 = true] =
+      Pr{let result ← independentGame decode c key adversary}[∃ input ∈ result.2.ctx.publicInputs, SecretPrefixQuery key input] := by
+  change _ = Pr{let result ← (simulateQ (sourceImpl false decode c key) adversary).run initialState}[∃ input ∈ result.2.ctx.publicInputs, SecretPrefixQuery key input]
+  rw [← flaggedGame_projection, prEvent_map]
+  apply prEvent_congr_of_support
   intro result supported
   exact flaggedGame_prefix decode c key adversary result supported
 
@@ -286,27 +294,34 @@ theorem retainedRoutedGame_distance_le_prefix (decode : RawDecoder) (c : Pqxdh.C
     {Result : Type} (adversary : OracleComp ReceiveSpec Result) :
     tvDist (retainedRoutedGame decode c adversary)
       (AdaptiveCtxRetainedKey.retainedIndependentGame decode c adversary) ≤
-      Pr[RetainedPrefix | AdaptiveCtxRetainedKey.retainedIndependentGame decode c adversary].toReal := by
-  simp only [retainedRoutedGame, AdaptiveCtxRetainedKey.retainedIndependentGame, bind_pure_comp]
+      Pr{let x ← AdaptiveCtxRetainedKey.retainedIndependentGame decode c adversary}[RetainedPrefix x].toReal := by
+  conv_lhs => simp only [retainedRoutedGame, AdaptiveCtxRetainedKey.retainedIndependentGame, bind_pure_comp]
   have convex := tvDist_bind_left_le ($ᵗ CtxKey)
     (fun key => (Prod.mk key) <$> splitGame decode c key adversary)
     (fun key => (Prod.mk key) <$> independentGame decode c key adversary)
   rw [tsum_fintype] at convex
+  simp only [VCVioLegacy.probOutput_eq_prEvent] at convex
   calc
-    _ ≤ ∑ key : CtxKey, Pr[= key | ($ᵗ CtxKey)].toReal *
-        (Pr[fun result => ∃ input ∈ result.2.ctx.publicInputs, SecretPrefixQuery key input |
-          independentGame decode c key adversary]).toReal := by
+    _ ≤ ∑ key : CtxKey, Pr{let x ← ($ᵗ CtxKey)}[x = key].toReal *
+        (Pr{let result ← independentGame decode c key adversary}[∃ input ∈ result.2.ctx.publicInputs, SecretPrefixQuery key input]).toReal := by
       refine convex.trans (Finset.sum_le_sum fun key _ => ?_)
       have pointwise := canonicalGame_distance_le_prefix decode c key adversary
       rw [canonicalGame_split, flaggedGame_bad_eq_public_prefix] at pointwise
       exact mul_le_mul_of_nonneg_left ((tvDist_map_le (Prod.mk key) _ _).trans pointwise)
         ENNReal.toReal_nonneg
     _ = _ := by
-      simp only [probEvent_bind_eq_tsum, probEvent_map]
-      rw [tsum_fintype, ENNReal.toReal_sum]
-      · simp only [Function.comp_def, RetainedPrefix, ENNReal.toReal_mul]
+      unfold AdaptiveCtxRetainedKey.retainedIndependentGame
+      rw [prEvent_bind_eq_sum_fintype, ENNReal.toReal_sum]
+      · refine Finset.sum_congr rfl fun key _ => ?_
+        rw [ENNReal.toReal_mul]
+        conv_rhs => rw [bind_pure_comp _ (independentGame decode c key adversary), prEvent_map]
+        try rfl
       · intro key _
-        exact ENNReal.mul_ne_top probOutput_ne_top probEvent_ne_top
+        exact ENNReal.mul_ne_top (prEvent_ne_top _) (prEvent_ne_top _)
+
+set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.AdaptiveCtxPrefix.retainedRoutedGame_distance_le_prefix_vcvioLegacy :
+    ∀ (decode : BeaconcryptCore.Computational.AdaptiveCtxReceive.RawDecoder) (c : Pqxdh.Crypto) {Result : Type} (adversary : OracleComp BeaconcryptCore.Computational.AdaptiveCtxReceive.ReceiveSpec Result), tvDist (BeaconcryptCore.Computational.AdaptiveCtxPrefix.retainedRoutedGame decode c adversary) (BeaconcryptCore.Computational.AdaptiveCtxRetainedKey.retainedIndependentGame decode c adversary) ≤ (probEvent (BeaconcryptCore.Computational.AdaptiveCtxRetainedKey.retainedIndependentGame decode c adversary) BeaconcryptCore.Computational.AdaptiveCtxPrefix.RetainedPrefix).toReal :=
+  by simpa only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent] using @BeaconcryptCore.Computational.AdaptiveCtxPrefix.retainedRoutedGame_distance_le_prefix
 
 /-- Both structural adaptive hops now occur in the same retained-key source experiment. The prefix probability remains an event to reduce, not a primitive assumption. -/
 theorem retainedRoutedGame_distance_le_prefix_add_intctxt (decode : RawDecoder) (c : Pqxdh.Crypto)
@@ -316,7 +331,7 @@ theorem retainedRoutedGame_distance_le_prefix_add_intctxt (decode : RawDecoder) 
     ENNReal.ofReal (tvDist (retainedRoutedGame decode c adversary)
       (AdaptiveCtxRetainedKey.sourceProjection <$>
         AdaptiveCtxRetainedKey.retainedLinkedGame false decode c adversary)) ≤
-      Pr[RetainedPrefix | AdaptiveCtxRetainedKey.retainedIndependentGame decode c adversary] +
+      Pr{let x ← AdaptiveCtxRetainedKey.retainedIndependentGame decode c adversary}[RetainedPrefix x] +
         ∑ index ∈ Finset.range count,
           CtxNonceAeadIntCtxt.modifiedNonceAeadINTCTXTAdvantage c
             (AdaptiveRawNonceAead.indexedReduction (baseDecoder decode) fallback (wrapped decode adversary) index) := by
@@ -327,7 +342,7 @@ theorem retainedRoutedGame_distance_le_prefix_add_intctxt (decode : RawDecoder) 
   rw [ENNReal.ofReal_add (tvDist_nonneg _ _) (tvDist_nonneg _ _)]
   apply add_le_add
   · exact (ENNReal.ofReal_le_ofReal (retainedRoutedGame_distance_le_prefix decode c adversary)).trans_eq
-      (ENNReal.ofReal_toReal probEvent_ne_top)
+      (ENNReal.ofReal_toReal (prEvent_ne_top _))
   · exact AdaptiveCtxRetainedKey.retainedIndependentGame_distance_le_intctxt_sum decode c fallback adversary count bounded
 
 end BeaconcryptCore.Computational.AdaptiveCtxPrefix

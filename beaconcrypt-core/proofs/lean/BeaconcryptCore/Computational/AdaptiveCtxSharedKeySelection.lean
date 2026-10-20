@@ -114,16 +114,16 @@ theorem source_prepared_selection {count : Nat} (target : Fin (count + 1))
     (targetReal : Bool) (targetDecode : RawDecoder) (real : Fin count → Bool)
     (decode : Fin count → RawDecoder) (c : Pqxdh.Crypto) {Result : Type}
     (client : OracleComp (SourceSpec count) Result) :
-    𝒮[sourceGame (join target targetReal real) (join target targetDecode decode) c client] =
-      𝒮[erasePrepared target <$> AdaptiveCtxSharedModePreparation.source
+    EvalDistEq (sourceGame (join target targetReal real) (join target targetDecode decode) c client)
+      (erasePrepared target <$> AdaptiveCtxSharedModePreparation.source
         (AdaptiveCtxSharedModePreparation.independentSetup count ()) targetReal targetDecode real decode c
-          (fun _ => simulateQ (select target) client)] := by
+          (fun _ => simulateQ (select target) client)) := by
   unfold sourceGame
-  rw [partition_continuation_vcvioLegacy count target]
+  refine (partition_continuation count target _).trans ?_
   simp only [AdaptiveCtxSharedModePreparation.source, AdaptiveCtxSharedModePreparation.independentSetup,
     AdaptiveCtxSharedModeFamily.sourceGame, fixed_source_selection, map_bind, bind_assoc, pure_bind, map_pure]
   simp only [erasePrepared, bind_pure_comp]
-  exact JointEagerTable.independent_comm_spmf_vcvioLegacy ($ᵗ CtxKey) ($ᵗ (Fin count → CtxKey)) _
+  exact JointEagerTable.independent_comm_spmf ($ᵗ CtxKey) ($ᵗ (Fin count → CtxKey)) _
 
 
 def SelectionClass {count : Nat} (target : Fin (count + 1))
@@ -169,13 +169,13 @@ theorem source_view_selection {count : Nat} (target : Fin (count + 1))
     (targetReal : Bool) (targetDecode : RawDecoder) (real : Fin count → Bool)
     (decode : Fin count → RawDecoder) (c : Pqxdh.Crypto)
     (client : OracleComp (SourceSpec count) Bool) :
-    𝒮[Prod.fst <$> sourceGame (join target targetReal real) (join target targetDecode decode) c client] =
-      𝒮[(fun result => result.2.1) <$> AdaptiveCtxSharedModePreparation.source
+    EvalDistEq (Prod.fst <$> sourceGame (join target targetReal real) (join target targetDecode decode) c client)
+      ((fun result => result.2.1) <$> AdaptiveCtxSharedModePreparation.source
         (AdaptiveCtxSharedModePreparation.independentSetup count ()) targetReal targetDecode real decode c
-          (fun _ => simulateQ (select target) client)] := by
-  have full := congrArg (fun distribution => Prod.fst <$> distribution)
-    (source_prepared_selection target targetReal targetDecode real decode c client)
-  simpa only [← evalSPMF_map, Functor.map_map, erasePrepared] using full
+          (fun _ => simulateQ (select target) client)) := by
+  refine ((source_prepared_selection target targetReal targetDecode real decode c client).map Prod.fst).trans ?_
+  simp only [Functor.map_map, erasePrepared]
+  exact EvalDistEq.refl _
 
 open AdaptiveCtxSharedModeBounds CtxNonceAeadIntCtxt CtxNonceAeadIndDollarValidation
 open AdaptiveCtxQueryBounds
@@ -214,13 +214,13 @@ theorem selected_integrity {count : Nat} (target : Fin (count + 1))
         𝒟[(fun result => result.2.1) <$> AdaptiveCtxSharedModePreparation.source
           (AdaptiveCtxSharedModePreparation.independentSetup count ()) true targetDecode real decode c
             (fun _ => simulateQ (select target) client)] {true} := by
-    simpa only [evalDist_apply_singleton] using probOutput_congr rfl trueEq
+    rw [EvalDistEq.evalDist_eq trueEq]
   have falseMass :
       𝒟[Prod.fst <$> sourceGame (join target false real) (join target targetDecode decode) c client] {true} =
         𝒟[(fun result => result.2.1) <$> AdaptiveCtxSharedModePreparation.source
           (AdaptiveCtxSharedModePreparation.independentSetup count ()) false targetDecode real decode c
             (fun _ => simulateQ (select target) client)] {true} := by
-    simpa only [evalDist_apply_singleton] using probOutput_congr rfl falseEq
+    rw [EvalDistEq.evalDist_eq falseEq]
   simpa only [ProbComp.boolDistAdvantage, trueMass, falseMass] using bound
 
 end BeaconcryptCore.Computational.AdaptiveCtxSharedKeySelection

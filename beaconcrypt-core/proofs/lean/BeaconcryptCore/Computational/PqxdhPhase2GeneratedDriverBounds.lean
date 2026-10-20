@@ -106,8 +106,8 @@ theorem authentication_bound {KemSK : Type} {setup : StatefulPhase1Setup baseSpe
     (noSign : ∀ reply, (program.main reply).IsQueryBoundP (ForwardedSource (baseSpec := baseSpec) IsSigning) 0)
     (noCreate : ∀ reply, (program.main reply).IsQueryBoundP (ForwardedSource (baseSpec := baseSpec) Creating) 0)
     (fallback : DynamicForgery) (ordinaryFallback : PqxdhJointIdentity.Forgery) :
-    Pr[Changed | privateRun attachedVerify primitives 1
-      (PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (driver env program))] ≤
+    Pr{let x ← (privateRun attachedVerify primitives 1
+      (PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (driver env program)))}[Changed x] ≤
       PqxdhJointIdentity.advantage primitives
         (PqxdhGeneratedPhase1Prefix.privateReduction primitives baseImpl kem setup (driver env program) fallback ordinaryFallback) := by
   exact PqxdhGeneratedPhase1Prefix.authentication_bound attachedVerify primitives adapter baseImpl kem setup

@@ -266,7 +266,7 @@ theorem canonical_replay_advantage_bound (decode : RawDecoder) (c : Pqxdh.Crypto
       tvDist left right := by
     simpa only [ProbComp.boolDistAdvantage, canonicalView, replayView, left, right, decision,
       Functor.map_map, AdaptiveCtxPrefixValidation.canonicalProjection, Prod.map_apply,
-      Function.comp_def, Prod.map_fst, id_eq, evalDist_apply_singleton] using variation
+      Function.comp_def, Prod.map_fst, id_eq, VCVioLegacy.evalDist_singleton_eq_probOutput] using variation
   exact (ENNReal.ofReal_le_ofReal projected).trans
     (canonical_replay_distance_bound decode c fallback adversary qHash qSeal qRaw
       hashBound sealBound rawBound small)

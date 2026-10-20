@@ -167,8 +167,8 @@ theorem classifiedVerifier_le_inv_of_direct_support
         adversary.main).run emptyCtxIndependentTagState))
     (hnotRetained : ¬ RetainedWin c
       (independentHandlerStateToBeforeVerify key target state)) :
-    Pr[= true | classifiedVerifier c
-      (independentTrackedProjection key (target, state))] ≤
+    Pr{let x ← (classifiedVerifier c
+      (independentTrackedProjection key (target, state)))}[x = true] ≤
         (Fintype.card CtxDigest : ℝ≥0∞)⁻¹ := by
   by_cases halias : CtxFullAliasShape
     (independentHandlerStateToBeforeVerify key target state)
@@ -180,18 +180,14 @@ theorem classifiedVerifier_le_inv_of_direct_support
     unfold ctxKeyFreeSuffixStep
     rw [hfresh]
     simp only [bind_assoc, pure_bind]
-    rw [← probEvent_eq_eq_probOutput, bind_pure_comp, probEvent_map]
-    refine (probEvent_mono''
-      (q := fun x : CtxDigest => x = target.record.commit) ?_).trans ?_
+    refine (prEvent_mono _ _ (fun x : CtxDigest => x = target.record.commit) ?_).trans ?_
     · intro expected haccepted
-      simp only [Function.comp_apply] at haccepted
       have hclassified := @of_decide_eq_true _ (Classical.propDecidable _) haccepted
       unfold ClassifiedAt at hclassified
       rcases hclassified with hretained | haliasAccepted
       · exact (hnotRetained hretained).elim
       · exact haliasAccepted.2.symm
-    · rw [probEvent_eq_eq_probOutput,
-        probOutput_uniformSample CtxDigest target.record.commit]
+    · exact le_of_eq (SampleableType.prEvent_uniformSample_eq_singleton target.record.commit)
   · unfold classifiedVerifier
     unfold independentHandlerStateToBeforeVerify at hnotRetained halias
     simp only [independentTrackedProjection,
@@ -204,14 +200,13 @@ theorem classifiedVerifier_le_inv_of_direct_support
 theorem acceptedVerifier_le_classified_of_cache_sound
     (c : Pqxdh.Crypto) (result : CtxBeforeVerify × SplitCache)
     (hsound : CtxHonestCommitmentsCached result.1 result.2) :
-    Pr[= true | acceptedVerifier c result] ≤
-      Pr[= true | classifiedVerifier c result] := by
-  rw [← probEvent_eq_eq_probOutput, ← probEvent_eq_eq_probOutput]
+    Pr{let x ← acceptedVerifier c result}[x = true] ≤
+      Pr{let x ← classifiedVerifier c result}[x = true] := by
   unfold acceptedVerifier classifiedVerifier
-  simp only [bind_pure_comp, probEvent_map]
-  apply probEvent_mono
+  simp only [bind_assoc, pure_bind]
+  apply prEvent_mono_of_support
   intro oracleResult horacle haccepted
-  simp only [Function.comp_apply, decide_eq_true_eq] at haccepted ⊢
+  simp only [decide_eq_true_eq] at haccepted ⊢
   exact acceptedAt_implies_classified_of_cache_sound
     c result.1 result.2 oracleResult.2 oracleResult.1 hsound horacle haccepted
 
@@ -221,29 +216,22 @@ theorem directAcceptedGame_le_classified_of_cache_sound
     (hsound : ∀ result ∈ support
       (ctxDirectSampleIndependentTagGame c adversary),
       CtxHonestCommitmentsCached result.1 result.2) :
-    Pr[= true | directAcceptedGame c adversary] ≤
-      Pr[= true | directClassifiedGame c adversary] := by
-  rw [← probEvent_eq_eq_probOutput, ← probEvent_eq_eq_probOutput]
+    Pr{let x ← directAcceptedGame c adversary}[x = true] ≤
+      Pr{let x ← directClassifiedGame c adversary}[x = true] := by
   unfold directAcceptedGame
     directClassifiedGame
-  apply probEvent_bind_mono
-  intro result hresult
-  simpa [probEvent_eq_eq_probOutput] using
-    (acceptedVerifier_le_classified_of_cache_sound
-      c result (hsound result hresult))
+  refine prEvent_bind_mono_of_forall_le_of_support _ _ _ _ _ fun result hresult => ?_
+  exact acceptedVerifier_le_classified_of_cache_sound
+    c result (hsound result hresult)
 
 /-- The direct classified game is bounded by retained-base integrity plus one fresh digest. -/
 theorem directClassifiedGame_le_retained_add_inv
     (c : Pqxdh.Crypto) (adversary : CtxAdversary) :
-    Pr[= true | directClassifiedGame c adversary] ≤
-      Pr[fun result : CtxBeforeVerify × SplitCache =>
-          RetainedWin c result.1 |
-        ctxDirectSampleIndependentTagGame c adversary] +
+    Pr{let x ← directClassifiedGame c adversary}[x = true] ≤
+      Pr{let result ← ctxDirectSampleIndependentTagGame c adversary}[RetainedWin c result.1] +
       (Fintype.card CtxDigest : ℝ≥0∞)⁻¹ := by
-  rw [← probEvent_eq_eq_probOutput]
   unfold directClassifiedGame
-  refine probEvent_bind_le_probEvent_add ?_
-  intro result hresult hnotRetained
+  refine prEvent_bind_le_prEvent_add_of_support _ _ _ _ fun result hresult hnotRetained => ?_
   unfold ctxDirectSampleIndependentTagGame at hresult
   rw [mem_support_bind_iff] at hresult
   obtain ⟨key, _, hresult⟩ := hresult
@@ -251,16 +239,15 @@ theorem directClassifiedGame_le_retained_add_inv
   rw [support_map] at hresult
   obtain ⟨source, hsource, rfl⟩ := hresult
   rcases source with ⟨target, state⟩
-  simpa [probEvent_eq_eq_probOutput] using
-    (classifiedVerifier_le_inv_of_direct_support
-      c key adversary target state hsource hnotRetained)
+  exact classifiedVerifier_le_inv_of_direct_support
+    c key adversary target state hsource hnotRetained
 
 
 /-- The actual typed full-fresh game pays the same single canonical-to-direct prefix charge. -/
 theorem acceptedGame_le_direct_add_prefix
     (c : Pqxdh.Crypto) (adversary : CtxAdversary) :
-    Pr[= true | acceptedGame c adversary] ≤
-      Pr[= true | directAcceptedGame c adversary] +
+    Pr{let x ← acceptedGame c adversary}[x = true] ≤
+      Pr{let x ← directAcceptedGame c adversary}[x = true] +
         ctxSecretPrefixQueriedProbability c adversary := by
   have htv : tvDist (acceptedGame c adversary)
       (directAcceptedGame c adversary) ≤
@@ -279,36 +266,35 @@ theorem acceptedGame_le_direct_add_prefix
       (acceptedGame c adversary).boolDistAdvantage
           (directAcceptedGame c adversary) ≤
         (ctxSecretPrefixQueriedProbability c adversary).toReal := by
-    simpa [ProbComp.boolDistAdvantage] using hdiff.trans htv
+    simpa only [ProbComp.boolDistAdvantage, VCVioLegacy.evalDist_singleton_eq_probOutput] using hdiff.trans htv
   calc
-    Pr[= true | acceptedGame c adversary] ≤
-        Pr[= true | directAcceptedGame c adversary] +
+    Pr{let x ← acceptedGame c adversary}[x = true] ≤
+        Pr{let x ← directAcceptedGame c adversary}[x = true] +
           ENNReal.ofReal
             ((acceptedGame c adversary).boolDistAdvantage
               (directAcceptedGame c adversary)) := by
       have comparison := VCVioForward.evalDist_apply_true_le_add_ofReal_boolDistAdvantage
           (acceptedGame c adversary) (directAcceptedGame c adversary)
-      simp only [VCVioLegacy.evalDist_singleton_eq_probOutput] at comparison
+      rw [← prEvent_eq_evalDist_singleton (acceptedGame c adversary) true,
+        ← prEvent_eq_evalDist_singleton (directAcceptedGame c adversary) true] at comparison
       exact comparison
-    _ ≤ Pr[= true | directAcceptedGame c adversary] +
+    _ ≤ Pr{let x ← directAcceptedGame c adversary}[x = true] +
           ENNReal.ofReal
             (ctxSecretPrefixQueriedProbability c adversary).toReal := by
       gcongr
-    _ = Pr[= true | directAcceptedGame c adversary] +
+    _ = Pr{let x ← directAcceptedGame c adversary}[x = true] +
           ctxSecretPrefixQueriedProbability c adversary := by
       have hprefix : ctxSecretPrefixQueriedProbability c adversary ≠ ⊤ := by
-        simp only [ctxSecretPrefixQueriedProbability_vcvioLegacy]
-        exact probEvent_ne_top
+        exact prEvent_ne_top _
       rw [ENNReal.ofReal_toReal hprefix]
 
 
 /-- Exact retained-base reduction equality applies to acceptance of any optional plaintext. -/
 theorem retainedProbability_eq_intctxtAdvantage (c : Pqxdh.Crypto) (adversary : CtxAdversary) :
-    Pr[fun result : CtxBeforeVerify × SplitCache => RetainedWin c result.1 |
-      ctxDirectSampleIndependentTagGame c adversary] =
+    Pr{let result ← ctxDirectSampleIndependentTagGame c adversary}[RetainedWin c result.1] =
       modifiedNonceAeadINTCTXTAdvantage c (ctxRetainedBaseReduction adversary) := by
   unfold modifiedNonceAeadINTCTXTAdvantage
-  rw [modifiedNonceAeadINTCTXTGame_reduction_eq_direct, probEvent_map]
+  rw [modifiedNonceAeadINTCTXTGame_reduction_eq_direct, prEvent_map]
   rfl
 
 /-- Actual typed full-fresh security follows from the classified core whenever direct honest cache values are sound. -/
@@ -317,24 +303,21 @@ theorem acceptedProbability_le_intCtxt_add_prefix_add_inv_of_cache_sound
     (hsound : ∀ result ∈ support
       (ctxDirectSampleIndependentTagGame c adversary),
       CtxHonestCommitmentsCached result.1 result.2) :
-    Pr[= true | acceptedGame c adversary] ≤
+    Pr{let x ← acceptedGame c adversary}[x = true] ≤
       modifiedNonceAeadINTCTXTAdvantage c
           (ctxRetainedBaseReduction adversary) +
         ctxSecretPrefixQueriedProbability c adversary +
         (((2 ^ 512 : ℕ) : ℝ≥0∞))⁻¹ := by
   calc
-    Pr[= true | acceptedGame c adversary] ≤
-        Pr[= true | directAcceptedGame c adversary] +
+    Pr{let x ← acceptedGame c adversary}[x = true] ≤
+        Pr{let x ← directAcceptedGame c adversary}[x = true] +
           ctxSecretPrefixQueriedProbability c adversary :=
       acceptedGame_le_direct_add_prefix c adversary
-    _ ≤ Pr[= true | directClassifiedGame c adversary] +
-          ctxSecretPrefixQueriedProbability c adversary := by
-      gcongr
-      exact directAcceptedGame_le_classified_of_cache_sound
-        c adversary hsound
-    _ ≤ (Pr[fun result : CtxBeforeVerify × SplitCache =>
-            RetainedWin c result.1 |
-          ctxDirectSampleIndependentTagGame c adversary] +
+    _ ≤ Pr{let x ← directClassifiedGame c adversary}[x = true] +
+          ctxSecretPrefixQueriedProbability c adversary :=
+      add_le_add (directAcceptedGame_le_classified_of_cache_sound
+        c adversary hsound) le_rfl
+    _ ≤ (Pr{let result ← ctxDirectSampleIndependentTagGame c adversary}[RetainedWin c result.1] +
           (Fintype.card CtxDigest : ℝ≥0∞)⁻¹) +
         ctxSecretPrefixQueriedProbability c adversary := by
       gcongr
@@ -355,7 +338,7 @@ theorem acceptedProbability_le_intCtxt_add_prefix_add_inv_of_cache_sound
 /-- Unconditional actual typed full-fresh core bound from the reachable direct cache invariant. -/
 theorem acceptedProbability_le_intCtxt_add_prefix_add_inv
     (c : Pqxdh.Crypto) (adversary : CtxAdversary) :
-    Pr[= true | acceptedGame c adversary] ≤
+    Pr{let x ← acceptedGame c adversary}[x = true] ≤
       modifiedNonceAeadINTCTXTAdvantage c
           (ctxRetainedBaseReduction adversary) +
         ctxSecretPrefixQueriedProbability c adversary +
@@ -400,8 +383,7 @@ theorem acceptedProbability_le_intCtxt_add_booleanIndDollar_add_guesses
     (c : Pqxdh.Crypto) {qH qE : ℕ}
     (adversary : CtxQueryBoundedAdversary qH qE)
     (hqE : qE < 2 ^ 96) :
-    Pr[= true |
-        acceptedGame c adversary.toCtxAdversary] ≤
+    Pr{let x ← acceptedGame c adversary.toCtxAdversary}[x = true] ≤
       modifiedNonceAeadINTCTXTAdvantage c
           (ctxRetainedBaseReduction adversary.toCtxAdversary) +
         ENNReal.ofReal
@@ -410,8 +392,7 @@ theorem acceptedProbability_le_intCtxt_add_booleanIndDollar_add_guesses
         (qH : ℝ≥0∞) * (((2 ^ 128 : ℕ) : ℝ≥0∞))⁻¹ +
         (((2 ^ 512 : ℕ) : ℝ≥0∞))⁻¹ := by
   calc
-    Pr[= true |
-        acceptedGame c adversary.toCtxAdversary] ≤
+    Pr{let x ← acceptedGame c adversary.toCtxAdversary}[x = true] ≤
       modifiedNonceAeadINTCTXTAdvantage c
           (ctxRetainedBaseReduction adversary.toCtxAdversary) +
         ctxSecretPrefixQueriedProbability c adversary.toCtxAdversary +
@@ -440,7 +421,7 @@ theorem acceptedProbability_le_intCtxt_add_booleanIndDollar_add_guesses
 /-- The unclaimed endpoint has the existing primitive reductions and losses, with no plaintext guess factor. -/
 theorem game_le_intctxt_add_booleanIndDollar_add_guesses (c : Pqxdh.Crypto) {qH qE : ℕ}
     (adversary : QueryBoundedAdversary qH qE) (nonceSpace : qE < 2 ^ 96) :
-    Pr[= true | game c adversary.toAdversary] ≤
+    Pr{let x ← game c adversary.toAdversary}[x = true] ≤
       modifiedNonceAeadINTCTXTAdvantage c (ctxRetainedBaseReduction adversary.toLegacy.toCtxAdversary) +
         ENNReal.ofReal (modifiedNonceAeadINDDollarAdvantage c
           (ctxPrefixToBooleanINDDollarReduction c adversary.toLegacy)) +
@@ -553,7 +534,7 @@ theorem reduction_query_bounds (c : Pqxdh.Crypto) {qH qE : ℕ}
 /-- The actual shared-ROM ciphertext-only game has the stated ordinary primitive reductions and losses. -/
 theorem canonicalGame_le_intctxt_add_booleanIndDollar_add_guesses (c : Pqxdh.Crypto) {qH qE : ℕ}
     (adversary : QueryBoundedAdversary qH qE) (nonceSpace : qE < 2 ^ 96) :
-    Pr[= true | canonicalGame c adversary.toAdversary] ≤
+    Pr{let x ← canonicalGame c adversary.toAdversary}[x = true] ≤
       modifiedNonceAeadINTCTXTAdvantage c (ctxRetainedBaseReduction adversary.toLegacy.toCtxAdversary) +
         ENNReal.ofReal (modifiedNonceAeadINDDollarAdvantage c
           (ctxPrefixToBooleanINDDollarReduction c adversary.toLegacy)) +

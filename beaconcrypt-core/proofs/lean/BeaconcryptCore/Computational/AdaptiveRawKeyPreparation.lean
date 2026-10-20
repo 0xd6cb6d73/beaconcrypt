@@ -46,13 +46,13 @@ theorem prepared_interpretation {Context Result : Type} {count : Nat}
     (prepare : ProbComp (Prepared Context count)) (targetReal : Bool) (targetDecode : RawDecoder)
     (real : Fin count → Bool) (decode : Fin count → RawDecoder) (c : Pqxdh.Crypto)
     (client : Context → OracleComp (FamilySpec count) Result) :
-    𝒮[source prepare targetReal targetDecode real decode c client] =
-      𝒮[reassociate <$> uniformAdaptiveGame targetReal targetDecode c (wrapped prepare real decode c client)] := by
+    EvalDistEq (source prepare targetReal targetDecode real decode c client)
+      (reassociate <$> uniformAdaptiveGame targetReal targetDecode c (wrapped prepare real decode c client)) := by
   simp only [source, uniformSource, uniformAdaptiveGame, adaptiveGame, wrapped,
     simulateQ_bind, StateT.run_bind, simulateQ_pure, StateT.run_pure,
     targetUniform, map_bind, bind_assoc, bind_map_left, map_pure]
   simp only [schedule_interpretation, bind_map_left]
-  exact evalSPMF_bind_bind_swap prepare ($ᵗ CtxKey) _
+  exact OracleComp.EvalDistEq.bind_bind_swap prepare ($ᵗ CtxKey) _
 
 /-- Preparation does not consume target encryption or raw-opening queries. -/
 theorem prepared_target_bound {Context Result : Type} {count : Nat}
@@ -104,7 +104,9 @@ theorem prepared_integrity_bound {Context Result : Type} {count : Nat}
   have mapped := (ENNReal.ofReal_le_ofReal (tvDist_map_le reassociate
     (uniformAdaptiveGame true targetDecode c (wrapped prepare real decode c client))
     (uniformAdaptiveGame false targetDecode c (wrapped prepare real decode c client)))).trans linked
-  simpa only [tvDist, ← prepared_interpretation] using mapped
+  have interpretation := fun targetReal => (VCVioLegacy.evalSPMF_eq_iff_evalDistEq _ _).2
+    (prepared_interpretation prepare targetReal targetDecode real decode c client)
+  simpa only [tvDist, ← interpretation] using mapped
 
 /-- The original prepared source charges preparation, target-key generation and all client randomness. -/
 theorem prepared_source_uniform {Context Result : Type} {count : Nat}

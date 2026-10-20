@@ -52,14 +52,14 @@ theorem prepared_interpretation {Context Result : Type} {count : Nat}
     (prepare : ProbComp (Prepared Context count)) (selectedDecode : RawDecoder)
     (decode : Fin count → RawDecoder) (c : Pqxdh.Crypto)
     (client : Context → OracleComp (FamilySpec count) Result) :
-    𝒮[source prepare selectedDecode decode c client] =
-      𝒮[do
+    EvalDistEq (source prepare selectedDecode decode c client)
+      (do
         let selectedKey ← $ᵗ CtxKey
-        reassociate <$> canonicalGame selectedDecode c selectedKey (wrapped prepare decode c client)] := by
+        reassociate <$> canonicalGame selectedDecode c selectedKey (wrapped prepare decode c client)) := by
   simp only [source, uniform_interpretation, wrapped, canonicalGame, simulateQ_bind,
     StateT.run_bind, simulateQ_pure, StateT.run_pure, canonical_uniform, map_bind,
     bind_assoc, bind_map_left, map_pure]
-  exact JointEagerTable.independent_comm_spmf_vcvioLegacy prepare ($ᵗ CtxKey) _
+  exact JointEagerTable.independent_comm_spmf prepare ($ᵗ CtxKey) _
 
 /-- Preparation uniform draws consume no target nonuniform resource. -/
 theorem lift_no_class (p : ReceiveSpec.Domain → Prop) [DecidablePred p]
@@ -150,14 +150,14 @@ theorem prepared_view_eq {Context : Type} {count : Nat}
     (prepare : ProbComp (Prepared Context count)) (selectedDecode : RawDecoder)
     (decode : Fin count → RawDecoder) (c : Pqxdh.Crypto)
     (client : Context → OracleComp (FamilySpec count) Bool) :
-    𝒮[(fun result => result.2.1) <$> source prepare selectedDecode decode c client] =
-      𝒮[AdaptiveCtxPrivacyGuard.canonicalView selectedDecode c (decisionClient prepare decode c client)] := by
-  have full := congrArg (fun distribution =>
-      (fun (result : Prepared Context count × (Bool × SourceState count)) => result.2.1) <$> distribution)
-    (prepared_interpretation prepare selectedDecode decode c client)
-  simpa only [← evalSPMF_map, map_bind, Functor.map_map, reassociate,
-    AdaptiveCtxPrivacyGuard.canonicalView, AdaptiveCtxPrefixValidation.retainedCanonicalGame,
-    canonicalGame, decisionClient, simulateQ_map, StateT.run_map, bind_pure_comp] using full
+    EvalDistEq ((fun result => result.2.1) <$> source prepare selectedDecode decode c client)
+      (AdaptiveCtxPrivacyGuard.canonicalView selectedDecode c (decisionClient prepare decode c client)) := by
+  refine ((prepared_interpretation prepare selectedDecode decode c client).map
+    (fun (result : Prepared Context count × (Bool × SourceState count)) => result.2.1)).trans ?_
+  simp only [map_bind, Functor.map_map, reassociate, AdaptiveCtxPrivacyGuard.canonicalView,
+    AdaptiveCtxPrefixValidation.retainedCanonicalGame, canonicalGame, decisionClient, simulateQ_map,
+    StateT.run_map, bind_pure_comp]
+  exact EvalDistEq.refl _
 
 /-- The original source charges preparation, selected-key generation and all shared-cache execution. -/
 theorem prepared_source_uniform {Context Result : Type} {count : Nat}
@@ -261,7 +261,7 @@ theorem prepared_integrity_bound {Context : Type} {count : Nat}
       𝒟[(fun result => result.2.1) <$> source prepare selectedDecode decode c client] {true} =
         𝒟[AdaptiveCtxPrivacyGuard.canonicalView selectedDecode c
           (decisionClient prepare decode c client)] {true} := by
-    simpa only [evalDist_apply_singleton] using probOutput_congr rfl equal
+    rw [EvalDistEq.evalDist_eq equal]
   simpa only [ProbComp.boolDistAdvantage, equal_true] using bound
 
 /-- The prepared source privacy hop additionally charges the ordinary ciphertext-view reduction. -/
@@ -295,7 +295,7 @@ theorem prepared_privacy_bound {Context : Type} {count : Nat}
       𝒟[(fun result => result.2.1) <$> source prepare selectedDecode decode c client] {true} =
         𝒟[AdaptiveCtxPrivacyGuard.canonicalView selectedDecode c
           (decisionClient prepare decode c client)] {true} := by
-    simpa only [evalDist_apply_singleton] using probOutput_congr rfl equal
+    rw [EvalDistEq.evalDist_eq equal]
   simpa only [ProbComp.boolDistAdvantage, equal_true] using bound
 
 /-- All prepared ordinary reductions pay their setup, uniform and selected-encryption costs. -/

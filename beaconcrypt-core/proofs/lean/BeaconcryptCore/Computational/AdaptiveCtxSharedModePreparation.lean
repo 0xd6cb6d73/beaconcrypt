@@ -67,14 +67,14 @@ theorem prepared_interpretation {Context Result : Type} {count : Nat}
     (prepare : ProbComp (Prepared Context count)) (selectedReal : Bool) (selectedDecode : RawDecoder)
     (real : Fin count → Bool) (decode : Fin count → RawDecoder) (c : Pqxdh.Crypto)
     (client : Context → OracleComp (FamilySpec count) Result) :
-    𝒮[source prepare selectedReal selectedDecode real decode c client] =
-      𝒮[do
+    EvalDistEq (source prepare selectedReal selectedDecode real decode c client)
+      (do
         let selectedKey ← $ᵗ CtxKey
-        reassociate <$> (simulateQ (targetImpl selectedReal selectedDecode c selectedKey) (wrapped prepare real decode c client)).run AdaptiveCtxSharedModes.initialState] := by
+        reassociate <$> (simulateQ (targetImpl selectedReal selectedDecode c selectedKey) (wrapped prepare real decode c client)).run AdaptiveCtxSharedModes.initialState) := by
   simp only [source, uniform_interpretation, targetGame, wrapped, simulateQ_bind,
     StateT.run_bind, simulateQ_pure, StateT.run_pure, mode_uniform, map_bind,
     bind_assoc, bind_map_left, map_pure]
-  exact JointEagerTable.independent_comm_spmf_vcvioLegacy prepare ($ᵗ CtxKey) _
+  exact JointEagerTable.independent_comm_spmf prepare ($ᵗ CtxKey) _
 
 open AdaptiveCtxSharedPreparation (lift_no_class lift_uniform_bound)
 
@@ -117,13 +117,13 @@ theorem prepared_view_eq {Context : Type} {count : Nat}
     (prepare : ProbComp (Prepared Context count)) (selectedReal : Bool) (selectedDecode : RawDecoder)
     (real : Fin count → Bool) (decode : Fin count → RawDecoder) (c : Pqxdh.Crypto)
     (client : Context → OracleComp (FamilySpec count) Bool) :
-    𝒮[(fun result => result.2.1) <$> source prepare selectedReal selectedDecode real decode c client] =
-      𝒮[targetView selectedReal selectedDecode c (decisionClient prepare real decode c client)] := by
-  have full := congrArg (fun distribution =>
-      (fun (result : Prepared Context count × (Bool × SourceState count)) => result.2.1) <$> distribution)
-    (prepared_interpretation prepare selectedReal selectedDecode real decode c client)
-  simpa only [← evalSPMF_map, map_bind, Functor.map_map, reassociate,
-    targetView, targetGame, decisionClient, simulateQ_map, StateT.run_map, bind_pure_comp] using full
+    EvalDistEq ((fun result => result.2.1) <$> source prepare selectedReal selectedDecode real decode c client)
+      (targetView selectedReal selectedDecode c (decisionClient prepare real decode c client)) := by
+  refine ((prepared_interpretation prepare selectedReal selectedDecode real decode c client).map
+    (fun (result : Prepared Context count × (Bool × SourceState count)) => result.2.1)).trans ?_
+  simp only [map_bind, Functor.map_map, reassociate, targetView, targetGame, decisionClient, simulateQ_map,
+    StateT.run_map]
+  exact EvalDistEq.refl _
 
 theorem decision_class_bound {Context : Type} {count : Nat}
     (prepare : ProbComp (Prepared Context count)) (real : Fin count → Bool) (decode : Fin count → RawDecoder)
@@ -177,12 +177,12 @@ theorem prepared_integrity_bound {Context : Type} {count : Nat}
       𝒟[(fun result => result.2.1) <$> source prepare true selectedDecode real decode c client] {true} =
         𝒟[AdaptiveCtxPrivacyGuard.canonicalView selectedDecode c
           (decisionClient prepare real decode c client)] {true} := by
-    simpa only [evalDist_apply_singleton] using probOutput_congr rfl trueEq
+    rw [EvalDistEq.evalDist_eq trueEq]
   have falseMass :
       𝒟[(fun result => result.2.1) <$> source prepare false selectedDecode real decode c client] {true} =
         𝒟[AdaptiveCtxPrivacyGuard.replayView selectedDecode c
           (decisionClient prepare real decode c client)] {true} := by
-    simpa only [evalDist_apply_singleton] using probOutput_congr rfl falseEq
+    rw [EvalDistEq.evalDist_eq falseEq]
   simpa only [ProbComp.boolDistAdvantage, trueMass, falseMass] using bound
 
 noncomputable def independentSetup {Context : Type} (count : Nat) (context : Context) :

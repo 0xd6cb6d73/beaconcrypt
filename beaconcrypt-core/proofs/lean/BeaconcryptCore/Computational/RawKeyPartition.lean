@@ -64,15 +64,6 @@ theorem partition_continuation {Result : Type} (count : Nat) (target : Fin (coun
   have complete := (sampled_partition count target).symm.bind_left next
   simpa only [bind_assoc, pure_bind] using complete
 
-set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.RawKeyPartition.partition_continuation_vcvioLegacy :
-    ∀ {Result : Type} (count : ℕ) (target : Fin (count + 1)) (next : (Fin (count + 1) → BeaconcryptCore.Computational.CtxRomAuth.CtxKey) → ProbComp Result),
-      𝒮[$ᵗ (Fin (count + 1) → BeaconcryptCore.Computational.CtxRomAuth.CtxKey) >>= next] =
-        𝒮[do
-          let key ← $ᵗ BeaconcryptCore.Computational.CtxRomAuth.CtxKey
-          let others ← $ᵗ (Fin count → BeaconcryptCore.Computational.CtxRomAuth.CtxKey)
-          next (BeaconcryptCore.Computational.RawKeyPartition.join target key others)] :=
-  by simpa only [BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq] using @BeaconcryptCore.Computational.RawKeyPartition.partition_continuation
-
 /-- Updating the selected state changes exactly its original source entry. -/
 theorem join_selected_update {Value : Type} {count : Nat} (target : Fin (count + 1))
     (selected updated : Value) (others : Fin count → Value) :

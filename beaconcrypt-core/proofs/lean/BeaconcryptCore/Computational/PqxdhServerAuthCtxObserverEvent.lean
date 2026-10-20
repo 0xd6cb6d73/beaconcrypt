@@ -258,7 +258,7 @@ theorem ctxLoss_finite (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
     (fallback : ModifiedNonceAeadForgery) (qHash : Nat) :
     ctxLossENN setup codec checks adversary Q j fallback qHash ≠ ⊤ := by
   have primitive : modifiedNonceAeadINTCTXTAdvantage setup.source.crypto
-      (integrity setup codec checks adversary Q j fallback) ≠ ⊤ := probEvent_ne_top
+      (integrity setup codec checks adversary Q j fallback) ≠ ⊤ := prEvent_ne_top _
   simp only [ctxLossENN, ENNReal.add_ne_top]
   constructor
   · constructor

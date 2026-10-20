@@ -160,8 +160,7 @@ noncomputable def modifiedNonceAeadINTCTXTGame
 /-- Modified nonce-AEAD INT-CTXT advantage. -/
 noncomputable def modifiedNonceAeadINTCTXTAdvantage
     (c : Pqxdh.Crypto) (adversary : ModifiedNonceAeadAdversary) : ℝ≥0∞ :=
-  Pr[ModifiedNonceAeadINTCTXTWin c |
-    modifiedNonceAeadINTCTXTGame c adversary]
+  Pr{let result ← modifiedNonceAeadINTCTXTGame c adversary}[ModifiedNonceAeadINTCTXTWin c result]
 
 /-- Project a CTX sealing request to its primitive retained-base request. -/
 def CtxSealInput.toModifiedNonceAeadSealInput
@@ -706,15 +705,14 @@ theorem modifiedNonceAeadINTCTXTGame_reduction_eq_direct
 /-- Every fresh retained-base acceptance is charged to the constructed INT-CTXT forger. -/
 theorem ctxFreshAcceptedRetainedBaseProbability_le_intCtxtAdvantage
     (c : Pqxdh.Crypto) (adversary : CtxAdversary) :
-    Pr[fun result : CtxBeforeVerify × SplitCache =>
-        CtxFreshAcceptedRetainedBase c result.1 |
-      ctxDirectSampleIndependentTagGame c adversary] ≤
+    Pr{let result : CtxBeforeVerify × SplitCache ← ctxDirectSampleIndependentTagGame c adversary}[
+        CtxFreshAcceptedRetainedBase c result.1] ≤
       modifiedNonceAeadINTCTXTAdvantage c
         (ctxRetainedBaseReduction adversary) := by
   unfold modifiedNonceAeadINTCTXTAdvantage
   rw [modifiedNonceAeadINTCTXTGame_reduction_eq_direct,
-    probEvent_map]
-  apply probEvent_mono''
+    prEvent_map]
+  apply prEvent_mono
   intro result hretained
   exact ctxFreshAcceptedRetainedBase_implies_modifiedNonceAeadINTCTXTWin
     c result.1 hretained

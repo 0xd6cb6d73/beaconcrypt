@@ -1276,7 +1276,7 @@ theorem ctxLoss_ne_top (target : Target S (B + 1)) (fallback : ModifiedNonceAead
   refine ENNReal.add_ne_top.mpr ⟨ENNReal.add_ne_top.mpr ⟨ENNReal.add_ne_top.mpr ⟨ENNReal.ofReal_ne_top, ?_⟩, ?_⟩, ?_⟩
   · exact ENNReal.mul_ne_top (ENNReal.natCast_ne_top _) (ENNReal.inv_ne_top.mpr (by positivity))
   · refine ENNReal.mul_ne_top (by norm_num) (ENNReal.sum_ne_top.mpr fun index _ => ?_)
-    exact probEvent_ne_top
+    exact prEvent_ne_top _
   · exact ENNReal.div_ne_top (ENNReal.natCast_ne_top _) (by positivity)
 
 /-- C4's compiled first Beacon record game is bounded by the initial half-alias term `2^-256`, the ordinary CTX authentication loss of the constructed key-free client, and the explicit gap game in which the constructed client returns `true` while the ordinary observer does not win. -/

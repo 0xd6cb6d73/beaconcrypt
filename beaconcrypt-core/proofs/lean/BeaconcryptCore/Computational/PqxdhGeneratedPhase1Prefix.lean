@@ -227,14 +227,14 @@ theorem changed_advantage_bound
     (fallback : DynamicForgery) (ordinaryFallback : Forgery)
     (creates : (program baseImpl kem setup driver).IsQueryBoundP
       (fun query => IsSourceClass (SourceClass IsCreate) (translated query)) (count + 1)) :
-    Pr[Changed | privateRun attachedVerify primitives (count + 1) (program baseImpl kem setup driver)] ≤
+    Pr{let x ← privateRun attachedVerify primitives (count + 1) (program baseImpl kem setup driver)}[Changed x] ≤
       ∑ target : Fin (count + 1), advantage primitives
         (globalReduction primitives target ordinaryFallback
           (routedAdversary count ordinaryFallback
             (reportExtractor primitives (count + 1) fallback
               (routedClient primitives (count + 1) (instrumentedClient primitives
                 ((simulateQ compile (program baseImpl kem setup driver)).run [])))))) := by
-  exact (probEvent_mono (fun result supported changed =>
+  exact (prEvent_mono_of_support _ _ _ (fun result supported changed =>
     changed_origin attachedVerify primitives adapter count baseImpl kem setup driver noSign result supported changed)).trans
     (origin_advantage_bound attachedVerify primitives adapter count
       (beforeCandidate baseImpl kem setup driver) fallback ordinaryFallback creates)
@@ -349,7 +349,7 @@ theorem authentication_bound
       (driver.main index publicIdentity generated publicTranscript).IsQueryBoundP
       (SelectorSource (baseSpec := baseSpec) Creating) 0)
     (fallback : DynamicForgery) (ordinaryFallback : Forgery) :
-    Pr[Changed | privateRun attachedVerify primitives 1 (program baseImpl kem setup driver)] ≤
+    Pr{let x ← privateRun attachedVerify primitives 1 (program baseImpl kem setup driver)}[Changed x] ≤
       advantage primitives (privateReduction primitives baseImpl kem setup driver fallback ordinaryFallback) := by
   have bounded := changed_advantage_bound attachedVerify primitives adapter 0 baseImpl kem setup driver
     (fun index publicIdentity generated secret publicTranscript =>
@@ -357,7 +357,7 @@ theorem authentication_bound
       IsSigning (fun _ => by simp [IsSigning, dynamicClass, IsClass]) 0 (driverNoSign index publicIdentity generated publicTranscript))
     fallback ordinaryFallback (program_create_bound baseImpl kem setup driver driverNoCreate)
   rw [Fin.sum_univ_succ] at bounded
-  simpa [privateReduction] using bounded
+  simpa [privateReduction, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ] using bounded
 
 /-- The actual source signing block pays for all three signatures, with no extra signing request hidden in private KEM generation or interpretation. -/
 theorem program_sign_bound
@@ -399,6 +399,7 @@ theorem authentication_continuation_bound {Result : Type}
       (advantage primitives (privateReduction primitives baseImpl kem setup driver fallback ordinaryFallback)).toReal := by
   refine (tvDist_bind_left_event_le (privateRun attachedVerify primitives 1 (program baseImpl kem setup driver))
     next _ (fun state => changedBit state = true) (fun state good => by simp [good])).trans ?_
+  rw [VCVioLegacy.probEvent_eq_prEvent]
   apply ENNReal.toReal_mono (show advantage primitives
     (privateReduction primitives baseImpl kem setup driver fallback ordinaryFallback) ≠ ∞ from prEvent_ne_top _)
   simpa only [changedBit_iff] using authentication_bound attachedVerify primitives adapter baseImpl kem setup driver

@@ -66,7 +66,7 @@ theorem loss_finite {count : Nat} (target : Fin (count + 1))
   unfold loss
   have attempts : (∑ attempt ∈ Finset.range qRaw,
       modifiedNonceAeadINTCTXTAdvantage c (forgeryReduction target decode c fallback client attempt)) ≠ ⊤ :=
-    ENNReal.sum_ne_top.mpr (fun _ _ => probEvent_ne_top)
+    ENNReal.sum_ne_top.mpr (fun _ _ => (prEvent_ne_top _))
   simp only [ENNReal.add_ne_top]
   exact ⟨⟨⟨ENNReal.ofReal_ne_top,
     ENNReal.mul_ne_top (ENNReal.natCast_ne_top qHash) (ENNReal.inv_ne_top.mpr (by norm_num))⟩,

@@ -359,10 +359,6 @@ theorem reporting_advantage_le_identity_sum (primitives : Primitives) (count : �
       (extractor_query_bound primitives (count + 1) fallback client
         PqxdhDynamicIdentityPool.IsCreate (count + 1) creates))
 
-set_option linter.deprecated false in set_option linter.unusedVariables false in theorem _root_.BeaconcryptCore.Computational.PqxdhDynamicIdentityReports.reporting_advantage_le_identity_sum_vcvioLegacy :
-    ∀ (primitives : BeaconcryptCore.Computational.PqxdhJointIdentity.Primitives) (count : ℕ) {Result : Type} (fallback : BeaconcryptCore.Computational.PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : BeaconcryptCore.Computational.PqxdhJointIdentity.Forgery) (client : OracleComp BeaconcryptCore.Computational.PqxdhDynamicIdentityReports.ReportingSpec Result) (creates : client.IsQueryBoundP (BeaconcryptCore.Computational.PqxdhDynamicIdentityReports.reportingClass BeaconcryptCore.Computational.PqxdhDynamicIdentityPool.IsCreate) (count + 1)), (probEvent (BeaconcryptCore.Computational.PqxdhDynamicIdentityReports.reportingRun primitives (count + 1) client) fun (result : Result × BeaconcryptCore.Computational.PqxdhDynamicIdentityReports.ReportingState (count + 1)) => result.2.occurred = Bool.true) ≤ ∑ target : Fin (count + 1), BeaconcryptCore.Computational.PqxdhJointIdentity.advantage primitives (BeaconcryptCore.Computational.PqxdhJointIdentityFreshness.globalReduction primitives target ordinaryFallback (BeaconcryptCore.Computational.PqxdhDynamicIdentityRouting.routedAdversary count ordinaryFallback (BeaconcryptCore.Computational.PqxdhDynamicIdentityReports.reportExtractor primitives (count + 1) fallback client))) :=
-  by simpa only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent] using @BeaconcryptCore.Computational.PqxdhDynamicIdentityReports.reporting_advantage_le_identity_sum
-
 /-- Each constructed reduction keeps the original source primitive caps and generates only the other reserved seeds. Public report tests make no challenger query. -/
 theorem reportingReduction_query_bound (primitives : Primitives) (count : ℕ)
     (target : Fin (count + 1)) (fallback : DynamicForgery) (ordinaryFallback : Forgery)

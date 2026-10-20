@@ -631,10 +631,6 @@ theorem ctxSplitRouted_independent_agree_good
       rw [hrun]
   · rfl
 
-set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.CtxIndependentTags.ctxSplitRouted_independent_agree_good_vcvioLegacy :
-    ∀ (c : Pqxdh.Crypto) (key : BeaconcryptCore.Computational.CtxRomAuth.CtxKey) (query : BeaconcryptCore.Computational.CtxRomAuth.CtxAdversarySpec.Domain) (state : BeaconcryptCore.Computational.CtxIndependentTags.CtxIndependentTagState) (output : BeaconcryptCore.Computational.CtxRomAuth.CtxAdversarySpec.Range query) (state' : BeaconcryptCore.Computational.CtxIndependentTags.CtxIndependentTagState), Pr[= (output, state', Bool.false) | (BeaconcryptCore.Computational.CtxIndependentTags.ctxSplitRoutedWithPrefixFlagImpl c key query).run (state, Bool.false)] = Pr[= (output, state', Bool.false) | (BeaconcryptCore.Computational.CtxIndependentTags.ctxIndependentWithPrefixFlagImpl c key query).run (state, Bool.false)] :=
-  by simpa only [BeaconcryptCore.VCVioLegacy.probOutput_eq_prEvent] using @BeaconcryptCore.Computational.CtxIndependentTags.ctxSplitRouted_independent_agree_good
-
 /-- The routed split handler never clears its prefix-bad flag. -/
 theorem ctxSplitRoutedWithPrefixFlagImpl_bad_mono
     (c : Pqxdh.Crypto) (key : CtxKey)
@@ -688,10 +684,6 @@ theorem ctxSplitRouted_badProbability_eq_prefixBad
     prEvent_map]
   rfl
 
-set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.CtxIndependentTags.ctxSplitRouted_badProbability_eq_prefixBad_vcvioLegacy :
-    ∀ (c : Pqxdh.Crypto) (key : BeaconcryptCore.Computational.CtxRomAuth.CtxKey) (adversary : BeaconcryptCore.Computational.CtxRomAuth.CtxAdversary), (probEvent (BeaconcryptCore.Computational.CtxIndependentTags.ctxSplitRoutedFlaggedBeforeVerify c key adversary) fun (result : BeaconcryptCore.Computational.CtxRomAuth.CtxAliasTarget × BeaconcryptCore.Computational.CtxIndependentTags.CtxIndependentTagState × Bool) => result.2.2 = Bool.true) = BeaconcryptCore.Computational.CtxPrefixIsolation.ctxPrefixBadProbability c key adversary :=
-  by simpa only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent] using @BeaconcryptCore.Computational.CtxIndependentTags.ctxSplitRouted_badProbability_eq_prefixBad
-
 /-- Split-cache projection preserves the canonical bad-event probability for an arbitrary result type. -/
 theorem ctxSplitRouted_badProbability_eq_real_of_main
     (c : Pqxdh.Crypto) (key : CtxKey) {α : Type}
@@ -703,10 +695,6 @@ theorem ctxSplitRouted_badProbability_eq_real_of_main
   rw [← ctxRealWithPrefixFlagImpl_split_projection_run_of_main c key main,
     prEvent_map]
   rfl
-
-set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.CtxIndependentTags.ctxSplitRouted_badProbability_eq_real_of_main_vcvioLegacy :
-    ∀ (c : Pqxdh.Crypto) (key : BeaconcryptCore.Computational.CtxRomAuth.CtxKey) {α : Type} (main : OracleComp BeaconcryptCore.Computational.CtxRomAuth.CtxAdversarySpec α), (probEvent ((simulateQ (BeaconcryptCore.Computational.CtxIndependentTags.ctxSplitRoutedWithPrefixFlagImpl c key) main).run (BeaconcryptCore.Computational.CtxIndependentTags.emptyCtxIndependentTagState, Bool.false)) fun (result : α × BeaconcryptCore.Computational.CtxIndependentTags.CtxIndependentTagState × Bool) => result.2.2 = Bool.true) = probEvent ((simulateQ (BeaconcryptCore.Computational.CtxPrefixIsolation.ctxRealWithPrefixFlagImpl c key) main).run (BeaconcryptCore.Computational.CtxRomAuth.emptyCtxHandlerState, Bool.false)) fun (result : α × BeaconcryptCore.Computational.CtxRomAuth.CtxHandlerState × Bool) => result.2.2 = Bool.true :=
-  by simpa only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent] using @BeaconcryptCore.Computational.CtxIndependentTags.ctxSplitRouted_badProbability_eq_real_of_main
 
 /-- The routed and key-free independent-tag games differ only on prefix-bad. -/
 theorem tvDist_ctxSplitRouted_independentTag_le_prefixBad
@@ -758,10 +746,6 @@ theorem tvDist_ctxSplitRouted_independentTag_le_prefixBad_of_main
       (ctxIndependentWithPrefixFlagImpl_bad_mono c key)
   rw [VCVioLegacy.probEvent_eq_prEvent] at bound
   exact bound
-
-set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.CtxIndependentTags.tvDist_ctxSplitRouted_independentTag_le_prefixBad_of_main_vcvioLegacy :
-    ∀ (c : Pqxdh.Crypto) (key : BeaconcryptCore.Computational.CtxRomAuth.CtxKey) {α : Type} (main : OracleComp BeaconcryptCore.Computational.CtxRomAuth.CtxAdversarySpec α), tvDist ((simulateQ (BeaconcryptCore.Computational.CtxIndependentTags.ctxSplitRoutedWithPrefixFlagImpl c key) main).run (BeaconcryptCore.Computational.CtxIndependentTags.emptyCtxIndependentTagState, Bool.false)) ((simulateQ (BeaconcryptCore.Computational.CtxIndependentTags.ctxIndependentWithPrefixFlagImpl c key) main).run (BeaconcryptCore.Computational.CtxIndependentTags.emptyCtxIndependentTagState, Bool.false)) ≤ (probEvent ((simulateQ (BeaconcryptCore.Computational.CtxIndependentTags.ctxSplitRoutedWithPrefixFlagImpl c key) main).run (BeaconcryptCore.Computational.CtxIndependentTags.emptyCtxIndependentTagState, Bool.false)) fun (result : α × BeaconcryptCore.Computational.CtxIndependentTags.CtxIndependentTagState × Bool) => result.2.2 = Bool.true).toReal :=
-  by simpa only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent] using @BeaconcryptCore.Computational.CtxIndependentTags.tvDist_ctxSplitRouted_independentTag_le_prefixBad_of_main
 
 /-- Dropping the routed split flag recovers the unflagged routed handler. -/
 theorem ctxSplitRoutedWithPrefixFlagImpl_proj_step

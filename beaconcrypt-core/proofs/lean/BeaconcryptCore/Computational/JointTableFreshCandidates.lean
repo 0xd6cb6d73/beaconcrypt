@@ -71,10 +71,6 @@ theorem fixed_vector_bound {bound : ℕ} (cache : (D →ₒ R).QueryCache)
       exact Finset.sum_le_sum fun index _ => optional_fresh_guess_bound cache (candidates.get index)
     _ = _ := by simp
 
-set_option linter.deprecated false in set_option linter.unusedVariables false in theorem _root_.BeaconcryptCore.Computational.JointTableFreshCandidates.fixed_vector_bound_vcvioLegacy :
-    ∀ {D R : Type} [DecidableEq D] [Finite D] [Finite R] [Nonempty R] [SampleableType R] [inst : SampleableType (D → R)] [inst_1 : MeasurableSpace R] [DiscreteMeasurableSpace R] {bound : ℕ} (cache : (OracleSpec.ofFn fun (x : D) => R).QueryCache) (candidates : List.Vector (Option (D × R)) bound), (probEvent ($ᵗ (D → R)) fun (tail : D → R) => ∃ (index : Fin bound), BeaconcryptCore.Computational.JointTableFreshCandidates.FreshHit cache (OracleComp.tableExtending cache tail) (candidates.get index)) ≤ ↑bound * (↑(Nat.card R))⁻¹ :=
-  by simpa only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent] using @BeaconcryptCore.Computational.JointTableFreshCandidates.fixed_vector_bound
-
 /-- Retain the entire actual sampled result and final cache while independently completing only its missing table cells. -/
 def completeResult {Result : Type} (draw : ProbComp (Result × (D →ₒ R).QueryCache)) :
     ProbComp ((D → R) × (Result × (D →ₒ R).QueryCache)) := do

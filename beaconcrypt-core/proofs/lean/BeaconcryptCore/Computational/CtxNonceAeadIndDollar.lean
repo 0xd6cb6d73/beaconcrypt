@@ -99,23 +99,24 @@ theorem ctxPrefixProbeVector_hit_iff_of_length_le {qH : ℕ}
 /-- The independent-tag game preserves the same sticky secret-prefix event as the split-cache game. -/
 theorem ctxIndependent_badProbability_eq_prefixBad
     (c : Pqxdh.Crypto) (key : CtxKey) (adversary : CtxAdversary) :
-    Pr[fun result => result.2.2 = true |
-      ctxIndependentTagFlaggedBeforeVerify c key adversary] =
+    Pr{let result ← ctxIndependentTagFlaggedBeforeVerify c key adversary}[result.2.2 = true] =
       ctxPrefixBadProbability c key adversary := by
   calc
-    Pr[fun result => result.2.2 = true |
-        ctxIndependentTagFlaggedBeforeVerify c key adversary] =
-        Pr[fun result => result.2.2 = true |
-          ctxSplitRoutedFlaggedBeforeVerify c key adversary] :=
-      (OracleComp.ProgramLogic.Relational.probEvent_output_bad_eq'
+    Pr{let result ← ctxIndependentTagFlaggedBeforeVerify c key adversary}[result.2.2 = true] =
+        Pr{let result ← ctxSplitRoutedFlaggedBeforeVerify c key adversary}[result.2.2 = true] := by
+      have equal := OracleComp.ProgramLogic.Relational.probEvent_output_bad_eq'
         (ctxSplitRoutedWithPrefixFlagImpl c key)
         (ctxIndependentWithPrefixFlagImpl c key)
-        (ctxSplitRouted_independent_agree_good_vcvioLegacy c key)
+        (fun query state output state' => by
+          simpa only [VCVioLegacy.probOutput_eq_prEvent] using
+            ctxSplitRouted_independent_agree_good c key query state output state')
         (ctxSplitRoutedWithPrefixFlagImpl_bad_mono c key)
         (ctxIndependentWithPrefixFlagImpl_bad_mono c key)
-        adversary.main emptyCtxIndependentTagState).symm
+        adversary.main emptyCtxIndependentTagState
+      simp only [VCVioLegacy.probEvent_eq_prEvent] at equal
+      exact equal.symm
     _ = ctxPrefixBadProbability c key adversary :=
-      ctxSplitRouted_badProbability_eq_prefixBad_vcvioLegacy c key adversary
+      ctxSplitRouted_badProbability_eq_prefixBad c key adversary
 
 theorem ctxIndependentPublicOracle_publicInputs
     (query : CtxRO.Domain) (state : CtxIndependentTagState)
@@ -222,20 +223,17 @@ theorem ctxIndependentTagFlagged_run_prefix_flag
 noncomputable def ctxIndependentPublicPrefixProbability
     (c : Pqxdh.Crypto) (key : CtxKey) (adversary : CtxAdversary) :
     ℝ≥0∞ :=
-  Pr[fun result =>
-      ∃ input ∈ result.2.publicInputs, SecretPrefixQuery key input |
-    (simulateQ (ctxIndependentTagImpl c key) adversary.main).run
-      emptyCtxIndependentTagState]
+  Pr{let result ← ((simulateQ (ctxIndependentTagImpl c key) adversary.main).run
+      emptyCtxIndependentTagState)}[∃ input ∈ result.2.publicInputs, SecretPrefixQuery key input]
 
 theorem ctxIndependent_badProbability_eq_publicPrefix
     (c : Pqxdh.Crypto) (key : CtxKey) (adversary : CtxAdversary) :
-    Pr[fun result => result.2.2 = true |
-      ctxIndependentTagFlaggedBeforeVerify c key adversary] =
+    Pr{let result ← ctxIndependentTagFlaggedBeforeVerify c key adversary}[result.2.2 = true] =
       ctxIndependentPublicPrefixProbability c key adversary := by
   unfold ctxIndependentPublicPrefixProbability
   rw [← ctxIndependentWithPrefixFlagImpl_proj_run c key adversary,
-    probEvent_map]
-  apply OracleComp.probEvent_congr' _ rfl
+    prEvent_map]
+  apply prEvent_congr_of_support
   intro result hresult
   exact ctxIndependentTagFlagged_run_prefix_flag
     c key adversary result hresult
@@ -366,10 +364,8 @@ theorem ctxDirectSampleIndependentTag_run_publicInputs_length_le_qH
 noncomputable def ctxDirectSamplePublicPrefixProbability
     (c : Pqxdh.Crypto) (key : CtxKey) (adversary : CtxAdversary) :
     ℝ≥0∞ :=
-  Pr[fun result =>
-      ∃ input ∈ result.2.publicInputs, SecretPrefixQuery key input |
-    (simulateQ (ctxDirectSampleIndependentTagImpl c key) adversary.main).run
-      emptyCtxIndependentTagState]
+  Pr{let result ← ((simulateQ (ctxDirectSampleIndependentTagImpl c key) adversary.main).run
+      emptyCtxIndependentTagState)}[∃ input ∈ result.2.publicInputs, SecretPrefixQuery key input]
 
 theorem ctxIndependentPublicPrefixProbability_eq_directSample
     (c : Pqxdh.Crypto) (key : CtxKey) (adversary : CtxAdversary) :
@@ -383,14 +379,11 @@ theorem ctxIndependentPublicPrefixProbability_eq_directSample
 theorem ctxIndependentPublicPrefixProbability_eq_directSample_of_main
     (c : Pqxdh.Crypto) (key : CtxKey) {alpha : Type}
     (main : OracleComp CtxAdversarySpec alpha) :
-    Pr[fun result : alpha × CtxIndependentTagState =>
-        ∃ input ∈ result.2.publicInputs, SecretPrefixQuery key input |
-      (simulateQ (ctxIndependentTagImpl c key) main).run
-        emptyCtxIndependentTagState] =
-      Pr[fun result : alpha × CtxIndependentTagState =>
-          ∃ input ∈ result.2.publicInputs, SecretPrefixQuery key input |
-        (simulateQ (ctxDirectSampleIndependentTagImpl c key) main).run
-          emptyCtxIndependentTagState] := by
+    Pr{let result : alpha × CtxIndependentTagState ← ((simulateQ (ctxIndependentTagImpl c key) main).run
+        emptyCtxIndependentTagState)}[∃ input ∈ result.2.publicInputs, SecretPrefixQuery key input] =
+      Pr{let result : alpha × CtxIndependentTagState ←
+          (simulateQ (ctxDirectSampleIndependentTagImpl c key) main).run
+            emptyCtxIndependentTagState}[∃ input ∈ result.2.publicInputs, SecretPrefixQuery key input] := by
   rw [ctxIndependentTagImpl_run_eq_directSample_of_main]
 
 /-- The canonical fixed-key bad event is exactly the direct game's public-prefix event. -/
@@ -403,8 +396,7 @@ theorem ctxSecretPrefixQueriedProbabilityInner_eq_directSamplePublicPrefix
         ctxPrefixBadProbability c key adversary :=
       (ctxPrefixBadProbability_eq_secretPrefixQueriedProbabilityInner
         c key adversary).symm
-    _ = Pr[fun result => result.2.2 = true |
-          ctxIndependentTagFlaggedBeforeVerify c key adversary] :=
+    _ = Pr{let result ← ctxIndependentTagFlaggedBeforeVerify c key adversary}[result.2.2 = true] :=
       (ctxIndependent_badProbability_eq_prefixBad c key adversary).symm
     _ = ctxIndependentPublicPrefixProbability c key adversary :=
       ctxIndependent_badProbability_eq_publicPrefix c key adversary
@@ -536,41 +528,47 @@ theorem ctxKey_card : Fintype.card CtxKey = 2 ^ 256 := by
 /-- A fixed vector of `qH` candidates hits an independent uniform key with probability at most `qH / |K|`. -/
 theorem probEvent_uniformKey_probeHit_le {qH : ℕ}
     (probes : CtxKeyProbes qH) :
-    Pr[fun key => CtxKeyProbeHit key probes | $ᵗ CtxKey] ≤
+    Pr{let key ← $ᵗ CtxKey}[CtxKeyProbeHit key probes] ≤
       (qH : ℝ≥0∞) * (Fintype.card CtxKey : ℝ≥0∞)⁻¹ := by
   classical
   calc
-    Pr[fun key => CtxKeyProbeHit key probes | $ᵗ CtxKey] ≤
+    Pr{let key ← $ᵗ CtxKey}[CtxKeyProbeHit key probes] ≤
         ∑ i : Fin qH,
-          Pr[fun key => probes.get i = some key | $ᵗ CtxKey] := by
-      simpa [CtxKeyProbeHit] using
-        (probEvent_exists_finset_le_sum
-          (Finset.univ : Finset (Fin qH)) ($ᵗ CtxKey)
-          (fun i key => probes.get i = some key))
+          Pr{let key ← $ᵗ CtxKey}[probes.get i = some key] := by
+      rw [prEvent_congr ($ᵗ CtxKey) (fun key => CtxKeyProbeHit key probes)
+        (fun key => ∃ i ∈ (Finset.univ : Finset (Fin qH)), probes.get i = some key)
+        (fun key => by simp [CtxKeyProbeHit])]
+      exact prEvent_exists_finset_le (Finset.univ : Finset (Fin qH)) ($ᵗ CtxKey)
+        (fun i key => probes.get i = some key)
     _ ≤ ∑ _i : Fin qH,
           (Fintype.card CtxKey : ℝ≥0∞)⁻¹ := by
       refine Finset.sum_le_sum fun i _ => ?_
       cases hprobe : probes.get i with
-      | none => simp
+      | none =>
+          rw [prEvent_eq_zero_of_forall_not ($ᵗ CtxKey)
+            (fun key : CtxKey => (none : Option CtxKey) = some key) (fun key h => by simp at h)]
+          exact zero_le
       | some candidate =>
-          simp
+          refine le_of_eq ?_
+          rw [prEvent_congr ($ᵗ CtxKey) (fun key => some candidate = some key) (fun key => key = candidate)
+              (fun key => by simp [eq_comm]),
+            SampleableType.prEvent_uniformSample_eq_singleton]
     _ = (qH : ℝ≥0∞) * (Fintype.card CtxKey : ℝ≥0∞)⁻¹ := by
       simp [Finset.sum_const, nsmul_eq_mul]
 
 /-- The random-world key-probe event costs only the `qH / |K|` guessing term. -/
 theorem modifiedNonceAeadINDDollarRandomProbe_le {qH : ℕ}
     (adversary : ModifiedNonceAeadINDDollarProbeAdversary qH) :
-    Pr[= true | modifiedNonceAeadINDDollarRandomProbeExp adversary] ≤
+    Pr{let x ← modifiedNonceAeadINDDollarRandomProbeExp adversary}[x = true] ≤
       (qH : ℝ≥0∞) * (Fintype.card CtxKey : ℝ≥0∞)⁻¹ := by
   classical
   unfold modifiedNonceAeadINDDollarRandomProbeExp
-  rw [← probEvent_eq_eq_probOutput]
-  refine probEvent_bind_le_of_forall_le (mx :=
-    (simulateQ modifiedNonceAeadINDDollarRandomImpl
-      adversary.main).run emptyModifiedNonceAeadHandlerState) ?_
-  rintro ⟨probes, state⟩ hsupport
-  rw [bind_pure_comp, probEvent_map]
-  simpa [decide_eq_true_eq] using
+  refine prEvent_bind_le_of_forall_le
+    ((simulateQ modifiedNonceAeadINDDollarRandomImpl
+      adversary.main).run emptyModifiedNonceAeadHandlerState) _ _ ?_
+  rintro ⟨probes, state⟩
+  rw [bind_pure_comp _ ($ᵗ CtxKey), prEvent_map]
+  simpa only [decide_eq_true_eq] using
     probEvent_uniformKey_probeHit_le probes
 
 /-- Fixed-key direct CTX experiment returning whether the bounded probe vector hits the key. -/
@@ -589,13 +587,14 @@ noncomputable def ctxDirectSamplePrefixProbeExpInner
 theorem ctxDirectSamplePrefixProbeExpInner_probability
     (c : Pqxdh.Crypto) (key : CtxKey) {qH qE : ℕ}
     (adversary : CtxQueryBoundedAdversary qH qE) :
-    Pr[= true | ctxDirectSamplePrefixProbeExpInner c key adversary] =
+    Pr{let x ← ctxDirectSamplePrefixProbeExpInner c key adversary}[x = true] =
       ctxDirectSamplePublicPrefixProbability c key adversary.toCtxAdversary := by
   classical
   unfold ctxDirectSamplePrefixProbeExpInner
     ctxDirectSamplePublicPrefixProbability
-  rw [← probEvent_eq_eq_probOutput, bind_pure_comp, probEvent_map]
-  apply OracleComp.probEvent_congr' _ rfl
+  rw [bind_pure_comp _ ((simulateQ (ctxDirectSampleIndependentTagImpl c key)
+      adversary.main).run emptyCtxIndependentTagState), prEvent_map]
+  apply prEvent_congr_of_support
   intro result hresult
   simpa [Function.comp_def] using
     (ctxPrefixProbeVector_hit_iff_of_length_le
@@ -643,19 +642,16 @@ theorem ctxSecretPrefixQueriedProbability_eq_directSampleProbe
     (c : Pqxdh.Crypto) {qH qE : ℕ}
     (adversary : CtxQueryBoundedAdversary qH qE) :
     ctxSecretPrefixQueriedProbability c adversary.toCtxAdversary =
-      Pr[= true | ctxDirectSamplePrefixProbeExp c adversary] := by
+      Pr{let x ← ctxDirectSamplePrefixProbeExp c adversary}[x = true] := by
   classical
-  simp only [ctxSecretPrefixQueriedProbability_vcvioLegacy]
-  unfold ctxBeforeVerifyGame
+  unfold ctxSecretPrefixQueriedProbability ctxBeforeVerifyGame
     ctxDirectSamplePrefixProbeExp
-  rw [probEvent_bind_eq_tsum, probOutput_bind_eq_tsum]
-  apply tsum_congr
-  intro key
+  rw [prEvent_bind_eq_sum_fintype, prEvent_bind_eq_sum_fintype]
+  refine Finset.sum_congr rfl fun key _ => ?_
   congr 1
   rw [ctxDirectSamplePrefixProbeExpInner_probability]
-  simpa only [ctxSecretPrefixQueriedProbabilityInner, VCVioLegacy.probEvent_eq_prEvent] using
-    ctxSecretPrefixQueriedProbabilityInner_eq_directSamplePublicPrefix
-      c key adversary.toCtxAdversary
+  exact ctxSecretPrefixQueriedProbabilityInner_eq_directSamplePublicPrefix
+    c key adversary.toCtxAdversary
 
 /-- The complete real probe reduction equals the direct experiment, including key sampling. -/
 theorem modifiedNonceAeadINDDollarRealProbeExp_reduction_eq_directSample
@@ -679,9 +675,8 @@ theorem ctxSecretPrefixQueriedProbability_eq_realProbeReduction
     (c : Pqxdh.Crypto) {qH qE : ℕ}
     (adversary : CtxQueryBoundedAdversary qH qE) :
     ctxSecretPrefixQueriedProbability c adversary.toCtxAdversary =
-      Pr[= true |
-        modifiedNonceAeadINDDollarRealProbeExp c
-          (ctxPrefixToModifiedNonceAeadINDDollarReduction adversary)] := by
+      Pr{let x ← (modifiedNonceAeadINDDollarRealProbeExp c
+          (ctxPrefixToModifiedNonceAeadINDDollarReduction adversary))}[x = true] := by
   rw [ctxSecretPrefixQueriedProbability_eq_directSampleProbe]
   rw [modifiedNonceAeadINDDollarRealProbeExp_reduction_eq_directSample]
 
@@ -697,14 +692,16 @@ theorem ctxSecretPrefixQueriedProbability_le_modifiedNonceAeadINDDollar
   let reduction := ctxPrefixToModifiedNonceAeadINDDollarReduction adversary
   calc
     ctxSecretPrefixQueriedProbability c adversary.toCtxAdversary =
-        Pr[= true | modifiedNonceAeadINDDollarRealProbeExp c reduction] := by
+        Pr{let x ← modifiedNonceAeadINDDollarRealProbeExp c reduction}[x = true] := by
       exact ctxSecretPrefixQueriedProbability_eq_realProbeReduction c adversary
-    _ ≤ Pr[= true | modifiedNonceAeadINDDollarRandomProbeExp reduction] +
+    _ ≤ Pr{let x ← modifiedNonceAeadINDDollarRandomProbeExp reduction}[x = true] +
           ENNReal.ofReal (modifiedNonceAeadINDDollarProbeAdvantage c reduction) := by
       have comparison := VCVioForward.evalDist_apply_true_le_add_ofReal_boolDistAdvantage
           (modifiedNonceAeadINDDollarRealProbeExp c reduction)
           (modifiedNonceAeadINDDollarRandomProbeExp reduction)
-      simp only [VCVioLegacy.evalDist_singleton_eq_probOutput] at comparison
+      rw [← prEvent_eq_evalDist_singleton (modifiedNonceAeadINDDollarRealProbeExp c reduction) true,
+        ← prEvent_eq_evalDist_singleton (modifiedNonceAeadINDDollarRandomProbeExp reduction) true]
+        at comparison
       exact comparison
     _ ≤ (qH : ℝ≥0∞) * (Fintype.card CtxKey : ℝ≥0∞)⁻¹ +
           ENNReal.ofReal (modifiedNonceAeadINDDollarProbeAdvantage c reduction) := by

@@ -76,7 +76,7 @@ theorem hop_bound {count : Nat} (target : Fin (count + 1))
         (modifiedNonceAeadINTCTXTAdvantage c (reduction target decode c fallback client index)).toReal := by
   have each : ∀ index ∈ Finset.range rawCount,
       modifiedNonceAeadINTCTXTAdvantage c (reduction target decode c fallback client index) ≠ ⊤ :=
-    fun index _ => probEvent_ne_top
+    fun index _ => (prEvent_ne_top _)
   have finite : (∑ index ∈ Finset.range rawCount,
       modifiedNonceAeadINTCTXTAdvantage c (reduction target decode c fallback client index)) ≠ ⊤ := by
     exact ENNReal.sum_ne_top.mpr each
@@ -88,7 +88,7 @@ theorem hop_bound {count : Nat} (target : Fin (count + 1))
         tvDist (sourceGame (realAt count target.val) decode c client)
           (sourceGame (realAt count (target.val + 1)) decode c client) := by
     unfold game
-    simpa only [ProbComp.boolDistAdvantage, evalDist_apply_singleton] using
+    simpa only [ProbComp.boolDistAdvantage, VCVioLegacy.evalDist_singleton_eq_probOutput] using
       (abs_probOutput_toReal_sub_le_tvDist
         (Prod.fst <$> sourceGame (realAt count target.val) decode c client)
         (Prod.fst <$> sourceGame (realAt count (target.val + 1)) decode c client)).trans

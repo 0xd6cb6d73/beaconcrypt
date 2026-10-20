@@ -255,37 +255,50 @@ theorem guessEvent_implies_freshHit {Result : Type} {bound : ℕ} (c : Pqxdh.Cry
 theorem honestCompletion_guess_bound {Result : Type} {bound : ℕ} (decode : RawDecoder)
     (c : Pqxdh.Crypto) (key : CtxKey) (adversary : OracleComp ReceiveSpec Result)
     (selector : Result → List.Vector (Option CtxUnclaimedAcceptance.Target) bound) :
-    Pr[GuessEvent selector | mixedCompletedLazy (honestClient decode c key adversary) ∅] ≤
+    Pr{let x ← mixedCompletedLazy (honestClient decode c key adversary) ∅}[GuessEvent selector x] ≤
       (bound : ℝ≥0∞) / (2 ^ 512 : ℕ) := by
-  let : MeasurableSpace CtxDigest := ⊤
-  let : DiscreteMeasurableSpace CtxDigest := ⟨fun _ => by simp⟩
   unfold mixedCompletedLazy
-  apply probEvent_bind_le_of_forall_le
-  intro result supported
+  generalize sampled : ($ᵗ (Suffix → CtxDigest) : ProbComp (Suffix → CtxDigest)) = sample
+  have step : ∀ {X Q T Y : Type} (run : ProbComp (X × Q)) (draw : ProbComp T) (extend : Q → T → Y)
+      (event : Y × X → Prop) (ε : ℝ≥0∞),
+      (∀ result ∈ support run, Pr{let tail ← draw}[event (extend result.2 tail, result.1)] ≤ ε) →
+      Pr{let x ← run >>= fun result => draw >>= fun tail => pure (extend result.2 tail, result.1)}[event x] ≤
+        ε := by
+    intro X Q T Y run draw extend event ε bound
+    refine prEvent_bind_le_of_forall_le_of_support run _ event fun result supported => ?_
+    rw [bind_pure_comp _ draw, prEvent_map]
+    exact bound result supported
+  have mono : ∀ {T C X E : Type} {n : ℕ} (draw : ProbComp T) (extend : C → T → T) (cache : C) (res : X)
+      (event : T × X → Prop) (fresh : C → T → E → Prop) (cands : List.Vector E n),
+      (∀ tail ∈ support draw, event (extend cache tail, res) →
+        ∃ index : Fin n, fresh cache (extend cache tail) (cands.get index)) →
+      Pr{let tail ← draw}[event (extend cache tail, res)] ≤
+        Pr{let tail ← draw}[∃ index : Fin n, fresh cache (extend cache tail) (cands.get index)] :=
+    fun draw _ _ _ _ _ _ implied => prEvent_mono_of_support draw _ _ implied
+  refine step _ sample tableExtending (GuessEvent selector) _ fun result supported => ?_
   obtain ⟨aligned, invariant⟩ := honestClient_cache_invariant decode c key adversary result supported
-  simp only [bind_pure_comp, probEvent_map, Function.comp_def]
   calc
-    _ ≤ Pr[(fun tail : Suffix → CtxDigest => ∃ index : Fin bound,
+    _ ≤ Pr{let tail ← sample}[∃ index : Fin bound,
         JointTableFreshCandidates.FreshHit result.2 (tableExtending result.2 tail)
-          ((candidates selector result.1).get index)) | $ᵗ (Suffix → CtxDigest)] := by
-      apply probEvent_mono
-      intro tail _ won
-      exact guessEvent_implies_freshHit c key selector result invariant aligned tail won
-    _ ≤ (bound : ℝ≥0∞) * (Nat.card CtxDigest : ℝ≥0∞)⁻¹ :=
-      JointTableFreshCandidates.fixed_vector_bound_vcvioLegacy result.2 (candidates selector result.1)
+          ((candidates selector result.1).get index)] :=
+      mono sample tableExtending result.2 result.1 (GuessEvent selector) JointTableFreshCandidates.FreshHit
+        (candidates selector result.1) fun tail _ won =>
+          guessEvent_implies_freshHit c key selector result invariant aligned tail won
+    _ ≤ (bound : ℝ≥0∞) * (Nat.card CtxDigest : ℝ≥0∞)⁻¹ := by
+      subst sampled
+      let : MeasurableSpace CtxDigest := ⊤
+      let : DiscreteMeasurableSpace CtxDigest := ⟨fun _ => by simp⟩
+      exact JointTableFreshCandidates.fixed_vector_bound result.2 (candidates selector result.1)
     _ = _ := by rw [Nat.card_eq_fintype_card, ctxDigest_card, div_eq_mul_inv]
 
 /-- The actual replay-only source, including every earlier rejected private lookup and complete cache, obeys the same final-vector bound through the checked SAME-table reconstruction. No public-HKDF table or extra primitive security premise is used. -/
 theorem completedSource_guess_bound {Result : Type} {bound : ℕ} (decode : RawDecoder)
     (c : Pqxdh.Crypto) (key : CtxKey) (adversary : OracleComp ReceiveSpec Result)
     (selector : Result → List.Vector (Option CtxUnclaimedAcceptance.Target) bound) :
-    Pr[GuessEvent selector | completedSource decode c key adversary AdaptiveCtxReceive.initialState] ≤
+    Pr{let x ← completedSource decode c key adversary AdaptiveCtxReceive.initialState}[GuessEvent selector x] ≤
       (bound : ℝ≥0∞) / (2 ^ 512 : ℕ) := by
-  have same := OracleComp.probEvent_congr' (fun _ _ => Iff.rfl)
-    (completedSource_eq_honestCompletion decode c key adversary)
-      (p := GuessEvent selector) (q := GuessEvent selector)
-  rw [same]
-  simp only [probEvent_map]
+  rw [(completedSource_eq_honestCompletion decode c key adversary).prEvent_eq (GuessEvent selector),
+    prEvent_map]
   exact honestCompletion_guess_bound decode c key adversary selector
 
 end BeaconcryptCore.Computational.AdaptiveCtxHonestCache

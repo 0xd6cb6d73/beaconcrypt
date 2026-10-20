@@ -82,47 +82,58 @@ noncomputable def loggedProbeExp {Result : Type} (decode : AdaptiveCtxReceive.Ra
 
 theorem loggedProbeExp_probability {Result : Type} (decode : AdaptiveCtxReceive.RawDecoder)
     (c : Pqxdh.Crypto) (adversary : OracleComp AdaptiveCtxReceive.ReceiveSpec Result) (qHash : ℕ) :
-    Pr[= true | loggedProbeExp decode c adversary qHash] =
-      Pr[ProbeEvent qHash | retainedLoggedGame decode c adversary] := by
+    Pr{let x ← loggedProbeExp decode c adversary qHash}[x = true] =
+      Pr{let x ← retainedLoggedGame decode c adversary}[ProbeEvent qHash x] := by
   classical
-  rw [← probEvent_eq_eq_probOutput]
-  simp only [loggedProbeExp, retainedLoggedGame, probEvent_bind_eq_tsum,
-    probEvent_pure, decide_eq_true_eq]
+  unfold loggedProbeExp retainedLoggedGame
+  rw [prEvent_bind_eq_sum_fintype, prEvent_bind_eq_sum_fintype]
+  refine Finset.sum_congr rfl fun key _ => ?_
+  congr 1
+  conv_lhs => rw [bind_pure_comp _ ((simulateQ (modifiedNonceAeadINTCTXTImpl c key)
+      (sourceClient decode adversary)).run emptyModifiedNonceAeadHandlerState), prEvent_map]
+  conv_rhs => rw [bind_pure_comp _ ((simulateQ (modifiedNonceAeadINTCTXTImpl c key)
+      (sourceClient decode adversary)).run emptyModifiedNonceAeadHandlerState), prEvent_map]
+  simp only [decide_eq_true_eq]
 
 /-- Each fixed candidate vector has at most qHash false validation matches in the random ordinary game. Adaptive raw replies and private cache state are already part of the executed client. -/
 theorem validationReduction_random_le {Result : Type} (decode : AdaptiveCtxReceive.RawDecoder)
     (c : Pqxdh.Crypto) (adversary : OracleComp AdaptiveCtxReceive.ReceiveSpec Result) (qHash : ℕ) :
-    Pr[= true | modifiedNonceAeadINDDollarRandomExp (validationReduction decode c adversary qHash)] ≤
+    Pr{let x ← modifiedNonceAeadINDDollarRandomExp (validationReduction decode c adversary qHash)}[x = true] ≤
       (qHash : ℝ≥0∞) * (((2 ^ 128 : ℕ) : ℝ≥0∞))⁻¹ := by
-  unfold modifiedNonceAeadINDDollarRandomExp validationReduction
-  simp only [simulateQ_bind, StateT.run_bind, bind_assoc]
-  rw [← probEvent_eq_eq_probOutput]
-  simp_rw [simulateQ_queryModifiedNonceAeadSeal_random, simulateQ_pure, StateT.run_pure]
-  simp only [pure_bind]
-  refine probEvent_bind_le_of_forall_le
-    (mx := (simulateQ modifiedNonceAeadINDDollarRandomImpl
-      (sourceClient decode adversary)).run emptyModifiedNonceAeadHandlerState) ?_
-  rintro ⟨result, primitiveState⟩ _
-  simpa [probEvent_eq_eq_probOutput] using
-    randomValidationContinuation_le c
-      (chooseFreshCtxNonce (result.2.map (fun entry => entry.input.nonce)))
-      (ctxPrefixProbeVector qHash result.1.2.ctx.publicInputs) primitiveState
+  unfold modifiedNonceAeadINDDollarRandomExp
+  rw [bind_pure_comp _ ((simulateQ modifiedNonceAeadINDDollarRandomImpl
+    (validationReduction decode c adversary qHash).main).run emptyModifiedNonceAeadHandlerState),
+    prEvent_map]
+  unfold validationReduction
+  simp only [simulateQ_bind, StateT.run_bind]
+  refine prEvent_bind_le_of_forall_le _ _ _ fun result => ?_
+  rcases result with ⟨result, primitiveState⟩
+  have bound := randomValidationContinuation_le c
+    (chooseFreshCtxNonce (result.2.map (fun entry => entry.input.nonce)))
+    (ctxPrefixProbeVector qHash result.1.2.ctx.publicInputs) primitiveState
+  rw [bind_pure_comp _ ((modifiedNonceAeadINDDollarRandomSealOracle
+    (ctxValidationInput (chooseFreshCtxNonce (result.2.map (fun entry => entry.input.nonce))))).run
+      primitiveState), prEvent_map] at bound
+  simp only [simulateQ_queryModifiedNonceAeadSeal_random, simulateQ_pure, StateT.run_pure,
+    validationAccept_eq]
+  rw [bind_pure_comp _ ((modifiedNonceAeadINDDollarRandomSealOracle
+    (ctxValidationInput (chooseFreshCtxNonce (result.2.map (fun entry => entry.input.nonce))))).run
+      primitiveState), prEvent_map]
+  exact bound
 
 /-- A real key hit always validates at the constructive unused nonce. No plaintext recovered under the hidden key is inserted into any request. -/
 theorem loggedProbe_le_validationReal {Result : Type} (decode : AdaptiveCtxReceive.RawDecoder)
     (c : Pqxdh.Crypto) (adversary : OracleComp AdaptiveCtxReceive.ReceiveSpec Result)
     (qHash qSeal : ℕ) (bounded : adversary.IsQueryBoundP AdaptiveCtxQueryBounds.SourceSeal qSeal)
     (small : qSeal < 2 ^ 96) :
-    Pr[= true | loggedProbeExp decode c adversary qHash] ≤
-      Pr[= true | modifiedNonceAeadINDDollarRealExp c (validationReduction decode c adversary qHash)] := by
+    Pr{let x ← loggedProbeExp decode c adversary qHash}[x = true] ≤
+      Pr{let x ← modifiedNonceAeadINDDollarRealExp c (validationReduction decode c adversary qHash)}[x = true] := by
   unfold loggedProbeExp modifiedNonceAeadINDDollarRealExp validationReduction
-  apply probOutput_bind_mono
-  intro key _
+  refine prEvent_bind_mono_of_forall_le _ _ _ _ _ fun key => ?_
   simp only [simulateQ_bind, StateT.run_bind, bind_assoc]
   simp_rw [simulateQ_queryModifiedNonceAeadSeal, simulateQ_pure, StateT.run_pure]
   simp only [pure_bind]
-  apply probOutput_bind_mono
-  intro result supported
+  refine OracleComp.prEvent_bind_mono_of_support _ _ _ fun result supported => ?_
   by_cases hit : ProbeEvent qHash (key, result.1.1)
   · have fresh := sourceClient_validation_fresh decode c key adversary qSeal bounded small result supported
     rw [modifiedNonceAeadSealOracle_validation_run_of_fresh c key _ result.2 fresh]
@@ -130,15 +141,15 @@ theorem loggedProbe_le_validationReal {Result : Type} (decode : AdaptiveCtxRecei
     have accepts := keyProbeHit_implies_realValidationCiphertextHit c key
       (chooseFreshCtxNonce (result.1.2.map (fun entry => entry.input.nonce)))
       (ctxPrefixProbeVector qHash result.1.1.2.ctx.publicInputs) hit
-    simp [hit, ctxValidationAccept, accepts]
-  · simp [hit]
+    simp [hit, ctxValidationAccept, accepts, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+  · simp [hit, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
 
 /-- The logged source's candidate-hit event has an ordinary conventional IND$ reduction and an explicit 128-bit validation term. -/
 theorem loggedProbe_le_indDollar {Result : Type} (decode : AdaptiveCtxReceive.RawDecoder)
     (c : Pqxdh.Crypto) (adversary : OracleComp AdaptiveCtxReceive.ReceiveSpec Result)
     (qHash qSeal : ℕ) (bounded : adversary.IsQueryBoundP AdaptiveCtxQueryBounds.SourceSeal qSeal)
     (small : qSeal < 2 ^ 96) :
-    Pr[ProbeEvent qHash | retainedLoggedGame decode c adversary] ≤
+    Pr{let x ← retainedLoggedGame decode c adversary}[ProbeEvent qHash x] ≤
       ENNReal.ofReal (modifiedNonceAeadINDDollarAdvantage c (validationReduction decode c adversary qHash)) +
         (qHash : ℝ≥0∞) * (((2 ^ 128 : ℕ) : ℝ≥0∞))⁻¹ := by
   rw [← loggedProbeExp_probability]
@@ -146,7 +157,11 @@ theorem loggedProbe_le_indDollar {Result : Type} (decode : AdaptiveCtxReceive.Ra
   have comparison := VCVioForward.evalDist_apply_true_le_add_ofReal_boolDistAdvantage
     (modifiedNonceAeadINDDollarRealExp c (validationReduction decode c adversary qHash))
     (modifiedNonceAeadINDDollarRandomExp (validationReduction decode c adversary qHash))
-  simp only [VCVioLegacy.evalDist_singleton_eq_probOutput] at comparison
+  rw [← prEvent_eq_evalDist_singleton
+      (modifiedNonceAeadINDDollarRealExp c (validationReduction decode c adversary qHash)) true,
+    ← prEvent_eq_evalDist_singleton
+      (modifiedNonceAeadINDDollarRandomExp (validationReduction decode c adversary qHash)) true]
+    at comparison
   exact comparison.trans (by
     rw [add_comm]
     exact add_le_add le_rfl (validationReduction_random_le decode c adversary qHash))
@@ -154,36 +169,40 @@ theorem loggedProbe_le_indDollar {Result : Type} (decode : AdaptiveCtxReceive.Ra
 /-- Any fixed terminal event can be transported across full-state total variation without exposing the retained state to the adversary. -/
 theorem probEvent_le_add_ofReal_tvDist {Result : Type} (left right : ProbComp Result)
     (event : Result → Prop) :
-    Pr[event | left] ≤ Pr[event | right] + ENNReal.ofReal (tvDist left right) := by
+    Pr{let x ← left}[event x] ≤ Pr{let x ← right}[event x] + ENNReal.ofReal (tvDist left right) := by
   classical
   let decideEvent := fun result => decide (event result)
   have comparison := VCVioForward.evalDist_apply_true_le_add_ofReal_boolDistAdvantage
     (decideEvent <$> left) (decideEvent <$> right)
-  simp only [VCVioLegacy.evalDist_singleton_eq_probOutput] at comparison
+  rw [← prEvent_eq_evalDist_singleton (decideEvent <$> left) true,
+    ← prEvent_eq_evalDist_singleton (decideEvent <$> right) true, prEvent_map, prEvent_map] at comparison
   have variation : (decideEvent <$> left).boolDistAdvantage (decideEvent <$> right) ≤ tvDist left right := by
     rw [ProbComp.boolDistAdvantage]
-    simpa only [evalDist_apply_singleton] using
+    simpa only [VCVioLegacy.evalDist_singleton_eq_probOutput] using
       (abs_probOutput_toReal_sub_le_tvDist _ _).trans (tvDist_map_le decideEvent left right)
   calc
-    Pr[event | left] ≤ Pr[event | right] +
+    Pr{let x ← left}[event x] ≤ Pr{let x ← right}[event x] +
         ENNReal.ofReal ((decideEvent <$> left).boolDistAdvantage (decideEvent <$> right)) := by
-      simpa only [← probEvent_eq_eq_probOutput, probEvent_map, Function.comp_def,
-        decideEvent, decide_eq_true_eq] using comparison
+      simpa only [decideEvent, decide_eq_true_eq] using comparison
     _ ≤ _ := add_le_add le_rfl (ENNReal.ofReal_le_ofReal variation)
+
+set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.AdaptiveCtxPrefixValidation.probEvent_le_add_ofReal_tvDist_vcvioLegacy :
+    ∀ {Result : Type} (left right : ProbComp Result) (event : Result → Prop), probEvent left event ≤ probEvent right event + ENNReal.ofReal (tvDist left right) :=
+  by simpa only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent] using @BeaconcryptCore.Computational.AdaptiveCtxPrefixValidation.probEvent_le_add_ofReal_tvDist
 
 /-- Only the actual independent source run needs a trace-length theorem. The fixed candidate-vector event can then be transported unchanged to the logged world. -/
 theorem independent_prefix_eq_probe {Result : Type} (decode : AdaptiveCtxReceive.RawDecoder)
     (c : Pqxdh.Crypto) (adversary : OracleComp AdaptiveCtxReceive.ReceiveSpec Result)
     (qHash : ℕ) (bounded : adversary.IsQueryBoundP AdaptiveCtxQueryBounds.SourceHash qHash) :
-    Pr[AdaptiveCtxPrefix.RetainedPrefix | AdaptiveCtxRetainedKey.retainedIndependentGame decode c adversary] =
-      Pr[ProbeEvent qHash | AdaptiveCtxRetainedKey.retainedIndependentGame decode c adversary] := by
+    Pr{let x ← AdaptiveCtxRetainedKey.retainedIndependentGame decode c adversary}[AdaptiveCtxPrefix.RetainedPrefix x] =
+      Pr{let x ← AdaptiveCtxRetainedKey.retainedIndependentGame decode c adversary}[ProbeEvent qHash x] := by
   unfold AdaptiveCtxRetainedKey.retainedIndependentGame
-  rw [probEvent_bind_eq_tsum, probEvent_bind_eq_tsum]
-  apply tsum_congr
-  intro key
+  rw [prEvent_bind_eq_sum_fintype, prEvent_bind_eq_sum_fintype]
+  refine Finset.sum_congr rfl fun key _ => ?_
   congr 1
-  simp only [bind_pure_comp, probEvent_map]
-  apply OracleComp.probEvent_congr' _ rfl
+  rw [bind_pure_comp _ (AdaptiveCtxIndependent.independentGame decode c key adversary), prEvent_map,
+    prEvent_map]
+  apply prEvent_congr_of_support
   intro result supported
   exact (AdaptiveCtxPrefix.independentGame_prefix_probe_iff decode c key adversary qHash bounded result supported).symm
 
@@ -196,7 +215,7 @@ theorem independent_prefix_le_indDollar_add_intctxt {Result : Type}
     (sealBound : adversary.IsQueryBoundP AdaptiveCtxQueryBounds.SourceSeal qSeal)
     (rawBound : adversary.IsQueryBoundP AdaptiveCtxReceive.IsRawQuery qRaw)
     (small : qSeal < 2 ^ 96) :
-    Pr[AdaptiveCtxPrefix.RetainedPrefix | AdaptiveCtxRetainedKey.retainedIndependentGame decode c adversary] ≤
+    Pr{let x ← AdaptiveCtxRetainedKey.retainedIndependentGame decode c adversary}[AdaptiveCtxPrefix.RetainedPrefix x] ≤
       ENNReal.ofReal (modifiedNonceAeadINDDollarAdvantage c (validationReduction decode c adversary qHash)) +
         (qHash : ℝ≥0∞) * (((2 ^ 128 : ℕ) : ℝ≥0∞))⁻¹ +
           ∑ index ∈ Finset.range qRaw, modifiedNonceAeadINTCTXTAdvantage c
@@ -211,6 +230,10 @@ theorem independent_prefix_le_indDollar_add_intctxt {Result : Type}
   · rw [retainedLoggedGame_eq]
     exact AdaptiveCtxRetainedKey.retainedIndependentGame_distance_le_intctxt_sum
       decode c fallback adversary qRaw rawBound
+
+set_option linter.deprecated false in set_option linter.unusedVariables false in theorem _root_.BeaconcryptCore.Computational.AdaptiveCtxPrefixValidation.independent_prefix_le_indDollar_add_intctxt_vcvioLegacy :
+    ∀ {Result : Type} (decode : BeaconcryptCore.Computational.AdaptiveCtxReceive.RawDecoder) (c : Pqxdh.Crypto) (fallback : BeaconcryptCore.Computational.CtxNonceAeadIntCtxt.ModifiedNonceAeadForgery) (adversary : OracleComp.{0, 0, 0} BeaconcryptCore.Computational.AdaptiveCtxReceive.ReceiveSpec Result) (qHash qSeal qRaw : ℕ) (hashBound : OracleComp.IsQueryBoundP.{0} adversary BeaconcryptCore.Computational.AdaptiveCtxQueryBounds.SourceHash qHash) (sealBound : OracleComp.IsQueryBoundP.{0} adversary BeaconcryptCore.Computational.AdaptiveCtxQueryBounds.SourceSeal qSeal) (rawBound : OracleComp.IsQueryBoundP.{0} adversary BeaconcryptCore.Computational.AdaptiveCtxReceive.IsRawQuery qRaw) (small : LT.lt.{0} qSeal (HPow.hPow.{0, 0, 0} 2 96)), LE.le.{0} (probEvent.{0, 0} (BeaconcryptCore.Computational.AdaptiveCtxRetainedKey.retainedIndependentGame decode c adversary) BeaconcryptCore.Computational.AdaptiveCtxPrefix.RetainedPrefix) (HAdd.hAdd.{0, 0, 0} (HAdd.hAdd.{0, 0, 0} (ENNReal.ofReal (BeaconcryptCore.Computational.CtxNonceAeadIndDollarValidation.modifiedNonceAeadINDDollarAdvantage c (BeaconcryptCore.Computational.AdaptiveCtxPrefixValidation.validationReduction decode c adversary qHash))) (HMul.hMul.{0, 0, 0} (↑qHash) (Inv.inv.{0} ↑(HPow.hPow.{0, 0, 0} 2 128)))) (∑ index ∈ Finset.range qRaw, BeaconcryptCore.Computational.CtxNonceAeadIntCtxt.modifiedNonceAeadINTCTXTAdvantage c (BeaconcryptCore.Computational.AdaptiveRawNonceAead.indexedReduction (BeaconcryptCore.Computational.AdaptiveCtxReceive.baseDecoder decode) fallback (BeaconcryptCore.Computational.AdaptiveCtxReceive.wrapped decode adversary) index))) :=
+  by simpa only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent] using @BeaconcryptCore.Computational.AdaptiveCtxPrefixValidation.independent_prefix_le_indDollar_add_intctxt
 
 /-- Canonical routed CTX and the executable ordinary log/reject source client now share a conventional primitive bound. The factor two explicitly retains the integrity cost of both full-transcript replacement and prefix-event transfer. -/
 theorem routed_distance_le_indDollar_add_two_intctxt {Result : Type}

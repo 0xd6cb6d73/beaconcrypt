@@ -994,7 +994,7 @@ theorem keyLoss_ne_top (decode : RawDecoder) (c : Pqxdh.Crypto) (fallback : Modi
   unfold keyLoss
   refine ENNReal.mul_ne_top (by norm_num) (ENNReal.add_ne_top.mpr ⟨ENNReal.add_ne_top.mpr ⟨ENNReal.ofReal_ne_top, ?_⟩, ?_⟩)
   · exact ENNReal.mul_ne_top (ENNReal.natCast_ne_top _) (ENNReal.inv_ne_top.mpr (by positivity))
-  · exact ENNReal.sum_ne_top.mpr fun index _ => probEvent_ne_top
+  · exact ENNReal.sum_ne_top.mpr fun index _ => prEvent_ne_top _
 
 /-- `key_bound`: the key-disclosure game of the first Beacon record (in the key-last run, the first-record event and no hidden disclosure hold while the uniform record key equals a revealed value) is at most the CTX key-recovery loss `recoveryLoss` of the constructed candidate client, the initial half-alias term `2^-256` and the nonce-repeat stop bound of `PqxdhFirstRecordStopTagged.stop_bound`. -/
 theorem key_bound (post : PqxdhAuthenticatedRootExperiment.Post (baseSpec := baseSpec) program.Selection S (B + 1)) (b : Fin (B + 1))

@@ -47,7 +47,7 @@ theorem actual_eq_total
       𝒟[nativeContinued attachedVerify primitives baseImpl kem setup (driver env.toDriverEnvironment program)
         (PqxdhInitialRootEventExperiment.totalNext env baseImpl kem attachedVerify primitives program post accepted) false] := by
   apply evalDist_eq_of_evalSPMF_eq
-  rw [actual, nativeContinued_keyfirst, nativeContinued_keyfirst]
+  rw [actual, nativeContinued_keyfirst_vcvioLegacy, nativeContinued_keyfirst_vcvioLegacy]
   apply evalSPMF_bind_congr
   intro pair generated
   apply evalSPMF_bind_congr
@@ -115,7 +115,7 @@ theorem filtered_eq_nativeMain :
       (PqxdhInitialRootEventExperiment.filteredNext env baseImpl kem attachedVerify primitives program post accepted) false] =
       𝒟[nativeMain env baseImpl kem attachedVerify primitives program post accepted] := by
   apply evalDist_eq_of_evalSPMF_eq
-  rw [nativeContinued_keyfirst]
+  rw [nativeContinued_keyfirst_vcvioLegacy]
   simp only [nativeMain, protocol, PqxdhAuthenticatedRootExperiment.protocol, evalKem_bind, bind_assoc]
   apply evalSPMF_bind_congr'
   intro pair

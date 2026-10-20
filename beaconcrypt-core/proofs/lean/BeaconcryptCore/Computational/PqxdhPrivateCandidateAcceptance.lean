@@ -129,18 +129,18 @@ theorem origin_advantage_bound {Context : Type}
     (fallback : DynamicForgery) (ordinaryFallback : Forgery)
     (creates : (candidateProgram before).IsQueryBoundP
       (fun query => IsSourceClass (SourceClass IsCreate) (translated query)) (count + 1)) :
-    Pr[OriginEvent primitives | privateRun attachedVerify primitives (count + 1) (candidateProgram before)] ≤
+    Pr{let x ← privateRun attachedVerify primitives (count + 1) (candidateProgram before)}[OriginEvent primitives x] ≤
       ∑ target : Fin (count + 1), advantage primitives
         (globalReduction primitives target ordinaryFallback
           (routedAdversary count ordinaryFallback
             (reportExtractor primitives (count + 1) fallback
               (routedClient primitives (count + 1) (instrumentedClient primitives
                 ((simulateQ compile (candidateProgram before)).run [])))))) := by
-  rw [privateRun_eq, ← actualRun_erase, probEvent_map, probEvent_map]
-  have detected := probEvent_mono (fun result supported event =>
-    compiledCandidate_recorded attachedVerify primitives adapter (count + 1) before result supported event)
-  exact detected.trans (acceptance_advantage_le_sum_vcvioLegacy attachedVerify primitives adapter count _ fallback ordinaryFallback
-    (compile_bound (candidateProgram before) _ (count + 1) creates []))
+  rw [privateRun_eq, ← actualRun_erase, prEvent_map, prEvent_map]
+  exact (prEvent_mono_of_support _ _ _ (fun result supported event =>
+    compiledCandidate_recorded attachedVerify primitives adapter (count + 1) before result supported event)).trans
+    (acceptance_advantage_le_sum attachedVerify primitives adapter count _ fallback ordinaryFallback
+      (compile_bound (candidateProgram before) _ (count + 1) creates []))
 
 end BeaconcryptCore.Computational.PqxdhPrivateCandidateAcceptance
 

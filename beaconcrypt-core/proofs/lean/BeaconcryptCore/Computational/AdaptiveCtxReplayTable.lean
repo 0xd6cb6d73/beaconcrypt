@@ -57,14 +57,13 @@ theorem completedSource_eq_mixed {Result : Type} (decode : RawDecoder) (c : Pqxd
     (key : CtxKey) (adversary : OracleComp ReceiveSpec Result)
     (state : AdaptiveCtxReceive.ReceiveState) (dictionary : PrivateSpec.QueryCache)
     (aligned : DictionaryAligned state.ctx.cache dictionary) :
-    𝒮[completedSource decode c key adversary state] =
-      𝒮[mixedCompletedLazy ((simulateQ (abstractImpl decode c key) adversary).run state) dictionary] := by
+    EvalDistEq (completedSource decode c key adversary state)
+      (mixedCompletedLazy ((simulateQ (abstractImpl decode c key) adversary).run state) dictionary) := by
   unfold completedSource mixedCompletedLazy
   rw [← abstractRun_projection decode c key adversary state dictionary aligned]
   simp only [bind_map_left]
   rw [← lazyDictionary_eq_mixed]
-  apply evalSPMF_bind_congr
-  intro result supported
+  refine OracleComp.EvalDistEq.bind_congr_of_support _ fun result supported => ?_
   have same := abstractRun_dictionary decode c key adversary state dictionary aligned result supported
   rw [same]
 
@@ -78,32 +77,37 @@ noncomputable def tableRun {Result : Type} (decode : RawDecoder) (c : Pqxdh.Cryp
 theorem completedSource_eq_eager {Result : Type} (decode : RawDecoder) (c : Pqxdh.Crypto)
     (key : CtxKey) (adversary : OracleComp ReceiveSpec Result)
     (state : AdaptiveCtxReceive.ReceiveState) :
-    𝒮[completedSource decode c key adversary state] =
-      𝒮[do
+    EvalDistEq (completedSource decode c key adversary state)
+      (do
         let tail ← $ᵗ (Suffix → CtxDigest)
         let table := tableExtending (sourceDictionary state) tail
         let result ← tableRun decode c key table adversary state
-        pure (table, result)] := by
-  rw [completedSource_eq_mixed decode c key adversary state (sourceDictionary state) (fun _ => rfl)]
+        pure (table, result)) := by
+  refine (completedSource_eq_mixed decode c key adversary state (sourceDictionary state)
+    (fun _ => rfl)).trans ?_
   let : MeasurableSpace Result := ⊤
   let : DiscreteMeasurableSpace Result := ⟨fun _ => by simp⟩
   let : MeasurableSpace CtxDigest := ⊤
   let : DiscreteMeasurableSpace CtxDigest := ⟨fun _ => by simp⟩
   let : MeasurableSpace AdaptiveCtxReceive.ReceiveState := ⊤
   let : DiscreteMeasurableSpace AdaptiveCtxReceive.ReceiveState := ⟨fun _ => by simp⟩
-  exact evalSPMF_eq_of_evalDist_eq _ _ (mixedCompletedLazy_eq_eager _ _)
+  have ofMeasure : ∀ mx my : ProbComp ((Suffix → CtxDigest) × (Result × AdaptiveCtxReceive.ReceiveState)),
+      𝒟[mx] = 𝒟[my] → EvalDistEq mx my := fun mx my same =>
+    OracleComp.evalDistEq_of_forall_prEvent_eq_output fun output => by
+      rw [prEvent_eq_evalDist_singleton, prEvent_eq_evalDist_singleton, same]
+  exact ofMeasure _ _ (mixedCompletedLazy_eq_eager _ _)
 
 /-- Fresh-source specialization: one uniformly reserved private table retains its joint law with all actual source state, adaptive replies, logs and explicit coins. -/
 theorem completedSource_initial_eq_uniform {Result : Type} (decode : RawDecoder) (c : Pqxdh.Crypto)
     (key : CtxKey) (adversary : OracleComp ReceiveSpec Result) :
-    𝒮[completedSource decode c key adversary AdaptiveCtxReceive.initialState] =
-      𝒮[do
+    EvalDistEq (completedSource decode c key adversary AdaptiveCtxReceive.initialState)
+      (do
         let table ← $ᵗ (Suffix → CtxDigest)
         let result ← tableRun decode c key table adversary AdaptiveCtxReceive.initialState
-        pure (table, result)] := by
-  rw [completedSource_eq_eager]
+        pure (table, result)) := by
+  refine (completedSource_eq_eager decode c key adversary _).trans ?_
   have empty : sourceDictionary AdaptiveCtxReceive.initialState = (∅ : PrivateSpec.QueryCache) := rfl
-  simp only [empty, tableExtending_empty]
+  simp only [empty, tableExtending_empty, EvalDistEq.refl]
 
 /-- Reconstruct every private cache entry from its actual query history and the same fixed table. Repeated addresses remain the same sampled cell. Invalid-width entries are absent from the fresh-source interface. -/
 def tracedSuffixCache (table : Suffix → CtxDigest) : List Pqxdh.Bytes → CtxSuffixRO.QueryCache
@@ -251,26 +255,32 @@ def restoreTerminal {Result : Type} (terminal : (Suffix → CtxDigest) × (Resul
 /-- The actual completed replay-only source is exactly the completed honest-sealing dictionary client followed by full-cache reconstruction, including every failed raw lookup. -/
 theorem completedSource_eq_honestCompletion {Result : Type} (decode : RawDecoder) (c : Pqxdh.Crypto)
     (key : CtxKey) (adversary : OracleComp ReceiveSpec Result) :
-    𝒮[completedSource decode c key adversary AdaptiveCtxReceive.initialState] =
-      𝒮[restoreTerminal <$> mixedCompletedLazy (honestClient decode c key adversary) ∅] := by
-  rw [completedSource_initial_eq_uniform]
+    EvalDistEq (completedSource decode c key adversary AdaptiveCtxReceive.initialState)
+      (restoreTerminal <$> mixedCompletedLazy (honestClient decode c key adversary) ∅) := by
+  refine (completedSource_initial_eq_uniform decode c key adversary).trans ?_
   let : MeasurableSpace Result := ⊤
   let : DiscreteMeasurableSpace Result := ⟨fun _ => by simp⟩
   let : MeasurableSpace CtxDigest := ⊤
   let : DiscreteMeasurableSpace CtxDigest := ⟨fun _ => by simp⟩
   let : MeasurableSpace AdaptiveCtxReceive.ReceiveState := ⊤
   let : DiscreteMeasurableSpace AdaptiveCtxReceive.ReceiveState := ⟨fun _ => by simp⟩
-  have reserved := evalSPMF_map_eq_of_evalSPMF_eq
-    (evalSPMF_eq_of_evalDist_eq _ _
-      (mixedCompletedLazy_empty_eq_uniform (honestClient decode c key adversary))) restoreTerminal
-  rw [reserved]
+  have reserved : EvalDistEq (mixedCompletedLazy (honestClient decode c key adversary) ∅)
+      (do
+        let table ← $ᵗ (Suffix → CtxDigest)
+        let result ← simulateQ (mixedEagerImpl table) (honestClient decode c key adversary)
+        pure (table, result)) := by
+    have ofMeasure : ∀ mx my : ProbComp ((Suffix → CtxDigest) × (Result × AdaptiveCtxReceive.ReceiveState)),
+        𝒟[mx] = 𝒟[my] → EvalDistEq mx my := fun mx my same =>
+      OracleComp.evalDistEq_of_forall_prEvent_eq_output fun output => by
+        rw [prEvent_eq_evalDist_singleton, prEvent_eq_evalDist_singleton, same]
+    exact ofMeasure _ _ (mixedCompletedLazy_empty_eq_uniform _)
+  refine EvalDistEq.trans ?_ (reserved.map restoreTerminal).symm
   simp only [map_bind, bind_pure_comp, Functor.map_map]
-  apply evalSPMF_bind_congr'
-  intro table
+  refine EvalDistEq.bind_right _ fun table => ?_
   have reconstructed := honestRun_restore decode c key table adversary AdaptiveCtxReceive.initialState
   rw [restorePrivate_initial] at reconstructed
   rw [← reconstructed]
-  simp only [Functor.map_map, honestClient, restoreTerminal]
+  simp only [Functor.map_map, honestClient, restoreTerminal, EvalDistEq.refl]
 
 end BeaconcryptCore.Computational.AdaptiveCtxReplayTable
 

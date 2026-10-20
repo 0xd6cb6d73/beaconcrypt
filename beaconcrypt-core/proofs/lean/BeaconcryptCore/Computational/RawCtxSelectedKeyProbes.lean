@@ -172,14 +172,14 @@ theorem canonical_prefix_bound {Result : Type} (decode : RawDecoder) (c : Pqxdh.
     _ ≤ Pr[AdaptiveCtxPrefix.RetainedPrefix | AdaptiveCtxRetainedKey.retainedIndependentGame decode c client] +
         ENNReal.ofReal (tvDist (AdaptiveCtxPrefix.retainedRoutedGame decode c client)
           (AdaptiveCtxRetainedKey.retainedIndependentGame decode c client)) :=
-      AdaptiveCtxPrefixValidation.probEvent_le_add_ofReal_tvDist _ _ _
+      AdaptiveCtxPrefixValidation.probEvent_le_add_ofReal_tvDist_vcvioLegacy _ _ _
     _ ≤ Pr[AdaptiveCtxPrefix.RetainedPrefix | AdaptiveCtxRetainedKey.retainedIndependentGame decode c client] +
         Pr[AdaptiveCtxPrefix.RetainedPrefix | AdaptiveCtxRetainedKey.retainedIndependentGame decode c client] := by
       apply add_le_add le_rfl
-      exact (ENNReal.ofReal_le_ofReal (AdaptiveCtxPrefix.retainedRoutedGame_distance_le_prefix decode c client)).trans_eq
+      exact (ENNReal.ofReal_le_ofReal (AdaptiveCtxPrefix.retainedRoutedGame_distance_le_prefix_vcvioLegacy decode c client)).trans_eq
         (ENNReal.ofReal_toReal probEvent_ne_top)
     _ = 2 * Pr[AdaptiveCtxPrefix.RetainedPrefix | AdaptiveCtxRetainedKey.retainedIndependentGame decode c client] := (two_mul _).symm
-    _ ≤ _ := mul_le_mul_right (AdaptiveCtxPrefixValidation.independent_prefix_le_indDollar_add_intctxt
+    _ ≤ _ := mul_le_mul_right (AdaptiveCtxPrefixValidation.independent_prefix_le_indDollar_add_intctxt_vcvioLegacy
       decode c fallback client qHash qSeal qRaw hashBound sealBound rawBound small) 2
 
 /-- Candidate equality is tested only as a retained-key analysis event. -/

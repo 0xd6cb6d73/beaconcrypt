@@ -244,14 +244,14 @@ theorem changed_advantage_bound
     (fallback : DynamicForgery) (ordinaryFallback : Forgery)
     (creates : (program baseImpl kem setup selector).IsQueryBoundP
       (fun query => IsSourceClass (SourceClass IsCreate) (translated query)) (count + 1)) :
-    Pr[Changed | privateRun attachedVerify primitives (count + 1) (program baseImpl kem setup selector)] ≤
+    Pr{let x ← privateRun attachedVerify primitives (count + 1) (program baseImpl kem setup selector)}[Changed x] ≤
       ∑ target : Fin (count + 1), advantage primitives
         (globalReduction primitives target ordinaryFallback
           (routedAdversary count ordinaryFallback
             (reportExtractor primitives (count + 1) fallback
               (routedClient primitives (count + 1) (instrumentedClient primitives
                 ((simulateQ compile (program baseImpl kem setup selector)).run [])))))) := by
-  exact (probEvent_mono (fun result supported changed =>
+  exact (prEvent_mono_of_support _ _ _ (fun result supported changed =>
     changed_origin attachedVerify primitives adapter count baseImpl kem setup selector noSign result supported changed)).trans
     (origin_advantage_bound attachedVerify primitives adapter count
       (beforeCandidate baseImpl kem setup selector) fallback ordinaryFallback creates)
@@ -371,14 +371,14 @@ theorem authentication_bound
     (selectorNoCreate : ∀ publicTranscript, (selector.main publicTranscript).IsQueryBoundP
       (SelectorSource (baseSpec := baseSpec) Creating) 0)
     (fallback : DynamicForgery) (ordinaryFallback : Forgery) :
-    Pr[Changed | privateRun attachedVerify primitives 1 (program baseImpl kem setup selector)] ≤
+    Pr{let x ← privateRun attachedVerify primitives 1 (program baseImpl kem setup selector)}[Changed x] ≤
       advantage primitives (privateReduction primitives baseImpl kem setup selector fallback ordinaryFallback) := by
   have bounded := changed_advantage_bound attachedVerify primitives adapter 0 baseImpl kem setup selector
     (fun secret publicTranscript => localSelector_source_bound baseImpl kem secret (selector.main publicTranscript)
       IsSigning (fun _ => by simp [IsSigning, dynamicClass, IsClass]) 0 (selectorNoSign publicTranscript))
     fallback ordinaryFallback (program_create_bound baseImpl kem setup selector selectorNoCreate)
   rw [Fin.sum_univ_succ] at bounded
-  simpa [privateReduction] using bounded
+  simpa [privateReduction, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ] using bounded
 
 /-- Executable test for precisely the charged fresh changed acceptance branch. -/
 def changedBit {setup : StatefulPhase1Setup baseSpec} {Selection : Type} {count : Nat}
@@ -441,6 +441,7 @@ theorem authentication_continuation_bound {Result : Type}
       (advantage primitives (privateReduction primitives baseImpl kem setup selector fallback ordinaryFallback)).toReal := by
   refine (tvDist_bind_left_event_le (privateRun attachedVerify primitives 1 (program baseImpl kem setup selector))
     next _ (fun state => changedBit state = true) (fun state good => by simp [good])).trans ?_
+  rw [VCVioLegacy.probEvent_eq_prEvent]
   apply ENNReal.toReal_mono (show advantage primitives
     (privateReduction primitives baseImpl kem setup selector fallback ordinaryFallback) ≠ ∞ from prEvent_ne_top _)
   simpa only [changedBit_iff] using authentication_bound attachedVerify primitives adapter baseImpl kem setup selector

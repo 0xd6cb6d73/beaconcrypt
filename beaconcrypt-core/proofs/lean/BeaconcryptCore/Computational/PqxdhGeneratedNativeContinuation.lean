@@ -34,11 +34,11 @@ theorem nativeContinued_keyfirst {Result : Type}
     (setup : StatefulPhase1Setup baseSpec) (driver : Driver setup)
     (next : KemSK → Outcome (Retained setup Unit driver.State) × BareState 1 → ProbComp Result)
     (fallback : Result) :
-    𝒮[nativeContinued attachedVerify primitives baseImpl kem setup driver next fallback] =
-      𝒮[do let pair ← simulateQ (kemAmbientImpl baseImpl) kem.keygen
-           let prepared ← evalKem baseImpl kem pair.2
-             (borrowedPrefix attachedVerify primitives setup driver pair.1)
-           next pair.2 prepared] := by
+    EvalDistEq (nativeContinued attachedVerify primitives baseImpl kem setup driver next fallback)
+      (do let pair ← simulateQ (kemAmbientImpl baseImpl) kem.keygen
+          let prepared ← evalKem baseImpl kem pair.2
+            (borrowedPrefix attachedVerify primitives setup driver pair.1)
+          next pair.2 prepared) := by
   have commute := generators_complete_continuation baseImpl primitives kem setup
     (fun seed generated => do
       let material := publicMaterial setup (primitives.publicKeys seed).ed25519 generated
@@ -55,6 +55,15 @@ theorem nativeContinued_keyfirst {Result : Type}
   simpa only [nativeContinued, PqxdhGeneratedPhase1Prefix.program_complete, bind_assoc, pure_bind,
     PqxdhGeneratedRootSource.borrowedPrefix_evaluated, identityPreSample, eraseOutput, eraseRetained, eraseGenerated,
     publicMaterial, setupMaterial] using commute
+
+set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.PqxdhGeneratedNativeContinuation.nativeContinued_keyfirst_vcvioLegacy :
+    ∀ {ι : Type} {baseSpec : OracleSpec ι} {KemSK Result : Type} (attachedVerify : BeaconcryptCore.Computational.PqxdhEd25519EufCma.Ed25519PublicKey → Pqxdh.Bytes → Option Pqxdh.Bytes) (primitives : BeaconcryptCore.Computational.PqxdhJointIdentity.Primitives) (baseImpl : QueryImpl baseSpec ProbComp) (kem : BeaconcryptCore.Computational.PqxdhKemIndCca.MlKemScheme) (setup : BeaconcryptCore.Computational.PqxdhStatefulPhase1EufCma.StatefulPhase1Setup baseSpec) (driver : BeaconcryptCore.Computational.PqxdhGeneratedPhase1Prefix.Driver setup) (next : KemSK → BeaconcryptCore.Computational.PqxdhPrivateCandidateAcceptance.Outcome (BeaconcryptCore.Computational.PqxdhPrivatePhase1Prefix.Retained setup Unit driver.State) × BeaconcryptCore.Computational.PqxdhPhase1AcceptanceOracle.BareState 1 → ProbComp Result) (fallback : Result),
+      𝒮[BeaconcryptCore.Computational.PqxdhGeneratedNativeContinuation.nativeContinued attachedVerify primitives baseImpl kem setup driver next fallback] =
+        𝒮[do
+          let pair ← simulateQ (BeaconcryptCore.Computational.PqxdhInitializerSecrecy.kemAmbientImpl baseImpl) kem.keygen
+          let prepared ← BeaconcryptCore.Computational.PqxdhPrivateKemSource.evalKem baseImpl kem pair.2 (BeaconcryptCore.Computational.PqxdhGeneratedRootSource.borrowedPrefix attachedVerify primitives setup driver pair.1)
+          next pair.2 prepared] :=
+  by simpa only [BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq] using @BeaconcryptCore.Computational.PqxdhGeneratedNativeContinuation.nativeContinued_keyfirst
 
 end BeaconcryptCore.Computational.PqxdhGeneratedNativeContinuation
 

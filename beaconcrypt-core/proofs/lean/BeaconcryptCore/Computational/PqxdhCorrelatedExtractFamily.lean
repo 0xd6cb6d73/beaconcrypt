@@ -218,10 +218,10 @@ theorem real_eq_correlated
       𝒟[simulateQ (kemAmbientImpl baseImpl)
         (randomMain source kem (runtimeOfImpl (kemAmbientImpl baseImpl)) protocol)] := by
   simp only [realGame, reduction_real source hmac correct]
-  apply evalDist_eq_of_evalSPMF_eq
-  rw [evalSPMF_sample_comm_vcvioLegacy ($ᵗ MlKemSharedSecret) (prepare baseImpl kem protocol)]
+  refine EvalDistEq.evalDist_eq ?_
+  refine (evalSPMF_sample_comm ($ᵗ MlKemSharedSecret) (prepare baseImpl kem protocol) _).trans ?_
   simp only [prepare, randomMain, runtimeOfImpl_liftProbComp, simulateQ_bind,
-    simulateQ_kemAmbient_liftProbComp, bind_assoc, pure_bind]
+    simulateQ_kemAmbient_liftProbComp, bind_assoc, pure_bind, EvalDistEq.refl]
 
 /-- The extra loss is exactly an ordinary secret-input family advantage, not a protocol-event assumption. -/
 theorem correlated_advantage_eq

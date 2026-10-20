@@ -20,25 +20,26 @@ theorem retainedAdaptiveGame_distance_le_bad (decode : RawDecoder) (c : Pqxdh.Cr
     {Result : Type} (adversary : OracleComp AdaptiveSpec Result) :
     tvDist (retainedAdaptiveGame true decode c adversary)
       (retainedAdaptiveGame false decode c adversary) ≤
-      Pr[fun result => result.2.2 = true | uniformAdaptiveGame true decode c adversary].toReal := by
-  simp only [retainedAdaptiveGame, bind_pure_comp]
+      Pr{let result ← uniformAdaptiveGame true decode c adversary}[result.2.2 = true].toReal := by
+  conv_lhs => simp only [retainedAdaptiveGame, bind_pure_comp]
   have convex := tvDist_bind_left_le ($ᵗ CtxKey)
     (fun key => (Prod.mk key) <$> adaptiveGame true decode c key adversary)
     (fun key => (Prod.mk key) <$> adaptiveGame false decode c key adversary)
   rw [tsum_fintype] at convex
+  simp only [VCVioLegacy.probOutput_eq_prEvent] at convex
   calc
-    _ ≤ ∑ key : CtxKey, Pr[= key | ($ᵗ CtxKey)].toReal *
-        (Pr[fun result => result.2.2 = true | adaptiveGame true decode c key adversary]).toReal := by
+    _ ≤ ∑ key : CtxKey, Pr{let x ← ($ᵗ CtxKey)}[x = key].toReal *
+        (Pr{let result ← adaptiveGame true decode c key adversary}[result.2.2 = true]).toReal := by
       refine convex.trans (Finset.sum_le_sum fun key _ => ?_)
       exact mul_le_mul_of_nonneg_left
         ((tvDist_map_le (Prod.mk key) _ _).trans
           (adaptiveGame_distance_le_discrepancy decode c key adversary)) ENNReal.toReal_nonneg
     _ = _ := by
       unfold uniformAdaptiveGame
-      rw [probEvent_bind_eq_tsum, tsum_fintype, ENNReal.toReal_sum]
+      rw [OracleComp.prEvent_bind_eq_tsum, tsum_fintype, ENNReal.toReal_sum]
       · simp only [ENNReal.toReal_mul]
       · intro key _
-        exact ENNReal.mul_ne_top probOutput_ne_top probEvent_ne_top
+        exact ENNReal.mul_ne_top (prEvent_ne_top _) (prEvent_ne_top _)
 
 /-- The same explicit ordinary integrity family bounds the retained-key transcript distance. -/
 theorem retainedAdaptiveGame_distance_le_intctxt_sum (decode : RawDecoder) (c : Pqxdh.Crypto)
@@ -49,11 +50,10 @@ theorem retainedAdaptiveGame_distance_le_intctxt_sum (decode : RawDecoder) (c : 
       ∑ index ∈ Finset.range count,
         modifiedNonceAeadINTCTXTAdvantage c (indexedReduction decode fallback adversary index) := by
   calc
-    _ ≤ ENNReal.ofReal (Pr[fun result => result.2.2 = true |
-        uniformAdaptiveGame true decode c adversary].toReal) :=
+    _ ≤ ENNReal.ofReal (Pr{let result ← uniformAdaptiveGame true decode c adversary}[result.2.2 = true].toReal) :=
       ENNReal.ofReal_le_ofReal (retainedAdaptiveGame_distance_le_bad decode c adversary)
-    _ = Pr[fun result => result.2.2 = true | uniformAdaptiveGame true decode c adversary] :=
-      ENNReal.ofReal_toReal probEvent_ne_top
+    _ = Pr{let result ← uniformAdaptiveGame true decode c adversary}[result.2.2 = true] :=
+      ENNReal.ofReal_toReal (prEvent_ne_top _)
     _ ≤ _ := uniformAdaptive_bad_le_intctxt_sum decode c fallback adversary count bounded
 
 /-- Terminal key retention for the linked CTX wrapper does not alter any adaptive answer. -/

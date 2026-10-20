@@ -122,10 +122,9 @@ def ReportEvent {Result : Type} {count : ℕ}
 /-- Exact event transport uses the full source run and does not replace imported seeds, earlier observations or later reveals. -/
 theorem run_event (primitives : Primitives) (count : ℕ) {Result : Type}
     (client : OracleComp OwnedSpec Result) :
-    Pr[ReportEvent | run primitives count client] =
-      Pr[(fun result => result.2.occurred = true) |
-        PqxdhDynamicIdentityReports.reportingRun primitives count (routedClient primitives client)] := by
-  rw [run_complete, probEvent_map]
+    Pr{let x ← run primitives count client}[ReportEvent x] =
+      Pr{let result ← PqxdhDynamicIdentityReports.reportingRun primitives count (routedClient primitives client)}[result.2.occurred = true] := by
+  rw [run_complete, prEvent_map]
   rfl
 
 /-- All public source request classes, including imports and report attempts, have independent budgets. -/
@@ -237,14 +236,14 @@ theorem report_advantage_le_sum (primitives : Primitives) (count : ℕ)
     {Result : Type} (client : OracleComp OwnedSpec Result)
     (fallback : DynamicForgery) (ordinaryFallback : Forgery)
     (creates : client.IsQueryBoundP (IsCost .create) (count + 1)) :
-    Pr[ReportEvent | run primitives (count + 1) client] ≤
+    Pr{let x ← run primitives (count + 1) client}[ReportEvent x] ≤
       ∑ target : Fin (count + 1), advantage primitives
         (globalReduction primitives target ordinaryFallback
           (PqxdhDynamicIdentityRouting.routedAdversary count ordinaryFallback
             (PqxdhDynamicIdentityReports.reportExtractor primitives (count + 1) fallback
               (routedClient primitives client)))) := by
   rw [run_event]
-  apply PqxdhDynamicIdentityReports.reporting_advantage_le_identity_sum_vcvioLegacy
+  apply PqxdhDynamicIdentityReports.reporting_advantage_le_identity_sum
   simpa only [forwarded_create] using
     routedClient_query_bound primitives client .create (count + 1) creates
 
@@ -513,7 +512,7 @@ theorem report_advantage_le_count (primitives : Primitives) (count : ℕ)
         (PqxdhDynamicIdentityRouting.routedAdversary count ordinaryFallback
           (PqxdhDynamicIdentityReports.reportExtractor primitives (count + 1) fallback
             (routedClient primitives client)))) ≤ epsilon) :
-    Pr[ReportEvent | run primitives (count + 1) client] ≤ (count + 1 : ℕ) * epsilon := by
+    Pr{let x ← run primitives (count + 1) client}[ReportEvent x] ≤ (count + 1 : ℕ) * epsilon := by
   exact (report_advantage_le_sum primitives count client fallback ordinaryFallback creates).trans
     ((Finset.sum_le_sum fun target _ => bounded target).trans_eq (by simp))
 

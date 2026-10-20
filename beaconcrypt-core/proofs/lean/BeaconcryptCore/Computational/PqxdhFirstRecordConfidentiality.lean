@@ -4424,7 +4424,7 @@ theorem privacyLoss_ne_top (decode : RawDecoder) (c : Pqxdh.Crypto) (client : Or
     ⟨ENNReal.ofReal_ne_top, ?_⟩, ?_⟩, ?_⟩, ENNReal.ofReal_ne_top⟩
   · exact ENNReal.mul_ne_top (ENNReal.natCast_ne_top _) (ENNReal.inv_ne_top.mpr (by positivity))
   · refine ENNReal.mul_ne_top (by norm_num) (ENNReal.sum_ne_top.mpr fun index _ => ?_)
-    exact probEvent_ne_top
+    exact prEvent_ne_top _
   · exact ENNReal.div_ne_top (ENNReal.natCast_ne_top _) (by positivity)
 
 /-- Two-sided ordinary CTX privacy of a constructed key-free client: its selected-key source game and its ordinary random view differ by at most the privacy loss. -/

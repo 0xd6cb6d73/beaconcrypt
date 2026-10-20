@@ -86,26 +86,31 @@ theorem cachedGuess_implies_completed {Result : Type} {bound : ℕ}
 theorem cachedGuess_bound {Result : Type} {bound : ℕ} (decode : RawDecoder)
     (c : Pqxdh.Crypto) (key : CtxKey) (adversary : OracleComp ReceiveSpec Result)
     (selector : Result → List.Vector (Option CtxUnclaimedAcceptance.Target) bound) :
-    Pr[CachedGuess selector | (simulateQ (replayImpl decode c key) adversary).run initialState] ≤
+    Pr{let x ← (simulateQ (replayImpl decode c key) adversary).run initialState}[CachedGuess selector x] ≤
       (bound : ℝ≥0∞) / (2 ^ 512 : ℕ) := by
   classical
+  have split : ∀ {A B C T : Type} (run : ProbComp (A × B)) (draw : ProbComp T) (dict : B → C)
+      (extend : C → T → T) (won : A × B → Prop) (event : T × (A × B) → Prop),
+      (∀ terminal, won terminal → ∀ tail ∈ support draw, event (extend (dict terminal.2) tail, terminal)) →
+      Pr{let x ← run}[won x] ≤
+        Pr{let x ← (run >>= fun terminal => draw >>= fun tail =>
+          pure (extend (dict terminal.2) tail, terminal))}[event x] := by
+    intro A B C T run draw dict extend won event implied
+    rw [OracleComp.prEvent_eq_tsum_ite, OracleComp.prEvent_bind_eq_tsum]
+    refine ENNReal.tsum_le_tsum fun terminal => ?_
+    by_cases hit : won terminal
+    · have chance : Pr{let x ← (draw >>= fun tail =>
+          pure (extend (dict terminal.2) tail, terminal))}[event x] = 1 := by
+        rw [bind_pure_comp _ draw, prEvent_map]
+        exact OracleComp.prEvent_eq_one_of_forall_mem_support _ _ (implied terminal hit)
+      rw [ite_eq_left hit, chance, mul_one]
+    · rw [ite_eq_right hit]
+      exact zero_le
   have security := completedSource_guess_bound (bound := bound) decode c key adversary selector
   refine le_trans ?_ security
   unfold completedSource
-  rw [probEvent_eq_tsum_ite, probEvent_bind_eq_tsum]
-  apply ENNReal.tsum_le_tsum
-  intro result
-  by_cases won : CachedGuess selector result
-  · have chance : Pr[GuessEvent selector | do
-        let tail ← $ᵗ (Suffix → CtxDigest)
-        pure (tableExtending (sourceDictionary result.2) tail, result)] = 1 := by
-      simp only [bind_pure_comp, probEvent_map, Function.comp_def]
-      apply probEvent_eq_one
-      exact ⟨by simp, fun tail _ => cachedGuess_implies_completed selector result tail won⟩
-    simp only [won, ite_eq_left, chance, mul_one]
-    exact le_rfl
-  · simp only [won]
-    exact zero_le
+  exact split _ _ sourceDictionary tableExtending (CachedGuess selector) (GuessEvent selector)
+    fun terminal won tail _ => cachedGuess_implies_completed selector terminal tail won
 
 /-- One raw stopping position contributes exactly one unchanged decoded candidate; malformed and absent positions remain none. -/
 def oneSlot (decode : RawDecoder) (raw : Option Pqxdh.Bytes) :
@@ -142,8 +147,7 @@ theorem oneSlot_none (decode : RawDecoder) (state : AdaptiveCtxReceive.ReceiveSt
 /-- Each stopped source actually executes its selected raw lookup and then makes only one final commitment guess. No qRaw factor appears in this individual bound. -/
 theorem stopped_guess_bound {Result : Type} (decode : RawDecoder) (c : Pqxdh.Crypto)
     (key : CtxKey) (adversary : OracleComp ReceiveSpec Result) (index : ℕ) :
-    Pr[CachedGuess (oneSlot decode) |
-      (simulateQ (replayImpl decode c key) (stopAtRaw adversary index)).run initialState] ≤
+    Pr{let x ← (simulateQ (replayImpl decode c key) (stopAtRaw adversary index)).run initialState}[CachedGuess (oneSlot decode) x] ≤
         (1 : ℝ≥0∞) / (2 ^ 512 : ℕ) := by
   simpa only [Nat.cast_one] using cachedGuess_bound decode c key (stopAtRaw adversary index) (oneSlot decode)
 
@@ -217,12 +221,14 @@ theorem firstDiscrepancy_le_indexed_sum {Result : Type} (decode : RawDecoder) (c
     (key : CtxKey) (adversary : OracleComp ReceiveSpec Result) (count : ℕ)
     (state : AdaptiveCtxReceive.ReceiveState)
     (bounded : adversary.IsQueryBoundP AdaptiveCtxReceive.IsRawQuery count) :
-    Pr[fun bad => bad = true | firstDiscrepancy decode c key adversary state] ≤
+    Pr{let bad ← firstDiscrepancy decode c key adversary state}[bad = true] ≤
       ∑ index ∈ Finset.range count,
-        Pr[CachedGuess (oneSlot decode) | indexedGame decode c key adversary index state] := by
+        Pr{let x ← indexedGame decode c key adversary index state}[CachedGuess (oneSlot decode) x] := by
   classical
   induction adversary using OracleComp.inductionOn generalizing count state with
-  | pure value => simp [indexedGame]
+  | pure value =>
+    rw [firstDiscrepancy_pure, prEvent_pure]
+    simp only [Bool.false_eq_true, ↓reduceIte, zero_le]
   | query_bind query next ih =>
     rw [OracleComp.isQueryBoundP_query_bind_iff] at bounded
     cases query with
@@ -235,11 +241,13 @@ theorem firstDiscrepancy_le_indexed_sum {Result : Type} (decode : RawDecoder) (c
       intro result supported
       by_cases bad : RawBad decode raw result.2
       · rw [ite_eq_left bad]
-        have current : Pr[CachedGuess (oneSlot decode) | (pure (some raw, result.2) : ProbComp _)] = 1 := by
-          simp only [probEvent_pure, oneSlot_some, bad, ite_true]
+        have current : Pr{let x ← (pure (some raw, result.2) : ProbComp _)}[CachedGuess (oneSlot decode) x] = 1 := by
+          simp only [prEvent_pure, oneSlot_some, bad, ite_true]
         calc
-          Pr[fun flag => flag = true | (pure true : ProbComp Bool)] = 1 := by simp
-          _ = Pr[CachedGuess (oneSlot decode) | (pure (some raw, result.2) : ProbComp _)] := current.symm
+          Pr{let flag ← (pure true : ProbComp Bool)}[flag = true] = 1 := by
+            rw [prEvent_pure]
+            simp
+          _ = Pr{let x ← (pure (some raw, result.2) : ProbComp _)}[CachedGuess (oneSlot decode) x] := current.symm
           _ ≤ _ := by
             rw [Finset.sum_range_succ']
             exact le_add_of_nonneg_left zero_le
@@ -263,7 +271,7 @@ theorem firstDiscrepancy_le_indexed_sum {Result : Type} (decode : RawDecoder) (c
 theorem firstDiscrepancy_bound {Result : Type} (decode : RawDecoder) (c : Pqxdh.Crypto)
     (key : CtxKey) (adversary : OracleComp ReceiveSpec Result) (qRaw : ℕ)
     (bounded : adversary.IsQueryBoundP AdaptiveCtxReceive.IsRawQuery qRaw) :
-    Pr[fun bad => bad = true | firstDiscrepancy decode c key adversary initialState] ≤
+    Pr{let bad ← firstDiscrepancy decode c key adversary initialState}[bad = true] ≤
       (qRaw : ℝ≥0∞) / (2 ^ 512 : ℕ) := by
   have indexed := firstDiscrepancy_le_indexed_sum decode c key adversary qRaw initialState bounded
   refine indexed.trans ((Finset.sum_le_sum fun index _ => stopped_guess_bound decode c key adversary index).trans_eq ?_)

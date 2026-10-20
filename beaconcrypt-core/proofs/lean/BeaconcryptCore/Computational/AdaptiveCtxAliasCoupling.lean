@@ -21,17 +21,19 @@ def postLoggedReply (decode : RawDecoder) (raw : Pqxdh.Bytes)
 /-- Both source raw kernels perform the same actual private lookup; replacing the replay-only optional reply with its logged opening recovers the exact logged kernel and full next state. -/
 theorem loggedRaw_eq_replayRaw (decode : RawDecoder) (raw : Pqxdh.Bytes)
     (state : AdaptiveCtxReceive.ReceiveState) :
-    𝒮[loggedRaw decode raw state] =
-      𝒮[(fun result => (postLoggedReply decode raw result.2, result.2)) <$> replayRaw decode raw state] := by
+    EvalDistEq (loggedRaw decode raw state)
+      ((fun result => (postLoggedReply decode raw result.2, result.2)) <$> replayRaw decode raw state) := by
   cases parsed : decode raw with
   | none => simp [loggedRaw, replayRaw, postLoggedReply, parsed]
   | some target =>
     simp only [loggedRaw, replayRaw, parsed, map_bind, map_pure]
-    apply evalSPMF_bind_congr
-    intro lookup supported
+    refine OracleComp.EvalDistEq.bind_congr_of_support _ fun lookup supported => ?_
     have installed := suffixStep_installs _ _ lookup supported
+    have pureEq : ∀ {α : Type} {a b : α}, a = b → EvalDistEq (pure a : ProbComp α) (pure b) :=
+      fun same => by subst same; exact EvalDistEq.refl _
+    apply pureEq
     simp only [postLoggedReply, parsed, installed, Option.some.injEq]
-    congr 3
+    congr 1
     simp only [ctxIndependentTagStateToModifiedNonceAead, eq_comm]
 
 /-- Replay-only raw processing preserves the actual commitment, nonce and base-log invariants while retaining every rejected lookup. -/
@@ -92,16 +94,16 @@ noncomputable def flaggedImpl (logged : Bool) (decode : RawDecoder) (c : Pqxdh.C
 theorem flaggedImpl_agree_good (decode : RawDecoder) (c : Pqxdh.Crypto) (key : CtxKey)
     (query : ReceiveSpec.Domain) (state : AdaptiveCtxReceive.ReceiveState)
     (answer : ReceiveSpec.Range query) (next : AdaptiveCtxReceive.ReceiveState) :
-    Pr[= (answer, (next, false)) | (flaggedImpl true decode c key query).run (state, false)] =
-      Pr[= (answer, (next, false)) | (flaggedImpl false decode c key query).run (state, false)] := by
+    Pr{let x ← (flaggedImpl true decode c key query).run (state, false)}[x = (answer, (next, false))] =
+      Pr{let x ← (flaggedImpl false decode c key query).run (state, false)}[x = (answer, (next, false))] := by
   classical
   let : DecidableEq AdaptiveCtxReceive.ReceiveState := Classical.decEq _
   cases query with
   | inl request => rfl
   | inr raw =>
     unfold flaggedImpl StateT.run
-    apply probOutput_bind_congr
-    intro result supported
+    refine prEvent_bind_congr _ _ _ _ _ fun result => ?_
+    simp only [prEvent_pure]
     by_cases equal : postLoggedReply decode raw result.2 = result.1
     · simp [equal]
     · simp [equal]
@@ -127,12 +129,10 @@ theorem flaggedImpl_bad_mono (logged : Bool) (decode : RawDecoder) (c : Pqxdh.Cr
 theorem flagged_bad_probability_one {Result : Type} (logged : Bool) (decode : RawDecoder)
     (c : Pqxdh.Crypto) (key : CtxKey) (adversary : OracleComp ReceiveSpec Result)
     (state : AdaptiveCtxReceive.ReceiveState) :
-    Pr[fun result => result.2.2 = true |
-      (simulateQ (flaggedImpl logged decode c key) adversary).run (state, true)] = 1 := by
-  rw [probEvent_eq_one_iff]
-  refine ⟨by simp, ?_⟩
-  exact simulateQ_run_preservesInv (flaggedImpl logged decode c key) (fun pair => pair.2 = true)
-    (flaggedImpl_bad_mono logged decode c key) adversary (state, true) rfl
+    Pr{let result ← (simulateQ (flaggedImpl logged decode c key) adversary).run (state, true)}[result.2.2 = true] = 1 := by
+  exact OracleComp.prEvent_eq_one_of_forall_mem_support _ _
+    (simulateQ_run_preservesInv (flaggedImpl logged decode c key) (fun pair => pair.2 = true)
+      (flaggedImpl_bad_mono logged decode c key) adversary (state, true) rfl)
 
 /-- The replay-only source preserves the same actual-cache invariant for every original query class. -/
 theorem replayImpl_preserves_invariant (decode : RawDecoder) (c : Pqxdh.Crypto) (key : CtxKey) :
@@ -147,44 +147,43 @@ theorem replayImpl_preserves_invariant (decode : RawDecoder) (c : Pqxdh.Crypto) 
 theorem flagged_bad_eq_first {Result : Type} (decode : RawDecoder) (c : Pqxdh.Crypto)
     (key : CtxKey) (adversary : OracleComp ReceiveSpec Result)
     (state : AdaptiveCtxReceive.ReceiveState) (invariant : LoggedInvariant c key state) :
-    Pr[fun result => result.2.2 = true |
-      (simulateQ (flaggedImpl false decode c key) adversary).run (state, false)] =
-    Pr[fun bad => bad = true | firstDiscrepancy decode c key adversary state] := by
+    Pr{let result ← (simulateQ (flaggedImpl false decode c key) adversary).run (state, false)}[result.2.2 = true] =
+    Pr{let bad ← firstDiscrepancy decode c key adversary state}[bad = true] := by
   induction adversary using OracleComp.inductionOn generalizing state with
-  | pure value => simp
+  | pure value =>
+    simp only [simulateQ_pure, StateT.run_pure, firstDiscrepancy_pure, prEvent_pure]
   | query_bind query next ih =>
     cases query with
     | inr raw =>
       rw [firstDiscrepancy_receive]
       simp only [simulateQ_query_bind, StateT.run_bind, OracleQuery.input_query]
-      change Pr[fun result => result.2.2 = true | do
+      change Pr{let result ← (do
         let result ← (do
           let reply ← replayRaw decode raw state
           pure (reply.1, (reply.2, decide (postLoggedReply decode raw reply.2 ≠ reply.1))))
-        (simulateQ (flaggedImpl false decode c key) (next result.1)).run result.2] = _
-      simp only [bind_assoc, pure_bind, probEvent_bind_eq_tsum_subtype]
-      apply tsum_congr
-      rintro ⟨result, supported⟩
+        (simulateQ (flaggedImpl false decode c key) (next result.1)).run result.2)}[result.2.2 = true] = _
+      simp only [bind_assoc, pure_bind]
+      refine OracleComp.prEvent_bind_congr_of_support _ _ _ fun result supported => ?_
       have same := replayRaw_discrepancy_iff decode c key raw state invariant result supported
       have kept := replayRaw_preserves_invariant decode c key raw state invariant result supported
       by_cases bad : RawBad decode raw result.2
       · have decision : decide (postLoggedReply decode raw result.2 ≠ result.1) = true := decide_eq_true (same.mpr bad)
-        rw [decision, flagged_bad_probability_one, ite_eq_left bad]
+        rw [decision, flagged_bad_probability_one, ite_eq_left bad, prEvent_pure]
         simp
       · have decision : decide (postLoggedReply decode raw result.2 ≠ result.1) = false := decide_eq_false (fun different => bad (same.mp different))
         rw [decision, ite_eq_right bad, ih result.1 result.2 kept]
     | inl request =>
       rw [firstDiscrepancy_primitive]
       simp only [simulateQ_query_bind, StateT.run_bind, OracleQuery.input_query]
-      change Pr[fun result => result.2.2 = true | do
+      change Pr{let result ← (do
         let result ← (do
           let reply ← (replayImpl decode c key (.inl request)).run state
           pure (reply.1, (reply.2, false)))
-        (simulateQ (flaggedImpl false decode c key) (next result.1)).run result.2] = _
-      simp only [bind_assoc, pure_bind, probEvent_bind_eq_tsum_subtype]
-      apply tsum_congr
-      rintro ⟨result, supported⟩
-      rw [ih result.1 result.2 (replayImpl_preserves_invariant decode c key (.inl request) state invariant result supported)]
+        (simulateQ (flaggedImpl false decode c key) (next result.1)).run result.2)}[result.2.2 = true] = _
+      simp only [bind_assoc, pure_bind]
+      refine OracleComp.prEvent_bind_congr_of_support _ _ _ fun result supported => ?_
+      exact ih result.1 result.2
+        (replayImpl_preserves_invariant decode c key (.inl request) state invariant result supported)
 
 /-- The two uninstrumented source interpreters differ only in the permitted raw optional plaintext. -/
 noncomputable def sourceImpl (logged : Bool) (decode : RawDecoder) (c : Pqxdh.Crypto) (key : CtxKey) :
@@ -198,8 +197,8 @@ def sourceProjection {Result : Type} (result : Result × (AdaptiveCtxReceive.Rec
 /-- The exact complete query result projects to the intended source kernel in both worlds. -/
 theorem flagged_query_projection (logged : Bool) (decode : RawDecoder) (c : Pqxdh.Crypto) (key : CtxKey)
     (query : ReceiveSpec.Domain) (state : AdaptiveCtxReceive.ReceiveState × Bool) :
-    𝒮[sourceProjection <$> (flaggedImpl logged decode c key query).run state] =
-      𝒮[(sourceImpl logged decode c key query).run state.1] := by
+    EvalDistEq (sourceProjection <$> (flaggedImpl logged decode c key query).run state)
+      ((sourceImpl logged decode c key query).run state.1) := by
   cases query with
   | inl request =>
     cases request <;> cases logged <;>
@@ -213,10 +212,10 @@ theorem flagged_query_projection (logged : Bool) (decode : RawDecoder) (c : Pqxd
     | true =>
       simp only [flaggedImpl, sourceImpl, ↓reduceIte, StateT.run,
         map_bind, map_pure, sourceProjection, loggedImpl]
-      change 𝒮[do
+      change EvalDistEq (do
         let result ← replayRaw decode raw state.1
-        pure (postLoggedReply decode raw result.2, result.2)] =
-          𝒮[loggedRaw decode raw state.1]
+        pure (postLoggedReply decode raw result.2, result.2))
+          (loggedRaw decode raw state.1)
       simpa only [map_eq_bind_pure_comp, Function.comp_def] using
         (loggedRaw_eq_replayRaw decode raw state.1).symm
 
@@ -224,40 +223,39 @@ theorem flagged_query_projection (logged : Bool) (decode : RawDecoder) (c : Pqxd
 theorem flagged_run_projection {Result : Type} (logged : Bool) (decode : RawDecoder)
     (c : Pqxdh.Crypto) (key : CtxKey) (adversary : OracleComp ReceiveSpec Result)
     (state : AdaptiveCtxReceive.ReceiveState × Bool) :
-    𝒮[sourceProjection <$> (simulateQ (flaggedImpl logged decode c key) adversary).run state] =
-      𝒮[(simulateQ (sourceImpl logged decode c key) adversary).run state.1] := by
+    EvalDistEq (sourceProjection <$> (simulateQ (flaggedImpl logged decode c key) adversary).run state)
+      ((simulateQ (sourceImpl logged decode c key) adversary).run state.1) := by
   induction adversary using OracleComp.inductionOn generalizing state with
   | pure value => simp [sourceProjection]
   | query_bind query next ih =>
     simp only [simulateQ_query_bind, StateT.run_bind, map_bind, OracleQuery.input_query]
-    change 𝒮[do
+    change EvalDistEq (do
       let result ← (flaggedImpl logged decode c key query).run state
-      sourceProjection <$> (simulateQ (flaggedImpl logged decode c key) (next result.1)).run result.2] = _
-    calc
-      _ = 𝒮[do
-        let result ← (flaggedImpl logged decode c key query).run state
-        (simulateQ (sourceImpl logged decode c key) (next result.1)).run result.2.1] := by
-          apply evalSPMF_bind_congr
-          intro result supported
-          exact ih result.1 result.2
-      _ = 𝒮[do
-        let result ← sourceProjection <$> (flaggedImpl logged decode c key query).run state
-        (simulateQ (sourceImpl logged decode c key) (next result.1)).run result.2] := by
-          rw [bind_map_left]
-          rfl
-      _ = _ := by
-        rw [evalSPMF_bind, flagged_query_projection, ← evalSPMF_bind]
-        rfl
+      sourceProjection <$> (simulateQ (flaggedImpl logged decode c key) (next result.1)).run result.2) _
+    have folded : ((flaggedImpl logged decode c key query).run state >>= fun result =>
+        (simulateQ (sourceImpl logged decode c key) (next result.1)).run result.2.1) =
+        ((sourceProjection <$> (flaggedImpl logged decode c key query).run state) >>= fun result =>
+          (simulateQ (sourceImpl logged decode c key) (next result.1)).run result.2) := by
+      rw [bind_map_left]
+      rfl
+    refine (OracleComp.EvalDistEq.bind_congr_of_support _ fun result _ => ih result.1 result.2).trans ?_
+    rw [folded]
+    exact (flagged_query_projection logged decode c key query state).bind_left _
 
 /-- Both full optional-plaintext games encounter their first discrepancy with the same probability, even though later adversarial continuations may differ. -/
 theorem flagged_bad_eq {Result : Type} (decode : RawDecoder) (c : Pqxdh.Crypto) (key : CtxKey)
     (adversary : OracleComp ReceiveSpec Result) (state : AdaptiveCtxReceive.ReceiveState) :
-    Pr[fun result => result.2.2 = true | (simulateQ (flaggedImpl true decode c key) adversary).run (state, false)] =
-      Pr[fun result => result.2.2 = true | (simulateQ (flaggedImpl false decode c key) adversary).run (state, false)] :=
-  OracleComp.ProgramLogic.Relational.probEvent_output_bad_eq'
+    Pr{let result ← (simulateQ (flaggedImpl true decode c key) adversary).run (state, false)}[result.2.2 = true] =
+      Pr{let result ← (simulateQ (flaggedImpl false decode c key) adversary).run (state, false)}[result.2.2 = true] := by
+  have equal := OracleComp.ProgramLogic.Relational.probEvent_output_bad_eq'
     (flaggedImpl true decode c key) (flaggedImpl false decode c key)
-    (flaggedImpl_agree_good decode c key) (flaggedImpl_bad_mono true decode c key)
+    (fun query state answer next => by
+      simpa only [VCVioLegacy.probOutput_eq_prEvent] using
+        flaggedImpl_agree_good decode c key query state answer next)
+    (flaggedImpl_bad_mono true decode c key)
     (flaggedImpl_bad_mono false decode c key) adversary state
+  rw [VCVioLegacy.probEvent_eq_prEvent, VCVioLegacy.probEvent_eq_prEvent] at equal
+  exact equal
 
 /-- The complete source state and actual optional plaintext differ only at one of the qRaw charged commitment guesses. -/
 theorem flagged_distance_bound {Result : Type} (decode : RawDecoder) (c : Pqxdh.Crypto) (key : CtxKey)
@@ -269,8 +267,12 @@ theorem flagged_distance_bound {Result : Type} (decode : RawDecoder) (c : Pqxdh.
         (qRaw : ℝ≥0∞) / (2 ^ 512 : ℕ) := by
   have distance := OracleComp.ProgramLogic.Relational.tvDist_simulateQ_run_le_probEvent_output_bad
     (flaggedImpl true decode c key) (flaggedImpl false decode c key) adversary initialState
-    (flaggedImpl_agree_good decode c key) (flaggedImpl_bad_mono true decode c key)
+    (fun query state answer next => by
+      simpa only [VCVioLegacy.probOutput_eq_prEvent] using
+        flaggedImpl_agree_good decode c key query state answer next)
+    (flaggedImpl_bad_mono true decode c key)
     (flaggedImpl_bad_mono false decode c key)
+  rw [VCVioLegacy.probEvent_eq_prEvent] at distance
   rw [flagged_bad_eq, flagged_bad_eq_first decode c key adversary initialState (initial_invariant c key)] at distance
   exact (ENNReal.ofReal_le_ofReal distance).trans
     (ENNReal.ofReal_toReal_le.trans (firstDiscrepancy_bound decode c key adversary qRaw bounded))
@@ -291,7 +293,11 @@ theorem source_distance_bound {Result : Type} (decode : RawDecoder) (c : Pqxdh.C
       (sourceProjection <$> (simulateQ (flaggedImpl false decode c key) adversary).run (initialState, false)) =
       tvDist ((simulateQ (loggedImpl decode c key) adversary).run initialState)
         ((simulateQ (replayImpl decode c key) adversary).run initialState) := by
-    simp only [tvDist, flagged_run_projection, sourceImpl, Bool.false_eq_true, ↓reduceIte]
+    have flaggedTrue := (VCVioLegacy.evalSPMF_eq_iff_evalDistEq _ _).2
+      (flagged_run_projection true decode c key adversary (initialState, false))
+    have flaggedFalse := (VCVioLegacy.evalSPMF_eq_iff_evalDistEq _ _).2
+      (flagged_run_projection false decode c key adversary (initialState, false))
+    simp only [tvDist, flaggedTrue, flaggedFalse, sourceImpl, Bool.false_eq_true, ↓reduceIte]
   rw [same] at projection
   exact (ENNReal.ofReal_le_ofReal projection).trans (flagged_distance_bound decode c key adversary qRaw bounded)
 

@@ -87,10 +87,10 @@ theorem continuedSource_keyfirst {Result : Type}
     (setup : StatefulPhase1Setup baseSpec) (driver : Driver setup)
     (next : Outcome (Retained setup Unit driver.State) × BareState 1 →
       OracleComp (MlKemCCAOracleSpec baseSpec) Result) (fallback : Result) :
-    𝒮[continuedSource attachedVerify primitives baseImpl kem setup driver next fallback] =
-      𝒮[do let pair ← simulateQ (kemAmbientImpl baseImpl) kem.keygen
-           evalKem baseImpl kem pair.2
-             (borrowedPrefix attachedVerify primitives setup driver pair.1 >>= next)] := by
+    EvalDistEq (continuedSource attachedVerify primitives baseImpl kem setup driver next fallback)
+      (do let pair ← simulateQ (kemAmbientImpl baseImpl) kem.keygen
+          evalKem baseImpl kem pair.2
+            (borrowedPrefix attachedVerify primitives setup driver pair.1 >>= next)) := by
   have commute := generators_complete_continuation baseImpl primitives kem setup
     (fun seed generated => do
       let material := publicMaterial setup (primitives.publicKeys seed).ed25519 generated
@@ -146,19 +146,16 @@ theorem actualGame_eq_total
     𝒟[actualGame baseImpl kem parameters attachedVerify primitives setup driver observer] =
       𝒟[continuedSource attachedVerify primitives baseImpl kem setup driver
         (PqxdhPrivateAcceptedRoot.totalNext kem parameters attachedVerify primitives setup observer) false] := by
-  apply evalDist_eq_of_evalSPMF_eq
+  refine EvalDistEq.evalDist_eq ?_
   simp only [actualGame, continuedSource, PqxdhGeneratedPhase1Prefix.program_complete, bind_assoc, pure_bind]
-  apply evalSPMF_bind_congr'
-  intro seed
-  apply evalSPMF_bind_congr
-  intro generated generatedSupport
-  apply evalSPMF_bind_congr'
-  intro selected
+  refine EvalDistEq.bind_right _ fun seed => ?_
+  refine OracleComp.EvalDistEq.bind_congr_of_support _ fun generated generatedSupport => ?_
+  refine EvalDistEq.bind_right _ fun selected => ?_
   simp only [PqxdhPrivateAcceptedRoot.nativeNext, PqxdhPrivateAcceptedRoot.totalNext]
   split
-  · apply evalSPMF_eq_of_evalDist_eq
-    apply PqxdhPrivateAcceptedRoot.nativeTarget_eq_total baseImpl kem parameters compatible attachedVerify primitives setup observer
-    exact generate_key_support baseImpl kem setup _ generated generatedSupport
+  · exact EvalDistEq.of_evalDist_eq
+      (PqxdhPrivateAcceptedRoot.nativeTarget_eq_total baseImpl kem parameters compatible attachedVerify primitives
+        setup observer _ _ (generate_key_support baseImpl kem setup _ generated generatedSupport))
   · rfl
 
 
@@ -201,34 +198,33 @@ theorem dispatch_complete_eq_source
           target secret mode)] =
       𝒟[evalKem baseImpl kem secret
         (PqxdhPrivateAcceptedRoot.filteredNext kem parameters attachedVerify primitives setup observer prepared)] := by
-  apply evalDist_eq_of_evalSPMF_eq
+  refine EvalDistEq.evalDist_eq ?_
   by_cases bad : changedBit (some prepared.1, prepared.2) = true
-  · apply evalSPMF_ext
-    intro output
-    simp [PqxdhPrivateAcceptedRoot.dispatch, PqxdhPrivateAcceptedRoot.filteredNext, bad, evalKem, PqxdhPrivateAcceptedRoot.complete, rootProtocol]
+  · simp [PqxdhPrivateAcceptedRoot.dispatch, PqxdhPrivateAcceptedRoot.filteredNext, bad, evalKem,
+      PqxdhPrivateAcceptedRoot.complete, rootProtocol, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+    exact OracleComp.EvalDistEq.map_const _ _
   · by_cases eligible : targetEligible parameters prepared = true
     · simp only [PqxdhPrivateAcceptedRoot.dispatch, PqxdhPrivateAcceptedRoot.filteredNext, bad, Bool.false_eq_true, ite_false, eligible, ite_true,
         PqxdhPrivateAcceptedRoot.totalNext, PqxdhPrivateAcceptedRoot.totalTargetContinuation, evalKem_bind, evalKem_ambient, bind_assoc]
-      apply evalSPMF_bind_congr'
-      intro ephemeral
+      refine EvalDistEq.bind_right _ fun ephemeral => ?_
       cases failure : rootFailure parameters.source.crypto parameters.server.ikSk ephemeral.toList
         prepared.1.context.publicIdentity.ed25519 prepared.1.context.generated.before.publicKey
         prepared.1.context.generated.after.publicKey with
       | none =>
           simp only [PqxdhPrivateAcceptedRoot.complete, rootProtocol, simulateQ_bind, evalKem_pure, pure_bind,
             PqxdhPrivateAcceptedRoot.targetAfterEncapsulation, failure, Option.map_some, target_eq, PqxdhPrivateAcceptedRoot.finishTarget_actual]
+          exact EvalDistEq.rfl
       | some reason =>
           simp only [evalKem_bind, evalKem_ambient, evalKem_pure, bind_assoc, pure_bind,
             PqxdhPrivateAcceptedRoot.targetAfterEncapsulation, failure]
-          apply evalSPMF_bind_congr'
-          intro encapsulated
-          apply evalSPMF_ext
-          intro output
-          simp [PqxdhPrivateAcceptedRoot.complete, rootProtocol, probOutput_bind_eq_tsum]
-    · apply evalSPMF_ext
-      intro output
-      simp [PqxdhPrivateAcceptedRoot.dispatch, PqxdhPrivateAcceptedRoot.filteredNext, bad, eligible, PqxdhPrivateAcceptedRoot.totalNext, evalKem, PqxdhPrivateAcceptedRoot.complete,
-        rootProtocol, probOutput_bind_eq_tsum]
+          refine EvalDistEq.bind_right _ fun encapsulated => ?_
+          simp [PqxdhPrivateAcceptedRoot.complete, rootProtocol, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+          refine (EvalDistEq.bind_right _ fun value => OracleComp.EvalDistEq.map_const _ value).trans ?_
+          rw [bind_pure]
+    · simp [PqxdhPrivateAcceptedRoot.dispatch, PqxdhPrivateAcceptedRoot.filteredNext, bad, eligible,
+        PqxdhPrivateAcceptedRoot.totalNext, evalKem, PqxdhPrivateAcceptedRoot.complete, rootProtocol, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+      refine (EvalDistEq.bind_right _ fun value => OracleComp.EvalDistEq.map_const _ value).trans ?_
+      rw [bind_pure]
 
 set_option backward.isDefEq.respectTransparency false in
 /-- The actual filtered prefix and complete native correlated continuation form the ordinary source experiment. -/
@@ -242,14 +238,12 @@ theorem filteredSource_eq_sourceMain
       (PqxdhPrivateAcceptedRoot.filteredNext kem parameters attachedVerify primitives setup observer) false] =
       𝒟[simulateQ (kemAmbientImpl baseImpl) (sourceMain parameters.source kem
         (rootProtocol kem parameters attachedVerify primitives setup driver observer))] := by
-  apply evalDist_eq_of_evalSPMF_eq
-  rw [continuedSource_keyfirst]
+  refine EvalDistEq.evalDist_eq ?_
+  refine (continuedSource_keyfirst attachedVerify primitives baseImpl kem setup driver _ false).trans ?_
   simp only [sourceMain, rootProtocol, simulateQ_bind, bind_assoc, evalKem_bind]
-  apply evalSPMF_bind_congr'
-  intro pair
-  apply evalSPMF_bind_congr
-  intro prepared supported
-  apply evalSPMF_eq_of_evalDist_eq
+  refine EvalDistEq.bind_right _ fun pair => ?_
+  refine OracleComp.EvalDistEq.bind_congr_of_support _ fun prepared supported => ?_
+  refine EvalDistEq.of_evalDist_eq ?_
   simpa only [PqxdhPrivateAcceptedRoot.complete, rootProtocol, simulateQ_bind, evalKem, localKemPreChallengeImpl] using
     (dispatch_complete_eq_source baseImpl kem parameters attachedVerify primitives setup driver
     observer prepared pair.1 pair.2
@@ -315,7 +309,7 @@ theorem authentication_hop
     rw [continuedSource_filtered]
     exact auth
   have output := (abs_probOutput_toReal_sub_le_tvDist _ _).trans totalBound
-  simpa only [ProbComp.boolDistAdvantage, evalDist_apply_singleton, probOutput_def,
+  simpa only [ProbComp.boolDistAdvantage, VCVioLegacy.evalDist_singleton_eq_probOutput, prEvent_eq_evalDist_singleton,
     actualGame_eq_total baseImpl kem parameters compatible attachedVerify primitives setup driver observer,
     ← filteredSource_eq_sourceMain baseImpl kem parameters attachedVerify primitives setup driver observer] using output
 

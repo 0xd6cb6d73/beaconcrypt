@@ -588,10 +588,6 @@ noncomputable def ctxSecretPrefixQueriedProbability (c : Pqxdh.Crypto)
     (adversary : CtxAdversary) : ℝ≥0∞ :=
   Pr{let p ← ctxBeforeVerifyGame c adversary}[CtxSecretPrefixQueried p.1]
 
-set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.CtxRomAuth.ctxSecretPrefixQueriedProbability_vcvioLegacy :
-    BeaconcryptCore.Computational.CtxRomAuth.ctxSecretPrefixQueriedProbability = fun (c : Pqxdh.Crypto) (adversary : BeaconcryptCore.Computational.CtxRomAuth.CtxAdversary) => probEvent (BeaconcryptCore.Computational.CtxRomAuth.ctxBeforeVerifyGame c adversary) fun (p : BeaconcryptCore.Computational.CtxRomAuth.CtxBeforeVerify × BeaconcryptCore.Computational.CtxRomAuth.CtxRO.QueryCache) => BeaconcryptCore.Computational.CtxRomAuth.CtxSecretPrefixQueried p.1 :=
-  by delta BeaconcryptCore.Computational.CtxRomAuth.ctxSecretPrefixQueriedProbability; simp only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent]
-
 /-- Every alias-gated target-cache hit reduces pointwise to a public hidden-key-prefix query. -/
 theorem ctxAliasTargetCacheHitProbability_le_secretPrefixQueriedProbability
     (c : Pqxdh.Crypto) (adversary : CtxAdversary) :

@@ -52,7 +52,7 @@ theorem good_alias_bound {Metadata Auxiliary Result : Type} {serverCount beaconC
       (simulateQ (observedImpl source writer (RawCtxKdfRequestTable.fullResponse output)
         sender decode owner labelRead) client).run state] := by
   rw [event_good source writer output target sender decode owner client state event]
-  refine (AdaptiveCtxPrefixValidation.probEvent_le_add_ofReal_tvDist _
+  refine (AdaptiveCtxPrefixValidation.probEvent_le_add_ofReal_tvDist_vcvioLegacy _
     (consistentGame source writer output labelRead (RawCtxSelectedQueryTrace.rootVector target)
       sender decode owner client state) _).trans ?_
   exact add_le_add le_rfl (by

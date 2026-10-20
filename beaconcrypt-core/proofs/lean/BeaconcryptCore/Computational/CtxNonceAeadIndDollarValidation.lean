@@ -289,23 +289,32 @@ theorem ctxValidationTag_card : Fintype.card (FixedBytes 16) = 2 ^ 128 := by
 /-- A fixed vector of `qH` candidate tags hits a fresh uniform tag with union-bound cost. -/
 theorem probEvent_uniformValidationTag_hit_le {qH : ℕ}
     (probes : List.Vector (Option (FixedBytes 16)) qH) :
-    Pr[fun tag => CtxValidationTagHit tag probes | $ᵗ (FixedBytes 16)] ≤
+    Pr{let tag ← $ᵗ (FixedBytes 16)}[CtxValidationTagHit tag probes] ≤
       (qH : ℝ≥0∞) * (Fintype.card (FixedBytes 16) : ℝ≥0∞)⁻¹ := by
   classical
   calc
-    Pr[fun tag => CtxValidationTagHit tag probes | $ᵗ (FixedBytes 16)] ≤
+    Pr{let tag ← $ᵗ (FixedBytes 16)}[CtxValidationTagHit tag probes] ≤
         ∑ i : Fin qH,
-          Pr[fun tag => probes.get i = some tag | $ᵗ (FixedBytes 16)] := by
-      simpa [CtxValidationTagHit] using
-        (probEvent_exists_finset_le_sum
-          (Finset.univ : Finset (Fin qH)) ($ᵗ (FixedBytes 16))
-          (fun i tag => probes.get i = some tag))
+          Pr{let tag ← $ᵗ (FixedBytes 16)}[probes.get i = some tag] := by
+      rw [prEvent_congr ($ᵗ (FixedBytes 16)) (fun tag => CtxValidationTagHit tag probes)
+        (fun tag => ∃ i ∈ (Finset.univ : Finset (Fin qH)), probes.get i = some tag)
+        (fun tag => by simp [CtxValidationTagHit])]
+      exact prEvent_exists_finset_le (Finset.univ : Finset (Fin qH)) ($ᵗ (FixedBytes 16))
+        (fun i tag => probes.get i = some tag)
     _ ≤ ∑ _i : Fin qH,
           (Fintype.card (FixedBytes 16) : ℝ≥0∞)⁻¹ := by
       refine Finset.sum_le_sum fun i _ => ?_
       cases hprobe : probes.get i with
-      | none => simp
-      | some candidate => simp
+      | none =>
+          rw [prEvent_eq_zero_of_forall_not ($ᵗ (FixedBytes 16))
+            (fun tag : FixedBytes 16 => (none : Option (FixedBytes 16)) = some tag)
+            (fun tag h => by simp at h)]
+          exact zero_le
+      | some candidate =>
+          refine le_of_eq ?_
+          rw [prEvent_congr ($ᵗ (FixedBytes 16)) (fun tag => some candidate = some tag)
+              (fun tag => tag = candidate) (fun tag => by simp [eq_comm]),
+            SampleableType.prEvent_uniformSample_eq_singleton]
     _ = (qH : ℝ≥0∞) *
           (Fintype.card (FixedBytes 16) : ℝ≥0∞)⁻¹ := by
       simp [Finset.sum_const, nsmul_eq_mul]
@@ -405,32 +414,29 @@ theorem keyProbeHit_implies_realValidationCiphertextHit
 theorem randomValidationContinuation_le
     (c : Pqxdh.Crypto) (nonce : CtxNonce) {qH : ℕ}
     (probes : CtxKeyProbes qH) (state : ModifiedNonceAeadHandlerState) :
-    Pr[= true |
-      (modifiedNonceAeadINDDollarRandomSealOracle
+    Pr{let x ← ((modifiedNonceAeadINDDollarRandomSealOracle
         (ctxValidationInput nonce)).run state >>= fun result =>
-          pure (ctxValidationAccept c nonce probes result.1)] ≤
+          pure (ctxValidationAccept c nonce probes result.1))}[x = true] ≤
       (qH : ℝ≥0∞) * (((2 ^ 128 : ℕ) : ℝ≥0∞))⁻¹ := by
+  rw [bind_pure_comp _ ((modifiedNonceAeadINDDollarRandomSealOracle
+    (ctxValidationInput nonce)).run state), prEvent_map]
   by_cases hused : nonce ∈ state.usedNonces
   · unfold modifiedNonceAeadINDDollarRandomSealOracle
-    simp [StateT.run, ctxValidationInput, hused, ctxValidationAccept]
+    simp only [StateT.run, ctxValidationInput, hused, ite_true]
+    classical
+    rw [prEvent_pure]
+    simp [ctxValidationAccept]
   · unfold modifiedNonceAeadINDDollarRandomSealOracle
     simp only [StateT.run, ctxValidationInput, hused, ite_false]
-    simp only [bind_assoc, pure_bind]
-    rw [← probEvent_eq_eq_probOutput]
-    refine probEvent_bind_le_of_forall_le
-      (mx := ($ᵗ (FixedBytes [].length) : ProbComp _)) ?_
-    intro body _
-    rw [bind_pure_comp, probEvent_map]
+    refine prEvent_bind_le_of_forall_le ($ᵗ (FixedBytes [].length) : ProbComp _) _ _ fun body => ?_
+    rw [bind_pure_comp _ ($ᵗ (FixedBytes 16)), prEvent_map]
     calc
-      probEvent ($ᵗ (FixedBytes 16))
-          ((fun x => x = true) ∘ fun tag =>
-            ctxValidationAccept c nonce probes
-              (some ⟨body.toList, tag.toList, tag.toList_length⟩)) =
-        Pr[fun tag => CtxValidationTagHit tag
-            (ctxValidationTagProbeVector c nonce probes) |
-          $ᵗ (FixedBytes 16)] := by
-            apply OracleComp.probEvent_congr' _ rfl
-            intro tag _
+      Pr{let tag ← $ᵗ (FixedBytes 16)}[ctxValidationAccept c nonce probes
+          (some ⟨body.toList, tag.toList, tag.toList_length⟩) = true] =
+        Pr{let tag ← $ᵗ (FixedBytes 16)}[CtxValidationTagHit tag
+            (ctxValidationTagProbeVector c nonce probes)] := by
+            apply prEvent_congr
+            intro tag
             classical
             simp [ctxValidationAccept,
               CtxValidationCiphertextHit,
@@ -453,27 +459,28 @@ theorem simulateQ_queryModifiedNonceAeadSeal_random
 theorem ctxPrefixBooleanReduction_random_le
     (c : Pqxdh.Crypto) {qH qE : ℕ}
     (adversary : CtxQueryBoundedAdversary qH qE) :
-    Pr[= true |
-      modifiedNonceAeadINDDollarRandomExp
-        (ctxPrefixToBooleanINDDollarReduction c adversary)] ≤
+    Pr{let x ← (modifiedNonceAeadINDDollarRandomExp
+        (ctxPrefixToBooleanINDDollarReduction c adversary))}[x = true] ≤
       (qH : ℝ≥0∞) * (((2 ^ 128 : ℕ) : ℝ≥0∞))⁻¹ := by
   unfold modifiedNonceAeadINDDollarRandomExp
-    ctxPrefixToBooleanINDDollarReduction
-  simp only [simulateQ_bind, StateT.run_bind, bind_assoc]
-  rw [← probEvent_eq_eq_probOutput]
-  simp_rw [simulateQ_queryModifiedNonceAeadSeal_random]
-  simp_rw [simulateQ_pure, StateT.run_pure]
-  simp only [pure_bind]
-  refine probEvent_bind_le_of_forall_le
-    (mx := (simulateQ modifiedNonceAeadINDDollarRandomImpl
-      ((simulateQ ctxRetainedBaseReductionImpl adversary.main).run
-        emptyCtxIndependentTagState)).run
-          emptyModifiedNonceAeadHandlerState) ?_
-  rintro ⟨⟨target, state⟩, primitiveState⟩ _
-  simpa [probEvent_eq_eq_probOutput] using
-    (randomValidationContinuation_le c
-      (chooseFreshCtxNonce state.usedNonces)
-      (ctxPrefixProbeVector qH state.publicInputs) primitiveState)
+  rw [bind_pure_comp _ ((simulateQ modifiedNonceAeadINDDollarRandomImpl
+    (ctxPrefixToBooleanINDDollarReduction c adversary).main).run emptyModifiedNonceAeadHandlerState),
+    prEvent_map]
+  unfold ctxPrefixToBooleanINDDollarReduction
+  simp only [simulateQ_bind, StateT.run_bind]
+  refine prEvent_bind_le_of_forall_le _ _ _ fun result => ?_
+  rcases result with ⟨⟨target, state⟩, primitiveState⟩
+  have bound := randomValidationContinuation_le c
+    (chooseFreshCtxNonce state.usedNonces)
+    (ctxPrefixProbeVector qH state.publicInputs) primitiveState
+  rw [bind_pure_comp _ ((modifiedNonceAeadINDDollarRandomSealOracle
+    (ctxValidationInput (chooseFreshCtxNonce state.usedNonces))).run primitiveState),
+    prEvent_map] at bound
+  simp only [simulateQ_queryModifiedNonceAeadSeal_random, simulateQ_pure, StateT.run_pure]
+  rw [bind_pure_comp _ ((modifiedNonceAeadINDDollarRandomSealOracle
+    (ctxValidationInput (chooseFreshCtxNonce state.usedNonces))).run primitiveState),
+    prEvent_map]
+  exact bound
 
 /-- Fixed-key conventional real experiment. -/
 noncomputable def modifiedNonceAeadINDDollarRealExpInner
@@ -488,9 +495,9 @@ theorem directProbe_le_booleanRealInner
     (c : Pqxdh.Crypto) (key : CtxKey) {qH qE : ℕ}
     (adversary : CtxQueryBoundedAdversary qH qE)
     (hqE : qE < 2 ^ 96) :
-    Pr[= true | ctxDirectSamplePrefixProbeExpInner c key adversary] ≤
-      Pr[= true | modifiedNonceAeadINDDollarRealExpInner c key
-        (ctxPrefixToBooleanINDDollarReduction c adversary)] := by
+    Pr{let x ← ctxDirectSamplePrefixProbeExpInner c key adversary}[x = true] ≤
+      Pr{let x ← (modifiedNonceAeadINDDollarRealExpInner c key
+        (ctxPrefixToBooleanINDDollarReduction c adversary))}[x = true] := by
   unfold ctxDirectSamplePrefixProbeExpInner
     modifiedNonceAeadINDDollarRealExpInner
     ctxPrefixToBooleanINDDollarReduction
@@ -501,8 +508,7 @@ theorem directProbe_le_booleanRealInner
   simp only [pure_bind]
   rw [← bind_pure_comp]
   simp only [bind_assoc, pure_bind]
-  refine probOutput_bind_mono ?_
-  intro result hresult
+  refine OracleComp.prEvent_bind_mono_of_support _ _ _ fun result hresult => ?_
   by_cases hhit : CtxKeyProbeHit key
       (ctxPrefixProbeVector qH result.2.publicInputs)
   · have hfresh := chooseFreshCtxNonce_fresh_of_direct_support
@@ -514,8 +520,8 @@ theorem directProbe_le_booleanRealInner
     have haccept := keyProbeHit_implies_realValidationCiphertextHit
       c key (chooseFreshCtxNonce result.2.usedNonces)
       (ctxPrefixProbeVector qH result.2.publicInputs) hhit
-    simp [hhit, ctxValidationAccept, haccept]
-  · simp [hhit]
+    simp [hhit, ctxValidationAccept, haccept, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+  · simp [hhit, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
 
 /-- The canonical secret-prefix event is contained in real Boolean validation success. -/
 theorem ctxSecretPrefixQueriedProbability_le_booleanReal
@@ -523,16 +529,15 @@ theorem ctxSecretPrefixQueriedProbability_le_booleanReal
     (adversary : CtxQueryBoundedAdversary qH qE)
     (hqE : qE < 2 ^ 96) :
     ctxSecretPrefixQueriedProbability c adversary.toCtxAdversary ≤
-      Pr[= true | modifiedNonceAeadINDDollarRealExp c
-        (ctxPrefixToBooleanINDDollarReduction c adversary)] := by
+      Pr{let x ← (modifiedNonceAeadINDDollarRealExp c
+        (ctxPrefixToBooleanINDDollarReduction c adversary))}[x = true] := by
   rw [ctxSecretPrefixQueriedProbability_eq_directSampleProbe]
   unfold ctxDirectSamplePrefixProbeExp
     modifiedNonceAeadINDDollarRealExp
-  refine probOutput_bind_mono ?_
-  intro key _
-  change Pr[= true | ctxDirectSamplePrefixProbeExpInner c key adversary] ≤
-    Pr[= true | modifiedNonceAeadINDDollarRealExpInner c key
-      (ctxPrefixToBooleanINDDollarReduction c adversary)]
+  refine prEvent_bind_mono_of_forall_le _ _ _ _ _ fun key => ?_
+  change Pr{let x ← ctxDirectSamplePrefixProbeExpInner c key adversary}[x = true] ≤
+    Pr{let x ← (modifiedNonceAeadINDDollarRealExpInner c key
+      (ctxPrefixToBooleanINDDollarReduction c adversary))}[x = true]
   exact directProbe_le_booleanRealInner c key adversary hqE
 
 /-- Conventional Boolean IND$ bound for the CTX secret-prefix event. -/
@@ -548,16 +553,18 @@ theorem ctxSecretPrefixQueriedProbability_le_booleanINDDollar
   let reduction := ctxPrefixToBooleanINDDollarReduction c adversary
   calc
     ctxSecretPrefixQueriedProbability c adversary.toCtxAdversary ≤
-        Pr[= true | modifiedNonceAeadINDDollarRealExp c reduction] := by
+        Pr{let x ← modifiedNonceAeadINDDollarRealExp c reduction}[x = true] := by
       exact ctxSecretPrefixQueriedProbability_le_booleanReal
         c adversary hqE
-    _ ≤ Pr[= true | modifiedNonceAeadINDDollarRandomExp reduction] +
+    _ ≤ Pr{let x ← modifiedNonceAeadINDDollarRandomExp reduction}[x = true] +
           ENNReal.ofReal
             (modifiedNonceAeadINDDollarAdvantage c reduction) := by
       have comparison := VCVioForward.evalDist_apply_true_le_add_ofReal_boolDistAdvantage
           (modifiedNonceAeadINDDollarRealExp c reduction)
           (modifiedNonceAeadINDDollarRandomExp reduction)
-      simp only [VCVioLegacy.evalDist_singleton_eq_probOutput] at comparison
+      rw [← prEvent_eq_evalDist_singleton (modifiedNonceAeadINDDollarRealExp c reduction) true,
+        ← prEvent_eq_evalDist_singleton (modifiedNonceAeadINDDollarRandomExp reduction) true]
+        at comparison
       exact comparison
     _ ≤ (qH : ℝ≥0∞) * (((2 ^ 128 : ℕ) : ℝ≥0∞))⁻¹ +
           ENNReal.ofReal

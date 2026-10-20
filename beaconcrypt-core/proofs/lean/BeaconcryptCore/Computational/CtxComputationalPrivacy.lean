@@ -105,8 +105,7 @@ noncomputable def ctxPrivacyRealFlaggedExpInner
 noncomputable def ctxPrivacySecretPrefixProbabilityInner
     (c : Pqxdh.Crypto) (key : CtxKey) {qH qE : ℕ}
     (adversary : CtxPrivacyAdversary qH qE) : ℝ≥0∞ :=
-  Pr[fun result => result.2.2 = true |
-    ctxPrivacyRealFlaggedExpInner c key adversary]
+  Pr{let result ← ctxPrivacyRealFlaggedExpInner c key adversary}[result.2.2 = true]
 
 /-- Uniform-key flagged execution used to expose the single public-prefix event. -/
 noncomputable def ctxPrivacyRealFlaggedGame
@@ -120,8 +119,7 @@ noncomputable def ctxPrivacyRealFlaggedGame
 noncomputable def ctxPrivacySecretPrefixProbability
     (c : Pqxdh.Crypto) {qH qE : ℕ}
     (adversary : CtxPrivacyAdversary qH qE) : ℝ≥0∞ :=
-  Pr[fun result => result.2.2 = true |
-    ctxPrivacyRealFlaggedGame c adversary]
+  Pr{let result ← ctxPrivacyRealFlaggedGame c adversary}[result.2.2 = true]
 
 /-- Fixed-key flagged execution after exact split-cache routing. -/
 noncomputable def ctxPrivacySplitRoutedFlaggedExpInner
@@ -189,12 +187,10 @@ theorem ctxPrivacySecretPrefixProbabilityInner_eq_publicInputs
     (c : Pqxdh.Crypto) (key : CtxKey) {qH qE : ℕ}
     (adversary : CtxPrivacyAdversary qH qE) :
     ctxPrivacySecretPrefixProbabilityInner c key adversary =
-      Pr[fun result =>
-          ∃ input ∈ result.2.1.publicInputs,
-            SecretPrefixQuery key input |
-        ctxPrivacyRealFlaggedExpInner c key adversary] := by
+      Pr{let result ← ctxPrivacyRealFlaggedExpInner c key adversary}[∃ input ∈ result.2.1.publicInputs,
+            SecretPrefixQuery key input] := by
   unfold ctxPrivacySecretPrefixProbabilityInner
-  apply OracleComp.probEvent_congr' _ rfl
+  apply prEvent_congr_of_support
   intro result hresult
   exact ctxPrivacyRealFlaggedExpInner_prefix_flag
     c key adversary result hresult
@@ -235,13 +231,12 @@ theorem ctxPrivacyRealExpInner_eq_splitRouted
 theorem ctxPrivacySplitRouted_badProbability_eq_secretPrefix
     (c : Pqxdh.Crypto) (key : CtxKey) {qH qE : ℕ}
     (adversary : CtxPrivacyAdversary qH qE) :
-    Pr[fun result => result.2.2 = true |
-        ctxPrivacySplitRoutedFlaggedExpInner c key adversary] =
+    Pr{let result ← ctxPrivacySplitRoutedFlaggedExpInner c key adversary}[result.2.2 = true] =
       ctxPrivacySecretPrefixProbabilityInner c key adversary := by
   unfold ctxPrivacySplitRoutedFlaggedExpInner
     ctxPrivacySecretPrefixProbabilityInner
     ctxPrivacyRealFlaggedExpInner
-  exact ctxSplitRouted_badProbability_eq_real_of_main_vcvioLegacy
+  exact ctxSplitRouted_badProbability_eq_real_of_main
     c key adversary.main
 
 /-- Routed and key-free Boolean executions differ only on the single public-prefix event. -/
@@ -263,11 +258,10 @@ theorem tvDist_ctxPrivacySplitRouted_independentTag_le_secretPrefix
         (ctxPrivacySplitRoutedFlaggedExpInner c key adversary)
         (ctxPrivacyIndependentTagFlaggedExpInner c key adversary) := by
           exact tvDist_map_le (m := ProbComp) Prod.fst _ _
-    _ ≤ Pr[fun result => result.2.2 = true |
-          ctxPrivacySplitRoutedFlaggedExpInner c key adversary].toReal := by
+    _ ≤ Pr{let result ← ctxPrivacySplitRoutedFlaggedExpInner c key adversary}[result.2.2 = true].toReal := by
       unfold ctxPrivacySplitRoutedFlaggedExpInner
         ctxPrivacyIndependentTagFlaggedExpInner
-      exact tvDist_ctxSplitRouted_independentTag_le_prefixBad_of_main_vcvioLegacy
+      exact tvDist_ctxSplitRouted_independentTag_le_prefixBad_of_main
         c key adversary.main
     _ = (ctxPrivacySecretPrefixProbabilityInner
           c key adversary).toReal := by
@@ -332,15 +326,15 @@ theorem ctxPrivacySecretPrefixProbability_toReal_eq_tsum
     (adversary : CtxPrivacyAdversary qH qE) :
     (ctxPrivacySecretPrefixProbability c adversary).toReal =
       ∑' key : CtxKey,
-        Pr[= key | $ᵗ CtxKey].toReal *
+        Pr{let x ← $ᵗ CtxKey}[x = key].toReal *
           (ctxPrivacySecretPrefixProbabilityInner
             c key adversary).toReal := by
   unfold ctxPrivacySecretPrefixProbability
     ctxPrivacyRealFlaggedGame
     ctxPrivacySecretPrefixProbabilityInner
-  rw [probEvent_bind_eq_tsum]
+  rw [OracleComp.prEvent_bind_eq_tsum]
   rw [ENNReal.tsum_toReal_eq (fun key =>
-    ENNReal.mul_ne_top probOutput_ne_top probEvent_ne_top)]
+    ENNReal.mul_ne_top (prEvent_ne_top _) (prEvent_ne_top _))]
   refine tsum_congr fun key => ?_
   rw [ENNReal.toReal_mul]
 
@@ -353,7 +347,11 @@ theorem tvDist_ctxPrivacyRealGame_directSample_le_secretPrefix
       (ctxPrivacySecretPrefixProbability c adversary).toReal := by
   rw [ctxPrivacySecretPrefixProbability_toReal_eq_tsum]
   unfold ctxPrivacyRealGame ctxPrivacyDirectSampleGame
-  refine (tvDist_bind_left_le ($ᵗ CtxKey) _ _).trans ?_
+  have convex := tvDist_bind_left_le ($ᵗ CtxKey)
+    (fun key => ctxPrivacyRealExpInner c key adversary)
+    (fun key => ctxPrivacyDirectSampleExpInner c key adversary)
+  simp only [VCVioLegacy.probOutput_eq_prEvent] at convex
+  refine convex.trans ?_
   refine Summable.tsum_le_tsum (fun key => ?_) ?_ ?_
   · exact mul_le_mul_of_nonneg_left
       (tvDist_ctxPrivacyRealExpInner_directSample_le_secretPrefix
@@ -362,12 +360,14 @@ theorem tvDist_ctxPrivacyRealGame_directSample_le_secretPrefix
       (fun key => mul_nonneg ENNReal.toReal_nonneg (tvDist_nonneg _ _))
       (fun key => mul_le_of_le_one_right ENNReal.toReal_nonneg
         (tvDist_le_one _ _)) ?_
-    exact ENNReal.summable_toReal tsum_probOutput_ne_top
+    exact ENNReal.summable_toReal
+      (ne_top_of_le_ne_top one_ne_top (OracleComp.tsum_prEvent_le_one ($ᵗ CtxKey)))
   · refine Summable.of_nonneg_of_le
       (fun key => mul_nonneg ENNReal.toReal_nonneg ENNReal.toReal_nonneg)
       (fun key => mul_le_of_le_one_right ENNReal.toReal_nonneg ?_) ?_
-    · exact ENNReal.toReal_mono one_ne_top probEvent_le_one
-    · exact ENNReal.summable_toReal tsum_probOutput_ne_top
+    · exact ENNReal.toReal_mono one_ne_top (prEvent_le_one _)
+    · exact ENNReal.summable_toReal
+        (ne_top_of_le_ne_top one_ne_top (OracleComp.tsum_prEvent_le_one ($ᵗ CtxKey)))
 
 /-- The real public branch is exactly the canonical shared lazy-ROM handler. -/
 theorem ctxPrivacyRealImpl_public
@@ -649,30 +649,29 @@ theorem modifiedNonceAeadINDDollarRealExp_viewReduction_eq_directSampleGame
 noncomputable def ctxPrivacyDirectSamplePublicPrefixProbabilityInner
     (c : Pqxdh.Crypto) (key : CtxKey) {qH qE : ℕ}
     (adversary : CtxPrivacyAdversary qH qE) : ℝ≥0∞ :=
-  Pr[fun result : Bool × CtxIndependentTagState =>
-      ∃ input ∈ result.2.publicInputs, SecretPrefixQuery key input |
-    (simulateQ (ctxDirectSampleIndependentTagImpl c key)
-      adversary.main).run emptyCtxIndependentTagState]
+  Pr{let result ← ((simulateQ (ctxDirectSampleIndependentTagImpl c key)
+      adversary.main).run emptyCtxIndependentTagState)}[∃ input ∈ result.2.publicInputs, SecretPrefixQuery key input]
 
 /-- The independent Boolean privacy execution preserves the canonical prefix-event probability. -/
 theorem ctxPrivacyIndependent_badProbability_eq_secretPrefix
     (c : Pqxdh.Crypto) (key : CtxKey) {qH qE : ℕ}
     (adversary : CtxPrivacyAdversary qH qE) :
-    Pr[fun result => result.2.2 = true |
-      ctxPrivacyIndependentTagFlaggedExpInner c key adversary] =
+    Pr{let result ← ctxPrivacyIndependentTagFlaggedExpInner c key adversary}[result.2.2 = true] =
       ctxPrivacySecretPrefixProbabilityInner c key adversary := by
   calc
-    Pr[fun result => result.2.2 = true |
-        ctxPrivacyIndependentTagFlaggedExpInner c key adversary] =
-        Pr[fun result => result.2.2 = true |
-          ctxPrivacySplitRoutedFlaggedExpInner c key adversary] :=
-      (OracleComp.ProgramLogic.Relational.probEvent_output_bad_eq'
+    Pr{let result ← ctxPrivacyIndependentTagFlaggedExpInner c key adversary}[result.2.2 = true] =
+        Pr{let result ← ctxPrivacySplitRoutedFlaggedExpInner c key adversary}[result.2.2 = true] := by
+      have equal := OracleComp.ProgramLogic.Relational.probEvent_output_bad_eq'
         (ctxSplitRoutedWithPrefixFlagImpl c key)
         (ctxIndependentWithPrefixFlagImpl c key)
-        (ctxSplitRouted_independent_agree_good_vcvioLegacy c key)
+        (fun query state output state' => by
+          simpa only [VCVioLegacy.probOutput_eq_prEvent] using
+            ctxSplitRouted_independent_agree_good c key query state output state')
         (ctxSplitRoutedWithPrefixFlagImpl_bad_mono c key)
         (ctxIndependentWithPrefixFlagImpl_bad_mono c key)
-        adversary.main emptyCtxIndependentTagState).symm
+        adversary.main emptyCtxIndependentTagState
+      rw [VCVioLegacy.probEvent_eq_prEvent, VCVioLegacy.probEvent_eq_prEvent] at equal
+      exact equal.symm
     _ = ctxPrivacySecretPrefixProbabilityInner c key adversary :=
       ctxPrivacySplitRouted_badProbability_eq_secretPrefix
         c key adversary
@@ -681,16 +680,13 @@ theorem ctxPrivacyIndependent_badProbability_eq_secretPrefix
 theorem ctxPrivacyIndependent_badProbability_eq_publicPrefix
     (c : Pqxdh.Crypto) (key : CtxKey) {qH qE : ℕ}
     (adversary : CtxPrivacyAdversary qH qE) :
-    Pr[fun result => result.2.2 = true |
-      ctxPrivacyIndependentTagFlaggedExpInner c key adversary] =
-      Pr[fun result : Bool × CtxIndependentTagState =>
-          ∃ input ∈ result.2.publicInputs, SecretPrefixQuery key input |
-        (simulateQ (ctxIndependentTagImpl c key)
-          adversary.main).run emptyCtxIndependentTagState] := by
+    Pr{let result ← ctxPrivacyIndependentTagFlaggedExpInner c key adversary}[result.2.2 = true] =
+      Pr{let result ← ((simulateQ (ctxIndependentTagImpl c key)
+          adversary.main).run emptyCtxIndependentTagState)}[∃ input ∈ result.2.publicInputs, SecretPrefixQuery key input] := by
   unfold ctxPrivacyIndependentTagFlaggedExpInner
   rw [← ctxIndependentWithPrefixFlagImpl_proj_run_of_main
-    c key adversary.main, probEvent_map]
-  apply OracleComp.probEvent_congr' _ rfl
+    c key adversary.main, prEvent_map]
+  apply prEvent_congr_of_support
   intro result hresult
   exact ctxIndependentTagFlagged_run_prefix_flag_of_main
     c key adversary.main result hresult
@@ -704,14 +700,11 @@ theorem ctxPrivacySecretPrefixProbabilityInner_eq_directSamplePublicPrefix
         c key adversary := by
   calc
     ctxPrivacySecretPrefixProbabilityInner c key adversary =
-        Pr[fun result => result.2.2 = true |
-          ctxPrivacyIndependentTagFlaggedExpInner c key adversary] :=
+        Pr{let result ← ctxPrivacyIndependentTagFlaggedExpInner c key adversary}[result.2.2 = true] :=
       (ctxPrivacyIndependent_badProbability_eq_secretPrefix
         c key adversary).symm
-    _ = Pr[fun result : Bool × CtxIndependentTagState =>
-          ∃ input ∈ result.2.publicInputs, SecretPrefixQuery key input |
-        (simulateQ (ctxIndependentTagImpl c key)
-          adversary.main).run emptyCtxIndependentTagState] :=
+    _ = Pr{let result ← ((simulateQ (ctxIndependentTagImpl c key)
+          adversary.main).run emptyCtxIndependentTagState)}[∃ input ∈ result.2.publicInputs, SecretPrefixQuery key input] :=
       ctxPrivacyIndependent_badProbability_eq_publicPrefix
         c key adversary
     _ = ctxPrivacyDirectSamplePublicPrefixProbabilityInner
@@ -736,15 +729,15 @@ noncomputable def ctxPrivacyDirectSamplePrefixProbeExpInner
 theorem ctxPrivacyDirectSamplePrefixProbeExpInner_probability
     (c : Pqxdh.Crypto) (key : CtxKey) {qH qE : ℕ}
     (adversary : CtxPrivacyAdversary qH qE) :
-    Pr[= true |
-      ctxPrivacyDirectSamplePrefixProbeExpInner c key adversary] =
+    Pr{let x ← ctxPrivacyDirectSamplePrefixProbeExpInner c key adversary}[x = true] =
       ctxPrivacyDirectSamplePublicPrefixProbabilityInner
         c key adversary := by
   classical
   unfold ctxPrivacyDirectSamplePrefixProbeExpInner
     ctxPrivacyDirectSamplePublicPrefixProbabilityInner
-  rw [← probEvent_eq_eq_probOutput, bind_pure_comp, probEvent_map]
-  apply OracleComp.probEvent_congr' _ rfl
+  rw [bind_pure_comp _ ((simulateQ (ctxDirectSampleIndependentTagImpl c key)
+      adversary.main).run emptyCtxIndependentTagState), prEvent_map]
+  apply prEvent_congr_of_support
   intro result hresult
   simpa [Function.comp_def] using
     (ctxPrefixProbeVector_hit_iff_of_length_le
@@ -764,13 +757,12 @@ theorem ctxPrivacySecretPrefixProbability_eq_directSampleProbe
     (c : Pqxdh.Crypto) {qH qE : ℕ}
     (adversary : CtxPrivacyAdversary qH qE) :
     ctxPrivacySecretPrefixProbability c adversary =
-      Pr[= true |
-        ctxPrivacyDirectSamplePrefixProbeExp c adversary] := by
+      Pr{let x ← ctxPrivacyDirectSamplePrefixProbeExp c adversary}[x = true] := by
   classical
   unfold ctxPrivacySecretPrefixProbability
     ctxPrivacyRealFlaggedGame
     ctxPrivacyDirectSamplePrefixProbeExp
-  rw [probEvent_bind_eq_tsum, probOutput_bind_eq_tsum]
+  rw [OracleComp.prEvent_bind_eq_tsum, OracleComp.prEvent_bind_eq_tsum]
   apply tsum_congr
   intro key
   congr 1
@@ -839,10 +831,9 @@ theorem ctxPrivacySecretPrefixProbability_eq_realProbeReduction
     (c : Pqxdh.Crypto) {qH qE : ℕ}
     (adversary : CtxPrivacyAdversary qH qE) :
     ctxPrivacySecretPrefixProbability c adversary =
-      Pr[= true |
-        modifiedNonceAeadINDDollarRealProbeExp c
+      Pr{let x ← (modifiedNonceAeadINDDollarRealProbeExp c
           (ctxPrivacyPrefixToModifiedNonceAeadINDDollarReduction
-            adversary)] := by
+            adversary))}[x = true] := by
   rw [ctxPrivacySecretPrefixProbability_eq_directSampleProbe]
   rw [modifiedNonceAeadINDDollarRealProbeExp_privacyReduction_eq_directSample]
 
@@ -860,18 +851,18 @@ theorem ctxPrivacySecretPrefixProbability_le_probeINDDollar
     ctxPrivacyPrefixToModifiedNonceAeadINDDollarReduction adversary
   calc
     ctxPrivacySecretPrefixProbability c adversary =
-        Pr[= true |
-          modifiedNonceAeadINDDollarRealProbeExp c reduction] := by
+        Pr{let x ← modifiedNonceAeadINDDollarRealProbeExp c reduction}[x = true] := by
       exact ctxPrivacySecretPrefixProbability_eq_realProbeReduction
         c adversary
-    _ ≤ Pr[= true |
-          modifiedNonceAeadINDDollarRandomProbeExp reduction] +
+    _ ≤ Pr{let x ← modifiedNonceAeadINDDollarRandomProbeExp reduction}[x = true] +
         ENNReal.ofReal
           (modifiedNonceAeadINDDollarProbeAdvantage c reduction) := by
       have comparison := VCVioForward.evalDist_apply_true_le_add_ofReal_boolDistAdvantage
           (modifiedNonceAeadINDDollarRealProbeExp c reduction)
           (modifiedNonceAeadINDDollarRandomProbeExp reduction)
-      simp only [VCVioLegacy.evalDist_singleton_eq_probOutput] at comparison
+      rw [← prEvent_eq_evalDist_singleton (modifiedNonceAeadINDDollarRealProbeExp c reduction) true,
+        ← prEvent_eq_evalDist_singleton (modifiedNonceAeadINDDollarRandomProbeExp reduction) true]
+        at comparison
       exact comparison
     _ ≤ (qH : ℝ≥0∞) * (Fintype.card CtxKey : ℝ≥0∞)⁻¹ +
         ENNReal.ofReal
@@ -927,38 +918,37 @@ theorem ctxPrivacyPrefixToBooleanINDDollarReduction_seal_query_bound
 theorem ctxPrivacyPrefixBooleanReduction_random_le
     (c : Pqxdh.Crypto) {qH qE : ℕ}
     (adversary : CtxPrivacyAdversary qH qE) :
-    Pr[= true |
-      modifiedNonceAeadINDDollarRandomExp
-        (ctxPrivacyPrefixToBooleanINDDollarReduction c adversary)] ≤
+    Pr{let x ← (modifiedNonceAeadINDDollarRandomExp
+        (ctxPrivacyPrefixToBooleanINDDollarReduction c adversary))}[x = true] ≤
       (qH : ℝ≥0∞) * (((2 ^ 128 : ℕ) : ℝ≥0∞))⁻¹ := by
   unfold modifiedNonceAeadINDDollarRandomExp
-    ctxPrivacyPrefixToBooleanINDDollarReduction
-  simp only [simulateQ_bind, StateT.run_bind, bind_assoc]
-  rw [← probEvent_eq_eq_probOutput]
-  simp_rw [simulateQ_queryModifiedNonceAeadSeal_random]
-  simp_rw [simulateQ_pure, StateT.run_pure]
-  simp only [pure_bind]
-  refine probEvent_bind_le_of_forall_le
-    (mx := (simulateQ modifiedNonceAeadINDDollarRandomImpl
-      ((simulateQ ctxRetainedBaseReductionImpl adversary.main).run
-        emptyCtxIndependentTagState)).run
-          emptyModifiedNonceAeadHandlerState) ?_
-  rintro ⟨⟨decision, state⟩, primitiveState⟩ _
-  simpa [probEvent_eq_eq_probOutput] using
-    (randomValidationContinuation_le c
-      (chooseFreshCtxNonce state.usedNonces)
-      (ctxPrefixProbeVector qH state.publicInputs) primitiveState)
+  rw [bind_pure_comp _ ((simulateQ modifiedNonceAeadINDDollarRandomImpl
+    (ctxPrivacyPrefixToBooleanINDDollarReduction c adversary).main).run emptyModifiedNonceAeadHandlerState),
+    prEvent_map]
+  unfold ctxPrivacyPrefixToBooleanINDDollarReduction
+  simp only [simulateQ_bind, StateT.run_bind]
+  refine prEvent_bind_le_of_forall_le _ _ _ fun result => ?_
+  rcases result with ⟨⟨decision, state⟩, primitiveState⟩
+  have bound := randomValidationContinuation_le c
+    (chooseFreshCtxNonce state.usedNonces)
+    (ctxPrefixProbeVector qH state.publicInputs) primitiveState
+  rw [bind_pure_comp _ ((modifiedNonceAeadINDDollarRandomSealOracle
+    (ctxValidationInput (chooseFreshCtxNonce state.usedNonces))).run primitiveState),
+    prEvent_map] at bound
+  simp only [simulateQ_queryModifiedNonceAeadSeal_random, simulateQ_pure, StateT.run_pure]
+  rw [bind_pure_comp _ ((modifiedNonceAeadINDDollarRandomSealOracle
+    (ctxValidationInput (chooseFreshCtxNonce state.usedNonces))).run primitiveState),
+    prEvent_map]
+  exact bound
 
 /-- Fixed-key direct privacy probe success is contained in real validation success. -/
 theorem ctxPrivacyDirectProbe_le_booleanRealInner
     (c : Pqxdh.Crypto) (key : CtxKey) {qH qE : ℕ}
     (adversary : CtxPrivacyAdversary qH qE)
     (hqE : qE < 2 ^ 96) :
-    Pr[= true |
-      ctxPrivacyDirectSamplePrefixProbeExpInner c key adversary] ≤
-      Pr[= true |
-        modifiedNonceAeadINDDollarRealExpInner c key
-          (ctxPrivacyPrefixToBooleanINDDollarReduction c adversary)] := by
+    Pr{let x ← ctxPrivacyDirectSamplePrefixProbeExpInner c key adversary}[x = true] ≤
+      Pr{let x ← (modifiedNonceAeadINDDollarRealExpInner c key
+          (ctxPrivacyPrefixToBooleanINDDollarReduction c adversary))}[x = true] := by
   unfold ctxPrivacyDirectSamplePrefixProbeExpInner
     modifiedNonceAeadINDDollarRealExpInner
     ctxPrivacyPrefixToBooleanINDDollarReduction
@@ -970,8 +960,7 @@ theorem ctxPrivacyDirectProbe_le_booleanRealInner
   simp only [pure_bind]
   rw [← bind_pure_comp]
   simp only [bind_assoc, pure_bind]
-  refine probOutput_bind_mono ?_
-  intro result hresult
+  refine OracleComp.prEvent_bind_mono_of_support _ _ _ fun result hresult => ?_
   by_cases hhit : CtxKeyProbeHit key
       (ctxPrefixProbeVector qH result.2.publicInputs)
   · have hfresh := chooseFreshCtxNonce_fresh_of_direct_support_of_main
@@ -983,8 +972,8 @@ theorem ctxPrivacyDirectProbe_le_booleanRealInner
     have haccept := keyProbeHit_implies_realValidationCiphertextHit
       c key (chooseFreshCtxNonce result.2.usedNonces)
       (ctxPrefixProbeVector qH result.2.publicInputs) hhit
-    simp [hhit, ctxValidationAccept, haccept]
-  · simp [hhit]
+    simp [hhit, ctxValidationAccept, haccept, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+  · simp [hhit, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
 
 /-- The canonical privacy prefix event is contained in real conventional validation success. -/
 theorem ctxPrivacySecretPrefixProbability_le_booleanReal
@@ -992,19 +981,15 @@ theorem ctxPrivacySecretPrefixProbability_le_booleanReal
     (adversary : CtxPrivacyAdversary qH qE)
     (hqE : qE < 2 ^ 96) :
     ctxPrivacySecretPrefixProbability c adversary ≤
-      Pr[= true |
-        modifiedNonceAeadINDDollarRealExp c
-          (ctxPrivacyPrefixToBooleanINDDollarReduction c adversary)] := by
+      Pr{let x ← (modifiedNonceAeadINDDollarRealExp c
+          (ctxPrivacyPrefixToBooleanINDDollarReduction c adversary))}[x = true] := by
   rw [ctxPrivacySecretPrefixProbability_eq_directSampleProbe]
   unfold ctxPrivacyDirectSamplePrefixProbeExp
     modifiedNonceAeadINDDollarRealExp
-  refine probOutput_bind_mono ?_
-  intro key _
-  change Pr[= true |
-      ctxPrivacyDirectSamplePrefixProbeExpInner c key adversary] ≤
-    Pr[= true |
-      modifiedNonceAeadINDDollarRealExpInner c key
-        (ctxPrivacyPrefixToBooleanINDDollarReduction c adversary)]
+  refine prEvent_bind_mono_of_forall_le _ _ _ _ _ fun key => ?_
+  change Pr{let x ← ctxPrivacyDirectSamplePrefixProbeExpInner c key adversary}[x = true] ≤
+    Pr{let x ← (modifiedNonceAeadINDDollarRealExpInner c key
+        (ctxPrivacyPrefixToBooleanINDDollarReduction c adversary))}[x = true]
   exact ctxPrivacyDirectProbe_le_booleanRealInner
     c key adversary hqE
 
@@ -1022,18 +1007,18 @@ theorem ctxPrivacySecretPrefixProbability_le_booleanINDDollar
     ctxPrivacyPrefixToBooleanINDDollarReduction c adversary
   calc
     ctxPrivacySecretPrefixProbability c adversary ≤
-        Pr[= true |
-          modifiedNonceAeadINDDollarRealExp c reduction] := by
+        Pr{let x ← modifiedNonceAeadINDDollarRealExp c reduction}[x = true] := by
       exact ctxPrivacySecretPrefixProbability_le_booleanReal
         c adversary hqE
-    _ ≤ Pr[= true |
-          modifiedNonceAeadINDDollarRandomExp reduction] +
+    _ ≤ Pr{let x ← modifiedNonceAeadINDDollarRandomExp reduction}[x = true] +
         ENNReal.ofReal
           (modifiedNonceAeadINDDollarAdvantage c reduction) := by
       have comparison := VCVioForward.evalDist_apply_true_le_add_ofReal_boolDistAdvantage
           (modifiedNonceAeadINDDollarRealExp c reduction)
           (modifiedNonceAeadINDDollarRandomExp reduction)
-      simp only [VCVioLegacy.evalDist_singleton_eq_probOutput] at comparison
+      rw [← prEvent_eq_evalDist_singleton (modifiedNonceAeadINDDollarRealExp c reduction) true,
+        ← prEvent_eq_evalDist_singleton (modifiedNonceAeadINDDollarRandomExp reduction) true]
+        at comparison
       exact comparison
     _ ≤ (qH : ℝ≥0∞) * (((2 ^ 128 : ℕ) : ℝ≥0∞))⁻¹ +
         ENNReal.ofReal
@@ -1063,7 +1048,7 @@ theorem ofReal_ctxPrivacyAdvantage_le_viewAdvantage_add_secretPrefix
         (𝒟[ctxPrivacyDirectSampleGame c adversary] {true}).toReal| ≤
           tvDist (ctxPrivacyRealGame c adversary)
             (ctxPrivacyDirectSampleGame c adversary) from ?_).trans ?_
-    · simpa only [evalDist_apply_singleton] using
+    · simpa only [VCVioLegacy.evalDist_singleton_eq_probOutput] using
         abs_probOutput_toReal_sub_le_tvDist
           (ctxPrivacyRealGame c adversary)
           (ctxPrivacyDirectSampleGame c adversary)
@@ -1097,7 +1082,7 @@ theorem ofReal_ctxPrivacyAdvantage_le_viewAdvantage_add_secretPrefix
   have hprefix_ne_top :
       ctxPrivacySecretPrefixProbability c adversary ≠ ∞ := by
     unfold ctxPrivacySecretPrefixProbability
-    exact probEvent_ne_top
+    exact prEvent_ne_top _
   calc
     ENNReal.ofReal (ctxPrivacyAdvantage c adversary) ≤
         ENNReal.ofReal

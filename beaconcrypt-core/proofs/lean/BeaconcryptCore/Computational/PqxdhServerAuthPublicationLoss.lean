@@ -36,7 +36,7 @@ theorem recordLoss_expanded (setup : Setup baseSpec KemSK) (codec : Codec Reader
   have nonnegative (reduction : ModifiedNonceAeadINDDollarAdversary) :
       0 ≤ modifiedNonceAeadINDDollarAdvantage setup.source.crypto reduction := abs_nonneg _
   have integrityFinite : modifiedNonceAeadINTCTXTAdvantage setup.source.crypto
-      (PqxdhServerAuthCtxObserverEvent.integrity setup codec checks adversary Q j fallback) ≠ ⊤ := probEvent_ne_top
+      (PqxdhServerAuthCtxObserverEvent.integrity setup codec checks adversary Q j fallback) ≠ ⊤ := prEvent_ne_top _
   simp only [recordLoss, PqxdhServerAuthCtxObserverEvent.ctxLoss, PqxdhServerAuthCtxObserverEvent.ctxLossENN,
     PqxdhServerAuthPublicationPrivacy.loss, PqxdhServerAuthPublicationPrivacy.lossENN]
   have finiteStat : (H : ℝ≥0∞) * ((2 ^ 128 : Nat) : ℝ≥0∞)⁻¹ ≠ ⊤ :=
