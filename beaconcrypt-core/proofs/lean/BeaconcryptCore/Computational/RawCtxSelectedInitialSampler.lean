@@ -69,7 +69,7 @@ theorem delayed_eq {Context Result : Type} (sample : ProbComp Context)
     let result ← observe (context, ⟨address context, other.1, other.2⟩)
     pure (target, result))).trans ?_
   exact evalSPMF_bind_congr' ($ᵗ Remainder) (fun other =>
-    evalSPMF_sample_comm ($ᵗ RootOutput) (observe (context, ⟨address context, other.1, other.2⟩))
+    evalSPMF_sample_comm_vcvioLegacy ($ᵗ RootOutput) (observe (context, ⟨address context, other.1, other.2⟩))
       (fun target result => pure (target, result)))
 
 def initialOther (output : HmacBlock) : RootOutput := (vectorSplitEquiv 32 32 output).2
@@ -129,7 +129,7 @@ theorem initial_delayed_eq {Context Result : Type} (sample : ProbComp Context)
     let result ← observe context other
     pure (target, result))).trans ?_
   exact evalSPMF_bind_congr' ($ᵗ RootOutput) (fun other =>
-    evalSPMF_sample_comm ($ᵗ RootOutput) (observe context other) (fun target result => pure (target, result)))
+    evalSPMF_sample_comm_vcvioLegacy ($ᵗ RootOutput) (observe context other) (fun target result => pure (target, result)))
 
 set_option maxRecDepth 2048 in
 /-- The full76 source sampler pays every context, output-byte and continuation request. -/

@@ -461,7 +461,7 @@ theorem ctxClassifiedForgeryGame_le_direct_add_prefix
     _ = Pr[= true | ctxDirectClassifiedForgeryGame c adversary] +
           ctxSecretPrefixQueriedProbability c adversary := by
       have hprefix : ctxSecretPrefixQueriedProbability c adversary ≠ ⊤ := by
-        unfold ctxSecretPrefixQueriedProbability
+        simp only [ctxSecretPrefixQueriedProbability_vcvioLegacy]
         exact probEvent_ne_top
       rw [ENNReal.ofReal_toReal hprefix]
 
@@ -506,7 +506,7 @@ theorem ctxTypedFullFreshForgeryGame_le_direct_add_prefix
     _ = Pr[= true | ctxDirectTypedFullFreshForgeryGame c adversary] +
           ctxSecretPrefixQueriedProbability c adversary := by
       have hprefix : ctxSecretPrefixQueriedProbability c adversary ≠ ⊤ := by
-        unfold ctxSecretPrefixQueriedProbability
+        simp only [ctxSecretPrefixQueriedProbability_vcvioLegacy]
         exact probEvent_ne_top
       rw [ENNReal.ofReal_toReal hprefix]
 

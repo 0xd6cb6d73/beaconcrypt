@@ -631,7 +631,7 @@ theorem observed_source {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Res
   apply evalDist_eq_of_evalSPMF_eq
   simpa only [seedReal, sourceFullGame, PqxdhServerAuthKeySchedule.uniform32,
     reductionObserver, bind_assoc, pure_bind] using
-    evalSPMF_sample_comm (retainedContext source ideal setup codec target client) ($ᵗ RootOutput)
+    evalSPMF_sample_comm_vcvioLegacy (retainedContext source ideal setup codec target client) ($ᵗ RootOutput)
       (fun context hidden => seedObserver source ideal filling setup codec target direction observer context
         (PqxdhJointKdf.productionStream source.crypto (FixedHkdfDomain.ratchet.address hidden.toList)))
 
@@ -660,7 +660,7 @@ theorem uniform_source {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Resp
   simp only [seedUniform, independentFullGame, PqxdhServerAuthKeySchedule.uniform32,
     reductionObserver, bind_assoc, pure_bind]
   rw [OracleComp.DeferredSampling.evalSPMF_bind_const_neverFails ($ᵗ RootOutput) (by simp)]
-  exact evalSPMF_sample_comm (retainedContext source ideal setup codec target client) ($ᵗ FullOutput)
+  exact evalSPMF_sample_comm_vcvioLegacy (retainedContext source ideal setup codec target client) ($ᵗ FullOutput)
     (seedObserver source ideal filling setup codec target direction observer)
 
 /-- Either directional global seed cut has a coefficient-one ordinary uniform32 Extract and two-query uniform-secret-key HMAC bound. The sole source premise is the existing functional HKDF implementation equality; this is not yet an adjacent-policy or global security theorem. -/

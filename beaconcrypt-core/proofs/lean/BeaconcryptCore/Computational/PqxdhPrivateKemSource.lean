@@ -172,7 +172,7 @@ theorem generators_complete_continuation {Result : Type}
            let after ← simulateQ (kemAmbientImpl baseImpl)
              (setup.oneTime (primitives.publicKeys retained.1).ed25519 retained.2 pair.1)
            next retained.1 ⟨retained.2, pair.1, pair.2, after⟩] := by
-  have commute := PqxdhSecretInputKdf.evalSPMF_sample_comm (identityPreSample baseImpl primitives setup)
+  have commute := PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy (identityPreSample baseImpl primitives setup)
     (simulateQ (kemAmbientImpl baseImpl) kem.keygen)
     (fun retained pair => do
       let after ← simulateQ (kemAmbientImpl baseImpl)

@@ -257,7 +257,7 @@ theorem injective_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
       ∑ target : Fin (budget.create + 1), advantage setup.joint
         (PqxdhDeploymentServerAuthInjective.collider setup.joint budget.create target) := by
   classical
-  rw [UniformTargetSelection.chance_eq]
+  rw [UniformTargetSelection.chance_eq_vcvioLegacy]
   refine le_trans (probEvent_mono (q := fun outcome => ∃ created output final, outcome.1 = some (created, output, final) ∧
     Collision setup.joint (identities final.2.native)) fun outcome member ⟨c, c', shared⟩ =>
       shared_collision setup codec checks route ensureInit phase1 phase2 bounds mode adversary runtime outcome member c c'
@@ -343,12 +343,12 @@ theorem ce_a1_injective (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
   refine ⟨?_, unmatched.2, fun target => PqxdhDeploymentServerAuthInjective.collider_bills setup.joint budget.create target⟩
   set run := (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode adversary).run runtime
   classical
-  rw [UniformTargetSelection.chance_eq] at unmatched injective
+  rw [UniformTargetSelection.chance_eq_vcvioLegacy] at unmatched injective
   have total : 𝒟[(fun outcome => @decide ((∃ c, PqxdhDeploymentServerAuth.A1NoPinnedMatch setup codec c outcome) ∨
       ∃ c c', SharedMatch setup codec c c' outcome) (Classical.propDecidable _)) <$> run] {true} =
       Pr[fun outcome => (∃ c, PqxdhDeploymentServerAuth.A1NoPinnedMatch setup codec c outcome) ∨
         ∃ c c', SharedMatch setup codec c c' outcome | run] :=
-    @UniformTargetSelection.chance_eq _ run _ (fun _ => Classical.propDecidable _)
+    @UniformTargetSelection.chance_eq_vcvioLegacy _ run _ (fun _ => Classical.propDecidable _)
   rw [total]
   have split := probEvent_or_le run (fun outcome => ∃ c, PqxdhDeploymentServerAuth.A1NoPinnedMatch setup codec c outcome)
     (fun outcome => ∃ c c', SharedMatch setup codec c c' outcome)

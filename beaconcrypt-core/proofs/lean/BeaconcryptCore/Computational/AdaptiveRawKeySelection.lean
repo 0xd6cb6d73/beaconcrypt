@@ -112,7 +112,7 @@ theorem source_prepared_selection {count : Nat} (target : Fin (count + 1))
         (AdaptiveRawKeyPreparation.independentSetup count ()) targetReal targetDecode real decode c
           (fun _ => simulateQ (select target) client)] := by
   unfold sourceGame
-  rw [partition_continuation count target]
+  rw [partition_continuation_vcvioLegacy count target]
   simp only [AdaptiveRawKeyPreparation.source, AdaptiveRawKeyPreparation.independentSetup,
     uniformSource, fixed_source_selection, map_bind, bind_assoc, pure_bind, map_pure]
   simp only [erasePrepared, bind_pure_comp]

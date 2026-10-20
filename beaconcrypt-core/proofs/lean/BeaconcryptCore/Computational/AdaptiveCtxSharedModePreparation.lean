@@ -74,7 +74,7 @@ theorem prepared_interpretation {Context Result : Type} {count : Nat}
   simp only [source, uniform_interpretation, targetGame, wrapped, simulateQ_bind,
     StateT.run_bind, simulateQ_pure, StateT.run_pure, mode_uniform, map_bind,
     bind_assoc, bind_map_left, map_pure]
-  exact JointEagerTable.independent_comm_spmf prepare ($ᵗ CtxKey) _
+  exact JointEagerTable.independent_comm_spmf_vcvioLegacy prepare ($ᵗ CtxKey) _
 
 open AdaptiveCtxSharedPreparation (lift_no_class lift_uniform_bound)
 

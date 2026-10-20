@@ -219,7 +219,7 @@ theorem rootExpand_random (source : FixedHkdfSha512NoSaltSource) (distinguisher 
     𝒟[hmacPrfRandomGame (rootExpandReduction source distinguisher)] =
       𝒟[rootHybrid source distinguisher] := by
   apply evalDist_eq_of_evalSPMF_eq
-  rw [rootExpandReduction, hmacRandom_eq_independentRoot]
+  rw [rootExpandReduction, hmacRandom_eq_independentRoot_vcvioLegacy]
   simp [independentRootGame, unitSample, rootObserver, rootHybrid]
 
 /-- The real Extract world of reduction 2 is hybrid 1, by `SourceFullCorrect` for the 64-byte HKDF. -/
@@ -401,9 +401,9 @@ theorem keySchedule_bound_context {Context : Type} (source : FixedHkdfSha512NoSa
           (extractUniformGame uniform32 (stepExtractReduction hmac (withContext sample distinguisher))) +
         (hmacPrfRealGame hmac (stepExpandReduction (withContext sample distinguisher))).boolDistAdvantage
           (hmacPrfRandomGame (stepExpandReduction (withContext sample distinguisher))) := by
-  have real := evalDist_eq_of_evalSPMF_eq _ _ (PqxdhSecretInputKdf.evalSPMF_sample_comm sample
+  have real := evalDist_eq_of_evalSPMF_eq _ _ (PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy sample
     ($ᵗ HmacBlock) (fun context prk => distinguisher context (keySchedule source hmac prk)))
-  have ideal := evalDist_eq_of_evalSPMF_eq _ _ (PqxdhSecretInputKdf.evalSPMF_sample_comm sample
+  have ideal := evalDist_eq_of_evalSPMF_eq _ _ (PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy sample
     ($ᵗ Output) (fun context output => distinguisher context output))
   rw [advantage_congr real ideal]
   exact keySchedule_bound source hmac correct (withContext sample distinguisher)

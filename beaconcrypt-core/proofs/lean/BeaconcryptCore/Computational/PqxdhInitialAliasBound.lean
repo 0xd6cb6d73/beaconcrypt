@@ -74,7 +74,7 @@ theorem delayed (fixed : FixedHkdfSha512NoSaltSource)
         pure (root, (output, result))] := by
   simp only [sampleCut, left, bind_assoc, pure_bind]
   refine evalSPMF_bind_congr' (m := ProbComp) sample fun context => ?_
-  have moved := evalSPMF_sample_comm ($ᵗ RootOutput)
+  have moved := evalSPMF_sample_comm_vcvioLegacy ($ᵗ RootOutput)
     (do let output ← $ᵗ HmacBlock
         let result ← observed fixed selected client context output
         pure (output, result)) (fun root pair => (pure (root, pair) : ProbComp _))

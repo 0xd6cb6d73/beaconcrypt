@@ -283,7 +283,7 @@ theorem seeds_eager (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
               (fun result : Result × (State KemSK × List IdentitySeed) => (result.1, result.2.1)) <$>
                 (simulateQ (seedEager setup codec checks seed) (next result.1)).run result.2]
         simp only [bind_map_left]
-        rw [PqxdhSecretInputKdf.evalSPMF_sample_comm (PqxdhDynamicIdentityPool.sampleSeeds fewer)
+        rw [PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy (PqxdhDynamicIdentityPool.sampleSeeds fewer)
           (createWith setup identity pin keyId state)]
         apply evalSPMF_bind_congr'
         intro result
@@ -291,7 +291,7 @@ theorem seeds_eager (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
         simp only [creates, ite_true] at rest
         exact ih result.1 fewer rest result.2
       · simp only [seedEager_other setup codec checks seed query creates, bind_map_left]
-        rw [PqxdhSecretInputKdf.evalSPMF_sample_comm (PqxdhDynamicIdentityPool.sampleSeeds count)
+        rw [PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy (PqxdhDynamicIdentityPool.sampleSeeds count)
           ((base setup codec checks seed query).run state)]
         apply evalSPMF_bind_congr'
         intro result

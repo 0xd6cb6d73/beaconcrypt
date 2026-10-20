@@ -120,7 +120,7 @@ theorem event_good {X : Type} (target : Label n) (decode : RawDecoder)
     𝒟[(simulateQ (marked target decode left) work).run state] {result | event result ∧ result.2.2 = false} =
       𝒟[(simulateQ (marked target decode right) work).run state] {result | event result ∧ result.2.2 = false} := by
   simpa only [evalDist_apply_setOf] using
-    StatefulGoodEvent.event_good (marked target decode left) (marked target decode right)
+    StatefulGoodEvent.event_good_vcvioLegacy (marked target decode left) (marked target decode right)
       (fun query current reply next => by
         simpa only [evalDist_apply_singleton] using (agree_good target decode left right agree query current reply next))
       (marked_sticky target decode left) (marked_sticky target decode right) work state event

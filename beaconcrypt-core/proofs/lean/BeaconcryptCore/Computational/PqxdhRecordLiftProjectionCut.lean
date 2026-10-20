@@ -133,7 +133,7 @@ theorem observed_delayed {Context X : Type} (part : Part)
     let answer ← observe (pair.1, mask pair.2.val.2 pair.2.val.1 value)
     pure (target, answer))).trans ?_
   exact evalSPMF_bind_congr' ($ᵗ Retained) (fun value =>
-    evalSPMF_sample_comm ($ᵗ RootOutput)
+    evalSPMF_sample_comm_vcvioLegacy ($ᵗ RootOutput)
       (observe (pair.1, mask pair.2.val.2 pair.2.val.1 value))
       (fun target answer => pure (target, answer)))
 
@@ -207,7 +207,7 @@ theorem child_source {Context : Type} (source : FixedHkdfSha512NoSaltSource)
   rw [factor]
   simpa only [sourceFullGame, PqxdhServerAuthKeySchedule.uniform32, unitObserver,
     bind_assoc, pure_bind] using
-    evalSPMF_sample_comm (retainedContext sample) ($ᵗ RootOutput)
+    evalSPMF_sample_comm_vcvioLegacy (retainedContext sample) ($ᵗ RootOutput)
       (fun context target => observe context (PqxdhJointKdf.productionStream source.crypto
         (FixedHkdfDomain.ratchet.address target.toList)))
 
@@ -220,7 +220,7 @@ theorem child_independent {Context : Type}
   simp only [independentFullGame, PqxdhServerAuthKeySchedule.uniform32, unitObserver,
     bind_assoc, pure_bind]
   rw [OracleComp.DeferredSampling.evalSPMF_bind_const_neverFails ($ᵗ RootOutput) (by simp)]
-  exact evalSPMF_sample_comm (retainedContext sample) ($ᵗ FullOutput) observe
+  exact evalSPMF_sample_comm_vcvioLegacy (retainedContext sample) ($ᵗ FullOutput) observe
 
 /-- The cut uses Extract only at the ordinary uniform32 sampler, plus a two-query uniform-secret-key HMAC reduction. No joint-sampler security assumption is added. -/
 theorem child_bound {Context : Type} (source : FixedHkdfSha512NoSaltSource) (hmac : HmacSha512)

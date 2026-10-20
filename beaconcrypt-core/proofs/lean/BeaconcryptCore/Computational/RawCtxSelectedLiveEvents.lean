@@ -30,7 +30,7 @@ theorem event_good {Metadata Auxiliary Result : Type} {serverCount beaconCount :
     Pr[fun result => event result ∧ result.2.2 = false |
       (simulateQ (observedImpl source writer (RawCtxKdfRequestTable.fullResponse output)
         sender decode owner labelRead) client).run state] := by
-  exact StatefulGoodEvent.event_good _ _
+  exact StatefulGoodEvent.event_good_vcvioLegacy _ _
     (agree_good source writer _ sender decode owner target)
     (sticky source writer _ sender decode owner (nativeReader target))
     (sticky source writer _ sender decode owner labelRead) client state event

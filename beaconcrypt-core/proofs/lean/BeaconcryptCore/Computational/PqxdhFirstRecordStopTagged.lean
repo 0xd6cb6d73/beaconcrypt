@@ -5306,7 +5306,7 @@ theorem bind_le_support {α : Type} (first : ProbComp α) (left right : α → P
 /-- A uniform 32-byte value drawn before a computation that does not depend on it lies in the computation's final log with probability at most the log-length bound divided by `2^256`. -/
 theorem delayed_bound (run : ProbComp Log) (budget : Nat) (bounded : ∀ log ∈ support run, log.length ≤ budget) :
     Pr[= true | $ᵗ RootOutput >>= fun target => (fun log => decide (target ∈ log)) <$> run] ≤ (budget : ℝ≥0∞) / 2 ^ 256 := by
-  have swapped := evalSPMF_sample_comm ($ᵗ RootOutput) run (fun target log => (pure (decide (target ∈ log)) : ProbComp Bool))
+  have swapped := evalSPMF_sample_comm_vcvioLegacy ($ᵗ RootOutput) run (fun target log => (pure (decide (target ∈ log)) : ProbComp Bool))
   have shape : ($ᵗ RootOutput >>= fun target => (fun log => decide (target ∈ log)) <$> run) =
       ($ᵗ RootOutput >>= fun target => run >>= fun log => pure (decide (target ∈ log))) := by
     simp only [map_eq_bind_pure_comp, Function.comp_def]

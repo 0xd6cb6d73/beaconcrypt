@@ -24,7 +24,7 @@ theorem uniform_candidates (candidates : List RootOutput) :
   rw [← projected, probEvent_map]
   change Pr[fun value : Material => value.1 ∈ candidates | $ᵗ Material] ≤ _
   simpa only [PqxdhMaterialKeyCollisions.material_key_card, Nat.cast_pow, Nat.cast_ofNat] using
-    PqxdhMaterialKeyCollisions.material_key_mem candidates
+    PqxdhMaterialKeyCollisions.material_key_mem_vcvioLegacy candidates
 
 /-- In the same full-reply cut, an arbitrary continued candidate trace is charged without conditioning on success or stopping. -/
 theorem observed_candidates {Context Stopped Result : Type} (sample : ProbComp Context)

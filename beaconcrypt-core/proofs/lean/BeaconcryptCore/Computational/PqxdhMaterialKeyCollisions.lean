@@ -1,4 +1,5 @@
 import BeaconcryptCore.Computational.PqxdhAdaptiveBidirectionalChains
+import BeaconcryptCore.Computational.VCVioLegacyBridge
 
 /-!
 # Key-coordinate collisions in the actual eager material tapes
@@ -17,27 +18,44 @@ open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhOrderedC
 
 /-- One key-coordinate event is measured in the unchanged full material sampler. -/
 theorem material_key_eq (key : RootOutput) :
-    Pr[fun material : Material => material.1 = key | $ᵗ Material] =
+    Pr{let material ← $ᵗ Material}[material.1 = key] =
       (Fintype.card RootOutput : ℝ≥0∞)⁻¹ := by
-  have projected := OracleComp.probOutput_congr (x := key) rfl
-    (evalSPMF_map_fst_uniformSample_prod (α := RootOutput) (β := NonceOutput))
-  rw [← probEvent_eq_eq_probOutput', probEvent_map] at projected
-  simpa only [Function.comp_def, eq_comm, probOutput_uniformSample] using projected
+  have marginal : ∀ (α β : Type) [Fintype α] [DecidableEq α] [Fintype β] [Nonempty β]
+      [SampleableType (α × β)] (a : α),
+      Pr{let pair ← $ᵗ (α × β)}[pair.1 = a] = (Fintype.card α : ℝ≥0∞)⁻¹ := by
+    intro α β _ _ _ _ _ a
+    rw [SampleableType.prEvent_uniformSample]
+    have fiber : (Finset.univ.filter fun pair : α × β => pair.1 = a) =
+        ({a} : Finset α) ×ˢ (Finset.univ : Finset β) := by
+      ext ⟨first, second⟩
+      simp only [Finset.mem_filter, Finset.mem_univ, true_and, Finset.mem_product,
+        Finset.mem_singleton, and_true]
+    have positive : (Fintype.card β : ℝ≥0∞) ≠ 0 := by
+      exact_mod_cast Fintype.card_ne_zero
+    have finite : (Fintype.card β : ℝ≥0∞) ≠ ⊤ := ENNReal.natCast_ne_top _
+    rw [fiber, Finset.card_product, Finset.card_singleton, one_mul, Finset.card_univ, Fintype.card_prod,
+      Nat.cast_mul, ENNReal.div_eq_inv_mul, ENNReal.mul_inv (Or.inr finite) (Or.inr positive), mul_assoc,
+      ENNReal.inv_mul_cancel positive finite, mul_one]
+  exact marginal RootOutput NonceOutput key
 
 /-- A prior fixed list may repeat; each entry is still charged in the collision bound. -/
 theorem material_key_mem (prior : List RootOutput) :
-    Pr[fun material : Material => material.1 ∈ prior | $ᵗ Material] ≤
+    Pr{let material ← $ᵗ Material}[material.1 ∈ prior] ≤
       (prior.length : ℝ≥0∞) / (Fintype.card RootOutput : ℝ≥0∞) := by
   induction prior with
   | nil =>
-    simp only [List.not_mem_nil, probEvent_False]
+    simp only [List.not_mem_nil, prEvent_false]
     exact zero_le
   | cons head tail ih =>
-    have union := (probEvent_or_le ($ᵗ Material)
+    have union := (prEvent_or_le ($ᵗ Material)
       (fun material => material.1 = head) (fun material => material.1 ∈ tail)).trans
       (add_le_add (material_key_eq head).le ih)
     simpa only [List.mem_cons, List.length_cons, Nat.cast_add, Nat.cast_one,
       div_eq_mul_inv, add_mul, one_mul, add_comm] using union
+
+set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.material_key_mem_vcvioLegacy :
+    ∀ (prior : List BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput), (probEvent ($ᵗ BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.Material) fun (material : BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.Material) => material.1 ∈ prior) ≤ ↑prior.length / ↑(Fintype.card BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput) :=
+  by simpa only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent] using @BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.material_key_mem
 
 /-- Every supported full tape retains exactly its prescribed number of material positions. -/
 theorem sampleMaterials_length (count : Nat) (records : List Material)
@@ -63,22 +81,29 @@ theorem keyCollision_append (records : List Material) (last : Material) :
 
 /-- The exact birthday bound counts unordered distinct material positions, retaining their original paired nonces. -/
 theorem sampleMaterials_collision_bound (count : Nat) :
-    Pr[KeyCollision | sampleMaterials count] ≤
+    Pr{let records ← sampleMaterials count}[KeyCollision records] ≤
       (Nat.choose count 2 : ℝ≥0∞) / (Fintype.card RootOutput : ℝ≥0∞) := by
+  classical
   induction count with
   | zero =>
-    have zero : Pr[KeyCollision | sampleMaterials 0] = 0 := by simp [sampleMaterials, KeyCollision]
+    have zero : Pr{let records ← sampleMaterials 0}[KeyCollision records] = 0 := by
+      rw [show sampleMaterials 0 = pure [] from rfl, prEvent_pure]
+      simp [KeyCollision]
     rw [zero]
     exact zero_le
   | succ count ih =>
-    change Pr[KeyCollision | sampleMaterials count >>= fun prior =>
-      ($ᵗ Material) >>= fun last => pure (prior ++ [last])] ≤ _
-    have step := probEvent_bind_le_probEvent_add (mx := sampleMaterials count)
+    change Pr{let records ← (sampleMaterials count >>= fun prior =>
+      ($ᵗ Material) >>= fun last => pure (prior ++ [last]))}[KeyCollision records] ≤ _
+    have step := prEvent_bind_le_prEvent_add_of_support (mx := sampleMaterials count)
       (p := KeyCollision) (q := KeyCollision)
       (ε := (count : ℝ≥0∞) / (Fintype.card RootOutput : ℝ≥0∞))
-      (my := fun prior => ($ᵗ Material) >>= fun last => pure (prior ++ [last])) (by
+      (f := fun prior => ($ᵗ Material) >>= fun last => pure (prior ++ [last])) (by
         intro prior supported fresh
-        rw [bind_pure_comp, probEvent_map]
+        have shape : (($ᵗ Material) >>= fun last => pure (prior ++ [last])) =
+            (fun last => prior ++ [last]) <$> ($ᵗ Material) := by
+          rw [map_eq_bind_pure_comp]
+          rfl
+        rw [shape, prEvent_map]
         simpa only [Function.comp_def, keyCollision_append, fresh, false_or,
           List.length_map, sampleMaterials_length count prior supported] using
           material_key_mem (prior.map Prod.fst))
@@ -113,13 +138,13 @@ noncomputable def sampleTapes (left right : Nat) : ProbComp (List Material × Li
 
 /-- The joint two-tape event charges every distinct position across and within both directions. -/
 theorem sampleTapes_collision_bound (left right : Nat) :
-    Pr[fun tapes => KeyCollision (tapes.1 ++ tapes.2) | sampleTapes left right] ≤
+    Pr{let tapes ← sampleTapes left right}[KeyCollision (tapes.1 ++ tapes.2)] ≤
       (Nat.choose (left + right) 2 : ℝ≥0∞) / (Fintype.card RootOutput : ℝ≥0∞) := by
   have joined : (fun tapes : List Material × List Material => tapes.1 ++ tapes.2) <$>
       sampleTapes left right = sampleMaterials (left + right) := by
     simpa only [sampleTapes, map_bind, map_pure] using sampleMaterials_append left right
   have bound := sampleMaterials_collision_bound (left + right)
-  rw [← joined, probEvent_map] at bound
+  rw [← joined, prEvent_map] at bound
   exact bound
 
 structure Observation (Context Result : Type) where
@@ -139,19 +164,26 @@ noncomputable def observedTapes {Context Result : Type} (sample : ProbComp Conte
 /-- Arbitrary later observation and stopping cannot amplify this event on the retained original tapes. -/
 theorem observedTapes_collision_bound {Context Result : Type} (sample : ProbComp Context)
     (observe : Context → List Material → List Material → ProbComp Result) (left right : Nat) :
-    Pr[fun output => KeyCollision (output.tapes.1 ++ output.tapes.2) |
-      observedTapes sample observe left right] ≤
+    Pr{let output ← observedTapes sample observe left right}[
+      KeyCollision (output.tapes.1 ++ output.tapes.2)] ≤
       (Nat.choose (left + right) 2 : ℝ≥0∞) / (Fintype.card RootOutput : ℝ≥0∞) := by
   unfold observedTapes
-  apply probEvent_bind_le_of_forall_le
-  intro context _
+  apply prEvent_bind_le_of_forall_le
+  intro context
   calc
-    _ ≤ Pr[fun tapes => KeyCollision (tapes.1 ++ tapes.2) | sampleTapes left right] := by
-      apply probEvent_bind_le_probEvent
+    _ ≤ Pr{let tapes ← sampleTapes left right}[KeyCollision (tapes.1 ++ tapes.2)] := by
+      apply prEvent_bind_le_prEvent_of_support
       intro tapes _ fresh
-      rw [bind_pure_comp, probEvent_map]
-      change Pr[fun _ => KeyCollision (tapes.1 ++ tapes.2) | observe context tapes.1 tapes.2] = 0
-      simp only [fresh, probEvent_False]
+      have shape :
+          (do
+            let result ← observe context tapes.1 tapes.2
+            pure (⟨context, tapes, result⟩ : Observation Context Result)) =
+          (fun result => (⟨context, tapes, result⟩ : Observation Context Result)) <$>
+            observe context tapes.1 tapes.2 := by
+        rw [map_eq_bind_pure_comp]
+        rfl
+      rw [shape, prEvent_map]
+      exact prEvent_eq_zero_of_forall_not _ _ fun _ => fresh
     _ ≤ _ := sampleTapes_collision_bound left right
 
 /-- The key coordinate has exactly the source's 256-bit width. -/
@@ -168,8 +200,8 @@ theorem material_key_card : Fintype.card RootOutput = 2 ^ 256 := by
 /-- The concrete retained-tape bound uses key width, independently of nonce equality. -/
 theorem observedTapes_collision_bound256 {Context Result : Type} (sample : ProbComp Context)
     (observe : Context → List Material → List Material → ProbComp Result) (left right : Nat) :
-    Pr[fun output => KeyCollision (output.tapes.1 ++ output.tapes.2) |
-      observedTapes sample observe left right] ≤
+    Pr{let output ← observedTapes sample observe left right}[
+      KeyCollision (output.tapes.1 ++ output.tapes.2)] ≤
       (Nat.choose (left + right) 2 : ℝ≥0∞) / (2 ^ 256 : ℝ≥0∞) := by
   simpa only [material_key_card, Nat.cast_pow, Nat.cast_ofNat] using
     observedTapes_collision_bound sample observe left right
@@ -199,8 +231,8 @@ theorem observedEager_projection {Context Result : Type} (fallback : Material)
 theorem observedEager_collision_bound {Context Result : Type} (fallback : Material)
     (sample : ProbComp Context) (client : Context → OracleComp ChainSpec Result)
     (finish : Context → Result × (Nat × Nat) → ProbComp Bool) (left right : Nat) :
-    Pr[fun output => KeyCollision (output.tapes.1 ++ output.tapes.2) |
-      observedEager fallback sample client finish left right] ≤
+    Pr{let output ← observedEager fallback sample client finish left right}[
+      KeyCollision (output.tapes.1 ++ output.tapes.2)] ≤
       (Nat.choose (left + right) 2 : ℝ≥0∞) / (2 ^ 256 : ℝ≥0∞) := by
   exact observedTapes_collision_bound256 sample _ left right
 

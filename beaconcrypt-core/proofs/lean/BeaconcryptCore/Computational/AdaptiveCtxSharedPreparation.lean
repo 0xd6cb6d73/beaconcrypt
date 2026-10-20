@@ -59,7 +59,7 @@ theorem prepared_interpretation {Context Result : Type} {count : Nat}
   simp only [source, uniform_interpretation, wrapped, canonicalGame, simulateQ_bind,
     StateT.run_bind, simulateQ_pure, StateT.run_pure, canonical_uniform, map_bind,
     bind_assoc, bind_map_left, map_pure]
-  exact JointEagerTable.independent_comm_spmf prepare ($ᵗ CtxKey) _
+  exact JointEagerTable.independent_comm_spmf_vcvioLegacy prepare ($ᵗ CtxKey) _
 
 /-- Preparation uniform draws consume no target nonuniform resource. -/
 theorem lift_no_class (p : ReceiveSpec.Domain → Prop) [DecidablePred p]

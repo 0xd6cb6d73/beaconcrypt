@@ -23,7 +23,7 @@ theorem initial_chains_observed {A : Type} (continuation : RootOutput → RootOu
       𝒮[(do let left ← $ᵗ RootOutput
             let right ← $ᵗ RootOutput
             continuation left right)] := by
-  have full := fullOutput_observed (fun record chain => continuation record.1 chain)
+  have full := fullOutput_observed_vcvioLegacy (fun record chain => continuation record.1 chain)
   simp only [material, nextChain] at full
   rw [full]
   simp only [Material, ← pairSample, bind_assoc, pure_bind]

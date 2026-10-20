@@ -135,7 +135,7 @@ theorem complete (baseImpl : QueryImpl baseSpec ProbComp) (primitives : PqxdhJoi
       have stepEq (future : List (Pair KemSK)) :=
         noncreate_equal baseImpl primitives kem (state.2.keys ++ future) query creates state
       simp_rw [← stepEq]
-      rw [PqxdhSecretInputKdf.evalSPMF_sample_comm (samplePairs (simulateQ (kemAmbientImpl baseImpl) kem.keygen) count)
+      rw [PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy (samplePairs (simulateQ (kemAmbientImpl baseImpl) kem.keygen) count)
         ((impl baseImpl primitives kem query).run state)]
       apply evalSPMF_bind_congr
       intro result actual

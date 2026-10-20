@@ -645,7 +645,8 @@ theorem ctxSecretPrefixQueriedProbability_eq_directSampleProbe
     ctxSecretPrefixQueriedProbability c adversary.toCtxAdversary =
       Pr[= true | ctxDirectSamplePrefixProbeExp c adversary] := by
   classical
-  unfold ctxSecretPrefixQueriedProbability ctxBeforeVerifyGame
+  simp only [ctxSecretPrefixQueriedProbability_vcvioLegacy]
+  unfold ctxBeforeVerifyGame
     ctxDirectSamplePrefixProbeExp
   rw [probEvent_bind_eq_tsum, probOutput_bind_eq_tsum]
   apply tsum_congr

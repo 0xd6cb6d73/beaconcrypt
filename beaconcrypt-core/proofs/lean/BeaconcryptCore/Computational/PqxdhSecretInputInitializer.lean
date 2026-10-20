@@ -92,8 +92,8 @@ theorem real_sourceRoot_advantage_eq_indCCA
     (runtimeOfImpl_noFail_bool (kemAmbientImpl baseImpl))
   simpa [oneKeyBranch, runtimeOfImpl_evalDist, initializerRealGame,
     simulateQ_initializerOneKeyFalse_eq_falseCore, sourceRootGame_eq_kemFalseCore,
-    ProbComp.boolDistAdvantage, SPMF.boolDistAdvantage, MeasureTheory.Measure.boolDist, probOutput_def,
-    evalDist_apply_singleton] using hcca.symm
+    ProbComp.boolDistAdvantage, MeasureTheory.Measure.boolDist, -evalDist_apply_singleton,
+    -evalDist_apply_setOf, -evalDist_apply_univ] using hcca.symm
 
 /-- One actual root is replaced with loss-one KEM, Extract, and HMAC reductions while public KDF evaluations stay real. -/
 theorem initializerAdvantage_le_kem_add_extract_add_hmac

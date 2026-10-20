@@ -119,11 +119,11 @@ theorem source_prepared_selection {count : Nat} (target : Fin (count + 1))
         (AdaptiveCtxSharedModePreparation.independentSetup count ()) targetReal targetDecode real decode c
           (fun _ => simulateQ (select target) client)] := by
   unfold sourceGame
-  rw [partition_continuation count target]
+  rw [partition_continuation_vcvioLegacy count target]
   simp only [AdaptiveCtxSharedModePreparation.source, AdaptiveCtxSharedModePreparation.independentSetup,
     AdaptiveCtxSharedModeFamily.sourceGame, fixed_source_selection, map_bind, bind_assoc, pure_bind, map_pure]
   simp only [erasePrepared, bind_pure_comp]
-  exact JointEagerTable.independent_comm_spmf ($ᵗ CtxKey) ($ᵗ (Fin count → CtxKey)) _
+  exact JointEagerTable.independent_comm_spmf_vcvioLegacy ($ᵗ CtxKey) ($ᵗ (Fin count → CtxKey)) _
 
 
 def SelectionClass {count : Nat} (target : Fin (count + 1))

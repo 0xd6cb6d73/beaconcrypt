@@ -69,9 +69,9 @@ theorem fromRoot_bound_context {Context : Type} (source : FixedHkdfSha512NoSaltS
           (extractUniformGame uniform32 (stepExtractReduction hmac (withContext sample distinguisher))) +
         (hmacPrfRealGame hmac (stepExpandReduction (withContext sample distinguisher))).boolDistAdvantage
           (hmacPrfRandomGame (stepExpandReduction (withContext sample distinguisher))) := by
-  have real := evalDist_eq_of_evalSPMF_eq _ _ (PqxdhSecretInputKdf.evalSPMF_sample_comm sample
+  have real := evalDist_eq_of_evalSPMF_eq _ _ (PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy sample
     ($ᵗ RootOutput) (fun context root => distinguisher context (fromRoot source root)))
-  have ideal := evalDist_eq_of_evalSPMF_eq _ _ (PqxdhSecretInputKdf.evalSPMF_sample_comm sample
+  have ideal := evalDist_eq_of_evalSPMF_eq _ _ (PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy sample
     ($ᵗ Output) (fun context output => distinguisher context output))
   rw [advantage_congr real ideal]
   exact fromRoot_bound source hmac correct (withContext sample distinguisher)

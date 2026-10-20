@@ -1,6 +1,7 @@
 import BeaconcryptCore.Computational.CtxAuthClassification
 import Examples.CommitmentScheme.Common
 import Mathlib.Data.Fintype.BigOperators
+import BeaconcryptCore.Computational.VCVioLegacyBridge
 
 /-!
 # Random-oracle alias bound for modified CTX
@@ -14,6 +15,8 @@ The proved game hop separates every accepted context-alias replay into an alias-
 The handler records successful seals and public inputs alongside the cache and maintains a provenance invariant through every adaptive query.
 Nonce uniqueness and exact `ctxPreimage` injectivity rule out an honest origin for an alias target, so every remaining hit is a public query carrying the hidden key as its first 32 bytes.
 The next reduction step must bound that secret-prefix event through base-AEAD IND$ privacy before composing the retained-base authenticity branch.
+
+Probabilities are written in the forward event vocabulary `Pr{let x ← mx}[p x]`, which replaces the deprecated `Pr[p | mx]` of VCVio's retiring probability interface and has the same meaning. Two dependencies are still stated in the deprecated form at the pinned VCVio commit and have no forward counterpart there: the fresh-query bound `probEvent_from_fresh_query_le_inv` of VCVio's commitment-scheme examples, and the uniform-sampling simulation law `uniformSampleImpl.probEvent_simulateQ`. The proofs that use them convert through the `BeaconcryptCore.VCVioLegacy` bridges, which are proved from the pin and are deleted at the VCVio upgrade.
 -/
 
 open OracleComp OracleSpec ENNReal
@@ -577,15 +580,17 @@ noncomputable def ctxAliasGame (c : Pqxdh.Crypto)
 /-- Probability that a full alias target's exact outer-hash input is already in the shared cache before private verification. -/
 noncomputable def ctxAliasTargetCacheHitProbability (c : Pqxdh.Crypto)
     (adversary : CtxAdversary) : ℝ≥0∞ :=
-  Pr[fun p => CtxFullAliasShape p.1 ∧
-    p.2 ((), p.1.targetInput) ≠ none |
-    ctxBeforeVerifyGame c adversary]
+  Pr{let p ← ctxBeforeVerifyGame c adversary}[CtxFullAliasShape p.1 ∧
+    p.2 ((), p.1.targetInput) ≠ none]
 
 /-- Probability that a public ROM query carries the hidden key as its first 32 bytes. -/
 noncomputable def ctxSecretPrefixQueriedProbability (c : Pqxdh.Crypto)
     (adversary : CtxAdversary) : ℝ≥0∞ :=
-  Pr[fun p => CtxSecretPrefixQueried p.1 |
-    ctxBeforeVerifyGame c adversary]
+  Pr{let p ← ctxBeforeVerifyGame c adversary}[CtxSecretPrefixQueried p.1]
+
+set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.CtxRomAuth.ctxSecretPrefixQueriedProbability_vcvioLegacy :
+    BeaconcryptCore.Computational.CtxRomAuth.ctxSecretPrefixQueriedProbability = fun (c : Pqxdh.Crypto) (adversary : BeaconcryptCore.Computational.CtxRomAuth.CtxAdversary) => probEvent (BeaconcryptCore.Computational.CtxRomAuth.ctxBeforeVerifyGame c adversary) fun (p : BeaconcryptCore.Computational.CtxRomAuth.CtxBeforeVerify × BeaconcryptCore.Computational.CtxRomAuth.CtxRO.QueryCache) => BeaconcryptCore.Computational.CtxRomAuth.CtxSecretPrefixQueried p.1 :=
+  by delta BeaconcryptCore.Computational.CtxRomAuth.ctxSecretPrefixQueriedProbability; simp only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent]
 
 /-- Every alias-gated target-cache hit reduces pointwise to a public hidden-key-prefix query. -/
 theorem ctxAliasTargetCacheHitProbability_le_secretPrefixQueriedProbability
@@ -593,7 +598,7 @@ theorem ctxAliasTargetCacheHitProbability_le_secretPrefixQueriedProbability
     ctxAliasTargetCacheHitProbability c adversary ≤
       ctxSecretPrefixQueriedProbability c adversary := by
   unfold ctxAliasTargetCacheHitProbability ctxSecretPrefixQueriedProbability
-  apply probEvent_mono
+  apply prEvent_mono_of_support
   intro result hresult hbad
   exact generated_aliasCacheHit_implies_secretPrefixQueried c adversary
     result hresult hbad.1 hbad.2
@@ -603,9 +608,9 @@ open scoped Classical in
 theorem ctxFreshAliasVerifier_le_inv (c : Pqxdh.Crypto)
     (before : CtxBeforeVerify) (cache : CtxRO.QueryCache)
     (hfresh : cache ((), before.targetInput) = none) :
-    Pr[fun z => z.1 = true |
-      (simulateQ CtxRO.cachingOracle (ctxFreshAliasVerifier c before)).run cache] ≤
+    Pr{let z ← (simulateQ CtxRO.cachingOracle (ctxFreshAliasVerifier c before)).run cache}[z.1 = true] ≤
         (Fintype.card CtxDigest : ℝ≥0∞)⁻¹ := by
+  rw [← BeaconcryptCore.VCVioLegacy.oracleComp_probEvent_eq_prEvent]
   simpa only [ctxFreshAliasVerifier] using
     probEvent_from_fresh_query_le_inv
       (M := Unit) (S := Pqxdh.Bytes) (C := CtxDigest)
@@ -621,17 +626,18 @@ theorem ctxFreshAliasVerifier_le_inv (c : Pqxdh.Crypto)
 /-- A cache-fresh full alias replay pays one inverse digest-space factor, independently of the number of sealing calls. -/
 theorem ctxFreshAliasGame_le_inv (c : Pqxdh.Crypto)
     (adversary : CtxAdversary) :
-    Pr[fun z => z.1 = true | ctxFreshAliasGame c adversary] ≤
+    Pr{let z ← ctxFreshAliasGame c adversary}[z.1 = true] ≤
       (Fintype.card CtxDigest : ℝ≥0∞)⁻¹ := by
   unfold ctxFreshAliasGame
-  refine probEvent_bind_le_of_forall_le fun p hp => ?_
+  refine prEvent_bind_le_of_forall_le _ _ _ fun p => ?_
   rcases p with ⟨before, cache⟩
   simp only
   by_cases hfresh : cache ((), before.targetInput) = none
-  · rw [ite_eq_left hfresh, uniformSampleImpl.probEvent_simulateQ]
+  · rw [ite_eq_left hfresh, ← BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent,
+      uniformSampleImpl.probEvent_simulateQ, BeaconcryptCore.VCVioLegacy.oracleComp_probEvent_eq_prEvent]
     exact ctxFreshAliasVerifier_le_inv c before cache hfresh
   · rw [ite_eq_right hfresh]
-    simp only [probEvent_pure, Bool.false_eq_true, ite_false]
+    simp only [prEvent_pure, Bool.false_eq_true, ite_false]
     exact bot_le
 
 theorem ctxDigest_card : Fintype.card CtxDigest = 2 ^ 512 := by
@@ -648,42 +654,45 @@ theorem ctxDigest_card : Fintype.card CtxDigest = 2 ^ 512 := by
 /-- The fresh-alias bound with the BLAKE2b-512 width exposed numerically. -/
 theorem ctxFreshAliasGame_le_inv_512 (c : Pqxdh.Crypto)
     (adversary : CtxAdversary) :
-    Pr[fun z => z.1 = true | ctxFreshAliasGame c adversary] ≤
+    Pr{let z ← ctxFreshAliasGame c adversary}[z.1 = true] ≤
       (((2 ^ 512 : ℕ) : ℝ≥0∞))⁻¹ := by
   simpa only [ctxDigest_card] using ctxFreshAliasGame_le_inv c adversary
 
 /-- Every accepted alias replay is charged either to a pre-verification exact-target cache hit or to one fresh 512-bit digest guess. -/
 theorem ctxAliasGameProbability_le_cacheHit_add_inv (c : Pqxdh.Crypto)
     (adversary : CtxAdversary) :
-    Pr[fun z => z.1 = true | ctxAliasGame c adversary] ≤
+    Pr{let z ← ctxAliasGame c adversary}[z.1 = true] ≤
       ctxAliasTargetCacheHitProbability c adversary +
         (Fintype.card CtxDigest : ℝ≥0∞)⁻¹ := by
   unfold ctxAliasGame ctxAliasTargetCacheHitProbability
-  refine probEvent_bind_le_probEvent_add (p := fun p :
+  refine prEvent_bind_le_prEvent_add_of_support _ _ (fun p :
       CtxBeforeVerify × CtxRO.QueryCache =>
     CtxFullAliasShape p.1 ∧
-      p.2 ((), p.1.targetInput) ≠ none) ?_
+      p.2 ((), p.1.targetInput) ≠ none) _ ?_
   intro p hp hnotBad
   rcases p with ⟨before, cache⟩
   by_cases halias : CtxFullAliasShape before
-  · rw [uniformSampleImpl.probEvent_simulateQ]
+  · rw [← BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent, uniformSampleImpl.probEvent_simulateQ,
+      BeaconcryptCore.VCVioLegacy.oracleComp_probEvent_eq_prEvent]
     apply ctxFreshAliasVerifier_le_inv
     by_contra hhit
     exact hnotBad ⟨halias, hhit⟩
   · have hzero :
-        Pr[fun z => z.1 = true |
-          simulateQ uniformSampleImpl
+        Pr{let z ← simulateQ uniformSampleImpl
             ((simulateQ CtxRO.cachingOracle
-              (ctxFreshAliasVerifier c before)).run cache)] = 0 := by
+              (ctxFreshAliasVerifier c before)).run cache)}[z.1 = true] = 0 := by
+      refine prEvent_eq_zero_of_forall_mem_support _ _ fun z hz => ?_
       set_option maxRecDepth 100000 in
-        simp [ctxFreshAliasVerifier, CtxAcceptedFullAliasReplayAt, halias]
+        simp [ctxFreshAliasVerifier, CtxAcceptedFullAliasReplayAt, halias] at hz
+      obtain ⟨_, _, _, rfl⟩ := hz
+      simp
     rw [hzero]
     exact bot_le
 
 /-- The complete split with the BLAKE2b-512 width exposed numerically. -/
 theorem ctxAliasGameProbability_le_cacheHit_add_inv_512
     (c : Pqxdh.Crypto) (adversary : CtxAdversary) :
-    Pr[fun z => z.1 = true | ctxAliasGame c adversary] ≤
+    Pr{let z ← ctxAliasGame c adversary}[z.1 = true] ≤
       ctxAliasTargetCacheHitProbability c adversary +
         (((2 ^ 512 : ℕ) : ℝ≥0∞))⁻¹ := by
   simpa only [ctxDigest_card] using
@@ -692,7 +701,7 @@ theorem ctxAliasGameProbability_le_cacheHit_add_inv_512
 /-- Complete reduction seam: alias acceptance is charged to a public hidden-key-prefix query plus one fresh digest guess. -/
 theorem ctxAliasGameProbability_le_secretPrefix_add_inv
     (c : Pqxdh.Crypto) (adversary : CtxAdversary) :
-    Pr[fun z => z.1 = true | ctxAliasGame c adversary] ≤
+    Pr{let z ← ctxAliasGame c adversary}[z.1 = true] ≤
       ctxSecretPrefixQueriedProbability c adversary +
         (Fintype.card CtxDigest : ℝ≥0∞)⁻¹ := by
   exact (ctxAliasGameProbability_le_cacheHit_add_inv c adversary).trans
@@ -703,7 +712,7 @@ theorem ctxAliasGameProbability_le_secretPrefix_add_inv
 /-- The typed one-key ROM alias-game split with the 512-bit digest width exposed numerically. -/
 theorem ctxAliasGameProbability_le_secretPrefix_add_inv_512
     (c : Pqxdh.Crypto) (adversary : CtxAdversary) :
-    Pr[fun z => z.1 = true | ctxAliasGame c adversary] ≤
+    Pr{let z ← ctxAliasGame c adversary}[z.1 = true] ≤
       ctxSecretPrefixQueriedProbability c adversary +
         (((2 ^ 512 : ℕ) : ℝ≥0∞))⁻¹ := by
   simpa only [ctxDigest_card] using

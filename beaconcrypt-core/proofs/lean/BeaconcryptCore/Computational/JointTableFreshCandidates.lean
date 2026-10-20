@@ -1,4 +1,5 @@
 import BeaconcryptCore.Computational.JointEagerTable
+import BeaconcryptCore.Computational.VCVioLegacyBridge
 
 open OracleComp OracleSpec ENNReal
 set_option autoImplicit false
@@ -25,18 +26,19 @@ theorem uniform_coordinate (point : D) :
 
 /-- A candidate wins only at a final cache miss; each such fixed guess costs at most one uniform range value. Cached coordinates make this event false. -/
 theorem fixed_fresh_guess_bound (cache : (D →ₒ R).QueryCache) (point : D) (guess : R) :
-    Pr[ (fun table : D → R => cache point = none ∧ tableExtending cache table point = guess)
-      | $ᵗ (D → R)] ≤ (Nat.card R : ℝ≥0∞)⁻¹ := by
+    Pr{let table ← $ᵗ (D → R)}[cache point = none ∧ tableExtending cache table point = guess] ≤
+      (Nat.card R : ℝ≥0∞)⁻¹ := by
   classical
   let := Fintype.ofFinite R
   by_cases fresh : cache point = none
-  · have coordinate : Pr[(fun table : D → R => table point = guess) | $ᵗ (D → R)] =
+  · have coordinate : Pr{let table ← $ᵗ (D → R)}[table point = guess] =
         (Nat.card R : ℝ≥0∞)⁻¹ := by
-      rw [← probOutput_map]
-      rw [← evalDist_apply_singleton, uniform_coordinate, evalDist_apply_singleton,
-        probOutput_uniformSample, Nat.card_eq_fintype_card]
+      rw [← prEvent_map ($ᵗ (D → R)) (fun table : D → R => table point) (fun value => value = guess),
+        prEvent_eq_evalDist_singleton, uniform_coordinate, ← prEvent_eq_evalDist_singleton,
+        SampleableType.prEvent_uniformSample_eq_singleton, Nat.card_eq_fintype_card]
     simpa only [tableExtending, fresh, Option.getD_none, true_and] using coordinate.le
-  · simp [fresh]
+  · simp only [fresh, false_and, prEvent_false]
+    exact zero_le
 
 /-- Absence is part of the winning event itself; an omitted candidate never wins. -/
 def FreshHit (cache : (D →ₒ R).QueryCache) (table : D → R) : Option (D × R) → Prop
@@ -45,28 +47,33 @@ def FreshHit (cache : (D →ₒ R).QueryCache) (table : D → R) : Option (D × 
 
 /-- Optional candidates cover malformed and ineligible raw slots without dropping their accounting positions. -/
 theorem optional_fresh_guess_bound (cache : (D →ₒ R).QueryCache) (candidate : Option (D × R)) :
-    Pr[(fun tail : D → R => FreshHit cache (tableExtending cache tail) candidate) | $ᵗ (D → R)] ≤
+    Pr{let tail ← $ᵗ (D → R)}[FreshHit cache (tableExtending cache tail) candidate] ≤
       (Nat.card R : ℝ≥0∞)⁻¹ := by
   cases candidate with
-  | none => simp [FreshHit]
+  | none =>
+    simp only [FreshHit, prEvent_false]
+    exact zero_le
   | some pair => exact fixed_fresh_guess_bound cache pair.1 pair.2
 
 /-- The union bound counts every candidate slot, with no distinct-address or distinct-guess premise. -/
 theorem fixed_vector_bound {bound : ℕ} (cache : (D →ₒ R).QueryCache)
     (candidates : List.Vector (Option (D × R)) bound) :
-    Pr[(fun tail : D → R => ∃ index : Fin bound,
-      FreshHit cache (tableExtending cache tail) (candidates.get index)) | $ᵗ (D → R)] ≤
+    Pr{let tail ← $ᵗ (D → R)}[∃ index : Fin bound,
+      FreshHit cache (tableExtending cache tail) (candidates.get index)] ≤
       (bound : ℝ≥0∞) * (Nat.card R : ℝ≥0∞)⁻¹ := by
   classical
   calc
     _ ≤ ∑ index : Fin bound,
-        Pr[(fun tail : D → R => FreshHit cache (tableExtending cache tail) (candidates.get index))
-          | $ᵗ (D → R)] := by
-      simpa using probEvent_exists_finset_le_sum (Finset.univ : Finset (Fin bound)) ($ᵗ (D → R))
+        Pr{let tail ← $ᵗ (D → R)}[FreshHit cache (tableExtending cache tail) (candidates.get index)] :=
+      prEvent_exists_le ($ᵗ (D → R))
         (fun index tail => FreshHit cache (tableExtending cache tail) (candidates.get index))
     _ ≤ ∑ _index : Fin bound, (Nat.card R : ℝ≥0∞)⁻¹ := by
       exact Finset.sum_le_sum fun index _ => optional_fresh_guess_bound cache (candidates.get index)
     _ = _ := by simp
+
+set_option linter.deprecated false in set_option linter.unusedVariables false in theorem _root_.BeaconcryptCore.Computational.JointTableFreshCandidates.fixed_vector_bound_vcvioLegacy :
+    ∀ {D R : Type} [DecidableEq D] [Finite D] [Finite R] [Nonempty R] [SampleableType R] [inst : SampleableType (D → R)] [inst_1 : MeasurableSpace R] [DiscreteMeasurableSpace R] {bound : ℕ} (cache : (OracleSpec.ofFn fun (x : D) => R).QueryCache) (candidates : List.Vector (Option (D × R)) bound), (probEvent ($ᵗ (D → R)) fun (tail : D → R) => ∃ (index : Fin bound), BeaconcryptCore.Computational.JointTableFreshCandidates.FreshHit cache (OracleComp.tableExtending cache tail) (candidates.get index)) ≤ ↑bound * (↑(Nat.card R))⁻¹ :=
+  by simpa only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent] using @BeaconcryptCore.Computational.JointTableFreshCandidates.fixed_vector_bound
 
 /-- Retain the entire actual sampled result and final cache while independently completing only its missing table cells. -/
 def completeResult {Result : Type} (draw : ProbComp (Result × (D →ₒ R).QueryCache)) :
@@ -79,22 +86,25 @@ def completeResult {Result : Type} (draw : ProbComp (Result × (D →ₒ R).Quer
 theorem completed_result_vector_bound {Result : Type} {bound : ℕ}
     (draw : ProbComp (Result × (D →ₒ R).QueryCache))
     (candidates : Result × (D →ₒ R).QueryCache → List.Vector (Option (D × R)) bound) :
-    Pr[(fun terminal => ∃ index : Fin bound,
-      FreshHit terminal.2.2 terminal.1 ((candidates terminal.2).get index)) | completeResult draw] ≤
+    Pr{let terminal ← completeResult draw}[∃ index : Fin bound,
+      FreshHit terminal.2.2 terminal.1 ((candidates terminal.2).get index)] ≤
       (bound : ℝ≥0∞) * (Nat.card R : ℝ≥0∞)⁻¹ := by
   unfold completeResult
-  apply probEvent_bind_le_of_forall_le
-  intro result _
-  simpa only [bind_pure_comp, probEvent_map, Function.comp_def] using
-    fixed_vector_bound result.2 (candidates result)
+  apply prEvent_bind_le_of_forall_le
+  intro result
+  have shape : (do let tail ← $ᵗ (D → R); pure (tableExtending result.2 tail, result)) =
+      (fun tail => (tableExtending result.2 tail, result)) <$> ($ᵗ (D → R)) := by
+    rw [map_eq_bind_pure_comp]
+    rfl
+  rw [shape, prEvent_map]
+  exact fixed_vector_bound result.2 (candidates result)
 
 /-- The bound applies to an arbitrary adaptive mixed client, from any preexisting dictionary. Every explicit source coin remains part of its actual execution; malformed slots and repeated guesses remain in the fixed candidate vector. -/
 theorem mixed_completed_vector_bound {Result : Type} {bound : ℕ}
     (client : OracleComp (MixedSpec D R) Result) (cache : (D →ₒ R).QueryCache)
     (candidates : Result × (D →ₒ R).QueryCache → List.Vector (Option (D × R)) bound) :
-    Pr[(fun terminal => ∃ index : Fin bound,
-      FreshHit terminal.2.2 terminal.1 ((candidates terminal.2).get index)) |
-      completeResult ((simulateQ mixedLazyImpl client).run cache)] ≤
+    Pr{let terminal ← completeResult ((simulateQ mixedLazyImpl client).run cache)}[∃ index : Fin bound,
+      FreshHit terminal.2.2 terminal.1 ((candidates terminal.2).get index)] ≤
       (bound : ℝ≥0∞) / Nat.card R := by
   simpa only [div_eq_mul_inv] using
     completed_result_vector_bound ((simulateQ mixedLazyImpl client).run cache) candidates

@@ -127,7 +127,7 @@ theorem event_good {Auxiliary Result : Type}
     Pr[fun result => event result ∧ result.2.2 = false |
       (simulateQ (observed source writer prior entry output labelRead
         (RawCtxSelectedParentPublic.reply prior entry replacement)) client).run state] := by
-  exact StatefulGoodEvent.event_good _ _ (agree_good source writer prior entry output target replacement)
+  exact StatefulGoodEvent.event_good_vcvioLegacy _ _ (agree_good source writer prior entry output target replacement)
     (sticky source writer prior entry output (nativeReader (RawCtxFreshChainCut.concreteChain target))
       (RawCtxSelectedParentPublic.reply prior entry target))
     (sticky source writer prior entry output labelRead (RawCtxSelectedParentPublic.reply prior entry replacement))

@@ -1,5 +1,7 @@
 import VCVio.OracleComp.QueryTracking.RandomOracle.EagerTable
 import VCVio.OracleComp.Constructions.SampleableType.MeasureCompatibility
+import BeaconcryptCore.Computational.VCVioForwardOracleComp
+import BeaconcryptCore.Computational.VCVioLegacyBridge
 
 open OracleComp OracleSpec
 set_option autoImplicit false
@@ -104,13 +106,18 @@ theorem uniform_update_bind {Result : Type} [MeasurableSpace Result]
 theorem independent_comm_spmf {A B Result : Type}
     (left : ProbComp A) (right : ProbComp B)
     (next : A → B → ProbComp Result) :
-    𝒮[left >>= fun a => right >>= next a] =
-      𝒮[right >>= fun b => left >>= fun a => next a b] := by
-  apply evalSPMF_ext
-  intro output
-  simp_rw [probOutput_bind_eq_tsum, ← ENNReal.tsum_mul_left]
-  rw [ENNReal.tsum_comm]
-  simp only [mul_left_comm]
+    EvalDistEq (left >>= fun a => right >>= next a)
+      (right >>= fun b => left >>= fun a => next a b) :=
+  OracleComp.EvalDistEq.bind_bind_swap left right next
+
+set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.JointEagerTable.independent_comm_spmf_vcvioLegacy :
+    ∀ {A B Result : Type} (left : ProbComp A) (right : ProbComp B) (next : A → B → ProbComp Result),
+      𝒮[left >>= fun (a : A) => right >>= next a] =
+        𝒮[do
+          let b ← right
+          let a ← left
+          next a b] :=
+  by simpa only [BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq] using @BeaconcryptCore.Computational.JointEagerTable.independent_comm_spmf
 
 /-- The measure-level form of independent explicit sampler reordering. -/
 theorem independent_comm {A B Result : Type} [MeasurableSpace Result]
@@ -118,7 +125,7 @@ theorem independent_comm {A B Result : Type} [MeasurableSpace Result]
     (next : A → B → ProbComp Result) :
     𝒟[left >>= fun a => right >>= next a] =
       𝒟[right >>= fun b => left >>= fun a => next a b] := by
-  exact evalDist_eq_of_evalSPMF_eq _ _ (independent_comm_spmf left right next)
+  exact (independent_comm_spmf left right next).evalDist_eq
 
 abbrev MixedSpec (D R : Type) := unifSpec + (D →ₒ R)
 

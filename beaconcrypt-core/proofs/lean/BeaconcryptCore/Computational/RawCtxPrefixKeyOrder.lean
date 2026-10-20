@@ -25,7 +25,7 @@ theorem complete {Context Result : Type} (real : Bool) (decode : AdaptiveCtxRece
       let result ← (simulateQ (sourceImpl real decode c key) (simulateQ forward prelude)).run initialSource
       continuation key result.1 result.2)] := by
   simp_rw [forward_complete, bind_map_left]
-  exact JointEagerTable.independent_comm_spmf
+  exact JointEagerTable.independent_comm_spmf_vcvioLegacy
     ((simulateQ AdaptiveCtxSharedTarget.sharedImpl prelude).run (∅, [])) ($ᵗ CtxKey)
     (fun result key => continuation key result.1 (install initialSource result.2))
 

@@ -1,5 +1,6 @@
 import BeaconcryptCore.Computational.AdaptiveRawKeyPreparation
 import Mathlib.Logic.Equiv.Fin.Basic
+import BeaconcryptCore.Computational.VCVioLegacyBridge
 
 /-!
 Eight statements split the actual independently sampled finite key family at any selected index. The index bijection preserves coincident values and charges no hidden extra key draw. The sampling law quantifies over the complete evaluated continuation, including all retained private state. Update and reconstruction laws preserve the original index and every unselected entry.
@@ -39,26 +40,38 @@ noncomputable def partition {Value : Type} {count : Nat} (target : Fin (count + 
 
 /-- The selected draw and remaining-family draw reproduce the actual full-family distribution. -/
 theorem sampled_partition (count : Nat) (target : Fin (count + 1)) :
-    𝒮[do let key ← $ᵗ CtxRomAuth.CtxKey
-          let others ← $ᵗ (Fin count → CtxRomAuth.CtxKey)
-          pure (join target key others)] =
-      𝒮[$ᵗ (Fin (count + 1) → CtxRomAuth.CtxKey)] := by
-  have transported := @evalSPMF_uniformSample (Fin (count + 1) → CtxRomAuth.CtxKey)
-    (SampleableType.ofEquiv (partition target)) inferInstance inferInstance
-  change 𝒮[partition target <$> (Prod.mk <$> ($ᵗ CtxRomAuth.CtxKey) <*> ($ᵗ (Fin count → CtxRomAuth.CtxKey)))] = _ at transported
-  simpa only [seq_eq_bind_map, bind_map_left, map_bind, Functor.map_map, bind_pure_comp, partition, Equiv.coe_fn_mk] using
-    transported.trans (evalSPMF_uniformSample (Fin (count + 1) → CtxRomAuth.CtxKey)).symm
+    EvalDistEq
+      (do
+        let key ← $ᵗ CtxRomAuth.CtxKey
+        let others ← $ᵗ (Fin count → CtxRomAuth.CtxKey)
+        pure (join target key others))
+      ($ᵗ (Fin (count + 1) → CtxRomAuth.CtxKey)) := by
+  have transported := SampleableType.map_uniformSample_evalDistEq_of_bijective
+    (α := CtxRomAuth.CtxKey × (Fin count → CtxRomAuth.CtxKey)) (partition target).bijective
+  change EvalDistEq (partition target <$> (Prod.mk <$> ($ᵗ CtxRomAuth.CtxKey) <*>
+    ($ᵗ (Fin count → CtxRomAuth.CtxKey)))) _ at transported
+  simpa only [seq_eq_bind_map, bind_map_left, map_bind, Functor.map_map, bind_pure_comp, partition,
+    Equiv.coe_fn_mk] using transported
 
 /-- The sampling partition is valid under every complete evaluated continuation. -/
 theorem partition_continuation {Result : Type} (count : Nat) (target : Fin (count + 1))
     (next : (Fin (count + 1) → CtxRomAuth.CtxKey) → ProbComp Result) :
-    𝒮[($ᵗ (Fin (count + 1) → CtxRomAuth.CtxKey)) >>= next] =
-      𝒮[do let key ← $ᵗ CtxRomAuth.CtxKey
-            let others ← $ᵗ (Fin count → CtxRomAuth.CtxKey)
-            next (join target key others)] := by
-  have complete := congrArg (fun distribution => distribution >>= fun keys => 𝒮[next keys])
-    (sampled_partition count target).symm
-  simpa only [← evalSPMF_bind, bind_assoc, pure_bind] using complete
+    EvalDistEq (($ᵗ (Fin (count + 1) → CtxRomAuth.CtxKey)) >>= next)
+      (do
+        let key ← $ᵗ CtxRomAuth.CtxKey
+        let others ← $ᵗ (Fin count → CtxRomAuth.CtxKey)
+        next (join target key others)) := by
+  have complete := (sampled_partition count target).symm.bind_left next
+  simpa only [bind_assoc, pure_bind] using complete
+
+set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.RawKeyPartition.partition_continuation_vcvioLegacy :
+    ∀ {Result : Type} (count : ℕ) (target : Fin (count + 1)) (next : (Fin (count + 1) → BeaconcryptCore.Computational.CtxRomAuth.CtxKey) → ProbComp Result),
+      𝒮[$ᵗ (Fin (count + 1) → BeaconcryptCore.Computational.CtxRomAuth.CtxKey) >>= next] =
+        𝒮[do
+          let key ← $ᵗ BeaconcryptCore.Computational.CtxRomAuth.CtxKey
+          let others ← $ᵗ (Fin count → BeaconcryptCore.Computational.CtxRomAuth.CtxKey)
+          next (BeaconcryptCore.Computational.RawKeyPartition.join target key others)] :=
+  by simpa only [BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq] using @BeaconcryptCore.Computational.RawKeyPartition.partition_continuation
 
 /-- Updating the selected state changes exactly its original source entry. -/
 theorem join_selected_update {Value : Type} {count : Nat} (target : Fin (count + 1))

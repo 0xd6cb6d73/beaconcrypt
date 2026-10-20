@@ -137,7 +137,7 @@ theorem delayed_second {Context Result : Type} (sample : ProbComp Context)
     let result ← observe context (initialSecond (role context) other)
     pure (target, result))).trans ?_
   exact evalSPMF_bind_congr' ($ᵗ RootOutput) (fun other =>
-    evalSPMF_sample_comm ($ᵗ RootOutput) (observe context (initialSecond (role context) other))
+    evalSPMF_sample_comm_vcvioLegacy ($ᵗ RootOutput) (observe context (initialSecond (role context) other))
       (fun target result => pure (target, result)))
 
 set_option maxRecDepth 2048 in

@@ -61,7 +61,7 @@ theorem full_inputs (past : List JointKdfAddress) :
   have same := probEvent_congr'
     (p := fun root => inputAddress root ∈ past) (q := fun root => inputAddress root ∈ past)
     (fun _ _ => Iff.rfl)
-    (PqxdhOrderedChainHybrids.fullOutput_observed (fun _ root => pure root))
+    (PqxdhOrderedChainHybrids.fullOutput_observed_vcvioLegacy (fun _ root => pure root))
   simp only [bind_pure, bind_pure_comp, probEvent_map, Function.comp_def] at same
   rw [same]
   apply probEvent_bind_le_of_forall_le

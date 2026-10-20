@@ -32,11 +32,11 @@ theorem delayed_eq (sample : ProbComp Context) (address : Context → JointKdfAd
     𝒮[original sample address observe] = 𝒮[delayed sample address observe] := by
   simp only [original, delayed]
   refine evalSPMF_bind_congr' sample (fun context => ?_)
-  refine (fullOutput_observed (fun material target => do
+  refine (fullOutput_observed_vcvioLegacy (fun material target => do
     let result ← observe (context, ⟨address context, material⟩)
     pure (target, result))).trans ?_
   exact evalSPMF_bind_congr' ($ᵗ Material) (fun material =>
-    evalSPMF_sample_comm ($ᵗ RootOutput) (observe (context, ⟨address context, material⟩))
+    evalSPMF_sample_comm_vcvioLegacy ($ᵗ RootOutput) (observe (context, ⟨address context, material⟩))
       (fun target result => pure (target, result)))
 
 set_option maxRecDepth 2048 in

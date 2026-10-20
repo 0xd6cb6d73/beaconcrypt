@@ -139,7 +139,7 @@ theorem generators_commute_complete_continuation {SecretKey Output : Type}
       let keypair ← simulateQ (kemAmbientImpl baseImpl) kem.keygen
       let retained ← identityPrekeySample baseImpl sigAlg setup
       next retained keypair] := by
-  exact PqxdhSecretInputKdf.evalSPMF_sample_comm (identityPrekeySample baseImpl sigAlg setup)
+  exact PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy (identityPrekeySample baseImpl sigAlg setup)
     (simulateQ (kemAmbientImpl baseImpl) kem.keygen) next
 
 /-- Internal source prefix retains the identity secret and leaves the KEM secret available only to its later interpreter. -/

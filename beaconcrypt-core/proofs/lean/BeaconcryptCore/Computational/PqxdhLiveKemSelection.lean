@@ -54,7 +54,7 @@ theorem target_first {Result : Type} (sampler : ProbComp (Pair KemSK))
             intro first
             exact ih target (fun rest => next (Fin.cons first rest))
         _ = _ := by
-          rw [PqxdhSecretInputKdf.evalSPMF_sample_comm sampler sampler]
+          rw [PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy sampler sampler]
           simp [sampleFamily, Fin.insertNth_succ_cons, bind_assoc]
     case zero => simp [sampleFamily, Fin.insertNth_zero']
   case zero =>

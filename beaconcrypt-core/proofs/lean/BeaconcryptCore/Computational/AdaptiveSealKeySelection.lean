@@ -116,7 +116,7 @@ theorem source_prepared_selection {count : Nat} (target : Fin (count + 1))
         reconstruct target <$> (simulateQ (localImpl targetReal c key)
           (prepared target real c client)).run emptyModifiedNonceAeadHandlerState] := by
   unfold sourceGame
-  rw [partition_continuation count target]
+  rw [partition_continuation_vcvioLegacy count target]
   simp only [prepared_run, fixed_source_selection, schedule_interpretation, map_bind, Functor.map_map]
   rfl
 

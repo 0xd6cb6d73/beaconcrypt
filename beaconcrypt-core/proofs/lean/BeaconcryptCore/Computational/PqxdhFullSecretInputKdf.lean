@@ -191,7 +191,7 @@ theorem fullExtractUniform_eq_hmacReal {Context : Type} (hmac : HmacSha512)
       𝒮[hmacPrfRealGame hmac (fullExpandReduction domain sample observer)] := by
   simpa [hmacPrfRealGame, fullExpandReduction_real, extractUniformGame,
     fullExtractReduction] using
-      evalSPMF_sample_comm (sample : ProbComp (Context × Pqxdh.Bytes)) ($ᵗ HmacBlock)
+      evalSPMF_sample_comm_vcvioLegacy (sample : ProbComp (Context × Pqxdh.Bytes)) ($ᵗ HmacBlock)
         (fun pair key => observer pair.1 (expandFull hmac domain key))
 
 /-- Any continuation observes exactly a uniform full output in the HMAC random world. -/

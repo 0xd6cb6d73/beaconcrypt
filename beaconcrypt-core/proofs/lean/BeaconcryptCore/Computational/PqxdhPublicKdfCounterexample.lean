@@ -1,4 +1,5 @@
 import BeaconcryptCore.Computational.PqxdhJointKdfGame
+import BeaconcryptCore.Computational.VCVioForwardOracleComp
 
 /-!
 # Public evaluation refutes the fixed-HKDF/random-table security interpretation
@@ -55,11 +56,12 @@ theorem publicEvaluation_random (source : FixedHkdfSha512NoSaltSource)
 /-- Exact random-world false-positive probability; it is not close to the real world's one. -/
 theorem publicEvaluation_random_probability (source : FixedHkdfSha512NoSaltSource)
     (address : JointKdfAddress) :
-    Pr[= true | fixedHkdfSha512JointStreamRandomExp
-      (publicEvaluationAdversary source address)] =
+    Pr{let x ← (fixedHkdfSha512JointStreamRandomExp
+      (publicEvaluationAdversary source address))}[x = true] =
       (Fintype.card JointKdfStream : ℝ≥0∞)⁻¹ := by
-  simp [publicEvaluation_random, probOutput_map,
-    probOutput_uniformSample]
+  rw [publicEvaluation_random, prEvent_map]
+  simp only [decide_eq_true_eq]
+  exact SampleableType.prEvent_uniformSample_eq_singleton _
 
 /-- The efficient control has advantage `1 - 1 / 2^608`, expressed without a giant numeral. -/
 theorem publicEvaluation_advantage (source : FixedHkdfSha512NoSaltSource)
@@ -67,10 +69,19 @@ theorem publicEvaluation_advantage (source : FixedHkdfSha512NoSaltSource)
     fixedHkdfSha512JointStreamAdvantage source
       (publicEvaluationAdversary source address) =
       |1 - ((Fintype.card JointKdfStream : ℝ≥0∞)⁻¹).toReal| := by
+  have real : Pr{let x ← (fixedHkdfSha512JointStreamRealExp source
+      (publicEvaluationAdversary source address))}[x = true] = 1 := by
+    have run : fixedHkdfSha512JointStreamRealExp source (publicEvaluationAdversary source address) =
+        pure true :=
+      publicEvaluation_real source address
+    rw [run, prEvent_pure]
+    simp
   unfold fixedHkdfSha512JointStreamAdvantage ProbComp.boolDistAdvantage
-  rw [evalDist_apply_singleton, evalDist_apply_singleton]
-  rw [publicEvaluation_random_probability]
-  simp [fixedHkdfSha512JointStreamRealExp, publicEvaluationAdversary, publicEvaluation_real]
+  rw [← prEvent_eq_evalDist_singleton
+      (fixedHkdfSha512JointStreamRealExp source (publicEvaluationAdversary source address)) true,
+    ← prEvent_eq_evalDist_singleton
+      (fixedHkdfSha512JointStreamRandomExp (publicEvaluationAdversary source address)) true,
+    real, publicEvaluation_random_probability, ENNReal.toReal_one]
 
 /-- In particular no bound below one half holds for all one-query distinguishers in this game. -/
 theorem publicEvaluation_advantage_ge_half (source : FixedHkdfSha512NoSaltSource)

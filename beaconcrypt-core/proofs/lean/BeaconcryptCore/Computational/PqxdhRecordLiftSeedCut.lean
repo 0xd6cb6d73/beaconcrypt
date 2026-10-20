@@ -133,7 +133,7 @@ theorem observed_delayed {Context X : Type} (direction : Bool)
     let answer ← observe (pair.1, mask pair.2 other)
     pure (target, answer))).trans ?_
   exact evalSPMF_bind_congr' ($ᵗ RootOutput) (fun other =>
-    evalSPMF_sample_comm ($ᵗ RootOutput) (observe (pair.1, mask pair.2 other))
+    evalSPMF_sample_comm_vcvioLegacy ($ᵗ RootOutput) (observe (pair.1, mask pair.2 other))
       (fun target answer => pure (target, answer)))
 
 /-- Charge every returned candidate, including duplicates, against the actual uniformly sampled hidden half. -/
@@ -210,7 +210,7 @@ theorem first_source {Context : Type} (direction : Bool) (source : FixedHkdfSha5
   rw [factor]
   simpa only [sourceFullGame, PqxdhServerAuthKeySchedule.uniform32, unitObserver,
     bind_assoc, pure_bind] using
-    evalSPMF_sample_comm (retainedContext sample) ($ᵗ RootOutput)
+    evalSPMF_sample_comm_vcvioLegacy (retainedContext sample) ($ᵗ RootOutput)
       (fun context target => observe context (PqxdhJointKdf.productionStream source.crypto
         (FixedHkdfDomain.ratchet.address target.toList)))
 
@@ -222,7 +222,7 @@ theorem first_independent {Context : Type}
   simp only [firstUniform, independentFullGame, PqxdhServerAuthKeySchedule.uniform32,
     unitObserver, bind_assoc, pure_bind]
   rw [OracleComp.DeferredSampling.evalSPMF_bind_const_neverFails ($ᵗ RootOutput) (by simp)]
-  exact evalSPMF_sample_comm (retainedContext sample) ($ᵗ FullOutput) observe
+  exact evalSPMF_sample_comm_vcvioLegacy (retainedContext sample) ($ᵗ FullOutput) observe
 
 /-- The first derivation uses one ordinary uniform32 Extract reduction and one two-query uniform-secret-key HMAC reduction. No joint-sampler security premise is introduced. -/
 theorem first_bound {Context : Type} (direction : Bool)

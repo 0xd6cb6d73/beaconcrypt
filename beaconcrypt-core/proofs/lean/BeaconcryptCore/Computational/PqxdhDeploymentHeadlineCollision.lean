@@ -358,7 +358,7 @@ theorem identity_collision_game (setup : Setup baseSpec KemSK) (codec : Codec Re
       (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode adversary).run runtime] {true} ≤
       injTerm setup budget := by
   classical
-  rw [UniformTargetSelection.chance_eq]
+  rw [UniformTargetSelection.chance_eq_vcvioLegacy]
   refine le_trans ?_ (PqxdhDeploymentServerAuthInjective.collision_bound setup budget.create)
   rw [← PqxdhDeploymentCompileSecrecy.compile_full_game setup codec checks route ensureInit 0 phase1 phase2 bounds mode
     adversary runtime, probEvent_map]

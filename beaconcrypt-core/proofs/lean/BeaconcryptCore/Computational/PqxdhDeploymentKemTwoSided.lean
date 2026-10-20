@@ -19,7 +19,7 @@ section Generic
 theorem chance_ext {α : Type} (run : ProbComp α) (p q : α → Prop) {_ : DecidablePred p} {_ : DecidablePred q}
     (same : ∀ x ∈ support run, p x ↔ q x) :
     𝒟[(fun x => decide (p x)) <$> run] {true} = 𝒟[(fun x => decide (q x)) <$> run] {true} := by
-  rw [UniformTargetSelection.chance_eq, UniformTargetSelection.chance_eq]
+  rw [UniformTargetSelection.chance_eq_vcvioLegacy, UniformTargetSelection.chance_eq_vcvioLegacy]
   exact probEvent_ext same
 
 /-- An event that, on the support of a run, implies one of two events has at most the sum of their probabilities, for any decidability instances. -/
@@ -27,13 +27,13 @@ theorem chance_le_add {α : Type} (run : ProbComp α) (p q r : α → Prop) {_ :
     {_ : DecidablePred r} (split : ∀ x ∈ support run, p x → q x ∨ r x) :
     𝒟[(fun x => decide (p x)) <$> run] {true} ≤
       𝒟[(fun x => decide (q x)) <$> run] {true} + 𝒟[(fun x => decide (r x)) <$> run] {true} := by
-  rw [UniformTargetSelection.chance_eq, UniformTargetSelection.chance_eq, UniformTargetSelection.chance_eq]
+  rw [UniformTargetSelection.chance_eq_vcvioLegacy, UniformTargetSelection.chance_eq_vcvioLegacy, UniformTargetSelection.chance_eq_vcvioLegacy]
   exact probEvent_le_add_of_imp_or split
 
 /-- An event that fails on the support of a run has probability zero, for any decidability instance. -/
 theorem chance_eq_zero {α : Type} (run : ProbComp α) (p : α → Prop) {_ : DecidablePred p}
     (never : ∀ x ∈ support run, ¬p x) : 𝒟[(fun x => decide (p x)) <$> run] {true} = 0 := by
-  rw [UniformTargetSelection.chance_eq, probEvent_eq_zero_iff]
+  rw [UniformTargetSelection.chance_eq_vcvioLegacy, probEvent_eq_zero_iff]
   exact never
 
 /-- If `a ≤ b ≤ a + c` for finite `a` and `c`, then the real numbers of `b` and `a` differ by at most that of `c`. -/
@@ -609,7 +609,7 @@ theorem split_create (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
         adversary budget respects runtime claim outcome reached]),
     UniformTargetSelection.split, Fintype.sum_prod_type, Fintype.sum_prod_type]
   refine Finset.sum_congr rfl fun session _ => sum_last_eq budget.create _ ?_
-  rw [UniformTargetSelection.chance_eq, probEvent_eq_zero_iff]
+  rw [UniformTargetSelection.chance_eq_vcvioLegacy, probEvent_eq_zero_iff]
   rintro outcome reached ⟨_, chosen⟩
   exact lt_irrefl _ (PqxdhDeploymentTargetRange.designated_create setup codec checks route ensureInit phase1 phase2
     bounds mode adversary budget respects runtime claim outcome reached _ chosen)

@@ -297,7 +297,7 @@ theorem acceptedGame_le_direct_add_prefix
     _ = Pr[= true | directAcceptedGame c adversary] +
           ctxSecretPrefixQueriedProbability c adversary := by
       have hprefix : ctxSecretPrefixQueriedProbability c adversary ≠ ⊤ := by
-        unfold ctxSecretPrefixQueriedProbability
+        simp only [ctxSecretPrefixQueriedProbability_vcvioLegacy]
         exact probEvent_ne_top
       rw [ENNReal.ofReal_toReal hprefix]
 

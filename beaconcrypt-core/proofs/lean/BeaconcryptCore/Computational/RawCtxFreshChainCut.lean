@@ -88,7 +88,7 @@ theorem sampledCut_partition {Context Stopped : Type} (sample : ProbComp Context
     (stop : Context → RatchetMaterial → Stopped) :
     𝒮[sampledCut sample stop] = 𝒮[partitionedCut sample stop] := by
   exact evalSPMF_bind_congr' sample (fun context =>
-    fullOutput_observed (fun value chain => pure (stop context (concreteMaterial value), chain.toList)))
+    fullOutput_observed_vcvioLegacy (fun value chain => pure (stop context (concreteMaterial value), chain.toList)))
 
 /-- Typed form used by the concrete selected-chain source game. -/
 noncomputable def typedCut {Context Stopped : Type} (sample : ProbComp Context)
@@ -127,10 +127,10 @@ theorem observedCut_delayed {Context Stopped Result : Type} (sample : ProbComp C
     𝒮[observedCut sample stop observe] = 𝒮[delayedCut sample stop observe] := by
   simp only [observedCut, typedCut, delayedCut, bind_assoc, pure_bind]
   refine evalSPMF_bind_congr' sample (fun context => ?_)
-  refine (fullOutput_observed (fun value target => do
+  refine (fullOutput_observed_vcvioLegacy (fun value target => do
     let result ← observe (stop context (concreteMaterial value)); pure (target, result))).trans ?_
   exact evalSPMF_bind_congr' ($ᵗ Material) (fun value =>
-    evalSPMF_sample_comm ($ᵗ RootOutput) (observe (stop context (concreteMaterial value)))
+    evalSPMF_sample_comm_vcvioLegacy ($ᵗ RootOutput) (observe (stop context (concreteMaterial value)))
       (fun target result => pure (target, result)))
 
 end BeaconcryptCore.Computational.RawCtxFreshChainCut

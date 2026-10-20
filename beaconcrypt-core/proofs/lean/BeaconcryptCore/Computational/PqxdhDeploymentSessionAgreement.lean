@@ -117,7 +117,7 @@ theorem ce_a1_agreement (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
     exact probOutput_ne_top
   refine ENNReal.toReal_mono finite ?_
   classical
-  rw [UniformTargetSelection.chance_eq, UniformTargetSelection.chance_eq]
+  rw [UniformTargetSelection.chance_eq_vcvioLegacy, UniformTargetSelection.chance_eq_vcvioLegacy]
   exact probEvent_mono fun outcome member ⟨c, event⟩ => ⟨c, noAgreement_noPinnedMatch setup codec checks route
     ensureInit phase1 phase2 bounds mode adversary runtime outcome member c event⟩
 

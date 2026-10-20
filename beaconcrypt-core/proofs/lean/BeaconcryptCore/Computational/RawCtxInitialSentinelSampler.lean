@@ -18,7 +18,7 @@ theorem full_observed {Result : Type} (next : RootOutput → RootOutput → Prob
       𝒮[(do let other ← $ᵗ RootOutput
             let target ← $ᵗ RootOutput
             next other target)] := by
-  refine (PqxdhOrderedChainHybrids.fullOutput_observed (fun value target => next value.1 target)).trans ?_
+  refine (PqxdhOrderedChainHybrids.fullOutput_observed_vcvioLegacy (fun value target => next value.1 target)).trans ?_
   have projected : 𝒮[(Prod.fst : Material → RootOutput) <$> ($ᵗ Material)] = 𝒮[$ᵗ RootOutput] :=
     evalSPMF_map_fst_uniformSample_prod
   calc

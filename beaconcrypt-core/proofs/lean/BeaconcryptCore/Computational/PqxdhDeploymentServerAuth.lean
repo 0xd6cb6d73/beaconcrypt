@@ -172,7 +172,7 @@ theorem a1_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) 
       (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit identityIndex bounds mode adversary).run
         runtime] := by
     classical
-    exact UniformTargetSelection.chance_eq _ _
+    exact UniformTargetSelection.chance_eq_vcvioLegacy _ _
   have right : 𝒟[PqxdhServerAuthCommonProbability.decision setup codec checks <$>
       PqxdhServerAuthRootObserved.orderedGame setup codec checks false
         (serverAuthAdversary setup codec route bounds mode adversary c)] {true} =
@@ -309,11 +309,11 @@ theorem a1_sum (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (c
   have chance : ∀ c, 𝒟[a1Decision setup codec c <$> run] {true} = Pr[fun outcome => A1At setup codec c outcome | run] := by
     intro c
     classical
-    exact UniformTargetSelection.chance_eq _ _
+    exact UniformTargetSelection.chance_eq_vcvioLegacy _ _
   have total : 𝒟[(fun outcome => @decide (∃ c, A1At setup codec c outcome) (Classical.propDecidable _)) <$> run]
       {true} = Pr[fun outcome => ∃ c, A1At setup codec c outcome | run] := by
     classical
-    exact UniformTargetSelection.chance_eq _ _
+    exact UniformTargetSelection.chance_eq_vcvioLegacy _ _
   have ranged : Pr[fun outcome => ∃ c, A1At setup codec c outcome | run] =
       Pr[fun outcome => ∃ c ∈ (Finset.univ : Finset (Fin budget.create)), A1At setup codec c.val outcome | run] := by
     refine probEvent_ext fun outcome member => ⟨fun ⟨c, event⟩ => ?_, fun ⟨c, _, event⟩ => ⟨c.val, event⟩⟩
@@ -541,7 +541,7 @@ theorem ce_a1 (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (ch
     exact probOutput_ne_top
   refine ENNReal.toReal_mono finite ?_
   classical
-  rw [UniformTargetSelection.chance_eq, UniformTargetSelection.chance_eq]
+  rw [UniformTargetSelection.chance_eq_vcvioLegacy, UniformTargetSelection.chance_eq_vcvioLegacy]
   exact probEvent_mono fun outcome member ⟨c, event⟩ => ⟨c, noFailure_a1At setup codec c outcome
     (noPinnedMatch_noFailure setup codec checks route ensureInit identityIndex phase2 bounds mode adversary runtime c
       outcome member event)⟩

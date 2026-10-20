@@ -1,4 +1,5 @@
 import BeaconcryptCore.Computational.PqxdhPrivateRootSource
+import BeaconcryptCore.Computational.VCVioForwardOracleComp
 
 /-!
 This component routes the ordinary CCA-supplied shared secret through an initial private root and every later private derivation at the same ciphertext. Actual Beacon coordinates include arbitrary ephemeral inputs. The public CCA channel retains its standard block; private processing is not forbidden by freshness. Ordinary perfect correctness on actual generated/encapsulated support identifies the secret. Full arbitrary-stateful substitution additionally uses the explicit pure functional decapsulation interface, so evaluated output equality never erases primitive effects. The correlated real/random hop has coefficient one. Protocol state and root replies are private interpreter values; native registration/role instantiation, correlated multi-input Extract and the global security theorem remain separate.
@@ -21,7 +22,8 @@ theorem honest_decapsulation
     (generated : (pk, sk) ∈ support (simulateQ (kemAmbientImpl baseImpl) kem.keygen))
     {ciphertext : MlKem768Ciphertext} {secret : MlKemSharedSecret}
     (encapsulated : (ciphertext, secret) ∈ support (simulateQ (kemAmbientImpl baseImpl) (kem.encaps pk))) :
-    𝒮[simulateQ (kemAmbientImpl baseImpl) (kem.decaps sk ciphertext)] = pure (some secret) := by
+    EvalDistEq (simulateQ (kemAmbientImpl baseImpl) (kem.decaps sk ciphertext))
+      (pure (some secret) : ProbComp (Option MlKemSharedSecret)) := by
   let : MeasurableSpace MlKem768PublicKey := ⊤
   let : DiscreteMeasurableSpace MlKem768PublicKey := ⟨fun _ => by simp⟩
   let : MeasurableSpace MlKem768Ciphertext := ⊤
@@ -43,23 +45,20 @@ theorem honest_decapsulation
       (runtimeOfImpl (kemAmbientImpl baseImpl))
       (runtimeOfImpl_evalDist_pure _) (runtimeOfImpl_evalDist_bind _) correct
       (pk := pk) (sk := sk)
-      (by simpa only [runtimeOfImpl_evalDist, evalDist_apply_singleton] using
-        probOutput_ne_zero_of_mem_support generated)
-      (by simpa only [runtimeOfImpl_evalDist, evalDist_apply_singleton] using
-        probOutput_ne_zero_of_mem_support encapsulated)
-      (by simpa only [runtimeOfImpl_evalDist, evalDist_apply_singleton] using
-        probOutput_ne_zero_of_mem_support supported)
-  have certain : Pr[= some secret | decapsulation] = 1 :=
-    probOutput_eq_one_of_support_subset_singleton (by simp) unique
-  apply SPMF.ext
-  intro recovered
-  change Pr[= recovered | decapsulation] = (pure (some secret) : SPMF _) recovered
+      (by simpa only [runtimeOfImpl_evalDist] using
+        ((OracleComp.mem_support_iff_evalDist_singleton_pos _ _).1 generated).ne')
+      (by simpa only [runtimeOfImpl_evalDist] using
+        ((OracleComp.mem_support_iff_evalDist_singleton_pos _ _).1 encapsulated).ne')
+      (by simpa only [runtimeOfImpl_evalDist] using
+        ((OracleComp.mem_support_iff_evalDist_singleton_pos _ _).1 supported).ne')
+  refine OracleComp.evalDistEq_of_forall_prEvent_eq_output fun recovered => ?_
+  rw [prEvent_pure]
   by_cases same : recovered = some secret
   · subst recovered
-    simpa only [SPMF.pure_apply_self] using certain
-  · have absent : Pr[= recovered | decapsulation] = 0 :=
-      (probOutput_eq_zero_iff _ _).mpr (fun supported => same (unique _ supported))
-    simpa only [SPMF.pure_apply, ite_eq_right same] using absent
+    rw [ite_eq_left rfl]
+    exact OracleComp.prEvent_eq_one_of_forall_mem_support _ _ unique
+  · rw [ite_eq_right fun equal => same equal.symm]
+    exact prEvent_eq_zero_of_not_mem_support _ fun supported => same (unique _ supported)
 
 /-- A functional primitive implementation uses no ambient oracle effects during decapsulation. -/
 structure FunctionalDecapsulation
@@ -79,9 +78,13 @@ theorem honest_decapsulation_program
     (encapsulated : (ciphertext, secret) ∈ support (simulateQ (kemAmbientImpl baseImpl) (kem.encaps pk))) :
     kem.decaps sk ciphertext = pure (some secret) := by
   have evaluated := honest_decapsulation baseImpl kem correct generated encapsulated
-  simp only [functional.exact, simulateQ_pure, evalSPMF_pure] at evaluated
-  have values := congrArg SPMF.support evaluated
-  simp only [SPMF.support_pure, Set.singleton_eq_singleton_iff] at values
+  simp only [functional.exact, simulateQ_pure] at evaluated
+  have values : functional.result sk ciphertext = some secret := by
+    have mass := evaluated.prEvent_eq fun recovered => recovered = functional.result sk ciphertext
+    rw [prEvent_pure, prEvent_pure, ite_eq_left rfl] at mass
+    by_contra different
+    rw [ite_eq_right fun equal => different equal.symm] at mass
+    exact one_ne_zero mass
   rw [functional.exact, values]
 
 /-- A private protocol request carries the actual ciphertext and all four actual DH coordinates. -/
@@ -251,19 +254,18 @@ theorem native_eq_real
       oneKeyBranch kem (runtimeOfImpl (kemAmbientImpl baseImpl)) (reduction source kem protocol) true := by
   simp only [nativeMain, oneKeyBranch, runtimeOfImpl_evalDist, oneKeyBranchMain, oneKeyPrefix,
     oneKeyFinish, reduction, ite_true, simulateQ_bind, pure_bind, bind_assoc]
-  apply evalDist_eq_of_evalSPMF_eq
-  apply evalSPMF_bind_congr
+  apply EvalDistEq.evalDist_eq
+  apply OracleComp.EvalDistEq.bind_congr_of_support
   rintro ⟨publicKey, secretKey⟩ generated
-  apply evalSPMF_bind_congr'
+  apply EvalDistEq.bind_right
   intro state
-  apply evalSPMF_bind_congr
+  apply OracleComp.EvalDistEq.bind_congr_of_support
   rintro ⟨ciphertext, secret⟩ encapsulated
-  apply evalSPMF_bind_congr'
+  apply EvalDistEq.bind_right
   intro unused
   have agreement := honest_decapsulation_program baseImpl kem functional correct generated encapsulated
-  apply congrArg evalSPMF
-  apply congrArg (simulateQ (kemAmbientImpl baseImpl))
-  exact (route_complete source kem secretKey ciphertext secret agreement _).symm
+  rw [(route_complete source kem secretKey ciphertext secret agreement _).symm]
+  exact EvalDistEq.refl _
 
 /-- One uniform secret drives the initial root and every later matching request. The real encapsulation still runs and its secret is unused in this world. -/
 noncomputable def randomMain
@@ -334,18 +336,16 @@ theorem source_eq_native
     𝒟[simulateQ (kemAmbientImpl baseImpl) (sourceMain source kem protocol)] =
       𝒟[simulateQ (kemAmbientImpl baseImpl)
         (nativeMain source kem (runtimeOfImpl (kemAmbientImpl baseImpl)) protocol)] := by
-  apply evalDist_eq_of_evalSPMF_eq
+  apply EvalDistEq.evalDist_eq
   simp only [sourceMain, nativeMain, simulateQ_bind, runtimeOfImpl_liftProbComp,
     simulateQ_kemAmbient_liftProbComp]
-  apply evalSPMF_bind_congr'
+  apply EvalDistEq.bind_right
   rintro ⟨publicKey, secretKey⟩
-  apply evalSPMF_bind_congr'
+  apply EvalDistEq.bind_right
   intro state
-  apply evalSPMF_bind_congr'
+  apply EvalDistEq.bind_right
   rintro ⟨ciphertext, secret⟩
-  apply evalSPMF_ext
-  intro decision
-  simp only [probOutput_bind_const, probFailure_eq_zero, tsub_zero, one_mul]
+  exact (OracleComp.EvalDistEq.bind_const _ _).symm
 
 /-- The source execution with no ghost sample has exactly the same coefficient-one ordinary CCA hop. -/
 theorem source_correlated_indCCA

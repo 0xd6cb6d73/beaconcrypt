@@ -256,14 +256,14 @@ theorem indexed_real (hmac : HmacSha512) (client : OracleComp RootSpec Bool) (in
     𝒟[hybridGame hmac client index] = 𝒟[hmacPrfRealGame hmac (indexedReduction hmac client index)] :=
   (hybrid_eq_extractUniform hmac client index).trans
     (evalDist_eq_of_evalSPMF_eq _ _
-      (extractUniform_eq_hmacReal hmac (scanSampler client index) (scanObserver hmac)))
+      (extractUniform_eq_hmacReal_vcvioLegacy hmac (scanSampler client index) (scanObserver hmac)))
 
 /-- The random HMAC answer changes precisely the selected miss and preserves every repeated-input root. -/
 theorem indexed_random (hmac : HmacSha512) (client : OracleComp RootSpec Bool) (index : Nat) :
     𝒟[hybridGame hmac client (index + 1)] = 𝒟[hmacPrfRandomGame (indexedReduction hmac client index)] :=
   (hybrid_succ_eq_independent hmac client index).trans
     (evalDist_eq_of_evalSPMF_eq _ _
-      (hmacRandom_eq_independentRoot (scanSampler client index) (scanObserver hmac)).symm)
+      (hmacRandom_eq_independentRoot_vcvioLegacy (scanSampler client index) (scanObserver hmac)).symm)
 
 theorem indexed_advantage (hmac : HmacSha512) (client : OracleComp RootSpec Bool) (index : Nat) :
     (hybridGame hmac client index).boolDistAdvantage (hybridGame hmac client (index + 1)) =

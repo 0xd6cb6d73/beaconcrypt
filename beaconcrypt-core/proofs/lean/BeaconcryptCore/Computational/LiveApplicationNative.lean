@@ -1,5 +1,6 @@
 import BeaconcryptCore.Computational.LiveApplicationObservation
 import BeaconcryptCore.Computational.RawCtxRevealBudgets
+import BeaconcryptCore.Computational.VCVioForwardEvalDist
 
 /-!
 The public honest-application service is instantiated with the actual replicated Server/Beacon record, public fixed-HKDF, shared CTX and live-reveal interpreter. A private application has its own state and uniform oracle work. The complete joint initial sampler may correlate all states and its public context. The exact observation equality retains that sampler and every adaptive optional reply.
@@ -60,14 +61,17 @@ theorem native_observation {PublicContext Result : Type}
     (application : QueryImpl (ApplicationSpec AppRequest S B) (StateT AppState ProbComp))
     (initial : ProbComp (PublicContext × NativeState M P I D K A AppState S B))
     (client : PublicContext → OracleComp (PublicSpec AppRequest S B) Result) :
-    𝒮[(do let selected ← initial
-           let observed ← publicObservation (compiled source writer sender route decode application)
-             (client selected.1) selected.2
-           pure (selected.1, observed))] =
-      𝒮[(do let selected ← initial
-             let observed ← publicObservation (impl source writer sender route decode application)
-               (client selected.1) selected.2
-             pure (selected.1, observed))] := by
+    EvalDistEq
+      (do
+        let selected ← initial
+        let observed ← publicObservation (compiled source writer sender route decode application)
+          (client selected.1) selected.2
+        pure (selected.1, observed))
+      (do
+        let selected ← initial
+        let observed ← publicObservation (impl source writer sender route decode application)
+          (client selected.1) selected.2
+        pure (selected.1, observed)) := by
   have exactImpl : compiled (P := P) (I := I) (D := D) (K := K) (A := A)
       source writer sender route decode application = impl source writer sender route decode application :=
     funext (native_query source writer sender route decode application)

@@ -1,5 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import VCVio.OracleComp.Constructions.SampleableType
+import BeaconcryptCore.Computational.VCVioForwardOracleComp
+import BeaconcryptCore.Computational.VCVioLegacyBridge
 
 /-! Generic target selection (CE-4). A run produces an outcome; a deterministic function `designate` of the outcome names at most one target in a finite domain `G`, and an outcome is eligible when it names one. Every statement here is an exact identity with no assumption and no loss. The split form writes the probability of an event on eligible outcomes as the exact sum over targets of the probability of the event together with that target's designation; it is the headline form, to be composed with per-target hops stated with absolute advantages. The event form writes the same probability as `card G` times the probability that a uniform guess drawn before an unchanged run equals the designated target. The advantage form is the split form for a left-or-right guess with the eligibility-weighted half subtracted, as a real-valued identity. The guessing combinator writes a sum of per-target probabilities, or of signed per-target differences, as `card G` times the probability, or the signed difference, of the run with a uniformly guessed target; with signed per-target hops it turns the exact sum into the `card G · Adv(B_guess)` wording. No security claim is made here. -/
 open OracleComp OracleSpec ENNReal
@@ -7,45 +9,44 @@ set_option autoImplicit false
 namespace BeaconcryptCore.Computational.UniformTargetSelection
 variable {Ω G : Type} [Fintype G] [DecidableEq G]
 
-set_option linter.deprecated false in
 /-- The probability of an event as the evaluation measure of its indicator bit. -/
 theorem chance_eq (run : ProbComp Ω) (event : Ω → Prop) [DecidablePred event] :
-    𝒟[(fun outcome => decide (event outcome)) <$> run] {true} = Pr[event | run] := by
-  rw [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map]
-  congr 1
-  funext outcome
-  simp
+    𝒟[(fun outcome => decide (event outcome)) <$> run] {true} = Pr{let outcome ← run}[event outcome] := by
+  rw [map_eq_bind_pure_comp]
+  exact (prEvent_eq_evalDist_decide run event).symm
 
-set_option linter.deprecated false in
+set_option linter.deprecated false in set_option linter.unusedVariables false in theorem _root_.BeaconcryptCore.Computational.UniformTargetSelection.chance_eq_vcvioLegacy :
+    ∀ {Ω : Type} (run : ProbComp Ω) (event : Ω → Prop) [inst : DecidablePred event], 𝒟[(fun (outcome : Ω) => Decidable.decide (event outcome)) <$> run] {Bool.true} = probEvent run event :=
+  by simpa only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent] using @BeaconcryptCore.Computational.UniformTargetSelection.chance_eq
+
 /-- Split form: the probability of an event on eligible outcomes is the exact sum over targets of the probability of the event with that target designated. -/
 theorem split (run : ProbComp Ω) (event : Ω → Prop) [DecidablePred event] (designate : Ω → Option G) :
     𝒟[(fun outcome => decide (event outcome ∧ (designate outcome).isSome)) <$> run] {true} =
       ∑ target, 𝒟[(fun outcome => decide (event outcome ∧ designate outcome = some target)) <$> run] {true} := by
-  simp only [chance_eq, probEvent_eq_tsum_ite]
+  simp only [chance_eq, OracleComp.prEvent_eq_tsum_ite]
   rw [← Summable.tsum_finsetSum (fun _ _ => ENNReal.summable)]
   refine tsum_congr fun outcome => ?_
   cases named : designate outcome with
-  | none => simp
+  | none => simp [-evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
   | some chosen =>
       by_cases holds : event outcome
-      · simp [holds, Finset.sum_ite_eq]
-      · simp [holds]
+      · simp [holds, Finset.sum_ite_eq, -evalDist_apply_singleton, -evalDist_apply_setOf,
+          -evalDist_apply_univ]
+      · simp [holds, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
 
-set_option linter.deprecated false in
 /-- Split form for an event that implies eligibility. -/
 theorem split_of_eligible (run : ProbComp Ω) (event : Ω → Prop) [DecidablePred event] (designate : Ω → Option G)
     (eligible : ∀ outcome, event outcome → designate outcome ≠ none) :
     𝒟[(fun outcome => decide (event outcome)) <$> run] {true} =
       ∑ target, 𝒟[(fun outcome => decide (event outcome ∧ designate outcome = some target)) <$> run] {true} := by
   rw [← split run event designate, chance_eq, chance_eq]
-  refine probEvent_ext fun outcome _ => ?_
+  refine prEvent_congr run _ _ fun outcome => ?_
   constructor
   · intro holds
     exact ⟨holds, Option.isSome_iff_ne_none.mpr (eligible outcome holds)⟩
   · exact fun both => both.1
 
 omit [DecidableEq G] in
-set_option linter.deprecated false in
 /-- Guessing combinator: a sum over targets of per-target probabilities is `card G` times the probability of the run of a uniformly guessed target. -/
 theorem sum_eq_card_mul [SampleableType G] (runs : G → ProbComp Ω) (event : G → Ω → Prop)
     [∀ target, DecidablePred (event target)] :
@@ -55,14 +56,17 @@ theorem sum_eq_card_mul [SampleableType G] (runs : G → ProbComp Ω) (event : G
         let outcome ← runs target
         pure (target, outcome)] {true} := by
   simp only [chance_eq]
-  rw [probEvent_bind_eq_tsum, tsum_fintype]
-  have each : ∀ target : G, Pr[fun pair : G × Ω => event pair.1 pair.2 | do
+  rw [OracleComp.prEvent_bind_eq_tsum, tsum_fintype]
+  have each : ∀ target : G, Pr{let pair ← (do
       let outcome ← runs target
-      pure (target, outcome)] = Pr[event target | runs target] := by
+      pure (target, outcome))}[event pair.1 pair.2] = Pr{let outcome ← runs target}[event target outcome] := by
     intro target
-    rw [bind_pure_comp, probEvent_map]
-    rfl
-  simp only [each, probOutput_uniformSample]
+    have shape : (do let outcome ← runs target; pure (target, outcome)) =
+        (fun outcome => (target, outcome)) <$> runs target := by
+      rw [map_eq_bind_pure_comp]
+      rfl
+    rw [shape, prEvent_map]
+  simp only [each, SampleableType.prEvent_uniformSample_eq_singleton]
   rw [← Finset.mul_sum, ← mul_assoc]
   have positive : (Fintype.card G : ℝ≥0∞) ≠ 0 := by
     have : 0 < Fintype.card G := Fintype.card_pos
@@ -81,10 +85,9 @@ theorem guess [SampleableType G] (run : ProbComp Ω) (event : Ω → Prop) [Deci
   exact sum_eq_card_mul (fun _ => run) fun target outcome => event outcome ∧ designate outcome = some target
 
 /-- Evaluation probabilities are finite. -/
-theorem chance_ne_top (run : ProbComp Ω) (event : Ω → Bool) : 𝒟[event <$> run] {true} ≠ ⊤ :=
-  ne_top_of_le_ne_top one_ne_top (by
-    rw [evalDist_apply_singleton]
-    exact probOutput_le_one)
+theorem chance_ne_top (run : ProbComp Ω) (event : Ω → Bool) : 𝒟[event <$> run] {true} ≠ ⊤ := by
+  rw [← prEvent_eq_evalDist_singleton]
+  exact prEvent_ne_top _
 
 /-- Advantage form: the eligibility-weighted guessing advantage of a left-or-right bit is the exact sum over targets of the per-target weighted advantages. -/
 theorem advantage (run : ProbComp Ω) (correct : Ω → Prop) [DecidablePred correct] (designate : Ω → Option G) :

@@ -272,7 +272,7 @@ theorem honestCompletion_guess_bound {Result : Type} {bound : ℕ} (decode : Raw
       intro tail _ won
       exact guessEvent_implies_freshHit c key selector result invariant aligned tail won
     _ ≤ (bound : ℝ≥0∞) * (Nat.card CtxDigest : ℝ≥0∞)⁻¹ :=
-      JointTableFreshCandidates.fixed_vector_bound result.2 (candidates selector result.1)
+      JointTableFreshCandidates.fixed_vector_bound_vcvioLegacy result.2 (candidates selector result.1)
     _ = _ := by rw [Nat.card_eq_fintype_card, ctxDigest_card, div_eq_mul_inv]
 
 /-- The actual replay-only source, including every earlier rejected private lookup and complete cache, obeys the same final-vector bound through the checked SAME-table reconstruction. No public-HKDF table or extra primitive security premise is used. -/

@@ -1,6 +1,8 @@
 import BeaconcryptCore.Computational.PqxdhFullSecretInputKdf
 import BeaconcryptCore.Computational.PqxdhComposition
 import VCVio.OracleComp.QueryTracking.RandomOracle.DeferredSampling
+import BeaconcryptCore.Computational.VCVioForwardOracleComp
+import BeaconcryptCore.Computational.VCVioLegacyBridge
 
 /-! Ordered replacement of evolving chain outputs. Each complete expansion supplies the message key, nonce and next chain together. The stopped sampler retains earlier record material, but the consumed chain appears only as its secret input. -/
 
@@ -85,37 +87,48 @@ def materialChainEquiv : FullOutput ≃ (Material × RootOutput) :=
     right_inv := fun _ => rfl }
 
 theorem materialChain_uniform :
-    𝒮[(fun output : FullOutput => (material output, nextChain output)) <$>
-      ($ᵗ FullOutput)] = 𝒮[$ᵗ (Material × RootOutput)] := by
-  exact evalSPMF_map_bijective_uniform_cross FullOutput materialChainEquiv
-    materialChainEquiv.bijective
+    EvalDistEq ((fun output : FullOutput => (material output, nextChain output)) <$>
+      ($ᵗ FullOutput)) ($ᵗ (Material × RootOutput)) := by
+  exact SampleableType.map_uniformSample_evalDistEq_of_bijective materialChainEquiv.bijective
 
 /-- Complete continuations see a material/next-chain pair with the exact uniform joint law. -/
 theorem fullOutput_observed {A : Type} (continuation : Material → RootOutput → ProbComp A) :
-    𝒮[(do let output ← $ᵗ FullOutput
-          continuation (material output) (nextChain output))] =
-      𝒮[(do let record ← $ᵗ Material
-            let chain ← $ᵗ RootOutput
-            continuation record chain)] := by
-  have observed := congrArg (fun distribution => distribution >>=
-    fun pair => 𝒮[continuation pair.1 pair.2]) materialChain_uniform
-  simpa only [← evalSPMF_bind, bind_map_left, ← pairSample, bind_assoc, pure_bind] using observed
+    EvalDistEq
+      (do
+        let output ← $ᵗ FullOutput
+        continuation (material output) (nextChain output))
+      (do
+        let record ← $ᵗ Material
+        let chain ← $ᵗ RootOutput
+        continuation record chain) := by
+  have observed := materialChain_uniform.bind_left fun pair => continuation pair.1 pair.2
+  simpa only [bind_map_left, ← pairSample, bind_assoc, pure_bind] using observed
+
+set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.fullOutput_observed_vcvioLegacy :
+    ∀ {A : Type} (continuation : BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.Material → BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput → ProbComp A),
+      𝒮[do
+          let output ← $ᵗ BeaconcryptCore.Computational.PqxdhFullSecretInputKdf.FullOutput
+          continuation (BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.material output) (BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.nextChain output)] =
+        𝒮[do
+          let record ← $ᵗ BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.Material
+          let chain ← $ᵗ BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput
+          continuation record chain] :=
+  by simpa only [BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq] using @BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.fullOutput_observed
 
 /-- The independent full-output hop is precisely the next ordered hybrid. -/
 theorem independentHop_eq_hybrid {Context : Type} (source : FixedHkdfSha512NoSaltSource)
     (sample : ProbComp Context) (observer : EvolutionObserver Context) (cut remaining : Nat) :
-    𝒮[independentFullGame (hopSampler sample cut) (hopObserver source observer remaining)] =
-      𝒮[hybrid source sample observer (cut + 1 + remaining) (cut + 1)] := by
+    EvalDistEq (independentFullGame (hopSampler sample cut) (hopObserver source observer remaining))
+      (hybrid source sample observer (cut + 1 + remaining) (cut + 1)) := by
   have count : cut + 1 + remaining - (cut + 1) = remaining := by omega
   simp only [independentFullGame, hopSampler, hopObserver, hybrid, count, sampleMaterials,
     bind_assoc, pure_bind, List.append_assoc, List.singleton_append]
-  refine evalSPMF_bind_congr' sample fun context => ?_
-  refine evalSPMF_bind_congr' (sampleMaterials cut) fun prior => ?_
+  refine EvalDistEq.bind_right sample fun context => ?_
+  refine EvalDistEq.bind_right (sampleMaterials cut) fun prior => ?_
   have ignored (computation : ProbComp Bool) :
-      𝒮[(($ᵗ RootOutput) : ProbComp RootOutput) >>= fun _ => computation] =
-        𝒮[computation] :=
-    OracleComp.DeferredSampling.evalSPMF_bind_const_neverFails _ (by simp) computation
-  rw [ignored]
+      EvalDistEq ((($ᵗ RootOutput) : ProbComp RootOutput) >>= fun _ => computation) computation :=
+    OracleComp.EvalDistEq.bind_const _ computation
+  refine (ignored _).trans ?_
   exact fullOutput_observed (fun record chain =>
     observer context ⟨prior ++ record :: (realEvolution source remaining chain).records,
       (realEvolution source remaining chain).live⟩)
@@ -138,8 +151,7 @@ theorem adjacent_bound {Context : Type} (source : FixedHkdfSha512NoSaltSource)
     (hybrid source sample observer (cut + 1 + remaining) cut).boolDistAdvantage
       (hybrid source sample observer (cut + 1 + remaining) (cut + 1)) ≤
         hopLoss source hmac sample observer cut remaining := by
-  have random := evalDist_eq_of_evalSPMF_eq _ _
-    (independentHop_eq_hybrid source sample observer cut remaining)
+  have random := (independentHop_eq_hybrid source sample observer cut remaining).evalDist_eq
   simpa only [hybrid_eq_sourceHop, hopLoss, ProbComp.boolDistAdvantage, random] using
     sourceFullAdvantage_le_extract_add_hmac source hmac correct .ratchet
       (hopSampler sample cut) (hopObserver source observer remaining)

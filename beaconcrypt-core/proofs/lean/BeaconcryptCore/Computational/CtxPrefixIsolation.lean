@@ -492,7 +492,8 @@ theorem ctxSecretPrefixQueriedProbability_toReal_eq_tsum
       ∑' key : CtxKey,
         Pr[= key | $ᵗ CtxKey].toReal *
           (ctxSecretPrefixQueriedProbabilityInner c key adversary).toReal := by
-  unfold ctxSecretPrefixQueriedProbability ctxBeforeVerifyGame
+  simp only [ctxSecretPrefixQueriedProbability_vcvioLegacy]
+  unfold ctxBeforeVerifyGame
   rw [probEvent_bind_eq_tsum]
   rw [ENNReal.tsum_toReal_eq (fun key =>
     ENNReal.mul_ne_top probOutput_ne_top probEvent_ne_top)]

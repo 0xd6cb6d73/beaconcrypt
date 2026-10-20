@@ -1,6 +1,8 @@
 import BeaconcryptCore.Computational.PqxdhJointKdfGame
 import VCVio.OracleComp.Constructions.SampleableType.MeasureCompatibility
 import VCVio.OracleComp.QueryTracking.SubSpec
+import BeaconcryptCore.Computational.VCVioForwardOracleComp
+import BeaconcryptCore.Computational.VCVioLegacyBridge
 
 /-!
 # A secret-input PQXDH root game and an Extract/HMAC decomposition
@@ -142,22 +144,31 @@ theorem expandReduction_real {Context : Type} (hmac : HmacSha512)
 /-- The independent PRF key and public sampler may be reordered in distribution. -/
 theorem evalSPMF_sample_comm {A B C : Type} (left : ProbComp A) (right : ProbComp B)
     (next : A → B → ProbComp C) :
-    𝒮[left >>= fun a => right >>= next a] =
-      𝒮[right >>= fun b => left >>= fun a => next a b] := by
-  apply evalSPMF_ext
-  intro output
-  simp_rw [probOutput_bind_eq_tsum, ← ENNReal.tsum_mul_left]
-  rw [ENNReal.tsum_comm]
-  simp only [mul_left_comm]
+    EvalDistEq (left >>= fun a => right >>= next a)
+      (right >>= fun b => left >>= fun a => next a b) :=
+  OracleComp.EvalDistEq.bind_bind_swap left right next
+
+set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy :
+    ∀ {A B C : Type} (left : ProbComp A) (right : ProbComp B) (next : A → B → ProbComp C),
+      𝒮[left >>= fun (a : A) => right >>= next a] =
+        𝒮[do
+          let b ← right
+          let a ← left
+          next a b] :=
+  by simpa only [BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq] using @BeaconcryptCore.Computational.PqxdhSecretInputKdf.evalSPMF_sample_comm
 
 /-- Uniform Extract output is exactly the ordinary secret-key HMAC real world. -/
 theorem extractUniform_eq_hmacReal {Context : Type} (hmac : HmacSha512)
     (sample : SecretInputSampler Context) (observer : RootObserver Context) :
-    𝒮[extractUniformGame sample (extractReduction hmac observer)] =
-      𝒮[hmacPrfRealGame hmac (expandReduction sample observer)] := by
+    EvalDistEq (extractUniformGame sample (extractReduction hmac observer))
+      (hmacPrfRealGame hmac (expandReduction sample observer)) := by
   simpa [hmacPrfRealGame, expandReduction_real, extractUniformGame, extractReduction] using
     evalSPMF_sample_comm (sample : ProbComp (Context × Pqxdh.Bytes)) ($ᵗ HmacBlock)
       (fun pair key => observer pair.1 (expandRoot hmac key))
+
+set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.PqxdhSecretInputKdf.extractUniform_eq_hmacReal_vcvioLegacy :
+    ∀ {Context : Type} (hmac : BeaconcryptCore.Computational.PqxdhSecretInputKdf.HmacSha512) (sample : BeaconcryptCore.Computational.PqxdhSecretInputKdf.SecretInputSampler Context) (observer : BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootObserver Context), 𝒮[BeaconcryptCore.Computational.PqxdhSecretInputKdf.extractUniformGame sample (BeaconcryptCore.Computational.PqxdhSecretInputKdf.extractReduction hmac observer)] = 𝒮[BeaconcryptCore.Computational.PqxdhSecretInputKdf.hmacPrfRealGame hmac (BeaconcryptCore.Computational.PqxdhSecretInputKdf.expandReduction sample observer)] :=
+  by simpa only [BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq] using @BeaconcryptCore.Computational.PqxdhSecretInputKdf.extractUniform_eq_hmacReal
 
 /-- The ideal HMAC reduction receives one fresh block, while local computations leave the table alone. -/
 theorem expandReduction_random {Context : Type}
@@ -185,28 +196,47 @@ def blockSplitEquiv : HmacBlock ≃ (RootOutput × RootOutput) where
 
 /-- The ideal first-block projection is exactly a uniform 32-byte root. -/
 theorem first32_uniform :
-    𝒮[first32 <$> ($ᵗ HmacBlock)] = 𝒮[$ᵗ RootOutput] := by
-  have split : 𝒮[blockSplitEquiv <$> ($ᵗ HmacBlock)] =
-      𝒮[$ᵗ (RootOutput × RootOutput)] :=
-    evalSPMF_map_bijective_uniform_cross HmacBlock blockSplitEquiv blockSplitEquiv.bijective
-  calc
-    _ = 𝒮[Prod.fst <$> (blockSplitEquiv <$> ($ᵗ HmacBlock))] := by
-      simp only [Functor.map_map]
-      rfl
-    _ = 𝒮[Prod.fst <$> ($ᵗ (RootOutput × RootOutput))] := by
-      rw [evalSPMF_map, split, ← evalSPMF_map]
-    _ = _ := evalSPMF_map_fst_uniformSample_prod
+    EvalDistEq (first32 <$> ($ᵗ HmacBlock)) ($ᵗ RootOutput) := by
+  have split : EvalDistEq (blockSplitEquiv <$> ($ᵗ HmacBlock)) ($ᵗ (RootOutput × RootOutput)) :=
+    SampleableType.map_uniformSample_evalDistEq_of_bijective blockSplitEquiv.bijective
+  have marginal : ∀ (α β : Type) [Fintype α] [DecidableEq α] [Fintype β] [Nonempty β] [SampleableType α]
+      [SampleableType (α × β)], EvalDistEq (Prod.fst <$> ($ᵗ (α × β))) ($ᵗ α) := by
+    intro α β _ _ _ _ _ _
+    refine evalDistEq_iff_forall_prEvent_eq_output.2 fun a => ?_
+    have : Nonempty α := ⟨a⟩
+    rw [prEvent_map, SampleableType.prEvent_uniformSample, SampleableType.prEvent_uniformSample_eq_singleton]
+    have fiber : (Finset.univ.filter fun pair : α × β => pair.1 = a) =
+        ({a} : Finset α) ×ˢ (Finset.univ : Finset β) := by
+      ext ⟨first, second⟩
+      simp only [Finset.mem_filter, Finset.mem_univ, true_and, Finset.mem_product,
+        Finset.mem_singleton, and_true]
+    have positive : (Fintype.card β : ℝ≥0∞) ≠ 0 := by
+      exact_mod_cast Fintype.card_ne_zero
+    have finite : (Fintype.card β : ℝ≥0∞) ≠ ⊤ := ENNReal.natCast_ne_top _
+    rw [fiber, Finset.card_product, Finset.card_singleton, one_mul, Finset.card_univ, Fintype.card_prod,
+      Nat.cast_mul, ENNReal.div_eq_inv_mul, ENNReal.mul_inv (Or.inr finite) (Or.inr positive), mul_assoc,
+      ENNReal.inv_mul_cancel positive finite, mul_one]
+  have shape : first32 <$> ($ᵗ HmacBlock) = Prod.fst <$> (blockSplitEquiv <$> ($ᵗ HmacBlock)) := by
+    simp only [Functor.map_map]
+    rfl
+  rw [shape]
+  exact (split.map_congr Prod.fst).trans (marginal RootOutput RootOutput)
 
 /-- The HMAC random world replaces exactly the honest root and preserves the observer's local public evaluations. -/
 theorem hmacRandom_eq_independentRoot {Context : Type}
     (sample : SecretInputSampler Context) (observer : RootObserver Context) :
-    𝒮[hmacPrfRandomGame (expandReduction sample observer)] =
-      𝒮[independentRootGame sample observer] := by
+    EvalDistEq (hmacPrfRandomGame (expandReduction sample observer))
+      (independentRootGame sample observer) := by
   rw [expandReduction_random]
-  refine evalSPMF_bind_congr' (m := ProbComp) (sample : ProbComp (Context × Pqxdh.Bytes)) fun pair => ?_
-  change 𝒮[($ᵗ HmacBlock) >>= fun block => observer pair.1 (first32 block)] =
-    𝒮[($ᵗ RootOutput) >>= observer pair.1]
-  rw [← bind_map_left, evalSPMF_bind, first32_uniform, ← evalSPMF_bind]
+  refine EvalDistEq.bind_right (m := ProbComp) (sample : ProbComp (Context × Pqxdh.Bytes)) fun pair => ?_
+  change EvalDistEq (($ᵗ HmacBlock) >>= fun block => observer pair.1 (first32 block))
+    (($ᵗ RootOutput) >>= observer pair.1)
+  rw [← bind_map_left]
+  exact first32_uniform.bind_left (observer pair.1)
+
+set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.PqxdhSecretInputKdf.hmacRandom_eq_independentRoot_vcvioLegacy :
+    ∀ {Context : Type} (sample : BeaconcryptCore.Computational.PqxdhSecretInputKdf.SecretInputSampler Context) (observer : BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootObserver Context), 𝒮[BeaconcryptCore.Computational.PqxdhSecretInputKdf.hmacPrfRandomGame (BeaconcryptCore.Computational.PqxdhSecretInputKdf.expandReduction sample observer)] = 𝒮[BeaconcryptCore.Computational.PqxdhSecretInputKdf.independentRootGame sample observer] :=
+  by simpa only [BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq] using @BeaconcryptCore.Computational.PqxdhSecretInputKdf.hmacRandom_eq_independentRoot
 
 /-- A loss-one root reduction to fixed-salt Extract pseudorandomness and ordinary secret-key HMAC PRF advantage.
 
@@ -222,10 +252,8 @@ theorem sourceRootAdvantage_le_extract_add_hmac {Context : Type}
         (extractUniformGame sample (extractReduction hmac observer)) +
       (hmacPrfRealGame hmac (expandReduction sample observer)).boolDistAdvantage
         (hmacPrfRandomGame (expandReduction sample observer)) := by
-  have real := evalDist_eq_of_evalSPMF_eq _ _
-    (extractUniform_eq_hmacReal hmac sample observer)
-  have random := evalDist_eq_of_evalSPMF_eq _ _
-    (hmacRandom_eq_independentRoot sample observer)
+  have real := (extractUniform_eq_hmacReal hmac sample observer).evalDist_eq
+  have random := (hmacRandom_eq_independentRoot sample observer).evalDist_eq
   simpa only [sourceRootGame_eq_extract source hmac correct, ProbComp.boolDistAdvantage,
     real, random] using
     ProbComp.boolDistAdvantage_triangle (sourceRootGame source sample observer)
@@ -281,9 +309,9 @@ theorem hmacRealImpl_zeroSaltPatched (hmac : HmacSha512) (key : HmacBlock)
 Together with the preceding handler equality this identifies the rare-key event a PRF hybrid must charge. It is not an implementation of SHA-512 and asserts no concrete HMAC attack.
 -/
 theorem zeroSalt_key_probability :
-    Pr[fun key : HmacBlock => key = zeroSalt | $ᵗ HmacBlock] =
-      (Fintype.card HmacBlock : ℝ≥0∞)⁻¹ := by
-  simp [probOutput_uniformSample]
+    Pr{let key ← $ᵗ HmacBlock}[key = zeroSalt] =
+      (Fintype.card HmacBlock : ℝ≥0∞)⁻¹ :=
+  SampleableType.prEvent_uniformSample_eq_singleton zeroSalt
 
 end BeaconcryptCore.Computational.PqxdhSecretInputKdf
 

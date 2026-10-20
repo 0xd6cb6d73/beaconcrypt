@@ -111,7 +111,7 @@ theorem constructor_order (setup : Setup baseSpec KemSK) (codec : Codec Reader R
     (count : Nat) (selected : Fin (count + 1)) :
     𝒮[reserved setup codec checks ensureInit supplied client state count selected] =
       𝒮[selectedFirst setup codec checks ensureInit supplied client state count selected] := by
-  rw [selectedFirst, ← PqxdhSecretInputKdf.evalSPMF_sample_comm]
+  rw [selectedFirst, ← PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy]
   unfold reserved
   apply evalSPMF_bind_congr'
   rintro ⟨(_ | created), after⟩

@@ -59,7 +59,7 @@ theorem uniform_delayed {Context Result : Type} (prior : ProbComp Context) (seco
     let result ← observe (context, other) child
     pure (target, result))).trans ?_
   exact evalSPMF_bind_congr' ($ᵗ RootOutput) (fun other => by
-    simpa only [bind_assoc] using evalSPMF_sample_comm ($ᵗ RootOutput)
+    simpa only [bind_assoc] using evalSPMF_sample_comm_vcvioLegacy ($ᵗ RootOutput)
       (do let child ← $ᵗ FullOutput; observe (context, other) child)
       (fun target result => pure (target, result)))
 

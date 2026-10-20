@@ -175,7 +175,7 @@ theorem split_create_later (setup : Setup baseSpec KemSK) (codec : Codec Reader 
         respects runtime claim outcome reached]),
     UniformTargetSelection.split, Fintype.sum_prod_type, Fintype.sum_prod_type]
   refine Finset.sum_congr rfl fun session _ => PqxdhDeploymentKemTwoSided.sum_last_eq budget.create _ ?_
-  rw [UniformTargetSelection.chance_eq, probEvent_eq_zero_iff]
+  rw [UniformTargetSelection.chance_eq_vcvioLegacy, probEvent_eq_zero_iff]
   rintro outcome reached ⟨_, chosen⟩
   exact lt_irrefl _ (designated_create_later setup codec checks route ensureInit phase1 phase2 bounds mode first second
     budget respects runtime claim outcome reached _ chosen)

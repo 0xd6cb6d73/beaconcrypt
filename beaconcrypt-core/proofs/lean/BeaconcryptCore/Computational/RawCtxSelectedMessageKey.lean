@@ -115,7 +115,7 @@ theorem key_observed {Result : Type}
              let chain ← $ᵗ RootOutput
              let key ← $ᵗ RootOutput
              continuation key nonce chain)] := by
-  have original := fullOutput_observed (fun value chain => continuation value.1 value.2 chain)
+  have original := fullOutput_observed_vcvioLegacy (fun value chain => continuation value.1 value.2 chain)
   have reordered := evalSPMF_bind_bind_swap ($ᵗ RootOutput)
     ($ᵗ (NonceOutput × RootOutput)) (fun key pair => continuation key pair.1 pair.2)
   simp only [← pairSample, bind_assoc, pure_bind] at original reordered

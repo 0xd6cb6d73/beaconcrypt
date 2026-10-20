@@ -53,7 +53,7 @@ theorem sampleFamily_target_first {Result : Type} (count : ℕ) (target : Fin (c
                 intro first
                 exact ih target (fun rest => next (Fin.cons first rest))
             _ = _ := by
-              rw [PqxdhSecretInputKdf.evalSPMF_sample_comm sampleSeed sampleSeed]
+              rw [PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy sampleSeed sampleSeed]
               simp [sampleFamily, Fin.insertNth_succ_cons, bind_assoc]
 
 /-- Exact family generation cost, including every byte of each independent identity seed. -/

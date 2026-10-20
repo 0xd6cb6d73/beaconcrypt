@@ -205,7 +205,7 @@ theorem lazy_eager_complete (primitives : Primitives) {Result : Type}
     · have stepEq (future : List IdentitySeed) :=
         noncreate_step_eq primitives (state.seeds ++ future) query creates state
       simp_rw [← stepEq]
-      rw [PqxdhSecretInputKdf.evalSPMF_sample_comm (sampleSeeds count)
+      rw [PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy (sampleSeeds count)
         ((lazyImpl primitives query).run state)]
       apply evalSPMF_bind_congr
       intro result supported
