@@ -358,6 +358,7 @@
    "stage": 692,
    "stage_in_new_modules": [],
    "stage_in_stage_modules": [],
+   "note_spmf_only": "G3 counts the deprecated statement heads (probOutput, probEvent, probFailure, evalSPMF, the Boolean lemma); it does not count SPMF itself. Five restated theorems, StatefulGoodEvent.event_good, output_good, output_bad_zero, output_good_false and CtxRomAuth.ctxFreshAliasVerifier_le_inv, elaborate the forward notation with the pin's SPMF adapter instEvalDistSemanticsOfMonadLiftTSPMF (no native semantics at the pin over a generic IsUniformSpec specification or over CtxRO), so their types reference SPMF and the adapter instance without any deprecated head. The review-fix gate report (G3 spmf_only_report, amendment A2) lists them: declarations referencing SPMF without a deprecated head 108 -> 113, the five new ones all with the adapter instance in their types; see vcvio-deprecations-s2-review.json.",
    "pass": true
   },
   "G4": {
@@ -637,6 +638,7 @@
    "module_changed_unexplained": [],
    "unexplained_type_changes": [],
    "unexplained_levels_changes": [],
+   "note_type_changed_unexpected": "type_changed_unexpected and levels_changed list every change outside the configured allowlist. The three entries there (material_key_eq._simp_1_1, fullOutput_observed._simp_1_1, independentHop_eq_hybrid._proof_1_1; levels: fullOutput_observed._simp_1_1) are generated auxiliary declarations of restated theorems, which gates.py explains; the gate criterion is unexplained_type_changes and unexplained_levels_changes, both empty. From the review fixes on, gates.py also lists such entries under allowed_generated.",
    "theorem_value_changed_outside_edited": [],
    "pass": true
   },
@@ -3568,5 +3570,5 @@
   "warn_categories.py": "160cb0a9791c5bacfad1856f16d4c9c98eb8c361306f6fd6a9fd6cd395739703"
  },
  "logs": "machine-local, /tmp/bc-arc-scratch/vcvio-migration/S2/logs/ (check-lean-0/1, lake-L0..L3b, twintext-L0/L1/L2, rename-L0/L1/L2, certificates-1, certificates-negative-1, check-certificates-1, stage-*-1, check-inventory-1, warn-categories)",
- "reviews": "not yet (plan section 8 step 6: two independent reviews before integration)"
+ "reviews": "two independent reviews at 86ab011c (2026-10-20, statement equivalence and hygiene, both APPROVE_WITH_NITS); their fixes and reruns are recorded in vcvio-deprecations-s2-review.json"
 }
