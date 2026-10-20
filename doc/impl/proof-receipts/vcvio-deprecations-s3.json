@@ -561,6 +561,7 @@
    "module_changed_unexplained": [],
    "unexplained_type_changes": [],
    "unexplained_levels_changes": [],
+   "note_generated_type_changes": "Of the four generated helpers in type_changed_unexpected (allowed_generated), only probEvent_projectionCacheBad12_run_le_sum_aux._proof_1_6 and probEvent_projectionCacheBad32_run_le_sum_aux._proof_1_6 changed their type hash: they are arithmetic side goals of the rewritten proofs, not translated statements (after the same premises on the cache keys, base: 0 < m -> not m = m - 1 + 1 -> False; stage: forall j, not k + 1 + j = k + (j + 1) -> False; review-fix probe HelperTypes.lean on the base and stage builds). The two _proof_1_4 differ only in macro-scoped binder names: type hash, value hash and the scope-erased fingerprint are equal, only the raw binder-aware fingerprint differs (S3 review finding EQ-S3-2; see vcvio-deprecations-s3-review.json).",
    "allowed_generated": {
     "type_changed": [
      "_private.BeaconcryptCore.Computational.PqxdhProjectionCollisions.0.BeaconcryptCore.Computational.PqxdhProjectionCollisions.probEvent_projectionCacheBad12_run_le_sum_aux._proof_1_4",
@@ -2657,6 +2658,6 @@
   "declrep.py": "daf4e7fbb38acad7cc4845330d72bcd6dfae8ca020ee109cf53b54fb8dfe34b7",
   "prparen.py": "9e5225e5f32ef323670e48316f8a9456ddbe0cb0d7c40e1c96b64f76ec73d4af"
  },
- "logs": "machine-local, /tmp/bc-arc-scratch/vcvio-migration/S3/logs/ (check-lean-0/1/2, lake-stage-1, sf/*, twintext-1, twins-insert, rename-1, certificates-1 (first run: one failure, the fallback case), certificates-3, certificates-negative-3, check-certificates-3, stage-*-1, inv-rehash-1/2, check-inventory-1 (before the Lean rows were rehashed: drift, as expected) and -2, warn-categories)",
- "reviews": "not yet (plan section 8 step 6: two independent reviews before integration)"
+ "logs": "machine-local, /tmp/bc-arc-scratch/vcvio-migration/S3/logs/ (check-lean-0/1/2, lake-stage-1, sf/*, twintext-1, twins-insert, rename-1, certificates-1 (first run: one failure, the fallback case), certificates-2 and check-certificates-2 (second run: Lean output identical to run 3 apart from timing, checker RESULT FAIL because it did not find the fallback's whole-statement iff with its axiom guard in the form it requires in the certificate file; the generator gen_s3_certificates.py was corrected and rerun, writing the final certificate file, sha256 186c6064..., before run 3), certificates-3, certificates-negative-3, check-certificates-3, stage-*-1, inv-rehash-1/2, check-inventory-1 (before the Lean rows were rehashed: drift, as expected) and -2, warn-categories)",
+ "reviews": "two independent reviews at 08cb87f7 (2026-10-20, statement equivalence and hygiene, both APPROVE_WITH_NITS); their fixes and reruns are recorded in vcvio-deprecations-s3-review.json"
 }
