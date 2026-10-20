@@ -7601,5 +7601,5 @@
   "lean-check-scoped.sh": "137b7305a657dc389f3dc1231792c1c12cacc92b753a7c41a4db4854826801e3"
  },
  "logs": "machine-local, /tmp/bc-arc-scratch/vcvio-migration/S5/logs/ (check-lean-0..4, lake-*, oom-1..7, oomvar/*, oomx/*, twintext, twins-insert, twin-rename-apply, twins-remove-earlier, wrapper-patch-apply, certificates-1..3, certificates-negative-1..3, check-certificates-1..3, stage-*, inv-recount, inv-rehash-1, check-inventory-1, gates-final, warn-categories)",
- "reviews": "not yet (plan section 8 step 6: two independent reviews before integration)"
+ "reviews": "two independent reviews at d5c67b3b (2026-10-20, statement equivalence and hygiene, both APPROVE_WITH_NITS); their fixes and reruns are recorded in vcvio-deprecations-s5-review.json"
 }

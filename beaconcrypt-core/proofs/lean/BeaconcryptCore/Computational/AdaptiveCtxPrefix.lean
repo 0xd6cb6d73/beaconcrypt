@@ -315,7 +315,7 @@ theorem retainedRoutedGame_distance_le_prefix (decode : RawDecoder) (c : Pqxdh.C
       · refine Finset.sum_congr rfl fun key _ => ?_
         rw [ENNReal.toReal_mul]
         conv_rhs => rw [bind_pure_comp _ (independentGame decode c key adversary), prEvent_map]
-        try rfl
+        dsimp only [RetainedPrefix]
       · intro key _
         exact ENNReal.mul_ne_top (prEvent_ne_top _) (prEvent_ne_top _)
 

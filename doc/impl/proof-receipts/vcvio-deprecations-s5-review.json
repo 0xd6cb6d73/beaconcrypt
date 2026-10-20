@@ -1,0 +1,149 @@
+{
+ "date": "2026-10-20",
+ "scope": "VCVio deprecation migration, stage S5, fixes of the two independent reviews at d5c67b3b (statement equivalence EQ-S5-1, EQ-S5-2; hygiene H1, H2). One proof step of one Lean file changed (H2; no statement, guard or declaration changed), so that module and its dependents were rebuilt; four explanatory comment lines of check-inventory.sh changed (H1; no pin changed); two inventory rows were rehashed. Supplements vcvio-deprecations-s5.json (the record of d5c67b3b).",
+ "basis": "c90fad1518cb4c5268d421cb07d6863335cb4509",
+ "previous_head": "d5c67b3ba98be71ec3b82bf81c27d33a49b80317",
+ "topic": {
+  "branch": "codex/vcvio-migration-S5",
+  "clone": "/home/user/bc-vmig-S5"
+ },
+ "commits": {
+  "fixes": "the commit that adds this receipt"
+ },
+ "reviews": {
+  "equivalence": {
+   "verdict": "APPROVE_WITH_NITS",
+   "commit": "d5c67b3ba98be71ec3b82bf81c27d33a49b80317",
+   "findings_sha256": "6d1429f97e28681b803a9730b33cc0088fc112961a2d28879d24747cbc718174",
+   "fixed": [
+    "EQ-S5-1 (wording; later-stage procedure recorded)",
+    "EQ-S5-2"
+   ]
+  },
+  "hygiene": {
+   "verdict": "APPROVE_WITH_NITS",
+   "commit": "d5c67b3ba98be71ec3b82bf81c27d33a49b80317",
+   "findings_sha256": "e0d53209e479593d2bface58ef6ff5659b88137e462c970226b4e34fbc802c80",
+   "fixed": [
+    "H1",
+    "H2"
+   ]
+  },
+  "owner_level": []
+ },
+ "fixes": {
+  "H2": "AdaptiveCtxPrefix.retainedRoutedGame_distance_le_prefix (restated theorem, statement unchanged): the summand step's closing `try rfl` is now `dsimp only [RetainedPrefix]`. Scratch checks (lean -M7000, memory-capped leases): without the step the goal remains (the sides differ only by RetainedPrefix (key, x) against its definition), so `rfl` closed it by default-transparency unfolding; `dsimp only [RetainedPrefix]` and `simp only [RetainedPrefix]` both close it (module 2.6 s, 3.4 GB, guards pass, no warning). Environment check (Environment.find?, positive control: a theorem that realizes RetainedPrefix.eq_1): neither the earlier step nor the new one generates RetainedPrefix.eq_1, eq_def or eq_unfold. The fresh declaration dump of the rebuilt tree is byte-identical to the stage's (types, values and fingerprints).",
+  "H1": "check-inventory.sh comment lines of the S2, S3, S4 and S5 twin blocks: S5 'its four later-stage finiteness proofs' -> 'its five later-stage finiteness proofs'; the closing sentence 'The twin pins are removed together with the twins when their last consumer stage migrates.' -> 'When the last consumer stage of a twin migrates, the twin and its per-twin pin are removed, and the module count pins stay at the new counts (zero when no twin remains) with a removal note.' No pin changed. Generator S5/tools/gen_s5_inventory_block.py fixed the same way (original kept as gen_s5_inventory_block.py.d5c6.txt); its output equals the edited S5 block (63 lines).",
+  "EQ-S5-1": "the plan's reference probe records one edge per (declaration, target) and prefers the type edge, so PqxdhServerAuthPublicationLoss.recordLoss_expanded appears only as a type-level user of modifiedNonceAeadINTCTXTAdvantage and the consumer list (proof edges) had four of the five finiteness proofs; the S5 record entry and the analysis now say so. Later stages S7 and S8 (restated wrappers: 2 and 3) take the users of a restated definition's earlier body from proof edges recorded separately from type edges (as in the review's ReviewS5Env probe, S5/review-equivalence/lean/ReviewS5Env.lean.in and scripts/gen_env.py) before the first full build (S5/NOTES.md, PROGRESS.md).",
+  "EQ-S5-2": "S5/tools/phaseb_exceptions_s5.py: HEADS no longer contains evalDist_apply_singleton and PFunctor.FreeM.instDiscreteEvalDistCompatibleOfCompatible; a FORBIDDEN check (the gate G5 forbidden names of plan section 3, the pin's simp bridges evalDist_apply_singleton/evalDist_apply_setOf/evalDist_apply_univ, any DiscreteEvalDistCompatible or SPMF.toMeasure* name) makes the script fail. Rerun on the stage report and on the rebuilt tree's report: byte-identical exception list; three doctored reports fail (rc 1), the earlier tool accepted two of them (rc 0)."
+ },
+ "lean_change": {
+  "file": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/AdaptiveCtxPrefix.lean",
+  "declaration": "BeaconcryptCore.Computational.AdaptiveCtxPrefix.retainedRoutedGame_distance_le_prefix",
+  "before": "try rfl",
+  "after": "dsimp only [RetainedPrefix]",
+  "statement_changed": false,
+  "modules_rebuilt": 1258,
+  "scratch_check_leases": "00001005-00001017 (8192 MiB scopes, no swap, lean -j1 -M7000)"
+ },
+ "build": {
+  "check_lean": {
+   "lease": "00001018",
+   "rc": 0,
+   "jobs": "5535",
+   "modules_built": 1258,
+   "error_records": 0
+  },
+  "records_equal_to_stage_final_build_check_lean_5": true,
+  "records_equal_to_validation_run": true,
+  "warning_categories": "PASS (vs check-lean-0; VCVio 851 -> 585, -266 exact, no growth, no new kind); output equal to the validation run"
+ },
+ "post_build": {
+  "leases": {
+   "decls": "00001019",
+   "facade": "00001020",
+   "probe-usage": "00001021",
+   "probe-used": "00001022",
+   "axiom-walk": "00001023"
+  },
+  "declaration_dump_equal_to_stage": true,
+  "facade_probe_equal_to_stage": true,
+  "usage_probe_equal_to_stage": true,
+  "used_probe_equal_to_stage": true,
+  "source_scan_equal_to_stage": true,
+  "step7_lean_scan": "LEAN-SCAN files 1994 hits 0",
+  "step7_axiom_walk": [
+   "AXIOM-WALK roots 95255 reached 122227 unresolved 0",
+   "AXIOM-WALK axioms [Classical.choice, Quot.sound, propext]",
+   "SERVER-DOMAIN PqxdhDeploymentKemTwoSided.kem_transfer_two_sided true",
+   "SERVER-DOMAIN PqxdhDeploymentIdealCompile.ideal_compile true",
+   "SERVER-DOMAIN PqxdhDeploymentIdealHandoff.ideal_world_view true",
+   "SERVER-DOMAIN PqxdhRegistrationJointKemKeyTransfer.allIdeal_loss false",
+   "SERVER-DOMAIN PqxdhRegistrationJointKemPostSkeleton.opaqueBranch_shared false",
+   "SERVER-DOMAIN PqxdhRegistrationJointBeaconFinishOnce.slotGame_two false"
+  ]
+ },
+ "gates": {
+  "result": "G1-G5 PASS; JSON equal to the stage's logs/gates-final.log (paths stripped, key order ignored)",
+  "edited_theorems": "174, equal to the stage config",
+  "phase_b_report_equal_to_stage": true
+ },
+ "phase_b_exceptions": {
+  "file": "/tmp/bc-arc-scratch/vcvio-migration/S5/review-fix/post/phaseB-exceptions.json",
+  "sha256": "6e6504a4597c1d2a91139acbdfb98829a7a16eacfcf25520e6dbe18b21937321",
+  "equal_to_stage_list": true,
+  "declarations": 49,
+  "rows": 370,
+  "tool_sha256_before": "ce8b973ade4ecaccba50424d904c6f3fca9d5be4c70e858a8e93b2309fdc5f70",
+  "tool_sha256_after": "5b431f05a50c7b1af4a85f24c027b677057b94fb0b6ca381c0c14a090d14e579",
+  "doctored_controls": "3 doctored reports (evalDist_apply_singleton, PFunctor.FreeM.instDiscreteEvalDistCompatibleOfCompatible, SPMF.toMeasure_apply added to one declaration) fail with the corrected tool; the earlier tool accepted the first two (logs/phaseb-exceptions-controls.log)"
+ },
+ "certificates": {
+  "tooling": {
+   "CertTools.lean": "987e93df28f0d50ad616536108c41d2220bd985b4feafffc521899f48ee1660e",
+   "olean_sha256": "779be810e6d5773ba092f71c3ba3ef5de65e540e321971cd075728e637097b9f",
+   "olean_equal_to_shared_build": true,
+   "check_certificates_s2.py": "f330b2676633e4d1b2921abd285282107f0242e34c9b8948f0a80298cceca540"
+  },
+  "certificate_file_sha256": "02a6f8311ffbdd051d24b5bcbbc25182e0af65045b5f7d0e372c1e6c85bd5009",
+  "certificate_file_equal_to_stage": true,
+  "negative_file_sha256": "e375da17f36c50caea91eff40623538e988f370348802b263b0b30200f605e95",
+  "negative_file_equal_to_stage": true,
+  "pre_stage_dump_sha256": "0d680e1b467ed06c80d2573351c0ccf35b70d8c2342767ee751ebbc764ff9a87",
+  "leases": {
+   "certificates": "00001024",
+   "negative": "00001025"
+  },
+  "pass_lines": 125,
+  "negative_error_lines": [
+   12,
+   13,
+   14,
+   15,
+   16,
+   17
+  ],
+  "checker": "RESULT PASS",
+  "lean_output_equal_to_stage_run_3": true,
+  "lean_output_equal_to_validation_run": true,
+  "negative_output_equal_to_stage_run_3": true,
+  "negative_output_equal_to_validation_run": true,
+  "log_sha256": "a3b7291c97bdd169bd8314fd71ba4a36885184ef5c426633f657004f5bb764ca"
+ },
+ "inventory": {
+  "inv_recount": "handwritten-lean count unchanged (1987)",
+  "inv_rehash": "proofs/lean/BeaconcryptCore/Computational/AdaptiveCtxPrefix.lean: 40bb008386a1 -> b63ca23dbc80; proofs/lean/BeaconcryptCore.lean: unchanged; proofs/trusted-boundary.md: unchanged; proofs/check-inventory.sh: 57bf50c1747c -> e80e1ef6d8b5",
+  "check_inventory_edited_tree": {
+   "lease": "00001026",
+   "rc": 0
+  },
+  "inventory_block_generator_sha256_before": "e01c34f4c2ea48c1e87c5662ee91cc86d5b90dd0d31972adc122c4cffc923a10",
+  "inventory_block_generator_sha256_after": "bf23715563705f0580040ae9ef580a2bc62fa2c431d4e1ef65f1382379b9e9ab"
+ },
+ "not_run": [
+  "verify-in-shell, ProVerif, transcript fidelity, cargo, Go and Python tests (owner decision 2026-10-19 item 5)",
+  "mutation suite (no Rust source changed)",
+  "nix-collect-garbage"
+ ],
+ "logs": "machine-local, /tmp/bc-arc-scratch/vcvio-migration/S5/review-fix/logs/"
+}
