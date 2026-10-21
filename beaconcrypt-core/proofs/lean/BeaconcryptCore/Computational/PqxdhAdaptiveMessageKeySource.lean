@@ -105,7 +105,7 @@ theorem first_source :
   apply evalDist_eq_of_evalSPMF_eq
   exact PqxdhFinalMaterialKeySplit.complete_vcvioLegacy _
 
-/-- The complete_vcvioLegacy actual source comparison reaches one ordinary uniform selected message key after its original source preparation; every final-material alias charge is explicit. -/
+/-- The complete actual source comparison reaches one ordinary uniform selected message key after its original source preparation; every final-material alias charge is explicit. -/
 theorem later_bound (depth : Nat) (position : (targets selected).number.val = depth + 2)
     (compatible : PqxdhOptionalKemSource.HonestKeyCompatibility baseImpl kem env.native)
     (adapter : HasAttachedVerificationAdapter attachedVerify primitives.verify)

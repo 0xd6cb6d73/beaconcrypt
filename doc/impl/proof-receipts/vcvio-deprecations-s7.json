@@ -1,6 +1,6 @@
 {
  "date": "2026-10-21",
- "scope": "VCVio deprecation migration, stage S7 (plan doc/impl/vcvio-deprecation-migration-plan.md section 7: {PqxdhInitial*, PqxdhAuthenticated*}, PqxdhFinal* and the proof-term-only PqxdhInitializer*, PqxdhComposition*, PqxdhSelected*): restatement of 91 theorems and 2 wrapper definition bodies in 40 of the 56 stage modules in VCVio's forward vocabulary (Pr{let x <- mx}[...] and EvalDistEq), with out-of-build certificates for all 93 (92 inverse-map, 1 textual fallback); 4 transitional twins and their 9 later-stage consumer references; 17 earlier twins without consumers deleted; the S2/S3/S4/S5/S6 twins used by the stage's files switched back; the three amendment A3 bridge sites of stage S4 rewritten; phase B proof rewrites in the 56 stage modules; Lean-only validation.",
+ "scope": "VCVio deprecation migration, stage S7 (plan doc/impl/vcvio-deprecation-migration-plan.md section 7: {PqxdhInitial*, PqxdhAuthenticated*}, PqxdhFinal* and the proof-term-only PqxdhInitializer*, PqxdhComposition*, PqxdhSelected*): restatement of 91 theorems and 2 wrapper definition bodies in 40 of the 56 stage modules in VCVio's forward vocabulary (Pr{let x <- mx}[...] and EvalDistEq), with out-of-build certificates for all 93 (92 inverse-map, 1 textual fallback); 4 transitional twins and their 8 later-stage consumer references; 17 earlier twins without consumers deleted; the S2/S3/S4/S5/S6 twins used by the stage's files switched back; the three amendment A3 bridge sites of stage S4 rewritten; phase B proof rewrites in the 56 stage modules; Lean-only validation.",
  "basis": "6ae77bba8417e723e594a4d43dafd433457d5059",
  "topic": {
   "branch": "codex/vcvio-migration-S7",
@@ -136,10 +136,10 @@
    "PqxdhInitialNativeRisk.carried_risk",
    "PqxdhInitialRootEventComposition.authenticated_root_bound"
   ],
-  "consumer_references_renamed": 9,
+  "consumer_references_renamed": 8,
   "consumer_reference_files": 6,
   "consumer_files": [
-   "PqxdhAdaptiveMessageKeySource (S8, 3)",
+   "PqxdhAdaptiveMessageKeySource (S8, 2)",
    "PqxdhHeadlineBridges (S8, 2)",
    "PqxdhFirstRecordTarget (S8, 1)",
    "PqxdhHypothesisWitness (S8, 1)",
@@ -5270,5 +5270,5 @@
   "prparen.py": "e31cd0484599309f6f946a5af2c06c2b9e553cad8b19ec5186c10501ea3a500b"
  },
  "logs": "machine-local, /tmp/bc-arc-scratch/vcvio-migration/S7/logs/ (check-lean-0..2, work/*, exp/*, twintext, twins-insert, twin-rename-apply, twins-remove-earlier, certificates-pre, certificates-1 and -final, check-certificates-*, stage-*, warn-categories-*, gates-1, gates-final, inv-recount, inv-rehash-1, check-inventory-1)",
- "reviews": "not yet (plan section 8 step 6: two independent reviews before integration)"
+ "reviews": "two independent reviews at d912a809 (2026-10-21, statement equivalence APPROVE_WITH_NITS, hygiene REQUEST_CHANGES, the same finding EQ-S7-1 = H1 and the nit H2); their fixes, among them the corrected count of renamed later-stage references above (8, not 9: twin_rename.py had also renamed a docstring word, now restored), are recorded in vcvio-deprecations-s7-review.json"
 }

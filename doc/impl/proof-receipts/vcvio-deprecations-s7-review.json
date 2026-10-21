@@ -1,0 +1,207 @@
+{
+ "date": "2026-10-21",
+ "scope": "VCVio deprecation migration, stage S7, fixes of the two independent reviews at d912a809 (statement equivalence EQ-S7-1; hygiene H1 = EQ-S7-1, H2; no owner item). One docstring word of one later-stage Lean file restored (EQ-S7-1/H1; no statement, proof, guard or declaration changed), so that module and its dependents were rebuilt; one inventory row rehashed; the renamed later-stage reference count corrected from 9 to 8 in the S7 record entry, the analysis and vcvio-deprecations-s7.json; the scratch tool twin_rename.py restricted to code text, with a new post-build check for twin names in comments; the analysis and record sentence on the simplification-bridge exclusion corrected and completed (H2). Supplements vcvio-deprecations-s7.json (the record of d912a809, corrected in its consumer count).",
+ "basis": "6ae77bba8417e723e594a4d43dafd433457d5059",
+ "previous_head": "d912a809835d8e5ca7d37f82dc59f14a0a7dabd7",
+ "topic": {
+  "branch": "codex/vcvio-migration-S7",
+  "clone": "/home/user/bc-vmig-S7"
+ },
+ "commits": {
+  "fixes": "the commit that adds this receipt"
+ },
+ "reviews": {
+  "equivalence": {
+   "verdict": "APPROVE_WITH_NITS",
+   "commit": "d912a809835d8e5ca7d37f82dc59f14a0a7dabd7",
+   "findings_sha256": "9ba2d893b7faa4a3971f7a009fd41a0e03e001b712250733421a7b2a5df22eec",
+   "fixed": [
+    "EQ-S7-1"
+   ]
+  },
+  "hygiene": {
+   "verdict": "REQUEST_CHANGES",
+   "commit": "d912a809835d8e5ca7d37f82dc59f14a0a7dabd7",
+   "findings_sha256": "8243736f73c4345b807bdcaeafc2e28e323c565321fbb653fe437472dfdb1d08",
+   "fixed": [
+    "H1 (same defect as EQ-S7-1)",
+    "H2"
+   ]
+  },
+  "owner_level": []
+ },
+ "fixes": {
+  "EQ-S7-1/H1": {
+   "defect": "twin_rename.py apply renamed the English word 'complete' in the docstring of PqxdhAdaptiveMessageKeySource.later_bound (line 108) to 'complete_vcvioLegacy': chunks() did not start a chunk at '/-' lines, so the docstring sat in the chunk of the consumer first_source, and the bare suffix 'complete' of PqxdhFinalMaterialKeySplit.complete was substituted on every line of that chunk. No type, value, guard or warning was affected; the record, the analysis and vcvio-deprecations-s7.json counted it as a ninth reference.",
+   "lean_change": {
+    "file": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhAdaptiveMessageKeySource.lean",
+    "line": 108,
+    "before": "/-- The complete_vcvioLegacy actual source comparison ...",
+    "after": "/-- The complete actual source comparison ...",
+    "file_differs_from_basis_only_by": "the two code renames PqxdhFinalMaterialKeySplit.complete -> complete_vcvioLegacy (lines 70 and 106)",
+    "statement_or_proof_changed": false
+   },
+   "corrected_count": {
+    "consumer_references_renamed": 8,
+    "consumer_reference_files": 6,
+    "PqxdhAdaptiveMessageKeySource": 2,
+    "documents_corrected": [
+     "doc/impl/staged-verification-record.md (S7 entry)",
+     "doc/formal-verification-analysis.md (S7 section)",
+     "doc/impl/proof-receipts/vcvio-deprecations-s7.json (scope, consumer_references_renamed, consumer_files[0])"
+    ],
+    "not_amendable": "the message of commit 1ab1a706 says 'rename their 9 references in 6 later files'"
+   },
+   "tool_fix": {
+    "file": "/tmp/bc-arc-scratch/vcvio-migration/S7/tools/twin_rename.py",
+    "sha256_before": "2b7a59a985fd2d152aaff13b0c593f9ca78f55ee9b227329892dd6d16246ed40",
+    "sha256_after": "ebf9eb05f2c0637cd9f48b01e9291b949a426784d3a054bb3bcd89f30344b9c3",
+    "original_kept_as": "/tmp/bc-arc-scratch/vcvio-migration/S7/tools/twin_rename.py.d912.txt",
+    "change": "apply and revert substitute in code text only: comments (--, nested /- -/, docstrings), string literals (also r#\"...\"#) and character literals are blanked by a verbatim copy of strip() of S7/step7/lean-scan.py (offsets per code point) and a match is changed only where the blanked text still shows it; skipped matches are listed as SKIP lines on stderr; chunk heads are read from the blanked text; new subcommand check-comments (exit 1 if any _vcvioLegacy name lies inside a comment, docstring or literal)",
+    "postbuild_check": {
+     "file": "/tmp/bc-arc-scratch/vcvio-migration/S7/tools/s7-postbuild.sh",
+     "sha256_before": "f5470da391abe2e130b1b87e541c1a144399d8b68ed24d327577b999a31e2502",
+     "sha256_after": "e25f03062f21231b125ea280437d5e5de0dde2706374e96aa0c5eb8e107e51ab",
+     "change": "runs twin_rename.py check-comments on the clone after each build (for S8 and later stages to copy)"
+    },
+    "replay": {
+     "script": "/tmp/bc-arc-scratch/vcvio-migration/S7/review-fix/scripts/twin_rename_replay.sh",
+     "log": "/tmp/bc-arc-scratch/vcvio-migration/S7/review-fix/logs/twin-rename-replay.log",
+     "S5": "corrected = original tool output = stage log (11 references)",
+     "S6": "corrected = original tool output = stage log (57 references)",
+     "S7": "original 9 (stage log), corrected 8; the outputs differ only at the docstring line 108; the corrected output equals the review-fix tree for all 6 files"
+    },
+    "controls": {
+     "script": "/tmp/bc-arc-scratch/vcvio-migration/S7/review-fix/scripts/twin_rename_controls.sh",
+     "log": "/tmp/bc-arc-scratch/vcvio-migration/S7/review-fix/logs/twin-rename-controls.log",
+     "revert_of_corrected_output_restores_basis": true,
+     "revert_of_d912_output": "8 switched back, the docstring name skipped",
+     "synthetic_file": "corrected: 3 code references renamed, 7 matches in comments, docstrings, a nested block comment and a string skipped; original tool: 8 renamed, comments included",
+     "check_comments_review_fix_tree": "TWIN-NAMES-IN-COMMENTS files 1994 hits 0",
+     "check_comments_d912a809_tree": "TWIN-NAMES-IN-COMMENTS files 1994 hits 1"
+    }
+   }
+  },
+  "H2": "analysis (S7 section, Proofs paragraph) said the two proofs that the facade probe found reaching the pin's simplification bridge 'now exclude it'; PqxdhInitialFutureInputCandidates.clear_bound uses simp only instead and only PqxdhInitialSampledParent.local_bound excludes it. The exclusion -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ sits in 15 simp calls of 9 stage declarations (none at the basis): PqxdhAuthenticatedRoot.dispatch_finish_eq_source (3), PqxdhAuthenticatedRootSource.dispatch_complete_eq_source (3), PqxdhInitialRootEventSource.dispatch_complete_eq_source (3), PqxdhAuthenticatedRootCorrectness.after_bound, PqxdhComposition.finiteHybridBound, PqxdhInitialCommonSecrecy.local_bound, PqxdhInitialHalfSecrecy.local_bound, PqxdhInitialNativeRisk.callback_risk, PqxdhInitialSampledParent.local_bound. The analysis sentence and the record's 'What else was edited' sentence now say how each of the two proofs avoids the bridge and name all nine declarations. No proof changed."
+ },
+ "build": {
+  "check_lean": {
+   "lease": "00001303",
+   "rc": 0,
+   "jobs": "5535",
+   "modules_built": 660,
+   "modules_built_equal_import_closure": true,
+   "error_records": 0
+  },
+  "records_equal_to_stage_final_build_check_lean_2": true,
+  "records_equal_to_validation_run": true,
+  "warning_categories": "PASS (vs check-lean-0; VCVio 230 -> 65, -165 exact, no growth, no new kind); output equal to the validation run"
+ },
+ "post_build": {
+  "leases": {
+   "decls": "00001304",
+   "facade": "00001305",
+   "probe-usage": "00001306",
+   "probe-used": "00001307",
+   "axiom-walk": "00001308"
+  },
+  "declaration_dump_equal_to_stage": true,
+  "facade_probe_equal_to_stage": true,
+  "usage_probe_equal_to_stage": true,
+  "used_probe_equal_to_stage": true,
+  "source_scan_equal_to_stage": true,
+  "twin_names_in_comments": "TWIN-NAMES-IN-COMMENTS files 1994 hits 0",
+  "step7_lean_scan": "LEAN-SCAN files 1994 hits 0",
+  "step7_axiom_walk": [
+   "AXIOM-WALK roots 95209 reached 122155 unresolved 0",
+   "AXIOM-WALK axioms [Classical.choice, Quot.sound, propext]",
+   "SERVER-DOMAIN PqxdhDeploymentKemTwoSided.kem_transfer_two_sided true",
+   "SERVER-DOMAIN PqxdhDeploymentIdealCompile.ideal_compile true",
+   "SERVER-DOMAIN PqxdhDeploymentIdealHandoff.ideal_world_view true",
+   "SERVER-DOMAIN PqxdhRegistrationJointKemKeyTransfer.allIdeal_loss false",
+   "SERVER-DOMAIN PqxdhRegistrationJointKemPostSkeleton.opaqueBranch_shared false",
+   "SERVER-DOMAIN PqxdhRegistrationJointBeaconFinishOnce.slotGame_two false"
+  ],
+  "step7_axiom_walk_lines_equal_to_stage_final": true
+ },
+ "gates": {
+  "result": "G1-G5 PASS; JSON equal to the stage's logs/gates-final.log (paths stripped)",
+  "edited_theorems": "144, equal to the stage config",
+  "theorem_value_changes_equal_to_stage": true,
+  "phase_b_report_equal_to_stage": true
+ },
+ "phase_b_exceptions": {
+  "file": "/tmp/bc-arc-scratch/vcvio-migration/S7/review-fix/post/phaseB-exceptions.json",
+  "sha256": "742f4e2c910fbaa353dd8c8a521ba1bbaa18875aca5914b2fc81ee2820bae626",
+  "equal_to_stage_list": true,
+  "declarations": 26,
+  "rows": 171,
+  "tool_sha256": "32a5e3695cd80775e36d24c5cb57c1151553aef585229b2fef9de9d6e7ee1bf7"
+ },
+ "certificates": {
+  "tooling": {
+   "CertTools.lean": "987e93df28f0d50ad616536108c41d2220bd985b4feafffc521899f48ee1660e",
+   "olean_sha256": "779be810e6d5773ba092f71c3ba3ef5de65e540e321971cd075728e637097b9f",
+   "olean_equal_to_shared_build": true,
+   "check_certificates_s2.py": "f330b2676633e4d1b2921abd285282107f0242e34c9b8948f0a80298cceca540"
+  },
+  "certificate_file_sha256": "5d6088c50ebc4166b5992630d3e9ed2b46ffa8596afbda8f9b05930c2ca06295",
+  "certificate_file_equal_to_stage": true,
+  "negative_file_sha256": "ec87efef4c78503bdae98cf11f3b7d23345437b2293f71a989b7d9b29ff8e962",
+  "negative_file_equal_to_stage": true,
+  "pre_stage_dump_sha256": "9a4029fd498ecf85e035f237d79cf9bf4b09e44408c0786ef0c69901e3fd89e3",
+  "leases": {
+   "certificates": "00001309",
+   "negative": "00001310"
+  },
+  "pass_lines": 97,
+  "negative_error_lines": [
+   15,
+   16,
+   17,
+   18,
+   19,
+   20,
+   21,
+   22
+  ],
+  "checker": "RESULT PASS",
+  "lean_output_equal_to_stage_final_run": true,
+  "lean_output_equal_to_validation_run": true,
+  "negative_output_equal_to_stage_final_run": true,
+  "negative_output_equal_to_validation_run": true,
+  "log_sha256": "31ad47803a4dd1fb1c6c8d4fef11f7860826b974110307754c857121692c6a62"
+ },
+ "inventory": {
+  "inv_recount": "handwritten-lean count unchanged (1987)",
+  "inv_rehash": "proofs/lean/BeaconcryptCore/Computational/PqxdhAdaptiveMessageKeySource.lean: a7c085cadcce -> 257eeaebd5f1",
+  "unchanged": "check-inventory.sh, BeaconcryptCore.lean, trusted-boundary.md (no pin changed)",
+  "check_inventory_edited_tree": {
+   "lease": "00001311",
+   "rc": 0
+  }
+ },
+ "docs": {
+  "doc/impl/staged-verification-record.md": "S7 entry: 'Corrected in part' note, the reference count (eight, PqxdhAdaptiveMessageKeySource two) and the H2 sentence; new entry 'VCVio deprecation migration, stage S7, review fixes (2026-10-21)'",
+  "doc/formal-verification-analysis.md": "S7 section: the reference count (eight), the H2 sentence, the status sentence replaced by the record link, Reviews paragraph",
+  "doc/impl/proof-receipts/vcvio-deprecations-s7.json": "scope count (8), consumer_references_renamed 8, consumer_files[0] '(S8, 2)', reviews pointer"
+ },
+ "not_run": [
+  "verify-in-shell, ProVerif, transcript fidelity, cargo, Go and Python tests (owner decision 2026-10-19 item 5)",
+  "mutation suite (no Rust source changed)",
+  "nix-collect-garbage"
+ ],
+ "tool_sha256": {
+  "edit_docs_rf1.py": "f59c64d7421d8a85f615e0f9cd0cf0aac7dcee9459438911da63b6c1e85e9a2a",
+  "append_record_entry_s7.py": "7f715916975eece8d3cc40609b6bc93ea360ef00d486aae67299849e451d17d4",
+  "twin_rename_replay.sh": "299941fd7d21d369307a73a6855c6a6dd1d521510bff56940a16d6ee7bd5be72",
+  "twin_rename_controls.sh": "5c0fe5169968fb906826cca90eeea19abaa08747509261492189d307fe4f073f",
+  "after-build.sh": "060149172b1f4a1f2cbeedd2c630153b82300af4c4b84073a8ad3f39a19cd426",
+  "postbuild.sh": "d2762ee9e2fef7a454c1fbee2db1f0079439a941aa2c31c1c8db0bae543c2e61",
+  "gates.sh": "f9537a1ca5cb69c9fce5d14e4a14f8db58c52a21539e5c12bfe82c50819a021b",
+  "certificates.sh": "cc764db9894645c0e4609de4b9ac8022c945ac7b8a33c1b46553cc24fecb503b",
+  "rebuilt_closure.py": "51363596c351f2dfd0a8318504cfecbe99eb5c2c958318110578f7e81e156199",
+  "gen_receipt_s7_review.py": "80c0eeff8b187ef1ec357b30c24219be9fd5570441e16bf2a2dd300b6041735a"
+ },
+ "logs": "machine-local, /tmp/bc-arc-scratch/vcvio-migration/S7/review-fix/logs/"
+}
