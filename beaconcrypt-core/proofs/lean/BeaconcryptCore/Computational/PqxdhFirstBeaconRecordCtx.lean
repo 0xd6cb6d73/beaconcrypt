@@ -1235,6 +1235,7 @@ theorem alias_bound :
   generalize sampledBlock : ($ᵗ HmacBlock : ProbComp HmacBlock) = block at uniform ⊢
   refine (aliasStep block _ ?_).trans uniform
   intro initialBlock _ separate
+  rw [OracleComp.prEvent_eq_zero_iff]
   simp [separate, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
 
 /-- C4's compiled game is dominated by the initial half-alias probability plus the separated compiled game. -/

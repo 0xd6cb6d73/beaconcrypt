@@ -153,7 +153,7 @@ theorem client_transfer (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
       𝒟[(fun final => final.2.1.occurred) <$> PqxdhJointPhase1Reports.run setup.joint count
         (client setup codec checks route ensureInit bounds mode adversary count runtime)] {true} := by
   classical
-  rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true, client_run]
+  rw [client_run]
   have bounded := prEvent_bind_mono_of_forall_le_of_support
     (PqxdhJointPhase1Reports.run setup.joint count (PqxdhRegistrationJointReportCompiler.initialized setup codec
       checks ensureInit none count (compileFull setup codec route bounds mode adversary) runtime))
@@ -161,7 +161,8 @@ theorem client_transfer (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
     (fun reached => (fun after => after.2.1.occurred) <$> (simulateQ (sourceImpl setup.joint count)
       (announceAll count (acceptedCandidates codec (finalTranscript reached.1)))).run reached.2)
     (fun value : Bool => value = true) (fun value : Bool => value = true) (fun reached member => ?_)
-  · simpa only [map_bind, Functor.map_map, bind_pure_comp] using bounded
+  · rw [prEvent_eq_evalDist_singleton, prEvent_eq_evalDist_singleton] at bounded
+    simpa only [map_bind, Functor.map_map, bind_pure_comp] using bounded
   · by_cases happened : event reached
     · simp only [prEvent_pure, decide_eq_true_eq, happened, ite_true]
       apply le_of_eq
@@ -171,7 +172,7 @@ theorem client_transfer (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
       rw [support_map] at supported
       obtain ⟨after, afterMember, rfl⟩ := supported
       exact detected reached member happened after afterMember
-    · simp [happened, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+    · simp only [prEvent_pure, decide_eq_true_eq, happened, ite_false, zero_le]
 
 /-- Theorem CE-A2 (signing-history form, all accepts, no selection factor). For a deployment adversary in either mode that respects its budget, in the report-instrumented initialized execution of its compiled program with a generated Server seed, the probability that the run passes through a successful raw accept, at any position, whose verified identity key is that of a generated Beacon owner unrevealed at that accept and whose verified key tuple is not among that owner's chronological signing attempts before the accept is at most the sum over the `qCreate + 1` generated identity positions of the ordinary joint-use weak-EUF advantages of the A2 client's reductions, with coefficient one. There is no accept-position, owner, field or report-position factor and no collision term; the premises are the attached-signature format rule `shortRejects` with `setup.wiring` and the adversary's budget, and no codec law is used. Reading the bound as a statement about the deployment experiment uses `report_game`, which needs the approved codec laws `Phase1ReadBack` and `Phase2ReadBack`. The unrevealed qualifier holds on every run of the compiled program (`generated_forgery_iff`, `a2_generated_bound`), and the query bills of the reductions are `a2_bills`. -/
 theorem a2_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)

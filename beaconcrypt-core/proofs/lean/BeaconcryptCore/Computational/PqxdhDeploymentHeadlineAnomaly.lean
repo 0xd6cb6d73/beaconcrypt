@@ -163,7 +163,7 @@ theorem ptc_random_le (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
           {true} ≤ (2 ^ 256 : ℝ≥0∞)⁻¹ := by
   rw [ptc_branch_eval setup functional, ← prEvent_eq_evalDist_singleton _ true]
   refine prEvent_bind_le_of_forall_le_of_support _ _ _ fun draw _ => ?_
-  simp only [bind_assoc, pure_bind]
+  rw [bind_pure_comp _ ($ᵗ MlKemSharedSecret), prEvent_map]
   cases mapped : draw.2.1.map (fun c => (c, functional.result draw.1.2 c)) with
   | none =>
       have never : ∀ candidate, ptcOutcome setup.kem functional false draw candidate = false := fun candidate => by

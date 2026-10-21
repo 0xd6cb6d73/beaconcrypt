@@ -146,7 +146,7 @@ theorem pair_random_le (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK) 
   rw [(OracleComp.EvalDistEq.bind_bind_swap ($ᵗ MlKemSharedSecret)
     (simulateQ (kemAmbientImpl setup.baseImpl) (setup.kem.encaps pair.1)) _).prEvent_eq]
   refine prEvent_bind_le_of_forall_le_of_support _ _ _ fun second _ => ?_
-  simp only [bind_assoc, pure_bind]
+  rw [bind_pure_comp _ ($ᵗ MlKemSharedSecret), prEvent_map]
   calc Pr{let candidate ← $ᵗ MlKemSharedSecret}[pairOutcome false (pair, first, second) candidate = true]
       ≤ Pr{let candidate ← $ᵗ MlKemSharedSecret}[candidate = second.2] := by
         refine prEvent_mono_of_support _ _ _ fun candidate _ hit => ?_

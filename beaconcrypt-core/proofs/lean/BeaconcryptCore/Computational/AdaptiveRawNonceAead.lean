@@ -504,8 +504,9 @@ theorem simulated_bad_eq_firstDiscrepancy (decode : RawDecoder) (c : Pqxdh.Crypt
               pure (pair.1, ((⟨pair.2, state.attempts⟩ : ReceiveState), false)))
             (simulateQ (adaptiveImpl false decode c key) (next result.1)).run result.2)}[
               result.2.2 = true] = _
-          simp only [bind_assoc, pure_bind]
-          refine OracleComp.prEvent_bind_congr_of_support _ _ _ fun result _ => ?_
+          rw [bind_assoc ((modifiedNonceAeadINTCTXTImpl c key primitive).run state.seals)]
+          simp only [pure_bind]
+          refine prEvent_bind_congr _ _ _ _ _ fun result => ?_
           exact ih result.1 ⟨result.2, state.attempts⟩
       | inr raw =>
           rw [firstDiscrepancy_receive]

@@ -63,7 +63,8 @@ theorem local_bound (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixed
       (observer source writer continuation context output) ≤
       3 * Pr{let x ← bad source writer continuation context target output}[x = true].toReal := by
   rcases context with ⟨common | pending, entry⟩
-  · simp [native, observer, ProbComp.boolDistAdvantage, -evalDist_apply_singleton, -evalDist_apply_setOf,
+  · refine le_of_eq_of_le ?_ (mul_nonneg (by norm_num) ENNReal.toReal_nonneg)
+    simp [native, observer, ProbComp.boolDistAdvantage, -evalDist_apply_singleton, -evalDist_apply_setOf,
       -evalDist_apply_univ]
   · have bad_eq : bad source writer continuation (.inr pending, entry) target output =
         RawCtxSelectedParentHop.bad source writer (RawCtxCheckedParentSecrecy.parent continuation)
@@ -122,8 +123,10 @@ theorem actual_route (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixe
     rw [bad, prEvent_map, prEvent_map]
     exact prEvent_congr _ _ _ fun result => by simp only [decide_eq_true_eq]
   rw [← event]
-  simpa only [actual, RawCtxSelectedParentSecrecy.actual, RawCtxSelectedParentCandidates.sample,
-    Nat.cast_ofNat, bind_assoc, pure_bind] using bound
+  refine le_of_eq_of_le ?_ (bound.trans_eq ?_)
+  · simp only [actual, RawCtxSelectedParentSecrecy.actual, RawCtxSelectedParentCandidates.sample, bind_assoc,
+      pure_bind]
+  · rw [Nat.cast_ofNat]
 
 
 set_option maxRecDepth 2048 in

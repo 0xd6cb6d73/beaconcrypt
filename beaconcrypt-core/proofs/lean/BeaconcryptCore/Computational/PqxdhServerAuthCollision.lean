@@ -53,14 +53,15 @@ theorem verified_third_probability (setup : Setup baseSpec KemSK)
         absBytes input.third = value.toList] ≤
       (64 : ℝ≥0∞) / (Fintype.card ScalarBytes : ℝ≥0∞) := by
   classical
-  -- The rejection branches end in the impossible event.
-  have prPureFalse : 𝒟[(pure False : ProbComp Prop)] {True} = 0 := by
-    have impossible := prEvent_false (pure () : ProbComp Unit)
-    rwa [pure_bind] at impossible
+  -- The event is decided into a Boolean point mass, so the rejection branches end in the point mass of `false`.
+  have prPureFalse : 𝒟[(pure false : ProbComp Bool)] {true} = 0 := by
+    rw [← prEvent_eq_evalDist_singleton _ true, prEvent_pure]
+    simp
   -- Reassociation at the event level: a bare `rw [bind_assoc]` would also rewrite the bind that expands `Pr{...}`.
   have prAssoc : ∀ {α β γ : Type} (x : ProbComp α) (f : α → ProbComp β) (g : β → ProbComp γ) (p : γ → Prop),
       Pr{let y ← (x >>= f >>= g)}[p y] = Pr{let y ← (x >>= fun a => f a >>= g)}[p y] := fun x f g p => by
     rw [bind_assoc x f g]
+  rw [prEvent_eq_evalDist_decide]
   simp only [PqxdhServerRootPreparation.collectVerified, OptionT.run_bind,
     OptionT.run_monadLift, Option.elimM, bind_map_left,
     simulateQ_bind, simulateQ_spec_query, PqxdhServerStaticDhSource.prefixImpl,
@@ -68,9 +69,10 @@ theorem verified_third_probability (setup : Setup baseSpec KemSK)
   simp only [StateT.run, Option.elim_some, pure_bind]
   by_cases used : PqxdhServerRootPreparation.registrationId verified ∈ consumed
   · simp only [used, ite_true, OptionT.run_failure, simulateQ_pure]
-    change Pr{let result ← (pure (none, consumed) : ProbComp (Option (PqxdhServerRootPreparation.Inputs Reader ScalarBytes
-        PeerEncoding) × List Pqxdh.Bytes))}[∃ input, result.1 = some input ∧ absBytes input.third = value.toList] ≤ _
-    simp only [prEvent_pure, reduceCtorEq, false_and, exists_false, ite_false]
+    change 𝒟[(pure (none, consumed) : ProbComp (Option (PqxdhServerRootPreparation.Inputs Reader ScalarBytes
+        PeerEncoding) × List Pqxdh.Bytes)) >>= fun result =>
+          pure (decide (∃ input, result.1 = some input ∧ absBytes input.third = value.toList))] {true} ≤ _
+    simp only [pure_bind, reduceCtorEq, false_and, exists_false, decide_false, prPureFalse]
     exact zero_le
   · simp only [used, ite_false, OptionT.run_bind, OptionT.run_monadLift,
       Option.elimM, bind_map_left, simulateQ_bind, simulateQ_spec_query,
@@ -78,8 +80,8 @@ theorem verified_third_probability (setup : Setup baseSpec KemSK)
       pure_bind, Option.elim_some]
     cases reserved : checks.reserveRegistration <;>
       simp only [Bool.not_false, Bool.not_true, Bool.false_eq_true, ite_true, ite_false,
-        OptionT.run_failure, simulateQ_pure, state_pure, prEvent_pure,
-        reduceCtorEq, false_and, exists_false]
+        OptionT.run_failure, simulateQ_pure, state_pure, pure_bind,
+        reduceCtorEq, false_and, exists_false, decide_false, prPureFalse]
     · exact zero_le
     cases pre : checks.x25519Point (PqxdhRootTableInitialization.rootArray verified.keys.prekey) <;>
       cases one : checks.x25519Point (PqxdhRootTableInitialization.rootArray verified.keys.oneTime) <;>
@@ -88,7 +90,8 @@ theorem verified_third_probability (setup : Setup baseSpec KemSK)
         simulateQ_pure, PqxdhServerStaticDhSource.prefixImpl, serverAux,
         state_pure, pure_bind, pre, one, Bool.not_true,
         Bool.not_false, Bool.false_eq_true, ite_true, ite_false, reduceCtorEq,
-        false_and, exists_false, prPureFalse] <;> try exact zero_le
+        false_and, exists_false, decide_false, prPureFalse] <;> try exact zero_le
+    rw [← prEvent_eq_evalDist_decide]
     simp only [state_bind, state_lift, generateEphemeral, prAssoc, pure_bind,
       Option.elim_some]
     refine (prEvent_bind_le_prEvent_of_support _ _ (fun scalar : ScalarBytes =>

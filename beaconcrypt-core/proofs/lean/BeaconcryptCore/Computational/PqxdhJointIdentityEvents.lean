@@ -206,7 +206,8 @@ theorem reportingRun_le_extractor (primitives : Primitives) (count : ℕ)
   unfold reportingRun globalRun
   refine prEvent_bind_mono_of_forall_le _ _ _ _ _ fun seeds => ?_
   apply (occurred_probability_le_stopped primitives seeds _ (initialState count) []).trans
-  simp only [reportExtractor, simulateQ_map, StateT.run_map, bind_map_left, bind_assoc, pure_bind]
+  simp only [reportExtractor, simulateQ_map, StateT.run_map, bind_map_left]
+  rw [bind_pure_comp (β := _ × _ × _), prEvent_map]
   apply prEvent_mono
   intro result accepted
   dsimp only [StoppedReportEvent] at accepted

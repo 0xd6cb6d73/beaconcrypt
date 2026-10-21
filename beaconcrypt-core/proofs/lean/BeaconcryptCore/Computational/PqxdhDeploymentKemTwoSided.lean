@@ -184,7 +184,7 @@ theorem real_le_run (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
       · rw [active]
         apply prEvent_bind_mono_of_forall_le_of_support
         intro encapsulated _
-        conv_lhs => rw [bind_assoc, OracleComp.prEvent_bind_const]
+        conv_lhs => rw [(OracleComp.EvalDistEq.bind_const _ _).prEvent_eq (fun y => y = true)]
         rw [prEvent_eq_evalDist_singleton, prEvent_eq_evalDist_singleton]
         simp only [PqxdhRegistrationJointKemResume.sourcePost, cutMap, active, ite_true, simulateQ_map,
           OptionT.run_map, StateT.run_map, bind_pure_comp, Functor.map_map]

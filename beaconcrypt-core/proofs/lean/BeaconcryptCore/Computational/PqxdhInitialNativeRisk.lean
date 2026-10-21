@@ -64,7 +64,9 @@ theorem callback_risk (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMix
   | inr query =>
       rw [external_handler, prEvent_map]
       simp only [Clean, RawCtxFirstParentRisk.Clean] at clean ⊢
-      simp [counted, clean, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+      simp only [clean, not_true_eq_false]
+      rw [prEvent_false]
+      exact zero_le
 
 /-- The full-interface first-hit scan accumulates only its actual counted source calls, with collision terms indexed by the retained chronological input bound. -/
 theorem scan_risk (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)

@@ -102,7 +102,8 @@ theorem after_bound (baseImpl : QueryImpl baseSpec ProbComp)
       simpa only [decide_eq_true good, ite_true, ENNReal.toReal_one] using
         tvDist_le_one (left publicKey secretKey context pair.1 pair.2)
           (right publicKey secretKey context pair.1 pair.2)
-  · simp [after, proceed, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+  · refine le_of_eq_of_le ?_ ENNReal.toReal_nonneg
+    simp [after, proceed, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
 
 /-- Averaging the original prechallenge execution requires agreement only on its actual supported states and does not condition the error on proceeding. -/
 theorem prepared_bound (baseImpl : QueryImpl baseSpec ProbComp)

@@ -77,7 +77,8 @@ theorem local_bound (context : (Bool ⊕ Context) × Entry) (target : RootOutput
       (observer source writer mark sender route decode view context output) ≤
     3 * Pr{let x ← bad source writer mark sender route decode view context target output}[x = true].toReal := by
   rcases context with ⟨common | pending, entry⟩
-  · simp [native, observer, ProbComp.boolDistAdvantage, -evalDist_apply_singleton, -evalDist_apply_setOf,
+  · refine le_of_eq_of_le ?_ (mul_nonneg (by norm_num) ENNReal.toReal_nonneg)
+    simp [native, observer, ProbComp.boolDistAdvantage, -evalDist_apply_singleton, -evalDist_apply_setOf,
       -evalDist_apply_univ]
   · simpa only [native, observer, bad, observed, Functor.map_map, Function.comp_def, candidates,
       PqxdhInitialPrivateCheckedFreshness.maskedRun, PqxdhInitialCheckedFreshness.maskedRun,
@@ -133,8 +134,10 @@ theorem actual_route (sample : ProbComp (Bool ⊕ Context))
     rw [bad, prEvent_map, prEvent_map]
     exact prEvent_congr _ _ _ fun result => by simp only [decide_eq_true_eq]
   rw [← event]
-  simpa only [actual, RawCtxSelectedParentSecrecy.actual, RawCtxSelectedParentCandidates.sample,
-    Nat.cast_ofNat, bind_assoc, pure_bind] using bound
+  refine le_of_eq_of_le ?_ (bound.trans_eq ?_)
+  · simp only [actual, RawCtxSelectedParentSecrecy.actual, RawCtxSelectedParentCandidates.sample, bind_assoc,
+      pure_bind]
+  · rw [Nat.cast_ofNat]
 
 
 

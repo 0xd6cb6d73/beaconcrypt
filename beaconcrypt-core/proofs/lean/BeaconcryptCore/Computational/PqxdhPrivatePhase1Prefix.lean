@@ -378,7 +378,8 @@ theorem authentication_bound
       IsSigning (fun _ => by simp [IsSigning, dynamicClass, IsClass]) 0 (selectorNoSign publicTranscript))
     fallback ordinaryFallback (program_create_bound baseImpl kem setup selector selectorNoCreate)
   rw [Fin.sum_univ_succ] at bounded
-  simpa [privateReduction, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ] using bounded
+  refine bounded.trans_eq ?_
+  simp [privateReduction, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
 
 /-- Executable test for precisely the charged fresh changed acceptance branch. -/
 def changedBit {setup : StatefulPhase1Setup baseSpec} {Selection : Type} {count : Nat}

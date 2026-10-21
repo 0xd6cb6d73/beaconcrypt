@@ -162,16 +162,20 @@ theorem flagged_bad_eq_first {Result : Type} (decode : RawDecoder) (c : Pqxdh.Cr
           let reply ← replayRaw decode raw state
           pure (reply.1, (reply.2, decide (postLoggedReply decode raw reply.2 ≠ reply.1))))
         (simulateQ (flaggedImpl false decode c key) (next result.1)).run result.2)}[result.2.2 = true] = _
-      simp only [bind_assoc, pure_bind]
-      refine OracleComp.prEvent_bind_congr_of_support _ _ _ fun result supported => ?_
-      have same := replayRaw_discrepancy_iff decode c key raw state invariant result supported
-      have kept := replayRaw_preserves_invariant decode c key raw state invariant result supported
-      by_cases bad : RawBad decode raw result.2
-      · have decision : decide (postLoggedReply decode raw result.2 ≠ result.1) = true := decide_eq_true (same.mpr bad)
-        rw [decision, flagged_bad_probability_one, ite_eq_left bad, prEvent_pure]
-        simp
-      · have decision : decide (postLoggedReply decode raw result.2 ≠ result.1) = false := decide_eq_false (fun different => bad (same.mp different))
-        rw [decision, ite_eq_right bad, ih result.1 result.2 kept]
+      rw [bind_assoc (replayRaw decode raw state)]
+      simp only [pure_bind]
+      refine le_antisymm
+        (prEvent_bind_mono_of_forall_le_of_support _ _ _ _ _ fun result supported => le_of_eq ?_)
+        (prEvent_bind_mono_of_forall_le_of_support _ _ _ _ _ fun result supported => ge_of_eq ?_)
+      all_goals
+        have same := replayRaw_discrepancy_iff decode c key raw state invariant result supported
+        have kept := replayRaw_preserves_invariant decode c key raw state invariant result supported
+        by_cases bad : RawBad decode raw result.2
+        · have decision : decide (postLoggedReply decode raw result.2 ≠ result.1) = true := decide_eq_true (same.mpr bad)
+          rw [decision, flagged_bad_probability_one, ite_eq_left bad, prEvent_pure]
+          simp
+        · have decision : decide (postLoggedReply decode raw result.2 ≠ result.1) = false := decide_eq_false (fun different => bad (same.mp different))
+          rw [decision, ite_eq_right bad, ih result.1 result.2 kept]
     | inl request =>
       rw [firstDiscrepancy_primitive]
       simp only [simulateQ_query_bind, StateT.run_bind, OracleQuery.input_query]
@@ -180,10 +184,14 @@ theorem flagged_bad_eq_first {Result : Type} (decode : RawDecoder) (c : Pqxdh.Cr
           let reply ← (replayImpl decode c key (.inl request)).run state
           pure (reply.1, (reply.2, false)))
         (simulateQ (flaggedImpl false decode c key) (next result.1)).run result.2)}[result.2.2 = true] = _
-      simp only [bind_assoc, pure_bind]
-      refine OracleComp.prEvent_bind_congr_of_support _ _ _ fun result supported => ?_
-      exact ih result.1 result.2
-        (replayImpl_preserves_invariant decode c key (.inl request) state invariant result supported)
+      rw [bind_assoc ((replayImpl decode c key (.inl request)).run state)]
+      simp only [pure_bind]
+      refine le_antisymm
+        (prEvent_bind_mono_of_forall_le_of_support _ _ _ _ _ fun result supported => le_of_eq ?_)
+        (prEvent_bind_mono_of_forall_le_of_support _ _ _ _ _ fun result supported => ge_of_eq ?_)
+      all_goals
+        exact ih result.1 result.2
+          (replayImpl_preserves_invariant decode c key (.inl request) state invariant result supported)
 
 /-- The two uninstrumented source interpreters differ only in the permitted raw optional plaintext. -/
 noncomputable def sourceImpl (logged : Bool) (decode : RawDecoder) (c : Pqxdh.Crypto) (key : CtxKey) :

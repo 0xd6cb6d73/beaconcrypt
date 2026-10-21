@@ -66,8 +66,10 @@ theorem actual_route (sample : ProbComp (Packet (extra := extra) (M := M) (P := 
     rw [bad, prEvent_map, prEvent_map]
     exact prEvent_congr _ _ _ fun result => by simp only [decide_eq_true_eq]
   rw [← event]
-  simpa only [actual, RawCtxSelectedParentSecrecy.actual, RawCtxSelectedParentCandidates.sample,
-    Nat.cast_ofNat, bind_assoc, pure_bind] using bound
+  refine le_of_eq_of_le ?_ (bound.trans_eq ?_)
+  · simp only [actual, RawCtxSelectedParentSecrecy.actual, RawCtxSelectedParentCandidates.sample, bind_assoc,
+      pure_bind]
+  · rw [Nat.cast_ofNat]
 
 
 

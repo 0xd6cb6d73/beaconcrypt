@@ -59,7 +59,11 @@ theorem first_seal_guess (decode : AdaptiveCtxReceive.RawDecoder) (input : CtxSe
     let _ ← $ᵗ CtxDigest
     Prod.map id project <$> (simulateQ (impl decode) work).run (afterSeal input state))
     (fun result => guess result.1) using 1
-  simp only [bind_assoc, pure_bind, Hit, List.Vector.mk_toList]
+  refine prEvent_bind_congr ($ᵗ FixedBytes 16) _ _ _ _ fun tag => ?_
+  rw [bind_assoc (γ := _ × _) ($ᵗ CtxDigest)]
+  refine prEvent_bind_congr ($ᵗ CtxDigest) _ _ _ _ fun commitment => ?_
+  rw [bind_pure_comp (β := _ × _), bind_pure_comp (β := _ × _)]
+  simp only [prEvent_map, Hit, List.Vector.mk_toList]
 
 end BeaconcryptCore.Computational.PqxdhServerAuthPublicationTag
 

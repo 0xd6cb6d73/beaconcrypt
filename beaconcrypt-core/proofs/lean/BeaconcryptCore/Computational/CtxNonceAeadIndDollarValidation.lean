@@ -501,6 +501,7 @@ theorem directProbe_le_booleanRealInner
   unfold ctxDirectSamplePrefixProbeExpInner
     modifiedNonceAeadINDDollarRealExpInner
     ctxPrefixToBooleanINDDollarReduction
+  rw [prEvent_eq_evalDist_singleton, prEvent_eq_evalDist_singleton]
   simp only [simulateQ_bind, StateT.run_bind, bind_assoc]
   rw [ctxRetainedBaseNestedRun_eq_direct c key adversary.toCtxAdversary]
   simp_rw [simulateQ_queryModifiedNonceAeadSeal,
@@ -508,20 +509,20 @@ theorem directProbe_le_booleanRealInner
   simp only [pure_bind]
   rw [← bind_pure_comp]
   simp only [bind_assoc, pure_bind]
-  refine OracleComp.prEvent_bind_mono_of_support _ _ _ fun result hresult => ?_
+  rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true]
+  refine prEvent_bind_mono_of_forall_le_of_support _ _ _ _ _ fun result hresult => ?_
   by_cases hhit : CtxKeyProbeHit key
       (ctxPrefixProbeVector qH result.2.publicInputs)
   · have hfresh := chooseFreshCtxNonce_fresh_of_direct_support
       c key adversary hqE result hresult
     rw [modifiedNonceAeadSealOracle_validation_run_of_fresh
       c key (chooseFreshCtxNonce result.2.usedNonces)
-      (ctxIndependentTagStateToModifiedNonceAead result.2) hfresh]
-    simp only [pure_bind]
+      (ctxIndependentTagStateToModifiedNonceAead result.2) hfresh, prEvent_pure, pure_bind, prEvent_pure]
     have haccept := keyProbeHit_implies_realValidationCiphertextHit
       c key (chooseFreshCtxNonce result.2.usedNonces)
       (ctxPrefixProbeVector qH result.2.publicInputs) hhit
     simp [hhit, ctxValidationAccept, haccept, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
-  · simp [hhit, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+  · simp only [prEvent_pure, decide_eq_true_eq, hhit, ite_false, zero_le]
 
 /-- The canonical secret-prefix event is contained in real Boolean validation success. -/
 theorem ctxSecretPrefixQueriedProbability_le_booleanReal

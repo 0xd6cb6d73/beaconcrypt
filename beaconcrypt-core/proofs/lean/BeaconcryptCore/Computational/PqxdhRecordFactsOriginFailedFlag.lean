@@ -64,8 +64,9 @@ theorem sampled_le_trace (modes : Label n → KeyMode)
   simp only [OracleComp.prEvent_bind_eq_tsum]
   refine ENNReal.tsum_le_tsum fun digest => mul_le_mul_right ?_ _
   split_ifs
-  · simp only [map_eq_bind_pure_comp, bind_assoc, pure_bind, Option.some.injEq, exists_eq_left',
-      PqxdhRecordFactsOriginFailedGuess.continuation, Function.comp_def, Prod.map, id_eq]
+  · rw [PqxdhRecordFactsOriginFailedGuess.continuation, bind_map_left, bind_pure_comp (β := Bool),
+      bind_pure_comp (β := CtxDigest × Option _), prEvent_map, prEvent_map]
+    simp only [Option.some.injEq, exists_eq_left', Prod.map, id_eq]
     have flag := PqxdhRecordFactsOriginCandidateFlag.flag_probability pending.material modes codec.frameRead
       setup.source.crypto (PqxdhRecordFactsPrivateCacheWorld.baseInterpreter setup codec) codec.frameWrite replace
       client noSeal (hiddenResult codec.frameWrite pending input body tag width digest state).2 digest
@@ -75,7 +76,7 @@ theorem sampled_le_trace (modes : Label n → KeyMode)
       ← @prEvent_eq_evalDist_of_discrete _ _ _ _ _ _ PqxdhRecordFactsOriginCandidateFlag.instMeasurableSpaceProdCtxPrivate
         PqxdhRecordFactsOriginCandidateFlag.instDiscreteMeasurableSpaceProdCtxPrivate] at flag
     exact flag
-  · simp [-evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+  · simp only [prEvent_pure, Bool.false_eq_true, ite_false, zero_le]
 
 
 /-- The literal selected failed-writer replay flag costs at most two uniform point masses per original raw receive allowance. -/
@@ -123,7 +124,7 @@ theorem sampled_probability (modes : Label n → KeyMode)
   intro digest
   refine congrArg (HMul.hMul _) ?_
   split_ifs
-  · simp only [bind_assoc, pure_bind]
+  · rw [bind_pure_comp (β := Bool), bind_pure_comp (β := Bool), prEvent_map, prEvent_map]
     have bad := (PqxdhRecordFactsOriginMuteAdaptive.source_bad_probability pending.material modes replace setup codec
       client (hiddenResult codec.frameWrite pending input body tag width digest state).2).symm
     rw [← @prEvent_eq_evalDist_of_discrete _ _ _ _ _ _ PqxdhRecordFactsOriginMuteAdaptive.instMeasurableSpaceProdCtxPrivateBool

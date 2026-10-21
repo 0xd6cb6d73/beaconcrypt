@@ -189,8 +189,9 @@ theorem actual_route
     rw [bad, prEvent_map, prEvent_map]
     exact prEvent_congr _ _ _ fun result => by simp only [decide_eq_true_eq]
   rw [← event]
-  simpa only [actual, RawCtxSelectedParentSecrecy.actual, RawCtxSelectedParentCandidates.sample, bind_assoc,
-    pure_bind] using bound
+  refine le_of_eq_of_le ?_ bound
+  simp only [actual, RawCtxSelectedParentSecrecy.actual, RawCtxSelectedParentCandidates.sample, bind_assoc,
+    pure_bind]
 
 
 set_option maxRecDepth 2048 in

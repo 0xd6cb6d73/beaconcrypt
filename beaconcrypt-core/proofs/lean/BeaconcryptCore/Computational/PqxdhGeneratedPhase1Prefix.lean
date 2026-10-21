@@ -357,7 +357,8 @@ theorem authentication_bound
       IsSigning (fun _ => by simp [IsSigning, dynamicClass, IsClass]) 0 (driverNoSign index publicIdentity generated publicTranscript))
     fallback ordinaryFallback (program_create_bound baseImpl kem setup driver driverNoCreate)
   rw [Fin.sum_univ_succ] at bounded
-  simpa [privateReduction, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ] using bounded
+  refine bounded.trans_eq ?_
+  simp [privateReduction, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
 
 /-- The actual source signing block pays for all three signatures, with no extra signing request hidden in private KEM generation or interpretation. -/
 theorem program_sign_bound

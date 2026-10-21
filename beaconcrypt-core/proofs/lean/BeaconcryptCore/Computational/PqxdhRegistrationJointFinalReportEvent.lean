@@ -42,14 +42,14 @@ theorem transport (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     𝒟[(fun result => result.2.1.occurred) <$>
       run setup.joint count (client setup codec checks ensureInit supplied count program runtime)] {true} := by
   classical
-  rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true]
   have bounded := prEvent_bind_mono_of_forall_le_of_support
     (run setup.joint count (PqxdhRegistrationJointReportCompiler.initialized setup codec checks ensureInit supplied count program runtime))
     (fun before => (pure (decide (Failure setup.joint codec before)) : ProbComp Bool))
     (fun before => (fun after => after.2.1.occurred) <$>
       (simulateQ (sourceImpl setup.joint count) (announce count (selected codec before.1))).run before.2)
     (fun value : Bool => value = true) (fun value : Bool => value = true) (fun before _ => ?_)
-  · simpa only [client, PqxdhJointPhase1Reports.run, simulateQ_bind, StateT.run_bind, simulateQ_pure, StateT.run_pure,
+  · rw [prEvent_eq_evalDist_singleton, prEvent_eq_evalDist_singleton] at bounded
+    simpa only [client, PqxdhJointPhase1Reports.run, simulateQ_bind, StateT.run_bind, simulateQ_pure, StateT.run_pure,
       simulateQ_map, StateT.run_map, Functor.map_map,
       map_bind, map_pure, bind_assoc, pure_bind, bind_pure_comp] using bounded
   · by_cases failed : Failure setup.joint codec before

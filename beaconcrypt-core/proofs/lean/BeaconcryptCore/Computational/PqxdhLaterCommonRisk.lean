@@ -221,7 +221,9 @@ theorem sample_inner_common (depth qPost : Nat)
         (positions input reached) (bounded input reached)
       rw [← prEvent_eq_evalDist_singleton _ true, prEvent_map] at bound
       simp only [decide_eq_true_eq] at bound
-      simp only [bind_assoc, pure_bind]
+      dsimp only
+      rw [bind_pure_comp _ (PqxdhErasedParentSample.sampleOne source writer sender route decode depth (input, output)),
+        prEvent_map]
       refine (prEvent_mono_of_support _ _ _ ?_).trans bound
       intro value _ winning
       cases value with

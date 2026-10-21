@@ -129,8 +129,9 @@ theorem actual_route {Context Auxiliary Result : Type}
     rw [bad, prEvent_map, prEvent_map]
     exact prEvent_congr _ _ _ fun result => by simp only [decide_eq_true_eq]
   rw [← event]
-  simpa only [actual, RawCtxSelectedParentSecrecy.actual, RawCtxSelectedParentCandidates.sample, bind_assoc,
-    pure_bind] using bound
+  refine le_of_eq_of_le ?_ bound
+  simp only [actual, RawCtxSelectedParentSecrecy.actual, RawCtxSelectedParentCandidates.sample, bind_assoc,
+    pure_bind]
 
 set_option maxRecDepth 2048 in
 /-- The independent-child experiment pays the original delayed-coordinate candidate event when returning to the private source interface. -/

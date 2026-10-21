@@ -179,7 +179,9 @@ theorem classifiedVerifier_le_inv_of_direct_support
       independentHandlerStateToBeforeVerify]
     unfold ctxKeyFreeSuffixStep
     rw [hfresh]
-    simp only [bind_assoc, pure_bind]
+    dsimp only
+    simp only [bind_assoc (γ := Bool), pure_bind]
+    rw [bind_pure_comp _ ($ᵗ CtxDigest), prEvent_map]
     refine (prEvent_mono _ _ (fun x : CtxDigest => x = target.record.commit) ?_).trans ?_
     · intro expected haccepted
       have hclassified := @of_decide_eq_true _ (Classical.propDecidable _) haccepted
@@ -192,6 +194,8 @@ theorem classifiedVerifier_le_inv_of_direct_support
     unfold independentHandlerStateToBeforeVerify at hnotRetained halias
     simp only [independentTrackedProjection,
       independentHandlerStateToBeforeVerify]
+    rw [bind_pure_comp (β := Bool), prEvent_map]
+    refine le_of_eq_of_le (prEvent_eq_zero_of_forall_not _ _ fun oracleResult => ?_) zero_le
     simp [ClassifiedAt, AliasWin,
       hnotRetained, halias]
 
@@ -203,7 +207,8 @@ theorem acceptedVerifier_le_classified_of_cache_sound
     Pr{let x ← acceptedVerifier c result}[x = true] ≤
       Pr{let x ← classifiedVerifier c result}[x = true] := by
   unfold acceptedVerifier classifiedVerifier
-  simp only [bind_assoc, pure_bind]
+  dsimp only
+  rw [bind_pure_comp (β := Bool), bind_pure_comp (β := Bool), prEvent_map, prEvent_map]
   apply prEvent_mono_of_support
   intro oracleResult horacle haccepted
   simp only [decide_eq_true_eq] at haccepted ⊢

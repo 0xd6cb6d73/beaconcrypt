@@ -92,6 +92,7 @@ theorem event_partition {Choice Result : Type} [Fintype Choice] [DecidableEq Cho
     Finset.sum_congr rfl fun target _ => OracleComp.prEvent_eq_tsum_ite game (selectedEvent select win target)]
   rw [← Summable.tsum_finsetSum (fun _ _ => ENNReal.summable)]
   refine tsum_congr fun result => ?_
+  generalize Pr{let y ← game}[y = result] = mass
   cases selected : select result with
   | none => simp [anyEvent, selectedEvent, selected, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
   | some target =>

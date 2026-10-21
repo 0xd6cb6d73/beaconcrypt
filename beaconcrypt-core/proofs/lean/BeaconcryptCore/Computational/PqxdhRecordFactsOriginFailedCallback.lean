@@ -46,10 +46,11 @@ theorem resume_probability (modes : Label n → KeyMode)
     OracleComp.prEvent_bind_eq_tsum]
   refine tsum_congr fun reply => congrArg _ ?_
   rcases reply with ⟨_ | encrypted, state⟩
-  · simp only [Option.isNone_none, Bool.true_and, ↓reduceIte, bind_assoc, pure_bind]
+  · simp only [Option.isNone_none, Bool.true_and, ↓reduceIte]
+    rw [bind_pure_comp (β := Bool), bind_pure_comp (β := _ × Bool), prEvent_map, prEvent_map]
   · simp only [Option.isNone_some, Bool.false_eq_true, ↓reduceIte]
-    rw [prEvent_pure]
-    simp only [bind_assoc, pure_bind, Bool.false_and, Bool.false_eq_true]
+    rw [prEvent_pure, bind_pure_comp (β := _ × Bool), prEvent_map]
+    simp only [Bool.false_and, Bool.false_eq_true]
     rw [prEvent_false]
     simp
 

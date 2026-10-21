@@ -106,7 +106,8 @@ theorem local_bound (target : RootOutput) (output : FullOutput) :
       (observer source writer sender route decode depth remaining context output) ≤
     3 * Pr{let x ← bad source writer sender route decode depth remaining context target output}[x = true].toReal := by
   rcases context with ⟨common | ⟨start, pending⟩, entry⟩
-  · simp [native, observer, ProbComp.boolDistAdvantage, -evalDist_apply_singleton, -evalDist_apply_setOf,
+  · refine le_of_eq_of_le ?_ (mul_nonneg (by norm_num) ENNReal.toReal_nonneg)
+    simp [native, observer, ProbComp.boolDistAdvantage, -evalDist_apply_singleton, -evalDist_apply_setOf,
       -evalDist_apply_univ]
   · exact PqxdhInitialCommonSecrecy.local_bound source writer (marker source start) sender route decode
       (view source writer sender route decode depth remaining start) (pending.val, entry) target output

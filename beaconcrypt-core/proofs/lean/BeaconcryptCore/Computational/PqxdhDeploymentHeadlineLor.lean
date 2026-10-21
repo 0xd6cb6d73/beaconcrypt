@@ -463,7 +463,8 @@ theorem chance_split {α : Type} (run : ProbComp α) (first : α → Bool) (seco
       rw [← prEvent_eq_evalDist_singleton _ true, prEvent_map]
   rw [each, each, each, OracleComp.prEvent_eq_tsum_ite, OracleComp.prEvent_eq_tsum_ite, OracleComp.prEvent_eq_tsum_ite, ← ENNReal.tsum_add]
   refine tsum_congr fun a => ?_
-  by_cases held : first a = true <;> by_cases other : second a <;> simp [held, other, -evalDist_apply_singleton]
+  generalize Pr{let y ← run}[y = a] = mass
+  by_cases held : first a = true <;> by_cases other : second a <;> simp [held, other]
 
 /-- The non-negative real `½ · x` as an extended non-negative real is half of `x`. -/
 theorem ofReal_half (x : ℝ) : ENNReal.ofReal ((1 / 2) * x) = 2⁻¹ * ENNReal.ofReal x := by

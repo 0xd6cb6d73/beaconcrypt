@@ -200,7 +200,7 @@ theorem real_error (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
         rw [prEvent_eq_evalDist_singleton]
         exact point chosen context pair
       · simp only [PqxdhKemCorrectnessStopped.keyError, simulateQ_bind]
-    · rw [bind_assoc, OracleComp.prEvent_bind_const]
+    · rw [(OracleComp.EvalDistEq.bind_const _ _).prEvent_eq (fun result => result = true)]
   · rw [PqxdhRegistrationJointKemRawGame.correctnessError, ← prEvent_eq_evalDist_singleton _ true,
       PqxdhKemCorrectnessStopped.error_keygen, simulateQ_bind]
 

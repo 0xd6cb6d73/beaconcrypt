@@ -424,11 +424,15 @@ theorem targetEvent_le_jointAdvantage (primitives : Primitives) {count : ℕ}
         pure (familyPublic primitives (target.insertNth seed others), result, state))}[
         TargetEvent primitives target result] :=
     (sampleFamily_target_first count target _).prEvent_eq _
-  rw [reordered]
-  simp only [advantage, game, run, globalReduction, simulateQ_bind, StateT.run_bind,
-    simulateQ_pure, StateT.run_pure, simulate_joint_uniform, bind_map_left, pure_bind, bind_assoc]
-  refine OracleComp.prEvent_bind_mono_of_support _ _ _ fun seed _ => ?_
-  refine OracleComp.prEvent_bind_mono_of_support _ _ _ fun others _ => ?_
+  rw [reordered, advantage, prEvent_eq_evalDist_singleton]
+  conv_rhs =>
+    simp only [game, run, globalReduction, simulateQ_bind, StateT.run_bind,
+      simulateQ_pure, StateT.run_pure, simulate_joint_uniform, bind_map_left, pure_bind, bind_assoc]
+  rw [← prEvent_eq_evalDist_singleton _ true]
+  refine prEvent_bind_mono_of_forall_le_of_support _ _ _ _ _ fun seed _ => ?_
+  refine prEvent_bind_mono_of_forall_le_of_support _ _ _ _ _ fun others _ => ?_
+  dsimp only
+  rw [bind_pure_comp (β := _ × _ × _), bind_pure_comp (β := Bool), prEvent_map, prEvent_map]
   simp only [TargetEvent, familyPublic_insertNth, Fin.insertNth_apply_same]
   exact freshExecution_le_reductionWork primitives target seed others fallback _
 

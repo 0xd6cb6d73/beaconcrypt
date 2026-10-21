@@ -616,8 +616,9 @@ theorem reserved_event_le_global (primitives : Primitives) (count : ℕ) (fallba
   unfold reservedRun globalRun
   refine prEvent_bind_mono_of_forall_le _ _ _ _ _ fun seeds => ?_
   rw [QueryImpl.Stateful.simulateQ_link_run]
-  simp only [routedAdversary, bind_pure_comp, simulateQ_map, StateT.run_map, Functor.map_map]
-  rw [← bind_pure_comp, ← bind_pure_comp]
+  simp only [routedAdversary, bind_pure_comp (β := FamilyForgery (count + 1)), simulateQ_map, StateT.run_map,
+    bind_map_left]
+  rw [bind_pure_comp (β := _ × _), bind_pure_comp (β := _ × _), prEvent_map, prEvent_map]
   apply prEvent_mono
   intro result accepted
   exact dynamicEvent_implies_global primitives count fallback seeds result accepted

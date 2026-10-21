@@ -198,8 +198,9 @@ theorem source_distance {Metadata Auxiliary Result : Type}
       ((simulateQ (compiler sender decode) client).run state.1)).run (state.2, []))}[target ∈ result.2.2].toReal at projected
   simp only [source_schedule source writer output sender decode client (state.1, (state.2, [])),
     prEvent_map] at projected
-  simpa [regroup, Functor.map_map, consistentGame, -evalDist_apply_singleton, -evalDist_apply_setOf,
-    -evalDist_apply_univ] using projected
+  refine le_of_eq_of_le ?_ projected
+  simp [regroup, Functor.map_map, consistentGame, -evalDist_apply_singleton, -evalDist_apply_setOf,
+    -evalDist_apply_univ]
 
 end BeaconcryptCore.Computational.RawCtxSelectedAliasCompiler
 

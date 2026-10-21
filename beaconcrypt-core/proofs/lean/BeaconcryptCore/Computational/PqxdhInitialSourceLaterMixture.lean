@@ -186,8 +186,9 @@ theorem real_bound (position : number.val = (depth + 1) + remaining + 1) :
           exact congrArg evalDist (PqxdhInitialSourceLaterEndpoints.real_endpoint source writer selectedMessage previousRoot response64 other
             sender route decode index metadata ready post before selected number ancestors disclosed shared privateState cache depth remaining
             input contextSupported parent safe position))
-  simpa only [parents, bind_assoc, pure_bind, PqxdhInitialSourcePreparedSecrecy.actual,
-    PqxdhInitialCommonSecrecy.actual, RawCtxSelectedParentCandidates.sample] using bound
+  refine le_of_eq_of_le ?_ bound
+  simp only [parents, bind_assoc, pure_bind, PqxdhInitialSourcePreparedSecrecy.actual,
+    PqxdhInitialCommonSecrecy.actual, RawCtxSelectedParentCandidates.sample]
 
 /-- The same original normalized later source game differs from its constructed cryptographic observer by at most one explicitly counted prior-input collision event. -/
 theorem random_bound (position : number.val = (depth + 1) + remaining + 1) :
@@ -213,8 +214,9 @@ theorem random_bound (position : number.val = (depth + 1) + remaining + 1) :
           exact PqxdhInitialSourceLaterEndpoints.random_endpoint source writer selectedMessage previousRoot response64 other
             sender route decode index metadata ready post before selected number ancestors disclosed shared privateState cache depth remaining
             input contextSupported parent safe position)
-  simpa only [parents, bind_assoc, pure_bind, PqxdhInitialSourcePreparedSecrecy.random,
-    PqxdhInitialCommonSecrecy.random, RawCtxSelectedParentCandidates.sample] using bound
+  refine le_of_eq_of_le ?_ bound
+  simp only [parents, bind_assoc, pure_bind, PqxdhInitialSourcePreparedSecrecy.random,
+    PqxdhInitialCommonSecrecy.random, RawCtxSelectedParentCandidates.sample]
 
 end BeaconcryptCore.Computational.PqxdhInitialSourceLaterMixture
 

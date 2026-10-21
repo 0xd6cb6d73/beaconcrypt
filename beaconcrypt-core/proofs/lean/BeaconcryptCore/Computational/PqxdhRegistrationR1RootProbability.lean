@@ -36,7 +36,9 @@ theorem prefix_probability (setup : Setup baseSpec KemSK) (codec : Codec Reader 
   unfold rootPrefix
   refine prEvent_bind_le_of_forall_le_of_support _ _ _ fun initialized _ => ?_
   cases initialized.1 <;> simp only [Bool.false_eq_true, ite_false, ite_true, prEvent_map, prefixDecision]
-  all_goals simp [-evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+  · rw [prEvent_false]
+    exact zero_le
+  · exact le_rfl
 
 /-- The target event of the actual generated-Server experiment is bounded by the existing ordered authentication experiment. Both initialization gates are dropped only by probability monotonicity, with their runtime-dependent refusal tails intact on the source side. -/
 theorem generated_probability (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)

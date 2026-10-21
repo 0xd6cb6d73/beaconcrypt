@@ -22,6 +22,7 @@ theorem split (run : ProbComp Ω) (event : Ω → Prop) [DecidablePred event] (d
   simp only [chance_eq, OracleComp.prEvent_eq_tsum_ite]
   rw [← Summable.tsum_finsetSum (fun _ _ => ENNReal.summable)]
   refine tsum_congr fun outcome => ?_
+  generalize Pr{let y ← run}[y = outcome] = mass
   cases named : designate outcome with
   | none => simp [-evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
   | some chosen =>

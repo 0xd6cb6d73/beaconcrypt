@@ -149,7 +149,7 @@ theorem candidate_bound {Context X : Type} (direction : Bool)
   refine prEvent_bind_le_of_forall_le_of_support _ _ _ (fun pair _ => ?_)
   refine prEvent_bind_le_of_forall_le_of_support _ _ _ (fun other _ => ?_)
   refine prEvent_bind_le_of_forall_le_of_support _ _ _ (fun answer supported => ?_)
-  simp only [bind_assoc, pure_bind]
+  rw [bind_pure_comp _ ($ᵗ RootOutput), prEvent_map]
   exact (RawCtxSelectedInputCandidates.uniform_candidates (candidates answer)).trans
     (ENNReal.div_le_div_right (by exact_mod_cast bounded _ answer supported) _)
 

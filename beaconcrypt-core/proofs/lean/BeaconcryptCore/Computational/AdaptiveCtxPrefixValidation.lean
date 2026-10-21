@@ -130,19 +130,21 @@ theorem loggedProbe_le_validationReal {Result : Type} (decode : AdaptiveCtxRecei
       Pr{let x ← modifiedNonceAeadINDDollarRealExp c (validationReduction decode c adversary qHash)}[x = true] := by
   unfold loggedProbeExp modifiedNonceAeadINDDollarRealExp validationReduction
   refine prEvent_bind_mono_of_forall_le _ _ _ _ _ fun key => ?_
+  rw [prEvent_eq_evalDist_singleton, prEvent_eq_evalDist_singleton]
   simp only [simulateQ_bind, StateT.run_bind, bind_assoc]
   simp_rw [simulateQ_queryModifiedNonceAeadSeal, simulateQ_pure, StateT.run_pure]
   simp only [pure_bind]
-  refine OracleComp.prEvent_bind_mono_of_support _ _ _ fun result supported => ?_
+  rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true]
+  refine prEvent_bind_mono_of_forall_le_of_support _ _ _ _ _ fun result supported => ?_
   by_cases hit : ProbeEvent qHash (key, result.1.1)
   · have fresh := sourceClient_validation_fresh decode c key adversary qSeal bounded small result supported
-    rw [modifiedNonceAeadSealOracle_validation_run_of_fresh c key _ result.2 fresh]
-    simp only [pure_bind]
+    rw [modifiedNonceAeadSealOracle_validation_run_of_fresh c key _ result.2 fresh, prEvent_pure, pure_bind,
+      prEvent_pure]
     have accepts := keyProbeHit_implies_realValidationCiphertextHit c key
       (chooseFreshCtxNonce (result.1.2.map (fun entry => entry.input.nonce)))
       (ctxPrefixProbeVector qHash result.1.1.2.ctx.publicInputs) hit
     simp [hit, ctxValidationAccept, accepts, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
-  · simp [hit, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+  · simp only [prEvent_pure, decide_eq_true_eq, hit, ite_false, zero_le]
 
 /-- The logged source's candidate-hit event has an ordinary conventional IND$ reduction and an explicit 128-bit validation term. -/
 theorem loggedProbe_le_indDollar {Result : Type} (decode : AdaptiveCtxReceive.RawDecoder)

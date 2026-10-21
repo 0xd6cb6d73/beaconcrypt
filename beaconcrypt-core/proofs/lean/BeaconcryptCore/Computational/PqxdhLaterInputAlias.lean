@@ -110,7 +110,8 @@ theorem prepared_collision
         (pure (decide (RawCtxFirstParentRisk.inputAddress (PqxdhOrderedChainHybrids.nextChain parent) ∈
           inputs packet ++ [address packet])) : ProbComp Bool))
   rw [drop.prEvent_eq (fun value => value = true)]
-  simp only [bind_assoc, pure_bind, decide_eq_true_eq]
+  rw [bind_pure_comp _ ($ᵗ FullOutput), prEvent_map]
+  simp only [decide_eq_true_eq]
   apply bound.trans
   apply mul_le_mul_left
   apply Nat.cast_le.mpr

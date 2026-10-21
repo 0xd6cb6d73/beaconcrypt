@@ -174,8 +174,8 @@ theorem wLaws (limit : Nat) : PqxdhServerAuthNegativeControl.ControlLaws wSetup 
   phase2Bounded _ _ _ _ _ _ _ _ := ⟨_, rfl⟩
 
 theorem wKemError : PqxdhServerAuthNegativeControl.kemError wSetup = 0 := by
-  simp [PqxdhServerAuthNegativeControl.kemError, PqxdhKemCorrectnessError.errorExperiment,
-    PqxdhKemCorrectnessError.sample, wSetup, toyKem]
+  rw [PqxdhServerAuthNegativeControl.kemError, (OracleComp.prEvent_eq_zero_iff _ _).mpr, ENNReal.toReal_zero]
+  simp [PqxdhKemCorrectnessError.errorExperiment, PqxdhKemCorrectnessError.sample, wSetup, toyKem]
 
 /-- At the witness the negative control reaches `W1` with probability one, for every `Checks`. -/
 theorem control_wins (checks : PqxdhServerAuthExperiment.Checks) :
