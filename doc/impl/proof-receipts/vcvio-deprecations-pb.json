@@ -1,0 +1,244 @@
+{
+ "date": "2026-10-21",
+ "scope": "VCVio deprecation migration, closing checks of phase B (stage PB) after the integration of stage S9 and the final sweep: end-state confirmation on central, cumulative certificates of stages S1-S9 against the final build, and the four documentation nits carried by the S9 integration (C2-1, C2-2, CONF-S8-1, CF1-1); Lean-only by owner decision item 5; no Lean file changes",
+ "basis": "67e2cefc1a83058e87add9ac6fa679d0ade852a0",
+ "topic": {
+  "branch": "codex/vcvio-migration-PB",
+  "clone": "/home/user/bc-vmig-PB"
+ },
+ "commits": {
+  "documents": "the commit that adds this receipt"
+ },
+ "owner_decisions": "decision-2026-10-19.txt items 4 (D6 phase B with a final sweep after S9), 5 (Lean-only validation) and 6 (A2 item 4 accepted); no new owner item",
+ "owner_level": [],
+ "published_leanpath": {
+  "commit": "67e2cefc1a83058e87add9ac6fa679d0ade852a0",
+  "sha256": "e15a085d8493d70a5365cfc0179e990248b62124f92d6ca085776ef1fc49d49c"
+ },
+ "end_state": {
+  "lean_files_changed": 0,
+  "twins": {
+   "vcvioLegacy_names_in_lean_sources": 0,
+   "twin_headers": 0
+  },
+  "source_scan": {
+   "files": 1994,
+   "deprecated_sites": 28,
+   "sites_in_bridge": 28,
+   "all_in_bridge": true,
+   "suppression_lines_outside_bridge": 0,
+   "scan_sha256": "d05d9dcbb52fb3081cbafaeb16cce130f665f6a98d1c910771f45be431ba0806",
+   "equal_to_s9_confirming_fix_post_build": true
+  },
+  "step7_source_scan_hits": 0,
+  "project_vcvio_deprecation_warnings": 0,
+  "phase_b": {
+   "declarations": 321,
+   "rows": 2020,
+   "by_stage": {
+    "S1": 2,
+    "S2": 10,
+    "S3": 13,
+    "S4": 16,
+    "S5": 49,
+    "S6": 39,
+    "S7": 26,
+    "S8": 19,
+    "S9": 93,
+    "none": 54
+   },
+   "recorded_in_stage_lists": 267,
+   "final_sweep_exceptions": 14,
+   "lean_core_deprecations_out_of_scope": 40,
+   "unrecorded": []
+  },
+  "final_acceptance": {
+   "source": "S9 review-fix-2 post-build of the 67e2cefc Lean sources",
+   "sha256": "8ac95424c900c4cd7e8f85246330453b27ae74f3c83038db4a729827ac012100",
+   "result": "PASS",
+   "fails": []
+  }
+ },
+ "forward_names": {
+  "replacement_names": 171,
+  "used_package_constants": 546,
+  "used_replacement_names": 51,
+  "used_replacement_names_missing_upstream": [],
+  "used_absent_upstream": 124,
+  "result": "PASS",
+  "upstream": "afa6593f (survey api/outB/all-pkg-consts.jsonl)",
+  "output_sha256": "ac2463f2c509284dc19964793d3fbb4e5ebc74910096e87f1661c3df0d165b3b"
+ },
+ "certificates": {
+  "file_sha256": "681a7b8c7ae4a280496c4ede773bec3a54e729ff1b50e1655f31b1fb8a634630",
+  "negative_file_sha256": "49f9da3b09b5973401b929c7d10a8a8fd893faaf4fa41032b6702f4ade099526",
+  "stage_files": {
+   "S1": {
+    "sha256": "8e09fe82f54981254849ccd4c377bdf6c5d05e0ae58ac020d1f9813367af33e9",
+    "negative_sha256": "dc2b206e3d9162eb88b251b3610ca35b1a772b54d550afcf83fb28cda0a7f937",
+    "inverse_map": 22,
+    "textual_fallbacks": [],
+    "twin_checks_dropped": 0,
+    "twin_negatives_dropped": 0,
+    "dumps": [
+     "/tmp/bc-arc-scratch/vcvio-migration/S1/base/s1-base.jsonl"
+    ]
+   },
+   "S2": {
+    "sha256": "835ca43acad91ba57475a15ec15e505410a7dd60a2853ff80bc12427df875fb5",
+    "negative_sha256": "544dee86c713bff221b396e178c6a12af40e9fb3341df5579b4a775742236c5b",
+    "inverse_map": 41,
+    "textual_fallbacks": [
+     "BeaconcryptCore.Computational.PqxdhChallengeSecretRouting.honest_decapsulation"
+    ],
+    "twin_checks_dropped": 11,
+    "twin_negatives_dropped": 1,
+    "dumps": [
+     "/tmp/bc-arc-scratch/vcvio-migration/S2/base/s2-base.jsonl"
+    ]
+   },
+   "S3": {
+    "sha256": "186c6064b5b548c897aae28432eeee8a3544b8bf45227b007f14bf90150681ac",
+    "negative_sha256": "c70c504afdd4044b5e2141a20c856533b64e6ab702c786c06ac03912267c829f",
+    "inverse_map": 56,
+    "textual_fallbacks": [
+     "BeaconcryptCore.Computational.PqxdhHiddenRoot.evalSPMF_first32_uniformJointKdfStream"
+    ],
+    "twin_checks_dropped": 2,
+    "twin_negatives_dropped": 1,
+    "dumps": [
+     "/tmp/bc-arc-scratch/vcvio-migration/S3/base/s3-base.jsonl"
+    ]
+   },
+   "S4": {
+    "sha256": "954efee08771ef2dfa76a7817c3a55283f88316c7e7bf984d4aaa5ce5782cedb",
+    "negative_sha256": "bce5160bf1a20e6141a0fe3908149c8c2bf6a881c22e8f9ad961bee83afa91e5",
+    "inverse_map": 82,
+    "textual_fallbacks": [
+     "BeaconcryptCore.Computational.PqxdhFullSecretInputKdf.projectedOutput_uniform"
+    ],
+    "twin_checks_dropped": 16,
+    "twin_negatives_dropped": 1,
+    "dumps": [
+     "/tmp/bc-arc-scratch/vcvio-migration/S4/base/s4-base.jsonl"
+    ]
+   },
+   "S5": {
+    "sha256": "02a6f8311ffbdd051d24b5bcbbc25182e0af65045b5f7d0e372c1e6c85bd5009",
+    "negative_sha256": "e375da17f36c50caea91eff40623538e988f370348802b263b0b30200f605e95",
+    "inverse_map": 121,
+    "textual_fallbacks": [],
+    "twin_checks_dropped": 4,
+    "twin_negatives_dropped": 1,
+    "dumps": [
+     "/tmp/bc-arc-scratch/vcvio-migration/S5/base/s5-base.jsonl"
+    ]
+   },
+   "S6": {
+    "sha256": "08a3ee245dbda1305d9021feb5fe44a850ddb3607e9052ec405b0f1e090b7fe1",
+    "negative_sha256": "17047c284574f69893d73652a3973382a66a230cd49de74f47a8cecd033bfdb0",
+    "inverse_map": 155,
+    "textual_fallbacks": [
+     "BeaconcryptCore.Computational.RawCtxPendingChildRealization.random"
+    ],
+    "twin_checks_dropped": 22,
+    "twin_negatives_dropped": 1,
+    "dumps": [
+     "/tmp/bc-arc-scratch/vcvio-migration/S6/base/s6-base.jsonl"
+    ]
+   },
+   "S7": {
+    "sha256": "5d6088c50ebc4166b5992630d3e9ed2b46ffa8596afbda8f9b05930c2ca06295",
+    "negative_sha256": "ec87efef4c78503bdae98cf11f3b7d23345437b2293f71a989b7d9b29ff8e962",
+    "inverse_map": 92,
+    "textual_fallbacks": [
+     "BeaconcryptCore.Computational.PqxdhInitialNativeChildDraw.bare_uniform"
+    ],
+    "twin_checks_dropped": 4,
+    "twin_negatives_dropped": 1,
+    "dumps": [
+     "/tmp/bc-arc-scratch/vcvio-migration/S7/base/s7-base.jsonl"
+    ]
+   },
+   "S8": {
+    "sha256": "2d2f69fbe9db47e2bab92d4414071463592f31f8b68102b9de588bda952718c8",
+    "negative_sha256": "776295fed170970db83124a527f11c6916d0e28ae1e48dc485f513bf1730cc13",
+    "inverse_map": 128,
+    "textual_fallbacks": [],
+    "twin_checks_dropped": 7,
+    "twin_negatives_dropped": 2,
+    "dumps": [
+     "/tmp/bc-arc-scratch/vcvio-migration/S8/base/s8-base.jsonl"
+    ]
+   },
+   "S9": {
+    "sha256": "1080f73e306ee517b2996369efef0a9b750294fba07efed723bed50c2a0fd21f",
+    "negative_sha256": "d752539bb63ec5fb7b46ba8cf9f0b97b1f96f924c213d0bbae4a25d7553199d8",
+    "inverse_map": 52,
+    "textual_fallbacks": [
+     "BeaconcryptCore.Computational.PqxdhDeploymentServerAuthChain.frozen_single",
+     "BeaconcryptCore.Computational.PqxdhDeploymentServerAuthChain.native_frozen"
+    ],
+    "twin_checks_dropped": 0,
+    "twin_negatives_dropped": 0,
+    "dumps": [
+     "/tmp/bc-arc-scratch/vcvio-migration/S9/base/s9-base.jsonl"
+    ]
+   }
+  },
+  "inverse_map_pass": 749,
+  "textual_fallback_pass": 7,
+  "restated_declarations": 756,
+  "negatives": 54,
+  "certtools": {
+   "source_sha256": "987e93df28f0d50ad616536108c41d2220bd985b4feafffc521899f48ee1660e",
+   "olean_sha256": "779be810e6d5773ba092f71c3ba3ef5de65e540e321971cd075728e637097b9f"
+  },
+  "leases": [
+   "00002401",
+   "00002402",
+   "00002403"
+  ],
+  "checker": "RESULT PASS"
+ },
+ "axiom_walk": {
+  "lease": "00002404",
+  "walk_sha256": "f93cd6e6da2ccc6b3cfd51c1cd4a095731f3d87ca22bb5046f2f2987335b11ba",
+  "output": [
+   "AXIOM-WALK roots 95133 reached 121982 unresolved 0",
+   "AXIOM-WALK axioms [Classical.choice, Quot.sound, propext]"
+  ],
+  "server_domain_lines": 6,
+  "equal_to_s9_confirming_fix_post_build": true
+ },
+ "inventory": {
+  "recount": "handwritten-lean count unchanged (1987)",
+  "rehash": "no row changed (no inventoried file edited)",
+  "check_inventory_leases": {
+   "basis_67e2cefc": "00002405",
+   "edited_tree": "00002406"
+  }
+ },
+ "documents": {
+  "C2-1": "doc/formal-verification-analysis.md final-acceptance paragraph gives 95,128 and 95,133 declarations",
+  "C2-2": "doc/impl/vcvio-upgrade-residual.md: the expansion probe does not see measure- or ENNReal-valued laws at Prop; the one such step (PqxdhInitialSourceLaterMixture.supported_event_bound, bridge simpa) is a recorded total-variation exception; forward-name result added to the upgrade steps",
+  "CONF-S8-1": "doc/impl/staged-verification-record.md: note at the top of the S8 review-fix entry (line count and declaration positions kept; three proof lines of verified_third_probability moved up by one)",
+  "CF1-1": "amendment A4 (AMENDMENTS.md sha256 09fa450a5bc4ce514d78e400da93bd9e7ab1f62aaf183b952988c3333c3768a3) and its copy in doc/impl/vcvio-deprecation-migration-plan.md: count pins of retired twins stay at zero (204 pins, 51 modules)",
+  "analysis_section": "VCVio deprecation migration, closing checks of phase B (2026-10-21)",
+  "record_entry": "VCVio deprecation migration, closing checks of phase B (stage PB) (2026-10-21)",
+  "edit_script": {
+   "file": "PB/scripts/edit_docs_pb.py",
+   "sha256": "9ed99214a9c15652d53bf1d5edf493789635520f5b57b0333d0e58986e1a6815"
+  }
+ },
+ "tools": {
+  "gen_pb_certificates.py": "78e47a94c58d3f011418cae65fb8d50f55ddb2602dfe97e8fb3e3bad6e99b361",
+  "check_pb_certificates.py": "37fc5c05bbe41353e3c48a2a7fd3d4c8f51633a31e35e96fca866ff709ff5a04",
+  "run-certificates.sh": "cfc412fe7dd335d0d8ee1be1d91b2980bf1938c191d3899577b7f9309d0706f5",
+  "forward_names.py": "45dd0acdc211a83d4b52fed412d586728b4afaabde467859b7f5bdd3071f6de4",
+  "lean-check.sh": "66a63f63f2fab45ea322f4b17bd4920651b099dc39020882c3396f36b9b63c90",
+  "check-inventory.sh": "273e7590904b053fcb3efa34e35dcd08af96ada2425c5512976f5e7a92f28d26",
+  "gen_receipt_pb.py": "adff3ec7fccd60b29e18932e73e3b7e8b1f929775a38e3026a721c1a5e62044a"
+ },
+ "not_run": "lake build and make check-lean (no Lean file changes; the 67e2cefc build is the build of this tree), verify-in-shell, ProVerif, transcript fidelity, cargo, Go and Python tests and the mutation suite (owner decision item 5); nix-collect-garbage"
+}
