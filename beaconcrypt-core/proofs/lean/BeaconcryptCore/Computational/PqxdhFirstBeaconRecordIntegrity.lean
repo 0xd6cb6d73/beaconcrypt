@@ -311,8 +311,7 @@ theorem unflagged_eq {ι σ X : Type} {spec : OracleSpec ι} [MeasurableSpace (X
         prEvent_eq_zero_of_not_mem_support _ (flagged_absent right bad (continuation reply) next value final), mul_zero,
         mul_zero]
     | false =>
-      -- The event form of `RawCtxSelectedFamilyNonceCoupling.marked_agree` (stated there with that module's
-      -- local discrete σ-algebra), by the same two cases.
+      -- Event form of `RawCtxSelectedFamilyNonceCoupling.marked_agree` (stated with a local σ-algebra), by the same two cases.
       have step : Pr{let y ← (RawCtxSelectedFamilyNonceCoupling.marked left bad query).run (state, false)}[
             y = (reply, (next, false))] =
           Pr{let y ← (RawCtxSelectedFamilyNonceCoupling.marked right bad query).run (state, false)}[

@@ -1,0 +1,230 @@
+{
+ "date": "2026-10-21",
+ "scope": "VCVio deprecation migration, stage S8, fixes of the two independent reviews at f752e169 (statement equivalence EQ-S8-1, EQ-S8-2; hygiene H1 = EQ-S8-1, H2 (including EQ-S8-2), H3, H4; no owner item). Comment-only edits in 7 Lean files of the stage (one module docstring sentence reworded, eight wrapped proof comments made single lines without scratch references; no statement, proof step, guard or declaration changed), so these modules and their dependents were rebuilt; 7 inventory rows rehashed; the scratch codemod pin_codemod.py restricted to code text, with a new post-build prose check; the S8 record entry, the analysis and vcvio-deprecations-s8.json completed with the thirteenth simp-bridge exclusion (H3), the record's step 7 lease bullet made exact (H4). Supplements vcvio-deprecations-s8.json (the record of f752e169).",
+ "basis": "326d5b857f6864060f5cd202d8f017f5460b8bc7",
+ "previous_head": "f752e169eb227a3d5312403096f59d7ab116869a",
+ "topic": {
+  "branch": "codex/vcvio-migration-S8",
+  "clone": "/home/user/bc-vmig-S8"
+ },
+ "commits": {
+  "fixes": "the commit that adds this receipt"
+ },
+ "reviews": {
+  "equivalence": {
+   "verdict": "APPROVE_WITH_NITS",
+   "commit": "f752e169eb227a3d5312403096f59d7ab116869a",
+   "findings_sha256": "69ad65ccf1ca66b2d1e4422b4d0c3e8949e76f04705f668112db765ba2ca986d",
+   "fixed": [
+    "EQ-S8-1",
+    "EQ-S8-2"
+   ]
+  },
+  "hygiene": {
+   "verdict": "REQUEST_CHANGES",
+   "commit": "f752e169eb227a3d5312403096f59d7ab116869a",
+   "findings_sha256": "7f575738e714f3422068a0826af3244e43ee15148fc15508c41fc151c29b14d0",
+   "fixed": [
+    "H1 (same defect as EQ-S8-1)",
+    "H2 (includes EQ-S8-2)",
+    "H3",
+    "H4"
+   ]
+  },
+  "owner_level": []
+ },
+ "fixes": {
+  "EQ-S8-1/H1": {
+   "defect": "pin_codemod.py (upstream's migrate-native-probability.py, which also rewrites prose) rewrote the quoted notation in the module docstring of PqxdhHypothesisWitness (line 19): 'That statement uses the deprecated `Pr[= true | ...]` notation, so the deprecation linter is disabled for this one declaration.' became '... the deprecated `Pr{let x ← ...}[x = true]` notation ...', while the stage removed the suppression before hb111_instance; hb111_instance also writes Pr{let x ← (simulateQ ...)} where HB-111 writes Pr{let x ← simulateQ ...}, the same term but not the same text. No type, value, guard, certificate or warning was affected.",
+   "lean_change": {
+    "file": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhHypothesisWitness.lean",
+    "line": 19,
+    "after": "`hb111_instance` repeats the HB-111 statement instantiated at the toy instance. Like HB-111, it writes the KEM correctness-error term in the forward event notation `Pr{let x ← ...}[x = true]`.",
+    "inventory_pin_kept": "require_line_count 0 'linter\\.deprecated' (the sentence names no linter option)",
+    "statement_or_proof_changed": false
+   },
+   "tool_fix": {
+    "file": "/tmp/bc-arc-scratch/vcvio-migration/S8/tools/codemod/pin_codemod.py",
+    "sha256_before": "33dbd76e2af2eea28ddce9408243f8b5f508046229c037158c043dd56a089a61",
+    "sha256_after": "fee42922bf26801f701e71037926bfc89ac372ebbe41b550e6c11df00b2958a3",
+    "original_kept_as": "/tmp/bc-arc-scratch/vcvio-migration/S8/tools/codemod/pin_codemod.py.f752.txt",
+    "change": "comments (--, nested /- -/, docstrings), string literals (also r#\"...\"#) and character literals are cut out before the rewrite by the scanner of the step 7 stripper (as in twin_rename.py) and pasted back unchanged; placeholders keep the spans' line breaks, so line numbers, layout decisions and report lines are unchanged; a span that the earlier tool would have changed is listed as a SKIP line on stderr",
+    "replay": {
+     "script": "/tmp/bc-arc-scratch/vcvio-migration/S8/review-fix/scripts/codemod_replay.sh",
+     "log": "/tmp/bc-arc-scratch/vcvio-migration/S8/review-fix/logs/codemod-replay.log",
+     "S8_inputs": "76 stage files (edits/orig + spmf_eq.py): original and corrected outputs differ only at PqxdhHypothesisWitness.lean:19, which the corrected tool keeps and lists (1 SKIP); reports otherwise equal, and the original report equals the stage's codemod-1.log modulo the twin suffixes switched back before that run and PqxdhServerAuthObservedSchedule (added to the stage later)",
+     "synthetic": "code rewritten identically; two docstrings, a line comment, a nested block comment, a string literal and a comment inside a Pr[...] left unchanged and listed (6 SKIP)",
+     "S9_preview": "dry run on the 132 S9 files of the plan at f752e169: 0 SKIP"
+    }
+   },
+   "prose_check": {
+    "file": "/tmp/bc-arc-scratch/vcvio-migration/S8/tools/prose_check.py",
+    "sha256": "989e1b6a06a5a9f30913d3e1cfb0e785a2bd8ba203bb38b57e598542909c8ea9",
+    "postbuild": {
+     "file": "/tmp/bc-arc-scratch/vcvio-migration/S8/tools/s8-postbuild.sh",
+     "sha256_before": "aef0d547c4267b2e34fa62c3ec110f405e4860cb5ec0e5815a5ed1edcdf346cf",
+     "sha256_after": "b7dbb21653c92a10f28ac1a1c04299bd4f127df21a610eb8615e0fac27459be8"
+    },
+    "at_f752e169": "PROSE-CHECK files 86 modified 1 added 16 removed 0 wrapped-added 8 scratch-refs 3",
+    "at_fixed_tree": "PROSE-CHECK files 86 modified 1 added 9 removed 0 wrapped-added 0 scratch-refs 0"
+   }
+  },
+  "EQ-S8-2/H2": {
+   "defect": "eight two-line -- comments added by commit 84359b8d broke a sentence across lines (AGENTS.md: no mid-sentence line breaks); three cited scratch-only editing rules",
+   "comments": [
+    "PqxdhFirstBeaconRecordCanonical.lean:1664-1665 (S6 editing rule 10)",
+    "PqxdhFirstBeaconRecordCtx.lean:1228-1229 (S6 editing rule 10)",
+    "PqxdhFirstBeaconRecordIntegrity.lean:314-315",
+    "PqxdhFirstRecordFinishBound.lean:1215-1216",
+    "PqxdhFirstRecordStopTagged.lean:476-477",
+    "PqxdhFirstRecordStopTagged.lean:3760-3761",
+    "PqxdhFirstRecordStopTagged.lean:5126-5127",
+    "PqxdhServerAuthCollision.lean:56-57 (S8 editing rule 14)"
+   ],
+   "fix": "each made one line stating its content (abstract-draw law applied after generalizing $ᵗ HmacBlock; event form of RawCtxSelectedFamilyNonceCoupling.marked_agree; relational phase B exception; in PqxdhServerAuthCollision one sentence before prPureFalse and one before prAssoc); 7 lines fewer in 6 files; no 'editing rule' reference left"
+  },
+  "H3": "the record ('What else was edited'), the analysis ('Proofs') and vcvio-deprecations-s8.json (lean_changes.simp_bridge_exclusions) now also name PqxdhFirstBeaconRecordCtx.alias_bound, whose hand-rewritten proof excludes evalDist_apply_singleton, evalDist_apply_setOf and evalDist_apply_univ in one simp call: 13 declarations, 18 calls, none at the basis. No proof changed.",
+  "H4": "the record's step 7 bullet named the lease range 00001526-00001531, which also holds the G3-G5 probes (00001527, 00001529, 00001530) and the inventory check (00001528); it now names the axiom walk lease 00001531 (roots: every declaration of the project's modules, 95,184, as many as the final declaration dump of lease 00001526) and says that the source and twin-name scans need no lease.",
+  "edit_script": {
+   "file": "/tmp/bc-arc-scratch/vcvio-migration/S8/review-fix/scripts/edit_lean_rf1.py",
+   "sha256": "2e3466080c982a8c4465e622c20ea65b0f77f7720c06c8c871dfd015cc5e2f3b",
+   "note": "exact-text replacements checked against the f752e169 blobs; apply + revert tested on copies (revert restores byte for byte)"
+  }
+ },
+ "build": {
+  "check_lean": {
+   "lease": "00001553",
+   "rc": 0,
+   "jobs": "5535",
+   "modules_built_count": 645,
+   "modules_built": "the 7 edited modules and every module that imports one of the 6 whose olean changed (line shifts, module docstring), with the root: equal to that import closure (logs/rebuilt-closure-1b.log)",
+   "modules_built_equal_refined_closure": true,
+   "not_rebuilt_importers_of_collision_only": 19,
+   "collision_note": "the PqxdhServerAuthCollision edit moves one comment line and keeps the line count, so no declaration position and no byte of its olean changed; Lake rebuilt the module and replayed its 19 importers that import no other edited module",
+   "error_records": 0
+  },
+  "records_equal_to_stage_final_build_check_lean_3": true,
+  "records_equal_to_validation_run": true,
+  "warning_categories": "PASS (vs check-lean-0; VCVio 65 -> 36, -29 exact, no growth, no new kind); output equal to the validation run"
+ },
+ "post_build": {
+  "leases": {
+   "decls": "00001554",
+   "facade": "00001555",
+   "probe-usage": "00001556",
+   "probe-used": "00001557",
+   "axiom-walk": "00001558"
+  },
+  "declaration_dump_equal_to_stage": true,
+  "facade_probe_equal_to_stage": true,
+  "usage_probe": "differs from the stage's only in line/endLine of 6 declarations in the shortened files (scripts/positions_only.py, logs/positions-only.log)",
+  "used_probe_equal_to_stage": true,
+  "source_scan": "differs from the stage's only in the per-file line counts of the five shortened files (Canonical, Ctx, Integrity, FinishBound -1, StopTagged -3); sites, suppressions and all other keys equal",
+  "twin_names_in_comments": "TWIN-NAMES-IN-COMMENTS files 1994 hits 0",
+  "prose_check": "PROSE-CHECK files 86 modified 1 added 9 removed 0 wrapped-added 0 scratch-refs 0",
+  "step7_lean_scan": "LEAN-SCAN files 1994 hits 0",
+  "step7_axiom_walk": [
+   "AXIOM-WALK roots 95184 reached 122116 unresolved 0",
+   "AXIOM-WALK axioms [Classical.choice, Quot.sound, propext]",
+   "SERVER-DOMAIN PqxdhDeploymentKemTwoSided.kem_transfer_two_sided true",
+   "SERVER-DOMAIN PqxdhDeploymentIdealCompile.ideal_compile true",
+   "SERVER-DOMAIN PqxdhDeploymentIdealHandoff.ideal_world_view true",
+   "SERVER-DOMAIN PqxdhRegistrationJointKemKeyTransfer.allIdeal_loss false",
+   "SERVER-DOMAIN PqxdhRegistrationJointKemPostSkeleton.opaqueBranch_shared false",
+   "SERVER-DOMAIN PqxdhRegistrationJointBeaconFinishOnce.slotGame_two false"
+  ],
+  "step7_axiom_walk_lines_equal_to_stage_final": true
+ },
+ "gates": {
+  "result": "G1-G5 PASS; JSON equal to the stage's logs/gates-final.log (paths stripped)",
+  "edited_theorems": "stage config list used; value_changes.py on the fresh dump: edited_theorems stage 241 value_changes on rf1 dump 241 equal True",
+  "theorem_value_changes_equal_to_stage": true,
+  "phase_b_report_equal_to_stage": true
+ },
+ "phase_b_exceptions": {
+  "file": "/tmp/bc-arc-scratch/vcvio-migration/S8/review-fix/post/phaseB-exceptions.json",
+  "sha256": "f9992ef79fabdc545d54525edffcb6bbd6cea90fc67410d3949c3acd90d383d8",
+  "equal_to_stage_list": true,
+  "declarations": 19,
+  "rows": 103,
+  "by_class": {
+   "total variation": 4,
+   "relational": 15
+  },
+  "tool_sha256": "7ef7096a0536d4de33d28c62b6b092fe11ea90266300f4f5f5efc45f6d96f03c"
+ },
+ "certificates": {
+  "tooling": {
+   "CertTools.lean": "987e93df28f0d50ad616536108c41d2220bd985b4feafffc521899f48ee1660e",
+   "olean_sha256": "779be810e6d5773ba092f71c3ba3ef5de65e540e321971cd075728e637097b9f",
+   "olean_equal_to_shared_build": true,
+   "check_certificates_s2.py": "f330b2676633e4d1b2921abd285282107f0242e34c9b8948f0a80298cceca540"
+  },
+  "certificate_file_sha256": "2d2f69fbe9db47e2bab92d4414071463592f31f8b68102b9de588bda952718c8",
+  "certificate_file_equal_to_stage": true,
+  "negative_file_sha256": "776295fed170970db83124a527f11c6916d0e28ae1e48dc485f513bf1730cc13",
+  "negative_file_equal_to_stage": true,
+  "pre_stage_dump_sha256": "1b6aa10127aec807259f36473bc92ae9bf5326b1cbb529541d4d06ba638864f3",
+  "leases": {
+   "certificates": "00001559",
+   "negative": "00001560"
+  },
+  "pass_lines": 135,
+  "negative_error_lines": [
+   13,
+   14,
+   15,
+   16,
+   17,
+   18,
+   19
+  ],
+  "checker": "RESULT PASS",
+  "lean_output_equal_to_stage_final_run": true,
+  "lean_output_equal_to_validation_run": true,
+  "negative_output_equal_to_stage_final_run": true,
+  "negative_output_equal_to_validation_run": true,
+  "log_sha256": "fa8026f0750f30961d983bcee44d040d857ba55ecd56444504636ed6e23e5dbb"
+ },
+ "inventory": {
+  "inv_recount": "handwritten-lean count unchanged (1987), run before the rehash",
+  "inv_rehash": [
+   "proofs/lean/BeaconcryptCore/Computational/PqxdhHypothesisWitness.lean: e9902c7c6487 -> d110e4c1efe9",
+   "proofs/lean/BeaconcryptCore/Computational/PqxdhFirstBeaconRecordCanonical.lean: c09d44e53c6e -> 0f1419a1049e",
+   "proofs/lean/BeaconcryptCore/Computational/PqxdhFirstBeaconRecordCtx.lean: 41f8f26908c4 -> a3fdf8653cf7",
+   "proofs/lean/BeaconcryptCore/Computational/PqxdhFirstBeaconRecordIntegrity.lean: d9d5ed632790 -> 68c4b8fae659",
+   "proofs/lean/BeaconcryptCore/Computational/PqxdhFirstRecordFinishBound.lean: 9d0cda56e274 -> bcbc650fd400",
+   "proofs/lean/BeaconcryptCore/Computational/PqxdhFirstRecordStopTagged.lean: ad05abc0ee89 -> 6b7456bb0b51",
+   "proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthCollision.lean: 0621a4216bd7 -> 44e5c178f11c"
+  ],
+  "unchanged": "check-inventory.sh, BeaconcryptCore.lean, trusted-boundary.md (no pin changed)",
+  "check_inventory_edited_tree": {
+   "lease": "00001561",
+   "rc": 0
+  }
+ },
+ "docs": {
+  "doc/impl/staged-verification-record.md": "S8 entry: 'Corrected in part' note, the H3 sentence (thirteen declarations, eighteen calls) and the exact step 7 leases (H4); new entry 'VCVio deprecation migration, stage S8, review fixes (2026-10-21)'",
+  "doc/formal-verification-analysis.md": "S8 section: the H3 sentence, the status sentence replaced by the record link, Reviews paragraph",
+  "doc/impl/proof-receipts/vcvio-deprecations-s8.json": "lean_changes.simp_bridge_exclusions (H3), reviews pointer"
+ },
+ "not_run": [
+  "verify-in-shell, ProVerif, transcript fidelity, cargo, Go and Python tests (owner decision 2026-10-19 item 5)",
+  "mutation suite (no Rust source changed)",
+  "nix-collect-garbage"
+ ],
+ "tool_sha256": {
+  "edit_lean_rf1.py": "2e3466080c982a8c4465e622c20ea65b0f77f7720c06c8c871dfd015cc5e2f3b",
+  "edit_docs_rf1.py": "5a4e3d4b59ff65adc84216b76ead88f8d698e73a268ad5219466ffe73f530739",
+  "append_docs_rf1.py": "41a9050eb56fdd0d360d97cc379583f865b508293dfbb4ddb4fd998d18e31d29",
+  "codemod_replay.sh": "c133971ce4877dd4d8cf51293c2de5638705ab83db482ed47765bd0d54d8eb56",
+  "after-build.sh": "5e92909b0935cf322be00732efccb75adddc98195845412e722e9604c950985c",
+  "postbuild.sh": "1e34a8f6da9c1a69d75634edc0e9bc0fefd47ba10617fe4aa9a8ef6a0517b01e",
+  "gates.sh": "9bb0d542772f1c2649bb22b2e8ede2285a75c5818f3300c0be40c9c9d85c1102",
+  "certificates.sh": "468fe1de4c63452c8b137a9d3b0a375a26578aecccf6ca342e49c8b9084b0d52",
+  "rebuilt_closure.py": "4a4e0fc150957354953a9b234437f1e559107cdfec9199bf4e677051b227339b",
+  "positions_only.py": "8fd6679d6e2d738a478e5c071a5b609237270687c9db4c0ebf45c5498b90a6ad",
+  "gen_receipt_s8_review.py": "360b0f143d43300a1f8af384c101b809ec285f6087e5954e9c9f44e6ed76e420"
+ },
+ "logs": "machine-local, /tmp/bc-arc-scratch/vcvio-migration/S8/review-fix/logs/"
+}

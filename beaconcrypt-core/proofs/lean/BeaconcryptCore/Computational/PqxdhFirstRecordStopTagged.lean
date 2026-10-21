@@ -473,8 +473,7 @@ theorem coupled_bound (impl₁ : QueryImpl spec (StateT σ₁ ProbComp)) (impl�
     (event : α × σ₁ → Prop) (excluded : ∀ result, event result → ¬ bad₁ result.2)
     (impossible : ∀ left right, related left right → ¬ bad₂ right → ∀ value, event (value, left) → False) :
     Pr{let x ← (simulateQ impl₁ work).run first}[event x] ≤ Pr{let result ← (simulateQ impl₂ work).run second}[bad₂ result.2] := by
-  -- Relational program logic: VCVio's coupling-to-event law exists at the pin only in the deprecated form (S8 phase B
-  -- exception, relational class); both events are converted through the allowlisted bridge.
+  -- Relational phase B exception: the coupling-to-event law exists only in deprecated form; both events use the bridge.
   rw [← VCVioLegacy.probEvent_eq_prEvent, ← VCVioLegacy.probEvent_eq_prEvent]
   refine probEvent_le_of_relTriple (coupled_run impl₁ impl₂ related bad₁ bad₂ absorbing₁ absorbing₂ step work first second
     (Or.inr (Or.inr start))) fun left right held holds => ?_
@@ -3757,8 +3756,7 @@ theorem post_bound {Result : Type} (target : RootOutput)
     Pr{let result ← ((simulateQ (world source writer prior key nonce next sender route decode pre application initialW selector aux
         (taggedFinishOp source writer prior key nonce next decode pre application initialW selector aux fixed selectedMessage other))
         client).run tagged)}[Exposed target result.2] := by
-  -- Relational program logic: VCVio's coupling-to-event law exists at the pin only in the deprecated form (S8 phase B
-  -- exception, relational class); both events are converted through the allowlisted bridge.
+  -- Relational phase B exception: the coupling-to-event law exists only in deprecated form; both events use the bridge.
   rw [← VCVioLegacy.probEvent_eq_prEvent, ← VCVioLegacy.probEvent_eq_prEvent]
   refine probEvent_le_of_relTriple (post_coupled source writer prior key nonce next sender route decode pre application initialC selector
     aux initialW (taggedFinishOp source writer prior key nonce next decode pre application initialW selector aux fixed selectedMessage
@@ -5123,8 +5121,7 @@ theorem bind_event_le {α β γ δ : Type} (first : ProbComp α) (rest : α → 
   have left : (first >>= fun value => output <$> rest value) = output <$> (first >>= rest) := by rw [map_bind]
   have right : (other >>= fun value => log <$> later value) = log <$> (other >>= later) := by rw [map_bind]
   rw [left, right, ← prEvent_eq_evalDist_singleton _ true, prEvent_map, prEvent_map]
-  -- Relational program logic: VCVio's coupling-to-event law exists at the pin only in the deprecated form (S8 phase B
-  -- exception, relational class); both events are converted through the allowlisted bridge.
+  -- Relational phase B exception: the coupling-to-event law exists only in deprecated form; both events use the bridge.
   rw [← VCVioLegacy.probEvent_eq_prEvent, ← VCVioLegacy.probEvent_eq_prEvent]
   exact probEvent_le_of_relTriple coupled fun _ _ held holds => held holds
 

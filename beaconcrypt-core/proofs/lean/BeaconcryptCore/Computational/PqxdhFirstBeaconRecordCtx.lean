@@ -1225,8 +1225,7 @@ theorem alias_bound :
   classical
   rw [← prEvent_eq_evalDist_singleton _ true]
   unfold aliasGame
-  -- S6 editing rule 10: the generic law is stated over an abstract `ProbComp` draw and applied to `$ᵗ HmacBlock`
-  -- with first-order arguments.
+  -- Stated over an abstract draw, used after generalizing `$ᵗ HmacBlock`: the concrete draw exceeds the recursion depth.
   have aliasStep : ∀ (block : ProbComp HmacBlock) (rest : HmacBlock → ProbComp Bool),
       (∀ b ∈ support block, ¬ RawCtxSendLineageCollision.InitialAlias b → Pr{let y ← rest b}[y = true] = 0) →
       Pr{let y ← block >>= rest}[y = true] ≤ Pr{let b ← block}[RawCtxSendLineageCollision.InitialAlias b] :=

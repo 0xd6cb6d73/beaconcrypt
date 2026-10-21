@@ -1212,8 +1212,7 @@ theorem aug_hit (client : OracleComp (Optional (PqxdhInitialGenericPost.Spec ext
         (simulateQ (hitObserved (extra := extra) pre application initial selector aux source writer prior key target nonce next sender
           route decode) client).run ((history, PqxdhSelectedPostCompiler.project (insErase first)), first.1.2.2.2)] {true} := by
   rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true, prEvent_map, prEvent_map]
-  -- Relational program logic: VCVio's coupling-to-event law exists at the pin only in the deprecated form (S8 phase B
-  -- exception, relational class); both events are converted through the allowlisted bridge.
+  -- Relational phase B exception: the coupling-to-event law exists only in deprecated form; both events use the bridge.
   rw [← VCVioLegacy.probEvent_eq_prEvent, ← VCVioLegacy.probEvent_eq_prEvent]
   refine probEvent_le_of_relTriple (aug_run pre application initial selector aux source writer prior key target nonce next sender route
     decode mark b client first _ ⟨rfl, id⟩) fun left right held holds => ?_

@@ -1661,8 +1661,7 @@ theorem prelude_alias (key : CtxKey) :
     (prelude_source setup env callbacks baseImpl kem attachedVerify primitives program post)
   simp only [prEvent_map] at restored
   refine le_of_eq_of_le (Eq.trans rfl restored) ?_
-  -- S6 editing rule 10: the generic law over an abstract `ProbComp` draw, applied to `$ᵗ HmacBlock` with first-order
-  -- arguments after generalizing the draw.
+  -- Stated over an abstract draw, used after generalizing `$ᵗ HmacBlock`: the concrete draw exceeds the recursion depth.
   have aliasStep : ∀ (block : ProbComp HmacBlock) {β : Type} (rest : HmacBlock → ProbComp β) (q : β → Prop),
       (∀ b ∈ support block, ¬ RawCtxSendLineageCollision.InitialAlias b → Pr{let y ← rest b}[q y] = 0) →
       Pr{let y ← block >>= rest}[q y] ≤ Pr{let b ← block}[RawCtxSendLineageCollision.InitialAlias b] :=

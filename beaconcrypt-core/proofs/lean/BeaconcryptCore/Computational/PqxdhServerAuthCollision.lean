@@ -53,11 +53,11 @@ theorem verified_third_probability (setup : Setup baseSpec KemSK)
         absBytes input.third = value.toList] ≤
       (64 : ℝ≥0∞) / (Fintype.card ScalarBytes : ℝ≥0∞) := by
   classical
-  -- Event-level laws over abstract computations (S8 editing rule 14): the rejection branches end in the
-  -- impossible event, and the accepted branch reassociates the observed computation only.
+  -- The rejection branches end in the impossible event.
   have prPureFalse : 𝒟[(pure False : ProbComp Prop)] {True} = 0 := by
     have impossible := prEvent_false (pure () : ProbComp Unit)
     rwa [pure_bind] at impossible
+  -- Reassociation at the event level: a bare `rw [bind_assoc]` would also rewrite the bind that expands `Pr{...}`.
   have prAssoc : ∀ {α β γ : Type} (x : ProbComp α) (f : α → ProbComp β) (g : β → ProbComp γ) (p : γ → Prop),
       Pr{let y ← (x >>= f >>= g)}[p y] = Pr{let y ← (x >>= fun a => f a >>= g)}[p y] := fun x f g p => by
     rw [bind_assoc x f g]
