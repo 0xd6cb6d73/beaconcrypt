@@ -74,10 +74,6 @@ theorem distance {ι State Result : Type} {spec : OracleSpec ι}
     (RawCtxSelectedAliasInitial.recorded_distance_initial (mark handler direct) (mark alternate direct)
       record target client (split state))
 
-set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.RawCtxFlaggedQueryTrace.distance_vcvioLegacy :
-    ∀ {ι State Result : Type} {spec : OracleSpec ι} (handler alternate : QueryImpl spec (StateT State ProbComp)) (record : spec.Domain → List BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput) (direct : spec.Domain → Bool) (target : BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput) (client : OracleComp spec Result) (state : (State × List BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput) × Bool), tvDist ((simulateQ (BeaconcryptCore.Computational.RawCtxFlaggedQueryTrace.trace handler record direct) client).run state) ((simulateQ (BeaconcryptCore.Computational.RawCtxFlaggedQueryTrace.trace (BeaconcryptCore.Computational.RawCtxSelectedAliasCoupling.routed handler alternate record target) record direct) client).run state) ≤ (probEvent ((simulateQ (BeaconcryptCore.Computational.RawCtxFlaggedQueryTrace.trace handler record direct) client).run state) fun (result : Result × (State × List BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput) × Bool) => target ∈ result.2.1.2).toReal :=
-  by simpa only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent] using @BeaconcryptCore.Computational.RawCtxFlaggedQueryTrace.distance
-
 end BeaconcryptCore.Computational.RawCtxFlaggedQueryTrace
 
 /-- info: 'BeaconcryptCore.Computational.RawCtxFlaggedQueryTrace.step' depends on axioms: [propext, Quot.sound] -/

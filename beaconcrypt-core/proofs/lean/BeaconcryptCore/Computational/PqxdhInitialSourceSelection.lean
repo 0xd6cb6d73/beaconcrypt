@@ -26,19 +26,17 @@ variable (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writ
 /-- Selecting an actually published fresh record costs a finite sum over the source-derived position allowance, retaining the same original decision and byte-level freshness. -/
 theorem positions (stage qPost : Nat) (bounded : ∀ reply, (post reply).IsTotalQueryBound qPost)
     (ancestors disclosed : List RatchetChain) :
-    Pr[fun result => ∃ number : Std.U64,
+    Pr{let result ← (run source writer selectedMessage previousRoot response64 other sender route decode index metadata ready post before
+        selected shared privateState cache stage)}[∃ number : Std.U64,
       PqxdhInitialPublishedEvent.sourceEvent source (root source previousRoot response64 selected)
-        selected number ancestors disclosed result |
-      run source writer selectedMessage previousRoot response64 other sender route decode index metadata ready post before
-        selected shared privateState cache stage] ≤
+        selected number ancestors disclosed result] ≤
       ∑ position ∈ Finset.range (7 + qPost * 67 + 1),
-        Pr[fun result => ∃ number : Std.U64, number.val = position ∧
+        Pr{let result ← (run source writer selectedMessage previousRoot response64 other sender route decode index metadata ready post before
+            selected shared privateState cache stage)}[∃ number : Std.U64, number.val = position ∧
           PqxdhInitialPublishedEvent.sourceEvent source (root source previousRoot response64 selected)
-            selected number ancestors disclosed result |
-          run source writer selectedMessage previousRoot response64 other sender route decode index metadata ready post before
-            selected shared privateState cache stage] := by
-  refine le_trans ?_ (probEvent_exists_finset_le_sum _ _ _)
-  apply probEvent_mono
+            selected number ancestors disclosed result] := by
+  refine le_trans ?_ (prEvent_exists_finset_le _ _ _)
+  apply prEvent_mono_of_support
   exact fun result supported ⟨number, event⟩ =>
     ⟨number.val, Finset.mem_range.mpr (Nat.lt_succ_of_le
       (published_bound source writer selectedMessage previousRoot response64 other sender route decode index metadata ready

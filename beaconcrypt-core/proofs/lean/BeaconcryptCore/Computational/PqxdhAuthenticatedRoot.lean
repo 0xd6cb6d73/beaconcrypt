@@ -201,8 +201,8 @@ theorem borrowedPrefix_target
 
 /-- An unused total probabilistic computation changes no continued output distribution. -/
 theorem evalDist_discard {A B : Type} (work : ProbComp A) (next : ProbComp B) :
-    𝒮[work >>= fun _ => next] = 𝒮[next] := by
-  exact evalSPMF_ext (fun output => by simp)
+    EvalDistEq (work >>= fun _ => next) (next) := by
+  exact OracleComp.EvalDistEq.bind_const work next
 
 /-- Dispatch completes every non-target oracle interaction before the challenge; the pending branch uses the exact blocked handler. -/
 theorem dispatch_finish_eq_source
@@ -228,9 +228,14 @@ theorem dispatch_finish_eq_source
           (target, kemSk, mode) true)] =
     𝒟[sourceContinuation source baseImpl kem setup selector verifyFn protocol true
       (identitySk, result, kemSk)] := by
-  apply evalDist_eq_of_evalSPMF_eq
-  apply evalSPMF_ext
-  intro output
+  refine EvalDistEq.evalDist_eq ?_
+  have discard : ∀ {E : Type} (work : ProbComp Bool) (encaps : ProbComp E),
+      EvalDistEq (do let a ← work; let _ ← encaps; (fun _ => a) <$> ($ᵗ MlKemSharedSecret)) work := by
+    intro E work encaps
+    refine (EvalDistEq.bind_right work fun a =>
+      (EvalDistEq.bind_right encaps fun _ => OracleComp.EvalDistEq.map_const _ a).trans
+        (OracleComp.EvalDistEq.bind_const encaps (pure a))).trans ?_
+    rw [bind_pure]
   cases admitted : admission verifyFn result <;>
     by_cases bad : result.badBit verifyFn = true <;>
     by_cases eligible : protocol.targetEligible identitySk result = true <;>
@@ -238,11 +243,18 @@ theorem dispatch_finish_eq_source
       toKemOneKeyAdversary, rootInitializer,
       runtimeOfImpl_liftProbComp,
       simulateQ_kemAmbient_liftM_ProbComp,
-      runCommon, target_eq, eligible, probOutput_bind_eq_tsum, ← mul_assoc, ENNReal.mul_inv_cancel_right,
-      Fintype.card_ne_zero]
-  apply tsum_congr
-  intro ready
-  cases ready <;> simp [probOutput_bind_eq_tsum]
+      runCommon, target_eq, eligible, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+  all_goals first
+    | exact discard _ _
+    | refine EvalDistEq.bind_right _ fun prepared => ?_
+      cases prepared with
+      | inl decision =>
+        simp [-evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+        exact (EvalDistEq.bind_right _ fun _ => OracleComp.EvalDistEq.map_const _ decision).trans
+          (OracleComp.EvalDistEq.bind_const _ _)
+      | inr ready =>
+        simp [-evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+        exact EvalDistEq.bind_right _ fun _ => OracleComp.EvalDistEq.bind_const _ _
 
 set_option backward.isDefEq.respectTransparency false in
 /-- The full source-ordered filtered execution is exactly the standard one-key challenger schedule after interpretation. -/
@@ -258,18 +270,15 @@ theorem sourceGame_filtered_eq_initializerReal
     𝒟[sourceGame source baseImpl sigAlg kem setup selector verifyFn protocol true] =
       𝒟[initializerRealGame source baseImpl kem
         (rootInitializer sigAlg kem setup selector verifyFn protocol)] := by
-  apply evalDist_eq_of_evalSPMF_eq
+  apply EvalDistEq.evalDist_eq
   unfold sourceGame
-  rw [(VCVioLegacy.evalSPMF_eq_iff_evalDistEq _ _).2
-    (privateSourcePrefix_borrowed_complete baseImpl sigAlg kem setup selector _)]
+  refine (privateSourcePrefix_borrowed_complete baseImpl sigAlg kem setup selector _).trans ?_
   simp only [initializerRealGame, oneKeyBranchMain, oneKeyPrefix,
     toKemOneKeyAdversary, rootInitializer, conditionalPrefix,
     simulateQ_bind, bind_assoc, pure_bind]
-  apply evalSPMF_bind_congr'
-  intro pair
-  apply evalSPMF_bind_congr
-  intro retained supported
-  apply evalSPMF_eq_of_evalDist_eq
+  refine EvalDistEq.bind_right _ fun pair => ?_
+  refine OracleComp.EvalDistEq.bind_congr_of_support _ fun retained supported => ?_
+  refine EvalDistEq.of_evalDist_eq ?_
   exact (dispatch_finish_eq_source source baseImpl sigAlg kem setup selector verifyFn protocol
       pair.1 pair.2 retained.1 retained.2
       (borrowedPrefix_target baseImpl sigAlg kem setup selector pair.1 pair.2 retained supported)).symm

@@ -116,8 +116,8 @@ theorem output_bad_zero (stopped : Bool) (work : OracleComp (Optional (PqxdhInit
     (before : SourceState M P I D K A N C S B) (result : Result × SourceState M P I D K A N C S B)
     (bad : ¬ Good before) (good : Good result.2) :
     𝒟[(simulateQ (handler pre application initial selector aux source writer prior parent key target nonce next sender route read stopped) work).run before] {result} = 0 := by
-  rw [evalDist_apply_singleton]
-  exact probOutput_eq_zero_of_not_mem_support fun supported =>
+  rw [← prEvent_eq_evalDist_singleton]
+  exact prEvent_eq_zero_of_not_mem_support _ fun supported =>
     bad (schedule_good pre application initial selector aux source writer prior parent key target nonce next sender route read stopped work before result supported good)
 
 noncomputable def Discloses (query : (Optional (PqxdhInitialGenericPost.Spec extra S B)).Domain)
@@ -194,12 +194,13 @@ theorem output_good (work : OracleComp (Optional (PqxdhInitialGenericPost.Spec e
     simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind]
     by_cases clear : ¬ Discloses (extra := extra) query before
     · rw [step_agree pre application initial selector aux source writer prior parent key target nonce next sender route read query before clear]
-      rw [evalDist_apply_singleton, evalDist_apply_singleton, probOutput_bind_eq_tsum, probOutput_bind_eq_tsum]
+      rw [← prEvent_eq_evalDist_singleton _ result, ← prEvent_eq_evalDist_singleton _ result,
+        OracleComp.prEvent_bind_eq_tsum, OracleComp.prEvent_bind_eq_tsum]
       apply tsum_congr
       intro reply
-      simpa only [evalDist_apply_singleton] using congrArg (fun probability =>
-        𝒟[(PqxdhSelectedPostCompiler.original pre application initial selector aux source writer prior parent key target nonce next sender route read query).run before] {reply} * probability)
-          (ih reply.1 reply.2)
+      have same := ih reply.1 reply.2
+      rw [← prEvent_eq_evalDist_singleton _ result, ← prEvent_eq_evalDist_singleton _ result] at same
+      rw [same]
     · obtain ⟨request, rfl, disclosed⟩ := discloses_shape query before (not_not.mp clear)
       rw [normal_read pre application initial selector aux source writer prior parent key target nonce next sender route read request before,
         original_read pre application initial selector aux source writer prior parent key target nonce next sender route read request before]
@@ -217,13 +218,15 @@ theorem event_good (work : OracleComp (Optional (PqxdhInitialGenericPost.Spec ex
     𝒟[(simulateQ (normal pre application initial selector aux source writer prior parent key target nonce next sender route read) work).run before] {result | event result ∧ Good result.2} =
       𝒟[(simulateQ (PqxdhSelectedPostCompiler.original pre application initial selector aux source writer prior parent key target nonce next sender route read) work).run before] {result | event result ∧ Good result.2} := by
   classical
-  rw [evalDist_apply_setOf, evalDist_apply_setOf, probEvent_eq_tsum_ite, probEvent_eq_tsum_ite]
+  rw [← prEvent_eq_evalDist_of_discrete, ← prEvent_eq_evalDist_of_discrete, OracleComp.prEvent_eq_tsum_ite,
+    OracleComp.prEvent_eq_tsum_ite]
   apply tsum_congr
   intro result
   by_cases good : Good result.2
   · simp only [good, and_true]
-    exact congrArg (fun probability => if event result then probability else 0)
-      (by simpa only [evalDist_apply_singleton] using output_good pre application initial selector aux source writer prior parent key target nonce next sender route read work before result good)
+    have same := output_good pre application initial selector aux source writer prior parent key target nonce next sender route read work before result good
+    rw [← prEvent_eq_evalDist_singleton _ result, ← prEvent_eq_evalDist_singleton _ result] at same
+    rw [same]
   · simp only [good, and_false, ite_false]
 
 /-- The original byte-based selected-material freshness event already excludes every withheld disclosure across the full outer schedule. Stopping therefore adds zero error without constraining any final decision on compromised executions. -/

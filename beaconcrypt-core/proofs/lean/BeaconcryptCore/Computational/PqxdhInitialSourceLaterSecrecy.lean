@@ -93,18 +93,17 @@ theorem normalized_bound (hmac : HmacSha512) (correct : SourceFullCorrect source
     exact (ProbComp.boolDistAdvantage_triangle early actualGame later).trans
       (by have bound := ProbComp.boolDistAdvantage_triangle actualGame randomGame later; linarith)
   have total : ENNReal.ofReal ((early).boolDistAdvantage later) ≤
-      ENNReal.ofReal (primitiveLoss hmac) + 2 * Pr[badEvent | parentSample] := by
+      ENNReal.ofReal (primitiveLoss hmac) + 2 * Pr{let x ← parentSample}[badEvent x] := by
     have forward := ENNReal.ofReal_le_ofReal triangle
     simp only [ProbComp.boolDistAdvantage] at forward
     rw [ENNReal.ofReal_add (add_nonneg (abs_nonneg _) (abs_nonneg _)) (abs_nonneg _),
       ENNReal.ofReal_add (abs_nonneg _) (abs_nonneg _)] at forward
-    have back : ENNReal.ofReal ((randomGame).boolDistAdvantage later) ≤ Pr[badEvent | parentSample] := by
+    have back : ENNReal.ofReal ((randomGame).boolDistAdvantage later) ≤ Pr{let x ← parentSample}[badEvent x] := by
       simpa only [ProbComp.boolDistAdvantage, abs_sub_comm] using randomBound
-    apply forward.trans
-    calc
-      _ ≤ (Pr[badEvent | parentSample] + ENNReal.ofReal (primitiveLoss hmac)) + Pr[badEvent | parentSample] :=
-        add_le_add (add_le_add realBound (ENNReal.ofReal_le_ofReal primitive)) back
-      _ = _ := by rw [two_mul]; ac_rfl
+    generalize Pr{let x ← parentSample}[badEvent x] = badMass at realBound back ⊢
+    refine forward.trans ((add_le_add (add_le_add realBound (ENNReal.ofReal_le_ofReal primitive)) back).trans_eq ?_)
+    rw [two_mul]
+    ac_rfl
   have complete := total.trans (add_le_add le_rfl (mul_le_mul_right collision 2))
   have earlyEq := PqxdhInitialSourceLaterMixture.resumed_real source writer selectedMessage previousRoot response64 other sender route decode
     index metadata ready post before selected number ancestors disclosed shared privateState cache depth

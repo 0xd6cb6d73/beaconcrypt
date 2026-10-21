@@ -46,19 +46,19 @@ theorem pointwise (fixed : FixedHkdfSha512NoSaltSource)
     (selected : Context → Message) (client : Context → OracleComp PqxdhInitialLabelCompiler.Spec Result)
     (cut : Cut Context) :
     tvDist (left fixed selected client cut) (right fixed selected client cut) ≤
-      Pr[fun result => result.1 ∈ result.2.2.2.2 | left fixed selected client cut].toReal := by
+      Pr{let result ← left fixed selected client cut}[result.1 ∈ result.2.2.2.2].toReal := by
   have bound := (tvDist_map_le (fun result => (cut.1.2, (cut.2, result))) _ _).trans
     (distance fixed (selected cut.1.1) cut.1.2 (RawCtxSelectedInitialConstructor.response64 cut.2)
       (client cut.1.1) (∅, []))
-  simpa only [left, right, observed, probEvent_map, Function.comp_def] using bound
+  simpa only [left, right, observed, prEvent_map, Function.comp_def] using bound
 
 /-- The original prepared-context/root/response draw averages the complete source coupling and charges that same original final candidate event. -/
 theorem cut_distance (fixed : FixedHkdfSha512NoSaltSource)
     (selected : Context → Message) (client : Context → OracleComp PqxdhInitialLabelCompiler.Spec Result)
     (sample : ProbComp Context) :
     tvDist (sampleCut sample >>= left fixed selected client) (sampleCut sample >>= right fixed selected client) ≤
-      Pr[fun result => result.1 ∈ result.2.2.2.2 | sampleCut sample >>= left fixed selected client].toReal := by
-  exact PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind_vcvioLegacy (sampleCut sample)
+      Pr{let result ← sampleCut sample >>= left fixed selected client}[result.1 ∈ result.2.2.2.2].toReal := by
+  exact PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind (sampleCut sample)
     (left fixed selected client) (right fixed selected client) (left fixed selected client)
     (fun result => result.1 ∈ result.2.2.2.2) (pointwise fixed selected client)
 
@@ -66,15 +66,15 @@ theorem cut_distance (fixed : FixedHkdfSha512NoSaltSource)
 theorem delayed (fixed : FixedHkdfSha512NoSaltSource)
     (selected : Context → Message) (client : Context → OracleComp PqxdhInitialLabelCompiler.Spec Result)
     (sample : ProbComp Context) :
-    𝒮[sampleCut sample >>= left fixed selected client] =
-      𝒮[sample >>= fun context => do
+    EvalDistEq (sampleCut sample >>= left fixed selected client)
+      (sample >>= fun context => do
         let output ← $ᵗ HmacBlock
         let result ← observed fixed selected client context output
         let root ← $ᵗ RootOutput
-        pure (root, (output, result))] := by
+        pure (root, (output, result))) := by
   simp only [sampleCut, left, bind_assoc, pure_bind]
-  refine evalSPMF_bind_congr' (m := ProbComp) sample fun context => ?_
-  have moved := evalSPMF_sample_comm_vcvioLegacy ($ᵗ RootOutput)
+  refine EvalDistEq.bind_right (m := ProbComp) sample fun context => ?_
+  have moved := evalSPMF_sample_comm ($ᵗ RootOutput)
     (do let output ← $ᵗ HmacBlock
         let result ← observed fixed selected client context output
         pure (output, result)) (fun root pair => (pure (root, pair) : ProbComp _))
@@ -85,18 +85,16 @@ theorem candidates_bound (fixed : FixedHkdfSha512NoSaltSource)
     (selected : Context → Message) (client : Context → OracleComp PqxdhInitialLabelCompiler.Spec Result)
     (sample : ProbComp Context) (budget : Nat)
     (bounded : ∀ context, (client context).IsQueryBoundP IsInitializer budget) :
-    Pr[fun result => result.1 ∈ result.2.2.2.2 | sampleCut sample >>= left fixed selected client] ≤
+    Pr{let result ← sampleCut sample >>= left fixed selected client}[result.1 ∈ result.2.2.2.2] ≤
       (budget : ENNReal) / (2 ^ 256 : ENNReal) := by
-  have delayedEvent := OracleComp.probEvent_congr'
-    (p := fun result : RootOutput × (HmacBlock × Trace Result) => result.1 ∈ result.2.2.2.2)
-    (q := fun result : RootOutput × (HmacBlock × Trace Result) => result.1 ∈ result.2.2.2.2)
-    (fun _ _ => Iff.rfl) (delayed fixed selected client sample)
+  have delayedEvent := (delayed fixed selected client sample).prEvent_eq
+    (fun result : RootOutput × (HmacBlock × Trace Result) => result.1 ∈ result.2.2.2.2)
   rw [delayedEvent]
-  refine probEvent_bind_le_of_forall_le fun context _ => ?_
-  refine probEvent_bind_le_of_forall_le fun output _ => ?_
-  refine probEvent_bind_le_of_forall_le fun result supported => ?_
-  rw [bind_pure_comp, probEvent_map]
-  refine (RawCtxSelectedInputCandidates.uniform_candidates_vcvioLegacy result.2.2).trans ?_
+  refine prEvent_bind_le_of_forall_le_of_support _ _ _ fun context _ => ?_
+  refine prEvent_bind_le_of_forall_le_of_support _ _ _ fun output _ => ?_
+  refine prEvent_bind_le_of_forall_le_of_support _ _ _ fun result supported => ?_
+  rw [bind_pure_comp _ ($ᵗ RootOutput), prEvent_map]
+  refine (RawCtxSelectedInputCandidates.uniform_candidates result.2.2).trans ?_
   have length := trace_length fixed (selected context) (RawCtxSelectedInitialConstructor.response64 output)
     (client context) budget (bounded context) (∅, []) result supported
   simp only [List.length_nil, Nat.zero_add] at length

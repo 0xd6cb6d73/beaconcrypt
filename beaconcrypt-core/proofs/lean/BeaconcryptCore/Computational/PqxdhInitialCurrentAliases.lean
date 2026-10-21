@@ -97,7 +97,7 @@ theorem random_bound (budget : Nat)
   have projected := (tvDist_map_le
     (fun result : RootOutput × (HmacBlock × PqxdhInitialAliasBound.Trace Bool) => result.2.2.1) _ _).trans total
   simpa only [tracedRandom, consistentRandom, ProbComp.boolDistAdvantage,
-    evalDist_apply_singleton] using
+    VCVioLegacy.evalDist_singleton_eq_probOutput] using
     (abs_probOutput_toReal_sub_le_tvDist _ _).trans projected
 
 /-- The actual current uniform-root source endpoint reaches one value-consistent randomized initializer through ordinary Extract and two-query HMAC reductions plus the explicit original initializer-candidate loss. -/

@@ -114,7 +114,7 @@ theorem source_common_risk (depth : Nat) (position : number.val = depth + 2)
     𝒟[(fun cut => decide (Common selectedOwner number cut)) <$> sourceCarried depth] {true} ≤
       ∑ j ∈ Finset.range (7 + qPost * 67), ((j + 1 : Nat) : ENNReal) * (2 ^ 256 : ENNReal)⁻¹ := by
   simp only [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map, Function.comp_def, decide_eq_true_eq]
-  have risk := PqxdhInitialNativeRisk.carried_risk source writer sourceMark sender route decode sourceExecution
+  have risk := PqxdhInitialNativeRisk.carried_risk_vcvioLegacy source writer sourceMark sender route decode sourceExecution
     depth 0 qPost sourceExternal bounded sourceInitial
     (PqxdhInitialSourceExperiment.initial_valid sourceRoot shared privateState cache depth).1
     (PqxdhInitialSourceExperiment.initial_valid sourceRoot shared privateState cache depth).2

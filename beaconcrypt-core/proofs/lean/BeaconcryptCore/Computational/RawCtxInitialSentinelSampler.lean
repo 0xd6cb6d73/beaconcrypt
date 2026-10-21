@@ -39,16 +39,6 @@ theorem initial_observed {Result : Type} (second : Bool) (next : RootOutput → 
             next (material output).1 (nextChain output)) :=
   (RawCtxInitialChildSecrecy.parts_observed second next).trans (full_observed next).symm
 
-set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.RawCtxInitialSentinelSampler.initial_observed_vcvioLegacy :
-    ∀ {Result : Type} (second : Bool) (next : BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput → BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput → ProbComp Result),
-      𝒮[do
-          let output ← $ᵗ BeaconcryptCore.Computational.PqxdhSecretInputKdf.HmacBlock
-          next (BeaconcryptCore.Computational.RawCtxInitialChildSecrecy.parts second output).1 (BeaconcryptCore.Computational.RawCtxInitialChildSecrecy.parts second output).2] =
-        𝒮[do
-          let output ← $ᵗ BeaconcryptCore.Computational.PqxdhFullSecretInputKdf.FullOutput
-          next (BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.material output).1 (BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.nextChain output)] :=
-  by simpa only [BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq] using @BeaconcryptCore.Computational.RawCtxInitialSentinelSampler.initial_observed
-
 def join (second : Bool) (other target : RootOutput) : HmacBlock :=
   if second then other ++ target else target ++ other
 

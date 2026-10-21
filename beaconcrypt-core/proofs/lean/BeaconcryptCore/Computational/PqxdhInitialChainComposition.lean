@@ -17,18 +17,19 @@ open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhOrderedC
 
 /-- Discard only the unused initial nonce slot, keeping the entire continuation on both chains. -/
 theorem initial_chains_observed {A : Type} (continuation : RootOutput → RootOutput → ProbComp A) :
-    𝒮[(do let output ← $ᵗ FullOutput
+    EvalDistEq
+      (do let output ← $ᵗ FullOutput
           continuation (JointKdfProjection.first32.project output)
-            (JointKdfProjection.second32.project output))] =
-      𝒮[(do let left ← $ᵗ RootOutput
-            let right ← $ᵗ RootOutput
-            continuation left right)] := by
-  have full := fullOutput_observed_vcvioLegacy (fun record chain => continuation record.1 chain)
+            (JointKdfProjection.second32.project output))
+      (do let left ← $ᵗ RootOutput
+          let right ← $ᵗ RootOutput
+          continuation left right) := by
+  have full := fullOutput_observed (fun record chain => continuation record.1 chain)
   simp only [material, nextChain] at full
-  rw [full]
+  refine full.trans ?_
   simp only [Material, ← pairSample, bind_assoc, pure_bind]
-  refine evalSPMF_bind_congr' ($ᵗ RootOutput) (fun left => ?_)
-  exact OracleComp.DeferredSampling.evalSPMF_bind_const_neverFails _ (by simp) _
+  refine EvalDistEq.bind_right ($ᵗ RootOutput) (fun left => ?_)
+  exact OracleComp.EvalDistEq.bind_const _ _
 
 /-- Initial chain expansion observes one root input without exposing that root in its context. -/
 noncomputable def rootSampler {Context : Type} (sample : ProbComp Context) :
@@ -63,13 +64,13 @@ theorem initialized_pair_source (source : FixedHkdfSha512NoSaltSource) (root : R
 theorem independent_initial_eq_bidirectional {Context : Type}
     (source : FixedHkdfSha512NoSaltSource) (sample : ProbComp Context)
     (observer : BidirectionalObserver Context) (leftRounds rightRounds : Nat) :
-    𝒮[independentFullGame (rootSampler sample)
-      (initialObserver source observer leftRounds rightRounds)] =
-      𝒮[bidirectionalGame source sample observer leftRounds rightRounds 0 0] := by
+    EvalDistEq (independentFullGame (rootSampler sample)
+      (initialObserver source observer leftRounds rightRounds))
+      (bidirectionalGame source sample observer leftRounds rightRounds 0 0) := by
   simp only [independentFullGame, rootSampler, initialObserver, bidirectionalGame,
     sampleEvolution, sampleMaterials, Nat.sub_zero, List.nil_append, bind_assoc, pure_bind]
-  refine evalSPMF_bind_congr' sample (fun context => ?_)
-  rw [OracleComp.DeferredSampling.evalSPMF_bind_const_neverFails ($ᵗ RootOutput) (by simp)]
+  refine EvalDistEq.bind_right sample (fun context => ?_)
+  refine (OracleComp.EvalDistEq.bind_const ($ᵗ RootOutput) _).trans ?_
   exact initial_chains_observed (fun left right =>
     observer context (realEvolution source leftRounds left) (realEvolution source rightRounds right))
 
@@ -92,8 +93,7 @@ theorem initialized_bound {Context : Type} (source : FixedHkdfSha512NoSaltSource
     (initializedGame source sample observer leftRounds rightRounds).boolDistAdvantage
       (bidirectionalGame source sample observer leftRounds rightRounds 0 0) ≤
       initialLoss source hmac sample observer leftRounds rightRounds := by
-  have random := evalDist_eq_of_evalSPMF_eq _ _
-    (independent_initial_eq_bidirectional source sample observer leftRounds rightRounds)
+  have random := (independent_initial_eq_bidirectional source sample observer leftRounds rightRounds).evalDist_eq
   simpa only [initializedGame, initialLoss, ProbComp.boolDistAdvantage, random] using
     sourceFullAdvantage_le_extract_add_hmac source hmac correct .ratchet
       (rootSampler sample) (initialObserver source observer leftRounds rightRounds)

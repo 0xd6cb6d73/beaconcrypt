@@ -1013,7 +1013,7 @@ theorem authenticated_native_root_bound_bridged
     CommitmentTranscriptBridge ∧ SendFinishBridge ∧ FramePayloadBridge ∧
     AcceptBridge env baseImpl kem attachedVerify primitives program post secretIdentity := by
   intro p
-  have original := PqxdhAuthenticatedRootBudgets.authenticated_native_root_bound env baseImpl kem
+  have original := PqxdhAuthenticatedRootBudgets.authenticated_native_root_bound_vcvioLegacy env baseImpl kem
     attachedVerify primitives program post c compatible adapter functional hmac sourceCorrect fallback
     ordinaryFallback secretIdentity initialMatch
   exact ⟨original.1, original.2, prepare_bridge, commit_bridge, beacon_start_bridge, beacon_commit_bridge,
@@ -1092,7 +1092,7 @@ theorem authenticated_extracted_root_bound
     PrepareBridge ∧ CommitBridge ∧ BeaconStartBridge ∧ BeaconCommitBridge ∧ RegistrationIdBridge ∧
     CommitmentTranscriptBridge ∧ SendFinishBridge ∧ FramePayloadBridge ∧ ValidateInitBridge := by
   intro p
-  have original := PqxdhAuthenticatedRootBudgets.authenticated_native_root_bound env baseImpl kem
+  have original := PqxdhAuthenticatedRootBudgets.authenticated_native_root_bound_vcvioLegacy env baseImpl kem
     attachedVerify primitives program post c compatible adapter functional hmac sourceCorrect fallback
     ordinaryFallback secretIdentity initialMatch
   have same : (extractedActual env baseImpl kem attachedVerify primitives program post secretIdentity).boolDistAdvantage

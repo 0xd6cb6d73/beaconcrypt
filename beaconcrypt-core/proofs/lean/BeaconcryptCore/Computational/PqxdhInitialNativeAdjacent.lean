@@ -60,7 +60,8 @@ theorem normalization (depth k qPost : Nat)
   classical
   rw [← (source_adjacent source writer mark sender route decode execution external depth state valid.2.1).2, normalized]
   exact (ofReal_tvDist_bind_left_event_le _ _ _ Cached (fun cut good => by simp only [good, ite_false])).trans
-    (cached_risk source writer mark sender route decode execution depth k qPost external bounded state valid clean)
+    ((VCVioLegacy.probEvent_eq_prEvent _ Cached).le.trans
+      (cached_risk source writer mark sender route decode execution depth k qPost external bounded state valid clean))
 
 /-- A common complete-state observation, including an appended private lineage check, preserves the one cached-branch charge. -/
 theorem normalization_after {Observed : Type} (depth k qPost : Nat)
@@ -86,7 +87,7 @@ theorem adjacent_bound (depth k qPost : Nat)
       ∑ j ∈ Finset.range (7 + qPost * 67), ((k + j + 1 : Nat) : ℝ≥0∞) * (2 ^ 256 : ℝ≥0∞)⁻¹ := by
   refine (ENNReal.ofReal_le_ofReal (ProbComp.boolDistAdvantage_triangle _
     (normalized source writer mark sender route decode execution external depth state >>= observe) _)).trans ?_
-  simp only [ProbComp.boolDistAdvantage, evalDist_apply_singleton]
+  simp only [ProbComp.boolDistAdvantage, VCVioLegacy.evalDist_singleton_eq_probOutput]
   rw [ENNReal.ofReal_add (abs_nonneg _) (abs_nonneg _)]
   apply add_le_add le_rfl
   refine (ENNReal.ofReal_le_ofReal (abs_probOutput_toReal_sub_le_tvDist _ _)).trans ?_

@@ -67,10 +67,6 @@ theorem recorded_distance_initial {ι State Result : Type} {spec : OracleSpec ι
   rw [bad_probability_initial] at projected
   simpa only [complete_erase, decorate] using projected
 
-set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.RawCtxSelectedAliasInitial.recorded_distance_initial_vcvioLegacy :
-    ∀ {ι State Result : Type} {spec : OracleSpec ι} (handler alternate : QueryImpl spec (StateT State ProbComp)) (record : spec.Domain → List BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput) (target : BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput) (client : OracleComp spec Result) (state : State × List BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput), tvDist ((simulateQ (BeaconcryptCore.Computational.RawCtxSelectedQueryTrace.recorded handler record) client).run state) ((simulateQ (BeaconcryptCore.Computational.RawCtxSelectedQueryTrace.recorded (BeaconcryptCore.Computational.RawCtxSelectedAliasCoupling.routed handler alternate record target) record) client).run state) ≤ (probEvent ((simulateQ (BeaconcryptCore.Computational.RawCtxSelectedQueryTrace.recorded handler record) client).run state) fun (result : Result × State × List BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput) => target ∈ result.2.2).toReal :=
-  by simpa only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent] using @BeaconcryptCore.Computational.RawCtxSelectedAliasInitial.recorded_distance_initial
-
 end BeaconcryptCore.Computational.RawCtxSelectedAliasInitial
 
 /--

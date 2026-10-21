@@ -56,7 +56,7 @@ local notation "V" => sampleBudget qPost qPre qApplication qSelector qAux
 include bounded preBound applicationBound selectorBound auxBound in
 /-- The native fresh candidate event in the entire original stopped suffix has the displayed source-derived cap; no whole-observer or no-future-reveal premise is supplied. -/
 theorem source_bound :
-    Pr[= true | PqxdhInitialFutureInputCandidates.future source writer mark sender route decode sourceView sourceSample sourceAddress] ≤
+    Pr{let x ← PqxdhInitialFutureInputCandidates.future source writer mark sender route decode sourceView sourceSample sourceAddress}[x = true] ≤
       2 * ((Q : ENNReal) / (2 ^ 256 : ENNReal)) := by
   apply PqxdhInitialFutureInputCandidates.future_bound
   intro context output result reached

@@ -88,8 +88,9 @@ noncomputable def decision (event : Trace M P I D K A N C Result Origin S B → 
 /-- The complete original event and the final actual direct-read flag are tested together without conditioning. -/
 theorem decision_probability (event : Trace M P I D K A N C Result Origin S B → Prop)
     (run : ProbComp (Trace M P I D K A N C Result Origin S B)) :
-    Pr[= true | decision event <$> run] = Pr[fun result => event result ∧ result.2.2 = false | run] := by
-  simp only [← probEvent_eq_eq_probOutput, probEvent_map, Function.comp_def, decision, decide_eq_true_eq]
+    Pr{let x ← decision event <$> run}[x = true] = Pr{let result ← run}[event result ∧ result.2.2 = false] := by
+  rw [prEvent_map]
+  exact prEvent_congr _ _ _ fun result => by simp only [decision, decide_eq_true_eq]
 
 noncomputable def observer : FullObserver (Context × Entry) :=
   fun context output => decision (continuation.event context) <$>
@@ -115,13 +116,13 @@ set_option backward.isDefEq.respectTransparency false in
 theorem local_bound (context : Context × Entry) (target : RootOutput) (output : FullOutput) :
     (privateGame source writer mark sender route decode continuation context target output).boolDistAdvantage
       (observer source writer mark sender route decode continuation context output) ≤
-      Pr[= true | bad source writer mark sender route decode continuation context target output].toReal := by
+      Pr{let x ← bad source writer mark sender route decode continuation context target output}[x = true].toReal := by
   have agreement := PqxdhInitialParentObserverAliases.event_good source writer (continuation.prior context.1) context.2 output
     (continuation.pre context.1) (continuation.application context.1) (continuation.initializer context.1)
     (continuation.selector context.1) (continuation.aux context.1) target
     (program mark sender route decode continuation context) (continuation.initial context) (continuation.event context)
-  rw [privateGame, observer, ProbComp.boolDistAdvantage, evalDist_apply_singleton,
-    evalDist_apply_singleton, decision_probability, decision_probability, agreement]
+  rw [privateGame, observer, ProbComp.boolDistAdvantage, ← prEvent_eq_evalDist_singleton _ true,
+    ← prEvent_eq_evalDist_singleton _ true, decision_probability, decision_probability, agreement]
   have variation := (abs_probOutput_toReal_sub_le_tvDist
     (decision (continuation.event context) <$>
       (simulateQ (PqxdhInitialParentObserverAliases.observed source writer (continuation.prior context.1) context.2 output
@@ -130,12 +131,18 @@ theorem local_bound (context : Context × Entry) (target : RootOutput) (output :
         (program mark sender route decode continuation context)).run (continuation.initial context))
     (decision (continuation.event context) <$> observed source writer mark sender route decode continuation context output)).trans
       (tvDist_map_le (decision (continuation.event context)) _ _)
-  rw [decision_probability, decision_probability, tvDist_comm] at variation
-  simpa only [bad, candidates, observed, ← probEvent_eq_eq_probOutput, probEvent_map, Function.comp_def, decide_eq_true_eq] using
-    variation.trans (PqxdhInitialParentObserverAliases.distance source writer (continuation.prior context.1) context.2 output
+  rw [VCVioLegacy.probOutput_eq_prEvent, VCVioLegacy.probOutput_eq_prEvent, decision_probability, decision_probability,
+    tvDist_comm] at variation
+  have event :
+      Pr{let result ← observed source writer mark sender route decode continuation context output}[target ∈ candidates result] =
+        Pr{let x ← bad source writer mark sender route decode continuation context target output}[x = true] := by
+    rw [bad, prEvent_map]
+    exact prEvent_congr _ _ _ fun result => by simp only [decide_eq_true_eq]
+  exact (variation.trans (PqxdhInitialParentObserverAliases.distance source writer (continuation.prior context.1) context.2 output
       (continuation.pre context.1) (continuation.application context.1) (continuation.initializer context.1)
       (continuation.selector context.1) (continuation.aux context.1) RawCtxSelectedLiveRead.labelRead target
-      (program mark sender route decode continuation context) (continuation.initial context))
+      (program mark sender route decode continuation context) (continuation.initial context))).trans_eq (by
+    simpa only [observed, candidates] using congrArg ENNReal.toReal event)
 
 noncomputable def actual
     (priorSample : ProbComp Context) : ProbComp Bool := do
@@ -154,15 +161,10 @@ theorem actual_route
     (priorSample : ProbComp Context) :
     (actual source writer mark sender route decode continuation priorSample).boolDistAdvantage
       (RawCtxSelectedParentSecrecy.actual source priorSample (address continuation) (observer source writer mark sender route decode continuation)) ≤
-      Pr[fun pair => pair.1 ∈ candidates pair.2 |
-        RawCtxFullPreimageTester.actual (RawCtxFullPreimageTester.production source)
+      Pr{let pair ← (RawCtxFullPreimageTester.actual (RawCtxFullPreimageTester.production source)
           (RawCtxSelectedParentCandidates.sample priorSample (address continuation))
-          (observed source writer mark sender route decode continuation)].toReal := by
-  simpa only [actual, RawCtxSelectedParentSecrecy.actual, RawCtxSelectedParentCandidates.sample,
-    RawCtxFullPreimageTester.actual, RawCtxFullPreimageTester.production, bad,
-    bind_assoc, pure_bind, ← probEvent_eq_eq_probOutput, probEvent_bind_eq_tsum,
-    probEvent_map, Function.comp_def, decide_eq_true_eq, probEvent_pure, mul_ite, mul_one, mul_zero]
-    using RawCtxBadEventMixture.bind_bound_vcvioLegacy (RawCtxSelectedParentCandidates.sample priorSample (address continuation))
+          (observed source writer mark sender route decode continuation))}[pair.1 ∈ candidates pair.2].toReal := by
+  have bound := RawCtxBadEventMixture.bind_bound (RawCtxSelectedParentCandidates.sample priorSample (address continuation))
       (fun pair => privateGame source writer mark sender route decode continuation pair.1 pair.2
         (productionStream source.crypto (FixedHkdfDomain.ratchet.address pair.2.toList)))
       (fun pair => observer source writer mark sender route decode continuation pair.1
@@ -170,6 +172,25 @@ theorem actual_route
       (fun pair => bad source writer mark sender route decode continuation pair.1 pair.2
         (productionStream source.crypto (FixedHkdfDomain.ratchet.address pair.2.toList)))
       (fun pair => local_bound source writer mark sender route decode continuation pair.1 pair.2 _)
+  have bindCongr : ∀ {α β γ : Type} (first : ProbComp α) (f : α → ProbComp β) (g : α → ProbComp γ)
+      (p : β → Prop) (q : γ → Prop), (∀ a, Pr{let x ← f a}[p x] = Pr{let y ← g a}[q y]) →
+        Pr{let x ← first >>= f}[p x] = Pr{let y ← first >>= g}[q y] :=
+    fun first f g p q same => prEvent_bind_congr first f g p q same
+  have event : Pr{let x ← (RawCtxSelectedParentCandidates.sample priorSample (address continuation) >>= fun pair =>
+        bad source writer mark sender route decode continuation pair.1 pair.2
+          (productionStream source.crypto (FixedHkdfDomain.ratchet.address pair.2.toList)))}[x = true] =
+      Pr{let pair ← (RawCtxFullPreimageTester.actual (RawCtxFullPreimageTester.production source)
+          (RawCtxSelectedParentCandidates.sample priorSample (address continuation))
+          (observed source writer mark sender route decode continuation))}[pair.1 ∈ candidates pair.2] := by
+    rw [RawCtxFullPreimageTester.actual]
+    refine bindCongr _ _ _ _ _ fun pair => ?_
+    obtain ⟨context, target⟩ := pair
+    dsimp only
+    rw [bad, prEvent_map, prEvent_map]
+    exact prEvent_congr _ _ _ fun result => by simp only [decide_eq_true_eq]
+  rw [← event]
+  simpa only [actual, RawCtxSelectedParentSecrecy.actual, RawCtxSelectedParentCandidates.sample, bind_assoc,
+    pure_bind] using bound
 
 
 set_option maxRecDepth 2048 in
@@ -178,9 +199,8 @@ theorem random_route
     (priorSample : ProbComp Context) :
     (random source writer mark sender route decode continuation priorSample).boolDistAdvantage
       (RawCtxSelectedParentSecrecy.random priorSample (address continuation) (observer source writer mark sender route decode continuation)) ≤
-      Pr[fun pair => pair.1 ∈ candidates pair.2 |
-        RawCtxSelectedParentCandidates.uniform priorSample (address continuation) (observed source writer mark sender route decode continuation)].toReal := by
-  have bound := RawCtxBadEventMixture.bind_bound_vcvioLegacy
+      Pr{let pair ← RawCtxSelectedParentCandidates.uniform priorSample (address continuation) (observed source writer mark sender route decode continuation)}[pair.1 ∈ candidates pair.2].toReal := by
+  have bound := RawCtxBadEventMixture.bind_bound
       (do let pair ← RawCtxSelectedParentCandidates.sample priorSample (address continuation)
           let output ← $ᵗ FullOutput
           pure (pair, output))
@@ -188,13 +208,46 @@ theorem random_route
       (fun value => observer source writer mark sender route decode continuation value.1.1 value.2)
       (fun value => bad source writer mark sender route decode continuation value.1.1 value.1.2 value.2)
       (fun value => local_bound source writer mark sender route decode continuation value.1.1 value.1.2 value.2)
-  simp only [random, RawCtxSelectedParentSecrecy.random, independentFullGame,
-    RawCtxSelectedParentSecrecy.joint, RawCtxSelectedParentCandidates.sample,
-    RawCtxSelectedParentCandidates.uniform, RawCtxSelectedParentSampler.original, bad,
-    bind_assoc, pure_bind] at bound ⊢
-  simp only [bind_pure_comp] at bound ⊢
-  simpa only [← probEvent_eq_eq_probOutput, probEvent_bind_eq_tsum, probEvent_map,
-    Function.comp_def, decide_eq_true_eq] using bound
+  have bindCongr : ∀ {α β γ : Type} (first : ProbComp α) (f : α → ProbComp β) (g : α → ProbComp γ)
+      (p : β → Prop) (q : γ → Prop), (∀ a, Pr{let x ← f a}[p x] = Pr{let y ← g a}[q y]) →
+        Pr{let x ← first >>= f}[p x] = Pr{let y ← first >>= g}[q y] :=
+    fun first f g p q same => prEvent_bind_congr first f g p q same
+  have leftEq : (RawCtxSelectedParentCandidates.sample priorSample (address continuation) >>= fun pair =>
+          ($ᵗ FullOutput) >>= fun output => pure (pair, output)) >>=
+        (fun value => privateGame source writer mark sender route decode continuation value.1.1 value.1.2 value.2) =
+      random source writer mark sender route decode continuation priorSample := by
+    simp only [random, bind_assoc, pure_bind]
+  have rightEq : (RawCtxSelectedParentCandidates.sample priorSample (address continuation) >>= fun pair =>
+          ($ᵗ FullOutput) >>= fun output => pure (pair, output)) >>=
+        (fun value => observer source writer mark sender route decode continuation value.1.1 value.2) =
+      RawCtxSelectedParentSecrecy.random priorSample (address continuation) (observer source writer mark sender route decode continuation) := by
+    simp only [RawCtxSelectedParentSecrecy.random, independentFullGame, RawCtxSelectedParentSecrecy.joint,
+      RawCtxSelectedParentCandidates.sample, bind_assoc, pure_bind]
+  have lhsComp : (RawCtxSelectedParentCandidates.sample priorSample (address continuation) >>= fun pair =>
+          ($ᵗ FullOutput) >>= fun output => pure (pair, output)) >>=
+        (fun value => bad source writer mark sender route decode continuation value.1.1 value.1.2 value.2) =
+      RawCtxSelectedParentCandidates.sample priorSample (address continuation) >>= fun pair =>
+        ($ᵗ FullOutput) >>= fun output => bad source writer mark sender route decode continuation pair.1 pair.2 output := by
+    simp only [bind_assoc, pure_bind]
+  have rhsComp : RawCtxSelectedParentCandidates.uniform priorSample (address continuation) (observed source writer mark sender route decode continuation) =
+      RawCtxSelectedParentCandidates.sample priorSample (address continuation) >>= fun pair =>
+        (($ᵗ FullOutput) >>= fun child => observed source writer mark sender route decode continuation pair.1 child) >>= fun result =>
+          pure (pair.2, result) := by
+    simp only [RawCtxSelectedParentCandidates.uniform, RawCtxSelectedParentSampler.original,
+      RawCtxSelectedParentCandidates.sample, bind_assoc, pure_bind]
+  have event : Pr{let x ← ((RawCtxSelectedParentCandidates.sample priorSample (address continuation) >>= fun pair =>
+          ($ᵗ FullOutput) >>= fun output => pure (pair, output)) >>=
+            (fun value => bad source writer mark sender route decode continuation value.1.1 value.1.2 value.2))}[x = true] =
+      Pr{let pair ← RawCtxSelectedParentCandidates.uniform priorSample (address continuation) (observed source writer mark sender route decode continuation)}[
+        pair.1 ∈ candidates pair.2] := by
+    rw [lhsComp, rhsComp]
+    refine bindCongr _ _ _ _ _ fun pair => ?_
+    rw [bind_pure_comp _ (($ᵗ FullOutput) >>= fun child => observed source writer mark sender route decode continuation pair.1 child), prEvent_map]
+    refine bindCongr _ _ _ _ _ fun output => ?_
+    rw [bad, prEvent_map]
+    exact prEvent_congr _ _ _ fun result => by simp only [decide_eq_true_eq]
+  rw [leftEq, rightEq, event] at bound
+  exact bound
 
 
 noncomputable def aliasTester
@@ -213,7 +266,7 @@ theorem actual_bound
     (show ((2 ^ 352 : ENNReal)⁻¹ + ENNReal.ofReal (
       extractLoss hmac priorSample (address continuation) (aliasTester source writer mark sender route decode continuation) +
         hmacLoss hmac priorSample (address continuation) (aliasTester source writer mark sender route decode continuation))) ≠ ⊤ by simp)
-    (RawCtxSelectedParentCandidates.real_bound_vcvioLegacy source hmac correct priorSample (address continuation)
+    (RawCtxSelectedParentCandidates.real_bound source hmac correct priorSample (address continuation)
       (observed source writer mark sender route decode continuation) candidates)
   have nonnegative : 0 ≤ extractLoss hmac priorSample (address continuation) (aliasTester source writer mark sender route decode continuation) +
       hmacLoss hmac priorSample (address continuation) (aliasTester source writer mark sender route decode continuation) :=
@@ -232,7 +285,7 @@ theorem random_bound
       (qCandidates : ℝ) / (2 ^ 256 : ℝ) := by
   simpa using (random_route source writer mark sender route decode continuation priorSample).trans
     (ENNReal.toReal_mono (ENNReal.div_ne_top (by simp) (by simp))
-      (RawCtxSelectedParentCandidates.uniform_bound_vcvioLegacy priorSample (address continuation)
+      (RawCtxSelectedParentCandidates.uniform_bound priorSample (address continuation)
         (observed source writer mark sender route decode continuation) candidates qCandidates bounded))
 
 

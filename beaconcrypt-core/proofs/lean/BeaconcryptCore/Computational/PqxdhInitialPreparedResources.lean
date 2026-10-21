@@ -116,17 +116,22 @@ def address : Bool ⊕ Supported sourceRun → JointKdfAddress
 
 /-- The current parent input receives its own exact full76-draw collision charge. It is not assumed to appear in an earlier query or disclosure list. -/
 theorem parent_collision :
-    Pr[fun pair => RawCtxSelectedParentPrivatePatch.targetAddress pair.2 = pair.1.2.address |
-      RawCtxSelectedParentCandidates.sample
+    Pr{let pair ← (RawCtxSelectedParentCandidates.sample
         (sample source writer pre application initializer selector aux mark sender route decode observe execution depth state)
-        (address source writer pre application initializer selector aux mark sender route decode execution depth state)] ≤
+        (address source writer pre application initializer selector aux mark sender route decode execution depth state))}[RawCtxSelectedParentPrivatePatch.targetAddress pair.2 = pair.1.2.address] ≤
       (2 ^ 256 : ENNReal)⁻¹ := by
   unfold RawCtxSelectedParentCandidates.sample
-  apply probEvent_bind_le_of_forall_le
-  intro context _
-  simpa only [bind_pure_comp, probEvent_map, Function.comp_def, RawCtxSelectedParentEntry.fromOutput,
-    target_address, List.mem_cons, List.not_mem_nil, or_false, List.length_singleton, Nat.cast_one, one_mul] using
-    RawCtxFirstParentRisk.full_inputs_vcvioLegacy [address source writer pre application initializer selector aux mark sender route decode execution depth state context]
+  have split : ∀ {Context Value : Type} (prior : ProbComp Context) (draw : Context → ProbComp Value)
+      (q : Value → Prop) (ε : ENNReal),
+      (∀ context, Pr{let y ← draw context}[q y] ≤ ε) → Pr{let y ← prior >>= draw}[q y] ≤ ε :=
+    fun prior draw q ε h => prEvent_bind_le_of_forall_le prior draw q h
+  refine split _ _ _ _ fun context => ?_
+  have bound := RawCtxFirstParentRisk.full_inputs [address source writer pre application initializer selector aux mark sender route decode execution depth state context]
+  simp only [List.length_singleton, Nat.cast_one, one_mul] at bound
+  generalize sampled : ($ᵗ FullOutput : ProbComp FullOutput) = block at bound ⊢
+  rw [bind_pure_comp _ block, prEvent_map]
+  refine (prEvent_congr _ _ _ fun output => ?_).trans_le bound
+  simp only [RawCtxSelectedParentEntry.fromOutput, target_address, List.mem_cons, List.not_mem_nil, or_false]
 
 end BeaconcryptCore.Computational.PqxdhInitialPreparedResources
 

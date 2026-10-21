@@ -17,7 +17,7 @@ theorem finiteHybridBound (game : ℕ → ProbComp Bool) (n : ℕ) :
     (game 0).boolDistAdvantage (game n) ≤
       ∑ i ∈ Finset.range n, (game i).boolDistAdvantage (game (i + 1)) := by
   induction n with
-  | zero => simp [ProbComp.boolDistAdvantage]
+  | zero => simp [ProbComp.boolDistAdvantage, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
   | succ n ih =>
       calc
         _ ≤ (game 0).boolDistAdvantage (game n) +

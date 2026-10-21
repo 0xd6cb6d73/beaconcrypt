@@ -63,10 +63,6 @@ theorem event_good {ι State Result : Type} {spec : OracleSpec ι}
   rw [← VCVioLegacy.oracleComp_probEvent_eq_prEvent, ← VCVioLegacy.oracleComp_probEvent_eq_prEvent] at good
   exact (VCVioLegacy.probEvent_eq_prEvent _ _).symm.trans (good.trans (VCVioLegacy.probEvent_eq_prEvent _ _))
 
-set_option linter.deprecated false in set_option linter.unusedVariables false in theorem _root_.BeaconcryptCore.Computational.RawCtxFlaggedQueryAgreement.event_good_vcvioLegacy :
-    ∀ {ι State Result : Type} {spec : OracleSpec ι} (left right : QueryImpl spec (StateT State ProbComp)) (record : spec.Domain → List BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput) (direct : spec.Domain → Bool) (safe : ∀ (query : spec.Domain), direct query = Bool.false → left query = right query) (client : OracleComp spec Result) (state : (State × List BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput) × Bool) (event : Result × (State × List BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput) × Bool → Prop), (probEvent ((simulateQ (BeaconcryptCore.Computational.RawCtxFlaggedQueryTrace.trace left record direct) client).run state) fun (result : Result × (State × List BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput) × Bool) => event result ∧ result.2.2 = Bool.false) = probEvent ((simulateQ (BeaconcryptCore.Computational.RawCtxFlaggedQueryTrace.trace right record direct) client).run state) fun (result : Result × (State × List BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput) × Bool) => event result ∧ result.2.2 = Bool.false :=
-  by simpa only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent] using @BeaconcryptCore.Computational.RawCtxFlaggedQueryAgreement.event_good
-
 end BeaconcryptCore.Computational.RawCtxFlaggedQueryAgreement
 
 /-- info: 'BeaconcryptCore.Computational.RawCtxFlaggedQueryAgreement.flag_step' depends on axioms: [propext,

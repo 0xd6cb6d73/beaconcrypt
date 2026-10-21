@@ -28,17 +28,6 @@ theorem parts_observed {Result : Type} (second : Bool) (next : RootOutput → Ro
   case false => exact RawCtxSelectedInitialSampler.initial_observed next
   case true => exact RawCtxSelectedInitialSecond.second_observed next
 
-set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.RawCtxInitialChildSecrecy.parts_observed_vcvioLegacy :
-    ∀ {Result : Type} (second : Bool) (next : BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput → BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput → ProbComp Result),
-      𝒮[do
-          let output ← $ᵗ BeaconcryptCore.Computational.PqxdhSecretInputKdf.HmacBlock
-          next (BeaconcryptCore.Computational.RawCtxInitialChildSecrecy.parts second output).1 (BeaconcryptCore.Computational.RawCtxInitialChildSecrecy.parts second output).2] =
-        𝒮[do
-          let other ← $ᵗ BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput
-          let target ← $ᵗ BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput
-          next other target] :=
-  by simpa only [BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq] using @BeaconcryptCore.Computational.RawCtxInitialChildSecrecy.parts_observed
-
 noncomputable def sample {Context : Type} (prior : ProbComp Context) (second : Context → Bool) :
     ProbComp ((Context × RootOutput) × RootOutput) := do
   let context ← prior
@@ -61,10 +50,6 @@ theorem joint_separated {Context : Type} (prior : ProbComp Context) (second : Co
   simpa only [joint, RawCtxFullPreimageTester.byteSampler, sample, separated, map_bind, map_pure] using
     EvalDistEq.bind_right prior (fun context => parts_observed (second context)
       (fun other target => pure ((context, other), target.toList)))
-
-set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.RawCtxInitialChildSecrecy.joint_separated_vcvioLegacy :
-    ∀ {Context : Type} (prior : ProbComp Context) (second : Context → Bool), 𝒮[BeaconcryptCore.Computational.RawCtxInitialChildSecrecy.joint prior second] = 𝒮[BeaconcryptCore.Computational.RawCtxInitialChildSecrecy.separated prior] :=
-  by simpa only [BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq] using @BeaconcryptCore.Computational.RawCtxInitialChildSecrecy.joint_separated
 
 noncomputable def actual {Context : Type} (source : FixedHkdfSha512NoSaltSource)
     (prior : ProbComp Context) (second : Context → Bool) (observe : FullObserver (Context × RootOutput)) : ProbComp Bool := do

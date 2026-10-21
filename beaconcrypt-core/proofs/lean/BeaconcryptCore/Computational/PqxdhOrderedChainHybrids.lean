@@ -104,17 +104,6 @@ theorem fullOutput_observed {A : Type} (continuation : Material → RootOutput �
   have observed := materialChain_uniform.bind_left fun pair => continuation pair.1 pair.2
   simpa only [bind_map_left, ← pairSample, bind_assoc, pure_bind] using observed
 
-set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.fullOutput_observed_vcvioLegacy :
-    ∀ {A : Type} (continuation : BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.Material → BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput → ProbComp A),
-      𝒮[do
-          let output ← $ᵗ BeaconcryptCore.Computational.PqxdhFullSecretInputKdf.FullOutput
-          continuation (BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.material output) (BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.nextChain output)] =
-        𝒮[do
-          let record ← $ᵗ BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.Material
-          let chain ← $ᵗ BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput
-          continuation record chain] :=
-  by simpa only [BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq] using @BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.fullOutput_observed
-
 /-- The independent full-output hop is precisely the next ordered hybrid. -/
 theorem independentHop_eq_hybrid {Context : Type} (source : FixedHkdfSha512NoSaltSource)
     (sample : ProbComp Context) (observer : EvolutionObserver Context) (cut remaining : Nat) :

@@ -53,15 +53,13 @@ theorem actual_mixture :
   calc
     _ = 𝒟[RawCtxSupportedSample.sum prior >>= fun context => ($ᵗ HmacBlock) >>=
       observation source writer sender route decode depth remaining false (Sum.map id Subtype.val context)] := by
-      apply evalDist_eq_of_evalSPMF_eq
-      apply evalSPMF_bind_congr' (RawCtxSupportedSample.sum prior)
-      intro context
-      apply evalSPMF_bind_congr' ($ᵗ HmacBlock)
-      intro output
+      apply EvalDistEq.evalDist_eq
+      refine EvalDistEq.bind_right (RawCtxSupportedSample.sum prior) fun context => ?_
+      refine EvalDistEq.bind_right ($ᵗ HmacBlock) fun output => ?_
       cases context with
       | inl decision =>
         simp only [pure_bind, PqxdhInitialSampledParent.native, observation, Sum.map_inl, id_eq]
-        exact OracleComp.DeferredSampling.evalSPMF_bind_const_neverFails ($ᵗ FullOutput) (by simp) (pure decision)
+        exact OracleComp.EvalDistEq.bind_const ($ᵗ FullOutput) (pure decision)
       | inr input =>
         simp only [bind_assoc, pure_bind, Sum.map_inr, observation, localModel, Bool.false_eq_true, ite_false,
           PqxdhInitialSampledParent.native, PqxdhInitialSampledParent.address]
@@ -80,16 +78,14 @@ theorem random_mixture :
   calc
     _ = 𝒟[RawCtxSupportedSample.sum prior >>= fun context => ($ᵗ HmacBlock) >>=
       observation source writer sender route decode depth remaining true (Sum.map id Subtype.val context)] := by
-      apply evalDist_eq_of_evalSPMF_eq
-      apply evalSPMF_bind_congr' (RawCtxSupportedSample.sum prior)
-      intro context
-      apply evalSPMF_bind_congr' ($ᵗ HmacBlock)
-      intro output
+      apply EvalDistEq.evalDist_eq
+      refine EvalDistEq.bind_right (RawCtxSupportedSample.sum prior) fun context => ?_
+      refine EvalDistEq.bind_right ($ᵗ HmacBlock) fun output => ?_
       cases context with
       | inl decision =>
         simp only [pure_bind, PqxdhInitialSampledParent.native, observation, Sum.map_inl, id_eq]
-        rw [OracleComp.DeferredSampling.evalSPMF_bind_const_neverFails ($ᵗ FullOutput) (by simp)]
-        exact OracleComp.DeferredSampling.evalSPMF_bind_const_neverFails ($ᵗ FullOutput) (by simp) (pure decision)
+        exact (OracleComp.EvalDistEq.bind_const ($ᵗ FullOutput) _).trans
+          (OracleComp.EvalDistEq.bind_const ($ᵗ FullOutput) (pure decision))
       | inr input =>
         simp only [bind_assoc, pure_bind, Sum.map_inr, observation, localModel, ite_true,
           PqxdhInitialSampledParent.native, PqxdhInitialSampledParent.address]
@@ -171,7 +167,7 @@ theorem local_random (start : Start extra M P I D K X Response A N S B) (qPost :
     start.1.selected start.1.number start.1.ancestors start.1.disclosed start.1.shared start.1.privateState start.1.cache depth qPost bounded
   have front : ENNReal.ofReal ((sourceGame source writer sender route decode start.1 zeroRoot (response start) (depth + 2)).boolDistAdvantage normalized) ≤
       ∑ j ∈ Finset.range (7 + qPost * 67), ((j + 1 : Nat) : ENNReal) * (2 ^ 256 : ENNReal)⁻¹ := by
-    simpa only [ProbComp.boolDistAdvantage, evalDist_apply_singleton] using
+    simpa only [ProbComp.boolDistAdvantage, VCVioLegacy.evalDist_singleton_eq_probOutput] using
       (ENNReal.ofReal_le_ofReal (abs_probOutput_toReal_sub_le_tvDist
         (sourceGame source writer sender route decode start.1 zeroRoot (response start) (depth + 2)) normalized)).trans normal
   have triangle := ENNReal.ofReal_le_ofReal (ProbComp.boolDistAdvantage_triangle

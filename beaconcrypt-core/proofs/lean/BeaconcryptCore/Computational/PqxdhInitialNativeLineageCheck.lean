@@ -204,21 +204,22 @@ theorem appended_uniform (source : FixedHkdfSha512NoSaltSource)
     (missing : table (cursorAddress cursor) = none)
     (published : ∀ result ∈ support ((simulateQ (handler source (cursor.depth + 1) other) client).run (state, (table, cursor))),
       gate result.1 = true → ∃ path, RawCtxCursorLineage.walk result.2.2.1 (n + 1) root = some path) :
-    𝒮[(fun result => ((result.1, if gate result.1 then some
+    EvalDistEq ((fun result => ((result.1, if gate result.1 then some
       (trace nativeKey (RawCtxPublishedLineage.step (view (productionStream source.crypto) result.2.2.1)) n
         (RawCtxFreshChainCut.concreteChain root)) else none), result.2.1)) <$>
-      (simulateQ (handler source (cursor.depth + 1) other) client).run (state, (table, cursor))] =
-    𝒮[($ᵗ FullOutput) >>= fun output =>
+      (simulateQ (handler source (cursor.depth + 1) other) client).run (state, (table, cursor)))
+      (($ᵗ FullOutput) >>= fun output =>
       let prior := view (productionStream source.crypto) (table.cacheQuery (cursorAddress cursor) output)
       (fun result => ((result.1, if gate result.1 then some
         (trace nativeKey (RawCtxPublishedLineage.step prior) n (RawCtxFreshChainCut.concreteChain root))
         else none), result.2)) <$>
-        (simulateQ (RawCtxRetainedTable.viewImpl prior other) client).run state] := by
+        (simulateQ (RawCtxRetainedTable.viewImpl prior other) client).run state) := by
   rw [← appended_cached source (cursor.depth + 1) other client gate n root (state, (table, cursor)) published]
-  rw [RawCtxSelectiveSingleDraw.single_uniform_vcvioLegacy source other (appended client gate n root) state table cursor missing]
-  exact evalSPMF_bind_congr' ($ᵗ FullOutput) (fun output => congrArg evalSPMF
-    (appended_retained (view (productionStream source.crypto) (table.cacheQuery (cursorAddress cursor) output))
-      other client gate n root state))
+  refine (RawCtxSelectiveSingleDraw.single_uniform source other (appended client gate n root) state table cursor
+    missing).trans ?_
+  exact EvalDistEq.bind_right ($ᵗ FullOutput) (fun output => by
+    rw [appended_retained (view (productionStream source.crypto) (table.cacheQuery (cursorAddress cursor) output))
+      other client gate n root state])
 
 /-- The analysis continuation explicitly reserves its full finite checker after the original client, under every possible callback reply. -/
 theorem appended_queries (client : OracleComp (spec + JointKdfRO) Result) (gate : Result → Bool)
@@ -257,17 +258,17 @@ theorem logged_uniform (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
     (published : ∀ result ∈ support ((simulateQ (PqxdhInitialNativeLog.handler source writer
         (state.1.1.2.2.depth + 1) external) client).run state),
       gate result.1 = true → ∃ path, RawCtxCursorLineage.walk result.2.1.1.2.1 (n + 1) root = some path) :
-    𝒮[(fun result => ((result.1, if gate result.1 then some
+    EvalDistEq ((fun result => ((result.1, if gate result.1 then some
       (trace nativeKey (RawCtxPublishedLineage.step (view (productionStream source.crypto) result.2.1.1.2.1)) n
         (RawCtxFreshChainCut.concreteChain root)) else none), PqxdhInitialNativeRetained.project result.2)) <$>
-      (simulateQ (PqxdhInitialNativeLog.handler source writer (state.1.1.2.2.depth + 1) external) client).run state] =
-    𝒮[($ᵗ FullOutput) >>= fun output =>
+      (simulateQ (PqxdhInitialNativeLog.handler source writer (state.1.1.2.2.depth + 1) external) client).run state)
+      (($ᵗ FullOutput) >>= fun output =>
       let prior := view (productionStream source.crypto) (state.1.1.2.1.cacheQuery (cursorAddress state.1.1.2.2) output)
       (fun result => ((result.1, if gate result.1 then some
         (trace nativeKey (RawCtxPublishedLineage.step prior) n (RawCtxFreshChainCut.concreteChain root))
         else none), result.2)) <$>
         (simulateQ (PqxdhInitialNativeRetained.retained source writer prior external) client).run
-          (PqxdhInitialNativeRetained.project state)] := by
+          (PqxdhInitialNativeRetained.project state)) := by
   have same := logged_flat source writer (state.1.1.2.2.depth + 1) external client state
   have cachedSource : ∀ result ∈ support ((simulateQ
       (handler source (state.1.1.2.2.depth + 1) (PqxdhInitialNativeChildDraw.other source writer external))

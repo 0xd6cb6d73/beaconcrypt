@@ -107,14 +107,6 @@ theorem single_uniform {ι State Result : Type} {spec : OracleSpec ι}
         simpa only [future] using ih (view (productionStream source.crypto) cache request) state
           (cache.cacheQuery request (view (productionStream source.crypto) cache request)) cursor stillMissing
 
-set_option linter.deprecated false in set_option linter.unusedVariables false in theorem _root_.BeaconcryptCore.Computational.RawCtxSelectiveSingleDraw.single_uniform_vcvioLegacy :
-    ∀ {ι State Result : Type} {spec : OracleSpec ι} (source : BeaconcryptCore.Computational.PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) (other : QueryImpl spec (StateT State ProbComp)) (client : OracleComp (spec + BeaconcryptCore.Computational.PqxdhJointKdf.JointKdfRO) Result) (state : State) (cache : BeaconcryptCore.Computational.RawCtxKdfRequestTable.Table) (cursor : BeaconcryptCore.Computational.RawCtxSelectiveChainGame.Cursor) (missing : cache (BeaconcryptCore.Computational.RawCtxSelectiveChainGame.cursorAddress cursor) = Option.none),
-      𝒮[(fun (result : Result × State × BeaconcryptCore.Computational.RawCtxSelectiveChainGame.Store) => (result.1, result.2.1)) <$> (simulateQ (BeaconcryptCore.Computational.RawCtxSelectiveChainGame.handler source (cursor.depth + 1) other) client).run (state, cache, cursor)] =
-        𝒮[do
-          let output ← $ᵗ BeaconcryptCore.Computational.PqxdhFullSecretInputKdf.FullOutput
-          (simulateQ (BeaconcryptCore.Computational.RawCtxRetainedTable.viewImpl (BeaconcryptCore.Computational.RawCtxSelectedParentTable.view (BeaconcryptCore.Computational.PqxdhJointKdf.productionStream source.crypto) (OracleSpec.QueryCache.cacheQuery cache (BeaconcryptCore.Computational.RawCtxSelectiveChainGame.cursorAddress cursor) output)) other) client).run state] :=
-  by simpa only [BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq] using @BeaconcryptCore.Computational.RawCtxSelectiveSingleDraw.single_uniform
-
 noncomputable def early {ι State Result : Type} {spec : OracleSpec ι}
     (source : FixedHkdfSha512NoSaltSource) (other : QueryImpl spec (StateT State ProbComp))
     (client : OracleComp (spec + JointKdfRO) Result) (state : State) (cache : Table) (target : JointKdfAddress) :

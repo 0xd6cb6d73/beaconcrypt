@@ -1536,7 +1536,7 @@ theorem initializerSharedRoot_independentRoot_advantage_le
         (initializerIndependentRootGame baseImpl kem adversary bounds) ≤
       tvDist (initializerSharedRootGame baseImpl kem adversary bounds)
         (initializerIndependentRootGame baseImpl kem adversary bounds) by
-      simpa [ProbComp.boolDistAdvantage] using houtput).trans
+      simpa only [ProbComp.boolDistAdvantage, VCVioLegacy.evalDist_singleton_eq_probOutput] using houtput).trans
     (tvDist_initializerSharedRoot_independentRoot_le baseImpl kem adversary
       bounds)
 

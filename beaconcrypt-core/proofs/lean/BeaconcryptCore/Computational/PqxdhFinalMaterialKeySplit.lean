@@ -16,14 +16,24 @@ theorem reconstruct (output : FullOutput) :
 
 /-- The exact source continuation, including final private-state checks, is preserved after the selected message-key draw is placed last. -/
 theorem complete {Result : Type} (continuation : FullOutput → ProbComp Result) :
-    𝒮[($ᵗ FullOutput) >>= continuation] =
-      𝒮[(do let nonce ← $ᵗ NonceOutput
-             let chain ← $ᵗ RootOutput
-             let key ← $ᵗ RootOutput
-             continuation (materialChainEquiv.symm ((key, nonce), chain)))] := by
-  have same := RawCtxSelectedMessageKey.key_observed_vcvioLegacy
+    EvalDistEq (($ᵗ FullOutput) >>= continuation)
+      (do let nonce ← $ᵗ NonceOutput
+          let chain ← $ᵗ RootOutput
+          let key ← $ᵗ RootOutput
+          continuation (materialChainEquiv.symm ((key, nonce), chain))) := by
+  have same := RawCtxSelectedMessageKey.key_observed
     (fun key nonce chain => continuation (materialChainEquiv.symm ((key, nonce), chain)))
   simpa only [reconstruct] using same
+
+set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.PqxdhFinalMaterialKeySplit.complete_vcvioLegacy :
+    ∀ {Result : Type} (continuation : BeaconcryptCore.Computational.PqxdhFullSecretInputKdf.FullOutput → ProbComp Result),
+      𝒮[$ᵗ BeaconcryptCore.Computational.PqxdhFullSecretInputKdf.FullOutput >>= continuation] =
+        𝒮[do
+          let nonce ← $ᵗ BeaconcryptCore.Computational.PqxdhFullSecretInputKdf.NonceOutput
+          let chain ← $ᵗ BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput
+          let key ← $ᵗ BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput
+          continuation (BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.materialChainEquiv.symm ((key, nonce), chain))] :=
+  by simpa only [BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq] using @BeaconcryptCore.Computational.PqxdhFinalMaterialKeySplit.complete
 
 end BeaconcryptCore.Computational.PqxdhFinalMaterialKeySplit
 

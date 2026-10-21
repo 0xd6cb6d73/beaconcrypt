@@ -46,10 +46,6 @@ theorem bind_bound {Context : Type} (sample : ProbComp Context)
     ← prEvent_eq_evalDist_singleton (sample >>= right) true]
   exact abs_le.mpr ⟨by linarith, by linarith⟩
 
-set_option linter.deprecated false in set_option linter.unusedVariables false in theorem _root_.BeaconcryptCore.Computational.RawCtxBadEventMixture.bind_bound_vcvioLegacy :
-    ∀ {Context : Type} (sample : ProbComp Context) (left right bad : Context → ProbComp Bool) (bound : ∀ (context : Context), (left context).boolDistAdvantage (right context) ≤ Pr[= Bool.true | bad context].toReal), (sample >>= left).boolDistAdvantage (sample >>= right) ≤ Pr[= Bool.true | sample >>= bad].toReal :=
-  by simpa only [BeaconcryptCore.VCVioLegacy.probOutput_eq_prEvent] using @BeaconcryptCore.Computational.RawCtxBadEventMixture.bind_bound
-
 end BeaconcryptCore.Computational.RawCtxBadEventMixture
 /-- info: 'BeaconcryptCore.Computational.RawCtxBadEventMixture.local_probability' depends on axioms: [propext,
  Classical.choice,

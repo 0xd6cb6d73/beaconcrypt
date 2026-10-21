@@ -331,7 +331,7 @@ theorem hb111_instance :
       ∃ output, result.1.map PqxdhPrivateRootSource.eraseOutput = some output ∧
         PqxdhProtocolServerInvariant.RootFields toyEnv.source.crypto (fun _ => toyServer.ikSk) toyEnv.senderId
           toyEnv.index toyEnv.server output.context.selection.2 :=
-  PqxdhAuthenticatedRootBudgets.authenticated_native_root_bound toyEnv baseImpl toyKem toyAttachedVerify toyPrimitives
+  PqxdhAuthenticatedRootBudgets.authenticated_native_root_bound_vcvioLegacy toyEnv baseImpl toyKem toyAttachedVerify toyPrimitives
     toyProgram toyPost toyCertificate toy_compatible toy_adapter toyFunctional toyHmac toy_root_correct
     toyDynamicFallback toyOrdinaryFallback (fun _ => toyServer.ikSk) toy_root_fields
 

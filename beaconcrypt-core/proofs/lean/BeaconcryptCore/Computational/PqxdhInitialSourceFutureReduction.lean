@@ -56,7 +56,7 @@ local notation "V" => sampleBudget qPost qPre qApplication qSelector qAux
 
 /-- The actual future candidate event with a real child pays the exact joint-sampler tester endpoints; no candidate independence from that child is assumed. -/
 theorem source_bound (hmac : HmacSha512) (correct : SourceFullCorrect source hmac) :
-    Pr[= true | PqxdhInitialFutureInputReduction.realFuture source writer mark sender route decode sourceView sourceSample sourceAddress] ≤
+    Pr{let x ← PqxdhInitialFutureInputReduction.realFuture source writer mark sender route decode sourceView sourceSample sourceAddress}[x = true] ≤
       2 * ((2 ^ 352 : ENNReal)⁻¹ + ENNReal.ofReal (PqxdhInitialFutureInputReduction.testerLoss
         source writer mark sender route decode sourceView hmac sourceSample sourceAddress)) := by
   exact PqxdhInitialFutureInputReduction.real_bound source writer mark sender route decode sourceView hmac correct sourceSample sourceAddress

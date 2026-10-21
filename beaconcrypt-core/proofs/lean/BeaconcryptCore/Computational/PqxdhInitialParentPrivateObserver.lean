@@ -70,9 +70,8 @@ theorem distance (reader : RawCtxSelectedLiveTrace.Reader) (target : RootOutput)
     (state : (State A N C × List RootOutput) × Bool) :
     tvDist ((simulateQ (PqxdhInitialParentObserver.observed source writer prior entry output pre application initial selector aux reader) client).run state)
       ((simulateQ (observed source writer prior entry output pre application initial selector aux reader target) client).run state) ≤
-      Pr[fun result => target ∈ result.2.1.2 |
-        (simulateQ (PqxdhInitialParentObserver.observed source writer prior entry output pre application initial selector aux reader) client).run state].toReal :=
-  RawCtxFlaggedQueryTrace.distance_vcvioLegacy
+      Pr{let result ← (simulateQ (PqxdhInitialParentObserver.observed source writer prior entry output pre application initial selector aux reader) client).run state}[target ∈ result.2.1.2].toReal :=
+  RawCtxFlaggedQueryTrace.distance
     (PqxdhInitialParentObserver.handler source writer prior entry output pre application initial selector aux reader)
     (alternate source writer prior entry output pre application initial selector aux reader)
     inputs direct target client state
@@ -101,13 +100,11 @@ theorem query_safe (target : RootOutput) (query : (Spec extra I D K X Response S
 theorem event_good (target : RootOutput) (client : OracleComp (Spec extra I D K X Response Shared) Result)
     (state : (State A N C × List RootOutput) × Bool)
     (event : Result × ((State A N C × List RootOutput) × Bool) → Prop) :
-    Pr[fun result => event result ∧ result.2.2 = false |
-      (simulateQ (observed source writer prior entry output pre application initial selector aux
-        (RawCtxSelectedLiveTrace.nativeReader (RawCtxFreshChainCut.concreteChain target)) target) client).run state] =
-      Pr[fun result => event result ∧ result.2.2 = false |
-        (simulateQ (observed source writer prior entry output pre application initial selector aux
-          RawCtxSelectedLiveRead.labelRead target) client).run state] :=
-  RawCtxFlaggedQueryAgreement.event_good_vcvioLegacy _ _ inputs direct
+    Pr{let result ← ((simulateQ (observed source writer prior entry output pre application initial selector aux
+        (RawCtxSelectedLiveTrace.nativeReader (RawCtxFreshChainCut.concreteChain target)) target) client).run state)}[event result ∧ result.2.2 = false] =
+      Pr{let result ← ((simulateQ (observed source writer prior entry output pre application initial selector aux
+          RawCtxSelectedLiveRead.labelRead target) client).run state)}[event result ∧ result.2.2 = false] :=
+  RawCtxFlaggedQueryAgreement.event_good _ _ inputs direct
     (query_safe source writer prior entry output pre application initial selector aux target) client state event
 
 /-- Away from the explicit parent-input collision, partial routing is exactly the patched private interpreter with every original initializer and external reply unchanged. -/

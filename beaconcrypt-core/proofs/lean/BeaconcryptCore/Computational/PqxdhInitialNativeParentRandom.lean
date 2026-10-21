@@ -102,7 +102,7 @@ theorem source_random (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMix
     intro result reached good
     obtain ⟨earlier, input, walked⟩ := published result reached (of_decide_eq_true good)
     exact ⟨(earlier, input), by simpa only [Nat.sub_add_cancel (by omega : 1 ≤ number.val)] using walked⟩
-  have equality := evalSPMF_map_eq_of_evalSPMF_eq
+  have equality := EvalDistEq.map
     (PqxdhInitialNativeLineageCheck.logged_uniform source writer external client gate (number.val - 1) root state missing cached)
     observe
   simp only [Functor.map_map, map_bind] at equality
@@ -117,7 +117,7 @@ theorem source_random (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMix
     · simp only [observe, gate, good, decide_true, ite_true, retainedDecision, RawCtxPublishedLineage.lineage]
     · simp only [observe, gate, good, decide_false, Bool.false_eq_true, ite_false, retainedDecision, false_and, decide_false]
   simp only [observed] at equality
-  exact evalDist_eq_of_evalSPMF_eq _ _ equality
+  exact equality.evalDist_eq
 
 /-- The original selected parent response advances the source cursor to the exact native child address. -/
 theorem child_cursor (state : State A N C) (address : JointKdfAddress) (parent : FullOutput)
@@ -247,12 +247,12 @@ theorem frame_random
       (PqxdhInitialParentBuilderContext.reply sender route decode context.original parent)) state
     (PqxdhInitialBuilderContext.address context.original) parent missing matching childMissing separate root earlier walked
     selected number remaining position ancestors disclosed published]
-  apply evalDist_eq_of_evalSPMF_eq
-  apply evalSPMF_bind_congr' ($ᵗ FullOutput)
-  intro output
+  apply EvalDistEq.evalDist_eq
+  refine EvalDistEq.bind_right ($ᵗ FullOutput) fun output => ?_
   rw [PqxdhInitialNativeParentChild.retained_compiled source writer pre application initial selector aux
     mark sender route decode context parent output state separate]
   simp only [Functor.map_map]
+  exact EvalDistEq.rfl
 
 include missing matching separate walked position in
 /-- The complete real source continuation uses the same original publication/freshness decision as the actual partial-routing observer. -/

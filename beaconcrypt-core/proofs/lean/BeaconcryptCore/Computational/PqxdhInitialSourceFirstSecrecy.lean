@@ -41,15 +41,14 @@ theorem actual_source (prior : ProbComp (Context extra M P I D K X Response A N 
   cases context with
   | inl decision =>
       simp only [PqxdhInitialSourceSampled.observe, PqxdhInitialHalfSecrecy.native]
-      apply evalDist_eq_of_evalSPMF_eq
-      exact (OracleComp.ProgramLogic.Relational.evalSPMF_bind_const_of_no_failure ($ᵗ HmacBlock) (pure decision)).trans
-        (OracleComp.ProgramLogic.Relational.evalSPMF_bind_const_of_no_failure ($ᵗ FullOutput) (pure decision)).symm
+      exact ((OracleComp.EvalDistEq.bind_const ($ᵗ HmacBlock) (pure decision)).trans
+        (OracleComp.EvalDistEq.bind_const ($ᵗ FullOutput) (pure decision)).symm).evalDist_eq
   | inr input =>
-      have sampled := initial_observed_vcvioLegacy (second input.selected) (fun other target =>
+      have sampled := initial_observed (second input.selected) (fun other target =>
         PqxdhInitialSourceInitialSecrecy.sourceGame source writer sender route decode input zeroRoot
           (RawCtxSelectedInitialConstructor.response64 (join (second input.selected) other target)) 0)
       simp only [join_parts] at sampled
-      refine (evalDist_eq_of_evalSPMF_eq _ _ sampled).trans ?_
+      refine sampled.evalDist_eq.trans ?_
       apply evalDist_bind_congr
       intro output
       simpa only [address, RawCtxSelectedParentEntry.fromOutput, RawCtxInitialSentinel.entry, RawCtxInitialSentinel.sentinel,
@@ -69,17 +68,15 @@ theorem random_source (prior : ProbComp (Context extra M P I D K X Response A N 
   cases context with
   | inl decision =>
       simp only [PqxdhInitialSourceSampled.observe, PqxdhInitialHalfSecrecy.native]
-      apply evalDist_eq_of_evalSPMF_eq
-      exact (OracleComp.ProgramLogic.Relational.evalSPMF_bind_const_of_no_failure ($ᵗ HmacBlock) (pure decision)).trans
-        ((OracleComp.ProgramLogic.Relational.evalSPMF_bind_const_of_no_failure ($ᵗ FullOutput)
-          (($ᵗ FullOutput) >>= fun _ => pure decision)).trans
-          (OracleComp.ProgramLogic.Relational.evalSPMF_bind_const_of_no_failure ($ᵗ FullOutput) (pure decision))).symm
+      exact ((OracleComp.EvalDistEq.bind_const ($ᵗ HmacBlock) (pure decision)).trans
+        ((OracleComp.EvalDistEq.bind_const ($ᵗ FullOutput) (($ᵗ FullOutput) >>= fun _ => pure decision)).trans
+          (OracleComp.EvalDistEq.bind_const ($ᵗ FullOutput) (pure decision))).symm).evalDist_eq
   | inr input =>
-      have sampled := initial_observed_vcvioLegacy (second input.selected) (fun other target =>
+      have sampled := initial_observed (second input.selected) (fun other target =>
         PqxdhInitialSourceInitialSecrecy.sourceGame source writer sender route decode input zeroRoot
           (RawCtxSelectedInitialConstructor.response64 (join (second input.selected) other target)) 1)
       simp only [join_parts] at sampled
-      refine (evalDist_eq_of_evalSPMF_eq _ _ sampled).trans ?_
+      refine sampled.evalDist_eq.trans ?_
       apply evalDist_bind_congr
       intro output
       exact random_native source writer sender route decode input (positive input supported)

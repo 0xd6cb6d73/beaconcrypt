@@ -114,9 +114,8 @@ theorem distance (fixed : FixedHkdfSha512NoSaltSource) (selected : Message) (tar
     tvDist ((simulateQ (traced fixed) (simulateQ (compiler selected response) client)).run state)
       ((simulateQ (RawCtxSelectedQueryTrace.recorded (consistent fixed target response) inputs)
         (simulateQ (compiler selected response) client)).run state) ≤
-      Pr[fun result => target ∈ result.2.2 |
-        (simulateQ (traced fixed) (simulateQ (compiler selected response) client)).run state].toReal :=
-  RawCtxSelectedAliasInitial.recorded_distance_initial_vcvioLegacy (handler fixed) (alternate fixed response) inputs target _ state
+      Pr{let result ← (simulateQ (traced fixed) (simulateQ (compiler selected response) client)).run state}[target ∈ result.2.2].toReal :=
+  RawCtxSelectedAliasInitial.recorded_distance_initial (handler fixed) (alternate fixed response) inputs target _ state
 
 def IsInitializer (query : PqxdhInitialLabelCompiler.Spec.Domain) : Prop := query.isRight = true
 def IsEvaluation : Expanded.Domain → Prop

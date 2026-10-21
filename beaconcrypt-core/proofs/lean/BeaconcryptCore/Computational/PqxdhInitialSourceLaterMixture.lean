@@ -17,21 +17,23 @@ variable {ι M P I D K X Response A N : Type} {extra : OracleSpec ι} {S B : Nat
 theorem supported_event_bound {Context : Type} (sampler : ProbComp Context)
     (left right : Context → ProbComp Bool) (bad : Context → Prop)
     (agree : ∀ context ∈ support sampler, ¬ bad context → 𝒟[left context] = 𝒟[right context]) :
-    ENNReal.ofReal ((sampler >>= left).boolDistAdvantage (sampler >>= right)) ≤ Pr[bad | sampler] := by
+    ENNReal.ofReal ((sampler >>= left).boolDistAdvantage (sampler >>= right)) ≤ Pr{let x ← sampler}[bad x] := by
   let annotation := RawCtxSupportedSample.certify sampler (fun context => context ∈ support sampler) (fun _ supported => supported)
   have bound := ofReal_tvDist_bind_left_event_le annotation (fun context => left context.val) (fun context => right context.val)
     (fun context => bad context.val) (fun context good =>
-      evalSPMF_eq_of_evalDist_eq _ _ (agree context.val context.property good))
+      (VCVioLegacy.evalSPMF_eq_iff_evalDistEq _ _).2 (EvalDistEq.of_evalDist_eq (agree context.val context.property good)))
   have erased : Subtype.val <$> annotation = sampler := RawCtxSupportedSample.erase sampler _ _
   have leftSame : (annotation >>= fun context => left context.val) = sampler >>= left := RawCtxSupportedSample.run sampler _ _ left
   have rightSame : (annotation >>= fun context => right context.val) = sampler >>= right := RawCtxSupportedSample.run sampler _ _ right
   rw [leftSame, rightSame] at bound
-  have probability : Pr[fun context => bad context.val | annotation] = Pr[bad | sampler] := by
-    simpa only [probEvent_map, Function.comp_def] using
-      congrArg (fun work : ProbComp Context => Pr[bad | work]) erased
-  rw [probability] at bound
-  simpa only [ProbComp.boolDistAdvantage, evalDist_apply_singleton] using
-    (ENNReal.ofReal_le_ofReal (abs_probOutput_toReal_sub_le_tvDist (sampler >>= left) (sampler >>= right))).trans bound
+  have probability : Pr{let context ← annotation}[bad context.val] = Pr{let x ← sampler}[bad x] := by
+    have mapped := prEvent_map annotation Subtype.val bad
+    rw [erased] at mapped
+    exact mapped.symm
+  have bridged := bound.trans ((VCVioLegacy.probEvent_eq_prEvent annotation fun context => bad context.val).le.trans
+    probability.le)
+  simpa only [ProbComp.boolDistAdvantage, VCVioLegacy.evalDist_singleton_eq_probOutput] using
+    (ENNReal.ofReal_le_ofReal (abs_probOutput_toReal_sub_le_tvDist (sampler >>= left) (sampler >>= right))).trans bridged
 
 variable (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
   (selectedMessage : Message) (previousRoot : RootOutput) (response64 : PqxdhInitialRootLabelService.Response)
@@ -83,14 +85,13 @@ theorem resumed_prepared (stage : Nat) (afterDepth : depth < stage) :
     𝒟[sourceSample >>= fun context => ($ᵗ FullOutput) >>= continuation stage context] =
     𝒟[PqxdhInitialPreparedParent.prepare source writer (pre other) (application other) initial (selector other) (aux other)
       mark sender route decode observation execution depth state >>= resume stage] := by
-  apply evalDist_eq_of_evalSPMF_eq
+  apply EvalDistEq.evalDist_eq
   rw [← PqxdhInitialPreparedResources.sample_run source writer (pre other) (application other) initial (selector other) (aux other)
     mark sender route decode observation execution depth state (resume stage)]
-  apply evalSPMF_bind_congr
-  intro context supported
+  refine OracleComp.EvalDistEq.bind_congr_of_support _ fun context supported => ?_
   cases context with
   | inl decision =>
-    exact OracleComp.DeferredSampling.evalSPMF_bind_const_neverFails ($ᵗ FullOutput) (by simp) (pure decision)
+    exact OracleComp.EvalDistEq.bind_const ($ᵗ FullOutput) (pure decision)
   | inr input =>
     have original : Sum.inr input.val ∈ support
         (PqxdhInitialPreparedParent.prepare source writer (pre other) (application other) initial (selector other) (aux other)
@@ -104,8 +105,7 @@ theorem resumed_prepared (stage : Nat) (afterDepth : depth < stage) :
     simp only [Sum.map_inr, PqxdhInitialPreparedParent.resume, PqxdhInitialPreparedParent.finish,
       PqxdhInitialNativeAdjacent.continued, RawCtxForwardScan.pack, RawCtxPendingMixedPrefix.finish,
       drawn, bind_map_left, bind_assoc]
-    apply evalSPMF_bind_congr' ($ᵗ FullOutput)
-    intro parent
+    refine EvalDistEq.bind_right ($ᵗ FullOutput) fun parent => ?_
     unfold resumed PqxdhInitialSourceLaterEndpoints.afterParent PqxdhInitialSourcePreparedSecrecy.observe
     rw [bind_pure_comp]
 
@@ -147,19 +147,28 @@ local notation "badEvent" => bad source writer selectedMessage previousRoot resp
 
 /-- The same full parent sampler charges the entire prior private-input list and current parent address with its exact source callback allowance. -/
 theorem collision_bound (qPost : Nat) (bounded : ∀ reply, (post reply).IsTotalQueryBound qPost) :
-    Pr[badEvent | parentSample] ≤ ((8 + qPost * 67 : Nat) : ENNReal) * (2 ^ 256 : ENNReal)⁻¹ := by
+    Pr{let x ← parentSample}[badEvent x] ≤ ((8 + qPost * 67 : Nat) : ENNReal) * (2 ^ 256 : ENNReal)⁻¹ := by
   have bound := PqxdhInitialPreparedRisk.collision_bound source writer (pre other) (application other) initial (selector other) (aux other)
     mark sender route decode execution depth state observation qPost bounded
-  simpa only [parents, bad, PqxdhInitialSourcePreparedSecrecy.sample,
-    RawCtxSelectedParentCandidates.sample, bind_pure_comp, probEvent_bind_eq_tsum, probEvent_map, Function.comp_def,
-    PqxdhInitialSourceExperiment.initialState, List.length_nil, Nat.zero_add, show 7 + qPost * 67 + 1 = 8 + qPost * 67 by omega] using bound
+  have bindCongr : ∀ {α β γ : Type} (first : ProbComp α) (f : α → ProbComp β) (g : α → ProbComp γ)
+      (p : β → Prop) (q : γ → Prop), (∀ a, Pr{let x ← f a}[p x] = Pr{let y ← g a}[q y]) →
+        Pr{let x ← first >>= f}[p x] = Pr{let y ← first >>= g}[q y] :=
+    fun first f g p q same => prEvent_bind_congr first f g p q same
+  refine (le_of_eq ?_).trans (bound.trans_eq ?_)
+  · unfold parents RawCtxSelectedParentCandidates.sample PqxdhInitialSourcePreparedSecrecy.sample
+    refine bindCongr _ _ _ _ _ fun context => ?_
+    generalize ($ᵗ FullOutput : ProbComp FullOutput) = block
+    rw [bind_pure_comp _ block, bind_pure_comp _ block, prEvent_map, prEvent_map]
+    exact prEvent_congr _ _ _ fun _ => Iff.rfl
+  · simp only [PqxdhInitialSourceExperiment.initialState, List.length_nil, Nat.zero_add,
+      show 7 + qPost * 67 + 1 = 8 + qPost * 67 by omega]
 
 /-- The same original earlier source game differs from its constructed cryptographic observer by at most one explicitly counted prior-input collision event. -/
 theorem real_bound (position : number.val = (depth + 1) + remaining + 1) :
     ENNReal.ofReal ((sourceSample >>= fun context => ($ᵗ FullOutput) >>= continuation (depth + 1) context).boolDistAdvantage
       (PqxdhInitialSourcePreparedSecrecy.actual source writer selectedMessage previousRoot response64 other sender route decode
         index metadata ready post before selected number ancestors disclosed shared privateState cache depth remaining)) ≤
-      Pr[badEvent | parentSample] := by
+      Pr{let x ← parentSample}[badEvent x] := by
   have bound := supported_event_bound parentSample
     (fun pair => continuation (depth + 1) pair.1 pair.2)
     (fun pair => PqxdhInitialCommonSecrecy.native source writer mark sender route decode sourceView
@@ -185,7 +194,7 @@ theorem random_bound (position : number.val = (depth + 1) + remaining + 1) :
     ENNReal.ofReal ((sourceSample >>= fun context => ($ᵗ FullOutput) >>= continuation (depth + 2) context).boolDistAdvantage
       (PqxdhInitialSourcePreparedSecrecy.random source writer selectedMessage previousRoot response64 other sender route decode
         index metadata ready post before selected number ancestors disclosed shared privateState cache depth remaining)) ≤
-      Pr[badEvent | parentSample] := by
+      Pr{let x ← parentSample}[badEvent x] := by
   have bound := supported_event_bound parentSample
     (fun pair => continuation (depth + 2) pair.1 pair.2)
     (fun pair => ($ᵗ FullOutput) >>= fun output => PqxdhInitialCommonSecrecy.native source writer mark sender route decode sourceView
@@ -199,8 +208,7 @@ theorem random_bound (position : number.val = (depth + 1) + remaining + 1) :
           exact same ▸ reached
         cases context with
         | inl decision =>
-          apply evalDist_eq_of_evalSPMF_eq
-          exact (OracleComp.DeferredSampling.evalSPMF_bind_const_neverFails ($ᵗ FullOutput) (by simp) (pure decision)).symm
+          exact (OracleComp.EvalDistEq.bind_const ($ᵗ FullOutput) (pure decision)).symm.evalDist_eq
         | inr input =>
           exact PqxdhInitialSourceLaterEndpoints.random_endpoint source writer selectedMessage previousRoot response64 other
             sender route decode index metadata ready post before selected number ancestors disclosed shared privateState cache depth remaining

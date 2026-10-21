@@ -104,16 +104,14 @@ theorem real_source (prior : ProbComp (Context extra M P I D K X Response A N S 
 theorem random_source (prior : ProbComp (Context extra M P I D K X Response A N S B)) :
     𝒟[independentFullGame (sampler prior) (observer source writer sender route decode)] =
       𝒟[random source writer sender route decode prior] := by
-  apply evalDist_eq_of_evalSPMF_eq
+  apply EvalDistEq.evalDist_eq
   simp only [independentFullGame, sampler, bind_assoc, pure_bind, random]
-  apply evalSPMF_bind_congr' prior
-  intro context
-  have discarded := OracleComp.ProgramLogic.Relational.evalSPMF_bind_const_of_no_failure
-    ($ᵗ RootOutput) (do let output ← $ᵗ FullOutput; observer source writer sender route decode context output)
-  refine discarded.trans ?_
-  have projected := congrArg (fun distribution : SPMF HmacBlock => distribution >>= fun output =>
-    𝒮[observe source writer sender route decode context (RawCtxSelectedInitialConstructor.response64 output)]) initialPrefix_uniform_vcvioLegacy
-  simpa only [← evalSPMF_bind, bind_map_left, observer] using projected
+  refine EvalDistEq.bind_right prior fun context => ?_
+  refine (OracleComp.EvalDistEq.bind_const ($ᵗ RootOutput)
+    (do let output ← $ᵗ FullOutput; observer source writer sender route decode context output)).trans ?_
+  have projected := initialPrefix_uniform.bind_left fun output =>
+    observe source writer sender route decode context (RawCtxSelectedInitialConstructor.response64 output)
+  simpa only [bind_map_left, observer] using projected
 
 /-- The actual full source publication/freshness event, starting at an independent32-byte root and retaining both directions, reduces to the exact Extract sampler and ordinary HMAC PRF with coefficient one. -/
 theorem bound (prior : ProbComp (Context extra M P I D K X Response A N S B))

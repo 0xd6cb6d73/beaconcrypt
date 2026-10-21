@@ -38,15 +38,10 @@ theorem actual_route (sample : ProbComp (Packet (extra := extra) (M := M) (P := 
     (actual source writer sender route decode depth remaining sample address).boolDistAdvantage
       (RawCtxSelectedParentSecrecy.actual source sample address
         (observer source writer sender route decode depth remaining)) ≤
-      3 * Pr[fun pair => pair.1 ∈ PqxdhInitialCommonSecrecy.candidates pair.2 |
-        RawCtxFullPreimageTester.actual (RawCtxFullPreimageTester.production source)
+      3 * Pr{let pair ← (RawCtxFullPreimageTester.actual (RawCtxFullPreimageTester.production source)
           (RawCtxSelectedParentCandidates.sample sample address)
-          (observed source writer sender route decode depth remaining)].toReal := by
-  simpa only [actual, RawCtxSelectedParentSecrecy.actual, RawCtxSelectedParentCandidates.sample,
-    RawCtxFullPreimageTester.actual, RawCtxFullPreimageTester.production, bad,
-    Nat.cast_ofNat, bind_assoc, pure_bind, ← probEvent_eq_eq_probOutput, probEvent_bind_eq_tsum,
-    probEvent_map, Function.comp_def, decide_eq_true_eq, probEvent_pure, mul_ite, mul_one, mul_zero] using
-      RawCtxScaledBadEventMixture.bind_bound_vcvioLegacy (RawCtxSelectedParentCandidates.sample sample address)
+          (observed source writer sender route decode depth remaining))}[pair.1 ∈ PqxdhInitialCommonSecrecy.candidates pair.2].toReal := by
+  have bound := RawCtxScaledBadEventMixture.bind_bound (RawCtxSelectedParentCandidates.sample sample address)
         (fun pair => native source writer sender route decode depth remaining pair.1 pair.2
           (productionStream source.crypto (FixedHkdfDomain.ratchet.address pair.2.toList)))
         (fun pair => observer source writer sender route decode depth remaining pair.1
@@ -54,6 +49,25 @@ theorem actual_route (sample : ProbComp (Packet (extra := extra) (M := M) (P := 
         (fun pair => bad source writer sender route decode depth remaining pair.1 pair.2
           (productionStream source.crypto (FixedHkdfDomain.ratchet.address pair.2.toList))) 3
         (fun pair => local_bound source writer sender route decode depth remaining pair.1 pair.2 _)
+  have bindCongr : ∀ {α β γ : Type} (first : ProbComp α) (f : α → ProbComp β) (g : α → ProbComp γ)
+      (p : β → Prop) (q : γ → Prop), (∀ a, Pr{let x ← f a}[p x] = Pr{let y ← g a}[q y]) →
+        Pr{let x ← first >>= f}[p x] = Pr{let y ← first >>= g}[q y] :=
+    fun first f g p q same => prEvent_bind_congr first f g p q same
+  have event : Pr{let x ← ((RawCtxSelectedParentCandidates.sample sample address) >>= fun pair =>
+        bad source writer sender route decode depth remaining pair.1 pair.2
+          (productionStream source.crypto (FixedHkdfDomain.ratchet.address pair.2.toList)))}[x = true] =
+      Pr{let pair ← (RawCtxFullPreimageTester.actual (RawCtxFullPreimageTester.production source)
+          (RawCtxSelectedParentCandidates.sample sample address)
+          (observed source writer sender route decode depth remaining))}[pair.1 ∈ PqxdhInitialCommonSecrecy.candidates pair.2] := by
+    rw [RawCtxFullPreimageTester.actual]
+    refine bindCongr _ _ _ _ _ fun pair => ?_
+    obtain ⟨context, target⟩ := pair
+    dsimp only
+    rw [bad, prEvent_map, prEvent_map]
+    exact prEvent_congr _ _ _ fun result => by simp only [decide_eq_true_eq]
+  rw [← event]
+  simpa only [actual, RawCtxSelectedParentSecrecy.actual, RawCtxSelectedParentCandidates.sample,
+    Nat.cast_ofNat, bind_assoc, pure_bind] using bound
 
 
 
@@ -64,10 +78,9 @@ theorem random_route (sample : ProbComp (Packet (extra := extra) (M := M) (P := 
     (random source writer sender route decode depth remaining sample address).boolDistAdvantage
       (RawCtxSelectedParentSecrecy.random sample address
         (observer source writer sender route decode depth remaining)) ≤
-      3 * Pr[fun pair => pair.1 ∈ PqxdhInitialCommonSecrecy.candidates pair.2 |
-        RawCtxSelectedParentCandidates.uniform sample address
-          (observed source writer sender route decode depth remaining)].toReal := by
-  have bound := RawCtxScaledBadEventMixture.bind_bound_vcvioLegacy
+      3 * Pr{let pair ← (RawCtxSelectedParentCandidates.uniform sample address
+          (observed source writer sender route decode depth remaining))}[pair.1 ∈ PqxdhInitialCommonSecrecy.candidates pair.2].toReal := by
+  have bound := RawCtxScaledBadEventMixture.bind_bound
     (do let pair ← RawCtxSelectedParentCandidates.sample sample address
         let output ← $ᵗ FullOutput
         pure (pair, output))
@@ -75,13 +88,46 @@ theorem random_route (sample : ProbComp (Packet (extra := extra) (M := M) (P := 
     (fun value => observer source writer sender route decode depth remaining value.1.1 value.2)
     (fun value => bad source writer sender route decode depth remaining value.1.1 value.1.2 value.2) 3
     (fun value => local_bound source writer sender route decode depth remaining value.1.1 value.1.2 value.2)
-  simp only [random, RawCtxSelectedParentSecrecy.random, independentFullGame,
-    RawCtxSelectedParentSecrecy.joint, RawCtxSelectedParentCandidates.sample,
-    RawCtxSelectedParentCandidates.uniform, RawCtxSelectedParentSampler.original, bad,
-    Nat.cast_ofNat, bind_assoc, pure_bind] at bound ⊢
-  simp only [bind_pure_comp] at bound ⊢
-  simpa only [← probEvent_eq_eq_probOutput, probEvent_bind_eq_tsum, probEvent_map,
-    Function.comp_def, decide_eq_true_eq] using bound
+  have bindCongr : ∀ {α β γ : Type} (first : ProbComp α) (f : α → ProbComp β) (g : α → ProbComp γ)
+      (p : β → Prop) (q : γ → Prop), (∀ a, Pr{let x ← f a}[p x] = Pr{let y ← g a}[q y]) →
+        Pr{let x ← first >>= f}[p x] = Pr{let y ← first >>= g}[q y] :=
+    fun first f g p q same => prEvent_bind_congr first f g p q same
+  have leftEq : (RawCtxSelectedParentCandidates.sample sample address >>= fun pair =>
+          ($ᵗ FullOutput) >>= fun output => pure (pair, output)) >>=
+        (fun value => native source writer sender route decode depth remaining value.1.1 value.1.2 value.2) =
+      random source writer sender route decode depth remaining sample address := by
+    simp only [random, bind_assoc, pure_bind]
+  have rightEq : (RawCtxSelectedParentCandidates.sample sample address >>= fun pair =>
+          ($ᵗ FullOutput) >>= fun output => pure (pair, output)) >>=
+        (fun value => observer source writer sender route decode depth remaining value.1.1 value.2) =
+      RawCtxSelectedParentSecrecy.random sample address (observer source writer sender route decode depth remaining) := by
+    simp only [RawCtxSelectedParentSecrecy.random, independentFullGame, RawCtxSelectedParentSecrecy.joint,
+      RawCtxSelectedParentCandidates.sample, bind_assoc, pure_bind]
+  have lhsComp : (RawCtxSelectedParentCandidates.sample sample address >>= fun pair =>
+          ($ᵗ FullOutput) >>= fun output => pure (pair, output)) >>=
+        (fun value => bad source writer sender route decode depth remaining value.1.1 value.1.2 value.2) =
+      RawCtxSelectedParentCandidates.sample sample address >>= fun pair =>
+        ($ᵗ FullOutput) >>= fun output => bad source writer sender route decode depth remaining pair.1 pair.2 output := by
+    simp only [bind_assoc, pure_bind]
+  have rhsComp : RawCtxSelectedParentCandidates.uniform sample address (observed source writer sender route decode depth remaining) =
+      RawCtxSelectedParentCandidates.sample sample address >>= fun pair =>
+        (($ᵗ FullOutput) >>= fun child => observed source writer sender route decode depth remaining pair.1 child) >>= fun result =>
+          pure (pair.2, result) := by
+    simp only [RawCtxSelectedParentCandidates.uniform, RawCtxSelectedParentSampler.original,
+      RawCtxSelectedParentCandidates.sample, bind_assoc, pure_bind]
+  have event : Pr{let x ← ((RawCtxSelectedParentCandidates.sample sample address >>= fun pair =>
+          ($ᵗ FullOutput) >>= fun output => pure (pair, output)) >>=
+            (fun value => bad source writer sender route decode depth remaining value.1.1 value.1.2 value.2))}[x = true] =
+      Pr{let pair ← RawCtxSelectedParentCandidates.uniform sample address (observed source writer sender route decode depth remaining)}[
+        pair.1 ∈ PqxdhInitialCommonSecrecy.candidates pair.2] := by
+    rw [lhsComp, rhsComp]
+    refine bindCongr _ _ _ _ _ fun pair => ?_
+    rw [bind_pure_comp _ (($ᵗ FullOutput) >>= fun child => observed source writer sender route decode depth remaining pair.1 child), prEvent_map]
+    refine bindCongr _ _ _ _ _ fun output => ?_
+    rw [bad, prEvent_map]
+    exact prEvent_congr _ _ _ fun result => by simp only [decide_eq_true_eq]
+  rw [leftEq, rightEq, event] at bound
+  simpa only [Nat.cast_ofNat] using bound
 
 
 
@@ -98,7 +144,7 @@ theorem actual_bound (hmac : HmacSha512) (correct : SourceFullCorrect source hma
     (show ((2 ^ 352 : ENNReal)⁻¹ + ENNReal.ofReal (
       RawCtxSelectedParentHop.extractLoss hmac sample address (aliasTester source writer sender route decode depth remaining) +
         RawCtxSelectedParentHop.hmacLoss hmac sample address (aliasTester source writer sender route decode depth remaining))) ≠ ⊤ by simp)
-    (RawCtxSelectedParentCandidates.real_bound_vcvioLegacy source hmac correct sample address
+    (RawCtxSelectedParentCandidates.real_bound source hmac correct sample address
       (observed source writer sender route decode depth remaining) PqxdhInitialCommonSecrecy.candidates)
   have nonnegative : 0 ≤
       RawCtxSelectedParentHop.extractLoss hmac sample address (aliasTester source writer sender route decode depth remaining) +
@@ -122,7 +168,7 @@ theorem random_bound (sample : ProbComp (Packet (extra := extra) (M := M) (P := 
   simpa using (random_route source writer sender route decode depth remaining sample address).trans
     (mul_le_mul_of_nonneg_left
       (ENNReal.toReal_mono (ENNReal.div_ne_top (by simp) (by simp))
-        (RawCtxSelectedParentCandidates.uniform_bound_vcvioLegacy sample address
+        (RawCtxSelectedParentCandidates.uniform_bound sample address
           (observed source writer sender route decode depth remaining)
           PqxdhInitialCommonSecrecy.candidates qCandidates bounded)) (by norm_num))
 

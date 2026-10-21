@@ -265,7 +265,7 @@ theorem completed_bound (target : Target S (B + 1))
     (PqxdhInitialRootEventExperiment.actual env baseImpl kem attachedVerify primitives program post (rejectAll env program)).boolDistAdvantage
       (commonOnly env baseImpl kem attachedVerify primitives program post target) ≤
     completedLoss env baseImpl kem attachedVerify primitives program post hmac fallback ordinaryFallback := by
-  have result := PqxdhInitialRootEventComposition.authenticated_root_bound env baseImpl kem attachedVerify primitives program post
+  have result := PqxdhInitialRootEventComposition.authenticated_root_bound_vcvioLegacy env baseImpl kem attachedVerify primitives program post
     (rejectAll env program) compatible adapter functional hmac sourceCorrect c.noSign c.noCreate fallback ordinaryFallback
     1 (reject_root_queries env baseImpl kem attachedVerify primitives program post c)
   have endpoint := completed_uniform env baseImpl kem attachedVerify primitives program post target

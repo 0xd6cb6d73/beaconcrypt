@@ -726,24 +726,21 @@ theorem selection_bound (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxM
     (qPost : Nat) (bounded : ∀ reply, (post reply).IsTotalQueryBound qPost)
     (before : Front M P I D K S B) (state : SourceState A N)
     (event : Nat → (Result × Snapshot M P I D K S B) × SourceState A N → Prop) :
-    Pr[fun result => ∃ number : Std.U64, ((selected, number), true) ∈ result.1.2.2.published ∧ event number.val result |
-      sequence source writer stage selectedMessage previousRoot response64 other sender route decode index metadata ready post before state] ≤
+    Pr{let result ← sequence source writer stage selectedMessage previousRoot response64 other sender route decode index metadata ready post before state}[∃ number : Std.U64, ((selected, number), true) ∈ result.1.2.2.published ∧ event number.val result] ≤
       ∑ position ∈ Finset.range (state.1.2.length + (7 + qPost * 67) + 1),
-        Pr[fun result => ∃ number : Std.U64, number.val = position ∧ ((selected, number), true) ∈ result.1.2.2.published ∧ event position result |
-          sequence source writer stage selectedMessage previousRoot response64 other sender route decode index metadata ready post before state] := by
+        Pr{let result ← sequence source writer stage selectedMessage previousRoot response64 other sender route decode index metadata ready post before state}[∃ number : Std.U64, number.val = position ∧ ((selected, number), true) ∈ result.1.2.2.published ∧ event position result] := by
   classical
   calc
-    _ ≤ Pr[fun result => ∃ position ∈ Finset.range (state.1.2.length + (7 + qPost * 67) + 1),
-        ∃ number : Std.U64, number.val = position ∧ ((selected, number), true) ∈ result.1.2.2.published ∧ event position result |
-          sequence source writer stage selectedMessage previousRoot response64 other sender route decode index metadata ready post before state] := by
-      apply probEvent_mono
+    _ ≤ Pr{let result ← sequence source writer stage selectedMessage previousRoot response64 other sender route decode index metadata ready post before state}[∃ position ∈ Finset.range (state.1.2.length + (7 + qPost * 67) + 1),
+        ∃ number : Std.U64, number.val = position ∧ ((selected, number), true) ∈ result.1.2.2.published ∧ event position result] := by
+      apply prEvent_mono_of_support
       intro result supported accepted
       obtain ⟨number, published, enabled⟩ := accepted
       exact ⟨number.val, Finset.mem_range.mpr (Nat.lt_succ_of_le
         (publication_bound source writer stage selectedMessage previousRoot response64 other entry initialized selected
           sender route decode index metadata ready post qPost bounded before state result supported number published)),
         number, rfl, published, enabled⟩
-    _ ≤ _ := probEvent_exists_finset_le_sum _ _ _
+    _ ≤ _ := prEvent_exists_finset_le _ _ _
 
 end BeaconcryptCore.Computational.PqxdhInitialCounterPublication
 

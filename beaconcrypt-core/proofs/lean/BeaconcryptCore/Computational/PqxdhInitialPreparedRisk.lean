@@ -121,18 +121,24 @@ private theorem target_address (target : RootOutput) :
 theorem collision_bound
     (observe : PqxdhInitialPreparedParent.Output M P I D K Result Origin A N C S B → ProbComp Bool)
     (qPost : Nat) (bounded : ∀ reply, (execution.outside reply).IsTotalQueryBound qPost) :
-    Pr[fun pair => RawCtxSelectedParentPrivatePatch.targetAddress pair.2 ∈
-      addresses source writer pre application initializer selector aux mark sender route decode execution depth state pair.1.1 |
-      RawCtxSelectedParentCandidates.sample
+    Pr{let pair ← (RawCtxSelectedParentCandidates.sample
         (PqxdhInitialPreparedResources.sample source writer pre application initializer selector aux mark sender route decode
           observe execution depth state)
-        (PqxdhInitialPreparedResources.address source writer pre application initializer selector aux mark sender route decode execution depth state)] ≤
+        (PqxdhInitialPreparedResources.address source writer pre application initializer selector aux mark sender route decode execution depth state))}[RawCtxSelectedParentPrivatePatch.targetAddress pair.2 ∈
+      addresses source writer pre application initializer selector aux mark sender route decode execution depth state pair.1.1] ≤
       ((state.1.1.2.length + (7 + qPost * 67) + 1 : Nat) : ℝ≥0∞) * (2 ^ 256 : ℝ≥0∞)⁻¹ := by
   unfold RawCtxSelectedParentCandidates.sample
-  apply probEvent_bind_le_of_forall_le
-  intro context _
-  simp only [bind_pure_comp, probEvent_map, Function.comp_def, target_address]
-  exact (RawCtxFirstParentRisk.full_inputs_vcvioLegacy _).trans (mul_le_mul_left
+  have split : ∀ {Context Value : Type} (prior : ProbComp Context) (draw : Context → ProbComp Value)
+      (q : Value → Prop) (ε : ENNReal),
+      (∀ context, Pr{let y ← draw context}[q y] ≤ ε) → Pr{let y ← prior >>= draw}[q y] ≤ ε :=
+    fun prior draw q ε h => prEvent_bind_le_of_forall_le prior draw q h
+  refine split _ _ _ _ fun context => ?_
+  have bound := RawCtxFirstParentRisk.full_inputs
+    (addresses source writer pre application initializer selector aux mark sender route decode execution depth state context)
+  generalize sampled : ($ᵗ FullOutput : ProbComp FullOutput) = block at bound ⊢
+  rw [bind_pure_comp _ block, prEvent_map]
+  simp only [target_address]
+  exact bound.trans (mul_le_mul_left
     (Nat.cast_le.mpr (addresses_length source writer pre application initializer selector aux mark sender route decode
       execution depth state qPost bounded context)) _)
 

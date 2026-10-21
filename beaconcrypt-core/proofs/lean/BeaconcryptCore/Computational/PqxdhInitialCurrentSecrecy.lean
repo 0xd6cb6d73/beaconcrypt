@@ -57,13 +57,13 @@ theorem random_comparison :
     𝒟[independentFullGame (joint env baseImpl kem attachedVerify primitives program post)
       (observer env baseImpl kem attachedVerify primitives program post)] =
       𝒟[random env baseImpl kem attachedVerify primitives program post] := by
-  apply evalDist_eq_of_evalSPMF_eq
+  apply EvalDistEq.evalDist_eq
   simp only [independentFullGame, joint, RawCtxInitialSecrecy.joint, bind_map_left, random]
-  refine evalSPMF_bind_congr' (m := ProbComp) _ (fun pair => ?_)
-  have projected := congrArg (fun distribution : SPMF HmacBlock => distribution >>= fun output =>
-    𝒮[observe env baseImpl kem attachedVerify primitives program post pair.1
-      (RawCtxSelectedInitialConstructor.response64 output)]) initialPrefix_uniform_vcvioLegacy
-  simpa only [← evalSPMF_bind, bind_map_left, observer] using projected
+  refine EvalDistEq.bind_right (m := ProbComp) _ (fun pair => ?_)
+  have projected := initialPrefix_uniform.bind_left fun output =>
+    observe env baseImpl kem attachedVerify primitives program post pair.1
+      (RawCtxSelectedInitialConstructor.response64 output)
+  simpa only [bind_map_left, observer] using projected
 
 /-- The current protocol's actual uniform-root endpoint reduces with coefficient one to fixed-salt Extract at its exact joint sampler and ordinary uniform-secret HMAC PRF. The one selected initializer response remains shared across all repeated source requests. -/
 theorem primitive_bound (hmac : HmacSha512) (correct : SourceFullCorrect env.source hmac) :

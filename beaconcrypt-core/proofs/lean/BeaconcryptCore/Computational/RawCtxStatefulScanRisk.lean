@@ -82,10 +82,6 @@ theorem scan_risk
               (add_le_add (by simpa only [charged, ite_false] using step k query state chosen valid clean) le_rfl)
             simpa only [zero_add] using combined
 
-set_option linter.deprecated false in set_option linter.unusedVariables false in theorem _root_.BeaconcryptCore.Computational.RawCtxStatefulScanRisk.scan_risk_vcvioLegacy :
-    ∀ {ι Result State : Type} {spec : OracleSpec ι} (selected : ι → State → Bool) (impl : QueryImpl spec (StateT State ProbComp)) (counted : ι → Prop) [DecidablePred counted] (Clean : State → Prop) (Valid : ℕ → State → Prop) (risk : ℕ → ENNReal) (preserve : ∀ (k : ℕ) (query : ι) (state : State), selected query state = Bool.false → Valid k state → Clean state → ∀ result ∈ MonadAttach.support ((impl query).run state), Valid (k + if counted query then 1 else 0) result.2) (step : ∀ (k : ℕ) (query : ι) (state : State), selected query state = Bool.false → Valid k state → Clean state → (probEvent ((impl query).run state) fun (result : spec.Range query × State) => ¬Clean result.2) ≤ if counted query then risk k else 0) (client : OracleComp spec Result) (m k : ℕ) (bound : client.IsQueryBoundP counted m) (state : State) (valid : Valid k state) (clean : Clean state), (probEvent (BeaconcryptCore.Computational.RawCtxStatefulPendingPrefix.scan selected impl client state) fun (result : BeaconcryptCore.Computational.RawCtxPendingMixedPrefix.Prefix spec Result State) => ¬Clean result.2) ≤ ∑ j ∈ Finset.range m, risk (k + j) :=
-  by simpa only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent] using @BeaconcryptCore.Computational.RawCtxStatefulScanRisk.scan_risk
-
 end BeaconcryptCore.Computational.RawCtxStatefulScanRisk
 
 /-- info: 'BeaconcryptCore.Computational.RawCtxStatefulScanRisk.scan_risk' depends on axioms: [propext,

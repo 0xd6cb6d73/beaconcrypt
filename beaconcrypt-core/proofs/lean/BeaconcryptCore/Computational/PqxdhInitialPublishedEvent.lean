@@ -64,8 +64,7 @@ theorem checked_bound (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMix
       (PqxdhInitialParentStoppedHop.decision
         (PqxdhInitialCheckedFreshness.remainingEvent earlier disclosed (fun result => Gate selected number result.1.1)) <$>
         PqxdhInitialCheckedFreshness.maskedRun source writer mark sender route decode continuation context output disclosed state candidates) ≤
-      3 * (Pr[fun result => target ∈ result.2.1.2 |
-        PqxdhInitialCheckedFreshness.maskedRun source writer mark sender route decode continuation context output disclosed state candidates]).toReal :=
+      3 * (Pr{let result ← PqxdhInitialCheckedFreshness.maskedRun source writer mark sender route decode continuation context output disclosed state candidates}[target ∈ result.2.1.2]).toReal :=
   PqxdhInitialCheckedFreshness.bound source writer mark sender route decode continuation context target output disclosed state candidates
     earlier (fun result => Gate selected number result.1.1) n depth
 

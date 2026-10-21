@@ -55,28 +55,29 @@ noncomputable def main (baseImpl : QueryImpl baseSpec ProbComp)
 -- The existing PqxdhHiddenRoot averaging argument, restricted to supported samples.
 private theorem average_supported {Alpha Beta Gamma : Type} (sample : ProbComp Alpha)
     (left right : Alpha → ProbComp Beta) (badRun : Alpha → ProbComp Gamma) (bad : Gamma → Prop)
-    (point : ∀ value ∈ support sample, tvDist (left value) (right value) ≤ Pr[bad | badRun value].toReal) :
-    tvDist (sample >>= left) (sample >>= right) ≤ Pr[bad | sample >>= badRun].toReal := by
-  rw [probEvent_bind_eq_tsum]
+    (point : ∀ value ∈ support sample, tvDist (left value) (right value) ≤ Pr{let x ← badRun value}[bad x].toReal) :
+    tvDist (sample >>= left) (sample >>= right) ≤ Pr{let x ← sample >>= badRun}[bad x].toReal := by
+  rw [OracleComp.prEvent_bind_eq_tsum]
   rw [ENNReal.tsum_toReal_eq (fun value =>
-    ENNReal.mul_ne_top probOutput_ne_top probEvent_ne_top)]
+    ENNReal.mul_ne_top (prEvent_ne_top _) (prEvent_ne_top _))]
   simp_rw [ENNReal.toReal_mul]
   refine (tvDist_bind_left_le sample left right).trans ?_
+  simp only [VCVioLegacy.probOutput_eq_prEvent]
   refine Summable.tsum_le_tsum (fun value => ?_) ?_ ?_
   · by_cases present : value ∈ support sample
     · exact mul_le_mul_of_nonneg_left (point value present) ENNReal.toReal_nonneg
-    · simp [probOutput_eq_zero_of_not_mem_support present]
+    · rw [prEvent_eq_zero_of_not_mem_support sample present, ENNReal.toReal_zero, zero_mul, zero_mul]
   · exact Summable.of_nonneg_of_le
       (fun value => mul_nonneg ENNReal.toReal_nonneg
         (tvDist_nonneg (left value) (right value)))
       (fun value => mul_le_of_le_one_right ENNReal.toReal_nonneg
         (tvDist_le_one (left value) (right value)))
-      (ENNReal.summable_toReal tsum_probOutput_ne_top)
+      (ENNReal.summable_toReal (ne_top_of_le_ne_top ENNReal.one_ne_top (OracleComp.tsum_prEvent_le_one sample)))
   · exact Summable.of_nonneg_of_le
       (fun value => mul_nonneg ENNReal.toReal_nonneg ENNReal.toReal_nonneg)
       (fun value => mul_le_of_le_one_right ENNReal.toReal_nonneg
-        (ENNReal.toReal_mono one_ne_top probEvent_le_one))
-      (ENNReal.summable_toReal tsum_probOutput_ne_top)
+        (ENNReal.toReal_mono one_ne_top (prEvent_le_one _)))
+      (ENNReal.summable_toReal (ne_top_of_le_ne_top ENNReal.one_ne_top (OracleComp.tsum_prEvent_le_one sample)))
 
 /-- At one reached prechallenge state, complete continuations agree except on this key's ordinary correctness event. -/
 theorem after_bound (baseImpl : QueryImpl baseSpec ProbComp)
@@ -89,18 +90,19 @@ theorem after_bound (baseImpl : QueryImpl baseSpec ProbComp)
           left publicKey secretKey context pair.1 pair.2 = right publicKey secretKey context pair.1 pair.2) :
     tvDist (after baseImpl kem stopped left publicKey secretKey context)
       (after baseImpl kem stopped right publicKey secretKey context) ≤
-      Pr[= true | simulateQ (kemAmbientImpl baseImpl) (keyError kem publicKey secretKey)].toReal := by
+      Pr{let x ← simulateQ (kemAmbientImpl baseImpl) (keyError kem publicKey secretKey)}[x = true].toReal := by
   by_cases proceed : stopped.proceed publicKey context = true
-  · simp only [after, proceed, ite_true, keyError, simulateQ_bind, ← probEvent_eq_eq_probOutput]
+  · simp only [after, proceed, ite_true, keyError, simulateQ_bind]
     apply average_supported
     intro pair supported
     by_cases good : functional.result secretKey pair.1 = some pair.2
     · simp only [agreement proceed pair supported good, tvDist_self, ENNReal.toReal_nonneg]
-    · simpa only [functional.exact, simulateQ_pure, pure_bind, probEvent_eq_eq_probOutput,
-        probOutput_pure, decide_eq_true good, ite_true, ENNReal.toReal_one] using
+    · simp only [functional.exact, simulateQ_pure]
+      rw [pure_bind (functional.result secretKey pair.1), prEvent_pure]
+      simpa only [decide_eq_true good, ite_true, ENNReal.toReal_one] using
         tvDist_le_one (left publicKey secretKey context pair.1 pair.2)
           (right publicKey secretKey context pair.1 pair.2)
-  · simp [after, proceed]
+  · simp [after, proceed, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
 
 /-- Averaging the original prechallenge execution requires agreement only on its actual supported states and does not condition the error on proceeding. -/
 theorem prepared_bound (baseImpl : QueryImpl baseSpec ProbComp)
@@ -115,7 +117,7 @@ theorem prepared_bound (baseImpl : QueryImpl baseSpec ProbComp)
     tvDist
       (prepare baseImpl kem stopped publicKey secretKey >>= after baseImpl kem stopped left publicKey secretKey)
       (prepare baseImpl kem stopped publicKey secretKey >>= after baseImpl kem stopped right publicKey secretKey) ≤
-      Pr[= true | simulateQ (kemAmbientImpl baseImpl) (keyError kem publicKey secretKey)].toReal := by
+      Pr{let x ← simulateQ (kemAmbientImpl baseImpl) (keyError kem publicKey secretKey)}[x = true].toReal := by
   exact tvDist_bind_left_le_const _ _ _ _ (fun context supported =>
     after_bound baseImpl kem functional stopped left right publicKey secretKey context (agreement context supported))
 
@@ -130,12 +132,11 @@ theorem main_bound (baseImpl : QueryImpl baseSpec ProbComp)
         functional.result keys.2 pair.1 = some pair.2 →
           left keys.1 keys.2 context pair.1 pair.2 = right keys.1 keys.2 context pair.1 pair.2) :
     tvDist (main baseImpl kem stopped left) (main baseImpl kem stopped right) ≤
-      Pr[= true | simulateQ (kemAmbientImpl baseImpl) (errorExperiment kem)].toReal := by
-  simp only [main, PqxdhKemCorrectnessStopped.error_keygen, simulateQ_bind, ← probEvent_eq_eq_probOutput]
+      Pr{let x ← simulateQ (kemAmbientImpl baseImpl) (errorExperiment kem)}[x = true].toReal := by
+  simp only [main, PqxdhKemCorrectnessStopped.error_keygen, simulateQ_bind]
   apply average_supported
-  exact fun keys supported => by
-    simpa only [probEvent_eq_eq_probOutput] using
-      prepared_bound baseImpl kem functional stopped left right keys.1 keys.2 (agreement keys supported)
+  exact fun keys supported =>
+    prepared_bound baseImpl kem functional stopped left right keys.1 keys.2 (agreement keys supported)
 
 /-- Stopping retains the original abort computation and makes no encapsulation call. -/
 theorem stopped_branch (baseImpl : QueryImpl baseSpec ProbComp)

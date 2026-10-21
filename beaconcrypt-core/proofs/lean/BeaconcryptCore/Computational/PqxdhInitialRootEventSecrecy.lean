@@ -58,7 +58,7 @@ noncomputable def loss (hmac : HmacSha512) (fallback : PqxdhDynamicIdentityRouti
   (PqxdhJointIdentity.advantage primitives
     (PqxdhGeneratedPhase1Prefix.privateReduction primitives baseImpl kem setup
       (driver env.toDriverEnvironment program) fallback ordinaryFallback)).toReal +
-  Pr[= true | simulateQ (kemAmbientImpl baseImpl) (PqxdhKemCorrectnessError.errorExperiment kem)].toReal +
+  Pr{let x ← simulateQ (kemAmbientImpl baseImpl) (PqxdhKemCorrectnessError.errorExperiment kem)}[x = true].toReal +
   kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
     (PqxdhChallengeSecretRouting.reduction env.source kem p).toINDCCA +
   PqxdhCorrelatedExtractFamily.advantage hmac

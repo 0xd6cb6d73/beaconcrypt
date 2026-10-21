@@ -98,7 +98,7 @@ theorem key_first {Result : Type}
       𝒮[(do let key ← $ᵗ RootOutput
              let rest ← $ᵗ Residual
              continuation (output key rest))] := by
-  have split := PqxdhFinalMaterialKeySplit.complete
+  have split := PqxdhFinalMaterialKeySplit.complete_vcvioLegacy
     (fun full => do let other ← $ᵗ RootOutput; continuation (full, other))
   have reorder := evalSPMF_bind_bind_swap ($ᵗ (NonceOutput × RootOutput))
     ($ᵗ RootOutput) (fun pair key => do

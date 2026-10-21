@@ -54,13 +54,12 @@ theorem routed_eq_real (source : FixedHkdfSha512NoSaltSource)
     oneKeyBranchMain, oneKeyPrefix, oneKeyFinish, PqxdhChallengeSecretRouting.reduction,
     simulateQ_bind, pure_bind, bind_assoc, runtimeOfImpl_liftProbComp,
     simulateQ_kemAmbient_liftProbComp]
-  apply evalDist_eq_of_evalSPMF_eq
-  refine evalSPMF_bind_congr (fun keys _ => ?_)
-  refine evalSPMF_bind_congr (fun state _ => ?_)
-  refine evalSPMF_bind_congr (fun pair _ => ?_)
-  refine evalSPMF_ext (fun decision => ?_)
-  simp only [publicImpl, probOutput_bind_const, probFailure_eq_zero, tsub_zero, one_mul]
-  rfl
+  apply EvalDistEq.evalDist_eq
+  refine EvalDistEq.bind_right _ fun keys => ?_
+  refine EvalDistEq.bind_right _ fun state => ?_
+  refine EvalDistEq.bind_right _ fun pair => ?_
+  simp only [publicImpl]
+  exact (OracleComp.EvalDistEq.bind_const _ _).symm
 
 /-- The routed real-to-random-secret hop is exactly the constructed ordinary one-key IND-CCA advantage, with no correctness assumption. -/
 theorem routed_indCCA (source : FixedHkdfSha512NoSaltSource)
@@ -98,8 +97,9 @@ theorem actual_routed_bound (source : FixedHkdfSha512NoSaltSource)
     (agreement : GoodSimulation source baseImpl kem functional protocol actual) :
     (PqxdhAuthenticatedRootCorrectness.main baseImpl kem (protocolPrefix protocol) actual).boolDistAdvantage
       (routedMain source baseImpl kem protocol) ≤
-      Pr[= true | simulateQ (kemAmbientImpl baseImpl) (PqxdhKemCorrectnessError.errorExperiment kem)].toReal := by
-  rw [ProbComp.boolDistAdvantage, evalDist_apply_singleton, evalDist_apply_singleton]
+      Pr{let x ← simulateQ (kemAmbientImpl baseImpl) (PqxdhKemCorrectnessError.errorExperiment kem)}[x = true].toReal := by
+  rw [ProbComp.boolDistAdvantage, VCVioLegacy.evalDist_singleton_eq_probOutput,
+    VCVioLegacy.evalDist_singleton_eq_probOutput]
   exact (abs_probOutput_toReal_sub_le_tvDist _ _).trans
     (PqxdhAuthenticatedRootCorrectness.main_bound baseImpl kem functional (protocolPrefix protocol)
       actual (routedAfter source baseImpl kem protocol)
@@ -142,7 +142,7 @@ theorem actual_uniform_bound (source : FixedHkdfSha512NoSaltSource)
     (qRoot : Nat) (rootBound : (rootReduction source baseImpl kem protocol).IsQueryBoundP IsRoot qRoot) :
     (PqxdhAuthenticatedRootCorrectness.main baseImpl kem (protocolPrefix protocol) actual).boolDistAdvantage
       (uniformGame (rootReduction source baseImpl kem protocol)) ≤
-      Pr[= true | simulateQ (kemAmbientImpl baseImpl) (PqxdhKemCorrectnessError.errorExperiment kem)].toReal +
+      Pr{let x ← simulateQ (kemAmbientImpl baseImpl) (PqxdhKemCorrectnessError.errorExperiment kem)}[x = true].toReal +
       kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
         (PqxdhChallengeSecretRouting.reduction source kem protocol).toINDCCA +
       PqxdhCorrelatedExtractFamily.advantage hmac
@@ -168,7 +168,7 @@ theorem authenticated_uniform_bound (source : FixedHkdfSha512NoSaltSource)
       (PqxdhAuthenticatedRootCorrectness.main baseImpl kem (protocolPrefix protocol) actual) ≤ authenticationLoss) :
     game.boolDistAdvantage (uniformGame (rootReduction source baseImpl kem protocol)) ≤
       authenticationLoss +
-      Pr[= true | simulateQ (kemAmbientImpl baseImpl) (PqxdhKemCorrectnessError.errorExperiment kem)].toReal +
+      Pr{let x ← simulateQ (kemAmbientImpl baseImpl) (PqxdhKemCorrectnessError.errorExperiment kem)}[x = true].toReal +
       kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
         (PqxdhChallengeSecretRouting.reduction source kem protocol).toINDCCA +
       PqxdhCorrelatedExtractFamily.advantage hmac

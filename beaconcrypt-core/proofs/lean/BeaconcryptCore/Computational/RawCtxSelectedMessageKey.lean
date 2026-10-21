@@ -121,18 +121,6 @@ theorem key_observed {Result : Type}
   simp only [← pairSample, bind_assoc, pure_bind] at original reordered
   exact original.trans reordered
 
-set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.RawCtxSelectedMessageKey.key_observed_vcvioLegacy :
-    ∀ {Result : Type} (continuation : BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput → BeaconcryptCore.Computational.PqxdhFullSecretInputKdf.NonceOutput → BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput → ProbComp Result),
-      𝒮[do
-          let output ← $ᵗ BeaconcryptCore.Computational.PqxdhFullSecretInputKdf.FullOutput
-          continuation (BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.material output).1 (BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.material output).2 (BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.nextChain output)] =
-        𝒮[do
-          let nonce ← $ᵗ BeaconcryptCore.Computational.PqxdhFullSecretInputKdf.NonceOutput
-          let chain ← $ᵗ BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput
-          let key ← $ᵗ BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput
-          continuation key nonce chain] :=
-  by simpa only [BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq] using @BeaconcryptCore.Computational.RawCtxSelectedMessageKey.key_observed
-
 /-- The exact native decoder, with all three projections used jointly, factors through the ordinary uniform selected key sample. -/
 theorem decoded_observed {Result : Type}
     (continuation : (RatchetChain × RatchetMaterial) → ProbComp Result) :

@@ -322,10 +322,6 @@ theorem initialPrefix_uniform :
     EvalDistEq (initialPrefix <$> ($ᵗ FullOutput)) ($ᵗ HmacBlock) := by
   exact take_uniform 64 12
 
-set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.PqxdhFullSecretInputKdf.initialPrefix_uniform_vcvioLegacy :
-    𝒮[BeaconcryptCore.Computational.PqxdhFullSecretInputKdf.initialPrefix <$> ($ᵗ BeaconcryptCore.Computational.PqxdhFullSecretInputKdf.FullOutput)] = 𝒮[$ᵗ BeaconcryptCore.Computational.PqxdhSecretInputKdf.HmacBlock] :=
-  by simpa only [BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq] using @BeaconcryptCore.Computational.PqxdhFullSecretInputKdf.initialPrefix_uniform
-
 /-- The root projection never uses the second expansion block. -/
 theorem rootProjection_joinBlocks (first second : HmacBlock) :
     PqxdhJointKdf.rootProjection (joinBlocks first second) =
