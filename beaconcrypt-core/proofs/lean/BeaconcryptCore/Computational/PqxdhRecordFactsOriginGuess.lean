@@ -29,8 +29,8 @@ theorem independent_guess (work : ProbComp X) (guess : X → Option CtxDigest) :
     𝒟[(do let digest ← $ᵗ CtxDigest
           let result ← work
           pure (digest, result))] {result | guess result.2 = some result.1} ≤ ((2 ^ 512 : Nat) : ℝ≥0∞)⁻¹ := by
-  have same := evalDist_eq_of_evalSPMF_eq _ _ (OracleComp.DeferredSampling.evalSPMF_bind_comm
-    ($ᵗ CtxDigest) work (fun digest result => pure (digest, result)))
+  have same := (OracleComp.EvalDistEq.bind_bind_swap
+    ($ᵗ CtxDigest) work (fun digest result => pure (digest, result))).evalDist_eq
   rw [same]
   refine PqxdhRecordFactsCollision.bind_le work _ _ _ fun result => ?_
   rw [bind_pure_comp, evalDist_map_of_discrete, Measure.map_apply Measurable.of_discrete (.of_discrete)]

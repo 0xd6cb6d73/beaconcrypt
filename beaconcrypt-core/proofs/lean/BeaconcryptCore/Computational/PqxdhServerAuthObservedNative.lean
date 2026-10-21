@@ -50,7 +50,7 @@ theorem native_game_source (setup : Setup baseSpec KemSK) (codec : Codec Reader 
     (observer : Observer) :
     𝒟[nativeGame setup codec checks adversary revealSeed Q j observer] =
       𝒟[PqxdhServerAuthObservedSchedule.actualGame setup codec checks adversary revealSeed Q j observer] := by
-  apply evalDist_eq_of_evalSPMF_eq
+  refine EvalDistEq.evalDist_eq ((VCVioLegacy.evalSPMF_eq_iff_evalDistEq _ _).1 ?_)
   apply evalSPMF_eq_of_relTriple_eqRel
   unfold nativeGame PqxdhServerAuthObservedSchedule.actualGame
   refine relTriple_bind (R := fun a b => a = b ∧ a ∈ support (contextSample setup codec))

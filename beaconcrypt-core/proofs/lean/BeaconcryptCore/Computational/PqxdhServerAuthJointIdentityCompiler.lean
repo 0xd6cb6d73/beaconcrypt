@@ -306,8 +306,7 @@ theorem seed_order {Result : Type} [MeasurableSpace Result]
     (next : IdentitySeed → IdentitySeed → ProbComp Result) :
     𝒟[do let beaconSeed ← sampleSeed; let serverSeed ← sampleSeed; next serverSeed beaconSeed] =
       𝒟[do let serverSeed ← sampleSeed; let beaconSeed ← sampleSeed; next serverSeed beaconSeed] := by
-  apply evalDist_eq_of_evalSPMF_eq
-  exact DeferredSampling.evalSPMF_bind_comm _ _ _
+  exact (OracleComp.EvalDistEq.bind_bind_swap _ _ _).evalDist_eq
 
 /-- The ordinary joint challenger retains its real history while the final observer reads only the original source result. -/
 noncomputable def observed (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)

@@ -171,8 +171,7 @@ theorem first_miss_observer {setup : StatefulPhase1Setup baseSpec}
   | completed decision =>
       simp only [observe, mode, PqxdhInitialRootContext.firstMiss, protocol,
         PqxdhInitialRootContext.afterRoot, simulateQ_pure, StateT.run_pure, map_pure]
-      apply evalDist_eq_of_evalSPMF_eq
-      exact OracleComp.ProgramLogic.Relational.evalSPMF_bind_const_of_no_failure _ _
+      exact (OracleComp.EvalDistEq.bind_const _ _).evalDist_eq
   | pending prepared ephemeral =>
       simp only [observe, mode, PqxdhInitialRootContext.firstMiss, protocol,
         PqxdhInitialRootContext.afterRoot, map_bind]

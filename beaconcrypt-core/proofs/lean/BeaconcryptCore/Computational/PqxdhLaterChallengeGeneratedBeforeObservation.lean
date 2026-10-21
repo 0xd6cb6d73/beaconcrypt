@@ -166,11 +166,11 @@ theorem observed (depth : Nat) (first second : Bool) (cache : CtxRO.QueryCache)
     𝒟[(observe ∘ beforeKey setup program) <$> (simulateQ hashImpl
       (PqxdhLaterChallengeGeneratedContinuation.run setup env callbacks program adversary owner number second
         attachedVerify primitives baseImpl kem ancestors disclosed depth)).run cache] := by
-  exact evalDist_eq_of_evalSPMF_eq _ _ (evalSPMF_map_eq_of_relTriple (relTriple_post_mono
+  exact ((VCVioLegacy.evalSPMF_eq_iff_evalDistEq _ _).1 (evalSPMF_map_eq_of_relTriple (relTriple_post_mono
     (PqxdhLaterChallengeGeneratedSamplerCoupling.carried setup env callbacks program adversary owner number
       attachedVerify primitives baseImpl kem ancestors disclosed depth first second cache)
     (fun left right related => congrArg observe
-      (related_key setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed first second left right related))))
+      (related_key setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed first second left right related))))).evalDist_eq
 
 end BeaconcryptCore.Computational.PqxdhLaterChallengeGeneratedBeforeObservation
 

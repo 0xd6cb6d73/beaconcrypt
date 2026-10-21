@@ -92,7 +92,7 @@ theorem failed_trace_bound (modes : Label n → KeyMode)
     (PqxdhRecordFactsOriginCandidateTrace.traced_queries _ client [] _ 0 noSeal) cap
     (fun index result => PqxdhRecordFactsOriginCandidateTrace.guess cap index result.1))
   apply measure_mono_ae
-  apply OracleComp.ae_of_forall_mem_support
+  apply OracleComp.ae_evalDist_of_forall_mem_support
   rintro ⟨digest, value⟩ supported ⟨result, same, present⟩
   cases same
   exact PqxdhRecordFactsOriginCandidateTrace.source_guess_complete (serviceCandidate codec.frameRead) Counted

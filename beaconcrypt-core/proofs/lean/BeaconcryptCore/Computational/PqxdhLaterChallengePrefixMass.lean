@@ -84,9 +84,9 @@ theorem prepared_before
         (capturedPrefix original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth owner number first adversary)).run cache)] =
     𝒟[beforeKey <$> (RawCtxSharedPrefixScan.restore attach <$> (simulateQ hashImpl
         (capturedPrefix original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth owner number second adversary)).run cache)] := by
-  exact evalDist_eq_of_evalSPMF_eq _ _ (evalSPMF_map_eq_of_relTriple (relTriple_post_mono
+  exact ((VCVioLegacy.evalSPMF_eq_iff_evalDistEq _ _).1 (evalSPMF_map_eq_of_relTriple (relTriple_post_mono
     (PqxdhLaterChallengePrefixCoupling.prepared original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth
-      owner number first second adversary cache) (related_key owner number first second adversary)))
+      owner number first second adversary cache) (related_key owner number first second adversary)))).evalDist_eq
 
 end Prepared
 end BeaconcryptCore.Computational.PqxdhLaterChallengePrefixMass

@@ -125,7 +125,7 @@ theorem lawEq_support_subset {α : Type} {mx my : ProbComp α} (h : LawEq mx my)
     simp only [k, mem_support_bind_iff, support_pure, Set.mem_singleton_iff]
     exact ⟨a, member, by simp [outside]⟩
   have right : false ∉ support (my >>= k) := by simp [k]
-  rw [mem_support_iff_evalDist_singleton_ne_zero, law, ← mem_support_iff_evalDist_singleton_ne_zero] at left
+  rw [OracleComp.mem_support_iff_evalDist_singleton_pos, law, ← OracleComp.mem_support_iff_evalDist_singleton_pos] at left
   exact right left
 
 /-- Programs with the same law have the same support. -/
