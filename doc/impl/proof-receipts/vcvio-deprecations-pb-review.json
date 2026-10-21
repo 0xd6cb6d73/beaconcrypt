@@ -1,0 +1,303 @@
+{
+ "date": "2026-10-21",
+ "scope": "VCVio deprecation migration, closing checks of phase B (stage PB), fixes of the two independent reviews at b49b64ee (statement equivalence: EQ-PB-1 major, EQ-PB-2 and EQ-PB-3 nits; hygiene: H-PB-1 and H-PB-2 minor, H-PB-3 to H-PB-5 nits; no owner item). The cumulative certificate file is regenerated from the stage files that each stage's last committed receipt records (for S2 the review-fix file with the whole-statement iff of honest_decapsulation), the checker requires those files by hash and a guarded whole-statement iff for every textual fallback, and the rerun against the final build passes with the same counts; documentation wording (adapter class, upstream types of the forward names, twelve instances, the 321 count) and a record entry with the validation of b49b64ee and the reviews. No Lean file changes; Lean-only by owner decision item 5.",
+ "basis": "67e2cefc1a83058e87add9ac6fa679d0ade852a0",
+ "previous_head": "b49b64eeef9dc4cae5870ec3645aac1a00700c53",
+ "topic": {
+  "branch": "codex/vcvio-migration-PB",
+  "clone": "/home/user/bc-vmig-PB"
+ },
+ "commits": {
+  "fixes": "the commit that adds this receipt"
+ },
+ "reviews": {
+  "equivalence": {
+   "verdict": "REQUEST_CHANGES",
+   "commit": "b49b64eeef9dc4cae5870ec3645aac1a00700c53",
+   "findings_sha256": "72868f77fd67d7c1e8a714909e7c2921f168df2a145f5567bedc07f07ff8bc1b",
+   "fixed": [
+    "EQ-PB-1",
+    "EQ-PB-2",
+    "EQ-PB-3"
+   ],
+   "probe": {
+    "file": "PB/review-equivalence/lean/ReviewS2Rf.lean (lines 63-147 of the S2 review-fix certificate file)",
+    "lease": "00002415",
+    "result": "rc 0, same-type PASS, all three axiom guards hold"
+   }
+  },
+  "hygiene": {
+   "verdict": "APPROVE_WITH_NITS",
+   "commit": "b49b64eeef9dc4cae5870ec3645aac1a00700c53",
+   "findings_sha256": "286e60112791256f92932f5cd5a2ccca34c2593f18513846a5d866ee1147332d",
+   "fixed": [
+    "H-PB-1",
+    "H-PB-2",
+    "H-PB-3",
+    "H-PB-4",
+    "H-PB-5"
+   ]
+  },
+  "owner_level": []
+ },
+ "fixes": {
+  "EQ-PB-1": {
+   "defect": "the first run (leases 00002401-00002403) concatenated stage S2's certificate file from before the S2 review fixes (835ca43a), which proves the conclusion iff and the old statement of the textual fallback PqxdhChallengeSecretRouting.honest_decapsulation but not the whole-statement iff certificateStatementIff_honest_decapsulation that the S2 review receipt's file (b4925f10) adds; the analysis, the record and the receipt claimed the whole-statement check for all 756",
+   "fix": "PB/review-fix/scripts/gen_pb_certificates.py takes each stage's certificate and negative files by the hashes of the stage's last committed receipt that records them (stage_receipts.py: S1-S5, S7, S8 review receipts; S6 stage receipt; S9 first review receipt); check_pb_certificates.py adds STAGE-RECEIPTS (rehash, receipt hashes, section = stage file without imports and twin checks, negative commands = stage negatives without twin controls) and FALLBACK-IFF (theorem certificateStatementIff_<F> stating (type_of% @F) <-> (type_of% @certificateOld_<F>) in the fallback's namespace, exact three-axiom guards on it and on certificateOld_<F>)",
+   "checker_control_on_first_run": "FAIL exactly on S2 (835ca43a/544dee86 vs receipt b4925f10/65c35e5d), STAGE-RECEIPTS 8 of 9, FALLBACK-IFF 6 of 7 (honest_decapsulation)",
+   "result": "RESULT PASS; 749 + 7 PASS lines identical to the first run; 54 negatives with identical messages modulo file and doctored-record paths"
+  },
+  "EQ-PB-2": "the adapter class (14) also holds CtxRomAuth.ctxAliasGameProbability_le_cacheHit_add_inv, ctxFreshAliasGame_le_inv and ctxFreshAliasVerifier_le_inv (adapter semantics for CtxRO, amendment A2 item 1); the analysis PB section and the residual report's adapter paragraph now say so",
+  "EQ-PB-3": "27 of the 51 used replacement names have a different type at afa6593f, 10 also different binders (9 only instance binders, OracleComp.evalDist_query_uniform one more implicit after its explicit argument), explicit-argument count and order unchanged in all 51 (recomputed from S9 review-fix-2 post/probe-used/used.jsonl against survey api/outB); the residual report's upgrade steps and the analysis now say the names carry over and the upgrade build rechecks their uses",
+  "H-PB-1": "of the 124 used constants absent upstream, by exact name 51 are in the residual report, 61 more only in the S9 receipt, and 12 (all isInstance, named by no Lean source) in no document; the residual report's 'Non-deprecated API removed upstream' section lists the 12 and the PB entry's forward-name bullet is reworded",
+  "H-PB-2": "new record entry 'VCVio deprecation migration, closing checks of phase B (stage PB), review fixes (2026-10-21)' with the validation of b49b64ee, both reviews and this round's validation; 'Corrected in part' note on the PB entry; analysis Reviews paragraph; this receipt and a reviews pointer in vcvio-deprecations-pb.json",
+  "H-PB-3": "this round keeps the coord.sh inv dirt/recount/rehash output as logs (PB/review-fix/logs/inv-*.log)",
+  "H-PB-4": "the PB entry's phase B bullet and the residual report now say that the 321 declarations reference deprecated constants: deprecated VCVio constants, VCVio constants stated in the deprecated form, or deprecated Lean core lemmas",
+  "H-PB-5": "the tools of both PB receipts are keyed by their scratch paths (PB/scripts/..., PB/review-fix/scripts/...)"
+ },
+ "validation_b49b64ee": {
+  "summary": "PB/validation.md (PB session 2): Lean-only, all PASS",
+  "check_lean": {
+   "lease": "00002408",
+   "rc": 0,
+   "jobs": 5535,
+   "project_modules_built": 1994,
+   "dependency_modules_built": 0,
+   "records": 2909,
+   "error_records": 0,
+   "records_and_message_bodies_equal_to_S9_check_of_67e2cefc": true,
+   "warning_categories": "PASS vs 67e2cefc (project VCVio 0 -> 0, all deltas 0)"
+  },
+  "check_inventory": {
+   "lease": "00002409",
+   "rc": 0
+  },
+  "step7_source_scan": "LEAN-SCAN files 1994 hits 0 (positive control 3 hits)",
+  "axiom_walk": {
+   "lease": "00002411",
+   "output": [
+    "AXIOM-WALK roots 95133 reached 121982 unresolved 0",
+    "AXIOM-WALK axioms [Classical.choice, Quot.sound, propext]"
+   ]
+  },
+  "first_certificate_file": {
+   "leases": [
+    "00002412",
+    "00002413",
+    "00002414"
+   ],
+   "result": "output identical to its run against the published 67e2cefc build"
+  }
+ },
+ "certificates": {
+  "tooling": {
+   "CertTools.lean": "987e93df28f0d50ad616536108c41d2220bd985b4feafffc521899f48ee1660e",
+   "olean_sha256": "779be810e6d5773ba092f71c3ba3ef5de65e540e321971cd075728e637097b9f",
+   "olean_equal_to_shared_build": true
+  },
+  "leanpath": {
+   "published_commit": "67e2cefc1a83058e87add9ac6fa679d0ade852a0",
+   "sha256": "e15a085d8493d70a5365cfc0179e990248b62124f92d6ca085776ef1fc49d49c"
+  },
+  "file_sha256": "f32cf08f2bc5e102cc05d02bab1165505b465ed15e2622a41de59832722078aa",
+  "negative_file_sha256": "8a09ce404e3b42f933efc5ddb8ed3684d04f92ccea0964d255aa7456609f3fab",
+  "expected_sha256": "fcaf69b96a74fecbd69bcc086edbf9fb0507e5133ed137c9f4b37c76afd717d5",
+  "stage_files": {
+   "S1": {
+    "source": "/tmp/bc-arc-scratch/vcvio-migration/S1/certificates/S1Certificates.lean",
+    "sha256": "8e09fe82f54981254849ccd4c377bdf6c5d05e0ae58ac020d1f9813367af33e9",
+    "negative_source": "/tmp/bc-arc-scratch/vcvio-migration/S1/certificates/S1CertificatesNegative.lean",
+    "negative_sha256": "dc2b206e3d9162eb88b251b3610ca35b1a772b54d550afcf83fb28cda0a7f937",
+    "receipt": "doc/impl/proof-receipts/vcvio-deprecations-s1-review.json"
+   },
+   "S2": {
+    "source": "/tmp/bc-arc-scratch/vcvio-migration/S2/review-fix/certificates/S2Certificates.lean",
+    "sha256": "b4925f1097f58984a5876b4bc7ec7269c59f8f85be03138772db1ea5fdb32ed5",
+    "negative_source": "/tmp/bc-arc-scratch/vcvio-migration/S2/review-fix/certificates/S2CertificatesNegative.lean",
+    "negative_sha256": "65c35e5dc4f43d97544b53b0dd28e51cae6ca26d323451c41ad270fb916e622f",
+    "receipt": "doc/impl/proof-receipts/vcvio-deprecations-s2-review.json"
+   },
+   "S3": {
+    "source": "/tmp/bc-arc-scratch/vcvio-migration/S3/certificates/S3Certificates.lean",
+    "sha256": "186c6064b5b548c897aae28432eeee8a3544b8bf45227b007f14bf90150681ac",
+    "negative_source": "/tmp/bc-arc-scratch/vcvio-migration/S3/certificates/S3CertificatesNegative.lean",
+    "negative_sha256": "c70c504afdd4044b5e2141a20c856533b64e6ab702c786c06ac03912267c829f",
+    "receipt": "doc/impl/proof-receipts/vcvio-deprecations-s3-review.json"
+   },
+   "S4": {
+    "source": "/tmp/bc-arc-scratch/vcvio-migration/S4/certificates/S4Certificates.lean",
+    "sha256": "954efee08771ef2dfa76a7817c3a55283f88316c7e7bf984d4aaa5ce5782cedb",
+    "negative_source": "/tmp/bc-arc-scratch/vcvio-migration/S4/certificates/S4CertificatesNegative.lean",
+    "negative_sha256": "bce5160bf1a20e6141a0fe3908149c8c2bf6a881c22e8f9ad961bee83afa91e5",
+    "receipt": "doc/impl/proof-receipts/vcvio-deprecations-s4-review.json"
+   },
+   "S5": {
+    "source": "/tmp/bc-arc-scratch/vcvio-migration/S5/certificates/S5Certificates.lean",
+    "sha256": "02a6f8311ffbdd051d24b5bcbbc25182e0af65045b5f7d0e372c1e6c85bd5009",
+    "negative_source": "/tmp/bc-arc-scratch/vcvio-migration/S5/certificates/S5CertificatesNegative.lean",
+    "negative_sha256": "e375da17f36c50caea91eff40623538e988f370348802b263b0b30200f605e95",
+    "receipt": "doc/impl/proof-receipts/vcvio-deprecations-s5-review.json"
+   },
+   "S6": {
+    "source": "/tmp/bc-arc-scratch/vcvio-migration/S6/certificates/S6Certificates.lean",
+    "sha256": "08a3ee245dbda1305d9021feb5fe44a850ddb3607e9052ec405b0f1e090b7fe1",
+    "negative_source": "/tmp/bc-arc-scratch/vcvio-migration/S6/certificates/S6CertificatesNegative.lean",
+    "negative_sha256": "17047c284574f69893d73652a3973382a66a230cd49de74f47a8cecd033bfdb0",
+    "receipt": "doc/impl/proof-receipts/vcvio-deprecations-s6.json"
+   },
+   "S7": {
+    "source": "/tmp/bc-arc-scratch/vcvio-migration/S7/certificates/S7Certificates.lean",
+    "sha256": "5d6088c50ebc4166b5992630d3e9ed2b46ffa8596afbda8f9b05930c2ca06295",
+    "negative_source": "/tmp/bc-arc-scratch/vcvio-migration/S7/certificates/S7CertificatesNegative.lean",
+    "negative_sha256": "ec87efef4c78503bdae98cf11f3b7d23345437b2293f71a989b7d9b29ff8e962",
+    "receipt": "doc/impl/proof-receipts/vcvio-deprecations-s7-review.json"
+   },
+   "S8": {
+    "source": "/tmp/bc-arc-scratch/vcvio-migration/S8/certificates/S8Certificates.lean",
+    "sha256": "2d2f69fbe9db47e2bab92d4414071463592f31f8b68102b9de588bda952718c8",
+    "negative_source": "/tmp/bc-arc-scratch/vcvio-migration/S8/certificates/S8CertificatesNegative.lean",
+    "negative_sha256": "776295fed170970db83124a527f11c6916d0e28ae1e48dc485f513bf1730cc13",
+    "receipt": "doc/impl/proof-receipts/vcvio-deprecations-s8-review.json"
+   },
+   "S9": {
+    "source": "/tmp/bc-arc-scratch/vcvio-migration/S9/certificates/S9Certificates.lean",
+    "sha256": "1080f73e306ee517b2996369efef0a9b750294fba07efed723bed50c2a0fd21f",
+    "negative_source": "/tmp/bc-arc-scratch/vcvio-migration/S9/certificates/S9CertificatesNegative.lean",
+    "negative_sha256": "d752539bb63ec5fb7b46ba8cf9f0b97b1f96f924c213d0bbae4a25d7553199d8",
+    "receipt": "doc/impl/proof-receipts/vcvio-deprecations-s9-review.json"
+   }
+  },
+  "difference_from_first_file": "header comment and the S2 section (whole-statement iff, its axiom guard, its fail_if_success control, docstring); negative file: header comment and the S2 doctored-record paths (the two doctored records are byte-identical)",
+  "leases": {
+   "certtools": "00002416",
+   "certificates": "00002417",
+   "negative": "00002418"
+  },
+  "inverse_map_pass": 749,
+  "textual_fallback_pass": 7,
+  "whole_statement_iffs": 7,
+  "twin_checks_dropped": 66,
+  "negatives": 54,
+  "negative_lines": [
+   9,
+   10,
+   11,
+   12,
+   13,
+   15,
+   16,
+   17,
+   18,
+   19,
+   21,
+   22,
+   23,
+   24,
+   25,
+   26,
+   28,
+   29,
+   30,
+   31,
+   32,
+   33,
+   35,
+   36,
+   37,
+   38,
+   39,
+   41,
+   42,
+   43,
+   44,
+   45,
+   46,
+   48,
+   49,
+   50,
+   51,
+   52,
+   53,
+   54,
+   56,
+   57,
+   58,
+   59,
+   60,
+   62,
+   63,
+   64,
+   65,
+   66,
+   67,
+   68,
+   69,
+   70
+  ],
+  "pass_lines_equal_to_first_run": true,
+  "negative_messages_equal_to_first_run_modulo_paths": true,
+  "checker": "RESULT PASS",
+  "log_sha256": {
+   "certificates": "508cfcdc37d639323439941c53f6f3461eded89eb2adbacf00e38a52b96c13aa",
+   "negative": "93af0bef00bf3230a310f91c95180cee401b3fcd5d6779cd46f4b082d735b9a5",
+   "checker": "7ddcbc2f03083b82977365bc7b5e4e9369483e513823061b4f13b5fd3c54511b"
+  }
+ },
+ "build": {
+  "check_lean": {
+   "lease": "00002419",
+   "rc": 0,
+   "jobs": 5535,
+   "modules_built": 0,
+   "records": 2909,
+   "error_records": 0,
+   "records_equal_to_validation_b49b64ee": true,
+   "note": "the fix commit changes no Lean file; the PB clone's build of b49b64ee is up to date"
+  }
+ },
+ "inventory": {
+  "inv_recount": "handwritten-lean count unchanged (1987), run before the rehash (16:52:50.186Z, rehash 16:52:50.268Z)",
+  "inv_rehash": [
+   "proofs/lean/BeaconcryptCore.lean: unchanged",
+   "proofs/trusted-boundary.md: unchanged",
+   "proofs/check-inventory.sh: unchanged"
+  ],
+  "check_inventory": {
+   "edited_tree": "00002420",
+   "committed_tree": "after the commit, recorded in PB/validation.md"
+  },
+  "logs": [
+   "PB/review-fix/logs/inv-dirt.log",
+   "PB/review-fix/logs/inv-recount.log",
+   "PB/review-fix/logs/inv-rehash.log",
+   "PB/review-fix/logs/check-inventory-1.log"
+  ]
+ },
+ "docs": {
+  "doc/impl/staged-verification-record.md": "PB entry: 'Corrected in part' note, phase B bullet (H-PB-4) and forward-name bullet (H-PB-1); new entry 'VCVio deprecation migration, closing checks of phase B (stage PB), review fixes (2026-10-21)'",
+  "doc/formal-verification-analysis.md": "PB section: adapter class (EQ-PB-2), forward-name types (EQ-PB-3), whole-statement iffs and receipt-pinned stage files (EQ-PB-1), Reviews paragraph",
+  "doc/impl/vcvio-upgrade-residual.md": "upgrade steps (EQ-PB-3), 321 sentence (H-PB-4), adapter paragraph (EQ-PB-2), twelve instances (H-PB-1)",
+  "doc/impl/proof-receipts/vcvio-deprecations-pb.json": "certificates of the rerun, superseded_first_run, reviews pointer, tools keyed by scratch path",
+  "edit_script": {
+   "file": "PB/review-fix/scripts/edit_docs_pbrf.py",
+   "sha256": "6f2e1c0e2d73b13228aa8663c9bb7420cc355b89424ffc5b8b55e002311e8fa2"
+  }
+ },
+ "not_run": [
+  "verify-in-shell, ProVerif, transcript fidelity, cargo, Go and Python tests (owner decision 2026-10-19 item 5)",
+  "mutation suite (no Rust source changed)",
+  "nix-collect-garbage"
+ ],
+ "tool_sha256": {
+  "PB/review-fix/scripts/stage_receipts.py": "cabad681fb025339c989246d1b8d18f9b784ececeba022a4ea4c3f18392e014e",
+  "PB/review-fix/scripts/gen_pb_certificates.py": "c7d10fdb380384055fc4e6eae02f91ee7b8cedaacd72c071266045080e23c496",
+  "PB/review-fix/scripts/check_pb_certificates.py": "1881d735bb1c122d6953c055482725617bde8b5e32325ac6563504f6fdfb5484",
+  "PB/review-fix/scripts/run-certificates.sh": "5b7b930abfefedf71028e92cbd6d6f20ead17bb944c6466478d8b276e01904a7",
+  "PB/review-fix/scripts/check-lean.sh": "c363f70f50706eef80a1910161d31dd7a19c5b3957770c7828b8118928507ce0",
+  "PB/review-fix/scripts/check-inventory.sh": "fa7313ba3f2078ffc3b0e557ccdee26e512d2e9573240c295df531f81ef403ed",
+  "PB/review-fix/scripts/edit_docs_pbrf.py": "6f2e1c0e2d73b13228aa8663c9bb7420cc355b89424ffc5b8b55e002311e8fa2",
+  "PB/review-fix/scripts/gen_receipts_pbrf.py": "c601905dd4e7c05a18aefdcad2c5b87221190ede6b5c3afb6dc05a42b1379bb2",
+  "PB/scripts/lean-check.sh": "66a63f63f2fab45ea322f4b17bd4920651b099dc39020882c3396f36b9b63c90"
+ },
+ "logs": "machine-local, /tmp/bc-arc-scratch/vcvio-migration/PB/review-fix/logs/"
+}
