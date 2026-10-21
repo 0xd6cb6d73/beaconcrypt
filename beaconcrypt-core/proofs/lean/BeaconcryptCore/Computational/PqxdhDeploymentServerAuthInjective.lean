@@ -457,7 +457,14 @@ theorem lower_le_advantage (setup : Setup baseSpec KemSK) (count : Nat) (target 
   have decided : Pr{let x ← PqxdhJointIdentityFamily.sampleFamily (count + 1)}[(LowerCollision setup.joint target) x] =
       Pr{let x ← (PqxdhJointIdentityFamily.sampleFamily (count + 1) >>= fun seeds =>
         pure (decide (LowerCollision setup.joint target seeds)))}[x = true] := by
-    simp only [bind_assoc, pure_bind, decide_eq_true_eq]
+    -- Turn the final decision into a map of the computation, so that `prEvent_map` applies whatever term `Pr{…}` elaborates to.
+    have computation : (PqxdhJointIdentityFamily.sampleFamily (count + 1) >>= fun seeds =>
+        pure (decide (LowerCollision setup.joint target seeds))) =
+        (fun seeds => decide (LowerCollision setup.joint target seeds)) <$>
+          PqxdhJointIdentityFamily.sampleFamily (count + 1) :=
+      bind_pure_comp _ _
+    rw [computation, prEvent_map]
+    exact prEvent_congr _ _ _ fun _ => decide_eq_true_iff.symm
   have moved := (PqxdhJointIdentityFamily.sampleFamily_target_first count target
     (fun seeds => pure (decide (LowerCollision setup.joint target seeds)))).prEvent_eq (fun value => value = true)
   rw [decided, moved, advantage, collider_game]

@@ -1,0 +1,277 @@
+{
+ "date": "2026-10-21",
+ "scope": "VCVio deprecation migration, stage S9 and final sweep, fixes of the two independent reviews at 617fac92 (statement equivalence EQ-S9-1; hygiene H1, H2, H3, H4; no owner item). One proof step of PqxdhDeploymentServerAuthInjective.lower_le_advantage rewritten (statement, guard and certificate unchanged; only its proof term changes among the 95,128 declarations) and four module docstrings reworded, so these five modules and their importers were rebuilt; seven inventory rows rehashed; LA-09, the HB-124 toolchain summary and its compatibility paragraph in trusted-boundary.md, the Lean README's VCVio paragraph, the analysis overview and S9 section and the S9 record entry corrected (H2-H4). Supplements vcvio-deprecations-s9.json (the record of 617fac92, left unchanged).",
+ "basis": "86bbc791bb3f2f8ad3747394fc68620101faa8ae",
+ "previous_head": "617fac92f58ecb19a634ecbf41daef47d3420606",
+ "topic": {
+  "branch": "codex/vcvio-migration-S9",
+  "clone": "/home/user/bc-vmig-S9"
+ },
+ "commits": {
+  "fixes": "the commit that adds this receipt"
+ },
+ "reviews": {
+  "equivalence": {
+   "verdict": "APPROVE_WITH_NITS",
+   "commit": "617fac92f58ecb19a634ecbf41daef47d3420606",
+   "findings_sha256": "c0c508de5ede53b1ad715c5c7287cec2c89135e769129418b5f50a0c71f1e363",
+   "fixed": [
+    "EQ-S9-1"
+   ]
+  },
+  "hygiene": {
+   "verdict": "REQUEST_CHANGES",
+   "commit": "617fac92f58ecb19a634ecbf41daef47d3420606",
+   "findings_sha256": "ffb00670a1a94d76f836c7f6aa303ab0bcd535e6ae331208b3ef688839e00199",
+   "fixed": [
+    "H1",
+    "H2",
+    "H3",
+    "H4"
+   ]
+  },
+  "owner_level": []
+ },
+ "fixes": {
+  "EQ-S9-1": {
+   "defect": "the A3 rewrite of lower_le_advantage proved its local equation `decided` (Pr{let x <- sampleFamily (count + 1)}[(LowerCollision setup.joint target) x] = Pr{let x <- (sampleFamily (count + 1) >>= fun seeds => pure (decide (LowerCollision setup.joint target seeds)))}[x = true]) by `simp only [bind_assoc, pure_bind, decide_eq_true_eq]`, which closes only through the pin's macro expansion of Pr{...} (VCVio/EvalDist/ProbabilityNotation.lean:28-32, `𝒟[do ...; return p x] {True}`); upstream afa6593f elaborates Pr{...} to `prEvent ((fun x => p x) <$> mx)` (prEventNormalize), on which the step fails; no deprecated or removed name, so neither G5 nor the residual report counted it",
+   "lean_change": {
+    "file": "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentServerAuthInjective.lean",
+    "theorem": "BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective.lower_le_advantage",
+    "after": "have computation : (sampleFamily (count + 1) >>= fun seeds => pure (decide (LowerCollision setup.joint target seeds))) = (fun seeds => decide (LowerCollision setup.joint target seeds)) <$> sampleFamily (count + 1) := bind_pure_comp _ _; rw [computation, prEvent_map]; exact prEvent_congr _ _ _ fun _ => decide_eq_true_iff.symm (with a one-line comment)",
+    "statement_changed": false,
+    "guard_changed": false,
+    "upstream_names": "prEvent_map and prEvent_congr exist upstream with the same statements and explicit arguments (api/vcvio-upstream/VCVio/EvalDist/ProbabilityNotation.lean:470 and :331); bind_pure_comp and decide_eq_true_iff are Lean core"
+   },
+   "replay_style_check": {
+    "files": {
+     "Pin": {
+      "path": "/tmp/bc-arc-scratch/vcvio-migration/S9/review-fix/replay/DecidedStepPin.lean",
+      "sha256": "b76d09ba3bca4dfd9f71312b5da123fd2bc1e175b4f6c4abe7779819f67465b1"
+     },
+     "Upstream": {
+      "path": "/tmp/bc-arc-scratch/vcvio-migration/S9/review-fix/replay/DecidedStepUpstream.lean",
+      "sha256": "dcaf0222f3df93907da1d88f6ed4255a4df781276139dc3ceac31918cda5bbe8"
+     },
+     "OldPin": {
+      "path": "/tmp/bc-arc-scratch/vcvio-migration/S9/review-fix/replay/DecidedStepOldPin.lean",
+      "sha256": "cff1fe6bb79bf16607bf198a26aa865380bd757952468f612397c66d402efdbf"
+     },
+     "OldUpstream": {
+      "path": "/tmp/bc-arc-scratch/vcvio-migration/S9/review-fix/replay/DecidedStepOldUpstream.lean",
+      "sha256": "4b91286f3ea1d6ab59c315582b0108bcb058084f95d9efa12924fd62f91ebc0b"
+     }
+    },
+    "statement": "the `decided` step over an arbitrary `mx : ProbComp α` and `L : α → Prop`, once after `classical` (as in the proof) and once with `[DecidablePred L]`",
+    "leanpaths": {
+     "pin": "/tmp/bc-arc-scratch/vcvio-migration/S9/stage/leanpath-clone (the stage clone's build)",
+     "upstream": "/tmp/bc-arc-scratch/vcvio-migration/S0/base/leanpath-upstream-afa6593f (the forward replay's upstream build)"
+    },
+    "results": {
+     "Pin": {
+      "lease": "00002098",
+      "rc": 0,
+      "errors": []
+     },
+     "Upstream": {
+      "lease": "00002101",
+      "rc": 0,
+      "errors": []
+     },
+     "OldPin": {
+      "lease": "00002100",
+      "rc": 0,
+      "errors": []
+     },
+     "OldUpstream": {
+      "lease": "00002102",
+      "rc": 1,
+      "errors": [
+       "`simp` made no progress"
+      ]
+     }
+    },
+    "summary": "new step: compiles on the pin and upstream; 617fac92 step: compiles on the pin, fails upstream with `simp` made no progress"
+   },
+   "single_file_check": {
+    "lease": "00002103",
+    "result": "rc 0, no error, no warning",
+    "negative": "a doctored copy (decide_eq_true_iff without .symm) fails at the step and at the two dependent axiom guards"
+   }
+  },
+  "H1": {
+   "defect": "four module docstrings described restated statements or replaced proof steps in the deprecated layer",
+   "lines": {
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftKeyCut.lean:8": "key_cut / key_cut_measure 'in the deprecated `𝒮`' -> 'as an equality in distribution (`EvalDistEq`)'; miss_eager, table_eager, key_cut_view, key_cut 'stated in the deprecated `𝒮` because ... are stated in `𝒮`; only these four theorems switch off the deprecation linter' -> 'stated with `EvalDistEq`, like the central lemmas they apply, ...' (no linter option named; inventory pin require_line_count 0 'linter\\.deprecated' kept)",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemSecondEntryTable.lean:11": "'stated in VCVio's deprecated `𝒮[…]` notation, like that lemma' -> 'stated as an equality in distribution (`EvalDistEq`), like that lemma'",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentServerAuthEager.lean:4": "`DeferredSampling.evalSPMF_bind_comm` -> `OracleComp.EvalDistEq.bind_bind_swap` (the law the proofs use, lines 214 and 280)",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftLaterCtx.lean:10": "`evalDist_eq_of_evalSPMF_eq` -> `EvalDistEq.evalDist_eq` (the law key_cut_of uses)"
+   },
+   "stale_comment_scan": {
+    "script": "/tmp/bc-arc-scratch/vcvio-migration/S9/review-fix/scripts/stale_comment_names_wt.py (the reviewer's stale_comment_names.py with a working-tree head)",
+    "sha256": "739111bdb7b4ebc2f7540af3642dbc88f5d8323898a8561ac13f98e86a1b4f9b",
+    "reproduces_reviewer_at_617fac92": true,
+    "edited_tree": "the four lines no longer reported; no new line"
+   }
+  },
+  "H2": {
+   "trusted-boundary.md (compatibility paragraph after the HB-124 summary)": "'Generic discrete laws retain `evalSPMF`' -> 'Generic discrete laws retained `evalSPMF` until the VCVio deprecation migration restated them as `EvalDistEq` equalities'",
+   "doc/formal-verification-analysis.md (Lean 4.34 overview)": "'Generic discrete full-state equalities use `evalSPMF`, and Boolean singleton lemmas connect them ...' -> '..., stated with `evalSPMF` at the port and with `EvalDistEq` since the VCVio deprecation migration, are connected ... by Boolean singleton lemmas'"
+  },
+  "H3": {
+   "simp_bridge_exclusions": "the stage adds exactly ten exclusion lines in ten files: eight simp/simpa calls exclude evalDist_apply_singleton, evalDist_apply_setOf and evalDist_apply_univ (LaterServerKemHop, Provenance, OriginFailedFlag, OriginOrdinalProbability, KemRawGame, SecondEntryTable, R1RootProbability, RootFirstEntry), and the full simp calls of PqxdhDeploymentHeadlineLor.chance_split and PqxdhRecordFactsLaterFresh.hitAt_bound exclude evalDist_apply_singleton only; the record ('What else was edited') and the analysis ('Proofs') now say eight and two",
+   "work_set_vs_edited": "154 = the work set (136 stage modules + 18 twin host modules); the stage commit 6794f734 edits 113 of them; the 200 theorems with changed proofs are all in the 113 (94 modules); heartbeat/recursion options: 22 in the 113 edited files, 24 in the 154, 15 in the 136, each before and after; the record's first validation bullet and G4 bullet and the analysis's 'Elaboration limits' now say so",
+   "stage_receipt_correction": "vcvio-deprecations-s9.json lean_changes 'elaboration_limits' says '24 in the stage's files before and after': read '24 in the 154 work-set files, 22 in the 113 edited files and 15 in the 136 stage files, before and after'. The stage receipt stays the record of 617fac92 and is not edited."
+  },
+  "H4": {
+   "lean/README.md": "'every statement outside the allowlisted `VCVioLegacyBridge` is written with ...' -> 'every statement outside the allowlisted `VCVioLegacyBridge` that used that interface is now written with ...'",
+   "trusted-boundary.md LA-09": "residual notions: total variation, expectations, the Boolean advantage and the subdistribution adapter semantics",
+   "trusted-boundary.md HB-124 toolchain summary": "'defines a notion or states a law from it alone (total variation, expectations, the Boolean advantage, the relational coupling laws, the adapter semantics for arbitrary uniform oracle specifications)', the list of the final-sweep section, the analysis and the residual report",
+   "change_of_trust": "none (documentation only)"
+  },
+  "edit_scripts": {
+   "edit_lean_rf1.py": "5eede2aa69aeb496da9508ab2ca2e43957d768d3c3d7fda920cce95ec8ed4237",
+   "edit_docs_rf1.py": "6b79dd4196fbc3e6f79b5ca249a0affa3ae52e76376888c50cdbc2174967c6e7",
+   "append_docs_rf1.py": "2fa5b96bc5f274ab1a33920976cccbc2e86e5b95434a33638870af96431426a5"
+  },
+  "edit_scripts_note": "exact-text, count-checked replacements against the 617fac92 blobs; the Lean apply + revert tested on copies (revert byte-identical), the document edits tested on copies of the 617fac92 documents (equal to the clone result)"
+ },
+ "build": {
+  "check_lean": {
+   "lease": "00002105",
+   "rc": 0,
+   "jobs": "5535",
+   "modules_built_count": 228,
+   "modules_built_equal_import_closure": "the 5 edited modules, all their transitive importers and the root (scripts/rebuilt_closure.py)",
+   "error_records": 0
+  },
+  "records_equal_to_check_lean_4": true,
+  "records_equal_to_validation_617f": true,
+  "warning_categories": "PASS (vs check-lean-0; VCVio 36 -> 0, no growth, no new kind); output equal to logs/warn-categories-4.log"
+ },
+ "post_build": {
+  "leases": {
+   "decls": "00002107",
+   "facade": "00002106",
+   "stmtnames": "00002108",
+   "probe-usage": "00002109",
+   "probe-used": "00002110",
+   "axiom-walk": "00002112"
+  },
+  "declaration_diff_vs_final": "95,128 = 95,128; only the value (proof term) of PqxdhDeploymentServerAuthInjective.lower_le_advantage changes",
+  "facade_probe_equal_to_final": true,
+  "statement_names_equal_to_final": true,
+  "usage_and_used_probes": [
+   "USED constants 546 546 added/removed []",
+   "USED changed ('VCVio.EvalDist.ProbabilityNotation', 'prEvent_congr') ['users'] {'BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective': (None, 1)}",
+   "USED changed ('VCVio.EvalDist.ProbabilityNotation', 'prEvent_map') ['users'] {'BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjective': (1, 2)}",
+   "USAGE constants 540 540 added/removed []",
+   "USAGE changed ('VCVio.EvalDist.ProbabilityNotation', 'prEvent_congr') {'projModules': (31, 32), 'projValueRefs': (52, 53)}",
+   "USAGE changed ('VCVio.EvalDist.ProbabilityNotation', 'prEvent_map') {'projValueRefs': (259, 260)}"
+  ],
+  "usage_and_used_note": "differ from the final sweep's only by the new step's uses in PqxdhDeploymentServerAuthInjective (prEvent_map one more, prEvent_congr one new user); both constants exist upstream",
+  "source_scan": [
+   "keys equal True",
+   "sites: new 28 final 28 equal True",
+   "comment_mentions: new 54 final 55 equal False",
+   "  only final {\"col\": 433, \"comment_kind\": \"moddoc\", \"decl\": \"evalSPMF\", \"file\": \"BeaconcryptCore/Computational/PqxdhRegistrationJointKemSecondEntryTable.lean\", \"line\": 11, \"token\": \"\\ud835\\udcae[\"}",
+   "notation_definition_sites: new 0 final 0 equal True",
+   "files differing: {\"BeaconcryptCore/Computational/PqxdhDeploymentServerAuthInjective.lean\": [{\"lines\": 637, \"sites\": 0, \"new_notation_uses\": 0}, {\"lines\": 644, \"sites\": 0, \"new_notation_uses\": 0}]}"
+  ],
+  "source_scan_note": "sites equal (28, the bridge); one comment mention fewer (the 𝒮[ of the reworded SecondEntryTable docstring); PqxdhDeploymentServerAuthInjective 7 lines longer",
+  "step7_lean_scan": "LEAN-SCAN files 1994 hits 0",
+  "twin_names_in_comments": "TWIN-NAMES-IN-COMMENTS files 1994 hits 0",
+  "prose_check_vs_617fac92": "PROSE-CHECK files 5 modified 4 added 1 removed 0 wrapped-added 0 scratch-refs 0",
+  "step7_axiom_walk": [
+   "AXIOM-WALK roots 95128 reached 121978 unresolved 0",
+   "AXIOM-WALK axioms [Classical.choice, Quot.sound, propext]",
+   "SERVER-DOMAIN PqxdhDeploymentKemTwoSided.kem_transfer_two_sided true",
+   "SERVER-DOMAIN PqxdhDeploymentIdealCompile.ideal_compile true",
+   "SERVER-DOMAIN PqxdhDeploymentIdealHandoff.ideal_world_view true",
+   "SERVER-DOMAIN PqxdhRegistrationJointKemKeyTransfer.allIdeal_loss false",
+   "SERVER-DOMAIN PqxdhRegistrationJointKemPostSkeleton.opaqueBranch_shared false",
+   "SERVER-DOMAIN PqxdhRegistrationJointBeaconFinishOnce.slotGame_two false"
+  ],
+  "step7_axiom_walk_lines_equal_to_final": true
+ },
+ "final_checks": {
+  "phase_b_report_equal_to_final": true,
+  "stage_exceptions_equal_to_stage_list": true,
+  "sweep_exceptions_equal_to_final_list": true,
+  "cumulative_g4_equal_to_final": true,
+  "final_residual_equal_to_final": true,
+  "final_acceptance": "RESULT PASS",
+  "final_acceptance_equal_to_final": true,
+  "note": "paths ignored in the JSON comparisons (scripts/json_same.py); exception lists byte for byte"
+ },
+ "certificates": {
+  "tooling": {
+   "CertTools.lean": "987e93df28f0d50ad616536108c41d2220bd985b4feafffc521899f48ee1660e",
+   "olean_sha256": "779be810e6d5773ba092f71c3ba3ef5de65e540e321971cd075728e637097b9f",
+   "olean_equal_to_shared_build": true,
+   "check_certificates_s2.py": "f330b2676633e4d1b2921abd285282107f0242e34c9b8948f0a80298cceca540"
+  },
+  "certificate_file_sha256": "1080f73e306ee517b2996369efef0a9b750294fba07efed723bed50c2a0fd21f",
+  "certificate_file_equal_to_stage": true,
+  "negative_file_sha256": "d752539bb63ec5fb7b46ba8cf9f0b97b1f96f924c213d0bbae4a25d7553199d8",
+  "negative_file_equal_to_stage": true,
+  "leases": {
+   "certificates": "00002113",
+   "negative": "00002114"
+  },
+  "pass_lines": 54,
+  "negative_error_lines": [
+   13,
+   14,
+   15,
+   16,
+   17,
+   18,
+   19,
+   20,
+   21
+  ],
+  "checker": "RESULT PASS",
+  "log_sha256": "3572fd8b3de0ec9237cb88b7ffe30d3b5f4b6cd6c53eda1e78c37723925307b2"
+ },
+ "inventory": {
+  "inv_recount": "handwritten-lean count unchanged (1987), run before the rehash",
+  "inv_rehash": [
+   "proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentServerAuthInjective.lean: 1670dbb8bf7d -> 13d2edd0b982",
+   "proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftKeyCut.lean: 04bb329afc3b -> 7910c8be9f5e",
+   "proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointKemSecondEntryTable.lean: f3efd5262ebc -> 55db7ac347d3",
+   "proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentServerAuthEager.lean: f50d8454f34f -> e33e947704cf",
+   "proofs/lean/BeaconcryptCore/Computational/PqxdhRecordLiftLaterCtx.lean: 92875010173d -> 4558e4852bda",
+   "proofs/trusted-boundary.md: b55d665010d8 -> 88365696d5c2",
+   "proofs/lean/README.md: d3600f2b86cd -> db3132d82a4f"
+  ],
+  "unchanged": "check-inventory.sh, BeaconcryptCore.lean (no pin changed)",
+  "check_inventory_edited_tree": {
+   "lease": "00002111",
+   "rc": 0
+  }
+ },
+ "docs": {
+  "beaconcrypt-core/proofs/trusted-boundary.md": "LA-09 and the HB-124 toolchain summary (H4), compatibility paragraph (H2)",
+  "beaconcrypt-core/proofs/lean/README.md": "VCVio paragraph (H4)",
+  "doc/formal-verification-analysis.md": "Lean 4.34 overview (H2); S9 section: 'Elaboration limits' and 'Proofs' counts (H3), Reviews paragraph",
+  "doc/impl/staged-verification-record.md": "S9 entry: 'Corrected in part' note and the H3 counts; final-sweep entry: 'Corrected in part' note; new entry 'VCVio deprecation migration, stage S9 and final sweep, review fixes (2026-10-21)'",
+  "doc/impl/proof-receipts/vcvio-deprecations-s9.json": "unchanged (record of 617fac92); see fixes.H3.stage_receipt_correction"
+ },
+ "not_run": [
+  "verify-in-shell, ProVerif, transcript fidelity, cargo, Go and Python tests (owner decision 2026-10-19 item 5)",
+  "mutation suite (no Rust source changed)",
+  "nix-collect-garbage"
+ ],
+ "tool_sha256": {
+  "post.sh": "51b09082678163ebfad60fade3407297c19891c442fcbefb533d32261dac897a",
+  "decl_diff.py": "69a3ffbe11cf23e3f1622925a181d55fb3dcefdef55b09684d02fa1551236b79",
+  "json_same.py": "a1b1adc962a89165fe0d8ec7784081f2a7c84c0364eae9c4423d6557dc750860",
+  "probe_diff.py": "3ad6959f49963cecf51413623a2ed8c699bb8937e7cfcc61b39f48c672ba298b",
+  "scan_diff.py": "408d76028bac3bebfeb02cac92f3a950ed297a45099b2c7ac7aacccc27cae8c8",
+  "rebuilt_closure.py": "9f0d3685fc2e512ddf5f7dfd171da812da41c60e9c6d6e84f2b927c10068e20f",
+  "stale_comment_names_wt.py": "739111bdb7b4ebc2f7540af3642dbc88f5d8323898a8561ac13f98e86a1b4f9b",
+  "gen_receipt_s9_review.py": "336346ad23f360115dd7f309cadfb98a8ec6b09f1e70eb4f61afb48051be6b4a"
+ },
+ "logs": "machine-local, /tmp/bc-arc-scratch/vcvio-migration/S9/review-fix/logs/"
+}
