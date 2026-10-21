@@ -93,7 +93,9 @@ theorem same_prefix (depth qPost : Nat) (sourceBit : Bool) :
       depth qPost sourceBit false] {true} =
     𝒟[run setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
       depth qPost sourceBit true] {true} := by
-  simp only [run, evalDist_apply_singleton, probOutput_bind_eq_tsum]
+  simp only [run]
+  rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true]
+  simp only [OracleComp.prEvent_bind_eq_tsum]
   apply tsum_congr
   intro result
   by_cases actual : result ∈ support ((simulateQ backend
@@ -101,9 +103,9 @@ theorem same_prefix (depth qPost : Nat) (sourceBit : Bool) :
         attachedVerify primitives baseImpl kem ancestors disclosed depth)).run randomInitial)
   · have equal := reached setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem
       ancestors disclosed depth qPost sourceBit result.1 result.2 actual
-    simp only [evalDist_apply_singleton] at equal
+    rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true] at equal
     rw [equal]
-  · have zero := probOutput_eq_zero_of_not_mem_support actual
+  · have zero := prEvent_eq_zero_of_not_mem_support _ actual
     rw [zero, zero_mul, zero_mul]
 
 /-- For any fixed continuation world, the complete before observation, including the full reached component state, gives the same actual resumed distribution in either generated prefix world. -/
@@ -112,7 +114,7 @@ theorem same_continuation (depth qPost : Nat) (first second bit : Bool) :
       depth qPost first bit] =
     𝒟[run setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
       depth qPost second bit] := by
-  apply evalDist_eq_of_evalSPMF_eq
+  refine EvalDistEq.evalDist_eq ((VCVioLegacy.evalSPMF_eq_iff_evalDistEq _ _).mp ?_)
   apply evalSPMF_eq_of_relTriple_eqRel
   have paired := relTriple_bind (PqxdhLaterChallengeRandomBefore.carried setup env callbacks program
     adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed depth first second randomInitial)

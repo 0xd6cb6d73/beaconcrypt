@@ -78,13 +78,12 @@ theorem indexed_miss (sampler : ℕ → ProbComp R) (point : D) (state : IState 
       Pure.pure (answer, (state.1.cacheQuery point answer, state.2 + 1))) := by
   simp [indexedImpl, miss]
 
-set_option linter.deprecated false in
 /-- Eager sampling of the `k`-th fresh point: the indexed table has the output distribution of drawing the `k`-th fresh value first and answering the `k`-th fresh point with it. -/
 theorem indexed_eager {α : Type} (sampler : ℕ → ProbComp R) (k : ℕ) (client : OracleComp (Spec D R) α)
     (state : IState D R) :
-    𝒮[(simulateQ (indexedImpl sampler) client).run state] =
-      𝒮[do let value ← sampler k; (simulateQ (indexedImpl (pin k value sampler)) client).run state] := by
-  refine PqxdhServerAuthEntryFactor.eager_run_vcvioLegacy (sampler k) (indexedImpl sampler)
+    EvalDistEq ((simulateQ (indexedImpl sampler) client).run state)
+      (do let value ← sampler k; (simulateQ (indexedImpl (pin k value sampler)) client).run state) := by
+  refine PqxdhServerAuthEntryFactor.eager_run (sampler k) (indexedImpl sampler)
     (fun value => indexedImpl (pin k value sampler)) (fun state => k < state.2) ?_ ?_ client state
   · intro query current done
     rcases query with coin | point
@@ -113,8 +112,7 @@ theorem indexed_eager {α : Type} (sampler : ℕ → ProbComp R) (k : ℕ) (clie
     · rcases hit : current.1 point with _ | answer
       · by_cases at_k : current.2 = k
         · refine Or.inr ⟨?_, ?_⟩
-          · congr 1
-            simp only [indexed_miss _ _ _ hit, at_k, pin_same, pure_bind]
+          · simp only [indexed_miss _ _ _ hit, at_k, pin_same, pure_bind, EvalDistEq.refl]
           · intro value result member
             rw [indexed_miss _ _ _ hit, at_k, pin_same, pure_bind, support_pure, Set.mem_singleton_iff] at member
             subst member
@@ -127,10 +125,9 @@ theorem indexed_eager_output {α : Type} [MeasurableSpace α] (sampler : ℕ →
     (client : OracleComp (Spec D R) α) (state : IState D R) :
     𝒟[(simulateQ (indexedImpl sampler) client).run' state] =
       𝒟[do let value ← sampler k; (simulateQ (indexedImpl (pin k value sampler)) client).run' state] := by
-  apply evalDist_eq_of_evalSPMF_eq
-  have project := congrArg (fun distribution => Prod.fst <$> distribution) (indexed_eager sampler k client state)
-  simp only [← evalSPMF_map] at project
-  simpa [StateT.run'_eq, map_bind] using project
+  refine EvalDistEq.evalDist_eq ?_
+  have project := (indexed_eager sampler k client state).map Prod.fst
+  simpa [StateT.run'_eq, map_bind, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ] using project
 
 end Indexed
 

@@ -694,9 +694,8 @@ open PqxdhDeploymentIdealTrace (Anomaly)
 theorem evalDist_decide_mono {α : Type} (mx : ProbComp α) (P Q : α → Prop) [DecidablePred P] [DecidablePred Q]
     (implies : ∀ a ∈ support mx, P a → Q a) :
     𝒟[(fun a => decide (P a)) <$> mx] {true} ≤ 𝒟[(fun a => decide (Q a)) <$> mx] {true} := by
-  rw [evalDist_apply_singleton, evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, ← probEvent_eq_eq_probOutput,
-    probEvent_map, probEvent_map]
-  exact probEvent_mono fun a member held => by simpa using implies a member (by simpa using held)
+  rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true, prEvent_map, prEvent_map]
+  exact prEvent_mono_of_support _ _ _ fun a member held => by simpa using implies a member (by simpa using held)
 
 open Classical in
 /-- The transcript guess event on the record world with the ideal environment of a target: the transcript guess (`PqxdhDeploymentIdealGuess.guessCt`) is the challenge ciphertext of the drawn parameters with probability at most `ctGuessPk`. This public event of the transcript and the drawn parameters has the same probability on the challenger's draws followed by the final split game (`PqxdhDeploymentIdealEnv.c1_split`, whose projection keeps the drawn parameters), where it is at most `ctGuessPk` (`split_guess_le`). It takes no read-back premise; the anomaly bounds below reduce to it. -/

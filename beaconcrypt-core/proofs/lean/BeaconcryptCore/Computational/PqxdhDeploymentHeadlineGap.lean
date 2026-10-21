@@ -850,18 +850,17 @@ noncomputable def ctGapTerm (setup : Setup baseSpec KemSK) (codec : Codec Reader
 theorem chance_le_support {α : Type} (run : ProbComp α) (first second : α → Bool)
     (implies : ∀ a ∈ support run, first a = true → second a = true) :
     𝒟[first <$> run] {true} ≤ 𝒟[second <$> run] {true} := by
-  rw [evalDist_apply_singleton, evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, ← probEvent_eq_eq_probOutput,
-    probEvent_map, probEvent_map]
-  exact probEvent_mono fun a member held => implies a member held
+  rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true, prEvent_map, prEvent_map]
+  exact prEvent_mono_of_support _ _ _ fun a member held => implies a member held
 
 /-- The union bound on the support for Boolean events. -/
 theorem chance_le_add_support {α : Type} (run : ProbComp α) (first second third : α → Bool)
     (implies : ∀ a ∈ support run, first a = true → second a = true ∨ third a = true) :
     𝒟[first <$> run] {true} ≤ 𝒟[second <$> run] {true} + 𝒟[third <$> run] {true} := by
-  rw [evalDist_apply_singleton, evalDist_apply_singleton, evalDist_apply_singleton, ← probEvent_eq_eq_probOutput,
-    ← probEvent_eq_eq_probOutput, ← probEvent_eq_eq_probOutput, probEvent_map, probEvent_map, probEvent_map]
-  refine le_trans (probEvent_mono fun a member held => implies a member held) ?_
-  exact probEvent_or_le run _ _
+  rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true,
+    ← prEvent_eq_evalDist_singleton _ true, prEvent_map, prEvent_map, prEvent_map]
+  refine le_trans (prEvent_mono_of_support _ _ _ fun a member held => implies a member held) ?_
+  exact prEvent_or_le run _ _
 
 /-- The Server-side gap is contained in the per-owner CE-A2pub event on every outcome of the experiment (`server_gap`). Premises: the approved Phase 1 and Phase 2 read-back contracts and the budget. -/
 theorem server_gap_le (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)

@@ -124,9 +124,9 @@ theorem split_fst (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
         continuation setup codec checks ensureInit count tagFinish reached >>= fun _ => pure (observe reached)) := by
     simp only [split, map_bind, map_pure]
   rw [shape]
-  refine MeasureTheory.Measure.ext_of_singleton fun value => ?_
-  rw [evalDist_apply_singleton, evalDist_apply_singleton, probOutput_def, probOutput_def,
-    OracleComp.ProgramLogic.Relational.evalSPMF_bind_ignore]
+  refine EvalDistEq.evalDist_eq ?_
+  rw [map_eq_bind_pure_comp]
+  exact EvalDistEq.bind_right _ fun reached => OracleComp.EvalDistEq.bind_const _ _
 
 /-- The initialized reported commands are natural in the program result. -/
 theorem commands_initialized_map (f : X → Y) (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)

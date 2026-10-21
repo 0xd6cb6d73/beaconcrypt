@@ -94,8 +94,8 @@ theorem advantage (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (runtimeOfImpl_noFail_bool (kemAmbientImpl setup.baseImpl))
   simpa only [oneKeyBranch, branch_erase, runtimeOfImpl_evalDist,
     PqxdhRegistrationJointKemGame.branch_source, PqxdhRegistrationJointKemGame.branch_real setup functional correct,
-    ProbComp.boolDistAdvantage, SPMF.boolDistAdvantage, MeasureTheory.Measure.boolDist,
-    probOutput_def, evalDist_apply_singleton] using exactHop.symm
+    ProbComp.boolDistAdvantage, MeasureTheory.Measure.boolDist,
+    prEvent_eq_evalDist_singleton] using exactHop.symm
 
 end BeaconcryptCore.Computational.PqxdhRegistrationJointKemCertified
 

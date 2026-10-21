@@ -222,11 +222,11 @@ theorem protected_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
   classical
   refine le_trans ?_ (PqxdhRegistrationJointAcceptCutEuf.selected_report_bound setup codec checks ensureInit supplied
     count work runtime index chosenOwner fallback budget certified capacity dynamicFallback ordinaryFallback)
-  rw [PqxdhRegistrationJointAcceptCutReports.selected_run, evalDist_apply_singleton, ← probEvent_eq_eq_probOutput,
-    probEvent_map, evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map, probEvent_map]
-  apply probEvent_mono
+  rw [PqxdhRegistrationJointAcceptCutReports.selected_run, ← prEvent_eq_evalDist_singleton _ true,
+    prEvent_map, ← prEvent_eq_evalDist_singleton _ true, prEvent_map, prEvent_map]
+  apply prEvent_mono_of_support
   intro reached supported event
-  simp only [Function.comp_apply, decide_eq_true_eq] at event ⊢
+  simp only [decide_eq_true_eq] at event ⊢
   exact protected_report_failure setup codec checks shortRejects ensureInit supplied (count + 1) work index runtime
     reached supported kemIndex chosenOwner fallback event.1 event.2
 

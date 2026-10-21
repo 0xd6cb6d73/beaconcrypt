@@ -156,16 +156,18 @@ theorem run_le_real (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
   classical
   rw [← exposeAt_tag, ← PqxdhRegistrationJointKemCut.scan_finish _ _ 0,
     PqxdhRegistrationJointKemRawNatural.router_split, map_bind, scanned_map,
-    PqxdhRegistrationJointKemRawNatural.router_map, bind_map_left, evalDist_apply_singleton, evalDist_apply_singleton]
-  apply probOutput_bind_mono
+    PqxdhRegistrationJointKemRawNatural.router_map, bind_map_left, ← prEvent_eq_evalDist_singleton _ true,
+    ← prEvent_eq_evalDist_singleton _ true]
+  apply prEvent_bind_mono_of_forall_le_of_support
   rintro ⟨_ | cut, after⟩ reachedCut
   · have absent : ¬RunEvent setup codec checks decision selected.val (List.ofFn (selected.insertNth chosen others))
         (none, after) := by
       rintro ⟨_, _, _, _, found, _⟩
       cases found
     rw [Option.elim_none, map_pure, decide_eq_false absent]
-    rw [probOutput_eq_zero_of_not_mem_support (by simp)]
-    exact zero_le
+    rw [prEvent_eq_zero_of_not_mem_support]
+    · exact zero_le
+    · simp
   · have cutSupport := PqxdhRegistrationJointKemRawNatural.router_support _ _ _ _ _ reachedCut
     cases cut with
     | complete outcome =>
@@ -179,29 +181,31 @@ theorem run_le_real (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
         exact absurd session (by simpa using rejected)
       rw [Option.elim_some, PqxdhRegistrationJointKemCut.finish, simulateQ_pure, OptionT.run_pure, StateT.run_pure,
         map_pure, decide_eq_false absent]
-      rw [probOutput_eq_zero_of_not_mem_support (by simp)]
-      exact zero_le
+      rw [prEvent_eq_zero_of_not_mem_support]
+      · exact zero_le
+      · simp
     | pending request resume =>
       dsimp only [Option.elim_some, Option.map_some]
       rw [PqxdhRegistrationJointKemRawNatural.finish_stopped, map_bind]
       by_cases active : request.2 = chosen.1
       · rw [active]
-        apply probOutput_bind_mono
+        apply prEvent_bind_mono_of_forall_le_of_support
         intro encapsulated _
-        rw [probOutput_bind_const, probFailure_eq_zero, tsub_zero, one_mul]
+        conv_rhs => rw [bind_assoc, OracleComp.prEvent_bind_const]
+        rw [prEvent_eq_evalDist_singleton, prEvent_eq_evalDist_singleton]
         simp only [PqxdhRegistrationJointKemResume.sourcePost, cutMap, active, ite_true, simulateQ_map,
           OptionT.run_map, StateT.run_map, bind_pure_comp, Functor.map_map]
-        rw [← probEvent_eq_eq_probOutput, ← probEvent_eq_eq_probOutput, probEvent_map, probEvent_map]
-        apply probEvent_mono
+        rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true, prEvent_map, prEvent_map]
+        apply prEvent_mono_of_support
         rintro reached _ event
-        simp only [Function.comp_apply, decide_eq_true_eq] at event ⊢
+        simp only [decide_eq_true_eq] at event ⊢
         obtain ⟨outcome, _, _, _, found, decided, session, _⟩ := event
         rcases reached with ⟨_ | final, state⟩
         · cases found
         · cases found
           simp only [Option.map_some, PqxdhRegistrationJointKemGame.decision, mapOutcome, decideTag, decided,
             session, Bool.and_self]
-      · rw [probOutput_eq_zero_of_not_mem_support]
+      · rw [prEvent_eq_zero_of_not_mem_support]
         · exact zero_le
         intro member
         rw [mem_support_bind_iff] at member
@@ -235,25 +239,24 @@ theorem commands_le_real (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
   refine le_trans ?_ (run_le_real setup codec checks decision work index count selected created joint runtime chosen
     others)
   simp only [PqxdhDeploymentLaterServerInitialized.commands, Functor.map_map]
-  rw [evalDist_apply_singleton, evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, ← probEvent_eq_eq_probOutput,
-    probEvent_map, probEvent_map]
-  refine le_trans (probEvent_mono (q := fun reached => RunEvent setup codec checks decision selected.val
+  rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true, prEvent_map, prEvent_map]
+  refine le_trans (prEvent_mono_of_support _ _ (fun reached => RunEvent setup codec checks decision selected.val
     (List.ofFn (selected.insertNth chosen others)) reached ∧
       reached.2.2.history.any (PqxdhDynamicKemStopping.disclosed selected.val) = false) ?_) ?_
   · rintro ⟨_ | outcome, state⟩ _ final
-    · simp only [Function.comp_apply, decide_eq_true_eq] at final
+    · simp only [decide_eq_true_eq] at final
       obtain ⟨⟨_, found, _⟩, _⟩ := final
       cases found
-    · simp only [Function.comp_apply, decide_eq_true_eq] at final
+    · simp only [decide_eq_true_eq] at final
       obtain ⟨⟨_, found, decided, session⟩, good, ⟨_, raw, answer, value, found', tagged, checked, keyed⟩⟩ := final
       cases found
       cases found'
       exact ⟨⟨outcome, raw, answer, value, rfl, decided, session, tagged, checked, keyed⟩, good⟩
-  refine le_trans (le_of_eq (PqxdhDynamicKemJointStopping.history_event_vcvioLegacy setup.baseImpl setup.joint setup.kem
+  refine le_trans (le_of_eq (PqxdhDynamicKemJointStopping.history_event setup.baseImpl setup.joint setup.kem
     selected.val (List.ofFn (selected.insertNth chosen others)) _ (joint, PqxdhDynamicKemRouter.empty) rfl
     (fun reached => RunEvent setup codec checks decision selected.val
       (List.ofFn (selected.insertNth chosen others)) reached))) ?_
-  apply probEvent_mono
+  apply prEvent_mono_of_support
   intro reached _ event
   simpa only [Function.comp_apply, decide_eq_true_eq] using event.1
 
@@ -285,15 +288,15 @@ theorem actual_le_real (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
   have same := PqxdhDeploymentLaterServerInitialized.actual_source_first setup codec checks ensureInit supplied
     (tag work index) ((PqxdhDynamicIdentityPool.initialState, PqxdhLiveKemBirth.empty), runtime) rfl count selected
     (tag_bound work index _ _ bounded)
-  rw [evalDist_apply_singleton, probOutput_def, evalSPMF_map, same, ← evalSPMF_map, ← probOutput_def,
-    evalDist_apply_singleton]
+  rw [(same.map _).evalDist_eq]
   simp only [PqxdhDeploymentLaterServerInitialized.selectedFirst, PqxdhDeploymentLaterServerKemHop.sourceReal,
     PqxdhDeploymentLaterServerKemHop.sourcePre, map_bind, bind_assoc]
-  apply probOutput_bind_mono
+  rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true]
+  apply prEvent_bind_mono_of_forall_le_of_support
   intro chosen _
-  apply probOutput_bind_mono
+  apply prEvent_bind_mono_of_forall_le_of_support
   rintro ⟨_ | created, after⟩ _
-  · rw [map_pure, probOutput_eq_zero_of_not_mem_support]
+  · rw [map_pure, prEvent_eq_zero_of_not_mem_support]
     · exact zero_le
     rw [support_pure, Set.mem_singleton_iff]
     intro equal
@@ -302,12 +305,14 @@ theorem actual_le_real (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
     obtain ⟨⟨_, found, _⟩, _⟩ := event
     cases found
   · dsimp only
+    rw [prEvent_eq_evalDist_singleton, prEvent_eq_evalDist_singleton]
     simp only [map_bind, bind_assoc, pure_bind]
-    apply probOutput_bind_mono
+    rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true]
+    apply prEvent_bind_mono_of_forall_le_of_support
     intro others _
     have core := commands_le_real setup codec checks decision work index count selected created after.1.1 after.2
       chosen others
-    rw [evalDist_apply_singleton, evalDist_apply_singleton] at core
+    rw [prEvent_eq_evalDist_singleton, prEvent_eq_evalDist_singleton]
     simpa only [map_bind, bind_assoc, pure_bind] using core
 
 end BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBridge

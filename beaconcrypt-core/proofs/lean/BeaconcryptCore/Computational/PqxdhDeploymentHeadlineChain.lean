@@ -485,8 +485,8 @@ theorem view_unslotted (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
           (PqxdhDeploymentIdealEnv.envGD setup codec checks t ensureInit identityIndex runtime)
           setup.serverKeyId bounds mode adversary] {true} := by
   rw [← anomaly_view setup codec checks route t ensureInit identityIndex runtime bounds mode adversary]
-  rw [UniformTargetSelection.chance_eq_vcvioLegacy, UniformTargetSelection.chance_eq_vcvioLegacy]
-  refine probEvent_mono fun view member held => ?_
+  rw [UniformTargetSelection.chance_eq, UniformTargetSelection.chance_eq]
+  refine prEvent_mono_of_support _ _ _ fun view member held => ?_
   rw [support_map] at member
   obtain ⟨result, resultMember, rfl⟩ := member
   obtain ⟨value, unslotted⟩ := Classical.not_forall.mp held.2

@@ -514,8 +514,9 @@ open Classical in
 theorem pairHit_mean (setup : Setup baseSpec KemSK) :
     expectedValue (keyGen setup) (pairHit setup) = PqxdhDeploymentHeadlineCollision.pairCollision setup := by
   unfold PqxdhDeploymentHeadlineCollision.pairCollision
-  rw [PqxdhDeploymentHeadlineCollision.pairDraws_eval, evalDist_apply_singleton, ← probEvent_eq_eq_probOutput,
-    ← OracleComp.EvalDist.expectedValue_ite_one, OracleComp.EvalDist.expectedValue_map]
+  rw [PqxdhDeploymentHeadlineCollision.pairDraws_eval, ← prEvent_eq_evalDist_singleton _ true,
+    ← VCVioLegacy.probEvent_eq_prEvent, ← OracleComp.EvalDist.expectedValue_ite_one,
+    OracleComp.EvalDist.expectedValue_map]
   unfold keyGen
   rw [OracleComp.EvalDist.expectedValue_map, OracleComp.EvalDist.expectedValue_bind]
   congr 1
@@ -722,7 +723,7 @@ theorem triple_le (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     𝒟[(fun outcome => @decide (TripleColl k i j outcome) (Classical.propDecidable _)) <$>
       (gameG setup codec checks route ensureInit identityIndex bounds mode adversary).run runtime] {true} ≤
       PqxdhDeploymentHeadlineCollision.pairCollision setup := by
-  rw [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map]
+  rw [← prEvent_eq_evalDist_singleton _ true, prEvent_map, ← VCVioLegacy.probEvent_eq_prEvent]
   classical
   rw [← OracleComp.EvalDist.expectedValue_ite_one]
   simp only [gameG, StateT.run, OracleComp.EvalDist.expectedValue_bind]
@@ -739,19 +740,19 @@ theorem triple_le (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
         (asModeO mode adversary) ((PqxdhDeploymentSecrecy.Ledger.empty, PqxdhDeploymentNative.initial created),
           Ghost.empty)).trans (le_of_eq (phi_empty setup k i j)))
     by_cases coll : GhostColl k i j result.2.2
-    · have holds : ((fun b => b = true) ∘ fun outcome => @decide (TripleColl k i j outcome) (Classical.propDecidable _))
-          (some (PqxdhRegistrationJointServerBirth.encode created, result), after) := by
-        simp only [Function.comp_apply, decide_eq_true_eq]
+    · have holds : @decide (TripleColl k i j (some (PqxdhRegistrationJointServerBirth.encode created, result), after))
+          (Classical.propDecidable _) = true := by
+        simp only [decide_eq_true_eq]
         exact ⟨_, _, _, rfl, coll⟩
       simp only [holds, ↓reduceIte]
       exact phi_coll setup k i j result.2.2 coll
-    · have fails : ¬((fun b => b = true) ∘ fun outcome => @decide (TripleColl k i j outcome) (Classical.propDecidable _))
-          (some (PqxdhRegistrationJointServerBirth.encode created, result), after) := by
-        simp only [Function.comp_apply, decide_eq_true_eq]
+    · have fails : ¬@decide (TripleColl k i j (some (PqxdhRegistrationJointServerBirth.encode created, result), after))
+          (Classical.propDecidable _) = true := by
+        simp only [decide_eq_true_eq]
         rintro ⟨_, _, _, same, holds⟩
         cases same
         exact coll holds
-      simp only [fails, ↓reduceIte]
+      simp only [fails]
       exact zero_le
 
 end TripleGame

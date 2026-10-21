@@ -5,7 +5,6 @@ import BeaconcryptCore.Computational.PqxdhRegistrationJointKemCommands
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
-set_option linter.deprecated false
 namespace BeaconcryptCore.Computational.PqxdhRegistrationJointKemInitialization
 open PqxdhKemIndCca PqxdhJointIdentity PqxdhServerAuthExperiment PqxdhServerAuthNative
 open PqxdhRegistrationJointServerBirth (ClientCreated)
@@ -69,10 +68,10 @@ theorem initialized (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
     (certified : ∀ source, client.IsQueryBoundP
       (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))
     (count : Nat) (selected : Fin (count + 1)) (room : budget (.inl 1) ≤ count + 1) :
-    𝒮[(PqxdhRegistrationJointInitializedSchedule.client setup codec checks ensureInit supplied client).run state] =
-      𝒮[reserved setup codec checks ensureInit supplied client state count selected] := by
+    EvalDistEq ((PqxdhRegistrationJointInitializedSchedule.client setup codec checks ensureInit supplied client).run state)
+      (reserved setup codec checks ensureInit supplied client state count selected) := by
   simp only [PqxdhRegistrationJointInitializedSchedule.client, StateT.run, reserved]
-  apply evalSPMF_bind_congr
+  apply OracleComp.EvalDistEq.bind_congr_of_support
   rintro ⟨(_ | created), after⟩ supported
   · rfl
   · have emptyAfter := (constructor_kem setup ensureInit supplied state after (some created) supported).trans empty
@@ -83,8 +82,8 @@ theorem initialized (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
     have source := PqxdhRegistrationJointKemCommands.selected_source setup codec checks
       created.server.server.metadata.identityIndex created.publicIdentity client budget certified []
       (PqxdhRegistrationJointInitializedAccept.initial created) after.1.1 count selected room
-    have mapped := congrArg (fun distribution => finish created after.2 <$> distribution) source
-    simpa only [← evalSPMF_map, Functor.map_map, map_bind, finish, Option.map_some,
+    have mapped := source.map (finish created after.2)
+    simpa only [Functor.map_map, map_bind, finish, Option.map_some,
       commands, PqxdhRegistrationJointKemCommands.program, ← emptyAfter, Prod.mk.eta] using mapped
 
 /-- Selected-key-first mathematical source game. The actual initializer still keeps its complete runtime, rejection and generated/imported origin before any source command executes. -/
@@ -109,13 +108,14 @@ theorem constructor_order (setup : Setup baseSpec KemSK) (codec : Codec Reader R
     (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes)
     (client : OracleComp (SourceSpec KemSK) Result) (state : State KemSK A)
     (count : Nat) (selected : Fin (count + 1)) :
-    𝒮[reserved setup codec checks ensureInit supplied client state count selected] =
-      𝒮[selectedFirst setup codec checks ensureInit supplied client state count selected] := by
-  rw [selectedFirst, ← PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy]
+    EvalDistEq (reserved setup codec checks ensureInit supplied client state count selected)
+      (selectedFirst setup codec checks ensureInit supplied client state count selected) := by
+  rw [selectedFirst]
+  refine EvalDistEq.trans ?_ (PqxdhSecretInputKdf.evalSPMF_sample_comm _ _ _).symm
   unfold reserved
-  apply evalSPMF_bind_congr'
+  apply EvalDistEq.bind_right
   rintro ⟨(_ | created), after⟩
-  · exact (OracleComp.ProgramLogic.Relational.evalSPMF_bind_const_of_no_failure _ _).symm
+  · exact (OracleComp.EvalDistEq.bind_const _ _).symm
   · rfl
 
 /-- Whole actual initialized source-client distribution with its selected KEM creation drawn first. Complete generator-order interchange and source counts, rather than marginal key equality, justify the embedding. -/
@@ -126,8 +126,8 @@ theorem initialized_first (setup : Setup baseSpec KemSK) (codec : Codec Reader R
     (certified : ∀ source, client.IsQueryBoundP
       (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))
     (count : Nat) (selected : Fin (count + 1)) (room : budget (.inl 1) ≤ count + 1) :
-    𝒮[(PqxdhRegistrationJointInitializedSchedule.client setup codec checks ensureInit supplied client).run state] =
-      𝒮[selectedFirst setup codec checks ensureInit supplied client state count selected] :=
+    EvalDistEq ((PqxdhRegistrationJointInitializedSchedule.client setup codec checks ensureInit supplied client).run state)
+      (selectedFirst setup codec checks ensureInit supplied client state count selected) :=
   (initialized setup codec checks ensureInit supplied client state empty budget certified count selected room).trans
     (constructor_order setup codec checks ensureInit supplied client state count selected)
 
@@ -139,9 +139,9 @@ theorem actual_source_first (setup : Setup baseSpec KemSK) (codec : Codec Reader
     (certified : ∀ source, client.IsQueryBoundP
       (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))
     (count : Nat) (selected : Fin (count + 1)) (room : budget (.inl 1) ≤ count + 1) :
-    𝒮[(fun result => (result.1.map (PqxdhRegistrationJointInitializedSchedule.encodeOutcome setup), result.2)) <$>
-      (PqxdhRegistrationJointInitializedSchedule.source setup codec checks ensureInit supplied client).run state] =
-      𝒮[selectedFirst setup codec checks ensureInit supplied client state count selected] := by
+    EvalDistEq ((fun result => (result.1.map (PqxdhRegistrationJointInitializedSchedule.encodeOutcome setup), result.2)) <$>
+      (PqxdhRegistrationJointInitializedSchedule.source setup codec checks ensureInit supplied client).run state)
+      (selectedFirst setup codec checks ensureInit supplied client state count selected) := by
   rw [← PqxdhRegistrationJointInitializedSchedule.initialized_source]
   exact initialized_first setup codec checks ensureInit supplied client state empty budget certified count selected room
 

@@ -200,10 +200,10 @@ theorem event_filter (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixe
         @decide (result.2.2 = some true) (Classical.propDecidable _)) <$>
       run source writer (PqxdhLaterPatchedOccurrence.patchedPrior source pending parent output)
         sender route decode start (nextChain parent) adversary number bit selection] {true} := by
-  simp only [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map]
-  apply OracleComp.probEvent_congr' _ rfl
+  rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true, prEvent_map, prEvent_map]
+  apply prEvent_congr_of_support
   intro result supported
-  simp only [Function.comp_def, Bool.and_eq_true, decide_eq_true_eq]
+  simp only [Bool.and_eq_true, decide_eq_true_eq]
   exact ⟨fun accepted => ⟨accepted, event_marked source writer sender route decode cr depth start pending sampled
     parent output safe adversary number position bit selection result supported accepted.1⟩, And.left⟩
 

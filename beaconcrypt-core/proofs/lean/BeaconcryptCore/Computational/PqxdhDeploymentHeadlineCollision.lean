@@ -126,40 +126,36 @@ theorem pair_real_draws (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
           {true} =
       𝒟[(fun draw => decide (draw.2.2.1 = draw.2.1.1 ∧ draw.2.2.2 = draw.2.1.2)) <$>
         simulateQ (kemAmbientImpl setup.baseImpl) (pairDraws setup.kem)] {true} := by
-  rw [pair_branch_eval, pairDraws_eval, evalDist_apply_singleton, evalDist_apply_singleton]
+  rw [pair_branch_eval, pairDraws_eval]
   simp only [map_bind, map_pure]
-  refine probOutput_bind_congr' _ _ fun pair => ?_
-  refine probOutput_bind_congr' _ _ fun first => ?_
+  congr 1
+  refine EvalDistEq.evalDist_eq (EvalDistEq.bind_right _ fun pair => EvalDistEq.bind_right _ fun first => ?_)
   have same : ∀ candidate second, pairOutcome true (pair, first, second) candidate =
       decide (second.1 = first.1 ∧ second.2 = first.2) := fun _ _ => rfl
   simp only [same]
-  rw [probOutput_bind_const]
-  simp
+  exact OracleComp.EvalDistEq.bind_const _ _
 
-set_option linter.deprecated false in
 /-- The random branch of `pairAdversary` succeeds with probability at most `2^-256`: its candidate is a fresh uniform 32-byte key, independent of the second encapsulation. -/
 theorem pair_random_le (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK) :
     𝒟[simulateQ (kemAmbientImpl setup.baseImpl)
         (oneKeyBranchMain setup.kem (runtimeOfImpl (kemAmbientImpl setup.baseImpl)) (pairAdversary setup.kem) false)]
           {true} ≤ (2 ^ 256 : ℝ≥0∞)⁻¹ := by
-  rw [pair_branch_eval, evalDist_apply_singleton, ← probEvent_eq_eq_probOutput]
-  refine probEvent_bind_le_of_forall_le fun pair _ => ?_
-  refine probEvent_bind_le_of_forall_le fun first _ => ?_
-  rw [probEvent_bind_bind_swap ($ᵗ MlKemSharedSecret)
-    (simulateQ (kemAmbientImpl setup.baseImpl) (setup.kem.encaps pair.1))]
-  refine probEvent_bind_le_of_forall_le fun second _ => ?_
-  rw [bind_pure_comp, probEvent_map]
-  calc Pr[(fun hit => hit = true) ∘ fun candidate => pairOutcome false (pair, first, second) candidate |
-        $ᵗ MlKemSharedSecret]
-      ≤ Pr[fun candidate => candidate = second.2 | $ᵗ MlKemSharedSecret] := by
-        refine probEvent_mono fun candidate _ hit => ?_
-        simp only [Function.comp_apply, pairOutcome, Bool.false_eq_true, ite_false, decide_eq_true_eq] at hit
+  rw [pair_branch_eval, ← prEvent_eq_evalDist_singleton _ true]
+  refine prEvent_bind_le_of_forall_le_of_support _ _ _ fun pair _ => ?_
+  refine prEvent_bind_le_of_forall_le_of_support _ _ _ fun first _ => ?_
+  rw [(OracleComp.EvalDistEq.bind_bind_swap ($ᵗ MlKemSharedSecret)
+    (simulateQ (kemAmbientImpl setup.baseImpl) (setup.kem.encaps pair.1)) _).prEvent_eq]
+  refine prEvent_bind_le_of_forall_le_of_support _ _ _ fun second _ => ?_
+  simp only [bind_assoc, pure_bind]
+  calc Pr{let candidate ← $ᵗ MlKemSharedSecret}[pairOutcome false (pair, first, second) candidate = true]
+      ≤ Pr{let candidate ← $ᵗ MlKemSharedSecret}[candidate = second.2] := by
+        refine prEvent_mono_of_support _ _ _ fun candidate _ hit => ?_
+        simp only [pairOutcome, Bool.false_eq_true, ite_false, decide_eq_true_eq] at hit
         exact hit.2.symm
     _ = (2 ^ 256 : ℝ≥0∞)⁻¹ := by
-        rw [probEvent_eq_eq_probOutput, probOutput_uniformSample, PqxdhExtractRomHiddenSuffix.secret_card]
+        rw [SampleableType.prEvent_uniformSample_eq_singleton, PqxdhExtractRomHiddenSuffix.secret_card]
         norm_num
 
-set_option linter.deprecated false in
 /-- The correctness error of the first encapsulation of the joint draws is the ML-KEM correctness error. -/
 theorem pair_first_error (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (functional : FunctionalDecapsulation setup.kem) :
@@ -168,28 +164,23 @@ theorem pair_first_error (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK
       ENNReal.ofReal (PqxdhRegistrationJointKemRawGame.correctnessError setup) := by
   have finite : 𝒟[simulateQ (kemAmbientImpl setup.baseImpl)
       (PqxdhKemCorrectnessError.errorExperiment setup.kem)] {true} ≠ ⊤ := by
-    rw [evalDist_apply_singleton]
-    exact probOutput_ne_top
-  rw [PqxdhRegistrationJointKemRawGame.correctnessError, ENNReal.ofReal_toReal finite, evalDist_apply_singleton,
-    evalDist_apply_singleton, PqxdhKemCorrectnessError.error_probability_vcvioLegacy setup.baseImpl setup.kem functional,
-    ← probEvent_eq_eq_probOutput, probEvent_map]
-  have projected : Pr[PqxdhKemCorrectnessError.Bad setup.kem functional |
-      simulateQ (kemAmbientImpl setup.baseImpl) (PqxdhKemCorrectnessError.sample setup.kem)] =
-      Pr[PqxdhKemCorrectnessError.Bad setup.kem functional |
-        (fun draw => (⟨draw.1.1, draw.1.2, draw.2.1.1, draw.2.1.2⟩ : PqxdhKemCorrectnessError.Sample KemSK)) <$>
-          simulateQ (kemAmbientImpl setup.baseImpl) (pairDraws setup.kem)] := by
+    rw [← prEvent_eq_evalDist_singleton _ true]
+    exact prEvent_ne_top _
+  rw [PqxdhRegistrationJointKemRawGame.correctnessError, ENNReal.ofReal_toReal finite,
+    ← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true,
+    PqxdhKemCorrectnessError.error_probability setup.baseImpl setup.kem functional, prEvent_map]
+  have projected : Pr{let x ← simulateQ (kemAmbientImpl setup.baseImpl) (PqxdhKemCorrectnessError.sample setup.kem)}[(PqxdhKemCorrectnessError.Bad setup.kem functional) x] =
+      Pr{let x ← ((fun draw : (MlKem768PublicKey × KemSK) × (MlKem768Ciphertext × MlKemSharedSecret) × (MlKem768Ciphertext × MlKemSharedSecret) =>
+          (⟨draw.1.1, draw.1.2, draw.2.1.1, draw.2.1.2⟩ : PqxdhKemCorrectnessError.Sample KemSK)) <$>
+          simulateQ (kemAmbientImpl setup.baseImpl) (pairDraws setup.kem))}[(PqxdhKemCorrectnessError.Bad setup.kem functional) x] := by
     rw [← simulateQ_map]
     simp only [PqxdhKemCorrectnessError.sample, pairDraws, map_bind, map_pure, simulateQ_bind, simulateQ_pure]
-    refine probEvent_bind_congr' _ _ fun pair => ?_
-    refine probEvent_bind_congr' _ _ fun first => ?_
-    rw [probEvent_bind_const]
-    simp
-  rw [projected, probEvent_map]
-  congr 1
-  funext draw
+    refine EvalDistEq.prEvent_eq (EvalDistEq.bind_right _ fun pair => EvalDistEq.bind_right _ fun first => ?_) _
+    exact (OracleComp.EvalDistEq.bind_const _ _).symm
+  rw [projected, prEvent_map]
+  refine prEvent_congr _ _ _ fun draw => ?_
   simp [PqxdhKemCorrectnessError.Bad]
 
-set_option linter.deprecated false in
 /-- The correctness error of the second encapsulation of the joint draws is the ML-KEM correctness error: the two encapsulations are independent, so their order can be swapped. -/
 theorem pair_second_error (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (functional : FunctionalDecapsulation setup.kem) :
@@ -198,27 +189,23 @@ theorem pair_second_error (setup : PqxdhServerAuthExperiment.Setup baseSpec KemS
       ENNReal.ofReal (PqxdhRegistrationJointKemRawGame.correctnessError setup) := by
   have finite : 𝒟[simulateQ (kemAmbientImpl setup.baseImpl)
       (PqxdhKemCorrectnessError.errorExperiment setup.kem)] {true} ≠ ⊤ := by
-    rw [evalDist_apply_singleton]
-    exact probOutput_ne_top
-  rw [PqxdhRegistrationJointKemRawGame.correctnessError, ENNReal.ofReal_toReal finite, evalDist_apply_singleton,
-    evalDist_apply_singleton, PqxdhKemCorrectnessError.error_probability_vcvioLegacy setup.baseImpl setup.kem functional,
-    ← probEvent_eq_eq_probOutput, probEvent_map]
-  have projected : Pr[PqxdhKemCorrectnessError.Bad setup.kem functional |
-      simulateQ (kemAmbientImpl setup.baseImpl) (PqxdhKemCorrectnessError.sample setup.kem)] =
-      Pr[PqxdhKemCorrectnessError.Bad setup.kem functional |
-        (fun draw => (⟨draw.1.1, draw.1.2, draw.2.2.1, draw.2.2.2⟩ : PqxdhKemCorrectnessError.Sample KemSK)) <$>
-          simulateQ (kemAmbientImpl setup.baseImpl) (pairDraws setup.kem)] := by
+    rw [← prEvent_eq_evalDist_singleton _ true]
+    exact prEvent_ne_top _
+  rw [PqxdhRegistrationJointKemRawGame.correctnessError, ENNReal.ofReal_toReal finite,
+    ← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true,
+    PqxdhKemCorrectnessError.error_probability setup.baseImpl setup.kem functional, prEvent_map]
+  have projected : Pr{let x ← simulateQ (kemAmbientImpl setup.baseImpl) (PqxdhKemCorrectnessError.sample setup.kem)}[(PqxdhKemCorrectnessError.Bad setup.kem functional) x] =
+      Pr{let x ← ((fun draw : (MlKem768PublicKey × KemSK) × (MlKem768Ciphertext × MlKemSharedSecret) × (MlKem768Ciphertext × MlKemSharedSecret) =>
+          (⟨draw.1.1, draw.1.2, draw.2.2.1, draw.2.2.2⟩ : PqxdhKemCorrectnessError.Sample KemSK)) <$>
+          simulateQ (kemAmbientImpl setup.baseImpl) (pairDraws setup.kem))}[(PqxdhKemCorrectnessError.Bad setup.kem functional) x] := by
     rw [← simulateQ_map]
     simp only [PqxdhKemCorrectnessError.sample, pairDraws, map_bind, map_pure, simulateQ_bind, simulateQ_pure]
-    refine probEvent_bind_congr' _ _ fun pair => ?_
-    rw [probEvent_bind_bind_swap (simulateQ (kemAmbientImpl setup.baseImpl) (setup.kem.encaps pair.1))
-      (simulateQ (kemAmbientImpl setup.baseImpl) (setup.kem.encaps pair.1))]
-    refine probEvent_bind_congr' _ _ fun second => ?_
-    rw [probEvent_bind_const]
-    simp
-  rw [projected, probEvent_map]
-  congr 1
-  funext draw
+    refine EvalDistEq.prEvent_eq (EvalDistEq.bind_right _ fun pair => ?_) _
+    refine EvalDistEq.trans ?_ (OracleComp.EvalDistEq.bind_bind_swap _ _ _).symm
+    refine EvalDistEq.bind_right _ fun second => ?_
+    exact (OracleComp.EvalDistEq.bind_const _ _).symm
+  rw [projected, prEvent_map]
+  refine prEvent_congr _ _ _ fun draw => ?_
   simp [PqxdhKemCorrectnessError.Bad]
 
 /-- `pairAdversary`'s advantage is the distance of its two fixed branches under the ambient interpreter. -/
@@ -274,11 +261,11 @@ theorem pair_cp_le (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     · right
       simp [first]
   have finiteReal : real ≠ ⊤ := by
-    rw [hreal, evalDist_apply_singleton]
-    exact probOutput_ne_top
+    rw [hreal, ← prEvent_eq_evalDist_singleton _ true]
+    exact prEvent_ne_top _
   have finiteRandom : random ≠ ⊤ := by
-    rw [hrandom, evalDist_apply_singleton]
-    exact probOutput_ne_top
+    rw [hrandom, ← prEvent_eq_evalDist_singleton _ true]
+    exact prEvent_ne_top _
   have close : real ≤ random + ENNReal.ofReal (setup.kem.IND_CCA_Advantage
       (runtimeOfImpl (kemAmbientImpl setup.baseImpl)) (pairAdversary setup.kem).toINDCCA) := by
     rw [pair_advantage setup]
@@ -358,31 +345,32 @@ theorem identity_collision_game (setup : Setup baseSpec KemSK) (codec : Codec Re
       (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode adversary).run runtime] {true} ≤
       injTerm setup budget := by
   classical
-  rw [UniformTargetSelection.chance_eq_vcvioLegacy]
+  rw [UniformTargetSelection.chance_eq]
   refine le_trans ?_ (PqxdhDeploymentServerAuthInjective.collision_bound setup budget.create)
   rw [← PqxdhDeploymentCompileSecrecy.compile_full_game setup codec checks route ensureInit 0 phase1 phase2 bounds mode
-    adversary runtime, probEvent_map]
-  simp only [PqxdhRegistrationJointInitializedSchedule.native, PqxdhLiveServerConstruction.construct, StateT.run,
-    bind_assoc]
-  refine probEvent_bind_le_of_forall_le fun ready _ => ?_
+    adversary runtime, prEvent_map]
+  simp only [PqxdhRegistrationJointInitializedSchedule.native, PqxdhLiveServerConstruction.construct, StateT.run]
+  rw [bind_assoc (ensureInit runtime)]
+  refine prEvent_bind_le_of_forall_le_of_support _ _ _ fun ready _ => ?_
   cases ready.1 with
   | false =>
-      simp only [Bool.false_eq_true, ite_false, pure_bind]
-      refine le_of_eq_of_le (probEvent_eq_zero_iff.mpr ?_) zero_le
+      simp only [Bool.false_eq_true, ite_false]
+      rw [pure_bind]
+      refine le_of_eq_of_le ((OracleComp.prEvent_eq_zero_iff _ _).mpr ?_) zero_le
       intro outcome member
       simp only [support_pure, Set.mem_singleton_iff] at member
       subst member
       simp [PqxdhDeploymentCompileSecrecy.mergeFull, IdentityCollision]
   | true =>
       simp only [ite_true, bind_map_left]
-      refine probEvent_bind_le_of_forall_le fun seed _ => ?_
-      rw [probEvent_map]
-      refine le_of_eq_of_le (probEvent_ext fun result _ => ?_)
+      refine prEvent_bind_le_of_forall_le_of_support _ _ _ fun seed _ => ?_
+      rw [prEvent_map]
+      refine le_of_eq_of_le (prEvent_congr_of_support _ _ _ fun result _ => ?_)
         (PqxdhDeploymentServerAuthInjective.owners_collision setup codec checks seed
           (PqxdhDeploymentCompileSecrecy.compileFull setup codec route bounds mode adversary) (budget.create + 1)
           (PqxdhDeploymentServerAuthInjectiveGame.compiled_creates setup codec route bounds mode adversary budget
             respects) _ rfl)
-      simp only [Function.comp_apply, PqxdhDeploymentCompileSecrecy.mergeFull, Option.map_some, IdentityCollision,
+      simp only [PqxdhDeploymentCompileSecrecy.mergeFull, Option.map_some, IdentityCollision,
         Option.some.injEq]
       constructor
       · rintro ⟨_, _, _, equal, collision⟩

@@ -113,13 +113,14 @@ theorem source_common_risk (depth : Nat) (position : number.val = depth + 2)
     (qPost : Nat) (bounded : ∀ reply, (post reply).IsTotalQueryBound qPost) :
     𝒟[(fun cut => decide (Common selectedOwner number cut)) <$> sourceCarried depth] {true} ≤
       ∑ j ∈ Finset.range (7 + qPost * 67), ((j + 1 : Nat) : ENNReal) * (2 ^ 256 : ENNReal)⁻¹ := by
-  simp only [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map, Function.comp_def, decide_eq_true_eq]
-  have risk := PqxdhInitialNativeRisk.carried_risk_vcvioLegacy source writer sourceMark sender route decode sourceExecution
+  rw [← prEvent_eq_evalDist_singleton _ true, prEvent_map]
+  simp only [decide_eq_true_eq]
+  have risk := PqxdhInitialNativeRisk.carried_risk source writer sourceMark sender route decode sourceExecution
     depth 0 qPost sourceExternal bounded sourceInitial
     (PqxdhInitialSourceExperiment.initial_valid sourceRoot shared privateState cache depth).1
     (PqxdhInitialSourceExperiment.initial_valid sourceRoot shared privateState cache depth).2
   simp only [Nat.zero_add] at risk
-  refine (probEvent_mono (q := fun result => ¬PqxdhInitialNativeRisk.Clean
+  refine (prEvent_mono_of_support _ _ (fun result => ¬PqxdhInitialNativeRisk.Clean
     (RawCtxForwardScan.pack (PqxdhInitialOriginContext.frame (X := X) (Response := Response) sourceMark sender route decode) result).2) ?_).trans risk
   intro cut supported common
   cases cut with
@@ -156,13 +157,14 @@ theorem prepared_common_risk (depth : Nat) (position : number.val = depth + 2)
   classical
   have bound := source_common_risk source writer sender route decode selectedMessage previousRoot response64
     other index metadata ready post before selectedOwner number shared privateState cache depth position qPost bounded
-  simp only [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map, Function.comp_def, decide_eq_true_eq] at bound ⊢
+  rw [← prEvent_eq_evalDist_singleton _ true, prEvent_map] at bound ⊢
+  simp only [decide_eq_true_eq] at bound ⊢
   rw [← PqxdhInitialSourcePreparedSecrecy.external_source source selectedMessage previousRoot response64 other,
     ← PqxdhInitialNativeAuditCarried.carried_projection source writer sourcePre sourceApplication sourceInitializer
       sourceSelector sourceAux sourceMark sender route decode sourceExecution depth (depth + 1) (sourceInitial, []),
-    probEvent_map] at bound
-  refine (probEvent_bind_le_probEvent (p := fun cut => Common selectedOwner number
-    (PqxdhInitialNativeAuditCarried.eraseCut cut)) ?_).trans bound
+    prEvent_map] at bound
+  refine (prEvent_bind_le_prEvent_of_support _ _ (fun cut => Common selectedOwner number
+    (PqxdhInitialNativeAuditCarried.eraseCut cut)) _ ?_).trans bound
   intro cut _ absent
   let : DecidablePred (fun value : Bool ⊕ PqxdhInitialPreparedParent.Pending extra M P I D K Bool Bool A N RootOracle.QueryCache S B =>
     value = Sum.inl true) := fun _ => Classical.propDecidable _
@@ -171,11 +173,11 @@ theorem prepared_common_risk (depth : Nat) (position : number.val = depth + 2)
       have denied : ¬ PqxdhInitialPublishedEvent.Gate selectedOwner number result := absent
       simp only [PqxdhInitialPreparedParent.collect, PqxdhInitialSourcePreparedSecrecy.observe,
         PqxdhInitialPublishedEvent.sourceDecision, PqxdhInitialPublishedEvent.sourceEvent, denied,
-        false_and, decide_false, map_pure, probEvent_pure, Sum.inl.injEq, Bool.false_eq_true, ite_false]
+        false_and, decide_false, map_pure, prEvent_pure, Sum.inl.injEq, Bool.false_eq_true, ite_false]
   | pending context reached =>
       have missing : reached.1.1.1.2.1 (PqxdhInitialBuilderContext.address context.original) = none :=
         Classical.not_not.mp absent
-      simp only [PqxdhInitialPreparedParent.collect, missing, ite_true, probEvent_pure,
+      simp only [PqxdhInitialPreparedParent.collect, missing, ite_true, prEvent_pure,
         Sum.inr_ne_inl, ite_false]
 
 end Source
@@ -208,18 +210,19 @@ theorem sample_inner_common (depth qPost : Nat)
     (bounded : ∀ input, Sum.inr input ∈ support prior → ∀ reply, (input.post reply).IsTotalQueryBound qPost) :
     𝒟[innerCommon <$> PqxdhErasedParentSample.sample source writer sender route decode depth prior] {true} ≤
       ∑ j ∈ Finset.range (7 + qPost * 67), ((j + 1 : Nat) : ENNReal) * (2 ^ 256 : ENNReal)⁻¹ := by
-  simp only [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map, Function.comp_def,
-    PqxdhErasedParentSample.sample]
-  refine probEvent_bind_le_of_forall_le fun context reached => ?_
-  refine probEvent_bind_le_of_forall_le fun output _ => ?_
+  rw [← prEvent_eq_evalDist_singleton _ true, prEvent_map]
+  simp only [PqxdhErasedParentSample.sample]
+  refine prEvent_bind_le_of_forall_le_of_support _ _ _ fun context reached => ?_
+  refine prEvent_bind_le_of_forall_le_of_support _ _ _ fun output _ => ?_
   cases context with
-  | inl decision => simp only [probEvent_pure, innerCommon, Bool.false_eq_true, ite_false, zero_le]
+  | inl decision => simp only [prEvent_pure, innerCommon, Bool.false_eq_true, ite_false, zero_le]
   | inr input =>
       have bound := sample_one_common source writer sender route decode depth qPost (input, output)
         (positions input reached) (bounded input reached)
-      simp only [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map, Function.comp_def,
-        decide_eq_true_eq, bind_pure_comp] at bound ⊢
-      refine (probEvent_mono ?_).trans bound
+      rw [← prEvent_eq_evalDist_singleton _ true, prEvent_map] at bound
+      simp only [decide_eq_true_eq] at bound
+      simp only [bind_assoc, pure_bind]
+      refine (prEvent_mono_of_support _ _ _ ?_).trans bound
       intro value _ winning
       cases value with
       | inl decision => exact congrArg Sum.inl winning

@@ -670,7 +670,6 @@ def GameEvent (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     PublishedForgery setup.source.crypto codec final.1.transcript (ownerIdentities setup final.2.native) ∧
     PqxdhDeploymentTranscript.NoBundleFailure final.1.transcript
 
-set_option linter.deprecated false in
 /-- Under the approved codec laws `Phase1ReadBack` and `Phase2ReadBack`, for every property of the final transcript and the owners' identity keys, the probability that it holds on an outcome of the deployment experiment with Server identity index 0 equals the probability that it holds on an outcome of the report-instrumented initialized execution of the compiled program. -/
 theorem game_report_holds (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)
@@ -687,33 +686,30 @@ theorem game_report_holds (setup : Setup baseSpec KemSK) (codec : Codec Reader R
           checks ensureInit none count (PqxdhDeploymentCompileSecrecy.compileFull setup codec route bounds mode
             adversary) runtime)] {true} := by
   classical
-  rw [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map, evalDist_apply_singleton,
-    ← probEvent_eq_eq_probOutput, probEvent_map]
-  simp only [Function.comp_def, decide_eq_true_eq]
+  rw [← prEvent_eq_evalDist_singleton _ true, prEvent_map, ← prEvent_eq_evalDist_singleton _ true,
+    prEvent_map]
+  simp only [decide_eq_true_eq]
   have compiled := PqxdhDeploymentCompileSecrecy.compile_full_source setup codec checks route ensureInit phase1 phase2
     bounds mode adversary ((PqxdhDynamicIdentityPool.initialState, PqxdhLiveKemBirth.empty), runtime)
   simp only [PqxdhDynamicIdentityPool.initialState, List.length_nil] at compiled
   have reported := PqxdhRegistrationJointReportSource.initialized_source setup codec checks ensureInit none count
     (PqxdhDeploymentCompileSecrecy.compileFull setup codec route bounds mode adversary) runtime
-  have decoded : Pr[ReportHolds (KemSK := KemSK) (A := A) (X := X) property (count := count) | PqxdhJointPhase1Reports.run
-      setup.joint count (PqxdhRegistrationJointReportCompiler.initialized setup codec checks ensureInit none count
-        (PqxdhDeploymentCompileSecrecy.compileFull setup codec route bounds mode adversary) runtime)] =
-      Pr[DecodedHolds (KemSK := KemSK) (A := A) (X := X) property | (fun result =>
-        PqxdhRegistrationJointIdentityCompiler.initializedResult (result.1, result.2.2.source.2)) <$>
-          PqxdhJointPhase1Reports.run setup.joint count (PqxdhRegistrationJointReportCompiler.initialized setup codec
-            checks ensureInit none count (PqxdhDeploymentCompileSecrecy.compileFull setup codec route bounds mode
-              adversary) runtime)] := by
-    rw [probEvent_map]
-    rfl
-  rw [decoded, reported, probEvent_map, ← compiled, probEvent_map]
-  congr 1
-  funext result
+  have decoded := (prEvent_congr (PqxdhJointPhase1Reports.run setup.joint count
+      (PqxdhRegistrationJointReportCompiler.initialized setup codec checks ensureInit none count
+        (PqxdhDeploymentCompileSecrecy.compileFull setup codec route bounds mode adversary) runtime))
+      (ReportHolds (KemSK := KemSK) (A := A) (X := X) property (count := count)) _ (fun _ => Iff.rfl)).trans
+    (prEvent_map (PqxdhJointPhase1Reports.run setup.joint count
+      (PqxdhRegistrationJointReportCompiler.initialized setup codec checks ensureInit none count
+        (PqxdhDeploymentCompileSecrecy.compileFull setup codec route bounds mode adversary) runtime))
+      (fun result => PqxdhRegistrationJointIdentityCompiler.initializedResult (result.1, result.2.2.source.2))
+      (DecodedHolds (KemSK := KemSK) (A := A) (X := X) property)).symm
+  rw [decoded, reported, prEvent_map, ← compiled, prEvent_map]
+  refine prEvent_congr _ _ _ fun result => ?_
   rcases result with ⟨_ | outcome, after⟩
   · simp [GameHolds, DecodedHolds, PqxdhDeploymentCompileSecrecy.mergeFull]
-  · simp only [Function.comp_apply, GameHolds, DecodedHolds, PqxdhDeploymentCompileSecrecy.mergeFull, Option.map_some,
+  · simp only [GameHolds, DecodedHolds, PqxdhDeploymentCompileSecrecy.mergeFull, Option.map_some,
       Option.some.injEq, PqxdhRegistrationJointInitializedSchedule.eraseOutcome,
       PqxdhRegistrationJointInitializedSchedule.encodeOutcome]
-    apply propext
     constructor
     · rintro ⟨_, _, _, ⟨rfl, rfl, rfl⟩, holds⟩
       refine ⟨_, rfl, ?_⟩
@@ -783,7 +779,7 @@ theorem a2pub_owner_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader R
       (fun outcome => decide (GameHolds setup property outcome)) from rfl,
     game_report_holds setup codec checks route ensureInit phase1 phase2 bounds mode adversary (budget.create + 1)
       runtime property,
-    evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map]
+    ← prEvent_eq_evalDist_singleton _ true, prEvent_map]
   have transfer := PqxdhDeploymentProvenance.client_transfer setup codec checks route ensureInit bounds mode adversary
     (budget.create + 1) runtime (ReportHolds property) (by
       intro reached member happened after afterMember
@@ -793,13 +789,13 @@ theorem a2pub_owner_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader R
         forged clean
       exact announceAll_detects setup.joint (budget.create + 1) target _ candidate candidateMember reached.2 failure
         after afterMember)
-  rw [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map] at transfer
+  rw [← prEvent_eq_evalDist_singleton _ true, prEvent_map] at transfer
   have creates := PqxdhDeploymentProvenance.client_creates setup codec checks route ensureInit bounds mode adversary
     budget respects (budget.create + 1) runtime
-  have field := PqxdhJointPhase1Reports.fieldOrigin_advantage_le_sum_vcvioLegacy setup.joint budget.create
+  have field := PqxdhJointPhase1Reports.fieldOrigin_advantage_le_sum setup.joint budget.create
     (PqxdhDeploymentProvenance.client setup codec checks route ensureInit bounds mode adversary (budget.create + 1)
       runtime) fallback ordinaryFallback (creates.mono (by omega))
-  rw [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map] at transfer
+  rw [← prEvent_eq_evalDist_singleton _ true, prEvent_map] at transfer
   exact le_trans transfer field
 
 /-- Theorem CE-A2pub (published-tuple provenance, on `NoBundleFailure` runs, no selection factor). For a deployment adversary in either mode that respects its budget, with a generated Server seed, the probability that the run has no rejected bundle call made in Fresh and yet some successful accept carries a raw candidate that the source attached verification accepts with the identity key of some created owner and a key tuple other than the tuple of that owner's published bundle (or that owner published none) is at most the same sum over the `qCreate + 1` generated identity positions of the ordinary joint-use weak-EUF advantages of the A2 client's reductions as CE-A2. The premises are `shortRejects` with `setup.wiring`, the approved codec laws `Phase1ReadBack` and `Phase2ReadBack`, and the adversary's budget. It is the corollary of `a2pub_owner_bound` through `game_owner`. -/
@@ -822,11 +818,11 @@ theorem a2pub_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
   classical
   refine le_trans ?_ (a2pub_owner_bound setup codec checks shortRejects phase1 phase2 route ensureInit bounds mode
     adversary budget respects runtime fallback ordinaryFallback)
-  rw [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map, evalDist_apply_singleton,
-    ← probEvent_eq_eq_probOutput, probEvent_map]
-  apply probEvent_mono
+  rw [← prEvent_eq_evalDist_singleton _ true, prEvent_map, ← prEvent_eq_evalDist_singleton _ true,
+    prEvent_map]
+  apply prEvent_mono_of_support
   intro outcome _ event
-  simp only [Function.comp_apply, decide_eq_true_eq] at event ⊢
+  simp only [decide_eq_true_eq] at event ⊢
   exact game_owner setup codec outcome event
 
 /-- A partial map whose image list has no duplicate sends no two positions of the list to the same value. -/
@@ -996,11 +992,11 @@ theorem r1prime_owner_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader
   classical
   refine le_trans ?_ (a2pub_owner_bound setup codec checks shortRejects phase1 phase2 route ensureInit bounds mode
     adversary budget respects runtime fallback ordinaryFallback)
-  rw [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map, evalDist_apply_singleton,
-    ← probEvent_eq_eq_probOutput, probEvent_map]
-  apply probEvent_mono
+  rw [← prEvent_eq_evalDist_singleton _ true, prEvent_map, ← prEvent_eq_evalDist_singleton _ true,
+    prEvent_map]
+  apply prEvent_mono_of_support
   intro outcome member replayed
-  simp only [Function.comp_apply, decide_eq_true_eq] at replayed ⊢
+  simp only [decide_eq_true_eq] at replayed ⊢
   exact replay_owner_published setup codec checks route ensureInit 0 bounds mode adversary runtime outcome member
     replayed
 
@@ -1024,11 +1020,11 @@ theorem r1prime_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
   classical
   refine le_trans ?_ (r1prime_owner_bound setup codec checks shortRejects phase1 phase2 route ensureInit bounds mode
     adversary budget respects runtime fallback ordinaryFallback)
-  rw [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map, evalDist_apply_singleton,
-    ← probEvent_eq_eq_probOutput, probEvent_map]
-  apply probEvent_mono
+  rw [← prEvent_eq_evalDist_singleton _ true, prEvent_map, ← prEvent_eq_evalDist_singleton _ true,
+    prEvent_map]
+  apply prEvent_mono_of_support
   intro outcome _ replayed
-  simp only [Function.comp_apply, decide_eq_true_eq] at replayed ⊢
+  simp only [decide_eq_true_eq] at replayed ⊢
   exact replay_owner setup codec outcome replayed
 
 end BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple

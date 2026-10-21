@@ -144,16 +144,15 @@ end OriginPin
 theorem chance_mono_support {α : Type} (run : ProbComp α) (first second : α → Bool)
     (implies : ∀ a ∈ support run, first a = true → second a = true) :
     𝒟[first <$> run] {true} ≤ 𝒟[second <$> run] {true} := by
-  rw [evalDist_apply_singleton, evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, ← probEvent_eq_eq_probOutput,
-    probEvent_map, probEvent_map]
-  exact probEvent_mono fun a member held => implies a member held
+  rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true, prEvent_map, prEvent_map]
+  exact prEvent_mono_of_support _ _ _ fun a member held => implies a member held
 
 /-- Union bound for Boolean events. -/
 theorem chance_or_le {α : Type} (run : ProbComp α) (first second : α → Bool) :
     𝒟[(fun a => first a || second a) <$> run] {true} ≤ 𝒟[first <$> run] {true} + 𝒟[second <$> run] {true} := by
-  rw [evalDist_apply_singleton, evalDist_apply_singleton, evalDist_apply_singleton, ← probEvent_eq_eq_probOutput,
-    ← probEvent_eq_eq_probOutput, ← probEvent_eq_eq_probOutput, probEvent_map, probEvent_map, probEvent_map]
-  refine le_trans (probEvent_mono fun a _ held => ?_) (probEvent_or_le run _ _)
+  rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true,
+    ← prEvent_eq_evalDist_singleton _ true, prEvent_map, prEvent_map, prEvent_map]
+  refine le_trans (prEvent_mono_of_support _ _ _ fun a _ held => ?_) (prEvent_or_le run _ _)
   simpa only [Function.comp, Bool.or_eq_true] using held
 
 /-! ### The containment -/

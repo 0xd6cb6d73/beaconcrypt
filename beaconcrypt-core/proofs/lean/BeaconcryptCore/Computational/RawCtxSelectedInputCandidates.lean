@@ -25,10 +25,6 @@ theorem uniform_candidates (candidates : List RootOutput) :
   simpa only [PqxdhMaterialKeyCollisions.material_key_card, Nat.cast_pow, Nat.cast_ofNat] using
     PqxdhMaterialKeyCollisions.material_key_mem candidates
 
-set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.RawCtxSelectedInputCandidates.uniform_candidates_vcvioLegacy :
-    ∀ (candidates : List BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput), (probEvent ($ᵗ BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput) fun (target : BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput) => target ∈ candidates) ≤ ↑candidates.length / 2 ^ 256 :=
-  by simpa only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent] using @BeaconcryptCore.Computational.RawCtxSelectedInputCandidates.uniform_candidates
-
 /-- In the same full-reply cut, an arbitrary continued candidate trace is charged without conditioning on success or stopping. -/
 theorem observed_candidates {Context Stopped Result : Type} (sample : ProbComp Context)
     (stop : Context → beaconcrypt_core.ratchet.RatchetMaterial → Stopped)

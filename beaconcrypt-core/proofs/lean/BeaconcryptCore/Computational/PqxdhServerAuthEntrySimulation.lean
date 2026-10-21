@@ -175,24 +175,6 @@ theorem eager_run {α σ V : Type} (sampler : ProbComp V) (lazy : QueryImpl spec
               (simulateQ lazy (next step.1)).run step.2) from (bind_assoc _ _ _).symm]
         exact designated.bind_left _
 
-set_option linter.deprecated false in set_option linter.unusedVariables false in theorem _root_.BeaconcryptCore.Computational.PqxdhServerAuthEntryFactor.eager_run_vcvioLegacy :
-    ∀ {ι : Type} {spec : OracleSpec ι} {α σ V : Type} (sampler : ProbComp V) (lazy : QueryImpl spec (StateT σ ProbComp)) (eager : V → QueryImpl spec (StateT σ ProbComp)) (done : σ → Prop) (doneStep : ∀ (query : spec.Domain) (state : σ), done state → (∀ (value : V), (eager value query).run state = (lazy query).run state) ∧ ∀ result ∈ MonadAttach.support ((lazy query).run state), done result.2)
-      (freshStep :
-        ∀ (query : spec.Domain) (state : σ),
-          ¬done state →
-            (∀ (value : V), (eager value query).run state = (lazy query).run state) ∨
-              𝒮[(lazy query).run state] =
-                  𝒮[do
-                    let value ← sampler
-                    (eager value query).run state] ∧
-                ∀ (value : V), ∀ result ∈ MonadAttach.support ((eager value query).run state), done result.2)
-      (work : OracleComp spec α) (state : σ),
-      𝒮[(simulateQ lazy work).run state] =
-        𝒮[do
-          let value ← sampler
-          (simulateQ (eager value) work).run state] :=
-  by simpa only [BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq] using @BeaconcryptCore.Computational.PqxdhServerAuthEntryFactor.eager_run
-
 end Generic
 
 end BeaconcryptCore.Computational.PqxdhServerAuthEntryFactor

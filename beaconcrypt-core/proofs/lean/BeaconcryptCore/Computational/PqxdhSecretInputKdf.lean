@@ -148,15 +148,6 @@ theorem evalSPMF_sample_comm {A B C : Type} (left : ProbComp A) (right : ProbCom
       (right >>= fun b => left >>= fun a => next a b) :=
   OracleComp.EvalDistEq.bind_bind_swap left right next
 
-set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy :
-    ∀ {A B C : Type} (left : ProbComp A) (right : ProbComp B) (next : A → B → ProbComp C),
-      𝒮[left >>= fun (a : A) => right >>= next a] =
-        𝒮[do
-          let b ← right
-          let a ← left
-          next a b] :=
-  by simpa only [BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq] using @BeaconcryptCore.Computational.PqxdhSecretInputKdf.evalSPMF_sample_comm
-
 /-- Uniform Extract output is exactly the ordinary secret-key HMAC real world. -/
 theorem extractUniform_eq_hmacReal {Context : Type} (hmac : HmacSha512)
     (sample : SecretInputSampler Context) (observer : RootObserver Context) :

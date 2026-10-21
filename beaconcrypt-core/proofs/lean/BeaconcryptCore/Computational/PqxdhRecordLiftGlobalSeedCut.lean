@@ -477,7 +477,7 @@ theorem miss_continuation {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader R
   rw [allocate_miss policy setup codec target secret missing, bind_map_left]
   intro Observed _ observe
   simp only [bind_assoc]
-  apply evalDist_eq_of_evalSPMF_eq
+  refine EvalDistEq.evalDist_eq ?_
   simpa only [prepare_realize] using PqxdhRecordLiftSeedCut.split_continuation direction
     (fun other hidden => continuation ((), realize hidden (prepare secret target direction other)) >>= observe)
 
@@ -628,10 +628,10 @@ theorem observed_source {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Res
         (reductionObserver source ideal filling setup codec target direction client observer)] := by
   have actual := (observed_real source ideal filling setup codec target direction client observer).evalDist_eq
   rw [actual]
-  apply evalDist_eq_of_evalSPMF_eq
+  refine EvalDistEq.evalDist_eq ?_
   simpa only [seedReal, sourceFullGame, PqxdhServerAuthKeySchedule.uniform32,
     reductionObserver, bind_assoc, pure_bind] using
-    evalSPMF_sample_comm_vcvioLegacy (retainedContext source ideal setup codec target client) ($ᵗ RootOutput)
+    evalSPMF_sample_comm (retainedContext source ideal setup codec target client) ($ᵗ RootOutput)
       (fun context hidden => seedObserver source ideal filling setup codec target direction observer context
         (PqxdhJointKdf.productionStream source.crypto (FixedHkdfDomain.ratchet.address hidden.toList)))
 
@@ -656,12 +656,12 @@ theorem uniform_source {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Resp
     𝒟[seedUniform source ideal filling setup codec target direction client observer] =
       𝒟[independentFullGame PqxdhServerAuthKeySchedule.uniform32
         (reductionObserver source ideal filling setup codec target direction client observer)] := by
-  apply evalDist_eq_of_evalSPMF_eq
+  refine EvalDistEq.evalDist_eq ?_
   simp only [seedUniform, independentFullGame, PqxdhServerAuthKeySchedule.uniform32,
     reductionObserver, bind_assoc, pure_bind]
-  rw [OracleComp.DeferredSampling.evalSPMF_bind_const_neverFails ($ᵗ RootOutput) (by simp)]
-  exact evalSPMF_sample_comm_vcvioLegacy (retainedContext source ideal setup codec target client) ($ᵗ FullOutput)
-    (seedObserver source ideal filling setup codec target direction observer)
+  exact (evalSPMF_sample_comm (retainedContext source ideal setup codec target client) ($ᵗ FullOutput)
+    (seedObserver source ideal filling setup codec target direction observer)).trans
+      (OracleComp.EvalDistEq.bind_const ($ᵗ RootOutput) _).symm
 
 /-- Either directional global seed cut has a coefficient-one ordinary uniform32 Extract and two-query uniform-secret-key HMAC bound. The sole source premise is the existing functional HKDF implementation equality; this is not yet an adjacent-policy or global security theorem. -/
 theorem observed_bound {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response : Type}

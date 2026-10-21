@@ -80,8 +80,8 @@ theorem generated_authentication (setup : Setup baseSpec KemSK) (codec : Codec R
     (fun input => (unit_queries work input _ _).mpr (finishBound input)) fallback signatureFallback
   have finite : 𝒟[PqxdhServerAuthCommonProbability.decision setup codec checks <$>
       PqxdhServerAuthRootObserved.orderedGame setup codec checks false (unitWork work)] {true} ≠ ⊤ := by
-    rw [evalDist_apply_singleton]
-    exact probOutput_ne_top
+    rw [← prEvent_eq_evalDist_singleton _ true]
+    exact prEvent_ne_top _
   exact ⟨(ENNReal.toReal_mono finite
     (generated_failure_le setup codec checks ensureInit work runtime)).trans bound.1, bound.2⟩
 

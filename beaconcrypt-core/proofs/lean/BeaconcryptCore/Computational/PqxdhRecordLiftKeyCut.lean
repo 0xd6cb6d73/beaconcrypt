@@ -137,42 +137,40 @@ open PqxdhRecordLiftProjectionCut (Retained restore retained secret restore_spli
 noncomputable def keyStore (key : RootOutput) (output : FullOutput) : FullOutput :=
   restore .key (retained .key output) key
 
-set_option linter.deprecated false in
 /-- Storing a uniform output, or a uniform output whose key bytes are replaced by an independent uniform key sampled before it, has the same law under every continuation. -/
 theorem miss_eager {Result : Type} (continuation : FullOutput → Result) :
-    𝒮[continuation <$> ($ᵗ FullOutput)] =
-      𝒮[do let key ← $ᵗ RootOutput; (fun output => continuation (keyStore key output)) <$> ($ᵗ FullOutput)] := by
-  have swap := evalSPMF_bind_bind_swap ($ᵗ RootOutput) ($ᵗ FullOutput)
+    EvalDistEq (continuation <$> ($ᵗ FullOutput))
+      (do let key ← $ᵗ RootOutput; (fun output => continuation (keyStore key output)) <$> ($ᵗ FullOutput)) := by
+  have swap := OracleComp.EvalDistEq.bind_bind_swap ($ᵗ RootOutput) ($ᵗ FullOutput)
     (fun key output => (pure (continuation (keyStore key output)) : ProbComp Result))
   have first := split_continuation (X := Result) .key
     (fun value _ => do let key ← $ᵗ RootOutput; pure (continuation (restore .key value key)))
   have drop : ∀ value : Retained,
-      𝒮[(do let _ ← $ᵗ RootOutput
+      EvalDistEq
+        (do let _ ← $ᵗ RootOutput
             let key ← $ᵗ RootOutput
-            pure (continuation (restore .key value key)) : ProbComp Result)] =
-        𝒮[(do let key ← $ᵗ RootOutput; pure (continuation (restore .key value key)) : ProbComp Result)] :=
-    fun value => DeferredSampling.evalSPMF_bind_const_neverFails _ probFailure_eq_zero _
+            pure (continuation (restore .key value key)) : ProbComp Result)
+        (do let key ← $ᵗ RootOutput; pure (continuation (restore .key value key)) : ProbComp Result) :=
+    fun value => OracleComp.EvalDistEq.bind_const _ _
   have second := split_continuation (X := Result) .key (fun value key => pure (continuation (restore .key value key)))
   simp only [restore_split] at second
   simp only [map_eq_bind_pure_comp, Function.comp_def] at swap ⊢
-  rw [swap]
+  refine EvalDistEq.trans ?_ swap.symm
   simp only [keyStore]
-  rw [first, second, evalSPMF_bind ($ᵗ Retained), evalSPMF_bind ($ᵗ Retained)]
-  exact congrArg _ (funext fun value => (drop value).symm)
+  exact second.trans ((EvalDistEq.bind_right ($ᵗ Retained) fun value => (drop value).symm).trans first.symm)
 
 
-set_option linter.deprecated false in
 /-- **Eager target key.** For every mode assignment and every program, the CTX world has the law of first sampling a uniform key and then running the world that stores that key in the target's entry at its lookup miss. Both read every key from the table. -/
 theorem table_eager (modes : Label n → KeyMode) (target : Label n) (replace : Pqxdh.Bytes → Pqxdh.Bytes)
     (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK) (codec : PqxdhServerAuthExperiment.Codec Reader Response)
     {Result : Type} (client : OracleComp (PqxdhRecordLiftProtocol.ServiceSpec n) Result) (state : CtxPrivate n) :
-    𝒮[(simulateQ (ctxInterpreterWith tableKey modes replace setup codec) client).run state] =
-      𝒮[do
+    EvalDistEq ((simulateQ (ctxInterpreterWith tableKey modes replace setup codec) client).run state)
+      (do
         let key ← $ᵗ RootOutput
         (simulateQ (world (keyedWith tableKey modes (RawCtxUniversalDecoder.decoder codec.frameRead)
-          setup.source.crypto) (keyStore key) target replace setup codec) client).run state] := by
+          setup.source.crypto) (keyStore key) target replace setup codec) client).run state) := by
   rw [ctxInterpreterWith_of]
-  apply PqxdhServerAuthEntryFactor.eager_run_vcvioLegacy ($ᵗ RootOutput) _ _ (fun state => Present state.base.chain target)
+  apply PqxdhServerAuthEntryFactor.eager_run ($ᵗ RootOutput) _ _ (fun state => Present state.base.chain target)
   · intro query state present
     refine ⟨fun key => world_other _ _ target replace setup codec query state
       (fun ⟨_, missing⟩ => by obtain ⟨output, found⟩ := present; rw [found] at missing; cases missing), ?_⟩
@@ -675,7 +673,6 @@ theorem ctxView_map (program : ProbComp (Client n E X × CtxPrivate n)) :
   rw [Functor.map_map]
   rfl
 
-set_option linter.deprecated false in
 /-- **The selected-key law.** For every mode assignment, coordinate and adversary within its budget, the CTX world's view has the law of first sampling a uniform key and running the CTX world whose `target` coordinate is keyed with it (`PqxdhRecordLiftCtxLink.selectedKey`). -/
 theorem key_cut_view (modes : Label n → KeyMode) (target : Label n) (replace : Pqxdh.Bytes → Pqxdh.Bytes)
     (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK) (codec : PqxdhServerAuthExperiment.Codec Reader Response)
@@ -683,11 +680,11 @@ theorem key_cut_view (modes : Label n → KeyMode) (target : Label n) (replace :
     (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
     (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X)
     (budget : PqxdhDeploymentInterface.Budget) (respects : budget.Respects adversary) :
-    𝒮[ctxView <$> ctxRun modes replace setup codec route env serverKid bounds mode adversary] =
-      𝒮[do
+    EvalDistEq (ctxView <$> ctxRun modes replace setup codec route env serverKid bounds mode adversary)
+      (do
         let key ← $ᵗ CtxKey
         ctxView <$> ctxRunWith (selectedKey target key) modes replace setup codec route env serverKid bounds mode
-          adversary] := by
+          adversary) := by
   have eager := table_eager modes target replace setup codec
     (PqxdhRecordLiftProtocol.program env setup.source.crypto codec route serverKid bounds mode adversary)
     CtxPrivate.initial
@@ -701,10 +698,12 @@ theorem key_cut_view (modes : Label n → KeyMode) (target : Label n) (replace :
     rw [selected_table modes target key replace setup codec route env serverKid bounds mode adversary budget respects,
       ctxView_map, stored_view, ← ctxView_map]
     rfl
-  rw [← ctxRunWith_tableKey, ctxRunWith, evalSPMF_map, eager, ← evalSPMF_map, map_bind]
+  rw [← ctxRunWith_tableKey, ctxRunWith]
+  refine (eager.map ctxView).trans ?_
+  rw [map_bind]
   simp only [perKey]
+  exact EvalDistEq.rfl
 
-set_option linter.deprecated false in
 /-- The selected-key law for every decision on the view, in the form of `PqxdhRecordLiftCtxLink.link`. -/
 theorem key_cut {Out : Type} (modes : Label n → KeyMode) (target : Label n) (replace : Pqxdh.Bytes → Pqxdh.Bytes)
     (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK) (codec : PqxdhServerAuthExperiment.Codec Reader Response)
@@ -713,16 +712,16 @@ theorem key_cut {Out : Type} (modes : Label n → KeyMode) (target : Label n) (r
     (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X)
     (budget : PqxdhDeploymentInterface.Budget) (respects : budget.Respects adversary)
     (decision : View n E X → ProbComp Out) :
-    𝒮[ctxRun modes replace setup codec route env serverKid bounds mode adversary >>= fun result =>
-        decision (ctxView result)] =
-      𝒮[do
+    EvalDistEq (ctxRun modes replace setup codec route env serverKid bounds mode adversary >>= fun result =>
+        decision (ctxView result))
+      (do
         let key ← $ᵗ CtxKey
         let result ← ctxRunWith (selectedKey target key) modes replace setup codec route env serverKid bounds mode
           adversary
-        decision (ctxView result)] := by
-  have law := congrArg (fun distribution => distribution >>= fun view => 𝒮[decision view])
-    (key_cut_view modes target replace setup codec route env serverKid bounds mode adversary budget respects)
-  simp only [← evalSPMF_bind, bind_map_left, bind_assoc] at law
+        decision (ctxView result)) := by
+  have law := (key_cut_view modes target replace setup codec route env serverKid bounds mode adversary budget
+    respects).bind_left (fun view => decision view)
+  simp only [bind_map_left, bind_assoc] at law
   exact law
 
 /-- The selected-key law in the measure notation of the targets. -/
@@ -740,8 +739,7 @@ theorem key_cut_measure {Out : Type} [MeasurableSpace Out] (modes : Label n → 
         let result ← ctxRunWith (selectedKey target key) modes replace setup codec route env serverKid bounds mode
           adversary
         decision (ctxView result)] :=
-  evalDist_eq_of_evalSPMF_eq _ _
-    (key_cut modes target replace setup codec route env serverKid bounds mode adversary budget respects decision)
+  (key_cut modes target replace setup codec route env serverKid bounds mode adversary budget respects decision).evalDist_eq
 
 end BeaconcryptCore.Computational.PqxdhRecordLiftKeyCut
 

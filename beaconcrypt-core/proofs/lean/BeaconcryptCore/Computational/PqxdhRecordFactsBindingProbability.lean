@@ -29,8 +29,8 @@ theorem run_conflict_bound (modes : Label n → KeyMode) (ideal : ∀ label, mod
   rw [(PqxdhRecordFactsBindingEvent.run_conflict_observation modes replace setup codec route env serverKid bounds mode adversary ideal).evalDist_eq]
   refine le_trans ?_ (PqxdhRecordFactsHashCollision.erased_collision modes ideal replace setup codec route env
     startup allowance framed serverKid bounds mode budget adversary respects decisionCost)
-  simp only [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map]
-  apply probEvent_mono
+  rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true, prEvent_map, prEvent_map]
+  apply prEvent_mono_of_support
   intro result reached conflict
   exact @decide_eq_true _ (Classical.propDecidable _) (PqxdhRecordFactsBindingEvent.conflict_collision result.2
     (PqxdhRecordFactsBindingCache.erased_run_cached modes ideal replace setup codec route env serverKid bounds mode adversary result reached)

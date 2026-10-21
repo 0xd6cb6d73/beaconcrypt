@@ -89,8 +89,8 @@ theorem lawEq_until_stop {α σ₁ σ₂ V β : Type}
     rw [map_eq_bind_pure_comp, map_eq_bind_pure_comp]
     exact relTriple_bind coupled fun left right post => relTriple_pure_pure (agree left right post)
   intro γ _ continuation
-  apply evalDist_eq_of_evalSPMF_eq
-  rw [evalSPMF_bind, evalSPMF_bind, evalSPMF_eq_of_relTriple_eqRel mapped]
+  refine EvalDistEq.evalDist_eq ?_
+  exact ((VCVioLegacy.evalSPMF_eq_iff_evalDistEq _ _).mp (evalSPMF_eq_of_relTriple_eqRel mapped)).bind_left continuation
 
 end UntilStop
 

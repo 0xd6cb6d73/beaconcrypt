@@ -64,58 +64,54 @@ theorem journal_extends (dfl : (query : spec.Domain) → spec.Range query) (hand
       obtain ⟨rest, same⟩ := ih step.1 _ step.2 continued
       exact ⟨⟨query, step.1⟩ :: rest, by simp [same]⟩
 
-set_option linter.deprecated false in
 /-- A map that is constant on the support of a computation that never fails has the distribution of that constant. -/
 theorem map_const_support {β γ : Type} (computation : ProbComp β) (f : β → γ) (value : γ)
     (constant : ∀ outcome ∈ support computation, f outcome = value) :
-    𝒮[f <$> computation] = 𝒮[(pure value : ProbComp γ)] := by
+    EvalDistEq (f <$> computation) (pure value : ProbComp γ) := by
   rw [map_eq_bind_pure_comp]
-  rw [show 𝒮[computation >>= pure ∘ f] = 𝒮[computation >>= fun _ => (pure value : ProbComp γ)] from
-    evalSPMF_bind_congr fun outcome member => by simp [constant outcome member]]
-  exact DeferredSampling.evalSPMF_bind_const_neverFails _ (by simp) _
+  refine EvalDistEq.trans (OracleComp.EvalDistEq.bind_congr_of_support (g := fun _ => (pure value : ProbComp γ)) _
+    fun outcome member => ?_) (OracleComp.EvalDistEq.bind_const _ _)
+  simp [constant outcome member]
 
-set_option linter.deprecated false in
 /-- From a journal that has not stopped, the frozen journal has the distribution of the full journal's continuation cut at its first stopping prefix. -/
 theorem frozen_from (dfl : (query : spec.Domain) → spec.Range query)
     (stop : List ((query : spec.Domain) × spec.Range query) → Prop) [DecidablePred stop]
     (handler : QueryImpl spec (StateT σ ProbComp)) (program : OracleComp spec α)
     (start : List ((query : spec.Domain) × spec.Range query)) (open_ : ¬ stop start) (state : σ) :
-    𝒮[(fun outcome : (α × List ((query : spec.Domain) × spec.Range query)) × σ =>
+    EvalDistEq ((fun outcome : (α × List ((query : spec.Domain) × spec.Range query)) × σ =>
         untilFrom stop start (outcome.1.2.drop start.length)) <$>
-      (simulateQ handler ((simulateQ (freezeImpl dfl (fun _ => False)) program).run start)).run state] =
-    𝒮[(fun outcome : (α × List ((query : spec.Domain) × spec.Range query)) × σ => outcome.1.2) <$>
-      (simulateQ handler ((simulateQ (freezeImpl dfl stop) program).run start)).run state] := by
+      (simulateQ handler ((simulateQ (freezeImpl dfl (fun _ => False)) program).run start)).run state)
+      ((fun outcome : (α × List ((query : spec.Domain) × spec.Range query)) × σ => outcome.1.2) <$>
+      (simulateQ handler ((simulateQ (freezeImpl dfl stop) program).run start)).run state) := by
   induction program using OracleComp.inductionOn generalizing start state with
   | pure value => simp [untilFrom]
   | query_bind query next ih =>
       simp only [simulateQ_bind, simulateQ_query, OracleQuery.input_query, OracleQuery.cont_query, id_map,
         StateT.run_bind, PqxdhDeploymentServerAuthLocalize.freezeImpl_run, ite_false, ite_eq_right open_, bind_map_left,
         simulateQ_bind, simulateQ_query, map_bind]
-      refine DeferredSampling.evalSPMF_bind_congr_left _ _ _ fun step => ?_
+      refine EvalDistEq.bind_right _ fun step => ?_
       by_cases stopped : stop (start ++ [⟨query, step.1⟩])
       · obtain ⟨value, frozen⟩ := frozen_pure dfl stop (next step.1) _ stopped
         rw [frozen, simulateQ_pure, StateT.run_pure, map_pure]
         refine map_const_support _ _ _ fun outcome member => ?_
         obtain ⟨rest, same⟩ := journal_extends dfl handler (next step.1) _ step.2 outcome member
         simp only [same, List.append_assoc, List.singleton_append, List.drop_left, untilFrom, stopped, ite_true]
-      · rw [← ih step.1 _ stopped step.2]
-        congr 1
+      · refine EvalDistEq.trans ?_ (ih step.1 _ stopped step.2)
         rw [map_eq_bind_pure_comp, map_eq_bind_pure_comp]
-        refine OracleComp.bind_congr_of_forall_mem_support _ fun outcome member => ?_
+        refine OracleComp.EvalDistEq.bind_congr_of_support _ fun outcome member => ?_
         obtain ⟨rest, same⟩ := journal_extends dfl handler (next step.1) _ step.2 outcome member
         simp only [Function.comp_apply, same, List.append_assoc, List.singleton_append, List.drop_left, untilFrom,
           stopped, ite_false, List.length_append, List.length_singleton]
         simp
 
-set_option linter.deprecated false in
 /-- Under every handler, the frozen journal has the distribution of the full journal cut at its first stopping prefix, for every stop predicate that does not hold on the empty journal. -/
 theorem frozen_journal (dfl : (query : spec.Domain) → spec.Range query)
     (stop : List ((query : spec.Domain) × spec.Range query) → Prop) [DecidablePred stop]
     (handler : QueryImpl spec (StateT σ ProbComp)) (program : OracleComp spec α) (open_ : ¬ stop []) (state : σ) :
-    𝒮[(fun outcome : (α × List ((query : spec.Domain) × spec.Range query)) × σ => untilStop stop outcome.1.2) <$>
-      (simulateQ handler (journal dfl program)).run state] =
-    𝒮[(fun outcome : (α × List ((query : spec.Domain) × spec.Range query)) × σ => outcome.1.2) <$>
-      (simulateQ handler (freeze dfl stop program)).run state] := by
+    EvalDistEq ((fun outcome : (α × List ((query : spec.Domain) × spec.Range query)) × σ => untilStop stop outcome.1.2) <$>
+      (simulateQ handler (journal dfl program)).run state)
+      ((fun outcome : (α × List ((query : spec.Domain) × spec.Range query)) × σ => outcome.1.2) <$>
+      (simulateQ handler (freeze dfl stop program)).run state) := by
   simpa only [untilStop, journal, freeze, List.length_nil, List.drop_zero] using
     frozen_from dfl stop handler program [] open_ state
 

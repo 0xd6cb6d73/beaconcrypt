@@ -54,7 +54,7 @@ theorem triple_expect (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
       (fun outcome => @ite _ (TripleColl k i j outcome) (Classical.propDecidable _) 1 0) ≤ pairCollision setup := by
   have bound := PqxdhDeploymentHeadlineCtGhost.triple_le setup codec checks route ensureInit identityIndex bounds mode
     adversary runtime k i j order
-  rw [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map,
+  rw [← prEvent_eq_evalDist_singleton _ true, prEvent_map, ← VCVioLegacy.probEvent_eq_prEvent,
     ← OracleComp.EvalDist.expectedValue_ite_one] at bound
   refine le_trans (le_of_eq ?_) bound
   congr 1
@@ -73,8 +73,8 @@ theorem ct_collision_game (setup : Setup baseSpec KemSK) (codec : Codec Reader R
       ((budget.create * budget.accept.choose 2 : Nat) : ℝ≥0∞) * pairCollision setup := by
   classical
   unfold ctCollTerm
-  rw [PqxdhDeploymentHeadlineCtGhost.game_ghost, Functor.map_map, evalDist_apply_singleton,
-    ← probEvent_eq_eq_probOutput, probEvent_map, ← OracleComp.EvalDist.expectedValue_ite_one,
+  rw [PqxdhDeploymentHeadlineCtGhost.game_ghost, Functor.map_map, ← prEvent_eq_evalDist_singleton _ true,
+    prEvent_map, ← VCVioLegacy.probEvent_eq_prEvent, ← OracleComp.EvalDist.expectedValue_ite_one,
     ← sum_triples]
   set run := (gameG setup codec checks route ensureInit 0 bounds mode adversary).run runtime with runEq
   calc expectedValue run (fun outcome => if ((fun hit => hit = true) ∘ (PqxdhDeploymentKemTransfer.happens

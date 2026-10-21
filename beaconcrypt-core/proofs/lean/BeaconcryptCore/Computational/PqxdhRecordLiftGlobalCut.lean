@@ -75,7 +75,7 @@ theorem miss_continuation {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader R
   rw [lookup_miss source ideal setup codec target state selected missing, bind_map_left]
   intro Observed _ observe
   simp only [bind_assoc]
-  apply evalDist_eq_of_evalSPMF_eq
+  refine EvalDistEq.evalDist_eq ?_
   simpa only [prepare_realize] using PqxdhRecordLiftProjectionCut.split_continuation .chain
     (fun value hidden => continuation ((), PqxdhRecordLiftGlobalMask.realize hidden (prepare state target value)) >>= observe)
 
@@ -199,7 +199,7 @@ theorem full_split_law {X : Type} (continuation : PqxdhRecordLiftProjectionCut.R
           let hidden ← $ᵗ RootOutput
           continuation value hidden) := by
   intro Observed _ observe
-  apply evalDist_eq_of_evalSPMF_eq
+  refine EvalDistEq.evalDist_eq ?_
   simpa only [bind_assoc] using PqxdhRecordLiftProjectionCut.split_continuation .chain
     (fun value hidden => continuation value hidden >>= observe)
 

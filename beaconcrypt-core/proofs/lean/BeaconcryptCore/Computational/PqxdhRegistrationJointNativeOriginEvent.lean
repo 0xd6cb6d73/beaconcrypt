@@ -57,9 +57,9 @@ theorem transport (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
       PqxdhJointPhase1Reports.run setup.joint count (client setup codec checks ensureInit supplied count program runtime)] {true} := by
   classical
   apply le_trans _ (PqxdhRegistrationJointFinalReportEvent.transport setup codec checks ensureInit supplied count program runtime)
-  rw [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map,
-    evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map]
-  apply probEvent_mono
+  rw [← prEvent_eq_evalDist_singleton _ true, prEvent_map,
+    ← prEvent_eq_evalDist_singleton _ true, prEvent_map]
+  apply prEvent_mono_of_support
   intro result supported failed
   simpa only [Function.comp_apply, decide_eq_true_eq] using public_failure setup codec checks ensureInit supplied count program runtime result supported
     (of_decide_eq_true failed)

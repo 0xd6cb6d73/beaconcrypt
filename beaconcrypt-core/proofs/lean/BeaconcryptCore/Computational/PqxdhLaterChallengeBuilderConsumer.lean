@@ -121,9 +121,8 @@ theorem client_random (qPost : Nat) (key : Key) (state : RandomState) :
       (client setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem qPost false key)).run state] {true} =
     𝒟[Prod.fst <$> (simulateQ (confRandomImpl (RawCtxUniversalDecoder.decoder env.decode) env.source.crypto)
       (client setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem qPost true key)).run state] {true} := by
-  rw [evalDist_apply_singleton, evalDist_apply_singleton,
-    ← probEvent_eq_eq_probOutput, ← probEvent_eq_eq_probOutput, probEvent_map, probEvent_map]
-  exact pre_event_vcvioLegacy (confRandomImpl (RawCtxUniversalDecoder.decoder env.decode) env.source.crypto)
+  rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true, prEvent_map, prEvent_map]
+  exact pre_event (confRandomImpl (RawCtxUniversalDecoder.decoder env.decode) env.source.crypto)
     (fun m0 m1 => identRandom m0 m1)
     (client_pre setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem qPost key)
     (fun a => a = true) (fun b => b = true) (fun a b same => by rw [same])

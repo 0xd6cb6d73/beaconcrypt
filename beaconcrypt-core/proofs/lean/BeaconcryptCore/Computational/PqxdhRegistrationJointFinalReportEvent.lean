@@ -15,14 +15,12 @@ theorem announce_hits (joint : Primitives) (count target : Nat)
     (failure : FieldOriginFailure joint ⟨target, candidate⟩ state.1.snapshot) :
     𝒟[(fun result => result.2.1.occurred) <$>
       (simulateQ (sourceImpl joint count) (announce count (some candidate))).run state] {true} = 1 := by
-  rw [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map]
-  apply probEvent_eq_one
-  constructor
-  · simp
-  · intro result supported
-    apply PqxdhRegistrationJointTerminalReports.source_detects joint count target candidate state result supported
-    rw [(PqxdhRegistrationJointTerminalReports.source_batch joint count (List.range count) candidate state result supported).1]
-    exact failure
+  rw [← prEvent_eq_evalDist_singleton _ true, prEvent_map]
+  apply OracleComp.prEvent_eq_one_of_forall_mem_support
+  intro result supported
+  apply PqxdhRegistrationJointTerminalReports.source_detects joint count target candidate state result supported
+  rw [(PqxdhRegistrationJointTerminalReports.source_batch joint count (List.range count) candidate state result supported).1]
+  exact failure
 
 variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK A Reader Response : Type}
 open PqxdhServerAuthExperiment
@@ -44,25 +42,24 @@ theorem transport (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     𝒟[(fun result => result.2.1.occurred) <$>
       run setup.joint count (client setup codec checks ensureInit supplied count program runtime)] {true} := by
   classical
-  rw [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput,
-    evalDist_apply_singleton, ← probEvent_eq_eq_probOutput]
-  have bounded := probEvent_bind_mono
-    (mx := run setup.joint count (PqxdhRegistrationJointReportCompiler.initialized setup codec checks ensureInit supplied count program runtime))
-    (my := fun before => pure (decide (Failure setup.joint codec before)))
-    (oc := fun before => (fun after => after.2.1.occurred) <$>
+  rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true]
+  have bounded := prEvent_bind_mono_of_forall_le_of_support
+    (run setup.joint count (PqxdhRegistrationJointReportCompiler.initialized setup codec checks ensureInit supplied count program runtime))
+    (fun before => (pure (decide (Failure setup.joint codec before)) : ProbComp Bool))
+    (fun before => (fun after => after.2.1.occurred) <$>
       (simulateQ (sourceImpl setup.joint count) (announce count (selected codec before.1))).run before.2)
-    (q := fun value : Bool => value = true) (fun before _ => ?_)
+    (fun value : Bool => value = true) (fun value : Bool => value = true) (fun before _ => ?_)
   · simpa only [client, PqxdhJointPhase1Reports.run, simulateQ_bind, StateT.run_bind, simulateQ_pure, StateT.run_pure,
       simulateQ_map, StateT.run_map, Functor.map_map,
       map_bind, map_pure, bind_assoc, pure_bind, bind_pure_comp] using bounded
   · by_cases failed : Failure setup.joint codec before
-    · simp only [probEvent_pure, decide_eq_true_eq, failed, ite_true]
+    · simp only [prEvent_pure, decide_eq_true_eq, failed, ite_true]
       obtain ⟨target, candidate, chosen, failure⟩ := failed
       rw [chosen]
       have detected := announce_hits setup.joint count target candidate before.2 failure
-      rw [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput] at detected
+      rw [← prEvent_eq_evalDist_singleton _ true] at detected
       exact detected.ge
-    · simp [failed]
+    · simp only [prEvent_pure, decide_eq_true_eq, failed, ite_false, zero_le]
 
 end BeaconcryptCore.Computational.PqxdhRegistrationJointFinalReportEvent
 

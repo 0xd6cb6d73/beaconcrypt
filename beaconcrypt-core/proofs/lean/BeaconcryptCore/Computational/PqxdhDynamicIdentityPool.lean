@@ -106,10 +106,6 @@ theorem sampleSeeds_unused {Result : Type} (count : ℕ) (work : ProbComp Result
     EvalDistEq (sampleSeeds count >>= fun _ => work) work :=
   OracleComp.EvalDistEq.bind_const (sampleSeeds count) work
 
-set_option linter.deprecated false in set_option linter.unusedVariables false in theorem _root_.BeaconcryptCore.Computational.PqxdhDynamicIdentityPool.sampleSeeds_unused_vcvioLegacy :
-    ∀ {Result : Type} (count : Nat) (work : ProbComp Result), @Eq.{1} (SPMF.{0} Result) (@evalSPMF.{0, 0} ProbComp (@instMonadLiftTOfMonadLift.{0, 0, 0, 0} ProbComp PMF.{0} SPMF.{0} SPMF.instMonadLiftPMF.{0} (@PFunctor.FreeM.instMonadLiftTPMF.{0, 0} (@OracleSpec.toPFunctor.{0, 0} Nat unifSpec) (@OracleSpec.IsUniformSpec.toIsProbabilitySpec.{0, 0} Nat unifSpec OracleSpec.instIsUniformSpecNatUnifSpec))) Result (@Bind.bind.{0, 0} ProbComp (@PFunctor.FreeM.instBind.{0, 0, 0} (@OracleSpec.toPFunctor.{0, 0} Nat unifSpec)) (List.{0} BeaconcryptCore.Computational.PqxdhJointIdentity.IdentitySeed) Result (BeaconcryptCore.Computational.PqxdhDynamicIdentityPool.sampleSeeds count) fun (x : List.{0} BeaconcryptCore.Computational.PqxdhJointIdentity.IdentitySeed) => work)) (@evalSPMF.{0, 0} ProbComp (@instMonadLiftTOfMonadLift.{0, 0, 0, 0} ProbComp PMF.{0} SPMF.{0} SPMF.instMonadLiftPMF.{0} (@PFunctor.FreeM.instMonadLiftTPMF.{0, 0} (@OracleSpec.toPFunctor.{0, 0} Nat unifSpec) (@OracleSpec.IsUniformSpec.toIsProbabilitySpec.{0, 0} Nat unifSpec OracleSpec.instIsUniformSpecNatUnifSpec))) Result work) :=
-  by simpa only [BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq] using @BeaconcryptCore.Computational.PqxdhDynamicIdentityPool.sampleSeeds_unused
-
 /-- Every create result publishes the next generated index and retains exactly that new private seed. -/
 def createdReply (primitives : Primitives) (state : SourceState) (seed : IdentitySeed) :
     DynamicSpec.Range (.inr .create) × SourceState :=

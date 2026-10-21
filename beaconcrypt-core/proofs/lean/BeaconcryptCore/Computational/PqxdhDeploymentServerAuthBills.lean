@@ -367,7 +367,6 @@ theorem reduction_caps (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
     simp [finishWeights]
 
 
-set_option linter.deprecated false in
 /-- Theorem CE-A1 at the transported deployment budget: `PqxdhDeploymentServerAuth.ce_a1` with the query caps of every `R_c` discharged from the deployment budget (`reduction_caps`). For a budget-respecting adversary, the probability that some Beacon pinned to the constructed Server accepted with no session that matches it with that pin (`A1NoPinnedMatch`), on a run with `NoBundleFailure_c`, is at most the sum over the `qCreate` creation indices `c` of the Server-authentication bound of `R_c` at `Q = qAccept`, `qH = romCap`, `qHash = hashCap` and `qCoin = coinCap`, with every reduction's bills at those caps, `qTotal = totalCap` and `qFinish = qFinish`. -/
 theorem ce_a1_billed (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks) (caps : KemCaps)
     (bounded : KemBound setup caps) (route : RawCtxServerRouting.SenderDecoder) {A : Type}

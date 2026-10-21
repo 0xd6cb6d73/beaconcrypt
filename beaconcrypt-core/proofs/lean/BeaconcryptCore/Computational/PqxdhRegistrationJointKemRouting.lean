@@ -6,7 +6,6 @@ import BeaconcryptCore.Computational.PqxdhDynamicKemJointStopping
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
-set_option linter.deprecated false
 namespace BeaconcryptCore.Computational.PqxdhRegistrationJointKemRouting
 open PqxdhKemIndCca PqxdhJointIdentity PqxdhServerAuthExperiment PqxdhServerAuthNative
 open PqxdhRegistrationJointKemCommands (SourceSpec Budget program Outcome)
@@ -74,15 +73,13 @@ theorem fresh_pre_event (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
     (pairs : List (MlKem768PublicKey × KemSK)) (target : MlKem768PublicKey) (secret : KemSK)
     (present : pairs[selected]? = some (target, secret)) (joint : PqxdhDynamicIdentityPool.SourceState)
     (event : Option (Outcome KemSK Result) × State KemSK → Prop) :
-    Pr[fun result => event result ∧ result.2.2.history.any (PqxdhDynamicKemStopping.disclosed selected) = false |
-      ((simulateQ (PqxdhDynamicKemJointSource.normal setup.baseImpl setup.joint setup.kem selected pairs)
+    Pr{let result ← (((simulateQ (PqxdhDynamicKemJointSource.normal setup.baseImpl setup.joint setup.kem selected pairs)
         (program setup codec checks identityIndex publicIdentity client owners native)).run).run
-          (joint, PqxdhDynamicKemRouter.empty)] =
-      Pr[fun result => event result ∧ PqxdhDynamicKemJointStopping.Good result.2 |
-        PqxdhPrivateKemSource.evalKem setup.baseImpl setup.kem secret
+          (joint, PqxdhDynamicKemRouter.empty))}[event result ∧ result.2.2.history.any (PqxdhDynamicKemStopping.disclosed selected) = false] =
+      Pr{let result ← (PqxdhPrivateKemSource.evalKem setup.baseImpl setup.kem secret
           (pre setup codec checks identityIndex publicIdentity client owners native selected
-            (PqxdhDynamicKemRouter.redact selected pairs) (joint, PqxdhDynamicKemRouter.empty))] :=
-  PqxdhDynamicKemJointStopping.pre_event_vcvioLegacy setup.baseImpl setup.joint setup.kem selected pairs target secret present
+            (PqxdhDynamicKemRouter.redact selected pairs) (joint, PqxdhDynamicKemRouter.empty)))}[event result ∧ PqxdhDynamicKemJointStopping.Good result.2] :=
+  PqxdhDynamicKemJointStopping.pre_event setup.baseImpl setup.joint setup.kem selected pairs target secret present
     (program setup codec checks identityIndex publicIdentity client owners native) joint event
 
 /-- Every prechallenge source finish attempt costs at most one selected logical CCA decapsulation; source rejection and arbitrary optional replies do not increase the cap. -/

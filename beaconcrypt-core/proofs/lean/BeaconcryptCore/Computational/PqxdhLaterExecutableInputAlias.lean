@@ -112,16 +112,17 @@ theorem client_collision (c : PqxdhAuthenticatedRootBudgets.Certificate env0 bas
           selected number ancestors disclosed c depth)] {true} ≤ ((8 + PqxdhInitialPreparedSourceCaps.postCap env0 baseImpl kem program post c * 67 : Nat) : ℝ≥0∞) *
         (2 ^ 256 : ℝ≥0∞)⁻¹ := by
   simp only [AdaptiveCtxDynamicKnownKeys.sourceGame, PqxdhLaterExecutableCompletion.client,
-    simulateQ_bind, StateT.run_bind, map_bind, evalDist_apply_singleton, ← probEvent_eq_eq_probOutput]
-  apply probEvent_bind_le_of_forall_le
+    simulateQ_bind, StateT.run_bind, map_bind]
+  rw [← prEvent_eq_evalDist_singleton _ true]
+  apply prEvent_bind_le_of_forall_le_of_support
   intro key keySupported
   have prefixBound := component_prefix_collision setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed c depth key
-  simp only [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map, Function.comp_def] at prefixBound
+  rw [← prEvent_eq_evalDist_singleton _ true, prEvent_map] at prefixBound
   apply le_trans ?_ prefixBound
-  apply probEvent_bind_le_probEvent
+  apply prEvent_bind_le_prEvent_of_support
   intro result supported absent
-  rw [probEvent_map]
-  apply probEvent_eq_zero_iff.mpr
+  rw [prEvent_map]
+  apply (OracleComp.prEvent_eq_zero_iff _ _).mpr
   intro final reached hit
   apply absent
   apply suffix_collision setup env callbacks program post attachedVerify primitives baseImpl kem c result.1 final.1 ?_ hit

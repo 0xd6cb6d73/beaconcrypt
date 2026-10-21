@@ -48,8 +48,8 @@ theorem selected_report_bound (setup : Setup baseSpec KemSK) (codec : Codec Read
     (selected work index owner fallback) runtime IsCreate _
     (PqxdhRegistrationJointReportCosts.initialized_creates setup codec checks ensureInit supplied (count + 1)
       (selected work index owner fallback) runtime budget (selected_certified work index owner fallback budget certified))
-  rw [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map]
-  exact PqxdhJointPhase1Reports.fieldOrigin_advantage_le_sum_vcvioLegacy setup.joint count _ dynamicFallback ordinaryFallback
+  rw [← prEvent_eq_evalDist_singleton _ true, prEvent_map]
+  exact PqxdhJointPhase1Reports.fieldOrigin_advantage_le_sum setup.joint count _ dynamicFallback ordinaryFallback
     (creates.mono capacity)
 
 /-- Each reduction of the selected prefix makes at most `3 * qBundle` signing requests and at most `qFinish + qAccept` converted-DH requests. -/

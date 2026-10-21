@@ -185,22 +185,21 @@ theorem localCreate_fresh (setup : Setup baseSpec KemSK) (pin : Word32) (keyId :
   obtain ⟨_, _, _, _, _, _, rfl⟩ := member
   rfl
 
-set_option linter.deprecated false in
 /-- While the target is created and not bundled, its first bundle can be drawn before the rest of the run. -/
 theorem swap_created (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (seed : IdentitySeed) (c : Nat) (binding : Word32 × Std.U64) (program : OracleComp (SourceSpec KemSK) Result)
     (state : State KemSK) (owner : Owner KemSK) (found : state.owners[c]? = some owner)
     (fresh : PqxdhDeploymentEligibility.phaseClass owner.beacon.phase = .fresh) (created : Owner KemSK) :
-    𝒮[(simulateQ (base setup codec checks seed) program).run state] =
-      𝒮[do
+    EvalDistEq ((simulateQ (base setup codec checks seed) program).run state)
+      (do
         let bundled ← localBundle setup codec 0 owner
         (fun result : Result × (State KemSK × Phase) => (result.1, result.2.1)) <$>
           (simulateQ (eager setup codec checks seed c binding ⟨created, bundled.1, bundled.2⟩) program).run
-            (state, .created)] := by
+            (state, .created)) := by
   induction program using OracleComp.inductionOn generalizing state with
   | pure value =>
       simp only [simulateQ_pure, StateT.run_pure, map_pure]
-      exact (DeferredSampling.evalSPMF_bind_const_neverFails _ (by simp) _).symm
+      exact (OracleComp.EvalDistEq.bind_const _ _).symm
   | query_bind query next ih =>
       simp only [simulateQ_bind, simulateQ_query, OracleQuery.input_query, OracleQuery.cont_query, id_map,
         StateT.run_bind]
@@ -208,12 +207,12 @@ theorem swap_created (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
       · subst bundleC
         rw [PqxdhDeploymentServerAuthLocal.base_bundle, PqxdhDeploymentServerAuthLocal.bundle_found setup codec c state owner
           found, bind_map_left, localBundle_index setup codec c 0 owner]
-        refine DeferredSampling.evalSPMF_bind_congr_left _ _ _ fun bundled => ?_
+        refine EvalDistEq.bind_right _ fun bundled => ?_
         rw [PqxdhDeploymentServerAuthLocal.eager_bundle, ite_eq_left ⟨rfl, rfl⟩, pure_bind, eager_done, Functor.map_map]
         simp
       · simp only [eager_created_step setup codec checks seed c binding _ query bundleC, bind_map_left, map_bind]
-        rw [DeferredSampling.evalSPMF_bind_comm]
-        refine evalSPMF_bind_congr fun result member => ?_
+        refine EvalDistEq.trans ?_ (OracleComp.EvalDistEq.bind_bind_swap _ _ _).symm
+        refine OracleComp.EvalDistEq.bind_congr_of_support _ fun result member => ?_
         have kept : result.2.owners[c]? = some owner := by
           by_cases create : ∃ pin keyId, query = .inl (.inr (.create pin keyId))
           · obtain ⟨pin, keyId, rfl⟩ := create
@@ -243,20 +242,19 @@ theorem eager_waiting_step (setup : Setup baseSpec KemSK) (codec : Codec Reader 
     | _ => exact keep_run setup codec checks seed _ (state, .waiting)
   · exact keep_run setup codec checks seed _ (state, .waiting)
 
-set_option linter.deprecated false in
 /-- Drawing the target's material before the run: from every state with at most `c` owners, the native handler and the eager handler on the early draw give the same output distribution, for every program. -/
 theorem swap (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (seed : IdentitySeed) (c : Nat) (binding : Word32 × Std.U64) (program : OracleComp (SourceSpec KemSK) Result)
     (state : State KemSK) (short : state.owners.length ≤ c) :
-    𝒮[(simulateQ (base setup codec checks seed) program).run state] =
-      𝒮[do
+    EvalDistEq ((simulateQ (base setup codec checks seed) program).run state)
+      (do
         let pre ← draw setup codec binding
         (fun result : Result × (State KemSK × Phase) => (result.1, result.2.1)) <$>
-          (simulateQ (eager setup codec checks seed c binding pre) program).run (state, .waiting)] := by
+          (simulateQ (eager setup codec checks seed c binding pre) program).run (state, .waiting)) := by
   induction program using OracleComp.inductionOn generalizing state with
   | pure value =>
       simp only [simulateQ_pure, StateT.run_pure, map_pure]
-      exact (DeferredSampling.evalSPMF_bind_const_neverFails _ (by simp) _).symm
+      exact (OracleComp.EvalDistEq.bind_const _ _).symm
   | query_bind query next ih =>
       simp only [simulateQ_bind, simulateQ_query, OracleQuery.input_query, OracleQuery.cont_query, id_map,
         StateT.run_bind]
@@ -268,7 +266,7 @@ theorem swap (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (che
           rw [PqxdhDeploymentServerAuthLocal.base_create, PqxdhDeploymentServerAuthLocal.create_local, bind_map_left]
           subst chosen
           simp only [draw, bind_assoc, pure_bind]
-          refine evalSPMF_bind_congr fun owner member => ?_
+          refine OracleComp.EvalDistEq.bind_congr_of_support _ fun owner member => ?_
           have found : ({ state with owners := state.owners ++ [owner] } : State KemSK).owners[state.owners.length]? =
               some owner := by simp
           exact swap_created setup codec checks seed state.owners.length (pin, keyId) (next state.owners.length) _ owner
@@ -276,11 +274,11 @@ theorem swap (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (che
         · simp only [PqxdhDeploymentServerAuthLocal.eager_create, ite_eq_right chosen, and_self, ite_true,
             bind_map_left, eager_done]
           simp only [map_bind, Functor.map_map, Prod.mk.eta, id_map']
-          exact (DeferredSampling.evalSPMF_bind_const_neverFails _ (by simp) _).symm
+          exact (OracleComp.EvalDistEq.bind_const _ _).symm
       · push Not at target
         simp only [eager_waiting_step setup codec checks seed c binding _ query state target, bind_map_left, map_bind]
-        rw [DeferredSampling.evalSPMF_bind_comm]
-        refine evalSPMF_bind_congr fun result member => ?_
+        refine EvalDistEq.trans ?_ (OracleComp.EvalDistEq.bind_bind_swap _ _ _).symm
+        refine OracleComp.EvalDistEq.bind_congr_of_support _ fun result member => ?_
         have shorter : result.2.owners.length ≤ c := by
           by_cases create : ∃ pin keyId, query = .inl (.inr (.create pin keyId))
           · obtain ⟨pin, keyId, rfl⟩ := create

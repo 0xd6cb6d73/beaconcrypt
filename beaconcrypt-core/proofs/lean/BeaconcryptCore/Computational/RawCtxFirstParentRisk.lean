@@ -62,10 +62,6 @@ theorem full_inputs (past : List JointKdfAddress) :
   rw [same]
   exact prEvent_bind_le_of_forall_le _ _ _ fun _ => uniform_inputs past
 
-set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.RawCtxFirstParentRisk.full_inputs_vcvioLegacy :
-    ∀ (past : List BeaconcryptCore.Computational.PqxdhJointKdf.JointKdfAddress), (probEvent ($ᵗ BeaconcryptCore.Computational.PqxdhFullSecretInputKdf.FullOutput) fun (output : BeaconcryptCore.Computational.PqxdhFullSecretInputKdf.FullOutput) => BeaconcryptCore.Computational.RawCtxFirstParentRisk.inputAddress (BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.nextChain output) ∈ past) ≤ ↑past.length * (2 ^ 256)⁻¹ :=
-  by simpa only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent] using @BeaconcryptCore.Computational.RawCtxFirstParentRisk.full_inputs
-
 def Clean (state : LoggedState A) : Prop := state.1.2.1 (cursorAddress state.1.2.2) = none
 
 def Valid (depth k : Nat) (state : LoggedState A) : Prop :=

@@ -268,7 +268,7 @@ theorem output_key_first {β : Type} (continuation : PqxdhServerAuthKeySchedule.
       (($ᵗ RootOutput) >>= fun key => ($ᵗ Residual) >>= fun rest => continuation (output key rest)) := by
   intro γ _ k
   simp only [bind_assoc]
-  exact evalDist_eq_of_evalSPMF_eq _ _ (PqxdhServerAuthCtxMaterial.key_first_vcvioLegacy fun full => continuation full >>= k)
+  exact (PqxdhServerAuthCtxMaterial.key_first fun full => continuation full >>= k).evalDist_eq
 
 /-- Slot 0 of the two hidden slots, the first slot the allocator assigns. -/
 def slot0 : PqxdhRecordLiftInterface.Slot 2 := ⟨0, by decide⟩

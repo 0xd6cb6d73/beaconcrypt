@@ -146,9 +146,8 @@ theorem generated_random (depth qPost : Nat) (sourceBit : Bool)
     𝒟[Prod.fst <$> (simulateQ (confRandomImpl (RawCtxUniversalDecoder.decoder env.decode) env.source.crypto)
       (client setup env callbacks program owner number attachedVerify primitives baseImpl kem qPost true
         (PqxdhLaterChallengeGeneratedBeforeObservation.beforeKey setup program (result, after)))).run state] {true} := by
-  rw [evalDist_apply_singleton, evalDist_apply_singleton,
-    ← probEvent_eq_eq_probOutput, ← probEvent_eq_eq_probOutput, probEvent_map, probEvent_map]
-  exact pre_event_vcvioLegacy (confRandomImpl (RawCtxUniversalDecoder.decoder env.decode) env.source.crypto)
+  rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true, prEvent_map, prEvent_map]
+  exact pre_event (confRandomImpl (RawCtxUniversalDecoder.decoder env.decode) env.source.crypto)
     (fun m0 m1 => identRandom m0 m1)
     (generated_pre setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
       depth qPost sourceBit result after supported)

@@ -153,28 +153,25 @@ theorem client_transfer (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
       𝒟[(fun final => final.2.1.occurred) <$> PqxdhJointPhase1Reports.run setup.joint count
         (client setup codec checks route ensureInit bounds mode adversary count runtime)] {true} := by
   classical
-  rw [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, evalDist_apply_singleton, ← probEvent_eq_eq_probOutput,
-    client_run]
-  have bounded := probEvent_bind_mono
-    (mx := PqxdhJointPhase1Reports.run setup.joint count (PqxdhRegistrationJointReportCompiler.initialized setup codec
+  rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true, client_run]
+  have bounded := prEvent_bind_mono_of_forall_le_of_support
+    (PqxdhJointPhase1Reports.run setup.joint count (PqxdhRegistrationJointReportCompiler.initialized setup codec
       checks ensureInit none count (compileFull setup codec route bounds mode adversary) runtime))
-    (my := fun reached => (pure (decide (event reached)) : ProbComp Bool))
-    (oc := fun reached => (fun after => after.2.1.occurred) <$> (simulateQ (sourceImpl setup.joint count)
+    (fun reached => (pure (decide (event reached)) : ProbComp Bool))
+    (fun reached => (fun after => after.2.1.occurred) <$> (simulateQ (sourceImpl setup.joint count)
       (announceAll count (acceptedCandidates codec (finalTranscript reached.1)))).run reached.2)
-    (q := fun value : Bool => value = true) (fun reached member => ?_)
+    (fun value : Bool => value = true) (fun value : Bool => value = true) (fun reached member => ?_)
   · simpa only [map_bind, Functor.map_map, bind_pure_comp] using bounded
   · by_cases happened : event reached
-    · simp only [probEvent_pure, decide_eq_true_eq, happened, ite_true]
+    · simp only [prEvent_pure, decide_eq_true_eq, happened, ite_true]
       apply le_of_eq
       symm
-      apply probEvent_eq_one
-      constructor
-      · simp
-      · intro value supported
-        rw [support_map] at supported
-        obtain ⟨after, afterMember, rfl⟩ := supported
-        exact detected reached member happened after afterMember
-    · simp [happened]
+      apply OracleComp.prEvent_eq_one_of_forall_mem_support
+      intro value supported
+      rw [support_map] at supported
+      obtain ⟨after, afterMember, rfl⟩ := supported
+      exact detected reached member happened after afterMember
+    · simp [happened, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
 
 /-- Theorem CE-A2 (signing-history form, all accepts, no selection factor). For a deployment adversary in either mode that respects its budget, in the report-instrumented initialized execution of its compiled program with a generated Server seed, the probability that the run passes through a successful raw accept, at any position, whose verified identity key is that of a generated Beacon owner unrevealed at that accept and whose verified key tuple is not among that owner's chronological signing attempts before the accept is at most the sum over the `qCreate + 1` generated identity positions of the ordinary joint-use weak-EUF advantages of the A2 client's reductions, with coefficient one. There is no accept-position, owner, field or report-position factor and no collision term; the premises are the attached-signature format rule `shortRejects` with `setup.wiring` and the adversary's budget, and no codec law is used. Reading the bound as a statement about the deployment experiment uses `report_game`, which needs the approved codec laws `Phase1ReadBack` and `Phase2ReadBack`. The unrevealed qualifier holds on every run of the compiled program (`generated_forgery_iff`, `a2_generated_bound`), and the query bills of the reductions are `a2_bills`. -/
 theorem a2_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
@@ -199,8 +196,8 @@ theorem a2_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) 
         reached forgery) after afterMember) ?_
   have creates := client_creates setup codec checks route ensureInit bounds mode adversary budget respects
     (budget.create + 1) runtime
-  rw [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map]
-  exact PqxdhJointPhase1Reports.fieldOrigin_advantage_le_sum_vcvioLegacy setup.joint budget.create _ fallback ordinaryFallback
+  rw [← prEvent_eq_evalDist_singleton _ true, prEvent_map]
+  exact PqxdhJointPhase1Reports.fieldOrigin_advantage_le_sum setup.joint budget.create _ fallback ordinaryFallback
     (creates.mono (by omega))
 
 /-- The compiled program stopped right after its raw accept at any position issues no identity-field, KEM-field, prekey or one-time read, for every adversary and without a budget: the scan keeps the compiled program's zero caps (`compile_full_unread`) and the stopping step issues only the accept command. -/

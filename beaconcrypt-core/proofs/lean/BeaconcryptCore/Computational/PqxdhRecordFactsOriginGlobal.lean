@@ -135,8 +135,8 @@ theorem ctxRun_unproduced_zero (modes : Label n → KeyMode) (ideal : ∀ label,
     (adversary : OracleComp (ModeSpec mode) X) :
     𝒟[(fun result => unproducedEvent codec route (ctxView result)) <$>
       ctxRun modes replace setup codec route env serverKid bounds mode adversary] {true} = 0 := by
-  rw [evalDist_apply_singleton]
-  apply probOutput_eq_zero_of_not_mem_support
+  rw [← prEvent_eq_evalDist_singleton _ true]
+  apply prEvent_eq_zero_of_not_mem_support
   rw [support_map]
   rintro ⟨result, supported, winning⟩
   have impossible := ctxRun_not_unproduced modes ideal replace setup codec route readback env serverKid bounds mode adversary

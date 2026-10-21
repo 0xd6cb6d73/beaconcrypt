@@ -35,14 +35,18 @@ theorem marked_pending (service : QueryImpl (ServiceSpec n) (StateT (CtxPrivate 
     (event : Cut n X → X × CtxPrivate n → Prop) (cut : Cut n X) :
     𝒟[markedResume service (.inr cut)] {result | SelectedEvent event result} =
       𝒟[resume service (.inr cut)] {result | event cut result} := by
-  simp only [markedResume, evalDist_apply_setOf, probEvent_map, SelectedEvent, Function.comp_def]
+  simp only [markedResume]
+  rw [← prEvent_eq_evalDist_of_discrete, ← prEvent_eq_evalDist_of_discrete, prEvent_map]
+  rfl
 
 /-- Completion before the selected callback contributes probability zero. -/
 theorem marked_complete (service : QueryImpl (ServiceSpec n) (StateT (CtxPrivate n) ProbComp))
     (event : Cut n X → X × CtxPrivate n → Prop) (value : X × CtxPrivate n) :
     𝒟[markedResume service (.inl value)] {result | SelectedEvent event result} = 0 := by
   classical
-  simp only [markedResume, evalDist_apply_setOf, probEvent_pure, SelectedEvent, ite_false]
+  simp only [markedResume]
+  rw [← prEvent_eq_evalDist_of_discrete, prEvent_pure]
+  simp [SelectedEvent, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
 
 /-- The selected continuation bound is averaged over the complete unchanged supported prefix, without conditioning on a later result. -/
 theorem selected_bound (service : QueryImpl (ServiceSpec n) (StateT (CtxPrivate n) ProbComp))
@@ -53,7 +57,7 @@ theorem selected_bound (service : QueryImpl (ServiceSpec n) (StateT (CtxPrivate 
     𝒟[track service work state past] {result | SelectedEvent event (selected index result)} ≤ cap := by
   have mapped : 𝒟[selected index <$> track service work state past] {result | SelectedEvent event result} =
       𝒟[track service work state past] {result | SelectedEvent event (selected index result)} := by
-    simp only [evalDist_apply_setOf, probEvent_map, Function.comp_def]
+    rw [← prEvent_eq_evalDist_of_discrete, ← prEvent_eq_evalDist_of_discrete, prEvent_map]
   rw [← mapped, PqxdhRecordFactsOriginOrdinalTrace.track_selected]
   apply PqxdhRecordFactsOriginAverage.bind_le
   intro outcome supported
@@ -105,7 +109,7 @@ theorem any_cut_bound (service : QueryImpl (ServiceSpec n) (StateT (CtxPrivate n
     𝒟[track service work state past] {result | ∃ cut ∈ result.1, event cut result.2} ≤ count * cap := by
   refine le_trans ?_ (finite_union_bound service work state past event count cap bounded)
   apply measure_mono_ae
-  apply OracleComp.ae_of_forall_mem_support
+  apply OracleComp.ae_evalDist_of_forall_mem_support
   intro result supported hit
   exact trace_event_cover service work state past event count billed result supported hit
 
@@ -124,11 +128,11 @@ theorem source_event_bound (service : QueryImpl (ServiceSpec n) (StateT (CtxPriv
   have original : 𝒟[(simulateQ service work).run state] {result | sourceEvent result} =
       𝒟[track service work state past] {result | sourceEvent result.2} := by
     rw [← PqxdhRecordFactsOriginOrdinalTrace.track_drop service work state past]
-    simp only [evalDist_apply_setOf, probEvent_map, Function.comp_def]
+    rw [← prEvent_eq_evalDist_of_discrete, ← prEvent_eq_evalDist_of_discrete, prEvent_map]
   rw [original]
   refine le_trans ?_ (any_cut_bound service work state past event count cap billed bounded)
   apply measure_mono_ae
-  apply OracleComp.ae_of_forall_mem_support
+  apply OracleComp.ae_evalDist_of_forall_mem_support
   exact covered
 
 end BeaconcryptCore.Computational.PqxdhRecordFactsOriginOrdinalProbability

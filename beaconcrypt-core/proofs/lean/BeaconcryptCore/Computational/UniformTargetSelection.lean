@@ -15,10 +15,6 @@ theorem chance_eq (run : ProbComp Ω) (event : Ω → Prop) [DecidablePred event
   rw [map_eq_bind_pure_comp]
   exact (prEvent_eq_evalDist_decide run event).symm
 
-set_option linter.deprecated false in set_option linter.unusedVariables false in theorem _root_.BeaconcryptCore.Computational.UniformTargetSelection.chance_eq_vcvioLegacy :
-    ∀ {Ω : Type} (run : ProbComp Ω) (event : Ω → Prop) [inst : DecidablePred event], 𝒟[(fun (outcome : Ω) => Decidable.decide (event outcome)) <$> run] {Bool.true} = probEvent run event :=
-  by simpa only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent] using @BeaconcryptCore.Computational.UniformTargetSelection.chance_eq
-
 /-- Split form: the probability of an event on eligible outcomes is the exact sum over targets of the probability of the event with that target designated. -/
 theorem split (run : ProbComp Ω) (event : Ω → Prop) [DecidablePred event] (designate : Ω → Option G) :
     𝒟[(fun outcome => decide (event outcome ∧ (designate outcome).isSome)) <$> run] {true} =

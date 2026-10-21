@@ -25,10 +25,10 @@ noncomputable def fullAlias (address : JointKdfAddress) (parent : FullOutput) : 
 /-- A fixed pre-draw parent address meets the actual full76 next-chain coordinate with probability at most one over the full 256-bit space. The other parent coordinates remain in the draw. -/
 theorem full_alias (address : JointKdfAddress) :
     𝒟[fullAlias address <$> ($ᵗ FullOutput)] {true} ≤ (2 ^ 256 : ℝ≥0∞)⁻¹ := by
-  simp only [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map,
-    Function.comp_def, fullAlias, decide_eq_true_eq, target_address]
+  rw [← prEvent_eq_evalDist_singleton _ true, prEvent_map]
+  simp only [fullAlias, decide_eq_true_eq, target_address]
   simpa only [List.mem_singleton, List.length_singleton, Nat.cast_one, one_mul] using
-    RawCtxFirstParentRisk.full_inputs_vcvioLegacy [address]
+    RawCtxFirstParentRisk.full_inputs [address]
 
 
 section General
@@ -46,21 +46,25 @@ theorem prepared_alias (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
     (prior : ProbComp (PqxdhInitialSourceInitialSecrecy.Context extra M P I D K X Response A N S B)) :
     𝒟[collision <$> PqxdhErasedParentMaterial.prepare source writer sender route decode depth prior] {true} ≤
       (2 ^ 256 : ℝ≥0∞)⁻¹ := by
-  simp only [PqxdhErasedParentMaterial.prepare, map_bind, map_pure, evalDist_apply_singleton,
-    ← probEvent_eq_eq_probOutput]
-  apply probEvent_bind_le_of_forall_le
+  simp only [PqxdhErasedParentMaterial.prepare, map_bind, map_pure]
+  rw [← prEvent_eq_evalDist_singleton _ true]
+  apply prEvent_bind_le_of_forall_le_of_support
   intro packet supported
   have bound := full_alias (PqxdhErasedParentSample.address packet)
-  simp only [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, ← bind_pure_comp] at bound
-  rw [probEvent_eq_eq_probOutput, ← evalDist_apply_singleton]
+  rw [← prEvent_eq_evalDist_singleton _ true, map_eq_bind_pure_comp] at bound
+  rw [prEvent_eq_evalDist_singleton]
   change 𝒟[(do
     let parent ← $ᵗ FullOutput
     let _ ← $ᵗ NonceOutput
     let _ ← $ᵗ RootOutput
     pure (fullAlias (PqxdhErasedParentSample.address packet) parent))] {true} ≤ _
-  simp only [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput]
-  rw [probEvent_bind_eq_tsum] at bound ⊢
-  simpa only [probEvent_bind_const, probFailure_uniformSample, tsub_zero, one_mul, fullAlias] using bound
+  rw [← prEvent_eq_evalDist_singleton _ true]
+  have drop := EvalDistEq.bind_right ($ᵗ FullOutput) fun parent =>
+    (OracleComp.EvalDistEq.bind_const ($ᵗ NonceOutput) _).trans
+      (OracleComp.EvalDistEq.bind_const ($ᵗ RootOutput)
+        (pure (fullAlias (PqxdhErasedParentSample.address packet) parent) : ProbComp Bool))
+  rw [drop.prEvent_eq (fun value => value = true)]
+  simpa only [Function.comp_def] using bound
 
 end General
 
@@ -155,16 +159,17 @@ theorem client_alias (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseImp
         (PqxdhLaterExecutableCompletion.client setup env callbacks program post attachedVerify primitives baseImpl kem
           selected number ancestors disclosed c depth)] {true} ≤ (2 ^ 256 : ℝ≥0∞)⁻¹ := by
   simp only [AdaptiveCtxDynamicKnownKeys.sourceGame, PqxdhLaterExecutableCompletion.client,
-    simulateQ_bind, StateT.run_bind, map_bind, evalDist_apply_singleton, ← probEvent_eq_eq_probOutput]
-  apply probEvent_bind_le_of_forall_le
+    simulateQ_bind, StateT.run_bind, map_bind]
+  rw [← prEvent_eq_evalDist_singleton _ true]
+  apply prEvent_bind_le_of_forall_le_of_support
   intro key keySupported
   have prefixBound := component_prefix_alias setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed c depth key
-  simp only [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map, Function.comp_def] at prefixBound
+  rw [← prEvent_eq_evalDist_singleton _ true, prEvent_map] at prefixBound
   apply le_trans ?_ prefixBound
-  apply probEvent_bind_le_probEvent
+  apply prEvent_bind_le_prEvent_of_support
   intro result supported absent
-  rw [probEvent_map]
-  apply probEvent_eq_zero_iff.mpr
+  rw [prEvent_map]
+  apply (OracleComp.prEvent_eq_zero_iff _ _).mpr
   intro final reached hit
   apply absent
   apply suffix_alias setup env callbacks program post attachedVerify primitives baseImpl kem c result.1 final.1 ?_ hit

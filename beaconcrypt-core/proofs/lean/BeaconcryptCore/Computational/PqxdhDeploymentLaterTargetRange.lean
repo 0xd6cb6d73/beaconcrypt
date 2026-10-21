@@ -48,8 +48,10 @@ theorem range_game_create_later (setup : Setup baseSpec KemSK) (codec : Codec Re
           some (session, k) ∧ ¬ (session < budget.accept ∧ k < budget.create)) (Classical.propDecidable _)
   have classical : 𝒟[(fun outcome => outOfRange (outcome.1.map fun result => (result.1, result.2.2))) <$>
       (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode first).run runtime] {true} = 0 := by
-    rw [evalDist_apply_singleton, probOutput_eq_zero_iff, support_map]
-    rintro ⟨classicalOutcome, classicalReached, hit⟩
+    rw [← prEvent_eq_evalDist_singleton _ true, OracleComp.prEvent_eq_zero_iff]
+    intro value member hit
+    rw [support_map] at member
+    obtain ⟨classicalOutcome, classicalReached, rfl⟩ := member
     rcases resultEq : classicalOutcome.1 with _ | result
     · simp [resultEq, outOfRange] at hit
     · simp only [resultEq, Option.map_some, Option.any_some, outOfRange, decide_eq_true_eq] at hit
@@ -59,11 +61,10 @@ theorem range_game_create_later (setup : Setup baseSpec KemSK) (codec : Codec Re
           result.2.2.2.produced) (by simp [PqxdhDeploymentKemTransfer.observeGame, resultEq]) other otherSession otherK
         otherDesignated)
   rw [← PqxdhDeploymentLaterServerGame.game_classical_event setup codec checks route ensureInit 0 bounds mode first
-    second outOfRange (fun _ _ _ _ _ => rfl) runtime, evalDist_apply_singleton, probOutput_eq_zero_iff,
-    support_map] at classical
+    second outOfRange (fun _ _ _ _ _ => rfl) runtime, ← prEvent_eq_evalDist_singleton _ true,
+    OracleComp.prEvent_eq_zero_iff] at classical
   by_contra outside
-  apply classical
-  refine ⟨outcome, reached, ?_⟩
+  apply classical _ (by rw [support_map]; exact ⟨outcome, reached, rfl⟩)
   rcases resultEq : outcome.1 with _ | result
   · simp [resultEq, observeGame] at found
   · simp only [resultEq, observeGame, Option.map_some, Option.some.injEq] at found
@@ -175,7 +176,7 @@ theorem split_create_later (setup : Setup baseSpec KemSK) (codec : Codec Reader 
         respects runtime claim outcome reached]),
     UniformTargetSelection.split, Fintype.sum_prod_type, Fintype.sum_prod_type]
   refine Finset.sum_congr rfl fun session _ => PqxdhDeploymentKemTwoSided.sum_last_eq budget.create _ ?_
-  rw [UniformTargetSelection.chance_eq_vcvioLegacy, probEvent_eq_zero_iff]
+  rw [UniformTargetSelection.chance_eq, OracleComp.prEvent_eq_zero_iff]
   rintro outcome reached ⟨_, chosen⟩
   exact lt_irrefl _ (designated_create_later setup codec checks route ensureInit phase1 phase2 bounds mode first second
     budget respects runtime claim outcome reached _ chosen)

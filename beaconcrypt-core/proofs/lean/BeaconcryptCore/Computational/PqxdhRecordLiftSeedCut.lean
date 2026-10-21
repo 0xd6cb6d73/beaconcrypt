@@ -29,21 +29,20 @@ theorem restore_split (direction : Bool) (seed : Seed) :
 
 /-- Either chosen half has the exact ordinary uniform32 marginal independent of the other half. -/
 theorem split_uniform (direction : Bool) :
-    𝒮[(split direction) <$> ($ᵗ Seed)] = 𝒮[$ᵗ (RootOutput × RootOutput)] :=
-  evalSPMF_map_bijective_uniform_cross Seed (split direction) (split direction).bijective
+    EvalDistEq ((split direction) <$> ($ᵗ Seed)) ($ᵗ (RootOutput × RootOutput)) :=
+  SampleableType.map_uniformSample_evalDistEq_of_bijective (split direction).bijective
 
 /-- Factor the actual pair sampler under any complete continuation, in both directions. -/
 theorem split_continuation {X : Type} (direction : Bool)
     (continuation : RootOutput → RootOutput → ProbComp X) :
-    𝒮[(do let seed ← $ᵗ Seed
-          continuation (retained direction seed) (secret direction seed))] =
-      𝒮[(do let other ← $ᵗ RootOutput
-            let target ← $ᵗ RootOutput
-            continuation other target)] := by
-  have observed := congrArg (fun distribution => distribution >>=
-    fun pair => 𝒮[continuation pair.1 pair.2]) (split_uniform direction)
-  simpa only [← evalSPMF_bind, bind_map_left, ← pairSample, bind_assoc, pure_bind,
-    retained, secret] using observed
+    EvalDistEq
+      (do let seed ← $ᵗ Seed
+          continuation (retained direction seed) (secret direction seed))
+      (do let other ← $ᵗ RootOutput
+          let target ← $ᵗ RootOutput
+          continuation other target) := by
+  have observed := (split_uniform direction).bind_left (fun pair => continuation pair.1 pair.2)
+  simpa only [bind_map_left, ← pairSample, bind_assoc, pure_bind, retained, secret] using observed
 
 variable {n : Nat}
 
@@ -91,10 +90,10 @@ noncomputable def seedAt (state : State n) (slot : Slot n) : Seed :=
 /-- Factor one literal World.resolve miss while retaining its complete reply and poststate. -/
 theorem miss_continuation {X : Type} (direction : Bool) (atMiss : AtMiss n)
     (continuation : ConcreteRatchetKernel × State n → ProbComp X) :
-    𝒮[((resolve atMiss.role (.hidden atMiss.slot)).run atMiss.state >>= continuation)] =
-      𝒮[(do let other ← $ᵗ RootOutput
+    EvalDistEq ((resolve atMiss.role (.hidden atMiss.slot)).run atMiss.state >>= continuation)
+      (do let other ← $ᵗ RootOutput
             let target ← $ᵗ RootOutput
-            continuation (realize direction (mask atMiss other) target))] := by
+            continuation (realize direction (mask atMiss other) target)) := by
   rw [PqxdhRecordLiftWorldBudget.resolve_miss_count atMiss.role atMiss.slot
     atMiss.state atMiss.missing, bind_map_left]
   simpa only [realize_mask] using
@@ -123,17 +122,17 @@ noncomputable def delayed {Context X : Type}
 theorem observed_delayed {Context X : Type} (direction : Bool)
     (sample : ProbComp (Context × AtMiss n))
     (observe : Context × Mask n → ProbComp X) :
-    𝒮[observed direction sample observe] = 𝒮[delayed sample observe] := by
+    EvalDistEq (observed direction sample observe) (delayed sample observe) := by
   simp only [observed, delayed]
-  refine evalSPMF_bind_congr' sample (fun pair => ?_)
+  refine EvalDistEq.bind_right sample (fun pair => ?_)
   rw [PqxdhRecordLiftWorldBudget.resolve_miss_count pair.2.role pair.2.slot
     pair.2.state pair.2.missing, bind_map_left]
   simp only [seedAt, QueryCache.cacheQuery_self, Option.getD_some]
   refine (split_continuation direction (fun other target => do
     let answer ← observe (pair.1, mask pair.2 other)
     pure (target, answer))).trans ?_
-  exact evalSPMF_bind_congr' ($ᵗ RootOutput) (fun other =>
-    evalSPMF_sample_comm_vcvioLegacy ($ᵗ RootOutput) (observe (pair.1, mask pair.2 other))
+  exact EvalDistEq.bind_right ($ᵗ RootOutput) (fun other =>
+    evalSPMF_sample_comm ($ᵗ RootOutput) (observe (pair.1, mask pair.2 other))
       (fun target answer => pure (target, answer)))
 
 /-- Charge every returned candidate, including duplicates, against the actual uniformly sampled hidden half. -/
@@ -142,18 +141,16 @@ theorem candidate_bound {Context X : Type} (direction : Bool)
     (observe : Context × Mask n → ProbComp X) (candidates : X → List RootOutput)
     (budget : Nat) (bounded : ∀ context answer, answer ∈ support (observe context) →
       (candidates answer).length ≤ budget) :
-    Pr[fun result => result.1 ∈ candidates result.2 | observed direction sample observe] ≤
+    Pr{let result ← observed direction sample observe}[result.1 ∈ candidates result.2] ≤
       (budget : ENNReal) / (2 ^ 256 : ENNReal) := by
-  have same := OracleComp.probEvent_congr'
-    (p := fun result : RootOutput × X => result.1 ∈ candidates result.2)
-    (q := fun result : RootOutput × X => result.1 ∈ candidates result.2)
-    (fun _ _ => Iff.rfl) (observed_delayed direction sample observe)
+  have same := (observed_delayed direction sample observe).prEvent_eq
+    (fun result : RootOutput × X => result.1 ∈ candidates result.2)
   rw [same, delayed]
-  refine probEvent_bind_le_of_forall_le (fun pair _ => ?_)
-  refine probEvent_bind_le_of_forall_le (fun other _ => ?_)
-  refine probEvent_bind_le_of_forall_le (fun answer supported => ?_)
-  rw [bind_pure_comp, probEvent_map]
-  exact (RawCtxSelectedInputCandidates.uniform_candidates_vcvioLegacy (candidates answer)).trans
+  refine prEvent_bind_le_of_forall_le_of_support _ _ _ (fun pair _ => ?_)
+  refine prEvent_bind_le_of_forall_le_of_support _ _ _ (fun other _ => ?_)
+  refine prEvent_bind_le_of_forall_le_of_support _ _ _ (fun answer supported => ?_)
+  simp only [bind_assoc, pure_bind]
+  exact (RawCtxSelectedInputCandidates.uniform_candidates (candidates answer)).trans
     (ENNReal.div_le_div_right (by exact_mod_cast bounded _ answer supported) _)
 
 noncomputable def retainedContext {Context : Type}
@@ -191,38 +188,38 @@ noncomputable def firstUniform {Context : Type}
 /-- The actual initial seed miss and next derivation have the ordinary uniform32 primitive input law under the entire retained observer. -/
 theorem first_source {Context : Type} (direction : Bool) (source : FixedHkdfSha512NoSaltSource)
     (sample : ProbComp (Context × AtMiss n)) (observe : FullObserver (Context × Mask n)) :
-    𝒮[firstReal direction source sample observe] =
-      𝒮[sourceFullGame source .ratchet PqxdhServerAuthKeySchedule.uniform32
-        (unitObserver sample observe)] := by
-  have factor : 𝒮[firstReal direction source sample observe] =
-      𝒮[(do let context ← retainedContext sample
+    EvalDistEq (firstReal direction source sample observe)
+      (sourceFullGame source .ratchet PqxdhServerAuthKeySchedule.uniform32
+        (unitObserver sample observe)) := by
+  have factor : EvalDistEq (firstReal direction source sample observe)
+      (do let context ← retainedContext sample
             let target ← $ᵗ RootOutput
             observe context (PqxdhJointKdf.productionStream source.crypto
-              (FixedHkdfDomain.ratchet.address target.toList)))] := by
+              (FixedHkdfDomain.ratchet.address target.toList))) := by
     simp only [firstReal, retainedContext, bind_assoc, pure_bind]
-    refine evalSPMF_bind_congr' sample (fun pair => ?_)
+    refine EvalDistEq.bind_right sample (fun pair => ?_)
     rw [PqxdhRecordLiftWorldBudget.resolve_miss_count pair.2.role pair.2.slot
       pair.2.state pair.2.missing, bind_map_left]
     simp only [seedAt, QueryCache.cacheQuery_self, Option.getD_some]
     exact split_continuation direction (fun other target => observe
       (pair.1, mask pair.2 other)
       (PqxdhJointKdf.productionStream source.crypto (FixedHkdfDomain.ratchet.address target.toList)))
-  rw [factor]
+  refine factor.trans ?_
   simpa only [sourceFullGame, PqxdhServerAuthKeySchedule.uniform32, unitObserver,
     bind_assoc, pure_bind] using
-    evalSPMF_sample_comm_vcvioLegacy (retainedContext sample) ($ᵗ RootOutput)
+    evalSPMF_sample_comm (retainedContext sample) ($ᵗ RootOutput)
       (fun context target => observe context (PqxdhJointKdf.productionStream source.crypto
         (FixedHkdfDomain.ratchet.address target.toList)))
 
 /-- The uniform endpoint keeps the entire context law and discards only the primitive's unused input draw. -/
 theorem first_independent {Context : Type}
     (sample : ProbComp (Context × AtMiss n)) (observe : FullObserver (Context × Mask n)) :
-    𝒮[firstUniform sample observe] =
-      𝒮[independentFullGame PqxdhServerAuthKeySchedule.uniform32 (unitObserver sample observe)] := by
+    EvalDistEq (firstUniform sample observe)
+      (independentFullGame PqxdhServerAuthKeySchedule.uniform32 (unitObserver sample observe)) := by
   simp only [firstUniform, independentFullGame, PqxdhServerAuthKeySchedule.uniform32,
     unitObserver, bind_assoc, pure_bind]
-  rw [OracleComp.DeferredSampling.evalSPMF_bind_const_neverFails ($ᵗ RootOutput) (by simp)]
-  exact evalSPMF_sample_comm_vcvioLegacy (retainedContext sample) ($ᵗ FullOutput) observe
+  exact (evalSPMF_sample_comm (retainedContext sample) ($ᵗ FullOutput) observe).trans
+    (OracleComp.EvalDistEq.bind_const ($ᵗ RootOutput) _).symm
 
 /-- The first derivation uses one ordinary uniform32 Extract reduction and one two-query uniform-secret-key HMAC reduction. No joint-sampler security premise is introduced. -/
 theorem first_bound {Context : Type} (direction : Bool)
@@ -238,8 +235,8 @@ theorem first_bound {Context : Type} (direction : Bool)
         (unitObserver sample observe))).boolDistAdvantage
       (hmacPrfRandomGame (fullExpandReduction .ratchet PqxdhServerAuthKeySchedule.uniform32
         (unitObserver sample observe))) := by
-  have real := evalDist_eq_of_evalSPMF_eq _ _ (first_source direction source sample observe)
-  have random := evalDist_eq_of_evalSPMF_eq _ _ (first_independent sample observe)
+  have real := (first_source direction source sample observe).evalDist_eq
+  have random := (first_independent sample observe).evalDist_eq
   simpa only [ProbComp.boolDistAdvantage, real, random] using
     sourceFullAdvantage_le_extract_add_hmac source hmac correct .ratchet
       PqxdhServerAuthKeySchedule.uniform32 (unitObserver sample observe)

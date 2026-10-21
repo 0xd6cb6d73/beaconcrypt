@@ -400,8 +400,8 @@ theorem later_view_unslotted (setup : Setup baseSpec KemSK) (codec : Codec Reade
           setup.serverKeyId bounds mode first] {true} := by
   rw [← PqxdhDeploymentIdealLaterSlots.later_anomaly_eq setup codec route checks t ensureInit identityIndex runtime
     setup.serverKeyId bounds mode reveal first second]
-  rw [UniformTargetSelection.chance_eq_vcvioLegacy, UniformTargetSelection.chance_eq_vcvioLegacy]
-  refine probEvent_mono fun view member held => ?_
+  rw [UniformTargetSelection.chance_eq, UniformTargetSelection.chance_eq]
+  refine prEvent_mono_of_support _ _ _ fun view member held => ?_
   rw [support_map] at member
   obtain ⟨result, resultMember, rfl⟩ := member
   obtain ⟨value, unslotted⟩ := Classical.not_forall.mp held.2

@@ -392,7 +392,6 @@ theorem kem_hop (setup : Setup baseSpec KemSK)
   PqxdhDeploymentLaterServerKemHop.real_le_ideal setup functional ensureInit supplied
     (scanned setup codec checks decision work index) runtime count selected
 
-set_option linter.deprecated false in
 /-- The selected-first reservation for the hidden logged command program, by instantiation of the generic `PqxdhDynamicKemJointSource.selected_source`; the creation cap is the premise `room`. -/
 theorem selected_first (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (work : OracleComp (Spec KemSK) Result)
@@ -400,11 +399,11 @@ theorem selected_first (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
     (joint : PqxdhDynamicIdentityPool.SourceState) (count : Nat) (selected : Fin (count + 1))
     (room : (simulateQ (actual setup) (commands setup codec checks identityIndex publicIdentity work owners log
       state)).IsQueryBoundP (PqxdhLiveKemReservation.IsCreate (KemSK := KemSK)) (count + 1)) :
-    𝒮[(fun result => (some result.1, result.2)) <$>
+    EvalDistEq ((fun result => (some result.1, result.2)) <$>
       (simulateQ (PqxdhLiveKemBirth.impl setup.baseImpl setup.joint setup.kem)
         (simulateQ (actual setup) (commands setup codec checks identityIndex publicIdentity work owners log state))).run
-          (joint, PqxdhLiveKemBirth.empty)] =
-      𝒮[do
+          (joint, PqxdhLiveKemBirth.empty))
+      (do
         let chosen ← simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl) setup.kem.keygen
         let others ← PqxdhLiveKemSelection.sampleFamily
           (simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl) setup.kem.keygen) count
@@ -412,10 +411,9 @@ theorem selected_first (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
         Prod.map id (PqxdhDynamicKemJointSource.project pairs) <$>
           (((simulateQ (PqxdhDynamicKemJointSource.normal setup.baseImpl setup.joint setup.kem selected.val pairs)
             (simulateQ (actual setup) (commands setup codec checks identityIndex publicIdentity work owners log
-              state))).run).run (joint, PqxdhDynamicKemRouter.empty))] :=
-  PqxdhDynamicKemJointSource.selected_source_vcvioLegacy setup.baseImpl setup.joint setup.kem _ count selected room joint
+              state))).run).run (joint, PqxdhDynamicKemRouter.empty))) :=
+  PqxdhDynamicKemJointSource.selected_source setup.baseImpl setup.joint setup.kem _ count selected room joint
 
-set_option linter.deprecated false in
 /-- The selected-disclosure monitor for the hidden logged command program, by instantiation of the generic `PqxdhDynamicKemJointStopping.history_event`. -/
 theorem monitor (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (work : OracleComp (Spec KemSK) Result)
@@ -423,15 +421,14 @@ theorem monitor (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (
     (pairs : List (MlKem768PublicKey × KemSK)) (state : PqxdhDynamicKemJointSource.State KemSK)
     (tracked : PqxdhDynamicKemJointStopping.Tracked selected state)
     (event : Option (Outcome KemSK Result) × PqxdhDynamicKemJointSource.State KemSK → Prop) :
-    probEvent ((simulateQ (PqxdhDynamicKemJointSource.normal setup.baseImpl setup.joint setup.kem selected pairs)
+    Pr{let result ← ((simulateQ (PqxdhDynamicKemJointSource.normal setup.baseImpl setup.joint setup.kem selected pairs)
         (simulateQ (actual setup) (commands setup codec checks identityIndex publicIdentity work owners log
-          native))).run.run state)
-        (fun result => event result ∧ result.2.2.history.any (PqxdhDynamicKemStopping.disclosed selected) = false) =
-      probEvent ((simulateQ (PqxdhDynamicKemJointRouter.stopped setup.baseImpl setup.joint setup.kem selected pairs)
+          native))).run.run state)}[
+        event result ∧ result.2.2.history.any (PqxdhDynamicKemStopping.disclosed selected) = false] =
+      Pr{let result ← ((simulateQ (PqxdhDynamicKemJointRouter.stopped setup.baseImpl setup.joint setup.kem selected pairs)
         (simulateQ (actual setup) (commands setup codec checks identityIndex publicIdentity work owners log
-          native))).run.run state)
-        (fun result => event result ∧ PqxdhDynamicKemJointStopping.Good result.2) :=
-  PqxdhDynamicKemJointStopping.history_event_vcvioLegacy setup.baseImpl setup.joint setup.kem selected pairs _ state tracked event
+          native))).run.run state)}[event result ∧ PqxdhDynamicKemJointStopping.Good result.2] :=
+  PqxdhDynamicKemJointStopping.history_event setup.baseImpl setup.joint setup.kem selected pairs _ state tracked event
 
 end BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCut
 

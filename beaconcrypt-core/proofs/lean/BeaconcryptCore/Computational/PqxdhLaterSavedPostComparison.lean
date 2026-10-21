@@ -65,13 +65,16 @@ theorem original_good (event : Option Bool × Traced M P I D K A N C S B → Pro
       augmented pre application initial selector aux fixed writer prior key target nonce next mark sender route read monitor
         qPost context material fits state] {true} := by
   classical
-  simp only [original, augmented, map_bind, evalDist_apply_singleton, probOutput_bind_eq_tsum]
+  simp only [original, augmented, map_bind]
+  rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true]
+  simp only [OracleComp.prEvent_bind_eq_tsum]
   apply tsum_congr
   intro prepared
   congr 1
-  have equality := post_source_augmented_vcvioLegacy pre application initial selector aux fixed writer prior (some parent) key target nonce next
+  have equality := post_source_augmented pre application initial selector aux fixed writer prior (some parent) key target nonce next
     sender route read mark monitor prepared.1.1 (prepared.1.2, prepared.2) event
-  rw [← true_mass_eq_vcvioLegacy, ← true_mass_eq_vcvioLegacy, evalDist_apply_singleton, evalDist_apply_singleton] at equality
+  rw [← true_mass_eq, ← true_mass_eq, ← prEvent_eq_evalDist_singleton _ true,
+    ← prEvent_eq_evalDist_singleton _ true] at equality
   exact equality
 
 /-- The sole operational difference at this hop is the actual sticky nonce refusal in the same full continuation. Its mass is explicit rather than assumed zero. -/
@@ -84,15 +87,20 @@ theorem augmented_bound (event : Option Bool × InsFull M P I D K A N C S B → 
       flagged pre application initial selector aux fixed writer prior key target nonce next mark sender route read monitor
         qPost context material fits state] {true} := by
   rw [compiled, PqxdhLaterSavedPostCompiler.complete_evaluated]
-  simp only [augmented, flagged, staged, map_bind, evalDist_apply_singleton, probOutput_bind_eq_tsum]
+  simp only [augmented, flagged, staged, map_bind]
+  rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true,
+    ← prEvent_eq_evalDist_singleton _ true]
+  simp only [OracleComp.prEvent_bind_eq_tsum]
   rw [← ENNReal.tsum_add]
   apply ENNReal.tsum_le_tsum
   intro prepared
   rw [← mul_add]
   apply mul_le_mul_right
-  simpa only [evalDist_apply_singleton] using
-    augmented_le_evaluated pre application initial selector aux fixed writer prior (some parent) key target nonce next
-      sender route read mark monitor prepared.1.1 (prepared.1.2, prepared.2) event
+  have bound := augmented_le_evaluated pre application initial selector aux fixed writer prior (some parent) key target
+    nonce next sender route read mark monitor prepared.1.1 (prepared.1.2, prepared.2) event
+  rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true,
+    ← prEvent_eq_evalDist_singleton _ true] at bound
+  exact bound
 
 /-- Interpreting material and erasing only the auxiliary ledger recovers the already established complete saved-source experiment, including its original Boolean decision. -/
 theorem original_source :

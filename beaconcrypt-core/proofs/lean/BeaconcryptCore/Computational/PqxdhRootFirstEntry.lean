@@ -152,25 +152,23 @@ theorem eager_fresh (query : (unifSpec + (D →ₒ R)).Domain) (state : State D 
           subst member
           rfl
 
-set_option linter.deprecated false in
 /-- Eager sampling of the first fresh entry: the tracked lazy table has the output distribution of drawing the first fresh entry's value first and running the eager table. -/
 theorem eager_first {α : Type} (client : OracleComp (unifSpec + (D →ₒ R)) α) (state : State D R) :
-    𝒮[(simulateQ trackedImpl client).run state] =
-      𝒮[do let value ← $ᵗ R; (simulateQ (eagerImpl value) client).run state] :=
-  PqxdhServerAuthEntryFactor.eager_run_vcvioLegacy ($ᵗ R) trackedImpl eagerImpl (fun state => state.2.isSome)
+    EvalDistEq ((simulateQ trackedImpl client).run state)
+      (do let value ← $ᵗ R; (simulateQ (eagerImpl value) client).run state) :=
+  PqxdhServerAuthEntryFactor.eager_run ($ᵗ R) trackedImpl eagerImpl (fun state => state.2.isSome)
     eager_done (fun query state fresh => (eager_fresh query state fresh).imp id
       fun ⟨same, done⟩ => ⟨by rw [same], done⟩) client state
 
-set_option linter.deprecated false in
 /-- Eager sampling of the first fresh entry, for the lazy table itself: from a state with no recorded first entry, the lazy table has the output distribution of the eager run with the first point forgotten. -/
 theorem lazy_first {α : Type} (client : OracleComp (unifSpec + (D →ₒ R)) α)
     (cache : (D →ₒ R).QueryCache) :
-    𝒮[(simulateQ lazyImpl client).run cache] =
-      𝒮[do let value ← $ᵗ R
-           Prod.map id Prod.fst <$> (simulateQ (eagerImpl value) client).run (cache, none)] := by
+    EvalDistEq ((simulateQ lazyImpl client).run cache)
+      (do let value ← $ᵗ R
+          Prod.map id Prod.fst <$> (simulateQ (eagerImpl value) client).run (cache, none)) := by
   rw [← tracked_project client (cache, none)]
-  simp only [evalSPMF_map, eager_first client (cache, none), evalSPMF_bind]
-  simp [map_eq_bind_pure_comp, bind_assoc]
+  refine ((eager_first client (cache, none)).map (Prod.map id Prod.fst)).trans ?_
+  rw [map_bind]
 
 /-- In the eager run, the recorded first point holds the pre-drawn value. -/
 theorem first_cached {α : Type} (value : R) (client : OracleComp (unifSpec + (D →ₒ R)) α)
@@ -227,12 +225,10 @@ theorem uniformGame_first (client : OracleComp RootSpec Bool) :
     𝒟[PqxdhCorrelatedExpandHybrid.uniformGame client] =
       𝒟[do let root ← $ᵗ RootOutput
            (simulateQ (eagerImpl root) client).run' (∅, none)] := by
-  apply evalDist_eq_of_evalSPMF_eq
-  have first := lazy_first (D := Message) (R := RootOutput) client ∅
-  have project := congrArg (fun distribution => Prod.fst <$> distribution) first
-  simp only [← evalSPMF_map] at project
+  refine EvalDistEq.evalDist_eq ?_
+  have project := (lazy_first (D := Message) (R := RootOutput) client ∅).map Prod.fst
   simpa [PqxdhCorrelatedExpandHybrid.uniformGame, uniformImpl_eq, StateT.run'_eq, map_bind,
-    Functor.map_map] using project
+    Functor.map_map, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ] using project
 
 end BeaconcryptCore.Computational.PqxdhRootFirstEntry
 

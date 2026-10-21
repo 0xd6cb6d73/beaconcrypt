@@ -206,8 +206,8 @@ theorem key_cut_of {Out : Type} [MeasurableSpace Out] (modes : Label n → KeyMo
         let result ← ctxRunWithOf (selectedKey target key) modes replace setup codec route client
         decision (ctxView result)] := by
   let : MeasurableSpace (PqxdhRecordLiftIdeal.Client n E X × CtxPrivate n) := ⊤
-  have eager := evalDist_eq_of_evalSPMF_eq _ _ (table_eager modes target replace setup codec
-    (schedule codec.frameRead route client initialControl) CtxPrivate.initial)
+  have eager := (table_eager modes target replace setup codec
+    (schedule codec.frameRead route client initialControl) CtxPrivate.initial).evalDist_eq
   have perKey : ∀ key : CtxKey, ((simulateQ (world (keyedWith tableKey modes
       (RawCtxUniversalDecoder.decoder codec.frameRead) setup.source.crypto) (keyStore key) target replace setup codec)
       (schedule codec.frameRead route client initialControl)).run CtxPrivate.initial >>= fun result =>

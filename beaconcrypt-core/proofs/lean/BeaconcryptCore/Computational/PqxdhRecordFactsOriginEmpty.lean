@@ -60,7 +60,7 @@ theorem erased_probability (target : Label n) (modes : Label n → KeyMode)
     𝒟[(simulateQ (marked target (RawCtxUniversalDecoder.decoder codec.frameRead)
       (PqxdhRecordFactsPrivateCacheWorld.erased modes replace setup codec)) client).run (state, false)]
       {result | result.2.2 = true} = 0 := by
-  rw [evalDist_apply_setOf, probEvent_eq_zero_iff]
+  rw [← prEvent_eq_evalDist_of_discrete, OracleComp.prEvent_eq_zero_iff]
   intro result supported hit
   have absent := erased_flag target modes setup codec replace client noSeal state empty result supported
   exact Bool.false_ne_true (absent.symm.trans hit)

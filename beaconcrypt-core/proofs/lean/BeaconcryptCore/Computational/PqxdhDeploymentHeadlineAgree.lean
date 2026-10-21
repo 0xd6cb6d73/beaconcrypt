@@ -251,8 +251,8 @@ theorem ctxRun_agree_zero (modes : Label n → KeyMode) (ideal : ∀ label, mode
     (env : Environment n E) (serverKid : Std.U64) (bounds : FreshBounds) (mode : Mode)
     (adversary : OracleComp (ModeSpec mode) X) :
     𝒟[agreeEvent codec route <$> ctxRun modes replace setup codec route env serverKid bounds mode adversary] {true} = 0 := by
-  rw [evalDist_apply_singleton]
-  apply probOutput_eq_zero_of_not_mem_support
+  rw [← prEvent_eq_evalDist_singleton _ true]
+  apply prEvent_eq_zero_of_not_mem_support
   rw [support_map]
   rintro ⟨result, supported, failing⟩
   simp only [agreeEvent, decide_eq_true_eq] at failing

@@ -81,7 +81,6 @@ theorem noAgreement_iff (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
   ⟨noAgreement_noPinnedMatch setup codec checks route ensureInit phase1 phase2 bounds mode adversary runtime outcome
     supported c, noPinnedMatch_noAgreement setup codec c outcome⟩
 
-set_option linter.deprecated false in
 /-- O21 at the CE-A1 bound (ten of the eleven ServerAuth fields; identity index 0, generated seed): for a budget-respecting adversary, the probability that some Beacon `c`, pinned to the constructed Server's identity and key ID before its acceptance, accepted on a run with `NoBundleFailure_c` with no session handle that both pin-matches its accepted initial response and agrees with it on the ten fields read from the final state (`A1NoAgreement`), is at most the sum over the `qCreate` creation indices of the Server-authentication bound of `R_c`, with the bills of every constructed reduction. This is `PqxdhDeploymentServerAuth.ce_a1` at index 0 with its premises and right-hand side verbatim; the events coincide on the support (`noAgreement_iff`), so the content is the support-level agreement. Root agreement is not stated: the experiment retains no labelled Beacon root, and the root agreement inside the ServerAuth run of each `R_c` is not carried over to this experiment; the payload and the assigned key ID are not among the fields. -/
 theorem ce_a1_agreement (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (caps : KemCaps) (bounded : KemBound setup caps) (route : RawCtxServerRouting.SenderDecoder)
@@ -113,15 +112,14 @@ theorem ce_a1_agreement (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
   set run := (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode adversary).run runtime
   have finite : 𝒟[(fun outcome => @decide (∃ c, A1NoPinnedMatch setup codec c outcome) (Classical.propDecidable _)) <$>
       run] {true} ≠ ⊤ := by
-    rw [evalDist_apply_singleton]
-    exact probOutput_ne_top
+    rw [← prEvent_eq_evalDist_singleton _ true]
+    exact prEvent_ne_top _
   refine ENNReal.toReal_mono finite ?_
   classical
-  rw [UniformTargetSelection.chance_eq_vcvioLegacy, UniformTargetSelection.chance_eq_vcvioLegacy]
-  exact probEvent_mono fun outcome member ⟨c, event⟩ => ⟨c, noAgreement_noPinnedMatch setup codec checks route
+  rw [UniformTargetSelection.chance_eq, UniformTargetSelection.chance_eq]
+  exact prEvent_mono_of_support _ _ _ fun outcome member ⟨c, event⟩ => ⟨c, noAgreement_noPinnedMatch setup codec checks route
     ensureInit phase1 phase2 bounds mode adversary runtime outcome member c event⟩
 
-set_option linter.deprecated false in
 /-- O21 at the transported deployment budget: `ce_a1_agreement` with the query caps of every `R_c` discharged from the deployment budget, the right-hand side of `PqxdhDeploymentServerAuthBills.ce_a1_billed` at index 0 verbatim. -/
 theorem ce_a1_agreement_billed (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (caps : KemCaps) (bounded : KemBound setup caps) (route : RawCtxServerRouting.SenderDecoder)

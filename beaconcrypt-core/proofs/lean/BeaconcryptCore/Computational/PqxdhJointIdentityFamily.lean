@@ -58,15 +58,6 @@ theorem sampleFamily_target_first {Result : Type} (count : ℕ) (target : Fin (c
               next (Fin.cons first (target.insertNth chosen rest)))).trans ?_)
           simp [sampleFamily, Fin.insertNth_succ_cons, bind_assoc]
 
-set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.PqxdhJointIdentityFamily.sampleFamily_target_first_vcvioLegacy :
-    ∀ {Result : Type} (count : ℕ) (target : Fin (count + 1)) (next : (Fin (count + 1) → BeaconcryptCore.Computational.PqxdhJointIdentity.IdentitySeed) → ProbComp Result),
-      𝒮[BeaconcryptCore.Computational.PqxdhJointIdentityFamily.sampleFamily (count + 1) >>= next] =
-        𝒮[do
-          let seed ← BeaconcryptCore.Computational.PqxdhJointIdentity.sampleSeed
-          let rest ← BeaconcryptCore.Computational.PqxdhJointIdentityFamily.sampleFamily count
-          next (target.insertNth seed rest)] :=
-  by simpa only [BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq] using @BeaconcryptCore.Computational.PqxdhJointIdentityFamily.sampleFamily_target_first
-
 /-- Exact family generation cost, including every byte of each independent identity seed. -/
 theorem sampleFamily_uniform_bound (count : ℕ) :
     (sampleFamily count).IsTotalQueryBound (32 * count) := by

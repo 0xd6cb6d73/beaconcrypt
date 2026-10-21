@@ -2191,10 +2191,6 @@ theorem tvDist_bind_left_le_probEvent_bind
       (fun value => mul_le_of_le_one_right ENNReal.toReal_nonneg
         (ENNReal.toReal_mono one_ne_top (prEvent_le_one _)))
 
-set_option linter.deprecated false in set_option linter.unusedVariables false in theorem _root_.BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind_vcvioLegacy :
-    ∀ {alpha beta gamma : Type} (sample : ProbComp alpha) (left right : alpha → ProbComp beta) (badRun : alpha → ProbComp gamma) (bad : gamma → Prop) (hpoint : ∀ (value : alpha), tvDist (left value) (right value) ≤ (probEvent (badRun value) bad).toReal), tvDist (sample >>= left) (sample >>= right) ≤ (probEvent (sample >>= badRun) bad).toReal :=
-  by simpa only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent] using @BeaconcryptCore.Computational.PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind
-
 /-- Averaging over the hidden coordinate and complete stream charges singleton programming's
 sticky target-address event exactly once. -/
 theorem hiddenRootProgrammed_tracking_tvDist_le_programmedBad

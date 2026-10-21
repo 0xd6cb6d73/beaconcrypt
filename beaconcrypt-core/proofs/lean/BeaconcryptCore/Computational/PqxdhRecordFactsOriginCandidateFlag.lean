@@ -127,15 +127,15 @@ theorem flag_probability (target : Label n) (modes : Label n → KeyMode)
       work).run (state, false)] {result | result.2.2 = true} ≤
     𝒟[(simulateQ (interpreter target modes (RawCtxUniversalDecoder.decoder read) crypto base writer replace)
       (traced (serviceCandidate read) work [])).run state] {result | digest ∈ result.1.2} := by
-  simp only [evalDist_apply_setOf]
+  rw [← prEvent_eq_evalDist_of_discrete, ← prEvent_eq_evalDist_of_discrete]
   conv_lhs => rw [← PqxdhRecordFactsOriginCandidateTrace.interpreted_erase (serviceCandidate read)
     (marked target (RawCtxUniversalDecoder.decoder read)
       (interpreter target modes (RawCtxUniversalDecoder.decoder read) crypto base writer replace)) work [] (state, false)]
   conv_rhs => rw [← PqxdhRecordFactsOriginMuteAdaptive.complete_erase target (RawCtxUniversalDecoder.decoder read)
     (interpreter target modes (RawCtxUniversalDecoder.decoder read) crypto base writer replace)
     (traced (serviceCandidate read) work []) (state, false)]
-  simp only [probEvent_map]
-  exact probEvent_mono (fun result supported hit =>
+  simp only [prEvent_map]
+  exact prEvent_mono_of_support _ _ _ (fun result supported hit =>
     initialized_flag target modes read crypto base writer replace work noSeal state digest fixed result supported hit)
 
 end BeaconcryptCore.Computational.PqxdhRecordFactsOriginCandidateFlag

@@ -41,8 +41,8 @@ theorem ctxRun_cross_bound (modes : Label n → KeyMode) (ideal : ∀ label, mod
         (2 : ENNReal)^512 := by
   refine le_trans ?_ (PqxdhRecordFactsBindingProbability.run_conflict_bound modes ideal replace setup codec route env
     startup allowance framed serverKid bounds mode budget adversary respects 0)
-  simp only [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map]
-  apply probEvent_mono
+  rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true, prEvent_map, prEvent_map]
+  apply prEvent_mono_of_support
   exact fun result supported crossed => @decide_eq_true _ (Classical.propDecidable _)
     (ctxRun_cross_conflict modes ideal replace setup codec route readback env serverKid bounds mode adversary
       result supported (@of_decide_eq_true _ (Classical.propDecidable _) crossed))

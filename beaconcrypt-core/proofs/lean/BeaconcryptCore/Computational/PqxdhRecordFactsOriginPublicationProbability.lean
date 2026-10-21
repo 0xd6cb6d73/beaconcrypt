@@ -40,7 +40,8 @@ theorem unpublished_probability (modes : Label n → KeyMode) (ideal : ∀ label
     𝒟[PqxdhRecordFactsPrivateCacheWorld.erasedRun modes replace setup codec route env serverKid bounds mode adversary]
       {result | UnpublishedAccept codec route (ctxView result)} := by
   rw [(unpublished_observation modes ideal replace setup codec route env serverKid bounds mode adversary).evalDist_eq]
-  simp only [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map, unpublishedEvent, Function.comp_def, decide_eq_true_eq, evalDist_apply_setOf]
+  rw [← prEvent_eq_evalDist_singleton _ true, prEvent_map, ← prEvent_eq_evalDist_of_discrete]
+  simp only [unpublishedEvent, decide_eq_true_eq]
 
 /-- The derived two-branch, receive-times-send term is exactly the unchanged frozen publication term. -/
 theorem publication_term (budget : Budget) :

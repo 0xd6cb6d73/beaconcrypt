@@ -66,13 +66,14 @@ theorem chance_le_expected (run : ProbComp α) (event : α → Bool) (potential 
     (above : ∀ a ∈ support run, event a = true → 1 ≤ potential a) :
     𝒟[event <$> run] {true} ≤ expectedValue run potential := by
   classical
-  rw [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map,
+  rw [← prEvent_eq_evalDist_singleton _ true, prEvent_map,
+    ← VCVioLegacy.probEvent_eq_prEvent run (fun a => event a = true),
     ← OracleComp.EvalDist.expectedValue_ite_one]
   refine OracleComp.EvalDist.expectedValue_mono_of_support fun a supported => ?_
-  by_cases holds : ((fun b => b = true) ∘ event) a
+  by_cases holds : event a = true
   · simp only [holds, ↓reduceIte]
     exact above a supported holds
-  · simp only [holds, ↓reduceIte]
+  · simp only [holds]
     exact zero_le
 
 end Budget
@@ -96,14 +97,14 @@ theorem tsum_indicator [DecidableEq W] (Φ : V → W) (v : V) : ∑' k : W, (if 
 theorem average_mass [SampleableType V] [SampleableType W] [Fintype W] [DecidableEq W] (Φ : V → W) :
     expectedValue ($ᵗ W : ProbComp W) (mass Φ) ≤ (Fintype.card W : ℝ≥0∞)⁻¹ := by
   rw [OracleComp.EvalDist.expectedValue_def]
-  simp only [probOutput_uniformSample]
+  simp only [VCVioLegacy.probOutput_eq_prEvent, SampleableType.prEvent_uniformSample_eq_singleton]
   rw [ENNReal.tsum_mul_left]
   calc (Fintype.card W : ℝ≥0∞)⁻¹ * ∑' k, mass Φ k ≤ (Fintype.card W : ℝ≥0∞)⁻¹ * 1 := by
         gcongr
         simp only [mass, OracleComp.EvalDist.expectedValue_def]
         rw [ENNReal.tsum_comm]
         simp only [ENNReal.tsum_mul_left, tsum_indicator, mul_one]
-        exact tsum_probOutput_le_one
+        simpa only [VCVioLegacy.probOutput_eq_prEvent] using OracleComp.tsum_prEvent_le_one ($ᵗ V : ProbComp V)
     _ = _ := mul_one _
 
 /-- The first component of a uniform pair is uniform. -/
@@ -137,7 +138,7 @@ noncomputable def size (T : Cache D V) : ℝ≥0∞ := ∑' u, (T u).elim 0 fun 
 theorem hits_draw [SampleableType W] [Fintype W] [DecidableEq W] (Φ : V → W) (T : Cache D V) :
     expectedValue ($ᵗ W : ProbComp W) (hits Φ T) = size T * (Fintype.card W : ℝ≥0∞)⁻¹ := by
   rw [OracleComp.EvalDist.expectedValue_def]
-  simp only [probOutput_uniformSample]
+  simp only [VCVioLegacy.probOutput_eq_prEvent, SampleableType.prEvent_uniformSample_eq_singleton]
   rw [ENNReal.tsum_mul_left, mul_comm]
   congr 1
   unfold hits size
@@ -227,7 +228,7 @@ noncomputable def equalTo [DecidableEq V] (C : Cache D V) (d : V) : ℝ≥0∞ :
 theorem equalTo_draw [SampleableType V] [Fintype V] [DecidableEq V] (C : Cache D V) :
     expectedValue ($ᵗ V : ProbComp V) (equalTo C) = size C * (Fintype.card V : ℝ≥0∞)⁻¹ := by
   rw [OracleComp.EvalDist.expectedValue_def]
-  simp only [probOutput_uniformSample]
+  simp only [VCVioLegacy.probOutput_eq_prEvent, SampleableType.prEvent_uniformSample_eq_singleton]
   rw [ENNReal.tsum_mul_left, mul_comm]
   congr 1
   unfold equalTo size

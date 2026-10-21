@@ -59,8 +59,8 @@ theorem idealKeys_key_first (setup : Setup baseSpec KemSK) (codec : Codec Reader
         index] =
       𝒟[keyFirstBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected
         index] :=
-  evalDist_eq_of_evalSPMF_eq _ _ (PqxdhServerAuthCtxMaterial.key_first_vcvioLegacy
-    (entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index))
+  (PqxdhServerAuthCtxMaterial.key_first
+    (entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index)).evalDist_eq
 
 /-- The key-first and the key-last games have the same output distribution. -/
 theorem keyFirst_keyLast (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
@@ -71,9 +71,9 @@ theorem keyFirst_keyLast (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
         index] =
       𝒟[keyLastBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected
         index] :=
-  evalDist_eq_of_evalSPMF_eq _ _ (evalSPMF_bind_bind_swap ($ᵗ RootOutput) ($ᵗ Residual) (fun key rest =>
+  (OracleComp.EvalDistEq.bind_bind_swap ($ᵗ RootOutput) ($ᵗ Residual) (fun key rest =>
     entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index
-      (output key rest)))
+      (output key rest))).evalDist_eq
 
 /-- Stage S6, key last: the ideal-key branch has the output distribution of the game that draws the 32-byte message key after the 76-byte residual, both before `entryD` runs. -/
 theorem idealKeys_key_last (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)

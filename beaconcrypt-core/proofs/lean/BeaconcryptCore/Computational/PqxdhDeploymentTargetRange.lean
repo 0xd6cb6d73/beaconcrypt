@@ -387,7 +387,7 @@ theorem kem_transfer_create (setup : Setup baseSpec KemSK)
   refine Finset.sum_le_sum fun session _ => sum_last_le budget.create _ _ ?_ fun k =>
     PqxdhDeploymentKemTransfer.kem_transfer setup functional codec checks route ensureInit phase1 phase2 bounds mode
       adversary budget respects event claim (session, k.castSucc) runtime
-  rw [UniformTargetSelection.chance_eq_vcvioLegacy, probEvent_eq_zero_iff]
+  rw [UniformTargetSelection.chance_eq, OracleComp.prEvent_eq_zero_iff]
   rintro outcome reached ⟨_, chosen⟩
   exact lt_irrefl _ (designated_create setup codec checks route ensureInit phase1 phase2 bounds mode adversary budget
     respects runtime claim outcome reached _ chosen)

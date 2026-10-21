@@ -330,9 +330,8 @@ end Contain
 /-- A Boolean observation that implies another on every outcome has at most its probability. -/
 theorem chance_mono {α : Type} (run : ProbComp α) (first second : α → Bool)
     (implies : ∀ a, first a = true → second a = true) : 𝒟[first <$> run] {true} ≤ 𝒟[second <$> run] {true} := by
-  rw [evalDist_apply_singleton, evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, ← probEvent_eq_eq_probOutput,
-    probEvent_map, probEvent_map]
-  exact probEvent_mono fun a _ held => implies a held
+  rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true, prEvent_map, prEvent_map]
+  exact prEvent_mono_of_support _ _ _ fun a _ held => implies a held
 
 end BeaconcryptCore.Computational.PqxdhDeploymentHeadlineContain
 

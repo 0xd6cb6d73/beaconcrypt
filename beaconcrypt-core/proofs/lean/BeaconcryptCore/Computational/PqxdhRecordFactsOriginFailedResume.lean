@@ -52,8 +52,9 @@ theorem event_le_flag (modes : Label n → KeyMode)
     (covered : ∀ result ∈ support (resumeMarked modes setup codec replace cut), event result.1 → result.2 = true) :
     𝒟[resume (PqxdhRecordFactsPrivateCacheWorld.erased modes replace setup codec) (.inr cut)] {result | event result} ≤
       𝒟[resumeMarked modes setup codec replace cut] {result | result.2 = true} := by
-  rw [← resume_marked_erase modes setup codec replace cut]
-  simpa only [evalDist_apply_setOf, probEvent_map, Function.comp_def] using probEvent_mono covered
+  rw [← resume_marked_erase modes setup codec replace cut, ← prEvent_eq_evalDist_of_discrete,
+    ← prEvent_eq_evalDist_of_discrete, prEvent_map]
+  exact prEvent_mono_of_support _ _ _ covered
 
 end BeaconcryptCore.Computational.PqxdhRecordFactsOriginFailedResume
 

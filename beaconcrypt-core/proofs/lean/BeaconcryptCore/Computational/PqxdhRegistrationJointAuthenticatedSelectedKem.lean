@@ -237,11 +237,11 @@ theorem union_split (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
     𝒟[(fun pair => decide (Protected setup codec checks kemIndex pair.1 ∧
         ¬KeyMatchCut setup codec checks kemIndex pair.1)) <$>
       split setup codec checks ensureInit supplied count work index runtime] {true} := by
-  rw [evalDist_apply_singleton, evalDist_apply_singleton, evalDist_apply_singleton, ← probEvent_eq_eq_probOutput,
-    ← probEvent_eq_eq_probOutput, ← probEvent_eq_eq_probOutput, probEvent_map, probEvent_map, probEvent_map]
-  refine le_trans (probEvent_mono ?_) (probEvent_or_le _ _ _)
+  rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true,
+    ← prEvent_eq_evalDist_singleton _ true, prEvent_map, prEvent_map, prEvent_map]
+  refine le_trans (prEvent_mono_of_support _ _ _ ?_) (prEvent_or_le _ _ _)
   intro pair supported event
-  simp only [Function.comp_apply, decide_eq_true_eq] at event ⊢
+  simp only [decide_eq_true_eq] at event ⊢
   obtain ⟨decided, good, protects⟩ := event
   by_cases matched : KeyMatchCut setup codec checks kemIndex pair.1
   · exact Or.inl ⟨decided, good, protected_to_final setup codec checks ensureInit supplied count work index runtime

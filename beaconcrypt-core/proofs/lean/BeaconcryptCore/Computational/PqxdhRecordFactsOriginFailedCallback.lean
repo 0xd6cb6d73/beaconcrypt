@@ -41,13 +41,17 @@ theorem resume_probability (modes : Label n → KeyMode)
     (cut : Cut n X) :
     𝒟[resumeMarked modes setup codec replace cut] {result | result.2 = true} =
       𝒟[callback modes setup codec replace cut.pending cut.state (cut.next none)] {flag | flag = true} := by
-  simp only [resumeMarked, callback, evalDist_apply_setOf]
-  rw [probEvent_bind_eq_tsum, probEvent_bind_eq_tsum]
+  simp only [resumeMarked, callback]
+  rw [← prEvent_eq_evalDist_of_discrete, ← prEvent_eq_evalDist_of_discrete, OracleComp.prEvent_bind_eq_tsum,
+    OracleComp.prEvent_bind_eq_tsum]
   refine tsum_congr fun reply => congrArg _ ?_
-  rcases reply with ⟨_ | encrypted, state⟩ <;>
-    simp only [Option.isNone_none, Option.isNone_some, Bool.true_and, Bool.false_and,
-      Bool.false_eq_true, ↓reduceIte, bind_pure_comp, probEvent_map, Function.comp_def]
-  simp
+  rcases reply with ⟨_ | encrypted, state⟩
+  · simp only [Option.isNone_none, Bool.true_and, ↓reduceIte, bind_assoc, pure_bind]
+  · simp only [Option.isNone_some, Bool.false_eq_true, ↓reduceIte]
+    rw [prEvent_pure]
+    simp only [bind_assoc, pure_bind, Bool.false_and, Bool.false_eq_true]
+    rw [prEvent_false]
+    simp
 
 /-- The literal fresh hidden callback, including the source-ordered random body and tag draws and all rejection branches, has the same two-guess bound. -/
 theorem callback_bound (modes : Label n → KeyMode)
@@ -65,16 +69,25 @@ theorem callback_bound (modes : Label n → KeyMode)
     PqxdhRecordFactsOriginSelectedSeal.hiddenSampler]
   split
   · split
-    · simp only [bind_assoc, pure_bind, evalDist_apply_setOf]
-      refine probEvent_bind_le_of_forall_le fun body _ => probEvent_bind_le_of_forall_le fun tag _ => ?_
-      simpa only [PqxdhRecordFactsOriginFailedFlag.sampledErased, evalDist_apply_setOf] using
+    · simp only [bind_assoc, pure_bind]
+      rw [← prEvent_eq_evalDist_of_discrete]
+      refine prEvent_bind_le_of_forall_le_of_support _ _ _ fun body _ =>
+        prEvent_bind_le_of_forall_le_of_support _ _ _ fun tag _ => ?_
+      rw [prEvent_eq_evalDist_of_discrete]
+      simpa only [PqxdhRecordFactsOriginFailedFlag.sampledErased] using
         PqxdhRecordFactsOriginFailedFlag.sampled_erased_bound modes setup codec replace pending _
           body.toList tag.toList tag.toList_length state empty client noSeal cap bound
     · simpa only [PqxdhRecordFactsOriginFailedFlag.sampledErased, bind_assoc, pure_bind] using
         PqxdhRecordFactsOriginFailedFlag.sampled_erased_bound modes setup codec replace pending _
           _ _ (setup.source.crypto.aeadSeal_tag_length _ _ _ _) state empty client noSeal cap bound
-  · simpa only [pure_bind, Option.isNone_none, ↓reduceIte, bind_pure_comp, evalDist_apply_setOf, probEvent_map, Function.comp_def] using
-      (le_of_eq (PqxdhRecordFactsOriginEmpty.erased_probability pending.material modes setup codec replace client noSeal state empty)).trans zero_le
+  · simp only [pure_bind, Option.isNone_none, ↓reduceIte, bind_pure_comp]
+    rw [← prEvent_eq_evalDist_of_discrete, prEvent_map]
+    have zero := PqxdhRecordFactsOriginEmpty.erased_probability pending.material modes setup codec replace client noSeal
+      state empty
+    rw [← @prEvent_eq_evalDist_of_discrete _ _ _ _ _ _
+      PqxdhRecordFactsOriginEmpty.instMeasurableSpaceProdCtxPrivateBool
+      PqxdhRecordFactsOriginEmpty.instDiscreteMeasurableSpaceProdCtxPrivateBool] at zero
+    exact (le_of_eq zero).trans zero_le
 
 /-- The complete original selected resumption satisfies the bound; the successful-publication continuation is still executed in this statement. -/
 theorem marked_bound (modes : Label n → KeyMode)

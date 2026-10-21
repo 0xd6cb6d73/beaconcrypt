@@ -350,7 +350,6 @@ theorem execute_commands (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
   simp only [execute, PqxdhDeploymentLaterServerCommands.commands, simulateQ_map, StateT.run_map, Functor.map_map]
   rfl
 
-set_option linter.deprecated false in
 /-- The logged initialized source, with the log forgotten and the outcome encoded, has the distribution of the bounded reservation with the logged commands. The constructor's empty KEM pool, the Server-slot invariant and the creation cap are derived, not assumed. -/
 theorem initialized (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes) (client : OracleComp (Spec KemSK) Result)
@@ -358,16 +357,16 @@ theorem initialized (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
     (count : Nat) (selected : Fin (count + 1))
     (bounded : client.IsQueryBoundP
       (fun query => PqxdhDeploymentLaterServerReserve.laterKind (KemSK := KemSK) query = some (.inl 1)) (count + 1)) :
-    𝒮[(fun result => (result.1.map fun outcome => PqxdhRegistrationJointInitializedSchedule.encodeOutcome setup outcome.1,
+    EvalDistEq ((fun result => (result.1.map fun outcome => PqxdhRegistrationJointInitializedSchedule.encodeOutcome setup outcome.1,
         result.2)) <$>
-      (PqxdhDeploymentLaterServerSource.initialized setup codec checks ensureInit supplied client).run state] =
-      𝒮[reserved setup codec checks ensureInit supplied client state count selected] := by
+      (PqxdhDeploymentLaterServerSource.initialized setup codec checks ensureInit supplied client).run state)
+      (reserved setup codec checks ensureInit supplied client state count selected) := by
   simp only [PqxdhDeploymentLaterServerSource.initialized, reserved, StateT.run, map_bind]
   have born := PqxdhRegistrationJointServerBirth.client_source (P := Unit) setup ensureInit setup.serverKeyId supplied
     state
   simp only [StateT.run] at born
   rw [born, bind_map_left]
-  apply evalSPMF_bind_congr
+  apply OracleComp.EvalDistEq.bind_congr_of_support
   rintro ⟨(_ | created), after⟩ supported
   · simp
   · dsimp only [Option.map_some]
@@ -388,10 +387,9 @@ theorem initialized (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
       created.server.server.metadata.identityIndex (setup.joint.publicKeys created.seed) client count bounded [] []
       (PqxdhRegistrationJointInitializedAccept.initial (PqxdhRegistrationJointServerBirth.encode created)) after.1.1
       selected
-    have mapped := congrArg (fun distribution =>
-      PqxdhRegistrationJointKemInitialization.finish (PqxdhRegistrationJointServerBirth.encode created) after.2 <$>
-        distribution) source
-    simp only [← evalSPMF_map, Functor.map_map] at mapped
+    have mapped := source.map
+      (PqxdhRegistrationJointKemInitialization.finish (PqxdhRegistrationJointServerBirth.encode created) after.2)
+    simp only [Functor.map_map] at mapped
     rw [encode_factor, ← same, ← published]
     rw [show PqxdhRegistrationJointSchedule.initial after.1 (PqxdhRegistrationSchedule.initial created).shared =
         PqxdhRegistrationJointSchedule.initial after.1 (PqxdhRegistrationSchedule.initial created).shared from rfl,
@@ -405,21 +403,20 @@ theorem initialized (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
         created.server.server.metadata.identityIndex from rfl,
       show (PqxdhRegistrationJointServerBirth.encode created).publicIdentity = created.publicIdentity from rfl, published]
 
-set_option linter.deprecated false in
 /-- The selected key pair can be drawn before the actual initializer: a failed initializer only discards a lossless extra draw. -/
 theorem constructor_order (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes) (client : OracleComp (Spec KemSK) Result)
     (state : PqxdhRegistrationJointServerPrefix.State KemSK A) (count : Nat) (selected : Fin (count + 1)) :
-    𝒮[reserved setup codec checks ensureInit supplied client state count selected] =
-      𝒮[selectedFirst setup codec checks ensureInit supplied client state count selected] := by
-  rw [selectedFirst, ← PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy]
+    EvalDistEq (reserved setup codec checks ensureInit supplied client state count selected)
+      (selectedFirst setup codec checks ensureInit supplied client state count selected) := by
+  rw [selectedFirst]
+  refine EvalDistEq.trans ?_ (PqxdhSecretInputKdf.evalSPMF_sample_comm _ _ _).symm
   unfold reserved
-  apply evalSPMF_bind_congr'
+  apply EvalDistEq.bind_right
   rintro ⟨(_ | created), after⟩
-  · exact (OracleComp.ProgramLogic.Relational.evalSPMF_bind_const_of_no_failure _ _).symm
+  · exact (OracleComp.EvalDistEq.bind_const _ _).symm
   · rfl
 
-set_option linter.deprecated false in
 /-- The logged initialized source, with the log forgotten and the outcome encoded, has the distribution of the selected-first game of the logged source: the logged counterpart of `KemInitialization.actual_source_first`. -/
 theorem actual_source_first (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes) (client : OracleComp (Spec KemSK) Result)
@@ -427,10 +424,10 @@ theorem actual_source_first (setup : Setup baseSpec KemSK) (codec : Codec Reader
     (count : Nat) (selected : Fin (count + 1))
     (bounded : client.IsQueryBoundP
       (fun query => PqxdhDeploymentLaterServerReserve.laterKind (KemSK := KemSK) query = some (.inl 1)) (count + 1)) :
-    𝒮[(fun result => (result.1.map fun outcome => PqxdhRegistrationJointInitializedSchedule.encodeOutcome setup outcome.1,
+    EvalDistEq ((fun result => (result.1.map fun outcome => PqxdhRegistrationJointInitializedSchedule.encodeOutcome setup outcome.1,
         result.2)) <$>
-      (PqxdhDeploymentLaterServerSource.initialized setup codec checks ensureInit supplied client).run state] =
-      𝒮[selectedFirst setup codec checks ensureInit supplied client state count selected] :=
+      (PqxdhDeploymentLaterServerSource.initialized setup codec checks ensureInit supplied client).run state)
+      (selectedFirst setup codec checks ensureInit supplied client state count selected) :=
   (initialized setup codec checks ensureInit supplied client state empty count selected bounded).trans
     (constructor_order setup codec checks ensureInit supplied client state count selected)
 

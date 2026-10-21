@@ -22,8 +22,7 @@ theorem law_support {α : Type} {left right : ProbComp α}
   let : MeasurableSpace α := ⊤
   let : DiscreteMeasurableSpace α := ⟨fun _ => trivial⟩
   have point := congrArg (fun measure => measure {value}) same.evalDist_eq
-  simp only [evalDist_apply_singleton] at point
-  rw [← probOutput_pos_iff, ← probOutput_pos_iff, point]
+  rw [OracleComp.mem_support_iff_evalDist_singleton_pos, OracleComp.mem_support_iff_evalDist_singleton_pos, point]
 
 /-- Each supported erased final observation is realized by an original supported final observation; this asserts no path correspondence. -/
 theorem retained_support (modes : Label n → KeyMode) (ideal : ∀ label, modes label ≠ .real)

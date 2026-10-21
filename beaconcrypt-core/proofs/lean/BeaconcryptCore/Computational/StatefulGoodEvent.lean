@@ -126,10 +126,6 @@ theorem event_good
   rintro ⟨value, state, flag⟩
   cases flag <;> simp [good value state]
 
-set_option linter.deprecated false in set_option linter.unusedVariables false in theorem _root_.BeaconcryptCore.Computational.StatefulGoodEvent.event_good_vcvioLegacy :
-    ∀ {ι : Type} {spec : OracleSpec ι} {ι' : Type} {spec' : OracleSpec ι'} [inst : spec'.IsUniformSpec] {α σ : Type} (impl₁ impl₂ : QueryImpl spec (StateT (σ × Bool) (OracleComp spec'))) (agree_good : ∀ (t : spec.Domain) (s : σ) (u : spec.Range t) (s' : σ), Pr[= (u, s', Bool.false) | (impl₁ t).run (s, Bool.false)] = Pr[= (u, s', Bool.false) | (impl₂ t).run (s, Bool.false)]) (sticky₁ : ∀ (t : spec.Domain) (p : σ × Bool), p.2 = Bool.true → ∀ z ∈ MonadAttach.support ((impl₁ t).run p), z.2.2 = Bool.true) (sticky₂ : ∀ (t : spec.Domain) (p : σ × Bool), p.2 = Bool.true → ∀ z ∈ MonadAttach.support ((impl₂ t).run p), z.2.2 = Bool.true) (client : OracleComp spec α) (initial : σ × Bool) (event : α × σ × Bool → Prop), (probEvent ((simulateQ impl₁ client).run initial) fun (result : α × σ × Bool) => event result ∧ result.2.2 = Bool.false) = probEvent ((simulateQ impl₂ client).run initial) fun (result : α × σ × Bool) => event result ∧ result.2.2 = Bool.false :=
-  by simpa only [BeaconcryptCore.VCVioLegacy.oracleComp_probOutput_eq_prEvent, BeaconcryptCore.VCVioLegacy.oracleComp_probEvent_eq_prEvent] using @BeaconcryptCore.Computational.StatefulGoodEvent.event_good
-
 end BeaconcryptCore.Computational.StatefulGoodEvent
 
 /--

@@ -54,44 +54,36 @@ theorem a1At_merge (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
     exact ⟨_, _, _, rfl, failure⟩
 
 
-set_option linter.deprecated false in
 /-- Two continuations of one computation, with possibly different events, compare pointwise on its support. -/
 theorem probEvent_bind_le {α β γ : Type} (first : ProbComp α) (left : α → ProbComp β) (right : α → ProbComp γ)
     (leftEvent : β → Prop) (rightEvent : γ → Prop)
-    (bound : ∀ value ∈ support first, Pr[leftEvent | left value] ≤ Pr[rightEvent | right value]) :
-    Pr[leftEvent | first >>= left] ≤ Pr[rightEvent | first >>= right] := by
-  rw [probEvent_bind_eq_tsum, probEvent_bind_eq_tsum]
-  refine ENNReal.tsum_le_tsum fun value => ?_
-  by_cases member : value ∈ support first
-  · gcongr
-    exact bound value member
-  · simp [probOutput_eq_zero_of_not_mem_support member]
+    (bound : ∀ value ∈ support first, Pr{let x ← left value}[leftEvent x] ≤ Pr{let x ← right value}[rightEvent x]) :
+    Pr{let x ← first >>= left}[leftEvent x] ≤ Pr{let x ← first >>= right}[rightEvent x] :=
+  prEvent_bind_mono_of_forall_le_of_support first left right leftEvent rightEvent bound
 
-set_option linter.deprecated false in
 /-- Per creation index `c`: the probability of CE-A1 at `c` in the common deployment experiment, for every identity index of the constructed Server and every initialization runtime, is at most the probability of the common authentication failure of `R_c` in the ordered Server-authentication game. The constructor's initialization gate and seed draw are matched with the game's seed draw; a refused construction has no event. Premises: the approved Phase 1 and Phase 2 read-back contracts (through CE-COMPILE). -/
 theorem a1_le_ordered (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
     (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec) (bounds : FreshBounds) (mode : Mode)
     (adversary : OracleComp (ModeSpec mode) X) (runtime : A) (c : Nat) :
-    Pr[fun outcome => A1At setup codec c outcome |
-      (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit identityIndex bounds mode adversary).run runtime] ≤
-    Pr[fun result => PqxdhServerAuthCommonProbability.decision setup codec checks result = true |
-      PqxdhServerAuthRootObserved.orderedGame setup codec checks false
-        (serverAuthAdversary (KemSK := KemSK) setup codec route bounds mode adversary c)] := by
+    Pr{let outcome ← (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit identityIndex bounds mode adversary).run runtime}[A1At setup codec c outcome] ≤
+    Pr{let result ← (PqxdhServerAuthRootObserved.orderedGame setup codec checks false
+        (serverAuthAdversary (KemSK := KemSK) setup codec route bounds mode adversary c))}[PqxdhServerAuthCommonProbability.decision setup codec checks result = true] := by
   rw [← PqxdhDeploymentCompileSecrecy.compile_full_game setup codec checks route ensureInit identityIndex phase1 phase2
-    bounds mode adversary runtime, probEvent_map]
+    bounds mode adversary runtime, prEvent_map]
   rw [show serverAuthAdversary (KemSK := KemSK) setup codec route bounds mode adversary c =
       fun input => (fun _ => ()) <$> reduction (KemSK := KemSK) setup codec route bounds mode adversary c input from rfl,
     ← PqxdhRegistrationR1RootAudit.generated_order setup codec checks
       (reduction (KemSK := KemSK) setup codec route bounds mode adversary c)]
-  simp only [PqxdhRegistrationJointInitializedSchedule.native, PqxdhLiveServerConstruction.construct, StateT.run,
-    bind_assoc]
-  refine probEvent_bind_le_of_forall_le fun ready _ => ?_
+  simp only [PqxdhRegistrationJointInitializedSchedule.native, PqxdhLiveServerConstruction.construct, StateT.run]
+  rw [bind_assoc (ensureInit runtime)]
+  refine prEvent_bind_le_of_forall_le_of_support _ _ _ fun ready _ => ?_
   cases ready.1 with
   | false =>
-      simp only [Bool.false_eq_true, ite_false, pure_bind]
-      refine le_of_eq_of_le (probEvent_eq_zero_iff.mpr ?_) zero_le
+      simp only [Bool.false_eq_true, ite_false]
+      rw [pure_bind]
+      refine le_of_eq_of_le ((OracleComp.prEvent_eq_zero_iff _ _).mpr ?_) zero_le
       intro outcome member
       simp only [support_pure, Set.mem_singleton_iff] at member
       subst member
@@ -99,11 +91,11 @@ theorem a1_le_ordered (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
   | true =>
       simp only [ite_true, bind_map_left]
       refine probEvent_bind_le _ _ _ _ _ fun seed seeded => ?_
-      rw [probEvent_map, probEvent_map]
+      rw [prEvent_map, prEvent_map]
       have bound := PqxdhDeploymentServerAuthChain.seed_bound setup codec checks phase1 route bounds mode adversary c seed
         seeded identityIndex .generated
       refine le_of_eq_of_le ?_ bound
-      refine probEvent_ext fun result _ => ?_
+      refine prEvent_congr_of_support _ _ _ fun result _ => ?_
       exact a1At_merge setup codec c _ result _
 
 /-- The ServerAuth bound of `R_c`: the Gap-DH advantage of the scanning extractor, the accept-collision term, the record and schedule losses of every record coordinate and the joint-use signature advantage, each of the reductions constructed from `R_c`. -/
@@ -127,7 +119,6 @@ structure ReductionCaps (work : AuthInput → OracleComp ServerAuthSpec X) (qCoi
   total : ∀ input, (work input).IsTotalQueryBound qTotal
   finish : ∀ input, (work input).IsQueryBoundP PqxdhServerAuthJointIdentityDhBudget.IsFinish qFinish
 
-set_option linter.deprecated false in
 /-- Theorem CE-A1 at one creation index `c`: in the common deployment experiment with a generated Server seed, for every identity index of the constructed Server, the probability that owner `c`, created with the protected binding, accepted with no session matching it and no rejected bundle call in Fresh before its acceptance, is at most the Server-authentication bound of `R_c`, with the bills of every reduction in that bound. Premises: the approved Phase 1 and Phase 2 read-back contracts, `FrameReadBack`, `ReadWritable`, `X25519ClassLaw`, `X25519ScalarSpread`, `SourceFullCorrect`, `HasAttachedVerificationAdapter`, the KEM base caps and the query caps of `R_c`. -/
 theorem a1_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks) (caps : KemCaps)
     (bounded : KemBound setup caps) (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)
@@ -168,24 +159,21 @@ theorem a1_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) 
     runtime c
   have left : 𝒟[a1Decision setup codec c <$>
       (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit identityIndex bounds mode adversary).run runtime]
-        {true} = Pr[fun outcome => A1At setup codec c outcome |
-      (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit identityIndex bounds mode adversary).run
-        runtime] := by
+        {true} = Pr{let outcome ← ((PqxdhDeploymentSecrecy.game setup codec checks route ensureInit identityIndex bounds mode adversary).run
+        runtime)}[A1At setup codec c outcome] := by
     classical
-    exact UniformTargetSelection.chance_eq_vcvioLegacy _ _
+    exact UniformTargetSelection.chance_eq _ _
   have right : 𝒟[PqxdhServerAuthCommonProbability.decision setup codec checks <$>
       PqxdhServerAuthRootObserved.orderedGame setup codec checks false
         (serverAuthAdversary setup codec route bounds mode adversary c)] {true} =
-      Pr[fun result => PqxdhServerAuthCommonProbability.decision setup codec checks result = true |
-        PqxdhServerAuthRootObserved.orderedGame setup codec checks false
-          (serverAuthAdversary setup codec route bounds mode adversary c)] := by
-    rw [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map]
-    rfl
+      Pr{let result ← (PqxdhServerAuthRootObserved.orderedGame setup codec checks false
+          (serverAuthAdversary setup codec route bounds mode adversary c))}[PqxdhServerAuthCommonProbability.decision setup codec checks result = true] := by
+    rw [← prEvent_eq_evalDist_singleton _ true, prEvent_map]
   have finite : 𝒟[PqxdhServerAuthCommonProbability.decision setup codec checks <$>
       PqxdhServerAuthRootObserved.orderedGame setup codec checks false
         (serverAuthAdversary setup codec route bounds mode adversary c)] {true} ≠ ⊤ := by
-    rw [evalDist_apply_singleton]
-    exact probOutput_ne_top
+    rw [← prEvent_eq_evalDist_singleton _ true]
+    exact prEvent_ne_top _
   rw [left]
   rw [← right] at ordered
   exact (ENNReal.toReal_mono finite ordered).trans sa.1
@@ -275,7 +263,6 @@ theorem a1_range (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) 
         exact Set.mem_image_of_mem _ resultMember
       exact lt_of_lt_of_le created' (compiled_owners setup codec route bounds mode adversary budget respects _ program)
 
-set_option linter.deprecated false in
 /-- Theorem CE-A1 over all Beacons, in the A1At form: in the common deployment experiment of a budget-respecting adversary, the probability that some owner accepted as CE-A1 describes is at most the sum over the `qCreate` creation indices `c` of the Server-authentication bound of `R_c`, with every reduction's bills. -/
 theorem a1_sum (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks) (caps : KemCaps)
     (bounded : KemBound setup caps) (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)
@@ -306,26 +293,27 @@ theorem a1_sum (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (c
   refine ⟨?_, fun c => (each c).2⟩
   set run := (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit identityIndex bounds mode adversary).run
     runtime with runEq
-  have chance : ∀ c, 𝒟[a1Decision setup codec c <$> run] {true} = Pr[fun outcome => A1At setup codec c outcome | run] := by
+  have chance : ∀ c, 𝒟[a1Decision setup codec c <$> run] {true} = Pr{let outcome ← run}[A1At setup codec c outcome] := by
     intro c
     classical
-    exact UniformTargetSelection.chance_eq_vcvioLegacy _ _
+    exact UniformTargetSelection.chance_eq _ _
   have total : 𝒟[(fun outcome => @decide (∃ c, A1At setup codec c outcome) (Classical.propDecidable _)) <$> run]
-      {true} = Pr[fun outcome => ∃ c, A1At setup codec c outcome | run] := by
+      {true} = Pr{let outcome ← run}[∃ c, A1At setup codec c outcome] := by
     classical
-    exact UniformTargetSelection.chance_eq_vcvioLegacy _ _
-  have ranged : Pr[fun outcome => ∃ c, A1At setup codec c outcome | run] =
-      Pr[fun outcome => ∃ c ∈ (Finset.univ : Finset (Fin budget.create)), A1At setup codec c.val outcome | run] := by
-    refine probEvent_ext fun outcome member => ⟨fun ⟨c, event⟩ => ?_, fun ⟨c, _, event⟩ => ⟨c.val, event⟩⟩
+    exact UniformTargetSelection.chance_eq _ _
+  have ranged : Pr{let outcome ← run}[∃ c, A1At setup codec c outcome] =
+      Pr{let outcome ← run}[∃ c ∈ (Finset.univ : Finset (Fin budget.create)), A1At setup codec c.val outcome] := by
+    refine prEvent_congr_of_support _ _ _ fun outcome member =>
+      ⟨fun ⟨c, event⟩ => ?_, fun ⟨c, _, event⟩ => ⟨c.val, event⟩⟩
     exact ⟨⟨c, a1_range setup codec checks route ensureInit identityIndex phase1 phase2 bounds mode adversary budget
       respects runtime outcome member c event⟩, Finset.mem_univ _, event⟩
-  have union := probEvent_exists_finset_le_sum (Finset.univ : Finset (Fin budget.create)) run
+  have union := prEvent_exists_finset_le (Finset.univ : Finset (Fin budget.create)) run
     (fun c outcome => A1At setup codec c.val outcome)
-  have finite : ∑ c : Fin budget.create, Pr[fun outcome => A1At setup codec c.val outcome | run] ≠ ⊤ :=
-    ENNReal.sum_ne_top.mpr fun c _ => probEvent_ne_top
+  have finite : ∑ c : Fin budget.create, Pr{let outcome ← run}[A1At setup codec c.val outcome] ≠ ⊤ :=
+    ENNReal.sum_ne_top.mpr fun c _ => (prEvent_ne_top _)
   rw [total, ranged]
   refine (ENNReal.toReal_mono finite union).trans ?_
-  rw [ENNReal.toReal_sum fun c _ => probEvent_ne_top]
+  rw [ENNReal.toReal_sum fun c _ => (prEvent_ne_top _)]
   refine Finset.sum_le_sum fun c _ => ?_
   rw [← chance c.val]
   exact (each c.val).1
@@ -427,7 +415,6 @@ theorem build_entry (transcript : List PqxdhDeploymentInterface.Entry) (session 
     | _ => simp [PqxdhDeploymentServerAuthEvent.regOfEntry] at found
   · cases found
 
-set_option linter.deprecated false in
 /-- On every outcome of the experiment with a constructed Server, every successful build response of the final transcript reads back, with `Phase2ReadBack`, the constructed Server's identity key as the Server identity, which is the pin of the protected binding: the build responses are the Phase 2 writer outputs of fields carrying the Server's identity (CE-5's `Agree.builds`, kept from the initial state), and the generated Server's identity is the 32-byte word of its public identity key (`construct_origin`). -/
 theorem build_pin (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat)
@@ -467,7 +454,6 @@ theorem build_pin (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     rw [read, Option.bind_some, serverId, identity]
     rfl
 
-set_option linter.deprecated false in
 /-- On every outcome of the experiment, a session that matches owner `c` before its acceptance matches it with the pin of the protected binding (`build_pin`). -/
 theorem matched_pinned (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat)
@@ -489,7 +475,6 @@ theorem matched_pinned (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
     buildMember, build_pin setup codec checks route ensureInit identityIndex phase2 bounds mode adversary runtime outcome
       supported created output final reached session payload reply built, frameRaw, frameReply⟩
 
-set_option linter.deprecated false in
 /-- On every outcome of the experiment, CE-A1 with the pinned matching is CE-A1 with the public matching (`matched_pinned`); with `noFailure_noPinnedMatch` the two events coincide there. -/
 theorem noPinnedMatch_noFailure (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat)
@@ -504,7 +489,6 @@ theorem noPinnedMatch_noFailure (setup : Setup baseSpec KemSK) (codec : Codec Re
     (matched_pinned setup codec checks route ensureInit identityIndex phase2 bounds mode adversary runtime outcome
       supported created output final found c before raw acceptedEq matched)⟩
 
-set_option linter.deprecated false in
 /-- Theorem CE-A1 (plan section 10, option (b) of section 19), with the public pinned matching in place of the plan's eleven-field common session: in the common deployment experiment with a generated Server seed, for a budget-respecting adversary, every identity index and every initialization runtime, the probability that some Beacon `c`, pinned to the constructed Server's identity and key ID before its acceptance, accepted with no session that matches it with that pin and published the decoded record it accepted earlier (`A1NoPinnedMatch`), on a run with `NoBundleFailure_c`, is at most the sum over the `qCreate` creation indices of the Server-authentication bound of `R_c`, with the bills of every constructed reduction. Premises: the approved Phase 1, Phase 2 and frame read-back contracts, `ReadWritable`, `X25519ClassLaw`, `X25519ScalarSpread`, `SourceFullCorrect`, `HasAttachedVerificationAdapter`, the KEM base caps and the query caps of each `R_c`. -/
 theorem ce_a1 (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks) (caps : KemCaps)
     (bounded : KemBound setup caps) (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)
@@ -537,12 +521,12 @@ theorem ce_a1 (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (ch
     runtime
   have finite : 𝒟[(fun outcome => @decide (∃ c, A1At setup codec c outcome) (Classical.propDecidable _)) <$> run]
       {true} ≠ ⊤ := by
-    rw [evalDist_apply_singleton]
-    exact probOutput_ne_top
+    rw [← prEvent_eq_evalDist_singleton _ true]
+    exact prEvent_ne_top _
   refine ENNReal.toReal_mono finite ?_
   classical
-  rw [UniformTargetSelection.chance_eq_vcvioLegacy, UniformTargetSelection.chance_eq_vcvioLegacy]
-  exact probEvent_mono fun outcome member ⟨c, event⟩ => ⟨c, noFailure_a1At setup codec c outcome
+  rw [UniformTargetSelection.chance_eq, UniformTargetSelection.chance_eq]
+  exact prEvent_mono_of_support _ _ _ fun outcome member ⟨c, event⟩ => ⟨c, noFailure_a1At setup codec c outcome
     (noPinnedMatch_noFailure setup codec checks route ensureInit identityIndex phase2 bounds mode adversary runtime c
       outcome member event)⟩
 

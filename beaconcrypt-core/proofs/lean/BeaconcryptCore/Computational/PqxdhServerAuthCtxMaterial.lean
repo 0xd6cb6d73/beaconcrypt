@@ -106,15 +106,6 @@ theorem key_first {Result : Type}
   simp only [← pairSample, bind_assoc, pure_bind, output] at split reorder ⊢
   exact split.trans reorder
 
-set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.PqxdhServerAuthCtxMaterial.key_first_vcvioLegacy :
-    ∀ {Result : Type} (continuation : BeaconcryptCore.Computational.PqxdhServerAuthKeySchedule.Output → ProbComp Result),
-      𝒮[$ᵗ BeaconcryptCore.Computational.PqxdhServerAuthKeySchedule.Output >>= continuation] =
-        𝒮[do
-          let key ← $ᵗ BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput
-          let rest ← $ᵗ BeaconcryptCore.Computational.PqxdhServerAuthCtxMaterial.Residual
-          continuation (BeaconcryptCore.Computational.PqxdhServerAuthCtxMaterial.output key rest)] :=
-  by simpa only [BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq] using @BeaconcryptCore.Computational.PqxdhServerAuthCtxMaterial.key_first
-
 /-- A separately sampled complete source context can also be placed after the challenger key. Its full state and adaptive continuation are retained. -/
 theorem key_first_context {Context Result : Type} (sample : ProbComp Context)
     (continuation : Context → PqxdhServerAuthKeySchedule.Output → ProbComp Result) :

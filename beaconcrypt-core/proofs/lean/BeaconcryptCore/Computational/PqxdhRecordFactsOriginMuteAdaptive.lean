@@ -71,8 +71,8 @@ theorem agree_good (target : Label n) (decode : RawDecoder)
   by_cases hit : serviceBad target decode query state = true
   · have zero (impl : QueryImpl (ServiceSpec n) (StateT (CtxPrivate n) ProbComp)) :
         𝒟[(marked target decode impl query).run (state, false)] {(reply, (next, false))} = 0 := by
-      rw [evalDist_apply_singleton]
-      exact probOutput_eq_zero_of_not_mem_support (fun supported =>
+      rw [← prEvent_eq_evalDist_singleton _ (reply, (next, false))]
+      exact prEvent_eq_zero_of_not_mem_support _ (fun supported =>
         Bool.false_ne_true (hit_marked target decode impl query (state, false) hit (reply, (next, false)) supported))
     rw [zero, zero]
   · have same : left query state = right query state := agree query state (Bool.eq_false_of_not_eq_true hit)
@@ -103,11 +103,12 @@ theorem bad_probability {X : Type} (target : Label n) (decode : RawDecoder)
     (work : OracleComp (ServiceSpec n) X) (state : CtxPrivate n) :
     𝒟[(simulateQ (marked target decode left) work).run (state, false)] {result | result.2.2 = true} =
       𝒟[(simulateQ (marked target decode right) work).run (state, false)] {result | result.2.2 = true} := by
-  simpa only [evalDist_apply_setOf] using
+  simpa only [VCVioLegacy.probEvent_eq_evalDist_setOf] using
     OracleComp.ProgramLogic.Relational.probEvent_output_bad_eq'
       (marked target decode left) (marked target decode right)
       (fun query current reply next => by
-        simpa only [evalDist_apply_singleton] using (agree_good target decode left right agree query current reply next))
+        simpa only [VCVioLegacy.probOutput_eq_evalDist_singleton] using
+          (agree_good target decode left right agree query current reply next))
       (marked_sticky target decode left) (marked_sticky target decode right) work state
 
 /-- Every event on the complete result and state agrees jointly with the unraised flag; this is unconditioned event equality. -/
@@ -119,11 +120,15 @@ theorem event_good {X : Type} (target : Label n) (decode : RawDecoder)
     (event : X × CtxPrivate n × Bool → Prop) :
     𝒟[(simulateQ (marked target decode left) work).run state] {result | event result ∧ result.2.2 = false} =
       𝒟[(simulateQ (marked target decode right) work).run state] {result | event result ∧ result.2.2 = false} := by
-  simpa only [evalDist_apply_setOf] using
-    StatefulGoodEvent.event_good_vcvioLegacy (marked target decode left) (marked target decode right)
-      (fun query current reply next => by
-        simpa only [evalDist_apply_singleton] using (agree_good target decode left right agree query current reply next))
-      (marked_sticky target decode left) (marked_sticky target decode right) work state event
+  have good := StatefulGoodEvent.event_good (marked target decode left) (marked target decode right)
+    (fun query current reply next => by
+      rw [← VCVioLegacy.oracleComp_probOutput_eq_prEvent, ← VCVioLegacy.oracleComp_probOutput_eq_prEvent,
+        VCVioLegacy.probOutput_eq_evalDist_singleton, VCVioLegacy.probOutput_eq_evalDist_singleton]
+      exact agree_good target decode left right agree query current reply next)
+    (marked_sticky target decode left) (marked_sticky target decode right) work state event
+  rw [← VCVioLegacy.oracleComp_probEvent_eq_prEvent, ← VCVioLegacy.oracleComp_probEvent_eq_prEvent,
+    VCVioLegacy.probEvent_eq_evalDist_setOf, VCVioLegacy.probEvent_eq_evalDist_setOf] at good
+  exact good
 
 /-- Full adaptive joint output-state distance costs only one copy of the exact selected-match probability. -/
 theorem marked_distance {X : Type} (target : Label n) (decode : RawDecoder)
@@ -134,11 +139,12 @@ theorem marked_distance {X : Type} (target : Label n) (decode : RawDecoder)
     tvDist ((simulateQ (marked target decode left) work).run (state, false))
       ((simulateQ (marked target decode right) work).run (state, false)) ≤
       (𝒟[(simulateQ (marked target decode left) work).run (state, false)] {result | result.2.2 = true}).toReal := by
-  simpa only [evalDist_apply_setOf] using
+  simpa only [VCVioLegacy.probEvent_eq_evalDist_setOf] using
     OracleComp.ProgramLogic.Relational.tvDist_simulateQ_run_le_probEvent_output_bad
       (marked target decode left) (marked target decode right) work state
       (fun query current reply next => by
-        simpa only [evalDist_apply_singleton] using (agree_good target decode left right agree query current reply next))
+        simpa only [VCVioLegacy.probOutput_eq_evalDist_singleton] using
+          (agree_good target decode left right agree query current reply next))
       (marked_sticky target decode left) (marked_sticky target decode right)
 
 /-- Erasing the ghost flag retains the same bound on complete unmodified adaptive source executions. -/

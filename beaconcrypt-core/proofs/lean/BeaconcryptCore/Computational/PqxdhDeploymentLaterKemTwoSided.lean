@@ -44,10 +44,11 @@ theorem real_le_run (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
   classical
   rw [← PqxdhDeploymentLaterServerBridge.exposeAt_tag, ← PqxdhRegistrationJointKemCut.scan_finish _ _ 0,
     PqxdhRegistrationJointKemRawNatural.router_split, map_bind, PqxdhDeploymentLaterServerBridge.scanned_map,
-    PqxdhRegistrationJointKemRawNatural.router_map, bind_map_left, evalDist_apply_singleton, evalDist_apply_singleton]
-  apply probOutput_bind_mono
+    PqxdhRegistrationJointKemRawNatural.router_map, bind_map_left, ← prEvent_eq_evalDist_singleton _ true,
+    ← prEvent_eq_evalDist_singleton _ true]
+  apply prEvent_bind_mono_of_forall_le_of_support
   rintro ⟨_ | cut, after⟩ reachedCut
-  · rw [probOutput_eq_zero_of_not_mem_support]
+  · rw [prEvent_eq_zero_of_not_mem_support]
     · exact zero_le
     simp [PqxdhRegistrationJointKemResume.sourcePost, PqxdhRegistrationJointKemGame.decision]
   · have cleared : PqxdhDynamicKemJointStopping.Good after :=
@@ -55,7 +56,7 @@ theorem real_le_run (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
         (some cut, after) reachedCut rfl
     cases cut with
     | complete outcome =>
-      rw [probOutput_eq_zero_of_not_mem_support]
+      rw [prEvent_eq_zero_of_not_mem_support]
       · exact zero_le
       simp [PqxdhRegistrationJointKemResume.sourcePost, PqxdhRegistrationJointKemGame.decision, cutMap]
     | pending request resume =>
@@ -63,15 +64,16 @@ theorem real_le_run (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
       rw [PqxdhRegistrationJointKemRawNatural.finish_stopped, map_bind]
       by_cases active : request.2 = chosen.1
       · rw [active]
-        apply probOutput_bind_mono
+        apply prEvent_bind_mono_of_forall_le_of_support
         intro encapsulated _
-        rw [probOutput_bind_const, probFailure_eq_zero, tsub_zero, one_mul]
+        conv_lhs => rw [bind_assoc, OracleComp.prEvent_bind_const]
+        rw [prEvent_eq_evalDist_singleton, prEvent_eq_evalDist_singleton]
         simp only [PqxdhRegistrationJointKemResume.sourcePost, cutMap, active, ite_true, simulateQ_map,
           OptionT.run_map, StateT.run_map, bind_pure_comp, Functor.map_map]
-        rw [← probEvent_eq_eq_probOutput, ← probEvent_eq_eq_probOutput, probEvent_map, probEvent_map]
-        apply probEvent_mono
+        rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true, prEvent_map, prEvent_map]
+        apply prEvent_mono_of_support
         rintro reached member event
-        simp only [Function.comp_apply, decide_eq_true_eq] at event ⊢
+        simp only [decide_eq_true_eq] at event ⊢
         refine ⟨?_, stopped_good setup.baseImpl setup.joint setup.kem selected.val _ _ _ cleared reached member ?_⟩
         · rcases reached with ⟨_ | final, state⟩
           · simp [PqxdhRegistrationJointKemGame.decision] at event
@@ -81,7 +83,7 @@ theorem real_le_run (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
         · rcases reached with ⟨_ | final, state⟩
           · simp [PqxdhRegistrationJointKemGame.decision] at event
           · rfl
-      · rw [probOutput_eq_zero_of_not_mem_support]
+      · rw [prEvent_eq_zero_of_not_mem_support]
         · exact zero_le
         simp [PqxdhRegistrationJointKemResume.sourcePost, PqxdhRegistrationJointKemGame.decision, cutMap, active]
 
@@ -107,21 +109,20 @@ theorem real_le_commands (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
   refine le_trans (real_le_run setup codec checks decision work index count selected created joint runtime chosen
     others) ?_
   simp only [PqxdhDeploymentLaterServerInitialized.commands, Functor.map_map]
-  rw [evalDist_apply_singleton, evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, ← probEvent_eq_eq_probOutput,
-    probEvent_map, probEvent_map]
-  refine le_trans (le_of_eq ?_) (le_trans (le_of_eq (PqxdhDynamicKemJointStopping.history_event_vcvioLegacy setup.baseImpl
+  rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true, prEvent_map, prEvent_map]
+  refine le_trans (le_of_eq ?_) (le_trans (le_of_eq (PqxdhDynamicKemJointStopping.history_event setup.baseImpl
     setup.joint setup.kem selected.val (List.ofFn (selected.insertNth chosen others))
     (simulateQ (actual setup) (commands setup codec checks created.server.server.metadata.identityIndex
       created.publicIdentity (tag work index) [] [] (PqxdhRegistrationJointInitializedAccept.initial created)))
     (joint, PqxdhDynamicKemRouter.empty) rfl (Completed decision)).symm) ?_)
-  · apply probEvent_ext
+  · apply prEvent_congr_of_support
     intro reached _
-    simp only [Function.comp_apply, decide_eq_true_eq]
-  · apply probEvent_mono
+    simp only [decide_eq_true_eq]
+  · apply prEvent_mono_of_support
     rintro ⟨_ | outcome, state⟩ _ ⟨⟨final, found, decided, session⟩, good⟩
     · cases found
     · cases found
-      simp only [Function.comp_apply, decide_eq_true_eq]
+      simp only [decide_eq_true_eq]
       exact ⟨⟨_, rfl, decided, session⟩, good⟩
 
 set_option backward.isDefEq.respectTransparency false in
@@ -143,24 +144,26 @@ theorem real_le_actual (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
   have same := PqxdhDeploymentLaterServerInitialized.actual_source_first setup codec checks ensureInit supplied
     (tag work index) ((PqxdhDynamicIdentityPool.initialState, PqxdhLiveKemBirth.empty), runtime) rfl count selected
     (PqxdhDeploymentLaterServerBridge.tag_bound work index _ _ bounded)
-  conv_rhs => rw [evalDist_apply_singleton, probOutput_def, evalSPMF_map, same, ← evalSPMF_map, ← probOutput_def]
-  rw [evalDist_apply_singleton]
+  rw [(same.map _).evalDist_eq]
   simp only [PqxdhDeploymentLaterServerInitialized.selectedFirst, PqxdhDeploymentLaterServerKemHop.sourceReal,
     PqxdhDeploymentLaterServerKemHop.sourcePre, map_bind, bind_assoc]
-  apply probOutput_bind_mono
+  rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true]
+  apply prEvent_bind_mono_of_forall_le_of_support
   intro chosen _
-  apply probOutput_bind_mono
+  apply prEvent_bind_mono_of_forall_le_of_support
   rintro ⟨_ | created, after⟩ _
-  · rw [probOutput_eq_zero_of_not_mem_support]
+  · rw [prEvent_eq_zero_of_not_mem_support]
     · exact zero_le
     simp [PqxdhRegistrationJointKemResume.sourcePost, PqxdhRegistrationJointKemGame.decision]
   · dsimp only
+    rw [prEvent_eq_evalDist_singleton, prEvent_eq_evalDist_singleton]
     simp only [map_bind, bind_assoc, pure_bind]
-    apply probOutput_bind_mono
+    rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true]
+    apply prEvent_bind_mono_of_forall_le_of_support
     intro others _
     have core := real_le_commands setup codec checks decision work index count selected created after.1.1 after.2
       chosen others
-    rw [evalDist_apply_singleton, evalDist_apply_singleton] at core
+    rw [prEvent_eq_evalDist_singleton, prEvent_eq_evalDist_singleton]
     simpa only [map_bind, bind_assoc, pure_bind] using core
 
 set_option backward.isDefEq.respectTransparency false in
@@ -461,8 +464,8 @@ theorem kem_transfer_server_lower (setup : Setup baseSpec KemSK)
         PqxdhRegistrationJointKemRawGame.correctnessError setup) := by
   refine le_add_of_close (UniformTargetSelection.chance_ne_top _ _) ?_ (kem_transfer_server_two_sided setup functional
     codec checks route ensureInit phase1 phase2 bounds mode first second budget respects event claim g runtime)
-  rw [evalDist_apply_singleton]
-  exact probOutput_ne_top
+  rw [← prEvent_eq_evalDist_singleton _ true]
+  exact prEvent_ne_top _
 
 /-- Two-sided exact-sum headline of the key transfer for the LQ-F game: the probability that the LQ-F game ends with the event and a designated claim, and the sum over all targets `g` in `Fin qAccept × Fin (qCreate + 1)` of the logged opaque KEM-ideal branch of `g`'s decision, differ by at most the sum over `g` of one IND-CCA advantage plus one correctness error. -/
 theorem kem_transfer_server_sum_two_sided (setup : Setup baseSpec KemSK)

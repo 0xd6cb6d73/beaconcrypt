@@ -146,15 +146,14 @@ theorem ptc_real_draws (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
           {true} =
       𝒟[(fun draw => ptcOutcome setup.kem functional true draw draw.2.2.2) <$>
         simulateQ (kemAmbientImpl setup.baseImpl) (ptcDraws setup.kem guess)] {true} := by
-  rw [ptc_branch_eval setup functional, evalDist_apply_singleton, evalDist_apply_singleton, map_eq_bind_pure_comp]
-  refine probOutput_bind_congr' _ _ fun draw => ?_
+  rw [ptc_branch_eval setup functional, map_eq_bind_pure_comp]
+  congr 1
+  refine EvalDistEq.evalDist_eq (EvalDistEq.bind_right _ fun draw => ?_)
   have same : ∀ candidate, ptcOutcome setup.kem functional true draw candidate =
       ptcOutcome setup.kem functional true draw draw.2.2.2 := fun _ => rfl
   simp only [same, Function.comp_apply]
-  rw [probOutput_bind_const]
-  simp
+  exact OracleComp.EvalDistEq.bind_const _ _
 
-set_option linter.deprecated false in
 /-- The random branch of `ptc` succeeds with probability at most `2^-256`: its candidate is a fresh uniform 32-byte key drawn after everything the comparison reads. -/
 theorem ptc_random_le (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (functional : FunctionalDecapsulation setup.kem)
@@ -162,35 +161,35 @@ theorem ptc_random_le (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     𝒟[simulateQ (kemAmbientImpl setup.baseImpl)
         (oneKeyBranchMain setup.kem (runtimeOfImpl (kemAmbientImpl setup.baseImpl)) (ptc setup.kem guess) false)]
           {true} ≤ (2 ^ 256 : ℝ≥0∞)⁻¹ := by
-  rw [ptc_branch_eval setup functional, evalDist_apply_singleton, ← probEvent_eq_eq_probOutput]
-  refine probEvent_bind_le_of_forall_le fun draw _ => ?_
-  rw [bind_pure_comp, probEvent_map]
+  rw [ptc_branch_eval setup functional, ← prEvent_eq_evalDist_singleton _ true]
+  refine prEvent_bind_le_of_forall_le_of_support _ _ _ fun draw _ => ?_
+  simp only [bind_assoc, pure_bind]
   cases mapped : draw.2.1.map (fun c => (c, functional.result draw.1.2 c)) with
   | none =>
       have never : ∀ candidate, ptcOutcome setup.kem functional false draw candidate = false := fun candidate => by
         simp only [ptcOutcome, mapped]
-      simp [Function.comp_def, never]
+      simp only [never, Bool.false_eq_true]
+      rw [prEvent_false]
+      exact zero_le
   | some found =>
       obtain ⟨c, key⟩ := found
       cases key with
       | none =>
           have never : ∀ candidate, ptcOutcome setup.kem functional false draw candidate = false :=
             fun candidate => by simp only [ptcOutcome, mapped]
-          simp [Function.comp_def, never]
+          simp only [never, Bool.false_eq_true]
+          rw [prEvent_false]
+          exact zero_le
       | some k =>
-          calc Pr[(fun hit => hit = true) ∘ fun candidate => ptcOutcome setup.kem functional false draw candidate |
-                $ᵗ MlKemSharedSecret]
-              ≤ Pr[fun candidate => candidate = k | $ᵗ MlKemSharedSecret] := by
-                refine probEvent_mono fun candidate _ hit => ?_
-                simp only [Function.comp_apply, ptcOutcome, mapped, Bool.false_eq_true, ite_false,
-                  decide_eq_true_eq] at hit
+          calc Pr{let candidate ← $ᵗ MlKemSharedSecret}[ptcOutcome setup.kem functional false draw candidate = true]
+              ≤ Pr{let candidate ← $ᵗ MlKemSharedSecret}[candidate = k] := by
+                refine prEvent_mono_of_support _ _ _ fun candidate _ hit => ?_
+                simp only [ptcOutcome, mapped, Bool.false_eq_true, ite_false, decide_eq_true_eq] at hit
                 exact hit.2.symm
             _ = (2 ^ 256 : ℝ≥0∞)⁻¹ := by
-                rw [probEvent_eq_eq_probOutput, probOutput_uniformSample,
-                  PqxdhExtractRomHiddenSuffix.secret_card]
+                rw [SampleableType.prEvent_uniformSample_eq_singleton, PqxdhExtractRomHiddenSuffix.secret_card]
                 norm_num
 
-set_option linter.deprecated false in
 /-- The correctness error, read on the joint draws: the probability that the functional decapsulation of the encapsulation's ciphertext under the drawn secret key is not the encapsulated key is `correctnessError setup`. The guess between key generation and encapsulation does not change the joint law of the key pair and the encapsulation. -/
 theorem ptc_correct_draws (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (functional : FunctionalDecapsulation setup.kem)
@@ -200,24 +199,22 @@ theorem ptc_correct_draws (setup : PqxdhServerAuthExperiment.Setup baseSpec KemS
       ENNReal.ofReal (PqxdhRegistrationJointKemRawGame.correctnessError setup) := by
   have finite : 𝒟[simulateQ (kemAmbientImpl setup.baseImpl)
       (PqxdhKemCorrectnessError.errorExperiment setup.kem)] {true} ≠ ⊤ := by
-    rw [evalDist_apply_singleton]
-    exact probOutput_ne_top
-  rw [PqxdhRegistrationJointKemRawGame.correctnessError, ENNReal.ofReal_toReal finite, evalDist_apply_singleton,
-    evalDist_apply_singleton, PqxdhKemCorrectnessError.error_probability_vcvioLegacy setup.baseImpl setup.kem functional,
-    ← probEvent_eq_eq_probOutput, probEvent_map]
-  have projected : Pr[PqxdhKemCorrectnessError.Bad setup.kem functional |
-      simulateQ (kemAmbientImpl setup.baseImpl) (PqxdhKemCorrectnessError.sample setup.kem)] =
-      Pr[PqxdhKemCorrectnessError.Bad setup.kem functional |
-        (fun draw => (⟨draw.1.1, draw.1.2, draw.2.2.1, draw.2.2.2⟩ : PqxdhKemCorrectnessError.Sample KemSK)) <$>
-          simulateQ (kemAmbientImpl setup.baseImpl) (ptcDraws setup.kem guess)] := by
+    rw [← prEvent_eq_evalDist_singleton _ true]
+    exact prEvent_ne_top _
+  rw [PqxdhRegistrationJointKemRawGame.correctnessError, ENNReal.ofReal_toReal finite,
+    ← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true,
+    PqxdhKemCorrectnessError.error_probability setup.baseImpl setup.kem functional, prEvent_map]
+  have projected : Pr{let x ← simulateQ (kemAmbientImpl setup.baseImpl) (PqxdhKemCorrectnessError.sample setup.kem)}[(PqxdhKemCorrectnessError.Bad setup.kem functional) x] =
+      Pr{let x ← ((fun draw : (MlKem768PublicKey × KemSK) × Option MlKem768Ciphertext ×
+            (MlKem768Ciphertext × MlKemSharedSecret) =>
+          (⟨draw.1.1, draw.1.2, draw.2.2.1, draw.2.2.2⟩ : PqxdhKemCorrectnessError.Sample KemSK)) <$>
+          simulateQ (kemAmbientImpl setup.baseImpl) (ptcDraws setup.kem guess))}[(PqxdhKemCorrectnessError.Bad setup.kem functional) x] := by
     rw [← simulateQ_map]
     simp only [PqxdhKemCorrectnessError.sample, ptcDraws, map_bind, map_pure, simulateQ_bind, simulateQ_pure]
-    refine probEvent_bind_congr' _ _ fun pair => ?_
-    rw [probEvent_bind_const]
-    simp
-  rw [projected, probEvent_map]
-  congr 1
-  funext draw
+    refine EvalDistEq.prEvent_eq (EvalDistEq.bind_right _ fun pair => ?_) _
+    exact (OracleComp.EvalDistEq.bind_const _ _).symm
+  rw [projected, prEvent_map]
+  refine prEvent_congr _ _ _ fun draw => ?_
   simp [PqxdhKemCorrectnessError.Bad]
 
 /-- `ptc`'s advantage is the distance of its two fixed branches under the ambient interpreter (`PqxdhKemIndCca.oneKey_indCCAAdvantage_eq_branchDist`, coefficient one). -/
@@ -266,11 +263,11 @@ theorem ptc_bound (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
       simp [ptcOutcome, hit, good]
     · exact Or.inr good
   have finiteReal : real ≠ ⊤ := by
-    rw [hreal, evalDist_apply_singleton]
-    exact probOutput_ne_top
+    rw [hreal, ← prEvent_eq_evalDist_singleton _ true]
+    exact prEvent_ne_top _
   have finiteRandom : random ≠ ⊤ := by
-    rw [hrandom, evalDist_apply_singleton]
-    exact probOutput_ne_top
+    rw [hrandom, ← prEvent_eq_evalDist_singleton _ true]
+    exact prEvent_ne_top _
   have close : real ≤ random + ENNReal.ofReal (setup.kem.IND_CCA_Advantage
       (runtimeOfImpl (kemAmbientImpl setup.baseImpl)) (ptc setup.kem guess).toINDCCA) := by
     rw [ptc_advantage setup guess]

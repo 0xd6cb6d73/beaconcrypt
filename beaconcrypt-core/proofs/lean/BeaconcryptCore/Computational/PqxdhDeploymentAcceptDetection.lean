@@ -337,10 +337,10 @@ theorem forgery_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
   classical
   have creates := PqxdhRegistrationJointReportCosts.initialized_creates setup codec checks ensureInit supplied (count + 1)
     work runtime budget certified
-  refine le_trans ?_ (PqxdhJointPhase1Reports.fieldOrigin_advantage_le_sum_vcvioLegacy setup.joint count _ fallback ordinaryFallback
+  refine le_trans ?_ (PqxdhJointPhase1Reports.fieldOrigin_advantage_le_sum setup.joint count _ fallback ordinaryFallback
     (creates.mono capacity))
-  rw [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map]
-  apply probEvent_mono
+  rw [← prEvent_eq_evalDist_singleton _ true, prEvent_map]
+  apply prEvent_mono_of_support
   intro final _ forgery
   exact forgery_detected setup codec checks shortRejects ensureInit supplied (count + 1) work runtime final
     (of_decide_eq_true forgery)

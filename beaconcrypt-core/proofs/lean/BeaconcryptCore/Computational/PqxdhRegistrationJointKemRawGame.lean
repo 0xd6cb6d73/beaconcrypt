@@ -121,32 +121,32 @@ theorem branchRaw_real_error (setup : PqxdhServerAuthExperiment.Setup baseSpec K
     · have bad : (𝒟[simulateQ (kemAmbientImpl setup.baseImpl) (do
           let recovered ← setup.kem.decaps chosen.2 pair.1
           pure (decide (recovered ≠ some pair.2)))] {true}).toReal = 1 := by
-        rw [evalDist_apply_singleton]
-        simp [functional.exact, good]
+        rw [functional.exact]
+        simp [good, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
       rw [bad]
       exact tvDist_le_one _ _
   unfold branch sourceReal
-  refine le_trans (PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind_vcvioLegacy _ _ _
+  refine le_trans (PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind _ _ _
     (fun pair => simulateQ (kemAmbientImpl setup.baseImpl)
       (PqxdhKemCorrectnessStopped.keyError setup.kem pair.1 pair.2))
     (fun result => result = true) ?_) (le_of_eq ?_)
   · intro chosen
-    refine le_trans (PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind_vcvioLegacy _ _ _
+    refine le_trans (PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind _ _ _
       (fun _ => simulateQ (kemAmbientImpl setup.baseImpl)
         (PqxdhKemCorrectnessStopped.keyError setup.kem chosen.1 chosen.2))
       (fun result => result = true) ?_) (le_of_eq ?_)
     · intro context
-      refine le_trans (PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind_vcvioLegacy _ _ _
+      refine le_trans (PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind _ _ _
         (fun pair => simulateQ (kemAmbientImpl setup.baseImpl) (do
           let recovered ← setup.kem.decaps chosen.2 pair.1
           pure (decide (recovered ≠ some pair.2))))
         (fun result => result = true) ?_) (le_of_eq ?_)
       · intro pair
-        rw [probEvent_eq_eq_probOutput, ← evalDist_apply_singleton]
+        rw [prEvent_eq_evalDist_singleton]
         exact point chosen context pair
       · simp only [PqxdhKemCorrectnessStopped.keyError, simulateQ_bind]
-    · simp only [probEvent_bind_const, probFailure_eq_zero, tsub_zero, one_mul]
-  · rw [correctnessError, evalDist_apply_singleton, ← probEvent_eq_eq_probOutput,
+    · rw [bind_assoc, OracleComp.prEvent_bind_const]
+  · rw [correctnessError, ← prEvent_eq_evalDist_singleton _ true,
       PqxdhKemCorrectnessStopped.error_keygen, simulateQ_bind]
 
 /-- The real raw-ordinal game and its candidate replacement are within one ordinary one-key ML-KEM IND-CCA advantage plus one ordinary ML-KEM correctness error, both with coefficient one. -/
@@ -173,7 +173,7 @@ theorem advantageRaw_error (setup : PqxdhServerAuthExperiment.Setup baseSpec Kem
       setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
         (adversary setup codec checks ensureInit supplied decision work runtime count selected index).toINDCCA := by
     simpa only [oneKeyBranch, runtimeOfImpl_evalDist, branchRaw_source, ProbComp.boolDistAdvantage,
-      SPMF.boolDistAdvantage, MeasureTheory.Measure.boolDist, probOutput_def, evalDist_apply_singleton] using
+      MeasureTheory.Measure.boolDist, prEvent_eq_evalDist_singleton] using
       exactHop.symm
   have close : (sourceReal setup codec checks ensureInit supplied decision work runtime count selected index).boolDistAdvantage
       (branch setup codec checks ensureInit supplied decision work runtime count selected index true) ≤
@@ -182,7 +182,7 @@ theorem advantageRaw_error (setup : PqxdhServerAuthExperiment.Setup baseSpec Kem
     refine le_trans ?_ (branchRaw_real_error setup functional codec checks ensureInit supplied decision work runtime
       count selected index)
     rw [ProbComp.boolDistAdvantage]
-    simpa only [evalDist_apply_singleton] using abs_probOutput_toReal_sub_le_tvDist _ _
+    simpa only [VCVioLegacy.evalDist_singleton_eq_probOutput] using abs_probOutput_toReal_sub_le_tvDist _ _
   have triangle := ProbComp.boolDistAdvantage_triangle
     (sourceReal setup codec checks ensureInit supplied decision work runtime count selected index)
     (branch setup codec checks ensureInit supplied decision work runtime count selected index true)

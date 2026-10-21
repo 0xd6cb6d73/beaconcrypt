@@ -244,20 +244,19 @@ theorem seedEager_create (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
     (seedEager setup codec checks seed (.inl (.inr (.create pin keyId)))).run (state, identity :: rest) =
       (fun result => (result.1, (result.2, rest))) <$> createWith setup identity pin keyId state := rfl
 
-set_option linter.deprecated false in
 /-- Drawing the identity seeds of at most `count` creates before the run: for every program with at most `count` creates and every state, the native run and the eager run on a list of `count` seeds drawn first have the same distribution of result and final state. -/
 theorem seeds_eager (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (seed : IdentitySeed) (program : OracleComp (SourceSpec KemSK) Result) (count : Nat)
     (bounded : program.IsQueryBoundP (IsCreate (KemSK := KemSK)) count) (state : State KemSK) :
-    𝒮[(simulateQ (base setup codec checks seed) program).run state] =
-      𝒮[do
+    EvalDistEq ((simulateQ (base setup codec checks seed) program).run state)
+      (do
         let pool ← PqxdhDynamicIdentityPool.sampleSeeds count
         (fun result : Result × (State KemSK × List IdentitySeed) => (result.1, result.2.1)) <$>
-          (simulateQ (seedEager setup codec checks seed) program).run (state, pool)] := by
+          (simulateQ (seedEager setup codec checks seed) program).run (state, pool)) := by
   induction program using OracleComp.inductionOn generalizing count state with
   | pure value =>
       simp only [simulateQ_pure, StateT.run_pure, map_pure]
-      exact (PqxdhDynamicIdentityPool.sampleSeeds_unused_vcvioLegacy count _).symm
+      exact (PqxdhDynamicIdentityPool.sampleSeeds_unused count _).symm
   | query_bind query next ih =>
       rw [isQueryBoundP_query_bind_iff] at bounded
       simp only [simulateQ_bind, simulateQ_query, OracleQuery.input_query, OracleQuery.cont_query, id_map,
@@ -274,26 +273,20 @@ theorem seeds_eager (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
         obtain ⟨fewer, rfl⟩ : ∃ fewer, count = fewer + 1 := ⟨count - 1, by omega⟩
         rw [PqxdhDeploymentServerAuthLocal.base_create, create_with, PqxdhDynamicIdentityPool.sampleSeeds_succ]
         simp only [bind_assoc, pure_bind]
-        apply evalSPMF_bind_congr'
+        apply EvalDistEq.bind_right
         intro identity
-        change 𝒮[createWith setup identity pin keyId state >>= fun result =>
-            (simulateQ (base setup codec checks seed) (next result.1)).run result.2] =
-          𝒮[PqxdhDynamicIdentityPool.sampleSeeds fewer >>= fun rest =>
-            ((fun result => (result.1, (result.2, rest))) <$> createWith setup identity pin keyId state) >>= fun result =>
-              (fun result : Result × (State KemSK × List IdentitySeed) => (result.1, result.2.1)) <$>
-                (simulateQ (seedEager setup codec checks seed) (next result.1)).run result.2]
-        simp only [bind_map_left]
-        rw [PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy (PqxdhDynamicIdentityPool.sampleSeeds fewer)
-          (createWith setup identity pin keyId state)]
-        apply evalSPMF_bind_congr'
+        simp only [seedEager_create, bind_map_left]
+        refine EvalDistEq.trans ?_ (PqxdhSecretInputKdf.evalSPMF_sample_comm (PqxdhDynamicIdentityPool.sampleSeeds fewer)
+          (createWith setup identity pin keyId state) _).symm
+        apply EvalDistEq.bind_right
         intro result
         have rest := bounded.2 result.1
         simp only [creates, ite_true] at rest
         exact ih result.1 fewer rest result.2
       · simp only [seedEager_other setup codec checks seed query creates, bind_map_left]
-        rw [PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy (PqxdhDynamicIdentityPool.sampleSeeds count)
-          ((base setup codec checks seed query).run state)]
-        apply evalSPMF_bind_congr'
+        refine EvalDistEq.trans ?_ (PqxdhSecretInputKdf.evalSPMF_sample_comm (PqxdhDynamicIdentityPool.sampleSeeds count)
+          ((base setup codec checks seed query).run state) _).symm
+        apply EvalDistEq.bind_right
         intro result
         have rest := bounded.2 result.1
         simp only [creates, ite_false] at rest
@@ -353,12 +346,10 @@ theorem eager_identities (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
         | reveal keyId => exact other id
       · exact other id
 
-set_option linter.deprecated false in
 /-- Two computations with the same distribution give every event the same probability. -/
-theorem probEvent_evalSPMF_eq {α : Type} {first second : ProbComp α} (same : 𝒮[first] = 𝒮[second])
-    {event : α → Prop} : Pr[event | first] = Pr[event | second] := by
-  unfold probEvent
-  rw [same]
+theorem probEvent_evalSPMF_eq {α : Type} {first second : ProbComp α} (same : EvalDistEq (first) (second))
+    {event : α → Prop} : Pr{let x ← first}[event x] = Pr{let x ← second}[event x] :=
+  same.prEvent_eq event
 
 /-! ## Collisions of identity keys -/
 
@@ -378,18 +369,16 @@ theorem collision_take (joint : Primitives) (seeds : List IdentitySeed) (taken :
     exact found
   exact ⟨first, second, different, left, right, lift _ _ leftFound, lift _ _ rightFound, same⟩
 
-set_option linter.deprecated false in
 /-- From a state with no owner, the probability that two owners of the native run of a program with at most `count` creates have equal identity keys is at most the probability of a collision in `count` seeds drawn independently. -/
 theorem owners_collision (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (seed : IdentitySeed) (program : OracleComp (SourceSpec KemSK) Result) (count : Nat)
     (bounded : program.IsQueryBoundP (IsCreate (KemSK := KemSK)) count) (state : State KemSK)
     (empty : state.owners = []) :
-    Pr[fun result : Result × State KemSK => Collision setup.joint (identities result.2) |
-      (simulateQ (base setup codec checks seed) program).run state] ≤
-    Pr[fun pool => Collision setup.joint pool | PqxdhDynamicIdentityPool.sampleSeeds count] := by
+    Pr{let result ← (simulateQ (base setup codec checks seed) program).run state}[Collision setup.joint (identities result.2)] ≤
+    Pr{let pool ← PqxdhDynamicIdentityPool.sampleSeeds count}[Collision setup.joint pool] := by
   rw [probEvent_evalSPMF_eq (seeds_eager setup codec checks seed program count bounded state)]
-  refine probEvent_bind_le_probEvent fun pool poolMember free => ?_
-  rw [probEvent_eq_zero_iff]
+  refine prEvent_bind_le_prEvent_of_support _ _ _ _ fun pool poolMember free => ?_
+  rw [OracleComp.prEvent_eq_zero_iff]
   intro outcome member collision
   rw [support_map] at member
   obtain ⟨eager, eagerMember, rfl⟩ := member
@@ -460,26 +449,25 @@ theorem lower_wins (setup : Setup baseSpec KemSK) (count : Nat) (target : Fin (c
   have valid := joint_correct setup (others (Classical.choose found)) []
   rwa [chosen] at valid
 
-set_option linter.deprecated false in
 /-- For every identity index `target`, the probability that, among `count + 1` independently drawn identity seeds, the identity at `target` collides with a lower index is at most the joint-use weak-EUF advantage of `B^coll_t`: drawing the seed at `target` first is a distribution equality (`PqxdhJointIdentityFamily.sampleFamily_target_first`), and then `lower_wins` applies on every draw. -/
 theorem lower_le_advantage (setup : Setup baseSpec KemSK) (count : Nat) (target : Fin (count + 1)) :
-    Pr[LowerCollision setup.joint target | PqxdhJointIdentityFamily.sampleFamily (count + 1)] ≤
+    Pr{let x ← PqxdhJointIdentityFamily.sampleFamily (count + 1)}[(LowerCollision setup.joint target) x] ≤
       advantage setup.joint (collider setup.joint count target) := by
   classical
-  have decided : Pr[LowerCollision setup.joint target | PqxdhJointIdentityFamily.sampleFamily (count + 1)] =
-      Pr[= true | PqxdhJointIdentityFamily.sampleFamily (count + 1) >>= fun seeds =>
-        pure (decide (LowerCollision setup.joint target seeds))] := by
-    rw [bind_pure_comp, probOutput_map]
-    simp only [decide_eq_true_eq]
-  have moved := evalSPMF_ext_iff.mp (PqxdhJointIdentityFamily.sampleFamily_target_first_vcvioLegacy count target
-    (fun seeds => pure (decide (LowerCollision setup.joint target seeds)))) true
-  rw [decided, advantage, ← VCVioLegacy.probOutput_eq_prEvent, collider_game]
-  refine le_of_eq_of_le moved ?_
-  refine probOutput_bind_mono fun seed _ => probOutput_bind_mono fun others _ => ?_
+  have decided : Pr{let x ← PqxdhJointIdentityFamily.sampleFamily (count + 1)}[(LowerCollision setup.joint target) x] =
+      Pr{let x ← (PqxdhJointIdentityFamily.sampleFamily (count + 1) >>= fun seeds =>
+        pure (decide (LowerCollision setup.joint target seeds)))}[x = true] := by
+    simp only [bind_assoc, pure_bind, decide_eq_true_eq]
+  have moved := (PqxdhJointIdentityFamily.sampleFamily_target_first count target
+    (fun seeds => pure (decide (LowerCollision setup.joint target seeds)))).prEvent_eq (fun value => value = true)
+  rw [decided, moved, advantage, collider_game]
+  refine prEvent_bind_mono_of_forall_le_of_support _ _ _ _ _ fun seed _ =>
+    prEvent_bind_mono_of_forall_le_of_support _ _ _ _ _ fun others _ => ?_
   by_cases lower : LowerCollision setup.joint target (target.insertNth seed others)
-  · rw [lower_wins setup count target seed others lower]
+  · rw [lower_wins setup count target seed others lower, prEvent_pure, prEvent_pure]
     simp [lower]
-  · simp [lower]
+  · rw [prEvent_pure, prEvent_pure]
+    simp [lower]
 
 /-- A collision of the list of a family of identity seeds is a collision of some index with a lower index. -/
 theorem collision_lower (joint : Primitives) (count : Nat) (seeds : Fin count → IdentitySeed)
@@ -495,14 +483,13 @@ theorem collision_lower (joint : Primitives) (count : Nat) (seeds : Fin count �
   · exact ⟨⟨first, firstBound⟩, Finset.mem_univ _, ⟨second, secondBound⟩, greater, by
       rw [Option.some.inj leftEq, Option.some.inj rightEq]; exact same.symm⟩
 
-set_option linter.deprecated false in
 /-- A collision among `count + 1` independently drawn identity seeds is at most the sum, over the `count + 1` identity indices `t`, of the joint-use weak-EUF advantage of the zero-query reduction `B^coll_t` (`collider`): a collision is a collision of its higher index with a lower one (`collision_lower`), the union bound sums over the higher index, and `lower_le_advantage` bounds each term. No assumption beyond joint-use weak-EUF is used: a collision gives a valid forgery by signing correctness. -/
 theorem collision_bound (setup : Setup baseSpec KemSK) (count : Nat) :
-    Pr[fun pool => Collision setup.joint pool | PqxdhDynamicIdentityPool.sampleSeeds (count + 1)] ≤
+    Pr{let pool ← PqxdhDynamicIdentityPool.sampleSeeds (count + 1)}[Collision setup.joint pool] ≤
       ∑ target : Fin (count + 1), advantage setup.joint (collider setup.joint count target) := by
-  rw [PqxdhDynamicIdentityPool.sampleSeeds, probEvent_map]
-  refine (probEvent_mono fun seeds _ collision => collision_lower setup.joint (count + 1) seeds collision).trans ?_
-  exact (probEvent_exists_finset_le_sum _ _ _).trans
+  rw [PqxdhDynamicIdentityPool.sampleSeeds, prEvent_map]
+  refine (prEvent_mono_of_support _ _ _ fun seeds _ collision => collision_lower setup.joint (count + 1) seeds collision).trans ?_
+  exact (prEvent_exists_finset_le _ _ _).trans
     (Finset.sum_le_sum fun target _ => lower_le_advantage setup count target)
 
 /-- `B^coll_t` makes, on every challenge identity, at most `32·count` uniform queries (the bytes of the seeds it draws) and no signing and no static-DH query. -/

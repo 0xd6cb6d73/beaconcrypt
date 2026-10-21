@@ -96,24 +96,21 @@ theorem prepared_collision
     (bounded : ∀ input, Sum.inr input ∈ support prior → ∀ reply, (input.post reply).IsTotalQueryBound qPost) :
     𝒟[collision <$> PqxdhErasedParentMaterial.prepare source writer sender route read depth prior] {true} ≤
       ((8 + qPost * 67 : Nat) : ℝ≥0∞) * (2 ^ 256 : ℝ≥0∞)⁻¹ := by
-  simp only [PqxdhErasedParentMaterial.prepare, map_bind, map_pure, evalDist_apply_singleton,
-    ← probEvent_eq_eq_probOutput]
-  apply probEvent_bind_le_of_forall_le
+  simp only [PqxdhErasedParentMaterial.prepare, map_bind, map_pure]
+  rw [← prEvent_eq_evalDist_singleton _ true]
+  apply prEvent_bind_le_of_forall_le_of_support
   intro packet supported
   have length := (sample_log source writer sender route read depth qPost prior bounded packet supported).1
-  have bound : 𝒟[(do
-      let parent ← $ᵗ FullOutput
-      pure (decide (RawCtxFirstParentRisk.inputAddress (PqxdhOrderedChainHybrids.nextChain parent) ∈
-        inputs packet ++ [address packet])) : ProbComp Bool)] {true} ≤
-      ((inputs packet ++ [address packet]).length : ℝ≥0∞) * (2 ^ 256 : ℝ≥0∞)⁻¹ := by
-    simpa only [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput,
-      bind_pure_comp, probEvent_map, Function.comp_def, decide_eq_true_eq] using
-      RawCtxFirstParentRisk.full_inputs_vcvioLegacy (inputs packet ++ [address packet])
+  have bound := RawCtxFirstParentRisk.full_inputs (inputs packet ++ [address packet])
   simp only [collision, RawCtxSelectedParentEntry.fromOutput, (normalize_inputs packet).1,
     PqxdhLaterParentAlias.target_address]
-  simp only [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput] at bound
-  rw [probEvent_bind_eq_tsum] at bound ⊢
-  simp only [probEvent_bind_const, probFailure_uniformSample, tsub_zero, one_mul]
+  have drop := EvalDistEq.bind_right ($ᵗ FullOutput) fun parent =>
+    (OracleComp.EvalDistEq.bind_const ($ᵗ NonceOutput) _).trans
+      (OracleComp.EvalDistEq.bind_const ($ᵗ RootOutput)
+        (pure (decide (RawCtxFirstParentRisk.inputAddress (PqxdhOrderedChainHybrids.nextChain parent) ∈
+          inputs packet ++ [address packet])) : ProbComp Bool))
+  rw [drop.prEvent_eq (fun value => value = true)]
+  simp only [bind_assoc, pure_bind, decide_eq_true_eq]
   apply bound.trans
   apply mul_le_mul_left
   apply Nat.cast_le.mpr

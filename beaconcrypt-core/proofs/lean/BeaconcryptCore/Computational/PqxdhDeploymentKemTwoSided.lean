@@ -19,21 +19,21 @@ section Generic
 theorem chance_ext {α : Type} (run : ProbComp α) (p q : α → Prop) {_ : DecidablePred p} {_ : DecidablePred q}
     (same : ∀ x ∈ support run, p x ↔ q x) :
     𝒟[(fun x => decide (p x)) <$> run] {true} = 𝒟[(fun x => decide (q x)) <$> run] {true} := by
-  rw [UniformTargetSelection.chance_eq_vcvioLegacy, UniformTargetSelection.chance_eq_vcvioLegacy]
-  exact probEvent_ext same
+  rw [UniformTargetSelection.chance_eq, UniformTargetSelection.chance_eq]
+  exact prEvent_congr_of_support _ _ _ same
 
 /-- An event that, on the support of a run, implies one of two events has at most the sum of their probabilities, for any decidability instances. -/
 theorem chance_le_add {α : Type} (run : ProbComp α) (p q r : α → Prop) {_ : DecidablePred p} {_ : DecidablePred q}
     {_ : DecidablePred r} (split : ∀ x ∈ support run, p x → q x ∨ r x) :
     𝒟[(fun x => decide (p x)) <$> run] {true} ≤
       𝒟[(fun x => decide (q x)) <$> run] {true} + 𝒟[(fun x => decide (r x)) <$> run] {true} := by
-  rw [UniformTargetSelection.chance_eq_vcvioLegacy, UniformTargetSelection.chance_eq_vcvioLegacy, UniformTargetSelection.chance_eq_vcvioLegacy]
-  exact probEvent_le_add_of_imp_or split
+  rw [UniformTargetSelection.chance_eq, UniformTargetSelection.chance_eq, UniformTargetSelection.chance_eq]
+  exact (prEvent_mono_of_support _ _ _ split).trans (prEvent_or_le _ _ _)
 
 /-- An event that fails on the support of a run has probability zero, for any decidability instance. -/
 theorem chance_eq_zero {α : Type} (run : ProbComp α) (p : α → Prop) {_ : DecidablePred p}
     (never : ∀ x ∈ support run, ¬p x) : 𝒟[(fun x => decide (p x)) <$> run] {true} = 0 := by
-  rw [UniformTargetSelection.chance_eq_vcvioLegacy, probEvent_eq_zero_iff]
+  rw [UniformTargetSelection.chance_eq, OracleComp.prEvent_eq_zero_iff]
   exact never
 
 /-- If `a ≤ b ≤ a + c` for finite `a` and `c`, then the real numbers of `b` and `a` differ by at most that of `c`. -/
@@ -162,10 +162,11 @@ theorem real_le_run (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
   classical
   rw [← PqxdhRegistrationJointKemRawNatural.exposeAt_tag, ← PqxdhRegistrationJointKemCut.scan_finish _ _ 0,
     PqxdhRegistrationJointKemRawNatural.router_split, map_bind, PqxdhRegistrationJointKemRawNatural.rawScan_map,
-    PqxdhRegistrationJointKemRawNatural.router_map, bind_map_left, evalDist_apply_singleton, evalDist_apply_singleton]
-  apply probOutput_bind_mono
+    PqxdhRegistrationJointKemRawNatural.router_map, bind_map_left, ← prEvent_eq_evalDist_singleton _ true,
+    ← prEvent_eq_evalDist_singleton _ true]
+  apply prEvent_bind_mono_of_forall_le_of_support
   rintro ⟨_ | cut, after⟩ reachedCut
-  · rw [probOutput_eq_zero_of_not_mem_support]
+  · rw [prEvent_eq_zero_of_not_mem_support]
     · exact zero_le
     simp [PqxdhRegistrationJointKemResume.sourcePost, PqxdhRegistrationJointKemGame.decision]
   · have cleared : PqxdhDynamicKemJointStopping.Good after :=
@@ -173,7 +174,7 @@ theorem real_le_run (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
         (some cut, after) reachedCut rfl
     cases cut with
     | complete outcome =>
-      rw [probOutput_eq_zero_of_not_mem_support]
+      rw [prEvent_eq_zero_of_not_mem_support]
       · exact zero_le
       simp [PqxdhRegistrationJointKemResume.sourcePost, PqxdhRegistrationJointKemGame.decision, cutMap]
     | pending request resume =>
@@ -181,15 +182,16 @@ theorem real_le_run (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
       rw [PqxdhRegistrationJointKemRawNatural.finish_stopped, map_bind]
       by_cases active : request.2 = chosen.1
       · rw [active]
-        apply probOutput_bind_mono
+        apply prEvent_bind_mono_of_forall_le_of_support
         intro encapsulated _
-        rw [probOutput_bind_const, probFailure_eq_zero, tsub_zero, one_mul]
+        conv_lhs => rw [bind_assoc, OracleComp.prEvent_bind_const]
+        rw [prEvent_eq_evalDist_singleton, prEvent_eq_evalDist_singleton]
         simp only [PqxdhRegistrationJointKemResume.sourcePost, cutMap, active, ite_true, simulateQ_map,
           OptionT.run_map, StateT.run_map, bind_pure_comp, Functor.map_map]
-        rw [← probEvent_eq_eq_probOutput, ← probEvent_eq_eq_probOutput, probEvent_map, probEvent_map]
-        apply probEvent_mono
+        rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true, prEvent_map, prEvent_map]
+        apply prEvent_mono_of_support
         rintro reached member event
-        simp only [Function.comp_apply, decide_eq_true_eq] at event ⊢
+        simp only [decide_eq_true_eq] at event ⊢
         refine ⟨?_, stopped_good setup.baseImpl setup.joint setup.kem selected.val _ _ _ cleared reached member ?_⟩
         · rcases reached with ⟨_ | final, state⟩
           · simp [PqxdhRegistrationJointKemGame.decision] at event
@@ -199,7 +201,7 @@ theorem real_le_run (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
         · rcases reached with ⟨_ | final, state⟩
           · simp [PqxdhRegistrationJointKemGame.decision] at event
           · rfl
-      · rw [probOutput_eq_zero_of_not_mem_support]
+      · rw [prEvent_eq_zero_of_not_mem_support]
         · exact zero_le
         simp [PqxdhRegistrationJointKemResume.sourcePost, PqxdhRegistrationJointKemGame.decision, cutMap, active]
 
@@ -225,21 +227,20 @@ theorem real_le_commands (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
   refine le_trans (real_le_run setup codec checks decision work index count selected created joint runtime chosen
     others) ?_
   simp only [PqxdhRegistrationJointKemInitialization.commands, Functor.map_map]
-  rw [evalDist_apply_singleton, evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, ← probEvent_eq_eq_probOutput,
-    probEvent_map, probEvent_map]
-  refine le_trans (le_of_eq ?_) (le_trans (le_of_eq (PqxdhDynamicKemJointStopping.history_event_vcvioLegacy setup.baseImpl
+  rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true, prEvent_map, prEvent_map]
+  refine le_trans (le_of_eq ?_) (le_trans (le_of_eq (PqxdhDynamicKemJointStopping.history_event setup.baseImpl
     setup.joint setup.kem selected.val (List.ofFn (selected.insertNth chosen others))
     (PqxdhRegistrationJointKemCommands.program setup codec checks created.server.server.metadata.identityIndex
       created.publicIdentity (tag work index) [] (PqxdhRegistrationJointInitializedAccept.initial created))
     (joint, PqxdhDynamicKemRouter.empty) rfl (Completed decision)).symm) ?_)
-  · apply probEvent_ext
+  · apply prEvent_congr_of_support
     intro reached _
-    simp only [Function.comp_apply, decide_eq_true_eq]
-  · apply probEvent_mono
+    simp only [decide_eq_true_eq]
+  · apply prEvent_mono_of_support
     rintro ⟨_ | outcome, state⟩ _ ⟨⟨final, found, decided, session⟩, good⟩
     · cases found
     · cases found
-      simp only [Function.comp_apply, decide_eq_true_eq]
+      simp only [decide_eq_true_eq]
       exact ⟨⟨_, rfl, decided, session⟩, good⟩
 
 set_option backward.isDefEq.respectTransparency false in
@@ -261,24 +262,26 @@ theorem real_le_actual (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
   have same := PqxdhRegistrationJointKemInitialization.actual_source_first setup codec checks ensureInit supplied
     (tag work index) ((PqxdhDynamicIdentityPool.initialState, PqxdhLiveKemBirth.empty), runtime) rfl budget
     (fun source => PqxdhRegistrationJointAcceptCutTag.tag_bound work index _ _ (certified source)) count selected room
-  conv_rhs => rw [evalDist_apply_singleton, probOutput_def, evalSPMF_map, same, ← evalSPMF_map, ← probOutput_def]
-  rw [evalDist_apply_singleton]
+  rw [(same.map _).evalDist_eq]
   simp only [PqxdhRegistrationJointKemInitialization.selectedFirst, PqxdhRegistrationJointKemRawGame.sourceReal,
     PqxdhRegistrationJointKemRawChallenge.sourcePreRaw, map_bind, bind_assoc]
-  apply probOutput_bind_mono
+  rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true]
+  apply prEvent_bind_mono_of_forall_le_of_support
   intro chosen _
-  apply probOutput_bind_mono
+  apply prEvent_bind_mono_of_forall_le_of_support
   rintro ⟨_ | created, after⟩ _
-  · rw [probOutput_eq_zero_of_not_mem_support]
+  · rw [prEvent_eq_zero_of_not_mem_support]
     · exact zero_le
     simp [PqxdhRegistrationJointKemResume.sourcePost, PqxdhRegistrationJointKemGame.decision]
   · dsimp only
+    rw [prEvent_eq_evalDist_singleton, prEvent_eq_evalDist_singleton]
     simp only [map_bind, bind_assoc, pure_bind]
-    apply probOutput_bind_mono
+    rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true]
+    apply prEvent_bind_mono_of_forall_le_of_support
     intro others _
     have core := real_le_commands setup codec checks decision work index count selected created after.1.1 after.2
       chosen others
-    rw [evalDist_apply_singleton, evalDist_apply_singleton] at core
+    rw [prEvent_eq_evalDist_singleton, prEvent_eq_evalDist_singleton]
     simpa only [map_bind, bind_assoc, pure_bind] using core
 
 set_option backward.isDefEq.respectTransparency false in
@@ -539,8 +542,8 @@ theorem kem_transfer_lower (setup : Setup baseSpec KemSK)
         PqxdhRegistrationJointKemRawGame.correctnessError setup) := by
   refine le_add_of_close (UniformTargetSelection.chance_ne_top _ _) ?_ (kem_transfer_two_sided setup functional codec
     checks route ensureInit phase1 phase2 bounds mode adversary budget respects event claim g runtime)
-  rw [evalDist_apply_singleton]
-  exact probOutput_ne_top
+  rw [← prEvent_eq_evalDist_singleton _ true]
+  exact prEvent_ne_top _
 
 /-- A sum over finitely many targets of finite differences of probabilities: the difference of the summed probabilities is at most the sum of the per-target bounds. -/
 theorem abs_sum_sub_le {G : Type} [Fintype G] (first second : G → ENNReal) (bound : G → ℝ)
@@ -609,7 +612,7 @@ theorem split_create (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
         adversary budget respects runtime claim outcome reached]),
     UniformTargetSelection.split, Fintype.sum_prod_type, Fintype.sum_prod_type]
   refine Finset.sum_congr rfl fun session _ => sum_last_eq budget.create _ ?_
-  rw [UniformTargetSelection.chance_eq_vcvioLegacy, probEvent_eq_zero_iff]
+  rw [UniformTargetSelection.chance_eq, OracleComp.prEvent_eq_zero_iff]
   rintro outcome reached ⟨_, chosen⟩
   exact lt_irrefl _ (PqxdhDeploymentTargetRange.designated_create setup codec checks route ensureInit phase1 phase2
     bounds mode adversary budget respects runtime claim outcome reached _ chosen)

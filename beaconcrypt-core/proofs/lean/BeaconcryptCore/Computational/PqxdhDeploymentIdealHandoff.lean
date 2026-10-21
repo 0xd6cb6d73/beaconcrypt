@@ -209,10 +209,10 @@ theorem evalDist_le_add {α : Type} (mx : ProbComp α) (P Q R : α → Prop) [De
     [DecidablePred R] (implies : ∀ a ∈ support mx, P a → Q a ∨ R a) :
     𝒟[(fun a => decide (P a)) <$> mx] {true} ≤
       𝒟[(fun a => decide (Q a)) <$> mx] {true} + 𝒟[(fun a => decide (R a)) <$> mx] {true} := by
-  rw [evalDist_apply_singleton, evalDist_apply_singleton, evalDist_apply_singleton, ← probEvent_eq_eq_probOutput,
-    ← probEvent_eq_eq_probOutput, ← probEvent_eq_eq_probOutput, probEvent_map, probEvent_map, probEvent_map]
-  exact probEvent_le_add_of_imp_or fun a member held => by
-    simpa using implies a member (by simpa using held)
+  rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true,
+    ← prEvent_eq_evalDist_singleton _ true, prEvent_map, prEvent_map, prEvent_map]
+  exact (prEvent_mono_of_support _ _ _ fun a member held => by
+    simpa using implies a member (by simpa using held)).trans (prEvent_or_le _ _ _)
 
 /-- The observation of a record-lift view (`PqxdhRecordLiftIdeal.View`): the adversary's output, the ledger and the produced frames. -/
 def viewObserved {n : ℕ} {E : Type} (view : PqxdhRecordLiftIdeal.View n E X) : Option (Observed X) :=

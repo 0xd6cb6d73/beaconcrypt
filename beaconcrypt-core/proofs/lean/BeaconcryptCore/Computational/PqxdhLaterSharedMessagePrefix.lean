@@ -104,11 +104,10 @@ theorem key_order (depth : Nat) (real : Bool) (decodeRaw : AdaptiveCtxReceive.Ra
   unfold PqxdhErasedParentMaterial.ideal
   rw [← shared_source setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed depth]
   simp only [bind_map_left]
-  apply evalDist_eq_of_evalSPMF_eq
-  exact RawCtxPrefixKeyOrder.complete_vcvioLegacy real decodeRaw env.source.crypto
+  exact (RawCtxPrefixKeyOrder.complete real decodeRaw env.source.crypto
     (run setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed depth)
     (fun key context state => PqxdhErasedParentMaterial.observe env.source env.recordWriter env.senderId env.route env.decode
-      (restore setup context state.cache) key)
+      (restore setup context state.cache) key)).evalDist_eq
 
 /-- The named adaptive later-record endpoint consumes the full source-derived ordinary-ROM prefix, preserving the actual cached/missing mixture and original final publication/freshness event. -/
 theorem adaptive_endpoint {Choice : Type} [DecidableEq Choice]

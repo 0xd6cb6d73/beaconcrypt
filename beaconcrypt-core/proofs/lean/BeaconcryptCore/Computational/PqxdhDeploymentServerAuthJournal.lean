@@ -96,7 +96,6 @@ theorem audited_log (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
   rw [same, state]
   exact execution_log setup codec checks _ _ result reached
 
-set_option linter.deprecated false in
 /-- For every Server seed the generator can draw, a root-audited singleton outcome is an outcome of the Server-authentication game of the same client with its return value discarded. -/
 theorem audited_game (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (serverSeed : IdentitySeed) (seeded : serverSeed ∈ support sampleSeed)
@@ -112,13 +111,14 @@ theorem audited_game (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
   have same := congrArg (fun measure => measure {true})
     (PqxdhServerAuthRootObserved.observation_order (Result := Bool) setup codec checks false
       (fun input => (fun _ => ()) <$> work input) (fun outcome => @decide (outcome = audit.2) (Classical.propDecidable _)))
-  simp only [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map, Function.comp_def,
-    decide_eq_true_eq] at same
-  have positive : Pr[fun outcome => outcome = audit.2 | PqxdhServerAuthRootObserved.orderedGame setup codec checks false
-      (fun input => (fun _ => ()) <$> work input)] ≠ 0 := probEvent_ne_zero_iff.mpr ⟨_, ordered, rfl⟩
+  rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true, prEvent_map, prEvent_map] at same
+  simp only [decide_eq_true_eq] at same
+  have positive : Pr{let outcome ← (PqxdhServerAuthRootObserved.orderedGame setup codec checks false
+      (fun input => (fun _ => ()) <$> work input))}[outcome = audit.2] ≠ 0 := fun zero =>
+    (OracleComp.prEvent_eq_zero_iff _ _).mp zero _ ordered rfl
   rw [← same] at positive
-  obtain ⟨outcome, reached, rfl⟩ := probEvent_ne_zero_iff.mp positive
-  exact reached
+  by_contra absent
+  exact positive ((OracleComp.prEvent_eq_zero_iff _ _).mpr fun outcome reached equal => absent (equal ▸ reached))
 
 /-- On a root-audited singleton outcome of a client that journals its own queries, a successful finish in that journal and no session with both an earlier publication of the accepted decoded record and an accept carrying the target's published keys give the common authentication failure. -/
 theorem audited_failure (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)

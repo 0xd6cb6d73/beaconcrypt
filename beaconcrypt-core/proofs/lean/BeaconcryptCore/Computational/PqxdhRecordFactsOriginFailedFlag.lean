@@ -59,17 +59,23 @@ theorem sampled_le_trace (modes : Label n → KeyMode)
     𝒟[PqxdhRecordFactsOriginFailedGuess.experiment modes setup codec replace pending input body tag width state
       (traced (serviceCandidate codec.frameRead) client [])]
       {result | ∃ value, result.2 = some value ∧ result.1 ∈ value.1.2} := by
-  simp only [sampled, PqxdhRecordFactsOriginFailedGuess.experiment, evalDist_apply_setOf, probEvent_bind_eq_tsum]
+  simp only [sampled, PqxdhRecordFactsOriginFailedGuess.experiment]
+  rw [← prEvent_eq_evalDist_of_discrete, ← prEvent_eq_evalDist_of_discrete]
+  simp only [OracleComp.prEvent_bind_eq_tsum]
   refine ENNReal.tsum_le_tsum fun digest => mul_le_mul_right ?_ _
   split_ifs
-  · simp only [bind_pure_comp, probEvent_map, Option.some.injEq, exists_eq_left',
+  · simp only [map_eq_bind_pure_comp, bind_assoc, pure_bind, Option.some.injEq, exists_eq_left',
       PqxdhRecordFactsOriginFailedGuess.continuation, Function.comp_def, Prod.map, id_eq]
-    simpa only [evalDist_apply_setOf] using
-      (PqxdhRecordFactsOriginCandidateFlag.flag_probability pending.material modes codec.frameRead setup.source.crypto
-        (PqxdhRecordFactsPrivateCacheWorld.baseInterpreter setup codec) codec.frameWrite replace client noSeal
-        (hiddenResult codec.frameWrite pending input body tag width digest state).2 digest
-        (hidden_fixed codec.frameWrite pending input body tag width digest state empty))
-  · simp
+    have flag := PqxdhRecordFactsOriginCandidateFlag.flag_probability pending.material modes codec.frameRead
+      setup.source.crypto (PqxdhRecordFactsPrivateCacheWorld.baseInterpreter setup codec) codec.frameWrite replace
+      client noSeal (hiddenResult codec.frameWrite pending input body tag width digest state).2 digest
+      (hidden_fixed codec.frameWrite pending input body tag width digest state empty)
+    rw [← @prEvent_eq_evalDist_of_discrete _ _ _ _ _ _ PqxdhRecordFactsOriginCandidateFlag.instMeasurableSpaceProdCtxPrivateBool
+        PqxdhRecordFactsOriginCandidateFlag.instDiscreteMeasurableSpaceProdCtxPrivateBool,
+      ← @prEvent_eq_evalDist_of_discrete _ _ _ _ _ _ PqxdhRecordFactsOriginCandidateFlag.instMeasurableSpaceProdCtxPrivate
+        PqxdhRecordFactsOriginCandidateFlag.instDiscreteMeasurableSpaceProdCtxPrivate] at flag
+    exact flag
+  · simp [-evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
 
 
 /-- The literal selected failed-writer replay flag costs at most two uniform point masses per original raw receive allowance. -/
@@ -110,15 +116,21 @@ theorem sampled_probability (modes : Label n → KeyMode)
     (client : OracleComp (ServiceSpec n) X) :
     𝒟[sampledErased modes setup codec replace pending input body tag width state client] {flag | flag = true} =
       𝒟[sampled modes setup codec replace pending input body tag width state client] {flag | flag = true} := by
-  simp only [sampledErased, sampled, evalDist_apply_setOf, probEvent_bind_eq_tsum]
+  simp only [sampledErased, sampled]
+  rw [← prEvent_eq_evalDist_of_discrete, ← prEvent_eq_evalDist_of_discrete]
+  simp only [OracleComp.prEvent_bind_eq_tsum]
   apply tsum_congr
   intro digest
-  congr 1
+  refine congrArg (HMul.hMul _) ?_
   split_ifs
-  · simp only [bind_pure_comp, probEvent_map, Function.comp_def]
-    simpa only [evalDist_apply_setOf] using
-      (PqxdhRecordFactsOriginMuteAdaptive.source_bad_probability pending.material modes replace setup codec client
-        (hiddenResult codec.frameWrite pending input body tag width digest state).2).symm
+  · simp only [bind_assoc, pure_bind]
+    have bad := (PqxdhRecordFactsOriginMuteAdaptive.source_bad_probability pending.material modes replace setup codec
+      client (hiddenResult codec.frameWrite pending input body tag width digest state).2).symm
+    rw [← @prEvent_eq_evalDist_of_discrete _ _ _ _ _ _ PqxdhRecordFactsOriginMuteAdaptive.instMeasurableSpaceProdCtxPrivateBool
+        PqxdhRecordFactsOriginMuteAdaptive.instDiscreteMeasurableSpaceProdCtxPrivateBool,
+      ← @prEvent_eq_evalDist_of_discrete _ _ _ _ _ _ PqxdhRecordFactsOriginMuteAdaptive.instMeasurableSpaceProdCtxPrivateBool
+        PqxdhRecordFactsOriginMuteAdaptive.instDiscreteMeasurableSpaceProdCtxPrivateBool] at bad
+    exact bad
   · rfl
 
 

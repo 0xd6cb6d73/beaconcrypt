@@ -146,8 +146,8 @@ theorem cache_collision_bound [SampleableType Digest] [Fintype Digest]
   refine le_trans ?_ (collision_bound target client targets ordinary bounded)
   rw [← projected]
   simp only [Functor.map_map]
-  simp only [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map]
-  apply probEvent_mono
+  rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true, prEvent_map, prEvent_map]
+  apply prEvent_mono_of_support
   intro result reached collision
   exact collision_detected target client result reached (of_decide_eq_true collision)
 

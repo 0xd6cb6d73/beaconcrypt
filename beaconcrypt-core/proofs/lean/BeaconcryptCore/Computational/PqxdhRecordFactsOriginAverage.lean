@@ -13,10 +13,11 @@ theorem bind_le {X Y : Type} [MeasurableSpace X] [DiscreteMeasurableSpace X]
     (bounded : ∀ value ∈ support work, 𝒟[next value] event ≤ cap) :
     𝒟[work >>= next] event ≤ cap := by
   change 𝒟[work >>= next] {value | value ∈ event} ≤ cap
-  simp only [evalDist_apply_setOf]
-  apply probEvent_bind_le_of_forall_le
+  rw [← prEvent_eq_evalDist_of_discrete]
+  apply prEvent_bind_le_of_forall_le_of_support
   intro value supported
-  simpa only [evalDist_apply_setOf] using (show 𝒟[next value] {result | result ∈ event} ≤ cap from bounded value supported)
+  rw [prEvent_eq_evalDist_of_discrete]
+  exact bounded value supported
 
 end BeaconcryptCore.Computational.PqxdhRecordFactsOriginAverage
 

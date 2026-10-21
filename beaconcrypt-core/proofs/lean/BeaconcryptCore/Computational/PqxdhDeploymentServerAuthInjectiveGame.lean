@@ -245,7 +245,6 @@ theorem compiled_creates (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
       PqxdhDeploymentServerAuthInjective.IsCreate]
   · simp [PqxdhRegistrationJointRevealCosts.sourceKind, PqxdhDeploymentServerAuthInjective.IsCreate]
 
-set_option linter.deprecated false in
 /-- The injectivity loss `ε_inj` of CE-A1: in the common deployment experiment of a budget-respecting adversary (identity index zero), the probability that two distinct Beacons are matched to one session is at most the sum, over the `qCreate + 1` identity indices `t`, of the joint-use weak-EUF advantage of the zero-query collision reduction `B^coll_t` (`PqxdhDeploymentServerAuthInjective.collider`). Premises: the approved Phase 1 and Phase 2 read-back contracts. No distributional property of key generation is assumed; a collision of identity keys gives a forgery by signing correctness. -/
 theorem injective_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool)
@@ -257,34 +256,35 @@ theorem injective_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
       ∑ target : Fin (budget.create + 1), advantage setup.joint
         (PqxdhDeploymentServerAuthInjective.collider setup.joint budget.create target) := by
   classical
-  rw [UniformTargetSelection.chance_eq_vcvioLegacy]
-  refine le_trans (probEvent_mono (q := fun outcome => ∃ created output final, outcome.1 = some (created, output, final) ∧
+  rw [UniformTargetSelection.chance_eq]
+  refine le_trans (prEvent_mono_of_support _ _ (fun outcome => ∃ created output final, outcome.1 = some (created, output, final) ∧
     Collision setup.joint (identities final.2.native)) fun outcome member ⟨c, c', shared⟩ =>
       shared_collision setup codec checks route ensureInit phase1 phase2 bounds mode adversary runtime outcome member c c'
         shared) ?_
   refine le_trans ?_ (PqxdhDeploymentServerAuthInjective.collision_bound setup budget.create)
   rw [← PqxdhDeploymentCompileSecrecy.compile_full_game setup codec checks route ensureInit 0 phase1 phase2 bounds mode
-    adversary runtime, probEvent_map]
-  simp only [PqxdhRegistrationJointInitializedSchedule.native, PqxdhLiveServerConstruction.construct, StateT.run,
-    bind_assoc]
-  refine probEvent_bind_le_of_forall_le fun ready _ => ?_
+    adversary runtime, prEvent_map]
+  simp only [PqxdhRegistrationJointInitializedSchedule.native, PqxdhLiveServerConstruction.construct, StateT.run]
+  rw [bind_assoc (ensureInit runtime)]
+  refine prEvent_bind_le_of_forall_le_of_support _ _ _ fun ready _ => ?_
   cases ready.1 with
   | false =>
-      simp only [Bool.false_eq_true, ite_false, pure_bind]
-      refine le_of_eq_of_le (probEvent_eq_zero_iff.mpr ?_) zero_le
+      simp only [Bool.false_eq_true, ite_false]
+      rw [pure_bind]
+      refine le_of_eq_of_le ((OracleComp.prEvent_eq_zero_iff _ _).mpr ?_) zero_le
       intro outcome member
       simp only [support_pure, Set.mem_singleton_iff] at member
       subst member
       simp [mergeFull]
   | true =>
       simp only [ite_true, bind_map_left]
-      refine probEvent_bind_le_of_forall_le fun seed _ => ?_
-      rw [probEvent_map]
-      refine le_of_eq_of_le (probEvent_ext fun result _ => ?_)
+      refine prEvent_bind_le_of_forall_le_of_support _ _ _ fun seed _ => ?_
+      rw [prEvent_map]
+      refine le_of_eq_of_le (prEvent_congr_of_support _ _ _ fun result _ => ?_)
         (PqxdhDeploymentServerAuthInjective.owners_collision setup codec checks seed
           (compileFull setup codec route bounds mode adversary) (budget.create + 1)
           (compiled_creates setup codec route bounds mode adversary budget respects) _ rfl)
-      simp only [Function.comp_apply, mergeFull, Option.map_some, Option.some.injEq]
+      simp only [mergeFull, Option.map_some, Option.some.injEq]
       constructor
       · rintro ⟨_, _, _, equal, collision⟩
         cases equal
@@ -293,7 +293,6 @@ theorem injective_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
         exact ⟨_, _, _, rfl, by simpa [identities_merge] using collision⟩
 
 
-set_option linter.deprecated false in
 /-- Theorem CE-A1 with injectivity (plan section 10): in the common deployment experiment with a generated Server seed (identity index zero, as in CE-9), for a budget-respecting adversary, the probability that some Beacon pinned to the constructed Server accepted with no session that matches it with that pin (`A1NoPinnedMatch`) on a run with `NoBundleFailure_c`, or that two distinct Beacons are matched to one session, is at most the sum over the `qCreate` creation indices `c` of the Server-authentication bound of `R_c` at the transported caps, plus `ε_inj`, the sum over the `qCreate + 1` identity indices `t` of the joint-use weak-EUF advantage of the zero-query collision reduction `B^coll_t`; every reduction `R_c` of the first sum has its bills, and every `B^coll_t` draws at most `32·qCreate` uniform bytes and makes no signing and no static-DH query, with at most `32·(qCreate + 1)` uniform queries in its whole game. Premises: the approved Phase 1, Phase 2 and frame read-back contracts, `ReadWritable`, `X25519ClassLaw`, `X25519ScalarSpread`, `SourceFullCorrect`, `HasAttachedVerificationAdapter` and the KEM base caps. -/
 theorem ce_a1_injective (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (caps : PqxdhServerAuthSourceCosts.KemCaps) (bounded : PqxdhServerAuthSourceCosts.KemBound setup caps)
@@ -343,20 +342,20 @@ theorem ce_a1_injective (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
   refine ⟨?_, unmatched.2, fun target => PqxdhDeploymentServerAuthInjective.collider_bills setup.joint budget.create target⟩
   set run := (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode adversary).run runtime
   classical
-  rw [UniformTargetSelection.chance_eq_vcvioLegacy] at unmatched injective
+  rw [UniformTargetSelection.chance_eq] at unmatched injective
   have total : 𝒟[(fun outcome => @decide ((∃ c, PqxdhDeploymentServerAuth.A1NoPinnedMatch setup codec c outcome) ∨
       ∃ c c', SharedMatch setup codec c c' outcome) (Classical.propDecidable _)) <$> run] {true} =
-      Pr[fun outcome => (∃ c, PqxdhDeploymentServerAuth.A1NoPinnedMatch setup codec c outcome) ∨
-        ∃ c c', SharedMatch setup codec c c' outcome | run] :=
-    @UniformTargetSelection.chance_eq_vcvioLegacy _ run _ (fun _ => Classical.propDecidable _)
+      Pr{let outcome ← run}[(∃ c, PqxdhDeploymentServerAuth.A1NoPinnedMatch setup codec c outcome) ∨
+        ∃ c c', SharedMatch setup codec c c' outcome] :=
+    @UniformTargetSelection.chance_eq _ run _ (fun _ => Classical.propDecidable _)
   rw [total]
-  have split := probEvent_or_le run (fun outcome => ∃ c, PqxdhDeploymentServerAuth.A1NoPinnedMatch setup codec c outcome)
+  have split := prEvent_or_le run (fun outcome => ∃ c, PqxdhDeploymentServerAuth.A1NoPinnedMatch setup codec c outcome)
     (fun outcome => ∃ c c', SharedMatch setup codec c c' outcome)
   have finiteSum : ∑ target : Fin (budget.create + 1), advantage setup.joint
       (PqxdhDeploymentServerAuthInjective.collider setup.joint budget.create target) ≠ ⊤ :=
     ENNReal.sum_ne_top.mpr fun _ _ => ne_top_of_le_ne_top ENNReal.one_ne_top (prEvent_le_one _)
-  refine (ENNReal.toReal_mono (ENNReal.add_ne_top.mpr ⟨probEvent_ne_top, probEvent_ne_top⟩) split).trans ?_
-  rw [ENNReal.toReal_add probEvent_ne_top probEvent_ne_top]
+  refine (ENNReal.toReal_mono (ENNReal.add_ne_top.mpr ⟨(prEvent_ne_top _), (prEvent_ne_top _)⟩) split).trans ?_
+  rw [ENNReal.toReal_add (prEvent_ne_top _) (prEvent_ne_top _)]
   refine add_le_add unmatched.1 ?_
   rw [← ENNReal.toReal_sum fun target _ => ne_top_of_le_ne_top finiteSum
     (Finset.single_le_sum (fun _ _ => zero_le) (Finset.mem_univ target))]

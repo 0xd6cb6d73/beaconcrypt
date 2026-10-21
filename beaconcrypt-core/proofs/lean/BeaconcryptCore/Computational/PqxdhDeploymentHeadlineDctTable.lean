@@ -1224,9 +1224,9 @@ theorem world_keyHit (t : Target count) (ensureInit : StateT A ProbComp Bool) (i
           (PqxdhDeploymentIdealEnv.envGD setup codec checks t ensureInit identityIndex runtime) setup.serverKeyId bounds
             mode adversary) := by
     rw [Functor.map_map]
-  rw [joinedEq, ← law.evalDist_eq, map_bind, evalDist_apply_singleton, ← probEvent_eq_eq_probOutput]
-  refine probEvent_bind_le_of_forall_le fun p _ => ?_
-  rw [probEvent_eq_eq_probOutput, ← evalDist_apply_singleton]
+  rw [joinedEq, ← law.evalDist_eq, map_bind, ← prEvent_eq_evalDist_singleton _ true]
+  refine prEvent_bind_le_of_forall_le_of_support _ _ _ fun p _ => ?_
+  rw [prEvent_eq_evalDist_singleton]
   have split := split_keyHit setup codec checks route t p ensureInit identityIndex bounds mode adversary budget respects
     runtime
   refine le_of_eq_of_le ?_ split

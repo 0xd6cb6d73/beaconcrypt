@@ -111,18 +111,17 @@ theorem creations (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
       rwa [ite_eq_right other] at step
     · exact step_later setup codec checks identityIndex publicIdentity read held native
 
-set_option linter.deprecated false in
 /-- The selected-first reservation for the logged source: the hidden logged command program under the actual KEM pool has the distribution of the selected-first monitored KEM source, with the creation cap derived from the source budget. -/
 theorem selected_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (work : OracleComp (Spec KemSK) Result) (count : Nat)
     (bounded : work.IsQueryBoundP (fun query => laterKind (KemSK := KemSK) query = some (.inl 1)) (count + 1))
     (owners : List EncodedEntry) (log : Log) (state : NativeState KemSK)
     (joint : PqxdhDynamicIdentityPool.SourceState) (selected : Fin (count + 1)) :
-    𝒮[(fun result => (some result.1, result.2)) <$>
+    EvalDistEq ((fun result => (some result.1, result.2)) <$>
       (simulateQ (PqxdhLiveKemBirth.impl setup.baseImpl setup.joint setup.kem)
         (simulateQ (actual setup) (commands setup codec checks identityIndex publicIdentity work owners log state))).run
-          (joint, PqxdhLiveKemBirth.empty)] =
-      𝒮[do
+          (joint, PqxdhLiveKemBirth.empty))
+      (do
         let chosen ← simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl) setup.kem.keygen
         let others ← PqxdhLiveKemSelection.sampleFamily
           (simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl) setup.kem.keygen) count
@@ -130,7 +129,7 @@ theorem selected_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
         Prod.map id (PqxdhDynamicKemJointSource.project pairs) <$>
           (((simulateQ (PqxdhDynamicKemJointSource.normal setup.baseImpl setup.joint setup.kem selected.val pairs)
             (simulateQ (actual setup) (commands setup codec checks identityIndex publicIdentity work owners log
-              state))).run).run (joint, PqxdhDynamicKemRouter.empty))] :=
+              state))).run).run (joint, PqxdhDynamicKemRouter.empty))) :=
   PqxdhDeploymentLaterServerCut.selected_first setup codec checks identityIndex publicIdentity work owners log state
     joint count selected (creations setup codec checks identityIndex publicIdentity work (count + 1) bounded owners log state)
 

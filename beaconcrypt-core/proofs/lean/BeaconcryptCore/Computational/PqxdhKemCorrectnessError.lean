@@ -62,10 +62,6 @@ theorem error_probability (baseImpl : QueryImpl baseSpec ProbComp)
   rw [error_functional kem functional, simulateQ_map, prEvent_map]
   simp only [decide_eq_true_eq]
 
-set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.PqxdhKemCorrectnessError.error_probability_vcvioLegacy :
-    ∀ {ι KemSK : Type} {baseSpec : OracleSpec ι} (baseImpl : QueryImpl baseSpec ProbComp) (kem : BeaconcryptCore.Computational.PqxdhKemIndCca.MlKemScheme (baseSpec := baseSpec) (SK := KemSK)) (functional : BeaconcryptCore.Computational.PqxdhChallengeSecretRouting.FunctionalDecapsulation (baseSpec := baseSpec) kem), Pr[= Bool.true | simulateQ (spec := unifSpec + baseSpec) (BeaconcryptCore.Computational.PqxdhInitializerSecrecy.kemAmbientImpl (baseSpec := baseSpec) baseImpl) (BeaconcryptCore.Computational.PqxdhKemCorrectnessError.errorExperiment (baseSpec := baseSpec) kem)] = probEvent (simulateQ (spec := unifSpec + baseSpec) (BeaconcryptCore.Computational.PqxdhInitializerSecrecy.kemAmbientImpl (baseSpec := baseSpec) baseImpl) (BeaconcryptCore.Computational.PqxdhKemCorrectnessError.sample (baseSpec := baseSpec) kem)) (BeaconcryptCore.Computational.PqxdhKemCorrectnessError.Bad (baseSpec := baseSpec) kem functional) :=
-  by simpa only [BeaconcryptCore.VCVioLegacy.probOutput_eq_prEvent, BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent] using @BeaconcryptCore.Computational.PqxdhKemCorrectnessError.error_probability
-
 /-- Good samples give a literal decapsulation program equality without a perfect-correctness premise. -/
 theorem good_agreement (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK))
     (functional : FunctionalDecapsulation kem) (drawn : Sample KemSK)

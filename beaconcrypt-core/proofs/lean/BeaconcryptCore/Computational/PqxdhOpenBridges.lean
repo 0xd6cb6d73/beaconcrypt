@@ -374,7 +374,7 @@ theorem authenticated_native_root_bound_bridged_open
       (PqxdhJointIdentity.advantage primitives
         (PqxdhGeneratedPhase1Prefix.privateReduction primitives baseImpl kem setup
           (driver env.toDriverEnvironment program) fallback ordinaryFallback)).toReal +
-      Pr[= true | simulateQ (kemAmbientImpl baseImpl) (PqxdhKemCorrectnessError.errorExperiment kem)].toReal +
+      Pr{let x ← simulateQ (kemAmbientImpl baseImpl) (PqxdhKemCorrectnessError.errorExperiment kem)}[x = true].toReal +
       kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
         (PqxdhChallengeSecretRouting.reduction env.source kem p).toINDCCA +
       PqxdhCorrelatedExtractFamily.advantage hmac
@@ -394,7 +394,7 @@ theorem authenticated_native_root_bound_bridged_open
     OpenBridge := by
   intro p
   obtain ⟨bound, reached, prepare, commit, start, established, rid, transcript, send, frame, accept, validate⟩ :=
-    authenticated_native_root_bound_bridged_full_vcvioLegacy env baseImpl kem attachedVerify primitives program post c
+    authenticated_native_root_bound_bridged_full env baseImpl kem attachedVerify primitives program post c
       compatible adapter functional hmac sourceCorrect fallback ordinaryFallback secretIdentity initialMatch
   exact ⟨bound, reached, prepare, commit, start, established, rid, transcript, send, frame, accept, validate,
     open_bridge⟩
@@ -415,7 +415,7 @@ theorem authenticated_extracted_root_bound_open
       (PqxdhJointIdentity.advantage primitives
         (PqxdhGeneratedPhase1Prefix.privateReduction primitives baseImpl kem setup
           (driver env.toDriverEnvironment program) fallback ordinaryFallback)).toReal +
-      Pr[= true | simulateQ (kemAmbientImpl baseImpl) (PqxdhKemCorrectnessError.errorExperiment kem)].toReal +
+      Pr{let x ← simulateQ (kemAmbientImpl baseImpl) (PqxdhKemCorrectnessError.errorExperiment kem)}[x = true].toReal +
       kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
         (PqxdhChallengeSecretRouting.reduction env.source kem p).toINDCCA +
       PqxdhCorrelatedExtractFamily.advantage hmac
@@ -433,7 +433,7 @@ theorem authenticated_extracted_root_bound_open
     OpenBridge := by
   intro p
   obtain ⟨bound, reached, prepare, commit, start, established, rid, transcript, send, frame, validate⟩ :=
-    authenticated_extracted_root_bound_vcvioLegacy env baseImpl kem attachedVerify primitives program post c
+    authenticated_extracted_root_bound env baseImpl kem attachedVerify primitives program post c
       compatible adapter functional hmac sourceCorrect fallback ordinaryFallback secretIdentity initialMatch
   exact ⟨bound, reached, prepare, commit, start, established, rid, transcript, send, frame, validate,
     open_bridge⟩

@@ -7,7 +7,6 @@ import BeaconcryptCore.Computational.PqxdhDynamicKemJointBounds
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
-set_option linter.deprecated false
 namespace BeaconcryptCore.Computational.PqxdhRegistrationJointKemCommands
 open PqxdhJointIdentity PqxdhServerAuthExperiment PqxdhServerAuthNative
 open PqxdhRegistrationJointGeneratedFinish (EncodedEntry)
@@ -83,11 +82,11 @@ theorem selected_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
     (owners : List EncodedEntry) (state : NativeState KemSK)
     (joint : PqxdhDynamicIdentityPool.SourceState) (count : Nat) (selected : Fin (count + 1))
     (room : budget (.inl 1) ≤ count + 1) :
-    𝒮[(fun result => (some result.1, result.2)) <$>
+    EvalDistEq ((fun result => (some result.1, result.2)) <$>
       (simulateQ (PqxdhLiveKemBirth.impl setup.baseImpl setup.joint setup.kem)
         (program setup codec checks identityIndex publicIdentity client owners state)).run
-          (joint, PqxdhLiveKemBirth.empty)] =
-      𝒮[do
+          (joint, PqxdhLiveKemBirth.empty))
+      (do
         let chosen ← simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl) setup.kem.keygen
         let others ← PqxdhLiveKemSelection.sampleFamily
           (simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl) setup.kem.keygen) count
@@ -95,8 +94,8 @@ theorem selected_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
         Prod.map id (PqxdhDynamicKemJointSource.project pairs) <$>
           (((simulateQ (PqxdhDynamicKemJointSource.normal setup.baseImpl setup.joint setup.kem selected.val pairs)
             (program setup codec checks identityIndex publicIdentity client owners state)).run).run
-              (joint, PqxdhDynamicKemRouter.empty))] := by
-  exact PqxdhDynamicKemJointSource.selected_source_vcvioLegacy setup.baseImpl setup.joint setup.kem
+              (joint, PqxdhDynamicKemRouter.empty))) := by
+  exact PqxdhDynamicKemJointSource.selected_source setup.baseImpl setup.joint setup.kem
     (program setup codec checks identityIndex publicIdentity client owners state) count selected
     ((creations setup codec checks identityIndex publicIdentity client budget certified owners state).mono room) joint
 

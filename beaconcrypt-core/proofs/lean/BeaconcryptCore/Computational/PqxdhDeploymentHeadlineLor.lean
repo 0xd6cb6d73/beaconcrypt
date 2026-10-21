@@ -454,18 +454,16 @@ end Final
 
 section Helpers
 
-set_option linter.deprecated false in
 /-- Splitting a Boolean observation by a further predicate: its probability is that of its conjunction with the predicate plus that of its conjunction with the negation. -/
 theorem chance_split {α : Type} (run : ProbComp α) (first : α → Bool) (second : α → Prop) [DecidablePred second] :
     𝒟[first <$> run] {true} = 𝒟[(fun a => decide (first a = true ∧ second a)) <$> run] {true} +
       𝒟[(fun a => decide (first a = true ∧ ¬second a)) <$> run] {true} := by
-  have each : ∀ observation : α → Bool, 𝒟[observation <$> run] {true} = Pr[fun a => observation a = true | run] :=
+  have each : ∀ observation : α → Bool, 𝒟[observation <$> run] {true} = Pr{let a ← run}[observation a = true] :=
     fun observation => by
-      rw [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map]
-      rfl
-  rw [each, each, each, probEvent_eq_tsum_ite, probEvent_eq_tsum_ite, probEvent_eq_tsum_ite, ← ENNReal.tsum_add]
+      rw [← prEvent_eq_evalDist_singleton _ true, prEvent_map]
+  rw [each, each, each, OracleComp.prEvent_eq_tsum_ite, OracleComp.prEvent_eq_tsum_ite, OracleComp.prEvent_eq_tsum_ite, ← ENNReal.tsum_add]
   refine tsum_congr fun a => ?_
-  by_cases held : first a = true <;> by_cases other : second a <;> simp [held, other]
+  by_cases held : first a = true <;> by_cases other : second a <;> simp [held, other, -evalDist_apply_singleton]
 
 /-- The non-negative real `½ · x` as an extended non-negative real is half of `x`. -/
 theorem ofReal_half (x : ℝ) : ENNReal.ofReal ((1 / 2) * x) = 2⁻¹ * ENNReal.ofReal x := by

@@ -32,11 +32,11 @@ theorem prefix_probability (setup : Setup baseSpec KemSK) (codec : Codec Reader 
       rootPrefix setup codec checks serverSeed origin ensureInit (fun _ => work) runtime] {true} ≤
     𝒟[(fun audit => observe audit.2) <$> rootAudited setup codec checks serverSeed
       (fun published => work ⟨setup.joint.publicKeys serverSeed, setup.serverKeyId, published, none⟩)] {true} := by
-  simp only [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map, Function.comp_def]
+  rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true, prEvent_map, prEvent_map]
   unfold rootPrefix
-  refine probEvent_bind_le_of_forall_le fun initialized _ => ?_
-  cases initialized.1 <;> simp only [Bool.false_eq_true, ite_false, ite_true, probEvent_map, prefixDecision]
-  all_goals simp [Function.comp_def]
+  refine prEvent_bind_le_of_forall_le_of_support _ _ _ fun initialized _ => ?_
+  cases initialized.1 <;> simp only [Bool.false_eq_true, ite_false, ite_true, prEvent_map, prefixDecision]
+  all_goals simp [-evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
 
 /-- The target event of the actual generated-Server experiment is bounded by the existing ordered authentication experiment. Both initialization gates are dropped only by probability monotonicity, with their runtime-dependent refusal tails intact on the source side. -/
 theorem generated_probability (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
@@ -47,14 +47,18 @@ theorem generated_probability (setup : Setup baseSpec KemSK) (codec : Codec Read
         (fun input => (fun _ => ()) <$> work input)] {true} := by
   rw [← generated_order setup codec checks work]
   simp only [rootExperiment, PqxdhLiveServerConstruction.construct, StateT.run, map_bind,
-    bind_assoc, Functor.map_map, evalDist_apply_singleton, ← probEvent_eq_eq_probOutput]
-  refine probEvent_bind_le_of_forall_le fun initialized _ => ?_
-  cases initialized.1 <;> simp only [Bool.false_eq_true, ite_false, ite_true, pure_bind,
-    map_pure, laneDecision, probEvent_pure, zero_le, bind_map_left, Functor.map_map]
-  refine probEvent_bind_mono fun seed _ => ?_
-  simpa only [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput,
-    PqxdhLiveServerConstruction.initialized] using
-    prefix_probability setup codec checks seed .generated ensureInit work initialized.2 observe
+    bind_assoc, Functor.map_map]
+  rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true]
+  refine prEvent_bind_le_of_forall_le_of_support _ _ _ fun initialized _ => ?_
+  cases initialized.1
+  · simp only [Bool.false_eq_true, ite_false]
+    rw [pure_bind]
+    simp only [map_pure, laneDecision, prEvent_pure, Bool.false_eq_true, ite_false, zero_le]
+  simp only [ite_true, bind_map_left, Functor.map_map]
+  refine prEvent_bind_mono_of_forall_le_of_support _ _ _ _ _ fun seed _ => ?_
+  have bound := prefix_probability setup codec checks seed .generated ensureInit work initialized.2 observe
+  rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true] at bound
+  simpa only [PqxdhLiveServerConstruction.initialized, laneDecision] using bound
 
 /-- The actual common session/record failure is tested on the retained outcome; every constructor-refusal branch is false. The supplied-seed experiment is defined operationally but has no security conclusion here. -/
 noncomputable def laneFailure (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks) :
