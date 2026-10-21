@@ -62,15 +62,21 @@ theorem pointwise {Metadata Auxiliary Result : Type}
     (sender : Std.U64) (decode : RawCtxReceive.FrameDecoder)
     (client : OracleComp RawCtxSelectedPublicTrace.SourceSpec Result) (cut : Cut Metadata Auxiliary) :
     tvDist (left source writer sender decode client cut) (right source writer sender decode client cut) ≤
-      Pr[fun result => result.1 ∈ RawCtxSelectedTraceOwner.candidates result.2 |
-        left source writer sender decode client cut].toReal := by
+      Pr{let result ← left source writer sender decode client cut}[result.1 ∈ RawCtxSelectedTraceOwner.candidates result.2].toReal := by
   have distance := (tvDist_map_le (fun result => (cut.1.2, (cut.2, result)))
     ((simulateQ (RawCtxSelectedPublicTrace.sourceImpl source writer
       (RawCtxKdfRequestTable.fullResponse cut.2) sender decode) client).run (cut.1.1.1, (cut.1.1.2, [])))
     (RawCtxSelectedAliasCompiler.consistentGame source writer cut.2 cut.1.2 sender decode client cut.1.1)).trans
       (RawCtxSelectedAliasCompiler.source_distance source writer cut.2 cut.1.2 sender decode client cut.1.1)
-  simpa only [left, right, bind_pure_comp, probEvent_map, Function.comp_def,
-    RawCtxSelectedTraceOwner.candidates] using distance
+  have leftShape : left source writer sender decode client cut = (fun result => (cut.1.2, (cut.2, result))) <$>
+      (simulateQ (RawCtxSelectedPublicTrace.sourceImpl source writer
+        (RawCtxKdfRequestTable.fullResponse cut.2) sender decode) client).run (cut.1.1.1, (cut.1.1.2, [])) := by
+    simp only [left, bind_pure_comp]
+  have rightShape : right source writer sender decode client cut = (fun result => (cut.1.2, (cut.2, result))) <$>
+      RawCtxSelectedAliasCompiler.consistentGame source writer cut.2 cut.1.2 sender decode client cut.1.1 := by
+    simp only [right, bind_pure_comp]
+  rw [leftShape, rightShape, prEvent_map]
+  simpa only [RawCtxSelectedTraceOwner.candidates] using distance
 
 /-- Average the fixed-input alias coupling over exactly the original full76 cut and continued challenge draw. -/
 theorem cut_distance {Prior Metadata Auxiliary Result : Type}
@@ -82,10 +88,9 @@ theorem cut_distance {Prior Metadata Auxiliary Result : Type}
     tvDist (RawCtxFreshChainCut.observedCut sample stop
         (RawCtxSelectedPublicTrace.randomObserver source writer sender decode client))
       (sampleCut sample stop >>= right source writer sender decode client) ≤
-    Pr[fun result => result.1 ∈ RawCtxSelectedTraceOwner.candidates result.2 |
-      RawCtxFreshChainCut.observedCut sample stop
-        (RawCtxSelectedPublicTrace.randomObserver source writer sender decode client)].toReal := by
-  have averaged := PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind_vcvioLegacy (sampleCut sample stop)
+    Pr{let result ← (RawCtxFreshChainCut.observedCut sample stop
+        (RawCtxSelectedPublicTrace.randomObserver source writer sender decode client))}[result.1 ∈ RawCtxSelectedTraceOwner.candidates result.2].toReal := by
+  have averaged := PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind (sampleCut sample stop)
     (left source writer sender decode client) (right source writer sender decode client)
     (left source writer sender decode client)
     (fun result => result.1 ∈ RawCtxSelectedTraceOwner.candidates result.2)

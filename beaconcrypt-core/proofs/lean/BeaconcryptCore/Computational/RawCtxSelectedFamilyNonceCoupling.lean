@@ -167,8 +167,8 @@ theorem marked_agree {ι σ : Type} {spec : OracleSpec ι}
   by_cases hit : bad query state
   · have zero (handler : QueryImpl spec (StateT σ ProbComp)) :
         𝒟[(marked handler bad query).run (state, false)] {(reply, (nextState, false))} = 0 := by
-      rw [evalDist_apply_singleton]
-      apply probOutput_eq_zero_of_not_mem_support
+      rw [← prEvent_eq_evalDist_singleton]
+      apply prEvent_eq_zero_of_not_mem_support
       intro supported
       exact Bool.false_ne_true (marked_hit handler bad query (state, false) hit (reply, (nextState, false)) supported)
     rw [zero, zero]
@@ -184,10 +184,11 @@ theorem marked_distance {ι σ X : Type} {spec : OracleSpec ι}
     tvDist ((simulateQ (marked left bad) client).run (state, false))
       ((simulateQ (marked right bad) client).run (state, false)) ≤
       (𝒟[(fun result => result.2.2) <$> (simulateQ (marked left bad) client).run (state, false)] {true}).toReal := by
-  rw [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map]
+  rw [← prEvent_eq_evalDist_singleton, prEvent_map, ← VCVioLegacy.probEvent_eq_prEvent]
   exact OracleComp.ProgramLogic.Relational.tvDist_simulateQ_run_le_probEvent_output_bad
       _ _ client state
-      (fun query before reply after => by simpa only [evalDist_apply_singleton] using marked_agree left right bad agree query before reply after)
+      (fun query before reply after => by
+        simpa only [VCVioLegacy.probOutput_eq_evalDist_singleton] using marked_agree left right bad agree query before reply after)
       (marked_sticky left bad) (marked_sticky right bad)
 
 /-- Erasing the sticky flag preserves every adaptive reply and the complete original ledger. -/

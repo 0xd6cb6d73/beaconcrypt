@@ -126,7 +126,7 @@ theorem parent_collision :
   intro context _
   simpa only [bind_pure_comp, probEvent_map, Function.comp_def, RawCtxSelectedParentEntry.fromOutput,
     target_address, List.mem_cons, List.not_mem_nil, or_false, List.length_singleton, Nat.cast_one, one_mul] using
-    RawCtxFirstParentRisk.full_inputs [address source writer pre application initializer selector aux mark sender route decode execution depth state context]
+    RawCtxFirstParentRisk.full_inputs_vcvioLegacy [address source writer pre application initializer selector aux mark sender route decode execution depth state context]
 
 end BeaconcryptCore.Computational.PqxdhInitialPreparedResources
 

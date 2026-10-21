@@ -42,24 +42,23 @@ theorem single_uniform {ι State Result : Type} {spec : OracleSpec ι}
     (source : FixedHkdfSha512NoSaltSource) (other : QueryImpl spec (StateT State ProbComp))
     (client : OracleComp (spec + JointKdfRO) Result) (state : State) (cache : Table) (cursor : Cursor)
     (missing : cache (cursorAddress cursor) = none) :
-    𝒮[(fun result => (result.1, result.2.1)) <$>
-      (simulateQ (handler source (cursor.depth + 1) other) client).run (state, (cache, cursor))] =
-      𝒮[(($ᵗ FullOutput) >>= fun output =>
-        (simulateQ (viewImpl (view (productionStream source.crypto) (cache.cacheQuery (cursorAddress cursor) output)) other) client).run state)] := by
+    EvalDistEq ((fun result => (result.1, result.2.1)) <$>
+      (simulateQ (handler source (cursor.depth + 1) other) client).run (state, (cache, cursor)))
+      (($ᵗ FullOutput) >>= fun output =>
+        (simulateQ (viewImpl (view (productionStream source.crypto) (cache.cacheQuery (cursorAddress cursor) output)) other) client).run state) := by
   induction client using OracleComp.inductionOn generalizing state cache cursor with
   | pure value =>
-    change 𝒮[(pure (value, state) : ProbComp (Result × State))] =
-      𝒮[(($ᵗ FullOutput) >>= fun _ => pure (value, state))]
-    exact (OracleComp.DeferredSampling.evalSPMF_bind_const_neverFails ($ᵗ FullOutput)
-      probFailure_eq_zero (pure (value, state))).symm
+    change EvalDistEq (pure (value, state) : ProbComp (Result × State))
+      (($ᵗ FullOutput) >>= fun _ => pure (value, state))
+    exact (OracleComp.EvalDistEq.bind_const ($ᵗ FullOutput) (pure (value, state))).symm
   | query_bind query next ih =>
     cases query with
     | inl query =>
       simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind]
       simp only [handler, viewImpl, StateT.run, bind_assoc, pure_bind, map_bind]
-      refine (evalSPMF_bind_congr' ((other query).run state)
+      refine (EvalDistEq.bind_right ((other query).run state)
         (fun result => ih result.1 result.2 cache cursor missing)).trans ?_
-      exact (OracleComp.DeferredSampling.evalSPMF_bind_comm ($ᵗ FullOutput) ((other query).run state)
+      exact (OracleComp.EvalDistEq.bind_bind_swap ($ᵗ FullOutput) ((other query).run state)
         (fun output result => (simulateQ (viewImpl
           (view (productionStream source.crypto) (cache.cacheQuery (cursorAddress cursor) output)) other)
           (next result.1)).run result.2)).symm
@@ -72,15 +71,15 @@ theorem single_uniform {ι State Result : Type} {spec : OracleSpec ι}
           private_selected source (cursor.depth + 1) (cursorAddress cursor) (cache, cursor) missing chosen (Nat.lt_succ_self _),
           bind_map_left, pure_bind, map_bind, bind_assoc]
         simp only [view, QueryCache.cacheQuery_self, Option.getD_some]
-        refine evalSPMF_bind_congr' ($ᵗ FullOutput) (fun output => ?_)
-        change 𝒮[(fun result => (result.1, result.2.1)) <$>
+        refine EvalDistEq.bind_right ($ᵗ FullOutput) (fun output => ?_)
+        change EvalDistEq ((fun result => (result.1, result.2.1)) <$>
           (simulateQ (handler source (cursor.depth + 1) other) (next output)).run
-            (state, (cache.cacheQuery (cursorAddress cursor) output, advance cursor (cursorAddress cursor) output))] =
-          𝒮[(simulateQ (viewImpl (view (productionStream source.crypto) (cache.cacheQuery (cursorAddress cursor) output)) other)
-            (next output)).run state]
-        exact congrArg evalSPMF (saturated_view source (cursor.depth + 1) other (next output) state
-          (cache.cacheQuery (cursorAddress cursor) output) (advance cursor (cursorAddress cursor) output)
-          (by simp [advance_depth, chosen]))
+            (state, (cache.cacheQuery (cursorAddress cursor) output, advance cursor (cursorAddress cursor) output)))
+          ((simulateQ (viewImpl (view (productionStream source.crypto) (cache.cacheQuery (cursorAddress cursor) output)) other)
+            (next output)).run state)
+        exact Eq.subst (motive := fun later => EvalDistEq _ later) (saturated_view source (cursor.depth + 1) other
+          (next output) state (cache.cacheQuery (cursorAddress cursor) output) (advance cursor (cursorAddress cursor) output)
+          (by simp [advance_depth, chosen])) (EvalDistEq.refl _)
       · have unchosen : matched cursor request = false := by simp [matched, same]
         simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind]
         simp only [handler, viewImpl, StateT.run,
@@ -90,13 +89,13 @@ theorem single_uniform {ι State Result : Type} {spec : OracleSpec ι}
               view (productionStream source.crypto) cache request := by
           simp only [view, QueryCache.cacheQuery_of_ne (spec := JointKdfRO) cache output same]
         simp only [response]
-        change 𝒮[(fun result => (result.1, result.2.1)) <$>
+        change EvalDistEq ((fun result => (result.1, result.2.1)) <$>
           (simulateQ (handler source (cursor.depth + 1) other)
             (next (view (productionStream source.crypto) cache request))).run
-            (state, (cache.cacheQuery request (view (productionStream source.crypto) cache request), cursor))] =
-          𝒮[(($ᵗ FullOutput) >>= fun output =>
+            (state, (cache.cacheQuery request (view (productionStream source.crypto) cache request), cursor)))
+          (($ᵗ FullOutput) >>= fun output =>
             (simulateQ (viewImpl (view (productionStream source.crypto) (cache.cacheQuery (cursorAddress cursor) output)) other)
-              (next (view (productionStream source.crypto) cache request))).run state)]
+              (next (view (productionStream source.crypto) cache request))).run state)
         have stillMissing : (cache.cacheQuery request (view (productionStream source.crypto) cache request)) (cursorAddress cursor) = none := by
           rw [QueryCache.cacheQuery_of_ne (spec := JointKdfRO) cache _ (Ne.symm same), missing]
         have future (output : FullOutput) :
@@ -107,6 +106,14 @@ theorem single_uniform {ι State Result : Type} {spec : OracleSpec ι}
           simp only [view_recorded, view_stable]
         simpa only [future] using ih (view (productionStream source.crypto) cache request) state
           (cache.cacheQuery request (view (productionStream source.crypto) cache request)) cursor stillMissing
+
+set_option linter.deprecated false in set_option linter.unusedVariables false in theorem _root_.BeaconcryptCore.Computational.RawCtxSelectiveSingleDraw.single_uniform_vcvioLegacy :
+    ∀ {ι State Result : Type} {spec : OracleSpec ι} (source : BeaconcryptCore.Computational.PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) (other : QueryImpl spec (StateT State ProbComp)) (client : OracleComp (spec + BeaconcryptCore.Computational.PqxdhJointKdf.JointKdfRO) Result) (state : State) (cache : BeaconcryptCore.Computational.RawCtxKdfRequestTable.Table) (cursor : BeaconcryptCore.Computational.RawCtxSelectiveChainGame.Cursor) (missing : cache (BeaconcryptCore.Computational.RawCtxSelectiveChainGame.cursorAddress cursor) = Option.none),
+      𝒮[(fun (result : Result × State × BeaconcryptCore.Computational.RawCtxSelectiveChainGame.Store) => (result.1, result.2.1)) <$> (simulateQ (BeaconcryptCore.Computational.RawCtxSelectiveChainGame.handler source (cursor.depth + 1) other) client).run (state, cache, cursor)] =
+        𝒮[do
+          let output ← $ᵗ BeaconcryptCore.Computational.PqxdhFullSecretInputKdf.FullOutput
+          (simulateQ (BeaconcryptCore.Computational.RawCtxRetainedTable.viewImpl (BeaconcryptCore.Computational.RawCtxSelectedParentTable.view (BeaconcryptCore.Computational.PqxdhJointKdf.productionStream source.crypto) (OracleSpec.QueryCache.cacheQuery cache (BeaconcryptCore.Computational.RawCtxSelectiveChainGame.cursorAddress cursor) output)) other) client).run state] :=
+  by simpa only [BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq] using @BeaconcryptCore.Computational.RawCtxSelectiveSingleDraw.single_uniform
 
 noncomputable def early {ι State Result : Type} {spec : OracleSpec ι}
     (source : FixedHkdfSha512NoSaltSource) (other : QueryImpl spec (StateT State ProbComp))

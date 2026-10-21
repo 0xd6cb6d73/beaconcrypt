@@ -126,7 +126,7 @@ theorem future_bound (sample : ProbComp (Bool ⊕ Context)) (address : (Bool ⊕
       2 * ((qCandidates : ENNReal) / (2 ^ 256 : ENNReal)) := by
   have compared := future_masked source writer mark sender route decode view sample address
   rw [masked_probability] at compared
-  exact compared.trans (mul_le_mul_right (RawCtxSelectedParentCandidates.uniform_bound sample address
+  exact compared.trans (mul_le_mul_right (RawCtxSelectedParentCandidates.uniform_bound_vcvioLegacy sample address
     (observed source writer mark sender route decode view) candidates qCandidates bounded) 2)
 
 set_option maxRecDepth 2048 in

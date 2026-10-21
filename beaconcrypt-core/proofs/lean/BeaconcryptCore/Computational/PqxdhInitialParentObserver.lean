@@ -113,7 +113,7 @@ theorem event_good (target : RootOutput) (client : OracleComp (Spec extra I D K 
       Pr[fun result => event result ∧ result.2.2 = false |
         (simulateQ (observed source writer prior entry output pre application initial selector aux
           RawCtxSelectedLiveRead.labelRead) client).run state] :=
-  RawCtxFlaggedQueryAgreement.event_good _ _ inputs direct
+  RawCtxFlaggedQueryAgreement.event_good_vcvioLegacy _ _ inputs direct
     (query_safe source writer prior entry output pre application initial selector aux target) client state event
 
 /-- The observer's pending primitive callbacks are exactly the existing retained-parent source interpreter, with full ambient state and real public HKDF. -/

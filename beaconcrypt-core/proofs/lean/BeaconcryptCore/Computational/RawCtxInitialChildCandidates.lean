@@ -16,9 +16,8 @@ theorem real_bound {Context Result : Type} (source : FixedHkdfSha512NoSaltSource
     (hmac : HmacSha512) (correct : SourceFullCorrect source hmac)
     (prior : ProbComp Context) (second : Context → Bool)
     (observe : Context × RootOutput → FullOutput → ProbComp Result) (candidates : Result → List RootOutput) :
-    Pr[fun pair => pair.1 ∈ candidates pair.2 |
-      RawCtxFullPreimageTester.actual (RawCtxFullPreimageTester.production source)
-        (sample prior second) observe] ≤
+    Pr{let pair ← (RawCtxFullPreimageTester.actual (RawCtxFullPreimageTester.production source)
+        (sample prior second) observe)}[pair.1 ∈ candidates pair.2] ≤
       (2 ^ 352 : ENNReal)⁻¹ + ENNReal.ofReal (
         (extractRealGame hmac (joint prior second)
           (fullExtractReduction hmac .ratchet
@@ -51,15 +50,15 @@ noncomputable def delayed {Context Result : Type} (prior : ProbComp Context)
 /-- Either selected initial half can be delayed past the complete independent-child candidate computation while preserving all retained context and results. -/
 theorem uniform_delayed {Context Result : Type} (prior : ProbComp Context) (second : Context → Bool)
     (observe : Context × RootOutput → FullOutput → ProbComp Result) :
-    𝒮[uniform prior second observe] = 𝒮[delayed prior observe] := by
+    EvalDistEq (uniform prior second observe) (delayed prior observe) := by
   simp only [uniform, delayed, sample, bind_assoc, pure_bind]
-  refine evalSPMF_bind_congr' prior (fun context => ?_)
+  refine EvalDistEq.bind_right prior (fun context => ?_)
   refine (parts_observed (second context) (fun other target => do
     let child ← $ᵗ FullOutput
     let result ← observe (context, other) child
     pure (target, result))).trans ?_
-  exact evalSPMF_bind_congr' ($ᵗ RootOutput) (fun other => by
-    simpa only [bind_assoc] using evalSPMF_sample_comm_vcvioLegacy ($ᵗ RootOutput)
+  exact EvalDistEq.bind_right ($ᵗ RootOutput) (fun other => by
+    simpa only [bind_assoc] using evalSPMF_sample_comm ($ᵗ RootOutput)
       (do let child ← $ᵗ FullOutput; observe (context, other) child)
       (fun target result => pure (target, result)))
 
@@ -68,18 +67,16 @@ theorem uniform_bound {Context Result : Type} (prior : ProbComp Context) (second
     (observe : Context × RootOutput → FullOutput → ProbComp Result) (candidates : Result → List RootOutput)
     (budget : Nat) (bounded : ∀ context output result, result ∈ support (observe context output) →
       (candidates result).length ≤ budget) :
-    Pr[fun pair => pair.1 ∈ candidates pair.2 | uniform prior second observe] ≤
+    Pr{let pair ← uniform prior second observe}[pair.1 ∈ candidates pair.2] ≤
       (budget : ENNReal) / (2 ^ 256 : ENNReal) := by
-  have same := OracleComp.probEvent_congr'
-    (p := fun pair : RootOutput × Result => pair.1 ∈ candidates pair.2)
-    (q := fun pair : RootOutput × Result => pair.1 ∈ candidates pair.2)
-    (fun _ _ => Iff.rfl) (uniform_delayed prior second observe)
+  have same := (uniform_delayed prior second observe).prEvent_eq
+    (fun pair : RootOutput × Result => pair.1 ∈ candidates pair.2)
   rw [same, delayed]
-  refine probEvent_bind_le_of_forall_le (fun context _ => ?_)
-  refine probEvent_bind_le_of_forall_le (fun other _ => ?_)
-  refine probEvent_bind_le_of_forall_le (fun child _ => ?_)
-  refine probEvent_bind_le_of_forall_le (fun result reached => ?_)
-  rw [bind_pure_comp, probEvent_map]
+  refine prEvent_bind_le_of_forall_le _ _ _ (fun context => ?_)
+  refine prEvent_bind_le_of_forall_le _ _ _ (fun other => ?_)
+  refine prEvent_bind_le_of_forall_le _ _ _ (fun child => ?_)
+  refine prEvent_bind_le_of_forall_le_of_support _ _ _ (fun result reached => ?_)
+  rw [bind_pure_comp _ ($ᵗ RootOutput), prEvent_map]
   exact (RawCtxSelectedInputCandidates.uniform_candidates (candidates result)).trans
     (ENNReal.div_le_div_right (by exact_mod_cast bounded (context, other) child result reached) _)
 

@@ -65,11 +65,10 @@ theorem source_distance {Metadata Auxiliary Result : Type} {serverCount beaconCo
     tvDist ((simulateQ (observedImpl source writer (RawCtxKdfRequestTable.fullResponse output)
         sender decode owner reader) client).run state)
       (consistentGame source writer output reader target sender decode owner client state) ≤
-      Pr[fun result => target ∈ result.2.1.1.2.2 |
-        (simulateQ (observedImpl source writer (RawCtxKdfRequestTable.fullResponse output)
-          sender decode owner reader) client).run state].toReal := by
+      Pr{let result ← ((simulateQ (observedImpl source writer (RawCtxKdfRequestTable.fullResponse output)
+          sender decode owner reader) client).run state)}[target ∈ result.2.1.1.2.2].toReal := by
   rw [← source_project source writer output reader sender decode owner client state]
-  simp only [probEvent_map, Function.comp_def, regroup, joinState, consistentGame]
+  simp only [prEvent_map, regroup, joinState, consistentGame]
   exact (tvDist_map_le regroup _ _).trans
     (RawCtxSelectedAliasInitial.recorded_distance_initial
       (handler source writer output reader) (alternate source writer output reader) inputs target
@@ -103,18 +102,16 @@ theorem exposure_distance_initial {Metadata Auxiliary Result : Type} {serverCoun
         sender decode owner (nativeReader target)) client).run state)
       ((simulateQ (observedImpl source writer (RawCtxKdfRequestTable.fullResponse output)
         sender decode owner labelRead) client).run state) ≤
-      Pr[fun result => result.2.2 = true |
-        (simulateQ (observedImpl source writer (RawCtxKdfRequestTable.fullResponse output)
-          sender decode owner (nativeReader target)) client).run state].toReal := by
+      Pr{let result ← ((simulateQ (observedImpl source writer (RawCtxKdfRequestTable.fullResponse output)
+          sender decode owner (nativeReader target)) client).run state)}[result.2.2 = true].toReal := by
   rcases state with ⟨state, prior⟩
   cases prior with
   | false => exact exposure_distance source writer _ sender decode owner target client state
   | true =>
-    have one : Pr[fun result => result.2.2 = true |
-        (simulateQ (observedImpl source writer (RawCtxKdfRequestTable.fullResponse output)
-          sender decode owner (nativeReader target)) client).run (state, true)] = 1 := by
-      rw [probEvent_eq_one_iff]
-      exact ⟨by simp, observed_bad source writer output (nativeReader target) sender decode owner client (state, true) rfl⟩
+    have one : Pr{let result ← ((simulateQ (observedImpl source writer (RawCtxKdfRequestTable.fullResponse output)
+          sender decode owner (nativeReader target)) client).run (state, true))}[result.2.2 = true] = 1 := by
+      exact OracleComp.prEvent_eq_one_of_forall_mem_support _ _
+        (observed_bad source writer output (nativeReader target) sender decode owner client (state, true) rfl)
     simpa only [one, ENNReal.toReal_one] using
       tvDist_le_one ((simulateQ (observedImpl source writer (RawCtxKdfRequestTable.fullResponse output)
         sender decode owner (nativeReader target)) client).run (state, true))
@@ -131,12 +128,10 @@ theorem exposure_alias_distance {Metadata Auxiliary Result : Type} {serverCount 
         sender decode owner (nativeReader target)) client).run state)
       (consistentGame source writer output labelRead (RawCtxSelectedQueryTrace.rootVector target)
         sender decode owner client state) ≤
-      Pr[fun result => result.2.2 = true |
-        (simulateQ (observedImpl source writer (RawCtxKdfRequestTable.fullResponse output)
-          sender decode owner (nativeReader target)) client).run state].toReal +
-      Pr[fun result => RawCtxSelectedQueryTrace.rootVector target ∈ result.2.1.1.2.2 |
-        (simulateQ (observedImpl source writer (RawCtxKdfRequestTable.fullResponse output)
-          sender decode owner labelRead) client).run state].toReal := by
+      Pr{let result ← ((simulateQ (observedImpl source writer (RawCtxKdfRequestTable.fullResponse output)
+          sender decode owner (nativeReader target)) client).run state)}[result.2.2 = true].toReal +
+      Pr{let result ← ((simulateQ (observedImpl source writer (RawCtxKdfRequestTable.fullResponse output)
+          sender decode owner labelRead) client).run state)}[RawCtxSelectedQueryTrace.rootVector target ∈ result.2.1.1.2.2].toReal := by
   exact (tvDist_triangle _
     ((simulateQ (observedImpl source writer (RawCtxKdfRequestTable.fullResponse output)
       sender decode owner labelRead) client).run state) _).trans
@@ -158,14 +153,12 @@ theorem native_distance {Metadata Auxiliary Result : Type} {serverCount beaconCo
       (Prod.map id (RawCtxSelectedLiveSource.project target) <$>
         consistentGame source writer (nativeOutput source target) labelRead (RawCtxSelectedQueryTrace.rootVector target)
           sender decode owner client state) ≤
-      Pr[fun result => result.2.2 = true |
-        (simulateQ (observedImpl source writer
+      Pr{let result ← ((simulateQ (observedImpl source writer
           (RawCtxSourceHkdf.response source.crypto (RawCtxChainSend.nativeRequest target))
-          sender decode owner (nativeReader target)) client).run state].toReal +
-      Pr[fun result => RawCtxSelectedQueryTrace.rootVector target ∈ result.2.1.1.2.2 |
-        (simulateQ (observedImpl source writer
+          sender decode owner (nativeReader target)) client).run state)}[result.2.2 = true].toReal +
+      Pr{let result ← ((simulateQ (observedImpl source writer
           (RawCtxSourceHkdf.response source.crypto (RawCtxChainSend.nativeRequest target))
-          sender decode owner labelRead) client).run state].toReal := by
+          sender decode owner labelRead) client).run state)}[RawCtxSelectedQueryTrace.rootVector target ∈ result.2.1.1.2.2].toReal := by
   rw [RawCtxSelectedLiveSource.source_schedule]
   have projected := (tvDist_map_le (Prod.map id (RawCtxSelectedLiveSource.project target))
     ((simulateQ (observedImpl source writer (RawCtxKdfRequestTable.fullResponse (nativeOutput source target))

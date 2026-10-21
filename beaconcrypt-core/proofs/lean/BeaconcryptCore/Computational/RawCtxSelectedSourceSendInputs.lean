@@ -201,8 +201,9 @@ theorem nonce_input_bound (source : FixedHkdfSha512NoSaltSource) (writer : RawCt
       𝒟[(fun result => decide (RepeatedInput target result.2.1)) <$>
         (simulateQ (observed source writer prior parent key target nonce next sender route read) client).run ([], before)] {true} := by
   apply (RawCtxSelectedNonceSourceEvent.nonce_event_bound source writer prior parent key target nonce next sender route read client before empty).trans
-  simp only [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map, Function.comp_def, decide_eq_true_eq]
-  exact probEvent_mono (fun result supported repeated =>
+  repeat rw [← prEvent_eq_evalDist_singleton _ true]
+  simp only [prEvent_map, decide_eq_true_eq]
+  exact prEvent_mono_of_support _ _ _ (fun result supported repeated =>
     repeated_input source writer prior parent key target nonce next sender route read client before result supported repeated)
 
 /-- The whole source-to-executable CTX comparison is bounded by this source sending-input event with coefficient one and complete state retention. -/
@@ -224,8 +225,8 @@ theorem executable_distance (source : FixedHkdfSha512NoSaltSource) (writer : Raw
           (RawCtxSelectedFamilyNonceCoupling.optionalClient client)).run ([], before)] {true}).toReal := by
   apply (RawCtxSelectedFamilyNonceCoupling.executable_distance source writer prior parent key target nonce next sender route read client before).trans
   apply ENNReal.toReal_mono
-  · simp only [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput]
-    exact probEvent_ne_top
+  · rw [← prEvent_eq_evalDist_singleton _ true]
+    exact prEvent_ne_top _
   · exact nonce_input_bound source writer prior parent key target nonce next sender route read
       (RawCtxSelectedFamilyNonceCoupling.optionalClient client) before empty
 

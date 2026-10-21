@@ -261,19 +261,19 @@ theorem source_fresh_proxy {Result : Type} (parameters : Parameters)
 private theorem event_distance {Result : Type} (work : ProbComp Result) (actual proxy bad : Result → Prop)
     (included : ∀ result ∈ support work, actual result → proxy result)
     (agreed : ∀ result ∈ support work, proxy result → ¬ bad result → actual result) :
-    |(Pr[actual | work]).toReal - (Pr[proxy | work]).toReal| ≤ (Pr[bad | work]).toReal := by
-  have smaller : Pr[actual | work] ≤ Pr[proxy | work] := probEvent_mono included
-  have covered : Pr[proxy | work] ≤ Pr[fun result => actual result ∨ bad result | work] := by
-    apply probEvent_mono
+    |(Pr{let x ← work}[actual x]).toReal - (Pr{let x ← work}[proxy x]).toReal| ≤ (Pr{let x ← work}[bad x]).toReal := by
+  have smaller : Pr{let x ← work}[actual x] ≤ Pr{let x ← work}[proxy x] := prEvent_mono_of_support _ _ _ included
+  have covered : Pr{let x ← work}[proxy x] ≤ Pr{let result ← work}[actual result ∨ bad result] := by
+    apply prEvent_mono_of_support
     intro result supported enabled
     by_cases hit : bad result
     · exact Or.inr hit
     · exact Or.inl (agreed result supported enabled hit)
-  have larger : Pr[proxy | work] ≤ Pr[actual | work] + Pr[bad | work] :=
-    covered.trans (probEvent_or_le work actual bad)
-  have smallerReal := ENNReal.toReal_mono probEvent_ne_top smaller
-  have largerReal := ENNReal.toReal_mono (ENNReal.add_ne_top.mpr ⟨probEvent_ne_top, probEvent_ne_top⟩) larger
-  rw [ENNReal.toReal_add probEvent_ne_top probEvent_ne_top] at largerReal
+  have larger : Pr{let x ← work}[proxy x] ≤ Pr{let x ← work}[actual x] + Pr{let x ← work}[bad x] :=
+    covered.trans (prEvent_or_le work actual bad)
+  have smallerReal := ENNReal.toReal_mono (prEvent_ne_top _) smaller
+  have largerReal := ENNReal.toReal_mono (ENNReal.add_ne_top.mpr ⟨(prEvent_ne_top _), (prEvent_ne_top _)⟩) larger
+  rw [ENNReal.toReal_add (prEvent_ne_top _) (prEvent_ne_top _)] at largerReal
   rw [abs_sub_comm, abs_of_nonneg (sub_nonneg.mpr smallerReal)]
   linarith
 
@@ -285,10 +285,10 @@ theorem source_event_bound (parameters : Parameters)
     (blocked prior : List RatchetChain) (client : OracleComp (RawCtxProtocolReveals.SourceSpec S B) Bool)
     (state : FullState M P I D K A S B) (before : Invariant parameters.target prior state) :
     let work := (simulateQ (step parameters calls publicCalls sender route decode) client).run state
-    |(Pr[fun result => result.1 = true ∧ RawCtxLiveLineage.Fresh
-        (RawCtxFreshChainCut.concreteChain parameters.target :: blocked) prior result.2.1.2 | work]).toReal -
-      (Pr[fun result => result.1 = true ∧ Proxy blocked prior result.2.1.2 result.2.2.2 | work]).toReal| ≤
-      (Pr[fun result => parameters.target ∈ result.2.2.1.2 | work]).toReal := by
+    |(Pr{let result ← work}[result.1 = true ∧ RawCtxLiveLineage.Fresh
+        (RawCtxFreshChainCut.concreteChain parameters.target :: blocked) prior result.2.1.2]).toReal -
+      (Pr{let result ← work}[result.1 = true ∧ Proxy blocked prior result.2.1.2 result.2.2.2]).toReal| ≤
+      (Pr{let result ← work}[parameters.target ∈ result.2.2.1.2]).toReal := by
   apply event_distance
   · intro result supported enabled
     have after := schedule_invariant parameters calls publicCalls sender route decode prior client state before result supported
@@ -307,13 +307,13 @@ theorem compiled_event_bound (parameters : Parameters)
     (state : FullState M P I D K A S B) (before : Invariant parameters.target prior state) :
     let work := (simulateQ (observed parameters)
       ((simulateQ (compiler calls publicCalls sender route decode) client).run state.1)).run state.2
-    |(Pr[fun result => result.1.1 = true ∧ RawCtxLiveLineage.Fresh
-        (RawCtxFreshChainCut.concreteChain parameters.target :: blocked) prior result.1.2.2 | work]).toReal -
-      (Pr[fun result => result.1.1 = true ∧ Proxy blocked prior result.1.2.2 result.2.2 | work]).toReal| ≤
-      (Pr[fun result => parameters.target ∈ result.2.1.2 | work]).toReal := by
+    |(Pr{let result ← work}[result.1.1 = true ∧ RawCtxLiveLineage.Fresh
+        (RawCtxFreshChainCut.concreteChain parameters.target :: blocked) prior result.1.2.2]).toReal -
+      (Pr{let result ← work}[result.1.1 = true ∧ Proxy blocked prior result.1.2.2 result.2.2]).toReal| ≤
+      (Pr{let result ← work}[parameters.target ∈ result.2.1.2]).toReal := by
   have bounded := source_event_bound parameters calls publicCalls sender route decode blocked prior client state before
   rw [← source_project parameters calls publicCalls sender route decode client state] at bounded
-  simpa only [probEvent_map, Function.comp_def] using bounded
+  simpa only [prEvent_map, Function.comp_def] using bounded
 
 end BeaconcryptCore.Computational.RawCtxFamilySourceFreshness
 

@@ -60,7 +60,7 @@ theorem callback_risk (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMix
   cases query with
   | inl query =>
       rw [live_handler, probEvent_map]
-      exact RawCtxFirstParentRisk.callback_risk source writer depth k query state.1 valid clean unchosen
+      exact RawCtxFirstParentRisk.callback_risk_vcvioLegacy source writer depth k query state.1 valid clean unchosen
   | inr query =>
       rw [external_handler, probEvent_map]
       simp only [Clean, RawCtxFirstParentRisk.Clean] at clean ⊢
@@ -76,7 +76,7 @@ theorem scan_risk (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedSh
     Pr[fun result => ¬Clean result.2 | RawCtxStatefulPendingPrefix.scan (selected (extra := extra) depth)
       (handler source writer (depth + 1) external) client state] ≤
       ∑ j ∈ Finset.range calls, ((k + j + 1 : Nat) : ℝ≥0∞) * (2 ^ 256 : ℝ≥0∞)⁻¹ :=
-  RawCtxStatefulScanRisk.scan_risk _ _ counted Clean (Valid depth)
+  RawCtxStatefulScanRisk.scan_risk_vcvioLegacy _ _ counted Clean (Valid depth)
     (fun count => ((count + 1 : Nat) : ℝ≥0∞) * (2 ^ 256 : ℝ≥0∞)⁻¹)
     (fun count query before unchosen valid _ result supported =>
       valid_step source writer depth (depth + 1) count external query before valid unchosen result supported)

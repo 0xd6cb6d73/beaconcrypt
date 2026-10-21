@@ -35,12 +35,12 @@ theorem agree_good {ι State : Type} {spec : OracleSpec ι}
     (direct : spec.Domain → Bool)
     (safe : ∀ query, direct query = false → left query = right query)
     (query : spec.Domain) (state : State × List RootOutput) (reply : spec.Range query) (next : State × List RootOutput) :
-    Pr[= (reply, (next, false)) | (trace left record direct query).run (state, false)] =
-      Pr[= (reply, (next, false)) | (trace right record direct query).run (state, false)] := by
+    Pr{let x ← (trace left record direct query).run (state, false)}[x = (reply, (next, false))] =
+      Pr{let x ← (trace right record direct query).run (state, false)}[x = (reply, (next, false))] := by
   by_cases hit : direct query = true
   · have zero (handler : QueryImpl spec (StateT State ProbComp)) :
-        Pr[= (reply, (next, false)) | (trace handler record direct query).run (state, false)] = 0 := by
-      apply probOutput_eq_zero_of_not_mem_support
+        Pr{let x ← (trace handler record direct query).run (state, false)}[x = (reply, (next, false))] = 0 := by
+      apply (prEvent_eq_zero_of_not_mem_support _)
       exact fun supported => Bool.false_ne_true (by simpa only [hit, Bool.or_true] using
         (flag_step handler record direct query (state, false) (reply, (next, false)) supported))
     rw [zero, zero]
@@ -53,10 +53,19 @@ theorem event_good {ι State Result : Type} {spec : OracleSpec ι}
     (safe : ∀ query, direct query = false → left query = right query)
     (client : OracleComp spec Result) (state : (State × List RootOutput) × Bool)
     (event : Result × ((State × List RootOutput) × Bool) → Prop) :
-    Pr[fun result => event result ∧ result.2.2 = false | (simulateQ (trace left record direct) client).run state] =
-      Pr[fun result => event result ∧ result.2.2 = false | (simulateQ (trace right record direct) client).run state] := by
-  exact StatefulGoodEvent.event_good_vcvioLegacy _ _ (agree_good left right record direct safe)
+    Pr{let result ← (simulateQ (trace left record direct) client).run state}[event result ∧ result.2.2 = false] =
+      Pr{let result ← (simulateQ (trace right record direct) client).run state}[event result ∧ result.2.2 = false] := by
+  have good := StatefulGoodEvent.event_good _ _ (fun query before reply after => by
+      rw [← VCVioLegacy.oracleComp_probEvent_eq_prEvent, ← VCVioLegacy.oracleComp_probEvent_eq_prEvent]
+      exact (VCVioLegacy.probEvent_eq_prEvent _ _).trans
+        ((agree_good left right record direct safe query before reply after).trans (VCVioLegacy.probEvent_eq_prEvent _ _).symm))
     (sticky left record direct) (sticky right record direct) client state event
+  rw [← VCVioLegacy.oracleComp_probEvent_eq_prEvent, ← VCVioLegacy.oracleComp_probEvent_eq_prEvent] at good
+  exact (VCVioLegacy.probEvent_eq_prEvent _ _).symm.trans (good.trans (VCVioLegacy.probEvent_eq_prEvent _ _))
+
+set_option linter.deprecated false in set_option linter.unusedVariables false in theorem _root_.BeaconcryptCore.Computational.RawCtxFlaggedQueryAgreement.event_good_vcvioLegacy :
+    ∀ {ι State Result : Type} {spec : OracleSpec ι} (left right : QueryImpl spec (StateT State ProbComp)) (record : spec.Domain → List BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput) (direct : spec.Domain → Bool) (safe : ∀ (query : spec.Domain), direct query = Bool.false → left query = right query) (client : OracleComp spec Result) (state : (State × List BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput) × Bool) (event : Result × (State × List BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput) × Bool → Prop), (probEvent ((simulateQ (BeaconcryptCore.Computational.RawCtxFlaggedQueryTrace.trace left record direct) client).run state) fun (result : Result × (State × List BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput) × Bool) => event result ∧ result.2.2 = Bool.false) = probEvent ((simulateQ (BeaconcryptCore.Computational.RawCtxFlaggedQueryTrace.trace right record direct) client).run state) fun (result : Result × (State × List BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput) × Bool) => event result ∧ result.2.2 = Bool.false :=
+  by simpa only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent] using @BeaconcryptCore.Computational.RawCtxFlaggedQueryAgreement.event_good
 
 end BeaconcryptCore.Computational.RawCtxFlaggedQueryAgreement
 

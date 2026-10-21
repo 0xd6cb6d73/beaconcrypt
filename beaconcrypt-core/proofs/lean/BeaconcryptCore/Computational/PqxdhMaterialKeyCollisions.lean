@@ -53,10 +53,6 @@ theorem material_key_mem (prior : List RootOutput) :
     simpa only [List.mem_cons, List.length_cons, Nat.cast_add, Nat.cast_one,
       div_eq_mul_inv, add_mul, one_mul, add_comm] using union
 
-set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.material_key_mem_vcvioLegacy :
-    ∀ (prior : List BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput), (probEvent ($ᵗ BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.Material) fun (material : BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.Material) => material.1 ∈ prior) ≤ ↑prior.length / ↑(Fintype.card BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput) :=
-  by simpa only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent] using @BeaconcryptCore.Computational.PqxdhMaterialKeyCollisions.material_key_mem
-
 /-- Every supported full tape retains exactly its prescribed number of material positions. -/
 theorem sampleMaterials_length (count : Nat) (records : List Material)
     (supported : records ∈ support (sampleMaterials count)) : records.length = count := by

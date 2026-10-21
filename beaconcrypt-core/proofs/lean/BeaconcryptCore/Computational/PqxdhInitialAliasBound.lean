@@ -96,7 +96,7 @@ theorem candidates_bound (fixed : FixedHkdfSha512NoSaltSource)
   refine probEvent_bind_le_of_forall_le fun output _ => ?_
   refine probEvent_bind_le_of_forall_le fun result supported => ?_
   rw [bind_pure_comp, probEvent_map]
-  refine (RawCtxSelectedInputCandidates.uniform_candidates result.2.2).trans ?_
+  refine (RawCtxSelectedInputCandidates.uniform_candidates_vcvioLegacy result.2.2).trans ?_
   have length := trace_length fixed (selected context) (RawCtxSelectedInitialConstructor.response64 output)
     (client context) budget (bounded context) (∅, []) result supported
   simp only [List.length_nil, Nat.zero_add] at length

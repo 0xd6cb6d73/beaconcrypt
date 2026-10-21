@@ -80,12 +80,11 @@ theorem actual_source {Context : Type} (source : FixedHkdfSha512NoSaltSource)
 /-- The prefix-only full76 comparison has the same evaluated complete observation as the actual64 randomized initializer. -/
 theorem random_comparison {Context : Type} (sample : Sampler Context) (observe : Observer Context) :
     𝒟[independentFullGame (joint sample) (observer observe)] = 𝒟[random sample observe] := by
-  apply evalDist_eq_of_evalSPMF_eq
+  apply EvalDistEq.evalDist_eq
   simp only [independentFullGame, joint, bind_map_left, random]
-  refine evalSPMF_bind_congr' (m := ProbComp) (sample : ProbComp (Context × RootOutput)) (fun pair => ?_)
-  have projected := congrArg (fun distribution : SPMF HmacBlock => distribution >>=
-    fun output => evalSPMF (observe pair.1 (pair64 output))) initialPrefix_uniform_vcvioLegacy
-  simpa only [← evalSPMF_bind, bind_map_left, observer] using projected
+  refine EvalDistEq.bind_right (m := ProbComp) (sample : ProbComp (Context × RootOutput)) (fun pair => ?_)
+  have projected := initialPrefix_uniform.bind_left fun output => observe pair.1 (pair64 output)
+  simpa only [bind_map_left, observer] using projected
 
 /-- The actual paired64 initializer reduces with coefficient one to fixed-salt Extract on this exact root/context sampler and ordinary HMAC PRF. -/
 theorem primitive_bound {Context : Type} (source : FixedHkdfSha512NoSaltSource)

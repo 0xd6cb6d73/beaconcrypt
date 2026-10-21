@@ -100,17 +100,14 @@ theorem agree_good {Auxiliary : Type}
     (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
     (prior : Prior) (entry : Entry) (output : FullOutput) (target replacement : RootOutput)
     (query : Spec.Domain) (state : BaseState Auxiliary) (reply : Spec.Range query) (next : BaseState Auxiliary) :
-    Pr[= (reply, (next, false)) |
-      (observed source writer prior entry output (nativeReader (RawCtxFreshChainCut.concreteChain target))
-        (RawCtxSelectedParentPublic.reply prior entry target) query).run (state, false)] =
-    Pr[= (reply, (next, false)) |
-      (observed source writer prior entry output labelRead
-        (RawCtxSelectedParentPublic.reply prior entry replacement) query).run (state, false)] := by
+    Pr{let x ← ((observed source writer prior entry output (nativeReader (RawCtxFreshChainCut.concreteChain target))
+        (RawCtxSelectedParentPublic.reply prior entry target) query).run (state, false))}[x = ((reply, (next, false)) : Spec.Range query × State Auxiliary)] =
+    Pr{let x ← ((observed source writer prior entry output labelRead
+        (RawCtxSelectedParentPublic.reply prior entry replacement) query).run (state, false))}[x = ((reply, (next, false)) : Spec.Range query × State Auxiliary)] := by
   by_cases hit : direct entry query = true
   · have zero (reader : Reader) (view : View) :
-        Pr[= (reply, (next, false)) |
-          (observed source writer prior entry output reader view query).run (state, false)] = 0 := by
-      apply probOutput_eq_zero_of_not_mem_support
+        Pr{let x ← (observed source writer prior entry output reader view query).run (state, false)}[x = (reply, (next, false))] = 0 := by
+      apply (prEvent_eq_zero_of_not_mem_support _)
       exact fun supported => Bool.false_ne_true (hit_marked source writer prior entry output reader view
         query (state, false) hit (reply, (next, false)) supported)
     rw [zero, zero]
@@ -121,17 +118,21 @@ theorem event_good {Auxiliary Result : Type}
     (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
     (prior : Prior) (entry : Entry) (output : FullOutput) (target replacement : RootOutput)
     (client : OracleComp Spec Result) (state : State Auxiliary) (event : Result × State Auxiliary → Prop) :
-    Pr[fun result => event result ∧ result.2.2 = false |
-      (simulateQ (observed source writer prior entry output (nativeReader (RawCtxFreshChainCut.concreteChain target))
-        (RawCtxSelectedParentPublic.reply prior entry target)) client).run state] =
-    Pr[fun result => event result ∧ result.2.2 = false |
-      (simulateQ (observed source writer prior entry output labelRead
-        (RawCtxSelectedParentPublic.reply prior entry replacement)) client).run state] := by
-  exact StatefulGoodEvent.event_good_vcvioLegacy _ _ (agree_good source writer prior entry output target replacement)
+    Pr{let result ← ((simulateQ (observed source writer prior entry output (nativeReader (RawCtxFreshChainCut.concreteChain target))
+        (RawCtxSelectedParentPublic.reply prior entry target)) client).run state)}[event result ∧ result.2.2 = false] =
+    Pr{let result ← ((simulateQ (observed source writer prior entry output labelRead
+        (RawCtxSelectedParentPublic.reply prior entry replacement)) client).run state)}[event result ∧ result.2.2 = false] := by
+  have good := StatefulGoodEvent.event_good _ _
+    (fun query before reply after => by
+      rw [← VCVioLegacy.oracleComp_probEvent_eq_prEvent, ← VCVioLegacy.oracleComp_probEvent_eq_prEvent]
+      exact (VCVioLegacy.probEvent_eq_prEvent _ _).trans
+        ((agree_good source writer prior entry output target replacement query before reply after).trans (VCVioLegacy.probEvent_eq_prEvent _ _).symm))
     (sticky source writer prior entry output (nativeReader (RawCtxFreshChainCut.concreteChain target))
       (RawCtxSelectedParentPublic.reply prior entry target))
     (sticky source writer prior entry output labelRead (RawCtxSelectedParentPublic.reply prior entry replacement))
     client state event
+  rw [← VCVioLegacy.oracleComp_probEvent_eq_prEvent, ← VCVioLegacy.oracleComp_probEvent_eq_prEvent] at good
+  exact (VCVioLegacy.probEvent_eq_prEvent _ _).symm.trans (good.trans (VCVioLegacy.probEvent_eq_prEvent _ _))
 
 end BeaconcryptCore.Computational.RawCtxSelectedParentLive
 

@@ -105,15 +105,14 @@ theorem agree_good {Metadata Auxiliary : Type} {serverCount beaconCount : Nat}
     (owner : RawCtxProtocolReveals.Owner serverCount beaconCount) (target : RatchetChain)
     (query : SourceSpec.Domain) (state : BaseState Metadata Auxiliary serverCount beaconCount)
     (reply : SourceSpec.Range query) (next : BaseState Metadata Auxiliary serverCount beaconCount) :
-    Pr[= (reply, (next, false)) |
-      (observedImpl source writer challenge sender decode owner (nativeReader target) query).run (state, false)] =
-    Pr[= (reply, (next, false)) |
-      (observedImpl source writer challenge sender decode owner labelRead query).run (state, false)] := by
+    Pr{let x ← (observedImpl source writer challenge sender decode owner (nativeReader target) query).run (state, false)}[
+      x = ((reply, (next, false)) : SourceSpec.Range query × State Metadata Auxiliary serverCount beaconCount)] =
+    Pr{let x ← (observedImpl source writer challenge sender decode owner labelRead query).run (state, false)}[
+      x = ((reply, (next, false)) : SourceSpec.Range query × State Metadata Auxiliary serverCount beaconCount)] := by
   by_cases hit : direct query state = true
   · have zero (reader : Reader) :
-        Pr[= (reply, (next, false)) |
-          (observedImpl source writer challenge sender decode owner reader query).run (state, false)] = 0 := by
-      apply probOutput_eq_zero_of_not_mem_support
+        Pr{let x ← (observedImpl source writer challenge sender decode owner reader query).run (state, false)}[x = (reply, (next, false))] = 0 := by
+      apply (prEvent_eq_zero_of_not_mem_support _)
       intro supported
       exact Bool.false_ne_true (hit_marked source writer challenge sender decode owner reader
         query (state, false) hit (reply, (next, false)) supported)
@@ -129,12 +128,15 @@ theorem exposure_distance {Metadata Auxiliary Result : Type} {serverCount beacon
     (client : OracleComp SourceSpec Result) (state : BaseState Metadata Auxiliary serverCount beaconCount) :
     tvDist ((simulateQ (observedImpl source writer challenge sender decode owner (nativeReader target)) client).run (state, false))
       ((simulateQ (observedImpl source writer challenge sender decode owner labelRead) client).run (state, false)) ≤
-      Pr[fun result => result.2.2 = true |
-        (simulateQ (observedImpl source writer challenge sender decode owner (nativeReader target)) client).run (state, false)].toReal := by
-  exact OracleComp.ProgramLogic.Relational.tvDist_simulateQ_run_le_probEvent_output_bad
-    _ _ client state (agree_good source writer challenge sender decode owner target)
+      Pr{let result ← (simulateQ (observedImpl source writer challenge sender decode owner (nativeReader target)) client).run (state, false)}[result.2.2 = true].toReal := by
+  have bound := OracleComp.ProgramLogic.Relational.tvDist_simulateQ_run_le_probEvent_output_bad
+    _ _ client state (fun query before reply after => by
+      simpa only [VCVioLegacy.probOutput_eq_prEvent] using
+        agree_good source writer challenge sender decode owner target query before reply after)
     (sticky source writer challenge sender decode owner (nativeReader target))
     (sticky source writer challenge sender decode owner labelRead)
+  rw [VCVioLegacy.probEvent_eq_prEvent] at bound
+  exact bound
 
 /-- Masking the first unavailable reply preserves the probability of that same first exposure, without a second sampler. -/
 theorem exposure_probability {Metadata Auxiliary Result : Type} {serverCount beaconCount : Nat}
@@ -142,14 +144,16 @@ theorem exposure_probability {Metadata Auxiliary Result : Type} {serverCount bea
     (challenge : RatchetKdfResponse) (sender : Std.U64) (decode : RawCtxReceive.FrameDecoder)
     (owner : RawCtxProtocolReveals.Owner serverCount beaconCount) (target : RatchetChain)
     (client : OracleComp SourceSpec Result) (state : BaseState Metadata Auxiliary serverCount beaconCount) :
-    Pr[fun result => result.2.2 = true |
-      (simulateQ (observedImpl source writer challenge sender decode owner (nativeReader target)) client).run (state, false)] =
-    Pr[fun result => result.2.2 = true |
-      (simulateQ (observedImpl source writer challenge sender decode owner labelRead) client).run (state, false)] := by
-  exact OracleComp.ProgramLogic.Relational.probEvent_output_bad_eq' _ _
-    (agree_good source writer challenge sender decode owner target)
+    Pr{let result ← (simulateQ (observedImpl source writer challenge sender decode owner (nativeReader target)) client).run (state, false)}[result.2.2 = true] =
+    Pr{let result ← (simulateQ (observedImpl source writer challenge sender decode owner labelRead) client).run (state, false)}[result.2.2 = true] := by
+  have equal := OracleComp.ProgramLogic.Relational.probEvent_output_bad_eq' _ _
+    (fun query before reply after => by
+      simpa only [VCVioLegacy.probOutput_eq_prEvent] using
+        agree_good source writer challenge sender decode owner target query before reply after)
     (sticky source writer challenge sender decode owner (nativeReader target))
     (sticky source writer challenge sender decode owner labelRead) client state
+  rw [VCVioLegacy.probEvent_eq_prEvent, VCVioLegacy.probEvent_eq_prEvent] at equal
+  exact equal
 
 def cost : SourceSpec.Domain → Nat
   | .inl query => RawCtxSelectedPublicTrace.cost query

@@ -111,10 +111,9 @@ theorem source_exposure_distance {Metadata Auxiliary Result : Type} {serverCount
         (simulateQ (observedImpl source writer
           (RawCtxSourceHkdf.response source.crypto (RawCtxChainSend.nativeRequest target))
           sender decode owner labelRead) client).run (state, false)) ≤
-      Pr[fun result => result.2.2 = true |
-        (simulateQ (observedImpl source writer
+      Pr{let result ← ((simulateQ (observedImpl source writer
           (RawCtxSourceHkdf.response source.crypto (RawCtxChainSend.nativeRequest target))
-          sender decode owner (nativeReader target)) client).run (state, false)].toReal := by
+          sender decode owner (nativeReader target)) client).run (state, false))}[result.2.2 = true].toReal := by
   rw [source_schedule]
   exact (tvDist_map_le (Prod.map id (project target)) _ _).trans
     (exposure_distance source writer _ sender decode owner target client state)

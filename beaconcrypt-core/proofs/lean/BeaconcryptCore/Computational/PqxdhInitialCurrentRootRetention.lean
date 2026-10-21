@@ -44,7 +44,7 @@ theorem complete_split
             next pair.1 pair.2 (RawCtxInitialSentinelSampler.join (second pair) other target))] := by
   refine evalSPMF_bind_congr' (sample env baseImpl kem attachedVerify primitives program post) (fun pair => ?_)
   simpa only [RawCtxInitialSentinelSampler.join_parts] using
-    RawCtxInitialChildSecrecy.parts_observed (second pair)
+    RawCtxInitialChildSecrecy.parts_observed_vcvioLegacy (second pair)
       (fun other target => next pair.1 pair.2 (RawCtxInitialSentinelSampler.join (second pair) other target))
 
 /-- The first-child ordinary sampler contains the exact current preparation and its earlier root, plus the opposite half; only the selected half is serialized as the unavailable input. -/
@@ -54,7 +54,7 @@ theorem joint_separated
       (sample env baseImpl kem attachedVerify primitives program post) second] =
       𝒮[RawCtxInitialChildSecrecy.separated
         (sample env baseImpl kem attachedVerify primitives program post)] :=
-  RawCtxInitialChildSecrecy.joint_separated _ second
+  RawCtxInitialChildSecrecy.joint_separated_vcvioLegacy _ second
 
 /-- Private root retention adds no query: the exact current source certificate still pays its preparation,64-byte response and complete observer bill. -/
 theorem retained_uniform (c : PqxdhAuthenticatedRootBudgets.Certificate env baseImpl kem program post) :

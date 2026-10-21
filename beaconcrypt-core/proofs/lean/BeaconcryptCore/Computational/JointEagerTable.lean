@@ -110,15 +110,6 @@ theorem independent_comm_spmf {A B Result : Type}
       (right >>= fun b => left >>= fun a => next a b) :=
   OracleComp.EvalDistEq.bind_bind_swap left right next
 
-set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.JointEagerTable.independent_comm_spmf_vcvioLegacy :
-    ∀ {A B Result : Type} (left : ProbComp A) (right : ProbComp B) (next : A → B → ProbComp Result),
-      𝒮[left >>= fun (a : A) => right >>= next a] =
-        𝒮[do
-          let b ← right
-          let a ← left
-          next a b] :=
-  by simpa only [BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq] using @BeaconcryptCore.Computational.JointEagerTable.independent_comm_spmf
-
 /-- The measure-level form of independent explicit sampler reordering. -/
 theorem independent_comm {A B Result : Type} [MeasurableSpace Result]
     (left : ProbComp A) (right : ProbComp B)

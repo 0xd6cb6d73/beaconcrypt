@@ -46,7 +46,7 @@ theorem actual_route (sample : ProbComp (Packet (extra := extra) (M := M) (P := 
     RawCtxFullPreimageTester.actual, RawCtxFullPreimageTester.production, bad,
     Nat.cast_ofNat, bind_assoc, pure_bind, ← probEvent_eq_eq_probOutput, probEvent_bind_eq_tsum,
     probEvent_map, Function.comp_def, decide_eq_true_eq, probEvent_pure, mul_ite, mul_one, mul_zero] using
-      RawCtxScaledBadEventMixture.bind_bound (RawCtxSelectedParentCandidates.sample sample address)
+      RawCtxScaledBadEventMixture.bind_bound_vcvioLegacy (RawCtxSelectedParentCandidates.sample sample address)
         (fun pair => native source writer sender route decode depth remaining pair.1 pair.2
           (productionStream source.crypto (FixedHkdfDomain.ratchet.address pair.2.toList)))
         (fun pair => observer source writer sender route decode depth remaining pair.1
@@ -67,7 +67,7 @@ theorem random_route (sample : ProbComp (Packet (extra := extra) (M := M) (P := 
       3 * Pr[fun pair => pair.1 ∈ PqxdhInitialCommonSecrecy.candidates pair.2 |
         RawCtxSelectedParentCandidates.uniform sample address
           (observed source writer sender route decode depth remaining)].toReal := by
-  have bound := RawCtxScaledBadEventMixture.bind_bound
+  have bound := RawCtxScaledBadEventMixture.bind_bound_vcvioLegacy
     (do let pair ← RawCtxSelectedParentCandidates.sample sample address
         let output ← $ᵗ FullOutput
         pure (pair, output))
@@ -98,7 +98,7 @@ theorem actual_bound (hmac : HmacSha512) (correct : SourceFullCorrect source hma
     (show ((2 ^ 352 : ENNReal)⁻¹ + ENNReal.ofReal (
       RawCtxSelectedParentHop.extractLoss hmac sample address (aliasTester source writer sender route decode depth remaining) +
         RawCtxSelectedParentHop.hmacLoss hmac sample address (aliasTester source writer sender route decode depth remaining))) ≠ ⊤ by simp)
-    (RawCtxSelectedParentCandidates.real_bound source hmac correct sample address
+    (RawCtxSelectedParentCandidates.real_bound_vcvioLegacy source hmac correct sample address
       (observed source writer sender route decode depth remaining) PqxdhInitialCommonSecrecy.candidates)
   have nonnegative : 0 ≤
       RawCtxSelectedParentHop.extractLoss hmac sample address (aliasTester source writer sender route decode depth remaining) +
@@ -122,7 +122,7 @@ theorem random_bound (sample : ProbComp (Packet (extra := extra) (M := M) (P := 
   simpa using (random_route source writer sender route decode depth remaining sample address).trans
     (mul_le_mul_of_nonneg_left
       (ENNReal.toReal_mono (ENNReal.div_ne_top (by simp) (by simp))
-        (RawCtxSelectedParentCandidates.uniform_bound sample address
+        (RawCtxSelectedParentCandidates.uniform_bound_vcvioLegacy sample address
           (observed source writer sender route decode depth remaining)
           PqxdhInitialCommonSecrecy.candidates qCandidates bounded)) (by norm_num))
 

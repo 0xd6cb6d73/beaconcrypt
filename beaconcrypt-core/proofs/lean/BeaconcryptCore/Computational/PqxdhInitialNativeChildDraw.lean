@@ -152,7 +152,7 @@ theorem bare_uniform (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixe
     𝒮[($ᵗ FullOutput) >>= fun output =>
       (simulateQ (retained source writer (view (productionStream source.crypto)
         (state.1.2.1.cacheQuery (cursorAddress state.1.2.2) output)) external) client).run (state.1.1, state.2)] := by
-  have actual := RawCtxSelectiveSingleDraw.single_uniform source (other source writer external)
+  have actual := RawCtxSelectiveSingleDraw.single_uniform_vcvioLegacy source (other source writer external)
     (simulateQ compiler client) (state.1.1, state.2) state.1.2.1 state.1.2.2 missing
   simp only [Prod.eta] at actual
   have flattened := bare_program source writer (state.1.2.2.depth + 1) external client state

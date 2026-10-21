@@ -109,27 +109,39 @@ theorem send_selected {Context : Type}
 /-- Sampling the selected message key after the known nonce and next chain preserves every complete continuation, not just marginal key distributions. -/
 theorem key_observed {Result : Type}
     (continuation : RootOutput → NonceOutput → RootOutput → ProbComp Result) :
-    𝒮[($ᵗ FullOutput) >>= fun output =>
-      continuation (material output).1 (material output).2 (nextChain output)] =
-      𝒮[(do let nonce ← $ᵗ NonceOutput
+    EvalDistEq (($ᵗ FullOutput) >>= fun output =>
+      continuation (material output).1 (material output).2 (nextChain output))
+        (do let nonce ← $ᵗ NonceOutput
              let chain ← $ᵗ RootOutput
              let key ← $ᵗ RootOutput
-             continuation key nonce chain)] := by
-  have original := fullOutput_observed_vcvioLegacy (fun value chain => continuation value.1 value.2 chain)
-  have reordered := evalSPMF_bind_bind_swap ($ᵗ RootOutput)
+             continuation key nonce chain) := by
+  have original := fullOutput_observed (fun value chain => continuation value.1 value.2 chain)
+  have reordered := OracleComp.EvalDistEq.bind_bind_swap ($ᵗ RootOutput)
     ($ᵗ (NonceOutput × RootOutput)) (fun key pair => continuation key pair.1 pair.2)
   simp only [← pairSample, bind_assoc, pure_bind] at original reordered
   exact original.trans reordered
 
+set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.RawCtxSelectedMessageKey.key_observed_vcvioLegacy :
+    ∀ {Result : Type} (continuation : BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput → BeaconcryptCore.Computational.PqxdhFullSecretInputKdf.NonceOutput → BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput → ProbComp Result),
+      𝒮[do
+          let output ← $ᵗ BeaconcryptCore.Computational.PqxdhFullSecretInputKdf.FullOutput
+          continuation (BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.material output).1 (BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.material output).2 (BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.nextChain output)] =
+        𝒮[do
+          let nonce ← $ᵗ BeaconcryptCore.Computational.PqxdhFullSecretInputKdf.NonceOutput
+          let chain ← $ᵗ BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput
+          let key ← $ᵗ BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput
+          continuation key nonce chain] :=
+  by simpa only [BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq] using @BeaconcryptCore.Computational.RawCtxSelectedMessageKey.key_observed
+
 /-- The exact native decoder, with all three projections used jointly, factors through the ordinary uniform selected key sample. -/
 theorem decoded_observed {Result : Type}
     (continuation : (RatchetChain × RatchetMaterial) → ProbComp Result) :
-    𝒮[($ᵗ FullOutput) >>= fun output =>
-      continuation (RawCtxInterpretedReceive.decodeResponse (RawCtxKdfRequestTable.fullResponse output))] =
-      𝒮[(do let nonce ← $ᵗ NonceOutput
+    EvalDistEq (($ᵗ FullOutput) >>= fun output =>
+      continuation (RawCtxInterpretedReceive.decodeResponse (RawCtxKdfRequestTable.fullResponse output)))
+        (do let nonce ← $ᵗ NonceOutput
              let chain ← $ᵗ RootOutput
              let key ← $ᵗ RootOutput
-             continuation (concreteChain chain, interpret key (.hidden nonce)))] := by
+             continuation (concreteChain chain, interpret key (.hidden nonce))) := by
   simpa only [decoded_selected] using key_observed
     (fun key nonce chain => continuation (concreteChain chain, interpret key (.hidden nonce)))
 
@@ -137,15 +149,15 @@ theorem decoded_observed {Result : Type}
 theorem receive_observed {Context Result : Type}
     (pending : RawCtxInterpretedReceive.Kdf RatchetMaterial Context)
     (continuation : RawCtxInterpretedReceive.Effect RatchetMaterial Context → ProbComp Result) :
-    𝒮[($ᵗ FullOutput) >>= fun output => continuation
+    EvalDistEq (($ᵗ FullOutput) >>= fun output => continuation
       (RawCtxInterpretedReceive.normalResume pending
-        (RawCtxInterpretedReceive.decodeResponse (RawCtxKdfRequestTable.fullResponse output)))] =
-      𝒮[(do let nonce ← $ᵗ NonceOutput
+        (RawCtxInterpretedReceive.decodeResponse (RawCtxKdfRequestTable.fullResponse output))))
+        (do let nonce ← $ᵗ NonceOutput
              let chain ← $ᵗ RootOutput
              let key ← $ᵗ RootOutput
              continuation (RawCtxInterpretedReceive.mapEffect (interpret key)
                (RawCtxInterpretedReceive.normalResume (RawCtxInterpretedReceive.mapKdf Slot.known pending)
-                 (concreteChain chain, .hidden nonce))))] := by
+                 (concreteChain chain, .hidden nonce)))) := by
   simpa only [receive_selected] using key_observed
     (fun key nonce chain => continuation (RawCtxInterpretedReceive.mapEffect (interpret key)
       (RawCtxInterpretedReceive.normalResume (RawCtxInterpretedReceive.mapKdf Slot.known pending)
@@ -165,15 +177,16 @@ noncomputable def prepareReceive {Context : Type}
 theorem receive_prepared {Context Result : Type}
     (sample : ProbComp (RawCtxInterpretedReceive.Kdf RatchetMaterial Context))
     (continuation : RawCtxInterpretedReceive.Effect RatchetMaterial Context → ProbComp Result) :
-    𝒮[(do let pending ← sample
+    EvalDistEq
+      (do let pending ← sample
            let output ← $ᵗ FullOutput
            continuation (RawCtxInterpretedReceive.normalResume pending
-             (RawCtxInterpretedReceive.decodeResponse (RawCtxKdfRequestTable.fullResponse output))))] =
-      𝒮[(do let prepared ← prepareReceive sample
+             (RawCtxInterpretedReceive.decodeResponse (RawCtxKdfRequestTable.fullResponse output))))
+        (do let prepared ← prepareReceive sample
              let key ← $ᵗ RootOutput
-             continuation (RawCtxInterpretedReceive.mapEffect (interpret key) prepared))] := by
+             continuation (RawCtxInterpretedReceive.mapEffect (interpret key) prepared)) := by
   simp only [prepareReceive, bind_assoc, pure_bind]
-  exact evalSPMF_bind_congr' sample (fun pending => receive_observed pending continuation)
+  exact EvalDistEq.bind_right sample (fun pending => receive_observed pending continuation)
 
 /-- Every original preparation random query remains charged, plus the actual 12-byte nonce and 32-byte next chain; the primitive challenger separately supplies its 32-byte key. -/
 theorem prepare_receive_bound {Context : Type}

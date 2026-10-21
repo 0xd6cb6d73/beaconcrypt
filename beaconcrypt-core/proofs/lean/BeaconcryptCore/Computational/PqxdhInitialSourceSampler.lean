@@ -67,7 +67,7 @@ theorem full_continuation (source : FixedHkdfSha512NoSaltSource) (writer : RawCt
               (PqxdhOrderedChainHybrids.nextChain output)) result)] := by
   apply evalSPMF_bind_congr' prior
   intro context
-  have halves := initial_observed (input context).second
+  have halves := initial_observed_vcvioLegacy (input context).second
     (fun other target => do
       let result ← sourceBuilder source writer (aux context) sender (input context) (join (input context).second other target)
       next context (join (input context).second other target) result)

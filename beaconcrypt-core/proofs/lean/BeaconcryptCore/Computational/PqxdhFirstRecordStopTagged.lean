@@ -5319,7 +5319,7 @@ theorem delayed_bound (run : ProbComp Log) (budget : Nat) (bounded : ∀ log ∈
     funext target
     simp only [Function.comp_apply, decide_eq_true_eq]
   rw [uniform]
-  exact (RawCtxSelectedInputCandidates.uniform_candidates log).trans
+  exact (RawCtxSelectedInputCandidates.uniform_candidates_vcvioLegacy log).trans
     (ENNReal.div_le_div_right (by exact_mod_cast bounded log supported) _)
 
 end Sampling
@@ -5486,7 +5486,7 @@ theorem tagged_game_bound (budget : Kind → Nat)
       𝒮[$ᵗ RootOutput >>= fun other => $ᵗ RootOutput >>= fun value => $ᵗ NonceOutput >>= fun nonce => $ᵗ RootOutput >>= fun chain =>
         $ᵗ RootOutput >>= fun key => (fun log => decide (value ∈ log)) <$>
           taggedLog setup env callbacks baseImpl kem attachedVerify primitives program post target context other key nonce chain] :=
-    fun context => RawCtxSelectedInitialSecond.second_observed (fun other value => $ᵗ NonceOutput >>= fun nonce =>
+    fun context => RawCtxSelectedInitialSecond.second_observed_vcvioLegacy (fun other value => $ᵗ NonceOutput >>= fun nonce =>
       $ᵗ RootOutput >>= fun chain => $ᵗ RootOutput >>= fun key => (fun log => decide (value ∈ log)) <$>
         taggedLog setup env callbacks baseImpl kem attachedVerify primitives program post target context other key nonce chain)
   have equal := congrArg (fun distribution => distribution true) (evalSPMF_bind_congr' (PqxdhCorrelatedExtractFamily.prepare baseImpl

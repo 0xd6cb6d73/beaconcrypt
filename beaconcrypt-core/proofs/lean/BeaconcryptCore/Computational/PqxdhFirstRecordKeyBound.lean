@@ -737,7 +737,7 @@ theorem hitSource_reorder (qCand : Nat) (target : Target S (B + 1)) :
         (simulateQ (AdaptiveCtxDynamicKnownKeys.sourceImpl true (RawCtxUniversalDecoder.decoder (env0).decode)
           (env0).source.crypto key) (keySuffix setup env callbacks baseImpl kem attachedVerify primitives program post b target
             result.1)).run (RawCtxSourceSharedRom.install AdaptiveCtxDynamicKnownKeys.initialSource result.2)] := by
-  have exchanged := RawCtxPrefixKeyOrder.complete true (RawCtxUniversalDecoder.decoder (env0).decode) (env0).source.crypto
+  have exchanged := RawCtxPrefixKeyOrder.complete_vcvioLegacy true (RawCtxUniversalDecoder.decoder (env0).decode) (env0).source.crypto
     (prelude setup env callbacks baseImpl kem attachedVerify primitives program post)
     (fun key context state => (fun final : List CtxKey × AdaptiveCtxDynamicKnownKeys.SourceState =>
       decide (key ∈ final.1.take qCand)) <$>
@@ -859,7 +859,7 @@ theorem source_candidate_bound (decode : RawDecoder) (c : Pqxdh.Crypto) (fallbac
       pure (decide (key ∈ result.1.take qCand))] {true} ≤
     keyLoss decode c fallback (recvClient c qCand client) qHash qCand qRaw := by
   rw [source_candidate]
-  refine RawCtxSelectedKeyProbes.candidate_bound decode c fallback (recvClient c qCand client) qHash qCand qSeal qRaw ?_
+  refine RawCtxSelectedKeyProbes.candidate_bound_vcvioLegacy decode c fallback (recvClient c qCand client) qHash qCand qSeal qRaw ?_
     (recvClient_length c qCand client) ?_ ?_ small
   · exact (isQueryBoundP_map_iff _ _ _).mpr (hash_bound c client qHash hashBound _)
   · exact (isQueryBoundP_map_iff _ _ _).mpr (target_bound c _ AdaptiveCtxSharedTarget.forward_seal_class client qSeal sealBound _)

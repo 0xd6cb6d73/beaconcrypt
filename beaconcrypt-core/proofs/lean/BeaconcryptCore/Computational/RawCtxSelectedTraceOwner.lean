@@ -261,8 +261,7 @@ theorem stopped_candidates_bound {Prior Metadata Auxiliary Result : Type}
     (rawBound : client.IsQueryBoundP (fun query => query.isRight = true) qRaw)
     (sample : ProbComp Prior)
     (stop : Prior → RatchetMaterial → RawCtxSelectedChainGame.Context Metadata Auxiliary) :
-    Pr[fun result => result.1 ∈ candidates result.2 |
-      RawCtxFreshChainCut.observedCut sample stop (randomObserver source writer sender decode client)] ≤
+    Pr{let result ← RawCtxFreshChainCut.observedCut sample stop (randomObserver source writer sender decode client)}[result.1 ∈ candidates result.2] ≤
       ((qSend + 51*qRaw : Nat) : ℝ≥0∞) / (2 ^ 256 : ℝ≥0∞) :=
   RawCtxSelectedInputCandidates.observed_candidates sample stop
     (randomObserver source writer sender decode client) candidates (qSend + 51*qRaw)

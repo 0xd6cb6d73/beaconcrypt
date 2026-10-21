@@ -122,16 +122,17 @@ theorem assemble_parts (output : FullOutput) :
 
 /-- A uniform full response partitions into a target key, local next chain and nonce under any complete continuation. -/
 theorem full_partition {Result : Type} (next : FullOutput → ProbComp Result) :
-    𝒮[do let output ← $ᵗ FullOutput; next output] =
-      𝒮[do let key ← $ᵗ KeyPart
+    EvalDistEq (do let output ← $ᵗ FullOutput; next output)
+      (do let key ← $ᵗ KeyPart
             let chain ← $ᵗ ChainPart
             let nonce ← $ᵗ NoncePart
-            next (assemble (key, chain, nonce))] := by
-  have uniform := evalSPMF_map_bijective_uniform_cross Parts
-    PqxdhProjectionCollisions.jointKdfStreamProjectionEquiv.symm
-    PqxdhProjectionCollisions.jointKdfStreamProjectionEquiv.symm.bijective
-  have observed := congrArg (fun distribution => distribution >>= fun output => 𝒮[next output]) uniform
-  simpa only [← evalSPMF_bind, bind_map_left, ← pairSample, bind_assoc, pure_bind, assemble] using observed.symm
+            next (assemble (key, chain, nonce))) := by
+  have uniform : EvalDistEq (PqxdhProjectionCollisions.jointKdfStreamProjectionEquiv.symm <$> ($ᵗ Parts : ProbComp Parts))
+      ($ᵗ FullOutput : ProbComp FullOutput) :=
+    SampleableType.map_uniformSample_evalDistEq_of_bijective
+      PqxdhProjectionCollisions.jointKdfStreamProjectionEquiv.symm.bijective
+  have observed := uniform.bind_left next
+  simpa only [bind_map_left, ← pairSample, bind_assoc, pure_bind, assemble] using observed.symm
 
 /-- Erase only memoization state; every other primitive retains its original stateful handler. -/
 noncomputable def directImpl {ι State : Type} {spec : OracleSpec ι}

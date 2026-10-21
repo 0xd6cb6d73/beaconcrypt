@@ -84,7 +84,7 @@ theorem key_order (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseImpl k
         (suffix setup env callbacks program post attachedVerify primitives baseImpl kem c result.1)).run
           (RawCtxSourceSharedRom.install AdaptiveCtxDynamicKnownKeys.initialSource result.2))] := by
   apply evalDist_eq_of_evalSPMF_eq
-  exact RawCtxPrefixKeyOrder.source_game true (RawCtxUniversalDecoder.decoder env.decode) env.source.crypto _ _
+  exact RawCtxPrefixKeyOrder.source_game_vcvioLegacy true (RawCtxUniversalDecoder.decoder env.decode) env.source.crypto _ _
 
 /-- The complete sampled saved continuation counts every attempted selected seal, raw opening and public hash before any refusal. Source-local uniform and native primitive work remain separate ledger classes. -/
 theorem suffix_bills (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseImpl kem program post)

@@ -1666,7 +1666,7 @@ theorem prelude_alias (key : CtxKey) :
   refine le_of_eq_of_le (Eq.trans rfl restored) ?_
   refine probEvent_bind_le_of_forall_le fun context _ => ?_
   refine (probEvent_bind_le_probEvent (p := RawCtxSendLineageCollision.InitialAlias) ?_).trans
-    RawCtxSendLineageCollision.initial_alias_uniform
+    RawCtxSendLineageCollision.initial_alias_uniform_vcvioLegacy
   intro initialBlock _ separate
   simp
   intro _ _ _ _ _ _ _ same _ _

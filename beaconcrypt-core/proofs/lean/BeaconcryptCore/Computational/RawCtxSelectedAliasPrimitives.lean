@@ -124,8 +124,7 @@ theorem recorded_distance {Auxiliary Result : Type}
     (state : RawCtxSharedPrimitive.SharedState Auxiliary) :
     tvDist ((simulateQ (RawCtxSelectedQueryTrace.recorded (handler source writer output) inputs) client).run (state, []))
       ((simulateQ (RawCtxSelectedQueryTrace.recorded (consistent source writer output target) inputs) client).run (state, [])) ≤
-    Pr[fun result => target ∈ result.2.2 |
-      (simulateQ (RawCtxSelectedQueryTrace.recorded (handler source writer output) inputs) client).run (state, [])].toReal :=
+    Pr{let result ← (simulateQ (RawCtxSelectedQueryTrace.recorded (handler source writer output) inputs) client).run (state, [])}[target ∈ result.2.2].toReal :=
   RawCtxSelectedAliasCoupling.recorded_distance (handler source writer output)
     (alternate source writer output) inputs target client state
 

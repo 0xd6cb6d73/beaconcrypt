@@ -1198,7 +1198,7 @@ theorem separated_le_client (b : Fin (B + 1)) :
   · exact fun (result : (Packet (M := M) (P := P) (I := I) (K := K) (A := A) (KemSK := KemSK) setup program × HmacBlock ×
       NonceOutput × RootOutput) × AdaptiveCtxSharedTarget.SharedState) => true_bind_mono _ _ _ fun key =>
       observe_le setup env callbacks baseImpl kem attachedVerify primitives program post b result.1 result.2.1 result.2.2 key
-  have exchanged := RawCtxPrefixKeyOrder.source_game true (RawCtxUniversalDecoder.decoder (env0).decode) (env0).source.crypto
+  have exchanged := RawCtxPrefixKeyOrder.source_game_vcvioLegacy true (RawCtxUniversalDecoder.decoder (env0).decode) (env0).source.crypto
     (prelude setup env callbacks baseImpl kem attachedVerify primitives program post)
     (suffix setup env callbacks baseImpl kem attachedVerify primitives program post (firstBeacon b))
   have mapped := congrArg (fun distribution => Prod.fst <$> distribution) exchanged
@@ -1224,7 +1224,7 @@ theorem alias_bound :
   unfold aliasGame
   refine probEvent_bind_le_of_forall_le fun context _ => ?_
   refine (probEvent_bind_le_probEvent (p := RawCtxSendLineageCollision.InitialAlias) ?_).trans
-    RawCtxSendLineageCollision.initial_alias_uniform
+    RawCtxSendLineageCollision.initial_alias_uniform_vcvioLegacy
   intro initialBlock _ separate
   simp [separate]
 

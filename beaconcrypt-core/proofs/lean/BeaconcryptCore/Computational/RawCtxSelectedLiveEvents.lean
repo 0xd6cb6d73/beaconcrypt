@@ -24,16 +24,19 @@ theorem event_good {Metadata Auxiliary Result : Type} {serverCount beaconCount :
     (owner : RawCtxProtocolReveals.Owner serverCount beaconCount)
     (client : OracleComp SourceSpec Result) (state : RawCtxSelectedLiveTrace.State Metadata Auxiliary serverCount beaconCount)
     (event : Result × RawCtxSelectedLiveTrace.State Metadata Auxiliary serverCount beaconCount → Prop) :
-    Pr[fun result => event result ∧ result.2.2 = false |
-      (simulateQ (observedImpl source writer (RawCtxKdfRequestTable.fullResponse output)
-        sender decode owner (nativeReader target)) client).run state] =
-    Pr[fun result => event result ∧ result.2.2 = false |
-      (simulateQ (observedImpl source writer (RawCtxKdfRequestTable.fullResponse output)
-        sender decode owner labelRead) client).run state] := by
-  exact StatefulGoodEvent.event_good_vcvioLegacy _ _
-    (agree_good source writer _ sender decode owner target)
+    Pr{let result ← ((simulateQ (observedImpl source writer (RawCtxKdfRequestTable.fullResponse output)
+        sender decode owner (nativeReader target)) client).run state)}[event result ∧ result.2.2 = false] =
+    Pr{let result ← ((simulateQ (observedImpl source writer (RawCtxKdfRequestTable.fullResponse output)
+        sender decode owner labelRead) client).run state)}[event result ∧ result.2.2 = false] := by
+  have good := StatefulGoodEvent.event_good _ _
+    (fun query before reply after => by
+      rw [← VCVioLegacy.oracleComp_probEvent_eq_prEvent, ← VCVioLegacy.oracleComp_probEvent_eq_prEvent]
+      exact (VCVioLegacy.probEvent_eq_prEvent _ _).trans
+        ((agree_good source writer (RawCtxKdfRequestTable.fullResponse output) sender decode owner target query before reply after).trans (VCVioLegacy.probEvent_eq_prEvent _ _).symm))
     (sticky source writer _ sender decode owner (nativeReader target))
     (sticky source writer _ sender decode owner labelRead) client state event
+  rw [← VCVioLegacy.oracleComp_probEvent_eq_prEvent, ← VCVioLegacy.oracleComp_probEvent_eq_prEvent] at good
+  exact (VCVioLegacy.probEvent_eq_prEvent _ _).symm.trans (good.trans (VCVioLegacy.probEvent_eq_prEvent _ _))
 
 /-- Excluding the recorded direct disclosure removes its additive probability term; alias loss still uses the actual complete masked candidate list. -/
 theorem good_alias_bound {Metadata Auxiliary Result : Type} {serverCount beaconCount : Nat}
@@ -42,21 +45,18 @@ theorem good_alias_bound {Metadata Auxiliary Result : Type} {serverCount beaconC
     (owner : RawCtxProtocolReveals.Owner serverCount beaconCount)
     (client : OracleComp SourceSpec Result) (state : RawCtxSelectedLiveTrace.State Metadata Auxiliary serverCount beaconCount)
     (event : Result × RawCtxSelectedLiveTrace.State Metadata Auxiliary serverCount beaconCount → Prop) :
-    Pr[fun result => event result ∧ result.2.2 = false |
-      (simulateQ (observedImpl source writer (RawCtxKdfRequestTable.fullResponse output)
-        sender decode owner (nativeReader target)) client).run state] ≤
-    Pr[fun result => event result ∧ result.2.2 = false |
-      consistentGame source writer output labelRead (RawCtxSelectedQueryTrace.rootVector target)
-        sender decode owner client state] +
-    Pr[fun result => RawCtxSelectedQueryTrace.rootVector target ∈ result.2.1.1.2.2 |
-      (simulateQ (observedImpl source writer (RawCtxKdfRequestTable.fullResponse output)
-        sender decode owner labelRead) client).run state] := by
+    Pr{let result ← ((simulateQ (observedImpl source writer (RawCtxKdfRequestTable.fullResponse output)
+        sender decode owner (nativeReader target)) client).run state)}[event result ∧ result.2.2 = false] ≤
+    Pr{let result ← (consistentGame source writer output labelRead (RawCtxSelectedQueryTrace.rootVector target)
+        sender decode owner client state)}[event result ∧ result.2.2 = false] +
+    Pr{let result ← ((simulateQ (observedImpl source writer (RawCtxKdfRequestTable.fullResponse output)
+        sender decode owner labelRead) client).run state)}[RawCtxSelectedQueryTrace.rootVector target ∈ result.2.1.1.2.2] := by
   rw [event_good source writer output target sender decode owner client state event]
-  refine (AdaptiveCtxPrefixValidation.probEvent_le_add_ofReal_tvDist_vcvioLegacy _
+  refine (AdaptiveCtxPrefixValidation.probEvent_le_add_ofReal_tvDist _
     (consistentGame source writer output labelRead (RawCtxSelectedQueryTrace.rootVector target)
       sender decode owner client state) _).trans ?_
   exact add_le_add le_rfl (by
-    simpa only [ENNReal.ofReal_toReal probEvent_ne_top] using
+    simpa only [ENNReal.ofReal_toReal (prEvent_ne_top _)] using
       ENNReal.ofReal_le_ofReal (source_distance source writer output labelRead
         (RawCtxSelectedQueryTrace.rootVector target) sender decode owner client state))
 

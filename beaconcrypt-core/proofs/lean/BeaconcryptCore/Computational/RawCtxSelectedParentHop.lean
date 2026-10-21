@@ -64,19 +64,16 @@ theorem local_bound {Context Auxiliary Result : Type}
     (target : RootOutput) (output : FullOutput) :
     (privateGame source writer continuation context target output).boolDistAdvantage
       (observer source writer continuation context output) ≤
-      Pr[= true | bad source writer continuation context target output].toReal := by
+      Pr{let x ← bad source writer continuation context target output}[x = true].toReal := by
   have bound := RawCtxSelectedParentPrivateEvents.local_bound source writer
     (continuation.prior context.1) context.2 output target
     (RawCtxSelectedParentPrivateRealization.realView source) (continuation.program context)
     (continuation.initial context) (continuation.event context)
   have event :
-      Pr[fun result => target ∈ candidates result |
-        observed source writer continuation context output] =
-        Pr[= true | bad source writer continuation context target output] := by
-    simp only [bad, ← probEvent_eq_eq_probOutput, probEvent_map]
-    apply OracleComp.probEvent_congr' _ rfl
-    intro result _
-    simp only [Function.comp_def, decide_eq_true_eq]
+      Pr{let result ← observed source writer continuation context output}[target ∈ candidates result] =
+        Pr{let x ← bad source writer continuation context target output}[x = true] := by
+    rw [bad, prEvent_map]
+    exact prEvent_congr _ _ _ fun result => by simp only [decide_eq_true_eq]
   rw [privateGame, observer]
   exact bound.trans_eq (by
     simpa only [observed, candidates] using congrArg ENNReal.toReal event)
@@ -104,15 +101,10 @@ theorem actual_route {Context Auxiliary Result : Type}
     (address : Context → JointKdfAddress) :
     (actual source writer continuation priorSample address).boolDistAdvantage
       (RawCtxSelectedParentSecrecy.actual source priorSample address (observer source writer continuation)) ≤
-      Pr[fun pair => pair.1 ∈ candidates pair.2 |
-        RawCtxFullPreimageTester.actual (RawCtxFullPreimageTester.production source)
+      Pr{let pair ← (RawCtxFullPreimageTester.actual (RawCtxFullPreimageTester.production source)
           (RawCtxSelectedParentCandidates.sample priorSample address)
-          (observed source writer continuation)].toReal := by
-  simpa only [actual, RawCtxSelectedParentSecrecy.actual, RawCtxSelectedParentCandidates.sample,
-    RawCtxFullPreimageTester.actual, RawCtxFullPreimageTester.production, bad,
-    bind_assoc, pure_bind, ← probEvent_eq_eq_probOutput, probEvent_bind_eq_tsum,
-    probEvent_map, Function.comp_def, decide_eq_true_eq, probEvent_pure, mul_ite, mul_one, mul_zero]
-    using RawCtxBadEventMixture.bind_bound (RawCtxSelectedParentCandidates.sample priorSample address)
+          (observed source writer continuation))}[pair.1 ∈ candidates pair.2].toReal := by
+  have bound := RawCtxBadEventMixture.bind_bound (RawCtxSelectedParentCandidates.sample priorSample address)
       (fun pair => privateGame source writer continuation pair.1 pair.2
         (productionStream source.crypto (FixedHkdfDomain.ratchet.address pair.2.toList)))
       (fun pair => observer source writer continuation pair.1
@@ -120,6 +112,25 @@ theorem actual_route {Context Auxiliary Result : Type}
       (fun pair => bad source writer continuation pair.1 pair.2
         (productionStream source.crypto (FixedHkdfDomain.ratchet.address pair.2.toList)))
       (fun pair => local_bound source writer continuation pair.1 pair.2 _)
+  have bindCongr : ∀ {α β γ : Type} (first : ProbComp α) (f : α → ProbComp β) (g : α → ProbComp γ)
+      (p : β → Prop) (q : γ → Prop), (∀ a, Pr{let x ← f a}[p x] = Pr{let y ← g a}[q y]) →
+        Pr{let x ← first >>= f}[p x] = Pr{let y ← first >>= g}[q y] :=
+    fun first f g p q same => prEvent_bind_congr first f g p q same
+  have event : Pr{let x ← (RawCtxSelectedParentCandidates.sample priorSample address >>= fun pair =>
+        bad source writer continuation pair.1 pair.2
+          (productionStream source.crypto (FixedHkdfDomain.ratchet.address pair.2.toList)))}[x = true] =
+      Pr{let pair ← (RawCtxFullPreimageTester.actual (RawCtxFullPreimageTester.production source)
+          (RawCtxSelectedParentCandidates.sample priorSample address)
+          (observed source writer continuation))}[pair.1 ∈ candidates pair.2] := by
+    rw [RawCtxFullPreimageTester.actual]
+    refine bindCongr _ _ _ _ _ fun pair => ?_
+    obtain ⟨context, target⟩ := pair
+    dsimp only
+    rw [bad, prEvent_map, prEvent_map]
+    exact prEvent_congr _ _ _ fun result => by simp only [decide_eq_true_eq]
+  rw [← event]
+  simpa only [actual, RawCtxSelectedParentSecrecy.actual, RawCtxSelectedParentCandidates.sample, bind_assoc,
+    pure_bind] using bound
 
 set_option maxRecDepth 2048 in
 /-- The independent-child experiment pays the original delayed-coordinate candidate event when returning to the private source interface. -/
@@ -129,8 +140,7 @@ theorem random_route {Context Auxiliary Result : Type}
     (address : Context → JointKdfAddress) :
     (random source writer continuation priorSample address).boolDistAdvantage
       (RawCtxSelectedParentSecrecy.random priorSample address (observer source writer continuation)) ≤
-      Pr[fun pair => pair.1 ∈ candidates pair.2 |
-        RawCtxSelectedParentCandidates.uniform priorSample address (observed source writer continuation)].toReal := by
+      Pr{let pair ← RawCtxSelectedParentCandidates.uniform priorSample address (observed source writer continuation)}[pair.1 ∈ candidates pair.2].toReal := by
   have bound := RawCtxBadEventMixture.bind_bound
       (do let pair ← RawCtxSelectedParentCandidates.sample priorSample address
           let output ← $ᵗ FullOutput
@@ -139,13 +149,42 @@ theorem random_route {Context Auxiliary Result : Type}
       (fun value => observer source writer continuation value.1.1 value.2)
       (fun value => bad source writer continuation value.1.1 value.1.2 value.2)
       (fun value => local_bound source writer continuation value.1.1 value.1.2 value.2)
-  simp only [random, RawCtxSelectedParentSecrecy.random, independentFullGame,
-    RawCtxSelectedParentSecrecy.joint, RawCtxSelectedParentCandidates.sample,
-    RawCtxSelectedParentCandidates.uniform, RawCtxSelectedParentSampler.original, bad,
-    bind_assoc, pure_bind] at bound ⊢
-  simp only [bind_pure_comp] at bound ⊢
-  simpa only [← probEvent_eq_eq_probOutput, probEvent_bind_eq_tsum, probEvent_map,
-    Function.comp_def, decide_eq_true_eq] using bound
+  have bindCongr : ∀ {α β γ : Type} (first : ProbComp α) (f : α → ProbComp β) (g : α → ProbComp γ)
+      (p : β → Prop) (q : γ → Prop), (∀ a, Pr{let x ← f a}[p x] = Pr{let y ← g a}[q y]) →
+        Pr{let x ← first >>= f}[p x] = Pr{let y ← first >>= g}[q y] :=
+    fun first f g p q same => prEvent_bind_congr first f g p q same
+  have leftEq : (RawCtxSelectedParentCandidates.sample priorSample address >>= fun pair =>
+          ($ᵗ FullOutput) >>= fun output => pure (pair, output)) >>= (fun value => privateGame source writer continuation value.1.1 value.1.2 value.2) =
+      random source writer continuation priorSample address := by
+    simp only [random, bind_assoc, pure_bind]
+  have rightEq : (RawCtxSelectedParentCandidates.sample priorSample address >>= fun pair =>
+          ($ᵗ FullOutput) >>= fun output => pure (pair, output)) >>= (fun value => observer source writer continuation value.1.1 value.2) =
+      RawCtxSelectedParentSecrecy.random priorSample address (observer source writer continuation) := by
+    simp only [RawCtxSelectedParentSecrecy.random, independentFullGame, RawCtxSelectedParentSecrecy.joint,
+      RawCtxSelectedParentCandidates.sample, bind_assoc, pure_bind]
+  have lhsComp : (RawCtxSelectedParentCandidates.sample priorSample address >>= fun pair =>
+          ($ᵗ FullOutput) >>= fun output => pure (pair, output)) >>= (fun value => bad source writer continuation value.1.1 value.1.2 value.2) =
+      RawCtxSelectedParentCandidates.sample priorSample address >>= fun pair =>
+        ($ᵗ FullOutput) >>= fun output => bad source writer continuation pair.1 pair.2 output := by
+    simp only [bind_assoc, pure_bind]
+  have rhsComp : RawCtxSelectedParentCandidates.uniform priorSample address (observed source writer continuation) =
+      RawCtxSelectedParentCandidates.sample priorSample address >>= fun pair =>
+        (($ᵗ FullOutput) >>= fun child => observed source writer continuation pair.1 child) >>= fun result =>
+          pure (pair.2, result) := by
+    simp only [RawCtxSelectedParentCandidates.uniform, RawCtxSelectedParentSampler.original,
+      RawCtxSelectedParentCandidates.sample, bind_assoc, pure_bind]
+  have event : Pr{let x ← ((RawCtxSelectedParentCandidates.sample priorSample address >>= fun pair =>
+          ($ᵗ FullOutput) >>= fun output => pure (pair, output)) >>= (fun value => bad source writer continuation value.1.1 value.1.2 value.2))}[x = true] =
+      Pr{let pair ← RawCtxSelectedParentCandidates.uniform priorSample address (observed source writer continuation)}[
+        pair.1 ∈ candidates pair.2] := by
+    rw [lhsComp, rhsComp]
+    refine bindCongr _ _ _ _ _ fun pair => ?_
+    rw [bind_pure_comp _ (($ᵗ FullOutput) >>= fun child => observed source writer continuation pair.1 child), prEvent_map]
+    refine bindCongr _ _ _ _ _ fun output => ?_
+    rw [bad, prEvent_map]
+    exact prEvent_congr _ _ _ fun result => by simp only [decide_eq_true_eq]
+  rw [leftEq, rightEq, event] at bound
+  exact bound
 
 noncomputable def extractLoss {Context : Type} (hmac : HmacSha512)
     (priorSample : ProbComp Context) (address : Context → JointKdfAddress)

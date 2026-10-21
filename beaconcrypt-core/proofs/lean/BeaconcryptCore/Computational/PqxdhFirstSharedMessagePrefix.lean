@@ -96,7 +96,7 @@ theorem key_order (real : Bool) (decodeRaw : AdaptiveCtxReceive.RawDecoder) :
   rw [← shared_source setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed]
   simp only [bind_map_left]
   apply evalDist_eq_of_evalSPMF_eq
-  exact RawCtxPrefixKeyOrder.complete real decodeRaw env.source.crypto
+  exact RawCtxPrefixKeyOrder.complete_vcvioLegacy real decodeRaw env.source.crypto
     (run setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed)
     (fun key context state => PqxdhAdaptiveMessageKeySource.firstObserve env0 (restore setup context state.cache) key)
 

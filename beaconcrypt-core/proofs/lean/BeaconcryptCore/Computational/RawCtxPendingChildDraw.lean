@@ -18,11 +18,11 @@ variable {A Result : Type} {S B : Nat}
 theorem pending_uniform (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
     (client : OracleComp (Spec S B) Result) (state : State A)
     (missing : state.2.1 (cursorAddress state.2.2) = none) :
-    𝒮[(fun result => (result.1, result.2.1)) <$>
-      (simulateQ (RawCtxPendingSelectiveFamily.handler source writer (state.2.2.depth + 1)) client).run state] =
-      𝒮[(($ᵗ FullOutput) >>= fun output =>
+    EvalDistEq ((fun result => (result.1, result.2.1)) <$>
+      (simulateQ (RawCtxPendingSelectiveFamily.handler source writer (state.2.2.depth + 1)) client).run state)
+      (($ᵗ FullOutput) >>= fun output =>
         (simulateQ (retained source writer (view (productionStream source.crypto)
-          (state.2.1.cacheQuery (cursorAddress state.2.2) output))) client).run state.1)] := by
+          (state.2.1.cacheQuery (cursorAddress state.2.2) output))) client).run state.1) := by
   simp only [RawCtxPendingSelectiveFamily.handler, backend, retained, RawCtxPendingBackendInterpretation.program_compose]
   simpa only [compiler, Prod.eta] using RawCtxSelectiveSingleDraw.single_uniform source
     (RawCtxProtocolBackend.backend source writer) (simulateQ compiler client) state.1 state.2.1 state.2.2 missing
@@ -31,11 +31,11 @@ theorem pending_uniform (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxM
 theorem logged_uniform (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
     (client : OracleComp (Spec S B) Result) (state : RawCtxSelectiveFamilyLog.LoggedState A)
     (missing : state.1.2.1 (cursorAddress state.1.2.2) = none) :
-    𝒮[(fun result => (result.1, result.2.1.1)) <$>
-      (simulateQ (RawCtxSelectiveFamilyLog.handler source writer (state.1.2.2.depth + 1)) client).run state] =
-      𝒮[(($ᵗ FullOutput) >>= fun output =>
+    EvalDistEq ((fun result => (result.1, result.2.1.1)) <$>
+      (simulateQ (RawCtxSelectiveFamilyLog.handler source writer (state.1.2.2.depth + 1)) client).run state)
+      (($ᵗ FullOutput) >>= fun output =>
         (simulateQ (retained source writer (view (productionStream source.crypto)
-          (state.1.2.1.cacheQuery (cursorAddress state.1.2.2) output))) client).run state.1.1)] := by
+          (state.1.2.1.cacheQuery (cursorAddress state.1.2.2) output))) client).run state.1.1) := by
   have erased := congrArg (fun computation : ProbComp (Result × State A) =>
     (fun result => (result.1, result.2.1)) <$> computation)
     (RawCtxSelectiveFamilyLog.program_projection source writer (state.1.2.2.depth + 1) client state.1 state.2)
@@ -44,7 +44,8 @@ theorem logged_uniform (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
       (fun result => (result.1, result.2.1)) <$>
         (simulateQ (RawCtxPendingSelectiveFamily.handler source writer (state.1.2.2.depth + 1)) client).run state.1 := by
     simpa only [Functor.map_map, Prod.eta] using erased
-  exact (congrArg evalSPMF complete).trans (pending_uniform source writer client state.1 missing)
+  rw [complete]
+  exact pending_uniform source writer client state.1 missing
 
 /-- After the actual matched parent response, the next source stage draws its remaining child early and keeps the entire original native family continuation under the retained private cache. -/
 theorem parent_random {M P I D K : Type} (source : FixedHkdfSha512NoSaltSource)
@@ -57,13 +58,13 @@ theorem parent_random {M P I D K : Type} (source : FixedHkdfSha512NoSaltSource)
     (missing : (RawCtxLoggedParentResponse.updated context parent state).1.2.1
       (cursorAddress (RawCtxLoggedParentResponse.updated context parent state).1.2.2) = none) :
     let reached := RawCtxLoggedParentResponse.updated context parent state
-    𝒮[(fun result => (result.1, result.2.1.1)) <$>
-      RawCtxLoggedParentResponse.resume source writer (depth + 2) sender route decode context parent state] =
-      𝒮[(($ᵗ FullOutput) >>= fun child =>
+    EvalDistEq ((fun result => (result.1, result.2.1.1)) <$>
+      RawCtxLoggedParentResponse.resume source writer (depth + 2) sender route decode context parent state)
+      (($ᵗ FullOutput) >>= fun child =>
         (simulateQ (retained source writer (view (productionStream source.crypto)
           (reached.1.2.1.cacheQuery (cursorAddress reached.1.2.2) child)))
           ((RawCtxSelectedFamilyContext.frame sender route decode context).2
-            (RawCtxSelectedFamilyNativeContext.reply sender route decode context parent))).run state.1.1)] := by
+            (RawCtxSelectedFamilyNativeContext.reply sender route decode context parent))).run state.1.1) := by
   have actual := logged_uniform source writer
     ((RawCtxSelectedFamilyContext.frame sender route decode context).2
       (RawCtxSelectedFamilyNativeContext.reply sender route decode context parent))
@@ -112,13 +113,13 @@ theorem parent_random_of_unlisted {M P I D K : Type} (source : FixedHkdfSha512No
     (unlisted : cursorAddress (RawCtxLoggedParentResponse.updated context parent state).1.2.2 ∉
       state.2 ++ [RawCtxSelectedFamilyContext.address context]) :
     let reached := RawCtxLoggedParentResponse.updated context parent state
-    𝒮[(fun result => (result.1, result.2.1.1)) <$>
-      RawCtxLoggedParentResponse.resume source writer (depth + 2) sender route decode context parent state] =
-      𝒮[(($ᵗ FullOutput) >>= fun child =>
+    EvalDistEq ((fun result => (result.1, result.2.1.1)) <$>
+      RawCtxLoggedParentResponse.resume source writer (depth + 2) sender route decode context parent state)
+      (($ᵗ FullOutput) >>= fun child =>
         (simulateQ (retained source writer (view (productionStream source.crypto)
           (reached.1.2.1.cacheQuery (cursorAddress reached.1.2.2) child)))
           ((RawCtxSelectedFamilyContext.frame sender route decode context).2
-            (RawCtxSelectedFamilyNativeContext.reply sender route decode context parent))).run state.1.1)] := by
+            (RawCtxSelectedFamilyNativeContext.reply sender route decode context parent))).run state.1.1) := by
   exact parent_random source writer depth sender route decode context parent state selected sameDepth
     (child_missing context parent state covered _ unlisted)
 

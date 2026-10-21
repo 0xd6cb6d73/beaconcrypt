@@ -23,8 +23,9 @@ noncomputable def mass {X : Type} (event : X → Prop) (run : ProbComp X) : ENNR
 theorem mass_tv {X : Type} (event : X → Prop) (left right : ProbComp X) :
     mass event left ≤ mass event right + ENNReal.ofReal (tvDist left right) := by
   unfold mass
-  simp only [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map, Function.comp_def, decide_eq_true_eq]
-  exact AdaptiveCtxPrefixValidation.probEvent_le_add_ofReal_tvDist_vcvioLegacy left right event
+  repeat rw [← prEvent_eq_evalDist_singleton _ true]
+  simp only [prEvent_map, decide_eq_true_eq]
+  exact AdaptiveCtxPrefixValidation.probEvent_le_add_ofReal_tvDist left right event
 
 noncomputable def nativeGame (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
     (prior : Prior) (parent : Option Entry) (key target : RootOutput) (nonce : NonceOutput) (next : RootOutput)
@@ -62,7 +63,8 @@ theorem native_fresh (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixe
     mass (nativeFresh key remaining disclosed event) (nativeGame source writer prior parent key target nonce next sender route read client state) =
       mass (stoppedFresh key remaining disclosed event) (stoppedGame source writer prior parent key target nonce next sender route read client state) := by
   unfold mass nativeGame nativeFresh stoppedGame stoppedFresh
-  simp only [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map, Function.comp_def, decide_eq_true_eq]
+  repeat rw [← prEvent_eq_evalDist_singleton _ true]
+  simp only [prEvent_map, decide_eq_true_eq]
   exact RawCtxSelectedMessageStopping.native_event source writer prior parent key target nonce next remaining disclosed sender route read client (project state) event
 
 noncomputable def compiledGame (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)

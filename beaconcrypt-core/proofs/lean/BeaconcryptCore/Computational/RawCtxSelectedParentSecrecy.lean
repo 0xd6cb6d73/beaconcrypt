@@ -30,8 +30,8 @@ noncomputable def separated {Context : Type} (sample : ProbComp Context)
 
 /-- Equality holds for the full joint distribution, including the retained parent entry and every prior context field. -/
 theorem joint_separated {Context : Type} (sample : ProbComp Context)
-    (address : Context → JointKdfAddress) : 𝒮[joint sample address] = 𝒮[separated sample address] := by
-  exact evalSPMF_bind_congr' sample (fun context => fullOutput_observed_vcvioLegacy (fun value target =>
+    (address : Context → JointKdfAddress) : EvalDistEq (joint sample address) (separated sample address) := by
+  exact EvalDistEq.bind_right sample (fun context => fullOutput_observed (fun value target =>
     pure ((context, Entry.mk (address context) value), target.toList)))
 
 noncomputable def actual {Context : Type} (source : FixedHkdfSha512NoSaltSource)
@@ -128,18 +128,15 @@ theorem candidate_bound {Context Result : Type} (sample : ProbComp Context)
     (address : Context → JointKdfAddress) (observe : Context × Entry → ProbComp Result)
     (candidates : Result → List RootOutput) (budget : Nat)
     (bounded : ∀ context result, result ∈ support (observe context) → (candidates result).length ≤ budget) :
-    Pr[fun result => result.1 ∈ candidates result.2 |
-      RawCtxSelectedParentSampler.original sample address observe] ≤
+    Pr{let result ← RawCtxSelectedParentSampler.original sample address observe}[result.1 ∈ candidates result.2] ≤
       (budget : ENNReal) / (2 ^ 256 : ENNReal) := by
-  have delayed := OracleComp.probEvent_congr'
-    (p := fun result : RootOutput × Result => result.1 ∈ candidates result.2)
-    (q := fun result : RootOutput × Result => result.1 ∈ candidates result.2)
-    (fun _ _ => Iff.rfl) (RawCtxSelectedParentSampler.delayed_eq sample address observe)
+  have delayed := (RawCtxSelectedParentSampler.delayed_eq sample address observe).prEvent_eq
+    (fun result : RootOutput × Result => result.1 ∈ candidates result.2)
   rw [delayed, RawCtxSelectedParentSampler.delayed]
-  refine probEvent_bind_le_of_forall_le (fun context _ => ?_)
-  refine probEvent_bind_le_of_forall_le (fun value _ => ?_)
-  refine probEvent_bind_le_of_forall_le (fun result supported => ?_)
-  rw [bind_pure_comp, probEvent_map]
+  refine prEvent_bind_le_of_forall_le _ _ _ (fun context => ?_)
+  refine prEvent_bind_le_of_forall_le _ _ _ (fun value => ?_)
+  refine prEvent_bind_le_of_forall_le_of_support _ _ _ (fun result supported => ?_)
+  rw [bind_pure_comp _ ($ᵗ RootOutput), prEvent_map]
   exact (RawCtxSelectedInputCandidates.uniform_candidates (candidates result)).trans
     (ENNReal.div_le_div_right (by exact_mod_cast bounded _ result supported) _)
 

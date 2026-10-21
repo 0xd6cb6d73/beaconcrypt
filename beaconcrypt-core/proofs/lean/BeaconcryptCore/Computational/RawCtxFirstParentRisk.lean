@@ -26,29 +26,26 @@ private theorem input_injective : Function.Injective inputAddress := by
   exact Subtype.ext (congrArg JointKdfAddress.input same)
 
 private theorem uniform_address (address : JointKdfAddress) :
-    Pr[fun root => inputAddress root = address | ($ᵗ RootOutput)] ≤
+    Pr{let root ← ($ᵗ RootOutput)}[inputAddress root = address] ≤
       (Fintype.card RootOutput : ℝ≥0∞)⁻¹ := by
   classical
   by_cases present : ∃ root, inputAddress root = address
   · obtain ⟨root, rfl⟩ := present
     simp only [input_injective.eq_iff]
-    simp
-  · have absent : (fun root => inputAddress root = address) = fun _ => False := by
-      funext root
-      exact propext ⟨fun same => present ⟨root, same⟩, False.elim⟩
-    rw [absent]
-    simp
+    exact le_of_eq (SampleableType.prEvent_uniformSample_eq_singleton root)
+  · rw [prEvent_eq_zero_of_forall_not _ _ fun root same => present ⟨root, same⟩]
+    exact bot_le
 
 /-- A uniform next32 input hits a fixed chronological address list with probability at most its length divided by the full 256-bit coordinate space. -/
 theorem uniform_inputs (past : List JointKdfAddress) :
-    Pr[fun root => inputAddress root ∈ past | ($ᵗ RootOutput)] ≤
+    Pr{let root ← ($ᵗ RootOutput)}[inputAddress root ∈ past] ≤
       (past.length : ℝ≥0∞) * (2 ^ 256 : ℝ≥0∞)⁻¹ := by
   have card : Fintype.card RootOutput = 2 ^ 256 := PqxdhHiddenRoot.hiddenRootCoordinate_card
   induction past with
   | nil => simp
   | cons address past ih =>
     simp only [List.mem_cons]
-    refine (probEvent_or_le _ _ _).trans ?_
+    refine (prEvent_or_le _ _ _).trans ?_
     have head := uniform_address address
     simp only [card, Nat.cast_pow, Nat.cast_ofNat] at head
     have total := add_le_add head ih
@@ -56,17 +53,18 @@ theorem uniform_inputs (past : List JointKdfAddress) :
 
 /-- The actual full76 draw has the same next-input guessing bound, retaining all other coordinates in its distribution. -/
 theorem full_inputs (past : List JointKdfAddress) :
-    Pr[fun output => inputAddress (PqxdhOrderedChainHybrids.nextChain output) ∈ past | ($ᵗ FullOutput)] ≤
+    Pr{let output ← ($ᵗ FullOutput)}[inputAddress (PqxdhOrderedChainHybrids.nextChain output) ∈ past] ≤
       (past.length : ℝ≥0∞) * (2 ^ 256 : ℝ≥0∞)⁻¹ := by
-  have same := probEvent_congr'
-    (p := fun root => inputAddress root ∈ past) (q := fun root => inputAddress root ∈ past)
-    (fun _ _ => Iff.rfl)
-    (PqxdhOrderedChainHybrids.fullOutput_observed_vcvioLegacy (fun _ root => pure root))
-  simp only [bind_pure, bind_pure_comp, probEvent_map, Function.comp_def] at same
+  have same := (PqxdhOrderedChainHybrids.fullOutput_observed (fun _ root => pure root)).prEvent_eq
+    (fun root => inputAddress root ∈ past)
+  rw [bind_pure_comp _ ($ᵗ FullOutput), prEvent_map] at same
+  simp only [bind_pure] at same
   rw [same]
-  apply probEvent_bind_le_of_forall_le
-  intro value supported
-  exact uniform_inputs past
+  exact prEvent_bind_le_of_forall_le _ _ _ fun _ => uniform_inputs past
+
+set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.RawCtxFirstParentRisk.full_inputs_vcvioLegacy :
+    ∀ (past : List BeaconcryptCore.Computational.PqxdhJointKdf.JointKdfAddress), (probEvent ($ᵗ BeaconcryptCore.Computational.PqxdhFullSecretInputKdf.FullOutput) fun (output : BeaconcryptCore.Computational.PqxdhFullSecretInputKdf.FullOutput) => BeaconcryptCore.Computational.RawCtxFirstParentRisk.inputAddress (BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.nextChain output) ∈ past) ≤ ↑past.length * (2 ^ 256)⁻¹ :=
+  by simpa only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent] using @BeaconcryptCore.Computational.RawCtxFirstParentRisk.full_inputs
 
 def Clean (state : LoggedState A) : Prop := state.1.2.1 (cursorAddress state.1.2.2) = none
 
@@ -95,14 +93,12 @@ private theorem private_risk (source : FixedHkdfSha512NoSaltSource) (stage : Nat
     (covered : ∀ address output, store.1 address = some output → address ∈ past)
     (clean : store.1 (cursorAddress store.2) = none)
     (active : matched store.2 request = true → store.2.depth < stage) :
-    Pr[fun result => result.2.1 (cursorAddress result.2.2) ≠ none |
-      privateStep source stage request store] ≤
+    Pr{let result ← privateStep source stage request store}[result.2.1 (cursorAddress result.2.2) ≠ none] ≤
       ((past.length + 1 : Nat) : ℝ≥0∞) * (2 ^ 256 : ℝ≥0∞)⁻¹ := by
   cases matching : matched store.2 request with
   | false =>
-    have zero : Pr[fun result => result.2.1 (cursorAddress result.2.2) ≠ none |
-        privateStep source stage request store] = 0 := by
-      apply probEvent_eq_zero_iff.mpr
+    have zero : Pr{let result ← privateStep source stage request store}[result.2.1 (cursorAddress result.2.2) ≠ none] = 0 := by
+      apply prEvent_eq_zero_of_forall_mem_support
       intro result supported bad
       have exactState := private_state source stage request store result supported
       rw [exactState] at bad
@@ -117,7 +113,7 @@ private theorem private_risk (source : FixedHkdfSha512NoSaltSource) (stage : Nat
   | true =>
     have same : request = cursorAddress store.2 := by simpa only [matched, decide_eq_true_eq] using matching
     have missing : store.1 request = none := same ▸ clean
-    rw [private_selected source stage request store missing matching (active matching), probEvent_map]
+    rw [private_selected source stage request store missing matching (active matching), prEvent_map]
     have inclusion : ∀ output : FullOutput,
         (store.1.cacheQuery request output) (cursorAddress (advance store.2 request output)) ≠ none →
         inputAddress (PqxdhOrderedChainHybrids.nextChain output) ∈ past ++ [request] := by
@@ -136,7 +132,7 @@ private theorem private_risk (source : FixedHkdfSha512NoSaltSource) (stage : Nat
         rfl
       rw [unchanged, QueryCache.cacheQuery_of_ne (spec := JointKdfRO) store.1 output different, missingNext] at bad
       exact bad rfl
-    exact (probEvent_mono'' inclusion).trans (by simpa only [List.length_append, List.length_singleton] using full_inputs (past ++ [request]))
+    exact (prEvent_mono _ _ _ inclusion).trans (by simpa only [List.length_append, List.length_singleton] using full_inputs (past ++ [request]))
 
 set_option backward.isDefEq.respectTransparency false in
 /-- The actual complete callback has zero risk when it performs no private KDF call; otherwise its fresh-coordinate collision risk is bounded by the retained chronological list plus this input. -/
@@ -144,14 +140,13 @@ theorem callback_risk (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMix
     (depth k : Nat) (query : (Spec S B).Domain) (state : LoggedState A)
     (valid : Valid depth k state) (clean : Clean state)
     (unchosen : RawCtxFirstParentPrefix.selected depth query state = false) :
-    Pr[fun result => ¬Clean result.2 |
-      (RawCtxSelectiveFamilyLog.handler source writer (depth + 1) query).run state] ≤
+    Pr{let result ← (RawCtxSelectiveFamilyLog.handler source writer (depth + 1) query).run state}[¬Clean result.2] ≤
       if privateQuery query then ((k + 1 : Nat) : ℝ≥0∞) * (2 ^ 256 : ℝ≥0∞)⁻¹ else 0 := by
   cases found : RawCtxSelectedFamilyContext.queryAddress query with
   | none =>
     simp only [privateQuery, found, ne_eq, not_true_eq_false, ite_false]
     apply le_of_eq
-    apply probEvent_eq_zero_iff.mpr
+    apply prEvent_eq_zero_of_forall_mem_support
     intro result supported bad
     simp only [RawCtxSelectiveFamilyLog.handler, StateT.run, bind_pure_comp, support_map, Set.mem_image] at supported
     obtain ⟨reply, actual, rfl⟩ := supported
@@ -171,24 +166,33 @@ theorem callback_risk (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMix
       apply mul_le_mul_left
       exact_mod_cast Nat.add_le_add_right valid.2.2 1
     apply (le_trans · cost)
+    have logged : Pr{let result ← (RawCtxSelectiveFamilyLog.handler source writer (depth + 1) query).run state}[¬Clean result.2] =
+        Pr{let result ← (RawCtxPendingSelectiveFamily.handler source writer (depth + 1) query).run state.1}[
+          result.2.2.1 (cursorAddress result.2.2.2) ≠ none] := by
+      rw [show (RawCtxSelectiveFamilyLog.handler source writer (depth + 1) query).run state =
+          (fun result => (result.1, (result.2, RawCtxSelectiveFamilyLog.inputs query state.2))) <$>
+            (RawCtxPendingSelectiveFamily.handler source writer (depth + 1) query).run state.1 from by
+        simp only [RawCtxSelectiveFamilyLog.handler, StateT.run, bind_pure_comp], prEvent_map]
+      exact prEvent_congr _ _ _ fun _ => Iff.rfl
+    rw [logged]
     rcases query with ((request | opening) | ((request | sealing) | request)) | request
     all_goals simp only [RawCtxSelectedFamilyContext.queryAddress, RawCtxSelectedFamilyContext.primitiveAddress] at found
     all_goals try cases found
-    all_goals simp only [RawCtxSelectiveFamilyLog.handler, StateT.run,
-      bind_pure_comp, probEvent_map, Function.comp_def, Clean]
-    all_goals change Pr[fun result => result.2.2.1 (cursorAddress result.2.2.2) ≠ none |
-      (RawCtxPendingSelectiveFamily.handler source writer (depth + 1) _).run state.1] ≤ _
     all_goals first | rw [RawCtxPendingParentCallbacks.receive_step] | rw [RawCtxPendingParentCallbacks.send_step]
-    all_goals rw [probEvent_map]
+    all_goals rw [prEvent_map]
     all_goals exact localRisk
+
+set_option linter.deprecated false in set_option linter.unusedVariables false in theorem _root_.BeaconcryptCore.Computational.RawCtxFirstParentRisk.callback_risk_vcvioLegacy :
+    ∀ {A : Type} {S B : Nat} (source : BeaconcryptCore.Computational.PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) (writer : BeaconcryptCore.Computational.RawCtxMixedShared.Writer) (depth k : Nat) (query : @OracleSpec.Domain.{0, 0} (Sum.{0, 0} (Sum.{0, 0} (Sum.{0, 0} (BeaconcryptCore.Computational.RawCtxChainReceive.Kdf beaconcrypt_core.ratchet.RatchetChain beaconcrypt_core.ratchet.RatchetChain beaconcrypt_core.ratchet.RatchetMaterial BeaconcryptCore.Computational.RawCtxWholeOwner.OpenContext) (BeaconcryptCore.Computational.RawCtxInterpretedOpening.Opening beaconcrypt_core.ratchet.RatchetChain beaconcrypt_core.ratchet.RatchetChain beaconcrypt_core.ratchet.RatchetMaterial BeaconcryptCore.Computational.RawCtxWholeOwner.OpenContext)) (Sum.{0, 0} (Sum.{0, 0} (BeaconcryptCore.Computational.RawCtxChainSend.Kdf beaconcrypt_core.ratchet.RatchetChain beaconcrypt_core.ratchet.RatchetChain beaconcrypt_core.ratchet.RatchetMaterial BeaconcryptCore.Computational.RawCtxSourceSend.SealContext) (BeaconcryptCore.Computational.RawCtxChainSend.Seal beaconcrypt_core.ratchet.RatchetChain beaconcrypt_core.ratchet.RatchetChain beaconcrypt_core.ratchet.RatchetMaterial BeaconcryptCore.Computational.RawCtxSourceSend.SealContext)) (Sum.{0, 0} Nat (Sum.{0, 0} Pqxdh.Bytes BeaconcryptCore.Computational.PqxdhJointKdfGame.JointKdfViewQuery)))) (BeaconcryptCore.Computational.RawCtxGenericFamilyRead.ReadInput (BeaconcryptCore.Computational.RawCtxPendingFamilyLiveQueries.Kernel beaconcrypt_core.ratchet.RatchetChain) S B)) (BeaconcryptCore.Computational.RawCtxPendingSelectiveFamily.Spec S B)) (state : BeaconcryptCore.Computational.RawCtxSelectiveFamilyLog.LoggedState A) (valid : @BeaconcryptCore.Computational.RawCtxFirstParentRisk.Valid A depth k state) (clean : @BeaconcryptCore.Computational.RawCtxFirstParentRisk.Clean A state) (unchosen : @Eq.{1} Bool (@BeaconcryptCore.Computational.RawCtxFirstParentPrefix.selected A S B depth query state) Bool.false), @LE.le.{0} ENNReal ENNReal.instLE (@probEvent.{0, 0} ProbComp (Prod.{0, 0} (@OracleSpec.Range.{0, 0} (Sum.{0, 0} (Sum.{0, 0} (Sum.{0, 0} (BeaconcryptCore.Computational.RawCtxChainReceive.Kdf beaconcrypt_core.ratchet.RatchetChain beaconcrypt_core.ratchet.RatchetChain beaconcrypt_core.ratchet.RatchetMaterial BeaconcryptCore.Computational.RawCtxWholeOwner.OpenContext) (BeaconcryptCore.Computational.RawCtxInterpretedOpening.Opening beaconcrypt_core.ratchet.RatchetChain beaconcrypt_core.ratchet.RatchetChain beaconcrypt_core.ratchet.RatchetMaterial BeaconcryptCore.Computational.RawCtxWholeOwner.OpenContext)) (Sum.{0, 0} (Sum.{0, 0} (BeaconcryptCore.Computational.RawCtxChainSend.Kdf beaconcrypt_core.ratchet.RatchetChain beaconcrypt_core.ratchet.RatchetChain beaconcrypt_core.ratchet.RatchetMaterial BeaconcryptCore.Computational.RawCtxSourceSend.SealContext) (BeaconcryptCore.Computational.RawCtxChainSend.Seal beaconcrypt_core.ratchet.RatchetChain beaconcrypt_core.ratchet.RatchetChain beaconcrypt_core.ratchet.RatchetMaterial BeaconcryptCore.Computational.RawCtxSourceSend.SealContext)) (Sum.{0, 0} Nat (Sum.{0, 0} Pqxdh.Bytes BeaconcryptCore.Computational.PqxdhJointKdfGame.JointKdfViewQuery)))) (BeaconcryptCore.Computational.RawCtxGenericFamilyRead.ReadInput (BeaconcryptCore.Computational.RawCtxPendingFamilyLiveQueries.Kernel beaconcrypt_core.ratchet.RatchetChain) S B)) (BeaconcryptCore.Computational.RawCtxPendingSelectiveFamily.Spec S B) query) (BeaconcryptCore.Computational.RawCtxSelectiveFamilyLog.LoggedState A)) (@instMonadLiftTOfMonadLift.{0, 0, 0, 0} ProbComp PMF.{0} SPMF.{0} SPMF.instMonadLiftPMF.{0} (@PFunctor.FreeM.instMonadLiftTPMF.{0, 0} (@OracleSpec.toPFunctor.{0, 0} Nat unifSpec) (@OracleSpec.IsUniformSpec.toIsProbabilitySpec.{0, 0} Nat unifSpec OracleSpec.instIsUniformSpecNatUnifSpec))) (@StateT.run.{0, 0} (BeaconcryptCore.Computational.RawCtxSelectiveFamilyLog.LoggedState A) ProbComp (@OracleSpec.Range.{0, 0} (Sum.{0, 0} (Sum.{0, 0} (Sum.{0, 0} (BeaconcryptCore.Computational.RawCtxChainReceive.Kdf beaconcrypt_core.ratchet.RatchetChain beaconcrypt_core.ratchet.RatchetChain beaconcrypt_core.ratchet.RatchetMaterial BeaconcryptCore.Computational.RawCtxWholeOwner.OpenContext) (BeaconcryptCore.Computational.RawCtxInterpretedOpening.Opening beaconcrypt_core.ratchet.RatchetChain beaconcrypt_core.ratchet.RatchetChain beaconcrypt_core.ratchet.RatchetMaterial BeaconcryptCore.Computational.RawCtxWholeOwner.OpenContext)) (Sum.{0, 0} (Sum.{0, 0} (BeaconcryptCore.Computational.RawCtxChainSend.Kdf beaconcrypt_core.ratchet.RatchetChain beaconcrypt_core.ratchet.RatchetChain beaconcrypt_core.ratchet.RatchetMaterial BeaconcryptCore.Computational.RawCtxSourceSend.SealContext) (BeaconcryptCore.Computational.RawCtxChainSend.Seal beaconcrypt_core.ratchet.RatchetChain beaconcrypt_core.ratchet.RatchetChain beaconcrypt_core.ratchet.RatchetMaterial BeaconcryptCore.Computational.RawCtxSourceSend.SealContext)) (Sum.{0, 0} Nat (Sum.{0, 0} Pqxdh.Bytes BeaconcryptCore.Computational.PqxdhJointKdfGame.JointKdfViewQuery)))) (BeaconcryptCore.Computational.RawCtxGenericFamilyRead.ReadInput (BeaconcryptCore.Computational.RawCtxPendingFamilyLiveQueries.Kernel beaconcrypt_core.ratchet.RatchetChain) S B)) (BeaconcryptCore.Computational.RawCtxPendingSelectiveFamily.Spec S B) query) (@BeaconcryptCore.Computational.RawCtxSelectiveFamilyLog.handler A S B source writer (@HAdd.hAdd.{0, 0, 0} Nat Nat Nat (@instHAdd.{0} Nat instAddNat) depth (@OfNat.ofNat.{0} Nat (nat_lit 1) (instOfNatNat (nat_lit 1)))) query) state) fun (result : Prod.{0, 0} (@OracleSpec.Range.{0, 0} (Sum.{0, 0} (Sum.{0, 0} (Sum.{0, 0} (BeaconcryptCore.Computational.RawCtxChainReceive.Kdf beaconcrypt_core.ratchet.RatchetChain beaconcrypt_core.ratchet.RatchetChain beaconcrypt_core.ratchet.RatchetMaterial BeaconcryptCore.Computational.RawCtxWholeOwner.OpenContext) (BeaconcryptCore.Computational.RawCtxInterpretedOpening.Opening beaconcrypt_core.ratchet.RatchetChain beaconcrypt_core.ratchet.RatchetChain beaconcrypt_core.ratchet.RatchetMaterial BeaconcryptCore.Computational.RawCtxWholeOwner.OpenContext)) (Sum.{0, 0} (Sum.{0, 0} (BeaconcryptCore.Computational.RawCtxChainSend.Kdf beaconcrypt_core.ratchet.RatchetChain beaconcrypt_core.ratchet.RatchetChain beaconcrypt_core.ratchet.RatchetMaterial BeaconcryptCore.Computational.RawCtxSourceSend.SealContext) (BeaconcryptCore.Computational.RawCtxChainSend.Seal beaconcrypt_core.ratchet.RatchetChain beaconcrypt_core.ratchet.RatchetChain beaconcrypt_core.ratchet.RatchetMaterial BeaconcryptCore.Computational.RawCtxSourceSend.SealContext)) (Sum.{0, 0} Nat (Sum.{0, 0} Pqxdh.Bytes BeaconcryptCore.Computational.PqxdhJointKdfGame.JointKdfViewQuery)))) (BeaconcryptCore.Computational.RawCtxGenericFamilyRead.ReadInput (BeaconcryptCore.Computational.RawCtxPendingFamilyLiveQueries.Kernel beaconcrypt_core.ratchet.RatchetChain) S B)) (BeaconcryptCore.Computational.RawCtxPendingSelectiveFamily.Spec S B) query) (BeaconcryptCore.Computational.RawCtxSelectiveFamilyLog.LoggedState A)) => Not (@BeaconcryptCore.Computational.RawCtxFirstParentRisk.Clean A (@Prod.snd.{0, 0} (@OracleSpec.Range.{0, 0} (Sum.{0, 0} (Sum.{0, 0} (Sum.{0, 0} (BeaconcryptCore.Computational.RawCtxChainReceive.Kdf beaconcrypt_core.ratchet.RatchetChain beaconcrypt_core.ratchet.RatchetChain beaconcrypt_core.ratchet.RatchetMaterial BeaconcryptCore.Computational.RawCtxWholeOwner.OpenContext) (BeaconcryptCore.Computational.RawCtxInterpretedOpening.Opening beaconcrypt_core.ratchet.RatchetChain beaconcrypt_core.ratchet.RatchetChain beaconcrypt_core.ratchet.RatchetMaterial BeaconcryptCore.Computational.RawCtxWholeOwner.OpenContext)) (Sum.{0, 0} (Sum.{0, 0} (BeaconcryptCore.Computational.RawCtxChainSend.Kdf beaconcrypt_core.ratchet.RatchetChain beaconcrypt_core.ratchet.RatchetChain beaconcrypt_core.ratchet.RatchetMaterial BeaconcryptCore.Computational.RawCtxSourceSend.SealContext) (BeaconcryptCore.Computational.RawCtxChainSend.Seal beaconcrypt_core.ratchet.RatchetChain beaconcrypt_core.ratchet.RatchetChain beaconcrypt_core.ratchet.RatchetMaterial BeaconcryptCore.Computational.RawCtxSourceSend.SealContext)) (Sum.{0, 0} Nat (Sum.{0, 0} Pqxdh.Bytes BeaconcryptCore.Computational.PqxdhJointKdfGame.JointKdfViewQuery)))) (BeaconcryptCore.Computational.RawCtxGenericFamilyRead.ReadInput (BeaconcryptCore.Computational.RawCtxPendingFamilyLiveQueries.Kernel beaconcrypt_core.ratchet.RatchetChain) S B)) (BeaconcryptCore.Computational.RawCtxPendingSelectiveFamily.Spec S B) query) (BeaconcryptCore.Computational.RawCtxSelectiveFamilyLog.LoggedState A) result))) (@ite.{1} ENNReal (@BeaconcryptCore.Computational.RawCtxSelectiveFamilyLogBounds.privateQuery S B query) (@BeaconcryptCore.Computational.RawCtxSelectiveFamilyLogBounds.instDecidablePredDomainSumKdfRatchetChainRatchetMaterialOpenContextOpeningKdfSealContextSealNatBytesJointKdfViewQueryReadInputKernelSpecPrivateQuery S B query) (@HMul.hMul.{0, 0, 0} ENNReal ENNReal ENNReal (@instHMul.{0} ENNReal (@Distrib.toMul.{0} ENNReal (@instDistribOfSemiring.{0} ENNReal (@CommSemiring.toSemiring.{0} ENNReal ENNReal.instCommSemiring)))) (@Nat.cast.{0} ENNReal (@AddMonoidWithOne.toNatCast.{0} ENNReal (@AddCommMonoidWithOne.toAddMonoidWithOne.{0} ENNReal ENNReal.instAddCommMonoidWithOne)) (@HAdd.hAdd.{0, 0, 0} Nat Nat Nat (@instHAdd.{0} Nat instAddNat) k (@OfNat.ofNat.{0} Nat (nat_lit 1) (instOfNatNat (nat_lit 1))))) (@Inv.inv.{0} ENNReal ENNReal.instInv (@HPow.hPow.{0, 0, 0} ENNReal Nat ENNReal (@instHPow.{0, 0} ENNReal Nat (@NPow.toPow.{0} ENNReal (@Monoid.toNPow.{0} ENNReal (@Semiring.toMonoid.{0} ENNReal (@CommSemiring.toSemiring.{0} ENNReal ENNReal.instCommSemiring))))) (@OfNat.ofNat.{0} ENNReal (nat_lit 2) (@instOfNatAtLeastTwo.{0} ENNReal (nat_lit 2) (@AddMonoidWithOne.toNatCast.{0} ENNReal (@AddCommMonoidWithOne.toAddMonoidWithOne.{0} ENNReal ENNReal.instAddCommMonoidWithOne)) (@Nat.instAtLeastTwoHAddOfNat (@OfNat.ofNat.{0} Nat (nat_lit 1) (instOfNatNat (nat_lit 1))) (@Nat.instNeZeroSucc (@OfNat.ofNat.{0} Nat (nat_lit 0) (instOfNatNat (nat_lit 0))))))) (@OfNat.ofNat.{0} Nat (nat_lit 256) (instOfNatNat (nat_lit 256)))))) (@OfNat.ofNat.{0} ENNReal (nat_lit 0) (@Zero.toOfNat0.{0} ENNReal ENNReal.instZero))) :=
+  by simpa only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent] using @BeaconcryptCore.Computational.RawCtxFirstParentRisk.callback_risk
 
 /-- The actual first-hit/predecessor scan accumulates only its bounded original private calls; every failure risk is indexed by the retained chronological input count. -/
 theorem scan_risk (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
     (depth k calls : Nat) (client : OracleComp (Spec S B) Result)
     (bounded : client.IsQueryBoundP privateQuery calls) (state : LoggedState A)
     (valid : Valid depth k state) (clean : Clean state) :
-    Pr[fun result => ¬Clean result.2 | RawCtxStatefulPendingPrefix.scan
-      (RawCtxFirstParentPrefix.selected depth) (RawCtxSelectiveFamilyLog.handler source writer (depth + 1)) client state] ≤
+    Pr{let result ← (RawCtxStatefulPendingPrefix.scan
+      (RawCtxFirstParentPrefix.selected depth) (RawCtxSelectiveFamilyLog.handler source writer (depth + 1)) client state)}[¬Clean result.2] ≤
       ∑ j ∈ Finset.range calls, ((k + j + 1 : Nat) : ℝ≥0∞) * (2 ^ 256 : ℝ≥0∞)⁻¹ := by
   exact RawCtxStatefulScanRisk.scan_risk _ _ privateQuery Clean (Valid depth)
     (fun count => ((count + 1 : Nat) : ℝ≥0∞) * (2 ^ 256 : ℝ≥0∞)⁻¹)
@@ -206,8 +210,7 @@ theorem source_risk {M P I D K : Type}
     (budget : RawCtxRevealBudgets.Budget) (bounded : RawCtxRevealBudgets.Bounded client budget)
     (state : RawCtxProtocolReveals.State M P I D K S B) (initial : LoggedState A)
     (valid : Valid depth k initial) (clean : Clean initial) :
-    Pr[fun result => ¬Clean result.2 |
-      RawCtxFirstParentPrefix.scan source writer depth (depth + 1) sender route decode client state initial] ≤
+    Pr{let result ← RawCtxFirstParentPrefix.scan source writer depth (depth + 1) sender route decode client state initial}[¬Clean result.2] ≤
       ∑ j ∈ Finset.range (budget.1 .send + 51 * budget.1 .raw),
         ((k + j + 1 : Nat) : ℝ≥0∞) * (2 ^ 256 : ℝ≥0∞)⁻¹ :=
   scan_risk source writer depth k _ (program sender route decode client state)
@@ -221,13 +224,12 @@ theorem carried_risk {M P I D K : Type}
     (budget : RawCtxRevealBudgets.Budget) (bounded : RawCtxRevealBudgets.Bounded client budget)
     (state : RawCtxProtocolReveals.State M P I D K S B) (initial : LoggedState A)
     (valid : Valid depth k initial) (clean : Clean initial) :
-    Pr[fun result => ¬Clean (RawCtxLoggedParentSampler.pack sender route decode result).2 |
-      RawCtxForwardParentSampler.first source writer depth (depth + 1) sender route decode client state initial] ≤
+    Pr{let result ← RawCtxForwardParentSampler.first source writer depth (depth + 1) sender route decode client state initial}[¬Clean (RawCtxLoggedParentSampler.pack sender route decode result).2] ≤
       ∑ j ∈ Finset.range (budget.1 .send + 51 * budget.1 .raw),
         ((k + j + 1 : Nat) : ℝ≥0∞) * (2 ^ 256 : ℝ≥0∞)⁻¹ := by
   have original := source_risk source writer depth k sender route decode client budget bounded state initial valid clean
   rw [← RawCtxForwardParentSampler.first_pack source writer depth (depth + 1) sender route decode client state initial,
-    probEvent_map] at original
+    prEvent_map] at original
   exact original
 
 def Cached {M P I D K : Type} : RawCtxLoggedParentSampler.Cut M P I D K A Result S B → Prop
@@ -242,10 +244,10 @@ theorem cached_risk {M P I D K : Type}
     (budget : RawCtxRevealBudgets.Budget) (bounded : RawCtxRevealBudgets.Bounded client budget)
     (state : RawCtxProtocolReveals.State M P I D K S B) (initial : LoggedState A)
     (valid : Valid depth k initial) (clean : Clean initial) :
-    Pr[Cached | RawCtxForwardParentSampler.first source writer depth (depth + 1) sender route decode client state initial] ≤
+    Pr{let x ← RawCtxForwardParentSampler.first source writer depth (depth + 1) sender route decode client state initial}[Cached x] ≤
       ∑ j ∈ Finset.range (budget.1 .send + 51 * budget.1 .raw),
         ((k + j + 1 : Nat) : ℝ≥0∞) * (2 ^ 256 : ℝ≥0∞)⁻¹ := by
-  apply (probEvent_mono (q := fun result => ¬Clean (RawCtxLoggedParentSampler.pack sender route decode result).2) ?_).trans
+  refine (prEvent_mono_of_support _ _ (fun result => ¬Clean (RawCtxLoggedParentSampler.pack sender route decode result).2) ?_).trans
     (carried_risk source writer depth k sender route decode client budget bounded state initial valid clean)
   intro result supported bad
   cases result with

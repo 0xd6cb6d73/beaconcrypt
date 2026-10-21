@@ -108,7 +108,7 @@ theorem prepared_collision
       ((inputs packet ++ [address packet]).length : ℝ≥0∞) * (2 ^ 256 : ℝ≥0∞)⁻¹ := by
     simpa only [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput,
       bind_pure_comp, probEvent_map, Function.comp_def, decide_eq_true_eq] using
-      RawCtxFirstParentRisk.full_inputs (inputs packet ++ [address packet])
+      RawCtxFirstParentRisk.full_inputs_vcvioLegacy (inputs packet ++ [address packet])
   simp only [collision, RawCtxSelectedParentEntry.fromOutput, (normalize_inputs packet).1,
     PqxdhLaterParentAlias.target_address]
   simp only [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput] at bound

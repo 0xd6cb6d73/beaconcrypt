@@ -2920,7 +2920,7 @@ theorem insClient_source (target : Target S (B + 1))
       Prod.fst <$> (simulateQ (AdaptiveCtxDynamicKnownKeys.sourceImpl true (RawCtxUniversalDecoder.decoder (env0).decode)
         (env0).source.crypto key) (insSuffix setup env callbacks baseImpl kem attachedVerify primitives program post b target out
           result.1)).run (RawCtxSourceSharedRom.install AdaptiveCtxDynamicKnownKeys.initialSource result.2)] := by
-  have exchanged := RawCtxPrefixKeyOrder.source_game true (RawCtxUniversalDecoder.decoder (env0).decode) (env0).source.crypto
+  have exchanged := RawCtxPrefixKeyOrder.source_game_vcvioLegacy true (RawCtxUniversalDecoder.decoder (env0).decode) (env0).source.crypto
     (prelude setup env callbacks baseImpl kem attachedVerify primitives program post)
     (insSuffix setup env callbacks baseImpl kem attachedVerify primitives program post b target out)
   have mapped := congrArg (fun distribution => Prod.fst <$> distribution) exchanged

@@ -120,26 +120,26 @@ theorem step_agree {Metadata PeerMetadata Identity DhPair KemPair Auxiliary : Ty
     (result : (SourceSpec serverCount beaconCount).Range query ×
       NativeState Metadata PeerMetadata Identity DhPair KemPair Auxiliary serverCount beaconCount)
     (fresh : Fresh blocked prior result.2.1.2) :
-    Pr[= result | (RawCtxProtocolReveals.sourceImpl source writer serverCount beaconCount
-      senderId route decode query).run state] =
-    Pr[= result | (maskedImpl source writer serverCount beaconCount
-      senderId route decode blocked query).run state] := by
+    Pr{let x ← ((RawCtxProtocolReveals.sourceImpl source writer serverCount beaconCount
+      senderId route decode query).run state)}[x = result] =
+    Pr{let x ← ((maskedImpl source writer serverCount beaconCount
+      senderId route decode blocked query).run state)}[x = result] := by
   cases query with
   | inl request => rfl
   | inr request =>
     by_cases hit : exposed blocked ⟨request, reveal request state.1.1⟩ = true
     · have notFresh : ¬ Fresh blocked prior (note ⟨request, reveal request state.1.1⟩ state.1.2) := by
         simp only [fresh_note, hit, Bool.true_eq_false, and_false, not_false_eq_true]
-      have leftZero : Pr[= result | (RawCtxProtocolReveals.sourceImpl source writer serverCount beaconCount
-          senderId route decode (.inr request)).run state] = 0 := by
-        apply probOutput_eq_zero_of_not_mem_support
+      have leftZero : Pr{let x ← ((RawCtxProtocolReveals.sourceImpl source writer serverCount beaconCount
+          senderId route decode (.inr request)).run state)}[x = result] = 0 := by
+        apply (prEvent_eq_zero_of_not_mem_support _)
         intro supported
         simp only [RawCtxProtocolReveals.sourceImpl, StateT.run, mem_support_pure_iff] at supported
         subst result
         exact notFresh fresh
-      have rightZero : Pr[= result | (maskedImpl source writer serverCount beaconCount
-          senderId route decode blocked (.inr request)).run state] = 0 := by
-        apply probOutput_eq_zero_of_not_mem_support
+      have rightZero : Pr{let x ← ((maskedImpl source writer serverCount beaconCount
+          senderId route decode blocked (.inr request)).run state)}[x = result] = 0 := by
+        apply (prEvent_eq_zero_of_not_mem_support _)
         intro supported
         simp only [maskedImpl, StateT.run, mem_support_pure_iff] at supported
         subst result
@@ -165,8 +165,8 @@ private theorem output_fresh_zero {ι σ α : Type} {spec : OracleSpec ι}
     (impl : QueryImpl spec (StateT σ ProbComp)) (good : σ → Prop)
     (step : ∀ query state result, result ∈ support ((impl query).run state) → good result.2 → good state)
     (client : OracleComp spec α) (state : σ) (bad : ¬ good state) (result : α × σ) (fresh : good result.2) :
-    Pr[= result | (simulateQ impl client).run state] = 0 := by
-  exact probOutput_eq_zero_of_not_mem_support fun supported =>
+    Pr{let x ← (simulateQ impl client).run state}[x = result] = 0 := by
+  exact (prEvent_eq_zero_of_not_mem_support _) fun supported =>
     bad (supported_fresh impl good step client state result supported fresh)
 
 private theorem outputs_fresh {ι σ α : Type} {spec : OracleSpec ι}
@@ -174,16 +174,16 @@ private theorem outputs_fresh {ι σ α : Type} {spec : OracleSpec ι}
     (stepLeft : ∀ query state result, result ∈ support ((left query).run state) → good result.2 → good state)
     (stepRight : ∀ query state result, result ∈ support ((right query).run state) → good result.2 → good state)
     (agree : ∀ query state result, good result.2 →
-      Pr[= result | (left query).run state] = Pr[= result | (right query).run state])
+      Pr{let x ← (left query).run state}[x = result] = Pr{let x ← (right query).run state}[x = result])
     (client : OracleComp spec α) (state : σ) (result : α × σ) (fresh : good result.2) :
-    Pr[= result | (simulateQ left client).run state] =
-      Pr[= result | (simulateQ right client).run state] := by
+    Pr{let x ← (simulateQ left client).run state}[x = result] =
+      Pr{let x ← (simulateQ right client).run state}[x = result] := by
   classical
   induction client using OracleComp.inductionOn generalizing state with
   | pure value => rfl
   | query_bind query next ih =>
     simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind]
-    rw [probOutput_bind_eq_tsum, probOutput_bind_eq_tsum]
+    rw [OracleComp.prEvent_bind_eq_tsum, OracleComp.prEvent_bind_eq_tsum]
     refine tsum_congr ?_
     rintro ⟨reply, nextState⟩
     by_cases nextFresh : good nextState
@@ -202,10 +202,10 @@ theorem output_fresh {Metadata PeerMetadata Identity DhPair KemPair Auxiliary Re
     (state : NativeState Metadata PeerMetadata Identity DhPair KemPair Auxiliary serverCount beaconCount)
     (result : Result × NativeState Metadata PeerMetadata Identity DhPair KemPair Auxiliary serverCount beaconCount)
     (fresh : Fresh blocked prior result.2.1.2) :
-    Pr[= result | (simulateQ (RawCtxProtocolReveals.sourceImpl source writer serverCount beaconCount
-      senderId route decode) client).run state] =
-    Pr[= result | (simulateQ (maskedImpl source writer serverCount beaconCount
-      senderId route decode blocked) client).run state] := by
+    Pr{let x ← ((simulateQ (RawCtxProtocolReveals.sourceImpl source writer serverCount beaconCount
+      senderId route decode) client).run state)}[x = result] =
+    Pr{let x ← ((simulateQ (maskedImpl source writer serverCount beaconCount
+      senderId route decode blocked) client).run state)}[x = result] := by
   exact outputs_fresh _ _ (fun state => Fresh blocked prior state.1.2)
     (source_step_fresh source writer senderId route decode blocked prior)
     (masked_step_fresh source writer senderId route decode blocked prior)
@@ -220,19 +220,17 @@ theorem event_fresh {Metadata PeerMetadata Identity DhPair KemPair Auxiliary Res
     (client : OracleComp (SourceSpec serverCount beaconCount) Result)
     (state : NativeState Metadata PeerMetadata Identity DhPair KemPair Auxiliary serverCount beaconCount)
     (event : Result × NativeState Metadata PeerMetadata Identity DhPair KemPair Auxiliary serverCount beaconCount → Prop) :
-    Pr[fun result => event result ∧ Fresh blocked prior result.2.1.2 |
-      (simulateQ (RawCtxProtocolReveals.sourceImpl source writer serverCount beaconCount
-        senderId route decode) client).run state] =
-    Pr[fun result => event result ∧ Fresh blocked prior result.2.1.2 |
-      (simulateQ (maskedImpl source writer serverCount beaconCount
-        senderId route decode blocked) client).run state] := by
+    Pr{let result ← ((simulateQ (RawCtxProtocolReveals.sourceImpl source writer serverCount beaconCount
+        senderId route decode) client).run state)}[event result ∧ Fresh blocked prior result.2.1.2] =
+    Pr{let result ← ((simulateQ (maskedImpl source writer serverCount beaconCount
+        senderId route decode blocked) client).run state)}[event result ∧ Fresh blocked prior result.2.1.2] := by
   classical
-  rw [probEvent_eq_tsum_ite, probEvent_eq_tsum_ite]
+  rw [OracleComp.prEvent_eq_tsum_ite, OracleComp.prEvent_eq_tsum_ite]
   refine tsum_congr ?_
   intro result
   by_cases fresh : Fresh blocked prior result.2.1.2
-  · simp [fresh, output_fresh source writer senderId route decode blocked prior client state result fresh]
-  · simp [fresh]
+  · rw [output_fresh source writer senderId route decode blocked prior client state result fresh]
+  · simp only [fresh, and_false, ↓reduceIte]
 
 end BeaconcryptCore.Computational.RawCtxLiveSourceFreshness
 

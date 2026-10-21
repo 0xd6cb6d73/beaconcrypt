@@ -13,28 +13,41 @@ open PqxdhJointKdf PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhFullSecretInputKdf
 
 /-- The full comparison draw supplies the same two independent directional halves after ignoring its reduction-only twelve bytes, through the complete evaluated continuation. -/
 theorem full_observed {Result : Type} (next : RootOutput → RootOutput → ProbComp Result) :
-    𝒮[(do let output ← $ᵗ FullOutput
-          next (PqxdhOrderedChainHybrids.material output).1 (PqxdhOrderedChainHybrids.nextChain output))] =
-      𝒮[(do let other ← $ᵗ RootOutput
+    EvalDistEq
+      (do let output ← $ᵗ FullOutput
+          next (PqxdhOrderedChainHybrids.material output).1 (PqxdhOrderedChainHybrids.nextChain output))
+        (do let other ← $ᵗ RootOutput
             let target ← $ᵗ RootOutput
-            next other target)] := by
-  refine (PqxdhOrderedChainHybrids.fullOutput_observed_vcvioLegacy (fun value target => next value.1 target)).trans ?_
-  have projected : 𝒮[(Prod.fst : Material → RootOutput) <$> ($ᵗ Material)] = 𝒮[$ᵗ RootOutput] :=
-    evalSPMF_map_fst_uniformSample_prod
-  calc
-    _ = 𝒮[(do let other ← Prod.fst <$> ($ᵗ Material)
-               let target ← $ᵗ RootOutput
-               next other target)] := by rw [bind_map_left]
-    _ = _ := by
-      rw [evalSPMF_bind, projected, ← evalSPMF_bind]
+            next other target) := by
+  refine (PqxdhOrderedChainHybrids.fullOutput_observed (fun value target => next value.1 target)).trans ?_
+  have projected : EvalDistEq ((Prod.fst : Material → RootOutput) <$> ($ᵗ Material)) ($ᵗ RootOutput) := by
+    rw [← PqxdhFullSecretInputKdf.pairSample]
+    simpa only [map_bind, map_pure, bind_pure] using
+      EvalDistEq.bind_right ($ᵗ RootOutput) fun root =>
+        OracleComp.EvalDistEq.bind_const ($ᵗ PqxdhFullSecretInputKdf.NonceOutput) (pure root)
+  have observed := projected.bind_left fun other => do
+    let target ← $ᵗ RootOutput
+    next other target
+  simpa only [bind_map_left] using observed
 
 /-- Either actual directional half has the same complete continuation law as the comparison marker sampler; the opposite half is retained and the extra bytes never enter the source continuation. -/
 theorem initial_observed {Result : Type} (second : Bool) (next : RootOutput → RootOutput → ProbComp Result) :
-    𝒮[(do let output ← $ᵗ HmacBlock
-          next (RawCtxInitialChildSecrecy.parts second output).1 (RawCtxInitialChildSecrecy.parts second output).2)] =
-      𝒮[(do let output ← $ᵗ FullOutput
-            next (material output).1 (nextChain output))] :=
+    EvalDistEq
+      (do let output ← $ᵗ HmacBlock
+          next (RawCtxInitialChildSecrecy.parts second output).1 (RawCtxInitialChildSecrecy.parts second output).2)
+        (do let output ← $ᵗ FullOutput
+            next (material output).1 (nextChain output)) :=
   (RawCtxInitialChildSecrecy.parts_observed second next).trans (full_observed next).symm
+
+set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.RawCtxInitialSentinelSampler.initial_observed_vcvioLegacy :
+    ∀ {Result : Type} (second : Bool) (next : BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput → BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput → ProbComp Result),
+      𝒮[do
+          let output ← $ᵗ BeaconcryptCore.Computational.PqxdhSecretInputKdf.HmacBlock
+          next (BeaconcryptCore.Computational.RawCtxInitialChildSecrecy.parts second output).1 (BeaconcryptCore.Computational.RawCtxInitialChildSecrecy.parts second output).2] =
+        𝒮[do
+          let output ← $ᵗ BeaconcryptCore.Computational.PqxdhFullSecretInputKdf.FullOutput
+          next (BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.material output).1 (BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.nextChain output)] :=
+  by simpa only [BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq] using @BeaconcryptCore.Computational.RawCtxInitialSentinelSampler.initial_observed
 
 def join (second : Bool) (other target : RootOutput) : HmacBlock :=
   if second then other ++ target else target ++ other
@@ -61,15 +74,16 @@ theorem constructor (request : RawCtxInitializedKdfFamily.InitialRequest) (secon
 theorem native_observed {Context Result : Type} (prior : ProbComp Context)
     (request : Context → RawCtxInitializedKdfFamily.InitialRequest) (second : Context → Bool)
     (next : Context → HmacBlock → RustM ConcreteRatchetKernel → ProbComp Result) :
-    𝒮[(do let context ← prior
+    EvalDistEq
+      (do let context ← prior
           let output ← $ᵗ HmacBlock
-          next context output (RawCtxSelectedInitialConstructor.from64 (request context) output))] =
-      𝒮[(do let context ← prior
+          next context output (RawCtxSelectedInitialConstructor.from64 (request context) output))
+      (do let context ← prior
             let output ← $ᵗ FullOutput
             next context (join (second context) (material output).1 (nextChain output))
               (RawCtxSelectedChain.nativeKernel (RawCtxFreshChainCut.concreteChain (nextChain output)) <$>
-                labelInitial (second context) (request context).1 (material output).1))] := by
-  refine evalSPMF_bind_congr' prior (fun context => ?_)
+                labelInitial (second context) (request context).1 (material output).1)) := by
+  refine EvalDistEq.bind_right prior (fun context => ?_)
   simpa only [join_parts, constructor] using initial_observed (second context)
     (fun other target => next context (join (second context) other target)
       (RawCtxSelectedInitialConstructor.from64 (request context) (join (second context) other target)))

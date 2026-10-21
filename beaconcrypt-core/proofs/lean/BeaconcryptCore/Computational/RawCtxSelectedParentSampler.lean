@@ -29,14 +29,14 @@ noncomputable def delayed (sample : ProbComp Context) (address : Context → Joi
 /-- Delaying only the independent chain coordinate retains the same entire context, predecessor entry and observer result. -/
 theorem delayed_eq (sample : ProbComp Context) (address : Context → JointKdfAddress)
     (observe : Context × Entry → ProbComp Result) :
-    𝒮[original sample address observe] = 𝒮[delayed sample address observe] := by
+    EvalDistEq (original sample address observe) (delayed sample address observe) := by
   simp only [original, delayed]
-  refine evalSPMF_bind_congr' sample (fun context => ?_)
-  refine (fullOutput_observed_vcvioLegacy (fun material target => do
+  refine EvalDistEq.bind_right sample (fun context => ?_)
+  refine (fullOutput_observed (fun material target => do
     let result ← observe (context, ⟨address context, material⟩)
     pure (target, result))).trans ?_
-  exact evalSPMF_bind_congr' ($ᵗ Material) (fun material =>
-    evalSPMF_sample_comm_vcvioLegacy ($ᵗ RootOutput) (observe (context, ⟨address context, material⟩))
+  exact EvalDistEq.bind_right ($ᵗ Material) (fun material =>
+    evalSPMF_sample_comm ($ᵗ RootOutput) (observe (context, ⟨address context, material⟩))
       (fun target result => pure (target, result)))
 
 set_option maxRecDepth 2048 in

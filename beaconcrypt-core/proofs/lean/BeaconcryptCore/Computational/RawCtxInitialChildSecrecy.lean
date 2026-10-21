@@ -17,15 +17,27 @@ def parts (second : Bool) (output : HmacBlock) : RootOutput × RootOutput :=
 
 /-- Both orientations split the same actual initializer draw through an arbitrary complete continuation. -/
 theorem parts_observed {Result : Type} (second : Bool) (next : RootOutput → RootOutput → ProbComp Result) :
-    𝒮[(do let output ← $ᵗ HmacBlock
-          next (parts second output).1 (parts second output).2)] =
-      𝒮[(do let other ← $ᵗ RootOutput
+    EvalDistEq
+      (do let output ← $ᵗ HmacBlock
+          next (parts second output).1 (parts second output).2)
+        (do let other ← $ᵗ RootOutput
             let target ← $ᵗ RootOutput
-            next other target)] := by
+            next other target) := by
   cases second
   all_goals simp only [parts, Bool.false_eq_true, ite_false, ite_true]
   case false => exact RawCtxSelectedInitialSampler.initial_observed next
   case true => exact RawCtxSelectedInitialSecond.second_observed next
+
+set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.RawCtxInitialChildSecrecy.parts_observed_vcvioLegacy :
+    ∀ {Result : Type} (second : Bool) (next : BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput → BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput → ProbComp Result),
+      𝒮[do
+          let output ← $ᵗ BeaconcryptCore.Computational.PqxdhSecretInputKdf.HmacBlock
+          next (BeaconcryptCore.Computational.RawCtxInitialChildSecrecy.parts second output).1 (BeaconcryptCore.Computational.RawCtxInitialChildSecrecy.parts second output).2] =
+        𝒮[do
+          let other ← $ᵗ BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput
+          let target ← $ᵗ BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput
+          next other target] :=
+  by simpa only [BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq] using @BeaconcryptCore.Computational.RawCtxInitialChildSecrecy.parts_observed
 
 noncomputable def sample {Context : Type} (prior : ProbComp Context) (second : Context → Bool) :
     ProbComp ((Context × RootOutput) × RootOutput) := do
@@ -45,10 +57,14 @@ noncomputable def separated {Context : Type} (prior : ProbComp Context) :
 
 /-- The exact selected half is uniform independently of the complete prior context and retained opposite half, including adaptive direction selection before the initializer draw. -/
 theorem joint_separated {Context : Type} (prior : ProbComp Context) (second : Context → Bool) :
-    𝒮[joint prior second] = 𝒮[separated prior] := by
+    EvalDistEq (joint prior second) (separated prior) := by
   simpa only [joint, RawCtxFullPreimageTester.byteSampler, sample, separated, map_bind, map_pure] using
-    evalSPMF_bind_congr' prior (fun context => parts_observed (second context)
+    EvalDistEq.bind_right prior (fun context => parts_observed (second context)
       (fun other target => pure ((context, other), target.toList)))
+
+set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.RawCtxInitialChildSecrecy.joint_separated_vcvioLegacy :
+    ∀ {Context : Type} (prior : ProbComp Context) (second : Context → Bool), 𝒮[BeaconcryptCore.Computational.RawCtxInitialChildSecrecy.joint prior second] = 𝒮[BeaconcryptCore.Computational.RawCtxInitialChildSecrecy.separated prior] :=
+  by simpa only [BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq] using @BeaconcryptCore.Computational.RawCtxInitialChildSecrecy.joint_separated
 
 noncomputable def actual {Context : Type} (source : FixedHkdfSha512NoSaltSource)
     (prior : ProbComp Context) (second : Context → Bool) (observe : FullObserver (Context × RootOutput)) : ProbComp Bool := do

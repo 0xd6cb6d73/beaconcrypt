@@ -151,19 +151,23 @@ theorem initial_source_event (c : Pqxdh.Crypto) (output : HmacBlock)
 
 /-- One uniform full64 source response pays one 256-bit equality term for its two sending directions. It is never replaced by two independent role responses. -/
 theorem initial_alias_uniform :
-    Pr[InitialAlias | ($ᵗ HmacBlock)] ≤ (1 : ENNReal) / (2 ^ 256 : ENNReal) := by
+    Pr{let x ← ($ᵗ HmacBlock)}[InitialAlias x] ≤ (1 : ENNReal) / (2 ^ 256 : ENNReal) := by
   have law := RawCtxSelectedInitialSampler.initial_observed
     (fun second first => (pure (first, second) : ProbComp (RootOutput × RootOutput)))
-  have event := OracleComp.probEvent_congr'
-    (p := fun pair : RootOutput × RootOutput => pair.1 = pair.2)
-    (q := fun pair : RootOutput × RootOutput => pair.1 = pair.2)
-    (fun _ _ => Iff.rfl) law
-  simp only [bind_pure_comp, probEvent_map, Function.comp_def] at event
-  rw [show Pr[InitialAlias | ($ᵗ HmacBlock)] = _ from event]
-  refine probEvent_bind_le_of_forall_le fun second _ => ?_
-  simp only [probEvent_map, Function.comp_def]
+  have event := law.prEvent_eq (fun pair : RootOutput × RootOutput => pair.1 = pair.2)
+  generalize sampledBlock : ($ᵗ HmacBlock : ProbComp HmacBlock) = block at event ⊢
+  generalize sampledRoot : ($ᵗ RootOutput : ProbComp RootOutput) = root at event
+  rw [bind_pure_comp _ block, prEvent_map] at event
+  refine event.trans_le ?_
+  refine prEvent_bind_le_of_forall_le root _ _ fun second => ?_
+  rw [bind_pure_comp _ root, prEvent_map]
+  subst sampledRoot
   simpa only [List.mem_singleton, List.length_singleton, Nat.cast_one] using
     RawCtxSelectedInputCandidates.uniform_candidates [second]
+
+set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.RawCtxSendLineageCollision.initial_alias_uniform_vcvioLegacy :
+    probEvent ($ᵗ BeaconcryptCore.Computational.PqxdhSecretInputKdf.HmacBlock) BeaconcryptCore.Computational.RawCtxSendLineageCollision.InitialAlias ≤ 1 / 2 ^ 256 :=
+  by simpa only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent] using @BeaconcryptCore.Computational.RawCtxSendLineageCollision.initial_alias_uniform
 
 noncomputable def initialTrace {Context Result : Type} (sample : ProbComp Context)
     (observe : Context → HmacBlock → RustM ConcreteRatchetKernel → RustM ConcreteRatchetKernel → ProbComp Result) :
@@ -178,13 +182,13 @@ noncomputable def initialTrace {Context Result : Type} (sample : ProbComp Contex
 /-- The actual paired constructors and an arbitrary complete continuation retain the same initial-response collision bound. No success or freshness conditioning changes the sampler. -/
 theorem initial_observed_alias {Context Result : Type} (sample : ProbComp Context)
     (observe : Context → HmacBlock → RustM ConcreteRatchetKernel → RustM ConcreteRatchetKernel → ProbComp Result) :
-    Pr[fun result => InitialAlias result.2.1 | initialTrace sample observe] ≤ (1 : ENNReal) / (2 ^ 256 : ENNReal) := by
+    Pr{let result ← initialTrace sample observe}[InitialAlias result.2.1] ≤ (1 : ENNReal) / (2 ^ 256 : ENNReal) := by
   unfold initialTrace
-  refine probEvent_bind_le_of_forall_le fun context _ => ?_
-  refine (probEvent_bind_le_probEvent (p := InitialAlias) ?_).trans initial_alias_uniform
+  refine prEvent_bind_le_of_forall_le _ _ _ fun context => ?_
+  refine (prEvent_bind_le_prEvent_of_support _ _ InitialAlias _ ?_).trans initial_alias_uniform
   intro output _ different
-  simp only [bind_pure_comp, probEvent_map, Function.comp_def]
-  simpa only [different] using (probEvent_False (observe context output _ _))
+  rw [bind_pure_comp _ (observe context output _ _), prEvent_map]
+  exact prEvent_eq_zero_of_forall_not _ _ fun _ => different
 
 set_option maxRecDepth 2048 in
 /-- The paired initializer draws one64-byte response, paying the full original context sampler and every possible continuation cost. -/

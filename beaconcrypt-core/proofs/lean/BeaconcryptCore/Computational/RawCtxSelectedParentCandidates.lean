@@ -29,9 +29,8 @@ theorem real_bound {Context Result : Type} (source : FixedHkdfSha512NoSaltSource
     (hmac : HmacSha512) (correct : SourceFullCorrect source hmac)
     (priorSample : ProbComp Context) (address : Context → JointKdfAddress)
     (observe : Context × Entry → FullOutput → ProbComp Result) (candidates : Result → List RootOutput) :
-    Pr[fun pair => pair.1 ∈ candidates pair.2 |
-      RawCtxFullPreimageTester.actual (RawCtxFullPreimageTester.production source)
-        (sample priorSample address) observe] ≤
+    Pr{let pair ← (RawCtxFullPreimageTester.actual (RawCtxFullPreimageTester.production source)
+        (sample priorSample address) observe)}[pair.1 ∈ candidates pair.2] ≤
       (2 ^ 352 : ENNReal)⁻¹ + ENNReal.ofReal (
         (extractRealGame hmac (RawCtxSelectedParentSecrecy.joint priorSample address)
           (fullExtractReduction hmac .ratchet
@@ -46,6 +45,10 @@ theorem real_bound {Context Result : Type} (source : FixedHkdfSha512NoSaltSource
   simpa only [bytes_same] using RawCtxFullPreimageTester.source_alias_bound source hmac correct
     (sample priorSample address) observe candidates
 
+set_option linter.deprecated false in set_option linter.unusedVariables false in theorem _root_.BeaconcryptCore.Computational.RawCtxSelectedParentCandidates.real_bound_vcvioLegacy :
+    ∀ {Context Result : Type} (source : BeaconcryptCore.Computational.PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) (hmac : BeaconcryptCore.Computational.PqxdhSecretInputKdf.HmacSha512) (correct : BeaconcryptCore.Computational.PqxdhFullSecretInputKdf.SourceFullCorrect source hmac) (priorSample : ProbComp Context) (address : Context → BeaconcryptCore.Computational.PqxdhJointKdf.JointKdfAddress) (observe : Context × BeaconcryptCore.Computational.RawCtxSelectedParentEntry.Entry → BeaconcryptCore.Computational.PqxdhFullSecretInputKdf.FullOutput → ProbComp Result) (candidates : Result → List BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput), (probEvent (BeaconcryptCore.Computational.RawCtxFullPreimageTester.actual (BeaconcryptCore.Computational.RawCtxFullPreimageTester.production source) (BeaconcryptCore.Computational.RawCtxSelectedParentCandidates.sample priorSample address) observe) fun (pair : BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput × Result) => pair.1 ∈ candidates pair.2) ≤ (2 ^ 352)⁻¹ + ENNReal.ofReal ((BeaconcryptCore.Computational.PqxdhSecretInputKdf.extractRealGame hmac (BeaconcryptCore.Computational.RawCtxSelectedParentSecrecy.joint priorSample address) (BeaconcryptCore.Computational.PqxdhFullSecretInputKdf.fullExtractReduction hmac BeaconcryptCore.Computational.PqxdhJointKdfGame.FixedHkdfDomain.ratchet (BeaconcryptCore.Computational.RawCtxFullPreimageTester.tester (BeaconcryptCore.Computational.RawCtxFullPreimageTester.production source) observe candidates))).boolDistAdvantage (BeaconcryptCore.Computational.PqxdhSecretInputKdf.extractUniformGame (BeaconcryptCore.Computational.RawCtxSelectedParentSecrecy.joint priorSample address) (BeaconcryptCore.Computational.PqxdhFullSecretInputKdf.fullExtractReduction hmac BeaconcryptCore.Computational.PqxdhJointKdfGame.FixedHkdfDomain.ratchet (BeaconcryptCore.Computational.RawCtxFullPreimageTester.tester (BeaconcryptCore.Computational.RawCtxFullPreimageTester.production source) observe candidates))) + (BeaconcryptCore.Computational.PqxdhSecretInputKdf.hmacPrfRealGame hmac (BeaconcryptCore.Computational.PqxdhFullSecretInputKdf.fullExpandReduction BeaconcryptCore.Computational.PqxdhJointKdfGame.FixedHkdfDomain.ratchet (BeaconcryptCore.Computational.RawCtxSelectedParentSecrecy.joint priorSample address) (BeaconcryptCore.Computational.RawCtxFullPreimageTester.tester (BeaconcryptCore.Computational.RawCtxFullPreimageTester.production source) observe candidates))).boolDistAdvantage (BeaconcryptCore.Computational.PqxdhSecretInputKdf.hmacPrfRandomGame (BeaconcryptCore.Computational.PqxdhFullSecretInputKdf.fullExpandReduction BeaconcryptCore.Computational.PqxdhJointKdfGame.FixedHkdfDomain.ratchet (BeaconcryptCore.Computational.RawCtxSelectedParentSecrecy.joint priorSample address) (BeaconcryptCore.Computational.RawCtxFullPreimageTester.tester (BeaconcryptCore.Computational.RawCtxFullPreimageTester.production source) observe candidates)))) :=
+  by simpa only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent] using @BeaconcryptCore.Computational.RawCtxSelectedParentCandidates.real_bound
+
 noncomputable def uniform {Context Result : Type} (priorSample : ProbComp Context)
     (address : Context → JointKdfAddress) (observe : Context × Entry → FullOutput → ProbComp Result) :=
   RawCtxSelectedParentSampler.original priorSample address (fun context => do
@@ -59,12 +62,16 @@ theorem uniform_bound {Context Result : Type} (priorSample : ProbComp Context)
     (candidates : Result → List RootOutput) (budget : Nat)
     (bounded : ∀ context output result, result ∈ support (observe context output) →
       (candidates result).length ≤ budget) :
-    Pr[fun pair => pair.1 ∈ candidates pair.2 | uniform priorSample address observe] ≤
+    Pr{let pair ← uniform priorSample address observe}[pair.1 ∈ candidates pair.2] ≤
       (budget : ENNReal) / (2 ^ 256 : ENNReal) := by
   apply RawCtxSelectedParentSecrecy.candidate_bound
   intro context result supported
   simp only [mem_support_bind_iff] at supported
   exact supported.elim fun output proof => bounded context output result proof.2
+
+set_option linter.deprecated false in set_option linter.unusedVariables false in theorem _root_.BeaconcryptCore.Computational.RawCtxSelectedParentCandidates.uniform_bound_vcvioLegacy :
+    ∀ {Context Result : Type} (priorSample : ProbComp Context) (address : Context → BeaconcryptCore.Computational.PqxdhJointKdf.JointKdfAddress) (observe : Context × BeaconcryptCore.Computational.RawCtxSelectedParentEntry.Entry → BeaconcryptCore.Computational.PqxdhFullSecretInputKdf.FullOutput → ProbComp Result) (candidates : Result → List BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput) (budget : ℕ) (bounded : ∀ (context : Context × BeaconcryptCore.Computational.RawCtxSelectedParentEntry.Entry) (output : BeaconcryptCore.Computational.PqxdhFullSecretInputKdf.FullOutput), ∀ result ∈ MonadAttach.support (observe context output), (candidates result).length ≤ budget), (probEvent (BeaconcryptCore.Computational.RawCtxSelectedParentCandidates.uniform priorSample address observe) fun (pair : BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput × Result) => pair.1 ∈ candidates pair.2) ≤ ↑budget / 2 ^ 256 :=
+  by simpa only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent] using @BeaconcryptCore.Computational.RawCtxSelectedParentCandidates.uniform_bound
 
 /-- The additional tester pays two HMAC challenge queries, all original predecessor/observer uniform calls and its actual candidate evaluations of the real public function. -/
 theorem tester_queries {Context Result : Type} (source : FixedHkdfSha512NoSaltSource)

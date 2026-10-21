@@ -186,10 +186,6 @@ theorem probEvent_le_add_ofReal_tvDist {Result : Type} (left right : ProbComp Re
       simpa only [decideEvent, decide_eq_true_eq] using comparison
     _ ≤ _ := add_le_add le_rfl (ENNReal.ofReal_le_ofReal variation)
 
-set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.AdaptiveCtxPrefixValidation.probEvent_le_add_ofReal_tvDist_vcvioLegacy :
-    ∀ {Result : Type} (left right : ProbComp Result) (event : Result → Prop), probEvent left event ≤ probEvent right event + ENNReal.ofReal (tvDist left right) :=
-  by simpa only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent] using @BeaconcryptCore.Computational.AdaptiveCtxPrefixValidation.probEvent_le_add_ofReal_tvDist
-
 /-- Only the actual independent source run needs a trace-length theorem. The fixed candidate-vector event can then be transported unchanged to the logged world. -/
 theorem independent_prefix_eq_probe {Result : Type} (decode : AdaptiveCtxReceive.RawDecoder)
     (c : Pqxdh.Crypto) (adversary : OracleComp AdaptiveCtxReceive.ReceiveSpec Result)
@@ -230,10 +226,6 @@ theorem independent_prefix_le_indDollar_add_intctxt {Result : Type}
   · rw [retainedLoggedGame_eq]
     exact AdaptiveCtxRetainedKey.retainedIndependentGame_distance_le_intctxt_sum
       decode c fallback adversary qRaw rawBound
-
-set_option linter.deprecated false in set_option linter.unusedVariables false in theorem _root_.BeaconcryptCore.Computational.AdaptiveCtxPrefixValidation.independent_prefix_le_indDollar_add_intctxt_vcvioLegacy :
-    ∀ {Result : Type} (decode : BeaconcryptCore.Computational.AdaptiveCtxReceive.RawDecoder) (c : Pqxdh.Crypto) (fallback : BeaconcryptCore.Computational.CtxNonceAeadIntCtxt.ModifiedNonceAeadForgery) (adversary : OracleComp.{0, 0, 0} BeaconcryptCore.Computational.AdaptiveCtxReceive.ReceiveSpec Result) (qHash qSeal qRaw : ℕ) (hashBound : OracleComp.IsQueryBoundP.{0} adversary BeaconcryptCore.Computational.AdaptiveCtxQueryBounds.SourceHash qHash) (sealBound : OracleComp.IsQueryBoundP.{0} adversary BeaconcryptCore.Computational.AdaptiveCtxQueryBounds.SourceSeal qSeal) (rawBound : OracleComp.IsQueryBoundP.{0} adversary BeaconcryptCore.Computational.AdaptiveCtxReceive.IsRawQuery qRaw) (small : LT.lt.{0} qSeal (HPow.hPow.{0, 0, 0} 2 96)), LE.le.{0} (probEvent.{0, 0} (BeaconcryptCore.Computational.AdaptiveCtxRetainedKey.retainedIndependentGame decode c adversary) BeaconcryptCore.Computational.AdaptiveCtxPrefix.RetainedPrefix) (HAdd.hAdd.{0, 0, 0} (HAdd.hAdd.{0, 0, 0} (ENNReal.ofReal (BeaconcryptCore.Computational.CtxNonceAeadIndDollarValidation.modifiedNonceAeadINDDollarAdvantage c (BeaconcryptCore.Computational.AdaptiveCtxPrefixValidation.validationReduction decode c adversary qHash))) (HMul.hMul.{0, 0, 0} (↑qHash) (Inv.inv.{0} ↑(HPow.hPow.{0, 0, 0} 2 128)))) (∑ index ∈ Finset.range qRaw, BeaconcryptCore.Computational.CtxNonceAeadIntCtxt.modifiedNonceAeadINTCTXTAdvantage c (BeaconcryptCore.Computational.AdaptiveRawNonceAead.indexedReduction (BeaconcryptCore.Computational.AdaptiveCtxReceive.baseDecoder decode) fallback (BeaconcryptCore.Computational.AdaptiveCtxReceive.wrapped decode adversary) index))) :=
-  by simpa only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent] using @BeaconcryptCore.Computational.AdaptiveCtxPrefixValidation.independent_prefix_le_indDollar_add_intctxt
 
 /-- Canonical routed CTX and the executable ordinary log/reject source client now share a conventional primitive bound. The factor two explicitly retains the integrity cost of both full-transcript replacement and prefix-event transfer. -/
 theorem routed_distance_le_indDollar_add_two_intctxt {Result : Type}

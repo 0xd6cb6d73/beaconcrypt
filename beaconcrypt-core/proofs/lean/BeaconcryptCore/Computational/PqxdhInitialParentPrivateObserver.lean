@@ -72,7 +72,7 @@ theorem distance (reader : RawCtxSelectedLiveTrace.Reader) (target : RootOutput)
       ((simulateQ (observed source writer prior entry output pre application initial selector aux reader target) client).run state) ≤
       Pr[fun result => target ∈ result.2.1.2 |
         (simulateQ (PqxdhInitialParentObserver.observed source writer prior entry output pre application initial selector aux reader) client).run state].toReal :=
-  RawCtxFlaggedQueryTrace.distance
+  RawCtxFlaggedQueryTrace.distance_vcvioLegacy
     (PqxdhInitialParentObserver.handler source writer prior entry output pre application initial selector aux reader)
     (alternate source writer prior entry output pre application initial selector aux reader)
     inputs direct target client state
@@ -107,7 +107,7 @@ theorem event_good (target : RootOutput) (client : OracleComp (Spec extra I D K 
       Pr[fun result => event result ∧ result.2.2 = false |
         (simulateQ (observed source writer prior entry output pre application initial selector aux
           RawCtxSelectedLiveRead.labelRead target) client).run state] :=
-  RawCtxFlaggedQueryAgreement.event_good _ _ inputs direct
+  RawCtxFlaggedQueryAgreement.event_good_vcvioLegacy _ _ inputs direct
     (query_safe source writer prior entry output pre application initial selector aux target) client state event
 
 /-- Away from the explicit parent-input collision, partial routing is exactly the patched private interpreter with every original initializer and external reply unchanged. -/

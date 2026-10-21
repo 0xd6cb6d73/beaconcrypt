@@ -12,20 +12,21 @@ namespace BeaconcryptCore.Computational.RawCtxSupportedMixture
 /-- A fixed local distinguishing bound gives the same one-sided probability allowance after the complete supported sampler. -/
 theorem probability {Context : Type} (sampler : ProbComp Context) (left right : Context → ProbComp Bool) (cost : ENNReal)
     (bound : ∀ context ∈ support sampler, ENNReal.ofReal ((left context).boolDistAdvantage (right context)) ≤ cost) :
-    Pr[= true | sampler >>= left] ≤ Pr[= true | sampler >>= right] + cost := by
-  rw [probOutput_bind_eq_tsum, probOutput_bind_eq_tsum]
+    Pr{let x ← sampler >>= left}[x = true] ≤ Pr{let x ← sampler >>= right}[x = true] + cost := by
+  rw [OracleComp.prEvent_bind_eq_tsum, OracleComp.prEvent_bind_eq_tsum]
   calc
-    _ ≤ ∑' context, Pr[= context | sampler] * (Pr[= true | right context] + cost) := by
+    _ ≤ ∑' context, Pr{let x ← sampler}[x = context] * (Pr{let x ← right context}[x = true] + cost) := by
       apply ENNReal.tsum_le_tsum
       intro context
       by_cases supported : context ∈ support sampler
       · have comparison := VCVioForward.evalDist_apply_true_le_add_ofReal_boolDistAdvantage (left context) (right context)
-        simp only [VCVioLegacy.evalDist_singleton_eq_probOutput] at comparison
+        rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true] at comparison
         exact mul_le_mul' le_rfl (comparison.trans (add_le_add le_rfl (bound context supported)))
-      · simp only [probOutput_eq_zero_of_not_mem_support supported, zero_mul, le_refl]
-    _ = (∑' context, Pr[= context | sampler] * Pr[= true | right context]) + (∑' context, Pr[= context | sampler]) * cost := by
+      · simp only [prEvent_eq_zero_of_not_mem_support _ supported, zero_mul, le_refl]
+    _ = (∑' context, Pr{let x ← sampler}[x = context] * Pr{let x ← right context}[x = true]) + (∑' context, Pr{let x ← sampler}[x = context]) * cost := by
       simp only [mul_add, ENNReal.tsum_add, ENNReal.tsum_mul_right]
-    _ ≤ _ := add_le_add le_rfl (by simpa only [one_mul] using mul_le_mul_left (tsum_probOutput_le_one (mx := sampler)) cost)
+    _ ≤ _ := add_le_add le_rfl (by simpa only [one_mul] using mul_le_mul_left (OracleComp.tsum_prEvent_le_one sampler) cost)
+  exact le_rfl
 
 /-- One uniform statistical allowance is preserved through arbitrary original preparation and initializer sampling, with no context or response selection factor. -/
 theorem bound {Context : Type} (sampler : ProbComp Context) (left right : Context → ProbComp Bool) (cost : ENNReal)
@@ -36,12 +37,14 @@ theorem bound {Context : Type} (sampler : ProbComp Context) (left right : Contex
   · have forward := probability sampler left right cost localBound
     have backward := probability sampler right left cost (fun context supported => by
       simpa only [ProbComp.boolDistAdvantage, abs_sub_comm] using localBound context supported)
-    have forwardReal := ENNReal.toReal_mono (ENNReal.add_ne_top.mpr ⟨probOutput_ne_top, infinite⟩) forward
-    have backwardReal := ENNReal.toReal_mono (ENNReal.add_ne_top.mpr ⟨probOutput_ne_top, infinite⟩) backward
-    simp only [ENNReal.toReal_add probOutput_ne_top infinite] at forwardReal backwardReal
+    have forwardReal := ENNReal.toReal_mono (ENNReal.add_ne_top.mpr ⟨(prEvent_ne_top _), infinite⟩) forward
+    have backwardReal := ENNReal.toReal_mono (ENNReal.add_ne_top.mpr ⟨(prEvent_ne_top _), infinite⟩) backward
+    simp only [ENNReal.toReal_add (prEvent_ne_top _) infinite] at forwardReal backwardReal
     rw [← ENNReal.ofReal_toReal infinite]
     apply ENNReal.ofReal_le_ofReal
-    simp only [ProbComp.boolDistAdvantage, evalDist_apply_singleton]
+    simp only [ProbComp.boolDistAdvantage]
+    rw [← prEvent_eq_evalDist_singleton (sampler >>= left) true,
+      ← prEvent_eq_evalDist_singleton (sampler >>= right) true]
     exact abs_le.mpr ⟨by linarith, by linarith⟩
 
 end BeaconcryptCore.Computational.RawCtxSupportedMixture

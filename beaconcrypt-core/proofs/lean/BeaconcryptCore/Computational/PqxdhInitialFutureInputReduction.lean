@@ -55,7 +55,7 @@ theorem real_bound (hmac : HmacSha512) (correct : SourceFullCorrect source hmac)
       2 * ((2 ^ 352 : ENNReal)⁻¹ + ENNReal.ofReal (testerLoss source writer mark sender route decode view hmac sample address)) := by
   have compared := real_masked source writer mark sender route decode view sample address
   rw [real_masked_probability] at compared
-  exact compared.trans (mul_le_mul_right (RawCtxSelectedParentCandidates.real_bound source hmac correct sample address
+  exact compared.trans (mul_le_mul_right (RawCtxSelectedParentCandidates.real_bound_vcvioLegacy source hmac correct sample address
     (observed source writer mark sender route decode view) candidates) 2)
 
 end BeaconcryptCore.Computational.PqxdhInitialFutureInputReduction

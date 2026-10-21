@@ -15,7 +15,7 @@ def wins (result : Decision Choice) : Bool := result.1.isSome && result.2
 /-- The adaptive success event is the disjoint union of its actual final target choices. -/
 theorem partition (game : ProbComp (Decision Choice)) :
     Pr[= true | wins <$> game] = ∑ selected, Pr[= true | choose selected <$> game] := by
-  have identity := RawCtxSelectiveTargets.event_partition game Prod.fst (fun _ result => result.2 = true)
+  have identity := RawCtxSelectiveTargets.event_partition_vcvioLegacy game Prod.fst (fun _ result => result.2 = true)
   have any : ∀ result : Decision Choice, wins result = true ↔
       RawCtxSelectiveTargets.anyEvent Prod.fst (fun _ result => result.2 = true) result := by
     intro result

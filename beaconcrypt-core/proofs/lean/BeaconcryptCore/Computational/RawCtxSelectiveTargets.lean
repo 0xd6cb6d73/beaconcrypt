@@ -86,13 +86,14 @@ def anyEvent {Choice Result : Type} (select : Result → Option Choice)
 /-- A post-execution adaptive target choice partitions the original winning event exactly, without preselecting the adversary's eventual choice. -/
 theorem event_partition {Choice Result : Type} [Fintype Choice] [DecidableEq Choice]
     (game : ProbComp Result) (select : Result → Option Choice) (win : Choice → Result → Prop) :
-    Pr[anyEvent select win | game] = ∑ target, Pr[selectedEvent select win target | game] := by
+    Pr{let x ← game}[(anyEvent select win) x] = ∑ target, Pr{let x ← game}[(selectedEvent select win target) x] := by
   classical
-  simp only [probEvent_eq_tsum_ite]
+  rw [OracleComp.prEvent_eq_tsum_ite,
+    Finset.sum_congr rfl fun target _ => OracleComp.prEvent_eq_tsum_ite game (selectedEvent select win target)]
   rw [← Summable.tsum_finsetSum (fun _ _ => ENNReal.summable)]
   refine tsum_congr fun result => ?_
   cases selected : select result with
-  | none => simp [anyEvent, selectedEvent, selected]
+  | none => simp [anyEvent, selectedEvent, selected, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
   | some target =>
     by_cases accepted : win target result
     · have filtered : Finset.univ.filter (fun other => target = other ∧ win other result) = {target} := by
@@ -103,15 +104,21 @@ theorem event_partition {Choice Result : Type} [Fintype Choice] [DecidableEq Cho
         · intro equal
           subst other
           exact ⟨rfl, accepted⟩
-      simp [anyEvent, selectedEvent, selected, accepted, filtered]
-    · simp [anyEvent, selectedEvent, selected, accepted]
+      simp [anyEvent, selectedEvent, selected, accepted, filtered, -evalDist_apply_singleton, -evalDist_apply_setOf,
+        -evalDist_apply_univ]
+    · simp [anyEvent, selectedEvent, selected, accepted, -evalDist_apply_singleton, -evalDist_apply_setOf,
+        -evalDist_apply_univ]
+
+set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.RawCtxSelectiveTargets.event_partition_vcvioLegacy :
+    ∀ {Choice Result : Type} [Fintype Choice] [DecidableEq Choice] (game : ProbComp Result) (select : Result → Option Choice) (win : Choice → Result → Prop), probEvent game (BeaconcryptCore.Computational.RawCtxSelectiveTargets.anyEvent select win) = ∑ target : Choice, probEvent game (BeaconcryptCore.Computational.RawCtxSelectiveTargets.selectedEvent select win target) :=
+  by simpa only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent] using @BeaconcryptCore.Computational.RawCtxSelectiveTargets.event_partition
 
 /-- Fixed-target reductions are summed over the adversary's original final-choice partition. -/
 theorem selection_sum {Choice Result : Type} [Fintype Choice] [DecidableEq Choice]
     (game : ProbComp Result) (select : Result → Option Choice) (win : Choice → Result → Prop)
     (loss : Choice → ENNReal)
-    (bounded : ∀ target, Pr[selectedEvent select win target | game] ≤ loss target) :
-    Pr[anyEvent select win | game] ≤ ∑ target, loss target := by
+    (bounded : ∀ target, Pr{let x ← game}[(selectedEvent select win target) x] ≤ loss target) :
+    Pr{let x ← game}[(anyEvent select win) x] ≤ ∑ target, loss target := by
   rw [event_partition]
   exact Finset.sum_le_sum (fun target _ => bounded target)
 
@@ -119,8 +126,8 @@ theorem selection_sum {Choice Result : Type} [Fintype Choice] [DecidableEq Choic
 theorem selection_factor {Result : Type} (sessionCount recordCount : Nat)
     (game : ProbComp Result) (select : Result → Option (Target sessionCount recordCount))
     (win : Target sessionCount recordCount → Result → Prop) (loss : ENNReal)
-    (bounded : ∀ target, Pr[selectedEvent select win target | game] ≤ loss) :
-    Pr[anyEvent select win | game] ≤ (sessionCount * 2 * recordCount : Nat) * loss := by
+    (bounded : ∀ target, Pr{let x ← game}[(selectedEvent select win target) x] ≤ loss) :
+    Pr{let x ← game}[(anyEvent select win) x] ≤ (sessionCount * 2 * recordCount : Nat) * loss := by
   simpa only [Finset.sum_const, Finset.card_univ, target_card, nsmul_eq_mul] using
     selection_sum game select win (fun _ => loss) bounded
 

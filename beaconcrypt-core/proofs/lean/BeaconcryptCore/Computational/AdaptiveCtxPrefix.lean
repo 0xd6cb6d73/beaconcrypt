@@ -319,10 +319,6 @@ theorem retainedRoutedGame_distance_le_prefix (decode : RawDecoder) (c : Pqxdh.C
       · intro key _
         exact ENNReal.mul_ne_top (prEvent_ne_top _) (prEvent_ne_top _)
 
-set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.AdaptiveCtxPrefix.retainedRoutedGame_distance_le_prefix_vcvioLegacy :
-    ∀ (decode : BeaconcryptCore.Computational.AdaptiveCtxReceive.RawDecoder) (c : Pqxdh.Crypto) {Result : Type} (adversary : OracleComp BeaconcryptCore.Computational.AdaptiveCtxReceive.ReceiveSpec Result), tvDist (BeaconcryptCore.Computational.AdaptiveCtxPrefix.retainedRoutedGame decode c adversary) (BeaconcryptCore.Computational.AdaptiveCtxRetainedKey.retainedIndependentGame decode c adversary) ≤ (probEvent (BeaconcryptCore.Computational.AdaptiveCtxRetainedKey.retainedIndependentGame decode c adversary) BeaconcryptCore.Computational.AdaptiveCtxPrefix.RetainedPrefix).toReal :=
-  by simpa only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent] using @BeaconcryptCore.Computational.AdaptiveCtxPrefix.retainedRoutedGame_distance_le_prefix
-
 /-- Both structural adaptive hops now occur in the same retained-key source experiment. The prefix probability remains an event to reduce, not a primitive assumption. -/
 theorem retainedRoutedGame_distance_le_prefix_add_intctxt (decode : RawDecoder) (c : Pqxdh.Crypto)
     (fallback : CtxNonceAeadIntCtxt.ModifiedNonceAeadForgery) {Result : Type}

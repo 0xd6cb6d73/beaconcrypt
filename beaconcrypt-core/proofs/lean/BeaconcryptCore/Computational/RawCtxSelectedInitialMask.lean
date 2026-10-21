@@ -91,8 +91,8 @@ theorem distance {Auxiliary Result : Type}
       (handler source writer prior (atRoot root other nonce) left output reader view) privateInputs direct) client).run state)
       ((simulateQ (RawCtxFlaggedQueryTrace.trace
         (handler source writer prior (atRoot root other nonce) right output reader view) privateInputs direct) client).run state) ≤
-      Pr[fun result => root ∈ result.2.1.2 | (simulateQ (RawCtxFlaggedQueryTrace.trace
-        (handler source writer prior (atRoot root other nonce) left output reader view) privateInputs direct) client).run state].toReal := by
+      Pr{let result ← ((simulateQ (RawCtxFlaggedQueryTrace.trace
+        (handler source writer prior (atRoot root other nonce) left output reader view) privateInputs direct) client).run state)}[root ∈ result.2.1.2].toReal := by
   have bound := RawCtxFlaggedQueryTrace.distance
     (handler source writer prior (atRoot root other nonce) left output reader view)
     (handler source writer prior (atRoot root other nonce) right output reader view) privateInputs direct root client state

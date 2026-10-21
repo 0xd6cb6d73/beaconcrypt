@@ -180,8 +180,9 @@ theorem probability {M P I D K Result : Type} {S B : Nat} (p : Parameters M)
         (decision (RawCtxUniversalDecoder.decoder p.read) (base p original front))] {true} := by
   rw [← game_decision]
   unfold RawCtxSelectedNativeFreshLift.mass
-  simp only [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map, Function.comp_def, decide_eq_true_eq]
-  exact probEvent_mono fun result supported event => game_wins p c original front result supported event
+  repeat rw [← prEvent_eq_evalDist_singleton _ true]
+  simp only [prEvent_map, decide_eq_true_eq]
+  exact prEvent_mono_of_support _ _ _ fun result supported event => game_wins p c original front result supported event
 
 open AdaptiveCtxDynamicKnownBounds AdaptiveCtxQueryBounds AdaptiveCtxSharedReplayBounds
 open CtxNonceAeadIntCtxt CtxNonceAeadIndDollarValidation

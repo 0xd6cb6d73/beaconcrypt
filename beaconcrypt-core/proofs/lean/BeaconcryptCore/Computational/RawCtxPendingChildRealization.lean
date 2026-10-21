@@ -75,21 +75,21 @@ theorem random (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShare
     (selected : matched state.1.2.2 (address context) = true) (sameDepth : state.1.2.2.depth = depth)
     (covered : RawCtxSelectiveFamilyLog.Covered state)
     (unlisted : targetAddress (nextChain parent) ∉ state.2 ++ [address context]) :
-    𝒮[(fun result => (result.1, result.2.1.1)) <$>
-      RawCtxLoggedParentResponse.resume source writer (depth + 2) sender route decode context parent state] =
-      𝒮[(($ᵗ FullOutput) >>= fun child =>
+    EvalDistEq ((fun result => (result.1, result.2.1.1)) <$>
+      RawCtxLoggedParentResponse.resume source writer (depth + 2) sender route decode context parent state)
+      (($ᵗ FullOutput) >>= fun child =>
         Prod.map (Prod.map id (RawCtxGenericFamilyLive.mapState (nativeKernel (nextChain parent)))) id <$>
           (simulateQ (labelLive source writer
             (privatePatch (view (productionStream source.crypto) state.1.2.1) (nextChain parent) child)
             (fromOutput (address context) parent) (nextChain parent))
-            (stopped sender route decode context (material parent))).run state.1.1)] := by
+            (stopped sender route decode context (material parent))).run state.1.1) := by
   have separate : targetAddress (nextChain parent) ≠ address context := by
     intro same
     exact unlisted (by simp [same])
   have actual := RawCtxPendingChildDraw.parent_random_of_unlisted source writer depth sender route decode context parent state
     selected sameDepth covered (by simpa only [child_address context parent state selected] using unlisted)
   refine actual.trans ?_
-  apply evalSPMF_bind_congr' ($ᵗ FullOutput)
+  apply EvalDistEq.bind_right ($ᵗ FullOutput)
   intro child
   have table : view (productionStream source.crypto)
       ((RawCtxLoggedParentResponse.updated context parent state).1.2.1.cacheQuery
@@ -99,9 +99,9 @@ theorem random (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShare
     rw [child_address context parent state selected]
     exact child_table (productionStream source.crypto) state.1.2.1 (address context) parent child separate
   rw [table, RawCtxRetainedParentBackend.retained_live]
-  exact congrArg evalSPMF (RawCtxSelectedFamilyNativeContext.frame_run source writer
+  exact Eq.subst (motive := fun later => EvalDistEq _ later) (RawCtxSelectedFamilyNativeContext.frame_run source writer
     (privatePatch (view (productionStream source.crypto) state.1.2.1) (nextChain parent) child)
-    sender route decode context parent state.1.1)
+    sender route decode context parent state.1.1) (EvalDistEq.refl _)
 
 /-- Outside the actual prior-input event, patching the child's original fixed-source value leaves the complete retained prior lookup unchanged. -/
 theorem real_patch (source : FixedHkdfSha512NoSaltSource) (context : Context M P I D K Result S B)

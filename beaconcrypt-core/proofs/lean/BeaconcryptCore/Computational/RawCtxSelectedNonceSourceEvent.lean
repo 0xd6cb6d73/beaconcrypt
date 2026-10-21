@@ -173,8 +173,9 @@ theorem nonce_event_bound (source : FixedHkdfSha512NoSaltSource) (writer : RawCt
       (observedBad prior parent target nonce next sender) client (([], before), false))
   simp only [Functor.map_map, Prod.map_def, id_eq] at histories
   rw [← histories]
-  simp only [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map, Function.comp_def, decide_eq_true_eq]
-  apply probEvent_mono
+  repeat rw [← prEvent_eq_evalDist_singleton _ true]
+  simp only [prEvent_map, decide_eq_true_eq]
+  apply prEvent_mono_of_support
   intro result supported flagged
   exact (marked_program_consistent source writer prior parent key target nonce next sender route read client
     (([], before), false) result supported ⟨initial_tracked before empty, fun impossible => False.elim (Bool.false_ne_true impossible)⟩).2 flagged
@@ -197,8 +198,8 @@ theorem executable_distance (source : FixedHkdfSha512NoSaltSource) (writer : Raw
           (RawCtxSelectedFamilyNonceCoupling.optionalClient client)).run ([], before)] {true}).toReal := by
   apply (RawCtxSelectedFamilyNonceCoupling.executable_distance source writer prior parent key target nonce next sender route read client before).trans
   apply ENNReal.toReal_mono
-  · simp only [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput]
-    exact probEvent_ne_top
+  · rw [← prEvent_eq_evalDist_singleton _ true]
+    exact prEvent_ne_top _
   · exact nonce_event_bound source writer prior parent key target nonce next sender route read
       (RawCtxSelectedFamilyNonceCoupling.optionalClient client) before empty
 

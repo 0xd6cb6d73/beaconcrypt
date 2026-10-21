@@ -132,7 +132,7 @@ theorem collision_bound
   apply probEvent_bind_le_of_forall_le
   intro context _
   simp only [bind_pure_comp, probEvent_map, Function.comp_def, target_address]
-  exact (RawCtxFirstParentRisk.full_inputs _).trans (mul_le_mul_left
+  exact (RawCtxFirstParentRisk.full_inputs_vcvioLegacy _).trans (mul_le_mul_left
     (Nat.cast_le.mpr (addresses_length source writer pre application initializer selector aux mark sender route decode
       execution depth state qPost bounded context)) _)
 

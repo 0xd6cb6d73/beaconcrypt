@@ -154,7 +154,7 @@ theorem candidate_bound {Context X : Type} (part : Part)
   refine probEvent_bind_le_of_forall_le (fun value _ => ?_)
   refine probEvent_bind_le_of_forall_le (fun answer supported => ?_)
   rw [bind_pure_comp, probEvent_map]
-  exact (RawCtxSelectedInputCandidates.uniform_candidates (candidates answer)).trans
+  exact (RawCtxSelectedInputCandidates.uniform_candidates_vcvioLegacy (candidates answer)).trans
     (ENNReal.div_le_div_right (by exact_mod_cast bounded _ answer supported) _)
 
 noncomputable def retainedContext {Context : Type}

@@ -21,7 +21,7 @@ theorem complete {Result : Type} (continuation : FullOutput → ProbComp Result)
              let chain ← $ᵗ RootOutput
              let key ← $ᵗ RootOutput
              continuation (materialChainEquiv.symm ((key, nonce), chain)))] := by
-  have same := RawCtxSelectedMessageKey.key_observed
+  have same := RawCtxSelectedMessageKey.key_observed_vcvioLegacy
     (fun key nonce chain => continuation (materialChainEquiv.symm ((key, nonce), chain)))
   simpa only [reconstruct] using same
 

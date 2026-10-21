@@ -264,8 +264,8 @@ theorem decision_interpreted (real : Bool) (decode : RawDecoder) (c : Pqxdh.Cryp
 /-- The concrete final observer never wins in the replay endpoint, for every sampled selected key and every adaptive client. -/
 theorem replay_zero (decode : RawDecoder) (c : Pqxdh.Crypto) {Result : Type} (client : OracleComp Spec Result) :
     𝒟[Prod.fst <$> AdaptiveCtxDynamicKnownKeys.sourceGame false decode c (decision decode client)] {true} = 0 := by
-  rw [evalDist_apply_singleton]
-  apply probOutput_eq_zero_of_not_mem_support
+  rw [← prEvent_eq_evalDist_singleton]
+  apply prEvent_eq_zero_of_not_mem_support
   simp only [AdaptiveCtxDynamicKnownKeys.sourceGame, map_bind, decision_interpreted,
     mem_support_bind_iff, support_map, Set.mem_image]
   rintro ⟨key, _, result, reached, winning⟩

@@ -215,7 +215,7 @@ theorem appended_uniform (source : FixedHkdfSha512NoSaltSource)
         else none), result.2)) <$>
         (simulateQ (RawCtxRetainedTable.viewImpl prior other) client).run state] := by
   rw [← appended_cached source (cursor.depth + 1) other client gate n root (state, (table, cursor)) published]
-  rw [RawCtxSelectiveSingleDraw.single_uniform source other (appended client gate n root) state table cursor missing]
+  rw [RawCtxSelectiveSingleDraw.single_uniform_vcvioLegacy source other (appended client gate n root) state table cursor missing]
   exact evalSPMF_bind_congr' ($ᵗ FullOutput) (fun output => congrArg evalSPMF
     (appended_retained (view (productionStream source.crypto) (table.cacheQuery (cursorAddress cursor) output))
       other client gate n root state))

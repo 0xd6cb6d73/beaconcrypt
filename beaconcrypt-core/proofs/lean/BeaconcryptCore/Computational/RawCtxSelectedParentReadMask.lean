@@ -48,11 +48,9 @@ theorem event_good {Auxiliary Result : Type}
     (view : RawCtxSelectedParentLive.View) (client : OracleComp Spec Result)
     (state : RawCtxSelectedParentLive.State Auxiliary)
     (event : Result × RawCtxSelectedParentLive.State Auxiliary → Prop) :
-    Pr[fun result => event result ∧ result.2.2 = false |
-      (simulateQ (observed source writer prior entry output
-        (nativeReader (RawCtxFreshChainCut.concreteChain target)) view) client).run state] =
-      Pr[fun result => event result ∧ result.2.2 = false |
-        (simulateQ (observed source writer prior entry output labelRead view) client).run state] := by
+    Pr{let result ← ((simulateQ (observed source writer prior entry output
+        (nativeReader (RawCtxFreshChainCut.concreteChain target)) view) client).run state)}[event result ∧ result.2.2 = false] =
+      Pr{let result ← (simulateQ (observed source writer prior entry output labelRead view) client).run state}[event result ∧ result.2.2 = false] := by
   exact RawCtxFlaggedQueryAgreement.event_good _ _ inputs direct
     (query_safe source writer prior entry output target view) client state event
 
@@ -66,8 +64,7 @@ theorem alias_distance {Auxiliary Result : Type}
       ((simulateQ (RawCtxFlaggedQueryTrace.trace
         (RawCtxSelectedParentAliases.consistent source writer prior entry output reader view target)
         inputs direct) client).run state) ≤
-      Pr[fun result => target ∈ result.2.1.2 |
-        (simulateQ (observed source writer prior entry output reader view) client).run state].toReal := by
+      Pr{let result ← (simulateQ (observed source writer prior entry output reader view) client).run state}[target ∈ result.2.1.2].toReal := by
   exact RawCtxFlaggedQueryTrace.distance
     (RawCtxSelectedParentLive.handler source writer prior entry output reader view)
     (RawCtxSelectedParentAliases.alternate source writer prior entry output reader view)

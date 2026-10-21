@@ -66,7 +66,8 @@ theorem normalization (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMix
   classical
   rw [← (source_adjacent source writer depth sender route decode client state initial valid.2.1).2, normalized]
   exact (ofReal_tvDist_bind_left_event_le _ _ _ Cached (fun cut good => by simp only [good, ite_false])).trans
-    (cached_risk source writer depth k sender route decode client budget bounded state initial valid clean)
+    ((VCVioLegacy.probEvent_eq_prEvent _ Cached).le.trans
+    (cached_risk source writer depth k sender route decode client budget bounded state initial valid clean))
 
 /-- Any one common complete-state continuation, including a private appended lineage check, preserves the same cached-branch charge. -/
 theorem normalization_after {Observed : Type}
@@ -109,7 +110,7 @@ theorem adjacent_bound (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
   change ENNReal.ofReal (before.boolDistAdvantage after) ≤
     ENNReal.ofReal (before.boolDistAdvantage middle) + _
   refine (ENNReal.ofReal_le_ofReal (ProbComp.boolDistAdvantage_triangle before middle after)).trans ?_
-  simp only [ProbComp.boolDistAdvantage, evalDist_apply_singleton]
+  simp only [ProbComp.boolDistAdvantage, VCVioLegacy.evalDist_singleton_eq_probOutput]
   rw [ENNReal.ofReal_add (abs_nonneg _) (abs_nonneg _)]
   apply add_le_add le_rfl
   refine (ENNReal.ofReal_le_ofReal (abs_probOutput_toReal_sub_le_tvDist middle after)).trans ?_

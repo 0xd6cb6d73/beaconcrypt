@@ -252,8 +252,9 @@ theorem gated_probability {Chain M P I D K : Type} {S B : Nat}
         (decision (RawCtxUniversalDecoder.decoder read) client)] {true} := by
   rw [← game_decision]
   unfold RawCtxSelectedNativeFreshLift.mass
-  simp only [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map, Function.comp_def, decide_eq_true_eq]
-  exact probEvent_mono'' fun result event => gated_wins read selected number blocked disclosed result.1 event
+  repeat rw [← prEvent_eq_evalDist_singleton _ true]
+  simp only [prEvent_map, decide_eq_true_eq]
+  exact prEvent_mono _ _ _ fun result event => gated_wins read selected number blocked disclosed result.1 event
 
 open AdaptiveCtxDynamicKnownBounds AdaptiveCtxQueryBounds AdaptiveCtxSharedReplayBounds
 open CtxNonceAeadIntCtxt CtxNonceAeadIndDollarValidation

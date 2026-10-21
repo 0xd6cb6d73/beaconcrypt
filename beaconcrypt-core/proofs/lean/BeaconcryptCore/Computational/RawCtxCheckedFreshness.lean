@@ -29,14 +29,14 @@ def remainingEvent (earlier prior : List RatchetChain) (result : Output M P I D 
 private theorem event_distance {Result : Type} (work : ProbComp Result) (actual proxy bad : Result → Prop)
     (included : ∀ result ∈ support work, actual result → proxy result)
     (agreed : ∀ result ∈ support work, proxy result → ¬ bad result → actual result) :
-    |(Pr[actual | work]).toReal - (Pr[proxy | work]).toReal| ≤ (Pr[bad | work]).toReal := by
-  have smaller : Pr[actual | work] ≤ Pr[proxy | work] := probEvent_mono included
-  have covered : Pr[proxy | work] ≤ Pr[fun result => actual result ∨ bad result | work] :=
-    probEvent_mono (fun result reached enabled => Classical.byCases Or.inr (fun safe => Or.inl (agreed result reached enabled safe)))
-  have larger := covered.trans (probEvent_or_le work actual bad)
-  have smallerReal := ENNReal.toReal_mono probEvent_ne_top smaller
-  have largerReal := ENNReal.toReal_mono (ENNReal.add_ne_top.mpr ⟨probEvent_ne_top, probEvent_ne_top⟩) larger
-  rw [ENNReal.toReal_add probEvent_ne_top probEvent_ne_top] at largerReal
+    |(Pr{let x ← work}[actual x]).toReal - (Pr{let x ← work}[proxy x]).toReal| ≤ (Pr{let x ← work}[bad x]).toReal := by
+  have smaller : Pr{let x ← work}[actual x] ≤ Pr{let x ← work}[proxy x] := prEvent_mono_of_support _ _ _ included
+  have covered : Pr{let x ← work}[proxy x] ≤ Pr{let result ← work}[actual result ∨ bad result] :=
+    prEvent_mono_of_support _ _ _ (fun result reached enabled => Classical.byCases Or.inr (fun safe => Or.inl (agreed result reached enabled safe)))
+  have larger := covered.trans (prEvent_or_le work actual bad)
+  have smallerReal := ENNReal.toReal_mono (prEvent_ne_top _) smaller
+  have largerReal := ENNReal.toReal_mono (ENNReal.add_ne_top.mpr ⟨(prEvent_ne_top _), (prEvent_ne_top _)⟩) larger
+  rw [ENNReal.toReal_add (prEvent_ne_top _) (prEvent_ne_top _)] at largerReal
   rw [abs_sub_comm, abs_of_nonneg (sub_nonneg.mpr smallerReal)]
   linarith
 
@@ -49,11 +49,11 @@ theorem good_bound (parameters : Parameters) (sender : M → Std.U64)
     (state : RawCtxSharedPrimitive.SharedState A) (candidates : List RootOutput) :
     let execution := (simulateQ (observed parameters) (checked sender route decode history outside work n)).run
       (initial prior history state candidates)
-    |(Pr[fun result => result.1.1.1 = true ∧ RawCtxLiveLineage.Fresh
-        (result.1.2.map (interpret (RawCtxFreshChainCut.concreteChain parameters.target)) ++ earlier) prior result.1.1.2.2 | execution]).toReal -
-      (Pr[fun result => result.1.1.1 = true ∧ Proxy (RawCtxFiniteLineageCheck.knownValues result.1.2 ++ earlier)
-        prior result.1.1.2.2 result.2.2 | execution]).toReal| ≤
-      (Pr[fun result => parameters.target ∈ result.2.1.2 ∧ result.2.2 = false | execution]).toReal := by
+    |(Pr{let result ← execution}[result.1.1.1 = true ∧ RawCtxLiveLineage.Fresh
+        (result.1.2.map (interpret (RawCtxFreshChainCut.concreteChain parameters.target)) ++ earlier) prior result.1.1.2.2]).toReal -
+      (Pr{let result ← execution}[result.1.1.1 = true ∧ Proxy (RawCtxFiniteLineageCheck.knownValues result.1.2 ++ earlier)
+        prior result.1.1.2.2 result.2.2]).toReal| ≤
+      (Pr{let result ← execution}[parameters.target ∈ result.2.1.2 ∧ result.2.2 = false]).toReal := by
   apply event_distance
   case agreed =>
     intro result supported enabled safe
@@ -79,10 +79,12 @@ theorem decision_bound (parameters : Parameters) (sender : M → Std.U64)
       (initial prior history state candidates)
     (actualDecision parameters.target earlier prior <$> execution).boolDistAdvantage
       (RawCtxSelectedParentPrivateEvents.decision (remainingEvent earlier prior) <$> execution) ≤
-      (Pr[fun result => parameters.target ∈ result.2.1.2 ∧ result.2.2 = false | execution]).toReal := by
-  simp only [ProbComp.boolDistAdvantage, evalDist_apply_singleton]
-  rw [RawCtxSelectedParentPrivateEvents.decision_probability, ← probEvent_eq_eq_probOutput]
-  simpa only [probEvent_map, Function.comp_def, actualDecision, decide_eq_true_eq,
+      (Pr{let result ← execution}[parameters.target ∈ result.2.1.2 ∧ result.2.2 = false]).toReal := by
+  dsimp only
+  simp only [ProbComp.boolDistAdvantage]
+  rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true,
+    RawCtxSelectedParentPrivateEvents.decision_probability, prEvent_map]
+  simpa only [actualDecision, decide_eq_true_eq,
     RawCtxSelectedParentPrivateEvents.decision, remainingEvent, Proxy, and_assoc, and_left_comm, and_comm] using
       good_bound parameters sender route decode earlier prior history outside work n state candidates
 
@@ -98,8 +100,7 @@ theorem bound (parameters : Parameters) (sender : M → Std.U64)
     (actualDecision parameters.target earlier prior <$> (simulateQ (observed parameters) program).run start).boolDistAdvantage
       (RawCtxSelectedParentPrivateEvents.decision (remainingEvent earlier prior) <$>
         (simulateQ (RawCtxFamilyFreshnessEvent.masked parameters) program).run start) ≤
-      3 * (Pr[fun result => parameters.target ∈ result.2.1.2 |
-        (simulateQ (RawCtxFamilyFreshnessEvent.masked parameters) program).run start]).toReal := by
+      3 * (Pr{let result ← (simulateQ (RawCtxFamilyFreshnessEvent.masked parameters) program).run start}[parameters.target ∈ result.2.1.2]).toReal := by
   have triangle := ProbComp.boolDistAdvantage_triangle
     (actualDecision parameters.target earlier prior <$>
       (simulateQ (observed parameters) (checked sender route decode history outside work n)).run

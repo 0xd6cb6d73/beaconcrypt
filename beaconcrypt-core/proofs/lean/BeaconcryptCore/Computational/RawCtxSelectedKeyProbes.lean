@@ -28,14 +28,13 @@ noncomputable def finish {Result : Type}
 /-- Stopped-result instrumentation preserves the entire original output distribution, even when candidates depend on all prior replies. -/
 theorem finish_result {Result : Type} (decode : RawDecoder) (c : Pqxdh.Crypto) (key : CtxKey)
     (client : OracleComp ReceiveSpec (Result × List CtxKey)) (state : CanonicalState) :
-    𝒮[Prod.fst <$> (simulateQ (canonicalImpl decode c key) (finish client)).run state] =
-      𝒮[Prod.fst <$> (simulateQ (canonicalImpl decode c key) client).run state] := by
+    EvalDistEq (Prod.fst <$> (simulateQ (canonicalImpl decode c key) (finish client)).run state)
+      (Prod.fst <$> (simulateQ (canonicalImpl decode c key) client).run state) := by
   simp only [finish, simulateQ_bind, StateT.run_bind, simulateQ_pure, StateT.run_pure,
     map_bind, map_pure]
   rw [map_eq_bind_pure_comp]
-  apply evalSPMF_bind_congr'
-  intro result
-  exact OracleComp.ProgramLogic.Relational.evalSPMF_bind_const_of_no_failure
+  refine EvalDistEq.bind_right _ fun result => ?_
+  exact OracleComp.EvalDistEq.bind_const
     ((simulateQ (canonicalImpl decode c key) (probes result.1.2)).run result.2) (pure result.1)
 
 set_option backward.isDefEq.respectTransparency false in
@@ -156,30 +155,30 @@ theorem canonical_prefix_bound {Result : Type} (decode : RawDecoder) (c : Pqxdh.
     (qHash qSeal qRaw : Nat) (hashBound : client.IsQueryBoundP SourceHash qHash)
     (sealBound : client.IsQueryBoundP SourceSeal qSeal)
     (rawBound : client.IsQueryBoundP IsRawQuery qRaw) (small : qSeal < 2 ^ 96) :
-    Pr[CanonicalPrefix | AdaptiveCtxPrefixValidation.retainedCanonicalGame decode c client] ≤
+    Pr{let x ← AdaptiveCtxPrefixValidation.retainedCanonicalGame decode c client}[CanonicalPrefix x] ≤
       2 * (ENNReal.ofReal (CtxNonceAeadIndDollarValidation.modifiedNonceAeadINDDollarAdvantage c
         (AdaptiveCtxPrefixValidation.validationReduction decode c client qHash)) +
         (qHash : ℝ≥0∞) * (((2 ^ 128 : Nat) : ℝ≥0∞))⁻¹ +
         ∑ index ∈ Finset.range qRaw, CtxNonceAeadIntCtxt.modifiedNonceAeadINTCTXTAdvantage c
           (AdaptiveRawNonceAead.indexedReduction (baseDecoder decode) fallback (wrapped decode client) index)) := by
   have exactPrefix :
-      Pr[CanonicalPrefix | AdaptiveCtxPrefixValidation.retainedCanonicalGame decode c client] =
-        Pr[AdaptiveCtxPrefix.RetainedPrefix | AdaptiveCtxPrefix.retainedRoutedGame decode c client] := by
-    rw [← AdaptiveCtxPrefixValidation.retainedCanonicalGame_eq_routed, probEvent_map]
-    rfl
+      Pr{let x ← AdaptiveCtxPrefixValidation.retainedCanonicalGame decode c client}[CanonicalPrefix x] =
+        Pr{let x ← AdaptiveCtxPrefix.retainedRoutedGame decode c client}[AdaptiveCtxPrefix.RetainedPrefix x] := by
+    rw [← AdaptiveCtxPrefixValidation.retainedCanonicalGame_eq_routed, prEvent_map]
+    exact prEvent_congr _ _ _ fun _ => Iff.rfl
   rw [exactPrefix]
   calc
-    _ ≤ Pr[AdaptiveCtxPrefix.RetainedPrefix | AdaptiveCtxRetainedKey.retainedIndependentGame decode c client] +
+    _ ≤ Pr{let x ← AdaptiveCtxRetainedKey.retainedIndependentGame decode c client}[AdaptiveCtxPrefix.RetainedPrefix x] +
         ENNReal.ofReal (tvDist (AdaptiveCtxPrefix.retainedRoutedGame decode c client)
           (AdaptiveCtxRetainedKey.retainedIndependentGame decode c client)) :=
-      AdaptiveCtxPrefixValidation.probEvent_le_add_ofReal_tvDist_vcvioLegacy _ _ _
-    _ ≤ Pr[AdaptiveCtxPrefix.RetainedPrefix | AdaptiveCtxRetainedKey.retainedIndependentGame decode c client] +
-        Pr[AdaptiveCtxPrefix.RetainedPrefix | AdaptiveCtxRetainedKey.retainedIndependentGame decode c client] := by
+      AdaptiveCtxPrefixValidation.probEvent_le_add_ofReal_tvDist _ _ _
+    _ ≤ Pr{let x ← AdaptiveCtxRetainedKey.retainedIndependentGame decode c client}[AdaptiveCtxPrefix.RetainedPrefix x] +
+        Pr{let x ← AdaptiveCtxRetainedKey.retainedIndependentGame decode c client}[AdaptiveCtxPrefix.RetainedPrefix x] := by
       apply add_le_add le_rfl
-      exact (ENNReal.ofReal_le_ofReal (AdaptiveCtxPrefix.retainedRoutedGame_distance_le_prefix_vcvioLegacy decode c client)).trans_eq
-        (ENNReal.ofReal_toReal probEvent_ne_top)
-    _ = 2 * Pr[AdaptiveCtxPrefix.RetainedPrefix | AdaptiveCtxRetainedKey.retainedIndependentGame decode c client] := (two_mul _).symm
-    _ ≤ _ := mul_le_mul_right (AdaptiveCtxPrefixValidation.independent_prefix_le_indDollar_add_intctxt_vcvioLegacy
+      exact (ENNReal.ofReal_le_ofReal (AdaptiveCtxPrefix.retainedRoutedGame_distance_le_prefix decode c client)).trans_eq
+        (ENNReal.ofReal_toReal (prEvent_ne_top _))
+    _ = 2 * Pr{let x ← AdaptiveCtxRetainedKey.retainedIndependentGame decode c client}[AdaptiveCtxPrefix.RetainedPrefix x] := (two_mul _).symm
+    _ ≤ _ := mul_le_mul_right (AdaptiveCtxPrefixValidation.independent_prefix_le_indDollar_add_intctxt
       decode c fallback client qHash qSeal qRaw hashBound sealBound rawBound small) 2
 
 /-- Candidate equality is tested only as a retained-key analysis event. -/
@@ -189,25 +188,25 @@ def CandidateHit {Result : Type} (result : CtxKey × ((Result × List CtxKey) ×
 /-- Adding terminal probes preserves the actual selected-key/candidate correlation and its probability. -/
 theorem candidate_probability_finish {Result : Type} (decode : RawDecoder) (c : Pqxdh.Crypto)
     (client : OracleComp ReceiveSpec (Result × List CtxKey)) :
-    Pr[CandidateHit | AdaptiveCtxPrefixValidation.retainedCanonicalGame decode c (finish client)] =
-      Pr[CandidateHit | AdaptiveCtxPrefixValidation.retainedCanonicalGame decode c client] := by
-  simp only [AdaptiveCtxPrefixValidation.retainedCanonicalGame, bind_pure_comp,
-    probEvent_bind_eq_tsum, probEvent_map, CandidateHit, Function.comp_def]
-  apply tsum_congr
-  intro key
+    Pr{let x ← AdaptiveCtxPrefixValidation.retainedCanonicalGame decode c (finish client)}[CandidateHit x] =
+      Pr{let x ← AdaptiveCtxPrefixValidation.retainedCanonicalGame decode c client}[CandidateHit x] := by
+  simp only [AdaptiveCtxPrefixValidation.retainedCanonicalGame]
+  rw [OracleComp.prEvent_bind_eq_tsum, OracleComp.prEvent_bind_eq_tsum]
+  refine tsum_congr fun key => ?_
   congr 1
-  have exactEvent := OracleComp.probEvent_congr'
-    (p := fun result : Result × List CtxKey => key ∈ result.2)
-    (q := fun result : Result × List CtxKey => key ∈ result.2)
-    (fun _ _ => Iff.rfl) (finish_result decode c key client canonicalInitial)
-  simpa only [probEvent_map, Function.comp_def, canonicalGame] using exactEvent
+  rw [bind_pure_comp _ (canonicalGame decode c key (finish client)),
+    bind_pure_comp _ (canonicalGame decode c key client), prEvent_map, prEvent_map]
+  have exactEvent := (finish_result decode c key client canonicalInitial).prEvent_eq
+    (fun result : Result × List CtxKey => key ∈ result.2)
+  rw [prEvent_map, prEvent_map] at exactEvent
+  simpa only [CandidateHit, canonicalGame] using exactEvent
 
 /-- Every instrumented candidate hit is a public-prefix event on that same complete run. -/
 theorem candidate_le_prefix {Result : Type} (decode : RawDecoder) (c : Pqxdh.Crypto)
     (client : OracleComp ReceiveSpec (Result × List CtxKey)) :
-    Pr[CandidateHit | AdaptiveCtxPrefixValidation.retainedCanonicalGame decode c (finish client)] ≤
-      Pr[CanonicalPrefix | AdaptiveCtxPrefixValidation.retainedCanonicalGame decode c (finish client)] := by
-  apply probEvent_mono
+    Pr{let x ← AdaptiveCtxPrefixValidation.retainedCanonicalGame decode c (finish client)}[CandidateHit x] ≤
+      Pr{let x ← AdaptiveCtxPrefixValidation.retainedCanonicalGame decode c (finish client)}[CanonicalPrefix x] := by
+  apply prEvent_mono_of_support
   rintro ⟨key, result⟩ supported hit
   simp only [AdaptiveCtxPrefixValidation.retainedCanonicalGame, mem_support_bind_iff,
     mem_support_pure_iff] at supported
@@ -223,7 +222,7 @@ theorem candidate_bound {Result : Type} (decode : RawDecoder) (c : Pqxdh.Crypto)
     (lengthBound : ∀ result ∈ support client, result.2.length ≤ qCandidates)
     (sealBound : client.IsQueryBoundP SourceSeal qSeal)
     (rawBound : client.IsQueryBoundP IsRawQuery qRaw) (small : qSeal < 2 ^ 96) :
-    Pr[CandidateHit | AdaptiveCtxPrefixValidation.retainedCanonicalGame decode c client] ≤
+    Pr{let x ← AdaptiveCtxPrefixValidation.retainedCanonicalGame decode c client}[CandidateHit x] ≤
       2 * (ENNReal.ofReal (CtxNonceAeadIndDollarValidation.modifiedNonceAeadINDDollarAdvantage c
         (AdaptiveCtxPrefixValidation.validationReduction decode c (finish client) (qHash + qCandidates))) +
         ((qHash + qCandidates : Nat) : ℝ≥0∞) * (((2 ^ 128 : Nat) : ℝ≥0∞))⁻¹ +
@@ -236,6 +235,10 @@ theorem candidate_bound {Result : Type} (decode : RawDecoder) (c : Pqxdh.Crypto)
     (finish_hash client qHash qCandidates hashBound lengthBound)
     (finish_uncharged client SourceSeal qSeal sealBound (by simp [SourceSeal]))
     (finish_uncharged client IsRawQuery qRaw rawBound (by simp [IsRawQuery])) small
+
+set_option linter.deprecated false in set_option linter.unusedVariables false in theorem _root_.BeaconcryptCore.Computational.RawCtxSelectedKeyProbes.candidate_bound_vcvioLegacy :
+    ∀ {Result : Type} (decode : BeaconcryptCore.Computational.AdaptiveCtxReceive.RawDecoder) (c : Pqxdh.Crypto) (fallback : BeaconcryptCore.Computational.CtxNonceAeadIntCtxt.ModifiedNonceAeadForgery) (client : @OracleComp.{0, 0, 0} (Sum.{0, 0} (Sum.{0, 0} Nat (Sum.{0, 0} (Prod.{0, 0} Unit Pqxdh.Bytes) BeaconcryptCore.Computational.CtxRomAuth.CtxSealInput)) Pqxdh.Bytes) BeaconcryptCore.Computational.AdaptiveCtxReceive.ReceiveSpec (Prod.{0, 0} Result (List.{0} BeaconcryptCore.Computational.CtxRomAuth.CtxKey))) (qHash qCandidates qSeal qRaw : Nat) (hashBound : @OracleComp.IsQueryBoundP.{0} (Sum.{0, 0} (Sum.{0, 0} Nat (Sum.{0, 0} (Prod.{0, 0} Unit Pqxdh.Bytes) BeaconcryptCore.Computational.CtxRomAuth.CtxSealInput)) Pqxdh.Bytes) BeaconcryptCore.Computational.AdaptiveCtxReceive.ReceiveSpec (Prod.{0, 0} Result (List.{0} BeaconcryptCore.Computational.CtxRomAuth.CtxKey)) client BeaconcryptCore.Computational.AdaptiveCtxQueryBounds.SourceHash BeaconcryptCore.Computational.AdaptiveCtxQueryBounds.instDecidablePredDomainSumNatProdUnitBytesCtxSealInputReceiveSpecSourceHash qHash) (lengthBound : ∀ (result : Prod.{0, 0} Result (List.{0} BeaconcryptCore.Computational.CtxRomAuth.CtxKey)), @Membership.mem.{0, 0} (Prod.{0, 0} Result (List.{0} BeaconcryptCore.Computational.CtxRomAuth.CtxKey)) (Set.{0} (Prod.{0, 0} Result (List.{0} BeaconcryptCore.Computational.CtxRomAuth.CtxKey))) (@Set.instMembership.{0} (Prod.{0, 0} Result (List.{0} BeaconcryptCore.Computational.CtxRomAuth.CtxKey))) (@MonadAttach.support.{0, 0} (@OracleComp.{0, 0, 0} (Sum.{0, 0} (Sum.{0, 0} Nat (Sum.{0, 0} (Prod.{0, 0} Unit Pqxdh.Bytes) BeaconcryptCore.Computational.CtxRomAuth.CtxSealInput)) Pqxdh.Bytes) BeaconcryptCore.Computational.AdaptiveCtxReceive.ReceiveSpec) (Prod.{0, 0} Result (List.{0} BeaconcryptCore.Computational.CtxRomAuth.CtxKey)) (@PFunctor.FreeM.instMonadAttach.{0, 0, 0} (@OracleSpec.toPFunctor.{0, 0} (Sum.{0, 0} (Sum.{0, 0} Nat (Sum.{0, 0} (Prod.{0, 0} Unit Pqxdh.Bytes) BeaconcryptCore.Computational.CtxRomAuth.CtxSealInput)) Pqxdh.Bytes) BeaconcryptCore.Computational.AdaptiveCtxReceive.ReceiveSpec)) client) result → @LE.le.{0} Nat instLENat (@List.length.{0} BeaconcryptCore.Computational.CtxRomAuth.CtxKey (@Prod.snd.{0, 0} Result (List.{0} BeaconcryptCore.Computational.CtxRomAuth.CtxKey) result)) qCandidates) (sealBound : @OracleComp.IsQueryBoundP.{0} (Sum.{0, 0} (Sum.{0, 0} Nat (Sum.{0, 0} (Prod.{0, 0} Unit Pqxdh.Bytes) BeaconcryptCore.Computational.CtxRomAuth.CtxSealInput)) Pqxdh.Bytes) BeaconcryptCore.Computational.AdaptiveCtxReceive.ReceiveSpec (Prod.{0, 0} Result (List.{0} BeaconcryptCore.Computational.CtxRomAuth.CtxKey)) client BeaconcryptCore.Computational.AdaptiveCtxQueryBounds.SourceSeal BeaconcryptCore.Computational.AdaptiveCtxQueryBounds.instDecidablePredDomainSumNatProdUnitBytesCtxSealInputReceiveSpecSourceSeal qSeal) (rawBound : @OracleComp.IsQueryBoundP.{0} (Sum.{0, 0} (Sum.{0, 0} Nat (Sum.{0, 0} (Prod.{0, 0} Unit Pqxdh.Bytes) BeaconcryptCore.Computational.CtxRomAuth.CtxSealInput)) Pqxdh.Bytes) BeaconcryptCore.Computational.AdaptiveCtxReceive.ReceiveSpec (Prod.{0, 0} Result (List.{0} BeaconcryptCore.Computational.CtxRomAuth.CtxKey)) client BeaconcryptCore.Computational.AdaptiveCtxReceive.IsRawQuery BeaconcryptCore.Computational.AdaptiveCtxReceive.instDecidablePredDomainSumNatProdUnitBytesCtxSealInputReceiveSpecIsRawQuery qRaw) (small : @LT.lt.{0} Nat instLTNat qSeal (@HPow.hPow.{0, 0, 0} Nat Nat Nat (@instHPow.{0, 0} Nat Nat (@NPow.toPow.{0} Nat (@Monoid.toNPow.{0} Nat Nat.instMonoid))) (@OfNat.ofNat.{0} Nat (nat_lit 2) (instOfNatNat (nat_lit 2))) (@OfNat.ofNat.{0} Nat (nat_lit 96) (instOfNatNat (nat_lit 96))))), @LE.le.{0} ENNReal ENNReal.instLE (@probEvent.{0, 0} ProbComp (Prod.{0, 0} BeaconcryptCore.Computational.CtxRomAuth.CtxKey (Prod.{0, 0} (Prod.{0, 0} Result (List.{0} BeaconcryptCore.Computational.CtxRomAuth.CtxKey)) BeaconcryptCore.Computational.AdaptiveCtxCanonical.CanonicalState)) (@instMonadLiftTOfMonadLift.{0, 0, 0, 0} ProbComp PMF.{0} SPMF.{0} SPMF.instMonadLiftPMF.{0} (@PFunctor.FreeM.instMonadLiftTPMF.{0, 0} (@OracleSpec.toPFunctor.{0, 0} Nat unifSpec) (@OracleSpec.IsUniformSpec.toIsProbabilitySpec.{0, 0} Nat unifSpec OracleSpec.instIsUniformSpecNatUnifSpec))) (@BeaconcryptCore.Computational.AdaptiveCtxPrefixValidation.retainedCanonicalGame (Prod.{0, 0} Result (List.{0} BeaconcryptCore.Computational.CtxRomAuth.CtxKey)) decode c client) (@BeaconcryptCore.Computational.RawCtxSelectedKeyProbes.CandidateHit Result)) (@HMul.hMul.{0, 0, 0} ENNReal ENNReal ENNReal (@instHMul.{0} ENNReal (@Distrib.toMul.{0} ENNReal (@instDistribOfSemiring.{0} ENNReal (@CommSemiring.toSemiring.{0} ENNReal ENNReal.instCommSemiring)))) (@OfNat.ofNat.{0} ENNReal (nat_lit 2) (@instOfNatAtLeastTwo.{0} ENNReal (nat_lit 2) (@AddMonoidWithOne.toNatCast.{0} ENNReal (@AddCommMonoidWithOne.toAddMonoidWithOne.{0} ENNReal ENNReal.instAddCommMonoidWithOne)) (@Nat.instAtLeastTwoHAddOfNat (@OfNat.ofNat.{0} Nat (nat_lit 1) (instOfNatNat (nat_lit 1))) (@Nat.instNeZeroSucc (@OfNat.ofNat.{0} Nat (nat_lit 0) (instOfNatNat (nat_lit 0))))))) (@HAdd.hAdd.{0, 0, 0} ENNReal ENNReal ENNReal (@instHAdd.{0} ENNReal ENNReal.instAdd) (@HAdd.hAdd.{0, 0, 0} ENNReal ENNReal ENNReal (@instHAdd.{0} ENNReal ENNReal.instAdd) (ENNReal.ofReal (BeaconcryptCore.Computational.CtxNonceAeadIndDollarValidation.modifiedNonceAeadINDDollarAdvantage c (@BeaconcryptCore.Computational.AdaptiveCtxPrefixValidation.validationReduction (Prod.{0, 0} Result (List.{0} BeaconcryptCore.Computational.CtxRomAuth.CtxKey)) decode c (@BeaconcryptCore.Computational.RawCtxSelectedKeyProbes.finish Result client) (@HAdd.hAdd.{0, 0, 0} Nat Nat Nat (@instHAdd.{0} Nat instAddNat) qHash qCandidates)))) (@HMul.hMul.{0, 0, 0} ENNReal ENNReal ENNReal (@instHMul.{0} ENNReal (@Distrib.toMul.{0} ENNReal (@instDistribOfSemiring.{0} ENNReal (@CommSemiring.toSemiring.{0} ENNReal ENNReal.instCommSemiring)))) (@Nat.cast.{0} ENNReal (@AddMonoidWithOne.toNatCast.{0} ENNReal (@AddCommMonoidWithOne.toAddMonoidWithOne.{0} ENNReal ENNReal.instAddCommMonoidWithOne)) (@HAdd.hAdd.{0, 0, 0} Nat Nat Nat (@instHAdd.{0} Nat instAddNat) qHash qCandidates)) (@Inv.inv.{0} ENNReal ENNReal.instInv (@Nat.cast.{0} ENNReal (@AddMonoidWithOne.toNatCast.{0} ENNReal (@AddCommMonoidWithOne.toAddMonoidWithOne.{0} ENNReal ENNReal.instAddCommMonoidWithOne)) (@HPow.hPow.{0, 0, 0} Nat Nat Nat (@instHPow.{0, 0} Nat Nat (@NPow.toPow.{0} Nat (@Monoid.toNPow.{0} Nat Nat.instMonoid))) (@OfNat.ofNat.{0} Nat (nat_lit 2) (instOfNatNat (nat_lit 2))) (@OfNat.ofNat.{0} Nat (nat_lit 128) (instOfNatNat (nat_lit 128)))))))) (∑ index ∈ Finset.range qRaw, BeaconcryptCore.Computational.CtxNonceAeadIntCtxt.modifiedNonceAeadINTCTXTAdvantage c (@BeaconcryptCore.Computational.AdaptiveRawNonceAead.indexedReduction (Prod.{0, 0} (Prod.{0, 0} Result (List.{0} BeaconcryptCore.Computational.CtxRomAuth.CtxKey)) BeaconcryptCore.Computational.AdaptiveCtxReceive.ReceiveState) (BeaconcryptCore.Computational.AdaptiveCtxReceive.baseDecoder decode) fallback (@BeaconcryptCore.Computational.AdaptiveCtxReceive.wrapped (Prod.{0, 0} Result (List.{0} BeaconcryptCore.Computational.CtxRomAuth.CtxKey)) decode (@BeaconcryptCore.Computational.RawCtxSelectedKeyProbes.finish Result client)) index)))) :=
+  by simpa only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent] using @BeaconcryptCore.Computational.RawCtxSelectedKeyProbes.candidate_bound
 
 /-- The actual validation reduction pays one additional seal and all source/probe digest randomness; its challenger samples its own separate 32-byte key. -/
 theorem candidate_validation_bills {Result : Type} (decode : RawDecoder) (c : Pqxdh.Crypto)

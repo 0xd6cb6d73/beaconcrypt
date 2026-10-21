@@ -63,16 +63,20 @@ theorem distance {ι State Result : Type} {spec : OracleSpec ι}
     (client : OracleComp spec Result) (state : (State × List RootOutput) × Bool) :
     tvDist ((simulateQ (trace handler record direct) client).run state)
       ((simulateQ (trace (RawCtxSelectedAliasCoupling.routed handler alternate record target) record direct) client).run state) ≤
-      Pr[fun result => target ∈ result.2.1.2 | (simulateQ (trace handler record direct) client).run state].toReal := by
+      Pr{let result ← (simulateQ (trace handler record direct) client).run state}[target ∈ result.2.1.2].toReal := by
   have original := complete handler record direct client (split state)
   have alternateRun := complete (RawCtxSelectedAliasCoupling.routed handler alternate record target)
     record direct client (split state)
   simp only [regroup, split, Prod.mk.eta] at original alternateRun
   rw [← original, ← alternateRun, mark_routed]
-  simp only [probEvent_map, Function.comp_def, Prod.map_def, regroup, id_eq]
+  simp only [prEvent_map, Prod.map_def, regroup, id_eq]
   exact (tvDist_map_le _ _ _).trans
     (RawCtxSelectedAliasInitial.recorded_distance_initial (mark handler direct) (mark alternate direct)
       record target client (split state))
+
+set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.RawCtxFlaggedQueryTrace.distance_vcvioLegacy :
+    ∀ {ι State Result : Type} {spec : OracleSpec ι} (handler alternate : QueryImpl spec (StateT State ProbComp)) (record : spec.Domain → List BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput) (direct : spec.Domain → Bool) (target : BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput) (client : OracleComp spec Result) (state : (State × List BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput) × Bool), tvDist ((simulateQ (BeaconcryptCore.Computational.RawCtxFlaggedQueryTrace.trace handler record direct) client).run state) ((simulateQ (BeaconcryptCore.Computational.RawCtxFlaggedQueryTrace.trace (BeaconcryptCore.Computational.RawCtxSelectedAliasCoupling.routed handler alternate record target) record direct) client).run state) ≤ (probEvent ((simulateQ (BeaconcryptCore.Computational.RawCtxFlaggedQueryTrace.trace handler record direct) client).run state) fun (result : Result × (State × List BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput) × Bool) => target ∈ result.2.1.2).toReal :=
+  by simpa only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent] using @BeaconcryptCore.Computational.RawCtxFlaggedQueryTrace.distance
 
 end BeaconcryptCore.Computational.RawCtxFlaggedQueryTrace
 

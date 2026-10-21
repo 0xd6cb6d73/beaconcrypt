@@ -82,8 +82,8 @@ theorem output_bad_zero (record : Record M P I D K σ S B) (key : RootOutput)
     (client : OracleComp (RawCtxProtocolReveals.SourceSpec S B) Result)
     (state : FullState M P I D K σ S B) (result : Result × FullState M P I D K σ S B)
     (bad : ¬ Good state) (good : Good result.2) :
-    Pr[= result | (simulateQ (normal record key) client).run state] = 0 :=
-  probOutput_eq_zero_of_not_mem_support fun supported =>
+    Pr{let x ← (simulateQ (normal record key) client).run state}[x = result] = 0 :=
+  (prEvent_eq_zero_of_not_mem_support _) fun supported =>
     bad (schedule_good record key client state result supported good)
 
 set_option backward.isDefEq.respectTransparency false in
@@ -92,36 +92,40 @@ theorem output_good (record : Record M P I D K σ S B) (key : RootOutput)
     (client : OracleComp (RawCtxProtocolReveals.SourceSpec S B) Result)
     (state : FullState M P I D K σ S B) (result : Result × FullState M P I D K σ S B)
     (good : Good result.2) :
-    Pr[= result | (simulateQ (normal record key) client).run state] =
-      Pr[= (some result.1, result.2) | ((simulateQ (stopping record) client).run).run state] := by
+    Pr{let x ← (simulateQ (normal record key) client).run state}[x = result] =
+      Pr{let x ← ((simulateQ (stopping record) client).run).run state}[x = (some result.1, result.2)] := by
   classical
   induction client using OracleComp.inductionOn generalizing state with
   | pure value =>
     have injective : Function.Injective (fun p : Result × FullState M P I D K σ S B => (some p.1, p.2)) := by
       intro a b equal
       exact Prod.ext (Option.some.inj (congrArg Prod.fst equal)) (congrArg (fun p : Option Result × FullState M P I D K σ S B => p.2) equal)
-    simpa only [simulateQ_pure, StateT.run_pure, OptionT.run_pure, map_pure] using
-      (probOutput_map_injective (pure (value, state) : ProbComp _) injective result).symm
+    have mapped : Pr{let y ← (fun p : Result × FullState M P I D K σ S B => (some p.1, p.2)) <$>
+          (pure (value, state) : ProbComp (Result × FullState M P I D K σ S B))}[y = (some result.1, result.2)] =
+        Pr{let y ← (pure (value, state) : ProbComp (Result × FullState M P I D K σ S B))}[y = result] := by
+      rw [prEvent_map]
+      exact prEvent_congr _ _ _ fun y => ⟨fun same => @injective y result same, fun same => by subst same; rfl⟩
+    simpa only [simulateQ_pure, StateT.run_pure, OptionT.run_pure, map_pure] using mapped.symm
   | query_bind query next ih =>
     simp only [simulateQ_bind, simulateQ_spec_query, OptionT.run_bind, Option.elimM, StateT.run_bind]
     cases query with
     | inl request =>
-      change Pr[= result | do
+      change Pr{let x ← (do
         let child ← (fun child : (RawCtxProtocolRoles.SourceSpec S B).Range request × (Roles M P I D K S B × σ) => (child.1, ((child.2.1, tick state.1.2), child.2.2))) <$> (record request).run (state.1.1, state.2)
-        (simulateQ (normal record key) (next child.1)).run child.2] =
-        Pr[= (some result.1, result.2) | do
+        (simulateQ (normal record key) (next child.1)).run child.2)}[x = result] =
+        Pr{let x ← (do
           let child ← (fun child : (RawCtxProtocolRoles.SourceSpec S B).Range request × (Roles M P I D K S B × σ) => (some child.1, ((child.2.1, tick state.1.2), child.2.2))) <$> (record request).run (state.1.1, state.2)
-          (child.1.elim (pure none) (fun value => (simulateQ (stopping record) (next value)).run)).run child.2]
+          (child.1.elim (pure none) (fun value => (simulateQ (stopping record) (next value)).run)).run child.2)}[x = (some result.1, result.2)]
       simp only [bind_map_left, Option.elim_some]
-      rw [probOutput_bind_eq_tsum, probOutput_bind_eq_tsum]
-      exact tsum_congr fun child => congrArg (fun probability => Pr[= child | (record request).run (state.1.1, state.2)] * probability) (ih child.1 ((child.2.1, tick state.1.2), child.2.2))
+      rw [OracleComp.prEvent_bind_eq_tsum, OracleComp.prEvent_bind_eq_tsum]
+      exact tsum_congr fun child => congrArg (fun probability => Pr{let x ← (record request).run (state.1.1, state.2)}[x = child] * probability) (ih child.1 ((child.2.1, tick state.1.2), child.2.2))
     | inr request =>
-      change Pr[= result | do
+      change Pr{let x ← (do
         let child ← pure (interpretReply key request (RawCtxSelectedMessageReveals.step request state.1).1, ((RawCtxSelectedMessageReveals.step request state.1).2, state.2))
-        (simulateQ (normal record key) (next child.1)).run child.2] =
-        Pr[= (some result.1, result.2) | do
+        (simulateQ (normal record key) (next child.1)).run child.2)}[x = result] =
+        Pr{let x ← (do
           let child ← pure (emit request (RawCtxSelectedMessageReveals.step request state.1).1, ((RawCtxSelectedMessageReveals.step request state.1).2, state.2))
-          (child.1.elim (pure none) (fun value => (simulateQ (stopping record) (next value)).run)).run child.2]
+          (child.1.elim (pure none) (fun value => (simulateQ (stopping record) (next value)).run)).run child.2)}[x = (some result.1, result.2)]
       simp only [pure_bind]
       cases emitted : emit request (RawCtxSelectedMessageReveals.step request state.1).1 with
       | none =>
@@ -131,7 +135,7 @@ theorem output_good (record : Record M P I D K σ S B) (key : RootOutput)
           simp only [Good, RawCtxSelectedMessageReveals.step, hidden_note, returned, Bool.or_true, Bool.true_eq_false, not_false_eq_true]
         rw [output_bad_zero record key _ _ result bad good]
         symm
-        apply probOutput_eq_zero_of_not_mem_support
+        apply (prEvent_eq_zero_of_not_mem_support _)
         intro supported
         simp only [Option.elim_none, StateT.run_pure, mem_support_pure_iff] at supported
         have impossible : some result.1 = (none : Option Result) := congrArg (fun p : Option Result × FullState M P I D K σ S B => p.1) supported
@@ -150,15 +154,15 @@ theorem event_good (record : Record M P I D K σ S B) (key : RootOutput)
     (client : OracleComp (RawCtxProtocolReveals.SourceSpec S B) Result)
     (state : FullState M P I D K σ S B)
     (event : Result × FullState M P I D K σ S B → Prop) :
-    Pr[fun result => event result ∧ Good result.2 | (simulateQ (normal record key) client).run state] =
-      Pr[completed (fun result => event result ∧ Good result.2) | ((simulateQ (stopping record) client).run).run state] := by
+    Pr{let result ← (simulateQ (normal record key) client).run state}[event result ∧ Good result.2] =
+      Pr{let x ← ((simulateQ (stopping record) client).run).run state}[(completed (fun result => event result ∧ Good result.2)) x] := by
   classical
   let embed := fun p : Result × FullState M P I D K σ S B => (some p.1, p.2)
   have injective : Function.Injective embed := by
     intro a b equal
     exact Prod.ext (Option.some.inj (congrArg Prod.fst equal)) (congrArg (fun p : Option Result × FullState M P I D K σ S B => p.2) equal)
-  change Pr[(completed (fun result => event result ∧ Good result.2)) ∘ embed | _] = _
-  rw [← probEvent_map, probEvent_eq_tsum_ite, probEvent_eq_tsum_ite]
+  change Pr{let x ← _}[(completed (fun result => event result ∧ Good result.2)) (embed x)] = _
+  rw [← prEvent_map _ embed, OracleComp.prEvent_eq_tsum_ite, OracleComp.prEvent_eq_tsum_ite]
   refine tsum_congr ?_
   rintro ⟨value, finalState⟩
   cases value with
@@ -166,7 +170,11 @@ theorem event_good (record : Record M P I D K σ S B) (key : RootOutput)
   | some value =>
     by_cases good : Good finalState
     · simp only [completed, good, and_true]
-      rw [probOutput_map_injective _ injective (value, finalState), output_good record key client state (value, finalState) good]
+      have mapped : Pr{let y ← embed <$> (simulateQ (normal record key) client).run state}[y = (some value, finalState)] =
+          Pr{let x ← (simulateQ (normal record key) client).run state}[x = (value, finalState)] := by
+        rw [prEvent_map]
+        exact prEvent_congr _ _ _ fun y => ⟨fun same => @injective y (value, finalState) same, fun same => by subst same; rfl⟩
+      rw [mapped, output_good record key client state (value, finalState) good]
     · simp only [completed, good, and_false, ↓reduceIte]
 
 /-- The original byte-based freshness gate already excludes every withheld hidden disclosure; stopping adds no error term and assumes no decision on compromised executions. -/
@@ -175,18 +183,20 @@ theorem event_fresh (record : Record M P I D K σ S B) (key : RootOutput)
     (client : OracleComp (RawCtxProtocolReveals.SourceSpec S B) Result)
     (state : FullState M P I D K σ S B)
     (event : Result × FullState M P I D K σ S B → Prop) :
-    Pr[fun result => event result ∧ RawCtxLiveLineage.Fresh (concreteChain key :: remaining) prior (interpretHistory key result.2.1.2) |
-      (simulateQ (normal record key) client).run state] =
-      Pr[completed (fun result => event result ∧ RawCtxLiveLineage.Fresh (concreteChain key :: remaining) prior (interpretHistory key result.2.1.2)) |
-        ((simulateQ (stopping record) client).run).run state] := by
+    Pr{let result ← (simulateQ (normal record key) client).run state}[event result ∧ RawCtxLiveLineage.Fresh (concreteChain key :: remaining) prior (interpretHistory key result.2.1.2)] =
+      Pr{let x ← ((simulateQ (stopping record) client).run).run state}[(completed (fun result => event result ∧ RawCtxLiveLineage.Fresh (concreteChain key :: remaining) prior (interpretHistory key result.2.1.2))) x] := by
+  have factorIff : ∀ result : Result × FullState M P I D K σ S B,
+      ((event result ∧ RawCtxLiveLineage.Fresh (concreteChain key :: remaining) prior (interpretHistory key result.2.1.2)) ∧ Good result.2) ↔
+        (event result ∧ RawCtxLiveLineage.Fresh (concreteChain key :: remaining) prior (interpretHistory key result.2.1.2)) :=
+    fun result => ⟨And.left, fun h => ⟨h, ((fresh_keys key remaining prior result.2.1.2).mp h.2).1.1⟩⟩
   have factor : (fun result : Result × FullState M P I D K σ S B =>
       (event result ∧ RawCtxLiveLineage.Fresh (concreteChain key :: remaining) prior (interpretHistory key result.2.1.2)) ∧ Good result.2) =
-      (fun result => event result ∧ RawCtxLiveLineage.Fresh (concreteChain key :: remaining) prior (interpretHistory key result.2.1.2)) := by
-    funext result
-    apply propext
-    exact ⟨And.left, fun h => ⟨h, ((fresh_keys key remaining prior result.2.1.2).mp h.2).1.1⟩⟩
-  simpa only [factor] using event_good record key client state
+      (fun result => event result ∧ RawCtxLiveLineage.Fresh (concreteChain key :: remaining) prior (interpretHistory key result.2.1.2)) :=
+    funext fun result => propext (factorIff result)
+  have good := event_good record key client state
     (fun result => event result ∧ RawCtxLiveLineage.Fresh (concreteChain key :: remaining) prior (interpretHistory key result.2.1.2))
+  rw [prEvent_congr _ _ _ factorIff] at good
+  simpa only [factor] using good
 
 set_option backward.isDefEq.respectTransparency false in
 /-- The record service consumed by the stopping proof is the concrete original owner frontend, retaining every ambient primitive field. -/
@@ -255,13 +265,11 @@ theorem native_event {A : Type} (source : FixedHkdfSha512NoSaltSource) (writer :
     (client : OracleComp (RawCtxProtocolReveals.SourceSpec S B) Result)
     (state : FullState M P I D K (RawCtxSharedPrimitive.SharedState A) S B)
     (event : (Result × RawCtxProtocolReveals.State M P I D K S B) × RawCtxSharedPrimitive.SharedState A → Prop) :
-    Pr[fun result => event result ∧ RawCtxLiveLineage.Fresh (concreteChain key :: remaining) disclosed result.1.2.2 |
-      (simulateQ (RawCtxFunctionalFamily.backend source writer (RawCtxSelectedMessageDriver.privateTable prior parent target (RawCtxSelectedMessageKdf.response key nonce next)))
-        ((simulateQ (RawCtxProtocolReveals.protocolImpl S B sender route decode) client).run (nativeState key state.1))).run state.2] =
-      Pr[completed (fun result => event (nativeOutput key result) ∧
-          RawCtxLiveLineage.Fresh (concreteChain key :: remaining) disclosed (interpretHistory key result.2.1.2)) |
-        ((simulateQ (stopping (sourceRecord source writer prior parent key target nonce next sender route decode)) client).run).run state] := by
-  rw [native_schedule, probEvent_map]
+    Pr{let result ← ((simulateQ (RawCtxFunctionalFamily.backend source writer (RawCtxSelectedMessageDriver.privateTable prior parent target (RawCtxSelectedMessageKdf.response key nonce next)))
+        ((simulateQ (RawCtxProtocolReveals.protocolImpl S B sender route decode) client).run (nativeState key state.1))).run state.2)}[event result ∧ RawCtxLiveLineage.Fresh (concreteChain key :: remaining) disclosed result.1.2.2] =
+      Pr{let x ← ((simulateQ (stopping (sourceRecord source writer prior parent key target nonce next sender route decode)) client).run).run state}[(completed (fun result => event (nativeOutput key result) ∧
+          RawCtxLiveLineage.Fresh (concreteChain key :: remaining) disclosed (interpretHistory key result.2.1.2))) x] := by
+  rw [native_schedule, prEvent_map]
   exact event_fresh (sourceRecord source writer prior parent key target nonce next sender route decode)
     key remaining disclosed client state (fun result => event (nativeOutput key result))
 

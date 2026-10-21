@@ -53,11 +53,9 @@ theorem event_good {Auxiliary Result : Type}
     (view : RawCtxSelectedParentLive.View) (client : OracleComp Spec Result)
     (state : RawCtxSelectedParentLive.State Auxiliary)
     (event : Result × RawCtxSelectedParentLive.State Auxiliary → Prop) :
-    Pr[fun result => event result ∧ result.2.2 = false |
-      (simulateQ (RawCtxSelectedParentPrivate.observed source writer prior entry output
-        (nativeReader (RawCtxFreshChainCut.concreteChain target)) view target) client).run state] =
-      Pr[fun result => event result ∧ result.2.2 = false |
-        (simulateQ (RawCtxSelectedParentPrivate.observed source writer prior entry output labelRead view target) client).run state] := by
+    Pr{let result ← ((simulateQ (RawCtxSelectedParentPrivate.observed source writer prior entry output
+        (nativeReader (RawCtxFreshChainCut.concreteChain target)) view target) client).run state)}[event result ∧ result.2.2 = false] =
+      Pr{let result ← (simulateQ (RawCtxSelectedParentPrivate.observed source writer prior entry output labelRead view target) client).run state}[event result ∧ result.2.2 = false] := by
   exact RawCtxFlaggedQueryAgreement.event_good _ _ inputs RawCtxSelectedParentReadMask.direct
     (query_safe source writer prior entry output target view) client state event
 
@@ -71,8 +69,9 @@ noncomputable def decision {Auxiliary Result : Type}
 theorem decision_probability {Auxiliary Result : Type}
     (event : Result × RawCtxSelectedParentLive.State Auxiliary → Prop)
     (run : ProbComp (Result × RawCtxSelectedParentLive.State Auxiliary)) :
-    Pr[= true | decision event <$> run] = Pr[fun result => event result ∧ result.2.2 = false | run] := by
-  simp only [← probEvent_eq_eq_probOutput, probEvent_map, Function.comp_def, decision, decide_eq_true_eq]
+    Pr{let x ← decision event <$> run}[x = true] = Pr{let result ← run}[event result ∧ result.2.2 = false] := by
+  rw [prEvent_map]
+  exact prEvent_congr _ _ _ fun result => by simp only [decision, decide_eq_true_eq]
 
 /-- The original private-table experiment and target-free masked observer differ only by the complete masked candidate event; excluded disclosures have no additive charge. -/
 theorem local_bound {Auxiliary Result : Type}
@@ -85,17 +84,16 @@ theorem local_bound {Auxiliary Result : Type}
       (nativeReader (RawCtxFreshChainCut.concreteChain target)) view target) client).run state).boolDistAdvantage
       (decision event <$> (simulateQ (RawCtxSelectedParentReadMask.observed source writer prior entry output
         labelRead view) client).run state) ≤
-      Pr[fun result => target ∈ result.2.1.2 |
-        (simulateQ (RawCtxSelectedParentReadMask.observed source writer prior entry output labelRead view) client).run state].toReal := by
+      Pr{let result ← (simulateQ (RawCtxSelectedParentReadMask.observed source writer prior entry output labelRead view) client).run state}[target ∈ result.2.1.2].toReal := by
   have agreement := event_good source writer prior entry output target view client state event
-  rw [ProbComp.boolDistAdvantage]
-  simp only [evalDist_apply_singleton]
-  rw [decision_probability, decision_probability, agreement]
+  rw [ProbComp.boolDistAdvantage, ← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true,
+    decision_probability, decision_probability, agreement]
   have variation := (abs_probOutput_toReal_sub_le_tvDist
     (decision event <$> (simulateQ (RawCtxSelectedParentPrivate.observed source writer prior entry output labelRead view target) client).run state)
     (decision event <$> (simulateQ (RawCtxSelectedParentReadMask.observed source writer prior entry output labelRead view) client).run state)).trans
       (tvDist_map_le (decision event) _ _)
-  rw [decision_probability, decision_probability, tvDist_comm] at variation
+  rw [VCVioLegacy.probOutput_eq_prEvent, VCVioLegacy.probOutput_eq_prEvent, decision_probability, decision_probability,
+    tvDist_comm] at variation
   exact variation.trans (RawCtxSelectedParentPrivate.distance source writer prior entry output
     labelRead view target client state)
 

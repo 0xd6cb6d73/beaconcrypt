@@ -28,7 +28,7 @@ theorem full_alias (address : JointKdfAddress) :
   simp only [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map,
     Function.comp_def, fullAlias, decide_eq_true_eq, target_address]
   simpa only [List.mem_singleton, List.length_singleton, Nat.cast_one, one_mul] using
-    RawCtxFirstParentRisk.full_inputs [address]
+    RawCtxFirstParentRisk.full_inputs_vcvioLegacy [address]
 
 
 section General

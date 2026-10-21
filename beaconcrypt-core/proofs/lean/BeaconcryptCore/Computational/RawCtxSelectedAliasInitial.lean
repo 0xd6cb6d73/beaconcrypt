@@ -29,12 +29,10 @@ theorem bad_probability_initial {ι State Result : Type} {spec : OracleSpec ι}
     (handler : QueryImpl spec (StateT State ProbComp))
     (record : spec.Domain → List RootOutput) (target : RootOutput)
     (client : OracleComp spec Result) (state : State × List RootOutput) :
-    Pr[fun result => result.2.2 = true |
-      (simulateQ (marked handler record target) client).run (decorate target state)] =
-    Pr[fun result => target ∈ result.2.2 |
-      (simulateQ (RawCtxSelectedQueryTrace.recorded handler record) client).run state] := by
-  rw [← complete_graph handler record target client state, probEvent_map]
-  simp only [Function.comp_def, Prod.map_def, id_eq, decorate, decide_eq_true_eq]
+    Pr{let result ← (simulateQ (marked handler record target) client).run (decorate target state)}[result.2.2 = true] =
+    Pr{let result ← (simulateQ (RawCtxSelectedQueryTrace.recorded handler record) client).run state}[target ∈ result.2.2] := by
+  rw [← complete_graph handler record target client state, prEvent_map]
+  simp only [Prod.map_def, id_eq, decorate, decide_eq_true_eq]
 
 /-- A prior hit starts bad immediately; otherwise the existing complete-state identical-until-bad theorem applies to the unchanged callbacks. -/
 theorem marked_distance_initial {ι State Result : Type} {spec : OracleSpec ι}
@@ -43,15 +41,12 @@ theorem marked_distance_initial {ι State Result : Type} {spec : OracleSpec ι}
     (client : OracleComp spec Result) (state : State × List RootOutput) :
     tvDist ((simulateQ (marked handler record target) client).run (decorate target state))
       ((simulateQ (marked (routed handler alternate record target) record target) client).run (decorate target state)) ≤
-      Pr[fun result => result.2.2 = true |
-        (simulateQ (marked handler record target) client).run (decorate target state)].toReal := by
+      Pr{let result ← (simulateQ (marked handler record target) client).run (decorate target state)}[result.2.2 = true].toReal := by
   classical
   by_cases prior : target ∈ state.2
-  · have one : Pr[fun result => result.2.2 = true |
-        (simulateQ (marked handler record target) client).run (decorate target state)] = 1 := by
-      rw [probEvent_eq_one_iff]
-      exact ⟨by simp, marked_bad handler record target client (decorate target state)
-        (by simp [decorate, prior])⟩
+  · have one : Pr{let result ← (simulateQ (marked handler record target) client).run (decorate target state)}[result.2.2 = true] = 1 := by
+      exact OracleComp.prEvent_eq_one_of_forall_mem_support _ _
+        (marked_bad handler record target client (decorate target state) (by simp [decorate, prior]))
     rw [one, ENNReal.toReal_one]
     exact tvDist_le_one _ _
   · simpa only [decorate, decide_eq_false prior] using
@@ -64,14 +59,17 @@ theorem recorded_distance_initial {ι State Result : Type} {spec : OracleSpec ι
     (client : OracleComp spec Result) (state : State × List RootOutput) :
     tvDist ((simulateQ (RawCtxSelectedQueryTrace.recorded handler record) client).run state)
       ((simulateQ (RawCtxSelectedQueryTrace.recorded (routed handler alternate record target) record) client).run state) ≤
-    Pr[fun result => target ∈ result.2.2 |
-      (simulateQ (RawCtxSelectedQueryTrace.recorded handler record) client).run state].toReal := by
+    Pr{let result ← (simulateQ (RawCtxSelectedQueryTrace.recorded handler record) client).run state}[target ∈ result.2.2].toReal := by
   have projected := (tvDist_map_le (Prod.map id Prod.fst)
     ((simulateQ (marked handler record target) client).run (decorate target state))
     ((simulateQ (marked (routed handler alternate record target) record target) client).run (decorate target state))).trans
       (marked_distance_initial handler alternate record target client state)
   rw [bad_probability_initial] at projected
   simpa only [complete_erase, decorate] using projected
+
+set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.RawCtxSelectedAliasInitial.recorded_distance_initial_vcvioLegacy :
+    ∀ {ι State Result : Type} {spec : OracleSpec ι} (handler alternate : QueryImpl spec (StateT State ProbComp)) (record : spec.Domain → List BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput) (target : BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput) (client : OracleComp spec Result) (state : State × List BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput), tvDist ((simulateQ (BeaconcryptCore.Computational.RawCtxSelectedQueryTrace.recorded handler record) client).run state) ((simulateQ (BeaconcryptCore.Computational.RawCtxSelectedQueryTrace.recorded (BeaconcryptCore.Computational.RawCtxSelectedAliasCoupling.routed handler alternate record target) record) client).run state) ≤ (probEvent ((simulateQ (BeaconcryptCore.Computational.RawCtxSelectedQueryTrace.recorded handler record) client).run state) fun (result : Result × State × List BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput) => target ∈ result.2.2).toReal :=
+  by simpa only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent] using @BeaconcryptCore.Computational.RawCtxSelectedAliasInitial.recorded_distance_initial
 
 end BeaconcryptCore.Computational.RawCtxSelectedAliasInitial
 

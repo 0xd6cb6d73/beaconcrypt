@@ -258,7 +258,7 @@ theorem initExpand_random (source : FixedHkdfSha512NoSaltSource) (distinguisher 
 /-- Hybrids 3 and 4 have the same output distribution: a uniform initializer is two independent uniform halves (`second_observed`). -/
 theorem init_split (source : FixedHkdfSha512NoSaltSource) (distinguisher : Distinguisher) :
     𝒟[initHybrid source distinguisher] = 𝒟[splitHybrid source distinguisher] :=
-  evalDist_eq_of_evalSPMF_eq _ _ (RawCtxSelectedInitialSecond.second_observed
+  evalDist_eq_of_evalSPMF_eq _ _ (RawCtxSelectedInitialSecond.second_observed_vcvioLegacy
     (fun chain other => distinguisher (step source chain, other)))
 
 /-- The real Extract world of reduction 4 is hybrid 4, by `SourceFullCorrect` for the 76-byte HKDF. -/

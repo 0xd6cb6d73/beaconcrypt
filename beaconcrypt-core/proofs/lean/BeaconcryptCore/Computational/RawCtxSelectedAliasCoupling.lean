@@ -66,13 +66,12 @@ theorem agree_good {ι State : Type} {spec : OracleSpec ι}
     (record : spec.Domain → List RootOutput) (target : RootOutput)
     (query : spec.Domain) (state : State × List RootOutput)
     (reply : spec.Range query) (next : State × List RootOutput) :
-    Pr[= (reply, (next, false)) | (marked handler record target query).run (state, false)] =
-      Pr[= (reply, (next, false)) |
-        (marked (routed handler alternate record target) record target query).run (state, false)] := by
+    Pr{let x ← (marked handler record target query).run (state, false)}[x = (reply, (next, false))] =
+      Pr{let x ← (marked (routed handler alternate record target) record target query).run (state, false)}[x = (reply, (next, false))] := by
   by_cases hit : target ∈ record query
   · have zero (implementation : QueryImpl spec (StateT State ProbComp)) :
-        Pr[= (reply, (next, false)) | (marked implementation record target query).run (state, false)] = 0 := by
-      apply probOutput_eq_zero_of_not_mem_support
+        Pr{let x ← (marked implementation record target query).run (state, false)}[x = (reply, (next, false))] = 0 := by
+      apply (prEvent_eq_zero_of_not_mem_support _)
       intro supported
       exact Bool.false_ne_true (hit_marked implementation record target query (state, false)
         hit (reply, (next, false)) supported)
@@ -86,12 +85,15 @@ theorem marked_distance {ι State Result : Type} {spec : OracleSpec ι}
     (client : OracleComp spec Result) (state : State × List RootOutput) :
     tvDist ((simulateQ (marked handler record target) client).run (state, false))
       ((simulateQ (marked (routed handler alternate record target) record target) client).run (state, false)) ≤
-      Pr[fun result => result.2.2 = true |
-        (simulateQ (marked handler record target) client).run (state, false)].toReal := by
-  exact OracleComp.ProgramLogic.Relational.tvDist_simulateQ_run_le_probEvent_output_bad
-    _ _ client state (agree_good handler alternate record target)
+      Pr{let result ← (simulateQ (marked handler record target) client).run (state, false)}[result.2.2 = true].toReal := by
+  have bound := OracleComp.ProgramLogic.Relational.tvDist_simulateQ_run_le_probEvent_output_bad
+    _ _ client state (fun query before reply after => by
+      simpa only [VCVioLegacy.probOutput_eq_prEvent] using
+        agree_good handler alternate record target query before reply after)
     (marked_sticky handler record target)
     (marked_sticky (routed handler alternate record target) record target)
+  rw [VCVioLegacy.probEvent_eq_prEvent] at bound
+  exact bound
 
 noncomputable def decorate {State : Type} (target : RootOutput)
     (state : State × List RootOutput) : (State × List RootOutput) × Bool :=
@@ -132,14 +134,12 @@ theorem bad_probability {ι State Result : Type} {spec : OracleSpec ι}
     (handler : QueryImpl spec (StateT State ProbComp))
     (record : spec.Domain → List RootOutput) (target : RootOutput)
     (client : OracleComp spec Result) (state : State) :
-    Pr[fun result => result.2.2 = true |
-      (simulateQ (marked handler record target) client).run ((state, []), false)] =
-    Pr[fun result => target ∈ result.2.2 |
-      (simulateQ (RawCtxSelectedQueryTrace.recorded handler record) client).run (state, [])] := by
+    Pr{let result ← (simulateQ (marked handler record target) client).run ((state, []), false)}[result.2.2 = true] =
+    Pr{let result ← (simulateQ (RawCtxSelectedQueryTrace.recorded handler record) client).run (state, [])}[target ∈ result.2.2] := by
   have graph := complete_graph handler record target client (state, [])
   simp only [decorate, List.not_mem_nil, decide_false] at graph
-  rw [← graph, probEvent_map]
-  simp only [Function.comp_def, Prod.map_def, id_eq, decorate, decide_eq_true_eq]
+  rw [← graph, prEvent_map]
+  simp only [Prod.map_def, id_eq, decorate, decide_eq_true_eq]
 
 /-- Arbitrary adaptive alias routing costs only membership in the original actual candidate log, retaining its full result and primitive state. -/
 theorem recorded_distance {ι State Result : Type} {spec : OracleSpec ι}
@@ -148,8 +148,7 @@ theorem recorded_distance {ι State Result : Type} {spec : OracleSpec ι}
     (client : OracleComp spec Result) (state : State) :
     tvDist ((simulateQ (RawCtxSelectedQueryTrace.recorded handler record) client).run (state, []))
       ((simulateQ (RawCtxSelectedQueryTrace.recorded (routed handler alternate record target) record) client).run (state, [])) ≤
-    Pr[fun result => target ∈ result.2.2 |
-      (simulateQ (RawCtxSelectedQueryTrace.recorded handler record) client).run (state, [])].toReal := by
+    Pr{let result ← (simulateQ (RawCtxSelectedQueryTrace.recorded handler record) client).run (state, [])}[target ∈ result.2.2].toReal := by
   have projected := (tvDist_map_le (Prod.map id Prod.fst)
     ((simulateQ (marked handler record target) client).run ((state, []), false))
     ((simulateQ (marked (routed handler alternate record target) record target) client).run ((state, []), false))).trans

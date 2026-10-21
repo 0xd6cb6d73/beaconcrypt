@@ -45,7 +45,7 @@ theorem actual_source (prior : ProbComp (Context extra M P I D K X Response A N 
       exact (OracleComp.ProgramLogic.Relational.evalSPMF_bind_const_of_no_failure ($ᵗ HmacBlock) (pure decision)).trans
         (OracleComp.ProgramLogic.Relational.evalSPMF_bind_const_of_no_failure ($ᵗ FullOutput) (pure decision)).symm
   | inr input =>
-      have sampled := initial_observed (second input.selected) (fun other target =>
+      have sampled := initial_observed_vcvioLegacy (second input.selected) (fun other target =>
         PqxdhInitialSourceInitialSecrecy.sourceGame source writer sender route decode input zeroRoot
           (RawCtxSelectedInitialConstructor.response64 (join (second input.selected) other target)) 0)
       simp only [join_parts] at sampled
@@ -75,7 +75,7 @@ theorem random_source (prior : ProbComp (Context extra M P I D K X Response A N 
           (($ᵗ FullOutput) >>= fun _ => pure decision)).trans
           (OracleComp.ProgramLogic.Relational.evalSPMF_bind_const_of_no_failure ($ᵗ FullOutput) (pure decision))).symm
   | inr input =>
-      have sampled := initial_observed (second input.selected) (fun other target =>
+      have sampled := initial_observed_vcvioLegacy (second input.selected) (fun other target =>
         PqxdhInitialSourceInitialSecrecy.sourceGame source writer sender route decode input zeroRoot
           (RawCtxSelectedInitialConstructor.response64 (join (second input.selected) other target)) 1)
       simp only [join_parts] at sampled

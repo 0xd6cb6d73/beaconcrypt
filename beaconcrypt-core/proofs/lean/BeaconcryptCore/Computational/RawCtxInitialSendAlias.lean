@@ -59,28 +59,27 @@ theorem real_source {Context Result : Type} (source : FixedHkdfSha512NoSaltSourc
 theorem random_source {Context Result : Type} (sample : ProbComp (Context × RootOutput))
     (resume : Continue Context Result) :
     𝒟[independentFullGame (sampler sample) (observer resume)] = 𝒟[random sample resume] := by
-  apply evalDist_eq_of_evalSPMF_eq
+  apply EvalDistEq.evalDist_eq
   simp only [independentFullGame, sampler, bind_map_left, random]
-  refine evalSPMF_bind_congr' sample fun pair => ?_
-  have projected := congrArg (fun distribution : SPMF HmacBlock => distribution >>= fun output =>
-    𝒮[observe resume pair.1 (RawCtxSelectedInitialConstructor.response64 output)]) initialPrefix_uniform_vcvioLegacy
-  simpa only [← evalSPMF_bind, bind_map_left, observer] using projected
+  refine EvalDistEq.bind_right sample fun pair => ?_
+  have projected := initialPrefix_uniform.bind_left fun output =>
+    observe resume pair.1 (RawCtxSelectedInitialConstructor.response64 output)
+  simpa only [bind_map_left, observer] using projected
 
 /-- All source continuation effects occur before the collision decision; even failure or adaptive stopping does not increase the uniform64 half-equality probability. -/
 theorem random_bound {Context Result : Type} (sample : ProbComp (Context × RootOutput))
     (resume : Continue Context Result) :
-    Pr[= true | random sample resume] ≤ (1 : ENNReal) / (2 ^ 256 : ENNReal) := by
+    Pr{let x ← random sample resume}[x = true] ≤ (1 : ENNReal) / (2 ^ 256 : ENNReal) := by
   classical
   unfold random
-  rw [← probEvent_eq_eq_probOutput']
-  refine probEvent_bind_le_of_forall_le fun pair _ => ?_
-  refine (probEvent_bind_le_probEvent (p := InitialAlias) ?_).trans initial_alias_uniform
+  have aliasBound := initial_alias_uniform
+  generalize sampled : ($ᵗ HmacBlock : ProbComp HmacBlock) = block at aliasBound ⊢
+  refine prEvent_bind_le_of_forall_le _ _ _ fun pair => ?_
+  refine (prEvent_bind_le_prEvent_of_support _ _ InitialAlias _ ?_).trans aliasBound
   intro output _ different
   have noAlias := (response_alias output).not.mpr different
-  simpa only [observe, probEvent_map, Function.comp_def, decide_eq_false noAlias, Bool.true_eq_false] using
-    (probEvent_False (resume pair.1 (RawCtxSelectedInitialConstructor.response64 output)
-      (PqxdhInitialReplyErasure.kernelOf true (RawCtxSelectedInitialConstructor.response64 output))
-      (PqxdhInitialReplyErasure.kernelOf false (RawCtxSelectedInitialConstructor.response64 output))))
+  simp only [observe, prEvent_map, decide_eq_false noAlias, Bool.false_eq_true]
+  exact prEvent_false _
 
 /-- Both advantages retain the exact joint root/context sampler and literal native continuation. No smallness is postulated. -/
 noncomputable def reductionLoss {Context Result : Type} (hmac : HmacSha512)
@@ -103,15 +102,17 @@ theorem primitive_bound {Context Result : Type} (source : FixedHkdfSha512NoSaltS
 theorem source_bound {Context Result : Type} (source : FixedHkdfSha512NoSaltSource)
     (hmac : HmacSha512) (correct : SourceFullCorrect source hmac)
     (sample : ProbComp (Context × RootOutput)) (resume : Continue Context Result) :
-    Pr[= true | real source sample resume] ≤
+    Pr{let x ← real source sample resume}[x = true] ≤
       (1 : ENNReal) / (2 ^ 256 : ENNReal) + ENNReal.ofReal (reductionLoss hmac sample resume) := by
   have randomMeasure : 𝒟[random sample resume] {true} ≤ (1 : ENNReal) / (2 ^ 256 : ENNReal) := by
-    simpa only [evalDist_apply_singleton] using random_bound sample resume
+    rw [← prEvent_eq_evalDist_singleton]
+    exact random_bound sample resume
   have result := (ProbComp.evalDist_apply_true_le_add_ofReal_boolDistAdvantage
     (real source sample resume) (random sample resume)).trans
       (add_le_add randomMeasure
         (ENNReal.ofReal_le_ofReal (primitive_bound source hmac correct sample resume)))
-  simpa only [evalDist_apply_singleton] using result
+  rw [prEvent_eq_evalDist_singleton]
+  exact result
 
 /-- The bad event is literal equality of the two actual initial sending chains when the original native constructors return. -/
 theorem native_event (c : Pqxdh.Crypto) (response : Response) (beacon server : ConcreteRatchetKernel)

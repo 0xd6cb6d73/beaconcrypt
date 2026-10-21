@@ -162,7 +162,7 @@ theorem actual_route
     RawCtxFullPreimageTester.actual, RawCtxFullPreimageTester.production, bad,
     bind_assoc, pure_bind, ← probEvent_eq_eq_probOutput, probEvent_bind_eq_tsum,
     probEvent_map, Function.comp_def, decide_eq_true_eq, probEvent_pure, mul_ite, mul_one, mul_zero]
-    using RawCtxBadEventMixture.bind_bound (RawCtxSelectedParentCandidates.sample priorSample (address continuation))
+    using RawCtxBadEventMixture.bind_bound_vcvioLegacy (RawCtxSelectedParentCandidates.sample priorSample (address continuation))
       (fun pair => privateGame source writer mark sender route decode continuation pair.1 pair.2
         (productionStream source.crypto (FixedHkdfDomain.ratchet.address pair.2.toList)))
       (fun pair => observer source writer mark sender route decode continuation pair.1
@@ -180,7 +180,7 @@ theorem random_route
       (RawCtxSelectedParentSecrecy.random priorSample (address continuation) (observer source writer mark sender route decode continuation)) ≤
       Pr[fun pair => pair.1 ∈ candidates pair.2 |
         RawCtxSelectedParentCandidates.uniform priorSample (address continuation) (observed source writer mark sender route decode continuation)].toReal := by
-  have bound := RawCtxBadEventMixture.bind_bound
+  have bound := RawCtxBadEventMixture.bind_bound_vcvioLegacy
       (do let pair ← RawCtxSelectedParentCandidates.sample priorSample (address continuation)
           let output ← $ᵗ FullOutput
           pure (pair, output))
@@ -213,7 +213,7 @@ theorem actual_bound
     (show ((2 ^ 352 : ENNReal)⁻¹ + ENNReal.ofReal (
       extractLoss hmac priorSample (address continuation) (aliasTester source writer mark sender route decode continuation) +
         hmacLoss hmac priorSample (address continuation) (aliasTester source writer mark sender route decode continuation))) ≠ ⊤ by simp)
-    (RawCtxSelectedParentCandidates.real_bound source hmac correct priorSample (address continuation)
+    (RawCtxSelectedParentCandidates.real_bound_vcvioLegacy source hmac correct priorSample (address continuation)
       (observed source writer mark sender route decode continuation) candidates)
   have nonnegative : 0 ≤ extractLoss hmac priorSample (address continuation) (aliasTester source writer mark sender route decode continuation) +
       hmacLoss hmac priorSample (address continuation) (aliasTester source writer mark sender route decode continuation) :=
@@ -232,7 +232,7 @@ theorem random_bound
       (qCandidates : ℝ) / (2 ^ 256 : ℝ) := by
   simpa using (random_route source writer mark sender route decode continuation priorSample).trans
     (ENNReal.toReal_mono (ENNReal.div_ne_top (by simp) (by simp))
-      (RawCtxSelectedParentCandidates.uniform_bound priorSample (address continuation)
+      (RawCtxSelectedParentCandidates.uniform_bound_vcvioLegacy priorSample (address continuation)
         (observed source writer mark sender route decode continuation) candidates qCandidates bounded))
 
 

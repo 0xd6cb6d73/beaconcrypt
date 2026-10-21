@@ -84,7 +84,7 @@ theorem stopped_distance (source : FixedHkdfSha512NoSaltSource) (writer : RawCtx
     (RawCtxSelectedFamilyNonceCoupling.executable_distance source writer prior parent key target nonce next sender route read client before)
   rw [source_projection source writer prior parent key target nonce next sender route read client before] at distance
   refine le_trans ?_ distance
-  simpa only [ProbComp.boolDistAdvantage, evalDist_apply_singleton] using
+  simpa only [ProbComp.boolDistAdvantage, VCVioLegacy.evalDist_singleton_eq_probOutput] using
     abs_probOutput_toReal_sub_le_tvDist _ _
 
 /-- The ordinary endpoint is exactly the actual compiled source view under one explicit uniform selected-key draw and its specified empty component state. No independence statement about arbitrary native contexts is inferred here. -/
@@ -128,9 +128,11 @@ theorem uniform_stopped_distance (source : FixedHkdfSha512NoSaltSource) (writer 
     (fun key : RootOutput => RawCtxSelectedNativeFreshLift.nonceGame source writer prior parent key target nonce next sender route read client
       (before, (ambient, AdaptiveCtxDynamicKnownKeys.initialSource)))
     (fun key : RootOutput => by
-      simpa only [evalDist_apply_singleton] using (stopped_distance source writer prior parent key target nonce next sender route read client
+      rw [prEvent_eq_evalDist_singleton]
+      exact (stopped_distance source writer prior parent key target nonce next sender route read client
         (before, (ambient, AdaptiveCtxDynamicKnownKeys.initialSource))))
-  simpa only [AdaptiveCtxDynamicKnownKeys.sourceGame, map_bind, evalDist_apply_singleton] using averaged
+  rw [← prEvent_eq_evalDist_singleton]
+  simpa only [AdaptiveCtxDynamicKnownKeys.sourceGame, map_bind] using averaged
 
 open AdaptiveCtxDynamicKnownBounds AdaptiveCtxQueryBounds AdaptiveCtxSharedReplayBounds
 open CtxNonceAeadIntCtxt CtxNonceAeadIndDollarValidation AdaptiveCtxReceive

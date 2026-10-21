@@ -23,10 +23,10 @@ theorem test_iff (function : RootOutput → FullOutput) (output : FullOutput) (c
 
 /-- Even adaptively chosen candidates can accept only outputs in the fixed function's finite image. -/
 theorem uniform_image (function : RootOutput → FullOutput) :
-    Pr[fun output => output ∈ Set.range function | $ᵗ FullOutput] ≤
+    Pr{let output ← $ᵗ FullOutput}[output ∈ Set.range function] ≤
       (Fintype.card RootOutput : ENNReal) / (Fintype.card FullOutput : ENNReal) := by
   classical
-  rw [probEvent_uniformSample]
+  rw [SampleableType.prEvent_uniformSample]
   have image : Finset.univ.filter (fun output => output ∈ Set.range function) =
       Finset.univ.image function := by ext output; simp
   rw [image]
@@ -45,7 +45,7 @@ theorem full_card : Fintype.card FullOutput = 2 ^ 608 := by
 
 /-- The complete fixed 32-byte input image occupies at most a 2^-352 fraction of uniform full 76-byte outputs. -/
 theorem uniform_image352 (function : RootOutput → FullOutput) :
-    Pr[fun output => output ∈ Set.range function | $ᵗ FullOutput] ≤
+    Pr{let output ← $ᵗ FullOutput}[output ∈ Set.range function] ≤
       (2 ^ 352 : ENNReal)⁻¹ := by
   convert uniform_image function using 1
   rw [PqxdhMaterialKeyCollisions.material_key_card, full_card]
@@ -62,14 +62,17 @@ noncomputable def tester {Context Result : Type} (function : RootOutput → Full
 /-- The complete adaptive observer cannot cause acceptance outside the fixed input image. -/
 theorem uniform_tester {Context Result : Type} (function : RootOutput → FullOutput)
     (observe : Context → FullOutput → ProbComp Result) (candidates : Result → List RootOutput) (context : Context) :
-    Pr[= true | ($ᵗ FullOutput) >>= tester function observe candidates context] ≤ (2 ^ 352 : ENNReal)⁻¹ := by
-  rw [← probEvent_eq_eq_probOutput']
-  refine (probEvent_bind_le_probEvent (p := fun output => output ∈ Set.range function) ?_).trans (uniform_image352 function)
+    Pr{let x ← ($ᵗ FullOutput) >>= tester function observe candidates context}[x = true] ≤ (2 ^ 352 : ENNReal)⁻¹ := by
+  have generic : ∀ (sample : ProbComp FullOutput) (next : FullOutput → ProbComp Bool),
+      (∀ output ∈ support sample, ¬ output ∈ Set.range function → Pr{let y ← next output}[y = true] = 0) →
+        Pr{let y ← sample >>= next}[y = true] ≤ Pr{let output ← sample}[output ∈ Set.range function] :=
+    fun sample next vanish => prEvent_bind_le_prEvent_of_support sample next _ _ vanish
+  refine (generic _ _ ?_).trans (uniform_image352 function)
   intro output _ absent
-  rw [tester, probEvent_map]
-  apply probEvent_eq_zero_iff.mpr
+  rw [tester, prEvent_map]
+  apply prEvent_eq_zero_of_forall_mem_support
   intro result _ accepted
-  obtain ⟨candidate, _, same⟩ := (test_iff function output (candidates result)).mp accepted.symm
+  obtain ⟨candidate, _, same⟩ := (test_iff function output (candidates result)).mp accepted
   exact absent ⟨candidate, same⟩
 
 /-- The private event retains the actual target solely for the experiment's final event. -/
@@ -87,22 +90,29 @@ def byteSampler {Context : Type} (sample : ProbComp (Context × RootOutput)) : S
 theorem actual_test {Context Result : Type} (function : RootOutput → FullOutput)
     (sample : ProbComp (Context × RootOutput)) (observe : Context → FullOutput → ProbComp Result)
     (candidates : Result → List RootOutput) :
-    Pr[fun pair => pair.1 ∈ candidates pair.2 | actual function sample observe] ≤
-      Pr[= true | sample >>= fun pair => tester function observe candidates pair.1 (function pair.2)] := by
-  rw [actual, probEvent_bind_eq_tsum, probOutput_bind_eq_tsum]
+    Pr{let pair ← actual function sample observe}[pair.1 ∈ candidates pair.2] ≤
+      Pr{let x ← sample >>= fun pair => tester function observe candidates pair.1 (function pair.2)}[x = true] := by
+  rw [actual, OracleComp.prEvent_bind_eq_tsum, OracleComp.prEvent_bind_eq_tsum]
   refine ENNReal.tsum_le_tsum fun pair => mul_le_mul' le_rfl ?_
-  rw [probEvent_map, ← probEvent_eq_eq_probOutput', tester, probEvent_map]
-  exact probEvent_mono'' fun result member =>
-    ((test_iff function (function pair.2) (candidates result)).mpr ⟨pair.2, member, rfl⟩).symm
+  rw [prEvent_map, tester, prEvent_map]
+  exact prEvent_mono _ _ _ fun result member =>
+    (test_iff function (function pair.2) (candidates result)).mpr ⟨pair.2, member, rfl⟩
 
 /-- The complete sampler precedes the independently uniform child, with no restriction on subsequent adaptive candidates. -/
 theorem independent_test {Context Result : Type} (function : RootOutput → FullOutput)
     (sample : SecretInputSampler Context) (observe : Context → FullOutput → ProbComp Result)
     (candidates : Result → List RootOutput) :
-    Pr[= true | independentFullGame sample (tester function observe candidates)] ≤ (2 ^ 352 : ENNReal)⁻¹ := by
-  rw [← probEvent_eq_eq_probOutput', independentFullGame]
-  exact probEvent_bind_le_of_forall_le fun pair _ => by
-    simpa only [probEvent_eq_eq_probOutput'] using uniform_tester function observe candidates pair.1
+    Pr{let x ← independentFullGame sample (tester function observe candidates)}[x = true] ≤ (2 ^ 352 : ENNReal)⁻¹ := by
+  have generic : ∀ (first : ProbComp (Context × Pqxdh.Bytes)) (next : Context × Pqxdh.Bytes → ProbComp Bool),
+      (∀ pair, Pr{let y ← next pair}[y = true] ≤ (2 ^ 352 : ENNReal)⁻¹) →
+        Pr{let y ← first >>= next}[y = true] ≤ (2 ^ 352 : ENNReal)⁻¹ :=
+    fun first next bounded => prEvent_bind_le_of_forall_le first next _ bounded
+  have shape : independentFullGame sample (tester function observe candidates) =
+      bind (m := ProbComp) sample fun pair => ($ᵗ FullOutput) >>= tester function observe candidates pair.1 := by
+    unfold independentFullGame
+    rfl
+  rw [shape]
+  exact generic _ _ fun pair => uniform_tester function observe candidates pair.1
 
 /-- Every tester evaluation uses the actual public fixed HKDF at the ratchet label. -/
 def production (source : FixedHkdfSha512NoSaltSource) (input : RootOutput) : FullOutput :=
@@ -121,7 +131,7 @@ theorem source_alias_bound {Context Result : Type} (source : FixedHkdfSha512NoSa
     (hmac : HmacSha512) (correct : SourceFullCorrect source hmac)
     (sample : ProbComp (Context × RootOutput)) (observe : Context → FullOutput → ProbComp Result)
     (candidates : Result → List RootOutput) :
-    Pr[fun pair => pair.1 ∈ candidates pair.2 | actual (production source) sample observe] ≤
+    Pr{let pair ← actual (production source) sample observe}[pair.1 ∈ candidates pair.2] ≤
       (2 ^ 352 : ENNReal)⁻¹ + ENNReal.ofReal (
         (extractRealGame hmac (byteSampler sample)
           (fullExtractReduction hmac .ratchet (tester (production source) observe candidates))).boolDistAdvantage
@@ -136,7 +146,7 @@ theorem source_alias_bound {Context Result : Type} (source : FixedHkdfSha512NoSa
   have comparison := VCVioForward.evalDist_apply_true_le_add_ofReal_boolDistAdvantage
     (sourceFullGame source .ratchet (byteSampler sample) (tester (production source) observe candidates))
     (independentFullGame (byteSampler sample) (tester (production source) observe candidates))
-  simp only [VCVioLegacy.evalDist_singleton_eq_probOutput] at comparison
+  rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true] at comparison
   refine actualBound.trans (comparison.trans ?_)
   exact add_le_add (independent_test (production source) (byteSampler sample) observe candidates)
     (ENNReal.ofReal_le_ofReal (sourceFullAdvantage_le_extract_add_hmac source hmac correct .ratchet
