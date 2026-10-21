@@ -127,31 +127,26 @@ theorem joint_witness : ∃ (s : PqxdhServerAuthExperiment.Setup Base Unit)
     Nonempty (PqxdhChallengeSecretRouting.FunctionalDecapsulation s.kem) :=
   ⟨setup, codec, control_laws, class_law, scalar_spread, root_correct, full_correct, kem_error, read_writable, ⟨toyFunctional⟩⟩
 
-set_option linter.deprecated false in
 /-- The seed-reveal attack succeeds on the jointly satisfying instance, for every admission-check function. -/
 theorem seed_control_wins (checks : PqxdhServerAuthExperiment.Checks) :
-    1 ≤ (Pr[fun result => PqxdhServerAuthExperiment.W1 setup result.1 result.2.1 result.2.2.1.ghost |
-      PqxdhServerAuthExperiment.gameState setup codec checks true
-        (PqxdhServerAuthNegativeControl.controlAdversary setup codec [1])]).toReal := by
+    1 ≤ (Pr{let result ← (PqxdhServerAuthExperiment.gameState setup codec checks true
+        (PqxdhServerAuthNegativeControl.controlAdversary setup codec [1]))}[PqxdhServerAuthExperiment.W1 setup result.1 result.2.1 result.2.2.1.ghost]).toReal := by
   simpa only [kem_error, sub_zero] using
     PqxdhServerAuthNegativeControl.negative_control setup codec checks 100 (control_laws 100)
       toyFunctional [1] (by simp) (by simp)
 
-set_option linter.deprecated false in
 /-- Honest relay has zero authentication-winning probability on the same joint witness, for any checks and payload. -/
 theorem relay_zero (checks : PqxdhServerAuthExperiment.Checks) (payload : Option Pqxdh.Bytes) :
-    (Pr[= true | PqxdhServerAuthExperiment.serverAuthGame setup codec checks false
-      (PqxdhServerAuthNegativeControl.relayAdversary payload)]).toReal = 0 := by
+    (Pr{let x ← (PqxdhServerAuthExperiment.serverAuthGame setup codec checks false
+      (PqxdhServerAuthNegativeControl.relayAdversary payload))}[x = true]).toReal = 0 := by
   exact le_antisymm (by simpa only [kem_error] using
     PqxdhServerAuthNegativeControl.relay_not_win setup codec checks (control_laws 0).toRelayLaws toyFunctional payload)
     ENNReal.toReal_nonneg
 
-set_option linter.deprecated false in
 /-- The honest relay also reaches actual Beacon acceptance on that same jointly satisfying setup. -/
 theorem relay_accepts :
-    1 ≤ (Pr[fun result => result.2.2.1.ghost.acceptance ≠ none |
-      PqxdhServerAuthExperiment.gameState setup codec PqxdhServerAuthNegativeControl.acceptAll false
-        (PqxdhServerAuthNegativeControl.relayAdversary none)]).toReal := by
+    1 ≤ (Pr{let result ← (PqxdhServerAuthExperiment.gameState setup codec PqxdhServerAuthNegativeControl.acceptAll false
+        (PqxdhServerAuthNegativeControl.relayAdversary none))}[result.2.2.1.ghost.acceptance ≠ none]).toReal := by
   have live := PqxdhServerAuthNegativeControl.relay_live setup codec 100 (control_laws 100) toyFunctional none
     (by simp [PqxdhServerRegistrationPublication.registrationWitness])
     (by simp [PqxdhServerRegistrationPublication.registrationWitness]; scalar_tac)

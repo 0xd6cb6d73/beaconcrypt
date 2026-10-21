@@ -55,7 +55,8 @@ theorem client_event (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
     𝒟[decision setup context Q j observer <$>
       (((simulateQ (sourceStopped setup codec checks context Q j tails)
         (PqxdhServerAuthApiJournal.record client)).run).run (state, first))] := by
-  apply evalDist_eq_of_evalSPMF_eq
+  apply EvalDistEq.evalDist_eq
+  refine (VCVioLegacy.evalSPMF_eq_iff_evalDistEq _ _).1 ?_
   apply evalSPMF_map_eq_of_relTriple
   exact relTriple_post_mono
     (source_client_coupling setup codec checks context Q j tails (PqxdhServerAuthApiJournal.record client)
@@ -161,7 +162,7 @@ theorem uniform_game (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
       𝒟[Prod.fst <$> AdaptiveCtxDynamicKnownKeys.sourceGame true
         (RawCtxUniversalDecoder.decoder codec.frameRead) setup.source.crypto
         (client setup codec checks adversary Q j observer)] := by
-  apply evalDist_eq_of_evalSPMF_eq
+  apply EvalDistEq.evalDist_eq
   have sampling := PqxdhServerAuthCtxMaterial.key_first_context (contextSample setup codec)
     (fun context value => PqxdhServerAuthObservedEntry.distinguisher setup codec checks adversary false Q j observer context value)
   unfold PqxdhServerAuthObservedSchedule.uniformGame
@@ -173,7 +174,7 @@ theorem uniform_game (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
   intro context _
   apply evalSPMF_bind_congr_support
   intro rest _
-  exact evalSPMF_eq_of_evalDist_eq _ _ (context_source setup codec checks adversary Q j observer context rest key)
+  exact EvalDistEq.of_evalDist_eq (context_source setup codec checks adversary Q j observer context rest key)
 
 /-- The complete sampled run is shared by the new observation and the original decision; only pure terminal projections differ. -/
 noncomputable def full (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)

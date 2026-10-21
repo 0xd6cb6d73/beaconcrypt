@@ -1607,17 +1607,17 @@ section Guard
 /-- A Boolean continuation that can return `true` only after an outcome satisfying `guard` has `true` mass at most the probability of `guard`. -/
 theorem true_le_guard {α : Type} (mx : ProbComp α) (my : α → ProbComp Bool) (guard : α → Prop)
     (quiet : ∀ a ∈ support mx, ¬ guard a → ∀ b ∈ support (my a), b = false) :
-    𝒟[mx >>= my] {true} ≤ Pr[guard | mx] := by
+    𝒟[mx >>= my] {true} ≤ Pr{let x ← mx}[guard x] := by
   classical
-  rw [evalDist_apply_singleton, probOutput_bind_eq_tsum, probEvent_eq_tsum_ite]
+  rw [← prEvent_eq_evalDist_singleton _ true, OracleComp.prEvent_bind_eq_tsum, OracleComp.prEvent_eq_tsum_ite]
   refine ENNReal.tsum_le_tsum fun a => ?_
   by_cases reached : a ∈ support mx
   · by_cases guarded : guard a
     · rw [ite_eq_left guarded]
-      exact mul_le_of_le_one_right' probOutput_le_one
-    · rw [ite_eq_right guarded, probOutput_eq_zero_of_not_mem_support (mx := my a) (x := true)
+      exact mul_le_of_le_one_right' (prEvent_le_one _)
+    · rw [ite_eq_right guarded, prEvent_eq_zero_of_not_mem_support (my a) (x := true)
         (fun found => by simpa using quiet a reached guarded true found), mul_zero]
-  · rw [probOutput_eq_zero_of_not_mem_support reached, zero_mul]
+  · rw [prEvent_eq_zero_of_not_mem_support _ reached, zero_mul]
     exact bot_le
 
 end Guard
@@ -1643,31 +1643,36 @@ local notation "env0" => PqxdhSourceSharedPreparation.environment setup env call
 
 /-- In the observed run of the forwarded prelude, the two halves of the drawn initializer response are equal with probability at most `2^-256`. -/
 theorem prelude_alias (key : CtxKey) :
-    Pr[fun result => RawCtxSendLineageCollision.InitialAlias result.1.2.1 |
-      (simulateQ (observed true (RawCtxUniversalDecoder.decoder (env0).decode) (env0).source.crypto key)
+    Pr{let result ← ((simulateQ (observed true (RawCtxUniversalDecoder.decoder (env0).decode) (env0).source.crypto key)
         (simulateQ RawCtxSourceSharedRom.forward (prelude setup env callbacks baseImpl kem attachedVerify primitives program post))).run
-          (initialState, AdaptiveCtxDynamicKnownKeys.initialSource)] ≤ (1 : ℝ≥0∞) / (2 ^ 256 : ℝ≥0∞) := by
+          (initialState, AdaptiveCtxDynamicKnownKeys.initialSource))}[RawCtxSendLineageCollision.InitialAlias result.1.2.1] ≤ (1 : ℝ≥0∞) / (2 ^ 256 : ℝ≥0∞) := by
   classical
-  rw [show (fun result : (Packet (M := M) (P := P) (I := I) (K := K) (A := A) (KemSK := KemSK) setup program × HmacBlock ×
-      NonceOutput × RootOutput) × (State × SourceState) => RawCtxSendLineageCollision.InitialAlias result.1.2.1) =
-      (fun sample : Packet (M := M) (P := P) (I := I) (K := K) (A := A) (KemSK := KemSK) setup program × HmacBlock ×
-        NonceOutput × RootOutput => RawCtxSendLineageCollision.InitialAlias sample.2.1) ∘ Prod.fst from rfl,
-    ← probEvent_map, observed_fst]
+  rw [← prEvent_map _ Prod.fst (fun sample : Packet (M := M) (P := P) (I := I) (K := K) (A := A) (KemSK := KemSK) setup
+      program × HmacBlock × NonceOutput × RootOutput => RawCtxSendLineageCollision.InitialAlias sample.2.1),
+    observed_fst]
   have cached := congrArg (fun work => Prod.fst <$> work) (RawCtxSourceSharedRom.forward_cache true
     (RawCtxUniversalDecoder.decoder (env0).decode) (env0).source.crypto key
     (prelude setup env callbacks baseImpl kem attachedVerify primitives program post) AdaptiveCtxDynamicKnownKeys.initialSource)
   simp only [Functor.map_map] at cached
-  rw [cached, probEvent_map]
+  rw [cached, prEvent_map]
   have emptyCache : AdaptiveCtxDynamicKnownKeys.initialSource.cache = ∅ := rfl
   rw [emptyCache]
-  have restored := congrArg (fun work => probEvent work fun sample => RawCtxSendLineageCollision.InitialAlias sample.2.1)
+  have restored := congrArg (fun work => Pr{let sample ← work}[RawCtxSendLineageCollision.InitialAlias sample.2.1])
     (prelude_source setup env callbacks baseImpl kem attachedVerify primitives program post)
-  simp only [probEvent_map] at restored
+  simp only [prEvent_map] at restored
   refine le_of_eq_of_le (Eq.trans rfl restored) ?_
-  refine probEvent_bind_le_of_forall_le fun context _ => ?_
-  refine (probEvent_bind_le_probEvent (p := RawCtxSendLineageCollision.InitialAlias) ?_).trans
-    RawCtxSendLineageCollision.initial_alias_uniform_vcvioLegacy
+  -- S6 editing rule 10: the generic law over an abstract `ProbComp` draw, applied to `$ᵗ HmacBlock` with first-order
+  -- arguments after generalizing the draw.
+  have aliasStep : ∀ (block : ProbComp HmacBlock) {β : Type} (rest : HmacBlock → ProbComp β) (q : β → Prop),
+      (∀ b ∈ support block, ¬ RawCtxSendLineageCollision.InitialAlias b → Pr{let y ← rest b}[q y] = 0) →
+      Pr{let y ← block >>= rest}[q y] ≤ Pr{let b ← block}[RawCtxSendLineageCollision.InitialAlias b] :=
+    fun block _ rest q h => prEvent_bind_le_prEvent_of_support block rest _ q h
+  refine prEvent_bind_le_of_forall_le_of_support _ _ _ fun context _ => ?_
+  have uniform := RawCtxSendLineageCollision.initial_alias_uniform
+  generalize sampledBlock : ($ᵗ HmacBlock : ProbComp HmacBlock) = block at uniform ⊢
+  refine (aliasStep block _ _ ?_).trans uniform
   intro initialBlock _ separate
+  rw [OracleComp.prEvent_eq_zero_iff]
   simp
   intro _ _ _ _ _ _ _ same _ _
   subst same
@@ -1679,9 +1684,9 @@ theorem gap_le (post0 : PqxdhAuthenticatedRootExperiment.Post (baseSpec := baseS
     𝒟[gapGame (RawCtxUniversalDecoder.decoder (env0).decode) (env0).source.crypto
       (fullClient setup env callbacks baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0)
         (firstBeacon b))] {true} ≤ (1 : ℝ≥0∞) / (2 ^ 256 : ℝ≥0∞) := by
-  rw [gap_observed, evalDist_apply_singleton, ← probEvent_eq_eq_probOutput]
-  refine probEvent_bind_le_of_forall_le fun key _ => ?_
-  rw [probEvent_eq_eq_probOutput, ← evalDist_apply_singleton]
+  rw [gap_observed, ← prEvent_eq_evalDist_singleton _ true]
+  refine prEvent_bind_le_of_forall_le_of_support _ _ _ fun key _ => ?_
+  rw [prEvent_eq_evalDist_singleton]
   unfold fullClient
   rw [simulateQ_bind, StateT.run_bind, bind_assoc]
   refine (true_le_guard _ _ (fun result => RawCtxSendLineageCollision.InitialAlias result.1.2.1) ?_).trans

@@ -230,10 +230,6 @@ theorem hmacRandom_eq_independentRoot {Context : Type}
   rw [← bind_map_left]
   exact first32_uniform.bind_left (observer pair.1)
 
-set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.PqxdhSecretInputKdf.hmacRandom_eq_independentRoot_vcvioLegacy :
-    ∀ {Context : Type} (sample : BeaconcryptCore.Computational.PqxdhSecretInputKdf.SecretInputSampler Context) (observer : BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootObserver Context), 𝒮[BeaconcryptCore.Computational.PqxdhSecretInputKdf.hmacPrfRandomGame (BeaconcryptCore.Computational.PqxdhSecretInputKdf.expandReduction sample observer)] = 𝒮[BeaconcryptCore.Computational.PqxdhSecretInputKdf.independentRootGame sample observer] :=
-  by simpa only [BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq] using @BeaconcryptCore.Computational.PqxdhSecretInputKdf.hmacRandom_eq_independentRoot
-
 /-- A loss-one root reduction to fixed-salt Extract pseudorandomness and ordinary secret-key HMAC PRF advantage.
 
 The Extract term depends on the full joint input/side-information sampler. Its smallness is an additional primitive/distribution obligation, not a theorem of HMAC PRF security. This bound has no public-HKDF-versus-random-table term and makes no multi-session or compromise claim.

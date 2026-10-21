@@ -44,7 +44,8 @@ theorem source_real_coupling (setup : Setup baseSpec KemSK) (codec : Codec Reade
   refine relTriple_bind (R := fun a b => a = b ∧ a ∈ support (contextSample setup codec))
     (relTriple_refl_of_mem_support (contextSample setup codec) fun value member => ⟨rfl, member⟩) ?_
   rintro context _ ⟨rfl, supported⟩
-  apply relTriple_of_evalSPMF_eq_left (source_prefetched setup codec checks adversary revealSeed Q j observer context)
+  apply relTriple_of_evalSPMF_eq_left ((VCVioLegacy.evalSPMF_eq_iff_evalDistEq _ _).2
+    (source_prefetched setup codec checks adversary revealSeed Q j observer context))
   refine relTriple_bind (R := Eq) (relTriple_refl ($ᵗ HmacBlock)) ?_
   rintro prk _ rfl
   exact source_hidden_coupling setup codec checks adversary revealSeed Q j observer context supported prk

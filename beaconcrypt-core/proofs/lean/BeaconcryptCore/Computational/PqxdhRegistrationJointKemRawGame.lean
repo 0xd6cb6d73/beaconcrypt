@@ -23,7 +23,7 @@ noncomputable def correctnessError (setup : PqxdhServerAuthExperiment.Setup base
 /-- The correctness error of the raw-ordinal KEM hop is the existing correctness-error term `PqxdhServerAuthNegativeControl.kemError`: both are the probability that the same error experiment returns `true` under the experiment's ambient coins, so consumers have one quantity, not two. -/
 theorem correctnessError_eq_kemError (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK) :
     correctnessError setup = PqxdhServerAuthNegativeControl.kemError setup := by
-  simp only [correctnessError, PqxdhServerAuthNegativeControl.kemError, evalDist_apply_singleton]
+  simp only [correctnessError, PqxdhServerAuthNegativeControl.kemError, ← prEvent_eq_evalDist_singleton _ true]
 
 /-- The constructed ordinary adversary receives only a public challenge key and a candidate reply, runs the actual initialized source compiler up to the encapsulation of the selected raw accept and resumes the saved callback. -/
 noncomputable def adversary (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)

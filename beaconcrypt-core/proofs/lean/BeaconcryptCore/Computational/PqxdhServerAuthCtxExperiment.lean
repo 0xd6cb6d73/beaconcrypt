@@ -92,7 +92,7 @@ theorem stopped_game (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
       𝒟[Prod.fst <$> AdaptiveCtxDynamicKnownKeys.sourceGame true
         (RawCtxUniversalDecoder.decoder codec.frameRead) setup.source.crypto
         (client setup codec checks adversary Q j)] := by
-  apply evalDist_eq_of_evalSPMF_eq
+  apply EvalDistEq.evalDist_eq
   have exactSampler := PqxdhServerAuthCtxMaterial.key_first_context (contextSample setup codec)
     (fun context value => PqxdhServerAuthCtxStop.stoppedEntryDistinguisher setup codec checks adversary false Q j context value)
   simpa only [PqxdhServerAuthCtxStop.stoppedEntryGame, AdaptiveCtxDynamicKnownKeys.sourceGame,

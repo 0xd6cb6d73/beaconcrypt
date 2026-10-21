@@ -59,7 +59,7 @@ theorem idealKeys_key_first (setup : Setup baseSpec KemSK) (codec : Codec Reader
         index] =
       𝒟[keyFirstBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected
         index] :=
-  evalDist_eq_of_evalSPMF_eq _ _ (PqxdhServerAuthCtxMaterial.key_first
+  evalDist_eq_of_evalSPMF_eq _ _ (PqxdhServerAuthCtxMaterial.key_first_vcvioLegacy
     (entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index))
 
 /-- The key-first and the key-last games have the same output distribution. -/

@@ -66,7 +66,6 @@ theorem dynamic_query (query : AdaptiveCtxDynamicKnownKeys.Spec.Domain)
   all_goals try rfl
   exact (notRaw raw rfl).elim
 
-set_option linter.deprecated false in
 /-- Stopping branches cannot increase a before-raw capture event that is false when no candidate was captured. The full stateful component interpreter, its replies and its poststate are shared. -/
 theorem capture_mono {State : Type}
     (impl : QueryImpl AdaptiveCtxDynamicKnownKeys.Spec (StateT State ProbComp))
@@ -74,36 +73,36 @@ theorem capture_mono {State : Type}
     (right : OracleComp AdaptiveCtxDynamicKnownKeys.Spec Right) (pruned : Prunes left right)
     (saved : Option CtxRomAuth.CtxRomRecord) (state : State)
     (event : PqxdhServerAuthPublicationGuess.Candidate → Prop) (empty : ¬ event none) :
-    Pr[fun result => event result.1 | (simulateQ impl
-      (PqxdhServerAuthPublicationCaptureSource.dynamic left saved)).run state] ≤
-      Pr[fun result => event result.1 | (simulateQ impl
-        (PqxdhServerAuthPublicationCaptureSource.dynamic right saved)).run state] := by
+    Pr{let result ← ((simulateQ impl
+      (PqxdhServerAuthPublicationCaptureSource.dynamic left saved)).run state)}[event result.1] ≤
+      Pr{let result ← ((simulateQ impl
+        (PqxdhServerAuthPublicationCaptureSource.dynamic right saved)).run state)}[event result.1] := by
   classical
   induction pruned generalizing saved state with
   | stop value work =>
-      change Pr[fun result => event result.1 | (pure (none, state) : ProbComp (PqxdhServerAuthPublicationGuess.Candidate × State))] ≤ _
-      simp [probEvent_pure, empty]
+      change Pr{let result ← (pure (none, state) : ProbComp (PqxdhServerAuthPublicationGuess.Candidate × State))}[event result.1] ≤ _
+      rw [prEvent_pure]
+      simp only [empty, ↓reduceIte, zero_le]
   | query query left right next ih =>
       by_cases raw : ∃ bytes, query = .inl (.inr bytes)
       · obtain ⟨bytes, rfl⟩ := raw
         exact le_rfl
       · rw [dynamic_query query (fun bytes equal => raw ⟨bytes, equal⟩),
           dynamic_query query (fun bytes equal => raw ⟨bytes, equal⟩)]
-        simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind, probEvent_bind_eq_tsum]
+        simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind, OracleComp.prEvent_bind_eq_tsum]
         exact ENNReal.tsum_le_tsum fun reply => mul_le_mul_right (ih reply.1 _ reply.2) _
 
-set_option linter.deprecated false in
 /-- The literal dynamic source experiment preserves capture domination, including its selected-key draw and full shared source state. -/
 theorem source_mono (real : Bool) (decode : AdaptiveCtxReceive.RawDecoder) (crypto : Pqxdh.Crypto)
     (left : OracleComp AdaptiveCtxDynamicKnownKeys.Spec Left)
     (right : OracleComp AdaptiveCtxDynamicKnownKeys.Spec Right) (pruned : Prunes left right)
     (saved : Option CtxRomAuth.CtxRomRecord)
     (event : PqxdhServerAuthPublicationGuess.Candidate → Prop) (empty : ¬ event none) :
-    Pr[fun result => event result.1 | AdaptiveCtxDynamicKnownKeys.sourceGame real decode crypto
-      (PqxdhServerAuthPublicationCaptureSource.dynamic left saved)] ≤
-      Pr[fun result => event result.1 | AdaptiveCtxDynamicKnownKeys.sourceGame real decode crypto
-        (PqxdhServerAuthPublicationCaptureSource.dynamic right saved)] := by
-  simp only [AdaptiveCtxDynamicKnownKeys.sourceGame, probEvent_bind_eq_tsum]
+    Pr{let result ← (AdaptiveCtxDynamicKnownKeys.sourceGame real decode crypto
+      (PqxdhServerAuthPublicationCaptureSource.dynamic left saved))}[event result.1] ≤
+      Pr{let result ← (AdaptiveCtxDynamicKnownKeys.sourceGame real decode crypto
+        (PqxdhServerAuthPublicationCaptureSource.dynamic right saved))}[event result.1] := by
+  simp only [AdaptiveCtxDynamicKnownKeys.sourceGame, OracleComp.prEvent_bind_eq_tsum]
   exact ENNReal.tsum_le_tsum fun key => mul_le_mul_right
     (capture_mono (AdaptiveCtxDynamicKnownKeys.sourceImpl real decode crypto key) left right pruned
       saved AdaptiveCtxDynamicKnownKeys.initialSource event empty) _

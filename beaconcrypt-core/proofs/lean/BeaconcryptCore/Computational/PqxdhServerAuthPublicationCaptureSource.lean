@@ -140,20 +140,17 @@ theorem reference_view (setup : Setup baseSpec KemSK) (codec : Codec Reader Wire
         (PqxdhServerAuthPublicationRandom.decision setup codec checks adversary Q j decode) := by
   rw [AdaptiveCtxDynamicKnownKeys.source_view, AdaptiveCtxSharedModes.real_view_eq, reference_decision]
 
-set_option linter.deprecated false in
 /-- Interpreting the dynamic Boolean observer is exactly the event on its actual captured record/raw pair, with the complete source component state retained. -/
 theorem capture_probability (real : Bool) (decode : RawDecoder) (crypto : Pqxdh.Crypto)
     (work : OracleComp AdaptiveCtxDynamicKnownKeys.Spec Result) :
-    Pr[fun result => result.1 = true | AdaptiveCtxDynamicKnownKeys.sourceGame real decode crypto (decision decode work)] =
-      Pr[fun result => Hit (PqxdhServerAuthPublicationRandom.decodedTag decode) result.1 |
-        AdaptiveCtxDynamicKnownKeys.sourceGame real decode crypto (dynamic work none)] := by
+    Pr{let result ← AdaptiveCtxDynamicKnownKeys.sourceGame real decode crypto (decision decode work)}[result.1 = true] =
+      Pr{let result ← AdaptiveCtxDynamicKnownKeys.sourceGame real decode crypto (dynamic work none)}[Hit (PqxdhServerAuthPublicationRandom.decodedTag decode) result.1] := by
   classical
   simp only [decision, AdaptiveCtxDynamicKnownKeys.sourceGame, simulateQ_map, StateT.run_map,
-    probEvent_bind_eq_tsum, probEvent_map, Function.comp_def, decide_eq_true_eq]
+    OracleComp.prEvent_bind_eq_tsum, prEvent_map, decide_eq_true_eq]
 
 open PqxdhServerAuthSourceCosts PqxdhServerAuthBodyCosts PqxdhServerAuthGapDh
 
-set_option linter.deprecated false in
 /-- The actual dynamic source game for the concrete reference capture consumes the exact ordinary privacy bound and original source budgets. No occurrence, failure or tag law is supplied by the caller. -/
 theorem reference_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader WireResponse) (checks : Checks)
     (caps : KemCaps) (bounded : KemBound setup caps) (adversary : Adversary)
@@ -163,16 +160,15 @@ theorem reference_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Wir
     (hashes : ∀ input, (adversary input).IsQueryBoundP IsHashQuery qHash)
     (rom : ∀ input, (adversary input).IsQueryBoundP IsRomQuery qH)
     (j : Fin (Q + 1)) (decode : RawDecoder) :
-    (Pr[fun result => Hit (PqxdhServerAuthPublicationRandom.decodedTag decode) result.1 |
-      AdaptiveCtxDynamicKnownKeys.sourceGame true decode setup.source.crypto
-        (dynamic (PqxdhServerAuthPublicationReference.client setup codec checks adversary Q j) none)]).toReal ≤
+    (Pr{let result ← (AdaptiveCtxDynamicKnownKeys.sourceGame true decode setup.source.crypto
+        (dynamic (PqxdhServerAuthPublicationReference.client setup codec checks adversary Q j) none))}[Hit (PqxdhServerAuthPublicationRandom.decodedTag decode) result.1]).toReal ≤
       PqxdhServerAuthPublicationPrivacy.loss setup codec checks adversary Q j decode
         (entryReductionBudget caps qCoin Q qHash qH + 76) := by
   rw [← capture_probability]
   have bound := PqxdhServerAuthPublicationPrivacy.source_bound setup codec checks caps bounded adversary
     qCoin Q qHash qH coins accepts hashes rom j decode
   rw [← reference_view] at bound
-  simpa only [probEvent_map, Function.comp_def] using bound
+  simpa only [prEvent_map, Function.comp_def] using bound
 
 end BeaconcryptCore.Computational.PqxdhServerAuthPublicationCaptureSource
 

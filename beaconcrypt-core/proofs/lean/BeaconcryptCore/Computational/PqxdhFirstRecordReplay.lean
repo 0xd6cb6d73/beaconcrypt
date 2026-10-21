@@ -1339,8 +1339,8 @@ theorem pending_reaccept :
     𝒟[PqxdhFirstRecordTarget.pendingActual env baseImpl kem attachedVerify primitives program (reacceptPost env program post0)
       (PqxdhInitialRootEventSecrecy.accepted env attachedVerify primitives program (reacceptPost env program post0)
         selected number ancestors disclosed)] {true} = 0 := by
-  rw [evalDist_apply_singleton, probOutput_eq_zero_iff]
-  intro reached
+  rw [← prEvent_eq_evalDist_singleton _ true]
+  refine prEvent_eq_zero_of_not_mem_support _ fun reached => ?_
   simp only [PqxdhFirstRecordTarget.pendingActual, PqxdhGeneratedNativeContinuation.nativeContinued, mem_support_bind_iff] at reached
   obtain ⟨stopped, _, reached⟩ := reached
   split at reached

@@ -4,7 +4,6 @@ import BeaconcryptCore.Computational.PqxdhServerAuthPublicationPrefixStop
 /-! Actual raw-attempt histories retain the publication flag at the request, independently of later publications. -/
 open OracleComp OracleSpec ENNReal
 set_option autoImplicit false
-set_option linter.deprecated false
 namespace BeaconcryptCore.Computational.PqxdhServerAuthPublicationMarkedHistory
 open CtxRomAuth AdaptiveCtxReceive
 open PqxdhServerAuthPublicationPrefixStop (Spec)
@@ -124,20 +123,17 @@ theorem raw_probability (real : Bool) (decode : RawDecoder) (crypto : Pqxdh.Cryp
     (quiet : ∀ reply, (next reply).IsQueryBoundP Raw 0)
     (state : State × AdaptiveCtxDynamicKnownKeys.SourceState) (saved : Option CtxRomRecord)
     (aligned : Aligned state.1 saved) :
-    Pr[fun result => Matched guess result.2.1 |
-      (simulateQ (observed real decode crypto key)
-        (do let reply ← Spec.query (.inl (.inl (.inr raw))); next reply)).run state] ≤
-    Pr[fun result => result.1.1 = false ∧ Hit guess result.1.2 |
-      (pure ((state.1.published, saved.map fun record => (record, raw)), state.2) :
-        ProbComp ((Bool × PqxdhServerAuthPublicationGuess.Candidate) × AdaptiveCtxDynamicKnownKeys.SourceState))] := by
+    Pr{let result ← ((simulateQ (observed real decode crypto key)
+        (do let reply ← Spec.query (.inl (.inl (.inr raw))); next reply)).run state)}[Matched guess result.2.1] ≤
+    Pr{let result ← (pure ((state.1.published, saved.map fun record => (record, raw)), state.2) :
+        ProbComp ((Bool × PqxdhServerAuthPublicationGuess.Candidate) × AdaptiveCtxDynamicKnownKeys.SourceState))}[result.1.1 = false ∧ Hit guess result.1.2] := by
   classical
   by_cases hit : state.1.published = false ∧ Hit guess (saved.map fun record => (record, raw))
-  · simpa only [probEvent_pure, hit, and_self, ite_true] using
-      (probEvent_le_one : Pr[fun result => Matched guess result.2.1 |
-        (simulateQ (observed real decode crypto key)
-          (do let reply ← Spec.query (.inl (.inl (.inr raw))); next reply)).run state] ≤ 1)
-  · simp only [probEvent_pure, hit, ite_false, nonpos_iff_eq_zero]
-    apply probEvent_eq_zero_iff.mpr
+  · simpa only [prEvent_pure, hit, and_self, ite_true] using
+      ((prEvent_le_one _) : Pr{let result ← ((simulateQ (observed real decode crypto key)
+          (do let reply ← Spec.query (.inl (.inl (.inr raw))); next reply)).run state)}[Matched guess result.2.1] ≤ 1)
+  · simp only [prEvent_pure, hit, ite_false, nonpos_iff_eq_zero]
+    apply prEvent_eq_zero_of_forall_mem_support
     intro result supported matched
     simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind] at supported
     simp only [observed, StateT.run, bind_assoc, pure_bind, mem_support_bind_iff] at supported
@@ -155,14 +151,16 @@ theorem capture_bound (real : Bool) (decode : RawDecoder) (crypto : Pqxdh.Crypto
     (rawBound : work.IsQueryBoundP Raw 1)
     (noMore : saved ≠ none → work.IsQueryBoundP
       Seal 0) :
-    Pr[fun result => Matched guess result.2.1 | (simulateQ (observed real decode crypto key) work).run state] ≤
-    Pr[fun result => result.1.1 = false ∧ Hit guess result.1.2 |
-      (simulateQ (AdaptiveCtxDynamicKnownKeys.sourceImpl real decode crypto key)
-        (PqxdhServerAuthPublicationPrefixStop.capture work saved state.1.published)).run state.2] := by
+    Pr{let result ← (simulateQ (observed real decode crypto key) work).run state}[Matched guess result.2.1] ≤
+    Pr{let result ← ((simulateQ (AdaptiveCtxDynamicKnownKeys.sourceImpl real decode crypto key)
+        (PqxdhServerAuthPublicationPrefixStop.capture work saved state.1.published)).run state.2)}[result.1.1 = false ∧ Hit guess result.1.2] := by
   classical
+  have prAssoc : ∀ {α β γ : Type} (x : ProbComp α) (f : α → ProbComp β) (g : β → ProbComp γ) (p : γ → Prop),
+      Pr{let y ← (x >>= f >>= g)}[p y] = Pr{let y ← (x >>= fun a => f a >>= g)}[p y] := fun x f g p => by
+    rw [bind_assoc x f g]
   induction work using OracleComp.inductionOn generalizing state saved with
   | pure value =>
-      simpa only [simulateQ_pure, StateT.run_pure, probEvent_pure, matched_empty guess state.1 aligned.1,
+      simpa only [simulateQ_pure, StateT.run_pure, prEvent_pure, matched_empty guess state.1 aligned.1,
         ite_false] using (show (0 : ℝ≥0∞) ≤ _ from bot_le)
   | query_bind query next ih =>
       simp only [isQueryBoundP_query_bind_iff] at sealBound rawBound
@@ -170,18 +168,18 @@ theorem capture_bound (real : Bool) (decode : RawDecoder) (crypto : Pqxdh.Crypto
       | inl query =>
           rcases query with ((coin | (input | request)) | raw) | known
           · simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind]
-            simp only [observed, StateT.run, bind_assoc, pure_bind]
-            change Pr[fun result => Matched guess result.2.1 | (do
+            simp only [observed, StateT.run, prAssoc, pure_bind]
+            change Pr{let result ← (do
               let reply ← (AdaptiveCtxDynamicKnownKeys.sourceImpl real decode crypto key (.inl (.inl (.inl coin)))).run state.2
-              (simulateQ (observed real decode crypto key) (next reply.1)).run (state.1, reply.2))] ≤
-              Pr[fun result => result.1.1 = false ∧ Hit guess result.1.2 | (do
+              (simulateQ (observed real decode crypto key) (next reply.1)).run (state.1, reply.2))}[Matched guess result.2.1] ≤
+              Pr{let result ← (do
                 let reply ← (AdaptiveCtxDynamicKnownKeys.sourceImpl real decode crypto key (.inl (.inl (.inl coin)))).run state.2
                 (simulateQ (AdaptiveCtxDynamicKnownKeys.sourceImpl real decode crypto key)
-                  (PqxdhServerAuthPublicationPrefixStop.capture (next reply.1) saved state.1.published)).run reply.2)]
-            simp only [probEvent_bind_eq_tsum]
+                  (PqxdhServerAuthPublicationPrefixStop.capture (next reply.1) saved state.1.published)).run reply.2)}[result.1.1 = false ∧ Hit guess result.1.2]
+            simp only [OracleComp.prEvent_bind_eq_tsum]
             apply ENNReal.tsum_le_tsum
             intro reply
-            gcongr
+            refine mul_le_mul_of_nonneg_left ?_ zero_le
             refine ih reply.1 (state.1, reply.2) saved aligned ?_ ?_ ?_
             · simpa [Seal, AdaptiveCtxDynamicKnownBounds.TargetClass, AdaptiveCtxQueryBounds.SourceSeal] using sealBound.2 reply.1
             · simpa [Raw, AdaptiveCtxDynamicKnownBounds.TargetClass, IsRawQuery] using rawBound.2 reply.1
@@ -190,18 +188,18 @@ theorem capture_bound (real : Bool) (decode : RawDecoder) (crypto : Pqxdh.Crypto
               simp only [isQueryBoundP_query_bind_iff, Nat.zero_sub, ite_self] at quiet
               exact quiet.2 reply.1
           · simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind]
-            simp only [observed, StateT.run, bind_assoc, pure_bind]
-            change Pr[fun result => Matched guess result.2.1 | (do
+            simp only [observed, StateT.run, prAssoc, pure_bind]
+            change Pr{let result ← (do
               let reply ← (AdaptiveCtxDynamicKnownKeys.sourceImpl real decode crypto key (.inl (.inl (.inr (.inl input))))).run state.2
-              (simulateQ (observed real decode crypto key) (next reply.1)).run (state.1, reply.2))] ≤
-              Pr[fun result => result.1.1 = false ∧ Hit guess result.1.2 | (do
+              (simulateQ (observed real decode crypto key) (next reply.1)).run (state.1, reply.2))}[Matched guess result.2.1] ≤
+              Pr{let result ← (do
                 let reply ← (AdaptiveCtxDynamicKnownKeys.sourceImpl real decode crypto key (.inl (.inl (.inr (.inl input))))).run state.2
                 (simulateQ (AdaptiveCtxDynamicKnownKeys.sourceImpl real decode crypto key)
-                  (PqxdhServerAuthPublicationPrefixStop.capture (next reply.1) saved state.1.published)).run reply.2)]
-            simp only [probEvent_bind_eq_tsum]
+                  (PqxdhServerAuthPublicationPrefixStop.capture (next reply.1) saved state.1.published)).run reply.2)}[result.1.1 = false ∧ Hit guess result.1.2]
+            simp only [OracleComp.prEvent_bind_eq_tsum]
             apply ENNReal.tsum_le_tsum
             intro reply
-            gcongr
+            refine mul_le_mul_of_nonneg_left ?_ zero_le
             refine ih reply.1 (state.1, reply.2) saved aligned ?_ ?_ ?_
             · simpa [Seal, AdaptiveCtxDynamicKnownBounds.TargetClass, AdaptiveCtxQueryBounds.SourceSeal] using sealBound.2 reply.1
             · simpa [Raw, AdaptiveCtxDynamicKnownBounds.TargetClass, IsRawQuery] using rawBound.2 reply.1
@@ -218,21 +216,21 @@ theorem capture_bound (real : Bool) (decode : RawDecoder) (crypto : Pqxdh.Crypto
                   AdaptiveCtxQueryBounds.SourceSeal, Nat.lt_irrefl, not_true_eq_false, or_self, false_and] at quiet
             subst saved
             simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind]
-            simp only [observed, StateT.run, bind_assoc, pure_bind]
-            change Pr[fun result => Matched guess result.2.1 | (do
+            simp only [observed, StateT.run, prAssoc, pure_bind]
+            change Pr{let result ← (do
               let reply ← (AdaptiveCtxDynamicKnownKeys.sourceImpl real decode crypto key
                 (.inl (.inl (.inr (.inr request))))).run state.2
               (simulateQ (observed real decode crypto key) (next reply.1)).run
-                (step (.inl (.inl (.inl (.inr (.inr request))))) reply.1 state.1, reply.2))] ≤
-              Pr[fun result => result.1.1 = false ∧ Hit guess result.1.2 | (do
+                (step (.inl (.inl (.inl (.inr (.inr request))))) reply.1 state.1, reply.2))}[Matched guess result.2.1] ≤
+              Pr{let result ← (do
                 let reply ← (AdaptiveCtxDynamicKnownKeys.sourceImpl real decode crypto key
                   (.inl (.inl (.inr (.inr request))))).run state.2
                 (simulateQ (AdaptiveCtxDynamicKnownKeys.sourceImpl real decode crypto key)
-                  (PqxdhServerAuthPublicationPrefixStop.capture (next reply.1) reply.1 state.1.published)).run reply.2)]
-            simp only [probEvent_bind_eq_tsum]
+                  (PqxdhServerAuthPublicationPrefixStop.capture (next reply.1) reply.1 state.1.published)).run reply.2)}[result.1.1 = false ∧ Hit guess result.1.2]
+            simp only [OracleComp.prEvent_bind_eq_tsum]
             apply ENNReal.tsum_le_tsum
             intro reply
-            gcongr
+            refine mul_le_mul_of_nonneg_left ?_ zero_le
             have tailSeal : (next reply.1).IsQueryBoundP
                 Seal 0 := by
               simpa only [Seal, AdaptiveCtxDynamicKnownBounds.TargetClass, AdaptiveCtxQueryBounds.SourceSeal,
@@ -244,18 +242,18 @@ theorem capture_bound (real : Bool) (decode : RawDecoder) (crypto : Pqxdh.Crypto
               (fun reply => by simpa only [Raw, AdaptiveCtxDynamicKnownBounds.TargetClass, IsRawQuery, ite_true,
                 Nat.sub_self] using rawBound.2 reply) state saved aligned
           · simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind]
-            simp only [observed, StateT.run, bind_assoc, pure_bind]
-            change Pr[fun result => Matched guess result.2.1 | (do
+            simp only [observed, StateT.run, prAssoc, pure_bind]
+            change Pr{let result ← (do
               let reply ← (AdaptiveCtxDynamicKnownKeys.sourceImpl real decode crypto key (.inr known)).run state.2
-              (simulateQ (observed real decode crypto key) (next reply.1)).run (state.1, reply.2))] ≤
-              Pr[fun result => result.1.1 = false ∧ Hit guess result.1.2 | (do
+              (simulateQ (observed real decode crypto key) (next reply.1)).run (state.1, reply.2))}[Matched guess result.2.1] ≤
+              Pr{let result ← (do
                 let reply ← (AdaptiveCtxDynamicKnownKeys.sourceImpl real decode crypto key (.inr known)).run state.2
                 (simulateQ (AdaptiveCtxDynamicKnownKeys.sourceImpl real decode crypto key)
-                  (PqxdhServerAuthPublicationPrefixStop.capture (next reply.1) saved state.1.published)).run reply.2)]
-            simp only [probEvent_bind_eq_tsum]
+                  (PqxdhServerAuthPublicationPrefixStop.capture (next reply.1) saved state.1.published)).run reply.2)}[result.1.1 = false ∧ Hit guess result.1.2]
+            simp only [OracleComp.prEvent_bind_eq_tsum]
             apply ENNReal.tsum_le_tsum
             intro reply
-            gcongr
+            refine mul_le_mul_of_nonneg_left ?_ zero_le
             refine ih reply.1 (state.1, reply.2) saved aligned ?_ ?_ ?_
             · simpa [Seal, AdaptiveCtxDynamicKnownBounds.TargetClass, AdaptiveCtxQueryBounds.SourceSeal] using sealBound.2 reply.1
             · simpa [Raw, AdaptiveCtxDynamicKnownBounds.TargetClass, IsRawQuery] using rawBound.2 reply.1
@@ -315,13 +313,11 @@ theorem observer_erase (real : Bool) (decode : RawDecoder) (crypto : Pqxdh.Crypt
 theorem initial_killed_bound (real : Bool) (decode : RawDecoder) (crypto : Pqxdh.Crypto) (key : CtxKey)
     (guess : Pqxdh.Bytes → Option (FixedBytes 16)) (work : OracleComp Spec Result)
     (sealBound : work.IsQueryBoundP Seal 1) (rawBound : work.IsQueryBoundP Raw 1) :
-    Pr[fun result => Matched guess result.2.1 |
-      (simulateQ (observed real decode crypto key) work).run (initialState, AdaptiveCtxDynamicKnownKeys.initialSource)] ≤
-    Pr[fun result => Hit guess result.1 |
-      (simulateQ (AdaptiveCtxDynamicKnownKeys.sourceImpl real decode crypto key)
+    Pr{let result ← (simulateQ (observed real decode crypto key) work).run (initialState, AdaptiveCtxDynamicKnownKeys.initialSource)}[Matched guess result.2.1] ≤
+    Pr{let result ← ((simulateQ (AdaptiveCtxDynamicKnownKeys.sourceImpl real decode crypto key)
         (PqxdhServerAuthPublicationCaptureSource.dynamic
           (simulateQ PqxdhServerAuthPublicationPrefixStop.kill work).run none)).run
-            AdaptiveCtxDynamicKnownKeys.initialSource] := by
+            AdaptiveCtxDynamicKnownKeys.initialSource)}[Hit guess result.1] := by
   have bound := capture_bound real decode crypto key guess work
     (initialState, AdaptiveCtxDynamicKnownKeys.initialSource) none
     ⟨rfl, rfl, by simp [initialState, RawCtxSelectedAuthenticationObserver.initialState]⟩
@@ -341,15 +337,14 @@ noncomputable def sourceGame (real : Bool) (decode : RawDecoder) (crypto : Pqxdh
 theorem source_killed_bound (real : Bool) (decode : RawDecoder) (crypto : Pqxdh.Crypto)
     (guess : Pqxdh.Bytes → Option (FixedBytes 16)) (work : OracleComp Spec Result)
     (sealBound : work.IsQueryBoundP Seal 1) (rawBound : work.IsQueryBoundP Raw 1) :
-    Pr[fun result => Matched guess result.2.1 | sourceGame real decode crypto work] ≤
-    Pr[fun result => Hit guess result.1 |
-      AdaptiveCtxDynamicKnownKeys.sourceGame real decode crypto
+    Pr{let result ← sourceGame real decode crypto work}[Matched guess result.2.1] ≤
+    Pr{let result ← (AdaptiveCtxDynamicKnownKeys.sourceGame real decode crypto
         (PqxdhServerAuthPublicationCaptureSource.dynamic
-          (simulateQ PqxdhServerAuthPublicationPrefixStop.kill work).run none)] := by
-  simp only [sourceGame, AdaptiveCtxDynamicKnownKeys.sourceGame, probEvent_bind_eq_tsum]
+          (simulateQ PqxdhServerAuthPublicationPrefixStop.kill work).run none))}[Hit guess result.1] := by
+  simp only [sourceGame, AdaptiveCtxDynamicKnownKeys.sourceGame, OracleComp.prEvent_bind_eq_tsum]
   apply ENNReal.tsum_le_tsum
   intro key
-  gcongr
+  refine mul_le_mul_of_nonneg_left ?_ zero_le
   exact initial_killed_bound real decode crypto key guess work sealBound rawBound
 
 def Target (predicate : AdaptiveCtxDynamicKnownKeys.Spec.Domain → Prop) : Spec.Domain → Prop

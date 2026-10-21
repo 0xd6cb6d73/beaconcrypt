@@ -68,17 +68,6 @@ theorem second_observed {Result : Type} (continuation : RootOutput → RootOutpu
   have observed := second_uniform.bind_left fun pair => continuation pair.1 pair.2
   simpa only [bind_map_left, ← pairSample, bind_assoc, pure_bind] using observed
 
-set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.RawCtxSelectedInitialSecond.second_observed_vcvioLegacy :
-    ∀ {Result : Type} (continuation : BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput → BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput → ProbComp Result),
-      𝒮[do
-          let output ← $ᵗ BeaconcryptCore.Computational.PqxdhSecretInputKdf.HmacBlock
-          continuation (BeaconcryptCore.Computational.PqxdhSecretInputKdf.first32 output) (BeaconcryptCore.Computational.RawCtxSelectedInitialSecond.secondChain output)] =
-        𝒮[do
-          let other ← $ᵗ BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput
-          let target ← $ᵗ BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput
-          continuation other target] :=
-  by simpa only [BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq] using @BeaconcryptCore.Computational.RawCtxSelectedInitialSecond.second_observed
-
 /-- A retained full76 predecessor initializes only its first32 and hidden second32; the analysis nonce is unused. -/
 theorem full_second (request : RawCtxInitializedKdfFamily.InitialRequest)
     (entry : RawCtxSelectedParentEntry.Entry) (target : RootOutput) :

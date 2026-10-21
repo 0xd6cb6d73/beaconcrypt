@@ -165,10 +165,6 @@ theorem initial_alias_uniform :
   simpa only [List.mem_singleton, List.length_singleton, Nat.cast_one] using
     RawCtxSelectedInputCandidates.uniform_candidates [second]
 
-set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.RawCtxSendLineageCollision.initial_alias_uniform_vcvioLegacy :
-    probEvent ($ᵗ BeaconcryptCore.Computational.PqxdhSecretInputKdf.HmacBlock) BeaconcryptCore.Computational.RawCtxSendLineageCollision.InitialAlias ≤ 1 / 2 ^ 256 :=
-  by simpa only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent] using @BeaconcryptCore.Computational.RawCtxSendLineageCollision.initial_alias_uniform
-
 noncomputable def initialTrace {Context Result : Type} (sample : ProbComp Context)
     (observe : Context → HmacBlock → RustM ConcreteRatchetKernel → RustM ConcreteRatchetKernel → ProbComp Result) :
     ProbComp (Context × HmacBlock × Result) := do

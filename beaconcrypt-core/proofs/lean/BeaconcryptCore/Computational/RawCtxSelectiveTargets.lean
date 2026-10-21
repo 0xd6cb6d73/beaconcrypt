@@ -109,10 +109,6 @@ theorem event_partition {Choice Result : Type} [Fintype Choice] [DecidableEq Cho
     · simp [anyEvent, selectedEvent, selected, accepted, -evalDist_apply_singleton, -evalDist_apply_setOf,
         -evalDist_apply_univ]
 
-set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.RawCtxSelectiveTargets.event_partition_vcvioLegacy :
-    ∀ {Choice Result : Type} [Fintype Choice] [DecidableEq Choice] (game : ProbComp Result) (select : Result → Option Choice) (win : Choice → Result → Prop), probEvent game (BeaconcryptCore.Computational.RawCtxSelectiveTargets.anyEvent select win) = ∑ target : Choice, probEvent game (BeaconcryptCore.Computational.RawCtxSelectiveTargets.selectedEvent select win target) :=
-  by simpa only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent] using @BeaconcryptCore.Computational.RawCtxSelectiveTargets.event_partition
-
 /-- Fixed-target reductions are summed over the adversary's original final-choice partition. -/
 theorem selection_sum {Choice Result : Type} [Fintype Choice] [DecidableEq Choice]
     (game : ProbComp Result) (select : Result → Option Choice) (win : Choice → Result → Prop)

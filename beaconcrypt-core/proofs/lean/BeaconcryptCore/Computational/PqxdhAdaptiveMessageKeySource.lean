@@ -66,8 +66,7 @@ theorem later_source (depth : Nat) :
   simp only [bind_assoc, pure_bind]
   apply evalDist_bind_congr
   intro context
-  apply evalDist_eq_of_evalSPMF_eq
-  exact PqxdhFinalMaterialKeySplit.complete_vcvioLegacy _
+  exact (PqxdhFinalMaterialKeySplit.complete _).evalDist_eq
 
 abbrev FirstContext :=
   (Bool ⊕ PqxdhInitialPreparedSourceInput.Input (M := M) (P := P) (I := I) (K := K) (X := X)
@@ -102,8 +101,7 @@ theorem first_source :
   intro context
   apply evalDist_bind_congr
   intro initial
-  apply evalDist_eq_of_evalSPMF_eq
-  exact PqxdhFinalMaterialKeySplit.complete_vcvioLegacy _
+  exact (PqxdhFinalMaterialKeySplit.complete _).evalDist_eq
 
 /-- The complete actual source comparison reaches one ordinary uniform selected message key after its original source preparation; every final-material alias charge is explicit. -/
 theorem later_bound (depth : Nat) (position : (targets selected).number.val = depth + 2)

@@ -17,16 +17,11 @@ namespace BeaconcryptCore.Computational.PqxdhServerAuthEntryFactor
 section Generic
 variable {ι : Type} {spec : OracleSpec ι}
 
-set_option linter.deprecated false in
 /-- Two continuations with equal output distributions on the support of a common first computation give equal output distributions after it. -/
 theorem evalSPMF_bind_congr_support {α β : Type} (first : ProbComp α) (left right : α → ProbComp β)
-    (same : ∀ value ∈ support first, 𝒮[left value] = 𝒮[right value]) :
-    𝒮[first >>= left] = 𝒮[first >>= right] := by
-  apply evalSPMF_eq_of_relTriple_eqRel
-  refine relTriple_bind (R := fun a b => a = b ∧ a ∈ support first)
-    (relTriple_refl_of_mem_support first fun value member => ⟨rfl, member⟩) fun a b related => ?_
-  obtain ⟨rfl, member⟩ := related
-  exact relTriple_eqRel_of_evalSPMF_eq (same a member)
+    (same : ∀ value ∈ support first, EvalDistEq (left value) (right value)) :
+    EvalDistEq (first >>= left) (first >>= right) :=
+  OracleComp.EvalDistEq.bind_congr_of_support first same
 
 /-- Two images of one computation are coupled by any relation that holds between the two images of each supported value. -/
 theorem relTriple_map_same {α β γ : Type} (work : ProbComp α) (left : α → β) (right : α → γ)
@@ -101,7 +96,6 @@ theorem relTriple_until_bad {α σ₁ σ₂ : Type}
         exact ih right.1 left.2 right.2 rel
       · exact bothBad _ _ left.2 right.2 leftBad rightBad
 
-set_option linter.deprecated false in
 /-- Transport of an event through an identical-until-bad coupling: an event of the first run that excludes the first bad predicate, and that implies an event of the second run on related final states with equal outputs, has at most the probability of the second event. -/
 theorem probEvent_le_until_bad {α σ₁ σ₂ : Type}
     (impl₁ : QueryImpl spec (StateT σ₁ ProbComp)) (impl₂ : QueryImpl spec (StateT σ₂ ProbComp))
@@ -114,13 +108,13 @@ theorem probEvent_le_until_bad {α σ₁ σ₂ : Type}
     (event₁ : α × σ₁ → Prop) (event₂ : α × σ₂ → Prop)
     (excludes : ∀ result, event₁ result → ¬ bad₁ result.2)
     (implies : ∀ left right, left.1 = right.1 → related left.2 right.2 → event₁ left → event₂ right) :
-    Pr[event₁ | (simulateQ impl₁ work).run state₁] ≤ Pr[event₂ | (simulateQ impl₂ work).run state₂] :=
-  probEvent_le_of_relTriple
+    Pr{let x ← (simulateQ impl₁ work).run state₁}[event₁ x] ≤ Pr{let x ← (simulateQ impl₂ work).run state₂}[event₂ x] :=
+  (VCVioLegacy.probEvent_eq_prEvent _ event₁).symm.le.trans <| (probEvent_le_of_relTriple
     (relTriple_until_bad impl₁ impl₂ related bad₁ bad₂ keeps₁ keeps₂ step work state₁ state₂ (Or.inl start))
     fun left right post holds => by
       rcases post with ⟨same, rel⟩ | ⟨leftBad, _⟩
       · exact implies left right same rel holds
-      · exact absurd leftBad (excludes left holds)
+      · exact absurd leftBad (excludes left holds)).trans (VCVioLegacy.probEvent_eq_prEvent _ event₂).le
 
 /-- Once the eager value has been consumed, the eager and lazy handlers agree on every simulation. -/
 theorem done_run {α σ V : Type} (lazy : QueryImpl spec (StateT σ ProbComp))
@@ -139,7 +133,6 @@ theorem done_run {α σ V : Type} (lazy : QueryImpl spec (StateT σ ProbComp))
       exact OracleComp.bind_congr_of_forall_mem_support _ fun step member =>
         ih step.1 step.2 ((doneStep query state finished).2 step member)
 
-set_option linter.deprecated false in
 /-- Eager sampling of one value: a lazy handler that, at a single designated step, samples a value and runs the eager step with it has the output distribution of sampling the value first and running the eager handler throughout. At every other step the eager handler does not use its value, and after the designated step (`done`) it never does again. -/
 theorem eager_run {α σ V : Type} (sampler : ProbComp V) (lazy : QueryImpl spec (StateT σ ProbComp))
     (eager : V → QueryImpl spec (StateT σ ProbComp)) (done : σ → Prop)
@@ -148,27 +141,28 @@ theorem eager_run {α σ V : Type} (sampler : ProbComp V) (lazy : QueryImpl spec
         ∀ result ∈ support ((lazy query).run state), done result.2)
     (freshStep : ∀ query state, ¬ done state →
       (∀ value, (eager value query).run state = (lazy query).run state) ∨
-        (𝒮[(lazy query).run state] = 𝒮[do let value ← sampler; (eager value query).run state] ∧
+        (EvalDistEq ((lazy query).run state) (do let value ← sampler; (eager value query).run state) ∧
           ∀ value, ∀ result ∈ support ((eager value query).run state), done result.2))
     (work : OracleComp spec α) (state : σ) :
-    𝒮[(simulateQ lazy work).run state] = 𝒮[do let value ← sampler; (simulateQ (eager value) work).run state] := by
+    EvalDistEq ((simulateQ lazy work).run state) (do let value ← sampler; (simulateQ (eager value) work).run state) := by
   induction work using OracleComp.inductionOn generalizing state with
   | pure result =>
       simp only [simulateQ_pure, StateT.run_pure]
-      exact (DeferredSampling.evalSPMF_bind_const_neverFails sampler (probFailure_eq_zero) _).symm
+      exact (OracleComp.EvalDistEq.bind_const sampler _).symm
   | query_bind query next ih =>
       by_cases finished : done state
       · have same : ∀ value, (simulateQ (eager value) (liftM (spec.query query) >>= next)).run state =
             (simulateQ lazy (liftM (spec.query query) >>= next)).run state := fun value =>
           done_run lazy eager done doneStep _ state finished value
         simp only [same]
-        exact (DeferredSampling.evalSPMF_bind_const_neverFails sampler (probFailure_eq_zero) _).symm
+        exact (OracleComp.EvalDistEq.bind_const sampler _).symm
       simp only [simulateQ_bind, simulateQ_query, OracleQuery.input_query, OracleQuery.cont_query, id_map,
         StateT.run_bind]
       rcases freshStep query state finished with independent | ⟨designated, consumed⟩
       · simp only [independent]
-        rw [DeferredSampling.evalSPMF_bind_comm]
-        exact DeferredSampling.evalSPMF_bind_congr_left _ _ _ fun step => ih step.1 step.2
+        refine (EvalDistEq.bind_right ((lazy query).run state) fun step => ih step.1 step.2).trans ?_
+        exact OracleComp.EvalDistEq.bind_bind_swap ((lazy query).run state) sampler
+          (fun step value => (simulateQ (eager value) (next step.1)).run step.2)
       · have after : ∀ value, (eager value query).run state >>= (fun step =>
             (simulateQ (eager value) (next step.1)).run step.2) =
             (eager value query).run state >>= (fun step => (simulateQ lazy (next step.1)).run step.2) :=
@@ -179,7 +173,25 @@ theorem eager_run {α σ V : Type} (sampler : ProbComp V) (lazy : QueryImpl spec
             (simulateQ lazy (next step.1)).run step.2) =
             ((sampler >>= fun value => (eager value query).run state) >>= fun step =>
               (simulateQ lazy (next step.1)).run step.2) from (bind_assoc _ _ _).symm]
-        rw [evalSPMF_bind, evalSPMF_bind, designated]
+        exact designated.bind_left _
+
+set_option linter.deprecated false in set_option linter.unusedVariables false in theorem _root_.BeaconcryptCore.Computational.PqxdhServerAuthEntryFactor.eager_run_vcvioLegacy :
+    ∀ {ι : Type} {spec : OracleSpec ι} {α σ V : Type} (sampler : ProbComp V) (lazy : QueryImpl spec (StateT σ ProbComp)) (eager : V → QueryImpl spec (StateT σ ProbComp)) (done : σ → Prop) (doneStep : ∀ (query : spec.Domain) (state : σ), done state → (∀ (value : V), (eager value query).run state = (lazy query).run state) ∧ ∀ result ∈ MonadAttach.support ((lazy query).run state), done result.2)
+      (freshStep :
+        ∀ (query : spec.Domain) (state : σ),
+          ¬done state →
+            (∀ (value : V), (eager value query).run state = (lazy query).run state) ∨
+              𝒮[(lazy query).run state] =
+                  𝒮[do
+                    let value ← sampler
+                    (eager value query).run state] ∧
+                ∀ (value : V), ∀ result ∈ MonadAttach.support ((eager value query).run state), done result.2)
+      (work : OracleComp spec α) (state : σ),
+      𝒮[(simulateQ lazy work).run state] =
+        𝒮[do
+          let value ← sampler
+          (simulateQ (eager value) work).run state] :=
+  by simpa only [BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq] using @BeaconcryptCore.Computational.PqxdhServerAuthEntryFactor.eager_run
 
 end Generic
 

@@ -173,36 +173,30 @@ theorem wLaws (limit : Nat) : PqxdhServerAuthNegativeControl.ControlLaws wSetup 
   frameBounded _ _ := ⟨_, rfl⟩
   phase2Bounded _ _ _ _ _ _ _ _ := ⟨_, rfl⟩
 
-set_option linter.deprecated false in
 theorem wKemError : PqxdhServerAuthNegativeControl.kemError wSetup = 0 := by
   simp [PqxdhServerAuthNegativeControl.kemError, PqxdhKemCorrectnessError.errorExperiment,
     PqxdhKemCorrectnessError.sample, wSetup, toyKem]
 
-set_option linter.deprecated false in
 /-- At the witness the negative control reaches `W1` with probability one, for every `Checks`. -/
 theorem control_wins (checks : PqxdhServerAuthExperiment.Checks) :
-    1 ≤ (Pr[fun result => PqxdhServerAuthExperiment.W1 wSetup result.1 result.2.1 result.2.2.1.ghost |
-      PqxdhServerAuthExperiment.gameState wSetup wCodec checks true
-        (PqxdhServerAuthNegativeControl.controlAdversary wSetup wCodec [1])]).toReal := by
+    1 ≤ (Pr{let result ← (PqxdhServerAuthExperiment.gameState wSetup wCodec checks true
+        (PqxdhServerAuthNegativeControl.controlAdversary wSetup wCodec [1]))}[PqxdhServerAuthExperiment.W1 wSetup result.1 result.2.1 result.2.2.1.ghost]).toReal := by
   have := PqxdhServerAuthNegativeControl.negative_control wSetup wCodec checks 100 (wLaws 100) toyFunctional [1]
     (by simp) (by simp)
   rwa [wKemError, sub_zero] at this
 
-set_option linter.deprecated false in
 /-- At the witness the honest relay never wins, for every `Checks` and payload. -/
 theorem relay_loses (checks : PqxdhServerAuthExperiment.Checks) (payload : Option Pqxdh.Bytes) :
-    (Pr[= true | PqxdhServerAuthExperiment.serverAuthGame wSetup wCodec checks false
-      (PqxdhServerAuthNegativeControl.relayAdversary payload)]).toReal ≤ 0 := by
+    (Pr{let x ← (PqxdhServerAuthExperiment.serverAuthGame wSetup wCodec checks false
+      (PqxdhServerAuthNegativeControl.relayAdversary payload))}[x = true]).toReal ≤ 0 := by
   have := PqxdhServerAuthNegativeControl.relay_not_win wSetup wCodec checks (wLaws 0).toRelayLaws toyFunctional
     payload
   rwa [wKemError] at this
 
-set_option linter.deprecated false in
 /-- At the witness the honest relay with the default payload makes the Beacon accept with probability one. -/
 theorem relay_accepts :
-    1 ≤ (Pr[fun result => result.2.2.1.ghost.acceptance ≠ none |
-      PqxdhServerAuthExperiment.gameState wSetup wCodec PqxdhServerAuthNegativeControl.acceptAll false
-        (PqxdhServerAuthNegativeControl.relayAdversary none)]).toReal := by
+    1 ≤ (Pr{let result ← (PqxdhServerAuthExperiment.gameState wSetup wCodec PqxdhServerAuthNegativeControl.acceptAll false
+        (PqxdhServerAuthNegativeControl.relayAdversary none))}[result.2.2.1.ghost.acceptance ≠ none]).toReal := by
   have := PqxdhServerAuthNegativeControl.relay_live wSetup wCodec 100 (wLaws 100) toyFunctional none
     (by simp [PqxdhServerRegistrationPublication.registrationWitness])
     (by simp [PqxdhServerRegistrationPublication.registrationWitness]; scalar_tac)

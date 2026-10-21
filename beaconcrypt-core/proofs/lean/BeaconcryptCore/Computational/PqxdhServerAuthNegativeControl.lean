@@ -115,11 +115,10 @@ theorem protected_length (c : Pqxdh.Crypto) (lengths : RawCtxSourcePublication.B
       plaintext.length + 80 := by
   simp only [List.length_append, lengths key nonce ad plaintext, c.aeadSeal_tag_length, List.Vector.toList_length]
 
-set_option linter.deprecated false in
 /-- The KEM correctness error of the experiment's ML-KEM: the probability, under the experiment's ambient coins, that a fresh key pair fails to decapsulate a fresh encapsulation to itself. -/
 noncomputable def kemError (setup : Setup baseSpec KemSK) : ℝ :=
-  (Pr[= true | simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl)
-    (PqxdhKemCorrectnessError.errorExperiment setup.kem)]).toReal
+  (Pr{let x ← (simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl)
+    (PqxdhKemCorrectnessError.errorExperiment setup.kem))}[x = true]).toReal
 
 /-! ## The honest relay -/
 
@@ -870,13 +869,11 @@ noncomputable abbrev keygenRun (setup : Setup baseSpec KemSK) :
     ProbComp (PqxdhKemIndCca.MlKem768PublicKey × KemSK) :=
   simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl) setup.kem.keygen
 
-set_option linter.deprecated false in
 /-- The per-key-pair KEM correctness error: the probability that an encapsulation to the key is not recovered. -/
 noncomputable def keyPairError (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)
     (keys : PqxdhKemIndCca.MlKem768PublicKey × KemSK) : ℝ≥0∞ :=
-  Pr[fun drawn => PqxdhKemCorrectnessError.Bad setup.kem functional ⟨keys.1, keys.2, drawn.1, drawn.2⟩ |
-    simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl) (setup.kem.encaps keys.1)]
+  Pr{let drawn ← simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl) (setup.kem.encaps keys.1)}[PqxdhKemCorrectnessError.Bad setup.kem functional ⟨keys.1, keys.2, drawn.1, drawn.2⟩]
 
 /-- The body under the Extract random oracle samples the Beacon's secrets and Phase 1, then runs the adversary. -/
 theorem body_run (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
@@ -898,54 +895,61 @@ theorem body_run (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) 
   rw [phase1Run_eq, pure_bind]
   rfl
 
-set_option linter.deprecated false in
 /-- Averaging the per-key-pair error over key generation gives the KEM correctness error. -/
 theorem keyPairError_average (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) :
-    ∑' keys, Pr[= keys | keygenRun setup] * keyPairError setup functional keys =
-      Pr[= true | simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl)
-        (PqxdhKemCorrectnessError.errorExperiment setup.kem)] := by
-  rw [PqxdhKemCorrectnessError.error_probability_vcvioLegacy setup.baseImpl setup.kem functional]
+    ∑' keys, Pr{let x ← keygenRun setup}[x = keys] * keyPairError setup functional keys =
+      Pr{let x ← (simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl)
+        (PqxdhKemCorrectnessError.errorExperiment setup.kem))}[x = true] := by
+  have pureMap : ∀ {α β : Type} (mx : ProbComp α) (f : α → β) (p : β → Prop),
+      Pr{let y ← (mx >>= fun a => pure (f a))}[p y] = Pr{let a ← mx}[p (f a)] := fun mx f p => by
+    rw [bind_pure_comp f mx, prEvent_map]
+  rw [PqxdhKemCorrectnessError.error_probability setup.baseImpl setup.kem functional]
   simp only [PqxdhKemCorrectnessError.sample, simulateQ_bind, simulateQ_pure]
-  rw [probEvent_bind_eq_tsum]
+  rw [OracleComp.prEvent_bind_eq_tsum]
   refine tsum_congr fun keys => ?_
   congr 1
-  rw [keyPairError, bind_pure_comp, probEvent_map]
-  rfl
+  rw [keyPairError]
+  exact (pureMap (simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl) (setup.kem.encaps keys.1))
+    (fun drawn => (⟨keys.1, keys.2, drawn.1, drawn.2⟩ : PqxdhKemCorrectnessError.Sample KemSK)) _).symm
 
-set_option linter.deprecated false in
 /-- KEM split of the experiment: if, for every sampled Beacon key pair, the adversary's run makes an event hold with probability at most the key pair's correctness error, then the event has probability at most the KEM correctness error. -/
 theorem kem_split (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (revealSeed : Bool) (adversary : Adversary)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)
     (event : IdentitySeed → ScalarBytes → GameState KemSK → Prop)
     (bound : ∀ seed scalar beaconSeed oneTime keys, keys ∈ support (keygenRun setup) →
-      Pr[fun result => event seed scalar result.1.2 | runAdversary setup codec checks seed scalar beaconSeed
+      Pr{let result ← (runAdversary setup codec checks seed scalar beaconSeed
         (adversary (controlInput setup (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar)
           (phase1Result setup codec (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar)
             beaconSeed oneTime keys.1 keys.2).1 (if revealSeed then some seed else none)))
         (initial setup (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar)
           (phase1Result setup codec (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar)
             beaconSeed oneTime keys.1 keys.2).2)
-        PqxdhJointDhExtractFamily.empty] ≤ keyPairError setup functional keys) :
-    Pr[fun result => event result.1 result.2.1 result.2.2.1 | gameState setup codec checks revealSeed adversary] ≤
-      Pr[= true | simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl)
-        (PqxdhKemCorrectnessError.errorExperiment setup.kem)] := by
+        PqxdhJointDhExtractFamily.empty)}[event seed scalar result.1.2] ≤ keyPairError setup functional keys) :
+    Pr{let result ← gameState setup codec checks revealSeed adversary}[event result.1 result.2.1 result.2.2.1] ≤
+      Pr{let x ← (simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl)
+        (PqxdhKemCorrectnessError.errorExperiment setup.kem))}[x = true] := by
+  have pureMap : ∀ {α β : Type} (mx : ProbComp α) (f : α → β) (p : β → Prop),
+      Pr{let y ← (mx >>= fun a => pure (f a))}[p y] = Pr{let a ← mx}[p (f a)] := fun mx f p => by
+    rw [bind_pure_comp f mx, prEvent_map]
   rw [gameState]
-  refine probEvent_bind_le_of_forall_le fun seed _ => probEvent_bind_le_of_forall_le fun scalar _ => ?_
-  rw [bind_pure_comp, probEvent_map]
-  change Pr[_ | (simulateQ (romReduction setup seed scalar) (body setup codec checks adversary
+  refine prEvent_bind_le_of_forall_le_of_support _ _ _ fun seed _ =>
+    prEvent_bind_le_of_forall_le_of_support _ _ _ fun scalar _ => ?_
+  rw [pureMap]
+  change Pr{let x ← ((simulateQ (romReduction setup seed scalar) (body setup codec checks adversary
     (if revealSeed then some seed else none) (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar))).run
-      PqxdhJointDhExtractFamily.empty] ≤ _
+      PqxdhJointDhExtractFamily.empty)}[_] ≤ _
   rw [body_run]
-  refine probEvent_bind_le_of_forall_le fun beaconSeed _ => probEvent_bind_le_of_forall_le fun oneTime _ => ?_
-  rw [probEvent_bind_eq_tsum, ← keyPairError_average setup functional]
+  refine prEvent_bind_le_of_forall_le_of_support _ _ _ fun beaconSeed _ =>
+    prEvent_bind_le_of_forall_le_of_support _ _ _ fun oneTime _ => ?_
+  rw [OracleComp.prEvent_bind_eq_tsum, ← keyPairError_average setup functional]
   refine ENNReal.tsum_le_tsum fun keys => ?_
   by_cases supported : keys ∈ support (keygenRun setup)
   · refine mul_le_mul_right ?_ _
-    rw [probEvent_map]
+    rw [prEvent_map]
     exact bound seed scalar beaconSeed oneTime keys supported
-  · rw [probOutput_eq_zero_of_not_mem_support supported, zero_mul, zero_mul]
+  · rw [prEvent_eq_zero_of_not_mem_support _ supported, zero_mul, zero_mul]
 
 /-! ## The control adversary -/
 
@@ -1244,14 +1248,13 @@ theorem phase1Result_some (setup : Setup baseSpec KemSK) (codec : Codec Reader R
       (some bytes, publishedBeacon setup publicValue beaconSeed oneTime kemSk) := by
   simp only [phase1Result, written]
 
-set_option linter.deprecated false in
 /-- Per key pair, the control adversary fails to make the Beacon accept without a partner (the event `W1`) with probability at most the key pair's KEM correctness error. -/
 theorem control_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (limit : Nat) (laws : ControlLaws setup codec limit)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)
     (payload : Pqxdh.Bytes) (nonempty : payload ≠ []) (short : payload.length + 88 < limit) (seed : IdentitySeed) (scalar : ScalarBytes)
     (beaconSeed : IdentitySeed) (oneTime : ScalarBytes) (keys : PqxdhKemIndCca.MlKem768PublicKey × KemSK) :
-    Pr[fun result => ¬ PqxdhServerAuthExperiment.W1 setup seed scalar result.1.2.ghost | runAdversary setup codec checks seed scalar beaconSeed
+    Pr{let result ← (runAdversary setup codec checks seed scalar beaconSeed
         (controlAdversary setup codec payload (controlInput setup
           (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar)
           (phase1Result setup codec (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar)
@@ -1259,17 +1262,17 @@ theorem control_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
         (initial setup (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar)
           (phase1Result setup codec (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar)
             beaconSeed oneTime keys.1 keys.2).2)
-        PqxdhJointDhExtractFamily.empty] ≤ keyPairError setup functional keys := by
+        PqxdhJointDhExtractFamily.empty)}[¬ PqxdhServerAuthExperiment.W1 setup seed scalar result.1.2.ghost] ≤ keyPairError setup functional keys := by
   obtain ⟨bytes, written⟩ := laws.phase1Total (beaconCandidate setup
     (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar) beaconSeed oneTime keys.1)
   rw [phase1Result_some setup codec _ beaconSeed oneTime keys.1 keys.2 bytes written]
   simp only [controlAdversary, controlInput, Option.bind_some,
     parse_honest setup codec laws.phase1 _ beaconSeed oneTime keys.1 bytes written]
   rw [runAdversary_bind, runAdversary_coins, bind_map_left]
-  refine probEvent_bind_le_of_forall_le fun e _ => ?_
+  refine prEvent_bind_le_of_forall_le_of_support _ _ _ fun e _ => ?_
   rw [runAdversary_bind, runAdversary_coins, bind_map_left]
-  refine le_trans (probEvent_bind_le_probEvent
-    (p := fun drawn => PqxdhKemCorrectnessError.Bad setup.kem functional ⟨keys.1, keys.2, drawn.1, drawn.2⟩)
+  refine le_trans (prEvent_bind_le_prEvent_of_support _ _
+    (fun drawn => PqxdhKemCorrectnessError.Bad setup.kem functional ⟨keys.1, keys.2, drawn.1, drawn.2⟩) _
     fun encapsulated _ good => ?_) le_rfl
   obtain ⟨first, hfirst⟩ := static_present setup laws.nonzero seed scalar
   obtain ⟨bytes0, hcb⟩ : ∃ bytes0, controlBytes setup seed (setup.joint.publicKeys beaconSeed).ed25519
@@ -1280,7 +1283,7 @@ theorem control_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
     rw [← hcb]
     exact PqxdhJointGapDh.assemble_length _ _ _
   simp only [PqxdhJointGapDh.challenge, hcb]
-  refine probEvent_eq_zero fun result supported => ?_
+  refine prEvent_eq_zero_of_forall_mem_support _ _ fun result supported => ?_
   rw [not_not]
   rw [runAdversary_bind, mem_support_bind_iff] at supported
   obtain ⟨first', hmacRun, supported⟩ := supported
@@ -1341,73 +1344,63 @@ theorem control_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
   obtain ⟨message, reply, _, member, _⟩ := partner
   simp [] at member
 
-set_option linter.deprecated false in
 /-- The experiment's success probability is the probability of the winning event. -/
 theorem game_win (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (revealSeed : Bool) (adversary : Adversary) :
-    Pr[= true | expGame setup codec checks revealSeed adversary] =
-      Pr[fun result => Win setup result.1 result.2.1 result.2.2.1.ghost |
-        gameState setup codec checks revealSeed adversary] := by
+    Pr{let x ← expGame setup codec checks revealSeed adversary}[x = true] =
+      Pr{let result ← gameState setup codec checks revealSeed adversary}[Win setup result.1 result.2.1 result.2.2.1.ghost] := by
   classical
-  rw [expGame, ← probEvent_eq_eq_probOutput, probEvent_map]
-  congr 1
-  funext result
-  simp only [Function.comp_apply, decide_eq_true_eq]
+  rw [expGame, prEvent_map]
+  exact prEvent_congr _ _ _ fun result => by simp only [decide_eq_true_eq]
 
-set_option linter.deprecated false in
 /-- Lower KEM split: if, for every sampled Beacon key pair, the adversary's run misses an event with probability at most the key pair's correctness error, then the event has probability at least one minus the KEM correctness error. -/
 theorem kem_lower (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (revealSeed : Bool) (adversary : Adversary)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)
     (event : IdentitySeed → ScalarBytes → GameState KemSK → Prop)
     (bound : ∀ seed scalar beaconSeed oneTime keys, keys ∈ support (keygenRun setup) →
-      Pr[fun result => ¬ event seed scalar result.1.2 | runAdversary setup codec checks seed scalar beaconSeed
+      Pr{let result ← (runAdversary setup codec checks seed scalar beaconSeed
         (adversary (controlInput setup (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar)
           (phase1Result setup codec (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar)
             beaconSeed oneTime keys.1 keys.2).1 (if revealSeed then some seed else none)))
         (initial setup (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar)
           (phase1Result setup codec (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar)
             beaconSeed oneTime keys.1 keys.2).2)
-        PqxdhJointDhExtractFamily.empty] ≤ keyPairError setup functional keys) :
-    1 - kemError setup ≤ (Pr[fun result => event result.1 result.2.1 result.2.2.1 |
-      gameState setup codec checks revealSeed adversary]).toReal := by
+        PqxdhJointDhExtractFamily.empty)}[¬ event seed scalar result.1.2] ≤ keyPairError setup functional keys) :
+    1 - kemError setup ≤ (Pr{let result ← gameState setup codec checks revealSeed adversary}[event result.1 result.2.1 result.2.2.1]).toReal := by
   have split := kem_split setup codec checks revealSeed adversary functional
     (fun seed scalar state => ¬ event seed scalar state) bound
-  have total := probEvent_compl (gameState setup codec checks revealSeed adversary)
+  have total := prEvent_add_prEvent_not_eq_prEvent_true (gameState setup codec checks revealSeed adversary)
     (fun result => event result.1 result.2.1 result.2.2.1)
-  simp only [probFailure_eq_zero, tsub_zero] at total
+  rw [OracleComp.prEvent_true_eq_one] at total
   rw [kemError]
-  have eventEq := ENNReal.eq_sub_of_add_eq (ne_top_of_le_ne_top ENNReal.one_ne_top probEvent_le_one) total
-  have missLe : Pr[fun result => ¬ event result.1 result.2.1 result.2.2.1 |
-      gameState setup codec checks revealSeed adversary] ≤ 1 := probEvent_le_one
+  have eventEq := ENNReal.eq_sub_of_add_eq (ne_top_of_le_ne_top ENNReal.one_ne_top (prEvent_le_one _)) total
+  have missLe : Pr{let result ← gameState setup codec checks revealSeed adversary}[¬ event result.1 result.2.1 result.2.2.1] ≤ 1 := (prEvent_le_one _)
   rw [eventEq, ENNReal.toReal_sub_of_le missLe ENNReal.one_ne_top, ENNReal.toReal_one]
-  have mono := ENNReal.toReal_mono (ne_top_of_le_ne_top ENNReal.one_ne_top probOutput_le_one) split
+  have mono := ENNReal.toReal_mono (ne_top_of_le_ne_top ENNReal.one_ne_top (prEvent_le_one _)) split
   linarith
 
-set_option linter.deprecated false in
 /-- Negative control (gate B5a): with the Server seed revealed, the control adversary, which never queries the Server, makes the Beacon accept without any partner session (the event `W1`) with probability at least one minus the KEM correctness error. -/
 theorem negative_control (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (limit : Nat) (laws : ControlLaws setup codec limit)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)
     (payload : Pqxdh.Bytes) (nonempty : payload ≠ []) (short : payload.length + 88 < limit) :
-    1 - kemError setup ≤ (Pr[fun result => PqxdhServerAuthExperiment.W1 setup result.1 result.2.1 result.2.2.1.ghost |
-      gameState setup codec checks true (controlAdversary setup codec payload)]).toReal :=
+    1 - kemError setup ≤ (Pr{let result ← gameState setup codec checks true (controlAdversary setup codec payload)}[PqxdhServerAuthExperiment.W1 setup result.1 result.2.1 result.2.2.1.ghost]).toReal :=
   kem_lower setup codec checks true (controlAdversary setup codec payload) functional
     (fun seed scalar state => PqxdhServerAuthExperiment.W1 setup seed scalar state.ghost)
     (fun seed scalar beaconSeed oneTime keys _ =>
       control_bound setup codec checks limit laws functional payload nonempty short seed scalar beaconSeed oneTime keys)
 
-set_option linter.deprecated false in
 /-- The negative control in the form of the experiment's success probability: since `W1` implies `Win`, the control adversary wins the experiment with probability at least one minus the KEM correctness error. -/
 theorem negative_control_win (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (limit : Nat) (laws : ControlLaws setup codec limit)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)
     (payload : Pqxdh.Bytes) (nonempty : payload ≠ []) (short : payload.length + 88 < limit) :
-    1 - kemError setup ≤ (Pr[= true | expGame setup codec checks true (controlAdversary setup codec payload)]).toReal :=
+    1 - kemError setup ≤ (Pr{let x ← expGame setup codec checks true (controlAdversary setup codec payload)}[x = true]).toReal :=
   (negative_control setup codec checks limit laws functional payload nonempty short).trans (by
     rw [game_win]
-    exact ENNReal.toReal_mono (ne_top_of_le_ne_top ENNReal.one_ne_top probEvent_le_one)
-      (probEvent_mono fun _ _ w1 => Or.inl w1))
+    exact ENNReal.toReal_mono (ne_top_of_le_ne_top ENNReal.one_ne_top (prEvent_le_one _))
+      (prEvent_mono_of_support _ _ _ fun _ _ w1 => Or.inl w1))
 
 /-! ## The Server's honest accept -/
 
@@ -2581,42 +2574,46 @@ theorem acceptAfter_none (setup : Setup baseSpec KemSK) (seed : IdentitySeed) (s
         server := { state.server with consumed := consumed } }), family) := by
   simp only [acceptAfter, StateT.run_bind, StateT.run_set, pure_bind, StateT.run_pure, simulateQ_pure]
 
-set_option linter.deprecated false in
 /-- Per key pair, the honest relay wins with probability at most the key pair's KEM correctness error. -/
 theorem relay_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (laws : RelayLaws setup codec) (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)
     (payload : Option Pqxdh.Bytes) (seed : IdentitySeed) (scalar : ScalarBytes)
     (beaconSeed : IdentitySeed) (oneTime : ScalarBytes) (keys : PqxdhKemIndCca.MlKem768PublicKey × KemSK) :
-    Pr[fun result => Win setup seed scalar result.1.2.ghost | runAdversary setup codec checks seed scalar beaconSeed
+    Pr{let result ← (runAdversary setup codec checks seed scalar beaconSeed
         (relayAdversary payload (controlInput setup (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar)
           (phase1Result setup codec (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar)
             beaconSeed oneTime keys.1 keys.2).1 none))
         (initial setup (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar)
           (phase1Result setup codec (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar)
             beaconSeed oneTime keys.1 keys.2).2)
-        PqxdhJointDhExtractFamily.empty] ≤ keyPairError setup functional keys := by
+        PqxdhJointDhExtractFamily.empty)}[Win setup seed scalar result.1.2.ghost] ≤ keyPairError setup functional keys := by
+  have prAssoc : ∀ {α β γ : Type} (x : ProbComp α) (f : α → ProbComp β) (g : β → ProbComp γ) (p : γ → Prop),
+      Pr{let y ← (x >>= f >>= g)}[p y] = Pr{let y ← (x >>= fun a => f a >>= g)}[p y] := fun x f g p => by
+    rw [bind_assoc x f g]
   cases written : codec.write1 (beaconCandidate setup (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar)
       beaconSeed oneTime keys.1) with
   | none =>
       simp only [phase1Result, written, controlInput, relayAdversary, runAdversary_pure]
-      refine le_of_eq_of_le (probEvent_eq_zero fun result supported => ?_) (by simp)
+      refine le_of_eq_of_le (prEvent_eq_zero_of_forall_mem_support _ _ fun result supported => ?_) (by simp)
       rw [support_pure, Set.mem_singleton_iff] at supported
       subst supported
       exact no_acceptance setup seed scalar _ rfl
   | some bytes =>
       rw [phase1Result_some setup codec _ beaconSeed oneTime keys.1 keys.2 bytes written]
       simp only [controlInput, relayAdversary]
-      rw [runAdversary_bind, run_accept, bind_assoc]
+      rw [runAdversary_bind, run_accept, prAssoc]
       obtain ⟨reader, hread, hidentity, hpq, hpre, hone⟩ := laws.phase1 _ bytes written
-      change Pr[_ | (PqxdhServerAuthExperiment.serverPrefix setup codec checks bytes).run [] >>= _] ≤ _
+      change Pr{let x : (_ × GameState KemSK) × PqxdhJointDhExtractFamily.State ←
+        (PqxdhServerAuthExperiment.serverPrefix setup codec checks bytes).run [] >>= _}[
+        Win setup seed scalar x.1.2.ghost] ≤ _
       rw [serverPrefix_eq setup codec checks laws.nonzero seed scalar beaconSeed oneTime keys.1 bytes reader hread
         hidentity hpq hpre hone]
       split_ifs with hcheck hkem
-      · rw [bind_assoc]
-        refine probEvent_bind_le_of_forall_le fun e _ => ?_
-        rw [bind_assoc]
-        refine le_trans (probEvent_bind_le_probEvent
-          (p := fun drawn => PqxdhKemCorrectnessError.Bad setup.kem functional ⟨keys.1, keys.2, drawn.1, drawn.2⟩)
+      · rw [prAssoc]
+        refine prEvent_bind_le_of_forall_le_of_support _ _ _ fun e _ => ?_
+        rw [prAssoc]
+        refine le_trans (prEvent_bind_le_prEvent_of_support _ _
+          (fun drawn => PqxdhKemCorrectnessError.Bad setup.kem functional ⟨keys.1, keys.2, drawn.1, drawn.2⟩) _
           fun encapsulated _ bad => ?_) le_rfl
         have good : functional.result keys.2 encapsulated.1 = some encapsulated.2 := not_not.mp bad
         rw [pure_bind]
@@ -2628,7 +2625,7 @@ theorem relay_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
         rw [hcb] at hinputS
         rw [acceptAfter_honest setup seed scalar _ [] bytesS hinputS
           (honest_localNonzero setup laws.nonzero _ scalar rfl beaconSeed oneTime keys.1 reader e encapsulated)]
-        refine probEvent_eq_zero fun result supported => ?_
+        refine prEvent_eq_zero_of_forall_mem_support _ _ fun result supported => ?_
         simp only [bind_assoc, pure_bind, mem_support_bind_iff] at supported
         obtain ⟨answer, answerRun, supported⟩ := supported
         have hcached := randomOracle_cached (spec := HmacOracle) _ _ _ answerRun
@@ -2636,26 +2633,25 @@ theorem relay_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
           reader e encapsulated good bytesS answer.1 hinputS _ _ (by simp [initial]) rfl rfl rfl
           (by simp [initial, PqxdhServerAuthExperiment.Ghost.empty]) hcached
           result supported).1
-      · refine le_of_eq_of_le (probEvent_eq_zero fun result supported => ?_) (by simp)
+      · refine le_of_eq_of_le (prEvent_eq_zero_of_forall_mem_support _ _ fun result supported => ?_) (by simp)
         simp only [bind_assoc, pure_bind, mem_support_bind_iff, acceptAfter_none] at supported
         obtain ⟨_, _, supported⟩ := supported
         simp only [relayBuild, runAdversary_pure, support_pure, Set.mem_singleton_iff] at supported
         subst supported
         exact no_acceptance setup seed scalar _ rfl
-      · refine le_of_eq_of_le (probEvent_eq_zero fun result supported => ?_) (by simp)
+      · refine le_of_eq_of_le (prEvent_eq_zero_of_forall_mem_support _ _ fun result supported => ?_) (by simp)
         simp only [pure_bind, acceptAfter_none] at supported
         simp only [relayBuild, runAdversary_pure, support_pure, Set.mem_singleton_iff] at supported
         subst supported
         exact no_acceptance setup seed scalar _ rfl
 
-set_option linter.deprecated false in
 /-- Relay control (gate B5a): an honest relay of the target Beacon's Phase 1 to the Server and of the Server's Phase 2 to the Beacon wins with probability at most the KEM correctness error. -/
 theorem relay_not_win (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (laws : RelayLaws setup codec) (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)
     (payload : Option Pqxdh.Bytes) :
-    (Pr[= true | expGame setup codec checks false (relayAdversary payload)]).toReal ≤ kemError setup := by
+    (Pr{let x ← expGame setup codec checks false (relayAdversary payload)}[x = true]).toReal ≤ kemError setup := by
   rw [game_win, kemError]
-  refine ENNReal.toReal_mono (ne_top_of_le_ne_top ENNReal.one_ne_top probOutput_le_one) ?_
+  refine ENNReal.toReal_mono (ne_top_of_le_ne_top ENNReal.one_ne_top (prEvent_le_one _)) ?_
   exact kem_split setup codec checks false (relayAdversary payload) functional
     (fun seed scalar state => Win setup seed scalar state.ghost)
     (fun seed scalar beaconSeed oneTime keys _ =>
@@ -2663,7 +2659,6 @@ theorem relay_not_win (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
 
 /-! ## Liveness of the honest relay -/
 
-set_option linter.deprecated false in
 /-- Per key pair, with the accepting checks and a nonempty short payload, the honest relay leaves the Beacon without an acceptance with probability at most the key pair's KEM correctness error. -/
 theorem relay_live_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (limit : Nat)
     (laws : ControlLaws setup codec limit)
@@ -2673,30 +2668,34 @@ theorem relay_live_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
     (short : (payload.getD PqxdhServerRegistrationPublication.registrationWitness).length + 88 < limit)
     (below : setup.serverKeyId ≠ core.num.U64.MAX) (seed : IdentitySeed) (scalar : ScalarBytes)
     (beaconSeed : IdentitySeed) (oneTime : ScalarBytes) (keys : PqxdhKemIndCca.MlKem768PublicKey × KemSK) :
-    Pr[fun result => ¬ result.1.2.ghost.acceptance ≠ none |
-      runAdversary setup codec acceptAll seed scalar beaconSeed
+    Pr{let result ← (runAdversary setup codec acceptAll seed scalar beaconSeed
         (relayAdversary payload (controlInput setup (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar)
           (phase1Result setup codec (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar)
             beaconSeed oneTime keys.1 keys.2).1 none))
         (initial setup (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar)
           (phase1Result setup codec (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar)
             beaconSeed oneTime keys.1 keys.2).2)
-        PqxdhJointDhExtractFamily.empty] ≤ keyPairError setup functional keys := by
+        PqxdhJointDhExtractFamily.empty)}[¬ result.1.2.ghost.acceptance ≠ none] ≤ keyPairError setup functional keys := by
+  have prAssoc : ∀ {α β γ : Type} (x : ProbComp α) (f : α → ProbComp β) (g : β → ProbComp γ) (p : γ → Prop),
+      Pr{let y ← (x >>= f >>= g)}[p y] = Pr{let y ← (x >>= fun a => f a >>= g)}[p y] := fun x f g p => by
+    rw [bind_assoc x f g]
   obtain ⟨bytes, written⟩ := laws.phase1Total (beaconCandidate setup
     (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar) beaconSeed oneTime keys.1)
   rw [phase1Result_some setup codec _ beaconSeed oneTime keys.1 keys.2 bytes written]
   simp only [controlInput, relayAdversary]
-  rw [runAdversary_bind, run_accept, bind_assoc]
+  rw [runAdversary_bind, run_accept, prAssoc]
   obtain ⟨reader, hread, hidentity, hpq, hpre, hone⟩ := laws.phase1 _ bytes written
-  change Pr[_ | (PqxdhServerAuthExperiment.serverPrefix setup codec acceptAll bytes).run [] >>= _] ≤ _
+  change Pr{let x : (_ × GameState KemSK) × PqxdhJointDhExtractFamily.State ←
+    (PqxdhServerAuthExperiment.serverPrefix setup codec acceptAll bytes).run [] >>= _}[
+    ¬ x.1.2.ghost.acceptance ≠ none] ≤ _
   rw [serverPrefix_eq setup codec acceptAll laws.nonzero seed scalar beaconSeed oneTime keys.1 bytes reader hread
     hidentity hpq hpre hone]
   simp only [acceptAll, Bool.and_self, ite_true]
-  rw [bind_assoc]
-  refine probEvent_bind_le_of_forall_le fun e _ => ?_
-  rw [bind_assoc]
-  refine le_trans (probEvent_bind_le_probEvent
-    (p := fun drawn => PqxdhKemCorrectnessError.Bad setup.kem functional ⟨keys.1, keys.2, drawn.1, drawn.2⟩)
+  rw [prAssoc]
+  refine prEvent_bind_le_of_forall_le_of_support _ _ _ fun e _ => ?_
+  rw [prAssoc]
+  refine le_trans (prEvent_bind_le_prEvent_of_support _ _
+    (fun drawn => PqxdhKemCorrectnessError.Bad setup.kem functional ⟨keys.1, keys.2, drawn.1, drawn.2⟩) _
     fun encapsulated _ bad => ?_) le_rfl
   have good : functional.result keys.2 encapsulated.1 = some encapsulated.2 := not_not.mp bad
   rw [pure_bind]
@@ -2708,7 +2707,7 @@ theorem relay_live_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
   rw [hcb] at hinputS
   rw [acceptAfter_honest setup seed scalar _ [] bytesS hinputS
     (honest_localNonzero setup laws.nonzero _ scalar rfl beaconSeed oneTime keys.1 reader e encapsulated)]
-  refine probEvent_eq_zero fun result supported => ?_
+  refine prEvent_eq_zero_of_forall_mem_support _ _ fun result supported => ?_
   simp only [bind_assoc, pure_bind, mem_support_bind_iff] at supported
   obtain ⟨answer, answerRun, supported⟩ := supported
   have hcached := randomOracle_cached (spec := HmacOracle) _ _ _ answerRun
@@ -2717,7 +2716,6 @@ theorem relay_live_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
     (by simp [initial, PqxdhServerAuthExperiment.Ghost.empty]) hcached result supported).2
     (build_publishes setup codec limit laws _ _ payload _ _ below (fun _ => rfl) rfl rfl nonempty allocatable short))
 
-set_option linter.deprecated false in
 /-- Relay liveness (gate B5a): with the accepting checks, a nonempty payload short enough for the writers and the Server's allocation, and a Server key ID below the maximum, the honest relay makes the Beacon accept with probability at least one minus the KEM correctness error. -/
 theorem relay_live (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (limit : Nat)
     (laws : ControlLaws setup codec limit)
@@ -2726,8 +2724,7 @@ theorem relay_live (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
     (allocatable : 8 + (payload.getD PqxdhServerRegistrationPublication.registrationWitness).length ≤ Usize.max)
     (short : (payload.getD PqxdhServerRegistrationPublication.registrationWitness).length + 88 < limit)
     (below : setup.serverKeyId ≠ core.num.U64.MAX) :
-    1 - kemError setup ≤ (Pr[fun result => result.2.2.1.ghost.acceptance ≠ none |
-      gameState setup codec acceptAll false (relayAdversary payload)]).toReal :=
+    1 - kemError setup ≤ (Pr{let result ← gameState setup codec acceptAll false (relayAdversary payload)}[result.2.2.1.ghost.acceptance ≠ none]).toReal :=
   kem_lower setup codec acceptAll false (relayAdversary payload) functional
     (fun _ _ state => state.ghost.acceptance ≠ none)
     (fun seed scalar beaconSeed oneTime keys _ =>

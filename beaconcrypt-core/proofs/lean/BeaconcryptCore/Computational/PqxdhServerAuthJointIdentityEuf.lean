@@ -120,15 +120,13 @@ theorem reduction_game (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
   simp only [PqxdhJointIdentity.game, PqxdhJointIdentity.run, reduction, simulateQ_map,
     StateT.run_map, bind_map_left, sampled, map_bind, map_pure]
 
-set_option linter.deprecated false in
 /-- Coefficient-one ordinary joint-use weak-EUF reduction for all original accept attempts in one complete source-shaped execution. No attempt, signature-field or candidate-key selection factor is charged. -/
 theorem routed_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (adversary : Adversary) (fallback : Forgery) :
-    Pr[= true | routedBad setup codec checks adversary] ≤
+    Pr{let x ← routedBad setup codec checks adversary}[x = true] ≤
       PqxdhJointIdentity.advantage setup.joint (reduction setup codec checks adversary fallback) := by
-  simp only [PqxdhJointIdentity.advantage, ← VCVioLegacy.probOutput_eq_prEvent, reduction_game, routedBad,
-    ← probEvent_eq_eq_probOutput, probEvent_map, Function.comp_def]
-  apply probEvent_mono
+  simp only [PqxdhJointIdentity.advantage, reduction_game, routedBad, prEvent_map]
+  apply prEvent_mono_of_support
   rintro ⟨seed, result⟩ supported bad
   simp only [sampled, mem_support_bind_iff, mem_support_pure_iff, Prod.mk.injEq] at supported
   obtain ⟨_, _, _, reached, rfl, rfl⟩ := supported
@@ -197,13 +195,12 @@ theorem source_routed (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
   simp only [map_bind, sourceBad, bind_pure_comp]
   exact seed_order _
 
-set_option linter.deprecated false in
 /-- Actual production-order field-substitution probability is bounded by the constructed joint Ed25519/converted-X25519 weak-EUF adversary with coefficient one. The target seed is generated only by the primitive challenger. -/
 theorem source_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (adversary : Adversary) (fallback : Forgery) :
     𝒟[sourceBad setup codec checks adversary] {true} ≤
       PqxdhJointIdentity.advantage setup.joint (reduction setup codec checks adversary fallback) := by
-  rw [← source_routed, evalDist_apply_singleton]
+  rw [← source_routed, ← prEvent_eq_evalDist_singleton _ true]
   exact routed_bound setup codec checks adversary fallback
 
 /-- The reached original decoder and getter receipts reconstruct the exact original candidate, with no injectivity or serialization assumption. -/

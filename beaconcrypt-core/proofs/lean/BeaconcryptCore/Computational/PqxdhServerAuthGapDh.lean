@@ -657,19 +657,17 @@ theorem candidate_game (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
   simp only [Bool.false_eq_true, ↓reduceIte]
   rfl
 
-set_option linter.deprecated false in
 /-- Step A2 and A3 of the hybrid chain: under the class law, the probability of the scan event in the experiment is the Gap-DH term of the scanning reduction. -/
 theorem candHit_eq_gapDh (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (adversary : Adversary) (qH : Nat) (law : PqxdhServerAuthAssumptions.X25519ClassLaw setup.source.crypto) :
-    Pr[fun result => PqxdhServerAuthExperiment.CandHit setup result.1 result.2.1 qH result.2.2.2.history |
-        PqxdhServerAuthExperiment.gameState setup codec checks false adversary] =
+    Pr{let result ← PqxdhServerAuthExperiment.gameState setup codec checks false adversary}[PqxdhServerAuthExperiment.CandHit setup result.1 result.2.1 qH result.2.2.2.history] =
       PqxdhServerAuthAssumptions.serverGapDhAdvantage setup.source.crypto setup.joint setup.secretOfSeed
         setup.wiring (PqxdhJointGapDh.extractor (scanClient setup codec checks adversary qH)) := by
   rw [← PqxdhServerAuthAssumptions.candidate_eq_serverGapDh]
-  change _ = Pr[= true | PqxdhJointGapDh.candidateGame setup.joint setup.dh
-    (scanClient setup codec checks adversary qH)]
-  rw [candidate_game setup codec checks adversary qH law, probOutput_map]
-  refine probEvent_ext fun result _ => ?_
+  change _ = Pr{let x ← (PqxdhJointGapDh.candidateGame setup.joint setup.dh
+    (scanClient setup codec checks adversary qH))}[x = true]
+  rw [candidate_game setup codec checks adversary qH law, prEvent_map]
+  refine prEvent_congr_of_support _ _ _ fun result _ => ?_
   simp only [decide_eq_true_eq, PqxdhServerAuthExperiment.CandHit]
 
 /-! ## Which family requests honest code makes -/
@@ -1458,17 +1456,15 @@ theorem badB_candidate (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
         · exact List.mem_filterMap.mpr ⟨_, touched, rfl⟩
         · rw [← assembled, PqxdhJointGapDh.read_first]
 
-set_option linter.deprecated false in
 /-- Main result of stage B6 (`badB_le_gapDh`, steps A1 to A3 of the hybrid chain): under the X25519 class law, if the adversary makes at most `qH` table-domain HMAC queries, the probability that it queries the Extract table at the Beacon's root input in the experiment without a seed reveal is at most the Gap-DH term of the scanning reduction `PqxdhJointGapDh.extractor (scanClient …)`, which is constructed from the adversary and holds neither secret. -/
 theorem badB_le_gapDh (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (adversary : Adversary) (qH : Nat) (law : PqxdhServerAuthAssumptions.X25519ClassLaw setup.source.crypto)
     (rom : ∀ input, (adversary input).IsQueryBoundP PqxdhServerAuthExperiment.IsRomQuery qH) :
-    Pr[fun result => PqxdhServerAuthExperiment.BadB setup result.1 result.2.1 result.2.2.1.ghost |
-        PqxdhServerAuthExperiment.gameState setup codec checks false adversary] ≤
+    Pr{let result ← PqxdhServerAuthExperiment.gameState setup codec checks false adversary}[PqxdhServerAuthExperiment.BadB setup result.1 result.2.1 result.2.2.1.ghost] ≤
       PqxdhServerAuthAssumptions.serverGapDhAdvantage setup.source.crypto setup.joint setup.secretOfSeed
         setup.wiring (PqxdhJointGapDh.extractor (scanClient setup codec checks adversary qH)) := by
   rw [← candHit_eq_gapDh setup codec checks adversary qH law]
-  exact probEvent_mono fun result supported bad =>
+  exact prEvent_mono_of_support _ _ _ fun result supported bad =>
     badB_candidate setup codec checks adversary qH rom result supported bad
 
 /-! ## Query counts of the reduction -/

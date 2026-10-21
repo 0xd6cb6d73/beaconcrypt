@@ -135,123 +135,125 @@ theorem hit_pair (guess : Pqxdh.Bytes → Option (FixedBytes 16))
         (saved, (bytes, state)) := by
   cases saved <;> cases bytes <;> simp [Hit, pair, PqxdhServerAuthPublicationTag.Hit]
 
-set_option linter.deprecated false in
 /-- The actual captured first-seal record and pre-raw candidate have the unconditional tag bound in the ordinary random game. Every source/public draw in the quiet suffix is retained. -/
 theorem first_capture_bound (decode : RawDecoder) (input : CtxSealInput) (state : State)
     (unused : Unused state) (work : OracleComp ReceiveSpec Result)
     (noSeal : work.IsQueryBoundP AdaptiveCtxQueryBounds.SourceSeal 0)
     (guess : Pqxdh.Bytes → Option (FixedBytes 16)) :
-    Pr[Hit guess | (do
+    Pr{let x ← (do
       let sealed ← step decode (.inl (.inr (.inr input))) state
       let final ← (simulateQ (impl decode) (capture work sealed.1)).run sealed.2
-      pure final.1)] ≤ ((2 ^ 128 : Nat) : ℝ≥0∞)⁻¹ := by
-  rw [first_capture_source decode input state work noSeal, probEvent_map]
+      pure final.1)}[(Hit guess) x] ≤ ((2 ^ 128 : Nat) : ℝ≥0∞)⁻¹ := by
+  rw [first_capture_source decode input state work noSeal, prEvent_map]
   have bounded := PqxdhServerAuthPublicationTag.first_seal_guess decode input state unused (raw work)
     (raw_budget work _ _ _ noSeal) (raw_no_raw work)
     (fun candidate : Option Pqxdh.Bytes => candidate.bind guess)
-  refine (probEvent_mono ?_).trans bounded
+  refine (prEvent_mono_of_support _ _ _ ?_).trans bounded
   intro result _ hit
   exact Eq.mp (hit_pair guess result.1 result.2.1 result.2.2) hit
 
-set_option linter.deprecated false in
 /-- A quiet suffix starting without a captured record cannot win, regardless of its actual raw request or private/public state. Its work is still executed. -/
 theorem capture_none (decode : RawDecoder) (state : State) (work : OracleComp ReceiveSpec Result)
     (noSeal : work.IsQueryBoundP AdaptiveCtxQueryBounds.SourceSeal 0)
     (guess : Pqxdh.Bytes → Option (FixedBytes 16)) :
-    Pr[Hit guess | Prod.fst <$> (simulateQ (impl decode) (capture work none)).run state] = 0 := by
+    Pr{let x ← Prod.fst <$> (simulateQ (impl decode) (capture work none)).run state}[(Hit guess) x] = 0 := by
   rw [capture_quiet work noSeal]
-  simp only [simulateQ_map, StateT.run_map, Functor.map_map, probEvent_map,
-    Function.comp_def, pair, Option.bind_none, Hit, probEvent_False]
+  simp only [simulateQ_map, StateT.run_map, Functor.map_map, prEvent_map, pair, Option.bind_none, Hit, prEvent_false]
 
-set_option linter.deprecated false in
 /-- After the first selected request, the executable continuation sees only the fixed replacement. Both actual refusal and successful records are retained by the private observer; no writer outcome is conditioned on. -/
 theorem first_scrub_bound (decode : RawDecoder) (input : CtxSealInput) (state : State)
     (unused : Unused state) (replacement : CtxRomRecord)
     (next : Option CtxRomRecord → OracleComp ReceiveSpec Result)
     (noSeal : ∀ reply, (next reply).IsQueryBoundP AdaptiveCtxQueryBounds.SourceSeal 0)
     (guess : Pqxdh.Bytes → Option (FixedBytes 16)) :
-    Pr[Hit guess | (do
+    Pr{let x ← (do
       let sealed ← step decode (.inl (.inr (.inr input))) state
       let final ← (simulateQ (impl decode) (capture
         (simulateQ (PqxdhServerAuthPublicationBlindKnown.scrub replacement)
           (next (sealed.1.map fun _ => replacement))) sealed.1)).run sealed.2
-      pure final.1)] ≤ ((2 ^ 128 : Nat) : ℝ≥0∞)⁻¹ := by
+      pure final.1)}[(Hit guess) x] ≤ ((2 ^ 128 : Nat) : ℝ≥0∞)⁻¹ := by
   have quiet : ∀ reply, simulateQ (PqxdhServerAuthPublicationBlindKnown.scrub replacement) (next reply) = next reply :=
     fun reply => PqxdhServerAuthPublicationBlindKnown.quiet replacement _ (noSeal reply)
   simp_rw [quiet]
+  have mapFst : ∀ work : ProbComp (Candidate × State),
+      Pr{let x ← (work >>= fun final => pure final.1)}[Hit guess x] = Pr{let x ← Prod.fst <$> work}[Hit guess x] :=
+    fun work => by rw [bind_pure_comp Prod.fst work]
   have same :
-      Pr[Hit guess | (do
+      Pr{let x ← (do
         let sealed ← step decode (.inl (.inr (.inr input))) state
         let final ← (simulateQ (impl decode) (capture (next (sealed.1.map fun _ => replacement)) sealed.1)).run sealed.2
-        pure final.1)] =
-      Pr[Hit guess | (do
+        pure final.1)}[(Hit guess) x] =
+      Pr{let x ← (do
         let sealed ← step decode (.inl (.inr (.inr input))) state
         let final ← (simulateQ (impl decode) (capture (next (some replacement)) sealed.1)).run sealed.2
-        pure final.1)] := by
-    simp only [bind_pure_comp, probEvent_bind_eq_tsum]
-    apply tsum_congr
-    intro sealed
-    congr 1
+        pure final.1)}[(Hit guess) x] := by
+    refine prEvent_bind_congr _ _ _ _ _ fun sealed => ?_
     cases sealed.1 with
     | some record => simp only [Option.map_some]
-    | none => simp only [Option.map_none, capture_none decode _ _ (noSeal _) guess]
+    | none => rw [mapFst, mapFst, capture_none decode _ _ (noSeal _) guess, capture_none decode _ _ (noSeal _) guess]
   rw [same]
   exact first_capture_bound decode input state unused (next (some replacement)) (noSeal _) guess
 
-set_option linter.deprecated false in
+set_option maxHeartbeats 400000 in
 /-- Every adaptive prefix retains the actual unused selected state until its first seal. The concrete before-raw observer against the scrubbed continuation has one unconditional tag-guess charge, without selecting a successful attempt. -/
 theorem scrub_capture_bound (decode : RawDecoder) (replacement : CtxRomRecord)
     (work : OracleComp ReceiveSpec Result)
     (bounded : work.IsQueryBoundP AdaptiveCtxQueryBounds.SourceSeal 1)
     (state : State) (unused : Unused state)
     (guess : Pqxdh.Bytes → Option (FixedBytes 16)) :
-    Pr[Hit guess | Prod.fst <$> (simulateQ (impl decode)
-      (capture (simulateQ (PqxdhServerAuthPublicationBlindKnown.scrub replacement) work) none)).run state] ≤
+    Pr{let x ← (Prod.fst <$> (simulateQ (impl decode)
+      (capture (simulateQ (PqxdhServerAuthPublicationBlindKnown.scrub replacement) work) none)).run state)}[(Hit guess) x] ≤
       ((2 ^ 128 : Nat) : ℝ≥0∞)⁻¹ := by
   classical
-  simp only [probEvent_map, Function.comp_def]
+  have pureMap : ∀ {α β : Type} (mx : ProbComp α) (f : α → β) (p : β → Prop),
+      Pr{let y ← (mx >>= fun a => pure (f a))}[p y] = Pr{let a ← mx}[p (f a)] := fun mx f p => by
+    rw [bind_pure_comp f mx, prEvent_map]
+  have bindCongr : ∀ {α β γ : Type} (mx : ProbComp α) (f : α → ProbComp β) (g : α → ProbComp γ) (p : β → Prop)
+      (q : γ → Prop), (∀ x, Pr{let y ← f x}[p y] = Pr{let z ← g x}[q z]) →
+        Pr{let y ← mx >>= f}[p y] = Pr{let z ← mx >>= g}[q z] :=
+    fun mx f g p q h => prEvent_bind_congr mx f g p q h
+  simp only [prEvent_map]
   induction work using OracleComp.inductionOn generalizing state with
   | pure value =>
-    change Pr[fun result : Candidate × State => Hit guess result.1 | (pure (none, state) : ProbComp _)] ≤ _
-    simp only [probEvent_pure, Hit, ite_false, zero_le]
+    change Pr{let result ← (pure (none, state) : ProbComp _)}[Hit guess result.1] ≤ _
+    simp only [prEvent_pure, Hit, ite_false, zero_le]
   | query_bind query next ih =>
     simp only [isQueryBoundP_query_bind_iff] at bounded
     rcases query with ((coin | (input | request)) | bytes)
     all_goals simp only [simulateQ_bind, simulateQ_spec_query,
       PqxdhServerAuthPublicationBlindKnown.scrub, bind_assoc, pure_bind]
-    · change Pr[fun result : Candidate × State => Hit guess result.1 |
-        (simulateQ (impl decode) (do
+    · change Pr{let result ← ((simulateQ (impl decode) (do
           let reply ← ReceiveSpec.query (.inl (.inl coin))
-          capture (simulateQ (PqxdhServerAuthPublicationBlindKnown.scrub replacement) (next reply)) none)).run state] ≤ _
+          capture (simulateQ (PqxdhServerAuthPublicationBlindKnown.scrub replacement) (next reply)) none)).run state)}[Hit guess result.1] ≤ _
       simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind]
-      apply probEvent_bind_le_of_forall_le
+      apply prEvent_bind_le_of_forall_le_of_support
       intro answer reached
       apply ih answer.1 (by simpa [AdaptiveCtxQueryBounds.SourceSeal] using bounded.2 answer.1) answer.2
       exact quiet_unused decode _ state (by simp [AdaptiveCtxQueryBounds.SourceSeal])
         (by simp [IsRawQuery]) unused answer reached
-    · change Pr[fun result : Candidate × State => Hit guess result.1 |
-        (simulateQ (impl decode) (do
+    · change Pr{let result ← ((simulateQ (impl decode) (do
           let reply ← ReceiveSpec.query (.inl (.inr (.inl input)))
-          capture (simulateQ (PqxdhServerAuthPublicationBlindKnown.scrub replacement) (next reply)) none)).run state] ≤ _
+          capture (simulateQ (PqxdhServerAuthPublicationBlindKnown.scrub replacement) (next reply)) none)).run state)}[Hit guess result.1] ≤ _
       simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind]
-      apply probEvent_bind_le_of_forall_le
+      apply prEvent_bind_le_of_forall_le_of_support
       intro answer reached
       apply ih answer.1 (by simpa [AdaptiveCtxQueryBounds.SourceSeal] using bounded.2 answer.1) answer.2
       exact quiet_unused decode _ state (by simp [AdaptiveCtxQueryBounds.SourceSeal])
         (by simp [IsRawQuery]) unused answer reached
-    · change Pr[fun result : Candidate × State => Hit guess result.1 |
-        (simulateQ (impl decode) (do
+    · change Pr{let result ← ((simulateQ (impl decode) (do
           let reply ← ReceiveSpec.query (.inl (.inr (.inr request)))
           capture (simulateQ (PqxdhServerAuthPublicationBlindKnown.scrub replacement)
-            (next (reply.map fun _ => replacement))) reply)).run state] ≤ _
+            (next (reply.map fun _ => replacement))) reply)).run state)}[Hit guess result.1] ≤ _
       simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind]
       have bound := first_scrub_bound decode request state unused replacement next
         (fun reply => by simpa [AdaptiveCtxQueryBounds.SourceSeal] using bounded.2 reply) guess
-      simpa only [bind_pure_comp, probEvent_bind_eq_tsum, probEvent_map, Function.comp_def, impl, StateT.run] using bound
-    · change Pr[fun result : Candidate × State => Hit guess result.1 | (pure (none, state) : ProbComp _)] ≤ _
-      simp only [probEvent_pure, Hit, ite_false, zero_le]
+      simp only [impl, StateT.run] at bound ⊢
+      refine le_of_eq_of_le ?_ bound
+      refine bindCongr _ _ _ _ _ fun sealed => ?_
+      exact (pureMap _ Prod.fst (Hit guess)).symm
+    · change Pr{let result ← (pure (none, state) : ProbComp _)}[Hit guess result.1] ≤ _
+      simp only [prEvent_pure, Hit, ite_false, zero_le]
 
-set_option linter.deprecated false in
 /-- A proved syntactic replacement equality discharges the fixed-reply condition of the actual adaptive capture bound. This helper is instantiated by the complete concrete reference, not treated as a primitive security assumption. -/
 theorem blind_capture_bound (decode : RawDecoder) (replacement : CtxRomRecord)
     (work : OracleComp ReceiveSpec Result)
@@ -259,7 +261,7 @@ theorem blind_capture_bound (decode : RawDecoder) (replacement : CtxRomRecord)
     (blind : simulateQ (PqxdhServerAuthPublicationBlindKnown.scrub replacement) work = work)
     (state : State) (unused : Unused state)
     (guess : Pqxdh.Bytes → Option (FixedBytes 16)) :
-    Pr[Hit guess | Prod.fst <$> (simulateQ (impl decode) (capture work none)).run state] ≤
+    Pr{let x ← Prod.fst <$> (simulateQ (impl decode) (capture work none)).run state}[(Hit guess) x] ≤
       ((2 ^ 128 : Nat) : ℝ≥0∞)⁻¹ := by
   simpa only [blind] using scrub_capture_bound decode replacement work bounded state unused guess
 

@@ -118,7 +118,6 @@ theorem client_kill (setup : Setup baseSpec KemSK) (codec : Codec Reader WireRes
 
 open PqxdhServerAuthSourceCosts PqxdhServerAuthBodyCosts PqxdhServerAuthGapDh
 
-set_option linter.deprecated false in
 /-- The actual source's clean first-raw prefix has the established unconditional reference loss. Publication after the captured raw cannot affect this event. -/
 theorem clean_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader WireResponse) (checks : Checks)
     (caps : KemCaps) (bounded : KemBound setup caps) (adversary : Adversary)
@@ -128,10 +127,9 @@ theorem clean_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader WireRes
     (hashes : ∀ input, (adversary input).IsQueryBoundP IsHashQuery qHash)
     (rom : ∀ input, (adversary input).IsQueryBoundP IsRomQuery qH)
     (j : Fin (Q + 1)) (decode : AdaptiveCtxReceive.RawDecoder) :
-    (Pr[fun result => result.1.1 = false ∧ PqxdhServerAuthPublicationGuess.Hit
-      (PqxdhServerAuthPublicationRandom.decodedTag decode) result.1.2 |
-      AdaptiveCtxDynamicKnownKeys.sourceGame true decode setup.source.crypto
-        (capture (client setup codec checks adversary Q j) none false)]).toReal ≤
+    (Pr{let result ← (AdaptiveCtxDynamicKnownKeys.sourceGame true decode setup.source.crypto
+        (capture (client setup codec checks adversary Q j) none false))}[result.1.1 = false ∧ PqxdhServerAuthPublicationGuess.Hit
+      (PqxdhServerAuthPublicationRandom.decodedTag decode) result.1.2]).toReal ≤
       PqxdhServerAuthPublicationPrivacy.loss setup codec checks adversary Q j decode
         (entryReductionBudget caps qCoin Q qHash qH + 76) := by
   rw [source_clean true decode setup.source.crypto _ none _ (by simp [PqxdhServerAuthPublicationGuess.Hit])]

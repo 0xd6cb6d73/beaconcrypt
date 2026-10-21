@@ -157,7 +157,7 @@ set_option linter.deprecated false in
 theorem eager_first {α : Type} (client : OracleComp (unifSpec + (D →ₒ R)) α) (state : State D R) :
     𝒮[(simulateQ trackedImpl client).run state] =
       𝒮[do let value ← $ᵗ R; (simulateQ (eagerImpl value) client).run state] :=
-  PqxdhServerAuthEntryFactor.eager_run ($ᵗ R) trackedImpl eagerImpl (fun state => state.2.isSome)
+  PqxdhServerAuthEntryFactor.eager_run_vcvioLegacy ($ᵗ R) trackedImpl eagerImpl (fun state => state.2.isSome)
     eager_done (fun query state fresh => (eager_fresh query state fresh).imp id
       fun ⟨same, done⟩ => ⟨by rw [same], done⟩) client state
 

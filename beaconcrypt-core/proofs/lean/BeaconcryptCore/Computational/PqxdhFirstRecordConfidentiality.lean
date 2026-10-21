@@ -22,22 +22,24 @@ namespace BeaconcryptCore.Computational.PqxdhFirstRecordConfidentiality
 
 section Fiber
 
-set_option linter.deprecated false in
 /-- A sum over a distribution of a function that factors through `e` is the sum over the pushforward. -/
 theorem tsum_map_factor {γ δ : Type} (mx : ProbComp γ) (e : γ → δ) (h : δ → ℝ≥0∞) :
-    ∑' x, Pr[= x | mx] * h (e x) = ∑' d, Pr[= d | e <$> mx] * h d := by
+    ∑' x, Pr{let y ← mx}[y = x] * h (e x) = ∑' d, Pr{let x ← e <$> mx}[x = d] * h d := by
   have decEq : DecidableEq δ := Classical.decEq δ
-  simp only [probOutput_map_eq_tsum_ite, ← ENNReal.tsum_mul_right]
+  have pushforward : ∀ d, Pr{let x ← e <$> mx}[x = d] = ∑' x, if d = e x then Pr{let y ← mx}[y = x] else 0 :=
+    fun d => by
+      rw [prEvent_map, prEvent_congr mx (fun x => e x = d) (fun x => d = e x) fun _ => eq_comm,
+        OracleComp.prEvent_eq_tsum_ite]
+  simp only [pushforward, ← ENNReal.tsum_mul_right]
   rw [ENNReal.tsum_comm]
   refine tsum_congr fun x => ?_
   simp only [ite_mul, zero_mul]
   rw [tsum_ite_eq]
 
-set_option linter.deprecated false in
 /-- Two distributions with the same pushforward under `e` give equal sums to functions that agree across `e`-related support points. -/
 theorem tsum_fiber_eq {γ δ : Type} (mx my : ProbComp γ) (e : γ → δ) (same : e <$> mx = e <$> my)
     (f g : γ → ℝ≥0∞) (agree : ∀ x ∈ support mx, ∀ y ∈ support my, e x = e y → f x = g y) :
-    ∑' x, Pr[= x | mx] * f x = ∑' y, Pr[= y | my] * g y := by
+    ∑' x, Pr{let y ← mx}[y = x] * f x = ∑' y, Pr{let x ← my}[x = y] * g y := by
   have hsupport : ∀ d, (∃ x ∈ support mx, e x = d) ↔ (∃ y ∈ support my, e y = d) := by
     intro d
     have := congrArg (fun z : ProbComp δ => d ∈ support z) same
@@ -55,16 +57,16 @@ theorem tsum_fiber_eq {γ δ : Type} (mx my : ProbComp γ) (e : γ → δ) (same
     have found : ∃ x ∈ support mx, e x = e y := (hsupport (e y)).mpr ⟨y, hy, rfl⟩
     simp only [h, found, _root_.dite_true]
     exact (agree found.choose found.choose_spec.1 y hy found.choose_spec.2).symm
-  have lsum : ∑' x, Pr[= x | mx] * f x = ∑' x, Pr[= x | mx] * h (e x) := by
+  have lsum : ∑' x, Pr{let y ← mx}[y = x] * f x = ∑' x, Pr{let y ← mx}[y = x] * h (e x) := by
     refine tsum_congr fun x => ?_
     by_cases hx : x ∈ support mx
     · rw [left x hx]
-    · rw [probOutput_eq_zero_of_not_mem_support hx, zero_mul, zero_mul]
-  have rsum : ∑' y, Pr[= y | my] * g y = ∑' y, Pr[= y | my] * h (e y) := by
+    · rw [(prEvent_eq_zero_of_not_mem_support _) hx, zero_mul, zero_mul]
+  have rsum : ∑' y, Pr{let x ← my}[x = y] * g y = ∑' y, Pr{let x ← my}[x = y] * h (e y) := by
     refine tsum_congr fun y => ?_
     by_cases hy : y ∈ support my
     · rw [right y hy]
-    · rw [probOutput_eq_zero_of_not_mem_support hy, zero_mul, zero_mul]
+    · rw [(prEvent_eq_zero_of_not_mem_support _) hy, zero_mul, zero_mul]
   rw [lsum, rsum, tsum_map_factor mx e h, tsum_map_factor my e h, same]
 
 end Fiber
@@ -126,50 +128,51 @@ structure Compatible : Prop where
     Prod.map (Option.map (ident m0 m1)) E <$> (impl (rawQuery raw)).run s =
       Prod.map (Option.map (ident m0 m1)) E <$> (impl (rawQuery raw)).run t
 
-set_option linter.deprecated false in
 /-- Twin clients interpreted by a compatible interpretation from identified states put the same mass on corresponding good outputs. -/
 theorem twin_event {α β : Type} {Out : α → β → Prop} {Dead0 : α → Prop} {Dead1 : β → Prop}
     {x : OracleComp Spec α} {y : OracleComp Spec β} (twin : Twin m0 m1 Out Dead0 Dead1 x y)
     (G0 : α → Prop) (G1 : β → Prop) [DecidablePred G0] [DecidablePred G1] (hOut : ∀ a b, Out a b → (G0 a ↔ G1 b))
     (hDead0 : ∀ a, Dead0 a → ¬ G0 a) (hDead1 : ∀ b, Dead1 b → ¬ G1 b)
     (compatible : Compatible m0 m1 impl E) (s t : σ) (same : E s = E t) :
-    Pr[fun z => G0 z.1 | (simulateQ impl x).run s] = Pr[fun z => G1 z.1 | (simulateQ impl y).run t] := by
+    Pr{let z ← (simulateQ impl x).run s}[G0 z.1] = Pr{let z ← (simulateQ impl y).run t}[G1 z.1] := by
   induction twin generalizing s t with
   | pure related =>
     rename_i a b
-    simp only [simulateQ_pure, StateT.run_pure, probEvent_pure]
+    simp only [simulateQ_pure, StateT.run_pure, prEvent_pure]
     by_cases good : G0 a
     · simp [good, (hOut a b related).mp good]
     · simp [good, show ¬ G1 b from fun holds => good ((hOut a b related).mpr holds)]
   | dead dead0 dead1 =>
     rename_i x y
-    rw [probEvent_eq_zero, probEvent_eq_zero]
-    · intro z hz good
-      have mem : z.1 ∈ support ((simulateQ impl y).run' t) := by
-        rw [StateT.run'_eq, support_map]
-        exact ⟨z, hz, rfl⟩
-      exact hDead1 z.1 (dead1 z.1 (support_simulateQ_run'_subset impl y t mem)) good
-    · intro z hz good
-      have mem : z.1 ∈ support ((simulateQ impl x).run' s) := by
-        rw [StateT.run'_eq, support_map]
-        exact ⟨z, hz, rfl⟩
-      exact hDead0 z.1 (dead0 z.1 (support_simulateQ_run'_subset impl x s mem)) good
+    have zero0 : Pr{let z ← (simulateQ impl x).run s}[G0 z.1] = 0 :=
+      prEvent_eq_zero_of_forall_mem_support _ _ fun z hz good => by
+        have mem : z.1 ∈ support ((simulateQ impl x).run' s) := by
+          rw [StateT.run'_eq, support_map]
+          exact ⟨z, hz, rfl⟩
+        exact hDead0 z.1 (dead0 z.1 (support_simulateQ_run'_subset impl x s mem)) good
+    have zero1 : Pr{let z ← (simulateQ impl y).run t}[G1 z.1] = 0 :=
+      prEvent_eq_zero_of_forall_mem_support _ _ fun z hz good => by
+        have mem : z.1 ∈ support ((simulateQ impl y).run' t) := by
+          rw [StateT.run'_eq, support_map]
+          exact ⟨z, hz, rfl⟩
+        exact hDead1 z.1 (dead1 z.1 (support_simulateQ_run'_subset impl y t mem)) good
+    rw [zero0, zero1]
   | quiet q isQuiet _ ih =>
-    simp only [simulateQ_bind, simulateQ_HasQuery_query, StateT.run_bind, probEvent_bind_eq_tsum]
+    simp only [simulateQ_bind, simulateQ_HasQuery_query, StateT.run_bind, OracleComp.prEvent_bind_eq_tsum]
     refine tsum_fiber_eq _ _ (Prod.map id E) (compatible.quiet q isQuiet s t same) _ _ ?_
     rintro ⟨r, s'⟩ _ ⟨r', t'⟩ _ related
     simp only [Prod.map, id_eq, Prod.mk.injEq] at related
     obtain ⟨rfl, states⟩ := related
     exact ih r s' t' states
   | sealing i0 i1 identified _ ih =>
-    simp only [simulateQ_bind, simulateQ_HasQuery_query, StateT.run_bind, probEvent_bind_eq_tsum]
+    simp only [simulateQ_bind, simulateQ_HasQuery_query, StateT.run_bind, OracleComp.prEvent_bind_eq_tsum]
     refine tsum_fiber_eq _ _ (Prod.map id E) (compatible.sealing i0 i1 identified s t same) _ _ ?_
     rintro ⟨r, s'⟩ _ ⟨r', t'⟩ _ related
     simp only [Prod.map, id_eq, Prod.mk.injEq] at related
     obtain ⟨rfl, states⟩ := related
     exact ih r s' t' states
   | raw raw _ ih =>
-    simp only [simulateQ_bind, simulateQ_HasQuery_query, StateT.run_bind, probEvent_bind_eq_tsum]
+    simp only [simulateQ_bind, simulateQ_HasQuery_query, StateT.run_bind, OracleComp.prEvent_bind_eq_tsum]
     refine tsum_fiber_eq _ _ (Prod.map (Option.map (ident m0 m1)) E) (compatible.raw raw s t same) _ _ ?_
     rintro ⟨r, s'⟩ _ ⟨r', t'⟩ _ related
     simp only [Prod.map, Prod.mk.injEq] at related
@@ -727,8 +730,8 @@ theorem randomView_twin (equal : m0.length = m1.length) {left right : OracleComp
     (twin : Twin m0 m1 (fun a b => a = b) (fun a => a = false) (fun b => b = false) left right) :
     𝒟[AdaptiveCtxPrivacyGuard.randomView decode (AdaptiveCtxDynamicKnownKeys.decisionClient c left)] {true} =
       𝒟[AdaptiveCtxPrivacyGuard.randomView decode (AdaptiveCtxDynamicKnownKeys.decisionClient c right)] {true} := by
-  rw [randomView_collapse, randomView_collapse, evalDist_apply_singleton, evalDist_apply_singleton,
-    ← probEvent_eq_eq_probOutput, ← probEvent_eq_eq_probOutput, probEvent_map, probEvent_map]
+  rw [randomView_collapse, randomView_collapse, ← prEvent_eq_evalDist_singleton _ true,
+    ← prEvent_eq_evalDist_singleton _ true, prEvent_map, prEvent_map]
   exact twin_event m0 m1 (confRandomImpl decode c) (identRandom m0 m1) twin (fun a => a = true) (fun b => b = true)
     (fun a b same => by rw [same]) (fun a dead => by simp [dead]) (fun b dead => by simp [dead])
     (random_compatible m0 m1 decode c equal) _ _ rfl
@@ -1058,47 +1061,52 @@ theorem pre_map {α β γ δ : Type} {Out : α → β → Prop} {Dead0 : α → 
 
 variable {σ : Type} (impl : QueryImpl Spec (StateT σ ProbComp)) (E : Pqxdh.Bytes → Pqxdh.Bytes → σ → σ)
 
-set_option linter.deprecated false in
 /-- Adaptive twin clients interpreted from one state by an interpretation compatible with every equal-length identification put the same mass on corresponding good outputs. -/
 theorem pre_event {α β : Type} {Out : α → β → Prop} {Dead0 : α → Prop} {Dead1 : β → Prop}
     {x : OracleComp Spec α} {y : OracleComp Spec β} (pre : Pre Out Dead0 Dead1 x y)
     (G0 : α → Prop) (G1 : β → Prop) [DecidablePred G0] [DecidablePred G1] (hOut : ∀ a b, Out a b → (G0 a ↔ G1 b))
     (hDead0 : ∀ a, Dead0 a → ¬ G0 a) (hDead1 : ∀ b, Dead1 b → ¬ G1 b)
     (compatible : ∀ m0 m1 : Pqxdh.Bytes, m0.length = m1.length → Compatible m0 m1 impl (E m0 m1)) (s : σ) :
-    Pr[fun z => G0 z.1 | (simulateQ impl x).run s] = Pr[fun z => G1 z.1 | (simulateQ impl y).run s] := by
+    Pr{let z ← (simulateQ impl x).run s}[G0 z.1] = Pr{let z ← (simulateQ impl y).run s}[G1 z.1] := by
   induction pre generalizing s with
   | pure related =>
     rename_i a b
-    simp only [simulateQ_pure, StateT.run_pure, probEvent_pure]
+    simp only [simulateQ_pure, StateT.run_pure, prEvent_pure]
     by_cases good : G0 a
     · simp [good, (hOut a b related).mp good]
     · simp [good, show ¬ G1 b from fun holds => good ((hOut a b related).mpr holds)]
   | dead dead0 dead1 =>
     rename_i x y
-    rw [probEvent_eq_zero, probEvent_eq_zero]
-    · intro z hz good
-      have mem : z.1 ∈ support ((simulateQ impl y).run' s) := by
-        rw [StateT.run'_eq, support_map]
-        exact ⟨z, hz, rfl⟩
-      exact hDead1 z.1 (dead1 z.1 (support_simulateQ_run'_subset impl y s mem)) good
-    · intro z hz good
-      have mem : z.1 ∈ support ((simulateQ impl x).run' s) := by
-        rw [StateT.run'_eq, support_map]
-        exact ⟨z, hz, rfl⟩
-      exact hDead0 z.1 (dead0 z.1 (support_simulateQ_run'_subset impl x s mem)) good
+    have zero0 : Pr{let z ← (simulateQ impl x).run s}[G0 z.1] = 0 :=
+      prEvent_eq_zero_of_forall_mem_support _ _ fun z hz good => by
+        have mem : z.1 ∈ support ((simulateQ impl x).run' s) := by
+          rw [StateT.run'_eq, support_map]
+          exact ⟨z, hz, rfl⟩
+        exact hDead0 z.1 (dead0 z.1 (support_simulateQ_run'_subset impl x s mem)) good
+    have zero1 : Pr{let z ← (simulateQ impl y).run s}[G1 z.1] = 0 :=
+      prEvent_eq_zero_of_forall_mem_support _ _ fun z hz good => by
+        have mem : z.1 ∈ support ((simulateQ impl y).run' s) := by
+          rw [StateT.run'_eq, support_map]
+          exact ⟨z, hz, rfl⟩
+        exact hDead1 z.1 (dead1 z.1 (support_simulateQ_run'_subset impl y s mem)) good
+    rw [zero0, zero1]
   | step q _ ih =>
-    simp only [simulateQ_bind, simulateQ_HasQuery_query, StateT.run_bind, probEvent_bind_eq_tsum]
+    simp only [simulateQ_bind, simulateQ_HasQuery_query, StateT.run_bind, OracleComp.prEvent_bind_eq_tsum]
     exact tsum_congr fun z => by rw [ih z.1 z.2]
   | switch m0 m1 equal twin =>
     exact twin_event m0 m1 impl (E m0 m1) twin G0 G1 hOut hDead0 hDead1 (compatible m0 m1 equal) s s rfl
+
+set_option linter.deprecated false in set_option linter.unusedVariables false in theorem _root_.BeaconcryptCore.Computational.PqxdhFirstRecordConfidentiality.pre_event_vcvioLegacy :
+    ∀ {σ : Type} (impl : QueryImpl BeaconcryptCore.Computational.AdaptiveCtxDynamicKnownKeys.Spec (StateT σ ProbComp)) (E : Pqxdh.Bytes → Pqxdh.Bytes → σ → σ) {α β : Type} {Out : α → β → Prop} {Dead0 : α → Prop} {Dead1 : β → Prop} {x : OracleComp BeaconcryptCore.Computational.AdaptiveCtxDynamicKnownKeys.Spec α} {y : OracleComp BeaconcryptCore.Computational.AdaptiveCtxDynamicKnownKeys.Spec β} (pre : BeaconcryptCore.Computational.PqxdhFirstRecordConfidentiality.Pre Out Dead0 Dead1 x y) (G0 : α → Prop) (G1 : β → Prop) [DecidablePred G0] [DecidablePred G1] (hOut : ∀ (a : α) (b : β), Out a b → (G0 a ↔ G1 b)) (hDead0 : ∀ (a : α), Dead0 a → ¬G0 a) (hDead1 : ∀ (b : β), Dead1 b → ¬G1 b) (compatible : ∀ (m0 m1 : Pqxdh.Bytes), List.length m0 = List.length m1 → BeaconcryptCore.Computational.PqxdhFirstRecordConfidentiality.Compatible m0 m1 impl (E m0 m1)) (s : σ), (probEvent ((simulateQ impl x).run s) fun (z : α × σ) => G0 z.1) = probEvent ((simulateQ impl y).run s) fun (z : β × σ) => G1 z.1 :=
+  by simpa only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent] using @BeaconcryptCore.Computational.PqxdhFirstRecordConfidentiality.pre_event
 
 /-- Adaptive twin Boolean clients have the same `true` mass in the ordinary random view: before the switch they are identical, and after it the challenge plaintexts have equal length. -/
 theorem randomView_pre (decode : AdaptiveCtxReceive.RawDecoder) (c : Pqxdh.Crypto) {left right : OracleComp Spec Bool}
     (pre : Pre (fun a b => a = b) (fun a => a = false) (fun b => b = false) left right) :
     𝒟[AdaptiveCtxPrivacyGuard.randomView decode (AdaptiveCtxDynamicKnownKeys.decisionClient c left)] {true} =
       𝒟[AdaptiveCtxPrivacyGuard.randomView decode (AdaptiveCtxDynamicKnownKeys.decisionClient c right)] {true} := by
-  rw [randomView_collapse, randomView_collapse, evalDist_apply_singleton, evalDist_apply_singleton,
-    ← probEvent_eq_eq_probOutput, ← probEvent_eq_eq_probOutput, probEvent_map, probEvent_map]
+  rw [randomView_collapse, randomView_collapse, ← prEvent_eq_evalDist_singleton _ true,
+    ← prEvent_eq_evalDist_singleton _ true, prEvent_map, prEvent_map]
   exact pre_event (confRandomImpl decode c) (fun m0 m1 => identRandom m0 m1) pre (fun a => a = true) (fun b => b = true)
     (fun a b same => by rw [same]) (fun a dead => by simp [dead]) (fun b dead => by simp [dead])
     (fun m0 m1 equal => random_compatible m0 m1 decode c equal) _
@@ -1356,7 +1364,6 @@ theorem run_good_back {ι σ X : Type} {spec : OracleSpec ι} (impl : QueryImpl 
     obtain ⟨step, stepSupported, rest⟩ := supported
     exact back query s step stepSupported (ih step.1 step.2 rest)
 
-set_option linter.deprecated false in
 /-- Two interpretations that agree except on disclosing steps, after which no good state is reachable, give the same probability to every good final result. -/
 theorem good_output_eq {ι σ X : Type} {spec : OracleSpec ι} (normal original : QueryImpl spec (StateT σ ProbComp))
     (Good : σ → Prop) (Discloses : spec.Domain → σ → Prop)
@@ -1366,29 +1373,28 @@ theorem good_output_eq {ι σ X : Type} {spec : OracleSpec ι} (normal original 
     (badNormal : ∀ q s, Discloses q s → ∀ z ∈ support ((normal q).run s), ¬ Good z.2)
     (badOriginal : ∀ q s, Discloses q s → ∀ z ∈ support ((original q).run s), ¬ Good z.2)
     (work : OracleComp spec X) (s : σ) (result : X × σ) (good : Good result.2) :
-    Pr[= result | (simulateQ normal work).run s] = Pr[= result | (simulateQ original work).run s] := by
+    Pr{let x ← (simulateQ normal work).run s}[x = result] = Pr{let x ← (simulateQ original work).run s}[x = result] := by
   classical
   induction work using OracleComp.inductionOn generalizing s with
   | pure value => rfl
   | query_bind query next ih =>
     simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind]
     by_cases clear : Discloses query s
-    · rw [probOutput_bind_eq_tsum, probOutput_bind_eq_tsum]
+    · rw [OracleComp.prEvent_bind_eq_tsum, OracleComp.prEvent_bind_eq_tsum]
       have zero : ∀ (impl : QueryImpl spec (StateT σ ProbComp)),
           (∀ q s z, z ∈ support ((impl q).run s) → Good z.2 → Good s) →
           (∀ z ∈ support ((impl query).run s), ¬ Good z.2) →
-          ∑' z, Pr[= z | (impl query).run s] * Pr[= result | (simulateQ impl (next z.1)).run z.2] = 0 := by
+          ∑' z, Pr{let x ← (impl query).run s}[x = z] * Pr{let x ← (simulateQ impl (next z.1)).run z.2}[x = result] = 0 := by
         intro impl back bad
         refine ENNReal.tsum_eq_zero.mpr fun z => ?_
         by_cases hz : z ∈ support ((impl query).run s)
-        · rw [probOutput_eq_zero_of_not_mem_support fun reached =>
+        · rw [(prEvent_eq_zero_of_not_mem_support _) fun reached =>
             bad z hz (run_good_back impl Good back (next z.1) z.2 result reached good), mul_zero]
-        · rw [probOutput_eq_zero_of_not_mem_support hz, zero_mul]
+        · rw [(prEvent_eq_zero_of_not_mem_support _) hz, zero_mul]
       rw [zero normal backNormal (badNormal query s clear), zero original backOriginal (badOriginal query s clear)]
-    · rw [agree query s clear, probOutput_bind_eq_tsum, probOutput_bind_eq_tsum]
+    · rw [agree query s clear, OracleComp.prEvent_bind_eq_tsum, OracleComp.prEvent_bind_eq_tsum]
       exact tsum_congr fun z => by rw [ih z.1 z.2]
 
-set_option linter.deprecated false in
 /-- The event form: every final event conjoined with goodness has equal probability under the two interpretations. -/
 theorem good_event_eq {ι σ X : Type} {spec : OracleSpec ι} (normal original : QueryImpl spec (StateT σ ProbComp))
     (Good : σ → Prop) (Discloses : spec.Domain → σ → Prop)
@@ -1398,10 +1404,10 @@ theorem good_event_eq {ι σ X : Type} {spec : OracleSpec ι} (normal original :
     (badNormal : ∀ q s, Discloses q s → ∀ z ∈ support ((normal q).run s), ¬ Good z.2)
     (badOriginal : ∀ q s, Discloses q s → ∀ z ∈ support ((original q).run s), ¬ Good z.2)
     (work : OracleComp spec X) (s : σ) (event : X × σ → Prop) :
-    Pr[fun result => event result ∧ Good result.2 | (simulateQ normal work).run s] =
-      Pr[fun result => event result ∧ Good result.2 | (simulateQ original work).run s] := by
+    Pr{let result ← (simulateQ normal work).run s}[event result ∧ Good result.2] =
+      Pr{let result ← (simulateQ original work).run s}[event result ∧ Good result.2] := by
   classical
-  rw [probEvent_eq_tsum_ite, probEvent_eq_tsum_ite]
+  rw [OracleComp.prEvent_eq_tsum_ite, OracleComp.prEvent_eq_tsum_ite]
   refine tsum_congr fun result => ?_
   by_cases good : Good result.2
   · simp only [good, and_true]
@@ -1505,16 +1511,13 @@ theorem trOriginal_read (request : RawCtxProtocolReveals.Request S B) (before : 
     StateT.run, map_pure]
   rfl
 
-set_option linter.deprecated false in
 /-- Every final event conjoined with the absence of hidden disclosure has the same probability in the traced ordinary source and the traced stopped source. -/
 theorem traced_event_good {Result : Type} (work : OracleComp (PqxdhSelectedPostCompiler.Optional (PqxdhInitialGenericPost.Spec extra S B)) Result)
     (before : Traced M P I D K A N C S B) (event : Result × Traced M P I D K A N C S B → Prop) :
-    Pr[fun result => event result ∧ PqxdhSelectedPostDisclosure.Good result.2.1 |
-        (simulateQ (traced pre application initial selector aux source writer prior parent key target nonce next sender route decode mark)
-          work).run before] =
-      Pr[fun result => event result ∧ PqxdhSelectedPostDisclosure.Good result.2.1 |
-        (simulateQ (trOriginal pre application initial selector aux source writer prior parent key target nonce next sender route decode mark)
-          work).run before] := by
+    Pr{let result ← ((simulateQ (traced pre application initial selector aux source writer prior parent key target nonce next sender route decode mark)
+          work).run before)}[event result ∧ PqxdhSelectedPostDisclosure.Good result.2.1] =
+      Pr{let result ← ((simulateQ (trOriginal pre application initial selector aux source writer prior parent key target nonce next sender route decode mark)
+          work).run before)}[event result ∧ PqxdhSelectedPostDisclosure.Good result.2.1] := by
   refine good_event_eq _ _ (fun state => PqxdhSelectedPostDisclosure.Good state.1)
     (fun query state => PqxdhSelectedPostDisclosure.Discloses (extra := extra) query state.1)
     (traced_agree pre application initial selector aux source writer prior parent key target nonce next sender route decode mark)
@@ -2018,24 +2021,25 @@ variable
     (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (read : RawCtxReceive.FrameDecoder)
     (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Bool) (b : Fin B)
 
-set_option linter.deprecated false in
 /-- From any instrumented start, the traced ordinary source post and the instrumented augmented post give the same probability to every transcript event conjoined with the absence of hidden disclosure. -/
 theorem post_source_augmented (work : OracleComp (PqxdhInitialGenericPost.Spec extra S B) Bool)
     (start : InsFull M P I D K A N C S B) (event : Option Bool × Traced M P I D K A N C S B → Prop) :
-    Pr[fun result => event result ∧ PqxdhSelectedPostDisclosure.Good result.2.1 |
-        (simulateQ (traced pre application initial selector aux source writer prior parent key target nonce next sender route read mark)
-          (RawCtxSelectedFamilyNonceCoupling.optionalClient work)).run (insProject start)] =
-      Pr[fun result => event (result.1, insProject result.2) ∧ PqxdhSelectedPostDisclosure.Good (insProject result.2).1 |
-        (simulateQ (insAugmented pre application initial selector aux source writer prior parent key target nonce next sender route read
-          mark b) (RawCtxSelectedFamilyNonceCoupling.optionalClient work)).run start] := by
+    Pr{let result ← ((simulateQ (traced pre application initial selector aux source writer prior parent key target nonce next sender route read mark)
+          (RawCtxSelectedFamilyNonceCoupling.optionalClient work)).run (insProject start))}[event result ∧ PqxdhSelectedPostDisclosure.Good result.2.1] =
+      Pr{let result ← ((simulateQ (insAugmented pre application initial selector aux source writer prior parent key target nonce next sender route read
+          mark b) (RawCtxSelectedFamilyNonceCoupling.optionalClient work)).run start)}[event (result.1, insProject result.2) ∧ PqxdhSelectedPostDisclosure.Good (insProject result.2).1] := by
   rw [traced_event_good]
   have projected := map_run_simulateQ_eq_of_query_map_eq
     (insAugmented pre application initial selector aux source writer prior parent key target nonce next sender route read mark b)
     (trOriginal pre application initial selector aux source writer prior parent key target nonce next sender route read mark)
     insProject (insAugmented_step pre application initial selector aux source writer prior parent key target nonce next sender route read
       mark b) (RawCtxSelectedFamilyNonceCoupling.optionalClient work) start
-  rw [← projected, probEvent_map]
+  rw [← projected, prEvent_map]
   rfl
+
+set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.PqxdhFirstRecordConfidentiality.post_source_augmented_vcvioLegacy :
+    ∀ {ι I D K X Response Shared A N C M P : Type} {extra : OracleSpec ι} {S B : ℕ} (pre : QueryImpl (BeaconcryptCore.Computational.PqxdhBeaconPhase2Shared.Spec I D K X Response Shared) (StateT (BeaconcryptCore.Computational.PqxdhNativeSharedPrefix.ExternalState A N C) ProbComp)) (application : Response → BeaconcryptCore.Computational.PqxdhNativeSharedPrefix.LocalCallback A N C (Option Pqxdh.Bytes)) (initial : BeaconcryptCore.Computational.PqxdhBeaconPhase2Shared.Secrets Shared → BeaconcryptCore.Computational.PqxdhNativeSharedPrefix.LocalCallback A N C BeaconcryptCore.Computational.PqxdhInitialNativeAudit.InitialReply) (selector : QueryImpl extra (StateT (BeaconcryptCore.Computational.PqxdhNativeSharedPrefix.ExternalState A N C) ProbComp)) (aux : QueryImpl BeaconcryptCore.Computational.PqxdhServerRegistrationPublication.AuxSpec (StateT (BeaconcryptCore.Computational.PqxdhNativeSharedPrefix.ExternalState A N C) ProbComp)) (source : BeaconcryptCore.Computational.PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) (writer : BeaconcryptCore.Computational.RawCtxMixedShared.Writer) (prior : BeaconcryptCore.Computational.RawCtxSelectedParentTable.Prior) (parent : Option BeaconcryptCore.Computational.RawCtxSelectedParentEntry.Entry) (key target : BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput) (nonce : BeaconcryptCore.Computational.PqxdhFullSecretInputKdf.NonceOutput) (next : BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput) (sender : M → Aeneas.Std.U64) (route : BeaconcryptCore.Computational.RawCtxServerRouting.SenderDecoder) (read : BeaconcryptCore.Computational.RawCtxReceive.FrameDecoder) (mark : BeaconcryptCore.Computational.PqxdhBeaconPhase2Shared.Secrets Shared → Bool) (b : Fin B) (work : OracleComp (BeaconcryptCore.Computational.PqxdhInitialGenericPost.Spec extra S B) Bool) (start : BeaconcryptCore.Computational.PqxdhFirstRecordConfidentiality.InsFull M P I D K A N C S B) (event : Option Bool × BeaconcryptCore.Computational.PqxdhSelectedFirstRecord.Traced M P I D K A N C S B → Prop), (probEvent ((simulateQ (BeaconcryptCore.Computational.PqxdhSelectedFirstRecord.traced pre application initial selector aux source writer prior parent key target nonce next sender route read mark) (BeaconcryptCore.Computational.RawCtxSelectedFamilyNonceCoupling.optionalClient work)).run (BeaconcryptCore.Computational.PqxdhFirstRecordConfidentiality.insProject start)) fun (result : Option Bool × BeaconcryptCore.Computational.PqxdhSelectedFirstRecord.Traced M P I D K A N C S B) => event result ∧ BeaconcryptCore.Computational.PqxdhSelectedPostDisclosure.Good result.2.1) = probEvent ((simulateQ (BeaconcryptCore.Computational.PqxdhFirstRecordConfidentiality.insAugmented pre application initial selector aux source writer prior parent key target nonce next sender route read mark b) (BeaconcryptCore.Computational.RawCtxSelectedFamilyNonceCoupling.optionalClient work)).run start) fun (result : Option Bool × BeaconcryptCore.Computational.PqxdhFirstRecordConfidentiality.InsFull M P I D K A N C S B) => event (result.1, BeaconcryptCore.Computational.PqxdhFirstRecordConfidentiality.insProject result.2) ∧ BeaconcryptCore.Computational.PqxdhSelectedPostDisclosure.Good (BeaconcryptCore.Computational.PqxdhFirstRecordConfidentiality.insProject result.2).1 :=
+  by simpa only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent] using @BeaconcryptCore.Computational.PqxdhFirstRecordConfidentiality.post_source_augmented
 
 /-- Unflagged: the instrumented augmented post exceeds the instrumented evaluated post on an event by at most the flagged event mass of the augmented run. -/
 theorem augmented_le_evaluated (work : OracleComp (PqxdhInitialGenericPost.Spec extra S B) Bool)
@@ -2081,8 +2085,8 @@ theorem evaluated_le_augmented (work : OracleComp (PqxdhInitialGenericPost.Spec 
         (insEvaluated pre application initial selector aux source writer prior parent key target nonce next sender route read mark b)
         (insStops (extra := extra) prior parent target nonce next sender))
         (RawCtxSelectedFamilyNonceCoupling.optionalClient work)).run (start, false)] {true} = 0 := by
-    rw [evalDist_apply_singleton]
-    refine probOutput_eq_zero_of_not_mem_support fun supported => ?_
+    rw [← prEvent_eq_evalDist_singleton _ true]
+    refine prEvent_eq_zero_of_not_mem_support _ fun supported => ?_
     rw [support_map, Set.mem_image] at supported
     obtain ⟨result, reached, hit⟩ := supported
     rw [Bool.and_eq_true] at hit
@@ -2098,7 +2102,6 @@ theorem evaluated_le_augmented (work : OracleComp (PqxdhInitialGenericPost.Spec 
       _ (start, false), Functor.map_map, Functor.map_map]
   exact bound
 
-set_option linter.deprecated false in
 /-- The flagged event mass of the instrumented augmented run is at most the flagged mass of the undisclosure event in the augmented run of `PqxdhSelectedPostCompiler` from the erased start. -/
 theorem flagged_le_stop (work : OracleComp (PqxdhInitialGenericPost.Spec extra S B) Bool)
     (start : InsFull M P I D K A N C S B) (event : Option Bool × InsFull M P I D K A N C S B → Bool)
@@ -2141,21 +2144,25 @@ theorem flagged_le_stop (work : OracleComp (PqxdhInitialGenericPost.Spec extra S
 
 end PostChain
 
-set_option linter.deprecated false in
 /-- The `true` mass of a decided event is the event's probability. -/
 theorem true_mass_eq {α : Type} (mx : ProbComp α) (p : α → Prop) [DecidablePred p] :
-    𝒟[(fun x => decide (p x)) <$> mx] {true} = Pr[p | mx] := by
-  rw [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map]
-  simp [Function.comp_def]
+    𝒟[(fun x => decide (p x)) <$> mx] {true} = Pr{let x ← mx}[p x] := by
+  rw [← prEvent_eq_evalDist_singleton _ true, prEvent_map]
+  exact prEvent_congr _ _ _ fun _ => decide_eq_true_iff
 
-set_option linter.deprecated false in
+set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.PqxdhFirstRecordConfidentiality.true_mass_eq_vcvioLegacy :
+    ∀ {α : Type} (mx : ProbComp α) (p : α → Prop) [DecidablePred p], 𝒟[(fun (x : α) => Decidable.decide (p x)) <$> mx] {Bool.true} = probEvent mx p :=
+  by simpa only [BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent] using @BeaconcryptCore.Computational.PqxdhFirstRecordConfidentiality.true_mass_eq
+
 /-- One event dominated pointwise by the disjunction of two events has at most their added masses. -/
 theorem map_le_add {α : Type} (mx : ProbComp α) (f g h : α → Bool) (split : ∀ a, f a = true → g a = true ∨ h a = true) :
     𝒟[f <$> mx] {true} ≤ 𝒟[g <$> mx] {true} + 𝒟[h <$> mx] {true} := by
-  simp only [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map]
-  calc probEvent mx ((fun x => x = true) ∘ f) ≤ probEvent mx (fun a => g a = true ∨ h a = true) :=
-        probEvent_mono'' fun a holds => split a holds
-    _ ≤ probEvent mx ((fun x => x = true) ∘ g) + probEvent mx ((fun x => x = true) ∘ h) := probEvent_or_le _ _ _
+  rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true,
+    ← prEvent_eq_evalDist_singleton _ true]
+  simp only [prEvent_map]
+  calc Pr{let x ← mx}[f x = true] ≤ Pr{let x ← mx}[g x = true ∨ h x = true] :=
+        prEvent_mono _ _ _ fun a holds => split a holds
+    _ ≤ Pr{let x ← mx}[g x = true] + Pr{let x ← mx}[h x = true] := prEvent_or_le _ _ _
 
 section First
 open PqxdhNativeSharedPrefix PqxdhSelectedStateInterpreter PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhJointKdfGame PqxdhJointKdf
@@ -2230,7 +2237,6 @@ noncomputable def keyRun (number : Std.U64) (ancestors disclosed : List RatchetC
     firstRun pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode
       index metadata ready post before selected shared privateState cache store key nonce next
 
-set_option linter.deprecated false in
 /-- Per selected builder result: the traced source event is dominated by the instrumented evaluated event plus the restricted stop integrand of `PqxdhFirstBeaconRecordIntegrity.stopRun`. -/
 theorem built_upper (number : Std.U64) (ancestors disclosed : List RatchetChain) (built : Built M P I D K A N S B) :
     𝒟[(fun result => decide (FirstEvent source previousRoot response64 selected number ancestors disclosed result ∧
@@ -2253,10 +2259,10 @@ theorem built_upper (number : Std.U64) (ancestors disclosed : List RatchetChain)
     nonce next sender route decode (PqxdhInitialSelectedOrigin.mark source selectedMessage) b (post built.1.1) (insStart index built)
     (FirstEvent source previousRoot response64 selected number ancestors disclosed)
   rw [true_mass_eq]
-  change probEvent _ _ = probEvent _ _ at same
   rw [show ((built.1.2, built.2), selectedAfter PqxdhInitialSourcePublication.empty built.1.2 index true built.1.1) =
     insProject (insStart index built) from rfl, same]
-  change Pr[InsEvent source previousRoot response64 selected number ancestors disclosed | _] ≤ _
+  refine le_of_eq_of_le (prEvent_congr _ _ (InsEvent source previousRoot response64 selected number ancestors disclosed)
+    fun _ => Iff.rfl) ?_
   rw [← true_mass_eq]
   refine (augmented_le_evaluated pre application initial selector aux source writer (productionStream source.crypto) none key target nonce
     next sender route decode (PqxdhInitialSelectedOrigin.mark source selectedMessage) b (post built.1.1) (insStart index built)
@@ -2269,7 +2275,6 @@ theorem built_upper (number : Std.U64) (ancestors disclosed : List RatchetChain)
       rw [decide_eq_true_iff] at holds ⊢
       exact holds.1.2.2)
 
-set_option linter.deprecated false in
 /-- Per selected builder result: the instrumented evaluated event never exceeds the traced source event. -/
 theorem built_lower (number : Std.U64) (ancestors disclosed : List RatchetChain) (built : Built M P I D K A N S B) :
     𝒟[(fun result => decide (InsEvent source previousRoot response64 selected number ancestors disclosed result)) <$>
@@ -2885,8 +2890,9 @@ theorem insCompiled_le_separated (target : Target S (B + 1)) :
       show (@decide (RawCtxSendLineageCollision.InitialAlias initialBlock) (Classical.propDecidable _)) = true from
         @decide_eq_true _ (Classical.propDecidable _) aliased]
     refine le_add_right ?_
-    simp only [evalDist_apply_singleton, probOutput_pure_self]
-    exact probOutput_le_one
+    rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true, prEvent_pure]
+    simp only [↓reduceIte]
+    exact prEvent_le_one _
   · rw [ite_eq_right_iff.mpr fun holds => absurd holds aliased]
     exact le_add_self
 
@@ -2903,7 +2909,7 @@ theorem insSeparated_le_compiled (target : Target S (B + 1)) :
   classical
   by_cases aliased : RawCtxSendLineageCollision.InitialAlias initialBlock
   · rw [ite_eq_left_iff.mpr fun impossible => absurd aliased impossible]
-    simp
+    simp [-evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
   · rw [ite_eq_right_iff.mpr fun holds => absurd holds aliased]
 
 /-- Sampling the selected key after the forwarded prelude: the ordinary selected-key CTX source game of the instrumented client is the prelude run, a key draw and the suffix from the reached shared state. -/
@@ -2920,12 +2926,12 @@ theorem insClient_source (target : Target S (B + 1))
       Prod.fst <$> (simulateQ (AdaptiveCtxDynamicKnownKeys.sourceImpl true (RawCtxUniversalDecoder.decoder (env0).decode)
         (env0).source.crypto key) (insSuffix setup env callbacks baseImpl kem attachedVerify primitives program post b target out
           result.1)).run (RawCtxSourceSharedRom.install AdaptiveCtxDynamicKnownKeys.initialSource result.2)] := by
-  have exchanged := RawCtxPrefixKeyOrder.source_game_vcvioLegacy true (RawCtxUniversalDecoder.decoder (env0).decode) (env0).source.crypto
+  have exchanged := RawCtxPrefixKeyOrder.source_game true (RawCtxUniversalDecoder.decoder (env0).decode) (env0).source.crypto
     (prelude setup env callbacks baseImpl kem attachedVerify primitives program post)
     (insSuffix setup env callbacks baseImpl kem attachedVerify primitives program post b target out)
-  have mapped := congrArg (fun distribution => Prod.fst <$> distribution) exchanged
-  simp only [← evalSPMF_map, map_bind] at mapped
-  exact evalDist_eq_of_evalSPMF_eq _ _ mapped
+  have mapped := exchanged.map Prod.fst
+  simp only [map_bind] at mapped
+  exact mapped.evalDist_eq
 
 /-- The separated instrumented game is dominated by the instrumented client-event client in the ordinary selected-key CTX source game. -/
 theorem insSeparated_le_client :
@@ -2944,7 +2950,7 @@ theorem insSeparated_le_client :
   classical
   by_cases aliased : RawCtxSendLineageCollision.InitialAlias result.1.2.1
   · rw [ite_eq_left_iff.mpr fun impossible => absurd aliased impossible]
-    simp
+    simp [-evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
   · rw [ite_eq_right_iff.mpr fun holds => absurd holds aliased,
       insObserve_eq setup env callbacks baseImpl kem attachedVerify primitives program post b result.1 result.2.1 result.2.2 key aliased]
 
@@ -2972,8 +2978,9 @@ theorem insClient_le_separated :
   · rw [show (@decide (RawCtxSendLineageCollision.InitialAlias result.1.2.1) (Classical.propDecidable _)) = true from
         @decide_eq_true _ (Classical.propDecidable _) aliased]
     refine le_add_left ?_
-    simp only [evalDist_apply_singleton, probOutput_pure_self]
-    exact probOutput_le_one
+    rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true, prEvent_pure]
+    simp only [↓reduceIte]
+    exact prEvent_le_one _
   · rw [ite_eq_right_iff.mpr fun holds => absurd holds aliased,
       insObserve_eq setup env callbacks baseImpl kem attachedVerify primitives program post b result.1 result.2.1 result.2.2 key aliased]
     exact le_self_add
@@ -4281,12 +4288,11 @@ theorem client_pre (b : Fin (B + 1))
 
 end ClientPre
 
-set_option linter.deprecated false in
 /-- One event dominated pointwise by another has at most its mass. -/
 theorem map_le_map {α : Type} (mx : ProbComp α) (f g : α → Bool) (le : ∀ a, f a = true → g a = true) :
     𝒟[f <$> mx] {true} ≤ 𝒟[g <$> mx] {true} := by
-  simp only [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map]
-  exact probEvent_mono'' fun a holds => le a holds
+  rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true, prEvent_map, prEvent_map]
+  exact prEvent_mono _ _ _ fun a holds => le a holds
 
 section OutputSwitch
 open PqxdhNativeSharedPrefix PqxdhInitialBeaconAmbient PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhJointKdfGame PqxdhJointKdf
@@ -4584,8 +4590,8 @@ theorem bit_bounds (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseImpl 
   have half : ((1 : ℝ≥0∞) / (2 ^ 256 : ℝ≥0∞)).toReal = 1 / 2 ^ 256 := by
     rw [ENNReal.toReal_div, ENNReal.toReal_pow]
     norm_num
-  have upReal := ENNReal.toReal_mono (by simp [lossFinite]) up
-  have loReal := ENNReal.toReal_mono (by simp [lossFinite]) lo
+  have upReal := ENNReal.toReal_mono (by simp [lossFinite, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]) up
+  have loReal := ENNReal.toReal_mono (by simp [lossFinite, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]) lo
   simp only [ENNReal.toReal_add, ne_eq, ENNReal.add_eq_top, PqxdhFirstRecordTarget.true_ne_top, halfFinite, lossFinite,
     not_false_eq_true, or_self, half] at upReal loReal
   unfold twinLoss
@@ -4642,7 +4648,7 @@ theorem stop_real (post : PqxdhAuthenticatedRootExperiment.Post (baseSpec := bas
     c.postBudget c.postBound b
   have real := ENNReal.toReal_mono (ENNReal.div_ne_top (ENNReal.natCast_ne_top _) (by positivity)) bound
   rw [ENNReal.toReal_div, ENNReal.toReal_pow, ENNReal.toReal_natCast] at real
-  simpa using real
+  simpa [-evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ] using real
 
 end Headline
 
@@ -5555,7 +5561,9 @@ theorem hiddenGap_zero (b : Fin (B + 1))
     𝒟[hiddenGapGame setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b β) b (firstBeacon b)]
       {true} = 0 := by
   unfold hiddenGapGame
-  rw [insFullClient_run, source_map, evalDist_apply_singleton, probOutput_eq_zero_iff, support_map]
+  rw [insFullClient_run, source_map, ← prEvent_eq_evalDist_singleton _ true]
+  refine prEvent_eq_zero_of_not_mem_support _ ?_
+  rw [support_map]
   rintro ⟨r, hr, reached⟩
   simp only [AdaptiveCtxDynamicKnownKeys.sourceGame, support_map] at hr
   obtain ⟨full, hfullKey, rfl⟩ := hr

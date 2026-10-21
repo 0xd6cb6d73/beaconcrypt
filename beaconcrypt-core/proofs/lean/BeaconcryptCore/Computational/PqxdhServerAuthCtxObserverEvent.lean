@@ -191,8 +191,8 @@ theorem uniform_observer (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
         setup.source.crypto (RawCtxSelectedAuthenticationObserver.decision (RawCtxUniversalDecoder.decoder codec.frameRead)
           (PqxdhServerAuthCtxExperiment.client setup codec checks adversary Q j))] {true} := by
   rw [PqxdhServerAuthCtxExperiment.uniform_game, observed_original, observed_decision]
-  simp only [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map, Function.comp_def]
-  apply probEvent_mono
+  rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true, prEvent_map, prEvent_map]
+  apply prEvent_mono_of_support
   intro result supported winning
   simp only [observedGame, mem_support_bind_iff] at supported
   obtain ⟨key, _, reached⟩ := supported

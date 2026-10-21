@@ -16,7 +16,7 @@ What this does not show: nothing here concerns security. The toy primitives are 
 
 Neither headline statement reaches the KEM fields `kemPub`, `encap`, `decap` or `decap_encap` of `Pqxdh.Crypto`. Their KEM enters only through the separate `kem : MlKemScheme` parameter and the explicit correctness-error term. A definition-reachability check found none of these fields in either statement, so the perfectly correct toy KEM fields of `toyCrypto` are placeholders. `actual_withKem` and `rootActual_withKem` confirm this for the actual games of HB-112 and HB-111: replacing only the KEM fields and their laws in the source leaves each actual game definitionally unchanged, which `rfl` proves. The HB-112 ideal game is not covered. Its prepared prior enters types through support-indexed subtypes, so `rfl` fails there, and this module does not attempt a propositional transfer.
 
-`hb111_instance` repeats the HB-111 statement verbatim. That statement uses the deprecated `Pr[= true | ...]` notation, so the deprecation linter is disabled for this one declaration.
+`hb111_instance` repeats the HB-111 statement verbatim. That statement uses the deprecated `Pr{let x ← ...}[x = true]` notation, so the deprecation linter is disabled for this one declaration.
 -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
@@ -305,7 +305,6 @@ theorem hb112_instance :
     toySelected 1#u64 [] [] toyCertificate (by decide) toy_compatible toy_adapter toyFunctional toyHmac
     toy_full_correct toyDynamicFallback toyOrdinaryFallback
 
-set_option linter.deprecated false in
 /-- HB-111 with every hypothesis proved, including the initial `RootFields` match, so both conjuncts hold. -/
 theorem hb111_instance :
     let p := PqxdhAuthenticatedRootExperiment.protocol toyEnv toyKem toyAttachedVerify toyPrimitives toyProgram toyPost
@@ -315,8 +314,8 @@ theorem hb111_instance :
       (PqxdhJointIdentity.advantage toyPrimitives
         (PqxdhGeneratedPhase1Prefix.privateReduction toyPrimitives baseImpl toyKem toySetup
           (driver toyEnv.toDriverEnvironment toyProgram) toyDynamicFallback toyOrdinaryFallback)).toReal +
-      Pr[= true | simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl baseImpl)
-        (PqxdhKemCorrectnessError.errorExperiment toyKem)].toReal +
+      Pr{let x ← (simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl baseImpl)
+        (PqxdhKemCorrectnessError.errorExperiment toyKem))}[x = true].toReal +
       toyKem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl (PqxdhInitializerSecrecy.kemAmbientImpl baseImpl))
         (PqxdhChallengeSecretRouting.reduction toyEnv.source toyKem p).toINDCCA +
       PqxdhCorrelatedExtractFamily.advantage toyHmac
@@ -331,7 +330,7 @@ theorem hb111_instance :
       ∃ output, result.1.map PqxdhPrivateRootSource.eraseOutput = some output ∧
         PqxdhProtocolServerInvariant.RootFields toyEnv.source.crypto (fun _ => toyServer.ikSk) toyEnv.senderId
           toyEnv.index toyEnv.server output.context.selection.2 :=
-  PqxdhAuthenticatedRootBudgets.authenticated_native_root_bound_vcvioLegacy toyEnv baseImpl toyKem toyAttachedVerify toyPrimitives
+  PqxdhAuthenticatedRootBudgets.authenticated_native_root_bound toyEnv baseImpl toyKem toyAttachedVerify toyPrimitives
     toyProgram toyPost toyCertificate toy_compatible toy_adapter toyFunctional toyHmac toy_root_correct
     toyDynamicFallback toyOrdinaryFallback (fun _ => toyServer.ikSk) toy_root_fields
 

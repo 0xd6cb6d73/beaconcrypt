@@ -107,29 +107,26 @@ theorem accepted_cases (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
   · exact Or.inr (Or.inl coll)
   · exact Or.inr (Or.inr ⟨j, Finset.mem_univ j, owned, accepted.2⟩)
 
-set_option linter.deprecated false in
 /-- The chronological observed event is charged to the original source disclosure/collision games and the same finite family of owner events. Observation conditions are dropped only on those two explicitly charged bad branches. -/
 theorem accepted_probability (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (revealSeed : Bool) (adversary : Adversary) (Q qH qHash : Nat)
     (budget : AuthBudget adversary Q qH qHash) (observer : Observer) :
-    Pr[Accepted observer | game setup codec checks revealSeed adversary] ≤
-      Pr[fun result => BadB setup result.1 result.2.1 result.2.2.1.ghost |
-        gameState setup codec checks revealSeed adversary] +
-      Pr[fun result => CollB setup result.1 result.2.1 result.2.2.1.ghost |
-        gameState setup codec checks revealSeed adversary] +
-      ∑ j : Fin (Q + 1), Pr[Owned setup Q j observer | game setup codec checks revealSeed adversary] := by
+    Pr{let x ← game setup codec checks revealSeed adversary}[(Accepted observer) x] ≤
+      Pr{let result ← gameState setup codec checks revealSeed adversary}[BadB setup result.1 result.2.1 result.2.2.1.ghost] +
+      Pr{let result ← gameState setup codec checks revealSeed adversary}[CollB setup result.1 result.2.1 result.2.2.1.ghost] +
+      ∑ j : Fin (Q + 1), Pr{let x ← game setup codec checks revealSeed adversary}[(Owned setup Q j observer) x] := by
   classical
-  simp only [← game_erase setup codec checks revealSeed adversary, probEvent_map, Function.comp_def, erase]
-  refine le_trans (probEvent_mono (q := fun result : Result KemSK =>
+  simp only [← game_erase setup codec checks revealSeed adversary, prEvent_map, erase]
+  refine le_trans (prEvent_mono_of_support _ _ (fun result : Result KemSK =>
     BadB setup result.1 result.2.1 result.2.2.1.2.ghost ∨
       (CollB setup result.1 result.2.1 result.2.2.1.2.ghost ∨
         ∃ j ∈ (Finset.univ : Finset (Fin (Q + 1))), Owned setup Q j observer result))
     (fun result supported accepted => accepted_cases setup codec checks revealSeed adversary Q qH qHash
       budget observer result supported accepted)) ?_
-  refine le_trans (probEvent_or_le (game setup codec checks revealSeed adversary) _ _) ?_
+  refine le_trans (prEvent_or_le (game setup codec checks revealSeed adversary) _ _) ?_
   rw [add_assoc]
-  exact add_le_add le_rfl (le_trans (probEvent_or_le (game setup codec checks revealSeed adversary) _ _)
-    (add_le_add le_rfl (probEvent_exists_finset_le_sum (Finset.univ : Finset (Fin (Q + 1)))
+  exact add_le_add le_rfl (le_trans (prEvent_or_le (game setup codec checks revealSeed adversary) _ _)
+    (add_le_add le_rfl (prEvent_exists_finset_le (Finset.univ : Finset (Fin (Q + 1)))
       (game setup codec checks revealSeed adversary) _)))
 
 /-- Any seed/scalar-indexed Boolean observation of actual source ghost and public history, used only for exact source-game correspondence. The later key-schedule reduction still uses its separate root-erased observer interface. -/
@@ -151,12 +148,12 @@ noncomputable def flatObserved (setup : Setup baseSpec KemSK) (codec : Codec Rea
       (PqxdhServerAuthApiJournal.record (adversary (contextInput setup revealSeed context)))).run
         (contextState setup context, fun _ => false, ∅)
 
-set_option linter.deprecated false in
 /-- Full-game correspondence retains the whole journal jointly with all observed source fields. The same original family interpreter and context samples are used on both sides. -/
 theorem observed_flat (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (revealSeed : Bool) (adversary : Adversary) (observation : Observation) :
-    𝒮[observed setup codec checks revealSeed adversary observation] =
-      𝒮[flatObserved setup codec checks revealSeed adversary observation] := by
+    EvalDistEq (observed setup codec checks revealSeed adversary observation)
+      (flatObserved setup codec checks revealSeed adversary observation) := by
+  refine (VCVioLegacy.evalSPMF_eq_iff_evalDistEq _ _).1 ?_
   apply evalSPMF_eq_of_relTriple_eqRel
   simp only [observed, game, flatObserved, contextSample, body, simulateQ_bind, StateT.run_bind,
     bind_assoc, pure_bind, family_coins (rom_coinForward setup.hmac setup.joint setup.dh _ _),

@@ -1200,7 +1200,6 @@ theorem aug_run {Result : Type} (client : OracleComp (Optional (PqxdhInitialGene
     · exact impossible.elim
     · exact held
 
-set_option linter.deprecated false in
 /-- An output of the instrumented augmented post that requires a raised finish raw flag and an undisclosed selected chain has at most the probability of a hit with the selected chain undisclosed in the hit-flagged source post. -/
 theorem aug_hit (client : OracleComp (Optional (PqxdhInitialGenericPost.Spec extra S B)) (Option Bool))
     (out : Option Bool × InsFull M P I D K A N C S B → Bool)
@@ -1212,12 +1211,15 @@ theorem aug_hit (client : OracleComp (Optional (PqxdhInitialGenericPost.Spec ext
       𝒟[(fun result => @decide (result.2.2 = true ∧ ¬ Disclosed target result.2.1) (Classical.propDecidable _)) <$>
         (simulateQ (hitObserved (extra := extra) pre application initial selector aux source writer prior key target nonce next sender
           route decode) client).run ((history, PqxdhSelectedPostCompiler.project (insErase first)), first.1.2.2.2)] {true} := by
-  simp only [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map]
+  rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true, prEvent_map, prEvent_map]
+  -- Relational program logic: VCVio's coupling-to-event law exists at the pin only in the deprecated form (S8 phase B
+  -- exception, relational class); both events are converted through the allowlisted bridge.
+  rw [← VCVioLegacy.probEvent_eq_prEvent, ← VCVioLegacy.probEvent_eq_prEvent]
   refine probEvent_le_of_relTriple (aug_run pre application initial selector aux source writer prior key target nonce next sender route
     decode mark b client first _ ⟨rfl, id⟩) fun left right held holds => ?_
   obtain ⟨raised, fresh⟩ := implies left holds
   obtain ⟨_, projected, flagged⟩ := held
-  simp only [Function.comp_apply, decide_eq_true_eq]
+  simp only [decide_eq_true_eq]
   refine ⟨flagged raised, fun disclosed => fresh ?_⟩
   have front := congrArg Prod.fst projected
   simp only [PqxdhSelectedPostCompiler.project, insErase] at front
@@ -1259,14 +1261,13 @@ noncomputable def hitRun (initial : PqxdhBeaconPhase2Shared.Secrets PqxdhPhase2D
       (PqxdhInitialSourceExperiment.root source previousRoot response64 selected) nonce next sender route decode)
       (RawCtxSelectedFamilyNonceCoupling.optionalClient (post built.1.1))).run (([], (built.1.2, built.2)), false)
 
-set_option linter.deprecated false in
 /-- The source-only finish-hit run of a Beacon owner, with initializer response `other ++ target`, is at most the probability that `target` is in the final log of the target-free tagged run of `PqxdhFirstRecordStopTagged`. -/
 theorem hit_tagged (other target key : RootOutput) (nonce : NonceOutput) (next : RootOutput) (b : Fin B) :
     𝒟[hitRun pre application selector aux source writer sender route decode index metadata ready post before shared privateState cache
         store (initialLocal source selectedMessage (List.Vector.replicate 32 0) (RawCtxSelectedInitialConstructor.response64 (other ++ target)))
         (List.Vector.replicate 32 0) (RawCtxSelectedInitialConstructor.response64 (other ++ target)) (.beacon b) key nonce next] {true} ≤
-      Pr[fun log => target ∈ log | taggedRun pre application selector aux source writer selectedMessage sender route decode index metadata
-        ready post before shared privateState cache store other key nonce next] := by
+      Pr{let log ← (taggedRun pre application selector aux source writer selectedMessage sender route decode index metadata
+        ready post before shared privateState cache store other key nonce next)}[target ∈ log] := by
   unfold hitRun PqxdhFirstBeaconRecordIntegrity.firstBuild taggedRun
   rw [beacon_root]
   refine bind_event_le _ _ _ _ _ _ target ?_
@@ -1401,7 +1402,6 @@ theorem insRun_client_out (out : Option Bool × PqxdhFirstRecordConfidentiality.
   rw [clientEq, cleaned, build, bind_map_left, bind_map_left]
   rfl
 
-set_option linter.deprecated false in
 /-- Per selected builder result: an output of the instrumented post bit that requires the finish raw flag and the undisclosed selected chain is at most the hit event of the hit-flagged source post from the builder's front and local state. -/
 theorem postBit_hit (out : Option Bool × PqxdhFirstRecordConfidentiality.InsState M P I D K A N RootOracle.QueryCache S B → Bool)
     (implies : ∀ result, out result = true → result.1 = some true ∧ result.2.2.2.2 = true ∧
@@ -1564,8 +1564,9 @@ theorem client_le_out (out : OutFunction M P I K A setup S B) :
   · rw [show (@decide (RawCtxSendLineageCollision.InitialAlias result.1.2.1) (Classical.propDecidable _)) = true from
         @decide_eq_true _ (Classical.propDecidable _) aliased]
     refine le_add_left ?_
-    simp only [evalDist_apply_singleton, probOutput_pure_self]
-    exact probOutput_le_one
+    rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true, prEvent_pure]
+    simp only [↓reduceIte]
+    exact prEvent_le_one _
   · rw [outObserve_eq setup env callbacks baseImpl kem attachedVerify primitives program post b out result.1 result.2.1 result.2.2 key
       aliased]
     exact le_self_add
@@ -1703,7 +1704,7 @@ theorem coll_real (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseImpl k
   have bound := coll_bound setup env callbacks baseImpl kem attachedVerify primitives program post b c.postBudget c.postBound
   have real := ENNReal.toReal_mono (ENNReal.div_ne_top (ENNReal.natCast_ne_top _) (by positivity)) bound
   rw [ENNReal.toReal_div, ENNReal.toReal_pow, ENNReal.toReal_natCast] at real
-  simpa using real
+  simpa [-evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ] using real
 
 end CollBound
 

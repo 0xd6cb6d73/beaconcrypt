@@ -232,10 +232,6 @@ theorem fullHmacRandom_eq_independent {Context : Type} (domain : FixedHkdfDomain
   have observed := joinBlocks_uniform.bind_left fun output => observer context output
   simpa only [bind_assoc, pure_bind] using observed
 
-set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.PqxdhFullSecretInputKdf.fullHmacRandom_eq_independent_vcvioLegacy :
-    ∀ {Context : Type} (domain : BeaconcryptCore.Computational.PqxdhJointKdfGame.FixedHkdfDomain) (sample : BeaconcryptCore.Computational.PqxdhSecretInputKdf.SecretInputSampler Context) (observer : BeaconcryptCore.Computational.PqxdhFullSecretInputKdf.FullObserver Context), 𝒮[BeaconcryptCore.Computational.PqxdhSecretInputKdf.hmacPrfRandomGame (BeaconcryptCore.Computational.PqxdhFullSecretInputKdf.fullExpandReduction domain sample observer)] = 𝒮[BeaconcryptCore.Computational.PqxdhFullSecretInputKdf.independentFullGame sample observer] :=
-  by simpa only [BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq] using @BeaconcryptCore.Computational.PqxdhFullSecretInputKdf.fullHmacRandom_eq_independent
-
 /-- A loss-one full-output reduction at the actual joint input/context sampler. -/
 theorem sourceFullAdvantage_le_extract_add_hmac {Context : Type}
     (source : FixedHkdfSha512NoSaltSource) (hmac : HmacSha512)

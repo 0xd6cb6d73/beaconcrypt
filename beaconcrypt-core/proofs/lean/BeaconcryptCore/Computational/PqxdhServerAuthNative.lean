@@ -1443,15 +1443,12 @@ theorem constructor_order {Result : Type} [MeasurableSpace Result] (setup : Setu
       let keys ← simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl) setup.kem.keygen
       let oneTime ← PqxdhJointGapDh.sampleScalar
       next seed scalar beaconSeed oneTime keys] := by
-  apply evalDist_eq_of_evalSPMF_eq
-  apply DeferredSampling.evalSPMF_bind_congr_left
-  intro seed
-  rw [DeferredSampling.evalSPMF_bind_comm]
-  apply DeferredSampling.evalSPMF_bind_congr_left
-  intro beaconSeed
-  apply DeferredSampling.evalSPMF_bind_congr_left
-  intro scalar
-  exact DeferredSampling.evalSPMF_bind_comm _ _ _
+  apply EvalDistEq.evalDist_eq
+  refine EvalDistEq.bind_right _ fun seed => ?_
+  refine (OracleComp.EvalDistEq.bind_bind_swap _ _ _).trans ?_
+  refine EvalDistEq.bind_right _ fun beaconSeed => ?_
+  refine EvalDistEq.bind_right _ fun scalar => ?_
+  exact OracleComp.EvalDistEq.bind_bind_swap _ _ _
 
 /-- Native setup in literal source constructor order: Server identity, Beacon identity, Beacon prekey, KEM, then the Phase-1 one-time key. The complete source Phase 1 and native adaptive continuation are unchanged. -/
 noncomputable def sourceOrderedState (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)

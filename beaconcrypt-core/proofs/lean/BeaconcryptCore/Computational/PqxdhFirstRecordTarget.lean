@@ -28,8 +28,13 @@ variable {setup : StatefulPhase1Setup baseSpec}
 theorem true_bind_split {α : Type} (mx : ProbComp α) (f g h : α → ProbComp Bool)
     (split : ∀ a, 𝒟[f a] {true} = 𝒟[g a] {true} + 𝒟[h a] {true}) :
     𝒟[mx >>= f] {true} = 𝒟[mx >>= g] {true} + 𝒟[mx >>= h] {true} := by
-  simp only [evalDist_apply_singleton] at split ⊢
-  simp only [probOutput_bind_eq_tsum, split, mul_add, ENNReal.tsum_add]
+  have pointwise : ∀ a, Pr{let x ← f a}[x = true] = Pr{let x ← g a}[x = true] + Pr{let x ← h a}[x = true] :=
+    fun a => by
+      rw [prEvent_eq_evalDist_singleton, prEvent_eq_evalDist_singleton, prEvent_eq_evalDist_singleton]
+      exact split a
+  rw [← prEvent_eq_evalDist_singleton (mx >>= f), ← prEvent_eq_evalDist_singleton (mx >>= g),
+    ← prEvent_eq_evalDist_singleton (mx >>= h)]
+  simp only [OracleComp.prEvent_bind_eq_tsum, pointwise, mul_add, ENNReal.tsum_add]
 
 section Actual
 variable (accepted : PqxdhPrivateRootSource.Prepared setup (driver env.toDriverEnvironment program).State → Ready →
@@ -81,11 +86,11 @@ theorem after_split (secret : KemSK) (prepared : Prepared setup (driver env.toDr
       (rejectAll env program) secret prepared ephemeral encapsulated] {true} +
     𝒟[pendingAfterEncapsulation env baseImpl kem attachedVerify primitives program post accepted secret prepared ephemeral encapsulated] {true} := by
   rcases encapsulated with _ | ⟨ciphertext, shared⟩
-  · simp [PqxdhInitialRootEventExperiment.nativeAfterEncapsulation, pendingAfterEncapsulation]
+  · simp [PqxdhInitialRootEventExperiment.nativeAfterEncapsulation, pendingAfterEncapsulation, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
   · simp only [PqxdhInitialRootEventExperiment.nativeAfterEncapsulation, pendingAfterEncapsulation]
     split
-    next failure same => simp [same]
-    next same => simp [same, PqxdhInitialRootEventExperiment.nativeAccepted, rejectAll]
+    next failure same => simp [same, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+    next same => simp [same, PqxdhInitialRootEventExperiment.nativeAccepted, rejectAll, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
 
 /-- The complete actual continuation, including eligibility and private generators, splits in the same way. -/
 theorem next_split (secret : KemSK) (prepared : Prepared setup (driver env.toDriverEnvironment program).State) :
@@ -100,7 +105,7 @@ theorem next_split (secret : KemSK) (prepared : Prepared setup (driver env.toDri
     apply true_bind_split
     intro encapsulated
     exact after_split env baseImpl kem attachedVerify primitives program post accepted secret prepared ephemeral encapsulated
-  · simp
+  · simp [-evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
 
 /-- The actual root-event experiment is exactly its constant-`false` continuation plus the accepted-branch mass, for any executable accepted continuation. -/
 theorem actual_split :
@@ -186,8 +191,8 @@ theorem ideal_split (target : Target S (B + 1)) :
   apply true_bind_split
   intro context
   rcases context with decision | input
-  · simp [PqxdhAdaptiveMessageKeySource.firstObserve, PqxdhAdaptiveFirstMaterial.observe]
-  · simp
+  · simp [PqxdhAdaptiveMessageKeySource.firstObserve, PqxdhAdaptiveFirstMaterial.observe, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+  · simp [-evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
 
 set_option backward.isDefEq.respectTransparency false in
 /-- The uniform-root endpoint of the constant-`false` root-event protocol is exactly the completed decisions of the actual preparation. -/
@@ -195,24 +200,23 @@ theorem completed_uniform (target : Target S (B + 1)) :
     𝒟[uniformGame (rootReduction env.source baseImpl kem
       (PqxdhInitialRootEventExperiment.protocol env kem attachedVerify primitives program post (rejectAll env program)))] =
     𝒟[commonOnly env baseImpl kem attachedVerify primitives program post target] := by
-  apply evalDist_eq_of_evalSPMF_eq
+  apply EvalDistEq.evalDist_eq
   simp only [uniformGame, StateT.run'_eq, PqxdhInitialRootContext.reduction_complete,
     commonOnly, PqxdhInitialPreparedSourceInput.prior, PqxdhCorrelatedExtractFamily.prepare,
     bind_assoc, pure_bind, map_bind, map_pure]
-  refine evalSPMF_bind_congr' _ (fun keys => ?_)
-  refine evalSPMF_bind_congr' _ (fun mode => ?_)
-  refine evalSPMF_bind_congr' _ (fun pair => ?_)
+  refine EvalDistEq.bind_right _ (fun keys => ?_)
+  refine EvalDistEq.bind_right _ (fun mode => ?_)
+  refine EvalDistEq.bind_right _ (fun pair => ?_)
   cases mode with
   | completed decision =>
     simp only [PqxdhInitialRootContext.firstMiss, PqxdhInitialRootEventExperiment.protocol, PqxdhAuthenticatedRootExperiment.protocol,
       PqxdhInitialRootContext.afterRoot, PqxdhInitialPreparedSourceInput.input,
-      simulateQ_pure, StateT.run_pure, map_pure]
+      simulateQ_pure, StateT.run_pure, map_pure, EvalDistEq.refl]
   | pending prepared ephemeral =>
     simp only [PqxdhInitialRootContext.firstMiss, PqxdhInitialRootEventExperiment.protocol, PqxdhAuthenticatedRootExperiment.protocol,
       PqxdhInitialRootContext.afterRoot, PqxdhInitialPreparedSourceInput.input, rejectAll,
       simulateQ_pure, StateT.run_pure, map_bind, map_pure]
-    exact OracleComp.ProgramLogic.Relational.evalSPMF_bind_const_of_no_failure
-      ($ᵗ RootOutput) (pure false : ProbComp Bool)
+    exact OracleComp.EvalDistEq.bind_const ($ᵗ RootOutput) (pure false : ProbComp Bool)
 
 /-- The constant-`false` protocol pays the original key-generation, encapsulation, base, decapsulation and preparation bills and nothing after its root. -/
 theorem reject_sampler_bounds (c : PqxdhAuthenticatedRootBudgets.Certificate env baseImpl kem program post) :
@@ -265,7 +269,7 @@ theorem completed_bound (target : Target S (B + 1))
     (PqxdhInitialRootEventExperiment.actual env baseImpl kem attachedVerify primitives program post (rejectAll env program)).boolDistAdvantage
       (commonOnly env baseImpl kem attachedVerify primitives program post target) ≤
     completedLoss env baseImpl kem attachedVerify primitives program post hmac fallback ordinaryFallback := by
-  have result := PqxdhInitialRootEventComposition.authenticated_root_bound_vcvioLegacy env baseImpl kem attachedVerify primitives program post
+  have result := PqxdhInitialRootEventComposition.authenticated_root_bound env baseImpl kem attachedVerify primitives program post
     (rejectAll env program) compatible adapter functional hmac sourceCorrect c.noSign c.noCreate fallback ordinaryFallback
     1 (reject_root_queries env baseImpl kem attachedVerify primitives program post c)
   have endpoint := completed_uniform env baseImpl kem attachedVerify primitives program post target
@@ -275,7 +279,7 @@ theorem completed_bound (target : Target S (B + 1))
     simp only [ProbComp.boolDistAdvantage, endpoint]
   simp only [same] at result
   unfold completedLoss
-  simpa only [evalDist_apply_singleton] using result
+  simpa only [prEvent_eq_evalDist_singleton] using result
 
 /-- The fixed-target source experiment is exactly its constant-`false` continuation plus the mass on which the accepted source-event continuation runs and returns `true`. -/
 theorem target_split (selected : RawCtxProtocolReveals.Owner S (B + 1)) (number : Std.U64) (ancestors disclosed : List RatchetChain) :
@@ -287,8 +291,8 @@ theorem target_split (selected : RawCtxProtocolReveals.Owner S (B + 1)) (number 
 
 /-- A Boolean game has finite `true` mass. -/
 theorem true_ne_top (game : ProbComp Bool) : 𝒟[game] {true} ≠ ⊤ := by
-  rw [evalDist_apply_singleton]
-  exact probOutput_ne_top
+  rw [← prEvent_eq_evalDist_singleton _ true]
+  exact prEvent_ne_top _
 
 /-- The pending mass of the fixed first-record source experiment is close to the pending mass of its key-last endpoint, with the first-record target loss plus the completed-branch root loss. -/
 theorem pending_bound (target : Target S (B + 1)) (position : target.number.val = 1)

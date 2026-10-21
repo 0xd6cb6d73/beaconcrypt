@@ -50,7 +50,6 @@ noncomputable def insKeyRun (number : Std.U64) (ancestors disclosed : List Ratch
       sender route decode (PqxdhInitialSelectedOrigin.mark source selectedMessage) b)
       (RawCtxSelectedFamilyNonceCoupling.optionalClient (post built.1.1))).run (insStart index built)
 
-set_option linter.deprecated false in
 /-- The key-disclosure run is dominated by the instrumented key-disclosure run plus the restricted stop run. -/
 theorem keyRun_le (number : Std.U64) (ancestors disclosed : List RatchetChain) :
     𝒟[keyRun pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode index
@@ -74,33 +73,31 @@ theorem keyRun_le (number : Std.U64) (ancestors disclosed : List RatchetChain) :
         sender route decode (PqxdhInitialSelectedOrigin.mark source selectedMessage))
         (RawCtxSelectedFamilyNonceCoupling.optionalClient (post built.1.1))).run
         ((built.1.2, built.2), selectedAfter PqxdhInitialSourcePublication.empty built.1.2 index true built.1.1)] {true} =
-      Pr[fun result => (FirstEvent source previousRoot response64 selected number ancestors disclosed result ∧
-        RawCtxFreshChainCut.concreteChain key ∈ RawCtxSelectedMessageFreshness.known disclosed result.2.1.1.roles.2) ∧
-        PqxdhSelectedPostDisclosure.Good result.2.1 |
-        (simulateQ (traced pre application initial selector aux source writer (productionStream source.crypto) none key target nonce next
+      Pr{let result ← ((simulateQ (traced pre application initial selector aux source writer (productionStream source.crypto) none key target nonce next
           sender route decode (PqxdhInitialSelectedOrigin.mark source selectedMessage))
-          (RawCtxSelectedFamilyNonceCoupling.optionalClient (post built.1.1))).run (insProject (insStart index built))] := by
-    rw [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map]
-    refine probEvent_ext fun result _ => ?_
-    simp only [Function.comp_apply, decide_eq_true_eq]
+          (RawCtxSelectedFamilyNonceCoupling.optionalClient (post built.1.1))).run (insProject (insStart index built)))}[(FirstEvent source previousRoot response64 selected number ancestors disclosed result ∧
+        RawCtxFreshChainCut.concreteChain key ∈ RawCtxSelectedMessageFreshness.known disclosed result.2.1.1.roles.2) ∧
+        PqxdhSelectedPostDisclosure.Good result.2.1] := by
+    rw [← prEvent_eq_evalDist_singleton _ true, prEvent_map]
+    refine prEvent_congr_of_support _ _ _ fun result _ => ?_
+    simp only [decide_eq_true_eq]
     tauto
   rw [left, same]
-  have right : Pr[fun result => (FirstEvent source previousRoot response64 selected number ancestors disclosed
+  have right : Pr{let result ← ((simulateQ (insAugmented pre application initial selector aux source writer (productionStream source.crypto) none key target nonce next
+        sender route decode (PqxdhInitialSelectedOrigin.mark source selectedMessage) b)
+        (RawCtxSelectedFamilyNonceCoupling.optionalClient (post built.1.1))).run (insStart index built))}[(FirstEvent source previousRoot response64 selected number ancestors disclosed
         (result.1, insProject result.2) ∧
       RawCtxFreshChainCut.concreteChain key ∈ RawCtxSelectedMessageFreshness.known disclosed (insProject result.2).1.1.roles.2) ∧
-      PqxdhSelectedPostDisclosure.Good (insProject result.2).1 |
-      (simulateQ (insAugmented pre application initial selector aux source writer (productionStream source.crypto) none key target nonce next
-        sender route decode (PqxdhInitialSelectedOrigin.mark source selectedMessage) b)
-        (RawCtxSelectedFamilyNonceCoupling.optionalClient (post built.1.1))).run (insStart index built)] =
+      PqxdhSelectedPostDisclosure.Good (insProject result.2).1] =
       𝒟[(fun result => @decide (InsEvent source previousRoot response64 selected number ancestors disclosed result ∧
         RawCtxFreshChainCut.concreteChain key ∈ RawCtxSelectedMessageFreshness.known disclosed (insProject result.2).1.1.roles.2)
         (Classical.propDecidable _)) <$>
       (simulateQ (insAugmented pre application initial selector aux source writer (productionStream source.crypto) none key target nonce next
         sender route decode (PqxdhInitialSelectedOrigin.mark source selectedMessage) b)
         (RawCtxSelectedFamilyNonceCoupling.optionalClient (post built.1.1))).run (insStart index built)] {true} := by
-    rw [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map]
-    refine probEvent_ext fun result _ => ?_
-    simp only [Function.comp_apply, decide_eq_true_eq]
+    rw [← prEvent_eq_evalDist_singleton _ true, prEvent_map]
+    refine prEvent_congr_of_support _ _ _ fun result _ => ?_
+    simp only [decide_eq_true_eq]
     unfold InsEvent
     tauto
   rw [right]
@@ -279,19 +276,22 @@ section Support
 /-- Pointwise domination of Boolean continuations on the support of the first computation is preserved by bind. -/
 theorem true_bind_mono_support {α : Type} (mx : ProbComp α) (f g : α → ProbComp Bool)
     (le : ∀ a ∈ support mx, 𝒟[f a] {true} ≤ 𝒟[g a] {true}) : 𝒟[mx >>= f] {true} ≤ 𝒟[mx >>= g] {true} := by
-  simp only [evalDist_apply_singleton] at le ⊢
-  simp only [probOutput_bind_eq_tsum]
+  have pointwise : ∀ a ∈ support mx, Pr{let x ← f a}[x = true] ≤ Pr{let x ← g a}[x = true] :=
+    fun a member => by
+      rw [prEvent_eq_evalDist_singleton, prEvent_eq_evalDist_singleton]
+      exact le a member
+  rw [← prEvent_eq_evalDist_singleton (mx >>= f), ← prEvent_eq_evalDist_singleton (mx >>= g)]
+  simp only [OracleComp.prEvent_bind_eq_tsum]
   refine ENNReal.tsum_le_tsum fun a => ?_
   by_cases member : a ∈ support mx
-  · gcongr
-    exact le a member
-  · simp [probOutput_eq_zero_of_not_mem_support member]
+  · exact mul_le_mul_of_nonneg_left (pointwise a member) zero_le
+  · rw [prEvent_eq_zero_of_not_mem_support _ member, zero_mul, zero_mul]
 
 /-- A Boolean projection implied by another one on the support has at most its `true` mass. -/
 theorem map_mono_support {α : Type} (mx : ProbComp α) (f g : α → Bool)
     (weaker : ∀ a ∈ support mx, f a = true → g a = true) : 𝒟[f <$> mx] {true} ≤ 𝒟[g <$> mx] {true} := by
-  simp only [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map]
-  exact _root_.probEvent_mono fun a member holds => weaker a member holds
+  rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true, prEvent_map, prEvent_map]
+  exact prEvent_mono_of_support _ _ _ fun a member holds => weaker a member holds
 
 end Support
 
@@ -397,13 +397,17 @@ end Hit
 theorem true_bind_le_support {α : Type} (mx : ProbComp α) (f g h : α → ProbComp Bool)
     (le : ∀ a ∈ support mx, 𝒟[f a] {true} ≤ 𝒟[g a] {true} + 𝒟[h a] {true}) :
     𝒟[mx >>= f] {true} ≤ 𝒟[mx >>= g] {true} + 𝒟[mx >>= h] {true} := by
-  simp only [evalDist_apply_singleton] at le ⊢
-  simp only [probOutput_bind_eq_tsum, ← ENNReal.tsum_add, ← mul_add]
+  have pointwise : ∀ a ∈ support mx,
+      Pr{let x ← f a}[x = true] ≤ Pr{let x ← g a}[x = true] + Pr{let x ← h a}[x = true] := fun a member => by
+    rw [prEvent_eq_evalDist_singleton, prEvent_eq_evalDist_singleton, prEvent_eq_evalDist_singleton]
+    exact le a member
+  rw [← prEvent_eq_evalDist_singleton (mx >>= f), ← prEvent_eq_evalDist_singleton (mx >>= g),
+    ← prEvent_eq_evalDist_singleton (mx >>= h)]
+  simp only [OracleComp.prEvent_bind_eq_tsum, ← ENNReal.tsum_add, ← mul_add]
   refine ENNReal.tsum_le_tsum fun a => ?_
   by_cases member : a ∈ support mx
-  · gcongr
-    exact le a member
-  · simp [probOutput_eq_zero_of_not_mem_support member]
+  · exact mul_le_mul_of_nonneg_left (pointwise a member) zero_le
+  · rw [prEvent_eq_zero_of_not_mem_support _ member, zero_mul, zero_mul]
 
 section HitGame
 open PqxdhNativeSharedPrefix PqxdhInitialBeaconAmbient PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhJointKdfGame PqxdhJointKdf
@@ -713,8 +717,9 @@ theorem hit_le_separated (qCand : Nat) (target : Target S (B + 1)) :
       show (@decide (RawCtxSendLineageCollision.InitialAlias initialBlock) (Classical.propDecidable _)) = true from
         @decide_eq_true _ (Classical.propDecidable _) aliased]
     refine le_add_right ?_
-    simp only [evalDist_apply_singleton, probOutput_pure_self]
-    exact probOutput_le_one
+    rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true, prEvent_pure]
+    simp only [↓reduceIte]
+    exact prEvent_le_one _
   · rw [ite_eq_right_iff.mpr fun holds => absurd holds aliased]
     exact le_add_self
 
@@ -737,16 +742,15 @@ theorem hitSource_reorder (qCand : Nat) (target : Target S (B + 1)) :
         (simulateQ (AdaptiveCtxDynamicKnownKeys.sourceImpl true (RawCtxUniversalDecoder.decoder (env0).decode)
           (env0).source.crypto key) (keySuffix setup env callbacks baseImpl kem attachedVerify primitives program post b target
             result.1)).run (RawCtxSourceSharedRom.install AdaptiveCtxDynamicKnownKeys.initialSource result.2)] := by
-  have exchanged := RawCtxPrefixKeyOrder.complete_vcvioLegacy true (RawCtxUniversalDecoder.decoder (env0).decode) (env0).source.crypto
+  have exchanged := RawCtxPrefixKeyOrder.complete true (RawCtxUniversalDecoder.decoder (env0).decode) (env0).source.crypto
     (prelude setup env callbacks baseImpl kem attachedVerify primitives program post)
     (fun key context state => (fun final : List CtxKey × AdaptiveCtxDynamicKnownKeys.SourceState =>
       decide (key ∈ final.1.take qCand)) <$>
       (simulateQ (AdaptiveCtxDynamicKnownKeys.sourceImpl true (RawCtxUniversalDecoder.decoder (env0).decode) (env0).source.crypto key)
         (keySuffix setup env callbacks baseImpl kem attachedVerify primitives program post b target context)).run state)
-  refine evalDist_eq_of_evalSPMF_eq _ _ ?_
-  rw [exchanged]
+  refine EvalDistEq.evalDist_eq (EvalDistEq.trans ?_ exchanged.symm)
   unfold hitSource keyClient
-  simp only [simulateQ_bind, StateT.run_bind, bind_pure_comp, map_bind]
+  simp only [simulateQ_bind, StateT.run_bind, bind_pure_comp, map_bind, EvalDistEq.refl]
 
 /-- The separated key-hit game of the first Beacon record is dominated by the key-retaining source game of the candidate client. -/
 theorem separated_le_source (qCand : Nat) :
@@ -763,7 +767,7 @@ theorem separated_le_source (qCand : Nat) :
   classical
   by_cases aliased : RawCtxSendLineageCollision.InitialAlias result.1.2.1
   · rw [ite_eq_left_iff.mpr fun impossible => absurd aliased impossible]
-    simp
+    simp [-evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
   · rw [ite_eq_right_iff.mpr fun holds => absurd holds aliased,
       hitObserve_eq setup env callbacks baseImpl kem attachedVerify primitives program post b qCand result.1 result.2.1 result.2.2 key
         aliased]
@@ -811,7 +815,6 @@ local instance candidateDecidable (result : CtxKey × ((Unit × List CtxKey) × 
     Decidable (RawCtxSelectedKeyProbes.CandidateHit result) :=
   inferInstanceAs (Decidable (result.1 ∈ result.2.1.2))
 
-set_option linter.deprecated false in
 /-- The key-retaining source game of a key-free dynamic candidate client has the probability of the retained candidate-hit event of the ordinary candidate client. -/
 theorem source_candidate (decode : RawDecoder) (c : Pqxdh.Crypto) (qCand : Nat)
     (client : OracleComp AdaptiveCtxDynamicKnownKeys.Spec (List CtxKey)) :
@@ -820,8 +823,7 @@ theorem source_candidate (decode : RawDecoder) (c : Pqxdh.Crypto) (qCand : Nat)
       let result ← (simulateQ (AdaptiveCtxDynamicKnownKeys.sourceImpl true decode c key) client).run
         AdaptiveCtxDynamicKnownKeys.initialSource
       pure (decide (key ∈ result.1.take qCand))] {true} =
-    Pr[RawCtxSelectedKeyProbes.CandidateHit |
-      AdaptiveCtxPrefixValidation.retainedCanonicalGame decode c (recvClient c qCand client)] := by
+    Pr{let x ← AdaptiveCtxPrefixValidation.retainedCanonicalGame decode c (recvClient c qCand client)}[RawCtxSelectedKeyProbes.CandidateHit x] := by
   have games : (do
       let key ← $ᵗ CtxKey
       let result ← (simulateQ (AdaptiveCtxDynamicKnownKeys.sourceImpl true decode c key) client).run
@@ -859,7 +861,7 @@ theorem source_candidate_bound (decode : RawDecoder) (c : Pqxdh.Crypto) (fallbac
       pure (decide (key ∈ result.1.take qCand))] {true} ≤
     keyLoss decode c fallback (recvClient c qCand client) qHash qCand qRaw := by
   rw [source_candidate]
-  refine RawCtxSelectedKeyProbes.candidate_bound_vcvioLegacy decode c fallback (recvClient c qCand client) qHash qCand qSeal qRaw ?_
+  refine RawCtxSelectedKeyProbes.candidate_bound decode c fallback (recvClient c qCand client) qHash qCand qSeal qRaw ?_
     (recvClient_length c qCand client) ?_ ?_ small
   · exact (isQueryBoundP_map_iff _ _ _).mpr (hash_bound c client qHash hashBound _)
   · exact (isQueryBoundP_map_iff _ _ _).mpr (target_bound c _ AdaptiveCtxSharedTarget.forward_seal_class client qSeal sealBound _)
@@ -1034,7 +1036,7 @@ theorem key_real (post : PqxdhAuthenticatedRootExperiment.Post (baseSpec := base
   have real := ENNReal.toReal_mono (ENNReal.add_ne_top.mpr ⟨ENNReal.add_ne_top.mpr ⟨lossFinite, halfFinite⟩, stopFinite⟩) bound
   rw [ENNReal.toReal_add (ENNReal.add_ne_top.mpr ⟨lossFinite, halfFinite⟩) stopFinite, ENNReal.toReal_add lossFinite halfFinite,
     ENNReal.toReal_div, ENNReal.toReal_div, ENNReal.toReal_pow, ENNReal.toReal_natCast] at real
-  simpa using real
+  simpa [-evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ] using real
 
 end KeyHeadline
 

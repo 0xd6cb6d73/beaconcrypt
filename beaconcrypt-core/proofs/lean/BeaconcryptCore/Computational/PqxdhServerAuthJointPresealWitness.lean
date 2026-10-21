@@ -25,13 +25,14 @@ theorem success_lower : 1 ≤ (𝒟[game] {true}).toReal := by
   have lower := PqxdhServerAuthPresealControl.preseal_reveal_control setup codec 100 actual_control_laws
     PqxdhHypothesisWitness.toyFunctional [1] [2] (by decide) (by decide) (by decide)
     (by simp; scalar_tac) (by decide) (by decide) (by decide)
-  simpa only [kem_error, sub_zero, game, client, evalDist_apply_singleton] using lower
+  rw [← prEvent_eq_evalDist_singleton _ true]
+  simpa only [kem_error, sub_zero, game, client] using lower
 
 /-- The separate original authentication decision succeeds with probability exactly one on the joint witness. -/
 theorem success : (𝒟[game] {true}).toReal = 1 := by
   have upper : 𝒟[game] {true} ≤ 1 := by
-    rw [evalDist_apply_singleton]
-    exact probOutput_le_one
+    rw [← prEvent_eq_evalDist_singleton _ true]
+    exact prEvent_le_one _
   exact le_antisymm (by simpa only [ENNReal.toReal_one] using
     (ENNReal.toReal_mono ENNReal.one_ne_top upper)) success_lower
 
@@ -48,11 +49,11 @@ theorem wrong_payload : (𝒟[wrongPayloadGame] {true}).toReal = 1 := by
     PqxdhHypothesisWitness.toyFunctional [1] [2] (by decide) (by decide) (by decide)
     (by simp; scalar_tac) (by decide) (by decide) (by decide)
   have actual : 1 ≤ (𝒟[wrongPayloadGame] {true}).toReal := by
-    simpa only [wrongPayloadGame, client, evalDist_apply_singleton, probOutput_map,
-      decide_eq_true_eq, kem_error, sub_zero] using lower
+    rw [← prEvent_eq_evalDist_singleton _ true]
+    simpa only [wrongPayloadGame, client, prEvent_map, decide_eq_true_eq, kem_error, sub_zero] using lower
   have upper : 𝒟[wrongPayloadGame] {true} ≤ 1 := by
-    rw [evalDist_apply_singleton]
-    exact probOutput_le_one
+    rw [← prEvent_eq_evalDist_singleton _ true]
+    exact prEvent_le_one _
   exact le_antisymm (by simpa only [ENNReal.toReal_one] using
     (ENNReal.toReal_mono ENNReal.one_ne_top upper)) actual
 

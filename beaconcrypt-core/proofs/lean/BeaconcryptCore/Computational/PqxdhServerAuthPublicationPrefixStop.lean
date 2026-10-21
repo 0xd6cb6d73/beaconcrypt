@@ -66,50 +66,46 @@ theorem capture_query (query : AdaptiveCtxDynamicKnownKeys.Spec.Domain)
   all_goals try rfl
   exact (notRaw raw rfl).elim
 
-set_option linter.deprecated false in
 /-- Once a publication marker precedes the first raw request, the clean-prefix capture event has zero mass under every complete stateful interpreter. -/
 theorem capture_seen_zero {State : Type}
     (impl : QueryImpl AdaptiveCtxDynamicKnownKeys.Spec (StateT State ProbComp))
     (work : OracleComp Spec Result) (saved : Option CtxRomAuth.CtxRomRecord) (state : State)
     (event : PqxdhServerAuthPublicationGuess.Candidate → Prop) :
-    Pr[fun result => result.1.1 = false ∧ event result.1.2 |
-      (simulateQ impl (capture work saved true)).run state] = 0 := by
+    Pr{let result ← (simulateQ impl (capture work saved true)).run state}[result.1.1 = false ∧ event result.1.2] = 0 := by
   classical
   induction work using OracleComp.inductionOn generalizing saved state with
   | pure value =>
-      change Pr[fun result => result.1.1 = false ∧ event result.1.2 |
-        (pure ((true, none), state) : ProbComp ((Bool × PqxdhServerAuthPublicationGuess.Candidate) × State))] = 0
-      simp [probEvent_pure]
+      change Pr{let result ← (pure ((true, none), state) : ProbComp ((Bool × PqxdhServerAuthPublicationGuess.Candidate) × State))}[result.1.1 = false ∧ event result.1.2] = 0
+      rw [prEvent_pure]
+      simp
   | query_bind query next ih =>
       cases query with
       | inl query =>
           rcases Classical.em (∃ bytes : Pqxdh.Bytes, query = .inl (.inr bytes)) with raw | raw
           · obtain ⟨bytes, rfl⟩ := raw
-            change Pr[fun result => result.1.1 = false ∧ event result.1.2 |
-              (pure ((true, saved.map fun record => (record, bytes)), state) : ProbComp _)] = 0
-            simp [probEvent_pure]
+            change Pr{let result ← (pure ((true, saved.map fun record => (record, bytes)), state) : ProbComp _)}[result.1.1 = false ∧ event result.1.2] = 0
+            rw [prEvent_pure]
+            simp
           · rw [capture_query query (fun bytes equal => raw ⟨bytes, equal⟩)]
-            simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind, probEvent_bind_eq_tsum,
+            simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind, OracleComp.prEvent_bind_eq_tsum,
               ih, mul_zero, tsum_zero]
       | inr flag => exact ih () saved state
 
-set_option linter.deprecated false in
 /-- Clean first-raw capture in the full marker program has exactly the event probability of capture after killing on the first publication marker. The interpreter and every preceding callback effect are shared. -/
 theorem clean_capture {State : Type}
     (impl : QueryImpl AdaptiveCtxDynamicKnownKeys.Spec (StateT State ProbComp))
     (work : OracleComp Spec Result) (saved : Option CtxRomAuth.CtxRomRecord) (state : State)
     (event : PqxdhServerAuthPublicationGuess.Candidate → Prop) (empty : ¬ event none) :
-    Pr[fun result => result.1.1 = false ∧ event result.1.2 |
-      (simulateQ impl (capture work saved false)).run state] =
-    Pr[fun result => event result.1 | (simulateQ impl
-      (PqxdhServerAuthPublicationCaptureSource.dynamic (simulateQ kill work).run saved)).run state] := by
+    Pr{let result ← (simulateQ impl (capture work saved false)).run state}[result.1.1 = false ∧ event result.1.2] =
+    Pr{let result ← ((simulateQ impl
+      (PqxdhServerAuthPublicationCaptureSource.dynamic (simulateQ kill work).run saved)).run state)}[event result.1] := by
   classical
   induction work using OracleComp.inductionOn generalizing saved state with
   | pure value =>
-      change Pr[fun result => result.1.1 = false ∧ event result.1.2 |
-        (pure ((false, none), state) : ProbComp _)] =
-        Pr[fun result => event result.1 | (pure (none, state) : ProbComp _)]
-      simp [probEvent_pure, empty]
+      change Pr{let result ← (pure ((false, none), state) : ProbComp _)}[result.1.1 = false ∧ event result.1.2] =
+        Pr{let result ← (pure (none, state) : ProbComp _)}[event result.1]
+      rw [prEvent_pure, prEvent_pure]
+      simp [empty]
   | query_bind query next ih =>
       cases query with
       | inl query =>
@@ -117,17 +113,16 @@ theorem clean_capture {State : Type}
             OptionT.run_mk, Option.elimM, bind_map_left, Option.elim_some]
           rcases Classical.em (∃ bytes : Pqxdh.Bytes, query = .inl (.inr bytes)) with raw | raw
           · obtain ⟨bytes, rfl⟩ := raw
-            change Pr[fun result => result.1.1 = false ∧ event result.1.2 |
-              (pure ((false, saved.map fun record => (record, bytes)), state) : ProbComp _)] =
-              Pr[fun result => event result.1 |
-                (pure (saved.map fun record => (record, bytes), state) : ProbComp _)]
-            simp [probEvent_pure]
+            change Pr{let result ← (pure ((false, saved.map fun record => (record, bytes)), state) : ProbComp _)}[result.1.1 = false ∧ event result.1.2] =
+              Pr{let result ← (pure (saved.map fun record => (record, bytes), state) : ProbComp _)}[event result.1]
+            rw [prEvent_pure, prEvent_pure]
+            simp
           · rw [capture_query query (fun bytes equal => raw ⟨bytes, equal⟩)]
             have step := dynamic_query (Left := Option Result) query (fun bytes equal => raw ⟨bytes, equal⟩)
               (fun reply => (simulateQ kill (next reply)).run) saved
             refine Eq.trans ?_ (congrArg (fun program =>
-              Pr[fun result => event result.1 | (simulateQ impl program).run state]) step.symm)
-            simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind, probEvent_bind_eq_tsum]
+              Pr{let result ← (simulateQ impl program).run state}[event result.1]) step.symm)
+            simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind, OracleComp.prEvent_bind_eq_tsum]
             exact tsum_congr fun reply => congrArg (fun value => _ * value) (ih reply.1 _ reply.2)
       | inr flag =>
           cases flag with
@@ -136,19 +131,18 @@ theorem clean_capture {State : Type}
               rw [show capture (do let reply ← Spec.query (.inr true); next reply) saved false =
                 capture (next ()) saved true from rfl]
               rw [capture_seen_zero]
-              change 0 = Pr[fun result => event result.1 | (pure (none, state) : ProbComp _)]
-              simp [probEvent_pure, empty]
+              change 0 = Pr{let result ← (pure (none, state) : ProbComp _)}[event result.1]
+              rw [prEvent_pure]
+              simp [empty]
 
-set_option linter.deprecated false in
 /-- The exact clean-prefix comparison retains the actual selected-key draw and initial shared source state. -/
 theorem source_clean (real : Bool) (decode : AdaptiveCtxReceive.RawDecoder) (crypto : Pqxdh.Crypto)
     (work : OracleComp Spec Result) (saved : Option CtxRomAuth.CtxRomRecord)
     (event : PqxdhServerAuthPublicationGuess.Candidate → Prop) (empty : ¬ event none) :
-    Pr[fun result => result.1.1 = false ∧ event result.1.2 |
-      AdaptiveCtxDynamicKnownKeys.sourceGame real decode crypto (capture work saved false)] =
-    Pr[fun result => event result.1 | AdaptiveCtxDynamicKnownKeys.sourceGame real decode crypto
-      (PqxdhServerAuthPublicationCaptureSource.dynamic (simulateQ kill work).run saved)] := by
-  simp only [AdaptiveCtxDynamicKnownKeys.sourceGame, probEvent_bind_eq_tsum]
+    Pr{let result ← AdaptiveCtxDynamicKnownKeys.sourceGame real decode crypto (capture work saved false)}[result.1.1 = false ∧ event result.1.2] =
+    Pr{let result ← (AdaptiveCtxDynamicKnownKeys.sourceGame real decode crypto
+      (PqxdhServerAuthPublicationCaptureSource.dynamic (simulateQ kill work).run saved))}[event result.1] := by
+  simp only [AdaptiveCtxDynamicKnownKeys.sourceGame, OracleComp.prEvent_bind_eq_tsum]
   exact tsum_congr fun key => congrArg (fun value => _ * value)
     (clean_capture (AdaptiveCtxDynamicKnownKeys.sourceImpl real decode crypto key) work saved
       AdaptiveCtxDynamicKnownKeys.initialSource event empty)

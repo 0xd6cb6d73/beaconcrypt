@@ -28,7 +28,8 @@ theorem native_flat (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
     (adversary : Adversary) (revealSeed : Bool) (observation : Observation) :
     𝒟[nativeGame setup codec checks adversary revealSeed observation] =
       𝒟[flatObserved setup codec checks revealSeed adversary observation] := by
-  apply evalDist_eq_of_evalSPMF_eq
+  apply EvalDistEq.evalDist_eq
+  refine (VCVioLegacy.evalSPMF_eq_iff_evalDistEq _ _).1 ?_
   apply evalSPMF_eq_of_relTriple_eqRel
   unfold nativeGame flatObserved
   refine relTriple_bind (R := fun a b => a = b ∧ a ∈ support (contextSample setup codec))
@@ -76,7 +77,7 @@ theorem ordered_observed (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
       𝒟[observed setup codec checks revealSeed adversary observation] := by
   exact (native_order setup codec checks adversary revealSeed observation).symm.trans
     ((native_flat setup codec checks adversary revealSeed observation).trans
-      (evalDist_eq_of_evalSPMF_eq _ _ (observed_flat setup codec checks revealSeed adversary observation)).symm)
+      (observed_flat setup codec checks revealSeed adversary observation).evalDist_eq.symm)
 
 open PqxdhServerAuthObservedEntry PqxdhServerAuthObservedPartition
 

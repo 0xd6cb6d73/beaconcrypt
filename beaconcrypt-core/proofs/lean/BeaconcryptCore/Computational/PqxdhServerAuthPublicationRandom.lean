@@ -28,14 +28,13 @@ theorem source_seal (setup : Setup baseSpec KemSK) (codec : Codec Reader WireRes
 def decodedTag (decode : RawDecoder) (bytes : Pqxdh.Bytes) : Option (FixedBytes 16) :=
   (decode bytes).map fun target => ⟨target.record.tag, target.record.tagLength⟩
 
-set_option linter.deprecated false in
 /-- The unconditional concrete reference capture has one 128-bit tag-guess charge. Its complete context, residual and adaptive source work are sampled as originally specified. -/
 theorem reference_capture (setup : Setup baseSpec KemSK) (codec : Codec Reader WireResponse)
     (checks : Checks) (adversary : Adversary) (Q : Nat) (j : Fin (Q + 1))
     (decode : RawDecoder) (replacement : CtxRomRecord) :
-    Pr[Hit (decodedTag decode) | Prod.fst <$>
+    Pr{let x ← (Prod.fst <$>
       (simulateQ (impl decode) (capture (source setup codec checks adversary Q j) none)).run
-        ((initialState, []), CtxNonceAeadIntCtxt.emptyModifiedNonceAeadHandlerState)] ≤
+        ((initialState, []), CtxNonceAeadIntCtxt.emptyModifiedNonceAeadHandlerState))}[(Hit (decodedTag decode)) x] ≤
       ((2 ^ 128 : Nat) : ℝ≥0∞)⁻¹ := by
   exact blind_capture_bound decode replacement _
     (source_seal setup codec checks adversary Q j)
@@ -59,18 +58,16 @@ noncomputable def decision (setup : Setup baseSpec KemSK) (codec : Codec Reader 
   exact (fun candidate => decide (Hit (decodedTag decode) candidate)) <$>
     capture (source setup codec checks adversary Q j) none
 
-set_option linter.deprecated false in
 /-- The existing ordinary random privacy endpoint of the actual fully sampled reference observer has probability at most one 128-bit tag guess. -/
 theorem random_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader WireResponse)
     (checks : Checks) (adversary : Adversary) (Q : Nat) (j : Fin (Q + 1))
     (decode : RawDecoder) :
-    Pr[fun answer => answer = true | AdaptiveCtxPrivacyGuard.randomView decode
-      (decision setup codec checks adversary Q j decode)] ≤ ((2 ^ 128 : Nat) : ℝ≥0∞)⁻¹ := by
+    Pr{let answer ← (AdaptiveCtxPrivacyGuard.randomView decode
+      (decision setup codec checks adversary Q j decode))}[answer = true] ≤ ((2 ^ 128 : Nat) : ℝ≥0∞)⁻¹ := by
   classical
   rw [random_source]
-  simp only [decision, simulateQ_map, StateT.run_map, Functor.map_map, probEvent_map,
-    Function.comp_def, decide_eq_true_eq]
-  simpa only [probEvent_map, Function.comp_def] using
+  simp only [decision, simulateQ_map, StateT.run_map, Functor.map_map, prEvent_map, decide_eq_true_eq]
+  simpa only [prEvent_map, Function.comp_def] using
     reference_capture setup codec checks adversary Q j decode
       ⟨[], List.replicate 16 0, by simp, List.Vector.replicate 64 0⟩
 

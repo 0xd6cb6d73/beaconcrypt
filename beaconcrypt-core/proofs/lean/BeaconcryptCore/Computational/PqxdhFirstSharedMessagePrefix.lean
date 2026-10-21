@@ -95,10 +95,10 @@ theorem key_order (real : Bool) (decodeRaw : AdaptiveCtxReceive.RawDecoder) :
       PqxdhAdaptiveMessageKeySource.firstObserve env0 (restore setup result.1 result.2.cache) key)] := by
   rw [← shared_source setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed]
   simp only [bind_map_left]
-  apply evalDist_eq_of_evalSPMF_eq
-  exact RawCtxPrefixKeyOrder.complete_vcvioLegacy real decodeRaw env.source.crypto
+  exact (RawCtxPrefixKeyOrder.complete real decodeRaw env.source.crypto
     (run setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed)
-    (fun key context state => PqxdhAdaptiveMessageKeySource.firstObserve env0 (restore setup context state.cache) key)
+    (fun key context state => PqxdhAdaptiveMessageKeySource.firstObserve env0 (restore setup context state.cache)
+      key)).evalDist_eq
 
 /-- The named adaptive first-record endpoint consumes this actual same-ROM preparation without a final event-equivalence premise. The pending CTX suffix still has to simulate the displayed original native observer. -/
 theorem adaptive_endpoint {Choice : Type} [DecidableEq Choice]

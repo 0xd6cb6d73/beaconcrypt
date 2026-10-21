@@ -172,7 +172,7 @@ theorem table_eager (modes : Label n → KeyMode) (target : Label n) (replace : 
         (simulateQ (world (keyedWith tableKey modes (RawCtxUniversalDecoder.decoder codec.frameRead)
           setup.source.crypto) (keyStore key) target replace setup codec) client).run state] := by
   rw [ctxInterpreterWith_of]
-  apply PqxdhServerAuthEntryFactor.eager_run ($ᵗ RootOutput) _ _ (fun state => Present state.base.chain target)
+  apply PqxdhServerAuthEntryFactor.eager_run_vcvioLegacy ($ᵗ RootOutput) _ _ (fun state => Present state.base.chain target)
   · intro query state present
     refine ⟨fun key => world_other _ _ target replace setup codec query state
       (fun ⟨_, missing⟩ => by obtain ⟨output, found⟩ := present; rw [found] at missing; cases missing), ?_⟩

@@ -96,11 +96,11 @@ theorem record_post_good
   apply tsum_congr
   intro result
   congr 1
-  have equality := post_source_augmented pre application initial selector aux source writer prior (some parent) key target nonce next
+  have equality := post_source_augmented_vcvioLegacy pre application initial selector aux source writer prior (some parent) key target nonce next
     sender route read mark monitor (post result.1.1)
     (((PqxdhLaterSavedRecord.afterRecord before result.1.2, result.2.1),
       (PqxdhInitialOriginPost.record trace request result.1.1, none, false)), result.2.2) event
-  rw [← true_mass_eq, ← true_mass_eq, evalDist_apply_singleton, evalDist_apply_singleton] at equality
+  rw [← true_mass_eq_vcvioLegacy, ← true_mass_eq_vcvioLegacy, evalDist_apply_singleton, evalDist_apply_singleton] at equality
   simpa only [insProject, RawCtxSelectedReceiveCompiler.project] using equality
 
 end Record

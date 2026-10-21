@@ -102,15 +102,14 @@ noncomputable def source (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
       (PqxdhServerAuthApiJournal.record (adversary (contextInput setup revealSeed context)))).run
         (contextState setup context, fun _ => false, ∅)
 
-set_option linter.deprecated false in
 /-- The single prefetched block preserves the joint law of the complete source state and chronological API journal, and therefore this observation. It is unused on hits or rejection. -/
 theorem source_prefetched (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (checks : Checks) (adversary : Adversary) (revealSeed : Bool) (Q : Nat) (j : Fin (Q + 1))
     (observer : Observer) (context : Context KemSK) :
-    𝒮[source setup codec checks adversary revealSeed Q j observer context] =
-      𝒮[do
+    EvalDistEq (source setup codec checks adversary revealSeed Q j observer context)
+      (do
         let prk ← $ᵗ HmacBlock
-        prefetched setup codec checks adversary revealSeed Q j observer context prk] := by
+        prefetched setup codec checks adversary revealSeed Q j observer context prk) := by
   have complete := eager_projected (designated Q j) ($ᵗ HmacBlock)
     (skeleton setup codec checks (context.publicValue setup) context.beaconSeed
       (realServices context.seed context.scalar setup codec checks))
@@ -120,10 +119,9 @@ theorem source_prefetched (setup : Setup baseSpec KemSK) (codec : Codec Reader R
       context.seed context.scalar)
     (PqxdhServerAuthApiJournal.record (adversary (contextInput setup revealSeed context)))
     ((contextState setup context, fun _ => false, ∅), false)
-  simpa only [source, prefetched, prefetchedHandler, ← map_bind, evalSPMF_map,
-    Functor.map_map, Function.comp_def] using
-    congrArg (fun distribution => (fun result =>
-      decision setup context Q j observer result.2.1.ghost result.1.2) <$> distribution) complete
+  have mapped := complete.map (fun result : _ × (FlatState KemSK HmacOracle.QueryCache) =>
+    decision setup context Q j observer result.2.1.ghost result.1.2)
+  simpa only [source, prefetched, prefetchedHandler, map_bind, Functor.map_map, Function.comp_def] using mapped
 
 end BeaconcryptCore.Computational.PqxdhServerAuthObservedEntry
 

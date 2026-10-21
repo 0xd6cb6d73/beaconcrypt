@@ -45,28 +45,24 @@ theorem full_winning (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
       snap accepted event.1.2.2.2 (by simpa only [Bool.not_eq_true'] using winning.1) event.1.2.2.1
       ((PqxdhServerAuthSessionRecordEvent.observer_true codec j.val _ journal).mp event.2)
 
-set_option linter.deprecated false in
 /-- The actual stronger public observation splits in the same experiment into the two previously bounded events, charging ordinary authentication only once. -/
 theorem winning_split (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (checks : Checks) (adversary : Adversary) (Q : Nat) (j : Fin (Q + 1))
     (writable : PqxdhFirstBeaconRecordCanonical.ReadWritable codec.frameWrite codec.frameRead)
     (responseBack : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
     (frameBack : PqxdhServerAuthNegativeControl.FrameReadBack codec) :
-    Pr[fun result => PqxdhServerAuthPublicationObserverProjection.decision setup Q j
-      (PqxdhServerAuthSessionRecordEvent.observer codec j.val) result.1 = true |
-      PqxdhServerAuthPublicationProbability.game setup codec checks adversary Q j] ≤
-    Pr[fun result => RawCtxSelectedAuthenticationObserver.won
-      (RawCtxUniversalDecoder.decoder codec.frameRead) result.2.1.observer = true |
-      PqxdhServerAuthPublicationProbability.game setup codec checks adversary Q j] +
-    Pr[fun result => PqxdhServerAuthPublicationMarkedHistory.Matched
-      (PqxdhServerAuthPublicationRandom.decodedTag (RawCtxUniversalDecoder.decoder codec.frameRead)) result.2.1 |
-      PqxdhServerAuthPublicationProbability.game setup codec checks adversary Q j] := by
-  refine (probEvent_mono (mx := PqxdhServerAuthPublicationProbability.game setup codec checks adversary Q j)
-    (q := fun result => RawCtxSelectedAuthenticationObserver.won
+    Pr{let result ← PqxdhServerAuthPublicationProbability.game setup codec checks adversary Q j}[PqxdhServerAuthPublicationObserverProjection.decision setup Q j
+      (PqxdhServerAuthSessionRecordEvent.observer codec j.val) result.1 = true] ≤
+    Pr{let result ← PqxdhServerAuthPublicationProbability.game setup codec checks adversary Q j}[RawCtxSelectedAuthenticationObserver.won
+      (RawCtxUniversalDecoder.decoder codec.frameRead) result.2.1.observer = true] +
+    Pr{let result ← PqxdhServerAuthPublicationProbability.game setup codec checks adversary Q j}[PqxdhServerAuthPublicationMarkedHistory.Matched
+      (PqxdhServerAuthPublicationRandom.decodedTag (RawCtxUniversalDecoder.decoder codec.frameRead)) result.2.1] := by
+  refine (prEvent_mono_of_support (PqxdhServerAuthPublicationProbability.game setup codec checks adversary Q j) _
+    (fun result => RawCtxSelectedAuthenticationObserver.won
       (RawCtxUniversalDecoder.decoder codec.frameRead) result.2.1.observer = true ∨
       PqxdhServerAuthPublicationMarkedHistory.Matched
         (PqxdhServerAuthPublicationRandom.decodedTag (RawCtxUniversalDecoder.decoder codec.frameRead)) result.2.1)
-    ?_).trans (probEvent_or_le _ _ _)
+    ?_).trans (prEvent_or_le _ _ _)
   intro result supported winning
   simp only [PqxdhServerAuthPublicationProbability.game,
     PqxdhServerAuthPublicationMarkedHistory.sourceGame, mem_support_bind_iff] at supported
@@ -86,12 +82,11 @@ theorem uniform_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
       (PqxdhServerAuthSessionRecordEvent.observer codec j.val)] {true}).toReal ≤
     PqxdhServerAuthPublicationLoss.recordLoss setup codec checks adversary Q j fallback
       (entryReductionBudget caps qCoin Q qHash qH + 76) := by
-  have split := ENNReal.toReal_mono (ENNReal.add_ne_top.mpr ⟨probEvent_ne_top, probEvent_ne_top⟩)
+  have split := ENNReal.toReal_mono (ENNReal.add_ne_top.mpr ⟨(prEvent_ne_top _), (prEvent_ne_top _)⟩)
     (winning_split setup codec checks adversary Q j writable responseBack frameBack)
-  rw [ENNReal.toReal_add probEvent_ne_top probEvent_ne_top] at split
+  rw [ENNReal.toReal_add (prEvent_ne_top _) (prEvent_ne_top _)] at split
   simp only [PqxdhServerAuthPublicationObserverProjection.uniform_decision,
-    evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map, Function.comp_def,
-    PqxdhServerAuthPublicationLoss.recordLoss]
+    ← prEvent_eq_evalDist_singleton _ true, prEvent_map, PqxdhServerAuthPublicationLoss.recordLoss]
   exact split.trans (add_le_add
     (PqxdhServerAuthPublicationProbability.ordinary_bound setup codec checks caps bounded adversary
       qCoin Q qH qHash budget coins j fallback)

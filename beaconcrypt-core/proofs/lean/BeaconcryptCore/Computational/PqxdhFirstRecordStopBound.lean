@@ -67,9 +67,9 @@ theorem kept_input_bound (client : OracleComp (Optional (PqxdhInitialGenericPost
       (PqxdhFirstRecordNonceStop.observedStops (extra := extra) prior parent target nonce next sender) client (([], before), false))
   simp only [Functor.map_map, Prod.map_def, id_eq] at histories
   rw [← histories]
-  simp only [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map, Function.comp_def, decide_eq_true_eq,
-    Bool.and_eq_true]
-  apply probEvent_mono
+  rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true, prEvent_map, prEvent_map]
+  simp only [decide_eq_true_eq, Bool.and_eq_true]
+  apply prEvent_mono_of_support
   intro result supported holds
   have consistent := PqxdhFirstRecordNonceStop.marked_program_consistent pre application initial selector aux source writer
     prior parent key target nonce next sender route read client (([], before), false) result supported
@@ -83,9 +83,12 @@ end Generic
 /-- A Boolean game whose continuation is pointwise dominated by another continuation is dominated by the other game. -/
 theorem bind_le {α : Type} (mx : ProbComp α) (f g : α → ProbComp Bool) (le : ∀ a, 𝒟[f a] {true} ≤ 𝒟[g a] {true}) :
     𝒟[mx >>= f] {true} ≤ 𝒟[mx >>= g] {true} := by
-  simp only [evalDist_apply_singleton] at le ⊢
-  simp only [probOutput_bind_eq_tsum]
-  exact ENNReal.tsum_le_tsum fun a => by gcongr; exact le a
+  have pointwise : ∀ a, Pr{let x ← f a}[x = true] ≤ Pr{let x ← g a}[x = true] := fun a => by
+    rw [prEvent_eq_evalDist_singleton, prEvent_eq_evalDist_singleton]
+    exact le a
+  rw [← prEvent_eq_evalDist_singleton (mx >>= f), ← prEvent_eq_evalDist_singleton (mx >>= g)]
+  simp only [OracleComp.prEvent_bind_eq_tsum]
+  exact ENNReal.tsum_le_tsum fun a => mul_le_mul_of_nonneg_left (pointwise a) zero_le
 
 section First
 open PqxdhNativeSharedPrefix PqxdhInitialBeaconAmbient PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhJointKdfGame PqxdhJointKdf

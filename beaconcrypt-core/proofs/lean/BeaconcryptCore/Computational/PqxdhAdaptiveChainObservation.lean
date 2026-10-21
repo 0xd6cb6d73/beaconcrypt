@@ -136,12 +136,12 @@ theorem sourceGame_eq_hybrid {Context Result : Type} (source : FixedHkdfSha512No
 theorem final_hybrid_eq_eager {Context Result : Type} (source : FixedHkdfSha512NoSaltSource)
     (fallback : Material) (sample : ProbComp Context) (client : Context → OracleComp ChainSpec Result)
     (finish : Context → Result × Nat → ProbComp Bool) (budget : Nat) :
-    𝒮[hybrid source sample (tapeObserver fallback client finish) budget budget] =
-      𝒮[eagerGame fallback sample client finish budget] := by
+    EvalDistEq (hybrid source sample (tapeObserver fallback client finish) budget budget)
+      (eagerGame fallback sample client finish budget) := by
   simp only [hybrid, eagerGame, tapeObserver, Nat.sub_self, realEvolution, List.append_nil]
-  refine evalSPMF_bind_congr' sample (fun context => ?_)
-  refine evalSPMF_bind_congr' (sampleMaterials budget) (fun records => ?_)
-  exact OracleComp.DeferredSampling.evalSPMF_bind_const_neverFails ($ᵗ RootOutput) (by simp) _
+  refine EvalDistEq.bind_right sample (fun context => ?_)
+  refine EvalDistEq.bind_right (sampleMaterials budget) (fun records => ?_)
+  exact OracleComp.EvalDistEq.bind_const ($ᵗ RootOutput) _
 
 /-- Adaptive stopping incurs no selection loss: the same budget-many ordered Extract/HMAC reductions apply. -/
 theorem adaptive_advantage_bound {Context Result : Type} (source : FixedHkdfSha512NoSaltSource)
@@ -153,8 +153,7 @@ theorem adaptive_advantage_bound {Context Result : Type} (source : FixedHkdfSha5
       (eagerGame fallback sample client finish budget) ≤
       ∑ cut ∈ Finset.range budget,
         hopLoss source hmac sample (tapeObserver fallback client finish) cut (budget - cut - 1) := by
-  have random := evalDist_eq_of_evalSPMF_eq _ _
-    (final_hybrid_eq_eager source fallback sample client finish budget)
+  have random := (final_hybrid_eq_eager source fallback sample client finish budget).evalDist_eq
   simpa only [sourceGame_eq_hybrid source fallback sample client finish budget bound,
     ProbComp.boolDistAdvantage, random] using
       ordered_chain_bound source hmac correct sample (tapeObserver fallback client finish) budget

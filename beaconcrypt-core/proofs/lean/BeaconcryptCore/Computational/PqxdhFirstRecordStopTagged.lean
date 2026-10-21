@@ -472,7 +472,10 @@ theorem coupled_bound (impl₁ : QueryImpl spec (StateT σ₁ ProbComp)) (impl�
     (work : OracleComp spec α) (first : σ₁) (second : σ₂) (start : related first second)
     (event : α × σ₁ → Prop) (excluded : ∀ result, event result → ¬ bad₁ result.2)
     (impossible : ∀ left right, related left right → ¬ bad₂ right → ∀ value, event (value, left) → False) :
-    Pr[event | (simulateQ impl₁ work).run first] ≤ Pr[fun result => bad₂ result.2 | (simulateQ impl₂ work).run second] := by
+    Pr{let x ← (simulateQ impl₁ work).run first}[event x] ≤ Pr{let result ← (simulateQ impl₂ work).run second}[bad₂ result.2] := by
+  -- Relational program logic: VCVio's coupling-to-event law exists at the pin only in the deprecated form (S8 phase B
+  -- exception, relational class); both events are converted through the allowlisted bridge.
+  rw [← VCVioLegacy.probEvent_eq_prEvent, ← VCVioLegacy.probEvent_eq_prEvent]
   refine probEvent_le_of_relTriple (coupled_run impl₁ impl₂ related bad₁ bad₂ absorbing₁ absorbing₂ step work first second
     (Or.inr (Or.inr start))) fun left right held holds => ?_
   rcases held with bad | bad | ⟨equal, same⟩
@@ -3748,14 +3751,15 @@ theorem post_bound {Result : Type} (target : RootOutput)
     (client : OracleComp (Optional (PqxdhInitialGenericPost.Spec extra S B)) Result)
     (start : Concrete M P I D K A N RootOracle.QueryCache S B) (tagged : TState M P I D K A N RootOracle.QueryCache S B)
     (represents : Represents target start tagged) (good : GoodState first Markable tagged) :
-    Pr[fun result => RawCtxSelectedSourceSendInputs.RepeatedInput target result.2.1 ∧
-        PqxdhFirstBeaconRecordIntegrity.Undisclosed target [] [] result.2.2 |
-      (simulateQ (PqxdhFirstRecordNonceStop.sourceObserved (extra := extra) pre application initialC selector aux source writer prior
-        none key target nonce next sender route decode) client).run start] ≤
-    Pr[fun result => Exposed target result.2 |
-      (simulateQ (world source writer prior key nonce next sender route decode pre application initialW selector aux
+    Pr{let result ← ((simulateQ (PqxdhFirstRecordNonceStop.sourceObserved (extra := extra) pre application initialC selector aux source writer prior
+        none key target nonce next sender route decode) client).run start)}[RawCtxSelectedSourceSendInputs.RepeatedInput target result.2.1 ∧
+        PqxdhFirstBeaconRecordIntegrity.Undisclosed target [] [] result.2.2] ≤
+    Pr{let result ← ((simulateQ (world source writer prior key nonce next sender route decode pre application initialW selector aux
         (taggedFinishOp source writer prior key nonce next decode pre application initialW selector aux fixed selectedMessage other))
-        client).run tagged] := by
+        client).run tagged)}[Exposed target result.2] := by
+  -- Relational program logic: VCVio's coupling-to-event law exists at the pin only in the deprecated form (S8 phase B
+  -- exception, relational class); both events are converted through the allowlisted bridge.
+  rw [← VCVioLegacy.probEvent_eq_prEvent, ← VCVioLegacy.probEvent_eq_prEvent]
   refine probEvent_le_of_relTriple (post_coupled source writer prior key nonce next sender route decode pre application initialC selector
     aux initialW (taggedFinishOp source writer prior key nonce next decode pre application initialW selector aux fixed selectedMessage
       other) target (GoodState first Markable)
@@ -5115,10 +5119,13 @@ variable {ι M P I D K X Response A N : Type} {extra : OracleSpec ι} {S B : Nat
 theorem bind_event_le {α β γ δ : Type} (first : ProbComp α) (rest : α → ProbComp β) (other : ProbComp γ) (later : γ → ProbComp δ)
     (output : β → Bool) (log : δ → Log) (target : RootOutput)
     (coupled : RelTriple (first >>= rest) (other >>= later) (fun left right => output left = true → target ∈ log right)) :
-    𝒟[first >>= fun value => output <$> rest value] {true} ≤ Pr[fun values => target ∈ values | other >>= fun value => log <$> later value] := by
+    𝒟[first >>= fun value => output <$> rest value] {true} ≤ Pr{let values ← other >>= fun value => log <$> later value}[target ∈ values] := by
   have left : (first >>= fun value => output <$> rest value) = output <$> (first >>= rest) := by rw [map_bind]
   have right : (other >>= fun value => log <$> later value) = log <$> (other >>= later) := by rw [map_bind]
-  rw [left, right, evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map, probEvent_map]
+  rw [left, right, ← prEvent_eq_evalDist_singleton _ true, prEvent_map, prEvent_map]
+  -- Relational program logic: VCVio's coupling-to-event law exists at the pin only in the deprecated form (S8 phase B
+  -- exception, relational class); both events are converted through the allowlisted bridge.
+  rw [← VCVioLegacy.probEvent_eq_prEvent, ← VCVioLegacy.probEvent_eq_prEvent]
   exact probEvent_le_of_relTriple coupled fun _ _ held holds => held holds
 
 variable (pre : QueryImpl (PqxdhBeaconPhase2Shared.Spec I D K X Response PqxdhPhase2DecapsulationRouting.Shared)
@@ -5184,8 +5191,8 @@ theorem stop_tagged (other target key : RootOutput) (nonce : NonceOutput) (next 
         (initialLocal source selectedMessage (List.Vector.replicate 32 0) (RawCtxSelectedInitialConstructor.response64 (other ++ target)))
         selector aux source writer (List.Vector.replicate 32 0) (RawCtxSelectedInitialConstructor.response64 (other ++ target)) sender
         route decode index metadata ready post before (.beacon b) shared privateState cache store key nonce next [] []] {true} ≤
-      Pr[fun log => target ∈ log | taggedRun pre application selector aux source writer selectedMessage sender route decode index metadata
-        ready post before shared privateState cache store other key nonce next] := by
+      Pr{let log ← (taggedRun pre application selector aux source writer selectedMessage sender route decode index metadata
+        ready post before shared privateState cache store other key nonce next)}[target ∈ log] := by
   unfold PqxdhFirstRecordStopBound.sourceStopRun PqxdhFirstBeaconRecordIntegrity.firstBuild taggedRun
   rw [beacon_root]
   refine bind_event_le _ _ _ _ _ _ target ?_
@@ -5295,31 +5302,32 @@ open PqxdhSecretInputKdf
 theorem bind_le_support {α : Type} (first : ProbComp α) (left right : α → ProbComp Bool)
     (le : ∀ value ∈ support first, 𝒟[left value] {true} ≤ 𝒟[right value] {true}) :
     𝒟[first >>= left] {true} ≤ 𝒟[first >>= right] {true} := by
-  simp only [evalDist_apply_singleton] at le ⊢
-  simp only [probOutput_bind_eq_tsum]
+  have pointwise : ∀ value ∈ support first, Pr{let x ← left value}[x = true] ≤ Pr{let x ← right value}[x = true] :=
+    fun value supported => by
+      rw [prEvent_eq_evalDist_singleton, prEvent_eq_evalDist_singleton]
+      exact le value supported
+  rw [← prEvent_eq_evalDist_singleton (first >>= left), ← prEvent_eq_evalDist_singleton (first >>= right)]
+  simp only [OracleComp.prEvent_bind_eq_tsum]
   refine ENNReal.tsum_le_tsum fun value => ?_
   by_cases supported : value ∈ support first
-  · gcongr
-    exact le value supported
-  · rw [probOutput_eq_zero_of_not_mem_support supported, zero_mul, zero_mul]
+  · exact mul_le_mul_of_nonneg_left (pointwise value supported) zero_le
+  · rw [prEvent_eq_zero_of_not_mem_support _ supported, zero_mul, zero_mul]
 
 /-- A uniform 32-byte value drawn before a computation that does not depend on it lies in the computation's final log with probability at most the log-length bound divided by `2^256`. -/
 theorem delayed_bound (run : ProbComp Log) (budget : Nat) (bounded : ∀ log ∈ support run, log.length ≤ budget) :
-    Pr[= true | $ᵗ RootOutput >>= fun target => (fun log => decide (target ∈ log)) <$> run] ≤ (budget : ℝ≥0∞) / 2 ^ 256 := by
-  have swapped := evalSPMF_sample_comm_vcvioLegacy ($ᵗ RootOutput) run (fun target log => (pure (decide (target ∈ log)) : ProbComp Bool))
+    Pr{let x ← $ᵗ RootOutput >>= fun target => (fun log => decide (target ∈ log)) <$> run}[x = true] ≤ (budget : ℝ≥0∞) / 2 ^ 256 := by
+  have swapped := evalSPMF_sample_comm ($ᵗ RootOutput) run (fun target log => (pure (decide (target ∈ log)) : ProbComp Bool))
   have shape : ($ᵗ RootOutput >>= fun target => (fun log => decide (target ∈ log)) <$> run) =
       ($ᵗ RootOutput >>= fun target => run >>= fun log => pure (decide (target ∈ log))) := by
     simp only [map_eq_bind_pure_comp, Function.comp_def]
-  rw [shape, probOutput_def, swapped, ← probOutput_def, ← probEvent_eq_eq_probOutput]
-  refine probEvent_bind_le_of_forall_le fun log supported => ?_
-  have uniform : Pr[(· = true) | $ᵗ RootOutput >>= fun target => (pure (decide (target ∈ log)) : ProbComp Bool)] =
-      Pr[fun target => target ∈ log | $ᵗ RootOutput] := by
-    rw [bind_pure_comp, probEvent_map]
-    congr 1
-    funext target
-    simp only [Function.comp_apply, decide_eq_true_eq]
+  rw [shape, swapped.prEvent_eq (fun x => x = true)]
+  refine prEvent_bind_le_of_forall_le_of_support _ _ _ fun log supported => ?_
+  have uniform : Pr{let x ← $ᵗ RootOutput >>= fun target => (pure (decide (target ∈ log)) : ProbComp Bool)}[x = true] =
+      Pr{let target ← $ᵗ RootOutput}[target ∈ log] := by
+    rw [bind_pure_comp _ ($ᵗ RootOutput), prEvent_map]
+    exact prEvent_congr _ _ _ fun _ => decide_eq_true_iff
   rw [uniform]
-  exact (RawCtxSelectedInputCandidates.uniform_candidates_vcvioLegacy log).trans
+  exact (RawCtxSelectedInputCandidates.uniform_candidates log).trans
     (ENNReal.div_le_div_right (by exact_mod_cast bounded log supported) _)
 
 end Sampling
@@ -5426,11 +5434,9 @@ noncomputable def taggedGame (target : Target S (B + 1)) : ProbComp Bool := do
 
 /-- The `true` mass of a decided membership test is the membership probability. -/
 theorem decide_mass (value : RootOutput) (run : ProbComp Log) :
-    𝒟[(fun log => decide (value ∈ log)) <$> run] {true} = Pr[fun log => value ∈ log | run] := by
-  rw [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map]
-  congr 1
-  funext log
-  simp only [Function.comp_apply, decide_eq_true_eq]
+    𝒟[(fun log => decide (value ∈ log)) <$> run] {true} = Pr{let log ← run}[value ∈ log] := by
+  rw [← prEvent_eq_evalDist_singleton _ true, prEvent_map]
+  exact prEvent_congr _ _ _ fun _ => decide_eq_true_iff
 
 /-- The source-only restricted repetition game of the first record of Beacon `b` is at most the target-free tagged stop game. -/
 theorem source_tagged (b : Fin (B + 1)) :
@@ -5478,25 +5484,22 @@ theorem tagged_game_bound (budget : Kind → Nat)
     𝒟[taggedGame setup env callbacks baseImpl kem attachedVerify primitives program post target] {true} ≤
       ((1 + stopPotential budget : ℕ) : ℝ≥0∞) / 2 ^ 256 := by
   unfold taggedGame
-  rw [evalDist_apply_singleton, probOutput_def]
-  have split : ∀ context, 𝒮[$ᵗ HmacBlock >>= fun initialBlock => $ᵗ NonceOutput >>= fun nonce => $ᵗ RootOutput >>= fun chain =>
+  rw [← prEvent_eq_evalDist_singleton _ true]
+  have split : ∀ context, EvalDistEq ($ᵗ HmacBlock >>= fun initialBlock => $ᵗ NonceOutput >>= fun nonce => $ᵗ RootOutput >>= fun chain =>
       $ᵗ RootOutput >>= fun key => (fun log => decide (RawCtxSelectedInitialSampler.initialOther initialBlock ∈ log)) <$>
         taggedLog setup env callbacks baseImpl kem attachedVerify primitives program post target context (first32 initialBlock) key
-          nonce chain] =
-      𝒮[$ᵗ RootOutput >>= fun other => $ᵗ RootOutput >>= fun value => $ᵗ NonceOutput >>= fun nonce => $ᵗ RootOutput >>= fun chain =>
+          nonce chain)
+      ($ᵗ RootOutput >>= fun other => $ᵗ RootOutput >>= fun value => $ᵗ NonceOutput >>= fun nonce => $ᵗ RootOutput >>= fun chain =>
         $ᵗ RootOutput >>= fun key => (fun log => decide (value ∈ log)) <$>
-          taggedLog setup env callbacks baseImpl kem attachedVerify primitives program post target context other key nonce chain] :=
-    fun context => RawCtxSelectedInitialSecond.second_observed_vcvioLegacy (fun other value => $ᵗ NonceOutput >>= fun nonce =>
+          taggedLog setup env callbacks baseImpl kem attachedVerify primitives program post target context other key nonce chain) :=
+    fun context => RawCtxSelectedInitialSecond.second_observed (fun other value => $ᵗ NonceOutput >>= fun nonce =>
       $ᵗ RootOutput >>= fun chain => $ᵗ RootOutput >>= fun key => (fun log => decide (value ∈ log)) <$>
         taggedLog setup env callbacks baseImpl kem attachedVerify primitives program post target context other key nonce chain)
-  have equal := congrArg (fun distribution => distribution true) (evalSPMF_bind_congr' (PqxdhCorrelatedExtractFamily.prepare baseImpl
-    kem (PqxdhAuthenticatedRootExperiment.protocol env0 kem attachedVerify primitives program post)) split)
-  refine (le_of_eq equal).trans ?_
-  change Pr[= true | _] ≤ _
-  rw [← probEvent_eq_eq_probOutput]
-  refine probEvent_bind_le_of_forall_le fun context _ => ?_
-  refine probEvent_bind_le_of_forall_le fun other _ => ?_
-  rw [probEvent_eq_eq_probOutput]
+  rw [(EvalDistEq.bind_right (PqxdhCorrelatedExtractFamily.prepare baseImpl kem
+    (PqxdhAuthenticatedRootExperiment.protocol env0 kem attachedVerify primitives program post)) split).prEvent_eq
+      (fun x => x = true)]
+  refine prEvent_bind_le_of_forall_le_of_support _ _ _ fun context _ => ?_
+  refine prEvent_bind_le_of_forall_le_of_support _ _ _ fun other _ => ?_
   have shape : ($ᵗ RootOutput >>= fun value => $ᵗ NonceOutput >>= fun nonce => $ᵗ RootOutput >>= fun chain =>
       $ᵗ RootOutput >>= fun key => (fun log => decide (value ∈ log)) <$>
         taggedLog setup env callbacks baseImpl kem attachedVerify primitives program post target context other key nonce chain) =

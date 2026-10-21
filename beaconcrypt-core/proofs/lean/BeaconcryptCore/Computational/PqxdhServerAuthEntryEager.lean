@@ -23,17 +23,18 @@ noncomputable def programmedRead (prk : HmacBlock) (bytes : Pqxdh.Bytes) :
   | some value => pure (value, cache)
   | none => pure (prk, cache.cacheQuery bytes prk)
 
-set_option linter.deprecated false in
 /-- A single table read is exactly a uniform block followed by the programmed read; on a hit the unused independent block disappears. -/
 theorem programmedRead_sample (bytes : Pqxdh.Bytes) (cache : HmacOracle.QueryCache) :
-    𝒮[(HmacOracle.randomOracle bytes).run cache] =
-      𝒮[do let prk ← $ᵗ HmacBlock; (programmedRead prk bytes).run cache] := by
+    EvalDistEq ((HmacOracle.randomOracle bytes).run cache)
+      (do let prk ← $ᵗ HmacBlock; (programmedRead prk bytes).run cache) := by
   rw [randomOracle.run_eq]
   cases hit : cache bytes with
-  | none => simp only [hit, programmedRead, StateT.run]
+  | none =>
+      simp only [hit, programmedRead, StateT.run]
+      exact EvalDistEq.rfl
   | some value =>
       simp only [hit, programmedRead, StateT.run]
-      exact (DeferredSampling.evalSPMF_bind_const_neverFails _ (probFailure_eq_zero) _).symm
+      exact (OracleComp.EvalDistEq.bind_const _ _).symm
 
 /-- The designated root derivation uses its prefetched block only at a missing actual input. -/
 noncomputable def programmedDerive (hmac : HmacSha512) (joint : Primitives) (dh : DhInterface joint)
@@ -44,21 +45,19 @@ noncomputable def programmedDerive (hmac : HmacSha512) (joint : Primitives) (dh 
   | some bytes => (fun read => (.root (expandRoot hmac read.1), read.2)) <$>
       (programmedRead prk bytes).run cache
 
-set_option linter.deprecated false in
 /-- Eager sampling preserves the complete derivation reply and table, including rejection and prior hits. -/
 theorem programmedDerive_sample (hmac : HmacSha512) (joint : Primitives) (dh : DhInterface joint)
     (seed : IdentitySeed) (scalar : ScalarBytes) (message : PqxdhJointDhExtractFamily.Message)
     (cache : HmacOracle.QueryCache) :
-    𝒮[(realDerive hmac joint dh seed scalar message).run cache] =
-      𝒮[do let prk ← $ᵗ HmacBlock; (programmedDerive hmac joint dh seed scalar prk message).run cache] := by
+    EvalDistEq ((realDerive hmac joint dh seed scalar message).run cache)
+      (do let prk ← $ᵗ HmacBlock; (programmedDerive hmac joint dh seed scalar prk message).run cache) := by
   unfold realDerive programmedDerive
   cases input : PqxdhJointDhExtractFamily.input joint dh seed scalar message with
-  | none => exact (DeferredSampling.evalSPMF_bind_const_neverFails _ (probFailure_eq_zero) _).symm
+  | none => exact (OracleComp.EvalDistEq.bind_const _ _).symm
   | some bytes =>
       dsimp only [StateT.run]
-      rw [← map_bind, evalSPMF_map, evalSPMF_map]
-      exact congrArg (fun work => (fun read => (Reply.root (expandRoot hmac read.1), read.2)) <$> work)
-        (programmedRead_sample bytes cache)
+      rw [← map_bind]
+      exact (programmedRead_sample bytes cache).map _
 
 
 /-- Only the designated derivation changes; all public HMAC requests and all other source services remain real. -/
@@ -68,78 +67,71 @@ noncomputable def programmedServices (seed : IdentitySeed) (scalar : ScalarBytes
   { realServices seed scalar setup codec checks with
     derive := programmedDerive setup.hmac setup.joint setup.dh seed scalar prk }
 
-set_option linter.deprecated false in
 /-- Sampling the candidate block before the complete accept operation preserves the entire returned state, including every rejection. -/
 theorem programmedAccept_sample (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (checks : Checks) (publicValue : PublicChallenge) (seed : IdentitySeed) (scalar : ScalarBytes)
     (raw : Pqxdh.Bytes) (state : FlatState KemSK HmacOracle.QueryCache) :
-    𝒮[(acceptStep setup codec checks publicValue (realServices seed scalar setup codec checks) raw).run state] =
-      𝒮[do
+    EvalDistEq ((acceptStep setup codec checks publicValue (realServices seed scalar setup codec checks) raw).run state)
+      (do
         let prk ← $ᵗ HmacBlock
-        (acceptStep setup codec checks publicValue (programmedServices seed scalar setup codec checks prk) raw).run state] := by
+        (acceptStep setup codec checks publicValue (programmedServices seed scalar setup codec checks prk) raw).run state) := by
   unfold acceptStep
   dsimp only [StateT.run]
-  rw [DeferredSampling.evalSPMF_bind_comm]
-  apply DeferredSampling.evalSPMF_bind_congr_left
-  intro collected
+  refine EvalDistEq.trans ?_ (OracleComp.EvalDistEq.bind_bind_swap _ _ _)
+  refine EvalDistEq.bind_right _ fun collected => ?_
   rcases collected with ⟨_ | input, consumed⟩
-  · exact (DeferredSampling.evalSPMF_bind_const_neverFails _ (probFailure_eq_zero) _).symm
+  · exact (OracleComp.EvalDistEq.bind_const _ _).symm
   · by_cases valid : PqxdhServerRelatedRootInput.localNonzero input
     · simp only [valid, ite_true, realServices, programmedServices]
-      rw [← bind_assoc, evalSPMF_bind, evalSPMF_bind]
-      congr 1
-      exact programmedDerive_sample setup.hmac setup.joint setup.dh seed scalar _ state.2.2
+      rw [← bind_assoc]
+      exact (programmedDerive_sample setup.hmac setup.joint setup.dh seed scalar _ state.2.2).bind_left _
     · simp only [valid, ite_false]
-      exact (DeferredSampling.evalSPMF_bind_const_neverFails _ (probFailure_eq_zero) _).symm
+      exact (OracleComp.EvalDistEq.bind_const _ _).symm
 
 
-set_option linter.deprecated false in
 /-- Eager sampling also preserves the entire single-shot Beacon finish, including failed preparation, raw opening and final commitment. -/
 theorem programmedFinish_sample (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (checks : Checks) (publicValue : PublicChallenge) (beaconSeed : IdentitySeed)
     (seed : IdentitySeed) (scalar : ScalarBytes) (raw : Pqxdh.Bytes)
     (state : FlatState KemSK HmacOracle.QueryCache) :
-    𝒮[(finishStep setup codec publicValue beaconSeed (realServices seed scalar setup codec checks) raw).run state] =
-      𝒮[do
+    EvalDistEq ((finishStep setup codec publicValue beaconSeed (realServices seed scalar setup codec checks) raw).run state)
+      (do
         let prk ← $ᵗ HmacBlock
-        (finishStep setup codec publicValue beaconSeed (programmedServices seed scalar setup codec checks prk) raw).run state] := by
+        (finishStep setup codec publicValue beaconSeed (programmedServices seed scalar setup codec checks prk) raw).run state) := by
   unfold finishStep
   dsimp only [StateT.run]
   cases phase : state.1.beacon.beacon.phase <;> simp only
-  all_goals try exact (DeferredSampling.evalSPMF_bind_const_neverFails _ (probFailure_eq_zero) _).symm
-  rw [DeferredSampling.evalSPMF_bind_comm]
-  apply DeferredSampling.evalSPMF_bind_congr_left
-  intro prepared
+  all_goals try exact (OracleComp.EvalDistEq.bind_const _ _).symm
+  refine EvalDistEq.trans ?_ (OracleComp.EvalDistEq.bind_bind_swap _ _ _)
+  refine EvalDistEq.bind_right _ fun prepared => ?_
   cases prepared with
-  | none => exact (DeferredSampling.evalSPMF_bind_const_neverFails _ (probFailure_eq_zero) _).symm
+  | none => exact (OracleComp.EvalDistEq.bind_const _ _).symm
   | some pending =>
       dsimp only [realServices, programmedServices]
-      rw [← bind_assoc, evalSPMF_bind, evalSPMF_bind]
-      congr 1
-      exact programmedDerive_sample setup.hmac setup.joint setup.dh seed scalar _ state.2.2
+      rw [← bind_assoc]
+      exact (programmedDerive_sample setup.hmac setup.joint setup.dh seed scalar _ state.2.2).bind_left _
 
 
-set_option linter.deprecated false in
 /-- Eager sampling preserves every complete oracle operation. Only accept and active finish can consume the sampled block. -/
 theorem programmedStep_sample (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (checks : Checks) (publicValue : PublicChallenge) (beaconSeed : IdentitySeed)
     (seed : IdentitySeed) (scalar : ScalarBytes) (query : ServerAuthSpec.Domain)
     (state : FlatState KemSK HmacOracle.QueryCache) :
-    𝒮[(skeleton setup codec checks publicValue beaconSeed (realServices seed scalar setup codec checks) query).run state] =
-      𝒮[do
+    EvalDistEq ((skeleton setup codec checks publicValue beaconSeed (realServices seed scalar setup codec checks) query).run state)
+      (do
         let prk ← $ᵗ HmacBlock
         (skeleton setup codec checks publicValue beaconSeed
-          (programmedServices seed scalar setup codec checks prk) query).run state] := by
+          (programmedServices seed scalar setup codec checks prk) query).run state) := by
   cases query with
-  | inl coin => exact (DeferredSampling.evalSPMF_bind_const_neverFails _ (probFailure_eq_zero) _).symm
+  | inl coin => exact (OracleComp.EvalDistEq.bind_const _ _).symm
   | inr query =>
       cases query with
       | accept raw => exact programmedAccept_sample setup codec checks publicValue seed scalar raw state
       | finish raw => exact programmedFinish_sample setup codec checks publicValue beaconSeed seed scalar raw state
-      | build session payload => exact (DeferredSampling.evalSPMF_bind_const_neverFails _ (probFailure_eq_zero) _).symm
-      | hmac key message => exact (DeferredSampling.evalSPMF_bind_const_neverFails _ (probFailure_eq_zero) _).symm
-      | hash bytes => exact (DeferredSampling.evalSPMF_bind_const_neverFails _ (probFailure_eq_zero) _).symm
-      | reveal keyId => exact (DeferredSampling.evalSPMF_bind_const_neverFails _ (probFailure_eq_zero) _).symm
+      | build session payload => exact (OracleComp.EvalDistEq.bind_const _ _).symm
+      | hmac key message => exact (OracleComp.EvalDistEq.bind_const _ _).symm
+      | hash bytes => exact (OracleComp.EvalDistEq.bind_const _ _).symm
+      | reveal keyId => exact (OracleComp.EvalDistEq.bind_const _ _).symm
 
 end BeaconcryptCore.Computational.PqxdhServerAuthEntryFactor
 
@@ -176,15 +168,14 @@ theorem latch_keeps (choose : spec.Domain → σ → Bool) (impl : QueryImpl spe
   obtain ⟨step, _, rfl⟩ := member
   simp [done]
 
-set_option linter.deprecated false in
 /-- One prefetched sample serves the entire adaptive run; the sampling law concerns complete query replies and states. -/
 theorem once_sample (choose : spec.Domain → σ → Bool) (sampler : ProbComp V)
     (lazy : QueryImpl spec (StateT σ ProbComp)) (programmed : V → QueryImpl spec (StateT σ ProbComp))
-    (sample : ∀ query state, 𝒮[(lazy query).run state] =
-      𝒮[do let value ← sampler; (programmed value query).run state])
+    (sample : ∀ query state, EvalDistEq ((lazy query).run state)
+      (do let value ← sampler; (programmed value query).run state))
     {α : Type} (work : OracleComp spec α) (state : σ × Bool) :
-    𝒮[(simulateQ (latch choose lazy) work).run state] =
-      𝒮[do let value ← sampler; (simulateQ (once choose lazy programmed value) work).run state] := by
+    EvalDistEq ((simulateQ (latch choose lazy) work).run state)
+      (do let value ← sampler; (simulateQ (once choose lazy programmed value) work).run state) := by
   apply eager_run sampler (latch choose lazy) (once choose lazy programmed) (fun state => state.2 = true)
   · intro query before done
     exact ⟨fun value => by simp only [once, StateT.run, done, ite_true],
@@ -196,9 +187,8 @@ theorem once_sample (choose : spec.Domain → σ → Bool) (sampler : ProbComp V
       constructor
       · simp only [once, StateT.run, flag, Bool.false_eq_true, ite_false, selected, ite_true]
         simp only [latch]
-        rw [← map_bind, evalSPMF_map, evalSPMF_map]
-        congr 1
-        exact sample query before.1
+        rw [← map_bind]
+        exact (sample query before.1).map _
       · intro value result member
         simp only [once, StateT.run, flag, Bool.false_eq_true, ite_false, selected, ite_true,
           latch, support_map, Set.mem_image] at member
@@ -224,20 +214,19 @@ theorem latch_run (choose : spec.Domain → σ → Bool) (impl : QueryImpl spec 
       simp only [latch, StateT.run, bind_map_left, map_bind]
       exact bind_congr fun step => ih step.1 (step.2, state.2 || choose query state.1)
 
-set_option linter.deprecated false in
 /-- The original run is a projection of one prefetched-value run, for an arbitrary adaptive client. -/
 theorem eager_projected (choose : spec.Domain → σ → Bool) (sampler : ProbComp V)
     (lazy : QueryImpl spec (StateT σ ProbComp)) (programmed : V → QueryImpl spec (StateT σ ProbComp))
-    (sample : ∀ query state, 𝒮[(lazy query).run state] =
-      𝒮[do let value ← sampler; (programmed value query).run state])
+    (sample : ∀ query state, EvalDistEq ((lazy query).run state)
+      (do let value ← sampler; (programmed value query).run state))
     {α : Type} (work : OracleComp spec α) (state : σ × Bool) :
-    𝒮[(simulateQ lazy work).run state.1] =
-      𝒮[do
+    EvalDistEq ((simulateQ lazy work).run state.1)
+      (do
         let value ← sampler
         (fun result : α × (σ × Bool) => (result.1, result.2.1)) <$>
-          (simulateQ (once choose lazy programmed value) work).run state] := by
-  rw [← latch_run choose lazy work state, ← map_bind, evalSPMF_map, evalSPMF_map,
-    once_sample choose sampler lazy programmed sample work state]
+          (simulateQ (once choose lazy programmed value) work).run state) := by
+  rw [← latch_run choose lazy work state, ← map_bind]
+  exact (once_sample choose sampler lazy programmed sample work state).map _
 
 end Once
 end BeaconcryptCore.Computational.PqxdhServerAuthEntryFactor
@@ -299,17 +288,16 @@ noncomputable def prefetchedGame (setup : Setup baseSpec KemSK) (codec : Codec R
   let result ← prefetchedRun setup codec checks adversary revealSeed context Q j prk
   pure (context, result)
 
-set_option linter.deprecated false in
 /-- The per-context run preserves its complete final protocol/table state when the private flag is removed. No honest-target, cache-miss or successful-derivation premise is used. -/
 theorem prefetchedRun_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (checks : Checks) (adversary : Adversary) (revealSeed : Bool) (context : Context KemSK)
     (Q : Nat) (j : Fin (Q + 1)) :
-    𝒮[flatRun setup adversary revealSeed context
+    EvalDistEq (flatRun setup adversary revealSeed context
       (skeleton setup codec checks (context.publicValue setup) context.beaconSeed
-        (realServices context.seed context.scalar setup codec checks)) ∅] =
-      𝒮[do
+        (realServices context.seed context.scalar setup codec checks)) ∅)
+      (do
         let prk ← $ᵗ HmacBlock
-        Prod.fst <$> prefetchedRun setup codec checks adversary revealSeed context Q j prk] := by
+        Prod.fst <$> prefetchedRun setup codec checks adversary revealSeed context Q j prk) := by
   have complete := eager_projected (designated Q j) ($ᵗ HmacBlock)
     (skeleton setup codec checks (context.publicValue setup) context.beaconSeed
       (realServices context.seed context.scalar setup codec checks))
@@ -320,42 +308,35 @@ theorem prefetchedRun_source (setup : Setup baseSpec KemSK) (codec : Codec Reade
     (adversary (contextInput setup revealSeed context))
     ((contextState setup context, fun _ => false, ∅), false)
   unfold flatRun prefetchedRun
-  simp only [Functor.map_map, ← map_bind, evalSPMF_map]
-  simpa only [← map_bind, evalSPMF_map, Functor.map_map, Function.comp_def, prefetchedHandler] using
-    congrArg (fun run => Prod.snd <$> run) complete
+  have mapped := complete.map Prod.snd
+  simp only [map_bind, Functor.map_map, prefetchedHandler] at mapped ⊢
+  exact mapped
 
 
-set_option linter.deprecated false in
 /-- Exact complete-game equality after projecting the private flag; all context samples precede the designated block in their original R1 experiment order. -/
 theorem prefetchedGame_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (checks : Checks) (adversary : Adversary) (revealSeed : Bool) (Q : Nat) (j : Fin (Q + 1)) :
-    𝒮[realGame setup codec checks revealSeed adversary] =
-      𝒮[(fun result => (result.1, result.2.1)) <$>
-        prefetchedGame setup codec checks adversary revealSeed Q j] := by
+    EvalDistEq (realGame setup codec checks revealSeed adversary)
+      ((fun result => (result.1, result.2.1)) <$>
+        prefetchedGame setup codec checks adversary revealSeed Q j) := by
   unfold realGame prefetchedGame
   simp only [map_bind, map_pure]
-  apply DeferredSampling.evalSPMF_bind_congr_left
-  intro context
-  have paired := congrArg (fun distribution => (fun state => (context, state)) <$> distribution)
-    (prefetchedRun_source setup codec checks adversary revealSeed context Q j)
-  simpa only [evalSPMF_bind, evalSPMF_map, evalSPMF_pure, map_eq_bind_pure_comp,
-    Function.comp_def, bind_assoc, pure_bind] using paired
+  refine EvalDistEq.bind_right _ fun context => ?_
+  have paired := (prefetchedRun_source setup codec checks adversary revealSeed context Q j).map
+    (fun state => (context, state))
+  simpa only [map_eq_bind_pure_comp, Function.comp_def, bind_assoc, pure_bind] using paired
 
 
-set_option linter.deprecated false in
 /-- The actual per-owner authentication event is bounded by that same event in the complete prefetched experiment, with coefficient one and no loss. This step does not yet replace the key schedule. -/
 theorem entry_le_prefetched (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (checks : Checks) (adversary : Adversary) (revealSeed : Bool) (Q : Nat) (j : Fin (Q + 1)) :
-    Pr[fun result => EntryEvent setup result.1 result.2.1 Q j result.2.2.1.ghost |
-      gameState setup codec checks revealSeed adversary] ≤
-      Pr[fun result => EntryEvent setup result.1.seed result.1.scalar Q j result.2.1.1.ghost |
-        prefetchedGame setup codec checks adversary revealSeed Q j] := by
+    Pr{let result ← gameState setup codec checks revealSeed adversary}[EntryEvent setup result.1 result.2.1 Q j result.2.2.1.ghost] ≤
+      Pr{let result ← prefetchedGame setup codec checks adversary revealSeed Q j}[EntryEvent setup result.1.seed result.1.scalar Q j result.2.1.1.ghost] := by
   apply le_trans (gameState_le_real setup codec checks revealSeed adversary (fun seed scalar ghost =>
     EntryEvent setup seed scalar Q j ghost))
-  have same := probEvent_congr' (fun _ _ => Iff.rfl)
-    (prefetchedGame_source setup codec checks adversary revealSeed Q j)
-    (p := fun result => EntryEvent setup result.1.seed result.1.scalar Q j result.2.1.ghost)
-  simpa only [probEvent_map, Function.comp_def] using le_of_eq same
+  have same := (prefetchedGame_source setup codec checks adversary revealSeed Q j).prEvent_eq
+    (fun result => EntryEvent setup result.1.seed result.1.scalar Q j result.2.1.ghost)
+  exact (le_of_eq same).trans (prEvent_map _ _ _).le
 
 end BeaconcryptCore.Computational.PqxdhServerAuthEntryFactor
 

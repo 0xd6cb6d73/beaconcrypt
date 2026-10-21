@@ -113,7 +113,9 @@ theorem bool_probability_le {left right : ProbComp Bool}
     𝒟[left] {true} ≤ 𝒟[right] {true} := by
   have bound := probEvent_le_of_relTriple coupled (p := fun bit => bit = true) (q := fun bit => bit = true)
     (fun _ _ implication => implication)
-  simpa only [← evalDist_apply_setOf, Set.ofPred_eq_eq_singleton] using bound
+  rw [VCVioLegacy.probEvent_eq_prEvent, VCVioLegacy.probEvent_eq_prEvent, prEvent_eq_evalDist_singleton,
+    prEvent_eq_evalDist_singleton] at bound
+  exact bound
 
 /-- Source and factored per-context success probabilities are related without a statistical or guessing loss. -/
 theorem prefetched_decision_le (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
@@ -181,9 +183,10 @@ theorem actual_le_prefetched_decision (setup : Setup baseSpec KemSK) (codec : Co
     𝒟[actualEntryGame setup codec checks adversary revealSeed Q j] {true} ≤
       𝒟[prefetchedEntryDecisionGame setup codec checks adversary revealSeed Q j] {true} := by
   classical
-  rw [prefetched_decision_map]
-  simpa only [actualEntryGame, evalDist_apply_singleton, probOutput_map, decide_eq_true_eq] using
-    entry_le_prefetched setup codec checks adversary revealSeed Q j
+  rw [prefetched_decision_map, ← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true,
+    actualEntryGame, prEvent_map, prEvent_map]
+  simp only [decide_eq_true_eq]
+  exact entry_le_prefetched setup codec checks adversary revealSeed Q j
 
 
 /-- The original source event is bounded by the concrete real key-schedule game with coefficient one, for every adaptive adversary and every selected operation. -/

@@ -57,20 +57,17 @@ theorem client_prunes (setup : Setup baseSpec KemSK) (codec : Codec Reader WireR
       (adversary (contextInput setup false context)) (PqxdhServerAuthCtxReserve.initial setup context).1)
       (fun _ => ()) (fun _ => ())
 
-set_option linter.deprecated false in
 /-- The actual fully sampled killed reference capture is bounded by the unchanged unconditional reference capture, with its original selected-key draw and shared state. -/
 theorem client_capture (setup : Setup baseSpec KemSK) (codec : Codec Reader WireResponse)
     (checks : Checks) (adversary : Adversary) (Q : Nat) (j : Fin (Q + 1))
     (decode : AdaptiveCtxReceive.RawDecoder) :
-    Pr[fun result => PqxdhServerAuthPublicationGuess.Hit
-      (PqxdhServerAuthPublicationRandom.decodedTag decode) result.1 |
-      AdaptiveCtxDynamicKnownKeys.sourceGame true decode setup.source.crypto
-        (PqxdhServerAuthPublicationCaptureSource.dynamic (comparisonClient setup codec checks adversary Q j) none)] ≤
-      Pr[fun result => PqxdhServerAuthPublicationGuess.Hit
-        (PqxdhServerAuthPublicationRandom.decodedTag decode) result.1 |
-        AdaptiveCtxDynamicKnownKeys.sourceGame true decode setup.source.crypto
+    Pr{let result ← (AdaptiveCtxDynamicKnownKeys.sourceGame true decode setup.source.crypto
+        (PqxdhServerAuthPublicationCaptureSource.dynamic (comparisonClient setup codec checks adversary Q j) none))}[PqxdhServerAuthPublicationGuess.Hit
+      (PqxdhServerAuthPublicationRandom.decodedTag decode) result.1] ≤
+      Pr{let result ← (AdaptiveCtxDynamicKnownKeys.sourceGame true decode setup.source.crypto
           (PqxdhServerAuthPublicationCaptureSource.dynamic
-            (PqxdhServerAuthPublicationReference.client setup codec checks adversary Q j) none)] := by
+            (PqxdhServerAuthPublicationReference.client setup codec checks adversary Q j) none))}[PqxdhServerAuthPublicationGuess.Hit
+        (PqxdhServerAuthPublicationRandom.decodedTag decode) result.1] := by
   simpa only [dynamic_map] using source_mono true decode setup.source.crypto _ _
     (client_prunes setup codec checks adversary Q j) none
     (PqxdhServerAuthPublicationGuess.Hit (PqxdhServerAuthPublicationRandom.decodedTag decode))
@@ -78,7 +75,6 @@ theorem client_capture (setup : Setup baseSpec KemSK) (codec : Codec Reader Wire
 
 open PqxdhServerAuthSourceCosts PqxdhServerAuthBodyCosts PqxdhServerAuthGapDh
 
-set_option linter.deprecated false in
 /-- The concrete stopped comparison consumes the existing ordinary reference reductions with the original source budgets. No failure-conditioned tag law or caller event inclusion is assumed. -/
 theorem comparison_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader WireResponse) (checks : Checks)
     (caps : KemCaps) (bounded : KemBound setup caps) (adversary : Adversary)
@@ -88,13 +84,12 @@ theorem comparison_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Wi
     (hashes : ∀ input, (adversary input).IsQueryBoundP IsHashQuery qHash)
     (rom : ∀ input, (adversary input).IsQueryBoundP IsRomQuery qH)
     (j : Fin (Q + 1)) (decode : AdaptiveCtxReceive.RawDecoder) :
-    (Pr[fun result => PqxdhServerAuthPublicationGuess.Hit
-      (PqxdhServerAuthPublicationRandom.decodedTag decode) result.1 |
-      AdaptiveCtxDynamicKnownKeys.sourceGame true decode setup.source.crypto
-        (PqxdhServerAuthPublicationCaptureSource.dynamic (comparisonClient setup codec checks adversary Q j) none)]).toReal ≤
+    (Pr{let result ← (AdaptiveCtxDynamicKnownKeys.sourceGame true decode setup.source.crypto
+        (PqxdhServerAuthPublicationCaptureSource.dynamic (comparisonClient setup codec checks adversary Q j) none))}[PqxdhServerAuthPublicationGuess.Hit
+      (PqxdhServerAuthPublicationRandom.decodedTag decode) result.1]).toReal ≤
       PqxdhServerAuthPublicationPrivacy.loss setup codec checks adversary Q j decode
         (entryReductionBudget caps qCoin Q qHash qH + 76) := by
-  exact (ENNReal.toReal_mono probEvent_ne_top (client_capture setup codec checks adversary Q j decode)).trans
+  exact (ENNReal.toReal_mono (prEvent_ne_top _) (client_capture setup codec checks adversary Q j decode)).trans
     (PqxdhServerAuthPublicationCaptureSource.reference_bound setup codec checks caps bounded adversary
       qCoin Q qHash qH coins accepts hashes rom j decode)
 
@@ -132,7 +127,6 @@ theorem actual_comparison (setup : Setup baseSpec KemSK) (codec : Codec Reader W
       (PqxdhServerAuthCtxReserve.initial setup context).1 := rfl
   simpa only [bind_pure_comp, Functor.map_map, initial] using same
 
-set_option linter.deprecated false in
 /-- The fully sampled actual stopped source obeys the ordinary unconditional-reference capture bound. Every original public callback runs before the publication stop; no conditioned primitive law is introduced. -/
 theorem actual_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader WireResponse) (checks : Checks)
     (caps : KemCaps) (bounded : KemBound setup caps) (adversary : Adversary)
@@ -142,10 +136,9 @@ theorem actual_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader WireRe
     (hashes : ∀ input, (adversary input).IsQueryBoundP IsHashQuery qHash)
     (rom : ∀ input, (adversary input).IsQueryBoundP IsRomQuery qH)
     (j : Fin (Q + 1)) (decode : AdaptiveCtxReceive.RawDecoder) :
-    (Pr[fun result => PqxdhServerAuthPublicationGuess.Hit
-      (PqxdhServerAuthPublicationRandom.decodedTag decode) result.1 |
-      AdaptiveCtxDynamicKnownKeys.sourceGame true decode setup.source.crypto
-        (PqxdhServerAuthPublicationCaptureSource.dynamic (actualClient setup codec checks adversary Q j) none)]).toReal ≤
+    (Pr{let result ← (AdaptiveCtxDynamicKnownKeys.sourceGame true decode setup.source.crypto
+        (PqxdhServerAuthPublicationCaptureSource.dynamic (actualClient setup codec checks adversary Q j) none))}[PqxdhServerAuthPublicationGuess.Hit
+      (PqxdhServerAuthPublicationRandom.decodedTag decode) result.1]).toReal ≤
       PqxdhServerAuthPublicationPrivacy.loss setup codec checks adversary Q j decode
         (entryReductionBudget caps qCoin Q qHash qH + 76) := by
   rw [actual_comparison]

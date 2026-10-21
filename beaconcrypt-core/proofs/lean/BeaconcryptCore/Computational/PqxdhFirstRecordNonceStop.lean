@@ -376,8 +376,9 @@ theorem input_bound (client : OracleComp (Optional (PqxdhInitialGenericPost.Spec
       (observedStops (extra := extra) prior parent target nonce next sender) client (([], before), false))
   simp only [Functor.map_map, Prod.map_def, id_eq] at histories
   rw [← histories]
-  simp only [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map, Function.comp_def, decide_eq_true_eq]
-  apply probEvent_mono
+  rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true, prEvent_map, prEvent_map]
+  simp only [decide_eq_true_eq]
+  apply prEvent_mono_of_support
   intro result supported flagged
   have consistent := marked_program_consistent pre application initial selector aux source writer prior parent key target nonce next
     sender route read client (([], before), false) result supported
@@ -401,8 +402,8 @@ theorem source_input_distance (work : OracleComp (PqxdhInitialGenericPost.Spec e
   apply (PqxdhSelectedPostCompiler.source_distance pre application initial selector aux source writer prior parent key target nonce next
     sender route read work before).trans
   apply ENNReal.toReal_mono
-  · simp only [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput]
-    exact probEvent_ne_top
+  · rw [← prEvent_eq_evalDist_singleton _ true]
+    exact prEvent_ne_top _
   · exact input_bound pre application initial selector aux source writer prior parent key target nonce next sender route read
       (RawCtxSelectedFamilyNonceCoupling.optionalClient work) before empty
 
@@ -440,8 +441,8 @@ theorem source_history_distance (work : OracleComp (PqxdhInitialGenericPost.Spec
   apply (PqxdhSelectedPostCompiler.source_distance pre application initial selector aux source writer prior parent key target nonce next
     sender route read work before).trans
   apply ENNReal.toReal_mono
-  · simp only [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput]
-    exact probEvent_ne_top
+  · rw [← prEvent_eq_evalDist_singleton _ true]
+    exact prEvent_ne_top _
   · exact source_input_bound pre application initial selector aux source writer prior parent key target nonce next sender route read
       (RawCtxSelectedFamilyNonceCoupling.optionalClient work) before empty
 

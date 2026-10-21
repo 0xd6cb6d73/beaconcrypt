@@ -31,31 +31,36 @@ theorem state_lift {σ α : Type} (work : ProbComp α) (state : σ) :
     (StateT.lift work : StateT σ ProbComp α) state =
       work >>= fun value => pure (value, state) := rfl
 
-set_option linter.deprecated false in
 /-- A fixed nonzero DH output has probability at most 64/2^256 at the actual scalar draw, directly from the approved functional counting contract. -/
 theorem spread_probability (c : Pqxdh.Crypto) (spread : X25519ScalarSpread c)
     (peer : PeerEncoding) (value : DhOutput) (nonzero : value ≠ zeroDh) :
-    Pr[fun scalar => c.x25519 scalar.toList peer.toList = value.toList |
-      sampleScalar] ≤
+    Pr{let scalar ← sampleScalar}[c.x25519 scalar.toList peer.toList = value.toList] ≤
       (64 : ℝ≥0∞) / (Fintype.card ScalarBytes : ℝ≥0∞) := by
-  rw [sampleScalar, probEvent_uniformSample]
+  rw [sampleScalar, SampleableType.prEvent_uniformSample]
   exact ENNReal.div_le_div_right (by exact_mod_cast spread peer value nonzero) _
 
 variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response : Type}
 
-set_option linter.deprecated false in
 /-- The actual verified Server prefix hits any fixed nonzero third coordinate only at the approved scalar-spread rate. Pre-generation rejection is retained, and later rejection is never conditioned away. -/
 theorem verified_third_probability (setup : Setup baseSpec KemSK)
     (codec : Codec Reader Response) (checks : Checks)
     (spread : X25519ScalarSpread setup.source.crypto)
     (verified : PqxdhServerRootPreparation.Verified Reader) (consumed : List Pqxdh.Bytes)
     (value : DhOutput) (nonzero : value ≠ zeroDh) :
-    Pr[fun result => ∃ input, result.1 = some input ∧
-        absBytes input.third = value.toList |
-      ((simulateQ (PqxdhServerStaticDhSource.prefixImpl setup.serverDomain
+    Pr{let result ← ((simulateQ (PqxdhServerStaticDhSource.prefixImpl setup.serverDomain
         (serverAux setup codec checks) (fun _ => pure ()))
-          (PqxdhServerRootPreparation.collectVerified verified)).run consumed)] ≤
+          (PqxdhServerRootPreparation.collectVerified verified)).run consumed)}[∃ input, result.1 = some input ∧
+        absBytes input.third = value.toList] ≤
       (64 : ℝ≥0∞) / (Fintype.card ScalarBytes : ℝ≥0∞) := by
+  classical
+  -- Event-level laws over abstract computations (S8 editing rule 14): the rejection branches end in the
+  -- impossible event, and the accepted branch reassociates the observed computation only.
+  have prPureFalse : 𝒟[(pure False : ProbComp Prop)] {True} = 0 := by
+    have impossible := prEvent_false (pure () : ProbComp Unit)
+    rwa [pure_bind] at impossible
+  have prAssoc : ∀ {α β γ : Type} (x : ProbComp α) (f : α → ProbComp β) (g : β → ProbComp γ) (p : γ → Prop),
+      Pr{let y ← (x >>= f >>= g)}[p y] = Pr{let y ← (x >>= fun a => f a >>= g)}[p y] := fun x f g p => by
+    rw [bind_assoc x f g]
   simp only [PqxdhServerRootPreparation.collectVerified, OptionT.run_bind,
     OptionT.run_monadLift, Option.elimM, bind_map_left,
     simulateQ_bind, simulateQ_spec_query, PqxdhServerStaticDhSource.prefixImpl,
@@ -63,10 +68,9 @@ theorem verified_third_probability (setup : Setup baseSpec KemSK)
   simp only [StateT.run, Option.elim_some, pure_bind]
   by_cases used : PqxdhServerRootPreparation.registrationId verified ∈ consumed
   · simp only [used, ite_true, OptionT.run_failure, simulateQ_pure]
-    change Pr[fun result : Option (PqxdhServerRootPreparation.Inputs Reader ScalarBytes PeerEncoding) ×
-        List Pqxdh.Bytes => ∃ input, result.1 = some input ∧ absBytes input.third = value.toList |
-      pure (none, consumed)] ≤ _
-    simp only [probEvent_pure, reduceCtorEq, false_and, exists_false, ite_false]
+    change Pr{let result ← (pure (none, consumed) : ProbComp (Option (PqxdhServerRootPreparation.Inputs Reader ScalarBytes
+        PeerEncoding) × List Pqxdh.Bytes))}[∃ input, result.1 = some input ∧ absBytes input.third = value.toList] ≤ _
+    simp only [prEvent_pure, reduceCtorEq, false_and, exists_false, ite_false]
     exact zero_le
   · simp only [used, ite_false, OptionT.run_bind, OptionT.run_monadLift,
       Option.elimM, bind_map_left, simulateQ_bind, simulateQ_spec_query,
@@ -74,7 +78,7 @@ theorem verified_third_probability (setup : Setup baseSpec KemSK)
       pure_bind, Option.elim_some]
     cases reserved : checks.reserveRegistration <;>
       simp only [Bool.not_false, Bool.not_true, Bool.false_eq_true, ite_true, ite_false,
-        OptionT.run_failure, simulateQ_pure, state_pure, probEvent_pure,
+        OptionT.run_failure, simulateQ_pure, state_pure, prEvent_pure,
         reduceCtorEq, false_and, exists_false]
     · exact zero_le
     cases pre : checks.x25519Point (PqxdhRootTableInitialization.rootArray verified.keys.prekey) <;>
@@ -83,15 +87,15 @@ theorem verified_third_probability (setup : Setup baseSpec KemSK)
         Option.elimM, Option.elim_some, bind_map_left, simulateQ_bind, simulateQ_spec_query,
         simulateQ_pure, PqxdhServerStaticDhSource.prefixImpl, serverAux,
         state_pure, pure_bind, pre, one, Bool.not_true,
-        Bool.not_false, Bool.false_eq_true, ite_true, ite_false, probEvent_pure, reduceCtorEq,
-        false_and, exists_false] <;> try exact zero_le
-    simp only [state_bind, state_lift, generateEphemeral, bind_assoc, pure_bind,
+        Bool.not_false, Bool.false_eq_true, ite_true, ite_false, reduceCtorEq,
+        false_and, exists_false, prPureFalse] <;> try exact zero_le
+    simp only [state_bind, state_lift, generateEphemeral, prAssoc, pure_bind,
       Option.elim_some]
-    refine (probEvent_bind_le_probEvent (p := fun scalar : ScalarBytes =>
-      setup.source.crypto.x25519 scalar.toList verified.keys.prekey.toList = value.toList) ?_).trans
+    refine (prEvent_bind_le_prEvent_of_support _ _ (fun scalar : ScalarBytes =>
+      setup.source.crypto.x25519 scalar.toList verified.keys.prekey.toList = value.toList) _ ?_).trans
         (spread_probability setup.source.crypto spread verified.keys.prekey value nonzero)
     intro scalar _ unequal
-    apply probEvent_eq_zero_iff.mpr
+    apply prEvent_eq_zero_of_forall_mem_support
     intro result supported accepted
     obtain ⟨input, hasInput, third⟩ := accepted
     generalize thirdField : input.third = thirdWord at third
@@ -154,51 +158,49 @@ theorem verified_third_probability (setup : Setup baseSpec KemSK)
         List.Vector.toList_mk] using
         raw.trans third
 
-set_option linter.deprecated false in
 /-- Arbitrary raw Phase 1 decoding and verification precede the same uniform draw; malformed input and all rejected continuations retain their original probability. -/
 theorem prefix_third_probability (setup : Setup baseSpec KemSK)
     (codec : Codec Reader Response) (checks : Checks)
     (spread : X25519ScalarSpread setup.source.crypto)
     (raw : Pqxdh.Bytes) (consumed : List Pqxdh.Bytes)
     (value : DhOutput) (nonzero : value ≠ zeroDh) :
-    Pr[fun result => ∃ input, result.1 = some input ∧
-        absBytes input.third = value.toList |
-      ((serverPrefix setup codec checks raw).run consumed)] ≤
+    Pr{let result ← ((serverPrefix setup codec checks raw).run consumed)}[∃ input, result.1 = some input ∧
+        absBytes input.third = value.toList] ≤
       (64 : ℝ≥0∞) / (Fintype.card ScalarBytes : ℝ≥0∞) := by
+  classical
   simp only [serverPrefix, PqxdhServerRootPreparation.collect, simulateQ_bind, StateT.run_bind]
-  apply probEvent_bind_le_of_forall_le
+  apply prEvent_bind_le_of_forall_le_of_support
   intro verified _
   cases verified.1 with
   | none =>
-      simp only [simulateQ_pure, StateT.run_pure, probEvent_pure, reduceCtorEq,
+      simp only [simulateQ_pure, StateT.run_pure, prEvent_pure, reduceCtorEq,
         false_and, exists_false, ite_false]
       exact zero_le
   | some input => exact verified_third_probability setup codec checks spread input verified.2 value nonzero
 
-set_option linter.deprecated false in
 /-- The same actual prefix has the finite-union bound against any previously fixed list of nonzero third coordinates. The list can be chosen from the entire prior adaptive history. -/
 theorem prefix_thirds_probability (setup : Setup baseSpec KemSK)
     (codec : Codec Reader Response) (checks : Checks)
     (spread : X25519ScalarSpread setup.source.crypto)
     (raw : Pqxdh.Bytes) (consumed : List Pqxdh.Bytes)
     (values : List DhOutput) (nonzero : ∀ value ∈ values, value ≠ zeroDh) :
-    Pr[fun result => ∃ input, result.1 = some input ∧
-        ∃ value ∈ values, absBytes input.third = value.toList |
-      ((serverPrefix setup codec checks raw).run consumed)] ≤
+    Pr{let result ← ((serverPrefix setup codec checks raw).run consumed)}[∃ input, result.1 = some input ∧
+        ∃ value ∈ values, absBytes input.third = value.toList] ≤
       (values.length : ℝ≥0∞) * ((64 : ℝ≥0∞) / (Fintype.card ScalarBytes : ℝ≥0∞)) := by
   induction values with
   | nil =>
-      simp only [List.not_mem_nil, false_and, exists_false, and_false, List.length_nil, Nat.cast_zero, zero_mul, probEvent_False, le_refl]
+      simp only [List.not_mem_nil, false_and, exists_false, and_false, List.length_nil, Nat.cast_zero, zero_mul,
+        prEvent_false, le_refl]
   | cons value rest ih =>
-      have splitEvent : (fun result : Option (PqxdhServerRootPreparation.Inputs Reader ScalarBytes PeerEncoding) ×
-          List Pqxdh.Bytes => ∃ input, result.1 = some input ∧
-            ∃ target ∈ value :: rest, absBytes input.third = target.toList) =
-          (fun result => (∃ input, result.1 = some input ∧ absBytes input.third = value.toList) ∨
+      have splitEvent : ∀ result : Option (PqxdhServerRootPreparation.Inputs Reader ScalarBytes PeerEncoding) ×
+          List Pqxdh.Bytes, (∃ input, result.1 = some input ∧
+            ∃ target ∈ value :: rest, absBytes input.third = target.toList) ↔
+          ((∃ input, result.1 = some input ∧ absBytes input.third = value.toList) ∨
             (∃ input, result.1 = some input ∧ ∃ target ∈ rest, absBytes input.third = target.toList)) := by
-        funext result
+        intro result
         simp only [List.mem_cons, exists_eq_or_imp, and_or_left, exists_or]
-      rw [splitEvent]
-      apply (probEvent_or_le _ _ _).trans
+      rw [prEvent_congr _ _ _ splitEvent]
+      apply (prEvent_or_le _ _ _).trans
       have headBound := prefix_third_probability setup codec checks spread raw consumed value
         (nonzero value (List.mem_cons_self))
       have tailBound := ih (fun target member => nonzero target (List.mem_cons_of_mem value member))
@@ -436,22 +438,21 @@ theorem evaluate_accept (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
   · simp only [StateT.run_pure, simulateQ_pure, map_pure, PqxdhSelectedStateInterpreter.pair]
   · rfl
 
-set_option linter.deprecated false in
 /-- One actual accept creates a new distinct-session DH3 collision with probability at most the number of prior retained attempts times the approved scalar-spread rate. Arbitrary preceding public and private state is retained. -/
 theorem accept_collision_probability (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (spread : X25519ScalarSpread setup.source.crypto) (publicValue : PublicChallenge)
     (seed : IdentitySeed) (scalar : ScalarBytes) (raw : Pqxdh.Bytes)
     (state : GameState KemSK × PqxdhJointDhExtractFamily.State)
     (clean : ¬ Collision (thirds state.1.ghost.touches)) :
-    Pr[fun result => Collision (thirds result.2.1.ghost.touches) |
-      ((evaluate setup seed scalar (acceptOracle setup codec checks publicValue raw)).run state)] ≤
+    Pr{let result ← ((evaluate setup seed scalar (acceptOracle setup codec checks publicValue raw)).run state)}[Collision (thirds result.2.1.ghost.touches)] ≤
       ((thirds state.1.ghost.touches).length : ℝ≥0∞) *
         ((64 : ℝ≥0∞) / (Fintype.card ScalarBytes : ℝ≥0∞)) := by
   rw [evaluate_accept]
-  refine (probEvent_bind_le_probEvent (p := fun collected => ∃ input, collected.1 = some input ∧
-      ∃ value ∈ (thirds state.1.ghost.touches).map Prod.snd, absBytes input.third = value.toList) ?_).trans ?_
+  refine (prEvent_bind_le_prEvent_of_support _ _ (fun collected : Option (PqxdhServerRootPreparation.Inputs Reader
+      ScalarBytes PeerEncoding) × List Pqxdh.Bytes => ∃ input, collected.1 = some input ∧
+      ∃ value ∈ (thirds state.1.ghost.touches).map Prod.snd, absBytes input.third = value.toList) _ ?_).trans ?_
   · intro collected _ missing
-    apply probEvent_eq_zero_iff.mpr
+    apply prEvent_eq_zero_of_forall_mem_support
     intro result supported collided
     rcases collected with ⟨input, consumed⟩
     cases input with
@@ -589,15 +590,13 @@ theorem fused_thirds_length (setup : Setup baseSpec KemSK) (codec : Codec Reader
   · rw [ite_eq_right accept, Nat.add_zero, fused_quiet setup codec checks publicValue beaconSeed seed scalar
       query accept state result supported]
 
-set_option linter.deprecated false in
 /-- The actual complete oracle step has collision hazard only for accepts; all other adaptive replies preserve the session history. -/
 theorem fused_collision_probability (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (spread : X25519ScalarSpread setup.source.crypto) (publicValue : PublicChallenge)
     (beaconSeed seed : IdentitySeed) (scalar : ScalarBytes) (query : ServerAuthSpec.Domain)
     (state : GameState KemSK × PqxdhJointDhExtractFamily.State)
     (clean : ¬ Collision (thirds state.1.ghost.touches)) :
-    Pr[fun result => Collision (thirds result.2.1.ghost.touches) |
-      ((PqxdhServerAuthGapDh.fusedImpl setup codec checks publicValue beaconSeed seed scalar query).run state)] ≤
+    Pr{let result ← ((PqxdhServerAuthGapDh.fusedImpl setup codec checks publicValue beaconSeed seed scalar query).run state)}[Collision (thirds result.2.1.ghost.touches)] ≤
       if IsAcceptQuery query then ((thirds state.1.ghost.touches).length : ℝ≥0∞) *
         ((64 : ℝ≥0∞) / (Fintype.card ScalarBytes : ℝ≥0∞)) else 0 := by
   by_cases accept : IsAcceptQuery query
@@ -610,7 +609,7 @@ theorem fused_collision_probability (setup : Setup baseSpec KemSK) (codec : Code
     | _ => cases accept
   · rw [ite_eq_right accept]
     apply le_of_eq
-    apply probEvent_eq_zero_iff.mpr
+    apply prEvent_eq_zero_of_forall_mem_support
     intro result supported collided
     rw [fused_quiet setup codec checks publicValue beaconSeed seed scalar query accept state result supported] at collided
     exact clean collided
@@ -634,7 +633,6 @@ theorem allowance_eq (n q : Nat) : allowance n q = q * n + q.choose 2 := by
       rw [allowance, ih, Nat.choose_succ_succ, Nat.choose_one_right]
       ring
 
-set_option linter.deprecated false in
 /-- The complete adaptive schedule accumulates the actual per-accept hazard over ordered attempt pairs. Arbitrary interleaving, stopping and every oracle reply remain in the original fused experiment. -/
 theorem run_collision_probability (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (spread : X25519ScalarSpread setup.source.crypto) (publicValue : PublicChallenge)
@@ -642,14 +640,13 @@ theorem run_collision_probability (setup : Setup baseSpec KemSK) (codec : Codec 
     (work : OracleComp ServerAuthSpec α) (q : Nat) (bounded : work.IsQueryBoundP IsAcceptQuery q)
     (state : GameState KemSK × PqxdhJointDhExtractFamily.State)
     (clean : ¬ Collision (thirds state.1.ghost.touches)) :
-    Pr[fun result => Collision (thirds result.2.1.ghost.touches) |
-      ((simulateQ (PqxdhServerAuthGapDh.fusedImpl setup codec checks publicValue beaconSeed seed scalar) work).run state)] ≤
+    Pr{let result ← ((simulateQ (PqxdhServerAuthGapDh.fusedImpl setup codec checks publicValue beaconSeed seed scalar) work).run state)}[Collision (thirds result.2.1.ghost.touches)] ≤
       (allowance (thirds state.1.ghost.touches).length q : ℝ≥0∞) *
         ((64 : ℝ≥0∞) / (Fintype.card ScalarBytes : ℝ≥0∞)) := by
   classical
   induction work using OracleComp.inductionOn generalizing q state with
   | pure value =>
-      simp only [simulateQ_pure, StateT.run_pure, probEvent_pure, clean, ite_false]
+      simp only [simulateQ_pure, StateT.run_pure, prEvent_pure, clean, ite_false]
       exact zero_le
   | query_bind query next ih =>
       rw [isQueryBoundP_query_bind_iff] at bounded
@@ -664,7 +661,9 @@ theorem run_collision_probability (setup : Setup baseSpec KemSK) (codec : Codec 
           have hazard := fused_collision_probability setup codec checks spread publicValue beaconSeed seed scalar
             query state clean
           rw [ite_eq_left accept] at hazard
-          refine (probEvent_bind_le_probEvent_add (p := fun result => Collision (thirds result.2.1.ghost.touches))
+          refine (prEvent_bind_le_prEvent_add_of_support _ _
+            (fun result : _ × GameState KemSK × PqxdhJointDhExtractFamily.State =>
+              Collision (thirds result.2.1.ghost.touches)) _
             (ε := (allowance ((thirds state.1.ghost.touches).length + 1) q : ℝ≥0∞) *
               ((64 : ℝ≥0∞) / (Fintype.card ScalarBytes : ℝ≥0∞))) ?_).trans ?_
           · intro result supported safe
@@ -677,54 +676,53 @@ theorem run_collision_probability (setup : Setup baseSpec KemSK) (codec : Codec 
             exact_mod_cast allowance_mono _ _ q growth
           · rw [allowance, Nat.cast_add, add_mul]
             exact add_le_add hazard le_rfl
-      · apply probEvent_bind_le_of_forall_le
+      · apply prEvent_bind_le_of_forall_le_of_support
         intro result supported
         have same := fused_quiet setup codec checks publicValue beaconSeed seed scalar query accept state result supported
         have tailBound := ih result.1 q (by simpa only [accept, ite_false, Nat.sub_zero] using bounded.2 result.1)
           result.2 (by rw [same]; exact clean)
         simpa only [same] using tailBound
 
-set_option linter.deprecated false in
 /-- The actual Phase 1 generation precedes the complete adaptive schedule. Its empty session history discharges the initial collision condition, for every supported source outcome and public challenge. -/
 theorem body_collision_probability (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (spread : X25519ScalarSpread setup.source.crypto) (adversary : Adversary)
     (Q : Nat) (accept : ∀ input, (adversary input).IsQueryBoundP IsAcceptQuery Q)
     (revealed : Option IdentitySeed) (publicValue : PublicChallenge) (seed : IdentitySeed) (scalar : ScalarBytes)
     (state : PqxdhJointDhExtractFamily.State) :
-    Pr[fun result => Collision (thirds result.1.ghost.touches) |
-      ((simulateQ (family setup seed scalar) (body setup codec checks adversary revealed publicValue)).run state)] ≤
+    Pr{let result ← ((simulateQ (family setup seed scalar) (body setup codec checks adversary revealed publicValue)).run state)}[Collision (thirds result.1.ghost.touches)] ≤
       (Q.choose 2 : ℝ≥0∞) * ((64 : ℝ≥0∞) / (Fintype.card ScalarBytes : ℝ≥0∞)) := by
   simp only [body, simulateQ_bind, StateT.run_bind, family, rom_coins, bind_map_left]
-  apply probEvent_bind_le_of_forall_le
+  apply prEvent_bind_le_of_forall_le_of_support
   intro beaconSeed _
-  apply probEvent_bind_le_of_forall_le
+  apply prEvent_bind_le_of_forall_le_of_support
   intro oneTime _
-  apply probEvent_bind_le_of_forall_le
+  apply prEvent_bind_le_of_forall_le_of_support
   intro keys _
-  apply probEvent_bind_le_of_forall_le
+  apply prEvent_bind_le_of_forall_le_of_support
   intro published _
   rw [simulateQ_map, StateT.run_map, OracleComp.simulateQ_mapStateTBase_run_eq_map_flattenStateT,
-    Functor.map_map, probEvent_map]
+    Functor.map_map, prEvent_map]
   have bound := run_collision_probability setup codec checks spread publicValue beaconSeed seed scalar
     (adversary ⟨publicValue.identity, setup.serverKeyId, published.1, revealed⟩) Q (accept _)
     (initialGameState setup publicValue published.2, state) (by simp [initialGameState, Ghost.empty, thirds, Collision])
   simpa only [initialGameState, Ghost.empty, thirds, List.filterMap_nil, List.length_nil,
     allowance_eq, Nat.mul_zero, Nat.zero_add, Function.comp_def, PqxdhServerAuthGapDh.fusedImpl] using bound
 
-set_option linter.deprecated false in
 /-- Sampling the original joint challenge first preserves the same adaptive pair bound. The result also holds for the seed-reveal negative control, because this is only the session-collision event. -/
 theorem gameState_collision_probability (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (spread : X25519ScalarSpread setup.source.crypto) (adversary : Adversary)
     (Q : Nat) (accept : ∀ input, (adversary input).IsQueryBoundP IsAcceptQuery Q) (revealSeed : Bool) :
-    Pr[fun result => Collision (thirds result.2.2.1.ghost.touches) |
-      gameState setup codec checks revealSeed adversary] ≤
+    Pr{let result ← gameState setup codec checks revealSeed adversary}[Collision (thirds result.2.2.1.ghost.touches)] ≤
       (Q.choose 2 : ℝ≥0∞) * ((64 : ℝ≥0∞) / (Fintype.card ScalarBytes : ℝ≥0∞)) := by
+  have pureMap : ∀ {α β : Type} (mx : ProbComp α) (f : α → β) (p : β → Prop),
+      Pr{let y ← (mx >>= fun a => pure (f a))}[p y] = Pr{let a ← mx}[p (f a)] := fun mx f p => by
+    rw [bind_pure_comp f mx, prEvent_map]
   unfold gameState
-  apply probEvent_bind_le_of_forall_le
+  apply prEvent_bind_le_of_forall_le_of_support
   intro seed _
-  apply probEvent_bind_le_of_forall_le
+  apply prEvent_bind_le_of_forall_le_of_support
   intro scalar _
-  rw [bind_pure_comp, probEvent_map]
+  rw [pureMap]
   exact body_collision_probability setup codec checks spread adversary Q accept _ _ seed scalar _
 
 /-- The actual raw ephemeral draw has exactly the 256-bit width stated by the approved spread contract. -/
@@ -738,17 +736,15 @@ theorem scalar_card : Fintype.card ScalarBytes = 2 ^ 256 := by
     _ = 2 ^ (8 * 32) := by rw [pow_mul]
     _ = 2 ^ 256 := by norm_num
 
-set_option linter.deprecated false in
 /-- B7: in the original adaptive experiment, two distinct Server attempts derive the target Beacon's same 192-byte input with probability at most choose(Q,2)·64/2^256. Q counts all accept attempts, including rejection; no extra session guess, conditioned success, KEM-security assumption or input-independence premise occurs. -/
 theorem collB_probability (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (spread : X25519ScalarSpread setup.source.crypto) (adversary : Adversary)
     (Q : Nat) (accept : ∀ input, (adversary input).IsQueryBoundP IsAcceptQuery Q) (revealSeed : Bool) :
-    Pr[fun result => CollB setup result.1 result.2.1 result.2.2.1.ghost |
-      gameState setup codec checks revealSeed adversary] ≤
+    Pr{let result ← gameState setup codec checks revealSeed adversary}[CollB setup result.1 result.2.1 result.2.2.1.ghost] ≤
       (Q.choose 2 : ℝ≥0∞) * 64 / (2 ^ 256 : ℝ≥0∞) := by
-  have inclusion := probEvent_mono (mx := gameState setup codec checks revealSeed adversary)
-    (p := fun result => CollB setup result.1 result.2.1 result.2.2.1.ghost)
-    (q := fun result => Collision (thirds result.2.2.1.ghost.touches)) (fun result supported collided =>
+  have inclusion := prEvent_mono_of_support (gameState setup codec checks revealSeed adversary)
+    (fun result => CollB setup result.1 result.2.1 result.2.2.1.ghost)
+    (fun result => Collision (thirds result.2.2.1.ghost.touches)) (fun result supported collided =>
       collB_thirds setup result.1 result.2.1 _ result.2.2.1
         (gameState_reachable setup codec checks revealSeed adversary result supported).1 collided)
   apply inclusion.trans

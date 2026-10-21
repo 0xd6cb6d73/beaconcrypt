@@ -33,8 +33,8 @@ theorem original_event_decomposition (setup : Setup baseSpec KemSK) (codec : Cod
       𝒟[originalCollisionGame setup codec checks adversary] {true} +
       ∑ j : Fin (Q + 1), 𝒟[actualEntryGame setup codec checks adversary false Q j] {true} := by
   classical
-  simpa only [originalDisclosureGame, originalCollisionGame, actualEntryGame,
-    evalDist_apply_singleton, probOutput_map, decide_eq_true_eq] using
+  simpa only [← prEvent_eq_evalDist_singleton _ true, originalDisclosureGame, originalCollisionGame,
+    actualEntryGame, prEvent_map, decide_eq_true_eq] using
     win_le_games setup codec checks false adversary Q qH qHash budget
 
 /-- The same finite source decomposition in real-valued probabilities, with finiteness discharged for every event term. -/
@@ -67,7 +67,7 @@ theorem disclosure_le_gapDh (setup : Setup baseSpec KemSK) (codec : Codec Reader
   have bounded : 𝒟[originalDisclosureGame setup codec checks adversary] {true} ≤
       serverGapDhAdvantage setup.source.crypto setup.joint setup.secretOfSeed setup.wiring
         (PqxdhJointGapDh.extractor (scanClient setup codec checks adversary qH)) := by
-    simpa only [originalDisclosureGame, evalDist_apply_singleton, probOutput_map, decide_eq_true_eq] using
+    simpa only [← prEvent_eq_evalDist_singleton _ true, originalDisclosureGame, prEvent_map, decide_eq_true_eq] using
       badB_le_gapDh setup codec checks adversary qH law rom
   exact ENNReal.toReal_mono (prEvent_ne_top _) bounded
 
@@ -97,12 +97,12 @@ theorem collision_le_scalar_spread (setup : Setup baseSpec KemSK) (codec : Codec
       (Q.choose 2 : ℝ) * 64 / (2 ^ 256 : ℝ) := by
   have bounded : 𝒟[originalCollisionGame setup codec checks adversary] {true} ≤
       (Q.choose 2 : ℝ≥0∞) * 64 / (2 ^ 256 : ℝ≥0∞) := by
-    simpa only [originalCollisionGame, evalDist_apply_singleton, probOutput_map, decide_eq_true_eq] using
+    simpa only [← prEvent_eq_evalDist_singleton _ true, originalCollisionGame, prEvent_map, decide_eq_true_eq] using
       collB_probability setup codec checks spread adversary Q accepts false
   have realBound := ENNReal.toReal_mono
     (ENNReal.div_ne_top
       (ENNReal.mul_ne_top (ENNReal.natCast_ne_top _) (by norm_num)) (by norm_num)) bounded
-  simpa using realBound
+  simpa [-evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ] using realBound
 
 /-- The intermediate original-R1 authentication bound with the checked adaptive collision term. It still exposes the remaining CTX entry games rather than assuming their security. -/
 theorem authentication_intermediate_scalar (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)

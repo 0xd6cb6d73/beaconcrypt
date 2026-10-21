@@ -39,29 +39,26 @@ theorem accepted_cases (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
   · exact Or.inl bad
   · exact Or.inr (Or.inl coll)
   · exact Or.inr (Or.inr ⟨j, Finset.mem_univ j, owned, accepted.2 j owned.2.2.2⟩)
-set_option linter.deprecated false in
 /-- The chronological observed event is charged to the original source disclosure/collision games and the same finite family of owner events. Observation conditions are dropped only on those two explicitly charged bad branches. -/
 theorem accepted_probability (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (revealSeed : Bool) (adversary : Adversary) (Q qH qHash : Nat)
     (budget : AuthBudget adversary Q qH qHash) (observers : Fin (Q + 1) → Observer) :
-    Pr[Accepted setup Q observers | game setup codec checks revealSeed adversary] ≤
-      Pr[fun result => BadB setup result.1 result.2.1 result.2.2.1.ghost |
-        gameState setup codec checks revealSeed adversary] +
-      Pr[fun result => CollB setup result.1 result.2.1 result.2.2.1.ghost |
-        gameState setup codec checks revealSeed adversary] +
-      ∑ j : Fin (Q + 1), Pr[Owned setup Q j (observers j) | game setup codec checks revealSeed adversary] := by
+    Pr{let x ← game setup codec checks revealSeed adversary}[(Accepted setup Q observers) x] ≤
+      Pr{let result ← gameState setup codec checks revealSeed adversary}[BadB setup result.1 result.2.1 result.2.2.1.ghost] +
+      Pr{let result ← gameState setup codec checks revealSeed adversary}[CollB setup result.1 result.2.1 result.2.2.1.ghost] +
+      ∑ j : Fin (Q + 1), Pr{let x ← game setup codec checks revealSeed adversary}[(Owned setup Q j (observers j)) x] := by
   classical
-  simp only [← game_erase setup codec checks revealSeed adversary, probEvent_map, Function.comp_def, erase]
-  refine le_trans (probEvent_mono (q := fun result : Result KemSK =>
+  simp only [← game_erase setup codec checks revealSeed adversary, prEvent_map, erase]
+  refine le_trans (prEvent_mono_of_support _ _ (fun result : Result KemSK =>
     BadB setup result.1 result.2.1 result.2.2.1.2.ghost ∨
       (CollB setup result.1 result.2.1 result.2.2.1.2.ghost ∨
         ∃ j ∈ (Finset.univ : Finset (Fin (Q + 1))), Owned setup Q j (observers j) result))
     (fun result supported accepted => accepted_cases setup codec checks revealSeed adversary Q qH qHash
       budget observers result supported accepted)) ?_
-  refine le_trans (probEvent_or_le (game setup codec checks revealSeed adversary) _ _) ?_
+  refine le_trans (prEvent_or_le (game setup codec checks revealSeed adversary) _ _) ?_
   rw [add_assoc]
-  exact add_le_add le_rfl (le_trans (probEvent_or_le (game setup codec checks revealSeed adversary) _ _)
-    (add_le_add le_rfl (probEvent_exists_finset_le_sum (Finset.univ : Finset (Fin (Q + 1)))
+  exact add_le_add le_rfl (le_trans (prEvent_or_le (game setup codec checks revealSeed adversary) _ _)
+    (add_le_add le_rfl (prEvent_exists_finset_le (Finset.univ : Finset (Fin (Q + 1)))
       (game setup codec checks revealSeed adversary) _)))
 
 /-- An actual accepted observation is partitioned over the original source bad events and the same owner coordinates. The observation predicate is dropped only in the two charged bad events. -/
@@ -71,8 +68,8 @@ theorem accepted_decomposition (setup : Setup baseSpec KemSK) (codec : Codec Rea
       𝒟[originalDisclosureGame setup codec checks adversary] {true} +
       𝒟[originalCollisionGame setup codec checks adversary] {true} +
       ∑ j : Fin (Q + 1), 𝒟[PqxdhServerAuthObservedPartition.ownerGame setup codec checks false adversary Q j (observers j)] {true} := by
-  simpa only [acceptedGame, PqxdhServerAuthObservedPartition.ownerGame, originalDisclosureGame, originalCollisionGame,
-    evalDist_apply_singleton, probOutput_map, decide_eq_true_eq] using
+  simpa only [← prEvent_eq_evalDist_singleton _ true, acceptedGame, PqxdhServerAuthObservedPartition.ownerGame,
+    originalDisclosureGame, originalCollisionGame, prEvent_map, decide_eq_true_eq] using
     accepted_probability setup codec checks false adversary Q qH qHash budget observers
 
 /-- Every event and the finite owner sum have finite probability, giving the same partition over real-valued probabilities. -/

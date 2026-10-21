@@ -57,38 +57,32 @@ theorem ordinary_decision (setup : Setup baseSpec KemSK) (codec : Codec Reader R
         true (RawCtxUniversalDecoder.decoder codec.frameRead) key
         (PqxdhServerAuthPublicationMarkedHistory.initialState, AdaptiveCtxDynamicKnownKeys.initialSource))).symm
 
-set_option linter.deprecated false in
 /-- Every actual winning publication observation is charged on the same sampled run to ordinary authentication or to an unpublished matched raw attempt. -/
 theorem winning_split (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (checks : Checks) (adversary : Adversary) (Q : Nat) (j : Fin (Q + 1))
     (writable : PqxdhFirstBeaconRecordCanonical.ReadWritable codec.frameWrite codec.frameRead) :
-    Pr[fun result => PqxdhServerAuthPublicationJournalClient.decision setup Q j result.1 = true |
-      game setup codec checks adversary Q j] ≤
-    Pr[fun result => RawCtxSelectedAuthenticationObserver.won
-      (RawCtxUniversalDecoder.decoder codec.frameRead) result.2.1.observer = true |
-      game setup codec checks adversary Q j] +
-    Pr[fun result => PqxdhServerAuthPublicationMarkedHistory.Matched
-      (PqxdhServerAuthPublicationRandom.decodedTag (RawCtxUniversalDecoder.decoder codec.frameRead)) result.2.1 |
-      game setup codec checks adversary Q j] := by
-  refine (probEvent_mono (mx := game setup codec checks adversary Q j) (q := fun result => RawCtxSelectedAuthenticationObserver.won
+    Pr{let result ← game setup codec checks adversary Q j}[PqxdhServerAuthPublicationJournalClient.decision setup Q j result.1 = true] ≤
+    Pr{let result ← game setup codec checks adversary Q j}[RawCtxSelectedAuthenticationObserver.won
+      (RawCtxUniversalDecoder.decoder codec.frameRead) result.2.1.observer = true] +
+    Pr{let result ← game setup codec checks adversary Q j}[PqxdhServerAuthPublicationMarkedHistory.Matched
+      (PqxdhServerAuthPublicationRandom.decodedTag (RawCtxUniversalDecoder.decoder codec.frameRead)) result.2.1] := by
+  refine (prEvent_mono_of_support (game setup codec checks adversary Q j) _ (fun result => RawCtxSelectedAuthenticationObserver.won
     (RawCtxUniversalDecoder.decoder codec.frameRead) result.2.1.observer = true ∨
     PqxdhServerAuthPublicationMarkedHistory.Matched
       (PqxdhServerAuthPublicationRandom.decodedTag (RawCtxUniversalDecoder.decoder codec.frameRead)) result.2.1)
-    ?_).trans (probEvent_or_le _ _ _)
+    ?_).trans (prEvent_or_le _ _ _)
   intro result supported winning
   simp only [game, PqxdhServerAuthPublicationMarkedHistory.sourceGame, mem_support_bind_iff] at supported
   exact supported.elim fun key reached =>
     PqxdhServerAuthPublicationJournalClient.full_winning setup codec checks adversary key Q j writable result reached.2 winning
 
-set_option linter.deprecated false in
 /-- The unpublished matched-history event consumes the already constructed validation and private-view reductions, on the actual selected-key draw. -/
 theorem matched_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (checks : Checks) (caps : KemCaps) (bounded : KemBound setup caps) (adversary : Adversary)
     (qCoin Q qH qHash : Nat) (budget : AuthBudget adversary Q qH qHash)
     (coins : ∀ input, (adversary input).IsQueryBoundP IsAuthCoin qCoin) (j : Fin (Q + 1)) :
-    (Pr[fun result => PqxdhServerAuthPublicationMarkedHistory.Matched
-      (PqxdhServerAuthPublicationRandom.decodedTag (RawCtxUniversalDecoder.decoder codec.frameRead)) result.2.1 |
-      game setup codec checks adversary Q j]).toReal ≤
+    (Pr{let result ← game setup codec checks adversary Q j}[PqxdhServerAuthPublicationMarkedHistory.Matched
+      (PqxdhServerAuthPublicationRandom.decodedTag (RawCtxUniversalDecoder.decoder codec.frameRead)) result.2.1]).toReal ≤
     PqxdhServerAuthPublicationPrivacy.loss setup codec checks adversary Q j
       (RawCtxUniversalDecoder.decoder codec.frameRead) (entryReductionBudget caps qCoin Q qHash qH + 76) := by
   have records := PqxdhServerAuthPublicationJournalClient.full_record_bills setup codec checks adversary Q j
@@ -99,28 +93,25 @@ theorem matched_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
   rw [← PqxdhServerAuthPublicationPrefixStop.source_clean _ _ _ _ _ _
       (by simp [PqxdhServerAuthPublicationGuess.Hit]),
     PqxdhServerAuthPublicationJournalClient.full_capture] at compared
-  exact (ENNReal.toReal_mono probEvent_ne_top compared).trans
+  exact (ENNReal.toReal_mono (prEvent_ne_top _) compared).trans
     (PqxdhServerAuthPublicationPrefixSource.clean_bound setup codec checks caps bounded adversary
       qCoin Q qHash qH coins budget.accept budget.hash budget.rom j (RawCtxUniversalDecoder.decoder codec.frameRead))
 
-set_option linter.deprecated false in
 /-- The ordinary branch uses the exact old authentication reductions, with the original complete source budget. -/
 theorem ordinary_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (checks : Checks) (caps : KemCaps) (bounded : KemBound setup caps) (adversary : Adversary)
     (qCoin Q qH qHash : Nat) (budget : AuthBudget adversary Q qH qHash)
     (coins : ∀ input, (adversary input).IsQueryBoundP IsAuthCoin qCoin)
     (j : Fin (Q + 1)) (fallback : ModifiedNonceAeadForgery) :
-    (Pr[fun result => RawCtxSelectedAuthenticationObserver.won
-      (RawCtxUniversalDecoder.decoder codec.frameRead) result.2.1.observer = true |
-      game setup codec checks adversary Q j]).toReal ≤
+    (Pr{let result ← game setup codec checks adversary Q j}[RawCtxSelectedAuthenticationObserver.won
+      (RawCtxUniversalDecoder.decoder codec.frameRead) result.2.1.observer = true]).toReal ≤
     PqxdhServerAuthCtxObserverEvent.ctxLoss setup codec checks adversary Q j fallback
       (entryReductionBudget caps qCoin Q qHash qH + 76) := by
   have bound := PqxdhServerAuthPublicationComposition.observer_bound setup codec checks adversary Q j
     (PqxdhServerAuthPublicationOccurrence.observer j.val) fallback _
     (PqxdhServerAuthCtxResources.client_hash setup codec checks caps bounded adversary
       qCoin Q qHash qH coins budget.accept budget.hash budget.rom j)
-  simpa only [ordinary_decision, evalDist_apply_singleton, ← probEvent_eq_eq_probOutput,
-    probEvent_map, Function.comp_def] using bound
+  simpa only [ordinary_decision, ← prEvent_eq_evalDist_singleton _ true, prEvent_map] using bound
 
 /-- The actual uniform owner experiment has only constructed primitive advantages and explicit statistical losses; no event-inclusion or publication premise is assumed. -/
 theorem uniform_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
@@ -133,12 +124,11 @@ theorem uniform_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
       (PqxdhServerAuthPublicationOccurrence.observer j.val)] {true}).toReal ≤
     PqxdhServerAuthPublicationLoss.recordLoss setup codec checks adversary Q j fallback
       (entryReductionBudget caps qCoin Q qHash qH + 76) := by
-  have split := ENNReal.toReal_mono (ENNReal.add_ne_top.mpr ⟨probEvent_ne_top, probEvent_ne_top⟩)
+  have split := ENNReal.toReal_mono (ENNReal.add_ne_top.mpr ⟨(prEvent_ne_top _), (prEvent_ne_top _)⟩)
     (winning_split setup codec checks adversary Q j writable)
-  rw [ENNReal.toReal_add probEvent_ne_top probEvent_ne_top] at split
+  rw [ENNReal.toReal_add (prEvent_ne_top _) (prEvent_ne_top _)] at split
   simp only [PqxdhServerAuthPublicationObservedCompiler.uniform_game, source_decision,
-    evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map, Function.comp_def,
-    PqxdhServerAuthPublicationLoss.recordLoss]
+    ← prEvent_eq_evalDist_singleton _ true, prEvent_map, PqxdhServerAuthPublicationLoss.recordLoss]
   exact split.trans (add_le_add
     (ordinary_bound setup codec checks caps bounded adversary qCoin Q qH qHash budget coins j fallback)
     (matched_bound setup codec checks caps bounded adversary qCoin Q qH qHash budget coins j))

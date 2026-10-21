@@ -26,7 +26,7 @@ theorem owner_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
     (revealSeed : Bool) (adversary : Adversary) (Q : Nat) (j : Fin (Q + 1)) (observer : Observer) :
     𝒟[ownerGame setup codec checks revealSeed adversary Q j observer] =
       𝒟[PqxdhServerAuthObservedSchedule.actualGame setup codec checks adversary revealSeed Q j observer] := by
-  apply evalDist_eq_of_evalSPMF_eq
+  apply EvalDistEq.evalDist_eq
   convert observed_flat setup codec checks revealSeed adversary (fun seed scalar ghost journal =>
     @decide (PqxdhServerAuthAcceptedEntry.Gate setup seed scalar Q j ghost ∧
       observer (eraseGhost ghost) journal = true) (Classical.propDecidable _)) using 1 <;> rfl
@@ -38,8 +38,8 @@ theorem accepted_decomposition (setup : Setup baseSpec KemSK) (codec : Codec Rea
       𝒟[originalDisclosureGame setup codec checks adversary] {true} +
       𝒟[originalCollisionGame setup codec checks adversary] {true} +
       ∑ j : Fin (Q + 1), 𝒟[ownerGame setup codec checks false adversary Q j observer] {true} := by
-  simpa only [acceptedGame, ownerGame, originalDisclosureGame, originalCollisionGame,
-    evalDist_apply_singleton, probOutput_map, decide_eq_true_eq] using
+  simpa only [← prEvent_eq_evalDist_singleton _ true, acceptedGame, ownerGame, originalDisclosureGame,
+    originalCollisionGame, prEvent_map, decide_eq_true_eq] using
     accepted_probability setup codec checks false adversary Q qH qHash budget observer
 
 /-- Every event and the finite owner sum have finite probability, giving the same partition over real-valued probabilities. -/

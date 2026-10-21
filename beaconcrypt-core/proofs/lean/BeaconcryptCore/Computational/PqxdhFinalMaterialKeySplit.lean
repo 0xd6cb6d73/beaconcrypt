@@ -25,16 +25,6 @@ theorem complete {Result : Type} (continuation : FullOutput → ProbComp Result)
     (fun key nonce chain => continuation (materialChainEquiv.symm ((key, nonce), chain)))
   simpa only [reconstruct] using same
 
-set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.PqxdhFinalMaterialKeySplit.complete_vcvioLegacy :
-    ∀ {Result : Type} (continuation : BeaconcryptCore.Computational.PqxdhFullSecretInputKdf.FullOutput → ProbComp Result),
-      𝒮[$ᵗ BeaconcryptCore.Computational.PqxdhFullSecretInputKdf.FullOutput >>= continuation] =
-        𝒮[do
-          let nonce ← $ᵗ BeaconcryptCore.Computational.PqxdhFullSecretInputKdf.NonceOutput
-          let chain ← $ᵗ BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput
-          let key ← $ᵗ BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput
-          continuation (BeaconcryptCore.Computational.PqxdhOrderedChainHybrids.materialChainEquiv.symm ((key, nonce), chain))] :=
-  by simpa only [BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq] using @BeaconcryptCore.Computational.PqxdhFinalMaterialKeySplit.complete
-
 end BeaconcryptCore.Computational.PqxdhFinalMaterialKeySplit
 
 /-- info: 'BeaconcryptCore.Computational.PqxdhFinalMaterialKeySplit.reconstruct' depends on axioms: [propext,

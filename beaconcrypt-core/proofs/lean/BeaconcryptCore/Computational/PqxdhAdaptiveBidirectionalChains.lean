@@ -179,14 +179,14 @@ theorem final_bidirectional_eq_eager {Context Result : Type} (source : FixedHkdf
     (finish : Context → Result × (Nat × Nat) → ProbComp Bool) (left right : Nat) :
     𝒟[bidirectionalGame source sample (tapeObserver fallback client finish) left right left right] =
       𝒟[eagerGame fallback sample client finish left right] := by
-  apply evalDist_eq_of_evalSPMF_eq
+  apply EvalDistEq.evalDist_eq
   simp only [bidirectionalGame, eagerGame, tapeObserver, sampleEvolution, Nat.sub_self,
     realEvolution, List.append_nil, bind_assoc, pure_bind]
-  refine evalSPMF_bind_congr' sample (fun context => ?_)
-  refine evalSPMF_bind_congr' (sampleMaterials left) (fun leftRecords => ?_)
-  rw [OracleComp.DeferredSampling.evalSPMF_bind_const_neverFails ($ᵗ RootOutput) (by simp)]
-  refine evalSPMF_bind_congr' (sampleMaterials right) (fun rightRecords => ?_)
-  exact OracleComp.DeferredSampling.evalSPMF_bind_const_neverFails ($ᵗ RootOutput) (by simp) _
+  refine EvalDistEq.bind_right sample (fun context => ?_)
+  refine EvalDistEq.bind_right (sampleMaterials left) (fun leftRecords => ?_)
+  refine (OracleComp.EvalDistEq.bind_const ($ᵗ RootOutput) _).trans ?_
+  refine EvalDistEq.bind_right (sampleMaterials right) (fun rightRecords => ?_)
+  exact OracleComp.EvalDistEq.bind_const ($ᵗ RootOutput) _
 
 /-- One initial hop and the two ordered directional sums cover arbitrary adaptive interleaving without a scheduling-selection factor. -/
 theorem adaptive_initialized_advantage_bound {Context Result : Type}

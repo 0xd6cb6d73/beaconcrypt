@@ -84,7 +84,7 @@ theorem indexed_eager {α : Type} (sampler : ℕ → ProbComp R) (k : ℕ) (clie
     (state : IState D R) :
     𝒮[(simulateQ (indexedImpl sampler) client).run state] =
       𝒮[do let value ← sampler k; (simulateQ (indexedImpl (pin k value sampler)) client).run state] := by
-  refine PqxdhServerAuthEntryFactor.eager_run (sampler k) (indexedImpl sampler)
+  refine PqxdhServerAuthEntryFactor.eager_run_vcvioLegacy (sampler k) (indexedImpl sampler)
     (fun value => indexedImpl (pin k value sampler)) (fun state => k < state.2) ?_ ?_ client state
   · intro query current done
     rcases query with coin | point

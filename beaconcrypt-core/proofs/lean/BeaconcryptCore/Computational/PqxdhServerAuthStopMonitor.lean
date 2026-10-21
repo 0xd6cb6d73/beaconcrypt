@@ -330,7 +330,8 @@ theorem client_event (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
       ((simulateQ (hiddenHandler setup codec checks context Q j (tableServices setup context tails)) client).run state)] =
     𝒟[stoppedDecision setup context Q j <$>
       (((simulateQ (sourceStopped setup codec checks context Q j tails) client).run).run (state, first))] := by
-  apply evalDist_eq_of_evalSPMF_eq
+  apply EvalDistEq.evalDist_eq
+  refine (VCVioLegacy.evalSPMF_eq_iff_evalDistEq _ _).1 ?_
   apply evalSPMF_map_eq_of_relTriple
   exact relTriple_post_mono (source_client_coupling setup codec checks context Q j tails client state first invariant tracked)
     (fun left right related => SourceRelation.decision setup context Q j left right related)
@@ -370,13 +371,13 @@ theorem uniform_entry_event (setup : Setup baseSpec KemSK) (codec : Codec Reader
     (checks : Checks) (adversary : Adversary) (revealSeed : Bool) (Q : Nat) (j : Fin (Q + 1)) :
     𝒟[uniformEntryGame setup codec checks adversary revealSeed Q j] =
       𝒟[stoppedEntryGame setup codec checks adversary revealSeed Q j] := by
-  apply evalDist_eq_of_evalSPMF_eq
+  apply EvalDistEq.evalDist_eq
   unfold uniformEntryGame stoppedEntryGame
   apply evalSPMF_bind_congr_support
   intro context _
   apply evalSPMF_bind_congr_support
   intro value _
-  exact evalSPMF_eq_of_evalDist_eq _ _ (entry_event setup codec checks adversary revealSeed Q j context value)
+  exact EvalDistEq.of_evalDist_eq (entry_event setup codec checks adversary revealSeed Q j context value)
 
 end BeaconcryptCore.Computational.PqxdhServerAuthCtxStop
 

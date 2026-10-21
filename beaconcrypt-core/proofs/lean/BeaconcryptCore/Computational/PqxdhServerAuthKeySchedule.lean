@@ -218,8 +218,9 @@ theorem rootExpand_real (source : FixedHkdfSha512NoSaltSource) (hmac : HmacSha51
 theorem rootExpand_random (source : FixedHkdfSha512NoSaltSource) (distinguisher : Distinguisher) :
     𝒟[hmacPrfRandomGame (rootExpandReduction source distinguisher)] =
       𝒟[rootHybrid source distinguisher] := by
-  apply evalDist_eq_of_evalSPMF_eq
-  rw [rootExpandReduction, hmacRandom_eq_independentRoot_vcvioLegacy]
+  apply EvalDistEq.evalDist_eq
+  rw [rootExpandReduction]
+  refine (hmacRandom_eq_independentRoot _ _).trans ?_
   simp [independentRootGame, unitSample, rootObserver, rootHybrid]
 
 /-- The real Extract world of reduction 2 is hybrid 1, by `SourceFullCorrect` for the 64-byte HKDF. -/
@@ -235,9 +236,9 @@ theorem initExtract_uniform (source : FixedHkdfSha512NoSaltSource) (hmac : HmacS
     (distinguisher : Distinguisher) :
     𝒟[extractUniformGame uniform32 (initExtractReduction source hmac distinguisher)] =
       𝒟[initKeyHybrid source hmac distinguisher] := by
-  apply evalDist_eq_of_evalSPMF_eq
+  apply EvalDistEq.evalDist_eq
   simp only [extractUniformGame, uniform32, bind_assoc, pure_bind]
-  exact OracleComp.DeferredSampling.evalSPMF_bind_const_neverFails ($ᵗ RootOutput) (by simp) _
+  exact OracleComp.EvalDistEq.bind_const ($ᵗ RootOutput) _
 
 /-- The real PRF world of reduction 3 is hybrid 2. -/
 theorem initExpand_real (source : FixedHkdfSha512NoSaltSource) (hmac : HmacSha512)
@@ -258,7 +259,7 @@ theorem initExpand_random (source : FixedHkdfSha512NoSaltSource) (distinguisher 
 /-- Hybrids 3 and 4 have the same output distribution: a uniform initializer is two independent uniform halves (`second_observed`). -/
 theorem init_split (source : FixedHkdfSha512NoSaltSource) (distinguisher : Distinguisher) :
     𝒟[initHybrid source distinguisher] = 𝒟[splitHybrid source distinguisher] :=
-  evalDist_eq_of_evalSPMF_eq _ _ (RawCtxSelectedInitialSecond.second_observed_vcvioLegacy
+  EvalDistEq.evalDist_eq (RawCtxSelectedInitialSecond.second_observed
     (fun chain other => distinguisher (step source chain, other)))
 
 /-- The real Extract world of reduction 4 is hybrid 4, by `SourceFullCorrect` for the 76-byte HKDF. -/
@@ -273,9 +274,9 @@ theorem stepExtract_real {source : FixedHkdfSha512NoSaltSource} {hmac : HmacSha5
 theorem stepExtract_uniform (hmac : HmacSha512) (distinguisher : Distinguisher) :
     𝒟[extractUniformGame uniform32 (stepExtractReduction hmac distinguisher)] =
       𝒟[stepKeyHybrid hmac distinguisher] := by
-  apply evalDist_eq_of_evalSPMF_eq
+  apply EvalDistEq.evalDist_eq
   simp only [extractUniformGame, uniform32, bind_assoc, pure_bind]
-  exact OracleComp.DeferredSampling.evalSPMF_bind_const_neverFails ($ᵗ RootOutput) (by simp) _
+  exact OracleComp.EvalDistEq.bind_const ($ᵗ RootOutput) _
 
 /-- The real PRF world of reduction 5 is hybrid 5. -/
 theorem stepExpand_real (hmac : HmacSha512) (distinguisher : Distinguisher) :
@@ -286,8 +287,9 @@ theorem stepExpand_real (hmac : HmacSha512) (distinguisher : Distinguisher) :
 /-- The random PRF world of reduction 5 has the output distribution of the ideal game: the two fresh blocks give a uniform 76-byte output. -/
 theorem stepExpand_random (distinguisher : Distinguisher) :
     𝒟[hmacPrfRandomGame (stepExpandReduction distinguisher)] = 𝒟[uniformGame distinguisher] := by
-  apply evalDist_eq_of_evalSPMF_eq
-  rw [stepExpandReduction, fullHmacRandom_eq_independent_vcvioLegacy]
+  apply EvalDistEq.evalDist_eq
+  rw [stepExpandReduction]
+  refine (fullHmacRandom_eq_independent _ _ _).trans ?_
   have joint : (do
       let output ← $ᵗ FullOutput
       let other ← $ᵗ RootOutput
@@ -298,7 +300,7 @@ theorem stepExpand_random (distinguisher : Distinguisher) :
           distinguisher pair) := by
     simp
   simp only [independentFullGame, unitSample, stepObserver, pure_bind, uniformGame, joint,
-    pairSample]
+    pairSample, EvalDistEq.refl]
 
 /-! ### The five hops and the bound -/
 
@@ -401,10 +403,10 @@ theorem keySchedule_bound_context {Context : Type} (source : FixedHkdfSha512NoSa
           (extractUniformGame uniform32 (stepExtractReduction hmac (withContext sample distinguisher))) +
         (hmacPrfRealGame hmac (stepExpandReduction (withContext sample distinguisher))).boolDistAdvantage
           (hmacPrfRandomGame (stepExpandReduction (withContext sample distinguisher))) := by
-  have real := evalDist_eq_of_evalSPMF_eq _ _ (PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy sample
-    ($ᵗ HmacBlock) (fun context prk => distinguisher context (keySchedule source hmac prk)))
-  have ideal := evalDist_eq_of_evalSPMF_eq _ _ (PqxdhSecretInputKdf.evalSPMF_sample_comm_vcvioLegacy sample
-    ($ᵗ Output) (fun context output => distinguisher context output))
+  have real := (PqxdhSecretInputKdf.evalSPMF_sample_comm sample
+    ($ᵗ HmacBlock) (fun context prk => distinguisher context (keySchedule source hmac prk))).evalDist_eq
+  have ideal := (PqxdhSecretInputKdf.evalSPMF_sample_comm sample
+    ($ᵗ Output) (fun context output => distinguisher context output)).evalDist_eq
   rw [advantage_congr real ideal]
   exact keySchedule_bound source hmac correct (withContext sample distinguisher)
 

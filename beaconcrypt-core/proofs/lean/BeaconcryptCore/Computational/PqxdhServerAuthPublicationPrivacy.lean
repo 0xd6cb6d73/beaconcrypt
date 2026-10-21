@@ -24,15 +24,14 @@ noncomputable def view (setup : Setup baseSpec KemSK) (codec : Codec Reader Wire
   AdaptiveCtxPrivacyGuard.viewReduction decode
     (PqxdhServerAuthPublicationRandom.decision setup codec checks adversary Q j decode)
 
-set_option linter.deprecated false in
 /-- No selected raw is issued, so the existing ordinary privacy comparison has no integrity or raw-alias term. The only statistical terms are the prefix-validation allowance and the unconditional tag guess. -/
 theorem canonical_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader WireResponse)
     (checks : Checks) (adversary : Adversary) (Q : Nat) (j : Fin (Q + 1))
     (decode : RawDecoder) (H : Nat)
     (hashBound : (PqxdhServerAuthPublicationRandom.decision setup codec checks adversary Q j decode).IsQueryBoundP
       AdaptiveCtxQueryBounds.SourceHash H) :
-    Pr[fun answer => answer = true | AdaptiveCtxPrivacyGuard.canonicalView decode setup.source.crypto
-      (PqxdhServerAuthPublicationRandom.decision setup codec checks adversary Q j decode)] ≤
+    Pr{let answer ← (AdaptiveCtxPrivacyGuard.canonicalView decode setup.source.crypto
+      (PqxdhServerAuthPublicationRandom.decision setup codec checks adversary Q j decode))}[answer = true] ≤
       ENNReal.ofReal (modifiedNonceAeadINDDollarAdvantage setup.source.crypto
         (validation setup codec checks adversary Q j decode H)) +
       (H : ℝ≥0∞) * ((2 ^ 128 : Nat) : ℝ≥0∞)⁻¹ +
@@ -51,8 +50,7 @@ theorem canonical_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Wir
   have comparison := VCVioForward.evalDist_apply_true_le_add_ofReal_boolDistAdvantage
     (AdaptiveCtxPrivacyGuard.canonicalView decode setup.source.crypto work)
     (AdaptiveCtxPrivacyGuard.randomView decode work)
-  simp only [VCVioLegacy.evalDist_singleton_eq_probOutput] at comparison
-  rw [← probEvent_eq_eq_probOutput, ← probEvent_eq_eq_probOutput] at comparison
+  rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true] at comparison
   exact (comparison.trans (add_le_add
     (PqxdhServerAuthPublicationRandom.random_bound setup codec checks adversary Q j decode) privacy)).trans
     (le_of_eq (by simp only [validation, view, work]; ac_rfl))
@@ -82,7 +80,6 @@ theorem loss_finite (setup : Setup baseSpec KemSK) (codec : Codec Reader WireRes
   exact ⟨⟨⟨ENNReal.ofReal_ne_top, ENNReal.mul_ne_top (by simp) (by norm_num)⟩,
     ENNReal.ofReal_ne_top⟩, by norm_num⟩
 
-set_option linter.deprecated false in
 /-- The exact ordinary real/canonical reference probability is bounded with the hash certificate derived from the complete source control and samplers. -/
 theorem source_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader WireResponse) (checks : Checks)
     (caps : KemCaps) (bounded : KemBound setup caps) (adversary : Adversary)
@@ -92,8 +89,8 @@ theorem source_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader WireRe
     (hashes : ∀ input, (adversary input).IsQueryBoundP IsHashQuery qHash)
     (rom : ∀ input, (adversary input).IsQueryBoundP IsRomQuery qH)
     (j : Fin (Q + 1)) (decode : RawDecoder) :
-    (Pr[fun answer => answer = true | AdaptiveCtxPrivacyGuard.canonicalView decode setup.source.crypto
-      (PqxdhServerAuthPublicationRandom.decision setup codec checks adversary Q j decode)]).toReal ≤
+    (Pr{let answer ← (AdaptiveCtxPrivacyGuard.canonicalView decode setup.source.crypto
+      (PqxdhServerAuthPublicationRandom.decision setup codec checks adversary Q j decode))}[answer = true]).toReal ≤
       loss setup codec checks adversary Q j decode (entryReductionBudget caps qCoin Q qHash qH + 76) := by
   exact ENNReal.toReal_mono (loss_finite setup codec checks adversary Q j decode _)
     (canonical_bound setup codec checks adversary Q j decode _

@@ -68,9 +68,8 @@ theorem source (position : (targets selected).number.val = 1) :
   intro initial
   cases context with
   | inl decision =>
-    apply evalDist_eq_of_evalSPMF_eq
-    exact (OracleComp.ProgramLogic.Relational.evalSPMF_bind_const_of_no_failure
-      ($ᵗ PqxdhFullSecretInputKdf.FullOutput) (pure decision)).symm
+    apply EvalDistEq.evalDist_eq
+    exact (OracleComp.EvalDistEq.bind_const ($ᵗ PqxdhFullSecretInputKdf.FullOutput) (pure decision)).symm
   | inr input =>
     have positive : 0 < input.number.val := by
       rw [PqxdhAuthenticatedEvolvingSecrecy.prior_position env baseImpl kem attachedVerify primitives program

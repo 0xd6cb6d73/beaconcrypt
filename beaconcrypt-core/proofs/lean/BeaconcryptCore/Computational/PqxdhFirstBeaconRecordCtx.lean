@@ -913,9 +913,12 @@ end Observer
 /-- Pointwise domination of Boolean continuations is preserved by bind. -/
 theorem true_bind_mono {α : Type} (mx : ProbComp α) (f g : α → ProbComp Bool)
     (le : ∀ a, 𝒟[f a] {true} ≤ 𝒟[g a] {true}) : 𝒟[mx >>= f] {true} ≤ 𝒟[mx >>= g] {true} := by
-  simp only [evalDist_apply_singleton] at le ⊢
-  simp only [probOutput_bind_eq_tsum]
-  exact ENNReal.tsum_le_tsum fun a => by gcongr; exact le a
+  have pointwise : ∀ a, Pr{let x ← f a}[x = true] ≤ Pr{let x ← g a}[x = true] := fun a => by
+    rw [prEvent_eq_evalDist_singleton, prEvent_eq_evalDist_singleton]
+    exact le a
+  rw [← prEvent_eq_evalDist_singleton (mx >>= f), ← prEvent_eq_evalDist_singleton (mx >>= g)]
+  simp only [OracleComp.prEvent_bind_eq_tsum]
+  exact ENNReal.tsum_le_tsum fun a => mul_le_mul_of_nonneg_left (pointwise a) zero_le
 
 section Prepared
 open PqxdhNativeSharedPrefix PqxdhInitialBeaconAmbient PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhJointKdfGame PqxdhJointKdf
@@ -1135,7 +1138,7 @@ theorem observe_le (b : Fin (B + 1))
   classical
   by_cases aliased : RawCtxSendLineageCollision.InitialAlias sample.2.1
   · rw [ite_eq_left_iff.mpr fun impossible => absurd aliased impossible]
-    simp
+    simp [-evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
   · rw [ite_eq_right_iff.mpr fun holds => absurd holds aliased]
     apply le_of_eq
     congr 1
@@ -1143,7 +1146,7 @@ theorem observe_le (b : Fin (B + 1))
     rw [← PqxdhSourceSharedInput.input_cache setup env callbacks program post attachedVerify primitives baseImpl kem]
     cases pending : PqxdhSourceSharedInput.input setup env callbacks program post attachedVerify primitives baseImpl kem
         (firstBeacon b).owner (firstBeacon b).number (firstBeacon b).ancestors (firstBeacon b).disclosed sample.1 with
-    | inl decision => simp [PqxdhSourceSharedInput.restore]
+    | inl decision => simp [PqxdhSourceSharedInput.restore, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
     | inr input =>
       have owner := input_selected setup env callbacks baseImpl kem attachedVerify primitives program post _ _ _ _ sample.1 input pending
       simp only [PqxdhSourceSharedInput.restore]
@@ -1198,12 +1201,12 @@ theorem separated_le_client (b : Fin (B + 1)) :
   · exact fun (result : (Packet (M := M) (P := P) (I := I) (K := K) (A := A) (KemSK := KemSK) setup program × HmacBlock ×
       NonceOutput × RootOutput) × AdaptiveCtxSharedTarget.SharedState) => true_bind_mono _ _ _ fun key =>
       observe_le setup env callbacks baseImpl kem attachedVerify primitives program post b result.1 result.2.1 result.2.2 key
-  have exchanged := RawCtxPrefixKeyOrder.source_game_vcvioLegacy true (RawCtxUniversalDecoder.decoder (env0).decode) (env0).source.crypto
+  have exchanged := RawCtxPrefixKeyOrder.source_game true (RawCtxUniversalDecoder.decoder (env0).decode) (env0).source.crypto
     (prelude setup env callbacks baseImpl kem attachedVerify primitives program post)
     (suffix setup env callbacks baseImpl kem attachedVerify primitives program post (firstBeacon b))
-  have mapped := congrArg (fun distribution => Prod.fst <$> distribution) exchanged
-  simp only [← evalSPMF_map, map_bind] at mapped
-  rw [evalDist_eq_of_evalSPMF_eq _ _ mapped.symm]
+  have mapped := exchanged.map Prod.fst
+  simp only [map_bind] at mapped
+  rw [mapped.symm.evalDist_eq]
   rfl
 
 /-- The initial half-alias game: the actual preparation and the same four draws, reporting whether the two halves of the 64-byte initializer response are equal. -/
@@ -1220,13 +1223,20 @@ noncomputable def aliasGame : ProbComp Bool := do
 theorem alias_bound :
     𝒟[aliasGame setup env callbacks baseImpl kem attachedVerify primitives program post] {true} ≤ (1 : ℝ≥0∞) / (2 ^ 256 : ℝ≥0∞) := by
   classical
-  rw [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput]
+  rw [← prEvent_eq_evalDist_singleton _ true]
   unfold aliasGame
-  refine probEvent_bind_le_of_forall_le fun context _ => ?_
-  refine (probEvent_bind_le_probEvent (p := RawCtxSendLineageCollision.InitialAlias) ?_).trans
-    RawCtxSendLineageCollision.initial_alias_uniform_vcvioLegacy
+  -- S6 editing rule 10: the generic law is stated over an abstract `ProbComp` draw and applied to `$ᵗ HmacBlock`
+  -- with first-order arguments.
+  have aliasStep : ∀ (block : ProbComp HmacBlock) (rest : HmacBlock → ProbComp Bool),
+      (∀ b ∈ support block, ¬ RawCtxSendLineageCollision.InitialAlias b → Pr{let y ← rest b}[y = true] = 0) →
+      Pr{let y ← block >>= rest}[y = true] ≤ Pr{let b ← block}[RawCtxSendLineageCollision.InitialAlias b] :=
+    fun block rest h => prEvent_bind_le_prEvent_of_support block rest _ _ h
+  refine prEvent_bind_le_of_forall_le_of_support _ _ _ fun context _ => ?_
+  have uniform := RawCtxSendLineageCollision.initial_alias_uniform
+  generalize sampledBlock : ($ᵗ HmacBlock : ProbComp HmacBlock) = block at uniform ⊢
+  refine (aliasStep block _ ?_).trans uniform
   intro initialBlock _ separate
-  simp [separate]
+  simp [separate, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
 
 /-- C4's compiled game is dominated by the initial half-alias probability plus the separated compiled game. -/
 theorem compiled_le_separated (target : Target S (B + 1)) :
@@ -1245,8 +1255,9 @@ theorem compiled_le_separated (target : Target S (B + 1)) :
   · rw [ite_eq_left_iff.mpr fun impossible => absurd aliased impossible, show (@decide (RawCtxSendLineageCollision.InitialAlias initialBlock) (Classical.propDecidable _)) = true from
       @decide_eq_true _ (Classical.propDecidable _) aliased]
     refine le_add_right ?_
-    simp only [evalDist_apply_singleton, probOutput_pure_self]
-    exact probOutput_le_one
+    rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true, prEvent_pure]
+    simp only [↓reduceIte]
+    exact prEvent_le_one _
   · rw [ite_eq_right_iff.mpr fun holds => absurd holds aliased]
     exact le_add_self
 

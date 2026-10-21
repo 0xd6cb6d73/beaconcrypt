@@ -230,19 +230,24 @@ end Post
 theorem true_bind_le {α : Type} (mx : ProbComp α) (f g h : α → ProbComp Bool)
     (le : ∀ a, 𝒟[f a] {true} ≤ 𝒟[g a] {true} + 𝒟[h a] {true}) :
     𝒟[mx >>= f] {true} ≤ 𝒟[mx >>= g] {true} + 𝒟[mx >>= h] {true} := by
-  simp only [evalDist_apply_singleton] at le ⊢
-  simp only [probOutput_bind_eq_tsum, ← ENNReal.tsum_add, ← mul_add]
-  exact ENNReal.tsum_le_tsum fun a => by gcongr; exact le a
+  have pointwise : ∀ a, Pr{let x ← f a}[x = true] ≤ Pr{let x ← g a}[x = true] + Pr{let x ← h a}[x = true] :=
+    fun a => by
+      rw [prEvent_eq_evalDist_singleton, prEvent_eq_evalDist_singleton, prEvent_eq_evalDist_singleton]
+      exact le a
+  rw [← prEvent_eq_evalDist_singleton (mx >>= f), ← prEvent_eq_evalDist_singleton (mx >>= g),
+    ← prEvent_eq_evalDist_singleton (mx >>= h)]
+  simp only [OracleComp.prEvent_bind_eq_tsum, ← ENNReal.tsum_add, ← mul_add]
+  exact ENNReal.tsum_le_tsum fun a => mul_le_mul_of_nonneg_left (pointwise a) zero_le
 
 /-- A Boolean projection of one game exceeds the same projection of another game by at most their total-variation distance. -/
 theorem map_le_tvDist {α : Type} (mx my : ProbComp α) (f : α → Bool) :
     𝒟[f <$> mx] {true} ≤ 𝒟[f <$> my] {true} + ENNReal.ofReal (tvDist mx my) := by
   have distance : |(𝒟[f <$> mx] {true}).toReal - (𝒟[f <$> my] {true}).toReal| ≤ tvDist mx my := by
-    simp only [evalDist_apply_singleton]
+    rw [VCVioLegacy.evalDist_singleton_eq_probOutput, VCVioLegacy.evalDist_singleton_eq_probOutput]
     exact (abs_probOutput_toReal_sub_le_tvDist _ _).trans (tvDist_map_le _ mx my)
   have upper := (abs_le.mp distance).2
   have finite : ∀ mz : ProbComp α, 𝒟[f <$> mz] {true} ≠ ⊤ := fun mz => by
-    rw [evalDist_apply_singleton]; exact probOutput_ne_top
+    rw [← prEvent_eq_evalDist_singleton _ true]; exact prEvent_ne_top _
   rw [← ENNReal.ofReal_toReal (finite mx), ← ENNReal.ofReal_toReal (finite my),
     ← ENNReal.ofReal_add ENNReal.toReal_nonneg (tvDist_nonneg mx my)]
   exact ENNReal.ofReal_le_ofReal (by linarith)
@@ -250,15 +255,15 @@ theorem map_le_tvDist {α : Type} (mx my : ProbComp α) (f : α → Bool) :
 /-- The mass of an event equals the `true` mass of its decided indicator. -/
 theorem setOf_bool {α : Type} [MeasurableSpace α] [DiscreteMeasurableSpace α] (mx : ProbComp α) (p : α → Prop) [DecidablePred p] :
     𝒟[mx] {x | p x} = 𝒟[(fun x => decide (p x)) <$> mx] {true} := by
-  rw [evalDist_apply_setOf, evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map]
-  simp [Function.comp_def]
+  rw [← prEvent_eq_evalDist_of_discrete, ← prEvent_eq_evalDist_singleton _ true, prEvent_map]
+  simp only [decide_eq_true_eq]
 
 
 /-- Weakening a Boolean projection pointwise weakens its `true` mass. -/
 theorem map_mono {α : Type} (mx : ProbComp α) (f g : α → Bool) (weaker : ∀ a, f a = true → g a = true) :
     𝒟[f <$> mx] {true} ≤ 𝒟[g <$> mx] {true} := by
-  simp only [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map]
-  exact probEvent_mono'' fun a => weaker a
+  rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true, prEvent_map, prEvent_map]
+  exact prEvent_mono _ _ _ fun a => weaker a
 
 /-- From a flagged state, every output of a marked run stays flagged. -/
 theorem flagged_run {ι σ X : Type} {spec : OracleSpec ι}
@@ -291,21 +296,35 @@ theorem unflagged_eq {ι σ X : Type} {spec : OracleSpec ι} [MeasurableSpace (X
     (client : OracleComp spec X) (state : σ) (value : X) (final : σ) :
     𝒟[(simulateQ (RawCtxSelectedFamilyNonceCoupling.marked left bad) client).run (state, false)] {(value, (final, false))} =
       𝒟[(simulateQ (RawCtxSelectedFamilyNonceCoupling.marked right bad) client).run (state, false)] {(value, (final, false))} := by
-  rw [evalDist_apply_singleton, evalDist_apply_singleton]
+  rw [← prEvent_eq_evalDist_singleton _ (value, (final, false)),
+    ← prEvent_eq_evalDist_singleton _ (value, (final, false))]
   induction client using OracleComp.inductionOn generalizing state with
   | pure result => rfl
   | query_bind query continuation ih =>
     simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind]
-    rw [probOutput_bind_eq_tsum, probOutput_bind_eq_tsum]
+    rw [OracleComp.prEvent_bind_eq_tsum, OracleComp.prEvent_bind_eq_tsum]
     refine tsum_congr ?_
     rintro ⟨reply, next, flag⟩
     cases flag with
     | true =>
-      rw [probOutput_eq_zero_of_not_mem_support (flagged_absent left bad (continuation reply) next value final),
-        probOutput_eq_zero_of_not_mem_support (flagged_absent right bad (continuation reply) next value final), mul_zero, mul_zero]
+      rw [prEvent_eq_zero_of_not_mem_support _ (flagged_absent left bad (continuation reply) next value final),
+        prEvent_eq_zero_of_not_mem_support _ (flagged_absent right bad (continuation reply) next value final), mul_zero,
+        mul_zero]
     | false =>
-      have step := RawCtxSelectedFamilyNonceCoupling.marked_agree left right bad agree query state reply next
-      simp only [evalDist_apply_singleton] at step
+      -- The event form of `RawCtxSelectedFamilyNonceCoupling.marked_agree` (stated there with that module's
+      -- local discrete σ-algebra), by the same two cases.
+      have step : Pr{let y ← (RawCtxSelectedFamilyNonceCoupling.marked left bad query).run (state, false)}[
+            y = (reply, (next, false))] =
+          Pr{let y ← (RawCtxSelectedFamilyNonceCoupling.marked right bad query).run (state, false)}[
+            y = (reply, (next, false))] := by
+        by_cases hit : bad query state
+        · rw [prEvent_eq_zero_of_not_mem_support _ fun supported => Bool.false_ne_true
+              (RawCtxSelectedFamilyNonceCoupling.marked_hit left bad query (state, false) hit _ supported),
+            prEvent_eq_zero_of_not_mem_support _ fun supported => Bool.false_ne_true
+              (RawCtxSelectedFamilyNonceCoupling.marked_hit right bad query (state, false) hit _ supported)]
+        · have equal := agree query state hit
+          change left query state = right query state at equal
+          simp only [RawCtxSelectedFamilyNonceCoupling.marked, StateT.run, equal]
       rw [step, ih reply next]
 
 /-- Identical until the flag, restricted to an event: the `true` mass of an event of one marked run is at most the same event in the other marked run plus the mass of the flag together with the event in the first run. -/
@@ -320,8 +339,10 @@ theorem restricted_le {ι σ X : Type} {spec : OracleSpec ι}
       𝒟[(fun result => result.2.2 && event (result.1, result.2.1)) <$>
         (simulateQ (RawCtxSelectedFamilyNonceCoupling.marked left bad) client).run (state, false)] {true} := by
   classical
-  simp only [evalDist_apply_singleton, ← probEvent_eq_eq_probOutput, probEvent_map]
-  rw [probEvent_eq_tsum_ite, probEvent_eq_tsum_ite, probEvent_eq_tsum_ite, ← ENNReal.tsum_add]
+  rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true,
+    ← prEvent_eq_evalDist_singleton _ true]
+  simp only [prEvent_map]
+  rw [OracleComp.prEvent_eq_tsum_ite, OracleComp.prEvent_eq_tsum_ite, OracleComp.prEvent_eq_tsum_ite, ← ENNReal.tsum_add]
   refine ENNReal.tsum_le_tsum fun result => ?_
   rcases result with ⟨value, final, flag⟩
   cases flag with
@@ -329,10 +350,11 @@ theorem restricted_le {ι σ X : Type} {spec : OracleSpec ι}
     let _ : MeasurableSpace (X × σ × Bool) := ⊤
     have _ : DiscreteMeasurableSpace (X × σ × Bool) := ⟨fun _ => trivial⟩
     have same := unflagged_eq left right bad agree client state value final
-    simp only [evalDist_apply_singleton] at same
-    simp only [Function.comp_apply, Bool.false_and, Bool.false_eq_true, ite_false, add_zero, same, le_refl]
+    rw [← prEvent_eq_evalDist_singleton _ (value, (final, false)),
+      ← prEvent_eq_evalDist_singleton _ (value, (final, false))] at same
+    simp only [Bool.false_and, Bool.false_eq_true, ite_false, add_zero, same, le_refl]
   | true =>
-    simp only [Function.comp_apply, Bool.true_and]
+    simp only [Bool.true_and]
     exact le_add_self
 
 section Generic
@@ -454,8 +476,8 @@ theorem post_le_full (prior : Prior) (parent : Option RawCtxSelectedParentEntry.
   refine add_le_add (le_of_eq rfl) ?_
   refine (ENNReal.ofReal_le_ofReal distance).trans (le_of_eq ?_)
   rw [ENNReal.ofReal_toReal]
-  rw [evalDist_apply_singleton]
-  exact probOutput_ne_top
+  rw [← prEvent_eq_evalDist_singleton _ true]
+  exact prEvent_ne_top _
 
 /-- From any full compiled state, the stopped-source post event `bit ∧ no hidden disclosure ∧ undisclosed` on the projected source state is dominated by the evaluated executable post bit plus the probability that the same augmented run reached an exact selected-nonce stop and satisfies `undisclosed` on its final projected state. -/
 theorem post_le_undisclosed (prior : Prior) (parent : Option RawCtxSelectedParentEntry.Entry) (target : RootOutput)

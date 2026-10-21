@@ -654,12 +654,11 @@ noncomputable def realGame (setup : Setup baseSpec KemSK) (codec : Codec Reader 
       (realServices context.seed context.scalar setup codec checks)) ∅
   pure (context, final)
 
-set_option linter.deprecated false in
 theorem gameState_le_real (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (revealSeed : Bool) (adversary : Adversary) (event : IdentitySeed → ScalarBytes → Ghost → Prop) :
-    Pr[fun result => event result.1 result.2.1 result.2.2.1.ghost | gameState setup codec checks revealSeed adversary] ≤
-      Pr[fun result => event result.1.seed result.1.scalar result.2.1.ghost |
-        realGame setup codec checks revealSeed adversary] := by
+    Pr{let result ← gameState setup codec checks revealSeed adversary}[event result.1 result.2.1 result.2.2.1.ghost] ≤
+      Pr{let result ← realGame setup codec checks revealSeed adversary}[event result.1.seed result.1.scalar result.2.1.ghost] := by
+  rw [← VCVioLegacy.probEvent_eq_prEvent, ← VCVioLegacy.probEvent_eq_prEvent]
   apply probEvent_le_of_relTriple (R := fun left right => left.1 = right.1.seed ∧ left.2.1 = right.1.scalar ∧
     left.2.2.1 = right.2.1)
   · simp only [gameState, realGame, contextSample, body, simulateQ_bind, StateT.run_bind, bind_assoc, pure_bind,

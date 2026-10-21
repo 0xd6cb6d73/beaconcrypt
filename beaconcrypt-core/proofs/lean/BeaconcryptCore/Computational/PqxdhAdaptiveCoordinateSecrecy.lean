@@ -68,17 +68,17 @@ theorem selection_bound [Fintype Choice] (positive : ∀ selected, 0 < (targets 
     (functional : FunctionalDecapsulation kem)
     (hmac : HmacSha512) (correct : PqxdhFullSecretInputKdf.SourceFullCorrect env.source hmac)
     (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : PqxdhJointIdentity.Forgery) :
-    |Pr[= true | PqxdhAdaptiveTargetPartition.wins <$>
-        PqxdhAdaptiveNativeResult.actual env baseImpl kem attachedVerify primitives program post targets].toReal -
-      ∑ selected, Pr[= true | targetIdeal env baseImpl kem attachedVerify primitives program post targets selected].toReal| ≤
+    |Pr{let x ← (PqxdhAdaptiveTargetPartition.wins <$>
+        PqxdhAdaptiveNativeResult.actual env baseImpl kem attachedVerify primitives program post targets)}[x = true].toReal -
+      ∑ selected, Pr{let x ← targetIdeal env baseImpl kem attachedVerify primitives program post targets selected}[x = true].toReal| ≤
     ∑ selected, targetLoss env baseImpl kem attachedVerify primitives program post targets c hmac fallback ordinaryFallback selected := by
   rw [PqxdhAdaptiveTargetPartition.partition_real, ← Finset.sum_sub_distrib]
   apply (Finset.abs_sum_le_sum_abs _ Finset.univ).trans
   apply Finset.sum_le_sum
   intro selected _
-  simpa only [ProbComp.boolDistAdvantage, evalDist_apply_singleton] using
-    target_bound env baseImpl kem attachedVerify primitives program post targets c selected (positive selected)
-      compatible adapter functional hmac correct fallback ordinaryFallback
+  rw [prEvent_eq_evalDist_singleton _ true, prEvent_eq_evalDist_singleton _ true]
+  exact target_bound env baseImpl kem attachedVerify primitives program post targets c selected (positive selected)
+    compatible adapter functional hmac correct fallback ordinaryFallback
 
 end BeaconcryptCore.Computational.PqxdhAdaptiveCoordinateSecrecy
 

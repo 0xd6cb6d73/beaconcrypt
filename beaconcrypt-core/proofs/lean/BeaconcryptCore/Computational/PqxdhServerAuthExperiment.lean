@@ -697,12 +697,10 @@ noncomputable def serverAuthGame (setup : Setup baseSpec KemSK) (codec : Codec R
   exact (fun result => decide (Win setup result.1 result.2.1 result.2.2.1.ghost)) <$>
     gameState setup codec checks revealSeed adversary
 
-set_option linter.deprecated false in
 /-- The session-collision game term: the probability of the narrowed collision in the executable experiment. -/
 noncomputable def sessionCollGame (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (adversary : Adversary) : ℝ :=
-  (Pr[fun result => CollB setup result.1 result.2.1 result.2.2.1.ghost |
-    gameState setup codec checks false adversary]).toReal
+  (Pr{let result ← gameState setup codec checks false adversary}[CollB setup result.1 result.2.1 result.2.2.1.ghost]).toReal
 
 /-! ## Accepted and sealed fields -/
 
@@ -2852,21 +2850,17 @@ theorem win_cases (setup : Setup baseSpec KemSK) (seed : IdentitySeed) (scalar :
   obtain ⟨j, found⟩ := owner_some setup seed scalar Q ghost sessions touched bounded bad
   exact ⟨j, Finset.mem_univ j, main, bad, coll, found⟩
 
-set_option linter.deprecated false in
 /-- Game decomposition (step 2 of the hybrid chain): under the query budget, the winning probability is at most the probability of the adversary's table query at the Beacon's input, plus the narrowed session collision, plus the sum over the `Q + 1` table owners of the per-entry events. -/
 theorem win_le_games (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (revealSeed : Bool) (adversary : Adversary) (Q qH qHash : Nat) (budget : AuthBudget adversary Q qH qHash) :
-    Pr[= true | serverAuthGame setup codec checks revealSeed adversary] ≤
-      Pr[fun result => BadB setup result.1 result.2.1 result.2.2.1.ghost |
-          gameState setup codec checks revealSeed adversary] +
-        Pr[fun result => CollB setup result.1 result.2.1 result.2.2.1.ghost |
-          gameState setup codec checks revealSeed adversary] +
-        ∑ j : Fin (Q + 1), Pr[fun result => EntryEvent setup result.1 result.2.1 Q j result.2.2.1.ghost |
-          gameState setup codec checks revealSeed adversary] := by
+    Pr{let x ← serverAuthGame setup codec checks revealSeed adversary}[x = true] ≤
+      Pr{let result ← gameState setup codec checks revealSeed adversary}[BadB setup result.1 result.2.1 result.2.2.1.ghost] +
+        Pr{let result ← gameState setup codec checks revealSeed adversary}[CollB setup result.1 result.2.1 result.2.2.1.ghost] +
+        ∑ j : Fin (Q + 1), Pr{let result ← gameState setup codec checks revealSeed adversary}[EntryEvent setup result.1 result.2.1 Q j result.2.2.1.ghost] := by
   classical
   unfold serverAuthGame
-  rw [probOutput_map]
-  refine le_trans (probEvent_mono (q := fun result : IdentitySeed × ScalarBytes × GameState KemSK ×
+  rw [prEvent_map]
+  refine le_trans (prEvent_mono_of_support _ _ (fun result : IdentitySeed × ScalarBytes × GameState KemSK ×
       PqxdhJointDhExtractFamily.State =>
       BadB setup result.1 result.2.1 result.2.2.1.ghost ∨ (CollB setup result.1 result.2.1 result.2.2.1.ghost ∨
         ∃ j ∈ (Finset.univ : Finset (Fin (Q + 1))), EntryEvent setup result.1 result.2.1 Q j result.2.2.1.ghost)) ?_) ?_
@@ -2875,10 +2869,10 @@ theorem win_le_games (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
     exact win_cases setup result.1 result.2.1 Q result.2.2.1.ghost result.2.2.1.sessions
       (fun snap found => (invariant.frozen snap found).1) invariant.touched (sessionBound Q qH qHash budget)
       (by simpa using win)
-  · refine le_trans (probEvent_or_le (gameState setup codec checks revealSeed adversary) _ _) ?_
+  · refine le_trans (prEvent_or_le (gameState setup codec checks revealSeed adversary) _ _) ?_
     rw [add_assoc]
-    exact add_le_add le_rfl (le_trans (probEvent_or_le (gameState setup codec checks revealSeed adversary) _ _)
-      (add_le_add le_rfl (probEvent_exists_finset_le_sum (Finset.univ : Finset (Fin (Q + 1)))
+    exact add_le_add le_rfl (le_trans (prEvent_or_le (gameState setup codec checks revealSeed adversary) _ _)
+      (add_le_add le_rfl (prEvent_exists_finset_le (Finset.univ : Finset (Fin (Q + 1)))
         (gameState setup codec checks revealSeed adversary) _)))
 
 end Decomposition

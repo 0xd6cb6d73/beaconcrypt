@@ -14,24 +14,24 @@ def wins (result : Decision Choice) : Bool := result.1.isSome && result.2
 
 /-- The adaptive success event is the disjoint union of its actual final target choices. -/
 theorem partition (game : ProbComp (Decision Choice)) :
-    Pr[= true | wins <$> game] = ∑ selected, Pr[= true | choose selected <$> game] := by
-  have identity := RawCtxSelectiveTargets.event_partition_vcvioLegacy game Prod.fst (fun _ result => result.2 = true)
+    Pr{let x ← wins <$> game}[x = true] = ∑ selected, Pr{let x ← choose selected <$> game}[x = true] := by
+  have identity := RawCtxSelectiveTargets.event_partition game Prod.fst (fun _ result => result.2 = true)
   have any : ∀ result : Decision Choice, wins result = true ↔
       RawCtxSelectiveTargets.anyEvent Prod.fst (fun _ result => result.2 = true) result := by
     intro result
     cases chosen : result.1 <;> simp [wins, RawCtxSelectiveTargets.anyEvent, RawCtxSelectiveTargets.selectedEvent, chosen]
-  have predicate : (fun result : Decision Choice => wins result = true) =
-      RawCtxSelectiveTargets.anyEvent Prod.fst (fun _ result => result.2 = true) := funext fun result => propext (any result)
-  simp only [← probEvent_eq_eq_probOutput, probEvent_map, choose, Bool.and_eq_true, decide_eq_true_eq, Function.comp_def]
-  rw [predicate, identity]
-  rfl
+  rw [prEvent_map, prEvent_congr game _ _ any, identity]
+  refine Finset.sum_congr rfl fun selected _ => ?_
+  rw [prEvent_map]
+  refine prEvent_congr game _ _ fun result => ?_
+  simp only [RawCtxSelectiveTargets.selectedEvent, choose, Bool.and_eq_true, decide_eq_true_eq]
 
 /-- Real-valued success probabilities inherit the same exact finite partition. -/
 theorem partition_real (game : ProbComp (Decision Choice)) :
-    Pr[= true | wins <$> game].toReal = ∑ selected, Pr[= true | choose selected <$> game].toReal := by
+    Pr{let x ← wins <$> game}[x = true].toReal = ∑ selected, Pr{let x ← choose selected <$> game}[x = true].toReal := by
   rw [partition, ENNReal.toReal_sum]
   intro selected _
-  exact probOutput_ne_top
+  exact prEvent_ne_top _
 
 end BeaconcryptCore.Computational.PqxdhAdaptiveTargetPartition
 

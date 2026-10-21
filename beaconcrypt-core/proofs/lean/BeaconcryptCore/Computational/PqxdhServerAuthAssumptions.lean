@@ -164,23 +164,21 @@ noncomputable def serverGapDhAdvantage (c : Pqxdh.Crypto) (joint : Primitives)
     (adversary : PublicChallenge → OracleComp PqxdhJointGapDh.AdversarySpec (Option DhOutput)) : ℝ≥0∞ :=
   PqxdhJointGapDh.advantage joint (sourceInterface c joint secretOfSeed wiring) adversary
 
-set_option linter.deprecated false in
 /-- `serverGapDhAdvantage` is the success probability of the existing game on the byte-model interface. -/
 theorem serverGapDhAdvantage_eq (c : Pqxdh.Crypto) (joint : Primitives)
     (secretOfSeed : IdentitySeed → List.Vector UInt8 64) (wiring : SourceWiring c joint secretOfSeed)
     (adversary : PublicChallenge → OracleComp PqxdhJointGapDh.AdversarySpec (Option DhOutput)) :
     serverGapDhAdvantage c joint secretOfSeed wiring adversary =
-      Pr[= true | PqxdhJointGapDh.game joint (sourceInterface c joint secretOfSeed wiring) adversary] :=
-  (VCVioLegacy.probOutput_eq_prEvent _ _).symm
+      Pr{let x ← PqxdhJointGapDh.game joint (sourceInterface c joint secretOfSeed wiring) adversary}[x = true] :=
+  rfl
 
-set_option linter.deprecated false in
 /-- The success probability of a candidate client on the byte-model interface equals the Gap-DH term of its executable scanning extractor, with no guessing factor. -/
 theorem candidate_eq_serverGapDh {count : Nat} (c : Pqxdh.Crypto) (joint : Primitives)
     (secretOfSeed : IdentitySeed → List.Vector UInt8 64) (wiring : SourceWiring c joint secretOfSeed)
     (client : PublicChallenge → OracleComp PqxdhJointGapDh.AdversarySpec (List.Vector DhOutput count)) :
-    Pr[= true | candidateGame joint (sourceInterface c joint secretOfSeed wiring) client] =
+    Pr{let x ← candidateGame joint (sourceInterface c joint secretOfSeed wiring) client}[x = true] =
       serverGapDhAdvantage c joint secretOfSeed wiring (extractor client) :=
-  candidate_success_eq_advantage_vcvioLegacy joint (sourceInterface c joint secretOfSeed wiring) client
+  candidate_success_eq_advantage joint (sourceInterface c joint secretOfSeed wiring) client
 
 end BeaconcryptCore.Computational.PqxdhServerAuthAssumptions
 

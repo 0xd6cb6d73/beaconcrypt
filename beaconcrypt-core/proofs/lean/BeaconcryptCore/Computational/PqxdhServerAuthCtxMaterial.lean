@@ -90,36 +90,44 @@ theorem output_decoded (key : RootOutput) (rest : Residual) :
   rw [show material (output key rest).1 = (key, rest.1) from congrArg Prod.fst parts,
     show nextChain (output key rest).1 = rest.2.1 from congrArg Prod.snd parts]
 
-set_option linter.deprecated false in
 /-- A uniform factor has exactly the ordinary challenger-key-first distribution, through every complete continuation. No context or outcome is conditioned on success. -/
 theorem key_first {Result : Type}
     (continuation : PqxdhServerAuthKeySchedule.Output → ProbComp Result) :
-    𝒮[(($ᵗ PqxdhServerAuthKeySchedule.Output) >>= continuation)] =
-      𝒮[(do let key ← $ᵗ RootOutput
+    EvalDistEq (($ᵗ PqxdhServerAuthKeySchedule.Output) >>= continuation)
+         (do let key ← $ᵗ RootOutput
              let rest ← $ᵗ Residual
-             continuation (output key rest))] := by
-  have split := PqxdhFinalMaterialKeySplit.complete_vcvioLegacy
+             continuation (output key rest)) := by
+  have split := PqxdhFinalMaterialKeySplit.complete
     (fun full => do let other ← $ᵗ RootOutput; continuation (full, other))
-  have reorder := evalSPMF_bind_bind_swap ($ᵗ (NonceOutput × RootOutput))
+  have reorder := OracleComp.EvalDistEq.bind_bind_swap ($ᵗ (NonceOutput × RootOutput))
     ($ᵗ RootOutput) (fun pair key => do
       let other ← $ᵗ RootOutput
       continuation (output key (pair.1, pair.2, other)))
   simp only [← pairSample, bind_assoc, pure_bind, output] at split reorder ⊢
   exact split.trans reorder
 
-set_option linter.deprecated false in
+set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.PqxdhServerAuthCtxMaterial.key_first_vcvioLegacy :
+    ∀ {Result : Type} (continuation : BeaconcryptCore.Computational.PqxdhServerAuthKeySchedule.Output → ProbComp Result),
+      𝒮[$ᵗ BeaconcryptCore.Computational.PqxdhServerAuthKeySchedule.Output >>= continuation] =
+        𝒮[do
+          let key ← $ᵗ BeaconcryptCore.Computational.PqxdhSecretInputKdf.RootOutput
+          let rest ← $ᵗ BeaconcryptCore.Computational.PqxdhServerAuthCtxMaterial.Residual
+          continuation (BeaconcryptCore.Computational.PqxdhServerAuthCtxMaterial.output key rest)] :=
+  by simpa only [BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq] using @BeaconcryptCore.Computational.PqxdhServerAuthCtxMaterial.key_first
+
 /-- A separately sampled complete source context can also be placed after the challenger key. Its full state and adaptive continuation are retained. -/
 theorem key_first_context {Context Result : Type} (sample : ProbComp Context)
     (continuation : Context → PqxdhServerAuthKeySchedule.Output → ProbComp Result) :
-    𝒮[(do let context ← sample
+    EvalDistEq
+       (do let context ← sample
            let full ← $ᵗ PqxdhServerAuthKeySchedule.Output
-           continuation context full)] =
-      𝒮[(do let key ← $ᵗ RootOutput
+           continuation context full)
+         (do let key ← $ᵗ RootOutput
              let context ← sample
              let rest ← $ᵗ Residual
-             continuation context (output key rest))] := by
-  exact (evalSPMF_bind_congr' sample (fun context => key_first (continuation context))).trans
-    (evalSPMF_bind_bind_swap sample ($ᵗ RootOutput) (fun context key => do
+             continuation context (output key rest)) := by
+  exact (EvalDistEq.bind_right sample (fun context => key_first (continuation context))).trans
+    (OracleComp.EvalDistEq.bind_bind_swap sample ($ᵗ RootOutput) (fun context key => do
       let rest ← $ᵗ Residual
       continuation context (output key rest)))
 

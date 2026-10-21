@@ -514,10 +514,6 @@ theorem candidate_success_eq_advantage {count : Nat} (joint : Primitives) (dh : 
     Pr{let x ← candidateGame joint dh client}[x = true] = advantage joint dh (extractor client) := by
   rw [advantage, extraction_game]
 
-set_option linter.deprecated false in theorem _root_.BeaconcryptCore.Computational.PqxdhJointGapDh.candidate_success_eq_advantage_vcvioLegacy :
-    ∀ {count : ℕ} (joint : BeaconcryptCore.Computational.PqxdhJointIdentity.Primitives) (dh : BeaconcryptCore.Computational.PqxdhJointGapDh.DhInterface joint) (client : BeaconcryptCore.Computational.PqxdhJointGapDh.PublicChallenge → OracleComp BeaconcryptCore.Computational.PqxdhJointGapDh.AdversarySpec (List.Vector BeaconcryptCore.Computational.PqxdhJointIdentity.DhOutput count)), Pr[= Bool.true | BeaconcryptCore.Computational.PqxdhJointGapDh.candidateGame joint dh client] = BeaconcryptCore.Computational.PqxdhJointGapDh.advantage joint dh (BeaconcryptCore.Computational.PqxdhJointGapDh.extractor client) :=
-  by simpa only [BeaconcryptCore.VCVioLegacy.probOutput_eq_prEvent] using @BeaconcryptCore.Computational.PqxdhJointGapDh.candidate_success_eq_advantage
-
 theorem extractor_class_bound {count : Nat}
     (client : PublicChallenge → OracleComp AdversarySpec (List.Vector DhOutput count))
     (publicValue : PublicChallenge) (predicate : AdversarySpec.Domain → Prop) [DecidablePred predicate]

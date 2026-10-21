@@ -164,15 +164,15 @@ open PqxdhJointGapDh (DhInterface ScalarBytes PublicChallenge)
 
 variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response : Type}
 
-set_option linter.deprecated false in
 /-- Exact distributional form of the already checked flat coupling; the complete source game state is retained and only family history is projected away. -/
 theorem flat_step_projection (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (publicValue : PublicChallenge) (beaconSeed : IdentitySeed) (seed : IdentitySeed) (scalar : ScalarBytes)
     (query : ServerAuthSpec.Domain) (state : GameState KemSK × PqxdhJointDhExtractFamily.State) :
-    𝒮[(fun result => (result.1, project result.2)) <$>
-      (flatReal setup codec checks publicValue beaconSeed seed scalar query).run state] =
-      𝒮[(skeleton setup codec checks publicValue beaconSeed
-        (realServices seed scalar setup codec checks) query).run (project state)] := by
+    EvalDistEq ((fun result => (result.1, project result.2)) <$>
+      (flatReal setup codec checks publicValue beaconSeed seed scalar query).run state)
+      ((skeleton setup codec checks publicValue beaconSeed
+        (realServices seed scalar setup codec checks) query).run (project state)) := by
+  refine (VCVioLegacy.evalSPMF_eq_iff_evalDistEq _ _).1 ?_
   apply evalSPMF_eq_of_relTriple_eqRel
   have paired := relTriple_post_mono (flat_couple setup codec checks publicValue beaconSeed seed scalar query state)
     (fun left right related => show (left.1, project left.2) = right from
@@ -192,6 +192,13 @@ theorem realStep_invariant (setup : Setup baseSpec KemSK) (codec : Codec Reader 
       (realServices seed scalar setup codec checks) query).run state)) :
     (GameInv Reader Response setup publicValue state.1 → GameInv Reader Response setup publicValue result.2.1) ∧
       Grows state.1 result.2.1 ∧ result.2.2.1 = fun _ => false := by
+  have supportEq : ∀ {α : Type} {mx my : ProbComp α}, EvalDistEq mx my → ∀ x ∈ support mx, x ∈ support my := by
+    intro α mx my same x member
+    by_contra missing
+    have zero : Pr{let y ← my}[y = x] = 0 :=
+      (OracleComp.prEvent_eq_zero_iff my _).2 fun y found equal => missing (equal ▸ found)
+    rw [← same.prEvent_eq (· = x)] at zero
+    exact (OracleComp.prEvent_eq_zero_iff mx _).1 zero x member rfl
   let original : GameState KemSK × PqxdhJointDhExtractFamily.State := (state.1, ⟨[], state.2.2⟩)
   have projected : project original = state := by
     change (state.1, (fun _ => false), state.2.2) = state
@@ -200,7 +207,7 @@ theorem realStep_invariant (setup : Setup baseSpec KemSK) (codec : Codec Reader 
   rw [projected] at distribution
   have projectedSupport : result ∈ support ((fun result => (result.1, project result.2)) <$>
       (flatReal setup codec checks publicValue beaconSeed seed scalar query).run original) := by
-    simpa only [support_eq_evalSPMF_support, distribution] using supported
+    exact supportEq distribution.symm result supported
   rw [support_map] at projectedSupport
   obtain ⟨sourceResult, sourceSupported, rfl⟩ := projectedSupport
   simp only [flatReal, interp, StateT.run, support_map, Set.mem_image] at sourceSupported
@@ -227,14 +234,21 @@ theorem programmedStep_support (setup : Setup baseSpec KemSK) (codec : Codec Rea
       (programmedServices seed scalar setup codec checks prk) query).run state)) :
     result ∈ support ((skeleton setup codec checks publicValue beaconSeed
       (realServices seed scalar setup codec checks) query).run state) := by
+  have supportEq : ∀ {α : Type} {mx my : ProbComp α}, EvalDistEq mx my → ∀ x ∈ support mx, x ∈ support my := by
+    intro α mx my same x member
+    by_contra missing
+    have zero : Pr{let y ← my}[y = x] = 0 :=
+      (OracleComp.prEvent_eq_zero_iff my _).2 fun y found equal => missing (equal ▸ found)
+    rw [← same.prEvent_eq (· = x)] at zero
+    exact (OracleComp.prEvent_eq_zero_iff mx _).1 zero x member rfl
   have mixed : result ∈ support (do
       let value ← $ᵗ HmacBlock
       (skeleton setup codec checks publicValue beaconSeed
         (programmedServices seed scalar setup codec checks value) query).run state) := by
     rw [mem_support_bind_iff]
     exact ⟨prk, mem_support_uniformSample HmacBlock, supported⟩
-  simpa only [support_eq_evalSPMF_support,
-    programmedStep_sample setup codec checks publicValue beaconSeed seed scalar query state] using mixed
+  exact supportEq (programmedStep_sample setup codec checks publicValue beaconSeed seed scalar query state).symm
+    result mixed
 
 end BeaconcryptCore.Computational.PqxdhServerAuthEntryFactor
 
