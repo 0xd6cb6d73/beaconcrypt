@@ -4,6 +4,8 @@
 
 The `beaconcrypt-core` package is the independently publishable, `no_std` extraction boundary for beaconcrypt's protocol state machines. Its Rust crate name is `beaconcrypt_core`. It intentionally has no cryptographic, serialization, FFI, or runtime dependencies. See the repository's [formal verification plan](../doc/formal-verification.md) for the intended boundary and proof inventory.
 
+The crate forbids unsafe Rust and erases owned ratchet secrets with `zeroize`. The `test-utils` feature exposes additional receive transitions for adapter regression tests.
+
 The crate contains the control-plane state machines for the symmetric ratchet and PQXDH registration, the production-specialized ratchet effect machine, and the fixed-width CTX commitment transcript builder. It owns ratchet counters, key availability, receive admission, exact KDF requests, response partitioning, staged receive publication, deterministic PQXDH/commitment transcript construction, role-specific registration states, and commit/abort decisions.
 
 Production stores `ConcreteRatchetKernel`, which directly specializes `RefinedRatchet<RatchetChain, RatchetChain, RatchetMaterial>`. The kernel contains no executor or function pointer. Cryptographic work crosses the boundary through affine, first-order phases: the core owns an exact request and continuation, the adapter borrows the request, computes one fixed-width response, and consumes the continuation to resume. Separate `InitialRatchetKdfResponse` and `RatchetKdfResponse` types prevent a 64-byte initial response from being used as a 76-byte chain-step response. Generic context values are carried by value through the phase but remain opaque to the core.

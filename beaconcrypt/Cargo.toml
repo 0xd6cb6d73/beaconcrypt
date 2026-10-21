@@ -1,6 +1,6 @@
 [package]
 name = "beaconcrypt"
-version = "0.4.3"
+version = "0.6.1"
 edition = "2024"
 license-file = "../LICENSE"
 readme = "../README.md"
@@ -43,7 +43,6 @@ path = "tests/wycheproof.rs"
 required-features = ["pqxdh"]
 
 [build-dependencies]
-capnpc = "0.26"
 cbindgen = "0.29"
 
 [dev-dependencies]
@@ -52,11 +51,11 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 
 [dependencies]
-beaconcrypt-core = { version = "0.1.0", path = "../beaconcrypt-core" }
-capnp = "0.26"
-libsodium-rs = "=0.2.4"
+beaconcrypt-core = { version = "0.1.1", path = "../beaconcrypt-core" }
+beaconcrypt-parse = { version = "0.1.0", path = "../beaconcrypt-parse" }
+libsodium-rs = "=0.3.0"
 zeroize = "1.9"
-pyo3 = { version = "0.29.0", features = ["abi3-py311", "experimental-inspect"], optional = true }
+pyo3 = { version = "0.30.1", features = ["abi3-py311", "experimental-inspect"], optional = true }
 serde = { version = "1", features = ["derive"], optional = true }
 serde_json = { version = "1", optional = true }
 

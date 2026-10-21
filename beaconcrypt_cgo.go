@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: 0BSD
 
+//go:build cgo && !beaconcrypt_wazero
+
 package beaconcrypt
 
 /*
@@ -7,108 +9,27 @@ package beaconcrypt
 #cgo windows LDFLAGS: -L${SRCDIR}/target/x86_64-pc-windows-gnu/release -l:libbeaconcrypt.a -lbcrypt -lws2_32 -luserenv -ldbghelp -lntdll
 #cgo linux LDFLAGS: -L${SRCDIR}/target/release -l:libbeaconcrypt.a
 #cgo darwin LDFLAGS: ${SRCDIR}/target/release/libbeaconcrypt.a
-#include <stdint.h>
-#include <stdlib.h>
-
-// C.CBytes owns exactly len bytes. Volatile stores prevent removal of the wipe before free.
-static void beaconcrypt_wipe_free(void *ptr, uintptr_t len) {
-	volatile uint8_t *bytes = (volatile uint8_t *)ptr;
-	for (uintptr_t i = 0; i < len; i++) bytes[i] = 0;
-	free(ptr);
-}
-
-typedef struct {
-	uint8_t *ptr;
-	uintptr_t len;
-	uintptr_t cap;
-} beaconcrypt_buffer;
-
-typedef struct {
-	beaconcrypt_buffer response;
-	uint64_t key_id;
-} beaconcrypt_registration_response;
-
-typedef struct {
-	beaconcrypt_buffer data;
-	beaconcrypt_buffer state;
-	uint64_t key_id;
-	uint64_t seq;
-} beaconcrypt_encrypt_state;
-
-typedef struct beaconcrypt_Server beaconcrypt_Server;
-typedef struct beaconcrypt_Beacon beaconcrypt_Beacon;
-
-void beaconcrypt_free_buffer(beaconcrypt_buffer buffer);
-beaconcrypt_Server *beaconcrypt_server_new(uint64_t server_kid);
-beaconcrypt_Server *beaconcrypt_server_new_from_seed(uint64_t server_kid, const uint8_t *seed_ptr, uintptr_t seed_len);
-beaconcrypt_Server *beaconcrypt_server_new_from_state(const uint8_t *state_ptr, uintptr_t state_len);
-beaconcrypt_buffer beaconcrypt_server_export_state(const beaconcrypt_Server *handle);
-beaconcrypt_Beacon *beaconcrypt_beacon_new(uint64_t server_kid, const uint8_t *server_pk_ptr, uintptr_t server_pk_len);
-void beaconcrypt_server_free(beaconcrypt_Server *handle);
-void beaconcrypt_beacon_free(beaconcrypt_Beacon *handle);
-beaconcrypt_buffer beaconcrypt_server_identity_pk(const beaconcrypt_Server *handle);
-beaconcrypt_buffer beaconcrypt_beacon_identity_pk(const beaconcrypt_Beacon *handle);
-beaconcrypt_buffer beaconcrypt_generate_registration(beaconcrypt_Beacon *handle);
-beaconcrypt_registration_response beaconcrypt_register_beacon(beaconcrypt_Server *handle, const uint8_t *reg_ptr, uintptr_t reg_len, const uint8_t *msg_ptr, uintptr_t msg_len);
-beaconcrypt_buffer beaconcrypt_process_initial_message(beaconcrypt_Beacon *handle, const uint8_t *ptr, uintptr_t len);
-beaconcrypt_buffer beaconcrypt_encrypt_to_beacon(beaconcrypt_Server *handle, uint64_t key_id, const uint8_t *ptr, uintptr_t len);
-beaconcrypt_buffer beaconcrypt_decrypt_beacon_message(beaconcrypt_Server *handle, const uint8_t *ptr, uintptr_t len);
-beaconcrypt_encrypt_state beaconcrypt_encrypt_and_update(beaconcrypt_Server *handle, uint64_t key_id, const uint8_t *ptr, uintptr_t len);
-beaconcrypt_buffer beaconcrypt_encrypt_and_update_json(beaconcrypt_Server *handle, uint64_t key_id, const uint8_t *ptr, uintptr_t len);
-beaconcrypt_encrypt_state beaconcrypt_decrypt_and_update(beaconcrypt_Server *handle, const uint8_t *ptr, uintptr_t len);
-beaconcrypt_buffer beaconcrypt_decrypt_and_update_json(beaconcrypt_Server *handle, const uint8_t *ptr, uintptr_t len);
-beaconcrypt_buffer beaconcrypt_encrypt_to_server(beaconcrypt_Beacon *handle, const uint8_t *ptr, uintptr_t len);
-beaconcrypt_buffer beaconcrypt_decrypt_server_message(beaconcrypt_Beacon *handle, const uint8_t *ptr, uintptr_t len);
+#include "beaconcrypt_go.h"
 */
 import "C"
 
 import (
-	"errors"
 	"runtime"
 	"sync"
-	"unsafe"
 )
 
-var (
-	ErrClosed    = errors.New("beaconcrypt: handle is closed")
-	ErrCrypto    = errors.New("beaconcrypt: cryptographic operation failed")
-	ErrSeedSize  = errors.New("beaconcrypt: server seed must be 32 bytes")
-	ErrEmptyData = errors.New("beaconcrypt: input must not be empty")
-)
+// Keep the backend-independent public constant tied to the native ABI.
+const _ = uint(MaxMessageSize - int(C.beaconcrypt_MAX_MESSAGE_SIZE))
+const _ = uint(int(C.beaconcrypt_MAX_MESSAGE_SIZE) - MaxMessageSize)
 
 type serverNativeHandle struct {
 	mu     sync.Mutex
 	handle *C.beaconcrypt_Server
+	store  *snapshotStoreContext
 }
 type beaconNativeHandle struct {
 	mu     sync.Mutex
 	handle *C.beaconcrypt_Beacon
-}
-
-// Server is safe for concurrent use. Calls on one Server are serialized because
-// they mutate shared native ratchet state.
-type Server struct {
-	native *serverNativeHandle
-}
-
-// Beacon is safe for concurrent use. Calls on one Beacon are serialized because
-// they mutate shared native ratchet state.
-type Beacon struct {
-	native *beaconNativeHandle
-}
-
-type RegistrationResponse struct {
-	Serialized []byte
-	KeyID      uint64
-}
-
-type EncryptState struct {
-	Data []byte
-	// State is inert plaintext ratchet JSON for observation only.
-	// It is secret-bearing, unauthenticated, and not restorable.
-	State string
-	KeyID uint64
-	Seq   uint64
 }
 
 func NewServer(serverKID uint64) (*Server, error) {
@@ -153,7 +74,8 @@ func NewServerFromState(state []byte) (*Server, error) {
 	return &Server{native: newServerNativeHandle(handle)}, nil
 }
 
-// ExportState returns the current plaintext server checkpoint.
+// ExportState returns the current plaintext server checkpoint. A store-backed
+// server loads its already committed snapshot from its authoritative store.
 //
 // Save it immediately after every accepted receive or other state-changing call and before using that call's output.
 // A normal rejected receive leaves the checkpoint unchanged.
@@ -162,7 +84,7 @@ func (s *Server) ExportState() ([]byte, error) {
 	if s == nil {
 		return nil, ErrClosed
 	}
-	return withServerHandle(s.native, func(handle *C.beaconcrypt_Server) ([]byte, error) {
+	return withServerMutation(s.native, func(handle *C.beaconcrypt_Server) ([]byte, error) {
 		return copyBuffer(C.beaconcrypt_server_export_state(handle))
 	})
 }
@@ -214,7 +136,7 @@ func (s *Server) RegisterBeacon(registration, initialMessage []byte) (*Registrat
 	if s == nil {
 		return nil, ErrClosed
 	}
-	return withServerHandle(s.native, func(handle *C.beaconcrypt_Server) (*RegistrationResponse, error) {
+	return withServerMutation(s.native, func(handle *C.beaconcrypt_Server) (*RegistrationResponse, error) {
 		if len(registration) == 0 {
 			return nil, ErrEmptyData
 		}
@@ -255,7 +177,7 @@ func (s *Server) EncryptToBeacon(keyID uint64, plaintext []byte) ([]byte, error)
 	if s == nil {
 		return nil, ErrClosed
 	}
-	return withServerHandle(s.native, func(handle *C.beaconcrypt_Server) ([]byte, error) {
+	return withServerMutation(s.native, func(handle *C.beaconcrypt_Server) ([]byte, error) {
 		return callUnary(plaintext, func(ptr *C.uint8_t, len C.uintptr_t) C.beaconcrypt_buffer {
 			return C.beaconcrypt_encrypt_to_beacon(handle, C.uint64_t(keyID), ptr, len)
 		})
@@ -266,7 +188,7 @@ func (s *Server) DecryptBeaconMessage(ciphertext []byte) ([]byte, error) {
 	if s == nil {
 		return nil, ErrClosed
 	}
-	return withServerHandle(s.native, func(handle *C.beaconcrypt_Server) ([]byte, error) {
+	return withServerMutation(s.native, func(handle *C.beaconcrypt_Server) ([]byte, error) {
 		return callUnary(ciphertext, func(ptr *C.uint8_t, len C.uintptr_t) C.beaconcrypt_buffer {
 			return C.beaconcrypt_decrypt_beacon_message(handle, ptr, len)
 		})
@@ -277,7 +199,7 @@ func (s *Server) EncryptAndUpdate(keyID uint64, plaintext []byte) (*EncryptState
 	if s == nil {
 		return nil, ErrClosed
 	}
-	return withServerHandle(s.native, func(handle *C.beaconcrypt_Server) (*EncryptState, error) {
+	return withServerMutation(s.native, func(handle *C.beaconcrypt_Server) (*EncryptState, error) {
 		return callStateUpdate(plaintext, func(ptr *C.uint8_t, len C.uintptr_t) C.beaconcrypt_encrypt_state {
 			return C.beaconcrypt_encrypt_and_update(handle, C.uint64_t(keyID), ptr, len)
 		})
@@ -288,7 +210,7 @@ func (s *Server) EncryptAndUpdateJSON(keyID uint64, plaintext []byte) (string, e
 	if s == nil {
 		return "", ErrClosed
 	}
-	return withServerHandle(s.native, func(handle *C.beaconcrypt_Server) (string, error) {
+	return withServerMutation(s.native, func(handle *C.beaconcrypt_Server) (string, error) {
 		data, err := callUnary(plaintext, func(ptr *C.uint8_t, len C.uintptr_t) C.beaconcrypt_buffer {
 			return C.beaconcrypt_encrypt_and_update_json(handle, C.uint64_t(keyID), ptr, len)
 		})
@@ -303,7 +225,7 @@ func (s *Server) DecryptAndUpdate(ciphertext []byte) (*EncryptState, error) {
 	if s == nil {
 		return nil, ErrClosed
 	}
-	return withServerHandle(s.native, func(handle *C.beaconcrypt_Server) (*EncryptState, error) {
+	return withServerMutation(s.native, func(handle *C.beaconcrypt_Server) (*EncryptState, error) {
 		return callStateUpdate(ciphertext, func(ptr *C.uint8_t, len C.uintptr_t) C.beaconcrypt_encrypt_state {
 			return C.beaconcrypt_decrypt_and_update(handle, ptr, len)
 		})
@@ -314,7 +236,7 @@ func (s *Server) DecryptAndUpdateJSON(ciphertext []byte) (string, error) {
 	if s == nil {
 		return "", ErrClosed
 	}
-	return withServerHandle(s.native, func(handle *C.beaconcrypt_Server) (string, error) {
+	return withServerMutation(s.native, func(handle *C.beaconcrypt_Server) (string, error) {
 		data, err := callUnary(ciphertext, func(ptr *C.uint8_t, len C.uintptr_t) C.beaconcrypt_buffer {
 			return C.beaconcrypt_decrypt_and_update_json(handle, ptr, len)
 		})
@@ -394,6 +316,7 @@ func (native *serverNativeHandle) close() {
 	if native.handle != nil {
 		C.beaconcrypt_server_free(native.handle)
 		native.handle = nil
+		native.store = nil
 	}
 }
 func (native *beaconNativeHandle) close() {
@@ -451,7 +374,7 @@ func copyBuffer(buffer C.beaconcrypt_buffer) ([]byte, error) {
 	if buffer.len == 0 {
 		return []byte{}, nil
 	}
-	return C.GoBytes(unsafe.Pointer(buffer.ptr), C.int(buffer.len)), nil
+	return callbackBytes(buffer.ptr, buffer.len)
 }
 
 func cBytes(data []byte) (*C.uint8_t, func()) {

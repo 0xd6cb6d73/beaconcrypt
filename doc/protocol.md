@@ -4,7 +4,7 @@
 The protocol uses Signal's `PQXDH` for key establishment alongside a symmetric ratchet that derives message keys and nonces for an AEAD scheme implemented by `libsodium`. The supported high-level runtime stores operational ratchets only for sessions that completed PQXDH establishment or were activated from a fresh snapshot supplied by a trusted persistent store. Within one accepted affine state lineage, each committed send advances the ratchet before another send can use it; the resulting key/nonce-no-reuse claim remains conditional on noncollision of the relevant HKDF output projections and correct use of the persistence contract described below. The interface provides opaque byte strings that either party can put on the wire. The intent is to provide a generic cryptographic layer upon which a transport can be built. Any framework metadata prepended outside beaconcrypt, such as a Mythic UUID, is not protected by this protocol.
 
 ## Assumptions
-It is assumed that the server's identity public key is compiled with the beacon and is authentic. Real-world key and nonce uniqueness additionally assumes correct HKDF-SHA-512 execution and noncollision of the relevant derived key/nonce projections. A server that persists or replicates state must use `PersistentServer` with a linearizable, durable, rollback-resistant `SnapshotStore` trusted for integrity and provenance. Snapshot bytes are plaintext and carry no authentication tag, while the unkeyed snapshot digest is an identity and lineage-linking value rather than proof of origin. The old public fixed-HKDF/random-table game is efficiently distinguishable and supplies no negligible bound for production noncollision or key secrecy. The corrected secret-input theorem and the remaining joint-key, multi-session and primitive-interface arguments are specified in [the composition ledger](composition-assumptions.md); the primitive choices below do not discharge them.
+It is assumed that the server's identity public key and numeric server identity-key ID are pinned in the beacon and are authentic. Real-world key and nonce uniqueness additionally assumes correct HKDF-SHA-512 execution and noncollision of the relevant derived key/nonce projections. A server that persists or replicates state must use `PersistentServer` with a linearizable, durable, rollback-resistant `SnapshotStore` trusted for integrity and provenance. Snapshot bytes are plaintext and carry no authentication tag, while the unkeyed snapshot digest is an identity and lineage-linking value rather than proof of origin. The old public fixed-HKDF/random-table game is efficiently distinguishable and supplies no negligible bound for production noncollision or key secrecy. The corrected secret-input theorem and the remaining joint-key, multi-session and primitive-interface arguments are specified in [the composition ledger](composition-assumptions.md); the primitive choices below do not discharge them.
 
 ## Motivation for dropping certain properties
 Forward secrecy concerns confidentiality of earlier messages after a later compromise, subject to erasure and the specified reveal interface. Post-compromise security concerns recovery after compromise when fresh secret material enters the protocol. Beaconcrypt uses a symmetric ratchet and has no such recovery: disclosure of a current chain exposes its descendants. Retained skipped keys, old snapshots, copied secrets and application plaintext can also expose earlier messages, so a later compromise does not imply blanket confidentiality of everything previously sent. The choice of a symmetric ratchet reduces protocol and state-management complexity; the checked past-message results and their precise compromise boundaries are described in [the verification analysis](formal-verification-analysis.md).
@@ -37,12 +37,12 @@ This is the entry point to beaconcrypt and it is initiated by the beacon. The be
 
 The server uses these values to perform its leg of the `PQXDH` protocol and initializes its KDF chains using the shared secret. It uses its send chain to derive an encryption key for the initial message, then ratchets. It then sends the relevant public values and the newly-obtained cipher text in the `phase2` bundle.
 
-The beacon receives the initial message and uses the `phase2` bundle to perform the final leg of the `PQXDH` protocol run. It uses the shared secret to initialize its KDF chains, then attempts to decrypt the bundled ciphertext using its receive chain. The session is established only if decryption succeeds, the authenticated sequence is exactly 1, the authenticated sender matches the pinned Server ID, and the first eight plaintext bytes equal the outer response’s claimed `keyId` in little-endian form followed by nonempty application plaintext. Any other initial sequence aborts registration. Established sessions retain the general receive path and its out-of-order delivery rules. At runtime the beacon's operational ratchet is owned only by `BeaconState::Established`, and the server peer map contains only `EstablishedRemote` entries produced by a successful registration commit or fresh restoration through the trusted store. Fresh, pending, and aborted beacon states cannot encrypt or decrypt application records, and the production API does not expose manual peer insertion, ratchet reset, or mutable ratchet access.
+The beacon receives the initial message and uses the `phase2` bundle to perform the final leg of the `PQXDH` protocol run. It uses the shared secret to initialize its KDF chains, then attempts to decrypt the bundled ciphertext using its receive chain. The session is established only if decryption succeeds, the implicit sequence is 1, the commitment uses the pinned Server ID, and the first eight plaintext bytes equal the outer response’s claimed `keyId` in little-endian form followed by nonempty application plaintext. A response encrypted under another sequence or sender context fails authentication. Established sessions retain the general receive path and its out-of-order delivery rules. At runtime the beacon's operational ratchet is owned only by `BeaconState::Established`, and the server peer map contains only `EstablishedRemote` entries produced by a successful registration commit or fresh restoration through the trusted store. Fresh, pending, and aborted beacon states cannot encrypt or decrypt application records, and the production API does not expose manual peer insertion, ratchet reset, or mutable ratchet access.
 
 The initial sequence check rejects substitution of a later authenticated application record, including a record whose first eight bytes match a relabelled outer `keyId`. The Server generates its registration response at sequence 1; its authenticated binding prefix is checked before the Beacon publishes the assigned ID and ratchet. The prior later-record substitution remains a historical negative-control scenario. See [the sequence-one change record](impl/beacon-initial-sequence-one.md).
 
 # Message encryption
-Every encryption wraps its payload in a Cap’n Proto message called a `CryptoFrame`, whose metadata supports out-of-order delivery. An established sender derives a key, next chain, and nonce from its current send chain, advances the affine operational ratchet, and consumes the private send capability before returning. The operational ratchet and its secret-bearing chain/material components are not `Clone`, and update APIs return an inert serialized `RatchetSnapshot` rather than another live manager. These ownership controls prevent safe in-process state forks, while restart and multi-owner safety depend on the trusted-store generation/digest/CAS persistence path. Under that contract and the stated HKDF noncollision assumption, distinct committed send allocations in one directional lineage use distinct key/nonce pairs. Send material is removed logically after the attempt and core arrays use best-effort zeroization on drop, but physical erasure is not a formal guarantee. Receive material is retained only for bounded out-of-order delivery after a successful future receive; every normally rejected receive preserves the complete entry state, while successful authentication consumes the selected record and later replay fails. The commitment described below binds `seq` and `keyId` to the protected payload, with `seq` selecting the derivation position and `keyId` identifying the sender and selected receive ratchet.
+Established-session encryption wraps its payload in a CBOR message called a `CryptoFrame`, whose metadata supports out-of-order delivery. An established sender derives a key, next chain, and nonce from its current send chain, advances its operational ratchet, and consumes the message key even if encryption fails. The operational ratchet and its secret-bearing chain/material components are not `Clone`, and update APIs return an inert serialized `RatchetSnapshot` rather than another live manager. These ownership controls prevent safe in-process state forks. Restart and multi-owner safety depend on the trusted-store generation/digest/CAS persistence path; key and nonce uniqueness additionally require correct HKDF execution and noncollision of the derived values. Send material is removed logically after the attempt and core arrays use best-effort zeroization on drop, but physical erasure cannot be guaranteed. Receive material is retained only for bounded out-of-order delivery after a successful future receive; every normally rejected receive preserves the complete entry state, while successful authentication consumes the selected record and later replay fails. The commitment described below binds `seq` and `keyId` to the protected payload, with `seq` selecting the derivation position and `keyId` identifying the sender and selected receive ratchet.
 
 ## State ownership and persistence
 
@@ -122,11 +122,25 @@ Where:
  - `S` is the new state of the ratchet
  - `N` is the message nonce
 
-Initial ratchet expansion uses the same symmetric-ratchet label and input convention with a 64-byte output, so for an equal input it is intentionally the first 64 bytes of the 76-byte record-step stream; output length is not domain separation.
+Initial ratchet expansion uses the same symmetric-ratchet label and input convention with a 64-byte output, so for an equal input it is the first 64 bytes of the 76-byte record-step stream; output length is not domain separation.
 
 # Protocol message
+
+## Wire encoding
+
+Messages use exact deterministic CBOR arrays from [transport.cddl](../beaconcrypt-parse/schema/transport.cddl); keys and ciphertexts are byte strings, and numeric fields are unsigned 64-bit integers. Decoders require complete input and reject unknown versions/kinds, extra fields, nonminimal encodings, and indefinite values.
+
+| Message | CBOR array |
+| --- | --- |
+| `InitKex` | `[1, 0, identityKey, preKey, oneTimeKey, pqKey]` |
+| `KexResponse` | `[1, 1, identityKey, ephemeralKey, kemCipherText, appCipherText, keyId]` |
+| `CryptoFrame` | `[1, 2, seq, keyId, cipherText]` |
+
+The inclusive limit is **32 MiB (33,554,432 bytes) per complete encoded message**, including every header, authentication tag, and commitment. Exact size checks reject oversized sends before output allocation or ratchet advancement; they do not cap plaintext snapshots or JSON state. This replaces the former Cap'n Proto wire format without fallback; peers and queued messages must use CBOR. Fixed-width LE64 commitment inputs and snapshot formats are unchanged.
+
 ## CryptoFrame
-This is the most basic framing for an encrypted message within beaconcrypt. It is defined in [cryptoframe.capnp](../beaconcrypt/src/schema/cryptoframe.capnp). It carries a key identifier (`seq`), a key identifier `keyId`, and the encrypted data under `cipherText`. These messages are closely tied to the ratcheting mechanism. To create such a message, the writer must:
+This is the most basic framing for an encrypted message within beaconcrypt. It is defined in [transport.cddl](../beaconcrypt-parse/schema/transport.cddl). It carries a key identifier (`seq`), a key identifier `keyId`, and the encrypted data under `cipherText`. These messages are closely tied to the ratcheting mechanism. To create such a message, the writer must:
+- Reject a complete encoded frame above the message limit before ratcheting
 - Ratchet their `send` keychain forward and get the sequence number `key_seq`
 - Use their current `send` key to encrypt the message into a pair of temporary variables `CT` and `T` 
 - Compute the commitment `T*` using `Hash(Key, Nonce, Associated Data, T, key_seq, key_id)`
@@ -139,11 +153,13 @@ This is the most basic framing for an encrypted message within beaconcrypt. It i
 - Delete the current `send` key
 
 To read a `CryptoFrame`, the reader must:
-- Reject an empty, unparsable, or too-short frame before changing ratchet state
+- Reject an empty, oversized, unparsable, or too-short frame before changing ratchet state
 - Use `keyId` to select the sender's identity, associated data, and receive ratchet
+- Reject sequence zero and any old sequence whose cached key has already been consumed
 - Check that a future `seq` is admissible under both receive limits
-  - The reference implementation permits a forward distance of at most 50
-  - The number of already cached receive keys plus that forward distance must also be at most 50
+  - Let `skipped = seq - current_receive_sequence - 1`; the target itself is consumed separately
+  - The reference implementation permits at most 50 skipped keys, allowing up to 51 derivations including the target
+  - The number of already cached receive keys plus `skipped` must also be at most 50
   - Abort processing without changing state if either limit is exceeded
 - Privately prepare the candidate receive transition without changing the live receive chain, counter, or cache
   - For a future `seq`, derive the bounded candidate chain and material while staging only the skipped keys; keep the target material separate
@@ -161,7 +177,7 @@ To read a `CryptoFrame`, the reader must:
 State-neutral rejection prevents unauthenticated traffic from consuming receive-cache capacity, but it trades that protection for bounded recomputation: retrying the same invalid future frame can repeat up to 51 private ratchet-KDF steps—50 skipped-key derivations plus the separately consumed target. Deployments should apply per-peer rate limits, admission quotas, or transport replay filtering as external availability controls; those controls must not encode rejection by mutating the cryptographic ratchet.
 
 ## InitKex
-This message starts the beacon registration process by initiating the `PQXDH` protocol run. It is defined in [phase1.capnp](../beaconcrypt/src/schema/phase1.capnp). It must only be run once per beacon instance. The beacon must generate all relevant cryptographic keys using the appropriate libsodium API before trying to construct this message. Ed25519 and ML-KEM-768 public keys are encoded as a one-byte type marker followed by the public-key buffer. The two X25519 fields additionally authenticate their semantic role and are encoded as `[type: u8, role: u8, key]`: `preKey` is `[0x04, 0x80, 32-byte key]` and `oneTimeKey` is `[0x04, 0x81, 32-byte key]`. Type markers occupy the low half of the byte domain and role markers the high half, so the domains are disjoint. The beacon builds this message as follows:
+This message starts the beacon registration process by initiating the `PQXDH` protocol run. It is defined in [transport.cddl](../beaconcrypt-parse/schema/transport.cddl). It must only be run once per beacon instance. The beacon must generate all relevant cryptographic keys using the appropriate libsodium API before trying to construct this message. Ed25519 and ML-KEM-768 public keys are encoded as a one-byte type marker followed by the public-key buffer. The two X25519 fields additionally authenticate their semantic role and are encoded as `[type: u8, role: u8, key]`: `preKey` is `[0x04, 0x80, 32-byte key]` and `oneTimeKey` is `[0x04, 0x81, 32-byte key]`. Type markers occupy the low half of the byte domain and role markers the high half, so the domains are disjoint. The beacon builds this message as follows:
 - Set `identityKey` to the beacon's Ed25519 encoded identity public key
 - Set `preKey` to the complete type-and-prekey-role encoded X25519 public key signed under the beacon's identity key
 - Set `oneTimeKey` to the complete type-and-one-time-role encoded X25519 public key signed under the beacon's identity key
@@ -169,14 +185,13 @@ This message starts the beacon registration process by initiating the `PQXDH` pr
 
 Beaconcrypt assumes the use of the libsodium `sign` API for all signatures. In this scheme, the signature is prepended to the buffer, so there are no dedicated signature fields.
 
+The signed X25519 payloads are now 34 bytes and are intentionally incompatible with the former 33-byte encodings that did not distinguish prekeys from one-time keys. A live Beacon emits its registration bundle at most once, and any failure while completing registration permanently aborts that Beacon object.
+
 The server must use this message as follows:
 - Verify that all keys except `identityKey` are signed under `identityKey`
-- Reject an X25519 field unless both its type marker and its field-specific role
-  marker match; exchanging or duplicating the two valid signed fields is invalid
-- Construct the 64-byte registration identifier as the decoded beacon identity
-  public key followed by the decoded signed one-time X25519 public key
-- Reject the message if that exact identifier is already in the server's
-  consumed-registration set
+- Reject an X25519 field unless both its type marker and its field-specific role marker match; exchanging or duplicating the two valid signed fields is invalid
+- Construct the 64-byte registration identifier as the decoded beacon identity public key followed by the decoded signed one-time X25519 public key
+- Reject the message if that exact identifier is already in the server's consumed-registration set
 - Generate its ephemeral X25519 keypair
 - Encapsulate the PQ shared secret (`SS`) using `pqKey`
 - Convert the beacon's identity public key and the server's identity secret key to X25519 format using libsodium's `ed25519_pk_to_curve25519` and `ed25519_sk_to_curve25519` respectively (thereafter they will use the `_kex` suffix)
@@ -188,17 +203,13 @@ The server must use this message as follows:
 - Compute the derived secret `KDF(Padding || DH1 || DH2 || DH3 || DH4 || SS)` using the exact 46-byte HKDF `info` string `BeaconcryptPqxdh_CURVE25519_SHA-512_ML-KEM-768`
   - `Padding` is 32 `0xFF` bytes
 - Delete all Diffie Hellman output
-- Add the registration identifier to the consumed set before returning the
-  pending response material; this is permanent even if response construction
-  later fails
+- Add the registration identifier to the consumed set before returning the pending response material; this is permanent even if response construction later fails
 - Return the KEM ciphertext, derived secret, ephemeral public key and beacon public key
 
 ## KexResponse
-This message enables the beacon to obtain the elements it needs to derive the shared secret. It is defined in [phase2.capnp](../beaconcrypt/src/schema/phase2.capnp) It is intrinsically linked to the corresponding `InitKex` which intiated the protocol run. It is expected that the server will create this message immediately after parsing a valid `InitKex`. It also potentially carries the first of the server's messages to the beacon. The server must contruct it as follows:
-- Create a new key ID to assign to the beacon using checked increment; abort if
-  the counter is exhausted or the exact next ID is already occupied
-- Stage a new known cryptographic identity using the beacon's public key and
-  newly created key ID without publishing it yet
+This message enables the beacon to obtain the elements it needs to derive the shared secret. It is defined in [transport.cddl](../beaconcrypt-parse/schema/transport.cddl). It is intrinsically linked to the corresponding `InitKex` which intiated the protocol run. It is expected that the server will create this message immediately after parsing a valid `InitKex`. It also potentially carries the first of the server's messages to the beacon. The server must contruct it as follows:
+- Create a new key ID to assign to the beacon using checked increment; abort if the counter is exhausted or the exact next ID is already occupied
+- Stage a new known cryptographic identity using the beacon's public key and newly created key ID without publishing it yet
 - Initialize its side of the ratchets using the derived secret with the exact 41-byte HKDF `info` string `SymRatchet_HKDF_SHA-512_CHACHA20_POLY1305`
 - Delete the derived secret
 - Set the `keyId` field to the newly generate beacon's key ID
@@ -206,15 +217,11 @@ This message enables the beacon to obtain the elements it needs to derive the sh
 - Set the `identityKey` to the server's Ed25519 public key
 - Set the `kemCipherText` to the KEM ciphertext from the corresponding `InitKex`
 - Create the associated data byte string by concatenating the encoded server identity key, encoded beacon identity key, `BeaconcryptPqxdh_CURVE25519_SHA-512_ML-KEM-768`, and `SymRatchet_HKDF_SHA-512_CHACHA20_POLY1305`
-- Encode the assigned beacon key ID as an eight-byte little-endian value and
-  prepend it to the first message, or to a single `0xFF` byte when no message
-  was supplied
-- Encrypt that prefixed payload using a `CryptoFrame` and set `appCipherText` to
-  its value
-- Set the initial `CryptoFrame.keyId` sender field to the server binding's numeric identity-key ID
+- Encode the assigned beacon key ID as an eight-byte little-endian value and prepend it to the first message, or to a single `0xFF` byte when no message was supplied
+- Set `appCipherText` directly to the encrypted `ciphertext || tag || commitment`, without a nested CBOR frame
+- Use implicit sequence `1` and the pinned numeric server identity-key ID as commitment inputs
 - Delete the ephemeral key pair
-- After encryption and serialization succeed, atomically commit the key-ID
-  counter, staged peer identity, and ratchets
+- After encryption and serialization succeed, atomically commit the key-ID counter, staged peer identity, and ratchets
 - Return the serialized registration response and key ID to the caller
 
 Upon reception, the beacon must process this message as follows:
@@ -236,12 +243,8 @@ Upon reception, the beacon must process this message as follows:
 - Create the associated data byte string by concatenating the encoded server identity key, encoded beacon identity key, `BeaconcryptPqxdh_CURVE25519_SHA-512_ML-KEM-768`, and `SymRatchet_HKDF_SHA-512_CHACHA20_POLY1305`
 - Initialize its side of the ratchets using the derived secret with the exact 41-byte HKDF `info` string `SymRatchet_HKDF_SHA-512_CHACHA20_POLY1305`
 - Delete the derived secret
-- Decrypt the `appCipherText` as a `CryptoFrame`, using its `recv` keychain
-- Require the successfully opened initial `CryptoFrame.seq` to equal 1; otherwise abort registration and discard the staged ratchet
-- Require the successfully opened initial `CryptoFrame.keyId` sender field to equal the numeric server identity-key ID pinned with the compiled-in public key
-- Split the authenticated plaintext into its eight-byte prefix and remaining
-  application plaintext, and require the prefix to equal the little-endian
-  encoding of `keyId`
+- Authenticate and decrypt raw `appCipherText` using the initial `recv` keychain, implicit sequence `1`, and pinned numeric server identity-key ID; otherwise abort registration and discard the staged ratchet
+- Split the authenticated plaintext into its eight-byte prefix and remaining application plaintext, and require the prefix to equal the little-endian encoding of `keyId`
 - Commit the assigned identity and staged ratchets only after that check passes
 - Strip the prefix before returning the application plaintext
 - If decryption is successful, return the plaintext to the caller oherwise abort the protocol and delete the previously derived cryptographic state
@@ -249,4 +252,4 @@ Upon reception, the beacon must process this message as follows:
 # Protocol details
 Once the session has been created, meaning a successful PQXDH run, the 153-byte associated data (`AD`) is the server's `0x01 || Ed25519 public key`, the beacon's `0x01 || Ed25519 public key`, the 46-byte PQXDH label, and the 41-byte symmetric-ratchet label in exactly that order. Authenticated bundle fields encode an ML-KEM-768 public key as `0x03 || pk`, an X25519 prekey as `0x04 || 0x80 || pk`, and an X25519 one-time key as `0x04 || 0x81 || pk`, so algorithm and X25519 role encodings are disjoint. This associated data is used in every encryption for a given `(Server, Beacon)` tuple. It is then expected that beacons will read messages from the server from their transport protocol and hand them off to beaconcrypt immediately for decryption and deserialization. All encrypted buffers (`CryptoFrame`s) carry a sequence number `seq` and sender identity `keyId`; neither field is part of the base AEAD associated data, and the protocol adds no AEAD or CTX domain label. The unlabeled CTX commitment binds both fields, encoded separately as LE64 values after the retained AEAD tag, to the ciphertext, so modifying either field causes decryption to fail.
 
-The `KexResponse.keyId` field has different semantics from the inner `CryptoFrame.keyId`: the outer field claims the receiving beacon’s assigned routing ID, whereas the inner field identifies the sending server. The Server prepends the assigned ID to its initial registration plaintext. Later application plaintext has no automatic recipient prefix. The Beacon rejects later records during registration before interpreting their plaintext as a registration binding. This does not change the 153-byte long-lived associated data or CTX commitment layout used for subsequent records.
+The `KexResponse.keyId` field claims the receiving beacon’s assigned routing ID; the response payload has no inner frame, and authenticates implicit sequence `1` plus the pinned numeric server ID. The Server prepends the assigned ID to its initial registration plaintext. Later application plaintext has no automatic recipient prefix. This does not change the 153-byte long-lived associated data or CTX commitment layout used for subsequent records.

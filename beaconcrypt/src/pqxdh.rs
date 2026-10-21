@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: 0BSD
 
-use crate::shared::{DhSecret, KEX_KDF_OUT_LEN, KexDerivedSecret, SignaturePk};
+#[cfg(feature = "server")]
+use crate::shared::SignaturePk;
+use crate::shared::{DhSecret, KEX_KDF_OUT_LEN, KexDerivedSecret};
 use beaconcrypt_core::pqxdh as verified_pqxdh;
 use libsodium_rs::{crypto_kdf, crypto_kem, crypto_kx, crypto_sign};
 use zeroize::Zeroize;
@@ -17,6 +19,7 @@ const _: () =
 const _: () =
 	assert!(crypto_kem::mlkem768::SHAREDSECRETBYTES == verified_pqxdh::SHARED_SECRET_SIZE);
 
+#[cfg(feature = "server")]
 impl SignaturePk for crypto_sign::PublicKey {}
 
 pub(crate) fn shared_secrets(
@@ -68,7 +71,7 @@ pub fn build_associated_data(
 
 #[cfg(all(test, feature = "beacon", feature = "server"))]
 mod tests {
-	use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
+	use beaconcrypt_parse::{InitKex, decode_init};
 	use libsodium_rs::{crypto_kdf, crypto_kem, crypto_kx, crypto_sign};
 
 	use super::{
@@ -77,7 +80,7 @@ mod tests {
 	};
 	use crate::{
 		Beacon, DH_OUT_LEN, ED25519_SEED_SIZE, KDF_STATE_SIZE, ProviderBeacon, ProviderServer,
-		Server, SignType, phase1_capnp,
+		Server, SignType,
 		shared::{DhSecret, KemType, KexDerivedSecret, decode_kem, decode_sign},
 	};
 
@@ -198,15 +201,8 @@ mod tests {
 		assert!(beacon.get_onetime_sk().is_some());
 
 		let serialized = beacon.get_registration_bundle().unwrap();
-		let message =
-			capnp::serialize::read_message(&serialized[..], ReaderOptions::new()).unwrap();
-		let typed = TypedReader::<_, phase1_capnp::init_kex::Owned>::new(message);
-		let registration = typed.get().unwrap();
-		let signed = crypto_sign::verify(
-			registration.get_one_time_key().unwrap(),
-			beacon.identity_pk(),
-		)
-		.unwrap();
+		let registration = decode_init(&serialized).unwrap();
+		let signed = crypto_sign::verify(registration.one_time_key, beacon.identity_pk()).unwrap();
 		assert_eq!(signed[0], u8::from(KemType::X25519));
 		assert_eq!(signed[1], verified_pqxdh::KEY_ROLE_ONE_TIME);
 		assert_eq!(&signed[2..], expected);
@@ -337,35 +333,26 @@ mod tests {
 		let server = Server::new(0, None);
 		let mut beacon = Beacon::new(0, server.identity_pk().as_bytes());
 		let serialized = beacon.get_registration_bundle().unwrap();
-		let message =
-			capnp::serialize::read_message(&serialized[..], ReaderOptions::new()).unwrap();
-		let typed = TypedReader::<_, phase1_capnp::init_kex::Owned>::new(message);
-		let registration = typed.get().unwrap();
+		let registration = decode_init(&serialized).unwrap();
 
-		let identity = registration.get_identity_key().unwrap();
+		let identity = registration.identity_key;
 		assert_eq!(identity[0], u8::from(SignType::Ed25519));
 		assert_eq!(
 			decode_sign(identity, SignType::Ed25519).unwrap(),
 			beacon.identity_pk().as_bytes()
 		);
 
-		let prekey =
-			crypto_sign::verify(registration.get_pre_key().unwrap(), beacon.identity_pk()).unwrap();
+		let prekey = crypto_sign::verify(registration.pre_key, beacon.identity_pk()).unwrap();
 		assert_eq!(prekey[0], u8::from(KemType::X25519));
 		assert_eq!(prekey[1], verified_pqxdh::KEY_ROLE_PREKEY);
 		assert_eq!(&prekey[2..], beacon.get_prekey_pk().unwrap().as_bytes());
 
-		let onetime = crypto_sign::verify(
-			registration.get_one_time_key().unwrap(),
-			beacon.identity_pk(),
-		)
-		.unwrap();
+		let onetime = crypto_sign::verify(registration.one_time_key, beacon.identity_pk()).unwrap();
 		assert_eq!(onetime[0], u8::from(KemType::X25519));
 		assert_eq!(onetime[1], verified_pqxdh::KEY_ROLE_ONE_TIME);
 		assert_eq!(&onetime[2..], beacon.get_onetime_pk().unwrap().as_bytes());
 
-		let pq =
-			crypto_sign::verify(registration.get_pq_key().unwrap(), beacon.identity_pk()).unwrap();
+		let pq = crypto_sign::verify(registration.pq_key, beacon.identity_pk()).unwrap();
 		assert_eq!(pq[0], u8::from(KemType::MlKem768));
 		assert_eq!(
 			decode_kem(&pq, KemType::MlKem768).unwrap(),
@@ -378,14 +365,11 @@ mod tests {
 		let mut server = Server::new(0, None);
 		let mut beacon = Beacon::new(0, server.identity_pk().as_bytes());
 		let serialized = beacon.get_registration_bundle().unwrap();
-		let message =
-			capnp::serialize::read_message(&serialized[..], ReaderOptions::new()).unwrap();
-		let typed = TypedReader::<_, phase1_capnp::init_kex::Owned>::new(message);
-		let registration = typed.get().unwrap();
-		let identity = registration.get_identity_key().unwrap().to_vec();
-		let prekey = registration.get_pre_key().unwrap().to_vec();
-		let onetime = registration.get_one_time_key().unwrap().to_vec();
-		let pq = registration.get_pq_key().unwrap().to_vec();
+		let registration = decode_init(&serialized).unwrap();
+		let identity = registration.identity_key.to_vec();
+		let prekey = registration.pre_key.to_vec();
+		let onetime = registration.one_time_key.to_vec();
+		let pq = registration.pq_key.to_vec();
 
 		for field in ["preKey", "oneTimeKey", "pqKey"] {
 			let mut tampered_prekey = prekey.clone();
@@ -400,14 +384,13 @@ mod tests {
 			let last = selected.len() - 1;
 			selected[last] ^= 1;
 
-			let mut message = TypedBuilder::<phase1_capnp::init_kex::Owned>::new_default();
-			let mut root = message.init_root();
-			root.set_identity_key(&identity);
-			root.set_pre_key(&tampered_prekey);
-			root.set_one_time_key(&tampered_onetime);
-			root.set_pq_key(&tampered_pq);
-			let mut tampered = vec![];
-			capnp::serialize::write_message(&mut tampered, message.borrow_inner()).unwrap();
+			let tampered = crate::wire::encode_init(InitKex {
+				identity_key: &identity,
+				pre_key: &tampered_prekey,
+				one_time_key: &tampered_onetime,
+				pq_key: &tampered_pq,
+			})
+			.unwrap();
 
 			assert!(
 				server.get_shared_secret(&tampered).is_none(),
@@ -423,25 +406,20 @@ mod tests {
 		let server = Server::new(0, None);
 		let mut beacon = Beacon::new(0, server.identity_pk().as_bytes());
 		let serialized = beacon.get_registration_bundle().unwrap();
-		let message =
-			capnp::serialize::read_message(&serialized[..], ReaderOptions::new()).unwrap();
-		let typed = TypedReader::<_, phase1_capnp::init_kex::Owned>::new(message);
-		let registration = typed.get().unwrap();
-		let identity = registration.get_identity_key().unwrap().to_vec();
-		let prekey = registration.get_pre_key().unwrap().to_vec();
-		let onetime = registration.get_one_time_key().unwrap().to_vec();
-		let pq = registration.get_pq_key().unwrap().to_vec();
+		let registration = decode_init(&serialized).unwrap();
+		let identity = registration.identity_key.to_vec();
+		let prekey = registration.pre_key.to_vec();
+		let onetime = registration.one_time_key.to_vec();
+		let pq = registration.pq_key.to_vec();
 
 		for duplicate_prekey in [false, true] {
-			let mut tampered = TypedBuilder::<phase1_capnp::init_kex::Owned>::new_default();
-			let mut root = tampered.init_root();
-			root.set_identity_key(&identity);
-			root.set_pre_key(if duplicate_prekey { &prekey } else { &onetime });
-			root.set_one_time_key(&prekey);
-			root.set_pq_key(&pq);
-			let mut tampered_serialized = vec![];
-			capnp::serialize::write_message(&mut tampered_serialized, tampered.borrow_inner())
-				.unwrap();
+			let tampered_serialized = crate::wire::encode_init(InitKex {
+				identity_key: &identity,
+				pre_key: if duplicate_prekey { &prekey } else { &onetime },
+				one_time_key: &prekey,
+				pq_key: &pq,
+			})
+			.unwrap();
 
 			let mut server = Server::new(0, None);
 			assert!(
@@ -464,21 +442,12 @@ mod tests {
 		let mut server = Server::new(0, None);
 		let mut beacon = Beacon::new(0, server.identity_pk().as_bytes());
 		let serialized = beacon.get_registration_bundle().unwrap();
-		let message =
-			capnp::serialize::read_message(&serialized[..], ReaderOptions::new()).unwrap();
-		let typed = TypedReader::<_, phase1_capnp::init_kex::Owned>::new(message);
-		let registration = typed.get().unwrap();
+		let registration = decode_init(&serialized).unwrap();
 
-		let identity = registration.get_identity_key().unwrap().to_vec();
-		let prekey =
-			crypto_sign::verify(registration.get_pre_key().unwrap(), beacon.identity_pk()).unwrap();
-		let onetime = crypto_sign::verify(
-			registration.get_one_time_key().unwrap(),
-			beacon.identity_pk(),
-		)
-		.unwrap();
-		let pq =
-			crypto_sign::verify(registration.get_pq_key().unwrap(), beacon.identity_pk()).unwrap();
+		let identity = registration.identity_key.to_vec();
+		let prekey = crypto_sign::verify(registration.pre_key, beacon.identity_pk()).unwrap();
+		let onetime = crypto_sign::verify(registration.one_time_key, beacon.identity_pk()).unwrap();
+		let pq = crypto_sign::verify(registration.pq_key, beacon.identity_pk()).unwrap();
 
 		for field in ["preKey", "oneTimeKey", "pqKey"] {
 			let mut wrong_prekey = prekey.clone();
@@ -494,14 +463,13 @@ mod tests {
 			let wrong_prekey = crypto_sign::sign(&wrong_prekey, beacon.identity_sk()).unwrap();
 			let wrong_onetime = crypto_sign::sign(&wrong_onetime, beacon.identity_sk()).unwrap();
 			let wrong_pq = crypto_sign::sign(&wrong_pq, beacon.identity_sk()).unwrap();
-			let mut message = TypedBuilder::<phase1_capnp::init_kex::Owned>::new_default();
-			let mut root = message.init_root();
-			root.set_identity_key(&identity);
-			root.set_pre_key(&wrong_prekey);
-			root.set_one_time_key(&wrong_onetime);
-			root.set_pq_key(&wrong_pq);
-			let mut wrong_type = vec![];
-			capnp::serialize::write_message(&mut wrong_type, message.borrow_inner()).unwrap();
+			let wrong_type = crate::wire::encode_init(InitKex {
+				identity_key: &identity,
+				pre_key: &wrong_prekey,
+				one_time_key: &wrong_onetime,
+				pq_key: &wrong_pq,
+			})
+			.unwrap();
 
 			assert!(
 				server.get_shared_secret(&wrong_type).is_none(),

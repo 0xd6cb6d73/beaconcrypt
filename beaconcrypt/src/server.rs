@@ -10,17 +10,15 @@ use crate::pqxdh::{
 use crate::ratchet::KeyMaterial;
 use crate::ratchet::{
 	RatchetManager, RatchetStatus, decrypt_message_with_ratchet, encrypt_message_with_ratchet,
-	finish_initial_ratchet_kdf,
+	encrypt_registration_message_with_ratchet, finish_initial_ratchet_kdf,
 };
 use crate::shared::{
 	DhSecret, EstablishedRemote, KexDerivedSecret, REGISTRATION_WITNESS, deserialize_server_state,
 	roles, serialize_server_state,
 };
-use crate::{phase1_capnp, phase2_capnp};
 use beaconcrypt_core::pqxdh::{self as verified_pqxdh, start_server_candidate_ratchet_kdf};
-use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
+use beaconcrypt_parse::{KexResponse, decode_init};
 use libsodium_rs::{crypto_kem, crypto_kx, crypto_scalarmult, crypto_sign, ensure_init};
-use std::vec;
 use zeroize::{Zeroize, Zeroizing};
 
 pub struct Server {
@@ -39,6 +37,21 @@ pub struct RegResponse {
 pub struct RegistrationOutput {
 	pub(crate) derived_secret: KexDerivedSecret,
 	pub(crate) control: beaconcrypt_core::pqxdh::PendingServerRegistration,
+}
+
+fn registration_response_len(application_len: usize, assigned_key_id: u64) -> Option<usize> {
+	let ciphertext_len = verified_pqxdh::REGISTRATION_KEY_ID_BINDING_SIZE
+		.checked_add(application_len)?
+		.checked_add(crate::ratchet::MESSAGE_OVERHEAD)?;
+	beaconcrypt_parse::encoded_response_len(
+		[
+			verified_pqxdh::SIGN_PUBLIC_KEY_SIZE,
+			verified_pqxdh::X25519_PUBLIC_KEY_SIZE,
+			verified_pqxdh::MLKEM768_CIPHERTEXT_SIZE,
+			ciphertext_len,
+		],
+		assigned_key_id,
+	)
 }
 
 /// The state effect of one receive attempt.
@@ -207,6 +220,10 @@ impl Server {
 	pub fn ratchet_status(&self, k: u64) -> Option<RatchetStatus> {
 		Some(self.ratchet_manager(k)?.status())
 	}
+	pub(crate) fn registration_response_fits(&self, data: Option<&[u8]>) -> bool {
+		let next_key_id = self.control.last_key_id().saturating_add(1);
+		registration_response_len(data.unwrap_or(REGISTRATION_WITNESS).len(), next_key_id).is_some()
+	}
 	pub(crate) fn ratchet_manager(&self, k: u64) -> Option<&RatchetManager> {
 		self.known_ids.get(&k).map(EstablishedRemote::ratchet)
 	}
@@ -331,19 +348,16 @@ impl Server {
 impl ProviderServer for Server {
 	fn get_shared_secret(&mut self, buffer: &[u8]) -> Option<RegistrationOutput> {
 		let control = self.control;
-		let reader = capnp::serialize::read_message(buffer, ReaderOptions::new()).ok()?;
-		let typed_reader = TypedReader::<_, phase1_capnp::init_kex::Owned>::new(reader);
-		let registration = typed_reader.get().ok()?;
+		let registration = decode_init(buffer)?;
 		let encoded_identity: [u8; verified_pqxdh::ENCODED_SIGN_PUBLIC_KEY_SIZE] =
-			registration.get_identity_key().ok()?.try_into().ok()?;
+			registration.identity_key.try_into().ok()?;
 		if encoded_identity[0] != verified_pqxdh::SIGN_TYPE_ED25519 {
 			return None;
 		}
 		let remote_id = crypto_sign::PublicKey::from_bytes(&encoded_identity[1..]).ok()?;
-		let pq_verified = crypto_sign::verify(registration.get_pq_key().ok()?, &remote_id)?;
-		let prekey_verified = crypto_sign::verify(registration.get_pre_key().ok()?, &remote_id)?;
-		let onetime_verified =
-			crypto_sign::verify(registration.get_one_time_key().ok()?, &remote_id)?;
+		let pq_verified = crypto_sign::verify(registration.pq_key, &remote_id)?;
+		let prekey_verified = crypto_sign::verify(registration.pre_key, &remote_id)?;
+		let onetime_verified = crypto_sign::verify(registration.one_time_key, &remote_id)?;
 		let init_kex = verified_pqxdh::InitKex::from_encoded(
 			encoded_identity,
 			prekey_verified.as_slice().try_into().ok()?,
@@ -427,11 +441,13 @@ impl ProviderServer for Server {
 		data: Option<&[u8]>,
 	) -> Option<RegResponse> {
 		let control = self.control;
+		let plaintext = data.unwrap_or(REGISTRATION_WITNESS);
+		let next_key_id = verified_pqxdh::server_next_key_id(control).ok()?;
+		registration_response_len(plaintext.len(), next_key_id)?;
 		let RegistrationOutput {
 			derived_secret,
 			control: pending,
 		} = reg_out;
-		let next_key_id = verified_pqxdh::server_next_key_id(control).ok()?;
 		let key_id_availability = if self.known_ids.contains_key(&next_key_id) {
 			verified_pqxdh::KeyIdAvailability::Occupied
 		} else {
@@ -456,7 +472,6 @@ impl ProviderServer for Server {
 		let pending = start_server_candidate_ratchet_kdf(&candidate, derived_secret.as_array());
 		let mut ratchet = RatchetManager::from_kernel(finish_initial_ratchet_kdf(pending));
 		let associated_data = *candidate.associated_data();
-		let plaintext = data.unwrap_or(REGISTRATION_WITNESS);
 		if plaintext.is_empty() {
 			return None;
 		}
@@ -468,7 +483,7 @@ impl ProviderServer for Server {
 			.ok()?;
 		authenticated_plaintext.extend_from_slice(candidate.key_id_binding().as_bytes());
 		authenticated_plaintext.extend_from_slice(plaintext);
-		let encrypted = encrypt_message_with_ratchet(
+		let encrypted = encrypt_registration_message_with_ratchet(
 			&authenticated_plaintext,
 			remote_kid,
 			candidate.server_identity_key_id(),
@@ -477,15 +492,13 @@ impl ProviderServer for Server {
 		);
 		authenticated_plaintext.zeroize();
 		let encrypted = encrypted?;
-		let mut msg = TypedBuilder::<phase2_capnp::kex_response::Owned>::new_default();
-		let mut bundle = msg.init_root();
-		bundle.set_key_id(remote_kid);
-		bundle.set_ephemeral_key(candidate.ephemeral_public_key());
-		bundle.set_identity_key(candidate.server_identity_public_key());
-		bundle.set_kem_cipher_text(candidate.kem_ciphertext());
-		bundle.set_app_cipher_text(&encrypted.ciphertext);
-		let mut buffer = vec![];
-		capnp::serialize_packed::write_message(&mut buffer, msg.borrow_inner()).ok()?;
+		let buffer = crate::wire::encode_response(KexResponse {
+			key_id: remote_kid,
+			ephemeral_key: candidate.ephemeral_public_key(),
+			identity_key: candidate.server_identity_public_key(),
+			kem_cipher_text: candidate.kem_ciphertext(),
+			app_cipher_text: &encrypted.ciphertext,
+		})?;
 		let (next_control, established_peer) = verified_pqxdh::server_commit(candidate);
 		debug_assert_eq!(established_peer.key_id, remote_kid);
 		debug_assert_eq!(established_peer.associated_data, associated_data);
@@ -529,5 +542,35 @@ impl ProviderServer for Server {
 					.expect("an accepted receive update must be serializable as JSON")
 			})
 			.into_option()
+	}
+}
+
+#[cfg(test)]
+mod size_tests {
+	use super::*;
+	use beaconcrypt_parse::MAX_MESSAGE_SIZE;
+
+	#[test]
+	fn registration_limit_includes_binding_raw_ciphertext_and_outer_response() {
+		// Near the limit, the payload contributes 88 bytes beyond the application
+		// plaintext (8 binding + 80 authentication), and the outer record adds 1,168.
+		let maximum_application = MAX_MESSAGE_SIZE - 1_256;
+		assert_eq!(
+			registration_response_len(maximum_application, 1),
+			Some(MAX_MESSAGE_SIZE)
+		);
+		assert_eq!(registration_response_len(maximum_application + 1, 1), None);
+
+		// The full-width assigned identifier adds eight bytes; the sender is implicit.
+		let maximum_application = MAX_MESSAGE_SIZE - 1_264;
+		assert_eq!(
+			registration_response_len(maximum_application, u64::MAX),
+			Some(MAX_MESSAGE_SIZE)
+		);
+		assert_eq!(
+			registration_response_len(maximum_application + 1, u64::MAX),
+			None
+		);
+		assert_eq!(registration_response_len(usize::MAX, 1), None);
 	}
 }

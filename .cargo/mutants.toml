@@ -7,9 +7,11 @@ test_workspace = true
 gitignore = true
 
 # These feature-gated adapters are tested through Go and Python rather than cargo test.
-# cargo-mutants does not evaluate cfg predicates, so default-feature runs would otherwise report
-# mutations in these files as missed without compiling them.
+# cargo-mutants does not evaluate cfg predicates, so default-feature runs would otherwise report mutations in these files as missed without compiling them.
 exclude_globs = [
+	# Imported EverCDDL output is checked by reproducible generation and codec tests.
+	# Keep all handwritten beaconcrypt-parse adapters in the mutation suite.
+	"beaconcrypt-parse/src/generated/**",
 	"beaconcrypt/src/cbinds.rs",
 	"beaconcrypt/src/pybinds.rs",
 ]

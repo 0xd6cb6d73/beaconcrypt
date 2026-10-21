@@ -1,5 +1,7 @@
 use beaconcrypt::*;
-use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
+use beaconcrypt_parse::{CryptoFrame, decode_frame};
+
+mod common;
 
 const SERVER_ID: u64 = 7;
 
@@ -16,25 +18,16 @@ fn register(server: &mut Server) -> (Beacon, u64) {
 }
 
 fn fields(raw: &[u8]) -> (u64, u64, Vec<u8>) {
-	let reader = capnp::serialize::read_message(raw, ReaderOptions::new()).unwrap();
-	let typed = TypedReader::<_, cryptoframe_capnp::crypto_frame::Owned>::new(reader);
-	let frame = typed.get().unwrap();
-	(
-		frame.get_seq(),
-		frame.get_key_id(),
-		frame.get_cipher_text().unwrap().to_vec(),
-	)
+	let frame = decode_frame(raw).unwrap();
+	(frame.seq, frame.key_id, frame.cipher_text.to_vec())
 }
 
 fn frame(sequence: u64, sender: u64, payload: &[u8]) -> Vec<u8> {
-	let mut message = TypedBuilder::<cryptoframe_capnp::crypto_frame::Owned>::new_default();
-	let mut frame = message.init_root();
-	frame.set_seq(sequence);
-	frame.set_key_id(sender);
-	frame.set_cipher_text(payload);
-	let mut result = Vec::new();
-	capnp::serialize::write_message(&mut result, message.borrow_inner()).unwrap();
-	result
+	common::encode_frame(CryptoFrame {
+		seq: sequence,
+		key_id: sender,
+		cipher_text: payload,
+	})
 }
 
 fn invalid_variants(raw: &[u8]) -> Vec<Vec<u8>> {

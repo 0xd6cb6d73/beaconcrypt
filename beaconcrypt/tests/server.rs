@@ -1,14 +1,75 @@
 use beaconcrypt::*;
-use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
+use beaconcrypt_parse::{CryptoFrame, decode_frame};
+
 use libsodium_rs::crypto_sign;
 use std::sync::{Arc, Barrier, Mutex};
 use std::thread;
+
+mod common;
 
 const SNAPSHOT_HEADER_SIZE: usize = 16 + 2 + 1 + 1 + 32 + 8 + 32 + 8;
 const SNAPSHOT_PARENT_DIGEST_OFFSET: usize = 16 + 2 + 1 + 1 + 32 + 8;
 const SNAPSHOT_PAYLOAD_LENGTH_OFFSET: usize = SNAPSHOT_HEADER_SIZE - 8;
 const CRYPTO_FRAME_COMMITMENT_SIZE: usize = 64;
 const RECEIVE_MAX_GAP: u64 = 50;
+
+#[test]
+fn boxed_snapshot_store_preserves_commits_and_trusted_snapshot_reads() {
+	let store = MemoryStore::default();
+	let lineage = SnapshotLineage::from_bytes([0x67; 32]);
+	let boxed: Box<dyn SnapshotStore + Send> = Box::new(store.clone());
+	let server =
+		PersistentServer::create_with_lineage(19, Some(&[0x68; 32]), boxed, lineage).unwrap();
+	let head = server.head();
+	assert_eq!(head.lineage(), lineage);
+	assert_eq!(head.generation(), 0);
+	assert_eq!(
+		SnapshotHead::from_parts(head.lineage(), head.generation(), head.digest()),
+		head
+	);
+	assert_eq!(
+		server.snapshot().unwrap().as_bytes(),
+		store.snapshot_bytes()
+	);
+	assert_eq!(server.snapshot().unwrap().head().unwrap(), head);
+	assert_eq!(store.cas_attempts(), 1);
+
+	// A missing or malformed store result is never returned as a usable checkpoint.
+	let valid = store.snapshot_bytes();
+	store.state.lock().unwrap().snapshot = None;
+	assert_eq!(
+		server.snapshot().err(),
+		Some(PersistenceError::MissingSnapshot)
+	);
+	store.state.lock().unwrap().snapshot = Some(vec![0x69]);
+	assert_eq!(
+		server.snapshot().err(),
+		Some(PersistenceError::InvalidSnapshot)
+	);
+	store.state.lock().unwrap().snapshot = Some(valid);
+
+	// Activation by another owner makes reads from the previous owner stale without mutating it.
+	let boxed: Box<dyn SnapshotStore + Send> = Box::new(store.clone());
+	let active = PersistentServer::restore(boxed).unwrap();
+	assert_eq!(active.head().generation(), 1);
+	assert_eq!(
+		active.snapshot().unwrap().as_bytes(),
+		store.snapshot_bytes()
+	);
+	assert_eq!(
+		server.snapshot().err(),
+		Some(PersistenceError::StaleGeneration)
+	);
+	assert_eq!(server.head(), head);
+	assert!(!server.is_poisoned());
+
+	let boxed: Box<dyn SnapshotStore + Send> = Box::new(store.clone());
+	assert_eq!(
+		PersistentServer::create(19, None, boxed).err(),
+		Some(PersistenceError::StaleGeneration)
+	);
+	assert_eq!(store.trusted_head(), Some(active.head()));
+}
 
 #[derive(Default)]
 struct MemoryStoreState {
@@ -174,22 +235,16 @@ fn rewrite_crypto_frame(
 	serialized: &[u8],
 	mutate: impl FnOnce(&mut u64, &mut u64, &mut Vec<u8>),
 ) -> Vec<u8> {
-	let message = capnp::serialize::read_message(serialized, ReaderOptions::new()).unwrap();
-	let typed = TypedReader::<_, cryptoframe_capnp::crypto_frame::Owned>::new(message);
-	let frame = typed.get().unwrap();
-	let mut seq = frame.get_seq();
-	let mut kid = frame.get_key_id();
-	let mut ciphertext = frame.get_cipher_text().unwrap().to_vec();
+	let frame = decode_frame(serialized).unwrap();
+	let mut seq = frame.seq;
+	let mut kid = frame.key_id;
+	let mut ciphertext = frame.cipher_text.to_vec();
 	mutate(&mut seq, &mut kid, &mut ciphertext);
-
-	let mut message = TypedBuilder::<cryptoframe_capnp::crypto_frame::Owned>::new_default();
-	let mut corrupted = message.init_root();
-	corrupted.set_seq(seq);
-	corrupted.set_key_id(kid);
-	corrupted.set_cipher_text(&ciphertext);
-	let mut serialized = Vec::new();
-	capnp::serialize::write_message(&mut serialized, message.borrow_inner()).unwrap();
-	serialized
+	common::encode_frame(CryptoFrame {
+		seq,
+		key_id: kid,
+		cipher_text: &ciphertext,
+	})
 }
 
 fn corrupt_crypto_frame_ciphertext(serialized: &[u8]) -> Vec<u8> {

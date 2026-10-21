@@ -2,15 +2,14 @@
 
 use crate::pqxdh::{AD_SIZE, derive_root_key_input, shared_secrets, zeroize_shared_secrets};
 use crate::ratchet::{
-	RatchetManager, RatchetStatus, decrypt_message_with_ratchet, encrypt_message_with_ratchet,
+	RatchetManager, RatchetStatus, decrypt_message_with_ratchet,
+	decrypt_registration_message_with_ratchet, encrypt_message_with_ratchet,
 	finish_initial_ratchet_kdf,
 };
 use crate::shared::DhSecret;
-use crate::{phase1_capnp, phase2_capnp};
 use beaconcrypt_core::pqxdh::{self as verified_pqxdh, start_beacon_candidate_ratchet_kdf};
-use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
+use beaconcrypt_parse::{InitKex, decode_response};
 use libsodium_rs::{crypto_kem, crypto_kx, crypto_scalarmult, crypto_sign, ensure_init};
-use std::vec;
 
 enum BeaconState {
 	Fresh {
@@ -343,18 +342,16 @@ impl ProviderBeacon for Beacon {
 				one_time_public_key: onetime_public,
 			},
 		);
-		let mut msg = TypedBuilder::<phase1_capnp::init_kex::Owned>::new_default();
-		let mut bundle = msg.init_root();
-		bundle.set_identity_key(started.message.identity_key());
 		let prekey_sig = crypto_sign::sign(started.message.prekey(), self.identity_sk()).ok()?;
-		bundle.set_pre_key(&prekey_sig);
 		let onetime_sig =
 			crypto_sign::sign(started.message.one_time_key(), self.identity_sk()).ok()?;
-		bundle.set_one_time_key(&onetime_sig);
 		let pq_sig = crypto_sign::sign(started.message.pq_key(), self.identity_sk()).ok()?;
-		bundle.set_pq_key(&pq_sig);
-		let mut buffer = vec![];
-		capnp::serialize::write_message(&mut buffer, msg.borrow_inner()).ok()?;
+		let buffer = crate::wire::encode_init(InitKex {
+			identity_key: started.message.identity_key(),
+			pre_key: &prekey_sig,
+			one_time_key: &onetime_sig,
+			pq_key: &pq_sig,
+		})?;
 
 		let fallback = BeaconState::Aborted {
 			control: verified_pqxdh::beacon_abort_fresh(control),
@@ -419,16 +416,11 @@ impl ProviderBeacon for Beacon {
 				),
 				_ => return None,
 			};
-			let reader = capnp::serialize_packed::read_message(bytes, ReaderOptions::new()).ok()?;
-			let typed_reader = TypedReader::<_, phase2_capnp::kex_response::Owned>::new(reader);
-			let response = typed_reader.get().ok()?;
+			let response = decode_response(bytes)?;
 			let kem_ciphertext =
-				crypto_kem::mlkem768::Ciphertext::from_bytes(response.get_kem_cipher_text().ok()?)
-					.ok()?;
-			let ephemeral =
-				crypto_kx::PublicKey::from_bytes(response.get_ephemeral_key().ok()?).ok()?;
-			let response_server =
-				crypto_sign::PublicKey::from_bytes(response.get_identity_key().ok()?).ok()?;
+				crypto_kem::mlkem768::Ciphertext::from_bytes(response.kem_cipher_text).ok()?;
+			let ephemeral = crypto_kx::PublicKey::from_bytes(response.ephemeral_key).ok()?;
+			let response_server = crypto_sign::PublicKey::from_bytes(response.identity_key).ok()?;
 			let server_kex_id = crypto_sign::ed25519_pk_to_curve25519(&response_server).ok()?;
 			let beacon_kex_id = crypto_sign::ed25519_sk_to_curve25519(self.identity_sk()).ok()?;
 			let kem_shared = crypto_kem::mlkem768::decapsulate(&kem_ciphertext, pq_secret).ok()?;
@@ -449,7 +441,7 @@ impl ProviderBeacon for Beacon {
 					.into();
 			let mut finish_inputs = verified_pqxdh::BeaconFinishInputs {
 				response_server_identity: *response_server.as_bytes(),
-				assigned_key_id: response.get_key_id(),
+				assigned_key_id: response.key_id,
 				shared_secrets: shared_secrets(dh1, dh2, dh3, dh4, &kem_shared)?,
 			};
 			let prepared = verified_pqxdh::beacon_prepare_finish(control, &finish_inputs);
@@ -459,8 +451,8 @@ impl ProviderBeacon for Beacon {
 			let pending = start_beacon_candidate_ratchet_kdf(&candidate, derived_secret.as_array());
 			let mut ratchet = RatchetManager::from_kernel(finish_initial_ratchet_kdf(pending));
 			let associated_data = *candidate.associated_data();
-			let decrypted = decrypt_message_with_ratchet(
-				response.get_app_cipher_text().ok()?,
+			let decrypted = decrypt_registration_message_with_ratchet(
+				response.app_cipher_text,
 				candidate.server_key_id(),
 				&associated_data,
 				&mut ratchet,
@@ -546,23 +538,16 @@ mod tests {
 			let frame =
 				encrypt_message_with_ratchet(&payload, original.kid, 0, &ad, &mut sender).unwrap();
 			assert_eq!(sender.status().send_sequence(), 1);
-			let reader = capnp::serialize_packed::read_message(
-				original.serialized.as_slice(),
-				ReaderOptions::new(),
-			)
+			let raw_frame = beaconcrypt_parse::decode_frame(&frame.ciphertext).unwrap();
+			let response = decode_response(&original.serialized).unwrap();
+			let serialized = crate::wire::encode_response(beaconcrypt_parse::KexResponse {
+				identity_key: response.identity_key,
+				ephemeral_key: response.ephemeral_key,
+				kem_cipher_text: response.kem_cipher_text,
+				key_id: original.kid,
+				app_cipher_text: raw_frame.cipher_text,
+			})
 			.unwrap();
-			let typed = TypedReader::<_, phase2_capnp::kex_response::Owned>::new(reader);
-			let response = typed.get().unwrap();
-			let mut builder = TypedBuilder::<phase2_capnp::kex_response::Owned>::new_default();
-			let mut changed = builder.init_root();
-			changed.set_identity_key(response.get_identity_key().unwrap());
-			changed.set_ephemeral_key(response.get_ephemeral_key().unwrap());
-			changed.set_kem_cipher_text(response.get_kem_cipher_text().unwrap());
-			changed.set_key_id(original.kid);
-			changed.set_app_cipher_text(&frame);
-			let mut serialized = Vec::new();
-			capnp::serialize_packed::write_message(&mut serialized, builder.borrow_inner())
-				.unwrap();
 			let opened = beacon.finish_registration(&serialized);
 			if case == 9 {
 				assert_eq!(opened, Some(vec![0x7e]));

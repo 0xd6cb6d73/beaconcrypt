@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: 0BSD
 
-use crate::cryptoframe_capnp;
 use crate::shared::{Decrypted, Encrypted};
 #[cfg(test)]
 use crate::shared::{SecretArr, roles, systems};
@@ -14,13 +13,11 @@ use beaconcrypt_core::pqxdh::{
 #[cfg(test)]
 use beaconcrypt_core::pqxdh::{RatchetInitialization, start_initial_ratchet_kdf};
 use beaconcrypt_core::ratchet as verified_ratchet;
-use beaconcrypt_core::record::{self as verified_record, OpenFrameContext, finish_frame_read};
-use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
-use capnp::serialize::OwnedSegments;
+use beaconcrypt_core::record::{self as verified_record, OpenFrameContext};
+use beaconcrypt_parse::{CryptoFrame, decode_frame};
 use libsodium_rs::utils::memcmp;
 use libsodium_rs::{crypto_aead, crypto_generichash, crypto_kdf};
 use std::ops::{Deref, DerefMut};
-use std::vec;
 use zeroize::{Zeroize, Zeroizing};
 
 pub const KDF_STATE_SIZE: usize = 32usize;
@@ -345,20 +342,14 @@ impl RatchetManager {
 }
 
 /// Decode exactly one complete message. Trailing bytes, including a second valid
-/// frame, are rejected before routing or touching a ratchet. Cap'n Proto may have
-/// multiple encodings of the same fields; this is framing, not canonicalization.
-fn decode_crypto_frame(
-	data: &[u8],
-) -> Option<TypedReader<OwnedSegments, cryptoframe_capnp::crypto_frame::Owned>> {
-	let mut remaining = data;
-	let reader = capnp::serialize::read_message(&mut remaining, ReaderOptions::new()).ok()?;
-	let reader = finish_frame_read(remaining, reader)?;
-	Some(TypedReader::new(reader))
+/// frame, are rejected before routing or touching a ratchet.
+fn decode_crypto_frame(data: &[u8]) -> Option<CryptoFrame<'_>> {
+	decode_frame(data)
 }
 
 #[cfg(feature = "server")]
 pub(crate) fn encrypted_frame_sender(data: &[u8]) -> Option<u64> {
-	Some(decode_crypto_frame(data)?.get().ok()?.get_key_id())
+	Some(decode_crypto_frame(data)?.key_id)
 }
 
 struct SealFrameContext<'a> {
@@ -366,6 +357,7 @@ struct SealFrameContext<'a> {
 	target_kid: u64,
 	sender_kid: u64,
 	associated_data: &'a [u8; AD_SIZE],
+	frame_encoding: bool,
 }
 
 fn seal_frame(
@@ -391,13 +383,15 @@ fn seal_frame(
 	)?;
 	plaintext.append(&mut tag);
 	plaintext.append(&mut commitment);
-	let mut t_builder = TypedBuilder::<cryptoframe_capnp::crypto_frame::Owned>::new_default();
-	let mut builder: cryptoframe_capnp::crypto_frame::Builder<'_> = t_builder.init_root();
-	builder.set_cipher_text(&plaintext);
-	builder.set_seq(key_seq);
-	builder.set_key_id(context.sender_kid);
-	let mut buffer = vec![];
-	capnp::serialize::write_message(&mut buffer, t_builder.borrow_inner()).ok()?;
+	let buffer = if context.frame_encoding {
+		crate::wire::encode_frame(CryptoFrame {
+			cipher_text: &plaintext,
+			seq: key_seq,
+			key_id: context.sender_kid,
+		})?
+	} else {
+		plaintext
+	};
 	Some(Encrypted {
 		ciphertext: buffer,
 		key_id: context.target_kid,
@@ -418,14 +412,56 @@ pub(crate) fn encrypt_message_with_ratchet(
 	associated_data: &[u8; AD_SIZE],
 	ratchet: &mut RatchetManager,
 ) -> Option<Encrypted> {
+	encrypt_with_ratchet(
+		bytes,
+		target_kid,
+		sender_kid,
+		associated_data,
+		ratchet,
+		true,
+	)
+}
+
+/// Seal the initial response payload directly; its outer record supplies framing.
+#[cfg(feature = "server")]
+pub(crate) fn encrypt_registration_message_with_ratchet(
+	bytes: &[u8],
+	target_kid: u64,
+	sender_kid: u64,
+	associated_data: &[u8; AD_SIZE],
+	ratchet: &mut RatchetManager,
+) -> Option<Encrypted> {
+	encrypt_with_ratchet(
+		bytes,
+		target_kid,
+		sender_kid,
+		associated_data,
+		ratchet,
+		false,
+	)
+}
+
+fn encrypt_with_ratchet(
+	bytes: &[u8],
+	target_kid: u64,
+	sender_kid: u64,
+	associated_data: &[u8; AD_SIZE],
+	ratchet: &mut RatchetManager,
+	frame_encoding: bool,
+) -> Option<Encrypted> {
 	if bytes.is_empty() {
 		return None;
+	}
+	if frame_encoding {
+		let sequence = ratchet.status().send_sequence().checked_add(1)?;
+		crate::wire::frame_len(bytes.len(), sequence, sender_kid)?;
 	}
 	let context = SealFrameContext {
 		bytes,
 		target_kid,
 		sender_kid,
 		associated_data,
+		frame_encoding,
 	};
 	let kernel = ratchet.refined.take();
 	let pending = match verified_ratchet::begin_send(kernel, context) {
@@ -505,15 +541,33 @@ pub(crate) fn decrypt_message_with_ratchet(
 	if data.is_empty() {
 		return None;
 	}
-	let typed_reader = decode_crypto_frame(data)?;
-	let frame = typed_reader.get().ok()?;
-	let kid = frame.get_key_id();
+	let frame = decode_crypto_frame(data)?;
+	let kid = frame.key_id;
 	if kid != expected_sender_kid {
 		return None;
 	}
-	let ciphertext = frame.get_cipher_text().ok()?;
+	decrypt_payload_with_ratchet(frame.cipher_text, frame.seq, kid, associated_data, ratchet)
+}
+
+/// Registration implicitly uses sequence one and the already pinned server ID.
+#[cfg(feature = "beacon")]
+pub(crate) fn decrypt_registration_message_with_ratchet(
+	ciphertext: &[u8],
+	sender_kid: u64,
+	associated_data: &[u8; AD_SIZE],
+	ratchet: &mut RatchetManager,
+) -> Option<Decrypted> {
+	decrypt_payload_with_ratchet(ciphertext, 1, sender_kid, associated_data, ratchet)
+}
+
+fn decrypt_payload_with_ratchet(
+	ciphertext: &[u8],
+	key_seq: u64,
+	kid: u64,
+	associated_data: &[u8; AD_SIZE],
+	ratchet: &mut RatchetManager,
+) -> Option<Decrypted> {
 	let context = OpenFrameContext::from_frame(ciphertext, associated_data, kid)?;
-	let key_seq = frame.get_seq();
 	let kernel = ratchet.refined.take();
 	let mut effect = verified_ratchet::begin_receive(kernel, key_seq, context);
 	loop {
@@ -581,6 +635,7 @@ mod raw_receive_tests {
 			target_kid: 9,
 			sender_kid: 7,
 			associated_data: &associated_data,
+			frame_encoding: true,
 		};
 		let verified_ratchet::SendStart::SendKdfRequested(pending) =
 			verified_ratchet::begin_send(sender.refined.take(), context)

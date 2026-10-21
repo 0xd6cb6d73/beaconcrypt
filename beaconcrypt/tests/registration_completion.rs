@@ -1,5 +1,7 @@
 use beaconcrypt::*;
-use capnp::message::{ReaderOptions, TypedBuilder, TypedReader};
+use beaconcrypt_parse::{KexResponse, decode_frame, decode_response};
+
+mod common;
 
 const SERVER_KID: u64 = 0;
 
@@ -14,22 +16,20 @@ fn pending() -> (Server, Beacon, RegResponse) {
 	(server, beacon, response)
 }
 
+fn response_with_ciphertext(response: &RegResponse, ciphertext: &[u8], assigned: u64) -> Vec<u8> {
+	let original = decode_response(&response.serialized).unwrap();
+	common::encode_response(KexResponse {
+		identity_key: original.identity_key,
+		ephemeral_key: original.ephemeral_key,
+		kem_cipher_text: original.kem_cipher_text,
+		key_id: assigned,
+		app_cipher_text: ciphertext,
+	})
+}
+
 fn response_with_frame(response: &RegResponse, frame: &[u8], assigned: u64) -> Vec<u8> {
-	let reader =
-		capnp::serialize_packed::read_message(response.serialized.as_slice(), ReaderOptions::new())
-			.unwrap();
-	let typed = TypedReader::<_, phase2_capnp::kex_response::Owned>::new(reader);
-	let original = typed.get().unwrap();
-	let mut builder = TypedBuilder::<phase2_capnp::kex_response::Owned>::new_default();
-	let mut rewritten = builder.init_root();
-	rewritten.set_identity_key(original.get_identity_key().unwrap());
-	rewritten.set_ephemeral_key(original.get_ephemeral_key().unwrap());
-	rewritten.set_kem_cipher_text(original.get_kem_cipher_text().unwrap());
-	rewritten.set_key_id(assigned);
-	rewritten.set_app_cipher_text(frame);
-	let mut serialized = vec![];
-	capnp::serialize_packed::write_message(&mut serialized, builder.borrow_inner()).unwrap();
-	serialized
+	let ciphertext = decode_frame(frame).unwrap().cipher_text;
+	response_with_ciphertext(response, ciphertext, assigned)
 }
 
 fn bound_payload(assigned: u64, plaintext: &[u8]) -> Vec<u8> {
@@ -116,23 +116,11 @@ fn registration_rejects_later_invalid_completions_and_aborts() {
 			),
 		};
 		let (_, target) = send_until(&mut server, original.kid, sequence, &payload);
-		let mut frame = target.to_vec();
+		let mut ciphertext = decode_frame(&target).unwrap().cipher_text.to_vec();
 		if invalid == 4 {
-			let reader =
-				capnp::serialize::read_message(frame.as_slice(), ReaderOptions::new()).unwrap();
-			let typed = TypedReader::<_, cryptoframe_capnp::crypto_frame::Owned>::new(reader);
-			let original_frame = typed.get().unwrap();
-			let mut ciphertext = original_frame.get_cipher_text().unwrap().to_vec();
 			ciphertext[0] ^= 1;
-			let mut builder = TypedBuilder::<cryptoframe_capnp::crypto_frame::Owned>::new_default();
-			let mut changed = builder.init_root();
-			changed.set_seq(original_frame.get_seq());
-			changed.set_key_id(original_frame.get_key_id());
-			changed.set_cipher_text(&ciphertext);
-			frame.clear();
-			capnp::serialize::write_message(&mut frame, builder.borrow_inner()).unwrap();
 		}
-		let candidate = response_with_frame(&original, &frame, assigned);
+		let candidate = response_with_ciphertext(&original, &ciphertext, assigned);
 		assert!(
 			beacon.finish_registration(&candidate).is_none(),
 			"invalid case {invalid}"
@@ -227,40 +215,69 @@ fn established_beacon_still_accepts_out_of_order_records_and_rejects_replays() {
 }
 
 #[test]
-fn registration_rejects_zero_sequence_malformed_and_unframed_input() {
+fn registration_rejects_frame_wrappers_malformed_bytes_and_plaintext() {
 	for kind in 0..3 {
-		let (mut server, mut beacon, original) = pending();
-		let (_, target) = send_until(
-			&mut server,
-			original.kid,
-			3,
-			&bound_payload(original.kid, b"valid nonempty application"),
-		);
-		let frame = match kind {
-			0 => {
-				let reader =
-					capnp::serialize::read_message(&target[..], ReaderOptions::new()).unwrap();
-				let typed = TypedReader::<_, cryptoframe_capnp::crypto_frame::Owned>::new(reader);
-				let original_frame = typed.get().unwrap();
-				let mut builder =
-					TypedBuilder::<cryptoframe_capnp::crypto_frame::Owned>::new_default();
-				let mut changed = builder.init_root();
-				changed.set_seq(0);
-				changed.set_key_id(original_frame.get_key_id());
-				changed.set_cipher_text(original_frame.get_cipher_text().unwrap());
-				let mut frame = vec![];
-				capnp::serialize::write_message(&mut frame, builder.borrow_inner()).unwrap();
-				frame
-			}
+		let (_server, mut beacon, original) = pending();
+		let ciphertext = match kind {
+			0 => common::encode_frame(beaconcrypt_parse::CryptoFrame {
+				seq: 1,
+				key_id: SERVER_KID,
+				cipher_text: decode_response(&original.serialized)
+					.unwrap()
+					.app_cipher_text,
+			}),
 			1 => vec![255; 3],
 			_ => bound_payload(original.kid, b"unframed plaintext"),
 		};
-		let candidate = response_with_frame(&original, &frame, original.kid);
+		let candidate = response_with_ciphertext(&original, &ciphertext, original.kid);
 		assert!(
 			beacon.finish_registration(&candidate).is_none(),
 			"kind {kind}"
 		);
 		assert!(beacon.ratchet_status().is_none());
 		assert!(beacon.finish_registration(&original.serialized).is_none());
+	}
+}
+
+#[test]
+fn registration_rejects_trailing_bytes_in_outer_response_and_ciphertext_and_aborts() {
+	for in_ciphertext in [false, true] {
+		for suffix_kind in 0..3 {
+			let (server, mut beacon, original) = pending();
+			let response = decode_response(&original.serialized).unwrap();
+			let input = if in_ciphertext {
+				response.app_cipher_text
+			} else {
+				&original.serialized
+			};
+			let suffix = match suffix_kind {
+				0 => &[0u8][..],
+				1 => &[0u8; 8][..],
+				_ => input,
+			};
+			let mut malformed = input.to_vec();
+			malformed.extend_from_slice(suffix);
+			let candidate = if in_ciphertext {
+				response_with_ciphertext(&original, &malformed, original.kid)
+			} else {
+				malformed
+			};
+			let server_status = server.ratchet_status(original.kid);
+			assert!(beacon.finish_registration(&candidate).is_none());
+			assert!(beacon.ratchet_status().is_none());
+			assert!(beacon.associated_data().is_none());
+			assert_eq!(beacon.identity_key_kid(), SERVER_KID);
+			assert!(beacon.get_prekey_sk().is_none());
+			assert!(beacon.get_onetime_sk().is_none());
+			assert!(beacon.pq_sk().is_none());
+			assert!(beacon.finish_registration(&original.serialized).is_none());
+			assert!(
+				beacon
+					.encrypt_message(b"must remain unestablished")
+					.is_none()
+			);
+			assert!(beacon.get_registration_bundle().is_none());
+			assert_eq!(server.ratchet_status(original.kid), server_status);
+		}
 	}
 }

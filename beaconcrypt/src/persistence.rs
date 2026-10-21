@@ -48,6 +48,20 @@ pub struct SnapshotHead {
 }
 
 impl SnapshotHead {
+	/// Reconstruct a store's trusted comparison value without authenticating its provenance.
+	/// Callers must obtain these fields from their authoritative storage domain.
+	pub const fn from_parts(
+		lineage: SnapshotLineage,
+		generation: u64,
+		digest: [u8; DIGEST_SIZE],
+	) -> Self {
+		Self {
+			lineage,
+			generation,
+			digest,
+		}
+	}
+
 	pub const fn lineage(self) -> SnapshotLineage {
 		self.lineage
 	}
@@ -255,13 +269,26 @@ pub trait SnapshotStore {
 	) -> bool;
 }
 
-/// In-memory checkpoint storage used by language bindings that cannot supply a Rust
-/// [`SnapshotStore`] implementation.
+impl<S: SnapshotStore + ?Sized> SnapshotStore for Box<S> {
+	fn load(&self) -> Option<ServerSnapshot> {
+		(**self).load()
+	}
+
+	fn compare_and_swap(
+		&mut self,
+		expected: Option<&SnapshotHead>,
+		replacement: &ServerSnapshot,
+	) -> bool {
+		(**self).compare_and_swap(expected, replacement)
+	}
+}
+
+/// In-memory storage for compatibility constructors that export checkpoints for manual saving.
 ///
 /// Importing bytes into this store explicitly trusts them as the current authoritative state.
 /// It provides in-process CAS fencing, but exporting its bytes is not a durable commit and cannot
-/// detect rollback to an older exported checkpoint. Production Rust deployments that need crash
-/// durability or multi-owner coordination must provide their own conforming [`SnapshotStore`].
+/// detect rollback to an older exported checkpoint. Deployments that need crash durability or
+/// coordination between owners must supply a conforming [`SnapshotStore`] through their language's store-backed API.
 #[derive(Default)]
 #[cfg(any(feature = "cbinds", feature = "pybinds"))]
 pub(crate) struct BindingSnapshotStore {
@@ -278,10 +305,6 @@ impl BindingSnapshotStore {
 			snapshot: Some(Zeroizing::new(snapshot.as_bytes().to_vec())),
 			head: Some(head),
 		})
-	}
-
-	pub(crate) fn as_bytes(&self) -> Option<&[u8]> {
-		self.snapshot.as_deref().map(Vec::as_slice)
 	}
 }
 
@@ -389,6 +412,16 @@ impl<S: SnapshotStore> PersistentServer<S> {
 		self.poisoned
 	}
 
+	/// Read the trusted store's committed snapshot only if it still belongs to this owner.
+	/// The returned bytes contain plaintext secrets and do not authenticate themselves.
+	pub fn snapshot(&self) -> Result<ServerSnapshot, PersistenceError> {
+		let snapshot = self.store.load().ok_or(PersistenceError::MissingSnapshot)?;
+		if snapshot.head()? != self.head {
+			return Err(PersistenceError::StaleGeneration);
+		}
+		Ok(snapshot)
+	}
+
 	pub fn identity_pk(&self) -> &libsodium_rs::crypto_sign::PublicKey {
 		self.server.identity_pk()
 	}
@@ -413,6 +446,9 @@ impl<S: SnapshotStore> PersistentServer<S> {
 		&mut self,
 		buffer: &[u8],
 	) -> Result<Option<RegistrationOutput>, PersistenceError> {
+		if buffer.len() > beaconcrypt_parse::MAX_MESSAGE_SIZE {
+			return self.reject_oversized();
+		}
 		self.commit(|server| server.get_shared_secret(buffer))
 	}
 
@@ -421,6 +457,9 @@ impl<S: SnapshotStore> PersistentServer<S> {
 		registration: RegistrationOutput,
 		data: Option<&[u8]>,
 	) -> Result<Option<RegResponse>, PersistenceError> {
+		if !self.server.registration_response_fits(data) {
+			return self.reject_oversized();
+		}
 		self.commit(|server| server.build_registration_response(registration, data))
 	}
 
@@ -429,6 +468,9 @@ impl<S: SnapshotStore> PersistentServer<S> {
 		bytes: &[u8],
 		kid: u64,
 	) -> Result<Option<Encrypted>, PersistenceError> {
+		if !self.outgoing_message_fits(bytes.len(), kid) {
+			return self.reject_oversized();
+		}
 		self.commit(|server| server.encrypt_message(bytes, kid))
 	}
 
@@ -443,6 +485,9 @@ impl<S: SnapshotStore> PersistentServer<S> {
 		bytes: &[u8],
 		kid: u64,
 	) -> Result<Option<SendState>, PersistenceError> {
+		if !self.outgoing_message_fits(bytes.len(), kid) {
+			return self.reject_oversized();
+		}
 		self.commit(|server| server.encrypt_and_update(bytes, kid))
 	}
 
@@ -460,7 +505,26 @@ impl<S: SnapshotStore> PersistentServer<S> {
 		bytes: &[u8],
 		kid: u64,
 	) -> Result<Option<String>, PersistenceError> {
+		if !self.outgoing_message_fits(bytes.len(), kid) {
+			return self.reject_oversized();
+		}
 		self.commit(|server| server.encrypt_and_update_json(bytes, kid))
+	}
+
+	fn outgoing_message_fits(&self, plaintext_len: usize, kid: u64) -> bool {
+		let sequence = self
+			.server
+			.ratchet_status(kid)
+			.map_or(0, |status| status.send_sequence().saturating_add(1));
+		crate::wire::frame_len(plaintext_len, sequence, self.server.identity_key_kid()).is_some()
+	}
+
+	fn reject_oversized<T>(&self) -> Result<Option<T>, PersistenceError> {
+		if self.poisoned {
+			Err(PersistenceError::Poisoned)
+		} else {
+			Ok(None)
+		}
 	}
 
 	pub fn decrypt_and_update_json(
@@ -559,30 +623,6 @@ impl<S: SnapshotStore> PersistentServer<S> {
 		self.head = successor_head;
 		self.poisoned = false;
 		Ok(output)
-	}
-}
-
-#[cfg(any(feature = "cbinds", feature = "pybinds"))]
-pub(crate) type BindingServer = PersistentServer<BindingSnapshotStore>;
-
-#[cfg(any(feature = "cbinds", feature = "pybinds"))]
-impl PersistentServer<BindingSnapshotStore> {
-	pub(crate) fn create_binding(
-		server_kid: u64,
-		id_seed: Option<&[u8]>,
-	) -> Result<Self, PersistenceError> {
-		Self::create(server_kid, id_seed, BindingSnapshotStore::default())
-	}
-
-	pub(crate) fn restore_binding(bytes: Vec<u8>) -> Result<Self, PersistenceError> {
-		Self::restore(BindingSnapshotStore::from_bytes(bytes)?)
-	}
-
-	pub(crate) fn export_binding_state(&self) -> Result<Vec<u8>, PersistenceError> {
-		self.store
-			.as_bytes()
-			.map(<[u8]>::to_vec)
-			.ok_or(PersistenceError::MissingSnapshot)
 	}
 }
 
@@ -910,27 +950,15 @@ mod tests {
 		let _second = beacon.encrypt_message(b"second").unwrap();
 		let third = beacon.encrypt_message(b"third").unwrap();
 
-		let message = capnp::serialize::read_message(
-			third.ciphertext.as_slice(),
-			capnp::message::ReaderOptions::new(),
-		)
-		.unwrap();
-		let typed =
-			capnp::message::TypedReader::<_, crate::cryptoframe_capnp::crypto_frame::Owned>::new(
-				message,
-			);
-		let frame = typed.get().unwrap();
-		let mut ciphertext = frame.get_cipher_text().unwrap().to_vec();
+		let frame = beaconcrypt_parse::decode_frame(&third.ciphertext).unwrap();
+		let mut ciphertext = frame.cipher_text.to_vec();
 		ciphertext[0] ^= 1;
-		let mut message = capnp::message::TypedBuilder::<
-			crate::cryptoframe_capnp::crypto_frame::Owned,
-		>::new_default();
-		let mut corrupted = message.init_root();
-		corrupted.set_seq(frame.get_seq());
-		corrupted.set_key_id(frame.get_key_id());
-		corrupted.set_cipher_text(&ciphertext);
-		let mut rejected = Vec::new();
-		capnp::serialize::write_message(&mut rejected, message.borrow_inner()).unwrap();
+		let rejected = crate::wire::encode_frame(beaconcrypt_parse::CryptoFrame {
+			seq: frame.seq,
+			key_id: frame.key_id,
+			cipher_text: &ciphertext,
+		})
+		.unwrap();
 
 		let live = persistent.server.serialize_state().unwrap();
 		let head = persistent.head();
@@ -999,27 +1027,15 @@ mod tests {
 		let full_state = restored.head();
 		let full_snapshot = restored.store.snapshot.clone();
 		let target = &frames[RATCHET_MAX_GAP as usize - 1].1;
-		let message = capnp::serialize::read_message(
-			target.ciphertext.as_slice(),
-			capnp::message::ReaderOptions::new(),
-		)
-		.unwrap();
-		let typed =
-			capnp::message::TypedReader::<_, crate::cryptoframe_capnp::crypto_frame::Owned>::new(
-				message,
-			);
-		let frame = typed.get().unwrap();
-		let mut ciphertext = frame.get_cipher_text().unwrap().to_vec();
+		let frame = beaconcrypt_parse::decode_frame(&target.ciphertext).unwrap();
+		let mut ciphertext = frame.cipher_text.to_vec();
 		ciphertext[0] ^= 1;
-		let mut message = capnp::message::TypedBuilder::<
-			crate::cryptoframe_capnp::crypto_frame::Owned,
-		>::new_default();
-		let mut corrupted = message.init_root();
-		corrupted.set_seq(frame.get_seq());
-		corrupted.set_key_id(frame.get_key_id());
-		corrupted.set_cipher_text(&ciphertext);
-		let mut rejected = Vec::new();
-		capnp::serialize::write_message(&mut rejected, message.borrow_inner()).unwrap();
+		let rejected = crate::wire::encode_frame(beaconcrypt_parse::CryptoFrame {
+			seq: frame.seq,
+			key_id: frame.key_id,
+			cipher_text: &ciphertext,
+		})
+		.unwrap();
 
 		assert!(restored.decrypt_message(&rejected).unwrap().is_none());
 		assert_eq!(restored.head(), full_state);

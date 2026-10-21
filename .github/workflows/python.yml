@@ -20,7 +20,7 @@ permissions:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
 
@@ -31,9 +31,6 @@ jobs:
         uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
       - name: Set up Python
         run: uv python install 3.14
-      - name: Install cap'n proto
-        run: |
-          sudo apt install capnproto
 
       - name: Run Python tests
         run: |
@@ -46,7 +43,7 @@ jobs:
   sdist:
     if: startsWith(github.ref, 'refs/tags/')
     needs: test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       deployments: read
 
@@ -57,15 +54,52 @@ jobs:
         uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
       - name: Set up Python
         run: uv python install 3.14
-      - name: Install cap'n proto
-        run: |
-          sudo apt install capnproto
 
       - name: Generate Python stubs
         run: uv run python scripts/generate_python_stubs.py
 
       - name: Build source distribution
         run: uv run maturin sdist --out dist
+
+      - name: Check source distribution parser and license files
+        run: |
+          uv run python - <<'PY'
+          from email.parser import BytesParser
+          from pathlib import Path
+          import tarfile
+
+          sdists = list(Path("dist").glob("*.tar.gz"))
+          if not sdists:
+              raise RuntimeError("No source distribution found")
+          for path in sdists:
+              root = path.name.removesuffix(".tar.gz")
+              with tarfile.open(path, "r:gz") as archive:
+                  metadata = BytesParser().parsebytes(archive.extractfile(f"{root}/PKG-INFO").read())
+                  for license_file in metadata.get_all("License-File", []):
+                      if not archive.getmember(f"{root}/{license_file}").isfile():
+                          raise RuntimeError(f"Missing license file in {path}: {license_file}")
+                  parser_files = (
+                      "Cargo.toml",
+                      "LICENSE-0BSD",
+                      "README.md",
+                      "generated/LICENSE",
+                      "generated/README.md",
+                      "schema/transport.cddl",
+                      "scripts/regenerate.py",
+                      "src/lib.rs",
+                      "src/preflight_tests.rs",
+                      "src/sizing.rs",
+                      "src/generated/cbordetver.rs",
+                      "src/generated/cbordetveraux.rs",
+                      "src/generated/transport.rs",
+                      "tests/codec.rs",
+                  )
+                  for parser_file in parser_files:
+                      member = f"{root}/beaconcrypt-parse/{parser_file}"
+                      if not archive.getmember(member).isfile():
+                          raise RuntimeError(f"Missing parser file in {path}: {parser_file}")
+              print(f"Validated parser and license files in {path}")
+          PY
 
       - name: Upload source distribution
         uses: actions/upload-artifact@v7
@@ -84,7 +118,7 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - ubuntu-latest
+          - ubuntu-24.04
           - windows-latest
 
     steps:
@@ -107,7 +141,7 @@ jobs:
 
   pypi-publish:
     if: startsWith(github.ref, 'refs/tags/')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs:
       - sdist
       - wheels
