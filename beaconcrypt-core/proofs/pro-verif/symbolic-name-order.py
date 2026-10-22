@@ -31,7 +31,7 @@ TOKEN_SHA256 = {
     "fs-common.pvl": "fddb894e764ce90949ab5477bd8f6ee8f6def0ea34bfd0958263d6b8ca9ceb3f",
 }
 SOURCE_SHA256 = {
-    "beaconcrypt/src/server.rs": "40efdd7a1a86e5dac0afee4bfa2c2433a66cf86e4fbdca640e2464241e1c0569"
+    "beaconcrypt/src/server.rs": "bede4addf22f32ead26815a2680aac04312b782d3449ccb931a9635433e9ab72"
 }
 NAMES = ("ephemeral_secret", "kem_coins")
 

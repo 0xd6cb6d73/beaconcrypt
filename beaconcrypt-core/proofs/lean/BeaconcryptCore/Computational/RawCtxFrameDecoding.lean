@@ -2,6 +2,8 @@ import BeaconcryptCore.Computational.RawCtxServerRouting
 import BeaconcryptCore.Computational.RawCtxNativeSlot
 
 /-!
+This retained generic reader model includes the former Cap'n Proto partial-header reader. It is not the current CBOR decoder transcription. `CborTransport.reader` instantiates it with one complete validated frame, so its header and payload failure domains coincide; `CborProductionBoundary` is the current normalized production entry point.
+
 This module formalizes the narrow protocol-owned CryptoFrame prelude over a functional Cap'n Proto reader interface at fixed reader options. It keeps read-message failure, exact remaining-input rejection, root failure, total scalar getters (including ordinary default values), fallible payload access and strict nonempty-body validation. Header routing and full decoding have different failure domains. Successful framing does not imply canonical encoding or injectivity of the original raw buffer.
 
 `sourcePrepared` follows the native getter order, retaining the exact base/tag/commitment slices before source admission. Their protected-payload projection is proved against the existing record decoder. The source/normalized-decoder equations are functional outcome equalities; they do not equate codec work, traversal/allocation traces, timing or failure side effects. The Reader boundary describes the same immutable message/root for each parse. Server's header parse and receive parse each start a new native reader with the same fixed options. Native Cap'n Proto/library representation, bounds and traversal accounting remain contracts, not security assumptions or implementation proofs.

@@ -60,6 +60,7 @@ PROVERIF_SCENARIOS := \
 	public-key-confusion-strong \
 	public-key-confusion-weak \
 	phase2-response-binding \
+	cbor-registration \
 	phase2-assigned-id-weak \
 	phase2-x25519-alias \
 	general-registration-admission \
@@ -432,6 +433,14 @@ check-proverif-aead-commitment: check-proverif-extraction
 			$(PROVERIF_AEAD_CONTROL_LIBS) \
 			$(PROVERIF_DIR)/aead-commitment.pv | \
 		awk -v scenario=aead-commitment -f '$(PROVERIF_CHECKER)'
+
+check-proverif-cbor-registration: check-proverif-extraction
+	@set -o pipefail; \
+		timeout '$(PROVERIF_TIMEOUT)' '$(PROVERIF)' \
+			$(PROVERIF_CRYPTO_LIBS) \
+			-lib $(PROVERIF_DIR)/cbor-registration.pvl \
+			$(PROVERIF_DIR)/cbor-registration.pv | \
+			awk -v scenario=cbor-registration -f '$(PROVERIF_CHECKER)'
 
 check-proverif-aead-no-commitment: check-proverif-extraction
 	@set -o pipefail; \

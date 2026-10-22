@@ -53,16 +53,16 @@ let Cur(
   r: nat,
   cached_1: bool
 ) =
-  (* @beaconcrypt-fs-fidelity key=server.decrypt src=beaconcrypt/src/server.rs:229-231 anchor=pub fn decrypt_message(&mut self, b: &[u8]) -> Option<crate::Decrypted> { *)
+  (* @beaconcrypt-fs-fidelity key=server.decrypt src=beaconcrypt/src/server.rs:246-248 anchor=pub fn decrypt_message(&mut self, b: &[u8]) -> Option<crate::Decrypted> { *)
   in(c, frame: bitstring) [precise];
   (* Decode the claimed sender, route to the installed peer with that ID and
      rebuild its associated data; then decode exactly one frame and require
      that sender.  Anything else returns None before the ratchet is
      touched. *)
-  (* @beaconcrypt-fs-fidelity key=server.route src=beaconcrypt/src/server.rs:237-245 anchor=let Some(k) = crate::ratchet::encrypted_frame_sender(b) else { *)
-  (* @beaconcrypt-fs-fidelity key=ratchet.frame_sender src=beaconcrypt/src/ratchet.rs:360-362 anchor=pub(crate) fn encrypted_frame_sender(data: &[u8]) -> Option<u64> { *)
-  (* @beaconcrypt-fs-fidelity key=server.peer_associated_data src=beaconcrypt/src/server.rs:218-223 anchor=pub(crate) fn associated_data(&self, k: u64) -> Option<[u8; AD_SIZE]> { *)
-  (* @beaconcrypt-fs-fidelity key=ratchet.decode_sender src=beaconcrypt/src/ratchet.rs:505-516 anchor=if data.is_empty() { *)
+  (* @beaconcrypt-fs-fidelity key=server.route src=beaconcrypt/src/server.rs:254-262 anchor=let Some(k) = crate::ratchet::encrypted_frame_sender(b) else { *)
+  (* @beaconcrypt-fs-fidelity key=ratchet.frame_sender src=beaconcrypt/src/ratchet.rs:351-353 anchor=pub(crate) fn encrypted_frame_sender(data: &[u8]) -> Option<u64> { *)
+  (* @beaconcrypt-fs-fidelity key=server.peer_associated_data src=beaconcrypt/src/server.rs:235-240 anchor=pub(crate) fn associated_data(&self, k: u64) -> Option<[u8; AD_SIZE]> { *)
+  (* @beaconcrypt-fs-fidelity key=ratchet.decode_sender src=beaconcrypt/src/ratchet.rs:541-550 anchor=if data.is_empty() { *)
   (* @beaconcrypt-fs-fidelity key=record.frame_context src=beaconcrypt-core/src/record.rs:35-61 anchor=pub fn from_frame( *)
   let crypto_frame(
     frame_cipher: bitstring,
@@ -82,7 +82,7 @@ let Cur(
       (* @beaconcrypt-fs-fidelity key=refined.prepare_cached src=beaconcrypt-core/src/ratchet/refined.rs:317-330 anchor=pub(super) fn prepare_cached_receive<SendChain, ReceiveChain, Material>( *)
       if t = 1 && cached_1 then
       (
-        (* @beaconcrypt-fs-fidelity key=ratchet.open src=beaconcrypt/src/ratchet.rs:449-482 anchor=fn execute_open( *)
+        (* @beaconcrypt-fs-fidelity key=ratchet.open src=beaconcrypt/src/ratchet.rs:485-518 anchor=fn execute_open( *)
         (* @beaconcrypt-fs-fidelity key=record.commitment src=beaconcrypt-core/src/record.rs:80-98 anchor=pub fn begin_open(opening: ReceiveOpen<OpenFrameContext<'_>>) -> OpenStart<'_> { *)
         let plaintext = open_frame(
           receive_material_1,
@@ -96,7 +96,7 @@ let Cur(
           (* @beaconcrypt-fs-fidelity key=core.open_finish src=beaconcrypt-core/src/ratchet/concrete.rs:436-454 anchor=pub fn finish<Plaintext>( *)
           (* @beaconcrypt-fs-fidelity key=control.cached_removal src=beaconcrypt-core/src/ratchet/control.rs:435-461 anchor=if !authenticated { *)
           (* @beaconcrypt-fs-fidelity key=refined.publish_cached src=beaconcrypt-core/src/ratchet/refined.rs:700-721 anchor=pub(super) fn publish_cached_receive<SendChain, ReceiveChain, Material>( *)
-          (* @beaconcrypt-fs-fidelity key=server.accepted src=beaconcrypt/src/server.rs:246-249 anchor=match decrypt_message_with_ratchet(b, k, &ad, ratchet) { *)
+          (* @beaconcrypt-fs-fidelity key=server.accepted src=beaconcrypt/src/server.rs:263-266 anchor=match decrypt_message_with_ratchet(b, k, &ad, ratchet) { *)
           event FsReceived(
             beacon_to_server(),
             server_identity,

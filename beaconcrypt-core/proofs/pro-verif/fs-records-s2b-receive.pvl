@@ -38,11 +38,11 @@ let Cur(
   r: nat,
   cached_2: bool
 ) =
-  (* @beaconcrypt-fs-fidelity key=beacon.decrypt src=beaconcrypt/src/beacon.rs:164-174 anchor=pub fn decrypt_message(&mut self, b: &[u8]) -> Option<crate::Decrypted> { *)
+  (* @beaconcrypt-fs-fidelity key=beacon.decrypt src=beaconcrypt/src/beacon.rs:163-173 anchor=pub fn decrypt_message(&mut self, b: &[u8]) -> Option<crate::Decrypted> { *)
   in(c, frame: bitstring) [precise];
   (* Decode exactly one frame and require the pinned Server ID as sender;
      anything else returns None before the ratchet is touched. *)
-  (* @beaconcrypt-fs-fidelity key=ratchet.decode_sender src=beaconcrypt/src/ratchet.rs:505-516 anchor=if data.is_empty() { *)
+  (* @beaconcrypt-fs-fidelity key=ratchet.decode_sender src=beaconcrypt/src/ratchet.rs:541-550 anchor=if data.is_empty() { *)
   (* @beaconcrypt-fs-fidelity key=record.frame_context src=beaconcrypt-core/src/record.rs:35-61 anchor=pub fn from_frame( *)
   let crypto_frame(
     frame_cipher: bitstring,
@@ -62,7 +62,7 @@ let Cur(
       (* @beaconcrypt-fs-fidelity key=refined.prepare_cached src=beaconcrypt-core/src/ratchet/refined.rs:317-330 anchor=pub(super) fn prepare_cached_receive<SendChain, ReceiveChain, Material>( *)
       if t = 2 && cached_2 then
       (
-        (* @beaconcrypt-fs-fidelity key=ratchet.open src=beaconcrypt/src/ratchet.rs:449-482 anchor=fn execute_open( *)
+        (* @beaconcrypt-fs-fidelity key=ratchet.open src=beaconcrypt/src/ratchet.rs:485-518 anchor=fn execute_open( *)
         (* @beaconcrypt-fs-fidelity key=record.commitment src=beaconcrypt-core/src/record.rs:80-98 anchor=pub fn begin_open(opening: ReceiveOpen<OpenFrameContext<'_>>) -> OpenStart<'_> { *)
         let plaintext = open_frame(
           receive_material_2,

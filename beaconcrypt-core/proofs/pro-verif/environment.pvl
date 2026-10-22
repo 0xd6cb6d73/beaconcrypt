@@ -5,6 +5,14 @@
 (* Wire adapters and event vocabulary                                     *)
 (**************************************************************************)
 
+(* These constructors describe logical decoded records, not CBOR bytes.
+   In current registration traffic initial_frame denotes the virtual frame
+   obtained from raw C || T || U with sequence one and the pinned Server ID.
+   The generic frame algebra also supports historical malformed-metadata and
+   omitted-gate controls; those are counterfactual decoder experiments, not
+   literal CBOR registration executions. cbor-registration.pvl checks the
+   current implicit-metadata boundary separately. *)
+
 (* @beaconcrypt-phase1-v1 signed_init_kex.fields=encoded_identity,signed_prekey,signed_one_time,signed_pq *)
 fun signed_init_kex(
   bitstring,

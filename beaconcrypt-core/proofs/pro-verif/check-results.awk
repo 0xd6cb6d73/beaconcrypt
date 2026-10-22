@@ -621,6 +621,20 @@ END {
     wanted = "Query not event(ReceiveHonestFutureDelivered(" receive_reachable_future_arguments ")) is false."
     require_exact(wanted,
                   "state-neutral post-compromise delivery reachability")
+  } else if (scenario == "cbor-registration") {
+    if (query_count != 5) {
+      reject("expected 5 CBOR registration payload queries, saw " query_count)
+    }
+    wanted = "Query not event(CborRegistrationGenuineOpened) is false."
+    require_exact(wanted, "CBOR genuine registration opening")
+    wanted = "Query not event(CborRegistrationLaterAttempted) is false."
+    require_exact(wanted, "CBOR later-sequence attempt reachability")
+    wanted = "Query not event(CborRegistrationLaterOpened) is true."
+    require_exact(wanted, "CBOR implicit sequence-one authentication")
+    wanted = "Query not event(CborRegistrationOtherSenderAttempted) is false."
+    require_exact(wanted, "CBOR other-sender attempt reachability")
+    wanted = "Query not event(CborRegistrationOtherSenderOpened) is true."
+    require_exact(wanted, "CBOR pinned-sender authentication")
   } else if (scenario ~ /^live-material-/) {
     if (query_count != 1 || material_result_count != 1) {
       reject("expected exactly one material-service query and result")

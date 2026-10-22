@@ -120,9 +120,9 @@ TOKEN_SHA256 = {
 }
 
 SOURCE_SHA256 = {
-    "beaconcrypt/src/beacon.rs": "c9db3b5357ba13b6c2ef5865a150285a18180e966e52db65c572f3f815a538a8",
-    "beaconcrypt/src/server.rs": "40efdd7a1a86e5dac0afee4bfa2c2433a66cf86e4fbdca640e2464241e1c0569",
-    "beaconcrypt-core/src/pqxdh.rs": "d13096f6f25e8c0dbf2c055d98abfc3080e6d231f5e49bacbd023d3b322f4abf",
+    "beaconcrypt/src/beacon.rs": "b07624435c15761d86749064cd6fd30f6a0fefcd246b485f0be80dee79d24698",
+    "beaconcrypt/src/server.rs": "bede4addf22f32ead26815a2680aac04312b782d3449ccb931a9635433e9ab72",
+    "beaconcrypt-core/src/pqxdh.rs": "cbb38e9d71b9f67c9c77c99ee34c834d8687cf4a1439a6965a360bb992f5eded",
 }
 
 

@@ -3,6 +3,8 @@ import BeaconcryptCore.Computational.RawCtxFrameWriting
 import BeaconcryptCore.Computational.LiveRecordEvents
 
 /-!
+This module retains the former Cap'n Proto bounded-Data writer model for the generic cryptographic results that quantify over it. Its `dataLimit` and infallible bounded-writer contract are not current CBOR admission rules. Current CBOR checks the inclusive 32 MiB size of the entire encoding before allocation or send-state advancement; see `CborSizing` and `CborProductionBoundary`.
+
 The actual frame writer targets an in-memory Vec. Its ordinary library contract has no normal error after bounded builder construction. This module consumes that contract on source-produced protected payloads, retaining the actual shared hash cache and the exact returned bytes. Native allocation/panic behavior and codec implementation remain external. Reader availability is deliberately not assumed: successfully decoded publication recovers the supplied fields under the existing conditional getter contract.
 
 These are operational publication results, not cryptographic origin assumptions. The source-selected material may alias other material. No frame is inserted into a receive target, no inner seal is silently renamed as an API send, and no wire canonicalization or source-to-ProVerif theorem is asserted.
@@ -18,7 +20,7 @@ set_option autoImplicit false
 namespace BeaconcryptCore.Computational.RawCtxSourcePublication
 open CtxRomAuth RawCtxCanonicalSeal
 
-/-- Cap'n Proto Data lists contain fewer than 2^29 byte elements. This is a codec size bound, not an application admission check. -/
+/-- Historical Cap'n Proto Data-list bound for this generic writer model; current CBOR uses `CborSizing.maxMessageSize` for the complete message. -/
 def dataLimit : Nat := 2 ^ 29
 
 /-- Ordinary detached ChaCha20-Poly1305 preserves the plaintext's byte length in its body. -/

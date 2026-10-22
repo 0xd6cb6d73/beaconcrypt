@@ -4,7 +4,7 @@
    The two slots are the object's consumed registration IDs; an empty slot
    holds fs_no_rid(), which no registration ID equals.  Exactly one of this
    file and the negative control fs-control-nocheck.pvl is loaded. *)
-(* @beaconcrypt-fs-fidelity key=consumed.contains src=beaconcrypt/src/server.rs:355-360 anchor=let registration_status = if self.consumed_registrations.contains(&registration_id) { *)
+(* @beaconcrypt-fs-fidelity key=consumed.contains src=beaconcrypt/src/server.rs:369-374 anchor=let registration_status = if self.consumed_registrations.contains(&registration_id) { *)
 letfun fs_reg_consumed(
   registration_id: beaconcrypt_core__pqxdh__t_RegistrationId,
   slot_1: beaconcrypt_core__pqxdh__t_RegistrationId,

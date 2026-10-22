@@ -4,7 +4,13 @@
 (* Finite later-sequence registration-completion control                  *)
 (**************************************************************************)
 
-(* This control is a finite source-fidelity witness, not a model of arbitrary scheduling or a semantic Rust refinement. *)
+(* Historical general-receive/counterfactual-decoder control. The CBOR
+   registration helper now injects sequence one before authenticating raw
+   C || T || U. Thus removing only the post-open sequence check no longer
+   enables this sequence-three registration execution in production. The
+   general receive/cache transitions and established-record continuation
+   remain useful regressions; cbor-registration.pvl covers the current
+   implicit-metadata registration boundary. This is not a Rust refinement. *)
 fun zero_sequence(): sequence [data].
 fun later_registration_ratchet_state(
   sequence,

@@ -27,13 +27,13 @@ FIELDS = {
 # Filled with reviewed complete source files, including lifecycle and adapter
 # visibility. Any change requires re-review, even outside a getter body.
 SOURCE_SHA256 = {
-    "beaconcrypt/src/beacon.rs": "c9db3b5357ba13b6c2ef5865a150285a18180e966e52db65c572f3f815a538a8",
-    "beaconcrypt/src/server.rs": "40efdd7a1a86e5dac0afee4bfa2c2433a66cf86e4fbdca640e2464241e1c0569",
-    "beaconcrypt/src/ratchet.rs": "f5156cd43267eeec43b22875a7eef5fd8ec954feec4ee0b43288a7a1091b0c52",
-    "beaconcrypt/src/shared.rs": "3b83ab0cabf2937db620f37e24f081f1ea4b37b0ae0be928de51620591beefd3",
-    "beaconcrypt/src/cbinds.rs": "332e181706147f981479045d6feb9eb08d2fdc696589d07dbb81851851749793",
-    "beaconcrypt/src/pybinds.rs": "9e454e6a1bbefdf4be2486ae7f1f25b6e563c17640a0ba8b49ebce65b757c20b",
-    "beaconcrypt/src/lib.rs": "2eaad96abd3e7286c34a5613ba6b7de44133338322dccbc1c42b6c35313e1d91",
+    "beaconcrypt/src/beacon.rs": "b07624435c15761d86749064cd6fd30f6a0fefcd246b485f0be80dee79d24698",
+    "beaconcrypt/src/server.rs": "bede4addf22f32ead26815a2680aac04312b782d3449ccb931a9635433e9ab72",
+    "beaconcrypt/src/ratchet.rs": "89e313030c12de769b7d54288b45a5e300550af330359cbb5b0c6d4ff3d2956b",
+    "beaconcrypt/src/shared.rs": "0592ebe52fcdcd444f1ed92a30c693d84733ec7248c997382e0a498b9cfd3396",
+    "beaconcrypt/src/cbinds.rs": "ca4057bda70356e0c99d2f6ec97dd11fa6e00a37866fc0d2dc8d0a12ff2292a5",
+    "beaconcrypt/src/pybinds.rs": "ca62f790039f79cee010eb3e02006ca91e94dc38289c29d5fcbe959a428745db",
+    "beaconcrypt/src/lib.rs": "2c6dd54893591629d24844687e55ee3d350927645aa85c28ac5f5670f074469d",
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointLiveRead.lean": "c3866a86f826c1fdc57bf605f7f47832ce6f88344c747819aaa53af3915b76fb",
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointOwnership.lean": "b802789bbb7ff115b50464900a759b1405db75e0c2212d5105021043971ceaec",
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/RawCtxProtocolReveals.lean": "452bff899641ed154e7a84110407ca07d828f54f29975b4330cba80bc50f42b8",

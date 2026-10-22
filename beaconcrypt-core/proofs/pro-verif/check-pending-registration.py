@@ -234,13 +234,30 @@ def check_source(directory=HERE):
     for anchor in (
         "let RegistrationOutput { derived_secret, control: pending, } = reg_out;",
         "let next_key_id = verified_pqxdh::server_next_key_id(control).ok()?;",
-        "let plaintext = data.unwrap_or(REGISTRATION_WITNESS); if plaintext.is_empty() { return None; }",
+        "let plaintext = data.unwrap_or(REGISTRATION_WITNESS);",
+        "registration_response_len(plaintext.len(), next_key_id)?;",
+        "if plaintext.is_empty() { return None; }",
         "self.control = next_control; Some(RegResponse",
     ):
         if anchor not in compact:
             raise ValueError(
                 f"source moved-token/counter/payload/publication boundary changed: {anchor}"
             )
+    ordered = (
+        "let plaintext = data.unwrap_or(REGISTRATION_WITNESS);",
+        "let next_key_id = verified_pqxdh::server_next_key_id(control).ok()?;",
+        "registration_response_len(plaintext.len(), next_key_id)?;",
+        "let RegistrationOutput {",
+        "if plaintext.is_empty()",
+        "encrypt_registration_message_with_ratchet(",
+        "crate::wire::encode_response(KexResponse {",
+        "self.control = next_control;",
+    )
+    positions = [compact.index(anchor) for anchor in ordered]
+    if positions != sorted(positions):
+        raise ValueError(
+            "source size admission/token consumption/publication order changed"
+        )
 
 
 def validate_targets(targets=TARGETS, directory=HERE):

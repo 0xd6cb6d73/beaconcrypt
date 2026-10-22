@@ -6,6 +6,7 @@ set -euo pipefail
 core_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 repo_dir="$(cd -- "$core_dir/.." && pwd)"
 adapter_dir="$repo_dir/beaconcrypt"
+parser_dir="$repo_dir/beaconcrypt-parse"
 cd "$core_dir"
 
 manifest="proofs/reviewed-inventory.txt"
@@ -27,7 +28,7 @@ while IFS=$'\t' read -r category expected path extra ||
 	[[ -n "${category:-}${expected:-}${path:-}${extra:-}" ]]; do
 	[[ -z "${category:-}" || "$category" == \#* ]] && continue
 	[[ -z "${extra:-}" ]] || fail "malformed manifest entry for $path"
-	[[ "$category" =~ ^(adapter-rust|adapter-schema|core-rust|control|generated-lean|generated-proverif|handwritten-lean|handwritten-proverif|inventory|lean-control|lean-dependency-overlay|validation)$ ]] ||
+	[[ "$category" =~ ^(adapter-rust|adapter-schema|parser-rust|core-rust|control|generated-lean|generated-proverif|handwritten-lean|handwritten-proverif|inventory|lean-control|lean-dependency-overlay|validation)$ ]] ||
 		fail "unknown manifest category: $category"
 	[[ "$expected" =~ ^[0-9a-f]{64}$ ]] || fail "invalid SHA-256 for $path"
 	[[ -n "$path" && -f "$path" ]] || fail "missing reviewed file: $path"
@@ -43,17 +44,18 @@ done < "$manifest"
 
 declare -A expected_category_counts=(
 	[adapter-rust]=13
-	[adapter-schema]=3
+	[adapter-schema]=1
+	[parser-rust]=6
 	[core-rust]=10
-	[control]=13
+	[control]=17
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=1987
-	[handwritten-proverif]=291
+	[handwritten-lean]=2016
+	[handwritten-proverif]=293
 	[inventory]=2
 	[lean-control]=12
 	[lean-dependency-overlay]=4
-	[validation]=64
+	[validation]=66
 )
 for category in "${!expected_category_counts[@]}"; do
 	expected="${expected_category_counts[$category]}"
@@ -76,7 +78,7 @@ compare_set() {
 	fi
 }
 
-symlink_path="$(find "$adapter_dir/src" "$core_dir/src" -type l -print -quit)"
+symlink_path="$(find "$adapter_dir/src" "$core_dir/src" "$parser_dir" -type l -print -quit)"
 [[ -z "$symlink_path" ]] || fail "symlink in monitored tree: $symlink_path"
 tracked_proof_symlink="$(git -C "$repo_dir" ls-files -s -- beaconcrypt-core/proofs |
 	awk '$1 == "120000" { print $4; exit }')"
@@ -91,6 +93,10 @@ printf '%s\n' \
 	../Cargo.lock \
 	../Cargo.toml \
 	../beaconcrypt/Cargo.toml \
+	../beaconcrypt-parse/Cargo.toml \
+	../beaconcrypt-parse/README.md \
+	../beaconcrypt-parse/generated/README.md \
+	../beaconcrypt-parse/scripts/regenerate.py \
 	../flake.lock \
 	../flake.nix \
 	../hax.toml \
@@ -104,6 +110,8 @@ printf '%s\n' proofs/check-inventory.sh proofs/trusted-boundary.md \
 compare_set inventory "$tmp_dir/inventory"
 
 printf '%s\n' ../beaconcrypt/tests/protocol.rs ../beaconcrypt/tests/server.rs \
+	../beaconcrypt/tests/message_size.rs \
+	../beaconcrypt-parse/tests/codec.rs \
 	proofs/source/getter-profile.py \
 	proofs/source/test-getter-profile.py \
 	../beaconcrypt/tests/registration_completion.rs \
@@ -188,12 +196,15 @@ fi
 
 find "$adapter_dir/src" -type f -name '*.rs' \
 	-printf '../beaconcrypt/src/%P\n' > "$tmp_dir/adapter-rust"
-printf '%s\n' ../beaconcrypt/build.rs >> "$tmp_dir/adapter-rust"
 compare_set adapter-rust "$tmp_dir/adapter-rust"
 
-find "$adapter_dir/src/schema" -type f -name '*.capnp' \
-	-printf '../beaconcrypt/src/schema/%f\n' > "$tmp_dir/adapter-schema"
+find "$parser_dir/schema" -type f -name '*.cddl' \
+	-printf '../beaconcrypt-parse/schema/%P\n' > "$tmp_dir/adapter-schema"
 compare_set adapter-schema "$tmp_dir/adapter-schema"
+
+find "$parser_dir/src" -type f -name '*.rs' \
+	-printf '../beaconcrypt-parse/src/%P\n' > "$tmp_dir/parser-rust"
+compare_set parser-rust "$tmp_dir/parser-rust"
 
 find src -type f -name '*.rs' -printf '%p\n' > "$tmp_dir/core-rust"
 compare_set core-rust "$tmp_dir/core-rust"
@@ -361,8 +372,10 @@ require_occurrence_count 46 '_to_bitstring' \
 	"${handwritten_proverif[@]}"
 
 transcript_interface=proofs/pro-verif/production-transcript-interface.pvl
-require_line_count 512 '^\(\* @beaconcrypt-fidelity-v1 ' "$transcript_interface" \
+require_line_count 522 '^\(\* @beaconcrypt-fidelity-v1 ' "$transcript_interface" \
 	"canonical production transcript fact"
+require_line_count 10 '^\(\* @beaconcrypt-fidelity-v1 transport\.' \
+	"$transcript_interface" "CBOR transport transcript fact"
 require_line_count 18 '^\(\* @beaconcrypt-fidelity-v1 phase1\.' \
 	"$transcript_interface" "Phase-1 InitKex transcript fact"
 require_line_count 42 '^\(\* @beaconcrypt-fidelity-v1 cryptoframe\.' \
@@ -918,9 +931,11 @@ for scenario_process in \
 done
 
 fidelity_test=tests/proverif_transcript_fidelity.rs
-require_line_count 44 \
-	'^const (INTERFACE|CRYPTO_MODEL|ENVIRONMENT_MODEL|ACTIVE_QUANTUM_WITNESS|EXTRACTION_MODEL|CORE_MAKEFILE|ADAPTER_PQXDH|ADAPTER_RATCHET|ADAPTER_SHARED|ADAPTER_SERVER|ADAPTER_BEACON|CORE_RECORD|CORE_COMMITMENT|CORE_PQXDH|CORE_PQXDH_CONCRETE|CORE_RATCHET|CORE_RATCHET_CONCRETE|CORE_RATCHET_CONTROL|CORE_RATCHET_REFINED|LEAN_PQXDH_KDF|CRYPTOFRAME_SCHEMA|PHASE1_SCHEMA|PHASE2_SCHEMA|FAILED_RECEIVE_QUERIES|PROVERIF_RESULT_CHECKER|TRANSCRIPT_FIDELITY_TEST): &str = include_str!|^const (MLKEM_REENCAPSULATION_CONTROL|LEAN_RATCHET_EFFECT|LEAN_RATCHET_EFFECT_REFINEMENT|LEAN_PQXDH_THEOREMS|FAILED_RECEIVE_REACHABILITY_QUERIES|LATER_REGISTRATION_CONTROL|LATER_REGISTRATION_QUERIES|LATER_REGISTRATION_MAIN|POST_REGISTRATION_CONTROL|POST_REGISTRATION_QUERIES|POST_REGISTRATION_MAIN|LEAN_RATCHET_CONTROL|LEAN_RATCHET_REFINEMENT|LEAN_RATCHET_RECEIVE_BEHAVIOR|LEAN_PQXDH_SESSION_LIFECYCLE|LEAN_BYTE_TRACE_REFINEMENT|LEAN_BOUNDARY_EXECUTION|LEAN_PROTOCOL_HISTORY): &str =$' \
+require_line_count 46 \
+	'^const (INTERFACE|CRYPTO_MODEL|ENVIRONMENT_MODEL|ACTIVE_QUANTUM_WITNESS|EXTRACTION_MODEL|CORE_MAKEFILE|ADAPTER_PQXDH|ADAPTER_RATCHET|ADAPTER_SHARED|ADAPTER_SERVER|ADAPTER_BEACON|CORE_RECORD|CORE_COMMITMENT|CORE_PQXDH|CORE_PQXDH_CONCRETE|CORE_RATCHET|CORE_RATCHET_CONCRETE|CORE_RATCHET_CONTROL|CORE_RATCHET_REFINED|LEAN_PQXDH_KDF|TRANSPORT_SCHEMA|TRANSPORT_PARSER|TRANSPORT_SIZING|ADAPTER_WIRE|CBOR_REGISTRATION_MODEL|FAILED_RECEIVE_QUERIES|PROVERIF_RESULT_CHECKER|TRANSCRIPT_FIDELITY_TEST): &str = include_str!|^const (MLKEM_REENCAPSULATION_CONTROL|LEAN_RATCHET_EFFECT|LEAN_RATCHET_EFFECT_REFINEMENT|LEAN_PQXDH_THEOREMS|FAILED_RECEIVE_REACHABILITY_QUERIES|LATER_REGISTRATION_CONTROL|LATER_REGISTRATION_QUERIES|LATER_REGISTRATION_MAIN|POST_REGISTRATION_CONTROL|POST_REGISTRATION_QUERIES|POST_REGISTRATION_MAIN|LEAN_RATCHET_CONTROL|LEAN_RATCHET_REFINEMENT|LEAN_RATCHET_RECEIVE_BEHAVIOR|LEAN_PQXDH_SESSION_LIFECYCLE|LEAN_BYTE_TRACE_REFINEMENT|LEAN_BOUNDARY_EXECUTION|LEAN_PROTOCOL_HISTORY): &str =$' \
 	"$fidelity_test" "transcript-fidelity synchronized input"
+require_line_count 3 '^const (CRYPTOFRAME_SCHEMA|PHASE1_SCHEMA|PHASE2_SCHEMA): &str = TRANSPORT_SCHEMA;$' \
+	"$fidelity_test" "shared CBOR schema aliases"
 require_line_count 1 '^const EXPECTED_FACTS: &\[&str\] = &\[$' \
 	"$fidelity_test" "transcript-fidelity exact fact allowlist"
 require_line_count 1 '^struct Snapshot \{$' \
@@ -975,21 +990,20 @@ require_occurrence_count 1 \
 for record_control in core_reader_inverts_remainder core_reader_discards_message core_payload_wrong_overhead native_wrapper_import_substituted core_begin_wrong_nonce core_begin_wrong_ad core_begin_drops_original_opening core_transcript_reads_substitute core_transcript_erases_substitute core_supplied_commitment_substituted core_resume_inverts_comparison core_resume_skips_rejection core_resume_replaces_capability core_request_wrong_material core_request_wrong_context core_request_wrong_ciphertext core_request_wrong_key core_finish_none_becomes_plaintext core_finish_wrong_sender core_finish_wrong_sequence core_finish_discards_actual_some native_hash_failure_short_circuits native_hash_uses_wrong_transcript native_hash_omits_erase native_hash_none_passes native_compare_result_ignored native_resume_forced_true native_rejected_commitment_drops_kernel native_aead_request_substituted native_optional_plaintext_substituted; do
 	require_line_count 1 "^[[:space:]]*\"${record_control}\",$" "$fidelity_test" "native record control ${record_control}"
 done
-require_line_count 1 '^const CRYPTOFRAME_WIRE_MUTATION_COUNT: usize = 229;$' \
+require_line_count 1 '^const CRYPTOFRAME_WIRE_MUTATION_COUNT: usize = 223;$' \
 	"$fidelity_test" "CryptoFrame exact mutation count"
 require_occurrence_count 1 \
 	'(?s)fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected\(\) \{.*?assert_eq!\(mutation_count, CRYPTOFRAME_WIRE_MUTATION_COUNT\);\s*\}' \
 	"CryptoFrame mutation matrix count assertion" "$fidelity_test"
 for cryptoframe_mutation_family in \
 	cryptoframe_schema_declaration_permutation_ \
-	cryptoframe_schema_ordinal_permutation_ \
 	cryptoframe_schema_omits_field_ \
-	cryptoframe_schema_renames_field_ \
-	cryptoframe_payload_permutation_ \
-	cryptoframe_payload_omits_field_ \
-	cryptoframe_payload_duplicate_ \
-	cryptoframe_builder_order_permutation_ \
-	cryptoframe_getter_permutation_ \
+	cryptoframe_schema_version_drift \
+	cryptoframe_schema_kind_drift \
+	cryptoframe_schema_seq_type_drift \
+	cryptoframe_schema_sender_type_drift \
+	cryptoframe_schema_payload_type_drift \
+	cryptoframe_builder_mapping_permutation_ \
 	cryptoframe_open_tag_slice_starts_late \
 	cryptoframe_open_commitment_slice_starts_late \
 	cryptoframe_open_decrypts_before_commitment_equality \
@@ -1005,7 +1019,59 @@ for cryptoframe_mutation_family in \
 	require_occurrence_count 1 "$cryptoframe_mutation_family" \
 		"CryptoFrame ${cryptoframe_mutation_family} mutation family" "$fidelity_test"
 done
-require_line_count 1 '^const PHASE1_REGISTRATION_MUTATION_COUNT: usize = 163;$' \
+for cbor_mutation in \
+	cbor_registration_raw_field_count \
+	cbor_registration_strip_tag \
+	cbor_registration_restore_sequence \
+	cbor_registration_restore_sender \
+	cbor_registration_open_sequence \
+	cbor_registration_open_sender \
+	cbor_registration_missing_genuine_success \
+	cbor_registration_missing_later_success \
+	cbor_registration_missing_sender_success \
+	cbor_registration_missing_genuine_query \
+	cbor_registration_missing_later_attempt \
+	cbor_registration_missing_sender_attempt \
+	cbor_frame_array_arity \
+	cbor_frame_version \
+	cbor_frame_kind \
+	cbor_frame_field_types \
+	cbor_init_array_arity \
+	cbor_init_field_types \
+	cbor_response_array_arity \
+	cbor_response_field_types \
+	cbor_frame_trailing_suffix \
+	cbor_init_trailing_suffix \
+	cbor_response_trailing_suffix \
+	cbor_preflight_size_gate \
+	cbor_preflight_trailing_bytes \
+	cbor_preflight_major_type \
+	cbor_preflight_indefinite_length \
+	cbor_preflight_checked_slice \
+	cbor_response_authentication_overhead \
+	cbor_response_checked_binding_length \
+	cbor_response_size_precheck \
+	cbor_message_size_limit \
+	cbor_length_header_overhead \
+	cbor_length_integer_overflow \
+	cbor_length_payload_overflow \
+	cbor_length_limit_gate \
+	cbor_encode_reservation \
+	cbor_encode_partial_publish \
+	cbor_encode_truncate \
+	cbor_frame_overhead_overflow \
+	cbor_seal_payload \
+	cbor_seal_sequence \
+	cbor_seal_sender \
+	cbor_seal_raw_branch \
+	cbor_send_size_gate \
+	cbor_receive_sender_gate \
+	cbor_receive_sequence \
+	cbor_registration_implicit_sequence \
+	cbor_registration_pinned_sender; do
+	require_occurrence_count 1 "$cbor_mutation" "CBOR ${cbor_mutation} mutation" "$fidelity_test"
+done
+require_line_count 1 '^const PHASE1_REGISTRATION_MUTATION_COUNT: usize = 157;$' \
 	"$fidelity_test" "Phase-1 exact mutation count"
 require_occurrence_count 1 \
 	'(?s)fn phase1_registration_mutation_matrix_is_complete_and_rejected\(\) \{.*?assert_eq!\(mutation_count, PHASE1_REGISTRATION_MUTATION_COUNT\);\s*\}' \
@@ -1014,8 +1080,7 @@ for phase1_mutation_family in \
 	phase1_schema_same_typed_permutation_ \
 	phase1_schema_omits_field_ \
 	phase1_schema_renames_ \
-	phase1_schema_ordinal_drift_ \
-	phase1_beacon_setter_ \
+	phase1_beacon_field_ \
 	phase1_beacon_signature_ \
 	phase1_server_consumer_ \
 	phase1_from_encoded_swaps_x25519_roles \
@@ -1029,7 +1094,7 @@ for phase1_mutation_family in \
 	phase1_symbolic_signature_verifies_under_x25519_key \
 	phase1_server_reorders_pq_and_prekey_verification \
 	phase1_symbolic_reorders_prekey_and_one_time_gates \
-	phase1_beacon_serializes_identity_after_prekey_signature \
+	phase1_beacon_duplicates_one_time_signature \
 	phase1_core_reorders_prekey_and_one_time_fields \
 	phase1_core_reorders_prekey_and_one_time_validation; do
 	require_occurrence_count 1 "$phase1_mutation_family" \
@@ -1375,12 +1440,24 @@ require_line_count 1 '^            target: check-generated-proverif-phase2-assig
 	"dedicated weak Phase-2 assigned-ID CI target"
 
 
-# HB-95: opening remains before the initial sequence-one policy and plaintext binding.
+# CBOR registration fixes the sequence and sender before the common payload opener.
 require_occurrence_count 1 \
-	'let decrypted = decrypt_message_with_ratchet\([\s\S]*?\)\?;\s*if decrypted\.seq != 1 \{\s*return None;\s*\}\s*let authenticated_server_key_id = decrypted\.key_id;' \
-	"Beacon authenticated sequence-one gate before binding" "$adapter_dir/src/beacon.rs"
+	'let decrypted = decrypt_registration_message_with_ratchet\(\s*response\.app_cipher_text,\s*candidate\.server_key_id\(\),\s*&associated_data,\s*&mut ratchet,\s*\)\?;\s*if decrypted\.seq != 1 \{\s*return None;\s*\}\s*let authenticated_server_key_id = decrypted\.key_id;' \
+	"Beacon implicit-sequence registration opening before binding" "$adapter_dir/src/beacon.rs"
+require_occurrence_count 1 \
+	'pub\(crate\) fn decrypt_registration_message_with_ratchet\([\s\S]*?\) -> Option<Decrypted> \{\s*decrypt_payload_with_ratchet\(ciphertext, 1, sender_kid, associated_data, ratchet\)\s*\}' \
+	"registration raw-payload opening fixes sequence one and pinned sender" "$adapter_dir/src/ratchet.rs"
+require_line_count 1 '^pub const MAX_MESSAGE_SIZE: usize = 33_554_432;$' \
+	"$parser_dir/src/sizing.rs" "complete CBOR message size limit"
+for record in \
+	'init-kex = \[1, 0, identity-key:' \
+	'kex-response = \[1, 1, identity-key:' \
+	'crypto-frame = \[1, 2, seq:'; do
+	require_line_count 1 "^${record}" "$parser_dir/schema/transport.cddl" \
+		"CBOR fixed version, kind and field prefix ${record}"
+done
 require_line_count 1 \
-	'^\(\* @beaconcrypt-fidelity-v1 later_registration\.source\.beacon\.first_gate=finish_registration_rejects_decrypted\.seq_ne_1_after_open_before_binding \*\)$' \
+	'^\(\* @beaconcrypt-fidelity-v1 later_registration\.source\.beacon\.first_gate=raw_helper_fixes_sequence_1;finish_registration_checks_decrypted\.seq_ne_1_defensively_before_binding \*\)$' \
 	"$transcript_interface" "sequence-one source fidelity fact"
 require_line_count 1 \
 	'^\(\* @beaconcrypt-fidelity-v1 later_registration\.adapter\.no_first_gate=generic_receive_has_no_first_sequence_special_case \*\)$' \
@@ -48786,6 +48863,267 @@ require_line_count 1 '^theorem accept_footprint([[:space:]]|$)' "$selected_sourc
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRegistrationAccept\.accept_footprint$' "$selected_source_module" "PqxdhBoundaryRegistrationAccept dependency accept_footprint"
 require_line_count 1 '^theorem collect_replay([[:space:]]|$)' "$selected_source_module" "PqxdhBoundaryRegistrationAccept theorem collect_replay"
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhBoundaryRegistrationAccept\.collect_replay$' "$selected_source_module" "PqxdhBoundaryRegistrationAccept dependency collect_replay"
+
+# CBOR transport extension: complete-message admission and implicit registration metadata.
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/CborSizing.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.CborSizing$' proofs/lean/BeaconcryptCore.lean "CborSizing root import"
+require_line_count 5 '^theorem ' "$selected_source_module" "CborSizing theorem total"
+require_line_count 5 '^#guard_msgs in$' "$selected_source_module" "CborSizing guarded dependencies"
+for theorem_name in argumentLen_bounds registration_frame_le_response registration_frame_fits init_size inclusive_boundaries; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "CborSizing theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.CborSizing.${theorem_name}$" "$selected_source_module" "CborSizing dependency ${theorem_name}"
+done
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/CborTransport.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.CborTransport$' proofs/lean/BeaconcryptCore.lean "CborTransport root import"
+require_line_count 10 '^theorem ' "$selected_source_module" "CborTransport theorem total"
+require_line_count 10 '^#guard_msgs in$' "$selected_source_module" "CborTransport guarded dependencies"
+for theorem_name in bigEndian_length argument_length render_length registration_render_fits registration_render_example decode_reader sender_reader oversized_decode oversized_sender registration_fields; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "CborTransport theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.CborTransport.${theorem_name}$" "$selected_source_module" "CborTransport dependency ${theorem_name}"
+done
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/CborRegistrationCodec.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.CborRegistrationCodec$' proofs/lean/BeaconcryptCore.lean "CborRegistrationCodec root import"
+require_line_count 9 '^theorem ' "$selected_source_module" "CborRegistrationCodec theorem total"
+require_line_count 9 '^#guard_msgs in$' "$selected_source_module" "CborRegistrationCodec guarded dependencies"
+for theorem_name in raw_frameWrite raw_outer_codec unwrap_written unwrap_success phase2_readBack application_normalized frame_codec_unchanged application_writer_irrelevant opening_raw_irrelevant; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "CborRegistrationCodec theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.CborRegistrationCodec.${theorem_name}$" "$selected_source_module" "CborRegistrationCodec dependency ${theorem_name}"
+done
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/CborProductionBoundary.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.CborProductionBoundary$' proofs/lean/BeaconcryptCore.lean "CborProductionBoundary root import"
+require_line_count 8 '^theorem ' "$selected_source_module" "CborProductionBoundary theorem total"
+require_line_count 8 '^#guard_msgs in$' "$selected_source_module" "CborProductionBoundary guarded dependencies"
+for theorem_name in registration_writer base_step_exact step_exact execute_exact decode_native sender_native reject_build_consumes reject_send_stutters; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "CborProductionBoundary theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.CborProductionBoundary.${theorem_name}$" "$selected_source_module" "CborProductionBoundary dependency ${theorem_name}"
+done
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/CborCommandFilter.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.CborCommandFilter$' proofs/lean/BeaconcryptCore.lean "CborCommandFilter root import"
+require_line_count 4 '^theorem ' "$selected_source_module" "CborCommandFilter theorem total"
+require_line_count 4 '^#guard_msgs in$' "$selected_source_module" "CborCommandFilter guarded dependencies"
+for theorem_name in atState_run admitted_run step_exact execute_exact; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "CborCommandFilter theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.CborCommandFilter.${theorem_name}$" "$selected_source_module" "CborCommandFilter dependency ${theorem_name}"
+done
+
+# CBOR representation and public admission compiler support.
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/CborAdmissionSubstitution.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.CborAdmissionSubstitution$' proofs/lean/BeaconcryptCore.lean "CborAdmissionSubstitution root import"
+require_line_count 4 '^theorem ' "$selected_source_module" "CborAdmissionSubstitution theorem total"
+require_line_count 4 '^#guard_msgs in$' "$selected_source_module" "CborAdmissionSubstitution guarded dependencies"
+for theorem_name in candidate_empty build_empty native_build_empty deployment_build_empty; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "CborAdmissionSubstitution theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.CborAdmissionSubstitution.${theorem_name}$" "$selected_source_module" "CborAdmissionSubstitution dependency ${theorem_name}"
+done
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/CborAdmissionSend.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.CborAdmissionSend$' proofs/lean/BeaconcryptCore.lean "CborAdmissionSend root import"
+require_line_count 2 '^theorem ' "$selected_source_module" "CborAdmissionSend theorem total"
+require_line_count 2 '^#guard_msgs in$' "$selected_source_module" "CborAdmissionSend guarded dependencies"
+for theorem_name in beacon_empty server_empty; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "CborAdmissionSend theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.CborAdmissionSend.${theorem_name}$" "$selected_source_module" "CborAdmissionSend dependency ${theorem_name}"
+done
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/CborAdmissionSimulation.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.CborAdmissionSimulation$' proofs/lean/BeaconcryptCore.lean "CborAdmissionSimulation root import"
+require_line_count 8 '^theorem ' "$selected_source_module" "CborAdmissionSimulation theorem total"
+require_line_count 8 '^#guard_msgs in$' "$selected_source_module" "CborAdmissionSimulation guarded dependencies"
+for theorem_name in base_build_empty base_server_empty base_beacon_empty empty_reject substitute_exact handler_exact adaptive_exact ledger_adaptive_exact; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "CborAdmissionSimulation theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.CborAdmissionSimulation.${theorem_name}$" "$selected_source_module" "CborAdmissionSimulation dependency ${theorem_name}"
+done
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/CborTaggedCodec.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.CborTaggedCodec$' proofs/lean/BeaconcryptCore.lean "CborTaggedCodec root import"
+require_line_count 8 '^theorem ' "$selected_source_module" "CborTaggedCodec theorem total"
+require_line_count 8 '^#guard_msgs in$' "$selected_source_module" "CborTaggedCodec guarded dependencies"
+for theorem_name in sender_encoding_injective untag_tag tag_length read_tagged application_tagged write_tagged phase2_readBack admitted_input; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "CborTaggedCodec theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.CborTaggedCodec.${theorem_name}$" "$selected_source_module" "CborTaggedCodec dependency ${theorem_name}"
+done
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/CborResponseRepresentation.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.CborResponseRepresentation$' proofs/lean/BeaconcryptCore.lean "CborResponseRepresentation root import"
+require_line_count 8 '^theorem ' "$selected_source_module" "CborResponseRepresentation theorem total"
+require_line_count 8 '^#guard_msgs in$' "$selected_source_module" "CborResponseRepresentation guarded dependencies"
+for theorem_name in collect afterInputs prepare raw_calls afterRoot tail owner native_owner; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "CborResponseRepresentation theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.CborResponseRepresentation.${theorem_name}$" "$selected_source_module" "CborResponseRepresentation dependency ${theorem_name}"
+done
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/CborResponseWriterMap.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.CborResponseWriterMap$' proofs/lean/BeaconcryptCore.lean "CborResponseWriterMap root import"
+require_line_count 4 '^theorem ' "$selected_source_module" "CborResponseWriterMap theorem total"
+require_line_count 4 '^#guard_msgs in$' "$selected_source_module" "CborResponseWriterMap guarded dependencies"
+for theorem_name in send_unchanged after_map candidate_map build_map; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "CborResponseWriterMap theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.CborResponseWriterMap.${theorem_name}$" "$selected_source_module" "CborResponseWriterMap dependency ${theorem_name}"
+done
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/CborTaggedFinish.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.CborTaggedFinish$' proofs/lean/BeaconcryptCore.lean "CborTaggedFinish root import"
+require_line_count 7 '^theorem ' "$selected_source_module" "CborTaggedFinish theorem total"
+require_line_count 7 '^#guard_msgs in$' "$selected_source_module" "CborTaggedFinish guarded dependencies"
+for theorem_name in preparation_calls tail_calls native_owner finish deployment_finish reader_finish production_finish; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "CborTaggedFinish theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.CborTaggedFinish.${theorem_name}$" "$selected_source_module" "CborTaggedFinish dependency ${theorem_name}"
+done
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/CborAdmissionPreload.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.CborAdmissionPreload$' proofs/lean/BeaconcryptCore.lean "CborAdmissionPreload root import"
+require_line_count 6 '^theorem ' "$selected_source_module" "CborAdmissionPreload theorem total"
+require_line_count 6 '^#guard_msgs in$' "$selected_source_module" "CborAdmissionPreload guarded dependencies"
+for theorem_name in owner_merge peer_merge peer_read_run owner_read_run preload_peer_good preload_owner_good; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "CborAdmissionPreload theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.CborAdmissionPreload.${theorem_name}$" "$selected_source_module" "CborAdmissionPreload dependency ${theorem_name}"
+done
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/CborAdmissionCachedBudget.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.CborAdmissionCachedBudget$' proofs/lean/BeaconcryptCore.lean "CborAdmissionCachedBudget root import"
+require_line_count 2 '^theorem ' "$selected_source_module" "CborAdmissionCachedBudget theorem total"
+require_line_count 2 '^#guard_msgs in$' "$selected_source_module" "CborAdmissionCachedBudget guarded dependencies"
+for theorem_name in server_cached beacon_cached; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "CborAdmissionCachedBudget theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.CborAdmissionCachedBudget.${theorem_name}$" "$selected_source_module" "CborAdmissionCachedBudget dependency ${theorem_name}"
+done
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/CborTaggedOther.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.CborTaggedOther$' proofs/lean/BeaconcryptCore.lean "CborTaggedOther root import"
+require_line_count 3 '^theorem ' "$selected_source_module" "CborTaggedOther theorem total"
+require_line_count 3 '^#guard_msgs in$' "$selected_source_module" "CborTaggedOther guarded dependencies"
+for theorem_name in server_step beacon_step native_other; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "CborTaggedOther theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.CborTaggedOther.${theorem_name}$" "$selected_source_module" "CborTaggedOther dependency ${theorem_name}"
+done
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/CborTaggedBuild.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.CborTaggedBuild$' proofs/lean/BeaconcryptCore.lean "CborTaggedBuild root import"
+require_line_count 12 '^theorem ' "$selected_source_module" "CborTaggedBuild theorem total"
+require_line_count 12 '^#guard_msgs in$' "$selected_source_module" "CborTaggedBuild guarded dependencies"
+for theorem_name in primitive_same send_same after_tagged candidate_tagged build_tagged native_build deployment_build reader_codec base_at base_build filter_map production_build; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "CborTaggedBuild theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.CborTaggedBuild.${theorem_name}$" "$selected_source_module" "CborTaggedBuild dependency ${theorem_name}"
+done
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/CborAdmissionCompiler.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.CborAdmissionCompiler$' proofs/lean/BeaconcryptCore.lean "CborAdmissionCompiler root import"
+require_line_count 5 '^theorem ' "$selected_source_module" "CborAdmissionCompiler theorem total"
+require_line_count 5 '^#guard_msgs in$' "$selected_source_module" "CborAdmissionCompiler guarded dependencies"
+for theorem_name in allowed_build build_run build_source_run build_native_exact build_step_exact; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "CborAdmissionCompiler theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.CborAdmissionCompiler.${theorem_name}$" "$selected_source_module" "CborAdmissionCompiler dependency ${theorem_name}"
+done
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/CborPublicClient.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.CborPublicClient$' proofs/lean/BeaconcryptCore.lean "CborPublicClient root import"
+require_line_count 5 '^theorem ' "$selected_source_module" "CborPublicClient theorem total"
+require_line_count 5 '^#guard_msgs in$' "$selected_source_module" "CborPublicClient guarded dependencies"
+for theorem_name in strip_tag finish_run create_run build_run fullClient_bound; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "CborPublicClient theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.CborPublicClient.${theorem_name}$" "$selected_source_module" "CborPublicClient dependency ${theorem_name}"
+done
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/CborInactiveFinish.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.CborInactiveFinish$' proofs/lean/BeaconcryptCore.lean "CborInactiveFinish root import"
+require_line_count 4 '^theorem ' "$selected_source_module" "CborInactiveFinish theorem total"
+require_line_count 4 '^#guard_msgs in$' "$selected_source_module" "CborInactiveFinish guarded dependencies"
+for theorem_name in native_inactive schedule_inactive schedule_no_active deployment_inactive; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "CborInactiveFinish theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.CborInactiveFinish.${theorem_name}$" "$selected_source_module" "CborInactiveFinish dependency ${theorem_name}"
+done
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/CborTaggedSimulation.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.CborTaggedSimulation$' proofs/lean/BeaconcryptCore.lean "CborTaggedSimulation root import"
+require_line_count 9 '^theorem ' "$selected_source_module" "CborTaggedSimulation theorem total"
+require_line_count 9 '^#guard_msgs in$' "$selected_source_module" "CborTaggedSimulation guarded dependencies"
+for theorem_name in base_other filter_congr other strip_mapped build finish adapt_exact handler_exact adaptive_exact; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "CborTaggedSimulation theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.CborTaggedSimulation.${theorem_name}$" "$selected_source_module" "CborTaggedSimulation dependency ${theorem_name}"
+done
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/CborAdmissionServerCompiler.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.CborAdmissionServerCompiler$' proofs/lean/BeaconcryptCore.lean "CborAdmissionServerCompiler root import"
+require_line_count 3 '^theorem ' "$selected_source_module" "CborAdmissionServerCompiler theorem total"
+require_line_count 3 '^#guard_msgs in$' "$selected_source_module" "CborAdmissionServerCompiler guarded dependencies"
+for theorem_name in step_exact good_support source_bound; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "CborAdmissionServerCompiler theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.CborAdmissionServerCompiler.${theorem_name}$" "$selected_source_module" "CborAdmissionServerCompiler dependency ${theorem_name}"
+done
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/CborAdmissionInvariant.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.CborAdmissionInvariant$' proofs/lean/BeaconcryptCore.lean "CborAdmissionInvariant root import"
+require_line_count 9 '^theorem ' "$selected_source_module" "CborAdmissionInvariant theorem total"
+require_line_count 9 '^#guard_msgs in$' "$selected_source_module" "CborAdmissionInvariant guarded dependencies"
+for theorem_name in source_count_step source_monotone_step source_no_build_counter existing_no_build_bound build_good liftExisting_source_run liftExisting_native_exact liftExisting_good liftExisting_step_exact; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "CborAdmissionInvariant theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.CborAdmissionInvariant.${theorem_name}$" "$selected_source_module" "CborAdmissionInvariant dependency ${theorem_name}"
+done
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/CborAdmissionBeaconCompiler.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.CborAdmissionBeaconCompiler$' proofs/lean/BeaconcryptCore.lean "CborAdmissionBeaconCompiler root import"
+require_line_count 6 '^theorem ' "$selected_source_module" "CborAdmissionBeaconCompiler theorem total"
+require_line_count 6 '^#guard_msgs in$' "$selected_source_module" "CborAdmissionBeaconCompiler guarded dependencies"
+for theorem_name in inactive_send allowed_inactive native_inactive observed_some step_exact good_support; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "CborAdmissionBeaconCompiler theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.CborAdmissionBeaconCompiler.${theorem_name}$" "$selected_source_module" "CborAdmissionBeaconCompiler dependency ${theorem_name}"
+done
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/CborAdmissionCompileStep.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.CborAdmissionCompileStep$' proofs/lean/BeaconcryptCore.lean "CborAdmissionCompileStep root import"
+require_line_count 7 '^theorem ' "$selected_source_module" "CborAdmissionCompileStep theorem total"
+require_line_count 7 '^#guard_msgs in$' "$selected_source_module" "CborAdmissionCompileStep guarded dependencies"
+for theorem_name in compiledImpl_run good_initial step_merge good_step compile_simulation good_run compile_native; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "CborAdmissionCompileStep theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.CborAdmissionCompileStep.${theorem_name}$" "$selected_source_module" "CborAdmissionCompileStep dependency ${theorem_name}"
+done
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/CborAdmissionCompileGame.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.CborAdmissionCompileGame$' proofs/lean/BeaconcryptCore.lean "CborAdmissionCompileGame root import"
+require_line_count 3 '^theorem ' "$selected_source_module" "CborAdmissionCompileGame theorem total"
+require_line_count 3 '^#guard_msgs in$' "$selected_source_module" "CborAdmissionCompileGame guarded dependencies"
+for theorem_name in construct_fields compile_game compile_source; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "CborAdmissionCompileGame theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.CborAdmissionCompileGame.${theorem_name}$" "$selected_source_module" "CborAdmissionCompileGame dependency ${theorem_name}"
+done
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/CborAdmissionCompileBudget.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.CborAdmissionCompileBudget$' proofs/lean/BeaconcryptCore.lean "CborAdmissionCompileBudget root import"
+require_line_count 4 '^theorem ' "$selected_source_module" "CborAdmissionCompileBudget theorem total"
+require_line_count 4 '^#guard_msgs in$' "$selected_source_module" "CborAdmissionCompileBudget guarded dependencies"
+for theorem_name in beacon_bound step_bound compile_bound compile_unread; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "CborAdmissionCompileBudget theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.CborAdmissionCompileBudget.${theorem_name}$" "$selected_source_module" "CborAdmissionCompileBudget dependency ${theorem_name}"
+done
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/CborLogPins.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.CborLogPins$' proofs/lean/BeaconcryptCore.lean "CborLogPins root import"
+require_line_count 2 '^theorem ' "$selected_source_module" "CborLogPins theorem total"
+require_line_count 2 '^#guard_msgs in$' "$selected_source_module" "CborLogPins guarded dependencies"
+for theorem_name in active_pin selection; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "CborLogPins theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.CborLogPins.${theorem_name}$" "$selected_source_module" "CborLogPins dependency ${theorem_name}"
+done
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/CborAdmissionCompileSecrecy.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.CborAdmissionCompileSecrecy$' proofs/lean/BeaconcryptCore.lean "CborAdmissionCompileSecrecy root import"
+require_line_count 6 '^theorem ' "$selected_source_module" "CborAdmissionCompileSecrecy theorem total"
+require_line_count 6 '^#guard_msgs in$' "$selected_source_module" "CborAdmissionCompileSecrecy guarded dependencies"
+for theorem_name in run_wrap game_wrap compile_full_game compile_full_source compile_full_bound compile_full_unread; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "CborAdmissionCompileSecrecy theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.CborAdmissionCompileSecrecy.${theorem_name}$" "$selected_source_module" "CborAdmissionCompileSecrecy dependency ${theorem_name}"
+done
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/CborRawRegistrationBuild.lean
+require_line_count 1 '^import BeaconcryptCore.Computational.CborRawRegistrationBuild$' proofs/lean/BeaconcryptCore.lean "CborRawRegistrationBuild root import"
+require_line_count 10 '^theorem ' "$selected_source_module" "CborRawRegistrationBuild theorem total"
+require_line_count 10 '^#guard_msgs in$' "$selected_source_module" "CborRawRegistrationBuild guarded dependencies"
+for theorem_name in raw_seal_exact raw_seal_run raw_seal_render raw_render_run shared_raw_seal render_registration render_admitted auxiliary_unchanged build_writer_irrelevant outer_none; do
+	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_source_module" "CborRawRegistrationBuild theorem ${theorem_name}"
+	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.CborRawRegistrationBuild.${theorem_name}$" "$selected_source_module" "CborRawRegistrationBuild dependency ${theorem_name}"
+done
+
+require_line_count 5 '^query event\(CborRegistration' proofs/pro-verif/cbor-registration.pvl "CBOR registration query total"
+require_occurrence_count 1 \
+	'cbor_registration_restore\(cbor_registration_payload\(body, tag, commitment\), pinned\) =\s*crypto_frame\(body, tag, commitment, first_sequence\(\), pinned\)\.' \
+	"CBOR registration reconstruction fixes sequence and pinned sender" proofs/pro-verif/cbor-registration.pvl
+require_line_count 1 '^\s*cbor-registration \\$' Makefile "CBOR registration aggregate scenario"
+require_line_count 1 '^check-proverif-cbor-registration: check-proverif-extraction$' Makefile "CBOR registration checker target"
+require_occurrence_count 1 \
+	'else if \(scenario == "cbor-registration"\) \{\s*if \(query_count != 5\)' \
+	"CBOR registration exact five-result classifier" proofs/pro-verif/check-results.awk
 
 # Reviewed actual getter availability, distinct from network compromise powers.
 python3 proofs/source/test-getter-profile.py

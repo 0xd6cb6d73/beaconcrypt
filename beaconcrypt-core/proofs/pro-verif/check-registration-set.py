@@ -75,10 +75,11 @@ def check_source_order():
     end = source.index("fn build_registration_response(", start)
     body = source[start:end]
     tokens = [
+        "let registration = decode_init(buffer)?;",
         "crypto_sign::PublicKey::from_bytes",
-        "crypto_sign::verify(registration.get_pq_key()",
-        "crypto_sign::verify(registration.get_pre_key()",
-        "crypto_sign::verify(registration.get_one_time_key()",
+        "crypto_sign::verify(registration.pq_key,",
+        "crypto_sign::verify(registration.pre_key,",
+        "crypto_sign::verify(registration.one_time_key,",
         "verified_pqxdh::validate_init_kex(init_kex)",
         "verified_pqxdh::registration_id(&verified_registration)",
         "self.consumed_registrations.contains(&registration_id)",

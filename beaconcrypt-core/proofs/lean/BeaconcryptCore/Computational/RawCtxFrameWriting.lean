@@ -3,6 +3,8 @@ import BeaconcryptCore.Computational.RawCtxSourceSeal
 /-!
 # Source frame builder, optional serialization and conditional field provenance
 
+The setter-shaped writer below is the retained pre-CBOR codec abstraction. Current CBOR constructs a `CryptoFrame` value and serializes it directly; this module's generic setter laws remain mathematical hypotheses, and its source-order prose is historical. Current complete-message admission is `CborSizing.frameFits`, and current normalized production is exposed by `CborProductionBoundary`.
+
 The source sets ciphertext, sequence and sender in that order before its actual optional write-message callback. Ordinary functional setter and codec-library laws connect successful serialization to exact fields when the actual complete-input reader succeeds. Framing, root and payload access may reject, including resource limits; successful writing does not promise reader availability. No canonical wire encoding, byte injectivity, authentication or crypto property is assumed.
 
 The builder expansion changes only the final writer argument in the native source interface. Complete adaptive send interpretation retains the actual optional API result, whole owner and full primitive state, with four separate qSend call caps. Actual source success then derives the pending/response-selected advanced kernel and decoded frame, keeping the same writer poststate. No active or honest-selected key premise is added. Local allocation/setter/serialization work is not free.
