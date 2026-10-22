@@ -373,29 +373,29 @@ impl ProviderBeacon for Beacon {
 		let onetime_sig =
 			crypto_sign::sign(started.message.one_time_key(), self.identity_sk()).ok()?;
 		let pq_sig = crypto_sign::sign(started.message.pq_key(), self.identity_sk()).ok()?;
+		let public_key = self.mldsa_public_key();
 		let init = InitKex {
 			identity_key: started.message.identity_key(),
 			pre_key: &prekey_sig,
 			one_time_key: &onetime_sig,
 			pq_key: &pq_sig,
+			mldsa_public_key: &public_key,
+			signature: &[],
 		};
-		let public_key = self.mldsa_public_key();
 		let init_hash = auth::init_transcript_hash(
 			&init,
 			self.server_kid(),
 			self.server_id.as_bytes(),
-			&public_key,
 			&self.authentication.server_public_key,
 		)?;
 		let signature = self
 			.authentication
 			.identity
 			.sign(AuthRole::Beacon, &init_hash)?;
-		let buffer = crate::mldsa_wire::encode_init(
-			&public_key,
-			&signature,
-			&crate::wire::encode_init(init)?,
-		)?;
+		let buffer = crate::wire::encode_init(InitKex {
+			signature: &signature,
+			..init
+		})?;
 
 		let fallback = BeaconState::Aborted {
 			control: verified_pqxdh::beacon_abort_fresh(control),
@@ -461,15 +461,14 @@ impl ProviderBeacon for Beacon {
 				),
 				_ => return None,
 			};
-			let (signature, payload) = crate::mldsa_wire::decode_response(bytes)?;
-			let response = decode_response(payload)?;
+			let response = decode_response(bytes)?;
 			let hash =
 				auth::response_transcript_hash(self.authentication.init_hash.as_ref()?, &response)?;
 			if !auth::verify(
 				&self.authentication.server_public_key,
 				AuthRole::Server,
 				&hash,
-				signature,
+				response.signature,
 			) {
 				return None;
 			}
@@ -608,15 +607,14 @@ mod tests {
 				encrypt_message_with_ratchet(&payload, original.kid, 0, &ad, &mut sender).unwrap();
 			assert_eq!(sender.status().send_sequence(), 1);
 			let raw_frame = beaconcrypt_parse::decode_frame(&frame.ciphertext).unwrap();
-			let (_, original_payload) =
-				crate::mldsa_wire::decode_response(&original.serialized).unwrap();
-			let response = decode_response(original_payload).unwrap();
+			let response = decode_response(&original.serialized).unwrap();
 			let rewritten = beaconcrypt_parse::KexResponse {
 				identity_key: response.identity_key,
 				ephemeral_key: response.ephemeral_key,
 				kem_cipher_text: response.kem_cipher_text,
 				key_id: original.kid,
 				app_cipher_text: raw_frame.cipher_text,
+				signature: &[],
 			};
 			let hash = auth::response_transcript_hash(
 				beacon.authentication.init_hash.as_ref().unwrap(),
@@ -626,10 +624,10 @@ mod tests {
 			let signature = MldsaIdentity::from_seed(mldsa_seed)
 				.sign(AuthRole::Server, &hash)
 				.unwrap();
-			let serialized = crate::mldsa_wire::encode_response(
-				&signature,
-				&crate::wire::encode_response(rewritten).unwrap(),
-			)
+			let serialized = crate::wire::encode_response(beaconcrypt_parse::KexResponse {
+				signature: &signature,
+				..rewritten
+			})
 			.unwrap();
 			let opened = beacon.finish_registration(&serialized);
 			if case == 9 {

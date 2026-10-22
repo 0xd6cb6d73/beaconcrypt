@@ -325,7 +325,15 @@ fn guest_server_interoperates_with_native_beacon_updates_json_and_checkpoint() {
 	)
 	.unwrap();
 	let bundle = beacon.get_registration_bundle().unwrap();
+	assert_eq!(&bundle[..3], &[0x88, 2, 0]);
+	assert_eq!(bundle.len(), 6_757);
+	assert_eq!(&bundle[bundle.len() - 3_312..][..3], &[0x59, 0x0c, 0xed]);
 	let registration = checked(5, owner, 0, &bundle, b"hello");
+	assert_eq!(&registration.data[..3], &[0x88, 2, 1]);
+	assert_eq!(
+		&registration.data[registration.data.len() - 3_312..][..3],
+		&[0x59, 0x0c, 0xed]
+	);
 	assert_eq!(
 		beacon.finish_registration(&registration.data).unwrap(),
 		b"hello"
@@ -416,10 +424,21 @@ fn guest_beacon_interoperates_with_native_server_and_rejects_wrong_handle_kinds(
 	let beacon = checked(2, 0, 19, &public, &[]).handle;
 	assert_eq!(checked(3, beacon, 0, &[], &[]).data.len(), 32);
 	let registration = checked(4, beacon, 0, &[], &[]);
+	assert_eq!(&registration.data[..3], &[0x88, 2, 0]);
+	assert_eq!(registration.data.len(), 6_757);
+	assert_eq!(
+		&registration.data[registration.data.len() - 3_312..][..3],
+		&[0x59, 0x0c, 0xed]
+	);
 	let pending = native.get_shared_secret(&registration.data).unwrap();
 	let response = native
 		.build_registration_response(pending, Some(b"native hello"))
 		.unwrap();
+	assert_eq!(&response.serialized[..3], &[0x88, 2, 1]);
+	assert_eq!(
+		&response.serialized[response.serialized.len() - 3_312..][..3],
+		&[0x59, 0x0c, 0xed]
+	);
 	assert_eq!(
 		checked(6, beacon, 0, &response.serialized, &[]).data,
 		b"native hello"

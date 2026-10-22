@@ -123,9 +123,10 @@ fn flattened_registration_response_accepts_the_exact_complete_message_limit() {
 	);
 	let init = beacon.get_registration_bundle().unwrap();
 	let accepted = server.get_shared_secret(&init).unwrap();
-	// The outer response adds 1,168 bytes to its raw payload at this size; the
-	// payload adds the eight-byte assigned-ID binding, tag, and commitment.
-	let application = vec![0x63; MAX_MESSAGE_SIZE - 1_256 - common::RESPONSE_HEADER];
+	// The v2 response adds 4,480 bytes to its raw payload, including the
+	// 3,309-byte signature and its three-byte CBOR header. The raw payload adds
+	// the eight-byte assigned-ID binding, tag, and commitment.
+	let application = vec![0x63; MAX_MESSAGE_SIZE - 4_568];
 	let response = server
 		.build_registration_response(accepted, Some(&application))
 		.unwrap();
@@ -175,13 +176,13 @@ fn persistent_oversize_rejections_skip_cas_and_preserve_poison_fencing() {
 	assert_eq!(server.head(), head);
 	assert_eq!(store.attempts(), attempts);
 	assert_eq!(store.bytes(), snapshot);
-	// Rejection of the oversized envelope leaves its underlying registration identifier fresh.
+	// Rejection of the oversized request leaves its registration identifier fresh.
 	let accepted = server.get_shared_secret(&init).unwrap().unwrap();
 	let head = server.head();
 	let attempts = store.attempts();
 	let snapshot = store.bytes();
 	// The raw ciphertext fits, but its binding and outer response exceed the cap.
-	let response_too_large = &oversized[..MAX_MESSAGE_SIZE - 1_255];
+	let response_too_large = &oversized[..MAX_MESSAGE_SIZE - 4_567];
 	assert!(
 		server
 			.build_registration_response(accepted, Some(response_too_large))
@@ -302,7 +303,7 @@ mod common;
 use common::decode_response;
 
 #[test]
-fn signed_response_envelope_overflow_rejects_before_persistence() {
+fn signed_response_cbor_overflow_rejects_before_persistence() {
 	let store = Store::default();
 	let mut server = PersistentServer::create(0, None, None, store.clone()).unwrap();
 	let mut beacon = Beacon::new(
@@ -315,8 +316,8 @@ fn signed_response_envelope_overflow_rejects_before_persistence() {
 	let head = server.head();
 	let attempts = store.attempts();
 	let snapshot = store.bytes();
-	// The CBOR response fits; adding its mandatory signature envelope exceeds the cap by one byte.
-	let application = vec![0x63; MAX_MESSAGE_SIZE - 1_255 - common::RESPONSE_HEADER];
+	// The complete v2 CBOR response exceeds the inclusive cap by exactly one byte.
+	let application = vec![0x63; MAX_MESSAGE_SIZE - 4_567];
 	assert!(
 		server
 			.build_registration_response(accepted, Some(&application))

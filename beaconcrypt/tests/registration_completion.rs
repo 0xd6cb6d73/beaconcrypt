@@ -29,6 +29,7 @@ fn response_with_ciphertext(response: &RegResponse, ciphertext: &[u8], assigned:
 		kem_cipher_text: original.kem_cipher_text,
 		key_id: assigned,
 		app_cipher_text: ciphertext,
+		signature: original.signature,
 	})
 }
 

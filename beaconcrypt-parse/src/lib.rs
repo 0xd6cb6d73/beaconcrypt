@@ -36,7 +36,7 @@ use transport::{
 };
 
 // Reject containers before the generic generated validator can scan their contents.
-// Each schema has a fixed prefix and at most five primitive fields; byte strings
+// Each schema has a fixed prefix and at most six primitive fields; byte strings
 // are skipped without inspecting their payload.
 fn preflight(input: &[u8], prefix: &[u8], fields: &[u8]) -> Option<()> {
 	if input.len() > MAX_MESSAGE_SIZE {
@@ -89,6 +89,8 @@ pub fn encode_init(init: InitKex<'_>, output: &mut [u8]) -> usize {
 		init.pre_key.len(),
 		init.one_time_key.len(),
 		init.pq_key.len(),
+		init.mldsa_public_key.len(),
+		init.signature.len(),
 	])
 	.is_none()
 	{
@@ -105,6 +107,7 @@ pub fn encode_response(response: KexResponse<'_>, output: &mut [u8]) -> usize {
 			response.ephemeral_key.len(),
 			response.kem_cipher_text.len(),
 			response.app_cipher_text.len(),
+			response.signature.len(),
 		],
 		response.key_id,
 	)
@@ -126,7 +129,7 @@ pub fn decode_frame(input: &[u8]) -> Option<CryptoFrame<'_>> {
 
 /// Validate and borrow exactly one registration request.
 pub fn decode_init(input: &[u8]) -> Option<InitKex<'_>> {
-	preflight(input, &[0x86, 1, 0], &[2, 2, 2, 2])?;
+	preflight(input, &[0x88, 2, 0], &[2, 2, 2, 2, 2, 2])?;
 	match validate_and_parse_initkex(input) {
 		ParsedInit::Some { v: (init, []) } => Some(init),
 		_ => None,
@@ -135,7 +138,7 @@ pub fn decode_init(input: &[u8]) -> Option<InitKex<'_>> {
 
 /// Validate and borrow exactly one registration response.
 pub fn decode_response(input: &[u8]) -> Option<KexResponse<'_>> {
-	preflight(input, &[0x87, 1, 1], &[2, 2, 2, 2, 0])?;
+	preflight(input, &[0x88, 2, 1], &[2, 2, 2, 2, 0, 2])?;
 	match validate_and_parse_kexresponse(input) {
 		ParsedResponse::Some { v: (response, []) } => Some(response),
 		_ => None,

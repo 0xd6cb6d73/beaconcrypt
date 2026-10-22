@@ -43,6 +43,8 @@ implements snapshot-store callbacks. Compilation is shared; each server or
 beacon retains its own guest memory and serialized operations. Server state
 still requires the storage guarantees described in [persistence.md](persistence.md).
 
+Registration uses a single CBOR version-two array in both backends. The eight-element `InitKex` array carries the agent's 1,952-byte ML-DSA public key and 3,309-byte signature after its four PQXDH byte fields. The eight-element `KexResponse` array carries its 3,309-byte signature after the assigned key ID. Established traffic uses the version-one `CryptoFrame` array. Go and the guest pass complete registration messages as opaque bytes; ABI version two continues to provision both server public-key pins and independent identity seeds through its existing constructor requests.
+
 ## Run guest unit and mutation tests
 
 With the pinned Rust target and Zig installed, run `bash scripts/test-wasm.sh` to execute the Rust guest tests in wazero under the production 256 MiB memory limit. The runner uses the existing pinned Go dependency and test-only snapshot callbacks. It exercises actual 32-bit allocation descriptors, complete packed replies, snapshot load/CAS forwarding, and owned-context destruction. One size-bound probe runs in a separate guest and must produce the expected allocation-failure trap, so the test never allocates a multi-gigabyte host buffer.
@@ -118,13 +120,4 @@ checkout. Packaging tests run without downloading tools:
 python3 -m unittest discover -s scripts -p 'test_package_wasm.py' -v
 ```
 
-The complete encoded-message limit remains 32 MiB, including framing and
-authentication. It is not a plaintext, snapshot or JSON-state limit. Each guest
-instance has a 256 MiB memory cap. The one-peer test fixture measured about
-193 MiB sender and 97 MiB receiver guest memory at that boundary; these are
-separate instances and exclude host memory. Those measurements do not bound
-memory use for other peer counts or snapshot sizes. Resource exhaustion
-invalidates the affected handle. The Wasm backend's memory and
-throughput costs should be measured with the application's peer counts and
-message sizes. Functional interoperability does not establish constant-time
-behavior of generated native code.
+The complete encoded-message limit remains 32 MiB, including CBOR headers, ML-DSA public keys, and signatures. It is not a plaintext, snapshot or JSON-state limit. Each guest instance has a 256 MiB memory cap. The one-peer test fixture measured about 193 MiB sender and 97 MiB receiver guest memory at that boundary; these are separate instances and exclude host memory. Those measurements do not bound memory use for other peer counts or snapshot sizes. Resource exhaustion invalidates the affected handle. The Wasm backend's memory and throughput costs should be measured with the application's peer counts and message sizes. Functional interoperability does not establish constant-time behavior of generated native code.

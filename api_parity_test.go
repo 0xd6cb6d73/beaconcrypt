@@ -266,3 +266,45 @@ func TestMLDSAServerPinSeparatelyAuthenticatesTheRegistration(t *testing.T) {
 		t.Fatalf("intended registration: %q, %v", opened, err)
 	}
 }
+
+func TestRegistrationCarriesMLDSAFieldsInsideCBORV2(t *testing.T) {
+	server := newServer(t)
+	ed, err := server.IdentityPK()
+	if err != nil {
+		t.Fatal(err)
+	}
+	beacon := newBeacon(t, server, ed)
+	init, err := beacon.GenerateRegistration()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(init) != 6757 {
+		t.Fatalf("unexpected complete registration request length: %d", len(init))
+	}
+	publicKey, err := beacon.MLDSAPublicKey()
+	if err != nil {
+		t.Fatal(err)
+	}
+	const signatureBytes = 3309
+	keyOffset := len(init) - (3 + signatureBytes) - (3 + MLDSA65PublicKeySize)
+	if !bytes.Equal(init[keyOffset:keyOffset+3], []byte{0x59, 0x07, 0xa0}) || !bytes.Equal(init[keyOffset+3:keyOffset+3+MLDSA65PublicKeySize], publicKey) {
+		t.Fatal("request does not contain the beacon ML-DSA public key as its penultimate CBOR field")
+	}
+	response, err := server.RegisterBeacon(init, []byte("signed CBOR response"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for kind, encoded := range [][]byte{init, response.Serialized} {
+		if !bytes.HasPrefix(encoded, []byte{0x88, 2, byte(kind)}) {
+			t.Fatal("registration is not an eight-field CBOR v2 array")
+		}
+		signatureOffset := len(encoded) - signatureBytes - 3
+		if signatureOffset < 3 || !bytes.Equal(encoded[signatureOffset:signatureOffset+3], []byte{0x59, 0x0c, 0xed}) {
+			t.Fatal("registration signature is not the final 3309-byte CBOR byte string")
+		}
+	}
+	opened, err := beacon.ProcessInitialMessage(response.Serialized)
+	if err != nil || !bytes.Equal(opened, []byte("signed CBOR response")) {
+		t.Fatalf("signed CBOR registration failed: %q, %v", opened, err)
+	}
+}

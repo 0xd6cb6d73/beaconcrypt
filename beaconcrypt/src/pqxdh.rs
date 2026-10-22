@@ -82,10 +82,7 @@ pub fn build_associated_data(
 
 #[cfg(all(test, feature = "beacon", feature = "server"))]
 mod tests {
-	use beaconcrypt_parse::InitKex;
-	fn decode_init(bytes: &[u8]) -> Option<InitKex<'_>> {
-		beaconcrypt_parse::decode_init(crate::mldsa_wire::decode_init(bytes)?.2)
-	}
+	use beaconcrypt_parse::{InitKex, decode_init};
 	use libsodium_rs::{crypto_kdf, crypto_kem, crypto_kx, crypto_sign};
 
 	use super::{
@@ -98,21 +95,27 @@ mod tests {
 		shared::{DhSecret, KemType, KexDerivedSecret, decode_kem, decode_sign},
 	};
 
-	fn authenticate_init_payload(server: &Server, payload: &[u8]) -> Vec<u8> {
-		// Re-sign the outer transcript so negative cases reach the classical checks.
+	fn authenticate_init_payload(server: &Server, decoded: InitKex<'_>) -> Vec<u8> {
+		// Re-sign the transcript so negative cases reach the classical checks.
 		let identity = crate::auth::MldsaIdentity::from_seed([0x6d; 32]);
 		let public_key = identity.public_key();
-		let decoded = beaconcrypt_parse::decode_init(payload).unwrap();
+		let decoded = InitKex {
+			mldsa_public_key: &public_key,
+			..decoded
+		};
 		let hash = crate::auth::init_transcript_hash(
 			&decoded,
 			server.identity_key_kid(),
 			server.identity_pk().as_bytes(),
-			&public_key,
 			&server.mldsa_public_key(),
 		)
 		.unwrap();
 		let signature = identity.sign(crate::auth::AuthRole::Beacon, &hash).unwrap();
-		crate::mldsa_wire::encode_init(&public_key, &signature, payload).unwrap()
+		crate::wire::encode_init(InitKex {
+			signature: &signature,
+			..decoded
+		})
+		.unwrap()
 	}
 
 	fn register(server: &mut Server, beacon: &mut Beacon) {
@@ -459,14 +462,16 @@ mod tests {
 			let last = selected.len() - 1;
 			selected[last] ^= 1;
 
-			let tampered = crate::wire::encode_init(InitKex {
-				identity_key: &identity,
-				pre_key: &tampered_prekey,
-				one_time_key: &tampered_onetime,
-				pq_key: &tampered_pq,
-			})
-			.unwrap();
-			let tampered = authenticate_init_payload(&server, &tampered);
+			let tampered = authenticate_init_payload(
+				&server,
+				InitKex {
+					identity_key: &identity,
+					pre_key: &tampered_prekey,
+					one_time_key: &tampered_onetime,
+					pq_key: &tampered_pq,
+					..registration
+				},
+			);
 
 			assert!(
 				server.get_shared_secret(&tampered).is_none(),
@@ -493,14 +498,16 @@ mod tests {
 		let pq = registration.pq_key.to_vec();
 
 		for duplicate_prekey in [false, true] {
-			let tampered_serialized = crate::wire::encode_init(InitKex {
-				identity_key: &identity,
-				pre_key: if duplicate_prekey { &prekey } else { &onetime },
-				one_time_key: &prekey,
-				pq_key: &pq,
-			})
-			.unwrap();
-			let tampered_serialized = authenticate_init_payload(&server, &tampered_serialized);
+			let tampered_serialized = authenticate_init_payload(
+				&server,
+				InitKex {
+					identity_key: &identity,
+					pre_key: if duplicate_prekey { &prekey } else { &onetime },
+					one_time_key: &prekey,
+					pq_key: &pq,
+					..registration
+				},
+			);
 
 			assert!(
 				server.get_shared_secret(&tampered_serialized).is_none(),
@@ -546,14 +553,16 @@ mod tests {
 			let wrong_prekey = crypto_sign::sign(&wrong_prekey, beacon.identity_sk()).unwrap();
 			let wrong_onetime = crypto_sign::sign(&wrong_onetime, beacon.identity_sk()).unwrap();
 			let wrong_pq = crypto_sign::sign(&wrong_pq, beacon.identity_sk()).unwrap();
-			let wrong_type = crate::wire::encode_init(InitKex {
-				identity_key: &identity,
-				pre_key: &wrong_prekey,
-				one_time_key: &wrong_onetime,
-				pq_key: &wrong_pq,
-			})
-			.unwrap();
-			let wrong_type = authenticate_init_payload(&server, &wrong_type);
+			let wrong_type = authenticate_init_payload(
+				&server,
+				InitKex {
+					identity_key: &identity,
+					pre_key: &wrong_prekey,
+					one_time_key: &wrong_onetime,
+					pq_key: &wrong_pq,
+					..registration
+				},
+			);
 
 			assert!(
 				server.get_shared_secret(&wrong_type).is_none(),
@@ -649,7 +658,7 @@ mod tests {
 			&server.mldsa_public_key(),
 		);
 		let bundle = beacon.get_registration_bundle().unwrap();
-		let payload = crate::mldsa_wire::decode_init(&bundle).unwrap().2;
+		let payload = decode_init(&bundle).unwrap();
 		let authenticated = authenticate_init_payload(&server, payload);
 		assert!(server.get_shared_secret(&authenticated).is_some());
 	}

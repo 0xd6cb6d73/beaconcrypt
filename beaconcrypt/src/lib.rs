@@ -5,8 +5,6 @@ mod auth;
 #[cfg(feature = "beacon")]
 mod beacon;
 mod error;
-#[cfg(feature = "pqxdh")]
-mod mldsa_wire;
 #[cfg(feature = "server")]
 mod persistence;
 #[cfg(feature = "pqxdh")]

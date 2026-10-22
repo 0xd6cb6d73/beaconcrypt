@@ -135,14 +135,13 @@ pub(crate) fn init_transcript_hash(
 	init: &InitKex<'_>,
 	server_kid: u64,
 	pinned_server_ed: &[u8; 32],
-	beacon_auth_key: &[u8; MLDSA_PUBLIC_KEY_LEN],
 	server_auth_key: &[u8; MLDSA_PUBLIC_KEY_LEN],
 ) -> Option<TranscriptHash> {
 	let mut state = hash_state()?;
 	state.update(INIT_TRANSCRIPT_DOMAIN);
 	state.update(&server_kid.to_le_bytes());
 	state.update(pinned_server_ed);
-	state.update(beacon_auth_key);
+	state.update(init.mldsa_public_key);
 	state.update(server_auth_key);
 	for field in [
 		init.identity_key,
@@ -293,10 +292,11 @@ mod tests {
 					pre_key: &fields[1],
 					one_time_key: &fields[2],
 					pq_key: &fields[3],
+					mldsa_public_key: beacon,
+					signature: &[],
 				},
 				kid,
 				ed,
-				beacon,
 				server,
 			)
 			.unwrap()
@@ -347,6 +347,7 @@ mod tests {
 					ephemeral_key: &fields[1],
 					kem_cipher_text: &fields[2],
 					app_cipher_text: &fields[3],
+					signature: &[],
 				},
 			)
 			.unwrap()
@@ -373,10 +374,11 @@ mod tests {
 					pre_key: prekey,
 					one_time_key: &[],
 					pq_key: &[],
+					mldsa_public_key: &public_key,
+					signature: &[],
 				},
 				0,
 				&[0; 32],
-				&public_key,
 				&public_key,
 			)
 			.unwrap()

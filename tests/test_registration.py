@@ -42,6 +42,58 @@ def test_register_without_initial_message():
     assert phase_2 == b"\xff"
 
 
+def test_registration_signatures_are_fields_of_cbor_version_two():
+    server = BeaconCryptServer(0, None, None)
+    beacon = BeaconCryptBeacon(0, server.id_pk(), server.mldsa_public_key())
+
+    request = beacon.generate_registration()
+    assert request is not None
+    assert request[:3] == b"\x88\x02\x00"
+    assert len(request) == 6757
+    assert request[-5267:-3312] == b"\x59\x07\xa0" + beacon.mldsa_public_key()
+    assert request[-3312:-3309] == b"\x59\x0c\xed"
+
+    response = server.register_beacon(request, b"signed CBOR response")
+    assert response is not None
+    encoded_response = response.serialized()
+    assert encoded_response[:3] == b"\x88\x02\x01"
+    assert encoded_response[-3312:-3309] == b"\x59\x0c\xed"
+    assert beacon.process_initial_message(encoded_response) == b"signed CBOR response"
+
+    frame = beacon.encrypt_message_to_server(b"established frame")
+    assert frame is not None
+    assert frame[:3] == b"\x85\x01\x02"
+    assert server.decrypt_beacon_message(frame) == b"established frame"
+
+
+def test_invalid_cbor_request_signature_does_not_consume_registration():
+    server = BeaconCryptServer(0, None, None)
+    beacon = BeaconCryptBeacon(0, server.id_pk(), server.mldsa_public_key())
+    request = beacon.generate_registration()
+    assert request is not None
+    damaged = request[:-1] + bytes([request[-1] ^ 1])
+
+    assert server.register_beacon(damaged, b"initial") is None
+    response = server.register_beacon(request, b"initial")
+    assert response is not None
+    assert beacon.process_initial_message(response.serialized()) == b"initial"
+
+
+def test_invalid_cbor_response_signature_aborts_registration():
+    server = BeaconCryptServer(0, None, None)
+    beacon = BeaconCryptBeacon(0, server.id_pk(), server.mldsa_public_key())
+    request = beacon.generate_registration()
+    assert request is not None
+    response = server.register_beacon(request, b"initial")
+    assert response is not None
+    encoded_response = response.serialized()
+    damaged = encoded_response[:-1] + bytes([encoded_response[-1] ^ 1])
+
+    assert beacon.process_initial_message(damaged) is None
+    assert beacon.process_initial_message(encoded_response) is None
+    assert beacon.encrypt_message_to_server(b"after rejection") is None
+
+
 def test_server_from_seed_uses_stable_identity():
     seed = bytes([0]) * 32
     expected_pk = bytes.fromhex(

@@ -40,10 +40,25 @@ fn fingerprint(key: &[u8]) -> Vec<u8> {
 	crypto_generichash::generichash(key, None, 64).unwrap()
 }
 
-fn init_with_payload(original: &[u8], payload: &[u8]) -> Vec<u8> {
-	let mut rewritten = original[..common::INIT_HEADER].to_vec();
-	rewritten.extend_from_slice(payload);
-	rewritten
+fn legacy_init(init: InitKex<'_>) -> Vec<u8> {
+	let mut encoded = common::encode_unchecked_init(InitKex {
+		mldsa_public_key: &[],
+		signature: &[],
+		..init
+	});
+	encoded.truncate(encoded.len() - 2);
+	encoded[..3].copy_from_slice(&[0x86, 1, 0]);
+	encoded
+}
+
+fn legacy_response(response: KexResponse<'_>) -> Vec<u8> {
+	let mut encoded = common::encode_unchecked_response(KexResponse {
+		signature: &[],
+		..response
+	});
+	encoded.pop();
+	encoded[..3].copy_from_slice(&[0x87, 1, 1]);
+	encoded
 }
 
 #[derive(Default)]
@@ -103,14 +118,15 @@ fn signed_registration_binds_both_public_keys_in_associated_data_and_exchanges_r
 	let beacon_key = beacon.mldsa_public_key();
 	assert_ne!(server_key, beacon_key);
 	let (init, response, kid) = register(&mut server, &mut beacon, b"authenticated welcome");
-	assert!(init.starts_with(common::AUTH_MAGIC));
-	assert!(response.starts_with(common::AUTH_MAGIC));
-	assert_eq!(init[common::AUTH_MAGIC.len()], 0);
-	assert_eq!(response[common::AUTH_MAGIC.len()], 1);
-	assert_eq!(
-		&init[common::AUTH_MAGIC.len() + 1..common::AUTH_MAGIC.len() + 1 + MLDSA_PUBLIC_KEY_LEN],
-		&beacon_key
-	);
+	assert!(init.starts_with(&[0x88, 2, 0]));
+	assert!(response.starts_with(&[0x88, 2, 1]));
+	let decoded_init = common::decode_init(&init).unwrap();
+	let decoded_response = common::decode_response(&response).unwrap();
+	assert_eq!(decoded_init.mldsa_public_key, beacon_key);
+	assert_eq!(decoded_init.signature.len(), MLDSA_SIGNATURE_LEN);
+	assert_eq!(decoded_response.signature.len(), MLDSA_SIGNATURE_LEN);
+	assert_eq!(common::encode_unchecked_init(decoded_init), init);
+	assert_eq!(common::encode_response(decoded_response), response);
 	let ad = beacon.associated_data().unwrap();
 	let base = beaconcrypt_core::pqxdh::build_associated_data(
 		*server.identity_pk().as_bytes(),
@@ -145,7 +161,7 @@ fn signed_registration_binds_both_public_keys_in_associated_data_and_exchanges_r
 }
 
 #[test]
-fn every_init_field_and_envelope_key_is_authenticated_before_server_state_changes() {
+fn every_init_field_and_mldsa_key_is_authenticated_before_server_state_changes() {
 	let mut server = persistent_server(&[8; 32]);
 	let mut beacon = Beacon::new(
 		SERVER_KID,
@@ -164,24 +180,25 @@ fn every_init_field_and_envelope_key_is_authenticated_before_server_state_change
 	for index in 0..fields.len() {
 		let mut altered = fields.clone();
 		altered[index][0] ^= 1;
-		candidates.push(init_with_payload(
-			&init,
-			&common::encode_unchecked_init(InitKex {
-				identity_key: &altered[0],
-				pre_key: &altered[1],
-				one_time_key: &altered[2],
-				pq_key: &altered[3],
-			}),
-		));
+		candidates.push(common::encode_unchecked_init(InitKex {
+			identity_key: &altered[0],
+			pre_key: &altered[1],
+			one_time_key: &altered[2],
+			pq_key: &altered[3],
+			mldsa_public_key: decoded.mldsa_public_key,
+			signature: decoded.signature,
+		}));
 	}
-	let mut substituted = init.clone();
-	let key_start = common::AUTH_MAGIC.len() + 1;
-	substituted[key_start..key_start + MLDSA_PUBLIC_KEY_LEN]
-		.copy_from_slice(&MldsaIdentity::from_seed([9; 32]).public_key());
-	candidates.push(substituted);
-	let mut bad_signature = init.clone();
-	bad_signature[key_start + MLDSA_PUBLIC_KEY_LEN] ^= 1;
-	candidates.push(bad_signature);
+	candidates.push(common::encode_unchecked_init(InitKex {
+		mldsa_public_key: &MldsaIdentity::from_seed([9; 32]).public_key(),
+		..decoded
+	}));
+	let mut bad_signature = decoded.signature.to_vec();
+	bad_signature[0] ^= 1;
+	candidates.push(common::encode_unchecked_init(InitKex {
+		signature: &bad_signature,
+		..decoded
+	}));
 	for candidate in candidates {
 		let before = server.snapshot().unwrap();
 		assert!(server.get_shared_secret(&candidate).unwrap().is_none());
@@ -262,14 +279,14 @@ fn every_response_field_is_authenticated_and_failure_aborts_the_beacon() {
 		} else {
 			key_id ^= 1;
 		}
-		let modified = common::encode_response(KexResponse {
+		let candidate = common::encode_response(KexResponse {
 			identity_key: &fields[0],
 			ephemeral_key: &fields[1],
 			kem_cipher_text: &fields[2],
 			app_cipher_text: &fields[3],
 			key_id,
+			signature: decoded.signature,
 		});
-		let candidate = common::replace_response_payload(&response.serialized, &modified);
 		assert!(
 			beacon.finish_registration(&candidate).is_none(),
 			"field {index}"
@@ -321,7 +338,7 @@ fn signatures_cannot_be_replayed_between_registration_transcripts() {
 }
 
 #[test]
-fn unsigned_and_malformed_init_envelopes_are_rejected_without_consuming_the_original() {
+fn unsigned_and_malformed_init_cbor_is_rejected_without_consuming_the_original() {
 	let mut server = persistent_server(&[8; 32]);
 	let mut beacon = Beacon::new(
 		SERVER_KID,
@@ -329,21 +346,40 @@ fn unsigned_and_malformed_init_envelopes_are_rejected_without_consuming_the_orig
 		&server.mldsa_public_key(),
 	);
 	let init = beacon.get_registration_bundle().unwrap();
-	let mut candidates = vec![
-		common::init_payload(&init).to_vec(),
-		Vec::new(),
-		init[..common::INIT_HEADER].to_vec(),
-		init[..common::INIT_HEADER - 1].to_vec(),
-	];
+	let decoded = common::decode_init(&init).unwrap();
+	let old_cbor = legacy_init(decoded);
+	let mut old_envelope = b"beaconcrypt/ml-dsa-65/v1\0".to_vec();
+	old_envelope.push(0);
+	old_envelope.extend_from_slice(decoded.mldsa_public_key);
+	old_envelope.extend_from_slice(decoded.signature);
+	old_envelope.extend_from_slice(&old_cbor);
+	let mut candidates = vec![old_cbor, old_envelope, Vec::new(), init[..1].to_vec()];
+	candidates.push(init[..init.len() - 1].to_vec());
+	for length in [0, MLDSA_SIGNATURE_LEN - 1, MLDSA_SIGNATURE_LEN + 1] {
+		let mut signature = decoded.signature.to_vec();
+		signature.resize(length, 0);
+		candidates.push(common::encode_unchecked_init(InitKex {
+			signature: &signature,
+			..decoded
+		}));
+	}
+	for length in [0, MLDSA_PUBLIC_KEY_LEN - 1, MLDSA_PUBLIC_KEY_LEN + 1] {
+		let mut public_key = decoded.mldsa_public_key.to_vec();
+		public_key.resize(length, 0);
+		candidates.push(common::encode_unchecked_init(InitKex {
+			mldsa_public_key: &public_key,
+			..decoded
+		}));
+	}
 	let mut wrong_kind = init.clone();
-	wrong_kind[common::AUTH_MAGIC.len()] = 1;
+	wrong_kind[2] = 1;
 	candidates.push(wrong_kind);
-	let mut wrong_magic = init.clone();
-	wrong_magic[0] ^= 1;
-	candidates.push(wrong_magic);
-	let mut shortened_signature = init.clone();
-	shortened_signature.remove(common::AUTH_MAGIC.len() + 1 + MLDSA_PUBLIC_KEY_LEN);
-	candidates.push(shortened_signature);
+	let mut wrong_version = init.clone();
+	wrong_version[1] = 1;
+	candidates.push(wrong_version);
+	let mut wrong_array = init.clone();
+	wrong_array[0] = 0x87;
+	candidates.push(wrong_array);
 	let mut trailing = init.clone();
 	trailing.push(0);
 	candidates.push(trailing);
@@ -356,24 +392,45 @@ fn unsigned_and_malformed_init_envelopes_are_rejected_without_consuming_the_orig
 }
 
 #[test]
-fn unsigned_or_malformed_response_envelopes_terminally_abort_registration() {
-	for case in 0..7 {
+fn unsigned_or_malformed_response_cbor_terminally_aborts_registration() {
+	for case in 0..11 {
 		let mut server = server();
 		let mut beacon = beacon(&server);
 		let init = beacon.get_registration_bundle().unwrap();
 		let accepted = server.get_shared_secret(&init).unwrap();
 		let response = server.build_registration_response(accepted, None).unwrap();
+		let decoded = common::decode_response(&response.serialized).unwrap();
 		let mut candidate = response.serialized.clone();
 		match case {
-			0 => candidate = common::response_payload(&candidate).to_vec(),
-			1 => candidate.truncate(common::RESPONSE_HEADER),
-			2 => candidate.truncate(common::RESPONSE_HEADER - 1),
-			3 => candidate[common::AUTH_MAGIC.len()] = 0,
-			4 => candidate[common::AUTH_MAGIC.len() + 1] ^= 1,
-			5 => {
-				candidate.remove(common::AUTH_MAGIC.len() + MLDSA_SIGNATURE_LEN);
+			0 => candidate = legacy_response(decoded),
+			1 => {
+				candidate = b"beaconcrypt/ml-dsa-65/v1\0".to_vec();
+				candidate.push(1);
+				candidate.extend_from_slice(decoded.signature);
+				candidate.extend_from_slice(&legacy_response(decoded));
 			}
-			6 => candidate.push(0),
+			2..=4 => {
+				let length = [0, MLDSA_SIGNATURE_LEN - 1, MLDSA_SIGNATURE_LEN + 1][case - 2];
+				let mut signature = decoded.signature.to_vec();
+				signature.resize(length, 0);
+				candidate = common::encode_unchecked_response(KexResponse {
+					signature: &signature,
+					..decoded
+				});
+			}
+			5 => {
+				let mut signature = decoded.signature.to_vec();
+				signature[0] ^= 1;
+				candidate = common::encode_response(KexResponse {
+					signature: &signature,
+					..decoded
+				});
+			}
+			6 => candidate[2] = 0,
+			7 => candidate[1] = 1,
+			8 => candidate.truncate(1),
+			9 => candidate.truncate(candidate.len() - 1),
+			10 => candidate.push(0),
 			_ => unreachable!(),
 		}
 		assert!(

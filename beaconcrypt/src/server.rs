@@ -59,6 +59,7 @@ fn registration_response_len(application_len: usize, assigned_key_id: u64) -> Op
 			verified_pqxdh::X25519_PUBLIC_KEY_SIZE,
 			verified_pqxdh::MLKEM768_CIPHERTEXT_SIZE,
 			ciphertext_len,
+			auth::MLDSA_SIGNATURE_LEN,
 		],
 		assigned_key_id,
 	)
@@ -255,8 +256,7 @@ impl Server {
 	}
 	pub(crate) fn registration_response_fits(&self, data: Option<&[u8]>) -> bool {
 		let next_key_id = self.control.last_key_id().saturating_add(1);
-		registration_response_len(data.unwrap_or(REGISTRATION_WITNESS).len(), next_key_id)
-			.is_some_and(crate::mldsa_wire::response_fits)
+		registration_response_len(data.unwrap_or(REGISTRATION_WITNESS).len(), next_key_id).is_some()
 	}
 	pub(crate) fn ratchet_manager(&self, k: u64) -> Option<&RatchetManager> {
 		self.known_ids.get(&k).map(EstablishedRemote::ratchet)
@@ -392,17 +392,21 @@ impl Server {
 impl ProviderServer for Server {
 	fn get_shared_secret(&mut self, buffer: &[u8]) -> Option<RegistrationOutput> {
 		let control = self.control;
-		let (public_key, signature, payload) = crate::mldsa_wire::decode_init(buffer)?;
-		let registration = decode_init(payload)?;
+		let registration = decode_init(buffer)?;
+		let public_key = registration.mldsa_public_key;
 		let server_key = self.mldsa_public_key();
 		let init_hash = auth::init_transcript_hash(
 			&registration,
 			self.identity_key_kid,
 			self.identity_pk().as_bytes(),
-			public_key,
 			&server_key,
 		)?;
-		if !auth::verify(public_key, AuthRole::Beacon, &init_hash, signature) {
+		if !auth::verify(
+			public_key,
+			AuthRole::Beacon,
+			&init_hash,
+			registration.signature,
+		) {
 			return None;
 		}
 		let authentication = RegistrationAuthentication {
@@ -505,12 +509,7 @@ impl ProviderServer for Server {
 		let control = self.control;
 		let plaintext = data.unwrap_or(REGISTRATION_WITNESS);
 		let next_key_id = verified_pqxdh::server_next_key_id(control).ok()?;
-		if !crate::mldsa_wire::response_fits(registration_response_len(
-			plaintext.len(),
-			next_key_id,
-		)?) {
-			return None;
-		}
+		registration_response_len(plaintext.len(), next_key_id)?;
 		let RegistrationOutput {
 			derived_secret,
 			control: pending,
@@ -573,13 +572,14 @@ impl ProviderServer for Server {
 			identity_key: candidate.server_identity_public_key(),
 			kem_cipher_text: candidate.kem_ciphertext(),
 			app_cipher_text: &encrypted.ciphertext,
+			signature: &[],
 		};
 		let hash = auth::response_transcript_hash(&authentication.init_hash, &response)?;
 		let signature = self.mldsa_identity.sign(AuthRole::Server, &hash)?;
-		let buffer = crate::mldsa_wire::encode_response(
-			&signature,
-			&crate::wire::encode_response(response)?,
-		)?;
+		let buffer = crate::wire::encode_response(KexResponse {
+			signature: &signature,
+			..response
+		})?;
 		let (next_control, established_peer) = verified_pqxdh::server_commit(candidate);
 		debug_assert_eq!(established_peer.key_id, remote_kid);
 		debug_assert_eq!(
@@ -636,10 +636,11 @@ mod size_tests {
 	use beaconcrypt_parse::MAX_MESSAGE_SIZE;
 
 	#[test]
-	fn registration_limit_includes_binding_raw_ciphertext_and_outer_response() {
+	fn registration_limit_includes_binding_ciphertext_signature_and_cbor() {
 		// Near the limit, the payload contributes 88 bytes beyond the application
-		// plaintext (8 binding + 80 authentication), and the outer record adds 1,168.
-		let maximum_application = MAX_MESSAGE_SIZE - 1_256;
+		// plaintext (8 binding + 80 authentication), and CBOR adds 4,480 including
+		// the mandatory 3,309-byte signature.
+		let maximum_application = MAX_MESSAGE_SIZE - 4_568;
 		assert_eq!(
 			registration_response_len(maximum_application, 1),
 			Some(MAX_MESSAGE_SIZE)
@@ -647,7 +648,7 @@ mod size_tests {
 		assert_eq!(registration_response_len(maximum_application + 1, 1), None);
 
 		// The full-width assigned identifier adds eight bytes; the sender is implicit.
-		let maximum_application = MAX_MESSAGE_SIZE - 1_264;
+		let maximum_application = MAX_MESSAGE_SIZE - 4_576;
 		assert_eq!(
 			registration_response_len(maximum_application, u64::MAX),
 			Some(MAX_MESSAGE_SIZE)

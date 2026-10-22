@@ -16,6 +16,7 @@ pub fn encode_response(response: KexResponse<'_>) -> Vec<u8> {
 		response.ephemeral_key.len(),
 		response.kem_cipher_text.len(),
 		response.app_cipher_text.len(),
+		response.signature.len(),
 	]
 	.into_iter()
 	.try_fold(64usize, usize::checked_add)
@@ -29,12 +30,14 @@ pub fn encode_response(response: KexResponse<'_>) -> Vec<u8> {
 
 // Hand-author canonical CBOR so malformed-length fixtures bypass the strict encoders.
 pub fn encode_unchecked_init(init: InitKex<'_>) -> Vec<u8> {
-	let mut output = vec![0x86, 1, 0];
+	let mut output = vec![0x88, 2, 0];
 	for field in [
 		init.identity_key,
 		init.pre_key,
 		init.one_time_key,
 		init.pq_key,
+		init.mldsa_public_key,
+		init.signature,
 	] {
 		append_byte_string(&mut output, field);
 	}
@@ -42,7 +45,7 @@ pub fn encode_unchecked_init(init: InitKex<'_>) -> Vec<u8> {
 }
 
 pub fn encode_unchecked_response(response: KexResponse<'_>) -> Vec<u8> {
-	let mut output = vec![0x87, 1, 1];
+	let mut output = vec![0x88, 2, 1];
 	for field in [
 		response.identity_key,
 		response.ephemeral_key,
@@ -52,6 +55,7 @@ pub fn encode_unchecked_response(response: KexResponse<'_>) -> Vec<u8> {
 		append_byte_string(&mut output, field);
 	}
 	append_argument(&mut output, 0, response.key_id);
+	append_byte_string(&mut output, response.signature);
 	output
 }
 
@@ -75,33 +79,9 @@ fn append_argument(output: &mut Vec<u8>, major: u8, value: u64) {
 	output.extend_from_slice(&value.to_be_bytes()[8 - width..]);
 }
 
-// The mandatory ML-DSA envelope is independent of the CBOR payload codec.
-pub const AUTH_MAGIC: &[u8] = b"beaconcrypt/ml-dsa-65/v1\0";
-pub const INIT_HEADER: usize =
-	AUTH_MAGIC.len() + 1 + beaconcrypt::MLDSA_PUBLIC_KEY_LEN + beaconcrypt::MLDSA_SIGNATURE_LEN;
-pub const RESPONSE_HEADER: usize = AUTH_MAGIC.len() + 1 + beaconcrypt::MLDSA_SIGNATURE_LEN;
-pub fn init_payload(bytes: &[u8]) -> &[u8] {
-	if bytes.starts_with(AUTH_MAGIC) {
-		&bytes[INIT_HEADER..]
-	} else {
-		bytes
-	}
-}
-pub fn response_payload(bytes: &[u8]) -> &[u8] {
-	if bytes.starts_with(AUTH_MAGIC) {
-		&bytes[RESPONSE_HEADER..]
-	} else {
-		bytes
-	}
-}
 pub fn decode_init(bytes: &[u8]) -> Option<InitKex<'_>> {
-	beaconcrypt_parse::decode_init(init_payload(bytes))
+	beaconcrypt_parse::decode_init(bytes)
 }
 pub fn decode_response(bytes: &[u8]) -> Option<KexResponse<'_>> {
-	beaconcrypt_parse::decode_response(response_payload(bytes))
-}
-pub fn replace_response_payload(original: &[u8], payload: &[u8]) -> Vec<u8> {
-	let mut candidate = original[..RESPONSE_HEADER].to_vec();
-	candidate.extend_from_slice(payload);
-	candidate
+	beaconcrypt_parse::decode_response(bytes)
 }

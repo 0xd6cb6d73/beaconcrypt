@@ -17,6 +17,8 @@ The script verifies the archive checksum and invokes `cddl.exe --rust --mname Tr
 | --- | ---: | --- |
 | `cbordetver.rs` | 20,416 | `e60e27d58b3fe7eeaca202e9751b596c88884b4a76d5bf57a345a21861066d6c` |
 | `cbordetveraux.rs` | 194,647 | `36420e78b9feed0a4c4a1b6a57b28aeba16ae38be9c61f5ff8165fa088ac3589` |
-| `transport.rs` | 181,142 | `0853835c205590395386537ad2b658df942cc7b5a3835e3751e839c4bfb1e1a8` |
+| `transport.rs` | 242,620 | `218245bef2baa287d6d2a77f6013fe7d78c887b4416a88756618240ad83e3fa8` |
+
+The registration version `2` schema adds a fixed 1,952-byte ML-DSA-65 public key and fixed 3,309-byte signature to requests, and a fixed 3,309-byte signature to responses. Regeneration for this schema changed only `transport.rs`; both imported generic CBOR runtime files retain the hashes above. Data-frame schema and encoding are unchanged. Review the generated diff together with the schema and the independent codec fixtures.
 
 Generation verifies the schema-specific F* module against shipped prechecked dependencies. This does not prove extracted Rust, handwritten wrappers, the compiler, or end-to-end protocol behavior.

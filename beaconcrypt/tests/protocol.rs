@@ -576,6 +576,7 @@ struct KexResponseParts {
 	kem_ciphertext: Vec<u8>,
 	app_ciphertext: Vec<u8>,
 	key_id: u64,
+	signature: Vec<u8>,
 }
 
 fn parse_kex_response(serialized: &[u8]) -> KexResponseParts {
@@ -586,6 +587,7 @@ fn parse_kex_response(serialized: &[u8]) -> KexResponseParts {
 		kem_ciphertext: response.kem_cipher_text.to_vec(),
 		app_ciphertext: response.app_cipher_text.to_vec(),
 		key_id: response.key_id,
+		signature: response.signature.to_vec(),
 	}
 }
 
@@ -596,6 +598,7 @@ fn serialize_kex_response(parts: &KexResponseParts) -> Vec<u8> {
 		kem_cipher_text: &parts.kem_ciphertext,
 		app_cipher_text: &parts.app_ciphertext,
 		key_id: parts.key_id,
+		signature: &parts.signature,
 	})
 }
 
@@ -1472,12 +1475,11 @@ fn registration_request_field_lengths_reject_before_consuming_replay_material() 
 		init.pre_key,
 		init.one_time_key,
 		init.pq_key,
+		init.mldsa_public_key,
+		init.signature,
 	];
-	assert_eq!(fields.map(<[u8]>::len), [33, 98, 98, 1_249]);
-	assert_eq!(
-		common::encode_unchecked_init(init),
-		common::init_payload(&original)
-	);
+	assert_eq!(fields.map(<[u8]>::len), [33, 98, 98, 1_249, 1_952, 3_309]);
+	assert_eq!(common::encode_unchecked_init(init), original);
 	for field in 0..fields.len() {
 		for length in [fields[field].len() - 1, fields[field].len() + 1] {
 			let mut changed = fields.map(<[u8]>::to_vec);
@@ -1487,6 +1489,8 @@ fn registration_request_field_lengths_reject_before_consuming_replay_material() 
 				pre_key: &changed[1],
 				one_time_key: &changed[2],
 				pq_key: &changed[3],
+				mldsa_public_key: &changed[4],
+				signature: &changed[5],
 			});
 			assert!(
 				decode_init(&candidate).is_none(),
@@ -1503,18 +1507,19 @@ fn registration_request_field_lengths_reject_before_consuming_replay_material() 
 
 #[test]
 fn registration_response_field_length_rejection_is_terminal() {
-	for (field, expected_length) in [(0, 32), (1, 32), (2, 1_088)] {
+	for (field, expected_length) in [(0, 32), (1, 32), (2, 1_088), (3, 3_309)] {
 		for length in [expected_length - 1, expected_length + 1] {
 			let (mut beacon, original) = pending_registration(b"field length checks");
 			assert_eq!(
 				common::encode_unchecked_response(decode_response(&original).unwrap()),
-				common::response_payload(&original)
+				original
 			);
 			let mut parts = parse_kex_response(&original);
 			let changed = match field {
 				0 => &mut parts.identity_key,
 				1 => &mut parts.ephemeral_key,
-				_ => &mut parts.kem_ciphertext,
+				2 => &mut parts.kem_ciphertext,
+				_ => &mut parts.signature,
 			};
 			assert_eq!(changed.len(), expected_length);
 			changed.resize(length, 0);
@@ -1524,6 +1529,7 @@ fn registration_response_field_length_rejection_is_terminal() {
 				kem_cipher_text: &parts.kem_ciphertext,
 				app_cipher_text: &parts.app_ciphertext,
 				key_id: parts.key_id,
+				signature: &parts.signature,
 			});
 			assert!(
 				decode_response(&candidate).is_none(),
@@ -1566,6 +1572,8 @@ fn mldsa_rejects_changed_prekeys_even_with_valid_ed25519_signatures() {
 			pre_key: &signed_prekey,
 			one_time_key: init.one_time_key,
 			pq_key: init.pq_key,
+			mldsa_public_key: init.mldsa_public_key,
+			signature: init.signature,
 		},
 		&mut changed,
 	);

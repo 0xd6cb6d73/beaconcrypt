@@ -34,6 +34,7 @@ fn registration_rejects_a_distinct_x25519_ephemeral_encoding() {
 			kem_cipher_text: original.kem_cipher_text,
 			app_cipher_text: original.app_cipher_text,
 			key_id: original.key_id,
+			signature: original.signature,
 		});
 		assert_ne!(candidate, response.serialized);
 
@@ -44,11 +45,11 @@ fn registration_rejects_a_distinct_x25519_ephemeral_encoding() {
 		assert_eq!(changed.kem_cipher_text, original.kem_cipher_text);
 		assert_eq!(changed.app_cipher_text, original.app_cipher_text);
 		assert_eq!(changed.key_id, original.key_id);
+		assert_eq!(changed.signature, original.signature);
 		assert_eq!(
 			changed.app_cipher_text.len(),
 			8 + b"sequence-one response".len() + 16 + 64
 		);
-		let candidate = common::replace_response_payload(&response.serialized, &candidate);
 		assert!(beacon.finish_registration(&candidate).is_none());
 		assert!(beacon.ratchet_status().is_none());
 	}
