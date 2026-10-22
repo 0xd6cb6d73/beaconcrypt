@@ -71,11 +71,11 @@ theorem completion_decision_bound (parameters : Parameters) (sender : M → Std.
     (state : RawCtxSharedPrimitive.SharedState A) (candidates : List RootOutput) :
     let execution := (simulateQ (observed parameters)
       (completion sender route decode history outside work)).run (initial prior history state candidates)
-    (actualDecision parameters.target blocked prior <$> execution).boolDistAdvantage
+    (actualDecision parameters.target blocked prior <$> execution).boolDistance
       (RawCtxSelectedParentPrivateEvents.decision (remainingEvent blocked prior) <$> execution) ≤
       (Pr{let result ← execution}[parameters.target ∈ result.2.1.2 ∧ result.2.2 = false]).toReal := by
   dsimp only
-  simp only [ProbComp.boolDistAdvantage]
+  simp only [ProbComp.boolDistance]
   rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true,
     RawCtxSelectedParentPrivateEvents.decision_probability, prEvent_map]
   simpa only [actualDecision, decide_eq_true_eq,
@@ -91,11 +91,11 @@ theorem completion_bound (parameters : Parameters) (sender : M → Std.U64)
     (state : RawCtxSharedPrimitive.SharedState A) (candidates : List RootOutput) :
     let program := completion sender route decode history outside work
     let start := initial prior history state candidates
-    (actualDecision parameters.target blocked prior <$> (simulateQ (observed parameters) program).run start).boolDistAdvantage
+    (actualDecision parameters.target blocked prior <$> (simulateQ (observed parameters) program).run start).boolDistance
       (RawCtxSelectedParentPrivateEvents.decision (remainingEvent blocked prior) <$>
         (simulateQ (RawCtxFamilyFreshnessEvent.masked parameters) program).run start) ≤
       3 * (Pr{let result ← (simulateQ (RawCtxFamilyFreshnessEvent.masked parameters) program).run start}[parameters.target ∈ result.2.1.2]).toReal := by
-  have triangle := ProbComp.boolDistAdvantage_triangle
+  have triangle := ProbComp.boolDistance_triangle
     (actualDecision parameters.target blocked prior <$>
       (simulateQ (observed parameters) (completion sender route decode history outside work)).run
         (initial prior history state candidates))
@@ -125,7 +125,7 @@ theorem stopped_bound (parameters : Parameters) (sender : M → Std.U64)
     let program := simulateQ live (RawCtxSelectedFamilyContext.stopped sender route decode
       (.family request history outside inner) value)
     let start := initial prior history state candidates
-    (actualDecision parameters.target blocked prior <$> (simulateQ (observed parameters) program).run start).boolDistAdvantage
+    (actualDecision parameters.target blocked prior <$> (simulateQ (observed parameters) program).run start).boolDistance
       (RawCtxSelectedParentPrivateEvents.decision (remainingEvent blocked prior) <$>
         (simulateQ (RawCtxFamilyFreshnessEvent.masked parameters) program).run start) ≤
       3 * (Pr{let result ← (simulateQ (RawCtxFamilyFreshnessEvent.masked parameters) program).run start}[parameters.target ∈ result.2.1.2]).toReal := by

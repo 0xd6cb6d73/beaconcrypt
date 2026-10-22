@@ -243,7 +243,7 @@ theorem prepared_integrity_bound {Context : Type} {count : Nat}
     (sealBound : ∀ context, (client context).IsQueryBoundP (TargetClass SourceSeal) qSeal)
     (rawBound : ∀ context, (client context).IsQueryBoundP (TargetClass IsRawQuery) qRaw)
     (small : qSeal < 2 ^ 96) :
-    ENNReal.ofReal (((fun result => result.2.1) <$> source prepare selectedDecode decode c client).boolDistAdvantage
+    ENNReal.ofReal (((fun result => result.2.1) <$> source prepare selectedDecode decode c client).boolDistance
       (AdaptiveCtxPrivacyGuard.replayView selectedDecode c (decisionClient prepare decode c client))) ≤
       ENNReal.ofReal (modifiedNonceAeadINDDollarAdvantage c
         (AdaptiveCtxPrefixValidation.validationReduction selectedDecode c (decisionClient prepare decode c client) qHash)) +
@@ -262,7 +262,7 @@ theorem prepared_integrity_bound {Context : Type} {count : Nat}
         𝒟[AdaptiveCtxPrivacyGuard.canonicalView selectedDecode c
           (decisionClient prepare decode c client)] {true} := by
     rw [EvalDistEq.evalDist_eq equal]
-  simpa only [ProbComp.boolDistAdvantage, equal_true] using bound
+  simpa only [ProbComp.boolDistance, equal_true] using bound
 
 /-- The prepared source privacy hop additionally charges the ordinary ciphertext-view reduction. -/
 theorem prepared_privacy_bound {Context : Type} {count : Nat}
@@ -275,7 +275,7 @@ theorem prepared_privacy_bound {Context : Type} {count : Nat}
     (sealBound : ∀ context, (client context).IsQueryBoundP (TargetClass SourceSeal) qSeal)
     (rawBound : ∀ context, (client context).IsQueryBoundP (TargetClass IsRawQuery) qRaw)
     (small : qSeal < 2 ^ 96) :
-    ENNReal.ofReal (((fun result => result.2.1) <$> source prepare selectedDecode decode c client).boolDistAdvantage
+    ENNReal.ofReal (((fun result => result.2.1) <$> source prepare selectedDecode decode c client).boolDistance
       (AdaptiveCtxPrivacyGuard.randomView selectedDecode (decisionClient prepare decode c client))) ≤
       ENNReal.ofReal (modifiedNonceAeadINDDollarAdvantage c
         (AdaptiveCtxPrefixValidation.validationReduction selectedDecode c (decisionClient prepare decode c client) qHash)) +
@@ -296,7 +296,7 @@ theorem prepared_privacy_bound {Context : Type} {count : Nat}
         𝒟[AdaptiveCtxPrivacyGuard.canonicalView selectedDecode c
           (decisionClient prepare decode c client)] {true} := by
     rw [EvalDistEq.evalDist_eq equal]
-  simpa only [ProbComp.boolDistAdvantage, equal_true] using bound
+  simpa only [ProbComp.boolDistance, equal_true] using bound
 
 /-- All prepared ordinary reductions pay their setup, uniform and selected-encryption costs. -/
 theorem prepared_reduction_bounds {Context : Type} {count : Nat}

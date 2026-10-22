@@ -183,24 +183,23 @@ theorem source_distance {Metadata Auxiliary Result : Type}
     (target : PqxdhSecretInputKdf.RootOutput) (sender : Std.U64) (decode : RawCtxReceive.FrameDecoder)
     (client : OracleComp RawCtxSelectedPublicTrace.SourceSpec Result)
     (state : RawCtxSelectedChainGame.Context Metadata Auxiliary) :
-    tvDist ((simulateQ (RawCtxSelectedPublicTrace.sourceImpl source writer
+    discreteDistance ((simulateQ (RawCtxSelectedPublicTrace.sourceImpl source writer
         (RawCtxKdfRequestTable.fullResponse output) sender decode) client).run (state.1, (state.2, [])))
       (consistentGame source writer output target sender decode client state) ≤
     Pr{let result ← ((simulateQ (RawCtxSelectedPublicTrace.sourceImpl source writer
         (RawCtxKdfRequestTable.fullResponse output) sender decode) client).run (state.1, (state.2, [])))}[target ∈ result.2.2.2].toReal := by
-  have projected := (tvDist_map_le regroup
+  have projected := (discreteDistance_map_le regroup
     ((simulateQ (recorded source writer output) ((simulateQ (compiler sender decode) client).run state.1)).run (state.2, []))
     ((simulateQ (RawCtxSelectedQueryTrace.recorded (consistent source writer output target) inputs)
       ((simulateQ (compiler sender decode) client).run state.1)).run (state.2, []))).trans
     (RawCtxSelectedAliasPrimitives.recorded_distance source writer output target
       ((simulateQ (compiler sender decode) client).run state.1) state.2)
-  change tvDist _ _ ≤ Pr{let result ← ((simulateQ (recorded source writer output)
+  change discreteDistance _ _ ≤ Pr{let result ← ((simulateQ (recorded source writer output)
       ((simulateQ (compiler sender decode) client).run state.1)).run (state.2, []))}[target ∈ result.2.2].toReal at projected
   simp only [source_schedule source writer output sender decode client (state.1, (state.2, [])),
     prEvent_map] at projected
   refine le_of_eq_of_le ?_ projected
-  simp [regroup, Functor.map_map, consistentGame, -evalDist_apply_singleton, -evalDist_apply_setOf,
-    -evalDist_apply_univ]
+  simp [regroup, Functor.map_map, consistentGame]
 
 end BeaconcryptCore.Computational.RawCtxSelectedAliasCompiler
 

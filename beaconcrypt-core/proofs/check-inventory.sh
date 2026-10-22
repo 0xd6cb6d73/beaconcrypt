@@ -50,7 +50,7 @@ declare -A expected_category_counts=(
 	[control]=17
 	[generated-lean]=7
 	[generated-proverif]=1
-	[handwritten-lean]=2016
+	[handwritten-lean]=2017
 	[handwritten-proverif]=293
 	[inventory]=2
 	[lean-control]=12
@@ -261,8 +261,8 @@ compare_set lean-control "$tmp_dir/lean-control"
 printf '%s\n' \
 	proofs/lean/apply-dependency-patches.sh \
 	proofs/lean/patches/README.md \
-	proofs/lean/patches/aeneas-lean-4.34.patch \
-	proofs/lean/patches/hax-lean-4.34.patch \
+	proofs/lean/patches/aeneas-lean-4.35.patch \
+	proofs/lean/patches/hax-lean-4.35.patch \
 	> "$tmp_dir/lean-dependency-overlay"
 compare_set lean-dependency-overlay "$tmp_dir/lean-dependency-overlay"
 
@@ -1894,9 +1894,9 @@ for theorem_name in \
 	require_line_count 1 "^theorem ${theorem_name}( |$)" \
 		"$vcvio_pilot" "VCVio feasibility theorem ${theorem_name}"
 done
-require_line_count 1 '^rev = "98dc1089129086b776129c79d88c0c561b8d8d1a"$' \
+require_line_count 1 '^rev = "88efe9715a9fa9e7d89635c38cf70259836766c2"$' \
 	proofs/lean/lakefile.toml \
-	"immutable VCVio v4.34.0 dependency pin"
+	"immutable VCVio v4.35.0 dependency pin"
 
 pqxdh_joint_kdf=proofs/lean/BeaconcryptCore/Computational/PqxdhJointKdf.lean
 for declaration in JointKdfAddress ProductionHkdfPrefixConsistent; do
@@ -2130,8 +2130,10 @@ require_line_count 1 '^  let oneTimeSignature ← liftM$' \
 	"$pqxdh_ed25519_eufcma" "PQXDH Ed25519 second one-time signing call"
 require_line_count 1 '^  let pqSignature ← liftM$' \
 	"$pqxdh_ed25519_eufcma" "PQXDH Ed25519 third PQ signing call"
-require_line_count 1 '^      \(phase1ToEUFCMA sigAlg materialGenerator adversary\)\.advantage runtime := by$' \
+require_line_count 1 '^      SignatureAlg\.unforgeableAdvantage runtime$' \
 	"$pqxdh_ed25519_eufcma" "PQXDH Ed25519 coefficient-one generic EUF-CMA endpoint"
+require_line_count 1 '^        \(phase1ToEUFCMA sigAlg materialGenerator adversary\) := by$' \
+	"$pqxdh_ed25519_eufcma" "PQXDH Ed25519 exact native EUF-CMA adversary"
 require_line_count 2 '^      IsPhase1SigningQuery 3 := by$' \
 	"$pqxdh_ed25519_eufcma" "PQXDH Ed25519 three-query client and reduction bounds"
 require_line_count 2 '^      IsPhase1BaseQuery \(qMaterial \+ qAdversary\) := by$' \
@@ -2239,7 +2241,7 @@ require_line_count 1 '^      IsFixedHkdfSymmetricStreamQuery qSym :=$' \
 	"$pqxdh_initializer_secrecy" "PQXDH initializer symmetric-domain upper bound"
 require_line_count 1 '^      IsFixedHkdfSha512UntypedStreamQuery 0 :=$' \
 	"$pqxdh_initializer_secrecy" "PQXDH initializer zero-untyped-stream invariant"
-require_line_count 2 '^      kem\.IND_CCA_Advantage \(runtimeOfImpl \(kemAmbientImpl baseImpl\)\)$' \
+require_line_count 2 '^      \(kem\.IND_CCA_Advantage \(runtimeOfImpl \(kemAmbientImpl baseImpl\)\)$' \
 	"$pqxdh_initializer_secrecy" "PQXDH initializer coefficient-one KEM endpoint"
 require_line_count 2 '^        fixedHkdfSha512JointStreamAdvantage source$' \
 	"$pqxdh_initializer_secrecy" "PQXDH initializer coefficient-one fixed-HKDF endpoint"
@@ -2386,7 +2388,7 @@ require_line_count 1 '^  ⟨root\.toList, \.ratchet, \.first32⟩$' \
 	"$pqxdh_initialized_chains" "PQXDH initialized-chain first typed same-root query"
 require_line_count 1 '^  ⟨root\.toList, \.ratchet, \.second32⟩$' \
 	"$pqxdh_initialized_chains" "PQXDH initialized-chain second typed same-root query"
-require_line_count 1 '^      kem\.IND_CCA_Advantage \(runtimeOfImpl \(kemAmbientImpl baseImpl\)\)$' \
+require_line_count 1 '^      \(kem\.IND_CCA_Advantage \(runtimeOfImpl \(kemAmbientImpl baseImpl\)\)$' \
 	"$pqxdh_initialized_chains" "PQXDH initialized-chain one KEM advantage"
 require_line_count 1 '^        fixedHkdfSha512JointStreamAdvantage source$' \
 	"$pqxdh_initialized_chains" "PQXDH initialized-chain one fixed-HKDF advantage"
@@ -5612,9 +5614,9 @@ done
 
 selected_live_module=proofs/lean/BeaconcryptCore/Computational/StatefulGoodEvent.lean
 require_line_count 1 '^import BeaconcryptCore.Computational.StatefulGoodEvent$' proofs/lean/BeaconcryptCore.lean "StatefulGoodEvent root import"
-require_line_count 2 '^theorem ' "$selected_live_module" "StatefulGoodEvent theorem inventory"
-require_line_count 2 '^#guard_msgs in$' "$selected_live_module" "StatefulGoodEvent guarded dependencies"
-for theorem_name in output_good event_good; do
+require_line_count 4 '^theorem ' "$selected_live_module" "StatefulGoodEvent theorem inventory"
+require_line_count 4 '^#guard_msgs in$' "$selected_live_module" "StatefulGoodEvent guarded dependencies"
+for theorem_name in output_good event_good distance_le_bad bad_probability_eq; do
 	require_line_count 1 "^#print axioms BeaconcryptCore.Computational.StatefulGoodEvent.${theorem_name}$" "$selected_live_module" "selected live dependency ${theorem_name}"
 	require_line_count 1 "^theorem ${theorem_name}([[:space:]]|$)" "$selected_live_module" "selected live theorem ${theorem_name}"
 done
@@ -42728,246 +42730,169 @@ require_line_count 1 '^theorem ce_a1_agreement([[:space:]]|$)' "$selected_source
 require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.PqxdhDeploymentProductionSessionAgreement\.ce_a1_agreement_billed$' "$selected_source_module" "PqxdhDeploymentProductionSessionAgreement dependency BeaconcryptCore.Computational.PqxdhDeploymentProductionSessionAgreement.ce_a1_agreement_billed"
 require_line_count 1 '^theorem ce_a1_agreement_billed([[:space:]]|$)' "$selected_source_module" "PqxdhDeploymentProductionSessionAgreement theorem ce_a1_agreement_billed"
 
-# VCVio deprecation migration on the VCVio pin (stage S0): forward shims with upstream-named backports, the Boolean-bound shim, the relational re-export and the transitional legacy bridge (the only module allowed to contain deprecated VCVio syntax).
+# Native VCVio 4.35 foundations: upstream declarations retain their original axiom guards; project distances fix the original real arithmetic and complete discrete observations.
 
 selected_source_module=proofs/lean/BeaconcryptCore/Computational/VCVioForwardEvalDist.lean
-require_line_count 1 '^import BeaconcryptCore\.Computational\.VCVioForwardEvalDist$' proofs/lean/BeaconcryptCore.lean "VCVioForwardEvalDist root import"
-require_line_count 52 '^theorem ' "$selected_source_module" "VCVioForwardEvalDist theorem inventory"
-require_line_count 1 '^protected theorem ' "$selected_source_module" "VCVioForwardEvalDist protected theorem inventory"
-require_line_count 53 '^#guard_msgs in$' "$selected_source_module" "VCVioForwardEvalDist guarded dependencies"
+require_line_count 0 '^(theorem|def|instance) ' "$selected_source_module" "VCVioForwardEvalDist imports upstream declarations"
+require_line_count 53 '^#guard_msgs in$' "$selected_source_module" "VCVioForwardEvalDist retained upstream axiom guards"
 require_line_count 1 '^#print axioms EvalDistEq\.prEvent_eq$' "$selected_source_module" "VCVioForwardEvalDist dependency EvalDistEq.prEvent_eq"
-require_line_count 1 '^theorem prEvent_eq([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem EvalDistEq.prEvent_eq"
 require_line_count 1 '^#print axioms EvalDistEq\.of_forall_prEvent_eq$' "$selected_source_module" "VCVioForwardEvalDist dependency EvalDistEq.of_forall_prEvent_eq"
-require_line_count 1 '^theorem of_forall_prEvent_eq([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem EvalDistEq.of_forall_prEvent_eq"
 require_line_count 1 '^#print axioms EvalDistEq\.refl$' "$selected_source_module" "VCVioForwardEvalDist dependency EvalDistEq.refl"
-require_line_count 1 '^theorem refl([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem EvalDistEq.refl"
 require_line_count 1 '^#print axioms EvalDistEq\.rfl$' "$selected_source_module" "VCVioForwardEvalDist dependency EvalDistEq.rfl"
-require_line_count 1 '^protected theorem rfl([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem EvalDistEq.rfl"
 require_line_count 1 '^#print axioms EvalDistEq\.symm$' "$selected_source_module" "VCVioForwardEvalDist dependency EvalDistEq.symm"
-require_line_count 1 '^theorem symm([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem EvalDistEq.symm"
 require_line_count 1 '^#print axioms EvalDistEq\.trans$' "$selected_source_module" "VCVioForwardEvalDist dependency EvalDistEq.trans"
-require_line_count 1 '^theorem trans([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem EvalDistEq.trans"
 require_line_count 1 '^#print axioms EvalDistEq\.map$' "$selected_source_module" "VCVioForwardEvalDist dependency EvalDistEq.map"
-require_line_count 1 '^theorem map([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem EvalDistEq.map"
 require_line_count 1 '^#print axioms EvalDistEq\.evalDist_eq$' "$selected_source_module" "VCVioForwardEvalDist dependency EvalDistEq.evalDist_eq"
-require_line_count 1 '^theorem evalDist_eq([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem EvalDistEq.evalDist_eq"
 require_line_count 1 '^#print axioms EvalDistEq\.of_evalDist_eq$' "$selected_source_module" "VCVioForwardEvalDist dependency EvalDistEq.of_evalDist_eq"
-require_line_count 1 '^theorem of_evalDist_eq([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem EvalDistEq.of_evalDist_eq"
 require_line_count 1 '^#print axioms evalDistEq_iff_evalDist_eq$' "$selected_source_module" "VCVioForwardEvalDist dependency evalDistEq_iff_evalDist_eq"
-require_line_count 1 '^theorem _root_\.evalDistEq_iff_evalDist_eq([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem evalDistEq_iff_evalDist_eq"
 require_line_count 1 '^#print axioms evalDistEq_iff_forall_prEvent_eq_output$' "$selected_source_module" "VCVioForwardEvalDist dependency evalDistEq_iff_forall_prEvent_eq_output"
-require_line_count 1 '^theorem _root_\.evalDistEq_iff_forall_prEvent_eq_output([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem evalDistEq_iff_forall_prEvent_eq_output"
 require_line_count 1 '^#print axioms EvalDistEq\.bind$' "$selected_source_module" "VCVioForwardEvalDist dependency EvalDistEq.bind"
-require_line_count 1 '^theorem bind([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem EvalDistEq.bind"
 require_line_count 1 '^#print axioms EvalDistEq\.map_congr$' "$selected_source_module" "VCVioForwardEvalDist dependency EvalDistEq.map_congr"
-require_line_count 1 '^theorem map_congr([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem EvalDistEq.map_congr"
 require_line_count 1 '^#print axioms EvalDistEq\.bind_congr$' "$selected_source_module" "VCVioForwardEvalDist dependency EvalDistEq.bind_congr"
-require_line_count 1 '^theorem bind_congr([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem EvalDistEq.bind_congr"
 require_line_count 1 '^#print axioms EvalDistEq\.bind_left$' "$selected_source_module" "VCVioForwardEvalDist dependency EvalDistEq.bind_left"
-require_line_count 1 '^theorem bind_left([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem EvalDistEq.bind_left"
 require_line_count 1 '^#print axioms EvalDistEq\.bind_right$' "$selected_source_module" "VCVioForwardEvalDist dependency EvalDistEq.bind_right"
-require_line_count 1 '^theorem bind_right([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem EvalDistEq.bind_right"
 require_line_count 1 '^#print axioms prEvent_false$' "$selected_source_module" "VCVioForwardEvalDist dependency prEvent_false"
-require_line_count 1 '^theorem prEvent_false([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem prEvent_false"
 require_line_count 1 '^#print axioms prEvent_pure$' "$selected_source_module" "VCVioForwardEvalDist dependency prEvent_pure"
-require_line_count 1 '^theorem prEvent_pure([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem prEvent_pure"
 require_line_count 1 '^#print axioms prEvent_le_one$' "$selected_source_module" "VCVioForwardEvalDist dependency prEvent_le_one"
-require_line_count 1 '^theorem prEvent_le_one([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem prEvent_le_one"
 require_line_count 1 '^#print axioms prEvent_ne_top$' "$selected_source_module" "VCVioForwardEvalDist dependency prEvent_ne_top"
-require_line_count 1 '^theorem prEvent_ne_top([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem prEvent_ne_top"
 require_line_count 1 '^#print axioms prEvent_lt_top$' "$selected_source_module" "VCVioForwardEvalDist dependency prEvent_lt_top"
-require_line_count 1 '^theorem prEvent_lt_top([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem prEvent_lt_top"
 require_line_count 1 '^#print axioms prEvent_true_eq_evalDist_apply_univ$' "$selected_source_module" "VCVioForwardEvalDist dependency prEvent_true_eq_evalDist_apply_univ"
-require_line_count 1 '^theorem prEvent_true_eq_evalDist_apply_univ([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem prEvent_true_eq_evalDist_apply_univ"
 require_line_count 1 '^#print axioms prEvent_bind_const$' "$selected_source_module" "VCVioForwardEvalDist dependency prEvent_bind_const"
-require_line_count 1 '^theorem prEvent_bind_const([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem prEvent_bind_const"
 require_line_count 1 '^#print axioms prEvent_bind_eq_sum_fintype$' "$selected_source_module" "VCVioForwardEvalDist dependency prEvent_bind_eq_sum_fintype"
-require_line_count 1 '^theorem prEvent_bind_eq_sum_fintype([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem prEvent_bind_eq_sum_fintype"
 require_line_count 1 '^#print axioms prEvent_bind_eq_tsum_of_countable$' "$selected_source_module" "VCVioForwardEvalDist dependency prEvent_bind_eq_tsum_of_countable"
-require_line_count 1 '^theorem prEvent_bind_eq_tsum_of_countable([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem prEvent_bind_eq_tsum_of_countable"
 require_line_count 1 '^#print axioms prEvent_or_le$' "$selected_source_module" "VCVioForwardEvalDist dependency prEvent_or_le"
-require_line_count 1 '^theorem prEvent_or_le([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem prEvent_or_le"
 require_line_count 1 '^#print axioms prEvent_exists_finset_le$' "$selected_source_module" "VCVioForwardEvalDist dependency prEvent_exists_finset_le"
-require_line_count 1 '^theorem prEvent_exists_finset_le([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem prEvent_exists_finset_le"
 require_line_count 1 '^#print axioms prEvent_exists_le$' "$selected_source_module" "VCVioForwardEvalDist dependency prEvent_exists_le"
-require_line_count 1 '^theorem prEvent_exists_le([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem prEvent_exists_le"
 require_line_count 1 '^#print axioms prEvent_eq_prEvent_and_add_prEvent_and_not$' "$selected_source_module" "VCVioForwardEvalDist dependency prEvent_eq_prEvent_and_add_prEvent_and_not"
-require_line_count 1 '^theorem prEvent_eq_prEvent_and_add_prEvent_and_not([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem prEvent_eq_prEvent_and_add_prEvent_and_not"
 require_line_count 1 '^#print axioms prEvent_le_prEvent_add_prEvent_and_not$' "$selected_source_module" "VCVioForwardEvalDist dependency prEvent_le_prEvent_add_prEvent_and_not"
-require_line_count 1 '^theorem prEvent_le_prEvent_add_prEvent_and_not([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem prEvent_le_prEvent_add_prEvent_and_not"
 require_line_count 1 '^#print axioms prEvent_add_prEvent_not_eq_prEvent_true$' "$selected_source_module" "VCVioForwardEvalDist dependency prEvent_add_prEvent_not_eq_prEvent_true"
-require_line_count 1 '^theorem prEvent_add_prEvent_not_eq_prEvent_true([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem prEvent_add_prEvent_not_eq_prEvent_true"
 require_line_count 1 '^#print axioms prEvent_and_le_left$' "$selected_source_module" "VCVioForwardEvalDist dependency prEvent_and_le_left"
-require_line_count 1 '^theorem prEvent_and_le_left([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem prEvent_and_le_left"
 require_line_count 1 '^#print axioms prEvent_and_le_right$' "$selected_source_module" "VCVioForwardEvalDist dependency prEvent_and_le_right"
-require_line_count 1 '^theorem prEvent_and_le_right([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem prEvent_and_le_right"
 require_line_count 1 '^#print axioms prEvent_bind_le_of_forall_le$' "$selected_source_module" "VCVioForwardEvalDist dependency prEvent_bind_le_of_forall_le"
-require_line_count 1 '^theorem prEvent_bind_le_of_forall_le([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem prEvent_bind_le_of_forall_le"
 require_line_count 1 '^#print axioms prEvent_bind_mono_of_forall_le$' "$selected_source_module" "VCVioForwardEvalDist dependency prEvent_bind_mono_of_forall_le"
-require_line_count 1 '^theorem prEvent_bind_mono_of_forall_le([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem prEvent_bind_mono_of_forall_le"
 require_line_count 1 '^#print axioms prEvent_bind_le_add_of_forall_le$' "$selected_source_module" "VCVioForwardEvalDist dependency prEvent_bind_le_add_of_forall_le"
-require_line_count 1 '^theorem prEvent_bind_le_add_of_forall_le([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem prEvent_bind_le_add_of_forall_le"
 require_line_count 1 '^#print axioms le_prEvent_bind_of_forall_le$' "$selected_source_module" "VCVioForwardEvalDist dependency le_prEvent_bind_of_forall_le"
-require_line_count 1 '^theorem le_prEvent_bind_of_forall_le([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem le_prEvent_bind_of_forall_le"
 require_line_count 1 '^#print axioms prEvent_bind_le_prEvent_add_mul_prEvent_not$' "$selected_source_module" "VCVioForwardEvalDist dependency prEvent_bind_le_prEvent_add_mul_prEvent_not"
-require_line_count 1 '^theorem prEvent_bind_le_prEvent_add_mul_prEvent_not([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem prEvent_bind_le_prEvent_add_mul_prEvent_not"
 require_line_count 1 '^#print axioms prEvent_bind_le_prEvent_of_forall_eq_zero$' "$selected_source_module" "VCVioForwardEvalDist dependency prEvent_bind_le_prEvent_of_forall_eq_zero"
-require_line_count 1 '^theorem prEvent_bind_le_prEvent_of_forall_eq_zero([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem prEvent_bind_le_prEvent_of_forall_eq_zero"
 require_line_count 1 '^#print axioms prEvent_bind_le_prEvent_add$' "$selected_source_module" "VCVioForwardEvalDist dependency prEvent_bind_le_prEvent_add"
-require_line_count 1 '^theorem prEvent_bind_le_prEvent_add([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem prEvent_bind_le_prEvent_add"
 require_line_count 1 '^#print axioms bind_eq_attach_bind$' "$selected_source_module" "VCVioForwardEvalDist dependency bind_eq_attach_bind"
-require_line_count 1 '^theorem bind_eq_attach_bind([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem bind_eq_attach_bind"
 require_line_count 1 '^#print axioms prEvent_true_attach$' "$selected_source_module" "VCVioForwardEvalDist dependency prEvent_true_attach"
-require_line_count 1 '^theorem prEvent_true_attach([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem prEvent_true_attach"
 require_line_count 1 '^#print axioms prEvent_mono_of_support$' "$selected_source_module" "VCVioForwardEvalDist dependency prEvent_mono_of_support"
-require_line_count 1 '^theorem prEvent_mono_of_support([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem prEvent_mono_of_support"
 require_line_count 1 '^#print axioms prEvent_congr_of_support$' "$selected_source_module" "VCVioForwardEvalDist dependency prEvent_congr_of_support"
-require_line_count 1 '^theorem prEvent_congr_of_support([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem prEvent_congr_of_support"
 require_line_count 1 '^#print axioms prEvent_eq_zero_of_forall_mem_support$' "$selected_source_module" "VCVioForwardEvalDist dependency prEvent_eq_zero_of_forall_mem_support"
-require_line_count 1 '^theorem prEvent_eq_zero_of_forall_mem_support([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem prEvent_eq_zero_of_forall_mem_support"
 require_line_count 1 '^#print axioms prEvent_eq_zero_of_not_mem_support$' "$selected_source_module" "VCVioForwardEvalDist dependency prEvent_eq_zero_of_not_mem_support"
-require_line_count 1 '^theorem prEvent_eq_zero_of_not_mem_support([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem prEvent_eq_zero_of_not_mem_support"
 require_line_count 1 '^#print axioms prEvent_bind_le_of_forall_le_of_support$' "$selected_source_module" "VCVioForwardEvalDist dependency prEvent_bind_le_of_forall_le_of_support"
-require_line_count 1 '^theorem prEvent_bind_le_of_forall_le_of_support([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem prEvent_bind_le_of_forall_le_of_support"
 require_line_count 1 '^#print axioms prEvent_bind_mono_of_forall_le_of_support$' "$selected_source_module" "VCVioForwardEvalDist dependency prEvent_bind_mono_of_forall_le_of_support"
-require_line_count 1 '^theorem prEvent_bind_mono_of_forall_le_of_support([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem prEvent_bind_mono_of_forall_le_of_support"
 require_line_count 1 '^#print axioms le_prEvent_bind_of_forall_le_of_support$' "$selected_source_module" "VCVioForwardEvalDist dependency le_prEvent_bind_of_forall_le_of_support"
-require_line_count 1 '^theorem le_prEvent_bind_of_forall_le_of_support([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem le_prEvent_bind_of_forall_le_of_support"
 require_line_count 1 '^#print axioms prEvent_bind_le_prEvent_add_mul_prEvent_not_of_support$' "$selected_source_module" "VCVioForwardEvalDist dependency prEvent_bind_le_prEvent_add_mul_prEvent_not_of_support"
-require_line_count 1 '^theorem prEvent_bind_le_prEvent_add_mul_prEvent_not_of_support([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem prEvent_bind_le_prEvent_add_mul_prEvent_not_of_support"
 require_line_count 1 '^#print axioms prEvent_bind_le_prEvent_of_support$' "$selected_source_module" "VCVioForwardEvalDist dependency prEvent_bind_le_prEvent_of_support"
-require_line_count 1 '^theorem prEvent_bind_le_prEvent_of_support([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem prEvent_bind_le_prEvent_of_support"
 require_line_count 1 '^#print axioms prEvent_bind_le_prEvent_add_of_support$' "$selected_source_module" "VCVioForwardEvalDist dependency prEvent_bind_le_prEvent_add_of_support"
-require_line_count 1 '^theorem prEvent_bind_le_prEvent_add_of_support([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem prEvent_bind_le_prEvent_add_of_support"
 require_line_count 1 '^#print axioms evalDist\.ae_of_forall_mem_support$' "$selected_source_module" "VCVioForwardEvalDist dependency evalDist.ae_of_forall_mem_support"
-require_line_count 1 '^theorem ae_of_forall_mem_support([[:space:]]|$)' "$selected_source_module" "VCVioForwardEvalDist theorem evalDist.ae_of_forall_mem_support"
-require_line_count 1 '^def EvalDistEq ' "$selected_source_module" "VCVio forward shim equality-in-distribution definition"
-require_line_count 1 '^  ∀ p : α → Prop, Pr\{let x ← mx\}\[p x\] = Pr\{let y ← my\}\[p y\]$' "$selected_source_module" "VCVio forward shim equality-in-distribution definition text"
 
 selected_source_module=proofs/lean/BeaconcryptCore/Computational/VCVioForwardOracleComp.lean
-require_line_count 1 '^import BeaconcryptCore\.Computational\.VCVioForwardOracleComp$' proofs/lean/BeaconcryptCore.lean "VCVioForwardOracleComp root import"
-require_line_count 27 '^theorem ' "$selected_source_module" "VCVioForwardOracleComp theorem inventory"
-require_line_count 27 '^#guard_msgs in$' "$selected_source_module" "VCVioForwardOracleComp guarded dependencies"
+require_line_count 0 '^(theorem|def|instance) ' "$selected_source_module" "VCVioForwardOracleComp imports upstream declarations"
+require_line_count 27 '^#guard_msgs in$' "$selected_source_module" "VCVioForwardOracleComp retained upstream axiom guards"
 require_line_count 1 '^#print axioms MeasureTheory\.lintegral_eq_tsum_of_ae_mem_countable$' "$selected_source_module" "VCVioForwardOracleComp dependency MeasureTheory.lintegral_eq_tsum_of_ae_mem_countable"
-require_line_count 1 '^theorem lintegral_eq_tsum_of_ae_mem_countable([[:space:]]|$)' "$selected_source_module" "VCVioForwardOracleComp theorem MeasureTheory.lintegral_eq_tsum_of_ae_mem_countable"
 require_line_count 1 '^#print axioms MeasureTheory\.lintegral_eq_tsum_mul_of_ae_mem_countable$' "$selected_source_module" "VCVioForwardOracleComp dependency MeasureTheory.lintegral_eq_tsum_mul_of_ae_mem_countable"
-require_line_count 1 '^theorem lintegral_eq_tsum_mul_of_ae_mem_countable([[:space:]]|$)' "$selected_source_module" "VCVioForwardOracleComp theorem MeasureTheory.lintegral_eq_tsum_mul_of_ae_mem_countable"
 require_line_count 1 '^#print axioms OracleComp\.prEvent_true_eq_one$' "$selected_source_module" "VCVioForwardOracleComp dependency OracleComp.prEvent_true_eq_one"
-require_line_count 1 '^theorem prEvent_true_eq_one([[:space:]]|$)' "$selected_source_module" "VCVioForwardOracleComp theorem OracleComp.prEvent_true_eq_one"
 require_line_count 1 '^#print axioms OracleComp\.prEvent_not_eq_one_sub$' "$selected_source_module" "VCVioForwardOracleComp dependency OracleComp.prEvent_not_eq_one_sub"
-require_line_count 1 '^theorem prEvent_not_eq_one_sub([[:space:]]|$)' "$selected_source_module" "VCVioForwardOracleComp theorem OracleComp.prEvent_not_eq_one_sub"
 require_line_count 1 '^#print axioms OracleComp\.prEvent_bind_const$' "$selected_source_module" "VCVioForwardOracleComp dependency OracleComp.prEvent_bind_const"
-require_line_count 1 '^theorem prEvent_bind_const([[:space:]]|$)' "$selected_source_module" "VCVioForwardOracleComp theorem OracleComp.prEvent_bind_const"
 require_line_count 1 '^#print axioms OracleComp\.EvalDistEq\.bind_const$' "$selected_source_module" "VCVioForwardOracleComp dependency OracleComp.EvalDistEq.bind_const"
-require_line_count 1 '^theorem EvalDistEq\.bind_const([[:space:]]|$)' "$selected_source_module" "VCVioForwardOracleComp theorem OracleComp.EvalDistEq.bind_const"
 require_line_count 1 '^#print axioms OracleComp\.EvalDistEq\.map_const$' "$selected_source_module" "VCVioForwardOracleComp dependency OracleComp.EvalDistEq.map_const"
-require_line_count 1 '^theorem EvalDistEq\.map_const([[:space:]]|$)' "$selected_source_module" "VCVioForwardOracleComp theorem OracleComp.EvalDistEq.map_const"
 require_line_count 1 '^#print axioms OracleComp\.ae_evalDist_of_forall_mem_support$' "$selected_source_module" "VCVioForwardOracleComp dependency OracleComp.ae_evalDist_of_forall_mem_support"
-require_line_count 1 '^theorem ae_evalDist_of_forall_mem_support([[:space:]]|$)' "$selected_source_module" "VCVioForwardOracleComp theorem OracleComp.ae_evalDist_of_forall_mem_support"
 require_line_count 1 '^#print axioms OracleComp\.prEvent_eq_one_of_forall_mem_support$' "$selected_source_module" "VCVioForwardOracleComp dependency OracleComp.prEvent_eq_one_of_forall_mem_support"
-require_line_count 1 '^theorem prEvent_eq_one_of_forall_mem_support([[:space:]]|$)' "$selected_source_module" "VCVioForwardOracleComp theorem OracleComp.prEvent_eq_one_of_forall_mem_support"
 require_line_count 1 '^#print axioms OracleComp\.prEvent_bind_mono_of_support$' "$selected_source_module" "VCVioForwardOracleComp dependency OracleComp.prEvent_bind_mono_of_support"
-require_line_count 1 '^theorem prEvent_bind_mono_of_support([[:space:]]|$)' "$selected_source_module" "VCVioForwardOracleComp theorem OracleComp.prEvent_bind_mono_of_support"
 require_line_count 1 '^#print axioms OracleComp\.prEvent_bind_congr_of_support$' "$selected_source_module" "VCVioForwardOracleComp dependency OracleComp.prEvent_bind_congr_of_support"
-require_line_count 1 '^theorem prEvent_bind_congr_of_support([[:space:]]|$)' "$selected_source_module" "VCVioForwardOracleComp theorem OracleComp.prEvent_bind_congr_of_support"
 require_line_count 1 '^#print axioms OracleComp\.EvalDistEq\.bind_congr_of_support$' "$selected_source_module" "VCVioForwardOracleComp dependency OracleComp.EvalDistEq.bind_congr_of_support"
-require_line_count 1 '^theorem EvalDistEq\.bind_congr_of_support([[:space:]]|$)' "$selected_source_module" "VCVioForwardOracleComp theorem OracleComp.EvalDistEq.bind_congr_of_support"
 require_line_count 1 '^#print axioms OracleComp\.evalDist_ae_mem_support$' "$selected_source_module" "VCVioForwardOracleComp dependency OracleComp.evalDist_ae_mem_support"
-require_line_count 1 '^theorem evalDist_ae_mem_support([[:space:]]|$)' "$selected_source_module" "VCVioForwardOracleComp theorem OracleComp.evalDist_ae_mem_support"
 require_line_count 1 '^#print axioms OracleComp\.lintegral_evalDist_eq_tsum$' "$selected_source_module" "VCVioForwardOracleComp dependency OracleComp.lintegral_evalDist_eq_tsum"
-require_line_count 1 '^theorem lintegral_evalDist_eq_tsum([[:space:]]|$)' "$selected_source_module" "VCVioForwardOracleComp theorem OracleComp.lintegral_evalDist_eq_tsum"
 require_line_count 1 '^#print axioms OracleComp\.tsum_prEvent_eq_one$' "$selected_source_module" "VCVioForwardOracleComp dependency OracleComp.tsum_prEvent_eq_one"
-require_line_count 1 '^theorem tsum_prEvent_eq_one([[:space:]]|$)' "$selected_source_module" "VCVioForwardOracleComp theorem OracleComp.tsum_prEvent_eq_one"
 require_line_count 1 '^#print axioms OracleComp\.tsum_prEvent_le_one$' "$selected_source_module" "VCVioForwardOracleComp dependency OracleComp.tsum_prEvent_le_one"
-require_line_count 1 '^theorem tsum_prEvent_le_one([[:space:]]|$)' "$selected_source_module" "VCVioForwardOracleComp theorem OracleComp.tsum_prEvent_le_one"
 require_line_count 1 '^#print axioms OracleComp\.prEvent_bind_eq_tsum$' "$selected_source_module" "VCVioForwardOracleComp dependency OracleComp.prEvent_bind_eq_tsum"
-require_line_count 1 '^theorem prEvent_bind_eq_tsum([[:space:]]|$)' "$selected_source_module" "VCVioForwardOracleComp theorem OracleComp.prEvent_bind_eq_tsum"
 require_line_count 1 '^#print axioms OracleComp\.prEvent_eq_tsum_ite$' "$selected_source_module" "VCVioForwardOracleComp dependency OracleComp.prEvent_eq_tsum_ite"
-require_line_count 1 '^theorem prEvent_eq_tsum_ite([[:space:]]|$)' "$selected_source_module" "VCVioForwardOracleComp theorem OracleComp.prEvent_eq_tsum_ite"
 require_line_count 1 '^#print axioms OracleComp\.evalDist_bind_bind_swap$' "$selected_source_module" "VCVioForwardOracleComp dependency OracleComp.evalDist_bind_bind_swap"
-require_line_count 1 '^theorem evalDist_bind_bind_swap([[:space:]]|$)' "$selected_source_module" "VCVioForwardOracleComp theorem OracleComp.evalDist_bind_bind_swap"
 require_line_count 1 '^#print axioms OracleComp\.evalDist_bind_bind_swap_of_uniform$' "$selected_source_module" "VCVioForwardOracleComp dependency OracleComp.evalDist_bind_bind_swap_of_uniform"
-require_line_count 1 '^theorem evalDist_bind_bind_swap_of_uniform([[:space:]]|$)' "$selected_source_module" "VCVioForwardOracleComp theorem OracleComp.evalDist_bind_bind_swap_of_uniform"
 require_line_count 1 '^#print axioms OracleComp\.EvalDistEq\.bind_bind_swap$' "$selected_source_module" "VCVioForwardOracleComp dependency OracleComp.EvalDistEq.bind_bind_swap"
-require_line_count 1 '^theorem EvalDistEq\.bind_bind_swap([[:space:]]|$)' "$selected_source_module" "VCVioForwardOracleComp theorem OracleComp.EvalDistEq.bind_bind_swap"
 require_line_count 1 '^#print axioms OracleComp\.evalDistEq_of_forall_prEvent_eq_output$' "$selected_source_module" "VCVioForwardOracleComp dependency OracleComp.evalDistEq_of_forall_prEvent_eq_output"
-require_line_count 1 '^theorem evalDistEq_of_forall_prEvent_eq_output([[:space:]]|$)' "$selected_source_module" "VCVioForwardOracleComp theorem OracleComp.evalDistEq_of_forall_prEvent_eq_output"
 require_line_count 1 '^#print axioms OracleComp\.prEvent_eq_one_iff$' "$selected_source_module" "VCVioForwardOracleComp dependency OracleComp.prEvent_eq_one_iff"
-require_line_count 1 '^theorem prEvent_eq_one_iff([[:space:]]|$)' "$selected_source_module" "VCVioForwardOracleComp theorem OracleComp.prEvent_eq_one_iff"
 require_line_count 1 '^#print axioms OracleComp\.prEvent_eq_zero_iff$' "$selected_source_module" "VCVioForwardOracleComp dependency OracleComp.prEvent_eq_zero_iff"
-require_line_count 1 '^theorem prEvent_eq_zero_iff([[:space:]]|$)' "$selected_source_module" "VCVioForwardOracleComp theorem OracleComp.prEvent_eq_zero_iff"
 require_line_count 1 '^#print axioms SampleableType\.evalDist_uniformSample_singleton$' "$selected_source_module" "VCVioForwardOracleComp dependency SampleableType.evalDist_uniformSample_singleton"
-require_line_count 1 '^theorem evalDist_uniformSample_singleton([[:space:]]|$)' "$selected_source_module" "VCVioForwardOracleComp theorem SampleableType.evalDist_uniformSample_singleton"
 require_line_count 1 '^#print axioms SampleableType\.prEvent_uniformSample_eq_singleton$' "$selected_source_module" "VCVioForwardOracleComp dependency SampleableType.prEvent_uniformSample_eq_singleton"
-require_line_count 1 '^theorem prEvent_uniformSample_eq_singleton([[:space:]]|$)' "$selected_source_module" "VCVioForwardOracleComp theorem SampleableType.prEvent_uniformSample_eq_singleton"
 require_line_count 1 '^#print axioms SampleableType\.map_uniformSample_evalDistEq_of_bijective$' "$selected_source_module" "VCVioForwardOracleComp dependency SampleableType.map_uniformSample_evalDistEq_of_bijective"
-require_line_count 1 '^theorem map_uniformSample_evalDistEq_of_bijective([[:space:]]|$)' "$selected_source_module" "VCVioForwardOracleComp theorem SampleableType.map_uniformSample_evalDistEq_of_bijective"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/BooleanDistance.lean
+require_line_count 6 '^#guard_msgs in$' "$selected_source_module" "BooleanDistance guarded native laws"
+require_line_count 1 '^#print axioms ProbComp\.boolDistance$' "$selected_source_module" "BooleanDistance native dependency ProbComp.boolDistance"
+require_line_count 1 '^#print axioms ProbComp\.boolDistance_eq_toReal_boolDist$' "$selected_source_module" "BooleanDistance native dependency ProbComp.boolDistance_eq_toReal_boolDist"
+require_line_count 1 '^#print axioms ProbComp\.boolDistance_self$' "$selected_source_module" "BooleanDistance native dependency ProbComp.boolDistance_self"
+require_line_count 1 '^#print axioms ProbComp\.boolDistance_comm$' "$selected_source_module" "BooleanDistance native dependency ProbComp.boolDistance_comm"
+require_line_count 1 '^#print axioms ProbComp\.boolDistance_triangle$' "$selected_source_module" "BooleanDistance native dependency ProbComp.boolDistance_triangle"
+require_line_count 1 '^#print axioms ProbComp\.evalDist_apply_true_le_add_ofReal_boolDistance$' "$selected_source_module" "BooleanDistance native dependency ProbComp.evalDist_apply_true_le_add_ofReal_boolDistance"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/DiscreteDistance.lean
+require_line_count 25 '^#guard_msgs in$' "$selected_source_module" "DiscreteDistance guarded native laws"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.discreteDistance$' "$selected_source_module" "DiscreteDistance native dependency BeaconcryptCore.Computational.discreteDistance"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.discreteDistance_nonneg$' "$selected_source_module" "DiscreteDistance native dependency BeaconcryptCore.Computational.discreteDistance_nonneg"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.discreteDistance_le_one$' "$selected_source_module" "DiscreteDistance native dependency BeaconcryptCore.Computational.discreteDistance_le_one"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.discreteDistance_self$' "$selected_source_module" "DiscreteDistance native dependency BeaconcryptCore.Computational.discreteDistance_self"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.discreteDistance_comm$' "$selected_source_module" "DiscreteDistance native dependency BeaconcryptCore.Computational.discreteDistance_comm"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.discreteDistance_triangle$' "$selected_source_module" "DiscreteDistance native dependency BeaconcryptCore.Computational.discreteDistance_triangle"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.discreteDistance_eq_toReal$' "$selected_source_module" "DiscreteDistance native dependency BeaconcryptCore.Computational.discreteDistance_eq_toReal"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.ofReal_discreteDistance_eq$' "$selected_source_module" "DiscreteDistance native dependency BeaconcryptCore.Computational.ofReal_discreteDistance_eq"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.discreteDistance_map_le$' "$selected_source_module" "DiscreteDistance native dependency BeaconcryptCore.Computational.discreteDistance_map_le"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.discreteDistance_bind_right_le$' "$selected_source_module" "DiscreteDistance native dependency BeaconcryptCore.Computational.discreteDistance_bind_right_le"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.abs_prEvent_toReal_sub_le_discreteDistance_event$' "$selected_source_module" "DiscreteDistance native dependency BeaconcryptCore.Computational.abs_prEvent_toReal_sub_le_discreteDistance_event"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.prEvent_le_prEvent_add_ofReal_discreteDistance$' "$selected_source_module" "DiscreteDistance native dependency BeaconcryptCore.Computational.prEvent_le_prEvent_add_ofReal_discreteDistance"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.abs_prEvent_toReal_sub_le_discreteDistance$' "$selected_source_module" "DiscreteDistance native dependency BeaconcryptCore.Computational.abs_prEvent_toReal_sub_le_discreteDistance"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.abs_evalDist_true_toReal_sub_le_discreteDistance$' "$selected_source_module" "DiscreteDistance native dependency BeaconcryptCore.Computational.abs_evalDist_true_toReal_sub_le_discreteDistance"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.discreteDistance_congr$' "$selected_source_module" "DiscreteDistance native dependency BeaconcryptCore.Computational.discreteDistance_congr"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.boolDistance_le_discreteDistance$' "$selected_source_module" "DiscreteDistance native dependency BeaconcryptCore.Computational.boolDistance_le_discreteDistance"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.discreteDistance_bind_left_le$' "$selected_source_module" "DiscreteDistance native dependency BeaconcryptCore.Computational.discreteDistance_bind_left_le"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.discreteDistance_bind_left_le_const$' "$selected_source_module" "DiscreteDistance native dependency BeaconcryptCore.Computational.discreteDistance_bind_left_le_const"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.ofReal_discreteDistance_bind_left_le_const$' "$selected_source_module" "DiscreteDistance native dependency BeaconcryptCore.Computational.ofReal_discreteDistance_bind_left_le_const"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.ofReal_discreteDistance_bind_left_le_const'"'"'$' "$selected_source_module" "DiscreteDistance native dependency BeaconcryptCore.Computational.ofReal_discreteDistance_bind_left_le_const'"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.discreteDistance_bind_left_le_const'"'"'$' "$selected_source_module" "DiscreteDistance native dependency BeaconcryptCore.Computational.discreteDistance_bind_left_le_const'"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.discreteDistance_bind_left_event_le$' "$selected_source_module" "DiscreteDistance native dependency BeaconcryptCore.Computational.discreteDistance_bind_left_event_le"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.ofReal_discreteDistance_bind_left_event_le$' "$selected_source_module" "DiscreteDistance native dependency BeaconcryptCore.Computational.ofReal_discreteDistance_bind_left_event_le"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.discreteDistance_simulateQ_run_le_prEvent_bad$' "$selected_source_module" "DiscreteDistance native dependency BeaconcryptCore.Computational.discreteDistance_simulateQ_run_le_prEvent_bad"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.ofReal_discreteDistance_simulateQ_run_le_prEvent_bad$' "$selected_source_module" "DiscreteDistance native dependency BeaconcryptCore.Computational.ofReal_discreteDistance_simulateQ_run_le_prEvent_bad"
+
+selected_source_module=proofs/lean/BeaconcryptCore/Computational/StatefulGoodEvent.lean
+require_line_count 4 '^#guard_msgs in$' "$selected_source_module" "StatefulGoodEvent guarded native laws"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.StatefulGoodEvent\.output_good$' "$selected_source_module" "StatefulGoodEvent native dependency BeaconcryptCore.Computational.StatefulGoodEvent.output_good"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.StatefulGoodEvent\.event_good$' "$selected_source_module" "StatefulGoodEvent native dependency BeaconcryptCore.Computational.StatefulGoodEvent.event_good"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.StatefulGoodEvent\.distance_le_bad$' "$selected_source_module" "StatefulGoodEvent native dependency BeaconcryptCore.Computational.StatefulGoodEvent.distance_le_bad"
+require_line_count 1 '^#print axioms BeaconcryptCore\.Computational\.StatefulGoodEvent\.bad_probability_eq$' "$selected_source_module" "StatefulGoodEvent native dependency BeaconcryptCore.Computational.StatefulGoodEvent.bad_probability_eq"
 
 selected_source_module=proofs/lean/BeaconcryptCore/Computational/VCVioForwardProbabilityTheory.lean
-require_line_count 1 '^import BeaconcryptCore\.Computational\.VCVioForwardProbabilityTheory$' proofs/lean/BeaconcryptCore.lean "VCVioForwardProbabilityTheory root import"
-require_line_count 3 '^theorem ' "$selected_source_module" "VCVioForwardProbabilityTheory theorem inventory"
-require_line_count 3 '^#guard_msgs in$' "$selected_source_module" "VCVioForwardProbabilityTheory guarded dependencies"
-require_line_count 1 '^#print axioms BeaconcryptCore\.VCVioForward\.ofReal_boolDistAdvantage_eq_absDiff$' "$selected_source_module" "VCVioForwardProbabilityTheory dependency BeaconcryptCore.VCVioForward.ofReal_boolDistAdvantage_eq_absDiff"
-require_line_count 1 '^theorem ofReal_boolDistAdvantage_eq_absDiff([[:space:]]|$)' "$selected_source_module" "VCVioForwardProbabilityTheory theorem BeaconcryptCore.VCVioForward.ofReal_boolDistAdvantage_eq_absDiff"
-require_line_count 1 '^#print axioms BeaconcryptCore\.VCVioForward\.evalDist_apply_true_le_add_ofReal_boolDistAdvantage$' "$selected_source_module" "VCVioForwardProbabilityTheory dependency BeaconcryptCore.VCVioForward.evalDist_apply_true_le_add_ofReal_boolDistAdvantage"
-require_line_count 1 '^theorem evalDist_apply_true_le_add_ofReal_boolDistAdvantage([[:space:]]|$)' "$selected_source_module" "VCVioForwardProbabilityTheory theorem BeaconcryptCore.VCVioForward.evalDist_apply_true_le_add_ofReal_boolDistAdvantage"
-require_line_count 1 '^#print axioms BeaconcryptCore\.VCVioForward\.evalDist_apply_true_le_add_absDiff$' "$selected_source_module" "VCVioForwardProbabilityTheory dependency BeaconcryptCore.VCVioForward.evalDist_apply_true_le_add_absDiff"
-require_line_count 1 '^theorem evalDist_apply_true_le_add_absDiff([[:space:]]|$)' "$selected_source_module" "VCVioForwardProbabilityTheory theorem BeaconcryptCore.VCVioForward.evalDist_apply_true_le_add_absDiff"
+require_line_count 1 '^#guard_msgs in$' "$selected_source_module" "VCVioForwardProbabilityTheory guarded native laws"
+require_line_count 1 '^#print axioms BeaconcryptCore\.VCVioForward\.evalDist_apply_true_le_add_absDiff$' "$selected_source_module" "VCVioForwardProbabilityTheory native dependency BeaconcryptCore.VCVioForward.evalDist_apply_true_le_add_absDiff"
 
 selected_source_module=proofs/lean/BeaconcryptCore/Computational/VCVioForwardProgramLogic.lean
-require_line_count 1 '^import BeaconcryptCore\.Computational\.VCVioForwardProgramLogic$' proofs/lean/BeaconcryptCore.lean "VCVioForwardProgramLogic root import"
-require_line_count 0 '^theorem ' "$selected_source_module" "VCVioForwardProgramLogic theorem inventory"
-require_line_count 0 '^#guard_msgs in$' "$selected_source_module" "VCVioForwardProgramLogic guarded dependencies"
-require_line_count 1 '^import VCVio\.ProgramLogic\.Relational\.FromUnary$' "$selected_source_module" "VCVio relational product-coupling import"
+require_line_count 1 '^import VCVio\.ProgramLogic\.Relational\.Basic$' "$selected_source_module" "native relational product coupling import"
 
-selected_source_module=proofs/lean/BeaconcryptCore/Computational/VCVioLegacyBridge.lean
-require_line_count 1 '^import BeaconcryptCore\.Computational\.VCVioLegacyBridge$' proofs/lean/BeaconcryptCore.lean "VCVioLegacyBridge root import"
-require_line_count 17 '^theorem ' "$selected_source_module" "VCVioLegacyBridge theorem inventory"
-require_line_count 17 '^#guard_msgs in$' "$selected_source_module" "VCVioLegacyBridge guarded dependencies"
-require_line_count 1 '^#print axioms BeaconcryptCore\.VCVioLegacy\.probOutput_eq_evalDist_singleton_of_compatible$' "$selected_source_module" "VCVioLegacyBridge dependency BeaconcryptCore.VCVioLegacy.probOutput_eq_evalDist_singleton_of_compatible"
-require_line_count 1 '^theorem probOutput_eq_evalDist_singleton_of_compatible([[:space:]]|$)' "$selected_source_module" "VCVioLegacyBridge theorem BeaconcryptCore.VCVioLegacy.probOutput_eq_evalDist_singleton_of_compatible"
-require_line_count 1 '^#print axioms BeaconcryptCore\.VCVioLegacy\.probEvent_eq_evalDist_setOf_of_compatible$' "$selected_source_module" "VCVioLegacyBridge dependency BeaconcryptCore.VCVioLegacy.probEvent_eq_evalDist_setOf_of_compatible"
-require_line_count 1 '^theorem probEvent_eq_evalDist_setOf_of_compatible([[:space:]]|$)' "$selected_source_module" "VCVioLegacyBridge theorem BeaconcryptCore.VCVioLegacy.probEvent_eq_evalDist_setOf_of_compatible"
-require_line_count 1 '^#print axioms BeaconcryptCore\.VCVioLegacy\.probOutput_eq_prEvent_of_compatible$' "$selected_source_module" "VCVioLegacyBridge dependency BeaconcryptCore.VCVioLegacy.probOutput_eq_prEvent_of_compatible"
-require_line_count 1 '^theorem probOutput_eq_prEvent_of_compatible([[:space:]]|$)' "$selected_source_module" "VCVioLegacyBridge theorem BeaconcryptCore.VCVioLegacy.probOutput_eq_prEvent_of_compatible"
-require_line_count 1 '^#print axioms BeaconcryptCore\.VCVioLegacy\.probEvent_eq_prEvent_of_compatible$' "$selected_source_module" "VCVioLegacyBridge dependency BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent_of_compatible"
-require_line_count 1 '^theorem probEvent_eq_prEvent_of_compatible([[:space:]]|$)' "$selected_source_module" "VCVioLegacyBridge theorem BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent_of_compatible"
-require_line_count 1 '^#print axioms BeaconcryptCore\.VCVioLegacy\.evalSPMF_eq_iff_evalDistEq_of_compatible$' "$selected_source_module" "VCVioLegacyBridge dependency BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq_of_compatible"
-require_line_count 1 '^theorem evalSPMF_eq_iff_evalDistEq_of_compatible([[:space:]]|$)' "$selected_source_module" "VCVioLegacyBridge theorem BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq_of_compatible"
-require_line_count 1 '^#print axioms BeaconcryptCore\.VCVioLegacy\.probOutput_eq_prEvent$' "$selected_source_module" "VCVioLegacyBridge dependency BeaconcryptCore.VCVioLegacy.probOutput_eq_prEvent"
-require_line_count 1 '^theorem probOutput_eq_prEvent([[:space:]]|$)' "$selected_source_module" "VCVioLegacyBridge theorem BeaconcryptCore.VCVioLegacy.probOutput_eq_prEvent"
-require_line_count 1 '^#print axioms BeaconcryptCore\.VCVioLegacy\.probEvent_eq_prEvent$' "$selected_source_module" "VCVioLegacyBridge dependency BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent"
-require_line_count 1 '^theorem probEvent_eq_prEvent([[:space:]]|$)' "$selected_source_module" "VCVioLegacyBridge theorem BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent"
-require_line_count 1 '^#print axioms BeaconcryptCore\.VCVioLegacy\.evalSPMF_eq_iff_evalDistEq$' "$selected_source_module" "VCVioLegacyBridge dependency BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq"
-require_line_count 1 '^theorem evalSPMF_eq_iff_evalDistEq([[:space:]]|$)' "$selected_source_module" "VCVioLegacyBridge theorem BeaconcryptCore.VCVioLegacy.evalSPMF_eq_iff_evalDistEq"
-require_line_count 1 '^#print axioms BeaconcryptCore\.VCVioLegacy\.probOutput_eq_evalDist_singleton$' "$selected_source_module" "VCVioLegacyBridge dependency BeaconcryptCore.VCVioLegacy.probOutput_eq_evalDist_singleton"
-require_line_count 1 '^theorem probOutput_eq_evalDist_singleton([[:space:]]|$)' "$selected_source_module" "VCVioLegacyBridge theorem BeaconcryptCore.VCVioLegacy.probOutput_eq_evalDist_singleton"
-require_line_count 1 '^#print axioms BeaconcryptCore\.VCVioLegacy\.evalDist_singleton_eq_probOutput$' "$selected_source_module" "VCVioLegacyBridge dependency BeaconcryptCore.VCVioLegacy.evalDist_singleton_eq_probOutput"
-require_line_count 1 '^theorem evalDist_singleton_eq_probOutput([[:space:]]|$)' "$selected_source_module" "VCVioLegacyBridge theorem BeaconcryptCore.VCVioLegacy.evalDist_singleton_eq_probOutput"
-require_line_count 1 '^#print axioms BeaconcryptCore\.VCVioLegacy\.probEvent_eq_evalDist_setOf$' "$selected_source_module" "VCVioLegacyBridge dependency BeaconcryptCore.VCVioLegacy.probEvent_eq_evalDist_setOf"
-require_line_count 1 '^theorem probEvent_eq_evalDist_setOf([[:space:]]|$)' "$selected_source_module" "VCVioLegacyBridge theorem BeaconcryptCore.VCVioLegacy.probEvent_eq_evalDist_setOf"
-require_line_count 1 '^#print axioms BeaconcryptCore\.VCVioLegacy\.oracleComp_probOutput_eq_prEvent$' "$selected_source_module" "VCVioLegacyBridge dependency BeaconcryptCore.VCVioLegacy.oracleComp_probOutput_eq_prEvent"
-require_line_count 1 '^theorem oracleComp_probOutput_eq_prEvent([[:space:]]|$)' "$selected_source_module" "VCVioLegacyBridge theorem BeaconcryptCore.VCVioLegacy.oracleComp_probOutput_eq_prEvent"
-require_line_count 1 '^#print axioms BeaconcryptCore\.VCVioLegacy\.oracleComp_probEvent_eq_prEvent$' "$selected_source_module" "VCVioLegacyBridge dependency BeaconcryptCore.VCVioLegacy.oracleComp_probEvent_eq_prEvent"
-require_line_count 1 '^theorem oracleComp_probEvent_eq_prEvent([[:space:]]|$)' "$selected_source_module" "VCVioLegacyBridge theorem BeaconcryptCore.VCVioLegacy.oracleComp_probEvent_eq_prEvent"
-require_line_count 1 '^#print axioms BeaconcryptCore\.VCVioLegacy\.oracleComp_evalSPMF_eq_iff_evalDistEq$' "$selected_source_module" "VCVioLegacyBridge dependency BeaconcryptCore.VCVioLegacy.oracleComp_evalSPMF_eq_iff_evalDistEq"
-require_line_count 1 '^theorem oracleComp_evalSPMF_eq_iff_evalDistEq([[:space:]]|$)' "$selected_source_module" "VCVioLegacyBridge theorem BeaconcryptCore.VCVioLegacy.oracleComp_evalSPMF_eq_iff_evalDistEq"
-require_line_count 1 '^#print axioms BeaconcryptCore\.VCVioLegacy\.oracleComp_probOutput_eq_prEvent_native$' "$selected_source_module" "VCVioLegacyBridge dependency BeaconcryptCore.VCVioLegacy.oracleComp_probOutput_eq_prEvent_native (stage S1)"
-require_line_count 1 '^theorem oracleComp_probOutput_eq_prEvent_native([[:space:]]|$)' "$selected_source_module" "VCVioLegacyBridge theorem BeaconcryptCore.VCVioLegacy.oracleComp_probOutput_eq_prEvent_native (stage S1)"
-require_line_count 1 '^#print axioms BeaconcryptCore\.VCVioLegacy\.oracleComp_probEvent_eq_prEvent_native$' "$selected_source_module" "VCVioLegacyBridge dependency BeaconcryptCore.VCVioLegacy.oracleComp_probEvent_eq_prEvent_native (stage S1)"
-require_line_count 1 '^theorem oracleComp_probEvent_eq_prEvent_native([[:space:]]|$)' "$selected_source_module" "VCVioLegacyBridge theorem BeaconcryptCore.VCVioLegacy.oracleComp_probEvent_eq_prEvent_native (stage S1)"
-require_line_count 1 '^#print axioms BeaconcryptCore\.VCVioLegacy\.oracleComp_evalSPMF_eq_iff_evalDistEq_native$' "$selected_source_module" "VCVioLegacyBridge dependency BeaconcryptCore.VCVioLegacy.oracleComp_evalSPMF_eq_iff_evalDistEq_native (stage S1)"
-require_line_count 1 '^theorem oracleComp_evalSPMF_eq_iff_evalDistEq_native([[:space:]]|$)' "$selected_source_module" "VCVioLegacyBridge theorem BeaconcryptCore.VCVioLegacy.oracleComp_evalSPMF_eq_iff_evalDistEq_native (stage S1)"
-require_line_count 17 '^set_option linter\.deprecated false in$' "$selected_source_module" "VCVio legacy bridge explicit deprecation suppressions"
-for selected_source_module in proofs/lean/BeaconcryptCore/Computational/VCVioForwardEvalDist.lean proofs/lean/BeaconcryptCore/Computational/VCVioForwardOracleComp.lean proofs/lean/BeaconcryptCore/Computational/VCVioForwardProbabilityTheory.lean proofs/lean/BeaconcryptCore/Computational/VCVioForwardProgramLogic.lean proofs/lean/BeaconcryptCore/Computational/VCVioLegacyBridge.lean; do
+
+# Retain the original bans on local syntax, metaprogramming and instance changes across every native probability foundation.
+for selected_source_module in \
+	proofs/lean/BeaconcryptCore/Computational/VCVioForwardEvalDist.lean \
+	proofs/lean/BeaconcryptCore/Computational/VCVioForwardOracleComp.lean \
+	proofs/lean/BeaconcryptCore/Computational/VCVioForwardProbabilityTheory.lean \
+	proofs/lean/BeaconcryptCore/Computational/VCVioForwardProgramLogic.lean \
+	proofs/lean/BeaconcryptCore/Computational/BooleanDistance.lean \
+	proofs/lean/BeaconcryptCore/Computational/DiscreteDistance.lean \
+	proofs/lean/BeaconcryptCore/Computational/StatefulGoodEvent.lean; do
 	require_line_count 0 '^[[:space:]]*(@\[[^]]*\][[:space:]]*)*((open|set_option)[[:space:]].*[[:space:]]in[[:space:]]+)*((private|protected|local|scoped|noncomputable|partial|unsafe)(\[[^]]*\])?[[:space:]]+)*(macro|macro_rules|syntax|elab|elab_rules|notation|notation3|infix|infixl|infixr|prefix|postfix|binder_predicate|declare_syntax_cat|initialize|builtin_initialize|register_simp_attr|register_option|simproc|dsimproc|simproc_decl|dsimproc_decl|unif_hint)([[:space:]:(]|$)' "$selected_source_module" "VCVio migration module notation, syntax and elaborator declarations, also precedence-annotated, scoped or after open/set_option ... in (amendment A1)"
 	require_line_count 0 '^[[:space:]]*import[[:space:]]+Lean|addDecl|Lean\.Elab|Lean\.Meta|Lean\.Parser|run_cmd|run_elab|run_meta|run_tac|#eval' "$selected_source_module" "VCVio migration module metaprogramming (amendment A1)"
 	require_line_count 0 '^[[:space:]]*(attribute[[:space:]]*\[[^]]*instance|deriving[[:space:]]+instance)|@\[[^]]*instance' "$selected_source_module" "VCVio migration module instance attributes and derived instances"
-done
-require_line_count 4 '^[[:space:]]*(@\[[^]]*\][[:space:]]*)*((open|set_option)[[:space:]].*[[:space:]]in[[:space:]]+)*((private|protected|local|scoped|noncomputable|partial|unsafe)(\[[^]]*\])?[[:space:]]+)*instance([[:space:]:(]|$)' proofs/lean/BeaconcryptCore/Computational/VCVioForwardEvalDist.lean "VCVioForwardEvalDist instance declarations (the Trans, Std.Refl, Std.Symm and IsTrans instances of EvalDistEq, as upstream)"
-for selected_source_module in proofs/lean/BeaconcryptCore/Computational/VCVioForwardOracleComp.lean proofs/lean/BeaconcryptCore/Computational/VCVioForwardProbabilityTheory.lean proofs/lean/BeaconcryptCore/Computational/VCVioForwardProgramLogic.lean proofs/lean/BeaconcryptCore/Computational/VCVioLegacyBridge.lean; do
 	require_line_count 0 '^[[:space:]]*(@\[[^]]*\][[:space:]]*)*((open|set_option)[[:space:]].*[[:space:]]in[[:space:]]+)*((private|protected|local|scoped|noncomputable|partial|unsafe)(\[[^]]*\])?[[:space:]]+)*instance([[:space:]:(]|$)' "$selected_source_module" "VCVio migration module instance declarations"
 done
+require_line_count 1 '^import BeaconcryptCore\.Computational\.VCVioForwardEvalDist$' proofs/lean/BeaconcryptCore.lean "VCVioForwardEvalDist native root import"
+require_line_count 1 '^import BeaconcryptCore\.Computational\.VCVioForwardOracleComp$' proofs/lean/BeaconcryptCore.lean "VCVioForwardOracleComp native root import"
+require_line_count 1 '^import BeaconcryptCore\.Computational\.VCVioForwardProbabilityTheory$' proofs/lean/BeaconcryptCore.lean "VCVioForwardProbabilityTheory native root import"
+require_line_count 1 '^import BeaconcryptCore\.Computational\.VCVioForwardProgramLogic$' proofs/lean/BeaconcryptCore.lean "VCVioForwardProgramLogic native root import"
+require_line_count 1 '^import BeaconcryptCore\.Computational\.BooleanDistance$' proofs/lean/BeaconcryptCore.lean "BooleanDistance native root import"
+require_line_count 1 '^import BeaconcryptCore\.Computational\.DiscreteDistance$' proofs/lean/BeaconcryptCore.lean "DiscreteDistance native root import"
+require_line_count 1 '^import BeaconcryptCore\.Computational\.StatefulGoodEvent$' proofs/lean/BeaconcryptCore.lean "StatefulGoodEvent native root import"
 
 # VCVio deprecation migration stage S2: transitional twins (plan section 5.2, amendments A1 and A1.1). A twin is one generated command right after its declaration whose header line carries the explicit deprecation suppression for the old statement; the unused-variable switch may appear only on twin header lines. No other deprecation suppression remains in the stage modules. When the last consumer stage of a twin migrates, the twin and its per-twin pin are removed, and the module count pins stay at the new counts (zero when no twin remains) with a removal note.
 require_line_count 0 '^set_option linter\.deprecated false in theorem _root_\.BeaconcryptCore\.Computational\.[A-Za-z0-9_.]+_vcvioLegacy :$' proofs/lean/BeaconcryptCore/Computational/CtxRomAuth.lean "CtxRomAuth transitional twin headers, plain variant (VCVio migration stage S2; its twin removed in stage S5)"
@@ -43425,7 +43350,7 @@ require_line_count 0 'linter\.deprecated' proofs/lean/BeaconcryptCore/Computatio
 require_line_count 0 'linter\.deprecated' proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthSessionRecord.lean "PqxdhServerAuthSessionRecord no deprecation suppression (VCVio migration stage S8)"
 require_line_count 0 'linter\.deprecated' proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthSessionRecordProbability.lean "PqxdhServerAuthSessionRecordProbability no deprecation suppression (VCVio migration stage S8)"
 require_line_count 0 'linter\.deprecated' proofs/lean/BeaconcryptCore/Computational/PqxdhServerAuthStopMonitor.lean "PqxdhServerAuthStopMonitor no deprecation suppression (VCVio migration stage S8)"
-# VCVio deprecation migration stage S9 and final sweep (plan sections 5.2 and 7, amendments A1 and A1.1): the last stage adds no transitional twin and removes the 23 remaining twins of stages S2 to S8 together with their per-twin pins; the module count pins of their modules stay at zero with a removal note. No deprecation suppression remains in the 136 stage files, including the three files that suppressed deprecation file-wide (PqxdhRegistrationJointKemCommands, PqxdhRegistrationJointKemInitialization, PqxdhRegistrationJointKemRouting). The only deprecated VCVio syntax left in the build is in the allowlisted VCVioLegacyBridge.
+# VCVio deprecation migration stage S9 and final sweep (plan sections 5.2 and 7, amendments A1 and A1.1): the last stage adds no transitional twin and removes the 23 remaining twins of stages S2 to S8 together with their per-twin pins; the module count pins of their modules stay at zero with a removal note. No deprecation suppression remains in the 136 stage files, including the three files that suppressed deprecation file-wide (PqxdhRegistrationJointKemCommands, PqxdhRegistrationJointKemInitialization, PqxdhRegistrationJointKemRouting). The subsequent 4.35 migration removes VCVioLegacyBridge and all uses of the retired probability layer.
 require_line_count 0 'linter\.deprecated' proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentAcceptDetection.lean "PqxdhDeploymentAcceptDetection no deprecation suppression (VCVio migration stage S9)"
 require_line_count 0 'linter\.deprecated' proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineAgree.lean "PqxdhDeploymentHeadlineAgree no deprecation suppression (VCVio migration stage S9)"
 require_line_count 0 'linter\.deprecated' proofs/lean/BeaconcryptCore/Computational/PqxdhDeploymentHeadlineAnomaly.lean "PqxdhDeploymentHeadlineAnomaly no deprecation suppression (VCVio migration stage S9)"

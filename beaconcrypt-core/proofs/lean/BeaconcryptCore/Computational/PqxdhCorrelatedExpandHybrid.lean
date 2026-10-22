@@ -265,31 +265,31 @@ theorem indexed_random (hmac : HmacSha512) (client : OracleComp RootSpec Bool) (
       (hmacRandom_eq_independentRoot (scanSampler client index) (scanObserver hmac)).symm)
 
 theorem indexed_advantage (hmac : HmacSha512) (client : OracleComp RootSpec Bool) (index : Nat) :
-    (hybridGame hmac client index).boolDistAdvantage (hybridGame hmac client (index + 1)) =
-      (hmacPrfRealGame hmac (indexedReduction hmac client index)).boolDistAdvantage
+    (hybridGame hmac client index).boolDistance (hybridGame hmac client (index + 1)) =
+      (hmacPrfRealGame hmac (indexedReduction hmac client index)).boolDistance
         (hmacPrfRandomGame (indexedReduction hmac client index)) := by
-  simp only [ProbComp.boolDistAdvantage]
+  simp only [ProbComp.boolDistance]
   rw [indexed_real hmac client index, indexed_random hmac client index]
 
 /-- The ordered family has one ordinary HMAC term per original root position, without another selection factor. -/
 theorem hybrid_distance_sum (hmac : HmacSha512) (client : OracleComp RootSpec Bool) (q : Nat) :
-    (hybridGame hmac client 0).boolDistAdvantage (hybridGame hmac client q) ≤
+    (hybridGame hmac client 0).boolDistance (hybridGame hmac client q) ≤
       ∑ index ∈ Finset.range q,
-        (hmacPrfRealGame hmac (indexedReduction hmac client index)).boolDistAdvantage
+        (hmacPrfRealGame hmac (indexedReduction hmac client index)).boolDistance
           (hmacPrfRandomGame (indexedReduction hmac client index)) := by
   induction q with
-  | zero => simp only [ProbComp.boolDistAdvantage, sub_self, abs_zero, Finset.range_zero, Finset.sum_empty, le_refl]
+  | zero => simp only [ProbComp.boolDistance, sub_self, abs_zero, Finset.range_zero, Finset.sum_empty, le_refl]
   | succ q ih =>
       rw [Finset.sum_range_succ]
-      exact (ProbComp.boolDistAdvantage_triangle _ _ _).trans
+      exact (ProbComp.boolDistance_triangle _ _ _).trans
         (add_le_add ih (le_of_eq (indexed_advantage hmac client q)))
 
 /-- A bounded arbitrary adaptive root client reaches the consistent uniform-root source using only ordinary HMAC advantages. -/
 theorem expanded_uniform_bound (hmac : HmacSha512) (client : OracleComp RootSpec Bool)
     (q : Nat) (bounded : client.IsQueryBoundP IsRoot q) :
-    (expandedGame hmac client).boolDistAdvantage (uniformGame client) ≤
+    (expandedGame hmac client).boolDistance (uniformGame client) ≤
       ∑ index ∈ Finset.range q,
-        (hmacPrfRealGame hmac (indexedReduction hmac client index)).boolDistAdvantage
+        (hmacPrfRealGame hmac (indexedReduction hmac client index)).boolDistance
           (hmacPrfRandomGame (indexedReduction hmac client index)) := by
   simpa only [hybrid_zero, hybrid_bound hmac client q bounded] using hybrid_distance_sum hmac client q
 
@@ -322,17 +322,17 @@ theorem authenticated_uniform_roots_bound
     (rootBound : (rootReduction parameters.source baseImpl kem
       (rootProtocol kem parameters attachedVerify primitives setup selector observer)).IsQueryBoundP IsRoot q) :
     let protocol := rootProtocol kem parameters attachedVerify primitives setup selector observer
-    (PqxdhCorrelatedRootSource.actualGame baseImpl kem parameters attachedVerify primitives setup selector observer).boolDistAdvantage
+    (PqxdhCorrelatedRootSource.actualGame baseImpl kem parameters attachedVerify primitives setup selector observer).boolDistance
       (uniformGame (rootReduction parameters.source baseImpl kem protocol)) ≤
       (PqxdhJointIdentity.advantage primitives
         (privateReduction primitives baseImpl kem setup selector fallback ordinaryFallback)).toReal +
-      kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
-        (PqxdhChallengeSecretRouting.reduction parameters.source kem protocol).toINDCCA +
+      (kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
+        (PqxdhChallengeSecretRouting.reduction parameters.source kem protocol).toINDCCA).toReal +
       PqxdhCorrelatedExtractFamily.advantage hmac
         (PqxdhCorrelatedExtractFamily.reduction parameters.source hmac baseImpl kem protocol) +
       ∑ index ∈ Finset.range q,
         (hmacPrfRealGame hmac (indexedReduction hmac
-          (rootReduction parameters.source baseImpl kem protocol) index)).boolDistAdvantage
+          (rootReduction parameters.source baseImpl kem protocol) index)).boolDistance
           (hmacPrfRandomGame (indexedReduction hmac
             (rootReduction parameters.source baseImpl kem protocol) index)) := by
   dsimp only
@@ -342,7 +342,7 @@ theorem authenticated_uniform_roots_bound
   have expanded := expanded_uniform_bound hmac (rootReduction parameters.source baseImpl kem
     (rootProtocol kem parameters attachedVerify primitives setup selector observer)) q rootBound
   rw [← reduction_expanded_eq parameters.source hmac baseImpl kem] at expanded
-  exact (ProbComp.boolDistAdvantage_triangle _ _ _).trans (add_le_add family expanded)
+  exact (ProbComp.boolDistance_triangle _ _ _).trans (add_le_add family expanded)
 
 end BeaconcryptCore.Computational.PqxdhCorrelatedExpandHybrid
 

@@ -81,19 +81,19 @@ theorem local_bound {Auxiliary Result : Type}
     (state : RawCtxSelectedParentLive.State Auxiliary)
     (event : Result × RawCtxSelectedParentLive.State Auxiliary → Prop) :
     (decision event <$> (simulateQ (RawCtxSelectedParentPrivate.observed source writer prior entry output
-      (nativeReader (RawCtxFreshChainCut.concreteChain target)) view target) client).run state).boolDistAdvantage
+      (nativeReader (RawCtxFreshChainCut.concreteChain target)) view target) client).run state).boolDistance
       (decision event <$> (simulateQ (RawCtxSelectedParentReadMask.observed source writer prior entry output
         labelRead view) client).run state) ≤
       Pr{let result ← (simulateQ (RawCtxSelectedParentReadMask.observed source writer prior entry output labelRead view) client).run state}[target ∈ result.2.1.2].toReal := by
   have agreement := event_good source writer prior entry output target view client state event
-  rw [ProbComp.boolDistAdvantage, ← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true,
+  rw [ProbComp.boolDistance, ← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true,
     decision_probability, decision_probability, agreement]
-  have variation := (abs_probOutput_toReal_sub_le_tvDist
+  have variation := (abs_prEvent_toReal_sub_le_discreteDistance
     (decision event <$> (simulateQ (RawCtxSelectedParentPrivate.observed source writer prior entry output labelRead view target) client).run state)
     (decision event <$> (simulateQ (RawCtxSelectedParentReadMask.observed source writer prior entry output labelRead view) client).run state)).trans
-      (tvDist_map_le (decision event) _ _)
-  rw [VCVioLegacy.probOutput_eq_prEvent, VCVioLegacy.probOutput_eq_prEvent, decision_probability, decision_probability,
-    tvDist_comm] at variation
+      (discreteDistance_map_le (decision event) _ _)
+  rw [ decision_probability, decision_probability,
+    discreteDistance_comm] at variation
   exact variation.trans (RawCtxSelectedParentPrivate.distance source writer prior entry output
     labelRead view target client state)
 

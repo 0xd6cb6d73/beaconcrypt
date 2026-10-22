@@ -21,12 +21,12 @@ theorem real_bound {Context Result : Type} (source : FixedHkdfSha512NoSaltSource
       (2 ^ 352 : ENNReal)⁻¹ + ENNReal.ofReal (
         (extractRealGame hmac (joint prior second)
           (fullExtractReduction hmac .ratchet
-            (RawCtxFullPreimageTester.tester (RawCtxFullPreimageTester.production source) observe candidates))).boolDistAdvantage
+            (RawCtxFullPreimageTester.tester (RawCtxFullPreimageTester.production source) observe candidates))).boolDistance
         (extractUniformGame (joint prior second)
           (fullExtractReduction hmac .ratchet
             (RawCtxFullPreimageTester.tester (RawCtxFullPreimageTester.production source) observe candidates))) +
         (hmacPrfRealGame hmac (fullExpandReduction .ratchet (joint prior second)
-          (RawCtxFullPreimageTester.tester (RawCtxFullPreimageTester.production source) observe candidates))).boolDistAdvantage
+          (RawCtxFullPreimageTester.tester (RawCtxFullPreimageTester.production source) observe candidates))).boolDistance
         (hmacPrfRandomGame (fullExpandReduction .ratchet (joint prior second)
           (RawCtxFullPreimageTester.tester (RawCtxFullPreimageTester.production source) observe candidates)))) :=
   RawCtxFullPreimageTester.source_alias_bound source hmac correct (sample prior second) observe candidates

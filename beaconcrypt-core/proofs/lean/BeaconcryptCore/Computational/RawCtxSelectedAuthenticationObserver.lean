@@ -294,7 +294,7 @@ theorem authentication_bound (decode : RawDecoder) (c : Pqxdh.Crypto)
         (AdaptiveRawNonceAead.indexedReduction (baseDecoder decode) fallback
           (AdaptiveCtxReceive.wrapped decode (AdaptiveCtxDynamicKnownKeys.decisionClient c (decision decode client))) index) +
       (qRaw : ℝ≥0∞) / (2 ^ 512 : Nat) := by
-  have difference := ProbComp.evalDist_apply_true_le_add_ofReal_boolDistAdvantage
+  have difference := ProbComp.evalDist_apply_true_le_add_ofReal_boolDistance
     (Prod.fst <$> AdaptiveCtxDynamicKnownKeys.sourceGame true decode c (decision decode client))
     (Prod.fst <$> AdaptiveCtxDynamicKnownKeys.sourceGame false decode c (decision decode client))
   have zero := replay_zero decode c client

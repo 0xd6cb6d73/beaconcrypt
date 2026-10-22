@@ -241,15 +241,15 @@ theorem true_bind_le {α : Type} (mx : ProbComp α) (f g h : α → ProbComp Boo
 
 /-- A Boolean projection of one game exceeds the same projection of another game by at most their total-variation distance. -/
 theorem map_le_tvDist {α : Type} (mx my : ProbComp α) (f : α → Bool) :
-    𝒟[f <$> mx] {true} ≤ 𝒟[f <$> my] {true} + ENNReal.ofReal (tvDist mx my) := by
-  have distance : |(𝒟[f <$> mx] {true}).toReal - (𝒟[f <$> my] {true}).toReal| ≤ tvDist mx my := by
-    rw [VCVioLegacy.evalDist_singleton_eq_probOutput, VCVioLegacy.evalDist_singleton_eq_probOutput]
-    exact (abs_probOutput_toReal_sub_le_tvDist _ _).trans (tvDist_map_le _ mx my)
+    𝒟[f <$> mx] {true} ≤ 𝒟[f <$> my] {true} + ENNReal.ofReal (discreteDistance mx my) := by
+  have distance : |(𝒟[f <$> mx] {true}).toReal - (𝒟[f <$> my] {true}).toReal| ≤ discreteDistance mx my := by
+    rw [← prEvent_eq_evalDist_singleton, ← prEvent_eq_evalDist_singleton]
+    exact (abs_prEvent_toReal_sub_le_discreteDistance _ _).trans (discreteDistance_map_le _ mx my)
   have upper := (abs_le.mp distance).2
   have finite : ∀ mz : ProbComp α, 𝒟[f <$> mz] {true} ≠ ⊤ := fun mz => by
     rw [← prEvent_eq_evalDist_singleton _ true]; exact prEvent_ne_top _
   rw [← ENNReal.ofReal_toReal (finite mx), ← ENNReal.ofReal_toReal (finite my),
-    ← ENNReal.ofReal_add ENNReal.toReal_nonneg (tvDist_nonneg mx my)]
+    ← ENNReal.ofReal_add ENNReal.toReal_nonneg (discreteDistance_nonneg mx my)]
   exact ENNReal.ofReal_le_ofReal (by linarith)
 
 /-- The mass of an event equals the `true` mass of its decided indicator. -/
@@ -686,6 +686,9 @@ theorem pending_ideal_le (target : Target S (B + 1)) (position : target.number.v
   unfold PqxdhFirstRecordTarget.pendingIdeal PqxdhAdaptiveMessageKeySource.firstPrepare compiledGame stopGame
   rw [PqxdhFirstRecordTarget.mapPost_choose]
   simp only [bind_assoc, pure_bind, PqxdhFirstRecordTarget.unitTargets, PqxdhInitialPreparedSourceInput.prior, bind_map_left]
+  generalize sampledBlock : ($ᵗ HmacBlock : ProbComp HmacBlock) = blockDraw
+  generalize sampledNonce : ($ᵗ NonceOutput : ProbComp NonceOutput) = nonceDraw
+  generalize sampledRoot : ($ᵗ RootOutput : ProbComp RootOutput) = rootDraw
   refine true_bind_le _ _ _ _ fun context => ?_
   refine true_bind_le _ _ _ _ fun initialBlock => ?_
   refine true_bind_le _ _ _ _ fun nonce => ?_

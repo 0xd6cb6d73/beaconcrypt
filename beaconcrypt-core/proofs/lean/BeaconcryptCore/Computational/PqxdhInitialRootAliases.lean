@@ -111,7 +111,7 @@ theorem consistent_real (fixed : FixedHkdfSha512NoSaltSource) (target : RootOutp
 theorem distance (fixed : FixedHkdfSha512NoSaltSource) (selected : Message) (target : RootOutput)
     (response : PqxdhInitialRootLabelService.Response) (client : OracleComp PqxdhInitialLabelCompiler.Spec Result)
     (state : RootOracle.QueryCache × List RootOutput) :
-    tvDist ((simulateQ (traced fixed) (simulateQ (compiler selected response) client)).run state)
+    discreteDistance ((simulateQ (traced fixed) (simulateQ (compiler selected response) client)).run state)
       ((simulateQ (RawCtxSelectedQueryTrace.recorded (consistent fixed target response) inputs)
         (simulateQ (compiler selected response) client)).run state) ≤
       Pr{let result ← (simulateQ (traced fixed) (simulateQ (compiler selected response) client)).run state}[target ∈ result.2.2].toReal :=

@@ -29,8 +29,7 @@ theorem native_flat (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
     𝒟[nativeGame setup codec checks adversary revealSeed observation] =
       𝒟[flatObserved setup codec checks revealSeed adversary observation] := by
   apply EvalDistEq.evalDist_eq
-  refine (VCVioLegacy.evalSPMF_eq_iff_evalDistEq _ _).1 ?_
-  apply evalSPMF_eq_of_relTriple_eqRel
+  apply evalDistEq_of_relTriple_eqRel
   unfold nativeGame flatObserved
   refine relTriple_bind (R := fun a b => a = b ∧ a ∈ support (contextSample setup codec))
     (relTriple_refl_of_mem_support (contextSample setup codec) fun value member => ⟨rfl, member⟩) ?_

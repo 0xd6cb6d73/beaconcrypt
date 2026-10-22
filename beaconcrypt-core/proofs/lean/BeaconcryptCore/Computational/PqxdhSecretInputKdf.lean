@@ -1,8 +1,7 @@
 import BeaconcryptCore.Computational.PqxdhJointKdfGame
-import VCVio.OracleComp.Constructions.SampleableType.MeasureCompatibility
+import VCVio.OracleComp.Constructions.SampleableType.Measure
 import VCVio.OracleComp.QueryTracking.SubSpec
 import BeaconcryptCore.Computational.VCVioForwardOracleComp
-import BeaconcryptCore.Computational.VCVioLegacyBridge
 
 /-!
 # A secret-input PQXDH root game and an Extract/HMAC decomposition
@@ -229,17 +228,17 @@ theorem sourceRootAdvantage_le_extract_add_hmac {Context : Type}
     (source : FixedHkdfSha512NoSaltSource) (hmac : HmacSha512)
     (correct : SourceRootCorrect source hmac) (sample : SecretInputSampler Context)
     (observer : RootObserver Context) :
-    (sourceRootGame source sample observer).boolDistAdvantage
+    (sourceRootGame source sample observer).boolDistance
         (independentRootGame sample observer) ≤
-      (extractRealGame hmac sample (extractReduction hmac observer)).boolDistAdvantage
+      (extractRealGame hmac sample (extractReduction hmac observer)).boolDistance
         (extractUniformGame sample (extractReduction hmac observer)) +
-      (hmacPrfRealGame hmac (expandReduction sample observer)).boolDistAdvantage
+      (hmacPrfRealGame hmac (expandReduction sample observer)).boolDistance
         (hmacPrfRandomGame (expandReduction sample observer)) := by
   have real := (extractUniform_eq_hmacReal hmac sample observer).evalDist_eq
   have random := (hmacRandom_eq_independentRoot sample observer).evalDist_eq
-  simpa only [sourceRootGame_eq_extract source hmac correct, ProbComp.boolDistAdvantage,
+  simpa only [sourceRootGame_eq_extract source hmac correct, ProbComp.boolDistance,
     real, random] using
-    ProbComp.boolDistAdvantage_triangle (sourceRootGame source sample observer)
+    ProbComp.boolDistance_triangle (sourceRootGame source sample observer)
       (extractUniformGame sample (extractReduction hmac observer))
       (independentRootGame sample observer)
 

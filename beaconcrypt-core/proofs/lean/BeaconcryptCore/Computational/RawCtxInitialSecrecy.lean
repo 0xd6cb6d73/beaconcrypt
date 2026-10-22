@@ -90,12 +90,12 @@ theorem random_comparison {Context : Type} (sample : Sampler Context) (observe :
 theorem primitive_bound {Context : Type} (source : FixedHkdfSha512NoSaltSource)
     (hmac : HmacSha512) (correct : SourceFullCorrect source hmac)
     (sample : Sampler Context) (observe : Observer Context) :
-    (actual source sample observe).boolDistAdvantage (random sample observe) ≤
-      (extractRealGame hmac (joint sample) (fullExtractReduction hmac .ratchet (observer observe))).boolDistAdvantage
+    (actual source sample observe).boolDistance (random sample observe) ≤
+      (extractRealGame hmac (joint sample) (fullExtractReduction hmac .ratchet (observer observe))).boolDistance
         (extractUniformGame (joint sample) (fullExtractReduction hmac .ratchet (observer observe))) +
-      (hmacPrfRealGame hmac (fullExpandReduction .ratchet (joint sample) (observer observe))).boolDistAdvantage
+      (hmacPrfRealGame hmac (fullExpandReduction .ratchet (joint sample) (observer observe))).boolDistance
         (hmacPrfRandomGame (fullExpandReduction .ratchet (joint sample) (observer observe))) := by
-  simpa only [← actual_source, ProbComp.boolDistAdvantage, random_comparison sample observe] using
+  simpa only [← actual_source, ProbComp.boolDistance, random_comparison sample observe] using
     sourceFullAdvantage_le_extract_add_hmac source hmac correct .ratchet (joint sample) (observer observe)
 
 /-- Serializing the root into the exact Extract sampler retains every earlier uniform query without adding a draw. -/

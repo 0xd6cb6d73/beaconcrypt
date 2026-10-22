@@ -24,27 +24,27 @@ open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhServerAu
 /-- G2: from a uniform 32-byte root, the 108-byte key-schedule output is indistinguishable from 108 uniform bytes up to two Extract advantages on an independent uniform 32-byte input and two HMAC-SHA-512 PRF advantages, all of reductions built from the distinguisher, under the functional contract `SourceFullCorrect`. -/
 theorem fromRoot_bound (source : FixedHkdfSha512NoSaltSource) (hmac : HmacSha512)
     (correct : SourceFullCorrect source hmac) (distinguisher : Distinguisher) :
-    (rootHybrid source distinguisher).boolDistAdvantage
+    (rootHybrid source distinguisher).boolDistance
         (PqxdhServerAuthKeySchedule.uniformGame distinguisher) ≤
-      (extractRealGame hmac uniform32 (initExtractReduction source hmac distinguisher)).boolDistAdvantage
+      (extractRealGame hmac uniform32 (initExtractReduction source hmac distinguisher)).boolDistance
           (extractUniformGame uniform32 (initExtractReduction source hmac distinguisher)) +
-        (hmacPrfRealGame hmac (initExpandReduction source distinguisher)).boolDistAdvantage
+        (hmacPrfRealGame hmac (initExpandReduction source distinguisher)).boolDistance
           (hmacPrfRandomGame (initExpandReduction source distinguisher)) +
-        (extractRealGame hmac uniform32 (stepExtractReduction hmac distinguisher)).boolDistAdvantage
+        (extractRealGame hmac uniform32 (stepExtractReduction hmac distinguisher)).boolDistance
           (extractUniformGame uniform32 (stepExtractReduction hmac distinguisher)) +
-        (hmacPrfRealGame hmac (stepExpandReduction distinguisher)).boolDistAdvantage
+        (hmacPrfRealGame hmac (stepExpandReduction distinguisher)).boolDistance
           (hmacPrfRandomGame (stepExpandReduction distinguisher)) := by
   rw [← initExtract_hop correct, ← initExpand_hop, ← stepExtract_hop correct, ← stepExpand_hop]
-  have split : (initHybrid source distinguisher).boolDistAdvantage
+  have split : (initHybrid source distinguisher).boolDistance
       (PqxdhServerAuthKeySchedule.uniformGame distinguisher) =
-      (splitHybrid source distinguisher).boolDistAdvantage
+      (splitHybrid source distinguisher).boolDistance
         (PqxdhServerAuthKeySchedule.uniformGame distinguisher) :=
     advantage_congr (init_split source distinguisher) rfl
-  have first := ProbComp.boolDistAdvantage_triangle (rootHybrid source distinguisher)
+  have first := ProbComp.boolDistance_triangle (rootHybrid source distinguisher)
     (initKeyHybrid source hmac distinguisher) (PqxdhServerAuthKeySchedule.uniformGame distinguisher)
-  have second := ProbComp.boolDistAdvantage_triangle (initKeyHybrid source hmac distinguisher)
+  have second := ProbComp.boolDistance_triangle (initKeyHybrid source hmac distinguisher)
     (initHybrid source distinguisher) (PqxdhServerAuthKeySchedule.uniformGame distinguisher)
-  have third := ProbComp.boolDistAdvantage_triangle (splitHybrid source distinguisher)
+  have third := ProbComp.boolDistance_triangle (splitHybrid source distinguisher)
     (stepKeyHybrid hmac distinguisher) (PqxdhServerAuthKeySchedule.uniformGame distinguisher)
   linarith
 
@@ -54,20 +54,20 @@ theorem fromRoot_bound_context {Context : Type} (source : FixedHkdfSha512NoSaltS
     (distinguisher : Context → Distinguisher) :
     (do let context ← sample
         let root ← $ᵗ RootOutput
-        distinguisher context (fromRoot source root)).boolDistAdvantage
+        distinguisher context (fromRoot source root)).boolDistance
       (do let context ← sample
           let output ← $ᵗ Output
           distinguisher context output) ≤
       (extractRealGame hmac uniform32
-          (initExtractReduction source hmac (withContext sample distinguisher))).boolDistAdvantage
+          (initExtractReduction source hmac (withContext sample distinguisher))).boolDistance
           (extractUniformGame uniform32
             (initExtractReduction source hmac (withContext sample distinguisher))) +
-        (hmacPrfRealGame hmac (initExpandReduction source (withContext sample distinguisher))).boolDistAdvantage
+        (hmacPrfRealGame hmac (initExpandReduction source (withContext sample distinguisher))).boolDistance
           (hmacPrfRandomGame (initExpandReduction source (withContext sample distinguisher))) +
         (extractRealGame hmac uniform32
-            (stepExtractReduction hmac (withContext sample distinguisher))).boolDistAdvantage
+            (stepExtractReduction hmac (withContext sample distinguisher))).boolDistance
           (extractUniformGame uniform32 (stepExtractReduction hmac (withContext sample distinguisher))) +
-        (hmacPrfRealGame hmac (stepExpandReduction (withContext sample distinguisher))).boolDistAdvantage
+        (hmacPrfRealGame hmac (stepExpandReduction (withContext sample distinguisher))).boolDistance
           (hmacPrfRandomGame (stepExpandReduction (withContext sample distinguisher))) := by
   have real := (PqxdhSecretInputKdf.evalSPMF_sample_comm sample
     ($ᵗ RootOutput) (fun context root => distinguisher context (fromRoot source root))).evalDist_eq

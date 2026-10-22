@@ -347,9 +347,9 @@ theorem authenticated_selected_opaque (setup : Setup baseSpec KemSK)
       PqxdhRegistrationJointAcceptCutReports.split setup codec checks ensureInit supplied (count + 1) work index
         runtime] {true}) ≤
     𝒟[opaqueBranch setup codec checks ensureInit supplied decision work runtime count kemIndex index false] {true} +
-      ENNReal.ofReal (setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
+      ENNReal.ofReal ((setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
         (PqxdhRegistrationJointKemRawCertified.adversary setup codec checks ensureInit supplied decision work runtime
-          count kemIndex index).toINDCCA +
+          count kemIndex index).toINDCCA).toReal +
         PqxdhRegistrationJointKemRawGame.correctnessError setup) +
       ∑ target : Fin (count + 1), advantage setup.joint
         (PqxdhRegistrationJointNativeOriginBound.reduction setup codec checks ensureInit supplied count

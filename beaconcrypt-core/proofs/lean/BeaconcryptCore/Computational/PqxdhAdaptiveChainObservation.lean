@@ -149,13 +149,13 @@ theorem adaptive_advantage_bound {Context Result : Type} (source : FixedHkdfSha5
     (fallback : Material) (sample : ProbComp Context) (client : Context → OracleComp ChainSpec Result)
     (finish : Context → Result × Nat → ProbComp Bool) (budget : Nat)
     (bound : ∀ context, IsQueryBoundP (client context) IsNext budget) :
-    (sourceGame source sample client finish).boolDistAdvantage
+    (sourceGame source sample client finish).boolDistance
       (eagerGame fallback sample client finish budget) ≤
       ∑ cut ∈ Finset.range budget,
         hopLoss source hmac sample (tapeObserver fallback client finish) cut (budget - cut - 1) := by
   have random := (final_hybrid_eq_eager source fallback sample client finish budget).evalDist_eq
   simpa only [sourceGame_eq_hybrid source fallback sample client finish budget bound,
-    ProbComp.boolDistAdvantage, random] using
+    ProbComp.boolDistance, random] using
       ordered_chain_bound source hmac correct sample (tapeObserver fallback client finish) budget
 
 abbrev IsCoin (query : ChainSpec.Domain) : Prop := ¬ IsNext query

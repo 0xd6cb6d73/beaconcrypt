@@ -55,13 +55,8 @@ theorem event_good {ι State Result : Type} {spec : OracleSpec ι}
     (event : Result × ((State × List RootOutput) × Bool) → Prop) :
     Pr{let result ← (simulateQ (trace left record direct) client).run state}[event result ∧ result.2.2 = false] =
       Pr{let result ← (simulateQ (trace right record direct) client).run state}[event result ∧ result.2.2 = false] := by
-  have good := StatefulGoodEvent.event_good _ _ (fun query before reply after => by
-      rw [← VCVioLegacy.oracleComp_probEvent_eq_prEvent, ← VCVioLegacy.oracleComp_probEvent_eq_prEvent]
-      exact (VCVioLegacy.probEvent_eq_prEvent _ _).trans
-        ((agree_good left right record direct safe query before reply after).trans (VCVioLegacy.probEvent_eq_prEvent _ _).symm))
+  exact StatefulGoodEvent.event_good _ _ (agree_good left right record direct safe)
     (sticky left record direct) (sticky right record direct) client state event
-  rw [← VCVioLegacy.oracleComp_probEvent_eq_prEvent, ← VCVioLegacy.oracleComp_probEvent_eq_prEvent] at good
-  exact (VCVioLegacy.probEvent_eq_prEvent _ _).symm.trans (good.trans (VCVioLegacy.probEvent_eq_prEvent _ _))
 
 end BeaconcryptCore.Computational.RawCtxFlaggedQueryAgreement
 

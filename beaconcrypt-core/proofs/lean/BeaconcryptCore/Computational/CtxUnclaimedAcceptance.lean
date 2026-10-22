@@ -1,6 +1,5 @@
 import BeaconcryptCore.Computational.CtxComputationalSecurity
 import BeaconcryptCore.Computational.VCVioForwardProbabilityTheory
-import BeaconcryptCore.Computational.VCVioLegacyBridge
 
 /-!
 # Modified CTX acceptance without an adversarial plaintext claim
@@ -254,31 +253,31 @@ theorem acceptedGame_le_direct_add_prefix
     Pr{let x ← acceptedGame c adversary}[x = true] ≤
       Pr{let x ← directAcceptedGame c adversary}[x = true] +
         ctxSecretPrefixQueriedProbability c adversary := by
-  have htv : tvDist (acceptedGame c adversary)
+  have htv : discreteDistance (acceptedGame c adversary)
       (directAcceptedGame c adversary) ≤
       (ctxSecretPrefixQueriedProbability c adversary).toReal := by
     unfold acceptedGame
       directAcceptedGame
-    exact (tvDist_bind_right_le (acceptedVerifier c)
+    exact (discreteDistance_bind_right_le (acceptedVerifier c)
       (ctxSplitBeforeVerifyGame c adversary)
       (ctxDirectSampleIndependentTagGame c adversary)).trans
         (tvDist_ctxSplitBeforeVerifyGame_directSampleIndependentTagGame_le_secretPrefixQueried
           c adversary)
-  have hdiff := abs_probOutput_toReal_sub_le_tvDist
+  have hdiff := abs_prEvent_toReal_sub_le_discreteDistance
     (acceptedGame c adversary)
     (directAcceptedGame c adversary)
   have hadv :
-      (acceptedGame c adversary).boolDistAdvantage
+      (acceptedGame c adversary).boolDistance
           (directAcceptedGame c adversary) ≤
         (ctxSecretPrefixQueriedProbability c adversary).toReal := by
-    simpa only [ProbComp.boolDistAdvantage, VCVioLegacy.evalDist_singleton_eq_probOutput] using hdiff.trans htv
+    simpa only [ProbComp.boolDistance, ← prEvent_eq_evalDist_singleton] using hdiff.trans htv
   calc
     Pr{let x ← acceptedGame c adversary}[x = true] ≤
         Pr{let x ← directAcceptedGame c adversary}[x = true] +
           ENNReal.ofReal
-            ((acceptedGame c adversary).boolDistAdvantage
+            ((acceptedGame c adversary).boolDistance
               (directAcceptedGame c adversary)) := by
-      have comparison := VCVioForward.evalDist_apply_true_le_add_ofReal_boolDistAdvantage
+      have comparison := ProbComp.evalDist_apply_true_le_add_ofReal_boolDistance
           (acceptedGame c adversary) (directAcceptedGame c adversary)
       rw [← prEvent_eq_evalDist_singleton (acceptedGame c adversary) true,
         ← prEvent_eq_evalDist_singleton (directAcceptedGame c adversary) true] at comparison

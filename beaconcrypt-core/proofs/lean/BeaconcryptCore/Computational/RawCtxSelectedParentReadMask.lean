@@ -60,7 +60,7 @@ theorem alias_distance {Auxiliary Result : Type}
     (prior : Prior) (entry : Entry) (output : FullOutput) (reader : Reader)
     (view : RawCtxSelectedParentLive.View) (target : RootOutput)
     (client : OracleComp Spec Result) (state : RawCtxSelectedParentLive.State Auxiliary) :
-    tvDist ((simulateQ (observed source writer prior entry output reader view) client).run state)
+    discreteDistance ((simulateQ (observed source writer prior entry output reader view) client).run state)
       ((simulateQ (RawCtxFlaggedQueryTrace.trace
         (RawCtxSelectedParentAliases.consistent source writer prior entry output reader view target)
         inputs direct) client).run state) ≤

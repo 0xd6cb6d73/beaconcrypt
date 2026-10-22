@@ -1316,7 +1316,7 @@ open PqxdhDeploymentInterface (FreshBounds Mode ModeSpec Budget)
 open PqxdhDeploymentHeadlineCtGhost (gameG forget TripleColl)
 open PqxdhDeploymentHeadlineCollision (ctCollTerm ctCollEvent pairCollision pairAdversary)
 open PqxdhInitializerSecrecy (runtimeOfImpl kemAmbientImpl)
-open OracleComp.EvalDist (expectedValue)
+open OracleComp.ProgramLogic (wp)
 
 /-- Production form of `PqxdhDeploymentHeadlineCtColl.ct_collision_game` (frozen: `ct_collision_game` (design-v2 section 7.4)). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`); the same bound (every other term at the production codec and route). The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. The left side `ctCollTerm` of the frozen statement is unfolded to its definition (the probability of `ctCollEvent` on the CE experiment) before it is moved. -/
 theorem ct_collision_game (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
@@ -1346,7 +1346,7 @@ open PqxdhDeploymentInterface (FreshBounds Mode ModeSpec Budget)
 open PqxdhDeploymentHeadlineCtGhost (gameG forget TripleColl)
 open PqxdhDeploymentHeadlineCollision (ctCollTerm ctCollEvent pairCollision pairAdversary)
 open PqxdhInitializerSecrecy (runtimeOfImpl kemAmbientImpl)
-open OracleComp.EvalDist (expectedValue)
+open OracleComp.ProgramLogic (wp)
 
 /-- Production form of `PqxdhDeploymentHeadlineCtColl.ct_coll_le` (frozen: `ct_coll_le`). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`); the same bound (every other term at the production codec and route). The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. The left side `ctCollTerm` of the frozen statement is unfolded to its definition (the probability of `ctCollEvent` on the CE experiment) before it is moved. -/
 theorem ct_coll_le (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
@@ -1376,7 +1376,7 @@ open PqxdhDeploymentInterface (FreshBounds Mode ModeSpec Budget)
 open PqxdhDeploymentHeadlineCtGhost (gameG forget TripleColl)
 open PqxdhDeploymentHeadlineCollision (ctCollTerm ctCollEvent pairCollision pairAdversary)
 open PqxdhInitializerSecrecy (runtimeOfImpl kemAmbientImpl)
-open OracleComp.EvalDist (expectedValue)
+open OracleComp.ProgramLogic (wp)
 
 /-- Production form of `PqxdhDeploymentHeadlineCtColl.ct_coll_billed` (frozen: `ct_coll_le` with the bill of its reduction). The frozen statement at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, with every probability of the CE experiment (`PqxdhDeploymentSecrecy.game`, index 0) replaced by the probability of the same event read back through `unwrap` on the classical source game `PqxdhBoundaryDeployment.sourceGame` (`PqxdhDeploymentProductionTransfer.chance`); the same bound (every other term at the production codec and route). The Phase 1 and Phase 2 read-back laws are stated at `codec` (`PqxdhBoundaryDeploymentStep.phase1_withReader`, `phase2_withReader`, `Iff.rfl`); every other premise is the frozen one at the production codec and route. The left side `ctCollTerm` of the frozen statement is unfolded to its definition (the probability of `ctCollEvent` on the CE experiment) before it is moved. -/
 theorem ct_coll_billed (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)

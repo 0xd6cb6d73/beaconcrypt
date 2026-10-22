@@ -169,7 +169,7 @@ theorem canonical_prefix_bound {Result : Type} (decode : RawDecoder) (c : Pqxdh.
   rw [exactPrefix]
   calc
     _ ≤ Pr{let x ← AdaptiveCtxRetainedKey.retainedIndependentGame decode c client}[AdaptiveCtxPrefix.RetainedPrefix x] +
-        ENNReal.ofReal (tvDist (AdaptiveCtxPrefix.retainedRoutedGame decode c client)
+        ENNReal.ofReal (discreteDistance (AdaptiveCtxPrefix.retainedRoutedGame decode c client)
           (AdaptiveCtxRetainedKey.retainedIndependentGame decode c client)) :=
       AdaptiveCtxPrefixValidation.probEvent_le_add_ofReal_tvDist _ _ _
     _ ≤ Pr{let x ← AdaptiveCtxRetainedKey.retainedIndependentGame decode c client}[AdaptiveCtxPrefix.RetainedPrefix x] +

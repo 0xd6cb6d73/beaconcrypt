@@ -109,7 +109,7 @@ theorem distance {Auxiliary Result : Type}
     (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
     (prior : Prior) (entry : Entry) (output : FullOutput) (reader : Reader) (view : View)
     (target : RootOutput) (client : OracleComp Spec Result) (state : RawCtxSelectedParentLive.State Auxiliary) :
-    tvDist ((simulateQ (RawCtxSelectedParentLive.observed source writer prior entry output reader view) client).run state)
+    discreteDistance ((simulateQ (RawCtxSelectedParentLive.observed source writer prior entry output reader view) client).run state)
       ((simulateQ (observed source writer prior entry output reader view target) client).run state) ≤
       Pr{let result ← (simulateQ (RawCtxSelectedParentLive.observed source writer prior entry output reader view) client).run state}[target ∈ result.2.1.2].toReal := by
   exact RawCtxFlaggedQueryTrace.distance (handler source writer prior entry output reader view)

@@ -531,15 +531,11 @@ theorem adaptiveGame_bad_eq (decode : RawDecoder) (c : Pqxdh.Crypto)
     (key : CtxKey) {Result : Type} (adversary : OracleComp AdaptiveSpec Result) :
     Pr{let result ← adaptiveGame true decode c key adversary}[result.2.2 = true] =
       Pr{let result ← adaptiveGame false decode c key adversary}[result.2.2 = true] := by
-  have equal := OracleComp.ProgramLogic.Relational.probEvent_output_bad_eq'
+  exact StatefulGoodEvent.bad_probability_eq
     (adaptiveImpl true decode c key) (adaptiveImpl false decode c key)
-    (fun query state answer next => by
-      simpa only [VCVioLegacy.probOutput_eq_prEvent] using
-        adaptiveImpl_agree_good decode c key query state answer next)
+    (adaptiveImpl_agree_good decode c key)
     (adaptiveImpl_bad_mono true decode c key)
-    (adaptiveImpl_bad_mono false decode c key) adversary initialState
-  rw [VCVioLegacy.probEvent_eq_prEvent, VCVioLegacy.probEvent_eq_prEvent] at equal
-  exact equal
+    (adaptiveImpl_bad_mono false decode c key) adversary (initialState, false)
 
 /-- The ordinary primitive key is uniformly generated once and remains inside the receive challenger. -/
 noncomputable def uniformAdaptiveGame (real : Bool) (decode : RawDecoder) (c : Pqxdh.Crypto)
@@ -572,31 +568,26 @@ theorem uniformAdaptive_bad_le_intctxt_sum {Result : Type} (decode : RawDecoder)
 /-- The complete adaptive transcript and state can differ only after an actual optional-plaintext discrepancy. -/
 theorem adaptiveGame_distance_le_discrepancy (decode : RawDecoder) (c : Pqxdh.Crypto)
     (key : CtxKey) {Result : Type} (adversary : OracleComp AdaptiveSpec Result) :
-    tvDist (adaptiveGame true decode c key adversary)
+    discreteDistance (adaptiveGame true decode c key adversary)
         (adaptiveGame false decode c key adversary) ≤
       Pr{let result ← adaptiveGame true decode c key adversary}[result.2.2 = true].toReal := by
-  have bound := OracleComp.ProgramLogic.Relational.tvDist_simulateQ_run_le_probEvent_output_bad
-    (adaptiveImpl true decode c key) (adaptiveImpl false decode c key) adversary initialState
-    (fun query state answer next => by
-      simpa only [VCVioLegacy.probOutput_eq_prEvent] using
-        adaptiveImpl_agree_good decode c key query state answer next)
+  exact StatefulGoodEvent.distance_le_bad
+    (adaptiveImpl true decode c key) (adaptiveImpl false decode c key)
+    (adaptiveImpl_agree_good decode c key)
     (adaptiveImpl_bad_mono true decode c key)
-    (adaptiveImpl_bad_mono false decode c key)
-  rw [VCVioLegacy.probEvent_eq_prEvent] at bound
-  exact bound
+    (adaptiveImpl_bad_mono false decode c key) adversary (initialState, false)
 
 /-- Mixing over the challenger's uniformly generated secret key preserves the full-state discrepancy bound. -/
 theorem uniformAdaptiveGame_distance_le_bad {Result : Type} (decode : RawDecoder) (c : Pqxdh.Crypto)
     (adversary : OracleComp AdaptiveSpec Result) :
-    tvDist (uniformAdaptiveGame true decode c adversary) (uniformAdaptiveGame false decode c adversary) ≤
+    discreteDistance (uniformAdaptiveGame true decode c adversary) (uniformAdaptiveGame false decode c adversary) ≤
       Pr{let result ← uniformAdaptiveGame true decode c adversary}[result.2.2 = true].toReal := by
-  have convex := tvDist_bind_left_le ($ᵗ CtxKey)
+  have convex := discreteDistance_bind_left_le ($ᵗ CtxKey)
     (fun key => adaptiveGame true decode c key adversary)
     (fun key => adaptiveGame false decode c key adversary)
   rw [tsum_fintype] at convex
-  simp only [VCVioLegacy.probOutput_eq_prEvent] at convex
   calc
-    tvDist (uniformAdaptiveGame true decode c adversary) (uniformAdaptiveGame false decode c adversary)
+    discreteDistance (uniformAdaptiveGame true decode c adversary) (uniformAdaptiveGame false decode c adversary)
         ≤ ∑ key : CtxKey, Pr{let y ← ($ᵗ CtxKey)}[y = key].toReal *
           (Pr{let result ← adaptiveGame true decode c key adversary}[result.2.2 = true]).toReal := by
       refine convex.trans (Finset.sum_le_sum fun key _ => ?_)
@@ -608,18 +599,17 @@ theorem uniformAdaptiveGame_distance_le_bad {Result : Type} (decode : RawDecoder
       · simp only [ENNReal.toReal_mul]
       · intro key _
         exact ENNReal.mul_ne_top (prEvent_ne_top _) (prEvent_ne_top _)
-  exact le_rfl
 
 /-- Full adaptive optional-plaintext simulation, with every possible first acceptance charged to an ordinary primitive forger. -/
 theorem uniformAdaptiveGame_distance_le_intctxt_sum {Result : Type} (decode : RawDecoder) (c : Pqxdh.Crypto)
     (fallback : ModifiedNonceAeadForgery) (adversary : OracleComp AdaptiveSpec Result)
     (count : ℕ) (bounded : adversary.IsQueryBoundP IsRawQuery count) :
-    ENNReal.ofReal (tvDist (uniformAdaptiveGame true decode c adversary)
+    ENNReal.ofReal (discreteDistance (uniformAdaptiveGame true decode c adversary)
       (uniformAdaptiveGame false decode c adversary)) ≤
       ∑ index ∈ Finset.range count,
         modifiedNonceAeadINTCTXTAdvantage c (indexedReduction decode fallback adversary index) := by
   calc
-    ENNReal.ofReal (tvDist (uniformAdaptiveGame true decode c adversary)
+    ENNReal.ofReal (discreteDistance (uniformAdaptiveGame true decode c adversary)
         (uniformAdaptiveGame false decode c adversary))
       ≤ ENNReal.ofReal (Pr{let result ← uniformAdaptiveGame true decode c adversary}[
           result.2.2 = true].toReal) :=
@@ -654,7 +644,7 @@ theorem uniformAdaptiveGame_distance_le_raw_count {Result : Type} (decode : RawD
     (count : ℕ) (bounded : adversary.IsQueryBoundP IsRawQuery count) (epsilon : ℝ≥0∞)
     (primitiveBound : ∀ index < count,
       modifiedNonceAeadINTCTXTAdvantage c (indexedReduction decode fallback adversary index) ≤ epsilon) :
-    ENNReal.ofReal (tvDist (uniformAdaptiveGame true decode c adversary)
+    ENNReal.ofReal (discreteDistance (uniformAdaptiveGame true decode c adversary)
       (uniformAdaptiveGame false decode c adversary)) ≤ (count : ℝ≥0∞) * epsilon := by
   refine (uniformAdaptiveGame_distance_le_intctxt_sum decode c fallback adversary count bounded).trans ?_
   calc

@@ -110,13 +110,13 @@ theorem later_bound (depth : Nat) (position : (targets selected).number.val = de
     (functional : FunctionalDecapsulation kem)
     (hmac : HmacSha512) (correct : SourceFullCorrect env.source hmac)
     (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : PqxdhJointIdentity.Forgery) :
-    (choose selected <$> PqxdhAdaptiveNativeResult.actual env baseImpl kem attachedVerify primitives program post targets).boolDistAdvantage
+    (choose selected <$> PqxdhAdaptiveNativeResult.actual env baseImpl kem attachedVerify primitives program post targets).boolDistance
       (laterIdeal env baseImpl kem attachedVerify primitives program post targets selected depth) ≤
     PqxdhAdaptiveCoordinateSecrecy.targetLoss env baseImpl kem attachedVerify primitives program post targets c hmac fallback ordinaryFallback selected +
       (PqxdhAdaptiveFinalMaterial.statistical qPost).toReal := by
   have result := PqxdhAdaptiveFinalMaterial.later_bound env baseImpl kem attachedVerify primitives program post targets c selected
     depth position compatible adapter functional hmac correct fallback ordinaryFallback
-  simpa only [ProbComp.boolDistAdvantage,
+  simpa only [ProbComp.boolDistance,
     later_source env baseImpl kem attachedVerify primitives program post targets selected depth] using result
 
 /-- The first-record source comparison reaches the same ordinary selected-key endpoint without a final cached-prefix charge. -/
@@ -126,12 +126,12 @@ theorem first_bound (position : (targets selected).number.val = 1)
     (functional : FunctionalDecapsulation kem)
     (hmac : HmacSha512) (correct : SourceFullCorrect env.source hmac)
     (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : PqxdhJointIdentity.Forgery) :
-    (choose selected <$> PqxdhAdaptiveNativeResult.actual env baseImpl kem attachedVerify primitives program post targets).boolDistAdvantage
+    (choose selected <$> PqxdhAdaptiveNativeResult.actual env baseImpl kem attachedVerify primitives program post targets).boolDistance
       (firstIdeal env baseImpl kem attachedVerify primitives program post targets selected) ≤
     PqxdhAdaptiveCoordinateSecrecy.targetLoss env baseImpl kem attachedVerify primitives program post targets c hmac fallback ordinaryFallback selected := by
   have result := PqxdhAdaptiveFirstMaterial.bound env baseImpl kem attachedVerify primitives program post targets c selected
     position compatible adapter functional hmac correct fallback ordinaryFallback
-  simpa only [ProbComp.boolDistAdvantage,
+  simpa only [ProbComp.boolDistance,
     first_source env baseImpl kem attachedVerify primitives program post targets selected] using result
 
 end BeaconcryptCore.Computational.PqxdhAdaptiveMessageKeySource

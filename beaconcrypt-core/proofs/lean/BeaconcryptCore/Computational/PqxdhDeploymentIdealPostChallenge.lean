@@ -592,8 +592,8 @@ theorem slot_keep (query : (PqxdhRegistrationJointKemSecondEntry.Spec Coord Pqxd
               have := below other otherSlot otherFound
               rw [equal] at this
               exact Nat.lt_irrefl _ this
-            simp only [cacheOf, otherFound, Option.bind_some] at held
-            simp only [cacheOf, Function.update_of_ne apart, otherFound, Option.bind_some,
+            simp only [cacheOf, QueryCache.ofFn_apply, otherFound, Option.bind_some] at held
+            simp only [cacheOf, QueryCache.ofFn_apply, Function.update_of_ne apart, otherFound, Option.bind_some,
               QueryCache.cacheQuery_of_ne _ _ distinct, held]
       · intro result member
         simp only [slotImpl, QueryImpl.add_apply_inr, StateT.run_mk, found, room, _root_.dite_false, support_map] at member
@@ -619,8 +619,8 @@ theorem slot_keep (query : (PqxdhRegistrationJointKemSecondEntry.Spec Coord Pqxd
               intro equal
               rw [equal] at otherFound
               simp [cacheOf, otherFound, stored] at held
-            simp only [cacheOf, otherFound, Option.bind_some] at held
-            simp only [cacheOf, otherFound, Option.bind_some, QueryCache.cacheQuery_of_ne _ _ distinct, held]
+            simp only [cacheOf, QueryCache.ofFn_apply, otherFound, Option.bind_some] at held
+            simp only [cacheOf, QueryCache.ofFn_apply, otherFound, Option.bind_some, QueryCache.cacheQuery_of_ne _ _ distinct, held]
       · rw [PqxdhRecordLiftLazyTable.run_hit _ _ _ stored, map_pure, support_pure, Set.mem_singleton_iff] at member
         subst member
         exact ⟨⟨below, unique, free⟩, fun _ _ held => held⟩

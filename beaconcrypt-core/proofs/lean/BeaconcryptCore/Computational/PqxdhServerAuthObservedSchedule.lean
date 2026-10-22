@@ -44,8 +44,8 @@ theorem source_real_coupling (setup : Setup baseSpec KemSK) (codec : Codec Reade
   refine relTriple_bind (R := fun a b => a = b ∧ a ∈ support (contextSample setup codec))
     (relTriple_refl_of_mem_support (contextSample setup codec) fun value member => ⟨rfl, member⟩) ?_
   rintro context _ ⟨rfl, supported⟩
-  apply relTriple_of_evalSPMF_eq_left ((VCVioLegacy.evalSPMF_eq_iff_evalDistEq _ _).2
-    (source_prefetched setup codec checks adversary revealSeed Q j observer context))
+  apply relTriple_of_evalDistEq_left
+    (source_prefetched setup codec checks adversary revealSeed Q j observer context)
   refine relTriple_bind (R := Eq) (relTriple_refl ($ᵗ HmacBlock)) ?_
   rintro prk _ rfl
   exact source_hidden_coupling setup codec checks adversary revealSeed Q j observer context supported prk
@@ -67,19 +67,19 @@ noncomputable def scheduleLoss (setup : Setup baseSpec KemSK) (codec : Codec Rea
   let E := PqxdhServerAuthKeySchedule.initExpandReduction setup.source D
   let S := PqxdhServerAuthKeySchedule.stepExtractReduction setup.hmac D
   let T := PqxdhServerAuthKeySchedule.stepExpandReduction D
-  (hmacPrfRealGame setup.hmac R).boolDistAdvantage (hmacPrfRandomGame R) +
-    (extractRealGame setup.hmac PqxdhServerAuthKeySchedule.uniform32 I).boolDistAdvantage
+  (hmacPrfRealGame setup.hmac R).boolDistance (hmacPrfRandomGame R) +
+    (extractRealGame setup.hmac PqxdhServerAuthKeySchedule.uniform32 I).boolDistance
       (extractUniformGame PqxdhServerAuthKeySchedule.uniform32 I) +
-    (hmacPrfRealGame setup.hmac E).boolDistAdvantage (hmacPrfRandomGame E) +
-    (extractRealGame setup.hmac PqxdhServerAuthKeySchedule.uniform32 S).boolDistAdvantage
+    (hmacPrfRealGame setup.hmac E).boolDistance (hmacPrfRandomGame E) +
+    (extractRealGame setup.hmac PqxdhServerAuthKeySchedule.uniform32 S).boolDistance
       (extractUniformGame PqxdhServerAuthKeySchedule.uniform32 S) +
-    (hmacPrfRealGame setup.hmac T).boolDistAdvantage (hmacPrfRandomGame T)
+    (hmacPrfRealGame setup.hmac T).boolDistance (hmacPrfRandomGame T)
 
 /-- Adjacent schedule hybrids use the same complete public journal and correlated callbacks. The sole functional premise is the existing full Extract/Expand source-wiring contract. -/
 theorem real_uniform (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (checks : Checks) (adversary : Adversary) (revealSeed : Bool) (Q : Nat) (j : Fin (Q + 1))
     (observer : Observer) (correct : SourceFullCorrect setup.source setup.hmac) :
-    (realGame setup codec checks adversary revealSeed Q j observer).boolDistAdvantage
+    (realGame setup codec checks adversary revealSeed Q j observer).boolDistance
       (uniformGame setup codec checks adversary revealSeed Q j observer) ≤
         scheduleLoss setup codec checks adversary revealSeed Q j observer := by
   simpa only [realGame, uniformGame, source_factor, scheduleLoss, reduction] using

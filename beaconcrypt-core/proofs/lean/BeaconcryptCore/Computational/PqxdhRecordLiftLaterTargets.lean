@@ -10,7 +10,7 @@ Definitions of the later-quantum forms of the targets of `PqxdhRecordLiftIdeal`,
 
 **Losses and bills.** The losses are the run-phase losses (`hopLoss`, `integrityLoss`, `privacyLoss`) of explicit reductions, summed with coefficient one over the same `hops n budget` ordered indices: the post phase makes no record request, so it derives no further hidden coordinate. Reductions (`LaterChainReduction`, `LaterCtxReduction`) are built from the environment, the observation mode, the reveal, both adversaries, the decision, the run budget and the post budget; bills (`LaterChainBills`, `LaterCtxBills`) are functions of `LaterBillInput`, the run-phase `BillInput` with the post budget. `postHash` is the post phase's shared-hash work (its own BLAKE2b requests plus the environment's class-six hash allowance per post HMAC request, `PqxdhRecordLiftLater.postCost`), the `qHash₂` term of the hash route, and `laterSharedHashTotal` adds it to the run-phase total `sharedHashTotal`.
 
-**Targets.** `LaterChainLiftStatement`, `LaterCtxAuthLiftStatement`, `LaterCtxPrivLiftStatement`, `LaterCtxLiftStatement`, `LaterRecordAuthLiftStatement` and `LaterRecordLiftStatement`, each two-sided with a `boolDistAdvantage` form and an event form, and `LaterHidingStatement` (mode P, plaintext replacement leaves the law of `hidingView` of `laterIdealRecords` unchanged); the `...Target` abbreviations fix the aliasing and refusal terms to zero (decision D3). No later origin, binding, fresh-guess or left-or-right statement is defined. Origin and binding are excluded by design: the later mode claims confidentiality only. `PqxdhRecordLiftLaterWorlds.laterReal_event` carries every event of the run-phase projection `runEventView` over to the later real world, but not the record-lift origin and binding events, which also read the handle-to-slot map that the post phase can extend. The later fresh-guess and left-or-right forms are open, as are their run-phase forms. The event forms follow from the Boolean forms (`laterChainLiftStatement_of_bool` and the five siblings), the composed lifts from their parts by the triangle inequality with coefficient one (`laterRecordLiftBool_of_parts`, `laterCtxLiftBool_of_parts`, `laterRecordAuthLiftBool_of_parts`), and the hiding target gives advantage zero (`laterHiding_advantage`, `laterHiding_event`).
+**Targets.** `LaterChainLiftStatement`, `LaterCtxAuthLiftStatement`, `LaterCtxPrivLiftStatement`, `LaterCtxLiftStatement`, `LaterRecordAuthLiftStatement` and `LaterRecordLiftStatement`, each two-sided with a `boolDistance` form and an event form, and `LaterHidingStatement` (mode P, plaintext replacement leaves the law of `hidingView` of `laterIdealRecords` unchanged); the `...Target` abbreviations fix the aliasing and refusal terms to zero (decision D3). No later origin, binding, fresh-guess or left-or-right statement is defined. Origin and binding are excluded by design: the later mode claims confidentiality only. `PqxdhRecordLiftLaterWorlds.laterReal_event` carries every event of the run-phase projection `runEventView` over to the later real world, but not the record-lift origin and binding events, which also read the handle-to-slot map that the post phase can extend. The later fresh-guess and left-or-right forms are open, as are their run-phase forms. The event forms follow from the Boolean forms (`laterChainLiftStatement_of_bool` and the five siblings), the composed lifts from their parts by the triangle inequality with coefficient one (`laterRecordLiftBool_of_parts`, `laterCtxLiftBool_of_parts`, `laterRecordAuthLiftBool_of_parts`), and the hiding target gives advantage zero (`laterHiding_advantage`, `laterHiding_event`).
 
 **Contracts.** The definitions name only contracts of the brief's H-7 list: `SourceFullCorrect` (chain and record lifts); IND$, INT-CTXT, HMAC-PRF and Extract-on-`uniform32` enter only as advantage terms. No theorem of this module has an assumption or contract hypothesis. The five relation theorems about the chain and record targets carry `SourceFullCorrect` only as the premise inside the target statements they relate; otherwise the theorems of this module reach contract fields only inside definitions (structurally: the DH-interface fields `dh_comm`, `xpub_length` and `x25519_length` through the type of `setup`, `hkdf_length` through the KDF definitions behind the real chain table, and `aeadSeal_tag_length` through the AEAD record-building definitions of the CTX worlds); per-theorem closure probe. New Claude work; nothing adapted from Codex WIP.
 -/
@@ -94,7 +94,7 @@ def LaterChainLiftBool (n : Nat) (hmac : PqxdhSecretInputKdf.HmacSha512) (reduct
     (∀ view cache, (decision view cache).IsTotalQueryBound cost) →
   ENNReal.ofReal
       ((laterRealChains setup codec route env serverKid bounds mode reveal first second >>= fun result =>
-          decision (chainView result) (chainCache result)).boolDistAdvantage
+          decision (chainView result) (chainCache result)).boolDistance
         (laterIdealChains setup codec route env serverKid bounds mode reveal first second >>= fun result =>
           decision (chainView result) (chainCache result))) ≤
       (∑ step, hopLoss hmac (reduction env mode reveal first second decision budget post step)) +
@@ -140,7 +140,7 @@ def LaterCtxAuthLiftBool (n : Nat) (fallback : CtxNonceAeadIntCtxt.ModifiedNonce
   ∀ (decision : View n E Out → ProbComp Bool) (cost : Nat), (∀ view, (decision view).IsTotalQueryBound cost) →
   ENNReal.ofReal
       ((laterIdealChains setup codec route env serverKid bounds mode reveal first second >>= fun result =>
-          decision (chainView result)).boolDistAdvantage
+          decision (chainView result)).boolDistance
         (laterIdealAuth setup codec route env serverKid bounds mode reveal first second >>= fun result =>
           decision (ctxView result))) ≤
       (∑ step, integrityLoss (RawCtxUniversalDecoder.decoder codec.frameRead) setup.source.crypto fallback
@@ -188,7 +188,7 @@ def LaterCtxPrivLiftBool (n : Nat) (reduction : LaterCtxReduction n) (bills : La
   ∀ (decision : View n E Out → ProbComp Bool) (cost : Nat), (∀ view, (decision view).IsTotalQueryBound cost) →
   ENNReal.ofReal
       ((laterIdealAuth setup codec route env serverKid bounds mode reveal first second >>= fun result =>
-          decision (ctxView result)).boolDistAdvantage
+          decision (ctxView result)).boolDistance
         (laterRandomRecords setup codec route env serverKid bounds mode reveal first second >>= fun result =>
           decision (ctxView result))) ≤
       (∑ step, privacyLoss (RawCtxUniversalDecoder.decoder codec.frameRead) setup.source.crypto
@@ -251,7 +251,7 @@ def LaterCtxLiftBool (n : Nat) (fallback : CtxNonceAeadIntCtxt.ModifiedNonceAead
   ∀ (decision : View n E Out → ProbComp Bool) (cost : Nat), (∀ view, (decision view).IsTotalQueryBound cost) →
   ENNReal.ofReal
       ((laterIdealChains setup codec route env serverKid bounds mode reveal first second >>= fun result =>
-          decision (chainView result)).boolDistAdvantage
+          decision (chainView result)).boolDistance
         (laterIdealRecords setup codec route env serverKid bounds mode reveal first second >>= fun result =>
           decision (ctxView result))) ≤
       laterCtxLoss setup codec n fallback auth privacy authBills refusal env mode reveal first second decision budget post
@@ -326,7 +326,7 @@ def LaterRecordLiftBool (n : Nat) (hmac : PqxdhSecretInputKdf.HmacSha512)
   ∀ (decision : View n E Out → ProbComp Bool) (cost : Nat), (∀ view, (decision view).IsTotalQueryBound cost) →
   ENNReal.ofReal
       ((laterRealChains setup codec route env serverKid bounds mode reveal first second >>= fun result =>
-          decision (chainView result)).boolDistAdvantage
+          decision (chainView result)).boolDistance
         (laterIdealRecords setup codec route env serverKid bounds mode reveal first second >>= fun result =>
           decision (ctxView result))) ≤
       laterRecordLoss setup codec n hmac fallback chain auth privacy authBills aliasing chainRefusal ctxRefusal env mode
@@ -401,7 +401,7 @@ def LaterRecordAuthLiftBool (n : Nat) (hmac : PqxdhSecretInputKdf.HmacSha512)
   ∀ (decision : View n E Out → ProbComp Bool) (cost : Nat), (∀ view, (decision view).IsTotalQueryBound cost) →
   ENNReal.ofReal
       ((laterRealChains setup codec route env serverKid bounds mode reveal first second >>= fun result =>
-          decision (chainView result)).boolDistAdvantage
+          decision (chainView result)).boolDistance
         (laterIdealAuth setup codec route env serverKid bounds mode reveal first second >>= fun result =>
           decision (ctxView result))) ≤
       laterRecordAuthLoss setup codec n hmac fallback chain auth authBills aliasing chainRefusal ctxRefusal env mode
@@ -588,7 +588,7 @@ theorem laterRecordLiftBool_of_parts (n : Nat) (hmac : PqxdhSecretInputKdf.HmacS
     respects postRespects (fun view _ => decision view) cost (fun view _ => costBound view)
   obtain ⟨authBound, authBilled⟩ := authLift env startup allowance frame mode reveal first second budget post respects
     postRespects decision cost costBound
-  have firstStep := ProbComp.boolDistAdvantage_triangle
+  have firstStep := ProbComp.boolDistance_triangle
     (laterRealChains setup codec route env serverKid bounds mode reveal first second >>= fun result =>
       decision (chainView result))
     (laterIdealChains setup codec route env serverKid bounds mode reveal first second >>= fun result =>
@@ -606,7 +606,7 @@ theorem laterRecordLiftBool_of_parts (n : Nat) (hmac : PqxdhSecretInputKdf.HmacS
       obtain ⟨privBound, privBilled⟩ := privLift env startup allowance frame .P reveal first second budget post respects
         postRespects decision cost costBound
       refine ⟨?_, chainBilled, authBilled, fun _ => privBilled⟩
-      have secondStep := ProbComp.boolDistAdvantage_triangle
+      have secondStep := ProbComp.boolDistance_triangle
         (laterIdealChains setup codec route env serverKid bounds .P reveal first second >>= fun result =>
           decision (chainView result))
         (laterIdealAuth setup codec route env serverKid bounds .P reveal first second >>= fun result =>
@@ -641,7 +641,7 @@ theorem laterCtxLiftBool_of_parts (n : Nat) (fallback : CtxNonceAeadIntCtxt.Modi
       obtain ⟨privBound, privBilled⟩ := privLift env startup allowance frame .P reveal first second budget post respects
         postRespects decision cost costBound
       refine ⟨?_, authBilled, fun _ => privBilled⟩
-      have secondStep := ProbComp.boolDistAdvantage_triangle
+      have secondStep := ProbComp.boolDistance_triangle
         (laterIdealChains setup codec route env serverKid bounds .P reveal first second >>= fun result =>
           decision (chainView result))
         (laterIdealAuth setup codec route env serverKid bounds .P reveal first second >>= fun result =>
@@ -667,7 +667,7 @@ theorem laterRecordAuthLiftBool_of_parts (n : Nat) (hmac : PqxdhSecretInputKdf.H
     respects postRespects (fun view _ => decision view) cost (fun view _ => costBound view)
   obtain ⟨authBound, authBilled⟩ := authLift env startup allowance frame mode reveal first second budget post respects
     postRespects decision cost costBound
-  have firstStep := ProbComp.boolDistAdvantage_triangle
+  have firstStep := ProbComp.boolDistance_triangle
     (laterRealChains setup codec route env serverKid bounds mode reveal first second >>= fun result =>
       decision (chainView result))
     (laterIdealChains setup codec route env serverKid bounds mode reveal first second >>= fun result =>
@@ -685,13 +685,13 @@ theorem laterHiding_advantage (n : Nat) (target : LaterHidingStatement setup cod
     (second : X → R → OracleComp PostSpec Out) (replace : Pqxdh.Bytes → Pqxdh.Bytes)
     (lengths : ∀ message, (replace message).length = message.length) (decision : HidingView n E Out → ProbComp Bool) :
     (laterCtxRun setup codec route env serverKid bounds .P reveal first second (fun _ => .random) replace >>= fun result =>
-        decision (hidingView (ctxView result))).boolDistAdvantage
+        decision (hidingView (ctxView result))).boolDistance
       (laterIdealRecords setup codec route env serverKid bounds .P reveal first second >>= fun result =>
         decision (hidingView (ctxView result))) = 0 := by
   have same := congrArg (fun work => work >>= decision) (target env reveal first second replace lengths)
   simp only [bind_map_left] at same
   rw [same]
-  exact ProbComp.boolDistAdvantage_self _
+  exact ProbComp.boolDistance_self _
 
 /-- The later hiding target in event form. -/
 theorem laterHiding_event (n : Nat) (target : LaterHidingStatement setup codec route serverKid bounds n)

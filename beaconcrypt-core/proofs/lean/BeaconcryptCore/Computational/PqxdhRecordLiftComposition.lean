@@ -100,7 +100,7 @@ theorem record_lift_O (n : Nat) (hmac : PqxdhSecretInputKdf.HmacSha512)
     (decision : View n E X → ProbComp Bool) (cost : Nat) (costBound : ∀ view, (decision view).IsTotalQueryBound cost) :
     ENNReal.ofReal
         ((realChains setup codec route env serverKid bounds .O adversary >>= fun result =>
-            decision (chainView result)).boolDistAdvantage
+            decision (chainView result)).boolDistance
           (idealRecords setup codec route env serverKid bounds .O adversary >>= fun result =>
             decision (ctxView result))) ≤
       recordLoss setup codec n hmac fallback (PqxdhRecordLiftChainLift.chainReduction setup codec route serverKid bounds n)

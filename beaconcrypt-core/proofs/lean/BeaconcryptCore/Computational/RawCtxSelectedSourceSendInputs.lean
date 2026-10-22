@@ -213,7 +213,7 @@ theorem executable_distance (source : FixedHkdfSha512NoSaltSource) (writer : Raw
     (client : OracleComp (RawCtxProtocolReveals.SourceSpec S B) Result)
     (before : RawCtxSelectedFamilyNonceCoupling.Full M P I D K A S B)
     (empty : before.2.2.selected.1.usedNonces = []) :
-    tvDist
+    discreteDistance
       (((simulateQ (RawCtxSelectedMessageStopping.stopping
         (RawCtxSelectedMessageStopping.sourceRecord source writer prior parent key target nonce next sender route read)) client).run).run
         (RawCtxSelectedFamilyNonceCoupling.project before))

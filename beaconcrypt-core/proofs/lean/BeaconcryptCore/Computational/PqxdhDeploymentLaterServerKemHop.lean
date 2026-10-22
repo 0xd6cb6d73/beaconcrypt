@@ -149,12 +149,12 @@ theorem real_error (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)
     (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes) (scanned : Scanned KemSK)
     (runtime : A) (count : Nat) (selected : Fin (count + 1)) :
-    tvDist (branch setup ensureInit supplied scanned runtime count selected true)
+    discreteDistance (branch setup ensureInit supplied scanned runtime count selected true)
       (sourceReal setup ensureInit supplied scanned runtime count selected) ≤
       PqxdhRegistrationJointKemRawGame.correctnessError setup := by
   have point : ∀ (chosen : MlKem768PublicKey × KemSK) (context : Context KemSK A Bool count)
       (pair : MlKem768Ciphertext × MlKemSharedSecret),
-      tvDist (do
+      discreteDistance (do
           let uniform ← $ᵗ MlKemSharedSecret
           PqxdhRegistrationJointKemGame.decision <$> PqxdhDynamicKemPost.evaluate setup.baseImpl setup.kem chosen.2
             pair.1 (post setup count selected ⟨chosen.1, pair.1, context⟩ (if true then pair.2 else uniform)))
@@ -171,15 +171,15 @@ theorem real_error (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
         (functional.exact chosen.2 pair.1).trans (congrArg pure good)
       have same := PqxdhRegistrationJointKemResume.post_source setup count selected chosen context pair.1 pair.2
         agreement
-      simp only [↓reduceIte, same, tvDist_self]
+      simp only [↓reduceIte, same, discreteDistance_self]
       exact ENNReal.toReal_nonneg
     · have bad : (𝒟[simulateQ (kemAmbientImpl setup.baseImpl) (do
           let recovered ← setup.kem.decaps chosen.2 pair.1
           pure (decide (recovered ≠ some pair.2)))] {true}).toReal = 1 := by
         rw [functional.exact]
-        simp [good, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+        simp [good]
       rw [bad]
-      exact tvDist_le_one _ _
+      exact discreteDistance_le_one _ _
   unfold branch sourceReal
   refine le_trans (PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind _ _ _
     (fun pair => simulateQ (kemAmbientImpl setup.baseImpl)
@@ -209,10 +209,10 @@ theorem advantage_error (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)
     (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes) (scanned : Scanned KemSK)
     (runtime : A) (count : Nat) (selected : Fin (count + 1)) :
-    (sourceReal setup ensureInit supplied scanned runtime count selected).boolDistAdvantage
+    (sourceReal setup ensureInit supplied scanned runtime count selected).boolDistance
       (branch setup ensureInit supplied scanned runtime count selected false) ≤
-      setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
-        (adversary setup ensureInit supplied scanned runtime count selected).toINDCCA +
+      (setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
+        (adversary setup ensureInit supplied scanned runtime count selected).toINDCCA).toReal +
         PqxdhRegistrationJointKemRawGame.correctnessError setup := by
   have exactHop := oneKey_indCCAAdvantage_eq_branchDist setup.kem
     (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
@@ -221,21 +221,21 @@ theorem advantage_error (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (runtimeOfImpl_evalDist_bind (kemAmbientImpl setup.baseImpl))
     (runtimeOfImpl_evalDist_liftProbComp setup.baseImpl)
     (runtimeOfImpl_noFail_bool (kemAmbientImpl setup.baseImpl))
-  have hop : (branch setup ensureInit supplied scanned runtime count selected true).boolDistAdvantage
+  have hop : (branch setup ensureInit supplied scanned runtime count selected true).boolDistance
       (branch setup ensureInit supplied scanned runtime count selected false) =
-      setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
-        (adversary setup ensureInit supplied scanned runtime count selected).toINDCCA := by
-    simpa only [oneKeyBranch, runtimeOfImpl_evalDist, branch_source, ProbComp.boolDistAdvantage,
-      MeasureTheory.Measure.boolDist, prEvent_eq_evalDist_singleton] using
-      exactHop.symm
-  have close : (sourceReal setup ensureInit supplied scanned runtime count selected).boolDistAdvantage
+      (setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
+        (adversary setup ensureInit supplied scanned runtime count selected).toINDCCA).toReal := by
+    simpa only [oneKeyBranch, runtimeOfImpl_evalDist, branch_source, ProbComp.boolDistance,
+      MeasureTheory.Measure.toReal_boolDist, prEvent_eq_evalDist_singleton] using
+      congrArg ENNReal.toReal exactHop.symm
+  have close : (sourceReal setup ensureInit supplied scanned runtime count selected).boolDistance
       (branch setup ensureInit supplied scanned runtime count selected true) ≤
       PqxdhRegistrationJointKemRawGame.correctnessError setup := by
-    rw [ProbComp.boolDistAdvantage_comm]
+    rw [ProbComp.boolDistance_comm]
     refine le_trans ?_ (real_error setup functional ensureInit supplied scanned runtime count selected)
-    rw [ProbComp.boolDistAdvantage]
-    simpa only [VCVioLegacy.evalDist_singleton_eq_probOutput] using abs_probOutput_toReal_sub_le_tvDist _ _
-  have triangle := ProbComp.boolDistAdvantage_triangle
+    rw [ProbComp.boolDistance]
+    simpa only [← prEvent_eq_evalDist_singleton] using abs_prEvent_toReal_sub_le_discreteDistance _ _
+  have triangle := ProbComp.boolDistance_triangle
     (sourceReal setup ensureInit supplied scanned runtime count selected)
     (branch setup ensureInit supplied scanned runtime count selected true)
     (branch setup ensureInit supplied scanned runtime count selected false)
@@ -299,10 +299,10 @@ theorem certified_advantage (setup : PqxdhServerAuthExperiment.Setup baseSpec Ke
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)
     (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes) (scanned : Scanned KemSK)
     (runtime : A) (count : Nat) (selected : Fin (count + 1)) :
-    (sourceReal setup ensureInit supplied scanned runtime count selected).boolDistAdvantage
+    (sourceReal setup ensureInit supplied scanned runtime count selected).boolDistance
       (branch setup ensureInit supplied scanned runtime count selected false) ≤
-      setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
-        (certified setup ensureInit supplied scanned runtime count selected).toINDCCA +
+      (setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
+        (certified setup ensureInit supplied scanned runtime count selected).toINDCCA).toReal +
         PqxdhRegistrationJointKemRawGame.correctnessError setup := by
   have proofCarrying := oneKey_indCCAAdvantage_eq_branchDist setup.kem
     (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
@@ -318,10 +318,10 @@ theorem certified_advantage (setup : PqxdhServerAuthExperiment.Setup baseSpec Ke
     (runtimeOfImpl_evalDist_bind (kemAmbientImpl setup.baseImpl))
     (runtimeOfImpl_evalDist_liftProbComp setup.baseImpl)
     (runtimeOfImpl_noFail_bool (kemAmbientImpl setup.baseImpl))
-  have same : setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
-      (certified setup ensureInit supplied scanned runtime count selected).toINDCCA =
-      setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
-        (adversary setup ensureInit supplied scanned runtime count selected).toINDCCA := by
+  have same : (setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
+      (certified setup ensureInit supplied scanned runtime count selected).toINDCCA).toReal =
+      (setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
+        (adversary setup ensureInit supplied scanned runtime count selected).toINDCCA).toReal := by
     rw [proofCarrying, plain]
     simp only [oneKeyBranch, branch_erase]
   rw [same]
@@ -334,10 +334,10 @@ theorem real_le_ideal (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (runtime : A) (count : Nat) (selected : Fin (count + 1)) :
     𝒟[sourceReal setup ensureInit supplied scanned runtime count selected] {true} ≤
       𝒟[branch setup ensureInit supplied scanned runtime count selected false] {true} +
-        ENNReal.ofReal (setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
-          (certified setup ensureInit supplied scanned runtime count selected).toINDCCA +
+        ENNReal.ofReal ((setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
+          (certified setup ensureInit supplied scanned runtime count selected).toINDCCA).toReal +
           PqxdhRegistrationJointKemRawGame.correctnessError setup) :=
-  (ProbComp.evalDist_apply_true_le_add_ofReal_boolDistAdvantage _ _).trans (add_le_add le_rfl
+  (ProbComp.evalDist_apply_true_le_add_ofReal_boolDistance _ _).trans (add_le_add le_rfl
     (ENNReal.ofReal_le_ofReal (certified_advantage setup functional ensureInit supplied scanned runtime count
       selected)))
 

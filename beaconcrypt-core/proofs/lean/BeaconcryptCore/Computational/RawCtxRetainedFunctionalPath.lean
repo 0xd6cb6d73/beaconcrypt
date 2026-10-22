@@ -14,7 +14,7 @@ open PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhJointKdf PqxdhJointKdfGame
 open RawCtxSelectedParentTable RawCtxCursorLineage RawCtxKdfRequestTable
 variable {AD PT CT A M P I D K Result : Type} {S B : Nat}
 
-def table (prior : Prior) : Table := fun address => some (prior address)
+def table (prior : Prior) : Table := QueryCache.ofFn (fun address => some (prior address))
 
 /-- The source ratchet request uses exactly the walk's input bytes and production domain label. -/
 theorem request_address (chain : RatchetChain) :
@@ -51,7 +51,8 @@ theorem source_walk (prior : Prior)
     obtain ⟨inputs, walked⟩ := ih
     refine ⟨inputs ++ [RawCtxSelectedQueryTrace.rootVector
       (Ratchet.chainAt (withInterpreter cr (RawCtxFunctionalFamily.execute prior)) root n)], ?_⟩
-    simp [walk, walked, table]
+    rw [walk, walked]
+    simp [table]
     simpa only [Ratchet.chainAt, Function.iterate_succ_apply', withInterpreter, request_address] using
       (interpreted_chain prior
         (Ratchet.chainAt (withInterpreter cr (RawCtxFunctionalFamily.execute prior)) root n)).symm

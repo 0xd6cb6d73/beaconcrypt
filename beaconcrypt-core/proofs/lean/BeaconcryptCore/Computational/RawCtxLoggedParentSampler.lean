@@ -166,7 +166,7 @@ theorem adjacent_empty (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
     (client : OracleComp (RawCtxProtocolReveals.SourceSpec S B) Result)
     (state : RawCtxProtocolReveals.State M P I D K S B) (primitive : RawCtxSharedPrimitive.SharedState A)
     (input : PqxdhSecretInputKdf.RootOutput) (past : List JointKdfAddress) :
-    let initial : LoggedState A := ((primitive, ((fun _ => none), ⟨input, 0⟩)), past)
+    let initial : LoggedState A := ((primitive, (∅, ⟨input, 0⟩)), past)
     let common := sample source writer depth sender route decode client state initial
     (Prod.map (Prod.map id (RawCtxGenericFamilyLive.nativeState ConcreteRatchetKernel.mk)) id <$>
       (common >>= after source writer (depth + 1) sender route decode)) =
@@ -177,7 +177,7 @@ theorem adjacent_empty (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
   dsimp only
   have covered := empty_covered primitive (⟨input, 0⟩ : Cursor) past
   have common := RawCtxLoggedParentPrefix.adjacent_complete source writer depth sender route decode client state
-    ((primitive, ((fun _ => none), ⟨input, 0⟩)), past) (Nat.zero_le depth)
+    ((primitive, (∅, ⟨input, 0⟩)), past) (Nat.zero_le depth)
   constructor
   · rw [sample_after source writer depth (depth + 1) sender route decode client state _ covered (by omega)]
     exact common.1

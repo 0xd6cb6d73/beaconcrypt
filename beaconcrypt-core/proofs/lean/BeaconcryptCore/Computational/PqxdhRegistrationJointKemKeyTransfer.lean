@@ -45,7 +45,7 @@ noncomputable def idealKeysLoss (setup : Setup baseSpec KemSK) (codec : Codec Re
   ((budget (.inl 3) + budget (.inl 5) + budget (.inl 6) : ℕ) : ℝ) / 2 ^ 256 +
     ∑ slot ∈ Finset.range 2,
       (hmacPrfRealGame setup.hmac (indexedReduction setup.hmac (rootClient (Reader := Reader) setup codec checks
-        ensureInit supplied decision work runtime count selected index) slot)).boolDistAdvantage
+        ensureInit supplied decision work runtime count selected index) slot)).boolDistance
         (hmacPrfRandomGame (indexedReduction setup.hmac (rootClient (Reader := Reader) setup codec checks ensureInit
           supplied decision work runtime count selected index) slot)) +
     keyScheduleBound setup.source setup.hmac
@@ -60,7 +60,7 @@ noncomputable def allIdealLoss (setup : Setup baseSpec KemSK) (codec : Codec Rea
   ((budget (.inl 3) + budget (.inl 5) + budget (.inl 6) : ℕ) : ℝ) / 2 ^ 256 +
     ∑ slot ∈ Finset.range 2,
       (hmacPrfRealGame setup.hmac (indexedReduction setup.hmac (rootClient (Reader := Reader) setup codec checks
-        ensureInit supplied decision work runtime count selected index) slot)).boolDistAdvantage
+        ensureInit supplied decision work runtime count selected index) slot)).boolDistance
         (hmacPrfRandomGame (indexedReduction setup.hmac (rootClient (Reader := Reader) setup codec checks ensureInit
           supplied decision work runtime count selected index) slot)) +
     ∑ k ∈ Finset.range 2, keyScheduleBound setup.source setup.hmac
@@ -76,7 +76,7 @@ theorem idealKeys_loss (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
       (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))
     (correct : SourceFullCorrect setup.source setup.hmac) :
     (opaqueBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index
-        false).boolDistAdvantage
+        false).boolDistance
       (idealKeysBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected
         index) ≤
       idealKeysLoss (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index
@@ -94,7 +94,7 @@ theorem allIdeal_loss (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
       (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))
     (correct : SourceFullCorrect setup.source setup.hmac) :
     (opaqueBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index
-        false).boolDistAdvantage
+        false).boolDistance
       (allIdealBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected
         index) ≤
       allIdealLoss (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index
@@ -105,12 +105,12 @@ theorem allIdeal_loss (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
 /-- Composition of T5's opaque form with a two-sided bound on the right: the event probability is bounded by the decision probability of the new game plus T5's loss and the new loss. -/
 theorem compose_right {left branch ideal : ProbComp Bool} {loss : ℝ} {kemTerm euf : ℝ≥0∞}
     (first : 𝒟[left] {true} ≤ 𝒟[branch] {true} + kemTerm + euf)
-    (second : branch.boolDistAdvantage ideal ≤ loss) :
+    (second : branch.boolDistance ideal ≤ loss) :
     𝒟[left] {true} ≤ 𝒟[ideal] {true} + kemTerm + euf + ENNReal.ofReal loss := by
   calc 𝒟[left] {true} ≤ 𝒟[branch] {true} + kemTerm + euf := first
-    _ ≤ (𝒟[ideal] {true} + ENNReal.ofReal (branch.boolDistAdvantage ideal)) + kemTerm + euf := by
+    _ ≤ (𝒟[ideal] {true} + ENNReal.ofReal (branch.boolDistance ideal)) + kemTerm + euf := by
         gcongr
-        exact ProbComp.evalDist_apply_true_le_add_ofReal_boolDistAdvantage branch ideal
+        exact ProbComp.evalDist_apply_true_le_add_ofReal_boolDistance branch ideal
     _ ≤ (𝒟[ideal] {true} + ENNReal.ofReal loss) + kemTerm + euf := by
         gcongr
     _ = 𝒟[ideal] {true} + kemTerm + euf + ENNReal.ofReal loss := by ring
@@ -142,9 +142,9 @@ theorem authenticated_ideal_keys (setup : Setup baseSpec KemSK)
         runtime] {true}) ≤
     𝒟[idealKeysBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count kemIndex
         index] {true} +
-      ENNReal.ofReal (setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
+      ENNReal.ofReal ((setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
         (PqxdhRegistrationJointKemRawCertified.adversary setup codec checks ensureInit supplied decision work runtime
-          count kemIndex index).toINDCCA +
+          count kemIndex index).toINDCCA).toReal +
         PqxdhRegistrationJointKemRawGame.correctnessError setup) +
       ∑ target : Fin (count + 1), advantage setup.joint
         (PqxdhRegistrationJointNativeOriginBound.reduction setup codec checks ensureInit supplied count
@@ -184,9 +184,9 @@ theorem authenticated_all_ideal (setup : Setup baseSpec KemSK)
         runtime] {true}) ≤
     𝒟[allIdealBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count kemIndex
         index] {true} +
-      ENNReal.ofReal (setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
+      ENNReal.ofReal ((setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
         (PqxdhRegistrationJointKemRawCertified.adversary setup codec checks ensureInit supplied decision work runtime
-          count kemIndex index).toINDCCA +
+          count kemIndex index).toINDCCA).toReal +
         PqxdhRegistrationJointKemRawGame.correctnessError setup) +
       ∑ target : Fin (count + 1), advantage setup.joint
         (PqxdhRegistrationJointNativeOriginBound.reduction setup codec checks ensureInit supplied count
@@ -226,9 +226,9 @@ theorem authenticated_slots (setup : Setup baseSpec KemSK)
         runtime] {true}) ≤
     𝒟[slotGame (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count kemIndex index
         2] {true} +
-      ENNReal.ofReal (setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
+      ENNReal.ofReal ((setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
         (PqxdhRegistrationJointKemRawCertified.adversary setup codec checks ensureInit supplied decision work runtime
-          count kemIndex index).toINDCCA +
+          count kemIndex index).toINDCCA).toReal +
         PqxdhRegistrationJointKemRawGame.correctnessError setup) +
       ∑ target : Fin (count + 1), advantage setup.joint
         (PqxdhRegistrationJointNativeOriginBound.reduction setup codec checks ensureInit supplied count

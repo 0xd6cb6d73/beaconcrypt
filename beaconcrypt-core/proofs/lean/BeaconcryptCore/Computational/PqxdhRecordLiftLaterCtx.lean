@@ -311,7 +311,7 @@ theorem hop_bound_of (fallback : CtxNonceAeadIntCtxt.ModifiedNonceAeadForgery) (
     (rawBound : (stepClientOf setup codec route client decision budget step).IsQueryBoundP (TargetClass IsRawQuery)
       qRaw)
     (small : qSeal < 2 ^ 96) :
-    ENNReal.ofReal ((gameOf setup codec route client decision budget step.val).boolDistAdvantage
+    ENNReal.ofReal ((gameOf setup codec route client decision budget step.val).boolDistance
       (gameOf setup codec route client decision budget (step.val + 1))) ≤
       integrityLoss (RawCtxUniversalDecoder.decoder codec.frameRead) setup.source.crypto fallback
         (PqxdhRecordLiftCtxModes.decisionClient setup.source.crypto
@@ -330,7 +330,7 @@ theorem ctx_auth_loss_of (fallback : CtxNonceAeadIntCtxt.ModifiedNonceAeadForger
       qSeal < 2 ^ 96 ∧
       (stepClientOf setup codec route client decision budget step).IsQueryBoundP (TargetClass IsRawQuery) qRaw) :
     ENNReal.ofReal
-      ((chainsOf (fun _ => true) setup codec route client >>= fun result => decision (chainView result)).boolDistAdvantage
+      ((chainsOf (fun _ => true) setup codec route client >>= fun result => decision (chainView result)).boolDistance
         (ctxRunOf (fun _ => .replay) id setup codec route client >>= fun result => decision (ctxView result))) ≤
       ∑ step : Fin (hops n budget), integrityLoss (RawCtxUniversalDecoder.decoder codec.frameRead) setup.source.crypto
         fallback (PqxdhRecordLiftCtxModes.decisionClient setup.source.crypto
@@ -346,23 +346,23 @@ theorem ctx_auth_loss_of (fallback : CtxNonceAeadIntCtxt.ModifiedNonceAeadForger
   rw [firstGame, lastGame]
   have telescope := PqxdhComposition.finiteHybridBound_of_hop_bounds
     (gameOf setup codec route client decision budget) (hops n budget)
-    (fun cut => (gameOf setup codec route client decision budget cut).boolDistAdvantage
+    (fun cut => (gameOf setup codec route client decision budget cut).boolDistance
       (gameOf setup codec route client decision budget (cut + 1))) (fun _ _ => le_refl _)
-  calc ENNReal.ofReal ((gameOf setup codec route client decision budget 0).boolDistAdvantage
+  calc ENNReal.ofReal ((gameOf setup codec route client decision budget 0).boolDistance
         (gameOf setup codec route client decision budget (hops n budget)))
       ≤ ENNReal.ofReal (∑ cut ∈ Finset.range (hops n budget),
-          (gameOf setup codec route client decision budget cut).boolDistAdvantage
+          (gameOf setup codec route client decision budget cut).boolDistance
             (gameOf setup codec route client decision budget (cut + 1))) :=
         ENNReal.ofReal_le_ofReal telescope
     _ = ∑ cut ∈ Finset.range (hops n budget), ENNReal.ofReal
-          ((gameOf setup codec route client decision budget cut).boolDistAdvantage
+          ((gameOf setup codec route client decision budget cut).boolDistance
             (gameOf setup codec route client decision budget (cut + 1))) :=
         ENNReal.ofReal_sum_of_nonneg (fun _ _ => abs_nonneg _)
     _ = ∑ step : Fin (hops n budget), ENNReal.ofReal
-          ((gameOf setup codec route client decision budget step.val).boolDistAdvantage
+          ((gameOf setup codec route client decision budget step.val).boolDistance
             (gameOf setup codec route client decision budget (step.val + 1))) :=
         (Fin.sum_univ_eq_sum_range (fun cut => ENNReal.ofReal
-          ((gameOf setup codec route client decision budget cut).boolDistAdvantage
+          ((gameOf setup codec route client decision budget cut).boolDistance
             (gameOf setup codec route client decision budget (cut + 1)))) _).symm
     _ ≤ _ := Finset.sum_le_sum (fun step _ => by
           obtain ⟨qSeal, hashBound, sealBound, small, rawBound⟩ := stepBounds step

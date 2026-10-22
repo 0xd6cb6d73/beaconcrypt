@@ -410,11 +410,7 @@ theorem relTriple_with_support {α β : Type} (left : ProbComp α) (right : Prob
     RelTriple left right (fun a b => relation a b ∧ a ∈ support left ∧ b ∈ support right) := by
   rw [relTriple_iff_relWP, relWP_iff_couplingPost] at coupled ⊢
   obtain ⟨coupling, holds⟩ := coupled
-  refine ⟨coupling, fun pair member => ⟨holds pair member, ?_, ?_⟩⟩
-  · rw [support_eq_evalSPMF_support, ← coupling.2.map_fst, spmf_support_map]
-    exact ⟨pair, member, rfl⟩
-  · rw [support_eq_evalSPMF_support, ← coupling.2.map_snd, spmf_support_map]
-    exact ⟨pair, member, rfl⟩
+  exact ⟨coupling, holds.and (ae_mem_support_prod coupling)⟩
 
 /-- If the current operation is not designated, the prefetched interpreter executes the ordinary complete query regardless of its private flag. -/
 theorem once_away {ι σ V : Type} {spec : OracleSpec ι}

@@ -157,7 +157,7 @@ noncomputable def loss (hmac : HmacSha512) : ℝ :=
 include bounded preBound applicationBound selectorBound auxBound in
 /-- The exact source-selected, common-or-pending sampler and its native freshness observer satisfy the constructed Extract/HMAC bound with the source-derived candidate cap. -/
 theorem bound (hmac : HmacSha512) (correct : SourceFullCorrect source hmac) :
-    (actualGame).boolDistAdvantage randomGame ≤
+    (actualGame).boolDistance randomGame ≤
       loss source writer selectedMessage previousRoot response64 other sender route decode index metadata ready post before
         selected number ancestors disclosed shared privateState cache depth remaining qPost hmac := by
   simpa only [actual, random, loss, observer, tester, view, sample, address,

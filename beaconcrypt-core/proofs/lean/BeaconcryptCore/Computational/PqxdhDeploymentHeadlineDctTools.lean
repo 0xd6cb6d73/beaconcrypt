@@ -1,7 +1,8 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.PqxdhDeploymentHiddenLayout
 import BeaconcryptCore.Computational.PqxdhFullSecretInputKdf
-import VCVio.EvalDist.Expectation
+import VCVio.ProgramLogic.Unary.HoareTriple
+import VCVio.OracleComp.Constructions.SampleableType.Measure
 
 /-!
 # Generic tools of CE-12 D-ct (closing `ctGapTerm`)
@@ -19,7 +20,7 @@ open OracleComp OracleSpec ENNReal
 set_option autoImplicit false
 
 namespace BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctTools
-open OracleComp.EvalDist (expectedValue)
+open OracleComp.ProgramLogic (wp)
 
 /-! ### A budgeted supermartingale over a whole simulation -/
 
@@ -31,31 +32,31 @@ theorem expected_run_bounded (impl : QueryImpl spec (StateT σ ProbComp)) (costl
     [DecidablePred costly] (potential : ℕ → σ → ℝ≥0∞)
     (mono : ∀ b state, potential b state ≤ potential (b + 1) state)
     (paid : ∀ query state b, costly query →
-      expectedValue ((impl query).run state) (fun result => potential b result.2) ≤ potential (b + 1) state)
+      wp ((impl query).run state) (fun result => potential b result.2) ≤ potential (b + 1) state)
     (free : ∀ query state b, ¬ costly query →
-      expectedValue ((impl query).run state) (fun result => potential b result.2) ≤ potential b state)
+      wp ((impl query).run state) (fun result => potential b result.2) ≤ potential b state)
     (work : OracleComp spec α) (b : ℕ) (bounded : work.IsQueryBoundP costly b) (state : σ) :
-    expectedValue ((simulateQ impl work).run state) (fun result => potential 0 result.2) ≤ potential b state := by
+    wp ((simulateQ impl work).run state) (fun result => potential 0 result.2) ≤ potential b state := by
   induction work using OracleComp.inductionOn generalizing state b with
   | pure value =>
-      simp only [simulateQ_pure, StateT.run_pure, OracleComp.EvalDist.expectedValue_pure]
+      simp only [simulateQ_pure, StateT.run_pure, OracleComp.ProgramLogic.wp_pure]
       clear bounded
       induction b with
       | zero => exact le_rfl
       | succ n ih => exact ih.trans (mono n state)
   | query_bind query next ih =>
       rw [isQueryBoundP_query_bind_iff] at bounded
-      rw [simulateQ_query_bind, StateT.run_bind, OracleComp.EvalDist.expectedValue_bind]
+      rw [simulateQ_query_bind, StateT.run_bind, OracleComp.ProgramLogic.wp_bind]
       by_cases hq : costly query
       · obtain ⟨pos, rest⟩ := bounded
         have positive : 0 < b := pos.resolve_left (not_not.mpr hq)
         obtain ⟨n, rfl⟩ : ∃ n, b = n + 1 := ⟨b - 1, by omega⟩
-        refine le_trans (OracleComp.EvalDist.expectedValue_mono ((impl query).run state) ?_) (paid query state n hq)
+        refine le_trans (OracleComp.ProgramLogic.wp_mono ((impl query).run state) ?_) (paid query state n hq)
         intro result
         have bound := rest result.1
         simp only [hq, ite_true, Nat.add_sub_cancel] at bound
         exact ih result.1 n bound result.2
-      · refine le_trans (OracleComp.EvalDist.expectedValue_mono ((impl query).run state) ?_) (free query state b hq)
+      · refine le_trans (OracleComp.ProgramLogic.wp_mono ((impl query).run state) ?_) (free query state b hq)
         intro result
         have bound := bounded.2 result.1
         simp only [hq, ite_false] at bound
@@ -64,12 +65,11 @@ theorem expected_run_bounded (impl : QueryImpl spec (StateT σ ProbComp)) (costl
 /-- The probability of a Boolean event is at most the expected value of any potential that is at least one on the event over the support. -/
 theorem chance_le_expected (run : ProbComp α) (event : α → Bool) (potential : α → ℝ≥0∞)
     (above : ∀ a ∈ support run, event a = true → 1 ≤ potential a) :
-    𝒟[event <$> run] {true} ≤ expectedValue run potential := by
+    𝒟[event <$> run] {true} ≤ wp run potential := by
   classical
   rw [← prEvent_eq_evalDist_singleton _ true, prEvent_map,
-    ← VCVioLegacy.probEvent_eq_prEvent run (fun a => event a = true),
-    ← OracleComp.EvalDist.expectedValue_ite_one]
-  refine OracleComp.EvalDist.expectedValue_mono_of_support fun a supported => ?_
+    OracleComp.ProgramLogic.prEvent_eq_wp_indicator]
+  refine OracleComp.ProgramLogic.wp_mono_of_support _ fun a supported => ?_
   by_cases holds : event a = true
   · simp only [holds, ↓reduceIte]
     exact above a supported holds
@@ -85,7 +85,7 @@ variable {V W : Type}
 
 /-- `mass Φ k`: the chance that `Φ` of a fresh uniform table value is `k`. -/
 noncomputable def mass [SampleableType V] [DecidableEq W] (Φ : V → W) (k : W) : ℝ≥0∞ :=
-  expectedValue ($ᵗ V : ProbComp V) fun v => if Φ v = k then 1 else 0
+  wp ($ᵗ V : ProbComp V) fun v => if Φ v = k then 1 else 0
 
 /-- Exactly one key is `Φ v`. -/
 theorem tsum_indicator [DecidableEq W] (Φ : V → W) (v : V) : ∑' k : W, (if Φ v = k then (1 : ℝ≥0∞) else 0) = 1 := by
@@ -95,27 +95,27 @@ theorem tsum_indicator [DecidableEq W] (Φ : V → W) (v : V) : ∑' k : W, (if 
 
 /-- The averaged per-entry bound: whatever `Φ` is, the expected mass of a uniform key is at most `1/|W|`. -/
 theorem average_mass [SampleableType V] [SampleableType W] [Fintype W] [DecidableEq W] (Φ : V → W) :
-    expectedValue ($ᵗ W : ProbComp W) (mass Φ) ≤ (Fintype.card W : ℝ≥0∞)⁻¹ := by
-  rw [OracleComp.EvalDist.expectedValue_def]
-  simp only [VCVioLegacy.probOutput_eq_prEvent, SampleableType.prEvent_uniformSample_eq_singleton]
+    wp ($ᵗ W : ProbComp W) (mass Φ) ≤ (Fintype.card W : ℝ≥0∞)⁻¹ := by
+  rw [OracleComp.ProgramLogic.wp_eq_tsum]
+  simp only [SampleableType.prEvent_uniformSample_eq_singleton]
   rw [ENNReal.tsum_mul_left]
   calc (Fintype.card W : ℝ≥0∞)⁻¹ * ∑' k, mass Φ k ≤ (Fintype.card W : ℝ≥0∞)⁻¹ * 1 := by
         gcongr
-        simp only [mass, OracleComp.EvalDist.expectedValue_def]
+        simp only [mass, OracleComp.ProgramLogic.wp_eq_tsum]
         rw [ENNReal.tsum_comm]
         simp only [ENNReal.tsum_mul_left, tsum_indicator, mul_one]
-        simpa only [VCVioLegacy.probOutput_eq_prEvent] using OracleComp.tsum_prEvent_le_one ($ᵗ V : ProbComp V)
+        simpa only using OracleComp.tsum_prEvent_le_one ($ᵗ V : ProbComp V)
     _ = _ := mul_one _
 
 /-- The first component of a uniform pair is uniform. -/
 theorem expected_fst {α β : Type} [SampleableType α] [SampleableType β] (g : α → ℝ≥0∞) :
-    expectedValue ($ᵗ (α × β) : ProbComp (α × β)) (fun m => g m.1) = expectedValue ($ᵗ α : ProbComp α) g := by
-  rw [← PqxdhFullSecretInputKdf.pairSample, OracleComp.EvalDist.expectedValue_bind]
+    wp ($ᵗ (α × β) : ProbComp (α × β)) (fun m => g m.1) = wp ($ᵗ α : ProbComp α) g := by
+  rw [← PqxdhFullSecretInputKdf.pairSample, OracleComp.ProgramLogic.wp_bind]
   congr 1
   funext a
-  rw [OracleComp.EvalDist.expectedValue_bind]
-  simp only [OracleComp.EvalDist.expectedValue_pure]
-  exact OracleComp.EvalDist.expectedValue_const (probFailure_uniformSample _) (g a)
+  rw [OracleComp.ProgramLogic.wp_bind]
+  simp only [OracleComp.ProgramLogic.wp_pure]
+  exact OracleComp.ProgramLogic.wp_const _ (g a)
 
 end Average
 
@@ -136,9 +136,9 @@ noncomputable def size (T : Cache D V) : ℝ≥0∞ := ∑' u, (T u).elim 0 fun 
 
 /-- At the draw of a uniform key every existing entry is hit with chance `1/|W|`. -/
 theorem hits_draw [SampleableType W] [Fintype W] [DecidableEq W] (Φ : V → W) (T : Cache D V) :
-    expectedValue ($ᵗ W : ProbComp W) (hits Φ T) = size T * (Fintype.card W : ℝ≥0∞)⁻¹ := by
-  rw [OracleComp.EvalDist.expectedValue_def]
-  simp only [VCVioLegacy.probOutput_eq_prEvent, SampleableType.prEvent_uniformSample_eq_singleton]
+    wp ($ᵗ W : ProbComp W) (hits Φ T) = size T * (Fintype.card W : ℝ≥0∞)⁻¹ := by
+  rw [OracleComp.ProgramLogic.wp_eq_tsum]
+  simp only [SampleableType.prEvent_uniformSample_eq_singleton]
   rw [ENNReal.tsum_mul_left, mul_comm]
   congr 1
   unfold hits size
@@ -163,10 +163,10 @@ theorem hits_cacheQuery [DecidableEq D] [DecidableEq W] (Φ : V → W) (T : Cach
 
 /-- At a miss, a fresh uniform value adds `mass Φ k` to the hits in expectation. -/
 theorem hits_miss [DecidableEq D] [SampleableType V] [DecidableEq W] (Φ : V → W) (T : Cache D V) (u : D) (fresh : T u = none) (k : W) :
-    expectedValue ($ᵗ V : ProbComp V) (fun v => hits Φ (T.cacheQuery u v) k) ≤ hits Φ T k + mass Φ k := by
+    wp ($ᵗ V : ProbComp V) (fun v => hits Φ (T.cacheQuery u v) k) ≤ hits Φ T k + mass Φ k := by
   simp only [hits_cacheQuery Φ T u fresh]
-  rw [OracleComp.EvalDist.expectedValue_add]
-  exact add_le_add (OracleComp.EvalDist.expectedValue_le_of_le _ fun _ => le_rfl) le_rfl
+  rw [OracleComp.ProgramLogic.wp_add]
+  exact add_le_add (OracleComp.ProgramLogic.wp_le_const_of_support _ fun _ _ => le_rfl) le_rfl
 
 /-- A miss adds one entry. -/
 theorem size_cacheQuery [DecidableEq D] (T : Cache D V) (u : D) (fresh : T u = none) (v : V) :
@@ -190,25 +190,25 @@ theorem one_le_hits [DecidableEq W] (Φ : V → W) (T : Cache D V) (u : D) (v : 
 
 /-- One read of VCVio's lazy random oracle adds at most `mass Φ k` to the hits in expectation, whatever the cache. -/
 theorem ro_hits [DecidableEq D] [SampleableType V] [DecidableEq W] (Φ : V → W) (T : Cache D V) (u : D) (k : W) :
-    expectedValue (((D →ₒ V).randomOracle u).run T) (fun result => hits Φ result.2 k) ≤ hits Φ T k + mass Φ k := by
+    wp (((D →ₒ V).randomOracle u).run T) (fun result => hits Φ result.2 k) ≤ hits Φ T k + mass Φ k := by
   cases found : T u with
   | some v =>
-      rw [QueryImpl.withCaching_run_some _ found, OracleComp.EvalDist.expectedValue_pure]
+      rw [QueryImpl.withCaching_run_some _ found, OracleComp.ProgramLogic.wp_pure]
       exact le_self_add
   | none =>
-      rw [QueryImpl.withCaching_run_none _ found, OracleComp.EvalDist.expectedValue_map]
+      rw [QueryImpl.withCaching_run_none _ found, OracleComp.ProgramLogic.wp_map]
       exact hits_miss Φ T u found k
 
 /-- One read of the lazy random oracle adds at most one entry in expectation. -/
 theorem ro_size [DecidableEq D] [SampleableType V] (T : Cache D V) (u : D) :
-    expectedValue (((D →ₒ V).randomOracle u).run T) (fun result => size result.2) ≤ size T + 1 := by
+    wp (((D →ₒ V).randomOracle u).run T) (fun result => size result.2) ≤ size T + 1 := by
   cases found : T u with
   | some v =>
-      rw [QueryImpl.withCaching_run_some _ found, OracleComp.EvalDist.expectedValue_pure]
+      rw [QueryImpl.withCaching_run_some _ found, OracleComp.ProgramLogic.wp_pure]
       exact le_self_add
   | none =>
-      rw [QueryImpl.withCaching_run_none _ found, OracleComp.EvalDist.expectedValue_map]
-      refine OracleComp.EvalDist.expectedValue_le_of_le _ fun v => le_of_eq ?_
+      rw [QueryImpl.withCaching_run_none _ found, OracleComp.ProgramLogic.wp_map]
+      refine OracleComp.ProgramLogic.wp_le_const_of_support _ fun v _ => le_of_eq ?_
       exact size_cacheQuery T u found v
 
 end Table
@@ -226,9 +226,9 @@ noncomputable def equalTo [DecidableEq V] (C : Cache D V) (d : V) : ℝ≥0∞ :
 
 /-- A uniform digest equals each cached digest with chance `1/|V|`. -/
 theorem equalTo_draw [SampleableType V] [Fintype V] [DecidableEq V] (C : Cache D V) :
-    expectedValue ($ᵗ V : ProbComp V) (equalTo C) = size C * (Fintype.card V : ℝ≥0∞)⁻¹ := by
-  rw [OracleComp.EvalDist.expectedValue_def]
-  simp only [VCVioLegacy.probOutput_eq_prEvent, SampleableType.prEvent_uniformSample_eq_singleton]
+    wp ($ᵗ V : ProbComp V) (equalTo C) = size C * (Fintype.card V : ℝ≥0∞)⁻¹ := by
+  rw [OracleComp.ProgramLogic.wp_eq_tsum]
+  simp only [SampleableType.prEvent_uniformSample_eq_singleton]
   rw [ENNReal.tsum_mul_left, mul_comm]
   congr 1
   unfold equalTo size
@@ -273,17 +273,18 @@ theorem collIn_cacheQuery [DecidableEq D] (C : Cache D V) (u : D) (fresh : C u =
 open Classical in
 /-- One read of the lazy random oracle creates a collision with chance at most `size C / |V|`. -/
 theorem ro_coll [DecidableEq D] [SampleableType V] [Fintype V] [DecidableEq V] (C : Cache D V) (u : D) :
-    expectedValue (((D →ₒ V).randomOracle u).run C) (fun r => if CollIn r.2 then (1 : ℝ≥0∞) else 0) ≤
+    wp (((D →ₒ V).randomOracle u).run C) (fun r => if CollIn r.2 then (1 : ℝ≥0∞) else 0) ≤
       (if CollIn C then 1 else 0) + size C * (Fintype.card V : ℝ≥0∞)⁻¹ := by
   cases found : C u with
   | some v =>
-      rw [QueryImpl.withCaching_run_some _ found, OracleComp.EvalDist.expectedValue_pure]
+      rw [QueryImpl.withCaching_run_some _ found, OracleComp.ProgramLogic.wp_pure]
       exact le_self_add
   | none =>
-      rw [QueryImpl.withCaching_run_none _ found, OracleComp.EvalDist.expectedValue_map, ← equalTo_draw C,
-        ← OracleComp.EvalDist.expectedValue_const (probFailure_uniformSample V) (if CollIn C then (1 : ℝ≥0∞) else 0),
-        ← OracleComp.EvalDist.expectedValue_add]
-      refine OracleComp.EvalDist.expectedValue_mono _ fun v => ?_
+      rw [QueryImpl.withCaching_run_none _ found, OracleComp.ProgramLogic.wp_map, ← equalTo_draw C,
+        ← OracleComp.ProgramLogic.wp_const ($ᵗ V : ProbComp V) (if CollIn C then (1 : ℝ≥0∞) else 0),
+        ← OracleComp.ProgramLogic.wp_add]
+      refine OracleComp.ProgramLogic.wp_mono _ fun v => ?_
+      simp only [Function.comp_def]
       by_cases coll : CollIn (C.cacheQuery u v)
       · simp only [coll, ↓reduceIte]
         rcases collIn_cacheQuery C u found v coll with old | ⟨z, atZ⟩
@@ -316,8 +317,8 @@ theorem keyPart_card : Fintype.card RawCtxKdfRequestTable.KeyPart = 2 ^ 256 := b
 
 /-- The key part of a uniform material is uniform (the nonce draw is integrated out). -/
 theorem material_marginal (g : RawCtxKdfRequestTable.KeyPart → ℝ≥0∞) :
-    expectedValue ($ᵗ PqxdhDeploymentHiddenLayout.Material : ProbComp PqxdhDeploymentHiddenLayout.Material)
-      (fun m => g m.1) = expectedValue ($ᵗ RawCtxKdfRequestTable.KeyPart : ProbComp RawCtxKdfRequestTable.KeyPart) g :=
+    wp ($ᵗ PqxdhDeploymentHiddenLayout.Material : ProbComp PqxdhDeploymentHiddenLayout.Material)
+      (fun m => g m.1) = wp ($ᵗ RawCtxKdfRequestTable.KeyPart : ProbComp RawCtxKdfRequestTable.KeyPart) g :=
   expected_fst g
 
 end BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctTools

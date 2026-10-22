@@ -139,7 +139,7 @@ theorem reached_empty {Metadata PeerMetadata Identity DhPair KemPair Auxiliary R
     (next : (Spec serverCount beaconCount).Range query → OracleComp (Spec serverCount beaconCount)
       (Result × RawCtxSelectedFamilyContext.NativeLive Metadata PeerMetadata Identity DhPair KemPair serverCount beaconCount))
     (supported : (RawCtxPendingMixedPrefix.Stopped.pending query next, reached) ∈ support
-      (scan source writer cutStage runStage sender route decode client state ((primitive, ((fun _ => none), cursor)), past))) :
+      (scan source writer cutStage runStage sender route decode client state ((primitive, (∅, cursor)), past))) :
     RawCtxSelectiveFamilyLog.Covered reached ∧
     ∃ context : RawCtxSelectedFamilyContext.Context Metadata PeerMetadata Identity DhPair KemPair Result serverCount beaconCount,
       (⟨query, next⟩ : RawCtxSelectedFamilyContext.Frame Metadata PeerMetadata Identity DhPair KemPair Result serverCount beaconCount) =
@@ -148,10 +148,10 @@ theorem reached_empty {Metadata PeerMetadata Identity DhPair KemPair Auxiliary R
       matched reached.1.2.2 (RawCtxSelectedFamilyContext.address context) = true ∧ reached.1.2.2.depth = cutStage := by
   exact ⟨RawCtxSelectiveFamilyLog.scan_covered source writer runStage
     (fun query logged => parentCut cutStage query logged.1) (program sender route decode client state)
-    ((primitive, ((fun _ => none), cursor)), past) (RawCtxSelectiveFamilyLog.empty_covered primitive cursor past)
+    ((primitive, (∅, cursor)), past) (RawCtxSelectiveFamilyLog.empty_covered primitive cursor past)
     (RawCtxPendingMixedPrefix.Stopped.pending query next, reached) supported,
     reached_context source writer cutStage runStage sender route decode client state
-      ((primitive, ((fun _ => none), cursor)), past) reached query next supported⟩
+      ((primitive, (∅, cursor)), past) reached query next supported⟩
 
 end BeaconcryptCore.Computational.RawCtxLoggedParentPrefix
 

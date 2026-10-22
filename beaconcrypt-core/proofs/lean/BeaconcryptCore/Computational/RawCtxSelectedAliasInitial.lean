@@ -39,7 +39,7 @@ theorem marked_distance_initial {ι State Result : Type} {spec : OracleSpec ι}
     (handler alternate : QueryImpl spec (StateT State ProbComp))
     (record : spec.Domain → List RootOutput) (target : RootOutput)
     (client : OracleComp spec Result) (state : State × List RootOutput) :
-    tvDist ((simulateQ (marked handler record target) client).run (decorate target state))
+    discreteDistance ((simulateQ (marked handler record target) client).run (decorate target state))
       ((simulateQ (marked (routed handler alternate record target) record target) client).run (decorate target state)) ≤
       Pr{let result ← (simulateQ (marked handler record target) client).run (decorate target state)}[result.2.2 = true].toReal := by
   classical
@@ -48,7 +48,7 @@ theorem marked_distance_initial {ι State Result : Type} {spec : OracleSpec ι}
       exact OracleComp.prEvent_eq_one_of_forall_mem_support _ _
         (marked_bad handler record target client (decorate target state) (by simp [decorate, prior]))
     rw [one, ENNReal.toReal_one]
-    exact tvDist_le_one _ _
+    exact discreteDistance_le_one _ _
   · simpa only [decorate, decide_eq_false prior] using
       marked_distance handler alternate record target client state
 
@@ -57,10 +57,10 @@ theorem recorded_distance_initial {ι State Result : Type} {spec : OracleSpec ι
     (handler alternate : QueryImpl spec (StateT State ProbComp))
     (record : spec.Domain → List RootOutput) (target : RootOutput)
     (client : OracleComp spec Result) (state : State × List RootOutput) :
-    tvDist ((simulateQ (RawCtxSelectedQueryTrace.recorded handler record) client).run state)
+    discreteDistance ((simulateQ (RawCtxSelectedQueryTrace.recorded handler record) client).run state)
       ((simulateQ (RawCtxSelectedQueryTrace.recorded (routed handler alternate record target) record) client).run state) ≤
     Pr{let result ← (simulateQ (RawCtxSelectedQueryTrace.recorded handler record) client).run state}[target ∈ result.2.2].toReal := by
-  have projected := (tvDist_map_le (Prod.map id Prod.fst)
+  have projected := (discreteDistance_map_le (Prod.map id Prod.fst)
     ((simulateQ (marked handler record target) client).run (decorate target state))
     ((simulateQ (marked (routed handler alternate record target) record target) client).run (decorate target state))).trans
       (marked_distance_initial handler alternate record target client state)

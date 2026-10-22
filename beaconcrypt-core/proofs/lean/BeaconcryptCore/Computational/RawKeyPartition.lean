@@ -1,6 +1,6 @@
 import BeaconcryptCore.Computational.AdaptiveRawKeyPreparation
 import Mathlib.Logic.Equiv.Fin.Basic
-import BeaconcryptCore.Computational.VCVioLegacyBridge
+import BeaconcryptCore.Computational.VCVioForwardOracleComp
 
 /-!
 Eight statements split the actual independently sampled finite key family at any selected index. The index bijection preserves coincident values and charges no hidden extra key draw. The sampling law quantifies over the complete evaluated continuation, including all retained private state. Update and reconstruction laws preserve the original index and every unselected entry.

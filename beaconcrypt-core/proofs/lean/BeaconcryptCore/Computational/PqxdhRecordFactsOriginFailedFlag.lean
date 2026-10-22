@@ -79,6 +79,8 @@ theorem sampled_le_trace (modes : Label n → KeyMode)
   · simp only [prEvent_pure, Bool.false_eq_true, ite_false, zero_le]
 
 
+-- Composing these exact measure bounds normalizes the concrete 64-byte draw.
+set_option maxRecDepth 1024 in
 /-- The literal selected failed-writer replay flag costs at most two uniform point masses per original raw receive allowance. -/
 theorem sampled_bound (modes : Label n → KeyMode)
     (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (replace : Pqxdh.Bytes → Pqxdh.Bytes)

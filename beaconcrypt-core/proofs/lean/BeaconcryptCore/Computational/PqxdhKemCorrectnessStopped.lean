@@ -61,7 +61,7 @@ theorem after_bound (source : FixedHkdfSha512NoSaltSource) (baseImpl : QueryImpl
     (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK)) (functional : FunctionalDecapsulation kem)
     (protocol : StoppedProtocol baseSpec Result) (publicKey : MlKem768PublicKey) (secretKey : KemSK)
     (context : protocol.Context) :
-    tvDist (simulateQ (kemAmbientImpl baseImpl) (after false source kem protocol publicKey secretKey context))
+    discreteDistance (simulateQ (kemAmbientImpl baseImpl) (after false source kem protocol publicKey secretKey context))
       (simulateQ (kemAmbientImpl baseImpl) (after true source kem protocol publicKey secretKey context)) ≤
       Pr{let x ← simulateQ (kemAmbientImpl baseImpl) (keyError kem publicKey secretKey)}[x = true].toReal := by
   by_cases proceed : protocol.proceed publicKey context = true
@@ -76,7 +76,7 @@ theorem after_bound (source : FixedHkdfSha512NoSaltSource) (baseImpl : QueryImpl
       simulateQ (kemAmbientImpl baseImpl) (do
         let recovered ← kem.decaps secretKey pair.1
         pure (decide (recovered ≠ some pair.2)))
-    have point : ∀ pair, tvDist (left pair) (right pair) ≤ Pr{let x ← badRun pair}[x = true].toReal := by
+    have point : ∀ pair, discreteDistance (left pair) (right pair) ≤ Pr{let x ← badRun pair}[x = true].toReal := by
       rintro ⟨ciphertext, secret⟩
       by_cases good : functional.result secretKey ciphertext = some secret
       · have agreement : kem.decaps secretKey ciphertext = pure (some secret) :=
@@ -85,12 +85,12 @@ theorem after_bound (source : FixedHkdfSha512NoSaltSource) (baseImpl : QueryImpl
           congrArg (simulateQ (kemAmbientImpl baseImpl))
             (route_complete source kem secretKey ciphertext secret agreement
               (protocol.resume publicKey ciphertext context)).symm
-        rw [equal, tvDist_self]
+        rw [equal, discreteDistance_self]
         exact ENNReal.toReal_nonneg
       · have run : badRun (ciphertext, secret) = pure true := by
           simp only [badRun, functional.exact, pure_bind, simulateQ_pure, decide_eq_true good]
         rw [run, prEvent_pure, ite_eq_left rfl]
-        simpa using tvDist_le_one (left (ciphertext, secret)) (right (ciphertext, secret))
+        simpa using discreteDistance_le_one (left (ciphertext, secret)) (right (ciphertext, secret))
     have averaged := PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind
       (simulateQ (kemAmbientImpl baseImpl) (kem.encaps publicKey)) left right badRun (fun result => result = true)
       point
@@ -98,14 +98,14 @@ theorem after_bound (source : FixedHkdfSha512NoSaltSource) (baseImpl : QueryImpl
   · have same : after false source kem protocol publicKey secretKey context =
         after true source kem protocol publicKey secretKey context := by
       simp [after, proceed]
-    rw [same, tvDist_self]
+    rw [same, discreteDistance_self]
     exact ENNReal.toReal_nonneg
 
 /-- The actual prechallenge state may select an immediate abort. Averaging its complete continuation never conditions the correctness endpoint on continuing. -/
 theorem prepared_bound (source : FixedHkdfSha512NoSaltSource) (baseImpl : QueryImpl baseSpec ProbComp)
     (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK)) (functional : FunctionalDecapsulation kem)
     (protocol : StoppedProtocol baseSpec Result) (publicKey : MlKem768PublicKey) (secretKey : KemSK) :
-    tvDist
+    discreteDistance
       (do
         let context ← simulateQ (kemAmbientImpl baseImpl)
           (simulateQ (kem.IND_CCA_preChallengeImpl secretKey) (protocol.prepare publicKey))
@@ -130,7 +130,7 @@ theorem prepared_bound (source : FixedHkdfSha512NoSaltSource) (baseImpl : QueryI
 theorem stopped_bound (source : FixedHkdfSha512NoSaltSource) (baseImpl : QueryImpl baseSpec ProbComp)
     (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK)) (functional : FunctionalDecapsulation kem)
     (protocol : StoppedProtocol baseSpec Result) :
-    tvDist (simulateQ (kemAmbientImpl baseImpl) (main false source kem protocol))
+    discreteDistance (simulateQ (kemAmbientImpl baseImpl) (main false source kem protocol))
       (simulateQ (kemAmbientImpl baseImpl) (main true source kem protocol)) ≤
       Pr{let x ← simulateQ (kemAmbientImpl baseImpl) (errorExperiment kem)}[x = true].toReal := by
   simp only [main, simulateQ_bind]

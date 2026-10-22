@@ -82,14 +82,14 @@ theorem selected_bound {Metadata Auxiliary : Type}
     (writer : RawCtxMixedShared.Writer) (senderId : Std.U64) (decode : RawCtxReceive.FrameDecoder)
     (client : OracleComp RawCtxMixedOwner.SourceSpec Bool)
     (sample : ProbComp (Context Metadata Auxiliary × RootOutput)) :
-    (actualGame source writer senderId decode client sample).boolDistAdvantage
+    (actualGame source writer senderId decode client sample).boolDistance
       (randomGame source writer senderId decode client sample) ≤
       (extractRealGame hmac (secretSampler sample)
-        (fullExtractReduction hmac .ratchet (observer source writer senderId decode client))).boolDistAdvantage
+        (fullExtractReduction hmac .ratchet (observer source writer senderId decode client))).boolDistance
         (extractUniformGame (secretSampler sample)
           (fullExtractReduction hmac .ratchet (observer source writer senderId decode client))) +
       (hmacPrfRealGame hmac
-        (fullExpandReduction .ratchet (secretSampler sample) (observer source writer senderId decode client))).boolDistAdvantage
+        (fullExpandReduction .ratchet (secretSampler sample) (observer source writer senderId decode client))).boolDistance
         (hmacPrfRandomGame
           (fullExpandReduction .ratchet (secretSampler sample) (observer source writer senderId decode client))) := by
   simpa only [actual_eq_source, randomGame] using sourceFullAdvantage_le_extract_add_hmac

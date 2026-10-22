@@ -90,6 +90,7 @@ theorem failed_guess_bound (modes : Label n → KeyMode)
     (fun digest => (hiddenResult codec.frameWrite pending input body tag width digest state).1.isNone)
     (fun failed => if failed then some <$> continuation modes setup codec replace pending input body tag width state client default else pure none)
     (fun result => result.bind guess)
+  generalize hsample : ($ᵗ CtxDigest) = sample at bounded ⊢
   simpa only [ite_bind] using bounded
 
 /-- The literal failed-writer reply selects `next none`; existing source freshness discharges its restriction before any writer outcome is observed. -/

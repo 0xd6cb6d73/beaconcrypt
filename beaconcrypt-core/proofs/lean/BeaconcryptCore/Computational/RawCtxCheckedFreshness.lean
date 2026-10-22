@@ -77,11 +77,11 @@ theorem decision_bound (parameters : Parameters) (sender : M → Std.U64)
     (state : RawCtxSharedPrimitive.SharedState A) (candidates : List RootOutput) :
     let execution := (simulateQ (observed parameters) (checked sender route decode history outside work n)).run
       (initial prior history state candidates)
-    (actualDecision parameters.target earlier prior <$> execution).boolDistAdvantage
+    (actualDecision parameters.target earlier prior <$> execution).boolDistance
       (RawCtxSelectedParentPrivateEvents.decision (remainingEvent earlier prior) <$> execution) ≤
       (Pr{let result ← execution}[parameters.target ∈ result.2.1.2 ∧ result.2.2 = false]).toReal := by
   dsimp only
-  simp only [ProbComp.boolDistAdvantage]
+  simp only [ProbComp.boolDistance]
   rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true,
     RawCtxSelectedParentPrivateEvents.decision_probability, prEvent_map]
   simpa only [actualDecision, decide_eq_true_eq,
@@ -97,11 +97,11 @@ theorem bound (parameters : Parameters) (sender : M → Std.U64)
     (state : RawCtxSharedPrimitive.SharedState A) (candidates : List RootOutput) :
     let program := checked sender route decode history outside work n
     let start := initial prior history state candidates
-    (actualDecision parameters.target earlier prior <$> (simulateQ (observed parameters) program).run start).boolDistAdvantage
+    (actualDecision parameters.target earlier prior <$> (simulateQ (observed parameters) program).run start).boolDistance
       (RawCtxSelectedParentPrivateEvents.decision (remainingEvent earlier prior) <$>
         (simulateQ (RawCtxFamilyFreshnessEvent.masked parameters) program).run start) ≤
       3 * (Pr{let result ← (simulateQ (RawCtxFamilyFreshnessEvent.masked parameters) program).run start}[parameters.target ∈ result.2.1.2]).toReal := by
-  have triangle := ProbComp.boolDistAdvantage_triangle
+  have triangle := ProbComp.boolDistance_triangle
     (actualDecision parameters.target earlier prior <$>
       (simulateQ (observed parameters) (checked sender route decode history outside work n)).run
         (initial prior history state candidates))

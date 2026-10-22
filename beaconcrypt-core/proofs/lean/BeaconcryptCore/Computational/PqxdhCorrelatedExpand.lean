@@ -103,10 +103,11 @@ theorem compile_reduction
 
 /-- The table projection preserves every address and discards only each private PRK beyond its derived root. -/
 def projectCache (hmac : HmacSha512) (cache : ExtractOracle.QueryCache) : RootOracle.QueryCache :=
-  fun message => (cache message).map (expandRoot hmac)
+  QueryCache.ofFn fun message => (cache message).map (expandRoot hmac)
 
 theorem projectCache_empty (hmac : HmacSha512) : projectCache hmac ∅ = ∅ := by
-  funext message
+  apply QueryCache.ext
+  intro message
   rfl
 
 noncomputable def rootSampler (hmac : HmacSha512) : ProbComp RootOutput :=
@@ -122,7 +123,8 @@ theorem projectCache_update (hmac : HmacSha512) (cache : ExtractOracle.QueryCach
     (message : Message) (prk : HmacBlock) :
     projectCache hmac (cache.cacheQuery message prk) =
       (projectCache hmac cache).cacheQuery message (expandRoot hmac prk) := by
-  funext other
+  apply QueryCache.ext
+  intro other
   by_cases same : other = message
   · subst other
     simp [projectCache]

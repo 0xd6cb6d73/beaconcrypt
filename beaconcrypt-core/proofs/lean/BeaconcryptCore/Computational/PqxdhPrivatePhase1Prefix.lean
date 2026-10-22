@@ -379,7 +379,7 @@ theorem authentication_bound
     fallback ordinaryFallback (program_create_bound baseImpl kem setup selector selectorNoCreate)
   rw [Fin.sum_univ_succ] at bounded
   refine bounded.trans_eq ?_
-  simp [privateReduction, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+  simp [privateReduction]
 
 /-- Executable test for precisely the charged fresh changed acceptance branch. -/
 def changedBit {setup : StatefulPhase1Setup baseSpec} {Selection : Type} {count : Nat}
@@ -436,13 +436,13 @@ theorem authentication_continuation_bound {Result : Type}
       (SelectorSource (baseSpec := baseSpec) Creating) 0)
     (fallback : DynamicForgery) (ordinaryFallback : Forgery)
     (next onChanged : Option (Outcome (Retained setup KemSK selector.State)) × BareState 1 → ProbComp Result) :
-    tvDist (privateRun attachedVerify primitives 1 (program baseImpl kem setup selector) >>= next)
+    discreteDistance (privateRun attachedVerify primitives 1 (program baseImpl kem setup selector) >>= next)
       (privateRun attachedVerify primitives 1 (program baseImpl kem setup selector) >>= fun state =>
         if changedBit state then onChanged state else next state) ≤
       (advantage primitives (privateReduction primitives baseImpl kem setup selector fallback ordinaryFallback)).toReal := by
-  refine (tvDist_bind_left_event_le (privateRun attachedVerify primitives 1 (program baseImpl kem setup selector))
+  refine (discreteDistance_bind_left_event_le (privateRun attachedVerify primitives 1 (program baseImpl kem setup selector))
     next _ (fun state => changedBit state = true) (fun state good => by simp [good])).trans ?_
-  rw [VCVioLegacy.probEvent_eq_prEvent]
+  skip
   apply ENNReal.toReal_mono (show advantage primitives
     (privateReduction primitives baseImpl kem setup selector fallback ordinaryFallback) ≠ ∞ from prEvent_ne_top _)
   simpa only [changedBit_iff] using authentication_bound attachedVerify primitives adapter baseImpl kem setup selector

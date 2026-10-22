@@ -54,7 +54,7 @@ noncomputable def randomGame (client : OracleComp FamilySpec Bool) : ProbComp Bo
 
 /-- Only the ordinary distinguishing bit appears in this endpoint. No protocol acceptance or freshness predicate occurs. -/
 noncomputable def advantage (hmac : HmacSha512) (client : OracleComp FamilySpec Bool) : ℝ :=
-  (realGame hmac client).boolDistAdvantage (randomGame client)
+  (realGame hmac client).boolDistance (randomGame client)
 
 def root (hmac : HmacSha512) (known : KnownPqxdhRootCoordinates) : OracleComp FamilySpec RootOutput := do
   let prk ← FamilySpec.query (.inr (coordinates known))
@@ -229,10 +229,10 @@ theorem correlated_advantage_eq
     (baseImpl : QueryImpl baseSpec ProbComp)
     (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK)) (protocol : Protocol baseSpec) :
     (simulateQ (kemAmbientImpl baseImpl)
-      (randomMain source kem (runtimeOfImpl (kemAmbientImpl baseImpl)) protocol)).boolDistAdvantage
+      (randomMain source kem (runtimeOfImpl (kemAmbientImpl baseImpl)) protocol)).boolDistance
       (randomGame (reduction source hmac baseImpl kem protocol)) =
       advantage hmac (reduction source hmac baseImpl kem protocol) := by
-  simp only [advantage, ProbComp.boolDistAdvantage, real_eq_correlated source hmac correct]
+  simp only [advantage, ProbComp.boolDistance, real_eq_correlated source hmac correct]
 
 theorem familyInput_message_injective (secret : MlKemSharedSecret) :
     Function.Injective (fun message => familyInput message secret) := by
@@ -292,19 +292,19 @@ theorem authenticated_family_bound
     (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : PqxdhJointIdentity.Forgery)
     (observer : CorrelatedObserver setup selector.State) :
     let protocol := rootProtocol kem parameters attachedVerify primitives setup selector observer
-    (PqxdhCorrelatedRootSource.actualGame baseImpl kem parameters attachedVerify primitives setup selector observer).boolDistAdvantage
+    (PqxdhCorrelatedRootSource.actualGame baseImpl kem parameters attachedVerify primitives setup selector observer).boolDistance
       (randomGame (reduction parameters.source hmac baseImpl kem protocol)) ≤
       (PqxdhJointIdentity.advantage primitives
         (privateReduction primitives baseImpl kem setup selector fallback ordinaryFallback)).toReal +
-      kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
-        (PqxdhChallengeSecretRouting.reduction parameters.source kem protocol).toINDCCA +
+      (kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
+        (PqxdhChallengeSecretRouting.reduction parameters.source kem protocol).toINDCCA).toReal +
       advantage hmac (reduction parameters.source hmac baseImpl kem protocol) := by
   dsimp only
   have authenticated := authenticated_correlated_bound baseImpl kem parameters compatible functional correct
     attachedVerify primitives adapter setup selector selectorNoSign selectorNoCreate fallback ordinaryFallback observer
   have family := correlated_advantage_eq parameters.source hmac sourceCorrect baseImpl kem
     (rootProtocol kem parameters attachedVerify primitives setup selector observer)
-  exact (ProbComp.boolDistAdvantage_triangle _ _ _).trans
+  exact (ProbComp.boolDistance_triangle _ _ _).trans
     (add_le_add authenticated (le_of_eq family))
 
 end BeaconcryptCore.Computational.PqxdhCorrelatedExtractFamily

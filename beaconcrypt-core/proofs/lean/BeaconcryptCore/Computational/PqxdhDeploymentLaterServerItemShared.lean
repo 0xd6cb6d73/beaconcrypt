@@ -60,10 +60,9 @@ theorem groupedClientL_log (setup : Setup baseSpec KemSK) (codec : Codec Reader 
 /-- The native backend of the logged grouped client: the grouped native backend, and the exposed logged accept. -/
 noncomputable def groupedImplL (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (candidate : MlKemSharedSecret) :
-    QueryImpl (GSpecL KemSK Response) (PqxdhRegistrationJointKemEncapsulation.Client KemSK) :=
-  groupedImpl setup codec checks identityIndex publicIdentity candidate +
-    (fun raw => PqxdhDeploymentLaterServerCommands.accept setup codec checks identityIndex publicIdentity raw :
-      QueryImpl AcceptL (PqxdhRegistrationJointKemEncapsulation.Client KemSK))
+    QueryImpl (GSpecL KemSK Response) (PqxdhRegistrationJointKemEncapsulation.Client KemSK)
+  | .inl query => groupedImpl setup codec checks identityIndex publicIdentity candidate query
+  | .inr raw => PqxdhDeploymentLaterServerCommands.accept setup codec checks identityIndex publicIdentity raw
 
 /-- Every step of the marked logged client and of the logged grouped client has the same erased interpretation: source14 requests by `PqxdhRegistrationJointKemPostSkeleton.client_grouped`, and the logged accept and the Server read are the same requests on both sides. -/
 theorem client_groupedL (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)

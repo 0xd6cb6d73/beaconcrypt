@@ -261,6 +261,8 @@ theorem factor_after_uniform (setup : Setup baseSpec KemSK) (codec : Codec Reade
       simp only [bind_pure_comp, StateT.run_map, IsTotalQueryBound, isQueryBound_map_iff]
       exact generic_raw_uniform _ 64 (factored_receive_uniform setup codec _) _ raw _ state
 
+-- The exact 64-byte sampler fact needs extra depth during elaboration and proof linting.
+set_option maxRecDepth 1024 in
 /-- A real Extract-domain table lookup samples at most one 64-byte block; cache hits retain zero draws. -/
 theorem extract_table_uniform (bytes : Pqxdh.Bytes) (cache : PqxdhSecretInputKdf.HmacOracle.QueryCache) :
     ((PqxdhSecretInputKdf.HmacOracle.randomOracle bytes).run cache).IsTotalQueryBound 64 := by

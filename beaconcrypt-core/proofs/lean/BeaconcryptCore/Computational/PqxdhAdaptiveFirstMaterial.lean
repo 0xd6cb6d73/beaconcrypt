@@ -88,12 +88,12 @@ theorem bound (position : (targets selected).number.val = 1)
     (functional : FunctionalDecapsulation kem)
     (hmac : HmacSha512) (correct : PqxdhFullSecretInputKdf.SourceFullCorrect env.source hmac)
     (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : PqxdhJointIdentity.Forgery) :
-    (choose selected <$> PqxdhAdaptiveNativeResult.actual env baseImpl kem attachedVerify primitives program post targets).boolDistAdvantage
+    (choose selected <$> PqxdhAdaptiveNativeResult.actual env baseImpl kem attachedVerify primitives program post targets).boolDistance
       (ideal env baseImpl kem attachedVerify primitives program post targets selected) ≤
     PqxdhAdaptiveCoordinateSecrecy.targetLoss env baseImpl kem attachedVerify primitives program post targets c hmac fallback ordinaryFallback selected := by
   have result := PqxdhAdaptiveCoordinateSecrecy.target_bound env baseImpl kem attachedVerify primitives program post targets c
     selected (by omega) compatible adapter functional hmac correct fallback ordinaryFallback
-  simpa only [ProbComp.boolDistAdvantage,
+  simpa only [ProbComp.boolDistance,
     source env baseImpl kem attachedVerify primitives program post targets selected position] using result
 
 end BeaconcryptCore.Computational.PqxdhAdaptiveFirstMaterial

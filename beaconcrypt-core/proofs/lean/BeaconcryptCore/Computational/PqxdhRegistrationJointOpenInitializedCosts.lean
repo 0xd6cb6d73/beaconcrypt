@@ -27,6 +27,7 @@ theorem lifted_queries (program : OracleComp (PqxdhLiveKemBirth.Spec KemSK) Resu
       simp only [classify, Option.some.injEq] at ih ⊢
       exact and_congr Iff.rfl (forall_congr' fun reply => ih reply _)
 
+set_option backward.isDefEq.respectTransparency false in
 /-- The actual constructor requests one generated identity at most on its generated branch; caller-known import never becomes a generated target or an additional private capability. -/
 theorem constructor_private (sender : Std.U64) (supplied : Option Pqxdh.Bytes) (kind : Kind) :
     (PqxdhRegistrationJointServerBirth.client (KemSK := KemSK) (P := Unit) sender supplied).IsQueryBoundP
@@ -72,6 +73,7 @@ theorem lifted_local_free (program : OracleComp (PqxdhLiveKemBirth.Spec KemSK) R
         reduceCtorEq, not_false_eq_true, true_or, ite_false, true_and]
       exact ih
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Initial construction keeps one initialization allowance and at most one import attempt on the supplied branch, including all rejection paths and arbitrary typed replies. -/
 theorem constructor_local (sender : Std.U64) (supplied : Option Pqxdh.Bytes) (kind : Bool) :
     (PqxdhRegistrationJointServerBirth.client (KemSK := KemSK) (P := Unit) sender supplied).IsQueryBoundP

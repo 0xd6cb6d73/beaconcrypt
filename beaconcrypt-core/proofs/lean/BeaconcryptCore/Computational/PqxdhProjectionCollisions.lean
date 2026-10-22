@@ -3,7 +3,6 @@ import VCVio.OracleComp.QueryTracking.Birthday
 import VCVio.OracleComp.QueryTracking.RandomOracle.DeferredSampling
 import VCVio.OracleComp.SimSemantics.StateT.StateProjection
 import BeaconcryptCore.Computational.VCVioForwardProbabilityTheory
-import BeaconcryptCore.Computational.VCVioLegacyBridge
 
 /-!
 # PQXDH joint-HKDF projection collisions
@@ -18,7 +17,7 @@ The random model exposes a 76-byte answer as independent 32-byte first, 32-byte 
 single public projection without inventing protocol labels or fixed protocol call counts.
 The real-world inequality retains the legacy fixed-public-HKDF/random-table advantage, which is efficiently large in general (`PqxdhPublicKdfCounterexample`). Thus the birthday bound is a random-table result; this module does not discharge computational output noncollision of production HKDF. A useful production transfer still needs a source/distribution-specific reduction that preserves local public evaluation.
 
-Probabilities and output laws are written in VCVio's forward vocabulary: `Pr{let x ← mx}[p x]` for events and outputs and `EvalDistEq A B` (upstream `A =ᵈ B`) for equality in distribution, which replace the deprecated `Pr[p | mx]`, `Pr[= a | mx]` and `𝒮[A] = 𝒮[B]` of VCVio's retiring probability interface and have the same meaning.
+Probabilities use VCVio's native events `Pr{let x ← mx}[p x]`, and `EvalDistEq A B` (`A =ᵈ B`) expresses equality in distribution. The proofs use native answer measures and the structured query-cache interface while retaining the complete joint observation.
 -/
 
 open OracleComp OracleSpec ENNReal
@@ -215,8 +214,7 @@ theorem dependentQueryCache_cacheQuery_comm
     (hne : left ≠ right) :
     (cache.cacheQuery left leftValue).cacheQuery right rightValue =
       (cache.cacheQuery right rightValue).cacheQuery left leftValue := by
-  unfold QueryCache.cacheQuery
-  exact Function.update_comm hne _ _ _
+  exact QueryCache.cacheQuery_comm cache hne leftValue rightValue
 
 open Classical in
 /-- A fresh lazy-oracle coordinate may equivalently be sampled and cached before an arbitrary
@@ -823,11 +821,11 @@ abbrev Projection32RO := Coord32 →ₒ Projection32Value
 /-- Random oracle for exact nonce-coordinate identities. -/
 abbrev Projection12RO := Coord12 →ₒ Projection12Value
 
-noncomputable instance projection32ROIsUniformSpec : IsUniformSpec Projection32RO :=
-  OracleSpec.IsUniformSpec.ofFintypeInhabited _
+noncomputable instance projection32ROIsUniformSpec : UniformAnswerMeasure Projection32RO :=
+  OracleSpec.UniformAnswerMeasure.ofFiniteNonempty _
 
-noncomputable instance projection12ROIsUniformSpec : IsUniformSpec Projection12RO :=
-  OracleSpec.IsUniformSpec.ofFintypeInhabited _
+noncomputable instance projection12ROIsUniformSpec : UniformAnswerMeasure Projection12RO :=
+  OracleSpec.UniformAnswerMeasure.ofFiniteNonempty _
 
 /-- The two mixed-width coordinate oracles, kept as constant-range suboracles. -/
 abbrev ProjectionCoordSpec := Projection32RO + Projection12RO
@@ -2009,8 +2007,9 @@ theorem projection12Value_card : Fintype.card Projection12Value = 2 ^ 96 := by
 open Classical in
 /-- At most one already-populated cache key can be charged for each colliding answer. -/
 private lemma card_cacheQuery_collision_le_support
-    {ι : Type} [DecidableEq ι] {spec : OracleSpec.{0, 0} ι} [spec.DecidableEq]
-    [IsUniformSpec spec]
+    {ι : Type} [DecidableEq ι] {spec : OracleSpec.{0, 0} ι}
+    [∀ t, DecidableEq (spec.Range t)] [∀ t, Fintype (spec.Range t)]
+    [OracleSpec.UniformAnswerMeasure spec]
     {cache₀ : QueryCache spec} {query : spec.Domain}
     {supportKeys : Finset spec.Domain}
     (hnocoll : ¬CacheHasCollision cache₀)
@@ -2620,11 +2619,12 @@ theorem projectionCoordUnifiedRandomImpl_coordinate_run_miss
 /-- Split the unified sum-domain cache into the width-specific pair used by the birthday games. -/
 def projectionCoordUnifiedCacheToPair
     (cache : ProjectionCoordUnifiedCache) : ProjectionCoordCache :=
-  (fun coord => cache (.inl coord), fun coord => cache (.inr coord))
+  (QueryCache.ofFn (fun coord => cache (.inl coord)),
+    QueryCache.ofFn (fun coord => cache (.inr coord)))
 
 /-- Recombine the two width-specific caches into one sum-domain coordinate cache. -/
 def projectionCoordPairCacheToUnified
-    (cache : ProjectionCoordCache) : ProjectionCoordUnifiedCache
+    (cache : ProjectionCoordCache) : ProjectionCoordUnifiedCache := QueryCache.ofFn fun
   | .inl coord => cache.1 coord
   | .inr coord => cache.2 coord
 
@@ -2633,10 +2633,10 @@ def projectionCoordCacheEquiv : ProjectionCoordUnifiedCache ≃ ProjectionCoordC
   toFun := projectionCoordUnifiedCacheToPair
   invFun := projectionCoordPairCacheToUnified
   left_inv cache := by
-    funext query
+    ext query
     cases query <;> rfl
   right_inv cache := by
-    apply Prod.ext <;> funext query <;> rfl
+    apply Prod.ext <;> ext query <;> rfl
 
 @[simp] theorem projectionCoordUnifiedCacheToPair_cacheQuery32
     (cache : ProjectionCoordUnifiedCache) (coord : Coord32)
@@ -2646,12 +2646,12 @@ def projectionCoordCacheEquiv : ProjectionCoordUnifiedCache ≃ ProjectionCoordC
       ((projectionCoordUnifiedCacheToPair cache).1.cacheQuery coord value,
         (projectionCoordUnifiedCacheToPair cache).2) := by
   apply Prod.ext
-  · funext other
+  · ext other
     by_cases heq : other = coord
     · subst other
       simp [projectionCoordUnifiedCacheToPair, QueryCache.cacheQuery]
     · simp [projectionCoordUnifiedCacheToPair, QueryCache.cacheQuery, heq]
-  · funext other
+  · ext other
     simp [projectionCoordUnifiedCacheToPair, QueryCache.cacheQuery]
 
 @[simp] theorem projectionCoordUnifiedCacheToPair_cacheQuery12
@@ -2662,9 +2662,9 @@ def projectionCoordCacheEquiv : ProjectionCoordUnifiedCache ≃ ProjectionCoordC
       ((projectionCoordUnifiedCacheToPair cache).1,
         (projectionCoordUnifiedCacheToPair cache).2.cacheQuery coord value) := by
   apply Prod.ext
-  · funext other
+  · ext other
     simp [projectionCoordUnifiedCacheToPair, QueryCache.cacheQuery]
-  · funext other
+  · ext other
     by_cases heq : other = coord
     · subst other
       simp [projectionCoordUnifiedCacheToPair, QueryCache.cacheQuery]
@@ -2672,7 +2672,7 @@ def projectionCoordCacheEquiv : ProjectionCoordUnifiedCache ≃ ProjectionCoordC
 
 /-- Embed every cached complete stream into one unified entry for each canonical coordinate. -/
 def jointKdfStreamCacheToUnifiedProjectionCoordCache
-    (cache : JointKdfRO.QueryCache) : ProjectionCoordUnifiedCache
+    (cache : JointKdfRO.QueryCache) : ProjectionCoordUnifiedCache := QueryCache.ofFn fun
   | .inl coord => (cache coord.address).map coord.project
   | .inr address => (cache address).map (Coord12.project address)
 
@@ -2794,7 +2794,7 @@ theorem jointKdfStreamCacheToProjectionCoordCache_cacheQuery
         (jointKdfStreamCacheToProjectionCoordCache cache).2.cacheQuery address
           (JointKdfProjection.final12.project stream)) := by
   apply Prod.ext
-  · funext coord
+  · ext coord
     rcases coord with ⟨other, slot⟩
     by_cases haddress : other = address
     · subst other
@@ -2808,7 +2808,7 @@ theorem jointKdfStreamCacheToProjectionCoordCache_cacheQuery
           projectionCoordUnifiedCacheToPair,
           jointKdfStreamCacheToUnifiedProjectionCoordCache,
           QueryCache.cacheQuery, firstCoord, secondCoord, haddress]
-  · funext other
+  · ext other
     by_cases haddress : other = address
     · subst other
       simp [jointKdfStreamCacheToProjectionCoordCache,
@@ -2832,7 +2832,7 @@ theorem jointKdfStreamCacheToUnifiedProjectionCoordCache_cacheQuery
           (.inl (secondCoord address))
           (JointKdfProjection.second32.project stream)).cacheQuery
           (.inr address) (JointKdfProjection.final12.project stream) := by
-  funext query
+  ext query
   rcases query with coord | other
   · rcases coord with ⟨other, slot⟩
     by_cases haddress : other = address
@@ -4689,7 +4689,7 @@ theorem evalSPMF_sourceProjectionObservedFullRandom_eq_deferred
       simp only [QueryImpl.simulateQ_compose,
         simulateQ_jointKdfStreamEagerCoordinate_sourceKdfStreamObservedMain]
       have hempty : jointKdfStreamCacheToUnifiedProjectionCoordCache ∅ = ∅ := by
-        funext query
+        ext query
         rcases query with coord | nonce
         · simp [jointKdfStreamCacheToUnifiedProjectionCoordCache]
         · simp [jointKdfStreamCacheToUnifiedProjectionCoordCache]
@@ -5056,9 +5056,9 @@ theorem sourceProjectionCollision_real_le
         rw [probOutput_collisionReduction_real_eq_sourceEvent]
     _ ≤ Pr{let bit ← fixedHkdfSha512JointStreamRandomExp reduction}[bit = true] +
         ENNReal.ofReal
-          ((fixedHkdfSha512JointStreamRealExp source reduction).boolDistAdvantage
+          ((fixedHkdfSha512JointStreamRealExp source reduction).boolDistance
             (fixedHkdfSha512JointStreamRandomExp reduction)) := by
-      have comparison := VCVioForward.evalDist_apply_true_le_add_ofReal_boolDistAdvantage
+      have comparison := ProbComp.evalDist_apply_true_le_add_ofReal_boolDistance
           (fixedHkdfSha512JointStreamRealExp source reduction)
           (fixedHkdfSha512JointStreamRandomExp reduction)
       rw [prEvent_eq_evalDist_singleton, prEvent_eq_evalDist_singleton]

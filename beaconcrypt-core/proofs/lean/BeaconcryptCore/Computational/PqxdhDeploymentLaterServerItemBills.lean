@@ -289,9 +289,11 @@ theorem groupedClientL_cost (setup : Setup baseSpec KemSK) (codec : Codec Reader
         simp [wGL, wSourceL, laterKind, wSource, sourceKind, PqxdhRegistrationSchedule.sourceKind]))
     · rw [groupedClientL_run setup codec selected challenge identityIndex query (fun raw same => accept ⟨raw, same⟩)
         held]
-      refine wBound_map _ (wBound_simulate _ (wG caps) (wGL caps) (fun query => (wBound_query _ _ _).mpr
-        (wGL_le caps query)) ?_)
-      exact groupedClient_cost setup codec selected challenge caps query held.1
+      have lifted := wBound_simulate
+        (fun q => ((GSpecL KemSK Response).query (.inl q) : OracleComp (GSpecL KemSK Response) _))
+        (wG caps) (wGL caps) (fun query => (wBound_query _ _ _).mpr (wGL_le caps query))
+        (groupedClient_cost (Response := Response) setup codec selected challenge caps query held.1)
+      exact wBound_map _ lifted
   · change WBound ((fun seed => ((seed, held.2), held)) <$>
       simulateQ (fun q => ((GSpecL KemSK Response).query (.inl q) : OracleComp (GSpecL KemSK Response) _))
         (groupedPoolLift (Response := Response) (.inl (.inr (.reveal identityIndex))))) _ _

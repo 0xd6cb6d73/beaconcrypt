@@ -1,5 +1,5 @@
 import BeaconcryptCore.Computational.PqxdhServerAuthAcceptedEntry
-import VCVio.OracleComp.QueryTracking.LoggingOracle
+import VCVio.OracleComp.QueryTracking.LoggingOracle.Core
 
 /-! Chronological observations of the actual public API. Logging is a transformation of the public client, so existing full-continuation simulations apply to the entire joint execution, not merely to its final marginal state. -/
 open OracleComp OracleSpec ENNReal

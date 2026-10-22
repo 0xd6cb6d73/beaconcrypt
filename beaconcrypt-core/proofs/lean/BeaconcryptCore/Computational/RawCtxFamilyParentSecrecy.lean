@@ -59,7 +59,7 @@ noncomputable def native (source : FixedHkdfSha512NoSaltSource) (writer : RawCtx
 theorem local_bound (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
     (continuation : Continuation Context M P I D K A Value S B) (context : Context × Entry)
     (target : RootOutput) (output : FullOutput) :
-    (native source writer continuation context target output).boolDistAdvantage
+    (native source writer continuation context target output).boolDistance
       (RawCtxSelectedParentHop.observer source writer (parent continuation) context output) ≤
       3 * Pr{let x ← RawCtxSelectedParentHop.bad source writer (parent continuation) context target output}[x = true].toReal := by
   have event :
@@ -93,7 +93,7 @@ noncomputable def random (source : FixedHkdfSha512NoSaltSource) (writer : RawCtx
 theorem actual_route (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
     (continuation : Continuation Context M P I D K A Value S B) (sample : ProbComp Context)
     (address : Context → JointKdfAddress) :
-    (actual source writer continuation sample address).boolDistAdvantage
+    (actual source writer continuation sample address).boolDistance
       (RawCtxSelectedParentSecrecy.actual source sample address
         (RawCtxSelectedParentHop.observer source writer (parent continuation))) ≤
       3 * Pr{let pair ← (RawCtxFullPreimageTester.actual (RawCtxFullPreimageTester.production source)
@@ -134,7 +134,7 @@ set_option maxRecDepth 2048 in
 theorem random_route (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
     (continuation : Continuation Context M P I D K A Value S B) (sample : ProbComp Context)
     (address : Context → JointKdfAddress) :
-    (random source writer continuation sample address).boolDistAdvantage
+    (random source writer continuation sample address).boolDistance
       (RawCtxSelectedParentSecrecy.random sample address
         (RawCtxSelectedParentHop.observer source writer (parent continuation))) ≤
       3 * Pr{let pair ← (RawCtxSelectedParentCandidates.uniform sample address
@@ -188,7 +188,7 @@ theorem random_route (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixe
 theorem actual_bound (source : FixedHkdfSha512NoSaltSource) (hmac : HmacSha512) (correct : SourceFullCorrect source hmac)
     (writer : RawCtxMixedShared.Writer) (continuation : Continuation Context M P I D K A Value S B)
     (sample : ProbComp Context) (address : Context → JointKdfAddress) :
-    (actual source writer continuation sample address).boolDistAdvantage
+    (actual source writer continuation sample address).boolDistance
       (RawCtxSelectedParentSecrecy.actual source sample address
         (RawCtxSelectedParentHop.observer source writer (parent continuation))) ≤
       3 * ((2 ^ 352 : ℝ)⁻¹ +
@@ -214,7 +214,7 @@ theorem random_bound (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixe
     (bounded : ∀ context output result,
       result ∈ support (RawCtxSelectedParentHop.observed source writer (parent continuation) context output) →
         (RawCtxSelectedParentHop.candidates result).length ≤ qCandidates) :
-    (random source writer continuation sample address).boolDistAdvantage
+    (random source writer continuation sample address).boolDistance
       (RawCtxSelectedParentSecrecy.random sample address
         (RawCtxSelectedParentHop.observer source writer (parent continuation))) ≤
       3 * ((qCandidates : ℝ) / (2 ^ 256 : ℝ)) := by
@@ -239,23 +239,23 @@ theorem bound (source : FixedHkdfSha512NoSaltSource) (hmac : HmacSha512) (correc
     (bounded : ∀ context output result,
       result ∈ support (RawCtxSelectedParentHop.observed source writer (parent continuation) context output) →
         (RawCtxSelectedParentHop.candidates result).length ≤ qCandidates) :
-    (actual source writer continuation sample address).boolDistAdvantage
+    (actual source writer continuation sample address).boolDistance
       (random source writer continuation sample address) ≤
       RawCtxSelectedParentHop.extractLoss hmac sample address (RawCtxSelectedParentHop.observer source writer (parent continuation)) +
         RawCtxSelectedParentHop.hmacLoss hmac sample address (RawCtxSelectedParentHop.observer source writer (parent continuation)) +
         3 * (RawCtxSelectedParentHop.extractLoss hmac sample address (RawCtxSelectedParentHop.aliasTester source writer (parent continuation)) +
           RawCtxSelectedParentHop.hmacLoss hmac sample address (RawCtxSelectedParentHop.aliasTester source writer (parent continuation)) +
           (2 ^ 352 : ℝ)⁻¹ + (qCandidates : ℝ) / (2 ^ 256 : ℝ)) := by
-  have triangle := (ProbComp.boolDistAdvantage_triangle
+  have triangle := (ProbComp.boolDistance_triangle
     (actual source writer continuation sample address)
     (RawCtxSelectedParentSecrecy.actual source sample address
       (RawCtxSelectedParentHop.observer source writer (parent continuation)))
     (random source writer continuation sample address)).trans
-      (add_le_add le_rfl (ProbComp.boolDistAdvantage_triangle _
+      (add_le_add le_rfl (ProbComp.boolDistance_triangle _
         (RawCtxSelectedParentSecrecy.random sample address
           (RawCtxSelectedParentHop.observer source writer (parent continuation))) _))
   have main : (RawCtxSelectedParentSecrecy.actual source sample address
-      (RawCtxSelectedParentHop.observer source writer (parent continuation))).boolDistAdvantage
+      (RawCtxSelectedParentHop.observer source writer (parent continuation))).boolDistance
         (RawCtxSelectedParentSecrecy.random sample address
           (RawCtxSelectedParentHop.observer source writer (parent continuation))) ≤
       RawCtxSelectedParentHop.extractLoss hmac sample address
@@ -265,9 +265,9 @@ theorem bound (source : FixedHkdfSha512NoSaltSource) (hmac : HmacSha512) (correc
     RawCtxSelectedParentSecrecy.primitive_bound source hmac correct sample address
       (RawCtxSelectedParentHop.observer source writer (parent continuation))
   have back : (RawCtxSelectedParentSecrecy.random sample address
-      (RawCtxSelectedParentHop.observer source writer (parent continuation))).boolDistAdvantage
+      (RawCtxSelectedParentHop.observer source writer (parent continuation))).boolDistance
         (random source writer continuation sample address) ≤ 3 * ((qCandidates : ℝ) / (2 ^ 256 : ℝ)) := by
-    simpa only [ProbComp.boolDistAdvantage, abs_sub_comm] using
+    simpa only [ProbComp.boolDistance, abs_sub_comm] using
       random_bound source writer continuation sample address qCandidates bounded
   exact loss_sum triangle (actual_bound source hmac correct writer continuation sample address) main back
 

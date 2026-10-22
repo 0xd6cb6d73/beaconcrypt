@@ -1,6 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.PqxdhRegistrationCellState
-import VCVio.OracleComp.QueryTracking.LoggingOracle
+import VCVio.OracleComp.QueryTracking.LoggingOracle.Core
 
 /-! The raw public constructor and complete adaptive registration surface preserve the exact native source execution under live-cell representation. Runtime effects and both cryptographic caches remain part of the same program. -/
 open OracleComp OracleSpec CoreModels Aeneas

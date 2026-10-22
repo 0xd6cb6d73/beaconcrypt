@@ -4,7 +4,7 @@ import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemShared
 /-! LQ-F upstream, unit A1: stage S1c of item 2 over the logged source (LQ-F upstream design-v2, section 4.3, module `…ItemSplit`). The main theorem `opaqueBranchL_split` instantiates G1 (`PqxdhExtractRomHiddenSuffix.hidden_suffix_bound`) on the logged prefix and client of stage S1b at coefficient one:
 
 ```text
-(opaqueBranch … false).boolDistAdvantage (splitGame (sharedStartL …) (sharedClientL …)) ≤ (qAccept + qFinish + qHmac) / 2^256
+(opaqueBranch … false).boolDistance (splitGame (sharedStartL …) (sharedClientL …)) ≤ (qAccept + qFinish + qHmac) / 2^256
 ```
 
 The premise is the logged source budget `certified`: caps per source14 kind through `PqxdhDeploymentLaterServerReserve.laterKind`; the Server read has kind `none`, reads no table and needs no cap. The compiled LQ-F program `PqxdhDeploymentLaterServerCompile.compileServer` meets this premise at the transported caps `PqxdhDeploymentLaterServerCompileBudget.laterTransported bounds budget post` (`PqxdhDeploymentLaterServerCompileBudget.compile_server_certified`), whose HMAC cap `qHmac + qHmac₂` adds the post phase's HMAC budget to the run's; at these caps the three caps of the bound add up to `qAccept + qFinish + (qHmac + qHmac₂)` (`PqxdhDeploymentLaterServerItemTargets.later_guess_term`), so post-run HMAC queries enter the guessing term with coefficient one.
@@ -565,7 +565,7 @@ theorem shared_splitL (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
     (certified : ∀ kind, work.IsQueryBoundP
       (fun query => PqxdhDeploymentLaterServerReserve.laterKind (KemSK := KemSK) query = some kind) (budget kind)) :
     (sharedGame (sharedStartL (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count
-        selected index) (sharedClientL setup codec checks decision count selected)).boolDistAdvantage
+        selected index) (sharedClientL setup codec checks decision count selected)).boolDistance
       (splitGame (sharedStartL (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count
         selected index) (sharedClientL setup codec checks decision count selected)) ≤
       (tableBudget budget : ℝ) / 2 ^ 256 := by
@@ -624,7 +624,7 @@ theorem opaqueBranchL_split (setup : Setup baseSpec KemSK) (codec : Codec Reader
     (certified : ∀ kind, work.IsQueryBoundP
       (fun query => PqxdhDeploymentLaterServerReserve.laterKind (KemSK := KemSK) query = some kind) (budget kind)) :
     (opaqueBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index
-        false).boolDistAdvantage
+        false).boolDistance
       (splitGame (sharedStartL (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count
         selected index) (sharedClientL setup codec checks decision count selected)) ≤
       ((budget (.inl 3) + budget (.inl 5) + budget (.inl 6) : ℕ) : ℝ) / 2 ^ 256 := by

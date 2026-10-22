@@ -80,7 +80,7 @@ theorem cachedGuess_implies_completed {Result : Type} {bound : ℕ}
     GuessEvent selector (tableExtending (sourceDictionary terminal.2) tail, terminal) := by
   obtain ⟨index, target, selected, eligible, cached⟩ := won
   refine ⟨index, target, selected, eligible, ?_⟩
-  simp only [tableExtending, sourceDictionary, typedSuffix, List.Vector.toList, cached, Option.getD_some]
+  simp only [tableExtending, sourceDictionary, QueryCache.toFn_ofFn, typedSuffix, List.Vector.toList, cached, Option.getD_some]
 
 /-- The actual persistent cache's eligible final vector costs the same q/2^512 after joint completion. -/
 theorem cachedGuess_bound {Result : Type} {bound : ℕ} (decode : RawDecoder)

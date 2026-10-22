@@ -1,7 +1,6 @@
 import VCVio.OracleComp.QueryTracking.RandomOracle.EagerTable
-import VCVio.OracleComp.Constructions.SampleableType.MeasureCompatibility
+import VCVio.OracleComp.Constructions.SampleableType.Measure
 import BeaconcryptCore.Computational.VCVioForwardOracleComp
-import BeaconcryptCore.Computational.VCVioLegacyBridge
 
 open OracleComp OracleSpec
 set_option autoImplicit false

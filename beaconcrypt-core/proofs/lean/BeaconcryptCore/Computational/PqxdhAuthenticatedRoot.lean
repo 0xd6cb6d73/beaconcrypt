@@ -175,10 +175,10 @@ theorem sourceGame_authentication_hop
     (verifyFn : Ed25519PublicKey → Pqxdh.Bytes → Ed25519Signature → Bool)
     (deterministic : HasDeterministicVerification sigAlg verifyFn)
     (protocol : RootProtocol kem setup selector IdentitySK) :
-    (sourceGame source baseImpl sigAlg kem setup selector verifyFn protocol false).boolDistAdvantage
+    (sourceGame source baseImpl sigAlg kem setup selector verifyFn protocol false).boolDistance
       (sourceGame source baseImpl sigAlg kem setup selector verifyFn protocol true) ≤
-    ((statefulPhase1ToEUFCMA sigAlg kem setup selector).advantage
-      (runtimeOfImpl (kemAmbientImpl baseImpl))).toReal := by
+    (SignatureAlg.unforgeableAdvantage (runtimeOfImpl (kemAmbientImpl baseImpl))
+        (statefulPhase1ToEUFCMA sigAlg kem setup selector)).toReal := by
   simpa [sourceGame, sourceContinuation] using
     privateContinuationAdvantage_le_eufCma baseImpl sigAlg kem setup selector verifyFn deterministic
       (fun state => sourceContinuation source baseImpl kem setup selector verifyFn protocol false state)
@@ -243,17 +243,17 @@ theorem dispatch_finish_eq_source
       toKemOneKeyAdversary, rootInitializer,
       runtimeOfImpl_liftProbComp,
       simulateQ_kemAmbient_liftM_ProbComp,
-      runCommon, target_eq, eligible, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+      runCommon, target_eq, eligible]
   all_goals first
     | exact discard _ _
     | refine EvalDistEq.bind_right _ fun prepared => ?_
       cases prepared with
       | inl decision =>
-        simp [-evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+        simp [ ]
         exact (EvalDistEq.bind_right _ fun _ => OracleComp.EvalDistEq.map_const _ decision).trans
           (OracleComp.EvalDistEq.bind_const _ _)
       | inr ready =>
-        simp [-evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+        simp [ ]
         exact EvalDistEq.bind_right _ fun _ => OracleComp.EvalDistEq.bind_const _ _
 
 set_option backward.isDefEq.respectTransparency false in
@@ -298,15 +298,15 @@ theorem authenticatedRootAdvantage_le_euf_add_kem_add_extract_add_hmac
     let adversary := rootInitializer sigAlg kem setup selector verifyFn protocol
     let sample := secretInputSample baseImpl kem adversary
     let observer := rootObserver source baseImpl kem adversary
-    (sourceGame source baseImpl sigAlg kem setup selector verifyFn protocol false).boolDistAdvantage
+    (sourceGame source baseImpl sigAlg kem setup selector verifyFn protocol false).boolDistance
         (independentInitializerGame source baseImpl kem adversary) ≤
-      ((statefulPhase1ToEUFCMA sigAlg kem setup selector).advantage
-        (runtimeOfImpl (kemAmbientImpl baseImpl))).toReal +
-      kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
-        (toKemOneKeyAdversary source kem adversary).toINDCCA +
-      (extractRealGame hmac sample (extractReduction hmac observer)).boolDistAdvantage
+      (SignatureAlg.unforgeableAdvantage (runtimeOfImpl (kemAmbientImpl baseImpl))
+        (statefulPhase1ToEUFCMA sigAlg kem setup selector)).toReal +
+      (kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
+        (toKemOneKeyAdversary source kem adversary).toINDCCA).toReal +
+      (extractRealGame hmac sample (extractReduction hmac observer)).boolDistance
         (extractUniformGame sample (extractReduction hmac observer)) +
-      (hmacPrfRealGame hmac (expandReduction sample observer)).boolDistAdvantage
+      (hmacPrfRealGame hmac (expandReduction sample observer)).boolDistance
         (hmacPrfRandomGame (expandReduction sample observer)) := by
   dsimp only
   have hroot := initializerAdvantage_le_kem_add_extract_add_hmac source hmac correct baseImpl kem
@@ -314,15 +314,15 @@ theorem authenticatedRootAdvantage_le_euf_add_kem_add_extract_add_hmac
   have heq := sourceGame_filtered_eq_initializerReal source baseImpl sigAlg kem setup selector
     verifyFn protocol
   have hfiltered :
-      (sourceGame source baseImpl sigAlg kem setup selector verifyFn protocol true).boolDistAdvantage
+      (sourceGame source baseImpl sigAlg kem setup selector verifyFn protocol true).boolDistance
         (independentInitializerGame source baseImpl kem
           (rootInitializer sigAlg kem setup selector verifyFn protocol)) =
       (initializerRealGame source baseImpl kem
-        (rootInitializer sigAlg kem setup selector verifyFn protocol)).boolDistAdvantage
+        (rootInitializer sigAlg kem setup selector verifyFn protocol)).boolDistance
         (independentInitializerGame source baseImpl kem
           (rootInitializer sigAlg kem setup selector verifyFn protocol)) := by
-    simp only [ProbComp.boolDistAdvantage, heq]
-  have composed := (ProbComp.boolDistAdvantage_triangle
+    simp only [ProbComp.boolDistance, heq]
+  have composed := (ProbComp.boolDistance_triangle
     (sourceGame source baseImpl sigAlg kem setup selector verifyFn protocol false)
     (sourceGame source baseImpl sigAlg kem setup selector verifyFn protocol true)
     (independentInitializerGame source baseImpl kem

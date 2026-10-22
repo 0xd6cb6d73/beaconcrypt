@@ -15,15 +15,8 @@ variable {n : Nat} {ι KemSK Reader Response E X : Type} {baseSpec : OracleSpec 
 theorem hash_cached (query : CtxRO.Domain) (before : CtxRO.QueryCache)
     (result : CtxDigest × CtxRO.QueryCache)
     (supported : result ∈ support ((ctxRandomOracle query).run before)) :
-    result.2 query = some result.1 := by
-  cases old : before query
-  case none =>
-    rw [ctxRandomOracle, QueryImpl.withCaching_run_none _ old, support_map] at supported
-    obtain ⟨digest, reached, rfl⟩ := supported
-    exact QueryCache.cacheQuery_self before query digest
-  case some digest =>
-    rw [ctxRandomOracle, QueryImpl.withCaching_run_some _ old, support_pure, Set.mem_singleton_iff] at supported
-    simpa only [supported] using old
+    result.2 query = some result.1 :=
+  QueryImpl.withCaching_run_caches uniformSampleImpl query before result supported
 
 /-- Shared ROM sampling only extends the same cache; hits preserve their old digest. -/
 theorem hash_grows (query : CtxRO.Domain) (before : CtxRO.QueryCache)

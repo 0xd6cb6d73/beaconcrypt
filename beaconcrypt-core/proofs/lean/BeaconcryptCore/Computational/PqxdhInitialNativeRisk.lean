@@ -149,7 +149,7 @@ end Source
 /-- The actual empty selective store starts clean independently of the retained initial chain and other private state. -/
 theorem empty_clean (primitive : RawCtxSharedPrimitive.SharedState A) (cursor : RawCtxSelectiveChainGame.Cursor)
     (past : List JointKdfAddress) (privateState : N) (cache : C) :
-    Clean (((primitive, ((fun _ => none), cursor)), past), (privateState, cache)) := rfl
+    Clean (((primitive, (∅, cursor)), past), (privateState, cache)) := rfl
 
 end BeaconcryptCore.Computational.PqxdhInitialNativeRisk
 

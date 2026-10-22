@@ -61,9 +61,9 @@ theorem pointwise {Metadata Auxiliary Result : Type}
     (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
     (sender : Std.U64) (decode : RawCtxReceive.FrameDecoder)
     (client : OracleComp RawCtxSelectedPublicTrace.SourceSpec Result) (cut : Cut Metadata Auxiliary) :
-    tvDist (left source writer sender decode client cut) (right source writer sender decode client cut) ≤
+    discreteDistance (left source writer sender decode client cut) (right source writer sender decode client cut) ≤
       Pr{let result ← left source writer sender decode client cut}[result.1 ∈ RawCtxSelectedTraceOwner.candidates result.2].toReal := by
-  have distance := (tvDist_map_le (fun result => (cut.1.2, (cut.2, result)))
+  have distance := (discreteDistance_map_le (fun result => (cut.1.2, (cut.2, result)))
     ((simulateQ (RawCtxSelectedPublicTrace.sourceImpl source writer
       (RawCtxKdfRequestTable.fullResponse cut.2) sender decode) client).run (cut.1.1.1, (cut.1.1.2, [])))
     (RawCtxSelectedAliasCompiler.consistentGame source writer cut.2 cut.1.2 sender decode client cut.1.1)).trans
@@ -85,7 +85,7 @@ theorem cut_distance {Prior Metadata Auxiliary Result : Type}
     (client : OracleComp RawCtxSelectedPublicTrace.SourceSpec Result)
     (sample : ProbComp Prior)
     (stop : Prior → RatchetMaterial → RawCtxSelectedChainGame.Context Metadata Auxiliary) :
-    tvDist (RawCtxFreshChainCut.observedCut sample stop
+    discreteDistance (RawCtxFreshChainCut.observedCut sample stop
         (RawCtxSelectedPublicTrace.randomObserver source writer sender decode client))
       (sampleCut sample stop >>= right source writer sender decode client) ≤
     Pr{let result ← (RawCtxFreshChainCut.observedCut sample stop
@@ -107,7 +107,7 @@ theorem cut_bound {Prior Metadata Auxiliary Result : Type}
     (kdfBound : client.IsQueryBoundP RawCtxSelectedPublicTrace.IsPublicKdf qKdf)
     (sample : ProbComp Prior)
     (stop : Prior → RatchetMaterial → RawCtxSelectedChainGame.Context Metadata Auxiliary) :
-    tvDist (RawCtxFreshChainCut.observedCut sample stop
+    discreteDistance (RawCtxFreshChainCut.observedCut sample stop
         (RawCtxSelectedPublicTrace.randomObserver source writer sender decode client))
       (sampleCut sample stop >>= right source writer sender decode client) ≤
       (((qSend + 51*qRaw + qKdf : Nat) : ℝ≥0∞) / (2 ^ 256 : ℝ≥0∞)).toReal := by

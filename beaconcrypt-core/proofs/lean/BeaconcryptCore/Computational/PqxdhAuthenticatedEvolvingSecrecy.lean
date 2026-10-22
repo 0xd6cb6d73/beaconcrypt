@@ -61,7 +61,7 @@ theorem coordinate_bound (positive : 0 < number.val)
     (functional : FunctionalDecapsulation kem)
     (hmac : HmacSha512) (correct : SourceFullCorrect env.source hmac)
     (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : PqxdhJointIdentity.Forgery) :
-    (PqxdhInitialRootEventSecrecy.actual env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed).boolDistAdvantage
+    (PqxdhInitialRootEventSecrecy.actual env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed).boolDistance
       (PqxdhInitialSourceSampled.game env.source env.recordWriter env.senderId env.route env.decode actualPrior number.val) ≤
     PqxdhInitialRootEventSecrecy.loss env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed q hmac fallback ordinaryFallback +
       PqxdhEvolvingChainComposition.initialLoss env.source env.recordWriter env.senderId env.route env.decode actualPrior hmac +
@@ -77,7 +77,7 @@ theorem coordinate_bound (positive : 0 < number.val)
       omega)
   have order : number.val - 1 + 1 = number.val := by omega
   rw [order] at chainBound
-  have result := (ProbComp.boolDistAdvantage_triangle
+  have result := (ProbComp.boolDistance_triangle
     (PqxdhInitialRootEventSecrecy.actual env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed)
     (PqxdhInitialPreparedSourceInput.uniformRoot env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed)
     (PqxdhInitialSourceSampled.game env.source env.recordWriter env.senderId env.route env.decode actualPrior number.val)).trans
@@ -91,14 +91,14 @@ theorem bound (positive : 0 < number.val)
     (functional : FunctionalDecapsulation kem)
     (hmac : HmacSha512) (correct : SourceFullCorrect env.source hmac)
     (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : PqxdhJointIdentity.Forgery) :
-    (PqxdhInitialRootEventSecrecy.actual env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed).boolDistAdvantage
+    (PqxdhInitialRootEventSecrecy.actual env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed).boolDistance
       (ideal env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed) ≤
     loss env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed c hmac fallback ordinaryFallback := by
   have sourceBound := coordinate_bound env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed c
     positive compatible adapter functional hmac correct fallback ordinaryFallback
   have aliasBound := PqxdhInitialAliasPrepared.bound env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed
     number.val q (PqxdhInitialPreparedSourceCaps.post_total env baseImpl kem program post c)
-  exact (ProbComp.boolDistAdvantage_triangle
+  exact (ProbComp.boolDistance_triangle
     (PqxdhInitialRootEventSecrecy.actual env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed)
     (PqxdhInitialSourceSampled.game env.source env.recordWriter env.senderId env.route env.decode actualPrior number.val)
     (ideal env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed)).trans

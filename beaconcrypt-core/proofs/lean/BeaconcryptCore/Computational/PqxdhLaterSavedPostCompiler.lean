@@ -92,17 +92,12 @@ theorem record_post_good
         PqxdhSelectedPostDisclosure.Good (insProject result.2).1))) <$> augmentedWork] {true} := by
   classical
   dsimp only
-  rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true]
-  simp only [map_bind, OracleComp.prEvent_bind_eq_tsum]
-  apply tsum_congr
-  intro result
-  congr 1
+  rw [true_mass_eq, true_mass_eq]
+  refine prEvent_bind_congr (m := ProbComp) _ _ _ _ _ fun result => ?_
   have equality := post_source_augmented pre application initial selector aux source writer prior (some parent) key target nonce next
     sender route read mark monitor (post result.1.1)
     (((PqxdhLaterSavedRecord.afterRecord before result.1.2, result.2.1),
       (PqxdhInitialOriginPost.record trace request result.1.1, none, false)), result.2.2) event
-  rw [← true_mass_eq, ← true_mass_eq, ← prEvent_eq_evalDist_singleton _ true,
-    ← prEvent_eq_evalDist_singleton _ true] at equality
   simpa only [insProject, RawCtxSelectedReceiveCompiler.project] using equality
 
 end Record

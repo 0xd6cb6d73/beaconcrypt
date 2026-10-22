@@ -25,9 +25,9 @@ def origin : KernelRef n → Option (Slot n)
 /-- The original request and its actual success reply determine provenance. Refusals do not change it, and append starts without a hidden origin. -/
 def annotate : (query : (WorldSpec n).Domain) → (WorldSpec n).Range query → Origins n → Origins n
   | .inr (.inl (.inr (.installServer keyId _ ref))), success, state =>
-      if success then { state with peers := Function.update state.peers keyId (origin ref) } else state
+      if @Eq Bool success true then { state with peers := Function.update state.peers keyId (origin ref) } else state
   | .inr (.inl (.inr (.installBeacon owner _ ref))), success, state =>
-      if success then { state with owners := Function.update state.owners owner (origin ref) } else state
+      if @Eq Bool success true then { state with owners := Function.update state.owners owner (origin ref) } else state
   | .inr (.inl (.inr (.appendOwner _ _ _))), owner, state =>
       { state with owners := Function.update state.owners owner none }
   | _, _, state => state

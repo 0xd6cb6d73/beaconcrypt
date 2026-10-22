@@ -165,7 +165,7 @@ theorem annotated_query_erase (setup : Setup baseSpec KemSK) (codec : Codec Read
       have equality := congrArg (fun work => (fun reply => (reply, state.2)) <$> work)
         (PqxdhRegistrationJointPreparation.annotated_query_erase setup codec identityIndex kemIndex query state.1)
       simp only [Functor.map_map, PqxdhRegistrationSchedule.callbacks, nativeCoins, StateT.run] at equality ⊢
-      convert equality using 1
+      exact equality
   | inr query =>
       simp only [annotated, onNative_run, PqxdhRegistrationSchedule.callbacks, Functor.map_map]
       exact id_map _

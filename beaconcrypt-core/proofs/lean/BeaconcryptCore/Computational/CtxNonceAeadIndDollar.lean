@@ -2,7 +2,6 @@ import BeaconcryptCore.Computational.CtxNonceAeadIntCtxt
 import VCVio.CryptoFoundations.SecExp
 import VCVio.OracleComp.QueryTracking.QueryBound
 import BeaconcryptCore.Computational.VCVioForwardProbabilityTheory
-import BeaconcryptCore.Computational.VCVioLegacyBridge
 
 /-!
 # Modified nonce-AEAD IND$ reduction for the CTX secret-prefix event
@@ -104,17 +103,13 @@ theorem ctxIndependent_badProbability_eq_prefixBad
   calc
     Pr{let result ← ctxIndependentTagFlaggedBeforeVerify c key adversary}[result.2.2 = true] =
         Pr{let result ← ctxSplitRoutedFlaggedBeforeVerify c key adversary}[result.2.2 = true] := by
-      have equal := OracleComp.ProgramLogic.Relational.probEvent_output_bad_eq'
+      exact (StatefulGoodEvent.bad_probability_eq
         (ctxSplitRoutedWithPrefixFlagImpl c key)
         (ctxIndependentWithPrefixFlagImpl c key)
-        (fun query state output state' => by
-          simpa only [VCVioLegacy.probOutput_eq_prEvent] using
-            ctxSplitRouted_independent_agree_good c key query state output state')
+        (ctxSplitRouted_independent_agree_good c key)
         (ctxSplitRoutedWithPrefixFlagImpl_bad_mono c key)
         (ctxIndependentWithPrefixFlagImpl_bad_mono c key)
-        adversary.main emptyCtxIndependentTagState
-      simp only [VCVioLegacy.probEvent_eq_prEvent] at equal
-      exact equal.symm
+        adversary.main (emptyCtxIndependentTagState, false)).symm
     _ = ctxPrefixBadProbability c key adversary :=
       ctxSplitRouted_badProbability_eq_prefixBad c key adversary
 
@@ -510,7 +505,7 @@ noncomputable def modifiedNonceAeadINDDollarRandomProbeExp
 noncomputable def modifiedNonceAeadINDDollarProbeAdvantage
     (c : Pqxdh.Crypto) {qH : ℕ}
     (adversary : ModifiedNonceAeadINDDollarProbeAdversary qH) : ℝ :=
-  (modifiedNonceAeadINDDollarRealProbeExp c adversary).boolDistAdvantage
+  (modifiedNonceAeadINDDollarRealProbeExp c adversary).boolDistance
     (modifiedNonceAeadINDDollarRandomProbeExp adversary)
 
 /-- The hidden CTX key space has exactly 256 bits. -/
@@ -696,7 +691,7 @@ theorem ctxSecretPrefixQueriedProbability_le_modifiedNonceAeadINDDollar
       exact ctxSecretPrefixQueriedProbability_eq_realProbeReduction c adversary
     _ ≤ Pr{let x ← modifiedNonceAeadINDDollarRandomProbeExp reduction}[x = true] +
           ENNReal.ofReal (modifiedNonceAeadINDDollarProbeAdvantage c reduction) := by
-      have comparison := VCVioForward.evalDist_apply_true_le_add_ofReal_boolDistAdvantage
+      have comparison := ProbComp.evalDist_apply_true_le_add_ofReal_boolDistance
           (modifiedNonceAeadINDDollarRealProbeExp c reduction)
           (modifiedNonceAeadINDDollarRandomProbeExp reduction)
       rw [← prEvent_eq_evalDist_singleton (modifiedNonceAeadINDDollarRealProbeExp c reduction) true,

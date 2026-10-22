@@ -45,9 +45,9 @@ noncomputable def right (fixed : FixedHkdfSha512NoSaltSource)
 theorem pointwise (fixed : FixedHkdfSha512NoSaltSource)
     (selected : Context → Message) (client : Context → OracleComp PqxdhInitialLabelCompiler.Spec Result)
     (cut : Cut Context) :
-    tvDist (left fixed selected client cut) (right fixed selected client cut) ≤
+    discreteDistance (left fixed selected client cut) (right fixed selected client cut) ≤
       Pr{let result ← left fixed selected client cut}[result.1 ∈ result.2.2.2.2].toReal := by
-  have bound := (tvDist_map_le (fun result => (cut.1.2, (cut.2, result))) _ _).trans
+  have bound := (discreteDistance_map_le (fun result => (cut.1.2, (cut.2, result))) _ _).trans
     (distance fixed (selected cut.1.1) cut.1.2 (RawCtxSelectedInitialConstructor.response64 cut.2)
       (client cut.1.1) (∅, []))
   simpa only [left, right, observed, prEvent_map, Function.comp_def] using bound
@@ -56,7 +56,7 @@ theorem pointwise (fixed : FixedHkdfSha512NoSaltSource)
 theorem cut_distance (fixed : FixedHkdfSha512NoSaltSource)
     (selected : Context → Message) (client : Context → OracleComp PqxdhInitialLabelCompiler.Spec Result)
     (sample : ProbComp Context) :
-    tvDist (sampleCut sample >>= left fixed selected client) (sampleCut sample >>= right fixed selected client) ≤
+    discreteDistance (sampleCut sample >>= left fixed selected client) (sampleCut sample >>= right fixed selected client) ≤
       Pr{let result ← sampleCut sample >>= left fixed selected client}[result.1 ∈ result.2.2.2.2].toReal := by
   exact PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind (sampleCut sample)
     (left fixed selected client) (right fixed selected client) (left fixed selected client)
@@ -105,7 +105,7 @@ theorem cut_bound (fixed : FixedHkdfSha512NoSaltSource)
     (selected : Context → Message) (client : Context → OracleComp PqxdhInitialLabelCompiler.Spec Result)
     (sample : ProbComp Context) (budget : Nat)
     (bounded : ∀ context, (client context).IsQueryBoundP IsInitializer budget) :
-    tvDist (sampleCut sample >>= left fixed selected client) (sampleCut sample >>= right fixed selected client) ≤
+    discreteDistance (sampleCut sample >>= left fixed selected client) (sampleCut sample >>= right fixed selected client) ≤
       ((budget : ENNReal) / (2 ^ 256 : ENNReal)).toReal := by
   refine (cut_distance fixed selected client sample).trans ?_
   apply ENNReal.toReal_mono (ENNReal.div_ne_top (ENNReal.natCast_ne_top _) (pow_ne_zero _ (by norm_num)))

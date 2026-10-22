@@ -30,8 +30,13 @@ theorem related_builder (owner : RawCtxProtocolReveals.Owner S B) (number : U64)
     (related : PqxdhLaterChallengeBuilderCoupling.Related owner number first second adversary left right) :
     builderKey left = builderKey right := by
   rcases related with ⟨callback, state, rfl, rfl⟩ | ⟨left, right, rfl, rfl, wrapper⟩
-  · rcases callback with ⟨original, trace, origin⟩
-    rcases original with (record | finish) | builder <;> rfl
+  · have shared (leftWork rightWork : PqxdhInitialBuilderContext.BuildResult →
+        OracleComp (PqxdhInitialPostContext.PostSpec extra S B) Bool) :
+        builderKey (.pending (append leftWork callback, none) state) =
+          builderKey (.pending (append rightWork callback, none) state) := by
+      rcases callback with ⟨original, trace, origin⟩
+      rcases original with (record | finish) | builder <;> rfl
+    exact shared _ _
   · cases left <;> cases right <;> rfl
 
 end BeaconcryptCore.Computational.PqxdhLaterChallengeBuilderObservation

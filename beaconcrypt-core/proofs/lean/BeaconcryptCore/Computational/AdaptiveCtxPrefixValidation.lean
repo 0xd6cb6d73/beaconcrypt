@@ -1,6 +1,5 @@
 import BeaconcryptCore.Computational.AdaptiveCtxLogSimulation
 import BeaconcryptCore.Computational.VCVioForwardProbabilityTheory
-import BeaconcryptCore.Computational.VCVioLegacyBridge
 
 open OracleComp OracleSpec ENNReal
 set_option autoImplicit false
@@ -143,7 +142,7 @@ theorem loggedProbe_le_validationReal {Result : Type} (decode : AdaptiveCtxRecei
     have accepts := keyProbeHit_implies_realValidationCiphertextHit c key
       (chooseFreshCtxNonce (result.1.2.map (fun entry => entry.input.nonce)))
       (ctxPrefixProbeVector qHash result.1.1.2.ctx.publicInputs) hit
-    simp [hit, ctxValidationAccept, accepts, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+    simp [hit, ctxValidationAccept, accepts]
   · simp only [prEvent_pure, decide_eq_true_eq, hit, ite_false, zero_le]
 
 /-- The logged source's candidate-hit event has an ordinary conventional IND$ reduction and an explicit 128-bit validation term. -/
@@ -156,7 +155,7 @@ theorem loggedProbe_le_indDollar {Result : Type} (decode : AdaptiveCtxReceive.Ra
         (qHash : ℝ≥0∞) * (((2 ^ 128 : ℕ) : ℝ≥0∞))⁻¹ := by
   rw [← loggedProbeExp_probability]
   apply (loggedProbe_le_validationReal decode c adversary qHash qSeal bounded small).trans
-  have comparison := VCVioForward.evalDist_apply_true_le_add_ofReal_boolDistAdvantage
+  have comparison := ProbComp.evalDist_apply_true_le_add_ofReal_boolDistance
     (modifiedNonceAeadINDDollarRealExp c (validationReduction decode c adversary qHash))
     (modifiedNonceAeadINDDollarRandomExp (validationReduction decode c adversary qHash))
   rw [← prEvent_eq_evalDist_singleton
@@ -171,22 +170,8 @@ theorem loggedProbe_le_indDollar {Result : Type} (decode : AdaptiveCtxReceive.Ra
 /-- Any fixed terminal event can be transported across full-state total variation without exposing the retained state to the adversary. -/
 theorem probEvent_le_add_ofReal_tvDist {Result : Type} (left right : ProbComp Result)
     (event : Result → Prop) :
-    Pr{let x ← left}[event x] ≤ Pr{let x ← right}[event x] + ENNReal.ofReal (tvDist left right) := by
-  classical
-  let decideEvent := fun result => decide (event result)
-  have comparison := VCVioForward.evalDist_apply_true_le_add_ofReal_boolDistAdvantage
-    (decideEvent <$> left) (decideEvent <$> right)
-  rw [← prEvent_eq_evalDist_singleton (decideEvent <$> left) true,
-    ← prEvent_eq_evalDist_singleton (decideEvent <$> right) true, prEvent_map, prEvent_map] at comparison
-  have variation : (decideEvent <$> left).boolDistAdvantage (decideEvent <$> right) ≤ tvDist left right := by
-    rw [ProbComp.boolDistAdvantage]
-    simpa only [VCVioLegacy.evalDist_singleton_eq_probOutput] using
-      (abs_probOutput_toReal_sub_le_tvDist _ _).trans (tvDist_map_le decideEvent left right)
-  calc
-    Pr{let x ← left}[event x] ≤ Pr{let x ← right}[event x] +
-        ENNReal.ofReal ((decideEvent <$> left).boolDistAdvantage (decideEvent <$> right)) := by
-      simpa only [decideEvent, decide_eq_true_eq] using comparison
-    _ ≤ _ := add_le_add le_rfl (ENNReal.ofReal_le_ofReal variation)
+    Pr{let x ← left}[event x] ≤ Pr{let x ← right}[event x] + ENNReal.ofReal (discreteDistance left right) := by
+  exact prEvent_le_prEvent_add_ofReal_discreteDistance left right event
 
 /-- Only the actual independent source run needs a trace-length theorem. The fixed candidate-vector event can then be transported unchanged to the logged world. -/
 theorem independent_prefix_eq_probe {Result : Type} (decode : AdaptiveCtxReceive.RawDecoder)
@@ -238,7 +223,7 @@ theorem routed_distance_le_indDollar_add_two_intctxt {Result : Type}
     (sealBound : adversary.IsQueryBoundP AdaptiveCtxQueryBounds.SourceSeal qSeal)
     (rawBound : adversary.IsQueryBoundP AdaptiveCtxReceive.IsRawQuery qRaw)
     (small : qSeal < 2 ^ 96) :
-    ENNReal.ofReal (tvDist (AdaptiveCtxPrefix.retainedRoutedGame decode c adversary)
+    ENNReal.ofReal (discreteDistance (AdaptiveCtxPrefix.retainedRoutedGame decode c adversary)
       (retainedLoggedGame decode c adversary)) ≤
       ENNReal.ofReal (modifiedNonceAeadINDDollarAdvantage c (validationReduction decode c adversary qHash)) +
         (qHash : ℝ≥0∞) * (((2 ^ 128 : ℕ) : ℝ≥0∞))⁻¹ +
@@ -355,7 +340,7 @@ theorem canonical_distance_le_indDollar_add_two_intctxt {Result : Type}
     (sealBound : adversary.IsQueryBoundP AdaptiveCtxQueryBounds.SourceSeal qSeal)
     (rawBound : adversary.IsQueryBoundP AdaptiveCtxReceive.IsRawQuery qRaw)
     (small : qSeal < 2 ^ 96) :
-    ENNReal.ofReal (tvDist (canonicalProjection <$> retainedCanonicalGame decode c adversary)
+    ENNReal.ofReal (discreteDistance (canonicalProjection <$> retainedCanonicalGame decode c adversary)
       (retainedLoggedGame decode c adversary)) ≤
       ENNReal.ofReal (modifiedNonceAeadINDDollarAdvantage c (validationReduction decode c adversary qHash)) +
         (qHash : ℝ≥0∞) * (((2 ^ 128 : ℕ) : ℝ≥0∞))⁻¹ +

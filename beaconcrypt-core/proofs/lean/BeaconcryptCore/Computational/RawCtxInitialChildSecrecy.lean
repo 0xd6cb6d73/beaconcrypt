@@ -73,10 +73,10 @@ theorem actual_source {Context : Type} (source : FixedHkdfSha512NoSaltSource)
 theorem primitive_bound {Context : Type} (source : FixedHkdfSha512NoSaltSource)
     (hmac : HmacSha512) (correct : SourceFullCorrect source hmac)
     (prior : ProbComp Context) (second : Context → Bool) (observe : FullObserver (Context × RootOutput)) :
-    (actual source prior second observe).boolDistAdvantage (random prior second observe) ≤
-      (extractRealGame hmac (joint prior second) (fullExtractReduction hmac .ratchet observe)).boolDistAdvantage
+    (actual source prior second observe).boolDistance (random prior second observe) ≤
+      (extractRealGame hmac (joint prior second) (fullExtractReduction hmac .ratchet observe)).boolDistance
         (extractUniformGame (joint prior second) (fullExtractReduction hmac .ratchet observe)) +
-      (hmacPrfRealGame hmac (fullExpandReduction .ratchet (joint prior second) observe)).boolDistAdvantage
+      (hmacPrfRealGame hmac (fullExpandReduction .ratchet (joint prior second) observe)).boolDistance
         (hmacPrfRandomGame (fullExpandReduction .ratchet (joint prior second) observe)) := by
   simpa only [actual_source, random] using
     sourceFullAdvantage_le_extract_add_hmac source hmac correct .ratchet (joint prior second) observe

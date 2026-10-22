@@ -1,3 +1,4 @@
+import BeaconcryptCore.Computational.BooleanDistance
 import BeaconcryptCore.Computational.PqxdhJointKdf
 import VCVio.CryptoFoundations.SecExp
 import VCVio.OracleComp.QueryTracking.QueryBound
@@ -136,8 +137,8 @@ abbrev JointKdfViewAdversarySpec := unifSpec + JointKdfViewSpec
 abbrev FixedHkdfSha512JointStreamSpec := unifSpec + JointKdfRO
 
 /-- The random challenge interprets every complete-stream answer as uniform. -/
-noncomputable instance jointKdfROIsUniformSpec : IsUniformSpec JointKdfRO :=
-  OracleSpec.IsUniformSpec.ofFintypeInhabited _
+noncomputable instance jointKdfROIsUniformSpec : UniformAnswerMeasure JointKdfRO :=
+  OracleSpec.UniformAnswerMeasure.ofFiniteNonempty _
 
 /-- Forward every projection through exactly one canonical complete-stream query. -/
 def jointKdfViewForwardImpl :
@@ -692,7 +693,7 @@ This legacy mathematical endpoint is efficiently distinguishable by public evalu
 noncomputable def fixedHkdfSha512JointStreamAdvantage
     (source : FixedHkdfSha512NoSaltSource) {qU qKdf : ℕ}
     (adversary : FixedHkdfSha512JointStreamAdversary qU qKdf) : ℝ :=
-  (fixedHkdfSha512JointStreamRealExp source adversary).boolDistAdvantage
+  (fixedHkdfSha512JointStreamRealExp source adversary).boolDistance
     (fixedHkdfSha512JointStreamRandomExp adversary)
 
 /-- Real experiment exposed through the exact public projection component. -/
@@ -710,7 +711,7 @@ noncomputable def jointKdfViewRandomExp {qU qKdf : ℕ}
 noncomputable def jointKdfViewAdvantage
     (source : FixedHkdfSha512NoSaltSource) {qU qKdf : ℕ}
     (adversary : JointKdfViewAdversary qU qKdf) : ℝ :=
-  (jointKdfViewRealExp source adversary).boolDistAdvantage
+  (jointKdfViewRealExp source adversary).boolDistance
     (jointKdfViewRandomExp adversary)
 
 /-- Forwarding reproduces the public real world exactly. -/

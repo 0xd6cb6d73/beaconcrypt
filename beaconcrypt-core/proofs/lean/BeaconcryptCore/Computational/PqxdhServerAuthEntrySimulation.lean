@@ -109,12 +109,12 @@ theorem probEvent_le_until_bad {α σ₁ σ₂ : Type}
     (excludes : ∀ result, event₁ result → ¬ bad₁ result.2)
     (implies : ∀ left right, left.1 = right.1 → related left.2 right.2 → event₁ left → event₂ right) :
     Pr{let x ← (simulateQ impl₁ work).run state₁}[event₁ x] ≤ Pr{let x ← (simulateQ impl₂ work).run state₂}[event₂ x] :=
-  (VCVioLegacy.probEvent_eq_prEvent _ event₁).symm.le.trans <| (probEvent_le_of_relTriple
+  prEvent_le_of_relTriple
     (relTriple_until_bad impl₁ impl₂ related bad₁ bad₂ keeps₁ keeps₂ step work state₁ state₂ (Or.inl start))
     fun left right post holds => by
       rcases post with ⟨same, rel⟩ | ⟨leftBad, _⟩
       · exact implies left right same rel holds
-      · exact absurd leftBad (excludes left holds)).trans (VCVioLegacy.probEvent_eq_prEvent _ event₂).le
+      · exact absurd leftBad (excludes left holds)
 
 /-- Once the eager value has been consumed, the eager and lazy handlers agree on every simulation. -/
 theorem done_run {α σ V : Type} (lazy : QueryImpl spec (StateT σ ProbComp))

@@ -28,14 +28,14 @@ theorem family_bound {count : Nat} (decode : Fin (count + 1) → RawDecoder) (c 
     (sealBound : ∀ target, client.IsQueryBoundP (SelectionClass target (TargetClass SourceSeal)) (qSeal target))
     (rawBound : ∀ target, client.IsQueryBoundP (SelectionClass target (TargetClass IsRawQuery)) (qRaw target))
     (small : ∀ target, qSeal target < 2 ^ 96) :
-    (Prod.fst <$> sourceGame (fun _ => true) decode c client).boolDistAdvantage
+    (Prod.fst <$> sourceGame (fun _ => true) decode c client).boolDistance
       (AdaptiveCtxSharedReplayCompiler.randomView decode c client) ≤
       (∑ target : Fin (count + 1), (loss target decode c fallback client (qHash target) (qRaw target)).toReal) +
         ∑ target : Fin (count + 1), modifiedNonceAeadINDDollarAdvantage c (privacyReduction target decode c client) := by
   have integrity := AdaptiveCtxSharedMultiKeyIntegrity.family_bound decode c fallback client qHash qSeal qRaw
     hashBound sealBound rawBound small
   simp only [game, first_flags, final_flags] at integrity
-  exact (ProbComp.boolDistAdvantage_triangle _ _ _).trans
+  exact (ProbComp.boolDistance_triangle _ _ _).trans
     (add_le_add integrity (AdaptiveCtxSharedReplayCompiler.replay_privacy_bound decode c client))
 
 /-- Global public/seal/raw caps instantiate each selected integrity ledger before the same privacy compiler is applied. -/
@@ -46,14 +46,14 @@ theorem global_family_bound {count : Nat} (decode : Fin (count + 1) → RawDecod
     (sealBound : client.IsQueryBoundP (AdaptiveCtxSharedMultiKeyBounds.SourceClass SourceSeal) qSeal)
     (rawBound : client.IsQueryBoundP (AdaptiveCtxSharedMultiKeyBounds.SourceClass IsRawQuery) qRaw)
     (small : qSeal < 2 ^ 96) :
-    (Prod.fst <$> sourceGame (fun _ => true) decode c client).boolDistAdvantage
+    (Prod.fst <$> sourceGame (fun _ => true) decode c client).boolDistance
       (AdaptiveCtxSharedReplayCompiler.randomView decode c client) ≤
       (∑ target : Fin (count + 1), (loss target decode c fallback client (qPublic + (qSeal + qRaw)) qRaw).toReal) +
         ∑ target : Fin (count + 1), modifiedNonceAeadINDDollarAdvantage c (privacyReduction target decode c client) := by
   have integrity := AdaptiveCtxSharedMultiKeyBounds.global_family_bound decode c fallback client qPublic qSeal qRaw
     hashBound sealBound rawBound small
   simp only [game, first_flags, final_flags] at integrity
-  exact (ProbComp.boolDistAdvantage_triangle _ _ _).trans
+  exact (ProbComp.boolDistance_triangle _ _ _).trans
     (add_le_add integrity (AdaptiveCtxSharedReplayCompiler.replay_privacy_bound decode c client))
 
 end BeaconcryptCore.Computational.AdaptiveCtxSharedMultiKeyPrivacy

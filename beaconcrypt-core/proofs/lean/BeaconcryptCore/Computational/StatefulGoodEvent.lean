@@ -7,22 +7,23 @@ output/event corollaries.
 -/
 
 import VCVio.ProgramLogic.Relational.SimulateQ
-import BeaconcryptCore.Computational.VCVioLegacyBridge
+import BeaconcryptCore.Computational.VCVioForwardOracleComp
+import BeaconcryptCore.Computational.DiscreteDistance
 
 /-!
 Exact agreement of arbitrary events restricted to the original good final state. Both simulations retain the same complete result/state type, and their common initial bad flag may already be set. The only premises are the existing non-bad one-step output agreement and sticky bad flags. No probability bound on disclosures or conditioning on freshness is introduced. The private support and pointwise inductions reproduce the checked VCVio heterogeneous identical-until-bad argument because its corresponding output-good helper is private; no VCVio source is modified.
 
-The statements use the forward event vocabulary `Pr{let x ← mx}[x = a]` and `Pr{let x ← mx}[p x]`, which replaces the deprecated `Pr[= a | mx]` and `Pr[p | mx]` of VCVio's retiring probability interface and has the same meaning. Over an arbitrary specification with uniform answers the pinned VCVio interprets these events through its `SPMF` semantics, whose output-sum laws are still stated in the deprecated form, so the two inductive proofs convert through the `BeaconcryptCore.VCVioLegacy.oracleComp_*` bridges, which are proved from the pin and are deleted at the VCVio upgrade.
+The statements use native event probabilities under an arbitrary specification with uniform answer measures. The inductive proofs use VCVio's sums of singleton event probabilities directly; they require no legacy probability adapter or measurable structure on the complete result and state.
 -/
 
 open OracleComp OracleSpec ENNReal
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.StatefulGoodEvent
 variable {ι : Type} {spec : OracleSpec ι}
-variable {ι' : Type} {spec' : OracleSpec ι'} [IsUniformSpec spec']
+variable {ι' : Type} {spec' : OracleSpec ι'} [UniformAnswerMeasure spec']
 variable {α σ : Type}
 
-omit [IsUniformSpec spec'] in
+omit [UniformAnswerMeasure spec'] in
 private lemma support_bad
     (impl : QueryImpl spec (StateT (σ × Bool) (OracleComp spec')))
     (h_mono : ∀ (t : spec.Domain) (p : σ × Bool), p.2 = true →
@@ -65,21 +66,20 @@ private lemma output_good_false
     (oa : OracleComp spec α) (s₀ : σ) (x : α) (s : σ) :
     Pr{let y ← (simulateQ impl₁ oa).run (s₀, false)}[y = (x, (s, false))] =
       Pr{let y ← (simulateQ impl₂ oa).run (s₀, false)}[y = (x, (s, false))] := by
-  simp only [← BeaconcryptCore.VCVioLegacy.oracleComp_probOutput_eq_prEvent] at h_agree_good ⊢
+  let : ∀ t, Finite (spec'.Range t) := fun t => UniformAnswerMeasure.finite_range t
   induction oa using OracleComp.inductionOn generalizing s₀ with
   | pure a =>
     simp only [simulateQ_pure]
   | query_bind t oa ih =>
     simp only [simulateQ_bind, simulateQ_query, OracleQuery.input_query,
       OracleQuery.cont_query, id_map, StateT.run_bind]
-    rw [probOutput_bind_eq_tsum, probOutput_bind_eq_tsum]
+    rw [prEvent_bind_eq_tsum, prEvent_bind_eq_tsum]
     refine tsum_congr ?_
     rintro ⟨u, ⟨s', b⟩⟩
     cases b with
     | true =>
       have h₁ := output_bad_zero impl₁ h_mono₁ (oa u) (s', true) rfl x s
       have h₂ := output_bad_zero impl₂ h_mono₂ (oa u) (s', true) rfl x s
-      simp only [← BeaconcryptCore.VCVioLegacy.oracleComp_probOutput_eq_prEvent] at h₁ h₂
       simp [h₁, h₂]
     | false =>
       rw [h_agree_good t s₀ u s', ih u s']
@@ -117,14 +117,62 @@ theorem event_good
     (client : OracleComp spec α) (initial : σ × Bool) (event : α × σ × Bool → Prop) :
     Pr{let result ← (simulateQ impl₁ client).run initial}[event result ∧ result.2.2 = false] =
     Pr{let result ← (simulateQ impl₂ client).run initial}[event result ∧ result.2.2 = false] := by
+  let : ∀ t, Finite (spec'.Range t) := fun t => UniformAnswerMeasure.finite_range t
   classical
   have good := output_good impl₁ impl₂ agree_good sticky₁ sticky₂ client initial
-  simp only [← BeaconcryptCore.VCVioLegacy.oracleComp_probOutput_eq_prEvent] at good
-  simp only [← BeaconcryptCore.VCVioLegacy.oracleComp_probEvent_eq_prEvent]
-  rw [probEvent_eq_tsum_ite, probEvent_eq_tsum_ite]
+  rw [prEvent_eq_tsum_ite, prEvent_eq_tsum_ite]
   refine tsum_congr ?_
   rintro ⟨value, state, flag⟩
   cases flag <;> simp [good value state]
+
+/-- Complete-output real distance is bounded by the original final bad-flag probability. -/
+theorem distance_le_bad
+    (impl₁ impl₂ : QueryImpl spec (StateT (σ × Bool) (OracleComp spec')))
+    (agree_good : ∀ (t : spec.Domain) (s : σ) (u : spec.Range t) (s' : σ),
+      Pr{let x ← (impl₁ t).run (s, false)}[x = (u, (s', false))] =
+        Pr{let x ← (impl₂ t).run (s, false)}[x = (u, (s', false))])
+    (sticky₁ : ∀ (t : spec.Domain) (p : σ × Bool), p.2 = true →
+      ∀ z ∈ support ((impl₁ t).run p), z.2.2 = true)
+    (sticky₂ : ∀ (t : spec.Domain) (p : σ × Bool), p.2 = true →
+      ∀ z ∈ support ((impl₂ t).run p), z.2.2 = true)
+    (client : OracleComp spec α) (initial : σ × Bool) :
+    discreteDistance ((simulateQ impl₁ client).run initial)
+        ((simulateQ impl₂ client).run initial) ≤
+      (Pr{let result ← (simulateQ impl₁ client).run initial}[result.2.2 = true]).toReal := by
+  let : ∀ t, Finite (spec'.Range t) := fun t => UniformAnswerMeasure.finite_range t
+  exact discreteDistance_simulateQ_run_le_prEvent_bad
+    impl₁ impl₂ (fun state => state.2 = true)
+    (fun query state hgood q => by
+      rcases state with ⟨state, flag⟩
+      have hflag : flag = false := by simpa using hgood
+      subst flag
+      exact OracleComp.ProgramLogic.Relational.prEvent_and_not_flag_eq_of_forall_prEvent_eq
+        (agree_good query state) q)
+    sticky₁ sticky₂ client initial
+
+/-- Sticky simulations with the same complete good outputs have the same final bad-flag probability. -/
+theorem bad_probability_eq
+    (impl₁ impl₂ : QueryImpl spec (StateT (σ × Bool) (OracleComp spec')))
+    (agree_good : ∀ (t : spec.Domain) (s : σ) (u : spec.Range t) (s' : σ),
+      Pr{let x ← (impl₁ t).run (s, false)}[x = (u, (s', false))] =
+        Pr{let x ← (impl₂ t).run (s, false)}[x = (u, (s', false))])
+    (sticky₁ : ∀ (t : spec.Domain) (p : σ × Bool), p.2 = true →
+      ∀ z ∈ support ((impl₁ t).run p), z.2.2 = true)
+    (sticky₂ : ∀ (t : spec.Domain) (p : σ × Bool), p.2 = true →
+      ∀ z ∈ support ((impl₂ t).run p), z.2.2 = true)
+    (client : OracleComp spec α) (initial : σ × Bool) :
+    Pr{let result ← (simulateQ impl₁ client).run initial}[result.2.2 = true] =
+      Pr{let result ← (simulateQ impl₂ client).run initial}[result.2.2 = true] := by
+  let : ∀ t, Finite (spec'.Range t) := fun t => UniformAnswerMeasure.finite_range t
+  exact OracleComp.ProgramLogic.Relational.prEvent_simulateQ_run_bad_eq
+    impl₁ impl₂ (fun state => state.2 = true)
+    (fun query state hgood q => by
+      rcases state with ⟨state, flag⟩
+      have hflag : flag = false := by simpa using hgood
+      subst flag
+      exact OracleComp.ProgramLogic.Relational.prEvent_and_not_flag_eq_of_forall_prEvent_eq
+        (agree_good query state) q)
+    sticky₁ sticky₂ client initial
 
 end BeaconcryptCore.Computational.StatefulGoodEvent
 
@@ -139,3 +187,19 @@ info: 'BeaconcryptCore.Computational.StatefulGoodEvent.event_good' depends on ax
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.StatefulGoodEvent.event_good
+
+/--
+info: 'BeaconcryptCore.Computational.StatefulGoodEvent.distance_le_bad' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.StatefulGoodEvent.distance_le_bad
+
+/--
+info: 'BeaconcryptCore.Computational.StatefulGoodEvent.bad_probability_eq' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.StatefulGoodEvent.bad_probability_eq

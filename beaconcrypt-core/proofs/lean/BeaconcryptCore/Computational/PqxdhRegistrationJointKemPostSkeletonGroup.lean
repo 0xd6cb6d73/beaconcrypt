@@ -138,9 +138,9 @@ noncomputable def groupNative (setup : Setup baseSpec KemSK) (codec : Codec Read
 /-- The native backend of the grouped interface: the source backend, and the grouped finish. -/
 noncomputable def groupedImpl (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (candidate : MlKemSharedSecret) :
-    QueryImpl (GSpec KemSK Response) (PqxdhRegistrationJointKemEncapsulation.Client KemSK) :=
-  PqxdhRegistrationJointKemEncapsulation.impl setup codec checks identityIndex publicIdentity +
-    groupNative setup codec candidate
+    QueryImpl (GSpec KemSK Response) (PqxdhRegistrationJointKemEncapsulation.Client KemSK)
+  | .inl query => PqxdhRegistrationJointKemEncapsulation.impl setup codec checks identityIndex publicIdentity query
+  | .inr pending => groupNative setup codec candidate pending
 
 theorem ctxClient_run {α : Type} (work : StateT (RawCtxSharedPrimitive.SharedState Unit) ProbComp α)
     (state : NativeState KemSK) :

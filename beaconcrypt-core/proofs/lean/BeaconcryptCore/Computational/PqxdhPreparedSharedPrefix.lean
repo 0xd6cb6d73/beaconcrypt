@@ -35,7 +35,7 @@ noncomputable def input (start : Input) : Input :=
 
 noncomputable def state (start : Input) (output : HmacBlock) : Local A (BareState 1) RootOracle.QueryCache := {
   shared := start.shared.1
-  store := (fun _ => none, ⟨PqxdhInitialSourceExperiment.root original.source zeroRoot
+  store := (∅, ⟨PqxdhInitialSourceExperiment.root original.source zeroRoot
     (RawCtxSelectedInitialConstructor.response64 output) start.selected, 0⟩)
   inputs := []
   privateState := start.privateState

@@ -351,7 +351,8 @@ theorem oneKeyFairProgram_eq
     (baseImpl : QueryImpl baseSpec ProbComp)
     (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK)) (adversary : OneKeyAdversary kem) :
     𝒟[oneKeyFairProgram baseImpl kem adversary] =
-      kem.IND_CCA_Game (runtimeOfImpl (kemAmbientImpl baseImpl)) adversary.toINDCCA := by
+      (runtimeOfImpl (kemAmbientImpl baseImpl)).evalDist
+        (kem.IND_CCA_Game (runtimeOfImpl (kemAmbientImpl baseImpl)) adversary.toINDCCA) := by
   simp only [oneKeyFairProgram, KEMScheme.IND_CCA_Game, OneKeyAdversary.toINDCCA,
     oneKeyPrefix, oneKeyFinish, simulateQ_bind, simulateQ_pure, bind_assoc, pure_bind,
     runtimeOfImpl_evalDist]

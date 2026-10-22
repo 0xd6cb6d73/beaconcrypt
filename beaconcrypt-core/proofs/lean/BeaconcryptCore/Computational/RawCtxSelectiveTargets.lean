@@ -94,7 +94,7 @@ theorem event_partition {Choice Result : Type} [Fintype Choice] [DecidableEq Cho
   refine tsum_congr fun result => ?_
   generalize Pr{let y ← game}[y = result] = mass
   cases selected : select result with
-  | none => simp [anyEvent, selectedEvent, selected, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+  | none => simp [anyEvent, selectedEvent, selected]
   | some target =>
     by_cases accepted : win target result
     · have filtered : Finset.univ.filter (fun other => target = other ∧ win other result) = {target} := by
@@ -105,10 +105,8 @@ theorem event_partition {Choice Result : Type} [Fintype Choice] [DecidableEq Cho
         · intro equal
           subst other
           exact ⟨rfl, accepted⟩
-      simp [anyEvent, selectedEvent, selected, accepted, filtered, -evalDist_apply_singleton, -evalDist_apply_setOf,
-        -evalDist_apply_univ]
-    · simp [anyEvent, selectedEvent, selected, accepted, -evalDist_apply_singleton, -evalDist_apply_setOf,
-        -evalDist_apply_univ]
+      simp [anyEvent, selectedEvent, selected, accepted, filtered]
+    · simp [anyEvent, selectedEvent, selected, accepted]
 
 /-- Fixed-target reductions are summed over the adversary's original final-choice partition. -/
 theorem selection_sum {Choice Result : Type} [Fintype Choice] [DecidableEq Choice]

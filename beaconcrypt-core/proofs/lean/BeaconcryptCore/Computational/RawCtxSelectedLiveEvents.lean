@@ -28,15 +28,10 @@ theorem event_good {Metadata Auxiliary Result : Type} {serverCount beaconCount :
         sender decode owner (nativeReader target)) client).run state)}[event result ∧ result.2.2 = false] =
     Pr{let result ← ((simulateQ (observedImpl source writer (RawCtxKdfRequestTable.fullResponse output)
         sender decode owner labelRead) client).run state)}[event result ∧ result.2.2 = false] := by
-  have good := StatefulGoodEvent.event_good _ _
-    (fun query before reply after => by
-      rw [← VCVioLegacy.oracleComp_probEvent_eq_prEvent, ← VCVioLegacy.oracleComp_probEvent_eq_prEvent]
-      exact (VCVioLegacy.probEvent_eq_prEvent _ _).trans
-        ((agree_good source writer (RawCtxKdfRequestTable.fullResponse output) sender decode owner target query before reply after).trans (VCVioLegacy.probEvent_eq_prEvent _ _).symm))
+  exact StatefulGoodEvent.event_good _ _
+    (agree_good source writer (RawCtxKdfRequestTable.fullResponse output) sender decode owner target)
     (sticky source writer _ sender decode owner (nativeReader target))
     (sticky source writer _ sender decode owner labelRead) client state event
-  rw [← VCVioLegacy.oracleComp_probEvent_eq_prEvent, ← VCVioLegacy.oracleComp_probEvent_eq_prEvent] at good
-  exact (VCVioLegacy.probEvent_eq_prEvent _ _).symm.trans (good.trans (VCVioLegacy.probEvent_eq_prEvent _ _))
 
 /-- Excluding the recorded direct disclosure removes its additive probability term; alias loss still uses the actual complete masked candidate list. -/
 theorem good_alias_bound {Metadata Auxiliary Result : Type} {serverCount beaconCount : Nat}

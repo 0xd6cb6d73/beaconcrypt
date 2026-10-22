@@ -82,6 +82,7 @@ def routeImport : (PqxdhRegistrationJointReportLift.Spec PqxdhRegistrationJointI
   | .inl (.inr (.inr _)) => true
   | _ => false
 
+set_option backward.isDefEq.respectTransparency false in
 /-- With a generated Server seed, the report-instrumented initialized commands never import a known seed: the constructor creates the Server identity, and every later command reaches the private pools only through ordinary pool requests. -/
 theorem initialized_free (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks) (count : Nat)
     (program : OracleComp (Spec KemSK) Result) :

@@ -168,7 +168,7 @@ theorem game_real (source : FixedHkdfSha512NoSaltSource) (hmac : HmacSha512)
 theorem advantage_exact (source : FixedHkdfSha512NoSaltSource) (hmac : HmacSha512)
     (correct : SourceRootCorrect source hmac) (joint : Primitives) (dh : DhInterface joint)
     (client : PublicChallenge → OracleComp RootSpec Bool) :
-    (sourceGame source hmac joint dh client).boolDistAdvantage (idealRootGame hmac joint dh client) =
+    (sourceGame source hmac joint dh client).boolDistance (idealRootGame hmac joint dh client) =
       advantage hmac joint dh (fun publicValue => simulateQ reduction (client publicValue)) := by
   rw [PqxdhJointDhExtractFamily.advantage, game_real source hmac correct]
   rfl

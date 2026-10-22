@@ -223,18 +223,18 @@ theorem child_independent {Context : Type}
 theorem child_bound {Context : Type} (source : FixedHkdfSha512NoSaltSource) (hmac : HmacSha512)
     (correct : SourceFullCorrect source hmac) (sample : ProbComp (Context × AtMiss Slot))
     (observe : FullObserver (Context × Mask Slot)) :
-    (childReal source sample observe).boolDistAdvantage (childUniform sample observe) ≤
+    (childReal source sample observe).boolDistance (childUniform sample observe) ≤
       (extractRealGame hmac PqxdhServerAuthKeySchedule.uniform32
-        (fullExtractReduction hmac .ratchet (unitObserver sample observe))).boolDistAdvantage
+        (fullExtractReduction hmac .ratchet (unitObserver sample observe))).boolDistance
       (extractUniformGame PqxdhServerAuthKeySchedule.uniform32
         (fullExtractReduction hmac .ratchet (unitObserver sample observe))) +
       (hmacPrfRealGame hmac (fullExpandReduction .ratchet PqxdhServerAuthKeySchedule.uniform32
-        (unitObserver sample observe))).boolDistAdvantage
+        (unitObserver sample observe))).boolDistance
       (hmacPrfRandomGame (fullExpandReduction .ratchet PqxdhServerAuthKeySchedule.uniform32
         (unitObserver sample observe))) := by
   have real := (child_source source sample observe).evalDist_eq
   have random := (child_independent sample observe).evalDist_eq
-  simpa only [ProbComp.boolDistAdvantage, real, random] using
+  simpa only [ProbComp.boolDistance, real, random] using
     sourceFullAdvantage_le_extract_add_hmac source hmac correct .ratchet
       PqxdhServerAuthKeySchedule.uniform32 (unitObserver sample observe)
 

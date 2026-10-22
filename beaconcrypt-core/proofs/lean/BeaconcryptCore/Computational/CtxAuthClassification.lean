@@ -16,7 +16,7 @@ The corresponding probability theorem is a same-view union bound, not a reductio
 Per-key nonce uniqueness is not imposed here and remains a requirement for the eventual nonce-respecting oracle game.
 
 The probabilities are stated in VCVio's forward event vocabulary, `Pr{let attempt ← mx}[E attempt]`.
-The import of `BeaconcryptCore.Computational.VCVioForwardOracleComp` puts the measurable structure of probabilistic computations' answers in scope, so that these events elaborate with VCVio's native measure semantics rather than with the pin's deprecated `SPMF` adapter; it also provides the forward union bound `prEvent_or_le`.
+The import of `BeaconcryptCore.Computational.VCVioForwardOracleComp` supplies VCVio's native event laws, including the union bound `prEvent_or_le`.
 -/
 
 open OracleComp ENNReal

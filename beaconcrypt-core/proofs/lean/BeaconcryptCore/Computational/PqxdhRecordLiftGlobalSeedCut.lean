@@ -137,7 +137,8 @@ theorem seed_cache_commute (cache : (PqxdhRecordLiftWorld.SeedSpec n).QueryCache
     (different : slot ≠ selected) :
     (cache.cacheQuery slot value).cacheQuery selected hidden =
       (cache.cacheQuery selected hidden).cacheQuery slot value := by
-  funext query
+  apply QueryCache.ext
+  intro query
   by_cases here : query = selected
   · subst query
     simp [Ne.symm different]
@@ -672,19 +673,19 @@ theorem observed_bound {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Resp
     (target : Slot n) (direction : Bool) (client : OracleComp (ServiceSpec n) Result)
     (observer : Observer Result) :
     (((simulateQ (PqxdhRecordLiftProtocol.interpreter (PqxdhRecordLiftChainOracle.lookup source · ideal)
-      setup codec) client).run initialPrivate >>= PqxdhRecordLiftGlobalCut.observe observer)).boolDistAdvantage
+      setup codec) client).run initialPrivate >>= PqxdhRecordLiftGlobalCut.observe observer)).boolDistance
       (seedUniform source ideal filling setup codec target direction client observer) ≤
     (extractRealGame hmac PqxdhServerAuthKeySchedule.uniform32
       (fullExtractReduction hmac .ratchet
-        (reductionObserver source ideal filling setup codec target direction client observer))).boolDistAdvantage
+        (reductionObserver source ideal filling setup codec target direction client observer))).boolDistance
     (extractUniformGame PqxdhServerAuthKeySchedule.uniform32
       (fullExtractReduction hmac .ratchet
         (reductionObserver source ideal filling setup codec target direction client observer))) +
     (hmacPrfRealGame hmac (fullExpandReduction .ratchet PqxdhServerAuthKeySchedule.uniform32
-      (reductionObserver source ideal filling setup codec target direction client observer))).boolDistAdvantage
+      (reductionObserver source ideal filling setup codec target direction client observer))).boolDistance
     (hmacPrfRandomGame (fullExpandReduction .ratchet PqxdhServerAuthKeySchedule.uniform32
       (reductionObserver source ideal filling setup codec target direction client observer))) := by
-  simpa only [ProbComp.boolDistAdvantage,
+  simpa only [ProbComp.boolDistance,
     observed_source source ideal filling setup codec target direction client observer,
     uniform_source source ideal filling setup codec target direction client observer] using
     sourceFullAdvantage_le_extract_add_hmac source hmac correct .ratchet

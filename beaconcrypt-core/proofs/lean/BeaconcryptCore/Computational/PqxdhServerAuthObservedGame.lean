@@ -153,8 +153,7 @@ theorem observed_flat (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
     (revealSeed : Bool) (adversary : Adversary) (observation : Observation) :
     EvalDistEq (observed setup codec checks revealSeed adversary observation)
       (flatObserved setup codec checks revealSeed adversary observation) := by
-  refine (VCVioLegacy.evalSPMF_eq_iff_evalDistEq _ _).1 ?_
-  apply evalSPMF_eq_of_relTriple_eqRel
+  apply evalDistEq_of_relTriple_eqRel
   simp only [observed, game, flatObserved, contextSample, body, simulateQ_bind, StateT.run_bind,
     bind_assoc, pure_bind, family_coins (rom_coinForward setup.hmac setup.joint setup.dh _ _),
     map_bind, map_pure, bind_map_left]

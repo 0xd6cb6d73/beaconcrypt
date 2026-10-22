@@ -287,15 +287,15 @@ theorem actualRootAdvantage_le_euf_add_kem_add_extract_add_hmac
     let adversary := rootInitializer sigAlg kem setup selector verifyFn protocol
     let sample := PqxdhSecretInputInitializer.secretInputSample baseImpl kem adversary
     let continuation := PqxdhSecretInputInitializer.rootObserver source baseImpl kem adversary
-    (actualGame source baseImpl sigAlg kem native setup selector observer server application ephemeralGen verifyFn).boolDistAdvantage
+    (actualGame source baseImpl sigAlg kem native setup selector observer server application ephemeralGen verifyFn).boolDistance
         (PqxdhSecretInputInitializer.independentInitializerGame source baseImpl kem adversary) ≤
-      ((statefulPhase1ToEUFCMA sigAlg kem setup selector).advantage
-        (runtimeOfImpl (kemAmbientImpl baseImpl))).toReal +
-      kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
-        (toKemOneKeyAdversary source kem adversary).toINDCCA +
-      (extractRealGame hmac sample (extractReduction hmac continuation)).boolDistAdvantage
+      (SignatureAlg.unforgeableAdvantage (runtimeOfImpl (kemAmbientImpl baseImpl))
+        (statefulPhase1ToEUFCMA sigAlg kem setup selector)).toReal +
+      (kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
+        (toKemOneKeyAdversary source kem adversary).toINDCCA).toReal +
+      (extractRealGame hmac sample (extractReduction hmac continuation)).boolDistance
         (extractUniformGame sample (extractReduction hmac continuation)) +
-      (hmacPrfRealGame hmac (expandReduction sample continuation)).boolDistAdvantage
+      (hmacPrfRealGame hmac (expandReduction sample continuation)).boolDistance
         (hmacPrfRandomGame (expandReduction sample continuation)) := by
   have bound := authenticatedRootAdvantage_le_euf_add_kem_add_extract_add_hmac source hmac correct
     baseImpl sigAlg kem setup selector verifyFn deterministic
@@ -303,7 +303,7 @@ theorem actualRootAdvantage_le_euf_add_kem_add_extract_add_hmac
   dsimp only at bound ⊢
   have heq := sourceGame_eq_actualGame source baseImpl sigAlg kem native compatible setup selector
     observer server application ephemeralGen verifyFn
-  simpa only [ProbComp.boolDistAdvantage, heq] using bound
+  simpa only [ProbComp.boolDistance, heq] using bound
 
 /--
 info: 'BeaconcryptCore.Computational.PqxdhOptionalKemSource.sourceGame_eq_actualGame' depends on axioms: [propext,

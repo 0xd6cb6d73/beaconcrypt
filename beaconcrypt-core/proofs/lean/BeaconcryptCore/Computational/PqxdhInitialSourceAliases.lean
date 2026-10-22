@@ -115,7 +115,7 @@ theorem sampled_source (prior : ProbComp SourceContext) (stage : Nat)
 theorem bound (prior : ProbComp SourceContext) (stage qPost : Nat)
     (valid : ∀ input, Sum.inr input ∈ support prior → Admissible input)
     (bounded : ∀ input, Sum.inr input ∈ support prior → ∀ reply, (input.post reply).IsTotalQueryBound qPost) :
-    (PqxdhInitialSourceSampled.game source writer sender route decode prior stage).boolDistAdvantage
+    (PqxdhInitialSourceSampled.game source writer sender route decode prior stage).boolDistance
       (consistent source writer sender route decode prior stage) ≤
       ((1 + (7 + qPost * 67) : Nat) : ENNReal).toReal / (2 ^ 256 : ℝ) := by
   have result := PqxdhInitialAliasEvent.bound source (fun context => selected (erase prior context))

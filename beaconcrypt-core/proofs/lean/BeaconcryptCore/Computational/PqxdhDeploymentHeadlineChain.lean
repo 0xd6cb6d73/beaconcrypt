@@ -52,12 +52,12 @@ noncomputable def kemLoss (setup : Setup baseSpec KemSK) (codec : Codec Reader R
     (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool) (bounds : FreshBounds)
     (mode : Mode) (adversary : OracleComp (ModeSpec mode) X) (budget : Budget) (event : Observed X → Bool)
     (claim : Observed X → Option Handle) (g : Fin budget.accept × Fin budget.capacity) (runtime : A) : ℝ :=
-  setup.kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl
+  (setup.kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl
       (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl))
     (PqxdhRegistrationJointKemRawCertified.adversary setup codec checks ensureInit none
       (decision setup.source.crypto codec setup.serverKeyId budget event claim g)
       (compileFull setup codec route bounds mode adversary) runtime budget.create (selectedKem budget g)
-      g.1.val).toINDCCA +
+      g.1.val).toINDCCA).toReal +
     PqxdhRegistrationJointKemRawGame.correctnessError setup
 
 /-- `slotLoss g d_g` (design-v2 section 2): item 2's stage S7 with stage T at two slots for the decision `d_g(event, claim)` (`PqxdhRegistrationJointKemKeyTransfer.allIdealLoss` at the caps transported from the budget): the R1 statistical term, two HMAC-PRF advantages and the two key-schedule bounds. -/
@@ -211,9 +211,9 @@ theorem chain_slot (setup : Setup baseSpec KemSK)
     (decision setup.source.crypto codec setup.serverKeyId budget event claim g)
     (compileFull setup codec route bounds mode adversary) runtime budget.create
     (selectedKem budget g) g.1.val 2 with hslot
-  have step := ProbComp.evalDist_apply_true_le_add_ofReal_boolDistAdvantage opq slot
+  have step := ProbComp.evalDist_apply_true_le_add_ofReal_boolDistance opq slot
   refine kem.trans ?_
-  calc _ ≤ (𝒟[slot] {true} + ENNReal.ofReal (opq.boolDistAdvantage slot)) +
+  calc _ ≤ (𝒟[slot] {true} + ENNReal.ofReal (opq.boolDistance slot)) +
         ENNReal.ofReal (kemLoss setup codec checks route ensureInit bounds mode adversary budget event claim g
           runtime) := add_le_add step le_rfl
     _ ≤ _ := by

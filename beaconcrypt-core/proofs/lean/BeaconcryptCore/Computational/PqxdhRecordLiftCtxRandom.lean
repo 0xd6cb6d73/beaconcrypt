@@ -481,7 +481,7 @@ theorem replayTarget_keyImpl (decode : RawDecoder) (crypto : Pqxdh.Crypto) (key 
 
 /-- **Replay versus random, one key.** The replay one-key target and the random one-key target differ, for every one-key client, by exactly the ordinary IND$ advantage of the view reduction, that is `PqxdhRecordLiftIdeal.privacyLoss` (without `ofReal`). -/
 theorem replay_random_target (decode : RawDecoder) (crypto : Pqxdh.Crypto) (client : OracleComp ReceiveSpec Bool) :
-    (AdaptiveCtxSharedModes.targetView false decode crypto client).boolDistAdvantage (randomTargetView decode client) =
+    (AdaptiveCtxSharedModes.targetView false decode crypto client).boolDistance (randomTargetView decode client) =
       modifiedNonceAeadINDDollarAdvantage crypto (AdaptiveCtxPrivacyGuard.viewReduction decode client) := by
   rw [AdaptiveCtxSharedModes.replay_view_eq, randomTargetView_randomView]
   exact AdaptiveCtxPrivacyGuard.replay_random_advantage decode crypto client
@@ -489,7 +489,7 @@ theorem replay_random_target (decode : RawDecoder) (crypto : Pqxdh.Crypto) (clie
 /-- The per-key privacy loss of the targets is the replay-to-random distance of the one-key targets. -/
 theorem privacyLoss_eq (decode : RawDecoder) (crypto : Pqxdh.Crypto) (client : OracleComp ReceiveSpec Bool) :
     PqxdhRecordLiftIdeal.privacyLoss decode crypto client =
-      ENNReal.ofReal ((AdaptiveCtxSharedModes.targetView false decode crypto client).boolDistAdvantage
+      ENNReal.ofReal ((AdaptiveCtxSharedModes.targetView false decode crypto client).boolDistance
         (randomTargetView decode client)) := by
   rw [replay_random_target]
   rfl

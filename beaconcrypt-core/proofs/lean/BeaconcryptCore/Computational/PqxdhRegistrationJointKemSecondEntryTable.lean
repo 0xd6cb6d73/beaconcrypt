@@ -127,7 +127,7 @@ theorem indexed_eager_output {α : Type} [MeasurableSpace α] (sampler : ℕ →
       𝒟[do let value ← sampler k; (simulateQ (indexedImpl (pin k value sampler)) client).run' state] := by
   refine EvalDistEq.evalDist_eq ?_
   have project := (indexed_eager sampler k client state).map Prod.fst
-  simpa [StateT.run'_eq, map_bind, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ] using project
+  simpa [StateT.run'_eq, map_bind] using project
 
 end Indexed
 
@@ -357,7 +357,7 @@ noncomputable def tableService : SlotService (PqxdhRecordLiftLazyTable.State (Sl
 
 /-- The table on the points that the allocator and the slot table represent. -/
 def cacheOf (state : Alloc D n × PqxdhRecordLiftLazyTable.State (Slot n →ₒ R)) : (D →ₒ R).QueryCache :=
-  fun point => (state.1.1 point).bind fun slot => state.2.1 slot
+  QueryCache.ofFn fun point => (state.1.1 point).bind fun slot => state.2.1 slot
 
 /-- Allocated slots are below the next free slot and belong to one point each; free slots hold no value. -/
 def SlotGood (state : Alloc D n × PqxdhRecordLiftLazyTable.State (Slot n →ₒ R)) : Prop :=
@@ -394,11 +394,12 @@ theorem slot_step (point : D) (state : Alloc D n × PqxdhRecordLiftLazyTable.Sta
       refine bind_congr fun answer => ?_
       simp only [Function.comp_apply, Prod.map_apply, id_eq]
       congr 2
-      funext other
+      apply QueryCache.ext
+      intro other
       by_cases same : other = point
       · subst same
         simp [cacheOf]
-      · simp only [cacheOf, Function.update_of_ne same, QueryCache.cacheQuery_of_ne _ _ same]
+      · simp only [cacheOf, QueryCache.ofFn_apply, Function.update_of_ne same, QueryCache.cacheQuery_of_ne _ _ same]
         rcases otherFound : state.1.1 other with _ | otherSlot
         · rfl
         · have distinct : otherSlot ≠ ⟨state.1.2, room⟩ := by
@@ -456,11 +457,12 @@ theorem slot_step (point : D) (state : Alloc D n × PqxdhRecordLiftLazyTable.Sta
         refine bind_congr fun answer => ?_
         simp only [Function.comp_apply, Prod.map_apply, id_eq]
         congr 2
-        funext other
+        apply QueryCache.ext
+        intro other
         by_cases same : other = point
         · subst same
           simp [cacheOf, found]
-        · simp only [cacheOf, QueryCache.cacheQuery_of_ne _ _ same]
+        · simp only [cacheOf, QueryCache.ofFn_apply, QueryCache.cacheQuery_of_ne _ _ same]
           rcases otherFound : state.1.1 other with _ | otherSlot
           · rfl
           · have distinct : otherSlot ≠ slot := by

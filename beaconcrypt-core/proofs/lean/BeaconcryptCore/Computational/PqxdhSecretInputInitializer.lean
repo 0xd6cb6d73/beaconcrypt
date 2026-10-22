@@ -78,11 +78,11 @@ theorem real_sourceRoot_advantage_eq_indCCA
     (baseImpl : QueryImpl baseSpec ProbComp)
     (kem : MlKemScheme (baseSpec := baseSpec) (SK := SK))
     (adversary : InitializerAdversary kem) :
-    (initializerRealGame source baseImpl kem adversary).boolDistAdvantage
+    (initializerRealGame source baseImpl kem adversary).boolDistance
         (sourceRootGame source (secretInputSample baseImpl kem adversary)
           (rootObserver source baseImpl kem adversary)) =
-      kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
-        (toKemOneKeyAdversary source kem adversary).toINDCCA := by
+      (kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
+        (toKemOneKeyAdversary source kem adversary).toINDCCA).toReal := by
   have hcca := oneKey_indCCAAdvantage_eq_branchDist kem
     (runtimeOfImpl (kemAmbientImpl baseImpl))
     (toKemOneKeyAdversary source kem adversary)
@@ -90,10 +90,11 @@ theorem real_sourceRoot_advantage_eq_indCCA
     (runtimeOfImpl_evalDist_bind (kemAmbientImpl baseImpl))
     (runtimeOfImpl_evalDist_liftProbComp baseImpl)
     (runtimeOfImpl_noFail_bool (kemAmbientImpl baseImpl))
+  rw [ProbComp.boolDistance_eq_toReal_boolDist]
+  apply congrArg ENNReal.toReal
   simpa [oneKeyBranch, runtimeOfImpl_evalDist, initializerRealGame,
     simulateQ_initializerOneKeyFalse_eq_falseCore, sourceRootGame_eq_kemFalseCore,
-    ProbComp.boolDistAdvantage, MeasureTheory.Measure.boolDist, -evalDist_apply_singleton,
-    -evalDist_apply_setOf, -evalDist_apply_univ] using hcca.symm
+    ProbComp.boolDistance, MeasureTheory.Measure.boolDist] using hcca.symm
 
 /-- One actual root is replaced with loss-one KEM, Extract, and HMAC reductions while public KDF evaluations stay real. -/
 theorem initializerAdvantage_le_kem_add_extract_add_hmac
@@ -102,19 +103,19 @@ theorem initializerAdvantage_le_kem_add_extract_add_hmac
     (baseImpl : QueryImpl baseSpec ProbComp)
     (kem : MlKemScheme (baseSpec := baseSpec) (SK := SK))
     (adversary : InitializerAdversary kem) :
-    (initializerRealGame source baseImpl kem adversary).boolDistAdvantage
+    (initializerRealGame source baseImpl kem adversary).boolDistance
         (independentInitializerGame source baseImpl kem adversary) ≤
-      kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
-        (toKemOneKeyAdversary source kem adversary).toINDCCA +
+      (kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
+        (toKemOneKeyAdversary source kem adversary).toINDCCA).toReal +
       (extractRealGame hmac (secretInputSample baseImpl kem adversary)
-        (extractReduction hmac (rootObserver source baseImpl kem adversary))).boolDistAdvantage
+        (extractReduction hmac (rootObserver source baseImpl kem adversary))).boolDistance
         (extractUniformGame (secretInputSample baseImpl kem adversary)
           (extractReduction hmac (rootObserver source baseImpl kem adversary))) +
       (hmacPrfRealGame hmac (expandReduction (secretInputSample baseImpl kem adversary)
-        (rootObserver source baseImpl kem adversary))).boolDistAdvantage
+        (rootObserver source baseImpl kem adversary))).boolDistance
         (hmacPrfRandomGame (expandReduction (secretInputSample baseImpl kem adversary)
           (rootObserver source baseImpl kem adversary))) := by
-  exact (ProbComp.boolDistAdvantage_triangle _
+  exact (ProbComp.boolDistance_triangle _
     (sourceRootGame source (secretInputSample baseImpl kem adversary)
       (rootObserver source baseImpl kem adversary)) _).trans
     (by rw [real_sourceRoot_advantage_eq_indCCA, add_assoc]

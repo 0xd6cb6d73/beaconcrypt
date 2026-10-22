@@ -31,7 +31,7 @@ theorem ambient (baseImpl : QueryImpl baseSpec ProbComp)
           (kem.IND_CCA_postChallengeImpl secret challenge (.inl query)) =
             PqxdhInitializerSecrecy.kemAmbientImpl baseImpl query := by
         unfold KEMScheme.IND_CCA_postChallengeImpl QueryImpl.add
-        simp only [HasQuery.toQueryImpl_apply, simulateQ_HasQuery_query]
+        simp only [QueryImpl.liftTarget_self, QueryImpl.id'_apply, simulateQ_spec_query]
       rw [baseQuery]
       change (PqxdhInitializerSecrecy.kemAmbientImpl baseImpl query >>= fun answer =>
         evaluate baseImpl kem secret challenge (ccaAmbient (next answer))) = _

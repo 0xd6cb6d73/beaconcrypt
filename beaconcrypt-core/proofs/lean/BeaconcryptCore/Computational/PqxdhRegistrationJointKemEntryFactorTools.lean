@@ -104,10 +104,12 @@ variable {ιA ιB ιT : Type} {A : OracleSpec ιA} {B : OracleSpec ιB} {T : Ora
 
 /-- Answer a value read with values in `W` by the value read with values in `V` at the same point, mapped by `f`; every other query is forwarded unchanged. -/
 def relabel (f : V → W) : QueryImpl (B + ((D →ₒ W) + T)) (OracleComp (B + ((D →ₒ V) + T))) :=
-  (fun query => ((B + ((D →ₒ V) + T)).query (.inl query) : OracleComp (B + ((D →ₒ V) + T)) _) :
-      QueryImpl B (OracleComp (B + ((D →ₒ V) + T)))) +
-    ((fun point => f <$> ((B + ((D →ₒ V) + T)).query (.inr (.inl point)) : OracleComp (B + ((D →ₒ V) + T)) V) :
-        QueryImpl (D →ₒ W) (OracleComp (B + ((D →ₒ V) + T)))) +
+  QueryImpl.add
+    (fun query => ((B + ((D →ₒ V) + T)).query (.inl query) : OracleComp (B + ((D →ₒ V) + T)) _) :
+      QueryImpl B (OracleComp (B + ((D →ₒ V) + T))))
+    (QueryImpl.add
+      (fun point => f <$> ((B + ((D →ₒ V) + T)).query (.inr (.inl point)) : OracleComp (B + ((D →ₒ V) + T)) V) :
+        QueryImpl (D →ₒ W) (OracleComp (B + ((D →ₒ V) + T))))
       (fun query => ((B + ((D →ₒ V) + T)).query (.inr (.inr query)) : OracleComp (B + ((D →ₒ V) + T)) _) :
         QueryImpl T (OracleComp (B + ((D →ₒ V) + T)))))
 
@@ -127,7 +129,8 @@ theorem relabel_direct (f : V → W) (query : ιT) :
 theorem relabel_liftComp {α : Type} (f : V → W) (work : OracleComp B α) :
     simulateQ (relabel (B := B) (D := D) (T := T) f) (OracleComp.liftComp work (B + ((D →ₒ W) + T))) =
       OracleComp.liftComp work (B + ((D →ₒ V) + T)) := by
-  rw [relabel, QueryImpl.simulateQ_add_liftComp_left, OracleComp.liftComp_def]
+  rw [relabel, QueryImpl.add_eq_hAdd, QueryImpl.simulateQ_add_liftComp_left,
+    OracleComp.liftComp_def]
   rfl
 
 /-- A direct query is unchanged by relabelling. -/

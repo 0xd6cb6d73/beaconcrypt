@@ -132,7 +132,7 @@ theorem selected_integrity (decode : RawDecoder) (c : Pqxdh.Crypto)
     (sealBound : client.IsQueryBoundP (TargetClass SourceSeal) qSeal)
     (rawBound : client.IsQueryBoundP (TargetClass IsRawQuery) qRaw)
     (small : qSeal < 2 ^ 96) :
-    ENNReal.ofReal ((Prod.fst <$> sourceGame true decode c client).boolDistAdvantage
+    ENNReal.ofReal ((Prod.fst <$> sourceGame true decode c client).boolDistance
       (Prod.fst <$> sourceGame false decode c client)) ≤
       ENNReal.ofReal (modifiedNonceAeadINDDollarAdvantage c
         (AdaptiveCtxPrefixValidation.validationReduction decode c (decisionClient c client) qHash)) +
@@ -159,7 +159,7 @@ theorem selected_privacy (decode : RawDecoder) (c : Pqxdh.Crypto)
     (sealBound : client.IsQueryBoundP (TargetClass SourceSeal) qSeal)
     (rawBound : client.IsQueryBoundP (TargetClass IsRawQuery) qRaw)
     (small : qSeal < 2 ^ 96) :
-    ENNReal.ofReal ((Prod.fst <$> sourceGame true decode c client).boolDistAdvantage
+    ENNReal.ofReal ((Prod.fst <$> sourceGame true decode c client).boolDistance
       (AdaptiveCtxPrivacyGuard.randomView decode (decisionClient c client))) ≤
       ENNReal.ofReal (modifiedNonceAeadINDDollarAdvantage c
         (AdaptiveCtxPrefixValidation.validationReduction decode c (decisionClient c client) qHash)) +

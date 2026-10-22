@@ -37,7 +37,7 @@ noncomputable def root (source : FixedHkdfSha512NoSaltSource) (previousRoot : Ro
 
 def initialState (root : RootOutput) (shared : RawCtxSharedPrimitive.SharedState A)
     (privateState : N) (cache : RootOracle.QueryCache) : PqxdhInitialOriginPostPath.State A N :=
-  (((shared, ((fun _ => none), ⟨root, 0⟩)), []), (privateState, cache))
+  (((shared, (∅, ⟨root, 0⟩)), []), (privateState, cache))
 
 /-- The source starts with an empty private cache and log at depth zero, so every later predecessor scan has its actual initial validity and absence conditions. -/
 theorem initial_valid (root : RootOutput) (shared : RawCtxSharedPrimitive.SharedState A)
@@ -107,7 +107,7 @@ theorem published_bound (stage qPost : Nat) (bounded : ∀ reply, (post reply).I
 
 /-- Cache normalization for the same actual source event has coefficient one and the concrete chronological sum, with all initial validity premises discharged. -/
 theorem normalization (depth qPost : Nat) (bounded : ∀ reply, (post reply).IsTotalQueryBound qPost) :
-    ENNReal.ofReal (tvDist
+    ENNReal.ofReal (discreteDistance
       (game source writer selectedMessage previousRoot response64 other sender route decode index metadata ready post before
         selected number ancestors disclosed shared privateState cache (depth + 2))
       (PqxdhInitialNativeAdjacent.normalized source writer (PqxdhInitialSelectedOrigin.mark source selectedMessage)

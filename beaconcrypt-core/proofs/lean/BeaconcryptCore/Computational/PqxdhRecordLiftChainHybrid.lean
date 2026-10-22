@@ -67,22 +67,22 @@ theorem chains_terminal (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
 
 /-- The first and last of a finite sequence of Boolean games differ by at most the sum of the adjacent advantages. -/
 theorem telescope (games : Nat → ProbComp Bool) (count : Nat) :
-    (games 0).boolDistAdvantage (games count) ≤
-      ∑ index ∈ Finset.range count, (games index).boolDistAdvantage (games (index + 1)) := by
+    (games 0).boolDistance (games count) ≤
+      ∑ index ∈ Finset.range count, (games index).boolDistance (games (index + 1)) := by
   induction count with
-  | zero => simp only [ProbComp.boolDistAdvantage_self, Finset.range_zero, Finset.sum_empty, le_refl]
+  | zero => simp only [ProbComp.boolDistance_self, Finset.range_zero, Finset.sum_empty, le_refl]
   | succ count ih =>
       rw [Finset.sum_range_succ]
-      exact (ProbComp.boolDistAdvantage_triangle _ (games count) _).trans (add_le_add ih (le_refl _))
+      exact (ProbComp.boolDistance_triangle _ (games count) _).trans (add_le_add ih (le_refl _))
 
 /-- The Extract-on-`uniform32` advantage of one full76 observer. -/
 noncomputable def extractAdvantage (hmac : HmacSha512) (observer : FullObserver Unit) : ℝ :=
-  (extractRealGame hmac PqxdhServerAuthKeySchedule.uniform32 (fullExtractReduction hmac .ratchet observer)).boolDistAdvantage
+  (extractRealGame hmac PqxdhServerAuthKeySchedule.uniform32 (fullExtractReduction hmac .ratchet observer)).boolDistance
     (extractUniformGame PqxdhServerAuthKeySchedule.uniform32 (fullExtractReduction hmac .ratchet observer))
 
 /-- The HMAC-PRF advantage of one full76 observer. -/
 noncomputable def prfAdvantage (hmac : HmacSha512) (observer : FullObserver Unit) : ℝ :=
-  (hmacPrfRealGame hmac (fullExpandReduction .ratchet PqxdhServerAuthKeySchedule.uniform32 observer)).boolDistAdvantage
+  (hmacPrfRealGame hmac (fullExpandReduction .ratchet PqxdhServerAuthKeySchedule.uniform32 observer)).boolDistance
     (hmacPrfRandomGame (fullExpandReduction .ratchet PqxdhServerAuthKeySchedule.uniform32 observer))
 
 /-- The loss of `PqxdhRecordLiftIdeal.hopLoss` is the sum of the two real advantages, each with coefficient one. -/
@@ -107,7 +107,7 @@ theorem chain_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
     (respects : budget.Respects adversary)
     (decision : PqxdhRecordLiftIdeal.View n E X → CtxRomAuth.CtxRO.QueryCache → ProbComp Bool) :
     (PqxdhRecordLiftIdeal.realChains setup codec route env serverKid bounds mode adversary >>= fun result =>
-        decision (PqxdhRecordLiftIdeal.chainView result) (PqxdhRecordLiftIdeal.chainCache result)).boolDistAdvantage
+        decision (PqxdhRecordLiftIdeal.chainView result) (PqxdhRecordLiftIdeal.chainCache result)).boolDistance
       (PqxdhRecordLiftIdeal.idealChains setup codec route env serverKid bounds mode adversary >>= fun result =>
         decision (PqxdhRecordLiftIdeal.chainView result) (PqxdhRecordLiftIdeal.chainCache result)) ≤
     ∑ step : Fin (PqxdhRecordLiftIdeal.hops n budget),
@@ -126,7 +126,7 @@ theorem chain_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
     simp only [games, chains_terminal setup codec route env serverKid bounds mode adversary budget respects]
   rw [first, last]
   refine (telescope games _).trans ?_
-  rw [← Fin.sum_univ_eq_sum_range (fun index => (games index).boolDistAdvantage (games (index + 1)))]
+  rw [← Fin.sum_univ_eq_sum_range (fun index => (games index).boolDistance (games (index + 1)))]
   apply Finset.sum_le_sum
   intro step _
   exact PqxdhRecordLiftChainHop.hop_bound setup codec route env serverKid bounds mode adversary hmac correct decision
@@ -141,7 +141,7 @@ theorem chain_loss (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
     (decision : PqxdhRecordLiftIdeal.View n E X → CtxRomAuth.CtxRO.QueryCache → ProbComp Bool) :
     ENNReal.ofReal
       ((PqxdhRecordLiftIdeal.realChains setup codec route env serverKid bounds mode adversary >>= fun result =>
-          decision (PqxdhRecordLiftIdeal.chainView result) (PqxdhRecordLiftIdeal.chainCache result)).boolDistAdvantage
+          decision (PqxdhRecordLiftIdeal.chainView result) (PqxdhRecordLiftIdeal.chainCache result)).boolDistance
         (PqxdhRecordLiftIdeal.idealChains setup codec route env serverKid bounds mode adversary >>= fun result =>
           decision (PqxdhRecordLiftIdeal.chainView result) (PqxdhRecordLiftIdeal.chainCache result))) ≤
     ∑ step : Fin (PqxdhRecordLiftIdeal.hops n budget),

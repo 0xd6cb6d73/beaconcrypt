@@ -43,7 +43,7 @@ theorem keyed_project (modes : Label n → KeyMode) (decode : AdaptiveCtxReceive
     PqxdhRecordFactsPrivateCacheRandom.linked, QueryImpl.flattenStateT, QueryImpl.mapStateTBase,
     StateT.run, StateT.mk, bind_pure_comp, Functor.map_map,
     zeroCtx, zeroPrivate, zeroPrimitive, Prod.map, id_eq] at same ⊢
-  convert same using 1
+  exact same
 
 /-- Arbitrary adaptive keyed continuations retain the complete result and projected poststate. -/
 theorem keyed_program_project (modes : Label n → KeyMode) (decode : AdaptiveCtxReceive.RawDecoder)
@@ -62,7 +62,7 @@ theorem onBase_project {Result : Type}
   have same := congrArg (fun work => (fun result => (result.1, { state with base := result.2 })) <$> work)
     (project state.base)
   simp only [onBase, StateT.run, Functor.map_map, zeroCtx, Prod.map, id_eq] at same ⊢
-  convert same using 1
+  exact same
 
 /-- Every actual CTX service retains its complete operational result after projecting only the uniform counter. -/
 theorem interpreter_project (modes : Label n → KeyMode) (replace : Pqxdh.Bytes → Pqxdh.Bytes)
@@ -78,7 +78,7 @@ theorem interpreter_project (modes : Label n → KeyMode) (replace : Pqxdh.Bytes
           ((hiddenSealing codec.frameWrite state.base.chain replace pending).run state.base.pending) state)
       simp only [ctxInterpreter, interpreter, StateT.run, bind_pure_comp, Functor.map_map,
         zeroCtx, zeroPrivate, Prod.map, id_eq] at same ⊢
-      convert same using 1
+      exact same
   | opening pending =>
       exact keyed_program_project modes (RawCtxUniversalDecoder.decoder codec.frameRead) setup.source.crypto
         (hiddenOpening (PqxdhRecordLiftProtocol.cachedSeeds state.base) state.base.chain pending) state

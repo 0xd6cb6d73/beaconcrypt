@@ -58,7 +58,7 @@ theorem keyedRaw_exact (modes : Label n → KeyMode) (decode : RawDecoder) (cryp
 /-- Every rejected or accepted erased raw query preserves the entire combined digest cache. -/
 theorem keyedRaw_cache (decode : RawDecoder) (label : Label n) (raw : Pqxdh.Bytes) (state : CtxPrivate n) :
     cacheOf (keyedRawResult decode label raw state).2 = cacheOf state := by
-  funext query
+  refine QueryCache.ext (fun query => ?_)
   cases parsed : decode raw <;>
     simp only [keyedRawResult, rawResult, parsed, PqxdhRecordFactsPrivateCacheFamily.localLens]
   all_goals

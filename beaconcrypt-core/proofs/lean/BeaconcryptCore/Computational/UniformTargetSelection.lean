@@ -1,7 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import VCVio.OracleComp.Constructions.SampleableType
 import BeaconcryptCore.Computational.VCVioForwardOracleComp
-import BeaconcryptCore.Computational.VCVioLegacyBridge
 
 /-! Generic target selection (CE-4). A run produces an outcome; a deterministic function `designate` of the outcome names at most one target in a finite domain `G`, and an outcome is eligible when it names one. Every statement here is an exact identity with no assumption and no loss. The split form writes the probability of an event on eligible outcomes as the exact sum over targets of the probability of the event together with that target's designation; it is the headline form, to be composed with per-target hops stated with absolute advantages. The event form writes the same probability as `card G` times the probability that a uniform guess drawn before an unchanged run equals the designated target. The advantage form is the split form for a left-or-right guess with the eligibility-weighted half subtracted, as a real-valued identity. The guessing combinator writes a sum of per-target probabilities, or of signed per-target differences, as `card G` times the probability, or the signed difference, of the run with a uniformly guessed target; with signed per-target hops it turns the exact sum into the `card G · Adv(B_guess)` wording. No security claim is made here. -/
 open OracleComp OracleSpec ENNReal
@@ -24,12 +23,11 @@ theorem split (run : ProbComp Ω) (event : Ω → Prop) [DecidablePred event] (d
   refine tsum_congr fun outcome => ?_
   generalize Pr{let y ← run}[y = outcome] = mass
   cases named : designate outcome with
-  | none => simp [-evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+  | none => simp
   | some chosen =>
       by_cases holds : event outcome
-      · simp [holds, Finset.sum_ite_eq, -evalDist_apply_singleton, -evalDist_apply_setOf,
-          -evalDist_apply_univ]
-      · simp [holds, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+      · simp [holds, Finset.sum_ite_eq]
+      · simp [holds]
 
 /-- Split form for an event that implies eligibility. -/
 theorem split_of_eligible (run : ProbComp Ω) (event : Ω → Prop) [DecidablePred event] (designate : Ω → Option G)

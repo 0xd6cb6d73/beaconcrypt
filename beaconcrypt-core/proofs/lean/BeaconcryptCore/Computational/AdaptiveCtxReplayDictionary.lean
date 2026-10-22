@@ -173,7 +173,8 @@ theorem cacheSuffix_of_some (cache : SplitCache) (address : Pqxdh.Bytes) (digest
     (cached : cache.suffixCache address = some digest) : cacheSuffix cache address digest = cache := by
   apply SplitCache.ext
   · rfl
-  · funext other
+  · apply QueryCache.ext
+    intro other
     by_cases same : other = address
     · subst other
       simpa only [cacheSuffix, QueryCache.cacheQuery_self] using cached.symm

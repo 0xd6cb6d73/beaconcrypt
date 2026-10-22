@@ -1,5 +1,5 @@
 import BeaconcryptCore.Computational.PqxdhChallengeSecretRouting
-import BeaconcryptCore.Computational.VCVioLegacyBridge
+import BeaconcryptCore.Computational.VCVioForwardOracleComp
 
 /-!
 The ordinary correctness-error endpoint samples one actual key pair, encapsulates to its public key, and invokes actual decapsulation. Rejection and recovery of a different secret both win. This error is separate from IND-CCA; no primitive internals or zero-error contract are proved.
@@ -77,17 +77,17 @@ theorem continuation_bound {Result : Type}
     (functional : FunctionalDecapsulation kem)
     (left right : Sample KemSK → ProbComp Result)
     (agree : ∀ drawn, ¬ Bad kem functional drawn → left drawn = right drawn) :
-    tvDist (simulateQ (kemAmbientImpl baseImpl) (sample kem) >>= left)
+    discreteDistance (simulateQ (kemAmbientImpl baseImpl) (sample kem) >>= left)
       (simulateQ (kemAmbientImpl baseImpl) (sample kem) >>= right) ≤
       Pr{let x ← simulateQ (kemAmbientImpl baseImpl) (errorExperiment kem)}[x = true].toReal := by
   rw [error_probability baseImpl kem functional]
-  have point : ∀ drawn, tvDist (left drawn) (right drawn) ≤
+  have point : ∀ drawn, discreteDistance (left drawn) (right drawn) ≤
       Pr{let x ← (pure drawn : ProbComp (Sample KemSK))}[Bad kem functional x].toReal := by
     intro drawn
     classical
     rw [prEvent_pure]
     by_cases bad : Bad kem functional drawn
-    · simpa [bad] using tvDist_le_one (left drawn) (right drawn)
+    · simpa [bad] using discreteDistance_le_one (left drawn) (right drawn)
     · rw [agree drawn bad]
       simp [bad]
   simpa only [bind_pure] using PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind
@@ -102,7 +102,7 @@ theorem routed_bound {Result State : Type}
     (client : MlKem768PublicKey → MlKem768Ciphertext → OracleComp (LocalPostSpec baseSpec) Result)
     (ambient : QueryImpl (unifSpec + baseSpec) (StateT State ProbComp))
     (initial : MlKem768PublicKey → MlKem768Ciphertext → State) :
-    tvDist
+    discreteDistance
       (do
         let drawn ← simulateQ (kemAmbientImpl baseImpl) (sample kem)
         (simulateQ ambient (simulateQ (actualImpl source kem drawn.secretKey drawn.ciphertext)

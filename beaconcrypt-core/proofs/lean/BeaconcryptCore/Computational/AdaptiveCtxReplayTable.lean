@@ -11,13 +11,14 @@ open AdaptiveCtxReplayDictionary JointEagerTable
 
 /-- Restrict the actual source cache to the exact fixed-width private interface. This retains every reachable cell, including cells first installed by rejected raw requests. -/
 def sourceDictionary (state : AdaptiveCtxReceive.ReceiveState) : PrivateSpec.QueryCache :=
-  fun address => state.ctx.cache.suffixCache address.toList
+  QueryCache.ofFn fun address => state.ctx.cache.suffixCache address.toList
 
 /-- Source/dictionary alignment determines the entire external private dictionary. -/
 theorem aligned_dictionary_eq (state : AdaptiveCtxReceive.ReceiveState)
     (dictionary : PrivateSpec.QueryCache) (aligned : DictionaryAligned state.ctx.cache dictionary) :
     dictionary = sourceDictionary state := by
-  funext address
+  apply QueryCache.ext
+  intro address
   exact (aligned address).symm
 
 /-- The duplicate private dictionary stays exactly equal to the full source cache restriction throughout an arbitrary adaptive continuation. -/

@@ -201,7 +201,7 @@ theorem dispatch_complete_eq_source
   refine EvalDistEq.evalDist_eq ?_
   by_cases bad : changedBit (some prepared.1, prepared.2) = true
   · simp [PqxdhPrivateAcceptedRoot.dispatch, PqxdhPrivateAcceptedRoot.filteredNext, bad, evalKem,
-      PqxdhPrivateAcceptedRoot.complete, rootProtocol, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+      PqxdhPrivateAcceptedRoot.complete, rootProtocol]
     exact OracleComp.EvalDistEq.map_const _ _
   · by_cases eligible : targetEligible parameters prepared = true
     · simp only [PqxdhPrivateAcceptedRoot.dispatch, PqxdhPrivateAcceptedRoot.filteredNext, bad, Bool.false_eq_true, ite_false, eligible, ite_true,
@@ -218,11 +218,11 @@ theorem dispatch_complete_eq_source
           simp only [evalKem_bind, evalKem_ambient, evalKem_pure, bind_assoc, pure_bind,
             PqxdhPrivateAcceptedRoot.targetAfterEncapsulation, failure]
           refine EvalDistEq.bind_right _ fun encapsulated => ?_
-          simp [PqxdhPrivateAcceptedRoot.complete, rootProtocol, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+          simp [PqxdhPrivateAcceptedRoot.complete, rootProtocol]
           refine (EvalDistEq.bind_right _ fun value => OracleComp.EvalDistEq.map_const _ value).trans ?_
           rw [bind_pure]
     · simp [PqxdhPrivateAcceptedRoot.dispatch, PqxdhPrivateAcceptedRoot.filteredNext, bad, eligible,
-        PqxdhPrivateAcceptedRoot.totalNext, evalKem, PqxdhPrivateAcceptedRoot.complete, rootProtocol, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+        PqxdhPrivateAcceptedRoot.totalNext, evalKem, PqxdhPrivateAcceptedRoot.complete, rootProtocol]
       refine (EvalDistEq.bind_right _ fun value => OracleComp.EvalDistEq.map_const _ value).trans ?_
       rw [bind_pure]
 
@@ -288,7 +288,7 @@ theorem authentication_hop
       (driver.main index publicIdentity generated publicTranscript).IsQueryBoundP
       (PqxdhPrivateKemQueryBounds.SelectorSource (baseSpec := baseSpec) Creating) 0)
     (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : Forgery) (observer : Continuation setup driver.State) :
-    (actualGame baseImpl kem parameters attachedVerify primitives setup driver observer).boolDistAdvantage
+    (actualGame baseImpl kem parameters attachedVerify primitives setup driver observer).boolDistance
       (simulateQ (kemAmbientImpl baseImpl) (sourceMain parameters.source kem
         (rootProtocol kem parameters attachedVerify primitives setup driver observer))) ≤
       (advantage primitives (PqxdhGeneratedPhase1Prefix.privateReduction primitives baseImpl kem setup driver fallback ordinaryFallback)).toReal := by
@@ -301,15 +301,15 @@ theorem authentication_hop
             (PqxdhPrivateAcceptedRoot.totalNext kem parameters attachedVerify primitives setup observer (eraseOutput output, stopped.2)))
     (fun _ => pure false)
   have totalBound :
-      tvDist (continuedSource attachedVerify primitives baseImpl kem setup driver
+      discreteDistance (continuedSource attachedVerify primitives baseImpl kem setup driver
         (PqxdhPrivateAcceptedRoot.totalNext kem parameters attachedVerify primitives setup observer) false)
         (continuedSource attachedVerify primitives baseImpl kem setup driver
           (PqxdhPrivateAcceptedRoot.filteredNext kem parameters attachedVerify primitives setup observer) false) ≤
       (advantage primitives (PqxdhGeneratedPhase1Prefix.privateReduction primitives baseImpl kem setup driver fallback ordinaryFallback)).toReal := by
     rw [continuedSource_filtered]
     exact auth
-  have output := (abs_probOutput_toReal_sub_le_tvDist _ _).trans totalBound
-  simpa only [ProbComp.boolDistAdvantage, VCVioLegacy.evalDist_singleton_eq_probOutput, prEvent_eq_evalDist_singleton,
+  have output := (abs_prEvent_toReal_sub_le_discreteDistance _ _).trans totalBound
+  simpa only [ProbComp.boolDistance, ← prEvent_eq_evalDist_singleton, prEvent_eq_evalDist_singleton,
     actualGame_eq_total baseImpl kem parameters compatible attachedVerify primitives setup driver observer,
     ← filteredSource_eq_sourceMain baseImpl kem parameters attachedVerify primitives setup driver observer] using output
 
@@ -333,12 +333,12 @@ theorem authenticated_correlated_bound
     (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : Forgery)
     (observer : Continuation setup driver.State) :
     let protocol := rootProtocol kem parameters attachedVerify primitives setup driver observer
-    (actualGame baseImpl kem parameters attachedVerify primitives setup driver observer).boolDistAdvantage
+    (actualGame baseImpl kem parameters attachedVerify primitives setup driver observer).boolDistance
       (simulateQ (kemAmbientImpl baseImpl)
         (randomMain parameters.source kem (runtimeOfImpl (kemAmbientImpl baseImpl)) protocol)) ≤
       (advantage primitives (PqxdhGeneratedPhase1Prefix.privateReduction primitives baseImpl kem setup driver fallback ordinaryFallback)).toReal +
-      kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
-        (reduction parameters.source kem protocol).toINDCCA := by
+      (kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
+        (reduction parameters.source kem protocol).toINDCCA).toReal := by
   dsimp only
   have authenticated := authentication_hop baseImpl kem parameters compatible attachedVerify primitives adapter
     setup driver driverNoSign driverNoCreate fallback ordinaryFallback observer
@@ -346,14 +346,14 @@ theorem authenticated_correlated_bound
     (rootProtocol kem parameters attachedVerify primitives setup driver observer)
   have loss :
       (simulateQ (kemAmbientImpl baseImpl) (sourceMain parameters.source kem
-        (rootProtocol kem parameters attachedVerify primitives setup driver observer))).boolDistAdvantage
+        (rootProtocol kem parameters attachedVerify primitives setup driver observer))).boolDistance
       (simulateQ (kemAmbientImpl baseImpl) (randomMain parameters.source kem (runtimeOfImpl (kemAmbientImpl baseImpl))
         (rootProtocol kem parameters attachedVerify primitives setup driver observer))) =
-      kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
+      (kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
         (reduction parameters.source kem
-          (rootProtocol kem parameters attachedVerify primitives setup driver observer)).toINDCCA := by
+          (rootProtocol kem parameters attachedVerify primitives setup driver observer)).toINDCCA).toReal := by
     exact correlated.symm
-  exact (ProbComp.boolDistAdvantage_triangle _ _ _).trans (add_le_add authenticated (le_of_eq loss))
+  exact (ProbComp.boolDistance_triangle _ _ _).trans (add_le_add authenticated (le_of_eq loss))
 
 
 end BeaconcryptCore.Computational.PqxdhGeneratedRootSource

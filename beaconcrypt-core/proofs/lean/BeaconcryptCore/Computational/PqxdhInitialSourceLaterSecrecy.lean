@@ -77,7 +77,7 @@ include bounded preBound applicationBound selectorBound auxBound in
 /-- The original source event pays the two actual collision comparisons around the constructed main/tester reduction, with both endpoint simulations proved from the same source sampler. -/
 theorem normalized_bound (hmac : HmacSha512) (correct : SourceFullCorrect source hmac)
     (position : number.val = (depth + 1) + remaining + 1) :
-    ENNReal.ofReal ((sourceGame (depth + 1)).boolDistAdvantage normalized) ≤
+    ENNReal.ofReal ((sourceGame (depth + 1)).boolDistance normalized) ≤
       ENNReal.ofReal (primitiveLoss hmac) + 2 * (((8 + qPost * 67 : Nat) : ENNReal) * (2 ^ 256 : ENNReal)⁻¹) := by
   have realBound := PqxdhInitialSourceLaterMixture.real_bound source writer selectedMessage previousRoot response64 other sender route decode
     index metadata ready post before selected number ancestors disclosed shared privateState cache depth remaining position
@@ -88,18 +88,18 @@ theorem normalized_bound (hmac : HmacSha512) (correct : SourceFullCorrect source
     qPost qPre qApplication qSelector qAux bounded preBound applicationBound selectorBound auxBound hmac correct
   have collision := PqxdhInitialSourceLaterMixture.collision_bound source writer selectedMessage previousRoot response64 other sender route decode
     index metadata ready post before selected number ancestors disclosed shared privateState cache depth qPost bounded
-  have triangle : (early).boolDistAdvantage later ≤
-      (early).boolDistAdvantage actualGame + (actualGame).boolDistAdvantage randomGame + (randomGame).boolDistAdvantage later := by
-    exact (ProbComp.boolDistAdvantage_triangle early actualGame later).trans
-      (by have bound := ProbComp.boolDistAdvantage_triangle actualGame randomGame later; linarith)
-  have total : ENNReal.ofReal ((early).boolDistAdvantage later) ≤
+  have triangle : (early).boolDistance later ≤
+      (early).boolDistance actualGame + (actualGame).boolDistance randomGame + (randomGame).boolDistance later := by
+    exact (ProbComp.boolDistance_triangle early actualGame later).trans
+      (by have bound := ProbComp.boolDistance_triangle actualGame randomGame later; linarith)
+  have total : ENNReal.ofReal ((early).boolDistance later) ≤
       ENNReal.ofReal (primitiveLoss hmac) + 2 * Pr{let x ← parentSample}[badEvent x] := by
     have forward := ENNReal.ofReal_le_ofReal triangle
-    simp only [ProbComp.boolDistAdvantage] at forward
+    simp only [ProbComp.boolDistance] at forward
     rw [ENNReal.ofReal_add (add_nonneg (abs_nonneg _) (abs_nonneg _)) (abs_nonneg _),
       ENNReal.ofReal_add (abs_nonneg _) (abs_nonneg _)] at forward
-    have back : ENNReal.ofReal ((randomGame).boolDistAdvantage later) ≤ Pr{let x ← parentSample}[badEvent x] := by
-      simpa only [ProbComp.boolDistAdvantage, abs_sub_comm] using randomBound
+    have back : ENNReal.ofReal ((randomGame).boolDistance later) ≤ Pr{let x ← parentSample}[badEvent x] := by
+      simpa only [ProbComp.boolDistance, abs_sub_comm] using randomBound
     generalize Pr{let x ← parentSample}[badEvent x] = badMass at realBound back ⊢
     refine forward.trans ((add_le_add (add_le_add realBound (ENNReal.ofReal_le_ofReal primitive)) back).trans_eq ?_)
     rw [two_mul]
@@ -109,14 +109,14 @@ theorem normalized_bound (hmac : HmacSha512) (correct : SourceFullCorrect source
     index metadata ready post before selected number ancestors disclosed shared privateState cache depth
   have laterEq := PqxdhInitialSourceLaterMixture.resumed_normalized source writer selectedMessage previousRoot response64 other sender route decode
     index metadata ready post before selected number ancestors disclosed shared privateState cache depth
-  simpa only [ProbComp.boolDistAdvantage, congrArg (fun μ : MeasureTheory.Measure Bool => μ {true}) earlyEq,
+  simpa only [ProbComp.boolDistance, congrArg (fun μ : MeasureTheory.Measure Bool => μ {true}) earlyEq,
     congrArg (fun μ : MeasureTheory.Measure Bool => μ {true}) laterEq] using complete
 
 include bounded preBound applicationBound selectorBound auxBound in
 /-- One complete later chain transition in the original source experiment reduces to the constructed Extract/HMAC games, two explicit prior-input collision charges and the coefficient-one cached-prefix sum. Both sides use the identical selected publication and actual full-history freshness event. -/
 theorem source_bound (hmac : HmacSha512) (correct : SourceFullCorrect source hmac)
     (position : number.val = (depth + 1) + remaining + 1) :
-    ENNReal.ofReal ((sourceGame (depth + 1)).boolDistAdvantage (sourceGame (depth + 2))) ≤
+    ENNReal.ofReal ((sourceGame (depth + 1)).boolDistance (sourceGame (depth + 2))) ≤
       ENNReal.ofReal (primitiveLoss hmac) + 2 * (((8 + qPost * 67 : Nat) : ENNReal) * (2 ^ 256 : ENNReal)⁻¹) +
         ∑ j ∈ Finset.range (7 + qPost * 67), ((j + 1 : Nat) : ENNReal) * (2 ^ 256 : ENNReal)⁻¹ := by
   have normalizedBound := normalized_bound source writer selectedMessage previousRoot response64 other sender route decode
@@ -126,8 +126,8 @@ theorem source_bound (hmac : HmacSha512) (correct : SourceFullCorrect source hma
     (PqxdhInitialOriginFinishPath.withInitial source selectedMessage previousRoot response64 other) depth 0 qPost bounded state.1
     (PqxdhInitialSourceExperiment.initial_valid root shared privateState cache depth).1
     (PqxdhInitialSourceExperiment.initial_valid root shared privateState cache depth).2 observation
-  have comparison : ENNReal.ofReal ((sourceGame (depth + 1)).boolDistAdvantage (sourceGame (depth + 2))) ≤
-      ENNReal.ofReal ((sourceGame (depth + 1)).boolDistAdvantage normalized) +
+  have comparison : ENNReal.ofReal ((sourceGame (depth + 1)).boolDistance (sourceGame (depth + 2))) ≤
+      ENNReal.ofReal ((sourceGame (depth + 1)).boolDistance normalized) +
         ∑ j ∈ Finset.range (7 + qPost * 67), ((j + 1 : Nat) : ENNReal) * (2 ^ 256 : ENNReal)⁻¹ := by
     unfold PqxdhInitialSourcePreparedSecrecy.observe at sourceBound ⊢
     simpa only [PqxdhInitialSourceExperiment.game, PqxdhInitialSourceExperiment.run_source,

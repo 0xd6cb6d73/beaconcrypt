@@ -33,8 +33,9 @@ variable {D V W : Type}
 
 /-- Answer a value request with values in `W` by the value request with values in `V` at the same point, mapped by `f`; coins are forwarded. -/
 def relabelR (f : V → W) : QueryImpl (unifSpec + (D →ₒ W)) (OracleComp (unifSpec + (D →ₒ V))) :=
-  (fun query => ((unifSpec + (D →ₒ V)).query (.inl query) : OracleComp (unifSpec + (D →ₒ V)) _) :
-      QueryImpl unifSpec (OracleComp (unifSpec + (D →ₒ V)))) +
+  QueryImpl.add
+    (fun query => ((unifSpec + (D →ₒ V)).query (.inl query) : OracleComp (unifSpec + (D →ₒ V)) _) :
+      QueryImpl unifSpec (OracleComp (unifSpec + (D →ₒ V))))
     (fun point => f <$> ((unifSpec + (D →ₒ V)).query (.inr point) : OracleComp (unifSpec + (D →ₒ V)) V) :
       QueryImpl (D →ₒ W) (OracleComp (unifSpec + (D →ₒ V))))
 
@@ -42,7 +43,7 @@ def relabelR (f : V → W) : QueryImpl (unifSpec + (D →ₒ W)) (OracleComp (un
 theorem relabelR_liftComp {α : Type} (f : V → W) (work : ProbComp α) :
     simulateQ (relabelR (D := D) f) (OracleComp.liftComp work (unifSpec + (D →ₒ W))) =
       OracleComp.liftComp work (unifSpec + (D →ₒ V)) := by
-  rw [relabelR, QueryImpl.simulateQ_add_liftComp_left, OracleComp.liftComp_def]
+  rw [relabelR, QueryImpl.add_eq_hAdd, QueryImpl.simulateQ_add_liftComp_left, OracleComp.liftComp_def]
   rfl
 
 end Relabel
@@ -143,18 +144,20 @@ theorem eagerImpl_eq [SampleableType R] (value : R) :
     PqxdhRootFirstEntry.eagerImpl (D := D) value = firstTable value ($ᵗ R) := rfl
 
 /-- A table with its answers mapped by `f`. -/
-def mapCache (f : R → R') (cache : (D →ₒ R).QueryCache) : (D →ₒ R').QueryCache := fun point => (cache point).map f
+def mapCache (f : R → R') (cache : (D →ₒ R).QueryCache) : (D →ₒ R').QueryCache :=
+  QueryCache.ofFn fun point => (cache point).map f
 
 omit [DecidableEq D] in
 theorem mapCache_empty (f : R → R') : mapCache (D := D) f ∅ = ∅ := rfl
 
 theorem mapCache_cacheQuery (f : R → R') (cache : (D →ₒ R).QueryCache) (point : D) (answer : R) :
     mapCache f (cache.cacheQuery point answer) = (mapCache f cache).cacheQuery point (f answer) := by
-  funext other
+  apply QueryCache.ext
+  intro other
   by_cases same : other = point
   · subst same
-    simp only [mapCache, QueryCache.cacheQuery_self, Option.map_some]
-  · simp only [mapCache, QueryCache.cacheQuery_of_ne, ne_eq, same, not_false_eq_true]
+    simp only [mapCache, QueryCache.ofFn_apply, QueryCache.cacheQuery_self, Option.map_some]
+  · simp only [mapCache, QueryCache.ofFn_apply, QueryCache.cacheQuery_of_ne, ne_eq, same, not_false_eq_true]
 
 /-- Relabelling the answers of the first-value table: the table answering `f` of its values is the table of the mapped values and the mapped sampler. -/
 theorem firstTable_relabel {α : Type} (f : R → R') (value : R) (sampler : ProbComp R)
@@ -173,11 +176,12 @@ theorem firstTable_relabel {α : Type} (f : R → R') (value : R) (sampler : Pro
         (f <$> ((unifSpec + (D →ₒ R)).query (.inr point) : OracleComp (unifSpec + (D →ₒ R)) R))).run current = _
     rw [simulateQ_map, simulateQ_spec_query, StateT.run_map, Functor.map_map]
     obtain ⟨cache, first⟩ := current
+    have mapped : mapCache f cache point = (cache point).map f := rfl
     rcases hit : cache point with _ | answer
     · rcases first with _ | first
-      · simp [firstTable, hit, mapCache, mapCache_cacheQuery]
-      · simp [firstTable, hit, mapCache, mapCache_cacheQuery]
-    · simp [firstTable, hit, mapCache]
+      · simp [firstTable, hit, mapped, mapCache_cacheQuery]
+      · simp [firstTable, hit, mapped, mapCache_cacheQuery]
+    · simp [firstTable, hit, mapped]
 
 end Table
 
@@ -263,11 +267,11 @@ theorem rootClient_entryD (setup : Setup baseSpec KemSK) (codec : Codec Reader R
     (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes)
     (decision : X → Bool) (work : OracleComp (SourceSpec KemSK) X) (runtime : A)
     (count : Nat) (selected : Fin (count + 1)) (index : Nat) (other : ProbComp Bool) :
-    other.boolDistAdvantage (PqxdhCorrelatedExpandHybrid.uniformGame (rootClient (Reader := Reader) setup codec checks
+    other.boolDistance (PqxdhCorrelatedExpandHybrid.uniformGame (rootClient (Reader := Reader) setup codec checks
         ensureInit supplied decision work runtime count selected index)) =
-      other.boolDistAdvantage (PqxdhServerAuthKeySchedule.rootHybrid setup.source (entryD (Reader := Reader) setup codec
+      other.boolDistance (PqxdhServerAuthKeySchedule.rootHybrid setup.source (entryD (Reader := Reader) setup codec
         checks ensureInit supplied decision work runtime count selected index)) := by
-  unfold ProbComp.boolDistAdvantage
+  unfold ProbComp.boolDistance
   rw [uniformGame_entry]
 
 end Entry

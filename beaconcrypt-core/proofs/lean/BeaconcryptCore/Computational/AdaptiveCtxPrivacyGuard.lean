@@ -231,7 +231,7 @@ noncomputable def randomView (decode : RawDecoder) (adversary : OracleComp Recei
 /-- After the exact real-view simulation, ciphertext replacement is precisely one ordinary Boolean IND$ reduction. -/
 theorem replay_random_advantage (decode : RawDecoder) (c : Pqxdh.Crypto)
     (adversary : OracleComp ReceiveSpec Bool) :
-    (replayView decode c adversary).boolDistAdvantage (randomView decode adversary) =
+    (replayView decode c adversary).boolDistance (randomView decode adversary) =
       modifiedNonceAeadINDDollarAdvantage c (viewReduction decode adversary) := by
   rw [← viewReduction_real_eq]
   rfl
@@ -249,7 +249,7 @@ theorem canonical_replay_advantage_bound (decode : RawDecoder) (c : Pqxdh.Crypto
     (sealBound : adversary.IsQueryBoundP AdaptiveCtxQueryBounds.SourceSeal qSeal)
     (rawBound : adversary.IsQueryBoundP AdaptiveCtxReceive.IsRawQuery qRaw)
     (small : qSeal < 2 ^ 96) :
-    ENNReal.ofReal ((canonicalView decode c adversary).boolDistAdvantage (replayView decode c adversary)) ≤
+    ENNReal.ofReal ((canonicalView decode c adversary).boolDistance (replayView decode c adversary)) ≤
       ENNReal.ofReal (modifiedNonceAeadINDDollarAdvantage c
         (AdaptiveCtxPrefixValidation.validationReduction decode c adversary qHash)) +
       (qHash : ℝ≥0∞) * (((2 ^ 128 : ℕ) : ℝ≥0∞))⁻¹ +
@@ -260,13 +260,13 @@ theorem canonical_replay_advantage_bound (decode : RawDecoder) (c : Pqxdh.Crypto
     AdaptiveCtxPrefixValidation.retainedCanonicalGame decode c adversary
   let right := retainedReplayGame decode c adversary
   let decision := fun result : CtxKey × (Bool × AdaptiveCtxReceive.ReceiveState) => result.2.1
-  have variation := (abs_probOutput_toReal_sub_le_tvDist (decision <$> left) (decision <$> right)).trans
-    (tvDist_map_le decision left right)
-  have projected : (canonicalView decode c adversary).boolDistAdvantage (replayView decode c adversary) ≤
-      tvDist left right := by
-    simpa only [ProbComp.boolDistAdvantage, canonicalView, replayView, left, right, decision,
+  have variation := (abs_prEvent_toReal_sub_le_discreteDistance (decision <$> left) (decision <$> right)).trans
+    (discreteDistance_map_le decision left right)
+  have projected : (canonicalView decode c adversary).boolDistance (replayView decode c adversary) ≤
+      discreteDistance left right := by
+    simpa only [ProbComp.boolDistance, canonicalView, replayView, left, right, decision,
       Functor.map_map, AdaptiveCtxPrefixValidation.canonicalProjection, Prod.map_apply,
-      Function.comp_def, Prod.map_fst, id_eq, VCVioLegacy.evalDist_singleton_eq_probOutput] using variation
+      Function.comp_def, Prod.map_fst, id_eq, ← prEvent_eq_evalDist_singleton] using variation
   exact (ENNReal.ofReal_le_ofReal projected).trans
     (canonical_replay_distance_bound decode c fallback adversary qHash qSeal qRaw
       hashBound sealBound rawBound small)
@@ -279,7 +279,7 @@ theorem canonical_random_advantage_bound (decode : RawDecoder) (c : Pqxdh.Crypto
     (sealBound : adversary.IsQueryBoundP AdaptiveCtxQueryBounds.SourceSeal qSeal)
     (rawBound : adversary.IsQueryBoundP AdaptiveCtxReceive.IsRawQuery qRaw)
     (small : qSeal < 2 ^ 96) :
-    ENNReal.ofReal ((canonicalView decode c adversary).boolDistAdvantage (randomView decode adversary)) ≤
+    ENNReal.ofReal ((canonicalView decode c adversary).boolDistance (randomView decode adversary)) ≤
       ENNReal.ofReal (modifiedNonceAeadINDDollarAdvantage c
         (AdaptiveCtxPrefixValidation.validationReduction decode c adversary qHash)) +
       (qHash : ℝ≥0∞) * (((2 ^ 128 : ℕ) : ℝ≥0∞))⁻¹ +
@@ -287,12 +287,12 @@ theorem canonical_random_advantage_bound (decode : RawDecoder) (c : Pqxdh.Crypto
         (AdaptiveRawNonceAead.indexedReduction (baseDecoder decode) fallback (wrapped decode adversary) index) +
       (qRaw : ℝ≥0∞) / (2 ^ 512 : ℕ) +
       ENNReal.ofReal (modifiedNonceAeadINDDollarAdvantage c (viewReduction decode adversary)) := by
-  have triangle := ENNReal.ofReal_le_ofReal (ProbComp.boolDistAdvantage_triangle
+  have triangle := ENNReal.ofReal_le_ofReal (ProbComp.boolDistance_triangle
     (canonicalView decode c adversary) (replayView decode c adversary) (randomView decode adversary))
   rw [ENNReal.ofReal_add
-    (show 0 ≤ (canonicalView decode c adversary).boolDistAdvantage (replayView decode c adversary)
+    (show 0 ≤ (canonicalView decode c adversary).boolDistance (replayView decode c adversary)
       from abs_nonneg _)
-    (show 0 ≤ (replayView decode c adversary).boolDistAdvantage (randomView decode adversary)
+    (show 0 ≤ (replayView decode c adversary).boolDistance (randomView decode adversary)
       from abs_nonneg _), replay_random_advantage] at triangle
   exact triangle.trans (add_le_add
     (canonical_replay_advantage_bound decode c fallback adversary qHash qSeal qRaw

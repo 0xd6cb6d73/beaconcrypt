@@ -1,7 +1,6 @@
 import BeaconcryptCore.Computational.CtxConstructiveNonce
 import VCVio.CryptoFoundations.SecExp
 import BeaconcryptCore.Computational.VCVioForwardProbabilityTheory
-import BeaconcryptCore.Computational.VCVioLegacyBridge
 
 /-!
 # Conventional Boolean IND$ validation for modified CTX
@@ -47,7 +46,7 @@ noncomputable def modifiedNonceAeadINDDollarRandomExp
 noncomputable def modifiedNonceAeadINDDollarAdvantage
     (c : Pqxdh.Crypto)
     (adversary : ModifiedNonceAeadINDDollarAdversary) : ℝ :=
-  (modifiedNonceAeadINDDollarRealExp c adversary).boolDistAdvantage
+  (modifiedNonceAeadINDDollarRealExp c adversary).boolDistance
     (modifiedNonceAeadINDDollarRandomExp adversary)
 
 /-- The protocol nonce space has exactly 96 bits. -/
@@ -521,7 +520,7 @@ theorem directProbe_le_booleanRealInner
     have haccept := keyProbeHit_implies_realValidationCiphertextHit
       c key (chooseFreshCtxNonce result.2.usedNonces)
       (ctxPrefixProbeVector qH result.2.publicInputs) hhit
-    simp [hhit, ctxValidationAccept, haccept, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+    simp [hhit, ctxValidationAccept, haccept]
   · simp only [prEvent_pure, decide_eq_true_eq, hhit, ite_false, zero_le]
 
 /-- The canonical secret-prefix event is contained in real Boolean validation success. -/
@@ -560,7 +559,7 @@ theorem ctxSecretPrefixQueriedProbability_le_booleanINDDollar
     _ ≤ Pr{let x ← modifiedNonceAeadINDDollarRandomExp reduction}[x = true] +
           ENNReal.ofReal
             (modifiedNonceAeadINDDollarAdvantage c reduction) := by
-      have comparison := VCVioForward.evalDist_apply_true_le_add_ofReal_boolDistAdvantage
+      have comparison := ProbComp.evalDist_apply_true_le_add_ofReal_boolDistance
           (modifiedNonceAeadINDDollarRealExp c reduction)
           (modifiedNonceAeadINDDollarRandomExp reduction)
       rw [← prEvent_eq_evalDist_singleton (modifiedNonceAeadINDDollarRealExp c reduction) true,

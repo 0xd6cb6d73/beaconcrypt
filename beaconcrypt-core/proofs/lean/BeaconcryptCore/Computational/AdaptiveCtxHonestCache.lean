@@ -183,7 +183,7 @@ theorem freshGuess_address_absent (c : Pqxdh.Crypto) (key : CtxKey)
   | some digest =>
     have sourceCached : state.ctx.cache.suffixCache
         (outerSuffix target.nonce target.context target.record.tag) = some digest := by
-      simpa only [aligned, sourceDictionary, typedSuffix, List.Vector.toList] using cached
+      simpa only [aligned, sourceDictionary, QueryCache.toFn_ofFn, typedSuffix, List.Vector.toList] using cached
     have commit : target.record.commit = digest := by
       simpa only [tableExtending, cached, Option.getD_some] using guessed
     have lookup : (digest, state.ctx.cache) ∈ support

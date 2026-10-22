@@ -2285,11 +2285,12 @@ import BeaconcryptCore.Computational.CborRegistrationCodec
 import BeaconcryptCore.Computational.CborCommandFilter
 import BeaconcryptCore.Computational.CborProductionBoundary
 
+import BeaconcryptCore.Computational.BooleanDistance
+import BeaconcryptCore.Computational.DiscreteDistance
 import BeaconcryptCore.Computational.VCVioForwardEvalDist
 import BeaconcryptCore.Computational.VCVioForwardOracleComp
 import BeaconcryptCore.Computational.VCVioForwardProbabilityTheory
 import BeaconcryptCore.Computational.VCVioForwardProgramLogic
-import BeaconcryptCore.Computational.VCVioLegacyBridge
 
 import BeaconcryptCore.Computational.CborAdmissionSubstitution
 import BeaconcryptCore.Computational.CborAdmissionSend

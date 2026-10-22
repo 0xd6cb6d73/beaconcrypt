@@ -1,4 +1,5 @@
 import BeaconcryptCore.Computational.PqxdhServerAuthJointIdentityDhBudget
+import BeaconcryptCore.Computational.PqxdhServerAuthEntryResourceServices
 
 /-! Explicit uniform costs of the literal native callbacks. The primitive programs and all interpreted base calls are retained; deterministic operations are not asserted to have zero running time. -/
 open OracleComp OracleSpec CoreModels Aeneas
@@ -13,16 +14,8 @@ variable {ι KemSK Reader Response : Type} {baseSpec : OracleSpec ι}
 
 /-- One restricted Extract table read costs at most 64 byte draws on a miss and zero on a hit. -/
 theorem extract_table_uniform (bytes : Pqxdh.Bytes) (cache : HmacOracle.QueryCache) :
-    ((HmacOracle.randomOracle bytes).run cache).IsTotalQueryBound 64 := by
-  cases found : cache bytes with
-  | none =>
-    rw [QueryImpl.withCaching_run_none uniformSampleImpl found]
-    unfold IsTotalQueryBound
-    rw [isQueryBound_map_iff]
-    exact CtxComputationalSecurity.uniformFixedBytes_isTotalQueryBound 64
-  | some value =>
-    rw [QueryImpl.withCaching_run_some uniformSampleImpl found]
-    trivial
+    ((HmacOracle.randomOracle bytes).run cache).IsTotalQueryBound 64 :=
+  PqxdhServerAuthEntryFactor.extract_table_uniform bytes cache
 
 /-- Actual root derivation pays the same 64-byte table allowance and keeps real Expand plus both original history entries. -/
 theorem root_bytes_uniform {A : Type} (hmac : HmacSha512)

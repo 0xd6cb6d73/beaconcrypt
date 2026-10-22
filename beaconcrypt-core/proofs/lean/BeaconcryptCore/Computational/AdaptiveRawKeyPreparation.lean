@@ -93,7 +93,7 @@ theorem prepared_integrity_bound {Context Result : Type} {count : Nat}
     (client : Context → OracleComp (FamilySpec count) Result)
     (fallback : ModifiedNonceAeadForgery) (rawCount : Nat)
     (bounded : ∀ context, (client context).IsQueryBoundP (TargetClass IsRawQuery) rawCount) :
-    ENNReal.ofReal (tvDist (source prepare true targetDecode real decode c client)
+    ENNReal.ofReal (discreteDistance (source prepare true targetDecode real decode c client)
       (source prepare false targetDecode real decode c client)) ≤
       ∑ index ∈ Finset.range rawCount, modifiedNonceAeadINTCTXTAdvantage c
         (indexedReduction targetDecode fallback (wrapped prepare real decode c client) index) := by
@@ -101,12 +101,14 @@ theorem prepared_integrity_bound {Context Result : Type} {count : Nat}
     (wrapped prepare real decode c client) rawCount
     (prepared_target_bound prepare real decode c client IsRawQuery
       (by intro coin; simp [IsRawQuery]) rawCount bounded)
-  have mapped := (ENNReal.ofReal_le_ofReal (tvDist_map_le reassociate
+  have mapped := (ENNReal.ofReal_le_ofReal (discreteDistance_map_le reassociate
     (uniformAdaptiveGame true targetDecode c (wrapped prepare real decode c client))
     (uniformAdaptiveGame false targetDecode c (wrapped prepare real decode c client)))).trans linked
-  have interpretation := fun targetReal => (VCVioLegacy.evalSPMF_eq_iff_evalDistEq _ _).2
-    (prepared_interpretation prepare targetReal targetDecode real decode c client)
-  simpa only [tvDist, ← interpretation] using mapped
+  have interpretation := discreteDistance_congr
+    (prepared_interpretation prepare true targetDecode real decode c client)
+    (prepared_interpretation prepare false targetDecode real decode c client)
+  rw [← interpretation] at mapped
+  exact mapped
 
 /-- The original prepared source charges preparation, target-key generation and all client randomness. -/
 theorem prepared_source_uniform {Context Result : Type} {count : Nat}

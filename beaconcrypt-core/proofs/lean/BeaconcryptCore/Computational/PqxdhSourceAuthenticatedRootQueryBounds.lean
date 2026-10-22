@@ -168,8 +168,10 @@ info: 'BeaconcryptCore.Computational.PqxdhSourceAuthenticatedRoot.sourceProtocol
 #guard_msgs in
 #print axioms sourceProtocol_prefix_query_bound
 
+-- The statement contains sourceProtocol through RootMode. Its acceptedCommon branch inherits Classical.choice from Lean 4.35's UInt8 linear-order package proof (via Classical.propDecidable), even though the postchallenge bound itself still forwards the constructive observer bound.
 /--
 info: 'BeaconcryptCore.Computational.PqxdhSourceAuthenticatedRoot.sourceProtocol_post_query_bound' depends on axioms: [propext,
+ Classical.choice,
  Quot.sound]
 -/
 #guard_msgs in

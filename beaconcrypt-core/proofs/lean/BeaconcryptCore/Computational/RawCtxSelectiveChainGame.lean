@@ -68,7 +68,7 @@ theorem private_real (source : FixedHkdfSha512NoSaltSource) (stage : Nat)
 /-- Recording a hit does not change any prior table entry. -/
 theorem cache_hit (table : Table) (request : JointKdfAddress) (output : FullOutput)
     (found : table request = some output) : table.cacheQuery request output = table := by
-  funext previous
+  refine QueryCache.ext (fun previous => ?_)
   by_cases same : previous = request
   · subst previous
     simpa using found.symm

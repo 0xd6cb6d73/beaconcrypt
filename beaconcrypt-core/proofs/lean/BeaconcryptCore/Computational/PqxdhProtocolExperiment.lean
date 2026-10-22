@@ -109,11 +109,11 @@ theorem authenticated_bound (env : Environment baseSpec M P I D K A S B)
       (PqxdhProtocolSelector.SelectorClass (PqxdhPrivateKemQueryBounds.SelectorSource (baseSpec := baseSpec) Creating)) 0)
     (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : Forgery)
     (post : Post program.Selection S B) :
-    (env.actual baseImpl kem attachedVerify primitives setup program post).boolDistAdvantage
+    (env.actual baseImpl kem attachedVerify primitives setup program post).boolDistance
       (env.correlated baseImpl kem attachedVerify primitives setup program post) ≤
       (advantage primitives (env.authenticationReduction baseImpl kem primitives setup program fallback ordinaryFallback)).toReal +
-      kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
-        (env.kemReduction kem attachedVerify primitives setup program post) := by
+      (kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
+        (env.kemReduction kem attachedVerify primitives setup program post)).toReal := by
   exact PqxdhAcceptedRegistration.authenticated_registration_bound baseImpl kem env.parameters compatible functional
     correct attachedVerify primitives adapter setup (env.selector program)
     (fun transcript => PqxdhProtocolSelector.selected_source_bound env.parameters.source env.writer env.senderId

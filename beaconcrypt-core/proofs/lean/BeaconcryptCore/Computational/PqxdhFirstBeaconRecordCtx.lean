@@ -1138,7 +1138,7 @@ theorem observe_le (b : Fin (B + 1))
   classical
   by_cases aliased : RawCtxSendLineageCollision.InitialAlias sample.2.1
   · rw [ite_eq_left_iff.mpr fun impossible => absurd aliased impossible]
-    simp [-evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+    simp [ ]
   · rw [ite_eq_right_iff.mpr fun holds => absurd holds aliased]
     apply le_of_eq
     congr 1
@@ -1146,7 +1146,7 @@ theorem observe_le (b : Fin (B + 1))
     rw [← PqxdhSourceSharedInput.input_cache setup env callbacks program post attachedVerify primitives baseImpl kem]
     cases pending : PqxdhSourceSharedInput.input setup env callbacks program post attachedVerify primitives baseImpl kem
         (firstBeacon b).owner (firstBeacon b).number (firstBeacon b).ancestors (firstBeacon b).disclosed sample.1 with
-    | inl decision => simp [PqxdhSourceSharedInput.restore, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+    | inl decision => simp [PqxdhSourceSharedInput.restore]
     | inr input =>
       have owner := input_selected setup env callbacks baseImpl kem attachedVerify primitives program post _ _ _ _ sample.1 input pending
       simp only [PqxdhSourceSharedInput.restore]
@@ -1236,7 +1236,7 @@ theorem alias_bound :
   refine (aliasStep block _ ?_).trans uniform
   intro initialBlock _ separate
   rw [OracleComp.prEvent_eq_zero_iff]
-  simp [separate, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+  simp [separate]
 
 /-- C4's compiled game is dominated by the initial half-alias probability plus the separated compiled game. -/
 theorem compiled_le_separated (target : Target S (B + 1)) :

@@ -209,9 +209,10 @@ theorem ptc_correct_draws (setup : PqxdhServerAuthExperiment.Setup baseSpec KemS
             (MlKem768Ciphertext × MlKemSharedSecret) =>
           (⟨draw.1.1, draw.1.2, draw.2.2.1, draw.2.2.2⟩ : PqxdhKemCorrectnessError.Sample KemSK)) <$>
           simulateQ (kemAmbientImpl setup.baseImpl) (ptcDraws setup.kem guess))}[(PqxdhKemCorrectnessError.Bad setup.kem functional) x] := by
+    apply EvalDistEq.prEvent_eq
     rw [← simulateQ_map]
     simp only [PqxdhKemCorrectnessError.sample, ptcDraws, map_bind, map_pure, simulateQ_bind, simulateQ_pure]
-    refine EvalDistEq.prEvent_eq (EvalDistEq.bind_right _ fun pair => ?_) _
+    refine EvalDistEq.bind_right (m := ProbComp) _ fun pair => ?_
     exact (OracleComp.EvalDistEq.bind_const _ _).symm
   rw [projected, prEvent_map]
   refine prEvent_congr _ _ _ fun draw => ?_
@@ -220,7 +221,7 @@ theorem ptc_correct_draws (setup : PqxdhServerAuthExperiment.Setup baseSpec KemS
 /-- `ptc`'s advantage is the distance of its two fixed branches under the ambient interpreter (`PqxdhKemIndCca.oneKey_indCCAAdvantage_eq_branchDist`, coefficient one). -/
 theorem ptc_advantage (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (guess : MlKem768PublicKey → OracleComp setup.kem.IND_CCA_oracleSpec (Option MlKem768Ciphertext)) :
-    setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl)) (ptc setup.kem guess).toINDCCA =
+    (setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl)) (ptc setup.kem guess).toINDCCA).toReal =
       |(𝒟[simulateQ (kemAmbientImpl setup.baseImpl)
           (oneKeyBranchMain setup.kem (runtimeOfImpl (kemAmbientImpl setup.baseImpl)) (ptc setup.kem guess) true)]
             {true}).toReal -
@@ -232,15 +233,19 @@ theorem ptc_advantage (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (PqxdhInitializerSecrecy.runtimeOfImpl_evalDist_bind _)
     (PqxdhInitializerSecrecy.runtimeOfImpl_evalDist_liftProbComp _)
     (PqxdhInitializerSecrecy.runtimeOfImpl_noFail_bool _)]
-  rfl
+  change ((𝒟[simulateQ (kemAmbientImpl setup.baseImpl)
+    (oneKeyBranchMain setup.kem (runtimeOfImpl (kemAmbientImpl setup.baseImpl)) (ptc setup.kem guess) true)]).boolDist
+    𝒟[simulateQ (kemAmbientImpl setup.baseImpl)
+      (oneKeyBranchMain setup.kem (runtimeOfImpl (kemAmbientImpl setup.baseImpl)) (ptc setup.kem guess) false)]).toReal = _
+  rw [MeasureTheory.Measure.toReal_boolDist]
 
 /-- `ptc_bound` (design-v2 section 6): the ciphertext guess of a guesser with decapsulation access is at most the IND-CCA advantage of the predict-then-compare adversary `ptc` plus the ML-KEM correctness error plus `2^-256`, each with coefficient one. Premise: `FunctionalDecapsulation`. -/
 theorem ptc_bound (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (functional : FunctionalDecapsulation setup.kem)
     (guess : MlKem768PublicKey → OracleComp setup.kem.IND_CCA_oracleSpec (Option MlKem768Ciphertext)) :
     PqxdhDeploymentIdealAnomalyGuesser.ctGuessByCca setup guess ≤
-      ENNReal.ofReal (setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
-        (ptc setup.kem guess).toINDCCA) +
+      ENNReal.ofReal ((setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
+        (ptc setup.kem guess).toINDCCA).toReal) +
       ENNReal.ofReal (PqxdhRegistrationJointKemRawGame.correctnessError setup) + (2 ^ 256 : ℝ≥0∞)⁻¹ := by
   set real := 𝒟[simulateQ (kemAmbientImpl setup.baseImpl)
     (oneKeyBranchMain setup.kem (runtimeOfImpl (kemAmbientImpl setup.baseImpl)) (ptc setup.kem guess) true)] {true}
@@ -268,14 +273,14 @@ theorem ptc_bound (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
   have finiteRandom : random ≠ ⊤ := by
     rw [hrandom, ← prEvent_eq_evalDist_singleton _ true]
     exact prEvent_ne_top _
-  have close : real ≤ random + ENNReal.ofReal (setup.kem.IND_CCA_Advantage
-      (runtimeOfImpl (kemAmbientImpl setup.baseImpl)) (ptc setup.kem guess).toINDCCA) := by
+  have close : real ≤ random + ENNReal.ofReal ((setup.kem.IND_CCA_Advantage
+      (runtimeOfImpl (kemAmbientImpl setup.baseImpl)) (ptc setup.kem guess).toINDCCA).toReal) := by
     rw [ptc_advantage setup guess]
     exact PqxdhDeploymentHeadlineChain.le_add_of_ofReal_abs finiteReal finiteRandom le_rfl
   calc PqxdhDeploymentIdealAnomalyGuesser.ctGuessByCca setup guess
       ≤ real + ENNReal.ofReal (PqxdhRegistrationJointKemRawGame.correctnessError setup) := guessed
-    _ ≤ ((2 ^ 256 : ℝ≥0∞)⁻¹ + ENNReal.ofReal (setup.kem.IND_CCA_Advantage
-          (runtimeOfImpl (kemAmbientImpl setup.baseImpl)) (ptc setup.kem guess).toINDCCA)) +
+    _ ≤ ((2 ^ 256 : ℝ≥0∞)⁻¹ + ENNReal.ofReal ((setup.kem.IND_CCA_Advantage
+          (runtimeOfImpl (kemAmbientImpl setup.baseImpl)) (ptc setup.kem guess).toINDCCA).toReal)) +
         ENNReal.ofReal (PqxdhRegistrationJointKemRawGame.correctnessError setup) :=
           add_le_add (close.trans (add_le_add (ptc_random_le setup functional guess) le_rfl)) le_rfl
     _ = _ := by ring
@@ -327,9 +332,9 @@ noncomputable def beta (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
     (route : RawCtxServerRouting.SenderDecoder) (checks : Checks) (ensureInit : StateT A ProbComp Bool)
     (bounds : FreshBounds) (mode : Mode) (adversary : OracleComp (ModeSpec mode) X) (budget : Budget)
     (g : Fin budget.accept × Fin budget.capacity) (runtime : A) : ℝ≥0∞ :=
-  ENNReal.ofReal (setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
+  ENNReal.ofReal ((setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
       (ptc setup.kem (PqxdhDeploymentIdealAnomalyGuesser.anomalyGuesser setup codec route checks
-        (Target.ofCE budget g) ensureInit 0 runtime bounds mode adversary)).toINDCCA) +
+        (Target.ofCE budget g) ensureInit 0 runtime bounds mode adversary)).toINDCCA).toReal) +
     ENNReal.ofReal (PqxdhRegistrationJointKemRawGame.correctnessError setup) + (2 ^ 256 : ℝ≥0∞)⁻¹
 
 open Classical in

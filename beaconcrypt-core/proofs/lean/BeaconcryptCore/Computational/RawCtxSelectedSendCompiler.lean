@@ -200,6 +200,7 @@ theorem send_source (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixed
     simp only [Functor.map_map, Prod.map_def, id_eq, StateT.run_map, apply_ite, map_pure, Option.map_none,
       Option.map_some] at mapped ⊢
     convert mapped using 1
+    rfl
 
 
 /-- Interpreting only private slots recovers the complete extracted native send, including the exact pending seal, optional writer reply and cache. The selected-nonce stop is the same explicit event. -/

@@ -52,7 +52,8 @@ theorem stopped_distinguisher_uniform (setup : Setup baseSpec KemSK) (codec : Co
       (entryRunBudget caps qCoin Q qHash qH) := by
   simp only [stoppedEntryDistinguisher, IsTotalQueryBound, isQueryBound_map_iff]
   apply (stopped_source_uniform setup codec checks caps bounded context Q j value
-    _ ![qCoin, Q, qHash, qH] ?_ _ ?_).mono
+    (adversary (contextInput setup revealSeed context)) ![qCoin, Q, qHash, qH] ?_
+    (((contextState setup context, fun _ => false, ⟨∅, none, false⟩), false), none) ?_).mono
       (entry_initial_potential setup context caps qCoin Q qHash qH)
   · intro i
     fin_cases i

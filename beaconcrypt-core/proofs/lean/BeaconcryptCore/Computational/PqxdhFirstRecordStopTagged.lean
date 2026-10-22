@@ -473,9 +473,7 @@ theorem coupled_bound (impl₁ : QueryImpl spec (StateT σ₁ ProbComp)) (impl�
     (event : α × σ₁ → Prop) (excluded : ∀ result, event result → ¬ bad₁ result.2)
     (impossible : ∀ left right, related left right → ¬ bad₂ right → ∀ value, event (value, left) → False) :
     Pr{let x ← (simulateQ impl₁ work).run first}[event x] ≤ Pr{let result ← (simulateQ impl₂ work).run second}[bad₂ result.2] := by
-  -- Relational phase B exception: the coupling-to-event law exists only in deprecated form; both events use the bridge.
-  rw [← VCVioLegacy.probEvent_eq_prEvent, ← VCVioLegacy.probEvent_eq_prEvent]
-  refine probEvent_le_of_relTriple (coupled_run impl₁ impl₂ related bad₁ bad₂ absorbing₁ absorbing₂ step work first second
+  refine prEvent_le_of_relTriple (coupled_run impl₁ impl₂ related bad₁ bad₂ absorbing₁ absorbing₂ step work first second
     (Or.inr (Or.inr start))) fun left right held holds => ?_
   rcases held with bad | bad | ⟨equal, same⟩
   · exact absurd bad (excluded left holds)
@@ -1592,12 +1590,9 @@ theorem support_right {β γ : Type} {first : ProbComp β} {second : ProbComp γ
     RelTriple first second (fun left right => post left right ∧ right ∈ support second) := by
   rw [relTriple_iff_relWP, relWP_iff_couplingPost] at coupled ⊢
   obtain ⟨coupling, holds⟩ := coupled
-  refine ⟨coupling, fun pair reached => ⟨holds pair reached, ?_⟩⟩
-  have mapped : pair.2 ∈ (Prod.snd <$> coupling.1).support := by
-    rw [spmf_support_map]
-    exact ⟨pair, reached, rfl⟩
-  rw [coupling.2.map_snd] at mapped
-  exact (mem_support_iff_evalSPMF_apply_ne_zero second pair.2).2 ((SPMF.mem_support_iff _ _).1 mapped)
+  refine ⟨coupling, ?_⟩
+  exact (holds.and (ae_mem_support_prod coupling)).mono fun _ reached =>
+    ⟨reached.1, reached.2.2⟩
 
 /-- Disclosure is monotone in the known chains. -/
 theorem known_mono (first second : RawCtxSelectedMessageFreshness.History S B)
@@ -2794,7 +2789,9 @@ theorem tagged_send (kernel : TKernel) (context : RawCtxSourceSend.SealContext) 
       ProbComp _)) at replySupported
     simp only [support_pure, Set.mem_singleton_iff] at replySupported
     subst replySupported
-    have kept := label_prefix source writer prior key nonce next _ _ sealed
+    have kept := label_prefix source writer prior key nonce next
+      (.inr (.inl (.inr (RawCtxChainSend.ready pending (taggedStep prior nonce next pending.request)))))
+      (state.1, state.2 ++ logged pending.request) sealed
       (by simpa only [QueryImpl.compose, sendInject, simulateQ_spec_query] using sealedSupported)
     refine Or.inr ⟨by simp [sendChains, begun], tagged_known prior nonce next pending.request, ?_⟩
     rw [← request]
@@ -3756,9 +3753,7 @@ theorem post_bound {Result : Type} (target : RootOutput)
     Pr{let result ← ((simulateQ (world source writer prior key nonce next sender route decode pre application initialW selector aux
         (taggedFinishOp source writer prior key nonce next decode pre application initialW selector aux fixed selectedMessage other))
         client).run tagged)}[Exposed target result.2] := by
-  -- Relational phase B exception: the coupling-to-event law exists only in deprecated form; both events use the bridge.
-  rw [← VCVioLegacy.probEvent_eq_prEvent, ← VCVioLegacy.probEvent_eq_prEvent]
-  refine probEvent_le_of_relTriple (post_coupled source writer prior key nonce next sender route decode pre application initialC selector
+  refine prEvent_le_of_relTriple (post_coupled source writer prior key nonce next sender route decode pre application initialC selector
     aux initialW (taggedFinishOp source writer prior key nonce next decode pre application initialW selector aux fixed selectedMessage
       other) target (GoodState first Markable)
     (good_step source writer prior key nonce next sender route decode pre application initialW selector aux fixed selectedMessage other
@@ -5121,9 +5116,7 @@ theorem bind_event_le {α β γ δ : Type} (first : ProbComp α) (rest : α → 
   have left : (first >>= fun value => output <$> rest value) = output <$> (first >>= rest) := by rw [map_bind]
   have right : (other >>= fun value => log <$> later value) = log <$> (other >>= later) := by rw [map_bind]
   rw [left, right, ← prEvent_eq_evalDist_singleton _ true, prEvent_map, prEvent_map]
-  -- Relational phase B exception: the coupling-to-event law exists only in deprecated form; both events use the bridge.
-  rw [← VCVioLegacy.probEvent_eq_prEvent, ← VCVioLegacy.probEvent_eq_prEvent]
-  exact probEvent_le_of_relTriple coupled fun _ _ held holds => held holds
+  exact prEvent_le_of_relTriple coupled fun _ _ held holds => held holds
 
 variable (pre : QueryImpl (PqxdhBeaconPhase2Shared.Spec I D K X Response PqxdhPhase2DecapsulationRouting.Shared)
       (StateT (ExternalState A N RootOracle.QueryCache) ProbComp))

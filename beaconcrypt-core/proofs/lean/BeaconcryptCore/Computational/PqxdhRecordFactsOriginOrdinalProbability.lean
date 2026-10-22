@@ -46,7 +46,7 @@ theorem marked_complete (service : QueryImpl (ServiceSpec n) (StateT (CtxPrivate
   classical
   simp only [markedResume]
   rw [← prEvent_eq_evalDist_of_discrete, prEvent_pure]
-  simp [SelectedEvent, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+  simp [SelectedEvent]
 
 /-- The selected continuation bound is averaged over the complete unchanged supported prefix, without conditioning on a later result. -/
 theorem selected_bound (service : QueryImpl (ServiceSpec n) (StateT (CtxPrivate n) ProbComp))

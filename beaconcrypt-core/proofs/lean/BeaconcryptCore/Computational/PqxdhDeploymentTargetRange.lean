@@ -308,12 +308,12 @@ theorem kem_transfer_eligible (setup : Setup baseSpec KemSK)
           (PqxdhDeploymentKemTransfer.decision setup.source.crypto codec setup.serverKeyId budget event claim g)
           (compileFull setup codec route bounds mode adversary) runtime budget.create
           (PqxdhDeploymentKemTransfer.selectedKem budget g) g.1.val false] {true} +
-        ENNReal.ofReal (setup.kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl
+        ENNReal.ofReal ((setup.kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl
             (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl))
           (PqxdhRegistrationJointKemRawCertified.adversary setup codec checks ensureInit none
             (PqxdhDeploymentKemTransfer.decision setup.source.crypto codec setup.serverKeyId budget event claim g)
             (compileFull setup codec route bounds mode adversary) runtime budget.create
-            (PqxdhDeploymentKemTransfer.selectedKem budget g) g.1.val).toINDCCA +
+            (PqxdhDeploymentKemTransfer.selectedKem budget g) g.1.val).toINDCCA).toReal +
           PqxdhRegistrationJointKemRawGame.correctnessError setup)) := by
   rw [PqxdhDeploymentKemTransfer.map_support_congr _ _
     (fun outcome => decide (PqxdhDeploymentKemTransfer.happens event outcome = true ∧
@@ -369,13 +369,13 @@ theorem kem_transfer_create (setup : Setup baseSpec KemSK)
             (g.1, g.2.castSucc))
           (compileFull setup codec route bounds mode adversary) runtime budget.create
           (PqxdhDeploymentKemTransfer.selectedKem budget (g.1, g.2.castSucc)) g.1.val false] {true} +
-        ENNReal.ofReal (setup.kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl
+        ENNReal.ofReal ((setup.kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl
             (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl))
           (PqxdhRegistrationJointKemRawCertified.adversary setup codec checks ensureInit none
             (PqxdhDeploymentKemTransfer.decision setup.source.crypto codec setup.serverKeyId budget event claim
               (g.1, g.2.castSucc))
             (compileFull setup codec route bounds mode adversary) runtime budget.create
-            (PqxdhDeploymentKemTransfer.selectedKem budget (g.1, g.2.castSucc)) g.1.val).toINDCCA +
+            (PqxdhDeploymentKemTransfer.selectedKem budget (g.1, g.2.castSucc)) g.1.val).toINDCCA).toReal +
           PqxdhRegistrationJointKemRawGame.correctnessError setup)) := by
   rw [PqxdhDeploymentKemTransfer.map_support_congr _ _
     (fun outcome => decide (PqxdhDeploymentKemTransfer.happens event outcome = true ∧

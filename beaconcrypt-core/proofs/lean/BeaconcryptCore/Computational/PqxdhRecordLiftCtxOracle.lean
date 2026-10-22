@@ -133,7 +133,8 @@ def store (masked : Mask Slot) (coordinate : Coordinate Slot) (output : FullOutp
 theorem store_realization (masked : Mask Slot) (key : RootOutput) (coordinate : Coordinate Slot)
     (output : FullOutput) (different : coordinate ≠ masked.coordinate) :
     keyTable (store masked coordinate output) key = (keyTable masked key).cacheQuery coordinate output := by
-  funext query
+  apply QueryCache.ext
+  intro query
   by_cases parent : query = masked.coordinate
   · subst query
     simp [keyTable, store, realize, QueryCache.cacheQuery_of_ne, Ne.symm different]

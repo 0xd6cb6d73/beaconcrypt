@@ -41,6 +41,7 @@ theorem lifted_coins (program : OracleComp (PqxdhLiveKemBirth.Spec KemSK) Result
         isQueryBoundP_query_bind_iff, IsCoin, ih]
       rfl
 
+set_option backward.isDefEq.respectTransparency false in
 /-- The open constructor has no direct coin query: generated identity randomness stays with the private challenger, and runtime initialization is a separate local call. -/
 theorem constructor_coins (sender : Std.U64) (supplied : Option Pqxdh.Bytes) :
     (PqxdhRegistrationJointServerBirth.client (KemSK := KemSK) (P := Unit) sender supplied).IsQueryBoundP

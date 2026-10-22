@@ -73,13 +73,12 @@ noncomputable def aliasTester : FullObserver ((Bool ⊕ Context) × Entry) :=
 set_option backward.isDefEq.respectTransparency false in
 /-- The actual publication-gated byte freshness decision differs from the ordinary observer only by three copies of the complete masked candidate event; common decisions are identical. -/
 theorem local_bound (context : (Bool ⊕ Context) × Entry) (target : RootOutput) (output : FullOutput) :
-    (native source writer mark sender route decode view context target output).boolDistAdvantage
+    (native source writer mark sender route decode view context target output).boolDistance
       (observer source writer mark sender route decode view context output) ≤
     3 * Pr{let x ← bad source writer mark sender route decode view context target output}[x = true].toReal := by
   rcases context with ⟨common | pending, entry⟩
   · refine le_of_eq_of_le ?_ (mul_nonneg (by norm_num) ENNReal.toReal_nonneg)
-    simp [native, observer, ProbComp.boolDistAdvantage, -evalDist_apply_singleton, -evalDist_apply_setOf,
-      -evalDist_apply_univ]
+    simp [native, observer, ProbComp.boolDistance]
   · simpa only [native, observer, bad, observed, Functor.map_map, Function.comp_def, candidates,
       PqxdhInitialPrivateCheckedFreshness.maskedRun, PqxdhInitialCheckedFreshness.maskedRun,
       PqxdhInitialParentStoppedHop.candidates, prEvent_map, decide_eq_true_eq] using
@@ -103,7 +102,7 @@ noncomputable def random (sample : ProbComp (Bool ⊕ Context))
 /-- Averaging the real-child freshness comparison retains the exact full predecessor sampler and charges three copies of its actual input-candidate event. -/
 theorem actual_route (sample : ProbComp (Bool ⊕ Context))
     (address : (Bool ⊕ Context) → JointKdfAddress) :
-    (actual source writer mark sender route decode view sample address).boolDistAdvantage
+    (actual source writer mark sender route decode view sample address).boolDistance
       (RawCtxSelectedParentSecrecy.actual source sample address
         (observer source writer mark sender route decode view)) ≤
       3 * Pr{let pair ← (RawCtxFullPreimageTester.actual (RawCtxFullPreimageTester.production source)
@@ -145,7 +144,7 @@ set_option maxRecDepth 2048 in
 /-- The independent-child freshness comparison retains the full delayed-coordinate candidate experiment with the same explicit factor three. -/
 theorem random_route (sample : ProbComp (Bool ⊕ Context))
     (address : (Bool ⊕ Context) → JointKdfAddress) :
-    (random source writer mark sender route decode view sample address).boolDistAdvantage
+    (random source writer mark sender route decode view sample address).boolDistance
       (RawCtxSelectedParentSecrecy.random sample address
         (observer source writer mark sender route decode view)) ≤
       3 * Pr{let pair ← (RawCtxSelectedParentCandidates.uniform sample address
@@ -207,7 +206,7 @@ theorem actual_bound (source : FixedHkdfSha512NoSaltSource) (hmac : HmacSha512) 
     (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
     (view : View Context extra M P I D K X Response Shared A N C S B)
     (sample : ProbComp (Bool ⊕ Context)) (address : (Bool ⊕ Context) → JointKdfAddress) :
-    (actual source writer mark sender route decode view sample address).boolDistAdvantage
+    (actual source writer mark sender route decode view sample address).boolDistance
       (RawCtxSelectedParentSecrecy.actual source sample address
         (observer source writer mark sender route decode view)) ≤
       3 * ((2 ^ 352 : ℝ)⁻¹ +
@@ -234,7 +233,7 @@ theorem random_bound (sample : ProbComp (Bool ⊕ Context))
     (bounded : ∀ context output result,
       result ∈ support (observed source writer mark sender route decode view context output) →
         (candidates result).length ≤ qCandidates) :
-    (random source writer mark sender route decode view sample address).boolDistAdvantage
+    (random source writer mark sender route decode view sample address).boolDistance
       (RawCtxSelectedParentSecrecy.random sample address
         (observer source writer mark sender route decode view)) ≤
       3 * ((qCandidates : ℝ) / (2 ^ 256 : ℝ)) := by
@@ -264,23 +263,23 @@ theorem bound (source : FixedHkdfSha512NoSaltSource) (hmac : HmacSha512) (correc
     (bounded : ∀ context output result,
       result ∈ support (observed source writer mark sender route decode view context output) →
         (candidates result).length ≤ qCandidates) :
-    (actual source writer mark sender route decode view sample address).boolDistAdvantage
+    (actual source writer mark sender route decode view sample address).boolDistance
       (random source writer mark sender route decode view sample address) ≤
       RawCtxSelectedParentHop.extractLoss hmac sample address (observer source writer mark sender route decode view) +
         RawCtxSelectedParentHop.hmacLoss hmac sample address (observer source writer mark sender route decode view) +
         3 * (RawCtxSelectedParentHop.extractLoss hmac sample address (aliasTester source writer mark sender route decode view) +
           RawCtxSelectedParentHop.hmacLoss hmac sample address (aliasTester source writer mark sender route decode view) +
           (2 ^ 352 : ℝ)⁻¹ + (qCandidates : ℝ) / (2 ^ 256 : ℝ)) := by
-  have triangle := (ProbComp.boolDistAdvantage_triangle
+  have triangle := (ProbComp.boolDistance_triangle
     (actual source writer mark sender route decode view sample address)
     (RawCtxSelectedParentSecrecy.actual source sample address
       (observer source writer mark sender route decode view))
     (random source writer mark sender route decode view sample address)).trans
-      (add_le_add le_rfl (ProbComp.boolDistAdvantage_triangle _
+      (add_le_add le_rfl (ProbComp.boolDistance_triangle _
         (RawCtxSelectedParentSecrecy.random sample address
           (observer source writer mark sender route decode view)) _))
   have main : (RawCtxSelectedParentSecrecy.actual source sample address
-      (observer source writer mark sender route decode view)).boolDistAdvantage
+      (observer source writer mark sender route decode view)).boolDistance
         (RawCtxSelectedParentSecrecy.random sample address
           (observer source writer mark sender route decode view)) ≤
       RawCtxSelectedParentHop.extractLoss hmac sample address
@@ -290,9 +289,9 @@ theorem bound (source : FixedHkdfSha512NoSaltSource) (hmac : HmacSha512) (correc
     RawCtxSelectedParentSecrecy.primitive_bound source hmac correct sample address
       (observer source writer mark sender route decode view)
   have back : (RawCtxSelectedParentSecrecy.random sample address
-      (observer source writer mark sender route decode view)).boolDistAdvantage
+      (observer source writer mark sender route decode view)).boolDistance
         (random source writer mark sender route decode view sample address) ≤ 3 * ((qCandidates : ℝ) / (2 ^ 256 : ℝ)) := by
-    simpa only [ProbComp.boolDistAdvantage, abs_sub_comm] using
+    simpa only [ProbComp.boolDistance, abs_sub_comm] using
       random_bound source writer mark sender route decode view sample address qCandidates bounded
   exact loss_sum triangle (actual_bound source hmac correct writer mark sender route decode view sample address) main back
 

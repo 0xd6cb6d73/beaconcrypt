@@ -17,11 +17,11 @@ variable {ι M P I D K X Response A N : Type} {extra : OracleSpec ι} {S B : Nat
 theorem supported_event_bound {Context : Type} (sampler : ProbComp Context)
     (left right : Context → ProbComp Bool) (bad : Context → Prop)
     (agree : ∀ context ∈ support sampler, ¬ bad context → 𝒟[left context] = 𝒟[right context]) :
-    ENNReal.ofReal ((sampler >>= left).boolDistAdvantage (sampler >>= right)) ≤ Pr{let x ← sampler}[bad x] := by
+    ENNReal.ofReal ((sampler >>= left).boolDistance (sampler >>= right)) ≤ Pr{let x ← sampler}[bad x] := by
   let annotation := RawCtxSupportedSample.certify sampler (fun context => context ∈ support sampler) (fun _ supported => supported)
-  have bound := ofReal_tvDist_bind_left_event_le annotation (fun context => left context.val) (fun context => right context.val)
+  have bound := ofReal_discreteDistance_bind_left_event_le annotation (fun context => left context.val) (fun context => right context.val)
     (fun context => bad context.val) (fun context good =>
-      (VCVioLegacy.evalSPMF_eq_iff_evalDistEq _ _).2 (EvalDistEq.of_evalDist_eq (agree context.val context.property good)))
+      EvalDistEq.of_evalDist_eq (agree context.val context.property good))
   have erased : Subtype.val <$> annotation = sampler := RawCtxSupportedSample.erase sampler _ _
   have leftSame : (annotation >>= fun context => left context.val) = sampler >>= left := RawCtxSupportedSample.run sampler _ _ left
   have rightSame : (annotation >>= fun context => right context.val) = sampler >>= right := RawCtxSupportedSample.run sampler _ _ right
@@ -30,10 +30,9 @@ theorem supported_event_bound {Context : Type} (sampler : ProbComp Context)
     have mapped := prEvent_map annotation Subtype.val bad
     rw [erased] at mapped
     exact mapped.symm
-  have bridged := bound.trans ((VCVioLegacy.probEvent_eq_prEvent annotation fun context => bad context.val).le.trans
-    probability.le)
-  simpa only [ProbComp.boolDistAdvantage, VCVioLegacy.evalDist_singleton_eq_probOutput] using
-    (ENNReal.ofReal_le_ofReal (abs_probOutput_toReal_sub_le_tvDist (sampler >>= left) (sampler >>= right))).trans bridged
+  have bridged := bound.trans probability.le
+  simpa only [ProbComp.boolDistance, ← prEvent_eq_evalDist_singleton] using
+    (ENNReal.ofReal_le_ofReal (abs_prEvent_toReal_sub_le_discreteDistance (sampler >>= left) (sampler >>= right))).trans bridged
 
 variable (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
   (selectedMessage : Message) (previousRoot : RootOutput) (response64 : PqxdhInitialRootLabelService.Response)
@@ -165,7 +164,7 @@ theorem collision_bound (qPost : Nat) (bounded : ∀ reply, (post reply).IsTotal
 
 /-- The same original earlier source game differs from its constructed cryptographic observer by at most one explicitly counted prior-input collision event. -/
 theorem real_bound (position : number.val = (depth + 1) + remaining + 1) :
-    ENNReal.ofReal ((sourceSample >>= fun context => ($ᵗ FullOutput) >>= continuation (depth + 1) context).boolDistAdvantage
+    ENNReal.ofReal ((sourceSample >>= fun context => ($ᵗ FullOutput) >>= continuation (depth + 1) context).boolDistance
       (PqxdhInitialSourcePreparedSecrecy.actual source writer selectedMessage previousRoot response64 other sender route decode
         index metadata ready post before selected number ancestors disclosed shared privateState cache depth remaining)) ≤
       Pr{let x ← parentSample}[badEvent x] := by
@@ -192,7 +191,7 @@ theorem real_bound (position : number.val = (depth + 1) + remaining + 1) :
 
 /-- The same original normalized later source game differs from its constructed cryptographic observer by at most one explicitly counted prior-input collision event. -/
 theorem random_bound (position : number.val = (depth + 1) + remaining + 1) :
-    ENNReal.ofReal ((sourceSample >>= fun context => ($ᵗ FullOutput) >>= continuation (depth + 2) context).boolDistAdvantage
+    ENNReal.ofReal ((sourceSample >>= fun context => ($ᵗ FullOutput) >>= continuation (depth + 2) context).boolDistance
       (PqxdhInitialSourcePreparedSecrecy.random source writer selectedMessage previousRoot response64 other sender route decode
         index metadata ready post before selected number ancestors disclosed shared privateState cache depth remaining)) ≤
       Pr{let x ← parentSample}[badEvent x] := by

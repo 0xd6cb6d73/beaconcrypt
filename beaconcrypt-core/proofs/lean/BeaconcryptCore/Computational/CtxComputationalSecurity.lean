@@ -1,7 +1,6 @@
 import BeaconcryptCore.Computational.CtxNonceAeadIndDollarValidation
 import VCVio.CryptoFoundations.SecExp
 import BeaconcryptCore.Computational.VCVioForwardProbabilityTheory
-import BeaconcryptCore.Computational.VCVioLegacyBridge
 
 /-!
 # Modified CTX computational security
@@ -419,30 +418,30 @@ theorem ctxClassifiedForgeryGame_le_direct_add_prefix
     Pr{let x ← ctxClassifiedForgeryGame c adversary}[x = true] ≤
       Pr{let x ← ctxDirectClassifiedForgeryGame c adversary}[x = true] +
         ctxSecretPrefixQueriedProbability c adversary := by
-  have htv : tvDist (ctxClassifiedForgeryGame c adversary)
+  have htv : discreteDistance (ctxClassifiedForgeryGame c adversary)
       (ctxDirectClassifiedForgeryGame c adversary) ≤
       (ctxSecretPrefixQueriedProbability c adversary).toReal := by
     unfold ctxClassifiedForgeryGame ctxDirectClassifiedForgeryGame
-    exact (tvDist_bind_right_le (ctxClassifiedVerifier c)
+    exact (discreteDistance_bind_right_le (ctxClassifiedVerifier c)
       (ctxSplitBeforeVerifyGame c adversary)
       (ctxDirectSampleIndependentTagGame c adversary)).trans
         (tvDist_ctxSplitBeforeVerifyGame_directSampleIndependentTagGame_le_secretPrefixQueried
           c adversary)
-  have hdiff := abs_probOutput_toReal_sub_le_tvDist
+  have hdiff := abs_prEvent_toReal_sub_le_discreteDistance
     (ctxClassifiedForgeryGame c adversary)
     (ctxDirectClassifiedForgeryGame c adversary)
   have hadv :
-      (ctxClassifiedForgeryGame c adversary).boolDistAdvantage
+      (ctxClassifiedForgeryGame c adversary).boolDistance
           (ctxDirectClassifiedForgeryGame c adversary) ≤
         (ctxSecretPrefixQueriedProbability c adversary).toReal := by
-    simpa only [ProbComp.boolDistAdvantage, VCVioLegacy.evalDist_singleton_eq_probOutput] using hdiff.trans htv
+    simpa only [ProbComp.boolDistance, ← prEvent_eq_evalDist_singleton] using hdiff.trans htv
   calc
     Pr{let x ← ctxClassifiedForgeryGame c adversary}[x = true] ≤
         Pr{let x ← ctxDirectClassifiedForgeryGame c adversary}[x = true] +
           ENNReal.ofReal
-            ((ctxClassifiedForgeryGame c adversary).boolDistAdvantage
+            ((ctxClassifiedForgeryGame c adversary).boolDistance
               (ctxDirectClassifiedForgeryGame c adversary)) := by
-      have comparison := VCVioForward.evalDist_apply_true_le_add_ofReal_boolDistAdvantage
+      have comparison := ProbComp.evalDist_apply_true_le_add_ofReal_boolDistance
           (ctxClassifiedForgeryGame c adversary) (ctxDirectClassifiedForgeryGame c adversary)
       rw [← prEvent_eq_evalDist_singleton (ctxClassifiedForgeryGame c adversary) true,
         ← prEvent_eq_evalDist_singleton (ctxDirectClassifiedForgeryGame c adversary) true] at comparison
@@ -463,31 +462,31 @@ theorem ctxTypedFullFreshForgeryGame_le_direct_add_prefix
     Pr{let x ← ctxTypedFullFreshForgeryGame c adversary}[x = true] ≤
       Pr{let x ← ctxDirectTypedFullFreshForgeryGame c adversary}[x = true] +
         ctxSecretPrefixQueriedProbability c adversary := by
-  have htv : tvDist (ctxTypedFullFreshForgeryGame c adversary)
+  have htv : discreteDistance (ctxTypedFullFreshForgeryGame c adversary)
       (ctxDirectTypedFullFreshForgeryGame c adversary) ≤
       (ctxSecretPrefixQueriedProbability c adversary).toReal := by
     unfold ctxTypedFullFreshForgeryGame
       ctxDirectTypedFullFreshForgeryGame
-    exact (tvDist_bind_right_le (ctxTypedFullFreshVerifier c)
+    exact (discreteDistance_bind_right_le (ctxTypedFullFreshVerifier c)
       (ctxSplitBeforeVerifyGame c adversary)
       (ctxDirectSampleIndependentTagGame c adversary)).trans
         (tvDist_ctxSplitBeforeVerifyGame_directSampleIndependentTagGame_le_secretPrefixQueried
           c adversary)
-  have hdiff := abs_probOutput_toReal_sub_le_tvDist
+  have hdiff := abs_prEvent_toReal_sub_le_discreteDistance
     (ctxTypedFullFreshForgeryGame c adversary)
     (ctxDirectTypedFullFreshForgeryGame c adversary)
   have hadv :
-      (ctxTypedFullFreshForgeryGame c adversary).boolDistAdvantage
+      (ctxTypedFullFreshForgeryGame c adversary).boolDistance
           (ctxDirectTypedFullFreshForgeryGame c adversary) ≤
         (ctxSecretPrefixQueriedProbability c adversary).toReal := by
-    simpa only [ProbComp.boolDistAdvantage, VCVioLegacy.evalDist_singleton_eq_probOutput] using hdiff.trans htv
+    simpa only [ProbComp.boolDistance, ← prEvent_eq_evalDist_singleton] using hdiff.trans htv
   calc
     Pr{let x ← ctxTypedFullFreshForgeryGame c adversary}[x = true] ≤
         Pr{let x ← ctxDirectTypedFullFreshForgeryGame c adversary}[x = true] +
           ENNReal.ofReal
-            ((ctxTypedFullFreshForgeryGame c adversary).boolDistAdvantage
+            ((ctxTypedFullFreshForgeryGame c adversary).boolDistance
               (ctxDirectTypedFullFreshForgeryGame c adversary)) := by
-      have comparison := VCVioForward.evalDist_apply_true_le_add_ofReal_boolDistAdvantage
+      have comparison := ProbComp.evalDist_apply_true_le_add_ofReal_boolDistance
           (ctxTypedFullFreshForgeryGame c adversary) (ctxDirectTypedFullFreshForgeryGame c adversary)
       rw [← prEvent_eq_evalDist_singleton (ctxTypedFullFreshForgeryGame c adversary) true,
         ← prEvent_eq_evalDist_singleton (ctxDirectTypedFullFreshForgeryGame c adversary) true] at comparison

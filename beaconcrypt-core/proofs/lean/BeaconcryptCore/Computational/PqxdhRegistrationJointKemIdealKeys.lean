@@ -52,8 +52,8 @@ noncomputable def idealKeysBranch (setup : Setup baseSpec KemSK) (codec : Codec 
 
 /-- Two games with equal output distributions have equal advantages against any game, on either side. -/
 theorem advantage_left {left left' right : ProbComp Bool} (same : 𝒟[left] = 𝒟[left']) :
-    left.boolDistAdvantage right = left'.boolDistAdvantage right := by
-  unfold ProbComp.boolDistAdvantage
+    left.boolDistance right = left'.boolDistance right := by
+  unfold ProbComp.boolDistance
   rw [same]
 
 /-- Stages S3b and S4b. The uniform-root world of stage S2 and the ideal-key branch are distinguishable with advantage at most the four key-schedule advantages of G2 on entry 0's distinguisher. -/
@@ -63,30 +63,30 @@ theorem uniform_idealKeys (setup : Setup baseSpec KemSK) (codec : Codec Reader R
     (count : Nat) (selected : Fin (count + 1)) (index : Nat)
     (correct : SourceFullCorrect setup.source setup.hmac) :
     (PqxdhCorrelatedExpandHybrid.uniformGame (rootClient (Reader := Reader) setup codec checks ensureInit supplied
-        decision work runtime count selected index)).boolDistAdvantage
+        decision work runtime count selected index)).boolDistance
       (idealKeysBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected
         index) ≤
       (extractRealGame setup.hmac uniform32 (initExtractReduction setup.source setup.hmac
           (entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected
-            index))).boolDistAdvantage
+            index))).boolDistance
           (extractUniformGame uniform32 (initExtractReduction setup.source setup.hmac
             (entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected
               index))) +
         (hmacPrfRealGame setup.hmac (initExpandReduction setup.source
           (entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected
-            index))).boolDistAdvantage
+            index))).boolDistance
           (hmacPrfRandomGame (initExpandReduction setup.source
             (entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected
               index))) +
         (extractRealGame setup.hmac uniform32 (stepExtractReduction setup.hmac
           (entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected
-            index))).boolDistAdvantage
+            index))).boolDistance
           (extractUniformGame uniform32 (stepExtractReduction setup.hmac
             (entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected
               index))) +
         (hmacPrfRealGame setup.hmac (stepExpandReduction
           (entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected
-            index))).boolDistAdvantage
+            index))).boolDistance
           (hmacPrfRandomGame (stepExpandReduction
             (entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected
               index))) := by
@@ -104,40 +104,40 @@ theorem opaqueBranch_idealKeys (setup : Setup baseSpec KemSK) (codec : Codec Rea
       (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))
     (correct : SourceFullCorrect setup.source setup.hmac) :
     (opaqueBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index
-        false).boolDistAdvantage
+        false).boolDistance
       (idealKeysBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected
         index) ≤
       ((budget (.inl 3) + budget (.inl 5) + budget (.inl 6) : ℕ) : ℝ) / 2 ^ 256 +
         ∑ slot ∈ Finset.range (1 + budget (.inl 5)),
           (hmacPrfRealGame setup.hmac (indexedReduction setup.hmac (rootClient (Reader := Reader) setup codec checks
-            ensureInit supplied decision work runtime count selected index) slot)).boolDistAdvantage
+            ensureInit supplied decision work runtime count selected index) slot)).boolDistance
             (hmacPrfRandomGame (indexedReduction setup.hmac (rootClient (Reader := Reader) setup codec checks
               ensureInit supplied decision work runtime count selected index) slot)) +
         ((extractRealGame setup.hmac uniform32 (initExtractReduction setup.source setup.hmac
             (entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected
-              index))).boolDistAdvantage
+              index))).boolDistance
             (extractUniformGame uniform32 (initExtractReduction setup.source setup.hmac
               (entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected
                 index))) +
           (hmacPrfRealGame setup.hmac (initExpandReduction setup.source
             (entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected
-              index))).boolDistAdvantage
+              index))).boolDistance
             (hmacPrfRandomGame (initExpandReduction setup.source
               (entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected
                 index))) +
           (extractRealGame setup.hmac uniform32 (stepExtractReduction setup.hmac
             (entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected
-              index))).boolDistAdvantage
+              index))).boolDistance
             (extractUniformGame uniform32 (stepExtractReduction setup.hmac
               (entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected
                 index))) +
           (hmacPrfRealGame setup.hmac (stepExpandReduction
             (entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected
-              index))).boolDistAdvantage
+              index))).boolDistance
             (hmacPrfRandomGame (stepExpandReduction
               (entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected
                 index)))) :=
-  (ProbComp.boolDistAdvantage_triangle _ _ _).trans (add_le_add
+  (ProbComp.boolDistance_triangle _ _ _).trans (add_le_add
     (PqxdhRegistrationJointKemRootExpand.opaqueBranch_uniform setup codec checks ensureInit supplied decision work
       runtime count selected index budget certified)
     (uniform_idealKeys setup codec checks ensureInit supplied decision work runtime count selected index correct))

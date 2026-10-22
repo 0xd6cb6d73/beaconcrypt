@@ -2,7 +2,6 @@ import BeaconcryptCore.Computational.PqxdhSecretInputKdf
 import BeaconcryptCore.Computational.CtxComputationalSecurity
 import BeaconcryptCore.Computational.PqxdhProjectionCollisions
 import BeaconcryptCore.Computational.VCVioForwardOracleComp
-import BeaconcryptCore.Computational.VCVioLegacyBridge
 
 /-!
 # The complete source HKDF expansion at one secret input
@@ -237,17 +236,17 @@ theorem sourceFullAdvantage_le_extract_add_hmac {Context : Type}
     (source : FixedHkdfSha512NoSaltSource) (hmac : HmacSha512)
     (correct : SourceFullCorrect source hmac) (domain : FixedHkdfDomain)
     (sample : SecretInputSampler Context) (observer : FullObserver Context) :
-    (sourceFullGame source domain sample observer).boolDistAdvantage
+    (sourceFullGame source domain sample observer).boolDistance
         (independentFullGame sample observer) ≤
-      (extractRealGame hmac sample (fullExtractReduction hmac domain observer)).boolDistAdvantage
+      (extractRealGame hmac sample (fullExtractReduction hmac domain observer)).boolDistance
         (extractUniformGame sample (fullExtractReduction hmac domain observer)) +
-      (hmacPrfRealGame hmac (fullExpandReduction domain sample observer)).boolDistAdvantage
+      (hmacPrfRealGame hmac (fullExpandReduction domain sample observer)).boolDistance
         (hmacPrfRandomGame (fullExpandReduction domain sample observer)) := by
   have real := (fullExtractUniform_eq_hmacReal hmac domain sample observer).evalDist_eq
   have random := (fullHmacRandom_eq_independent domain sample observer).evalDist_eq
-  simpa only [sourceFullGame_eq_extract source hmac correct, ProbComp.boolDistAdvantage,
+  simpa only [sourceFullGame_eq_extract source hmac correct, ProbComp.boolDistance,
     real, random] using
-      ProbComp.boolDistAdvantage_triangle (sourceFullGame source domain sample observer)
+      ProbComp.boolDistance_triangle (sourceFullGame source domain sample observer)
         (extractUniformGame sample (fullExtractReduction hmac domain observer))
         (independentFullGame sample observer)
 

@@ -150,7 +150,7 @@ variable (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (d
 local notation "zeroRoot" => (List.Vector.replicate 32 0 : RootOutput)
 
 noncomputable def initialState (response : PqxdhInitialRootLabelService.Response) : LocalState A N :=
-  (((shared, ((fun _ => none), ⟨PqxdhInitialSourceExperiment.root source zeroRoot response owner, 0⟩)), []), privateState)
+  (((shared, (∅, ⟨PqxdhInitialSourceExperiment.root source zeroRoot response owner, 0⟩)), []), privateState)
 
 noncomputable def client : OracleComp PqxdhInitialLabelCompiler.Spec
     ((Bool × PqxdhInitialOriginPostPath.Snapshot M P I D K S B) × LocalState A N) := do

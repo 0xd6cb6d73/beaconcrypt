@@ -76,7 +76,7 @@ theorem publicEvaluation_advantage (source : FixedHkdfSha512NoSaltSource)
       publicEvaluation_real source address
     rw [run, prEvent_pure]
     simp
-  unfold fixedHkdfSha512JointStreamAdvantage ProbComp.boolDistAdvantage
+  unfold fixedHkdfSha512JointStreamAdvantage ProbComp.boolDistance
   rw [← prEvent_eq_evalDist_singleton
       (fixedHkdfSha512JointStreamRealExp source (publicEvaluationAdversary source address)) true,
     ← prEvent_eq_evalDist_singleton

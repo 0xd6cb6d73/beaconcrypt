@@ -27,20 +27,20 @@ noncomputable def rootLoss (hmac : HmacSha512)
     (PqxdhGeneratedPhase1Prefix.privateReduction primitives baseImpl kem setup
       (driver env.toDriverEnvironment program) fallback ordinaryFallback)).toReal +
   Pr{let x ← simulateQ (kemAmbientImpl baseImpl) (PqxdhKemCorrectnessError.errorExperiment kem)}[x = true].toReal +
-  kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
-    (PqxdhChallengeSecretRouting.reduction env.source kem p).toINDCCA +
+  (kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
+    (PqxdhChallengeSecretRouting.reduction env.source kem p).toINDCCA).toReal +
   PqxdhCorrelatedExtractFamily.advantage hmac
     (PqxdhCorrelatedExtractFamily.reduction env.source hmac baseImpl kem p) +
   ∑ index ∈ Finset.range qRoot,
-    (hmacPrfRealGame hmac (indexedReduction hmac (rootReduction env.source baseImpl kem p) index)).boolDistAdvantage
+    (hmacPrfRealGame hmac (indexedReduction hmac (rootReduction env.source baseImpl kem p) index)).boolDistance
       (hmacPrfRandomGame (indexedReduction hmac (rootReduction env.source baseImpl kem p) index))
 
 noncomputable def initialLoss (hmac : HmacSha512) : ℝ :=
   let joint := PqxdhInitialCurrentSecrecy.joint env baseImpl kem attachedVerify primitives program post
   let observer := PqxdhInitialCurrentSecrecy.observer env baseImpl kem attachedVerify primitives program post
-  (extractRealGame hmac joint (fullExtractReduction hmac .ratchet observer)).boolDistAdvantage
+  (extractRealGame hmac joint (fullExtractReduction hmac .ratchet observer)).boolDistance
     (extractUniformGame joint (fullExtractReduction hmac .ratchet observer)) +
-  (hmacPrfRealGame hmac (fullExpandReduction .ratchet joint observer)).boolDistAdvantage
+  (hmacPrfRealGame hmac (fullExpandReduction .ratchet joint observer)).boolDistance
     (hmacPrfRandomGame (fullExpandReduction .ratchet joint observer))
 
 /-- The actual generated source reaches its shared uniform64 initializer endpoint with the concrete authenticated-root and initial-expansion reductions. Both hops use the same complete post client; the root-query cap comes from its source certificate. -/
@@ -52,11 +52,11 @@ theorem authenticated_initial_bound
     (hmac : HmacSha512) (rootCorrect : SourceRootCorrect env.source hmac)
     (fullCorrect : SourceFullCorrect env.source hmac)
     (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : PqxdhJointIdentity.Forgery) :
-    (actual env baseImpl kem attachedVerify primitives program post).boolDistAdvantage
+    (actual env baseImpl kem attachedVerify primitives program post).boolDistance
       (PqxdhInitialCurrentSecrecy.random env baseImpl kem attachedVerify primitives program post) ≤
       rootLoss env baseImpl kem attachedVerify primitives program post hmac fallback ordinaryFallback c.qRoot +
       initialLoss env baseImpl kem attachedVerify primitives program post hmac := by
-  exact (ProbComp.boolDistAdvantage_triangle _
+  exact (ProbComp.boolDistance_triangle _
     (uniformGame (rootReduction env.source baseImpl kem (protocol env kem attachedVerify primitives program post))) _).trans
     (add_le_add
       (PqxdhAuthenticatedRootComposition.authenticated_root_bound env baseImpl kem attachedVerify primitives program post
@@ -73,12 +73,12 @@ theorem authenticated_consistent_initial_bound
     (hmac : HmacSha512) (rootCorrect : SourceRootCorrect env.source hmac)
     (fullCorrect : SourceFullCorrect env.source hmac)
     (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : PqxdhJointIdentity.Forgery) :
-    (actual env baseImpl kem attachedVerify primitives program post).boolDistAdvantage
+    (actual env baseImpl kem attachedVerify primitives program post).boolDistance
       (PqxdhInitialCurrentAliases.consistentRandom env baseImpl kem attachedVerify primitives program post) ≤
       (rootLoss env baseImpl kem attachedVerify primitives program post hmac fallback ordinaryFallback c.qRoot +
       initialLoss env baseImpl kem attachedVerify primitives program post hmac) +
       (((1 + c.privatePost : Nat) : ENNReal) / (2 ^ 256 : ENNReal)).toReal := by
-  exact (ProbComp.boolDistAdvantage_triangle _
+  exact (ProbComp.boolDistance_triangle _
     (PqxdhInitialCurrentSecrecy.random env baseImpl kem attachedVerify primitives program post) _).trans
     (add_le_add
       (authenticated_initial_bound env baseImpl kem attachedVerify primitives program post c compatible adapter functional

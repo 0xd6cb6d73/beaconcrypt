@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.PqxdhRecordLiftLazyTable
 import VCVio.OracleComp.QueryTracking.RandomOracle.DeferredSampling
-import VCVio.OracleComp.Constructions.SampleableType.MeasureCompatibility
+import VCVio.OracleComp.Constructions.SampleableType.Measure
 
 /-!
 # Erasing discarded lazy-oracle queries
@@ -207,7 +207,7 @@ theorem complete_query_swap (t u : spec.Domain) (c : spec.QueryCache) :
         complete_of_some (QueryCache.cacheQuery_self c u x), map_pure]
     · rcases hu : c u with _ | w
       · have hcomm : ∀ x y, (c.cacheQuery t x).cacheQuery u y = (c.cacheQuery u y).cacheQuery t x :=
-          fun x y => Function.update_comm (Ne.symm htu) _ _ c
+          fun x y => QueryCache.cacheQuery_comm c (Ne.symm htu) x y
         have lhs : complete t c >>= (spec.randomOracle u).run =
             ($ᵗ spec.Range t) >>= fun x => ($ᵗ spec.Range u) >>= fun y =>
               pure (y, (c.cacheQuery u y).cacheQuery t x) := by

@@ -49,7 +49,7 @@ theorem hybridOf_uniform (k : ℕ) :
 
 /-- One hop for any client: replacing the `k`-th fresh entry's key-schedule output by 108 uniform bytes costs the four key-schedule advantages of G2 on the client's `k`-th entry distinguisher. -/
 theorem hybridOf_hop (hmac : HmacSha512) (correct : SourceFullCorrect source hmac) (k : ℕ) :
-    (hybridOf source client k).boolDistAdvantage (hybridOf source client (k + 1)) ≤
+    (hybridOf source client k).boolDistance (hybridOf source client (k + 1)) ≤
       keyScheduleBound source hmac (entryDkOf source client k) := by
   rw [PqxdhRegistrationJointKemIdealKeys.advantage_left (hybridOf_root source client k),
     advantage_right (hybridOf_uniform source client k)]
@@ -57,13 +57,13 @@ theorem hybridOf_hop (hmac : HmacSha512) (correct : SourceFullCorrect source hma
 
 /-- The hybrids of any client telescope: from the 0-th to the `q`-th hybrid, the advantage is at most the sum of the key-schedule bounds of the client's first `q` entry distinguishers. -/
 theorem hybridOf_telescope (hmac : HmacSha512) (correct : SourceFullCorrect source hmac) (q : ℕ) :
-    (hybridOf source client 0).boolDistAdvantage (hybridOf source client q) ≤
+    (hybridOf source client 0).boolDistance (hybridOf source client q) ≤
       ∑ k ∈ Finset.range q, keyScheduleBound source hmac (entryDkOf source client k) := by
   induction q with
-  | zero => simp [ProbComp.boolDistAdvantage_self]
+  | zero => simp [ProbComp.boolDistance_self]
   | succ q ih =>
       rw [Finset.sum_range_succ]
-      exact (ProbComp.boolDistAdvantage_triangle _ _ _).trans
+      exact (ProbComp.boolDistance_triangle _ _ _).trans
         (add_le_add ih (hybridOf_hop source client hmac correct q))
 
 /-! ### Entry 0 -/
@@ -114,7 +114,7 @@ theorem slotOf_telescope (hmac : HmacSha512) (correct : SourceFullCorrect source
     (entry : 𝒟[game] = 𝒟[rootHybrid source (fun value =>
       (simulateQ (firstTable value (fromRoot source <$> ($ᵗ RootOutput))) client).run' (∅, none))])
     (n : ℕ) (bounded : client.IsQueryBoundP (IsValue (D := PqxdhCorrelatedExtractFamily.Message) (R := Output)) n) :
-    game.boolDistAdvantage
+    game.boolDistance
         ((simulateQ (slotImpl (D := PqxdhCorrelatedExtractFamily.Message) (tableService (n := n))) client).run'
           (emptyAlloc, PqxdhRecordLiftLazyTable.initial)) ≤
       ∑ k ∈ Finset.range n, keyScheduleBound source hmac (entryDkOf source client k) := by

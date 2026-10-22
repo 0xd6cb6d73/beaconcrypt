@@ -211,7 +211,8 @@ theorem child_source {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Respon
       have cached := view_child hidden state (some child) agrees
       have unchanged : (view hidden state).chain.cacheQuery (advance state.masked.coordinate 1) child =
           (view hidden state).chain := by
-        funext query
+        apply QueryCache.ext
+        intro query
         by_cases same : query = advance state.masked.coordinate 1
         · subst query
           simp only [QueryCache.cacheQuery_self, cached]

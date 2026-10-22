@@ -1,5 +1,6 @@
 import BeaconcryptCore.Computational.RawCtxSelectedFamilyLiveCompiler
 import VCVio.ProgramLogic.Relational.SimulateQ
+import BeaconcryptCore.Computational.StatefulGoodEvent
 import BeaconcryptCore.Computational.PqxdhSelectedStateInterpreter
 
 /-!
@@ -181,15 +182,14 @@ theorem marked_distance {ι σ X : Type} {spec : OracleSpec ι}
     (left right : QueryImpl spec (StateT σ ProbComp)) (bad : spec.Domain → σ → Prop)
     (agree : ∀ query state, ¬ bad query state → (left query).run state = (right query).run state)
     (client : OracleComp spec X) (state : σ) :
-    tvDist ((simulateQ (marked left bad) client).run (state, false))
+    discreteDistance ((simulateQ (marked left bad) client).run (state, false))
       ((simulateQ (marked right bad) client).run (state, false)) ≤
       (𝒟[(fun result => result.2.2) <$> (simulateQ (marked left bad) client).run (state, false)] {true}).toReal := by
-  rw [← prEvent_eq_evalDist_singleton, prEvent_map, ← VCVioLegacy.probEvent_eq_prEvent]
-  exact OracleComp.ProgramLogic.Relational.tvDist_simulateQ_run_le_probEvent_output_bad
-      _ _ client state
-      (fun query before reply after => by
-        simpa only [VCVioLegacy.probOutput_eq_evalDist_singleton] using marked_agree left right bad agree query before reply after)
-      (marked_sticky left bad) (marked_sticky right bad)
+  rw [← prEvent_eq_evalDist_singleton, prEvent_map]
+  exact StatefulGoodEvent.distance_le_bad _ _
+    (fun query before reply after => by
+      simpa only [prEvent_eq_evalDist_singleton] using marked_agree left right bad agree query before reply after)
+    (marked_sticky left bad) (marked_sticky right bad) client (state, false)
 
 /-- Erasing the sticky flag preserves every adaptive reply and the complete original ledger. -/
 theorem marked_client {ι σ X : Type} {spec : OracleSpec ι}
@@ -204,9 +204,9 @@ theorem unmarked_distance {ι σ X : Type} {spec : OracleSpec ι}
     (left right : QueryImpl spec (StateT σ ProbComp)) (bad : spec.Domain → σ → Prop)
     (agree : ∀ query state, ¬ bad query state → (left query).run state = (right query).run state)
     (client : OracleComp spec X) (state : σ) :
-    tvDist ((simulateQ left client).run state) ((simulateQ right client).run state) ≤
+    discreteDistance ((simulateQ left client).run state) ((simulateQ right client).run state) ≤
       (𝒟[(fun result => result.2.2) <$> (simulateQ (marked left bad) client).run (state, false)] {true}).toReal := by
-  have bound := (tvDist_map_le (Prod.map id Prod.fst)
+  have bound := (discreteDistance_map_le (Prod.map id Prod.fst)
     ((simulateQ (marked left bad) client).run (state, false))
     ((simulateQ (marked right bad) client).run (state, false))).trans
       (marked_distance left right bad agree client state)
@@ -222,14 +222,14 @@ theorem source_distance (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxM
     (prior : Prior) (parent : Option Entry) (key target : RootOutput) (nonce : NonceOutput) (next : RootOutput)
     (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (read : RawCtxReceive.FrameDecoder)
     (client : OracleComp (RawCtxProtocolReveals.SourceSpec S B) Result) (state : Full M P I D K A S B) :
-    tvDist
+    discreteDistance
       (((simulateQ (RawCtxSelectedMessageStopping.stopping
         (RawCtxSelectedMessageStopping.sourceRecord source writer prior parent key target nonce next sender route read)) client).run).run (project state))
       (Prod.map id project <$> (simulateQ (compiled source writer prior parent key target nonce next sender route read) (optionalClient client)).run state) ≤
       (𝒟[(fun result => result.2.2) <$>
         (simulateQ (marked (augmented source writer prior parent key target nonce next sender route read)
           (nonceBad prior parent target nonce next sender)) (optionalClient client)).run (state, false)] {true}).toReal := by
-  have bound := (tvDist_map_le (Prod.map id project)
+  have bound := (discreteDistance_map_le (Prod.map id project)
     ((simulateQ (augmented source writer prior parent key target nonce next sender route read) (optionalClient client)).run state)
     ((simulateQ (compiled source writer prior parent key target nonce next sender route read) (optionalClient client)).run state)).trans
       (unmarked_distance _ _ (nonceBad prior parent target nonce next sender)
@@ -279,7 +279,7 @@ theorem executable_distance (source : FixedHkdfSha512NoSaltSource) (writer : Raw
     (prior : Prior) (parent : Option Entry) (key target : RootOutput) (nonce : NonceOutput) (next : RootOutput)
     (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (read : RawCtxReceive.FrameDecoder)
     (client : OracleComp (RawCtxProtocolReveals.SourceSpec S B) Result) (state : Full M P I D K A S B) :
-    tvDist
+    discreteDistance
       (((simulateQ (RawCtxSelectedMessageStopping.stopping
         (RawCtxSelectedMessageStopping.sourceRecord source writer prior parent key target nonce next sender route read)) client).run).run (project state))
       (RawCtxSelectedFamilyLiveCompiler.output <$>

@@ -103,13 +103,13 @@ theorem bad_probability {X : Type} (target : Label n) (decode : RawDecoder)
     (work : OracleComp (ServiceSpec n) X) (state : CtxPrivate n) :
     𝒟[(simulateQ (marked target decode left) work).run (state, false)] {result | result.2.2 = true} =
       𝒟[(simulateQ (marked target decode right) work).run (state, false)] {result | result.2.2 = true} := by
-  simpa only [VCVioLegacy.probEvent_eq_evalDist_setOf] using
-    OracleComp.ProgramLogic.Relational.probEvent_output_bad_eq'
+  simpa only [prEvent_eq_evalDist_of_discrete] using
+    StatefulGoodEvent.bad_probability_eq
       (marked target decode left) (marked target decode right)
       (fun query current reply next => by
-        simpa only [VCVioLegacy.probOutput_eq_evalDist_singleton] using
+        simpa only [prEvent_eq_evalDist_singleton] using
           (agree_good target decode left right agree query current reply next))
-      (marked_sticky target decode left) (marked_sticky target decode right) work state
+      (marked_sticky target decode left) (marked_sticky target decode right) work (state, false)
 
 /-- Every event on the complete result and state agrees jointly with the unraised flag; this is unconditioned event equality. -/
 theorem event_good {X : Type} (target : Label n) (decode : RawDecoder)
@@ -122,12 +122,12 @@ theorem event_good {X : Type} (target : Label n) (decode : RawDecoder)
       𝒟[(simulateQ (marked target decode right) work).run state] {result | event result ∧ result.2.2 = false} := by
   have good := StatefulGoodEvent.event_good (marked target decode left) (marked target decode right)
     (fun query current reply next => by
-      rw [← VCVioLegacy.oracleComp_probOutput_eq_prEvent, ← VCVioLegacy.oracleComp_probOutput_eq_prEvent,
-        VCVioLegacy.probOutput_eq_evalDist_singleton, VCVioLegacy.probOutput_eq_evalDist_singleton]
+      rw [
+        prEvent_eq_evalDist_singleton, prEvent_eq_evalDist_singleton]
       exact agree_good target decode left right agree query current reply next)
     (marked_sticky target decode left) (marked_sticky target decode right) work state event
-  rw [← VCVioLegacy.oracleComp_probEvent_eq_prEvent, ← VCVioLegacy.oracleComp_probEvent_eq_prEvent,
-    VCVioLegacy.probEvent_eq_evalDist_setOf, VCVioLegacy.probEvent_eq_evalDist_setOf] at good
+  rw [
+    prEvent_eq_evalDist_of_discrete, prEvent_eq_evalDist_of_discrete] at good
   exact good
 
 /-- Full adaptive joint output-state distance costs only one copy of the exact selected-match probability. -/
@@ -136,16 +136,16 @@ theorem marked_distance {X : Type} (target : Label n) (decode : RawDecoder)
     (agree : ∀ query state, serviceBad target decode query state = false →
       (left query).run state = (right query).run state)
     (work : OracleComp (ServiceSpec n) X) (state : CtxPrivate n) :
-    tvDist ((simulateQ (marked target decode left) work).run (state, false))
+    discreteDistance ((simulateQ (marked target decode left) work).run (state, false))
       ((simulateQ (marked target decode right) work).run (state, false)) ≤
       (𝒟[(simulateQ (marked target decode left) work).run (state, false)] {result | result.2.2 = true}).toReal := by
-  simpa only [VCVioLegacy.probEvent_eq_evalDist_setOf] using
-    OracleComp.ProgramLogic.Relational.tvDist_simulateQ_run_le_probEvent_output_bad
-      (marked target decode left) (marked target decode right) work state
+  simpa only [prEvent_eq_evalDist_of_discrete] using
+    StatefulGoodEvent.distance_le_bad
+      (marked target decode left) (marked target decode right)
       (fun query current reply next => by
-        simpa only [VCVioLegacy.probOutput_eq_evalDist_singleton] using
+        simpa only [prEvent_eq_evalDist_singleton] using
           (agree_good target decode left right agree query current reply next))
-      (marked_sticky target decode left) (marked_sticky target decode right)
+      (marked_sticky target decode left) (marked_sticky target decode right) work (state, false)
 
 /-- Erasing the ghost flag retains the same bound on complete unmodified adaptive source executions. -/
 theorem complete_distance {X : Type} (target : Label n) (decode : RawDecoder)
@@ -153,10 +153,10 @@ theorem complete_distance {X : Type} (target : Label n) (decode : RawDecoder)
     (agree : ∀ query state, serviceBad target decode query state = false →
       (left query).run state = (right query).run state)
     (work : OracleComp (ServiceSpec n) X) (state : CtxPrivate n) :
-    tvDist ((simulateQ left work).run state) ((simulateQ right work).run state) ≤
+    discreteDistance ((simulateQ left work).run state) ((simulateQ right work).run state) ≤
       (𝒟[(simulateQ (marked target decode left) work).run (state, false)] {result | result.2.2 = true}).toReal := by
   simpa only [complete_erase] using
-    (tvDist_map_le (Prod.map id Prod.fst)
+    (discreteDistance_map_le (Prod.map id Prod.fst)
       ((simulateQ (marked target decode left) work).run (state, false))
       ((simulateQ (marked target decode right) work).run (state, false))).trans
         (marked_distance target decode left right agree work state)
@@ -202,11 +202,11 @@ theorem source_event_good {X : Type} (target : Label n) (modes : Label n → Key
 theorem source_distance {X : Type} (target : Label n) (modes : Label n → KeyMode)
     (replace : Pqxdh.Bytes → Pqxdh.Bytes) (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (work : OracleComp (ServiceSpec n) X) (state : CtxPrivate n) :
-    tvDist ((simulateQ (PqxdhRecordFactsPrivateCacheWorld.erased modes replace setup codec) work).run state)
+    discreteDistance ((simulateQ (PqxdhRecordFactsPrivateCacheWorld.erased modes replace setup codec) work).run state)
       ((simulateQ (muted target modes replace setup codec) work).run state) ≤
     (𝒟[(simulateQ (marked target (RawCtxUniversalDecoder.decoder codec.frameRead)
       (muted target modes replace setup codec)) work).run (state, false)] {result | result.2.2 = true}).toReal := by
-  rw [tvDist_comm]
+  rw [discreteDistance_comm]
   exact complete_distance target (RawCtxUniversalDecoder.decoder codec.frameRead)
     (muted target modes replace setup codec) (PqxdhRecordFactsPrivateCacheWorld.erased modes replace setup codec)
     (PqxdhRecordFactsOriginMuteUntilBad.erased_agrees target modes replace setup codec) work state

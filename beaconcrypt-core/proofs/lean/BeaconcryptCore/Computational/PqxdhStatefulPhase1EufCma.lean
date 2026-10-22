@@ -420,7 +420,7 @@ def statefulPhase1ToEUFCMA {SecretKey : Type}
     (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK))
     (setup : StatefulPhase1Setup baseSpec)
     (selector : StatefulPhase1Selector kem setup.Context) :
-    SignatureAlg.unforgeableAdv sigAlg where
+    SignatureAlg.UnforgeableAdversary sigAlg where
   main identity := StatefulPhase1Result.forgery <$>
     statefulPhase1Client kem setup selector identity
 
@@ -532,10 +532,10 @@ theorem unforgeableExp_statefulPhase1ToEUFCMA {SecretKey : Type}
     (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK))
     (setup : StatefulPhase1Setup baseSpec)
     (selector : StatefulPhase1Selector kem setup.Context) :
-    SignatureAlg.unforgeableExp runtime (statefulPhase1ToEUFCMA sigAlg kem setup selector) =
+    runtime.evalDist (SignatureAlg.unforgeableExperiment (statefulPhase1ToEUFCMA sigAlg kem setup selector)) =
       runtime.evalDist (statefulPhase1EufBody sigAlg kem setup selector) := by
-  simp [SignatureAlg.unforgeableExp, statefulPhase1EufBody, statefulPhase1ToEUFCMA,
-    phase1SigningImpl, map_eq_bind_pure_comp]
+  simp [SignatureAlg.unforgeableExperiment, statefulPhase1EufBody, statefulPhase1ToEUFCMA,
+    phase1SigningImpl, SignatureAlg.runWithSigningOracle, map_eq_bind_pure_comp]
   congr 1
 
 set_option backward.isDefEq.respectTransparency false in
@@ -632,7 +632,7 @@ theorem unforgeableExp_statefulPhase1ToEUFCMA_eq_reference {SecretKey : Type}
     (selector : StatefulPhase1Selector kem setup.Context)
     (verifyFn : Ed25519PublicKey → Pqxdh.Bytes → Ed25519Signature → Bool)
     (deterministic : HasDeterministicVerification sigAlg verifyFn) :
-    SignatureAlg.unforgeableExp runtime (statefulPhase1ToEUFCMA sigAlg kem setup selector) =
+    runtime.evalDist (SignatureAlg.unforgeableExperiment (statefulPhase1ToEUFCMA sigAlg kem setup selector)) =
       runtime.evalDist
         (statefulPhase1JointReference sigAlg kem setup selector >>= fun result =>
           pure (StatefulPhase1Result.eufBit verifyFn result)) := by
@@ -662,11 +662,11 @@ theorem statefulPhase1FieldSubstitutionAdvantage_le_eufCma {SecretKey : Type}
     (verifyFn : Ed25519PublicKey → Pqxdh.Bytes → Ed25519Signature → Bool)
     (deterministic : HasDeterministicVerification sigAlg verifyFn) :
     StatefulPhase1FieldSubstitutionAdvantage runtime sigAlg kem setup selector verifyFn ≤
-      (statefulPhase1ToEUFCMA sigAlg kem setup selector).advantage runtime := by
+      SignatureAlg.unforgeableAdvantage runtime (statefulPhase1ToEUFCMA sigAlg kem setup selector) := by
   let : MeasurableSpace (StatefulPhase1Result kem setup selector) := ⊤
   let : DiscreteMeasurableSpace (StatefulPhase1Result kem setup selector) :=
     ⟨fun _ => by simp⟩
-  unfold StatefulPhase1FieldSubstitutionAdvantage SignatureAlg.unforgeableAdv.advantage
+  unfold StatefulPhase1FieldSubstitutionAdvantage SignatureAlg.unforgeableAdvantage
   rw [unforgeableExp_statefulPhase1ToEUFCMA_eq_reference runtime sigAlg kem setup
     selector verifyFn deterministic,
     runtime.evalDist_bind_pure _ (StatefulPhase1Result.badBit verifyFn)

@@ -71,12 +71,12 @@ theorem stopped_distance (source : FixedHkdfSha512NoSaltSource) (writer : RawCtx
     (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (read : RawCtxReceive.FrameDecoder)
     (client : OracleComp (RawCtxProtocolReveals.SourceSpec S B) Bool) (before : Full M P I D K A S B) :
     ((fun result => finalBit result.1) <$>
-      RawCtxSelectedNativeFreshLift.stoppedGame source writer prior parent key target nonce next sender route read client before).boolDistAdvantage
+      RawCtxSelectedNativeFreshLift.stoppedGame source writer prior parent key target nonce next sender route read client before).boolDistance
       (Prod.fst <$> (simulateQ
         (AdaptiveCtxDynamicKnownKeys.sourceImpl true (RawCtxUniversalDecoder.decoder read) source.crypto key)
         (decision source writer prior parent target nonce next sender route read client before.1)).run before.2.2) ≤
       (𝒟[RawCtxSelectedNativeFreshLift.nonceGame source writer prior parent key target nonce next sender route read client before] {true}).toReal := by
-  have projected := tvDist_map_le
+  have projected := discreteDistance_map_le
     (fun result : Option Bool × RawCtxSelectedFamilyNonceCoupling.SourceFull M P I D K A S B => finalBit result.1)
     (RawCtxSelectedNativeFreshLift.stoppedGame source writer prior parent key target nonce next sender route read client before)
     (RawCtxSelectedNativeFreshLift.compiledGame source writer prior parent key target nonce next sender route read client before)
@@ -84,8 +84,8 @@ theorem stopped_distance (source : FixedHkdfSha512NoSaltSource) (writer : RawCtx
     (RawCtxSelectedFamilyNonceCoupling.executable_distance source writer prior parent key target nonce next sender route read client before)
   rw [source_projection source writer prior parent key target nonce next sender route read client before] at distance
   refine le_trans ?_ distance
-  simpa only [ProbComp.boolDistAdvantage, VCVioLegacy.evalDist_singleton_eq_probOutput] using
-    abs_probOutput_toReal_sub_le_tvDist _ _
+  simpa only [ProbComp.boolDistance, ← prEvent_eq_evalDist_singleton] using
+    abs_prEvent_toReal_sub_le_discreteDistance _ _
 
 /-- The ordinary endpoint is exactly the actual compiled source view under one explicit uniform selected-key draw and its specified empty component state. No independence statement about arbitrary native contexts is inferred here. -/
 theorem uniform_source_view (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
@@ -112,7 +112,7 @@ theorem uniform_stopped_distance (source : FixedHkdfSha512NoSaltSource) (writer 
     ((do let key ← $ᵗ RootOutput
          (fun result : Option Bool × RawCtxSelectedFamilyNonceCoupling.SourceFull M P I D K A S B => finalBit result.1) <$>
           RawCtxSelectedNativeFreshLift.stoppedGame source writer prior parent key target nonce next sender route read client
-            (before, (ambient, AdaptiveCtxDynamicKnownKeys.initialSource))) : ProbComp Bool).boolDistAdvantage
+            (before, (ambient, AdaptiveCtxDynamicKnownKeys.initialSource))) : ProbComp Bool).boolDistance
       (Prod.fst <$> AdaptiveCtxDynamicKnownKeys.sourceGame true (RawCtxUniversalDecoder.decoder read) source.crypto
         (decision source writer prior parent target nonce next sender route read client before)) ≤
       (𝒟[(do let key ← $ᵗ RootOutput
@@ -170,7 +170,7 @@ theorem privacy_bound (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMix
     let executable := decision source writer prior parent target nonce next sender route read client before
     let reduction := AdaptiveCtxDynamicKnownKeys.decisionClient source.crypto executable
     let decode := RawCtxUniversalDecoder.decoder read
-    ENNReal.ofReal ((Prod.fst <$> AdaptiveCtxDynamicKnownKeys.sourceGame true decode source.crypto executable).boolDistAdvantage
+    ENNReal.ofReal ((Prod.fst <$> AdaptiveCtxDynamicKnownKeys.sourceGame true decode source.crypto executable).boolDistance
       (AdaptiveCtxPrivacyGuard.randomView decode reduction)) ≤
       ENNReal.ofReal (modifiedNonceAeadINDDollarAdvantage source.crypto
         (AdaptiveCtxPrefixValidation.validationReduction decode source.crypto reduction qHash)) +
@@ -198,7 +198,7 @@ theorem privacy_source_bound (source : FixedHkdfSha512NoSaltSource) (writer : Ra
     let executable := decision source writer prior parent target nonce next sender route read client before
     let reduction := AdaptiveCtxDynamicKnownKeys.decisionClient source.crypto executable
     let decode := RawCtxUniversalDecoder.decoder read
-    ENNReal.ofReal ((Prod.fst <$> AdaptiveCtxDynamicKnownKeys.sourceGame true decode source.crypto executable).boolDistAdvantage
+    ENNReal.ofReal ((Prod.fst <$> AdaptiveCtxDynamicKnownKeys.sourceGame true decode source.crypto executable).boolDistance
       (AdaptiveCtxPrivacyGuard.randomView decode reduction)) ≤
       ENNReal.ofReal (modifiedNonceAeadINDDollarAdvantage source.crypto
         (AdaptiveCtxPrefixValidation.validationReduction decode source.crypto reduction q)) +

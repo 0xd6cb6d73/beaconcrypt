@@ -200,7 +200,7 @@ theorem evalKem_ambient {Result : Type} (baseImpl : QueryImpl baseSpec ProbComp)
           simulateQ (kemAmbientImpl baseImpl) (localKemPreChallengeImpl kem secret (.inl query)) =
             kemAmbientImpl baseImpl query := by
         unfold localKemPreChallengeImpl KEMScheme.IND_CCA_preChallengeImpl QueryImpl.add
-        simp only [HasQuery.toQueryImpl_apply, simulateQ_HasQuery_query]
+        simp only [QueryImpl.liftTarget_self, QueryImpl.id'_apply, simulateQ_spec_query]
       rw [baseQuery]
       change (kemAmbientImpl baseImpl query >>= fun answer =>
         evalKem baseImpl kem secret (ccaAmbient (next answer))) = _

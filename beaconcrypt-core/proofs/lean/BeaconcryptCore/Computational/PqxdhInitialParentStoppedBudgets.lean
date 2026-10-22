@@ -74,7 +74,7 @@ theorem source_candidates (context : Context × Entry) (output : FullOutput)
 
 /-- The full source-and-checker comparison uses the computed entire candidate cap; the certificate contains neither an alias-probability premise nor a whole-observer resource bound. -/
 theorem source_bound (hmac : HmacSha512) (correct : SourceFullCorrect source hmac) (sample : ProbComp Context) :
-    (actual source writer mark sender route decode continuation sample).boolDistAdvantage
+    (actual source writer mark sender route decode continuation sample).boolDistance
       (random source writer mark sender route decode continuation sample) ≤
       extractLoss hmac sample (address continuation) (observer source writer mark sender route decode continuation) +
         hmacLoss hmac sample (address continuation) (observer source writer mark sender route decode continuation) +

@@ -65,14 +65,14 @@ theorem native_bound
     (state : Context → State (M := M) (P := P) (I := I) (D := D) (K := K) (A := A) (S := S) (B := B))
     (outside : Context → Result (M := M) (P := P) (I := I) (D := D) (K := K) (A := A) (S := S) (B := B) → ProbComp Bool) :
     let observe := observer source writer aux senderId index metadata ready state outside
-    (native source writer aux senderId index metadata sample ready state outside).boolDistAdvantage
+    (native source writer aux senderId index metadata sample ready state outside).boolDistance
         (RawCtxInitialSecrecy.random sample observe) ≤
       (extractRealGame hmac (RawCtxInitialSecrecy.joint sample)
-        (fullExtractReduction hmac .ratchet (RawCtxInitialSecrecy.observer observe))).boolDistAdvantage
+        (fullExtractReduction hmac .ratchet (RawCtxInitialSecrecy.observer observe))).boolDistance
         (extractUniformGame (RawCtxInitialSecrecy.joint sample)
           (fullExtractReduction hmac .ratchet (RawCtxInitialSecrecy.observer observe))) +
       (hmacPrfRealGame hmac (fullExpandReduction .ratchet (RawCtxInitialSecrecy.joint sample)
-        (RawCtxInitialSecrecy.observer observe))).boolDistAdvantage
+        (RawCtxInitialSecrecy.observer observe))).boolDistance
         (hmacPrfRandomGame (fullExpandReduction .ratchet (RawCtxInitialSecrecy.joint sample)
           (RawCtxInitialSecrecy.observer observe))) := by
   simpa only [native_source] using RawCtxInitialSecrecy.primitive_bound source hmac correct sample

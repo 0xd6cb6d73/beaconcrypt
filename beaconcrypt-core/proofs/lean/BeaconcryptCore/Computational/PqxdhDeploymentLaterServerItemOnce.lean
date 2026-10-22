@@ -742,12 +742,12 @@ theorem splitL_uniform_two (setup : Setup baseSpec KemSK) (codec : Codec Reader 
     (work : OracleComp (PqxdhDeploymentLaterServerSource.Spec KemSK) X) (runtime : A) (count : Nat)
     (selected : Fin (count + 1)) (index : Nat) :
     (splitGame (sharedStartL (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count
-        selected index) (sharedClientL setup codec checks decision count selected)).boolDistAdvantage
+        selected index) (sharedClientL setup codec checks decision count selected)).boolDistance
       (uniformGame (rootClientL (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count
         selected index)) ≤
       ∑ slot ∈ Finset.range 2,
         (hmacPrfRealGame setup.hmac (indexedReduction setup.hmac (rootClientL (Reader := Reader) setup codec checks
-          ensureInit supplied decision work runtime count selected index) slot)).boolDistAdvantage
+          ensureInit supplied decision work runtime count selected index) slot)).boolDistance
           (hmacPrfRandomGame (indexedReduction setup.hmac (rootClientL (Reader := Reader) setup codec checks
             ensureInit supplied decision work runtime count selected index) slot)) :=
   PqxdhDeploymentLaterServerItemRoot.splitL_uniform setup codec checks ensureInit supplied decision work runtime count
@@ -761,13 +761,13 @@ theorem opaqueBranchL_uniform_two (setup : Setup baseSpec KemSK) (codec : Codec 
     (certified : ∀ kind, work.IsQueryBoundP
       (fun query => PqxdhDeploymentLaterServerReserve.laterKind (KemSK := KemSK) query = some kind) (budget kind)) :
     (opaqueBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index
-        false).boolDistAdvantage
+        false).boolDistance
       (uniformGame (rootClientL (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count
         selected index)) ≤
       ((budget (.inl 3) + budget (.inl 5) + budget (.inl 6) : ℕ) : ℝ) / 2 ^ 256 +
         ∑ slot ∈ Finset.range 2,
           (hmacPrfRealGame setup.hmac (indexedReduction setup.hmac (rootClientL (Reader := Reader) setup codec checks
-            ensureInit supplied decision work runtime count selected index) slot)).boolDistAdvantage
+            ensureInit supplied decision work runtime count selected index) slot)).boolDistance
             (hmacPrfRandomGame (indexedReduction setup.hmac (rootClientL (Reader := Reader) setup codec checks
               ensureInit supplied decision work runtime count selected index) slot)) :=
   PqxdhDeploymentLaterServerItemRoot.opaqueBranchL_uniform setup codec checks ensureInit supplied decision work runtime

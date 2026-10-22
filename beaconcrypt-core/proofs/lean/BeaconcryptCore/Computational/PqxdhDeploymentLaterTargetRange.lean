@@ -200,13 +200,13 @@ theorem kem_transfer_server_create_two_sided (setup : Setup baseSpec KemSK)
           (compileServer setup codec route bounds mode first second) runtime budget.create
           (selectedKem budget (g.1, g.2.castSucc)) g.1.val false] {true}).toReal| ≤
       ∑ g : Fin budget.accept × Fin budget.create,
-        (setup.kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl
+        ((setup.kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl
             (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl))
           (PqxdhDeploymentLaterServerKemHop.certified setup ensureInit none
             (PqxdhDeploymentLaterServerCut.scanned setup codec checks
               (decision setup.source.crypto codec setup.serverKeyId budget event claim (g.1, g.2.castSucc))
               (compileServer setup codec route bounds mode first second) g.1.val)
-            runtime budget.create (selectedKem budget (g.1, g.2.castSucc))).toINDCCA +
+            runtime budget.create (selectedKem budget (g.1, g.2.castSucc))).toINDCCA).toReal +
           PqxdhRegistrationJointKemRawGame.correctnessError setup) := by
   rw [split_create_later setup codec checks route ensureInit phase1 phase2 bounds mode first second budget respects
     event claim runtime]

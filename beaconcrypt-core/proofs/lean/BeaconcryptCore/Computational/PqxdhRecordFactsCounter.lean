@@ -208,7 +208,7 @@ theorem local_project
       simp only [PqxdhRecordLiftProtocol.localInterpreter, localInterpreter,
         PqxdhRecordLiftOpaqueDrivers.interpreter, PqxdhRecordLiftNativeAdapters.receiveOpen,
         StateT.run, bind_pure_comp, Functor.map_map, zeroRecord, Prod.map, id_eq] at same ⊢
-      convert same using 1
+      exact same
     · have same := congrArg (fun work => (fun reply => (reply.1, (state.1, reply.2))) <$> work)
         (send_program_project setup codec
           (RawCtxSourceSend.adapter (.inr (RawCtxInterpretedSend.nativeSeal
@@ -216,7 +216,7 @@ theorem local_project
       simp only [PqxdhRecordLiftProtocol.localInterpreter, localInterpreter,
         PqxdhRecordLiftOpaqueDrivers.interpreter, PqxdhRecordLiftNativeAdapters.sendSeal,
         StateT.run, bind_pure_comp, Functor.map_map, zeroRecord, Prod.map, id_eq] at same ⊢
-      convert same using 1
+      exact same
 
 /-- Lifting any projected record computation preserves all other private fields. -/
 theorem withRecord_project {Result : Type}

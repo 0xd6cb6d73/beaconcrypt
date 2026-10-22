@@ -124,13 +124,13 @@ theorem beaconWrongSequenceAdvantage_le_blake2b_cr
   have hexp : beaconWrongSequenceExp h adversary =
       (fun claim => decide (BeaconWrongSequenceSuccess h claim)) <$> adversary := by
     simp only [beaconWrongSequenceExp, bind_pure_comp]
-  have hcr : CollisionResistance.crExp h.c.blake2b
+  have hcr : CollisionResistance.crExperiment h.c.blake2b
         (beaconWrongSequenceCollisionReduction h adversary) =
       (fun claim => decide ((beaconWrongSequenceCollisionInputs h claim).1 ≠
           (beaconWrongSequenceCollisionInputs h claim).2 ∧
         h.c.blake2b (beaconWrongSequenceCollisionInputs h claim).1 =
           h.c.blake2b (beaconWrongSequenceCollisionInputs h claim).2)) <$> adversary := by
-    simp only [CollisionResistance.crExp, beaconWrongSequenceCollisionReduction, bind_pure_comp,
+    simp only [CollisionResistance.crExperiment, beaconWrongSequenceCollisionReduction, bind_pure_comp,
       Functor.map_map]
   unfold beaconWrongSequenceAdvantage CollisionResistance.crAdvantage
   rw [← prEvent_eq_evalDist_singleton _ true, hexp, hcr, prEvent_map, prEvent_map]
@@ -283,13 +283,13 @@ theorem beaconCrossSessionAdvantage_le_blake2b_cr
   have hexp : beaconCrossSessionExp h adversary =
       (fun claim => decide (BeaconCrossSessionSuccess h claim)) <$> adversary := by
     simp only [beaconCrossSessionExp, bind_pure_comp]
-  have hcr : CollisionResistance.crExp h.c.blake2b
+  have hcr : CollisionResistance.crExperiment h.c.blake2b
         (beaconCrossSessionCollisionReduction h adversary) =
       (fun claim => decide ((beaconCrossSessionCollisionInputs h claim).1 ≠
           (beaconCrossSessionCollisionInputs h claim).2 ∧
         h.c.blake2b (beaconCrossSessionCollisionInputs h claim).1 =
           h.c.blake2b (beaconCrossSessionCollisionInputs h claim).2)) <$> adversary := by
-    simp only [CollisionResistance.crExp, beaconCrossSessionCollisionReduction, bind_pure_comp,
+    simp only [CollisionResistance.crExperiment, beaconCrossSessionCollisionReduction, bind_pure_comp,
       Functor.map_map]
   unfold beaconCrossSessionAdvantage CollisionResistance.crAdvantage
   rw [← prEvent_eq_evalDist_singleton _ true, hexp, hcr, prEvent_map, prEvent_map]

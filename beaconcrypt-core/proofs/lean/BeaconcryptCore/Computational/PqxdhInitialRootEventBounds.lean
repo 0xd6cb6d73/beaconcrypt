@@ -24,9 +24,9 @@ theorem retained_uniform (source : FixedHkdfSha512NoSaltSource) (writer : RawCtx
     ((RawCtxPendingRetainedExecution.retained source writer (productionStream source.crypto) query).run state).IsTotalQueryBound 76 := by
   have same := RawCtxPendingRetainedExecution.retained_run source writer 0
     ((RawCtxPendingSelectiveFamily.Spec S B).query query : OracleComp (RawCtxPendingSelectiveFamily.Spec S B) _)
-    (state, ((fun _ => none), ⟨List.Vector.replicate 32 0, 0⟩)) (Nat.zero_le _)
+    (state, (∅, ⟨List.Vector.replicate 32 0, 0⟩)) (Nat.zero_le _)
   simp only [simulateQ_spec_query] at same
-  have empty : RawCtxSelectedParentTable.view (productionStream source.crypto) (fun _ => none) = productionStream source.crypto := by
+  have empty : RawCtxSelectedParentTable.view (productionStream source.crypto) ∅ = productionStream source.crypto := by
     funext request
     rfl
   rw [empty] at same

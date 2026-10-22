@@ -40,26 +40,26 @@ open PqxdhRegistrationJointKemEntryFactor (Output EntrySpec entryClient entryD i
 /-- The bound of G2 on a distinguisher: two Extract advantages on an independent uniform 32-byte input and two HMAC-SHA-512 PRF advantages of the reductions of `PqxdhServerAuthKeySchedule`. -/
 noncomputable def keyScheduleBound (source : FixedHkdfSha512NoSaltSource) (hmac : HmacSha512)
     (distinguisher : PqxdhServerAuthKeySchedule.Distinguisher) : ℝ :=
-  (extractRealGame hmac uniform32 (initExtractReduction source hmac distinguisher)).boolDistAdvantage
+  (extractRealGame hmac uniform32 (initExtractReduction source hmac distinguisher)).boolDistance
       (extractUniformGame uniform32 (initExtractReduction source hmac distinguisher)) +
-    (hmacPrfRealGame hmac (initExpandReduction source distinguisher)).boolDistAdvantage
+    (hmacPrfRealGame hmac (initExpandReduction source distinguisher)).boolDistance
       (hmacPrfRandomGame (initExpandReduction source distinguisher)) +
-    (extractRealGame hmac uniform32 (stepExtractReduction hmac distinguisher)).boolDistAdvantage
+    (extractRealGame hmac uniform32 (stepExtractReduction hmac distinguisher)).boolDistance
       (extractUniformGame uniform32 (stepExtractReduction hmac distinguisher)) +
-    (hmacPrfRealGame hmac (stepExpandReduction distinguisher)).boolDistAdvantage
+    (hmacPrfRealGame hmac (stepExpandReduction distinguisher)).boolDistance
       (hmacPrfRandomGame (stepExpandReduction distinguisher))
 
 /-- G2 with its bound written as `keyScheduleBound`. -/
 theorem keySchedule_hop (source : FixedHkdfSha512NoSaltSource) (hmac : HmacSha512)
     (correct : SourceFullCorrect source hmac) (distinguisher : PqxdhServerAuthKeySchedule.Distinguisher) :
-    (rootHybrid source distinguisher).boolDistAdvantage (PqxdhServerAuthKeySchedule.uniformGame distinguisher) ≤
+    (rootHybrid source distinguisher).boolDistance (PqxdhServerAuthKeySchedule.uniformGame distinguisher) ≤
       keyScheduleBound source hmac distinguisher :=
   PqxdhKeyScheduleFromRoot.fromRoot_bound source hmac correct distinguisher
 
 /-- Two games with equal output distributions have equal advantages against any game, on the right. -/
 theorem advantage_right {left right right' : ProbComp Bool} (same : 𝒟[right] = 𝒟[right']) :
-    left.boolDistAdvantage right = left.boolDistAdvantage right' := by
-  unfold ProbComp.boolDistAdvantage
+    left.boolDistance right = left.boolDistance right' := by
+  unfold ProbComp.boolDistance
   rw [same]
 
 /-! ### The number of hidden reads of the factored root client -/
@@ -199,7 +199,7 @@ theorem hybrid_hop (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
     (count : Nat) (selected : Fin (count + 1)) (index : Nat) (correct : SourceFullCorrect setup.source setup.hmac)
     (k : ℕ) :
     (hybrid (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index
-        k).boolDistAdvantage
+        k).boolDistance
       (hybrid (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index
         (k + 1)) ≤
       keyScheduleBound setup.source setup.hmac (entryDk (Reader := Reader) setup codec checks ensureInit supplied
@@ -216,15 +216,15 @@ theorem hybrid_telescope (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
     (count : Nat) (selected : Fin (count + 1)) (index : Nat) (correct : SourceFullCorrect setup.source setup.hmac)
     (q : ℕ) :
     (hybrid (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index
-        0).boolDistAdvantage
+        0).boolDistance
       (hybrid (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index q) ≤
       ∑ k ∈ Finset.range q, keyScheduleBound setup.source setup.hmac (entryDk (Reader := Reader) setup codec checks
         ensureInit supplied decision work runtime count selected index k) := by
   induction q with
-  | zero => simp [ProbComp.boolDistAdvantage_self]
+  | zero => simp [ProbComp.boolDistance_self]
   | succ q ih =>
       rw [Finset.sum_range_succ]
-      exact (ProbComp.boolDistAdvantage_triangle _ _ _).trans
+      exact (ProbComp.boolDistance_triangle _ _ _).trans
         (add_le_add ih (hybrid_hop setup codec checks ensureInit supplied decision work runtime count selected index
           correct q))
 
@@ -318,20 +318,20 @@ theorem opaqueBranch_allIdeal (setup : Setup baseSpec KemSK) (codec : Codec Read
       (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))
     (correct : SourceFullCorrect setup.source setup.hmac) :
     (opaqueBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index
-        false).boolDistAdvantage
+        false).boolDistance
       (allIdealBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected
         index) ≤
       ((budget (.inl 3) + budget (.inl 5) + budget (.inl 6) : ℕ) : ℝ) / 2 ^ 256 +
         ∑ slot ∈ Finset.range (1 + budget (.inl 5)),
           (hmacPrfRealGame setup.hmac (indexedReduction setup.hmac (rootClient (Reader := Reader) setup codec checks
-            ensureInit supplied decision work runtime count selected index) slot)).boolDistAdvantage
+            ensureInit supplied decision work runtime count selected index) slot)).boolDistance
             (hmacPrfRandomGame (indexedReduction setup.hmac (rootClient (Reader := Reader) setup codec checks
               ensureInit supplied decision work runtime count selected index) slot)) +
         ∑ k ∈ Finset.range (1 + budget (.inl 5)), keyScheduleBound setup.source setup.hmac
           (entryDk (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index
             k) := by
   have tail : (PqxdhCorrelatedExpandHybrid.uniformGame (rootClient (Reader := Reader) setup codec checks ensureInit
-      supplied decision work runtime count selected index)).boolDistAdvantage
+      supplied decision work runtime count selected index)).boolDistance
       (allIdealBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected
         index) ≤
       ∑ k ∈ Finset.range (1 + budget (.inl 5)), keyScheduleBound setup.source setup.hmac
@@ -342,7 +342,7 @@ theorem opaqueBranch_allIdeal (setup : Setup baseSpec KemSK) (codec : Codec Read
       runtime count selected index _ (entryClient_value setup codec checks ensureInit supplied decision work runtime
         count selected index budget certified)]
     exact hybrid_telescope setup codec checks ensureInit supplied decision work runtime count selected index correct _
-  exact (ProbComp.boolDistAdvantage_triangle _ _ _).trans (add_le_add
+  exact (ProbComp.boolDistance_triangle _ _ _).trans (add_le_add
     (PqxdhRegistrationJointKemRootExpand.opaqueBranch_uniform setup codec checks ensureInit supplied decision work
       runtime count selected index budget certified) tail)
 
@@ -356,13 +356,13 @@ theorem opaqueBranch_slots (setup : Setup baseSpec KemSK) (codec : Codec Reader 
       (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))
     (correct : SourceFullCorrect setup.source setup.hmac) :
     (opaqueBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index
-        false).boolDistAdvantage
+        false).boolDistance
       (slotGame (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index
         (1 + budget (.inl 5))) ≤
       ((budget (.inl 3) + budget (.inl 5) + budget (.inl 6) : ℕ) : ℝ) / 2 ^ 256 +
         ∑ slot ∈ Finset.range (1 + budget (.inl 5)),
           (hmacPrfRealGame setup.hmac (indexedReduction setup.hmac (rootClient (Reader := Reader) setup codec checks
-            ensureInit supplied decision work runtime count selected index) slot)).boolDistAdvantage
+            ensureInit supplied decision work runtime count selected index) slot)).boolDistance
             (hmacPrfRandomGame (indexedReduction setup.hmac (rootClient (Reader := Reader) setup codec checks
               ensureInit supplied decision work runtime count selected index) slot)) +
         ∑ k ∈ Finset.range (1 + budget (.inl 5)), keyScheduleBound setup.source setup.hmac

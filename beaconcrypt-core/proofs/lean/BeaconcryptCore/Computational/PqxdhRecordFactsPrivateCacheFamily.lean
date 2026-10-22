@@ -17,8 +17,9 @@ abbrev FamilyRO (n : Nat) := ((Label n × Pqxdh.Bytes) →ₒ CtxDigest)
 
 /-- Every private suffix dictionary, with all local histories and the base state framed around it. -/
 def familyLens : CacheLens (FamilyRO n) (CtxPrivate n) where
-  get state := fun q => (state.keys q.1).2 q.2
-  set state cache := { state with keys := fun label => ((state.keys label).1, fun suffix => cache (label, suffix)) }
+  get state := QueryCache.ofFn (fun q => (state.keys q.1).2 q.2)
+  set state cache := { state with keys := fun label =>
+    ((state.keys label).1, QueryCache.ofFn (fun suffix => cache (label, suffix))) }
   get_set state cache := by rfl
   set_get state := by rfl
   set_set state cache cache' := by rfl
@@ -60,7 +61,7 @@ theorem complete_local (label : Label n) (suffix : Pqxdh.Bytes) (state : CtxPriv
     familyLens.complete (label, suffix) state =
       ((localLens label).comp suffixLens).complete suffix state := by
   simp only [StateLens.complete, complete_run, familyLens, localLens, StateLens.comp,
-    suffixLens, StateLens.fst, StateLens.snd]
+    suffixLens, StateLens.fst, StateLens.snd, QueryCache.toFn_ofFn]
   cases cached : (state.keys label).2 suffix with
   | none =>
       simp only [Functor.map_map]
@@ -72,17 +73,18 @@ theorem complete_local (label : Label n) (suffix : Pqxdh.Bytes) (state : CtxPriv
       · subst other
         simp only [Function.update_self]
         congr 1
-        funext otherSuffix
+        refine QueryCache.ext (fun otherSuffix => ?_)
         by_cases sameSuffix : otherSuffix = suffix
         · subst otherSuffix; simp
         · simp [QueryCache.cacheQuery, Function.update_of_ne, sameSuffix]
       · simp only [Function.update_of_ne same]
         apply Prod.ext
         · rfl
-        · funext otherSuffix
+        · refine QueryCache.ext (fun otherSuffix => ?_)
           simp [QueryCache.cacheQuery, Function.update_of_ne, same]
   | some digest =>
       simp only [map_pure, Prod.eta, Function.update_eq_self]
+      rfl
 
 /-- A step on one coordinate cannot inspect the suffix dictionary of another coordinate. -/
 theorem localLift_other_commutes {Result : Type} (label other : Label n) (different : label ≠ other)

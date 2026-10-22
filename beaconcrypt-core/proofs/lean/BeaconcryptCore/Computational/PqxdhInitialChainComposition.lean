@@ -80,9 +80,9 @@ noncomputable def initialLoss {Context : Type} (source : FixedHkdfSha512NoSaltSo
     (leftRounds rightRounds : Nat) : ℝ :=
   let joint := rootSampler sample
   let observe := initialObserver source observer leftRounds rightRounds
-  (extractRealGame hmac joint (fullExtractReduction hmac .ratchet observe)).boolDistAdvantage
+  (extractRealGame hmac joint (fullExtractReduction hmac .ratchet observe)).boolDistance
     (extractUniformGame joint (fullExtractReduction hmac .ratchet observe)) +
-  (hmacPrfRealGame hmac (fullExpandReduction .ratchet joint observe)).boolDistAdvantage
+  (hmacPrfRealGame hmac (fullExpandReduction .ratchet joint observe)).boolDistance
     (hmacPrfRandomGame (fullExpandReduction .ratchet joint observe))
 
 /-- The first hop replaces the shared initialization prefix, before any directional hop. -/
@@ -90,11 +90,11 @@ theorem initialized_bound {Context : Type} (source : FixedHkdfSha512NoSaltSource
     (hmac : HmacSha512) (correct : SourceFullCorrect source hmac)
     (sample : ProbComp Context) (observer : BidirectionalObserver Context)
     (leftRounds rightRounds : Nat) :
-    (initializedGame source sample observer leftRounds rightRounds).boolDistAdvantage
+    (initializedGame source sample observer leftRounds rightRounds).boolDistance
       (bidirectionalGame source sample observer leftRounds rightRounds 0 0) ≤
       initialLoss source hmac sample observer leftRounds rightRounds := by
   have random := (independent_initial_eq_bidirectional source sample observer leftRounds rightRounds).evalDist_eq
-  simpa only [initializedGame, initialLoss, ProbComp.boolDistAdvantage, random] using
+  simpa only [initializedGame, initialLoss, ProbComp.boolDistance, random] using
     sourceFullAdvantage_le_extract_add_hmac source hmac correct .ratchet
       (rootSampler sample) (initialObserver source observer leftRounds rightRounds)
 
@@ -103,7 +103,7 @@ theorem initialized_evolving_bound {Context : Type} (source : FixedHkdfSha512NoS
     (hmac : HmacSha512) (correct : SourceFullCorrect source hmac)
     (sample : ProbComp Context) (observer : BidirectionalObserver Context)
     (leftRounds rightRounds : Nat) :
-    (initializedGame source sample observer leftRounds rightRounds).boolDistAdvantage
+    (initializedGame source sample observer leftRounds rightRounds).boolDistance
       (bidirectionalGame source sample observer leftRounds rightRounds leftRounds rightRounds) ≤
       initialLoss source hmac sample observer leftRounds rightRounds +
       ((∑ cut ∈ Finset.range leftRounds,
@@ -112,7 +112,7 @@ theorem initialized_evolving_bound {Context : Type} (source : FixedHkdfSha512NoS
       (∑ cut ∈ Finset.range rightRounds,
         hopLoss source hmac (rightContextSampler source sample leftRounds leftRounds)
           (rightObserver observer) cut (rightRounds - cut - 1))) := by
-  exact (ProbComp.boolDistAdvantage_triangle _ _ _).trans
+  exact (ProbComp.boolDistance_triangle _ _ _).trans
     (add_le_add (initialized_bound source hmac correct sample observer leftRounds rightRounds)
       (bidirectional_bound source hmac correct sample observer leftRounds rightRounds))
 
@@ -164,7 +164,7 @@ theorem actualInitializedGame_evolving_bound {Context : Type} (source : FixedHkd
     (hmac : HmacSha512) (correct : SourceFullCorrect source hmac)
     (sample : ProbComp Context) (observer : BidirectionalObserver Context)
     (leftRounds rightRounds : Nat) :
-    (actualInitializedGame source sample observer leftRounds rightRounds).boolDistAdvantage
+    (actualInitializedGame source sample observer leftRounds rightRounds).boolDistance
       (bidirectionalGame source sample observer leftRounds rightRounds leftRounds rightRounds) ≤
       initialLoss source hmac sample observer leftRounds rightRounds +
       ((∑ cut ∈ Finset.range leftRounds,

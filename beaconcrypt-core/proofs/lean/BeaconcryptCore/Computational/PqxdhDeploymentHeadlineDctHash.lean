@@ -20,7 +20,7 @@ open OracleComp OracleSpec ENNReal
 set_option autoImplicit false
 
 namespace BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctHash
-open OracleComp.EvalDist (expectedValue)
+open OracleComp.ProgramLogic (wp)
 open PqxdhServerAuthExperiment (Setup Codec Checks)
 open PqxdhDeploymentInterface (FreshBounds Mode ModeSpec Budget)
 open PqxdhDeploymentHeadlineDctTools (size CollIn)
@@ -58,7 +58,7 @@ noncomputable def collPotential (H : ℕ) (w : PqxdhRecordLiftWorld.State 2) : �
 
 /-- One counted read of the lazily sampled BLAKE2b oracle does not raise the stopped birthday potential in expectation: a miss hits one of `|C|` cached digests with chance `|C|/2^512`, and `(b-1)(m+1) + C(b-1,2) = b·m + C(b,2) - m`. -/
 theorem draw_step (H n : ℕ) (cache : CtxRomAuth.CtxRO.QueryCache) (query : CtxRomAuth.CtxRO.Domain) :
-    expectedValue ((CtxRomAuth.ctxRandomOracle query).run cache) (fun r => drawPotential H (n + 1) r.2) ≤
+    wp ((CtxRomAuth.ctxRandomOracle query).run cache) (fun r => drawPotential H (n + 1) r.2) ≤
       drawPotential H n cache := by
   classical
   by_cases room : n + 1 ≤ H
@@ -71,13 +71,13 @@ theorem draw_step (H n : ℕ) (cache : CtxRomAuth.CtxRO.QueryCache) (query : Ctx
       simp only [drawPotential, room, ↓reduceIte, hb']
       ring
     simp only [expand]
-    rw [OracleComp.EvalDist.expectedValue_add, OracleComp.EvalDist.expectedValue_add,
-      OracleComp.EvalDist.expectedValue_mul_const]
+    rw [OracleComp.ProgramLogic.wp_add, OracleComp.ProgramLogic.wp_add,
+      OracleComp.ProgramLogic.wp_const_mul]
     have coll := PqxdhDeploymentHeadlineDctTools.ro_coll cache query
     have sized := PqxdhDeploymentHeadlineDctTools.ro_size cache query
-    have constant : expectedValue ((CtxRomAuth.ctxRandomOracle query).run cache)
+    have constant : wp ((CtxRomAuth.ctxRandomOracle query).run cache)
         (fun _ => (b.choose 2 : ℝ≥0∞) * (2 ^ 512 : ℝ≥0∞)⁻¹) ≤ (b.choose 2 : ℝ≥0∞) * (2 ^ 512 : ℝ≥0∞)⁻¹ :=
-      OracleComp.EvalDist.expectedValue_le_of_le _ fun _ => le_rfl
+      OracleComp.ProgramLogic.wp_le_const_of_support _ fun _ _ => le_rfl
     rw [CtxRomAuth.ctxDigest_card] at coll
     simp only [drawPotential, show n ≤ H by omega, ↓reduceIte, hb]
     calc _ ≤ ((if CtxColl cache then 1 else 0) + size cache * ((2 : ℝ≥0∞) ^ 512)⁻¹) +
@@ -93,7 +93,7 @@ theorem draw_step (H n : ℕ) (cache : CtxRomAuth.CtxRO.QueryCache) (query : Ctx
       intro r
       simp only [drawPotential, room, ↓reduceIte]
     simp only [zero]
-    exact le_trans (OracleComp.EvalDist.expectedValue_le_of_le _ fun _ => le_rfl) zero_le
+    exact le_trans (OracleComp.ProgramLogic.wp_le_const_of_support _ fun _ _ => le_rfl) zero_le
 
 /-! ### The primitive interpreter -/
 
@@ -102,23 +102,23 @@ variable (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
 
 /-- The uniform counter is pure instrumentation: an expectation of the counted run's value is the expectation of the run. -/
 theorem expected_countCoin {Y : Type} (work : ProbComp Y) (count : ℕ) (f : Y → ℝ≥0∞) :
-    expectedValue ((simulateQ PqxdhRecordLiftWorld.countCoin work).run count) (fun r => f r.1) =
-      expectedValue work f := by
-  have same := congrArg (fun m => expectedValue m f) (PqxdhRecordLiftWorld.countCoin_forget work count)
-  simp only [OracleComp.EvalDist.expectedValue_map] at same
+    wp ((simulateQ PqxdhRecordLiftWorld.countCoin work).run count) (fun r => f r.1) =
+      wp work f := by
+  have same := congrArg (fun m => wp m f) (PqxdhRecordLiftWorld.countCoin_forget work count)
+  simp only [OracleComp.ProgramLogic.wp_map] at same
   exact same
 
 /-- One call of the World's primitive interpreter does not raise the stopped birthday potential in expectation: only the BLAKE2b call touches the cache, and it raises the counted calls by one. -/
 theorem primitive_step (H : ℕ) (query : RawCtxMixedOwner.NativeSpec.Domain) (prim : PqxdhRecordLiftWorld.Primitive) :
-    expectedValue ((PqxdhRecordLiftWorld.primitives setup codec query).run prim) (fun r => primPotential H r.2) ≤
+    wp ((PqxdhRecordLiftWorld.primitives setup codec query).run prim) (fun r => primPotential H r.2) ≤
       primPotential H prim := by
-  change expectedValue ((simulateQ PqxdhRecordLiftWorld.countCoin
+  change wp ((simulateQ PqxdhRecordLiftWorld.countCoin
     ((PqxdhDeploymentNative.primitives setup codec query).run ((), prim.2))).run prim.1.uniform >>= fun result =>
       pure (result.1.1, ({ prim.1 with uniform := result.2, native := (Function.update prim.1.native
         (RawCtxMixedOwner.callKind query) (prim.1.native (RawCtxMixedOwner.callKind query) + 1)) }, result.1.2.2)))
     (fun r => primPotential H r.2) ≤ _
-  rw [OracleComp.EvalDist.expectedValue_bind]
-  simp only [OracleComp.EvalDist.expectedValue_pure]
+  rw [OracleComp.ProgramLogic.wp_bind]
+  simp only [OracleComp.ProgramLogic.wp_pure]
   simp only [primPotential, primCount]
   rw [expected_countCoin ((PqxdhDeploymentNative.primitives setup codec query).run ((), prim.2)) prim.1.uniform
     (fun r => drawPotential H (prim.1.effects .hash + Function.update prim.1.native
@@ -127,15 +127,15 @@ theorem primitive_step (H : ℕ) (query : RawCtxMixedOwner.NativeSpec.Domain) (p
   · rcases query with request | (sealing | (opening | (bytes | frame)))
     all_goals simp only [RawCtxMixedOwner.callKind, reduceCtorEq] at hashing
     simp only [RawCtxMixedOwner.callKind, Function.update_self]
-    change expectedValue ((RawCtxMixedShared.sharedImpl setup.source.crypto codec.frameWrite
+    change wp ((RawCtxMixedShared.sharedImpl setup.source.crypto codec.frameWrite
       (RawCtxSourceHkdf.kdfImpl setup.source) (.inr (.inr (.inr (.inl bytes))))).run ((), prim.2)) _ ≤ _
-    rw [RawCtxMixedShared.shared_hash, OracleComp.EvalDist.expectedValue_bind]
-    simp only [OracleComp.EvalDist.expectedValue_pure]
+    rw [RawCtxMixedShared.shared_hash, OracleComp.ProgramLogic.wp_bind]
+    simp only [OracleComp.ProgramLogic.wp_pure]
     rw [← Nat.add_assoc]
     exact draw_step H _ prim.2 ((), bytes)
   · rw [Function.update_of_ne (Ne.symm hashing)]
-    refine le_trans (OracleComp.EvalDist.expectedValue_mono_of_support fun r member => le_of_eq ?_)
-      (OracleComp.EvalDist.expectedValue_le_of_le _ fun _ => le_rfl)
+    refine le_trans (OracleComp.ProgramLogic.wp_mono_of_support _ fun r member => le_of_eq ?_)
+      (OracleComp.ProgramLogic.wp_le_const_of_support _ fun _ _ => le_rfl)
     congr 1
     rcases query with request | (sealing | (opening | (bytes | frame)))
     all_goals simp only [RawCtxMixedOwner.callKind, not_true_eq_false] at hashing
@@ -149,7 +149,7 @@ theorem primitive_step (H : ℕ) (query : RawCtxMixedOwner.NativeSpec.Domain) (p
 /-- A whole program on the World's primitive interpreter does not raise the stopped birthday potential in expectation. -/
 theorem primitiveRun_step {α : Type} (H : ℕ) (program : OracleComp RawCtxMixedOwner.NativeSpec α)
     (prim : PqxdhRecordLiftWorld.Primitive) :
-    expectedValue ((simulateQ (PqxdhRecordLiftWorld.primitives setup codec) program).run prim)
+    wp ((simulateQ (PqxdhRecordLiftWorld.primitives setup codec) program).run prim)
       (fun r => primPotential H r.2) ≤ primPotential H prim :=
   PqxdhDeploymentHeadlineDctTools.expected_run_bounded (PqxdhRecordLiftWorld.primitives setup codec) (fun _ => False)
     (fun _ state => primPotential H state) (fun _ _ => le_rfl) (fun _ _ _ wrong => absurd wrong id)
@@ -166,9 +166,9 @@ variable (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (route :
 theorem quiet_step {α : Type} (H : ℕ) (step : ProbComp (α × PqxdhRecordLiftWorld.State 2))
     (w : PqxdhRecordLiftWorld.State 2)
     (kept : ∀ r ∈ support step, r.2.primitive.2 = w.primitive.2 ∧ hashCount r.2 = hashCount w) :
-    expectedValue step (fun r => collPotential H r.2) ≤ collPotential H w := by
-  refine le_trans (OracleComp.EvalDist.expectedValue_mono_of_support fun r member => le_of_eq ?_)
-    (OracleComp.EvalDist.expectedValue_le_of_le _ fun _ => le_rfl)
+    wp step (fun r => collPotential H r.2) ≤ collPotential H w := by
+  refine le_trans (OracleComp.ProgramLogic.wp_mono_of_support _ fun r member => le_of_eq ?_)
+    (OracleComp.ProgramLogic.wp_le_const_of_support _ fun _ _ => le_rfl)
   obtain ⟨cache, count⟩ := kept r member
   change drawPotential H (hashCount r.2) r.2.primitive.2 = drawPotential H (hashCount w) w.primitive.2
   rw [cache, count]
@@ -253,33 +253,33 @@ theorem capability_quiet (request : (PqxdhRecordLiftInterface.CapabilitySpec 2).
 
 /-- A Server record step does not raise the stopped birthday potential in expectation. -/
 theorem serverStep_coll (H : ℕ) (query : RawCtxServerMixed.SourceSpec.Domain) (w : PqxdhRecordLiftWorld.State 2) :
-    expectedValue ((PqxdhRecordLiftWorld.serverStep setup codec route query).run w) (fun r => collPotential H r.2) ≤
+    wp ((PqxdhRecordLiftWorld.serverStep setup codec route query).run w) (fun r => collPotential H r.2) ≤
       collPotential H w := by
-  change expectedValue (PqxdhRecordLiftWorld.serverStep setup codec route query w) _ ≤ _
+  change wp (PqxdhRecordLiftWorld.serverStep setup codec route query w) _ ≤ _
   unfold PqxdhRecordLiftWorld.serverStep
   split
-  · split <;> simp only [OracleComp.EvalDist.expectedValue_pure, le_refl]
-  · rw [OracleComp.EvalDist.expectedValue_bind]
-    simp only [OracleComp.EvalDist.expectedValue_pure]
+  · split <;> simp only [OracleComp.ProgramLogic.wp_pure, le_refl]
+  · rw [OracleComp.ProgramLogic.wp_bind]
+    simp only [OracleComp.ProgramLogic.wp_pure]
     exact primitiveRun_step setup codec H _ w.primitive
 
 /-- A Beacon record step does not raise the stopped birthday potential in expectation. -/
 theorem beaconStep_coll (H : ℕ) (owner : ℕ) (query : RawCtxMixedOwner.SourceSpec.Domain)
     (w : PqxdhRecordLiftWorld.State 2) :
-    expectedValue ((PqxdhRecordLiftWorld.beaconStep setup codec owner query).run w) (fun r => collPotential H r.2) ≤
+    wp ((PqxdhRecordLiftWorld.beaconStep setup codec owner query).run w) (fun r => collPotential H r.2) ≤
       collPotential H w := by
-  change expectedValue (PqxdhRecordLiftWorld.beaconStep setup codec owner query w) _ ≤ _
+  change wp (PqxdhRecordLiftWorld.beaconStep setup codec owner query w) _ ≤ _
   unfold PqxdhRecordLiftWorld.beaconStep
   split
-  · simp only [OracleComp.EvalDist.expectedValue_pure, le_refl]
-  · rw [OracleComp.EvalDist.expectedValue_bind]
-    simp only [OracleComp.EvalDist.expectedValue_pure]
+  · simp only [OracleComp.ProgramLogic.wp_pure, le_refl]
+  · rw [OracleComp.ProgramLogic.wp_bind]
+    simp only [OracleComp.ProgramLogic.wp_pure]
     exact primitiveRun_step setup codec H _ w.primitive
 
 /-- `world_step_coll`: one World handler query never raises the stopped birthday potential in expectation. -/
 theorem world_step_coll (H : ℕ) (query : (PqxdhRecordLiftInterface.WorldSpec 2).Domain)
     (w : PqxdhRecordLiftWorld.State 2) :
-    expectedValue ((PqxdhRecordLiftWorld.handler setup codec route query).run w) (fun r => collPotential H r.2) ≤
+    wp ((PqxdhRecordLiftWorld.handler setup codec route query).run w) (fun r => collPotential H r.2) ≤
       collPotential H w := by
   rcases query with created | (effect | ((send | raw) | ⟨owner, plaintext | raw⟩))
   · refine quiet_step H _ w fun r member => ?_
@@ -300,8 +300,8 @@ theorem world_step_coll (H : ℕ) (query : (PqxdhRecordLiftInterface.WorldSpec 2
     · by_cases hashing : ∃ bytes, request = .hash bytes
       · obtain ⟨bytes, rfl⟩ := hashing
         simp only [PqxdhRecordLiftWorld.handler, PqxdhRecordLiftWorld.effects, PqxdhRecordLiftWorld.capability,
-          PqxdhRecordLiftWorld.sampled, StateT.run, bind_pure_comp, Functor.map_map, OracleComp.EvalDist.expectedValue_map]
-        simp only [collPotential, primPotential, primCount, PqxdhRecordLiftWorld.chargeEffect,
+          PqxdhRecordLiftWorld.sampled, StateT.run, bind_pure_comp, Functor.map_map, OracleComp.ProgramLogic.wp_map]
+        simp only [Function.comp_def, collPotential, primPotential, primCount, PqxdhRecordLiftWorld.chargeEffect,
           PqxdhRecordLiftInterface.effectKind, Function.update_self]
         have count : w.primitive.1.effects .hash + 1 + w.primitive.1.native .hash =
             (w.primitive.1.effects .hash + w.primitive.1.native .hash) + 1 := by omega

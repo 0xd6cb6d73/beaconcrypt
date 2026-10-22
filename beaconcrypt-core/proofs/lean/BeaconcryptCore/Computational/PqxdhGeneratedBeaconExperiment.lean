@@ -97,13 +97,13 @@ theorem authenticated_bound {KemSK : Type} {setup : StatefulPhase1Setup baseSpec
       (PqxdhProtocolSelector.SelectorClass (PqxdhPrivateKemQueryBounds.SelectorSource (baseSpec := baseSpec) PqxdhPrivatePhase1Prefix.Creating)) 0)
     (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : Forgery)
     (post : Post program.Selection S (B + 1)) :
-    (actual env baseImpl kem attachedVerify primitives program post).boolDistAdvantage
+    (actual env baseImpl kem attachedVerify primitives program post).boolDistance
       (correlated env baseImpl kem attachedVerify primitives program post) ≤
       (advantage primitives (PqxdhGeneratedPhase1Prefix.privateReduction primitives baseImpl kem setup
         (driver env.toEnvironment program) fallback ordinaryFallback)).toReal +
-      kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl (PqxdhInitializerSecrecy.kemAmbientImpl baseImpl))
+      (kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl (PqxdhInitializerSecrecy.kemAmbientImpl baseImpl))
         (PqxdhChallengeSecretRouting.reduction env.source kem
-          (protocol env kem attachedVerify primitives program post)).toINDCCA := by
+          (protocol env kem attachedVerify primitives program post)).toINDCCA).toReal := by
   exact PqxdhGeneratedRootSource.authenticated_correlated_bound baseImpl kem env.parameters compatible functional correct
     attachedVerify primitives adapter setup (driver env.toEnvironment program)
     (fun index publicIdentity generated transcript => driver_source_bound env.toEnvironment program

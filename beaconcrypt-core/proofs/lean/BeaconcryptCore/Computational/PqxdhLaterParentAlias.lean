@@ -46,26 +46,30 @@ theorem prepared_alias (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
     (prior : ProbComp (PqxdhInitialSourceInitialSecrecy.Context extra M P I D K X Response A N S B)) :
     𝒟[collision <$> PqxdhErasedParentMaterial.prepare source writer sender route decode depth prior] {true} ≤
       (2 ^ 256 : ℝ≥0∞)⁻¹ := by
-  simp only [PqxdhErasedParentMaterial.prepare, map_bind, map_pure]
+  unfold PqxdhErasedParentMaterial.prepare
+  generalize full_eq : ($ᵗ FullOutput) = fullWork
+  generalize nonce_eq : ($ᵗ NonceOutput) = nonceWork
+  generalize root_eq : ($ᵗ RootOutput) = rootWork
+  simp only [map_bind, map_pure]
   rw [← prEvent_eq_evalDist_singleton _ true]
   apply prEvent_bind_le_of_forall_le_of_support
   intro packet supported
   have bound := full_alias (PqxdhErasedParentSample.address packet)
-  rw [← prEvent_eq_evalDist_singleton _ true, map_eq_bind_pure_comp] at bound
+  rw [full_eq] at bound
+  rw [← prEvent_eq_evalDist_singleton _ true] at bound
   rw [prEvent_eq_evalDist_singleton]
   change 𝒟[(do
-    let parent ← $ᵗ FullOutput
-    let _ ← $ᵗ NonceOutput
-    let _ ← $ᵗ RootOutput
+    let parent ← fullWork
+    let _ ← nonceWork
+    let _ ← rootWork
     pure (fullAlias (PqxdhErasedParentSample.address packet) parent))] {true} ≤ _
   rw [← prEvent_eq_evalDist_singleton _ true]
-  have drop := EvalDistEq.bind_right ($ᵗ FullOutput) fun parent =>
-    (OracleComp.EvalDistEq.bind_const ($ᵗ NonceOutput) _).trans
-      (OracleComp.EvalDistEq.bind_const ($ᵗ RootOutput)
+  have drop := EvalDistEq.bind_right fullWork fun parent =>
+    (OracleComp.EvalDistEq.bind_const nonceWork _).trans
+      (OracleComp.EvalDistEq.bind_const rootWork
         (pure (fullAlias (PqxdhErasedParentSample.address packet) parent) : ProbComp Bool))
   rw [drop.prEvent_eq (fun value => value = true)]
-  simpa only [Function.comp_def] using bound
-
+  simpa only [bind_pure_comp] using bound
 end General
 
 section Actual

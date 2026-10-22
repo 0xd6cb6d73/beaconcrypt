@@ -124,7 +124,7 @@ include caps in
 /-- The actual sampled source stage zero-to-one secrecy comparison uses its constructed ordinary Extract/HMAC reductions, explicit factor-three alias loss and source-derived candidate bill. No honest-selection, distinct-byte, prior-state or final-event equality is assumed. -/
 theorem bound (hmac : HmacSha512) (correct : SourceFullCorrect source hmac)
     (positive : ∀ input, Sum.inr input ∈ support prior → 0 < input.number.val) :
-    (PqxdhInitialSourceSampled.game source writer sender route decode prior 0).boolDistAdvantage
+    (PqxdhInitialSourceSampled.game source writer sender route decode prior 0).boolDistance
       (PqxdhInitialSourceSampled.game source writer sender route decode prior 1) ≤
       loss source writer sender route decode prior qPost qCheck qKnown hmac := by
   have result := PqxdhInitialHalfSecrecy.bound source hmac correct writer (mark source prior) sender route decode
@@ -136,7 +136,7 @@ theorem bound (hmac : HmacSha512) (correct : SourceFullCorrect source hmac)
     (PqxdhInitialSourceFirstSecrecy.actual_source source writer sender route decode prior)
   have randomLaw := congrArg (fun μ : MeasureTheory.Measure Bool => μ {true})
     (PqxdhInitialSourceFirstSecrecy.random_source source writer sender route decode prior positive)
-  simpa only [ProbComp.boolDistAdvantage, ← realLaw, ← randomLaw, loss, observer, aliasTester] using result
+  simpa only [ProbComp.boolDistance, ← realLaw, ← randomLaw, loss, observer, aliasTester] using result
 
 /-- Attaching supported source inputs preserves the original preparation query bill by syntax equality. -/
 theorem sample_uniform (qPrior : Nat) (bounded : prior.IsTotalQueryBound qPrior) :

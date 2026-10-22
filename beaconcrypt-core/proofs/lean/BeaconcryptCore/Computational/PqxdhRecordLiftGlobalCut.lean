@@ -252,19 +252,19 @@ theorem observed_bound {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Resp
     (target : PqxdhRecordLiftWorldCompiler.Label n)
     (client : OracleComp (ServiceSpec n) Result) (selected : ideal target = true) (finish : Observer Result) :
     (((simulateQ (interpreter (PqxdhRecordLiftChainOracle.lookup source · ideal) setup codec) client).run initialPrivate >>=
-      observe finish)).boolDistAdvantage
+      observe finish)).boolDistance
       (PqxdhRecordLiftProjectionCut.childUniform (parentSample source ideal setup codec target client)
         (parentObserver source ideal setup codec finish)) ≤
     (extractRealGame hmac PqxdhServerAuthKeySchedule.uniform32
-      (fullExtractReduction hmac .ratchet (reductionObserver source ideal setup codec target client finish))).boolDistAdvantage
+      (fullExtractReduction hmac .ratchet (reductionObserver source ideal setup codec target client finish))).boolDistance
     (extractUniformGame PqxdhServerAuthKeySchedule.uniform32
       (fullExtractReduction hmac .ratchet (reductionObserver source ideal setup codec target client finish))) +
     (hmacPrfRealGame hmac (fullExpandReduction .ratchet PqxdhServerAuthKeySchedule.uniform32
-      (reductionObserver source ideal setup codec target client finish))).boolDistAdvantage
+      (reductionObserver source ideal setup codec target client finish))).boolDistance
     (hmacPrfRandomGame (fullExpandReduction .ratchet PqxdhServerAuthKeySchedule.uniform32
       (reductionObserver source ideal setup codec target client finish))) := by
   have actual := (observed_source source ideal setup codec target client selected finish).evalDist_eq
-  simpa only [ProbComp.boolDistAdvantage, actual, reductionObserver] using
+  simpa only [ProbComp.boolDistance, actual, reductionObserver] using
     PqxdhRecordLiftProjectionCut.child_bound source hmac correct
       (parentSample source ideal setup codec target client) (parentObserver source ideal setup codec finish)
 

@@ -269,7 +269,8 @@ theorem lookup_repeated (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
   | true => exact PqxdhRecordLiftChainOracle.lookup_hit source seeds ideal entry state mode value found
   | false =>
     have stable : state.1.cacheQuery entry value = state.1 := by
-      funext other
+      apply QueryCache.ext
+      intro other
       by_cases same : other = entry
       · subst other; simp only [QueryCache.cacheQuery_self, found]
       · exact QueryCache.cacheQuery_of_ne state.1 value same

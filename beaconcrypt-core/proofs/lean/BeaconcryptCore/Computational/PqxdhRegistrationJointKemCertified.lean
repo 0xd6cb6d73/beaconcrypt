@@ -81,10 +81,10 @@ theorem advantage (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes)
     (client : OracleComp (SourceSpec KemSK) Bool) (runtime : A)
     (count : Nat) (selected : Fin (count + 1)) (occurrence : Nat) :
-    (PqxdhRegistrationJointKemGame.sourceReal setup codec checks ensureInit supplied client runtime count selected occurrence).boolDistAdvantage
+    (PqxdhRegistrationJointKemGame.sourceReal setup codec checks ensureInit supplied client runtime count selected occurrence).boolDistance
       (PqxdhRegistrationJointKemGame.branch setup codec checks ensureInit supplied client runtime count selected occurrence false) =
-      setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
-        (adversary setup codec checks ensureInit supplied client runtime count selected occurrence).toINDCCA := by
+      (setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
+        (adversary setup codec checks ensureInit supplied client runtime count selected occurrence).toINDCCA).toReal := by
   have exactHop := oneKey_indCCAAdvantage_eq_branchDist setup.kem
     (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
     (adversary setup codec checks ensureInit supplied client runtime count selected occurrence)
@@ -94,8 +94,8 @@ theorem advantage (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (runtimeOfImpl_noFail_bool (kemAmbientImpl setup.baseImpl))
   simpa only [oneKeyBranch, branch_erase, runtimeOfImpl_evalDist,
     PqxdhRegistrationJointKemGame.branch_source, PqxdhRegistrationJointKemGame.branch_real setup functional correct,
-    ProbComp.boolDistAdvantage, MeasureTheory.Measure.boolDist,
-    prEvent_eq_evalDist_singleton] using exactHop.symm
+    ProbComp.boolDistance, MeasureTheory.Measure.toReal_boolDist,
+    prEvent_eq_evalDist_singleton] using congrArg ENNReal.toReal exactHop.symm
 
 end BeaconcryptCore.Computational.PqxdhRegistrationJointKemCertified
 

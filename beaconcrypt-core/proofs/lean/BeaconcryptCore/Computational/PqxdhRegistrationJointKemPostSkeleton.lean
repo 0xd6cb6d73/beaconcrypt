@@ -78,13 +78,14 @@ theorem resume_lift_backend (setup : Setup baseSpec KemSK) (codec : Codec Reader
 theorem resumeImpl_backend (hmac : PqxdhSecretInputKdf.HmacSha512) (index : Nat) {V : Type}
     (services : Services V Response) :
     resumeImpl (Reader := Reader) (KemSK := KemSK) hmac index services =
-      (show QueryImpl (Enc KemSK) (StateT (SkelState KemSK V) (OracleComp (Enc KemSK + TSpec V))) from
-        fun query => StateT.mk fun state => (fun reply => (reply, state)) <$> encLift (V := V) query) +
-      (show QueryImpl (PqxdhRegistrationJointKemOpaqueTail.Spec Reader KemSK)
-          (StateT (SkelState KemSK V) (OracleComp (Enc KemSK + TSpec V))) from
-        fun query => liftT (resumeTail hmac index services query)) := by
-  funext query
-  rcases query with query | query <;> rfl
+      QueryImpl.add
+        (show QueryImpl (Enc KemSK) (StateT (SkelState KemSK V) (OracleComp (Enc KemSK + TSpec V))) from
+          fun query => StateT.mk fun state => (fun reply => (reply, state)) <$> encLift (V := V) query)
+        (show QueryImpl (PqxdhRegistrationJointKemOpaqueTail.Spec Reader KemSK)
+            (StateT (SkelState KemSK V) (OracleComp (Enc KemSK + TSpec V))) from
+          fun query => liftT (resumeTail hmac index services query)) := by
+  exact funext fun query => by
+    rcases query with query | query <;> rfl
 
 end Resume
 
@@ -96,12 +97,11 @@ open PqxdhExtractRomHiddenSuffix (HiddenSpec sharedImpl)
 
 /-- G1's interface for the skeleton with root-valued hidden reads: coins and direct reads are forwarded, a hidden read at `m` is G1's hidden read at `m` followed by real Expand. -/
 noncomputable def compileHidden (hmac : PqxdhSecretInputKdf.HmacSha512) :
-    QueryImpl (SkelSpec RootOutput) (OracleComp HiddenSpec) :=
-  (fun query => (HiddenSpec.query (.inl query) : OracleComp HiddenSpec _) : QueryImpl unifSpec (OracleComp HiddenSpec)) +
-  ((fun point => PqxdhSecretInputKdf.expandRoot hmac <$> (HiddenSpec.query (.inr (.inl point)) : OracleComp HiddenSpec _) :
-      QueryImpl (ValueOracle RootOutput) (OracleComp HiddenSpec)) +
-    (fun point => (HiddenSpec.query (.inr (.inr point)) : OracleComp HiddenSpec _) :
-      QueryImpl PqxdhExtractRomHiddenSuffix.TableOracle (OracleComp HiddenSpec)))
+    QueryImpl (SkelSpec RootOutput) (OracleComp HiddenSpec)
+  | .inl query => HiddenSpec.query (.inl query)
+  | .inr (.inl point) => PqxdhSecretInputKdf.expandRoot hmac <$>
+      (HiddenSpec.query (.inr (.inl point)) : OracleComp HiddenSpec _)
+  | .inr (.inr point) => HiddenSpec.query (.inr (.inr point))
 
 /-- G1's shared world at the candidate, after `compileHidden`, is the table operation `opRoot` with uniform coins. -/
 theorem shared_compile {α : Type} (hmac : PqxdhSecretInputKdf.HmacSha512) (candidate : MlKemSharedSecret)

@@ -44,8 +44,8 @@ theorem chains_observe (ideal : Coordinate (Slot n) → Bool) (setup : Setup bas
 
 /-- Equal laws on the right preserve the Boolean distinguishing advantage. -/
 theorem advantage_congr_right (left middle right : ProbComp Bool) (same : 𝒟[middle] = 𝒟[right]) :
-    left.boolDistAdvantage middle = left.boolDistAdvantage right := by
-  simp only [ProbComp.boolDistAdvantage, same]
+    left.boolDistance middle = left.boolDistance right := by
+  simp only [ProbComp.boolDistance, same]
 
 /-! ### The parent cut at positive depth -/
 
@@ -137,18 +137,18 @@ theorem hop_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (positions : Nat) (step : Fin (positions * (n * 2))) :
     (PqxdhRecordLiftIdeal.chains (selected positions step.val) setup codec route env serverKid bounds mode
         adversary >>= fun result =>
-          decision (PqxdhRecordLiftIdeal.chainView result) (PqxdhRecordLiftIdeal.chainCache result)).boolDistAdvantage
+          decision (PqxdhRecordLiftIdeal.chainView result) (PqxdhRecordLiftIdeal.chainCache result)).boolDistance
       (PqxdhRecordLiftIdeal.chains (selected positions (step.val + 1)) setup codec route env serverKid bounds mode
         adversary >>= fun result =>
           decision (PqxdhRecordLiftIdeal.chainView result) (PqxdhRecordLiftIdeal.chainCache result)) ≤
     (extractRealGame hmac PqxdhServerAuthKeySchedule.uniform32
       (fullExtractReduction hmac .ratchet
-        (hopObserver setup codec route env serverKid bounds mode adversary decision positions step))).boolDistAdvantage
+        (hopObserver setup codec route env serverKid bounds mode adversary decision positions step))).boolDistance
       (extractUniformGame PqxdhServerAuthKeySchedule.uniform32
         (fullExtractReduction hmac .ratchet
           (hopObserver setup codec route env serverKid bounds mode adversary decision positions step))) +
     (hmacPrfRealGame hmac (fullExpandReduction .ratchet PqxdhServerAuthKeySchedule.uniform32
-      (hopObserver setup codec route env serverKid bounds mode adversary decision positions step))).boolDistAdvantage
+      (hopObserver setup codec route env serverKid bounds mode adversary decision positions step))).boolDistance
       (hmacPrfRandomGame (fullExpandReduction .ratchet PqxdhServerAuthKeySchedule.uniform32
         (hopObserver setup codec route env serverKid bounds mode adversary decision positions step))) := by
   rw [chains_observe, chains_observe, selected_succ step]

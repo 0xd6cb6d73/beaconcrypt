@@ -156,7 +156,7 @@ theorem run_not_inside {OtherA OtherN OtherC : Type} (depth : Nat) (position : n
   obtain ⟨rfl, rfl⟩ := Prod.mk.inj same
   change localPacket = Sum.inr (stored, Sum.inr pending) at shape
   change metadata = some details at captured
-  subst localPacket metadata
+  rw [shape, captured] at reached
   exact after_not_inside setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed
     packet output depth position stored pending details cache after reached prior entry target full external atParent before result completed accepted published
 

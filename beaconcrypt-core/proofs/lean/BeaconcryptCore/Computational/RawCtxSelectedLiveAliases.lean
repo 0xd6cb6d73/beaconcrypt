@@ -62,14 +62,14 @@ theorem source_distance {Metadata Auxiliary Result : Type} {serverCount beaconCo
     (output : FullOutput) (reader : Reader) (target : RootOutput) (sender : Std.U64) (decode : RawCtxReceive.FrameDecoder)
     (owner : RawCtxProtocolReveals.Owner serverCount beaconCount)
     (client : OracleComp SourceSpec Result) (state : RawCtxSelectedLiveTrace.State Metadata Auxiliary serverCount beaconCount) :
-    tvDist ((simulateQ (observedImpl source writer (RawCtxKdfRequestTable.fullResponse output)
+    discreteDistance ((simulateQ (observedImpl source writer (RawCtxKdfRequestTable.fullResponse output)
         sender decode owner reader) client).run state)
       (consistentGame source writer output reader target sender decode owner client state) ≤
       Pr{let result ← ((simulateQ (observedImpl source writer (RawCtxKdfRequestTable.fullResponse output)
           sender decode owner reader) client).run state)}[target ∈ result.2.1.1.2.2].toReal := by
   rw [← source_project source writer output reader sender decode owner client state]
   simp only [prEvent_map, regroup, joinState, consistentGame]
-  exact (tvDist_map_le regroup _ _).trans
+  exact (discreteDistance_map_le regroup _ _).trans
     (RawCtxSelectedAliasInitial.recorded_distance_initial
       (handler source writer output reader) (alternate source writer output reader) inputs target
       ((simulateQ (compiler sender decode owner) client).run (splitState state).1) (splitState state).2)
@@ -98,7 +98,7 @@ theorem exposure_distance_initial {Metadata Auxiliary Result : Type} {serverCoun
     (output : FullOutput) (sender : Std.U64) (decode : RawCtxReceive.FrameDecoder)
     (owner : RawCtxProtocolReveals.Owner serverCount beaconCount) (target : RatchetChain)
     (client : OracleComp SourceSpec Result) (state : RawCtxSelectedLiveTrace.State Metadata Auxiliary serverCount beaconCount) :
-    tvDist ((simulateQ (observedImpl source writer (RawCtxKdfRequestTable.fullResponse output)
+    discreteDistance ((simulateQ (observedImpl source writer (RawCtxKdfRequestTable.fullResponse output)
         sender decode owner (nativeReader target)) client).run state)
       ((simulateQ (observedImpl source writer (RawCtxKdfRequestTable.fullResponse output)
         sender decode owner labelRead) client).run state) ≤
@@ -113,7 +113,7 @@ theorem exposure_distance_initial {Metadata Auxiliary Result : Type} {serverCoun
       exact OracleComp.prEvent_eq_one_of_forall_mem_support _ _
         (observed_bad source writer output (nativeReader target) sender decode owner client (state, true) rfl)
     simpa only [one, ENNReal.toReal_one] using
-      tvDist_le_one ((simulateQ (observedImpl source writer (RawCtxKdfRequestTable.fullResponse output)
+      discreteDistance_le_one ((simulateQ (observedImpl source writer (RawCtxKdfRequestTable.fullResponse output)
         sender decode owner (nativeReader target)) client).run (state, true))
         ((simulateQ (observedImpl source writer (RawCtxKdfRequestTable.fullResponse output)
           sender decode owner labelRead) client).run (state, true))
@@ -124,7 +124,7 @@ theorem exposure_alias_distance {Metadata Auxiliary Result : Type} {serverCount 
     (output : FullOutput) (target : RatchetChain) (sender : Std.U64) (decode : RawCtxReceive.FrameDecoder)
     (owner : RawCtxProtocolReveals.Owner serverCount beaconCount)
     (client : OracleComp SourceSpec Result) (state : RawCtxSelectedLiveTrace.State Metadata Auxiliary serverCount beaconCount) :
-    tvDist ((simulateQ (observedImpl source writer (RawCtxKdfRequestTable.fullResponse output)
+    discreteDistance ((simulateQ (observedImpl source writer (RawCtxKdfRequestTable.fullResponse output)
         sender decode owner (nativeReader target)) client).run state)
       (consistentGame source writer output labelRead (RawCtxSelectedQueryTrace.rootVector target)
         sender decode owner client state) ≤
@@ -132,7 +132,7 @@ theorem exposure_alias_distance {Metadata Auxiliary Result : Type} {serverCount 
           sender decode owner (nativeReader target)) client).run state)}[result.2.2 = true].toReal +
       Pr{let result ← ((simulateQ (observedImpl source writer (RawCtxKdfRequestTable.fullResponse output)
           sender decode owner labelRead) client).run state)}[RawCtxSelectedQueryTrace.rootVector target ∈ result.2.1.1.2.2].toReal := by
-  exact (tvDist_triangle _
+  exact (discreteDistance_triangle _
     ((simulateQ (observedImpl source writer (RawCtxKdfRequestTable.fullResponse output)
       sender decode owner labelRead) client).run state) _).trans
     (add_le_add (exposure_distance_initial source writer output sender decode owner target client state)
@@ -148,7 +148,7 @@ theorem native_distance {Metadata Auxiliary Result : Type} {serverCount beaconCo
     (target : RatchetChain) (sender : Std.U64) (decode : RawCtxReceive.FrameDecoder)
     (owner : RawCtxProtocolReveals.Owner serverCount beaconCount)
     (client : OracleComp SourceSpec Result) (state : RawCtxSelectedLiveTrace.State Metadata Auxiliary serverCount beaconCount) :
-    tvDist ((simulateQ (RawCtxSelectedLiveSource.sourceImpl source writer sender decode owner) client).run
+    discreteDistance ((simulateQ (RawCtxSelectedLiveSource.sourceImpl source writer sender decode owner) client).run
         (RawCtxSelectedLiveSource.project target state))
       (Prod.map id (RawCtxSelectedLiveSource.project target) <$>
         consistentGame source writer (nativeOutput source target) labelRead (RawCtxSelectedQueryTrace.rootVector target)
@@ -160,7 +160,7 @@ theorem native_distance {Metadata Auxiliary Result : Type} {serverCount beaconCo
           (RawCtxSourceHkdf.response source.crypto (RawCtxChainSend.nativeRequest target))
           sender decode owner labelRead) client).run state)}[RawCtxSelectedQueryTrace.rootVector target ∈ result.2.1.1.2.2].toReal := by
   rw [RawCtxSelectedLiveSource.source_schedule]
-  have projected := (tvDist_map_le (Prod.map id (RawCtxSelectedLiveSource.project target))
+  have projected := (discreteDistance_map_le (Prod.map id (RawCtxSelectedLiveSource.project target))
     ((simulateQ (observedImpl source writer (RawCtxKdfRequestTable.fullResponse (nativeOutput source target))
       sender decode owner (nativeReader target)) client).run state)
     (consistentGame source writer (nativeOutput source target) labelRead (RawCtxSelectedQueryTrace.rootVector target)

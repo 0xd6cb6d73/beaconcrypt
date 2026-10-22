@@ -147,7 +147,7 @@ theorem prepared_integrity_bound {Context : Type} {count : Nat}
     (sealBound : ∀ context, (client context).IsQueryBoundP (TargetClass SourceSeal) qSeal)
     (rawBound : ∀ context, (client context).IsQueryBoundP (TargetClass IsRawQuery) qRaw)
     (small : qSeal < 2 ^ 96) :
-    ENNReal.ofReal (((fun result => result.2.1) <$> source prepare true selectedDecode real decode c client).boolDistAdvantage
+    ENNReal.ofReal (((fun result => result.2.1) <$> source prepare true selectedDecode real decode c client).boolDistance
       ((fun result => result.2.1) <$> source prepare false selectedDecode real decode c client)) ≤
       ENNReal.ofReal (modifiedNonceAeadINDDollarAdvantage c
         (AdaptiveCtxPrefixValidation.validationReduction selectedDecode c (decisionClient prepare real decode c client) qHash)) +
@@ -183,7 +183,7 @@ theorem prepared_integrity_bound {Context : Type} {count : Nat}
         𝒟[AdaptiveCtxPrivacyGuard.replayView selectedDecode c
           (decisionClient prepare real decode c client)] {true} := by
     rw [EvalDistEq.evalDist_eq falseEq]
-  simpa only [ProbComp.boolDistAdvantage, trueMass, falseMass] using bound
+  simpa only [ProbComp.boolDistance, trueMass, falseMass] using bound
 
 noncomputable def independentSetup {Context : Type} (count : Nat) (context : Context) :
     ProbComp (Prepared Context count) := do

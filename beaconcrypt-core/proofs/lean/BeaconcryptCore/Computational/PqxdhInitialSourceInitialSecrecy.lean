@@ -116,14 +116,14 @@ theorem random_source (prior : ProbComp (Context extra M P I D K X Response A N 
 /-- The actual full source publication/freshness event, starting at an independent32-byte root and retaining both directions, reduces to the exact Extract sampler and ordinary HMAC PRF with coefficient one. -/
 theorem bound (prior : ProbComp (Context extra M P I D K X Response A N S B))
     (hmac : HmacSha512) (correct : SourceFullCorrect source hmac) :
-    (real source writer sender route decode prior).boolDistAdvantage (random source writer sender route decode prior) ≤
-      (extractRealGame hmac (sampler prior) (fullExtractReduction hmac .ratchet (observer source writer sender route decode))).boolDistAdvantage
+    (real source writer sender route decode prior).boolDistance (random source writer sender route decode prior) ≤
+      (extractRealGame hmac (sampler prior) (fullExtractReduction hmac .ratchet (observer source writer sender route decode))).boolDistance
         (extractUniformGame (sampler prior) (fullExtractReduction hmac .ratchet (observer source writer sender route decode))) +
-      (hmacPrfRealGame hmac (fullExpandReduction .ratchet (sampler prior) (observer source writer sender route decode))).boolDistAdvantage
+      (hmacPrfRealGame hmac (fullExpandReduction .ratchet (sampler prior) (observer source writer sender route decode))).boolDistance
         (hmacPrfRandomGame (fullExpandReduction .ratchet (sampler prior) (observer source writer sender route decode))) := by
   have randomLaw := congrArg (fun distribution : MeasureTheory.Measure Bool => distribution {true})
     (random_source source writer sender route decode prior)
-  simpa only [real_source source writer sender route decode prior, ProbComp.boolDistAdvantage, randomLaw] using
+  simpa only [real_source source writer sender route decode prior, ProbComp.boolDistance, randomLaw] using
     sourceFullAdvantage_le_extract_add_hmac source hmac correct .ratchet (sampler prior) (observer source writer sender route decode)
 
 /-- The exact joint sampler pays the full original context preparation and its independent32-byte root, including common outcomes. -/

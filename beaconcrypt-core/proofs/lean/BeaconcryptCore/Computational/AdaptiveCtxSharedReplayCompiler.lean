@@ -322,7 +322,7 @@ noncomputable def randomView {count : Nat} (decode : Fin (count + 1) → RawDeco
 
 theorem replay_privacy_bound {count : Nat} (decode : Fin (count + 1) → RawDecoder) (c : Pqxdh.Crypto)
     (client : OracleComp (SourceSpec (count + 1)) Bool) :
-    (Prod.fst <$> AdaptiveCtxSharedKeySelection.sourceGame (fun _ => false) decode c client).boolDistAdvantage
+    (Prod.fst <$> AdaptiveCtxSharedKeySelection.sourceGame (fun _ => false) decode c client).boolDistance
       (randomView decode c client) ≤
         ∑ target : Fin (count + 1), CtxNonceAeadIndDollarValidation.modifiedNonceAeadINDDollarAdvantage c
           (AdaptiveSealMultiKeyPrivacy.reduction target (AdaptiveRawMultiKeyIntegrity.otherReal target) c

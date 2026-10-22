@@ -128,10 +128,9 @@ noncomputable def clientL (setup : Setup baseSpec KemSK) (codec : Codec Reader R
 /-- The native backend of the logged source client: the exposed native backend of the source, and the exposed logged accept on the logged accept request. -/
 noncomputable def implL (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) :
-    QueryImpl (SpecL KemSK Response) (PqxdhRegistrationJointKemEncapsulation.Client KemSK) :=
-  PqxdhRegistrationJointKemEncapsulation.impl setup codec checks identityIndex publicIdentity +
-    (fun raw => PqxdhDeploymentLaterServerCommands.accept setup codec checks identityIndex publicIdentity raw :
-      QueryImpl AcceptL (PqxdhRegistrationJointKemEncapsulation.Client KemSK))
+    QueryImpl (SpecL KemSK Response) (PqxdhRegistrationJointKemEncapsulation.Client KemSK)
+  | .inl query => PqxdhRegistrationJointKemEncapsulation.impl setup codec checks identityIndex publicIdentity query
+  | .inr raw => PqxdhDeploymentLaterServerCommands.accept setup codec checks identityIndex publicIdentity raw
 
 /-- Each step of the logged command handler is the native backend run on the logged source client's step. -/
 theorem impl_clientL (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
@@ -366,10 +365,9 @@ noncomputable def markedClientL (setup : Setup baseSpec KemSK) (codec : Codec Re
 /-- The native backend of the marked logged client: the marked backend, and the exposed logged accept. -/
 noncomputable def markedImplL (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (candidate : MlKemSharedSecret) :
-    QueryImpl (MarkedSpecL KemSK Response) (PqxdhRegistrationJointKemEncapsulation.Client KemSK) :=
-  markedImpl setup codec checks identityIndex publicIdentity candidate +
-    (fun raw => PqxdhDeploymentLaterServerCommands.accept setup codec checks identityIndex publicIdentity raw :
-      QueryImpl AcceptL (PqxdhRegistrationJointKemEncapsulation.Client KemSK))
+    QueryImpl (MarkedSpecL KemSK Response) (PqxdhRegistrationJointKemEncapsulation.Client KemSK)
+  | .inl query => markedImpl setup codec checks identityIndex publicIdentity candidate query
+  | .inr raw => PqxdhDeploymentLaterServerCommands.accept setup codec checks identityIndex publicIdentity raw
 
 /-- Every step of the logged source client and of the marked logged client has the same marked interpretation: source14 requests by `PqxdhRegistrationJointBeaconOpaqueFinish.client_marked`, and the logged accept and the Server read are the same requests on both sides. -/
 theorem client_markedL (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)

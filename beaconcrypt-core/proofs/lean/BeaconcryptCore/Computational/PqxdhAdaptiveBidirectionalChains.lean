@@ -196,7 +196,7 @@ theorem adaptive_initialized_advantage_bound {Context Result : Type}
     (leftBound : ∀ context, IsQueryBoundP (client context) (IsDirection false) left)
     (rightBound : ∀ context, IsQueryBoundP (client context) (IsDirection true) right) :
     let observer := tapeObserver fallback client finish
-    (actualGame source sample client finish).boolDistAdvantage
+    (actualGame source sample client finish).boolDistance
       (eagerGame fallback sample client finish left right) ≤
       initialLoss source hmac sample observer left right +
       ((∑ cut ∈ Finset.range left,
@@ -206,7 +206,7 @@ theorem adaptive_initialized_advantage_bound {Context Result : Type}
           (rightObserver observer) cut (right - cut - 1))) := by
   have random := final_bidirectional_eq_eager source fallback sample client finish left right
   simpa only [actualGame_eq_initialized source fallback sample client finish left right leftBound rightBound,
-    ProbComp.boolDistAdvantage, random] using
+    ProbComp.boolDistance, random] using
       actualInitializedGame_evolving_bound source hmac correct sample (tapeObserver fallback client finish) left right
 
 def IsCoin : ChainSpec.Domain → Prop

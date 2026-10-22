@@ -718,27 +718,40 @@ end BeaconcryptCore.Computational.PqxdhRegistrationAdmission
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhRegistrationAdmission.registration_eq_iff
 
-/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationAdmission.owner_step_fresh' depends on axioms: [propext, Quot.sound] -/
+-- The UInt8 order instance used by ownerStep's membership test in Lean 4.35 contains a Classical.propDecidable proof, which also reaches Quot.sound through classical excluded middle. These six unchanged statements inherit all three standard logical axioms through ownerStep or ownerRun.
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationAdmission.owner_step_fresh' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhRegistrationAdmission.owner_step_fresh
 
-/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationAdmission.owner_step_admission' depends on axioms: [propext] -/
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationAdmission.owner_step_admission' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhRegistrationAdmission.owner_step_admission
 
-/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationAdmission.owner_run_unique' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationAdmission.owner_run_unique' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhRegistrationAdmission.owner_run_unique
 
-/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationAdmission.owner_empty_unique' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationAdmission.owner_empty_unique' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhRegistrationAdmission.owner_empty_unique
 
-/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationAdmission.admission_owner_trace' depends on axioms: [propext] -/
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationAdmission.admission_owner_trace' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhRegistrationAdmission.admission_owner_trace
 
-/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationAdmission.owner_run_append' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationAdmission.owner_run_append' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhRegistrationAdmission.owner_run_append
 

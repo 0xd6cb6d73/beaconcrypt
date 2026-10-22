@@ -93,13 +93,13 @@ def SplitCache.lookup (key : CtxKey) (cache : SplitCache)
 /-- Merge a split cache back into the canonical cache type. -/
 def SplitCache.merge (key : CtxKey) (cache : SplitCache) :
     CtxRO.QueryCache :=
-  cache.lookup key
+  QueryCache.ofFn (cache.lookup key)
 
 /-- Project a canonical cache into its public and hidden-prefix suffix portions. -/
 def splitCtxCache (key : CtxKey) (cache : CtxRO.QueryCache) : SplitCache where
-  publicCache := fun query =>
+  publicCache := QueryCache.ofFn fun query =>
     if SecretPrefixQuery key query.2 then none else cache query
-  suffixCache := fun suffix => cache ((), secretAddress key suffix)
+  suffixCache := QueryCache.ofFn fun suffix => cache ((), secretAddress key suffix)
 
 /-- Split caches are normalized when the public component contains no secret-prefix entry. -/
 def SplitCache.Normalized (key : CtxKey) (cache : SplitCache) : Prop :=
@@ -134,11 +134,13 @@ theorem splitCtxCache_merge (key : CtxKey) (cache : SplitCache)
     (hnormalized : cache.Normalized key) :
     splitCtxCache key (cache.merge key) = cache := by
   apply SplitCache.ext
-  · funext query
+  · apply QueryCache.ext
+    intro query
     by_cases hprefix : SecretPrefixQuery key query.2
     · simpa [splitCtxCache, hprefix] using (hnormalized query hprefix).symm
     · simp [splitCtxCache, SplitCache.merge, SplitCache.lookup, hprefix]
-  · funext suffix
+  · apply QueryCache.ext
+    intro suffix
     simp [splitCtxCache, SplitCache.merge, SplitCache.lookup]
     rw [secretSuffix_secretAddress]
 
@@ -147,9 +149,11 @@ theorem splitCtxCache_merge (key : CtxKey) (cache : SplitCache)
     splitCtxCache key (∅ : CtxRO.QueryCache) =
       ⟨(∅ : CtxRO.QueryCache), (∅ : CtxSuffixRO.QueryCache)⟩ := by
   apply SplitCache.ext
-  · funext query
+  · apply QueryCache.ext
+    intro query
     simp [splitCtxCache]
-  · funext suffix
+  · apply QueryCache.ext
+    intro suffix
     simp [splitCtxCache]
 
 end BeaconcryptCore.Computational.CtxSplitCache

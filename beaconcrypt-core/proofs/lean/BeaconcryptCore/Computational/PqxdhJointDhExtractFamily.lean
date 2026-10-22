@@ -131,7 +131,7 @@ noncomputable def idealGame (hmac : HmacSha512) (joint : Primitives) (dh : DhInt
 /-- This additional primitive/distribution obligation is an ordinary distinguishing advantage. Its smallness is not assumed or proved. -/
 noncomputable def advantage (hmac : HmacSha512) (joint : Primitives) (dh : DhInterface joint)
     (client : PublicChallenge → OracleComp Spec Bool) : ℝ :=
-  (realGame hmac joint dh client).boolDistAdvantage (idealGame hmac joint dh client)
+  (realGame hmac joint dh client).boolDistance (idealGame hmac joint dh client)
 
 /-- Actual byte assembly preserves both optional DH computations without an injectivity assumption. -/
 theorem input_some_iff (joint : Primitives) (dh : DhInterface joint) (seed : IdentitySeed)

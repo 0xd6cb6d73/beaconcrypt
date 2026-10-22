@@ -1,5 +1,5 @@
 import BeaconcryptCore.Computational.JointEagerTable
-import BeaconcryptCore.Computational.VCVioLegacyBridge
+import BeaconcryptCore.Computational.VCVioForwardOracleComp
 
 open OracleComp OracleSpec ENNReal
 set_option autoImplicit false

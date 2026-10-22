@@ -52,7 +52,7 @@ theorem memo_step (fixed : FixedHkdfSha512NoSaltSource) (table : Table)
     have actual := consistent request response found
     subst response
     have retained : table.cacheQuery request (RawCtxSourceHkdf.initialResponse fixed.crypto request) = table := by
-      funext previous
+      refine QueryCache.ext (fun previous => ?_)
       by_cases same : previous = request
       · subst previous
         simpa using found.symm

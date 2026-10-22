@@ -1,6 +1,6 @@
 import BeaconcryptCore.Computational.PqxdhCorrelatedExtractFamily
-import VCVio.ProgramLogic.Relational.SimulateQ.Epsilon
-import BeaconcryptCore.Computational.VCVioLegacyBridge
+import VCVio.ProgramLogic.Relational.SimulateQ.UntilBad
+import BeaconcryptCore.Computational.VCVioForwardOracleComp
 
 /-!
 # Splitting a random-oracle table at a hidden uniform suffix (item 2, stage S1a, lemma G1)
@@ -19,12 +19,12 @@ What the split changes: in `sharedGame` a hidden read uses the entry of the one 
 Proof outline (route (a) of the plan):
 
 1. Common state (`Tables`): a public cache, a hidden cache keyed by coordinates, and a log of direct reads. `sharedFlag secret` answers a direct read at `familyInput m secret` from the hidden cache; `view` projects the common state onto the one table, and `shared_project` shows that the shared world is that projection whenever the prefix cache has no key of that shape (otherwise the outcome is an initial collision, charged through `keys`).
-2. Identical until bad: `splitFlag secret` and `sharedFlag secret` agree on every transition that does not read a direct point of the shape `familyInput m secret`; both set a monotone flag on such a read. VCVio's `tvDist_simulateQ_run_le_probEvent_output_bad` bounds the distance by the flag probability in the split world.
+2. Identical until bad: `splitFlag secret` and `sharedFlag secret` agree on every transition that does not read a direct point of the shape `familyInput m secret`; both set a monotone flag on such a read. VCVio's `measureETVDist_simulateQ_run_le_prEvent_bad` bounds the distance by the flag probability in the split world.
 3. Pure observer: the split world does not use the secret; the flag is a function of the direct-read log (`flag_log`), and the logged split run `splitLog` is secret-free (`splitFlag_log`).
 4. Union bound: for a fixed prefix outcome and a fixed log, a uniform secret makes one of at most `(keys p).card + log.length` byte strings have the hidden shape with probability at most that number over `2^256` (`guess_finset_le`); the log has at most `residual p` entries (`splitLog_length`).
 5. The bound passes from total variation to the Boolean advantage.
 
-Probabilities are written in VCVio's forward vocabulary `Pr{let x ← mx}[p x]`, which replaces the deprecated `Pr[p | mx]` and `Pr[= a | mx]` of VCVio's retiring probability interface and has the same meaning, and equality in distribution as `EvalDistEq A B` (upstream `A =ᵈ B`). Total variation `tvDist` is defined at the pinned VCVio commit from the deprecated output distributions and has no forward counterpart there, and VCVio's identical-until-bad bound `tvDist_simulateQ_run_le_probEvent_output_bad` and the laws `tvDist_bind_left_le` and `abs_probOutput_toReal_sub_le_tvDist` are stated there only in the deprecated form; the proofs reach them through the transitional bridge `BeaconcryptCore.VCVioLegacy`, which is proved from the pin and is deleted at the VCVio upgrade.
+Probabilities use VCVio 4.35's native event vocabulary `Pr{let x ← mx}[p x]` and equality in distribution `EvalDistEq A B` (notation `A =ᵈ B`). The project's `discreteDistance` is native measure total variation with every subset of the complete output space observable. Its identical-until-bad and common-prefix bounds are proved from native measure/event laws; no transitional discrete probability adapter remains.
 -/
 
 open OracleComp OracleSpec ENNReal
@@ -234,7 +234,7 @@ noncomputable def sharedFlag (secret : MlKemSharedSecret) :
 
 /-- The one table seen through the common state. -/
 def view (secret : MlKemSharedSecret) (tables : Tables) : HmacOracle.QueryCache :=
-  fun point => match coordinate secret point with
+  QueryCache.ofFn fun point => match coordinate secret point with
     | some message => tables.hid message
     | none => tables.pub point
 
@@ -254,7 +254,8 @@ theorem view_hidden_update (secret : MlKemSharedSecret) (tables : Tables) (messa
     (answer : HmacBlock) :
     view secret { tables with hid := tables.hid.cacheQuery message answer } =
       (view secret tables).cacheQuery (familyInput message secret) answer := by
-  funext point
+  apply QueryCache.ext
+  intro point
   cases shape : coordinate secret point with
   | none =>
       have distinct : point ≠ familyInput message secret := by
@@ -278,7 +279,8 @@ theorem view_public_update (secret : MlKemSharedSecret) (tables : Tables) (point
     (plain : coordinate secret point = none) (answer : HmacBlock) :
     view secret { tables with pub := tables.pub.cacheQuery point answer } =
       (view secret tables).cacheQuery point answer := by
-  funext other
+  apply QueryCache.ext
+  intro other
   cases shape : coordinate secret other with
   | none =>
       by_cases same : other = point
@@ -354,7 +356,8 @@ theorem shared_project {α : Type} (secret : MlKemSharedSecret) (oa : OracleComp
     (simulateQ (sharedImpl secret) oa).run' cache =
       Prod.fst <$> (simulateQ (sharedFlag secret) oa).run (⟨cache, ∅, []⟩, false) := by
   have start : view secret ⟨cache, ∅, []⟩ = cache := by
-    funext point
+    apply QueryCache.ext
+    intro point
     cases shape : coordinate secret point with
     | none => simp [view, shape]
     | some message =>
@@ -462,17 +465,15 @@ theorem sharedFlag_mono (secret : MlKemSharedSecret) (query : HiddenSpec.Domain)
 /-- Identical until bad: the flagged worlds are within the flag probability of the split world. -/
 theorem flagged_tvDist {α : Type} (secret : MlKemSharedSecret) (oa : OracleComp HiddenSpec α)
     (tables : Tables) :
-    tvDist ((simulateQ (sharedFlag secret) oa).run (tables, false))
+    discreteDistance ((simulateQ (sharedFlag secret) oa).run (tables, false))
         ((simulateQ (splitFlag secret) oa).run (tables, false)) ≤
       Pr{let result ← (simulateQ (splitFlag secret) oa).run (tables, false)}[result.2.2 = true].toReal := by
-  rw [tvDist_comm]
-  have bound := tvDist_simulateQ_run_le_probEvent_output_bad (splitFlag secret) (sharedFlag secret) oa
-    tables
-    (fun query tables answer next => by
-      simpa only [VCVioLegacy.probOutput_eq_prEvent] using flag_agree secret query tables answer next)
+  rw [discreteDistance_comm]
+  exact StatefulGoodEvent.distance_le_bad (splitFlag secret) (sharedFlag secret)
+    (fun query tables answer next => flag_agree secret query tables answer next)
     (fun query state flagged => splitFlag_mono secret query state flagged)
     (fun query state flagged => sharedFlag_mono secret query state flagged)
-  simpa only [VCVioLegacy.probEvent_eq_prEvent] using bound
+    oa (tables, false)
 
 /-! ### The flag is a function of the direct-read log -/
 
@@ -582,11 +583,10 @@ theorem splitLog_length {α : Type} (oa : OracleComp HiddenSpec α) (bound : ℕ
 /-- Total variation over a common first draw is bounded by the probability of an event of a joint computation whenever it is bounded pointwise by the event's probability. -/
 theorem tvDist_bind_le_probEvent {α β γ : Type} (mx : ProbComp α) (f g : α → ProbComp β)
     (h : α → ProbComp γ) (event : α → γ → Prop)
-    (bound : ∀ a ∈ support mx, tvDist (f a) (g a) ≤ (Pr{let c ← h a}[event a c]).toReal) :
-    tvDist (mx >>= f) (mx >>= g) ≤
+    (bound : ∀ a ∈ support mx, discreteDistance (f a) (g a) ≤ (Pr{let c ← h a}[event a c]).toReal) :
+    discreteDistance (mx >>= f) (mx >>= g) ≤
       (Pr{let pair ← (do let a ← mx; let c ← h a; pure (a, c))}[event pair.1 pair.2]).toReal := by
-  refine (tvDist_bind_left_le mx f g).trans ?_
-  simp only [VCVioLegacy.probOutput_eq_prEvent]
+  refine (discreteDistance_bind_left_le mx f g).trans ?_
   have expand : Pr{let pair ← (do let a ← mx; let c ← h a; pure (a, c))}[event pair.1 pair.2] =
       ∑' a, Pr{let x ← mx}[x = a] * Pr{let c ← h a}[event a c] := by
     rw [OracleComp.prEvent_bind_eq_tsum]
@@ -602,8 +602,8 @@ theorem tvDist_bind_le_probEvent {α β γ : Type} (mx : ProbComp α) (f g : α 
   have weights : Summable (fun a => (Pr{let x ← mx}[x = a]).toReal) :=
     ENNReal.summable_toReal (ne_top_of_le_ne_top one_ne_top (OracleComp.tsum_prEvent_le_one _))
   refine Summable.tsum_le_tsum (fun a => ?_)
-    (weights.of_nonneg_of_le (fun a => mul_nonneg ENNReal.toReal_nonneg (tvDist_nonneg _ _))
-      (fun a => mul_le_of_le_one_right ENNReal.toReal_nonneg (tvDist_le_one _ _)))
+    (weights.of_nonneg_of_le (fun a => mul_nonneg ENNReal.toReal_nonneg (discreteDistance_nonneg _ _))
+      (fun a => mul_le_of_le_one_right ENNReal.toReal_nonneg (discreteDistance_le_one _ _)))
     (ENNReal.summable_toReal finite)
   rw [ENNReal.toReal_mul]
   by_cases member : a ∈ support mx
@@ -619,7 +619,7 @@ def Bad (keys : Finset Pqxdh.Bytes) (secret : MlKemSharedSecret) (tables : Table
 theorem secret_tvDist {α : Type} (secret : MlKemSharedSecret) (oa : OracleComp HiddenSpec α)
     (cache : HmacOracle.QueryCache) (keys : Finset Pqxdh.Bytes)
     (covers : ∀ point, cache point ≠ none → point ∈ keys) :
-    tvDist ((simulateQ (sharedImpl secret) oa).run' cache) ((simulateQ splitImpl oa).run' (cache, ∅)) ≤
+    discreteDistance ((simulateQ (sharedImpl secret) oa).run' cache) ((simulateQ splitImpl oa).run' (cache, ∅)) ≤
       (Pr{let result ← (simulateQ splitLog oa).run ⟨cache, ∅, []⟩}[Bad keys secret result.2]).toReal := by
   by_cases collision : ∃ point ∈ keys, (coordinate secret point).isSome
   · have certain :
@@ -628,14 +628,14 @@ theorem secret_tvDist {α : Type} (secret : MlKemSharedSecret) (oa : OracleComp 
       obtain ⟨point, member, shaped⟩ := collision
       exact ⟨point, Finset.mem_union_left _ member, shaped⟩
     rw [certain, ENNReal.toReal_one]
-    exact tvDist_le_one _ _
+    exact discreteDistance_le_one _ _
   · push Not at collision
     have clean : ∀ point, cache point ≠ none → coordinate secret point = none := by
       intro point filled
       have := collision point (covers point filled)
       simpa [Option.isSome_iff_ne_none] using this
     rw [shared_project secret oa cache clean, split_project secret oa cache]
-    refine (tvDist_map_le _ _ _).trans ((flagged_tvDist secret oa ⟨cache, ∅, []⟩).trans ?_)
+    refine (discreteDistance_map_le _ _ _).trans ((flagged_tvDist secret oa ⟨cache, ∅, []⟩).trans ?_)
     refine ENNReal.toReal_mono (prEvent_ne_top _) ?_
     calc Pr{let result ← (simulateQ (splitFlag secret) oa).run (⟨cache, ∅, []⟩, false)}[result.2.2 = true]
         = Pr{let result ← (simulateQ (splitFlag secret) oa).run (⟨cache, ∅, []⟩, false)}[
@@ -655,7 +655,7 @@ theorem secret_tvDist {α : Type} (secret : MlKemSharedSecret) (oa : OracleComp 
 theorem prefix_tvDist {α : Type} (oa : OracleComp HiddenSpec α) (cache : HmacOracle.QueryCache)
     (keys : Finset Pqxdh.Bytes) (residual : ℕ) (covers : ∀ point, cache point ≠ none → point ∈ keys)
     (bounded : oa.IsQueryBoundP IsDirect residual) :
-    tvDist (do let secret ← $ᵗ MlKemSharedSecret; (simulateQ (sharedImpl secret) oa).run' cache)
+    discreteDistance (do let secret ← $ᵗ MlKemSharedSecret; (simulateQ (sharedImpl secret) oa).run' cache)
         (do let _secret ← $ᵗ MlKemSharedSecret; (simulateQ splitImpl oa).run' (cache, ∅)) ≤
       ((keys.card + residual : ℕ) : ℝ) / 2 ^ 256 := by
   refine (tvDist_bind_le_probEvent ($ᵗ MlKemSharedSecret) _ _ (fun _ => (simulateQ splitLog oa).run ⟨cache, ∅, []⟩)
@@ -690,10 +690,10 @@ theorem prefix_tvDist {α : Type} (oa : OracleComp HiddenSpec α) (cache : HmacO
 
 /-- The Boolean advantage is at most the total variation distance. -/
 theorem boolDistAdvantage_le_tvDist (left right : ProbComp Bool) :
-    left.boolDistAdvantage right ≤ tvDist left right := by
-  rw [ProbComp.boolDistAdvantage]
-  simpa only [VCVioLegacy.probOutput_eq_evalDist_singleton] using
-    abs_probOutput_toReal_sub_le_tvDist left right
+    left.boolDistance right ≤ discreteDistance left right := by
+  rw [ProbComp.boolDistance]
+  simpa only [prEvent_eq_evalDist_singleton] using
+    abs_prEvent_toReal_sub_le_discreteDistance left right
 
 /-- G1: the shared and split worlds are distinguishable with advantage at most `Q / 2^256`, where `Q` bounds, for every prefix outcome, the prefix cache keys (covered by `keys`) plus the client's direct reads after the prefix (`residual`). -/
 theorem hidden_suffix_bound {C : Type} (start : ProbComp (HmacOracle.QueryCache × C))
@@ -702,7 +702,7 @@ theorem hidden_suffix_bound {C : Type} (start : ProbComp (HmacOracle.QueryCache 
     (covers : ∀ p ∈ support start, ∀ x, p.1 x ≠ none → x ∈ keys p)
     (bounded : ∀ p ∈ support start, (client p.2).IsQueryBoundP IsDirect (residual p))
     (total : ∀ p ∈ support start, (keys p).card + residual p ≤ Q) :
-    (sharedGame start client).boolDistAdvantage (splitGame start client) ≤ (Q : ℝ) / 2 ^ 256 := by
+    (sharedGame start client).boolDistance (splitGame start client) ≤ (Q : ℝ) / 2 ^ 256 := by
   refine (boolDistAdvantage_le_tvDist _ _).trans ?_
   let paddedSplit : ProbComp Bool := start >>= fun p => $ᵗ MlKemSharedSecret >>= fun _secret =>
     (simulateQ splitImpl (client p.2)).run' (p.1, ∅)
@@ -710,11 +710,11 @@ theorem hidden_suffix_bound {C : Type} (start : ProbComp (HmacOracle.QueryCache 
     unfold splitGame
     refine EvalDistEq.bind_right _ fun p => ?_
     exact (OracleComp.EvalDistEq.bind_const _ _).symm
-  have same : tvDist (sharedGame start client) (splitGame start client) =
-      tvDist (sharedGame start client) paddedSplit := by
-    simp only [tvDist, (VCVioLegacy.evalSPMF_eq_iff_evalDistEq _ _).mpr padded]
+  have same : discreteDistance (sharedGame start client) (splitGame start client) =
+      discreteDistance (sharedGame start client) paddedSplit := by
+    exact discreteDistance_congr EvalDistEq.rfl padded
   rw [same]
-  refine tvDist_bind_left_le_const start _ _ _ fun p member => ?_
+  refine discreteDistance_bind_left_le_const start _ _ _ fun p member => ?_
   refine (prefix_tvDist (client p.2) p.1 (keys p) (residual p) (covers p member) (bounded p member)).trans ?_
   have := total p member
   gcongr

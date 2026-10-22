@@ -199,7 +199,7 @@ theorem source_distance (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxM
     (prior : Prior) (parent : Option Entry) (key target : RootOutput) (nonce : NonceOutput) (next : RootOutput)
     (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (read : RawCtxReceive.FrameDecoder)
     (work : OracleComp (PqxdhInitialGenericPost.Spec extra S B) Result) (before : Full M P I D K A N C S B) :
-    tvDist
+    discreteDistance
       ((simulateQ (original pre application initial selector aux source writer prior parent key target nonce next sender route read)
         (RawCtxSelectedFamilyNonceCoupling.optionalClient work)).run (project before))
       (Prod.map id project <$> (PqxdhSelectedStateInterpreter.evaluate
@@ -210,7 +210,7 @@ theorem source_distance (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxM
           (augmented pre application initial selector aux source writer prior parent key target nonce next sender route read)
           (Stops (extra := extra) prior parent target nonce next sender))
           (RawCtxSelectedFamilyNonceCoupling.optionalClient work)).run (before, false)] {true}).toReal := by
-  have bound := (tvDist_map_le (Prod.map id project)
+  have bound := (discreteDistance_map_le (Prod.map id project)
     ((simulateQ (augmented pre application initial selector aux source writer prior parent key target nonce next sender route read)
       (RawCtxSelectedFamilyNonceCoupling.optionalClient work)).run before)
     ((simulateQ (evaluated pre application initial selector aux source writer prior parent key target nonce next sender route read)

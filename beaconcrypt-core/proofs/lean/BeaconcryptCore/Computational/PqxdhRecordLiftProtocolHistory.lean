@@ -1339,8 +1339,8 @@ def serviceDefault : (query : (PqxdhRecordLiftProtocol.ServiceSpec n).Domain) �
   | .knownSend kernel _ => (kernel, none)
   | .knownReceive kernel _ _ => (kernel, .None)
 
-instance historySpecInhabited : (HistorySpec n).Inhabited where
-  inhabitedB request := ⟨serviceDefault request.2⟩
+instance historySpecInhabited (request : (HistorySpec n).Domain) : Inhabited ((HistorySpec n).Range request) :=
+  ⟨serviceDefault request.2⟩
 
 /-- Erase only the private history annotation, issuing exactly the original service request. -/
 def eraseService : QueryImpl (HistorySpec n) (OracleComp (PqxdhRecordLiftProtocol.ServiceSpec n)) :=

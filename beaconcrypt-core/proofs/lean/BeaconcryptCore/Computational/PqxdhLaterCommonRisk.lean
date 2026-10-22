@@ -173,7 +173,7 @@ theorem prepared_common_risk (depth : Nat) (position : number.val = depth + 2)
       have denied : ¬ PqxdhInitialPublishedEvent.Gate selectedOwner number result := absent
       simp only [PqxdhInitialPreparedParent.collect, PqxdhInitialSourcePreparedSecrecy.observe,
         PqxdhInitialPublishedEvent.sourceDecision, PqxdhInitialPublishedEvent.sourceEvent, denied,
-        false_and, decide_false, map_pure, prEvent_pure, Sum.inl.injEq, Bool.false_eq_true, ite_false]
+        false_and, decide_false, map_pure, prEvent_pure_prop, Sum.inl.injEq, Bool.false_eq_true, ite_false]
   | pending context reached =>
       have missing : reached.1.1.1.2.1 (PqxdhInitialBuilderContext.address context.original) = none :=
         Classical.not_not.mp absent

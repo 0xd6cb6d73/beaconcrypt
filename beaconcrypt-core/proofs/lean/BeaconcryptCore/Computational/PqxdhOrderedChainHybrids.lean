@@ -2,7 +2,6 @@ import BeaconcryptCore.Computational.PqxdhFullSecretInputKdf
 import BeaconcryptCore.Computational.PqxdhComposition
 import VCVio.OracleComp.QueryTracking.RandomOracle.DeferredSampling
 import BeaconcryptCore.Computational.VCVioForwardOracleComp
-import BeaconcryptCore.Computational.VCVioLegacyBridge
 
 /-! Ordered replacement of evolving chain outputs. Each complete expansion supplies the message key, nonce and next chain together. The stopped sampler retains earlier record material, but the consumed chain appears only as its secret input. -/
 
@@ -128,20 +127,20 @@ noncomputable def hopLoss {Context : Type} (source : FixedHkdfSha512NoSaltSource
     (cut remaining : Nat) : ℝ :=
   let joint := hopSampler sample cut
   let observe := hopObserver source observer remaining
-  (extractRealGame hmac joint (fullExtractReduction hmac .ratchet observe)).boolDistAdvantage
+  (extractRealGame hmac joint (fullExtractReduction hmac .ratchet observe)).boolDistance
     (extractUniformGame joint (fullExtractReduction hmac .ratchet observe)) +
-  (hmacPrfRealGame hmac (fullExpandReduction .ratchet joint observe)).boolDistAdvantage
+  (hmacPrfRealGame hmac (fullExpandReduction .ratchet joint observe)).boolDistance
     (hmacPrfRandomGame (fullExpandReduction .ratchet joint observe))
 
 /-- The adjacent bound is proved inside the same evolving experiment, before summing losses. -/
 theorem adjacent_bound {Context : Type} (source : FixedHkdfSha512NoSaltSource)
     (hmac : HmacSha512) (correct : SourceFullCorrect source hmac)
     (sample : ProbComp Context) (observer : EvolutionObserver Context) (cut remaining : Nat) :
-    (hybrid source sample observer (cut + 1 + remaining) cut).boolDistAdvantage
+    (hybrid source sample observer (cut + 1 + remaining) cut).boolDistance
       (hybrid source sample observer (cut + 1 + remaining) (cut + 1)) ≤
         hopLoss source hmac sample observer cut remaining := by
   have random := (independentHop_eq_hybrid source sample observer cut remaining).evalDist_eq
-  simpa only [hybrid_eq_sourceHop, hopLoss, ProbComp.boolDistAdvantage, random] using
+  simpa only [hybrid_eq_sourceHop, hopLoss, ProbComp.boolDistance, random] using
     sourceFullAdvantage_le_extract_add_hmac source hmac correct .ratchet
       (hopSampler sample cut) (hopObserver source observer remaining)
 
@@ -149,7 +148,7 @@ theorem adjacent_bound {Context : Type} (source : FixedHkdfSha512NoSaltSource)
 theorem ordered_chain_bound {Context : Type} (source : FixedHkdfSha512NoSaltSource)
     (hmac : HmacSha512) (correct : SourceFullCorrect source hmac)
     (sample : ProbComp Context) (observer : EvolutionObserver Context) (rounds : Nat) :
-    (hybrid source sample observer rounds 0).boolDistAdvantage
+    (hybrid source sample observer rounds 0).boolDistance
       (hybrid source sample observer rounds rounds) ≤
         ∑ cut ∈ Finset.range rounds,
           hopLoss source hmac sample observer cut (rounds - cut - 1) := by
@@ -315,7 +314,7 @@ theorem bidirectional_bound {Context : Type} (source : FixedHkdfSha512NoSaltSour
     (hmac : HmacSha512) (correct : SourceFullCorrect source hmac)
     (sample : ProbComp Context) (observer : BidirectionalObserver Context)
     (leftRounds rightRounds : Nat) :
-    (bidirectionalGame source sample observer leftRounds rightRounds 0 0).boolDistAdvantage
+    (bidirectionalGame source sample observer leftRounds rightRounds 0 0).boolDistance
       (bidirectionalGame source sample observer leftRounds rightRounds leftRounds rightRounds) ≤
       (∑ cut ∈ Finset.range leftRounds,
         hopLoss source hmac sample (leftObserver source observer rightRounds 0)
@@ -329,7 +328,7 @@ theorem bidirectional_bound {Context : Type} (source : FixedHkdfSha512NoSaltSour
     (rightContextSampler source sample leftRounds leftRounds) (rightObserver observer) rightRounds
   simp only [← bidirectional_eq_left] at left
   simp only [← bidirectional_eq_right] at right
-  exact (ProbComp.boolDistAdvantage_triangle _ _ _).trans (add_le_add left right)
+  exact (ProbComp.boolDistance_triangle _ _ _).trans (add_le_add left right)
 
 end BeaconcryptCore.Computational.PqxdhOrderedChainHybrids
 

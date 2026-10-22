@@ -42,7 +42,7 @@ variable (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writ
 /-- Every displayed later primitive loss is nonnegative; no cancellation is used when converting the explicit probability accounting. -/
 theorem later_loss_nonnegative (depth remaining qPost qKnown : Nat) (hmac : HmacSha512) :
     0 ≤ PqxdhInitialSampledReduction.loss source writer sender route decode depth remaining prior qPost qKnown hmac := by
-  unfold PqxdhInitialSampledReduction.loss RawCtxSelectedParentHop.extractLoss RawCtxSelectedParentHop.hmacLoss ProbComp.boolDistAdvantage
+  unfold PqxdhInitialSampledReduction.loss RawCtxSelectedParentHop.extractLoss RawCtxSelectedParentHop.hmacLoss ProbComp.boolDistance
   positivity
 
 variable (qPost qPre qApplication qSelector qAux qKnown : Nat)
@@ -52,7 +52,7 @@ include sourceCaps in
 /-- The proved global later-source transition has its literal real-valued reduction bill and the finite, separately stated collision/cache term. -/
 theorem later_bound (depth remaining : Nat) (hmac : HmacSha512) (correct : SourceFullCorrect source hmac)
     (position : ∀ input, Sum.inr input ∈ support prior → input.number.val = (depth + 1) + remaining + 1) :
-    (PqxdhInitialSourceSampled.game source writer sender route decode prior (depth + 1)).boolDistAdvantage
+    (PqxdhInitialSourceSampled.game source writer sender route decode prior (depth + 1)).boolDistance
       (PqxdhInitialSourceSampled.game source writer sender route decode prior (depth + 2)) ≤
       PqxdhInitialSampledReduction.loss source writer sender route decode depth remaining prior qPost qKnown hmac +
         (statisticalCost qPost).toReal := by
@@ -62,7 +62,7 @@ theorem later_bound (depth remaining : Nat) (hmac : HmacSha512) (correct : Sourc
   have finite : ENNReal.ofReal (PqxdhInitialSampledReduction.loss source writer sender route decode depth remaining prior qPost qKnown hmac) +
       statisticalCost qPost ≠ ⊤ := ENNReal.add_ne_top.mpr ⟨ENNReal.ofReal_ne_top, statistical_finite qPost⟩
   have realBound := ENNReal.toReal_mono finite bound
-  have advantageNonnegative : 0 ≤ (PqxdhInitialSourceSampled.game source writer sender route decode prior (depth + 1)).boolDistAdvantage
+  have advantageNonnegative : 0 ≤ (PqxdhInitialSourceSampled.game source writer sender route decode prior (depth + 1)).boolDistance
       (PqxdhInitialSourceSampled.game source writer sender route decode prior (depth + 2)) := abs_nonneg _
   simpa only [ENNReal.toReal_add ENNReal.ofReal_ne_top (statistical_finite qPost),
     ENNReal.toReal_ofReal (later_loss_nonnegative source writer sender route decode prior depth remaining qPost qKnown hmac),
@@ -72,7 +72,7 @@ include sourceCaps in
 /-- Every selected positive record has one first-half reduction followed by the ordered sum of its actual later-source reductions in the same global experiment. The two collision charges and cache sum are paid once per later hop. -/
 theorem ordered_bound (n : Nat) (hmac : HmacSha512) (correct : SourceFullCorrect source hmac)
     (position : ∀ input, Sum.inr input ∈ support prior → input.number.val = n + 1) :
-    (PqxdhInitialSourceSampled.game source writer sender route decode prior 0).boolDistAdvantage
+    (PqxdhInitialSourceSampled.game source writer sender route decode prior 0).boolDistance
       (PqxdhInitialSourceSampled.game source writer sender route decode prior (n + 1)) ≤
       PqxdhInitialSourceFirstResources.loss source writer sender route decode prior qPost (n + 1) qKnown hmac +
         (∑ depth ∈ Finset.range n, PqxdhInitialSampledReduction.loss source writer sender route decode
@@ -94,7 +94,7 @@ theorem ordered_bound (n : Nat) (hmac : HmacSha512) (correct : SourceFullCorrect
             intro input supported
             rw [position input supported]
             omega))
-  have triangle := ProbComp.boolDistAdvantage_triangle
+  have triangle := ProbComp.boolDistance_triangle
     (PqxdhInitialSourceSampled.game source writer sender route decode prior 0)
     (PqxdhInitialSourceSampled.game source writer sender route decode prior 1)
     (PqxdhInitialSourceSampled.game source writer sender route decode prior (n + 1))
@@ -103,11 +103,11 @@ theorem ordered_bound (n : Nat) (hmac : HmacSha512) (correct : SourceFullCorrect
 
 noncomputable def initialLoss (hmac : HmacSha512) : ℝ :=
   (extractRealGame hmac (PqxdhInitialSourceInitialSecrecy.sampler prior)
-    (fullExtractReduction hmac .ratchet (PqxdhInitialSourceInitialSecrecy.observer source writer sender route decode))).boolDistAdvantage
+    (fullExtractReduction hmac .ratchet (PqxdhInitialSourceInitialSecrecy.observer source writer sender route decode))).boolDistance
     (extractUniformGame (PqxdhInitialSourceInitialSecrecy.sampler prior)
       (fullExtractReduction hmac .ratchet (PqxdhInitialSourceInitialSecrecy.observer source writer sender route decode))) +
   (hmacPrfRealGame hmac (fullExpandReduction .ratchet (PqxdhInitialSourceInitialSecrecy.sampler prior)
-    (PqxdhInitialSourceInitialSecrecy.observer source writer sender route decode))).boolDistAdvantage
+    (PqxdhInitialSourceInitialSecrecy.observer source writer sender route decode))).boolDistance
     (hmacPrfRandomGame (fullExpandReduction .ratchet (PqxdhInitialSourceInitialSecrecy.sampler prior)
       (PqxdhInitialSourceInitialSecrecy.observer source writer sender route decode)))
 
@@ -120,13 +120,13 @@ include sourceCaps in
 /-- The exact secret-input initializer reduction precedes the ordered chain reductions in the same source experiment. Both initialized directions, the shared64 prefix, complete76 projections and every repeated evolving derivation retain their actual correlations. -/
 theorem initial_evolving_bound (n : Nat) (hmac : HmacSha512) (correct : SourceFullCorrect source hmac)
     (position : ∀ input, Sum.inr input ∈ support prior → input.number.val = n + 1) :
-    (PqxdhInitialSourceInitialSecrecy.real source writer sender route decode prior).boolDistAdvantage
+    (PqxdhInitialSourceInitialSecrecy.real source writer sender route decode prior).boolDistance
       (PqxdhInitialSourceSampled.game source writer sender route decode prior (n + 1)) ≤
       initialLoss source writer sender route decode prior hmac +
         chainLoss source writer sender route decode prior qPost qKnown n hmac := by
   have initial := PqxdhInitialSourceInitialSecrecy.bound source writer sender route decode prior hmac correct
   rw [← PqxdhInitialSourceSampled.initial source writer sender route decode prior] at initial
-  exact (ProbComp.boolDistAdvantage_triangle
+  exact (ProbComp.boolDistance_triangle
     (PqxdhInitialSourceInitialSecrecy.real source writer sender route decode prior)
     (PqxdhInitialSourceSampled.game source writer sender route decode prior 0)
     (PqxdhInitialSourceSampled.game source writer sender route decode prior (n + 1))).trans

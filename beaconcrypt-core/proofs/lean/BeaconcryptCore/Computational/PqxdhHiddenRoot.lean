@@ -1,9 +1,9 @@
 import BeaconcryptCore.Computational.PqxdhJointKdfGame
-import VCVio.OracleComp.QueryTracking.LoggingOracle
+import VCVio.OracleComp.QueryTracking.LoggingOracle.Core
 import VCVio.OracleComp.QueryTracking.ProgrammingOracle
 import VCVio.OracleComp.QueryTracking.SubSpec
 import VCVio.ProgramLogic.Relational.ProgrammingOracle
-import BeaconcryptCore.Computational.VCVioLegacyBridge
+import BeaconcryptCore.Computational.StatefulGoodEvent
 
 /-!
 # One-hidden-coordinate PQXDH root games
@@ -16,7 +16,7 @@ the HKDF address.
 
 The legacy real-to-random endpoint from `PqxdhJointKdfGame` is efficiently distinguishable and is not a sound negligibility assumption. In particular, both terminal root games also replace public adversarial KDF responses by random-table responses: even an observer ignoring the root can compare an unrelated public query with a local fixed-HKDF evaluation. The ROM hidden-query bound and every displayed inequality remain valid, but they do not prove production root secrecy. `PqxdhSecretInputKdf` supplies a separate one-root replacement with real public evaluation retained in both branches.
 
-Probabilities and output laws are written in VCVio's forward vocabulary: `Pr{let x ← mx}[p x]` for events and outputs and `EvalDistEq A B` (upstream `A =ᵈ B`) for equality in distribution, which replace the deprecated `Pr[p | mx]`, `Pr[= a | mx]` and `𝒮[A] = 𝒮[B]` of VCVio's retiring probability interface and have the same meaning. Total variation `tvDist` is defined at the pinned VCVio commit from the deprecated output distributions and has no forward counterpart there, and VCVio's identical-until-bad lemmas `probEvent_output_bad_eq'` and `tvDist_simulateQ_run_le_probEvent_output_bad` and the laws `tvDist_bind_left_le` and `abs_probOutput_toReal_sub_le_tvDist` are stated there only in the deprecated form; the proofs reach them through the transitional bridge `BeaconcryptCore.VCVioLegacy`, which is proved from the pin and is deleted at the VCVio upgrade.
+Probabilities use VCVio's native events `Pr{let x ← mx}[p x]`, and `EvalDistEq A B` (`A =ᵈ B`) expresses equality in distribution. Complete-state total variation uses `discreteDistance`, which fixes the discrete measurable structure on the entire output. The identical-until-bad steps use native event agreement and sticky bad-event laws through `StatefulGoodEvent`; no compatibility representation is involved.
 -/
 
 open OracleComp OracleSpec ENNReal
@@ -724,7 +724,7 @@ noncomputable def hiddenRootAdvantage
     {PublicContext : Type} {qU qRoot qSym : ℕ}
     (adversary : HiddenRootSourceAdversary PublicContext qU qRoot qSym)
     (known : KnownPqxdhRootCoordinates) (publicContext : PublicContext) : ℝ :=
-  (hiddenRootRealGame source adversary known publicContext).boolDistAdvantage
+  (hiddenRootRealGame source adversary known publicContext).boolDistance
     (hiddenRootIndependentGame adversary known publicContext)
 
 /-- The reduction's fixed-HKDF real experiment is exactly the source-shaped production game. -/
@@ -910,15 +910,15 @@ theorem jointKdfCache_cacheQuery_comm (cache : JointKdfRO.QueryCache)
     (hne : left ≠ right) :
     (cache.cacheQuery left leftStream).cacheQuery right rightStream =
       (cache.cacheQuery right rightStream).cacheQuery left leftStream := by
-  unfold QueryCache.cacheQuery
-  exact Function.update_comm hne _ _ _
+  exact QueryCache.cacheQuery_comm cache hne leftStream rightStream
 
 theorem jointKdfCache_cacheQuery_idem (cache : JointKdfRO.QueryCache)
     (address : JointKdfAddress) (stream : JointKdfStream) :
     (cache.cacheQuery address stream).cacheQuery address stream =
       cache.cacheQuery address stream := by
-  unfold QueryCache.cacheQuery
-  exact Function.update_idem _ _ _
+  simpa only [QueryCache.cacheQuery, QueryCache.toFn_ofFn] using
+    congrArg (QueryCache.ofFn (spec := JointKdfRO))
+      (Function.update_idem (a := address) (some stream) (some stream) cache.toFn)
 
 theorem jointKdfSingletonProgrammedStream_project_step
     (target : JointKdfAddress) (stream : JointKdfStream)
@@ -1111,14 +1111,20 @@ theorem hiddenRootSharedRandomGame_eq_programmedGame
     (known : KnownPqxdhRootCoordinates) (publicContext : PublicContext) :
     hiddenRootSharedRandomGame adversary known publicContext =
       hiddenRootProgrammedGame adversary known publicContext := by
-  simp [hiddenRootSharedRandomGame, hiddenRootProgrammedGame,
+  simp only [hiddenRootSharedRandomGame, hiddenRootProgrammedGame,
     hiddenRootReductionMain, queryHiddenRootStream,
-    fixedHkdfSha512JointStreamRandomImpl,
-    QueryImpl.simulateQ_add_liftM_left,
-    jointKdfLazyRandomStreamImpl_run_miss]
-  apply bind_congr
+    fixedHkdfSha512JointStreamRandomImpl]
+  simp only [simulateQ_bind, StateT.run'_eq, StateT.run_bind]
+  simp only [QueryImpl.simulateQ_add_liftComp_left, simulateQ_liftTarget,
+    simulateQ_ofLift_eq_self, simulateQ_spec_query,
+    QueryImpl.add_apply_inr]
+  simp only [StateT.run_liftM, map_bind]
+  simp only [bind_assoc, pure_bind]
+  apply bind_congr (m := ProbComp) (α := HiddenRootCoordinate) (β := Bool)
   intro hidden
-  apply bind_congr
+  rw [jointKdfLazyRandomStreamImpl_run_miss (hiddenRootAddress known hidden) ∅ rfl,
+    bind_map_left]
+  apply bind_congr (m := ProbComp) (α := JointKdfStream) (β := Bool)
   intro stream
   change Prod.fst <$>
       (simulateQ fixedHkdfSha512JointStreamRandomImpl
@@ -1246,36 +1252,32 @@ sticky policy-hit event. -/
 theorem jointKdfSingletonProgrammed_tracking_tvDist_le_bad
     {alpha : Type} (target : JointKdfAddress) (stream : JointKdfStream)
     (computation : OracleComp FixedHkdfSha512JointStreamSpec alpha) :
-    tvDist
+    discreteDistance
       ((simulateQ (jointKdfSingletonProgrammedStreamImpl target stream)
         computation).run' (∅, false))
       ((simulateQ (jointKdfSingletonTrackingStreamImpl target stream)
         computation).run' (∅, false)) ≤
     Pr{let result ← ((simulateQ (jointKdfSingletonProgrammedStreamImpl target stream)
         computation).run (∅, false))}[result.2.2 = true].toReal := by
-  refine (tvDist_map_le Prod.fst
+  refine (discreteDistance_map_le Prod.fst
     ((simulateQ (jointKdfSingletonProgrammedStreamImpl target stream)
       computation).run (∅, false))
     ((simulateQ (jointKdfSingletonTrackingStreamImpl target stream)
       computation).run (∅, false))).trans ?_
-  have bound := OracleComp.ProgramLogic.Relational.tvDist_simulateQ_run_le_probEvent_output_bad
+  exact StatefulGoodEvent.distance_le_bad
     (jointKdfSingletonProgrammedStreamImpl target stream)
     (jointKdfSingletonTrackingStreamImpl target stream)
-    computation ∅
-    (fun query cache response nextCache => by
-      simpa only [VCVioLegacy.probOutput_eq_prEvent] using
-        jointKdfSingletonProgrammed_tracking_agree_good target stream query cache response
-          nextCache)
+    (jointKdfSingletonProgrammed_tracking_agree_good target stream)
     (jointKdfSingletonProgrammedStream_bad_monotone target stream)
     (jointKdfSingletonTrackingStream_bad_monotone target stream)
-  simpa only [VCVioLegacy.probEvent_eq_prEvent] using bound
+    computation (∅, false)
 
 /-- Public projection version of the fixed-target identical-until-bad bound. -/
 theorem hiddenRootProgrammed_tracking_tvDist_le_bad
     {alpha : Type} (known : KnownPqxdhRootCoordinates)
     (hidden : HiddenRootCoordinate) (stream : JointKdfStream)
     (computation : OracleComp JointKdfViewAdversarySpec alpha) :
-    tvDist
+    discreteDistance
       ((simulateQ (hiddenRootProgrammedViewImpl known hidden stream)
         computation).run' (∅, false))
       ((simulateQ (hiddenRootTrackingViewImpl known hidden stream)
@@ -1444,8 +1446,8 @@ def hiddenRootStreamCandidates (known : KnownPqxdhRootCoordinates) :
 
 /-- A predicate query bound controls the matching portion of every logical query trace. -/
 theorem getQ_length_le_of_mem_support_withQueryLog
-    {index : Type} {spec : OracleSpec index} [spec.DecidableEq]
-    [IsUniformSpec spec] {alpha : Type}
+    {index : Type} {spec : OracleSpec index}
+    [OracleSpec.UniformAnswerMeasure spec] {alpha : Type}
     (predicate : spec.Domain → Prop) [DecidablePred predicate]
     {computation : OracleComp spec alpha} {bound : ℕ}
     (hbound : computation.IsQueryBoundP predicate bound)
@@ -1723,17 +1725,13 @@ theorem jointKdfSingletonProgrammed_tracking_probEvent_bad_eq
         computation).run (∅, false))}[result.2.2 = true] =
     Pr{let result ← ((simulateQ (jointKdfSingletonTrackingStreamImpl target stream)
         computation).run (∅, false))}[result.2.2 = true] := by
-  have equal := OracleComp.ProgramLogic.Relational.probEvent_output_bad_eq'
+  exact StatefulGoodEvent.bad_probability_eq
     (jointKdfSingletonProgrammedStreamImpl target stream)
     (jointKdfSingletonTrackingStreamImpl target stream)
-    (fun query cache response nextCache => by
-      simpa only [VCVioLegacy.probOutput_eq_prEvent] using
-        jointKdfSingletonProgrammed_tracking_agree_good target stream query cache response
-          nextCache)
+    (jointKdfSingletonProgrammed_tracking_agree_good target stream)
     (jointKdfSingletonProgrammedStream_bad_monotone target stream)
     (jointKdfSingletonTrackingStream_bad_monotone target stream)
-    computation ∅
-  simpa only [VCVioLegacy.probEvent_eq_prEvent] using equal
+    computation (∅, false)
 
 /-- Once the trace is retained, forgetting the tracking flag gives the ordinary lazy random
 joint-stream run without changing candidate events. -/
@@ -2168,24 +2166,23 @@ theorem tvDist_bind_left_le_probEvent_bind
     (left right : alpha → ProbComp beta)
     (badRun : alpha → ProbComp gamma) (bad : gamma → Prop)
     (hpoint : ∀ value,
-      tvDist (left value) (right value) ≤ Pr{let x ← badRun value}[bad x].toReal) :
-    tvDist (sample >>= left) (sample >>= right) ≤
+      discreteDistance (left value) (right value) ≤ Pr{let x ← badRun value}[bad x].toReal) :
+    discreteDistance (sample >>= left) (sample >>= right) ≤
       Pr{let x ← sample >>= badRun}[bad x].toReal := by
   rw [OracleComp.prEvent_bind_eq_tsum sample]
   rw [ENNReal.tsum_toReal_eq (fun value =>
     ENNReal.mul_ne_top (prEvent_ne_top _) (prEvent_ne_top _))]
   simp_rw [ENNReal.toReal_mul]
-  refine (tvDist_bind_left_le sample left right).trans ?_
-  simp only [VCVioLegacy.probOutput_eq_prEvent]
+  refine (discreteDistance_bind_left_le sample left right).trans ?_
   have weights : Summable (fun value => (Pr{let y ← sample}[y = value]).toReal) :=
     ENNReal.summable_toReal (ne_top_of_le_ne_top one_ne_top (OracleComp.tsum_prEvent_le_one _))
   refine Summable.tsum_le_tsum (fun value => ?_) ?_ ?_
   · exact mul_le_mul_of_nonneg_left (hpoint value) ENNReal.toReal_nonneg
   · exact weights.of_nonneg_of_le
       (fun value => mul_nonneg ENNReal.toReal_nonneg
-        (tvDist_nonneg (left value) (right value)))
+        (discreteDistance_nonneg (left value) (right value)))
       (fun value => mul_le_of_le_one_right ENNReal.toReal_nonneg
-        (tvDist_le_one (left value) (right value)))
+        (discreteDistance_le_one (left value) (right value)))
   · exact weights.of_nonneg_of_le
       (fun value => mul_nonneg ENNReal.toReal_nonneg ENNReal.toReal_nonneg)
       (fun value => mul_le_of_le_one_right ENNReal.toReal_nonneg
@@ -2197,7 +2194,7 @@ theorem hiddenRootProgrammed_tracking_tvDist_le_programmedBad
     {PublicContext : Type} {qU qRoot qSym : ℕ}
     (adversary : HiddenRootSourceAdversary PublicContext qU qRoot qSym)
     (known : KnownPqxdhRootCoordinates) (publicContext : PublicContext) :
-    tvDist (hiddenRootProgrammedGame adversary known publicContext)
+    discreteDistance (hiddenRootProgrammedGame adversary known publicContext)
         (hiddenRootTrackingGame adversary known publicContext) ≤
       Pr{let result ← hiddenRootProgrammedBadExperiment adversary known publicContext}[
           result.2.2 = true].toReal := by
@@ -2245,7 +2242,7 @@ theorem tvDist_hiddenRootSharedRandomGame_independentGame_le
     {PublicContext : Type} {qU qRoot qSym : ℕ}
     (adversary : HiddenRootSourceAdversary PublicContext qU qRoot qSym)
     (known : KnownPqxdhRootCoordinates) (publicContext : PublicContext) :
-    tvDist (hiddenRootSharedRandomGame adversary known publicContext)
+    discreteDistance (hiddenRootSharedRandomGame adversary known publicContext)
         (hiddenRootIndependentGame adversary known publicContext) ≤
       ((qRoot : ℝ≥0∞) / (2 ^ 256 : ℝ≥0∞)).toReal := by
   have htracking :
@@ -2255,12 +2252,11 @@ theorem tvDist_hiddenRootSharedRandomGame_independentGame_le
     exact evalSPMF_hiddenRootProjectedStreamGame_eq_independentGame
       adversary known publicContext
   have htvdist :
-      tvDist (hiddenRootProgrammedGame adversary known publicContext)
+      discreteDistance (hiddenRootProgrammedGame adversary known publicContext)
           (hiddenRootIndependentGame adversary known publicContext) =
-        tvDist (hiddenRootProgrammedGame adversary known publicContext)
+        discreteDistance (hiddenRootProgrammedGame adversary known publicContext)
           (hiddenRootTrackingGame adversary known publicContext) := by
-    unfold tvDist
-    rw [(VCVioLegacy.evalSPMF_eq_iff_evalDistEq _ _).mpr htracking]
+    exact discreteDistance_congr (EvalDistEq.refl _) htracking.symm
   have hbad := probEvent_hiddenRootProgrammedBadExperiment_le
     adversary known publicContext
   have hcard :
@@ -2285,7 +2281,7 @@ theorem hiddenRootReal_shared_advantage_eq_fixedHkdfSha512JointStreamAdvantage
     {PublicContext : Type} {qU qRoot qSym : ℕ}
     (adversary : HiddenRootSourceAdversary PublicContext qU qRoot qSym)
     (known : KnownPqxdhRootCoordinates) (publicContext : PublicContext) :
-    (hiddenRootRealGame source adversary known publicContext).boolDistAdvantage
+    (hiddenRootRealGame source adversary known publicContext).boolDistance
         (hiddenRootSharedRandomGame adversary known publicContext) =
       fixedHkdfSha512JointStreamAdvantage source
         (hiddenRootReduction adversary known publicContext) := by
@@ -2309,18 +2305,18 @@ theorem hiddenRootAdvantage_le_fixedHkdfSha512JointStreamAdvantage_add
           (hiddenRootReduction adversary known publicContext) +
         ((qRoot : ℝ≥0∞) / (2 ^ 256 : ℝ≥0∞)).toReal := by
   have hindependent :
-      (hiddenRootSharedRandomGame adversary known publicContext).boolDistAdvantage
+      (hiddenRootSharedRandomGame adversary known publicContext).boolDistance
           (hiddenRootIndependentGame adversary known publicContext) ≤
         ((qRoot : ℝ≥0∞) / (2 ^ 256 : ℝ≥0∞)).toReal := by
-    have houtput := abs_probOutput_toReal_sub_le_tvDist
+    have houtput := abs_prEvent_toReal_sub_le_discreteDistance
       (hiddenRootSharedRandomGame adversary known publicContext)
       (hiddenRootIndependentGame adversary known publicContext)
     have hadvantage :
-        (hiddenRootSharedRandomGame adversary known publicContext).boolDistAdvantage
+        (hiddenRootSharedRandomGame adversary known publicContext).boolDistance
             (hiddenRootIndependentGame adversary known publicContext) ≤
-          tvDist (hiddenRootSharedRandomGame adversary known publicContext)
+          discreteDistance (hiddenRootSharedRandomGame adversary known publicContext)
             (hiddenRootIndependentGame adversary known publicContext) := by
-      simpa only [ProbComp.boolDistAdvantage, VCVioLegacy.probOutput_eq_evalDist_singleton] using
+      simpa only [ProbComp.boolDistance, prEvent_eq_evalDist_singleton] using
         houtput
     exact hadvantage.trans
       (tvDist_hiddenRootSharedRandomGame_independentGame_le
@@ -2330,13 +2326,13 @@ theorem hiddenRootAdvantage_le_fixedHkdfSha512JointStreamAdvantage_add
       source adversary known publicContext
   unfold hiddenRootAdvantage
   calc
-    (hiddenRootRealGame source adversary known publicContext).boolDistAdvantage
+    (hiddenRootRealGame source adversary known publicContext).boolDistance
         (hiddenRootIndependentGame adversary known publicContext) ≤
-      (hiddenRootRealGame source adversary known publicContext).boolDistAdvantage
+      (hiddenRootRealGame source adversary known publicContext).boolDistance
           (hiddenRootSharedRandomGame adversary known publicContext) +
-        (hiddenRootSharedRandomGame adversary known publicContext).boolDistAdvantage
+        (hiddenRootSharedRandomGame adversary known publicContext).boolDistance
           (hiddenRootIndependentGame adversary known publicContext) :=
-      ProbComp.boolDistAdvantage_triangle _ _ _
+      ProbComp.boolDistance_triangle _ _ _
     _ ≤ fixedHkdfSha512JointStreamAdvantage source
           (hiddenRootReduction adversary known publicContext) +
         ((qRoot : ℝ≥0∞) / (2 ^ 256 : ℝ≥0∞)).toReal := by

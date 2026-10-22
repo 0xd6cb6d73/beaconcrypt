@@ -56,8 +56,7 @@ theorem client_event (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
       (((simulateQ (sourceStopped setup codec checks context Q j tails)
         (PqxdhServerAuthApiJournal.record client)).run).run (state, first))] := by
   apply EvalDistEq.evalDist_eq
-  refine (VCVioLegacy.evalSPMF_eq_iff_evalDistEq _ _).1 ?_
-  apply evalSPMF_map_eq_of_relTriple
+  apply evalDistEq_map_of_relTriple
   exact relTriple_post_mono
     (source_client_coupling setup codec checks context Q j tails (PqxdhServerAuthApiJournal.record client)
       state first invariant tracked)

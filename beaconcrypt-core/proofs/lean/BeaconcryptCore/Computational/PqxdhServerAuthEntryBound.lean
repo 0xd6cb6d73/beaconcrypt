@@ -111,9 +111,9 @@ theorem hidden_decision_coupling (setup : Setup baseSpec KemSK) (codec : Codec R
 theorem bool_probability_le {left right : ProbComp Bool}
     (coupled : RelTriple left right (fun a b => a = true → b = true)) :
     𝒟[left] {true} ≤ 𝒟[right] {true} := by
-  have bound := probEvent_le_of_relTriple coupled (p := fun bit => bit = true) (q := fun bit => bit = true)
+  have bound := prEvent_le_of_relTriple coupled (p := fun bit => bit = true) (q := fun bit => bit = true)
     (fun _ _ implication => implication)
-  rw [VCVioLegacy.probEvent_eq_prEvent, VCVioLegacy.probEvent_eq_prEvent, prEvent_eq_evalDist_singleton,
+  rw [ prEvent_eq_evalDist_singleton,
     prEvent_eq_evalDist_singleton] at bound
   exact bound
 
@@ -225,19 +225,19 @@ noncomputable def entryScheduleLoss (setup : Setup baseSpec KemSK) (codec : Code
   let E := PqxdhServerAuthKeySchedule.initExpandReduction setup.source D
   let S := PqxdhServerAuthKeySchedule.stepExtractReduction setup.hmac D
   let T := PqxdhServerAuthKeySchedule.stepExpandReduction D
-  (hmacPrfRealGame setup.hmac R).boolDistAdvantage (hmacPrfRandomGame R) +
-    (extractRealGame setup.hmac PqxdhServerAuthKeySchedule.uniform32 I).boolDistAdvantage
+  (hmacPrfRealGame setup.hmac R).boolDistance (hmacPrfRandomGame R) +
+    (extractRealGame setup.hmac PqxdhServerAuthKeySchedule.uniform32 I).boolDistance
       (extractUniformGame PqxdhServerAuthKeySchedule.uniform32 I) +
-    (hmacPrfRealGame setup.hmac E).boolDistAdvantage (hmacPrfRandomGame E) +
-    (extractRealGame setup.hmac PqxdhServerAuthKeySchedule.uniform32 S).boolDistAdvantage
+    (hmacPrfRealGame setup.hmac E).boolDistance (hmacPrfRandomGame E) +
+    (extractRealGame setup.hmac PqxdhServerAuthKeySchedule.uniform32 S).boolDistance
       (extractUniformGame PqxdhServerAuthKeySchedule.uniform32 S) +
-    (hmacPrfRealGame setup.hmac T).boolDistAdvantage (hmacPrfRandomGame T)
+    (hmacPrfRealGame setup.hmac T).boolDistance (hmacPrfRandomGame T)
 
 /-- The actual full-run key-schedule transition uses the five B8a reductions, with no protocol security hypothesis or honest-target premise. SourceFullCorrect is the permanent functional Extract/Expand wiring contract. -/
 theorem real_uniform_entry_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (checks : Checks) (adversary : Adversary) (revealSeed : Bool) (Q : Nat) (j : Fin (Q + 1))
     (correct : SourceFullCorrect setup.source setup.hmac) :
-    (realEntryGame setup codec checks adversary revealSeed Q j).boolDistAdvantage
+    (realEntryGame setup codec checks adversary revealSeed Q j).boolDistance
       (uniformEntryGame setup codec checks adversary revealSeed Q j) ≤
         entryScheduleLoss setup codec checks adversary revealSeed Q j := by
   simpa only [realEntryGame, uniformEntryGame, source_hidden_factor, entryScheduleLoss, entryReduction] using

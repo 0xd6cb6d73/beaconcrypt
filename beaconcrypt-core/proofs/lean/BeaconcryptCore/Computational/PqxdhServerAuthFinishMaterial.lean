@@ -67,7 +67,7 @@ theorem program_wrong (source : FixedHkdfSha512NoSaltSource) (rest : Residual)
     | openRequested pending =>
       simp only [RawCtxChainReceive.program, simulateQ_spec_query, simulateQ_map,
         bind_pure_comp, Functor.map_map]
-      convert opening_wrong source rest read expected candidate native pending target scope.1 wrong using 1
+      exact opening_wrong source rest read expected candidate native pending target scope.1 wrong
     | kdfRequested pending =>
       simp only [RawCtxChainReceive.program, simulateQ_bind, simulateQ_spec_query, receive, pure_bind]
       exact ih _ (depth ▸ RawCtxChainReceive.normalResume_rank pending (step source rest pending.request))

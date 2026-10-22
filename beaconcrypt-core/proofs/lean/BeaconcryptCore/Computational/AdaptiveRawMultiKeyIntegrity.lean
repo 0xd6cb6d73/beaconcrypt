@@ -54,7 +54,7 @@ theorem hop_distance {count : Nat} (target : Fin (count + 1))
     (fallback : ModifiedNonceAeadForgery) {Result : Type}
     (client : OracleComp (SourceSpec count) Result) (rawCount : Nat)
     (bounded : client.IsQueryBoundP (SelectionClass target (TargetClass IsRawQuery)) rawCount) :
-    ENNReal.ofReal (tvDist (sourceGame (realAt count target.val) decode c client)
+    ENNReal.ofReal (discreteDistance (sourceGame (realAt count target.val) decode c client)
       (sourceGame (realAt count (target.val + 1)) decode c client)) ≤
       ∑ index ∈ Finset.range rawCount, modifiedNonceAeadINTCTXTAdvantage c
         (reduction target decode c fallback client index) := by
@@ -71,7 +71,7 @@ theorem hop_bound {count : Nat} (target : Fin (count + 1))
     (decode : Fin (count + 1) → RawDecoder) (c : Pqxdh.Crypto)
     (fallback : ModifiedNonceAeadForgery) (client : OracleComp (SourceSpec count) Bool) (rawCount : Nat)
     (bounded : client.IsQueryBoundP (SelectionClass target (TargetClass IsRawQuery)) rawCount) :
-    (game decode c client target.val).boolDistAdvantage (game decode c client (target.val + 1)) ≤
+    (game decode c client target.val).boolDistance (game decode c client (target.val + 1)) ≤
       ∑ index ∈ Finset.range rawCount,
         (modifiedNonceAeadINTCTXTAdvantage c (reduction target decode c fallback client index)).toReal := by
   have each : ∀ index ∈ Finset.range rawCount,
@@ -81,18 +81,18 @@ theorem hop_bound {count : Nat} (target : Fin (count + 1))
       modifiedNonceAeadINTCTXTAdvantage c (reduction target decode c fallback client index)) ≠ ⊤ := by
     exact ENNReal.sum_ne_top.mpr each
   have converted := ENNReal.toReal_mono finite (hop_distance target decode c fallback client rawCount bounded)
-  rw [ENNReal.toReal_ofReal (tvDist_nonneg _ _), ENNReal.toReal_sum each] at converted
+  rw [ENNReal.toReal_ofReal (discreteDistance_nonneg _ _), ENNReal.toReal_sum each] at converted
   have observation :
-      (game decode c client target.val).boolDistAdvantage
+      (game decode c client target.val).boolDistance
           (game decode c client (target.val + 1)) ≤
-        tvDist (sourceGame (realAt count target.val) decode c client)
+        discreteDistance (sourceGame (realAt count target.val) decode c client)
           (sourceGame (realAt count (target.val + 1)) decode c client) := by
     unfold game
-    simpa only [ProbComp.boolDistAdvantage, VCVioLegacy.evalDist_singleton_eq_probOutput] using
-      (abs_probOutput_toReal_sub_le_tvDist
+    simpa only [ProbComp.boolDistance, ← prEvent_eq_evalDist_singleton] using
+      (abs_prEvent_toReal_sub_le_discreteDistance
         (Prod.fst <$> sourceGame (realAt count target.val) decode c client)
         (Prod.fst <$> sourceGame (realAt count (target.val + 1)) decode c client)).trans
-          (tvDist_map_le (m := ProbComp) (Prod.fst : Bool × SourceState count → Bool)
+          (discreteDistance_map_le (m := ProbComp) (Prod.fst : Bool × SourceState count → Bool)
             (sourceGame (realAt count target.val) decode c client)
             (sourceGame (realAt count (target.val + 1)) decode c client))
   exact observation.trans converted
@@ -110,7 +110,7 @@ theorem family_bound {count : Nat} (decode : Fin (count + 1) → RawDecoder) (c 
     (fallback : ModifiedNonceAeadForgery) (client : OracleComp (SourceSpec count) Bool)
     (rawCount : Fin (count + 1) → Nat)
     (bounded : ∀ target, client.IsQueryBoundP (SelectionClass target (TargetClass IsRawQuery)) (rawCount target)) :
-    (game decode c client 0).boolDistAdvantage (game decode c client (count + 1)) ≤
+    (game decode c client 0).boolDistance (game decode c client (count + 1)) ≤
       ∑ target : Fin (count + 1), ∑ index ∈ Finset.range (rawCount target),
         (modifiedNonceAeadINTCTXTAdvantage c (reduction target decode c fallback client index)).toReal := by
   have bound := PqxdhComposition.finiteHybridBound_of_hop_bounds (game decode c client) (count + 1)
@@ -148,7 +148,7 @@ theorem selected_source_bound {count : Nat} (target : Fin (count + 1))
 theorem global_attempt_bound {count : Nat} (decode : Fin (count + 1) → RawDecoder) (c : Pqxdh.Crypto)
     (fallback : ModifiedNonceAeadForgery) (client : OracleComp (SourceSpec count) Bool) (rawCount : Nat)
     (bounded : client.IsQueryBoundP (SourceClass IsRawQuery) rawCount) :
-    (game decode c client 0).boolDistAdvantage (game decode c client (count + 1)) ≤
+    (game decode c client 0).boolDistance (game decode c client (count + 1)) ≤
       ∑ target : Fin (count + 1), ∑ index ∈ Finset.range rawCount,
         (modifiedNonceAeadINTCTXTAdvantage c (reduction target decode c fallback client index)).toReal :=
   family_bound decode c fallback client (fun _ => rawCount)
@@ -160,7 +160,7 @@ theorem uniform_advantage_bound {count : Nat} (decode : Fin (count + 1) → RawD
     (bounded : client.IsQueryBoundP (SourceClass IsRawQuery) rawCount) (epsilon : ℝ)
     (primitiveBound : ∀ target index, index < rawCount →
       (modifiedNonceAeadINTCTXTAdvantage c (reduction target decode c fallback client index)).toReal ≤ epsilon) :
-    (game decode c client 0).boolDistAdvantage (game decode c client (count + 1)) ≤
+    (game decode c client 0).boolDistance (game decode c client (count + 1)) ≤
       (count + 1 : Nat) * (rawCount * epsilon) := by
   apply (global_attempt_bound decode c fallback client rawCount bounded).trans
   calc

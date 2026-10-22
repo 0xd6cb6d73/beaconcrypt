@@ -184,7 +184,7 @@ theorem global_family_bound {count : Nat} (decode : Fin (count + 1) → RawDecod
     (sealBound : client.IsQueryBoundP (SourceClass SourceSeal) qSeal)
     (rawBound : client.IsQueryBoundP (SourceClass IsRawQuery) qRaw)
     (small : qSeal < 2 ^ 96) :
-    (game decode c client 0).boolDistAdvantage (game decode c client (count + 1)) ≤
+    (game decode c client 0).boolDistance (game decode c client (count + 1)) ≤
       ∑ target : Fin (count + 1), (loss target decode c fallback client (qPublic + (qSeal + qRaw)) qRaw).toReal := by
   apply family_bound decode c fallback client (fun _ => qPublic + (qSeal + qRaw)) (fun _ => qSeal) (fun _ => qRaw)
   · intro target

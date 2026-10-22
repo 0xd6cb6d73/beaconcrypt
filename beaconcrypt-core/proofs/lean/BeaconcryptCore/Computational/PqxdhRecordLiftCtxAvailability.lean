@@ -132,7 +132,7 @@ theorem lookup_support (keyOf : KeyOf n) (modes : Label n → KeyMode) (replace 
 /-! ### The lookup history of a program, over every reply -/
 
 /-- The table whose present coordinates are exactly a lookup history. Its values are irrelevant. -/
-noncomputable def historyTable (past : List (Label n)) : Table (Slot n) := fun label =>
+noncomputable def historyTable (past : List (Label n)) : Table (Slot n) := QueryCache.ofFn fun label =>
   if label ∈ past then some fallbackOutput else none
 
 theorem historyTable_present (past : List (Label n)) (label : Label n) :
@@ -148,12 +148,13 @@ theorem historyTable_mono (past later : List (Label n)) (sub : past ⊆ later) :
     historyTable past ≤ historyTable later := by
   intro label output found
   have member : label ∈ past := (historyTable_present past label).mp ⟨output, found⟩
-  simp only [historyTable, member, ite_true] at found
-  simp only [historyTable, sub member, ite_true, found]
+  simp only [historyTable, QueryCache.ofFn_apply, member, ite_true] at found
+  simp only [historyTable, QueryCache.ofFn_apply, sub member, ite_true, found]
 
 theorem historyTable_append (past : List (Label n)) (label : Label n) :
     historyTable (past ++ [label]) label = some fallbackOutput := by
-  simp [historyTable]
+  change (if label ∈ past ++ [label] then some fallbackOutput else none) = some fallbackOutput
+  simp only [List.mem_append, List.mem_singleton, or_true, ite_true]
 
 /-- The coordinate a local request looks up, if any. -/
 def localLookups : (PqxdhRecordLiftProtocol.LocalSpec n).Domain → List (Label n)
@@ -1438,7 +1439,8 @@ theorem certified_map {σ τ : Type} (positions : Nat)
 /-- The empty history is depth-bounded by zero. -/
 theorem history_empty : PqxdhRecordLiftChainOrder.DepthBound (historyTable ([] : List (Label n))) 0 := by
   intro entry output found
-  simp [historyTable] at found
+  change none = some output at found
+  simp only [reduceCtorEq] at found
 
 /-- **Availability of the whole program.** For every adversary within its budget, a private interpreter simulated through a state map on every request touching only present coordinates within `positions budget` is simulated through it on the whole compiled program. -/
 theorem program_map {σ τ : Type} (budget : PqxdhDeploymentInterface.Budget)

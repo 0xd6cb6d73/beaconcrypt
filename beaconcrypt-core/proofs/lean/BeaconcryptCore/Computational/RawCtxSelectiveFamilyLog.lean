@@ -47,7 +47,7 @@ def Covered {Auxiliary : Type} (state : LoggedState Auxiliary) : Prop :=
 /-- The actual empty private cache needs no assumed enumeration; any retained earlier input list covers it. -/
 theorem empty_covered {Auxiliary : Type} (primitive : RawCtxSharedPrimitive.SharedState Auxiliary)
     (cursor : Cursor) (past : List JointKdfAddress) :
-    Covered ((primitive, ((fun _ => none), cursor)), past) := by
+    Covered ((primitive, (∅, cursor)), past) := by
   intro address output found
   cases found
 

@@ -767,7 +767,7 @@ theorem separated_le_source (qCand : Nat) :
   classical
   by_cases aliased : RawCtxSendLineageCollision.InitialAlias result.1.2.1
   · rw [ite_eq_left_iff.mpr fun impossible => absurd aliased impossible]
-    simp [-evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+    simp [ ]
   · rw [ite_eq_right_iff.mpr fun holds => absurd holds aliased,
       hitObserve_eq setup env callbacks baseImpl kem attachedVerify primitives program post b qCand result.1 result.2.1 result.2.2 key
         aliased]
@@ -1036,7 +1036,7 @@ theorem key_real (post : PqxdhAuthenticatedRootExperiment.Post (baseSpec := base
   have real := ENNReal.toReal_mono (ENNReal.add_ne_top.mpr ⟨ENNReal.add_ne_top.mpr ⟨lossFinite, halfFinite⟩, stopFinite⟩) bound
   rw [ENNReal.toReal_add (ENNReal.add_ne_top.mpr ⟨lossFinite, halfFinite⟩) stopFinite, ENNReal.toReal_add lossFinite halfFinite,
     ENNReal.toReal_div, ENNReal.toReal_div, ENNReal.toReal_pow, ENNReal.toReal_natCast] at real
-  simpa [-evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ] using real
+  simpa [ ] using real
 
 end KeyHeadline
 

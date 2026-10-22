@@ -1,6 +1,7 @@
 import BeaconcryptCore.Computational.PqxdhJointKdf
 import BeaconcryptCore.Refinement.PqxdhCore
 import BeaconcryptCore.Refinement.RatchetEffectRefinement
+import Mathlib.Tactic.IntervalCases
 
 /-!
 # Initial PQXDH ratchet complementarity

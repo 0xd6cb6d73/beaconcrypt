@@ -98,7 +98,7 @@ def BothOrNeither (state : (MaterialSpec n).QueryCache × (PqxdhRecordLiftWorld.
 /-- The output table of a split state: the join of material and seed where both are present. -/
 def joinTable (state : (MaterialSpec n).QueryCache × (PqxdhRecordLiftWorld.SeedSpec n).QueryCache) :
     (OutputSpec n).QueryCache :=
-  fun j => match state.1 j, state.2 j with
+  QueryCache.ofFn fun j => match state.1 j, state.2 j with
     | some m, some seed => some (joinOutput m seed)
     | _, _ => none
 
@@ -106,12 +106,14 @@ def joinTable (state : (MaterialSpec n).QueryCache × (PqxdhRecordLiftWorld.Seed
 theorem joinTable_cacheQuery (state : (MaterialSpec n).QueryCache × (PqxdhRecordLiftWorld.SeedSpec n).QueryCache)
     (j : PqxdhRecordLiftInterface.Slot n) (m : Material) (seed : PqxdhRecordLiftSeed.Seed) :
     joinTable (state.1.cacheQuery j m, state.2.cacheQuery j seed) = (joinTable state).cacheQuery j (joinOutput m seed) := by
-  funext i
+  apply QueryCache.ext
+  intro i
   by_cases same : i = j
   · subst same
-    simp only [joinTable, QueryCache.cacheQuery_self]
-  · simp only [joinTable, QueryCache.cacheQuery_of_ne state.1 m same, QueryCache.cacheQuery_of_ne state.2 seed same,
-      QueryCache.cacheQuery_of_ne (joinTable state) (joinOutput m seed) same]
+    simp only [joinTable, QueryCache.ofFn_apply, QueryCache.cacheQuery_self]
+  · rw [QueryCache.cacheQuery_of_ne (joinTable state) (joinOutput m seed) same]
+    simp only [joinTable, QueryCache.ofFn_apply, QueryCache.cacheQuery_of_ne state.1 m same,
+      QueryCache.cacheQuery_of_ne state.2 seed same]
 
 /-- At a slot with neither material nor seed, the split service draws both and records them. -/
 theorem splitService_none (state : (MaterialSpec n).QueryCache × (PqxdhRecordLiftWorld.SeedSpec n).QueryCache)
@@ -149,7 +151,7 @@ theorem split_service_proj : ServiceProj (n := n) BothOrNeither joinTable splitS
       have h := holds j
       rw [hm, Option.isSome_none] at h
       exact Option.isSome_eq_false_iff.mp h.symm |> Option.isNone_iff_eq_none.mp
-    have hj : joinTable state j = none := by simp only [joinTable, hm]
+    have hj : joinTable state j = none := by simp only [joinTable, QueryCache.ofFn_apply, hm]
     rw [splitService_none state j hm hs]
     constructor
     · have rhs : (lazyService j).run (joinTable state) =
@@ -173,7 +175,7 @@ theorem split_service_proj : ServiceProj (n := n) BothOrNeither joinTable splitS
       rw [hm] at h
       exact Option.isSome_iff_exists.mp h.symm
     obtain ⟨seed, hs⟩ := hs
-    have hj : joinTable state j = some (joinOutput m seed) := by simp only [joinTable, hm, hs]
+    have hj : joinTable state j = some (joinOutput m seed) := by simp only [joinTable, QueryCache.ofFn_apply, hm, hs]
     rw [splitService_some state j m seed hm hs]
     constructor
     · refine LawEq.of_eq ?_

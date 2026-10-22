@@ -1,7 +1,7 @@
 import BeaconcryptCore.Extraction.Funs
 import Examples.CommitmentScheme.Binding
 import VCVio.StateSeparating.Hybrid
-import BeaconcryptCore.Computational.VCVioLegacyBridge
+import BeaconcryptCore.Computational.VCVioForwardOracleComp
 
 /-!
 # VCVio computational-proof feasibility probe
@@ -10,7 +10,7 @@ This module records two framework feasibility probes. The first instantiates VCV
 
 The CTX theorems here remain a generic numerical ROM pilot. `BeaconcryptCore.Computational.CtxReduction` separately defines the real ideal-model raw-payload event and proves its factor-one standard-model reduction without using this generic binding game. Connecting this ROM pilot to that event would require an oracle-parametric verifier, while connecting either ideal surface to production still requires the extracted transcript and adapter hash refinement. Treating deployed BLAKE2b-512 as the random oracle in this module is an idealization, not a proof about the primitive.
 
-The four binding bounds are stated in the forward event vocabulary, `Pr{let result ← ctxBindingGame adversary}[result.1 = true]`, which replaces the deprecated `Pr[fun result => result.1 = true | ctxBindingGame adversary]` of VCVio's retiring probability interface and has the same meaning. VCVio's own `binding_bound` and `binding_bound_via_cr_chain` are still stated in the deprecated form at the pinned commit, so the two base proofs convert them through `BeaconcryptCore.VCVioLegacy.oracleComp_probEvent_eq_prEvent_native`, a transitional bridge that is proved from the pin and is deleted at the VCVio upgrade.
+The four binding bounds use native event probabilities, `Pr{let result ← ctxBindingGame adversary}[result.1 = true]`. VCVio's `binding_bound` and `binding_bound_via_cr_chain` now have the same event interface, so the two base proofs apply them directly to the unchanged shared-cache experiment.
 -/
 
 open OracleSpec OracleComp ENNReal
@@ -45,14 +45,13 @@ abbrev CtxAdversary (queryBudget : ℕ) :=
 
 /-- The generic bounded ROM game shares one hidden lazy random-function cache between the adversary and the two verifier queries. -/
 def ctxBindingGame {queryBudget : ℕ} (adversary : CtxAdversary queryBudget) :=
-  bindingGame adversary
+  bindingExperiment adversary
 
 /-- The tight generic ROM theorem combines the adversary-cache birthday bound with two fresh verifier queries. -/
 theorem ctx_binding_bound_tight {queryBudget : ℕ} (adversary : CtxAdversary queryBudget) :
     Pr{let result ← ctxBindingGame adversary}[result.1 = true] ≤
       (((queryBudget * (queryBudget - 1) + 2 : ℕ) : ℝ≥0∞) /
         (2 * Fintype.card CtxDigest)) := by
-  rw [← BeaconcryptCore.VCVioLegacy.oracleComp_probEvent_eq_prEvent_native]
   exact binding_bound adversary
 
 /-- The tight bound with the 512-bit random-oracle range cardinality made explicit. -/
@@ -69,7 +68,6 @@ theorem ctx_binding_bound {queryBudget : ℕ} (adversary : CtxAdversary queryBud
     Pr{let result ← ctxBindingGame adversary}[result.1 = true] ≤
       ((((queryBudget + 2) * (queryBudget + 1) : ℕ) : ℝ≥0∞) /
         (2 * Fintype.card CtxDigest)) := by
-  rw [← BeaconcryptCore.VCVioLegacy.oracleComp_probEvent_eq_prEvent_native]
   exact binding_bound_via_cr_chain adversary
 
 /-- The looser bound with the 512-bit random-oracle range cardinality made explicit. -/

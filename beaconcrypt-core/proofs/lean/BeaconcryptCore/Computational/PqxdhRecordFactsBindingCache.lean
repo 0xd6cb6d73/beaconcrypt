@@ -43,15 +43,8 @@ theorem private_lookup_cached (suffix : Pqxdh.Bytes) (before : CtxSuffixRO.Query
     (supported : result ∈ support (AdaptiveCtxSharedReplay.privateLookup suffix before)) :
     before ≤ result.2 ∧ result.2 suffix = some result.1 := by
   rw [privateLookup_exact] at supported
-  refine ⟨QueryImpl.withCaching_cache_le _ suffix before result supported, ?_⟩
-  cases old : before suffix
-  case none =>
-    rw [QueryImpl.withCaching_run_none _ old, support_map] at supported
-    obtain ⟨digest, reached, rfl⟩ := supported
-    exact QueryCache.cacheQuery_self before suffix digest
-  case some digest =>
-    rw [QueryImpl.withCaching_run_some _ old, support_pure, Set.mem_singleton_iff] at supported
-    exact supported ▸ old
+  exact ⟨QueryImpl.withCaching_cache_le _ suffix before result supported,
+    QueryImpl.withCaching_run_caches _ suffix before result supported⟩
 
 /-- Private commitment access preserves existing seals and retains both old and newly queried suffix answers. -/
 theorem local_private_cached (suffix : Pqxdh.Bytes) (before : KeyEntry) (result : CtxDigest × KeyEntry)

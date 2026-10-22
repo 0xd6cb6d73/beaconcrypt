@@ -95,7 +95,7 @@ theorem memo_step (source : FixedHkdfSha512NoSaltSource) (table : Table)
     have actual := consistent request output found
     subst output
     have retained : table.cacheQuery request (productionStream source.crypto request) = table := by
-      funext previous
+      refine QueryCache.ext (fun previous => ?_)
       by_cases same : previous = request
       · subst previous
         simpa using found.symm

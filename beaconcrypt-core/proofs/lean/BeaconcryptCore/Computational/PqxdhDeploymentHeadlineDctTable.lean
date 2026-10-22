@@ -18,7 +18,7 @@ open OracleComp OracleSpec ENNReal
 set_option autoImplicit false
 
 namespace BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctTable
-open OracleComp.EvalDist (expectedValue)
+open OracleComp.ProgramLogic (wp)
 open PqxdhServerAuthExperiment (Setup Codec Checks)
 open PqxdhServerAuthNative (NativeState NativeGame)
 open PqxdhSecretInputKdf (HmacBlock HmacOracle)
@@ -53,41 +53,41 @@ theorem tablePotential_mono (key : Option RawCtxKdfRequestTable.KeyPart) {b c : 
 /-- One read of the lazily sampled R1 table spends one unit of the budget. -/
 theorem ro_table (key : Option RawCtxKdfRequestTable.KeyPart) (b : ℕ) (T : HmacOracle.QueryCache)
     (u : Pqxdh.Bytes) :
-    expectedValue ((HmacOracle.randomOracle u).run T) (fun r => tablePotential setup key b r.2) ≤
+    wp ((HmacOracle.randomOracle u).run T) (fun r => tablePotential setup key b r.2) ≤
       tablePotential setup key (b + 1) T := by
   cases key with
   | none =>
       simp only [tablePotential]
-      rw [OracleComp.EvalDist.expectedValue_mul_const, OracleComp.EvalDist.expectedValue_add]
+      rw [OracleComp.ProgramLogic.wp_const_mul, OracleComp.ProgramLogic.wp_add]
       gcongr ?_ * _
       calc _ ≤ (size T + 1) + (b : ℝ≥0∞) := add_le_add (PqxdhDeploymentHeadlineDctTools.ro_size T u)
-            (OracleComp.EvalDist.expectedValue_le_of_le _ fun _ => le_rfl)
+            (OracleComp.ProgramLogic.wp_le_const_of_support _ fun _ _ => le_rfl)
         _ = size T + ((b + 1 : ℕ) : ℝ≥0∞) := by push_cast; ring
   | some k =>
       simp only [tablePotential]
-      rw [OracleComp.EvalDist.expectedValue_add]
+      rw [OracleComp.ProgramLogic.wp_add]
       calc _ ≤ (hits (seqKey setup) T k + mass (seqKey setup) k) + (b : ℝ≥0∞) * mass (seqKey setup) k :=
             add_le_add (PqxdhDeploymentHeadlineDctTools.ro_hits (seqKey setup) T u k)
-              (OracleComp.EvalDist.expectedValue_le_of_le _ fun _ => le_rfl)
+              (OracleComp.ProgramLogic.wp_le_const_of_support _ fun _ _ => le_rfl)
         _ = _ := by push_cast; ring
 
 /-- A native program charged `n` units of the table budget: whatever the hidden key, the expected table potential after it at budget `b` is at most the potential before it at budget `b + n`. -/
 def ChargedN {α : Type} (work : NativeGame KemSK α) (n : ℕ) : Prop :=
-  ∀ key b state, expectedValue (work.run state) (fun r => tablePotential setup key b r.2.1.cache) ≤
+  ∀ key b state, wp (work.run state) (fun r => tablePotential setup key b r.2.1.cache) ≤
     tablePotential setup key (b + n) state.1.cache
 
 theorem chargedN_pure {α : Type} (value : α) : ChargedN setup (pure value : NativeGame KemSK α) 0 := by
   intro key b state
-  rw [StateT.run_pure, OracleComp.EvalDist.expectedValue_pure]
+  rw [StateT.run_pure, OracleComp.ProgramLogic.wp_pure]
   exact le_rfl
 
 theorem chargedN_bind {α β : Type} {work : NativeGame KemSK α} {next : α → NativeGame KemSK β} {m n : ℕ}
     (first : ChargedN setup work m) (rest : ∀ value, ChargedN setup (next value) n) :
     ChargedN setup (work >>= next) (m + n) := by
   intro key b state
-  rw [StateT.run_bind, OracleComp.EvalDist.expectedValue_bind]
-  calc _ ≤ expectedValue (work.run state) (fun r => tablePotential setup key (b + n) r.2.1.cache) :=
-        OracleComp.EvalDist.expectedValue_mono _ fun r => rest r.1 key b r.2
+  rw [StateT.run_bind, OracleComp.ProgramLogic.wp_bind]
+  calc _ ≤ wp (work.run state) (fun r => tablePotential setup key (b + n) r.2.1.cache) :=
+        OracleComp.ProgramLogic.wp_mono _ fun r => rest r.1 key b r.2
     _ ≤ tablePotential setup key (b + n + m) state.1.cache := first key (b + n) state
     _ = _ := by rw [show b + n + m = b + (m + n) by omega]
 
@@ -99,8 +99,8 @@ theorem chargedN_mono {α : Type} {work : NativeGame KemSK α} {m n : ℕ} (char
 theorem chargedN_frame {α : Type} (work : NativeGame KemSK α)
     (kept : ∀ state, ∀ r ∈ support (work.run state), r.2.1.cache = state.1.cache) : ChargedN setup work 0 := by
   intro key b state
-  refine le_trans (OracleComp.EvalDist.expectedValue_mono_of_support fun r member => le_of_eq ?_)
-    (OracleComp.EvalDist.expectedValue_le_of_le _ fun _ => le_rfl)
+  refine le_trans (OracleComp.ProgramLogic.wp_mono_of_support _ fun r member => le_of_eq ?_)
+    (OracleComp.ProgramLogic.wp_le_const_of_support _ fun _ _ => le_rfl)
   rw [kept state r member]
   rfl
 
@@ -129,9 +129,9 @@ theorem chargedN_ctx {α : Type} (work : StateT (RawCtxSharedPrimitive.SharedSta
 theorem chargedN_sourceRoot (hmac : PqxdhSecretInputKdf.HmacSha512) (input : beaconcrypt_core.pqxdh.RootKeyInput) :
     ChargedN setup (PqxdhServerAuthNative.sourceRoot (KemSK := KemSK) hmac input) 1 := by
   intro key b state
-  show expectedValue (PqxdhServerAuthNative.sourceRoot hmac input state) _ ≤ _
+  show wp (PqxdhServerAuthNative.sourceRoot hmac input state) _ ≤ _
   unfold PqxdhServerAuthNative.sourceRoot
-  rw [OracleComp.EvalDist.expectedValue_map]
+  rw [OracleComp.ProgramLogic.wp_map]
   exact ro_table setup key b state.1.cache _
 
 theorem chargedN_romRootBytes (hmac : PqxdhSecretInputKdf.HmacSha512) (message : PqxdhJointDhExtractFamily.Message)
@@ -139,9 +139,9 @@ theorem chargedN_romRootBytes (hmac : PqxdhSecretInputKdf.HmacSha512) (message :
     ChargedN setup (PqxdhServerAuthNative.romRootBytes (A := PqxdhServerAuthExperiment.GameState KemSK) hmac message
       bytes) 1 := by
   intro key b state
-  show expectedValue (PqxdhServerAuthNative.romRootBytes hmac message bytes state) _ ≤ _
+  show wp (PqxdhServerAuthNative.romRootBytes hmac message bytes state) _ ≤ _
   unfold PqxdhServerAuthNative.romRootBytes
-  rw [OracleComp.EvalDist.expectedValue_map]
+  rw [OracleComp.ProgramLogic.wp_map]
   exact ro_table setup key b state.1.cache _
 
 /-- A whole program on native callbacks costs at most its budget of costly requests when each costly request costs one unit and every other request costs nothing. -/
@@ -198,10 +198,10 @@ theorem chargedN_accept (checks : Checks) (codec : Codec Reader Response) (seed 
 theorem chargedN_acceptLogged (checks : Checks) (codec : Codec Reader Response) (seed : PqxdhJointIdentity.IdentitySeed)
     (raw : Pqxdh.Bytes) : ChargedN setup (PqxdhDeploymentLaterServerNative.acceptLogged setup codec checks seed raw) 1 := by
   intro key b state
-  have same := congrArg (fun m => expectedValue m (fun r : Option ℕ × NativeState KemSK =>
+  have same := congrArg (fun m => wp m (fun r : Option ℕ × NativeState KemSK =>
     tablePotential setup key b r.2.1.cache))
     (PqxdhDeploymentLaterServerNative.acceptLogged_fst setup codec checks seed raw state)
-  simp only [OracleComp.EvalDist.expectedValue_map] at same
+  simp only [OracleComp.ProgramLogic.wp_map] at same
   exact (le_of_eq same).trans (chargedN_accept setup checks codec seed _ raw key b state)
 
 /-- The route-R1 public HMAC request costs one unit. -/
@@ -211,16 +211,16 @@ theorem chargedN_familyHmac (seed : PqxdhJointIdentity.IdentitySeed) (scalar : P
       (PqxdhExtractRomFamily.romImpl setup.hmac setup.joint setup.dh seed scalar ∘ₛ PqxdhJointDhExtractRoot.reduction)
       (.inr (.publicHmac key message))) 1 := by
   intro hidden b state
-  change expectedValue ((fun r => (r.1, (r.2, state.2))) <$> ((PqxdhExtractRomFamily.romImpl setup.hmac setup.joint
+  change wp ((fun r => (r.1, (r.2, state.2))) <$> ((PqxdhExtractRomFamily.romImpl setup.hmac setup.joint
     setup.dh seed scalar ∘ₛ PqxdhJointDhExtractRoot.reduction) (.inr (.publicHmac key message))).run state.1) _ ≤ _
-  rw [OracleComp.EvalDist.expectedValue_map]
+  rw [OracleComp.ProgramLogic.wp_map]
   simp only [QueryImpl.apply_compose, PqxdhJointDhExtractRoot.reduction, simulateQ_spec_query,
     PqxdhExtractRomFamily.romImpl, StateT.run]
   split_ifs
-  · rw [OracleComp.EvalDist.expectedValue_bind]
-    simp only [OracleComp.EvalDist.expectedValue_pure]
+  · rw [OracleComp.ProgramLogic.wp_bind]
+    simp only [OracleComp.ProgramLogic.wp_pure]
     exact ro_table setup hidden b state.1.cache message
-  · rw [OracleComp.EvalDist.expectedValue_pure]
+  · rw [OracleComp.ProgramLogic.wp_pure]
     exact tablePotential_mono setup hidden (by omega) _
 
 /-- The native public HMAC costs one unit. -/
@@ -255,25 +255,25 @@ variable (setup : Setup baseSpec KemSK)
 
 /-- A registration program charged `n` units, on the R1 table of its shared native state. -/
 def ChargedR {α : Type} (work : PqxdhRegistrationSchedule.Game KemSK α) (n : ℕ) : Prop :=
-  ∀ key b state, expectedValue (work.run state) (fun r => tablePotential setup key b r.2.shared.1.cache) ≤
+  ∀ key b state, wp (work.run state) (fun r => tablePotential setup key b r.2.shared.1.cache) ≤
     tablePotential setup key (b + n) state.shared.1.cache
 
 /-- A deployment program charged `n` units, on the R1 table of its shared native state. -/
 def ChargedD {α : Type} (work : StateT (PqxdhDeploymentNative.State KemSK) ProbComp α) (n : ℕ) : Prop :=
-  ∀ key b state, expectedValue (work.run state) (fun r => tablePotential setup key b r.2.native.shared.1.cache) ≤
+  ∀ key b state, wp (work.run state) (fun r => tablePotential setup key b r.2.native.shared.1.cache) ≤
     tablePotential setup key (b + n) state.native.shared.1.cache
 
 theorem chargedR_onShared {α : Type} {work : NativeGame KemSK α} {n : ℕ} (charged : ChargedN setup work n) :
     ChargedR setup (PqxdhRegistrationSchedule.onShared work) n := by
   intro key b state
-  change expectedValue ((fun result => (result.1, { state with shared := result.2 })) <$> work state.shared) _ ≤ _
-  rw [OracleComp.EvalDist.expectedValue_map]
+  change wp ((fun result => (result.1, { state with shared := result.2 })) <$> work state.shared) _ ≤ _
+  rw [OracleComp.ProgramLogic.wp_map]
   exact charged key b state.shared
 
 theorem chargedD_onNative {α : Type} {work : PqxdhRegistrationSchedule.Game KemSK α} {n : ℕ}
     (charged : ChargedR setup work n) : ChargedD setup (PqxdhDeploymentNative.onNative work) n := by
   intro key b state
-  rw [PqxdhDeploymentCompileStep.onNative_run, OracleComp.EvalDist.expectedValue_map]
+  rw [PqxdhDeploymentCompileStep.onNative_run, OracleComp.ProgramLogic.wp_map]
   exact charged key b state.native
 
 theorem chargedR_mono {α : Type} {work : PqxdhRegistrationSchedule.Game KemSK α} {m n : ℕ}
@@ -285,8 +285,8 @@ theorem chargedR_frame {α : Type} (work : PqxdhRegistrationSchedule.Game KemSK 
     (kept : ∀ state, ∀ r ∈ support (work.run state), r.2.shared.1.cache = state.shared.1.cache) :
     ChargedR setup work 0 := by
   intro key b state
-  refine le_trans (OracleComp.EvalDist.expectedValue_mono_of_support fun r member => le_of_eq ?_)
-    (OracleComp.EvalDist.expectedValue_le_of_le _ fun _ => le_rfl)
+  refine le_trans (OracleComp.ProgramLogic.wp_mono_of_support _ fun r member => le_of_eq ?_)
+    (OracleComp.ProgramLogic.wp_le_const_of_support _ fun _ _ => le_rfl)
   rw [kept state r member]
   rfl
 
@@ -295,8 +295,8 @@ theorem chargedD_frame {α : Type} (work : StateT (PqxdhDeploymentNative.State K
     (kept : ∀ state, ∀ r ∈ support (work.run state), r.2.native.shared.1.cache = state.native.shared.1.cache) :
     ChargedD setup work 0 := by
   intro key b state
-  refine le_trans (OracleComp.EvalDist.expectedValue_mono_of_support fun r member => le_of_eq ?_)
-    (OracleComp.EvalDist.expectedValue_le_of_le _ fun _ => le_rfl)
+  refine le_trans (OracleComp.ProgramLogic.wp_mono_of_support _ fun r member => le_of_eq ?_)
+    (OracleComp.ProgramLogic.wp_le_const_of_support _ fun _ _ => le_rfl)
   rw [kept state r member]
   rfl
 
@@ -307,12 +307,12 @@ theorem chargedR_finish (codec : Codec Reader Response) (index : ℕ) (raw : Pqx
   cases found : state.owners[index]? with
   | none =>
       rw [PqxdhRegistrationSchedule.finish_missing setup codec index raw state found,
-        OracleComp.EvalDist.expectedValue_pure]
+        OracleComp.ProgramLogic.wp_pure]
       exact tablePotential_mono setup key (by omega) _
   | some owner =>
-      change expectedValue (PqxdhRegistrationSchedule.finish setup codec index raw state) _ ≤ _
+      change wp (PqxdhRegistrationSchedule.finish setup codec index raw state) _ ≤ _
       rw [PqxdhRegistrationSchedule.finish_source setup codec index raw state owner found,
-        OracleComp.EvalDist.expectedValue_map]
+        OracleComp.ProgramLogic.wp_map]
       exact chargedN_run setup (PqxdhRegistrationSchedule.callbacks setup codec)
         (fun query => PqxdhRegistrationJointKemRomSplit.rootNative query = true)
         (fun query root => by simpa [root] using chargedN_callbacks setup codec query)
@@ -336,14 +336,14 @@ def slotKeyOf (q : SlotState) : Option RawCtxKdfRequestTable.KeyPart := (q.2.1 0
 /-- A slot client on a state with an R1 table `R`, charged `n` units through the allocator in front of the lazy service. -/
 def ChargedG {σ β : Type} (R : σ → HmacOracle.QueryCache)
     (step : StateT σ (OracleComp PqxdhDeploymentIdealSlots.SlotSpec) β) (n : ℕ) : Prop :=
-  ∀ b s q, expectedValue ((simulateQ (PqxdhRegistrationJointKemSecondEntry.slotImpl PqxdhDeploymentIdealKernel.lazyDummy)
+  ∀ b s q, wp ((simulateQ (PqxdhRegistrationJointKemSecondEntry.slotImpl PqxdhDeploymentIdealKernel.lazyDummy)
     (step.run s)).run q) (fun r => tablePotential setup (slotKeyOf r.2) b (R r.1.2)) ≤
       tablePotential setup (slotKeyOf q) (b + n) (R s)
 
 theorem chargedG_pure {σ β : Type} (R : σ → HmacOracle.QueryCache) (value : β) :
     ChargedG setup R (pure value : StateT σ (OracleComp PqxdhDeploymentIdealSlots.SlotSpec) β) 0 := by
   intro b s q
-  simp only [StateT.run_pure, simulateQ_pure, OracleComp.EvalDist.expectedValue_pure]
+  simp only [StateT.run_pure, simulateQ_pure, OracleComp.ProgramLogic.wp_pure]
   exact le_rfl
 
 theorem chargedG_bind {σ α β : Type} (R : σ → HmacOracle.QueryCache)
@@ -352,10 +352,10 @@ theorem chargedG_bind {σ α β : Type} (R : σ → HmacOracle.QueryCache)
     (first : ChargedG setup R step m) (rest : ∀ value, ChargedG setup R (next value) n) :
     ChargedG setup R (step >>= next) (m + n) := by
   intro b s q
-  rw [StateT.run_bind, simulateQ_bind, StateT.run_bind, OracleComp.EvalDist.expectedValue_bind]
-  calc _ ≤ expectedValue ((simulateQ (PqxdhRegistrationJointKemSecondEntry.slotImpl PqxdhDeploymentIdealKernel.lazyDummy)
+  rw [StateT.run_bind, simulateQ_bind, StateT.run_bind, OracleComp.ProgramLogic.wp_bind]
+  calc _ ≤ wp ((simulateQ (PqxdhRegistrationJointKemSecondEntry.slotImpl PqxdhDeploymentIdealKernel.lazyDummy)
         (step.run s)).run q) (fun r => tablePotential setup (slotKeyOf r.2) (b + n) (R r.1.2)) :=
-        OracleComp.EvalDist.expectedValue_mono _ fun r => rest r.1.1 b r.1.2 r.2
+        OracleComp.ProgramLogic.wp_mono _ fun r => rest r.1.1 b r.1.2 r.2
     _ ≤ tablePotential setup (slotKeyOf q) (b + n + m) (R s) := first (b + n) s q
     _ = _ := by rw [show b + n + m = b + (m + n) by omega]
 
@@ -366,40 +366,40 @@ theorem chargedG_mono {σ β : Type} (R : σ → HmacOracle.QueryCache)
 
 /-- A coins-only slot step costs what its program costs on the R1 table. -/
 theorem chargedG_lift {σ β : Type} (R : σ → HmacOracle.QueryCache) (work : StateT σ ProbComp β) (n : ℕ)
-    (charged : ∀ key b s, expectedValue (work.run s) (fun r => tablePotential setup key b (R r.2)) ≤
+    (charged : ∀ key b s, wp (work.run s) (fun r => tablePotential setup key b (R r.2)) ≤
       tablePotential setup key (b + n) (R s)) :
     ChargedG setup R (PqxdhDeploymentIdealSteps.onSlots work) n := by
   intro b s q
-  change expectedValue ((simulateQ (PqxdhRegistrationJointKemSecondEntry.slotImpl PqxdhDeploymentIdealKernel.lazyDummy)
+  change wp ((simulateQ (PqxdhRegistrationJointKemSecondEntry.slotImpl PqxdhDeploymentIdealKernel.lazyDummy)
     (PqxdhDeploymentIdealSteps.liftS (work.run s))).run q) _ ≤ _
-  rw [PqxdhDeploymentIdealErase.slotImpl_coins, OracleComp.EvalDist.expectedValue_map]
+  rw [PqxdhDeploymentIdealErase.slotImpl_coins, OracleComp.ProgramLogic.wp_map]
   exact charged (slotKeyOf q) b s
 
 /-- A lazy material read does not raise the table potential in expectation: the first draw of slot 0's material averages the hits over a uniform key (`hits_draw`, `average_mass`). -/
 theorem material_read (j : PqxdhRecordLiftInterface.Slot 2) (mat : PqxdhDeploymentIdealKernel.MatCache 2) (b : ℕ)
     (T : HmacOracle.QueryCache) :
-    expectedValue (((PqxdhDeploymentSeedSplit.MaterialSpec 2).randomOracle j).run mat)
+    wp (((PqxdhDeploymentSeedSplit.MaterialSpec 2).randomOracle j).run mat)
       (fun r => tablePotential setup ((r.2 0).map Prod.fst) b T) ≤
         tablePotential setup ((mat 0).map Prod.fst) b T := by
   cases found : mat j with
   | some m =>
-      rw [LazyOracleDiscard.query_of_some found, OracleComp.EvalDist.expectedValue_pure]
+      rw [LazyOracleDiscard.query_of_some found, OracleComp.ProgramLogic.wp_pure]
   | none =>
-      rw [LazyOracleDiscard.query_of_none found, OracleComp.EvalDist.expectedValue_bind]
-      simp only [OracleComp.EvalDist.expectedValue_pure]
+      rw [LazyOracleDiscard.query_of_none found, OracleComp.ProgramLogic.wp_bind]
+      simp only [OracleComp.ProgramLogic.wp_pure]
       by_cases zero : j = 0
       · subst zero
         simp only [QueryCache.cacheQuery_self, Option.map_some, found, Option.map_none]
-        change expectedValue ($ᵗ PqxdhDeploymentHiddenLayout.Material : ProbComp _)
+        change wp ($ᵗ PqxdhDeploymentHiddenLayout.Material : ProbComp _)
           (fun m => tablePotential setup (some m.1) b T) ≤ _
         rw [PqxdhDeploymentHeadlineDctTools.material_marginal (fun k => tablePotential setup (some k) b T)]
         simp only [tablePotential]
-        rw [OracleComp.EvalDist.expectedValue_add, PqxdhDeploymentHeadlineDctTools.hits_draw,
+        rw [OracleComp.ProgramLogic.wp_add, PqxdhDeploymentHeadlineDctTools.hits_draw,
           PqxdhDeploymentHeadlineDctTools.keyPart_card]
-        have averaged : expectedValue ($ᵗ RawCtxKdfRequestTable.KeyPart : ProbComp RawCtxKdfRequestTable.KeyPart)
+        have averaged : wp ($ᵗ RawCtxKdfRequestTable.KeyPart : ProbComp RawCtxKdfRequestTable.KeyPart)
             (fun k => (b : ℝ≥0∞) * mass (seqKey setup) k) ≤ (b : ℝ≥0∞) * (2 ^ 256 : ℝ≥0∞)⁻¹ := by
           simp only [mul_comm (b : ℝ≥0∞)]
-          rw [OracleComp.EvalDist.expectedValue_mul_const]
+          rw [OracleComp.ProgramLogic.wp_const_mul]
           have bound := PqxdhDeploymentHeadlineDctTools.average_mass (W := RawCtxKdfRequestTable.KeyPart)
             (seqKey setup)
           rw [PqxdhDeploymentHeadlineDctTools.keyPart_card] at bound
@@ -412,30 +412,30 @@ theorem material_read (j : PqxdhRecordLiftInterface.Slot 2) (mat : PqxdhDeployme
       · have other : ∀ m, (mat.cacheQuery j m) 0 = mat 0 := fun m =>
           QueryCache.cacheQuery_of_ne _ _ (Ne.symm zero)
         simp only [other]
-        exact OracleComp.EvalDist.expectedValue_le_of_le _ fun _ => le_rfl
+        exact OracleComp.ProgramLogic.wp_le_const_of_support _ fun _ _ => le_rfl
 
 /-- A read through the allocator in front of the lazy service does not raise the table potential in expectation. -/
 theorem slot_read (c : PqxdhDeploymentIdealSlots.Coord) (q : SlotState) (b : ℕ) (T : HmacOracle.QueryCache) :
-    expectedValue ((PqxdhRegistrationJointKemSecondEntry.slotImpl PqxdhDeploymentIdealKernel.lazyDummy (.inr c)).run q)
+    wp ((PqxdhRegistrationJointKemSecondEntry.slotImpl PqxdhDeploymentIdealKernel.lazyDummy (.inr c)).run q)
       (fun r => tablePotential setup (slotKeyOf r.2) b T) ≤ tablePotential setup (slotKeyOf q) b T := by
   rcases found : q.1.1 c with _ | slot
   · by_cases room : q.1.2 < 2
-    · rw [PqxdhDeploymentIdealDefer.slotImpl_lazy_new c q found room, OracleComp.EvalDist.expectedValue_map]
+    · rw [PqxdhDeploymentIdealDefer.slotImpl_lazy_new c q found room, OracleComp.ProgramLogic.wp_map]
       exact material_read setup _ q.2.1 b T
     · simp only [PqxdhRegistrationJointKemSecondEntry.slotImpl, QueryImpl.add_apply_inr, StateT.run_mk, found, room,
-        _root_.dite_false, OracleComp.EvalDist.expectedValue_map]
-      exact OracleComp.EvalDist.expectedValue_le_of_le _ fun _ => le_rfl
-  · rw [PqxdhDeploymentIdealDefer.slotImpl_lazy_found c q slot found, OracleComp.EvalDist.expectedValue_map]
+        _root_.dite_false, OracleComp.ProgramLogic.wp_map]
+      exact OracleComp.ProgramLogic.wp_le_const_of_support _ fun _ _ => le_rfl
+  · rw [PqxdhDeploymentIdealDefer.slotImpl_lazy_found c q slot found, OracleComp.ProgramLogic.wp_map]
     exact material_read setup slot q.2.1 b T
 
 /-- A value request at fixed coordinates costs nothing. -/
 theorem chargedG_read {σ : Type} (R : σ → HmacOracle.QueryCache) (c : PqxdhDeploymentIdealSlots.Coord) :
     ChargedG setup R (PqxdhDeploymentIdealErase.readAt (σ := σ) c) 0 := by
   intro b s q
-  change expectedValue ((simulateQ (PqxdhRegistrationJointKemSecondEntry.slotImpl PqxdhDeploymentIdealKernel.lazyDummy)
+  change wp ((simulateQ (PqxdhRegistrationJointKemSecondEntry.slotImpl PqxdhDeploymentIdealKernel.lazyDummy)
     ((fun v => (v, s)) <$> (PqxdhDeploymentIdealSlots.SlotSpec.query (.inr c) :
       OracleComp PqxdhDeploymentIdealSlots.SlotSpec _))).run q) _ ≤ _
-  rw [simulateQ_map, simulateQ_spec_query, StateT.run_map, OracleComp.EvalDist.expectedValue_map]
+  rw [simulateQ_map, simulateQ_spec_query, StateT.run_map, OracleComp.ProgramLogic.wp_map]
   exact slot_read setup c q b (R s)
 
 /-- A whole program on slot callbacks is charged its budget of costly requests when each costly request costs one unit and every other request costs nothing (the nested simulation is flattened, `simulateQ_mapStateTBase_run_eq_map_flattenStateT`). -/
@@ -445,19 +445,20 @@ theorem chargedG_run {κ α σ : Type} {spec : OracleSpec κ} (R : σ → HmacOr
     (free : ∀ query, ¬ costly query → ChargedG setup R (inner query) 0) (work : OracleComp spec α) (n : ℕ)
     (bounded : work.IsQueryBoundP costly n) : ChargedG setup R (simulateQ inner work) n := by
   intro b s q
-  rw [OracleComp.simulateQ_mapStateTBase_run_eq_map_flattenStateT, OracleComp.EvalDist.expectedValue_map]
+  rw [OracleComp.simulateQ_mapStateTBase_run_eq_map_flattenStateT, OracleComp.ProgramLogic.wp_map]
   have flatStep : ∀ (query : κ) (state : σ × SlotState) (c : ℕ),
-      expectedValue ((((PqxdhRegistrationJointKemSecondEntry.slotImpl PqxdhDeploymentIdealKernel.lazyDummy).mapStateTBase
+      wp ((((PqxdhRegistrationJointKemSecondEntry.slotImpl PqxdhDeploymentIdealKernel.lazyDummy).mapStateTBase
         inner).flattenStateT query).run state) (fun r => tablePotential setup (slotKeyOf r.2.2) (b + c) (R r.2.1)) =
-      expectedValue ((simulateQ (PqxdhRegistrationJointKemSecondEntry.slotImpl PqxdhDeploymentIdealKernel.lazyDummy)
+      wp ((simulateQ (PqxdhRegistrationJointKemSecondEntry.slotImpl PqxdhDeploymentIdealKernel.lazyDummy)
         ((inner query).run state.1)).run state.2)
           (fun r => tablePotential setup (slotKeyOf r.2) (b + c) (R r.1.2)) := by
     intro query state c
     obtain ⟨s', q'⟩ := state
-    change expectedValue ((fun z : (spec.Range query × σ) × SlotState => (z.1.1, (z.1.2, z.2))) <$>
+    change wp ((fun z : (spec.Range query × σ) × SlotState => (z.1.1, (z.1.2, z.2))) <$>
       (simulateQ (PqxdhRegistrationJointKemSecondEntry.slotImpl PqxdhDeploymentIdealKernel.lazyDummy)
         ((inner query).run s')).run q') _ = _
-    rw [OracleComp.EvalDist.expectedValue_map]
+    rw [OracleComp.ProgramLogic.wp_map]
+    rfl
   have run := PqxdhDeploymentHeadlineDctTools.expected_run_bounded
     (((PqxdhRegistrationJointKemSecondEntry.slotImpl PqxdhDeploymentIdealKernel.lazyDummy).mapStateTBase
       inner).flattenStateT) costly (fun c state => tablePotential setup (slotKeyOf state.2) (b + c) (R state.1))
@@ -468,7 +469,7 @@ theorem chargedG_run {κ α σ : Type} {spec : OracleSpec κ} (R : σ → HmacOr
     (fun query state c freeQuery => by
       rw [flatStep]
       simpa only [Nat.add_zero] using free query freeQuery (b + c) state.1 state.2) work n bounded (s, q)
-  simpa only [Nat.add_zero] using run
+  simpa only [Function.comp_def, Nat.add_zero] using run
 
 end Slots
 
@@ -587,18 +588,18 @@ local notation "lazySlots" =>
 
 /-- An expectation of a function constant on the support is at most that constant. -/
 theorem expected_frame {α : Type} (work : ProbComp α) (f : α → ℝ≥0∞) (c : ℝ≥0∞)
-    (constant : ∀ r ∈ support work, f r = c) : expectedValue work f ≤ c :=
-  le_trans (OracleComp.EvalDist.expectedValue_mono_of_support fun r member => le_of_eq (constant r member))
-    (OracleComp.EvalDist.expectedValue_le_of_le _ fun _ => le_rfl)
+    (constant : ∀ r ∈ support work, f r = c) : wp work f ≤ c :=
+  le_trans (OracleComp.ProgramLogic.wp_mono_of_support _ fun r member => le_of_eq (constant r member))
+    (OracleComp.ProgramLogic.wp_le_const_of_support _ fun _ _ => le_rfl)
 
 /-- A coins-only native slot step on a native state with a side component costs what its native program costs. -/
 theorem chargedG_native {τ α : Type} (work : NativeGame KemSK α) (n : ℕ) (charged : ChargedN setup work n) :
     ChargedG setup (fun z : NativeState KemSK × τ => z.1.1.cache)
       (fun s => (fun r => (r.1, (r.2, s.2))) <$> liftS (work.run s.1)) n := by
   intro b s q
-  change expectedValue ((simulateQ lazySlots ((fun r => (r.1, (r.2, s.2))) <$> liftS (work.run s.1))).run q) _ ≤ _
-  rw [simulateQ_map, StateT.run_map, PqxdhDeploymentIdealErase.slotImpl_coins, OracleComp.EvalDist.expectedValue_map,
-    OracleComp.EvalDist.expectedValue_map]
+  change wp ((simulateQ lazySlots ((fun r => (r.1, (r.2, s.2))) <$> liftS (work.run s.1))).run q) _ ≤ _
+  rw [simulateQ_map, StateT.run_map, PqxdhDeploymentIdealErase.slotImpl_coins, OracleComp.ProgramLogic.wp_map,
+    OracleComp.ProgramLogic.wp_map]
   exact charged (slotKeyOf q) b s.1
 
 /-- A coins-only native slot step on the native state, with its reply mapped, costs what its native program costs. -/
@@ -607,20 +608,20 @@ theorem chargedG_nativeMap {α β : Type} (work : NativeGame KemSK α)
     (charged : ChargedN setup work n) :
     ChargedG setup (fun s : NativeState KemSK => s.1.cache) (fun s => g <$> liftS (work.run s)) n := by
   intro b s q
-  change expectedValue ((simulateQ lazySlots (g <$> liftS (work.run s))).run q) _ ≤ _
-  rw [simulateQ_map, StateT.run_map, PqxdhDeploymentIdealErase.slotImpl_coins, OracleComp.EvalDist.expectedValue_map,
-    OracleComp.EvalDist.expectedValue_map]
-  simp only [kept]
+  change wp ((simulateQ lazySlots (g <$> liftS (work.run s))).run q) _ ≤ _
+  rw [simulateQ_map, StateT.run_map, PqxdhDeploymentIdealErase.slotImpl_coins, OracleComp.ProgramLogic.wp_map,
+    OracleComp.ProgramLogic.wp_map]
+  simp only [Function.comp_def, kept]
   exact charged (slotKeyOf q) b s
 
 /-- A coins-only slot step that keeps its state costs nothing. -/
 theorem chargedG_coins {σ α : Type} (R : σ → HmacOracle.QueryCache) (work : ProbComp α) :
     ChargedG setup R (fun s => (fun reply => (reply, s)) <$> liftS work) 0 := by
   intro b s q
-  change expectedValue ((simulateQ lazySlots ((fun reply => (reply, s)) <$> liftS work)).run q) _ ≤ _
-  rw [simulateQ_map, StateT.run_map, PqxdhDeploymentIdealErase.slotImpl_coins, OracleComp.EvalDist.expectedValue_map,
-    OracleComp.EvalDist.expectedValue_map]
-  exact OracleComp.EvalDist.expectedValue_le_of_le _ fun _ => le_rfl
+  change wp ((simulateQ lazySlots ((fun reply => (reply, s)) <$> liftS work)).run q) _ ≤ _
+  rw [simulateQ_map, StateT.run_map, PqxdhDeploymentIdealErase.slotImpl_coins, OracleComp.ProgramLogic.wp_map,
+    OracleComp.ProgramLogic.wp_map]
+  exact OracleComp.ProgramLogic.wp_le_const_of_support _ fun _ _ => le_rfl
 
 /-- The Server's marker-client root request costs one unit. -/
 theorem chargedN_romRoot (hmac : PqxdhSecretInputKdf.HmacSha512) (index : ℕ)
@@ -706,13 +707,13 @@ theorem chargedG_tailCE (hmac : PqxdhSecretInputKdf.HmacSha512) (index : ℕ)
   rcases query with (input | query) | query
   · show ChargedG setup _ _ 1
     intro b s q
-    change expectedValue ((simulateQ lazySlots (PqxdhDeploymentIdealSteps.tailCE hmac index (.inl (.inl input)) s)).run q)
+    change wp ((simulateQ lazySlots (PqxdhDeploymentIdealSteps.tailCE hmac index (.inl (.inl input)) s)).run q)
       _ ≤ _
     cases shared : input.shared with
     | challenge =>
         simp only [PqxdhDeploymentIdealSteps.tailCE, shared]
-        rw [simulateQ_bind, StateT.run_bind, OracleComp.EvalDist.expectedValue_bind]
-        simp only [simulateQ_pure, StateT.run_pure, OracleComp.EvalDist.expectedValue_pure, simulateQ_spec_query]
+        rw [simulateQ_bind, StateT.run_bind, OracleComp.ProgramLogic.wp_bind]
+        simp only [simulateQ_pure, StateT.run_pure, OracleComp.ProgramLogic.wp_pure, simulateQ_spec_query]
         exact (slot_read setup _ q b s.1.1.cache).trans (tablePotential_mono setup _ (by omega) _)
     | known value =>
         simp only [PqxdhDeploymentIdealSteps.tailCE, shared]
@@ -742,20 +743,22 @@ theorem chargedG_acceptActive (seed : PqxdhJointIdentity.IdentitySeed)
     ChargedG setup (fun s : NativeState KemSK => s.1.cache)
       (PqxdhDeploymentIdealSteps.acceptActive setup codec checks seed challenge verified) 1 := by
   intro b s q
-  change expectedValue ((simulateQ lazySlots (PqxdhDeploymentIdealSteps.acceptActive setup codec checks seed challenge
+  change wp ((simulateQ lazySlots (PqxdhDeploymentIdealSteps.acceptActive setup codec checks seed challenge
     verified s)).run q) _ ≤ _
   unfold PqxdhDeploymentIdealSteps.acceptActive
   rw [simulateQ_bind, StateT.run_bind, PqxdhDeploymentIdealErase.slotImpl_coins, bind_map_left]
-  refine OracleComp.EvalDist.expectedValue_bind_le_of_le fun pre => ?_
+  rw [OracleComp.ProgramLogic.wp_bind]
+  refine OracleComp.ProgramLogic.wp_le_const_of_support _ fun pre _ => ?_
   split
   · rw [simulateQ_bind, StateT.run_bind, PqxdhDeploymentIdealErase.slotImpl_coins, bind_map_left,
-      OracleComp.EvalDist.expectedValue_bind]
-    simp only [simulateQ_pure, StateT.run_pure, OracleComp.EvalDist.expectedValue_pure]
+      OracleComp.ProgramLogic.wp_bind]
+    simp only [simulateQ_pure, StateT.run_pure, OracleComp.ProgramLogic.wp_pure]
     exact chargedN_acceptTail setup _ _ _ (slotKeyOf q) b s
   · rw [simulateQ_bind, StateT.run_bind, PqxdhDeploymentIdealErase.slotImpl_coins, bind_map_left]
-    refine OracleComp.EvalDist.expectedValue_bind_le_of_le fun prepared => ?_
-    rw [simulateQ_bind, StateT.run_bind, OracleComp.EvalDist.expectedValue_bind]
-    simp only [simulateQ_pure, StateT.run_pure, OracleComp.EvalDist.expectedValue_pure]
+    rw [OracleComp.ProgramLogic.wp_bind]
+    refine OracleComp.ProgramLogic.wp_le_const_of_support _ fun prepared _ => ?_
+    rw [simulateQ_bind, StateT.run_bind, OracleComp.ProgramLogic.wp_bind]
+    simp only [simulateQ_pure, StateT.run_pure, OracleComp.ProgramLogic.wp_pure]
     exact chargedG_tail setup setup.hmac _ _ s.2 _ b (s, none) q
 
 /-- The selected raw accept with its encapsulation exposed costs one unit. -/
@@ -801,21 +804,21 @@ theorem chargedG_groupCE (hidden : PqxdhServerAuthKeySchedule.Output → PqxdhRe
     ChargedG setup (fun z : NativeState KemSK × Option Coord => z.1.1.cache)
       (PqxdhDeploymentIdealSteps.groupCE setup codec hidden pending) 1 := by
   intro b s q
-  change expectedValue ((simulateQ lazySlots (PqxdhDeploymentIdealSteps.groupCE setup codec hidden pending s)).run q)
+  change wp ((simulateQ lazySlots (PqxdhDeploymentIdealSteps.groupCE setup codec hidden pending s)).run q)
     _ ≤ _
   unfold PqxdhDeploymentIdealSteps.groupCE
   split
   · split
-    · rw [simulateQ_bind, StateT.run_bind, OracleComp.EvalDist.expectedValue_bind]
+    · rw [simulateQ_bind, StateT.run_bind, OracleComp.ProgramLogic.wp_bind]
       simp only [simulateQ_spec_query]
-      refine le_trans (OracleComp.EvalDist.expectedValue_mono _ fun read => ?_) ((slot_read setup _ q b s.1.1.cache).trans
+      refine le_trans (OracleComp.ProgramLogic.wp_mono _ fun read => ?_) ((slot_read setup _ q b s.1.1.cache).trans
         (tablePotential_mono setup _ (by omega) _))
       rw [simulateQ_bind, StateT.run_bind, PqxdhDeploymentIdealErase.slotImpl_coins, bind_map_left,
-        OracleComp.EvalDist.expectedValue_bind]
-      simp only [simulateQ_pure, StateT.run_pure, OracleComp.EvalDist.expectedValue_pure]
+        OracleComp.ProgramLogic.wp_bind]
+      simp only [simulateQ_pure, StateT.run_pure, OracleComp.ProgramLogic.wp_pure]
       refine expected_frame _ _ _ fun r member => ?_
       rw [PqxdhDeploymentHeadlineDctFinish.nativeCtx_keeps _ s.1 r member]
-    · simp only [simulateQ_pure, StateT.run_pure, OracleComp.EvalDist.expectedValue_pure]
+    · simp only [simulateQ_pure, StateT.run_pure, OracleComp.ProgramLogic.wp_pure]
       exact tablePotential_mono setup _ (by omega) _
   · exact chargedG_native setup _ 1 (chargedN_knownGroup setup codec pending) b s q
 
@@ -826,14 +829,14 @@ theorem chargedG_finishChallenge
     ChargedG setup (fun z : PqxdhRegistrationSchedule.State KemSK × Option Coord => z.1.shared.1.cache)
       (PqxdhDeploymentIdealSteps.finishChallenge setup codec hidden challenge index raw) 1 := by
   intro b s q
-  change expectedValue ((simulateQ lazySlots (PqxdhDeploymentIdealSteps.finishChallenge setup codec hidden challenge
+  change wp ((simulateQ lazySlots (PqxdhDeploymentIdealSteps.finishChallenge setup codec hidden challenge
     index raw s)).run q) _ ≤ _
   unfold PqxdhDeploymentIdealSteps.finishChallenge
   split
-  · simp only [simulateQ_pure, StateT.run_pure, OracleComp.EvalDist.expectedValue_pure]
+  · simp only [simulateQ_pure, StateT.run_pure, OracleComp.ProgramLogic.wp_pure]
     exact tablePotential_mono setup _ (by omega) _
-  · rw [simulateQ_bind, StateT.run_bind, OracleComp.EvalDist.expectedValue_bind]
-    simp only [simulateQ_pure, StateT.run_pure, OracleComp.EvalDist.expectedValue_pure]
+  · rw [simulateQ_bind, StateT.run_bind, OracleComp.ProgramLogic.wp_bind]
+    simp only [simulateQ_pure, StateT.run_pure, OracleComp.ProgramLogic.wp_pure]
     exact chargedG_run setup (fun z : NativeState KemSK × Option Coord => z.1.1.cache)
       (PqxdhDeploymentIdealSteps.ownerImplCE setup codec hidden challenge) (fun query => ownerGroupCE query = true)
       (fun query grouped => by
@@ -865,17 +868,17 @@ local notation "lazySlots" =>
 theorem realRegAt_charged {Bk : Type} {n : ℕ} (created : PqxdhLiveServerConstruction.Created Unit)
     (query : PqxdhRecordLiftInterface.EnvQuery) (key : Option RawCtxKdfRequestTable.KeyPart) (b : ℕ)
     (x : XState KemSK Bk n) :
-    expectedValue ((PqxdhDeploymentIdealSteps.realRegAt setup codec route checks created query).run x)
+    wp ((PqxdhDeploymentIdealSteps.realRegAt setup codec route checks created query).run x)
       (fun r => tablePotential setup key b r.2.base.native.shared.1.cache) ≤
         tablePotential setup key (b + if r1Costly (.inr query.val) then 1 else 0) x.base.native.shared.1.cache := by
   obtain ⟨command, env⟩ := query
   rcases Classical.em (∃ raw, command = .accept raw) with accept | accept
   · obtain ⟨raw, rfl⟩ := accept
     rw [PqxdhDeploymentIdealEnvReal.realRegAt_accept setup codec checks route created raw x,
-      OracleComp.EvalDist.expectedValue_map]
+      OracleComp.ProgramLogic.wp_map]
     exact chargedN_acceptLogged setup checks codec created.seed raw key b x.base.native.shared
   · rw [PqxdhDeploymentIdealEnvReal.realRegAt_quiet setup codec checks route created ⟨command, env⟩
-      (fun raw same => accept ⟨raw, same⟩) x, OracleComp.EvalDist.expectedValue_map]
+      (fun raw same => accept ⟨raw, same⟩) x, OracleComp.ProgramLogic.wp_map]
     exact chargedD_handler setup codec checks route created.seed (.inr command) key b x.base
 
 /-- The body of a create keeps the shared native state. -/
@@ -920,11 +923,11 @@ theorem chargedG_acceptStep (t : Target count) (p : Params KemSK count)
     ChargedG setup (fun y : XState KemSK IdealCore 2 => y.base.native.shared.1.cache)
       (PqxdhDeploymentIdealSteps.acceptStep setup codec route checks t p created raw) 1 := by
   intro b x q
-  change expectedValue ((simulateQ lazySlots (PqxdhDeploymentIdealSteps.acceptStep setup codec route checks t p created
+  change wp ((simulateQ lazySlots (PqxdhDeploymentIdealSteps.acceptStep setup codec route checks t p created
     raw x)).run q) _ ≤ _
   unfold PqxdhDeploymentIdealSteps.acceptStep
   split
-  · rw [simulateQ_map, StateT.run_map, OracleComp.EvalDist.expectedValue_map]
+  · rw [simulateQ_map, StateT.run_map, OracleComp.ProgramLogic.wp_map]
     exact chargedG_acceptExposed setup codec checks created.seed p.chosen p.challenge raw b x.base.native.shared q
   · exact chargedG_lift setup (fun y : XState KemSK IdealCore 2 => y.base.native.shared.1.cache) _ 1
       (fun key b y => realRegAt_charged setup codec checks route created ⟨.accept raw, trivial⟩ key b y) b _ q
@@ -938,10 +941,10 @@ theorem chargedG_buildHiddenC
   unfold PqxdhDeploymentIdealKernel.buildHiddenC
   refine chargedG_bind setup _ (m := 0) (n := 0) (chargedG_read setup _ coords) fun value => ?_
   refine chargedG_lift setup _ _ 0 fun key b y => ?_
-  rw [StateT.run_map, OracleComp.EvalDist.expectedValue_map]
-  show expectedValue (PqxdhDeploymentIdealErase.buildFocus (hidden value) session payload coords y) _ ≤ _
+  rw [StateT.run_map, OracleComp.ProgramLogic.wp_map]
+  show wp (PqxdhDeploymentIdealErase.buildFocus (hidden value) session payload coords y) _ ≤ _
   unfold PqxdhDeploymentIdealErase.buildFocus
-  rw [OracleComp.EvalDist.expectedValue_map]
+  rw [OracleComp.ProgramLogic.wp_map]
   exact chargedN_buildHidden setup (hidden value) session payload key b y.base.native.shared
 
 /-- The build of the ideal registration keeps the R1 table. -/
@@ -951,17 +954,17 @@ theorem chargedG_buildStepC
     ChargedG setup (fun y : XState KemSK IdealCore 2 => y.base.native.shared.1.cache)
       (PqxdhDeploymentIdealKernel.buildStepC setup codec checks route hidden created session payload) 0 := by
   intro b x q
-  change expectedValue ((simulateQ lazySlots (PqxdhDeploymentIdealKernel.buildStepC setup codec checks route hidden
+  change wp ((simulateQ lazySlots (PqxdhDeploymentIdealKernel.buildStepC setup codec checks route hidden
     created session payload x)).run q) _ ≤ _
   unfold PqxdhDeploymentIdealKernel.buildStepC
   split
   · split
     · exact chargedG_buildHiddenC setup hidden session payload _ b x q
-    · rw [simulateQ_map, StateT.run_map, OracleComp.EvalDist.expectedValue_map]
+    · rw [simulateQ_map, StateT.run_map, OracleComp.ProgramLogic.wp_map]
       exact chargedG_lift setup (fun y : XState KemSK IdealCore 2 => y.base.native.shared.1.cache) _ 0
         (fun key b y => realRegAt_charged setup codec checks route created ⟨.build session payload, trivial⟩ key b y)
         b x q
-  · rw [simulateQ_map, StateT.run_map, OracleComp.EvalDist.expectedValue_map]
+  · rw [simulateQ_map, StateT.run_map, OracleComp.ProgramLogic.wp_map]
     exact chargedG_lift setup (fun y : XState KemSK IdealCore 2 => y.base.native.shared.1.cache) _ 0
       (fun key b y => realRegAt_charged setup codec checks route created ⟨.build session payload, trivial⟩ key b y)
       b x q
@@ -973,16 +976,16 @@ theorem chargedG_finishStepC (t : Target count) (p : Params KemSK count)
     ChargedG setup (fun y : XState KemSK IdealCore 2 => y.base.native.shared.1.cache)
       (PqxdhDeploymentIdealKernel.finishStepC setup codec checks route t p hidden created owner raw) 1 := by
   intro b x q
-  change expectedValue ((simulateQ lazySlots (PqxdhDeploymentIdealKernel.finishStepC setup codec checks route t p
+  change wp ((simulateQ lazySlots (PqxdhDeploymentIdealKernel.finishStepC setup codec checks route t p
     hidden created owner raw x)).run q) _ ≤ _
   unfold PqxdhDeploymentIdealKernel.finishStepC
   split
-  · change expectedValue ((simulateQ lazySlots ((fun r => ((r.1, r.2.2), PqxdhDeploymentIdealKernel.assembleF x owner
+  · change wp ((simulateQ lazySlots ((fun r => ((r.1, r.2.2), PqxdhDeploymentIdealKernel.assembleF x owner
       r.2)) <$> (PqxdhDeploymentIdealSteps.finishChallenge setup codec hidden p.challenge owner raw).run
         (x.base.native, none))).run q) _ ≤ _
-    rw [simulateQ_map, StateT.run_map, OracleComp.EvalDist.expectedValue_map]
+    rw [simulateQ_map, StateT.run_map, OracleComp.ProgramLogic.wp_map]
     exact chargedG_finishChallenge setup codec hidden p.challenge owner raw b (x.base.native, none) q
-  · rw [simulateQ_map, StateT.run_map, OracleComp.EvalDist.expectedValue_map]
+  · rw [simulateQ_map, StateT.run_map, OracleComp.ProgramLogic.wp_map]
     exact chargedG_lift setup (fun y : XState KemSK IdealCore 2 => y.base.native.shared.1.cache) _ 1
       (fun key b y => realRegAt_charged setup codec checks route created ⟨.finish owner raw, trivial⟩ key b y) b x q
 
@@ -992,17 +995,17 @@ noncomputable def keyPotential (b : ℕ) (x : XState KemSK SplitBk 2) : ℝ≥0�
 
 /-- A program on the extended state charged `n` units of the table budget. -/
 def ChargedX {β : Type} (work : StateT (XState KemSK SplitBk 2) ProbComp β) (n : ℕ) : Prop :=
-  ∀ b x, expectedValue (work.run x) (fun r => keyPotential setup b r.2) ≤ keyPotential setup (b + n) x
+  ∀ b x, wp (work.run x) (fun r => keyPotential setup b r.2) ≤ keyPotential setup (b + n) x
 
 /-- A slot program run against the allocator in front of the lazy service is charged what it is charged as a slot client. -/
 theorem chargedX_slotRunX {β : Type} (step : StateT (XState KemSK IdealCore 2) (OracleComp SlotSpec) β) (n : ℕ)
     (charged : ChargedG setup (fun y : XState KemSK IdealCore 2 => y.base.native.shared.1.cache) step n) :
     ChargedX setup (PqxdhDeploymentIdealKernel.slotRunX PqxdhDeploymentIdealKernel.lazyDummy step) n := by
   intro b x
-  change expectedValue ((fun r => (r.1, PqxdhDeploymentIdealKeys.attachX r.2.1 r.2.2.1 r.2.2.2)) <$>
+  change wp ((fun r => (r.1, PqxdhDeploymentIdealKeys.attachX r.2.1 r.2.2.1 r.2.2.2)) <$>
     (PqxdhDeploymentIdealErase.onPair PqxdhDeploymentIdealKernel.lazyDummy step).run
       (PqxdhDeploymentIdealKeys.detachX x, (x.backend.2.1, (x.backend.1, x.seeds)))) _ ≤ _
-  rw [PqxdhDeploymentIdealErase.onPair_run, OracleComp.EvalDist.expectedValue_map, OracleComp.EvalDist.expectedValue_map]
+  rw [PqxdhDeploymentIdealErase.onPair_run, OracleComp.ProgramLogic.wp_map, OracleComp.ProgramLogic.wp_map]
   exact charged b (PqxdhDeploymentIdealKeys.detachX x) (x.backend.2.1, (x.backend.1, x.seeds))
 
 /-- A native deployment step on the base keeps the backend and is charged what it is charged on the base. -/
@@ -1011,8 +1014,8 @@ theorem chargedX_onBase {α : Type} (step : StateT (PqxdhDeploymentNative.State 
   intro b x
   have based := PqxdhDeploymentIdealCut.onBase_base step x
   have bound := charged (slotKey x) b x.base
-  rw [← based.1, OracleComp.EvalDist.expectedValue_map] at bound
-  refine le_trans (OracleComp.EvalDist.expectedValue_mono_of_support fun r member => le_of_eq ?_) bound
+  rw [← based.1, OracleComp.ProgramLogic.wp_map] at bound
+  refine le_trans (OracleComp.ProgramLogic.wp_mono_of_support _ fun r member => le_of_eq ?_) bound
   have key : slotKey r.2 = slotKey x := by
     unfold slotKey
     rw [(based.2 r member).1]
@@ -1024,7 +1027,7 @@ theorem chargedX_onBase {α : Type} (step : StateT (PqxdhDeploymentNative.State 
 theorem install_le {γ : Type} (install : γ × XState KemSK SplitBk 2 → ProbComp (γ × XState KemSK SplitBk 2))
     (kept : ∀ r, ∀ r' ∈ support (install r), r1 r'.2 = r1 r.2 ∧ r'.2.backend.1 = r.2.backend.1) (b : ℕ)
     (r : γ × XState KemSK SplitBk 2) :
-    expectedValue (install r) (fun r' => keyPotential setup b r'.2) ≤ keyPotential setup b r.2 :=
+    wp (install r) (fun r' => keyPotential setup b r'.2) ≤ keyPotential setup b r.2 :=
   expected_frame _ _ _ fun r' member => by
     unfold keyPotential slotKey
     rw [(kept r r' member).1, (kept r r' member).2]
@@ -1047,11 +1050,11 @@ theorem handler_charged (t : Target count) (p : Params KemSK count) (created : P
   rcases query with coin | command
   · show ChargedX setup _ 0
     intro b x
-    change expectedValue ((StateT.lift (unifSpec.query coin : ProbComp _) :
+    change wp ((StateT.lift (unifSpec.query coin : ProbComp _) :
       StateT (XState KemSK SplitBk 2) ProbComp _).run x) _ ≤ _
-    rw [StateT.run_lift, OracleComp.EvalDist.expectedValue_bind]
-    simp only [OracleComp.EvalDist.expectedValue_pure]
-    exact OracleComp.EvalDist.expectedValue_le_of_le _ fun _ => le_rfl
+    rw [StateT.run_lift, OracleComp.ProgramLogic.wp_bind]
+    simp only [OracleComp.ProgramLogic.wp_pure]
+    exact OracleComp.ProgramLogic.wp_le_const_of_support _ fun _ _ => le_rfl
   · cases command with
     | create pin keyId =>
         exact slot ⟨.create pin keyId, trivial⟩ 0 (chargedG_create setup _ pin keyId)
@@ -1065,12 +1068,12 @@ theorem handler_charged (t : Target count) (p : Params KemSK count) (created : P
     | build session payload =>
         show ChargedX setup _ 0
         intro b x
-        change expectedValue ((fun r => (r.1.1, r.2)) <$> ((PqxdhDeploymentIdealKernel.slotRunX
+        change wp ((fun r => (r.1.1, r.2)) <$> ((PqxdhDeploymentIdealKernel.slotRunX
           PqxdhDeploymentIdealKernel.lazyDummy (PqxdhDeploymentIdealKernel.buildStepC setup codec checks route
             (PqxdhDeploymentIdealSteps.erasedHidden setup codec checks) created session payload)).run x >>=
               PqxdhDeploymentIdealDefer.serverInstall)) _ ≤ _
-        rw [OracleComp.EvalDist.expectedValue_map, OracleComp.EvalDist.expectedValue_bind]
-        refine le_trans (OracleComp.EvalDist.expectedValue_mono _ fun r => install_le setup _ (fun r r' member =>
+        rw [OracleComp.ProgramLogic.wp_map, OracleComp.ProgramLogic.wp_bind]
+        refine le_trans (OracleComp.ProgramLogic.wp_mono _ fun r => install_le setup _ (fun r r' member =>
           ?_) b r) (chargedX_slotRunX setup _ 0 (chargedG_buildStepC setup codec checks route _ created session payload)
             b x)
         obtain ⟨-, rootKept, -, -, matKept⟩ := PqxdhDeploymentHeadlineDctCommit.serverInstall_keeps r r' member
@@ -1078,12 +1081,12 @@ theorem handler_charged (t : Target count) (p : Params KemSK count) (created : P
     | finish owner raw =>
         show ChargedX setup _ 1
         intro b x
-        change expectedValue ((fun r => (r.1.1, r.2)) <$> ((PqxdhDeploymentIdealKernel.slotRunX
+        change wp ((fun r => (r.1.1, r.2)) <$> ((PqxdhDeploymentIdealKernel.slotRunX
           PqxdhDeploymentIdealKernel.lazyDummy (PqxdhDeploymentIdealKernel.finishStepC setup codec checks route t p
             (PqxdhDeploymentIdealSteps.erasedHidden setup codec checks) created owner raw)).run x >>=
               PqxdhDeploymentIdealDefer.beaconInstall owner)) _ ≤ _
-        rw [OracleComp.EvalDist.expectedValue_map, OracleComp.EvalDist.expectedValue_bind]
-        refine le_trans (OracleComp.EvalDist.expectedValue_mono _ fun r => install_le setup _ (fun r r' member =>
+        rw [OracleComp.ProgramLogic.wp_map, OracleComp.ProgramLogic.wp_bind]
+        refine le_trans (OracleComp.ProgramLogic.wp_mono _ fun r => install_le setup _ (fun r r' member =>
           ?_) b r) (chargedX_slotRunX setup _ 1 (chargedG_finishStepC setup codec checks route t p _ created owner raw)
             b x)
         obtain ⟨-, sharedKept⟩ := PqxdhDeploymentHeadlineDctCommit.beaconInstall_keeps owner r r' member
@@ -1184,12 +1187,12 @@ theorem split_keyHit (t : Target count) (p : Params KemSK count) (ensureInit : S
     · simp only [Option.any_some, decide_eq_true_eq] at hit
       exact one_le_keyPotential setup _ hit
   · simp only [PqxdhDeploymentBackend.gameWith, StateT.run]
-    rw [OracleComp.EvalDist.expectedValue_bind]
-    refine OracleComp.EvalDist.expectedValue_le_of_le _ fun born => ?_
+    rw [OracleComp.ProgramLogic.wp_bind]
+    refine OracleComp.ProgramLogic.wp_le_const_of_support _ fun born _ => ?_
     rcases born with ⟨_ | constructed, after⟩
     · simp
     · dsimp only
-      rw [OracleComp.EvalDist.expectedValue_map]
+      rw [OracleComp.ProgramLogic.wp_map]
       refine le_trans (PqxdhDeploymentHeadlineDctTools.expected_run_bounded _ r1Costly
         (fun c x => keyPotential setup c x) (fun c x => tablePotential_mono setup _ (by omega) _)
         (fun query x c costly => ?_) (fun query x c free => ?_) _ (r1Cap budget)

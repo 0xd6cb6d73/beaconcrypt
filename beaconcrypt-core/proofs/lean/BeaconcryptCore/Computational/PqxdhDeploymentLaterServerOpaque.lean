@@ -247,9 +247,9 @@ theorem transfer (setup : Setup baseSpec KemSK)
           ((PqxdhDynamicIdentityPool.initialState, PqxdhLiveKemBirth.empty), runtime))] {true}) ≤
     𝒟[opaqueBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index
         false] {true} +
-      ENNReal.ofReal (setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
+      ENNReal.ofReal ((setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
         (PqxdhDeploymentLaterServerKemHop.certified setup ensureInit supplied
-          (PqxdhDeploymentLaterServerCut.scanned setup codec checks decision work index) runtime count selected).toINDCCA +
+          (PqxdhDeploymentLaterServerCut.scanned setup codec checks decision work index) runtime count selected).toINDCCA).toReal +
         PqxdhRegistrationJointKemRawGame.correctnessError setup) := by
   refine (PqxdhDeploymentLaterServerBridge.actual_le_real setup codec checks ensureInit supplied decision work runtime
     count selected index bounded).trans ?_

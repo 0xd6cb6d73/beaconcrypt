@@ -68,22 +68,22 @@ theorem random_comparison :
 /-- The current protocol's actual uniform-root endpoint reduces with coefficient one to fixed-salt Extract at its exact joint sampler and ordinary uniform-secret HMAC PRF. The one selected initializer response remains shared across all repeated source requests. -/
 theorem primitive_bound (hmac : HmacSha512) (correct : SourceFullCorrect env.source hmac) :
     (uniformGame (PqxdhCorrelatedExpand.rootReduction env.source baseImpl kem
-      (protocol env kem attachedVerify primitives program post))).boolDistAdvantage
+      (protocol env kem attachedVerify primitives program post))).boolDistance
       (random env baseImpl kem attachedVerify primitives program post) ≤
     (extractRealGame hmac (joint env baseImpl kem attachedVerify primitives program post)
-      (fullExtractReduction hmac .ratchet (observer env baseImpl kem attachedVerify primitives program post))).boolDistAdvantage
+      (fullExtractReduction hmac .ratchet (observer env baseImpl kem attachedVerify primitives program post))).boolDistance
       (extractUniformGame (joint env baseImpl kem attachedVerify primitives program post)
         (fullExtractReduction hmac .ratchet (observer env baseImpl kem attachedVerify primitives program post))) +
     (hmacPrfRealGame hmac (fullExpandReduction .ratchet
       (joint env baseImpl kem attachedVerify primitives program post)
-      (observer env baseImpl kem attachedVerify primitives program post))).boolDistAdvantage
+      (observer env baseImpl kem attachedVerify primitives program post))).boolDistance
       (hmacPrfRandomGame (fullExpandReduction .ratchet
         (joint env baseImpl kem attachedVerify primitives program post)
         (observer env baseImpl kem attachedVerify primitives program post))) := by
   have realLaw :=
     PqxdhInitialLegalObserver.current_game env baseImpl kem attachedVerify primitives program post
   have randomLaw := random_comparison env baseImpl kem attachedVerify primitives program post
-  simpa only [source_game, ProbComp.boolDistAdvantage, realLaw, randomLaw] using
+  simpa only [source_game, ProbComp.boolDistance, realLaw, randomLaw] using
     sourceFullAdvantage_le_extract_add_hmac env.source hmac correct .ratchet
       (joint env baseImpl kem attachedVerify primitives program post)
       (observer env baseImpl kem attachedVerify primitives program post)

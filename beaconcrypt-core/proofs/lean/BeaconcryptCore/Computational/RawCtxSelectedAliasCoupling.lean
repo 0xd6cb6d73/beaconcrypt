@@ -1,5 +1,6 @@
 import BeaconcryptCore.Computational.RawCtxSelectedPublicTrace
 import VCVio.ProgramLogic.Relational.SimulateQ
+import BeaconcryptCore.Computational.StatefulGoodEvent
 
 /-!
 An analysis-only sticky flag marks exact membership of a selected byte vector in the original callback's input list. At a marked query an arbitrary alternate callback may run; on every other query the callback stays unchanged. The existing full-state identical-until-bad theorem bounds the resulting distance by membership in the original execution's complete log, with no success conditioning and no protocol security premise.
@@ -83,17 +84,13 @@ theorem marked_distance {ι State Result : Type} {spec : OracleSpec ι}
     (handler alternate : QueryImpl spec (StateT State ProbComp))
     (record : spec.Domain → List RootOutput) (target : RootOutput)
     (client : OracleComp spec Result) (state : State × List RootOutput) :
-    tvDist ((simulateQ (marked handler record target) client).run (state, false))
+    discreteDistance ((simulateQ (marked handler record target) client).run (state, false))
       ((simulateQ (marked (routed handler alternate record target) record target) client).run (state, false)) ≤
       Pr{let result ← (simulateQ (marked handler record target) client).run (state, false)}[result.2.2 = true].toReal := by
-  have bound := OracleComp.ProgramLogic.Relational.tvDist_simulateQ_run_le_probEvent_output_bad
-    _ _ client state (fun query before reply after => by
-      simpa only [VCVioLegacy.probOutput_eq_prEvent] using
-        agree_good handler alternate record target query before reply after)
+  exact StatefulGoodEvent.distance_le_bad _ _
+    (agree_good handler alternate record target)
     (marked_sticky handler record target)
-    (marked_sticky (routed handler alternate record target) record target)
-  rw [VCVioLegacy.probEvent_eq_prEvent] at bound
-  exact bound
+    (marked_sticky (routed handler alternate record target) record target) client (state, false)
 
 noncomputable def decorate {State : Type} (target : RootOutput)
     (state : State × List RootOutput) : (State × List RootOutput) × Bool :=
@@ -146,10 +143,10 @@ theorem recorded_distance {ι State Result : Type} {spec : OracleSpec ι}
     (handler alternate : QueryImpl spec (StateT State ProbComp))
     (record : spec.Domain → List RootOutput) (target : RootOutput)
     (client : OracleComp spec Result) (state : State) :
-    tvDist ((simulateQ (RawCtxSelectedQueryTrace.recorded handler record) client).run (state, []))
+    discreteDistance ((simulateQ (RawCtxSelectedQueryTrace.recorded handler record) client).run (state, []))
       ((simulateQ (RawCtxSelectedQueryTrace.recorded (routed handler alternate record target) record) client).run (state, [])) ≤
     Pr{let result ← (simulateQ (RawCtxSelectedQueryTrace.recorded handler record) client).run (state, [])}[target ∈ result.2.2].toReal := by
-  have projected := (tvDist_map_le (Prod.map id Prod.fst)
+  have projected := (discreteDistance_map_le (Prod.map id Prod.fst)
     ((simulateQ (marked handler record target) client).run ((state, []), false))
     ((simulateQ (marked (routed handler alternate record target) record target) client).run ((state, []), false))).trans
       (marked_distance handler alternate record target client (state, []))

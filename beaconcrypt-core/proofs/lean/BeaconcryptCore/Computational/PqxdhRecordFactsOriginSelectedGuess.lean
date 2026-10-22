@@ -51,6 +51,8 @@ theorem continuation_support (modes : Label n → KeyMode)
     exact ⟨reply, reached, rfl⟩)
 
 
+-- Normalizing the concrete 64-byte draw in support bookkeeping needs this finite depth.
+set_option maxRecDepth 1024 in
 /-- Successful completion of the failed-writer branch retains a supported reply of the unchanged source syntax. -/
 theorem experiment_support (modes : Label n → KeyMode)
     (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (replace : Pqxdh.Bytes → Pqxdh.Bytes)
@@ -60,7 +62,9 @@ theorem experiment_support (modes : Label n → KeyMode)
     (supported : (digest, some result) ∈ support (PqxdhRecordFactsOriginFailedGuess.experiment
       modes setup codec replace pending input body tag width state client)) :
     result.1 ∈ support client := by
-  simp only [PqxdhRecordFactsOriginFailedGuess.experiment, mem_support_bind_iff] at supported
+  unfold PqxdhRecordFactsOriginFailedGuess.experiment at supported
+  generalize hsample : ($ᵗ CtxDigest : ProbComp CtxDigest) = sample at supported
+  simp only [mem_support_bind_iff] at supported
   obtain ⟨sampled, _, branch⟩ := supported
   split at branch
   · simp only [mem_support_bind_iff, mem_support_pure_iff, Prod.mk.injEq, Option.some.injEq] at branch
@@ -75,6 +79,8 @@ def Counted (query : PqxdhRecordLiftProtocol.Service n) : Prop :=
 
 instance : DecidablePred (Counted (n := n)) := fun _ => inferInstanceAs (Decidable (_ = (1 : Nat)))
 
+-- The exact selected-support application normalizes the same 64-byte draw.
+set_option maxRecDepth 1024 in
 /-- The actual public raw candidate trace after a failed selected writer costs at most twice its original raw-query cap per uniform digest. -/
 theorem failed_trace_bound (modes : Label n → KeyMode)
     (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (replace : Pqxdh.Bytes → Pqxdh.Bytes)
@@ -97,7 +103,8 @@ theorem failed_trace_bound (modes : Label n → KeyMode)
   cases same
   exact PqxdhRecordFactsOriginCandidateTrace.source_guess_complete (serviceCandidate codec.frameRead) Counted
     (PqxdhRecordFactsOriginRawGuess.service_candidate_counted codec.frameRead) client cap bound result.1
-    (experiment_support modes setup codec replace pending input body tag width state _ digest result supported) digest present
+    (experiment_support modes setup codec replace pending input body tag width state
+      (traced (serviceCandidate codec.frameRead) client []) digest result supported) digest present
 
 end BeaconcryptCore.Computational.PqxdhRecordFactsOriginSelectedGuess
 

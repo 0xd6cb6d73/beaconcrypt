@@ -729,7 +729,7 @@ noncomputable def initializedChainsSecrecyAdvantage
     (baseImpl : QueryImpl baseSpec ProbComp)
     (kem : MlKemScheme (baseSpec := baseSpec) (SK := SK))
     (observer : InitializedChainsObserver kem) : ℝ :=
-  (productionInitializedChainsGame source baseImpl kem observer).boolDistAdvantage
+  (productionInitializedChainsGame source baseImpl kem observer).boolDistance
     (independentRootInitializedChainsGame baseImpl kem observer)
 
 /-- One-session initialized directional-chain secrecy reduces with coefficient one to the existing ML-KEM IND-CCA and fixed-HKDF joint-stream endpoints plus the one root-guess term. -/
@@ -744,8 +744,8 @@ theorem initializedChainsSecrecyAdvantage_le
       qKemAmbient qKemPrefix qKemPost qUPre qBPre qDPre
       qUPost qBPost qDPost qRoot qSym) :
     initializedChainsSecrecyAdvantage source baseImpl kem observer ≤
-      kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
-          (initializedChainsKemReduction source kem observer).toINDCCA +
+      (kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
+          (initializedChainsKemReduction source kem observer).toINDCCA).toReal +
         fixedHkdfSha512JointStreamAdvantage source
           (initializedChainsKdfReduction source baseImpl kem observer bounds) +
         ((qRoot : ℝ≥0∞) / (2 ^ 256 : ℝ≥0∞)).toReal := by

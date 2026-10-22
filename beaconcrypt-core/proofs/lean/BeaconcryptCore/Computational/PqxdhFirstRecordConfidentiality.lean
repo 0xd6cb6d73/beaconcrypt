@@ -2435,6 +2435,9 @@ theorem pending_ideal_upper (target : Target S (B + 1)) (position : target.numbe
   unfold PqxdhFirstRecordTarget.pendingIdeal PqxdhAdaptiveMessageKeySource.firstPrepare insCompiledGame stopGame
   rw [PqxdhFirstRecordTarget.mapPost_choose]
   simp only [bind_assoc, pure_bind, PqxdhFirstRecordTarget.unitTargets, PqxdhInitialPreparedSourceInput.prior, bind_map_left]
+  generalize sampledBlock : ($ᵗ HmacBlock : ProbComp HmacBlock) = blockDraw
+  generalize sampledNonce : ($ᵗ NonceOutput : ProbComp NonceOutput) = nonceDraw
+  generalize sampledRoot : ($ᵗ RootOutput : ProbComp RootOutput) = rootDraw
   refine true_bind_le _ _ _ _ fun context => ?_
   refine true_bind_le _ _ _ _ fun initialBlock => ?_
   refine true_bind_le _ _ _ _ fun nonce => ?_
@@ -2897,7 +2900,7 @@ theorem insSeparated_le_compiled (target : Target S (B + 1)) :
   classical
   by_cases aliased : RawCtxSendLineageCollision.InitialAlias initialBlock
   · rw [ite_eq_left_iff.mpr fun impossible => absurd aliased impossible]
-    simp [-evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+    simp [ ]
   · rw [ite_eq_right_iff.mpr fun holds => absurd holds aliased]
 
 /-- Sampling the selected key after the forwarded prelude: the ordinary selected-key CTX source game of the instrumented client is the prelude run, a key draw and the suffix from the reached shared state. -/
@@ -2938,7 +2941,7 @@ theorem insSeparated_le_client :
   classical
   by_cases aliased : RawCtxSendLineageCollision.InitialAlias result.1.2.1
   · rw [ite_eq_left_iff.mpr fun impossible => absurd aliased impossible]
-    simp [-evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+    simp [ ]
   · rw [ite_eq_right_iff.mpr fun holds => absurd holds aliased,
       insObserve_eq setup env callbacks baseImpl kem attachedVerify primitives program post b result.1 result.2.1 result.2.2 key aliased]
 
@@ -4437,9 +4440,9 @@ theorem source_random (decode : RawDecoder) (c : Pqxdh.Crypto) (client : OracleC
   have bound := AdaptiveCtxDynamicKnownBounds.selected_privacy decode c fallback client qHash qSeal qRaw hashBound sealBound
     rawBound small
   constructor
-  · exact (ProbComp.evalDist_apply_true_le_add_ofReal_boolDistAdvantage _ _).trans (add_le_add le_rfl bound)
-  · refine (ProbComp.evalDist_apply_true_le_add_ofReal_boolDistAdvantage _ _).trans (add_le_add le_rfl ?_)
-    rw [ProbComp.boolDistAdvantage_comm]
+  · exact (ProbComp.evalDist_apply_true_le_add_ofReal_boolDistance _ _).trans (add_le_add le_rfl bound)
+  · refine (ProbComp.evalDist_apply_true_le_add_ofReal_boolDistance _ _).trans (add_le_add le_rfl ?_)
+    rw [ProbComp.boolDistance_comm]
     exact bound
 
 end Privacy
@@ -4578,8 +4581,8 @@ theorem bit_bounds (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseImpl 
   have half : ((1 : ℝ≥0∞) / (2 ^ 256 : ℝ≥0∞)).toReal = 1 / 2 ^ 256 := by
     rw [ENNReal.toReal_div, ENNReal.toReal_pow]
     norm_num
-  have upReal := ENNReal.toReal_mono (by simp [lossFinite, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]) up
-  have loReal := ENNReal.toReal_mono (by simp [lossFinite, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]) lo
+  have upReal := ENNReal.toReal_mono (by simp [lossFinite]) up
+  have loReal := ENNReal.toReal_mono (by simp [lossFinite]) lo
   simp only [ENNReal.toReal_add, ne_eq, ENNReal.add_eq_top, PqxdhFirstRecordTarget.true_ne_top, halfFinite, lossFinite,
     not_false_eq_true, or_self, half] at upReal loReal
   unfold twinLoss
@@ -4636,7 +4639,7 @@ theorem stop_real (post : PqxdhAuthenticatedRootExperiment.Post (baseSpec := bas
     c.postBudget c.postBound b
   have real := ENNReal.toReal_mono (ENNReal.div_ne_top (ENNReal.natCast_ne_top _) (by positivity)) bound
   rw [ENNReal.toReal_div, ENNReal.toReal_pow, ENNReal.toReal_natCast] at real
-  simpa [-evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ] using real
+  simpa [ ] using real
 
 end Headline
 

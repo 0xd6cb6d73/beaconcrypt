@@ -8,7 +8,7 @@ The first half of design-v2's `ct_collision_game`: a ghost-instrumented copy of 
 
 - Logged collector. `collectEnc` (with `collectVerifiedEnc`) is the Server's Phase 1 collector `PqxdhServerRootPreparation.collect`, split at its encapsulation callback by `PqxdhRegistrationJointKemCollected.collect_split`, which also returns the encapsulation it reached: the PQ key of the verified candidate and the ciphertext array of the callback's reply (`Enc`). Forgetting the log gives the collector back (`collectEnc_fst`), so the logged native prefix `prefixEnc` and the logged native raw accept `acceptEnc` forget to `PqxdhServerAuthNative.nativePrefix` and `nativeAccept` (`prefixEnc_fst`, `acceptEnc_fst`, through `PqxdhRegistrationJointServerAccept.native_run`).
 - Ghost. `Ghost` holds the KEM public keys of the created owners in creation order and one entry per raw accept attempt, in attempt order, with the encapsulation it reached, if any. `handlerG` is the CE handler with the ghost: a raw accept runs `acceptEnc` and appends its entry, a create appends the new owner's KEM public key (`createdKey`, read from the state after the create), and every query is answered as `PqxdhDeploymentSecrecy.handler` answers it (`handlerG_proj`). `gameG` is the experiment with `handlerG`; forgetting the ghost gives `PqxdhDeploymentSecrecy.game` (`game_ghost`, by `OracleComp.map_run_simulateQ_eq_of_query_map_eq`). No reply and no state other than the ghost depends on it.
-- Fresh draws. The ciphertext a raw accept logs is a fresh draw `encC setup key` of an encapsulation to the verified key, made after every step that decides that key (`prefixEnc_expect`, `acceptEnc_expect`), and the key a create logs is a fresh draw `keyGen setup` (`create_run`, `create_expect`). Hence a potential of the ghost whose expectation does not increase over these two draws (and when an attempt reaches no encapsulation) does not increase over any query (`handlerG_expect`), nor over a whole simulation (`expected_run_le`, generic, with VCVio's `expectedValue`).
+- Fresh draws. The ciphertext a raw accept logs is a fresh draw `encC setup key` of an encapsulation to the verified key, made after every step that decides that key (`prefixEnc_expect`, `acceptEnc_expect`), and the key a create logs is a fresh draw `keyGen setup` (`create_run`, `create_expect`). Hence a potential of the ghost whose expectation does not increase over these two draws (and when an attempt reaches no encapsulation) does not increase over any query (`handlerG_expect`), nor over a whole simulation (`expected_run_le`, generic, with VCVio's `wp`).
 - One triple. For an owner index `k` and raw accept attempts `i < j`, the potential `phi` reads owner `k`'s key and the two attempts' encapsulations (`view`): with nothing drawn it is `pairCollision setup` (`PqxdhDeploymentHeadlineCollision`, the probability that two independent encapsulations to a fresh key collide; `pairHit_mean`), with only the key `CP(pk_k)` (`pairHit`), with only attempt `i` reached to `(pk, c)` the key's mass times `c`'s mass (`keyMass`, `hit`), with the key and attempt `i` the mass of `c` if `i` went to `pk_k`, with both attempts but no key the key's mass if `j` repeated `i`, and with all three the indicator of the collision (`GhostColl`). It does not increase in expectation over a key generation (`phi_key`), a fresh encapsulation (`phi_enc`) or an attempt without encapsulation (`phi_none`), starts at `pairCollision setup` (`phi_empty`) and is at least 1 on the collision (`phi_coll`). `triple_le`: in the instrumented experiment, the probability that owner `k`'s key exists and attempts `i` and `j` encapsulated to it with one ciphertext (`TripleColl`) is at most `pairCollision setup`.
 
 The adversary's adaptivity costs nothing: the key of each attempt and the order of the draws are fixed before each draw, and the potential averages only over the draw itself (design-v2 section 7.4: the hit set is fixed before the draw). These are program equalities and expectation bounds; no assumption and no contract is used. The transcript event `CtCollEvent` and the union bound are in `PqxdhDeploymentHeadlineCtTrace` and `PqxdhDeploymentHeadlineCtColl`.
@@ -22,7 +22,7 @@ namespace BeaconcryptCore.Computational.PqxdhDeploymentHeadlineCtGhost
 open PqxdhServerAuthExperiment (Setup Codec Checks)
 open PqxdhServerRootPreparation (Inputs Verified verifyInput collectVerified collect)
 open PqxdhBeaconPhase2Preparation (Ciphertext Word32)
-open OracleComp.EvalDist (expectedValue)
+open OracleComp.ProgramLogic (wp)
 
 /-- One reached encapsulation of a raw accept: the PQ key encapsulated to and the ciphertext array. -/
 abbrev Enc := PqxdhKemIndCca.MlKem768PublicKey × Ciphertext
@@ -114,14 +114,14 @@ variable {ι' : Type} {spec : OracleSpec ι'} {σ α : Type}
 
 /-- A potential whose expectation does not increase over any single query does not increase over a whole simulation. -/
 theorem expected_run_le (impl : QueryImpl spec (StateT σ ProbComp)) (potential : σ → ℝ≥0∞)
-    (step : ∀ query state, expectedValue ((impl query).run state) (fun result => potential result.2) ≤ potential state)
+    (step : ∀ query state, wp ((impl query).run state) (fun result => potential result.2) ≤ potential state)
     (work : OracleComp spec α) (state : σ) :
-    expectedValue ((simulateQ impl work).run state) (fun result => potential result.2) ≤ potential state := by
+    wp ((simulateQ impl work).run state) (fun result => potential result.2) ≤ potential state := by
   induction work using OracleComp.inductionOn generalizing state with
   | pure value => simp
   | query_bind query next ih =>
-      rw [simulateQ_query_bind, StateT.run_bind, OracleComp.EvalDist.expectedValue_bind]
-      refine le_trans (OracleComp.EvalDist.expectedValue_mono ((impl query).run state) ?_) (step query state)
+      rw [simulateQ_query_bind, StateT.run_bind, OracleComp.ProgramLogic.wp_bind]
+      refine le_trans (OracleComp.ProgramLogic.wp_mono ((impl query).run state) ?_) (step query state)
       intro result
       exact ih result.1 result.2
 
@@ -147,8 +147,8 @@ noncomputable def keyGen (setup : Setup baseSpec KemSK) : ProbComp PqxdhKemIndCc
 theorem prefixEnc_expect (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (seed : PqxdhJointIdentity.IdentitySeed) (raw : Pqxdh.Bytes) (consumed : List Pqxdh.Bytes)
     (value : Option Enc → ℝ≥0∞) (bound : ℝ≥0∞) (noneLe : value none ≤ bound)
-    (someLe : ∀ key, expectedValue (encC setup key) (fun c => value (some (key, c))) ≤ bound) :
-    expectedValue ((prefixEnc setup codec checks seed raw).run consumed) (fun result => value result.1.2) ≤ bound := by
+    (someLe : ∀ key, wp (encC setup key) (fun c => value (some (key, c))) ≤ bound) :
+    wp ((prefixEnc setup codec checks seed raw).run consumed) (fun result => value result.1.2) ≤ bound := by
   unfold prefixEnc collectEnc
   rw [simulateQ_bind, StateT.run_bind, PqxdhRegistrationJointRawSignatures.verifyInput_source, pure_bind]
   cases PqxdhRegistrationJointRawSignatures.verified setup codec checks raw with
@@ -156,35 +156,36 @@ theorem prefixEnc_expect (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
   | some verified =>
       dsimp only
       unfold collectVerifiedEnc
-      rw [simulateQ_bind, StateT.run_bind, OracleComp.EvalDist.expectedValue_bind]
-      refine OracleComp.EvalDist.expectedValue_le_of_le _ fun prepared => ?_
+      rw [simulateQ_bind, StateT.run_bind, OracleComp.ProgramLogic.wp_bind]
+      refine OracleComp.ProgramLogic.wp_le_const_of_support _ fun prepared _ => ?_
       rcases prepared with ⟨_ | ephemeral, after⟩
       · simpa using noneLe
       · dsimp only
         rw [simulateQ_bind, StateT.run_bind, simulateQ_spec_query]
         simp only [PqxdhServerStaticDhSource.nativeImpl, PqxdhServerAuthExperiment.serverAux, StateT.run_lift,
           PqxdhServerAuthExperiment.encapsulate, simulateQ_map, bind_assoc, pure_bind,
-          OracleComp.EvalDist.expectedValue_bind, OracleComp.EvalDist.expectedValue_map]
+          OracleComp.ProgramLogic.wp_bind, OracleComp.ProgramLogic.wp_map]
         refine le_trans ?_ (someLe verified.keys.pqKey)
         unfold encC
-        rw [OracleComp.EvalDist.expectedValue_map]
-        refine OracleComp.EvalDist.expectedValue_mono _ fun result => ?_
-        rw [simulateQ_bind, StateT.run_bind, OracleComp.EvalDist.expectedValue_bind]
-        refine OracleComp.EvalDist.expectedValue_le_of_le _ fun finished => ?_
+        rw [OracleComp.ProgramLogic.wp_map]
+        simp only [Function.comp_def]
+        refine OracleComp.ProgramLogic.wp_mono _ fun result => ?_
+        rw [simulateQ_bind, StateT.run_bind, OracleComp.ProgramLogic.wp_bind]
+        refine OracleComp.ProgramLogic.wp_le_const_of_support _ fun finished _ => ?_
         simp
 
 /-- The logged native accept: the same bound for the logged encapsulation of the whole accept. -/
 theorem acceptEnc_expect (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (seed : PqxdhJointIdentity.IdentitySeed) (raw : Pqxdh.Bytes) (shared : NativeState KemSK)
     (value : Option Enc → ℝ≥0∞) (bound : ℝ≥0∞) (noneLe : value none ≤ bound)
-    (someLe : ∀ key, expectedValue (encC setup key) (fun c => value (some (key, c))) ≤ bound) :
-    expectedValue (acceptEnc setup codec checks seed raw shared) (fun result => value result.1.2) ≤ bound := by
+    (someLe : ∀ key, wp (encC setup key) (fun c => value (some (key, c))) ≤ bound) :
+    wp (acceptEnc setup codec checks seed raw shared) (fun result => value result.1.2) ≤ bound := by
   unfold acceptEnc
-  rw [OracleComp.EvalDist.expectedValue_bind]
-  refine le_trans (OracleComp.EvalDist.expectedValue_mono _ fun collected => ?_)
+  rw [OracleComp.ProgramLogic.wp_bind]
+  refine le_trans (OracleComp.ProgramLogic.wp_mono _ fun collected => ?_)
     (prefixEnc_expect setup codec checks seed raw shared.2.server.consumed value bound noneLe someLe)
-  rw [OracleComp.EvalDist.expectedValue_bind]
-  refine OracleComp.EvalDist.expectedValue_le_of_le _ fun answer => ?_
+  rw [OracleComp.ProgramLogic.wp_bind]
+  refine OracleComp.ProgramLogic.wp_le_const_of_support _ fun answer _ => ?_
   simp
 
 end Draws
@@ -303,24 +304,24 @@ theorem create_expect (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
     (route : RawCtxServerRouting.SenderDecoder) (serverSeed : PqxdhJointIdentity.IdentitySeed) (bounds : FreshBounds)
     (pin : Pqxdh.Bytes) (keyId : Aeneas.Std.U64) (state : PqxdhDeploymentSecrecy.State KemSK)
     (value : Option PqxdhKemIndCca.MlKem768PublicKey → ℝ≥0∞) (bound : ℝ≥0∞) (noneLe : value none ≤ bound)
-    (someLe : expectedValue (keyGen setup) (fun key => value (some key)) ≤ bound) :
-    expectedValue ((PqxdhDeploymentSecrecy.handler setup codec checks route serverSeed bounds
+    (someLe : wp (keyGen setup) (fun key => value (some key)) ≤ bound) :
+    wp ((PqxdhDeploymentSecrecy.handler setup codec checks route serverSeed bounds
       (.inl (.inr (.create pin keyId)))).run state) (fun result => value (createdKey result.1 result.2)) ≤ bound := by
   rcases state with ⟨ledger, native⟩
   rw [PqxdhDeploymentEligibility.handler_run, PqxdhDeploymentSecrecy.ledgerImpl_forward, simulateQ_map,
-    simulateQ_spec_query, StateT.run_map, Functor.map_map, OracleComp.EvalDist.expectedValue_map]
+    simulateQ_spec_query, StateT.run_map, Functor.map_map, OracleComp.ProgramLogic.wp_map]
   simp only [PqxdhDeploymentNative.handler]
   cases parsePin pin with
   | none => simpa [createdKey] using noneLe
   | some word =>
-      simp only [StateT.run_map, OracleComp.EvalDist.expectedValue_map, PqxdhDeploymentCompileStep.onNative_run,
+      simp only [StateT.run_map, OracleComp.ProgramLogic.wp_map, PqxdhDeploymentCompileStep.onNative_run,
         PqxdhRegistrationSchedule.handler, create_run]
-      simp only [OracleComp.EvalDist.expectedValue_bind, OracleComp.EvalDist.expectedValue_pure]
-      refine OracleComp.EvalDist.expectedValue_le_of_le _ fun identity => ?_
-      refine OracleComp.EvalDist.expectedValue_le_of_le _ fun prekey => ?_
+      simp only [OracleComp.ProgramLogic.wp_bind, OracleComp.ProgramLogic.wp_pure]
+      refine OracleComp.ProgramLogic.wp_le_const_of_support _ fun identity _ => ?_
+      refine OracleComp.ProgramLogic.wp_le_const_of_support _ fun prekey _ => ?_
       refine le_trans (le_of_eq ?_) someLe
       unfold keyGen
-      rw [OracleComp.EvalDist.expectedValue_map]
+      rw [OracleComp.ProgramLogic.wp_map]
       congr 1
       funext keys
       simp [createdKey, PqxdhDeploymentEligibility.kemPublic]
@@ -335,32 +336,32 @@ theorem ghost_keys_nil (ghost : Ghost) :
 theorem handlerG_expect (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (serverSeed : PqxdhJointIdentity.IdentitySeed) (bounds : FreshBounds)
     (potential : Ghost → ℝ≥0∞)
-    (keyStep : ∀ ghost, expectedValue (keyGen setup) (fun key => potential { ghost with keys := ghost.keys ++ [key] }) ≤
+    (keyStep : ∀ ghost, wp (keyGen setup) (fun key => potential { ghost with keys := ghost.keys ++ [key] }) ≤
       potential ghost)
-    (encStep : ∀ ghost key, expectedValue (encC setup key)
+    (encStep : ∀ ghost key, wp (encC setup key)
       (fun c => potential { ghost with encs := ghost.encs ++ [some (key, c)] }) ≤ potential ghost)
     (noneStep : ∀ ghost, potential { ghost with encs := ghost.encs ++ [none] } ≤ potential ghost)
     (query : PqxdhDeploymentInterface.Query) (state : PqxdhDeploymentSecrecy.State KemSK × Ghost) :
-    expectedValue ((handlerG setup codec checks route serverSeed bounds query).run state)
+    wp ((handlerG setup codec checks route serverSeed bounds query).run state)
       (fun result => potential result.2.2) ≤ potential state.2 := by
   have other : ∀ (work : ProbComp (FullSpec.Range query × PqxdhDeploymentSecrecy.State KemSK)),
-      expectedValue ((fun result => (result.1, (result.2, state.2))) <$> work) (fun result => potential result.2.2) ≤
+      wp ((fun result => (result.1, (result.2, state.2))) <$> work) (fun result => potential result.2.2) ≤
         potential state.2 := fun work => by
-    rw [OracleComp.EvalDist.expectedValue_map]
-    exact OracleComp.EvalDist.expectedValue_le_of_le _ fun _ => le_rfl
+    rw [OracleComp.ProgramLogic.wp_map]
+    exact OracleComp.ProgramLogic.wp_le_const_of_support _ fun _ _ => le_rfl
   rcases query with (coin | command) | secrecy
   · exact other _
   · cases command with
     | accept raw =>
-        change expectedValue (_ <$> acceptEnc setup codec checks serverSeed raw state.1.2.native.shared) _ ≤ _
-        rw [OracleComp.EvalDist.expectedValue_map]
+        change wp (_ <$> acceptEnc setup codec checks serverSeed raw state.1.2.native.shared) _ ≤ _
+        rw [OracleComp.ProgramLogic.wp_map]
         exact acceptEnc_expect setup codec checks serverSeed raw state.1.2.native.shared
           (fun entry => potential { state.2 with encs := state.2.encs ++ [entry] }) (potential state.2)
           (noneStep state.2) (encStep state.2)
     | create pin keyId =>
-        change expectedValue (_ <$> (PqxdhDeploymentSecrecy.handler setup codec checks route serverSeed bounds
+        change wp (_ <$> (PqxdhDeploymentSecrecy.handler setup codec checks route serverSeed bounds
           (.inl (.inr (.create pin keyId)))).run state.1) _ ≤ _
-        rw [OracleComp.EvalDist.expectedValue_map]
+        rw [OracleComp.ProgramLogic.wp_map]
         refine create_expect setup codec checks route serverSeed bounds pin keyId state.1
           (fun key => potential { state.2 with keys := state.2.keys ++ key.toList }) (potential state.2) ?_ ?_
         · simp only [Option.toList_none]
@@ -441,7 +442,7 @@ theorem pointFn_ne {α : Type} (point x : α) (value : ℝ≥0∞) (other : x �
 
 /-- The probability that a computation returns `point`, as the expectation of its indicator. -/
 noncomputable def mass {α : Type} (work : ProbComp α) (point : α) : ℝ≥0∞ :=
-  expectedValue work (pointFn point 1)
+  wp work (pointFn point 1)
 
 /-- `D_pk(c)`: the probability that one encapsulation to `key` gives the ciphertext array `c`. -/
 noncomputable def hit (setup : Setup baseSpec KemSK) (key : PqxdhKemIndCca.MlKem768PublicKey) (c : Ciphertext) : ℝ≥0∞ :=
@@ -449,7 +450,7 @@ noncomputable def hit (setup : Setup baseSpec KemSK) (key : PqxdhKemIndCca.MlKem
 
 /-- `CP(pk)`: the probability that two independent encapsulations to `key` give equal ciphertexts. -/
 noncomputable def pairHit (setup : Setup baseSpec KemSK) (key : PqxdhKemIndCca.MlKem768PublicKey) : ℝ≥0∞ :=
-  expectedValue (encC setup key) (hit setup key)
+  wp (encC setup key) (hit setup key)
 
 /-- `KG(pk)`: the probability that one key generation gives the public key `key`. -/
 noncomputable def keyMass (setup : Setup baseSpec KemSK) (key : PqxdhKemIndCca.MlKem768PublicKey) : ℝ≥0∞ :=
@@ -464,19 +465,17 @@ theorem ciphertextArray_injective : Function.Injective PqxdhAcceptedRegistration
 
 /-- A constant factor in front of the functional scales the expectation. -/
 theorem expectedValue_const_mul {α : Type} (work : ProbComp α) (value : α → ℝ≥0∞) (factor : ℝ≥0∞) :
-    expectedValue work (fun x => factor * value x) = factor * expectedValue work value := by
-  simp only [OracleComp.EvalDist.expectedValue_def, ← ENNReal.tsum_mul_left]
-  refine tsum_congr fun x => ?_
-  ring
+    wp work (fun x => factor * value x) = factor * wp work value :=
+  OracleComp.ProgramLogic.wp_mul_const work factor value
 
 /-- The expectation of the zero functional. -/
-theorem expectedValue_zero {α : Type} (work : ProbComp α) : expectedValue work (fun _ => (0 : ℝ≥0∞)) = 0 := by
-  simp [OracleComp.EvalDist.expectedValue_def]
+theorem expectedValue_zero {α : Type} (work : ProbComp α) : wp work (fun _ => (0 : ℝ≥0∞)) = 0 := by
+  simp [OracleComp.ProgramLogic.wp_eq_tsum]
 
 /-- Averaging the indicator of one value with a weight. -/
 theorem expectedValue_point {α : Type} (work : ProbComp α) (point : α) (value : ℝ≥0∞) :
-    expectedValue work (pointFn point value) = mass work point * value := by
-  rw [mass, ← OracleComp.EvalDist.expectedValue_mul_const]
+    wp work (pointFn point value) = mass work point * value := by
+  rw [mass, ← OracleComp.ProgramLogic.wp_const_mul]
   congr 1
   funext x
   rcases Classical.em (x = point) with same | same
@@ -486,21 +485,23 @@ theorem expectedValue_point {α : Type} (work : ProbComp α) (point : α) (value
 
 /-- A functional that is a weighted indicator of one value averages to the value's mass times the weight. -/
 theorem point_le {α : Type} (work : ProbComp α) (f : α → ℝ≥0∞) (point : α) (value bound : ℝ≥0∞)
-    (shape : ∀ x, f x = pointFn point value x) (le : mass work point * value ≤ bound) : expectedValue work f ≤ bound := by
+    (shape : ∀ x, f x = pointFn point value x) (le : mass work point * value ≤ bound) : wp work f ≤ bound := by
   rw [show f = pointFn point value from funext shape, expectedValue_point]
   exact le
 
 open Classical in
 /-- `CP(pk)` as the probability that a second raw encapsulation equals a first one. -/
 theorem pairHit_raw (setup : Setup baseSpec KemSK) (key : PqxdhKemIndCca.MlKem768PublicKey) :
-    pairHit setup key = expectedValue (simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl)
-      (setup.kem.encaps key)) (fun first => expectedValue (simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl)
+    pairHit setup key = wp (simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl)
+      (setup.kem.encaps key)) (fun first => wp (simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl)
         (setup.kem.encaps key)) (fun second => if second.1 = first.1 then 1 else 0)) := by
   unfold pairHit hit mass encC
-  rw [OracleComp.EvalDist.expectedValue_map]
+  rw [OracleComp.ProgramLogic.wp_map]
+  simp only [Function.comp_def]
   congr 1
   funext first
-  rw [OracleComp.EvalDist.expectedValue_map]
+  rw [OracleComp.ProgramLogic.wp_map]
+  simp only [Function.comp_def]
   congr 1
   funext second
   by_cases same : second.1 = first.1
@@ -512,19 +513,20 @@ theorem pairHit_raw (setup : Setup baseSpec KemSK) (key : PqxdhKemIndCca.MlKem76
 open Classical in
 /-- `CP` averaged over key generation is `pairCollision` (`PqxdhDeploymentHeadlineCollision`): the probability that two independent encapsulations to a fresh key collide. -/
 theorem pairHit_mean (setup : Setup baseSpec KemSK) :
-    expectedValue (keyGen setup) (pairHit setup) = PqxdhDeploymentHeadlineCollision.pairCollision setup := by
+    wp (keyGen setup) (pairHit setup) = PqxdhDeploymentHeadlineCollision.pairCollision setup := by
   unfold PqxdhDeploymentHeadlineCollision.pairCollision
   rw [PqxdhDeploymentHeadlineCollision.pairDraws_eval, ← prEvent_eq_evalDist_singleton _ true,
-    ← VCVioLegacy.probEvent_eq_prEvent, ← OracleComp.EvalDist.expectedValue_ite_one,
-    OracleComp.EvalDist.expectedValue_map]
+    OracleComp.ProgramLogic.prEvent_eq_wp_indicator,
+    OracleComp.ProgramLogic.wp_map]
   unfold keyGen
-  rw [OracleComp.EvalDist.expectedValue_map, OracleComp.EvalDist.expectedValue_bind]
+  rw [OracleComp.ProgramLogic.wp_map, OracleComp.ProgramLogic.wp_bind]
+  simp only [Function.comp_def]
   congr 1
   funext pair
-  rw [pairHit_raw, OracleComp.EvalDist.expectedValue_bind]
+  rw [pairHit_raw, OracleComp.ProgramLogic.wp_bind]
   congr 1
   funext first
-  rw [OracleComp.EvalDist.expectedValue_bind]
+  rw [OracleComp.ProgramLogic.wp_bind]
   congr 1
   funext second
   simp
@@ -534,7 +536,7 @@ open Classical in
 theorem keyMass_pairHit_le (setup : Setup baseSpec KemSK) (key : PqxdhKemIndCca.MlKem768PublicKey) :
     keyMass setup key * pairHit setup key ≤ PqxdhDeploymentHeadlineCollision.pairCollision setup := by
   rw [← pairHit_mean, keyMass, ← expectedValue_point]
-  refine OracleComp.EvalDist.expectedValue_mono _ fun other => ?_
+  refine OracleComp.ProgramLogic.wp_mono _ fun other => ?_
   by_cases same : other = key
   · subst same
     rw [pointFn_self]
@@ -594,7 +596,7 @@ theorem phi_coll (setup : Setup baseSpec KemSK) (k i j : Nat) (ghost : Ghost) (c
 open Classical in
 /-- A key generation appended to the keys does not increase the expected potential. -/
 theorem phi_key (setup : Setup baseSpec KemSK) (k i j : Nat) (ghost : Ghost) :
-    expectedValue (keyGen setup) (fun key => phi setup (view k i j { ghost with keys := ghost.keys ++ [key] })) ≤
+    wp (keyGen setup) (fun key => phi setup (view k i j { ghost with keys := ghost.keys ++ [key] })) ≤
       phi setup (view k i j ghost) := by
   by_cases atLength : k = ghost.keys.length
   · subst atLength
@@ -624,7 +626,7 @@ theorem phi_key (setup : Setup baseSpec KemSK) (k i j : Nat) (ghost : Ghost) :
   · have same : ∀ key, (ghost.keys ++ [key])[k]? = ghost.keys[k]? := fun key =>
       getElem?_snoc_ne ghost.keys key k atLength
     simp only [view, same]
-    exact OracleComp.EvalDist.expectedValue_le_of_le _ fun _ => le_rfl
+    exact OracleComp.ProgramLogic.wp_le_const_of_support _ fun _ _ => le_rfl
 
 /-- `none` appended to the encapsulations does not increase the potential. -/
 theorem phi_none (setup : Setup baseSpec KemSK) (k i j : Nat) (order : i < j) (ghost : Ghost) :
@@ -646,7 +648,7 @@ open Classical in
 /-- One encapsulation to `key` appended to the encapsulations does not increase the expected potential. -/
 theorem phi_enc (setup : Setup baseSpec KemSK) (k i j : Nat) (order : i < j) (ghost : Ghost)
     (key : PqxdhKemIndCca.MlKem768PublicKey) :
-    expectedValue (encC setup key) (fun c => phi setup (view k i j { ghost with encs := ghost.encs ++ [some (key, c)] })) ≤
+    wp (encC setup key) (fun c => phi setup (view k i j { ghost with encs := ghost.encs ++ [some (key, c)] })) ≤
       phi setup (view k i j ghost) := by
   by_cases first : i = ghost.encs.length
   · have later : j ≠ ghost.encs.length := by omega
@@ -699,7 +701,7 @@ theorem phi_enc (setup : Setup baseSpec KemSK) (k i j : Nat) (order : i < j) (gh
             exact zero_le
     · simp only [view, fun c => getElem?_snoc_ne ghost.encs (some (key, c)) i first,
         fun c => getElem?_snoc_ne ghost.encs (some (key, c)) j second]
-      exact OracleComp.EvalDist.expectedValue_le_of_le _ fun _ => le_rfl
+      exact OracleComp.ProgramLogic.wp_le_const_of_support _ fun _ _ => le_rfl
 
 end Triple
 
@@ -723,16 +725,17 @@ theorem triple_le (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     𝒟[(fun outcome => @decide (TripleColl k i j outcome) (Classical.propDecidable _)) <$>
       (gameG setup codec checks route ensureInit identityIndex bounds mode adversary).run runtime] {true} ≤
       PqxdhDeploymentHeadlineCollision.pairCollision setup := by
-  rw [← prEvent_eq_evalDist_singleton _ true, prEvent_map, ← VCVioLegacy.probEvent_eq_prEvent]
+  rw [← prEvent_eq_evalDist_singleton _ true, prEvent_map]
   classical
-  rw [← OracleComp.EvalDist.expectedValue_ite_one]
-  simp only [gameG, StateT.run, OracleComp.EvalDist.expectedValue_bind]
-  refine OracleComp.EvalDist.expectedValue_le_of_le _ fun born => ?_
+  rw [OracleComp.ProgramLogic.prEvent_eq_wp_indicator]
+  simp only [gameG, StateT.run, OracleComp.ProgramLogic.wp_bind]
+  refine OracleComp.ProgramLogic.wp_le_const_of_support _ fun born _ => ?_
   rcases born with ⟨_ | created, after⟩
   · simp [TripleColl]
   · dsimp only
-    rw [OracleComp.EvalDist.expectedValue_map]
-    refine le_trans (OracleComp.EvalDist.expectedValue_mono _ fun result => ?_)
+    rw [OracleComp.ProgramLogic.wp_map]
+    simp only [Function.comp_def]
+    refine le_trans (OracleComp.ProgramLogic.wp_mono _ fun result => ?_)
       ((expected_run_le (handlerG setup codec checks route created.seed bounds)
         (fun state => phi setup (view k i j state.2))
         (handlerG_expect setup codec checks route created.seed bounds (fun ghost => phi setup (view k i j ghost))

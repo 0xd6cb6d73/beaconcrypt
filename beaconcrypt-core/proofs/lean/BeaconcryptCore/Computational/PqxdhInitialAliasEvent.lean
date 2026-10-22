@@ -53,21 +53,21 @@ theorem left_source (prior : ProbComp Context) :
 /-- The same source event differs from its value-consistent private initializer by at most one independent-root guess for each actual initializer query, while every public HKDF evaluation remains real. -/
 theorem bound (prior : ProbComp Context) (qInitial : Nat)
     (bounded : ∀ context, (client context).IsQueryBoundP PqxdhInitialRootAliases.IsInitializer qInitial) :
-    (sourceGame fixed selected client event prior).boolDistAdvantage
+    (sourceGame fixed selected client event prior).boolDistance
       (rightGame fixed selected client event prior) ≤ ((qInitial : ENNReal) / (2 ^ 256 : ENNReal)).toReal := by
   have mixture := PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind (sampleCut prior)
     (fun cut => decision event cut.1.1 <$> left fixed selected client cut)
     (fun cut => decision event cut.1.1 <$> right fixed selected client cut)
     (left fixed selected client) (fun result => result.1 ∈ result.2.2.2.2)
-    (fun cut => (tvDist_map_le (decision event cut.1.1) _ _).trans (pointwise fixed selected client cut))
-  have tv : tvDist (leftGame fixed selected client event prior) (rightGame fixed selected client event prior) ≤
+    (fun cut => (discreteDistance_map_le (decision event cut.1.1) _ _).trans (pointwise fixed selected client cut))
+  have tv : discreteDistance (leftGame fixed selected client event prior) (rightGame fixed selected client event prior) ≤
       ((qInitial : ENNReal) / (2 ^ 256 : ENNReal)).toReal := by
     apply mixture.trans
     apply ENNReal.toReal_mono (ENNReal.div_ne_top (ENNReal.natCast_ne_top _) (pow_ne_zero _ (by norm_num)))
     exact candidates_bound fixed selected client prior qInitial bounded
   have erased := left_source fixed selected client event prior
-  simpa only [ProbComp.boolDistAdvantage, ← erased, VCVioLegacy.evalDist_singleton_eq_probOutput] using
-    (abs_probOutput_toReal_sub_le_tvDist _ _).trans tv
+  simpa only [ProbComp.boolDistance, ← erased, ← prEvent_eq_evalDist_singleton] using
+    (abs_prEvent_toReal_sub_le_discreteDistance _ _).trans tv
 
 end BeaconcryptCore.Computational.PqxdhInitialAliasEvent
 

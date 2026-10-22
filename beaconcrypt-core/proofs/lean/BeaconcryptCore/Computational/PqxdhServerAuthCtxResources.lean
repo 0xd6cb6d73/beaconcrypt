@@ -111,7 +111,8 @@ theorem continuation_total (setup : Setup baseSpec KemSK) (codec : Codec Reader 
   simp only [PqxdhServerAuthCtxExperiment.continuation, IsTotalQueryBound, isQueryBound_map_iff,
     PqxdhServerAuthCtxExperiment.execution]
   apply (stopped_total setup codec checks context rest caps bounded Q j
-    _ ![qCoin, Q, qHash, qH] ?_ _ ?_).mono
+    (adversary (contextInput setup false context)) ![qCoin, Q, qHash, qH] ?_
+    (PqxdhServerAuthCtxReserve.initial setup context).1 ?_).mono
       (entry_initial_potential setup context caps qCoin Q qHash qH)
   · intro i
     fin_cases i

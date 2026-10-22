@@ -18,21 +18,20 @@ noncomputable def retainedAdaptiveGame (real : Bool) (decode : RawDecoder) (c : 
 /-- The discrepancy coupling retains the exact correlation between the terminal key and full adaptive transcript. -/
 theorem retainedAdaptiveGame_distance_le_bad (decode : RawDecoder) (c : Pqxdh.Crypto)
     {Result : Type} (adversary : OracleComp AdaptiveSpec Result) :
-    tvDist (retainedAdaptiveGame true decode c adversary)
+    discreteDistance (retainedAdaptiveGame true decode c adversary)
       (retainedAdaptiveGame false decode c adversary) ≤
       Pr{let result ← uniformAdaptiveGame true decode c adversary}[result.2.2 = true].toReal := by
   conv_lhs => simp only [retainedAdaptiveGame, bind_pure_comp]
-  have convex := tvDist_bind_left_le ($ᵗ CtxKey)
+  have convex := discreteDistance_bind_left_le ($ᵗ CtxKey)
     (fun key => (Prod.mk key) <$> adaptiveGame true decode c key adversary)
     (fun key => (Prod.mk key) <$> adaptiveGame false decode c key adversary)
   rw [tsum_fintype] at convex
-  simp only [VCVioLegacy.probOutput_eq_prEvent] at convex
   calc
     _ ≤ ∑ key : CtxKey, Pr{let x ← ($ᵗ CtxKey)}[x = key].toReal *
         (Pr{let result ← adaptiveGame true decode c key adversary}[result.2.2 = true]).toReal := by
       refine convex.trans (Finset.sum_le_sum fun key _ => ?_)
       exact mul_le_mul_of_nonneg_left
-        ((tvDist_map_le (Prod.mk key) _ _).trans
+        ((discreteDistance_map_le (Prod.mk key) _ _).trans
           (adaptiveGame_distance_le_discrepancy decode c key adversary)) ENNReal.toReal_nonneg
     _ = _ := by
       unfold uniformAdaptiveGame
@@ -45,7 +44,7 @@ theorem retainedAdaptiveGame_distance_le_bad (decode : RawDecoder) (c : Pqxdh.Cr
 theorem retainedAdaptiveGame_distance_le_intctxt_sum (decode : RawDecoder) (c : Pqxdh.Crypto)
     (fallback : ModifiedNonceAeadForgery) {Result : Type} (adversary : OracleComp AdaptiveSpec Result)
     (count : ℕ) (bounded : adversary.IsQueryBoundP IsRawQuery count) :
-    ENNReal.ofReal (tvDist (retainedAdaptiveGame true decode c adversary)
+    ENNReal.ofReal (discreteDistance (retainedAdaptiveGame true decode c adversary)
       (retainedAdaptiveGame false decode c adversary)) ≤
       ∑ index ∈ Finset.range count,
         modifiedNonceAeadINTCTXTAdvantage c (indexedReduction decode fallback adversary index) := by
@@ -86,14 +85,14 @@ theorem retainedLinkedGame_distance_le_intctxt_sum (decode : AdaptiveCtxReceive.
     (c : Pqxdh.Crypto) (fallback : ModifiedNonceAeadForgery) {Result : Type}
     (adversary : OracleComp AdaptiveCtxReceive.ReceiveSpec Result) (count : ℕ)
     (bounded : adversary.IsQueryBoundP AdaptiveCtxReceive.IsRawQuery count) :
-    ENNReal.ofReal (tvDist (retainedLinkedGame true decode c adversary)
+    ENNReal.ofReal (discreteDistance (retainedLinkedGame true decode c adversary)
       (retainedLinkedGame false decode c adversary)) ≤
       ∑ index ∈ Finset.range count,
         modifiedNonceAeadINTCTXTAdvantage c
           (indexedReduction (AdaptiveCtxReceive.baseDecoder decode) fallback
             (AdaptiveCtxReceive.wrapped decode adversary) index) := by
   rw [retainedLinkedGame_eq, retainedLinkedGame_eq]
-  exact (ENNReal.ofReal_le_ofReal (tvDist_map_le retainKeyAndBoth _ _)).trans
+  exact (ENNReal.ofReal_le_ofReal (discreteDistance_map_le retainKeyAndBoth _ _)).trans
     (retainedAdaptiveGame_distance_le_intctxt_sum _ c fallback _ count
       (AdaptiveCtxReceive.wrapped_raw_query_bound decode adversary count bounded))
 
@@ -131,14 +130,14 @@ theorem retainedIndependentGame_distance_le_intctxt_sum (decode : AdaptiveCtxRec
     (c : Pqxdh.Crypto) (fallback : ModifiedNonceAeadForgery) {Result : Type}
     (adversary : OracleComp AdaptiveCtxReceive.ReceiveSpec Result) (count : ℕ)
     (bounded : adversary.IsQueryBoundP AdaptiveCtxReceive.IsRawQuery count) :
-    ENNReal.ofReal (tvDist (retainedIndependentGame decode c adversary)
+    ENNReal.ofReal (discreteDistance (retainedIndependentGame decode c adversary)
       (sourceProjection <$> retainedLinkedGame false decode c adversary)) ≤
       ∑ index ∈ Finset.range count,
         modifiedNonceAeadINTCTXTAdvantage c
           (indexedReduction (AdaptiveCtxReceive.baseDecoder decode) fallback
             (AdaptiveCtxReceive.wrapped decode adversary) index) := by
   rw [← retainedLinkedGame_projection]
-  exact (ENNReal.ofReal_le_ofReal (tvDist_map_le sourceProjection _ _)).trans
+  exact (ENNReal.ofReal_le_ofReal (discreteDistance_map_le sourceProjection _ _)).trans
     (retainedLinkedGame_distance_le_intctxt_sum decode c fallback adversary count bounded)
 
 end BeaconcryptCore.Computational.AdaptiveCtxRetainedKey

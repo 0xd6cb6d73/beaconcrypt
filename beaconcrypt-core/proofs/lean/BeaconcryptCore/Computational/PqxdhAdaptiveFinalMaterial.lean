@@ -47,7 +47,7 @@ noncomputable def statistical (budget : Nat) : ENNReal :=
 
 /-- The maintained source endpoint reaches the actual complete final-material sampler with its real cache-hit normalization cost and no guessed initializer or source-event equality premise. -/
 theorem later_source (depth : Nat) (position : (targets selected).number.val = depth + 2) :
-    (PqxdhAdaptiveCoordinateSecrecy.targetIdeal env baseImpl kem attachedVerify primitives program post targets selected).boolDistAdvantage
+    (PqxdhAdaptiveCoordinateSecrecy.targetIdeal env baseImpl kem attachedVerify primitives program post targets selected).boolDistance
       (laterIdeal env baseImpl kem attachedVerify primitives program post targets selected depth) ≤ (statistical qPost).toReal := by
   have compared := PqxdhInitialSampledSourceEndpoints.random_bound env.source env.recordWriter env.senderId env.route env.decode depth 0 sourcePrior qPost
     (fun input supported => (PqxdhInitialPreparedSourceCaps.supported_caps env baseImpl kem attachedVerify primitives program
@@ -64,7 +64,7 @@ theorem later_source (depth : Nat) (position : (targets selected).number.val = d
     exact ⟨ENNReal.mul_ne_top (ENNReal.natCast_ne_top _) inverse, fun _ _ => ENNReal.mul_ne_top (ENNReal.natCast_ne_top _) inverse⟩
   have converted := ENNReal.toReal_mono finite compared
   simpa only [PqxdhAdaptiveCoordinateSecrecy.targetIdeal, laterIdeal, position, statistical,
-    ProbComp.boolDistAdvantage, ENNReal.toReal_ofReal (abs_nonneg _)] using converted
+    ProbComp.boolDistance, ENNReal.toReal_ofReal (abs_nonneg _)] using converted
 
 /-- The original generated adaptive-choice execution reaches the actual final full76 material sampler. All primitive losses are inherited from the concrete source theorem; only the explicit final cache/input collision allowance is added. -/
 theorem later_bound (depth : Nat) (position : (targets selected).number.val = depth + 2)
@@ -73,11 +73,11 @@ theorem later_bound (depth : Nat) (position : (targets selected).number.val = de
     (functional : FunctionalDecapsulation kem)
     (hmac : HmacSha512) (correct : PqxdhFullSecretInputKdf.SourceFullCorrect env.source hmac)
     (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : PqxdhJointIdentity.Forgery) :
-    (choose selected <$> PqxdhAdaptiveNativeResult.actual env baseImpl kem attachedVerify primitives program post targets).boolDistAdvantage
+    (choose selected <$> PqxdhAdaptiveNativeResult.actual env baseImpl kem attachedVerify primitives program post targets).boolDistance
       (laterIdeal env baseImpl kem attachedVerify primitives program post targets selected depth) ≤
     PqxdhAdaptiveCoordinateSecrecy.targetLoss env baseImpl kem attachedVerify primitives program post targets c hmac fallback ordinaryFallback selected +
       (statistical qPost).toReal := by
-  exact (ProbComp.boolDistAdvantage_triangle _
+  exact (ProbComp.boolDistance_triangle _
     (PqxdhAdaptiveCoordinateSecrecy.targetIdeal env baseImpl kem attachedVerify primitives program post targets selected) _).trans
       (add_le_add (PqxdhAdaptiveCoordinateSecrecy.target_bound env baseImpl kem attachedVerify primitives program post targets c
         selected (by omega) compatible adapter functional hmac correct fallback ordinaryFallback)

@@ -507,7 +507,8 @@ theorem traced_step (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
       have := congrArg PqxdhRegistrationSchedule.State.shared stateEq
       exact this.symm
     obtain ⟨sessions, returned⟩ := nativeAccept_session setup codec checks seed raw _ reached member
-    have accepts : acceptsOf (record (.inl (.inr (.accept raw))) result.1 log) = acceptsOf log ++ [(raw, result.1)] := by
+    have accepts : acceptsOf (record (.inl (.inr (.accept raw))) result.1 log) =
+        acceptsOf log ++ ([(raw, result.1)] : List (Pqxdh.Bytes × Option Nat)) := by
       simp [record, acceptsOf]
     refine ⟨?_, ?_, ?_, ?_, kem, owned⟩
     · rw [accepts, List.length_append, List.length_singleton, sharedEq, sessions, ← traced.sessions]

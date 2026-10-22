@@ -55,16 +55,16 @@ def impl (setup : Setup baseSpec KemSK) (ensureInit : StateT A ProbComp Bool) :
 
 /-- Initialization precedes the exact length check or the standard joint-service creation query. No unavailable generated seed leaves its interpreter. -/
 def client (sender : Std.U64) (supplied : Option Pqxdh.Bytes) : OracleComp (Spec KemSK) (Option (ClientCreated P)) := do
-  let ready ← (Spec KemSK).query (.inr .initialize)
+  let ready : Bool ← (Spec KemSK).query (.inr .initialize)
   if ready then
     match supplied with
     | some bytes => match PqxdhLiveServerConstruction.parseSeed bytes with
       | none => pure none
       | some knownSeed => do
-        let identity ← (Spec KemSK).query (.inr (.importSeed knownSeed))
+        let identity : Nat × PublicIdentity ← (Spec KemSK).query (.inr (.importSeed knownSeed))
         pure (some (initialized identity.1 sender .imported identity.2))
     | none => do
-      let identity ← (Spec KemSK).query (.inl (.inl (.inr .create)))
+      let identity : Option (Nat × PublicIdentity) ← (Spec KemSK).query (.inl (.inl (.inr .create)))
       pure (identity.map fun identity => initialized identity.1 sender .generated identity.2)
   else pure none
 

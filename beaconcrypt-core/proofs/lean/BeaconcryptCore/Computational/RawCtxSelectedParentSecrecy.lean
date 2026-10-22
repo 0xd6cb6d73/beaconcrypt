@@ -58,10 +58,10 @@ theorem primitive_bound {Context : Type} (source : FixedHkdfSha512NoSaltSource)
     (hmac : HmacSha512) (correct : SourceFullCorrect source hmac)
     (sample : ProbComp Context) (address : Context → JointKdfAddress)
     (observer : FullObserver (Context × Entry)) :
-    (actual source sample address observer).boolDistAdvantage (random sample address observer) ≤
-      (extractRealGame hmac (joint sample address) (fullExtractReduction hmac .ratchet observer)).boolDistAdvantage
+    (actual source sample address observer).boolDistance (random sample address observer) ≤
+      (extractRealGame hmac (joint sample address) (fullExtractReduction hmac .ratchet observer)).boolDistance
         (extractUniformGame (joint sample address) (fullExtractReduction hmac .ratchet observer)) +
-      (hmacPrfRealGame hmac (fullExpandReduction .ratchet (joint sample address) observer)).boolDistAdvantage
+      (hmacPrfRealGame hmac (fullExpandReduction .ratchet (joint sample address) observer)).boolDistance
         (hmacPrfRandomGame (fullExpandReduction .ratchet (joint sample address) observer)) := by
   simpa only [actual_source, random] using
     sourceFullAdvantage_le_extract_add_hmac source hmac correct .ratchet (joint sample address) observer

@@ -70,7 +70,7 @@ theorem interpreter_project (ideal : PqxdhRecordLiftWorldCompiler.Label n → Bo
       simp only [PqxdhRecordLiftProtocol.interpreter, interpreter, sampled,
         StateT.run, bind_pure_comp, Functor.map_map, zeroPrivate, zeroPrimitive,
         Prod.map, id_eq] at same ⊢
-      convert same using 1
+      exact same
   | allocate slot =>
       have same := congrArg (fun work => (fun reply => ((), { reply.2 with seeds := reply.1.2 })) <$> work)
         (sampled_project ((PqxdhRecordLiftLazyTable.impl slot).run state.seeds) state)

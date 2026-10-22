@@ -34,12 +34,12 @@ theorem real_bound {Context Result : Type} (source : FixedHkdfSha512NoSaltSource
       (2 ^ 352 : ENNReal)⁻¹ + ENNReal.ofReal (
         (extractRealGame hmac (RawCtxSelectedParentSecrecy.joint priorSample address)
           (fullExtractReduction hmac .ratchet
-            (RawCtxFullPreimageTester.tester (RawCtxFullPreimageTester.production source) observe candidates))).boolDistAdvantage
+            (RawCtxFullPreimageTester.tester (RawCtxFullPreimageTester.production source) observe candidates))).boolDistance
         (extractUniformGame (RawCtxSelectedParentSecrecy.joint priorSample address)
           (fullExtractReduction hmac .ratchet
             (RawCtxFullPreimageTester.tester (RawCtxFullPreimageTester.production source) observe candidates))) +
         (hmacPrfRealGame hmac (fullExpandReduction .ratchet (RawCtxSelectedParentSecrecy.joint priorSample address)
-          (RawCtxFullPreimageTester.tester (RawCtxFullPreimageTester.production source) observe candidates))).boolDistAdvantage
+          (RawCtxFullPreimageTester.tester (RawCtxFullPreimageTester.production source) observe candidates))).boolDistance
         (hmacPrfRandomGame (fullExpandReduction .ratchet (RawCtxSelectedParentSecrecy.joint priorSample address)
           (RawCtxFullPreimageTester.tester (RawCtxFullPreimageTester.production source) observe candidates)))) := by
   simpa only [bytes_same] using RawCtxFullPreimageTester.source_alias_bound source hmac correct

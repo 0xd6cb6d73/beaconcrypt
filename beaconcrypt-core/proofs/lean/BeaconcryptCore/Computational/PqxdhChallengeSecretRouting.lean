@@ -302,14 +302,15 @@ theorem correlated_indCCA
     (functional : FunctionalDecapsulation kem)
     (correct : MlKem768RecipientCorrectness kem (runtimeOfImpl (kemAmbientImpl baseImpl)))
     (protocol : Protocol baseSpec) :
-    kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
-      (reduction source kem protocol).toINDCCA =
+    (kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
+      (reduction source kem protocol).toINDCCA).toReal =
       (simulateQ (kemAmbientImpl baseImpl)
-        (nativeMain source kem (runtimeOfImpl (kemAmbientImpl baseImpl)) protocol)).boolDistAdvantage
+        (nativeMain source kem (runtimeOfImpl (kemAmbientImpl baseImpl)) protocol)).boolDistance
         (simulateQ (kemAmbientImpl baseImpl)
           (randomMain source kem (runtimeOfImpl (kemAmbientImpl baseImpl)) protocol)) := by
-  simp only [ProbComp.boolDistAdvantage]
+  rw [ProbComp.boolDistance_eq_toReal_boolDist]
   rw [native_eq_real source baseImpl kem functional correct, random_eq_branch]
+  apply congrArg ENNReal.toReal
   exact oneKey_indCCAAdvantage_eq_branchDist kem (runtimeOfImpl (kemAmbientImpl baseImpl))
     (reduction source kem protocol)
     (runtimeOfImpl_evalDist_pure _) (runtimeOfImpl_evalDist_bind _)
@@ -355,12 +356,12 @@ theorem source_correlated_indCCA
     (functional : FunctionalDecapsulation kem)
     (correct : MlKem768RecipientCorrectness kem (runtimeOfImpl (kemAmbientImpl baseImpl)))
     (protocol : Protocol baseSpec) :
-    kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
-      (reduction source kem protocol).toINDCCA =
-      (simulateQ (kemAmbientImpl baseImpl) (sourceMain source kem protocol)).boolDistAdvantage
+    (kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
+      (reduction source kem protocol).toINDCCA).toReal =
+      (simulateQ (kemAmbientImpl baseImpl) (sourceMain source kem protocol)).boolDistance
         (simulateQ (kemAmbientImpl baseImpl)
           (randomMain source kem (runtimeOfImpl (kemAmbientImpl baseImpl)) protocol)) := by
-  simp only [ProbComp.boolDistAdvantage]
+  simp only [ProbComp.boolDistance]
   rw [source_eq_native]
   exact correlated_indCCA source baseImpl kem functional correct protocol
 

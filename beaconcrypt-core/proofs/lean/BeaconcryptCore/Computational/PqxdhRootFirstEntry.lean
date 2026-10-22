@@ -228,7 +228,7 @@ theorem uniformGame_first (client : OracleComp RootSpec Bool) :
   refine EvalDistEq.evalDist_eq ?_
   have project := (lazy_first (D := Message) (R := RootOutput) client ∅).map Prod.fst
   simpa [PqxdhCorrelatedExpandHybrid.uniformGame, uniformImpl_eq, StateT.run'_eq, map_bind,
-    Functor.map_map, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ] using project
+    Functor.map_map] using project
 
 end BeaconcryptCore.Computational.PqxdhRootFirstEntry
 

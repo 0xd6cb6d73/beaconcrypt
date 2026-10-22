@@ -82,7 +82,7 @@ theorem fill_update (prk : HmacBlock) (table : HiddenTable) (bytes : Pqxdh.Bytes
   | none => simp [HiddenTable.fill, hidden]
   | some selected =>
       have ne : bytes ≠ selected := by intro same; subst same; exact away hidden
-      funext input
+      refine QueryCache.ext (fun input => ?_)
       by_cases here : input = bytes
       · subst here; simp [HiddenTable.fill, hidden, QueryCache.cacheQuery, ne]
       · by_cases chosen : input = selected
@@ -172,8 +172,7 @@ theorem flat_step_projection (setup : Setup baseSpec KemSK) (codec : Codec Reade
       (flatReal setup codec checks publicValue beaconSeed seed scalar query).run state)
       ((skeleton setup codec checks publicValue beaconSeed
         (realServices seed scalar setup codec checks) query).run (project state)) := by
-  refine (VCVioLegacy.evalSPMF_eq_iff_evalDistEq _ _).1 ?_
-  apply evalSPMF_eq_of_relTriple_eqRel
+  apply evalDistEq_of_relTriple_eqRel
   have paired := relTriple_post_mono (flat_couple setup codec checks publicValue beaconSeed seed scalar query state)
     (fun left right related => show (left.1, project left.2) = right from
       Prod.ext related.1 related.2.symm)

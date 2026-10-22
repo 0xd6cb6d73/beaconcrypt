@@ -100,7 +100,7 @@ theorem material_paths (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
   simp only [PqxdhErasedParentSample.sample, mem_support_bind_iff] at sampled
   obtain ⟨common | input, priorReached, block, _, sampled⟩ := sampled
   · simp only [mem_support_pure_iff] at sampled
-    subst packet
+    rw [sampled] at shape
     cases shape
   simp only [mem_support_bind_iff, mem_support_pure_iff] at sampled
   obtain ⟨common | reachedPending, reached, rfl⟩ := sampled

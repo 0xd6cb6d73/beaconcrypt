@@ -69,7 +69,7 @@ theorem audit_reply (reader : RawCtxSelectedLiveTrace.Reader) (target : RootOutp
 theorem distance (reader : RawCtxSelectedLiveTrace.Reader) (target : RootOutput)
     (client : OracleComp (Spec extra I D K X Response Shared) Result)
     (state : (State A N C × List RootOutput) × Bool) :
-    tvDist ((simulateQ (PqxdhInitialHalfObserver.observed source writer prior entry output pre application initial selector aux reader) client).run state)
+    discreteDistance ((simulateQ (PqxdhInitialHalfObserver.observed source writer prior entry output pre application initial selector aux reader) client).run state)
       ((simulateQ (observed source writer prior entry output pre application initial selector aux reader target) client).run state) ≤
       Pr{let result ← (simulateQ (PqxdhInitialHalfObserver.observed source writer prior entry output pre application initial selector aux reader) client).run state}[target ∈ result.2.1.2].toReal :=
   RawCtxFlaggedQueryTrace.distance

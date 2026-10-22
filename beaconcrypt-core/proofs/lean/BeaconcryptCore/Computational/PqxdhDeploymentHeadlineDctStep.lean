@@ -1630,9 +1630,7 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctStep.romImpl_grow
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctStep.romImpl_grows
 
 /--
-info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctStep.run_ctx_grows' depends on axioms: [propext,
- Classical.choice,
- Quot.sound]
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctStep.run_ctx_grows' depends on axioms: [propext, Quot.sound]
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctStep.run_ctx_grows

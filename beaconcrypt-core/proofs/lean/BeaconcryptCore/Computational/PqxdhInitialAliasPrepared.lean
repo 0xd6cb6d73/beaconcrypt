@@ -95,7 +95,7 @@ theorem prior_post (qPost : Nat) (bounded : ∀ selection reply, (post selection
 /-- The actual authenticated-root preparation and original adaptive schedule discharge every operational premise of the full-source value-consistency correction. -/
 theorem bound (stage qPost : Nat) (bounded : ∀ selection reply, (post selection reply).IsTotalQueryBound qPost) :
     (PqxdhInitialSourceSampled.game env.source env.recordWriter env.senderId env.route env.decode
-      (PqxdhInitialPreparedSourceInput.prior env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed) stage).boolDistAdvantage
+      (PqxdhInitialPreparedSourceInput.prior env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed) stage).boolDistance
     (PqxdhInitialSourceAliases.consistent env.source env.recordWriter env.senderId env.route env.decode
       (PqxdhInitialPreparedSourceInput.prior env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed) stage) ≤
       ((1 + (7 + qPost * 67) : Nat) : ENNReal).toReal / (2 ^ 256 : ℝ) :=

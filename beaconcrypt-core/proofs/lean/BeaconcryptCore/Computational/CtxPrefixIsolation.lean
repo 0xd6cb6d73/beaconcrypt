@@ -1,7 +1,7 @@
 import BeaconcryptCore.Computational.CtxRomAuth
 import VCVio.ProgramLogic.Relational.SimulateQ
 import BeaconcryptCore.Computational.VCVioForwardOracleComp
-import BeaconcryptCore.Computational.VCVioLegacyBridge
+import BeaconcryptCore.Computational.StatefulGoodEvent
 
 open OracleComp OracleSpec ENNReal
 
@@ -12,6 +12,7 @@ set_option maxRecDepth 100000
 namespace BeaconcryptCore.Computational.CtxPrefixIsolation
 
 open CtxRomAuth
+
 
 /-- The public query exposes the hidden 32-byte key prefix. -/
 def SecretPrefixQuery (key : CtxKey) (input : Pqxdh.Bytes) : Prop :=
@@ -49,8 +50,7 @@ theorem withStickyBad_fst_map_run {m : Type → Type} [Monad m] [LawfulMonad m]
 
 /-- A sticky wrapper never clears a fired flag. -/
 theorem withStickyBad_mono {m : Type → Type} [Monad m] [LawfulMonad m]
-    [MonadAttach m] [ExactMonadAttach m] [MonadLiftT m SetM]
-    [LawfulMonadLiftT m SetM] {α σ : Type}
+    [MonadAttach m] [ExactMonadAttach m] {α σ : Type}
     (fires : Bool) (step : StateT σ m α)
     (state : σ × Bool) (hbad : state.2 = true)
     (result : α × (σ × Bool))
@@ -68,8 +68,7 @@ theorem withStickyBad_mono {m : Type → Type} [Monad m] [LawfulMonad m]
 
 /-- A firing sticky wrapper sets bad on every supported result. -/
 theorem withStickyBad_true {m : Type → Type} [Monad m] [LawfulMonad m]
-    [MonadAttach m] [ExactMonadAttach m] [MonadLiftT m SetM]
-    [LawfulMonadLiftT m SetM] {α σ : Type}
+    [MonadAttach m] [ExactMonadAttach m] {α σ : Type}
     (step : StateT σ m α)
     (state : σ × Bool) (result : α × (σ × Bool))
     (hresult : result ∈ support ((withStickyBad true step).run state)) :
@@ -211,8 +210,7 @@ theorem ctxPrefixIsolatedImpl_bad_mono (c : Pqxdh.Crypto) (key : CtxKey)
 
 /-- Supported sticky-wrapper results have the wrapper's explicit post-state shape. -/
 theorem withStickyBad_result_state {m : Type → Type} [Monad m] [LawfulMonad m]
-    [MonadAttach m] [ExactMonadAttach m] [MonadLiftT m SetM]
-    [LawfulMonadLiftT m SetM] {α σ : Type}
+    [MonadAttach m] [ExactMonadAttach m] {α σ : Type}
     (fires : Bool) (step : StateT σ m α) (state : σ × Bool)
     (result : α × (σ × Bool))
     (hresult : result ∈ support ((withStickyBad fires step).run state)) :
@@ -435,24 +433,20 @@ theorem ctxPrefixBadProbability_eq_secretPrefixQueriedProbabilityInner
 /-- The current real game and the prefix-isolated game are identical until a public prefix query. -/
 theorem tvDist_ctxReal_prefixIsolated_le_prefixBad
     (c : Pqxdh.Crypto) (key : CtxKey) (adversary : CtxAdversary) :
-    tvDist (ctxRealWithPrefixFlagBeforeVerify c key adversary)
+    discreteDistance (ctxRealWithPrefixFlagBeforeVerify c key adversary)
         (ctxPrefixIsolatedFlaggedBeforeVerify c key adversary) ≤
       (ctxPrefixBadProbability c key adversary).toReal := by
-  have bound := OracleComp.ProgramLogic.Relational.tvDist_simulateQ_run_le_probEvent_output_bad
+  exact StatefulGoodEvent.distance_le_bad
     (ctxRealWithPrefixFlagImpl c key) (ctxPrefixIsolatedImpl c key)
-    adversary.main emptyCtxHandlerState
-    (fun query state output state' => by
-      simpa only [VCVioLegacy.probOutput_eq_prEvent] using
-        ctxReal_prefixIsolated_agree_good c key query state output state')
+    (ctxReal_prefixIsolated_agree_good c key)
     (ctxRealWithPrefixFlagImpl_bad_mono c key)
     (ctxPrefixIsolatedImpl_bad_mono c key)
-  rw [VCVioLegacy.probEvent_eq_prEvent] at bound
-  exact bound
+    adversary.main (emptyCtxHandlerState, false)
 
 /-- Fixed-key fundamental lemma stated directly with the tracked prefix-query event. -/
 theorem tvDist_ctxReal_prefixIsolated_le_secretPrefixQueried
     (c : Pqxdh.Crypto) (key : CtxKey) (adversary : CtxAdversary) :
-    tvDist (ctxRealWithPrefixFlagBeforeVerify c key adversary)
+    discreteDistance (ctxRealWithPrefixFlagBeforeVerify c key adversary)
         (ctxPrefixIsolatedFlaggedBeforeVerify c key adversary) ≤
       (ctxSecretPrefixQueriedProbabilityInner c key adversary).toReal := by
   rw [← ctxPrefixBadProbability_eq_secretPrefixQueriedProbabilityInner]
@@ -470,13 +464,12 @@ noncomputable def ctxPrefixIsolatedBeforeVerifyInner (c : Pqxdh.Crypto)
 /-- Fixed-key prefix isolation on exactly the tracked `ctxBeforeVerifyInner` proof surface. -/
 theorem tvDist_ctxBeforeVerifyInner_prefixIsolated_le_secretPrefixQueried
     (c : Pqxdh.Crypto) (key : CtxKey) (adversary : CtxAdversary) :
-    tvDist (ctxBeforeVerifyInner c adversary key)
+    discreteDistance (ctxBeforeVerifyInner c adversary key)
         (ctxPrefixIsolatedBeforeVerifyInner c adversary key) ≤
       (ctxSecretPrefixQueriedProbabilityInner c key adversary).toReal := by
   unfold ctxPrefixIsolatedBeforeVerifyInner
   rw [← trackedProjection_realWithPrefixFlag_eq_ctxBeforeVerifyInner]
-  refine le_trans (tvDist_map_le
-    (m := ProbComp)
+  refine le_trans (discreteDistance_map_le
     (fun result : CtxAliasTarget × (CtxHandlerState × Bool) =>
       trackedProjection key (result.1, result.2.1))
     (ctxRealWithPrefixFlagBeforeVerify c key adversary)
@@ -509,13 +502,12 @@ theorem ctxSecretPrefixQueriedProbability_toReal_eq_tsum
 /-- Uniform-key prefix isolation, charged exactly to the tracked public-prefix event. -/
 theorem tvDist_ctxBeforeVerifyGame_prefixIsolatedGame_le_secretPrefixQueried
     (c : Pqxdh.Crypto) (adversary : CtxAdversary) :
-    tvDist (ctxBeforeVerifyGame c adversary)
+    discreteDistance (ctxBeforeVerifyGame c adversary)
         (ctxPrefixIsolatedGame c adversary) ≤
       (ctxSecretPrefixQueriedProbability c adversary).toReal := by
   rw [ctxSecretPrefixQueriedProbability_toReal_eq_tsum]
   unfold ctxBeforeVerifyGame ctxPrefixIsolatedGame
-  refine (tvDist_bind_left_le ($ᵗ CtxKey) _ _).trans ?_
-  simp only [VCVioLegacy.probOutput_eq_prEvent]
+  refine (discreteDistance_bind_left_le ($ᵗ CtxKey) _ _).trans ?_
   have total : ∑' key : CtxKey, Pr{let sampled ← $ᵗ CtxKey}[sampled = key] ≠ ⊤ :=
     ne_top_of_le_ne_top one_ne_top (OracleComp.tsum_prEvent_le_one _)
   refine Summable.tsum_le_tsum (fun key => ?_) ?_ ?_
@@ -523,9 +515,9 @@ theorem tvDist_ctxBeforeVerifyGame_prefixIsolatedGame_le_secretPrefixQueried
       (tvDist_ctxBeforeVerifyInner_prefixIsolated_le_secretPrefixQueried
         c key adversary) ENNReal.toReal_nonneg
   · refine Summable.of_nonneg_of_le
-      (fun key => mul_nonneg ENNReal.toReal_nonneg (tvDist_nonneg _ _))
+      (fun key => mul_nonneg ENNReal.toReal_nonneg (discreteDistance_nonneg _ _))
       (fun key => mul_le_of_le_one_right ENNReal.toReal_nonneg
-        (tvDist_le_one _ _)) ?_
+        (discreteDistance_le_one _ _)) ?_
     exact ENNReal.summable_toReal total
   · refine Summable.of_nonneg_of_le
       (fun key => mul_nonneg ENNReal.toReal_nonneg ENNReal.toReal_nonneg)

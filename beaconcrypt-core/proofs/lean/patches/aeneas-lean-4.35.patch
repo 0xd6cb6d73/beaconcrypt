@@ -5,7 +5,7 @@ index 0930b95b8eabaf0145fc3f33c56ddf63fc6307f4..356c45bf1f690e4932ad7342fa9f6e4e
 @@ -108,13 +108,9 @@ theorem getElem_set! {α : Type u}
    simp only [set!_eq_setIfInBounds, ← getElem_toList, toList_setIfInBounds]
    simp_lists
-
+ 
 -@[simp, simp_lists_safe]
 -theorem getElem!_set!_ne {α : Type u}
 -  [Inhabited α] {i j : ℕ} {x : α} {xs : Array α}
@@ -16,7 +16,7 @@ index 0930b95b8eabaf0145fc3f33c56ddf63fc6307f4..356c45bf1f690e4932ad7342fa9f6e4e
 +-- `Array.getElem!_set!_ne` is now provided by the core library; just register the
 +-- Aeneas simp attributes on it.
 +attribute [simp, simp_lists_safe] _root_.Array.getElem!_set!_ne
-
+ 
  @[simp, simp_lists_safe]
  theorem getElem_set!_ne {α : Type u}
 diff --git a/backends/lean/Aeneas/Data/Vector.lean b/backends/lean/Aeneas/Data/Vector.lean
@@ -26,7 +26,7 @@ index 42118e3bbee8a47689029fa325e6153adafea385..b62c10e2d4dae01cb78721a45505f47f
 @@ -108,16 +108,9 @@ theorem getElem!_set! {α : Type u}
      ← Array.getElem!_toList, Array.toList_setIfInBounds]
    simp_lists
-
+ 
 -@[simp, simp_lists_safe]
 -theorem getElem_set! {α : Type u}
 -  [Inhabited α] {n i j : ℕ} {x : α} {xs : Vector α n}
@@ -40,13 +40,13 @@ index 42118e3bbee8a47689029fa325e6153adafea385..b62c10e2d4dae01cb78721a45505f47f
 +-- `Vector.getElem_set!_self` is now provided by the core library; register the
 +-- Aeneas simp attribute on it.
 +attribute [simp_lists_safe] getElem_set!_self
-
+ 
  @[simp, simp_lists_safe]
  theorem getElem!_set!_ne {α : Type u}
 @@ -127,13 +120,9 @@ theorem getElem!_set!_ne {α : Type u}
    simp only [getElem!_eq_toArray_getElem!, toArray_set!]
    simp_lists
-
+ 
 -@[simp, simp_lists_safe]
 -theorem getElem_set!_ne {α : Type u}
 -  [Inhabited α] {n i j : ℕ} {x : α} {xs : Vector α n}
@@ -57,7 +57,7 @@ index 42118e3bbee8a47689029fa325e6153adafea385..b62c10e2d4dae01cb78721a45505f47f
 +-- `Vector.getElem_set!_ne` is now provided by the core library; register the
 +-- Aeneas simp attribute on it.
 +attribute [simp_lists_safe] getElem_set!_ne
-
+ 
  @[simp, simp_lists_safe]
  theorem getElem!_replicate {α : Type u} [Inhabited α] {i n : ℕ} {a : α} (h : i < n) :
 diff --git a/backends/lean/Aeneas/Do/Tests.lean b/backends/lean/Aeneas/Do/Tests.lean
@@ -65,99 +65,99 @@ index 44e527406e9ba3460ffd951434b688929961b0d3..8abc37ae7fc86404fe6c549995f40f7a
 --- a/backends/lean/Aeneas/Do/Tests.lean
 +++ b/backends/lean/Aeneas/Do/Tests.lean
 @@ -625,13 +625,15 @@ def do_match_cross_arm_used (t : Two) : RustM Nat := do
-
+ 
  /-- warning: Variable name `n` is not explicitly referenced.
-
+ 
 -The binding can be removed (if unused) or named `_` (if used implicitly).
 +Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
 +  [apply] _n
-
+ 
  Note: This linter can be disabled with `set_option linter.unusedVariables false`
  ---
  warning: Variable name `n` is not explicitly referenced.
-
+ 
 -The binding can be removed (if unused) or named `_` (if used implicitly).
 +Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
 +  [apply] _n
-
+ 
  Note: This linter can be disabled with `set_option linter.unusedVariables false` -/
  #guard_msgs in
 @@ -647,7 +649,8 @@ def do_let_arrow_id_used : RustM Nat := do
-
+ 
  /-- warning: Variable name `x` is not explicitly referenced.
-
+ 
 -The binding can be removed (if unused) or named `_` (if used implicitly).
 +Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
 +  [apply] _x
-
+ 
  Note: This linter can be disabled with `set_option linter.unusedVariables false` -/
  #guard_msgs in
 @@ -668,25 +671,29 @@ def do_let_arrow_pat_used : RustM Nat := do
  /--
  warning: Variable name `a` is not explicitly referenced.
-
+ 
 -The binding can be removed (if unused) or named `_` (if used implicitly).
 +Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
 +  [apply] _a
-
+ 
  Note: This linter can be disabled with `set_option linter.unusedVariables false`
  ---
  warning: Variable name `b` is not explicitly referenced.
-
+ 
 -The binding can be removed (if unused) or named `_` (if used implicitly).
 +Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
 +  [apply] _b
-
+ 
  Note: This linter can be disabled with `set_option linter.unusedVariables false`
  ---
  warning: Variable name `c` is not explicitly referenced.
-
+ 
 -The binding can be removed (if unused) or named `_` (if used implicitly).
 +Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
 +  [apply] _c
-
+ 
  Note: This linter can be disabled with `set_option linter.unusedVariables false`
  ---
  warning: Variable name `d` is not explicitly referenced.
-
+ 
 -The binding can be removed (if unused) or named `_` (if used implicitly).
 +Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
 +  [apply] _d
-
+ 
  Note: This linter can be disabled with `set_option linter.unusedVariables false`
  -/
 @@ -699,25 +706,29 @@ def do_let_arrow_pat_unused : RustM Nat := do
  /--
  warning: Variable name `a` is not explicitly referenced.
-
+ 
 -The binding can be removed (if unused) or named `_` (if used implicitly).
 +Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
 +  [apply] _a
-
+ 
  Note: This linter can be disabled with `set_option linter.unusedVariables false`
  ---
  warning: Variable name `b` is not explicitly referenced.
-
+ 
 -The binding can be removed (if unused) or named `_` (if used implicitly).
 +Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
 +  [apply] _b
-
+ 
  Note: This linter can be disabled with `set_option linter.unusedVariables false`
  ---
  warning: Variable name `c` is not explicitly referenced.
-
+ 
 -The binding can be removed (if unused) or named `_` (if used implicitly).
 +Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
 +  [apply] _c
-
+ 
  Note: This linter can be disabled with `set_option linter.unusedVariables false`
  ---
  warning: Variable name `d` is not explicitly referenced.
-
+ 
 -The binding can be removed (if unused) or named `_` (if used implicitly).
 +Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
 +  [apply] _d
-
+ 
  Note: This linter can be disabled with `set_option linter.unusedVariables false`
  -/
 diff --git a/backends/lean/Aeneas/Std/Array/Array.lean b/backends/lean/Aeneas/Std/Array/Array.lean
@@ -169,7 +169,7 @@ index 65b9bec00d4a38a88f4c45115746aaa44d475636..c77cda1512f0f2f1da1fd5b25eeb8346
    simp only [partialSpec, update, set]
    cases hopt : v[i]? <;> simp_all
 +  rfl
-
+ 
  def Array.index_mut_usize {α : Type u} {n : Usize} (v: Array α n) (i: Usize) :
    RustM (α × (α -> Array α n)) := do
 @@ -244,8 +245,8 @@ theorem Array.index_mut_usize_spec {α : Type u} {n : Usize} (v: Array α n) (i:
@@ -180,7 +180,7 @@ index 65b9bec00d4a38a88f4c45115746aaa44d475636..c77cda1512f0f2f1da1fd5b25eeb8346
 -  simp only [Array, Subtype.ext_iff, set_val_eq, List.set_getElem!]
 +  apply Subtype.ext
 +  simp only [set_val_eq, List.set_getElem!]
-
+ 
  @[simp]
  theorem Array.set_getElem_eq {α} {n : Usize} (x : Array α n) (i : Usize) (h : i.val < x.length) :
 @@ -254,15 +255,14 @@ theorem Array.set_getElem_eq {α} {n : Usize} (x : Array α n) (i : Usize) (h :
@@ -191,7 +191,7 @@ index 65b9bec00d4a38a88f4c45115746aaa44d475636..c77cda1512f0f2f1da1fd5b25eeb8346
 +  apply Subtype.ext
 +  simp only [set_val_eq]
    exact hself
-
+ 
  @[simp↓, simp_lists_safe↓]
  theorem Array.getElem_set_eq {α} {n : Usize} (v : Array α n) (i : Usize) (x : α) (h : i.val < (v.set i x).length) :
    (v.set i x)[i]'h = x := by
@@ -199,7 +199,7 @@ index 65b9bec00d4a38a88f4c45115746aaa44d475636..c77cda1512f0f2f1da1fd5b25eeb8346
 -  unfold set getElem instGetElemArrayUsizeLtNatValLengthValListEq
 -  simp only [List.getElem_set_self]
 +  simp only [Array.getElem_Usize_eq, Array.set_val_eq, List.getElem_set_self]
-
+ 
  @[simp↓, simp_lists_safe↓]
  theorem Array.getElem_set_eq' {α} {n : Usize} (v : Array α n) (i j : Usize) (x : α) (h : j.val < (v.set i x).length)
 @@ -274,9 +274,8 @@ theorem Array.getElem_set_eq' {α} {n : Usize} (v : Array α n) (i j : Usize) (x
@@ -212,7 +212,7 @@ index 65b9bec00d4a38a88f4c45115746aaa44d475636..c77cda1512f0f2f1da1fd5b25eeb8346
 +  simp only [ne_eq, UScalar.neq_to_neq_val] at h'
 +  simp only [Array.getElem_Usize_eq, Array.set_val_eq]
    simp_lists [List.getElem_set_ne]
-
+ 
  /-- Small helper (this function doesn't model a specific Rust function) -/
 @@ -289,13 +288,19 @@ theorem Array.clone_length {α : Type u} {n : Usize} (clone : α → RustM α) (
    simp [Array.clone] at h
@@ -222,7 +222,7 @@ index 65b9bec00d4a38a88f4c45115746aaa44d475636..c77cda1512f0f2f1da1fd5b25eeb8346
 +  have := List.mapM_RustM_length heq
 +  cases s'; simp_all
 +  cases h; simp_all
-
+ 
  @[step]
  theorem Array.clone_spec {α : Type u} {n : Usize} {clone : α → RustM α} {s : Array α n} (h : ∀ x ∈ s.val, clone x = ok x) :
    Array.clone clone s ⦃ s' => s' = s ⦄ := by
@@ -232,7 +232,7 @@ index 65b9bec00d4a38a88f4c45115746aaa44d475636..c77cda1512f0f2f1da1fd5b25eeb8346
 +  simp only [h.1, bind_tc_ok]
 +  apply (spec_ok _).mpr
 +  exact Subtype.ext h.2.1
-
+ 
  @[rust_fun "core::array::{core::clone::Clone<[@T; @N]>}::clone"]
  def core.array.CloneArray.clone
 @@ -307,8 +312,9 @@ theorem core.array.CloneArray.clone_spec {T : Type} {N : Usize} (cloneInst : cor
@@ -244,7 +244,7 @@ index 65b9bec00d4a38a88f4c45115746aaa44d475636..c77cda1512f0f2f1da1fd5b25eeb8346
 +  have ⟨a', h'⟩ := spec_imp_exists (Array.clone_spec h)
 +  rw [h'.1]
 +  exact (spec_ok _).mpr h'.2.symm
-
+ 
  @[rust_fun "core::array::{core::clone::Clone<[@T; @N]>}::clone_from"]
  def core.array.CloneArray.clone_from {T : Type} {N : Usize} (cloneInst : core.clone.Clone T)
 @@ -320,8 +326,9 @@ theorem core.array.CloneArray.clone_from_spec {T : Type} {N : Usize} (cloneInst
@@ -256,7 +256,7 @@ index 65b9bec00d4a38a88f4c45115746aaa44d475636..c77cda1512f0f2f1da1fd5b25eeb8346
 +  have ⟨source', h'⟩ := spec_imp_exists (Array.clone_spec h)
 +  rw [h'.1]
 +  exact (spec_ok _).mpr h'.2.symm
-
+ 
  @[reducible, rust_trait_impl "core::clone::Clone<[@T; @N]>"]
  def core.clone.CloneArray {T : Type} (N : Usize)
 @@ -337,7 +344,8 @@ def Array.setSlice! {α : Type u} {n} (s : Array α n) (i : ℕ) (s' : List α)
@@ -267,7 +267,7 @@ index 65b9bec00d4a38a88f4c45115746aaa44d475636..c77cda1512f0f2f1da1fd5b25eeb8346
 +  simp only [Array.getElem!_Nat_eq]
 +  simp only [Array.setSlice!]
    simp_lists
-
+ 
  @[simp_lists_safe]
 @@ -346,7 +354,8 @@ theorem Array.setSlice!_getElem_prefix {α} {n}
    (s.setSlice! i s')[j] = s[j] := by
@@ -287,7 +287,7 @@ index 65b9bec00d4a38a88f4c45115746aaa44d475636..c77cda1512f0f2f1da1fd5b25eeb8346
 +  simp only [Array.getElem!_Nat_eq]
 +  simp only [Array.setSlice!]
    simp_lists
-
+ 
  @[simp_lists_safe]
 @@ -367,7 +377,8 @@ theorem Array.setSlice!_getElem_middle {α} {n}
      scalar_tac
@@ -307,7 +307,7 @@ index 65b9bec00d4a38a88f4c45115746aaa44d475636..c77cda1512f0f2f1da1fd5b25eeb8346
 +  simp only [Array.getElem!_Nat_eq]
 +  simp only [Array.setSlice!]
    simp_lists
-
+ 
  theorem Array.setSlice!_getElem_suffix {α} {n}
 @@ -384,7 +396,8 @@ theorem Array.setSlice!_getElem_suffix {α} {n}
    (s.setSlice! i s')[j] = s[j] := by
@@ -331,7 +331,7 @@ index fbe13cafd8c0df30ad6d0a335bb06a97aa0c220d..e372db75cafdd40069e7d119e56ca78a
 +  simp only [lift, to_slice_mut, to_slice]
 +  apply (spec_ok _).mpr
 +  simp [Std.WP.uncurry']
-
+ 
  def Array.subslice {α : Type u} {n : Usize} (a : Array α n) (r : Range Usize) : RustM (Slice α) :=
    if r.start.val ≤ r.end.val ∧ r.end.val ≤ a.val.length then
 @@ -92,9 +94,14 @@ theorem Array.update_subslice_spec {α : Type u} {n : Usize} [Inhabited α] (a :
@@ -349,7 +349,7 @@ index fbe13cafd8c0df30ad6d0a335bb06a97aa0c220d..e372db75cafdd40069e7d119e56ca78a
 +  · rename_i h
 +    simp [partialSpec]
 +    scalar_tac
-
+ 
  @[rust_fun "core::array::{core::ops::index::Index<[@T; @N], @I, @O>}::index"]
  def core.array.Array.index
 @@ -135,7 +142,8 @@ theorem Array.val_to_slice {α} {n} (a : Array α n) : a.to_slice.val = a.val :=
@@ -359,7 +359,7 @@ index fbe13cafd8c0df30ad6d0a335bb06a97aa0c220d..e372db75cafdd40069e7d119e56ca78a
 -  simp only [Slice.length, Array.to_slice, List.Vector.length_val]
 +  simp only [Slice.length, Array.to_slice]
 +  exact a.property
-
+ 
  @[rust_fun "core::array::equality::{core::cmp::PartialEq<[@T; @N], [@U; @N]>}::eq"]
  def core.array.equality.PartialEqArray.eq
 @@ -313,7 +321,11 @@ theorem core.array.TryFromArrayCopySlice.try_from.step
@@ -372,7 +372,7 @@ index fbe13cafd8c0df30ad6d0a335bb06a97aa0c220d..e372db75cafdd40069e7d119e56ca78a
 +    exact ⟨rfl, by scalar_tac⟩
 +  · apply (spec_ok _).mpr
 +    simpa using ‹¬ s.length = N›
-
+ 
  @[rust_fun "core::array::{core::convert::TryFrom<&'a [@T; @N], &'a [@T], core::array::TryFromSliceError>}::try_from"]
  def core.array.TryFromSharedArraySlice.try_from
 @@ -381,7 +393,9 @@ theorem Array.Insts.CoreConvertAsRefSlice.as_ref.spec
@@ -383,7 +383,7 @@ index fbe13cafd8c0df30ad6d0a335bb06a97aa0c220d..e372db75cafdd40069e7d119e56ca78a
 +  simp only [Array.Insts.CoreConvertAsRefSlice.as_ref]
 +  apply (spec_ok _).mpr
 +  rfl
-
+ 
  @[step]
  theorem Array.Insts.CoreConvertAsMutSlice.as_mut.spec
 @@ -391,9 +405,13 @@ theorem Array.Insts.CoreConvertAsMutSlice.as_mut.spec
@@ -400,7 +400,7 @@ index fbe13cafd8c0df30ad6d0a335bb06a97aa0c220d..e372db75cafdd40069e7d119e56ca78a
 +  · trivial
 +  · scalar_tac
 +  · simp [hs']
-
+ 
  @[simp, step_simps]
  theorem Array.index_SliceIndexRangeUsizeSlice {T : Type} {N : Usize}
 @@ -414,7 +432,7 @@ theorem Array.index_SliceIndexRangeUsizeSlice.step {T : Type} {N : Usize} [Inhab
@@ -425,7 +425,7 @@ index fbe13cafd8c0df30ad6d0a335bb06a97aa0c220d..e372db75cafdd40069e7d119e56ca78a
 +      List.length_setSlice!, Array.length_eq]
    · simp_lists; scalar_tac
    · scalar_tac
-
+ 
 @@ -464,10 +483,11 @@ theorem Array.index_mut_SliceIndexRangeToUsizeSlice {T : Type} {N : Usize}
        False := by
    simp only [core.array.Array.index_mut, core.ops.index.IndexMutSlice,
@@ -438,7 +438,7 @@ index fbe13cafd8c0df30ad6d0a335bb06a97aa0c220d..e372db75cafdd40069e7d119e56ca78a
 +    simp [partialSpec, Array.from_slice, Array.to_slice, uncurry', Slice.length,
 +      List.length_setSlice!, Array.length_eq] <;>
      scalar_tac
-
+ 
  -- Array index/index_mut with RangeFrom
 @@ -493,11 +513,12 @@ theorem Array.index_mut_SliceIndexRangeFromUsizeSlice {T : Type} {N : Usize}
        False := by
@@ -453,7 +453,7 @@ index fbe13cafd8c0df30ad6d0a335bb06a97aa0c220d..e372db75cafdd40069e7d119e56ca78a
 +          Slice.length, Slice.drop, List.length_drop,
 +          List.length_setSlice!, Array.length_eq];
      scalar_tac
-
+ 
  @[reducible, rust_trait_impl "core::convert::AsRef<[@T; @N], [@T]>"]
 diff --git a/backends/lean/Aeneas/Std/Core/Convert.lean b/backends/lean/Aeneas/Std/Core/Convert.lean
 index d2aa0bd13e9e59dd132d850cb12d9e60d9c06a1c..1ec8349e903835912e09aafdd379e43c2b372ce8 100644
@@ -467,7 +467,7 @@ index d2aa0bd13e9e59dd132d850cb12d9e60d9c06a1c..1ec8349e903835912e09aafdd379e43c
 -  | .Err e => grind [is_ok]
 +  | .Ok v => simp only [is_ok]; exact (WP.spec_ok _).mpr (by simp)
 +  | .Err e => simp only [is_ok]; exact (WP.spec_ok _).mpr (by simp)
-
+ 
  /-- Step spec for `Result::branch` on an `Ok`: yields `Continue v`. -/
  theorem core.result.Result.Insts.CoreOpsTry.branch_Ok.spec
 diff --git a/backends/lean/Aeneas/Std/Core/Core.lean b/backends/lean/Aeneas/Std/Core/Core.lean
@@ -480,7 +480,7 @@ index 03e782b18c1dee15d17317332912f6e672df53a2..b821628e7268801fb7f768406fc0a0c8
    unwrap x ⦃ v => x = some v ⦄ := by
 -  simp only [unwrap, ofOption]; grind
 +  simp only [unwrap, ofOption]; cases x <;> simp_all
-
+ 
  @[step_pure_def, rust_fun "core::option::{core::option::Option<@T>}::unwrap_or" -canFail]
  def core.option.Option.unwrap_or (self : Option T) (default : T) : T :=
 diff --git a/backends/lean/Aeneas/Std/Core/CoreOption.lean b/backends/lean/Aeneas/Std/Core/CoreOption.lean
@@ -488,12 +488,12 @@ index 88e16b18a39a05cc9bb23de924a01e10fd003093..66714a842569b06eec0f77ed904dbc15
 --- a/backends/lean/Aeneas/Std/Core/CoreOption.lean
 +++ b/backends/lean/Aeneas/Std/Core/CoreOption.lean
 @@ -16,7 +16,7 @@ attribute [agrind =] Option.isSome_none Option.isSome_some
-
+ 
  theorem core.option.Option.expect.spec {T : Type} (x : Option T) (msg: Str) (h : x.isSome) :
    expect x msg ⦃ v => x = some v ⦄ := by
 -  simp only [expect, RustM.ofOption]; grind
 +  simp only [expect, RustM.ofOption]; cases x <;> simp_all
-
+ 
  @[rust_fun "core::option::{core::option::Option<@T>}::ok_or"]
  def core.option.Option.ok_or {T E : Type} (x : Option T) (e : E) :
 diff --git a/backends/lean/Aeneas/Std/Scalar/CoreConvertNum.lean b/backends/lean/Aeneas/Std/Scalar/CoreConvertNum.lean
@@ -506,22 +506,22 @@ index 3cada2b45dfad261b37e454475fb592651224626..c3da84e1b15c59ac106bbc09ab285414
  uscalar_no_usize def core.num.«%S».from_le_bytes (a : Array U8 (%Size)#usize) : «%S» :=
 -  ⟨ (BitVec.fromLEBytes (List.map U8.bv a.val)).cast (by simp) ⟩
 +  ⟨ (BitVec.fromLEBytes (List.map U8.bv a.val)).cast (by scalar_tac) ⟩
-
+ 
  iscalar_no_isize def core.num.«%S».from_le_bytes (a : Array I8 (%Size)#usize) : «%S» :=
 -  ⟨ (BitVec.fromLEBytes (List.map I8.bv a.val)).cast (by simp) ⟩
 +  ⟨ (BitVec.fromLEBytes (List.map I8.bv a.val)).cast (by scalar_tac) ⟩
-
+ 
  /-!
  # From Big-Endian
  -/
  uscalar_no_usize def core.num.«%S».from_be_bytes (a : Array U8 (%Size)#usize) : «%S» :=
 -  ⟨ (BitVec.fromBEBytes (List.map U8.bv a.val)).cast (by simp) ⟩
 +  ⟨ (BitVec.fromBEBytes (List.map U8.bv a.val)).cast (by scalar_tac) ⟩
-
+ 
  iscalar_no_isize def core.num.«%S».from_be_bytes (a : Array I8 (%Size)#usize) : «%S» :=
 -  ⟨ (BitVec.fromBEBytes (List.map I8.bv a.val)).cast (by simp) ⟩
 +  ⟨ (BitVec.fromBEBytes (List.map I8.bv a.val)).cast (by scalar_tac) ⟩
-
+ 
  /-!
  # Progress theorems: To Little-Endian
 @@ -614,25 +614,29 @@ iscalar_no_isize def core.num.«%S».from_be_bytes (a : Array I8 (%Size)#usize)
@@ -531,14 +531,14 @@ index 3cada2b45dfad261b37e454475fb592651224626..c3da84e1b15c59ac106bbc09ab285414
 -  simp only [spec_ok, lift, to_le_bytes, UScalarTy.U8_numBits_eq]
 +  simp only [lift, to_le_bytes, UScalarTy.U8_numBits_eq]
 +  exact (spec_ok _).mpr rfl
-
+ 
  iscalar_no_isize @[step]
  theorem core.num.«%S».to_le_bytes.step_spec (x : «%S») :
    lift (core.num.«%S».to_le_bytes x) ⦃ y => y.val = x.bv.toLEBytes.map (@IScalar.mk IScalarTy.I8) ⦄ := by
 -  simp only [spec_ok, lift, to_le_bytes, IScalarTy.I8_numBits_eq]
 +  simp only [lift, to_le_bytes, IScalarTy.I8_numBits_eq]
 +  exact (spec_ok _).mpr rfl
-
+ 
  /-!
  # Progress theorems: From Little-Endian
  -/
@@ -549,7 +549,7 @@ index 3cada2b45dfad261b37e454475fb592651224626..c3da84e1b15c59ac106bbc09ab285414
 +  lift (core.num.«%S».from_le_bytes x) ⦃ y => y.bv = (BitVec.fromLEBytes (x.val.map U8.bv)).cast (by scalar_tac) ⦄ := by
 +  simp only [lift, from_le_bytes]
 +  exact (spec_ok _).mpr rfl
-
+ 
  iscalar_no_isize @[step]
  theorem core.num.«%S».from_le_bytes.step_spec (x : Array I8 (%Size)#usize) :
 -  lift (core.num.«%S».from_le_bytes x) ⦃ y => y.bv = (BitVec.fromLEBytes (x.val.map I8.bv)).cast (by simp) ⦄  := by
@@ -557,7 +557,7 @@ index 3cada2b45dfad261b37e454475fb592651224626..c3da84e1b15c59ac106bbc09ab285414
 +  lift (core.num.«%S».from_le_bytes x) ⦃ y => y.bv = (BitVec.fromLEBytes (x.val.map I8.bv)).cast (by scalar_tac) ⦄  := by
 +  simp only [lift, from_le_bytes]
 +  exact (spec_ok _).mpr rfl
-
+ 
  /-!
  # Progress theorems: To Big-Endian
 @@ -640,25 +644,29 @@ theorem core.num.«%S».from_le_bytes.step_spec (x : Array I8 (%Size)#usize) :
@@ -567,14 +567,14 @@ index 3cada2b45dfad261b37e454475fb592651224626..c3da84e1b15c59ac106bbc09ab285414
 -  simp only [spec_ok, lift, to_be_bytes, UScalarTy.U8_numBits_eq]
 +  simp only [lift, to_be_bytes, UScalarTy.U8_numBits_eq]
 +  exact (spec_ok _).mpr rfl
-
+ 
  iscalar_no_isize @[step]
  theorem core.num.«%S».to_be_bytes.step_spec (x : «%S») :
    lift (core.num.«%S».to_be_bytes x) ⦃ y => y.val = x.bv.toBEBytes.map (@IScalar.mk IScalarTy.I8) ⦄ := by
 -  simp only [spec_ok, lift, to_be_bytes, IScalarTy.I8_numBits_eq]
 +  simp only [lift, to_be_bytes, IScalarTy.I8_numBits_eq]
 +  exact (spec_ok _).mpr rfl
-
+ 
  /-!
  # Progress theorems: From Big-Endian
  -/
@@ -585,7 +585,7 @@ index 3cada2b45dfad261b37e454475fb592651224626..c3da84e1b15c59ac106bbc09ab285414
 +  lift (core.num.«%S».from_be_bytes x) ⦃ y => y.bv = (BitVec.fromBEBytes (x.val.map U8.bv)).cast (by scalar_tac) ⦄ := by
 +  simp only [lift, from_be_bytes]
 +  exact (spec_ok _).mpr rfl
-
+ 
  iscalar_no_isize @[step]
  theorem core.num.«%S».from_be_bytes.step_spec (x : Array I8 (%Size)#usize) :
 -  lift (core.num.«%S».from_be_bytes x) ⦃ y => y.bv = (BitVec.fromBEBytes (x.val.map I8.bv)).cast (by simp) ⦄  := by
@@ -593,7 +593,7 @@ index 3cada2b45dfad261b37e454475fb592651224626..c3da84e1b15c59ac106bbc09ab285414
 +  lift (core.num.«%S».from_be_bytes x) ⦃ y => y.bv = (BitVec.fromBEBytes (x.val.map I8.bv)).cast (by scalar_tac) ⦄  := by
 +  simp only [lift, from_be_bytes]
 +  exact (spec_ok _).mpr rfl
-
+ 
  /-!
  # `cast_signed` / `cast_unsigned`
 diff --git a/backends/lean/Aeneas/Std/Slice.lean b/backends/lean/Aeneas/Std/Slice.lean
@@ -602,11 +602,11 @@ index 2e67cb3755ccc29d4bbaaaca76d15b5fe9bd71ab..9974d6ed8b231242b6a92f67a23d61c9
 +++ b/backends/lean/Aeneas/Std/Slice.lean
 @@ -118,7 +118,7 @@ def Slice.index_usize {α : Type u} (v: Slice α) (i: Usize) : RustM α :=
    | some x => ok x
-
+ 
  theorem Slice.eq_iff {α} (s0 s1 : Slice α) : s0 = s1 ↔ s0.val = s1.val := by
 -  simp only [Slice, Subtype.ext_iff]
 +  exact Subtype.ext_iff
-
+ 
  @[rust_fun "core::slice::{[@T]}::is_empty", simp]
  def core.slice.Slice.is_empty {T : Type} (s : Slice T) : RustM Bool := ok (s.length = 0)
 @@ -292,7 +292,8 @@ theorem Slice.index_mut_usize_spec {α : Type u} (v: Slice α) (i: Usize) :
@@ -616,7 +616,7 @@ index 2e67cb3755ccc29d4bbaaaca76d15b5fe9bd71ab..9974d6ed8b231242b6a92f67a23d61c9
 -  simp only [Slice, Subtype.ext_iff, set_val_eq, List.set_getElem_self]
 +  apply Subtype.ext
 +  simp only [set_val_eq, List.set_getElem_self]
-
+ 
  def Slice.subslice {α : Type u} (s : Slice α) (r : Range Usize) : RustM (Slice α) :=
    if r.start.val ≤ r.end.val ∧ r.end.val ≤ s.length then
 @@ -315,8 +316,11 @@ theorem Slice.subslice_spec {α : Type u} [Inhabited α] (s : Slice α) (r : Ran
@@ -644,7 +644,7 @@ index 2e67cb3755ccc29d4bbaaaca76d15b5fe9bd71ab..9974d6ed8b231242b6a92f67a23d61c9
 +  apply (spec_ok _).mpr
 +  refine ⟨fun i hi => ?_, fun i hi hj => ?_, fun i hi hj => ?_⟩ <;>
 +    (simp only [getElem!]; simp_lists)
-
+ 
  @[rust_fun "core::slice::{[@T]}::reverse" -canFail]
  def core.slice.Slice.reverse {T : Type} (s : Slice T) : Slice T :=
 @@ -688,7 +693,9 @@ theorem _SliceIndexRangeFromUsizeSlice.index_mut.test {T} (s : Slice T) (r : cor
@@ -655,10 +655,10 @@ index 2e67cb3755ccc29d4bbaaaca76d15b5fe9bd71ab..9974d6ed8b231242b6a92f67a23d61c9
 +  simp only [h, ↓reduceIte, Slice.drop]
 +  apply Subtype.ext
 +  simp
-
+ 
  @[reducible, rust_trait_impl "core::slice::index::SliceIndex<core::ops::range::RangeFrom<usize>, [@T], [@T]>"]
  def core.slice.index.SliceIndexRangeFromUsizeSlice (T : Type) :
-@@ -724,7 +731,9 @@ theorem Slice.clone_spec {T : Type} {clone : T → RustM T} {s : Slice T} (h :
+@@ -724,7 +731,9 @@ theorem Slice.clone_spec {T : Type} {clone : T → RustM T} {s : Slice T} (h : 
    Slice.clone clone s ⦃ s' => s = s' ⦄ := by
    simp only [Slice.clone]
    have ⟨ _, h ⟩ := spec_imp_exists (List.clone_spec h)
@@ -666,7 +666,7 @@ index 2e67cb3755ccc29d4bbaaaca76d15b5fe9bd71ab..9974d6ed8b231242b6a92f67a23d61c9
 +  simp only [h.1, bind_tc_ok]
 +  apply (spec_ok _).mpr
 +  exact (Subtype.ext h.2.1).symm
-
+ 
  @[rust_fun "core::slice::{[@T]}::split_at"]
  def core.slice.Slice.split_at {T : Type} (s : Slice T) (n : Usize) :
 @@ -765,7 +774,7 @@ theorem core.slice.Slice.split_at.spec {T : Type} (s : Slice T) (n : Usize) :
@@ -697,7 +697,7 @@ index 2e67cb3755ccc29d4bbaaaca76d15b5fe9bd71ab..9974d6ed8b231242b6a92f67a23d61c9
 +          List.length_append]
 +        scalar_tac
    · scalar_tac
-
+ 
  @[rust_fun "core::slice::{[@T]}::swap"]
 @@ -852,7 +865,8 @@ theorem Slice.setSlice!_length {α : Type u} (s : Slice α) (i : ℕ) (s' : List
  theorem Slice.setSlice!_getElem!_prefix {α} [Inhabited α]
@@ -707,7 +707,7 @@ index 2e67cb3755ccc29d4bbaaaca76d15b5fe9bd71ab..9974d6ed8b231242b6a92f67a23d61c9
 +  simp only [Slice.getElem!_Nat_eq]
 +  simp only [Slice.setSlice!]
    simp_lists
-
+ 
  @[simp_lists_safe]
 @@ -862,7 +876,8 @@ theorem Slice.setSlice!_getElem_prefix {α}
    have hj' : j < (s.setSlice! i s').length := by
@@ -727,7 +727,7 @@ index 2e67cb3755ccc29d4bbaaaca76d15b5fe9bd71ab..9974d6ed8b231242b6a92f67a23d61c9
 +  simp only [Slice.getElem!_Nat_eq]
 +  simp only [Slice.setSlice!]
    simp_lists
-
+ 
  @[simp_lists_safe]
 @@ -883,7 +899,8 @@ theorem Slice.setSlice!_getElem_middle {α}
      simpa [Slice.setSlice!_length] using h.2.2
@@ -747,7 +747,7 @@ index 2e67cb3755ccc29d4bbaaaca76d15b5fe9bd71ab..9974d6ed8b231242b6a92f67a23d61c9
 +  simp only [Slice.getElem!_Nat_eq]
 +  simp only [Slice.setSlice!]
    simp_lists
-
+ 
  theorem Slice.setSlice!_getElem_suffix {α}
 @@ -901,7 +919,8 @@ theorem Slice.setSlice!_getElem_suffix {α}
    have hj' : j < (s.setSlice! i s').length := by
@@ -768,7 +768,7 @@ index 2e67cb3755ccc29d4bbaaaca76d15b5fe9bd71ab..9974d6ed8b231242b6a92f67a23d61c9
      simp_scalar
 -    simp_lists [Slice.eq_iff]
    . scalar_tac
-
+ 
  @[step]
 @@ -935,9 +954,10 @@ theorem core.slice.index.SliceIndexRangeUsizeSlice.index.step_spec {α : Type}
        s1.length = r.end - r.start ⦄ := by
@@ -782,7 +782,7 @@ index 2e67cb3755ccc29d4bbaaaca76d15b5fe9bd71ab..9974d6ed8b231242b6a92f67a23d61c9
 +    simp_scalar
    · simp only [spec_fail]
      scalar_tac
-
+ 
 @@ -978,8 +998,11 @@ theorem core.slice.index.SliceIndexRangeToUsizeSlice.index.step_spec
        s1.length = r.end ⦄ := by
    simp only [index]
@@ -795,7 +795,7 @@ index 2e67cb3755ccc29d4bbaaaca76d15b5fe9bd71ab..9974d6ed8b231242b6a92f67a23d61c9
 +    simp_lists
 +    simp_scalar
    · scalar_tac
-
+ 
  -- RangeFrom step specs
 @@ -1019,8 +1042,11 @@ theorem core.slice.index.SliceIndexRangeFromUsizeSlice.index.step_spec
        s1.length = s.length - r.start.val ⦄ := by
@@ -809,7 +809,7 @@ index 2e67cb3755ccc29d4bbaaaca76d15b5fe9bd71ab..9974d6ed8b231242b6a92f67a23d61c9
 +    simp_lists
 +    simp_scalar
    · scalar_tac
-
+ 
  @[step]
 @@ -1061,7 +1087,7 @@ theorem Slice.mapM_spec {α β} {f : α → RustM β} {s : Slice α} {post : Nat
    obtain ⟨l', hl'⟩ := hmapM_ok
@@ -831,7 +831,7 @@ index 2e67cb3755ccc29d4bbaaaca76d15b5fe9bd71ab..9974d6ed8b231242b6a92f67a23d61c9
 +    simp [Slice.length, List.length_replicate]
    · exfalso; simp_all
    · exfalso; simp_all
-
+ 
 diff --git a/backends/lean/Aeneas/Std/Vec.lean b/backends/lean/Aeneas/Std/Vec.lean
 index 1115d89da8f7b21cf75792eed892456d417313fe..7589b9de6a68954df8d07a36a24ee30d3419eb9e 100644
 --- a/backends/lean/Aeneas/Std/Vec.lean
@@ -850,7 +850,7 @@ index 1115d89da8f7b21cf75792eed892456d417313fe..7589b9de6a68954df8d07a36a24ee30d
 +    rename_i hc
 +    simp only [Bool.or_eq_true, decide_eq_true_eq, not_or] at hc
 +    scalar_tac
-
+ 
  @[rust_fun "alloc::vec::{alloc::vec::Vec<@T>}::insert" (keepParams := [true, false])]
  def Vec.insert {α : Type u} (v: Vec α) (i: Usize) (x: α) : RustM (Vec α) :=
 @@ -143,7 +151,9 @@ def Vec.insert {α : Type u} (v: Vec α) (i: Usize) (x: α) : RustM (Vec α) :=
@@ -861,7 +861,7 @@ index 1115d89da8f7b21cf75792eed892456d417313fe..7589b9de6a68954df8d07a36a24ee30d
 +  simp only [insert, hbound, ↓reduceIte]
 +  apply (spec_ok _).mpr
 +  rfl
-
+ 
  def Vec.index_usize {α : Type u} (v: Vec α) (i: Usize) : RustM α :=
    match v[i.val]? with
 @@ -170,7 +180,9 @@ theorem Vec.update_spec {α : Type u} (v: Vec α) (i: Usize) (x : α)
@@ -872,7 +872,7 @@ index 1115d89da8f7b21cf75792eed892456d417313fe..7589b9de6a68954df8d07a36a24ee30d
 +  split
 +  · simp_all
 +  · apply (spec_ok _).mpr; rfl
-
+ 
  @[scalar_tac_simps, grind =, agrind =]
  theorem Vec.set_length {α : Type u} (v: Vec α) (i: Usize) (x: α) :
 @@ -345,6 +357,8 @@ theorem alloc.vec.from_elem_spec {T : Type} (cloneInst : core.clone.Clone T)
@@ -881,7 +881,7 @@ index 1115d89da8f7b21cf75792eed892456d417313fe..7589b9de6a68954df8d07a36a24ee30d
    simp [h]
 +  apply (spec_ok _).mpr
 +  exact ⟨rfl, by simp⟩
-
+ 
  @[rust_fun "alloc::vec::{alloc::vec::Vec<@T>}::with_capacity" -canFail -lift]
  def alloc.vec.Vec.with_capacity (T : Type) (_ : Usize) : alloc.vec.Vec T := Vec.new T
 @@ -400,24 +414,24 @@ theorem alloc.vec.Vec.resize_spec {T} (cloneInst : core.clone.Clone T)
@@ -893,7 +893,7 @@ index 1115d89da8f7b21cf75792eed892456d417313fe..7589b9de6a68954df8d07a36a24ee30d
 +  · apply (spec_ok _).mpr; rfl
 +  · simp only [hClone]
 +    apply (spec_ok _).mpr; rfl
-
+ 
  @[simp↓, scalar_tac_simps↓, grind =, agrind =]
  theorem alloc.vec.Vec.set_getElem!_eq α [Inhabited α] (x : alloc.vec.Vec α) (i : Usize) :
    x.set i x[i]! = x := by
@@ -901,7 +901,7 @@ index 1115d89da8f7b21cf75792eed892456d417313fe..7589b9de6a68954df8d07a36a24ee30d
 -  simp only [Vec, set_val_eq, Subtype.ext_iff, List.set_getElem!]
 +  apply Subtype.ext
 +  simp only [getElem!_Usize_eq, set_val_eq, List.set_getElem!]
-
+ 
  @[simp↓, scalar_tac_simps, simp_lists_safe, grind =, agrind =]
  theorem alloc.vec.Vec.set_getElem_eq α (x : alloc.vec.Vec α) (i : Usize) (h : i.val < x.length) :
    x.set i x[i] = x := by
@@ -914,7 +914,7 @@ index 1115d89da8f7b21cf75792eed892456d417313fe..7589b9de6a68954df8d07a36a24ee30d
 +  apply Subtype.ext
 +  simp only [set_val_eq, getElem_Usize_eq]
 +  exact List.set_getElem_self (as := x.val) (i := i.val) (h := h')
-
+ 
  @[simp_lists_safe↓]
  theorem alloc.vec.Vec.set_getElem_eq' α (x : alloc.vec.Vec α) (i j : Usize) (h : j.val < x.length) (hEq : i = j) :
 @@ -462,7 +476,9 @@ def alloc.vec.FromBoxSliceVec.from {T : Type} (v : alloc.vec.Vec T) : RustM (Sli
@@ -925,7 +925,7 @@ index 1115d89da8f7b21cf75792eed892456d417313fe..7589b9de6a68954df8d07a36a24ee30d
 +  simp only [alloc.vec.FromBoxSliceVec.from]
 +  apply (spec_ok _).mpr
 +  exact ⟨rfl, rfl⟩
-
+ 
  @[reducible, rust_trait_impl "core::convert::From<Box<[@T]>, alloc::vec::Vec<@T>>" (keepParams := [true, false])]
  def core.convert.FromBoxSliceVec (T : Type) :
 @@ -482,7 +498,8 @@ theorem alloc.vec.Vec.setSlice!_length {α : Type u} (s : alloc.vec.Vec α) (i :
@@ -936,7 +936,7 @@ index 1115d89da8f7b21cf75792eed892456d417313fe..7589b9de6a68954df8d07a36a24ee30d
 +  rw [Vec.getElem!_Nat_eq]
 +  simp only [Vec.setSlice!]
    simp_lists
-
+ 
  @[simp_lists_safe, grind =, agrind =]
 @@ -492,7 +509,8 @@ theorem alloc.vec.Vec.setSlice!_getElem_prefix {α}
    have hj' : j < (s.setSlice! i s').length := by
@@ -956,7 +956,7 @@ index 1115d89da8f7b21cf75792eed892456d417313fe..7589b9de6a68954df8d07a36a24ee30d
 +  rw [Vec.getElem!_Nat_eq]
 +  simp only [Vec.setSlice!]
    simp_lists
-
+ 
  @[simp_lists_safe, grind =, agrind =]
 @@ -512,7 +531,8 @@ theorem alloc.vec.Vec.setSlice!_getElem_middle {α}
      simpa [Vec.setSlice!_length] using h.2.2
@@ -976,7 +976,7 @@ index 1115d89da8f7b21cf75792eed892456d417313fe..7589b9de6a68954df8d07a36a24ee30d
 +  rw [Vec.getElem!_Nat_eq]
 +  simp only [Vec.setSlice!]
    simp_lists
-
+ 
  theorem alloc.vec.Vec.setSlice!_getElem_suffix {α}
 @@ -529,7 +550,8 @@ theorem alloc.vec.Vec.setSlice!_getElem_suffix {α}
    have hj' : j < (s.setSlice! i s').length := by
@@ -993,32 +993,32 @@ index ac724d290ff99134aa66839cdff35ec379d66fa8..bb7d71de9e00eb8ea7e54979ce606fdb
 --- a/backends/lean/Aeneas/Std/WP.lean
 +++ b/backends/lean/Aeneas/Std/WP.lean
 @@ -8,8 +8,8 @@ namespace Aeneas.Std.WP
-
+ 
  open Std RustM
-
+ 
 -def Post α := (α -> Prop)
 -def Pre := Prop
 +@[reducible] def Post α := (α -> Prop)
 +@[reducible] def Pre := Prop
-
+ 
  def Wp α := Post α → Pre
-
+ 
 @@ -37,7 +37,7 @@ theorem spec_dspec (α) (x : RustM α) (p: Post α) : spec x p → dspec x p :=
  theorem dspec_admissible {α} (p : Post α )
    : Lean.Order.admissible (fun x => dspec x p) := by
    apply Lean.Order.admissible_flatOrder
 -  simp [dspec]
 +  simp [dspec, Lean.Order.FlatOrder.mk]
-
+ 
  /-- Variant of `uncurry` used to decompose tuples in post-conditions.
-
+ 
 @@ -764,7 +764,7 @@ example (x : Nat) :
-
+ 
  private theorem massert_spec' (b : Prop) [Decidable b] (h : b) :
    massert b ⦃ _ => True ⦄ := by
 -  grind [massert]
 +  simp only [massert, if_pos h, spec_ok]
-
+ 
  @[simp]
  theorem qimp_spec_unit {α} (P : Unit → Prop) (k : Unit → RustM α) (Q : α → Prop) :
 @@ -791,11 +791,9 @@ example :
@@ -1033,7 +1033,7 @@ index ac724d290ff99134aa66839cdff35ec379d66fa8..bb7d71de9e00eb8ea7e54979ce606fdb
 +  -- eliminate the quantifier over the `()` output and the trivial precondition
 +  intro _ _
 +  apply massert_spec'; omega
-
+ 
  /- Example with a post-condition manipulating an ∃ -/
  example (zero : List Nat → RustM (List Nat))
 @@ -809,9 +807,9 @@ example (zero : List Nat → RustM (List Nat))
@@ -1045,8 +1045,8 @@ index ac724d290ff99134aa66839cdff35ec379d66fa8..bb7d71de9e00eb8ea7e54979ce606fdb
    --
 -  simp only [pure, spec_ok]
 +  simp only [pure, spec_ok, imp, implies_true]
-
-
+ 
+ 
  end Aeneas.Std.WP
 @@ -944,7 +942,16 @@ theorem loop.spec {α : Type u} {β : Type v} {γ : Type w}
    apply @wf.wf.fix γ (fun x' =>
@@ -1063,7 +1063,7 @@ index ac724d290ff99134aa66839cdff35ec379d66fa8..bb7d71de9e00eb8ea7e54979ce606fdb
 +    obtain ⟨hinv', hrel⟩ := hr
 +    -- the measure strictly decreases, so we can conclude by well-founded recursion
 +    exact IH (measure x') (hmeas ▸ hrel) x' rfl hinv'
-
+ 
  theorem loop.spec_decr_nat {α : Type u} {β : Type v}
    (measure : α → Nat)
 diff --git a/backends/lean/Aeneas/Tactic/Conv/Bvify/Bvify.lean b/backends/lean/Aeneas/Tactic/Conv/Bvify/Bvify.lean
@@ -1073,7 +1073,7 @@ index da2d80c4187aa4a50afd24ad3e0f57d4fade2932..b36b59f341fcadb540a9e61a6302e99c
 @@ -317,6 +317,33 @@ def bvifyTac (config : Config) (n : Expr) (loc : Utils.Location) : TacticM Unit
    let config := { nonLin := config.nonLin, saturationPasses := config.saturationPasses }
    ScalarTac.condSimpTac config bvifySimpConfig hypsArgs args (bvifyAddSimpThms n) true loc
-
+ 
 +/-- Expose specialized scalar projections as bit-vector variables before `bv_decide`.
 +Lean 4.34's symbolic reifier does not reduce the computed width of the generic
 +scalar field projection. Generalization retains an equality to every original
@@ -1110,7 +1110,7 @@ index da2d80c4187aa4a50afd24ad3e0f57d4fade2932..b36b59f341fcadb540a9e61a6302e99c
    extract_goal1
 -  bv_decide
 +  simp only [hc]
-
+ 
  example
    (a : U32)
 @@ -442,6 +469,7 @@ example
@@ -1119,7 +1119,7 @@ index da2d80c4187aa4a50afd24ad3e0f57d4fade2932..b36b59f341fcadb540a9e61a6302e99c
    simp_all only
 +  run_tac Aeneas.Bvify.generalizeScalarBvProjections
    bv_decide
-
+ 
  example
 @@ -463,6 +491,7 @@ example
    := by
@@ -1127,11 +1127,11 @@ index da2d80c4187aa4a50afd24ad3e0f57d4fade2932..b36b59f341fcadb540a9e61a6302e99c
    simp_all only
 +  run_tac Aeneas.Bvify.generalizeScalarBvProjections
    bv_decide
-
+ 
  example
 @@ -502,6 +531,11 @@ example (x a b : U32) (h : x.val = a.val + b.val) : (x.val : ZMod 3329) = (a.val
    simp [h]
-
+ 
  example (byte : U8) : 8 ∣ (byte &&& 16#u8).val := by
 -  bvify 8; bv_decide
 +  rcases byte with ⟨byte⟩
@@ -1140,8 +1140,30 @@ index da2d80c4187aa4a50afd24ad3e0f57d4fade2932..b36b59f341fcadb540a9e61a6302e99c
 +  rw [Nat.dvd_iff_mod_eq_zero]
 +  have h : (byte &&& 16#8) % 8#8 = 0#8 := by bv_decide
 +  simpa using congrArg BitVec.toNat h
-
+ 
  end Aeneas.Bvify
+diff --git a/backends/lean/Aeneas/Tactic/Simp/SimpScalar/Lemmas.lean b/backends/lean/Aeneas/Tactic/Simp/SimpScalar/Lemmas.lean
+index b8e88f9213fddf5384af70ee9812e2583a2aff05..3836b15acc003758ee4ad9329881ced67993ad8c 100644
+--- a/backends/lean/Aeneas/Tactic/Simp/SimpScalar/Lemmas.lean
++++ b/backends/lean/Aeneas/Tactic/Simp/SimpScalar/Lemmas.lean
+@@ -8,7 +8,7 @@ section
+   initialize registerTraceClass `ReduceLog2
+ 
+   -- TODO: the pattern `Nat.log2 (@OfNat.ofNat _ _ _)` doesn't work
+-  simproc Nat.reduceLog2 (Nat.log2 _) := fun e => do
++  simproc Nat.reduceLog2Aeneas (Nat.log2 _) := fun e => do
+     match e.consumeMData.getAppFnArgs with
+     | (``Nat.log2, #[value]) =>
+       trace[ReduceLog2] "- value: {value}"
+@@ -23,7 +23,7 @@ section
+ 
+   example : (2^128).log2 = 128 := by simp
+ 
+-  attribute [scalar_tac_simps, simp_scalar_safe] Nat.reduceLog2
++  attribute [scalar_tac_simps, simp_scalar_safe] Nat.reduceLog2Aeneas
+ 
+ end
+ 
 diff --git a/backends/lean/Aeneas/Tactic/Simproc/ReduceZMod/ReduceZMod.lean b/backends/lean/Aeneas/Tactic/Simproc/ReduceZMod/ReduceZMod.lean
 index 4e63f80b2f467181cf783ccfe65e153d8c354344..e19f8564c8bf37e3f99739e5cb38bfca2ffde0a7 100644
 --- a/backends/lean/Aeneas/Tactic/Simproc/ReduceZMod/ReduceZMod.lean
@@ -1184,24 +1206,24 @@ index 65d1fca3967700632483cb846def9ea457a528a6..6577d7cd064b5f9701a2955620fc7382
 @@ -7,7 +7,7 @@ namespace Aeneas.BvTac
  open Lean Lean.Meta Lean.Parser.Tactic Lean.Elab.Tactic
  open Bvify Utils
-
+ 
 -structure Config extends Lean.Elab.Tactic.BVDecide.Frontend.BVDecideConfig, Bvify.Config where
 +structure Config extends Lean.Elab.Tactic.BVDecide.BVDecideConfig, Bvify.Config where
-
+ 
  declare_config_elab elabConfig Config
-
+ 
 @@ -79,7 +79,7 @@ partial def bvTacPreprocess (config : Config) (n : Option Expr): TacticM Unit :=
  elab "bv_tac_preprocess" config:Parser.Tactic.optConfig n:(colGt term)? : tactic => do
    bvTacPreprocess (← elabConfig config) (← optElabTerm n)
-
+ 
 -open Lean.Elab.Tactic.BVDecide.Frontend Lean.Elab in
 +open Lean.Meta.Tactic.BVDecide Lean.Elab in
  /-- `bv_tac n` solves goals about bit-vectors.
-
+ 
  **Usage**: `bv_tac n` where `n` is the bitwidth to use for the bit-vectors.
 @@ -96,8 +96,10 @@ be lifted, one can try lifting them manually - see the documentation of `bvify`
  and tricks.
-
+ 
  **Debugging**:
 -Calling `bv_tac n` is (roughly) equivalent to: `bv_tac_preprocess n; bv_decide`,
 -which is itself roughly equivalent to: `bvify n at *; simp_all only; bv_decide`.
@@ -1209,7 +1231,7 @@ index 65d1fca3967700632483cb846def9ea457a528a6..6577d7cd064b5f9701a2955620fc7382
 +projections while retaining their defining equalities, then calls `bv_decide`.
 +Without that projection normalization, preprocessing is (roughly) equivalent to:
 +`bvify n at *; simp_all only`.
-
+ 
  Note that it often happens that `bv_tac` fails because `bvify` could not
  lift some assumptions to the subset `bv_decide` can reason about. For this
 @@ -115,12 +117,15 @@ elab "bv_tac" config:Parser.Tactic.optConfig n:(colGt term)? : tactic =>
@@ -1227,7 +1249,7 @@ index 65d1fca3967700632483cb846def9ea457a528a6..6577d7cd064b5f9701a2955620fc7382
 +      let params ← Lean.Meta.Grind.mkDefaultParams {}
 +      discard <| Lean.Meta.Grind.GrindM.run (params := params) <|
 +        Lean.Meta.Tactic.BVDecide.bvDecide (.mvarIdTarget g) cfg
-
+ 
  /-!
  # Tests
 diff --git a/backends/lean/Aeneas/Tactic/Solver/BvTac/Lemmas.lean b/backends/lean/Aeneas/Tactic/Solver/BvTac/Lemmas.lean
@@ -1236,7 +1258,7 @@ index b7cf133035be82dc206c78b6b6d59b64740222e2..17c8be61a0f6f1a261bccf31609005a9
 +++ b/backends/lean/Aeneas/Tactic/Solver/BvTac/Lemmas.lean
 @@ -116,15 +116,15 @@ theorem U128.maxVal_and_val (x : U128) : 340282366920938463463374607431768211455
  -- ============================================================================
-
+ 
  @[simp, simp_scalar_safe, bvify, grind =, agrind =]
 -theorem U8.bv_mod_size (x : U8) : x.bv % 256#8 = x.bv := by bv_tac 8
 +theorem U8.bv_mod_size (x : U8) : x.bv % 256#8 = x.bv := BitVec.umod_zero
@@ -1252,7 +1274,7 @@ index b7cf133035be82dc206c78b6b6d59b64740222e2..17c8be61a0f6f1a261bccf31609005a9
  @[simp, simp_scalar_safe, bvify, grind =, agrind =]
 -theorem U128.bv_mod_size (x : U128) : x.bv % 340282366920938463463374607431768211456#128 = x.bv := by bv_tac 128
 +theorem U128.bv_mod_size (x : U128) : x.bv % 340282366920938463463374607431768211456#128 = x.bv := BitVec.umod_zero
-
+ 
  -- ============================================================================
  -- x.val % (2^n) = x.val  (Nat level)
 diff --git a/backends/lean/Aeneas/Tactic/Step/DspecInduction.lean b/backends/lean/Aeneas/Tactic/Step/DspecInduction.lean
@@ -1265,7 +1287,7 @@ index e9dbae18edb66550586d4c2e20d83a0a873b485f..3814a45ce84647928cdf306a5bd4dbf1
    apply Lean.Order.admissible_flatOrder
 -  simp only [WP.dspec]
 +  simp only [WP.dspec, Lean.Order.FlatOrder.mk]
-
+ 
  def getParamNames (ty : Expr) : MetaM (Array Name) := do
    forallTelescope ty fun xs _ => do
 diff --git a/backends/lean/Aeneas/Tactic/Step/Init.lean b/backends/lean/Aeneas/Tactic/Step/Init.lean
@@ -1274,14 +1296,14 @@ index b4193791600ee613aaea5bf58ed127c6ee8094ae..5b255dcba2f0fd686dd7ee56892514ea
 +++ b/backends/lean/Aeneas/Tactic/Step/Init.lean
 @@ -736,7 +736,8 @@ theorem intro_uncurry' (p : α × β → Prop) : p = uncurry' (fun x y => p (x,
    simp only
-
+ 
  theorem lift_to_spec x (p0 p1 : α → Prop) (h0 : p0 x) (h1 : p0 = p1) : spec (Std.lift x) p1 := by
 -  grind [spec, Std.lift]
 +  simp only [Std.lift, spec_ok, ← h1]
 +  exact h0
-
+ 
  namespace Test
-
+ 
 diff --git a/backends/lean/Aeneas/Tactic/Step/Step.lean b/backends/lean/Aeneas/Tactic/Step/Step.lean
 index 47a0a47c45f335bac721635db4fc5b321c50dc34..7804263f8b41ab45c5cb3684348f7122fbca54e6 100644
 --- a/backends/lean/Aeneas/Tactic/Step/Step.lean
@@ -1303,12 +1325,12 @@ index 47a0a47c45f335bac721635db4fc5b321c50dc34..7804263f8b41ab45c5cb3684348f7122
    | some res => pure (some res)
    | none => pure none
 @@ -2079,7 +2078,7 @@ h1 : ∀ (i : ℕ) (x : i < s.length), s'[i] = 0#u32
-
+ 
    -- `Inhabited α` is not necessary: we add it for the purpose of testing
    theorem get_spec {α} [Inhabited α] (x : Option α) (h : x.isSome) : get x ⦃ _ => True ⦄ := by
 -    cases x <;> grind [get]
 +    cases x <;> simp_all [get]
-
+ 
    example {α} [Inhabited α] (x : Option α) (h : x.isSome) : get x ⦃ _ => True ⦄ := by
      step with get_spec
 @@ -2183,7 +2182,7 @@ h1 : ∀ (i : ℕ) (x : i < s.length), s'[i] = 0#u32
@@ -1334,10 +1356,64 @@ index 7a7bb36949240f57c5cf15d808f0832acb653a67..77697455f9ae599399b6044772336769
        | none => `(declModifiers|@[step])
        | some vis =>
 diff --git a/backends/lean/Aeneas/Tactic/Step/StepStar.lean b/backends/lean/Aeneas/Tactic/Step/StepStar.lean
-index f39b5116d251fd9d70682308723b3d4a478549a6..36c3f22dce3321371b3bc4d71c108ccf8458800d 100644
+index f39b5116d251fd9d70682308723b3d4a478549a6..1f38c983819f4c3b9f17c3f0185b9d52f357a9ac 100644
 --- a/backends/lean/Aeneas/Tactic/Step/StepStar.lean
 +++ b/backends/lean/Aeneas/Tactic/Step/StepStar.lean
-@@ -455,7 +455,7 @@ where
+@@ -235,26 +235,24 @@ instance: ToMessageData Info where
+ def Info.ofExpr(e: Expr): MetaM (Option Info) := do
+   let e := e.consumeMData
+   if e.isIte || e.isDIte then
+-    let kind := if e.isIte then .ite else .dite
+-    let e ← deltaExpand e (fun n => n == ``ite || n == ``dite)
+-    let .const ``Decidable.casesOn uLevels := e.getAppFn
+-      | throwError "Expected ``Decidable.casesOn, found {←ppExpr e.getAppFn}"
+-    let #[prop, motive, dec, brFalse, brTrue] := e.getAppArgs
++    let isDependent := e.isDIte
++    let kind := if isDependent then .dite else .ite
++    let #[type, prop, dec, brTrue, brFalse] := e.getAppArgs
+       | throwError "Wrong number of parameters for {e.getAppFn}: {e.getAppArgs.size} [{e.getAppArgs}]"
+-    let name? ← if e.isDIte
++    let name? ← if isDependent
+       then some <$> Utils.lambdaOne brFalse fun x _ => x.fvarId!.getUserName
+       else pure none
+     return some {
+       kind,
+       discrs := #[{ toExpr := dec, name?}]
+-      branches  := #[
+-        { toExpr := brTrue,  numArgs := 1, },
+-        { toExpr := brFalse, numArgs := 1, }
++      branches := #[
++        { toExpr := brTrue, numArgs := if isDependent then 1 else 0 },
++        { toExpr := brFalse, numArgs := if isDependent then 1 else 0 }
+       ]
+-      matcher := ``Decidable.casesOn,
+-      uLevels,
+-      params  := #[prop]
+-      motive,
++      matcher := e.getAppFn.constName!,
++      uLevels := e.getAppFn.constLevels!,
++      params := #[type, prop],
++      motive := type,
+       scrut := dec,
+     }
+   else if let some ma ← Meta.matchMatcherApp? e (alsoCasesOn := true) then
+@@ -276,10 +274,11 @@ def Info.ofExpr(e: Expr): MetaM (Option Info) := do
+ 
+ def Info.toExpr(info: Info): Expr :=
+   let fn := Expr.const info.matcher info.uLevels
+-  let args := info.params ++
+-    #[info.motive] ++
+-    info.discrs.map (·.toExpr) ++
+-    info.branches.map (·.toExpr)
++  let args := match info.kind with
++    | .ite | .dite =>
++      info.params ++ info.discrs.map (·.toExpr) ++ info.branches.map (·.toExpr)
++    | .matcher _ =>
++      info.params ++ #[info.motive] ++ info.discrs.map (·.toExpr) ++ info.branches.map (·.toExpr)
+   mkAppN fn args
+ 
+ end Bifurcation
+@@ -455,7 +454,7 @@ where
        {simpThms := #[← Step.stepSimpExt.getTheorems]}
        (.targets #[] true)
      /- We may have proven the goal already -/
@@ -1353,67 +1429,67 @@ index d9357524e1501324ed21fd6026e40378446a266d..af738d5bed8fa67e02b670ca33a56960
 @@ -35,49 +35,57 @@ private theorem sixNats_spec : sixNats ⦃ ((a, b), c) ((d, e), f) => a = 3 ∧
  /--
  warning: Variable name `a` is not explicitly referenced.
-
+ 
 -The binding can be removed (if unused) or named `_` (if used implicitly).
 +Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
 +  [apply] _a
-
+ 
  Note: This linter can be disabled with `set_option linter.unusedVariables false`
  ---
  warning: Variable name `b` is not explicitly referenced.
-
+ 
 -The binding can be removed (if unused) or named `_` (if used implicitly).
 +Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
 +  [apply] _b
-
+ 
  Note: This linter can be disabled with `set_option linter.unusedVariables false`
  ---
  warning: Variable name `c` is not explicitly referenced.
-
+ 
 -The binding can be removed (if unused) or named `_` (if used implicitly).
 +Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
 +  [apply] _c
-
+ 
  Note: This linter can be disabled with `set_option linter.unusedVariables false`
  ---
  warning: Variable name `d` is not explicitly referenced.
-
+ 
 -The binding can be removed (if unused) or named `_` (if used implicitly).
 +Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
 +  [apply] _d
-
+ 
  Note: This linter can be disabled with `set_option linter.unusedVariables false`
  ---
  warning: Variable name `b` is not explicitly referenced.
-
+ 
 -The binding can be removed (if unused) or named `_` (if used implicitly).
 +Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
 +  [apply] _b
-
+ 
  Note: This linter can be disabled with `set_option linter.unusedVariables false`
  ---
  warning: Variable name `c` is not explicitly referenced.
-
+ 
 -The binding can be removed (if unused) or named `_` (if used implicitly).
 +Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
 +  [apply] _c
-
+ 
  Note: This linter can be disabled with `set_option linter.unusedVariables false`
  ---
  warning: Variable name `e` is not explicitly referenced.
-
+ 
 -The binding can be removed (if unused) or named `_` (if used implicitly).
 +Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
 +  [apply] _e
-
+ 
  Note: This linter can be disabled with `set_option linter.unusedVariables false`
  ---
  warning: Variable name `h` is not explicitly referenced.
-
+ 
 -The binding can be removed (if unused) or named `_` (if used implicitly).
 +Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
 +  [apply] _h
-
+ 
  Note: This linter can be disabled with `set_option linter.unusedVariables false`
  -/
 diff --git a/backends/lean/AeneasMeta/BvEnumToBitVec.lean b/backends/lean/AeneasMeta/BvEnumToBitVec.lean
@@ -1426,18 +1502,18 @@ index 2fadf4bc097f141533b9bf038712a5132baf3bbf..54f9d66efab00c13e577cb593ccce6b1
  import Lean
 -import Lean.Elab.Tactic.BVDecide.Frontend.Normalize.Enums
 +import Lean.Meta.Tactic.BVDecide.Normalize.Enums
-
+ 
  /-!
  # Eagerly realizing `bv_decide`'s enum conversion constants
 @@ -44,7 +44,7 @@ module, turning the lazy per-use realisation into a single deterministic one.
  namespace Aeneas
-
+ 
  open Lean Meta Elab
 -open Lean.Elab.Tactic.BVDecide.Frontend.Normalize
 +open Lean.Meta.Tactic.BVDecide.Normalize
-
+ 
  /-- Marker class enabling `deriving BvEnumToBitVec` on an enum inductive.
-
+ 
 @@ -69,11 +69,14 @@ def realizeBvEnumToBitVec (declName : Name) : CoreM Unit := do
        (parameter-free with only nullary constructors); \
        `bv_decide` only synthesises `enumToBitVec` for such types."
@@ -1455,7 +1531,7 @@ index 2fadf4bc097f141533b9bf038712a5132baf3bbf..54f9d66efab00c13e577cb593ccce6b1
 +  executeReservedNameAction (.str declName enumToBitVecSuffix)
 +  executeReservedNameAction (.str declName "enumToBitVec_le")
 +  executeReservedNameAction (.str declName "eq_iff_enumToBitVec_eq")
-
+ 
  /-- `#define_bv_decide_toBitVec T` eagerly realises `bv_decide`'s enum
  conversion constants for the enum inductive `T` in the current module.
 diff --git a/backends/lean/AeneasMeta/Simp/Simp.lean b/backends/lean/AeneasMeta/Simp/Simp.lean
@@ -1472,108 +1548,118 @@ index 322ea73a566080979750baef1518ed802b2c5ee6..455376f4831f0cfe81e5c7ccbee38dad
      let fvars ← do
        match freshFVarIds with
 diff --git a/backends/lean/lake-manifest.json b/backends/lean/lake-manifest.json
-index 276c521fef1e0953ab029aee601a577b0b97ab3b..fe7ce4810fcede78e560f4b1d1b8fd13143050d1 100644
+index 276c521fef1e0953ab029aee601a577b0b97ab3b..f9aebe0da8186ef340dbd696aa34ff7fe390f6d8 100644
 --- a/backends/lean/lake-manifest.json
 +++ b/backends/lean/lake-manifest.json
-@@ -5,17 +5,17 @@
+@@ -1,21 +1,23 @@
+-{"version": "1.2.0",
++{"version": "1.3.0",
+  "packagesDir": ".lake/packages",
+  "packages":
+- [{"url": "https://github.com/leanprover-community/mathlib4.git",
++ [{
++   "url": "https://github.com/leanprover-community/mathlib4",
     "type": "git",
     "subDir": null,
-    "scope": "",
+-   "scope": "",
 -   "rev": "fabf563a7c95a166b8d7b6efca11c8b4dc9d911f",
-+   "rev": "5ed2965256430c3649e86755f9576b54eca72435",
++   "scope": "leanprover-community",
++   "rev": "56a005855ea17e0b0958f73ec801ae140b0a1679",
     "name": "mathlib",
     "manifestFile": "lake-manifest.json",
 -   "inputRev": "v4.31.0",
-+   "inputRev": "v4.34.0",
++   "inputRev": "v4.35.0",
     "inherited": false,
-    "configFile": "lakefile.lean"},
+-   "configFile": "lakefile.lean"},
++   "configFile": "lakefile.lean"
++  },
    {"url": "https://github.com/leanprover-community/plausible",
     "type": "git",
     "subDir": null,
     "scope": "leanprover-community",
 -   "rev": "63045536fe95024e6c18fc7b48e03f506701c5bc",
-+   "rev": "118aa17ee84656b8bd727fef7c458ee8c833385c",
++   "rev": "dfa4f38190d07c37e315953e08b90fe2d95b3c24",
     "name": "plausible",
     "manifestFile": "lake-manifest.json",
     "inputRev": "main",
-@@ -25,7 +25,7 @@
+@@ -25,7 +27,7 @@
     "type": "git",
     "subDir": null,
     "scope": "leanprover-community",
 -   "rev": "c5d5b8fe6e5158def25cd28eb94e4141ad97c843",
-+   "rev": "ddf04cf3949fa556442341e87d47f9f6e6074707",
++   "rev": "d6b4c7be5be75ec4917c873ac50c756dc1436372",
     "name": "LeanSearchClient",
     "manifestFile": "lake-manifest.json",
     "inputRev": "main",
-@@ -35,7 +35,7 @@
+@@ -35,7 +37,7 @@
     "type": "git",
     "subDir": null,
     "scope": "leanprover-community",
 -   "rev": "5c7542ed018c78194f1e2b903eaf6a792b74c03d",
-+   "rev": "e928b72544873815af278d38681b31c0293588e3",
++   "rev": "a41f0e9a4dea23188ea9cc1c41ac9f8bbafe0b93",
     "name": "importGraph",
     "manifestFile": "lake-manifest.json",
     "inputRev": "main",
-@@ -45,7 +45,7 @@
+@@ -45,7 +47,7 @@
     "type": "git",
     "subDir": null,
     "scope": "leanprover-community",
 -   "rev": "24b0d9dc081c5423f8eec7e866c441e5184f29d9",
-+   "rev": "106ff4fafc74ef4ac99d81dbf3ab399118f497a5",
++   "rev": "df72b022e558978a1c50264cfc4d7fec86fa8e04",
     "name": "proofwidgets",
     "manifestFile": "lake-manifest.json",
     "inputRev": "main",
-@@ -55,7 +55,7 @@
+@@ -55,7 +57,7 @@
     "type": "git",
     "subDir": null,
     "scope": "leanprover-community",
 -   "rev": "e3cb2f741431ce31bf73549fb52316a57368b06f",
-+   "rev": "355695d523e41d0554926416cba2a2b3544fbbc9",
++   "rev": "4a174c490d8707121c4a9290800489f105d85e07",
     "name": "aesop",
     "manifestFile": "lake-manifest.json",
     "inputRev": "master",
-@@ -65,7 +65,7 @@
+@@ -65,7 +67,7 @@
     "type": "git",
     "subDir": null,
     "scope": "leanprover-community",
 -   "rev": "f46324995fca5f0483b742e4eb4daec7f4ee50d2",
-+   "rev": "6a489d9af5d0c47e5b259e2e8bcdfc1811b5a259",
++   "rev": "dce0ad79c486cb1fb504af04f953c3466b0c6db8",
     "name": "Qq",
     "manifestFile": "lake-manifest.json",
     "inputRev": "master",
-@@ -75,7 +75,7 @@
+@@ -75,7 +77,7 @@
     "type": "git",
     "subDir": null,
     "scope": "leanprover-community",
 -   "rev": "fa08db58b30eb033edcdab331bba000827f9f785",
-+   "rev": "f2effa3d803fda822b1f97b806c47cf2adfbcbc2",
++   "rev": "66e469188fe07963e5cf666c7d4433f45b8131c5",
     "name": "batteries",
     "manifestFile": "lake-manifest.json",
     "inputRev": "main",
-@@ -85,10 +85,10 @@
+@@ -85,10 +87,10 @@
     "type": "git",
     "subDir": null,
     "scope": "leanprover",
 -   "rev": "92564e5770e4d09f2d86dfbf8ada1e9c715b384c",
-+   "rev": "e92c9f15fdfacc8536f31cfb3b7ad26c3c8cd204",
++   "rev": "c24fe6078c630e89b489bffe59b3e20ac30d12c8",
     "name": "Cli",
     "manifestFile": "lake-manifest.json",
 -   "inputRev": "v4.31.0",
-+   "inputRev": "v4.34.0",
++   "inputRev": "v4.35.0",
     "inherited": true,
     "configFile": "lakefile.toml"}],
   "name": "aeneas",
 diff --git a/backends/lean/lakefile.lean b/backends/lean/lakefile.lean
-index a5fe60e574fd863f67a4d3bb53cd61f185785453..979e0fe3a1dbdfabe2ffb74f2b5a388e4481880c 100644
+index a5fe60e574fd863f67a4d3bb53cd61f185785453..b810bbfce20494668a83ad2861e258320f69b555 100644
 --- a/backends/lean/lakefile.lean
 +++ b/backends/lean/lakefile.lean
 @@ -3,11 +3,16 @@ open Lake DSL
-
+ 
  -- Important: mathlib imports std4 and quote4: we mustn't add a `require std4` line
  require mathlib from git
 -  "https://github.com/leanprover-community/mathlib4.git" @ "v4.31.0"
-+  "https://github.com/leanprover-community/mathlib4.git" @ "v4.34.0"
-
++  "https://github.com/leanprover-community/mathlib4.git" @ "v4.35.0"
+ 
  package «aeneas» where
 -  preferReleaseBuild := true
 +  preferReleaseBuild := false
@@ -1583,13 +1669,13 @@ index a5fe60e574fd863f67a4d3bb53cd61f185785453..979e0fe3a1dbdfabe2ffb74f2b5a388e
 +    ⟨`weak.linter.defProp, false⟩,
 +    ⟨`weak.linter.ambiguousOpen, false⟩
 +  ]
-
+ 
  @[default_target] lean_lib «Aeneas» {}
-
+ 
 diff --git a/backends/lean/lean-toolchain b/backends/lean/lean-toolchain
-index 18640c8b066b182147f324d3aefd8ee48ee45238..12359f928f18e4a89ebd1444a0310b025931b17d 100644
+index 18640c8b066b182147f324d3aefd8ee48ee45238..a6aff065db2882c535684f8c5bcd4f16e9a23915 100644
 --- a/backends/lean/lean-toolchain
 +++ b/backends/lean/lean-toolchain
 @@ -1 +1 @@
 -leanprover/lean4:v4.31.0
-+leanprover/lean4:v4.34.0
++leanprover/lean4:v4.35.0

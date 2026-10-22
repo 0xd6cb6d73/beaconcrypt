@@ -55,7 +55,7 @@ theorem generated_probability (setup : Setup baseSpec KemSK) (codec : Codec Read
   cases initialized.1
   · simp only [Bool.false_eq_true, ite_false]
     rw [pure_bind]
-    simp only [map_pure, laneDecision, prEvent_pure, Bool.false_eq_true, ite_false, zero_le]
+    simp only [map_pure, laneDecision, Bool.false_eq_true, prEvent_pure_prop, ite_false, zero_le]
   simp only [ite_true, bind_map_left, Functor.map_map]
   refine prEvent_bind_mono_of_forall_le_of_support _ _ _ _ _ fun seed _ => ?_
   have bound := prefix_probability setup codec checks seed .generated ensureInit work initialized.2 observe

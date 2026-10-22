@@ -1,6 +1,6 @@
 import BeaconcryptCore.Computational.RawCtxSelectedInputCandidates
 import BeaconcryptCore.Computational.VCVioForwardProbabilityTheory
-import BeaconcryptCore.Computational.VCVioLegacyBridge
+import BeaconcryptCore.Computational.VCVioForwardOracleComp
 
 /-!
 A separately constructed full-output distinguisher tests whether any actual public candidate evaluation reproduces the supplied child output. The hidden input is retained only by the private winning event, never passed to this tester. For an independently uniform 76-byte child, acceptance implies membership in the complete image of the fixed 32-byte-input function, whose probability is at most 2^-352 even if the candidate list is chosen adaptively after seeing the child.
@@ -134,16 +134,16 @@ theorem source_alias_bound {Context Result : Type} (source : FixedHkdfSha512NoSa
     Pr{let pair ← actual (production source) sample observe}[pair.1 ∈ candidates pair.2] ≤
       (2 ^ 352 : ENNReal)⁻¹ + ENNReal.ofReal (
         (extractRealGame hmac (byteSampler sample)
-          (fullExtractReduction hmac .ratchet (tester (production source) observe candidates))).boolDistAdvantage
+          (fullExtractReduction hmac .ratchet (tester (production source) observe candidates))).boolDistance
         (extractUniformGame (byteSampler sample)
           (fullExtractReduction hmac .ratchet (tester (production source) observe candidates))) +
         (hmacPrfRealGame hmac (fullExpandReduction .ratchet (byteSampler sample)
-          (tester (production source) observe candidates))).boolDistAdvantage
+          (tester (production source) observe candidates))).boolDistance
         (hmacPrfRandomGame (fullExpandReduction .ratchet (byteSampler sample)
           (tester (production source) observe candidates)))) := by
   have actualBound := actual_test (production source) sample observe candidates
   rw [← source_test] at actualBound
-  have comparison := VCVioForward.evalDist_apply_true_le_add_ofReal_boolDistAdvantage
+  have comparison := ProbComp.evalDist_apply_true_le_add_ofReal_boolDistance
     (sourceFullGame source .ratchet (byteSampler sample) (tester (production source) observe candidates))
     (independentFullGame (byteSampler sample) (tester (production source) observe candidates))
   rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true] at comparison

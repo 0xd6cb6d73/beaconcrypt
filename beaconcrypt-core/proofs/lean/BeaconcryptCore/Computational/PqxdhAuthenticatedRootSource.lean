@@ -77,8 +77,7 @@ theorem dispatch_complete_eq_source
       𝒟[PqxdhAuthenticatedRootExperiment.filteredNext env baseImpl kem attachedVerify primitives program post secret prepared] := by
   refine EvalDistEq.evalDist_eq ?_
   by_cases bad : changedBit (some prepared.1, prepared.2) = true
-  · simp [PqxdhPrivateAcceptedRoot.dispatch, PqxdhAuthenticatedRootExperiment.filteredNext, bad, evalKem, nativeComplete, nativeAfter,
-      -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+  · simp [PqxdhPrivateAcceptedRoot.dispatch, PqxdhAuthenticatedRootExperiment.filteredNext, bad, evalKem, nativeComplete, nativeAfter]
     exact OracleComp.EvalDistEq.map_const _ _
   · by_cases eligible : targetEligible env.parameters prepared = true
     · simp only [PqxdhPrivateAcceptedRoot.dispatch, PqxdhAuthenticatedRootExperiment.filteredNext, bad, Bool.false_eq_true, ite_false,
@@ -95,12 +94,12 @@ theorem dispatch_complete_eq_source
           simp only [Environment.parameters, failure, evalKem_bind, evalKem_ambient, evalKem_pure,
             bind_assoc, pure_bind, nativeAfterEncapsulation]
           refine EvalDistEq.bind_right _ fun encapsulated => ?_
-          simp [nativeComplete, nativeAfter, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+          simp [nativeComplete, nativeAfter]
           refine (EvalDistEq.bind_right _ fun value => OracleComp.EvalDistEq.map_const _ value).trans ?_
           rw [bind_pure]
     · simp only [PqxdhPrivateAcceptedRoot.dispatch, PqxdhAuthenticatedRootExperiment.filteredNext,
         PqxdhAuthenticatedRootExperiment.totalNext, bad, eligible]
-      simp [evalKem, nativeComplete, nativeAfter, Environment.parameters, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+      simp [evalKem, nativeComplete, nativeAfter, Environment.parameters]
       refine (EvalDistEq.bind_right _ fun value => OracleComp.EvalDistEq.map_const _ value).trans ?_
       rw [bind_pure]
 
@@ -148,7 +147,7 @@ theorem authentication_hop
     (noCreate : ∀ reply, (program.main reply).IsQueryBoundP
       (PqxdhPhase2SourceSchedulerBounds.ForwardedSource (baseSpec := baseSpec) Creating) 0)
     (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : PqxdhJointIdentity.Forgery) :
-    (actual env baseImpl kem attachedVerify primitives program post).boolDistAdvantage
+    (actual env baseImpl kem attachedVerify primitives program post).boolDistance
       (nativeMain env baseImpl kem attachedVerify primitives program post) ≤
       (PqxdhJointIdentity.advantage primitives
         (PqxdhGeneratedPhase1Prefix.privateReduction primitives baseImpl kem setup
@@ -161,7 +160,7 @@ theorem authentication_hop
           output.context.generated.secret (eraseOutput output, stopped.2))
     (fun _ => pure false)
   have totalBound :
-      tvDist (nativeContinued attachedVerify primitives baseImpl kem setup (driver env.toDriverEnvironment program)
+      discreteDistance (nativeContinued attachedVerify primitives baseImpl kem setup (driver env.toDriverEnvironment program)
         (PqxdhAuthenticatedRootExperiment.totalNext env baseImpl kem attachedVerify primitives program post) false)
         (nativeContinued attachedVerify primitives baseImpl kem setup (driver env.toDriverEnvironment program)
           (PqxdhAuthenticatedRootExperiment.filteredNext env baseImpl kem attachedVerify primitives program post) false) ≤
@@ -170,13 +169,12 @@ theorem authentication_hop
           (driver env.toDriverEnvironment program) fallback ordinaryFallback)).toReal := by
     rw [nativeContinued_filtered]
     unfold nativeContinued
-    unfold tvDist
     convert auth using 1
-    refine congrArg₂ SPMF.tvDist ?_ ?_
-    all_goals refine congrArg _ (bind_congr fun state => ?_)
+    refine congrArg₂ discreteDistance ?_ ?_
+    all_goals refine bind_congr fun state => ?_
     all_goals split <;> simp_all only
-  have output := (abs_probOutput_toReal_sub_le_tvDist _ _).trans totalBound
-  simpa only [ProbComp.boolDistAdvantage, VCVioLegacy.evalDist_singleton_eq_probOutput, prEvent_eq_evalDist_singleton,
+  have output := (abs_prEvent_toReal_sub_le_discreteDistance _ _).trans totalBound
+  simpa only [ProbComp.boolDistance, ← prEvent_eq_evalDist_singleton, prEvent_eq_evalDist_singleton,
     actual_eq_total env baseImpl kem attachedVerify primitives program post compatible,
     ← filtered_eq_nativeMain env baseImpl kem attachedVerify primitives program post] using output
 

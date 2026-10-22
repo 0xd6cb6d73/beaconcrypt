@@ -500,12 +500,12 @@ theorem kem_transfer (setup : Setup baseSpec KemSK)
         (decision setup.source.crypto codec setup.serverKeyId budget event claim g)
         (compileFull setup codec route bounds mode adversary) runtime budget.create (selectedKem budget g) g.1.val
         false] {true} +
-      ENNReal.ofReal (setup.kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl
+      ENNReal.ofReal ((setup.kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl
           (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl))
         (PqxdhRegistrationJointKemRawCertified.adversary setup codec checks ensureInit none
           (decision setup.source.crypto codec setup.serverKeyId budget event claim g)
           (compileFull setup codec route bounds mode adversary) runtime budget.create (selectedKem budget g)
-          g.1.val).toINDCCA +
+          g.1.val).toINDCCA).toReal +
         PqxdhRegistrationJointKemRawGame.correctnessError setup) := by
   rw [eligible_actual setup codec checks route ensureInit phase1 phase2 bounds mode adversary budget event claim g
     runtime, ← PqxdhRegistrationJointKemRawOpaque.branchRaw_opaque]
@@ -562,12 +562,12 @@ theorem kem_transfer_billed (setup : Setup baseSpec KemSK)
         (decision setup.source.crypto codec setup.serverKeyId budget event claim g)
         (compileFull setup codec route bounds mode adversary) runtime budget.create (selectedKem budget g) g.1.val
         false] {true} +
-      ENNReal.ofReal (setup.kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl
+      ENNReal.ofReal ((setup.kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl
           (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl))
         (PqxdhRegistrationJointKemRawCertified.adversary setup codec checks ensureInit none
           (decision setup.source.crypto codec setup.serverKeyId budget event claim g)
           (compileFull setup codec route bounds mode adversary) runtime budget.create (selectedKem budget g)
-          g.1.val).toINDCCA +
+          g.1.val).toINDCCA).toReal +
         PqxdhRegistrationJointKemRawGame.correctnessError setup) ∧
     (PqxdhRegistrationJointKemRawCertified.adversary setup codec checks ensureInit none
         (decision setup.source.crypto codec setup.serverKeyId budget event claim g)
@@ -601,12 +601,12 @@ theorem kem_hop_close (setup : Setup baseSpec KemSK)
         (decision setup.source.crypto codec setup.serverKeyId budget event claim g)
         (compileFull setup codec route bounds mode adversary) runtime budget.create (selectedKem budget g) g.1.val
         false] {true}).toReal| ≤
-      setup.kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl
+      (setup.kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl
           (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl))
         (PqxdhRegistrationJointKemRawCertified.adversary setup codec checks ensureInit none
           (decision setup.source.crypto codec setup.serverKeyId budget event claim g)
           (compileFull setup codec route bounds mode adversary) runtime budget.create (selectedKem budget g)
-          g.1.val).toINDCCA +
+          g.1.val).toINDCCA).toReal +
         PqxdhRegistrationJointKemRawGame.correctnessError setup := by
   rw [← PqxdhRegistrationJointKemRawOpaque.branchRaw_opaque]
   exact PqxdhRegistrationJointKemRawCertified.ideal_close setup functional codec checks ensureInit none _ _ runtime
@@ -628,12 +628,12 @@ theorem kem_transfer_sum (setup : Setup baseSpec KemSK)
           (decision setup.source.crypto codec setup.serverKeyId budget event claim g)
           (compileFull setup codec route bounds mode adversary) runtime budget.create (selectedKem budget g) g.1.val
           false] {true} +
-        ENNReal.ofReal (setup.kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl
+        ENNReal.ofReal ((setup.kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl
             (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl))
           (PqxdhRegistrationJointKemRawCertified.adversary setup codec checks ensureInit none
             (decision setup.source.crypto codec setup.serverKeyId budget event claim g)
             (compileFull setup codec route bounds mode adversary) runtime budget.create (selectedKem budget g)
-            g.1.val).toINDCCA +
+            g.1.val).toINDCCA).toReal +
           PqxdhRegistrationJointKemRawGame.correctnessError setup)) := by
   rw [UniformTargetSelection.split]
   exact Finset.sum_le_sum fun g _ => kem_transfer setup functional codec checks route ensureInit phase1 phase2 bounds

@@ -16,13 +16,15 @@ variable {n : Nat}
 abbrev Cache (n : Nat) := (HashInput n →ₒ CtxDigest).QueryCache
 
 /-- The entire canonical combined cache, with exact private suffix addresses and original shared hash bytes. -/
-def cacheOf (state : CtxPrivate n) : Cache n
+def cacheOf (state : CtxPrivate n) : Cache n := QueryCache.ofFn fun
   | .inl (label, suffix) => (state.keys label).2 suffix
   | .inr bytes => state.base.primitive.2 ((), bytes)
 
 /-- Source initialization gives the ordinary empty combined lazy cache. -/
 theorem cacheOf_initial : cacheOf (PqxdhRecordFactsCounter.zeroCtx (CtxPrivate.initial : CtxPrivate n)) = ∅ := by
-  funext query; cases query <;> rfl
+  apply QueryCache.ext
+  intro query
+  cases query <;> rfl
 
 /-- The hidden writer buffer has no effect on either half of the combined digest cache. -/
 theorem cacheOf_pending (state : CtxPrivate n) (frames : PqxdhRecordLiftLoggedAdapters.Frames) :
@@ -39,7 +41,7 @@ theorem cacheOf_sealed (state : CtxPrivate n) (label : Label n) (input : CtxSeal
     (body tag : Pqxdh.Bytes) (width : tag.length = 16) (digest : CtxDigest) :
     cacheOf (sealedState state label input body tag width digest) =
       (cacheOf state).cacheQuery (.inl (label, outerSuffix input.nonce input.context tag)) digest := by
-  funext query
+  refine QueryCache.ext (fun query => ?_)
   cases query with
   | inr bytes => simp [cacheOf, sealedState, PqxdhRecordFactsPrivateCacheFamily.localLens, sealResult,
       QueryCache.cacheQuery]
@@ -48,7 +50,7 @@ theorem cacheOf_sealed (state : CtxPrivate n) (label : Label n) (input : CtxSeal
       by_cases same : other = label
       · subst other
         simp only [cacheOf, sealedState, PqxdhRecordFactsPrivateCacheFamily.localLens, sealResult,
-          Function.update_self]
+          Function.update_self, QueryCache.toFn_ofFn]
         by_cases sameSuffix : suffix = outerSuffix input.nonce input.context tag
         · subst suffix; simp
         · simp [QueryCache.cacheQuery, sameSuffix, cacheOf]
@@ -62,24 +64,24 @@ def withShared (state : CtxPrivate n) (cache : CtxRO.QueryCache) : CtxPrivate n 
 /-- An arbitrary base-state update frames the private half; the ordinary half reads its exact new shared cache. -/
 theorem cacheOf_base (state : CtxPrivate n) (base : PqxdhRecordLiftProtocol.Private n) :
     cacheOf { state with base := base } =
-      fun query => match query with
+      QueryCache.ofFn (fun query => match query with
       | .inl (label, suffix) => (state.keys label).2 suffix
-      | .inr bytes => base.primitive.2 ((), bytes) := rfl
+      | .inr bytes => base.primitive.2 ((), bytes)) := rfl
 
 /-- A base update that preserves the shared ROM preserves the complete combined cache. -/
 theorem cacheOf_base_frame (state : CtxPrivate n) (base : PqxdhRecordLiftProtocol.Private n)
     (same : base.primitive.2 = state.base.primitive.2) :
     cacheOf { state with base := base } = cacheOf state := by
-  funext query
+  refine QueryCache.ext (fun query => ?_)
   cases query with
   | inl address => rfl
-  | inr bytes => simp only [cacheOf, same]
+  | inr bytes => simp only [cacheOf, QueryCache.toFn_ofFn, same]
 
 /-- One ordinary shared-cache update is exactly the corresponding combined ordinary-address update. -/
 theorem cacheOf_shared_query (state : CtxPrivate n) (bytes : Pqxdh.Bytes) (digest : CtxDigest) :
     cacheOf (withShared state (state.base.primitive.2.cacheQuery ((), bytes) digest)) =
       (cacheOf state).cacheQuery (.inr bytes) digest := by
-  funext query
+  refine QueryCache.ext (fun query => ?_)
   cases query with
   | inl address => simp [cacheOf, withShared, QueryCache.cacheQuery]
   | inr other =>

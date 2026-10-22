@@ -1,3 +1,4 @@
+import BeaconcryptCore.Computational.BooleanDistance
 import BeaconcryptCore.Computational.PqxdhJointKdfGame
 
 /-!
@@ -14,31 +15,31 @@ namespace BeaconcryptCore.Computational.PqxdhComposition
 
 /-- Replacing `n` global hybrid steps charges the sum of all adjacent distinguishing gaps. -/
 theorem finiteHybridBound (game : ℕ → ProbComp Bool) (n : ℕ) :
-    (game 0).boolDistAdvantage (game n) ≤
-      ∑ i ∈ Finset.range n, (game i).boolDistAdvantage (game (i + 1)) := by
+    (game 0).boolDistance (game n) ≤
+      ∑ i ∈ Finset.range n, (game i).boolDistance (game (i + 1)) := by
   induction n with
-  | zero => simp [ProbComp.boolDistAdvantage, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+  | zero => simp [ProbComp.boolDistance]
   | succ n ih =>
       calc
-        _ ≤ (game 0).boolDistAdvantage (game n) +
-            (game n).boolDistAdvantage (game (n + 1)) :=
-          ProbComp.boolDistAdvantage_triangle _ _ _
-        _ ≤ (∑ i ∈ Finset.range n, (game i).boolDistAdvantage (game (i + 1))) +
-            (game n).boolDistAdvantage (game (n + 1)) := add_le_add ih (le_refl _)
+        _ ≤ (game 0).boolDistance (game n) +
+            (game n).boolDistance (game (n + 1)) :=
+          ProbComp.boolDistance_triangle _ _ _
+        _ ≤ (∑ i ∈ Finset.range n, (game i).boolDistance (game (i + 1))) +
+            (game n).boolDistance (game (n + 1)) := add_le_add ih (le_refl _)
         _ = _ := (Finset.sum_range_succ _ n).symm
 
 /-- Component losses can be added only after every adjacent global-game reduction has been supplied. -/
 theorem finiteHybridBound_of_hop_bounds (game : ℕ → ProbComp Bool) (n : ℕ)
     (loss : ℕ → ℝ)
-    (hop : ∀ i < n, (game i).boolDistAdvantage (game (i + 1)) ≤ loss i) :
-    (game 0).boolDistAdvantage (game n) ≤ ∑ i ∈ Finset.range n, loss i := by
+    (hop : ∀ i < n, (game i).boolDistance (game (i + 1)) ≤ loss i) :
+    (game 0).boolDistance (game n) ≤ ∑ i ∈ Finset.range n, loss i := by
   exact (finiteHybridBound game n).trans
     (Finset.sum_le_sum (fun i hi => hop i (Finset.mem_range.mp hi)))
 
 /-- A common per-hop loss incurs an explicit `n`-fold charge, not a free multi-key lifting. -/
 theorem finiteHybridBound_uniform_loss (game : ℕ → ProbComp Bool) (n : ℕ) (loss : ℝ)
-    (hop : ∀ i < n, (game i).boolDistAdvantage (game (i + 1)) ≤ loss) :
-    (game 0).boolDistAdvantage (game n) ≤ n * loss := by
+    (hop : ∀ i < n, (game i).boolDistance (game (i + 1)) ≤ loss) :
+    (game 0).boolDistance (game n) ≤ n * loss := by
   simpa using finiteHybridBound_of_hop_bounds game n (fun _ => loss) hop
 
 end BeaconcryptCore.Computational.PqxdhComposition

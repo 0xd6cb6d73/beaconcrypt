@@ -35,7 +35,7 @@ noncomputable def random (sample : ProbComp (Packet (extra := extra) (M := M) (P
 /-- Averaging the real-child freshness comparison retains the exact full predecessor sampler and charges three copies of its actual input-candidate event. -/
 theorem actual_route (sample : ProbComp (Packet (extra := extra) (M := M) (P := P) (I := I) (D := D) (K := K) (X := X) (Response := Response) (A := A) (N := N) (S := S) (B := B) source writer sender route decode depth prior))
     (address : (Packet (extra := extra) (M := M) (P := P) (I := I) (D := D) (K := K) (X := X) (Response := Response) (A := A) (N := N) (S := S) (B := B) source writer sender route decode depth prior) → JointKdfAddress) :
-    (actual source writer sender route decode depth remaining sample address).boolDistAdvantage
+    (actual source writer sender route decode depth remaining sample address).boolDistance
       (RawCtxSelectedParentSecrecy.actual source sample address
         (observer source writer sender route decode depth remaining)) ≤
       3 * Pr{let pair ← (RawCtxFullPreimageTester.actual (RawCtxFullPreimageTester.production source)
@@ -77,7 +77,7 @@ set_option maxRecDepth 2048 in
 /-- The independent-child freshness comparison retains the full delayed-coordinate candidate experiment with the same explicit factor three. -/
 theorem random_route (sample : ProbComp (Packet (extra := extra) (M := M) (P := P) (I := I) (D := D) (K := K) (X := X) (Response := Response) (A := A) (N := N) (S := S) (B := B) source writer sender route decode depth prior))
     (address : (Packet (extra := extra) (M := M) (P := P) (I := I) (D := D) (K := K) (X := X) (Response := Response) (A := A) (N := N) (S := S) (B := B) source writer sender route decode depth prior) → JointKdfAddress) :
-    (random source writer sender route decode depth remaining sample address).boolDistAdvantage
+    (random source writer sender route decode depth remaining sample address).boolDistance
       (RawCtxSelectedParentSecrecy.random sample address
         (observer source writer sender route decode depth remaining)) ≤
       3 * Pr{let pair ← (RawCtxSelectedParentCandidates.uniform sample address
@@ -136,7 +136,7 @@ theorem random_route (sample : ProbComp (Packet (extra := extra) (M := M) (P := 
 /-- Real-child recovery is charged to the separately constructed full-output tester, with the freshness coefficient applied explicitly to its Extract/HMAC and finite-image terms. -/
 theorem actual_bound (hmac : HmacSha512) (correct : SourceFullCorrect source hmac)
     (sample : ProbComp (Packet (extra := extra) (M := M) (P := P) (I := I) (D := D) (K := K) (X := X) (Response := Response) (A := A) (N := N) (S := S) (B := B) source writer sender route decode depth prior)) (address : (Packet (extra := extra) (M := M) (P := P) (I := I) (D := D) (K := K) (X := X) (Response := Response) (A := A) (N := N) (S := S) (B := B) source writer sender route decode depth prior) → JointKdfAddress) :
-    (actual source writer sender route decode depth remaining sample address).boolDistAdvantage
+    (actual source writer sender route decode depth remaining sample address).boolDistance
       (RawCtxSelectedParentSecrecy.actual source sample address
         (observer source writer sender route decode depth remaining)) ≤
       3 * ((2 ^ 352 : ℝ)⁻¹ +
@@ -163,7 +163,7 @@ theorem random_bound (sample : ProbComp (Packet (extra := extra) (M := M) (P := 
     (bounded : ∀ (context : Packet (extra := extra) (M := M) (P := P) (I := I) (D := D) (K := K) (X := X) (Response := Response) (A := A) (N := N) (S := S) (B := B) source writer sender route decode depth prior × Entry) output result,
       result ∈ support (observed source writer sender route decode depth remaining context output) →
         (PqxdhInitialCommonSecrecy.candidates result).length ≤ qCandidates) :
-    (random source writer sender route decode depth remaining sample address).boolDistAdvantage
+    (random source writer sender route decode depth remaining sample address).boolDistance
       (RawCtxSelectedParentSecrecy.random sample address
         (observer source writer sender route decode depth remaining)) ≤
       3 * ((qCandidates : ℝ) / (2 ^ 256 : ℝ)) := by
@@ -190,23 +190,23 @@ theorem bound (hmac : HmacSha512) (correct : SourceFullCorrect source hmac)
     (bounded : ∀ (context : Packet (extra := extra) (M := M) (P := P) (I := I) (D := D) (K := K) (X := X) (Response := Response) (A := A) (N := N) (S := S) (B := B) source writer sender route decode depth prior × Entry) output result,
       result ∈ support (observed source writer sender route decode depth remaining context output) →
         (PqxdhInitialCommonSecrecy.candidates result).length ≤ qCandidates) :
-    (actual source writer sender route decode depth remaining sample address).boolDistAdvantage
+    (actual source writer sender route decode depth remaining sample address).boolDistance
       (random source writer sender route decode depth remaining sample address) ≤
       RawCtxSelectedParentHop.extractLoss hmac sample address (observer source writer sender route decode depth remaining) +
         RawCtxSelectedParentHop.hmacLoss hmac sample address (observer source writer sender route decode depth remaining) +
         3 * (RawCtxSelectedParentHop.extractLoss hmac sample address (aliasTester source writer sender route decode depth remaining) +
           RawCtxSelectedParentHop.hmacLoss hmac sample address (aliasTester source writer sender route decode depth remaining) +
           (2 ^ 352 : ℝ)⁻¹ + (qCandidates : ℝ) / (2 ^ 256 : ℝ)) := by
-  have triangle := (ProbComp.boolDistAdvantage_triangle
+  have triangle := (ProbComp.boolDistance_triangle
     (actual source writer sender route decode depth remaining sample address)
     (RawCtxSelectedParentSecrecy.actual source sample address
       (observer source writer sender route decode depth remaining))
     (random source writer sender route decode depth remaining sample address)).trans
-      (add_le_add le_rfl (ProbComp.boolDistAdvantage_triangle _
+      (add_le_add le_rfl (ProbComp.boolDistance_triangle _
         (RawCtxSelectedParentSecrecy.random sample address
           (observer source writer sender route decode depth remaining)) _))
   have main : (RawCtxSelectedParentSecrecy.actual source sample address
-      (observer source writer sender route decode depth remaining)).boolDistAdvantage
+      (observer source writer sender route decode depth remaining)).boolDistance
         (RawCtxSelectedParentSecrecy.random sample address
           (observer source writer sender route decode depth remaining)) ≤
       RawCtxSelectedParentHop.extractLoss hmac sample address
@@ -216,9 +216,9 @@ theorem bound (hmac : HmacSha512) (correct : SourceFullCorrect source hmac)
     RawCtxSelectedParentSecrecy.primitive_bound source hmac correct sample address
       (observer source writer sender route decode depth remaining)
   have back : (RawCtxSelectedParentSecrecy.random sample address
-      (observer source writer sender route decode depth remaining)).boolDistAdvantage
+      (observer source writer sender route decode depth remaining)).boolDistance
         (random source writer sender route decode depth remaining sample address) ≤ 3 * ((qCandidates : ℝ) / (2 ^ 256 : ℝ)) := by
-    simpa only [ProbComp.boolDistAdvantage, abs_sub_comm] using
+    simpa only [ProbComp.boolDistance, abs_sub_comm] using
       random_bound source writer sender route decode depth remaining sample address qCandidates bounded
   exact loss_sum triangle (actual_bound source writer sender route decode depth remaining hmac correct sample address) main back
 

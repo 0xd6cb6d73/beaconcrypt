@@ -59,12 +59,12 @@ noncomputable def loss (hmac : HmacSha512) (fallback : PqxdhDynamicIdentityRouti
     (PqxdhGeneratedPhase1Prefix.privateReduction primitives baseImpl kem setup
       (driver env.toDriverEnvironment program) fallback ordinaryFallback)).toReal +
   Pr{let x ← simulateQ (kemAmbientImpl baseImpl) (PqxdhKemCorrectnessError.errorExperiment kem)}[x = true].toReal +
-  kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
-    (PqxdhChallengeSecretRouting.reduction env.source kem p).toINDCCA +
+  (kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
+    (PqxdhChallengeSecretRouting.reduction env.source kem p).toINDCCA).toReal +
   PqxdhCorrelatedExtractFamily.advantage hmac
     (PqxdhCorrelatedExtractFamily.reduction env.source hmac baseImpl kem p) +
   ∑ index ∈ Finset.range (1 + (7 + qPost * 67)),
-    (hmacPrfRealGame hmac (indexedReduction hmac (rootReduction env.source baseImpl kem p) index)).boolDistAdvantage
+    (hmacPrfRealGame hmac (indexedReduction hmac (rootReduction env.source baseImpl kem p) index)).boolDistance
       (hmacPrfRandomGame (indexedReduction hmac (rootReduction env.source baseImpl kem p) index))
 
 include c postTotal
@@ -75,7 +75,7 @@ theorem bound
     (functional : FunctionalDecapsulation kem)
     (hmac : HmacSha512) (sourceCorrect : SourceRootCorrect env.source hmac)
     (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : PqxdhJointIdentity.Forgery) :
-    (actual env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed).boolDistAdvantage
+    (actual env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed).boolDistance
       (PqxdhInitialPreparedSourceInput.uniformRoot env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed) ≤
     loss env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed qPost hmac fallback ordinaryFallback := by
   have rootBound := (PqxdhInitialRootEventBounds.reduction_bounds attachedVerify primitives env baseImpl kem program post
@@ -92,7 +92,7 @@ theorem bound
     compatible adapter functional hmac sourceCorrect c.noSign c.noCreate fallback ordinaryFallback
     (1 + (7 + qPost * 67)) genericRootBound
   have endpoint := PqxdhInitialRootEventAccepted.uniform_source env attachedVerify primitives program post baseImpl kem selected number ancestors disclosed
-  simpa only [actual, loss, protocol_source, ProbComp.boolDistAdvantage, endpoint] using result
+  simpa only [actual, loss, protocol_source, ProbComp.boolDistance, endpoint] using result
 
 end BeaconcryptCore.Computational.PqxdhInitialRootEventSecrecy
 

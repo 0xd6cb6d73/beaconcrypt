@@ -87,7 +87,7 @@ theorem distance {Auxiliary Result : Type}
     (prior : Prior) (root other left right : RootOutput) (nonce : NonceOutput) (output : FullOutput)
     (reader : Reader) (view : View) (direct : Spec.Domain → Bool) (client : OracleComp Spec Result)
     (state : (RawCtxSharedPrimitive.SharedState Auxiliary × List RootOutput) × Bool) :
-    tvDist ((simulateQ (RawCtxFlaggedQueryTrace.trace
+    discreteDistance ((simulateQ (RawCtxFlaggedQueryTrace.trace
       (handler source writer prior (atRoot root other nonce) left output reader view) privateInputs direct) client).run state)
       ((simulateQ (RawCtxFlaggedQueryTrace.trace
         (handler source writer prior (atRoot root other nonce) right output reader view) privateInputs direct) client).run state) ≤

@@ -255,32 +255,25 @@ theorem flagged_bad_eq {Result : Type} (decode : RawDecoder) (c : Pqxdh.Crypto) 
     (adversary : OracleComp ReceiveSpec Result) (state : AdaptiveCtxReceive.ReceiveState) :
     Pr{let result ← (simulateQ (flaggedImpl true decode c key) adversary).run (state, false)}[result.2.2 = true] =
       Pr{let result ← (simulateQ (flaggedImpl false decode c key) adversary).run (state, false)}[result.2.2 = true] := by
-  have equal := OracleComp.ProgramLogic.Relational.probEvent_output_bad_eq'
+  exact StatefulGoodEvent.bad_probability_eq
     (flaggedImpl true decode c key) (flaggedImpl false decode c key)
-    (fun query state answer next => by
-      simpa only [VCVioLegacy.probOutput_eq_prEvent] using
-        flaggedImpl_agree_good decode c key query state answer next)
+    (flaggedImpl_agree_good decode c key)
     (flaggedImpl_bad_mono true decode c key)
-    (flaggedImpl_bad_mono false decode c key) adversary state
-  rw [VCVioLegacy.probEvent_eq_prEvent, VCVioLegacy.probEvent_eq_prEvent] at equal
-  exact equal
+    (flaggedImpl_bad_mono false decode c key) adversary (state, false)
 
 /-- The complete source state and actual optional plaintext differ only at one of the qRaw charged commitment guesses. -/
 theorem flagged_distance_bound {Result : Type} (decode : RawDecoder) (c : Pqxdh.Crypto) (key : CtxKey)
     (adversary : OracleComp ReceiveSpec Result) (qRaw : ℕ)
     (bounded : adversary.IsQueryBoundP AdaptiveCtxReceive.IsRawQuery qRaw) :
-    ENNReal.ofReal (tvDist
+    ENNReal.ofReal (discreteDistance
       ((simulateQ (flaggedImpl true decode c key) adversary).run (initialState, false))
       ((simulateQ (flaggedImpl false decode c key) adversary).run (initialState, false))) ≤
         (qRaw : ℝ≥0∞) / (2 ^ 512 : ℕ) := by
-  have distance := OracleComp.ProgramLogic.Relational.tvDist_simulateQ_run_le_probEvent_output_bad
-    (flaggedImpl true decode c key) (flaggedImpl false decode c key) adversary initialState
-    (fun query state answer next => by
-      simpa only [VCVioLegacy.probOutput_eq_prEvent] using
-        flaggedImpl_agree_good decode c key query state answer next)
+  have distance := StatefulGoodEvent.distance_le_bad
+    (flaggedImpl true decode c key) (flaggedImpl false decode c key)
+    (flaggedImpl_agree_good decode c key)
     (flaggedImpl_bad_mono true decode c key)
-    (flaggedImpl_bad_mono false decode c key)
-  rw [VCVioLegacy.probEvent_eq_prEvent] at distance
+    (flaggedImpl_bad_mono false decode c key) adversary (initialState, false)
   rw [flagged_bad_eq, flagged_bad_eq_first decode c key adversary initialState (initial_invariant c key)] at distance
   exact (ENNReal.ofReal_le_ofReal distance).trans
     (ENNReal.ofReal_toReal_le.trans (firstDiscrepancy_bound decode c key adversary qRaw bounded))
@@ -289,23 +282,21 @@ theorem flagged_distance_bound {Result : Type} (decode : RawDecoder) (c : Pqxdh.
 theorem source_distance_bound {Result : Type} (decode : RawDecoder) (c : Pqxdh.Crypto) (key : CtxKey)
     (adversary : OracleComp ReceiveSpec Result) (qRaw : ℕ)
     (bounded : adversary.IsQueryBoundP AdaptiveCtxReceive.IsRawQuery qRaw) :
-    ENNReal.ofReal (tvDist
+    ENNReal.ofReal (discreteDistance
       ((simulateQ (loggedImpl decode c key) adversary).run initialState)
       ((simulateQ (replayImpl decode c key) adversary).run initialState)) ≤
         (qRaw : ℝ≥0∞) / (2 ^ 512 : ℕ) := by
-  have projection := tvDist_map_le sourceProjection
+  have projection := discreteDistance_map_le sourceProjection
     ((simulateQ (flaggedImpl true decode c key) adversary).run (initialState, false))
     ((simulateQ (flaggedImpl false decode c key) adversary).run (initialState, false))
-  have same : tvDist
+  have same : discreteDistance
       (sourceProjection <$> (simulateQ (flaggedImpl true decode c key) adversary).run (initialState, false))
       (sourceProjection <$> (simulateQ (flaggedImpl false decode c key) adversary).run (initialState, false)) =
-      tvDist ((simulateQ (loggedImpl decode c key) adversary).run initialState)
+      discreteDistance ((simulateQ (loggedImpl decode c key) adversary).run initialState)
         ((simulateQ (replayImpl decode c key) adversary).run initialState) := by
-    have flaggedTrue := (VCVioLegacy.evalSPMF_eq_iff_evalDistEq _ _).2
+    simpa [sourceImpl] using discreteDistance_congr
       (flagged_run_projection true decode c key adversary (initialState, false))
-    have flaggedFalse := (VCVioLegacy.evalSPMF_eq_iff_evalDistEq _ _).2
       (flagged_run_projection false decode c key adversary (initialState, false))
-    simp only [tvDist, flaggedTrue, flaggedFalse, sourceImpl, Bool.false_eq_true, ↓reduceIte]
   rw [same] at projection
   exact (ENNReal.ofReal_le_ofReal projection).trans (flagged_distance_bound decode c key adversary qRaw bounded)
 
@@ -320,12 +311,12 @@ noncomputable def retainedReplayGame {Result : Type} (decode : RawDecoder) (c : 
 theorem retained_distance_bound {Result : Type} (decode : RawDecoder) (c : Pqxdh.Crypto)
     (adversary : OracleComp ReceiveSpec Result) (qRaw : ℕ)
     (bounded : adversary.IsQueryBoundP AdaptiveCtxReceive.IsRawQuery qRaw) :
-    ENNReal.ofReal (tvDist (retainedDirectLoggedGame decode c adversary)
+    ENNReal.ofReal (discreteDistance (retainedDirectLoggedGame decode c adversary)
       (retainedReplayGame decode c adversary)) ≤ (qRaw : ℝ≥0∞) / (2 ^ 512 : ℕ) := by
   simp only [retainedDirectLoggedGame, loggedGame, retainedReplayGame, bind_pure_comp]
-  apply ofReal_tvDist_bind_left_le_const'
+  apply ofReal_discreteDistance_bind_left_le_const'
   intro key
-  exact (ENNReal.ofReal_le_ofReal (tvDist_map_le (Prod.mk key) _ _)).trans
+  exact (ENNReal.ofReal_le_ofReal (discreteDistance_map_le (Prod.mk key) _ _)).trans
     (source_distance_bound decode c key adversary qRaw bounded)
 
 /-- Canonical shared-ROM adaptive CTX is close to full-tuple replay-only opening with the existing conventional reduction, both explicit integrity sums, the public-prefix term and one qRaw/2^512 private-guess term. -/
@@ -336,7 +327,7 @@ theorem canonical_replay_distance_bound {Result : Type} (decode : RawDecoder) (c
     (sealBound : adversary.IsQueryBoundP AdaptiveCtxQueryBounds.SourceSeal qSeal)
     (rawBound : adversary.IsQueryBoundP AdaptiveCtxReceive.IsRawQuery qRaw)
     (small : qSeal < 2 ^ 96) :
-    ENNReal.ofReal (tvDist
+    ENNReal.ofReal (discreteDistance
       (AdaptiveCtxPrefixValidation.canonicalProjection <$> AdaptiveCtxPrefixValidation.retainedCanonicalGame decode c adversary)
       (retainedReplayGame decode c adversary)) ≤
         ENNReal.ofReal (modifiedNonceAeadINDDollarAdvantage c
@@ -349,10 +340,10 @@ theorem canonical_replay_distance_bound {Result : Type} (decode : RawDecoder) (c
     decode c fallback adversary qHash qSeal qRaw hashBound sealBound rawBound small
   rw [← retainedDirectLoggedGame_eq_client] at canonical
   have aliasBound := retained_distance_bound decode c adversary qRaw rawBound
-  have triangle := ENNReal.ofReal_le_ofReal (tvDist_triangle
+  have triangle := ENNReal.ofReal_le_ofReal (discreteDistance_triangle
     (AdaptiveCtxPrefixValidation.canonicalProjection <$> AdaptiveCtxPrefixValidation.retainedCanonicalGame decode c adversary)
     (retainedDirectLoggedGame decode c adversary) (retainedReplayGame decode c adversary))
-  rw [ENNReal.ofReal_add (tvDist_nonneg _ _) (tvDist_nonneg _ _)] at triangle
+  rw [ENNReal.ofReal_add (discreteDistance_nonneg _ _) (discreteDistance_nonneg _ _)] at triangle
   exact triangle.trans (add_le_add canonical aliasBound)
 
 end BeaconcryptCore.Computational.AdaptiveCtxAliasCoupling

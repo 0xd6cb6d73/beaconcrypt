@@ -1,5 +1,6 @@
 import BeaconcryptCore.Model.Pqxdh.Primitives
 import VCVio.CryptoFoundations.KeyEncapMech
+import VCVio.OracleComp.QueryTracking.QueryBound
 import BeaconcryptCore.Computational.VCVioForwardOracleComp
 
 /-!
@@ -207,7 +208,7 @@ theorem oneKey_indCCAAdvantage_eq_branchDist
     𝒟[oneKeyFinish kem runtime adversary state b]
   let preState : Measure (MlKem768PublicKey × SK × adversary.Context) :=
     𝒟[oneKeyPrefix kem adversary]
-  have hgame : kem.IND_CCA_Game runtime adversary.toINDCCA =
+  have hgame : runtime.evalDist (kem.IND_CCA_Game runtime adversary.toINDCCA) =
       preState.bind fun state => coin.bind fun b =>
         (finish state b).bind fun z => Measure.dirac (b == z) := by
     rw [KEMScheme.IND_CCA_Game, ← evalDist_eq_runtime]
@@ -596,8 +597,8 @@ theorem mlKem768RecipientCorrectness_recovered_eq
     rwa [evalDist_eq_runtime]
   have hdecaps' : 𝒟[kem.decaps sk cStar] {recovered} ≠ 0 := by
     rwa [evalDist_eq_runtime]
-  have hmem : 𝒟[kem.CorrectExp] {decide (recovered = some kReal)} ≠ 0 := by
-    rw [KEMScheme.CorrectExp, evalDist_bind_of_discrete]
+  have hmem : 𝒟[kem.correctnessExperiment] {decide (recovered = some kReal)} ≠ 0 := by
+    rw [KEMScheme.correctnessExperiment, evalDist_bind_of_discrete]
     refine measure_bind_apply_singleton_ne_zero _ _ (pk, sk) _ hkeygen' ?_
     rw [evalDist_bind_of_discrete]
     refine measure_bind_apply_singleton_ne_zero _ _ (cStar, kReal) _ hencaps' ?_
@@ -605,11 +606,11 @@ theorem mlKem768RecipientCorrectness_recovered_eq
     refine measure_bind_apply_singleton_ne_zero _ _ recovered _ hdecaps' ?_
     rw [evalDist_pure]
     simp
-  have htrue : 𝒟[kem.CorrectExp] {true} = 1 := by
+  have htrue : 𝒟[kem.correctnessExperiment] {true} = 1 := by
     rw [evalDist_eq_runtime]
     exact hcorrect
-  have hfalse : 𝒟[kem.CorrectExp] {false} = 0 := by
-    have hmass := evalDist_apply_univ_le_one kem.CorrectExp
+  have hfalse : 𝒟[kem.correctnessExperiment] {false} = 0 := by
+    have hmass := evalDist_apply_univ_le_one kem.correctnessExperiment
     rw [← Measure.apply_true_add_apply_false, htrue] at hmass
     apply le_zero_iff.mp
     apply (ENNReal.add_le_add_iff_left ENNReal.one_ne_top).mp

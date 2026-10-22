@@ -43,10 +43,10 @@ theorem random_reduction {count : Nat} (target : Fin (count + 1)) (real : Fin co
 /-- One original key replacement is exactly the constructed ordinary Boolean IND$ game. -/
 theorem selected_advantage {count : Nat} (target : Fin (count + 1)) (real : Fin count → Bool)
     (c : Pqxdh.Crypto) (client : OracleComp (Spec (count + 1)) Bool) :
-    (Prod.fst <$> sourceGame (join target true real) c client).boolDistAdvantage
+    (Prod.fst <$> sourceGame (join target true real) c client).boolDistance
       (Prod.fst <$> sourceGame (join target false real) c client) =
         modifiedNonceAeadINDDollarAdvantage c (reduction target real c client) := by
-  simp only [modifiedNonceAeadINDDollarAdvantage, ProbComp.boolDistAdvantage,
+  simp only [modifiedNonceAeadINDDollarAdvantage, ProbComp.boolDistance,
     real_reduction target real c client, random_reduction target real c client]
 
 noncomputable def game {count : Nat} (c : Pqxdh.Crypto)
@@ -55,7 +55,7 @@ noncomputable def game {count : Nat} (c : Pqxdh.Crypto)
 
 theorem hop_advantage {count : Nat} (target : Fin (count + 1)) (c : Pqxdh.Crypto)
     (client : OracleComp (Spec (count + 1)) Bool) :
-    (game c client target.val).boolDistAdvantage (game c client (target.val + 1)) =
+    (game c client target.val).boolDistance (game c client (target.val + 1)) =
       modifiedNonceAeadINDDollarAdvantage c (reduction target (otherReal target) c client) := by
   simpa only [game, hybrid_before, hybrid_after] using
     selected_advantage target (otherReal target) c client
@@ -68,7 +68,7 @@ noncomputable def hopLoss {count : Nat} (c : Pqxdh.Crypto)
 
 /-- Every adjacent game is discharged by its constructed one-key reduction before applying the finite hybrid bound. -/
 theorem family_bound {count : Nat} (c : Pqxdh.Crypto) (client : OracleComp (Spec (count + 1)) Bool) :
-    (game c client 0).boolDistAdvantage (game c client (count + 1)) ≤
+    (game c client 0).boolDistance (game c client (count + 1)) ≤
       ∑ target : Fin (count + 1), modifiedNonceAeadINDDollarAdvantage c
         (reduction target (otherReal target) c client) := by
   have bound := PqxdhComposition.finiteHybridBound_of_hop_bounds (game c client) (count + 1)
@@ -80,7 +80,7 @@ theorem family_bound {count : Nat} (c : Pqxdh.Crypto) (client : OracleComp (Spec
 
 /-- The actual all-real indexed family is bounded against the same all-random indexed family. -/
 theorem all_keys_bound {count : Nat} (c : Pqxdh.Crypto) (client : OracleComp (Spec (count + 1)) Bool) :
-    (Prod.fst <$> sourceGame (fun _ => true) c client).boolDistAdvantage
+    (Prod.fst <$> sourceGame (fun _ => true) c client).boolDistance
       (Prod.fst <$> sourceGame (fun _ => false) c client) ≤
         ∑ target : Fin (count + 1), modifiedNonceAeadINDDollarAdvantage c
           (reduction target (otherReal target) c client) := by

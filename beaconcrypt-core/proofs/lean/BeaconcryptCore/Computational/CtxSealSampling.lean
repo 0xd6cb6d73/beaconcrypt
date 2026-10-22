@@ -77,6 +77,7 @@ theorem ctxSealOracle_eq_directSample_of_good (c : Pqxdh.Crypto) (key : CtxKey)
     change (if input.nonce ∈ state.usedNonces then pure (none, state) else _) =
       (if input.nonce ∈ state.usedNonces then pure (none, state) else _)
     rw [ite_eq_right hused, ite_eq_right hused]
+    dsimp only
     rw [ctxRandomOracle,
       QueryImpl.withCaching_run_none uniformSampleImpl hfresh]
     rw [bind_map_left]

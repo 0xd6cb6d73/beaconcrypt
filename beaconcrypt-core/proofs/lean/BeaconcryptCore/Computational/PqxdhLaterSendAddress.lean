@@ -27,7 +27,8 @@ theorem retained_address (prior : Prior) (cr : Ratchet.Crypto RatchetChain Ratch
     store.2.depth (RawCtxSelectedQueryTrace.rootVector sendOrigin) (earlier, store.2.input) walked
   have successor : walk (RawCtxRetainedFunctionalPath.table prior) (store.2.depth + 1)
       (RawCtxSelectedQueryTrace.rootVector sendOrigin) = some (earlier ++ [store.2.input], nextChain parent) := by
-    simp [walk, extended, RawCtxRetainedFunctionalPath.table,
+    rw [walk, extended]
+    simp [RawCtxRetainedFunctionalPath.table,
       show RawCtxFirstParentRisk.inputAddress store.2.input = cursorAddress store.2 from rfl, retained]
   obtain ⟨inputs, path⟩ := RawCtxRetainedFunctionalPath.reachable_path prior cr sendOrigin receiveOrigin entry reachable
   rw [position, successor] at path
@@ -95,7 +96,7 @@ theorem sample_one_table (source : FixedHkdfSha512NoSaltSource) (writer : RawCtx
   · intro request response found
     have kept := PqxdhLaterRetainedPatch.sample_one_extends source writer sender route decode depth start pending
       supported parent output safe request response found
-    simp only [RawCtxRetainedFunctionalPath.table, PqxdhLaterPatchedOccurrence.patchedPrior,
+    simp only [RawCtxRetainedFunctionalPath.table, QueryCache.toFn_ofFn, PqxdhLaterPatchedOccurrence.patchedPrior,
       ← PqxdhInitialNativeParentChild.child_view source pending.2.1 _ parent output separate,
       RawCtxSelectedParentTable.view, kept, Option.getD_some]
   · simp only [← cursor.2.1, PqxdhLaterPatchedOccurrence.patchedPrior, RawCtxSelectedParentTable.lookup,

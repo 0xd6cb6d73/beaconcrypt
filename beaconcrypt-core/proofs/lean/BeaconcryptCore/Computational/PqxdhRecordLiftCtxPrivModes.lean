@@ -461,12 +461,12 @@ theorem random_game (decode : RawDecoder) (crypto : Pqxdh.Crypto) (client : Orac
 
 /-- **The per-key privacy hop.** The replay and random challenger games (world samplers) differ by exactly the ordinary IND$ advantage of the view reduction of the constructed client. -/
 theorem hop_advantage (decode : RawDecoder) (crypto : Pqxdh.Crypto) (client : OracleComp Spec Bool) :
-    (Prod.fst <$> sourceGame uniformBytes .replay decode crypto client).boolDistAdvantage
+    (Prod.fst <$> sourceGame uniformBytes .replay decode crypto client).boolDistance
         (Prod.fst <$> sourceGame uniformBytes .random decode crypto client) =
       CtxNonceAeadIndDollarValidation.modifiedNonceAeadINDDollarAdvantage crypto
         (AdaptiveCtxPrivacyGuard.viewReduction decode (decisionClient bytesSample crypto client)) := by
   rw [← AdaptiveCtxPrivacyGuard.replay_random_advantage]
-  unfold ProbComp.boolDistAdvantage
+  unfold ProbComp.boolDistance
   rw [replay_game, random_game]
 
 end BeaconcryptCore.Computational.PqxdhRecordLiftCtxPrivModes

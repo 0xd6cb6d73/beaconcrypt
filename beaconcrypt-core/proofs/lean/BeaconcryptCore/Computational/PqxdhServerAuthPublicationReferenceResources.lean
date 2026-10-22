@@ -94,7 +94,8 @@ theorem execution_total (setup : Setup baseSpec KemSK) (codec : Codec Reader Wir
   simp only [PqxdhServerAuthPublicationReference.execution, IsTotalQueryBound,
     PqxdhServerAuthPublicationReference.stopped]
   apply (stopped_total setup codec checks context rest caps bounded Q j
-    _ ![qCoin, Q, qHash, qH] ?_ _ ?_).mono
+    (adversary (contextInput setup false context)) ![qCoin, Q, qHash, qH] ?_
+    (PqxdhServerAuthCtxReserve.initial setup context).1 ?_).mono
       (entry_initial_potential setup context caps qCoin Q qHash qH)
   · intro i
     fin_cases i

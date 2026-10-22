@@ -52,7 +52,7 @@ theorem hop_distance {count : Nat} (target : Fin (count + 1))
     (sealBound : client.IsQueryBoundP (SelectionClass target (TargetClass SourceSeal)) qSeal)
     (rawBound : client.IsQueryBoundP (SelectionClass target (TargetClass IsRawQuery)) qRaw)
     (small : qSeal < 2 ^ 96) :
-    ENNReal.ofReal ((game decode c client target.val).boolDistAdvantage (game decode c client (target.val + 1))) ≤
+    ENNReal.ofReal ((game decode c client target.val).boolDistance (game decode c client (target.val + 1))) ≤
       loss target decode c fallback client qHash qRaw := by
   simpa only [game, loss, clientReduction, validationReduction, forgeryReduction,
     hybrid_before, hybrid_after, join_reconstruct] using
@@ -80,11 +80,11 @@ theorem hop_bound {count : Nat} (target : Fin (count + 1))
     (sealBound : client.IsQueryBoundP (SelectionClass target (TargetClass SourceSeal)) qSeal)
     (rawBound : client.IsQueryBoundP (SelectionClass target (TargetClass IsRawQuery)) qRaw)
     (small : qSeal < 2 ^ 96) :
-    (game decode c client target.val).boolDistAdvantage (game decode c client (target.val + 1)) ≤
+    (game decode c client target.val).boolDistance (game decode c client (target.val + 1)) ≤
       (loss target decode c fallback client qHash qRaw).toReal := by
   have converted := ENNReal.toReal_mono (loss_finite target decode c fallback client qHash qRaw)
     (hop_distance target decode c fallback client qHash qSeal qRaw hashBound sealBound rawBound small)
-  simpa only [ENNReal.toReal_ofReal (show 0 ≤ (game decode c client target.val).boolDistAdvantage
+  simpa only [ENNReal.toReal_ofReal (show 0 ≤ (game decode c client target.val).boolDistance
     (game decode c client (target.val + 1)) from abs_nonneg _)] using converted
 
 noncomputable def hopLoss {count : Nat} (decode : Fin (count + 1) → RawDecoder) (c : Pqxdh.Crypto)
@@ -101,7 +101,7 @@ theorem family_bound {count : Nat} (decode : Fin (count + 1) → RawDecoder) (c 
     (sealBound : ∀ target, client.IsQueryBoundP (SelectionClass target (TargetClass SourceSeal)) (qSeal target))
     (rawBound : ∀ target, client.IsQueryBoundP (SelectionClass target (TargetClass IsRawQuery)) (qRaw target))
     (small : ∀ target, qSeal target < 2 ^ 96) :
-    (game decode c client 0).boolDistAdvantage (game decode c client (count + 1)) ≤
+    (game decode c client 0).boolDistance (game decode c client (count + 1)) ≤
       ∑ target : Fin (count + 1), (loss target decode c fallback client (qHash target) (qRaw target)).toReal := by
   have bound := PqxdhComposition.finiteHybridBound_of_hop_bounds (game decode c client) (count + 1)
     (hopLoss decode c fallback client qHash qRaw) (fun hop valid => by

@@ -28,7 +28,7 @@ theorem memo_view (source : FixedHkdfSha512NoSaltSource) (cache : Table) (addres
   | none => simp [memoImpl, view, found]
   | some output =>
     have retained : cache.cacheQuery address output = cache := by
-      funext previous
+      refine QueryCache.ext (fun previous => ?_)
       by_cases same : previous = address
       · subst previous
         simpa using found.symm

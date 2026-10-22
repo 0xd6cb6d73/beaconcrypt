@@ -98,7 +98,7 @@ theorem random_mixture :
 theorem local_real (start : Start extra M P I D K X Response A N S B) (qPost : Nat)
     (bounded : ∀ reply, (start.1.post reply).IsTotalQueryBound qPost)
     (position : start.1.number.val = (depth + 1) + remaining + 1) :
-    ENNReal.ofReal ((sourceGame source writer sender route decode start.1 zeroRoot (response start) (depth + 1)).boolDistAdvantage
+    ENNReal.ofReal ((sourceGame source writer sender route decode start.1 zeroRoot (response start) (depth + 1)).boolDistance
       (localModel source writer sender route decode depth remaining false start)) ≤
       ((8 + qPost * 67 : Nat) : ENNReal) * (2 ^ 256 : ENNReal)⁻¹ := by
   have compared := PqxdhInitialSourceLaterMixture.real_bound source writer start.1.selectedMessage zeroRoot (response start) start.1.other
@@ -110,16 +110,16 @@ theorem local_real (start : Start extra M P I D K X Response A N S B) (qPost : N
   have same := PqxdhInitialSourceLaterMixture.resumed_real source writer start.1.selectedMessage zeroRoot (response start) start.1.other
     sender route decode start.1.index start.1.metadata { start.1.ready with root := zeroRoot } start.1.post start.1.before
     start.1.selected start.1.number start.1.ancestors start.1.disclosed start.1.shared start.1.privateState start.1.cache depth
-  simpa only [ProbComp.boolDistAdvantage, congrArg (fun μ : MeasureTheory.Measure Bool => μ {true}) same, sourceGame, localModel, Bool.false_eq_true, ite_false] using
+  simpa only [ProbComp.boolDistance, congrArg (fun μ : MeasureTheory.Measure Bool => μ {true}) same, sourceGame, localModel, Bool.false_eq_true, ite_false] using
     compared.trans collision
 
 /-- Averaging the exact real source endpoint over the original preparation and shared initial64 draw retains its one collision allowance without a target-response selection factor. -/
 theorem real_bound (qPost : Nat)
     (bounded : ∀ input, Sum.inr input ∈ support prior → ∀ reply, (input.post reply).IsTotalQueryBound qPost)
     (position : ∀ input, Sum.inr input ∈ support prior → input.number.val = (depth + 1) + remaining + 1) :
-    ENNReal.ofReal ((PqxdhInitialSourceSampled.game source writer sender route decode prior (depth + 1)).boolDistAdvantage actualGame) ≤
+    ENNReal.ofReal ((PqxdhInitialSourceSampled.game source writer sender route decode prior (depth + 1)).boolDistance actualGame) ≤
       ((8 + qPost * 67 : Nat) : ENNReal) * (2 ^ 256 : ENNReal)⁻¹ := by
-  have mixed : ENNReal.ofReal ((PqxdhInitialSourceSampled.game source writer sender route decode prior (depth + 1)).boolDistAdvantage
+  have mixed : ENNReal.ofReal ((PqxdhInitialSourceSampled.game source writer sender route decode prior (depth + 1)).boolDistance
       (mixture source writer sender route decode depth remaining false prior)) ≤
       ((8 + qPost * 67 : Nat) : ENNReal) * (2 ^ 256 : ENNReal)⁻¹ := by
     apply RawCtxSupportedMixture.bound prior
@@ -127,19 +127,19 @@ theorem real_bound (qPost : Nat)
     apply RawCtxSupportedMixture.bound ($ᵗ HmacBlock)
     intro output _
     cases context with
-    | inl decision => simp only [PqxdhInitialSourceSampled.observe, observation, ProbComp.boolDistAdvantage, sub_self, abs_zero,
+    | inl decision => simp only [PqxdhInitialSourceSampled.observe, observation, ProbComp.boolDistance, sub_self, abs_zero,
         ENNReal.ofReal_zero, zero_le]
     | inr input =>
       exact local_real source writer sender route decode depth remaining (input, output) qPost
         (bounded input supported) (position input supported)
   have same := actual_mixture source writer sender route decode depth remaining prior
-  simpa only [ProbComp.boolDistAdvantage, congrArg (fun μ : MeasureTheory.Measure Bool => μ {true}) same] using mixed
+  simpa only [ProbComp.boolDistance, congrArg (fun μ : MeasureTheory.Measure Bool => μ {true}) same] using mixed
 
 /-- The actual later source endpoint pays its single prior-input collision allowance and the complete cached-prefix normalization sum. -/
 theorem local_random (start : Start extra M P I D K X Response A N S B) (qPost : Nat)
     (bounded : ∀ reply, (start.1.post reply).IsTotalQueryBound qPost)
     (position : start.1.number.val = (depth + 1) + remaining + 1) :
-    ENNReal.ofReal ((sourceGame source writer sender route decode start.1 zeroRoot (response start) (depth + 2)).boolDistAdvantage
+    ENNReal.ofReal ((sourceGame source writer sender route decode start.1 zeroRoot (response start) (depth + 2)).boolDistance
       (localModel source writer sender route decode depth remaining true start)) ≤
       ((8 + qPost * 67 : Nat) : ENNReal) * (2 ^ 256 : ENNReal)⁻¹ +
         ∑ j ∈ Finset.range (7 + qPost * 67), ((j + 1 : Nat) : ENNReal) * (2 ^ 256 : ENNReal)⁻¹ := by
@@ -159,32 +159,32 @@ theorem local_random (start : Start extra M P I D K X Response A N S B) (qPost :
   have same := PqxdhInitialSourceLaterMixture.resumed_normalized source writer start.1.selectedMessage zeroRoot (response start) start.1.other
     sender route decode start.1.index start.1.metadata { start.1.ready with root := zeroRoot } start.1.post start.1.before
     start.1.selected start.1.number start.1.ancestors start.1.disclosed start.1.shared start.1.privateState start.1.cache depth
-  have back : ENNReal.ofReal (normalized.boolDistAdvantage (localModel source writer sender route decode depth remaining true start)) ≤
+  have back : ENNReal.ofReal (normalized.boolDistance (localModel source writer sender route decode depth remaining true start)) ≤
       ((8 + qPost * 67 : Nat) : ENNReal) * (2 ^ 256 : ENNReal)⁻¹ := by
-    simpa only [ProbComp.boolDistAdvantage, congrArg (fun μ : MeasureTheory.Measure Bool => μ {true}) same, normalized, marker, localModel, ite_true] using compared.trans collision
+    simpa only [ProbComp.boolDistance, congrArg (fun μ : MeasureTheory.Measure Bool => μ {true}) same, normalized, marker, localModel, ite_true] using compared.trans collision
   have normal := PqxdhInitialSourceExperiment.normalization source writer start.1.selectedMessage zeroRoot (response start) start.1.other
     sender route decode start.1.index start.1.metadata { start.1.ready with root := zeroRoot } start.1.post start.1.before
     start.1.selected start.1.number start.1.ancestors start.1.disclosed start.1.shared start.1.privateState start.1.cache depth qPost bounded
-  have front : ENNReal.ofReal ((sourceGame source writer sender route decode start.1 zeroRoot (response start) (depth + 2)).boolDistAdvantage normalized) ≤
+  have front : ENNReal.ofReal ((sourceGame source writer sender route decode start.1 zeroRoot (response start) (depth + 2)).boolDistance normalized) ≤
       ∑ j ∈ Finset.range (7 + qPost * 67), ((j + 1 : Nat) : ENNReal) * (2 ^ 256 : ENNReal)⁻¹ := by
-    simpa only [ProbComp.boolDistAdvantage, VCVioLegacy.evalDist_singleton_eq_probOutput] using
-      (ENNReal.ofReal_le_ofReal (abs_probOutput_toReal_sub_le_tvDist
+    simpa only [ProbComp.boolDistance, ← prEvent_eq_evalDist_singleton] using
+      (ENNReal.ofReal_le_ofReal (abs_prEvent_toReal_sub_le_discreteDistance
         (sourceGame source writer sender route decode start.1 zeroRoot (response start) (depth + 2)) normalized)).trans normal
-  have triangle := ENNReal.ofReal_le_ofReal (ProbComp.boolDistAdvantage_triangle
+  have triangle := ENNReal.ofReal_le_ofReal (ProbComp.boolDistance_triangle
     (sourceGame source writer sender route decode start.1 zeroRoot (response start) (depth + 2)) normalized
     (localModel source writer sender route decode depth remaining true start))
-  simp only [ProbComp.boolDistAdvantage] at triangle
+  simp only [ProbComp.boolDistance] at triangle
   rw [ENNReal.ofReal_add (abs_nonneg _) (abs_nonneg _)] at triangle
-  simpa only [ProbComp.boolDistAdvantage, add_comm] using triangle.trans (add_le_add front back)
+  simpa only [ProbComp.boolDistance, add_comm] using triangle.trans (add_le_add front back)
 
 /-- The later native reduction observer is connected to the same complete sampled source experiment, retaining the actual source normalization and collision terms with no initializer-selection loss. -/
 theorem random_bound (qPost : Nat)
     (bounded : ∀ input, Sum.inr input ∈ support prior → ∀ reply, (input.post reply).IsTotalQueryBound qPost)
     (position : ∀ input, Sum.inr input ∈ support prior → input.number.val = (depth + 1) + remaining + 1) :
-    ENNReal.ofReal ((PqxdhInitialSourceSampled.game source writer sender route decode prior (depth + 2)).boolDistAdvantage randomGame) ≤
+    ENNReal.ofReal ((PqxdhInitialSourceSampled.game source writer sender route decode prior (depth + 2)).boolDistance randomGame) ≤
       ((8 + qPost * 67 : Nat) : ENNReal) * (2 ^ 256 : ENNReal)⁻¹ +
         ∑ j ∈ Finset.range (7 + qPost * 67), ((j + 1 : Nat) : ENNReal) * (2 ^ 256 : ENNReal)⁻¹ := by
-  have mixed : ENNReal.ofReal ((PqxdhInitialSourceSampled.game source writer sender route decode prior (depth + 2)).boolDistAdvantage
+  have mixed : ENNReal.ofReal ((PqxdhInitialSourceSampled.game source writer sender route decode prior (depth + 2)).boolDistance
       (mixture source writer sender route decode depth remaining true prior)) ≤
       ((8 + qPost * 67 : Nat) : ENNReal) * (2 ^ 256 : ENNReal)⁻¹ +
         ∑ j ∈ Finset.range (7 + qPost * 67), ((j + 1 : Nat) : ENNReal) * (2 ^ 256 : ENNReal)⁻¹ := by
@@ -193,13 +193,13 @@ theorem random_bound (qPost : Nat)
     apply RawCtxSupportedMixture.bound ($ᵗ HmacBlock)
     intro output _
     cases context with
-    | inl decision => simp only [PqxdhInitialSourceSampled.observe, observation, ProbComp.boolDistAdvantage, sub_self, abs_zero,
+    | inl decision => simp only [PqxdhInitialSourceSampled.observe, observation, ProbComp.boolDistance, sub_self, abs_zero,
         ENNReal.ofReal_zero, zero_le]
     | inr input =>
       exact local_random source writer sender route decode depth remaining (input, output) qPost
         (bounded input supported) (position input supported)
   have same := random_mixture source writer sender route decode depth remaining prior
-  simpa only [ProbComp.boolDistAdvantage, congrArg (fun μ : MeasureTheory.Measure Bool => μ {true}) same] using mixed
+  simpa only [ProbComp.boolDistance, congrArg (fun μ : MeasureTheory.Measure Bool => μ {true}) same] using mixed
 
 end BeaconcryptCore.Computational.PqxdhInitialSampledSourceEndpoints
 

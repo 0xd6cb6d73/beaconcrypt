@@ -31,15 +31,15 @@ theorem authenticated_family_bound {KemSK : Type} {setup : StatefulPhase1Setup b
       (PqxdhProtocolSelector.SelectorClass (PqxdhPrivateKemQueryBounds.SelectorSource (baseSpec := baseSpec) PqxdhPrivatePhase1Prefix.Creating)) 0)
     (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : Forgery)
     (post : Post program.Selection S (B + 1)) :
-    (actual env baseImpl kem attachedVerify primitives program post).boolDistAdvantage
+    (actual env baseImpl kem attachedVerify primitives program post).boolDistance
       (PqxdhCorrelatedExtractFamily.randomGame
         (PqxdhCorrelatedExtractFamily.reduction env.source hmac baseImpl kem
           (protocol env kem attachedVerify primitives program post))) ≤
       (advantage primitives (PqxdhGeneratedPhase1Prefix.privateReduction primitives baseImpl kem setup
         (driver env.toEnvironment program) fallback ordinaryFallback)).toReal +
-      kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl (PqxdhInitializerSecrecy.kemAmbientImpl baseImpl))
+      (kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl (PqxdhInitializerSecrecy.kemAmbientImpl baseImpl))
         (PqxdhChallengeSecretRouting.reduction env.source kem
-          (protocol env kem attachedVerify primitives program post)).toINDCCA +
+          (protocol env kem attachedVerify primitives program post)).toINDCCA).toReal +
       PqxdhCorrelatedExtractFamily.advantage hmac
         (PqxdhCorrelatedExtractFamily.reduction env.source hmac baseImpl kem
           (protocol env kem attachedVerify primitives program post)) := by
@@ -47,7 +47,7 @@ theorem authenticated_family_bound {KemSK : Type} {setup : StatefulPhase1Setup b
     attachedVerify primitives adapter program noSign noCreate fallback ordinaryFallback post
   have extracted := PqxdhCorrelatedExtractFamily.correlated_advantage_eq env.source hmac sourceCorrect
     baseImpl kem (protocol env kem attachedVerify primitives program post)
-  exact (ProbComp.boolDistAdvantage_triangle _ _ _).trans
+  exact (ProbComp.boolDistance_triangle _ _ _).trans
     (add_le_add authenticated (le_of_eq extracted))
 
 /-- Every original root position pays its constructed ordinary HMAC reduction; repeated addresses retain the same complete root. -/
@@ -72,15 +72,15 @@ theorem authenticated_uniform_roots_bound {KemSK : Type} {setup : StatefulPhase1
     (rootBound : (PqxdhCorrelatedExpand.rootReduction env.source baseImpl kem
       (protocol env kem attachedVerify primitives program post)).IsQueryBoundP
         PqxdhCorrelatedExpandHybrid.IsRoot q) :
-    (actual env baseImpl kem attachedVerify primitives program post).boolDistAdvantage
+    (actual env baseImpl kem attachedVerify primitives program post).boolDistance
       (PqxdhCorrelatedExpandHybrid.uniformGame
         (PqxdhCorrelatedExpand.rootReduction env.source baseImpl kem
           (protocol env kem attachedVerify primitives program post))) ≤
       (advantage primitives (PqxdhGeneratedPhase1Prefix.privateReduction primitives baseImpl kem setup
         (driver env.toEnvironment program) fallback ordinaryFallback)).toReal +
-      kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl (PqxdhInitializerSecrecy.kemAmbientImpl baseImpl))
+      (kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl (PqxdhInitializerSecrecy.kemAmbientImpl baseImpl))
         (PqxdhChallengeSecretRouting.reduction env.source kem
-          (protocol env kem attachedVerify primitives program post)).toINDCCA +
+          (protocol env kem attachedVerify primitives program post)).toINDCCA).toReal +
       PqxdhCorrelatedExtractFamily.advantage hmac
         (PqxdhCorrelatedExtractFamily.reduction env.source hmac baseImpl kem
           (protocol env kem attachedVerify primitives program post)) +
@@ -88,7 +88,7 @@ theorem authenticated_uniform_roots_bound {KemSK : Type} {setup : StatefulPhase1
         (PqxdhSecretInputKdf.hmacPrfRealGame hmac
           (PqxdhCorrelatedExpandHybrid.indexedReduction hmac
             (PqxdhCorrelatedExpand.rootReduction env.source baseImpl kem
-              (protocol env kem attachedVerify primitives program post)) index)).boolDistAdvantage
+              (protocol env kem attachedVerify primitives program post)) index)).boolDistance
           (PqxdhSecretInputKdf.hmacPrfRandomGame
             (PqxdhCorrelatedExpandHybrid.indexedReduction hmac
               (PqxdhCorrelatedExpand.rootReduction env.source baseImpl kem
@@ -99,7 +99,7 @@ theorem authenticated_uniform_roots_bound {KemSK : Type} {setup : StatefulPhase1
     (PqxdhCorrelatedExpand.rootReduction env.source baseImpl kem
       (protocol env kem attachedVerify primitives program post)) q rootBound
   rw [← PqxdhCorrelatedExpand.reduction_expanded_eq env.source hmac baseImpl kem] at expanded
-  exact (ProbComp.boolDistAdvantage_triangle _ _ _).trans (add_le_add family expanded)
+  exact (ProbComp.boolDistance_triangle _ _ _).trans (add_le_add family expanded)
 
 /-- The current native continuation makes no further private roots, so its actual reduction uses at most one family address. This does not make its local computations free. -/
 theorem native_root_query_bound {KemSK : Type} {setup : StatefulPhase1Setup baseSpec}
@@ -161,22 +161,22 @@ theorem authenticated_native_root_bound {KemSK : Type} {setup : StatefulPhase1Se
     (postBound : ∀ choice response, RawCtxRevealBudgets.Bounded (post choice response) budget)
     (qAux : Nat)
     (auxBound : ∀ query primitive, ((env.aux query).run primitive).IsTotalQueryBound qAux) :
-    (actual env baseImpl kem attachedVerify primitives program post).boolDistAdvantage
+    (actual env baseImpl kem attachedVerify primitives program post).boolDistance
       (PqxdhCorrelatedExpandHybrid.uniformGame
         (PqxdhCorrelatedExpand.rootReduction env.source baseImpl kem
           (protocol env kem attachedVerify primitives program post))) ≤
       (advantage primitives (PqxdhGeneratedPhase1Prefix.privateReduction primitives baseImpl kem setup
         (driver env.toEnvironment program) fallback ordinaryFallback)).toReal +
-      kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl (PqxdhInitializerSecrecy.kemAmbientImpl baseImpl))
+      (kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl (PqxdhInitializerSecrecy.kemAmbientImpl baseImpl))
         (PqxdhChallengeSecretRouting.reduction env.source kem
-          (protocol env kem attachedVerify primitives program post)).toINDCCA +
+          (protocol env kem attachedVerify primitives program post)).toINDCCA).toReal +
       PqxdhCorrelatedExtractFamily.advantage hmac
         (PqxdhCorrelatedExtractFamily.reduction env.source hmac baseImpl kem
           (protocol env kem attachedVerify primitives program post)) +
         (PqxdhSecretInputKdf.hmacPrfRealGame hmac
           (PqxdhCorrelatedExpandHybrid.indexedReduction hmac
             (PqxdhCorrelatedExpand.rootReduction env.source baseImpl kem
-              (protocol env kem attachedVerify primitives program post)) 0)).boolDistAdvantage
+              (protocol env kem attachedVerify primitives program post)) 0)).boolDistance
           (PqxdhSecretInputKdf.hmacPrfRandomGame
             (PqxdhCorrelatedExpandHybrid.indexedReduction hmac
               (PqxdhCorrelatedExpand.rootReduction env.source baseImpl kem

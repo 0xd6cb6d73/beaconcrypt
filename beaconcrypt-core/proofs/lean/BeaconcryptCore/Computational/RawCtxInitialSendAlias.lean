@@ -84,18 +84,18 @@ theorem random_bound {Context Result : Type} (sample : ProbComp (Context × Root
 /-- Both advantages retain the exact joint root/context sampler and literal native continuation. No smallness is postulated. -/
 noncomputable def reductionLoss {Context Result : Type} (hmac : HmacSha512)
     (sample : ProbComp (Context × RootOutput)) (resume : Continue Context Result) : ℝ :=
-  (extractRealGame hmac (sampler sample) (fullExtractReduction hmac .ratchet (observer resume))).boolDistAdvantage
+  (extractRealGame hmac (sampler sample) (fullExtractReduction hmac .ratchet (observer resume))).boolDistance
     (extractUniformGame (sampler sample) (fullExtractReduction hmac .ratchet (observer resume))) +
-  (hmacPrfRealGame hmac (fullExpandReduction .ratchet (sampler sample) (observer resume))).boolDistAdvantage
+  (hmacPrfRealGame hmac (fullExpandReduction .ratchet (sampler sample) (observer resume))).boolDistance
     (hmacPrfRandomGame (fullExpandReduction .ratchet (sampler sample) (observer resume)))
 
 /-- The actual fixed-HKDF comparison pays one exact-sampler Extract advantage and one ordinary secret-key HMAC PRF advantage, with coefficient one each. -/
 theorem primitive_bound {Context Result : Type} (source : FixedHkdfSha512NoSaltSource)
     (hmac : HmacSha512) (correct : SourceFullCorrect source hmac)
     (sample : ProbComp (Context × RootOutput)) (resume : Continue Context Result) :
-    (real source sample resume).boolDistAdvantage (random sample resume) ≤ reductionLoss hmac sample resume := by
+    (real source sample resume).boolDistance (random sample resume) ≤ reductionLoss hmac sample resume := by
   have ideal := random_source sample resume
-  simpa only [real_source, ProbComp.boolDistAdvantage, ideal, reductionLoss] using
+  simpa only [real_source, ProbComp.boolDistance, ideal, reductionLoss] using
     sourceFullAdvantage_le_extract_add_hmac source hmac correct .ratchet (sampler sample) (observer resume)
 
 /-- The actual source initial send-alias probability is bounded only after charging its two displayed computational reductions. The final statistical term uses one shared64 response. -/
@@ -107,7 +107,7 @@ theorem source_bound {Context Result : Type} (source : FixedHkdfSha512NoSaltSour
   have randomMeasure : 𝒟[random sample resume] {true} ≤ (1 : ENNReal) / (2 ^ 256 : ENNReal) := by
     rw [← prEvent_eq_evalDist_singleton]
     exact random_bound sample resume
-  have result := (ProbComp.evalDist_apply_true_le_add_ofReal_boolDistAdvantage
+  have result := (ProbComp.evalDist_apply_true_le_add_ofReal_boolDistance
     (real source sample resume) (random sample resume)).trans
       (add_le_add randomMeasure
         (ENNReal.ofReal_le_ofReal (primitive_bound source hmac correct sample resume)))

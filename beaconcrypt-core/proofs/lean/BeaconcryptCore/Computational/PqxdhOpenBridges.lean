@@ -369,18 +369,18 @@ theorem authenticated_native_root_bound_bridged_open
     (initialMatch : PqxdhProtocolServerInvariant.RootFields env.source.crypto secretIdentity
       env.senderId env.index env.server env.initial) :
     let p := protocol env kem attachedVerify primitives program post
-    ((actual env baseImpl kem attachedVerify primitives program post).boolDistAdvantage
+    ((actual env baseImpl kem attachedVerify primitives program post).boolDistance
       (uniformGame (rootReduction env.source baseImpl kem p)) ≤
       (PqxdhJointIdentity.advantage primitives
         (PqxdhGeneratedPhase1Prefix.privateReduction primitives baseImpl kem setup
           (driver env.toDriverEnvironment program) fallback ordinaryFallback)).toReal +
       Pr{let x ← simulateQ (kemAmbientImpl baseImpl) (PqxdhKemCorrectnessError.errorExperiment kem)}[x = true].toReal +
-      kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
-        (PqxdhChallengeSecretRouting.reduction env.source kem p).toINDCCA +
+      (kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
+        (PqxdhChallengeSecretRouting.reduction env.source kem p).toINDCCA).toReal +
       PqxdhCorrelatedExtractFamily.advantage hmac
         (PqxdhCorrelatedExtractFamily.reduction env.source hmac baseImpl kem p) +
       ∑ index ∈ Finset.range c.qRoot,
-        (hmacPrfRealGame hmac (indexedReduction hmac (rootReduction env.source baseImpl kem p) index)).boolDistAdvantage
+        (hmacPrfRealGame hmac (indexedReduction hmac (rootReduction env.source baseImpl kem p) index)).boolDistance
           (hmacPrfRandomGame (indexedReduction hmac (rootReduction env.source baseImpl kem p) index))) ∧
     (∀ result ∈ support (PqxdhPrivateSourceCoins.privateRun attachedVerify primitives 1
       (PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (driver env.toDriverEnvironment program))),
@@ -410,18 +410,18 @@ theorem authenticated_extracted_root_bound_open
     (initialMatch : PqxdhProtocolServerInvariant.RootFields env.source.crypto secretIdentity
       env.senderId env.index env.server env.initial) :
     let p := protocol env kem attachedVerify primitives program post
-    ((extractedActual env baseImpl kem attachedVerify primitives program post secretIdentity).boolDistAdvantage
+    ((extractedActual env baseImpl kem attachedVerify primitives program post secretIdentity).boolDistance
       (uniformGame (rootReduction env.source baseImpl kem p)) ≤
       (PqxdhJointIdentity.advantage primitives
         (PqxdhGeneratedPhase1Prefix.privateReduction primitives baseImpl kem setup
           (driver env.toDriverEnvironment program) fallback ordinaryFallback)).toReal +
       Pr{let x ← simulateQ (kemAmbientImpl baseImpl) (PqxdhKemCorrectnessError.errorExperiment kem)}[x = true].toReal +
-      kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
-        (PqxdhChallengeSecretRouting.reduction env.source kem p).toINDCCA +
+      (kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
+        (PqxdhChallengeSecretRouting.reduction env.source kem p).toINDCCA).toReal +
       PqxdhCorrelatedExtractFamily.advantage hmac
         (PqxdhCorrelatedExtractFamily.reduction env.source hmac baseImpl kem p) +
       ∑ index ∈ Finset.range c.qRoot,
-        (hmacPrfRealGame hmac (indexedReduction hmac (rootReduction env.source baseImpl kem p) index)).boolDistAdvantage
+        (hmacPrfRealGame hmac (indexedReduction hmac (rootReduction env.source baseImpl kem p) index)).boolDistance
           (hmacPrfRandomGame (indexedReduction hmac (rootReduction env.source baseImpl kem p) index))) ∧
     (∀ result ∈ support (PqxdhPrivateSourceCoins.privateRun attachedVerify primitives 1
       (PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (driver env.toDriverEnvironment program))),
@@ -452,7 +452,7 @@ theorem evolving_bound_bridged_open (positive : 0 < number.val)
     (initialMatch : PqxdhProtocolServerInvariant.RootFields env.source.crypto secretIdentity
       env.senderId env.index env.server env.initial) :
     (PqxdhInitialRootEventSecrecy.actual env baseImpl kem attachedVerify primitives program post selected number
-        ancestors disclosed).boolDistAdvantage
+        ancestors disclosed).boolDistance
       (PqxdhAuthenticatedEvolvingSecrecy.ideal env baseImpl kem attachedVerify primitives program post selected
         number ancestors disclosed) ≤
       PqxdhAuthenticatedEvolvingSecrecy.loss env baseImpl kem attachedVerify primitives program post selected
@@ -479,7 +479,7 @@ theorem evolving_extracted_bound_open (positive : 0 < number.val)
     (initialMatch : PqxdhProtocolServerInvariant.RootFields env.source.crypto secretIdentity
       env.senderId env.index env.server env.initial) :
     (extractedEvolvingActual env baseImpl kem attachedVerify primitives program post selected number ancestors
-        disclosed secretIdentity).boolDistAdvantage
+        disclosed secretIdentity).boolDistance
       (PqxdhAuthenticatedEvolvingSecrecy.ideal env baseImpl kem attachedVerify primitives program post selected
         number ancestors disclosed) ≤
       PqxdhAuthenticatedEvolvingSecrecy.loss env baseImpl kem attachedVerify primitives program post selected

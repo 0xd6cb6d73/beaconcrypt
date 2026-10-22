@@ -296,7 +296,7 @@ def toyOrdinaryFallback : PqxdhJointIdentity.Forgery := ⟨[], List.Vector.repli
 /-- HB-112 with every hypothesis proved: selected owner `.beacon 0`, record number `1`, no ancestors and no disclosures. -/
 theorem hb112_instance :
     (PqxdhInitialRootEventSecrecy.actual toyEnv baseImpl toyKem toyAttachedVerify toyPrimitives toyProgram toyPost
-        toySelected 1#u64 [] []).boolDistAdvantage
+        toySelected 1#u64 [] []).boolDistance
       (PqxdhAuthenticatedEvolvingSecrecy.ideal toyEnv baseImpl toyKem toyAttachedVerify toyPrimitives toyProgram
         toyPost toySelected 1#u64 [] []) ≤
     PqxdhAuthenticatedEvolvingSecrecy.loss toyEnv baseImpl toyKem toyAttachedVerify toyPrimitives toyProgram toyPost
@@ -309,20 +309,20 @@ theorem hb112_instance :
 theorem hb111_instance :
     let p := PqxdhAuthenticatedRootExperiment.protocol toyEnv toyKem toyAttachedVerify toyPrimitives toyProgram toyPost
     ((PqxdhAuthenticatedRootExperiment.actual toyEnv baseImpl toyKem toyAttachedVerify toyPrimitives toyProgram
-        toyPost).boolDistAdvantage
+        toyPost).boolDistance
       (PqxdhCorrelatedExpandHybrid.uniformGame (PqxdhCorrelatedExpand.rootReduction toyEnv.source baseImpl toyKem p)) ≤
       (PqxdhJointIdentity.advantage toyPrimitives
         (PqxdhGeneratedPhase1Prefix.privateReduction toyPrimitives baseImpl toyKem toySetup
           (driver toyEnv.toDriverEnvironment toyProgram) toyDynamicFallback toyOrdinaryFallback)).toReal +
       Pr{let x ← (simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl baseImpl)
         (PqxdhKemCorrectnessError.errorExperiment toyKem))}[x = true].toReal +
-      toyKem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl (PqxdhInitializerSecrecy.kemAmbientImpl baseImpl))
-        (PqxdhChallengeSecretRouting.reduction toyEnv.source toyKem p).toINDCCA +
+      (toyKem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl (PqxdhInitializerSecrecy.kemAmbientImpl baseImpl))
+        (PqxdhChallengeSecretRouting.reduction toyEnv.source toyKem p).toINDCCA).toReal +
       PqxdhCorrelatedExtractFamily.advantage toyHmac
         (PqxdhCorrelatedExtractFamily.reduction toyEnv.source toyHmac baseImpl toyKem p) +
       ∑ index ∈ Finset.range toyCertificate.qRoot,
         (hmacPrfRealGame toyHmac (PqxdhCorrelatedExpandHybrid.indexedReduction toyHmac
-            (PqxdhCorrelatedExpand.rootReduction toyEnv.source baseImpl toyKem p) index)).boolDistAdvantage
+            (PqxdhCorrelatedExpand.rootReduction toyEnv.source baseImpl toyKem p) index)).boolDistance
           (hmacPrfRandomGame (PqxdhCorrelatedExpandHybrid.indexedReduction toyHmac
             (PqxdhCorrelatedExpand.rootReduction toyEnv.source baseImpl toyKem p) index))) ∧
     ∀ result ∈ support (PqxdhPrivateSourceCoins.privateRun toyAttachedVerify toyPrimitives 1

@@ -40,12 +40,12 @@ theorem rootClient_uniform (setup : Setup baseSpec KemSK) (codec : Codec Reader 
     (certified : ∀ source, work.IsQueryBoundP
       (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source)) :
     (PqxdhCorrelatedExpand.expandedGame setup.hmac (rootClient (Reader := Reader) setup codec checks ensureInit
-        supplied decision work runtime count selected index)).boolDistAdvantage
+        supplied decision work runtime count selected index)).boolDistance
       (uniformGame (rootClient (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count
         selected index)) ≤
       ∑ slot ∈ Finset.range (1 + budget (.inl 5)),
         (hmacPrfRealGame setup.hmac (indexedReduction setup.hmac (rootClient (Reader := Reader) setup codec checks
-          ensureInit supplied decision work runtime count selected index) slot)).boolDistAdvantage
+          ensureInit supplied decision work runtime count selected index) slot)).boolDistance
           (hmacPrfRandomGame (indexedReduction setup.hmac (rootClient (Reader := Reader) setup codec checks ensureInit
             supplied decision work runtime count selected index) slot)) :=
   PqxdhCorrelatedExpandHybrid.expanded_uniform_bound setup.hmac _ _
@@ -60,12 +60,12 @@ theorem split_uniform (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
     (certified : ∀ source, work.IsQueryBoundP
       (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source)) :
     (splitGame (sharedStart (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count
-        selected index) (sharedClient setup codec checks decision count selected)).boolDistAdvantage
+        selected index) (sharedClient setup codec checks decision count selected)).boolDistance
       (uniformGame (rootClient (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count
         selected index)) ≤
       ∑ slot ∈ Finset.range (1 + budget (.inl 5)),
         (hmacPrfRealGame setup.hmac (indexedReduction setup.hmac (rootClient (Reader := Reader) setup codec checks
-          ensureInit supplied decision work runtime count selected index) slot)).boolDistAdvantage
+          ensureInit supplied decision work runtime count selected index) slot)).boolDistance
           (hmacPrfRandomGame (indexedReduction setup.hmac (rootClient (Reader := Reader) setup codec checks ensureInit
             supplied decision work runtime count selected index) slot)) := by
   rw [splitGame_expanded]
@@ -81,16 +81,16 @@ theorem opaqueBranch_uniform (setup : Setup baseSpec KemSK) (codec : Codec Reade
     (certified : ∀ source, work.IsQueryBoundP
       (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source)) :
     (opaqueBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index
-        false).boolDistAdvantage
+        false).boolDistance
       (uniformGame (rootClient (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count
         selected index)) ≤
       ((budget (.inl 3) + budget (.inl 5) + budget (.inl 6) : ℕ) : ℝ) / 2 ^ 256 +
         ∑ slot ∈ Finset.range (1 + budget (.inl 5)),
           (hmacPrfRealGame setup.hmac (indexedReduction setup.hmac (rootClient (Reader := Reader) setup codec checks
-            ensureInit supplied decision work runtime count selected index) slot)).boolDistAdvantage
+            ensureInit supplied decision work runtime count selected index) slot)).boolDistance
             (hmacPrfRandomGame (indexedReduction setup.hmac (rootClient (Reader := Reader) setup codec checks
               ensureInit supplied decision work runtime count selected index) slot)) :=
-  (ProbComp.boolDistAdvantage_triangle _ _ _).trans (add_le_add
+  (ProbComp.boolDistance_triangle _ _ _).trans (add_le_add
     (PqxdhRegistrationJointKemRomSplit.opaqueBranch_split setup codec checks ensureInit supplied decision work runtime
       count selected index budget certified)
     (split_uniform setup codec checks ensureInit supplied decision work runtime count selected index budget certified))

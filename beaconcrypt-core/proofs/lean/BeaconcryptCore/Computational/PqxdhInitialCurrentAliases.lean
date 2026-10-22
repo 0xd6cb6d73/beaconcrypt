@@ -86,7 +86,7 @@ theorem random_source :
 theorem random_bound (budget : Nat)
     (bounded : ∀ context, (client env baseImpl kem attachedVerify primitives program post context).IsQueryBoundP
       PqxdhInitialRootAliases.IsInitializer budget) :
-    (PqxdhInitialCurrentSecrecy.random env baseImpl kem attachedVerify primitives program post).boolDistAdvantage
+    (PqxdhInitialCurrentSecrecy.random env baseImpl kem attachedVerify primitives program post).boolDistance
       (consistentRandom env baseImpl kem attachedVerify primitives program post) ≤
         ((budget : ENNReal) / (2 ^ 256 : ENNReal)).toReal := by
   rw [← random_source env baseImpl kem attachedVerify primitives program post]
@@ -94,11 +94,11 @@ theorem random_bound (budget : Nat)
     (client env baseImpl kem attachedVerify primitives program post)
     (PqxdhCorrelatedExtractFamily.prepare baseImpl kem (protocol env kem attachedVerify primitives program post))
     budget bounded
-  have projected := (tvDist_map_le
+  have projected := (discreteDistance_map_le
     (fun result : RootOutput × (HmacBlock × PqxdhInitialAliasBound.Trace Bool) => result.2.2.1) _ _).trans total
-  simpa only [tracedRandom, consistentRandom, ProbComp.boolDistAdvantage,
-    VCVioLegacy.evalDist_singleton_eq_probOutput] using
-    (abs_probOutput_toReal_sub_le_tvDist _ _).trans projected
+  simpa only [tracedRandom, consistentRandom, ProbComp.boolDistance,
+    ← prEvent_eq_evalDist_singleton] using
+    (abs_prEvent_toReal_sub_le_discreteDistance _ _).trans projected
 
 /-- The actual current uniform-root source endpoint reaches one value-consistent randomized initializer through ordinary Extract and two-query HMAC reductions plus the explicit original initializer-candidate loss. -/
 theorem primitive_bound (hmac : HmacSha512) (correct : PqxdhFullSecretInputKdf.SourceFullCorrect env.source hmac)
@@ -106,20 +106,20 @@ theorem primitive_bound (hmac : HmacSha512) (correct : PqxdhFullSecretInputKdf.S
     (bounded : ∀ context, (client env baseImpl kem attachedVerify primitives program post context).IsQueryBoundP
       PqxdhInitialRootAliases.IsInitializer budget) :
     (uniformGame (PqxdhCorrelatedExpand.rootReduction env.source baseImpl kem
-      (protocol env kem attachedVerify primitives program post))).boolDistAdvantage
+      (protocol env kem attachedVerify primitives program post))).boolDistance
       (consistentRandom env baseImpl kem attachedVerify primitives program post) ≤
     (extractRealGame hmac (PqxdhInitialCurrentSecrecy.joint env baseImpl kem attachedVerify primitives program post)
-      (fullExtractReduction hmac .ratchet (PqxdhInitialCurrentSecrecy.observer env baseImpl kem attachedVerify primitives program post))).boolDistAdvantage
+      (fullExtractReduction hmac .ratchet (PqxdhInitialCurrentSecrecy.observer env baseImpl kem attachedVerify primitives program post))).boolDistance
       (extractUniformGame (PqxdhInitialCurrentSecrecy.joint env baseImpl kem attachedVerify primitives program post)
         (fullExtractReduction hmac .ratchet (PqxdhInitialCurrentSecrecy.observer env baseImpl kem attachedVerify primitives program post))) +
     (hmacPrfRealGame hmac (fullExpandReduction .ratchet
       (PqxdhInitialCurrentSecrecy.joint env baseImpl kem attachedVerify primitives program post)
-      (PqxdhInitialCurrentSecrecy.observer env baseImpl kem attachedVerify primitives program post))).boolDistAdvantage
+      (PqxdhInitialCurrentSecrecy.observer env baseImpl kem attachedVerify primitives program post))).boolDistance
       (hmacPrfRandomGame (fullExpandReduction .ratchet
         (PqxdhInitialCurrentSecrecy.joint env baseImpl kem attachedVerify primitives program post)
         (PqxdhInitialCurrentSecrecy.observer env baseImpl kem attachedVerify primitives program post))) +
       ((budget : ENNReal) / (2 ^ 256 : ENNReal)).toReal := by
-  exact (ProbComp.boolDistAdvantage_triangle _
+  exact (ProbComp.boolDistance_triangle _
     (PqxdhInitialCurrentSecrecy.random env baseImpl kem attachedVerify primitives program post) _).trans
     (add_le_add (PqxdhInitialCurrentSecrecy.primitive_bound env baseImpl kem attachedVerify primitives program post hmac correct)
       (random_bound env baseImpl kem attachedVerify primitives program post budget bounded))

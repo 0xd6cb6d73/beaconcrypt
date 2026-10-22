@@ -113,7 +113,7 @@ theorem game_random_of (budget : Budget) (client : OracleComp (WorldSpec n) (Out
 /-- **One privacy hop** for an arbitrary World client within the record budget: exactly the step's `privacyLoss`. -/
 theorem hop_loss_of (budget : Budget) (client : OracleComp (WorldSpec n) (Outcome E X))
     (records : RecordBounded budget client) (decision : View n E X → ProbComp Bool) (step : Fin (hops n budget)) :
-    ENNReal.ofReal ((gameOf setup codec route client decision budget step.val).boolDistAdvantage
+    ENNReal.ofReal ((gameOf setup codec route client decision budget step.val).boolDistance
         (gameOf setup codec route client decision budget (step.val + 1))) =
       privacyLoss (RawCtxUniversalDecoder.decoder codec.frameRead) setup.source.crypto
         (PqxdhRecordLiftCtxPrivModes.decisionClient bytesSample setup.source.crypto
@@ -138,7 +138,7 @@ theorem game_last_of (budget : Budget) (client : OracleComp (WorldSpec n) (Outco
 theorem ctx_priv_loss_of (budget : Budget) (client : OracleComp (WorldSpec n) (Outcome E X))
     (records : RecordBounded budget client) (decision : View n E X → ProbComp Bool) :
     ENNReal.ofReal
-      ((ctxRunOf (fun _ => .replay) id setup codec route client >>= fun result => decision (ctxView result)).boolDistAdvantage
+      ((ctxRunOf (fun _ => .replay) id setup codec route client >>= fun result => decision (ctxView result)).boolDistance
         (ctxRunOf (fun _ => .random) id setup codec route client >>= fun result => decision (ctxView result))) ≤
       ∑ step : Fin (hops n budget), privacyLoss (RawCtxUniversalDecoder.decoder codec.frameRead) setup.source.crypto
         (PqxdhRecordLiftCtxPrivModes.decisionClient bytesSample setup.source.crypto
@@ -150,23 +150,23 @@ theorem ctx_priv_loss_of (budget : Budget) (client : OracleComp (WorldSpec n) (O
   rw [firstGame, game_last_of setup codec route budget client records decision]
   have telescope := PqxdhComposition.finiteHybridBound_of_hop_bounds
     (gameOf setup codec route client decision budget) (hops n budget)
-    (fun cut => (gameOf setup codec route client decision budget cut).boolDistAdvantage
+    (fun cut => (gameOf setup codec route client decision budget cut).boolDistance
       (gameOf setup codec route client decision budget (cut + 1))) (fun _ _ => le_refl _)
-  calc ENNReal.ofReal ((gameOf setup codec route client decision budget 0).boolDistAdvantage
+  calc ENNReal.ofReal ((gameOf setup codec route client decision budget 0).boolDistance
         (gameOf setup codec route client decision budget (hops n budget)))
       ≤ ENNReal.ofReal (∑ cut ∈ Finset.range (hops n budget),
-          (gameOf setup codec route client decision budget cut).boolDistAdvantage
+          (gameOf setup codec route client decision budget cut).boolDistance
             (gameOf setup codec route client decision budget (cut + 1))) :=
         ENNReal.ofReal_le_ofReal telescope
     _ = ∑ cut ∈ Finset.range (hops n budget), ENNReal.ofReal
-          ((gameOf setup codec route client decision budget cut).boolDistAdvantage
+          ((gameOf setup codec route client decision budget cut).boolDistance
             (gameOf setup codec route client decision budget (cut + 1))) :=
         ENNReal.ofReal_sum_of_nonneg (fun _ _ => abs_nonneg _)
     _ = ∑ step : Fin (hops n budget), ENNReal.ofReal
-          ((gameOf setup codec route client decision budget step.val).boolDistAdvantage
+          ((gameOf setup codec route client decision budget step.val).boolDistance
             (gameOf setup codec route client decision budget (step.val + 1))) :=
         (Fin.sum_univ_eq_sum_range (fun cut => ENNReal.ofReal
-          ((gameOf setup codec route client decision budget cut).boolDistAdvantage
+          ((gameOf setup codec route client decision budget cut).boolDistance
             (gameOf setup codec route client decision budget (cut + 1)))) _).symm
     _ = _ := Finset.sum_congr rfl (fun step _ => hop_loss_of setup codec route budget client records decision step)
 

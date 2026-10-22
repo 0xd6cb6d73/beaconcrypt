@@ -114,8 +114,8 @@ theorem same_continuation (depth qPost : Nat) (first second bit : Bool) :
       depth qPost first bit] =
     𝒟[run setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
       depth qPost second bit] := by
-  refine EvalDistEq.evalDist_eq ((VCVioLegacy.evalSPMF_eq_iff_evalDistEq _ _).mp ?_)
-  apply evalSPMF_eq_of_relTriple_eqRel
+  refine EvalDistEq.evalDist_eq ?_
+  apply evalDistEq_of_relTriple_eqRel
   have paired := relTriple_bind (PqxdhLaterChallengeRandomBefore.carried setup env callbacks program
     adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed depth first second randomInitial)
     (fun left right same => by

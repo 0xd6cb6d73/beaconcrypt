@@ -289,21 +289,21 @@ theorem hop_bound_of (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
     (decision : PqxdhRecordLiftIdeal.View n E X → CtxRomAuth.CtxRO.QueryCache → ProbComp Bool)
     (positions : Nat) (step : Fin (positions * (n * 2))) :
     (chainsOf (selected positions step.val) setup codec route client >>= fun result =>
-          decision (PqxdhRecordLiftIdeal.chainView result) (PqxdhRecordLiftIdeal.chainCache result)).boolDistAdvantage
+          decision (PqxdhRecordLiftIdeal.chainView result) (PqxdhRecordLiftIdeal.chainCache result)).boolDistance
       (chainsOf (selected positions (step.val + 1)) setup codec route client >>= fun result =>
           decision (PqxdhRecordLiftIdeal.chainView result) (PqxdhRecordLiftIdeal.chainCache result)) ≤
     (extractRealGame hmac PqxdhServerAuthKeySchedule.uniform32
       (fullExtractReduction hmac .ratchet
-        (hopObserverOf setup codec route client decision positions step))).boolDistAdvantage
+        (hopObserverOf setup codec route client decision positions step))).boolDistance
       (extractUniformGame PqxdhServerAuthKeySchedule.uniform32
         (fullExtractReduction hmac .ratchet (hopObserverOf setup codec route client decision positions step))) +
     (hmacPrfRealGame hmac (fullExpandReduction .ratchet PqxdhServerAuthKeySchedule.uniform32
-      (hopObserverOf setup codec route client decision positions step))).boolDistAdvantage
+      (hopObserverOf setup codec route client decision positions step))).boolDistance
       (hmacPrfRandomGame (fullExpandReduction .ratchet PqxdhServerAuthKeySchedule.uniform32
         (hopObserverOf setup codec route client decision positions step))) := by
   change ((simulateQ (interpreter (PqxdhRecordLiftChainOracle.lookup setup.source · (selected positions step.val))
       setup codec) (schedule codec.frameRead route client initialControl)).run initialPrivate >>=
-        PqxdhRecordLiftGlobalCut.observe (PqxdhRecordLiftChainHop.finish decision)).boolDistAdvantage
+        PqxdhRecordLiftGlobalCut.observe (PqxdhRecordLiftChainHop.finish decision)).boolDistance
     ((simulateQ (interpreter (PqxdhRecordLiftChainOracle.lookup setup.source · (selected positions (step.val + 1)))
       setup codec) (schedule codec.frameRead route client initialControl)).run initialPrivate >>=
         PqxdhRecordLiftGlobalCut.observe (PqxdhRecordLiftChainHop.finish decision)) ≤ _
@@ -365,7 +365,7 @@ theorem chain_loss_of (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
     (decision : PqxdhRecordLiftIdeal.View n E X → CtxRomAuth.CtxRO.QueryCache → ProbComp Bool) :
     ENNReal.ofReal
       ((chainsOf (fun _ => false) setup codec route client >>= fun result =>
-          decision (PqxdhRecordLiftIdeal.chainView result) (PqxdhRecordLiftIdeal.chainCache result)).boolDistAdvantage
+          decision (PqxdhRecordLiftIdeal.chainView result) (PqxdhRecordLiftIdeal.chainCache result)).boolDistance
         (chainsOf (fun _ => true) setup codec route client >>= fun result =>
           decision (PqxdhRecordLiftIdeal.chainView result) (PqxdhRecordLiftIdeal.chainCache result))) ≤
     ∑ step : Fin (PqxdhRecordLiftIdeal.hops n budget),
@@ -383,12 +383,12 @@ theorem chain_loss_of (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
       games (PqxdhRecordLiftIdeal.hops n budget) := by
     simp only [games, chainsOf_terminal setup codec route budget client records]
   rw [firstGame, lastGame]
-  have bound : (games 0).boolDistAdvantage (games (PqxdhRecordLiftIdeal.hops n budget)) ≤
+  have bound : (games 0).boolDistance (games (PqxdhRecordLiftIdeal.hops n budget)) ≤
       ∑ step : Fin (PqxdhRecordLiftIdeal.hops n budget),
         (PqxdhRecordLiftChainHybrid.extractAdvantage hmac (observerOf setup codec route client decision budget step) +
           PqxdhRecordLiftChainHybrid.prfAdvantage hmac (observerOf setup codec route client decision budget step)) := by
     refine (PqxdhRecordLiftChainHybrid.telescope games _).trans ?_
-    rw [← Fin.sum_univ_eq_sum_range (fun index => (games index).boolDistAdvantage (games (index + 1)))]
+    rw [← Fin.sum_univ_eq_sum_range (fun index => (games index).boolDistance (games (index + 1)))]
     apply Finset.sum_le_sum
     intro step _
     exact hop_bound_of setup codec route client hmac correct decision (PqxdhRecordLiftIdeal.positions budget) step

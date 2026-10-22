@@ -398,7 +398,7 @@ theorem compiled_shape (source : FixedHkdfSha512NoSaltSource) (codec : Codec Rea
       (PqxdhServerAuthCtxBuildSettlement.embed state) = state :=
     PqxdhServerAuthCtxBuildSettlement.native_embed _ state
   rw [collapse] at native
-  convert native using 1
+  exact native
 
 /-- A successful native response occurs exactly when the newly reached outer writer returned bytes. This compares actual callback occurrences, not decoded aliases or old trace membership. -/
 theorem shape_publication_iff (codec : Codec Reader WireResponse) (metadata : PeerMetadata)

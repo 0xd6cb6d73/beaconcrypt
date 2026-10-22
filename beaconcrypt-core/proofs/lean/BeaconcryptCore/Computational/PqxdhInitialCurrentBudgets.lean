@@ -44,15 +44,15 @@ theorem client_initial (context : Context env kem attachedVerify primitives prog
 theorem primitive_bound (hmac : HmacSha512) (correct : PqxdhFullSecretInputKdf.SourceFullCorrect env.source hmac)
  :
     (uniformGame (PqxdhCorrelatedExpand.rootReduction env.source baseImpl kem
-      (protocol env kem attachedVerify primitives program post))).boolDistAdvantage
+      (protocol env kem attachedVerify primitives program post))).boolDistance
       (consistentRandom env baseImpl kem attachedVerify primitives program post) ≤
     (extractRealGame hmac (PqxdhInitialCurrentSecrecy.joint env baseImpl kem attachedVerify primitives program post)
-      (fullExtractReduction hmac .ratchet (PqxdhInitialCurrentSecrecy.observer env baseImpl kem attachedVerify primitives program post))).boolDistAdvantage
+      (fullExtractReduction hmac .ratchet (PqxdhInitialCurrentSecrecy.observer env baseImpl kem attachedVerify primitives program post))).boolDistance
       (extractUniformGame (PqxdhInitialCurrentSecrecy.joint env baseImpl kem attachedVerify primitives program post)
         (fullExtractReduction hmac .ratchet (PqxdhInitialCurrentSecrecy.observer env baseImpl kem attachedVerify primitives program post))) +
     (hmacPrfRealGame hmac (fullExpandReduction .ratchet
       (PqxdhInitialCurrentSecrecy.joint env baseImpl kem attachedVerify primitives program post)
-      (PqxdhInitialCurrentSecrecy.observer env baseImpl kem attachedVerify primitives program post))).boolDistAdvantage
+      (PqxdhInitialCurrentSecrecy.observer env baseImpl kem attachedVerify primitives program post))).boolDistance
       (hmacPrfRandomGame (fullExpandReduction .ratchet
         (PqxdhInitialCurrentSecrecy.joint env baseImpl kem attachedVerify primitives program post)
         (PqxdhInitialCurrentSecrecy.observer env baseImpl kem attachedVerify primitives program post))) +

@@ -245,12 +245,12 @@ theorem authenticated_registration_bound {Metadata PeerMetadata Consumed Primiti
     (plan : Plan baseSpec setup selector.State Metadata PeerMetadata Consumed PrimitiveState) :
     let observer := plan.continuation parameters.source
     let protocol := rootProtocol kem parameters attachedVerify primitives setup selector observer
-    (actualGame baseImpl kem parameters attachedVerify primitives setup selector observer).boolDistAdvantage
+    (actualGame baseImpl kem parameters attachedVerify primitives setup selector observer).boolDistance
       (simulateQ (kemAmbientImpl baseImpl)
         (randomMain parameters.source kem (runtimeOfImpl (kemAmbientImpl baseImpl)) protocol)) ≤
       (advantage primitives (privateReduction primitives baseImpl kem setup selector fallback ordinaryFallback)).toReal +
-      kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
-        (reduction parameters.source kem protocol).toINDCCA := by
+      (kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
+        (reduction parameters.source kem protocol).toINDCCA).toReal := by
   exact authenticated_correlated_bound baseImpl kem parameters compatible functional correct attachedVerify
     primitives adapter setup selector selectorNoSign selectorNoCreate fallback ordinaryFallback
     (plan.continuation parameters.source)

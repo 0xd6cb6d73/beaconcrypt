@@ -350,8 +350,8 @@ theorem compile_step (source : FixedHkdfSha512NoSaltSource)
     all_goals simp [initCompile, StateT.run, Forwarded, counted]
   · trivial
 
-noncomputable local instance : IsUniformSpec RootOracle :=
-  OracleSpec.IsUniformSpec.ofFintypeInhabited _
+noncomputable local instance : OracleSpec.UniformAnswerMeasure RootOracle :=
+  OracleSpec.UniformAnswerMeasure.ofFiniteNonempty _
 
 /-- Every original adaptive class cap transfers to the root compiler through its complete stateful continuation. -/
 theorem compile_bound {Result : Type} (source : FixedHkdfSha512NoSaltSource)

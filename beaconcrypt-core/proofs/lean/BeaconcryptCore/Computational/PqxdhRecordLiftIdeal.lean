@@ -12,7 +12,7 @@ Definitions only: the ideal worlds of handoff items 4 and 5 and the H-5 target s
 
 **Views.** `View` is the permitted record-analysis view: the adversary's output, the world-owned ledger (transcript, test session, fresh messages), the environment's own final state, the tagged produced-frame log, the raw-attempt counters and the public handle-to-slot map of installed hidden kernels. It has no seed, table, label, kernel byte, CTX dictionary, primitive counter or shared cache. The CE-12 analysis projection (`PqxdhRecordLiftWorld.analysis`, consumed through `PqxdhDeploymentEnvironmentJoin.join_analysis`) factors through it (`analysis_chainView`). Chain decisions may additionally read the final shared BLAKE2b cache; CTX decisions may not (decision D4: commitment preimages contain message keys).
 
-**Targets (decisions D1-D4 of the takeover plan).** `ChainLiftStatement` (item 5), `CtxAuthLiftStatement` and `CtxPrivLiftStatement` (item 4 split into integrity and privacy, decision D1) with their composition `CtxLiftStatement` (the brief's `ctx_lift`), `RecordAuthLiftStatement` (the integrity record lift to `idealAuth`, which CE-OR and CE-UKS consume before the privacy half exists), `RecordLiftStatement`, the world-level facts `OriginStatement` and `BindingStatement`, and the hiding facts `HidingStatement` (replacement invariance), `FreshGuessStatement` and `LorStatement` (the final-world secrecy facts of CE-APP and CE-LOR). Each lift is two-sided, has a `boolDistAdvantage` form and an event form, is quantified over every environment with `Frame` and every adversary with `Budget.Respects` (the premises CE-11 discharges as C2a and the adversary budget), takes its reductions as explicit parameters (one per ordered hybrid index of `PqxdhRecordLiftChainOrder`, `positions budget * (n * 2)` of them), bills them in functions of `BillInput` (budget fields, the environment's `Frame` data, fresh bounds, slot count, decision cost), and has explicit alias and refusal term parameters; the `...Target` abbreviations fix those terms to zero (decision D3) and the cross-handle term to `bindingTerm`. The origin target carries the publication-versus-production term of decision D2 (`publicationTerm`, the purely statistical commitment-guessing term `guessTerm` in every ideal CTX world and both modes). A target with free reduction parameters is a statement shape: it is meaningful only with the explicit simulator-built reductions and bills of the theorem that delivers it. The only contracts named are those of brief H-7: `SourceFullCorrect` (chain, record lifts), `FrameReadBack` and `DecoderAgreement` (origin) and `FrameReadBack` (binding); IND$, INT-CTXT, HMAC-PRF and Extract-on-`uniform32` enter only as advantage terms of explicit reductions, and the BLAKE2b ROM is the world's model. No assumption or contract is added. Design notes: `doc/impl/record-lift-ideal.md`.
+**Targets (decisions D1-D4 of the takeover plan).** `ChainLiftStatement` (item 5), `CtxAuthLiftStatement` and `CtxPrivLiftStatement` (item 4 split into integrity and privacy, decision D1) with their composition `CtxLiftStatement` (the brief's `ctx_lift`), `RecordAuthLiftStatement` (the integrity record lift to `idealAuth`, which CE-OR and CE-UKS consume before the privacy half exists), `RecordLiftStatement`, the world-level facts `OriginStatement` and `BindingStatement`, and the hiding facts `HidingStatement` (replacement invariance), `FreshGuessStatement` and `LorStatement` (the final-world secrecy facts of CE-APP and CE-LOR). Each lift is two-sided, has a `boolDistance` form and an event form, is quantified over every environment with `Frame` and every adversary with `Budget.Respects` (the premises CE-11 discharges as C2a and the adversary budget), takes its reductions as explicit parameters (one per ordered hybrid index of `PqxdhRecordLiftChainOrder`, `positions budget * (n * 2)` of them), bills them in functions of `BillInput` (budget fields, the environment's `Frame` data, fresh bounds, slot count, decision cost), and has explicit alias and refusal term parameters; the `...Target` abbreviations fix those terms to zero (decision D3) and the cross-handle term to `bindingTerm`. The origin target carries the publication-versus-production term of decision D2 (`publicationTerm`, the purely statistical commitment-guessing term `guessTerm` in every ideal CTX world and both modes). A target with free reduction parameters is a statement shape: it is meaningful only with the explicit simulator-built reductions and bills of the theorem that delivers it. The only contracts named are those of brief H-7: `SourceFullCorrect` (chain, record lifts), `FrameReadBack` and `DecoderAgreement` (origin) and `FrameReadBack` (binding); IND$, INT-CTXT, HMAC-PRF and Extract-on-`uniform32` enter only as advantage terms of explicit reductions, and the BLAKE2b ROM is the world's model. No assumption or contract is added. Design notes: `doc/impl/record-lift-ideal.md`.
 -/
 
 open OracleComp OracleSpec ENNReal CoreModels Aeneas
@@ -292,11 +292,11 @@ structure BillInput where
 noncomputable def hopLoss (hmac : PqxdhSecretInputKdf.HmacSha512)
     (observer : PqxdhFullSecretInputKdf.FullObserver Unit) : ℝ≥0∞ :=
   ENNReal.ofReal ((PqxdhSecretInputKdf.extractRealGame hmac PqxdhServerAuthKeySchedule.uniform32
-      (PqxdhFullSecretInputKdf.fullExtractReduction hmac .ratchet observer)).boolDistAdvantage
+      (PqxdhFullSecretInputKdf.fullExtractReduction hmac .ratchet observer)).boolDistance
     (PqxdhSecretInputKdf.extractUniformGame PqxdhServerAuthKeySchedule.uniform32
       (PqxdhFullSecretInputKdf.fullExtractReduction hmac .ratchet observer))) +
   ENNReal.ofReal ((PqxdhSecretInputKdf.hmacPrfRealGame hmac
-      (PqxdhFullSecretInputKdf.fullExpandReduction .ratchet PqxdhServerAuthKeySchedule.uniform32 observer)).boolDistAdvantage
+      (PqxdhFullSecretInputKdf.fullExpandReduction .ratchet PqxdhServerAuthKeySchedule.uniform32 observer)).boolDistance
     (PqxdhSecretInputKdf.hmacPrfRandomGame
       (PqxdhFullSecretInputKdf.fullExpandReduction .ratchet PqxdhServerAuthKeySchedule.uniform32 observer)))
 
@@ -532,7 +532,7 @@ def ChainLiftBool (n : Nat) (hmac : PqxdhSecretInputKdf.HmacSha512) (reduction :
     (∀ view cache, (decision view cache).IsTotalQueryBound cost) →
   ENNReal.ofReal
       ((realChains setup codec route env serverKid bounds mode adversary >>= fun result =>
-          decision (chainView result) (chainCache result)).boolDistAdvantage
+          decision (chainView result) (chainCache result)).boolDistance
         (idealChains setup codec route env serverKid bounds mode adversary >>= fun result =>
           decision (chainView result) (chainCache result))) ≤
       (∑ step, hopLoss hmac (reduction env mode adversary decision budget step)) +
@@ -572,7 +572,7 @@ def CtxAuthLiftBool (n : Nat) (fallback : CtxNonceAeadIntCtxt.ModifiedNonceAeadF
   ∀ (decision : View n E X → ProbComp Bool) (cost : Nat), (∀ view, (decision view).IsTotalQueryBound cost) →
   ENNReal.ofReal
       ((idealChains setup codec route env serverKid bounds mode adversary >>= fun result =>
-          decision (chainView result)).boolDistAdvantage
+          decision (chainView result)).boolDistance
         (idealAuth setup codec route env serverKid bounds mode adversary >>= fun result =>
           decision (ctxView result))) ≤
       (∑ step, integrityLoss (RawCtxUniversalDecoder.decoder codec.frameRead) setup.source.crypto fallback
@@ -615,7 +615,7 @@ def CtxPrivLiftBool (n : Nat) (reduction : CtxReduction n) (bills : CtxBills) : 
   ∀ (decision : View n E X → ProbComp Bool) (cost : Nat), (∀ view, (decision view).IsTotalQueryBound cost) →
   ENNReal.ofReal
       ((idealAuth setup codec route env serverKid bounds mode adversary >>= fun result =>
-          decision (ctxView result)).boolDistAdvantage
+          decision (ctxView result)).boolDistance
         (randomRecords setup codec route env serverKid bounds mode adversary >>= fun result =>
           decision (ctxView result))) ≤
       (∑ step, privacyLoss (RawCtxUniversalDecoder.decoder codec.frameRead) setup.source.crypto
@@ -670,7 +670,7 @@ def CtxLiftBool (n : Nat) (fallback : CtxNonceAeadIntCtxt.ModifiedNonceAeadForge
   ∀ (decision : View n E X → ProbComp Bool) (cost : Nat), (∀ view, (decision view).IsTotalQueryBound cost) →
   ENNReal.ofReal
       ((idealChains setup codec route env serverKid bounds mode adversary >>= fun result =>
-          decision (chainView result)).boolDistAdvantage
+          decision (chainView result)).boolDistance
         (idealRecords setup codec route env serverKid bounds mode adversary >>= fun result =>
           decision (ctxView result))) ≤
       ctxLoss setup codec n fallback auth privacy authBills refusal env mode adversary decision budget
@@ -736,7 +736,7 @@ def RecordLiftBool (n : Nat) (hmac : PqxdhSecretInputKdf.HmacSha512)
   ∀ (decision : View n E X → ProbComp Bool) (cost : Nat), (∀ view, (decision view).IsTotalQueryBound cost) →
   ENNReal.ofReal
       ((realChains setup codec route env serverKid bounds mode adversary >>= fun result =>
-          decision (chainView result)).boolDistAdvantage
+          decision (chainView result)).boolDistance
         (idealRecords setup codec route env serverKid bounds mode adversary >>= fun result =>
           decision (ctxView result))) ≤
       recordLoss setup codec n hmac fallback chain auth privacy authBills aliasing chainRefusal ctxRefusal env mode
@@ -804,7 +804,7 @@ def RecordAuthLiftBool (n : Nat) (hmac : PqxdhSecretInputKdf.HmacSha512)
   ∀ (decision : View n E X → ProbComp Bool) (cost : Nat), (∀ view, (decision view).IsTotalQueryBound cost) →
   ENNReal.ofReal
       ((realChains setup codec route env serverKid bounds mode adversary >>= fun result =>
-          decision (chainView result)).boolDistAdvantage
+          decision (chainView result)).boolDistance
         (idealAuth setup codec route env serverKid bounds mode adversary >>= fun result =>
           decision (ctxView result))) ≤
       recordAuthLoss setup codec n hmac fallback chain auth authBills aliasing chainRefusal ctxRefusal env mode
@@ -1075,9 +1075,9 @@ theorem admittedTest_view (crypto : Pqxdh.Crypto) (codec : Codec Reader Response
 /-- The Boolean advantage of two deterministic decisions is the absolute difference of their event probabilities. -/
 theorem pure_advantage {α β : Type} (left : ProbComp α) (right : ProbComp β) (first : α → Bool)
     (second : β → Bool) :
-    (left >>= fun value => pure (first value)).boolDistAdvantage (right >>= fun value => pure (second value)) =
+    (left >>= fun value => pure (first value)).boolDistance (right >>= fun value => pure (second value)) =
       |(𝒟[first <$> left] {true}).toReal - (𝒟[second <$> right] {true}).toReal| := by
-  simp only [ProbComp.boolDistAdvantage, bind_pure_comp]
+  simp only [ProbComp.boolDistance, bind_pure_comp]
 
 section Relations
 variable (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
@@ -1152,7 +1152,7 @@ theorem recordLiftBool_of_parts (n : Nat) (hmac : PqxdhSecretInputKdf.HmacSha512
     (fun view _ => decision view) cost (fun view _ => costBound view)
   obtain ⟨authBound, authBilled⟩ := authLift env startup allowance frame mode adversary budget respects decision cost
     costBound
-  have first := ProbComp.boolDistAdvantage_triangle
+  have first := ProbComp.boolDistance_triangle
     (realChains setup codec route env serverKid bounds mode adversary >>= fun result => decision (chainView result))
     (idealChains setup codec route env serverKid bounds mode adversary >>= fun result => decision (chainView result))
     (idealRecords setup codec route env serverKid bounds mode adversary >>= fun result => decision (ctxView result))
@@ -1167,7 +1167,7 @@ theorem recordLiftBool_of_parts (n : Nat) (hmac : PqxdhSecretInputKdf.HmacSha512
       obtain ⟨privBound, privBilled⟩ := privLift env startup allowance frame .P adversary budget respects decision cost
         costBound
       refine ⟨?_, chainBilled, authBilled, fun _ => privBilled⟩
-      have second := ProbComp.boolDistAdvantage_triangle
+      have second := ProbComp.boolDistance_triangle
         (idealChains setup codec route env serverKid bounds .P adversary >>= fun result => decision (chainView result))
         (idealAuth setup codec route env serverKid bounds .P adversary >>= fun result => decision (ctxView result))
         (idealRecords setup codec route env serverKid bounds .P adversary >>= fun result => decision (ctxView result))
@@ -1211,7 +1211,7 @@ theorem ctxLiftBool_of_parts (n : Nat) (fallback : CtxNonceAeadIntCtxt.ModifiedN
       obtain ⟨privBound, privBilled⟩ := privLift env startup allowance frame .P adversary budget respects decision cost
         costBound
       refine ⟨?_, authBilled, fun _ => privBilled⟩
-      have second := ProbComp.boolDistAdvantage_triangle
+      have second := ProbComp.boolDistance_triangle
         (idealChains setup codec route env serverKid bounds .P adversary >>= fun result => decision (chainView result))
         (idealAuth setup codec route env serverKid bounds .P adversary >>= fun result => decision (ctxView result))
         (idealRecords setup codec route env serverKid bounds .P adversary >>= fun result => decision (ctxView result))
@@ -1249,7 +1249,7 @@ theorem recordAuthLiftBool_of_parts (n : Nat) (hmac : PqxdhSecretInputKdf.HmacSh
     (fun view _ => decision view) cost (fun view _ => costBound view)
   obtain ⟨authBound, authBilled⟩ := authLift env startup allowance frame mode adversary budget respects decision cost
     costBound
-  have first := ProbComp.boolDistAdvantage_triangle
+  have first := ProbComp.boolDistance_triangle
     (realChains setup codec route env serverKid bounds mode adversary >>= fun result => decision (chainView result))
     (idealChains setup codec route env serverKid bounds mode adversary >>= fun result => decision (chainView result))
     (idealAuth setup codec route env serverKid bounds mode adversary >>= fun result => decision (ctxView result))
@@ -1263,13 +1263,13 @@ theorem hiding_advantage (n : Nat) (target : HidingStatement setup codec route s
     (env : Environment n E) (adversary : OracleComp (ModeSpec .P) X) (replace : Pqxdh.Bytes → Pqxdh.Bytes)
     (lengths : ∀ message, (replace message).length = message.length) (decision : HidingView n E X → ProbComp Bool) :
     (ctxRun (fun _ => .random) replace setup codec route env serverKid bounds .P adversary >>= fun result =>
-        decision (hidingView (ctxView result))).boolDistAdvantage
+        decision (hidingView (ctxView result))).boolDistance
       (idealRecords setup codec route env serverKid bounds .P adversary >>= fun result =>
         decision (hidingView (ctxView result))) = 0 := by
   have same := congrArg (fun work => work >>= decision) (target env adversary replace lengths)
   simp only [bind_map_left] at same
   rw [same]
-  exact ProbComp.boolDistAdvantage_self _
+  exact ProbComp.boolDistance_self _
 
 /-- The hiding target in event form: every event of the hiding projection has the same probability with replaced and unreplaced hidden plaintexts. -/
 theorem hiding_event (n : Nat) (target : HidingStatement setup codec route serverKid bounds n)

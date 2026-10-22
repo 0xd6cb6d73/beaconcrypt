@@ -26,14 +26,14 @@ variable (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writ
 /-- The empty source private table with its early initial-chain response is exactly the private-only patch of the real production function. -/
 theorem initial_view (root : RootOutput) (output : PqxdhFullSecretInputKdf.FullOutput) :
     RawCtxSelectedParentTable.view (productionStream source.crypto)
-      (QueryCache.cacheQuery (spec := JointKdfRO) (fun _ => none) (RawCtxFirstParentRisk.inputAddress root) output) =
+      (QueryCache.cacheQuery (spec := JointKdfRO) ∅ (RawCtxFirstParentRisk.inputAddress root) output) =
     RawCtxSelectedParentPrivatePatch.privatePatch (productionStream source.crypto) root output := by
   have address : RawCtxSelectedParentPrivatePatch.targetAddress root = RawCtxFirstParentRisk.inputAddress root :=
     PqxdhInitialNativeLineageCheck.request_concrete root
   funext request
   by_cases same : request = RawCtxSelectedParentPrivatePatch.targetAddress root
   · subst request
-    have hit : QueryCache.cacheQuery (spec := JointKdfRO) (fun _ => none) (RawCtxFirstParentRisk.inputAddress root) output
+    have hit : QueryCache.cacheQuery (spec := JointKdfRO) ∅ (RawCtxFirstParentRisk.inputAddress root) output
         (RawCtxSelectedParentPrivatePatch.targetAddress root) = some output := by
       rw [address]
       exact QueryCache.cacheQuery_self _ _ _
@@ -79,12 +79,12 @@ theorem game_source (number : Std.U64) (positive : 0 < number.val) (ancestors di
   intro output
   change (fun result => PqxdhInitialNativeParentRandom.retainedDecision
     (RawCtxSelectedParentTable.view (productionStream source.crypto)
-      (QueryCache.cacheQuery (spec := JointKdfRO) (fun _ => none)
+      (QueryCache.cacheQuery (spec := JointKdfRO) ∅
         (RawCtxFirstParentRisk.inputAddress (root source previousRoot response64 selected)) output))
     (root source previousRoot response64 selected) selected number ancestors disclosed result.1) <$>
     (simulateQ (PqxdhInitialNativeRetained.retained source writer
       (RawCtxSelectedParentTable.view (productionStream source.crypto)
-        (QueryCache.cacheQuery (spec := JointKdfRO) (fun _ => none)
+        (QueryCache.cacheQuery (spec := JointKdfRO) ∅
           (RawCtxFirstParentRisk.inputAddress (root source previousRoot response64 selected)) output))
       (PqxdhInitialOriginFinishPath.withInitial source selectedMessage previousRoot response64 other))
       (PqxdhInitialNativeCarried.original source (PqxdhInitialSelectedOrigin.mark source selectedMessage)

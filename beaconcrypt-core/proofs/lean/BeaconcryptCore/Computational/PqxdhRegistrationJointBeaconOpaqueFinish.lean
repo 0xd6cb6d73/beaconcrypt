@@ -283,11 +283,10 @@ noncomputable def markedRoot (hmac : PqxdhSecretInputKdf.HmacSha512) (candidate 
 /-- The native backend of the marked interface: the source backend, and the private root interpreter. -/
 noncomputable def markedImpl (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (candidate : MlKemSharedSecret) :
-    QueryImpl (MarkedSpec KemSK Response) (PqxdhRegistrationJointKemEncapsulation.Client KemSK) :=
-  PqxdhRegistrationJointKemEncapsulation.impl setup codec checks identityIndex publicIdentity +
-    (fun secrets => PqxdhRegistrationJointKemEncapsulation.lift (KemSK := KemSK)
-      (PqxdhRegistrationJointOpenBackend.native (KemSK := KemSK) (markedRoot setup.hmac candidate secrets)) :
-      QueryImpl RootSpec (PqxdhRegistrationJointKemEncapsulation.Client KemSK))
+    QueryImpl (MarkedSpec KemSK Response) (PqxdhRegistrationJointKemEncapsulation.Client KemSK)
+  | .inl query => PqxdhRegistrationJointKemEncapsulation.impl setup codec checks identityIndex publicIdentity query
+  | .inr secrets => PqxdhRegistrationJointKemEncapsulation.lift (KemSK := KemSK)
+      (PqxdhRegistrationJointOpenBackend.native (KemSK := KemSK) (markedRoot setup.hmac candidate secrets))
 
 end Marked
 

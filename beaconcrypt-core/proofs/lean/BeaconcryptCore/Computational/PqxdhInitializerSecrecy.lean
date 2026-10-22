@@ -33,7 +33,7 @@ variable {iota : Type} {baseSpec : OracleSpec iota} {SK : Type}
 noncomputable def runtimeOfImpl
     (impl : QueryImpl (unifSpec + baseSpec) ProbComp) :
     ProbCompRuntime (OracleComp (unifSpec + baseSpec)) where
-  toMeasureSemanticsVia :=
+  toSemanticsVia :=
     { Sem := ProbComp
       instMonadSem := inferInstance
       interpret := simulateQ' impl
@@ -1384,7 +1384,7 @@ noncomputable def initializerSecrecyAdvantage
     (bounds : InitializerExplicitReductionBounds source baseImpl kem adversary
       qKemAmbient qKemPrefix qKemPost qUPre qBPre qDPre
       qUPost qBPost qDPost qRoot qSym) : ℝ :=
-  (initializerRealGame source baseImpl kem adversary).boolDistAdvantage
+  (initializerRealGame source baseImpl kem adversary).boolDistance
     (initializerIndependentRootGame baseImpl kem adversary bounds.toKdfBounds)
 
 /-- The concrete ambient runtime evaluates pure computations exactly. -/
@@ -1470,10 +1470,10 @@ theorem initializerReal_uniformKem_advantage_eq_indCCA
     (adversary : InitializerAdversary kem)
     (bounds : InitializerKdfReductionBounds baseImpl kem adversary
       qPrefix qPost qRoot qSym) :
-    (initializerRealGame source baseImpl kem adversary).boolDistAdvantage
+    (initializerRealGame source baseImpl kem adversary).boolDistance
         (initializerUniformKemGame source baseImpl kem adversary bounds) =
-      kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
-        (toKemOneKeyAdversary source kem adversary).toINDCCA := by
+      (kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
+        (toKemOneKeyAdversary source kem adversary).toINDCCA).toReal := by
   have hcca := oneKey_indCCAAdvantage_eq_branchDist kem
     (runtimeOfImpl (kemAmbientImpl baseImpl))
     (toKemOneKeyAdversary source kem adversary)
@@ -1491,10 +1491,8 @@ theorem initializerReal_uniformKem_advantage_eq_indCCA
   rw [initializerKemBranch_true_eq_real,
     initializerKemBranch_false_eq_uniformKemGame source baseImpl kem
       adversary bounds] at hcca
-  change Measure.boolDist
-      𝒟[initializerRealGame source baseImpl kem adversary]
-      𝒟[initializerUniformKemGame source baseImpl kem adversary bounds] = _
-  exact hcca.symm
+  rw [ProbComp.boolDistance_eq_toReal_boolDist]
+  exact congrArg ENNReal.toReal hcca.symm
 
 /-- Sampling the public KEM prefix before the hidden-root game preserves the pointwise `qRoot / 2^256` bound. -/
 theorem tvDist_initializerSharedRoot_independentRoot_le
@@ -1504,11 +1502,11 @@ theorem tvDist_initializerSharedRoot_independentRoot_le
     (adversary : InitializerAdversary kem)
     (bounds : InitializerKdfReductionBounds baseImpl kem adversary
       qPrefix qPost qRoot qSym) :
-    tvDist (initializerSharedRootGame baseImpl kem adversary bounds)
+    discreteDistance (initializerSharedRootGame baseImpl kem adversary bounds)
         (initializerIndependentRootGame baseImpl kem adversary bounds) ≤
       ((qRoot : ℝ≥0∞) / (2 ^ 256 : ℝ≥0∞)).toReal := by
   unfold initializerSharedRootGame initializerIndependentRootGame
-  apply tvDist_bind_left_le_const'
+  apply discreteDistance_bind_left_le_const'
   intro sampled
   exact tvDist_hiddenRootSharedRandomGame_independentGame_le
     (sampledHiddenRootAdversary baseImpl kem adversary bounds sampled)
@@ -1525,18 +1523,18 @@ theorem initializerSharedRoot_independentRoot_advantage_le
     (adversary : InitializerAdversary kem)
     (bounds : InitializerKdfReductionBounds baseImpl kem adversary
       qPrefix qPost qRoot qSym) :
-    (initializerSharedRootGame baseImpl kem adversary bounds).boolDistAdvantage
+    (initializerSharedRootGame baseImpl kem adversary bounds).boolDistance
         (initializerIndependentRootGame baseImpl kem adversary bounds) ≤
       ((qRoot : ℝ≥0∞) / (2 ^ 256 : ℝ≥0∞)).toReal := by
-  have houtput := abs_probOutput_toReal_sub_le_tvDist
+  have houtput := abs_prEvent_toReal_sub_le_discreteDistance
     (initializerSharedRootGame baseImpl kem adversary bounds)
     (initializerIndependentRootGame baseImpl kem adversary bounds)
   exact (show
-    (initializerSharedRootGame baseImpl kem adversary bounds).boolDistAdvantage
+    (initializerSharedRootGame baseImpl kem adversary bounds).boolDistance
         (initializerIndependentRootGame baseImpl kem adversary bounds) ≤
-      tvDist (initializerSharedRootGame baseImpl kem adversary bounds)
+      discreteDistance (initializerSharedRootGame baseImpl kem adversary bounds)
         (initializerIndependentRootGame baseImpl kem adversary bounds) by
-      simpa only [ProbComp.boolDistAdvantage, VCVioLegacy.evalDist_singleton_eq_probOutput] using houtput).trans
+      simpa only [ProbComp.boolDistance, ← prEvent_eq_evalDist_singleton] using houtput).trans
     (tvDist_initializerSharedRoot_independentRoot_le baseImpl kem adversary
       bounds)
 
@@ -1552,7 +1550,7 @@ theorem initializerUniformKem_sharedRoot_advantage_eq_fixedHkdf
       qKemAmbient qKemPrefix qKemPost qUPre qBPre qDPre
       qUPost qBPost qDPost qRoot qSym) :
     (initializerUniformKemGame source baseImpl kem adversary
-        bounds.toKdfBounds).boolDistAdvantage
+        bounds.toKdfBounds).boolDistance
       (initializerSharedRootGame baseImpl kem adversary bounds.toKdfBounds) =
     fixedHkdfSha512JointStreamAdvantage source
       (initializerKdfReduction source baseImpl kem adversary bounds) := by
@@ -1615,8 +1613,8 @@ theorem initializerSecrecyAdvantage_le
       qKemAmbient qKemPrefix qKemPost qUPre qBPre qDPre
       qUPost qBPost qDPost qRoot qSym) :
     initializerSecrecyAdvantage source baseImpl kem adversary bounds ≤
-      kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
-          (toKemOneKeyAdversary source kem adversary).toINDCCA +
+      (kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
+          (toKemOneKeyAdversary source kem adversary).toINDCCA).toReal +
         fixedHkdfSha512JointStreamAdvantage source
           (initializerKdfReduction source baseImpl kem adversary bounds) +
         ((qRoot : ℝ≥0∞) / (2 ^ 256 : ℝ≥0∞)).toReal := by
@@ -1628,32 +1626,32 @@ theorem initializerSecrecyAdvantage_le
     baseImpl kem adversary bounds.toKdfBounds
   unfold initializerSecrecyAdvantage
   calc
-    (initializerRealGame source baseImpl kem adversary).boolDistAdvantage
+    (initializerRealGame source baseImpl kem adversary).boolDistance
         (initializerIndependentRootGame baseImpl kem adversary
           bounds.toKdfBounds) ≤
-      (initializerRealGame source baseImpl kem adversary).boolDistAdvantage
+      (initializerRealGame source baseImpl kem adversary).boolDistance
           (initializerUniformKemGame source baseImpl kem adversary
             bounds.toKdfBounds) +
         (initializerUniformKemGame source baseImpl kem adversary
-          bounds.toKdfBounds).boolDistAdvantage
+          bounds.toKdfBounds).boolDistance
           (initializerIndependentRootGame baseImpl kem adversary
             bounds.toKdfBounds) :=
-      ProbComp.boolDistAdvantage_triangle _ _ _
-    _ ≤ (initializerRealGame source baseImpl kem adversary).boolDistAdvantage
+      ProbComp.boolDistance_triangle _ _ _
+    _ ≤ (initializerRealGame source baseImpl kem adversary).boolDistance
           (initializerUniformKemGame source baseImpl kem adversary
             bounds.toKdfBounds) +
         ((initializerUniformKemGame source baseImpl kem adversary
-          bounds.toKdfBounds).boolDistAdvantage
+          bounds.toKdfBounds).boolDistance
             (initializerSharedRootGame baseImpl kem adversary
               bounds.toKdfBounds) +
           (initializerSharedRootGame baseImpl kem adversary
-            bounds.toKdfBounds).boolDistAdvantage
+            bounds.toKdfBounds).boolDistance
             (initializerIndependentRootGame baseImpl kem adversary
               bounds.toKdfBounds)) := by
       gcongr
-      exact ProbComp.boolDistAdvantage_triangle _ _ _
-    _ ≤ kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
-          (toKemOneKeyAdversary source kem adversary).toINDCCA +
+      exact ProbComp.boolDistance_triangle _ _ _
+    _ ≤ (kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
+          (toKemOneKeyAdversary source kem adversary).toINDCCA).toReal +
         fixedHkdfSha512JointStreamAdvantage source
           (initializerKdfReduction source baseImpl kem adversary bounds) +
         ((qRoot : ℝ≥0∞) / (2 ^ 256 : ℝ≥0∞)).toReal := by

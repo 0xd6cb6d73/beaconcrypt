@@ -808,8 +808,7 @@ theorem bare_query (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
         QueryImpl.simulateQ_compose, PqxdhRecordLiftProtocol.withRecord,
         PqxdhRecordLiftProtocol.primitiveWork, PqxdhRecordLiftProtocol.recordState,
         StateT.run] at fact ⊢
-      convert fact using 1
-      rfl
+      exact fact
   | sealing pending =>
       have fact := bare_native setup codec (simulateQ RawCtxMixedOwner.sendAdapter
         (RawCtxSourceSend.adapter (.inr (RawCtxInterpretedSend.nativeSeal
@@ -820,8 +819,7 @@ theorem bare_query (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
         QueryImpl.simulateQ_compose, PqxdhRecordLiftProtocol.withRecord,
         PqxdhRecordLiftProtocol.primitiveWork, PqxdhRecordLiftProtocol.recordState,
         StateT.run] at fact ⊢
-      convert fact using 1
-      rfl
+      exact fact
   | coin coin => exact sampled_bare (unifSpec.query coin) state
   | allocate allocated =>
       have fact := congrArg (fun program => (fun result =>

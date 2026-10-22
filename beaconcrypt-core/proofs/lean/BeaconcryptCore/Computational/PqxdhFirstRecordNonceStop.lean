@@ -389,7 +389,7 @@ theorem input_bound (client : OracleComp (Optional (PqxdhInitialGenericPost.Spec
 /-- The complete post source and the evaluated executable CTX post differ by at most the probability of a repeated selected sending input in the same observed run, with coefficient one and complete terminal output and state comparison. -/
 theorem source_input_distance (work : OracleComp (PqxdhInitialGenericPost.Spec extra S B) Result)
     (before : Full M P I D K A N C S B) (empty : before.2.selected.1.usedNonces = []) :
-    tvDist
+    discreteDistance
       ((simulateQ (PqxdhSelectedPostCompiler.original pre application initial selector aux source writer prior parent key target nonce next
         sender route read) (RawCtxSelectedFamilyNonceCoupling.optionalClient work)).run (PqxdhSelectedPostCompiler.project before))
       (Prod.map id PqxdhSelectedPostCompiler.project <$> (PqxdhSelectedStateInterpreter.evaluate
@@ -428,7 +428,7 @@ theorem source_input_bound (client : OracleComp (Optional (PqxdhInitialGenericPo
 /-- The complete post source and the evaluated executable CTX post differ by at most the probability of a repeated selected sending input in the history-extended original source post from the projected state, with coefficient one and complete terminal output and state comparison. -/
 theorem source_history_distance (work : OracleComp (PqxdhInitialGenericPost.Spec extra S B) Result)
     (before : Full M P I D K A N C S B) (empty : before.2.selected.1.usedNonces = []) :
-    tvDist
+    discreteDistance
       ((simulateQ (PqxdhSelectedPostCompiler.original pre application initial selector aux source writer prior parent key target nonce next
         sender route read) (RawCtxSelectedFamilyNonceCoupling.optionalClient work)).run (PqxdhSelectedPostCompiler.project before))
       (Prod.map id PqxdhSelectedPostCompiler.project <$> (PqxdhSelectedStateInterpreter.evaluate

@@ -56,7 +56,7 @@ theorem slotLossL_eq (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
               (PqxdhDeploymentLaterServerItemTargets.rootClientL (Reader := Reader) setup codec checks ensureInit none
                 (decision setup.source.crypto codec setup.serverKeyId budget event claim g)
                 (compileServer setup codec route bounds mode first second) runtime budget.create (selectedKem budget g)
-                g.1.val) slot)).boolDistAdvantage
+                g.1.val) slot)).boolDistance
             (PqxdhSecretInputKdf.hmacPrfRandomGame (PqxdhCorrelatedExpandHybrid.indexedReduction setup.hmac
               (PqxdhDeploymentLaterServerItemTargets.rootClientL (Reader := Reader) setup codec checks ensureInit none
                 (decision setup.source.crypto codec setup.serverKeyId budget event claim g)

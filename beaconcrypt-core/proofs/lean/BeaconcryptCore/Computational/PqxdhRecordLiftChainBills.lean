@@ -144,8 +144,11 @@ theorem seal_hash
     (RawCtxSourceSend.arguments (RawCtxInterpretedSend.nativeSeal pending)) .hash
   have bounded := RawCtxSourceSeal.sealLift_bound (fun query => decide (RawCtxSourceSeal.callKind query = .hash))
     _ 1 (by simpa only [decide_eq_true_eq] using inner)
-  convert bounded using 1
-  funext query
+  refine (isQueryBoundP_congr_pred
+    (p' := fun query : RawCtxSourceSeal.NativeSpec.Domain =>
+      RawCtxSourceSeal.sealingPredicate (fun query => decide (RawCtxSourceSeal.callKind query = .hash)) query = true)
+    ?_).2 bounded
+  intro query
   rcases query with request | (input | (bytes | frame)) <;>
     simp [RawCtxMixedOwner.sendKind, RawCtxSourceSeal.sealingPredicate, RawCtxSourceSeal.callKind]
 

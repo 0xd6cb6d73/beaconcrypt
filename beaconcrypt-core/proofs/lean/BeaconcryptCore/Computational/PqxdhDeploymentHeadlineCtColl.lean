@@ -23,7 +23,7 @@ open PqxdhDeploymentInterface (FreshBounds Mode ModeSpec Budget)
 open PqxdhDeploymentHeadlineCtGhost (gameG forget TripleColl)
 open PqxdhDeploymentHeadlineCollision (ctCollTerm ctCollEvent pairCollision pairAdversary)
 open PqxdhInitializerSecrecy (runtimeOfImpl kemAmbientImpl)
-open OracleComp.EvalDist (expectedValue)
+open OracleComp.ProgramLogic (wp)
 
 /-! ### Counting the triples -/
 
@@ -50,12 +50,12 @@ theorem triple_expect (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
     (route : RawCtxServerRouting.SenderDecoder) (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat)
     (bounds : FreshBounds) (mode : Mode) (adversary : OracleComp (ModeSpec mode) X) (runtime : A) (k i j : Nat)
     (order : i < j) :
-    expectedValue ((gameG setup codec checks route ensureInit identityIndex bounds mode adversary).run runtime)
+    wp ((gameG setup codec checks route ensureInit identityIndex bounds mode adversary).run runtime)
       (fun outcome => @ite _ (TripleColl k i j outcome) (Classical.propDecidable _) 1 0) ≤ pairCollision setup := by
   have bound := PqxdhDeploymentHeadlineCtGhost.triple_le setup codec checks route ensureInit identityIndex bounds mode
     adversary runtime k i j order
-  rw [← prEvent_eq_evalDist_singleton _ true, prEvent_map, ← VCVioLegacy.probEvent_eq_prEvent,
-    ← OracleComp.EvalDist.expectedValue_ite_one] at bound
+  rw [← prEvent_eq_evalDist_singleton _ true, prEvent_map,
+    OracleComp.ProgramLogic.prEvent_eq_wp_indicator] at bound
   refine le_trans (le_of_eq ?_) bound
   congr 1
   funext outcome
@@ -74,14 +74,14 @@ theorem ct_collision_game (setup : Setup baseSpec KemSK) (codec : Codec Reader R
   classical
   unfold ctCollTerm
   rw [PqxdhDeploymentHeadlineCtGhost.game_ghost, Functor.map_map, ← prEvent_eq_evalDist_singleton _ true,
-    prEvent_map, ← VCVioLegacy.probEvent_eq_prEvent, ← OracleComp.EvalDist.expectedValue_ite_one,
+    prEvent_map, OracleComp.ProgramLogic.prEvent_eq_wp_indicator,
     ← sum_triples]
   set run := (gameG setup codec checks route ensureInit 0 bounds mode adversary).run runtime with runEq
-  calc expectedValue run (fun outcome => if ((fun hit => hit = true) ∘ (PqxdhDeploymentKemTransfer.happens
+  calc wp run (fun outcome => if ((fun hit => hit = true) ∘ (PqxdhDeploymentKemTransfer.happens
           (ctCollEvent setup.source.crypto codec) ∘ forget)) outcome then 1 else 0)
-      ≤ expectedValue run (fun outcome => ∑ k ∈ Finset.range budget.create, ∑ j ∈ Finset.range budget.accept,
+      ≤ wp run (fun outcome => ∑ k ∈ Finset.range budget.create, ∑ j ∈ Finset.range budget.accept,
           ∑ i ∈ Finset.range j, @ite _ (TripleColl k i j outcome) (Classical.propDecidable _) 1 0) := by
-        refine OracleComp.EvalDist.expectedValue_mono_of_support fun outcome member => ?_
+        refine OracleComp.ProgramLogic.wp_mono_of_support _ fun outcome member => ?_
         by_cases event : ((fun hit => hit = true) ∘ (PqxdhDeploymentKemTransfer.happens
             (ctCollEvent setup.source.crypto codec) ∘ forget)) outcome
         · simp only [event, ite_true]
@@ -104,12 +104,12 @@ theorem ct_collision_game (setup : Setup baseSpec KemSK) (codec : Codec Reader R
         · simp only [event, ite_false]
           exact zero_le
     _ = ∑ k ∈ Finset.range budget.create, ∑ j ∈ Finset.range budget.accept, ∑ i ∈ Finset.range j,
-          expectedValue run (fun outcome => @ite _ (TripleColl k i j outcome) (Classical.propDecidable _) 1 0) := by
-        rw [OracleComp.EvalDist.expectedValue_finsetSum]
+          wp run (fun outcome => @ite _ (TripleColl k i j outcome) (Classical.propDecidable _) 1 0) := by
+        rw [OracleComp.ProgramLogic.wp_finsetSum]
         refine Finset.sum_congr rfl fun k _ => ?_
-        rw [OracleComp.EvalDist.expectedValue_finsetSum]
+        rw [OracleComp.ProgramLogic.wp_finsetSum]
         refine Finset.sum_congr rfl fun j _ => ?_
-        rw [OracleComp.EvalDist.expectedValue_finsetSum]
+        rw [OracleComp.ProgramLogic.wp_finsetSum]
     _ ≤ ∑ _k ∈ Finset.range budget.create, ∑ j ∈ Finset.range budget.accept, ∑ _i ∈ Finset.range j,
           pairCollision setup := by
         refine Finset.sum_le_sum fun k _ => Finset.sum_le_sum fun j _ => Finset.sum_le_sum fun i member => ?_
@@ -127,8 +127,8 @@ variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response A X : Typ
 /-- `ε_ctcoll` (design-v2 section 2, with `qCreate` owners instead of `qCreate + 1`): `qCreate · C(qAccept, 2)` times the IND-CCA advantage of the fixed encapsulate-and-compare adversary `pairAdversary` plus twice the ML-KEM correctness error plus `2^-256`. -/
 noncomputable def ctCollEps (setup : Setup baseSpec KemSK) (budget : Budget) : ℝ≥0∞ :=
   ((budget.create * budget.accept.choose 2 : Nat) : ℝ≥0∞) *
-    (ENNReal.ofReal (setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
-      (pairAdversary setup.kem).toINDCCA) +
+    (ENNReal.ofReal ((setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
+      (pairAdversary setup.kem).toINDCCA).toReal) +
       2 * ENNReal.ofReal (PqxdhRegistrationJointKemRawGame.correctnessError setup) + (2 ^ 256 : ℝ≥0∞)⁻¹)
 
 /-- `ct_coll_le`: the explicit term `ctCollTerm` of the CE-12 symbolic corollaries is at most `ε_ctcoll`, by `ct_collision_game` and `pair_cp_le` (`PqxdhDeploymentHeadlineCollision`). Premises: the approved Phase 1 and Phase 2 read-back contracts, `FunctionalDecapsulation` (the premise of `pair_cp_le`) and the budget. -/
@@ -145,8 +145,8 @@ theorem ct_coll_le (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
 /-- `ε_ctcoll` is at most design-v2's form, which counts `qCreate + 1` owners. -/
 theorem ctCollEps_le_design (setup : Setup baseSpec KemSK) (budget : Budget) :
     ctCollEps setup budget ≤ (((budget.create + 1) * budget.accept.choose 2 : Nat) : ℝ≥0∞) *
-      (ENNReal.ofReal (setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
-        (pairAdversary setup.kem).toINDCCA) +
+      (ENNReal.ofReal ((setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
+        (pairAdversary setup.kem).toINDCCA).toReal) +
         2 * ENNReal.ofReal (PqxdhRegistrationJointKemRawGame.correctnessError setup) + (2 ^ 256 : ℝ≥0∞)⁻¹) :=
   mul_le_mul' (Nat.cast_le.mpr (Nat.mul_le_mul_right _ (Nat.le_succ _))) le_rfl
 

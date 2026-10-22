@@ -12,10 +12,10 @@ readonly manifest="${lean_dir}/lake-manifest.json"
 readonly lakefile="${lean_dir}/lakefile.toml"
 readonly toolchain="${lean_dir}/lean-toolchain"
 readonly hax_config="${repo_root}/hax.toml"
-readonly manifest_sha256="a8215c1806343c7e4cf1e0ea44404526553148db551b41bdf3f018c1e4adb528"
-readonly lakefile_sha256="283764189b6b806c4db280f9cdd8c2ea53c5c3671f38d409868640a22fdf1dfc"
-readonly toolchain_sha256="8733782dc070a99b312039cda424f601b80f3be6f6f512627da5ba25adc27632"
-readonly hax_config_sha256="f1fee525fcba3dbdd3334c9f19f62f6259cb84e67e5f59a7c211536a52de868b"
+readonly manifest_sha256="0700627797b440f26fc487645c517401cd881264b9e04457f195ee7dc79ffec7"
+readonly lakefile_sha256="7a5d3a6d0430ea61012fb57c4a05b9b63a9296d91ff8b9269407043c4cc43f68"
+readonly toolchain_sha256="ca5f1f601d34c49079e38d7e7041eb0f2a9c227fbc1df0f404820069a052330c"
+readonly hax_config_sha256="5010245f379886dba312f63d3d56f0fa9d3378c927d488106dd096d1bc7206f1"
 
 die() {
 	printf 'error: %s\n' "$*" >&2
@@ -154,9 +154,9 @@ apply_dependency_patch() {
 	if git -C "$checkout" diff --quiet --; then
 		git -C "$checkout" apply --check "$patch" || die "${label} patch does not apply to the pinned revision"
 		git -C "$checkout" apply "$patch"
-		printf 'Applied Lean 4.34.0 compatibility patch to %s\n' "$label"
+		printf 'Applied Lean 4.35.0 compatibility patch to %s\n' "$label"
 	elif git -C "$checkout" apply --reverse --check "$patch" >/dev/null 2>&1; then
-		printf 'Lean 4.34.0 compatibility patch already applied to %s\n' "$label"
+		printf 'Lean 4.35.0 compatibility patch already applied to %s\n' "$label"
 	else
 		die "${label} checkout contains changes other than the expected compatibility patch"
 	fi
@@ -183,14 +183,14 @@ apply_dependency_patch \
 	Aeneas \
 	"$aeneas_checkout" \
 	"6852e6474ec508930acba4df79977b3483a10d10" \
-	"${patch_dir}/aeneas-lean-4.34.patch" \
-	"00fdbad88d59323701df644bba37bdce7ced2471c91523da8504a54bf0f8de31" \
-	"a570d3db8c59698f9000cf462c9f8470ff182480b097508cb8daa9de6e222e71"
+	"${patch_dir}/aeneas-lean-4.35.patch" \
+	"3c7892807daed58da288d4e76caf9ce44ba2829221aee9e18a2afe3bf85c8cc6" \
+	"3c7892807daed58da288d4e76caf9ce44ba2829221aee9e18a2afe3bf85c8cc6"
 
 apply_dependency_patch \
 	Hax-Lean \
 	"$hax_checkout" \
 	"174840bf2f633ae3bae955e08f781b3737ffc0b8" \
-	"${patch_dir}/hax-lean-4.34.patch" \
-	"0e00e9a90566e40be3ba86ef091cd07852342743e642da81ff146e9e49976d14" \
-	"0e00e9a90566e40be3ba86ef091cd07852342743e642da81ff146e9e49976d14"
+	"${patch_dir}/hax-lean-4.35.patch" \
+	"6b4adcd93a11728fde424fa2fe5395852a0918165a94d640e213798cfb0f80e5" \
+	"6b4adcd93a11728fde424fa2fe5395852a0918165a94d640e213798cfb0f80e5"

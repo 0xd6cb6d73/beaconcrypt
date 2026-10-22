@@ -1,7 +1,6 @@
 import BeaconcryptCore.Computational.CtxSealSampling
 import BeaconcryptCore.Computational.CtxSplitCache
 import BeaconcryptCore.Computational.VCVioForwardOracleComp
-import BeaconcryptCore.Computational.VCVioLegacyBridge
 
 /-!
 # Key-free independent outer tags for modified CTX
@@ -79,8 +78,9 @@ theorem splitCtxCache_cacheQuery_prefix (key : CtxKey)
       cacheSuffix (splitCtxCache key cache) (secretSuffix query.2) digest := by
   rcases query with ⟨⟨⟩, input⟩
   apply SplitCache.ext
-  · funext candidate
-    simp only [splitCtxCache, cacheSuffix]
+  · apply QueryCache.ext
+    intro candidate
+    simp only [splitCtxCache, cacheSuffix, QueryCache.ofFn_apply]
     by_cases hcand : SecretPrefixQuery key candidate.2
     · simp [hcand]
     · have hne : candidate ≠ ((), input) := by
@@ -88,8 +88,9 @@ theorem splitCtxCache_cacheQuery_prefix (key : CtxKey)
         apply hcand
         simpa [heq] using hprefix
       simp [hcand, QueryCache.cacheQuery_of_ne cache digest hne]
-  · funext suffix
-    simp only [splitCtxCache, cacheSuffix]
+  · apply QueryCache.ext
+    intro suffix
+    simp only [splitCtxCache, cacheSuffix, QueryCache.ofFn_apply]
     by_cases heq : suffix = secretSuffix input
     · subst suffix
       rw [secretAddress_secretSuffix key input hprefix]
@@ -101,7 +102,8 @@ theorem splitCtxCache_cacheQuery_prefix (key : CtxKey)
         rw [← hinput, secretSuffix_secretAddress]
       rw [QueryCache.cacheQuery_of_ne cache digest haddr,
         QueryCache.cacheQuery_of_ne (spec := CtxSuffixRO)
-          (fun suffix => cache ((), secretAddress key suffix)) digest heq]
+          (QueryCache.ofFn fun suffix => cache ((), secretAddress key suffix)) digest heq]
+      rfl
 
 /-- Projecting a canonical non-prefix cache update changes only the public cache. -/
 theorem splitCtxCache_cacheQuery_public (key : CtxKey)
@@ -111,16 +113,18 @@ theorem splitCtxCache_cacheQuery_public (key : CtxKey)
       cachePublic (splitCtxCache key cache) query digest := by
   rcases query with ⟨⟨⟩, input⟩
   apply SplitCache.ext
-  · funext candidate
-    simp only [splitCtxCache, cachePublic]
+  · apply QueryCache.ext
+    intro candidate
+    simp only [splitCtxCache, cachePublic, QueryCache.ofFn_apply]
     by_cases heq : candidate = ((), input)
     · subst candidate
       simp [hpublic]
     · by_cases hcand : SecretPrefixQuery key candidate.2
       · simp [hcand, QueryCache.cacheQuery_of_ne _ _ heq]
       · simp [hcand, QueryCache.cacheQuery_of_ne _ _ heq]
-  · funext suffix
-    simp only [splitCtxCache, cachePublic]
+  · apply QueryCache.ext
+    intro suffix
+    simp only [splitCtxCache, cachePublic, QueryCache.ofFn_apply]
     have haddr : ((), secretAddress key suffix) ≠ ((), input) := by
       intro h
       apply hpublic
@@ -699,26 +703,21 @@ theorem ctxSplitRouted_badProbability_eq_real_of_main
 /-- The routed and key-free independent-tag games differ only on prefix-bad. -/
 theorem tvDist_ctxSplitRouted_independentTag_le_prefixBad
     (c : Pqxdh.Crypto) (key : CtxKey) (adversary : CtxAdversary) :
-    tvDist (ctxSplitRoutedFlaggedBeforeVerify c key adversary)
+    discreteDistance (ctxSplitRoutedFlaggedBeforeVerify c key adversary)
         (ctxIndependentTagFlaggedBeforeVerify c key adversary) ≤
       (ctxPrefixBadProbability c key adversary).toReal := by
   calc
-    tvDist (ctxSplitRoutedFlaggedBeforeVerify c key adversary)
+    discreteDistance (ctxSplitRoutedFlaggedBeforeVerify c key adversary)
         (ctxIndependentTagFlaggedBeforeVerify c key adversary) ≤
         Pr{let result ← ctxSplitRoutedFlaggedBeforeVerify c key adversary}[
           result.2.2 = true].toReal := by
-      have bound :=
-        OracleComp.ProgramLogic.Relational.tvDist_simulateQ_run_le_probEvent_output_bad
-          (ctxSplitRoutedWithPrefixFlagImpl c key)
-          (ctxIndependentWithPrefixFlagImpl c key)
-          adversary.main emptyCtxIndependentTagState
-          (fun query state output state' => by
-            simpa only [VCVioLegacy.probOutput_eq_prEvent] using
-              ctxSplitRouted_independent_agree_good c key query state output state')
-          (ctxSplitRoutedWithPrefixFlagImpl_bad_mono c key)
-          (ctxIndependentWithPrefixFlagImpl_bad_mono c key)
-      rw [VCVioLegacy.probEvent_eq_prEvent] at bound
-      exact bound
+      exact StatefulGoodEvent.distance_le_bad
+        (ctxSplitRoutedWithPrefixFlagImpl c key)
+        (ctxIndependentWithPrefixFlagImpl c key)
+        (ctxSplitRouted_independent_agree_good c key)
+        (ctxSplitRoutedWithPrefixFlagImpl_bad_mono c key)
+        (ctxIndependentWithPrefixFlagImpl_bad_mono c key)
+        adversary.main (emptyCtxIndependentTagState, false)
     _ = (ctxPrefixBadProbability c key adversary).toReal :=
       congrArg ENNReal.toReal
         (ctxSplitRouted_badProbability_eq_prefixBad c key adversary)
@@ -727,25 +726,20 @@ theorem tvDist_ctxSplitRouted_independentTag_le_prefixBad
 theorem tvDist_ctxSplitRouted_independentTag_le_prefixBad_of_main
     (c : Pqxdh.Crypto) (key : CtxKey) {α : Type}
     (main : OracleComp CtxAdversarySpec α) :
-    tvDist
+    discreteDistance
         ((simulateQ (ctxSplitRoutedWithPrefixFlagImpl c key) main).run
           (emptyCtxIndependentTagState, false))
         ((simulateQ (ctxIndependentWithPrefixFlagImpl c key) main).run
           (emptyCtxIndependentTagState, false)) ≤
       Pr{let result ← (simulateQ (ctxSplitRoutedWithPrefixFlagImpl c key) main).run
           (emptyCtxIndependentTagState, false)}[result.2.2 = true].toReal := by
-  have bound :=
-    OracleComp.ProgramLogic.Relational.tvDist_simulateQ_run_le_probEvent_output_bad
-      (ctxSplitRoutedWithPrefixFlagImpl c key)
-      (ctxIndependentWithPrefixFlagImpl c key)
-      main emptyCtxIndependentTagState
-      (fun query state output state' => by
-        simpa only [VCVioLegacy.probOutput_eq_prEvent] using
-          ctxSplitRouted_independent_agree_good c key query state output state')
-      (ctxSplitRoutedWithPrefixFlagImpl_bad_mono c key)
-      (ctxIndependentWithPrefixFlagImpl_bad_mono c key)
-  rw [VCVioLegacy.probEvent_eq_prEvent] at bound
-  exact bound
+  exact StatefulGoodEvent.distance_le_bad
+    (ctxSplitRoutedWithPrefixFlagImpl c key)
+    (ctxIndependentWithPrefixFlagImpl c key)
+    (ctxSplitRouted_independent_agree_good c key)
+    (ctxSplitRoutedWithPrefixFlagImpl_bad_mono c key)
+    (ctxIndependentWithPrefixFlagImpl_bad_mono c key)
+    main (emptyCtxIndependentTagState, false)
 
 /-- Dropping the routed split flag recovers the unflagged routed handler. -/
 theorem ctxSplitRoutedWithPrefixFlagImpl_proj_step
@@ -904,12 +898,12 @@ theorem independentFlaggedProjection_independent
 /-- Fixed-key routed and independent-tag views differ by at most one prefix-bad charge. -/
 theorem tvDist_ctxSplitRoutedBeforeVerifyInner_independentTag_le_secretPrefixQueried
     (c : Pqxdh.Crypto) (key : CtxKey) (adversary : CtxAdversary) :
-    tvDist (ctxSplitRoutedBeforeVerifyInner c adversary key)
+    discreteDistance (ctxSplitRoutedBeforeVerifyInner c adversary key)
         (ctxIndependentTagBeforeVerifyInner c adversary key) ≤
       (ctxSecretPrefixQueriedProbabilityInner c key adversary).toReal := by
   rw [← independentFlaggedProjection_splitRouted,
     ← independentFlaggedProjection_independent]
-  refine (tvDist_map_le (m := ProbComp)
+  refine (discreteDistance_map_le (m := ProbComp)
     (independentFlaggedProjection key)
     (ctxSplitRoutedFlaggedBeforeVerify c key adversary)
     (ctxIndependentTagFlaggedBeforeVerify c key adversary)).trans ?_
@@ -961,7 +955,7 @@ theorem ctxSplitRoutedBeforeVerifyInner_eq_ctxSplitBeforeVerifyInner
 /-- Fixed-key canonical split and independent-tag games charge prefix-bad once. -/
 theorem tvDist_ctxSplitBeforeVerifyInner_independentTag_le_secretPrefixQueried
     (c : Pqxdh.Crypto) (key : CtxKey) (adversary : CtxAdversary) :
-    tvDist (ctxSplitBeforeVerifyInner c adversary key)
+    discreteDistance (ctxSplitBeforeVerifyInner c adversary key)
         (ctxIndependentTagBeforeVerifyInner c adversary key) ≤
       (ctxSecretPrefixQueriedProbabilityInner c key adversary).toReal := by
   rw [← ctxSplitRoutedBeforeVerifyInner_eq_ctxSplitBeforeVerifyInner]
@@ -985,13 +979,12 @@ noncomputable def ctxIndependentTagGame (c : Pqxdh.Crypto)
 /-- The key-free independent-tag hop charges the secret-prefix event exactly once. -/
 theorem tvDist_ctxSplitBeforeVerifyGame_independentTagGame_le_secretPrefixQueried
     (c : Pqxdh.Crypto) (adversary : CtxAdversary) :
-    tvDist (ctxSplitBeforeVerifyGame c adversary)
+    discreteDistance (ctxSplitBeforeVerifyGame c adversary)
         (ctxIndependentTagGame c adversary) ≤
       (ctxSecretPrefixQueriedProbability c adversary).toReal := by
   rw [ctxSecretPrefixQueriedProbability_toReal_eq_tsum]
   unfold ctxSplitBeforeVerifyGame ctxIndependentTagGame
-  refine (tvDist_bind_left_le ($ᵗ CtxKey) _ _).trans ?_
-  simp only [VCVioLegacy.probOutput_eq_prEvent]
+  refine (discreteDistance_bind_left_le ($ᵗ CtxKey) _ _).trans ?_
   have total : ∑' key : CtxKey, Pr{let sampled ← $ᵗ CtxKey}[sampled = key] ≠ ⊤ :=
     ne_top_of_le_ne_top one_ne_top (OracleComp.tsum_prEvent_le_one _)
   refine Summable.tsum_le_tsum (fun key => ?_) ?_ ?_
@@ -999,9 +992,9 @@ theorem tvDist_ctxSplitBeforeVerifyGame_independentTagGame_le_secretPrefixQuerie
       (tvDist_ctxSplitBeforeVerifyInner_independentTag_le_secretPrefixQueried
         c key adversary) ENNReal.toReal_nonneg
   · refine Summable.of_nonneg_of_le
-      (fun key => mul_nonneg ENNReal.toReal_nonneg (tvDist_nonneg _ _))
+      (fun key => mul_nonneg ENNReal.toReal_nonneg (discreteDistance_nonneg _ _))
       (fun key => mul_le_of_le_one_right ENNReal.toReal_nonneg
-        (tvDist_le_one _ _)) ?_
+        (discreteDistance_le_one _ _)) ?_
     exact ENNReal.summable_toReal total
   · refine Summable.of_nonneg_of_le
       (fun key => mul_nonneg ENNReal.toReal_nonneg ENNReal.toReal_nonneg)

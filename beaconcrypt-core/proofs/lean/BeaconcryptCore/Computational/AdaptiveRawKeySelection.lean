@@ -163,7 +163,7 @@ theorem selected_integrity {count : Nat} (target : Fin (count + 1))
     (c : Pqxdh.Crypto) (fallback : ModifiedNonceAeadForgery) {Result : Type}
     (client : OracleComp (SourceSpec count) Result) (rawCount : Nat)
     (bounded : client.IsQueryBoundP (SelectionClass target (TargetClass IsRawQuery)) rawCount) :
-    ENNReal.ofReal (tvDist (sourceGame (join target true real) (join target targetDecode decode) c client)
+    ENNReal.ofReal (discreteDistance (sourceGame (join target true real) (join target targetDecode decode) c client)
       (sourceGame (join target false real) (join target targetDecode decode) c client)) ≤
       ∑ index ∈ Finset.range rawCount, modifiedNonceAeadINTCTXTAdvantage c
         (indexedReduction targetDecode fallback
@@ -173,14 +173,16 @@ theorem selected_integrity {count : Nat} (target : Fin (count + 1))
     (AdaptiveRawKeyPreparation.independentSetup count ()) targetDecode real decode c
       (fun _ => simulateQ (select target) client) fallback rawCount
       (fun _ => selection_bound target (TargetClass IsRawQuery) client rawCount bounded)
-  have mapped := (ENNReal.ofReal_le_ofReal (tvDist_map_le (erasePrepared target)
+  have mapped := (ENNReal.ofReal_le_ofReal (discreteDistance_map_le (erasePrepared target)
     (AdaptiveRawKeyPreparation.source (AdaptiveRawKeyPreparation.independentSetup count ()) true targetDecode real decode c
       (fun _ => simulateQ (select target) client))
     (AdaptiveRawKeyPreparation.source (AdaptiveRawKeyPreparation.independentSetup count ()) false targetDecode real decode c
       (fun _ => simulateQ (select target) client)))).trans integrity
-  have selection := fun targetReal => (VCVioLegacy.evalSPMF_eq_iff_evalDistEq _ _).2
-    (source_prepared_selection target targetReal targetDecode real decode c client)
-  simpa only [tvDist, ← selection] using mapped
+  have selection := discreteDistance_congr
+    (source_prepared_selection target true targetDecode real decode c client)
+    (source_prepared_selection target false targetDecode real decode c client)
+  rw [← selection] at mapped
+  exact mapped
 
 /-- Selected resource membership is exactly original-index equality and the local predicate. -/
 theorem selection_target_class {count : Nat} (target : Fin (count + 1))

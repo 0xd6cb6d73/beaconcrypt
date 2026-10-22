@@ -179,7 +179,7 @@ def keyInput (setup : Setup baseSpec KemSK) (seed : IdentitySeed) (scalar : Scal
 
 /-- The cache a symbolic table denotes: each input maps to the block of the first entry whose key has those bytes. -/
 def symCache (setup : Setup baseSpec KemSK) (seed : IdentitySeed) (scalar : ScalarBytes)
-    (table : List (SymKey × HmacBlock)) : HmacOracle.QueryCache := fun bytes =>
+    (table : List (SymKey × HmacBlock)) : HmacOracle.QueryCache := QueryCache.ofFn fun bytes =>
   (table.find? (fun entry => decide (keyInput setup seed scalar entry.1 = some bytes))).map Prod.snd
 
 /-- The family state a symbolic state denotes: the same history and the concretized table. -/
@@ -472,7 +472,7 @@ theorem symCache_append (setup : Setup baseSpec KemSK) (seed : IdentitySeed) (sc
     (miss : symCache setup seed scalar table bytes = none) :
     symCache setup seed scalar (table ++ [(query, block)]) =
       (symCache setup seed scalar table).cacheQuery bytes block := by
-  funext other
+  refine QueryCache.ext (fun other => ?_)
   have missFind : table.find? (fun entry => decide (keyInput setup seed scalar entry.1 = some bytes)) = none := by
     simpa [symCache] using miss
   by_cases same : other = bytes
@@ -2099,16 +2099,23 @@ theorem symCoins_excludes {α : Type} (work : ProbComp α)
 theorem symRead_decisions (c : Pqxdh.Crypto) (query : SymKey) (table : List (SymKey × HmacBlock)) :
     (symRead c query table).IsQueryBoundP PqxdhJointGapDh.IsDecision (lookupCost query table) := by
   unfold symRead
+  generalize sampled : ($ᵗ HmacBlock : ProbComp HmacBlock) = work
   apply (isQueryBoundP_bind (m := 0) (decides_symLookup c query table).1 _).mono (by omega)
   intro result _
   cases result
-  · simpa using symCoins_excludes ($ᵗ HmacBlock) PqxdhJointGapDh.IsDecision (fun _ found => found)
+  · rw [bind_pure_comp, isQueryBoundP_map_iff]
+    exact symCoins_excludes work PqxdhJointGapDh.IsDecision (fun _ found => found)
   · trivial
 
+-- Instantiating the exact 64-byte sampler bound and checking its proof need extra elaboration depth.
+set_option maxRecDepth 1024 in
 /-- Every table miss samples exactly one 64-byte block; hits sample none. -/
 theorem symRead_uniform (c : Pqxdh.Crypto) (query : SymKey) (table : List (SymKey × HmacBlock)) :
     (symRead c query table).IsQueryBoundP PqxdhJointGapDh.IsUniform 64 := by
+  have bounded : ($ᵗ HmacBlock : ProbComp HmacBlock).IsTotalQueryBound 64 :=
+    CtxComputationalSecurity.uniformFixedBytes_isTotalQueryBound 64
   unfold symRead
+  generalize sampled : ($ᵗ HmacBlock : ProbComp HmacBlock) = work at bounded ⊢
   apply (isQueryBoundP_bind (n := 0) (m := 64)
     ((decides_symLookup c query table).2.of_imp (fun query found => by
       rcases query with coin | request
@@ -2116,13 +2123,15 @@ theorem symRead_uniform (c : Pqxdh.Crypto) (query : SymKey) (table : List (SymKe
       · cases found)) _).mono (by omega)
   intro result _
   cases result
-  · simpa using symCoins_uniform ($ᵗ HmacBlock) 64 (CtxComputationalSecurity.uniformFixedBytes_isTotalQueryBound 64)
+  · rw [bind_pure_comp, isQueryBoundP_map_iff]
+    exact symCoins_uniform work 64 bounded
   · trivial
 
 /-- Reading the table makes no signing request. -/
 theorem symRead_signing (c : Pqxdh.Crypto) (query : SymKey) (table : List (SymKey × HmacBlock)) :
     (symRead c query table).IsQueryBoundP PqxdhJointGapDh.IsSigning 0 := by
   unfold symRead
+  generalize sampled : ($ᵗ HmacBlock : ProbComp HmacBlock) = work
   apply isQueryBoundP_bind (m := 0) ((decides_symLookup c query table).2.of_imp (fun query found => by
     rcases query with coin | request
     · cases found
@@ -2131,7 +2140,8 @@ theorem symRead_signing (c : Pqxdh.Crypto) (query : SymKey) (table : List (SymKe
       | decideDh _ _ _ => cases found))
   intro result _
   cases result
-  · simpa using symCoins_excludes ($ᵗ HmacBlock) PqxdhJointGapDh.IsSigning (fun _ found => found)
+  · rw [bind_pure_comp, isQueryBoundP_map_iff]
+    exact symCoins_excludes work PqxdhJointGapDh.IsSigning (fun _ found => found)
   · trivial
 
 /-- A table read either keeps the table or appends its one sampled entry. -/

@@ -61,7 +61,7 @@ theorem distance {ι State Result : Type} {spec : OracleSpec ι}
     (handler alternate : QueryImpl spec (StateT State ProbComp))
     (record : spec.Domain → List RootOutput) (direct : spec.Domain → Bool) (target : RootOutput)
     (client : OracleComp spec Result) (state : (State × List RootOutput) × Bool) :
-    tvDist ((simulateQ (trace handler record direct) client).run state)
+    discreteDistance ((simulateQ (trace handler record direct) client).run state)
       ((simulateQ (trace (RawCtxSelectedAliasCoupling.routed handler alternate record target) record direct) client).run state) ≤
       Pr{let result ← (simulateQ (trace handler record direct) client).run state}[target ∈ result.2.1.2].toReal := by
   have original := complete handler record direct client (split state)
@@ -70,7 +70,7 @@ theorem distance {ι State Result : Type} {spec : OracleSpec ι}
   simp only [regroup, split, Prod.mk.eta] at original alternateRun
   rw [← original, ← alternateRun, mark_routed]
   simp only [prEvent_map, Prod.map_def, regroup, id_eq]
-  exact (tvDist_map_le _ _ _).trans
+  exact (discreteDistance_map_le _ _ _).trans
     (RawCtxSelectedAliasInitial.recorded_distance_initial (mark handler direct) (mark alternate direct)
       record target client (split state))
 

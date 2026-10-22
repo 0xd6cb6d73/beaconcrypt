@@ -811,7 +811,7 @@ def phase1ToEUFCMA {ι : Type} {baseSpec : OracleSpec ι} {Context SecretKey : T
     (sigAlg : Ed25519Scheme baseSpec SecretKey)
     (materialGenerator : Phase1MaterialGenerator baseSpec Context)
     (adversary : Phase1Adversary baseSpec Context) :
-    SignatureAlg.unforgeableAdv sigAlg where
+    SignatureAlg.UnforgeableAdversary sigAlg where
   main pk := do
     let result ← phase1ClientMain materialGenerator adversary pk
     return selectPhase1Forgery result.material result.transcript result.candidate
@@ -992,13 +992,13 @@ theorem unforgeableExp_phase1ToEUFCMA {ι : Type}
     (sigAlg : Ed25519Scheme baseSpec SecretKey)
     (materialGenerator : Phase1MaterialGenerator baseSpec Context)
     (adversary : Phase1Adversary baseSpec Context) :
-    SignatureAlg.unforgeableExp runtime
-        (phase1ToEUFCMA sigAlg materialGenerator adversary) =
+    runtime.evalDist (SignatureAlg.unforgeableExperiment
+        (phase1ToEUFCMA sigAlg materialGenerator adversary)) =
       runtime.evalDist
         (phase1EufBody sigAlg materialGenerator adversary) := by
-  unfold SignatureAlg.unforgeableExp phase1EufBody phase1ToEUFCMA
+  unfold SignatureAlg.unforgeableExperiment phase1EufBody phase1ToEUFCMA
   simp only [simulateQ_bind, WriterT.run_bind]
-  simp [phase1SigningImpl, map_eq_bind_pure_comp]
+  simp [phase1SigningImpl, SignatureAlg.runWithSigningOracle, map_eq_bind_pure_comp]
   congr 1
 
 theorem phase1EufBody_eq_shared {ι : Type} {baseSpec : OracleSpec ι}
@@ -1044,8 +1044,8 @@ theorem unforgeableExp_phase1ToEUFCMA_eq_shared {ι : Type}
     (adversary : Phase1Adversary baseSpec Context)
     (verifyFn : Ed25519PublicKey → Pqxdh.Bytes → Ed25519Signature → Bool)
     (deterministic : HasDeterministicVerification sigAlg verifyFn) :
-    SignatureAlg.unforgeableExp runtime
-        (phase1ToEUFCMA sigAlg materialGenerator adversary) =
+    runtime.evalDist (SignatureAlg.unforgeableExperiment
+        (phase1ToEUFCMA sigAlg materialGenerator adversary)) =
       runtime.evalDist
         (phase1SharedJoint sigAlg materialGenerator adversary >>= fun joint =>
           pure (phase1EufBit verifyFn joint)) := by
@@ -1066,11 +1066,12 @@ theorem phase1FieldSubstitutionAdvantage_le_eufCma {ι : Type}
     (deterministic : HasDeterministicVerification sigAlg verifyFn) :
     Phase1FieldSubstitutionAdvantage runtime sigAlg materialGenerator adversary
         verifyFn ≤
-      (phase1ToEUFCMA sigAlg materialGenerator adversary).advantage runtime := by
+      SignatureAlg.unforgeableAdvantage runtime
+        (phase1ToEUFCMA sigAlg materialGenerator adversary) := by
   let : MeasurableSpace (Phase1SharedResult Context) := ⊤
   let : DiscreteMeasurableSpace (Phase1SharedResult Context) :=
     ⟨fun _ => by simp⟩
-  unfold Phase1FieldSubstitutionAdvantage SignatureAlg.unforgeableAdv.advantage
+  unfold Phase1FieldSubstitutionAdvantage SignatureAlg.unforgeableAdvantage
   rw [phase1FieldSubstitutionExp_eq_shared runtime sigAlg materialGenerator
       adversary verifyFn,
     unforgeableExp_phase1ToEUFCMA_eq_shared runtime sigAlg materialGenerator

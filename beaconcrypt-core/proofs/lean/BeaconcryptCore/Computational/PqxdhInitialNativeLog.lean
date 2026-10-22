@@ -103,7 +103,7 @@ theorem step_covered (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixe
 /-- Actual empty selective storage is covered without enumerating or assuming any earlier input. -/
 theorem empty_covered (primitive : RawCtxSharedPrimitive.SharedState A) (cursor : RawCtxSelectiveChainGame.Cursor)
     (past : List JointKdfAddress) (privateState : N) (cache : C) :
-    Covered (((primitive, ((fun _ => none), cursor)), past), (privateState, cache)) :=
+    Covered (((primitive, (∅, cursor)), past), (privateState, cache)) :=
   RawCtxSelectiveFamilyLog.empty_covered primitive cursor past
 
 /-- Every completed source execution derives its private-cache provenance from the same actual callback history. -/

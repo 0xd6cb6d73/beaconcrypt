@@ -214,11 +214,11 @@ theorem rootClientL_entryDL (setup : Setup baseSpec KemSK) (codec : Codec Reader
     (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes) (decision : X → Bool)
     (work : OracleComp (PqxdhDeploymentLaterServerSource.Spec KemSK) X) (runtime : A) (count : Nat)
     (selected : Fin (count + 1)) (index : Nat) (other : ProbComp Bool) :
-    other.boolDistAdvantage (PqxdhCorrelatedExpandHybrid.uniformGame (rootClientL (Reader := Reader) setup codec
+    other.boolDistance (PqxdhCorrelatedExpandHybrid.uniformGame (rootClientL (Reader := Reader) setup codec
         checks ensureInit supplied decision work runtime count selected index)) =
-      other.boolDistAdvantage (PqxdhServerAuthKeySchedule.rootHybrid setup.source (entryDL (Reader := Reader) setup
+      other.boolDistance (PqxdhServerAuthKeySchedule.rootHybrid setup.source (entryDL (Reader := Reader) setup
         codec checks ensureInit supplied decision work runtime count selected index)) := by
-  unfold ProbComp.boolDistAdvantage
+  unfold ProbComp.boolDistance
   rw [uniformGameL_entry]
 
 end Entry

@@ -111,7 +111,7 @@ theorem run_selection (depth : Nat)
   simp only [run, mem_support_bind_iff, mem_support_pure_iff] at supported
   obtain ⟨packet, _, output, _, ⟨localPacket, details⟩, sampled, parent, _, nonce, _, chain, _, rfl⟩ := supported
   change localPacket = Sum.inr (stored, Sum.inr pending) at shape
-  subst localPacket
+  rw [shape] at sampled
   rcases packet with ⟨publicKey, secretKey, state, ciphertext⟩
   cases state with
   | completed decision =>
@@ -176,7 +176,7 @@ theorem run_capture (depth : Nat)
   simp only [run, mem_support_bind_iff, mem_support_pure_iff] at supported
   obtain ⟨packet, _, output, _, ⟨localPacket, details⟩, sampled, parent, _, nonce, _, chain, _, rfl⟩ := supported
   change localPacket = Sum.inr (stored, Sum.inr pending) at shape
-  subst localPacket
+  rw [shape] at sampled
   rcases packet with ⟨publicKey, secretKey, state, ciphertext⟩
   cases state with
   | completed decision =>

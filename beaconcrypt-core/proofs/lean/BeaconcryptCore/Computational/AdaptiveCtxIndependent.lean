@@ -340,13 +340,13 @@ theorem uniformIndependentGame_distance_le_intctxt_sum (decode : RawDecoder) (c 
     (fallback : ModifiedNonceAeadForgery) {Result : Type}
     (adversary : OracleComp ReceiveSpec Result) (count : ℕ)
     (bounded : adversary.IsQueryBoundP IsRawQuery count) :
-    ENNReal.ofReal (tvDist (uniformIndependentGame decode c adversary)
+    ENNReal.ofReal (discreteDistance (uniformIndependentGame decode c adversary)
       (Prod.map id Prod.fst <$> uniformLinkedGame false decode c adversary)) ≤
       ∑ index ∈ Finset.range count,
         modifiedNonceAeadINTCTXTAdvantage c
           (AdaptiveRawNonceAead.indexedReduction (baseDecoder decode) fallback (wrapped decode adversary) index) := by
   rw [← uniformLinkedGame_projection]
-  exact (ENNReal.ofReal_le_ofReal (tvDist_map_le (Prod.map id Prod.fst) _ _)).trans
+  exact (ENNReal.ofReal_le_ofReal (discreteDistance_map_le (Prod.map id Prod.fst) _ _)).trans
     (uniformLinkedGame_distance_le_intctxt_sum decode c fallback adversary count bounded)
 
 /-- The direct-game integrity hop and every constructed reduction share the same explicit source budgets. -/
@@ -357,7 +357,7 @@ theorem uniformIndependentGame_bound_and_query_accounting (decode : RawDecoder) 
     (hashBound : adversary.IsQueryBoundP AdaptiveCtxQueryBounds.SourceHash qHash)
     (sealBound : adversary.IsQueryBoundP AdaptiveCtxQueryBounds.SourceSeal qSeal)
     (rawBound : adversary.IsQueryBoundP IsRawQuery qRaw) :
-    ENNReal.ofReal (tvDist (uniformIndependentGame decode c adversary)
+    ENNReal.ofReal (discreteDistance (uniformIndependentGame decode c adversary)
       (Prod.map id Prod.fst <$> uniformLinkedGame false decode c adversary)) ≤
       ∑ index ∈ Finset.range qRaw,
         modifiedNonceAeadINTCTXTAdvantage c

@@ -25,6 +25,7 @@ def cap (supplied : Option Pqxdh.Bytes) : Kind → Nat
   | .importSeed => if supplied.isSome then 1 else 0
   | .other => 0
 
+set_option backward.isDefEq.respectTransparency false in
 /-- The actual constructor has one initialization allowance and at most one request of its chosen origin. The statement covers every typed reply, including initialization rejection and invalid imported lengths. -/
 theorem client_bound (sender : Std.U64) (supplied : Option Pqxdh.Bytes) (kind : Kind) :
     (client (KemSK := KemSK) (P := P) sender supplied).IsQueryBoundP

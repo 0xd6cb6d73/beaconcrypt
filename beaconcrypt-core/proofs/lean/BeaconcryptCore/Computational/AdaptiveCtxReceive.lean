@@ -220,13 +220,13 @@ theorem uniformLinkedGame_distance_le_intctxt_sum (decode : RawDecoder) (c : Pqx
     (fallback : ModifiedNonceAeadForgery) {Result : Type}
     (adversary : OracleComp ReceiveSpec Result) (count : ℕ)
     (bounded : adversary.IsQueryBoundP IsRawQuery count) :
-    ENNReal.ofReal (tvDist (uniformLinkedGame true decode c adversary)
+    ENNReal.ofReal (discreteDistance (uniformLinkedGame true decode c adversary)
       (uniformLinkedGame false decode c adversary)) ≤
       ∑ index ∈ Finset.range count,
         modifiedNonceAeadINTCTXTAdvantage c
           (indexedReduction (baseDecoder decode) fallback (wrapped decode adversary) index) := by
   rw [uniformLinkedGame_eq, uniformLinkedGame_eq]
-  exact (ENNReal.ofReal_le_ofReal (tvDist_map_le retainBoth _ _)).trans
+  exact (ENNReal.ofReal_le_ofReal (discreteDistance_map_le retainBoth _ _)).trans
     (uniformAdaptiveGame_distance_le_intctxt_sum (baseDecoder decode) c fallback
       (wrapped decode adversary) count (wrapped_raw_query_bound decode adversary count bounded))
 

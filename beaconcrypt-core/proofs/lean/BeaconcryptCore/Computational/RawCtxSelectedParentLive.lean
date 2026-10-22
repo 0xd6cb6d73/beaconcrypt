@@ -122,17 +122,12 @@ theorem event_good {Auxiliary Result : Type}
         (RawCtxSelectedParentPublic.reply prior entry target)) client).run state)}[event result ∧ result.2.2 = false] =
     Pr{let result ← ((simulateQ (observed source writer prior entry output labelRead
         (RawCtxSelectedParentPublic.reply prior entry replacement)) client).run state)}[event result ∧ result.2.2 = false] := by
-  have good := StatefulGoodEvent.event_good _ _
-    (fun query before reply after => by
-      rw [← VCVioLegacy.oracleComp_probEvent_eq_prEvent, ← VCVioLegacy.oracleComp_probEvent_eq_prEvent]
-      exact (VCVioLegacy.probEvent_eq_prEvent _ _).trans
-        ((agree_good source writer prior entry output target replacement query before reply after).trans (VCVioLegacy.probEvent_eq_prEvent _ _).symm))
+  exact StatefulGoodEvent.event_good _ _
+    (agree_good source writer prior entry output target replacement)
     (sticky source writer prior entry output (nativeReader (RawCtxFreshChainCut.concreteChain target))
       (RawCtxSelectedParentPublic.reply prior entry target))
     (sticky source writer prior entry output labelRead (RawCtxSelectedParentPublic.reply prior entry replacement))
     client state event
-  rw [← VCVioLegacy.oracleComp_probEvent_eq_prEvent, ← VCVioLegacy.oracleComp_probEvent_eq_prEvent] at good
-  exact (VCVioLegacy.probEvent_eq_prEvent _ _).symm.trans (good.trans (VCVioLegacy.probEvent_eq_prEvent _ _))
 
 end BeaconcryptCore.Computational.RawCtxSelectedParentLive
 

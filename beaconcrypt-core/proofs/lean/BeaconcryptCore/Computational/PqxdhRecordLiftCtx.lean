@@ -77,8 +77,8 @@ theorem game_replay (env : Environment n E) (mode : Mode) (adversary : OracleCom
 
 /-- Equal laws give equal distinguishing advantages. -/
 theorem advantage_congr (left right left' right' : ProbComp Bool) (sameLeft : 𝒟[left] = 𝒟[left'])
-    (sameRight : 𝒟[right] = 𝒟[right']) : left.boolDistAdvantage right = left'.boolDistAdvantage right' := by
-  unfold ProbComp.boolDistAdvantage
+    (sameRight : 𝒟[right] = 𝒟[right']) : left.boolDistance right = left'.boolDistance right' := by
+  unfold ProbComp.boolDistance
   rw [sameLeft, sameRight]
 
 /-- **One hop.** The hybrids before and after step `step` differ by at most the step's integrity loss, at every hash and raw cap of its step client and every seal cap below `2^96`. -/
@@ -92,7 +92,7 @@ theorem hop_bound (fallback : CtxNonceAeadIntCtxt.ModifiedNonceAeadForgery) (env
     (rawBound : (stepClient setup codec route serverKid bounds env mode adversary decision budget step).IsQueryBoundP
       (TargetClass IsRawQuery) qRaw)
     (small : qSeal < 2 ^ 96) :
-    ENNReal.ofReal ((game setup codec route serverKid bounds env mode adversary decision budget step.val).boolDistAdvantage
+    ENNReal.ofReal ((game setup codec route serverKid bounds env mode adversary decision budget step.val).boolDistance
       (game setup codec route serverKid bounds env mode adversary decision budget (step.val + 1))) ≤
       integrityLoss (RawCtxUniversalDecoder.decoder codec.frameRead) setup.source.crypto fallback
         (ctxReduction setup codec route serverKid bounds env mode adversary decision budget step) qHash qRaw := by
@@ -147,23 +147,23 @@ theorem ctxAuthLiftBool_of_billed (fallback : CtxNonceAeadIntCtxt.ModifiedNonceA
     rw [first, last]
     have telescope := PqxdhComposition.finiteHybridBound_of_hop_bounds
       (game setup codec route serverKid bounds env mode adversary decision budget) (hops n budget)
-      (fun cut => (game setup codec route serverKid bounds env mode adversary decision budget cut).boolDistAdvantage
+      (fun cut => (game setup codec route serverKid bounds env mode adversary decision budget cut).boolDistance
         (game setup codec route serverKid bounds env mode adversary decision budget (cut + 1))) (fun _ _ => le_refl _)
-    calc ENNReal.ofReal ((game setup codec route serverKid bounds env mode adversary decision budget 0).boolDistAdvantage
+    calc ENNReal.ofReal ((game setup codec route serverKid bounds env mode adversary decision budget 0).boolDistance
           (game setup codec route serverKid bounds env mode adversary decision budget (hops n budget)))
         ≤ ENNReal.ofReal (∑ cut ∈ Finset.range (hops n budget),
-            (game setup codec route serverKid bounds env mode adversary decision budget cut).boolDistAdvantage
+            (game setup codec route serverKid bounds env mode adversary decision budget cut).boolDistance
               (game setup codec route serverKid bounds env mode adversary decision budget (cut + 1))) :=
           ENNReal.ofReal_le_ofReal telescope
       _ = ∑ cut ∈ Finset.range (hops n budget), ENNReal.ofReal
-            ((game setup codec route serverKid bounds env mode adversary decision budget cut).boolDistAdvantage
+            ((game setup codec route serverKid bounds env mode adversary decision budget cut).boolDistance
               (game setup codec route serverKid bounds env mode adversary decision budget (cut + 1))) :=
           ENNReal.ofReal_sum_of_nonneg (fun _ _ => abs_nonneg _)
       _ = ∑ step : Fin (hops n budget), ENNReal.ofReal
-            ((game setup codec route serverKid bounds env mode adversary decision budget step.val).boolDistAdvantage
+            ((game setup codec route serverKid bounds env mode adversary decision budget step.val).boolDistance
               (game setup codec route serverKid bounds env mode adversary decision budget (step.val + 1))) :=
           (Fin.sum_univ_eq_sum_range (fun cut => ENNReal.ofReal
-            ((game setup codec route serverKid bounds env mode adversary decision budget cut).boolDistAdvantage
+            ((game setup codec route serverKid bounds env mode adversary decision budget cut).boolDistance
               (game setup codec route serverKid bounds env mode adversary decision budget (cut + 1)))) _).symm
       _ ≤ ∑ step : Fin (hops n budget), integrityLoss (RawCtxUniversalDecoder.decoder codec.frameRead)
             setup.source.crypto fallback

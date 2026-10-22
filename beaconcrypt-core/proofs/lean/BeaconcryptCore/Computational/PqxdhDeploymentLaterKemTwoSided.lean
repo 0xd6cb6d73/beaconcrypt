@@ -61,7 +61,9 @@ theorem real_le_run (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
       simp [PqxdhRegistrationJointKemResume.sourcePost, PqxdhRegistrationJointKemGame.decision, cutMap]
     | pending request resume =>
       dsimp only [Option.elim_some, Option.map_some]
-      rw [PqxdhRegistrationJointKemRawNatural.finish_stopped, map_bind]
+      rw [prEvent_eq_evalDist_singleton, prEvent_eq_evalDist_singleton,
+        PqxdhRegistrationJointKemRawNatural.finish_stopped, map_bind,
+        ← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true]
       by_cases active : request.2 = chosen.1
       · rw [active]
         apply prEvent_bind_mono_of_forall_le_of_support
@@ -292,11 +294,11 @@ theorem hop_close (setup : Setup baseSpec KemSK)
           {true}).toReal -
       (𝒟[PqxdhDeploymentLaterServerOpaque.opaqueBranch (Reader := Reader) setup codec checks ensureInit supplied
         decision work runtime count selected index false] {true}).toReal| ≤
-      setup.kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl
+      (setup.kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl
           (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl))
         (PqxdhDeploymentLaterServerKemHop.certified setup ensureInit supplied
           (PqxdhDeploymentLaterServerCut.scanned setup codec checks decision work index) runtime count
-          selected).toINDCCA +
+          selected).toINDCCA).toReal +
         PqxdhRegistrationJointKemRawGame.correctnessError setup := by
   have close := PqxdhDeploymentLaterServerKemHop.certified_advantage setup functional ensureInit supplied
     (PqxdhDeploymentLaterServerCut.scanned setup codec checks decision work index) runtime count selected
@@ -425,13 +427,13 @@ theorem kem_transfer_server_two_sided (setup : Setup baseSpec KemSK)
         (decision setup.source.crypto codec setup.serverKeyId budget event claim g)
         (compileServer setup codec route bounds mode first second) runtime budget.create (selectedKem budget g) g.1.val
         false] {true}).toReal| ≤
-      setup.kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl
+      (setup.kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl
           (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl))
         (PqxdhDeploymentLaterServerKemHop.certified setup ensureInit none
           (PqxdhDeploymentLaterServerCut.scanned setup codec checks
             (decision setup.source.crypto codec setup.serverKeyId budget event claim g)
             (compileServer setup codec route bounds mode first second) g.1.val)
-          runtime budget.create (selectedKem budget g)).toINDCCA +
+          runtime budget.create (selectedKem budget g)).toINDCCA).toReal +
         PqxdhRegistrationJointKemRawGame.correctnessError setup := by
   rw [eligible_server_real setup codec checks route ensureInit phase1 phase2 bounds mode first second budget respects
     event claim g runtime]
@@ -454,13 +456,13 @@ theorem kem_transfer_server_lower (setup : Setup baseSpec KemSK)
         designated setup.source.crypto codec setup.serverKeyId budget claim outcome = some g)) <$>
       (PqxdhDeploymentLaterServerGame.game setup codec checks route ensureInit 0 bounds mode first second).run
         runtime] {true} +
-      ENNReal.ofReal (setup.kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl
+      ENNReal.ofReal ((setup.kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl
           (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl))
         (PqxdhDeploymentLaterServerKemHop.certified setup ensureInit none
           (PqxdhDeploymentLaterServerCut.scanned setup codec checks
             (decision setup.source.crypto codec setup.serverKeyId budget event claim g)
             (compileServer setup codec route bounds mode first second) g.1.val)
-          runtime budget.create (selectedKem budget g)).toINDCCA +
+          runtime budget.create (selectedKem budget g)).toINDCCA).toReal +
         PqxdhRegistrationJointKemRawGame.correctnessError setup) := by
   refine le_add_of_close (UniformTargetSelection.chance_ne_top _ _) ?_ (kem_transfer_server_two_sided setup functional
     codec checks route ensureInit phase1 phase2 bounds mode first second budget respects event claim g runtime)
@@ -486,13 +488,13 @@ theorem kem_transfer_server_sum_two_sided (setup : Setup baseSpec KemSK)
           (compileServer setup codec route bounds mode first second) runtime budget.create (selectedKem budget g)
           g.1.val false] {true}).toReal| ≤
       ∑ g : Fin budget.accept × Fin budget.capacity,
-        (setup.kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl
+        ((setup.kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl
             (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl))
           (PqxdhDeploymentLaterServerKemHop.certified setup ensureInit none
             (PqxdhDeploymentLaterServerCut.scanned setup codec checks
               (decision setup.source.crypto codec setup.serverKeyId budget event claim g)
               (compileServer setup codec route bounds mode first second) g.1.val)
-            runtime budget.create (selectedKem budget g)).toINDCCA +
+            runtime budget.create (selectedKem budget g)).toINDCCA).toReal +
           PqxdhRegistrationJointKemRawGame.correctnessError setup) := by
   rw [UniformTargetSelection.split]
   exact abs_sum_sub_le _ _ _ (fun _ => UniformTargetSelection.chance_ne_top _ _) fun g =>

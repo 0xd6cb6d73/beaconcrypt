@@ -1042,7 +1042,9 @@ theorem hit_dominates (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Bool) (
         by_cases hit : HitReq prior target nonce next read (⟨control, before, PqxdhBeaconPhase2Shared.clearedMetadata pending.metadata,
             PqxdhSelectedMessageBeacon.knownKernel kernel, third.1.1⟩ : PqxdhSelectedInitialOwnerCompiler.Request I D K)
         · exact Or.inr (@decide_eq_true _ (Classical.propDecidable _) hit)
-        · have fourthKept := markRaw_quiet _ (lower_quiet prior target nonce next read pre application initial selector aux _
+        · have fourthKept := markRaw_quiet _ (lower_quiet prior target nonce next read pre application initial selector aux
+            (.inr (⟨control, before, PqxdhBeaconPhase2Shared.clearedMetadata pending.metadata,
+              PqxdhSelectedMessageBeacon.knownKernel kernel, third.1.1⟩ : PqxdhSelectedInitialOwnerCompiler.Request I D K))
             (fun request same => by rw [← Sum.inr.inj same]; exact hit) third.1.2) flag fourth fourthReached
           exact Or.inl (fourthKept ▸ raised)
   · have same := markRaw_pure _ _ _ (by simpa only [simulateQ_pure, StateT.run_pure] using supported)
@@ -1212,9 +1214,7 @@ theorem aug_hit (client : OracleComp (Optional (PqxdhInitialGenericPost.Spec ext
         (simulateQ (hitObserved (extra := extra) pre application initial selector aux source writer prior key target nonce next sender
           route decode) client).run ((history, PqxdhSelectedPostCompiler.project (insErase first)), first.1.2.2.2)] {true} := by
   rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true, prEvent_map, prEvent_map]
-  -- Relational phase B exception: the coupling-to-event law exists only in deprecated form; both events use the bridge.
-  rw [← VCVioLegacy.probEvent_eq_prEvent, ← VCVioLegacy.probEvent_eq_prEvent]
-  refine probEvent_le_of_relTriple (aug_run pre application initial selector aux source writer prior key target nonce next sender route
+  refine prEvent_le_of_relTriple (aug_run pre application initial selector aux source writer prior key target nonce next sender route
     decode mark b client first _ ⟨rfl, id⟩) fun left right held holds => ?_
   obtain ⟨raised, fresh⟩ := implies left holds
   obtain ⟨_, projected, flagged⟩ := held
@@ -1703,7 +1703,7 @@ theorem coll_real (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseImpl k
   have bound := coll_bound setup env callbacks baseImpl kem attachedVerify primitives program post b c.postBudget c.postBound
   have real := ENNReal.toReal_mono (ENNReal.div_ne_top (ENNReal.natCast_ne_top _) (by positivity)) bound
   rw [ENNReal.toReal_div, ENNReal.toReal_pow, ENNReal.toReal_natCast] at real
-  simpa [-evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ] using real
+  simpa [ ] using real
 
 end CollBound
 

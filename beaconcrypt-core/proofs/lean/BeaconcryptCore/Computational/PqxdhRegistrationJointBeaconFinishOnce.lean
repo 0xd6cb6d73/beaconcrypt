@@ -94,12 +94,12 @@ theorem split_uniform_two (setup : Setup baseSpec KemSK) (codec : Codec Reader R
     (decision : X → Bool) (work : OracleComp (SourceSpec KemSK) X) (runtime : A)
     (count : Nat) (selected : Fin (count + 1)) (index : Nat) :
     (splitGame (sharedStart (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count
-        selected index) (sharedClient setup codec checks decision count selected)).boolDistAdvantage
+        selected index) (sharedClient setup codec checks decision count selected)).boolDistance
       (uniformGame (rootClient (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count
         selected index)) ≤
       ∑ slot ∈ Finset.range 2,
         (hmacPrfRealGame setup.hmac (indexedReduction setup.hmac (rootClient (Reader := Reader) setup codec checks
-          ensureInit supplied decision work runtime count selected index) slot)).boolDistAdvantage
+          ensureInit supplied decision work runtime count selected index) slot)).boolDistance
           (hmacPrfRandomGame (indexedReduction setup.hmac (rootClient (Reader := Reader) setup codec checks ensureInit
             supplied decision work runtime count selected index) slot)) := by
   rw [PqxdhRegistrationJointKemRootExpand.splitGame_expanded]
@@ -115,16 +115,16 @@ theorem opaqueBranch_uniform_two (setup : Setup baseSpec KemSK) (codec : Codec R
     (certified : ∀ source, work.IsQueryBoundP
       (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source)) :
     (opaqueBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index
-        false).boolDistAdvantage
+        false).boolDistance
       (uniformGame (rootClient (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count
         selected index)) ≤
       ((budget (.inl 3) + budget (.inl 5) + budget (.inl 6) : ℕ) : ℝ) / 2 ^ 256 +
         ∑ slot ∈ Finset.range 2,
           (hmacPrfRealGame setup.hmac (indexedReduction setup.hmac (rootClient (Reader := Reader) setup codec checks
-            ensureInit supplied decision work runtime count selected index) slot)).boolDistAdvantage
+            ensureInit supplied decision work runtime count selected index) slot)).boolDistance
             (hmacPrfRandomGame (indexedReduction setup.hmac (rootClient (Reader := Reader) setup codec checks
               ensureInit supplied decision work runtime count selected index) slot)) :=
-  (ProbComp.boolDistAdvantage_triangle _ _ _).trans (add_le_add
+  (ProbComp.boolDistance_triangle _ _ _).trans (add_le_add
     (PqxdhRegistrationJointKemRomSplit.opaqueBranch_split setup codec checks ensureInit supplied decision work runtime
       count selected index budget certified)
     (split_uniform_two setup codec checks ensureInit supplied decision work runtime count selected index))
@@ -139,40 +139,40 @@ theorem opaqueBranch_idealKeys_two (setup : Setup baseSpec KemSK) (codec : Codec
       (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))
     (correct : SourceFullCorrect setup.source setup.hmac) :
     (opaqueBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index
-        false).boolDistAdvantage
+        false).boolDistance
       (idealKeysBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected
         index) ≤
       ((budget (.inl 3) + budget (.inl 5) + budget (.inl 6) : ℕ) : ℝ) / 2 ^ 256 +
         ∑ slot ∈ Finset.range 2,
           (hmacPrfRealGame setup.hmac (indexedReduction setup.hmac (rootClient (Reader := Reader) setup codec checks
-            ensureInit supplied decision work runtime count selected index) slot)).boolDistAdvantage
+            ensureInit supplied decision work runtime count selected index) slot)).boolDistance
             (hmacPrfRandomGame (indexedReduction setup.hmac (rootClient (Reader := Reader) setup codec checks
               ensureInit supplied decision work runtime count selected index) slot)) +
         ((extractRealGame setup.hmac uniform32 (initExtractReduction setup.source setup.hmac
             (entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected
-              index))).boolDistAdvantage
+              index))).boolDistance
             (extractUniformGame uniform32 (initExtractReduction setup.source setup.hmac
               (entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected
                 index))) +
           (hmacPrfRealGame setup.hmac (initExpandReduction setup.source
             (entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected
-              index))).boolDistAdvantage
+              index))).boolDistance
             (hmacPrfRandomGame (initExpandReduction setup.source
               (entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected
                 index))) +
           (extractRealGame setup.hmac uniform32 (stepExtractReduction setup.hmac
             (entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected
-              index))).boolDistAdvantage
+              index))).boolDistance
             (extractUniformGame uniform32 (stepExtractReduction setup.hmac
               (entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected
                 index))) +
           (hmacPrfRealGame setup.hmac (stepExpandReduction
             (entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected
-              index))).boolDistAdvantage
+              index))).boolDistance
             (hmacPrfRandomGame (stepExpandReduction
               (entryD (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected
                 index)))) :=
-  (ProbComp.boolDistAdvantage_triangle _ _ _).trans (add_le_add
+  (ProbComp.boolDistance_triangle _ _ _).trans (add_le_add
     (opaqueBranch_uniform_two setup codec checks ensureInit supplied decision work runtime count selected index budget
       certified)
     (PqxdhRegistrationJointKemIdealKeys.uniform_idealKeys setup codec checks ensureInit supplied decision work runtime
@@ -190,20 +190,20 @@ theorem opaqueBranch_allIdeal_two (setup : Setup baseSpec KemSK) (codec : Codec 
       (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))
     (correct : SourceFullCorrect setup.source setup.hmac) :
     (opaqueBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index
-        false).boolDistAdvantage
+        false).boolDistance
       (allIdealBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected
         index) ≤
       ((budget (.inl 3) + budget (.inl 5) + budget (.inl 6) : ℕ) : ℝ) / 2 ^ 256 +
         ∑ slot ∈ Finset.range 2,
           (hmacPrfRealGame setup.hmac (indexedReduction setup.hmac (rootClient (Reader := Reader) setup codec checks
-            ensureInit supplied decision work runtime count selected index) slot)).boolDistAdvantage
+            ensureInit supplied decision work runtime count selected index) slot)).boolDistance
             (hmacPrfRandomGame (indexedReduction setup.hmac (rootClient (Reader := Reader) setup codec checks
               ensureInit supplied decision work runtime count selected index) slot)) +
         ∑ k ∈ Finset.range 2, keyScheduleBound setup.source setup.hmac
           (entryDk (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index
             k) := by
   have tail : (uniformGame (rootClient (Reader := Reader) setup codec checks ensureInit supplied decision work runtime
-      count selected index)).boolDistAdvantage
+      count selected index)).boolDistance
       (allIdealBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected
         index) ≤
       ∑ k ∈ Finset.range 2, keyScheduleBound setup.source setup.hmac
@@ -216,7 +216,7 @@ theorem opaqueBranch_allIdeal_two (setup : Setup baseSpec KemSK) (codec : Codec 
           selected index)]
     exact PqxdhRegistrationJointKemSecondEntry.hybrid_telescope setup codec checks ensureInit supplied decision work
       runtime count selected index correct _
-  exact (ProbComp.boolDistAdvantage_triangle _ _ _).trans (add_le_add
+  exact (ProbComp.boolDistance_triangle _ _ _).trans (add_le_add
     (opaqueBranch_uniform_two setup codec checks ensureInit supplied decision work runtime count selected index budget
       certified) tail)
 
@@ -241,12 +241,12 @@ theorem opaqueBranch_slots_two (setup : Setup baseSpec KemSK) (codec : Codec Rea
       (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))
     (correct : SourceFullCorrect setup.source setup.hmac) :
     (opaqueBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index
-        false).boolDistAdvantage
+        false).boolDistance
       (slotGame (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index 2) ≤
       ((budget (.inl 3) + budget (.inl 5) + budget (.inl 6) : ℕ) : ℝ) / 2 ^ 256 +
         ∑ slot ∈ Finset.range 2,
           (hmacPrfRealGame setup.hmac (indexedReduction setup.hmac (rootClient (Reader := Reader) setup codec checks
-            ensureInit supplied decision work runtime count selected index) slot)).boolDistAdvantage
+            ensureInit supplied decision work runtime count selected index) slot)).boolDistance
             (hmacPrfRandomGame (indexedReduction setup.hmac (rootClient (Reader := Reader) setup codec checks
               ensureInit supplied decision work runtime count selected index) slot)) +
         ∑ k ∈ Finset.range 2, keyScheduleBound setup.source setup.hmac

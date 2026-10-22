@@ -368,7 +368,7 @@ theorem ctxIndependentTagGame_eq_directSampleIndependentTagGame
 /-- Canonical split tags differ from explicit independent samples only on prefix-bad. -/
 theorem tvDist_ctxSplitBeforeVerifyGame_directSampleIndependentTagGame_le_secretPrefixQueried
     (c : Pqxdh.Crypto) (adversary : CtxAdversary) :
-    tvDist (ctxSplitBeforeVerifyGame c adversary)
+    discreteDistance (ctxSplitBeforeVerifyGame c adversary)
         (ctxDirectSampleIndependentTagGame c adversary) ≤
       (ctxSecretPrefixQueriedProbability c adversary).toReal := by
   rw [← ctxIndependentTagGame_eq_directSampleIndependentTagGame]

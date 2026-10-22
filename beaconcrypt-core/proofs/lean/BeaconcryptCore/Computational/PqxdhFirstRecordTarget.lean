@@ -86,11 +86,11 @@ theorem after_split (secret : KemSK) (prepared : Prepared setup (driver env.toDr
       (rejectAll env program) secret prepared ephemeral encapsulated] {true} +
     𝒟[pendingAfterEncapsulation env baseImpl kem attachedVerify primitives program post accepted secret prepared ephemeral encapsulated] {true} := by
   rcases encapsulated with _ | ⟨ciphertext, shared⟩
-  · simp [PqxdhInitialRootEventExperiment.nativeAfterEncapsulation, pendingAfterEncapsulation, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+  · simp [PqxdhInitialRootEventExperiment.nativeAfterEncapsulation, pendingAfterEncapsulation]
   · simp only [PqxdhInitialRootEventExperiment.nativeAfterEncapsulation, pendingAfterEncapsulation]
     split
-    next failure same => simp [same, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
-    next same => simp [same, PqxdhInitialRootEventExperiment.nativeAccepted, rejectAll, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+    next failure same => simp [same]
+    next same => simp [same, PqxdhInitialRootEventExperiment.nativeAccepted, rejectAll]
 
 /-- The complete actual continuation, including eligibility and private generators, splits in the same way. -/
 theorem next_split (secret : KemSK) (prepared : Prepared setup (driver env.toDriverEnvironment program).State) :
@@ -105,7 +105,7 @@ theorem next_split (secret : KemSK) (prepared : Prepared setup (driver env.toDri
     apply true_bind_split
     intro encapsulated
     exact after_split env baseImpl kem attachedVerify primitives program post accepted secret prepared ephemeral encapsulated
-  · simp [-evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+  · simp [ ]
 
 /-- The actual root-event experiment is exactly its constant-`false` continuation plus the accepted-branch mass, for any executable accepted continuation. -/
 theorem actual_split :
@@ -149,7 +149,7 @@ theorem first_target (target : Target S (B + 1)) (position : target.number.val =
     (functional : FunctionalDecapsulation kem) (hmac : HmacSha512) (correct : SourceFullCorrect env.source hmac)
     (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : Forgery) :
     (PqxdhInitialRootEventSecrecy.actual env baseImpl kem attachedVerify primitives program post
-        target.owner target.number target.ancestors target.disclosed).boolDistAdvantage
+        target.owner target.number target.ancestors target.disclosed).boolDistance
       (PqxdhAdaptiveMessageKeySource.firstIdeal env baseImpl kem attachedVerify primitives program
         (unitPost program post) (unitTargets target) ()) ≤
     PqxdhAdaptiveCoordinateSecrecy.targetLoss env baseImpl kem attachedVerify primitives program
@@ -191,8 +191,8 @@ theorem ideal_split (target : Target S (B + 1)) :
   apply true_bind_split
   intro context
   rcases context with decision | input
-  · simp [PqxdhAdaptiveMessageKeySource.firstObserve, PqxdhAdaptiveFirstMaterial.observe, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
-  · simp [-evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+  · simp [PqxdhAdaptiveMessageKeySource.firstObserve, PqxdhAdaptiveFirstMaterial.observe]
+  · simp [ ]
 
 set_option backward.isDefEq.respectTransparency false in
 /-- The uniform-root endpoint of the constant-`false` root-event protocol is exactly the completed decisions of the actual preparation. -/
@@ -251,12 +251,12 @@ noncomputable def completedLoss (hmac : HmacSha512) (fallback : PqxdhDynamicIden
     (PqxdhGeneratedPhase1Prefix.privateReduction primitives baseImpl kem setup
       (driver env.toDriverEnvironment program) fallback ordinaryFallback)).toReal +
   (𝒟[simulateQ (kemAmbientImpl baseImpl) (PqxdhKemCorrectnessError.errorExperiment kem)] {true}).toReal +
-  kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
-    (PqxdhChallengeSecretRouting.reduction env.source kem p).toINDCCA +
+  (kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
+    (PqxdhChallengeSecretRouting.reduction env.source kem p).toINDCCA).toReal +
   PqxdhCorrelatedExtractFamily.advantage hmac
     (PqxdhCorrelatedExtractFamily.reduction env.source hmac baseImpl kem p) +
   ∑ index ∈ Finset.range 1,
-    (hmacPrfRealGame hmac (indexedReduction hmac (rootReduction env.source baseImpl kem p) index)).boolDistAdvantage
+    (hmacPrfRealGame hmac (indexedReduction hmac (rootReduction env.source baseImpl kem p) index)).boolDistance
       (hmacPrfRandomGame (indexedReduction hmac (rootReduction env.source baseImpl kem p) index))
 
 /-- The constant-`false` actual experiment is close to the completed decisions of the actual preparation, with the explicit completed-branch root loss. -/
@@ -266,17 +266,17 @@ theorem completed_bound (target : Target S (B + 1))
     (adapter : HasAttachedVerificationAdapter attachedVerify primitives.verify)
     (functional : FunctionalDecapsulation kem) (hmac : HmacSha512) (sourceCorrect : SourceRootCorrect env.source hmac)
     (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : Forgery) :
-    (PqxdhInitialRootEventExperiment.actual env baseImpl kem attachedVerify primitives program post (rejectAll env program)).boolDistAdvantage
+    (PqxdhInitialRootEventExperiment.actual env baseImpl kem attachedVerify primitives program post (rejectAll env program)).boolDistance
       (commonOnly env baseImpl kem attachedVerify primitives program post target) ≤
     completedLoss env baseImpl kem attachedVerify primitives program post hmac fallback ordinaryFallback := by
   have result := PqxdhInitialRootEventComposition.authenticated_root_bound env baseImpl kem attachedVerify primitives program post
     (rejectAll env program) compatible adapter functional hmac sourceCorrect c.noSign c.noCreate fallback ordinaryFallback
     1 (reject_root_queries env baseImpl kem attachedVerify primitives program post c)
   have endpoint := completed_uniform env baseImpl kem attachedVerify primitives program post target
-  have same : ∀ game : ProbComp Bool, game.boolDistAdvantage (uniformGame (rootReduction env.source baseImpl kem
+  have same : ∀ game : ProbComp Bool, game.boolDistance (uniformGame (rootReduction env.source baseImpl kem
       (PqxdhInitialRootEventExperiment.protocol env kem attachedVerify primitives program post (rejectAll env program)))) =
-      game.boolDistAdvantage (commonOnly env baseImpl kem attachedVerify primitives program post target) := fun game => by
-    simp only [ProbComp.boolDistAdvantage, endpoint]
+      game.boolDistance (commonOnly env baseImpl kem attachedVerify primitives program post target) := fun game => by
+    simp only [ProbComp.boolDistance, endpoint]
   simp only [same] at result
   unfold completedLoss
   simpa only [prEvent_eq_evalDist_singleton] using result
@@ -312,7 +312,7 @@ theorem pending_bound (target : Target S (B + 1)) (position : target.number.val 
     compatible adapter functional hmac correct fallback ordinaryFallback
   have completed := completed_bound env baseImpl kem attachedVerify primitives program post target c
     compatible adapter functional hmac correct.root fallback ordinaryFallback
-  simp only [ProbComp.boolDistAdvantage] at first completed
+  simp only [ProbComp.boolDistance] at first completed
   rw [target_split, ideal_split, ENNReal.toReal_add (true_ne_top _) (true_ne_top _),
     ENNReal.toReal_add (true_ne_top _) (true_ne_top _)] at first
   rw [abs_le] at first completed ⊢

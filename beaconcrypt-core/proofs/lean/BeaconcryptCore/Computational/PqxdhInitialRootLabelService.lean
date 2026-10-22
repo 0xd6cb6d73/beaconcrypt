@@ -49,7 +49,7 @@ theorem cache_record (selected message : Message) (root value : RootOutput)
     (cache : RootOracle.QueryCache) (different : message ≠ selected) :
     completeCache selected root (cache.cacheQuery message value) =
       (completeCache selected root cache).cacheQuery message value := by
-  funext other
+  refine QueryCache.ext (fun other => ?_)
   by_cases hselected : other = selected
   · subst other
     simp [completeCache, QueryCache.cacheQuery_of_ne, Ne.symm different]

@@ -152,18 +152,17 @@ theorem initial_source_event (c : Pqxdh.Crypto) (output : HmacBlock)
 /-- One uniform full64 source response pays one 256-bit equality term for its two sending directions. It is never replaced by two independent role responses. -/
 theorem initial_alias_uniform :
     Pr{let x ← ($ᵗ HmacBlock)}[InitialAlias x] ≤ (1 : ENNReal) / (2 ^ 256 : ENNReal) := by
-  have law := RawCtxSelectedInitialSampler.initial_observed
-    (fun second first => (pure (first, second) : ProbComp (RootOutput × RootOutput)))
-  have event := law.prEvent_eq (fun pair : RootOutput × RootOutput => pair.1 = pair.2)
-  generalize sampledBlock : ($ᵗ HmacBlock : ProbComp HmacBlock) = block at event ⊢
-  generalize sampledRoot : ($ᵗ RootOutput : ProbComp RootOutput) = root at event
-  rw [bind_pure_comp _ block, prEvent_map] at event
-  refine event.trans_le ?_
-  refine prEvent_bind_le_of_forall_le root _ _ fun second => ?_
-  rw [bind_pure_comp _ root, prEvent_map]
-  subst sampledRoot
-  simpa only [List.mem_singleton, List.length_singleton, Nat.cast_one] using
-    RawCtxSelectedInputCandidates.uniform_candidates [second]
+  have event := RawCtxSelectedInitialSampler.initial_uniform.prEvent_eq
+    (fun pair : RootOutput × RootOutput => pair.2 = pair.1)
+  rw [prEvent_map] at event
+  change Pr{let x ← ($ᵗ HmacBlock)}[InitialAlias x] = _ at event
+  rw [event, ← pairSample]
+  refine prEvent_bind_le_of_forall_le ($ᵗ RootOutput) _ _ fun second => ?_
+  rw [bind_pure_comp _ ($ᵗ RootOutput), prEvent_map]
+  exact (prEvent_mono ($ᵗ RootOutput) _ _
+    (fun x (hx : x = second) => List.mem_singleton.mpr hx)).trans
+      ((RawCtxSelectedInputCandidates.uniform_candidates [second]).trans_eq
+        (by simp only [List.length_singleton, Nat.cast_one]))
 
 noncomputable def initialTrace {Context Result : Type} (sample : ProbComp Context)
     (observe : Context → HmacBlock → RustM ConcreteRatchetKernel → RustM ConcreteRatchetKernel → ProbComp Result) :

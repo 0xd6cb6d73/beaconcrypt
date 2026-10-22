@@ -136,7 +136,7 @@ theorem run_not_used {Other : Type} (depth : Nat) (position : number.val = depth
   obtain ⟨rfl, rfl⟩ := Prod.mk.inj same
   change localPacket = Sum.inr (stored, Sum.inr pending) at shape
   change metadata = some details at captured
-  subst localPacket metadata
+  rw [shape, captured] at reached
   exact after_not_used setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed
     packet output depth position stored pending details cache after reached afterImpl before reply result completed accepted published
 

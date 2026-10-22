@@ -6,7 +6,7 @@ import BeaconcryptCore.Computational.PqxdhRegistrationJointKemRomSplitPost
 This module completes stage S1c of the item 2 plan. Stage S1b (`PqxdhRegistrationJointKemPostSkeleton.opaqueBranch_shared`) states the opaque KEM-ideal branch (H0 of the plan) as G1's shared world: the KEM candidate is G1's secret, the 32-byte suffix of every hidden read, and every other read of the shared zero-key 192-byte Extract table, including the cache keys written before the cut, goes to the same table. The main theorem `opaqueBranch_split` instantiates G1 (`PqxdhExtractRomHiddenSuffix.hidden_suffix_bound`) at coefficient one:
 
 ```text
-(opaqueBranch … false).boolDistAdvantage (splitGame (sharedStart …) (sharedClient …)) ≤ (qAccept + qFinish + qHmac) / 2^256
+(opaqueBranch … false).boolDistance (splitGame (sharedStart …) (sharedClient …)) ≤ (qAccept + qFinish + qHmac) / 2^256
 ```
 
 where `qAccept`, `qFinish` and `qHmac` are the source budgets of raw accepts, Beacon finishes and public HMAC requests (`tableBudget`). G1's split world `splitGame` (H1 of the plan) answers the hidden reads from a separate lazily sampled table keyed by the 128-byte coordinates alone and draws no secret: the candidate is no longer a suffix of any key of the shared Extract-table cache, which now holds only the direct reads. This is the step that the semantic review of increment 1 assigned to S1c (plan section 19).
@@ -114,7 +114,7 @@ theorem shared_split (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
     (certified : ∀ source, work.IsQueryBoundP
       (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source)) :
     (sharedGame (sharedStart (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count
-        selected index) (sharedClient setup codec checks decision count selected)).boolDistAdvantage
+        selected index) (sharedClient setup codec checks decision count selected)).boolDistance
       (splitGame (sharedStart (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count
         selected index) (sharedClient setup codec checks decision count selected)) ≤
       (tableBudget budget : ℝ) / 2 ^ 256 := by
@@ -172,7 +172,7 @@ theorem opaqueBranch_split (setup : Setup baseSpec KemSK) (codec : Codec Reader 
     (certified : ∀ source, work.IsQueryBoundP
       (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source)) :
     (opaqueBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index
-        false).boolDistAdvantage
+        false).boolDistance
       (splitGame (sharedStart (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count
         selected index) (sharedClient setup codec checks decision count selected)) ≤
       ((budget (.inl 3) + budget (.inl 5) + budget (.inl 6) : ℕ) : ℝ) / 2 ^ 256 := by

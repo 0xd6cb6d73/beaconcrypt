@@ -86,11 +86,11 @@ local notation "actualObserver" => observer env
 
 /-- The original authenticated-root preparation supplies the exact joint sampler and the whole actual source publication/freshness observer for the coefficient-one initializer reduction. -/
 theorem initial_bound (hmac : HmacSha512) (correct : SourceFullCorrect env.source hmac) :
-    (uniformRoot env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed).boolDistAdvantage
+    (uniformRoot env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed).boolDistance
       (uniformInitial env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed) ≤
-      (extractRealGame hmac actualJoint (fullExtractReduction hmac .ratchet actualObserver)).boolDistAdvantage
+      (extractRealGame hmac actualJoint (fullExtractReduction hmac .ratchet actualObserver)).boolDistance
         (extractUniformGame actualJoint (fullExtractReduction hmac .ratchet actualObserver)) +
-      (hmacPrfRealGame hmac (fullExpandReduction .ratchet actualJoint actualObserver)).boolDistAdvantage
+      (hmacPrfRealGame hmac (fullExpandReduction .ratchet actualJoint actualObserver)).boolDistance
         (hmacPrfRandomGame (fullExpandReduction .ratchet actualJoint actualObserver)) := by
   exact PqxdhInitialSourceInitialSecrecy.bound env.source env.recordWriter env.senderId env.route env.decode preparedPrior hmac correct
 

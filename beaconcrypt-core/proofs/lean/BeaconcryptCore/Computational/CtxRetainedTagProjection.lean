@@ -14,7 +14,7 @@ The attempt computation is not constrained by an encryption oracle, key hiding i
 Fixing the context matters because `seq` and `sid` occur in `T*` but not in the base AEAD associated data, so whole-payload freshness across changed outer contexts does not by itself imply base-ciphertext freshness.
 
 The probabilities are stated in VCVio's forward event vocabulary, `Pr{let x ← mx}[x = true]`.
-The import of `BeaconcryptCore.Computational.VCVioForwardOracleComp` puts the measurable structure of probabilistic computations' answers in scope, so that these events elaborate with VCVio's native measure semantics rather than with the pin's deprecated `SPMF` adapter.
+The import of `BeaconcryptCore.Computational.VCVioForwardOracleComp` supplies the upstream native event laws used by the projection proofs.
 -/
 
 open OracleComp ENNReal

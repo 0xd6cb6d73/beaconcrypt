@@ -178,12 +178,12 @@ theorem selected_integrity_bound {count : Nat} (targetDecode : RawDecoder)
     (keys : Fin count → CtxKey) (fallback : ModifiedNonceAeadForgery) {Result : Type}
     (client : OracleComp (FamilySpec count) Result) (others : OtherState count)
     (rawCount : Nat) (bounded : client.IsQueryBoundP (TargetClass IsRawQuery) rawCount) :
-    ENNReal.ofReal (tvDist (uniformSource true targetDecode real decode c keys client others)
+    ENNReal.ofReal (discreteDistance (uniformSource true targetDecode real decode c keys client others)
       (uniformSource false targetDecode real decode c keys client others)) ≤
       ∑ index ∈ Finset.range rawCount, modifiedNonceAeadINTCTXTAdvantage c
         (indexedReduction targetDecode fallback (wrapped real decode c keys client others) index) := by
   rw [uniform_interpretation, uniform_interpretation]
-  exact (ENNReal.ofReal_le_ofReal (tvDist_map_le reassociate _ _)).trans
+  exact (ENNReal.ofReal_le_ofReal (discreteDistance_map_le reassociate _ _)).trans
     (uniformAdaptiveGame_distance_le_intctxt_sum targetDecode c fallback
       (wrapped real decode c keys client others) rawCount
         (wrapped_target_bound real decode c keys IsRawQuery (by intro coin; simp [IsRawQuery]) client rawCount bounded others))

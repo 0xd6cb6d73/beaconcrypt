@@ -531,7 +531,7 @@ theorem dispatch_finish_eq_source
   refine EvalDistEq.evalDist_eq ?_
   by_cases bad : changedBit (some prepared.1, prepared.2) = true
   · simp [dispatch, filteredNext, bad, evalKem, oneKeyFinish, toKemOneKeyAdversary,
-      rootInitializer, runtimeOfImpl_liftProbComp, simulateQ_kemAmbient_liftM_ProbComp, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+      rootInitializer, runtimeOfImpl_liftProbComp, simulateQ_kemAmbient_liftM_ProbComp]
     exact (EvalDistEq.bind_right _ fun _ => OracleComp.EvalDistEq.map_const _ _).trans
       (OracleComp.EvalDistEq.bind_const _ _)
   · by_cases eligible : targetEligible parameters prepared = true
@@ -553,13 +553,13 @@ theorem dispatch_finish_eq_source
             targetAfterEncapsulation, failure]
           refine EvalDistEq.bind_right _ fun encapsulated => ?_
           simp [oneKeyFinish, toKemOneKeyAdversary, rootInitializer,
-            runtimeOfImpl_liftProbComp, simulateQ_kemAmbient_liftM_ProbComp, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+            runtimeOfImpl_liftProbComp, simulateQ_kemAmbient_liftM_ProbComp]
           refine (EvalDistEq.bind_right _ fun value =>
             (EvalDistEq.bind_right _ fun _ => OracleComp.EvalDistEq.map_const _ value).trans
               (OracleComp.EvalDistEq.bind_const _ _)).trans ?_
           rw [bind_pure]
     · simp [dispatch, filteredNext, bad, eligible, totalNext, evalKem, oneKeyFinish, toKemOneKeyAdversary,
-        rootInitializer, runtimeOfImpl_liftProbComp, simulateQ_kemAmbient_liftM_ProbComp, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+        rootInitializer, runtimeOfImpl_liftProbComp, simulateQ_kemAmbient_liftM_ProbComp]
       refine (EvalDistEq.bind_right _ fun value =>
         (EvalDistEq.bind_right _ fun _ => OracleComp.EvalDistEq.map_const _ value).trans
           (OracleComp.EvalDistEq.bind_const _ _)).trans ?_
@@ -642,7 +642,7 @@ theorem authentication_hop
     (selectorNoCreate : ∀ publicTranscript, (selector.main publicTranscript).IsQueryBoundP
       (PqxdhPrivateKemQueryBounds.SelectorSource (baseSpec := baseSpec) Creating) 0)
     (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : Forgery) (observer : Observer setup selector.State) :
-    (actualGame baseImpl kem parameters attachedVerify primitives setup selector observer).boolDistAdvantage
+    (actualGame baseImpl kem parameters attachedVerify primitives setup selector observer).boolDistance
       (initializerRealGame parameters.source baseImpl kem
         (rootInitializer kem parameters attachedVerify primitives setup selector observer)) ≤
       (advantage primitives (privateReduction primitives baseImpl kem setup selector fallback ordinaryFallback)).toReal := by
@@ -655,15 +655,15 @@ theorem authentication_hop
             (totalNext kem parameters attachedVerify primitives setup observer (eraseOutput output, stopped.2)))
     (fun _ => pure false)
   have totalBound :
-      tvDist (continuedSource attachedVerify primitives baseImpl kem setup selector
+      discreteDistance (continuedSource attachedVerify primitives baseImpl kem setup selector
         (totalNext kem parameters attachedVerify primitives setup observer) false)
         (continuedSource attachedVerify primitives baseImpl kem setup selector
           (filteredNext kem parameters attachedVerify primitives setup observer) false) ≤
       (advantage primitives (privateReduction primitives baseImpl kem setup selector fallback ordinaryFallback)).toReal := by
     rw [continuedSource_filtered]
     exact auth
-  have output := (abs_probOutput_toReal_sub_le_tvDist _ _).trans totalBound
-  simpa only [ProbComp.boolDistAdvantage, VCVioLegacy.evalDist_singleton_eq_probOutput, prEvent_eq_evalDist_singleton,
+  have output := (abs_prEvent_toReal_sub_le_discreteDistance _ _).trans totalBound
+  simpa only [ProbComp.boolDistance, ← prEvent_eq_evalDist_singleton, prEvent_eq_evalDist_singleton,
     actualGame_eq_total baseImpl kem parameters compatible attachedVerify primitives setup selector observer,
     ← filteredSource_eq_initializerReal baseImpl kem parameters attachedVerify primitives setup selector observer] using output
 
@@ -685,21 +685,21 @@ theorem authenticated_root_bound
     let adversary := rootInitializer kem parameters attachedVerify primitives setup selector observer
     let sample := secretInputSample baseImpl kem adversary
     let postObserver := rootObserver parameters.source baseImpl kem adversary
-    (actualGame baseImpl kem parameters attachedVerify primitives setup selector observer).boolDistAdvantage
+    (actualGame baseImpl kem parameters attachedVerify primitives setup selector observer).boolDistance
       (independentInitializerGame parameters.source baseImpl kem adversary) ≤
       (advantage primitives (privateReduction primitives baseImpl kem setup selector fallback ordinaryFallback)).toReal +
-      kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
-        (toKemOneKeyAdversary parameters.source kem adversary).toINDCCA +
-      (extractRealGame hmac sample (extractReduction hmac postObserver)).boolDistAdvantage
+      (kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
+        (toKemOneKeyAdversary parameters.source kem adversary).toINDCCA).toReal +
+      (extractRealGame hmac sample (extractReduction hmac postObserver)).boolDistance
         (extractUniformGame sample (extractReduction hmac postObserver)) +
-      (hmacPrfRealGame hmac (expandReduction sample postObserver)).boolDistAdvantage
+      (hmacPrfRealGame hmac (expandReduction sample postObserver)).boolDistance
         (hmacPrfRandomGame (expandReduction sample postObserver)) := by
   dsimp only
   have authenticated := authentication_hop baseImpl kem parameters compatible attachedVerify primitives adapter
     setup selector selectorNoSign selectorNoCreate fallback ordinaryFallback observer
   have initialized := initializerAdvantage_le_kem_add_extract_add_hmac parameters.source hmac correct
     baseImpl kem (rootInitializer kem parameters attachedVerify primitives setup selector observer)
-  have combined := (ProbComp.boolDistAdvantage_triangle
+  have combined := (ProbComp.boolDistance_triangle
     (actualGame baseImpl kem parameters attachedVerify primitives setup selector observer)
     (initializerRealGame parameters.source baseImpl kem
       (rootInitializer kem parameters attachedVerify primitives setup selector observer))

@@ -1,7 +1,7 @@
 import BeaconcryptCore.Computational.CtxAuthClassification
 import Examples.CommitmentScheme.Common
 import Mathlib.Data.Fintype.BigOperators
-import BeaconcryptCore.Computational.VCVioLegacyBridge
+import BeaconcryptCore.Computational.VCVioForwardOracleComp
 
 /-!
 # Random-oracle alias bound for modified CTX
@@ -16,7 +16,7 @@ The handler records successful seals and public inputs alongside the cache and m
 Nonce uniqueness and exact `ctxPreimage` injectivity rule out an honest origin for an alias target, so every remaining hit is a public query carrying the hidden key as its first 32 bytes.
 The next reduction step must bound that secret-prefix event through base-AEAD IND$ privacy before composing the retained-base authenticity branch.
 
-Probabilities are written in the forward event vocabulary `Pr{let x ← mx}[p x]`, which replaces the deprecated `Pr[p | mx]` of VCVio's retiring probability interface and has the same meaning. Two dependencies are still stated in the deprecated form at the pinned VCVio commit and have no forward counterpart there: the fresh-query bound `probEvent_from_fresh_query_le_inv` of VCVio's commitment-scheme examples, and the uniform-sampling simulation law `uniformSampleImpl.probEvent_simulateQ`. The proofs that use them convert through the `BeaconcryptCore.VCVioLegacy` bridges, which are proved from the pin and are deleted at the VCVio upgrade.
+Probabilities use VCVio's native event vocabulary. The fresh-query bound `prEvent_from_fresh_query_le_inv` and the equality in distribution `uniformSampleImpl.evalDistEq_simulateQ` apply directly, preserving the same cache-freshness condition, verifier continuation and inverse digest-space factor.
 -/
 
 open OracleComp OracleSpec ENNReal
@@ -606,9 +606,8 @@ theorem ctxFreshAliasVerifier_le_inv (c : Pqxdh.Crypto)
     (hfresh : cache ((), before.targetInput) = none) :
     Pr{let z ← (simulateQ CtxRO.cachingOracle (ctxFreshAliasVerifier c before)).run cache}[z.1 = true] ≤
         (Fintype.card CtxDigest : ℝ≥0∞)⁻¹ := by
-  rw [← BeaconcryptCore.VCVioLegacy.oracleComp_probEvent_eq_prEvent]
   simpa only [ctxFreshAliasVerifier] using
-    probEvent_from_fresh_query_le_inv
+    prEvent_from_fresh_query_le_inv
       (M := Unit) (S := Pqxdh.Bytes) (C := CtxDigest)
       (t := ((), before.targetInput)) (target := before.target.record.commit)
       (cache₀ := cache) hfresh
@@ -629,8 +628,7 @@ theorem ctxFreshAliasGame_le_inv (c : Pqxdh.Crypto)
   rcases p with ⟨before, cache⟩
   simp only
   by_cases hfresh : cache ((), before.targetInput) = none
-  · rw [ite_eq_left hfresh, ← BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent,
-      uniformSampleImpl.probEvent_simulateQ, BeaconcryptCore.VCVioLegacy.oracleComp_probEvent_eq_prEvent]
+  · rw [ite_eq_left hfresh, (uniformSampleImpl.evalDistEq_simulateQ _).prEvent_eq]
     exact ctxFreshAliasVerifier_le_inv c before cache hfresh
   · rw [ite_eq_right hfresh]
     simp only [prEvent_pure, Bool.false_eq_true, ite_false]
@@ -668,8 +666,7 @@ theorem ctxAliasGameProbability_le_cacheHit_add_inv (c : Pqxdh.Crypto)
   intro p hp hnotBad
   rcases p with ⟨before, cache⟩
   by_cases halias : CtxFullAliasShape before
-  · rw [← BeaconcryptCore.VCVioLegacy.probEvent_eq_prEvent, uniformSampleImpl.probEvent_simulateQ,
-      BeaconcryptCore.VCVioLegacy.oracleComp_probEvent_eq_prEvent]
+  · rw [(uniformSampleImpl.evalDistEq_simulateQ _).prEvent_eq]
     apply ctxFreshAliasVerifier_le_inv
     by_contra hhit
     exact hnotBad ⟨halias, hhit⟩

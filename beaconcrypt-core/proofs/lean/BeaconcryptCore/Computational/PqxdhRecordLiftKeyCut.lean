@@ -205,7 +205,7 @@ def zeroKey : RootOutput := ⟨List.replicate 32 0, by simp⟩
 noncomputable def maskStore (output : FullOutput) : FullOutput := keyStore zeroKey output
 
 /-- The table with the key bytes of the target's entry zeroed. -/
-noncomputable def maskAt (target : Label n) (table : Table (Slot n)) : Table (Slot n) := fun label =>
+noncomputable def maskAt (target : Label n) (table : Table (Slot n)) : Table (Slot n) := QueryCache.ofFn fun label =>
   if label = target then (table label).map maskStore else table label
 
 /-- The CTX state with the key bytes of the target's entry zeroed. -/
@@ -248,7 +248,7 @@ theorem chain_mask (target : Label n) (seeds : Seeds (Slot n)) (table : Table (S
   funext coordinate
   have entry : maskAt target table (previous coordinate) = (table (previous coordinate)).map maskStore ∨
       maskAt target table (previous coordinate) = table (previous coordinate) := by
-    unfold maskAt
+    simp only [maskAt, QueryCache.ofFn_apply]
     split
     · exact Or.inl rfl
     · exact Or.inr rfl
@@ -265,7 +265,7 @@ theorem chain_mask (target : Label n) (seeds : Seeds (Slot n)) (table : Table (S
 /-- Masking keeps every coordinate's nonce. -/
 theorem nonce_mask (target : Label n) (table : Table (Slot n)) (label : Label n) :
     (materialAt (maskAt target table) label).2 = (materialAt table label).2 := by
-  unfold materialAt maskAt
+  simp only [materialAt, maskAt, QueryCache.ofFn_apply]
   split
   · cases table label with
     | none => rfl
@@ -275,7 +275,7 @@ theorem nonce_mask (target : Label n) (table : Table (Slot n)) (label : Label n)
 /-- Masking keeps every key other than the target's. -/
 theorem key_mask (target : Label n) (table : Table (Slot n)) (label : Label n) (different : label ≠ target) :
     materialAt (maskAt target table) label = materialAt table label := by
-  unfold materialAt maskAt
+  simp only [materialAt, maskAt, QueryCache.ofFn_apply]
   rw [ite_eq_right different]
 
 /-- The selected key never reads the masked bytes. -/
@@ -370,8 +370,9 @@ theorem mask_miss_self (target : Label n) (state : CtxPrivate n) (output : FullO
     maskState target (missState target state output) = missState target (maskState target state) (maskStore output) := by
   have chainEq : maskAt target (state.base.chain.cacheQuery target output) =
       (maskAt target state.base.chain).cacheQuery target (maskStore output) := by
-    funext label
-    unfold maskAt
+    apply QueryCache.ext
+    intro label
+    simp only [maskAt, QueryCache.ofFn_apply]
     by_cases same : label = target
     · subst same
       simp [QueryCache.cacheQuery_self]
@@ -383,12 +384,14 @@ theorem mask_miss_other (target coordinate : Label n) (different : coordinate �
     maskState target (missState coordinate state output) = missState coordinate (maskState target state) output := by
   have chainEq : maskAt target (state.base.chain.cacheQuery coordinate output) =
       (maskAt target state.base.chain).cacheQuery coordinate output := by
-    funext label
-    unfold maskAt
+    apply QueryCache.ext
+    intro label
+    simp only [maskAt, QueryCache.ofFn_apply]
     by_cases same : label = coordinate
     · subst same
       simp [QueryCache.cacheQuery_self, different]
     · rw [QueryCache.cacheQuery_of_ne _ _ same, QueryCache.cacheQuery_of_ne _ _ same]
+      rfl
   simp only [maskState, missState, missBase, chainEq]
 
 theorem maskAt_none (target : Label n) (table : Table (Slot n)) :
@@ -422,7 +425,7 @@ theorem world_mask (keyed : QueryImpl (KeyedSpec n) (StateT (CtxPrivate n) ProbC
             have maskedFound : (maskState target state).base.chain coordinate =
                 some (if coordinate = target then maskStore output else output) := by
               change maskAt target state.base.chain coordinate = _
-              unfold maskAt
+              simp only [maskAt, QueryCache.ofFn_apply]
               split <;> simp [found]
             rw [lookup_hit _ replace setup codec coordinate state output found,
               lookup_hit _ replace setup codec coordinate _ _ maskedFound, map_pure]
@@ -431,7 +434,7 @@ theorem world_mask (keyed : QueryImpl (KeyedSpec n) (StateT (CtxPrivate n) ProbC
             have different : coordinate ≠ target := fun same => selected ⟨same, same ▸ found⟩
             have maskedMissing : (maskState target state).base.chain coordinate = none := by
               change maskAt target state.base.chain coordinate = none
-              unfold maskAt
+              simp only [maskAt, QueryCache.ofFn_apply]
               rw [ite_eq_right different, found]
             rw [lookup_miss _ replace setup codec coordinate state found,
               lookup_miss _ replace setup codec coordinate _ maskedMissing, Functor.map_map]
@@ -613,8 +616,9 @@ theorem keyStore_mask (key : RootOutput) : (fun output => maskStore (keyStore ke
 theorem mask_absent (target : Label n) (state : CtxPrivate n) (missing : state.base.chain target = none) :
     maskState target state = state := by
   have chainEq : maskAt target state.base.chain = state.base.chain := by
-    funext label
-    unfold maskAt
+    apply QueryCache.ext
+    intro label
+    simp only [maskAt, QueryCache.ofFn_apply]
     split
     · rename_i same
       rw [same, missing]

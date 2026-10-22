@@ -319,7 +319,7 @@ noncomputable def slotLossL (setup : Setup baseSpec KemSK) (codec : Codec Reader
   ((budget (.inl 3) + budget (.inl 5) + budget (.inl 6) : ℕ) : ℝ) / 2 ^ 256 +
     ∑ slot ∈ Finset.range 2,
       (hmacPrfRealGame setup.hmac (indexedReduction setup.hmac (rootClientL (Reader := Reader) setup codec checks
-        ensureInit supplied decision work runtime count selected index) slot)).boolDistAdvantage
+        ensureInit supplied decision work runtime count selected index) slot)).boolDistance
         (hmacPrfRandomGame (indexedReduction setup.hmac (rootClientL (Reader := Reader) setup codec checks
           ensureInit supplied decision work runtime count selected index) slot)) +
     ∑ k ∈ Finset.range 2, keyScheduleBound setup.source setup.hmac
@@ -353,7 +353,7 @@ theorem slotLossL_transported (setup : Setup baseSpec KemSK) (codec : Codec Read
       ((budget.accept + budget.finish + (budget.hmac + post.hmac) : ℕ) : ℝ) / 2 ^ 256 +
         ∑ slot ∈ Finset.range 2,
           (hmacPrfRealGame setup.hmac (indexedReduction setup.hmac (rootClientL (Reader := Reader) setup codec checks
-            ensureInit supplied decision work runtime count selected index) slot)).boolDistAdvantage
+            ensureInit supplied decision work runtime count selected index) slot)).boolDistance
             (hmacPrfRandomGame (indexedReduction setup.hmac (rootClientL (Reader := Reader) setup codec checks
               ensureInit supplied decision work runtime count selected index) slot)) +
         ∑ k ∈ Finset.range 2, keyScheduleBound setup.source setup.hmac
@@ -372,7 +372,7 @@ def OpaqueBranchSlotsTwoTargetL : Prop :=
       (fun query => PqxdhDeploymentLaterServerReserve.laterKind (KemSK := KemSK) query = some kind) (budget kind)) →
     SourceFullCorrect setup.source setup.hmac →
     (PqxdhDeploymentLaterServerOpaque.opaqueBranch (Reader := Reader) setup codec checks ensureInit supplied decision
-        work runtime count selected index false).boolDistAdvantage
+        work runtime count selected index false).boolDistance
       (laterSlotGame (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected
         index 2) ≤
       slotLossL (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index
@@ -393,7 +393,7 @@ def LaterSlotsTwoTarget : Prop :=
     (PqxdhDeploymentLaterServerOpaque.opaqueBranch (Reader := Reader) setup codec checks ensureInit none
         (PqxdhDeploymentLaterServerTransfer.decision setup.source.crypto codec setup.serverKeyId budget event claim g)
         (PqxdhDeploymentLaterServerCompile.compileServer setup codec route bounds mode first second) runtime
-        budget.create (PqxdhDeploymentKemTransfer.selectedKem budget g) g.1.val false).boolDistAdvantage
+        budget.create (PqxdhDeploymentKemTransfer.selectedKem budget g) g.1.val false).boolDistance
       (laterSlotGame (Reader := Reader) setup codec checks ensureInit none
         (PqxdhDeploymentLaterServerTransfer.decision setup.source.crypto codec setup.serverKeyId budget event claim g)
         (PqxdhDeploymentLaterServerCompile.compileServer setup codec route bounds mode first second) runtime

@@ -102,7 +102,7 @@ theorem collision_le_scalar_spread (setup : Setup baseSpec KemSK) (codec : Codec
   have realBound := ENNReal.toReal_mono
     (ENNReal.div_ne_top
       (ENNReal.mul_ne_top (ENNReal.natCast_ne_top _) (by norm_num)) (by norm_num)) bounded
-  simpa [-evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ] using realBound
+  simpa [ ] using realBound
 
 /-- The intermediate original-R1 authentication bound with the checked adaptive collision term. It still exposes the remaining CTX entry games rather than assuming their security. -/
 theorem authentication_intermediate_scalar (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)

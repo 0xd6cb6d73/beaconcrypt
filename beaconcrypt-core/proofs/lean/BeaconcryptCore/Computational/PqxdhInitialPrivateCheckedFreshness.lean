@@ -159,11 +159,11 @@ theorem decision_bound (earlier : List RatchetChain)
     (gate : Trace M P I D K A N C Result Origin S B → Prop)
     (n : Nat) (depth : continuation.depth context.1 = some n) :
     let run := nativeRun source writer mark sender route decode continuation context target output disclosed state candidates
-    (actualDecision target earlier disclosed gate <$> run).boolDistAdvantage
+    (actualDecision target earlier disclosed gate <$> run).boolDistance
       (decision (remainingEvent earlier disclosed gate) <$> run) ≤
       (Pr{let result ← run}[target ∈ result.2.1.2 ∧ result.2.2 = false]).toReal := by
   dsimp only
-  simp only [ProbComp.boolDistAdvantage]
+  simp only [ProbComp.boolDistance]
   rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true, decision_probability, prEvent_map]
   simpa only [actualDecision, decide_eq_true_eq, decision, remainingEvent, Proxy, and_assoc, and_left_comm,
     and_comm] using
@@ -173,7 +173,7 @@ theorem decision_bound (earlier : List RatchetChain)
 
 /-- The exact full stopped program and its masked observer retain the same unconditioned gate and pay the complete original candidate event. -/
 theorem proxy_bound (event : Trace M P I D K A N C Result Origin S B → Prop) :
-    (decision event <$> nativeRun source writer mark sender route decode continuation context target output disclosed state candidates).boolDistAdvantage
+    (decision event <$> nativeRun source writer mark sender route decode continuation context target output disclosed state candidates).boolDistance
       (decision event <$> maskedRun source writer mark sender route decode continuation context output disclosed state candidates) ≤
       (Pr{let result ← maskedRun source writer mark sender route decode continuation context output disclosed state candidates}[target ∈ result.2.1.2]).toReal := by
   let client := program mark sender route decode continuation context
@@ -186,14 +186,14 @@ theorem proxy_bound (event : Trace M P I D K A N C Result Origin S B → Prop) :
   have agreement := PqxdhInitialParentPrivateObserver.event_good source writer (continuation.prior context.1) context.2 output
     (continuation.pre context.1) (continuation.application context.1) (continuation.initializer context.1)
     (continuation.selector context.1) (continuation.aux context.1) target client initialState event
-  rw [ProbComp.boolDistAdvantage, ← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true,
+  rw [ProbComp.boolDistance, ← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true,
     decision_probability, decision_probability, nativeRun, agreement]
-  have variation := (abs_probOutput_toReal_sub_le_tvDist
+  have variation := (abs_prEvent_toReal_sub_le_discreteDistance
     (decision event <$> partialMasked)
     (decision event <$> maskedRun source writer mark sender route decode continuation context output disclosed state candidates)).trans
-      (tvDist_map_le (decision event) _ _)
-  rw [VCVioLegacy.probOutput_eq_prEvent, VCVioLegacy.probOutput_eq_prEvent, decision_probability, decision_probability,
-    tvDist_comm] at variation
+      (discreteDistance_map_le (decision event) _ _)
+  rw [ decision_probability, decision_probability,
+    discreteDistance_comm] at variation
   exact variation.trans (PqxdhInitialParentPrivateObserver.distance source writer (continuation.prior context.1) context.2 output
     (continuation.pre context.1) (continuation.application context.1) (continuation.initializer context.1)
     (continuation.selector context.1) (continuation.aux context.1) RawCtxSelectedLiveRead.labelRead target client initialState)
@@ -204,7 +204,7 @@ theorem good_alias_bound :
       2 * (Pr{let result ← maskedRun source writer mark sender route decode continuation context output disclosed state candidates}[target ∈ result.2.1.2]).toReal := by
   have bound := proxy_bound source writer mark sender route decode continuation context target output disclosed state candidates
     (fun result => target ∈ result.2.1.2)
-  simp only [ProbComp.boolDistAdvantage] at bound
+  simp only [ProbComp.boolDistance] at bound
   rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true, decision_probability,
     decision_probability] at bound
   have contained := ENNReal.toReal_mono (prEvent_ne_top _) (prEvent_mono_of_support
@@ -218,11 +218,11 @@ theorem bound (earlier : List RatchetChain)
     (gate : Trace M P I D K A N C Result Origin S B → Prop)
     (n : Nat) (depth : continuation.depth context.1 = some n) :
     (actualDecision target earlier disclosed gate <$>
-      nativeRun source writer mark sender route decode continuation context target output disclosed state candidates).boolDistAdvantage
+      nativeRun source writer mark sender route decode continuation context target output disclosed state candidates).boolDistance
       (decision (remainingEvent earlier disclosed gate) <$>
         maskedRun source writer mark sender route decode continuation context output disclosed state candidates) ≤
       3 * (Pr{let result ← maskedRun source writer mark sender route decode continuation context output disclosed state candidates}[target ∈ result.2.1.2]).toReal := by
-  have triangle := ProbComp.boolDistAdvantage_triangle
+  have triangle := ProbComp.boolDistance_triangle
     (actualDecision target earlier disclosed gate <$>
       nativeRun source writer mark sender route decode continuation context target output disclosed state candidates)
     (decision (remainingEvent earlier disclosed gate) <$>

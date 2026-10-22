@@ -1,5 +1,5 @@
 import BeaconcryptCore.Computational.PqxdhAdaptiveBidirectionalChains
-import BeaconcryptCore.Computational.VCVioLegacyBridge
+import BeaconcryptCore.Computational.VCVioForwardOracleComp
 
 /-!
 # Key-coordinate collisions in the actual eager material tapes

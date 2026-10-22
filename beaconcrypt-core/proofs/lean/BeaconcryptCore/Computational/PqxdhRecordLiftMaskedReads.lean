@@ -245,7 +245,8 @@ theorem seed_realize_replace {n : Nat} (direction : Bool) (masked : PqxdhRecordL
       (PqxdhRecordLiftSeedCut.restore direction masked.other left)).cacheQuery masked.slot
         (PqxdhRecordLiftSeedCut.restore direction masked.other right) =
       masked.before.seeds.1.cacheQuery masked.slot (PqxdhRecordLiftSeedCut.restore direction masked.other right) := by
-    funext slot
+    apply QueryCache.ext
+    intro slot
     by_cases same : slot = masked.slot
     · subst slot
       simp

@@ -31,7 +31,7 @@ include sourceCaps in
 /-- A later source transition has the stated global Extract/HMAC reductions and explicit two-collision/cache bill. Operational resource premises are required only of actually supported preparation results. -/
 theorem source_bound (hmac : HmacSha512) (correct : SourceFullCorrect source hmac)
     (position : ∀ input, Sum.inr input ∈ support prior → input.number.val = (depth + 1) + remaining + 1) :
-    ENNReal.ofReal ((sourceGame (depth + 1)).boolDistAdvantage (sourceGame (depth + 2))) ≤
+    ENNReal.ofReal ((sourceGame (depth + 1)).boolDistance (sourceGame (depth + 2))) ≤
       ENNReal.ofReal (primitiveLoss hmac) + 2 * collision + cacheSum := by
   have realBound := PqxdhInitialSampledSourceEndpoints.real_bound source writer sender route decode depth remaining prior qPost
     (fun input supported => (sourceCaps input supported).postBound) position
@@ -39,17 +39,17 @@ theorem source_bound (hmac : HmacSha512) (correct : SourceFullCorrect source hma
     (fun input supported => (sourceCaps input supported).postBound) position
   have primitive := PqxdhInitialSampledReduction.bound source writer sender route decode depth remaining prior
     qPost qPre qApplication qSelector qAux qKnown sourceCaps hmac correct
-  have triangle : (sourceGame (depth + 1)).boolDistAdvantage (sourceGame (depth + 2)) ≤
-      (sourceGame (depth + 1)).boolDistAdvantage actualGame + (actualGame).boolDistAdvantage randomGame +
-        (randomGame).boolDistAdvantage (sourceGame (depth + 2)) := by
-    exact (ProbComp.boolDistAdvantage_triangle (sourceGame (depth + 1)) actualGame (sourceGame (depth + 2))).trans
-      (by have bound := ProbComp.boolDistAdvantage_triangle actualGame randomGame (sourceGame (depth + 2)); linarith)
+  have triangle : (sourceGame (depth + 1)).boolDistance (sourceGame (depth + 2)) ≤
+      (sourceGame (depth + 1)).boolDistance actualGame + (actualGame).boolDistance randomGame +
+        (randomGame).boolDistance (sourceGame (depth + 2)) := by
+    exact (ProbComp.boolDistance_triangle (sourceGame (depth + 1)) actualGame (sourceGame (depth + 2))).trans
+      (by have bound := ProbComp.boolDistance_triangle actualGame randomGame (sourceGame (depth + 2)); linarith)
   have forward := ENNReal.ofReal_le_ofReal triangle
-  simp only [ProbComp.boolDistAdvantage] at forward
+  simp only [ProbComp.boolDistance] at forward
   rw [ENNReal.ofReal_add (add_nonneg (abs_nonneg _) (abs_nonneg _)) (abs_nonneg _),
     ENNReal.ofReal_add (abs_nonneg _) (abs_nonneg _)] at forward
-  have back : ENNReal.ofReal ((randomGame).boolDistAdvantage (sourceGame (depth + 2))) ≤ collision + cacheSum := by
-    simpa only [ProbComp.boolDistAdvantage, abs_sub_comm] using randomBound
+  have back : ENNReal.ofReal ((randomGame).boolDistance (sourceGame (depth + 2))) ≤ collision + cacheSum := by
+    simpa only [ProbComp.boolDistance, abs_sub_comm] using randomBound
   apply forward.trans
   calc
     _ ≤ (collision + ENNReal.ofReal (primitiveLoss hmac)) + (collision + cacheSum) :=

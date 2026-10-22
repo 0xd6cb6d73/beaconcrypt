@@ -68,7 +68,7 @@ theorem borrowed_step
         (((MlKemCCAOracleSpec baseSpec).query (.inr (PqxdhPhase2InputBytes.ciphertext value))) :
           OracleComp (MlKemCCAOracleSpec baseSpec) (Option MlKemSharedSecret)))
       simp only [Functor.map_map, borrowedSelector, StateT.run, bind_pure_comp, Prod.mk.eta] at forwarded ⊢
-      convert forwarded using 1
+      exact forwarded
 
 /-- The private identity interpreter is installed after the source compiler has been fixed. -/
 theorem borrowed_interpretation

@@ -256,7 +256,7 @@ theorem cached_risk {M P I D K : Type}
 
 /-- An actual empty private cache starts clean regardless of the retained initial chain coordinate and prior input list. -/
 theorem empty_clean (state : RawCtxSharedPrimitive.SharedState A) (cursor : Cursor) (past : List JointKdfAddress) :
-    Clean ((state, ((fun _ => none), cursor)), past) := rfl
+    Clean ((state, (∅, cursor)), past) := rfl
 
 end BeaconcryptCore.Computational.RawCtxFirstParentRisk
 

@@ -209,10 +209,12 @@ theorem send_seal_noKdf
   apply RawCtxMixedOwner.sendLift_bound
   simp only [RawCtxSourceSend.adapter, bind_pure_comp, simulateQ_map, liftM,
     simulateQ_spec_query, isQueryBoundP_map_iff, RawCtxSourceSeal.nativeAdapter]
-  convert RawCtxSourceSeal.sealLift_no_kdf
-    (RawCtxSourceSeal.sealInput (RawCtxSourceSend.arguments (RawCtxInterpretedSend.nativeSeal pending))) using 1
-  funext query
-  rcases query with request | (input | (bytes | frame)) <;> simp [RawCtxMixedOwner.sendKind]
+  refine (isQueryBoundP_congr_pred
+    (p' := fun query : RawCtxSourceSeal.NativeSpec.Domain => query.isLeft = true) ?_).2 ?_
+  · intro query
+    rcases query with request | (input | (bytes | frame)) <;> simp [RawCtxMixedOwner.sendKind]
+  · exact RawCtxSourceSeal.sealLift_no_kdf
+      (RawCtxSourceSeal.sealInput (RawCtxSourceSend.arguments (RawCtxInterpretedSend.nativeSeal pending)))
 
 /-- The actual optional seal/writer result preserves the native KDF count after source send advancement. -/
 theorem sealing_kdf {ι KemSK Reader Response : Type} {baseSpec : OracleSpec ι}

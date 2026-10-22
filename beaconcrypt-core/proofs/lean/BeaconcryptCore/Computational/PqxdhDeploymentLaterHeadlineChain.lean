@@ -58,13 +58,13 @@ noncomputable def kemLossL (setup : Setup baseSpec KemSK) (codec : Codec Reader 
     (mode : Mode) (first : OracleComp (ModeSpec mode) X) (second : X → Reveal → OracleComp PostSpec Out)
     (budget : Budget) (event : Observed Out → Bool) (claim : Observed Out → Option Handle)
     (g : Fin budget.accept × Fin budget.capacity) (runtime : A) : ℝ :=
-  setup.kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl
+  (setup.kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl
       (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl))
     (PqxdhDeploymentLaterServerKemHop.certified setup ensureInit none
       (PqxdhDeploymentLaterServerCut.scanned setup codec checks
         (decision setup.source.crypto codec setup.serverKeyId budget event claim g)
         (compileServer setup codec route bounds mode first second) g.1.val)
-      runtime budget.create (selectedKem budget g)).toINDCCA +
+      runtime budget.create (selectedKem budget g)).toINDCCA).toReal +
     PqxdhRegistrationJointKemRawGame.correctnessError setup
 
 /-- `slotLossL g d_g` (design.md section 9.1, U-L1): item 2 over the logged LQ-F source at two slots for the decision `d_g(event, claim)` (`PqxdhDeploymentLaterServerItemTargets.slotLossL` at the transported caps `laterTransported bounds budget post`): the R1 guessing term `(qAccept + qFinish + qHmac + qHmac₂)/2^256` (`slotLossL_transported`), two HMAC-PRF advantages and the key-schedule bounds of the two hidden entries. -/
@@ -142,9 +142,9 @@ theorem chain_slot_later (setup : Setup baseSpec KemSK)
     (decision setup.source.crypto codec setup.serverKeyId budget event claim g)
     (compileServer setup codec route bounds mode first second) runtime budget.create (selectedKem budget g) g.1.val 2
     with hslot
-  have step := ProbComp.evalDist_apply_true_le_add_ofReal_boolDistAdvantage opq slot
+  have step := ProbComp.evalDist_apply_true_le_add_ofReal_boolDistance opq slot
   refine kem.trans ?_
-  calc _ ≤ (𝒟[slot] {true} + ENNReal.ofReal (opq.boolDistAdvantage slot)) +
+  calc _ ≤ (𝒟[slot] {true} + ENNReal.ofReal (opq.boolDistance slot)) +
         ENNReal.ofReal (kemLossL setup codec checks route ensureInit bounds mode first second budget event claim g
           runtime) := add_le_add step le_rfl
     _ ≤ _ := by

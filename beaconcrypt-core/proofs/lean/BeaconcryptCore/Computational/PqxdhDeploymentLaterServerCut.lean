@@ -385,9 +385,9 @@ theorem kem_hop (setup : Setup baseSpec KemSK)
         (scanned setup codec checks decision work index) runtime count selected] {true} ≤
       𝒟[PqxdhDeploymentLaterServerKemHop.branch setup ensureInit supplied
         (scanned setup codec checks decision work index) runtime count selected false] {true} +
-        ENNReal.ofReal (setup.kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl))
+        ENNReal.ofReal ((setup.kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl))
           (PqxdhDeploymentLaterServerKemHop.certified setup ensureInit supplied
-            (scanned setup codec checks decision work index) runtime count selected).toINDCCA +
+            (scanned setup codec checks decision work index) runtime count selected).toINDCCA).toReal +
           PqxdhRegistrationJointKemRawGame.correctnessError setup) :=
   PqxdhDeploymentLaterServerKemHop.real_le_ideal setup functional ensureInit supplied
     (scanned setup codec checks decision work index) runtime count selected

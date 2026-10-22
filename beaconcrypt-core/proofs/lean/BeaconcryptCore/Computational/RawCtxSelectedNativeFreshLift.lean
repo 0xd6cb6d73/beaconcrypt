@@ -21,7 +21,7 @@ noncomputable def mass {X : Type} (event : X → Prop) (run : ProbComp X) : ENNR
 
 /-- Every complete terminal decision is transported by the full-distribution bound, without a condition on the decision after compromise. -/
 theorem mass_tv {X : Type} (event : X → Prop) (left right : ProbComp X) :
-    mass event left ≤ mass event right + ENNReal.ofReal (tvDist left right) := by
+    mass event left ≤ mass event right + ENNReal.ofReal (discreteDistance left right) := by
   unfold mass
   repeat rw [← prEvent_eq_evalDist_singleton _ true]
   simp only [prEvent_map, decide_eq_true_eq]
@@ -94,7 +94,7 @@ theorem native_event_bound (source : FixedHkdfSha512NoSaltSource) (writer : RawC
       mass (stoppedFresh key remaining disclosed event) (compiledGame source writer prior parent key target nonce next sender route read client state) +
         𝒟[nonceGame source writer prior parent key target nonce next sender route read client state] {true} := by
   rw [native_fresh]
-  have cost : ENNReal.ofReal (tvDist
+  have cost : ENNReal.ofReal (discreteDistance
       (stoppedGame source writer prior parent key target nonce next sender route read client state)
       (compiledGame source writer prior parent key target nonce next sender route read client state)) ≤
       𝒟[nonceGame source writer prior parent key target nonce next sender route read client state] {true} :=

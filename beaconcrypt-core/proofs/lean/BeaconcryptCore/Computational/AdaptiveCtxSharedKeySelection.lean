@@ -188,7 +188,7 @@ theorem selected_integrity {count : Nat} (target : Fin (count + 1))
     (sealBound : client.IsQueryBoundP (SelectionClass target (TargetClass SourceSeal)) qSeal)
     (rawBound : client.IsQueryBoundP (SelectionClass target (TargetClass IsRawQuery)) qRaw)
     (small : qSeal < 2 ^ 96) :
-    ENNReal.ofReal ((Prod.fst <$> sourceGame (join target true real) (join target targetDecode decode) c client).boolDistAdvantage
+    ENNReal.ofReal ((Prod.fst <$> sourceGame (join target true real) (join target targetDecode decode) c client).boolDistance
       (Prod.fst <$> sourceGame (join target false real) (join target targetDecode decode) c client)) ≤
       ENNReal.ofReal (modifiedNonceAeadINDDollarAdvantage c
         (AdaptiveCtxPrefixValidation.validationReduction targetDecode c
@@ -221,7 +221,7 @@ theorem selected_integrity {count : Nat} (target : Fin (count + 1))
           (AdaptiveCtxSharedModePreparation.independentSetup count ()) false targetDecode real decode c
             (fun _ => simulateQ (select target) client)] {true} := by
     rw [EvalDistEq.evalDist_eq falseEq]
-  simpa only [ProbComp.boolDistAdvantage, trueMass, falseMass] using bound
+  simpa only [ProbComp.boolDistance, trueMass, falseMass] using bound
 
 end BeaconcryptCore.Computational.AdaptiveCtxSharedKeySelection
 

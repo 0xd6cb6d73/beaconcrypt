@@ -150,7 +150,7 @@ theorem family_source (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMix
       (public_source source writer (privateTable prior parent target (RawCtxSelectedMessageKdf.response key nonce next)) key read request state)
     simp only [Functor.map_map, Prod.map_def, id_eq, originalFrontend, RawCtxGenericFamilyFrontend.impl,
       StateT.run, bind_pure_comp, state_map_apply] at same ⊢
-    convert same using 1
+    exact same
 
 
 /-- Native interpretation recovers the original complete finite role API and every indexed native state, using the already checked source driver rather than an ambient realization premise. -/

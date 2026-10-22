@@ -99,11 +99,11 @@ theorem ctxMisattributionAdvantage_le_blake2b_cr (c : Pqxdh.Crypto)
   have hexp : ctxMisattributionExp c adversary =
       (fun attempt => decide (CtxMisattribution c attempt)) <$> adversary := by
     simp only [ctxMisattributionExp, bind_pure_comp]
-  have hcr : CollisionResistance.crExp c.blake2b (ctxCollisionReduction adversary) =
+  have hcr : CollisionResistance.crExperiment c.blake2b (ctxCollisionReduction adversary) =
       (fun attempt => decide ((ctxCollisionInputs attempt).1 ≠ (ctxCollisionInputs attempt).2 ∧
         c.blake2b (ctxCollisionInputs attempt).1 = c.blake2b (ctxCollisionInputs attempt).2)) <$>
         adversary := by
-    simp only [CollisionResistance.crExp, ctxCollisionReduction, bind_pure_comp,
+    simp only [CollisionResistance.crExperiment, ctxCollisionReduction, bind_pure_comp,
       Functor.map_map]
   unfold ctxMisattributionAdvantage CollisionResistance.crAdvantage
   rw [← prEvent_eq_evalDist_singleton _ true, hexp, hcr, prEvent_map, prEvent_map]
@@ -214,13 +214,13 @@ theorem ctxFullCommitmentAdvantage_le_blake2b_cr (c : Pqxdh.Crypto)
   have hexp : ctxFullCommitmentExp c adversary =
       (fun attempt => decide (CtxFullCommitment c attempt)) <$> adversary := by
     simp only [ctxFullCommitmentExp, bind_pure_comp]
-  have hcr : CollisionResistance.crExp c.blake2b
+  have hcr : CollisionResistance.crExperiment c.blake2b
         (ctxFullCommitmentCollisionReduction c adversary) =
       (fun attempt => decide ((ctxFullCommitmentCollisionInputs c attempt).1 ≠
           (ctxFullCommitmentCollisionInputs c attempt).2 ∧
         c.blake2b (ctxFullCommitmentCollisionInputs c attempt).1 =
           c.blake2b (ctxFullCommitmentCollisionInputs c attempt).2)) <$> adversary := by
-    simp only [CollisionResistance.crExp, ctxFullCommitmentCollisionReduction, bind_pure_comp,
+    simp only [CollisionResistance.crExperiment, ctxFullCommitmentCollisionReduction, bind_pure_comp,
       Functor.map_map]
   unfold ctxFullCommitmentAdvantage CollisionResistance.crAdvantage
   rw [← prEvent_eq_evalDist_singleton _ true, hexp, hcr, prEvent_map, prEvent_map]

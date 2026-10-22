@@ -1,6 +1,5 @@
 import BeaconcryptCore.Computational.PqxdhStatefulPhase1QueryBounds
 import BeaconcryptCore.Computational.PqxdhSecretInputInitializer
-import BeaconcryptCore.Computational.VCVioLegacyBridge
 
 /-!
 # Stateful Phase-1 admission and the full-continuation authentication hop
@@ -76,18 +75,17 @@ theorem continuationAdvantage_le_bad
     (verifyFn : Ed25519PublicKey → Pqxdh.Bytes → Ed25519Signature → Bool)
     (sample : ProbComp (StatefulPhase1Result kem setup selector))
     (next onChanged : StatefulPhase1Result kem setup selector → ProbComp Bool) :
-    (sample >>= next).boolDistAdvantage
+    (sample >>= next).boolDistance
         (sample >>= authenticateContinuation verifyFn next onChanged) ≤
       Pr{let result ← sample}[result.badBit verifyFn = true].toReal := by
-  rw [ProbComp.boolDistAdvantage]
-  have bound := tvDist_bind_left_event_le sample next
+  rw [ProbComp.boolDistance]
+  have bound := discreteDistance_bind_left_event_le sample next
     (authenticateContinuation verifyFn next onChanged)
     (fun result => result.badBit verifyFn = true)
     (fun result good => by simp [authenticateContinuation, good])
-  rw [VCVioLegacy.probEvent_eq_prEvent] at bound
   refine le_trans ?_ bound
-  simpa only [VCVioLegacy.probOutput_eq_evalDist_singleton] using
-    abs_probOutput_toReal_sub_le_tvDist (sample >>= next)
+  simpa only [prEvent_eq_evalDist_singleton] using
+    abs_prEvent_toReal_sub_le_discreteDistance (sample >>= next)
       (sample >>= authenticateContinuation verifyFn next onChanged)
 
 /-- A complete continuation after the source-ordered prefix costs one weak-EUF-CMA term; it need not be simulated by the forgery reduction. -/
@@ -101,12 +99,12 @@ theorem continuationAdvantage_le_eufCma {SecretKey : Type}
     (deterministic : HasDeterministicVerification sigAlg verifyFn)
     (next onChanged : StatefulPhase1Result kem setup selector → ProbComp Bool) :
     ((simulateQ (kemAmbientImpl baseImpl)
-      (statefulPhase1JointReference sigAlg kem setup selector)) >>= next).boolDistAdvantage
+      (statefulPhase1JointReference sigAlg kem setup selector)) >>= next).boolDistance
       ((simulateQ (kemAmbientImpl baseImpl)
         (statefulPhase1JointReference sigAlg kem setup selector)) >>=
           authenticateContinuation verifyFn next onChanged) ≤
-      ((statefulPhase1ToEUFCMA sigAlg kem setup selector).advantage
-        (runtimeOfImpl (kemAmbientImpl baseImpl))).toReal := by
+      (SignatureAlg.unforgeableAdvantage (runtimeOfImpl (kemAmbientImpl baseImpl))
+        (statefulPhase1ToEUFCMA sigAlg kem setup selector)).toReal := by
   have euf := statefulPhase1FieldSubstitutionAdvantage_le_eufCma
     (runtimeOfImpl (kemAmbientImpl baseImpl)) sigAlg kem setup selector verifyFn deterministic
   refine (continuationAdvantage_le_bad verifyFn _ next onChanged).trans ?_
@@ -119,7 +117,7 @@ theorem continuationAdvantage_le_eufCma {SecretKey : Type}
     rw [runtimeOfImpl_evalDist, simulateQ_bind, prEvent_eq_evalDist_decide]
     simp only [simulateQ_pure, Bool.decide_eq_true]
   rw [advantage] at euf
-  simpa only [SignatureAlg.unforgeableAdv.advantage] using euf
+  simpa only [SignatureAlg.unforgeableAdvantage] using euf
 
 /-- Independent source prefix before KEM generation, retaining the identity secret and private prekey state. -/
 noncomputable def identityPrekeySample {SecretKey : Type}
@@ -217,22 +215,22 @@ theorem privateContinuationAdvantage_le_eufCma {SecretKey : Type}
     (deterministic : HasDeterministicVerification sigAlg verifyFn)
     (next onChanged : (SecretKey × StatefulPhase1Result kem setup selector × KemSK) →
       ProbComp Bool) :
-    (privateSourcePrefix baseImpl sigAlg kem setup selector >>= next).boolDistAdvantage
+    (privateSourcePrefix baseImpl sigAlg kem setup selector >>= next).boolDistance
       (privateSourcePrefix baseImpl sigAlg kem setup selector >>= fun state =>
         if state.2.1.badBit verifyFn then onChanged state else next state) ≤
-      ((statefulPhase1ToEUFCMA sigAlg kem setup selector).advantage
-        (runtimeOfImpl (kemAmbientImpl baseImpl))).toReal := by
+      (SignatureAlg.unforgeableAdvantage (runtimeOfImpl (kemAmbientImpl baseImpl))
+        (statefulPhase1ToEUFCMA sigAlg kem setup selector)).toReal := by
   have euf := statefulPhase1FieldSubstitutionAdvantage_le_eufCma
     (runtimeOfImpl (kemAmbientImpl baseImpl)) sigAlg kem setup selector verifyFn deterministic
-  rw [ProbComp.boolDistAdvantage]
-  have bound := tvDist_bind_left_event_le (privateSourcePrefix baseImpl sigAlg kem setup selector)
+  rw [ProbComp.boolDistance]
+  have bound := discreteDistance_bind_left_event_le (privateSourcePrefix baseImpl sigAlg kem setup selector)
     next (fun state => if state.2.1.badBit verifyFn then onChanged state else next state)
     (fun state => state.2.1.badBit verifyFn = true)
     (fun state good => by simp [good])
-  rw [VCVioLegacy.probEvent_eq_prEvent, privateSourcePrefix_bad_probability] at bound
+  rw [ privateSourcePrefix_bad_probability] at bound
   refine le_trans ?_ (bound.trans (ENNReal.toReal_mono (MeasureTheory.measure_ne_top _ _) euf))
-  simpa only [VCVioLegacy.probOutput_eq_evalDist_singleton] using
-    abs_probOutput_toReal_sub_le_tvDist
+  simpa only [prEvent_eq_evalDist_singleton] using
+    abs_prEvent_toReal_sub_le_discreteDistance
       (privateSourcePrefix baseImpl sigAlg kem setup selector >>= next)
       (privateSourcePrefix baseImpl sigAlg kem setup selector >>= fun state =>
         if state.2.1.badBit verifyFn then onChanged state else next state)

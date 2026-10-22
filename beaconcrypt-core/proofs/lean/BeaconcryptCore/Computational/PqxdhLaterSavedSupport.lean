@@ -48,7 +48,7 @@ theorem sample_fits
   cases context with
   | inl decision =>
       simp only [mem_support_pure_iff] at supported
-      subst packet
+      rw [supported]
       trivial
   | inr input =>
       simp only [mem_support_bind_iff, mem_support_pure_iff] at supported

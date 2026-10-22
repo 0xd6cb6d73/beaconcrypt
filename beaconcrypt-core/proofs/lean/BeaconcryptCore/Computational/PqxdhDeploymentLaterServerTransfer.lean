@@ -234,13 +234,13 @@ theorem kem_transfer_server (setup : Setup baseSpec KemSK)
         (decision setup.source.crypto codec setup.serverKeyId budget event claim g)
         (compileServer setup codec route bounds mode first second) runtime budget.create (selectedKem budget g) g.1.val
         false] {true} +
-      ENNReal.ofReal (setup.kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl
+      ENNReal.ofReal ((setup.kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl
           (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl))
         (PqxdhDeploymentLaterServerKemHop.certified setup ensureInit none
           (PqxdhDeploymentLaterServerCut.scanned setup codec checks
             (decision setup.source.crypto codec setup.serverKeyId budget event claim g)
             (compileServer setup codec route bounds mode first second) g.1.val)
-          runtime budget.create (selectedKem budget g)).toINDCCA +
+          runtime budget.create (selectedKem budget g)).toINDCCA).toReal +
         PqxdhRegistrationJointKemRawGame.correctnessError setup) := by
   rw [eligible_server setup codec checks route ensureInit phase1 phase2 bounds mode first second budget event claim g
     runtime]
@@ -296,13 +296,13 @@ theorem kem_transfer_server_sum (setup : Setup baseSpec KemSK)
           (decision setup.source.crypto codec setup.serverKeyId budget event claim g)
           (compileServer setup codec route bounds mode first second) runtime budget.create (selectedKem budget g)
           g.1.val false] {true} +
-        ENNReal.ofReal (setup.kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl
+        ENNReal.ofReal ((setup.kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl
             (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl))
           (PqxdhDeploymentLaterServerKemHop.certified setup ensureInit none
             (PqxdhDeploymentLaterServerCut.scanned setup codec checks
               (decision setup.source.crypto codec setup.serverKeyId budget event claim g)
               (compileServer setup codec route bounds mode first second) g.1.val)
-            runtime budget.create (selectedKem budget g)).toINDCCA +
+            runtime budget.create (selectedKem budget g)).toINDCCA).toReal +
           PqxdhRegistrationJointKemRawGame.correctnessError setup)) := by
   rw [UniformTargetSelection.split]
   exact Finset.sum_le_sum fun g _ => kem_transfer_server setup functional codec checks route ensureInit phase1 phase2

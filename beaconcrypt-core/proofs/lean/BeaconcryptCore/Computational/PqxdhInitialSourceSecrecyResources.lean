@@ -123,7 +123,7 @@ local notation "testObserver" => PqxdhInitialCommonSecrecy.aliasTester source wr
 include bounded callbacks in
 /-- The actual supported source sampler instantiates the full native-freshness reduction with its computed candidate cap, rather than a whole-observer hypothesis. -/
 theorem bound (hmac : HmacSha512) (correct : SourceFullCorrect source hmac) :
-    (PqxdhInitialCommonSecrecy.actual source writer mark sender route decode sourceView sourceSample sourceAddress).boolDistAdvantage
+    (PqxdhInitialCommonSecrecy.actual source writer mark sender route decode sourceView sourceSample sourceAddress).boolDistance
       (PqxdhInitialCommonSecrecy.random source writer mark sender route decode sourceView sourceSample sourceAddress) ≤
       RawCtxSelectedParentHop.extractLoss hmac sourceSample sourceAddress mainObserver +
         RawCtxSelectedParentHop.hmacLoss hmac sourceSample sourceAddress mainObserver +

@@ -38,7 +38,7 @@ variable (sourceCaps : ∀ input, Sum.inr input ∈ support prior → Caps input
 include sourceCaps in
 /-- One global parent-child reduction uses the exact original preparation and source distribution, with the complete candidate allowance derived from actual supported source inputs. -/
 theorem bound (hmac : HmacSha512) (correct : SourceFullCorrect source hmac) :
-    (actualGame).boolDistAdvantage randomGame ≤
+    (actualGame).boolDistance randomGame ≤
       loss source writer sender route decode depth remaining prior qPost qKnown hmac := by
   exact PqxdhInitialSampledParentSecrecy.bound source writer sender route decode depth remaining hmac correct
     globalSample globalAddress Q (fun context output result supported =>

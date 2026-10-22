@@ -177,10 +177,10 @@ theorem server_raw_source (source : FixedHkdfSha512NoSaltSource) (writer : RawCt
         have same := mapped_source source key read publish
           (RawCtxSelectedOwnerCompiler.owner source writer prior parent target nonce next read (sender before.server.metadata) (.inr raw) selected)
           ((RawCtxChainOwner.ownerImpl (originalCalls source writer prior parent key target nonce next) (sender before.server.metadata) read (.inr raw)).run selected)
-          state False (by simp only [ite_false]; convert rawSame using 1)
+          state False (by simp only [ite_false]; exact rawSame)
         simp only [ite_false, RawCtxChainOwner.ownerImpl] at same
         simp only [publish, selected, bind_pure_comp, StateT.run] at same ⊢
-        convert same using 1
+        exact same
 
 
 noncomputable def ServerStops (prior : Prior) (parent : Option Entry) (target : RootOutput) (nonce : NonceOutput) (next : RootOutput)
@@ -265,7 +265,7 @@ theorem server_send_source (source : FixedHkdfSha512NoSaltSource) (writer : RawC
         state (RawCtxSelectedOwnerCompiler.Stops prior parent target nonce next (sender before.server.metadata) (.inl plaintext) selected state.2)
         (RawCtxSelectedOwnerCompiler.send_source source writer prior parent key target nonce next read (sender before.server.metadata) plaintext selected state)
       simp only [test, publish, selected, RawCtxChainOwner.ownerImpl, bind_pure_comp, StateT.run] at same ⊢
-      convert same using 1
+      exact same
 
 /-- One complete original Server record query, including all routing and lookup failures, compiles without a selected-key or fresh-nonce premise. -/
 theorem server_source (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)

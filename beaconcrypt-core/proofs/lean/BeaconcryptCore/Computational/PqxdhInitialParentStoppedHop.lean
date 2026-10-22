@@ -114,25 +114,25 @@ noncomputable def bad (context : Context × Entry) (target : RootOutput) (output
 set_option backward.isDefEq.respectTransparency false in
 /-- The original routed, native-reader continuation and the ordinary stopped observer pay the same complete masked candidate event; the clear-bit event retains the actual origin trace. -/
 theorem local_bound (context : Context × Entry) (target : RootOutput) (output : FullOutput) :
-    (privateGame source writer mark sender route decode continuation context target output).boolDistAdvantage
+    (privateGame source writer mark sender route decode continuation context target output).boolDistance
       (observer source writer mark sender route decode continuation context output) ≤
       Pr{let x ← bad source writer mark sender route decode continuation context target output}[x = true].toReal := by
   have agreement := PqxdhInitialParentObserverAliases.event_good source writer (continuation.prior context.1) context.2 output
     (continuation.pre context.1) (continuation.application context.1) (continuation.initializer context.1)
     (continuation.selector context.1) (continuation.aux context.1) target
     (program mark sender route decode continuation context) (continuation.initial context) (continuation.event context)
-  rw [privateGame, observer, ProbComp.boolDistAdvantage, ← prEvent_eq_evalDist_singleton _ true,
+  rw [privateGame, observer, ProbComp.boolDistance, ← prEvent_eq_evalDist_singleton _ true,
     ← prEvent_eq_evalDist_singleton _ true, decision_probability, decision_probability, agreement]
-  have variation := (abs_probOutput_toReal_sub_le_tvDist
+  have variation := (abs_prEvent_toReal_sub_le_discreteDistance
     (decision (continuation.event context) <$>
       (simulateQ (PqxdhInitialParentObserverAliases.observed source writer (continuation.prior context.1) context.2 output
         (continuation.pre context.1) (continuation.application context.1) (continuation.initializer context.1)
         (continuation.selector context.1) (continuation.aux context.1) RawCtxSelectedLiveRead.labelRead target)
         (program mark sender route decode continuation context)).run (continuation.initial context))
     (decision (continuation.event context) <$> observed source writer mark sender route decode continuation context output)).trans
-      (tvDist_map_le (decision (continuation.event context)) _ _)
-  rw [VCVioLegacy.probOutput_eq_prEvent, VCVioLegacy.probOutput_eq_prEvent, decision_probability, decision_probability,
-    tvDist_comm] at variation
+      (discreteDistance_map_le (decision (continuation.event context)) _ _)
+  rw [ decision_probability, decision_probability,
+    discreteDistance_comm] at variation
   have event :
       Pr{let result ← observed source writer mark sender route decode continuation context output}[target ∈ candidates result] =
         Pr{let x ← bad source writer mark sender route decode continuation context target output}[x = true] := by
@@ -159,7 +159,7 @@ noncomputable def random
 /-- The original real-child experiment and its target-free Extract observer differ by the exact real input-candidate event. -/
 theorem actual_route
     (priorSample : ProbComp Context) :
-    (actual source writer mark sender route decode continuation priorSample).boolDistAdvantage
+    (actual source writer mark sender route decode continuation priorSample).boolDistance
       (RawCtxSelectedParentSecrecy.actual source priorSample (address continuation) (observer source writer mark sender route decode continuation)) ≤
       Pr{let pair ← (RawCtxFullPreimageTester.actual (RawCtxFullPreimageTester.production source)
           (RawCtxSelectedParentCandidates.sample priorSample (address continuation))
@@ -198,7 +198,7 @@ set_option maxRecDepth 2048 in
 /-- The independent-child experiment pays the original delayed-coordinate candidate event when returning to the private source interface. -/
 theorem random_route
     (priorSample : ProbComp Context) :
-    (random source writer mark sender route decode continuation priorSample).boolDistAdvantage
+    (random source writer mark sender route decode continuation priorSample).boolDistance
       (RawCtxSelectedParentSecrecy.random priorSample (address continuation) (observer source writer mark sender route decode continuation)) ≤
       Pr{let pair ← RawCtxSelectedParentCandidates.uniform priorSample (address continuation) (observed source writer mark sender route decode continuation)}[pair.1 ∈ candidates pair.2].toReal := by
   have bound := RawCtxBadEventMixture.bind_bound
@@ -259,7 +259,7 @@ noncomputable def aliasTester
 /-- The real private-to-observer comparison pays the separately constructed actual-input tester and its full76 finite-image term. -/
 theorem actual_bound
     (hmac : HmacSha512) (correct : SourceFullCorrect source hmac) (priorSample : ProbComp Context) :
-    (actual source writer mark sender route decode continuation priorSample).boolDistAdvantage
+    (actual source writer mark sender route decode continuation priorSample).boolDistance
       (RawCtxSelectedParentSecrecy.actual source priorSample (address continuation) (observer source writer mark sender route decode continuation)) ≤
       (2 ^ 352 : ℝ)⁻¹ + extractLoss hmac priorSample (address continuation) (aliasTester source writer mark sender route decode continuation) +
         hmacLoss hmac priorSample (address continuation) (aliasTester source writer mark sender route decode continuation) := by
@@ -281,7 +281,7 @@ theorem random_bound
     (priorSample : ProbComp Context) (qCandidates : Nat)
     (bounded : ∀ context output result, result ∈ support (observed source writer mark sender route decode continuation context output) →
       (candidates result).length ≤ qCandidates) :
-    (random source writer mark sender route decode continuation priorSample).boolDistAdvantage
+    (random source writer mark sender route decode continuation priorSample).boolDistance
       (RawCtxSelectedParentSecrecy.random priorSample (address continuation) (observer source writer mark sender route decode continuation)) ≤
       (qCandidates : ℝ) / (2 ^ 256 : ℝ) := by
   simpa using (random_route source writer mark sender route decode continuation priorSample).trans
@@ -295,27 +295,27 @@ theorem bound
     (hmac : HmacSha512) (correct : SourceFullCorrect source hmac) (priorSample : ProbComp Context) (qCandidates : Nat)
     (bounded : ∀ context output result, result ∈ support (observed source writer mark sender route decode continuation context output) →
       (candidates result).length ≤ qCandidates) :
-    (actual source writer mark sender route decode continuation priorSample).boolDistAdvantage
+    (actual source writer mark sender route decode continuation priorSample).boolDistance
       (random source writer mark sender route decode continuation priorSample) ≤
       extractLoss hmac priorSample (address continuation) (observer source writer mark sender route decode continuation) +
         hmacLoss hmac priorSample (address continuation) (observer source writer mark sender route decode continuation) +
         extractLoss hmac priorSample (address continuation) (aliasTester source writer mark sender route decode continuation) +
         hmacLoss hmac priorSample (address continuation) (aliasTester source writer mark sender route decode continuation) +
         (2 ^ 352 : ℝ)⁻¹ + (qCandidates : ℝ) / (2 ^ 256 : ℝ) := by
-  have triangle := (ProbComp.boolDistAdvantage_triangle
+  have triangle := (ProbComp.boolDistance_triangle
     (actual source writer mark sender route decode continuation priorSample)
     (RawCtxSelectedParentSecrecy.actual source priorSample (address continuation) (observer source writer mark sender route decode continuation))
     (random source writer mark sender route decode continuation priorSample)).trans
-      (add_le_add le_rfl (ProbComp.boolDistAdvantage_triangle _
+      (add_le_add le_rfl (ProbComp.boolDistance_triangle _
         (RawCtxSelectedParentSecrecy.random priorSample (address continuation) (observer source writer mark sender route decode continuation)) _))
-  have main : (RawCtxSelectedParentSecrecy.actual source priorSample (address continuation) (observer source writer mark sender route decode continuation)).boolDistAdvantage
+  have main : (RawCtxSelectedParentSecrecy.actual source priorSample (address continuation) (observer source writer mark sender route decode continuation)).boolDistance
       (RawCtxSelectedParentSecrecy.random priorSample (address continuation) (observer source writer mark sender route decode continuation)) ≤
       extractLoss hmac priorSample (address continuation) (observer source writer mark sender route decode continuation) +
         hmacLoss hmac priorSample (address continuation) (observer source writer mark sender route decode continuation) :=
     RawCtxSelectedParentSecrecy.primitive_bound source hmac correct priorSample (address continuation) (observer source writer mark sender route decode continuation)
-  have uniformBound : (RawCtxSelectedParentSecrecy.random priorSample (address continuation) (observer source writer mark sender route decode continuation)).boolDistAdvantage
+  have uniformBound : (RawCtxSelectedParentSecrecy.random priorSample (address continuation) (observer source writer mark sender route decode continuation)).boolDistance
       (random source writer mark sender route decode continuation priorSample) ≤ (qCandidates : ℝ) / (2 ^ 256 : ℝ) := by
-    simpa only [ProbComp.boolDistAdvantage, abs_sub_comm] using
+    simpa only [ProbComp.boolDistance, abs_sub_comm] using
       random_bound source writer mark sender route decode continuation priorSample qCandidates bounded
   simpa only [add_assoc, add_comm, add_left_comm] using
     triangle.trans (add_le_add (actual_bound source writer mark sender route decode continuation hmac correct priorSample)

@@ -58,16 +58,17 @@ theorem normalization (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMix
     (budget : RawCtxRevealBudgets.Budget) (bounded : RawCtxRevealBudgets.Bounded client budget)
     (state : RawCtxProtocolReveals.State M P I D K S B) (initial : LoggedState A)
     (valid : Valid depth k initial) (clean : Clean initial) :
-    ENNReal.ofReal (tvDist
+    ENNReal.ofReal (discreteDistance
       (family source writer (depth + 2) sender route decode client state initial.1.1 initial.1.2 initial.2)
       (normalized source writer depth sender route decode client state initial)) ≤
       ∑ j ∈ Finset.range (budget.1 .send + 51 * budget.1 .raw),
         ((k + j + 1 : Nat) : ℝ≥0∞) * (2 ^ 256 : ℝ≥0∞)⁻¹ := by
   classical
   rw [← (source_adjacent source writer depth sender route decode client state initial valid.2.1).2, normalized]
-  exact (ofReal_tvDist_bind_left_event_le _ _ _ Cached (fun cut good => by simp only [good, ite_false])).trans
-    ((VCVioLegacy.probEvent_eq_prEvent _ Cached).le.trans
-    (cached_risk source writer depth k sender route decode client budget bounded state initial valid clean))
+  exact (ofReal_discreteDistance_bind_left_event_le _ _ _ Cached (fun cut good => by
+    simp only [good, ite_false]
+    exact EvalDistEq.refl _)).trans
+    (cached_risk source writer depth k sender route decode client budget bounded state initial valid clean)
 
 /-- Any one common complete-state continuation, including a private appended lineage check, preserves the same cached-branch charge. -/
 theorem normalization_after {Observed : Type}
@@ -79,12 +80,12 @@ theorem normalization_after {Observed : Type}
     (state : RawCtxProtocolReveals.State M P I D K S B) (initial : LoggedState A)
     (valid : Valid depth k initial) (clean : Clean initial)
     (observe : Output M P I D K A Result S B → ProbComp Observed) :
-    ENNReal.ofReal (tvDist
+    ENNReal.ofReal (discreteDistance
       (family source writer (depth + 2) sender route decode client state initial.1.1 initial.1.2 initial.2 >>= observe)
       (normalized source writer depth sender route decode client state initial >>= observe)) ≤
       ∑ j ∈ Finset.range (budget.1 .send + 51 * budget.1 .raw),
         ((k + j + 1 : Nat) : ℝ≥0∞) * (2 ^ 256 : ℝ≥0∞)⁻¹ :=
-  (ENNReal.ofReal_le_ofReal (tvDist_bind_right_le observe _ _)).trans
+  (ENNReal.ofReal_le_ofReal (discreteDistance_bind_right_le observe _ _)).trans
     (normalization source writer depth k sender route decode client budget bounded state initial valid clean)
 
 /-- The actual adjacent source advantage for one unchanged final decision is bounded by its collision-normalized comparison plus the derived chronological risk, with coefficient one. -/
@@ -96,9 +97,9 @@ theorem adjacent_bound (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
     (state : RawCtxProtocolReveals.State M P I D K S B) (initial : LoggedState A)
     (valid : Valid depth k initial) (clean : Clean initial)
     (observe : Output M P I D K A Result S B → ProbComp Bool) :
-    ENNReal.ofReal ((family source writer (depth + 1) sender route decode client state initial.1.1 initial.1.2 initial.2 >>= observe).boolDistAdvantage
+    ENNReal.ofReal ((family source writer (depth + 1) sender route decode client state initial.1.1 initial.1.2 initial.2 >>= observe).boolDistance
       (family source writer (depth + 2) sender route decode client state initial.1.1 initial.1.2 initial.2 >>= observe)) ≤
-      ENNReal.ofReal ((family source writer (depth + 1) sender route decode client state initial.1.1 initial.1.2 initial.2 >>= observe).boolDistAdvantage
+      ENNReal.ofReal ((family source writer (depth + 1) sender route decode client state initial.1.1 initial.1.2 initial.2 >>= observe).boolDistance
         (normalized source writer depth sender route decode client state initial >>= observe)) +
       ∑ j ∈ Finset.range (budget.1 .send + 51 * budget.1 .raw),
         ((k + j + 1 : Nat) : ℝ≥0∞) * (2 ^ 256 : ℝ≥0∞)⁻¹ := by
@@ -107,14 +108,14 @@ theorem adjacent_bound (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
   let after : ProbComp Bool :=
     family source writer (depth + 2) sender route decode client state initial.1.1 initial.1.2 initial.2 >>= observe
   let middle : ProbComp Bool := normalized source writer depth sender route decode client state initial >>= observe
-  change ENNReal.ofReal (before.boolDistAdvantage after) ≤
-    ENNReal.ofReal (before.boolDistAdvantage middle) + _
-  refine (ENNReal.ofReal_le_ofReal (ProbComp.boolDistAdvantage_triangle before middle after)).trans ?_
-  simp only [ProbComp.boolDistAdvantage, VCVioLegacy.evalDist_singleton_eq_probOutput]
+  change ENNReal.ofReal (before.boolDistance after) ≤
+    ENNReal.ofReal (before.boolDistance middle) + _
+  refine (ENNReal.ofReal_le_ofReal (ProbComp.boolDistance_triangle before middle after)).trans ?_
+  simp only [ProbComp.boolDistance, ← prEvent_eq_evalDist_singleton]
   rw [ENNReal.ofReal_add (abs_nonneg _) (abs_nonneg _)]
   apply add_le_add le_rfl
-  refine (ENNReal.ofReal_le_ofReal (abs_probOutput_toReal_sub_le_tvDist middle after)).trans ?_
-  rw [tvDist_comm]
+  refine (ENNReal.ofReal_le_ofReal (abs_prEvent_toReal_sub_le_discreteDistance middle after)).trans ?_
+  rw [discreteDistance_comm]
   simpa only [after, middle] using
     normalization_after source writer depth k sender route decode client budget bounded state initial valid clean observe
 

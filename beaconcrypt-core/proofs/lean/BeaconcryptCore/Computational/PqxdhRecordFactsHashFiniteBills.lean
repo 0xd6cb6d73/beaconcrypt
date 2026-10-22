@@ -234,20 +234,19 @@ def plainCost : (Spec n).Domain → Nat
   | .inl _ => 64
   | .inr _ => 1
 
+-- Instantiating the exact 64-byte sampler bound needs extra elaboration depth.
+set_option maxRecDepth 1024 in
 /-- Actual lazy digest interpretation charges complete miss sampling and reuses hits without a fresh draw. -/
 theorem plain_query_total (query : (Spec n).Domain) (cache : PqxdhRecordFactsDigestCache.Cache n) :
     ((PqxdhRecordFactsPrivateCacheSourceDrawMemo.plain query).run cache).IsTotalQueryBound (plainCost query) := by
   cases query with
   | inl input =>
-      change (((PqxdhRecordFactsPrivateCacheSourceDraw.HashInput n →ₒ CtxDigest).randomOracle input).run cache).IsTotalQueryBound 64
-      cases hit : cache input with
-      | none =>
-          rw [QueryImpl.withCaching_run_none uniformSampleImpl hit]
-          simp only [IsTotalQueryBound, isQueryBound_map_iff]
-          exact CtxComputationalSecurity.uniformFixedBytes_isTotalQueryBound 64
-      | some digest =>
-          rw [QueryImpl.withCaching_run_some uniformSampleImpl hit]
-          trivial
+      exact QueryImpl.isTotalQueryBound_run_withCaching
+        (spec := (PqxdhRecordFactsPrivateCacheSourceDraw.HashInput n →ₒ CtxDigest)) (n := 64)
+        uniformSampleImpl input
+        (by
+          change ($ᵗ CtxDigest : ProbComp CtxDigest).IsTotalQueryBound 64
+          exact CtxComputationalSecurity.uniformFixedBytes_isTotalQueryBound 64) cache
   | inr coin =>
       simp [PqxdhRecordFactsPrivateCacheSourceDrawMemo.plain, PqxdhRecordFactsCollisionOracle.plain,
         StateT.run, plainCost, IsTotalQueryBound]

@@ -173,9 +173,11 @@ theorem pair_first_error (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK
       Pr{let x ← ((fun draw : (MlKem768PublicKey × KemSK) × (MlKem768Ciphertext × MlKemSharedSecret) × (MlKem768Ciphertext × MlKemSharedSecret) =>
           (⟨draw.1.1, draw.1.2, draw.2.1.1, draw.2.1.2⟩ : PqxdhKemCorrectnessError.Sample KemSK)) <$>
           simulateQ (kemAmbientImpl setup.baseImpl) (pairDraws setup.kem))}[(PqxdhKemCorrectnessError.Bad setup.kem functional) x] := by
+    apply EvalDistEq.prEvent_eq
     rw [← simulateQ_map]
     simp only [PqxdhKemCorrectnessError.sample, pairDraws, map_bind, map_pure, simulateQ_bind, simulateQ_pure]
-    refine EvalDistEq.prEvent_eq (EvalDistEq.bind_right _ fun pair => EvalDistEq.bind_right _ fun first => ?_) _
+    refine EvalDistEq.bind_right (m := ProbComp) _ fun pair =>
+      EvalDistEq.bind_right (m := ProbComp) _ fun first => ?_
     exact (OracleComp.EvalDistEq.bind_const _ _).symm
   rw [projected, prEvent_map]
   refine prEvent_congr _ _ _ fun draw => ?_
@@ -198,9 +200,10 @@ theorem pair_second_error (setup : PqxdhServerAuthExperiment.Setup baseSpec KemS
       Pr{let x ← ((fun draw : (MlKem768PublicKey × KemSK) × (MlKem768Ciphertext × MlKemSharedSecret) × (MlKem768Ciphertext × MlKemSharedSecret) =>
           (⟨draw.1.1, draw.1.2, draw.2.2.1, draw.2.2.2⟩ : PqxdhKemCorrectnessError.Sample KemSK)) <$>
           simulateQ (kemAmbientImpl setup.baseImpl) (pairDraws setup.kem))}[(PqxdhKemCorrectnessError.Bad setup.kem functional) x] := by
+    apply EvalDistEq.prEvent_eq
     rw [← simulateQ_map]
     simp only [PqxdhKemCorrectnessError.sample, pairDraws, map_bind, map_pure, simulateQ_bind, simulateQ_pure]
-    refine EvalDistEq.prEvent_eq (EvalDistEq.bind_right _ fun pair => ?_) _
+    refine EvalDistEq.bind_right (m := ProbComp) _ fun pair => ?_
     refine EvalDistEq.trans ?_ (OracleComp.EvalDistEq.bind_bind_swap _ _ _).symm
     refine EvalDistEq.bind_right _ fun second => ?_
     exact (OracleComp.EvalDistEq.bind_const _ _).symm
@@ -210,7 +213,7 @@ theorem pair_second_error (setup : PqxdhServerAuthExperiment.Setup baseSpec KemS
 
 /-- `pairAdversary`'s advantage is the distance of its two fixed branches under the ambient interpreter. -/
 theorem pair_advantage (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK) :
-    setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl)) (pairAdversary setup.kem).toINDCCA =
+    (setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl)) (pairAdversary setup.kem).toINDCCA).toReal =
       |(𝒟[simulateQ (kemAmbientImpl setup.baseImpl)
           (oneKeyBranchMain setup.kem (runtimeOfImpl (kemAmbientImpl setup.baseImpl)) (pairAdversary setup.kem) true)]
             {true}).toReal -
@@ -222,14 +225,18 @@ theorem pair_advantage (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK) 
     (PqxdhInitializerSecrecy.runtimeOfImpl_evalDist_bind _)
     (PqxdhInitializerSecrecy.runtimeOfImpl_evalDist_liftProbComp _)
     (PqxdhInitializerSecrecy.runtimeOfImpl_noFail_bool _)]
-  rfl
+  change ((𝒟[simulateQ (kemAmbientImpl setup.baseImpl)
+    (oneKeyBranchMain setup.kem (runtimeOfImpl (kemAmbientImpl setup.baseImpl)) (pairAdversary setup.kem) true)]).boolDist
+    𝒟[simulateQ (kemAmbientImpl setup.baseImpl)
+      (oneKeyBranchMain setup.kem (runtimeOfImpl (kemAmbientImpl setup.baseImpl)) (pairAdversary setup.kem) false)]).toReal = _
+  rw [MeasureTheory.Measure.toReal_boolDist]
 
 /-- `pair_cp_le` (design-v2 section 7.4): the probability `CP` that two independent encapsulations to a freshly generated key collide is at most the IND-CCA advantage of the fixed encapsulate-and-compare adversary `pairAdversary`, plus twice the ML-KEM correctness error, plus `2^-256`. In the real branch a ciphertext collision gives equal keys unless one of the two encapsulations is decapsulated incorrectly (`FunctionalDecapsulation` makes decapsulation a function); in the random branch the candidate is a fresh uniform key. No KEM min-entropy or collision property is assumed. Premise: `FunctionalDecapsulation`. -/
 theorem pair_cp_le (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (functional : FunctionalDecapsulation setup.kem) :
     pairCollision setup ≤
-      ENNReal.ofReal (setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
-        (pairAdversary setup.kem).toINDCCA) +
+      ENNReal.ofReal ((setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
+        (pairAdversary setup.kem).toINDCCA).toReal) +
       2 * ENNReal.ofReal (PqxdhRegistrationJointKemRawGame.correctnessError setup) + (2 ^ 256 : ℝ≥0∞)⁻¹ := by
   set real := 𝒟[simulateQ (kemAmbientImpl setup.baseImpl)
     (oneKeyBranchMain setup.kem (runtimeOfImpl (kemAmbientImpl setup.baseImpl)) (pairAdversary setup.kem) true)]
@@ -266,14 +273,14 @@ theorem pair_cp_le (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
   have finiteRandom : random ≠ ⊤ := by
     rw [hrandom, ← prEvent_eq_evalDist_singleton _ true]
     exact prEvent_ne_top _
-  have close : real ≤ random + ENNReal.ofReal (setup.kem.IND_CCA_Advantage
-      (runtimeOfImpl (kemAmbientImpl setup.baseImpl)) (pairAdversary setup.kem).toINDCCA) := by
+  have close : real ≤ random + ENNReal.ofReal ((setup.kem.IND_CCA_Advantage
+      (runtimeOfImpl (kemAmbientImpl setup.baseImpl)) (pairAdversary setup.kem).toINDCCA).toReal) := by
     rw [pair_advantage setup]
     exact PqxdhDeploymentHeadlineChain.le_add_of_ofReal_abs finiteReal finiteRandom le_rfl
   calc pairCollision setup ≤ real + (ENNReal.ofReal (PqxdhRegistrationJointKemRawGame.correctnessError setup) +
         ENNReal.ofReal (PqxdhRegistrationJointKemRawGame.correctnessError setup)) := collided
-    _ ≤ ((2 ^ 256 : ℝ≥0∞)⁻¹ + ENNReal.ofReal (setup.kem.IND_CCA_Advantage
-          (runtimeOfImpl (kemAmbientImpl setup.baseImpl)) (pairAdversary setup.kem).toINDCCA)) +
+    _ ≤ ((2 ^ 256 : ℝ≥0∞)⁻¹ + ENNReal.ofReal ((setup.kem.IND_CCA_Advantage
+          (runtimeOfImpl (kemAmbientImpl setup.baseImpl)) (pairAdversary setup.kem).toINDCCA).toReal)) +
         (ENNReal.ofReal (PqxdhRegistrationJointKemRawGame.correctnessError setup) +
           ENNReal.ofReal (PqxdhRegistrationJointKemRawGame.correctnessError setup)) :=
         add_le_add (close.trans (add_le_add (pair_random_le setup) le_rfl)) le_rfl

@@ -104,8 +104,7 @@ theorem post_coins (baseImpl : QueryImpl baseSpec ProbComp)
         (kem.IND_CCA_postChallengeImpl secret challenge (.inl (.inl query))) =
           (unifSpec.query query : ProbComp _) := by
       unfold KEMScheme.IND_CCA_postChallengeImpl QueryImpl.add
-      simp only [HasQuery.toQueryImpl_apply, simulateQ_HasQuery_query]
-      rfl
+      simp only [QueryImpl.liftTarget_self, QueryImpl.id'_apply, simulateQ_spec_query] <;> rfl
     rw [coin]
     change ((unifSpec.query query : ProbComp _) >>= fun reply =>
       PqxdhDynamicKemPost.evaluate baseImpl kem secret challenge (ccaCoins (next reply))) = _

@@ -55,23 +55,22 @@ noncomputable def main (baseImpl : QueryImpl baseSpec ProbComp)
 -- The existing PqxdhHiddenRoot averaging argument, restricted to supported samples.
 private theorem average_supported {Alpha Beta Gamma : Type} (sample : ProbComp Alpha)
     (left right : Alpha → ProbComp Beta) (badRun : Alpha → ProbComp Gamma) (bad : Gamma → Prop)
-    (point : ∀ value ∈ support sample, tvDist (left value) (right value) ≤ Pr{let x ← badRun value}[bad x].toReal) :
-    tvDist (sample >>= left) (sample >>= right) ≤ Pr{let x ← sample >>= badRun}[bad x].toReal := by
+    (point : ∀ value ∈ support sample, discreteDistance (left value) (right value) ≤ Pr{let x ← badRun value}[bad x].toReal) :
+    discreteDistance (sample >>= left) (sample >>= right) ≤ Pr{let x ← sample >>= badRun}[bad x].toReal := by
   rw [OracleComp.prEvent_bind_eq_tsum]
   rw [ENNReal.tsum_toReal_eq (fun value =>
     ENNReal.mul_ne_top (prEvent_ne_top _) (prEvent_ne_top _))]
   simp_rw [ENNReal.toReal_mul]
-  refine (tvDist_bind_left_le sample left right).trans ?_
-  simp only [VCVioLegacy.probOutput_eq_prEvent]
+  refine (discreteDistance_bind_left_le sample left right).trans ?_
   refine Summable.tsum_le_tsum (fun value => ?_) ?_ ?_
   · by_cases present : value ∈ support sample
     · exact mul_le_mul_of_nonneg_left (point value present) ENNReal.toReal_nonneg
     · rw [prEvent_eq_zero_of_not_mem_support sample present, ENNReal.toReal_zero, zero_mul, zero_mul]
   · exact Summable.of_nonneg_of_le
       (fun value => mul_nonneg ENNReal.toReal_nonneg
-        (tvDist_nonneg (left value) (right value)))
+        (discreteDistance_nonneg (left value) (right value)))
       (fun value => mul_le_of_le_one_right ENNReal.toReal_nonneg
-        (tvDist_le_one (left value) (right value)))
+        (discreteDistance_le_one (left value) (right value)))
       (ENNReal.summable_toReal (ne_top_of_le_ne_top ENNReal.one_ne_top (OracleComp.tsum_prEvent_le_one sample)))
   · exact Summable.of_nonneg_of_le
       (fun value => mul_nonneg ENNReal.toReal_nonneg ENNReal.toReal_nonneg)
@@ -88,7 +87,7 @@ theorem after_bound (baseImpl : QueryImpl baseSpec ProbComp)
       ∀ pair ∈ support (simulateQ (kemAmbientImpl baseImpl) (kem.encaps publicKey)),
         functional.result secretKey pair.1 = some pair.2 →
           left publicKey secretKey context pair.1 pair.2 = right publicKey secretKey context pair.1 pair.2) :
-    tvDist (after baseImpl kem stopped left publicKey secretKey context)
+    discreteDistance (after baseImpl kem stopped left publicKey secretKey context)
       (after baseImpl kem stopped right publicKey secretKey context) ≤
       Pr{let x ← simulateQ (kemAmbientImpl baseImpl) (keyError kem publicKey secretKey)}[x = true].toReal := by
   by_cases proceed : stopped.proceed publicKey context = true
@@ -96,14 +95,14 @@ theorem after_bound (baseImpl : QueryImpl baseSpec ProbComp)
     apply average_supported
     intro pair supported
     by_cases good : functional.result secretKey pair.1 = some pair.2
-    · simp only [agreement proceed pair supported good, tvDist_self, ENNReal.toReal_nonneg]
+    · simp only [agreement proceed pair supported good, discreteDistance_self, ENNReal.toReal_nonneg]
     · simp only [functional.exact, simulateQ_pure]
       rw [pure_bind (functional.result secretKey pair.1), prEvent_pure]
       simpa only [decide_eq_true good, ite_true, ENNReal.toReal_one] using
-        tvDist_le_one (left publicKey secretKey context pair.1 pair.2)
+        discreteDistance_le_one (left publicKey secretKey context pair.1 pair.2)
           (right publicKey secretKey context pair.1 pair.2)
   · refine le_of_eq_of_le ?_ ENNReal.toReal_nonneg
-    simp [after, proceed, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+    simp [after, proceed]
 
 /-- Averaging the original prechallenge execution requires agreement only on its actual supported states and does not condition the error on proceeding. -/
 theorem prepared_bound (baseImpl : QueryImpl baseSpec ProbComp)
@@ -115,11 +114,11 @@ theorem prepared_bound (baseImpl : QueryImpl baseSpec ProbComp)
       ∀ pair ∈ support (simulateQ (kemAmbientImpl baseImpl) (kem.encaps publicKey)),
         functional.result secretKey pair.1 = some pair.2 →
           left publicKey secretKey context pair.1 pair.2 = right publicKey secretKey context pair.1 pair.2) :
-    tvDist
+    discreteDistance
       (prepare baseImpl kem stopped publicKey secretKey >>= after baseImpl kem stopped left publicKey secretKey)
       (prepare baseImpl kem stopped publicKey secretKey >>= after baseImpl kem stopped right publicKey secretKey) ≤
       Pr{let x ← simulateQ (kemAmbientImpl baseImpl) (keyError kem publicKey secretKey)}[x = true].toReal := by
-  exact tvDist_bind_left_le_const _ _ _ _ (fun context supported =>
+  exact discreteDistance_bind_left_le_const _ _ _ _ (fun context supported =>
     after_bound baseImpl kem functional stopped left right publicKey secretKey context (agreement context supported))
 
 /-- One unconditioned ordinary correctness error bounds the complete original stopped execution. The only simulation premise concerns generated, reached, continuing good samples; it is not a primitive security assumption. -/
@@ -132,7 +131,7 @@ theorem main_bound (baseImpl : QueryImpl baseSpec ProbComp)
       ∀ pair ∈ support (simulateQ (kemAmbientImpl baseImpl) (kem.encaps keys.1)),
         functional.result keys.2 pair.1 = some pair.2 →
           left keys.1 keys.2 context pair.1 pair.2 = right keys.1 keys.2 context pair.1 pair.2) :
-    tvDist (main baseImpl kem stopped left) (main baseImpl kem stopped right) ≤
+    discreteDistance (main baseImpl kem stopped left) (main baseImpl kem stopped right) ≤
       Pr{let x ← simulateQ (kemAmbientImpl baseImpl) (errorExperiment kem)}[x = true].toReal := by
   simp only [main, PqxdhKemCorrectnessStopped.error_keygen, simulateQ_bind]
   apply average_supported

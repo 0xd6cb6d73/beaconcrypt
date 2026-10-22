@@ -417,7 +417,7 @@ theorem canonical_directRandom_advantage_bound (decode : RawDecoder) (c : Pqxdh.
     (sealBound : adversary.IsQueryBoundP AdaptiveCtxQueryBounds.SourceSeal qSeal)
     (rawBound : adversary.IsQueryBoundP IsRawQuery qRaw)
     (small : qSeal < 2 ^ 96) :
-    ENNReal.ofReal ((canonicalView decode c adversary).boolDistAdvantage (directRandomView decode adversary)) ≤
+    ENNReal.ofReal ((canonicalView decode c adversary).boolDistance (directRandomView decode adversary)) ≤
       ENNReal.ofReal (modifiedNonceAeadINDDollarAdvantage c
         (AdaptiveCtxPrefixValidation.validationReduction decode c adversary qHash)) +
       (qHash : ℝ≥0∞) * (((2 ^ 128 : ℕ) : ℝ≥0∞))⁻¹ +

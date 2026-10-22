@@ -1,5 +1,5 @@
 import VCVio.OracleComp.SimSemantics.Append
-import VCVio.OracleComp.Coercions.Add
+import VCVio.OracleComp.Coercions.Add.Basic
 
 /-!
 # Moving a lazily sampled table below a stack of interpreters (item 2, stage S1b, generic tools)
@@ -35,7 +35,7 @@ def tableAt (coins : ∀ {α : Type}, ProbComp α → OracleComp A α) (op : Que
 
 /-- Forward table queries through a stateless interpreter. -/
 def fwd (layer : QueryImpl A (OracleComp B)) : QueryImpl (A + T) (OracleComp (B + T)) :=
-  (fun query => OracleComp.liftComp (layer query) (B + T) : QueryImpl A (OracleComp (B + T))) +
+  QueryImpl.add (fun query => OracleComp.liftComp (layer query) (B + T) : QueryImpl A (OracleComp (B + T)))
     (fun query => ((B + T).query (.inr query) : OracleComp (B + T) _) : QueryImpl T (OracleComp (B + T)))
 
 /-- Forward table queries through an optional stateful interpreter. -/

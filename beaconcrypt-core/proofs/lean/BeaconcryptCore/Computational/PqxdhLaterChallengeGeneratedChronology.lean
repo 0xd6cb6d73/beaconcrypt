@@ -125,7 +125,7 @@ theorem run_reaches (depth : Nat)
   obtain ⟨rfl, rfl⟩ := Prod.mk.inj same
   change localPacket = Sum.inr (stored, Sum.inr pending) at shape
   change metadata = some details at captured
-  subst localPacket metadata
+  rw [shape, captured] at reached
   exact ⟨packet, cache, output, prepared, rfl, after_reaches setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed
     packet output depth stored pending details cache after reached⟩
 

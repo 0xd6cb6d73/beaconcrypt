@@ -94,12 +94,12 @@ theorem branchRaw_real_error (setup : PqxdhServerAuthExperiment.Setup baseSpec K
     (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes)
     (decision : X → Bool) (work : OracleComp (SourceSpec KemSK) X) (runtime : A)
     (count : Nat) (selected : Fin (count + 1)) (index : Nat) :
-    tvDist (branch setup codec checks ensureInit supplied decision work runtime count selected index true)
+    discreteDistance (branch setup codec checks ensureInit supplied decision work runtime count selected index true)
       (sourceReal setup codec checks ensureInit supplied decision work runtime count selected index) ≤
       correctnessError setup := by
   have point : ∀ (chosen : MlKem768PublicKey × KemSK) (context : Context KemSK A Bool count)
       (pair : MlKem768Ciphertext × MlKemSharedSecret),
-      tvDist (do
+      discreteDistance (do
           let uniform ← $ᵗ MlKemSharedSecret
           PqxdhRegistrationJointKemGame.decision <$> PqxdhDynamicKemPost.evaluate setup.baseImpl setup.kem chosen.2
             pair.1 (post setup count selected ⟨chosen.1, pair.1, context⟩ (if true then pair.2 else uniform)))
@@ -116,15 +116,15 @@ theorem branchRaw_real_error (setup : PqxdhServerAuthExperiment.Setup baseSpec K
         (functional.exact chosen.2 pair.1).trans (congrArg pure good)
       have same := PqxdhRegistrationJointKemResume.post_source setup count selected chosen context pair.1 pair.2
         agreement
-      simp only [↓reduceIte, same, tvDist_self]
+      simp only [↓reduceIte, same, discreteDistance_self]
       exact ENNReal.toReal_nonneg
     · have bad : (𝒟[simulateQ (kemAmbientImpl setup.baseImpl) (do
           let recovered ← setup.kem.decaps chosen.2 pair.1
           pure (decide (recovered ≠ some pair.2)))] {true}).toReal = 1 := by
         rw [functional.exact]
-        simp [good, -evalDist_apply_singleton, -evalDist_apply_setOf, -evalDist_apply_univ]
+        simp [good]
       rw [bad]
-      exact tvDist_le_one _ _
+      exact discreteDistance_le_one _ _
   unfold branch sourceReal
   refine le_trans (PqxdhHiddenRoot.tvDist_bind_left_le_probEvent_bind _ _ _
     (fun pair => simulateQ (kemAmbientImpl setup.baseImpl)
@@ -156,10 +156,10 @@ theorem advantageRaw_error (setup : PqxdhServerAuthExperiment.Setup baseSpec Kem
     (ensureInit : StateT A ProbComp Bool) (supplied : Option Pqxdh.Bytes)
     (decision : X → Bool) (work : OracleComp (SourceSpec KemSK) X) (runtime : A)
     (count : Nat) (selected : Fin (count + 1)) (index : Nat) :
-    (sourceReal setup codec checks ensureInit supplied decision work runtime count selected index).boolDistAdvantage
+    (sourceReal setup codec checks ensureInit supplied decision work runtime count selected index).boolDistance
       (branch setup codec checks ensureInit supplied decision work runtime count selected index false) ≤
-      setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
-        (adversary setup codec checks ensureInit supplied decision work runtime count selected index).toINDCCA +
+      (setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
+        (adversary setup codec checks ensureInit supplied decision work runtime count selected index).toINDCCA).toReal +
         correctnessError setup := by
   have exactHop := oneKey_indCCAAdvantage_eq_branchDist setup.kem
     (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
@@ -168,22 +168,22 @@ theorem advantageRaw_error (setup : PqxdhServerAuthExperiment.Setup baseSpec Kem
     (runtimeOfImpl_evalDist_bind (kemAmbientImpl setup.baseImpl))
     (runtimeOfImpl_evalDist_liftProbComp setup.baseImpl)
     (runtimeOfImpl_noFail_bool (kemAmbientImpl setup.baseImpl))
-  have hop : (branch setup codec checks ensureInit supplied decision work runtime count selected index true).boolDistAdvantage
+  have hop : (branch setup codec checks ensureInit supplied decision work runtime count selected index true).boolDistance
       (branch setup codec checks ensureInit supplied decision work runtime count selected index false) =
-      setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
-        (adversary setup codec checks ensureInit supplied decision work runtime count selected index).toINDCCA := by
-    simpa only [oneKeyBranch, runtimeOfImpl_evalDist, branchRaw_source, ProbComp.boolDistAdvantage,
-      MeasureTheory.Measure.boolDist, prEvent_eq_evalDist_singleton] using
-      exactHop.symm
-  have close : (sourceReal setup codec checks ensureInit supplied decision work runtime count selected index).boolDistAdvantage
+      (setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
+        (adversary setup codec checks ensureInit supplied decision work runtime count selected index).toINDCCA).toReal := by
+    simpa only [oneKeyBranch, runtimeOfImpl_evalDist, branchRaw_source, ProbComp.boolDistance,
+      MeasureTheory.Measure.toReal_boolDist, prEvent_eq_evalDist_singleton] using
+      congrArg ENNReal.toReal exactHop.symm
+  have close : (sourceReal setup codec checks ensureInit supplied decision work runtime count selected index).boolDistance
       (branch setup codec checks ensureInit supplied decision work runtime count selected index true) ≤
       correctnessError setup := by
-    rw [ProbComp.boolDistAdvantage_comm]
+    rw [ProbComp.boolDistance_comm]
     refine le_trans ?_ (branchRaw_real_error setup functional codec checks ensureInit supplied decision work runtime
       count selected index)
-    rw [ProbComp.boolDistAdvantage]
-    simpa only [VCVioLegacy.evalDist_singleton_eq_probOutput] using abs_probOutput_toReal_sub_le_tvDist _ _
-  have triangle := ProbComp.boolDistAdvantage_triangle
+    rw [ProbComp.boolDistance]
+    simpa only [← prEvent_eq_evalDist_singleton] using abs_prEvent_toReal_sub_le_discreteDistance _ _
+  have triangle := ProbComp.boolDistance_triangle
     (sourceReal setup codec checks ensureInit supplied decision work runtime count selected index)
     (branch setup codec checks ensureInit supplied decision work runtime count selected index true)
     (branch setup codec checks ensureInit supplied decision work runtime count selected index false)
@@ -199,8 +199,8 @@ theorem ideal_close (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (count : Nat) (selected : Fin (count + 1)) (index : Nat) :
     |(𝒟[sourceReal setup codec checks ensureInit supplied decision work runtime count selected index] {true}).toReal -
       (𝒟[branch setup codec checks ensureInit supplied decision work runtime count selected index false] {true}).toReal| ≤
-      setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
-        (adversary setup codec checks ensureInit supplied decision work runtime count selected index).toINDCCA +
+      (setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
+        (adversary setup codec checks ensureInit supplied decision work runtime count selected index).toINDCCA).toReal +
         correctnessError setup :=
   advantageRaw_error setup functional codec checks ensureInit supplied decision work runtime count selected index
 
@@ -213,10 +213,10 @@ theorem real_le_ideal (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (count : Nat) (selected : Fin (count + 1)) (index : Nat) :
     𝒟[sourceReal setup codec checks ensureInit supplied decision work runtime count selected index] {true} ≤
       𝒟[branch setup codec checks ensureInit supplied decision work runtime count selected index false] {true} +
-        ENNReal.ofReal (setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
-          (adversary setup codec checks ensureInit supplied decision work runtime count selected index).toINDCCA +
+        ENNReal.ofReal ((setup.kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl setup.baseImpl))
+          (adversary setup codec checks ensureInit supplied decision work runtime count selected index).toINDCCA).toReal +
           correctnessError setup) :=
-  (ProbComp.evalDist_apply_true_le_add_ofReal_boolDistAdvantage _ _).trans (add_le_add le_rfl
+  (ProbComp.evalDist_apply_true_le_add_ofReal_boolDistance _ _).trans (add_le_add le_rfl
     (ENNReal.ofReal_le_ofReal (advantageRaw_error setup functional codec checks ensureInit supplied decision work
       runtime count selected index)))
 

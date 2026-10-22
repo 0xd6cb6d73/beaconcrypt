@@ -47,18 +47,18 @@ theorem authenticated_root_bound
     (qRoot : Nat) (rootBound :
       (rootReduction env.source baseImpl kem (protocol env kem attachedVerify primitives program post accepted)).IsQueryBoundP IsRoot qRoot) :
     let p := protocol env kem attachedVerify primitives program post accepted
-    (actual env baseImpl kem attachedVerify primitives program post accepted).boolDistAdvantage
+    (actual env baseImpl kem attachedVerify primitives program post accepted).boolDistance
       (uniformGame (rootReduction env.source baseImpl kem p)) ≤
       (PqxdhJointIdentity.advantage primitives
         (PqxdhGeneratedPhase1Prefix.privateReduction primitives baseImpl kem setup
           (driver env.toDriverEnvironment program) fallback ordinaryFallback)).toReal +
       Pr{let x ← simulateQ (kemAmbientImpl baseImpl) (PqxdhKemCorrectnessError.errorExperiment kem)}[x = true].toReal +
-      kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
-        (PqxdhChallengeSecretRouting.reduction env.source kem p).toINDCCA +
+      (kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
+        (PqxdhChallengeSecretRouting.reduction env.source kem p).toINDCCA).toReal +
       PqxdhCorrelatedExtractFamily.advantage hmac
         (PqxdhCorrelatedExtractFamily.reduction env.source hmac baseImpl kem p) +
       ∑ index ∈ Finset.range qRoot,
-        (hmacPrfRealGame hmac (indexedReduction hmac (rootReduction env.source baseImpl kem p) index)).boolDistAdvantage
+        (hmacPrfRealGame hmac (indexedReduction hmac (rootReduction env.source baseImpl kem p) index)).boolDistance
           (hmacPrfRandomGame (indexedReduction hmac (rootReduction env.source baseImpl kem p) index)) := by
   have auth := PqxdhInitialRootEventSource.authentication_hop env baseImpl kem attachedVerify primitives program post accepted
     compatible adapter noSign noCreate fallback ordinaryFallback

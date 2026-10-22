@@ -25,7 +25,8 @@ def record (masked : Mask Slot) (coordinate : Coordinate Slot) (output : FullOut
 theorem record_realize (masked : Mask Slot) (hidden : RootOutput)
     (coordinate : Coordinate Slot) (output : FullOutput) (different : coordinate ≠ masked.coordinate) :
     table (record masked coordinate output) hidden = (table masked hidden).cacheQuery coordinate output := by
-  funext query
+  apply QueryCache.ext
+  intro query
   by_cases parent : query = masked.coordinate
   · subst query
     simp [table, record, realize, QueryCache.cacheQuery_of_ne, Ne.symm different]

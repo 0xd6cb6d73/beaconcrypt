@@ -122,7 +122,7 @@ theorem recorded_distance {Auxiliary Result : Type}
     (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
     (output : FullOutput) (target : RootOutput) (client : OracleComp Spec Result)
     (state : RawCtxSharedPrimitive.SharedState Auxiliary) :
-    tvDist ((simulateQ (RawCtxSelectedQueryTrace.recorded (handler source writer output) inputs) client).run (state, []))
+    discreteDistance ((simulateQ (RawCtxSelectedQueryTrace.recorded (handler source writer output) inputs) client).run (state, []))
       ((simulateQ (RawCtxSelectedQueryTrace.recorded (consistent source writer output target) inputs) client).run (state, [])) ≤
     Pr{let result ← (simulateQ (RawCtxSelectedQueryTrace.recorded (handler source writer output) inputs) client).run (state, [])}[target ∈ result.2.2].toReal :=
   RawCtxSelectedAliasCoupling.recorded_distance (handler source writer output)

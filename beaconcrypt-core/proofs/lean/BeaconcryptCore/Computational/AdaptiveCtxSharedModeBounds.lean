@@ -175,7 +175,7 @@ theorem selected_integrity_bound {count : Nat} (selectedDecode : RawDecoder)
     (sealBound : client.IsQueryBoundP (TargetClass SourceSeal) qSeal)
     (rawBound : client.IsQueryBoundP (TargetClass IsRawQuery) qRaw)
     (small : qSeal < 2 ^ 96) :
-    ENNReal.ofReal ((Prod.fst <$> sourceGame true selectedDecode real decode c keys client).boolDistAdvantage
+    ENNReal.ofReal ((Prod.fst <$> sourceGame true selectedDecode real decode c keys client).boolDistance
       (Prod.fst <$> sourceGame false selectedDecode real decode c keys client)) ≤
       ENNReal.ofReal (modifiedNonceAeadINDDollarAdvantage c
         (AdaptiveCtxPrefixValidation.validationReduction selectedDecode c (decisionClient real decode c keys client) qHash)) +

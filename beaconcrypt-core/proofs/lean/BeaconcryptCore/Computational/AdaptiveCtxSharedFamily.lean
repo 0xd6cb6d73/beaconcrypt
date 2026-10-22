@@ -295,7 +295,7 @@ theorem selected_integrity_bound {count : Nat} (selectedDecode : RawDecoder)
     (sealBound : client.IsQueryBoundP (TargetClass AdaptiveCtxQueryBounds.SourceSeal) qSeal)
     (rawBound : client.IsQueryBoundP (TargetClass AdaptiveCtxReceive.IsRawQuery) qRaw)
     (small : qSeal < 2 ^ 96) :
-    ENNReal.ofReal ((Prod.fst <$> sourceGame selectedDecode decode c keys client).boolDistAdvantage
+    ENNReal.ofReal ((Prod.fst <$> sourceGame selectedDecode decode c keys client).boolDistance
       (AdaptiveCtxPrivacyGuard.replayView selectedDecode c (decisionClient decode c keys client))) ≤
       ENNReal.ofReal (modifiedNonceAeadINDDollarAdvantage c
         (AdaptiveCtxPrefixValidation.validationReduction selectedDecode c (decisionClient decode c keys client) qHash)) +
@@ -324,7 +324,7 @@ theorem selected_privacy_bound {count : Nat} (selectedDecode : RawDecoder)
     (sealBound : client.IsQueryBoundP (TargetClass AdaptiveCtxQueryBounds.SourceSeal) qSeal)
     (rawBound : client.IsQueryBoundP (TargetClass AdaptiveCtxReceive.IsRawQuery) qRaw)
     (small : qSeal < 2 ^ 96) :
-    ENNReal.ofReal ((Prod.fst <$> sourceGame selectedDecode decode c keys client).boolDistAdvantage
+    ENNReal.ofReal ((Prod.fst <$> sourceGame selectedDecode decode c keys client).boolDistance
       (AdaptiveCtxPrivacyGuard.randomView selectedDecode (decisionClient decode c keys client))) ≤
       ENNReal.ofReal (modifiedNonceAeadINDDollarAdvantage c
         (AdaptiveCtxPrefixValidation.validationReduction selectedDecode c (decisionClient decode c keys client) qHash)) +

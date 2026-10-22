@@ -106,7 +106,7 @@ theorem source_exposure_distance {Metadata Auxiliary Result : Type} {serverCount
     (sender : Std.U64) (decode : RawCtxReceive.FrameDecoder)
     (owner : RawCtxProtocolReveals.Owner serverCount beaconCount) (target : RatchetChain)
     (client : OracleComp SourceSpec Result) (state : BaseState Metadata Auxiliary serverCount beaconCount) :
-    tvDist ((simulateQ (sourceImpl source writer sender decode owner) client).run (project target (state, false)))
+    discreteDistance ((simulateQ (sourceImpl source writer sender decode owner) client).run (project target (state, false)))
       (Prod.map id (project target) <$>
         (simulateQ (observedImpl source writer
           (RawCtxSourceHkdf.response source.crypto (RawCtxChainSend.nativeRequest target))
@@ -115,7 +115,7 @@ theorem source_exposure_distance {Metadata Auxiliary Result : Type} {serverCount
           (RawCtxSourceHkdf.response source.crypto (RawCtxChainSend.nativeRequest target))
           sender decode owner (nativeReader target)) client).run (state, false))}[result.2.2 = true].toReal := by
   rw [source_schedule]
-  exact (tvDist_map_le (Prod.map id (project target)) _ _).trans
+  exact (discreteDistance_map_le (Prod.map id (project target)) _ _).trans
     (exposure_distance source writer _ sender decode owner target client state)
 
 end BeaconcryptCore.Computational.RawCtxSelectedLiveSource

@@ -65,13 +65,14 @@ theorem routed_eq_real (source : FixedHkdfSha512NoSaltSource)
 theorem routed_indCCA (source : FixedHkdfSha512NoSaltSource)
     (baseImpl : QueryImpl baseSpec ProbComp)
     (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK)) (protocol : Protocol baseSpec) :
-    (routedMain source baseImpl kem protocol).boolDistAdvantage
+    (routedMain source baseImpl kem protocol).boolDistance
       (simulateQ (kemAmbientImpl baseImpl)
         (randomMain source kem (runtimeOfImpl (kemAmbientImpl baseImpl)) protocol)) =
-      kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
-        (PqxdhChallengeSecretRouting.reduction source kem protocol).toINDCCA := by
-  simp only [ProbComp.boolDistAdvantage]
+      (kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
+        (PqxdhChallengeSecretRouting.reduction source kem protocol).toINDCCA).toReal := by
+  rw [ProbComp.boolDistance_eq_toReal_boolDist]
   rw [routed_eq_real, random_eq_branch]
+  apply congrArg ENNReal.toReal
   exact (oneKey_indCCAAdvantage_eq_branchDist kem (runtimeOfImpl (kemAmbientImpl baseImpl))
     (PqxdhChallengeSecretRouting.reduction source kem protocol)
     (runtimeOfImpl_evalDist_pure _) (runtimeOfImpl_evalDist_bind _)
@@ -95,12 +96,12 @@ theorem actual_routed_bound (source : FixedHkdfSha512NoSaltSource)
     (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK)) (functional : FunctionalDecapsulation kem)
     (protocol : Protocol baseSpec) (actual : PqxdhAuthenticatedRootCorrectness.After protocol.State KemSK Bool)
     (agreement : GoodSimulation source baseImpl kem functional protocol actual) :
-    (PqxdhAuthenticatedRootCorrectness.main baseImpl kem (protocolPrefix protocol) actual).boolDistAdvantage
+    (PqxdhAuthenticatedRootCorrectness.main baseImpl kem (protocolPrefix protocol) actual).boolDistance
       (routedMain source baseImpl kem protocol) ≤
       Pr{let x ← simulateQ (kemAmbientImpl baseImpl) (PqxdhKemCorrectnessError.errorExperiment kem)}[x = true].toReal := by
-  rw [ProbComp.boolDistAdvantage, VCVioLegacy.evalDist_singleton_eq_probOutput,
-    VCVioLegacy.evalDist_singleton_eq_probOutput]
-  exact (abs_probOutput_toReal_sub_le_tvDist _ _).trans
+  rw [ProbComp.boolDistance, ← prEvent_eq_evalDist_singleton,
+    ← prEvent_eq_evalDist_singleton]
+  exact (abs_prEvent_toReal_sub_le_discreteDistance _ _).trans
     (PqxdhAuthenticatedRootCorrectness.main_bound baseImpl kem functional (protocolPrefix protocol)
       actual (routedAfter source baseImpl kem protocol)
       (fun keys generated state reached _ pair encapsulated good =>
@@ -112,23 +113,23 @@ theorem routed_uniform_bound (source : FixedHkdfSha512NoSaltSource)
     (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK)) (protocol : Protocol baseSpec)
     (hmac : HmacSha512) (sourceCorrect : SourceRootCorrect source hmac)
     (qRoot : Nat) (rootBound : (rootReduction source baseImpl kem protocol).IsQueryBoundP IsRoot qRoot) :
-    (routedMain source baseImpl kem protocol).boolDistAdvantage
+    (routedMain source baseImpl kem protocol).boolDistance
       (uniformGame (rootReduction source baseImpl kem protocol)) ≤
-      kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
-        (PqxdhChallengeSecretRouting.reduction source kem protocol).toINDCCA +
+      (kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
+        (PqxdhChallengeSecretRouting.reduction source kem protocol).toINDCCA).toReal +
       PqxdhCorrelatedExtractFamily.advantage hmac
         (PqxdhCorrelatedExtractFamily.reduction source hmac baseImpl kem protocol) +
       ∑ index ∈ Finset.range qRoot,
-        (hmacPrfRealGame hmac (indexedReduction hmac (rootReduction source baseImpl kem protocol) index)).boolDistAdvantage
+        (hmacPrfRealGame hmac (indexedReduction hmac (rootReduction source baseImpl kem protocol) index)).boolDistance
           (hmacPrfRandomGame (indexedReduction hmac (rootReduction source baseImpl kem protocol) index)) := by
   have family := PqxdhCorrelatedExtractFamily.correlated_advantage_eq source hmac sourceCorrect baseImpl kem protocol
   rw [reduction_expanded_eq] at family
-  have first := (ProbComp.boolDistAdvantage_triangle (routedMain source baseImpl kem protocol)
+  have first := (ProbComp.boolDistance_triangle (routedMain source baseImpl kem protocol)
     (simulateQ (kemAmbientImpl baseImpl)
       (randomMain source kem (runtimeOfImpl (kemAmbientImpl baseImpl)) protocol))
     (expandedGame hmac (rootReduction source baseImpl kem protocol))).trans
       (add_le_add (le_of_eq (routed_indCCA source baseImpl kem protocol)) (le_of_eq family))
-  exact (ProbComp.boolDistAdvantage_triangle _
+  exact (ProbComp.boolDistance_triangle _
     (expandedGame hmac (rootReduction source baseImpl kem protocol)) _).trans
       (add_le_add first (expanded_uniform_bound hmac _ qRoot rootBound))
 
@@ -140,18 +141,18 @@ theorem actual_uniform_bound (source : FixedHkdfSha512NoSaltSource)
     (agreement : GoodSimulation source baseImpl kem functional protocol actual)
     (hmac : HmacSha512) (sourceCorrect : SourceRootCorrect source hmac)
     (qRoot : Nat) (rootBound : (rootReduction source baseImpl kem protocol).IsQueryBoundP IsRoot qRoot) :
-    (PqxdhAuthenticatedRootCorrectness.main baseImpl kem (protocolPrefix protocol) actual).boolDistAdvantage
+    (PqxdhAuthenticatedRootCorrectness.main baseImpl kem (protocolPrefix protocol) actual).boolDistance
       (uniformGame (rootReduction source baseImpl kem protocol)) ≤
       Pr{let x ← simulateQ (kemAmbientImpl baseImpl) (PqxdhKemCorrectnessError.errorExperiment kem)}[x = true].toReal +
-      kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
-        (PqxdhChallengeSecretRouting.reduction source kem protocol).toINDCCA +
+      (kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
+        (PqxdhChallengeSecretRouting.reduction source kem protocol).toINDCCA).toReal +
       PqxdhCorrelatedExtractFamily.advantage hmac
         (PqxdhCorrelatedExtractFamily.reduction source hmac baseImpl kem protocol) +
       ∑ index ∈ Finset.range qRoot,
-        (hmacPrfRealGame hmac (indexedReduction hmac (rootReduction source baseImpl kem protocol) index)).boolDistAdvantage
+        (hmacPrfRealGame hmac (indexedReduction hmac (rootReduction source baseImpl kem protocol) index)).boolDistance
           (hmacPrfRandomGame (indexedReduction hmac (rootReduction source baseImpl kem protocol) index)) := by
   simpa only [add_assoc] using
-    (ProbComp.boolDistAdvantage_triangle _ (routedMain source baseImpl kem protocol) _).trans
+    (ProbComp.boolDistance_triangle _ (routedMain source baseImpl kem protocol) _).trans
       (add_le_add (actual_routed_bound source baseImpl kem functional protocol actual agreement)
         (routed_uniform_bound source baseImpl kem protocol hmac sourceCorrect qRoot rootBound))
 
@@ -164,20 +165,20 @@ theorem authenticated_uniform_bound (source : FixedHkdfSha512NoSaltSource)
     (hmac : HmacSha512) (sourceCorrect : SourceRootCorrect source hmac)
     (qRoot : Nat) (rootBound : (rootReduction source baseImpl kem protocol).IsQueryBoundP IsRoot qRoot)
     (game : ProbComp Bool) (authenticationLoss : ℝ)
-    (authentication : game.boolDistAdvantage
+    (authentication : game.boolDistance
       (PqxdhAuthenticatedRootCorrectness.main baseImpl kem (protocolPrefix protocol) actual) ≤ authenticationLoss) :
-    game.boolDistAdvantage (uniformGame (rootReduction source baseImpl kem protocol)) ≤
+    game.boolDistance (uniformGame (rootReduction source baseImpl kem protocol)) ≤
       authenticationLoss +
       Pr{let x ← simulateQ (kemAmbientImpl baseImpl) (PqxdhKemCorrectnessError.errorExperiment kem)}[x = true].toReal +
-      kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
-        (PqxdhChallengeSecretRouting.reduction source kem protocol).toINDCCA +
+      (kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
+        (PqxdhChallengeSecretRouting.reduction source kem protocol).toINDCCA).toReal +
       PqxdhCorrelatedExtractFamily.advantage hmac
         (PqxdhCorrelatedExtractFamily.reduction source hmac baseImpl kem protocol) +
       ∑ index ∈ Finset.range qRoot,
-        (hmacPrfRealGame hmac (indexedReduction hmac (rootReduction source baseImpl kem protocol) index)).boolDistAdvantage
+        (hmacPrfRealGame hmac (indexedReduction hmac (rootReduction source baseImpl kem protocol) index)).boolDistance
           (hmacPrfRandomGame (indexedReduction hmac (rootReduction source baseImpl kem protocol) index)) := by
   simpa only [add_assoc] using
-    (ProbComp.boolDistAdvantage_triangle game
+    (ProbComp.boolDistance_triangle game
       (PqxdhAuthenticatedRootCorrectness.main baseImpl kem (protocolPrefix protocol) actual) _).trans
       (add_le_add authentication
         (actual_uniform_bound source baseImpl kem functional protocol actual agreement hmac sourceCorrect qRoot rootBound))

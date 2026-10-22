@@ -134,7 +134,7 @@ theorem hitAt_bound (modes : Label n → KeyMode) (setup : Setup baseSpec KemSK)
     · exact (card.symm.trans (Finset.sum_congr rfl fun offsets _ => same offsets)).le.trans sum
   case pos =>
     rw [same (fun _ => 0), evalDist_map_true]
-    simp [shiftedHit, Nat.not_le_of_gt short, -evalDist_apply_singleton]
+    simp [shiftedHit, Nat.not_le_of_gt short]
 
 /-- Adaptive fresh-message guessing in the zeroed later world is bounded by `2^{-min}`, without an index-selection loss: the disjoint adaptive claims provide their own probability weights. -/
 theorem fresh_zeros (modes : Label n → KeyMode) (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)

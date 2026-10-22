@@ -62,7 +62,7 @@ theorem uniform_idealKeysL (setup : Setup baseSpec KemSK) (codec : Codec Reader 
     (work : OracleComp (PqxdhDeploymentLaterServerSource.Spec KemSK) X) (runtime : A) (count : Nat)
     (selected : Fin (count + 1)) (index : Nat) (correct : SourceFullCorrect setup.source setup.hmac) :
     (uniformGame (rootClientL (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count
-        selected index)).boolDistAdvantage
+        selected index)).boolDistance
       (PqxdhServerAuthKeySchedule.uniformGame (entryDL (Reader := Reader) setup codec checks ensureInit supplied
         decision work runtime count selected index)) ≤
       keyScheduleBound setup.source setup.hmac (entryDL (Reader := Reader) setup codec checks ensureInit supplied
@@ -80,18 +80,18 @@ theorem opaqueBranchL_idealKeys_two (setup : Setup baseSpec KemSK) (codec : Code
       (fun query => PqxdhDeploymentLaterServerReserve.laterKind (KemSK := KemSK) query = some kind) (budget kind))
     (correct : SourceFullCorrect setup.source setup.hmac) :
     (opaqueBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index
-        false).boolDistAdvantage
+        false).boolDistance
       (PqxdhServerAuthKeySchedule.uniformGame (entryDL (Reader := Reader) setup codec checks ensureInit supplied
         decision work runtime count selected index)) ≤
       ((budget (.inl 3) + budget (.inl 5) + budget (.inl 6) : ℕ) : ℝ) / 2 ^ 256 +
         ∑ slot ∈ Finset.range 2,
           (hmacPrfRealGame setup.hmac (indexedReduction setup.hmac (rootClientL (Reader := Reader) setup codec checks
-            ensureInit supplied decision work runtime count selected index) slot)).boolDistAdvantage
+            ensureInit supplied decision work runtime count selected index) slot)).boolDistance
             (hmacPrfRandomGame (indexedReduction setup.hmac (rootClientL (Reader := Reader) setup codec checks
               ensureInit supplied decision work runtime count selected index) slot)) +
         keyScheduleBound setup.source setup.hmac (entryDL (Reader := Reader) setup codec checks ensureInit supplied
           decision work runtime count selected index) :=
-  (ProbComp.boolDistAdvantage_triangle _ _ _).trans (add_le_add
+  (ProbComp.boolDistance_triangle _ _ _).trans (add_le_add
     (opaqueBranchL_uniform_two setup codec checks ensureInit supplied decision work runtime count selected index budget
       certified)
     (uniform_idealKeysL setup codec checks ensureInit supplied decision work runtime count selected index correct))
@@ -116,7 +116,7 @@ theorem uniform_slotsL (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
     (work : OracleComp (PqxdhDeploymentLaterServerSource.Spec KemSK) X) (runtime : A) (count : Nat)
     (selected : Fin (count + 1)) (index : Nat) (correct : SourceFullCorrect setup.source setup.hmac) :
     (uniformGame (rootClientL (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count
-        selected index)).boolDistAdvantage
+        selected index)).boolDistance
       (laterSlotGame (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected
         index 2) ≤
       ∑ k ∈ Finset.range 2, keyScheduleBound setup.source setup.hmac
@@ -135,20 +135,20 @@ theorem opaqueBranchL_allIdeal_two (setup : Setup baseSpec KemSK) (codec : Codec
       (fun query => PqxdhDeploymentLaterServerReserve.laterKind (KemSK := KemSK) query = some kind) (budget kind))
     (correct : SourceFullCorrect setup.source setup.hmac) :
     (opaqueBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index
-        false).boolDistAdvantage
+        false).boolDistance
       ((simulateQ lazyImpl (entryClientL (Reader := Reader) setup codec checks ensureInit supplied decision work runtime
         count selected index)).run' (∅ : (PqxdhCorrelatedExtractFamily.Message →ₒ Output).QueryCache)) ≤
       ((budget (.inl 3) + budget (.inl 5) + budget (.inl 6) : ℕ) : ℝ) / 2 ^ 256 +
         ∑ slot ∈ Finset.range 2,
           (hmacPrfRealGame setup.hmac (indexedReduction setup.hmac (rootClientL (Reader := Reader) setup codec checks
-            ensureInit supplied decision work runtime count selected index) slot)).boolDistAdvantage
+            ensureInit supplied decision work runtime count selected index) slot)).boolDistance
             (hmacPrfRandomGame (indexedReduction setup.hmac (rootClientL (Reader := Reader) setup codec checks
               ensureInit supplied decision work runtime count selected index) slot)) +
         ∑ k ∈ Finset.range 2, keyScheduleBound setup.source setup.hmac
           (entryDkL (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index
             k) := by
   rw [← laterSlotGame_two]
-  exact (ProbComp.boolDistAdvantage_triangle _ _ _).trans (add_le_add
+  exact (ProbComp.boolDistance_triangle _ _ _).trans (add_le_add
     (opaqueBranchL_uniform_two setup codec checks ensureInit supplied decision work runtime count selected index budget
       certified)
     (uniform_slotsL setup codec checks ensureInit supplied decision work runtime count selected index correct))
@@ -164,12 +164,12 @@ theorem opaqueBranchL_slots_two (setup : Setup baseSpec KemSK) (codec : Codec Re
       (fun query => PqxdhDeploymentLaterServerReserve.laterKind (KemSK := KemSK) query = some kind) (budget kind))
     (correct : SourceFullCorrect setup.source setup.hmac) :
     (opaqueBranch (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index
-        false).boolDistAdvantage
+        false).boolDistance
       (laterSlotGame (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected
         index 2) ≤
       slotLossL (Reader := Reader) setup codec checks ensureInit supplied decision work runtime count selected index
         budget :=
-  (ProbComp.boolDistAdvantage_triangle _ _ _).trans (add_le_add
+  (ProbComp.boolDistance_triangle _ _ _).trans (add_le_add
     (opaqueBranchL_uniform_two setup codec checks ensureInit supplied decision work runtime count selected index budget
       certified)
     (uniform_slotsL setup codec checks ensureInit supplied decision work runtime count selected index correct))
@@ -197,7 +197,7 @@ theorem later_slots_two {Out : Type} (setup : Setup baseSpec KemSK) (codec : Cod
     (opaqueBranch (Reader := Reader) setup codec checks ensureInit none
         (PqxdhDeploymentLaterServerTransfer.decision setup.source.crypto codec setup.serverKeyId budget event claim g)
         (PqxdhDeploymentLaterServerCompile.compileServer setup codec route bounds mode first second) runtime
-        budget.create (PqxdhDeploymentKemTransfer.selectedKem budget g) g.1.val false).boolDistAdvantage
+        budget.create (PqxdhDeploymentKemTransfer.selectedKem budget g) g.1.val false).boolDistance
       (laterSlotGame (Reader := Reader) setup codec checks ensureInit none
         (PqxdhDeploymentLaterServerTransfer.decision setup.source.crypto codec setup.serverKeyId budget event claim g)
         (PqxdhDeploymentLaterServerCompile.compileServer setup codec route bounds mode first second) runtime

@@ -65,7 +65,7 @@ theorem query_exact (query : HashSpec.Domain) (state : CtxPrivate n) :
         rw [QueryImpl.withCaching_run_some _ combined, QueryImpl.withCaching_run_some _ hit]
         simp only [map_pure]
         have unchanged : state.base.primitive.2.cacheQuery ((), bytes) digest = state.base.primitive.2 := by
-          funext query
+          refine QueryCache.ext (fun query => ?_)
           by_cases same : query = ((), bytes)
           · subst query; simp [hit]
           · simp [QueryCache.cacheQuery, same]

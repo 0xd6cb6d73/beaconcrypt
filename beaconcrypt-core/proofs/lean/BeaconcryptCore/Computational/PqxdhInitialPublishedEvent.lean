@@ -60,7 +60,7 @@ theorem checked_bound (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMix
     (selected : RawCtxProtocolReveals.Owner S B) (number : Std.U64) (earlier : List RatchetChain)
     (n : Nat) (depth : continuation.depth context.1 = some n) :
     (PqxdhInitialCheckedFreshness.actualDecision target earlier disclosed (fun result => Gate selected number result.1.1) <$>
-      PqxdhInitialCheckedFreshness.nativeRun source writer mark sender route decode continuation context target output disclosed state candidates).boolDistAdvantage
+      PqxdhInitialCheckedFreshness.nativeRun source writer mark sender route decode continuation context target output disclosed state candidates).boolDistance
       (PqxdhInitialParentStoppedHop.decision
         (PqxdhInitialCheckedFreshness.remainingEvent earlier disclosed (fun result => Gate selected number result.1.1)) <$>
         PqxdhInitialCheckedFreshness.maskedRun source writer mark sender route decode continuation context output disclosed state candidates) ≤
