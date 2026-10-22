@@ -7,3 +7,6 @@ license = "Apache-2.0 AND 0BSD"
 readme = "README.md"
 description = "Generated deterministic CBOR transport codecs for beaconcrypt"
 repository = "https://github.com/0xd6cb6d73/beaconcrypt"
+
+[dev-dependencies]
+proptest = { version = "1", default-features = false, features = ["std"] }

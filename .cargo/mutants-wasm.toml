@@ -1,0 +1,13 @@
+additional_cargo_args = ["--locked"]
+test_workspace = false
+gitignore = true
+
+# Keep exact locations so source edits require reviewing these equivalences again.
+exclude_re = [
+	# Pointer and length occupy disjoint 32-bit halves, so OR and XOR agree.
+	"^beaconcrypt-wasm/src/abi\\.rs:161:57: replace \\| with \\^ in encode_result$",
+	# wasm32 rejects reservations above isize::MAX; the production 256 MiB guest cap
+	# also rejects i32::MAX itself. Both changed guards therefore still return zero.
+	"^beaconcrypt-wasm/src/abi\\.rs:130:21: replace > with == in bc_alloc$",
+	"^beaconcrypt-wasm/src/abi\\.rs:130:21: replace > with >= in bc_alloc$",
+]

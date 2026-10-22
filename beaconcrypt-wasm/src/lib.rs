@@ -362,3 +362,9 @@ pub extern "C" fn bc_call(
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod abi_tests;
+
+#[cfg(test)]
+mod store_tests;

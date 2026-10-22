@@ -82,14 +82,15 @@ The `-a` flag is required after rebuilding the Rust static library because Go's 
 
 ### Mutation testing
 
-Install `cargo-mutants` 27.1.0 and run the complete workspace mutation suite:
+Install `cargo-mutants` 27.1.0 and run both native and WASI mutation campaigns:
 
 ```bash
 cargo install --locked cargo-mutants@27.1.0
-cargo mutants --workspace --jobs 8
+PROPTEST_RNG_SEED=104729 cargo mutants --workspace --jobs 8
+bash scripts/test-wasm.sh --mutants --jobs 4 --output .build/wasm-mutations
 ```
 
-The [configuration](.cargo/mutants.toml) exercises all three crates through workspace tests and excludes imported generated parser sources, equivalent private-state mutations, and adapters covered by the Go and Python suites. After substantial code additions, every viable mutant must be caught; `mutants.out/missed.txt` and `mutants.out/timeout.txt` must be empty. Finish validation with a complete run without `--iterate`.
+The [native configuration](.cargo/mutants.toml) exercises the adapter, core, and parser through workspace tests and excludes imported generated parser sources, equivalent private-state mutations, and adapters covered by other targets. The [guest configuration](.cargo/mutants-wasm.toml) exercises the Wasm ABI and host callbacks on actual `wasm32-wasip1` with the production memory bound. The guest script requires Go and the Rust target and Zig versions pinned in [wasm-toolchain.json](scripts/wasm-toolchain.json). After substantial code additions, every viable mutant must be caught; `missed.txt` and `timeout.txt` must be empty in both `mutants.out/` and `.build/wasm-mutations/mutants.out/`. Finish validation with complete runs without `--iterate`. See the [property-testing guide](doc/impl/property-based-testing.md) for generated cases, seed replay, and the additional CI campaigns.
 
 ### Reproducing known-answer test vectors
 
