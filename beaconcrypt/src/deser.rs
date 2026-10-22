@@ -2,6 +2,8 @@
 
 #[cfg(feature = "server")]
 use super::{EstablishedRemote, SignType, decode_sign};
+#[cfg(feature = "server")]
+use crate::auth::MldsaIdentity;
 use crate::ratchet::{AEAD_KEY_LEN, AEAD_NONCE_LEN, KDF_STATE_SIZE, KeyMaterial, RatchetManager};
 use crate::shared::{roles, systems};
 use beaconcrypt_core::ratchet as verified_ratchet;
@@ -334,6 +336,7 @@ impl<'de> Deserialize<'de> for RatchetManager {
 struct RemotePrincipalData {
 	pk: Vec<u8>,
 	ratchet: RatchetManager,
+	mldsa_public_key_hash: SecretBytes<64>,
 }
 
 #[cfg(feature = "server")]
@@ -347,7 +350,7 @@ impl<'de> Deserialize<'de> for EstablishedRemote<crypto_sign::PublicKey> {
 			.map_err(|error| D::Error::custom(error.to_string()))?;
 		let pk = crypto_sign::PublicKey::from_bytes(&decoded)
 			.map_err(|_| D::Error::custom("invalid Ed25519 public key"))?;
-		Ok(Self::new(pk, data.ratchet))
+		Ok(Self::new(pk, data.ratchet, *data.mldsa_public_key_hash.0))
 	}
 }
 
@@ -360,6 +363,7 @@ struct ServerStateData {
 	server_kid: u64,
 	known_ids: DuplicateRejectingU64Map<EstablishedRemote<crypto_sign::PublicKey>>,
 	consumed_registrations: Vec<Vec<u8>>,
+	mldsa_identity_seed: SecretBytes<32>,
 }
 
 #[cfg(feature = "server")]
@@ -369,6 +373,7 @@ type DeserializedServerState = (
 	u64,
 	HashMap<u64, EstablishedRemote<crypto_sign::PublicKey>>,
 	HashSet<[u8; beaconcrypt_core::pqxdh::REGISTRATION_ID_SIZE]>,
+	MldsaIdentity,
 );
 
 #[cfg(feature = "server")]
@@ -379,6 +384,7 @@ pub(crate) fn deserialize_server_state(state: &str) -> Option<DeserializedServer
 		server_kid,
 		known_ids: DuplicateRejectingU64Map(known_ids),
 		consumed_registrations,
+		mldsa_identity_seed,
 	} = serde_json::from_str(state).ok()?;
 
 	if identity_key_kid > server_kid
@@ -396,8 +402,16 @@ pub(crate) fn deserialize_server_state(state: &str) -> Option<DeserializedServer
 	}
 
 	let keypair = crypto_sign::KeyPair::from_seed(identity_key.buffer.0.as_slice()).ok()?;
+	let mldsa_identity = MldsaIdentity::from_seed(*mldsa_identity_seed.0);
 
-	Some((keypair, identity_key_kid, server_kid, known_ids, consumed))
+	Some((
+		keypair,
+		identity_key_kid,
+		server_kid,
+		known_ids,
+		consumed,
+		mldsa_identity,
+	))
 }
 #[cfg(test)]
 mod tests {
@@ -556,8 +570,111 @@ mod tests {
 		let server = crate::Server::new(
 			server_kid,
 			Some(&[0x31; libsodium_rs::crypto_sign::SEEDBYTES]),
+			Some(&[0x32; 32]),
 		);
 		serde_json::from_str(&server.serialize_state().unwrap()).unwrap()
+	}
+
+	#[cfg(feature = "server")]
+	fn server_value_with_peers() -> Value {
+		let mut state = serialized_server_value(9);
+		let remote = crypto_sign::KeyPair::from_seed(&[0x36; crypto_sign::SEEDBYTES]).unwrap();
+		let peer = serde_json::to_value(EstablishedRemote::new(
+			remote.public_key,
+			RatchetManager::default(),
+			[0x35; 64],
+		))
+		.unwrap();
+		state["known_ids"] = json!({"8": peer.clone(), "9": peer});
+		state["consumed_registrations"] = json!([vec![0x37; 64], vec![0x38; 64]]);
+		state
+	}
+
+	#[cfg(feature = "server")]
+	fn reserialize_server(state: &DeserializedServerState) -> String {
+		crate::shared::serialize_server_state(
+			&state.0, state.1, state.2, &state.3, &state.4, &state.5,
+		)
+		.unwrap()
+	}
+
+	#[cfg(feature = "server")]
+	#[test]
+	fn server_restore_rejects_legacy_identity_and_peer_records() {
+		let state = server_value_with_peers();
+		let mut legacy_identity = state.clone();
+		legacy_identity
+			.as_object_mut()
+			.unwrap()
+			.remove("mldsa_identity_seed");
+		assert!(deserialize_server_state(&legacy_identity.to_string()).is_none());
+		for key_id in ["8", "9"] {
+			let mut legacy_peer = state.clone();
+			legacy_peer["known_ids"][key_id]
+				.as_object_mut()
+				.unwrap()
+				.remove("mldsa_public_key_hash");
+			assert!(deserialize_server_state(&legacy_peer.to_string()).is_none());
+		}
+	}
+
+	#[cfg(feature = "server")]
+	#[test]
+	fn mldsa_server_round_trip_preserves_seed_and_each_peer_hash() {
+		let seed = [0x39; 32];
+		let first_hash = [0x3a; 64];
+		let second_hash = [0x3b; 64];
+		let mut expected = server_value_with_peers();
+		expected["mldsa_identity_seed"] = json!(seed.to_vec());
+		expected["known_ids"]["8"]["mldsa_public_key_hash"] = json!(first_hash.to_vec());
+		expected["known_ids"]["9"]["mldsa_public_key_hash"] = json!(second_hash.to_vec());
+
+		let restored = deserialize_server_state(&expected.to_string()).unwrap();
+		assert_eq!(restored.5.to_seed().as_slice(), &seed);
+		assert_eq!(restored.3[&8].mldsa_public_key_hash(), &first_hash);
+		assert_eq!(restored.3[&9].mldsa_public_key_hash(), &second_hash);
+		let canonical = reserialize_server(&restored);
+		assert_eq!(serde_json::from_str::<Value>(&canonical).unwrap(), expected);
+		assert_eq!(
+			reserialize_server(&deserialize_server_state(&canonical).unwrap()),
+			canonical
+		);
+	}
+
+	#[cfg(feature = "server")]
+	#[test]
+	fn mldsa_identity_round_trips_before_any_peer_is_registered() {
+		let state = serialized_server_value(9);
+		let restored = deserialize_server_state(&state.to_string()).unwrap();
+		assert!(restored.3.is_empty());
+		assert_eq!(restored.5.to_seed().as_slice(), &[0x32; 32]);
+		assert_eq!(
+			serde_json::from_str::<Value>(&reserialize_server(&restored)).unwrap(),
+			state
+		);
+	}
+
+	#[cfg(feature = "server")]
+	#[test]
+	fn mldsa_persistence_fields_require_exact_byte_widths_and_non_null_values() {
+		for length in [0, 31, 33] {
+			let mut state = serialized_server_value(9);
+			state["mldsa_identity_seed"] = json!(vec![0x3f; length]);
+			assert!(deserialize_server_state(&state.to_string()).is_none());
+		}
+		for length in [0, 63, 65] {
+			let mut state = server_value_with_peers();
+			state["mldsa_identity_seed"] = json!(vec![0x40; 32]);
+			state["known_ids"]["8"]["mldsa_public_key_hash"] = json!(vec![0x41; length]);
+			state["known_ids"]["9"]["mldsa_public_key_hash"] = json!(vec![0x42; 64]);
+			assert!(deserialize_server_state(&state.to_string()).is_none());
+		}
+		let mut state = serialized_server_value(9);
+		state["mldsa_identity_seed"] = Value::Null;
+		assert!(deserialize_server_state(&state.to_string()).is_none());
+		let mut state = server_value_with_peers();
+		state["known_ids"]["8"]["mldsa_public_key_hash"] = Value::Null;
+		assert!(deserialize_server_state(&state.to_string()).is_none());
 	}
 
 	#[cfg(feature = "server")]
@@ -570,22 +687,18 @@ mod tests {
 		state["identity_key_kid"] = json!(6);
 		assert!(deserialize_server_state(&state.to_string()).is_some());
 
-		let mut server = crate::Server::new(7, Some(&[0x32; libsodium_rs::crypto_sign::SEEDBYTES]));
-		let remote = crypto_sign::KeyPair::from_seed(&[0x33; crypto_sign::SEEDBYTES]).unwrap();
-		server.add_known_kid(8, remote.public_key);
-		let mut state: Value = serde_json::from_str(&server.serialize_state().unwrap()).unwrap();
-		state["consumed_registrations"] = json!(vec![vec![0; 64]]);
+		let mut state = server_value_with_peers();
+		let peer = state["known_ids"]["8"].clone();
+		state["known_ids"] = json!({"10": peer});
 		assert!(deserialize_server_state(&state.to_string()).is_none());
 	}
 
 	#[cfg(feature = "server")]
 	#[test]
 	fn server_state_requires_a_consumed_registration_for_every_peer() {
-		let mut server = crate::Server::new(7, Some(&[0x34; libsodium_rs::crypto_sign::SEEDBYTES]));
-		let remote = crypto_sign::KeyPair::from_seed(&[0x35; crypto_sign::SEEDBYTES]).unwrap();
-		server.add_known_kid(7, remote.public_key);
-		let state = server.serialize_state().unwrap();
-		assert!(deserialize_server_state(&state).is_none());
+		let mut state = server_value_with_peers();
+		state["consumed_registrations"] = json!([]);
+		assert!(deserialize_server_state(&state.to_string()).is_none());
 	}
 
 	#[test]

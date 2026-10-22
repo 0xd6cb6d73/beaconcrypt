@@ -6,7 +6,7 @@ use beaconcrypt::{
 	Beacon, PersistenceError, PersistentServer, ProviderBeacon, ProviderServer, Server,
 	ServerSnapshot, SnapshotHead, SnapshotStore,
 };
-use beaconcrypt_parse::{MAX_MESSAGE_SIZE, decode_frame, decode_response, encoded_frame_len};
+use beaconcrypt_parse::{MAX_MESSAGE_SIZE, decode_frame, encoded_frame_len};
 use std::sync::{Arc, Mutex};
 
 #[derive(Default)]
@@ -70,8 +70,12 @@ impl SnapshotStore for Store {
 
 #[test]
 fn complete_frame_limit_is_inclusive_and_rejections_preserve_ratchets() {
-	let mut server = Server::new(0, None);
-	let mut beacon = Beacon::new(0, server.identity_pk().as_bytes());
+	let mut server = Server::new(0, None, None);
+	let mut beacon = Beacon::new(
+		0,
+		server.identity_pk().as_bytes(),
+		&server.mldsa_public_key(),
+	);
 	let init = beacon.get_registration_bundle().unwrap();
 	let accepted = server.get_shared_secret(&init).unwrap();
 	let response = server.build_registration_response(accepted, None).unwrap();
@@ -111,13 +115,17 @@ fn complete_frame_limit_is_inclusive_and_rejections_preserve_ratchets() {
 
 #[test]
 fn flattened_registration_response_accepts_the_exact_complete_message_limit() {
-	let mut server = Server::new(0, None);
-	let mut beacon = Beacon::new(0, server.identity_pk().as_bytes());
+	let mut server = Server::new(0, None, None);
+	let mut beacon = Beacon::new(
+		0,
+		server.identity_pk().as_bytes(),
+		&server.mldsa_public_key(),
+	);
 	let init = beacon.get_registration_bundle().unwrap();
 	let accepted = server.get_shared_secret(&init).unwrap();
 	// The outer response adds 1,168 bytes to its raw payload at this size; the
 	// payload adds the eight-byte assigned-ID binding, tag, and commitment.
-	let application = vec![0x63; MAX_MESSAGE_SIZE - 1_256];
+	let application = vec![0x63; MAX_MESSAGE_SIZE - 1_256 - common::RESPONSE_HEADER];
 	let response = server
 		.build_registration_response(accepted, Some(&application))
 		.unwrap();
@@ -139,8 +147,12 @@ fn flattened_registration_response_accepts_the_exact_complete_message_limit() {
 #[test]
 fn persistent_oversize_rejections_skip_cas_and_preserve_poison_fencing() {
 	let store = Store::default();
-	let mut server = PersistentServer::create(0, None, store.clone()).unwrap();
-	let mut first = Beacon::new(0, server.identity_pk().as_bytes());
+	let mut server = PersistentServer::create(0, None, None, store.clone()).unwrap();
+	let mut first = Beacon::new(
+		0,
+		server.identity_pk().as_bytes(),
+		&server.mldsa_public_key(),
+	);
 	let init = first.get_registration_bundle().unwrap();
 	let mut oversized = init.clone();
 	oversized.resize(MAX_MESSAGE_SIZE + 1, 0);
@@ -183,7 +195,11 @@ fn persistent_oversize_rejections_skip_cas_and_preserve_poison_fencing() {
 	assert!(server.pk_by_kid(1).is_none());
 	assert!(server.ratchet_status(1).is_none());
 
-	let mut beacon = Beacon::new(0, server.identity_pk().as_bytes());
+	let mut beacon = Beacon::new(
+		0,
+		server.identity_pk().as_bytes(),
+		&server.mldsa_public_key(),
+	);
 	let init = beacon.get_registration_bundle().unwrap();
 	let accepted = server.get_shared_secret(&init).unwrap().unwrap();
 	let response = server
@@ -237,7 +253,11 @@ fn persistent_oversize_rejections_skip_cas_and_preserve_poison_fencing() {
 		b"retry"
 	);
 
-	let mut pending_beacon = Beacon::new(0, server.identity_pk().as_bytes());
+	let mut pending_beacon = Beacon::new(
+		0,
+		server.identity_pk().as_bytes(),
+		&server.mldsa_public_key(),
+	);
 	let init = pending_beacon.get_registration_bundle().unwrap();
 	let pending = server.get_shared_secret(&init).unwrap().unwrap();
 	store.0.lock().unwrap().fail_next = true;
@@ -276,4 +296,36 @@ fn persistent_oversize_rejections_skip_cas_and_preserve_poison_fencing() {
 		Some(PersistenceError::Poisoned)
 	);
 	assert_eq!(store.attempts(), attempts);
+}
+
+mod common;
+use common::decode_response;
+
+#[test]
+fn signed_response_envelope_overflow_rejects_before_persistence() {
+	let store = Store::default();
+	let mut server = PersistentServer::create(0, None, None, store.clone()).unwrap();
+	let mut beacon = Beacon::new(
+		0,
+		server.identity_pk().as_bytes(),
+		&server.mldsa_public_key(),
+	);
+	let init = beacon.get_registration_bundle().unwrap();
+	let accepted = server.get_shared_secret(&init).unwrap().unwrap();
+	let head = server.head();
+	let attempts = store.attempts();
+	let snapshot = store.bytes();
+	// The CBOR response fits; adding its mandatory signature envelope exceeds the cap by one byte.
+	let application = vec![0x63; MAX_MESSAGE_SIZE - 1_255 - common::RESPONSE_HEADER];
+	assert!(
+		server
+			.build_registration_response(accepted, Some(&application))
+			.unwrap()
+			.is_none()
+	);
+	assert_eq!(server.head(), head);
+	assert_eq!(store.attempts(), attempts);
+	assert_eq!(store.bytes(), snapshot);
+	assert_eq!(server.server_kid(), 0);
+	assert!(server.pk_by_kid(1).is_none());
 }

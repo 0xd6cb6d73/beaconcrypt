@@ -441,12 +441,24 @@ pub trait SignaturePk {}
 pub struct EstablishedRemote<PkType: SignaturePk> {
 	pk: PkType,
 	ratchet: RatchetManager,
+	mldsa_public_key_hash: [u8; 64],
 }
 
 #[cfg(any(feature = "server", test))]
 impl<PkType: SignaturePk> EstablishedRemote<PkType> {
-	pub(crate) fn new(pk: PkType, ratchet: RatchetManager) -> Self {
-		Self { pk, ratchet }
+	pub(crate) fn new(
+		pk: PkType,
+		ratchet: RatchetManager,
+		mldsa_public_key_hash: [u8; 64],
+	) -> Self {
+		Self {
+			pk,
+			ratchet,
+			mldsa_public_key_hash,
+		}
+	}
+	pub(crate) fn mldsa_public_key_hash(&self) -> &[u8; 64] {
+		&self.mldsa_public_key_hash
 	}
 
 	pub fn pk(&self) -> &PkType {
@@ -892,7 +904,7 @@ mod tests {
 	/// import hashlib
 	/// key = bytes([0x11]) * 32
 	/// nonce = bytes([0x22]) * 12
-	/// ad = bytes([0x41]) * 153
+	/// ad = bytes([0x41]) * 281
 	/// tag = bytes([0x33]) * 16
 	/// seq = (0x44).to_bytes(8, "little")
 	/// kid = (0x55).to_bytes(8, "little")
@@ -904,8 +916,8 @@ mod tests {
 		let associated_data = [0x41; AD_SIZE];
 		let tag = [0x33; AEAD_TAG_LEN];
 		let expected = decode_hex::<COMMITMENT_SIZE>(
-			"39a3222768c214f7ceb291c4ba7df117a9d537a5ce41a61c33aba27e5f356153\
-			 a4a1090295f03aae7e684e03710fd818217a7c8d1420a4b4a5f81d86893a435d",
+			"0f5c8650fb355350716556eb153d01c9c39f9ed8f3e80a55d5afa15884a2fa00\
+			 e6b8a93a2cf767c5d76ae756f8691a2296b03ac2bff730117307b7e5a8d63889",
 		);
 		let key_seq = 0x44u64;
 		let key_id = 0x55u64;
@@ -970,10 +982,10 @@ mod tests {
 			 92ddbd7f2d778b8c9803aee328091b58fab324e4fad675945585808b4831d7bc\
 			 3ff4def08e4b7a9de576d26586cec64b6116",
 		);
-		let expected_tag = decode_hex::<AEAD_TAG_LEN>("88a5fc9f4d18b9c9d83fefd4f24e5fc4");
+		let expected_tag = decode_hex::<AEAD_TAG_LEN>("6a4ebb0cb2dd9643a193f35050a66886");
 		let expected_commitment = decode_hex::<COMMITMENT_SIZE>(
-			"1ea461abc0b5d491a23c7437f745548e9647a91c8ed34b29b171859a72e33dc5\
-			 82554e0c807220fc0433bedd1f3c4c7353d381683b15fb8d91749c7463cccc1d",
+			"ad464df12846b88b8106622d4823c48f88cfcf4a2ced02c46d060e2d1a559349\
+			 46bb95c59d26444c6719b7e6a4bb9d53c1d3250fa28c7e9879185ac3067f554c",
 		);
 		let aead_key: AeadKey = key.into();
 		let aead_nonce: AeadNonce = nonce.into();
@@ -1097,7 +1109,7 @@ mod tests {
 			"000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
 		);
 		let key_two = decode_hex::<AEAD_KEY_LEN>(
-			"967712731b5091e4e42b5fa6241e3b02108fedc55c561d80af04c2095d3edbe7",
+			"9ad90ef720e8fceffcc710361c3c760dbe50bf28bc0e21c67404e2c44399b3ef",
 		);
 		let nonce = decode_hex::<AEAD_NONCE_LEN>("000102030405060708090a0b");
 		let mut ad_one = [0; AD_SIZE];
@@ -1105,11 +1117,11 @@ mod tests {
 			*byte = index as u8;
 		}
 		let mut ad_two = ad_one;
-		ad_two[..16].copy_from_slice(&decode_hex::<16>("d62e8ca42f6f6e6eb114ca6035df7b24"));
+		ad_two[..16].copy_from_slice(&decode_hex::<16>("d0ab0bfa3600d9d715b82befab62d160"));
 		let ciphertext = decode_hex::<16>("00112233445566778899aabbccddeeff");
-		let tag = decode_hex::<AEAD_TAG_LEN>("a21c712bf7f8d516c2d0126087060814");
+		let tag = decode_hex::<AEAD_TAG_LEN>("39996c6c0e78fdfb0bbf29d428aaed4d");
 		let expected_plaintext_one = decode_hex::<16>("89ea2a336d42c3373f1a954854c0e09c");
-		let expected_plaintext_two = decode_hex::<16>("3c6ab3eb035de373e2b5d4a81a3cd13f");
+		let expected_plaintext_two = decode_hex::<16>("d4de696c5b25e8438e777ca060a610b3");
 		let aead_key_one: AeadKey = key_one.into();
 		let aead_key_two: AeadKey = key_two.into();
 		let aead_nonce: AeadNonce = nonce.into();
@@ -1137,12 +1149,12 @@ mod tests {
 		let commitment_one = commitment_for_test(key_one, nonce, &ad_one, &tag, 1, 7);
 		let commitment_two = commitment_for_test(key_two, nonce, &ad_two, &tag, 1, 7);
 		let expected_commitment_one = decode_hex::<COMMITMENT_SIZE>(
-			"9cda090561a1140c1e7fdee457c9057be213b87a65e895078564be7fa13360df\
-			 fb48bab92db64d3800fd90ba2fc4d8c174add55cbbf0b0bff98eb74b32c1e06e",
+			"22240e4b6a5dff2b3ffbb4a2ebb6119ce9af9607a6f36e8c15ec5a63c4c3f8d1\
+			 115dff685176f902f0fdf0c789077981040634d35a69ff311efb56209a10a7e5",
 		);
 		let expected_commitment_two = decode_hex::<COMMITMENT_SIZE>(
-			"f092a14b1da49bad4c64f3bacc67480d7dd367f5ba90fa3f79492aea29cd7707\
-			 49b0aefdc03fa3736dd11ee3c79038a4a4d10a64959042dd97007690a7506bb2",
+			"1cf9be23057b32477e24a24931e86b136ecda0fcdcb0bf117247c1c0c72ccae2\
+			 efb7500568150c94f151c138fa889d8c78a4573189fb5f3204c82ea1792c2dcf",
 		);
 		assert_eq!(commitment_one, expected_commitment_one);
 		assert_eq!(commitment_two, expected_commitment_two);
@@ -1673,8 +1685,11 @@ mod tests {
 		struct TestPublicKey([u8; 4]);
 		impl SignaturePk for TestPublicKey {}
 
-		let mut principal =
-			EstablishedRemote::new(TestPublicKey([1, 2, 3, 4]), RatchetManager::default());
+		let mut principal = EstablishedRemote::new(
+			TestPublicKey([1, 2, 3, 4]),
+			RatchetManager::default(),
+			[7; 64],
+		);
 		assert_eq!(principal.pk().0, [1, 2, 3, 4]);
 		assert!(principal.ratchet().recv_key(1).is_none());
 		assert_eq!(principal.ratchet_mut().ratchet_recv(), Some(1),);

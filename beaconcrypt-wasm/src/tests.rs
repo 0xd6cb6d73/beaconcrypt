@@ -110,7 +110,9 @@ mod wasm_store_tests {
 		const RESTORED: u32 = 0xbc00_0002;
 		const REJECTED: u32 = 0xbc00_0003;
 		unsafe { configure_store(FIRST, FIRST, 0) };
-		let server = PersistentServer::create(19, Some(&[9; 32]), HostStore(FIRST)).unwrap();
+		let server =
+			PersistentServer::create(19, Some(&[9; 32]), Some(&[10; 32]), HostStore(FIRST))
+				.unwrap();
 		let head = server.head();
 		assert_eq!(server.snapshot().unwrap().head().unwrap(), head);
 		assert_eq!(unsafe { store_count(FIRST, 0) }, 2);
@@ -136,15 +138,53 @@ mod wasm_store_tests {
 		assert_eq!(unsafe { store_count(RESTORED, 2) }, 1);
 
 		unsafe { configure_store(REJECTED, REJECTED, 1) };
-		let failure = PersistentServer::create(19, Some(&[9; 32]), HostStore(REJECTED));
+		let failure =
+			PersistentServer::create(19, Some(&[9; 32]), Some(&[10; 32]), HostStore(REJECTED));
 		assert!(matches!(failure, Err(PersistenceError::StaleGeneration)));
 		assert_eq!(unsafe { store_count(REJECTED, 1) }, 1);
 		assert_eq!(unsafe { store_count(REJECTED, 2) }, 1);
 	}
 
 	#[test]
+	fn host_store_constructor_dispatch_preserves_both_seeds_and_requested_lineage() {
+		let ed_seed = [9; 32];
+		let ml_seed = [10; 32];
+		let seeds = [ed_seed, ml_seed].concat();
+		let expected = beaconcrypt::Server::try_new(19, Some(&ed_seed), Some(&ml_seed)).unwrap();
+		let lineage = [0x35; 32];
+		for (op, context) in [(12, 0xbc10_0001u32), (18, 0xbc10_0002u32)] {
+			unsafe { configure_store(context, context, 0) };
+			let mut metadata = context.to_le_bytes().to_vec();
+			if op == 18 {
+				metadata.extend_from_slice(&lineage);
+			}
+			metadata.push(3);
+			let owner = checked(op, 0, 19, &seeds, &metadata).handle;
+			assert_eq!(
+				checked(3, owner, 0, &[], &[]).data,
+				expected.identity_pk().as_bytes()
+			);
+			assert_eq!(
+				checked(24, owner, 0, &[], &[]).data,
+				expected.mldsa_public_key()
+			);
+			let head = decode_head(&checked(14, owner, 0, &[], &[]).data).unwrap();
+			assert_eq!(head.generation(), 0);
+			if op == 18 {
+				assert_eq!(head.lineage(), SnapshotLineage::from_bytes(lineage));
+			}
+			assert_eq!(unsafe { store_count(context, 1) }, 1);
+			assert_eq!(unsafe { store_count(context, 2) }, 0);
+			checked(9, owner, 0, &[], &[]);
+			assert_eq!(unsafe { store_count(context, 2) }, 1);
+		}
+	}
+
+	#[test]
 	fn snapshot_load_copies_one_complete_read_and_requires_its_exact_length() {
-		let server = PersistentServer::create(19, Some(&[9; 32]), MemoryStore::default()).unwrap();
+		let server =
+			PersistentServer::create(19, Some(&[9; 32]), Some(&[10; 32]), MemoryStore::default())
+				.unwrap();
 		let snapshot = server.snapshot().unwrap();
 		for correct_length in [true, false] {
 			let mut calls = 0;
@@ -216,7 +256,7 @@ fn seeded_server_matches_rfc8032_ed25519_vector() {
 	// RFC 8032 section 7.1, TEST 1: an independent fixed identity vector.
 	let seed = hex::<32>("9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60");
 	let public_key = hex::<32>("d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a");
-	let owner = checked(1, 0, 19, &seed, &[]).handle;
+	let owner = checked(1, 0, 19, &seed, &[1]).handle;
 	assert_eq!(checked(3, owner, 0, &[], &[]).data, public_key);
 	checked(9, owner, 0, &[], &[]);
 	assert_eq!(dispatch(3, owner, 0, &[], &[]).status, INVALID_ARGUMENT);
@@ -238,7 +278,7 @@ fn reply_header_preserves_full_width_metadata_and_independent_lengths() {
 	let failed = Response::failed(12).encode().unwrap();
 	assert_eq!(failed.len(), 32);
 	assert!(failed[4..].iter().all(|byte| *byte == 0));
-	assert_eq!(bc_abi_version(), 1);
+	assert_eq!(bc_abi_version(), 2);
 	assert_eq!(bc_max_message_size(), 33_554_432);
 }
 
@@ -277,8 +317,13 @@ fn input_descriptors_require_owned_exact_allocations_and_free_is_checked() {
 
 #[test]
 fn guest_server_interoperates_with_native_beacon_updates_json_and_checkpoint() {
-	let owner = checked(1, 0, 19, &[9; 32], &[]).handle;
-	let mut beacon = Beacon::try_new(19, &checked(3, owner, 0, &[], &[]).data).unwrap();
+	let owner = checked(1, 0, 19, &[9; 64], &[3]).handle;
+	let mut beacon = Beacon::try_new(
+		19,
+		&checked(3, owner, 0, &[], &[]).data,
+		&checked(24, owner, 0, &[], &[]).data,
+	)
+	.unwrap();
 	let bundle = beacon.get_registration_bundle().unwrap();
 	let registration = checked(5, owner, 0, &bundle, b"hello");
 	assert_eq!(
@@ -362,8 +407,13 @@ fn guest_server_interoperates_with_native_beacon_updates_json_and_checkpoint() {
 #[test]
 fn guest_beacon_interoperates_with_native_server_and_rejects_wrong_handle_kinds() {
 	use beaconcrypt::ProviderServer;
-	let mut native = beaconcrypt::Server::try_new(19, Some(&[8; 32])).unwrap();
-	let beacon = checked(2, 0, 19, native.identity_pk().as_bytes(), &[]).handle;
+	let mut native = beaconcrypt::Server::try_new(19, Some(&[8; 32]), Some(&[9; 32])).unwrap();
+	let public = [
+		native.identity_pk().as_bytes().as_slice(),
+		native.mldsa_public_key().as_slice(),
+	]
+	.concat();
+	let beacon = checked(2, 0, 19, &public, &[]).handle;
 	assert_eq!(checked(3, beacon, 0, &[], &[]).data.len(), 32);
 	let registration = checked(4, beacon, 0, &[], &[]);
 	let pending = native.get_shared_secret(&registration.data).unwrap();
@@ -441,10 +491,16 @@ fn failed_commit_suppresses_updates_and_poisons_the_live_owner() {
 	let server = PersistentServer::create(
 		19,
 		Some(&[7; 32]),
+		Some(&[8; 32]),
 		Box::new(store.clone()) as Box<dyn SnapshotStore>,
 	)
 	.unwrap();
-	let mut beacon = Beacon::try_new(19, server.identity_pk().as_bytes()).unwrap();
+	let mut beacon = Beacon::try_new(
+		19,
+		server.identity_pk().as_bytes(),
+		&server.mldsa_public_key(),
+	)
+	.unwrap();
 	let owner = REGISTRY
 		.with_borrow_mut(|registry| registry.server(Ok(server)))
 		.handle;
@@ -470,7 +526,7 @@ fn failed_commit_suppresses_updates_and_poisons_the_live_owner() {
 
 #[test]
 fn exported_call_closes_the_requested_owner() {
-	let owner = checked(1, 0, 19, &[9; 32], &[]).handle;
+	let owner = checked(1, 0, 19, &[9; 64], &[3]).handle;
 	let packed = bc_call(9, owner, 0, 0, 0, 0, 0);
 	if packed != 0 {
 		abi::bc_free((packed >> 32) as u32, packed as u32);
@@ -480,7 +536,7 @@ fn exported_call_closes_the_requested_owner() {
 
 #[test]
 fn constructors_reject_nonzero_handles_and_unexpected_extra_bytes() {
-	let owner = checked(1, 0, 19, &[9; 32], &[]).handle;
+	let owner = checked(1, 0, 19, &[9; 64], &[3]).handle;
 	let public_key = checked(3, owner, 0, &[], &[]);
 	let snapshot = checked(10, owner, 0, &[], &[]);
 	for (handle, extra) in [(owner, &[][..]), (0, &[1][..])] {
@@ -500,7 +556,7 @@ fn constructors_reject_nonzero_handles_and_unexpected_extra_bytes() {
 #[test]
 fn host_store_constructors_validate_exact_context_length_and_restore_input() {
 	assert_eq!(
-		dispatch(12, 0, 19, &[9; 32], &[1; 5]).status,
+		dispatch(12, 0, 19, &[9; 32], &[1; 6]).status,
 		INVALID_ARGUMENT
 	);
 	assert_eq!(
@@ -515,7 +571,7 @@ fn host_store_constructors_validate_exact_context_length_and_restore_input() {
 
 #[test]
 fn snapshot_and_constructor_failures_use_production_status_codes() {
-	assert_eq!(dispatch(1, 0, 19, &[0; 31], &[]).status, INITIALIZATION);
+	assert_eq!(dispatch(1, 0, 19, &[0; 31], &[1]).status, INITIALIZATION);
 	assert_eq!(dispatch(19, 0, 0, &[], &[]).status, INVALID_ARGUMENT);
 	assert_eq!(dispatch(19, 0, 0, b"not a snapshot", &[]).status, 4);
 	assert_eq!(
@@ -556,4 +612,38 @@ fn host_load_failures_match_native_missing_snapshot_status() {
 			PersistentServer::restore(Box::new(LoadResult(host_result)) as Box<dyn SnapshotStore>);
 		assert_eq!(abi::error_status(restored.err().unwrap()), expected_status);
 	}
+}
+
+#[test]
+fn seed_presence_flags_keep_the_two_identity_seeds_distinct() {
+	let mut input = [0x11; 64];
+	input[32..].fill(0x22);
+	let (ed, ml) = seeds(&input, 3).unwrap();
+	assert_eq!(ed, Some(&input[..32]));
+	assert_eq!(ml, Some(&input[32..]));
+	assert_eq!(seeds(&input[..32], 1), Some((Some(&input[..32]), None)));
+	assert_eq!(seeds(&input[32..], 2), Some((None, Some(&input[32..]))));
+	assert_eq!(seeds(&[], 0), Some((None, None)));
+	for (bytes, flags) in [
+		(&input[..], 0),
+		(&input[..31], 1),
+		(&input[..32], 3),
+		(&input[..], 4),
+	] {
+		assert!(seeds(bytes, flags).is_none());
+	}
+}
+
+#[test]
+fn beacon_constructor_requires_the_mldsa_pin_after_the_ed25519_key() {
+	let server = checked(1, 0, 19, &[9; 64], &[3]).handle;
+	let ed = checked(3, server, 0, &[], &[]).data.clone();
+	let ml = checked(24, server, 0, &[], &[]).data.clone();
+	assert_eq!(ml.len(), 1952);
+	assert_eq!(dispatch(2, 0, 19, &ed, &[]).status, INITIALIZATION);
+	let public = [ed, ml].concat();
+	let beacon = checked(2, 0, 19, &public, &[]).handle;
+	assert_eq!(checked(24, beacon, 0, &[], &[]).data.len(), 1952);
+	checked(9, beacon, 0, &[], &[]);
+	checked(9, server, 0, &[], &[]);
 }

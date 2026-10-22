@@ -66,19 +66,36 @@ func constructWasm(op uint32, arg uint64, input, extra []byte, store SnapshotSto
 	return engine.construct(op, arg, input, extra, store)
 }
 
+func wasmIdentitySeeds(edSeed, mldsaSeed []byte) ([]byte, byte, error) {
+	if (len(edSeed) != 0 && len(edSeed) != 32) || (len(mldsaSeed) != 0 && len(mldsaSeed) != 32) {
+		return nil, 0, ErrSeedSize
+	}
+	var flags byte
+	if len(edSeed) != 0 {
+		flags |= 1
+	}
+	if len(mldsaSeed) != 0 {
+		flags |= 2
+	}
+	input := append(append(make([]byte, 0, len(edSeed)+len(mldsaSeed)), edSeed...), mldsaSeed...)
+	return input, flags, nil
+}
+
 func NewServer(serverKID uint64) (*Server, error) {
-	instance, err := constructWasm(1, serverKID, nil, nil, nil)
+	instance, err := constructWasm(1, serverKID, nil, []byte{0}, nil)
 	if err != nil {
 		return nil, wasmCryptoError(err)
 	}
 	return wasmServer(instance), nil
 }
 
-func NewServerFromSeed(serverKID uint64, seed []byte) (*Server, error) {
-	if len(seed) != 32 {
+func NewServerFromSeed(serverKID uint64, seed, mldsaSeed []byte) (*Server, error) {
+	if len(seed) != 32 || len(mldsaSeed) != 32 {
 		return nil, ErrSeedSize
 	}
-	instance, err := constructWasm(1, serverKID, seed, nil, nil)
+	input, flags, _ := wasmIdentitySeeds(seed, mldsaSeed)
+	defer clear(input)
+	instance, err := constructWasm(1, serverKID, input, []byte{flags}, nil)
 	if err != nil {
 		return nil, wasmCryptoError(err)
 	}
@@ -99,8 +116,12 @@ func NewServerFromState(state []byte) (*Server, error) {
 	return wasmServer(instance), nil
 }
 
-func NewBeacon(serverKID uint64, serverPK []byte) (*Beacon, error) {
-	instance, err := constructWasm(2, serverKID, serverPK, nil, nil)
+func NewBeacon(serverKID uint64, serverPK, serverMLDSAPK []byte) (*Beacon, error) {
+	if len(serverPK) != 32 || len(serverMLDSAPK) != MLDSA65PublicKeySize {
+		return nil, ErrCrypto
+	}
+	input := append(append(make([]byte, 0, 32+MLDSA65PublicKeySize), serverPK...), serverMLDSAPK...)
+	instance, err := constructWasm(2, serverKID, input, nil, nil)
 	if err != nil {
 		return nil, wasmCryptoError(err)
 	}
@@ -108,24 +129,26 @@ func NewBeacon(serverKID uint64, serverPK []byte) (*Beacon, error) {
 }
 
 // NewServerWithStore creates and commits generation zero before returning.
-// An empty seed selects a random identity; a nonempty seed must be 32 bytes.
-func NewServerWithStore(serverKID uint64, seed []byte, store SnapshotStore) (*Server, error) {
-	return newWasmServerWithStore(serverKID, seed, store, nil)
+// Each empty seed generates its corresponding identity key; supplied seeds must be 32 bytes.
+func NewServerWithStore(serverKID uint64, seed, mldsaSeed []byte, store SnapshotStore) (*Server, error) {
+	return newWasmServerWithStore(serverKID, seed, mldsaSeed, store, nil)
 }
 
 // NewServerWithStoreAndLineage uses an externally allocated lineage belonging
 // to exactly one authoritative storage domain.
-func NewServerWithStoreAndLineage(serverKID uint64, seed []byte, store SnapshotStore, lineage [32]byte) (*Server, error) {
-	return newWasmServerWithStore(serverKID, seed, store, &lineage)
+func NewServerWithStoreAndLineage(serverKID uint64, seed, mldsaSeed []byte, store SnapshotStore, lineage [32]byte) (*Server, error) {
+	return newWasmServerWithStore(serverKID, seed, mldsaSeed, store, &lineage)
 }
 
-func newWasmServerWithStore(serverKID uint64, seed []byte, store SnapshotStore, lineage *[32]byte) (*Server, error) {
+func newWasmServerWithStore(serverKID uint64, seed, mldsaSeed []byte, store SnapshotStore, lineage *[32]byte) (*Server, error) {
 	if store == nil {
 		return nil, &PersistenceError{Code: StatusInvalidArgument}
 	}
-	if len(seed) != 0 && len(seed) != 32 {
-		return nil, ErrSeedSize
+	input, flags, err := wasmIdentitySeeds(seed, mldsaSeed)
+	if err != nil {
+		return nil, err
 	}
+	defer clear(input)
 	op := uint32(12)
 	extra := make([]byte, 4)
 	binary.LittleEndian.PutUint32(extra, 1)
@@ -133,7 +156,8 @@ func newWasmServerWithStore(serverKID uint64, seed []byte, store SnapshotStore, 
 		op = 18
 		extra = append(extra, lineage[:]...)
 	}
-	instance, err := constructWasm(op, serverKID, seed, extra, store)
+	extra = append(extra, flags)
+	instance, err := constructWasm(op, serverKID, input, extra, store)
 	if err != nil {
 		return nil, wasmPersistenceConstructorError(err)
 	}
@@ -193,6 +217,18 @@ func (b *Beacon) wasmCall(op uint32, arg uint64, input []byte) (wasmResponse, er
 func (s *Server) IdentityPK() ([]byte, error) {
 	r, err := s.wasmCall(3, 0, nil, nil)
 	return r.data, wasmCryptoError(err)
+}
+
+// MLDSAPublicKey returns the server authentication key to provision into beacons.
+func (s *Server) MLDSAPublicKey() ([]byte, error) {
+	r, err := s.wasmCall(24, 0, nil, nil)
+	return r.data, wasmCryptoError(err)
+}
+
+// MLDSAPublicKey returns the beacon's ML-DSA-65 authentication key.
+func (b *Beacon) MLDSAPublicKey() ([]byte, error) {
+	r, err := b.wasmCall(24, 0, nil)
+	return r.data, err
 }
 
 func (b *Beacon) GenerateRegistration() ([]byte, error) {

@@ -15,6 +15,10 @@
  */
 #define beaconcrypt_MAX_MESSAGE_SIZE 33554432
 
+#define beaconcrypt_MLDSA_PUBLIC_KEY_LEN 1952
+
+#define beaconcrypt_MLDSA_SIGNATURE_LEN 3309
+
 
 
 #define beaconcrypt_KDF_STATE_SIZE 32
@@ -190,31 +194,35 @@ extern "C" {
 void beaconcrypt_free_buffer(struct beaconcrypt_Buffer buffer);
 
 /**
- * Create a server with a randomly generated identity key.
+ * Create a server with independently generated Ed25519 and ML-DSA-65 identity keys.
  *
  * Returns an owned handle, or null on failure. Release a non-null handle with `beaconcrypt_server_free`.
  */
 struct beaconcrypt_Server *beaconcrypt_server_new(uint64_t server_kid);
 
 /**
- * Create a server with an optional deterministic identity seed.
+ * Create a server with independent optional Ed25519 and ML-DSA-65 identity seeds.
  *
- * A null pointer or zero length selects a random identity key. A non-empty seed must contain exactly `beaconcrypt_ED25519_SEED_SIZE` readable bytes.
+ * Each null pointer or zero length selects an independently generated identity key. Each non-empty seed must contain exactly 32 readable secret bytes.
  *
  * Returns an owned handle, or null when creation fails. Release a non-null handle with `beaconcrypt_server_free`.
  */
 struct beaconcrypt_Server *beaconcrypt_server_new_from_seed(uint64_t server_kid,
                                                             const uint8_t *seed_ptr,
-                                                            uintptr_t seed_len);
+                                                            uintptr_t seed_len,
+                                                            const uint8_t *mldsa_seed_ptr,
+                                                            uintptr_t mldsa_seed_len);
 
 /**
  * Create a server whose results are released only after the store's durable compare-and-swap succeeds.
  *
- * The callbacks take ownership of their context even when construction fails. A null seed or zero seed length selects a random identity. `status_out` may be null; otherwise it receives a `beaconcrypt_STATUS_*` code. Returns null on failure.
+ * The callbacks take ownership of their context even when construction fails. Each null seed or zero seed length selects an independently generated identity. `status_out` may be null; otherwise it receives a `beaconcrypt_STATUS_*` code. Returns null on failure.
  */
 struct beaconcrypt_Server *beaconcrypt_server_create_with_store(uint64_t server_kid,
                                                                 const uint8_t *seed_ptr,
                                                                 uintptr_t seed_len,
+                                                                const uint8_t *mldsa_seed_ptr,
+                                                                uintptr_t mldsa_seed_len,
                                                                 struct beaconcrypt_SnapshotStoreCallbacks callbacks,
                                                                 uint32_t *status_out);
 
@@ -226,6 +234,8 @@ struct beaconcrypt_Server *beaconcrypt_server_create_with_store(uint64_t server_
 struct beaconcrypt_Server *beaconcrypt_server_create_with_store_and_lineage(uint64_t server_kid,
                                                                             const uint8_t *seed_ptr,
                                                                             uintptr_t seed_len,
+                                                                            const uint8_t *mldsa_seed_ptr,
+                                                                            uintptr_t mldsa_seed_len,
                                                                             struct beaconcrypt_SnapshotStoreCallbacks callbacks,
                                                                             const uint8_t *lineage_ptr,
                                                                             uintptr_t lineage_len,
@@ -293,15 +303,17 @@ struct beaconcrypt_Server *beaconcrypt_server_new_from_state(const uint8_t *stat
 struct beaconcrypt_Buffer beaconcrypt_server_export_state(const struct beaconcrypt_Server *handle);
 
 /**
- * Create a beacon bound to a server identity public key.
+ * Create a beacon bound to both server identity public keys.
  *
- * `server_pk_ptr` must point to an Ed25519 public key of the length implied by the API constants.
+ * `server_pk_ptr` must point to an Ed25519 public key, and `server_mldsa_pk_ptr` must point to an ML-DSA-65 public key of `beaconcrypt_MLDSA_PUBLIC_KEY_LEN` bytes. Both pins are mandatory.
  *
  * Returns an owned handle, or null for absent or incorrectly sized input or a reported initialization/key-generation failure. Release a non-null handle with `beaconcrypt_beacon_free`.
  */
 struct beaconcrypt_Beacon *beaconcrypt_beacon_new(uint64_t server_kid,
                                                   const uint8_t *server_pk_ptr,
-                                                  uintptr_t server_pk_len);
+                                                  uintptr_t server_pk_len,
+                                                  const uint8_t *server_mldsa_pk_ptr,
+                                                  uintptr_t server_mldsa_pk_len);
 
 /**
  * Release a server handle created by this API.
@@ -330,6 +342,18 @@ struct beaconcrypt_Buffer beaconcrypt_server_identity_pk(const struct beaconcryp
  * Returns an empty buffer when `handle` is null.
  */
 struct beaconcrypt_Buffer beaconcrypt_beacon_identity_pk(const struct beaconcrypt_Beacon *handle);
+
+/**
+ * Copy the server's ML-DSA-65 public key into a caller-owned buffer.
+ * Returns an empty buffer for a null handle and preserves the last operation's status.
+ */
+struct beaconcrypt_Buffer beaconcrypt_server_mldsa_public_key(const struct beaconcrypt_Server *handle);
+
+/**
+ * Copy the beacon's ML-DSA-65 public key into a caller-owned buffer.
+ * Returns an empty buffer for a null handle.
+ */
+struct beaconcrypt_Buffer beaconcrypt_beacon_mldsa_public_key(const struct beaconcrypt_Beacon *handle);
 
 /**
  * Generate the beacon's serialized registration bundle.

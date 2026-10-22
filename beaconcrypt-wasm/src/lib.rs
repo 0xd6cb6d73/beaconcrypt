@@ -12,16 +12,17 @@
 //! Hosts copy reply data before bc_free, which wipes the complete allocation.
 //! A zero packed reply indicates allocation failure and invalidates the guest.
 //!
-//! Operations: 1 checkpoint server (arg=kid,input=optional seed), 2 beacon
-//! (arg=server kid,input=public key), 3 identity, 4 registration bundle,
+//! Operations: 1 checkpoint server (arg=kid,input=seed concatenation,extra=presence flags), 2 beacon
+//! (arg=server kid,input=Ed25519 public key || ML-DSA-65 public key), 3 identity, 4 registration bundle,
 //! 5 register (input=bundle,extra=optional first plaintext), 6 finish registration,
 //! 7 encrypt (arg=peer kid for server), 8 decrypt, 9 close, 10 export checkpoint,
-//! 11 restore trusted checkpoint, 12 host-store server (extra=context u32),
+//! 11 restore trusted checkpoint, 12 host-store server (extra=context u32 + seed flags),
 //! 13 restore host store (arg=context), 14 owner head, 15 poisoned flag,
 //! 16 validate snapshot successor (extra=optional 72-byte head), 17 ratchet status,
-//! 18 host-store server with lineage (extra=context u32 + lineage[32]),
+//! 18 host-store server with lineage (extra=context u32 + lineage[32] + seed flags),
 //! 19 parse snapshot head, 20 encrypt and update, 21 decrypt and update,
-//! 22 encrypt and update JSON, 23 decrypt and update JSON. Operations 7,8 and
+//! 22 encrypt and update JSON, 23 decrypt and update JSON, 24 ML-DSA-65 public key. Seed flags select Ed25519
+//! (bit0) and ML-DSA (bit1), whose supplied 32-byte seeds appear in that order. Operations 7,8 and
 //! 20,21 return key_id/seq metadata; JSON operations return JSON in data only.
 //! Store-backed constructors take ownership of a valid supplied host context.
 //! All access to one instance must be serialized. Store callbacks must not
@@ -74,7 +75,7 @@ thread_local! { static REGISTRY: RefCell<Registry> = RefCell::new(Registry::defa
 
 #[unsafe(no_mangle)]
 pub extern "C" fn bc_abi_version() -> u32 {
-	1
+	2
 }
 
 #[unsafe(no_mangle)]
@@ -84,6 +85,18 @@ pub extern "C" fn bc_max_message_size() -> u32 {
 
 fn optional(input: &[u8]) -> Option<&[u8]> {
 	(!input.is_empty()).then_some(input)
+}
+
+type IdentitySeeds<'a> = (Option<&'a [u8]>, Option<&'a [u8]>);
+
+fn seeds(input: &[u8], flags: u8) -> Option<IdentitySeeds<'_>> {
+	let ed_len = usize::from(flags & 1 != 0) * 32;
+	let ml_len = usize::from(flags & 2 != 0) * 32;
+	if flags > 3 || input.len() != ed_len + ml_len {
+		return None;
+	}
+	let (ed, ml) = input.split_at(ed_len);
+	Some((optional(ed), optional(ml)))
 }
 
 fn protocol<T>(
@@ -134,7 +147,7 @@ fn dispatch(op: u32, handle: u32, arg: u64, input: &[u8], extra: &[u8]) -> Respo
 					return Response::failed(INVALID_ARGUMENT);
 				}
 				let store: Box<dyn SnapshotStore> = if op == 1 {
-					if !extra.is_empty() {
+					if extra.len() != 1 {
 						return Response::failed(INVALID_ARGUMENT);
 					}
 					Box::<MemoryStore>::default()
@@ -147,31 +160,43 @@ fn dispatch(op: u32, handle: u32, arg: u64, input: &[u8], extra: &[u8]) -> Respo
 					};
 					Box::new(HostStore(u32::from_le_bytes(context)))
 				};
+				let metadata_len = match op {
+					1 => 1,
+					12 => 5,
+					_ => 37,
+				};
+				if extra.len() != metadata_len {
+					return Response::failed(INVALID_ARGUMENT);
+				}
+				let Some((ed_seed, ml_seed)) = seeds(input, extra[metadata_len - 1]) else {
+					return Response::failed(INITIALIZATION);
+				};
 				return if op == 18 {
 					let Some(lineage) = extra
-						.get(4..)
+						.get(4..36)
 						.and_then(|bytes| <[u8; 32]>::try_from(bytes).ok())
 					else {
 						return Response::failed(INVALID_ARGUMENT);
 					};
 					registry.server(PersistentServer::create_with_lineage(
 						arg,
-						optional(input),
+						ed_seed,
+						ml_seed,
 						store,
 						SnapshotLineage::from_bytes(lineage),
 					))
 				} else {
-					if op == 12 && extra.len() != 4 {
-						return Response::failed(INVALID_ARGUMENT);
-					}
-					registry.server(PersistentServer::create(arg, optional(input), store))
+					registry.server(PersistentServer::create(arg, ed_seed, ml_seed, store))
 				};
 			}
 			2 => {
 				if handle != 0 || !extra.is_empty() {
 					return Response::failed(INVALID_ARGUMENT);
 				}
-				return match Beacon::try_new(arg, input) {
+				let Some((ed_public, ml_public)) = input.split_at_checked(32) else {
+					return Response::failed(INITIALIZATION);
+				};
+				return match Beacon::try_new(arg, ed_public, ml_public) {
 					Ok(beacon) => registry.insert(Handle::Beacon(Box::new(beacon))),
 					Err(_) => Response::failed(INITIALIZATION),
 				};
@@ -204,7 +229,7 @@ fn dispatch(op: u32, handle: u32, arg: u64, input: &[u8], extra: &[u8]) -> Respo
 		if !extra.is_empty() && op != 5 {
 			return Response::failed(INVALID_ARGUMENT);
 		}
-		if matches!(op, 3 | 4 | 9 | 10 | 14 | 15 | 17) && !input.is_empty() {
+		if matches!(op, 3 | 4 | 9 | 10 | 14 | 15 | 17 | 24) && !input.is_empty() {
 			return Response::failed(INVALID_ARGUMENT);
 		}
 		if matches!(op, 5..=8 | 20..=23) && input.is_empty() {
@@ -230,6 +255,16 @@ fn dispatch(op: u32, handle: u32, arg: u64, input: &[u8], extra: &[u8]) -> Respo
 				handle,
 				beacon.identity_key_kid(),
 				beacon.identity_pk().as_bytes().to_vec(),
+			),
+			(24, Handle::Server(server)) => Response::success(
+				handle,
+				server.identity_key_kid(),
+				server.mldsa_public_key().to_vec(),
+			),
+			(24, Handle::Beacon(beacon)) => Response::success(
+				handle,
+				beacon.identity_key_kid(),
+				beacon.mldsa_public_key().to_vec(),
 			),
 			(4, Handle::Beacon(beacon)) => match beacon.get_registration_bundle() {
 				Some(data) => Response::success(handle, 0, data),

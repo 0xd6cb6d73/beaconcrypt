@@ -74,3 +74,34 @@ fn append_argument(output: &mut Vec<u8>, major: u8, value: u64) {
 	output.push(major << 5 | information);
 	output.extend_from_slice(&value.to_be_bytes()[8 - width..]);
 }
+
+// The mandatory ML-DSA envelope is independent of the CBOR payload codec.
+pub const AUTH_MAGIC: &[u8] = b"beaconcrypt/ml-dsa-65/v1\0";
+pub const INIT_HEADER: usize =
+	AUTH_MAGIC.len() + 1 + beaconcrypt::MLDSA_PUBLIC_KEY_LEN + beaconcrypt::MLDSA_SIGNATURE_LEN;
+pub const RESPONSE_HEADER: usize = AUTH_MAGIC.len() + 1 + beaconcrypt::MLDSA_SIGNATURE_LEN;
+pub fn init_payload(bytes: &[u8]) -> &[u8] {
+	if bytes.starts_with(AUTH_MAGIC) {
+		&bytes[INIT_HEADER..]
+	} else {
+		bytes
+	}
+}
+pub fn response_payload(bytes: &[u8]) -> &[u8] {
+	if bytes.starts_with(AUTH_MAGIC) {
+		&bytes[RESPONSE_HEADER..]
+	} else {
+		bytes
+	}
+}
+pub fn decode_init(bytes: &[u8]) -> Option<InitKex<'_>> {
+	beaconcrypt_parse::decode_init(init_payload(bytes))
+}
+pub fn decode_response(bytes: &[u8]) -> Option<KexResponse<'_>> {
+	beaconcrypt_parse::decode_response(response_payload(bytes))
+}
+pub fn replace_response_payload(original: &[u8], payload: &[u8]) -> Vec<u8> {
+	let mut candidate = original[..RESPONSE_HEADER].to_vec();
+	candidate.extend_from_slice(payload);
+	candidate
+}

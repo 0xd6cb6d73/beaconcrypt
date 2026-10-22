@@ -18,7 +18,7 @@ fn prepare<'a>(
 	kernel: ConcreteRatchetKernel,
 	sequence: u64,
 	payload: &'a [u8],
-	ad: &'a [u8; 153],
+	ad: &'a [u8; 281],
 ) -> OpenCommitment<'a> {
 	let context = OpenFrameContext::from_frame(payload, ad, 0x0807_0605_0403_0201).unwrap();
 	let mut effect = begin_receive(kernel, sequence, context);
@@ -64,7 +64,7 @@ fn complete_reader_and_empty_body_boundaries_remain_strict() {
 	assert_eq!(finish_frame_read(&[], 7), Some(7));
 	assert_eq!(finish_frame_read(&[0], 7), None);
 	let payload = [0; 81];
-	let ad = [3; 153];
+	let ad = [3; 281];
 	for length in 0..=80 {
 		assert!(OpenFrameContext::from_frame(&payload[..length], &ad, 2).is_none());
 	}
@@ -74,15 +74,15 @@ fn complete_reader_and_empty_body_boundaries_remain_strict() {
 #[test]
 fn selected_request_retains_actual_payload_material_and_plaintext_metadata() {
 	let payload = core::array::from_fn::<_, 100, _>(|i| i as u8);
-	let ad = [0xA3; 153];
+	let ad = [0xA3; 281];
 	let pending = prepare(kernel(), 3, &payload, &ad);
 	let transcript = pending.transcript().as_bytes();
 	assert_eq!(&transcript[..32], &[12; 32]);
 	assert_eq!(&transcript[32..44], &[12; 12]);
-	assert_eq!(&transcript[44..197], &ad);
-	assert_eq!(&transcript[197..213], &payload[20..36]);
-	assert_eq!(&transcript[213..221], &3u64.to_le_bytes());
-	assert_eq!(&transcript[221..], &0x0807_0605_0403_0201u64.to_le_bytes());
+	assert_eq!(&transcript[44..325], &ad);
+	assert_eq!(&transcript[325..341], &payload[20..36]);
+	assert_eq!(&transcript[341..349], &3u64.to_le_bytes());
+	assert_eq!(&transcript[349..], &0x0807_0605_0403_0201u64.to_le_bytes());
 	assert_eq!(pending.supplied_commitment(), &payload[36..]);
 	let OpenAfterCommitment::OpenAeadRequested(opening) = pending.resume(true) else {
 		panic!("matching commitment rejected");
@@ -105,7 +105,7 @@ fn selected_request_retains_actual_payload_material_and_plaintext_metadata() {
 #[test]
 fn hash_and_aead_rejection_preserve_future_and_cached_state() {
 	let payload = [0xC5; 81];
-	let ad = [0xA3; 153];
+	let ad = [0xA3; 281];
 	let initial = kernel();
 	let before = state(&initial);
 	let OpenAfterCommitment::OpenCommitmentRejected(initial) =

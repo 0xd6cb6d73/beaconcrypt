@@ -17,12 +17,13 @@ import (
 )
 
 type command struct {
-	Op     string `json:"op"`
-	Handle uint64 `json:"handle"`
-	KID    uint64 `json:"kid"`
-	Data   []byte `json:"data"`
-	Extra  []byte `json:"extra"`
-	Seed   []byte `json:"seed"`
+	Op        string `json:"op"`
+	Handle    uint64 `json:"handle"`
+	KID       uint64 `json:"kid"`
+	Data      []byte `json:"data"`
+	Extra     []byte `json:"extra"`
+	Seed      []byte `json:"seed"`
+	MLDSASeed []byte `json:"mldsa_seed"`
 }
 
 type response struct {
@@ -104,11 +105,11 @@ func (fixture *fixture) call(command command) (response, error) {
 		if len(command.Seed) == 0 {
 			server, err = beaconcrypt.NewServer(command.KID)
 		} else {
-			server, err = beaconcrypt.NewServerFromSeed(command.KID, command.Seed)
+			server, err = beaconcrypt.NewServerFromSeed(command.KID, command.Seed, command.MLDSASeed)
 		}
 		return fixture.insert(object{server: server}, err)
 	case "beacon-new":
-		beacon, err := beaconcrypt.NewBeacon(command.KID, command.Data)
+		beacon, err := beaconcrypt.NewBeacon(command.KID, command.Data, command.Extra)
 		return fixture.insert(object{beacon: beacon}, err)
 	case "restore":
 		server, err := beaconcrypt.NewServerFromState(command.Data)
@@ -123,6 +124,12 @@ func (fixture *fixture) call(command command) (response, error) {
 	switch command.Op {
 	case "identity":
 		result.Data, err = object.server.IdentityPK()
+	case "mldsa-public-key":
+		if object.server != nil {
+			result.Data, err = object.server.MLDSAPublicKey()
+		} else {
+			result.Data, err = object.beacon.MLDSAPublicKey()
+		}
 	case "registration":
 		result.Data, err = object.beacon.GenerateRegistration()
 	case "register":

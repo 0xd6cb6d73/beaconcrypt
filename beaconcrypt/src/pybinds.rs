@@ -286,6 +286,7 @@ impl Server {
 		py: Python<'_>,
 		kid: u64,
 		id_seed: Option<&[u8]>,
+		mldsa_seed: Option<&[u8]>,
 		store: Box<dyn SnapshotStore + Send + Sync>,
 		lineage: Option<&[u8]>,
 		callback_error: CallbackError,
@@ -298,11 +299,12 @@ impl Server {
 				PythonServer::create_with_lineage(
 					kid,
 					id_seed,
+					mldsa_seed,
 					store,
 					SnapshotLineage::from_bytes(bytes),
 				)
 			}
-			None => PythonServer::create(kid, id_seed, store),
+			None => PythonServer::create(kid, id_seed, mldsa_seed, store),
 		};
 		let server = persistence_result(py, server, &callback_error)?;
 		Ok(Self {
@@ -347,11 +349,18 @@ impl Server {
 	}
 
 	#[new]
-	fn new(py: Python<'_>, kid: u64, id_seed: Option<&[u8]>) -> PyResult<Self> {
+	#[pyo3(signature = (kid, id_seed, mldsa_seed))]
+	fn new(
+		py: Python<'_>,
+		kid: u64,
+		id_seed: Option<&[u8]>,
+		mldsa_seed: Option<&[u8]>,
+	) -> PyResult<Self> {
 		Self::create(
 			py,
 			kid,
 			id_seed,
+			mldsa_seed,
 			Box::<BindingSnapshotStore>::default(),
 			None,
 			CallbackError::default(),
@@ -362,11 +371,12 @@ impl Server {
 	/// The store supplies load() -> bytes | None and compare_and_swap(expected, replacement) -> bool.
 	/// Callbacks must atomically validate and compare the complete trusted head, preserve rollback resistance, and never reenter this server.
 	#[staticmethod]
-	#[pyo3(signature = (kid, id_seed, store, lineage=None))]
+	#[pyo3(signature = (kid, id_seed, mldsa_seed, store, lineage=None))]
 	fn create_with_store(
 		py: Python<'_>,
 		kid: u64,
 		id_seed: Option<&[u8]>,
+		mldsa_seed: Option<&[u8]>,
 		store: Py<PyAny>,
 		lineage: Option<&[u8]>,
 	) -> PyResult<Self> {
@@ -376,7 +386,7 @@ impl Server {
 			object: object.clone(),
 			errors: errors.clone(),
 		});
-		let mut server = Self::create(py, kid, id_seed, store, lineage, errors)?;
+		let mut server = Self::create(py, kid, id_seed, mldsa_seed, store, lineage, errors)?;
 		server.store_object = Some(object);
 		Ok(server)
 	}
@@ -519,6 +529,10 @@ impl Server {
 	fn id_pk(&self) -> &[u8] {
 		self._0.identity_pk().as_bytes()
 	}
+
+	fn mldsa_public_key(&self) -> Vec<u8> {
+		self._0.mldsa_public_key().to_vec()
+	}
 }
 
 #[pyclass(name = "BeaconCryptBeacon")]
@@ -528,10 +542,14 @@ pub struct Beacon {
 #[pymethods]
 impl Beacon {
 	#[new]
-	fn new(server_kid: u64, server_id_pk: &[u8]) -> PyResult<Self> {
-		PqxdhBeacon::try_new(server_kid, server_id_pk)
+	fn new(server_kid: u64, server_id_pk: &[u8], server_mldsa_pk: &[u8]) -> PyResult<Self> {
+		PqxdhBeacon::try_new(server_kid, server_id_pk, server_mldsa_pk)
 			.map(|beacon| Self { _0: beacon })
 			.map_err(|error| PyValueError::new_err(error.to_string()))
+	}
+
+	fn mldsa_public_key(&self) -> Vec<u8> {
+		self._0.mldsa_public_key().to_vec()
 	}
 
 	/// Begin the beacon registration process. The output buffer should be sent as-is over the network.

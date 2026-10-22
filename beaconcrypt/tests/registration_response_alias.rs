@@ -1,16 +1,20 @@
-//! Counterexample to exact decoded Phase-2 response origin.
-//! X25519's ignored input bit is not separately authenticated by production.
+//! Transcript signatures authenticate even the input bit ignored by X25519.
 
 use beaconcrypt::*;
-use beaconcrypt_parse::{KexResponse, decode_response};
+use beaconcrypt_parse::KexResponse;
 
 mod common;
+use common::decode_response;
 
 #[test]
-fn registration_accepts_a_distinct_x25519_ephemeral_encoding() {
+fn registration_rejects_a_distinct_x25519_ephemeral_encoding() {
 	for _ in 0..16 {
-		let mut server = Server::new(0, None);
-		let mut beacon = Beacon::new(0, server.identity_pk().as_bytes());
+		let mut server = Server::new(0, None, None);
+		let mut beacon = Beacon::new(
+			0,
+			server.identity_pk().as_bytes(),
+			&server.mldsa_public_key(),
+		);
 		let init = beacon.get_registration_bundle().unwrap();
 		let accepted = server.get_shared_secret(&init).unwrap();
 		let response = server
@@ -44,23 +48,8 @@ fn registration_accepts_a_distinct_x25519_ephemeral_encoding() {
 			changed.app_cipher_text.len(),
 			8 + b"sequence-one response".len() + 16 + 64
 		);
-		assert_eq!(
-			beacon.finish_registration(&candidate).unwrap(),
-			b"sequence-one response"
-		);
-		assert_eq!(beacon.ratchet_status().unwrap().receive_sequence(), 1);
-
-		let outbound = beacon.encrypt_message(b"beacon after alias").unwrap();
-		assert_eq!(
-			server.decrypt_message(&outbound).unwrap().plaintext,
-			b"beacon after alias"
-		);
-		let inbound = server
-			.encrypt_message(b"server after alias", original.key_id)
-			.unwrap();
-		assert_eq!(
-			beacon.decrypt_message(&inbound).unwrap().plaintext,
-			b"server after alias"
-		);
+		let candidate = common::replace_response_payload(&response.serialized, &candidate);
+		assert!(beacon.finish_registration(&candidate).is_none());
+		assert!(beacon.ratchet_status().is_none());
 	}
 }

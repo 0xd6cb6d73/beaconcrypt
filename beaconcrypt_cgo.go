@@ -21,6 +21,8 @@ import (
 // Keep the backend-independent public constant tied to the native ABI.
 const _ = uint(MaxMessageSize - int(C.beaconcrypt_MAX_MESSAGE_SIZE))
 const _ = uint(int(C.beaconcrypt_MAX_MESSAGE_SIZE) - MaxMessageSize)
+const _ = uint(MLDSA65PublicKeySize - int(C.beaconcrypt_MLDSA_PUBLIC_KEY_LEN))
+const _ = uint(int(C.beaconcrypt_MLDSA_PUBLIC_KEY_LEN) - MLDSA65PublicKeySize)
 
 type serverNativeHandle struct {
 	mu     sync.Mutex
@@ -41,13 +43,15 @@ func NewServer(serverKID uint64) (*Server, error) {
 	return server, nil
 }
 
-func NewServerFromSeed(serverKID uint64, seed []byte) (*Server, error) {
-	if len(seed) != 32 {
+func NewServerFromSeed(serverKID uint64, seed, mldsaSeed []byte) (*Server, error) {
+	if len(seed) != 32 || len(mldsaSeed) != 32 {
 		return nil, ErrSeedSize
 	}
 	ptr, free := cBytes(seed)
 	defer free()
-	handle := C.beaconcrypt_server_new_from_seed(C.uint64_t(serverKID), ptr, C.uintptr_t(len(seed)))
+	mldsaPtr, mldsaFree := cBytes(mldsaSeed)
+	defer mldsaFree()
+	handle := C.beaconcrypt_server_new_from_seed(C.uint64_t(serverKID), ptr, C.uintptr_t(len(seed)), mldsaPtr, C.uintptr_t(len(mldsaSeed)))
 	if handle == nil {
 		return nil, ErrCrypto
 	}
@@ -89,10 +93,15 @@ func (s *Server) ExportState() ([]byte, error) {
 	})
 }
 
-func NewBeacon(serverKID uint64, serverPK []byte) (*Beacon, error) {
+func NewBeacon(serverKID uint64, serverPK, serverMLDSAPK []byte) (*Beacon, error) {
+	if len(serverPK) != 32 || len(serverMLDSAPK) != MLDSA65PublicKeySize {
+		return nil, ErrCrypto
+	}
 	ptr, free := cBytes(serverPK)
 	defer free()
-	handle := C.beaconcrypt_beacon_new(C.uint64_t(serverKID), ptr, C.uintptr_t(len(serverPK)))
+	mldsaPtr, mldsaFree := cBytes(serverMLDSAPK)
+	defer mldsaFree()
+	handle := C.beaconcrypt_beacon_new(C.uint64_t(serverKID), ptr, C.uintptr_t(len(serverPK)), mldsaPtr, C.uintptr_t(len(serverMLDSAPK)))
 	if handle == nil {
 		return nil, ErrCrypto
 	}
@@ -120,6 +129,26 @@ func (s *Server) IdentityPK() ([]byte, error) {
 	}
 	return withServerHandle(s.native, func(handle *C.beaconcrypt_Server) ([]byte, error) {
 		return copyBuffer(C.beaconcrypt_server_identity_pk(handle))
+	})
+}
+
+// MLDSAPublicKey returns the server authentication key to provision into beacons.
+func (s *Server) MLDSAPublicKey() ([]byte, error) {
+	if s == nil {
+		return nil, ErrClosed
+	}
+	return withServerHandle(s.native, func(handle *C.beaconcrypt_Server) ([]byte, error) {
+		return copyBuffer(C.beaconcrypt_server_mldsa_public_key(handle))
+	})
+}
+
+// MLDSAPublicKey returns the beacon's ML-DSA-65 authentication key.
+func (b *Beacon) MLDSAPublicKey() ([]byte, error) {
+	if b == nil {
+		return nil, ErrClosed
+	}
+	return withBeaconHandle(b.native, func(handle *C.beaconcrypt_Beacon) ([]byte, error) {
+		return copyBuffer(C.beaconcrypt_beacon_mldsa_public_key(handle))
 	})
 }
 

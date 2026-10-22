@@ -64,7 +64,7 @@ revision or Rust/build inputs since generation. Its outputs are:
   internal Go packages, C shim/header sources, `go.mod`, `go.sum`, licenses,
   embedded Wasm and a manifest under `beaconcrypt-go-v0.6.1/`.
 - `beaconcrypt.wasm`, the standalone guest module.
-- `beaconcrypt-wasm-manifest.json`, with ABI version 1, exact source revision,
+- `beaconcrypt-wasm-manifest.json`, with ABI version 2, exact source revision,
   dirty-source marker, tool versions, build inputs, import/export inventory and
   SHA-256 hashes for the Wasm and bundled files.
 - `SHA256SUMS`, covering the archive and standalone release assets.

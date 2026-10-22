@@ -6,7 +6,11 @@ mod common;
 const SERVER_ID: u64 = 7;
 
 fn register(server: &mut Server) -> (Beacon, u64) {
-	let mut beacon = Beacon::new(SERVER_ID, server.identity_pk().as_bytes());
+	let mut beacon = Beacon::new(
+		SERVER_ID,
+		server.identity_pk().as_bytes(),
+		&server.mldsa_public_key(),
+	);
 	let request = beacon.get_registration_bundle().unwrap();
 	let pending = server.get_shared_secret(&request).unwrap();
 	let response = server.build_registration_response(pending, None).unwrap();
@@ -56,7 +60,7 @@ fn invalid_variants(raw: &[u8]) -> Vec<Vec<u8>> {
 
 #[test]
 fn raw_rejections_preserve_future_and_cached_keys() {
-	let mut server = Server::new(SERVER_ID, None);
+	let mut server = Server::new(SERVER_ID, None, None);
 	let (mut beacon, kid) = register(&mut server);
 	let second = server.encrypt_message(b"second", kid).unwrap();
 	let third = server.encrypt_message(b"third", kid).unwrap();
@@ -104,7 +108,7 @@ fn raw_rejections_preserve_future_and_cached_keys() {
 
 #[test]
 fn server_routing_rejects_trailing_bytes_before_key_consumption() {
-	let mut server = Server::new(SERVER_ID, None);
+	let mut server = Server::new(SERVER_ID, None, None);
 	let (mut beacon, kid) = register(&mut server);
 	let message = beacon.encrypt_message(b"beacon output").unwrap();
 	let before = server.ratchet_status(kid).unwrap();
@@ -122,7 +126,7 @@ fn server_routing_rejects_trailing_bytes_before_key_consumption() {
 
 #[test]
 fn same_sender_and_sequence_do_not_bypass_session_associated_data() {
-	let mut server = Server::new(SERVER_ID, None);
+	let mut server = Server::new(SERVER_ID, None, None);
 	let (mut first, first_id) = register(&mut server);
 	let (mut second, second_id) = register(&mut server);
 	let first_message = server.encrypt_message(b"first session", first_id).unwrap();
