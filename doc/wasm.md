@@ -43,6 +43,12 @@ implements snapshot-store callbacks. Compilation is shared; each server or
 beacon retains its own guest memory and serialized operations. Server state
 still requires the storage guarantees described in [persistence.md](persistence.md).
 
+## Run guest unit and mutation tests
+
+With the pinned Rust target and Zig installed, run `bash scripts/test-wasm.sh` to execute the Rust guest tests in wazero under the production 256 MiB memory limit. The runner uses the existing pinned Go dependency and test-only snapshot callbacks. It exercises actual 32-bit allocation descriptors, complete packed replies, snapshot load/CAS forwarding, and owned-context destruction. One size-bound probe runs in a separate guest and must produce the expected allocation-failure trap, so the test never allocates a multi-gigabyte host buffer.
+
+Run the complete mutation catalog in two target partitions: `cargo mutants --workspace --exclude 'beaconcrypt-wasm/**'` runs native workspace mutations, and `bash scripts/test-wasm.sh --mutants` runs every guest mutation on wasm32-wasip1. Both partitions retain the repository's mutation configuration. Guest mutation workers use private build directories so a WASI runner cannot read another worker's rebuilt artifact. Guest tests use `test_workspace=false` because native integration tests require host OS facilities; the native partition still runs the workspace tests. The catalog union covers all source files, and only exact-name equivalent mutants justified in `.cargo/mutants.toml` are excluded. Native pointer-width behavior does not substitute for guest allocation and host-callback coverage.
+
 ## Create a release bundle
 
 After building the guest, run:

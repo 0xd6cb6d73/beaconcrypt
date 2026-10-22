@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: 0BSD
+set -euo pipefail
+
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+repo_dir="$(cd -- "$script_dir/.." && pwd)"
+cd -- "$repo_dir"
+
+read -r expected_rust expected_zig wasm_target < <(
+  python3 -c 'import json; p=json.load(open("scripts/wasm-toolchain.json")); print(p["rust"], p["zig"], p["target"])'
+)
+if [[ "$(rustc --version)" != "rustc $expected_rust "* ]]; then
+  printf 'Wasm tests require Rust %s\n' "$expected_rust" >&2
+  exit 1
+fi
+if [[ "$(zig version)" != "$expected_zig" ]]; then
+  printf 'Wasm tests require Zig %s\n' "$expected_zig" >&2
+  exit 1
+fi
+
+runner_dir="$(mktemp -d "${TMPDIR:-/tmp}/beaconcrypt-wasm-tests.XXXXXX")"
+trap 'rm -rf -- "$runner_dir"' EXIT
+go build -mod=readonly -o "$runner_dir/runner" ./scripts/wasm-test-runner
+export CARGO_TARGET_WASM32_WASIP1_RUNNER="$runner_dir/runner"
+
+if [[ "${1:-}" == --mutants ]]; then
+  shift
+  # A WASI runner must read its own worker's artifact after Cargo launches it.
+  unset CARGO_TARGET_DIR
+  cargo mutants -p beaconcrypt-wasm --test-workspace false --copy-target true --cargo-arg "--target=$wasm_target" "$@"
+else
+  cargo test --locked -p beaconcrypt-wasm --target "$wasm_target" "$@"
+fi
